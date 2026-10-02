@@ -2,12 +2,15 @@ extends TestCase
 ## Alchemy: success chance, ingredient checks, refining and the GameState action.
 
 
-func _alchemist(rank: int = 0, comprehension: int = 10) -> CharacterData:
+func _alchemist(rank: int = 0, comprehension: int = 10, learn_all: bool = true) -> CharacterData:
 	var c := new_character()
 	c.inventory = {}
 	c.attributes["comprehension"] = comprehension
 	if rank > 0:
 		c.professions["alchemist"] = {"rank": rank, "xp": 0.0}
+	if learn_all:
+		for recipe_id in data().recipes:
+			Alchemy.learn(c, data(), recipe_id)
 	return c
 
 
@@ -51,11 +54,97 @@ func test_check_rank_and_ingredients() -> void:
 	assert_true(Alchemy.check(c, data(), "no_such_recipe") != "")
 
 
-func test_known_recipes_follow_rank() -> void:
-	var novice := Alchemy.known_recipes(_alchemist(), data())
-	assert_true(novice.has("qi_gathering_pill"))
-	assert_false(novice.has("jade_marrow_pill"))
-	assert_true(Alchemy.known_recipes(_alchemist(10), data()).has("jade_marrow_pill"))
+func test_starter_recipes_are_known_without_learning() -> void:
+	var c := _alchemist(0, 10, false)
+	var known := Alchemy.known_recipes(c, data())
+	assert_true(known.has("qi_gathering_pill"))
+	assert_true(known.has("bone_setting_salve"))
+	assert_false(known.has("meridian_mending_pill"))
+	assert_false(Alchemy.known_recipes(_alchemist(10, 10, false), data()).has("jade_marrow_pill"), "rank alone teaches nothing")
+
+
+func test_unlearned_recipe_cannot_be_refined() -> void:
+	var c := _alchemist(2, 10, false)
+	_stock(c, "meridian_mending_pill")
+	assert_true(Alchemy.check(c, data(), "meridian_mending_pill").begins_with("You have not learned"))
+	assert_false(Alchemy.refine(c, data(), "meridian_mending_pill", seeded_rng())["ok"])
+	assert_true(Alchemy.learn(c, data(), "meridian_mending_pill"))
+	assert_eq(Alchemy.check(c, data(), "meridian_mending_pill"), "")
+
+
+func test_learning_ignores_rank_but_refining_does_not() -> void:
+	var c := _alchemist(0, 10, false)
+	assert_eq(Alchemy.can_learn(c, data(), "jade_marrow_pill"), "")
+	assert_true(Alchemy.learn(c, data(), "jade_marrow_pill"))
+	assert_true(Alchemy.known_recipes(c, data()).has("jade_marrow_pill"))
+	_stock(c, "jade_marrow_pill")
+	assert_true(Alchemy.check(c, data(), "jade_marrow_pill").begins_with("Requires"))
+
+
+func test_cannot_learn_twice_or_unknown() -> void:
+	var c := _alchemist(0, 10, false)
+	assert_true(Alchemy.can_learn(c, data(), "qi_gathering_pill").begins_with("You already know"), "starter recipe")
+	assert_true(Alchemy.learn(c, data(), "meridian_mending_pill"))
+	assert_false(Alchemy.learn(c, data(), "meridian_mending_pill"))
+	assert_eq(c.known_recipes.size(), 1)
+	assert_true(Alchemy.can_learn(c, data(), "no_such_recipe") != "")
+
+
+func test_recipe_scroll_teaches_recipe() -> void:
+	var c := _alchemist(0, 10, false)
+	c.add_item("recipe_meridian_mending_pill", 1)
+	var result := Items.use(c, data(), "recipe_meridian_mending_pill", {})
+	assert_true(result["ok"], str(result))
+	assert_true(Alchemy.knows(c, data(), "meridian_mending_pill"))
+	assert_eq(c.item_count("recipe_meridian_mending_pill"), 0)
+	c.add_item("recipe_meridian_mending_pill", 1)
+	assert_false(Items.use(c, data(), "recipe_meridian_mending_pill", {})["ok"], "already known")
+	assert_eq(c.item_count("recipe_meridian_mending_pill"), 1, "scroll kept when nothing to learn")
+
+
+func test_every_non_starter_recipe_has_a_scroll() -> void:
+	var taught := {}
+	for item: Dictionary in data().items.values():
+		var recipe_id: String = item.get("effects", {}).get("learn_recipe", "")
+		if recipe_id != "":
+			taught[recipe_id] = true
+	for recipe: Dictionary in data().recipes.values():
+		if not recipe.get("starter", false):
+			assert_true(taught.has(recipe["id"]), "no scroll teaches %s" % recipe["id"])
+
+
+func test_known_recipes_survive_save() -> void:
+	var c := _alchemist(0, 10, false)
+	Alchemy.learn(c, data(), "foundation_establishment_pill")
+	var loaded := CharacterData.from_dict(JSON.parse_string(JSON.stringify(c.to_dict())))
+	assert_true(Alchemy.knows(loaded, data(), "foundation_establishment_pill"))
+	assert_false(Alchemy.knows(loaded, data(), "jade_marrow_pill"))
+
+
+func test_old_save_keeps_rank_recipes() -> void:
+	var tree := Engine.get_main_loop() as SceneTree
+	var gs := tree.root.get_node("GameState")
+	var c := CharacterFactory.create("Elder Alchemist", gs.data, seeded_rng())
+	c.professions["alchemist"] = {"rank": 2, "xp": 0.0}
+	gs.start_session(c)
+	var save: Dictionary = gs.to_save_dict()
+	save["player"].erase("known_recipes")
+	gs.load_save_dict(JSON.parse_string(JSON.stringify(save)))
+	assert_true(Alchemy.knows(gs.player, gs.data, "foundation_establishment_pill"))
+	assert_false(Alchemy.knows(gs.player, gs.data, "jade_marrow_pill"))
+	gs.end_session()
+
+
+func test_game_state_use_recipe_scroll() -> void:
+	var tree := Engine.get_main_loop() as SceneTree
+	var gs := tree.root.get_node("GameState")
+	var c := CharacterFactory.create("Scholar", gs.data, seeded_rng())
+	gs.start_session(c)
+	c.add_item("recipe_foundation_establishment_pill", 1)
+	gs.use_item("recipe_foundation_establishment_pill")
+	assert_true(Alchemy.knows(c, gs.data, "foundation_establishment_pill"))
+	assert_true(Alchemy.known_recipes(c, gs.data).has("foundation_establishment_pill"))
+	gs.end_session()
 
 
 func test_refine_without_ingredients_changes_nothing() -> void:

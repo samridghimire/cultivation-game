@@ -9,6 +9,7 @@ extends RefCounted
 ##   set_flag: String           set a world flag
 ##   learn_technique: String    learn a technique (see techniques.gd)
 ##   heal_injury: String        heal one injury id, or "all" (see injuries.gd)
+##   learn_recipe: String       learn a crafting recipe (see alchemy.gd)
 
 
 ## Returns "" if the effects can be applied, otherwise a reason they cannot.
@@ -22,6 +23,10 @@ static func check(c: CharacterData, data: GameData, effects: Dictionary) -> Stri
 		return "You have no injury that this would heal."
 	if effects.has("learn_technique"):
 		var reason := Techniques.can_learn(c, data, effects["learn_technique"])
+		if reason != "":
+			return reason
+	if effects.has("learn_recipe"):
+		var reason := Alchemy.can_learn(c, data, effects["learn_recipe"])
 		if reason != "":
 			return reason
 	return ""
@@ -48,6 +53,8 @@ static func apply(c: CharacterData, data: GameData, effects: Dictionary, flags: 
 		notes.append("Next breakthrough +%d%%" % int(float(effects["breakthrough_bonus"]) * 100))
 	if effects.has("learn_technique") and Techniques.learn(c, data, effects["learn_technique"])["ok"]:
 		notes.append("Learned %s" % data.techniques[effects["learn_technique"]].name)
+	if effects.has("learn_recipe") and Alchemy.learn(c, data, effects["learn_recipe"]):
+		notes.append("Learned the %s recipe" % data.recipes[effects["learn_recipe"]].get("name", effects["learn_recipe"]))
 	if effects.has("heal_injury"):
 		for injury_id in Injuries.heal(c, effects["heal_injury"]):
 			notes.append("%s healed" % Injuries.injury_name(data, injury_id))
