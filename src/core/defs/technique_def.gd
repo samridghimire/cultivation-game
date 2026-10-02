@@ -20,6 +20,9 @@ var bonuses: Dictionary = {}
 var manual_item := ""
 var xp_base := 60.0
 var xp_growth := 1.5
+## Optional activation (forbidden secret arts): {"lifespan_cost": int years,
+## "days": int, "buff": {stat: fraction}}. Empty = cannot be activated.
+var activation: Dictionary = {}
 
 
 static func from_dict(d: Dictionary) -> TechniqueDef:
@@ -36,6 +39,7 @@ static func from_dict(d: Dictionary) -> TechniqueDef:
 	t.manual_item = d.get("manual_item", "")
 	t.xp_base = float(d.get("xp_base", 60))
 	t.xp_growth = float(d.get("xp_growth", 1.5))
+	t.activation = d.get("activation", {})
 	return t
 
 
