@@ -361,6 +361,30 @@ func treat_patients(days: int) -> void:
 	_pass_time(days)
 
 
+## Refine one batch of a recipe from data/recipes.json. Failure burns the ingredients.
+func refine(recipe_id: String) -> void:
+	if not _can_act():
+		return
+	var result := Alchemy.refine(player, data, recipe_id, rng)
+	if not result["ok"]:
+		EventBus.post(result["reason"], "warning")
+		EventBus.player_changed.emit()
+		return
+	var recipe_name: String = data.recipes[recipe_id].get("name", recipe_id)
+	if result["success"]:
+		EventBus.post("You refine %s: +%d %s, +%d xp." % [recipe_name, result["count"], data.items[result["item"]].get("name", result["item"]), int(result["xp"])], "progress")
+	else:
+		EventBus.post("The cauldron cracks and your herbs turn to ash. %s failed (+%d xp)." % [recipe_name, int(result["xp"])], "warning")
+	var prof_id: String = data.recipes[recipe_id]["profession"]
+	if result["ranks_gained"] > 0:
+		EventBus.post("You are now a %s!" % Professions.rank_title(player, data, prof_id), "progress")
+	if not player.is_rogue():
+		var contribution := int(result["xp"] / (1.0 if Sects.is_favored_profession(player, data, prof_id) else 2.0))
+		if Sects.add_contribution(player, data, contribution):
+			EventBus.post("Your sect promotes you to %s." % Sects.describe(player, data), "progress")
+	_pass_time(result["days"])
+
+
 ## Fight an enemy from data/enemies.json.
 func fight(enemy_id: String) -> void:
 	if not data.enemies.has(enemy_id):
