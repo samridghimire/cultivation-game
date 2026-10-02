@@ -7,7 +7,7 @@ Roles: `systems` (core rules + tests), `content` (data/*.json + small hooks), `w
 ## P0: Foundation hardening
 | id | role | status | task |
 |---|---|---|---|
-| F-001 | qa | todo | Add GameState integration tests for join_sect, leave_sect, buy_item, use_item, work_profession (contribution + promotion). |
+| F-001 | qa | done | Add GameState integration tests for join_sect, leave_sect, buy_item, use_item, work_profession (contribution + promotion). |
 | F-002 | world-ui | done | Pause menu on Esc (Resume / Save / Load / Settings stub / Quit to menu) instead of instantly returning to the menu. |
 | F-003 | world-ui | done | Breakthrough feedback: a short screen-flash / message banner on success and failure (listen to EventBus.breakthrough_attempted). |
 | F-004 | systems | done | Multiple save slots with metadata: SaveManager.list_slots/read_meta/delete_save/next_free_slot/most_recent_slot. |
@@ -23,8 +23,9 @@ Roles: `systems` (core rules + tests), `content` (data/*.json + small hooks), `w
 | ART-001 | systems | done | Respawn core: data/artifact.json (lives, anchor slots per realm, start anchor, recharge cost growth, respawn qi/day costs), anchor places via `anchor_id` in regions.json, CreationArtifact system, GameState.bind_anchor/unbind_anchor/recharge_artifact, lethal combat deaths respawn at the latest anchor (old age stays final), EventBus.player_respawned. Anchor bind/release entries in anchor places' menus. Future violent deaths (e.g. Heavenly Tribulations) must go through GameState._die_violently. |
 | ART-001b | world-ui | todo | Show artifact lives, recharge cost and bound anchors on the character sheet, plus a "Recharge artifact" action (GameState.recharge_artifact) until the full ART-005 screen exists. |
 | G-002 | systems | done | Alchemy crafting: data/recipes.json (5 pill recipes from herbs), Alchemy.success_chance/check/known_recipes/refine, GameState.refine(recipe_id). Chance from Alchemist rank + Comprehension - difficulty; failure burns the herbs for half xp. The workshop lists refine options instead of Alchemist odd jobs. |
-| G-002b | world-ui | todo | Alchemy screen (HUD modal, gamepad-friendly): list Alchemy.known_recipes with ingredients (have/need), output, success chance, days; Refine button calls GameState.refine; locked recipes show their rank requirement. Replaces the plain workshop option list. |
-| G-002c | systems | todo | Recipe learning + pill quality: recipes must be learned (recipe scrolls as items with a `learn_recipe` effect, sect contribution shop) instead of unlocking by rank alone; refining can yield a higher-grade pill on a great success (data-driven quality tiers). |
+| G-002b | world-ui | todo | Alchemy screen (HUD modal, gamepad-friendly): list Alchemy.known_recipes (learned recipes, including ones above your rank) with ingredients (have/need), output, success chance, days; Refine button calls GameState.refine; locked recipes show their rank requirement. Replaces the plain workshop option list. |
+| G-002c | systems | done | Recipe learning: only `starter` recipes (recipes.json) are known by default; others are learned from recipe scrolls (items with the `learn_recipe` effect, sold by merchants or looted; Jade Marrow from the Cave Guardian). CharacterData.known_recipes, Alchemy.knows/can_learn/learn; old saves keep the recipes their rank allowed. |
+| G-002e | systems | todo | Pill quality: refining can yield a higher-grade pill on a great success (data-driven quality tiers in recipes.json, e.g. per-recipe `great_output` item and a great-success chance from the margin over the success roll). Add the higher-grade pill items. Depends on G-002c. |
 | G-002d | content | todo | More alchemy recipes in data/recipes.json (new pills for qi, breakthroughs per realm, healing, combat buffs), using G-003 herbs; add new pill items to data/items.json. |
 | LIFE-001 | systems | done | Lifespan as a resource: `lifespan_spent_years`/`lifespan_bonus_years` on CharacterData (save-compatible), Cultivation.lifespan_years/years_left/burn_lifespan/extend_lifespan, effect keys `burn_lifespan`/`extend_lifespan` (burning the last years is refused), Blood Essence Burning Pill (qi for 5 years), rare Longevity Pill (ruins encounter), inventory text warns about lifespan costs. |
 | LIFE-001b | systems | todo | Temporary combat buffs (duration in days, stored on CharacterData, applied in Combat.stats) and a first forbidden secret art (technique activation that burns lifespan for a large temporary buff). Show the lifespan cost before activation. Depends on LIFE-001. |
@@ -38,7 +39,7 @@ Roles: `systems` (core rules + tests), `content` (data/*.json + small hooks), `w
 | G-007 | systems | done | Doctor (Medicine): treat own injuries (scales with Doctor rank + Spirit), pay a clinic, treat patients for income + alignment. GameState.treat_own_injury / visit_clinic / treat_patients. |
 | G-007b | world-ui | todo | Clinic place type in regions (village): options "Treat patients (1 month)", "Treat your <injury>" per injury, "Pay doctor (N stones)" via Medicine.clinic_cost. |
 | G-007c | systems | todo | Doctors heal NPC injuries (alignment + favor). Depends on W-002 NPC model. |
-| G-008 | systems | todo | Sect missions: sect members take missions from a mission board for contribution points; contribution shop sells techniques/pills. |
+| G-008 | systems | todo | Sect missions: sect members take missions from a mission board for contribution points; contribution shop sells techniques/pills/recipe scrolls (items with `learn_recipe`, G-002c). |
 | G-009 | systems | todo | Reputation per sect/faction separate from alignment; evil deeds witnessed lower reputation with righteous sects. |
 | G-010 | systems | todo | Cave abode: the player can claim a dwelling; place arrays, store items, cultivate in seclusion. |
 

@@ -21,6 +21,8 @@ var professions: Dictionary = {}  # profession id -> {"rank": int, "xp": float}
 var sect: Dictionary = {}
 var inventory: Dictionary = {}  # item id -> count
 var techniques: Dictionary = {}  # technique id -> {"level": int, "xp": float}
+## Recipe ids learned from scrolls (data/recipes.json "starter" recipes are known without learning).
+var known_recipes: Array[String] = []
 var injuries: Dictionary = {}  # injury id -> days left to heal
 ## Years of lifespan burned for power (forbidden arts, demonic pills); see Cultivation.lifespan_years.
 var lifespan_spent_years := 0
@@ -77,6 +79,7 @@ func to_dict() -> Dictionary:
 		"sect": sect.duplicate(),
 		"inventory": inventory.duplicate(),
 		"techniques": techniques.duplicate(true),
+		"known_recipes": known_recipes.duplicate(),
 		"injuries": injuries.duplicate(),
 		"lifespan_spent_years": lifespan_spent_years,
 		"lifespan_bonus_years": lifespan_bonus_years,
@@ -114,6 +117,8 @@ static func from_dict(d: Dictionary) -> CharacterData:
 	c.artifact_recharges = int(d.get("artifact_recharges", 0))
 	for anchor_id in d.get("anchors", []):
 		c.anchors.append(String(anchor_id))
+	for recipe_id in d.get("known_recipes", []):
+		c.known_recipes.append(String(recipe_id))
 	var techs: Dictionary = d.get("techniques", {})
 	for tech_id in techs:
 		c.techniques[tech_id] = {"level": int(techs[tech_id].get("level", 1)), "xp": float(techs[tech_id].get("xp", 0))}

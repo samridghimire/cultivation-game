@@ -465,6 +465,8 @@ func to_save_dict() -> Dictionary:
 
 func load_save_dict(d: Dictionary) -> void:
 	player = CharacterData.from_dict(d.get("player", {}))
+	if not d.get("player", {}).has("known_recipes"):
+		Alchemy.grant_rank_recipes(player, data)  # saves from before recipe learning
 	CreationArtifact.ensure(player, data)
 	world_flags = d.get("world_flags", {})
 	current_region = d.get("region", data.start_region)
