@@ -24,7 +24,7 @@ Your lifespan is limited, and breaking through to a higher realm is how you exte
 ## Family & Clan system (owner priority)
 The player may start a family and/or join a sect.
 - **Courtship and marriage.** Build favor with NPCs and marry a Dao companion. Spouses are full characters who cultivate, age and can die. Dual cultivation gives both partners a bonus.
-- **Wives and concubines (owner decision).** A male character can take one main wife plus **multiple concubines**, as in the genre. Spousal rank (main wife vs concubine) matters for status, inheritance of clan leadership and household politics. Limits and rules live in `data/family.json` per gender, not hardcoded.
+- **Wives and concubines (owner decision).** A male character can take one main wife plus **multiple concubines**, as in the genre. **A female character has a single Dao companion** (plus adoption). Spousal rank (main wife vs concubine) matters for status, inheritance of clan leadership and household politics. Limits and rules live in `data/family.json` per gender, not hardcoded.
 - **Children.** Children inherit spiritual roots and attributes from both parents, with random variation (a two-trash-root couple can still produce a genius, rarely). **Several partners can be pregnant at the same time.** Children grow up over in-game years, and adoption is also possible. Children of the main wife vs concubines can differ in status (heir priority), which the player can override as Patriarch.
 - **Training descendants.** Teach children techniques you know, assign training (cultivation, professions), pay for pills and resources, and send them to join sects.
 - **Founding a clan.** At sufficient strength (e.g. Foundation Establishment plus resources) found a clan with your surname and become its **Patriarch/Matriarch**. A clan has members (blood family, spouses, retainers), ranks (Patriarch, Elders, core members, outer members), a treasury, an estate with buildings (ancestral hall, spirit fields, alchemy room, protective array) and reputation.
@@ -33,7 +33,8 @@ The player may start a family and/or join a sect.
 
 ## The Creation Artifact (the protagonist's "golden finger")
 Every great cultivation protagonist has something that sets them apart. Ours is a mysterious **Creation Artifact** bound to the player's soul at the start of the game.
-- **Respawn instead of permadeath.** When the player is killed, the artifact pulls their soul back and they **respawn at one of their bound anchor locations**. Death has a cost (see open questions) but is not the end.
+- **Respawn instead of permadeath.** When the player is killed, the artifact pulls their soul back and they **respawn at one of their bound anchor locations**.
+- **Lives (owner decision).** Each respawn consumes one of the artifact's stored **lives**. The player **recharges the artifact with spirit stones to add more lives** (cost scales up, tunable in `data/artifact.json`). With no lives left, death is final. Smaller costs on respawn (some qi lost, some time passes) remain tunable in data.
 - **Anchors.** The player binds anchors at specific places (e.g. a meditation spot, their cave abode, clan estate). Anchor slots are limited and **more unlock as the player's cultivation realm rises**. Choosing where to respawn is a strategic decision.
 - **Unlockable functions.** The artifact has many sealed functions that unlock as the player advances (realm milestones, feeding it treasures/spirit stones, story events). Candidate functions, all data-driven in `data/artifact.json`:
   - Respawn + anchors (available from the start, 1 anchor)
@@ -74,6 +75,11 @@ Every great cultivation protagonist has something that sets them apart. Ours is 
 | Inventory and techniques screens | 🚧 | `src/ui/` |
 | Top-down world with interactables | ✅ placeholder art | `src/world/` |
 
+## Lifespan as a resource (owner decision)
+- Breaking through to a higher realm adds lifespan, so a cultivator who keeps progressing should **rarely die of old age**. The Creation Artifact does **not** save the player from old age.
+- Lifespan can be **spent**: forbidden secret arts, demonic weapons and evil cultivator artifacts that burn years of life for power. Recklessly burning lifespan is the main way a strong cultivator dies of old age.
+- Lifespan can also be extended (longevity pills, rare treasures, late-game artifact functions).
+
 ## Realm ladder
 Mortal → Qi Refining (9 layers) → Foundation Establishment → Core Formation → Nascent Soul → Soul Formation →
 Void Refinement → Body Integration → Mahayana → Tribulation Transcendence. Post-Qi-Refining realms have Early/Middle/Late/Peak stages.
@@ -81,9 +87,9 @@ Void Refinement → Body Integration → Mahayana → Tribulation Transcendence.
 ## Open design questions (for the human)
 - **Decided:** player picks gender at creation; a male character can have one main wife + multiple concubines and multiple simultaneous pregnancies.
 - **Decided:** no permadeath for the player; the Creation Artifact respawns them at bound anchors, with more anchors and functions unlocking as they level up.
-- Female player character: same structure mirrored (main husband + concubines), or a single Dao companion? Proposed default until answered: single Dao companion plus adoption, configurable in `data/family.json`.
-- Death cost when respawning: proposed default = drop a portion of carried spirit stones/items where you died, lose some qi, and time passes while the soul recovers. Should repeated deaths get worse?
-- Does the artifact protect against death by old age, or only violent death? Proposed default: violent death only; lifespan still matters (a late-game artifact function could extend it).
+- **Decided:** a female player character has a single Dao companion plus adoption.
+- **Decided:** respawns consume artifact lives, which are recharged with spirit stones; at zero lives death is final.
+- **Decided:** the artifact does not prevent death by old age; realm breakthroughs add lifespan, and lifespan can be burned for power (forbidden arts, evil weapons).
 - Permadeath, or reincarnation / legacy system on death?
 - Real-time world (NPCs move, time flows) or turn-like time that only passes through actions (current)?
 - Combat style: turn-based, real-time action, or auto-resolved with techniques/strategy?
