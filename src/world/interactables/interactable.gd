@@ -6,12 +6,15 @@ extends Area2D
 ##   {"label": String, "action": Callable, "disabled": bool (optional),
 ##    "keep_open": bool (optional, re-show the menu after the action)}
 ## Actions should call GameState methods, not change data directly.
+## Menus call menu_options(), which adds shared entries (e.g. artifact anchors).
 
 @export var display_name := "Object"
 @export var size := Vector2(64, 64)
 @export var color := Color.WHITE
 ## How far beyond its footprint the player can be and still interact.
 @export var reach := 28.0
+## Creation Artifact anchor id (data/regions.json "anchor_id"); "" = not an anchor.
+@export var anchor_id := ""
 
 
 func _ready() -> void:
@@ -28,6 +31,23 @@ func _ready() -> void:
 
 func get_options() -> Array[Dictionary]:
 	return []
+
+
+## get_options() plus the anchor entry when this place is an artifact anchor.
+func menu_options() -> Array[Dictionary]:
+	var options := get_options()
+	if anchor_id == "":
+		return options
+	var c: CharacterData = GameState.player
+	if c.anchors.has(anchor_id):
+		var label := "Release artifact anchor" if c.anchors[-1] != anchor_id else "Release artifact anchor (current respawn point)"
+		if c.anchors[-1] != anchor_id:
+			options.append({"label": "Make this your respawn point", "action": GameState.bind_anchor.bind(anchor_id), "keep_open": true})
+		options.append({"label": label, "action": GameState.unbind_anchor.bind(anchor_id), "keep_open": true})
+	else:
+		var slots := CreationArtifact.anchor_slots(c, GameState.data)
+		options.append({"label": "Bind artifact anchor here (%d/%d used)" % [c.anchors.size(), slots], "action": GameState.bind_anchor.bind(anchor_id), "keep_open": true})
+	return options
 
 
 ## Whether this can currently be interacted with (e.g. a dead NPC cannot).

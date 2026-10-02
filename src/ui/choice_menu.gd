@@ -1,6 +1,6 @@
 class_name ChoiceMenu
 extends PanelContainer
-## Modal list of actions offered by an Interactable (see Interactable.get_options).
+## Modal list of actions offered by an Interactable (see Interactable.menu_options).
 
 signal closed
 
@@ -47,7 +47,7 @@ func _rebuild() -> void:
 	for child in _buttons.get_children():
 		child.queue_free()
 	_title.text = _source.display_name
-	var options: Array[Dictionary] = _source.get_options()
+	var options: Array[Dictionary] = _source.menu_options()
 	if options.is_empty():
 		_buttons.add_child(UIStyle.label("There is nothing to do here.", 16))
 	for option in options:

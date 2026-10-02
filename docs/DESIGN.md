@@ -70,6 +70,7 @@ Every great cultivation protagonist has something that sets them apart. Ours is 
 | Alchemy (recipes, refining pills) | ✅ basic | `data/recipes.json`, `Alchemy` |
 | Items, merchant, using pills | ✅ basic | `data/items.json`, `Items` |
 | Save/load | ✅ | `SaveManager` |
+| Creation Artifact: lives, anchors, respawn | ✅ core | `data/artifact.json`, `CreationArtifact` |
 | Data-driven regions, travel, exploration encounters | 🚧 | `data/regions.json`, `data/encounters.json`, `Exploration` |
 | Injuries (from breakthroughs and combat) | ✅ | `data/injuries.json`, `Injuries` |
 | Combat and cultivation techniques | 🚧 | `Combat`, `Techniques`, `data/enemies.json`, `data/techniques.json` |

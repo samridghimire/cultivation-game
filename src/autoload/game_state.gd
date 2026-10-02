@@ -36,6 +36,7 @@ func has_session() -> bool:
 
 func start_session(character: CharacterData) -> void:
 	player = character
+	CreationArtifact.ensure(player, data)
 	world_flags = {}
 	current_region = data.start_region
 	npcs = {}
@@ -406,10 +407,41 @@ func fight_enemy(enemy: Dictionary) -> void:
 		EventBus.post("(%s)" % ", ".join(outcome["notes"]), "progress" if result["victory"] else "warning")
 	EventBus.combat_finished.emit(enemy.get("name", "enemy"), result["victory"], result["log"])
 	if outcome["died"]:
-		_kill(outcome["cause"])
-		EventBus.player_changed.emit()
+		_die_violently(outcome["cause"])
 		return
 	_pass_time(outcome["days"])
+
+
+## Bind the Creation Artifact to an anchor place (data/regions.json "anchor_id").
+func bind_anchor(anchor_id: String) -> void:
+	if not _can_act():
+		return
+	var result := CreationArtifact.bind_anchor(player, data, anchor_id)
+	if result["ok"]:
+		EventBus.post("The Creation Artifact hums as you bind its anchor to %s. You will return here if you fall." % CreationArtifact.anchor_name(data, anchor_id), "progress")
+	else:
+		EventBus.post(result["reason"], "warning")
+	EventBus.player_changed.emit()
+
+
+func unbind_anchor(anchor_id: String) -> void:
+	if not _can_act():
+		return
+	if CreationArtifact.unbind_anchor(player, anchor_id):
+		EventBus.post("You release the anchor at %s." % CreationArtifact.anchor_name(data, anchor_id))
+	EventBus.player_changed.emit()
+
+
+## Feed spirit stones to the Creation Artifact for one more life.
+func recharge_artifact() -> void:
+	if not _can_act():
+		return
+	var result := CreationArtifact.recharge(player, data)
+	if result["ok"]:
+		EventBus.post("The artifact drinks %d spirit stones. Lives: %d." % [result["cost"], player.artifact_lives], "progress")
+	else:
+		EventBus.post(result["reason"], "warning")
+	EventBus.player_changed.emit()
 
 
 # --- Save data ---------------------------------------------------------------
@@ -430,6 +462,7 @@ func to_save_dict() -> Dictionary:
 
 func load_save_dict(d: Dictionary) -> void:
 	player = CharacterData.from_dict(d.get("player", {}))
+	CreationArtifact.ensure(player, data)
 	world_flags = d.get("world_flags", {})
 	current_region = d.get("region", data.start_region)
 	npcs = Npcs.from_dict(d.get("npcs", {}))
@@ -469,6 +502,25 @@ func _on_days_advanced(days: int) -> void:
 		EventBus.post(event["text"], event["category"])
 	if player.age_years() >= Cultivation.lifespan_years(player, data):
 		_kill("Your lifespan is exhausted. You die of old age at %d." % player.age_years())
+
+
+## A death by violence: the Creation Artifact respawns the player if it has a
+## life left; otherwise death is final. (Old age always goes straight to _kill.)
+func _die_violently(cause: String) -> void:
+	if not CreationArtifact.can_respawn(player):
+		_kill(cause + " The Creation Artifact has no lives left to pull your soul back.")
+		EventBus.player_changed.emit()
+		return
+	var result := CreationArtifact.respawn(player, data)
+	EventBus.post(cause, "danger")
+	var place := CreationArtifact.anchor_name(data, result["anchor_id"]) if result["anchor_id"] != "" else Exploration.region_name(data, result["region"])
+	EventBus.post("The Creation Artifact pulls your soul back. You awaken at %s, %d qi lost. (%d lives left)" % [place, int(result["qi_lost"]), result["lives_left"]], "warning")
+	var moved: bool = result["region"] != current_region
+	current_region = result["region"]
+	EventBus.player_respawned.emit(result["anchor_id"], result["lives_left"])
+	_pass_time(result["days"])
+	if moved:
+		EventBus.region_changed.emit(current_region)
 
 
 func _kill(cause: String) -> void:
