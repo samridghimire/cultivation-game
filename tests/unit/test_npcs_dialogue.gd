@@ -1,0 +1,115 @@
+extends TestCase
+
+
+func _npcs() -> Dictionary:
+	var npcs := {}
+	Npcs.ensure_all(npcs, data(), seeded_rng())
+	return npcs
+
+
+func _ctx(npc_id: String, c: CharacterData, npcs: Dictionary, flags: Dictionary = {}, favor: int = 0) -> Dictionary:
+	return {"player": c, "npc": npcs[npc_id], "data": data(), "flags": flags, "favor": favor}
+
+
+func test_npcs_created_from_data() -> void:
+	var npcs := _npcs()
+	assert_eq(npcs.size(), data().npcs.size())
+	var mo: CharacterData = npcs["elder_mo"]
+	assert_eq(mo.realm_index, data().realm_index_of("foundation_establishment"))
+	assert_eq(mo.age_years(), 182)
+	assert_eq(mo.attribute("comprehension"), 14)
+	assert_eq(mo.attribute("fortune"), 10)
+
+
+func test_npcs_cultivate_and_break_through() -> void:
+	var npcs := _npcs()
+	var ling: CharacterData = npcs["xiao_ling"]
+	Npcs.simulate(npcs, data(), Calendar.DAYS_PER_YEAR * 2, seeded_rng())
+	assert_gt(ling.realm_index, 0, "a fire-root prodigy should reach Qi Refining within two years")
+	assert_eq(ling.age_years(), 18)
+
+
+func test_npcs_die_of_old_age() -> void:
+	var npcs := _npcs()
+	var mo: CharacterData = npcs["elder_mo"]
+	mo.realm_index = 0
+	var events := Npcs.simulate(npcs, data(), Calendar.DAYS_PER_MONTH, seeded_rng())
+	assert_false(mo.alive)
+	var texts: Array = events.map(func(e): return e["text"])
+	assert_true(texts.any(func(t): return "Elder Mo" in t))
+	assert_false(Npcs.in_region(npcs, data(), "qingshi_village").has(mo))
+
+
+func test_npc_save_round_trip() -> void:
+	var npcs := _npcs()
+	var restored := Npcs.from_dict(JSON.parse_string(JSON.stringify(Npcs.to_dict(npcs))))
+	assert_eq(restored["swordsman_yun"].stage, npcs["swordsman_yun"].stage)
+	assert_eq(restored["herbalist_lan"].spiritual_roots, npcs["herbalist_lan"].spiritual_roots)
+
+
+func test_entry_node_depends_on_conditions() -> void:
+	var npcs := _npcs()
+	var c := new_character()
+	var mo: Dictionary = data().dialogues["elder_mo"]
+	assert_eq(Dialogue.entry_node(mo, _ctx("elder_mo", c, npcs)), "greet")
+	c.alignment = -500
+	assert_eq(Dialogue.entry_node(mo, _ctx("elder_mo", c, npcs)), "demonic")
+	c.alignment = 0
+	c.realm_index = data().realm_index_of("core_formation")
+	assert_eq(Dialogue.entry_node(mo, _ctx("elder_mo", c, npcs)), "respect")
+
+
+func test_view_hides_and_locks_choices() -> void:
+	var npcs := _npcs()
+	var c := new_character()
+	c.inventory = {}
+	var view := Dialogue.view(data().dialogues["elder_mo"], "greet", _ctx("elder_mo", c, npcs))
+	assert_eq(view["id"], "elder_mo:greet")
+	var labels: Array = view["choices"].map(func(ch): return ch["label"])
+	assert_false(labels.any(func(l): return "bottleneck" in l), "realm-gated choice is hidden")
+	var gift: Dictionary = view["choices"].filter(func(ch): return "spirit stones" in ch["label"])[0]
+	assert_true(gift["disabled"], "unaffordable gift is shown locked")
+	assert_true("Elder Mo" in view["speaker"])
+
+
+func test_choose_applies_effects_and_favor() -> void:
+	var npcs := _npcs()
+	var c := new_character()
+	c.inventory = {"spirit_stone": 50}
+	var mo: Dictionary = data().dialogues["elder_mo"]
+	var idx := -1
+	var raw: Array = mo["nodes"]["greet"]["choices"]
+	for i in raw.size():
+		if raw[i].get("favor", 0) == 10:
+			idx = i
+	var result := Dialogue.choose(mo, "greet", idx, _ctx("elder_mo", c, npcs))
+	assert_true(result["ok"])
+	assert_eq(result["favor"], 10)
+	assert_eq(result["next"], "gift")
+	assert_eq(c.item_count("spirit_stone"), 40)
+	assert_eq(Dialogue.choose(mo, "greet", -1, _ctx("elder_mo", c, npcs))["next"], "")
+
+
+func test_text_placeholders() -> void:
+	var npcs := _npcs()
+	var c := new_character()
+	var view := Dialogue.view(data().dialogues["xiao_ling"], "greet", _ctx("xiao_ling", c, npcs))
+	assert_true(c.name in view["text"])
+
+
+func test_gathering_and_selling() -> void:
+	var c := new_character()
+	var table := [{"item": "dew_grass", "weight": 1, "min": 2, "max": 2}]
+	var found := Exploration.gather(c, table, seeded_rng())
+	assert_gt(found.get("dew_grass", 0), 5)
+	assert_true(Exploration.gather(c, [{"item": "", "weight": 1}], seeded_rng()).is_empty())
+	c.inventory = {"cold_iron": 2}
+	assert_true(Items.sell(c, data(), "cold_iron", 2)["ok"])
+	assert_eq(c.item_count("spirit_stone"), 2 * Items.sell_price(data(), "cold_iron"))
+	assert_false(Items.sell(c, data(), "cold_iron")["ok"])
+
+
+func test_doctor_only_finds_the_injured() -> void:
+	var c := new_character()
+	var ids: Array = Exploration.eligible_encounters(c, data(), ["village"], {}).map(func(e): return e["encounter"]["id"])
+	assert_false(ids.has("wild_doctor"))

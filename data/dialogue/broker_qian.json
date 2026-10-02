@@ -1,0 +1,22 @@
+{
+  "id": "broker_qian",
+  "entries": [{"node": "greet"}],
+  "nodes": {
+    "greet": {"text": "Information is the only treasure that grows when shared, and the price grows with it. What do you want to know?",
+      "choices": [
+        {"label": "Buy a rumour about Azure Peak. (20 stones)", "next": "peak", "effects": {"items": {"spirit_stone": -20}}, "show_locked": true},
+        {"label": "Buy a map to a hidden spirit vein. (120 stones)", "next": "vein", "if": {"not_flag": "qian_vein"}, "effects": {"items": {"spirit_stone": -120}}, "show_locked": true},
+        {"label": "Sell him the Ancient Jade Slip. (+600 stones)", "next": "slip", "effects": {"items": {"ancient_jade_slip": -1, "spirit_stone": 600}}, "favor": 10, "show_locked": true},
+        {"label": "Ask about the Blood Lotus Sect.", "next": "blood_lotus", "if": {"max_alignment": -100}},
+        {"label": "Not today.", "next": "end"}
+      ]},
+    "peak": {"text": "A cave on the peak holds a dead cultivator's legacy. A stone guardian watches it. Do not go before Foundation Establishment.",
+      "choices": [{"label": "...", "next": "greet"}]},
+    "vein": {"text": "Two days north-west. Absorb it quickly; such veins scatter within a season.",
+      "choices": [{"label": "Seek out the vein. (20 days)", "next": "end", "days": 20, "effects": {"qi": 3000, "set_flag": "qian_vein"}}]},
+    "slip": {"text": "A pleasure doing business. Don't tell anyone where you sold it.",
+      "choices": [{"label": "...", "next": "greet"}]},
+    "blood_lotus": {"text": "You've the right look for them. They recruit anyone at the Sect Envoy Hall, cultivation or not. Strength is all they respect.",
+      "choices": [{"label": "...", "next": "greet"}]}
+  }
+}

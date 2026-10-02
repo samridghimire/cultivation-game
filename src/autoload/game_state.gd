@@ -13,6 +13,13 @@ var player: CharacterData
 var world_flags: Dictionary = {}
 ## Id of the region (data/regions.json) the player is in.
 var current_region := ""
+## Live NPCs: id -> CharacterData (definitions in data/npcs.json).
+var npcs: Dictionary = {}
+## How much each NPC likes the player: id -> int.
+var npc_favor: Dictionary = {}
+## The conversation in progress ("" = none) and its current node.
+var dialogue_npc := ""
+var dialogue_node := ""
 var rng := RandomNumberGenerator.new()
 
 
@@ -31,6 +38,10 @@ func start_session(character: CharacterData) -> void:
 	player = character
 	world_flags = {}
 	current_region = data.start_region
+	npcs = {}
+	npc_favor = {}
+	dialogue_npc = ""
+	Npcs.ensure_all(npcs, data, rng)
 	GameClock.reset()
 	EventBus.session_started.emit()
 	EventBus.post("%s sets out on the path of cultivation." % player.name, "progress")
@@ -40,6 +51,9 @@ func start_session(character: CharacterData) -> void:
 func end_session() -> void:
 	player = null
 	world_flags = {}
+	npcs = {}
+	npc_favor = {}
+	dialogue_npc = ""
 
 
 # --- Actions -----------------------------------------------------------------
@@ -187,6 +201,98 @@ func explore(tags: Array = []) -> void:
 	fight(result["enemy"])
 
 
+## Gather materials from a place's gathering table (see Exploration.gather).
+func gather(table: Array, days: int) -> void:
+	if not _can_act():
+		return
+	var found := Exploration.gather(player, table, rng)
+	var notes: PackedStringArray = []
+	for item_id in found:
+		player.add_item(item_id, found[item_id])
+		notes.append("+%d %s" % [found[item_id], data.items[item_id]["name"]])
+	if notes.is_empty():
+		EventBus.post("You search for %s but find nothing worth taking." % Calendar.format_duration(days))
+	else:
+		EventBus.post("You gather for %s. (%s)" % [Calendar.format_duration(days), ", ".join(notes)], "progress")
+	_pass_time(days)
+
+
+func sell_item(item_id: String, quantity: int = 1) -> void:
+	if not _can_act():
+		return
+	var result := Items.sell(player, data, item_id, quantity)
+	if result["ok"]:
+		EventBus.post("You sell %d %s for %d spirit stones." % [quantity, data.items[item_id]["name"], result["stones"]])
+	else:
+		EventBus.post(result["reason"], "warning")
+	EventBus.player_changed.emit()
+
+
+# --- Dialogue ----------------------------------------------------------------
+# A dialogue window (or the NPC's own menu) calls start_dialogue, renders
+# dialogue_view() and calls choose_dialogue until dialogue_ended fires.
+
+func start_dialogue(npc_id: String) -> void:
+	if not _can_act():
+		return
+	var dialogue := _npc_dialogue(npc_id)
+	var npc: CharacterData = npcs.get(npc_id)
+	if dialogue.is_empty() or npc == null or not npc.alive:
+		return
+	var node := Dialogue.entry_node(dialogue, _dialogue_ctx(npc_id))
+	if node == "":
+		return
+	dialogue_npc = npc_id
+	dialogue_node = node
+	EventBus.dialogue_requested.emit(npc_id)
+
+
+## The current node: {id, speaker, text, choices: [{index, label, disabled,
+## reason}]}, or {} when no conversation is in progress.
+func dialogue_view() -> Dictionary:
+	if dialogue_npc == "":
+		return {}
+	return Dialogue.view(_npc_dialogue(dialogue_npc), dialogue_node, _dialogue_ctx(dialogue_npc))
+
+
+## Picks choice `index` (from dialogue_view) of the current node. Emits
+## dialogue_ended once effects and time are applied if the conversation is over.
+func choose_dialogue(index: int) -> void:
+	if dialogue_npc == "" or not _can_act():
+		return
+	var npc_id := dialogue_npc
+	var result := Dialogue.choose(_npc_dialogue(npc_id), dialogue_node, index, _dialogue_ctx(npc_id))
+	if not result["ok"]:
+		EventBus.post(result["reason"], "warning")
+		return
+	if result["favor"] != 0:
+		npc_favor[npc_id] = int(npc_favor.get(npc_id, 0)) + result["favor"]
+	if not result["notes"].is_empty():
+		EventBus.post("(%s)" % ", ".join(result["notes"]), "karma")
+	dialogue_node = result["next"]
+	_pass_time(result["days"])
+	if dialogue_node == "" or not _can_act():
+		end_dialogue()
+	else:
+		EventBus.player_changed.emit()
+
+
+func end_dialogue() -> void:
+	var npc_id := dialogue_npc
+	dialogue_npc = ""
+	dialogue_node = ""
+	EventBus.dialogue_ended.emit(npc_id)
+	EventBus.player_changed.emit()
+
+
+func _npc_dialogue(npc_id: String) -> Dictionary:
+	return data.dialogues.get(data.npcs.get(npc_id, {}).get("dialogue", ""), {})
+
+
+func _dialogue_ctx(npc_id: String) -> Dictionary:
+	return {"player": player, "npc": npcs.get(npc_id), "data": data, "flags": world_flags, "favor": int(npc_favor.get(npc_id, 0))}
+
+
 func learn_technique(tech_id: String) -> void:
 	if not _can_act():
 		return
@@ -289,6 +395,8 @@ func to_save_dict() -> Dictionary:
 		"player": player.to_dict(),
 		"world_flags": world_flags.duplicate(),
 		"region": current_region,
+		"npcs": Npcs.to_dict(npcs),
+		"npc_favor": npc_favor.duplicate(),
 		"clock": GameClock.to_dict(),
 		# 64-bit ints do not survive JSON floats, so store them as strings.
 		"rng_seed": str(rng.seed),
@@ -300,6 +408,13 @@ func load_save_dict(d: Dictionary) -> void:
 	player = CharacterData.from_dict(d.get("player", {}))
 	world_flags = d.get("world_flags", {})
 	current_region = d.get("region", data.start_region)
+	npcs = Npcs.from_dict(d.get("npcs", {}))
+	Npcs.ensure_all(npcs, data, rng)
+	npc_favor = {}
+	for npc_id in d.get("npc_favor", {}):
+		npc_favor[npc_id] = int(d["npc_favor"][npc_id])
+	dialogue_npc = ""
+	dialogue_node = ""
 	if not data.regions.has(current_region):
 		current_region = data.start_region
 	GameClock.from_dict(d.get("clock", {}))
@@ -326,6 +441,8 @@ func _on_days_advanced(days: int) -> void:
 	player.age_days += days
 	for injury_id in Injuries.pass_days(player, days):
 		EventBus.post("Your %s has healed." % Injuries.injury_name(data, injury_id), "progress")
+	for event in Npcs.simulate(npcs, data, days, rng):
+		EventBus.post(event["text"], event["category"])
 	if player.age_years() >= Cultivation.lifespan_years(player, data):
 		_kill("Your lifespan is exhausted. You die of old age at %d." % player.age_years())
 

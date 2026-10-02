@@ -21,7 +21,6 @@ Roles: `systems` (core rules + tests), `content` (data/*.json + small hooks), `w
 | G-001 | systems | done | Injuries (data/injuries.json, Injuries): failed breakthroughs and non-lethal defeats can injure; injuries slow cultivation and weaken combat until healed by time or pills (heal_injury effect). |
 | G-001b | world-ui | done | Show injuries (Injuries.describe) on the character sheet and an injured icon/indicator in the HUD. |
 | G-002 | systems | todo | Alchemy crafting: recipes in data/recipes.json (herbs → pills), success chance from Alchemist rank + comprehension, failure wastes herbs. Replaces "work as Alchemist" XP-only loop. Herb ids (tags ["herb"]): spirit_herb, dew_grass, qi_condensing_grass, purple_cloud_mushroom, flame_lotus, ice_soul_flower, blood_ginseng, thousand_year_lingzhi; ores (tags ["ore"]): iron_essence, cold_iron, azure_crystal, star_silver (from W-002 branch). |
-| G-003 | content | in-progress (local 2e) | Herbs and materials: add ~10 spirit herbs/ores to items.json with prices and a gathering spot interactable (forest). |
 | G-004 | systems | todo | Blacksmithing: forge artifacts (weapons/armor) from ores; artifacts have grade and stat bonuses. |
 | G-005 | systems | todo | Talismans: craft single-use talismans with combat or utility effects. |
 | G-006 | systems | todo | Arrays: place arrays that boost qi density at a location (e.g. Qi Gathering Array at your cave abode). |
@@ -35,20 +34,18 @@ Roles: `systems` (core rules + tests), `content` (data/*.json + small hooks), `w
 ## P2: World
 | id | role | status | task |
 |---|---|---|---|
-| W-001 | world-ui | in-progress | Region map with travel between locations; travel takes days. (Local session: data/regions.json + Exploration.) |
-| W-002 | systems | in-progress (local 2e) | NPC model: NPCs reuse CharacterData; they age, cultivate off-screen each month, and can die. |
-| W-003 | world-ui | in-progress (local 2e; window UI: 55) | Dialogue system driven by data/dialogue/*.json with conditions (realm, alignment, flags) and effects. |
-| W-004 | content | in-progress | Random encounters/events table using Effects. (Local session: data/encounters.json.) Follow-up: add more encounter content once merged. |
+| W-003b | world-ui | todo | Dialogue window UI: open on EventBus.dialogue_requested, render GameState.dialogue_view() ({id, speaker, text, choices[{index,label,disabled,reason}]}), call GameState.choose_dialogue(index), close on dialogue_ended. Follow src/ui/combat_report.gd; register in hud.gd. NPCs fall back to the choice menu until it exists. |
+| W-004b | content | todo | More encounter content in data/encounters.json (currently ~20), e.g. realm-scaled fortuitous encounters, sect-specific events, NPC cameos (set world flags NPC dialogue can check). |
 
-## Owned by local sessions (do not pick up from the cloud)
-As of 2026-10-02, local interactive sessions were building these. Cloud agents should not start overlapping work:
-- Combat + techniques: `combat.gd`, `techniques.gd`, `data/enemies.json`, `data/techniques.json`
-- World/exploration: `src/world/**`, `exploration.gd`, `data/regions.json`, `data/encounters.json`
-- UI: hud, character sheet, inventory screen, techniques screen, combat report
-
-Once these land on main, cloud agents may add follow-up tasks for them above (bugs, content, balance).
+## Local sessions
+The local sessions that built combat/techniques, world/exploration/NPCs/dialogue and the UI screens have finished (2026-10-02); their work is on main and these areas are open to anyone. Add follow-up tasks above.
 
 ## Done
 | id | task |
 |---|---|
+| G-003 | Herbs/ores (12 items, tags herb/ore), gather place type + gathering spots, Herb & Ore Stall that buys back at half price. |
+| W-001 | Regions and travel: 4 data-driven regions (data/regions.json), world scene built per region, routes with days and realm gates (Exploration). |
+| W-004 | Random encounters (data/encounters.json): tags, realm gates, Fortune-weighted, deadly lethal foes are evaded, combat via GameState.fight. |
+| W-002 | NPC model: 5 named NPCs (data/npcs.json) age, cultivate monthly, break through and die; saved in GameState.npcs with per-NPC favor. |
+| W-003 | Dialogue rules + data (src/core/systems/dialogue.gd, data/dialogue/*.json): entry conditions, hidden/locked choices, effects, favor, time. Inline choice-menu fallback. |
 | F-000 | Project foundation: data-driven core systems, autoloads, village slice, save/load, tests, tooling. |

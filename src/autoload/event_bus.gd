@@ -20,6 +20,10 @@ signal region_changed(region_id: String)
 ## A fight ended (GameState.fight). `log` is the full blow-by-blow.
 signal combat_finished(enemy_name: String, victory: bool, log: PackedStringArray)
 
+## A conversation with an NPC started; render GameState.dialogue_view().
+signal dialogue_requested(npc_id: String)
+## The conversation ended (after its effects and time were applied).
+signal dialogue_ended(npc_id: String)
 
 func post(text: String, category: String = "info") -> void:
 	message_posted.emit(text, category)

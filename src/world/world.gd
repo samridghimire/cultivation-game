@@ -4,7 +4,6 @@ extends Node2D
 ## Placeholder art is drawn in _draw().
 ## Running this scene directly (F6) starts a debug session automatically.
 
-const MAIN_MENU := "res://src/ui/main_menu.tscn"
 ## Script for each place 'type' in data/regions.json.
 const PLACE_SCRIPTS := {
 	"meditation": preload("res://src/world/interactables/meditation_spot.gd"),
@@ -14,9 +13,11 @@ const PLACE_SCRIPTS := {
 	"deed_giver": preload("res://src/world/interactables/deed_giver.gd"),
 	"explore": preload("res://src/world/interactables/explore_site.gd"),
 	"travel": preload("res://src/world/interactables/travel_point.gd"),
+	"gather": preload("res://src/world/interactables/gather_site.gd"),
 }
 ## Place keys that are layout, not script properties.
 const LAYOUT_KEYS := ["type", "pos"]
+const NPC_SCRIPT := preload("res://src/world/interactables/npc.gd")
 
 var map_size := Vector2(1600, 1000)
 var _region: Dictionary = {}
@@ -33,6 +34,7 @@ func _ready() -> void:
 	map_size = _vec(map.get("size", [map_size.x, map_size.y]))
 	player.position = _vec(_region.get("spawn", [map_size.x / 2.0, map_size.y / 2.0]))
 	_build_places()
+	_build_npcs()
 	_build_bounds()
 	_limit_camera()
 	EventBus.ui_modal_changed.connect(func(is_open: bool): player.input_enabled = not is_open)
@@ -46,11 +48,6 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event.is_action_pressed("quick_load"):
 		if SaveManager.load_game():
 			get_tree().reload_current_scene()
-	elif event.is_action_pressed("pause_menu"):
-		if GameState.player.alive:
-			SaveManager.save_game()
-		GameState.end_session()
-		get_tree().change_scene_to_file(MAIN_MENU)
 
 
 func _build_bounds() -> void:
@@ -80,6 +77,19 @@ func _build_places() -> void:
 				continue
 			node.set(key, _convert(place[key], node.get(key)))
 		# Add before the player so the player draws on top.
+		add_child(node)
+		move_child(node, player.get_index())
+
+
+func _build_npcs() -> void:
+	for c in Npcs.in_region(GameState.npcs, GameState.data, GameState.current_region):
+		var def: Dictionary = GameState.data.npcs[c.id]
+		var node: Interactable = NPC_SCRIPT.new()
+		node.npc_id = c.id
+		node.display_name = "%s (%s)" % [c.name, def["title"]] if def.has("title") else c.name
+		node.position = _vec(def.get("pos", [0, 0]))
+		node.size = _vec(def.get("size", [30, 30]))
+		node.color = Color(def.get("color", "e6bf99"))
 		add_child(node)
 		move_child(node, player.get_index())
 

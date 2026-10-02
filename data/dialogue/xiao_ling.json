@@ -1,0 +1,31 @@
+{
+  "id": "xiao_ling",
+  "entries": [
+    {"node": "rival", "if": {"min_realm": "qi_refining", "max_favor": -10}},
+    {"node": "greet"}
+  ],
+  "nodes": {
+    "greet": {"text": "{player}! Did you hear? Elder Mo said I have a fire root. One day I'll fly on a sword. ...Will you come with me?",
+      "choices": [
+        {"label": "Let's cultivate together.", "next": "together", "days": 30, "favor": 10, "effects": {"qi": 200}},
+        {"label": "Share a Spirit Herb with her.", "next": "herb", "effects": {"items": {"spirit_herb": -1}}, "favor": 15, "show_locked": true},
+        {"label": "Ask how her cultivation is going.", "next": "progress"},
+        {"label": "Mock her dreams.", "next": "mocked", "favor": -20, "effects": {"alignment": -10}},
+        {"label": "Later, Ling.", "next": "end"}
+      ]},
+    "together": {"text": "We sat by the Spirit Spring for a month. She chattered the whole time, but your qi feels steadier.",
+      "speaker": "",
+      "choices": [{"label": "Back to the village.", "next": "greet"}]},
+    "herb": {"text": "For me? ...Thank you. I won't forget this.",
+      "choices": [{"label": "...", "next": "greet"}]},
+    "progress": {"text": "I've reached {npc_realm}! What about you? You're at {player_realm}, right?",
+      "choices": [{"label": "...", "next": "greet"}]},
+    "mocked": {"text": "...Fine. We'll see who's laughing in a hundred years.",
+      "choices": [{"label": "Leave.", "next": "end"}]},
+    "rival": {"text": "Oh. It's you. I'm at {npc_realm} now. Don't get in my way.",
+      "choices": [
+        {"label": "Apologize for what you said.", "next": "end", "favor": 15},
+        {"label": "Leave.", "next": "end"}
+      ]}
+  }
+}

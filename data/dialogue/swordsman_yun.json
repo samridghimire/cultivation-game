@@ -1,0 +1,27 @@
+{
+  "id": "swordsman_yun",
+  "entries": [
+    {"node": "weak", "if": {"max_realm": "qi_refining"}},
+    {"node": "greet"}
+  ],
+  "nodes": {
+    "weak": {"text": "Turn back, junior. The beasts of this mountain eat Qi Refining cultivators for breakfast.",
+      "choices": [
+        {"label": "I can take care of myself.", "next": "end", "favor": -5},
+        {"label": "Thank you for the warning.", "next": "end", "favor": 5}
+      ]},
+    "greet": {"text": "Foundation Establishment. Good. Then you may stand on this mountain. I am Yun Feng; I hunt beasts and seek the sword's intent.",
+      "choices": [
+        {"label": "Spar with me.", "next": "spar", "days": 3, "favor": 5, "effects": {"qi": 2000}},
+        {"label": "Teach me the Metal Edge Sword Art.", "next": "teach", "if": {"min_favor": 30, "not_knows_technique": "metal_edge_sword"}, "show_locked": true},
+        {"label": "What guards the Ancient Cave?", "next": "cave", "if": {"not_flag": "cave_guardian_slain"}},
+        {"label": "Farewell.", "next": "end"}
+      ]},
+    "spar": {"text": "Your footwork is sloppy, but your qi is solid. Again, another day.",
+      "choices": [{"label": "...", "next": "greet"}]},
+    "teach": {"text": "Your intent is sincere. Watch closely; I will show it only once.",
+      "choices": [{"label": "Train with him. (1 month)", "next": "end", "days": 30, "effects": {"learn_technique": "metal_edge_sword"}}]},
+    "cave": {"text": "A puppet guardian from an ancient formation. It hits like a landslide. Late Foundation Establishment at least, and bring healing pills.",
+      "choices": [{"label": "...", "next": "greet"}]}
+  }
+}

@@ -7,6 +7,8 @@ extends RefCounted
 ## How strongly Fortune shifts the odds of good vs bad encounters (per point
 ## above or below the average of 10).
 const FORTUNE_WEIGHT_PER_POINT := 0.05
+## Draws per gathering trip before the Fortune bonus.
+const GATHER_ROLLS := 3
 
 
 static func region_name(data: GameData, region_id: String) -> String:
@@ -54,6 +56,8 @@ static func eligible_encounters(c: CharacterData, data: GameData, tags: Array, f
 		var blocker: String = e.get("blocked_by_flag", "")
 		if blocker != "" and flags.get(blocker, false):
 			continue
+		if e.get("only_if_applicable", false) and Effects.check(c, data, e.get("effects", {})) != "":
+			continue
 		var weight := float(e.get("weight", 1))
 		match e.get("kind", "neutral"):
 			"fortune":
@@ -91,6 +95,31 @@ static func resolve(c: CharacterData, data: GameData, encounter: Dictionary, fla
 	if not effects.is_empty():
 		notes = Effects.apply(c, data, effects, flags)
 	return {"ok": true, "reason": "", "notes": notes, "days": int(encounter.get("days", 0)), "enemy": encounter.get("enemy", "")}
+
+
+## Draws from a gathering table [{item, weight, min, max}] ("" item = nothing).
+## Rolls GATHER_ROLLS times, plus one more per 5 Fortune above 10.
+## Returns {item_id: count}.
+@warning_ignore("integer_division")
+static func gather(c: CharacterData, table: Array, rng: RandomNumberGenerator) -> Dictionary:
+	var found := {}
+	var total := 0.0
+	for entry: Dictionary in table:
+		total += float(entry.get("weight", 1))
+	if total <= 0.0:
+		return found
+	var rolls := GATHER_ROLLS + maxi(0, (c.attribute("fortune") - 10) / 5)
+	for i in rolls:
+		var roll := rng.randf() * total
+		for entry: Dictionary in table:
+			roll -= float(entry.get("weight", 1))
+			if roll < 0.0:
+				var item_id: String = entry.get("item", "")
+				if item_id != "":
+					var count := rng.randi_range(int(entry.get("min", 1)), int(entry.get("max", 1)))
+					found[item_id] = int(found.get(item_id, 0)) + count
+				break
+	return found
 
 
 ## True if the player should sense `enemy_id` coming and avoid the fight:

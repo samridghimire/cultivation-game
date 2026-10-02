@@ -1,0 +1,23 @@
+{
+  "id": "herbalist_lan",
+  "entries": [{"node": "greet"}],
+  "nodes": {
+    "greet": {"text": "Careful where you step, those are Dew Grass shoots. I'm Lan. I've gathered in this forest for twenty years.",
+      "choices": [
+        {"label": "Where do the best herbs grow?", "next": "herbs"},
+        {"label": "Sell her 5 Dew Grass. (+15 stones)", "next": "greet", "effects": {"items": {"dew_grass": -5, "spirit_stone": 15}}, "favor": 2, "show_locked": true},
+        {"label": "Help her gather for a week.", "next": "help", "days": 7, "favor": 8, "effects": {"items": {"spirit_herb": 2, "qi_condensing_grass": 1}}},
+        {"label": "Ask about the mist wolves.", "next": "wolves"},
+        {"label": "Ask her to share her secret valley.", "next": "secret", "if": {"min_favor": 25, "not_flag": "lan_secret"}, "show_locked": true},
+        {"label": "Goodbye.", "next": "end"}
+      ]},
+    "herbs": {"text": "The Herb Patch by the trail is safe enough. The valley to the south hides older roots. Up on Azure Peak, frost flowers grow on the ledges, if the beasts let you live.",
+      "choices": [{"label": "Thank you.", "next": "greet"}]},
+    "help": {"text": "You've a good eye. Here, take a share.",
+      "choices": [{"label": "...", "next": "greet"}]},
+    "wolves": {"text": "They hunt in the mist. A mortal won't see them coming, so don't wander the deep woods until you can sense qi.",
+      "choices": [{"label": "...", "next": "greet"}]},
+    "secret": {"text": "Hush. Follow me. Few have seen this place. The ginseng here is older than the village.",
+      "choices": [{"label": "Dig carefully. (5 days)", "next": "end", "days": 5, "effects": {"items": {"blood_ginseng": 1, "purple_cloud_mushroom": 2}, "set_flag": "lan_secret"}}]}
+  }
+}

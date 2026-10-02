@@ -23,6 +23,8 @@ var deeds: Dictionary = {}  # id -> Dictionary
 var regions: Dictionary = {}  # id -> Dictionary
 var start_region := ""
 var encounters: Dictionary = {}  # id -> Dictionary
+var npcs: Dictionary = {}  # id -> Dictionary (definitions; live NPCs are in GameState.npcs)
+var dialogues: Dictionary = {}  # id -> Dictionary, one per data/dialogue/*.json
 var techniques: Dictionary = {}  # id -> TechniqueDef
 var technique_affinity_bonus := 0.5
 var technique_mismatch_penalty := 0.5
@@ -102,6 +104,15 @@ func _load(dir: String) -> void:
 	for encounter in _read(dir, "encounters.json").get("encounters", []):
 		encounters[encounter["id"]] = encounter
 
+	for npc in _read(dir, "npcs.json").get("npcs", []):
+		npcs[npc["id"]] = npc
+
+	var dialogue_dir := dir.path_join("dialogue")
+	for file_name in DirAccess.get_files_at(dialogue_dir):
+		if file_name.ends_with(".json"):
+			var dialogue := _read(dialogue_dir, file_name)
+			dialogues[dialogue.get("id", file_name.get_basename())] = dialogue
+
 	var tech := _read(dir, "techniques.json")
 	technique_affinity_bonus = float(tech.get("element_affinity_bonus", technique_affinity_bonus))
 	technique_mismatch_penalty = float(tech.get("element_mismatch_penalty", technique_mismatch_penalty))
@@ -170,7 +181,7 @@ func _validate() -> void:
 func _validate_world() -> void:
 	if not regions.has(start_region):
 		load_errors.append("start_region '%s' is not a region" % start_region)
-	var place_types := ["meditation", "merchant", "sect_hall", "workshop", "deed_giver", "explore", "travel"]
+	var place_types := ["meditation", "merchant", "sect_hall", "workshop", "deed_giver", "explore", "travel", "gather"]
 	for region: Dictionary in regions.values():
 		for route: Dictionary in region.get("routes", []):
 			if not regions.has(route.get("to", "")):
@@ -178,6 +189,9 @@ func _validate_world() -> void:
 			if route.has("min_realm") and realm_index_of(route["min_realm"]) < 0:
 				load_errors.append("Region '%s' route has unknown min_realm '%s'" % [region["id"], route["min_realm"]])
 		for place: Dictionary in region.get("places", []):
+			for entry: Dictionary in place.get("gather_table", []):
+				if entry.get("item", "") != "" and not items.has(entry["item"]):
+					load_errors.append("Region '%s' gathers unknown item '%s'" % [region["id"], entry["item"]])
 			if not place_types.has(place.get("type", "")):
 				load_errors.append("Region '%s' has a place of unknown type '%s'" % [region["id"], place.get("type", "")])
 	for e: Dictionary in encounters.values():
@@ -189,6 +203,15 @@ func _validate_world() -> void:
 				load_errors.append("Encounter '%s' references unknown item '%s'" % [e["id"], item_id])
 		if e.has("enemy") and not enemies.has(e["enemy"]):
 			load_errors.append("Encounter '%s' references unknown enemy '%s'" % [e["id"], e["enemy"]])
+	for npc: Dictionary in npcs.values():
+		if not regions.has(npc.get("region", "")):
+			load_errors.append("NPC '%s' is in unknown region '%s'" % [npc["id"], npc.get("region", "")])
+		if realm_index_of(npc.get("realm", "mortal")) < 0:
+			load_errors.append("NPC '%s' has unknown realm '%s'" % [npc["id"], npc.get("realm", "")])
+		if npc.has("dialogue") and not dialogues.has(npc["dialogue"]):
+			load_errors.append("NPC '%s' has unknown dialogue '%s'" % [npc["id"], npc["dialogue"]])
+	for dialogue: Dictionary in dialogues.values():
+		load_errors.append_array(Dialogue.validate(dialogue, self))
 
 
 func _validate_combat() -> void:
