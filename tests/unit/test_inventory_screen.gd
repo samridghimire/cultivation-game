@@ -26,3 +26,9 @@ func test_describe_effects_empty() -> void:
 func test_describe_effects_names_taught_technique() -> void:
 	var lines := InventoryScreen.describe_effects({"learn_technique": "basic_breathing"}, data())
 	assert_eq(lines, PackedStringArray(["Teaches the technique: Basic Breathing Method"]))
+
+
+func test_describe_effects_healing() -> void:
+	assert_eq(InventoryScreen.describe_effects({"heal_injury": "all"}, data()), PackedStringArray(["Heals every injury"]))
+	var name := Injuries.injury_name(data(), "broken_bones")
+	assert_eq(InventoryScreen.describe_effects({"heal_injury": "broken_bones"}, data()), PackedStringArray(["Heals: %s" % name]))

@@ -19,7 +19,7 @@ Roles: `systems` (core rules + tests), `content` (data/*.json + small hooks), `w
 | id | role | status | task |
 |---|---|---|---|
 | G-001 | systems | done | Injuries (data/injuries.json, Injuries): failed breakthroughs and non-lethal defeats can injure; injuries slow cultivation and weaken combat until healed by time or pills (heal_injury effect). |
-| G-001b | world-ui | todo | Show injuries (Injuries.describe) on the character sheet and an injured icon/indicator in the HUD. |
+| G-001b | world-ui | done | Show injuries (Injuries.describe) on the character sheet and an injured icon/indicator in the HUD. |
 | G-002 | systems | todo | Alchemy crafting: recipes in data/recipes.json (herbs → pills), success chance from Alchemist rank + comprehension, failure wastes herbs. Replaces "work as Alchemist" XP-only loop. |
 | G-003 | content | in-progress (local 2e) | Herbs and materials: add ~10 spirit herbs/ores to items.json with prices and a gathering spot interactable (forest). |
 | G-004 | systems | todo | Blacksmithing: forge artifacts (weapons/armor) from ores; artifacts have grade and stat bonuses. |

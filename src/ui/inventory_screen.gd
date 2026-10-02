@@ -95,6 +95,9 @@ static func describe_effects(effects: Dictionary, data: GameData) -> PackedStrin
 	if effects.has("learn_technique"):
 		var tech: TechniqueDef = data.techniques.get(String(effects["learn_technique"]))
 		lines.append("Teaches the technique: %s" % (tech.name if tech != null else effects["learn_technique"]))
+	if effects.has("heal_injury"):
+		var injury_id := String(effects["heal_injury"])
+		lines.append("Heals every injury" if injury_id == "all" else "Heals: %s" % Injuries.injury_name(data, injury_id))
 	return lines
 
 
@@ -144,6 +147,12 @@ func _show_details() -> void:
 		lines.append("Market price: %d spirit stones" % int(item["price"]))
 	_effects.text = "\n".join(lines)
 	_use_button.visible = bool(item.get("usable", false))
+	# Show why an item can't be used now (e.g. nothing to heal) instead of a failed use.
+	var reason := Effects.check(GameState.player, data, item.get("effects", {})) if _use_button.visible else ""
+	_use_button.disabled = reason != ""
+	_use_button.tooltip_text = reason
+	if reason != "":
+		_effects.text += "\n" + reason
 
 
 func _use_selected() -> void:

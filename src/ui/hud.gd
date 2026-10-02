@@ -7,6 +7,7 @@ const MAX_LOG_LINES := 60
 
 var _status: Label
 var _qi_bar: ProgressBar
+var _injuries: Label
 var _log: RichTextLabel
 var _prompt: Label
 var _choice_menu: ChoiceMenu
@@ -109,6 +110,9 @@ func _build_status_panel() -> void:
 	_qi_bar.custom_minimum_size = Vector2(300, 14)
 	_qi_bar.show_percentage = false
 	box.add_child(_qi_bar)
+	_injuries = UIStyle.label("", 14, UIStyle.CATEGORY_COLORS["danger"])
+	_injuries.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	box.add_child(_injuries)
 	box.add_child(UIStyle.label("[E] interact   [C] character   [I] inventory   [K] techniques   [F5] save   [Esc] pause", 12, Color(0.7, 0.7, 0.7)))
 	add_child(panel)
 
@@ -174,6 +178,8 @@ func _refresh() -> void:
 	_status.text += "\n%s   (Qi x%s)" % [Exploration.region_name(data, GameState.current_region), String.num(density, 2)]
 	_qi_bar.max_value = maxf(Cultivation.qi_required(p, data), 1.0)
 	_qi_bar.value = p.qi
+	_injuries.visible = Injuries.has_any(p)
+	_injuries.text = "Injured: " + ", ".join(Injuries.describe(p, data))
 
 
 func _on_message(text: String, category: String) -> void:
