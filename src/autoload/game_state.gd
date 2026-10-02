@@ -183,6 +183,8 @@ func equip_item(item_id: String) -> void:
 		if previous != "":
 			text += " The %s goes back into your pack." % data.items[previous]["name"]
 		EventBus.post(text, "progress")
+		if Equipment.item_drain(data, item_id) > 0:
+			EventBus.post("It thirsts for your life. %d years remain to you." % Cultivation.years_left(player, data), "danger")
 	EventBus.player_changed.emit()
 
 
@@ -325,6 +327,33 @@ func _dialogue_ctx(npc_id: String) -> Dictionary:
 	return {"player": player, "npc": npcs.get(npc_id), "data": data, "flags": world_flags, "favor": int(npc_favor.get(npc_id, 0))}
 
 
+## Spend time courting an NPC (needs some favor first); raises their favor.
+func court(npc_id: String) -> void:
+	if not _can_act():
+		return
+	var result := Family.court(player, npcs.get(npc_id), int(npc_favor.get(npc_id, 0)), data)
+	if not result["ok"]:
+		EventBus.post(result["reason"], "warning")
+		EventBus.player_changed.emit()
+		return
+	npc_favor[npc_id] = int(npc_favor.get(npc_id, 0)) + result["favor"]
+	EventBus.post("You spend days in %s's company. They warm to you. (+%d favor)" % [npcs[npc_id].name, result["favor"]], "progress")
+	_pass_time(result["days"])
+
+
+## Propose marriage to an NPC, offering spousal `rank` (data/family.json).
+func propose(npc_id: String, rank: String) -> void:
+	if not _can_act():
+		return
+	var result := Family.propose(player, npcs.get(npc_id), int(npc_favor.get(npc_id, 0)), rank, data)
+	if not result["ok"]:
+		EventBus.post(result["reason"], "warning")
+		EventBus.player_changed.emit()
+		return
+	EventBus.post("%s accepts your proposal and becomes your %s." % [npcs[npc_id].name, Family.rank_name(data, player.gender, rank).to_lower()], "progress")
+	_pass_time(result["days"])
+
+
 func learn_technique(tech_id: String) -> void:
 	if not _can_act():
 		return
@@ -457,6 +486,13 @@ func fight_enemy(enemy: Dictionary) -> void:
 	if not outcome["notes"].is_empty():
 		EventBus.post("(%s)" % ", ".join(outcome["notes"]), "progress" if result["victory"] else "warning")
 	EventBus.combat_finished.emit(enemy.get("name", "enemy"), result["victory"], result["log"])
+	var drained := Equipment.drain_after_fight(player, data)
+	if drained > 0:
+		EventBus.post("Your weapon drinks %d %s of your life. %d years remain." % [drained, "year" if drained == 1 else "years", Cultivation.years_left(player, data)], "danger")
+		if player.age_years() >= Cultivation.lifespan_years(player, data):
+			_kill("Your weapon drinks the last of your years. You wither and die of old age at %d." % player.age_years())
+			EventBus.player_changed.emit()
+			return
 	if outcome["died"]:
 		_die_violently(outcome["cause"])
 		return
