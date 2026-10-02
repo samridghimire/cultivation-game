@@ -39,7 +39,7 @@ static func _build_stats(power: float, attrs: Dictionary, tech: Callable) -> Dic
 
 
 ## Combat stats of a character: {max_hp, attack, defense, speed, crit}.
-## Injuries scale down max_hp, attack and defense.
+## Injuries scale down max_hp, attack and defense; temporary buffs (Buffs) scale them up.
 static func stats(c: CharacterData, data: GameData) -> Dictionary:
 	var power := realm_power(c.realm_index, c.stage)
 	var s := _build_stats(power, c.attributes, func(key: String) -> float: return Techniques.bonus(c, data, key))
@@ -47,6 +47,10 @@ static func stats(c: CharacterData, data: GameData) -> Dictionary:
 	if hurt < 1.0:
 		for key in ["max_hp", "attack", "defense"]:
 			s[key] = maxi(1, roundi(s[key] * hurt))
+	for key in Buffs.STAT_KEYS:
+		var mult := Buffs.multiplier(c, key)
+		if mult != 1.0:
+			s[key] = maxi(1, roundi(s[key] * mult))
 	return s
 
 

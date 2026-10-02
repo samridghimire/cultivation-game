@@ -1,6 +1,7 @@
 class_name Techniques
 extends RefCounted
-## Learning, practicing and the stat bonuses of techniques.
+## Learning, practicing and the stat bonuses of techniques, and activating
+## secret arts (techniques with an "activation") for a temporary buff.
 ## Known techniques are stored as CharacterData.techniques {id: {"level", "xp"}}.
 
 
@@ -127,3 +128,44 @@ static func describe_bonuses(c: CharacterData, data: GameData, tech_id: String) 
 		else:
 			parts.append("%+d %s" % [roundi(value), key.replace("max_hp", "health")])
 	return ", ".join(parts)
+
+
+## Returns "" if `c` can activate `tech_id` now, otherwise the reason not.
+## Burning the last years of life is refused, as with burn_lifespan items.
+static func can_activate(c: CharacterData, data: GameData, tech_id: String) -> String:
+	var def: TechniqueDef = data.techniques.get(tech_id)
+	if def == null or not knows(c, tech_id):
+		return "You do not know that technique."
+	if def.activation.is_empty():
+		return "The %s cannot be activated." % def.name
+	var cost := int(def.activation.get("lifespan_cost", 0))
+	if cost > 0 and cost >= Cultivation.years_left(c, data):
+		return "Burning %d years of life would kill you." % cost
+	return ""
+
+
+## Activates a secret art: burns its lifespan cost and applies its buff
+## (refreshing it if already active). Returns {ok, reason, years, days}.
+static func activate(c: CharacterData, data: GameData, tech_id: String) -> Dictionary:
+	var reason := can_activate(c, data, tech_id)
+	if reason != "":
+		return {"ok": false, "reason": reason, "years": 0, "days": 0}
+	var def: TechniqueDef = data.techniques[tech_id]
+	var years := int(def.activation.get("lifespan_cost", 0))
+	var days := int(def.activation.get("days", 1))
+	Cultivation.burn_lifespan(c, years)
+	Buffs.add(c, tech_id, def.name, days, def.activation.get("buff", {}))
+	return {"ok": true, "reason": "", "years": years, "days": days}
+
+
+## Cost and effect shown before activating, e.g. "Burns 10 years of lifespan
+## (54 left): +80% attack, +30% speed for 1 month." "" if not activatable.
+static func describe_activation(c: CharacterData, data: GameData, tech_id: String) -> String:
+	var def: TechniqueDef = data.techniques.get(tech_id)
+	if def == null or def.activation.is_empty():
+		return ""
+	var effect := "%s for %s" % [Buffs.describe_mults(def.activation.get("buff", {})), Calendar.format_duration(int(def.activation.get("days", 1)))]
+	var cost := int(def.activation.get("lifespan_cost", 0))
+	if cost <= 0:
+		return effect + "."
+	return "Burns %d years of lifespan (%d left): %s." % [cost, Cultivation.years_left(c, data), effect]

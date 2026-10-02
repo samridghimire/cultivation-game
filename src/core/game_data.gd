@@ -253,6 +253,17 @@ func _validate_combat() -> void:
 		for key in def.bonuses:
 			if not TechniqueDef.BONUS_KEYS.has(key):
 				load_errors.append("Technique '%s' has unknown bonus '%s'" % [def.id, key])
+		if not def.activation.is_empty():
+			if int(def.activation.get("days", 0)) <= 0:
+				load_errors.append("Technique '%s' activation needs days > 0" % def.id)
+			if int(def.activation.get("lifespan_cost", 0)) < 0:
+				load_errors.append("Technique '%s' activation has a negative lifespan_cost" % def.id)
+			var buff: Dictionary = def.activation.get("buff", {})
+			if buff.is_empty():
+				load_errors.append("Technique '%s' activation has no buff" % def.id)
+			for key in buff:
+				if not Buffs.STAT_KEYS.has(key):
+					load_errors.append("Technique '%s' activation buffs unknown stat '%s'" % [def.id, key])
 	for item: Dictionary in items.values():
 		var tech_id: String = item.get("effects", {}).get("learn_technique", "")
 		if tech_id != "" and not techniques.has(tech_id):
@@ -315,6 +326,12 @@ func _validate_recipes() -> void:
 			load_errors.append("Recipe '%s' outputs unknown item '%s'" % [id, output.get("item", "")])
 		if int(output.get("count", 1)) <= 0:
 			load_errors.append("Recipe '%s' needs output count > 0" % id)
+		if recipe.has("great_output"):
+			var great: Dictionary = recipe["great_output"]
+			if not items.has(great.get("item", "")):
+				load_errors.append("Recipe '%s' great_output is unknown item '%s'" % [id, great.get("item", "")])
+			if int(great.get("count", 1)) <= 0:
+				load_errors.append("Recipe '%s' needs great_output count > 0" % id)
 		if recipe.has("starter") and typeof(recipe["starter"]) != TYPE_BOOL:
 			load_errors.append("Recipe '%s' starter must be true or false" % id)
 	for item: Dictionary in items.values():
