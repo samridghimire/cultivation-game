@@ -193,6 +193,10 @@ func _validate() -> void:
 	_validate_combat()
 	_validate_artifact()
 	_validate_recipes()
+	for item: Dictionary in items.values():
+		for key in ["burn_lifespan", "extend_lifespan"]:
+			if item.get("effects", {}).has(key) and int(item["effects"][key]) <= 0:
+				load_errors.append("Item '%s' needs a positive %s" % [item["id"], key])
 	var counts := {}
 	for g in root_grades:
 		counts[int(g["element_count"])] = true

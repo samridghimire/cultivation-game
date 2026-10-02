@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-02 [LIFE-001] Lifespan as a resource: burned/bonus years, burn_lifespan/extend_lifespan effects, Blood Essence Burning Pill, Longevity Pill (ruins), lifespan-cost warnings.
 - 2026-10-02 [W-004b] 22 new encounters (42 total): moral fortunes for righteous/demonic players, realm-gated foes, NPC cameos.
 - 2026-10-02 [ART-001] Creation Artifact respawn core: lives, anchors (anchor_id places), recharging with spirit stones, lethal defeats respawn the player (CreationArtifact, data/artifact.json).
 - 2026-10-02 [G-002] Alchemy: data/recipes.json, Alchemy system (rank/Comprehension success chance, failure burns herbs), GameState.refine, refine options at the workshop.
