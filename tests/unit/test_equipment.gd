@@ -115,3 +115,43 @@ func test_game_state_equip_and_use_item() -> void:
 	assert_eq(c.item_count("iron_essence"), 0)
 	assert_gt(clock.total_days, days, "forging takes time")
 	gs.end_session()
+
+
+func test_evil_weapon_drains_lifespan_per_fight() -> void:
+	var c := new_character()
+	assert_eq(Equipment.drain_after_fight(c, data()), 0, "ordinary fighters lose nothing")
+	assert_eq(c.lifespan_spent_years, 0)
+	c.add_item("blood_drinker_saber", 1)
+	Equipment.equip(c, data(), "blood_drinker_saber")
+	assert_eq(Equipment.lifespan_drain(c, data()), 1)
+	var before := Cultivation.lifespan_years(c, data())
+	assert_eq(Equipment.drain_after_fight(c, data()), 1)
+	assert_eq(Cultivation.lifespan_years(c, data()), before - 1)
+	assert_true(Equipment.describe_stats(data(), "blood_drinker_saber").contains("drinks 1 year of lifespan per fight"))
+	Equipment.unequip(c, "weapon")
+	assert_eq(Equipment.lifespan_drain(c, data()), 0, "sheathed, it drinks nothing")
+
+
+func test_negative_lifespan_drain_is_invalid() -> void:
+	var d := GameData.new()
+	d.items = {"bad": {"id": "bad", "equip": {"slot": "weapon", "grade": 1, "stats": {}, "lifespan_drain": -2}}}
+	assert_eq(Equipment.validate(d).size(), 1)
+
+
+func test_game_state_fight_with_evil_weapon_burns_lifespan() -> void:
+	var gs: Node = _root().get_node("GameState")
+	var c := CharacterFactory.create("Wielder", gs.data, seeded_rng())
+	gs.start_session(c)
+	c.add_item("blood_drinker_saber", 1)
+	gs.equip_item("blood_drinker_saber")
+	gs.fight("wild_boar")
+	assert_eq(c.lifespan_spent_years, 1)
+	assert_true(c.alive)
+	# With only a year left, the saber drinks the last of it: final death, no respawn.
+	c.lifespan_spent_years += Cultivation.years_left(c, gs.data) - 1
+	var lives: int = c.artifact_lives
+	gs.fight("wild_boar")
+	assert_false(c.alive, "old age is never undone by the artifact")
+	assert_true(c.cause_of_death.contains("weapon"))
+	assert_eq(c.artifact_lives, lives)
+	gs.end_session()
