@@ -13,6 +13,8 @@ var given_name := ""
 var parents: Array[String] = []
 var children: Array[String] = []
 var spouses: Array[String] = []
+## Spouse id -> rank id of that marriage (data/family.json, e.g. "wife", "concubine", "dao_companion").
+var spouse_ranks: Dictionary = {}
 ## NPC behavior. Empty/negative values fall back to the data/npcs.json def (see Npcs).
 var home_region := ""
 var cultivates := false
@@ -88,6 +90,7 @@ func to_dict() -> Dictionary:
 		"parents": parents.duplicate(),
 		"children": children.duplicate(),
 		"spouses": spouses.duplicate(),
+		"spouse_ranks": spouse_ranks.duplicate(),
 		"home_region": home_region,
 		"cultivates": cultivates,
 		"diligence": diligence,
@@ -127,6 +130,9 @@ static func from_dict(d: Dictionary) -> CharacterData:
 	c.parents = _strings(d.get("parents", []))
 	c.children = _strings(d.get("children", []))
 	c.spouses = _strings(d.get("spouses", []))
+	var saved_ranks: Dictionary = d.get("spouse_ranks", {})
+	for spouse_id in saved_ranks:
+		c.spouse_ranks[String(spouse_id)] = String(saved_ranks[spouse_id])
 	c.home_region = String(d.get("home_region", ""))
 	c.cultivates = bool(d.get("cultivates", false))
 	c.diligence = float(d.get("diligence", -1.0))
