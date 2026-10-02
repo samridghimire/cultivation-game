@@ -1,0 +1,10 @@
+{
+  "_doc": "Core character attributes. 10 is average. New characters roll each between roll_min and roll_max.",
+  "attributes": [
+    {"id": "constitution", "name": "Constitution", "description": "Bodily strength and vitality. Extends lifespan; key for Blacksmiths.", "roll_min": 5, "roll_max": 15},
+    {"id": "comprehension", "name": "Comprehension", "description": "Insight into the Dao. Speeds cultivation; key for Alchemists and Array Masters.", "roll_min": 5, "roll_max": 15},
+    {"id": "spirit", "name": "Spirit", "description": "Strength of soul and divine sense. Key for Talisman Masters and Doctors.", "roll_min": 5, "roll_max": 15},
+    {"id": "fortune", "name": "Fortune", "description": "Heaven's favor. Improves breakthrough odds and chance encounters.", "roll_min": 5, "roll_max": 15},
+    {"id": "charisma", "name": "Charisma", "description": "Presence and persuasion. Key for Beast Tamers and social standing.", "roll_min": 5, "roll_max": 15}
+  ]
+}

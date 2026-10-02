@@ -1,0 +1,19 @@
+{
+  "_doc": "Spiritual roots decide cultivation talent. Fewer elements = purer, faster root. Final multiplier = grade.cultivation_multiplier * (0.5 + average_purity / 100).",
+  "elements": [
+    {"id": "metal", "name": "Metal"},
+    {"id": "wood", "name": "Wood"},
+    {"id": "water", "name": "Water"},
+    {"id": "fire", "name": "Fire"},
+    {"id": "earth", "name": "Earth"}
+  ],
+  "grades": [
+    {"element_count": 1, "name": "Heavenly Root", "weight": 3, "cultivation_multiplier": 3.0},
+    {"element_count": 2, "name": "Earth Root", "weight": 12, "cultivation_multiplier": 1.8},
+    {"element_count": 3, "name": "Human Root", "weight": 25, "cultivation_multiplier": 1.2},
+    {"element_count": 4, "name": "Mixed Root", "weight": 30, "cultivation_multiplier": 0.8},
+    {"element_count": 5, "name": "Pseudo Root", "weight": 30, "cultivation_multiplier": 0.5}
+  ],
+  "purity_min": 20,
+  "purity_max": 100
+}

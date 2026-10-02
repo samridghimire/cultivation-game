@@ -1,0 +1,11 @@
+# Godot 4
+.godot/
+/android/
+# Local Godot binary downloaded by tools/godot.sh
+.godot-bin/
+# Export output
+/build/
+*.tmp
+# Scratch work by local sessions
+.scratch*/
+.claude/settings.local.json

@@ -1,0 +1,93 @@
+class_name Cultivation
+extends RefCounted
+## Pure cultivation rules: qi gathering, minor stage advancement, and major
+## realm breakthroughs. No nodes or signals; GameState calls these and emits events.
+
+
+## Qi gathered per day. `density` is the spiritual energy of the location
+## multiplied by any sect bonus (1.0 = an ordinary mortal village). Known
+## cultivation techniques multiply it further.
+static func qi_per_day(c: CharacterData, data: GameData, density: float = 1.0) -> float:
+	var realm: RealmDef = data.realms[c.realm_index]
+	var comprehension_mult := 0.5 + c.attribute("comprehension") / 20.0
+	return realm.base_qi_per_day * SpiritualRoots.cultivation_multiplier(c.spiritual_roots, data) * comprehension_mult * density * Techniques.cultivation_multiplier(c, data)
+
+
+## Cultivate for `days`. Returns {qi_gained, stages_gained, at_bottleneck}.
+static func cultivate(c: CharacterData, data: GameData, days: int, density: float = 1.0) -> Dictionary:
+	return add_qi(c, data, qi_per_day(c, data, density) * days)
+
+
+## Adds qi, advancing minor stages automatically. Qi stops accumulating at the
+## final stage of a realm (the bottleneck) until a breakthrough succeeds.
+static func add_qi(c: CharacterData, data: GameData, amount: float) -> Dictionary:
+	var start_qi := c.qi
+	var stages_gained := 0
+	var absorbed := 0.0
+	c.qi += amount
+	while true:
+		var realm: RealmDef = data.realms[c.realm_index]
+		var needed := realm.qi_required(c.stage)
+		if c.qi < needed:
+			break
+		if c.stage < realm.stage_count() - 1:
+			c.qi -= needed
+			absorbed += needed
+			c.stage += 1
+			stages_gained += 1
+		else:
+			c.qi = needed
+			break
+	return {
+		"qi_gained": absorbed + c.qi - start_qi,
+		"stages_gained": stages_gained,
+		"at_bottleneck": is_at_bottleneck(c, data),
+	}
+
+
+static func is_at_bottleneck(c: CharacterData, data: GameData) -> bool:
+	var realm: RealmDef = data.realms[c.realm_index]
+	return c.stage == realm.stage_count() - 1 and c.qi >= realm.qi_required(c.stage)
+
+
+static func can_attempt_breakthrough(c: CharacterData, data: GameData) -> bool:
+	return is_at_bottleneck(c, data) and c.realm_index < data.realms.size() - 1
+
+
+static func breakthrough_chance(c: CharacterData, data: GameData) -> float:
+	if c.realm_index >= data.realms.size() - 1:
+		return 0.0
+	var next: RealmDef = data.realms[c.realm_index + 1]
+	var fortune_bonus := (c.attribute("fortune") - 10) * 0.01
+	return clampf(next.breakthrough_chance + c.breakthrough_bonus + fortune_bonus, 0.01, 0.99)
+
+
+## Attempts a major breakthrough. Consumes any pending breakthrough bonus.
+## Returns {attempted, success, chance, realm_name}.
+static func attempt_breakthrough(c: CharacterData, data: GameData, rng: RandomNumberGenerator) -> Dictionary:
+	if not can_attempt_breakthrough(c, data):
+		return {"attempted": false, "success": false, "chance": 0.0, "realm_name": ""}
+	var chance := breakthrough_chance(c, data)
+	var next: RealmDef = data.realms[c.realm_index + 1]
+	c.breakthrough_bonus = 0.0
+	var success := rng.randf() < chance
+	if success:
+		c.realm_index += 1
+		c.stage = 0
+		c.qi = 0.0
+	else:
+		c.qi *= 1.0 - next.failure_qi_loss
+	return {"attempted": true, "success": success, "chance": chance, "realm_name": next.name}
+
+
+static func lifespan_years(c: CharacterData, data: GameData) -> int:
+	var realm: RealmDef = data.realms[c.realm_index]
+	return realm.lifespan_years + (c.attribute("constitution") - 10)
+
+
+static func realm_label(c: CharacterData, data: GameData) -> String:
+	return data.realms[c.realm_index].stage_label(c.stage)
+
+
+static func qi_required(c: CharacterData, data: GameData) -> float:
+	return data.realms[c.realm_index].qi_required(c.stage)

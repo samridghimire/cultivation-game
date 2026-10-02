@@ -1,0 +1,28 @@
+{
+  "_doc": "Random events when exploring. An encounter is eligible if it shares a tag with the place's tags, the player's realm is within min_realm/max_realm (realm ids, optional), and blocked_by_flag (optional) is unset. weight is relative; 'kind' fortune/misfortune weights are scaled by the Fortune attribute. effects use the shared effect keys (src/core/systems/effects.gd) and are applied when the encounter happens. enemy (an id in data/enemies.json) starts a fight after the text, unless it is lethal and Deadly for the player, who then senses it and slips away. days = time spent.",
+  "encounters": [
+    {"id": "village_nothing", "tags": ["village", "city"], "weight": 4, "kind": "neutral", "days": 1, "text": "You wander for a day. Nothing of note happens."},
+    {"id": "village_lost_coin", "tags": ["village"], "weight": 2, "kind": "fortune", "days": 1, "text": "You spot a spirit stone glinting in a ditch.", "effects": {"items": {"spirit_stone": 1}}},
+    {"id": "village_boar", "tags": ["village"], "weight": 2, "kind": "misfortune", "days": 1, "text": "A wild boar charges out of the fields!", "enemy": "wild_boar"},
+    {"id": "village_bandit", "tags": ["village", "forest"], "weight": 1, "kind": "misfortune", "days": 1, "text": "A bandit steps onto the road, blade drawn.", "enemy": "mountain_bandit"},
+    {"id": "village_old_man", "tags": ["village"], "weight": 1, "kind": "fortune", "days": 1, "blocked_by_flag": "met_old_man", "text": "A ragged old man shares a breathing method before vanishing. Was he an immortal?", "effects": {"qi": 200, "set_flag": "met_old_man"}},
+
+    {"id": "forest_herbs", "tags": ["forest", "herbs"], "weight": 4, "kind": "fortune", "days": 3, "text": "You gather spirit herbs from the misty undergrowth.", "effects": {"items": {"spirit_herb": 2}}},
+    {"id": "forest_ginseng", "tags": ["herbs"], "weight": 1, "kind": "fortune", "days": 5, "text": "Deep in the valley you unearth a centuries-old blood ginseng!", "effects": {"items": {"blood_ginseng": 1}}},
+    {"id": "forest_lost", "tags": ["forest", "herbs"], "weight": 2, "kind": "misfortune", "days": 7, "text": "The mist thickens and you lose your way for a week."},
+    {"id": "forest_wolf", "tags": ["forest"], "weight": 2, "kind": "misfortune", "days": 1, "min_realm": "qi_refining", "text": "Glowing eyes in the mist: a pack of mist wolves!", "enemy": "mist_wolf"},
+    {"id": "wild_rogue", "tags": ["wild", "city"], "weight": 1, "kind": "misfortune", "days": 1, "min_realm": "foundation_establishment", "text": "A rogue cultivator eyes your storage pouch and attacks.", "enemy": "rogue_cultivator"},
+    {"id": "wild_qi_vein", "tags": ["wild"], "weight": 1, "kind": "fortune", "days": 10, "text": "You find a small spirit vein and absorb it before it disperses.", "effects": {"qi": 1500}},
+
+    {"id": "city_rumour", "tags": ["city"], "weight": 2, "kind": "neutral", "days": 1, "text": "In a teahouse you overhear rumours of an ancient cave on Azure Peak."},
+    {"id": "city_pickpocket", "tags": ["city"], "weight": 1, "kind": "misfortune", "days": 0, "text": "Your pouch feels lighter. A pickpocket!", "effects": {"items": {"spirit_stone": -5}}},
+    {"id": "city_gamble", "tags": ["city"], "weight": 1, "kind": "fortune", "days": 1, "text": "You win a game of stone-gambling and crack open a raw spirit stone.", "effects": {"items": {"spirit_stone": 20}}},
+
+    {"id": "mountain_ape", "tags": ["mountain"], "weight": 2, "kind": "misfortune", "days": 1, "min_realm": "foundation_establishment", "text": "A stone-skinned ape hurls a boulder at you!", "enemy": "stone_ape"},
+    {"id": "mountain_eagle", "tags": ["mountain"], "weight": 1, "kind": "misfortune", "days": 1, "min_realm": "foundation_establishment", "text": "A cloud eagle dives from the heavens!", "enemy": "cloud_eagle"},
+    {"id": "mountain_insight", "tags": ["mountain"], "weight": 2, "kind": "fortune", "days": 15, "text": "Watching the sea of clouds, you glimpse a fragment of the Dao.", "effects": {"qi": 4000}},
+    {"id": "ruins_slip", "tags": ["ruins"], "weight": 2, "kind": "fortune", "days": 5, "blocked_by_flag": "cave_slip_taken", "text": "Among the bones of a long-dead cultivator lies a jade slip.", "effects": {"items": {"ancient_jade_slip": 1}, "set_flag": "cave_slip_taken"}},
+    {"id": "ruins_guardian", "tags": ["ruins"], "weight": 2, "kind": "misfortune", "days": 1, "min_realm": "foundation_establishment", "blocked_by_flag": "cave_guardian_slain", "text": "A stone guardian awakens, its eyes burning with formation light.", "enemy": "cave_guardian"},
+    {"id": "ruins_empty", "tags": ["ruins"], "weight": 1, "kind": "neutral", "days": 3, "text": "Empty chambers and dust. Whatever was here is long gone."}
+  ]
+}

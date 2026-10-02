@@ -1,0 +1,14 @@
+{
+  "_doc": "Techniques. bonuses are gained PER mastery level (qi_mult is additive to a 1.0 cultivation multiplier; attack/defense/max_hp/speed are flat combat stats). A technique whose element matches one of the character's spiritual roots gets element_affinity_bonus extra effect; a mismatched element gets element_mismatch_penalty less. Learned by using the manual_item. Practice xp to go from level L to L+1 = xp_base * xp_growth^(L-1); practice yields comprehension-scaled xp per day.",
+  "element_affinity_bonus": 0.5,
+  "element_mismatch_penalty": 0.5,
+  "techniques": [
+    {"id": "basic_breathing", "name": "Basic Breathing Method", "description": "The first method taught to every outer disciple. Slow, steady and universal.", "kind": "cultivation", "element": "", "min_realm": "mortal", "max_level": 5, "bonuses": {"qi_mult": 0.04}, "manual_item": "manual_basic_breathing", "xp_base": 40, "xp_growth": 1.5},
+    {"id": "flowing_water_sutra", "name": "Flowing Water Sutra", "description": "Qi circulates like a river, never stagnant.", "kind": "cultivation", "element": "water", "min_realm": "qi_refining", "max_level": 10, "bonuses": {"qi_mult": 0.06, "max_hp": 4}, "manual_item": "manual_flowing_water", "xp_base": 80, "xp_growth": 1.45},
+    {"id": "blazing_sun_art", "name": "Blazing Sun Art", "description": "Swallow the sun's fire into the dantian. Fast and violent.", "kind": "cultivation", "element": "fire", "min_realm": "qi_refining", "max_level": 10, "bonuses": {"qi_mult": 0.07, "attack": 1}, "manual_item": "manual_blazing_sun", "xp_base": 80, "xp_growth": 1.45},
+    {"id": "iron_fist", "name": "Iron Fist", "description": "A crude but honest boxing style. Every village has a master of it.", "kind": "combat", "element": "", "min_realm": "mortal", "max_level": 10, "bonuses": {"attack": 2}, "manual_item": "manual_iron_fist", "xp_base": 30, "xp_growth": 1.4},
+    {"id": "metal_edge_sword", "name": "Metal Edge Sword Art", "description": "Sword qi as sharp as autumn frost.", "kind": "combat", "element": "metal", "min_realm": "qi_refining", "max_level": 10, "bonuses": {"attack": 4, "speed": 1}, "manual_item": "manual_metal_edge", "xp_base": 70, "xp_growth": 1.45},
+    {"id": "wind_step", "name": "Drifting Wind Step", "description": "Footwork that turns blows aside before they land.", "kind": "combat", "element": "wood", "min_realm": "qi_refining", "max_level": 10, "bonuses": {"speed": 2, "defense": 1}, "manual_item": "manual_wind_step", "xp_base": 60, "xp_growth": 1.45},
+    {"id": "stone_skin", "name": "Stone Skin Tempering", "description": "Temper flesh with earth qi until blades skid off it.", "kind": "body", "element": "earth", "min_realm": "mortal", "max_level": 10, "bonuses": {"defense": 2, "max_hp": 8}, "manual_item": "manual_stone_skin", "xp_base": 50, "xp_growth": 1.45}
+  ]
+}

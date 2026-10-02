@@ -1,0 +1,88 @@
+{
+  "_doc": "World regions. The world scene builds itself from the current region. qi_density multiplies cultivation everywhere in the region (meditation spots multiply again). routes: travel targets with days and an optional min_realm (realm id). places: interactables; 'type' picks the script (meditation, merchant, sect_hall, workshop, deed_giver, explore, travel), 'pos' and 'size' are in pixels, other keys are passed to the script as exported properties. encounter_tags select entries from data/encounters.json when exploring.",
+  "start_region": "qingshi_village",
+  "regions": [
+    {
+      "id": "qingshi_village", "name": "Qingshi Village",
+      "description": "A sleepy mortal village where your journey begins.",
+      "qi_density": 1.0, "danger": 0,
+      "map": {"size": [1600, 1000], "ground": "4d6b3c", "border": "2a3a20", "paths": [[0, 470, 1600, 60], [770, 0, 60, 1000]], "path_color": "8a7350"},
+      "spawn": [800, 500],
+      "routes": [
+        {"to": "misty_forest", "days": 3},
+        {"to": "fallen_star_market", "days": 10}
+      ],
+      "encounter_tags": ["village"],
+      "places": [
+        {"type": "meditation", "display_name": "Meditation Rock", "pos": [300, 250], "size": [80, 60], "color": "8c919e"},
+        {"type": "meditation", "display_name": "Spirit Spring (2x qi)", "pos": [1400, 160], "size": [90, 70], "color": "59b3d9", "qi_density": 2.0},
+        {"type": "sect_hall", "display_name": "Sect Recruitment Hall", "pos": [1250, 750], "size": [160, 110], "color": "b33f33"},
+        {"type": "workshop", "display_name": "Village Workshop", "pos": [400, 720], "size": [130, 90], "color": "8c6640"},
+        {"type": "merchant", "display_name": "Wandering Merchant", "pos": [620, 380], "size": [60, 60], "color": "d9b34d"},
+        {"type": "deed_giver", "display_name": "Villager", "pos": [1000, 400], "size": [30, 30], "color": "e6bf99", "deed_context": "villager", "hidden_by_flag": "villager_dead"},
+        {"type": "explore", "display_name": "Village Outskirts", "pos": [150, 880], "size": [120, 70], "color": "6b7d4a"},
+        {"type": "travel", "display_name": "Village Gate", "pos": [1540, 500], "size": [40, 120], "color": "5c4630"}
+      ]
+    },
+    {
+      "id": "misty_forest", "name": "Misty Forest",
+      "description": "Ancient trees veiled in mist. Spirit herbs grow here, and so do spirit beasts.",
+      "qi_density": 1.5, "danger": 1,
+      "map": {"size": [1600, 1000], "ground": "2f4f2f", "border": "16261a", "paths": [[0, 470, 1600, 60]], "path_color": "5c5238"},
+      "spawn": [120, 500],
+      "routes": [
+        {"to": "qingshi_village", "days": 3},
+        {"to": "azure_peak", "days": 7, "min_realm": "qi_refining"},
+        {"to": "fallen_star_market", "days": 8}
+      ],
+      "encounter_tags": ["forest", "wild"],
+      "places": [
+        {"type": "meditation", "display_name": "Mossy Clearing", "pos": [500, 220], "size": [110, 80], "color": "4f8f5a", "qi_density": 1.2},
+        {"type": "explore", "display_name": "Deep Woods", "pos": [1100, 260], "size": [160, 110], "color": "1f3a22"},
+        {"type": "explore", "display_name": "Herb Valley", "pos": [800, 800], "size": [180, 90], "color": "6f9f4a", "explore_tags": ["herbs"]},
+        {"type": "deed_giver", "display_name": "Lost Traveller", "pos": [1300, 700], "size": [30, 30], "color": "c9a27a", "deed_context": "traveller", "hidden_by_flag": "traveller_gone"},
+        {"type": "travel", "display_name": "Forest Trail", "pos": [40, 500], "size": [40, 120], "color": "5c4630"}
+      ]
+    },
+    {
+      "id": "fallen_star_market", "name": "Fallen Star Market",
+      "description": "A bustling free city where rogue cultivators trade treasures and rumours.",
+      "qi_density": 1.1, "danger": 0,
+      "map": {"size": [1600, 1000], "ground": "6b6250", "border": "3a3428", "paths": [[0, 470, 1600, 60], [770, 0, 60, 1000]], "path_color": "9c917a"},
+      "spawn": [800, 900],
+      "routes": [
+        {"to": "qingshi_village", "days": 10},
+        {"to": "misty_forest", "days": 8},
+        {"to": "azure_peak", "days": 12, "min_realm": "qi_refining"}
+      ],
+      "encounter_tags": ["city"],
+      "places": [
+        {"type": "merchant", "display_name": "Pill Pavilion", "pos": [400, 300], "size": [140, 100], "color": "c9823a"},
+        {"type": "merchant", "display_name": "Night Market Stall", "pos": [1200, 300], "size": [80, 60], "color": "7a4fa0", "max_price": 100},
+        {"type": "workshop", "display_name": "Artisan Quarter", "pos": [400, 750], "size": [150, 100], "color": "8c6640"},
+        {"type": "sect_hall", "display_name": "Sect Envoy Hall", "pos": [1200, 750], "size": [160, 110], "color": "b33f33"},
+        {"type": "meditation", "display_name": "Rented Cultivation Room", "pos": [1450, 120], "size": [90, 70], "color": "8c919e", "qi_density": 1.3},
+        {"type": "explore", "display_name": "Back Alleys", "pos": [150, 120], "size": [120, 80], "color": "4a4438"},
+        {"type": "travel", "display_name": "City Gate", "pos": [800, 970], "size": [120, 40], "color": "5c4630"}
+      ]
+    },
+    {
+      "id": "azure_peak", "name": "Azure Peak",
+      "description": "Cloud-wreathed mountains thick with qi. Fierce beasts guard the heights.",
+      "qi_density": 2.5, "danger": 3,
+      "map": {"size": [1600, 1000], "ground": "5a6f80", "border": "2b3540", "paths": [[0, 470, 1600, 60]], "path_color": "8f9aa3"},
+      "spawn": [120, 500],
+      "routes": [
+        {"to": "misty_forest", "days": 7},
+        {"to": "fallen_star_market", "days": 12}
+      ],
+      "encounter_tags": ["mountain", "wild"],
+      "places": [
+        {"type": "meditation", "display_name": "Cloud-Sea Cliff (2x qi)", "pos": [1300, 180], "size": [120, 70], "color": "c9dceb", "qi_density": 2.0},
+        {"type": "explore", "display_name": "Beast Ridge", "pos": [700, 200], "size": [170, 100], "color": "3d4b57"},
+        {"type": "explore", "display_name": "Ancient Cave", "pos": [1200, 800], "size": [110, 90], "color": "1e2228", "explore_tags": ["ruins"]},
+        {"type": "travel", "display_name": "Mountain Path", "pos": [40, 500], "size": [40, 120], "color": "5c4630"}
+      ]
+    }
+  ]
+}

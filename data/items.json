@@ -1,0 +1,18 @@
+{
+  "_doc": "Items. 'effects' use the shared effect keys handled by src/core/systems/effects.gd (qi, alignment, items, breakthrough_bonus, set_flag, learn_technique). price is in spirit stones; 0 = not sold.",
+  "items": [
+    {"id": "spirit_stone", "name": "Spirit Stone", "description": "Crystallized qi. The currency of cultivators.", "price": 0, "usable": false, "effects": {}},
+    {"id": "qi_gathering_pill", "name": "Qi Gathering Pill", "description": "A common pill that floods the meridians with qi.", "price": 15, "usable": true, "effects": {"qi": 150}},
+    {"id": "foundation_establishment_pill", "name": "Foundation Establishment Pill", "description": "Greatly improves the odds of your next major breakthrough.", "price": 300, "usable": true, "effects": {"breakthrough_bonus": 0.25}},
+    {"id": "spirit_herb", "name": "Spirit Herb", "description": "A common herb steeped in qi. Chew it to refine a little energy.", "price": 0, "usable": true, "effects": {"qi": 80}},
+    {"id": "blood_ginseng", "name": "Blood Ginseng", "description": "A centuries-old root, rich enough to steady a breakthrough.", "price": 0, "usable": true, "effects": {"qi": 1200, "breakthrough_bonus": 0.05}},
+    {"id": "ancient_jade_slip", "name": "Ancient Jade Slip", "description": "A long-dead cultivator's insights into the Dao, sealed in jade.", "price": 0, "usable": true, "effects": {"qi": 8000, "breakthrough_bonus": 0.1}},
+    {"id": "manual_basic_breathing", "name": "Manual: Basic Breathing Method", "description": "A dog-eared pamphlet. Teaches the Basic Breathing Method.", "price": 20, "usable": true, "effects": {"learn_technique": "basic_breathing"}},
+    {"id": "manual_iron_fist", "name": "Manual: Iron Fist", "description": "Crude drawings of punches. Teaches Iron Fist.", "price": 15, "usable": true, "effects": {"learn_technique": "iron_fist"}},
+    {"id": "manual_stone_skin", "name": "Manual: Stone Skin Tempering", "description": "A body-tempering regimen carved on a slate. Teaches Stone Skin Tempering.", "price": 40, "usable": true, "effects": {"learn_technique": "stone_skin"}},
+    {"id": "manual_flowing_water", "name": "Manual: Flowing Water Sutra", "description": "A water-element cultivation method. Requires Qi Refining.", "price": 250, "usable": true, "effects": {"learn_technique": "flowing_water_sutra"}},
+    {"id": "manual_blazing_sun", "name": "Manual: Blazing Sun Art", "description": "A fire-element cultivation method. Requires Qi Refining.", "price": 250, "usable": true, "effects": {"learn_technique": "blazing_sun_art"}},
+    {"id": "manual_metal_edge", "name": "Manual: Metal Edge Sword Art", "description": "A metal-element sword art. Requires Qi Refining.", "price": 0, "usable": true, "effects": {"learn_technique": "metal_edge_sword"}},
+    {"id": "manual_wind_step", "name": "Manual: Drifting Wind Step", "description": "A wood-element movement art. Requires Qi Refining.", "price": 180, "usable": true, "effects": {"learn_technique": "wind_step"}}
+  ]
+}

@@ -1,0 +1,41 @@
+{
+  "_doc": "Sects the player can join. Alignment bounds are inclusive. min_realm is a realm id. cultivation_bonus multiplies qi gathering for members. Rank promotion is automatic once contribution reaches a rank's threshold.",
+  "sects": [
+    {
+      "id": "azure_cloud_sect", "name": "Azure Cloud Sect", "alignment": "righteous",
+      "description": "An orthodox sect on misty peaks. Values virtue, discipline and the protection of mortals.",
+      "min_alignment": -100, "max_alignment": 1000, "min_realm": "qi_refining", "cultivation_bonus": 1.5,
+      "favored_professions": ["alchemist", "array_master"],
+      "ranks": [
+        {"name": "Outer Disciple", "contribution": 0},
+        {"name": "Inner Disciple", "contribution": 500},
+        {"name": "Core Disciple", "contribution": 3000},
+        {"name": "Elder", "contribution": 20000}
+      ]
+    },
+    {
+      "id": "blood_lotus_sect", "name": "Blood Lotus Sect", "alignment": "demonic",
+      "description": "A feared demonic sect. Strength is the only law; the weak are resources.",
+      "min_alignment": -1000, "max_alignment": 0, "min_realm": "mortal", "cultivation_bonus": 1.4,
+      "favored_professions": ["talisman_master", "beast_tamer"],
+      "ranks": [
+        {"name": "Blood Servant", "contribution": 0},
+        {"name": "Blood Disciple", "contribution": 400},
+        {"name": "Blood Son", "contribution": 2500},
+        {"name": "Blood Elder", "contribution": 18000}
+      ]
+    },
+    {
+      "id": "myriad_treasure_pavilion", "name": "Myriad Treasure Pavilion", "alignment": "neutral",
+      "description": "A merchant sect that trades with anyone who pays. Rewards craftsmen generously.",
+      "min_alignment": -500, "max_alignment": 1000, "min_realm": "qi_refining", "cultivation_bonus": 1.2,
+      "favored_professions": ["blacksmith", "alchemist", "doctor"],
+      "ranks": [
+        {"name": "Junior Steward", "contribution": 0},
+        {"name": "Steward", "contribution": 600},
+        {"name": "Senior Steward", "contribution": 3500},
+        {"name": "Pavilion Elder", "contribution": 22000}
+      ]
+    }
+  ]
+}

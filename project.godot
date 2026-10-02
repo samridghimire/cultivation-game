@@ -1,0 +1,34 @@
+; Engine configuration file.
+; Input actions are registered in code (src/autoload/input_config.gd) so they
+; stay readable and diffable.
+
+config_version=5
+
+[application]
+
+config/name="Cultivation Game"
+config/description="An open-ended xianxia cultivation RPG. Start as a mortal; choose your own path."
+run/main_scene="res://src/ui/main_menu.tscn"
+config/features=PackedStringArray("4.7", "GL Compatibility")
+config/icon="res://icon.svg"
+
+[autoload]
+
+EventBus="*res://src/autoload/event_bus.gd"
+InputConfig="*res://src/autoload/input_config.gd"
+GameClock="*res://src/autoload/game_clock.gd"
+GameState="*res://src/autoload/game_state.gd"
+SaveManager="*res://src/autoload/save_manager.gd"
+
+[display]
+
+window/size/viewport_width=1280
+window/size/viewport_height=800
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+
+[rendering]
+
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
+textures/canvas_textures/default_texture_filter=0

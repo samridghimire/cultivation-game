@@ -1,0 +1,12 @@
+{
+  "_doc": "Cultivator professions. XP to go from rank r to r+1 = xp_base * xp_growth^r. Working earns xp per day scaled by primary_attribute/10, and spirit stones = work_income * (rank+1) per 30 days.",
+  "rank_names": ["Apprentice", "1st Grade", "2nd Grade", "3rd Grade", "4th Grade", "5th Grade", "6th Grade", "7th Grade", "8th Grade", "9th Grade", "Grandmaster"],
+  "professions": [
+    {"id": "alchemist", "name": "Alchemist", "description": "Refines spirit herbs into pills and elixirs.", "primary_attribute": "comprehension", "xp_base": 100, "xp_growth": 1.8, "work_income": 6},
+    {"id": "blacksmith", "name": "Blacksmith", "description": "Forges and refines magical artifacts and weapons.", "primary_attribute": "constitution", "xp_base": 100, "xp_growth": 1.8, "work_income": 6},
+    {"id": "talisman_master", "name": "Talisman Master", "description": "Inscribes talismans that store spells for later use.", "primary_attribute": "spirit", "xp_base": 100, "xp_growth": 1.8, "work_income": 5},
+    {"id": "array_master", "name": "Array Master", "description": "Builds formations that defend, trap, gather qi, or kill.", "primary_attribute": "comprehension", "xp_base": 120, "xp_growth": 1.85, "work_income": 7},
+    {"id": "doctor", "name": "Doctor", "description": "Heals injuries of body, meridian and soul.", "primary_attribute": "spirit", "xp_base": 90, "xp_growth": 1.75, "work_income": 5},
+    {"id": "beast_tamer", "name": "Beast Tamer", "description": "Raises and commands spirit beasts.", "primary_attribute": "charisma", "xp_base": 100, "xp_growth": 1.8, "work_income": 5}
+  ]
+}

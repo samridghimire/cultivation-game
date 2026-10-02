@@ -1,0 +1,12 @@
+{
+  "_doc": "Moral alignment axis. Tiers are matched by the highest 'min' that is <= the character's value.",
+  "min": -1000,
+  "max": 1000,
+  "tiers": [
+    {"id": "demonic", "name": "Demonic", "min": -1000},
+    {"id": "evil", "name": "Evil", "min": -600},
+    {"id": "neutral", "name": "Neutral", "min": -200},
+    {"id": "virtuous", "name": "Virtuous", "min": 200},
+    {"id": "righteous", "name": "Righteous", "min": 600}
+  ]
+}
