@@ -12,7 +12,7 @@ Roles: `systems` (core rules + tests), `content` (data/*.json + small hooks), `w
 | F-003 | world-ui | done | Breakthrough feedback: a short screen-flash / message banner on success and failure (listen to EventBus.breakthrough_attempted). |
 | F-004 | systems | todo | Multiple save slots with metadata (name, realm, date) and a Load screen in the main menu. |
 | F-005 | qa | todo | Balance sim script: `tests/sim/simulate_life.gd` runs N random lives headless and prints average age reaching each realm. Use it to sanity-check realms.json numbers. |
-| F-006 | world-ui | todo | Settings: window mode, UI scale, volume buses (Master/Music/SFX), persisted to user://settings.cfg. |
+| F-006 | world-ui | in-progress (local UI session) | Settings: window mode, UI scale, volume buses (Master/Music/SFX), persisted to user://settings.cfg. |
 
 ## P1: Core gameplay loops
 | id | role | status | task |
