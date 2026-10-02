@@ -14,4 +14,5 @@ static func create(character_name: String, data: GameData, rng: RandomNumberGene
 		c.attributes[attr["id"]] = rng.randi_range(int(attr["roll_min"]), int(attr["roll_max"]))
 	c.spiritual_roots = SpiritualRoots.roll(data, rng)
 	c.add_item("spirit_stone", START_SPIRIT_STONES)
+	CreationArtifact.ensure(c, data)
 	return c

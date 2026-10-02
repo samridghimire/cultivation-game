@@ -9,6 +9,8 @@ signal player_changed
 signal session_started
 signal breakthrough_attempted(success: bool, realm_name: String)
 signal player_died(cause: String)
+## The Creation Artifact saved the player from a violent death (respawned at anchor_id, "" = start region).
+signal player_respawned(anchor_id: String, lives_left: int)
 ## The interactable the player would use by pressing interact ("" = none).
 signal interaction_target_changed(display_name: String)
 ## Player asked to interact with `source` (an Interactable).

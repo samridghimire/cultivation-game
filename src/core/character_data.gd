@@ -22,6 +22,12 @@ var sect: Dictionary = {}
 var inventory: Dictionary = {}  # item id -> count
 var techniques: Dictionary = {}  # technique id -> {"level": int, "xp": float}
 var injuries: Dictionary = {}  # injury id -> days left to heal
+## Creation Artifact lives left (-1 = not yet initialised, see CreationArtifact.ensure).
+var artifact_lives := -1
+## Lives bought with spirit stones so far (raises the next recharge cost).
+var artifact_recharges := 0
+## Bound anchor ids (data/regions.json "anchor_id"), most recently bound last.
+var anchors: Array[String] = []
 
 
 func attribute(attr_id: String) -> int:
@@ -68,6 +74,9 @@ func to_dict() -> Dictionary:
 		"inventory": inventory.duplicate(),
 		"techniques": techniques.duplicate(true),
 		"injuries": injuries.duplicate(),
+		"artifact_lives": artifact_lives,
+		"artifact_recharges": artifact_recharges,
+		"anchors": anchors.duplicate(),
 	}
 
 
@@ -93,6 +102,10 @@ static func from_dict(d: Dictionary) -> CharacterData:
 		c.sect = {"id": String(s.get("id", "")), "rank": int(s.get("rank", 0)), "contribution": int(s.get("contribution", 0))}
 	c.inventory = _int_values(d.get("inventory", {}))
 	c.injuries = _int_values(d.get("injuries", {}))
+	c.artifact_lives = int(d.get("artifact_lives", -1))
+	c.artifact_recharges = int(d.get("artifact_recharges", 0))
+	for anchor_id in d.get("anchors", []):
+		c.anchors.append(String(anchor_id))
 	var techs: Dictionary = d.get("techniques", {})
 	for tech_id in techs:
 		c.techniques[tech_id] = {"level": int(techs[tech_id].get("level", 1)), "xp": float(techs[tech_id].get("xp", 0))}
