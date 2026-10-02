@@ -5,6 +5,19 @@ extends RefCounted
 
 var id := "player"
 var name := ""
+## Identity (FAM-001). gender is a key of data/names.json "given_names" ("" = unknown, e.g. old saves).
+var gender := ""
+var surname := ""
+var given_name := ""
+## Family links: character ids (the player is "player", NPCs use their GameState.npcs id).
+var parents: Array[String] = []
+var children: Array[String] = []
+var spouses: Array[String] = []
+## NPC behavior. Empty/negative values fall back to the data/npcs.json def (see Npcs).
+var home_region := ""
+var cultivates := false
+## Fraction of days spent cultivating; < 0 = unset.
+var diligence := -1.0
 var age_days := 0
 var alive := true
 var cause_of_death := ""
@@ -67,6 +80,15 @@ func to_dict() -> Dictionary:
 	return {
 		"id": id,
 		"name": name,
+		"gender": gender,
+		"surname": surname,
+		"given_name": given_name,
+		"parents": parents.duplicate(),
+		"children": children.duplicate(),
+		"spouses": spouses.duplicate(),
+		"home_region": home_region,
+		"cultivates": cultivates,
+		"diligence": diligence,
 		"age_days": age_days,
 		"alive": alive,
 		"cause_of_death": cause_of_death,
@@ -96,6 +118,15 @@ static func from_dict(d: Dictionary) -> CharacterData:
 	var c := CharacterData.new()
 	c.id = d.get("id", "player")
 	c.name = d.get("name", "")
+	c.gender = String(d.get("gender", ""))
+	c.surname = String(d.get("surname", ""))
+	c.given_name = String(d.get("given_name", ""))
+	c.parents = _strings(d.get("parents", []))
+	c.children = _strings(d.get("children", []))
+	c.spouses = _strings(d.get("spouses", []))
+	c.home_region = String(d.get("home_region", ""))
+	c.cultivates = bool(d.get("cultivates", false))
+	c.diligence = float(d.get("diligence", -1.0))
 	c.age_days = int(d.get("age_days", 0))
 	c.alive = bool(d.get("alive", true))
 	c.cause_of_death = d.get("cause_of_death", "")
@@ -130,6 +161,13 @@ static func from_dict(d: Dictionary) -> CharacterData:
 	for tech_id in techs:
 		c.techniques[tech_id] = {"level": int(techs[tech_id].get("level", 1)), "xp": float(techs[tech_id].get("xp", 0))}
 	return c
+
+
+static func _strings(a: Array) -> Array[String]:
+	var out: Array[String] = []
+	for v in a:
+		out.append(String(v))
+	return out
 
 
 ## JSON turns every number into a float; restore ints for integer maps.
