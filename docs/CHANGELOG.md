@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-02 [G-002f] Core Forming recipe scroll is now findable as one-per-life ruins loot (Foundation+): neutral find, righteous ghost purification, demonic desecration.
 - 2026-10-02 [G-004] Blacksmithing core: Equipment (weapon/armor, grade, flat combat stats), equip/unequip actions, 4 forge recipes + 5 equipment items, crafting chance uses the profession's primary attribute.
 - 2026-10-02 [FAM-001] Character identity: gender, surname/given name, parents/children/spouses and NPC behavior fields on CharacterData; data/names.json + Names; Npcs.spawn for generated NPCs without a def; character creation picks surname, given name and gender.
 - 2026-10-02 [G-002d] 6 new alchemy recipes and pills (healing, qi, righteous Clear Heart, demonic Blood Demon, Core Forming) with recipe scrolls.
