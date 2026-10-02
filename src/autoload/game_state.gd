@@ -183,6 +183,8 @@ func equip_item(item_id: String) -> void:
 		if previous != "":
 			text += " The %s goes back into your pack." % data.items[previous]["name"]
 		EventBus.post(text, "progress")
+		if Equipment.item_drain(data, item_id) > 0:
+			EventBus.post("It thirsts for your life. %d years remain to you." % Cultivation.years_left(player, data), "danger")
 	EventBus.player_changed.emit()
 
 
@@ -484,6 +486,13 @@ func fight_enemy(enemy: Dictionary) -> void:
 	if not outcome["notes"].is_empty():
 		EventBus.post("(%s)" % ", ".join(outcome["notes"]), "progress" if result["victory"] else "warning")
 	EventBus.combat_finished.emit(enemy.get("name", "enemy"), result["victory"], result["log"])
+	var drained := Equipment.drain_after_fight(player, data)
+	if drained > 0:
+		EventBus.post("Your weapon drinks %d %s of your life. %d years remain." % [drained, "year" if drained == 1 else "years", Cultivation.years_left(player, data)], "danger")
+		if player.age_years() >= Cultivation.lifespan_years(player, data):
+			_kill("Your weapon drinks the last of your years. You wither and die of old age at %d." % player.age_years())
+			EventBus.player_changed.emit()
+			return
 	if outcome["died"]:
 		_die_violently(outcome["cause"])
 		return

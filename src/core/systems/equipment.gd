@@ -5,6 +5,8 @@ extends RefCounted
 ## {"slot": one of SLOTS, "grade": int >= 1, "stats": {stat: flat bonus}}.
 ## Equipping moves the item out of the inventory into CharacterData.equipment;
 ## the bonuses are added flat to Combat.stats (before injuries and buffs scale them).
+## Evil artifacts may also have `lifespan_drain` (int years): each fight fought
+## while wielding them burns that many years of the wielder's lifespan.
 
 const SLOTS: PackedStringArray = ["weapon", "armor"]
 const STAT_KEYS: PackedStringArray = ["attack", "defense", "max_hp", "speed"]
@@ -60,13 +62,38 @@ static func bonus(c: CharacterData, data: GameData, stat: String) -> int:
 	return total
 
 
-## "+12 attack, +2 speed" for an item's equip stats.
+## Years of lifespan the item drinks per fight (0 for ordinary equipment).
+static func item_drain(data: GameData, item_id: String) -> int:
+	return int(data.items.get(item_id, {}).get("equip", {}).get("lifespan_drain", 0))
+
+
+## Total years per fight drained by everything `c` has equipped.
+static func lifespan_drain(c: CharacterData, data: GameData) -> int:
+	var total := 0
+	for slot in c.equipment:
+		total += item_drain(data, String(c.equipment[slot]))
+	return total
+
+
+## Burns the lifespan drained by `c`'s equipment after a fight. Unlike burning
+## lifespan by choice, this is never refused: an evil weapon can drink the
+## last of your years. Returns the years burned.
+static func drain_after_fight(c: CharacterData, data: GameData) -> int:
+	var years := lifespan_drain(c, data)
+	Cultivation.burn_lifespan(c, years)
+	return years
+
+
+## "+12 attack, +2 speed" for an item's equip stats, plus any lifespan drain.
 static func describe_stats(data: GameData, item_id: String) -> String:
 	var parts: PackedStringArray = []
 	var stats: Dictionary = data.items.get(item_id, {}).get("equip", {}).get("stats", {})
 	for key in STAT_KEYS:
 		if stats.has(key):
 			parts.append("%+d %s" % [int(stats[key]), key.replace("_", " ")])
+	var drain := item_drain(data, item_id)
+	if drain > 0:
+		parts.append("drinks %d %s of lifespan per fight" % [drain, "year" if drain == 1 else "years"])
 	return ", ".join(parts)
 
 
@@ -81,6 +108,8 @@ static func validate(data: GameData) -> PackedStringArray:
 			errors.append("Item '%s' has unknown equip slot '%s'" % [item["id"], e.get("slot", "")])
 		if int(e.get("grade", 0)) < 1:
 			errors.append("Item '%s' needs equip grade >= 1" % item["id"])
+		if int(e.get("lifespan_drain", 0)) < 0:
+			errors.append("Item '%s' needs equip lifespan_drain >= 0" % item["id"])
 		for key in e.get("stats", {}):
 			if not STAT_KEYS.has(key):
 				errors.append("Item '%s' equip has unknown stat '%s'" % [item["id"], key])

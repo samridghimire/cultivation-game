@@ -6,6 +6,7 @@ extends PanelContainer
 signal closed
 
 var _text: RichTextLabel
+var _recharge: Button
 
 
 func _init() -> void:
@@ -20,6 +21,8 @@ func _init() -> void:
 	_text.fit_content = true
 	_text.custom_minimum_size = Vector2(596, 0)
 	box.add_child(_text)
+	_recharge = UIStyle.button("Recharge artifact", func(): GameState.recharge_artifact())
+	box.add_child(_recharge)
 	box.add_child(UIStyle.button("Close", close))
 	EventBus.player_changed.connect(func(): if visible: _rebuild())
 
@@ -67,6 +70,11 @@ func _rebuild() -> void:
 		t += "\n[color=#%s]Active arts[/color]\n" % accent
 		for line in Buffs.describe(p):
 			t += "  %s\n" % line
+	t += "\n[color=#%s]Creation Artifact[/color]\n" % accent
+	for line in CreationArtifact.describe(p, data):
+		t += "  %s\n" % line
+	_recharge.text = "Recharge artifact (%d spirit stones)" % CreationArtifact.recharge_cost(p, data)
+	_recharge.disabled = p.item_count("spirit_stone") < CreationArtifact.recharge_cost(p, data) or p.artifact_lives >= int(data.artifact.get("max_lives", 9))
 	t += "\n[color=#%s]Techniques[/color]\n" % accent
 	if p.techniques.is_empty():
 		t += "  None yet. Learn one from a manual.\n"
