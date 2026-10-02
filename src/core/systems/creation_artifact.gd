@@ -95,3 +95,16 @@ static func respawn(c: CharacterData, data: GameData, anchor_id: String = "") ->
 	c.qi -= qi_lost
 	c.artifact_lives -= 1
 	return {"ok": true, "anchor_id": anchor_id, "region": region, "days": int(t.get("days", 7)), "qi_lost": qi_lost, "lives_left": c.artifact_lives}
+
+
+## Display lines for the character sheet: lives, recharge cost, bound anchors.
+## The latest bound anchor (the respawn point) is marked.
+static func describe(c: CharacterData, data: GameData) -> Array[String]:
+	var lines: Array[String] = []
+	var max_lives := int(data.artifact.get("max_lives", 9))
+	lines.append("Lives: %d / %d   |   Next recharge: %d spirit stones" % [c.artifact_lives, max_lives, recharge_cost(c, data)])
+	lines.append("Anchors: %d / %d bound" % [c.anchors.size(), anchor_slots(c, data)])
+	for i in c.anchors.size():
+		var tag := "  (respawn point)" if i == c.anchors.size() - 1 else ""
+		lines.append("  %s%s" % [anchor_name(data, c.anchors[i]), tag])
+	return lines

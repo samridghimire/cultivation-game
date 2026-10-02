@@ -130,3 +130,12 @@ func test_game_state_anchor_and_recharge_actions() -> void:
 	gs.recharge_artifact()
 	assert_eq(c.artifact_lives, lives + 1)
 	gs.end_session()
+
+
+func test_describe_lists_lives_and_anchors() -> void:
+	var c := CharacterData.new()
+	CreationArtifact.ensure(c, data())
+	var lines := CreationArtifact.describe(c, data())
+	assert_true(lines[0].begins_with("Lives: %d" % c.artifact_lives))
+	assert_true(lines[0].contains("%d spirit stones" % CreationArtifact.recharge_cost(c, data())))
+	assert_true(lines[-1].contains("respawn point"))
