@@ -5,6 +5,8 @@ extends RefCounted
 ## refinement burns every ingredient. Tunables live under "alchemy" in recipes.json.
 ## Recipes must be known before they can be refined: "starter" recipes are known
 ## by everyone, the rest are learned from recipe scrolls (the learn_recipe effect).
+## A great success (the roll lands well under the success chance) yields a
+## recipe's optional `great_output` instead, e.g. a higher-grade pill.
 
 
 ## Chance in [min_chance, max_chance] that refining `recipe_id` succeeds.
@@ -19,6 +21,19 @@ static func success_chance(c: CharacterData, data: GameData, recipe_id: String) 
 		+ float(t.get("comprehension_step", 0.02)) * (c.attribute("comprehension") - 10) \
 		- float(recipe.get("difficulty", 0.0))
 	return clampf(chance, float(t.get("min_chance", 0.05)), float(t.get("max_chance", 0.95)))
+
+
+## Chance in [0, success_chance] of a great success: the success chance above
+## great_threshold, times great_scale (recipes.json "alchemy"). 0 for recipes
+## without a great_output.
+static func great_chance(c: CharacterData, data: GameData, recipe_id: String) -> float:
+	var recipe: Dictionary = data.recipes.get(recipe_id, {})
+	if recipe.is_empty() or not recipe.has("great_output"):
+		return 0.0
+	var chance := success_chance(c, data, recipe_id)
+	var t := data.alchemy
+	var great := (chance - float(t.get("great_threshold", 0.5))) * float(t.get("great_scale", 0.5))
+	return clampf(great, 0.0, chance)
 
 
 ## Why `c` cannot refine `recipe_id` right now, or "" if they can.
@@ -84,19 +99,24 @@ static func grant_rank_recipes(c: CharacterData, data: GameData) -> void:
 
 
 ## Attempt one refinement. Ingredients are consumed either way; on success the
-## output is added. Returns {ok, reason, success, chance, days, item, count, xp, ranks_gained}.
+## output is added (the great_output on a great success, which shares the
+## success roll: roll < great_chance). Returns {ok, reason, success, great,
+## chance, days, item, count, xp, ranks_gained}.
 static func refine(c: CharacterData, data: GameData, recipe_id: String, rng: RandomNumberGenerator) -> Dictionary:
 	var reason := check(c, data, recipe_id)
 	if reason != "":
-		return {"ok": false, "reason": reason, "success": false, "chance": 0.0, "days": 0, "item": "", "count": 0, "xp": 0.0, "ranks_gained": 0}
+		return {"ok": false, "reason": reason, "success": false, "great": false, "chance": 0.0, "days": 0, "item": "", "count": 0, "xp": 0.0, "ranks_gained": 0}
 	var recipe: Dictionary = data.recipes[recipe_id]
 	var chance := success_chance(c, data, recipe_id)
 	for item_id in recipe["ingredients"]:
 		c.add_item(item_id, -int(recipe["ingredients"][item_id]))
-	var success := rng.randf() < chance
-	var item: String = recipe["output"]["item"]
-	var count := int(recipe["output"].get("count", 1)) if success else 0
+	var roll := rng.randf()
+	var success := roll < chance
+	var great := roll < great_chance(c, data, recipe_id)
+	var output: Dictionary = recipe["great_output"] if great else recipe["output"]
+	var item: String = output["item"]
+	var count := int(output.get("count", 1)) if success else 0
 	if success:
 		c.add_item(item, count)
 	var xp := float(recipe.get("xp", 0)) * (1.0 if success else float(data.alchemy.get("failure_xp_fraction", 0.5)))
-	return {"ok": true, "reason": "", "success": success, "chance": chance, "days": int(recipe.get("days", 1)), "item": item, "count": count, "xp": xp, "ranks_gained": Professions.add_xp(c, data, recipe["profession"], xp)}
+	return {"ok": true, "reason": "", "success": success, "great": great, "chance": chance, "days": int(recipe.get("days", 1)), "item": item, "count": count, "xp": xp, "ranks_gained": Professions.add_xp(c, data, recipe["profession"], xp)}
