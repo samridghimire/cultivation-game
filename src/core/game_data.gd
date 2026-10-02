@@ -30,7 +30,10 @@ var enemies: Dictionary = {}  # id -> Dictionary
 var enemy_technique_level := 3
 ## Fraction of spirit stones lost when beaten by a non-lethal enemy.
 var defeat_stone_loss := 0.2
-var recovery_days := 30
+var injuries: Dictionary = {}  # id -> Dictionary
+## Source name (e.g. "combat_defeat") -> {"chance": float, "table": [{"id", "weight"}]}.
+var injury_sources: Dictionary = {}
+var injury_fortune_step := 0.02
 ## Problems found while loading. Empty when all data files are valid.
 var load_errors: PackedStringArray = []
 
@@ -107,9 +110,14 @@ func _load(dir: String) -> void:
 	var foes := _read(dir, "enemies.json")
 	enemy_technique_level = int(foes.get("enemy_technique_level", enemy_technique_level))
 	defeat_stone_loss = float(foes.get("defeat_stone_loss", defeat_stone_loss))
-	recovery_days = int(foes.get("recovery_days", recovery_days))
 	for enemy in foes.get("enemies", []):
 		enemies[enemy["id"]] = enemy
+
+	var hurt := _read(dir, "injuries.json")
+	injury_fortune_step = float(hurt.get("fortune_step", injury_fortune_step))
+	injury_sources = hurt.get("sources", {})
+	for injury in hurt.get("injuries", []):
+		injuries[injury["id"]] = injury
 
 	_validate()
 
@@ -196,6 +204,14 @@ func _validate_combat() -> void:
 		var tech_id: String = item.get("effects", {}).get("learn_technique", "")
 		if tech_id != "" and not techniques.has(tech_id):
 			load_errors.append("Item '%s' teaches unknown technique '%s'" % [item["id"], tech_id])
+	for source in injury_sources:
+		for entry in injury_sources[source].get("table", []):
+			if not injuries.has(entry.get("id", "")):
+				load_errors.append("Injury source '%s' references unknown injury '%s'" % [source, entry.get("id", "")])
+	for item: Dictionary in items.values():
+		var injury_id: String = item.get("effects", {}).get("heal_injury", "")
+		if injury_id != "" and injury_id != "all" and not injuries.has(injury_id):
+			load_errors.append("Item '%s' heals unknown injury '%s'" % [item["id"], injury_id])
 	for enemy: Dictionary in enemies.values():
 		if realm_index_of(enemy.get("realm", "")) < 0:
 			load_errors.append("Enemy '%s' has unknown realm '%s'" % [enemy["id"], enemy.get("realm", "")])

@@ -59,23 +59,25 @@ func test_victory_grants_rewards() -> void:
 	var c := new_character()
 	var stones := c.item_count("spirit_stone")
 	var enemy: Dictionary = data().enemies["wild_boar"]
-	var outcome := Combat.apply_outcome(c, data(), enemy, {"victory": true, "draw": false}, {})
+	var outcome := Combat.apply_outcome(c, data(), enemy, {"victory": true, "draw": false}, {}, seeded_rng())
 	assert_false(outcome["died"])
 	assert_eq(c.item_count("spirit_stone"), stones + int(enemy["rewards"]["items"]["spirit_stone"]))
 
 
-func test_nonlethal_defeat_costs_stones_and_time() -> void:
+func test_nonlethal_defeat_costs_stones_and_injures() -> void:
 	var c := new_character()
 	c.inventory = {"spirit_stone": 100}
-	var outcome := Combat.apply_outcome(c, data(), data().enemies["mountain_bandit"], {"victory": false, "draw": false}, {})
+	c.attributes["fortune"] = 10
+	var outcome := Combat.apply_outcome(c, data(), data().enemies["mountain_bandit"], {"victory": false, "draw": false}, {}, seeded_rng())
 	assert_false(outcome["died"])
 	assert_eq(c.item_count("spirit_stone"), 80)
-	assert_eq(outcome["days"], 1 + data().recovery_days)
+	assert_eq(outcome["days"], 1)
+	assert_true(c.injuries.has(outcome["injury"]), "a non-lethal defeat at average fortune always injures")
 
 
 func test_lethal_defeat_kills() -> void:
 	var c := new_character()
-	var outcome := Combat.apply_outcome(c, data(), data().enemies["mist_wolf"], {"victory": false, "draw": false}, {})
+	var outcome := Combat.apply_outcome(c, data(), data().enemies["mist_wolf"], {"victory": false, "draw": false}, {}, seeded_rng())
 	assert_true(outcome["died"])
 	assert_true(outcome["cause"].contains("Mist Wolf"))
 

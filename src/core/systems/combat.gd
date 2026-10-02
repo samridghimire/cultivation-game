@@ -39,9 +39,15 @@ static func _build_stats(power: float, attrs: Dictionary, tech: Callable) -> Dic
 
 
 ## Combat stats of a character: {max_hp, attack, defense, speed, crit}.
+## Injuries scale down max_hp, attack and defense.
 static func stats(c: CharacterData, data: GameData) -> Dictionary:
 	var power := realm_power(c.realm_index, c.stage)
-	return _build_stats(power, c.attributes, func(key: String) -> float: return Techniques.bonus(c, data, key))
+	var s := _build_stats(power, c.attributes, func(key: String) -> float: return Techniques.bonus(c, data, key))
+	var hurt := Injuries.combat_multiplier(c, data)
+	if hurt < 1.0:
+		for key in ["max_hp", "attack", "defense"]:
+			s[key] = maxi(1, roundi(s[key] * hurt))
+	return s
 
 
 ## Combat stats of an enemy definition. The flat hp/attack/defense/speed in
@@ -134,24 +140,26 @@ static func _strike(atk: Dictionary, def: Dictionary, rng: RandomNumberGenerator
 
 
 ## Applies the result of resolve(). Victory grants the enemy's rewards; a
-## lethal defeat kills; any other defeat costs spirit stones and recovery time.
-## Returns {notes, died, cause, days}: `days` is how long the fight and any
-## recovery took. Marking the character dead is left to the caller.
-static func apply_outcome(c: CharacterData, data: GameData, enemy: Dictionary, result: Dictionary, flags: Dictionary) -> Dictionary:
+## lethal defeat kills; any other defeat costs spirit stones and may injure
+## ("combat_defeat" in injuries.json). Returns {notes, died, cause, days,
+## injury}. Marking the character dead is left to the caller.
+static func apply_outcome(c: CharacterData, data: GameData, enemy: Dictionary, result: Dictionary, flags: Dictionary, rng: RandomNumberGenerator) -> Dictionary:
 	var enemy_name: String = enemy.get("name", "enemy")
 	if result["victory"]:
-		return {"notes": Effects.apply(c, data, enemy.get("rewards", {}), flags), "died": false, "cause": "", "days": 1}
+		return {"notes": Effects.apply(c, data, enemy.get("rewards", {}), flags), "died": false, "cause": "", "days": 1, "injury": ""}
 	if result["draw"]:
-		return {"notes": PackedStringArray(), "died": false, "cause": "", "days": 1}
+		return {"notes": PackedStringArray(), "died": false, "cause": "", "days": 1, "injury": ""}
 	if enemy.get("lethal", false):
-		return {"notes": PackedStringArray(), "died": true, "cause": "You were slain by a %s at age %d." % [enemy_name, c.age_years()], "days": 0}
+		return {"notes": PackedStringArray(), "died": true, "cause": "You were slain by a %s at age %d." % [enemy_name, c.age_years()], "days": 0, "injury": ""}
 	var lost := int(c.item_count("spirit_stone") * data.defeat_stone_loss)
 	var notes: PackedStringArray = []
 	if lost > 0:
 		c.add_item("spirit_stone", -lost)
 		notes.append("-%d Spirit Stone" % lost)
-	notes.append("%d days recovering" % data.recovery_days)
-	return {"notes": notes, "died": false, "cause": "", "days": 1 + data.recovery_days}
+	var injury := Injuries.roll(c, data, "combat_defeat", rng)
+	if injury != "":
+		notes.append("Injured: %s" % Injuries.injury_name(data, injury))
+	return {"notes": notes, "died": false, "cause": "", "days": 1, "injury": injury}
 
 
 ## Estimated chance (0..1) that `c` beats `enemy`, by simulating fights with

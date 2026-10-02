@@ -6,11 +6,11 @@ extends RefCounted
 
 ## Qi gathered per day. `density` is the spiritual energy of the location
 ## multiplied by any sect bonus (1.0 = an ordinary mortal village). Known
-## cultivation techniques multiply it further.
+## cultivation techniques multiply it further; injuries slow it.
 static func qi_per_day(c: CharacterData, data: GameData, density: float = 1.0) -> float:
 	var realm: RealmDef = data.realms[c.realm_index]
 	var comprehension_mult := 0.5 + c.attribute("comprehension") / 20.0
-	return realm.base_qi_per_day * SpiritualRoots.cultivation_multiplier(c.spiritual_roots, data) * comprehension_mult * density * Techniques.cultivation_multiplier(c, data)
+	return realm.base_qi_per_day * SpiritualRoots.cultivation_multiplier(c.spiritual_roots, data) * comprehension_mult * density * Techniques.cultivation_multiplier(c, data) * Injuries.cultivation_multiplier(c, data)
 
 
 ## Cultivate for `days`. Returns {qi_gained, stages_gained, at_bottleneck}.
@@ -63,10 +63,11 @@ static func breakthrough_chance(c: CharacterData, data: GameData) -> float:
 
 
 ## Attempts a major breakthrough. Consumes any pending breakthrough bonus.
-## Returns {attempted, success, chance, realm_name}.
+## A failure may also inflict an injury ("breakthrough_failure" in injuries.json).
+## Returns {attempted, success, chance, realm_name, injury} (injury id or "").
 static func attempt_breakthrough(c: CharacterData, data: GameData, rng: RandomNumberGenerator) -> Dictionary:
 	if not can_attempt_breakthrough(c, data):
-		return {"attempted": false, "success": false, "chance": 0.0, "realm_name": ""}
+		return {"attempted": false, "success": false, "chance": 0.0, "realm_name": "", "injury": ""}
 	var chance := breakthrough_chance(c, data)
 	var next: RealmDef = data.realms[c.realm_index + 1]
 	c.breakthrough_bonus = 0.0
@@ -75,9 +76,11 @@ static func attempt_breakthrough(c: CharacterData, data: GameData, rng: RandomNu
 		c.realm_index += 1
 		c.stage = 0
 		c.qi = 0.0
-	else:
+	var injury := ""
+	if not success:
 		c.qi *= 1.0 - next.failure_qi_loss
-	return {"attempted": true, "success": success, "chance": chance, "realm_name": next.name}
+		injury = Injuries.roll(c, data, "breakthrough_failure", rng)
+	return {"attempted": true, "success": success, "chance": chance, "realm_name": next.name, "injury": injury}
 
 
 static func lifespan_years(c: CharacterData, data: GameData) -> int:

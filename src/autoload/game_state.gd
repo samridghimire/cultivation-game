@@ -74,6 +74,8 @@ func attempt_breakthrough() -> void:
 		EventBus.post("Breakthrough! You have entered the %s realm." % result["realm_name"], "progress")
 	else:
 		EventBus.post("Your breakthrough to %s failed (%d%% chance). Your qi scatters." % [result["realm_name"], int(result["chance"] * 100)], "danger")
+		if result["injury"] != "":
+			EventBus.post("You suffer %s." % Injuries.injury_name(data, result["injury"]), "danger")
 	EventBus.breakthrough_attempted.emit(result["success"], result["realm_name"])
 	_pass_time(BREAKTHROUGH_DAYS)
 
@@ -227,7 +229,7 @@ func fight_enemy(enemy: Dictionary) -> void:
 	var lines: PackedStringArray = result["log"]
 	EventBus.post(lines[0], "danger")
 	EventBus.post("%s (%d rounds, %d/%d hp left)" % [lines[-1], result["rounds"], result["player_hp"], result["player_max_hp"]], "progress" if result["victory"] else "danger")
-	var outcome := Combat.apply_outcome(player, data, enemy, result, world_flags)
+	var outcome := Combat.apply_outcome(player, data, enemy, result, world_flags, rng)
 	if not outcome["notes"].is_empty():
 		EventBus.post("(%s)" % ", ".join(outcome["notes"]), "progress" if result["victory"] else "warning")
 	EventBus.combat_finished.emit(enemy.get("name", "enemy"), result["victory"], result["log"])
@@ -280,6 +282,8 @@ func _on_days_advanced(days: int) -> void:
 	if not _can_act():
 		return
 	player.age_days += days
+	for injury_id in Injuries.pass_days(player, days):
+		EventBus.post("Your %s has healed." % Injuries.injury_name(data, injury_id), "progress")
 	if player.age_years() >= Cultivation.lifespan_years(player, data):
 		_kill("Your lifespan is exhausted. You die of old age at %d." % player.age_years())
 

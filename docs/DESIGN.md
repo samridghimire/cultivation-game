@@ -28,6 +28,7 @@ Your lifespan is limited, and breaking through to a higher realm is how you exte
 | Items, merchant, using pills | ✅ basic | `data/items.json`, `Items` |
 | Save/load | ✅ | `SaveManager` |
 | Data-driven regions, travel, exploration encounters | 🚧 | `data/regions.json`, `data/encounters.json`, `Exploration` |
+| Injuries (from breakthroughs and combat) | ✅ | `data/injuries.json`, `Injuries` |
 | Combat and cultivation techniques | 🚧 | `Combat`, `Techniques`, `data/enemies.json`, `data/techniques.json` |
 | Inventory and techniques screens | 🚧 | `src/ui/` |
 | Top-down world with interactables | ✅ placeholder art | `src/world/` |

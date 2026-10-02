@@ -1,0 +1,14 @@
+{
+  "_doc": "Injuries. A character holds {injury_id: days_left}; time heals them day by day. cultivation_mult multiplies qi gathering, combat_mult multiplies max_hp/attack/defense; several injuries stack multiplicatively. Suffering an injury you already have resets it to the longer of the two durations. sources: when an injury may be inflicted. chance is the base probability (reduced by (fortune - 10) * fortune_step), table picks which injury by weight. Pills heal with the Effects key heal_injury: an injury id, or \"all\".",
+  "fortune_step": 0.02,
+  "injuries": [
+    {"id": "qi_deviation", "name": "Qi Deviation", "description": "Qi runs wild through your meridians. Cultivating is slow and painful.", "cultivation_mult": 0.5, "combat_mult": 0.9, "heal_days": 180},
+    {"id": "damaged_meridians", "name": "Damaged Meridians", "description": "Your meridians are torn. Qi leaks out faster than you can gather it.", "cultivation_mult": 0.25, "combat_mult": 0.8, "heal_days": 365},
+    {"id": "broken_bones", "name": "Broken Bones", "description": "Several bones are broken. Fighting is out of the question.", "cultivation_mult": 0.9, "combat_mult": 0.5, "heal_days": 60},
+    {"id": "internal_injury", "name": "Internal Injury", "description": "A blow bruised your organs. You cough blood when you exert yourself.", "cultivation_mult": 0.7, "combat_mult": 0.7, "heal_days": 120}
+  ],
+  "sources": {
+    "breakthrough_failure": {"chance": 0.6, "table": [{"id": "qi_deviation", "weight": 3}, {"id": "damaged_meridians", "weight": 1}]},
+    "combat_defeat": {"chance": 1.0, "table": [{"id": "broken_bones", "weight": 2}, {"id": "internal_injury", "weight": 1}]}
+  }
+}

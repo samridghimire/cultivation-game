@@ -1,8 +1,7 @@
 {
-  "_doc": "Enemies for Combat.resolve. realm/stage give a baseline from realm power (see combat.gd); hp/attack/defense/speed are added on top. lethal: losing kills the player; otherwise the player is beaten, loses defeat_stone_loss of their spirit stones and spends recovery_days recovering. rewards use the shared Effects keys. techniques: technique ids the enemy knows at enemy_technique_level.",
+  "_doc": "Enemies for Combat.resolve. realm/stage give a baseline from realm power (see combat.gd); hp/attack/defense/speed are added on top. lethal: losing kills the player; otherwise the player is beaten, loses defeat_stone_loss of their spirit stones and may be injured (combat_defeat in injuries.json). rewards use the shared Effects keys. techniques: technique ids the enemy knows at enemy_technique_level.",
   "enemy_technique_level": 3,
   "defeat_stone_loss": 0.2,
-  "recovery_days": 30,
   "enemies": [
     {"id": "wild_boar", "name": "Wild Boar", "description": "A bad-tempered boar rooting through the fields.", "realm": "mortal", "stage": 0, "hp": -10, "attack": -2, "defense": 0, "speed": 0, "lethal": false, "techniques": [], "rewards": {"items": {"spirit_stone": 2}}},
     {"id": "mountain_bandit", "name": "Mountain Bandit", "description": "A mortal thug with a rusty saber.", "realm": "mortal", "stage": 0, "hp": 5, "attack": 1, "defense": 1, "speed": 0, "lethal": false, "techniques": [], "rewards": {"items": {"spirit_stone": 8}, "alignment": 5}},
