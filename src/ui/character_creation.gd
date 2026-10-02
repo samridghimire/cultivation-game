@@ -1,11 +1,14 @@
 extends Control
-## Name your character and roll attributes and spiritual roots.
+## Name your character (surname + given name), pick a gender and roll
+## attributes and spiritual roots.
 
 const MAIN_MENU := "res://src/ui/main_menu.tscn"
 const WORLD := "res://src/world/world.tscn"
 
 var _candidate: CharacterData
+var _surname_edit: LineEdit
 var _name_edit: LineEdit
+var _gender: OptionButton
 var _summary: RichTextLabel
 
 
@@ -22,11 +25,26 @@ func _ready() -> void:
 	panel.add_child(box)
 	box.add_child(UIStyle.label("A New Life", 30, UIStyle.ACCENT))
 
+	var name_row := HBoxContainer.new()
+	name_row.add_theme_constant_override("separation", 10)
+	_surname_edit = LineEdit.new()
+	_surname_edit.placeholder_text = "Surname"
+	_surname_edit.text = "Han"
+	_surname_edit.max_length = 12
+	_surname_edit.custom_minimum_size = Vector2(140, 0)
+	name_row.add_child(_surname_edit)
 	_name_edit = LineEdit.new()
-	_name_edit.placeholder_text = "Your name"
-	_name_edit.text = "Han Li"
-	_name_edit.max_length = 24
-	box.add_child(_name_edit)
+	_name_edit.placeholder_text = "Given name"
+	_name_edit.text = "Li"
+	_name_edit.max_length = 16
+	_name_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	name_row.add_child(_name_edit)
+	_gender = OptionButton.new()
+	for g in Names.genders(GameState.data):
+		_gender.add_item(g.capitalize())
+		_gender.set_item_metadata(_gender.item_count - 1, g)
+	name_row.add_child(_gender)
+	box.add_child(name_row)
 
 	_summary = RichTextLabel.new()
 	_summary.bbcode_enabled = true
@@ -49,7 +67,7 @@ func _ready() -> void:
 
 func _roll() -> void:
 	var data := GameState.data
-	_candidate = CharacterFactory.create(_name_edit.text, data, GameState.rng)
+	_candidate = CharacterFactory.create(_name_edit.text, data, GameState.rng, _selected_gender())
 	var t := "Spiritual Root: [color=#%s]%s[/color]\n" % [UIStyle.ACCENT.to_html(false), SpiritualRoots.describe(_candidate.spiritual_roots, data)]
 	t += "Cultivation talent: %.2fx\n\n" % SpiritualRoots.cultivation_multiplier(_candidate.spiritual_roots, data)
 	for attr in data.attributes:
@@ -58,7 +76,14 @@ func _roll() -> void:
 
 
 func _begin() -> void:
-	var chosen_name := _name_edit.text.strip_edges()
-	_candidate.name = chosen_name if chosen_name != "" else "Nameless"
+	var given := _name_edit.text.strip_edges()
+	Names.apply(_candidate, _surname_edit.text, given if given != "" else "Nameless")
+	_candidate.gender = _selected_gender()
 	GameState.start_session(_candidate)
 	get_tree().change_scene_to_file(WORLD)
+
+
+func _selected_gender() -> String:
+	if _gender.selected < 0:
+		return ""
+	return String(_gender.get_item_metadata(_gender.selected))

@@ -1,19 +1,24 @@
 {
-  "_doc": "Named NPCs. Each becomes a CharacterData at session start and lives on: it ages, cultivates off-screen (if 'cultivates') at its region's qi density times 'diligence' (fraction of days spent cultivating, default 0.3), attempts breakthroughs and can die of old age. realm is a realm id; roots map element ids to purity (omit to roll randomly); attributes default to 10. region/pos/size/color place the NPC in the world. dialogue is a file id in data/dialogue/. deed_context (optional) also offers deeds from data/deeds.json.",
+  "_doc": "Named NPCs. Each becomes a CharacterData at session start and lives on: it ages, cultivates off-screen (if 'cultivates') at its region's qi density times 'diligence' (fraction of days spent cultivating, default 0.3), attempts breakthroughs and can die of old age. realm is a realm id; roots map element ids to purity (omit to roll randomly); attributes default to 10. region/pos/size/color place the NPC in the world. gender (optional) is a data/names.json gender; surname/given_name are optional (name stays the display name). NPCs generated at runtime (Npcs.spawn) have no entry here. dialogue is a file id in data/dialogue/. deed_context (optional) also offers deeds from data/deeds.json.",
   "npcs": [
     {"id": "elder_mo", "name": "Elder Mo", "title": "Retired Cultivator", "region": "qingshi_village", "pos": [560, 170], "color": "9fa3c9",
+     "gender": "male",
      "realm": "foundation_establishment", "stage": 1, "age_years": 182, "alignment": 220, "roots": {"wood": 72, "water": 58},
      "attributes": {"comprehension": 14, "constitution": 11}, "cultivates": true, "dialogue": "elder_mo"},
     {"id": "xiao_ling", "name": "Xiao Ling", "title": "Childhood Friend", "region": "qingshi_village", "pos": [1080, 640], "color": "e89fb0",
+     "gender": "female", "surname": "Xiao", "given_name": "Ling",
      "realm": "mortal", "stage": 0, "age_years": 16, "alignment": 60, "roots": {"fire": 81},
      "attributes": {"comprehension": 13, "fortune": 12}, "cultivates": true, "diligence": 0.6, "dialogue": "xiao_ling"},
     {"id": "herbalist_lan", "name": "Herbalist Lan", "title": "Herb Gatherer", "region": "misty_forest", "pos": [640, 720], "color": "8fc97a",
+     "gender": "female",
      "realm": "qi_refining", "stage": 2, "age_years": 41, "alignment": 90, "roots": {"wood": 48, "earth": 40, "water": 35},
      "cultivates": true, "dialogue": "herbalist_lan"},
     {"id": "broker_qian", "name": "Broker Qian", "title": "Information Broker", "region": "fallen_star_market", "pos": [820, 330], "color": "d4b06a",
+     "gender": "male",
      "realm": "qi_refining", "stage": 6, "age_years": 67, "alignment": -80, "roots": {"metal": 55, "earth": 50},
      "attributes": {"charisma": 15}, "cultivates": true, "dialogue": "broker_qian"},
     {"id": "swordsman_yun", "name": "Yun Feng", "title": "Wandering Swordsman", "region": "azure_peak", "pos": [420, 760], "color": "b8d4e8",
+     "gender": "male", "surname": "Yun", "given_name": "Feng",
      "realm": "foundation_establishment", "stage": 3, "age_years": 88, "alignment": 300, "roots": {"metal": 90},
      "attributes": {"constitution": 14, "spirit": 13}, "cultivates": true, "dialogue": "swordsman_yun"}
   ]
