@@ -212,6 +212,48 @@ func practice_technique(tech_id: String, days: int) -> void:
 	_pass_time(days)
 
 
+## Treat one of your own injuries with your Doctor skill.
+func treat_own_injury(injury_id: String) -> void:
+	if not _can_act():
+		return
+	var result := Medicine.treat_self(player, data, injury_id)
+	if not result["ok"]:
+		EventBus.post(result["reason"], "warning")
+		return
+	var injury_name := Injuries.injury_name(data, injury_id)
+	if result["healed"]:
+		EventBus.post("You treat your %s. It is fully healed." % injury_name, "progress")
+	else:
+		EventBus.post("You treat your %s: %d days of healing. (%s left)" % [injury_name, result["days_healed"], Calendar.format_duration(player.injuries[injury_id])])
+	if result["ranks_gained"] > 0:
+		EventBus.post("You are now a %s!" % Professions.rank_title(player, data, Medicine.DOCTOR), "progress")
+	_pass_time(result["days"])
+
+
+## Pay a clinic to heal an injury fully.
+func visit_clinic(injury_id: String) -> void:
+	if not _can_act():
+		return
+	var result := Medicine.visit_clinic(player, data, injury_id)
+	if not result["ok"]:
+		EventBus.post(result["reason"], "warning")
+		EventBus.player_changed.emit()
+		return
+	EventBus.post("The doctor heals your %s for %d spirit stones." % [Injuries.injury_name(data, injury_id), result["cost"]], "progress")
+	_pass_time(result["days"])
+
+
+## Work as a doctor: treat village patients for income, Doctor xp and alignment.
+func treat_patients(days: int) -> void:
+	if not _can_act():
+		return
+	var result := Medicine.treat_patients(player, data, days)
+	EventBus.post("You treat patients for %s: +%d xp, +%d spirit stones, alignment %+d." % [Calendar.format_duration(days), int(result["xp"]), result["income"], result["alignment"]], "karma")
+	if result["ranks_gained"] > 0:
+		EventBus.post("You are now a %s!" % Professions.rank_title(player, data, Medicine.DOCTOR), "progress")
+	_pass_time(days)
+
+
 ## Fight an enemy from data/enemies.json.
 func fight(enemy_id: String) -> void:
 	if not data.enemies.has(enemy_id):

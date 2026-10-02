@@ -34,6 +34,8 @@ var injuries: Dictionary = {}  # id -> Dictionary
 ## Source name (e.g. "combat_defeat") -> {"chance": float, "table": [{"id", "weight"}]}.
 var injury_sources: Dictionary = {}
 var injury_fortune_step := 0.02
+## Doctor tunables (see Medicine).
+var medicine: Dictionary = {}
 ## Problems found while loading. Empty when all data files are valid.
 var load_errors: PackedStringArray = []
 
@@ -116,6 +118,7 @@ func _load(dir: String) -> void:
 	var hurt := _read(dir, "injuries.json")
 	injury_fortune_step = float(hurt.get("fortune_step", injury_fortune_step))
 	injury_sources = hurt.get("sources", {})
+	medicine = hurt.get("medicine", {})
 	for injury in hurt.get("injuries", []):
 		injuries[injury["id"]] = injury
 
@@ -208,6 +211,11 @@ func _validate_combat() -> void:
 		for entry in injury_sources[source].get("table", []):
 			if not injuries.has(entry.get("id", "")):
 				load_errors.append("Injury source '%s' references unknown injury '%s'" % [source, entry.get("id", "")])
+	for injury: Dictionary in injuries.values():
+		if int(injury.get("heal_days", 0)) <= 0:
+			load_errors.append("Injury '%s' needs heal_days > 0" % injury["id"])
+		if int(injury.get("treatment_cost", 0)) <= 0:
+			load_errors.append("Injury '%s' needs treatment_cost > 0" % injury["id"])
 	for item: Dictionary in items.values():
 		var injury_id: String = item.get("effects", {}).get("heal_injury", "")
 		if injury_id != "" and injury_id != "all" and not injuries.has(injury_id):

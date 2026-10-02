@@ -20,12 +20,14 @@ Roles: `systems` (core rules + tests), `content` (data/*.json + small hooks), `w
 |---|---|---|---|
 | G-001 | systems | done | Injuries (data/injuries.json, Injuries): failed breakthroughs and non-lethal defeats can injure; injuries slow cultivation and weaken combat until healed by time or pills (heal_injury effect). |
 | G-001b | world-ui | done | Show injuries (Injuries.describe) on the character sheet and an injured icon/indicator in the HUD. |
-| G-002 | systems | todo | Alchemy crafting: recipes in data/recipes.json (herbs → pills), success chance from Alchemist rank + comprehension, failure wastes herbs. Replaces "work as Alchemist" XP-only loop. |
+| G-002 | systems | todo | Alchemy crafting: recipes in data/recipes.json (herbs → pills), success chance from Alchemist rank + comprehension, failure wastes herbs. Replaces "work as Alchemist" XP-only loop. Herb ids (tags ["herb"]): spirit_herb, dew_grass, qi_condensing_grass, purple_cloud_mushroom, flame_lotus, ice_soul_flower, blood_ginseng, thousand_year_lingzhi; ores (tags ["ore"]): iron_essence, cold_iron, azure_crystal, star_silver (from W-002 branch). |
 | G-003 | content | in-progress (local 2e) | Herbs and materials: add ~10 spirit herbs/ores to items.json with prices and a gathering spot interactable (forest). |
 | G-004 | systems | todo | Blacksmithing: forge artifacts (weapons/armor) from ores; artifacts have grade and stat bonuses. |
 | G-005 | systems | todo | Talismans: craft single-use talismans with combat or utility effects. |
 | G-006 | systems | todo | Arrays: place arrays that boost qi density at a location (e.g. Qi Gathering Array at your cave abode). |
-| G-007 | systems | todo | Doctor: heal injuries (self and NPCs) for alignment + income. Depends on G-001. |
+| G-007 | systems | done | Doctor (Medicine): treat own injuries (scales with Doctor rank + Spirit), pay a clinic, treat patients for income + alignment. GameState.treat_own_injury / visit_clinic / treat_patients. |
+| G-007b | world-ui | todo | Clinic place type in regions (village): options "Treat patients (1 month)", "Treat your <injury>" per injury, "Pay doctor (N stones)" via Medicine.clinic_cost. |
+| G-007c | systems | todo | Doctors heal NPC injuries (alignment + favor). Depends on W-002 NPC model. |
 | G-008 | systems | todo | Sect missions: sect members take missions from a mission board for contribution points; contribution shop sells techniques/pills. |
 | G-009 | systems | todo | Reputation per sect/faction separate from alignment; evil deeds witnessed lower reputation with righteous sects. |
 | G-010 | systems | todo | Cave abode: the player can claim a dwelling; place arrays, store items, cultivate in seclusion. |
