@@ -156,6 +156,9 @@ func buy_item(item_id: String) -> void:
 func use_item(item_id: String) -> void:
 	if not _can_act():
 		return
+	if Equipment.is_equipment(data, item_id):
+		equip_item(item_id)
+		return
 	var result := Items.use(player, data, item_id, world_flags)
 	if result["ok"]:
 		EventBus.post("You use a %s. (%s)" % [data.items[item_id]["name"], ", ".join(result["notes"])], "progress")
@@ -164,6 +167,31 @@ func use_item(item_id: String) -> void:
 			EventBus.post("You feel %d years of life drain away. %d years remain." % [burned, Cultivation.years_left(player, data)], "danger")
 	else:
 		EventBus.post(result["reason"], "warning")
+	EventBus.player_changed.emit()
+
+
+## Equip a weapon/armor from the inventory (takes no time).
+func equip_item(item_id: String) -> void:
+	if not _can_act():
+		return
+	var reason := Equipment.check_equip(player, data, item_id)
+	if reason != "":
+		EventBus.post(reason, "warning")
+	else:
+		var previous := Equipment.equip(player, data, item_id)
+		var text := "You equip the %s (%s)." % [data.items[item_id]["name"], Equipment.describe_stats(data, item_id)]
+		if previous != "":
+			text += " The %s goes back into your pack." % data.items[previous]["name"]
+		EventBus.post(text, "progress")
+	EventBus.player_changed.emit()
+
+
+func unequip(slot: String) -> void:
+	if not _can_act():
+		return
+	var item_id := Equipment.unequip(player, slot)
+	if item_id != "":
+		EventBus.post("You put away the %s." % data.items[item_id]["name"], "info")
 	EventBus.player_changed.emit()
 
 
@@ -388,13 +416,17 @@ func refine(recipe_id: String) -> void:
 		EventBus.player_changed.emit()
 		return
 	var recipe_name: String = data.recipes[recipe_id].get("name", recipe_id)
+	var prof_id: String = data.recipes[recipe_id]["profession"]
+	var forging := prof_id == "blacksmith"
 	if result["great"]:
-		EventBus.post("Pill fragrance fills the room! A great success: %s yields +%d %s, +%d xp." % [recipe_name, result["count"], data.items[result["item"]].get("name", result["item"]), int(result["xp"])], "progress")
+		var flourish := "The blade sings as it leaves the forge!" if forging else "Pill fragrance fills the room!"
+		EventBus.post("%s A great success: %s yields +%d %s, +%d xp." % [flourish, recipe_name, result["count"], data.items[result["item"]].get("name", result["item"]), int(result["xp"])], "progress")
 	elif result["success"]:
-		EventBus.post("You refine %s: +%d %s, +%d xp." % [recipe_name, result["count"], data.items[result["item"]].get("name", result["item"]), int(result["xp"])], "progress")
+		EventBus.post("You %s %s: +%d %s, +%d xp." % ["forge" if forging else "refine", recipe_name, result["count"], data.items[result["item"]].get("name", result["item"]), int(result["xp"])], "progress")
+	elif forging:
+		EventBus.post("The metal cracks under the hammer and the ore is ruined. %s failed (+%d xp)." % [recipe_name, int(result["xp"])], "warning")
 	else:
 		EventBus.post("The cauldron cracks and your herbs turn to ash. %s failed (+%d xp)." % [recipe_name, int(result["xp"])], "warning")
-	var prof_id: String = data.recipes[recipe_id]["profession"]
 	if result["ranks_gained"] > 0:
 		EventBus.post("You are now a %s!" % Professions.rank_title(player, data, prof_id), "progress")
 	if not player.is_rogue():

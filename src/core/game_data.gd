@@ -193,6 +193,7 @@ func _validate() -> void:
 	_validate_combat()
 	_validate_artifact()
 	_validate_recipes()
+	load_errors.append_array(Equipment.validate(self))
 	for item: Dictionary in items.values():
 		for key in ["burn_lifespan", "extend_lifespan"]:
 			if item.get("effects", {}).has(key) and int(item["effects"][key]) <= 0:
