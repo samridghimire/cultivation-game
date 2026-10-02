@@ -5,6 +5,8 @@ extends PanelContainer
 signal closed
 ## The player chose Settings; the owner shows a SettingsScreen.
 signal settings_requested
+## The player chose Load Game; the owner shows a LoadScreen.
+signal load_requested
 
 const MAIN_MENU := "res://src/ui/main_menu.tscn"
 
@@ -24,7 +26,7 @@ func _init() -> void:
 	box.add_child(title)
 	box.add_child(UIStyle.button("Resume", close))
 	box.add_child(UIStyle.button("Save Game", _save))
-	_load_button = UIStyle.button("Load Game", _load)
+	_load_button = UIStyle.button("Load Game", load_requested.emit)
 	box.add_child(_load_button)
 	box.add_child(UIStyle.button("Settings", settings_requested.emit))
 	box.add_child(UIStyle.button("Save and Quit to Menu", _quit_to_menu))
@@ -41,7 +43,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func open() -> void:
 	_status.text = ""
-	_load_button.disabled = not SaveManager.has_save()
+	_load_button.disabled = SaveManager.list_slots().is_empty()
 	visible = true
 	(get_child(0).get_child(1) as Button).grab_focus.call_deferred()
 
@@ -60,13 +62,6 @@ func _save() -> void:
 		EventBus.post("Game saved.")
 	else:
 		_status.text = "Could not save the game."
-
-
-func _load() -> void:
-	if SaveManager.load_game():
-		get_tree().reload_current_scene()
-	else:
-		_status.text = "Could not load the save."
 
 
 func _quit_to_menu() -> void:
