@@ -1,0 +1,8 @@
+{
+  "_doc": "Name pools for generated characters (Names system). surnames: family names, written first (Chinese order: 'Han Li' = surname Han + given name Li). given_names: gender id -> list of given names; its keys are the valid genders for characters (CharacterData.gender, Npcs.spawn, character creation). Every list must be non-empty.",
+  "surnames": ["Li", "Wang", "Zhang", "Liu", "Chen", "Yang", "Zhao", "Huang", "Zhou", "Wu", "Xu", "Sun", "Ma", "Zhu", "Hu", "Guo", "He", "Lin", "Luo", "Gao", "Han", "Mo", "Yun", "Su", "Bai", "Xiao", "Ye", "Qin", "Lu", "Shen", "Murong", "Shangguan", "Ouyang", "Situ"],
+  "given_names": {
+    "male": ["Feng", "Tian", "Hao", "Chen", "Jun", "Long", "Wei", "Yu", "Ming", "Xuan", "Lei", "Tao", "Zhan", "Yan", "Qing", "Fan", "Kun", "Hong", "Rui", "Shen", "Ziyang", "Tianming", "Haoran", "Changkong", "Wuji", "Yifeng", "Mingyuan", "Xiaobai"],
+    "female": ["Ling", "Xue", "Yue", "Lan", "Mei", "Qian", "Yao", "Rou", "Xin", "Lian", "Ning", "Yun", "Hua", "Jing", "Shuang", "Ying", "Xiaoyu", "Ruoxi", "Qingxuan", "Mengyao", "Yueying", "Lingxi", "Xiangyun", "Shiyin", "Wanqing", "Ziyan"]
+  }
+}

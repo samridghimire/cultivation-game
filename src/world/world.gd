@@ -83,6 +83,9 @@ func _build_places() -> void:
 
 func _build_npcs() -> void:
 	for c in Npcs.in_region(GameState.npcs, GameState.data, GameState.current_region):
+		# Generated NPCs (Npcs.spawn) have no def or placement yet.
+		if not GameState.data.npcs.has(c.id):
+			continue
 		var def: Dictionary = GameState.data.npcs[c.id]
 		var node: Interactable = NPC_SCRIPT.new()
 		node.npc_id = c.id
