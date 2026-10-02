@@ -15,6 +15,7 @@ var _choice_menu: ChoiceMenu
 var _screens: Dictionary = {}
 var _combat_report: CombatReport
 var _pause_menu: PauseMenu
+var _settings: SettingsScreen
 var _banner: Banner
 var _death_screen: Control
 
@@ -39,6 +40,10 @@ func _ready() -> void:
 	_pause_menu = PauseMenu.new()
 	_pause_menu.closed.connect(_update_modal)
 	add_child(UIStyle.centered(_pause_menu))
+	_settings = SettingsScreen.new()
+	_settings.closed.connect(_on_settings_closed)
+	add_child(UIStyle.centered(_settings))
+	_pause_menu.settings_requested.connect(_open_settings)
 	_banner = Banner.new()
 	add_child(_banner)
 	_build_death_screen()
@@ -56,7 +61,7 @@ func _ready() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if _choice_menu.visible or _combat_report.visible or _pause_menu.visible or _death_screen.visible:
+	if _choice_menu.visible or _combat_report.visible or _pause_menu.visible or _settings.visible or _death_screen.visible:
 		return
 	if event.is_action_pressed("pause_menu"):
 		# Consumed here so the world's own Esc handling never runs mid-session.
@@ -183,7 +188,7 @@ func _on_target_changed(display_name: String) -> void:
 
 
 func _on_menu_requested(source: Node) -> void:
-	if _any_screen_open() or _combat_report.visible or _pause_menu.visible or _death_screen.visible:
+	if _any_screen_open() or _combat_report.visible or _pause_menu.visible or _settings.visible or _death_screen.visible:
 		return
 	_choice_menu.open_for(source)
 	_update_modal()
@@ -194,6 +199,7 @@ func _on_player_died(cause: String) -> void:
 	_close_screens()
 	_combat_report.close()
 	_pause_menu.close()
+	_settings.close()
 	(_death_screen.find_child("Cause", true, false) as Label).text = cause
 	_death_screen.visible = true
 	_death_screen.find_children("*", "Button", true, false)[0].grab_focus()
@@ -216,8 +222,20 @@ func _on_breakthrough(success: bool, realm_name: String) -> void:
 		_banner.announce("Breakthrough Failed", "Your qi scatters before the gate of %s." % realm_name, UIStyle.CATEGORY_COLORS["danger"])
 
 
+## Settings replaces the pause menu while open, then returns to it.
+func _open_settings() -> void:
+	_pause_menu.visible = false
+	_settings.open()
+
+
+func _on_settings_closed() -> void:
+	if GameState.has_session() and GameState.player.alive:
+		_pause_menu.open()
+	_update_modal()
+
+
 func _update_modal() -> void:
-	EventBus.ui_modal_changed.emit(_choice_menu.visible or _any_screen_open() or _combat_report.visible or _pause_menu.visible or _death_screen.visible)
+	EventBus.ui_modal_changed.emit(_choice_menu.visible or _any_screen_open() or _combat_report.visible or _pause_menu.visible or _settings.visible or _death_screen.visible)
 
 
 func _return_to_menu() -> void:

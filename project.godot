@@ -19,6 +19,7 @@ InputConfig="*res://src/autoload/input_config.gd"
 GameClock="*res://src/autoload/game_clock.gd"
 GameState="*res://src/autoload/game_state.gd"
 SaveManager="*res://src/autoload/save_manager.gd"
+Settings="*res://src/autoload/settings.gd"
 
 [display]
 

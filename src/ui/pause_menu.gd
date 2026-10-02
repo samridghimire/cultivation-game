@@ -3,6 +3,8 @@ extends PanelContainer
 ## Modal pause menu opened with the pause_menu action (Esc / Start).
 
 signal closed
+## The player chose Settings; the owner shows a SettingsScreen.
+signal settings_requested
 
 const MAIN_MENU := "res://src/ui/main_menu.tscn"
 
@@ -24,10 +26,7 @@ func _init() -> void:
 	box.add_child(UIStyle.button("Save Game", _save))
 	_load_button = UIStyle.button("Load Game", _load)
 	box.add_child(_load_button)
-	var settings := UIStyle.button("Settings", func(): pass)
-	settings.disabled = true
-	settings.tooltip_text = "Coming soon."
-	box.add_child(settings)
+	box.add_child(UIStyle.button("Settings", settings_requested.emit))
 	box.add_child(UIStyle.button("Save and Quit to Menu", _quit_to_menu))
 	_status = UIStyle.label("", 14, Color(0.7, 0.7, 0.7))
 	_status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER

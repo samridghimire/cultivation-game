@@ -4,6 +4,9 @@ extends Control
 const CHARACTER_CREATION := "res://src/ui/character_creation.tscn"
 const WORLD := "res://src/world/world.tscn"
 
+var _menu: Control
+var _settings: SettingsScreen
+
 
 func _ready() -> void:
 	var bg := ColorRect.new()
@@ -27,10 +30,23 @@ func _ready() -> void:
 	var continue_button := UIStyle.button("Continue", _continue)
 	continue_button.disabled = not SaveManager.has_save()
 	box.add_child(continue_button)
+	var settings_button := UIStyle.button("Settings", _open_settings)
+	box.add_child(settings_button)
 	box.add_child(UIStyle.button("Quit", func(): get_tree().quit()))
 	add_child(UIStyle.centered(box))
+	_menu = box
+	_settings = SettingsScreen.new()
+	_settings.closed.connect(func():
+		_menu.visible = true
+		settings_button.grab_focus())
+	add_child(UIStyle.centered(_settings))
 
 	(continue_button if not continue_button.disabled else new_game).grab_focus.call_deferred()
+
+
+func _open_settings() -> void:
+	_menu.visible = false
+	_settings.open()
 
 
 func _continue() -> void:

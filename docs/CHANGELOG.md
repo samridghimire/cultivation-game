@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-02 [F-006] Settings: fullscreen, UI scale, Master/Music/SFX volume in user://settings.cfg (src/autoload/settings.gd, src/ui/settings_screen.gd); opened from the main menu and the pause menu.
 - 2026-10-02 [G-001] Injuries: breakthrough failures and combat defeats can injure; healing over time and with salves/pills.
 - 2026-10-02 [F-004] Save slots backend: per-save metadata, list_slots, delete_save, slot-name validation (SaveManager).
 - 2026-10-02 [F-003] Breakthrough banner + screen flash (src/ui/banner.gd).
