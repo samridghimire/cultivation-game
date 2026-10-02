@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-02 [G-002] Alchemy: data/recipes.json, Alchemy system (rank/Comprehension success chance, failure burns herbs), GameState.refine, refine options at the workshop.
 - 2026-10-02 [W-002/W-003/G-003] Living NPCs (Npcs), branching dialogue (Dialogue, data/dialogue/), herbs/ores with gathering spots and a buy-back stall.
 - 2026-10-02 [G-007] Doctor: self-treatment, paid clinic and treating patients (Medicine).
 - 2026-10-02 [G-001b] Injury UI: HUD injury line, Injuries section on the character sheet, healing items described and Use disabled when nothing to heal.
