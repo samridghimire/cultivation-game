@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-02 [G-002e] Pill quality: recipes' optional great_output, Alchemy.great_chance (from the margin of success chance over great_threshold), Superior Qi Gathering Pill and Flawless Foundation Establishment Pill; other recipes yield double on a great success.
 - 2026-10-02 [F-004b] Load screen listing all save slots (name, realm, date, age) with confirm-to-delete; used by the main menu (Load Game, Continue = newest save) and the pause menu.
 - 2026-10-02 [LIFE-001] Lifespan as a resource: burned/bonus years, burn_lifespan/extend_lifespan effects, Blood Essence Burning Pill, Longevity Pill (ruins), lifespan-cost warnings.
 - 2026-10-02 [G-002c] Recipe learning: starter recipes plus recipe scrolls (learn_recipe effect, 3 scrolls), CharacterData.known_recipes, old saves keep rank-unlocked recipes.

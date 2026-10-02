@@ -3,6 +3,8 @@
   "items": [
     {"id": "spirit_stone", "name": "Spirit Stone", "description": "Crystallized qi. The currency of cultivators.", "price": 0, "usable": false, "effects": {}},
     {"id": "qi_gathering_pill", "name": "Qi Gathering Pill", "description": "A common pill that floods the meridians with qi.", "price": 15, "usable": true, "effects": {"qi": 150}},
+    {"id": "superior_qi_gathering_pill", "name": "Superior Qi Gathering Pill", "description": "A flawless, pale-gold Qi Gathering Pill with almost no impurities.", "price": 45, "usable": true, "effects": {"qi": 400}},
+    {"id": "flawless_foundation_establishment_pill", "name": "Flawless Foundation Establishment Pill", "description": "A pill bearing a faint cloud pattern. Far better odds at your next major breakthrough.", "price": 700, "usable": true, "effects": {"breakthrough_bonus": 0.4}},
     {"id": "foundation_establishment_pill", "name": "Foundation Establishment Pill", "description": "Greatly improves the odds of your next major breakthrough.", "price": 300, "usable": true, "effects": {"breakthrough_bonus": 0.25}},
     {"id": "bone_setting_salve", "name": "Bone-Setting Salve", "description": "A pungent salve that knits broken bones overnight.", "price": 25, "usable": true, "effects": {"heal_injury": "broken_bones"}},
     {"id": "meridian_mending_pill", "name": "Meridian Mending Pill", "description": "Soothes qi deviation and calms wild meridians.", "price": 120, "usable": true, "effects": {"heal_injury": "qi_deviation"}},

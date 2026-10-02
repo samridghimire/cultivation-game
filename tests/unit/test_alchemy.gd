@@ -167,7 +167,9 @@ func test_refine_success_and_failure() -> void:
 		var result := Alchemy.refine(c, data(), "qi_gathering_pill", rng)
 		assert_true(result["ok"])
 		assert_eq(result["days"], int(recipe["days"]))
-		if result["success"]:
+		if result["great"]:
+			successes += 1
+		elif result["success"]:
 			successes += 1
 			assert_eq(c.item_count("qi_gathering_pill") - pills_before, int(recipe["output"]["count"]))
 			assert_almost_eq(result["xp"], float(recipe["xp"]))
@@ -191,6 +193,72 @@ func test_refining_is_deterministic() -> void:
 	var rng_b := seeded_rng(7)
 	for i in 10:
 		assert_eq(Alchemy.refine(a, data(), "qi_gathering_pill", rng_a)["success"], Alchemy.refine(b, data(), "qi_gathering_pill", rng_b)["success"])
+
+
+func test_great_chance_scales_with_success_chance() -> void:
+	assert_almost_eq(Alchemy.great_chance(_alchemist(), data(), "qi_gathering_pill"), 0.0)  # no great success at base chance
+	var master := _alchemist(10, 30)
+	var great := Alchemy.great_chance(master, data(), "qi_gathering_pill")
+	var t := data().alchemy
+	assert_almost_eq(great, (float(t["max_chance"]) - float(t["great_threshold"])) * float(t["great_scale"]))
+	assert_gt(Alchemy.success_chance(master, data(), "qi_gathering_pill"), great)
+	assert_almost_eq(Alchemy.great_chance(master, data(), "no_such_recipe"), 0.0)
+
+
+func test_great_chance_needs_great_output() -> void:
+	var recipe: Dictionary = data().recipes["qi_gathering_pill"]
+	var saved: Dictionary = recipe["great_output"]
+	recipe.erase("great_output")
+	assert_almost_eq(Alchemy.great_chance(_alchemist(10, 30), data(), "qi_gathering_pill"), 0.0)
+	recipe["great_output"] = saved
+
+
+func test_great_success_yields_great_output() -> void:
+	var recipe: Dictionary = data().recipes["qi_gathering_pill"]
+	var great_item: String = recipe["great_output"]["item"]
+	var c := _alchemist(10, 30)
+	_stock(c, "qi_gathering_pill", 60)
+	var rng := seeded_rng()
+	var greats := 0
+	var normals := 0
+	for i in 60:
+		var great_before := c.item_count(great_item)
+		var normal_before := c.item_count("qi_gathering_pill")
+		var result := Alchemy.refine(c, data(), "qi_gathering_pill", rng)
+		if result["great"]:
+			greats += 1
+			assert_true(result["success"], "a great success is a success")
+			assert_eq(result["item"], great_item)
+			assert_eq(c.item_count(great_item) - great_before, int(recipe["great_output"]["count"]))
+			assert_eq(c.item_count("qi_gathering_pill"), normal_before)
+		elif result["success"]:
+			normals += 1
+			assert_eq(c.item_count(great_item), great_before)
+	assert_gt(greats, 0)
+	assert_gt(normals, 0)
+
+
+func test_great_outputs_are_valid_items() -> void:
+	for recipe: Dictionary in data().recipes.values():
+		if recipe.has("great_output"):
+			assert_true(data().items.has(recipe["great_output"]["item"]), recipe["id"])
+
+
+func test_game_state_great_refine() -> void:
+	var tree := Engine.get_main_loop() as SceneTree
+	var gs := tree.root.get_node("GameState")
+	var c := CharacterFactory.create("Alchemist", gs.data, seeded_rng())
+	gs.start_session(c)
+	c.attributes["comprehension"] = 30
+	c.professions["alchemist"] = {"rank": 10, "xp": 0.0}
+	var great_item: String = gs.data.recipes["qi_gathering_pill"]["great_output"]["item"]
+	var ingredients: Dictionary = gs.data.recipes["qi_gathering_pill"]["ingredients"]
+	for i in 30:
+		for item_id in ingredients:
+			c.add_item(item_id, int(ingredients[item_id]))
+		gs.refine("qi_gathering_pill")
+	assert_gt(c.item_count(great_item), 0, "a master alchemist eventually refines a superior pill")
+	gs.end_session()
 
 
 func test_game_state_refine() -> void:
