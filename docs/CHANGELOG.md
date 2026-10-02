@@ -3,6 +3,8 @@
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
 - 2026-10-02 [LIFE-001c] Evil artifact weapons: equip `lifespan_drain` burns years after every fight while equipped (can cause final death by old age), shown in Equipment.describe_stats; Blood-Drinker Saber item.
+- 2026-10-02 [ART-001b] Character sheet shows Creation Artifact lives, recharge cost and bound anchors (respawn point marked) with a Recharge artifact button; CreationArtifact.describe.
+- 2026-10-02 [F-005] Balance sim `tests/sim/simulate_life.gd` (N lives headless, avg age per realm, old-age deaths per realm); filed F-005b with findings.
 - 2026-10-02 [G-004] Blacksmithing core: Equipment (weapon/armor, grade, flat combat stats), equip/unequip actions, 4 forge recipes + 5 equipment items, crafting chance uses the profession's primary attribute.
 - 2026-10-02 [FAM-001] Character identity: gender, surname/given name, parents/children/spouses and NPC behavior fields on CharacterData; data/names.json + Names; Npcs.spawn for generated NPCs without a def; character creation picks surname, given name and gender.
 - 2026-10-02 [G-002d] 6 new alchemy recipes and pills (healing, qi, righteous Clear Heart, demonic Blood Demon, Core Forming) with recipe scrolls.
