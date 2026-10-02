@@ -71,7 +71,8 @@ ART-001 (respawn core) is in P1 because it is prioritized.
 | id | role | status | task |
 |---|---|---|---|
 | W-003b | world-ui | todo | Dialogue window UI: open on EventBus.dialogue_requested, render GameState.dialogue_view() ({id, speaker, text, choices[{index,label,disabled,reason}]}), call GameState.choose_dialogue(index), close on dialogue_ended. Follow src/ui/combat_report.gd; register in hud.gd. NPCs fall back to the choice menu until it exists. |
-| W-004b | content | todo | More encounter content in data/encounters.json (currently ~20), e.g. realm-scaled fortuitous encounters, sect-specific events, NPC cameos (set world flags NPC dialogue can check). |
+| W-004b | content | done | Added 22 encounters (now 42): righteous/neutral/demonic fortunes, realm-gated foes (demonic cultivator, jade python), NPC cameo flags (met_fox_spirit, met_peak_hermit). |
+| W-004c | systems | todo | Encounters with player choices (e.g. help vs rob the traveller) and flag-checked follow-up encounters; currently each encounter has one outcome, so moral choices are split into separate encounters. |
 
 ## Local sessions
 The local sessions that built combat/techniques, world/exploration/NPCs/dialogue and the UI screens have finished (2026-10-02); their work is on main and these areas are open to anyone. Add follow-up tasks above.
