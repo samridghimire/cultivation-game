@@ -24,15 +24,29 @@ Your lifespan is limited, and breaking through to a higher realm is how you exte
 ## Family & Clan system (owner priority)
 The player may start a family and/or join a sect.
 - **Courtship and marriage.** Build favor with NPCs and marry a Dao companion. Spouses are full characters who cultivate, age and can die. Dual cultivation gives both partners a bonus.
-- **Children.** Children inherit spiritual roots and attributes from both parents, with random variation (a two-trash-root couple can still produce a genius, rarely). They grow up over in-game years, and adoption is also possible.
+- **Wives and concubines (owner decision).** A male character can take one main wife plus **multiple concubines**, as in the genre. Spousal rank (main wife vs concubine) matters for status, inheritance of clan leadership and household politics. Limits and rules live in `data/family.json` per gender, not hardcoded.
+- **Children.** Children inherit spiritual roots and attributes from both parents, with random variation (a two-trash-root couple can still produce a genius, rarely). **Several partners can be pregnant at the same time.** Children grow up over in-game years, and adoption is also possible. Children of the main wife vs concubines can differ in status (heir priority), which the player can override as Patriarch.
 - **Training descendants.** Teach children techniques you know, assign training (cultivation, professions), pay for pills and resources, and send them to join sects.
 - **Founding a clan.** At sufficient strength (e.g. Foundation Establishment plus resources) found a clan with your surname and become its **Patriarch/Matriarch**. A clan has members (blood family, spouses, retainers), ranks (Patriarch, Elders, core members, outer members), a treasury, an estate with buildings (ancestral hall, spirit fields, alchemy room, protective array) and reputation.
 - **Generations.** Descendants marry and have children of their own. Bloodlines can carry special traits that awaken. Your clan can rise to rival sects, form marriage alliances, or wage feuds with NPC clans.
-- **Legacy (proposed default, owner to confirm).** When you die, you may continue playing as an heir, and the clan persists. With no heir, the run ends.
+- Your descendants are your legacy and power base, but the run follows **you**; see the Creation Artifact below.
+
+## The Creation Artifact (the protagonist's "golden finger")
+Every great cultivation protagonist has something that sets them apart. Ours is a mysterious **Creation Artifact** bound to the player's soul at the start of the game.
+- **Respawn instead of permadeath.** When the player is killed, the artifact pulls their soul back and they **respawn at one of their bound anchor locations**. Death has a cost (see open questions) but is not the end.
+- **Anchors.** The player binds anchors at specific places (e.g. a meditation spot, their cave abode, clan estate). Anchor slots are limited and **more unlock as the player's cultivation realm rises**. Choosing where to respawn is a strategic decision.
+- **Unlockable functions.** The artifact has many sealed functions that unlock as the player advances (realm milestones, feeding it treasures/spirit stones, story events). Candidate functions, all data-driven in `data/artifact.json`:
+  - Respawn + anchors (available from the start, 1 anchor)
+  - Storage space (a personal pocket dimension for items)
+  - Appraisal (see hidden stats: NPC talent/realm, item grade, herb age)
+  - Inner world (a pocket realm with dense qi and time dilation for cultivation)
+  - Spirit garden (grow herbs inside the inner world at accelerated speed)
+  - Further secrets for late game (owner to expand)
+- The artifact is the main story hook: who made it, why it chose the player, and who else wants it.
 
 ## Long-term roadmap (big systems, in rough order after the foundation)
 1. Crafting loops: alchemy, blacksmithing, talismans, arrays (G-00x)
-2. **Family & clan** (FAM-xxx)
+2. **Family & clan** (FAM-xxx) and the **Creation Artifact** (ART-xxx)
 3. Sect life: missions, contribution shop, sect ranks with real duties, rising to Sect Master or **founding your own sect**
 4. Cultivation methods (main technique that sets qi rate, element and special effects), Dao insights / comprehension, **Heavenly Tribulations** at major breakthroughs
 5. Rivals and karma: named rivals, grudges and vendettas, enemies hunting you, debts of gratitude
@@ -65,8 +79,11 @@ Mortal → Qi Refining (9 layers) → Foundation Establishment → Core Formatio
 Void Refinement → Body Integration → Mahayana → Tribulation Transcendence. Post-Qi-Refining realms have Early/Middle/Late/Peak stages.
 
 ## Open design questions (for the human)
-- Family: should the player pick a gender at creation, and who can have children (any couple, or with adoption as the alternative)? Proposed default: player chooses gender, any couple may marry, birth for opposite-sex couples and adoption for anyone, polygamy off by default.
-- Legacy: confirm "continue as heir on death".
+- **Decided:** player picks gender at creation; a male character can have one main wife + multiple concubines and multiple simultaneous pregnancies.
+- **Decided:** no permadeath for the player; the Creation Artifact respawns them at bound anchors, with more anchors and functions unlocking as they level up.
+- Female player character: same structure mirrored (main husband + concubines), or a single Dao companion? Proposed default until answered: single Dao companion plus adoption, configurable in `data/family.json`.
+- Death cost when respawning: proposed default = drop a portion of carried spirit stones/items where you died, lose some qi, and time passes while the soul recovers. Should repeated deaths get worse?
+- Does the artifact protect against death by old age, or only violent death? Proposed default: violent death only; lifespan still matters (a late-game artifact function could extend it).
 - Permadeath, or reincarnation / legacy system on death?
 - Real-time world (NPCs move, time flows) or turn-like time that only passes through actions (current)?
 - Combat style: turn-based, real-time action, or auto-resolved with techniques/strategy?
