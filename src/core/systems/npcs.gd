@@ -1,7 +1,10 @@
 class_name Npcs
 extends RefCounted
-## Named NPCs from data/npcs.json. They reuse CharacterData and live their own
-## lives off-screen: aging, cultivating and breaking through month by month.
+## NPCs: named ones from data/npcs.json and generated ones (Npcs.spawn) with no
+## def at all. They reuse CharacterData and live their own lives off-screen:
+## aging, cultivating and breaking through month by month. Behavior (region,
+## cultivates, diligence) is read from the CharacterData first, falling back
+## to the def for NPCs saved before FAM-001.
 
 ## NPCs are simulated in steps of at most this many days, so a year of
 ## seclusion gives them twelve chances to break through, not one.
@@ -9,6 +12,11 @@ const STEP_DAYS := Calendar.DAYS_PER_MONTH
 ## Fraction of their days NPCs spend cultivating, unless their data sets
 ## "diligence". They have lives, duties and bad habits.
 const DEFAULT_DILIGENCE := 0.3
+## Prefix of generated NPC ids ("gen_1", "gen_2", ...).
+const SPAWN_PREFIX := "gen_"
+## Diligence range for generated NPCs.
+const SPAWN_DILIGENCE_MIN := 0.15
+const SPAWN_DILIGENCE_MAX := 0.6
 
 
 static func create(def: Dictionary, data: GameData, rng: RandomNumberGenerator) -> CharacterData:
@@ -26,7 +34,77 @@ static func create(def: Dictionary, data: GameData, rng: RandomNumberGenerator) 
 	c.realm_index = maxi(0, data.realm_index_of(def.get("realm", "mortal")))
 	c.stage = clampi(int(def.get("stage", 0)), 0, data.realms[c.realm_index].stage_count() - 1)
 	c.alignment = int(def.get("alignment", 0))
+	c.gender = String(def.get("gender", ""))
+	c.surname = String(def.get("surname", ""))
+	c.given_name = String(def.get("given_name", ""))
+	c.home_region = String(def.get("region", ""))
+	c.cultivates = bool(def.get("cultivates", false))
+	c.diligence = float(def.get("diligence", DEFAULT_DILIGENCE))
 	return c
+
+
+## Creates a new NPC without a data/npcs.json def, adds it to `npcs` under a
+## unique id and returns it. Every `opts` key is optional:
+## gender, surname, given_name, age_years (16-40), region, realm ("mortal"),
+## stage, alignment, cultivates (true), diligence (random), roots (rolled),
+## attributes (rolled per data/attributes.json).
+static func spawn(npcs: Dictionary, data: GameData, rng: RandomNumberGenerator, opts: Dictionary = {}) -> CharacterData:
+	var c := CharacterData.new()
+	c.id = next_id(npcs)
+	c.gender = String(opts.get("gender", ""))
+	if not Names.is_gender(data, c.gender):
+		c.gender = Names.roll_gender(data, rng)
+	var surname := String(opts.get("surname", ""))
+	if surname == "":
+		surname = Names.roll_surname(data, rng)
+	var given := String(opts.get("given_name", ""))
+	if given == "":
+		given = Names.roll_given_name(data, c.gender, rng)
+	Names.apply(c, surname, given)
+	var age_years := int(opts.get("age_years", rng.randi_range(16, 40)))
+	c.age_days = age_years * Calendar.DAYS_PER_YEAR + rng.randi_range(0, Calendar.DAYS_PER_YEAR - 1)
+	var rolled := {}
+	for attr in data.attributes:
+		rolled[attr["id"]] = rng.randi_range(int(attr["roll_min"]), int(attr["roll_max"]))
+	for attr_id in rolled:
+		c.attributes[attr_id] = int(opts.get("attributes", {}).get(attr_id, rolled[attr_id]))
+	if opts.has("roots"):
+		for element in opts["roots"]:
+			c.spiritual_roots[element] = int(opts["roots"][element])
+	else:
+		c.spiritual_roots = SpiritualRoots.roll(data, rng)
+	c.realm_index = maxi(0, data.realm_index_of(String(opts.get("realm", "mortal"))))
+	c.stage = clampi(int(opts.get("stage", 0)), 0, data.realms[c.realm_index].stage_count() - 1)
+	c.alignment = int(opts.get("alignment", 0))
+	c.home_region = String(opts.get("region", ""))
+	c.cultivates = bool(opts.get("cultivates", true))
+	c.diligence = float(opts.get("diligence", rng.randf_range(SPAWN_DILIGENCE_MIN, SPAWN_DILIGENCE_MAX)))
+	npcs[c.id] = c
+	return c
+
+
+## The first free generated id. Deterministic, and stable across saves.
+static func next_id(npcs: Dictionary) -> String:
+	var n := npcs.size() + 1
+	while npcs.has(SPAWN_PREFIX + str(n)):
+		n += 1
+	return SPAWN_PREFIX + str(n)
+
+
+static func region_of(c: CharacterData, data: GameData) -> String:
+	if c.home_region != "":
+		return c.home_region
+	return String(data.npcs.get(c.id, {}).get("region", ""))
+
+
+static func cultivates(c: CharacterData, data: GameData) -> bool:
+	return c.cultivates or bool(data.npcs.get(c.id, {}).get("cultivates", false))
+
+
+static func diligence_of(c: CharacterData, data: GameData) -> float:
+	if c.diligence >= 0.0:
+		return c.diligence
+	return float(data.npcs.get(c.id, {}).get("diligence", DEFAULT_DILIGENCE))
 
 
 ## Creates any NPC in data that `npcs` (id -> CharacterData) does not have yet,
@@ -42,28 +120,26 @@ static func simulate(npcs: Dictionary, data: GameData, days: int, rng: RandomNum
 	var events: Array[Dictionary] = []
 	for npc_id in npcs:
 		var c: CharacterData = npcs[npc_id]
-		var def: Dictionary = data.npcs.get(npc_id, {})
 		var remaining := days
 		while remaining > 0 and c.alive:
 			var step := mini(remaining, STEP_DAYS)
 			remaining -= step
-			_live(c, def, data, step, rng, events)
+			_live(c, data, step, rng, events)
 	return events
 
 
-static func _live(c: CharacterData, def: Dictionary, data: GameData, days: int, rng: RandomNumberGenerator, events: Array[Dictionary]) -> void:
+static func _live(c: CharacterData, data: GameData, days: int, rng: RandomNumberGenerator, events: Array[Dictionary]) -> void:
 	c.age_days += days
 	if c.age_years() >= Cultivation.lifespan_years(c, data):
 		c.alive = false
 		c.cause_of_death = "old age"
 		events.append({"npc_id": c.id, "text": "News arrives: %s has died of old age at %d." % [c.name, c.age_years()], "category": "warning"})
 		return
-	if not def.get("cultivates", false):
+	if not cultivates(c, data):
 		return
 	if SpiritualRoots.cultivation_multiplier(c.spiritual_roots, data) <= 0.0:
 		return
-	var diligence := float(def.get("diligence", DEFAULT_DILIGENCE))
-	Cultivation.cultivate(c, data, days, Exploration.qi_density(data, def.get("region", "")) * diligence)
+	Cultivation.cultivate(c, data, days, Exploration.qi_density(data, region_of(c, data)) * diligence_of(c, data))
 	if Cultivation.can_attempt_breakthrough(c, data):
 		var result := Cultivation.attempt_breakthrough(c, data, rng)
 		# Mortal to Qi Refining is routine; only report real breakthroughs.
@@ -78,7 +154,7 @@ static func in_region(npcs: Dictionary, data: GameData, region_id: String) -> Ar
 	var result: Array[CharacterData] = []
 	for npc_id in npcs:
 		var c: CharacterData = npcs[npc_id]
-		if c.alive and data.npcs.get(npc_id, {}).get("region", "") == region_id:
+		if c.alive and region_of(c, data) == region_id:
 			result.append(c)
 	return result
 

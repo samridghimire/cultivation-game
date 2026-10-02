@@ -24,6 +24,7 @@ var regions: Dictionary = {}  # id -> Dictionary
 var start_region := ""
 var encounters: Dictionary = {}  # id -> Dictionary
 var npcs: Dictionary = {}  # id -> Dictionary (definitions; live NPCs are in GameState.npcs)
+var names: Dictionary = {}  # data/names.json: {"surnames": [...], "given_names": {gender: [...]}}
 var dialogues: Dictionary = {}  # id -> Dictionary, one per data/dialogue/*.json
 var techniques: Dictionary = {}  # id -> TechniqueDef
 var technique_affinity_bonus := 0.5
@@ -122,6 +123,8 @@ func _load(dir: String) -> void:
 
 	for npc in _read(dir, "npcs.json").get("npcs", []):
 		npcs[npc["id"]] = npc
+
+	names = _read(dir, "names.json")
 
 	var dialogue_dir := dir.path_join("dialogue")
 	for file_name in DirAccess.get_files_at(dialogue_dir):
@@ -230,7 +233,17 @@ func _validate_world() -> void:
 				load_errors.append("Encounter '%s' references unknown item '%s'" % [e["id"], item_id])
 		if e.has("enemy") and not enemies.has(e["enemy"]):
 			load_errors.append("Encounter '%s' references unknown enemy '%s'" % [e["id"], e["enemy"]])
+	if (names.get("surnames", []) as Array).is_empty():
+		load_errors.append("names.json has no surnames")
+	var given: Dictionary = names.get("given_names", {})
+	if given.is_empty():
+		load_errors.append("names.json has no given_names")
+	for gender in given:
+		if (given[gender] as Array).is_empty():
+			load_errors.append("names.json has no given names for gender '%s'" % gender)
 	for npc: Dictionary in npcs.values():
+		if npc.has("gender") and not given.has(npc["gender"]):
+			load_errors.append("NPC '%s' has unknown gender '%s'" % [npc["id"], npc["gender"]])
 		if not regions.has(npc.get("region", "")):
 			load_errors.append("NPC '%s' is in unknown region '%s'" % [npc["id"], npc.get("region", "")])
 		if realm_index_of(npc.get("realm", "mortal")) < 0:
