@@ -159,6 +159,9 @@ func use_item(item_id: String) -> void:
 	var result := Items.use(player, data, item_id, world_flags)
 	if result["ok"]:
 		EventBus.post("You use a %s. (%s)" % [data.items[item_id]["name"], ", ".join(result["notes"])], "progress")
+		var burned := int(data.items[item_id].get("effects", {}).get("burn_lifespan", 0))
+		if burned > 0:
+			EventBus.post("You feel %d years of life drain away. %d years remain." % [burned, Cultivation.years_left(player, data)], "danger")
 	else:
 		EventBus.post(result["reason"], "warning")
 	EventBus.player_changed.emit()

@@ -83,9 +83,32 @@ static func attempt_breakthrough(c: CharacterData, data: GameData, rng: RandomNu
 	return {"attempted": true, "success": success, "chance": chance, "realm_name": next.name, "injury": injury}
 
 
+## Total lifespan: the realm's, adjusted by Constitution, plus years gained from
+## longevity treasures, minus years burned for power.
 static func lifespan_years(c: CharacterData, data: GameData) -> int:
 	var realm: RealmDef = data.realms[c.realm_index]
-	return realm.lifespan_years + (c.attribute("constitution") - 10)
+	return realm.lifespan_years + (c.attribute("constitution") - 10) + c.lifespan_bonus_years - c.lifespan_spent_years
+
+
+## Whole years left before death by old age (never negative).
+static func years_left(c: CharacterData, data: GameData) -> int:
+	return maxi(lifespan_years(c, data) - c.age_years(), 0)
+
+
+## Burns `years` of lifespan. Returns false (and burns nothing) for a non-positive amount.
+static func burn_lifespan(c: CharacterData, years: int) -> bool:
+	if years <= 0:
+		return false
+	c.lifespan_spent_years += years
+	return true
+
+
+## Adds `years` of lifespan. Returns false (and adds nothing) for a non-positive amount.
+static func extend_lifespan(c: CharacterData, years: int) -> bool:
+	if years <= 0:
+		return false
+	c.lifespan_bonus_years += years
+	return true
 
 
 static func realm_label(c: CharacterData, data: GameData) -> String:

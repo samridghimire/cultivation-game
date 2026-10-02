@@ -88,6 +88,10 @@ static func describe_effects(effects: Dictionary, data: GameData) -> PackedStrin
 		lines.append("+%d qi" % int(effects["qi"]))
 	if effects.has("breakthrough_bonus"):
 		lines.append("+%d%% to your next breakthrough" % int(float(effects["breakthrough_bonus"]) * 100))
+	if effects.has("burn_lifespan"):
+		lines.append("WARNING: burns %d years of your lifespan!" % int(effects["burn_lifespan"]))
+	if effects.has("extend_lifespan"):
+		lines.append("+%d years of lifespan" % int(effects["extend_lifespan"]))
 	if effects.has("alignment"):
 		lines.append("Alignment %+d" % int(effects["alignment"]))
 	for item_id in effects.get("items", {}):

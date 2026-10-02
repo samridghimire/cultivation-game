@@ -24,6 +24,10 @@ var techniques: Dictionary = {}  # technique id -> {"level": int, "xp": float}
 ## Recipe ids learned from scrolls (data/recipes.json "starter" recipes are known without learning).
 var known_recipes: Array[String] = []
 var injuries: Dictionary = {}  # injury id -> days left to heal
+## Years of lifespan burned for power (forbidden arts, demonic pills); see Cultivation.lifespan_years.
+var lifespan_spent_years := 0
+## Years of lifespan gained from longevity pills and treasures.
+var lifespan_bonus_years := 0
 ## Creation Artifact lives left (-1 = not yet initialised, see CreationArtifact.ensure).
 var artifact_lives := -1
 ## Lives bought with spirit stones so far (raises the next recharge cost).
@@ -77,6 +81,8 @@ func to_dict() -> Dictionary:
 		"techniques": techniques.duplicate(true),
 		"known_recipes": known_recipes.duplicate(),
 		"injuries": injuries.duplicate(),
+		"lifespan_spent_years": lifespan_spent_years,
+		"lifespan_bonus_years": lifespan_bonus_years,
 		"artifact_lives": artifact_lives,
 		"artifact_recharges": artifact_recharges,
 		"anchors": anchors.duplicate(),
@@ -105,6 +111,8 @@ static func from_dict(d: Dictionary) -> CharacterData:
 		c.sect = {"id": String(s.get("id", "")), "rank": int(s.get("rank", 0)), "contribution": int(s.get("contribution", 0))}
 	c.inventory = _int_values(d.get("inventory", {}))
 	c.injuries = _int_values(d.get("injuries", {}))
+	c.lifespan_spent_years = int(d.get("lifespan_spent_years", 0))
+	c.lifespan_bonus_years = int(d.get("lifespan_bonus_years", 0))
 	c.artifact_lives = int(d.get("artifact_lives", -1))
 	c.artifact_recharges = int(d.get("artifact_recharges", 0))
 	for anchor_id in d.get("anchors", []):

@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-02 [LIFE-001] Lifespan as a resource: burned/bonus years, burn_lifespan/extend_lifespan effects, Blood Essence Burning Pill, Longevity Pill (ruins), lifespan-cost warnings.
 - 2026-10-02 [G-002c] Recipe learning: starter recipes plus recipe scrolls (learn_recipe effect, 3 scrolls), CharacterData.known_recipes, old saves keep rank-unlocked recipes.
 - 2026-10-02 [F-001] GameState integration tests for join_sect, leave_sect, buy_item, use_item, work_profession (contribution, promotion, rogue). No bugs found.
 - 2026-10-02 [W-004b] 22 new encounters (42 total): moral fortunes for righteous/demonic players, realm-gated foes, NPC cameos.
