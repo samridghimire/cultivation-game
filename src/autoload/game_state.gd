@@ -388,7 +388,9 @@ func refine(recipe_id: String) -> void:
 		EventBus.player_changed.emit()
 		return
 	var recipe_name: String = data.recipes[recipe_id].get("name", recipe_id)
-	if result["success"]:
+	if result["great"]:
+		EventBus.post("Pill fragrance fills the room! A great success: %s yields +%d %s, +%d xp." % [recipe_name, result["count"], data.items[result["item"]].get("name", result["item"]), int(result["xp"])], "progress")
+	elif result["success"]:
 		EventBus.post("You refine %s: +%d %s, +%d xp." % [recipe_name, result["count"], data.items[result["item"]].get("name", result["item"]), int(result["xp"])], "progress")
 	else:
 		EventBus.post("The cauldron cracks and your herbs turn to ash. %s failed (+%d xp)." % [recipe_name, int(result["xp"])], "warning")

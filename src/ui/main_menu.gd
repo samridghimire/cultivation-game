@@ -6,6 +6,7 @@ const WORLD := "res://src/world/world.tscn"
 
 var _menu: Control
 var _settings: SettingsScreen
+var _load_screen: LoadScreen
 
 
 func _ready() -> void:
@@ -28,8 +29,11 @@ func _ready() -> void:
 	var new_game := UIStyle.button("New Game", func(): get_tree().change_scene_to_file(CHARACTER_CREATION))
 	box.add_child(new_game)
 	var continue_button := UIStyle.button("Continue", _continue)
-	continue_button.disabled = not SaveManager.has_save()
+	continue_button.disabled = SaveManager.most_recent_slot() == ""
 	box.add_child(continue_button)
+	var load_button := UIStyle.button("Load Game", _open_load)
+	load_button.disabled = SaveManager.list_slots().is_empty()
+	box.add_child(load_button)
 	var settings_button := UIStyle.button("Settings", _open_settings)
 	box.add_child(settings_button)
 	box.add_child(UIStyle.button("Quit", func(): get_tree().quit()))
@@ -41,6 +45,13 @@ func _ready() -> void:
 		settings_button.grab_focus())
 	add_child(UIStyle.centered(_settings))
 
+	_load_screen = LoadScreen.new()
+	_load_screen.closed.connect(func():
+		_menu.visible = true
+		load_button.grab_focus())
+	_load_screen.slot_chosen.connect(_load_slot)
+	add_child(UIStyle.centered(_load_screen))
+
 	(continue_button if not continue_button.disabled else new_game).grab_focus.call_deferred()
 
 
@@ -49,6 +60,15 @@ func _open_settings() -> void:
 	_settings.open()
 
 
-func _continue() -> void:
-	if SaveManager.load_game():
+func _open_load() -> void:
+	_menu.visible = false
+	_load_screen.open()
+
+
+func _load_slot(slot: String) -> void:
+	if SaveManager.load_game(slot):
 		get_tree().change_scene_to_file(WORLD)
+
+
+func _continue() -> void:
+	_load_slot(SaveManager.most_recent_slot())

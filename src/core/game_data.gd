@@ -326,6 +326,12 @@ func _validate_recipes() -> void:
 			load_errors.append("Recipe '%s' outputs unknown item '%s'" % [id, output.get("item", "")])
 		if int(output.get("count", 1)) <= 0:
 			load_errors.append("Recipe '%s' needs output count > 0" % id)
+		if recipe.has("great_output"):
+			var great: Dictionary = recipe["great_output"]
+			if not items.has(great.get("item", "")):
+				load_errors.append("Recipe '%s' great_output is unknown item '%s'" % [id, great.get("item", "")])
+			if int(great.get("count", 1)) <= 0:
+				load_errors.append("Recipe '%s' needs great_output count > 0" % id)
 		if recipe.has("starter") and typeof(recipe["starter"]) != TYPE_BOOL:
 			load_errors.append("Recipe '%s' starter must be true or false" % id)
 	for item: Dictionary in items.values():
