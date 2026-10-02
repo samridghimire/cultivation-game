@@ -7,7 +7,7 @@ Roles: `systems` (core rules + tests), `content` (data/*.json + small hooks), `w
 ## P0: Foundation hardening
 | id | role | status | task |
 |---|---|---|---|
-| F-001 | qa | todo | Add GameState integration tests for join_sect, leave_sect, buy_item, use_item, work_profession (contribution + promotion). |
+| F-001 | qa | done | Add GameState integration tests for join_sect, leave_sect, buy_item, use_item, work_profession (contribution + promotion). |
 | F-002 | world-ui | done | Pause menu on Esc (Resume / Save / Load / Settings stub / Quit to menu) instead of instantly returning to the menu. |
 | F-003 | world-ui | done | Breakthrough feedback: a short screen-flash / message banner on success and failure (listen to EventBus.breakthrough_attempted). |
 | F-004 | systems | done | Multiple save slots with metadata: SaveManager.list_slots/read_meta/delete_save/next_free_slot/most_recent_slot. |
