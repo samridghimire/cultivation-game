@@ -1,7 +1,8 @@
 class_name Alchemy
 extends RefCounted
-## The Alchemist's loop: refining herbs into pills from recipes in data/recipes.json.
-## Success chance grows with Alchemist rank and Comprehension; a failed
+## The crafting loop: Alchemists refine herbs into pills and Blacksmiths forge
+## ores into artifacts, from recipes in data/recipes.json. Success chance grows
+## with profession rank and the profession's primary attribute; a failed
 ## refinement burns every ingredient. Tunables live under "alchemy" in recipes.json.
 ## Recipes must be known before they can be refined: "starter" recipes are known
 ## by everyone, the rest are learned from recipe scrolls (the learn_recipe effect).
@@ -18,9 +19,15 @@ static func success_chance(c: CharacterData, data: GameData, recipe_id: String) 
 	var rank_over := Professions.rank_of(c, recipe["profession"]) - int(recipe.get("min_rank", 0))
 	var chance := float(t.get("base_chance", 0.5)) \
 		+ float(t.get("rank_bonus", 0.08)) * rank_over \
-		+ float(t.get("comprehension_step", 0.02)) * (c.attribute("comprehension") - 10) \
+		+ float(t.get("comprehension_step", 0.02)) * (c.attribute(_primary_attribute(data, recipe["profession"])) - 10) \
 		- float(recipe.get("difficulty", 0.0))
 	return clampf(chance, float(t.get("min_chance", 0.05)), float(t.get("max_chance", 0.95)))
+
+
+## The attribute that helps crafting for `prof_id` (comprehension for alchemists).
+static func _primary_attribute(data: GameData, prof_id: String) -> String:
+	var def: ProfessionDef = data.professions.get(prof_id)
+	return def.primary_attribute if def != null else "comprehension"
 
 
 ## Chance in [0, success_chance] of a great success: the success chance above

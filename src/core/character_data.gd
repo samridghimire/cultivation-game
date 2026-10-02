@@ -33,6 +33,8 @@ var professions: Dictionary = {}  # profession id -> {"rank": int, "xp": float}
 ## Empty = rogue cultivator. Otherwise {"id": String, "rank": int, "contribution": int}.
 var sect: Dictionary = {}
 var inventory: Dictionary = {}  # item id -> count
+## Equipped artifacts: slot (Equipment.SLOTS) -> item id. Equipped items are not in inventory.
+var equipment: Dictionary = {}
 var techniques: Dictionary = {}  # technique id -> {"level": int, "xp": float}
 ## Recipe ids learned from scrolls (data/recipes.json "starter" recipes are known without learning).
 var known_recipes: Array[String] = []
@@ -102,6 +104,7 @@ func to_dict() -> Dictionary:
 		"professions": professions.duplicate(true),
 		"sect": sect.duplicate(),
 		"inventory": inventory.duplicate(),
+		"equipment": equipment.duplicate(),
 		"techniques": techniques.duplicate(true),
 		"known_recipes": known_recipes.duplicate(),
 		"injuries": injuries.duplicate(),
@@ -145,6 +148,9 @@ static func from_dict(d: Dictionary) -> CharacterData:
 		c.sect = {"id": String(s.get("id", "")), "rank": int(s.get("rank", 0)), "contribution": int(s.get("contribution", 0))}
 	c.inventory = _int_values(d.get("inventory", {}))
 	c.injuries = _int_values(d.get("injuries", {}))
+	var equipped: Dictionary = d.get("equipment", {})
+	for slot in equipped:
+		c.equipment[String(slot)] = String(equipped[slot])
 	var saved_buffs: Dictionary = d.get("buffs", {})
 	for buff_id in saved_buffs:
 		var b: Dictionary = saved_buffs[buff_id]
