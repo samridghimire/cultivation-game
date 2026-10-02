@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-02 [F-005] Balance sim `tests/sim/simulate_life.gd` (N lives headless, avg age per realm, old-age deaths per realm); filed F-005b with findings.
 - 2026-10-02 [G-002d] 6 new alchemy recipes and pills (healing, qi, righteous Clear Heart, demonic Blood Demon, Core Forming) with recipe scrolls.
 - 2026-10-02 [LIFE-001b] Temporary combat buffs (Buffs, CharacterData.buffs, applied in Combat.stats) and the forbidden Blood Demon Rage art (technique `activation`: burns 10 years for +80% attack/+30% speed for a month), GameState.activate_technique, Activate button with lifespan cost on the techniques screen, manual from a one-time ruins encounter.
 - 2026-10-02 [G-002e] Pill quality: recipes' optional great_output, Alchemy.great_chance (from the margin of success chance over great_threshold), Superior Qi Gathering Pill and Flawless Foundation Establishment Pill; other recipes yield double on a great success.
