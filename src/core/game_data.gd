@@ -38,6 +38,9 @@ var injury_sources: Dictionary = {}
 var injury_fortune_step := 0.02
 ## Doctor tunables (see Medicine).
 var medicine: Dictionary = {}
+var recipes: Dictionary = {}  # id -> Dictionary (data/recipes.json)
+## Alchemy tunables (see Alchemy).
+var alchemy: Dictionary = {}
 ## Problems found while loading. Empty when all data files are valid.
 var load_errors: PackedStringArray = []
 
@@ -133,6 +136,11 @@ func _load(dir: String) -> void:
 	for injury in hurt.get("injuries", []):
 		injuries[injury["id"]] = injury
 
+	var crafting := _read(dir, "recipes.json")
+	alchemy = crafting.get("alchemy", {})
+	for recipe in crafting.get("recipes", []):
+		recipes[recipe["id"]] = recipe
+
 	_validate()
 
 
@@ -170,6 +178,7 @@ func _validate() -> void:
 				load_errors.append("Deed '%s' references unknown item '%s'" % [deed["id"], item_id])
 	_validate_world()
 	_validate_combat()
+	_validate_recipes()
 	var counts := {}
 	for g in root_grades:
 		counts[int(g["element_count"])] = true
@@ -252,3 +261,28 @@ func _validate_combat() -> void:
 		for item_id in enemy.get("rewards", {}).get("items", {}):
 			if not items.has(item_id):
 				load_errors.append("Enemy '%s' rewards unknown item '%s'" % [enemy["id"], item_id])
+
+
+func _validate_recipes() -> void:
+	for recipe: Dictionary in recipes.values():
+		var id: String = recipe["id"]
+		if not professions.has(recipe.get("profession", "")):
+			load_errors.append("Recipe '%s' has unknown profession '%s'" % [id, recipe.get("profession", "")])
+		var min_rank := int(recipe.get("min_rank", 0))
+		if min_rank < 0 or min_rank >= profession_rank_names.size():
+			load_errors.append("Recipe '%s' has invalid min_rank %d" % [id, min_rank])
+		if int(recipe.get("days", 0)) <= 0:
+			load_errors.append("Recipe '%s' needs days > 0" % id)
+		var ingredients: Dictionary = recipe.get("ingredients", {})
+		if ingredients.is_empty():
+			load_errors.append("Recipe '%s' has no ingredients" % id)
+		for item_id in ingredients:
+			if not items.has(item_id):
+				load_errors.append("Recipe '%s' uses unknown item '%s'" % [id, item_id])
+			if int(ingredients[item_id]) <= 0:
+				load_errors.append("Recipe '%s' needs a positive count of '%s'" % [id, item_id])
+		var output: Dictionary = recipe.get("output", {})
+		if not items.has(output.get("item", "")):
+			load_errors.append("Recipe '%s' outputs unknown item '%s'" % [id, output.get("item", "")])
+		if int(output.get("count", 1)) <= 0:
+			load_errors.append("Recipe '%s' needs output count > 0" % id)
