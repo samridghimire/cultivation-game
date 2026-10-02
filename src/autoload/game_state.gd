@@ -327,6 +327,33 @@ func _dialogue_ctx(npc_id: String) -> Dictionary:
 	return {"player": player, "npc": npcs.get(npc_id), "data": data, "flags": world_flags, "favor": int(npc_favor.get(npc_id, 0))}
 
 
+## Spend time courting an NPC (needs some favor first); raises their favor.
+func court(npc_id: String) -> void:
+	if not _can_act():
+		return
+	var result := Family.court(player, npcs.get(npc_id), int(npc_favor.get(npc_id, 0)), data)
+	if not result["ok"]:
+		EventBus.post(result["reason"], "warning")
+		EventBus.player_changed.emit()
+		return
+	npc_favor[npc_id] = int(npc_favor.get(npc_id, 0)) + result["favor"]
+	EventBus.post("You spend days in %s's company. They warm to you. (+%d favor)" % [npcs[npc_id].name, result["favor"]], "progress")
+	_pass_time(result["days"])
+
+
+## Propose marriage to an NPC, offering spousal `rank` (data/family.json).
+func propose(npc_id: String, rank: String) -> void:
+	if not _can_act():
+		return
+	var result := Family.propose(player, npcs.get(npc_id), int(npc_favor.get(npc_id, 0)), rank, data)
+	if not result["ok"]:
+		EventBus.post(result["reason"], "warning")
+		EventBus.player_changed.emit()
+		return
+	EventBus.post("%s accepts your proposal and becomes your %s." % [npcs[npc_id].name, Family.rank_name(data, player.gender, rank).to_lower()], "progress")
+	_pass_time(result["days"])
+
+
 func learn_technique(tech_id: String) -> void:
 	if not _can_act():
 		return

@@ -97,3 +97,4 @@ Void Refinement → Body Integration → Mahayana → Tribulation Transcendence.
 - Combat style: turn-based, real-time action, or auto-resolved with techniques/strategy?
 - Art direction: pixel art? ink-wash painterly? (affects asset pipeline)
 - Should evil paths include demonic cultivation techniques (blood refining, soul devouring) as a separate progression tree?
+- (FAM-002) Smallest version implemented, tunable in `data/family.json`: courting is only between opposite genders, an NPC of a higher major realm (or flagged `proud`) refuses to be a concubine, proposals need favor 60, at most 1 major realm apart and alignment within 600. Should same-gender Dao companions be allowed, and are these thresholds right?

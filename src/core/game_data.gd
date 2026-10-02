@@ -41,6 +41,7 @@ var injury_fortune_step := 0.02
 var medicine: Dictionary = {}
 ## Creation Artifact tunables (data/artifact.json, see CreationArtifact).
 var artifact: Dictionary = {}
+var family: Dictionary = {}  # data/family.json (Family system)
 ## Anchor id -> {"region": String, "name": String}, from places with an anchor_id.
 var anchors: Dictionary = {}
 var recipes: Dictionary = {}  # id -> Dictionary (data/recipes.json)
@@ -125,6 +126,7 @@ func _load(dir: String) -> void:
 		npcs[npc["id"]] = npc
 
 	names = _read(dir, "names.json")
+	family = _read(dir, "family.json")
 
 	var dialogue_dir := dir.path_join("dialogue")
 	for file_name in DirAccess.get_files_at(dialogue_dir):
@@ -197,6 +199,7 @@ func _validate() -> void:
 	_validate_artifact()
 	_validate_recipes()
 	load_errors.append_array(Equipment.validate(self))
+	load_errors.append_array(Family.validate(self))
 	for item: Dictionary in items.values():
 		for key in ["burn_lifespan", "extend_lifespan"]:
 			if item.get("effects", {}).has(key) and int(item["effects"][key]) <= 0:
