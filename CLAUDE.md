@@ -55,7 +55,9 @@ Agents (scheduled cloud routines, and local sessions) share this repo. Follow th
 1. `git checkout main && git pull`.
 2. Read `docs/BACKLOG.md`. Pick the **highest-priority task with status `todo`** that matches your role and isn't claimed by an open PR
    (`gh pr list` or check remote branches named `claude/<task-id>-*`).
-3. Branch `claude/<task-id>-<short-slug>` from main.
+3. Branch `claude/<task-id>-<short-slug>` from main and **claim it immediately**: `git push -u origin <branch>` before writing
+   any code, so agents starting later see the task is taken. Re-check right before pushing: if another branch for the same
+   task id appeared first, abandon yours (delete your remote branch) and pick another task.
 4. Implement it, small and complete. If a task is too big, split it in BACKLOG.md and do the first part.
 5. Run `tools/test.sh` until it passes. (A brand-new `class_name` is only visible after an import; test.sh imports first.)
 6. Update `docs/BACKLOG.md`: set the task to `done` (or add follow-up tasks you discovered, with ids). Add a line to `docs/CHANGELOG.md`.
