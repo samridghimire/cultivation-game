@@ -38,6 +38,10 @@ var injury_sources: Dictionary = {}
 var injury_fortune_step := 0.02
 ## Doctor tunables (see Medicine).
 var medicine: Dictionary = {}
+## Creation Artifact tunables (data/artifact.json, see CreationArtifact).
+var artifact: Dictionary = {}
+## Anchor id -> {"region": String, "name": String}, from places with an anchor_id.
+var anchors: Dictionary = {}
 ## Problems found while loading. Empty when all data files are valid.
 var load_errors: PackedStringArray = []
 
@@ -100,6 +104,15 @@ func _load(dir: String) -> void:
 	start_region = world.get("start_region", "")
 	for region in world.get("regions", []):
 		regions[region["id"]] = region
+		for place: Dictionary in region.get("places", []):
+			var anchor_id: String = place.get("anchor_id", "")
+			if anchor_id == "":
+				continue
+			if anchors.has(anchor_id):
+				load_errors.append("Duplicate anchor_id '%s'" % anchor_id)
+			anchors[anchor_id] = {"region": region["id"], "name": place.get("display_name", anchor_id)}
+
+	artifact = _read(dir, "artifact.json")
 
 	for encounter in _read(dir, "encounters.json").get("encounters", []):
 		encounters[encounter["id"]] = encounter
@@ -170,6 +183,7 @@ func _validate() -> void:
 				load_errors.append("Deed '%s' references unknown item '%s'" % [deed["id"], item_id])
 	_validate_world()
 	_validate_combat()
+	_validate_artifact()
 	var counts := {}
 	for g in root_grades:
 		counts[int(g["element_count"])] = true
@@ -252,3 +266,14 @@ func _validate_combat() -> void:
 		for item_id in enemy.get("rewards", {}).get("items", {}):
 			if not items.has(item_id):
 				load_errors.append("Enemy '%s' rewards unknown item '%s'" % [enemy["id"], item_id])
+
+
+func _validate_artifact() -> void:
+	if int(artifact.get("starting_lives", 0)) < 0 or int(artifact.get("max_lives", 0)) < int(artifact.get("starting_lives", 0)):
+		load_errors.append("artifact.json needs 0 <= starting_lives <= max_lives")
+	var start: String = artifact.get("start_anchor", "")
+	if start != "" and not anchors.has(start):
+		load_errors.append("artifact.json start_anchor '%s' is not an anchor" % start)
+	for realm_id in artifact.get("anchor_slots", {}):
+		if realm_index_of(realm_id) < 0:
+			load_errors.append("artifact.json anchor_slots has unknown realm '%s'" % realm_id)

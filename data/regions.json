@@ -1,5 +1,5 @@
 {
-  "_doc": "World regions. The world scene builds itself from the current region. qi_density multiplies cultivation everywhere in the region (meditation spots multiply again). routes: travel targets with days and an optional min_realm (realm id). places: interactables; 'type' picks the script (meditation, merchant, sect_hall, workshop, deed_giver, explore, travel, gather), 'pos' and 'size' are in pixels, other keys are passed to the script as exported properties. encounter_tags select entries from data/encounters.json when exploring.",
+  "_doc": "World regions. The world scene builds itself from the current region. qi_density multiplies cultivation everywhere in the region (meditation spots multiply again). routes: travel targets with days and an optional min_realm (realm id). places: interactables; 'anchor_id' (optional, globally unique) makes the place a Creation Artifact anchor (data/artifact.json); 'type' picks the script (meditation, merchant, sect_hall, workshop, deed_giver, explore, travel, gather), 'pos' and 'size' are in pixels, other keys are passed to the script as exported properties. encounter_tags select entries from data/encounters.json when exploring.",
   "start_region": "qingshi_village",
   "regions": [
     {
@@ -14,7 +14,7 @@
       ],
       "encounter_tags": ["village"],
       "places": [
-        {"type": "meditation", "display_name": "Meditation Rock", "pos": [300, 250], "size": [80, 60], "color": "8c919e"},
+        {"type": "meditation", "anchor_id": "qingshi_rock", "display_name": "Meditation Rock", "pos": [300, 250], "size": [80, 60], "color": "8c919e"},
         {"type": "meditation", "display_name": "Spirit Spring (2x qi)", "pos": [1400, 160], "size": [90, 70], "color": "59b3d9", "qi_density": 2.0},
         {"type": "sect_hall", "display_name": "Sect Recruitment Hall", "pos": [1250, 750], "size": [160, 110], "color": "b33f33"},
         {"type": "workshop", "display_name": "Village Workshop", "pos": [400, 720], "size": [130, 90], "color": "8c6640"},
@@ -37,7 +37,7 @@
       ],
       "encounter_tags": ["forest", "wild"],
       "places": [
-        {"type": "meditation", "display_name": "Mossy Clearing", "pos": [500, 220], "size": [110, 80], "color": "4f8f5a", "qi_density": 1.2},
+        {"type": "meditation", "anchor_id": "misty_clearing", "display_name": "Mossy Clearing", "pos": [500, 220], "size": [110, 80], "color": "4f8f5a", "qi_density": 1.2},
         {"type": "explore", "display_name": "Deep Woods", "pos": [1100, 260], "size": [160, 110], "color": "1f3a22"},
         {"type": "explore", "display_name": "Herb Valley", "pos": [800, 800], "size": [180, 90], "color": "6f9f4a", "explore_tags": ["herbs"]},
         {"type": "gather", "display_name": "Herb Patch", "pos": [1000, 650], "size": [120, 70], "color": "7fae58", "gather_days": 5,
@@ -64,7 +64,7 @@
         {"type": "merchant", "display_name": "Night Market Stall", "pos": [1200, 300], "size": [80, 60], "color": "7a4fa0", "max_price": 100},
         {"type": "workshop", "display_name": "Artisan Quarter", "pos": [400, 750], "size": [150, 100], "color": "8c6640"},
         {"type": "sect_hall", "display_name": "Sect Envoy Hall", "pos": [1200, 750], "size": [160, 110], "color": "b33f33"},
-        {"type": "meditation", "display_name": "Rented Cultivation Room", "pos": [1450, 120], "size": [90, 70], "color": "8c919e", "qi_density": 1.3},
+        {"type": "meditation", "anchor_id": "fallen_star_room", "display_name": "Rented Cultivation Room", "pos": [1450, 120], "size": [90, 70], "color": "8c919e", "qi_density": 1.3},
         {"type": "explore", "display_name": "Back Alleys", "pos": [150, 120], "size": [120, 80], "color": "4a4438"},
         {"type": "travel", "display_name": "City Gate", "pos": [800, 970], "size": [120, 40], "color": "5c4630"}
       ]
@@ -81,7 +81,7 @@
       ],
       "encounter_tags": ["mountain", "wild"],
       "places": [
-        {"type": "meditation", "display_name": "Cloud-Sea Cliff (2x qi)", "pos": [1300, 180], "size": [120, 70], "color": "c9dceb", "qi_density": 2.0},
+        {"type": "meditation", "anchor_id": "azure_cliff", "display_name": "Cloud-Sea Cliff (2x qi)", "pos": [1300, 180], "size": [120, 70], "color": "c9dceb", "qi_density": 2.0},
         {"type": "gather", "display_name": "Crystal Vein", "pos": [300, 220], "size": [120, 80], "color": "7fa8c9", "gather_days": 10,
          "gather_table": [{"item": "iron_essence", "weight": 5, "min": 2, "max": 4}, {"item": "cold_iron", "weight": 3, "min": 1, "max": 2}, {"item": "azure_crystal", "weight": 2, "min": 1, "max": 1}, {"item": "star_silver", "weight": 0.3, "min": 1, "max": 1}, {"item": "", "weight": 2}]},
         {"type": "gather", "display_name": "Frost Ledge", "pos": [1450, 560], "size": [100, 70], "color": "e0ecf5", "gather_days": 10,
