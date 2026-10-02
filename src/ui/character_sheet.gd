@@ -63,6 +63,10 @@ func _rebuild() -> void:
 		t += "\n[color=#%s]Injuries[/color]  (cultivation x%s, combat x%s)\n" % [danger, String.num(Injuries.cultivation_multiplier(p, data), 2), String.num(Injuries.combat_multiplier(p, data), 2)]
 		for line in Injuries.describe(p, data):
 			t += "  %s\n" % line
+	if Buffs.has_any(p):
+		t += "\n[color=#%s]Active arts[/color]\n" % accent
+		for line in Buffs.describe(p):
+			t += "  %s\n" % line
 	t += "\n[color=#%s]Techniques[/color]\n" % accent
 	if p.techniques.is_empty():
 		t += "  None yet. Learn one from a manual.\n"

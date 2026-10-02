@@ -173,8 +173,13 @@ func _show_details() -> void:
 			_xp_bar.value = have
 			for days in PRACTICE_DAYS:
 				_actions.add_child(UIStyle.button("Practice %s" % Calendar.format_duration(days), _practice.bind(days)))
+		if not def.activation.is_empty():
+			_bonuses.text = Techniques.describe_activation(p, data, def.id)
+			var activate := UIStyle.button("Activate (-%d years)" % int(def.activation.get("lifespan_cost", 0)), _activate)
+			activate.disabled = Techniques.can_activate(p, data, def.id) != ""
+			_actions.add_child(activate)
 	else:
-		_bonuses.text = "At level 1: %s" % bonuses
+		_bonuses.text = "At level 1: %s" % bonuses if def.activation.is_empty() else Techniques.describe_activation(p, data, def.id)
 		_xp_bar.visible = false
 		var reason := Techniques.can_learn(p, data, def.id)
 		_mastery.text = reason if reason != "" else "You carry the manual for this technique."
@@ -185,6 +190,11 @@ func _show_details() -> void:
 
 func _practice(days: int) -> void:
 	GameState.practice_technique(_selected, days)
+	_focus_first_action.call_deferred()
+
+
+func _activate() -> void:
+	GameState.activate_technique(_selected)
 	_focus_first_action.call_deferred()
 
 

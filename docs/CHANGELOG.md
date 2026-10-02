@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-02 [LIFE-001b] Temporary combat buffs (Buffs, CharacterData.buffs, applied in Combat.stats) and the forbidden Blood Demon Rage art (technique `activation`: burns 10 years for +80% attack/+30% speed for a month), GameState.activate_technique, Activate button with lifespan cost on the techniques screen, manual from a one-time ruins encounter.
 - 2026-10-02 [G-002e] Pill quality: recipes' optional great_output, Alchemy.great_chance (from the margin of success chance over great_threshold), Superior Qi Gathering Pill and Flawless Foundation Establishment Pill; other recipes yield double on a great success.
 - 2026-10-02 [F-004b] Load screen listing all save slots (name, realm, date, age) with confirm-to-delete; used by the main menu (Load Game, Continue = newest save) and the pause menu.
 - 2026-10-02 [LIFE-001] Lifespan as a resource: burned/bonus years, burn_lifespan/extend_lifespan effects, Blood Essence Burning Pill, Longevity Pill (ruins), lifespan-cost warnings.

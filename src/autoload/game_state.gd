@@ -322,6 +322,20 @@ func practice_technique(tech_id: String, days: int) -> void:
 	_pass_time(days)
 
 
+## Activate a secret art: burn its lifespan cost for a temporary combat buff. Takes no time.
+func activate_technique(tech_id: String) -> void:
+	if not _can_act():
+		return
+	var result := Techniques.activate(player, data, tech_id)
+	if not result["ok"]:
+		EventBus.post(result["reason"], "warning")
+		return
+	var def: TechniqueDef = data.techniques[tech_id]
+	var cost := " Your life burns: -%d years of lifespan." % result["years"] if result["years"] > 0 else ""
+	EventBus.post("You ignite the %s for %s!%s" % [def.name, Calendar.format_duration(result["days"]), cost], "danger")
+	EventBus.player_changed.emit()
+
+
 ## Treat one of your own injuries with your Doctor skill.
 func treat_own_injury(injury_id: String) -> void:
 	if not _can_act():
@@ -505,6 +519,8 @@ func _on_days_advanced(days: int) -> void:
 	player.age_days += days
 	for injury_id in Injuries.pass_days(player, days):
 		EventBus.post("Your %s has healed." % Injuries.injury_name(data, injury_id), "progress")
+	for buff_name in Buffs.pass_days(player, days):
+		EventBus.post("The power of your %s fades." % buff_name)
 	for event in Npcs.simulate(npcs, data, days, rng):
 		EventBus.post(event["text"], event["category"])
 	if player.age_years() >= Cultivation.lifespan_years(player, data):
