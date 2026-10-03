@@ -81,7 +81,7 @@ Every great cultivation protagonist has something that sets them apart. Ours is 
 | Injuries (from breakthroughs and combat) | ✅ | `data/injuries.json`, `Injuries` |
 | Combat (auto-resolved) and techniques | ✅ basic | `Combat`, `Techniques`, `data/enemies.json`, `data/techniques.json` |
 | NPCs (named + generated), aging, monthly sim | ✅ | `data/npcs.json`, `Npcs`, `Names` |
-| Dialogue | ✅ core, 🚧 choice-menu fallback (W-003b) | `Dialogue`, `data/dialogue/` |
+| Dialogue | ✅ (dialogue window) | `Dialogue`, `data/dialogue/` |
 | Family: identity, courtship, marriage, dual cultivation, children | ✅ core, ❌ not reachable in-game (P0 tasks) | `data/family.json`, `Family`, `Children` |
 | Clans, estates, bloodlines | ❌ (FAM-005+) | |
 | Cultivation methods, Dao insights, Heavenly Tribulations | ❌ (CM-001, DAO-001, TRIB-001) | |

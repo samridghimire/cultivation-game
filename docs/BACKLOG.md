@@ -16,7 +16,6 @@ Roles: `systems` (core rules + tests), `content` (data/*.json + small hooks), `w
 | G-004b | world-ui | done | Show equipped weapon/armor with Equipment.describe_stats on the character sheet with Unequip buttons (GameState.unequip), and equip stats + an "Equip" label instead of "Use" for equipment in the inventory screen (GameState.equip_item). |
 | FAM-003c | world-ui | done | "Try for a child with <spouse>" entry (GameState.try_for_child, Children.check_conception reason shown when unavailable) next to dual cultivation, and pregnancy (days left) + children by name on the character sheet. |
 | G-005d | world-ui | todo | Ready/unready combat talismans (items with a `combat` block) from the inventory screen via GameState.ready_talisman/unready_talisman, show the readied list (max CombatTalismans.MAX_READIED) and the talisman kind/power (CombatTalismans.amount) in item details. |
-| W-003b | world-ui | todo | Dialogue window UI: open on EventBus.dialogue_requested, render GameState.dialogue_view() ({id, speaker, text, choices[{index,label,disabled,reason}]}), call GameState.choose_dialogue(index), close on dialogue_ended. Follow src/ui/combat_report.gd; register in hud.gd. NPCs fall back to the choice menu until it exists. |
 | G-007b | world-ui | todo | Clinic: new `clinic` place type (interactable in src/world/interactables, registered like workshop) with options "Treat patients (1 month)" (GameState.treat_patients), "Treat your <injury>" per injury (treat_own_injury), "Pay doctor (N stones)" (visit_clinic, Medicine.clinic_cost). Add one clinic place to qingshi_village and fallen_star_market in regions.json. |
 
 ## P1: Core gameplay loops
@@ -109,6 +108,7 @@ The local sessions that built combat/techniques, world/exploration/NPCs/dialogue
 ## Done
 | id | task |
 |---|---|
+| W-003b | Dialogue window: HUD modal (DialogueWindow) renders GameState.dialogue_view(), locked choices show their reason, gamepad focus, Esc ends the talk. |
 | LIFE-001f | Evil artifacts can be bought: items.json `restricted_tags` (demonic) are only sold by merchants that stock that tag, merchant `min_alignment`/`max_alignment` gate (Items.merchant_sells/check_merchant), Shadow Curio Den in Fallen Star Market for the wicked, prices for the 3 lifespan-drain artifacts. |
 | G-007c | NPCs get hurt (injuries.json `npc_mishap`, monthly for adults) and heal over time; Medicine.treat_npc / GameState.treat_npc heal their worst injury for Doctor xp, alignment and favor. |
 | G-009 | Sect reputation: Reputation system, CharacterData.reputation, witnessed deeds move reputation per sect deed_scale, min_join gating, faction merchant price tiers, mission and leave-sect reputation. |
