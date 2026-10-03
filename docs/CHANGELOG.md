@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-03 [C-007] Higher-grade herbs and ores for Foundation/Core cultivators: Cloud-Mist Orchid, Scarlet Flame Fruit, Hundred-Year Snow Lotus, Earth Marrow Fungus, Nine-Leaf Soul Grass, Golden Core Lotus Seed, Earth-Vein Jade and Fire Marrow Crystal; two new gather sites, six realm-gated herb finds, and three new alchemy recipes taught by scrolls.
 - 2026-10-03 [C-008] Twelve new deeds at four new deed givers: a Blood Lotus agent who wants Qingshi's well poisoned, a wounded sect disciple in the Misty Forest, a street child in Fallen Star Market and a bandit camp on Azure Peak, each with righteous, neutral and demonic choices.
 - 2026-10-03 [QA-007] Combat balance sim (tests/sim/simulate_combat.gd): a typical player vs every enemy at the realm it first appears in encounters and sect missions, flagging trivial/hard/unbeatable fights; a unit test keeps forced fights winnable. The Purge a Demonic Cultivator mission now needs Foundation Establishment (its foe was unbeatable and lethal at Qi Refining).
 - 2026-10-03 [FAM-003b] Adoption: adults can adopt orphaned children (no living parents, up to 12) or a foundling for a 20-stone donation (GameState.adopt / adopt_foundling); adopted children take the adopter's surname, birth_rank "" marks them adopted; righteous alignment and starting favor; up to 3 per character.
