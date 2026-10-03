@@ -95,7 +95,7 @@ func test_family_data_is_valid() -> void:
 	var d := GameData.new()
 	d.names = data().names
 	d.family = {"genders": {"male": {"partner_genders": ["dragon"], "ranks": {}}}}
-	assert_eq(Family.validate(d).size(), 3, "missing female rules, unknown partner gender, no ranks")
+	assert_eq(Family.validate(d).size(), 4, "missing female rules, unknown partner gender, no ranks, no dual_cultivation")
 
 
 func test_game_state_court_and_propose() -> void:
@@ -122,4 +122,100 @@ func test_game_state_court_and_propose() -> void:
 	gs.load_save_dict(JSON.parse_string(JSON.stringify(saved)))
 	assert_eq(gs.player.spouse_ranks.get("xiao_ling", ""), "wife")
 	assert_eq(gs.npcs["xiao_ling"].spouse_ranks.get("player", ""), "wife")
+	gs.end_session()
+
+
+# --- FAM-002b: dual cultivation ---------------------------------------------
+
+func _couple() -> Array[CharacterData]:
+	var he := _person("male", "player")
+	var she := _person("female", "npc_a")
+	he.spiritual_roots = {"fire": 60, "wood": 60, "earth": 60}
+	she.spiritual_roots = {"fire": 60, "wood": 60, "earth": 60}
+	he.realm_index = 1
+	she.realm_index = 1
+	he.stage = 0
+	she.stage = 0
+	he.qi = 0.0
+	she.qi = 0.0
+	return [he, she]
+
+
+func test_dual_cultivation_needs_a_rooted_spouse() -> void:
+	var pair := _couple()
+	assert_true(Family.check_dual_cultivation(pair[0], pair[1], data()) != "", "not married")
+	Family.marry(pair[0], pair[1], "wife")
+	assert_eq(Family.check_dual_cultivation(pair[0], pair[1], data()), "")
+	pair[1].spiritual_roots = {}
+	assert_true(Family.check_dual_cultivation(pair[0], pair[1], data()) != "", "spouse without roots")
+	pair[1].spiritual_roots = {"fire": 60}
+	pair[1].alive = false
+	assert_true(Family.check_dual_cultivation(pair[0], pair[1], data()) != "", "dead spouse")
+	assert_false(Family.dual_cultivate(pair[0], pair[1], data(), 10)["ok"])
+
+
+func test_dual_cultivation_bonus_scales_with_partner() -> void:
+	var pair := _couple()
+	var he := pair[0]
+	var she := pair[1]
+	var base := Family.dual_multiplier(he, she, data())
+	assert_gt(base, 1.0, "cultivating together helps")
+	she.realm_index = 2
+	assert_gt(Family.dual_multiplier(he, she, data()), base, "a higher-realm partner helps more")
+	assert_gt(base, Family.dual_multiplier(she, he, data()), "a lower-realm partner helps less")
+	she.realm_index = 1
+	she.spiritual_roots = {"fire": 90}
+	assert_gt(Family.dual_multiplier(he, she, data()), base, "better roots help more")
+	she.realm_index = 9
+	var rules: Dictionary = data().family["dual_cultivation"]
+	assert_almost_eq(Family.partner_factor(he, she, data()), float(rules["max_factor"]), 0.0001, "clamped")
+
+
+func test_dual_cultivate_beats_solo_and_feeds_the_spouse() -> void:
+	var pair := _couple()
+	var solo := _couple()
+	Family.marry(pair[0], pair[1], "wife")
+	var result := Family.dual_cultivate(pair[0], pair[1], data(), 20)
+	var alone := Cultivation.cultivate(solo[0], data(), 20)
+	assert_true(result["ok"])
+	assert_gt(float(result["qi_gained"]), float(alone["qi_gained"]))
+	assert_gt(float(result["spouse_qi"]), 0.0)
+	assert_eq(int(result["favor"]), int(data().family["dual_cultivation"]["favor_per_session"]))
+
+
+func test_spouse_favor_grows_per_month_and_caps() -> void:
+	var per_month := int(data().family["dual_cultivation"]["favor_per_month"])
+	assert_eq(Family.spouse_favor_gain(data(), 0, 29), 0)
+	assert_eq(Family.spouse_favor_gain(data(), 29, 31), per_month, "crossing a month boundary")
+	assert_eq(Family.spouse_favor_gain(data(), 0, 90), 3 * per_month)
+	var cap := int(data().family["dual_cultivation"]["max_favor"])
+	assert_eq(Family.add_spouse_favor(data(), cap - 1, 10), cap)
+	assert_eq(Family.add_spouse_favor(data(), cap + 5, 10), cap + 5, "never lowers favor")
+
+
+func test_game_state_dual_cultivate() -> void:
+	var gs: Node = _root().get_node("GameState")
+	var c := CharacterFactory.create("Husband", gs.data, seeded_rng())
+	c.gender = "male"
+	c.spiritual_roots = {"fire": 60, "wood": 60}
+	gs.start_session(c)
+	var spouse: CharacterData = gs.npcs["xiao_ling"]
+	spouse.spiritual_roots = {"water": 60}
+	spouse.realm_index = 1
+	spouse.stage = 0
+	spouse.qi = 0.0
+	var clock: Node = _root().get_node("GameClock")
+	var days: int = clock.total_days
+	gs.dual_cultivate("xiao_ling", 30)
+	assert_eq(clock.total_days, days, "not married: refused")
+	Family.marry(c, spouse, "wife")
+	gs.npc_favor["xiao_ling"] = 60
+	var qi_before: float = c.qi + 0.0
+	var spouse_qi: float = spouse.qi + 0.0
+	gs.current_region = Npcs.region_of(spouse, gs.data)
+	gs.dual_cultivate("xiao_ling", 30)
+	assert_gt(clock.total_days, days, "dual cultivation takes time")
+	assert_true(c.qi != qi_before or c.stage > 0, "player gained qi")
+	assert_true(spouse.qi != spouse_qi or spouse.stage > 0, "spouse gained qi")
+	assert_gt(int(gs.npc_favor["xiao_ling"]), 60, "favor from the session and the month passing")
 	gs.end_session()

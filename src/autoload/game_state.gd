@@ -354,6 +354,33 @@ func propose(npc_id: String, rank: String) -> void:
 	_pass_time(result["days"])
 
 
+## Cultivate together with a spouse who is in the current region: both gain
+## qi with the dual cultivation bonus (data/family.json) and favor rises.
+func dual_cultivate(spouse_id: String, days: int, location_density: float = 1.0) -> void:
+	if not _can_act():
+		return
+	var spouse: CharacterData = npcs.get(spouse_id)
+	if spouse != null and spouse.alive and Npcs.region_of(spouse, data) != current_region:
+		EventBus.post("%s is not here." % spouse.name, "warning")
+		EventBus.player_changed.emit()
+		return
+	var density := location_density * Exploration.qi_density(data, current_region) * Sects.cultivation_bonus(player, data)
+	var result := Family.dual_cultivate(player, spouse, data, days, density)
+	if not result["ok"]:
+		EventBus.post(result["reason"], "warning")
+		EventBus.player_changed.emit()
+		return
+	npc_favor[spouse_id] = Family.add_spouse_favor(data, int(npc_favor.get(spouse_id, 0)), result["favor"])
+	EventBus.post("You and %s cultivate together for %s. You gather %d qi; they gather %d." % [spouse.name, Calendar.format_duration(days), int(result["qi_gained"]), int(result["spouse_qi"])])
+	if result["stages_gained"] > 0:
+		EventBus.post("Your cultivation rises to %s!" % Cultivation.realm_label(player, data), "progress")
+	if result["spouse_stages"] > 0:
+		EventBus.post("%s rises to %s." % [spouse.name, Cultivation.realm_label(spouse, data)], "progress")
+	if result["at_bottleneck"]:
+		EventBus.post("You have reached a bottleneck. Attempt a breakthrough to advance.", "warning")
+	_pass_time(days)
+
+
 func learn_technique(tech_id: String) -> void:
 	if not _can_act():
 		return
@@ -589,7 +616,14 @@ func _pass_time(days: int) -> void:
 func _on_days_advanced(days: int) -> void:
 	if not _can_act():
 		return
+	var age_before := player.age_days
 	player.age_days += days
+	var spouse_favor := Family.spouse_favor_gain(data, age_before, player.age_days)
+	if spouse_favor > 0:
+		for spouse_id in player.spouses:
+			var spouse: CharacterData = npcs.get(spouse_id)
+			if spouse != null and spouse.alive:
+				npc_favor[spouse_id] = Family.add_spouse_favor(data, int(npc_favor.get(spouse_id, 0)), spouse_favor)
 	for injury_id in Injuries.pass_days(player, days):
 		EventBus.post("Your %s has healed." % Injuries.injury_name(data, injury_id), "progress")
 	for buff_name in Buffs.pass_days(player, days):
