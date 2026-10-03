@@ -13,7 +13,6 @@ Roles: `systems` (core rules + tests), `content` (data/*.json + small hooks), `w
 |---|---|---|---|
 | FAM-002f | world-ui | todo | Place generated NPCs (no data/npcs.json def) in the world: world.gd skips them today. Pick positions from a per-region list of NPC spots (regions.json `npc_spots`, document in `_doc`) or free floor tiles, a color by gender, and a title such as "Wandering Cultivator" / realm label, so FAM-002c candidates can be met and courted. Depends on FAM-002c (done). |
 | FAM-002d | world-ui | todo | NPC menu entries (src/world/interactables/npc.gd get_options): "Court <name>" (GameState.court) once favor allows, and "Propose as <rank>" per Family.ranks(player gender) with Family.check_proposal reasons shown on disabled entries. Works for both def NPCs and generated NPCs (FAM-002f). Add a scene/menu test. |
-| FAM-002e | world-ui | todo | "Cultivate with <spouse>" entry (GameState.dual_cultivate) on meditation spots for spouses in the current region, showing Family.dual_multiplier as a bonus %; disabled with Family.check_dual_cultivation reasons. |
 | FAM-003c | world-ui | todo | "Try for a child with <spouse>" entry (GameState.try_for_child, Children.check_conception reason shown when unavailable) next to dual cultivation, and pregnancy (days left) + children by name on the character sheet. |
 | G-004b | world-ui | todo | Show equipped weapon/armor with Equipment.describe_stats on the character sheet with Unequip buttons (GameState.unequip), and equip stats + an "Equip" label instead of "Use" for equipment in the inventory screen (GameState.equip_item). |
 | G-005d | world-ui | todo | Ready/unready combat talismans (items with a `combat` block) from the inventory screen via GameState.ready_talisman/unready_talisman, show the readied list (max CombatTalismans.MAX_READIED) and the talisman kind/power (CombatTalismans.amount) in item details. |
@@ -107,6 +106,7 @@ The local sessions that built combat/techniques, world/exploration/NPCs/dialogue
 ## Done
 | id | task |
 |---|---|
+| FAM-002e | Dual cultivation entries at meditation spots for living spouses in the region (Family.spouses_in_region), with bonus % and disabled reasons. |
 | FAM-001b | Family on the character sheet: Family.describe_links (spouses with rank, children, parents, deceased), gender/family header, one-time gender picker (GameState.choose_gender). |
 | W-004c | Encounter choices: encounters.json `choices` and `requires_flag`, Exploration.check_choice/choices/resolve_choice, GameState.encounter_choices/choose_encounter. |
 | G-008 | Sect missions part 1: data/sect_missions.json, Sects.available_missions/check_mission/complete_mission, CharacterData.mission_cooldowns, GameState.take_mission. |

@@ -285,3 +285,13 @@ static func _describe_relative(other: CharacterData, data: GameData) -> String:
 	if not other.alive:
 		return "%s (deceased)" % other.name
 	return "%s (%s, age %d)" % [other.name, Cultivation.realm_label(other, data), other.age_years()]
+
+
+## `c`'s living spouses whose home is `region_id`, in marriage order.
+static func spouses_in_region(c: CharacterData, people: Dictionary, data: GameData, region_id: String) -> Array[CharacterData]:
+	var out: Array[CharacterData] = []
+	for spouse_id in c.spouses:
+		var spouse: CharacterData = people.get(spouse_id)
+		if spouse != null and spouse.alive and Npcs.region_of(spouse, data) == region_id:
+			out.append(spouse)
+	return out
