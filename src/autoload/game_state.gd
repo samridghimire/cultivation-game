@@ -491,7 +491,7 @@ func fight_enemy(enemy: Dictionary) -> void:
 	if not outcome["notes"].is_empty():
 		EventBus.post("(%s)" % ", ".join(outcome["notes"]), "progress" if result["victory"] else "warning")
 	EventBus.combat_finished.emit(enemy.get("name", "enemy"), result["victory"], result["log"])
-	var drained := Equipment.drain_after_fight(player, data)
+	var drained := 0 if outcome["died"] else Equipment.drain_after_fight(player, data)
 	if drained > 0:
 		EventBus.post("Your weapon drinks %d %s of your life. %d years remain." % [drained, "year" if drained == 1 else "years", Cultivation.years_left(player, data)], "danger")
 		if player.age_years() >= Cultivation.lifespan_years(player, data):
