@@ -1,0 +1,45 @@
+{
+  "id": "blood_lotus_xue",
+  "entries": [
+    {"node": "righteous", "if": {"min_alignment": 300}},
+    {"node": "kin", "if": {"max_alignment": -200}},
+    {"node": "greet"}
+  ],
+  "nodes": {
+    "greet": {"text": "A lost lamb in the mist. Relax, I have already eaten today. I am Xue Yao of the Blood Lotus. Say what you want or keep walking.",
+      "choices": [
+        {"label": "Why would anyone join the Blood Lotus?", "next": "why"},
+        {"label": "Sell her a Blood Ginseng. (+110 stones)", "next": "greet", "effects": {"items": {"blood_ginseng": -1, "spirit_stone": 110}}, "favor": 5, "show_locked": true},
+        {"label": "Help her track a wounded mist wolf. (5 days)", "next": "hunt", "days": 5, "favor": 6, "effects": {"items": {"spirit_stone": 30}, "alignment": -10}},
+        {"label": "Leave.", "next": "end"}
+      ]},
+    "why": {"text": "The righteous sects measure your roots and throw you away. The Blood Lotus measures your will. Trash roots soaked in enough blood still blossom.",
+      "choices": [{"label": "...", "next": "greet"}]},
+    "hunt": {"text": "Ha, you didn't flinch when I drank from it. There may be hope for you yet.",
+      "choices": [{"label": "...", "next": "end"}]},
+    "kin": {"text": "I smell it on you, the good kind of rot. A fellow traveller on the crimson road. What do you need, {player}?",
+      "choices": [
+        {"label": "Trade 2 Blood Ginseng for a Blood Demon Pill.", "next": "kin", "effects": {"items": {"blood_ginseng": -2, "blood_demon_pill": 1}}, "favor": 4, "show_locked": true},
+        {"label": "Raid a herb caravan with her. (7 days)", "next": "raid", "days": 7, "favor": 8, "effects": {"items": {"spirit_stone": 160, "purple_cloud_mushroom": 2}, "alignment": -40}},
+        {"label": "Teach me to flee like blood on water.", "next": "teach", "if": {"min_favor": 30, "not_knows_technique": "blood_shadow_flight"}, "show_locked": true},
+        {"label": "Offer your own blood to her lotus seed. (burn 3 years)", "next": "seed", "if": {"min_favor": 45, "not_flag": "xue_seed"}, "show_locked": true},
+        {"label": "Leave.", "next": "end"}
+      ]},
+    "raid": {"text": "The guards ran, the drivers did not. Your share, partner. The Blood Lotus will hear your name.",
+      "choices": [{"label": "...", "next": "kin"}]},
+    "teach": {"text": "Bite your tongue, spit essence blood, and become the spray. It costs you, it always costs you. Watch.",
+      "choices": [{"label": "Learn Blood Shadow Flight. (10 days)", "next": "end", "days": 10, "effects": {"learn_technique": "blood_shadow_flight"}}]},
+    "seed": {"text": "The lotus seed drinks and splits open. Inside, a pill of crystallised qi, your own life refined. Swallow it before it remembers what it was.",
+      "choices": [{"label": "Swallow it.", "next": "end", "days": 2, "effects": {"burn_lifespan": 3, "qi": 6000, "breakthrough_bonus": 0.08, "set_flag": "xue_seed"}}]},
+    "righteous": {"text": "Azure Cloud's little hound. If you came to purge me, try it. If not, stop staring and go save a kitten.",
+      "choices": [
+        {"label": "Urge her to leave the Blood Lotus before it consumes her.", "next": "urge", "if": {"min_favor": 20, "not_flag": "xue_urged"}, "show_locked": true},
+        {"label": "Share your rations with her. (5 stones)", "next": "rations", "effects": {"items": {"spirit_stone": -5}}, "favor": 5, "show_locked": true},
+        {"label": "Leave.", "next": "end"}
+      ]},
+    "rations": {"text": "...Fine. They don't feed us on the outer roster. Don't tell anyone.",
+      "choices": [{"label": "...", "next": "end"}]},
+    "urge": {"text": "She is quiet for a long time. 'And go where? Your sects wouldn't have me.' She presses a crimson token into your hand. 'If I ever run, I'll find you.'",
+      "choices": [{"label": "Keep the token close.", "next": "end", "favor": 10, "effects": {"alignment": 30, "set_flag": "xue_urged"}}]}
+  }
+}
