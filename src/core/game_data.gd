@@ -48,6 +48,7 @@ var recipes: Dictionary = {}  # id -> Dictionary (data/recipes.json)
 ## Alchemy tunables (see Alchemy).
 var alchemy: Dictionary = {}
 var sect_missions: Dictionary = {}  # id -> Dictionary (data/sect_missions.json)
+var secret_realms: Dictionary = {}  # id -> Dictionary (data/secret_realms.json, SecretRealms)
 ## Problems found while loading. Empty when all data files are valid.
 var load_errors: PackedStringArray = []
 
@@ -163,6 +164,9 @@ func _load(dir: String) -> void:
 	for recipe in crafting.get("recipes", []):
 		recipes[recipe["id"]] = recipe
 
+	for secret_realm in _read(dir, "secret_realms.json").get("realms", []):
+		secret_realms[secret_realm["id"]] = secret_realm
+
 	_validate()
 
 
@@ -205,6 +209,7 @@ func _validate() -> void:
 	load_errors.append_array(Equipment.validate(self))
 	load_errors.append_array(CombatTalismans.validate(self))
 	load_errors.append_array(Family.validate(self))
+	load_errors.append_array(SecretRealms.validate(self))
 	load_errors.append_array(Children.validate(self))
 	load_errors.append_array(Sects.validate_missions(self))
 	load_errors.append_array(Exploration.validate_choices(self))
