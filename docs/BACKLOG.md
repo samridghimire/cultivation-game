@@ -87,6 +87,7 @@ ART-001/ART-001b are done; ART-002 and ART-005 are in P1 above.
 | C-005 | content | todo | A fifth region (e.g. a marsh or ruined city with a demonic lean): regions.json places (meditation, gather, explore, merchant), routes with realm gates, gather tables, 8+ encounters tagged for it. Pure data; follow regions.json `_doc`. |
 | C-006 | content | todo | 3 new named NPCs (data/npcs.json) with dialogue files in data/dialogue/, spread across regions (e.g. a wandering alchemist, a blood lotus disciple, a retired elder) with favor-gated rewards. |
 | RIV-001 | systems | todo | Rivals and grudges: CharacterData.grudges/gratitude per NPC (save-compatible); killing/robbing/humiliating creates grudges with the victim's family/sect; a named rival NPC grows alongside the player and appears in encounters; Npcs.simulate lets enemies hunt you. |
+| DEED-001 | systems | todo | Deed requirements and fights: optional `requires` on deeds (min_realm, min/max_alignment, like encounter choices) shown as disabled reasons by deed_giver, and an optional `enemy` fought before the effects apply (e.g. C-008's "free the captives" should mean beating the bandit lord). Then gate C-008's bandit camp deeds behind a fight. |
 | W-005 | systems | todo | Secret realms (first pass): data/secret_realms.json (opens every N years for M days, realm caps, floors of encounters with treasures and guardians), GameState.enter_secret_realm. Pair with a world-ui entry point later. |
 
 ## P4: QA and tooling
@@ -109,6 +110,7 @@ The local sessions that built combat/techniques, world/exploration/NPCs/dialogue
 ## Done
 | id | task |
 |---|---|
+| C-008 | Deeds expansion: 12 deeds in 4 new contexts with deed givers (Hooded Stranger well-poisoner in Qingshi, Wounded Sect Disciple in Misty Forest, Street Child in Fallen Star Market, Bandit Camp on Azure Peak), each with righteous/neutral/demonic options; test that every deed context has a giver and both moral sides. |
 | QA-007 | Combat balance sim (tests/sim/simulate_combat.gd + combat_balance.gd): typical/bare player win rates vs every enemy where it first appears; guard test that no forced fight is unbeatable; fixed Purge a Demonic Cultivator opening at Qi Refining (0% win, lethal). |
 | G-004c | Higher-grade equipment: Profound Iron / Dragon-Blood Gold ores, 4 new forge recipes with manuals, Heavenforge Smithy in Fallen Star Market, equipment encounters. |
 | LIFE-001e | Evil artifacts obtainable: Blood-Drinker Saber (wild), Corpse-Silk Burial Armor and Myriad Souls Banner (ruins), once per life, each with a righteous destroy alternative. |
