@@ -335,6 +335,9 @@ func _validate_artifact() -> void:
 
 
 func _validate_recipes() -> void:
+	var markup: Variant = alchemy.get("crafted_sell_markup", 1.3)
+	if not (markup is float or markup is int) or float(markup) < 1.0:
+		load_errors.append("recipes.json alchemy.crafted_sell_markup must be a number >= 1")
 	for recipe: Dictionary in recipes.values():
 		var id: String = recipe["id"]
 		if not professions.has(recipe.get("profession", "")):
