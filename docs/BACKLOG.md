@@ -137,6 +137,7 @@ The local sessions that built combat/techniques, world/exploration/NPCs/dialogue
 | G-008b | Sect mission board (MissionBoard screen from the sect hall): kind, days, hand-in items have/need, enemy danger, rewards, cooldowns, check_mission reasons, Take mission. |
 | UI-LEAK-001 | UIStyle.panel_style() replaces the leaked temporary PanelContainer in every HUD screen; tests/unit/test_ui_style.gd checks screens leave no orphan nodes. |
 | ART-005 | Respawn screen: after an artifact respawn the player chooses which bound anchor to awaken at (CreationArtifact.respawn_choices, GameState.pending_respawn/choose_respawn_anchor) and appears beside it; anchor places show a diamond marker (bound / respawn point). Artifact screen split to ART-005b. |
+| QA-20261003-3 | Close kin (parent/child, grandparent/grandchild, half-siblings) can't court or marry (Family.is_close_kin); the player could marry their own grown child. |
 | G-004c | Higher-grade equipment: Profound Iron / Dragon-Blood Gold ores, 4 new forge recipes with manuals, Heavenforge Smithy in Fallen Star Market, equipment encounters. |
 | LIFE-001e | Evil artifacts obtainable: Blood-Drinker Saber (wild), Corpse-Silk Burial Armor and Myriad Souls Banner (ruins), once per life, each with a righteous destroy alternative. |
 | FAM-002f | Generated NPCs placed in the world: regions.json `npc_spots`, Npcs.generated_in_region/spot_positions/world_title/describe, gender colors, "Look" option. |
