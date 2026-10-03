@@ -125,6 +125,59 @@ func test_game_state_court_and_propose() -> void:
 	gs.end_session()
 
 
+# --- FAM-002g: widowed spouses -----------------------------------------------
+
+func test_dead_spouse_frees_the_rank_slot() -> void:
+	var he := _person("male", "player")
+	var first := _person("female", "npc_a")
+	var second := _person("female", "npc_b")
+	var people := {"npc_a": first, "npc_b": second}
+	assert_true(Family.propose(he, first, 100, "wife", data(), people)["ok"])
+	assert_true(Family.check_proposal(he, second, 100, "wife", data(), people).contains("another"))
+	first.alive = false
+	assert_eq(Family.spouses_of_rank(he, "wife", people), 0, "the dead no longer count")
+	assert_eq(Family.living_spouses(he, people), [] as Array[String])
+	assert_eq(Family.check_proposal(he, second, 100, "wife", data(), people), "")
+	assert_true(Family.propose(he, second, 100, "wife", data(), people)["ok"])
+	assert_eq(he.spouses, ["npc_a", "npc_b"] as Array[String], "the late wife stays in the family history")
+	assert_eq(he.spouse_ranks["npc_a"], "wife")
+	assert_eq(Family.living_spouses(he, people), ["npc_b"] as Array[String])
+
+
+func test_widowed_npc_can_remarry() -> void:
+	var he := _person("male", "player")
+	var widow := _person("female", "npc_a")
+	var late := _person("male", "npc_b")
+	Family.marry(widow, late, "dao_companion")
+	var people := {"npc_a": widow, "npc_b": late}
+	assert_true(Family.check_partner(he, widow, data(), people).contains("married"))
+	late.alive = false
+	assert_eq(Family.check_partner(he, widow, data(), people), "")
+	assert_true(Family.is_living("player", people), "ids not in people (the player) count as living")
+
+
+func test_game_state_remarry_after_spouse_dies() -> void:
+	var gs: Node = _root().get_node("GameState")
+	var c := CharacterFactory.create("Widower", gs.data, seeded_rng())
+	c.gender = "male"
+	gs.start_session(c)
+	var first := _person("female", "test_first")
+	var second := _person("female", "test_second")
+	gs.npcs["test_first"] = first
+	gs.npcs["test_second"] = second
+	gs.npc_favor["test_first"] = 100
+	gs.npc_favor["test_second"] = 100
+	gs.propose("test_first", "wife")
+	assert_eq(c.spouse_ranks.get("test_first", ""), "wife")
+	gs.propose("test_second", "wife")
+	assert_false(c.spouses.has("test_second"), "only one living main wife")
+	first.alive = false
+	gs.propose("test_second", "wife")
+	assert_eq(c.spouse_ranks.get("test_second", ""), "wife", "remarried after being widowed")
+	assert_true(c.spouses.has("test_first"), "late wife kept for history")
+	gs.end_session()
+
+
 # --- FAM-002b: dual cultivation ---------------------------------------------
 
 func _couple() -> Array[CharacterData]:
@@ -218,4 +271,45 @@ func test_game_state_dual_cultivate() -> void:
 	assert_true(c.qi != qi_before or c.stage > 0, "player gained qi")
 	assert_true(spouse.qi != spouse_qi or spouse.stage > 0, "spouse gained qi")
 	assert_gt(int(gs.npc_favor["xiao_ling"]), 60, "favor from the session and the month passing")
+	gs.end_session()
+
+
+func test_spouses_in_region_lists_living_local_spouses() -> void:
+	var he := _person("male", "player")
+	var here := _person("female", "gen_1")
+	here.home_region = "village"
+	var away := _person("female", "gen_2")
+	away.home_region = "far_away"
+	var gone := _person("female", "gen_3")
+	gone.home_region = "village"
+	gone.alive = false
+	for s in [here, away, gone]:
+		Family.marry(he, s, "concubine")
+	var people := {here.id: here, away.id: away, gone.id: gone}
+	var found := Family.spouses_in_region(he, people, data(), "village")
+	assert_eq(found.size(), 1)
+	assert_eq(found[0].id, "gen_1")
+
+
+func test_meditation_spot_offers_dual_cultivation_with_local_spouse() -> void:
+	var gs: Node = _root().get_node("GameState")
+	var c := CharacterFactory.create("Husband", gs.data, seeded_rng())
+	c.gender = "male"
+	c.spiritual_roots = {"fire": 60}
+	gs.start_session(c)
+	var spot: Node = load("res://src/world/interactables/meditation_spot.gd").new()
+	var spouse: CharacterData = gs.npcs["xiao_ling"]
+	gs.current_region = Npcs.region_of(spouse, gs.data)
+	var labels := func() -> Array: return spot.get_options().map(func(o): return o["label"])
+	assert_false(str(labels.call()).contains("Dual cultivate"), "no spouse, no option")
+	Family.marry(c, spouse, "wife")
+	spouse.spiritual_roots = {"water": 60}
+	var dual: Array = spot.get_options().filter(func(o): return String(o["label"]).begins_with("Dual cultivate"))
+	assert_eq(dual.size(), 1)
+	assert_true(String(dual[0]["label"]).contains("%"), dual[0]["label"])
+	assert_false(dual[0]["disabled"])
+	spouse.spiritual_roots = {}
+	dual = spot.get_options().filter(func(o): return String(o["label"]).begins_with("Dual cultivate"))
+	assert_true(dual[0]["disabled"], "rootless spouse: disabled with a reason")
+	spot.free()
 	gs.end_session()

@@ -33,3 +33,18 @@ func test_workshop_offers_crafting_screens() -> void:
 	bus.crafting_requested.disconnect(cb)
 	shop.free()
 	assert_eq(seen, ["alchemist"])
+
+
+func test_refine_batch_crafts_until_ingredients_run_out() -> void:
+	var gs := (Engine.get_main_loop() as SceneTree).root.get_node("GameState")
+	var c := new_character()
+	c.inventory = {}
+	var recipe: Dictionary = data().recipes["qi_gathering_pill"]
+	for item_id in recipe["ingredients"]:
+		c.add_item(item_id, int(recipe["ingredients"][item_id]) * 2)
+	gs.start_session(c)
+	var before: int = gs.player.age_days
+	gs.refine_batch("qi_gathering_pill", 5)
+	assert_eq(gs.player.age_days, before + 2 * int(recipe["days"]))
+	for item_id in recipe["ingredients"]:
+		assert_eq(gs.player.item_count(item_id), 0)

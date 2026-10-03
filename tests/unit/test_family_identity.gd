@@ -123,3 +123,44 @@ func test_generated_npcs_survive_save_and_load() -> void:
 	assert_eq(loaded.home_region, "qingshi_village")
 	assert_eq(Npcs.next_id(gs.npcs) == npc.id, false)
 	gs.end_session()
+
+
+func _person(id: String, gender: String, surname: String, given: String) -> CharacterData:
+	var c := new_character()
+	c.id = id
+	c.gender = gender
+	Names.apply(c, surname, given)
+	return c
+
+
+func test_describe_links_names_spouses_children_and_parents() -> void:
+	var me := _person("player", "male", "Han", "Li")
+	var wife := _person("gen_1", "female", "Lin", "Xue")
+	var concubine := _person("gen_2", "female", "Su", "Mei")
+	concubine.alive = false
+	var son := _person("gen_3", "male", "Han", "Feng")
+	var father := _person("gen_4", "male", "Han", "Tian")
+	Family.marry(me, wife, "wife")
+	Family.marry(me, concubine, "concubine")
+	me.children.append(son.id)
+	me.children.append("gen_99")
+	me.parents.append(father.id)
+	var people := {wife.id: wife, concubine.id: concubine, son.id: son, father.id: father}
+	var lines := Family.describe_links(me, people, data())
+	assert_eq(lines.size(), 5)
+	assert_true(lines[0].begins_with("Wife: Lin Xue ("), lines[0])
+	assert_true(lines[0].contains("age %d" % wife.age_years()), lines[0])
+	assert_eq(lines[1], "Concubine: Su Mei (deceased)")
+	assert_true(lines[2].begins_with("Son: Han Feng"), lines[2])
+	assert_eq(lines[3], "Child: Unknown")
+	assert_true(lines[4].begins_with("Father: Han Tian"), lines[4])
+	assert_true(Family.describe_links(new_character(), {}, data()).is_empty())
+
+
+func test_choose_gender_only_when_unknown() -> void:
+	var c := new_character()
+	c.gender = ""
+	assert_eq(Names.check_choose_gender(c, data(), "female"), "")
+	assert_true(Names.check_choose_gender(c, data(), "dragon") != "")
+	c.gender = "male"
+	assert_true(Names.check_choose_gender(c, data(), "female") != "")

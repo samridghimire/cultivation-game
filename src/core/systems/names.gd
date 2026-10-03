@@ -42,3 +42,13 @@ static func apply(c: CharacterData, surname: String, given_name: String) -> void
 	c.surname = surname.strip_edges()
 	c.given_name = given_name.strip_edges()
 	c.name = full_name(c.surname, c.given_name)
+
+
+## Why `c` can't pick `gender` ("" = allowed). Only characters whose gender is
+## still unknown (old saves) may pick, and only once.
+static func check_choose_gender(c: CharacterData, data: GameData, gender: String) -> String:
+	if c.gender != "":
+		return "Your gender is already set."
+	if not is_gender(data, gender):
+		return "Unknown gender: %s." % gender
+	return ""
