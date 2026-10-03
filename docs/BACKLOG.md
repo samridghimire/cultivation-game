@@ -37,7 +37,7 @@ Roles: `systems` (core rules + tests), `content` (data/*.json + small hooks), `w
 | G-007c | systems | todo | Doctors heal NPC injuries (alignment + favor). NPCs need injuries first: let Npcs.simulate occasionally injure NPCs (data-driven chance), GameState.treat_npc(npc_id). |
 | LIFE-001f | systems | todo | Evil artifacts can be bought: merchants that only sell to demonic players (e.g. `min_alignment`/`max_alignment` on a merchant place, or a `hidden_tags` list so `equipment` merchants skip `demonic` items), then give the three `lifespan_drain` items prices and a Night Market stock rule. Optionally an alignment hit the first time an evil artifact is equipped. |
 | G-005c | content | todo | Talisman content: a talisman stall (`stock_tags: ["talisman"]`) in the market town, higher-rank talisman recipes taught by scrolls (learn_recipe), talismans as encounter loot, and buff talismans for higher realms. |
-| F-005c | qa | todo | Extend the balance sim's "sensible cultivator" with real-play help (moving to higher-density spots/regions as realms allow, breakthrough pills bought with profession income, sect density bonus) and re-check late-realm (Void Refinement+) old-age deaths and whether progression is now too fast for heavenly-root characters. |
+| F-005d | qa | blocked | Progression is far too fast (F-005c sim, seed 1, 200 lives): a sensible player (best reachable spot, Azure Cloud Sect) reaches Foundation at ~17, Core Formation at ~20, Nascent Soul at ~28, Void Refinement at ~92 and Tribulation Transcendence at ~800, with zero old-age deaths; Heavenly Roots hit Void Refinement at ~38. Even the bare density-1.0 sim reaches Core Formation at 40. Breakthrough pills never matter (no one can afford one before Foundation). Needs the target pacing from the owner (DESIGN.md open question), then rescale realms.json qi_required/base_qi_per_day and re-run `simulate_life.gd -- 200 1.0 1 real`. |
 
 ## P1b: Family & Clan (owner priority, see DESIGN.md "Family & Clan system")
 | id | role | status | task |
@@ -105,6 +105,7 @@ The local sessions that built combat/techniques, world/exploration/NPCs/dialogue
 ## Done
 | id | task |
 |---|---|
+| F-005c | Balance sim "real" profile (best reachable spot, sect bonus, alchemist income, breakthrough pills) and Heavenly Root breakdown; findings → F-005d. |
 | G-004c | Higher-grade equipment: Profound Iron / Dragon-Blood Gold ores, 4 new forge recipes with manuals, Heavenforge Smithy in Fallen Star Market, equipment encounters. |
 | LIFE-001e | Evil artifacts obtainable: Blood-Drinker Saber (wild), Corpse-Silk Burial Armor and Myriad Souls Banner (ruins), once per life, each with a righteous destroy alternative. |
 | FAM-002f | Generated NPCs placed in the world: regions.json `npc_spots`, Npcs.generated_in_region/spot_positions/world_title/describe, gender colors, "Look" option. |
