@@ -23,7 +23,6 @@ Roles: `systems` (core rules + tests), `content` (data/*.json + small hooks), `w
 ## P1: Core gameplay loops
 | id | role | status | task |
 |---|---|---|---|
-| W-004d | world-ui | todo | Encounter choice window: on EventBus.encounter_choice_requested show the encounter text and GameState.encounter_choices() (disabled entries show their reason), call GameState.choose_encounter(index), close on encounter_choice_resolved. Can reuse ChoiceMenu with a small source object. Gamepad focus. |
 | W-004e | content | todo | Convert split moral encounters into choice encounters (e.g. the wounded traveller: help / rob / walk away) with set_flag follow-ups (`requires_flag`: the grateful traveller returns, the robbed one's kin seek revenge). Only after W-004d lands, so choices are visible in-game. Depends on W-004d. |
 | G-008b | world-ui | todo | Mission board in the sect hall: list Sects.available_missions for the player's sect with kind, days, required items (have/need), enemy danger (Combat.danger_label), contribution/rewards and cooldown (Sects.mission_cooldown_left); disabled entries show Sects.check_mission reasons; "Take mission" calls GameState.take_mission. Gamepad-friendly. |
 | G-008c | systems | todo | Sect contribution shop: sects.json per-sect `shop` [{item_id, contribution, min_rank}] (technique manuals, pills, recipe scrolls), Sects.shop_items/check_purchase, GameState.buy_with_contribution(item_id); spending contribution never demotes (track spent separately from earned). Plus a sect-hall menu entry listing the shop (small UI, or split to world-ui if large). |
@@ -105,6 +104,7 @@ The local sessions that built combat/techniques, world/exploration/NPCs/dialogue
 ## Done
 | id | task |
 |---|---|
+| W-004d | Encounter choice window (EncounterWindow): choices with lock reasons, gamepad focus, "Walk away" (GameState.dismiss_encounter) when every choice is locked. |
 | G-004c | Higher-grade equipment: Profound Iron / Dragon-Blood Gold ores, 4 new forge recipes with manuals, Heavenforge Smithy in Fallen Star Market, equipment encounters. |
 | LIFE-001e | Evil artifacts obtainable: Blood-Drinker Saber (wild), Corpse-Silk Burial Armor and Myriad Souls Banner (ruins), once per life, each with a righteous destroy alternative. |
 | FAM-002f | Generated NPCs placed in the world: regions.json `npc_spots`, Npcs.generated_in_region/spot_positions/world_title/describe, gender colors, "Look" option. |
