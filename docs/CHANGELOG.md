@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-03 [FAM-003d] NPC families: generated NPCs marry unrelated singles of their region off-screen and have children (NpcFamilies, data/family.json `npc_families`, soft population cap); people you know are never married off, and courtship candidates are refilled.
 - 2026-10-03 [FAM-002f] Generated NPCs (courtship candidates, spouses, children) now appear in the world at per-region npc_spots, colored by gender with a realm or relation title, and can be looked at.
 - 2026-10-03 [FAM-002e] Meditation spots offer "Dual cultivate with <spouse>" (1 month, shows the qi bonus %, disabled with a reason) for spouses living in the current region.
 - 2026-10-03 [FAM-001b] Character sheet: gender + family header, Family section (spouses by rank, children, parents), one-time gender picker for old saves (GameState.choose_gender).
