@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-03 [FAM-002f] Generated NPCs (courtship candidates, spouses, children) now appear in the world at per-region npc_spots, colored by gender with a realm or relation title, and can be looked at.
 - 2026-10-03 [G-005b] Combat talismans: ready up to 3 kinds of talisman; fights open with strike talismans, shield talismans absorb damage and an escape talisman turns a defeat (even a lethal one) into a flight. New Fire Strike, Earth Wall and Thousand-Li Escape talismans and recipes.
 - 2026-10-03 [FAM-003] Children: married couples try for a child (GameState.try_for_child); the carrying spouse tracks a ~10-month pregnancy (several at once), and the child is born as a new NPC with roots/attributes mixed from both parents (mutation, rare genius), the father's surname and the mother's spousal rank; children cannot cultivate before 6.
 - 2026-10-03 [LIFE-001d] 3 more forbidden secret arts (Blood Shadow Flight, Ten-Thousand Bones Armor, Heaven-Devouring Burst) with manuals sold at the Night Market or found in ruins; righteous players can seal the cursed manuals for alignment and qi.

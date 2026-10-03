@@ -1,5 +1,5 @@
 {
-  "_doc": "World regions. The world scene builds itself from the current region. qi_density multiplies cultivation everywhere in the region (meditation spots multiply again). routes: travel targets with days and an optional min_realm (realm id). places: interactables; 'anchor_id' (optional, globally unique) makes the place a Creation Artifact anchor (data/artifact.json); 'type' picks the script (meditation, merchant, sect_hall, workshop, deed_giver, explore, travel, gather), 'pos' and 'size' are in pixels, other keys are passed to the script as exported properties. encounter_tags select entries from data/encounters.json when exploring.",
+  "_doc": "World regions. The world scene builds itself from the current region. qi_density multiplies cultivation everywhere in the region (meditation spots multiply again). routes: travel targets with days and an optional min_realm (realm id). places: interactables; 'anchor_id' (optional, globally unique) makes the place a Creation Artifact anchor (data/artifact.json); 'type' picks the script (meditation, merchant, sect_hall, workshop, deed_giver, explore, travel, gather), 'pos' and 'size' are in pixels, other keys are passed to the script as exported properties. npc_spots (optional): list of [x, y] positions where generated NPCs living in the region stand (in id order; extra NPCs gather around the spawn point). encounter_tags select entries from data/encounters.json when exploring.",
   "start_region": "qingshi_village",
   "regions": [
     {
@@ -8,6 +8,7 @@
       "qi_density": 1.0, "danger": 0,
       "map": {"size": [1600, 1000], "ground": "4d6b3c", "border": "2a3a20", "paths": [[0, 470, 1600, 60], [770, 0, 60, 1000]], "path_color": "8a7350"},
       "spawn": [800, 500],
+      "npc_spots": [[600, 600], [950, 250], [1150, 560], [200, 560], [650, 880], [1000, 880]],
       "routes": [
         {"to": "misty_forest", "days": 3},
         {"to": "fallen_star_market", "days": 10}
@@ -30,6 +31,7 @@
       "qi_density": 1.5, "danger": 1,
       "map": {"size": [1600, 1000], "ground": "2f4f2f", "border": "16261a", "paths": [[0, 470, 1600, 60]], "path_color": "5c5238"},
       "spawn": [120, 500],
+      "npc_spots": [[300, 380], [700, 600], [1000, 380], [1450, 300], [250, 750], [1450, 850]],
       "routes": [
         {"to": "qingshi_village", "days": 3},
         {"to": "azure_peak", "days": 7, "min_realm": "qi_refining"},
@@ -52,6 +54,7 @@
       "qi_density": 1.1, "danger": 0,
       "map": {"size": [1600, 1000], "ground": "6b6250", "border": "3a3428", "paths": [[0, 470, 1600, 60], [770, 0, 60, 1000]], "path_color": "9c917a"},
       "spawn": [800, 900],
+      "npc_spots": [[600, 600], [1000, 600], [600, 200], [1000, 200], [1450, 450], [200, 600]],
       "routes": [
         {"to": "qingshi_village", "days": 10},
         {"to": "misty_forest", "days": 8},
@@ -75,6 +78,7 @@
       "qi_density": 2.5, "danger": 3,
       "map": {"size": [1600, 1000], "ground": "5a6f80", "border": "2b3540", "paths": [[0, 470, 1600, 60]], "path_color": "8f9aa3"},
       "spawn": [120, 500],
+      "npc_spots": [[500, 380], [900, 380], [1000, 620], [600, 620], [1450, 350], [300, 850]],
       "routes": [
         {"to": "misty_forest", "days": 7},
         {"to": "fallen_star_market", "days": 12}
