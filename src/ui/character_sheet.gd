@@ -13,9 +13,7 @@ var _equip_row: HBoxContainer
 
 
 func _init() -> void:
-	var style_source := UIStyle.panel()
-	add_theme_stylebox_override("panel", style_source.get_theme_stylebox("panel"))
-	style_source.free()
+	add_theme_stylebox_override("panel", UIStyle.panel_style())
 	custom_minimum_size = Vector2(620, 0)
 	visible = false
 	var box := VBoxContainer.new()
