@@ -531,6 +531,25 @@ func visit_clinic(injury_id: String) -> void:
 	_pass_time(result["days"])
 
 
+## Treat an injured NPC's worst injury: Doctor xp, alignment and their favor.
+func treat_npc(npc_id: String) -> void:
+	if not _can_act():
+		return
+	var patient: CharacterData = npcs.get(npc_id)
+	var result := Medicine.treat_npc(player, patient, data)
+	if not result["ok"]:
+		EventBus.post(result["reason"], "warning")
+		EventBus.player_changed.emit()
+		return
+	npc_favor[npc_id] = int(npc_favor.get(npc_id, 0)) + result["favor"]
+	var injury_name := Injuries.injury_name(data, result["injury"])
+	var outcome := "it is fully healed" if result["healed"] else "%s left" % Calendar.format_duration(patient.injuries[result["injury"]])
+	EventBus.post("You treat %s's %s: %s. (+%d favor, alignment %+d)" % [patient.name, injury_name, outcome, result["favor"], result["alignment"]], "karma")
+	if result["ranks_gained"] > 0:
+		EventBus.post("You are now a %s!" % Professions.rank_title(player, data, Medicine.DOCTOR), "progress")
+	_pass_time(result["days"])
+
+
 ## Work as a doctor: treat village patients for income, Doctor xp and alignment.
 func treat_patients(days: int) -> void:
 	if not _can_act():

@@ -34,7 +34,7 @@ Roles: `systems` (core rules + tests), `content` (data/*.json + small hooks), `w
 | G-010b | world-ui | todo | Abode interactable: claim, storage chest (move items in/out), seclusion cultivation. Depends on G-010. |
 | G-006 | systems | todo | Arrays: Array Master profession recipes that produce array flags/discs; placing an array at your abode (or later clan estate) boosts qi density there (data-driven `array` block in items.json). Depends on G-010. |
 | G-009 | systems | todo | Reputation per sect/faction separate from alignment; evil deeds witnessed lower reputation with righteous sects; reputation gates sect joining and shop prices. data/sects.json `reputation` rules, CharacterData.reputation (save-compatible). |
-| G-007c | systems | todo | Doctors heal NPC injuries (alignment + favor). NPCs need injuries first: let Npcs.simulate occasionally injure NPCs (data-driven chance), GameState.treat_npc(npc_id). |
+| G-007d | world-ui | todo | NPC menu entry "Treat <name>'s <injury>" (GameState.treat_npc, Medicine.check_treat_npc reason on a disabled entry; injury = Medicine.worst_injury) for def and generated NPCs, and show an NPC's injuries in the "Look" description (Injuries.describe-style lines). Depends on G-007c (done). |
 | LIFE-001f | systems | todo | Evil artifacts can be bought: merchants that only sell to demonic players (e.g. `min_alignment`/`max_alignment` on a merchant place, or a `hidden_tags` list so `equipment` merchants skip `demonic` items), then give the three `lifespan_drain` items prices and a Night Market stock rule. Optionally an alignment hit the first time an evil artifact is equipped. |
 | G-005c | content | todo | Talisman content: a talisman stall (`stock_tags: ["talisman"]`) in the market town, higher-rank talisman recipes taught by scrolls (learn_recipe), talismans as encounter loot, and buff talismans for higher realms. |
 | F-005c | qa | todo | Extend the balance sim's "sensible cultivator" with real-play help (moving to higher-density spots/regions as realms allow, breakthrough pills bought with profession income, sect density bonus) and re-check late-realm (Void Refinement+) old-age deaths and whether progression is now too fast for heavenly-root characters. |
@@ -105,6 +105,7 @@ The local sessions that built combat/techniques, world/exploration/NPCs/dialogue
 ## Done
 | id | task |
 |---|---|
+| G-007c | NPCs get hurt (injuries.json `npc_mishap`, monthly for adults) and heal over time; Medicine.treat_npc / GameState.treat_npc heal their worst injury for Doctor xp, alignment and favor. |
 | G-004c | Higher-grade equipment: Profound Iron / Dragon-Blood Gold ores, 4 new forge recipes with manuals, Heavenforge Smithy in Fallen Star Market, equipment encounters. |
 | LIFE-001e | Evil artifacts obtainable: Blood-Drinker Saber (wild), Corpse-Silk Burial Armor and Myriad Souls Banner (ruins), once per life, each with a righteous destroy alternative. |
 | FAM-002f | Generated NPCs placed in the world: regions.json `npc_spots`, Npcs.generated_in_region/spot_positions/world_title/describe, gender colors, "Look" option. |

@@ -174,6 +174,10 @@ static func _live(c: CharacterData, data: GameData, days: int, rng: RandomNumber
 		c.cause_of_death = "old age"
 		events.append({"npc_id": c.id, "text": "News arrives: %s has died of old age at %d." % [c.name, c.age_years()], "category": "warning"})
 		return
+	# Injuries heal with time; adults may get hurt (injuries.json "npc_mishap", per month).
+	Injuries.pass_days(c, days)
+	if Children.can_cultivate_yet(c, data):
+		Injuries.roll(c, data, "npc_mishap", rng, float(days) / STEP_DAYS)
 	if not cultivates(c, data) or not Children.can_cultivate_yet(c, data):
 		return
 	if SpiritualRoots.cultivation_multiplier(c.spiritual_roots, data) <= 0.0:
