@@ -49,6 +49,8 @@ var known_recipes: Array[String] = []
 var injuries: Dictionary = {}  # injury id -> days left to heal
 ## Temporary combat buffs: buff id -> {"name", "days", "mults": {stat: fraction}} (see Buffs).
 var buffs: Dictionary = {}
+## Dao insights: insight id -> {"level": int, "progress": float} (see Dao).
+var dao: Dictionary = {}
 ## Combat talisman item ids burned automatically in fights (see CombatTalismans).
 var readied_talismans: Array[String] = []
 ## Years of lifespan burned for power (forbidden arts, demonic pills); see Cultivation.lifespan_years.
@@ -125,6 +127,7 @@ func to_dict() -> Dictionary:
 		"known_recipes": known_recipes.duplicate(),
 		"injuries": injuries.duplicate(),
 		"buffs": buffs.duplicate(true),
+		"dao": dao.duplicate(true),
 		"readied_talismans": readied_talismans.duplicate(),
 		"lifespan_spent_years": lifespan_spent_years,
 		"lifespan_bonus_years": lifespan_bonus_years,
@@ -191,6 +194,9 @@ static func from_dict(d: Dictionary) -> CharacterData:
 		c.anchors.append(String(anchor_id))
 	for recipe_id in d.get("known_recipes", []):
 		c.known_recipes.append(String(recipe_id))
+	var saved_dao: Dictionary = d.get("dao", {})
+	for insight_id in saved_dao:
+		c.dao[String(insight_id)] = {"level": int(saved_dao[insight_id].get("level", 0)), "progress": float(saved_dao[insight_id].get("progress", 0))}
 	var techs: Dictionary = d.get("techniques", {})
 	for tech_id in techs:
 		c.techniques[tech_id] = {"level": int(techs[tech_id].get("level", 1)), "xp": float(techs[tech_id].get("xp", 0))}

@@ -74,7 +74,8 @@ ART-001/ART-001b are done; ART-002 and ART-005 are in P1 above.
 | CM-001c | content | todo | Method content: 8+ methods across elements and alignments (righteous sect methods sold in contribution shops, demonic blood methods, rare ruins inheritances), with higher-realm caps so players must find better ones. Depends on CM-001. |
 | TRIB-001 | systems | todo | Heavenly Tribulations: data/realms.json `tribulation` block on major breakthroughs (Core Formation and up by default): N lightning waves with damage scaled by realm; survive via HP/defense, talismans, pills, arrays; failure injures, and the last wave can kill via GameState._die_violently (artifact respawn). Demonic alignment adds an extra heart-demon wave. See DESIGN.md open question for defaults. |
 | TRIB-001b | world-ui | todo | Tribulation sequence: a banner/screen showing each wave, damage taken and survival, plus a "prepare" warning before attempting a breakthrough that triggers a tribulation. Depends on TRIB-001. |
-| DAO-001 | systems | todo | Dao insights: data/dao.json insights (Sword Dao, Fire Dao, Dao of Life…) gained by rare encounters, practicing techniques long enough, or seclusion with a Comprehension check; each insight level boosts related techniques and breakthrough odds. CharacterData.dao (save-compatible). |
+| DAO-001b | world-ui | todo | Surface Dao insights: a "Dao insights" section on the character sheet (Dao.describe, progress vs Dao.progress_needed), and "Contemplate the <insight> (1 month)" entries at meditation spots for insights with level >= 1 (GameState.contemplate_dao, Dao.check_contemplate reasons on disabled entries). Depends on DAO-001 (done). |
+| DAO-001c | content | todo | Dao content: insights for more paths (Dao of Slaughter / Blood for demonic arts, Thunder, Wind, Space) in data/dao.json, rare encounters and ruins treasures granting them (effect key dao_insight), and technique lists so forbidden arts and new C-003 techniques have a matching Dao. Depends on DAO-001 (done). |
 | C-003 | content | todo | Techniques expansion: 10+ combat techniques across elements/alignments with manuals as merchant stock, sect shop items or encounter loot (follow data/techniques.json `_doc`). |
 
 ## P3: World
@@ -105,6 +106,7 @@ The local sessions that built combat/techniques, world/exploration/NPCs/dialogue
 ## Done
 | id | task |
 |---|---|
+| DAO-001 | Dao insights: data/dao.json (6 insights), CharacterData.dao, Dao system (levels, Comprehension checks, technique and breakthrough bonuses), dao_insight effect key + 2 encounters, insight progress from practice, GameState.contemplate_dao. |
 | G-004c | Higher-grade equipment: Profound Iron / Dragon-Blood Gold ores, 4 new forge recipes with manuals, Heavenforge Smithy in Fallen Star Market, equipment encounters. |
 | LIFE-001e | Evil artifacts obtainable: Blood-Drinker Saber (wild), Corpse-Silk Burial Armor and Myriad Souls Banner (ruins), once per life, each with a righteous destroy alternative. |
 | FAM-002f | Generated NPCs placed in the world: regions.json `npc_spots`, Npcs.generated_in_region/spot_positions/world_title/describe, gender colors, "Look" option. |
