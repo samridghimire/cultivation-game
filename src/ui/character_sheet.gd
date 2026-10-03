@@ -1,20 +1,19 @@
 class_name CharacterSheet
 extends PanelContainer
 ## Modal character overview: identity and family, attributes, roots and
-## professions. Items live in InventoryScreen. Old saves without a gender get a
-## one-time gender picker here.
+## professions, and equipped gear with Unequip buttons. Items live in
+## InventoryScreen. Old saves without a gender get a one-time gender picker here.
 
 signal closed
 
 var _text: RichTextLabel
 var _recharge: Button
 var _gender_row: HBoxContainer
+var _equip_row: HBoxContainer
 
 
 func _init() -> void:
-	var style_source := UIStyle.panel()
-	add_theme_stylebox_override("panel", style_source.get_theme_stylebox("panel"))
-	style_source.free()
+	add_theme_stylebox_override("panel", UIStyle.panel_style())
 	custom_minimum_size = Vector2(620, 0)
 	visible = false
 	var box := VBoxContainer.new()
@@ -31,6 +30,9 @@ func _init() -> void:
 	for g in Names.genders(GameState.data):
 		_gender_row.add_child(UIStyle.button(g.capitalize(), func(): _choose_gender(g)))
 	box.add_child(_gender_row)
+	_equip_row = HBoxContainer.new()
+	_equip_row.add_theme_constant_override("separation", 8)
+	box.add_child(_equip_row)
 	_recharge = UIStyle.button("Recharge artifact", func(): GameState.recharge_artifact())
 	box.add_child(_recharge)
 	box.add_child(UIStyle.button("Close", close))
@@ -85,6 +87,7 @@ func _rebuild() -> void:
 	t += "Alignment: %s (%d)   |   %s\n\n" % [Alignment.tier_name(p.alignment, data), p.alignment, Sects.describe(p, data)]
 	_gender_row.visible = p.gender == ""
 	var family := Family.describe_links(p, GameState.npcs, data)
+	family.append_array(Children.describe_pregnancies(p, GameState.npcs))
 	if not family.is_empty():
 		t += "[color=#%s]Family[/color]\n" % accent
 		for line in family:
@@ -96,6 +99,14 @@ func _rebuild() -> void:
 	var stats := Combat.stats(p, data)
 	t += "\n[color=#%s]Combat[/color]\n" % accent
 	t += "  Health %d   Attack %d   Defense %d   Speed %d   Crit %d%%\n" % [int(stats["max_hp"]), int(stats["attack"]), int(stats["defense"]), int(stats["speed"]), roundi(stats["crit"] * 100)]
+	t += "\n[color=#%s]Equipment[/color]\n" % accent
+	for slot in Equipment.SLOTS:
+		var item_id := String(p.equipment.get(slot, ""))
+		if item_id == "":
+			t += "  %s: none\n" % slot.capitalize()
+		else:
+			t += "  %s: %s (%s)\n" % [slot.capitalize(), data.items[item_id]["name"], Equipment.describe_stats(data, item_id)]
+	_rebuild_equip_row()
 	if Injuries.has_any(p):
 		var danger := UIStyle.CATEGORY_COLORS["danger"].to_html(false)
 		t += "\n[color=#%s]Injuries[/color]  (cultivation x%s, combat x%s)\n" % [danger, String.num(Injuries.cultivation_multiplier(p, data), 2), String.num(Injuries.combat_multiplier(p, data), 2)]
@@ -126,3 +137,25 @@ func _rebuild() -> void:
 		t += "  %s (%s)\n" % [Professions.rank_title(p, data, prof_id), next]
 	t += "\n[color=#888888]Press [I] for your inventory and [K] for techniques.[/color]"
 	_text.text = t
+
+
+## One Unequip button per filled equipment slot.
+func _rebuild_equip_row() -> void:
+	for child in _equip_row.get_children():
+		_equip_row.remove_child(child)
+		child.queue_free()
+	var p := GameState.player
+	for slot in Equipment.SLOTS:
+		var item_id := String(p.equipment.get(slot, ""))
+		if item_id != "":
+			var b := UIStyle.button("Unequip %s" % GameState.data.items[item_id]["name"], _unequip.bind(slot))
+			b.name = "unequip_" + slot
+			_equip_row.add_child(b)
+	_equip_row.visible = _equip_row.get_child_count() > 0
+
+
+func _unequip(slot: String) -> void:
+	GameState.unequip(slot)
+	# The row was rebuilt by player_changed; keep gamepad focus inside the sheet.
+	var target: Button = _equip_row.get_child(0) if _equip_row.get_child_count() > 0 else _default_focus()
+	target.grab_focus.call_deferred()

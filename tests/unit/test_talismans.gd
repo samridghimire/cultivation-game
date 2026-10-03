@@ -79,3 +79,20 @@ func test_game_state_inscribe_and_use_talisman() -> void:
 	gs.use_item("golden_bell_talisman")
 	assert_true(c.buffs.has("golden_bell"))
 	gs.end_session()
+
+
+func test_every_learned_talisman_recipe_has_an_obtainable_manual() -> void:
+	var d := data()
+	for recipe: Dictionary in d.recipes.values():
+		if recipe["profession"] != "talisman_master" or recipe.get("starter", false):
+			continue
+		var obtainable := false
+		for item: Dictionary in d.items.values():
+			if item.get("effects", {}).get("learn_recipe", "") != recipe["id"]:
+				continue
+			if int(item.get("price", 0)) > 0:
+				obtainable = true
+			for e: Dictionary in d.encounters.values():
+				if e.get("effects", {}).get("items", {}).has(item["id"]):
+					obtainable = true
+		assert_true(obtainable, "no manual for the %s recipe can be bought or found" % recipe["id"])
