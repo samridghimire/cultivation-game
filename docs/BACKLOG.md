@@ -74,8 +74,8 @@ ART-001/ART-001b are done; ART-002 and ART-005 are in P1 above.
 | CM-001c | content | todo | Method content: 8+ methods across elements and alignments (righteous sect methods sold in contribution shops, demonic blood methods, rare ruins inheritances), with higher-realm caps so players must find better ones. Depends on CM-001. |
 | TRIB-001 | systems | todo | Heavenly Tribulations: data/realms.json `tribulation` block on major breakthroughs (Core Formation and up by default): N lightning waves with damage scaled by realm; survive via HP/defense, talismans, pills, arrays; failure injures, and the last wave can kill via GameState._die_violently (artifact respawn). Demonic alignment adds an extra heart-demon wave. See DESIGN.md open question for defaults. |
 | TRIB-001b | world-ui | todo | Tribulation sequence: a banner/screen showing each wave, damage taken and survival, plus a "prepare" warning before attempting a breakthrough that triggers a tribulation. Depends on TRIB-001. |
+| C-003b | content | todo | Scripture Pavilion: a merchant in fallen_star_market with `stock_tags: ["scripture"]`, tag the sold technique manuals `scripture` so they leave the general stores (Wandering Merchant, Pill Pavilion), and add 2-3 more mid-price manuals. Coordinate with G-005c (also edits fallen_star_market places). Seed sect shops with C-003 manuals in G-008d (e.g. Cloud-Parting Palm for Azure Cloud, Scarlet Blood Palm for Blood Lotus). |
 | DAO-001 | systems | todo | Dao insights: data/dao.json insights (Sword Dao, Fire Dao, Dao of Life…) gained by rare encounters, practicing techniques long enough, or seclusion with a Comprehension check; each insight level boosts related techniques and breakthrough odds. CharacterData.dao (save-compatible). |
-| C-003 | content | todo | Techniques expansion: 10+ combat techniques across elements/alignments with manuals as merchant stock, sect shop items or encounter loot (follow data/techniques.json `_doc`). |
 
 ## P3: World
 | id | role | status | task |
@@ -105,6 +105,7 @@ The local sessions that built combat/techniques, world/exploration/NPCs/dialogue
 ## Done
 | id | task |
 |---|---|
+| C-003 | Techniques expansion: 13 combat/body techniques (Qi Refining, Foundation, Core Formation; all 5 elements plus 3 demonic arts) with manuals sold in shops or found through 12 exploration encounters, each demonic find paired with a righteous alternative. |
 | G-004c | Higher-grade equipment: Profound Iron / Dragon-Blood Gold ores, 4 new forge recipes with manuals, Heavenforge Smithy in Fallen Star Market, equipment encounters. |
 | LIFE-001e | Evil artifacts obtainable: Blood-Drinker Saber (wild), Corpse-Silk Burial Armor and Myriad Souls Banner (ruins), once per life, each with a righteous destroy alternative. |
 | FAM-002f | Generated NPCs placed in the world: regions.json `npc_spots`, Npcs.generated_in_region/spot_positions/world_title/describe, gender colors, "Look" option. |
