@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-03 [G-004b] Equipment is usable in-game: the inventory shows slot, stats and what an item would replace with an "Equip" button, and the character sheet lists equipped weapon/armor with Unequip buttons. InventoryScreen no longer leaks its temporary style panel.
 - 2026-10-03 [FAM-003c] Meditation spots offer "Try for a child with <spouse>" next to dual cultivation (disabled with the Children.check_conception reason), and the character sheet's Family section shows ongoing pregnancies with time to the birth (Children.describe_pregnancies).
 - 2026-10-03 [FAM-002d] NPC menus offer "Court <name>" (shows time and current favor) and "Propose to <name> as your <rank>" per spousal rank for anyone the player could pursue, named or generated; disabled entries show the refusal reason. Generated NPCs still need a favor source (FAM-002h).
 - 2026-10-03 [FAM-003d] NPC families: generated NPCs marry unrelated singles of their region off-screen and have children (NpcFamilies, data/family.json `npc_families`, soft population cap); people you know are never married off, and courtship candidates are refilled.
