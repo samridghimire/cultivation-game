@@ -181,6 +181,10 @@ static func _live(c: CharacterData, data: GameData, days: int, rng: RandomNumber
 			text += " The unborn child is lost as well."
 		events.append({"npc_id": c.id, "text": text, "category": "warning"})
 		return
+	# Injuries heal with time; adults may get hurt (injuries.json "npc_mishap", per month).
+	Injuries.pass_days(c, days)
+	if Children.can_cultivate_yet(c, data):
+		Injuries.roll(c, data, "npc_mishap", rng, float(days) / STEP_DAYS)
 	if not cultivates(c, data) or not Children.can_cultivate_yet(c, data):
 		return
 	if SpiritualRoots.cultivation_multiplier(c.spiritual_roots, data) <= 0.0:

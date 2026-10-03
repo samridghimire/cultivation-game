@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-03 [G-007c] NPCs now get injured now and then and heal with time; a doctor can treat an NPC's worst injury (GameState.treat_npc) for Doctor xp, alignment and their favor (more if fully healed). Menu entry follows in G-007d.
 - 2026-10-03 [G-009] Sect reputation, separate from alignment: witnessed deeds move each sect's opinion (righteous sects condemn evil, Blood Lotus admires it), low reputation blocks joining, faction merchants (the Pill Pavilion is Myriad Treasure Pavilion's) price by reputation tier, missions earn and leaving a sect costs reputation.
 - 2026-10-03 [G-010] Cave abodes: claim one dwelling for spirit stones (Waterfall Cave in Misty Forest, Cloud-Piercing Grotto on Azure Peak), cultivate there in seclusion at its qi density, keep items in its storage chest, and bind it as a Creation Artifact anchor (auto-bound when a slot is free). UI follows in G-010b.
 - 2026-10-03 [ART-002] Creation Artifact functions: feed spirit stones and treasures to the artifact for energy and spend it to unseal data-driven functions (realm/energy/flag conditions); the first, Storage Space (Qi Refining, 100 energy), holds 12 kinds of items that are never lost, even through death.
