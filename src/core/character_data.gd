@@ -45,6 +45,8 @@ var known_recipes: Array[String] = []
 var injuries: Dictionary = {}  # injury id -> days left to heal
 ## Temporary combat buffs: buff id -> {"name", "days", "mults": {stat: fraction}} (see Buffs).
 var buffs: Dictionary = {}
+## Combat talisman item ids burned automatically in fights (see CombatTalismans).
+var readied_talismans: Array[String] = []
 ## Years of lifespan burned for power (forbidden arts, demonic pills); see Cultivation.lifespan_years.
 var lifespan_spent_years := 0
 ## Years of lifespan gained from longevity pills and treasures.
@@ -115,6 +117,7 @@ func to_dict() -> Dictionary:
 		"known_recipes": known_recipes.duplicate(),
 		"injuries": injuries.duplicate(),
 		"buffs": buffs.duplicate(true),
+		"readied_talismans": readied_talismans.duplicate(),
 		"lifespan_spent_years": lifespan_spent_years,
 		"lifespan_bonus_years": lifespan_bonus_years,
 		"artifact_lives": artifact_lives,
@@ -165,6 +168,7 @@ static func from_dict(d: Dictionary) -> CharacterData:
 	for buff_id in saved_buffs:
 		var b: Dictionary = saved_buffs[buff_id]
 		Buffs.add(c, String(buff_id), String(b.get("name", buff_id)), int(b.get("days", 0)), b.get("mults", {}))
+	c.readied_talismans = _strings(d.get("readied_talismans", []))
 	c.lifespan_spent_years = int(d.get("lifespan_spent_years", 0))
 	c.lifespan_bonus_years = int(d.get("lifespan_bonus_years", 0))
 	c.artifact_lives = int(d.get("artifact_lives", -1))

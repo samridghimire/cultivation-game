@@ -83,8 +83,10 @@ static func dodge_chance(defender_speed: int, attacker_speed: int) -> float:
 	return clampf((defender_speed - attacker_speed) * 0.02, 0.0, MAX_DODGE)
 
 
-## Fights to the end. Returns {victory, draw, rounds, log, player_hp,
-## player_max_hp, enemy_hp, enemy_max_hp}. Does not modify `c`.
+## Fights to the end. Returns {victory, draw, escaped, rounds, log, player_hp,
+## player_max_hp, enemy_hp, enemy_max_hp, talismans_used}. Readied combat
+## talismans (CombatTalismans) strike first, shield the player, or turn a
+## defeat into an escape. Does not modify `c`.
 static func resolve(c: CharacterData, data: GameData, enemy: Dictionary, rng: RandomNumberGenerator) -> Dictionary:
 	var p := stats(c, data)
 	var e := enemy_stats(enemy, data)
@@ -94,6 +96,18 @@ static func resolve(c: CharacterData, data: GameData, enemy: Dictionary, rng: Ra
 	var lines: PackedStringArray = []
 	var player_first: bool = p["speed"] >= e["speed"]
 	lines.append("You face the %s. (You: %d hp, %d atk. Foe: %d hp, %d atk.)" % [enemy_name, player_hp, p["attack"], enemy_hp, e["attack"]])
+	var used: Array[String] = []
+	var shield := 0
+	for item_id in CombatTalismans.available(c, data, "shield"):
+		used.append(item_id)
+		shield += CombatTalismans.amount(data, item_id)
+		lines.append("You burn a %s: a barrier of qi surrounds you. (%d shield)" % [_item_name(data, item_id), CombatTalismans.amount(data, item_id)])
+	for item_id in CombatTalismans.available(c, data, "strike"):
+		if enemy_hp <= 0:
+			break
+		used.append(item_id)
+		enemy_hp -= CombatTalismans.amount(data, item_id)
+		lines.append("You hurl a %s for %d. (%s: %d hp)" % [_item_name(data, item_id), CombatTalismans.amount(data, item_id), enemy_name, maxi(enemy_hp, 0)])
 	var rounds := 0
 	while rounds < MAX_ROUNDS and player_hp > 0 and enemy_hp > 0:
 		rounds += 1
@@ -110,29 +124,45 @@ static func resolve(c: CharacterData, data: GameData, enemy: Dictionary, rng: Ra
 				else:
 					lines.append("You strike%s for %d. (%s: %d hp)" % [" critically" if hit["crit"] else "", hit["damage"], enemy_name, maxi(enemy_hp, 0)])
 			else:
-				player_hp -= hit["damage"]
-				if hit["dodged"]:
+				var absorbed := mini(shield, int(hit["damage"]))
+				shield -= absorbed
+				player_hp -= int(hit["damage"]) - absorbed
+				if absorbed > 0 and absorbed == int(hit["damage"]):
+					lines.append("Your barrier absorbs the %s's attack. (%d shield left)" % [enemy_name, shield])
+				elif hit["dodged"]:
 					lines.append("You evade the %s's attack." % enemy_name)
 				else:
 					lines.append("The %s hits you%s for %d. (You: %d hp)" % [enemy_name, " critically" if hit["crit"] else "", hit["damage"], maxi(player_hp, 0)])
 	var victory := enemy_hp <= 0
 	var draw := not victory and player_hp > 0
+	var escapes := CombatTalismans.available(c, data, "escape")
+	var escaped := not victory and not draw and not escapes.is_empty()
 	if victory:
 		lines.append("You defeat the %s!" % enemy_name)
 	elif draw:
 		lines.append("Neither side can finish the fight. You disengage.")
+	elif escaped:
+		used.append(escapes[0])
+		player_hp = 1
+		lines.append("On the brink of death you burn a %s and flee from the %s!" % [_item_name(data, escapes[0]), enemy_name])
 	else:
 		lines.append("You are defeated by the %s." % enemy_name)
 	return {
 		"victory": victory,
 		"draw": draw,
+		"escaped": escaped,
 		"rounds": rounds,
 		"log": lines,
 		"player_hp": maxi(player_hp, 0),
 		"player_max_hp": p["max_hp"],
 		"enemy_hp": maxi(enemy_hp, 0),
 		"enemy_max_hp": e["max_hp"],
+		"talismans_used": used,
 	}
+
+
+static func _item_name(data: GameData, item_id: String) -> String:
+	return String(data.items.get(item_id, {}).get("name", item_id))
 
 
 ## One attack. Returns {damage, crit, dodged}.
@@ -146,15 +176,26 @@ static func _strike(atk: Dictionary, def: Dictionary, rng: RandomNumberGenerator
 	return {"damage": maxi(1, roundi(dmg)), "crit": crit, "dodged": false}
 
 
-## Applies the result of resolve(). Victory grants the enemy's rewards; a
-## lethal defeat kills; any other defeat costs spirit stones and may injure
+## Applies the result of resolve(). Burned talismans are consumed. Victory
+## grants the enemy's rewards; an escape or draw costs nothing more; a lethal
+## defeat kills; any other defeat costs spirit stones and may injure
 ## ("combat_defeat" in injuries.json). Returns {notes, died, cause, days,
 ## injury}. Marking the character dead is left to the caller.
 static func apply_outcome(c: CharacterData, data: GameData, enemy: Dictionary, result: Dictionary, flags: Dictionary, rng: RandomNumberGenerator) -> Dictionary:
 	var enemy_name: String = enemy.get("name", "enemy")
+	var burned := CombatTalismans.consume(c, data, result.get("talismans_used", []))
+	var outcome := _outcome(c, data, enemy, enemy_name, result, flags, rng)
+	if not burned.is_empty():
+		var notes: PackedStringArray = ["Burned: %s" % ", ".join(burned)]
+		notes.append_array(outcome["notes"])
+		outcome["notes"] = notes
+	return outcome
+
+
+static func _outcome(c: CharacterData, data: GameData, enemy: Dictionary, enemy_name: String, result: Dictionary, flags: Dictionary, rng: RandomNumberGenerator) -> Dictionary:
 	if result["victory"]:
 		return {"notes": Effects.apply(c, data, enemy.get("rewards", {}), flags), "died": false, "cause": "", "days": 1, "injury": ""}
-	if result["draw"]:
+	if result["draw"] or result.get("escaped", false):
 		return {"notes": PackedStringArray(), "died": false, "cause": "", "days": 1, "injury": ""}
 	if enemy.get("lethal", false):
 		return {"notes": PackedStringArray(), "died": true, "cause": "You were slain by a %s at age %d." % [enemy_name, c.age_years()], "days": 0, "injury": ""}
