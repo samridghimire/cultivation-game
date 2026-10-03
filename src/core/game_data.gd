@@ -18,7 +18,11 @@ var alignment_tiers: Array[Dictionary] = []
 var profession_rank_names: PackedStringArray = []
 var professions: Dictionary = {}  # id -> ProfessionDef
 var sects: Dictionary = {}  # id -> SectDef
+## sects.json top-level "reputation" rules (Reputation system).
+var sect_reputation: Dictionary = {}
 var items: Dictionary = {}  # id -> Dictionary
+## items.json "restricted_tags": only merchants that stock these tags explicitly sell such items.
+var restricted_item_tags: PackedStringArray = []
 var deeds: Dictionary = {}  # id -> Dictionary
 var regions: Dictionary = {}  # id -> Dictionary
 var start_region := ""
@@ -42,8 +46,13 @@ var medicine: Dictionary = {}
 ## Creation Artifact tunables (data/artifact.json, see CreationArtifact).
 var artifact: Dictionary = {}
 var family: Dictionary = {}  # data/family.json (Family system)
+var bloodlines: Dictionary = {}  # id -> Dictionary (data/bloodlines.json)
+## data/bloodlines.json top-level rules (inherit chances).
+var bloodline_rules: Dictionary = {}
 ## Anchor id -> {"region": String, "name": String}, from places with an anchor_id.
 var anchors: Dictionary = {}
+## Claimable cave abodes: abode id -> regions.json abode def plus "region" (Abodes).
+var abodes: Dictionary = {}
 var recipes: Dictionary = {}  # id -> Dictionary (data/recipes.json)
 ## Alchemy tunables (see Alchemy).
 var alchemy: Dictionary = {}
@@ -96,11 +105,15 @@ func _load(dir: String) -> void:
 		var def := ProfessionDef.from_dict(p)
 		professions[def.id] = def
 
-	for s in _read(dir, "sects.json").get("sects", []):
+	var sect_file := _read(dir, "sects.json")
+	sect_reputation = sect_file.get("reputation", {})
+	for s in sect_file.get("sects", []):
 		var def := SectDef.from_dict(s)
 		sects[def.id] = def
 
-	for item in _read(dir, "items.json").get("items", []):
+	var item_file := _read(dir, "items.json")
+	restricted_item_tags = PackedStringArray(item_file.get("restricted_tags", []))
+	for item in item_file.get("items", []):
 		items[item["id"]] = item
 
 	for mission in _read(dir, "sect_missions.json").get("missions", []):
@@ -120,6 +133,16 @@ func _load(dir: String) -> void:
 			if anchors.has(anchor_id):
 				load_errors.append("Duplicate anchor_id '%s'" % anchor_id)
 			anchors[anchor_id] = {"region": region["id"], "name": place.get("display_name", anchor_id)}
+		for abode: Dictionary in region.get("abodes", []):
+			if abodes.has(abode.get("id", "")):
+				load_errors.append("Duplicate abode id '%s'" % abode.get("id", ""))
+			abodes[String(abode.get("id", ""))] = abode.merged({"region": region["id"]})
+			var abode_anchor: String = abode.get("anchor_id", "")
+			if abode_anchor == "":
+				continue
+			if anchors.has(abode_anchor):
+				load_errors.append("Duplicate anchor_id '%s'" % abode_anchor)
+			anchors[abode_anchor] = {"region": region["id"], "name": abode.get("display_name", abode_anchor)}
 
 	artifact = _read(dir, "artifact.json")
 
@@ -131,6 +154,9 @@ func _load(dir: String) -> void:
 
 	names = _read(dir, "names.json")
 	family = _read(dir, "family.json")
+	bloodline_rules = _read(dir, "bloodlines.json")
+	for bloodline in bloodline_rules.get("bloodlines", []):
+		bloodlines[bloodline["id"]] = bloodline
 
 	var dialogue_dir := dir.path_join("dialogue")
 	for file_name in DirAccess.get_files_at(dialogue_dir):
@@ -205,9 +231,18 @@ func _validate() -> void:
 	load_errors.append_array(Equipment.validate(self))
 	load_errors.append_array(CombatTalismans.validate(self))
 	load_errors.append_array(Family.validate(self))
+	load_errors.append_array(Abodes.validate(self))
+	load_errors.append_array(ArtifactFunctions.validate(self))
 	load_errors.append_array(Children.validate(self))
+	load_errors.append_array(NpcFamilies.validate(self))
+	load_errors.append_array(Training.validate(self))
+	load_errors.append_array(Clans.validate(self))
+	load_errors.append_array(Bloodlines.validate(self))
 	load_errors.append_array(Sects.validate_missions(self))
+	load_errors.append_array(Reputation.validate(self))
 	load_errors.append_array(Exploration.validate_choices(self))
+	load_errors.append_array(Adoption.validate(self))
+	load_errors.append_array(Sects.validate_shops(self))
 	for item: Dictionary in items.values():
 		if item.get("effects", {}).has("buff"):
 			for error in Buffs.validate_effect(item["effects"]["buff"]):
@@ -226,7 +261,7 @@ func _validate() -> void:
 func _validate_world() -> void:
 	if not regions.has(start_region):
 		load_errors.append("start_region '%s' is not a region" % start_region)
-	var place_types := ["meditation", "merchant", "sect_hall", "workshop", "deed_giver", "explore", "travel", "gather"]
+	var place_types := ["meditation", "merchant", "sect_hall", "workshop", "clinic", "deed_giver", "explore", "travel", "gather"]
 	for region: Dictionary in regions.values():
 		for route: Dictionary in region.get("routes", []):
 			if not regions.has(route.get("to", "")):
@@ -242,6 +277,8 @@ func _validate_world() -> void:
 					load_errors.append("Region '%s' gathers unknown item '%s'" % [region["id"], entry["item"]])
 			if not place_types.has(place.get("type", "")):
 				load_errors.append("Region '%s' has a place of unknown type '%s'" % [region["id"], place.get("type", "")])
+			if place.has("faction") and not sects.has(place["faction"]):
+				load_errors.append("Region '%s' place has unknown faction '%s'" % [region["id"], place["faction"]])
 	for e: Dictionary in encounters.values():
 		for key in ["min_realm", "max_realm"]:
 			if e.has(key) and realm_index_of(e[key]) < 0:

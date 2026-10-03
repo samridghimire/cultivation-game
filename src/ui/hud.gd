@@ -15,10 +15,13 @@ var _choice_menu: ChoiceMenu
 ## must have open(), close() and a `closed` signal.
 var _screens: Dictionary = {}
 var _combat_report: CombatReport
+var _dialogue: DialogueWindow
+var _encounter: EncounterWindow
 var _pause_menu: PauseMenu
 var _settings: SettingsScreen
 var _load_screen: LoadScreen
 var _crafting: CraftingScreen
+var _mission_board: MissionBoard
 var _banner: Banner
 var _respawn: RespawnScreen
 var _death_screen: Control
@@ -41,9 +44,18 @@ func _ready() -> void:
 	_crafting = CraftingScreen.new()
 	_crafting.closed.connect(_update_modal)
 	add_child(UIStyle.centered(_crafting))
+	_mission_board = MissionBoard.new()
+	_mission_board.closed.connect(_update_modal)
+	add_child(UIStyle.centered(_mission_board))
 	_combat_report = CombatReport.new()
 	_combat_report.closed.connect(_update_modal)
 	add_child(UIStyle.centered(_combat_report))
+	_dialogue = DialogueWindow.new()
+	_dialogue.closed.connect(_update_modal)
+	add_child(UIStyle.centered(_dialogue))
+	_encounter = EncounterWindow.new()
+	_encounter.closed.connect(_update_modal)
+	add_child(UIStyle.centered(_encounter))
 	_pause_menu = PauseMenu.new()
 	_pause_menu.closed.connect(_update_modal)
 	add_child(UIStyle.centered(_pause_menu))
@@ -71,17 +83,22 @@ func _ready() -> void:
 	EventBus.interaction_target_changed.connect(_on_target_changed)
 	EventBus.interaction_menu_requested.connect(_on_menu_requested)
 	EventBus.crafting_requested.connect(_on_crafting_requested)
+	EventBus.mission_board_requested.connect(_on_mission_board_requested)
 	EventBus.player_died.connect(_on_player_died)
 	EventBus.player_respawned.connect(func(_anchor_id: String, _lives: int): _open_pending_respawn())
 	EventBus.combat_finished.connect(_on_combat_finished)
 	EventBus.breakthrough_attempted.connect(_on_breakthrough)
+	EventBus.dialogue_requested.connect(_on_dialogue_requested)
+	EventBus.dialogue_ended.connect(func(_id): _dialogue.close())
+	EventBus.encounter_choice_requested.connect(_on_encounter_choice_requested)
+	EventBus.encounter_choice_resolved.connect(_encounter.close)
 	_refresh()
 	# A respawn that moved the player reloads the world; ask where to awaken now.
 	_open_pending_respawn.call_deferred()
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if _choice_menu.visible or _combat_report.visible or _respawn.visible or _pause_menu.visible or _settings.visible or _load_screen.visible or _death_screen.visible:
+	if _choice_menu.visible or _dialogue.visible or _encounter.visible or _combat_report.visible or _respawn.visible or _pause_menu.visible or _settings.visible or _load_screen.visible or _death_screen.visible:
 		return
 	if event.is_action_pressed("pause_menu"):
 		# Consumed here so the world's own Esc handling never runs mid-session.
@@ -113,6 +130,7 @@ func _close_screens() -> void:
 	for screen in _screens.values():
 		screen.close()
 	_crafting.close()
+	_mission_board.close()
 
 
 func _on_crafting_requested(prof_id: String) -> void:
@@ -120,8 +138,13 @@ func _on_crafting_requested(prof_id: String) -> void:
 	_update_modal()
 
 
+func _on_mission_board_requested() -> void:
+	_mission_board.open()
+	_update_modal()
+
+
 func _any_screen_open() -> bool:
-	return _crafting.visible or _screens.values().any(func(s): return s.visible)
+	return _crafting.visible or _mission_board.visible or _screens.values().any(func(s): return s.visible)
 
 
 func _build_status_panel() -> void:
@@ -219,7 +242,7 @@ func _on_target_changed(display_name: String) -> void:
 
 
 func _on_menu_requested(source: Node) -> void:
-	if _any_screen_open() or _combat_report.visible or _respawn.visible or _pause_menu.visible or _settings.visible or _load_screen.visible or _death_screen.visible:
+	if _any_screen_open() or _dialogue.visible or _encounter.visible or _combat_report.visible or _respawn.visible or _pause_menu.visible or _settings.visible or _load_screen.visible or _death_screen.visible:
 		return
 	_choice_menu.open_for(source)
 	_update_modal()
@@ -230,6 +253,8 @@ func _on_player_died(cause: String) -> void:
 	_close_screens()
 	_combat_report.close()
 	_respawn.close()
+	_dialogue.close()
+	_encounter.close()
 	_pause_menu.close()
 	_settings.close()
 	_load_screen.close()
@@ -256,6 +281,22 @@ func _open_pending_respawn() -> void:
 	_choice_menu.close()
 	_close_screens()
 	_respawn.open()
+	_update_modal()
+
+
+## Talking to an NPC (usually from its choice menu) opens the conversation.
+func _on_dialogue_requested(_npc_id: String) -> void:
+	_choice_menu.close()
+	_close_screens()
+	_dialogue.open()
+	_update_modal()
+
+
+## An explored encounter asks the player to choose (help, rob, fight...).
+func _on_encounter_choice_requested(_encounter_id: String) -> void:
+	_choice_menu.close()
+	_close_screens()
+	_encounter.open()
 	_update_modal()
 
 
@@ -298,7 +339,7 @@ func _on_settings_closed() -> void:
 
 
 func _update_modal() -> void:
-	EventBus.ui_modal_changed.emit(_choice_menu.visible or _any_screen_open() or _combat_report.visible or _respawn.visible or _pause_menu.visible or _settings.visible or _load_screen.visible or _death_screen.visible)
+	EventBus.ui_modal_changed.emit(_choice_menu.visible or _dialogue.visible or _encounter.visible or _any_screen_open() or _combat_report.visible or _respawn.visible or _pause_menu.visible or _settings.visible or _load_screen.visible or _death_screen.visible)
 
 
 func _return_to_menu() -> void:
