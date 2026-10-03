@@ -19,7 +19,6 @@ Roles: `systems` (core rules + tests), `content` (data/*.json + small hooks), `w
 | G-005d | world-ui | todo | Ready/unready combat talismans (items with a `combat` block) from the inventory screen via GameState.ready_talisman/unready_talisman, show the readied list (max CombatTalismans.MAX_READIED) and the talisman kind/power (CombatTalismans.amount) in item details. |
 | W-003b | world-ui | todo | Dialogue window UI: open on EventBus.dialogue_requested, render GameState.dialogue_view() ({id, speaker, text, choices[{index,label,disabled,reason}]}), call GameState.choose_dialogue(index), close on dialogue_ended. Follow src/ui/combat_report.gd; register in hud.gd. NPCs fall back to the choice menu until it exists. |
 | G-007b | world-ui | todo | Clinic: new `clinic` place type (interactable in src/world/interactables, registered like workshop) with options "Treat patients (1 month)" (GameState.treat_patients), "Treat your <injury>" per injury (treat_own_injury), "Pay doctor (N stones)" (visit_clinic, Medicine.clinic_cost). Add one clinic place to qingshi_village and fallen_star_market in regions.json. |
-| FAM-001b | world-ui | todo | Show gender, surname and family links (spouses with rank / children / parents by name, alive or deceased) on the character sheet. Old saves have gender "" (unknown): let the player pick it once there (CharacterData.gender must be a Names.genders key). |
 | QA-002 | qa | todo | End-to-end life script test (tests/unit/test_full_life.gd): drive one character through GameState only: create, cultivate to Qi Refining 3, join a sect, work a profession, refine a pill, buy/equip gear, fight + respawn via the artifact, court + propose + marry an eligible NPC, try for a child until born, save, load, and assert state survives the round trip. Fix any bug you find (small) or file a task. |
 
 ## P1: Core gameplay loops
@@ -100,6 +99,7 @@ ART-001/ART-001b are done; ART-002 and ART-005 are in P1 above.
 | QA-007 | qa | todo | Combat balance sim: per realm, a typical player (realm, gear, techniques, talismans) vs every enemy in enemies.json; report win rates and flag enemies that are trivial or unbeatable for the realm they appear at in encounters.json. |
 | QA-008 | qa | todo | Gamepad/focus audit: a scene test that opens each HUD screen (inventory, techniques, character sheet, crafting, pause, load, settings, combat report) and asserts something has focus and ui_cancel closes it. Fix screens that fail. |
 | QA-009 | qa | todo | Review recently merged code (G-005b combat talismans, FAM-003 children, FAM-002c eligible NPCs) for correctness and missing tests; fix small bugs, file tasks for larger ones. |
+| UI-LEAK-001 | world-ui | todo | Most HUD screens call `UIStyle.panel().get_theme_stylebox("panel")` in _init and leak the temporary PanelContainer (shows as "ObjectDB instances leaked" when screens are built in tests). Add a `UIStyle.panel_style()` helper returning just the StyleBox and use it everywhere (character_sheet already frees its temp panel). |
 
 ## Local sessions
 The local sessions that built combat/techniques, world/exploration/NPCs/dialogue and the UI screens have finished (2026-10-02); their work is on main and these areas are open to anyone. Add follow-up tasks above.
@@ -107,6 +107,7 @@ The local sessions that built combat/techniques, world/exploration/NPCs/dialogue
 ## Done
 | id | task |
 |---|---|
+| FAM-001b | Family on the character sheet: Family.describe_links (spouses with rank, children, parents, deceased), gender/family header, one-time gender picker (GameState.choose_gender). |
 | W-004c | Encounter choices: encounters.json `choices` and `requires_flag`, Exploration.check_choice/choices/resolve_choice, GameState.encounter_choices/choose_encounter. |
 | G-008 | Sect missions part 1: data/sect_missions.json, Sects.available_missions/check_mission/complete_mission, CharacterData.mission_cooldowns, GameState.take_mission. |
 | FAM-002g | Widowed spouses: dead spouses stay in family history but free their rank slot (Family.living_spouses/is_living, `people` param); widowed NPCs can remarry. |

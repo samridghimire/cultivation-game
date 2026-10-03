@@ -384,6 +384,19 @@ func court(npc_id: String) -> void:
 	_pass_time(result["days"])
 
 
+## Pick the player's gender once, for old saves where it is unknown ("").
+func choose_gender(gender: String) -> void:
+	if not _can_act():
+		return
+	var reason := Names.check_choose_gender(player, data, gender)
+	if reason != "":
+		EventBus.post(reason, "warning")
+		return
+	player.gender = gender
+	EventBus.post("You are %s." % gender, "info")
+	EventBus.player_changed.emit()
+
+
 ## Propose marriage to an NPC, offering spousal `rank` (data/family.json).
 func propose(npc_id: String, rank: String) -> void:
 	if not _can_act():
