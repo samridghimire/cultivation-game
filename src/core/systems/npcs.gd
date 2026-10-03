@@ -154,8 +154,10 @@ static func ensure_all(npcs: Dictionary, data: GameData, rng: RandomNumberGenera
 			npcs[def["id"]] = create(def, data, rng)
 
 
-## Lives `days` for every NPC. Returns notable events as [{npc_id, text, category}].
-static func simulate(npcs: Dictionary, data: GameData, days: int, rng: RandomNumberGenerator) -> Array[Dictionary]:
+## Lives `days` for every NPC, then their family life (NpcFamilies: marriages,
+## children; NPCs in `reserved` never marry off-screen). Returns notable events
+## as [{npc_id, text, category}] (family events also carry a "kind").
+static func simulate(npcs: Dictionary, data: GameData, days: int, rng: RandomNumberGenerator, reserved: Dictionary = {}) -> Array[Dictionary]:
 	var events: Array[Dictionary] = []
 	for npc_id in npcs:
 		var c: CharacterData = npcs[npc_id]
@@ -164,6 +166,7 @@ static func simulate(npcs: Dictionary, data: GameData, days: int, rng: RandomNum
 			var step := mini(remaining, STEP_DAYS)
 			remaining -= step
 			_live(c, data, step, rng, events)
+	events.append_array(NpcFamilies.simulate(npcs, data, days, rng, reserved))
 	return events
 
 
@@ -190,6 +193,15 @@ static func _live(c: CharacterData, data: GameData, days: int, rng: RandomNumber
 			events.append({"npc_id": c.id, "text": "Rumours spread: %s has broken through to %s!" % [c.name, result["realm_name"]], "category": "info"})
 		elif result["success"] and c.realm_index == 1:
 			events.append({"npc_id": c.id, "text": "%s has begun Qi Refining." % c.name, "category": "info"})
+
+
+## Whether simulate() news about `npc_id` should reach `player`: named NPCs
+## always; generated ones only if the player knows them (has favor with them)
+## or they are family (spouse, child or parent).
+static func is_newsworthy(npc_id: String, player: CharacterData, favor: Dictionary) -> bool:
+	if not npc_id.begins_with(SPAWN_PREFIX) or favor.has(npc_id):
+		return true
+	return player.spouses.has(npc_id) or player.children.has(npc_id) or player.parents.has(npc_id)
 
 
 ## NPCs whose home is `region_id` and who are still alive.
