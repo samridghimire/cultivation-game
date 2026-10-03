@@ -69,7 +69,7 @@ Every great cultivation protagonist has something that sets them apart. Ours is 
 | Sects (join/leave, requirements, ranks, contribution) | ✅ basic (no missions/shop yet) | `data/sects.json`, `Sects` |
 | Professions (ranks, XP, income) | ✅ basic | `data/professions.json`, `Professions` |
 | Alchemy (recipes, scrolls, pill quality) + crafting screen | ✅ | `data/recipes.json`, `Alchemy`, `src/ui/crafting_screen.gd` |
-| Blacksmithing and equipment (weapon/armor) | ✅ core, 🚧 no equip UI (G-004b) | `Equipment`, `data/recipes.json` |
+| Blacksmithing and equipment (weapon/armor) | ✅ (equip from inventory, unequip on the character sheet) | `Equipment`, `data/recipes.json` |
 | Talismans (buff talismans, combat strike/shield/escape) | ✅ core, 🚧 no ready UI (G-005d) | `Alchemy`, `Buffs`, `CombatTalismans` |
 | Temporary buffs and forbidden secret arts | ✅ | `Buffs`, `data/techniques.json` |
 | Medicine / Doctor (treat injuries, clinic, patients) | ✅ core, 🚧 no clinic place (G-007b) | `Medicine` |
