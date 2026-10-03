@@ -54,3 +54,14 @@ func test_no_forced_fight_is_unbeatable_where_it_appears() -> void:
 		var peak := Balance.typical_player(data(), realm, data().realms[realm].stage_count() - 1)
 		var rate := Balance.win_rate(peak, data(), enemy, 40)
 		assert_true(rate >= Balance.UNBEATABLE_BELOW, "%s (%s) opens at %s but wins only %d%%" % [a["enemy"], a["source"], data().realms[realm].name, roundi(rate * 100)])
+
+
+## QA-007d: same-realm fights carry tension, realm gaps stay nearly impossible.
+func test_same_realm_fights_are_not_foregone() -> void:
+	for realm in range(1, 5):
+		var peak := data().realms[realm].stage_count() - 1
+		for stage in [0, peak]:
+			var rate := Balance.same_stage_rate(data(), realm, stage, 60)
+			assert_true(rate >= 0.6 and rate <= 0.95, "%s stage %d: typical player wins %d%% vs a plain same-stage foe" % [data().realms[realm].name, stage, roundi(rate * 100)])
+		var up := Balance.win_rate(Balance.typical_player(data(), realm, peak), data(), Balance.plain_enemy(data(), realm + 1, 0), 60)
+		assert_true(up < 0.1, "%s peak beats the next realm %d%% of the time" % [data().realms[realm].name, roundi(up * 100)])
