@@ -19,6 +19,35 @@ static func add(c: CharacterData, id: String, buff_name: String, days: int, mult
 	return true
 
 
+## Adds a buff from a `buff` effect ({id, name, days, mults}; see effects.gd).
+## Returns e.g. "Golden Bell: +40% defense for 7 days", or "" if nothing was added.
+static func add_from_effect(c: CharacterData, effect: Dictionary) -> String:
+	var mults: Dictionary = effect.get("mults", {})
+	var days := int(effect.get("days", 0))
+	if not add(c, String(effect.get("id", "")), String(effect.get("name", "")), days, mults):
+		return ""
+	return "%s: %s for %s" % [effect.get("name", ""), describe_mults(mults), Calendar.format_duration(days)]
+
+
+## Problems with a `buff` effect definition (for GameData validation), or [].
+static func validate_effect(effect: Variant) -> PackedStringArray:
+	var errors: PackedStringArray = []
+	if typeof(effect) != TYPE_DICTIONARY:
+		return PackedStringArray(["buff must be an object {id, name, days, mults}"])
+	if String(effect.get("id", "")) == "" or String(effect.get("name", "")) == "":
+		errors.append("buff needs an id and a name")
+	if int(effect.get("days", 0)) <= 0:
+		errors.append("buff needs days > 0")
+	var mults: Variant = effect.get("mults", {})
+	if typeof(mults) != TYPE_DICTIONARY or mults.is_empty():
+		errors.append("buff needs non-empty mults")
+	else:
+		for key in mults:
+			if not STAT_KEYS.has(String(key)):
+				errors.append("buff has unknown stat '%s'" % key)
+	return errors
+
+
 static func has_any(c: CharacterData) -> bool:
 	return not c.buffs.is_empty()
 

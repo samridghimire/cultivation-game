@@ -435,6 +435,14 @@ func treat_patients(days: int) -> void:
 	_pass_time(days)
 
 
+## Crafting messages per profession (GameState.refine).
+const CRAFT_FLAVOR := {
+	"alchemist": {"verb": "refine", "great": "Pill fragrance fills the room!", "fail": "The cauldron cracks and your herbs turn to ash."},
+	"blacksmith": {"verb": "forge", "great": "The blade sings as it leaves the forge!", "fail": "The metal cracks under the hammer and the ore is ruined."},
+	"talisman_master": {"verb": "inscribe", "great": "The runes blaze with golden light!", "fail": "Your brush slips; the talisman flares and burns to ash."},
+}
+
+
 ## Refine one batch of a recipe from data/recipes.json. Failure burns the ingredients.
 func refine(recipe_id: String) -> void:
 	if not _can_act():
@@ -446,16 +454,13 @@ func refine(recipe_id: String) -> void:
 		return
 	var recipe_name: String = data.recipes[recipe_id].get("name", recipe_id)
 	var prof_id: String = data.recipes[recipe_id]["profession"]
-	var forging := prof_id == "blacksmith"
+	var flavor: Dictionary = CRAFT_FLAVOR.get(prof_id, CRAFT_FLAVOR["alchemist"])
 	if result["great"]:
-		var flourish := "The blade sings as it leaves the forge!" if forging else "Pill fragrance fills the room!"
-		EventBus.post("%s A great success: %s yields +%d %s, +%d xp." % [flourish, recipe_name, result["count"], data.items[result["item"]].get("name", result["item"]), int(result["xp"])], "progress")
+		EventBus.post("%s A great success: %s yields +%d %s, +%d xp." % [flavor["great"], recipe_name, result["count"], data.items[result["item"]].get("name", result["item"]), int(result["xp"])], "progress")
 	elif result["success"]:
-		EventBus.post("You %s %s: +%d %s, +%d xp." % ["forge" if forging else "refine", recipe_name, result["count"], data.items[result["item"]].get("name", result["item"]), int(result["xp"])], "progress")
-	elif forging:
-		EventBus.post("The metal cracks under the hammer and the ore is ruined. %s failed (+%d xp)." % [recipe_name, int(result["xp"])], "warning")
+		EventBus.post("You %s %s: +%d %s, +%d xp." % [flavor["verb"], recipe_name, result["count"], data.items[result["item"]].get("name", result["item"]), int(result["xp"])], "progress")
 	else:
-		EventBus.post("The cauldron cracks and your herbs turn to ash. %s failed (+%d xp)." % [recipe_name, int(result["xp"])], "warning")
+		EventBus.post("%s %s failed (+%d xp)." % [flavor["fail"], recipe_name, int(result["xp"])], "warning")
 	if result["ranks_gained"] > 0:
 		EventBus.post("You are now a %s!" % Professions.rank_title(player, data, prof_id), "progress")
 	if not player.is_rogue():

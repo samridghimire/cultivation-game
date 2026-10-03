@@ -1,9 +1,9 @@
 extends Interactable
 ## Odd jobs that train a profession and pay spirit stones. Alchemists refine
-## pills and Blacksmiths forge artifacts from recipes (data/recipes.json)
+## pills, Blacksmiths forge artifacts and Talisman Masters inscribe talismans from recipes (data/recipes.json)
 ## instead of doing odd jobs; an option without the ingredients posts what is missing.
 
-const CRAFTS := {"alchemist": "Refine", "blacksmith": "Forge"}
+const CRAFTS := {"alchemist": "Refine", "blacksmith": "Forge", "talisman_master": "Inscribe"}
 
 
 func get_options() -> Array[Dictionary]:
