@@ -158,3 +158,40 @@ func test_work_profession_rogue_has_no_contribution() -> void:
 	gs.work_profession("alchemist", Calendar.DAYS_PER_MONTH)
 	assert_true(c.sect.is_empty())
 	gs.end_session()
+
+
+func _arm_blood_drinker(c: CharacterData) -> void:
+	c.add_item("blood_drinker_saber", 1)
+	Equipment.equip(c, _game_state().data, "blood_drinker_saber")
+
+
+func test_fight_with_evil_weapon_burns_a_year() -> void:
+	var c := _start()
+	var gs := _game_state()
+	_arm_blood_drinker(c)
+	var before := Cultivation.years_left(c, gs.data)
+	gs.fight("wild_boar")
+	assert_true(c.alive)
+	assert_eq(Cultivation.years_left(c, gs.data), before - 1)
+	gs.end_session()
+
+
+func test_evil_weapon_drinking_last_year_kills_of_old_age() -> void:
+	var c := _start()
+	var gs := _game_state()
+	_arm_blood_drinker(c)
+	c.age_days = (Cultivation.lifespan_years(c, gs.data) - 1) * Calendar.DAYS_PER_YEAR
+	gs.fight("wild_boar")
+	assert_false(c.alive)
+	assert_true(c.cause_of_death.contains("weapon drinks the last"))
+	gs.end_session()
+
+
+func test_violent_death_does_not_also_drain_lifespan() -> void:
+	var c := _start()
+	var gs := _game_state()
+	_arm_blood_drinker(c)
+	var doom := {"id": "doom", "name": "Doom", "realm": "tribulation", "stage": 9, "hp": 100000, "attack": 100000, "defense": 100000, "speed": 100, "lethal": true, "techniques": [], "rewards": {}}
+	gs.fight_enemy(doom)
+	assert_eq(c.lifespan_spent_years, 0, "a respawned soul keeps its years; the saber drinks only after survived fights")
+	gs.end_session()
