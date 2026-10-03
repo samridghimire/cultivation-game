@@ -7,6 +7,8 @@ signal closed
 signal settings_requested
 ## The player chose Load Game; the owner shows a LoadScreen.
 signal load_requested
+## The player chose Help; the owner shows a HelpScreen.
+signal help_requested
 
 const MAIN_MENU := "res://src/ui/main_menu.tscn"
 
@@ -29,6 +31,7 @@ func _init() -> void:
 	_load_button = UIStyle.button("Load Game", load_requested.emit)
 	box.add_child(_load_button)
 	box.add_child(UIStyle.button("Settings", settings_requested.emit))
+	box.add_child(UIStyle.button("Help", help_requested.emit))
 	box.add_child(UIStyle.button("Save and Quit to Menu", _quit_to_menu))
 	_status = UIStyle.label("", 14, Color(0.7, 0.7, 0.7))
 	_status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER

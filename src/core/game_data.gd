@@ -48,6 +48,10 @@ var recipes: Dictionary = {}  # id -> Dictionary (data/recipes.json)
 ## Alchemy tunables (see Alchemy).
 var alchemy: Dictionary = {}
 var sect_missions: Dictionary = {}  # id -> Dictionary (data/sect_missions.json)
+## Help screen pages, in order: [{id, title, body: [paragraph]}] (data/help.json).
+var help_pages: Array = []
+## Input action id -> display name for the help screen's Controls page.
+var help_action_names: Dictionary = {}
 ## Problems found while loading. Empty when all data files are valid.
 var load_errors: PackedStringArray = []
 
@@ -163,6 +167,10 @@ func _load(dir: String) -> void:
 	for recipe in crafting.get("recipes", []):
 		recipes[recipe["id"]] = recipe
 
+	var help := _read(dir, "help.json")
+	help_pages = help.get("pages", [])
+	help_action_names = help.get("action_names", {})
+
 	_validate()
 
 
@@ -202,6 +210,7 @@ func _validate() -> void:
 	_validate_combat()
 	_validate_artifact()
 	_validate_recipes()
+	_validate_help()
 	load_errors.append_array(Equipment.validate(self))
 	load_errors.append_array(CombatTalismans.validate(self))
 	load_errors.append_array(Family.validate(self))
@@ -321,6 +330,23 @@ func _validate_combat() -> void:
 		for item_id in enemy.get("rewards", {}).get("items", {}):
 			if not items.has(item_id):
 				load_errors.append("Enemy '%s' rewards unknown item '%s'" % [enemy["id"], item_id])
+
+
+func _validate_help() -> void:
+	var ids := {}
+	for page in help_pages:
+		if not page is Dictionary or String(page.get("id", "")) == "" or String(page.get("title", "")) == "":
+			load_errors.append("help.json page needs an id and a title: %s" % [page])
+			continue
+		if ids.has(page["id"]):
+			load_errors.append("help.json has a duplicate page id '%s'" % page["id"])
+		ids[page["id"]] = true
+		var body: Variant = page.get("body", [])
+		if not body is Array or (body as Array).is_empty() or (body as Array).any(func(p): return not p is String):
+			load_errors.append("help.json page '%s' needs a non-empty body of strings" % page["id"])
+	for action in help_action_names:
+		if not help_action_names[action] is String:
+			load_errors.append("help.json action_names['%s'] must be a string" % action)
 
 
 func _validate_artifact() -> void:

@@ -18,6 +18,7 @@ var _combat_report: CombatReport
 var _pause_menu: PauseMenu
 var _settings: SettingsScreen
 var _load_screen: LoadScreen
+var _help: HelpScreen
 var _crafting: CraftingScreen
 var _banner: Banner
 var _death_screen: Control
@@ -55,6 +56,10 @@ func _ready() -> void:
 	_load_screen.slot_chosen.connect(_on_slot_chosen)
 	add_child(UIStyle.centered(_load_screen))
 	_pause_menu.load_requested.connect(_open_load)
+	_help = HelpScreen.new()
+	_help.closed.connect(_on_settings_closed)
+	add_child(UIStyle.centered(_help))
+	_pause_menu.help_requested.connect(_open_help)
 	_banner = Banner.new()
 	add_child(_banner)
 	_build_death_screen()
@@ -73,7 +78,7 @@ func _ready() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if _choice_menu.visible or _combat_report.visible or _pause_menu.visible or _settings.visible or _load_screen.visible or _death_screen.visible:
+	if _choice_menu.visible or _combat_report.visible or _pause_menu.visible or _settings.visible or _help.visible or _load_screen.visible or _death_screen.visible:
 		return
 	if event.is_action_pressed("pause_menu"):
 		# Consumed here so the world's own Esc handling never runs mid-session.
@@ -211,7 +216,7 @@ func _on_target_changed(display_name: String) -> void:
 
 
 func _on_menu_requested(source: Node) -> void:
-	if _any_screen_open() or _combat_report.visible or _pause_menu.visible or _settings.visible or _load_screen.visible or _death_screen.visible:
+	if _any_screen_open() or _combat_report.visible or _pause_menu.visible or _settings.visible or _help.visible or _load_screen.visible or _death_screen.visible:
 		return
 	_choice_menu.open_for(source)
 	_update_modal()
@@ -223,6 +228,7 @@ func _on_player_died(cause: String) -> void:
 	_combat_report.close()
 	_pause_menu.close()
 	_settings.close()
+	_help.close()
 	_load_screen.close()
 	(_death_screen.find_child("Cause", true, false) as Label).text = cause
 	_death_screen.visible = true
@@ -252,6 +258,12 @@ func _open_settings() -> void:
 	_settings.open()
 
 
+## Help replaces the pause menu while open, then returns to it.
+func _open_help() -> void:
+	_pause_menu.visible = false
+	_help.open()
+
+
 ## Load replaces the pause menu while open, then returns to it.
 func _open_load() -> void:
 	_pause_menu.visible = false
@@ -278,7 +290,7 @@ func _on_settings_closed() -> void:
 
 
 func _update_modal() -> void:
-	EventBus.ui_modal_changed.emit(_choice_menu.visible or _any_screen_open() or _combat_report.visible or _pause_menu.visible or _settings.visible or _load_screen.visible or _death_screen.visible)
+	EventBus.ui_modal_changed.emit(_choice_menu.visible or _any_screen_open() or _combat_report.visible or _pause_menu.visible or _settings.visible or _help.visible or _load_screen.visible or _death_screen.visible)
 
 
 func _return_to_menu() -> void:

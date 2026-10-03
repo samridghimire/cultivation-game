@@ -98,6 +98,7 @@ ART-001/ART-001b are done; ART-002 and ART-005 are in P1 above.
 | QA-008 | qa | todo | Gamepad/focus audit: a scene test that opens each HUD screen (inventory, techniques, character sheet, crafting, pause, load, settings, combat report) and asserts something has focus and ui_cancel closes it. Fix screens that fail. |
 | QA-009 | qa | todo | Review recently merged code (G-005b combat talismans, FAM-003 children, FAM-002c eligible NPCs) for correctness and missing tests; fix small bugs, file tasks for larger ones. |
 | UI-LEAK-001 | world-ui | todo | Most HUD screens call `UIStyle.panel().get_theme_stylebox("panel")` in _init and leak the temporary PanelContainer (shows as "ObjectDB instances leaked" when screens are built in tests). Add a `UIStyle.panel_style()` helper returning just the StyleBox and use it everywhere (character_sheet already frees its temp panel). |
+| UI-003b | world-ui | todo | Help from the main menu too (a "Help" button opening HelpScreen before a session exists; it only needs GameState.data), and remappable bindings later: show a "Rebind" hint once settings support it. |
 
 ## Local sessions
 The local sessions that built combat/techniques, world/exploration/NPCs/dialogue and the UI screens have finished (2026-10-02); their work is on main and these areas are open to anyone. Add follow-up tasks above.
@@ -105,6 +106,7 @@ The local sessions that built combat/techniques, world/exploration/NPCs/dialogue
 ## Done
 | id | task |
 |---|---|
+| UI-003 | Help screen (pause menu > Help): Controls page generated from InputConfig (keyboard + gamepad), plus guide pages from data/help.json (GameData.help_pages, validated). |
 | G-004c | Higher-grade equipment: Profound Iron / Dragon-Blood Gold ores, 4 new forge recipes with manuals, Heavenforge Smithy in Fallen Star Market, equipment encounters. |
 | LIFE-001e | Evil artifacts obtainable: Blood-Drinker Saber (wild), Corpse-Silk Burial Armor and Myriad Souls Banner (ruins), once per life, each with a righteous destroy alternative. |
 | FAM-002f | Generated NPCs placed in the world: regions.json `npc_spots`, Npcs.generated_in_region/spot_positions/world_title/describe, gender colors, "Look" option. |
