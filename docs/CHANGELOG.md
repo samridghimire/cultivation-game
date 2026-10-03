@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-03 [CM-001] Cultivation methods: one main method at a time multiplies qi gathering (stronger with a matching root, outgrown past its max realm); everyone starts on the Common Qi Gathering Method (no speed change for old saves), learning a first method adopts it, switching takes a week (GameState.set_main_method). First method: Verdant Spring Method (wood, sold as a manual).
 - 2026-10-03 [G-004c] Higher-grade equipment: Profound Iron and Dragon-Blood Gold ores, 4 Foundation/Core Formation forge recipes taught by forging manuals, a Heavenforge Smithy in Fallen Star Market, and equipment/ore finds while exploring.
 - 2026-10-03 [LIFE-001e] Evil artifacts are now obtainable: the Blood-Drinker Saber plus the new Corpse-Silk Burial Armor and Myriad Souls Banner (lifespan-draining) are once-per-life exploration finds; righteous players can destroy them for alignment and qi instead.
 - 2026-10-03 [FAM-002f] Generated NPCs (courtship candidates, spouses, children) now appear in the world at per-region npc_spots, colored by gender with a realm or relation title, and can be looked at.
