@@ -64,6 +64,8 @@
       "places": [
         {"type": "merchant", "display_name": "Pill Pavilion", "pos": [400, 300], "size": [140, 100], "color": "c9823a"},
         {"type": "merchant", "display_name": "Herb & Ore Stall", "pos": [1200, 140], "size": [90, 60], "color": "6f9f4a", "stock_tags": ["herb", "ore"]},
+        {"type": "merchant", "display_name": "Vermilion Script Talisman Stall", "pos": [1450, 600], "size": [100, 70], "color": "c23b2e", "stock_tags": ["talisman", "inscription"]},
+        {"type": "merchant", "display_name": "Heavenforge Smithy", "pos": [1450, 300], "size": [110, 80], "color": "5a5f66", "stock_tags": ["equipment", "ore", "smithing"]},
         {"type": "merchant", "display_name": "Night Market Stall", "pos": [1200, 300], "size": [80, 60], "color": "7a4fa0", "max_price": 100},
         {"type": "workshop", "display_name": "Artisan Quarter", "pos": [400, 750], "size": [150, 100], "color": "8c6640"},
         {"type": "sect_hall", "display_name": "Sect Envoy Hall", "pos": [1200, 750], "size": [160, 110], "color": "b33f33"},
@@ -87,7 +89,7 @@
       "places": [
         {"type": "meditation", "anchor_id": "azure_cliff", "display_name": "Cloud-Sea Cliff (2x qi)", "pos": [1300, 180], "size": [120, 70], "color": "c9dceb", "qi_density": 2.0},
         {"type": "gather", "display_name": "Crystal Vein", "pos": [300, 220], "size": [120, 80], "color": "7fa8c9", "gather_days": 10,
-         "gather_table": [{"item": "iron_essence", "weight": 5, "min": 2, "max": 4}, {"item": "cold_iron", "weight": 3, "min": 1, "max": 2}, {"item": "azure_crystal", "weight": 2, "min": 1, "max": 1}, {"item": "star_silver", "weight": 0.3, "min": 1, "max": 1}, {"item": "", "weight": 2}]},
+         "gather_table": [{"item": "iron_essence", "weight": 5, "min": 2, "max": 4}, {"item": "cold_iron", "weight": 3, "min": 1, "max": 2}, {"item": "azure_crystal", "weight": 2, "min": 1, "max": 1}, {"item": "star_silver", "weight": 0.3, "min": 1, "max": 1}, {"item": "profound_iron", "weight": 1.5, "min": 1, "max": 2}, {"item": "dragonblood_gold", "weight": 0.15, "min": 1, "max": 1}, {"item": "", "weight": 2}]},
         {"type": "gather", "display_name": "Frost Ledge", "pos": [1450, 560], "size": [100, 70], "color": "e0ecf5", "gather_days": 10,
          "gather_table": [{"item": "ice_soul_flower", "weight": 2, "min": 1, "max": 1}, {"item": "flame_lotus", "weight": 1, "min": 1, "max": 1}, {"item": "thousand_year_lingzhi", "weight": 0.2, "min": 1, "max": 1}, {"item": "spirit_herb", "weight": 3, "min": 1, "max": 3}, {"item": "", "weight": 4}]},
         {"type": "explore", "display_name": "Beast Ridge", "pos": [700, 200], "size": [170, 100], "color": "3d4b57"},

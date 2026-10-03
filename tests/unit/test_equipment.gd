@@ -155,3 +155,42 @@ func test_game_state_fight_with_evil_weapon_burns_lifespan() -> void:
 	assert_true(c.cause_of_death.contains("weapon"))
 	assert_eq(c.artifact_lives, lives)
 	gs.end_session()
+
+
+func test_every_learned_forging_recipe_has_an_obtainable_manual() -> void:
+	var d := data()
+	for recipe: Dictionary in d.recipes.values():
+		if recipe.get("profession", "") != "blacksmith" or recipe.get("starter", false):
+			continue
+		var obtainable := false
+		for item: Dictionary in d.items.values():
+			if item.get("effects", {}).get("learn_recipe", "") != recipe["id"]:
+				continue
+			if int(item.get("price", 0)) > 0:
+				obtainable = true
+			for e: Dictionary in d.encounters.values():
+				if e.get("effects", {}).get("items", {}).has(item["id"]):
+					obtainable = true
+		assert_true(obtainable, "no manual for the %s recipe can be bought or found" % recipe["id"])
+
+
+func test_every_evil_artifact_is_found_in_an_encounter_with_a_righteous_alternative() -> void:
+	var d := data()
+	for item: Dictionary in d.items.values():
+		if Equipment.item_drain(d, item["id"]) <= 0:
+			continue
+		var taker: Dictionary = {}
+		for e: Dictionary in d.encounters.values():
+			if e.get("effects", {}).get("items", {}).has(item["id"]):
+				taker = e
+		assert_false(taker.is_empty(), "%s has no encounter that grants it" % item["id"])
+		if taker.is_empty():
+			continue
+		assert_true(int(taker["effects"].get("alignment", 0)) < 0, "taking %s is a demonic act" % item["id"])
+		var flag: String = taker.get("blocked_by_flag", "")
+		assert_true(flag != "", "%s is found once per life" % item["id"])
+		var has_alternative := false
+		for e: Dictionary in d.encounters.values():
+			if e["id"] != taker["id"] and e.get("blocked_by_flag", "") == flag and int(e.get("effects", {}).get("alignment", 0)) > 0:
+				has_alternative = true
+		assert_true(has_alternative, "%s needs a righteous way to destroy it" % item["id"])
