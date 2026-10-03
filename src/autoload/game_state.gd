@@ -20,6 +20,9 @@ var npc_favor: Dictionary = {}
 ## The conversation in progress ("" = none) and its current node.
 var dialogue_npc := ""
 var dialogue_node := ""
+## Encounter id waiting for the player's choice (W-004c, "" = none). Like a
+## conversation it is not saved: loading a save drops it.
+var pending_encounter := ""
 var rng := RandomNumberGenerator.new()
 
 
@@ -42,6 +45,7 @@ func start_session(character: CharacterData) -> void:
 	npcs = {}
 	npc_favor = {}
 	dialogue_npc = ""
+	pending_encounter = ""
 	Npcs.ensure_all(npcs, data, rng)
 	Npcs.ensure_eligible(npcs, data, rng)
 	GameClock.reset()
@@ -56,6 +60,7 @@ func end_session() -> void:
 	npcs = {}
 	npc_favor = {}
 	dialogue_npc = ""
+	pending_encounter = ""
 
 
 # --- Actions -----------------------------------------------------------------
@@ -227,13 +232,50 @@ func explore(tags: Array = []) -> void:
 	if not result["notes"].is_empty():
 		text += " (%s)" % ", ".join(result["notes"])
 	EventBus.post(text, "danger" if result["enemy"] != "" else "info")
+	pending_encounter = ""
 	_pass_time(result["days"])
-	if result["enemy"] == "" or not _can_act():
+	if not _can_act():
+		return
+	if encounter.has("choices"):
+		pending_encounter = String(encounter["id"])
+		EventBus.encounter_choice_requested.emit(pending_encounter)
+		return
+	if result["enemy"] == "":
 		return
 	if Exploration.should_evade(player, data, result["enemy"]):
 		EventBus.post("You sense overwhelming killing intent and slip away before the %s notices you." % data.enemies[result["enemy"]]["name"], "warning")
 		return
 	fight(result["enemy"])
+
+
+## The pending encounter's choices for the UI: [{index, label, disabled, reason}]
+## ([] when no encounter is waiting).
+func encounter_choices() -> Array[Dictionary]:
+	if pending_encounter == "" or not _can_act():
+		return []
+	return Exploration.choices(player, data, data.encounters.get(pending_encounter, {}), world_flags)
+
+
+## Pick choice `index` of the pending encounter: applies its outcome, passes
+## its days and starts its fight, if any (a chosen fight is never evaded).
+func choose_encounter(index: int) -> void:
+	if pending_encounter == "" or not _can_act():
+		return
+	var result := Exploration.resolve_choice(player, data, data.encounters.get(pending_encounter, {}), index, world_flags)
+	if not result["ok"]:
+		EventBus.post(result["reason"], "warning")
+		EventBus.player_changed.emit()
+		return
+	pending_encounter = ""
+	var text: String = result["text"]
+	if not result["notes"].is_empty():
+		text += " (%s)" % ", ".join(result["notes"])
+	if text != "":
+		EventBus.post(text, "danger" if result["enemy"] != "" else "karma" if result["karma"] else "info")
+	EventBus.encounter_choice_resolved.emit()
+	_pass_time(result["days"])
+	if result["enemy"] != "" and _can_act():
+		fight(result["enemy"])
 
 
 ## Gather materials from a place's gathering table (see Exploration.gather).
@@ -682,6 +724,7 @@ func load_save_dict(d: Dictionary) -> void:
 		npc_favor[npc_id] = int(d["npc_favor"][npc_id])
 	dialogue_npc = ""
 	dialogue_node = ""
+	pending_encounter = ""
 	if not data.regions.has(current_region):
 		current_region = data.start_region
 	GameClock.from_dict(d.get("clock", {}))

@@ -25,8 +25,8 @@ Roles: `systems` (core rules + tests), `content` (data/*.json + small hooks), `w
 ## P1: Core gameplay loops
 | id | role | status | task |
 |---|---|---|---|
-| W-004c | systems | todo | Encounters with player choices (e.g. help vs rob the traveller) and flag-checked follow-up encounters: encounters.json `choices` [{label, requires, outcome}] (document in `_doc`, validate), Exploration returns a pending choice, GameState.choose_encounter(index). Keep single-outcome encounters working. Pair with W-004d. |
-| W-004d | world-ui | todo | Encounter choice popup: when GameState reports a pending encounter choice, show it in the choice menu (gamepad focus), call GameState.choose_encounter. Depends on W-004c. |
+| W-004d | world-ui | todo | Encounter choice window: on EventBus.encounter_choice_requested show the encounter text and GameState.encounter_choices() (disabled entries show their reason), call GameState.choose_encounter(index), close on encounter_choice_resolved. Can reuse ChoiceMenu with a small source object. Gamepad focus. |
+| W-004e | content | todo | Convert split moral encounters into choice encounters (e.g. the wounded traveller: help / rob / walk away) with set_flag follow-ups (`requires_flag`: the grateful traveller returns, the robbed one's kin seek revenge). Only after W-004d lands, so choices are visible in-game. Depends on W-004d. |
 | G-008b | world-ui | todo | Mission board in the sect hall: list Sects.available_missions for the player's sect with kind, days, required items (have/need), enemy danger (Combat.danger_label), contribution/rewards and cooldown (Sects.mission_cooldown_left); disabled entries show Sects.check_mission reasons; "Take mission" calls GameState.take_mission. Gamepad-friendly. |
 | G-008c | systems | todo | Sect contribution shop: sects.json per-sect `shop` [{item_id, contribution, min_rank}] (technique manuals, pills, recipe scrolls), Sects.shop_items/check_purchase, GameState.buy_with_contribution(item_id); spending contribution never demotes (track spent separately from earned). Plus a sect-hall menu entry listing the shop (small UI, or split to world-ui if large). |
 | G-008d | content | todo | Sect missions and shops content: 6+ missions per sect in data/sect_missions.json fitting each sect's alignment (Azure Cloud righteous patrols, Blood Lotus raids/sacrifices, Myriad Treasure Pavilion trade runs), and each sect's contribution shop stock. Depends on G-008 (schema) and G-008c. |
@@ -107,6 +107,7 @@ The local sessions that built combat/techniques, world/exploration/NPCs/dialogue
 ## Done
 | id | task |
 |---|---|
+| W-004c | Encounter choices: encounters.json `choices` and `requires_flag`, Exploration.check_choice/choices/resolve_choice, GameState.encounter_choices/choose_encounter. |
 | G-008 | Sect missions part 1: data/sect_missions.json, Sects.available_missions/check_mission/complete_mission, CharacterData.mission_cooldowns, GameState.take_mission. |
 | FAM-002g | Widowed spouses: dead spouses stay in family history but free their rank slot (Family.living_spouses/is_living, `people` param); widowed NPCs can remarry. |
 | G-002g | Crafting screen polish: x5 batch crafting (GameState.refine_batch), carried recipe scrolls listed with a Study button (Alchemy.scroll_recipes). |
