@@ -91,14 +91,45 @@ func attempt_breakthrough() -> void:
 		EventBus.post("You are not ready to break through.", "warning")
 		return
 	var result := Cultivation.attempt_breakthrough(player, data, rng)
+	_report_tribulation(result)
+	if result["died"]:
+		EventBus.breakthrough_attempted.emit(false, result["realm_name"])
+		_die_violently("The final bolt of the %s tribulation tears through you. Your body turns to ash." % result["realm_name"])
+		return
 	if result["success"]:
 		EventBus.post("Breakthrough! You have entered the %s realm." % result["realm_name"], "progress")
 	else:
-		EventBus.post("Your breakthrough to %s failed (%d%% chance). Your qi scatters." % [result["realm_name"], int(result["chance"] * 100)], "danger")
+		if result["tribulation"].is_empty():
+			EventBus.post("Your breakthrough to %s failed (%d%% chance). Your qi scatters." % [result["realm_name"], int(result["chance"] * 100)], "danger")
+		else:
+			EventBus.post("Your breakthrough to %s fails in the tribulation. Your qi scatters." % result["realm_name"], "danger")
 		if result["injury"] != "":
 			EventBus.post("You suffer %s." % Injuries.injury_name(data, result["injury"]), "danger")
 	EventBus.breakthrough_attempted.emit(result["success"], result["realm_name"])
 	_pass_time(BREAKTHROUGH_DAYS)
+
+
+## Expected tribulation for breaking into the next realm (Tribulation.preview),
+## for a "prepare" warning before attempting a breakthrough.
+func tribulation_preview() -> Dictionary:
+	return Tribulation.preview(player, data, player.realm_index + 1)
+
+
+func _report_tribulation(result: Dictionary) -> void:
+	var trib: Dictionary = result["tribulation"]
+	if trib.is_empty():
+		return
+	EventBus.post("Heaven answers your breakthrough: tribulation clouds gather over the %s threshold!" % result["realm_name"], "danger")
+	if not trib["talismans_used"].is_empty():
+		EventBus.post("You burn %s to shield yourself." % ", ".join(trib["talismans_used"]), "info")
+	for i in trib["waves"].size():
+		var wave: Dictionary = trib["waves"][i]
+		var what := "Your heart demon rises" if wave["kind"] == "heart_demon" else "Lightning wave %d strikes" % (i + 1)
+		EventBus.post("%s: %d damage (%d/%d left)." % [what, wave["damage"], wave["hp_left"], trib["max_hp"]], "danger")
+	if trib["survived"]:
+		EventBus.post("You endure the tribulation and are reforged by its lightning.", "progress")
+	elif not trib["died"]:
+		EventBus.post("You are struck down before the tribulation ends.", "danger")
 
 
 func work_profession(prof_id: String, days: int) -> void:
