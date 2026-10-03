@@ -7,6 +7,8 @@ extends RefCounted
 const DEFAULT_DIR := "res://data"
 
 var realms: Array[RealmDef] = []
+## realms.json heart_demon: {max_alignment, hp_fraction} (see Tribulation); {} = none.
+var heart_demon: Dictionary = {}
 var attributes: Array[Dictionary] = []
 var root_elements: Array[Dictionary] = []
 var root_grades: Array[Dictionary] = []
@@ -90,8 +92,10 @@ func attribute_ids() -> PackedStringArray:
 
 
 func _load(dir: String) -> void:
-	for r in _read(dir, "realms.json").get("realms", []):
+	var realm_file := _read(dir, "realms.json")
+	for r in realm_file.get("realms", []):
 		realms.append(RealmDef.from_dict(r))
+	heart_demon = realm_file.get("heart_demon", {})
 
 	attributes.assign(_read(dir, "attributes.json").get("attributes", []))
 
@@ -223,6 +227,7 @@ func _read(dir: String, file_name: String) -> Dictionary:
 func _validate() -> void:
 	if realms.is_empty():
 		load_errors.append("No realms defined")
+	load_errors.append_array(Tribulation.validate(self))
 	load_errors.append_array(Dao.validate(self))
 	var attr_ids := attribute_ids()
 	for def: ProfessionDef in professions.values():

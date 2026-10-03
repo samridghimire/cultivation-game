@@ -194,6 +194,11 @@ static func _live(c: CharacterData, data: GameData, days: int, rng: RandomNumber
 	Cultivation.cultivate(c, data, days, Exploration.qi_density(data, region_of(c, data)) * diligence_of(c, data))
 	if Cultivation.can_attempt_breakthrough(c, data):
 		var result := Cultivation.attempt_breakthrough(c, data, rng)
+		if result["died"]:
+			c.alive = false
+			c.cause_of_death = "heavenly tribulation"
+			events.append({"npc_id": c.id, "text": "Heaven's lightning falls: %s perished in the tribulation of %s." % [c.name, result["realm_name"]], "category": "warning"})
+			return
 		# Mortal to Qi Refining is routine; only report real breakthroughs.
 		if result["success"] and c.realm_index > 1:
 			events.append({"npc_id": c.id, "text": "Rumours spread: %s has broken through to %s!" % [c.name, result["realm_name"]], "category": "info"})

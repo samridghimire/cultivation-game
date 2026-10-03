@@ -64,23 +64,33 @@ static func breakthrough_chance(c: CharacterData, data: GameData) -> float:
 
 ## Attempts a major breakthrough. Consumes any pending breakthrough bonus.
 ## A failure may also inflict an injury ("breakthrough_failure" in injuries.json).
-## Returns {attempted, success, chance, realm_name, injury} (injury id or "").
+## A successful roll into a realm with a tribulation must then survive it
+## (Tribulation.endure); falling fails the breakthrough, and falling to the
+## final wave kills (died = true; the caller handles death).
+## Returns {attempted, success, chance, realm_name, injury, tribulation, died}
+## (injury id or ""; tribulation is Tribulation.endure's result or {}).
 static func attempt_breakthrough(c: CharacterData, data: GameData, rng: RandomNumberGenerator) -> Dictionary:
 	if not can_attempt_breakthrough(c, data):
-		return {"attempted": false, "success": false, "chance": 0.0, "realm_name": "", "injury": ""}
+		return {"attempted": false, "success": false, "chance": 0.0, "realm_name": "", "injury": "", "tribulation": {}, "died": false}
 	var chance := breakthrough_chance(c, data)
 	var next: RealmDef = data.realms[c.realm_index + 1]
 	c.breakthrough_bonus = 0.0
 	var success := rng.randf() < chance
+	var injury := ""
+	var trib := {}
+	if success and Tribulation.has_tribulation(data, c.realm_index + 1):
+		trib = Tribulation.endure(c, data, c.realm_index + 1, rng)
+		success = trib["survived"]
+		injury = trib["injury"]
 	if success:
 		c.realm_index += 1
 		c.stage = 0
 		c.qi = 0.0
-	var injury := ""
-	if not success:
+	else:
 		c.qi *= 1.0 - next.failure_qi_loss
-		injury = Injuries.roll(c, data, "breakthrough_failure", rng)
-	return {"attempted": true, "success": success, "chance": chance, "realm_name": next.name, "injury": injury}
+		if trib.is_empty():
+			injury = Injuries.roll(c, data, "breakthrough_failure", rng)
+	return {"attempted": true, "success": success, "chance": chance, "realm_name": next.name, "injury": injury, "tribulation": trib, "died": bool(trib.get("died", false))}
 
 
 ## Total lifespan: the realm's, adjusted by Constitution, plus years gained from
