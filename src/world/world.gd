@@ -18,6 +18,7 @@ const PLACE_SCRIPTS := {
 ## Place keys that are layout, not script properties.
 const LAYOUT_KEYS := ["type", "pos"]
 const NPC_SCRIPT := preload("res://src/world/interactables/npc.gd")
+const ABODE_SCRIPT := preload("res://src/world/interactables/abode.gd")
 ## Placeholder body color of generated NPCs by gender.
 const GENDER_COLORS := {"male": Color("8fb3e0"), "female": Color("e6a3c4")}
 
@@ -79,6 +80,21 @@ func _build_places() -> void:
 				continue
 			node.set(key, _convert(place[key], node.get(key)))
 		# Add before the player so the player draws on top.
+		add_child(node)
+		move_child(node, player.get_index())
+	_build_abodes()
+
+
+## Claimable cave abodes (region "abodes", G-010b).
+func _build_abodes() -> void:
+	for abode: Dictionary in _region.get("abodes", []):
+		var node: Interactable = ABODE_SCRIPT.new()
+		node.abode_id = String(abode.get("id", ""))
+		node.display_name = String(abode.get("display_name", node.abode_id))
+		node.anchor_id = String(abode.get("anchor_id", ""))
+		node.position = _vec(abode.get("pos", [0, 0]))
+		node.size = _vec(abode.get("size", [80, 60]))
+		node.color = Color(String(abode.get("color", "6f6a5a")))
 		add_child(node)
 		move_child(node, player.get_index())
 

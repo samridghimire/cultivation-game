@@ -118,6 +118,10 @@ func _rebuild() -> void:
 		t += "\n[color=#%s]Active arts[/color]\n" % accent
 		for line in Buffs.describe(p):
 			t += "  %s\n" % line
+	if p.abode != "":
+		var abode := Abodes.get_def(data, p.abode)
+		t += "\n[color=#%s]Abode[/color]\n" % accent
+		t += "  %s in %s (seclusion qi x%s, chest %d / %d kinds)\n" % [Abodes.abode_name(data, p.abode), Exploration.region_name(data, String(abode.get("region", ""))), String.num(float(abode.get("qi_density", 1.0)), 2), p.abode_storage.size(), Abodes.storage_slots(p, data)]
 	t += "\n[color=#%s]Creation Artifact[/color]\n" % accent
 	for line in CreationArtifact.describe(p, data):
 		t += "  %s\n" % line
