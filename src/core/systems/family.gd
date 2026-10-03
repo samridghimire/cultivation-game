@@ -107,6 +107,75 @@ static func court(c: CharacterData, other: CharacterData, favor: int, data: Game
 	return {"ok": true, "reason": "", "favor": courtship_gain(c, data), "days": int(data.family.get("courtship", {}).get("days", 1))}
 
 
+## Favor gained per chat (data/family.json acquaintance): base chat_favor,
+## adjusted by Charisma like courtship (minimum 1).
+static func chat_gain(c: CharacterData, data: GameData) -> int:
+	var rules: Dictionary = data.family.get("acquaintance", {})
+	var step := maxi(1, int(rules.get("charisma_step", 4)))
+	@warning_ignore("integer_division")
+	var bonus := (c.attribute("charisma") - 10) / step
+	return maxi(1, int(rules.get("chat_favor", 2)) + bonus)
+
+
+## Why `c` cannot chat with `other` (favor `favor`), or "" if they can.
+## NPCs with a dialogue file (data/npcs.json) are talked to through it instead.
+static func check_chat(c: CharacterData, other: CharacterData, favor: int, data: GameData) -> String:
+	if other == null or not other.alive or other.id == c.id:
+		return "There is no one to talk to."
+	if String(data.npcs.get(other.id, {}).get("dialogue", "")) != "":
+		return "Speak with %s properly instead." % other.name
+	if favor >= int(data.family.get("acquaintance", {}).get("chat_max_favor", 0)):
+		return "Small talk will not bring you closer to %s now." % other.name
+	return ""
+
+
+## Passing the time with an NPC. Returns {ok, reason, favor (gain, never past
+## chat_max_favor), days}.
+static func chat(c: CharacterData, other: CharacterData, favor: int, data: GameData) -> Dictionary:
+	var reason := check_chat(c, other, favor, data)
+	if reason != "":
+		return {"ok": false, "reason": reason, "favor": 0, "days": 0}
+	var rules: Dictionary = data.family.get("acquaintance", {})
+	var gain := mini(chat_gain(c, data), int(rules.get("chat_max_favor", 0)) - favor)
+	return {"ok": true, "reason": "", "favor": gain, "days": int(rules.get("chat_days", 1))}
+
+
+## Favor a gift of `item_id` is worth: its price / gift_price_per_favor,
+## between 1 and gift_max_per_item; 0 for worthless (price 0) items.
+static func gift_value(data: GameData, item_id: String) -> int:
+	var rules: Dictionary = data.family.get("acquaintance", {})
+	var price := int(data.items.get(item_id, {}).get("price", 0))
+	if price <= 0:
+		return 0
+	@warning_ignore("integer_division")
+	return clampi(price / maxi(1, int(rules.get("gift_price_per_favor", 10))), 1, int(rules.get("gift_max_per_item", 10)))
+
+
+## Why `c` cannot give `item_id` to `other`, or "" if they can.
+static func check_gift(c: CharacterData, other: CharacterData, favor: int, item_id: String, data: GameData) -> String:
+	if other == null or not other.alive or other.id == c.id:
+		return "There is no one to give it to."
+	if c.item_count(item_id) < 1:
+		return "You do not have that."
+	if gift_value(data, item_id) <= 0:
+		return "%s has no use for that." % other.name
+	if favor >= int(data.family.get("acquaintance", {}).get("gift_max_favor", 0)):
+		return "%s politely declines. Gifts alone will not win more of their heart." % other.name
+	return ""
+
+
+## Gives one `item_id` to `other` (removed from `c`'s inventory).
+## Returns {ok, reason, favor (gain, never past gift_max_favor), days}.
+static func give_gift(c: CharacterData, other: CharacterData, favor: int, item_id: String, data: GameData) -> Dictionary:
+	var reason := check_gift(c, other, favor, item_id, data)
+	if reason != "":
+		return {"ok": false, "reason": reason, "favor": 0, "days": 0}
+	var rules: Dictionary = data.family.get("acquaintance", {})
+	c.add_item(item_id, -1)
+	var gain := mini(gift_value(data, item_id), int(rules.get("gift_max_favor", 0)) - favor)
+	return {"ok": true, "reason": "", "favor": gain, "days": int(rules.get("gift_days", 0))}
+
+
 ## Why `other` would refuse `c`'s proposal for `rank`, or "" if they accept.
 static func check_proposal(c: CharacterData, other: CharacterData, favor: int, rank: String, data: GameData, people: Dictionary = {}) -> String:
 	var reason := check_partner(c, other, data, people)
@@ -237,6 +306,13 @@ static func validate(data: GameData) -> PackedStringArray:
 		errors.append("family.json needs a dual_cultivation block")
 	elif float(dual.get("min_factor", 0.0)) > float(dual.get("max_factor", 0.0)) or float(dual.get("qi_bonus", -1.0)) < 0.0:
 		errors.append("family.json dual_cultivation needs qi_bonus >= 0 and min_factor <= max_factor")
+	var acq: Dictionary = data.family.get("acquaintance", {})
+	if not acq.is_empty():
+		for key in ["chat_days", "chat_favor", "chat_max_favor", "gift_days", "gift_price_per_favor", "gift_max_per_item", "gift_max_favor"]:
+			if not acq.has(key) or int(acq[key]) < 0:
+				errors.append("family.json acquaintance needs %s >= 0" % key)
+		if int(acq.get("gift_price_per_favor", 0)) < 1 or int(acq.get("gift_max_per_item", 0)) < 1:
+			errors.append("family.json acquaintance needs gift_price_per_favor and gift_max_per_item >= 1")
 	var eligible: Dictionary = data.family.get("eligible_npcs", {})
 	if eligible.is_empty():
 		return errors  # optional: no generated courtship candidates

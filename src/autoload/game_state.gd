@@ -88,6 +88,58 @@ func cultivate(days: int, location_density: float = 1.0) -> void:
 	_pass_time(days)
 
 
+## Claim a cave abode in the current region for spirit stones. Its anchor is
+## bound right away if the artifact has a free anchor slot.
+func claim_abode(abode_id: String) -> void:
+	if not _can_act():
+		return
+	var result := Abodes.claim(player, data, abode_id, current_region)
+	if not result["ok"]:
+		EventBus.post(result["reason"], "warning")
+		EventBus.player_changed.emit()
+		return
+	if result["previous"] != "":
+		EventBus.post("You leave %s behind." % Abodes.abode_name(data, result["previous"]))
+	EventBus.post("You pay %d spirit stones and claim %s as your abode." % [result["cost"], Abodes.abode_name(data, abode_id)], "progress")
+	var anchor_id := String(result["anchor_id"])
+	if anchor_id != "" and not player.anchors.has(anchor_id) and player.anchors.size() < CreationArtifact.anchor_slots(player, data):
+		bind_anchor(anchor_id)
+	EventBus.player_changed.emit()
+
+
+## Cultivate in seclusion at the player's abode (must be in its region).
+func cultivate_in_seclusion(days: int) -> void:
+	if not _can_act():
+		return
+	var density := Abodes.seclusion_density(player, data, current_region)
+	if density <= 0.0:
+		EventBus.post("You have no abode here to seclude yourself in.", "warning")
+		return
+	cultivate(days, density)
+
+
+func store_in_abode(item_id: String, quantity: int = 1) -> void:
+	if not _can_act():
+		return
+	var result := Abodes.store(player, data, current_region, item_id, quantity)
+	if result["ok"]:
+		EventBus.post("You put %d %s in your abode's chest." % [quantity, data.items.get(item_id, {}).get("name", item_id)])
+	else:
+		EventBus.post(result["reason"], "warning")
+	EventBus.player_changed.emit()
+
+
+func retrieve_from_abode(item_id: String, quantity: int = 1) -> void:
+	if not _can_act():
+		return
+	var result := Abodes.retrieve(player, data, current_region, item_id, quantity)
+	if result["ok"]:
+		EventBus.post("You take %d %s from your abode's chest." % [quantity, data.items.get(item_id, {}).get("name", item_id)])
+	else:
+		EventBus.post(result["reason"], "warning")
+	EventBus.player_changed.emit()
+
+
 func attempt_breakthrough() -> void:
 	if not _can_act():
 		return
@@ -136,7 +188,9 @@ func leave_sect() -> void:
 		return
 	var old_id := Sects.leave(player)
 	if old_id != "":
-		EventBus.post("You leave the %s and walk the path alone." % data.sects[old_id].name, "warning")
+		var rep := Reputation.on_leave(player, data, old_id)
+		var suffix := " (reputation %+d)" % rep if rep != 0 else ""
+		EventBus.post("You leave the %s and walk the path alone.%s" % [data.sects[old_id].name, suffix], "warning")
 	EventBus.player_changed.emit()
 
 
@@ -152,12 +206,13 @@ func perform_deed(deed_id: String) -> void:
 	_pass_time(result["days"])
 
 
-func buy_item(item_id: String) -> void:
+## Buys one item; `faction` is the sect the merchant belongs to (prices follow reputation).
+func buy_item(item_id: String, faction: String = "") -> void:
 	if not _can_act():
 		return
-	var result := Items.buy(player, data, item_id)
+	var result := Items.buy(player, data, item_id, 1, faction)
 	if result["ok"]:
-		EventBus.post("You buy a %s." % data.items[item_id]["name"])
+		EventBus.post("You buy a %s for %d spirit stones." % [data.items[item_id]["name"], result["stones"]])
 	else:
 		EventBus.post(result["reason"], "warning")
 	EventBus.player_changed.emit()
@@ -282,6 +337,17 @@ func choose_encounter(index: int) -> void:
 		fight(result["enemy"])
 
 
+## Leave the pending encounter without choosing (the UI offers this only when
+## every choice is locked).
+func dismiss_encounter() -> void:
+	if pending_encounter == "":
+		return
+	pending_encounter = ""
+	EventBus.post("You leave the matter be and walk away.")
+	EventBus.encounter_choice_resolved.emit()
+	EventBus.player_changed.emit()
+
+
 ## Gather materials from a place's gathering table (see Exploration.gather).
 func gather(table: Array, days: int) -> void:
 	if not _can_act():
@@ -385,6 +451,38 @@ func court(npc_id: String) -> void:
 		return
 	npc_favor[npc_id] = int(npc_favor.get(npc_id, 0)) + result["favor"]
 	EventBus.post("You spend days in %s's company. They warm to you. (+%d favor)" % [npcs[npc_id].name, result["favor"]], "progress")
+	_pass_time(result["days"])
+
+
+## Pass a few days chatting with an NPC who has no dialogue file; raises favor
+## up to data/family.json acquaintance.chat_max_favor (enough to court).
+func chat(npc_id: String) -> void:
+	if not _can_act():
+		return
+	var favor := int(npc_favor.get(npc_id, 0))
+	var result := Family.chat(player, npcs.get(npc_id), favor, data)
+	if not result["ok"]:
+		EventBus.post(result["reason"], "warning")
+		EventBus.player_changed.emit()
+		return
+	npc_favor[npc_id] = favor + result["favor"]
+	EventBus.post("You pass some time talking with %s. (+%d favor)" % [npcs[npc_id].name, result["favor"]])
+	_pass_time(result["days"])
+
+
+## Give one item to an NPC; favor scales with its price, up to
+## data/family.json acquaintance.gift_max_favor.
+func give_gift(npc_id: String, item_id: String) -> void:
+	if not _can_act():
+		return
+	var favor := int(npc_favor.get(npc_id, 0))
+	var result := Family.give_gift(player, npcs.get(npc_id), favor, item_id, data)
+	if not result["ok"]:
+		EventBus.post(result["reason"], "warning")
+		EventBus.player_changed.emit()
+		return
+	npc_favor[npc_id] = favor + result["favor"]
+	EventBus.post("%s accepts your %s. (+%d favor)" % [npcs[npc_id].name, data.items[item_id].get("name", item_id), result["favor"]])
 	_pass_time(result["days"])
 
 
@@ -523,6 +621,105 @@ func deposit_to_clan(amount: int) -> void:
 	EventBus.player_changed.emit()
 
 
+## Adopt an orphaned child NPC in the current region (data/family.json "adoption").
+func adopt(npc_id: String) -> void:
+	if not _can_act():
+		return
+	var child: CharacterData = npcs.get(npc_id)
+	if child != null and child.alive and Npcs.region_of(child, data) != current_region:
+		EventBus.post("%s is not here." % child.name, "warning")
+		EventBus.player_changed.emit()
+		return
+	var result := Adoption.adopt(player, child, npcs, data)
+	if not result["ok"]:
+		EventBus.post(result["reason"], "warning")
+		EventBus.player_changed.emit()
+		return
+	_welcome_adopted(child, result)
+
+
+## Adopt a foundling from an orphanage or temple in the current region, for a
+## donation (Adoption.foundling_donation).
+func adopt_foundling() -> void:
+	if not _can_act():
+		return
+	var result := Adoption.adopt_foundling(player, npcs, data, rng, current_region)
+	if not result["ok"]:
+		EventBus.post(result["reason"], "warning")
+		EventBus.player_changed.emit()
+		return
+	EventBus.post("You donate %d spirit stones to the caretakers." % result["donation"])
+	_welcome_adopted(result["child"], result)
+
+
+func _welcome_adopted(child: CharacterData, result: Dictionary) -> void:
+	npc_favor[child.id] = maxi(int(npc_favor.get(child.id, 0)), int(result["favor"]))
+	EventBus.post("You take in %s, a %d-year-old %s with %s, as your own." % [child.name, child.age_years(), "boy" if child.gender == "male" else "girl", SpiritualRoots.describe(child.spiritual_roots, data)], "progress")
+	_pass_time(result["days"])
+
+
+## Give one of your children a monthly training assignment (data/family.json
+## "training"), paid in spirit stones each month. Takes no time.
+func assign_training(child_id: String, assignment_id: String, profession: String = "") -> void:
+	if not _can_act():
+		return
+	var child: CharacterData = npcs.get(child_id)
+	var result := Training.assign(player, child, assignment_id, profession, data)
+	if result["ok"]:
+		var what := Training.assignment_name(data, assignment_id)
+		if profession != "" and child.training.has("profession"):
+			what += " (%s)" % data.professions[profession].name
+		EventBus.post("%s will train: %s, %d spirit stones a month." % [child.name, what, Training.monthly_cost(data, assignment_id)])
+	else:
+		EventBus.post(result["reason"], "warning")
+	EventBus.player_changed.emit()
+
+
+## Stop paying for a child's training. Takes no time.
+func clear_training(child_id: String) -> void:
+	if not _can_act():
+		return
+	var child: CharacterData = npcs.get(child_id)
+	var reason := Training.check_child(player, child)
+	if reason != "":
+		EventBus.post(reason, "warning")
+	elif Training.current(child) != "":
+		Training.clear(child)
+		EventBus.post("%s's training is stopped." % child.name)
+	EventBus.player_changed.emit()
+
+
+## Teach a child in the current region a technique you know.
+func teach_technique(child_id: String, tech_id: String) -> void:
+	if not _can_act():
+		return
+	var child: CharacterData = npcs.get(child_id)
+	if not _child_is_here(child):
+		return
+	var result := Training.teach(player, child, tech_id, data)
+	if not result["ok"]:
+		EventBus.post(result["reason"], "warning")
+		EventBus.player_changed.emit()
+		return
+	EventBus.post("You teach %s the %s." % [child.name, data.techniques[tech_id].name], "progress")
+	_pass_time(result["days"])
+
+
+## Give a child in the current region a pill (any usable item) to take at once. Takes no time.
+func give_to_child(child_id: String, item_id: String) -> void:
+	if not _can_act():
+		return
+	var child: CharacterData = npcs.get(child_id)
+	if not _child_is_here(child):
+		return
+	var result := Training.give(player, child, item_id, data, world_flags)
+	if result["ok"]:
+		EventBus.post("%s takes the %s. (%s)" % [child.name, data.items[item_id]["name"], ", ".join(result["notes"])], "progress")
+	else:
+		EventBus.post(result["reason"], "warning")
+	EventBus.player_changed.emit()
+
+
 func learn_technique(tech_id: String) -> void:
 	if not _can_act():
 		return
@@ -590,6 +787,25 @@ func visit_clinic(injury_id: String) -> void:
 		EventBus.player_changed.emit()
 		return
 	EventBus.post("The doctor heals your %s for %d spirit stones." % [Injuries.injury_name(data, injury_id), result["cost"]], "progress")
+	_pass_time(result["days"])
+
+
+## Treat an injured NPC's worst injury: Doctor xp, alignment and their favor.
+func treat_npc(npc_id: String) -> void:
+	if not _can_act():
+		return
+	var patient: CharacterData = npcs.get(npc_id)
+	var result := Medicine.treat_npc(player, patient, data)
+	if not result["ok"]:
+		EventBus.post(result["reason"], "warning")
+		EventBus.player_changed.emit()
+		return
+	npc_favor[npc_id] = int(npc_favor.get(npc_id, 0)) + result["favor"]
+	var injury_name := Injuries.injury_name(data, result["injury"])
+	var outcome := "it is fully healed" if result["healed"] else "%s left" % Calendar.format_duration(patient.injuries[result["injury"]])
+	EventBus.post("You treat %s's %s: %s. (+%d favor, alignment %+d)" % [patient.name, injury_name, outcome, result["favor"], result["alignment"]], "karma")
+	if result["ranks_gained"] > 0:
+		EventBus.post("You are now a %s!" % Professions.rank_title(player, data, Medicine.DOCTOR), "progress")
 	_pass_time(result["days"])
 
 
@@ -680,6 +896,19 @@ func take_mission(mission_id: String) -> void:
 	_pass_time(result["days"])
 
 
+## Buy an item from your sect's contribution shop (sects.json `shop`).
+## Spending contribution never lowers your rank. Takes no time.
+func buy_with_contribution(item_id: String) -> void:
+	if not _can_act():
+		return
+	var result := Sects.buy_with_contribution(player, data, item_id)
+	if not result["ok"]:
+		EventBus.post(result["reason"], "warning")
+	else:
+		EventBus.post("The sect treasury grants you %s for %d contribution. (%d left)" % [data.items[item_id].get("name", item_id), result["cost"], Sects.contribution_balance(player)], "progress")
+	EventBus.player_changed.emit()
+
+
 ## Fight an enemy from data/enemies.json.
 func fight(enemy_id: String) -> void:
 	if not data.enemies.has(enemy_id):
@@ -768,6 +997,55 @@ func recharge_artifact() -> void:
 	EventBus.player_changed.emit()
 
 
+## Feed items (spirit stones, treasures) to the Creation Artifact for energy.
+func feed_artifact(item_id: String, quantity: int = 1) -> void:
+	if not _can_act():
+		return
+	var result := ArtifactFunctions.feed(player, data, item_id, quantity)
+	if result["ok"]:
+		EventBus.post("The artifact devours %d %s. (+%d energy, %d total)" % [quantity, data.items.get(item_id, {}).get("name", item_id), result["energy"], player.artifact_energy], "progress")
+	else:
+		EventBus.post(result["reason"], "warning")
+	EventBus.player_changed.emit()
+
+
+## Spend artifact energy to unseal a function (data/artifact.json "functions").
+func unlock_artifact_function(function_id: String) -> void:
+	if not _can_act():
+		return
+	var result := ArtifactFunctions.unlock(player, data, function_id, world_flags)
+	if result["ok"]:
+		var def := ArtifactFunctions.get_def(data, function_id)
+		EventBus.post("A seal on the Creation Artifact shatters: %s. %s" % [def.get("name", function_id), def.get("description", "")], "progress")
+	else:
+		EventBus.post(result["reason"], "warning")
+	EventBus.player_changed.emit()
+
+
+## Move items into the artifact's storage space (kept even through death).
+func store_in_artifact(item_id: String, quantity: int = 1) -> void:
+	if not _can_act():
+		return
+	var result := ArtifactFunctions.store(player, data, item_id, quantity)
+	if result["ok"]:
+		EventBus.post("You tuck %d %s away inside the artifact." % [quantity, data.items.get(item_id, {}).get("name", item_id)])
+	else:
+		EventBus.post(result["reason"], "warning")
+	EventBus.player_changed.emit()
+
+
+## Take items back out of the artifact's storage space.
+func retrieve_from_artifact(item_id: String, quantity: int = 1) -> void:
+	if not _can_act():
+		return
+	var result := ArtifactFunctions.retrieve(player, item_id, quantity)
+	if result["ok"]:
+		EventBus.post("You draw %d %s out of the artifact." % [quantity, data.items.get(item_id, {}).get("name", item_id)])
+	else:
+		EventBus.post(result["reason"], "warning")
+	EventBus.player_changed.emit()
+
+
 # --- Save data ---------------------------------------------------------------
 
 func to_save_dict() -> Dictionary:
@@ -838,13 +1116,24 @@ func _on_days_advanced(days: int) -> void:
 		EventBus.post("Your %s has healed." % Injuries.injury_name(data, injury_id), "progress")
 	for buff_name in Buffs.pass_days(player, days):
 		EventBus.post("The power of your %s fades." % buff_name)
-	for event in Npcs.simulate(npcs, data, days, rng):
+	# NPCs the player knows (favor) or married never marry off-screen.
+	var reserved := npc_favor.duplicate()
+	for spouse_id in player.spouses:
+		reserved[spouse_id] = true
+	var married_off := false
+	for event in Npcs.simulate(npcs, data, days, rng, reserved):
+		married_off = married_off or event.get("kind", "") == "marriage"
 		# News about generated strangers is noise; only report people the player knows.
-		var npc_id := String(event["npc_id"])
-		if npc_id.begins_with(Npcs.SPAWN_PREFIX) and not npc_favor.has(npc_id) and not player.spouses.has(npc_id):
+		if not Npcs.is_newsworthy(String(event["npc_id"]), player, npc_favor):
 			continue
 		EventBus.post(event["text"], event["category"])
+	if married_off:
+		Npcs.ensure_eligible(npcs, data, rng)  # keep courtship candidates in every region
 	_advance_pregnancies(days)
+	@warning_ignore("integer_division")
+	var months := player.age_days / Calendar.DAYS_PER_MONTH - age_before / Calendar.DAYS_PER_MONTH
+	for event in Training.advance(player, npcs, data, months):
+		EventBus.post(event["text"], event["category"])
 	if clan != null:
 		for joined in Clans.sync_family(player, clan, npcs, data):
 			EventBus.post("%s joins the %s." % [joined, clan.name], "progress")
@@ -871,6 +1160,15 @@ func _advance_pregnancies(days: int) -> void:
 		var child := Children.give_birth(mother, father, npcs, data, rng, region)
 		var mother_name := "you" if mother == player else mother.name
 		EventBus.post("A child is born to %s: %s, a %s with %s." % [mother_name, child.name, "son" if child.gender == "male" else "daughter", SpiritualRoots.describe(child.spiritual_roots, data)], "progress")
+
+
+## Whether `child` (a living NPC) is in the current region; posts a warning if not.
+func _child_is_here(child: CharacterData) -> bool:
+	if child != null and child.alive and Npcs.region_of(child, data) != current_region:
+		EventBus.post("%s is not here." % child.name, "warning")
+		EventBus.player_changed.emit()
+		return false
+	return true
 
 
 ## A death by violence: the Creation Artifact respawns the player if it has a
