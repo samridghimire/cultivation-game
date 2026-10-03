@@ -63,6 +63,8 @@ var artifact_recharges := 0
 var anchors: Array[String] = []
 ## Sect mission id -> age_days when it may be taken again (Sects missions).
 var mission_cooldowns: Dictionary = {}
+## Secret realm id -> {"opening": int, "floor": int}: floors cleared in that opening (see SecretRealms).
+var secret_realms: Dictionary = {}
 
 
 func attribute(attr_id: String) -> int:
@@ -132,6 +134,7 @@ func to_dict() -> Dictionary:
 		"artifact_recharges": artifact_recharges,
 		"anchors": anchors.duplicate(),
 		"mission_cooldowns": mission_cooldowns.duplicate(),
+		"secret_realms": secret_realms.duplicate(true),
 	}
 
 
@@ -187,6 +190,9 @@ static func from_dict(d: Dictionary) -> CharacterData:
 	c.artifact_lives = int(d.get("artifact_lives", -1))
 	c.artifact_recharges = int(d.get("artifact_recharges", 0))
 	c.mission_cooldowns = _int_values(d.get("mission_cooldowns", {}))
+	var delves: Dictionary = d.get("secret_realms", {})
+	for realm_id in delves:
+		c.secret_realms[String(realm_id)] = {"opening": int(delves[realm_id].get("opening", -1)), "floor": int(delves[realm_id].get("floor", 0))}
 	for anchor_id in d.get("anchors", []):
 		c.anchors.append(String(anchor_id))
 	for recipe_id in d.get("known_recipes", []):
