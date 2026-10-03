@@ -21,6 +21,9 @@ var pregnancy: Dictionary = {}
 var birth_rank := ""
 ## Training assigned by a parent (FAM-004): {} or {"assignment": id, "profession": id}. See Training.
 var training: Dictionary = {}
+## Bloodline id (data/bloodlines.json, "" = none) and whether it has awakened (FAM-007).
+var bloodline := ""
+var bloodline_awakened := false
 ## NPC behavior. Empty/negative values fall back to the data/npcs.json def (see Npcs).
 var home_region := ""
 var cultivates := false
@@ -119,6 +122,8 @@ func to_dict() -> Dictionary:
 		"pregnancy": pregnancy.duplicate(),
 		"birth_rank": birth_rank,
 		"training": training.duplicate(),
+		"bloodline": bloodline,
+		"bloodline_awakened": bloodline_awakened,
 		"home_region": home_region,
 		"cultivates": cultivates,
 		"diligence": diligence,
@@ -177,6 +182,8 @@ static func from_dict(d: Dictionary) -> CharacterData:
 	var saved_training: Dictionary = d.get("training", {})
 	for key in saved_training:
 		c.training[String(key)] = String(saved_training[key])
+	c.bloodline = String(d.get("bloodline", ""))
+	c.bloodline_awakened = bool(d.get("bloodline_awakened", false))
 	c.home_region = String(d.get("home_region", ""))
 	c.cultivates = bool(d.get("cultivates", false))
 	c.diligence = float(d.get("diligence", -1.0))

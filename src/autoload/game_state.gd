@@ -149,6 +149,8 @@ func attempt_breakthrough() -> void:
 	var result := Cultivation.attempt_breakthrough(player, data, rng)
 	if result["success"]:
 		EventBus.post("Breakthrough! You have entered the %s realm." % result["realm_name"], "progress")
+		if Bloodlines.update(player, data):
+			EventBus.post("Your blood boils and sings: your %s awakens!" % Bloodlines.bloodline_name(data, player.bloodline), "progress")
 	else:
 		EventBus.post("Your breakthrough to %s failed (%d%% chance). Your qi scatters." % [result["realm_name"], int(result["chance"] * 100)], "danger")
 		if result["injury"] != "":
