@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-03 [C-007] Higher-grade herbs and ores for Foundation/Core cultivators: Cloud-Mist Orchid, Scarlet Flame Fruit, Hundred-Year Snow Lotus, Earth Marrow Fungus, Nine-Leaf Soul Grass, Golden Core Lotus Seed, Earth-Vein Jade and Fire Marrow Crystal; two new gather sites, six realm-gated herb finds, and three new alchemy recipes taught by scrolls.
 - 2026-10-03 [G-005c] Talisman content: a talisman stall in Fallen Star Market, Gold-Thread Talisman Paper, 7 higher-rank talismans (buffs, Foundation/Core combat talismans, a demonic Blood Sacrifice talisman) taught by manuals, and talisman finds while exploring.
 - 2026-10-03 [G-004c] Higher-grade equipment: Profound Iron and Dragon-Blood Gold ores, 4 Foundation/Core Formation forge recipes taught by forging manuals, a Heavenforge Smithy in Fallen Star Market, and equipment/ore finds while exploring.
 - 2026-10-03 [LIFE-001e] Evil artifacts are now obtainable: the Blood-Drinker Saber plus the new Corpse-Silk Burial Armor and Myriad Souls Banner (lifespan-draining) are once-per-life exploration finds; righteous players can destroy them for alignment and qi instead.
