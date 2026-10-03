@@ -1,0 +1,29 @@
+{
+	"version": 1,
+	"saved_at": "2026-10-01T12:00:00",
+	"game": {
+		"player": {
+			"id": "player",
+			"name": "Old Lin",
+			"age_days": 7300,
+			"alive": true,
+			"cause_of_death": "",
+			"attributes": {"constitution": 12.0, "comprehension": 11.0, "spirit": 10.0, "fortune": 9.0, "charisma": 8.0},
+			"spiritual_roots": {"fire": 70.0, "wood": 40.0},
+			"realm_index": 1.0,
+			"stage": 2.0,
+			"qi": 150.5,
+			"breakthrough_bonus": 0.0,
+			"alignment": 40.0,
+			"professions": {"alchemist": {"rank": 1.0, "xp": 30.0}},
+			"sect": {"id": "azure_cloud_sect", "rank": 0.0, "contribution": 20.0},
+			"inventory": {"spirit_stone": 25.0, "qi_gathering_pill": 2.0},
+			"techniques": {"basic_breathing": {"level": 1.0, "xp": 5.0}}
+		},
+		"world_flags": {"villager_dead": true},
+		"region": "qingshi_village",
+		"clock": {"total_days": 400.0},
+		"rng_seed": "12345",
+		"rng_state": "67890"
+	}
+}

@@ -90,7 +90,6 @@ ART-001/ART-001b are done; ART-002 and ART-005 are in P1 above.
 ## P4: QA and tooling
 | id | role | status | task |
 |---|---|---|---|
-| QA-003 | qa | todo | Save compatibility fixtures: commit tests/fixtures/saves/ with a save from the oldest supported SAVE_VERSION and one from the current version (hand-written JSON), and a test that both load via SaveManager/GameState with sane defaults for every newer field. Document "add a fixture when bumping SAVE_VERSION" in CLAUDE.md. |
 | QA-004 | qa | todo | Obtainability audit test: every item in items.json is reachable (merchant stock tags, recipe output, encounter/deed/enemy loot, dialogue reward or starting item) and every recipe scroll is obtainable; known exceptions listed in an explicit allowlist with a task id (e.g. Blood-Drinker Saber → LIFE-001e). |
 | QA-005 | qa | todo | Family edge cases: spouse dies while pregnant, carrier spouse divorces/dies mid-pregnancy, save/load mid-pregnancy, child of a deceased parent, player respawn during pregnancy. Add tests, fix small bugs, file tasks for big ones. |
 | QA-006 | qa | todo | Economy sim (tests/sim/simulate_economy.gd): spirit stone income (professions, sales, missions once G-008 lands) vs costs (pills, gear, artifact recharge growth) across a 200-year life; report whether the player can afford breakthroughs and recharges, and propose data tweaks. |
@@ -105,6 +104,7 @@ The local sessions that built combat/techniques, world/exploration/NPCs/dialogue
 ## Done
 | id | task |
 |---|---|
+| QA-003 | Save fixtures: tests/fixtures/saves/v1_oldest.json (F-000 format) and v1_current.json, test_save_fixtures.gd (defaults for missing fields, no field dropped, load + play + round trip); CLAUDE.md rule to add a fixture per SAVE_VERSION bump. |
 | G-004c | Higher-grade equipment: Profound Iron / Dragon-Blood Gold ores, 4 new forge recipes with manuals, Heavenforge Smithy in Fallen Star Market, equipment encounters. |
 | LIFE-001e | Evil artifacts obtainable: Blood-Drinker Saber (wild), Corpse-Silk Burial Armor and Myriad Souls Banner (ruins), once per life, each with a righteous destroy alternative. |
 | FAM-002f | Generated NPCs placed in the world: regions.json `npc_spots`, Npcs.generated_in_region/spot_positions/world_title/describe, gender colors, "Look" option. |
