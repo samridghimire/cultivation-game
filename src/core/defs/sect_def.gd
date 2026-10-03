@@ -12,6 +12,7 @@ var min_realm := "mortal"
 var cultivation_bonus := 1.0
 var favored_professions: PackedStringArray = []
 var ranks: Array[Dictionary] = []  # [{name, contribution}], ascending
+var robe_color := ""  # hex; "" = the default rogue robe
 
 
 static func from_dict(d: Dictionary) -> SectDef:
@@ -26,6 +27,7 @@ static func from_dict(d: Dictionary) -> SectDef:
 	s.cultivation_bonus = float(d.get("cultivation_bonus", 1))
 	s.favored_professions = PackedStringArray(d.get("favored_professions", []))
 	s.ranks.assign(d.get("ranks", []))
+	s.robe_color = String(d.get("robe_color", ""))
 	return s
 
 

@@ -87,6 +87,9 @@ ART-001/ART-001b are done; ART-002 and ART-005 are in P1 above.
 | C-006 | content | todo | 3 new named NPCs (data/npcs.json) with dialogue files in data/dialogue/, spread across regions (e.g. a wandering alchemist, a blood lotus disciple, a retired elder) with favor-gated rewards. |
 | RIV-001 | systems | todo | Rivals and grudges: CharacterData.grudges/gratitude per NPC (save-compatible); killing/robbing/humiliating creates grudges with the victim's family/sect; a named rival NPC grows alongside the player and appears in encounters; Npcs.simulate lets enemies hunt you. |
 | W-005 | systems | todo | Secret realms (first pass): data/secret_realms.json (opens every N years for M days, realm caps, floors of encounters with treasures and guardians), GameState.enter_secret_realm. Pair with a world-ui entry point later. |
+| VIS-001 | world-ui | done | Player avatar placeholder art: robed cultivator facing the walking direction with a walking bob; robe color from the sect (sects.json `robe_color`), sash color from the alignment tier, pulsing qi aura rings that grow with the realm (src/world/player_look.gd, tested). |
+| VIS-002 | world-ui | todo | Region scenery: deterministic decorations (trees, rocks, grass tufts, flowers) seeded from the region id and drawn under the places, avoiding paths, places and npc_spots; optional regions.json `map.decor` ({trees, rocks, grass, tree_color, rock_color}) documented in _doc and validated. Pure placement helper with unit tests. |
+| VIS-003 | world-ui | todo | Place art: draw each place type distinctly instead of a plain rectangle (meditation stone circle with a glow, merchant stall with an awning, workshop furnace, sect hall roof, travel gate, gather herb patch, explore cave mouth, NPC as a small robed figure), and a pulsing outline on the current interaction target. |
 
 ## P4: QA and tooling
 | id | role | status | task |
