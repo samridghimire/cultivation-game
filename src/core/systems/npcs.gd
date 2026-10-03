@@ -174,7 +174,7 @@ static func _live(c: CharacterData, data: GameData, days: int, rng: RandomNumber
 		c.cause_of_death = "old age"
 		events.append({"npc_id": c.id, "text": "News arrives: %s has died of old age at %d." % [c.name, c.age_years()], "category": "warning"})
 		return
-	if not cultivates(c, data):
+	if not cultivates(c, data) or not Children.can_cultivate_yet(c, data):
 		return
 	if SpiritualRoots.cultivation_multiplier(c.spiritual_roots, data) <= 0.0:
 		return

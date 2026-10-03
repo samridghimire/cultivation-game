@@ -200,6 +200,7 @@ func _validate() -> void:
 	_validate_recipes()
 	load_errors.append_array(Equipment.validate(self))
 	load_errors.append_array(Family.validate(self))
+	load_errors.append_array(Children.validate(self))
 	for item: Dictionary in items.values():
 		if item.get("effects", {}).has("buff"):
 			for error in Buffs.validate_effect(item["effects"]["buff"]):
