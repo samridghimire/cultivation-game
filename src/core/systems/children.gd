@@ -148,6 +148,8 @@ static func give_birth(mother: CharacterData, father: CharacterData, npcs: Dicti
 	for parent: CharacterData in [mother, father]:
 		if not parent.children.has(child.id):
 			parent.children.append(child.id)
+	# Rolled last so the roots/attribute rolls stay the same for a given seed.
+	child.bloodline = Bloodlines.inherit(mother, father, data, rng)
 	mother.pregnancy = {}
 	return child
 

@@ -49,7 +49,8 @@ Roles: `systems` (core rules + tests), `content` (data/*.json + small hooks), `w
 | FAM-006 | systems | todo | Clan estate: buildings in data/clan_buildings.json (ancestral hall, spirit field, alchemy room, protective array, library) with costs, build time and monthly effects (income, qi density, herb yield, training speed). Depends on FAM-005. |
 | FAM-006b | world-ui | todo | Estate view: list buildings with build/upgrade actions and monthly effects (clan screen tab), and draw built buildings as placeholder shapes at the estate place. Depends on FAM-006. |
 | FAM-003d | systems | todo | NPC couples (married generated NPCs, e.g. eligible NPCs who marry each other off-screen) have children during Npcs.simulate using Children.try_conceive/give_birth, with a population cap in data/family.json. Feeds FAM-013. |
-| FAM-007 | systems | todo | Bloodlines: rare inheritable bloodline traits (data/bloodlines.json, e.g. Azure Dragon, Vermilion Phoenix) that can awaken at a realm and grant bonuses; inheritance odds through generations. |
+| FAM-007b | world-ui | todo | Show bloodlines (Bloodlines.describe) on the character sheet for the player and in the family list for spouses/children, and in Npcs.describe/"Look" for NPCs whose bloodline the player could know (awakened ones). Depends on FAM-007. |
+| FAM-007c | content | todo | Bloodline content: give 1-2 named NPCs (npcs.json `bloodline`) and a rare eligible-NPC chance a bloodline so players can marry into one, add 2-4 more bloodlines (e.g. Qilin, Nine-Tailed Fox, demonic Blood Asura) and a rare encounter/treasure that awakens or grants a bloodline. Depends on FAM-007. |
 | FAM-008 | systems | todo | Clan succession for NPC clans and heir designation: the Patriarch designates an heir (default: eldest child of the main wife); used by NPC clans when their patriarch dies and by the player's clan for an appointed Young Master/Mistress title. (The player does NOT permadie; see ART-001.) Depends on FAM-005. |
 | FAM-009 | systems | todo | NPC clans (data/clans.json) with their own families; marriage alliances between clans; clan feuds and favor. Family members can join sects (clan + sect dual membership). Depends on FAM-005. |
 | FAM-010 | world-ui | todo | Family tree & clan screen (HUD modal, gamepad-friendly): spouses, children with realm/age/roots, clan members, ranks, treasury, estate buildings; actions to assign training (FAM-004). Build incrementally on FAM-005b. |
@@ -105,6 +106,7 @@ The local sessions that built combat/techniques, world/exploration/NPCs/dialogue
 ## Done
 | id | task |
 |---|---|
+| FAM-007 | Bloodlines: data/bloodlines.json (Azure Dragon, Vermilion Phoenix, White Tiger, Black Tortoise), inherited at birth (one/both-parent odds, rare spontaneous), dormant until awaken_realm, then qi/breakthrough/combat bonuses; CharacterData.bloodline(_awakened), npcs.json `bloodline`. UI → FAM-007b, content → FAM-007c. |
 | G-004c | Higher-grade equipment: Profound Iron / Dragon-Blood Gold ores, 4 new forge recipes with manuals, Heavenforge Smithy in Fallen Star Market, equipment encounters. |
 | LIFE-001e | Evil artifacts obtainable: Blood-Drinker Saber (wild), Corpse-Silk Burial Armor and Myriad Souls Banner (ruins), once per life, each with a righteous destroy alternative. |
 | FAM-002f | Generated NPCs placed in the world: regions.json `npc_spots`, Npcs.generated_in_region/spot_positions/world_title/describe, gender colors, "Look" option. |

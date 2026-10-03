@@ -40,6 +40,8 @@ static func create(def: Dictionary, data: GameData, rng: RandomNumberGenerator) 
 	c.home_region = String(def.get("region", ""))
 	c.cultivates = bool(def.get("cultivates", false))
 	c.diligence = float(def.get("diligence", DEFAULT_DILIGENCE))
+	c.bloodline = String(def.get("bloodline", ""))
+	Bloodlines.update(c, data)
 	return c
 
 
@@ -186,6 +188,8 @@ static func _live(c: CharacterData, data: GameData, days: int, rng: RandomNumber
 			events.append({"npc_id": c.id, "text": "Rumours spread: %s has broken through to %s!" % [c.name, result["realm_name"]], "category": "info"})
 		elif result["success"] and c.realm_index == 1:
 			events.append({"npc_id": c.id, "text": "%s has begun Qi Refining." % c.name, "category": "info"})
+		if result["success"] and Bloodlines.update(c, data):
+			events.append({"npc_id": c.id, "text": "Heaven and earth tremble: the %s of %s has awakened!" % [Bloodlines.bloodline_name(data, c.bloodline), c.name], "category": "progress"})
 
 
 ## NPCs whose home is `region_id` and who are still alive.
