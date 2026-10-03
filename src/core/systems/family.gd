@@ -103,7 +103,7 @@ static func check_proposal(c: CharacterData, other: CharacterData, favor: int, r
 	if absi(c.alignment - other.alignment) > int(rules.get("max_alignment_gap", 2000)):
 		return "%s cannot walk the same path as you." % other.name
 	if rank == String(data.family.get("concubine_rank", "")):
-		if bool(data.npcs.get(other.id, {}).get("proud", false)) or other.realm_index > c.realm_index:
+		if Npcs.is_proud(other, data) or other.realm_index > c.realm_index:
 			return "%s is too proud to become anyone's %s." % [other.name, rank_name(data, c.gender, rank).to_lower()]
 	return ""
 
@@ -216,4 +216,17 @@ static func validate(data: GameData) -> PackedStringArray:
 		errors.append("family.json needs a dual_cultivation block")
 	elif float(dual.get("min_factor", 0.0)) > float(dual.get("max_factor", 0.0)) or float(dual.get("qi_bonus", -1.0)) < 0.0:
 		errors.append("family.json dual_cultivation needs qi_bonus >= 0 and min_factor <= max_factor")
+	var eligible: Dictionary = data.family.get("eligible_npcs", {})
+	if eligible.is_empty():
+		return errors  # optional: no generated courtship candidates
+	if int(eligible.get("age_min", 0)) < int(data.family.get("adult_age", 16)) or int(eligible.get("age_max", 0)) < int(eligible.get("age_min", 0)):
+		errors.append("family.json eligible_npcs needs adult_age <= age_min <= age_max")
+	if (eligible.get("realms_by_danger", []) as Array).is_empty():
+		errors.append("family.json eligible_npcs needs realms_by_danger")
+	for realms in eligible.get("realms_by_danger", []):
+		if (realms as Array).is_empty():
+			errors.append("family.json eligible_npcs realms_by_danger has an empty entry")
+		for realm_id in realms:
+			if data.realm_index_of(String(realm_id)) < 0:
+				errors.append("family.json eligible_npcs has unknown realm '%s'" % realm_id)
 	return errors

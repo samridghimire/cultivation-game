@@ -4,6 +4,7 @@
   "courtship": {"min_favor": 20, "favor_gain": 6, "charisma_step": 2, "days": 7},
   "proposal": {"min_favor": 60, "max_realm_gap": 1, "max_alignment_gap": 600, "days": 1},
   "concubine_rank": "concubine",
+  "eligible_npcs": {"per_gender": 2, "age_min": 17, "age_max": 30, "proud_chance": 0.25, "realms_by_danger": [["mortal", "qi_refining"], ["qi_refining"], ["qi_refining", "foundation_establishment"], ["foundation_establishment"]]},
   "dual_cultivation": {"qi_bonus": 0.5, "realm_step": 0.25, "min_factor": 0.25, "max_factor": 2.0, "favor_per_month": 1, "favor_per_session": 2, "max_favor": 100},
   "genders": {
     "male": {

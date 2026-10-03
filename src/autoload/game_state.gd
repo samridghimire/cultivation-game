@@ -43,6 +43,7 @@ func start_session(character: CharacterData) -> void:
 	npc_favor = {}
 	dialogue_npc = ""
 	Npcs.ensure_all(npcs, data, rng)
+	Npcs.ensure_eligible(npcs, data, rng)
 	GameClock.reset()
 	EventBus.session_started.emit()
 	EventBus.post("%s sets out on the path of cultivation." % player.name, "progress")
@@ -588,6 +589,7 @@ func load_save_dict(d: Dictionary) -> void:
 	current_region = d.get("region", data.start_region)
 	npcs = Npcs.from_dict(d.get("npcs", {}))
 	Npcs.ensure_all(npcs, data, rng)
+	Npcs.ensure_eligible(npcs, data, rng)
 	npc_favor = {}
 	for npc_id in d.get("npc_favor", {}):
 		npc_favor[npc_id] = int(d["npc_favor"][npc_id])
@@ -629,6 +631,10 @@ func _on_days_advanced(days: int) -> void:
 	for buff_name in Buffs.pass_days(player, days):
 		EventBus.post("The power of your %s fades." % buff_name)
 	for event in Npcs.simulate(npcs, data, days, rng):
+		# News about generated strangers is noise; only report people the player knows.
+		var npc_id := String(event["npc_id"])
+		if npc_id.begins_with(Npcs.SPAWN_PREFIX) and not npc_favor.has(npc_id) and not player.spouses.has(npc_id):
+			continue
 		EventBus.post(event["text"], event["category"])
 	if player.age_years() >= Cultivation.lifespan_years(player, data):
 		_kill("Your lifespan is exhausted. You die of old age at %d." % player.age_years())
