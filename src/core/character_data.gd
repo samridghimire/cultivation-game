@@ -61,6 +61,8 @@ var artifact_lives := -1
 var artifact_recharges := 0
 ## Bound anchor ids (data/regions.json "anchor_id"), most recently bound last.
 var anchors: Array[String] = []
+## Sect mission id -> age_days when it may be taken again (Sects missions).
+var mission_cooldowns: Dictionary = {}
 
 
 func attribute(attr_id: String) -> int:
@@ -129,6 +131,7 @@ func to_dict() -> Dictionary:
 		"artifact_lives": artifact_lives,
 		"artifact_recharges": artifact_recharges,
 		"anchors": anchors.duplicate(),
+		"mission_cooldowns": mission_cooldowns.duplicate(),
 	}
 
 
@@ -183,6 +186,7 @@ static func from_dict(d: Dictionary) -> CharacterData:
 	c.lifespan_bonus_years = int(d.get("lifespan_bonus_years", 0))
 	c.artifact_lives = int(d.get("artifact_lives", -1))
 	c.artifact_recharges = int(d.get("artifact_recharges", 0))
+	c.mission_cooldowns = _int_values(d.get("mission_cooldowns", {}))
 	for anchor_id in d.get("anchors", []):
 		c.anchors.append(String(anchor_id))
 	for recipe_id in d.get("known_recipes", []):

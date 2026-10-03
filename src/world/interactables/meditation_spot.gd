@@ -1,5 +1,6 @@
 extends Interactable
 ## A place to cultivate. Denser spiritual energy = faster qi gathering.
+## Spouses living in this region can join for dual cultivation (FAM-002b).
 
 @export var qi_density := 1.0
 
@@ -9,6 +10,7 @@ func get_options() -> Array[Dictionary]:
 		{"label": "Meditate (1 month)", "action": GameState.cultivate.bind(Calendar.DAYS_PER_MONTH, qi_density), "keep_open": true},
 		{"label": "Closed-door cultivation (1 year)", "action": GameState.cultivate.bind(Calendar.DAYS_PER_YEAR, qi_density), "keep_open": true},
 	]
+	options.append_array(_dual_cultivation_options())
 	if Cultivation.can_attempt_breakthrough(GameState.player, GameState.data):
 		var chance := Cultivation.breakthrough_chance(GameState.player, GameState.data)
 		options.append({"label": "Attempt breakthrough (%d%% chance)" % int(chance * 100), "action": GameState.attempt_breakthrough, "keep_open": true})
@@ -17,4 +19,18 @@ func get_options() -> Array[Dictionary]:
 			continue
 		var tech_name: String = GameState.data.techniques[tech_id].name
 		options.append({"label": "Practice %s (1 month)" % tech_name, "action": GameState.practice_technique.bind(tech_id, Calendar.DAYS_PER_MONTH), "keep_open": true})
+	return options
+
+
+func _dual_cultivation_options() -> Array[Dictionary]:
+	var options: Array[Dictionary] = []
+	var p := GameState.player
+	var data := GameState.data
+	for spouse in Family.spouses_in_region(p, GameState.npcs, data, GameState.current_region):
+		var bonus := roundi((Family.dual_multiplier(p, spouse, data) - 1.0) * 100.0)
+		var label := "Dual cultivate with %s (1 month, +%d%% qi)" % [spouse.name, bonus]
+		var reason := Family.check_dual_cultivation(p, spouse, data)
+		if reason != "":
+			label += " (%s)" % reason
+		options.append({"label": label, "action": GameState.dual_cultivate.bind(spouse.id, Calendar.DAYS_PER_MONTH, qi_density), "disabled": reason != "", "keep_open": true})
 	return options

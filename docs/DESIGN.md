@@ -57,25 +57,34 @@ Every great cultivation protagonist has something that sets them apart. Ours is 
 9. Endgame: Ascension to the Immortal Realm
 
 ## Current systems (foundation)
+"Core" = rules + tests exist in GameState; "UI" = reachable by the player in-game.
 | System | Status | Where |
 |---|---|---|
 | Realms & stages (Mortal → Tribulation Transcendence) | ✅ | `data/realms.json`, `Cultivation` |
 | Spiritual roots (5 elements, grades, purity) | ✅ | `data/spiritual_roots.json`, `SpiritualRoots` |
 | Attributes (Constitution, Comprehension, Spirit, Fortune, Charisma) | ✅ | `data/attributes.json` |
 | Breakthroughs with risk, pills that boost odds | ✅ | `Cultivation.attempt_breakthrough` |
-| Lifespan & death by old age | ✅ | `GameState._on_days_advanced` |
+| Lifespan, death by old age, burning/extending lifespan | ✅ | `Cultivation`, `GameState._on_days_advanced` |
 | Alignment (Demonic … Righteous) and deeds | ✅ | `data/alignment.json`, `data/deeds.json` |
-| Sects (join/leave, requirements, ranks, contribution) | ✅ | `data/sects.json`, `Sects` |
+| Sects (join/leave, requirements, ranks, contribution) | ✅ basic (no missions/shop yet) | `data/sects.json`, `Sects` |
 | Professions (ranks, XP, income) | ✅ basic | `data/professions.json`, `Professions` |
-| Alchemy (recipes, refining pills) | ✅ basic | `data/recipes.json`, `Alchemy` |
-| Talismans (inscribing, buff talismans) | ✅ basic | `data/recipes.json`, `Alchemy`, `Buffs` |
-| Items, merchant, using pills | ✅ basic | `data/items.json`, `Items` |
-| Save/load | ✅ | `SaveManager` |
-| Creation Artifact: lives, anchors, respawn | ✅ core | `data/artifact.json`, `CreationArtifact` |
-| Data-driven regions, travel, exploration encounters | 🚧 | `data/regions.json`, `data/encounters.json`, `Exploration` |
+| Alchemy (recipes, scrolls, pill quality) + crafting screen | ✅ | `data/recipes.json`, `Alchemy`, `src/ui/crafting_screen.gd` |
+| Blacksmithing and equipment (weapon/armor) | ✅ core, 🚧 no equip UI (G-004b) | `Equipment`, `data/recipes.json` |
+| Talismans (buff talismans, combat strike/shield/escape) | ✅ core, 🚧 no ready UI (G-005d) | `Alchemy`, `Buffs`, `CombatTalismans` |
+| Temporary buffs and forbidden secret arts | ✅ | `Buffs`, `data/techniques.json` |
+| Medicine / Doctor (treat injuries, clinic, patients) | ✅ core, 🚧 no clinic place (G-007b) | `Medicine` |
+| Items, merchants, using pills | ✅ basic | `data/items.json`, `Items` |
+| Save/load, multiple slots | ✅ | `SaveManager` |
+| Creation Artifact: lives, anchors, respawn, recharge | ✅ core (functions: ART-002+) | `data/artifact.json`, `CreationArtifact` |
+| Data-driven regions (4), travel, exploration encounters | ✅ (choices: W-004c) | `data/regions.json`, `data/encounters.json`, `Exploration` |
 | Injuries (from breakthroughs and combat) | ✅ | `data/injuries.json`, `Injuries` |
-| Combat and cultivation techniques | 🚧 | `Combat`, `Techniques`, `data/enemies.json`, `data/techniques.json` |
-| Inventory and techniques screens | 🚧 | `src/ui/` |
+| Combat (auto-resolved) and techniques | ✅ basic | `Combat`, `Techniques`, `data/enemies.json`, `data/techniques.json` |
+| NPCs (named + generated), aging, monthly sim | ✅ | `data/npcs.json`, `Npcs`, `Names` |
+| Dialogue | ✅ core, 🚧 choice-menu fallback (W-003b) | `Dialogue`, `data/dialogue/` |
+| Family: identity, courtship, marriage, dual cultivation, children | ✅ core, ❌ not reachable in-game (P0 tasks) | `data/family.json`, `Family`, `Children` |
+| Clans, estates, bloodlines | ❌ (FAM-005+) | |
+| Cultivation methods, Dao insights, Heavenly Tribulations | ❌ (CM-001, DAO-001, TRIB-001) | |
+| Inventory, techniques, character sheet, settings, pause, load screens | ✅ | `src/ui/` |
 | Top-down world with interactables | ✅ placeholder art | `src/world/` |
 
 ## Lifespan as a resource (owner decision)
@@ -99,3 +108,8 @@ Void Refinement → Body Integration → Mahayana → Tribulation Transcendence.
 - Art direction: pixel art? ink-wash painterly? (affects asset pipeline)
 - Should evil paths include demonic cultivation techniques (blood refining, soul devouring) as a separate progression tree?
 - (FAM-002) Smallest version implemented, tunable in `data/family.json`: courting is only between opposite genders, an NPC of a higher major realm (or flagged `proud`) refuses to be a concubine, proposals need favor 60, at most 1 major realm apart and alignment within 600. Should same-gender Dao companions be allowed, and are these thresholds right?
+- (FAM-002g) **Widowed spouses.** Default the agents will build: a dead spouse stays in your family history but no longer takes up a wife/concubine/Dao companion slot, so you can remarry. Should there be a mourning period or an alignment/favor penalty for remarrying quickly?
+- (TRIB-001) **Heavenly Tribulations.** Default: tribulations strike at every major-realm breakthrough from Core Formation upward, as several lightning waves you survive with HP, defense, talismans and pills. Failing injures you, and the last wave can kill you, in which case the Creation Artifact respawns you and spends a life. Demonic cultivators face an extra heart-demon wave. Is this right, and should a tribulation also hit at Foundation Establishment?
+- (FAM-005) **Clan founding requirements.** Default: Foundation Establishment, 500 spirit stones and a claimed estate/abode, all in `data/family.json`. Can a rogue still in a sect found a clan, or must they leave or get permission?
+- (W-005/G-008) **Founding your own sect** (roadmap item 3) is not scheduled yet. Default proposal: it unlocks at Nascent Soul, needs a mountain gate place, and reuses the clan treasury/buildings model. Should it be a separate system from clans, or a clan that grows into a sect?
+- **Main story / Creation Artifact origin.** Agents keep the artifact's maker, why it chose the player and who hunts it vague until you decide. Do you want to outline the main story arc (acts, antagonist faction), or should agents propose 2-3 options for you to pick from?

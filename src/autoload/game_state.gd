@@ -20,6 +20,9 @@ var npc_favor: Dictionary = {}
 ## The conversation in progress ("" = none) and its current node.
 var dialogue_npc := ""
 var dialogue_node := ""
+## Encounter id waiting for the player's choice (W-004c, "" = none). Like a
+## conversation it is not saved: loading a save drops it.
+var pending_encounter := ""
 var rng := RandomNumberGenerator.new()
 
 
@@ -42,6 +45,7 @@ func start_session(character: CharacterData) -> void:
 	npcs = {}
 	npc_favor = {}
 	dialogue_npc = ""
+	pending_encounter = ""
 	Npcs.ensure_all(npcs, data, rng)
 	Npcs.ensure_eligible(npcs, data, rng)
 	GameClock.reset()
@@ -56,6 +60,7 @@ func end_session() -> void:
 	npcs = {}
 	npc_favor = {}
 	dialogue_npc = ""
+	pending_encounter = ""
 
 
 # --- Actions -----------------------------------------------------------------
@@ -227,13 +232,50 @@ func explore(tags: Array = []) -> void:
 	if not result["notes"].is_empty():
 		text += " (%s)" % ", ".join(result["notes"])
 	EventBus.post(text, "danger" if result["enemy"] != "" else "info")
+	pending_encounter = ""
 	_pass_time(result["days"])
-	if result["enemy"] == "" or not _can_act():
+	if not _can_act():
+		return
+	if encounter.has("choices"):
+		pending_encounter = String(encounter["id"])
+		EventBus.encounter_choice_requested.emit(pending_encounter)
+		return
+	if result["enemy"] == "":
 		return
 	if Exploration.should_evade(player, data, result["enemy"]):
 		EventBus.post("You sense overwhelming killing intent and slip away before the %s notices you." % data.enemies[result["enemy"]]["name"], "warning")
 		return
 	fight(result["enemy"])
+
+
+## The pending encounter's choices for the UI: [{index, label, disabled, reason}]
+## ([] when no encounter is waiting).
+func encounter_choices() -> Array[Dictionary]:
+	if pending_encounter == "" or not _can_act():
+		return []
+	return Exploration.choices(player, data, data.encounters.get(pending_encounter, {}), world_flags)
+
+
+## Pick choice `index` of the pending encounter: applies its outcome, passes
+## its days and starts its fight, if any (a chosen fight is never evaded).
+func choose_encounter(index: int) -> void:
+	if pending_encounter == "" or not _can_act():
+		return
+	var result := Exploration.resolve_choice(player, data, data.encounters.get(pending_encounter, {}), index, world_flags)
+	if not result["ok"]:
+		EventBus.post(result["reason"], "warning")
+		EventBus.player_changed.emit()
+		return
+	pending_encounter = ""
+	var text: String = result["text"]
+	if not result["notes"].is_empty():
+		text += " (%s)" % ", ".join(result["notes"])
+	if text != "":
+		EventBus.post(text, "danger" if result["enemy"] != "" else "karma" if result["karma"] else "info")
+	EventBus.encounter_choice_resolved.emit()
+	_pass_time(result["days"])
+	if result["enemy"] != "" and _can_act():
+		fight(result["enemy"])
 
 
 ## Gather materials from a place's gathering table (see Exploration.gather).
@@ -332,7 +374,7 @@ func _dialogue_ctx(npc_id: String) -> Dictionary:
 func court(npc_id: String) -> void:
 	if not _can_act():
 		return
-	var result := Family.court(player, npcs.get(npc_id), int(npc_favor.get(npc_id, 0)), data)
+	var result := Family.court(player, npcs.get(npc_id), int(npc_favor.get(npc_id, 0)), data, npcs)
 	if not result["ok"]:
 		EventBus.post(result["reason"], "warning")
 		EventBus.player_changed.emit()
@@ -342,11 +384,24 @@ func court(npc_id: String) -> void:
 	_pass_time(result["days"])
 
 
+## Pick the player's gender once, for old saves where it is unknown ("").
+func choose_gender(gender: String) -> void:
+	if not _can_act():
+		return
+	var reason := Names.check_choose_gender(player, data, gender)
+	if reason != "":
+		EventBus.post(reason, "warning")
+		return
+	player.gender = gender
+	EventBus.post("You are %s." % gender, "info")
+	EventBus.player_changed.emit()
+
+
 ## Propose marriage to an NPC, offering spousal `rank` (data/family.json).
 func propose(npc_id: String, rank: String) -> void:
 	if not _can_act():
 		return
-	var result := Family.propose(player, npcs.get(npc_id), int(npc_favor.get(npc_id, 0)), rank, data)
+	var result := Family.propose(player, npcs.get(npc_id), int(npc_favor.get(npc_id, 0)), rank, data, npcs)
 	if not result["ok"]:
 		EventBus.post(result["reason"], "warning")
 		EventBus.player_changed.emit()
@@ -559,6 +614,47 @@ func refine(recipe_id: String) -> void:
 	_pass_time(result["days"])
 
 
+## Craft `times` batches in a row, stopping when one is no longer possible
+## (missing ingredients, rank) or the character dies.
+func refine_batch(recipe_id: String, times: int) -> void:
+	for i in times:
+		if not _can_act() or Alchemy.check(player, data, recipe_id) != "":
+			break
+		refine(recipe_id)
+
+
+## Take a sect mission (data/sect_missions.json): beat its enemy if it has
+## one (losing fails the mission), then hand in items, earn contribution and
+## rewards, and spend the mission's days.
+func take_mission(mission_id: String) -> void:
+	if not _can_act():
+		return
+	var reason := Sects.check_mission(player, data, mission_id)
+	if reason != "":
+		EventBus.post(reason, "warning")
+		EventBus.player_changed.emit()
+		return
+	var mission: Dictionary = data.sect_missions[mission_id]
+	var enemy_id := String(mission.get("enemy", ""))
+	if enemy_id != "":
+		EventBus.post("Sect mission: %s." % mission["name"])
+		if not fight_enemy(data.enemies[enemy_id]):
+			if _can_act():
+				EventBus.post("You fail the mission: %s." % mission["name"], "warning")
+			return
+	var result := Sects.complete_mission(player, data, mission_id, world_flags)
+	if not result["ok"]:
+		EventBus.post(result["reason"], "warning")
+		EventBus.player_changed.emit()
+		return
+	var notes: PackedStringArray = result["notes"]
+	notes.insert(0, "+%d contribution" % result["contribution"])
+	EventBus.post("Mission complete: %s. (%s)" % [mission["name"], ", ".join(notes)], "progress")
+	if result["promoted"]:
+		EventBus.post("Your sect promotes you to %s." % Sects.describe(player, data), "progress")
+	_pass_time(result["days"])
+
+
 ## Fight an enemy from data/enemies.json.
 func fight(enemy_id: String) -> void:
 	if not data.enemies.has(enemy_id):
@@ -587,10 +683,11 @@ func unready_talisman(item_id: String) -> void:
 	EventBus.player_changed.emit()
 
 
-## Fight any enemy dictionary in the enemies.json format.
-func fight_enemy(enemy: Dictionary) -> void:
+## Fight any enemy dictionary in the enemies.json format. Returns true if the
+## player won and is still alive.
+func fight_enemy(enemy: Dictionary) -> bool:
 	if not _can_act():
-		return
+		return false
 	var result := Combat.resolve(player, data, enemy, rng)
 	# The full blow-by-blow goes out with combat_finished; the log gets a summary.
 	var lines: PackedStringArray = result["log"]
@@ -606,11 +703,12 @@ func fight_enemy(enemy: Dictionary) -> void:
 		if player.age_years() >= Cultivation.lifespan_years(player, data):
 			_kill("Your weapon drinks the last of your years. You wither and die of old age at %d." % player.age_years())
 			EventBus.player_changed.emit()
-			return
+			return false
 	if outcome["died"]:
 		_die_violently(outcome["cause"])
-		return
+		return false
 	_pass_time(outcome["days"])
+	return bool(result["victory"]) and _can_act()
 
 
 ## Bind the Creation Artifact to an anchor place (data/regions.json "anchor_id").
@@ -676,6 +774,7 @@ func load_save_dict(d: Dictionary) -> void:
 		npc_favor[npc_id] = int(d["npc_favor"][npc_id])
 	dialogue_npc = ""
 	dialogue_node = ""
+	pending_encounter = ""
 	if not data.regions.has(current_region):
 		current_region = data.start_region
 	GameClock.from_dict(d.get("clock", {}))
