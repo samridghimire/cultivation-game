@@ -117,3 +117,21 @@ static func realm_label(c: CharacterData, data: GameData) -> String:
 
 static func qi_required(c: CharacterData, data: GameData) -> float:
 	return data.realms[c.realm_index].qi_required(c.stage)
+
+
+## Expected years to fill every stage of a realm and then break into the next one
+## at a cultivation speed of `qi_mult` x the realm's base rate. Failed attempts
+## (at the realm's base breakthrough chance) each cost failure_qi_loss of the
+## final stage's qi to refill. Ignores injuries, fortune and pills. Used to check
+## realm balance: lifespan gained per realm must outpace this (data/realms.json _doc).
+static func expected_realm_years(data: GameData, realm_index: int, qi_mult: float = 1.0) -> float:
+	var realm: RealmDef = data.realms[realm_index]
+	var qi := 0.0
+	for stage in realm.stage_count():
+		qi += realm.qi_required(stage)
+	if realm_index < data.realms.size() - 1:
+		var next: RealmDef = data.realms[realm_index + 1]
+		var chance := maxf(next.breakthrough_chance, 0.01)
+		var expected_failures := (1.0 - chance) / chance
+		qi += expected_failures * realm.qi_required(realm.stage_count() - 1) * next.failure_qi_loss
+	return qi / (realm.base_qi_per_day * maxf(qi_mult, 0.0001)) / Calendar.DAYS_PER_YEAR
