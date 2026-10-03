@@ -28,7 +28,7 @@ Roles: `systems` (core rules + tests), `content` (data/*.json + small hooks), `w
 | G-008b | world-ui | todo | Mission board in the sect hall: list Sects.available_missions for the player's sect with kind, days, required items (have/need), enemy danger (Combat.danger_label), contribution/rewards and cooldown (Sects.mission_cooldown_left); disabled entries show Sects.check_mission reasons; "Take mission" calls GameState.take_mission. Gamepad-friendly. |
 | G-008c | systems | todo | Sect contribution shop: sects.json per-sect `shop` [{item_id, contribution, min_rank}] (technique manuals, pills, recipe scrolls), Sects.shop_items/check_purchase, GameState.buy_with_contribution(item_id); spending contribution never demotes (track spent separately from earned). Plus a sect-hall menu entry listing the shop (small UI, or split to world-ui if large). |
 | G-008d | content | todo | Sect missions and shops content: 6+ missions per sect in data/sect_missions.json fitting each sect's alignment (Azure Cloud righteous patrols, Blood Lotus raids/sacrifices, Myriad Treasure Pavilion trade runs), and each sect's contribution shop stock. Depends on G-008 (schema) and G-008c. |
-| ART-002 | systems | todo | Artifact functions framework: `data/artifact.json` "functions" list with unlock conditions (realm, artifact energy, flags) and effects. GameState.feed_artifact(item_id) converts spirit stones/treasures into artifact energy. Implement the first function: **Storage space** (separate item storage that is never dropped on death). |
+| ART-002b | world-ui | todo | Artifact functions UI (can be the first tab of ART-005's artifact screen): ArtifactFunctions.describe lines, "Feed spirit stones (x10/x100)" and feed-an-item picker with ArtifactFunctions.energy_value (GameState.feed_artifact), "Unseal <function>" with check_unlock reasons (GameState.unlock_artifact_function), and a Storage Space panel moving items between inventory and storage (GameState.store_in_artifact/retrieve_from_artifact). Gamepad focus. |
 | ART-005 | world-ui | todo | Artifact UI: an artifact screen (functions, locked/unlocked with conditions, energy, anchors list with bind/unbind), a respawn screen on death ("The artifact pulls your soul back...", choose an anchor), and anchor markers in the world. Gamepad friendly. Build incrementally: anchors + respawn screen now, functions once ART-002 lands. |
 | G-010 | systems | todo | Cave abode: the player can claim a dwelling in a region (data/regions.json `abode` place with a claim cost), store items there, cultivate in seclusion (density bonus), auto-bind it as an artifact anchor slot candidate. CharacterData.abode (save-compatible). Pair with G-010b. |
 | G-010b | world-ui | todo | Abode interactable: claim, storage chest (move items in/out), seclusion cultivation. Depends on G-010. |
@@ -58,7 +58,7 @@ Roles: `systems` (core rules + tests), `content` (data/*.json + small hooks), `w
 | FAM-013 | qa | todo | Generational sim: simulate 300 years with families headless; check population doesn't explode (cap/fertility tuning), save size stays reasonable, descendants' power curve is fun. Depends on FAM-003d. |
 
 ## P1c: The Creation Artifact (owner priority, see DESIGN.md "The Creation Artifact")
-ART-001/ART-001b are done; ART-002 and ART-005 are in P1 above.
+ART-001/ART-001b/ART-002 are done; ART-002b and ART-005 are in P1 above.
 
 | id | role | status | task |
 |---|---|---|---|
@@ -105,6 +105,7 @@ The local sessions that built combat/techniques, world/exploration/NPCs/dialogue
 ## Done
 | id | task |
 |---|---|
+| ART-002 | Artifact functions framework: data/artifact.json `energy` + `functions` (realm/energy/flag unlocks), ArtifactFunctions, GameState.feed_artifact/unlock_artifact_function, first function Storage Space (store_in_artifact/retrieve_from_artifact, kept through death). UI → ART-002b. |
 | G-004c | Higher-grade equipment: Profound Iron / Dragon-Blood Gold ores, 4 new forge recipes with manuals, Heavenforge Smithy in Fallen Star Market, equipment encounters. |
 | LIFE-001e | Evil artifacts obtainable: Blood-Drinker Saber (wild), Corpse-Silk Burial Armor and Myriad Souls Banner (ruins), once per life, each with a righteous destroy alternative. |
 | FAM-002f | Generated NPCs placed in the world: regions.json `npc_spots`, Npcs.generated_in_region/spot_positions/world_title/describe, gender colors, "Look" option. |

@@ -61,6 +61,12 @@ var artifact_lives := -1
 var artifact_recharges := 0
 ## Bound anchor ids (data/regions.json "anchor_id"), most recently bound last.
 var anchors: Array[String] = []
+## Creation Artifact energy fed from spirit stones and treasures (ArtifactFunctions).
+var artifact_energy := 0
+## Unlocked artifact function ids (data/artifact.json "functions").
+var artifact_functions: Array[String] = []
+## Items kept in the artifact's storage space: item id -> count. Never lost.
+var artifact_storage: Dictionary = {}
 ## Sect mission id -> age_days when it may be taken again (Sects missions).
 var mission_cooldowns: Dictionary = {}
 
@@ -131,6 +137,9 @@ func to_dict() -> Dictionary:
 		"artifact_lives": artifact_lives,
 		"artifact_recharges": artifact_recharges,
 		"anchors": anchors.duplicate(),
+		"artifact_energy": artifact_energy,
+		"artifact_functions": artifact_functions.duplicate(),
+		"artifact_storage": artifact_storage.duplicate(),
 		"mission_cooldowns": mission_cooldowns.duplicate(),
 	}
 
@@ -186,6 +195,9 @@ static func from_dict(d: Dictionary) -> CharacterData:
 	c.lifespan_bonus_years = int(d.get("lifespan_bonus_years", 0))
 	c.artifact_lives = int(d.get("artifact_lives", -1))
 	c.artifact_recharges = int(d.get("artifact_recharges", 0))
+	c.artifact_energy = int(d.get("artifact_energy", 0))
+	c.artifact_functions = _strings(d.get("artifact_functions", []))
+	c.artifact_storage = _int_values(d.get("artifact_storage", {}))
 	c.mission_cooldowns = _int_values(d.get("mission_cooldowns", {}))
 	for anchor_id in d.get("anchors", []):
 		c.anchors.append(String(anchor_id))
