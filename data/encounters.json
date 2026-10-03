@@ -11,7 +11,7 @@
     {"id": "forest_ginseng", "tags": ["herbs"], "weight": 1, "kind": "fortune", "days": 5, "text": "Deep in the valley you unearth a centuries-old blood ginseng!", "effects": {"items": {"blood_ginseng": 1}}},
     {"id": "forest_lost", "tags": ["forest", "herbs"], "weight": 2, "kind": "misfortune", "days": 7, "text": "The mist thickens and you lose your way for a week."},
     {"id": "forest_wolf", "tags": ["forest"], "weight": 2, "kind": "misfortune", "days": 1, "min_realm": "qi_refining", "text": "Glowing eyes in the mist: a pack of mist wolves!", "enemy": "mist_wolf"},
-    {"id": "wild_rogue", "tags": ["wild", "city"], "weight": 1, "kind": "misfortune", "days": 1, "min_realm": "foundation_establishment", "text": "A rogue cultivator eyes your storage pouch and attacks.", "enemy": "rogue_cultivator"},
+    {"id": "wild_rogue", "tags": ["wild", "city"], "weight": 1, "kind": "misfortune", "days": 1, "min_realm": "qi_refining", "text": "A rogue cultivator eyes your storage pouch and attacks.", "enemy": "rogue_cultivator"},
     {"id": "wild_qi_vein", "tags": ["wild"], "weight": 1, "kind": "fortune", "days": 10, "text": "You find a small spirit vein and absorb it before it disperses.", "effects": {"qi": 1500}},
 
     {"id": "wild_doctor", "tags": ["forest", "city", "village"], "weight": 1, "kind": "fortune", "days": 2, "text": "A wandering doctor tends your wounds and refuses payment.", "only_if_applicable": true, "effects": {"heal_injury": "all"}},
@@ -20,7 +20,7 @@
     {"id": "city_pickpocket", "tags": ["city"], "weight": 1, "kind": "misfortune", "days": 0, "text": "Your pouch feels lighter. A pickpocket!", "effects": {"items": {"spirit_stone": -5}}},
     {"id": "city_gamble", "tags": ["city"], "weight": 1, "kind": "fortune", "days": 1, "text": "You win a game of stone-gambling and crack open a raw spirit stone.", "effects": {"items": {"spirit_stone": 20}}},
 
-    {"id": "mountain_ape", "tags": ["mountain"], "weight": 2, "kind": "misfortune", "days": 1, "min_realm": "foundation_establishment", "text": "A stone-skinned ape hurls a boulder at you!", "enemy": "stone_ape"},
+    {"id": "mountain_ape", "tags": ["mountain"], "weight": 2, "kind": "misfortune", "days": 1, "min_realm": "qi_refining", "text": "A stone-skinned ape hurls a boulder at you!", "enemy": "stone_ape"},
     {"id": "mountain_eagle", "tags": ["mountain"], "weight": 1, "kind": "misfortune", "days": 1, "min_realm": "foundation_establishment", "text": "A cloud eagle dives from the heavens!", "enemy": "cloud_eagle"},
     {"id": "mountain_insight", "tags": ["mountain"], "weight": 2, "kind": "fortune", "days": 15, "text": "Watching the sea of clouds, you glimpse a fragment of the Dao.", "effects": {"qi": 4000}},
     {"id": "ruins_longevity_pill", "tags": ["ruins"], "weight": 1, "kind": "fortune", "days": 5, "min_realm": "qi_refining", "blocked_by_flag": "longevity_pill_found", "text": "In a sealed jade box beside a meditating skeleton rests a single fragrant pill. Its owner died waiting for a breakthrough; you will not.", "effects": {"items": {"longevity_pill": 1}, "set_flag": "longevity_pill_found"}},
