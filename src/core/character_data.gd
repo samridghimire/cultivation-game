@@ -50,6 +50,8 @@ var inventory: Dictionary = {}  # item id -> count
 ## Equipped artifacts: slot (Equipment.SLOTS) -> item id. Equipped items are not in inventory.
 var equipment: Dictionary = {}
 var techniques: Dictionary = {}  # technique id -> {"level": int, "xp": float}
+## Active main cultivation method (a known "method" technique); "" = the starter method.
+var main_method := ""
 ## Recipe ids learned from scrolls (data/recipes.json "starter" recipes are known without learning).
 var known_recipes: Array[String] = []
 var injuries: Dictionary = {}  # injury id -> days left to heal
@@ -143,6 +145,7 @@ func to_dict() -> Dictionary:
 		"inventory": inventory.duplicate(),
 		"equipment": equipment.duplicate(),
 		"techniques": techniques.duplicate(true),
+		"main_method": main_method,
 		"known_recipes": known_recipes.duplicate(),
 		"injuries": injuries.duplicate(),
 		"buffs": buffs.duplicate(true),
@@ -231,6 +234,7 @@ static func from_dict(d: Dictionary) -> CharacterData:
 		c.anchors.append(String(anchor_id))
 	for recipe_id in d.get("known_recipes", []):
 		c.known_recipes.append(String(recipe_id))
+	c.main_method = String(d.get("main_method", ""))
 	var techs: Dictionary = d.get("techniques", {})
 	for tech_id in techs:
 		c.techniques[tech_id] = {"level": int(techs[tech_id].get("level", 1)), "xp": float(techs[tech_id].get("xp", 0))}
