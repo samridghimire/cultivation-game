@@ -5,6 +5,10 @@ extends RefCounted
 ## companion) and how many of each rank a character can have. Spouses are
 ## linked on both characters (CharacterData.spouses + spouse_ranks).
 ## Favor is owned by the caller (GameState.npc_favor) and passed in.
+## Dead spouses stay in `spouses` as family history but no longer hold a rank
+## slot (FAM-002g): functions that count spouses take `people` (id ->
+## CharacterData, e.g. GameState.npcs); ids missing from it (e.g. the player)
+## count as living.
 
 
 ## The family.json rules for `gender` ({} if none).
@@ -30,9 +34,26 @@ static func rank_limit(c: CharacterData, data: GameData, rank: String) -> int:
 	return int(def.get("max", 0)) + int(def.get("max_per_realm", 0)) * c.realm_index
 
 
-static func spouses_of_rank(c: CharacterData, rank: String) -> int:
-	var count := 0
+## Whether the character `id` is alive according to `people`; unknown ids
+## (not in `people`, e.g. the player) count as living.
+static func is_living(id: String, people: Dictionary) -> bool:
+	var other: CharacterData = people.get(id)
+	return other == null or other.alive
+
+
+## `c`'s spouses who are still alive (dead spouses remain in c.spouses).
+static func living_spouses(c: CharacterData, people: Dictionary = {}) -> Array[String]:
+	var out: Array[String] = []
 	for spouse_id in c.spouses:
+		if is_living(spouse_id, people):
+			out.append(spouse_id)
+	return out
+
+
+## Living spouses of `c` married at `rank`.
+static func spouses_of_rank(c: CharacterData, rank: String, people: Dictionary = {}) -> int:
+	var count := 0
+	for spouse_id in living_spouses(c, people):
 		if String(c.spouse_ranks.get(spouse_id, "")) == rank:
 			count += 1
 	return count
@@ -43,7 +64,7 @@ static func is_married_to(a: CharacterData, b: CharacterData) -> bool:
 
 
 ## Why `c` cannot pursue `other` romantically at all, or "" if they can.
-static func check_partner(c: CharacterData, other: CharacterData, data: GameData) -> String:
+static func check_partner(c: CharacterData, other: CharacterData, data: GameData, people: Dictionary = {}) -> String:
 	if other == null or not other.alive:
 		return "There is no one to court."
 	if not Names.is_gender(data, c.gender):
@@ -55,7 +76,7 @@ static func check_partner(c: CharacterData, other: CharacterData, data: GameData
 		return "%s does not return that kind of interest." % other.name
 	if is_married_to(c, other):
 		return "%s is already your spouse." % other.name
-	if not other.spouses.is_empty():
+	if not living_spouses(other, people).is_empty():
 		return "%s is already married." % other.name
 	return ""
 
@@ -69,8 +90,8 @@ static func courtship_gain(c: CharacterData, data: GameData) -> int:
 	return maxi(1, int(rules.get("favor_gain", 5)) + bonus)
 
 
-static func check_court(c: CharacterData, other: CharacterData, favor: int, data: GameData) -> String:
-	var reason := check_partner(c, other, data)
+static func check_court(c: CharacterData, other: CharacterData, favor: int, data: GameData, people: Dictionary = {}) -> String:
+	var reason := check_partner(c, other, data, people)
 	if reason != "":
 		return reason
 	if favor < int(data.family.get("courtship", {}).get("min_favor", 0)):
@@ -79,21 +100,21 @@ static func check_court(c: CharacterData, other: CharacterData, favor: int, data
 
 
 ## A courtship outing. Returns {ok, reason, favor (gain), days}.
-static func court(c: CharacterData, other: CharacterData, favor: int, data: GameData) -> Dictionary:
-	var reason := check_court(c, other, favor, data)
+static func court(c: CharacterData, other: CharacterData, favor: int, data: GameData, people: Dictionary = {}) -> Dictionary:
+	var reason := check_court(c, other, favor, data, people)
 	if reason != "":
 		return {"ok": false, "reason": reason, "favor": 0, "days": 0}
 	return {"ok": true, "reason": "", "favor": courtship_gain(c, data), "days": int(data.family.get("courtship", {}).get("days", 1))}
 
 
 ## Why `other` would refuse `c`'s proposal for `rank`, or "" if they accept.
-static func check_proposal(c: CharacterData, other: CharacterData, favor: int, rank: String, data: GameData) -> String:
-	var reason := check_partner(c, other, data)
+static func check_proposal(c: CharacterData, other: CharacterData, favor: int, rank: String, data: GameData, people: Dictionary = {}) -> String:
+	var reason := check_partner(c, other, data, people)
 	if reason != "":
 		return reason
 	if not ranks(data, c.gender).has(rank):
 		return "That is not a station you can offer."
-	if spouses_of_rank(c, rank) >= rank_limit(c, data, rank):
+	if spouses_of_rank(c, rank, people) >= rank_limit(c, data, rank):
 		return "You cannot take another %s." % rank_name(data, c.gender, rank).to_lower()
 	var rules: Dictionary = data.family.get("proposal", {})
 	if favor < int(rules.get("min_favor", 0)):
@@ -110,8 +131,8 @@ static func check_proposal(c: CharacterData, other: CharacterData, favor: int, r
 
 ## Proposes to `other` for `rank` and marries them on success.
 ## Returns {ok, reason, days}.
-static func propose(c: CharacterData, other: CharacterData, favor: int, rank: String, data: GameData) -> Dictionary:
-	var reason := check_proposal(c, other, favor, rank, data)
+static func propose(c: CharacterData, other: CharacterData, favor: int, rank: String, data: GameData, people: Dictionary = {}) -> Dictionary:
+	var reason := check_proposal(c, other, favor, rank, data, people)
 	if reason != "":
 		return {"ok": false, "reason": reason, "days": 0}
 	marry(c, other, rank)
@@ -230,6 +251,40 @@ static func validate(data: GameData) -> PackedStringArray:
 			if data.realm_index_of(String(realm_id)) < 0:
 				errors.append("family.json eligible_npcs has unknown realm '%s'" % realm_id)
 	return errors
+
+
+## Display lines for `c`'s family links (spouses with their rank, children,
+## parents), looked up by id in `people` (e.g. GameState.npcs). Ids that are
+## not in `people` show as "Unknown".
+static func describe_links(c: CharacterData, people: Dictionary, data: GameData) -> Array[String]:
+	var out: Array[String] = []
+	for spouse_id in c.spouses:
+		var title := rank_name(data, c.gender, String(c.spouse_ranks.get(spouse_id, ""))).capitalize()
+		out.append("%s: %s" % [title if title != "" else "Spouse", _describe_relative(people.get(spouse_id), data)])
+	for child_id in c.children:
+		out.append("%s: %s" % [_kin_title(people.get(child_id), "Son", "Daughter", "Child"), _describe_relative(people.get(child_id), data)])
+	for parent_id in c.parents:
+		out.append("%s: %s" % [_kin_title(people.get(parent_id), "Father", "Mother", "Parent"), _describe_relative(people.get(parent_id), data)])
+	return out
+
+
+static func _kin_title(other: CharacterData, male: String, female: String, unknown: String) -> String:
+	if other == null:
+		return unknown
+	match other.gender:
+		"male":
+			return male
+		"female":
+			return female
+	return unknown
+
+
+static func _describe_relative(other: CharacterData, data: GameData) -> String:
+	if other == null:
+		return "Unknown"
+	if not other.alive:
+		return "%s (deceased)" % other.name
+	return "%s (%s, age %d)" % [other.name, Cultivation.realm_label(other, data), other.age_years()]
 
 
 ## `c`'s living spouses whose home is `region_id`, in marriage order.

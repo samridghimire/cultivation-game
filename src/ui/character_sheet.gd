@@ -1,16 +1,20 @@
 class_name CharacterSheet
 extends PanelContainer
-## Modal character overview: attributes, roots and professions. Items live in
-## InventoryScreen.
+## Modal character overview: identity and family, attributes, roots and
+## professions. Items live in InventoryScreen. Old saves without a gender get a
+## one-time gender picker here.
 
 signal closed
 
 var _text: RichTextLabel
 var _recharge: Button
+var _gender_row: HBoxContainer
 
 
 func _init() -> void:
-	add_theme_stylebox_override("panel", UIStyle.panel().get_theme_stylebox("panel"))
+	var style_source := UIStyle.panel()
+	add_theme_stylebox_override("panel", style_source.get_theme_stylebox("panel"))
+	style_source.free()
 	custom_minimum_size = Vector2(620, 0)
 	visible = false
 	var box := VBoxContainer.new()
@@ -21,6 +25,12 @@ func _init() -> void:
 	_text.fit_content = true
 	_text.custom_minimum_size = Vector2(596, 0)
 	box.add_child(_text)
+	_gender_row = HBoxContainer.new()
+	_gender_row.add_theme_constant_override("separation", 8)
+	_gender_row.add_child(UIStyle.label("Your gender is unknown. Choose:", 16))
+	for g in Names.genders(GameState.data):
+		_gender_row.add_child(UIStyle.button(g.capitalize(), func(): _choose_gender(g)))
+	box.add_child(_gender_row)
 	_recharge = UIStyle.button("Recharge artifact", func(): GameState.recharge_artifact())
 	box.add_child(_recharge)
 	box.add_child(UIStyle.button("Close", close))
@@ -36,7 +46,18 @@ func _unhandled_input(event: InputEvent) -> void:
 func open() -> void:
 	_rebuild()
 	visible = true
-	(get_child(0).get_child(-1) as Button).grab_focus.call_deferred()
+	_default_focus().grab_focus.call_deferred()
+
+
+func _default_focus() -> Button:
+	if _gender_row.visible:
+		return _gender_row.get_child(1) as Button
+	return get_child(0).get_child(-1) as Button
+
+
+func _choose_gender(gender: String) -> void:
+	GameState.choose_gender(gender)
+	_default_focus().grab_focus.call_deferred()
 
 
 func close() -> void:
@@ -51,10 +72,24 @@ func _rebuild() -> void:
 	var data := GameState.data
 	var accent := UIStyle.ACCENT.to_html(false)
 	var t := "[font_size=24][color=#%s]%s[/color][/font_size]\n" % [accent, p.name]
+	var identity: Array[String] = []
+	if p.gender != "":
+		identity.append(p.gender.capitalize())
+	if p.surname != "":
+		identity.append("of the %s family" % p.surname)
+	if not identity.is_empty():
+		t += "%s\n" % " ".join(identity)
 	t += "%s, age %d of %d\n" % [Cultivation.realm_label(p, data), p.age_years(), Cultivation.lifespan_years(p, data)]
 	t += "Spiritual Root: %s\n" % SpiritualRoots.describe(p.spiritual_roots, data)
 	t += "Cultivation speed: %.2f qi/day here\n" % Cultivation.qi_per_day(p, data, Exploration.qi_density(data, GameState.current_region) * Sects.cultivation_bonus(p, data))
 	t += "Alignment: %s (%d)   |   %s\n\n" % [Alignment.tier_name(p.alignment, data), p.alignment, Sects.describe(p, data)]
+	_gender_row.visible = p.gender == ""
+	var family := Family.describe_links(p, GameState.npcs, data)
+	if not family.is_empty():
+		t += "[color=#%s]Family[/color]\n" % accent
+		for line in family:
+			t += "  %s\n" % line
+		t += "\n"
 	t += "[color=#%s]Attributes[/color]\n" % accent
 	for attr in data.attributes:
 		t += "  %s: %d\n" % [attr["name"], p.attribute(attr["id"])]

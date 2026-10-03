@@ -125,6 +125,59 @@ func test_game_state_court_and_propose() -> void:
 	gs.end_session()
 
 
+# --- FAM-002g: widowed spouses -----------------------------------------------
+
+func test_dead_spouse_frees_the_rank_slot() -> void:
+	var he := _person("male", "player")
+	var first := _person("female", "npc_a")
+	var second := _person("female", "npc_b")
+	var people := {"npc_a": first, "npc_b": second}
+	assert_true(Family.propose(he, first, 100, "wife", data(), people)["ok"])
+	assert_true(Family.check_proposal(he, second, 100, "wife", data(), people).contains("another"))
+	first.alive = false
+	assert_eq(Family.spouses_of_rank(he, "wife", people), 0, "the dead no longer count")
+	assert_eq(Family.living_spouses(he, people), [] as Array[String])
+	assert_eq(Family.check_proposal(he, second, 100, "wife", data(), people), "")
+	assert_true(Family.propose(he, second, 100, "wife", data(), people)["ok"])
+	assert_eq(he.spouses, ["npc_a", "npc_b"] as Array[String], "the late wife stays in the family history")
+	assert_eq(he.spouse_ranks["npc_a"], "wife")
+	assert_eq(Family.living_spouses(he, people), ["npc_b"] as Array[String])
+
+
+func test_widowed_npc_can_remarry() -> void:
+	var he := _person("male", "player")
+	var widow := _person("female", "npc_a")
+	var late := _person("male", "npc_b")
+	Family.marry(widow, late, "dao_companion")
+	var people := {"npc_a": widow, "npc_b": late}
+	assert_true(Family.check_partner(he, widow, data(), people).contains("married"))
+	late.alive = false
+	assert_eq(Family.check_partner(he, widow, data(), people), "")
+	assert_true(Family.is_living("player", people), "ids not in people (the player) count as living")
+
+
+func test_game_state_remarry_after_spouse_dies() -> void:
+	var gs: Node = _root().get_node("GameState")
+	var c := CharacterFactory.create("Widower", gs.data, seeded_rng())
+	c.gender = "male"
+	gs.start_session(c)
+	var first := _person("female", "test_first")
+	var second := _person("female", "test_second")
+	gs.npcs["test_first"] = first
+	gs.npcs["test_second"] = second
+	gs.npc_favor["test_first"] = 100
+	gs.npc_favor["test_second"] = 100
+	gs.propose("test_first", "wife")
+	assert_eq(c.spouse_ranks.get("test_first", ""), "wife")
+	gs.propose("test_second", "wife")
+	assert_false(c.spouses.has("test_second"), "only one living main wife")
+	first.alive = false
+	gs.propose("test_second", "wife")
+	assert_eq(c.spouse_ranks.get("test_second", ""), "wife", "remarried after being widowed")
+	assert_true(c.spouses.has("test_first"), "late wife kept for history")
+	gs.end_session()
+
+
 # --- FAM-002b: dual cultivation ---------------------------------------------
 
 func _couple() -> Array[CharacterData]:
