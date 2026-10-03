@@ -237,6 +237,7 @@ func _validate() -> void:
 	load_errors.append_array(Bloodlines.validate(self))
 	load_errors.append_array(NpcFamilies.validate(self))
 	load_errors.append_array(Training.validate(self))
+	load_errors.append_array(Clans.validate(self))
 	load_errors.append_array(Sects.validate_missions(self))
 	load_errors.append_array(Reputation.validate(self))
 	load_errors.append_array(Exploration.validate_choices(self))
