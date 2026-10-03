@@ -531,6 +531,38 @@ func refine_batch(recipe_id: String, times: int) -> void:
 		refine(recipe_id)
 
 
+## Take a sect mission (data/sect_missions.json): beat its enemy if it has
+## one (losing fails the mission), then hand in items, earn contribution and
+## rewards, and spend the mission's days.
+func take_mission(mission_id: String) -> void:
+	if not _can_act():
+		return
+	var reason := Sects.check_mission(player, data, mission_id)
+	if reason != "":
+		EventBus.post(reason, "warning")
+		EventBus.player_changed.emit()
+		return
+	var mission: Dictionary = data.sect_missions[mission_id]
+	var enemy_id := String(mission.get("enemy", ""))
+	if enemy_id != "":
+		EventBus.post("Sect mission: %s." % mission["name"])
+		if not fight_enemy(data.enemies[enemy_id]):
+			if _can_act():
+				EventBus.post("You fail the mission: %s." % mission["name"], "warning")
+			return
+	var result := Sects.complete_mission(player, data, mission_id, world_flags)
+	if not result["ok"]:
+		EventBus.post(result["reason"], "warning")
+		EventBus.player_changed.emit()
+		return
+	var notes: PackedStringArray = result["notes"]
+	notes.insert(0, "+%d contribution" % result["contribution"])
+	EventBus.post("Mission complete: %s. (%s)" % [mission["name"], ", ".join(notes)], "progress")
+	if result["promoted"]:
+		EventBus.post("Your sect promotes you to %s." % Sects.describe(player, data), "progress")
+	_pass_time(result["days"])
+
+
 ## Fight an enemy from data/enemies.json.
 func fight(enemy_id: String) -> void:
 	if not data.enemies.has(enemy_id):
@@ -559,10 +591,11 @@ func unready_talisman(item_id: String) -> void:
 	EventBus.player_changed.emit()
 
 
-## Fight any enemy dictionary in the enemies.json format.
-func fight_enemy(enemy: Dictionary) -> void:
+## Fight any enemy dictionary in the enemies.json format. Returns true if the
+## player won and is still alive.
+func fight_enemy(enemy: Dictionary) -> bool:
 	if not _can_act():
-		return
+		return false
 	var result := Combat.resolve(player, data, enemy, rng)
 	# The full blow-by-blow goes out with combat_finished; the log gets a summary.
 	var lines: PackedStringArray = result["log"]
@@ -578,11 +611,12 @@ func fight_enemy(enemy: Dictionary) -> void:
 		if player.age_years() >= Cultivation.lifespan_years(player, data):
 			_kill("Your weapon drinks the last of your years. You wither and die of old age at %d." % player.age_years())
 			EventBus.player_changed.emit()
-			return
+			return false
 	if outcome["died"]:
 		_die_violently(outcome["cause"])
-		return
+		return false
 	_pass_time(outcome["days"])
+	return bool(result["victory"]) and _can_act()
 
 
 ## Bind the Creation Artifact to an anchor place (data/regions.json "anchor_id").

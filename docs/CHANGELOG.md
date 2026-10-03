@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-03 [G-008] Sect missions: disciples take data-driven missions (gather, hunt, deliver, guard) for contribution, stones and alignment; hunts and guard duties are real fights, missions have rank/realm requirements and cooldowns (GameState.take_mission). 9 missions across the three sects.
 - 2026-10-03 [FAM-002g] Widowed spouses: a dead spouse no longer takes up a wife/concubine/Dao companion slot, so the player can remarry, and widowed NPCs can be courted again; the dead stay in the family history.
 - 2026-10-03 [G-002g] Crafting screen: "x5" batch button (GameState.refine_batch stops when ingredients run out) and recipe scrolls in your pouch show as "(scroll)" entries with a Study button.
 - 2026-10-03 [PROD] Backlog grooming: new P0 "close the loop" section to surface family/equipment/talisman/medicine/dialogue systems in-game; new tasks for sect missions/shop, abode, clans UI, cultivation methods, tribulations, Dao, rivals, secret realms, content and QA; Done table and DESIGN.md systems table updated.

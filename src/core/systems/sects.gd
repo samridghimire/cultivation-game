@@ -1,7 +1,9 @@
 class_name Sects
 extends RefCounted
-## Joining, leaving, contribution and rank within sects. A character with no
-## sect is a rogue cultivator.
+## Joining, leaving, contribution and rank within sects, and sect missions
+## (data/sect_missions.json). A character with no sect is a rogue cultivator.
+
+const MISSION_KINDS: Array[String] = ["gather", "hunt", "deliver", "guard"]
 
 
 ## Returns {ok: bool, reason: String}.
@@ -62,3 +64,102 @@ static func describe(c: CharacterData, data: GameData) -> String:
 		return "Rogue Cultivator"
 	var sect: SectDef = data.sects[c.sect["id"]]
 	return "%s, %s" % [sect.name, sect.rank_name(c.sect["rank"])]
+
+
+# --- Missions (G-008) ----------------------------------------------------------
+
+## Mission ids offered by `c`'s sect (missions without a `sects` list are
+## offered by every sect), in data order, whether or not `c` qualifies yet.
+## Rogues get none.
+static func available_missions(c: CharacterData, data: GameData) -> Array[String]:
+	var out: Array[String] = []
+	if c.is_rogue():
+		return out
+	for mission: Dictionary in data.sect_missions.values():
+		var sects: Array = mission.get("sects", [])
+		if sects.is_empty() or sects.has(c.sect["id"]):
+			out.append(String(mission["id"]))
+	return out
+
+
+## Days until `c` may take `mission_id` again (0 = ready).
+static func mission_cooldown_left(c: CharacterData, mission_id: String) -> int:
+	return maxi(0, int(c.mission_cooldowns.get(mission_id, 0)) - c.age_days)
+
+
+## Why `c` cannot take `mission_id` now, or "" if they can.
+static func check_mission(c: CharacterData, data: GameData, mission_id: String) -> String:
+	if not data.sect_missions.has(mission_id):
+		return "No such mission."
+	if c.is_rogue():
+		return "Only sect disciples receive sect missions."
+	if not available_missions(c, data).has(mission_id):
+		return "Your sect does not offer that mission."
+	var mission: Dictionary = data.sect_missions[mission_id]
+	var sect: SectDef = data.sects[c.sect["id"]]
+	var min_rank := int(mission.get("min_rank", 0))
+	if int(c.sect["rank"]) < min_rank:
+		return "Only a %s or above may take this mission." % sect.rank_name(min_rank)
+	var min_realm := data.realm_index_of(String(mission.get("min_realm", "mortal")))
+	if c.realm_index < min_realm:
+		return "This mission needs a cultivator of %s or above." % data.realms[min_realm].name
+	var wait := mission_cooldown_left(c, mission_id)
+	if wait > 0:
+		return "This mission is not offered again for %s." % Calendar.format_duration(wait)
+	var needed: Dictionary = mission.get("requires", {}).get("items", {})
+	for item_id in needed:
+		if c.item_count(item_id) < int(needed[item_id]):
+			return "You need %d %s." % [int(needed[item_id]), data.items.get(item_id, {}).get("name", item_id)]
+	return ""
+
+
+## Completes `mission_id` (any fight must already be won): hands in the
+## required items, applies the rewards, adds contribution and starts the
+## cooldown. Returns {ok, reason, contribution, promoted, notes, days}.
+static func complete_mission(c: CharacterData, data: GameData, mission_id: String, flags: Dictionary) -> Dictionary:
+	var reason := check_mission(c, data, mission_id)
+	if reason != "":
+		return {"ok": false, "reason": reason, "contribution": 0, "promoted": false, "notes": PackedStringArray(), "days": 0}
+	var mission: Dictionary = data.sect_missions[mission_id]
+	var needed: Dictionary = mission.get("requires", {}).get("items", {})
+	for item_id in needed:
+		c.add_item(item_id, -int(needed[item_id]))
+	var notes := Effects.apply(c, data, mission.get("rewards", {}), flags)
+	var contribution := int(mission.get("contribution", 0))
+	var promoted := add_contribution(c, data, contribution)
+	c.mission_cooldowns[mission_id] = c.age_days + int(mission.get("cooldown_days", 0))
+	return {"ok": true, "reason": "", "contribution": contribution, "promoted": promoted, "notes": notes, "days": int(mission.get("days", 1))}
+
+
+## Load errors for data/sect_missions.json.
+static func validate_missions(data: GameData) -> PackedStringArray:
+	var errors: PackedStringArray = []
+	for mission: Dictionary in data.sect_missions.values():
+		var id := String(mission["id"])
+		var kind := String(mission.get("kind", ""))
+		if not MISSION_KINDS.has(kind):
+			errors.append("Mission '%s' has unknown kind '%s'" % [id, kind])
+		for sect_id in mission.get("sects", []):
+			if not data.sects.has(sect_id):
+				errors.append("Mission '%s' has unknown sect '%s'" % [id, sect_id])
+		if data.realm_index_of(String(mission.get("min_realm", "mortal"))) < 0:
+			errors.append("Mission '%s' has unknown min_realm '%s'" % [id, mission.get("min_realm", "")])
+		if int(mission.get("min_rank", 0)) < 0:
+			errors.append("Mission '%s' needs min_rank >= 0" % id)
+		if int(mission.get("days", 0)) < 1:
+			errors.append("Mission '%s' needs days >= 1" % id)
+		if int(mission.get("contribution", 0)) < 0 or int(mission.get("cooldown_days", 0)) < 0:
+			errors.append("Mission '%s' needs contribution and cooldown_days >= 0" % id)
+		var enemy := String(mission.get("enemy", ""))
+		if (kind == "hunt" or kind == "guard") and enemy == "":
+			errors.append("Mission '%s' (%s) needs an enemy" % [id, kind])
+		if enemy != "" and not data.enemies.has(enemy):
+			errors.append("Mission '%s' has unknown enemy '%s'" % [id, enemy])
+		var needed: Dictionary = mission.get("requires", {}).get("items", {})
+		for item_id in needed:
+			if not data.items.has(item_id) or int(needed[item_id]) <= 0:
+				errors.append("Mission '%s' requires unknown item or bad count '%s'" % [id, item_id])
+		for item_id in mission.get("rewards", {}).get("items", {}):
+			if not data.items.has(item_id):
+				errors.append("Mission '%s' rewards unknown item '%s'" % [id, item_id])
+	return errors
