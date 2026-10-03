@@ -18,6 +18,7 @@ var _combat_report: CombatReport
 var _pause_menu: PauseMenu
 var _settings: SettingsScreen
 var _load_screen: LoadScreen
+var _crafting: CraftingScreen
 var _banner: Banner
 var _death_screen: Control
 
@@ -36,6 +37,9 @@ func _ready() -> void:
 	_add_screen("toggle_character_sheet", CharacterSheet.new())
 	_add_screen("toggle_inventory", InventoryScreen.new())
 	_add_screen("toggle_techniques", TechniquesScreen.new())
+	_crafting = CraftingScreen.new()
+	_crafting.closed.connect(_update_modal)
+	add_child(UIStyle.centered(_crafting))
 	_combat_report = CombatReport.new()
 	_combat_report.closed.connect(_update_modal)
 	add_child(UIStyle.centered(_combat_report))
@@ -61,6 +65,7 @@ func _ready() -> void:
 	EventBus.message_posted.connect(_on_message)
 	EventBus.interaction_target_changed.connect(_on_target_changed)
 	EventBus.interaction_menu_requested.connect(_on_menu_requested)
+	EventBus.crafting_requested.connect(_on_crafting_requested)
 	EventBus.player_died.connect(_on_player_died)
 	EventBus.combat_finished.connect(_on_combat_finished)
 	EventBus.breakthrough_attempted.connect(_on_breakthrough)
@@ -99,10 +104,16 @@ func _add_screen(action: String, screen: Control) -> void:
 func _close_screens() -> void:
 	for screen in _screens.values():
 		screen.close()
+	_crafting.close()
+
+
+func _on_crafting_requested(prof_id: String) -> void:
+	_crafting.open(prof_id)
+	_update_modal()
 
 
 func _any_screen_open() -> bool:
-	return _screens.values().any(func(s): return s.visible)
+	return _crafting.visible or _screens.values().any(func(s): return s.visible)
 
 
 func _build_status_panel() -> void:
