@@ -823,12 +823,20 @@ func _on_days_advanced(days: int) -> void:
 		EventBus.post("Your %s has healed." % Injuries.injury_name(data, injury_id), "progress")
 	for buff_name in Buffs.pass_days(player, days):
 		EventBus.post("The power of your %s fades." % buff_name)
-	for event in Npcs.simulate(npcs, data, days, rng):
+	# NPCs the player knows (favor) or married never marry off-screen.
+	var reserved := npc_favor.duplicate()
+	for spouse_id in player.spouses:
+		reserved[spouse_id] = true
+	var married_off := false
+	for event in Npcs.simulate(npcs, data, days, rng, reserved):
+		married_off = married_off or event.get("kind", "") == "marriage"
 		# News about generated strangers is noise; only report people the player knows.
 		var npc_id := String(event["npc_id"])
-		if npc_id.begins_with(Npcs.SPAWN_PREFIX) and not npc_favor.has(npc_id) and not player.spouses.has(npc_id):
+		if npc_id.begins_with(Npcs.SPAWN_PREFIX) and not reserved.has(npc_id) and not player.children.has(npc_id):
 			continue
 		EventBus.post(event["text"], event["category"])
+	if married_off:
+		Npcs.ensure_eligible(npcs, data, rng)  # keep courtship candidates in every region
 	_advance_pregnancies(days)
 	if player.age_years() >= Cultivation.lifespan_years(player, data):
 		_kill("Your lifespan is exhausted. You die of old age at %d." % player.age_years())
