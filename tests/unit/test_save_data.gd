@@ -71,6 +71,10 @@ func test_every_character_field_survives_a_save() -> void:
 	c.injuries = {"x_injury": 9}
 	Buffs.add(c, "x_buff", "X Buff", 5, {"attack": 1.5})
 	c.mission_cooldowns = {"x_mission": 400}
+	c.training = {"assignment": "profession", "profession": "alchemist"}
+	c.artifact_storage = {"spirit_stone": 12}
+	c.reputation = {"azure_cloud_sect": 150}
+	c.abode_storage = {"iron_ore": 4}
 	var restored := CharacterData.from_dict(JSON.parse_string(JSON.stringify(c.to_dict())))
 	var before := c.to_dict()
 	var after := restored.to_dict()
