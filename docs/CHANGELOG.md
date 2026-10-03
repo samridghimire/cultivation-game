@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-03 [G-008d] Sect missions content: every sect now offers 8 missions fitting its path (Azure Cloud patrols, fever relief, array upkeep and a Jade Python hunt; Blood Lotus press-gangs, blood pool offerings, silencing talebearers and soul offerings; Pavilion herb and sword orders, stolen consignments, star silver escorts and auction lots), and contribution shops stock rank 2-3 rewards up to the Core Forming Pill.
 - 2026-10-03 [W-003b] Dialogue window: talking to a named NPC opens a conversation window (speaker, line, choices; locked choices show why, e.g. "Need 10 spirit stones"), gamepad-focusable, Esc/B ends the conversation. Replaces the inline choice-menu fallback in-game.
 - 2026-10-03 [LIFE-001f] The Shadow Curio Den in Fallen Star Market sells the lifespan-draining evil artifacts, but only to players at alignment -200 or below; demonic goods never show up at ordinary smithies (items.json restricted_tags, merchant alignment bounds).
 - 2026-10-03 [G-007c] NPCs now get injured now and then and heal with time; a doctor can treat an NPC's worst injury (GameState.treat_npc) for Doctor xp, alignment and their favor (more if fully healed). Menu entry follows in G-007d.
