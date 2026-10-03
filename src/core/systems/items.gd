@@ -26,6 +26,43 @@ static func has_tag(data: GameData, item_id: String, tags: Array) -> bool:
 	return false
 
 
+## Item ids a merchant sells, cheapest first: priced items up to `max_price`
+## (0 = no limit) that carry one of `stock_tags`, or untagged goods (pills,
+## manuals) when `stock_tags` is empty.
+static func shop_stock(data: GameData, max_price: int, stock_tags: Array) -> Array:
+	var ids: Array = []
+	for item: Dictionary in data.items.values():
+		var price := int(item.get("price", 0))
+		if price <= 0 or (max_price > 0 and price > max_price):
+			continue
+		var tags: Array = item.get("tags", [])
+		if (tags.is_empty() if stock_tags.is_empty() else has_tag(data, item["id"], stock_tags)):
+			ids.append(item["id"])
+	ids.sort_custom(func(a, b): return _price_then_name(data, a, b))
+	return ids
+
+
+## Item ids `c` holds that a merchant with `stock_tags` buys back. Only
+## specialist (tagged) merchants buy, and only goods matching their tags.
+static func buyback_ids(c: CharacterData, data: GameData, stock_tags: Array) -> Array:
+	var ids: Array = []
+	if stock_tags.is_empty():
+		return ids
+	for item_id in c.inventory:
+		if c.item_count(item_id) > 0 and has_tag(data, item_id, stock_tags) and sell_price(data, item_id) > 0:
+			ids.append(item_id)
+	ids.sort_custom(func(a, b): return _price_then_name(data, a, b))
+	return ids
+
+
+static func _price_then_name(data: GameData, a: String, b: String) -> bool:
+	var pa := int(data.items[a].get("price", 0))
+	var pb := int(data.items[b].get("price", 0))
+	if pa != pb:
+		return pa < pb
+	return String(data.items[a]["name"]).naturalnocasecmp_to(String(data.items[b]["name"])) < 0
+
+
 static func sell_price(data: GameData, item_id: String) -> int:
 	return int(int(data.items.get(item_id, {}).get("price", 0)) * SELL_RATE)
 

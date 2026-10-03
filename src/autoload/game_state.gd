@@ -148,12 +148,13 @@ func perform_deed(deed_id: String) -> void:
 	_pass_time(result["days"])
 
 
-func buy_item(item_id: String) -> void:
+func buy_item(item_id: String, quantity: int = 1) -> void:
 	if not _can_act():
 		return
-	var result := Items.buy(player, data, item_id)
+	var result := Items.buy(player, data, item_id, quantity)
 	if result["ok"]:
-		EventBus.post("You buy a %s." % data.items[item_id]["name"])
+		var item_name: String = data.items[item_id]["name"]
+		EventBus.post("You buy a %s." % item_name if quantity == 1 else "You buy %d %s." % [quantity, item_name])
 	else:
 		EventBus.post(result["reason"], "warning")
 	EventBus.player_changed.emit()

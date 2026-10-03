@@ -19,6 +19,7 @@ var _pause_menu: PauseMenu
 var _settings: SettingsScreen
 var _load_screen: LoadScreen
 var _crafting: CraftingScreen
+var _shop: ShopScreen
 var _banner: Banner
 var _death_screen: Control
 
@@ -40,6 +41,9 @@ func _ready() -> void:
 	_crafting = CraftingScreen.new()
 	_crafting.closed.connect(_update_modal)
 	add_child(UIStyle.centered(_crafting))
+	_shop = ShopScreen.new()
+	_shop.closed.connect(_update_modal)
+	add_child(UIStyle.centered(_shop))
 	_combat_report = CombatReport.new()
 	_combat_report.closed.connect(_update_modal)
 	add_child(UIStyle.centered(_combat_report))
@@ -66,6 +70,7 @@ func _ready() -> void:
 	EventBus.interaction_target_changed.connect(_on_target_changed)
 	EventBus.interaction_menu_requested.connect(_on_menu_requested)
 	EventBus.crafting_requested.connect(_on_crafting_requested)
+	EventBus.shop_requested.connect(_on_shop_requested)
 	EventBus.player_died.connect(_on_player_died)
 	EventBus.combat_finished.connect(_on_combat_finished)
 	EventBus.breakthrough_attempted.connect(_on_breakthrough)
@@ -105,6 +110,7 @@ func _close_screens() -> void:
 	for screen in _screens.values():
 		screen.close()
 	_crafting.close()
+	_shop.close()
 
 
 func _on_crafting_requested(prof_id: String) -> void:
@@ -112,8 +118,13 @@ func _on_crafting_requested(prof_id: String) -> void:
 	_update_modal()
 
 
+func _on_shop_requested(merchant_name: String, max_price: int, stock_tags: Array) -> void:
+	_shop.open(merchant_name, max_price, stock_tags)
+	_update_modal()
+
+
 func _any_screen_open() -> bool:
-	return _crafting.visible or _screens.values().any(func(s): return s.visible)
+	return _crafting.visible or _shop.visible or _screens.values().any(func(s): return s.visible)
 
 
 func _build_status_panel() -> void:
