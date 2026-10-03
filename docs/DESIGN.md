@@ -57,7 +57,7 @@ Every great cultivation protagonist has something that sets them apart. Ours is 
 9. Endgame: Ascension to the Immortal Realm
 
 ## Current systems (foundation)
-"Core" = rules + tests exist in GameState; "UI" = reachable by the player in-game.
+"Core" = rules + tests exist in GameState; "UI" = reachable by the player in-game. Updated 2026-10-03 12:00 UTC (32 PRs open).
 | System | Status | Where |
 |---|---|---|
 | Realms & stages (Mortal → Tribulation Transcendence) | ✅ | `data/realms.json`, `Cultivation` |
@@ -66,24 +66,26 @@ Every great cultivation protagonist has something that sets them apart. Ours is 
 | Breakthroughs with risk, pills that boost odds | ✅ | `Cultivation.attempt_breakthrough` |
 | Lifespan, death by old age, burning/extending lifespan | ✅ | `Cultivation`, `GameState._on_days_advanced` |
 | Alignment (Demonic … Righteous) and deeds | ✅ | `data/alignment.json`, `data/deeds.json` |
-| Sects (join/leave, requirements, ranks, contribution) | ✅ basic (no missions/shop yet) | `data/sects.json`, `Sects` |
+| Sects (join/leave, requirements, ranks, contribution, missions) | ✅ core, 🚧 mission board (G-008b) and contribution shop (G-008c) in PR; rank duties G-008e | `data/sects.json`, `data/sect_missions.json`, `Sects` |
 | Professions (ranks, XP, income) | ✅ basic | `data/professions.json`, `Professions` |
 | Alchemy (recipes, scrolls, pill quality) + crafting screen | ✅ | `data/recipes.json`, `Alchemy`, `src/ui/crafting_screen.gd` |
-| Blacksmithing and equipment (weapon/armor) | ✅ core, 🚧 no equip UI (G-004b) | `Equipment`, `data/recipes.json` |
+| Blacksmithing and equipment (weapon/armor, 3 grades incl. Core Formation gear) | ✅ core, 🚧 equip UI in PR (G-004b) | `Equipment`, `data/recipes.json` |
 | Talismans (buff talismans, combat strike/shield/escape) | ✅ core, 🚧 no ready UI (G-005d) | `Alchemy`, `Buffs`, `CombatTalismans` |
-| Temporary buffs and forbidden secret arts | ✅ | `Buffs`, `data/techniques.json` |
-| Medicine / Doctor (treat injuries, clinic, patients) | ✅ core, 🚧 no clinic place (G-007b) | `Medicine` |
+| Temporary buffs, forbidden secret arts, lifespan-draining evil artifacts | ✅ | `Buffs`, `data/techniques.json`, `data/items.json` |
+| Medicine / Doctor (treat injuries, clinic, patients) | ✅ core, 🚧 clinic place in PR (G-007b) | `Medicine` |
 | Items, merchants, using pills | ✅ basic | `data/items.json`, `Items` |
 | Save/load, multiple slots | ✅ | `SaveManager` |
-| Creation Artifact: lives, anchors, respawn, recharge | ✅ core (functions: ART-002+) | `data/artifact.json`, `CreationArtifact` |
-| Data-driven regions (4), travel, exploration encounters | ✅ (choices: W-004c) | `data/regions.json`, `data/encounters.json`, `Exploration` |
+| Creation Artifact: lives, anchors, respawn, recharge | ✅ core + sheet UI; 🚧 functions/Storage (ART-002) and respawn screen (ART-005) in PR | `data/artifact.json`, `CreationArtifact` |
+| Data-driven regions (4), travel, exploration encounters (61) with choices | ✅ core, 🚧 choice window in PR (W-004d) | `data/regions.json`, `data/encounters.json`, `Exploration` |
 | Injuries (from breakthroughs and combat) | ✅ | `data/injuries.json`, `Injuries` |
 | Combat (auto-resolved) and techniques | ✅ basic | `Combat`, `Techniques`, `data/enemies.json`, `data/techniques.json` |
 | NPCs (named + generated), aging, monthly sim | ✅ | `data/npcs.json`, `Npcs`, `Names` |
-| Dialogue | ✅ core, 🚧 choice-menu fallback (W-003b) | `Dialogue`, `data/dialogue/` |
-| Family: identity, courtship, marriage, dual cultivation, children | ✅ core, ❌ not reachable in-game (P0 tasks) | `data/family.json`, `Family`, `Children` |
-| Clans, estates, bloodlines | ❌ (FAM-005+) | |
-| Cultivation methods, Dao insights, Heavenly Tribulations | ❌ (CM-001, DAO-001, TRIB-001) | |
+| Dialogue | ✅ core, 🚧 dialogue window in PR (W-003b) | `Dialogue`, `data/dialogue/` |
+| Family: identity, courtship, marriage, dual cultivation, children | ✅ core; ✅ UI: family on sheet, generated NPCs in world, dual cultivation; 🚧 court/propose, chat/gifts, try for child, adoption in PR | `data/family.json`, `Family`, `Children` |
+| Clans, estates, bloodlines, training descendants | 🚧 FAM-005, FAM-007, FAM-004 in PR; estates FAM-006 | |
+| Cultivation methods, Dao insights, Heavenly Tribulations | 🚧 CM-001 in PR, TRIB-001 claimed; ❌ DAO-001 | |
+| Cave abode, arrays | 🚧 G-010 in PR; ❌ arrays (G-006) | |
+| Rivals/karma, secret realms, inheritances, spirit beasts, auctions, world events | ❌ (RIV-001+, W-005+, BEAST-001, AUC-001, LW-001) | |
 | Inventory, techniques, character sheet, settings, pause, load screens | ✅ | `src/ui/` |
 | Top-down world with interactables | ✅ placeholder art | `src/world/` |
 
@@ -113,3 +115,6 @@ Void Refinement → Body Integration → Mahayana → Tribulation Transcendence.
 - (FAM-005) **Clan founding requirements.** Default: Foundation Establishment, 500 spirit stones and a claimed estate/abode, all in `data/family.json`. Can a rogue still in a sect found a clan, or must they leave or get permission?
 - (W-005/G-008) **Founding your own sect** (roadmap item 3) is not scheduled yet. Default proposal: it unlocks at Nascent Soul, needs a mountain gate place, and reuses the clan treasury/buildings model. Should it be a separate system from clans, or a clan that grows into a sect?
 - **Main story / Creation Artifact origin.** Agents keep the artifact's maker, why it chose the player and who hunts it vague until you decide. Do you want to outline the main story arc (acts, antagonist faction), or should agents propose 2-3 options for you to pick from?
+- (G-008e) **Sect promotion.** Default: promotion to Inner Disciple and above needs a realm minimum plus a trial fight, ranks pay a monthly stipend, and missing the monthly duty only skips the stipend (no demotion). Should neglecting duties demote or expel a disciple?
+- (BEAST-001) **Spirit beasts.** Default: only Beast Tamers can tame, one active companion fights alongside you, beasts grow by feeding. Should non-tamers be able to keep a beast (e.g. one bought or gifted), and how many companions at once?
+- (DEM-001) **Devouring.** Default: after defeating a cultivator the player can devour their cultivation for qi at a big alignment cost and a heart-demon injury risk. This is the smallest demonic art; the separate demonic tree (DEM-002) stays blocked on the question above.
