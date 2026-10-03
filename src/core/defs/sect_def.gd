@@ -12,6 +12,8 @@ var min_realm := "mortal"
 var cultivation_bonus := 1.0
 var favored_professions: PackedStringArray = []
 var ranks: Array[Dictionary] = []  # [{name, contribution}], ascending
+## Contribution shop (G-008c): [{item_id, contribution, min_rank}].
+var shop: Array[Dictionary] = []
 
 
 static func from_dict(d: Dictionary) -> SectDef:
@@ -26,6 +28,7 @@ static func from_dict(d: Dictionary) -> SectDef:
 	s.cultivation_bonus = float(d.get("cultivation_bonus", 1))
 	s.favored_professions = PackedStringArray(d.get("favored_professions", []))
 	s.ranks.assign(d.get("ranks", []))
+	s.shop.assign(d.get("shop", []))
 	return s
 
 
