@@ -24,6 +24,8 @@ var dialogue_node := ""
 ## conversation it is not saved: loading a save drops it.
 var pending_encounter := ""
 var rng := RandomNumberGenerator.new()
+## The player's clan (FAM-005), null until founded.
+var clan: ClanData = null
 
 
 func _ready() -> void:
@@ -44,6 +46,7 @@ func start_session(character: CharacterData) -> void:
 	current_region = data.start_region
 	npcs = {}
 	npc_favor = {}
+	clan = null
 	dialogue_npc = ""
 	pending_encounter = ""
 	Npcs.ensure_all(npcs, data, rng)
@@ -59,6 +62,7 @@ func end_session() -> void:
 	world_flags = {}
 	npcs = {}
 	npc_favor = {}
+	clan = null
 	dialogue_npc = ""
 	pending_encounter = ""
 
@@ -461,6 +465,64 @@ func try_for_child(spouse_id: String) -> void:
 	_pass_time(result["days"])
 
 
+## Found the player's clan (data/family.json "clan"): the player becomes its
+## Patriarch/Matriarch and their spouses and descendants join.
+func found_clan() -> void:
+	if not _can_act():
+		return
+	var result := Clans.found(player, clan, npcs, data, GameClock.total_days)
+	if not result["ok"]:
+		EventBus.post(result["reason"], "warning")
+		EventBus.player_changed.emit()
+		return
+	clan = result["clan"]
+	EventBus.post("You found the %s and become its %s. %d members gather under your banner." % [clan.name, Clans.rank_name(data, Clans.head_rank(data), player.gender), clan.members.size()], "progress")
+	_pass_time(result["days"])
+
+
+## Recruit an NPC in the current region as a clan retainer.
+func recruit_to_clan(npc_id: String) -> void:
+	if not _can_act():
+		return
+	var npc: CharacterData = npcs.get(npc_id)
+	if npc != null and npc.alive and Npcs.region_of(npc, data) != current_region:
+		EventBus.post("%s is not here." % npc.name, "warning")
+		EventBus.player_changed.emit()
+		return
+	var result := Clans.recruit(player, clan, npc, int(npc_favor.get(npc_id, 0)), data)
+	if not result["ok"]:
+		EventBus.post(result["reason"], "warning")
+		EventBus.player_changed.emit()
+		return
+	EventBus.post("%s swears allegiance to the %s." % [npc.name, clan.name], "progress")
+	_pass_time(result["days"])
+
+
+## Give a clan member a rank (data/family.json clan.ranks). Takes no time.
+func set_clan_rank(member_id: String, rank_id: String) -> void:
+	if not _can_act():
+		return
+	var member: CharacterData = npcs.get(member_id)
+	var result := Clans.promote(clan, member, rank_id, data)
+	if result["ok"]:
+		EventBus.post("%s is now a %s of the %s." % [member.name, Clans.rank_name(data, rank_id, member.gender), clan.name], "progress")
+	else:
+		EventBus.post(result["reason"], "warning")
+	EventBus.player_changed.emit()
+
+
+## Move spirit stones into the clan treasury. Takes no time.
+func deposit_to_clan(amount: int) -> void:
+	if not _can_act():
+		return
+	var result := Clans.deposit(player, clan, amount)
+	if result["ok"]:
+		EventBus.post("You deposit %d spirit stones. The %s treasury holds %d." % [amount, clan.name, clan.treasury])
+	else:
+		EventBus.post(result["reason"], "warning")
+	EventBus.player_changed.emit()
+
+
 func learn_technique(tech_id: String) -> void:
 	if not _can_act():
 		return
@@ -715,6 +777,7 @@ func to_save_dict() -> Dictionary:
 		"region": current_region,
 		"npcs": Npcs.to_dict(npcs),
 		"npc_favor": npc_favor.duplicate(),
+		"clan": clan.to_dict() if clan != null else {},
 		"clock": GameClock.to_dict(),
 		# 64-bit ints do not survive JSON floats, so store them as strings.
 		"rng_seed": str(rng.seed),
@@ -735,6 +798,8 @@ func load_save_dict(d: Dictionary) -> void:
 	npc_favor = {}
 	for npc_id in d.get("npc_favor", {}):
 		npc_favor[npc_id] = int(d["npc_favor"][npc_id])
+	var saved_clan: Dictionary = d.get("clan", {})
+	clan = ClanData.from_dict(saved_clan) if not saved_clan.is_empty() else null
 	dialogue_npc = ""
 	dialogue_node = ""
 	pending_encounter = ""
@@ -780,6 +845,9 @@ func _on_days_advanced(days: int) -> void:
 			continue
 		EventBus.post(event["text"], event["category"])
 	_advance_pregnancies(days)
+	if clan != null:
+		for joined in Clans.sync_family(player, clan, npcs, data):
+			EventBus.post("%s joins the %s." % [joined, clan.name], "progress")
 	if player.age_years() >= Cultivation.lifespan_years(player, data):
 		_kill("Your lifespan is exhausted. You die of old age at %d." % player.age_years())
 

@@ -44,7 +44,7 @@ Roles: `systems` (core rules + tests), `content` (data/*.json + small hooks), `w
 |---|---|---|---|
 | FAM-003b | systems | todo | Adoption: GameState.adopt(npc_id) for an orphaned/unrelated child NPC (or a generated foundling at an orphanage/temple), links parents/children with birth_rank "" (adopted), favor/alignment rules in data/family.json; lets female players and couples without a carrier grow a family. |
 | FAM-004 | systems | todo | Training descendants: monthly training assignment for each child/disciple (cultivate, profession, study technique), teaching techniques the player knows, spending pills/stones on them; progress reported in the message log. CharacterData.training (save-compatible), Npcs.simulate honors it. |
-| FAM-005 | systems | todo | Found a clan: requirements in data/family.json `clan` (default: Foundation Establishment, spirit stones, a claimed estate place). Player becomes Patriarch/Matriarch; clan has a name (player surname), members (family, spouses, recruited retainers), ranks (Patriarch, Elder, Core, Outer), treasury, reputation. New ClanData (src/core) saved in GameState.to_save_dict. GameState.found_clan / recruit / promote / deposit. |
+| FAM-005c | systems | todo | Clan founding needs a claimed estate: once G-010 (abodes) is on main, add a data/family.json clan `requires_abode` rule checked in Clans.check_found, and record the clan seat (abode/region) on ClanData (save-compatible). Depends on G-010. |
 | FAM-005b | world-ui | todo | Surface clan founding: a "Found the <Surname> Clan" option at an estate/abode place with Clans.check_found reasons, and a first version of the clan screen (members, ranks, treasury, promote/recruit). Depends on FAM-005. Grows into FAM-010. |
 | FAM-006 | systems | todo | Clan estate: buildings in data/clan_buildings.json (ancestral hall, spirit field, alchemy room, protective array, library) with costs, build time and monthly effects (income, qi density, herb yield, training speed). Depends on FAM-005. |
 | FAM-006b | world-ui | todo | Estate view: list buildings with build/upgrade actions and monthly effects (clan screen tab), and draw built buildings as placeholder shapes at the estate place. Depends on FAM-006. |
@@ -105,6 +105,7 @@ The local sessions that built combat/techniques, world/exploration/NPCs/dialogue
 ## Done
 | id | task |
 |---|---|
+| FAM-005 | Found a clan: data/family.json `clan` (min realm, cost, ranks Patriarch/Matriarch > Elder > Core > Outer, recruit rules), ClanData saved in GameState, Clans system, GameState.found_clan/recruit_to_clan/set_clan_rank/deposit_to_clan; spouses and descendants join automatically. Estate requirement → FAM-005c, UI → FAM-005b. |
 | G-004c | Higher-grade equipment: Profound Iron / Dragon-Blood Gold ores, 4 new forge recipes with manuals, Heavenforge Smithy in Fallen Star Market, equipment encounters. |
 | LIFE-001e | Evil artifacts obtainable: Blood-Drinker Saber (wild), Corpse-Silk Burial Armor and Myriad Souls Banner (ruins), once per life, each with a righteous destroy alternative. |
 | FAM-002f | Generated NPCs placed in the world: regions.json `npc_spots`, Npcs.generated_in_region/spot_positions/world_title/describe, gender colors, "Look" option. |
