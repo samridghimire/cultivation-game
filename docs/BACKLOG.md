@@ -36,7 +36,6 @@ Roles: `systems` (core rules + tests), `content` (data/*.json + small hooks), `w
 | G-009 | systems | todo | Reputation per sect/faction separate from alignment; evil deeds witnessed lower reputation with righteous sects; reputation gates sect joining and shop prices. data/sects.json `reputation` rules, CharacterData.reputation (save-compatible). |
 | G-007c | systems | todo | Doctors heal NPC injuries (alignment + favor). NPCs need injuries first: let Npcs.simulate occasionally injure NPCs (data-driven chance), GameState.treat_npc(npc_id). |
 | LIFE-001f | systems | todo | Evil artifacts can be bought: merchants that only sell to demonic players (e.g. `min_alignment`/`max_alignment` on a merchant place, or a `hidden_tags` list so `equipment` merchants skip `demonic` items), then give the three `lifespan_drain` items prices and a Night Market stock rule. Optionally an alignment hit the first time an evil artifact is equipped. |
-| G-004c | content | todo | More equipment: higher-grade weapons/armor per realm (Foundation, Core Formation ores), forging recipe scrolls for non-starter recipes, a smithy merchant (`stock_tags: ["equipment", "ore"]`) in the market town, equipment as rare encounter loot. |
 | G-005c | content | todo | Talisman content: a talisman stall (`stock_tags: ["talisman"]`) in the market town, higher-rank talisman recipes taught by scrolls (learn_recipe), talismans as encounter loot, and buff talismans for higher realms. |
 | F-005c | qa | todo | Extend the balance sim's "sensible cultivator" with real-play help (moving to higher-density spots/regions as realms allow, breakthrough pills bought with profession income, sect density bonus) and re-check late-realm (Void Refinement+) old-age deaths and whether progression is now too fast for heavenly-root characters. |
 
@@ -106,6 +105,7 @@ The local sessions that built combat/techniques, world/exploration/NPCs/dialogue
 ## Done
 | id | task |
 |---|---|
+| G-004c | Higher-grade equipment: Profound Iron / Dragon-Blood Gold ores, 4 new forge recipes with manuals, Heavenforge Smithy in Fallen Star Market, equipment encounters. |
 | LIFE-001e | Evil artifacts obtainable: Blood-Drinker Saber (wild), Corpse-Silk Burial Armor and Myriad Souls Banner (ruins), once per life, each with a righteous destroy alternative. |
 | FAM-002f | Generated NPCs placed in the world: regions.json `npc_spots`, Npcs.generated_in_region/spot_positions/world_title/describe, gender colors, "Look" option. |
 | FAM-002e | Dual cultivation entries at meditation spots for living spouses in the region (Family.spouses_in_region), with bonus % and disabled reasons. |

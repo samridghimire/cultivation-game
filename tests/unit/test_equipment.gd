@@ -157,6 +157,23 @@ func test_game_state_fight_with_evil_weapon_burns_lifespan() -> void:
 	gs.end_session()
 
 
+func test_every_learned_forging_recipe_has_an_obtainable_manual() -> void:
+	var d := data()
+	for recipe: Dictionary in d.recipes.values():
+		if recipe.get("profession", "") != "blacksmith" or recipe.get("starter", false):
+			continue
+		var obtainable := false
+		for item: Dictionary in d.items.values():
+			if item.get("effects", {}).get("learn_recipe", "") != recipe["id"]:
+				continue
+			if int(item.get("price", 0)) > 0:
+				obtainable = true
+			for e: Dictionary in d.encounters.values():
+				if e.get("effects", {}).get("items", {}).has(item["id"]):
+					obtainable = true
+		assert_true(obtainable, "no manual for the %s recipe can be bought or found" % recipe["id"])
+
+
 func test_every_evil_artifact_is_found_in_an_encounter_with_a_righteous_alternative() -> void:
 	var d := data()
 	for item: Dictionary in d.items.values():
