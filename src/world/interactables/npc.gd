@@ -20,7 +20,7 @@ func get_options() -> Array[Dictionary]:
 	var def: Dictionary = GameState.data.npcs.get(npc_id, {})
 	if def.is_empty():
 		options.append({"label": "Look", "action": _look, "keep_open": true})
-	if def.has("dialogue"):
+	if GameState.has_dialogue(npc_id):
 		if _has_dialogue_window():
 			options.append({"label": "Talk", "action": GameState.start_dialogue.bind(npc_id)})
 		else:

@@ -6,6 +6,8 @@ extends Node
 ## Keep rules out of this file; put them in the systems so they stay testable.
 
 const BREAKTHROUGH_DAYS := 7
+## Dialogue id (data/dialogue/) for generated NPCs without their own file.
+const GENERIC_DIALOGUE := "generic_cultivator"
 
 var data: GameData
 var player: CharacterData
@@ -362,8 +364,20 @@ func end_dialogue() -> void:
 	EventBus.player_changed.emit()
 
 
+## True if talking to `npc_id` would open a conversation file.
+func has_dialogue(npc_id: String) -> bool:
+	return not _npc_dialogue(npc_id).is_empty()
+
+
+## A named NPC's own dialogue file; generated adults (no def) fall back to
+## GENERIC_DIALOGUE, children have nothing to say.
 func _npc_dialogue(npc_id: String) -> Dictionary:
-	return data.dialogues.get(data.npcs.get(npc_id, {}).get("dialogue", ""), {})
+	if data.npcs.has(npc_id):
+		return data.dialogues.get(data.npcs[npc_id].get("dialogue", ""), {})
+	var npc: CharacterData = npcs.get(npc_id)
+	if npc == null or npc.age_years() < int(data.family.get("adult_age", 16)):
+		return {}
+	return data.dialogues.get(GENERIC_DIALOGUE, {})
 
 
 func _dialogue_ctx(npc_id: String) -> Dictionary:
