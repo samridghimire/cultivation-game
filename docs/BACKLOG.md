@@ -11,7 +11,6 @@ Roles: `systems` (core rules + tests), `content` (data/*.json + small hooks), `w
 ## P0: Close the loop (surface what is already built)
 | id | role | status | task |
 |---|---|---|---|
-| G-002g | world-ui | in-progress | Crafting screen polish: batch crafting (x5), a "learnable scroll" hint for recipes the player lacks, and show unknown-but-in-pouch recipe scrolls. (PR #29) |
 | FAM-002f | world-ui | todo | Place generated NPCs (no data/npcs.json def) in the world: world.gd skips them today. Pick positions from a per-region list of NPC spots (regions.json `npc_spots`, document in `_doc`) or free floor tiles, a color by gender, and a title such as "Wandering Cultivator" / realm label, so FAM-002c candidates can be met and courted. Depends on FAM-002c (done). |
 | FAM-002d | world-ui | todo | NPC menu entries (src/world/interactables/npc.gd get_options): "Court <name>" (GameState.court) once favor allows, and "Propose as <rank>" per Family.ranks(player gender) with Family.check_proposal reasons shown on disabled entries. Works for both def NPCs and generated NPCs (FAM-002f). Add a scene/menu test. |
 | FAM-002e | world-ui | todo | "Cultivate with <spouse>" entry (GameState.dual_cultivate) on meditation spots for spouses in the current region, showing Family.dual_multiplier as a bonus %; disabled with Family.check_dual_cultivation reasons. |
@@ -110,6 +109,7 @@ The local sessions that built combat/techniques, world/exploration/NPCs/dialogue
 ## Done
 | id | task |
 |---|---|
+| G-002g | Crafting screen polish: x5 batch crafting (GameState.refine_batch), carried recipe scrolls listed with a Study button (Alchemy.scroll_recipes). |
 | G-005b | Combat talismans: strike/shield/escape talismans readied for fights (CombatTalismans), GameState.ready_talisman/unready_talisman. |
 | FAM-003 | Children part 1: conception, per-carrier pregnancy, birth with inherited roots/attributes, birth_rank, GameState.try_for_child. |
 | LIFE-001d | 3 more forbidden secret arts (Blood Shadow Flight, Ten-Thousand Bones Armor, Heaven-Devouring Burst) with manuals and righteous sealing alternatives. |
