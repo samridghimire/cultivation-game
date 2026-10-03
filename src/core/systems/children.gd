@@ -152,6 +152,27 @@ static func give_birth(mother: CharacterData, father: CharacterData, npcs: Dicti
 	return child
 
 
+## Display lines for pregnancies in `c`'s family: `c`'s own and each living
+## spouse's (looked up in `people`) where `c` is the other parent, e.g.
+## "Mei Lin is with your child (3 months to the birth)".
+static func describe_pregnancies(c: CharacterData, people: Dictionary) -> Array[String]:
+	var out: Array[String] = []
+	if is_pregnant(c):
+		var partner: CharacterData = people.get(String(c.pregnancy.get("partner", "")))
+		var by := " by %s" % partner.name if partner != null else ""
+		out.append("You are with child%s (%s)" % [by, _due_in(c)])
+	for spouse_id in Family.living_spouses(c, people):
+		var spouse: CharacterData = people.get(spouse_id)
+		if spouse != null and is_pregnant(spouse) and String(spouse.pregnancy.get("partner", "")) == c.id:
+			out.append("%s is with your child (%s)" % [spouse.name, _due_in(spouse)])
+	return out
+
+
+static func _due_in(carrier: CharacterData) -> String:
+	var days := int(carrier.pregnancy.get("days_left", 0))
+	return "due any day" if days <= 0 else "%s to the birth" % Calendar.format_duration(days)
+
+
 ## "You are" when `who` is `c`, else "<name> is".
 static func _subject(c: CharacterData, who: CharacterData) -> String:
 	return "You are" if who == c else who.name + " is"
