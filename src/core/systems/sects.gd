@@ -19,13 +19,16 @@ static func check_join(c: CharacterData, data: GameData, sect_id: String) -> Dic
 		return {"ok": false, "reason": "%s will not accept someone of your evil reputation." % sect.name}
 	if c.alignment > sect.max_alignment:
 		return {"ok": false, "reason": "%s has no use for someone so soft-hearted." % sect.name}
+	var rep_reason := Reputation.check_join(c, data, sect_id)
+	if rep_reason != "":
+		return {"ok": false, "reason": rep_reason}
 	return {"ok": true, "reason": ""}
 
 
 static func join(c: CharacterData, data: GameData, sect_id: String) -> Dictionary:
 	var check := check_join(c, data, sect_id)
 	if check["ok"]:
-		c.sect = {"id": sect_id, "rank": 0, "contribution": 0}
+		c.sect = {"id": sect_id, "rank": 0, "contribution": 0, "spent": 0}
 	return check
 
 
@@ -64,6 +67,82 @@ static func describe(c: CharacterData, data: GameData) -> String:
 		return "Rogue Cultivator"
 	var sect: SectDef = data.sects[c.sect["id"]]
 	return "%s, %s" % [sect.name, sect.rank_name(c.sect["rank"])]
+
+
+# --- Contribution shop (G-008c) ---------------------------------------------
+
+## Contribution `c` can still spend: earned minus spent. Spending never lowers
+## rank, which follows lifetime contribution.
+static func contribution_balance(c: CharacterData) -> int:
+	if c.is_rogue():
+		return 0
+	return maxi(0, int(c.sect.get("contribution", 0)) - int(c.sect.get("spent", 0)))
+
+
+## The shop entries ({item_id, contribution, min_rank}) of `c`'s sect, in data
+## order, whether or not `c` can afford them yet. Rogues get none.
+static func shop_items(c: CharacterData, data: GameData) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	if c.is_rogue():
+		return out
+	out.assign((data.sects[c.sect["id"]] as SectDef).shop)
+	return out
+
+
+## The shop entry for `item_id` in `c`'s sect ({} if it does not sell it).
+static func shop_entry(c: CharacterData, data: GameData, item_id: String) -> Dictionary:
+	for entry in shop_items(c, data):
+		if String(entry["item_id"]) == item_id:
+			return entry
+	return {}
+
+
+## Why `c` cannot buy `item_id` from the sect shop now, or "" if they can.
+static func check_purchase(c: CharacterData, data: GameData, item_id: String) -> String:
+	if c.is_rogue():
+		return "Only sect disciples may draw on a sect's treasury."
+	var entry := shop_entry(c, data, item_id)
+	if entry.is_empty():
+		return "Your sect does not offer that."
+	var sect: SectDef = data.sects[c.sect["id"]]
+	var min_rank := int(entry.get("min_rank", 0))
+	if int(c.sect["rank"]) < min_rank:
+		return "Only a %s or above may claim this." % sect.rank_name(min_rank)
+	var cost := int(entry["contribution"])
+	if contribution_balance(c) < cost:
+		return "You need %d contribution (you have %d)." % [cost, contribution_balance(c)]
+	return ""
+
+
+## Buys `item_id` with contribution. Returns {ok, reason, cost}.
+static func buy_with_contribution(c: CharacterData, data: GameData, item_id: String) -> Dictionary:
+	var reason := check_purchase(c, data, item_id)
+	if reason != "":
+		return {"ok": false, "reason": reason, "cost": 0}
+	var cost := int(shop_entry(c, data, item_id)["contribution"])
+	c.sect["spent"] = int(c.sect.get("spent", 0)) + cost
+	c.add_item(item_id, 1)
+	return {"ok": true, "reason": "", "cost": cost}
+
+
+## Load errors for the sects.json `shop` lists.
+static func validate_shops(data: GameData) -> PackedStringArray:
+	var errors: PackedStringArray = []
+	for sect: SectDef in data.sects.values():
+		var seen := {}
+		for entry in sect.shop:
+			var item_id := String(entry.get("item_id", ""))
+			if not data.items.has(item_id):
+				errors.append("Sect '%s' shop sells unknown item '%s'" % [sect.id, item_id])
+			if seen.has(item_id):
+				errors.append("Sect '%s' shop lists '%s' twice" % [sect.id, item_id])
+			seen[item_id] = true
+			if int(entry.get("contribution", 0)) < 1:
+				errors.append("Sect '%s' shop item '%s' needs contribution >= 1" % [sect.id, item_id])
+			var min_rank := int(entry.get("min_rank", 0))
+			if min_rank < 0 or min_rank >= sect.ranks.size():
+				errors.append("Sect '%s' shop item '%s' has min_rank outside its ranks" % [sect.id, item_id])
+	return errors
 
 
 # --- Missions (G-008) ----------------------------------------------------------
@@ -115,7 +194,8 @@ static func check_mission(c: CharacterData, data: GameData, mission_id: String) 
 
 ## Completes `mission_id` (any fight must already be won): hands in the
 ## required items, applies the rewards, adds contribution and starts the
-## cooldown. Returns {ok, reason, contribution, promoted, notes, days}.
+## cooldown. Contribution also earns reputation with the sect.
+## Returns {ok, reason, contribution, promoted, notes, days}.
 static func complete_mission(c: CharacterData, data: GameData, mission_id: String, flags: Dictionary) -> Dictionary:
 	var reason := check_mission(c, data, mission_id)
 	if reason != "":
@@ -126,6 +206,9 @@ static func complete_mission(c: CharacterData, data: GameData, mission_id: Strin
 		c.add_item(item_id, -int(needed[item_id]))
 	var notes := Effects.apply(c, data, mission.get("rewards", {}), flags)
 	var contribution := int(mission.get("contribution", 0))
+	var rep := Reputation.change(c, data, String(c.sect["id"]), Reputation.mission_gain(data, contribution))
+	if rep != 0:
+		notes.append("%s reputation %+d" % [data.sects[c.sect["id"]].name, rep])
 	var promoted := add_contribution(c, data, contribution)
 	c.mission_cooldowns[mission_id] = c.age_days + int(mission.get("cooldown_days", 0))
 	return {"ok": true, "reason": "", "contribution": contribution, "promoted": promoted, "notes": notes, "days": int(mission.get("days", 1))}

@@ -10,6 +10,7 @@ const PLACE_SCRIPTS := {
 	"merchant": preload("res://src/world/interactables/merchant.gd"),
 	"sect_hall": preload("res://src/world/interactables/sect_hall.gd"),
 	"workshop": preload("res://src/world/interactables/workshop.gd"),
+	"clinic": preload("res://src/world/interactables/clinic.gd"),
 	"deed_giver": preload("res://src/world/interactables/deed_giver.gd"),
 	"explore": preload("res://src/world/interactables/explore_site.gd"),
 	"travel": preload("res://src/world/interactables/travel_point.gd"),
