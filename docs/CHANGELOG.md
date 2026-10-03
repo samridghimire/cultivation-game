@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-03 [QA-007] Combat balance sim (tests/sim/simulate_combat.gd): a typical player vs every enemy at the realm it first appears in encounters and sect missions, flagging trivial/hard/unbeatable fights; a unit test keeps forced fights winnable. The Purge a Demonic Cultivator mission now needs Foundation Establishment (its foe was unbeatable and lethal at Qi Refining).
 - 2026-10-03 [G-005c] Talisman content: a talisman stall in Fallen Star Market, Gold-Thread Talisman Paper, 7 higher-rank talismans (buffs, Foundation/Core combat talismans, a demonic Blood Sacrifice talisman) taught by manuals, and talisman finds while exploring.
 - 2026-10-03 [G-004c] Higher-grade equipment: Profound Iron and Dragon-Blood Gold ores, 4 Foundation/Core Formation forge recipes taught by forging manuals, a Heavenforge Smithy in Fallen Star Market, and equipment/ore finds while exploring.
 - 2026-10-03 [LIFE-001e] Evil artifacts are now obtainable: the Blood-Drinker Saber plus the new Corpse-Silk Burial Armor and Myriad Souls Banner (lifespan-draining) are once-per-life exploration finds; righteous players can destroy them for alignment and qi instead.
