@@ -6,17 +6,19 @@ extends RefCounted
 const SELL_RATE := 0.5
 
 
-## Returns {ok, reason}.
-static func buy(c: CharacterData, data: GameData, item_id: String, quantity: int = 1) -> Dictionary:
+## Buys at a merchant affiliated with sect `faction` ("" = none), whose
+## prices follow the buyer's reputation (Reputation.buy_price).
+## Returns {ok, reason, stones}.
+static func buy(c: CharacterData, data: GameData, item_id: String, quantity: int = 1, faction: String = "") -> Dictionary:
 	var item: Dictionary = data.items.get(item_id, {})
-	var price := int(item.get("price", 0)) * quantity
+	var price := Reputation.buy_price(c, data, item_id, faction) * quantity
 	if item.is_empty() or price <= 0:
 		return {"ok": false, "reason": "That is not for sale."}
 	if c.item_count("spirit_stone") < price:
 		return {"ok": false, "reason": "You need %d spirit stones." % price}
 	c.add_item("spirit_stone", -price)
 	c.add_item(item_id, quantity)
-	return {"ok": true, "reason": ""}
+	return {"ok": true, "reason": "", "stones": price}
 
 
 ## Whether a merchant stocking `stock_tags` (empty = untagged goods) up to

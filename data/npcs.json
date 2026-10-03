@@ -20,6 +20,18 @@
     {"id": "swordsman_yun", "name": "Yun Feng", "title": "Wandering Swordsman", "region": "azure_peak", "pos": [420, 760], "color": "b8d4e8",
      "gender": "male", "surname": "Yun", "given_name": "Feng",
      "realm": "foundation_establishment", "stage": 3, "age_years": 88, "alignment": 300, "roots": {"metal": 90},
-     "attributes": {"constitution": 14, "spirit": 13}, "cultivates": true, "dialogue": "swordsman_yun"}
+     "attributes": {"constitution": 14, "spirit": 13}, "cultivates": true, "dialogue": "swordsman_yun"},
+    {"id": "alchemist_hua", "name": "Hua Qingyi", "title": "Wandering Alchemist", "region": "fallen_star_market", "pos": [700, 470], "color": "c99ad8",
+     "gender": "female", "surname": "Hua", "given_name": "Qingyi",
+     "realm": "qi_refining", "stage": 8, "age_years": 74, "alignment": 40, "roots": {"fire": 68, "wood": 52},
+     "attributes": {"comprehension": 15, "spirit": 13}, "cultivates": true, "diligence": 0.35, "dialogue": "alchemist_hua"},
+    {"id": "blood_lotus_xue", "name": "Xue Yao", "title": "Blood Lotus Disciple", "region": "misty_forest", "pos": [1250, 480], "color": "b0303c",
+     "gender": "female", "surname": "Xue", "given_name": "Yao",
+     "realm": "qi_refining", "stage": 7, "age_years": 29, "alignment": -480, "roots": {"fire": 62, "metal": 47},
+     "attributes": {"constitution": 13, "charisma": 13}, "cultivates": true, "diligence": 0.5, "dialogue": "blood_lotus_xue"},
+    {"id": "hermit_gu", "name": "Hermit Gu", "title": "Retired Azure Cloud Elder", "region": "azure_peak", "pos": [1050, 180], "color": "e6e0c8",
+     "gender": "male", "surname": "Gu", "given_name": "Changhe",
+     "realm": "core_formation", "stage": 0, "age_years": 471, "alignment": 380, "roots": {"water": 77, "metal": 41},
+     "attributes": {"comprehension": 17, "spirit": 15, "constitution": 9}, "cultivates": true, "diligence": 0.15, "dialogue": "hermit_gu"}
   ]
 }

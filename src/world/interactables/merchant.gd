@@ -9,6 +9,8 @@ extends Interactable
 ## Only trades with players whose alignment is within these bounds (inclusive).
 @export var min_alignment := -1000000
 @export var max_alignment := 1000000
+## Sect this merchant belongs to (data/sects.json id); prices follow your reputation with it.
+@export var faction := ""
 
 
 func get_options() -> Array[Dictionary]:
@@ -21,10 +23,10 @@ func get_options() -> Array[Dictionary]:
 	for item: Dictionary in data.items.values():
 		if not Items.merchant_sells(data, item, stock_tags, max_price):
 			continue
-		var price := int(item.get("price", 0))
+		var price := Reputation.buy_price(GameState.player, data, item["id"], faction)
 		options.append({
 			"label": "Buy %s (%d spirit stones)" % [item["name"], price],
-			"action": GameState.buy_item.bind(item["id"]),
+			"action": GameState.buy_item.bind(item["id"], faction),
 			"disabled": GameState.player.item_count("spirit_stone") < price,
 			"keep_open": true,
 		})
