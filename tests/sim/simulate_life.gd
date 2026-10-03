@@ -45,6 +45,7 @@ func _run() -> void:
 			else:
 				Cultivation.cultivate(c, data, STEP_DAYS, density)
 			c.age_days += STEP_DAYS
+			Injuries.pass_days(c, STEP_DAYS)
 		final_realm_total += c.realm_index
 	print("Lives: %d, density %.1f, seed %d. Died of old age: %d. Avg final realm index: %.2f" % [lives, density, seed_value, old_age_deaths, float(final_realm_total) / lives])
 	for i in data.realms.size():
