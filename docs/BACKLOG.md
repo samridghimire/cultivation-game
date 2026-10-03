@@ -82,7 +82,7 @@ ART-001/ART-001b are done; ART-002 and ART-005 are in P1 above.
 |---|---|---|---|
 | C-001 | content | todo | Generic dialogue for generated NPCs: data/dialogue/generic_cultivator.json (greet, chat, small gift, ask about the region) with favor gains, so courtship candidates have something to say. If Dialogue only resolves files by def id, add a small `generic` fallback in GameState._npc_dialogue with a test. Depends on W-003 (done). |
 | C-002 | content | todo | Enemies expansion: data/enemies.json has 9 enemies; add 10+ for Foundation and Core Formation (beasts with ore/herb loot, rogue and demonic cultivators), and use them in encounters.json realm-gated entries. |
-| C-005 | content | todo | A fifth region (e.g. a marsh or ruined city with a demonic lean): regions.json places (meditation, gather, explore, merchant), routes with realm gates, gather tables, 8+ encounters tagged for it. Pure data; follow regions.json `_doc`. |
+| C-005b | content | todo | Withered Bone Marsh follow-ups: marsh enemies (corpse puppet, drowned yin ghost, blood-lotus scout) once C-002 lands, a marsh deed_giver context in deeds.json (e.g. a corpse-refiner's captive to free or sell), and a named marsh NPC. Depends on C-002. |
 | C-006 | content | todo | 3 new named NPCs (data/npcs.json) with dialogue files in data/dialogue/, spread across regions (e.g. a wandering alchemist, a blood lotus disciple, a retired elder) with favor-gated rewards. |
 | RIV-001 | systems | todo | Rivals and grudges: CharacterData.grudges/gratitude per NPC (save-compatible); killing/robbing/humiliating creates grudges with the victim's family/sect; a named rival NPC grows alongside the player and appears in encounters; Npcs.simulate lets enemies hunt you. |
 | W-005 | systems | todo | Secret realms (first pass): data/secret_realms.json (opens every N years for M days, realm caps, floors of encounters with treasures and guardians), GameState.enter_secret_realm. Pair with a world-ui entry point later. |
@@ -105,6 +105,7 @@ The local sessions that built combat/techniques, world/exploration/NPCs/dialogue
 ## Done
 | id | task |
 |---|---|
+| C-005 | Fifth region: Withered Bone Marsh (yin qi 1.8, danger 2, demonic lean; routes from Misty Forest/Fallen Star Market at Qi Refining), 2 anchors, bog gathering, herb/ore buyer, 12 marsh encounters with righteous and demonic options. |
 | G-004c | Higher-grade equipment: Profound Iron / Dragon-Blood Gold ores, 4 new forge recipes with manuals, Heavenforge Smithy in Fallen Star Market, equipment encounters. |
 | LIFE-001e | Evil artifacts obtainable: Blood-Drinker Saber (wild), Corpse-Silk Burial Armor and Myriad Souls Banner (ruins), once per life, each with a righteous destroy alternative. |
 | FAM-002f | Generated NPCs placed in the world: regions.json `npc_spots`, Npcs.generated_in_region/spot_positions/world_title/describe, gender colors, "Look" option. |
