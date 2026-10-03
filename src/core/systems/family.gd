@@ -230,3 +230,37 @@ static func validate(data: GameData) -> PackedStringArray:
 			if data.realm_index_of(String(realm_id)) < 0:
 				errors.append("family.json eligible_npcs has unknown realm '%s'" % realm_id)
 	return errors
+
+
+## Display lines for `c`'s family links (spouses with their rank, children,
+## parents), looked up by id in `people` (e.g. GameState.npcs). Ids that are
+## not in `people` show as "Unknown".
+static func describe_links(c: CharacterData, people: Dictionary, data: GameData) -> Array[String]:
+	var out: Array[String] = []
+	for spouse_id in c.spouses:
+		var title := rank_name(data, c.gender, String(c.spouse_ranks.get(spouse_id, ""))).capitalize()
+		out.append("%s: %s" % [title if title != "" else "Spouse", _describe_relative(people.get(spouse_id), data)])
+	for child_id in c.children:
+		out.append("%s: %s" % [_kin_title(people.get(child_id), "Son", "Daughter", "Child"), _describe_relative(people.get(child_id), data)])
+	for parent_id in c.parents:
+		out.append("%s: %s" % [_kin_title(people.get(parent_id), "Father", "Mother", "Parent"), _describe_relative(people.get(parent_id), data)])
+	return out
+
+
+static func _kin_title(other: CharacterData, male: String, female: String, unknown: String) -> String:
+	if other == null:
+		return unknown
+	match other.gender:
+		"male":
+			return male
+		"female":
+			return female
+	return unknown
+
+
+static func _describe_relative(other: CharacterData, data: GameData) -> String:
+	if other == null:
+		return "Unknown"
+	if not other.alive:
+		return "%s (deceased)" % other.name
+	return "%s (%s, age %d)" % [other.name, Cultivation.realm_label(other, data), other.age_years()]
