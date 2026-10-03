@@ -85,7 +85,6 @@ ART-001/ART-001b/ART-002 are done; ART-002b and ART-005 are in P1 above.
 | C-002 | content | todo | Enemies expansion: data/enemies.json has 9 enemies; add 10+ for Foundation and Core Formation (beasts with ore/herb loot, rogue and demonic cultivators), and use them in encounters.json realm-gated entries. |
 | C-005 | content | todo | A fifth region (e.g. a marsh or ruined city with a demonic lean): regions.json places (meditation, gather, explore, merchant), routes with realm gates, gather tables, 8+ encounters tagged for it. Pure data; follow regions.json `_doc`. |
 | RIV-001 | systems | todo | Rivals and grudges: CharacterData.grudges/gratitude per NPC (save-compatible); killing/robbing/humiliating creates grudges with the victim's family/sect; a named rival NPC grows alongside the player and appears in encounters; Npcs.simulate lets enemies hunt you. |
-| GATHER-001 | systems | todo | Realm-gated gathering: optional `min_realm` per gather_table entry (or per gather place) in regions.json, skipped (or the place disabled with a reason) below that realm, validated in GameData. Then move C-007's Nine-Leaf Soul Grass / Earth Marrow Fungus / Golden Core seeds behind Foundation/Core gates in the gather tables (today they are only rare drops there, plus realm-gated encounters). |
 | DEED-001 | systems | todo | Deed requirements and fights: optional `requires` on deeds (min_realm, min/max_alignment, like encounter choices) shown as disabled reasons by deed_giver, and an optional `enemy` fought before the effects apply (e.g. C-008's "free the captives" should mean beating the bandit lord). Then gate C-008's bandit camp deeds behind a fight. |
 | W-005 | systems | todo | Secret realms (first pass): data/secret_realms.json (opens every N years for M days, realm caps, floors of encounters with treasures and guardians), GameState.enter_secret_realm. Pair with a world-ui entry point later. |
 
@@ -108,6 +107,7 @@ The local sessions that built combat/techniques, world/exploration/NPCs/dialogue
 ## Done
 | id | task |
 |---|---|
+| GATHER-001 | Realm-gated gathering: optional `min_realm` per regions.json gather_table entry (validated); below it the entry counts as nothing found (Exploration.gather_table_for) and gathering hints at rarer treasures. Cloud-Sea Orchid Terraces gate Nine-Leaf Soul Grass (Foundation), Earth Marrow Fungus and the new Golden Core Lotus Seed entry (Core Formation). |
 | W-003b | Dialogue window: HUD modal (DialogueWindow) renders GameState.dialogue_view(), locked choices show their reason, gamepad focus, Esc ends the talk. |
 | LIFE-001f | Evil artifacts can be bought: items.json `restricted_tags` (demonic) are only sold by merchants that stock that tag, merchant `min_alignment`/`max_alignment` gate (Items.merchant_sells/check_merchant), Shadow Curio Den in Fallen Star Market for the wicked, prices for the 3 lifespan-drain artifacts. |
 | G-007c | NPCs get hurt (injuries.json `npc_mishap`, monthly for adults) and heal over time; Medicine.treat_npc / GameState.treat_npc heal their worst injury for Doctor xp, alignment and favor. |

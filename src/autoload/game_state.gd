@@ -337,7 +337,7 @@ func choose_encounter(index: int) -> void:
 func gather(table: Array, days: int) -> void:
 	if not _can_act():
 		return
-	var found := Exploration.gather(player, table, rng)
+	var found := Exploration.gather(player, Exploration.gather_table_for(player, data, table), rng)
 	var notes: PackedStringArray = []
 	for item_id in found:
 		player.add_item(item_id, found[item_id])
@@ -346,6 +346,8 @@ func gather(table: Array, days: int) -> void:
 		EventBus.post("You search for %s but find nothing worth taking." % Calendar.format_duration(days))
 	else:
 		EventBus.post("You gather for %s. (%s)" % [Calendar.format_duration(days), ", ".join(notes)], "progress")
+	if Exploration.locked_gather_count(player, data, table) > 0:
+		EventBus.post("You sense rarer treasures here, but your cultivation is too shallow to find them.")
 	_pass_time(days)
 
 
