@@ -1,9 +1,9 @@
 {
-  "_doc": "World regions. The world scene builds itself from the current region. qi_density multiplies cultivation everywhere in the region (meditation spots multiply again). routes: travel targets with days and an optional min_realm (realm id). places: interactables; 'anchor_id' (optional, globally unique) makes the place a Creation Artifact anchor (data/artifact.json); 'type' picks the script (meditation, merchant, sect_hall, workshop, deed_giver, explore, travel, gather), 'pos' and 'size' are in pixels, other keys are passed to the script as exported properties. npc_spots (optional): list of [x, y] positions where generated NPCs living in the region stand (in id order; extra NPCs gather around the spawn point). encounter_tags select entries from data/encounters.json when exploring.",
+  "_doc": "World regions. The world scene builds itself from the current region. qi_density multiplies cultivation everywhere in the region (meditation spots multiply again). routes: travel targets with days and an optional min_realm (realm id). places: interactables; 'anchor_id' (optional, globally unique) makes the place a Creation Artifact anchor (data/artifact.json); 'type' picks the script (meditation, merchant, sect_hall, workshop, deed_giver, explore, travel, gather), 'pos' and 'size' are in pixels, other keys are passed to the script as exported properties. npc_spots (optional): list of [x, y] positions where generated NPCs living in the region stand (in id order; extra NPCs gather around the spawn point). encounter_tags select entries from data/encounters.json when exploring. map_pos (optional): [x, y] fractions 0..1 placing the region on the world map screen (regions without it are spread around the map edge).",
   "start_region": "qingshi_village",
   "regions": [
     {
-      "id": "qingshi_village", "name": "Qingshi Village",
+      "id": "qingshi_village", "map_pos": [0.08, 0.72], "name": "Qingshi Village",
       "description": "A sleepy mortal village where your journey begins.",
       "qi_density": 1.0, "danger": 0,
       "map": {"size": [1600, 1000], "ground": "4d6b3c", "border": "2a3a20", "paths": [[0, 470, 1600, 60], [770, 0, 60, 1000]], "path_color": "8a7350"},
@@ -26,7 +26,7 @@
       ]
     },
     {
-      "id": "misty_forest", "name": "Misty Forest",
+      "id": "misty_forest", "map_pos": [0.4, 0.4], "name": "Misty Forest",
       "description": "Ancient trees veiled in mist. Spirit herbs grow here, and so do spirit beasts.",
       "qi_density": 1.5, "danger": 1,
       "map": {"size": [1600, 1000], "ground": "2f4f2f", "border": "16261a", "paths": [[0, 470, 1600, 60]], "path_color": "5c5238"},
@@ -49,7 +49,7 @@
       ]
     },
     {
-      "id": "fallen_star_market", "name": "Fallen Star Market",
+      "id": "fallen_star_market", "map_pos": [0.5, 0.92], "name": "Fallen Star Market",
       "description": "A bustling free city where rogue cultivators trade treasures and rumours.",
       "qi_density": 1.1, "danger": 0,
       "map": {"size": [1600, 1000], "ground": "6b6250", "border": "3a3428", "paths": [[0, 470, 1600, 60], [770, 0, 60, 1000]], "path_color": "9c917a"},
@@ -75,7 +75,7 @@
       ]
     },
     {
-      "id": "azure_peak", "name": "Azure Peak",
+      "id": "azure_peak", "map_pos": [0.88, 0.1], "name": "Azure Peak",
       "description": "Cloud-wreathed mountains thick with qi. Fierce beasts guard the heights.",
       "qi_density": 2.5, "danger": 3,
       "map": {"size": [1600, 1000], "ground": "5a6f80", "border": "2b3540", "paths": [[0, 470, 1600, 60]], "path_color": "8f9aa3"},

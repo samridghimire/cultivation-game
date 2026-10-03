@@ -234,6 +234,10 @@ func _validate_world() -> void:
 				load_errors.append("Region '%s' has a route to unknown region '%s'" % [region["id"], route.get("to", "")])
 			if route.has("min_realm") and realm_index_of(route["min_realm"]) < 0:
 				load_errors.append("Region '%s' route has unknown min_realm '%s'" % [region["id"], route["min_realm"]])
+		if region.has("map_pos"):
+			var map_pos: Variant = region["map_pos"]
+			if not (map_pos is Array and (map_pos as Array).size() == 2 and (map_pos as Array).all(func(v): return (v is float or v is int) and v >= 0.0 and v <= 1.0)):
+				load_errors.append("Region '%s' map_pos must be [x, y] with values in 0..1" % region["id"])
 		for spot in region.get("npc_spots", []):
 			if not (spot is Array and (spot as Array).size() == 2):
 				load_errors.append("Region '%s' has an npc_spot that is not [x, y]: %s" % [region["id"], spot])
