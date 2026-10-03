@@ -99,3 +99,25 @@ func test_lifespan_grows_with_realm() -> void:
 	var mortal := Cultivation.lifespan_years(c, data())
 	c.realm_index = 2
 	assert_gt(Cultivation.lifespan_years(c, data()), mortal)
+
+
+func test_expected_realm_years_counts_stages_and_failed_attempts() -> void:
+	var realm: RealmDef = data().realms[2]
+	var next: RealmDef = data().realms[3]
+	var qi := 0.0
+	for stage in realm.stage_count():
+		qi += realm.qi_required(stage)
+	var failures := (1.0 - next.breakthrough_chance) / next.breakthrough_chance
+	qi += failures * realm.qi_required(realm.stage_count() - 1) * next.failure_qi_loss
+	var expected := qi / realm.base_qi_per_day / Calendar.DAYS_PER_YEAR
+	assert_almost_eq(Cultivation.expected_realm_years(data(), 2), expected, 0.001)
+	assert_almost_eq(Cultivation.expected_realm_years(data(), 2, 2.0), expected / 2.0, 0.001)
+
+
+func test_expected_realm_years_final_realm_has_no_breakthrough() -> void:
+	var last := data().realms.size() - 1
+	var realm: RealmDef = data().realms[last]
+	var qi := 0.0
+	for stage in realm.stage_count():
+		qi += realm.qi_required(stage)
+	assert_almost_eq(Cultivation.expected_realm_years(data(), last), qi / realm.base_qi_per_day / Calendar.DAYS_PER_YEAR, 0.001)

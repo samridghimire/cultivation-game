@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-03 [F-005b] Lifespan balance: gentler breakthrough-failure qi loss, faster qi gathering in high realms, Soul Formation lifespan 2500; Cultivation.expected_realm_years + a data test that keeps lifespan gains >= 10x realm time; balance sim now heals injuries.
 - 2026-10-02 [G-002f] Core Forming recipe scroll is now findable as one-per-life ruins loot (Foundation+): neutral find, righteous ghost purification, demonic desecration.
 - 2026-10-02 [FAM-002] Courtship and marriage core: data/family.json per-gender rules (male: 1 wife + concubines growing with realm; female: 1 Dao companion), Family system with favor/realm/alignment/pride refusals, CharacterData.spouse_ranks on both spouses, GameState.court/propose.
 - 2026-10-02 [LIFE-001c] Evil artifact weapons: equip `lifespan_drain` burns years after every fight while equipped (can cause final death by old age), shown in Equipment.describe_stats; Blood-Drinker Saber item.

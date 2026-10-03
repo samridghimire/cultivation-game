@@ -24,6 +24,17 @@ func test_lifespans_increase_with_realm() -> void:
 		assert_gt(realms[i].lifespan_years, realms[i - 1].lifespan_years, realms[i].id)
 
 
+## F-005b balance rule: each breakthrough must add comfortably more lifespan than
+## a 1.0x cultivator needs to reach the next one, so slow cultivators (~0.3x) and
+## unlucky breakthrough streaks still rarely die of old age.
+func test_lifespan_gain_outpaces_realm_time() -> void:
+	var realms := data().realms
+	for i in range(1, realms.size() - 1):
+		var gain: int = realms[i + 1].lifespan_years - realms[i].lifespan_years
+		var years := Cultivation.expected_realm_years(data(), i)
+		assert_gt(float(gain), 10.0 * years, "%s: +%d years vs %.1f expected" % [realms[i].id, gain, years])
+
+
 func test_required_professions_exist() -> void:
 	for prof_id in ["alchemist", "blacksmith", "talisman_master", "array_master", "doctor"]:
 		assert_true(data().professions.has(prof_id), prof_id)
