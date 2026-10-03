@@ -522,6 +522,15 @@ func refine(recipe_id: String) -> void:
 	_pass_time(result["days"])
 
 
+## Craft `times` batches in a row, stopping when one is no longer possible
+## (missing ingredients, rank) or the character dies.
+func refine_batch(recipe_id: String, times: int) -> void:
+	for i in times:
+		if not _can_act() or Alchemy.check(player, data, recipe_id) != "":
+			break
+		refine(recipe_id)
+
+
 ## Fight an enemy from data/enemies.json.
 func fight(enemy_id: String) -> void:
 	if not data.enemies.has(enemy_id):

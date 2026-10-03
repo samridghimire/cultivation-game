@@ -97,6 +97,18 @@ static func known_recipes(c: CharacterData, data: GameData, prof_id: String = "a
 	return ids
 
 
+## Unknown recipes of `prof_id` whose scroll `c` carries: {recipe_id: item_id}.
+static func scroll_recipes(c: CharacterData, data: GameData, prof_id: String) -> Dictionary:
+	var found := {}
+	for item_id in c.inventory:
+		if c.item_count(item_id) <= 0:
+			continue
+		var recipe_id: String = data.items.get(item_id, {}).get("effects", {}).get("learn_recipe", "")
+		if recipe_id != "" and data.recipes.has(recipe_id) and data.recipes[recipe_id]["profession"] == prof_id and not knows(c, data, recipe_id):
+			found[recipe_id] = item_id
+	return found
+
+
 ## Save migration for characters from before recipe learning existed: they
 ## knew every recipe their rank allowed, so they keep those.
 static func grant_rank_recipes(c: CharacterData, data: GameData) -> void:
