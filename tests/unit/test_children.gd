@@ -184,3 +184,24 @@ func test_game_state_try_for_child_and_birth() -> void:
 	assert_true(wife.children.has(child.id))
 	assert_false(Children.is_pregnant(wife))
 	gs.end_session()
+
+
+func test_describe_pregnancies_lists_own_and_spouses() -> void:
+	var c := new_character()
+	c.gender = "male"
+	var npcs := {}
+	var wife := Npcs.spawn(npcs, data(), seeded_rng(1), {"gender": "female"})
+	var concubine := Npcs.spawn(npcs, data(), seeded_rng(2), {"gender": "female"})
+	Family.marry(c, wife, "wife")
+	Family.marry(c, concubine, "concubine")
+	assert_eq(Children.describe_pregnancies(c, npcs).size(), 0)
+	wife.pregnancy = {"partner": c.id, "days_left": 90}
+	concubine.pregnancy = {"partner": "someone_else", "days_left": 10}
+	var lines := Children.describe_pregnancies(c, npcs)
+	assert_eq(lines.size(), 1, str(lines))
+	assert_true(lines[0].contains(wife.name) and lines[0].contains("3 months"), lines[0])
+	var she := new_character(9)
+	she.gender = "female"
+	she.pregnancy = {"partner": wife.id, "days_left": 0}
+	lines = Children.describe_pregnancies(she, npcs)
+	assert_true(lines[0].begins_with("You are with child by %s" % wife.name) and lines[0].contains("due any day"), lines[0])
