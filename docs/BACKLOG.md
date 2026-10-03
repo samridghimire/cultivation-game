@@ -17,7 +17,6 @@ Roles: `systems` (core rules + tests), `content` (data/*.json + small hooks), `w
 | G-004b | world-ui | todo | Show equipped weapon/armor with Equipment.describe_stats on the character sheet with Unequip buttons (GameState.unequip), and equip stats + an "Equip" label instead of "Use" for equipment in the inventory screen (GameState.equip_item). |
 | G-005d | world-ui | todo | Ready/unready combat talismans (items with a `combat` block) from the inventory screen via GameState.ready_talisman/unready_talisman, show the readied list (max CombatTalismans.MAX_READIED) and the talisman kind/power (CombatTalismans.amount) in item details. |
 | W-003b | world-ui | todo | Dialogue window UI: open on EventBus.dialogue_requested, render GameState.dialogue_view() ({id, speaker, text, choices[{index,label,disabled,reason}]}), call GameState.choose_dialogue(index), close on dialogue_ended. Follow src/ui/combat_report.gd; register in hud.gd. NPCs fall back to the choice menu until it exists. |
-| G-007b | world-ui | todo | Clinic: new `clinic` place type (interactable in src/world/interactables, registered like workshop) with options "Treat patients (1 month)" (GameState.treat_patients), "Treat your <injury>" per injury (treat_own_injury), "Pay doctor (N stones)" (visit_clinic, Medicine.clinic_cost). Add one clinic place to qingshi_village and fallen_star_market in regions.json. |
 | QA-002 | qa | todo | End-to-end life script test (tests/unit/test_full_life.gd): drive one character through GameState only: create, cultivate to Qi Refining 3, join a sect, work a profession, refine a pill, buy/equip gear, fight + respawn via the artifact, court + propose + marry an eligible NPC, try for a child until born, save, load, and assert state survives the round trip. Fix any bug you find (small) or file a task. |
 
 ## P1: Core gameplay loops
@@ -105,6 +104,7 @@ The local sessions that built combat/techniques, world/exploration/NPCs/dialogue
 ## Done
 | id | task |
 |---|---|
+| G-007b | Clinic place type (Village Clinic, Hall of Gentle Hands Clinic): treat patients, treat own injuries, pay the doctor. |
 | G-004c | Higher-grade equipment: Profound Iron / Dragon-Blood Gold ores, 4 new forge recipes with manuals, Heavenforge Smithy in Fallen Star Market, equipment encounters. |
 | LIFE-001e | Evil artifacts obtainable: Blood-Drinker Saber (wild), Corpse-Silk Burial Armor and Myriad Souls Banner (ruins), once per life, each with a righteous destroy alternative. |
 | FAM-002f | Generated NPCs placed in the world: regions.json `npc_spots`, Npcs.generated_in_region/spot_positions/world_title/describe, gender colors, "Look" option. |
