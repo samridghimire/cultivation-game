@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-03 [G-008c] Sect contribution shop: members claim pills, manuals, recipe scrolls and gear from their sect's treasury at the sect hall (GameState.buy_with_contribution); spending contribution never lowers rank.
 - 2026-10-03 [C-006] Three new named NPCs with dialogue: wandering alchemist Hua Qingyi (Fallen Star Market: herb trade, furnace work, a formula and a commissioned Foundation pill), Blood Lotus disciple Xue Yao (Misty Forest: demonic raids and blood arts, or a righteous plea to leave her sect) and the dying Hermit Gu (Azure Peak: the Flowing Water Sutra and a Core Formation legacy you can accept, decline, or steal).
 - 2026-10-03 [C-007] Higher-grade herbs and ores for Foundation/Core cultivators: Cloud-Mist Orchid, Scarlet Flame Fruit, Hundred-Year Snow Lotus, Earth Marrow Fungus, Nine-Leaf Soul Grass, Golden Core Lotus Seed, Earth-Vein Jade and Fire Marrow Crystal; two new gather sites, six realm-gated herb finds, and three new alchemy recipes taught by scrolls.
 - 2026-10-03 [C-008] Twelve new deeds at four new deed givers: a Blood Lotus agent who wants Qingshi's well poisoned, a wounded sect disciple in the Misty Forest, a street child in Fallen Star Market and a bandit camp on Azure Peak, each with righteous, neutral and demonic choices.
