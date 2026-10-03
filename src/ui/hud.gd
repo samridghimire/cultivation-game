@@ -8,6 +8,7 @@ const MAX_LOG_LINES := 60
 var _status: Label
 var _qi_bar: ProgressBar
 var _injuries: Label
+var _hint: Label
 var _log: RichTextLabel
 var _prompt: Label
 var _choice_menu: ChoiceMenu
@@ -63,6 +64,7 @@ func _ready() -> void:
 	EventBus.session_started.connect(_refresh)
 	EventBus.region_changed.connect(func(_id): _refresh())
 	EventBus.message_posted.connect(_on_message)
+	Settings.changed.connect(func(key: String, _v): if key == "show_hints": _refresh())
 	EventBus.interaction_target_changed.connect(_on_target_changed)
 	EventBus.interaction_menu_requested.connect(_on_menu_requested)
 	EventBus.crafting_requested.connect(_on_crafting_requested)
@@ -130,6 +132,10 @@ func _build_status_panel() -> void:
 	_injuries = UIStyle.label("", 14, UIStyle.CATEGORY_COLORS["danger"])
 	_injuries.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	box.add_child(_injuries)
+	_hint = UIStyle.label("", 14, Color("9fd3c7"))
+	_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_hint.custom_minimum_size = Vector2(316, 0)
+	box.add_child(_hint)
 	box.add_child(UIStyle.label("[E] interact   [C] character   [I] inventory   [K] techniques   [F5] save   [Esc] pause", 12, Color(0.7, 0.7, 0.7)))
 	add_child(panel)
 
@@ -197,6 +203,9 @@ func _refresh() -> void:
 	_qi_bar.value = p.qi
 	_injuries.visible = Injuries.has_any(p)
 	_injuries.text = "Injured: " + ", ".join(Injuries.describe(p, data))
+	var hints := Guidance.hints(p, data, density * Sects.cultivation_bonus(p, data), 1)
+	_hint.visible = bool(Settings.get_value("show_hints")) and not hints.is_empty()
+	_hint.text = "Next: " + hints[0] if not hints.is_empty() else ""
 
 
 func _on_message(text: String, category: String) -> void:
