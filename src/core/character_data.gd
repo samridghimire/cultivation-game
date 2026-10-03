@@ -19,6 +19,8 @@ var spouse_ranks: Dictionary = {}
 var pregnancy: Dictionary = {}
 ## The mother's spousal rank to the father at birth ("" = unknown or adopted); used for heir priority.
 var birth_rank := ""
+## Training assigned by a parent (FAM-004): {} or {"assignment": id, "profession": id}. See Training.
+var training: Dictionary = {}
 ## NPC behavior. Empty/negative values fall back to the data/npcs.json def (see Npcs).
 var home_region := ""
 var cultivates := false
@@ -103,6 +105,7 @@ func to_dict() -> Dictionary:
 		"spouse_ranks": spouse_ranks.duplicate(),
 		"pregnancy": pregnancy.duplicate(),
 		"birth_rank": birth_rank,
+		"training": training.duplicate(),
 		"home_region": home_region,
 		"cultivates": cultivates,
 		"diligence": diligence,
@@ -152,6 +155,9 @@ static func from_dict(d: Dictionary) -> CharacterData:
 	if not saved_pregnancy.is_empty():
 		c.pregnancy = {"partner": String(saved_pregnancy.get("partner", "")), "days_left": int(saved_pregnancy.get("days_left", 0))}
 	c.birth_rank = String(d.get("birth_rank", ""))
+	var saved_training: Dictionary = d.get("training", {})
+	for key in saved_training:
+		c.training[String(key)] = String(saved_training[key])
 	c.home_region = String(d.get("home_region", ""))
 	c.cultivates = bool(d.get("cultivates", false))
 	c.diligence = float(d.get("diligence", -1.0))

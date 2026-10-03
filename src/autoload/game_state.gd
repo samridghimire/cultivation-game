@@ -461,6 +461,68 @@ func try_for_child(spouse_id: String) -> void:
 	_pass_time(result["days"])
 
 
+## Give one of your children a monthly training assignment (data/family.json
+## "training"), paid in spirit stones each month. Takes no time.
+func assign_training(child_id: String, assignment_id: String, profession: String = "") -> void:
+	if not _can_act():
+		return
+	var child: CharacterData = npcs.get(child_id)
+	var result := Training.assign(player, child, assignment_id, profession, data)
+	if result["ok"]:
+		var what := Training.assignment_name(data, assignment_id)
+		if profession != "" and child.training.has("profession"):
+			what += " (%s)" % data.professions[profession].name
+		EventBus.post("%s will train: %s, %d spirit stones a month." % [child.name, what, Training.monthly_cost(data, assignment_id)])
+	else:
+		EventBus.post(result["reason"], "warning")
+	EventBus.player_changed.emit()
+
+
+## Stop paying for a child's training. Takes no time.
+func clear_training(child_id: String) -> void:
+	if not _can_act():
+		return
+	var child: CharacterData = npcs.get(child_id)
+	var reason := Training.check_child(player, child)
+	if reason != "":
+		EventBus.post(reason, "warning")
+	elif Training.current(child) != "":
+		Training.clear(child)
+		EventBus.post("%s's training is stopped." % child.name)
+	EventBus.player_changed.emit()
+
+
+## Teach a child in the current region a technique you know.
+func teach_technique(child_id: String, tech_id: String) -> void:
+	if not _can_act():
+		return
+	var child: CharacterData = npcs.get(child_id)
+	if not _child_is_here(child):
+		return
+	var result := Training.teach(player, child, tech_id, data)
+	if not result["ok"]:
+		EventBus.post(result["reason"], "warning")
+		EventBus.player_changed.emit()
+		return
+	EventBus.post("You teach %s the %s." % [child.name, data.techniques[tech_id].name], "progress")
+	_pass_time(result["days"])
+
+
+## Give a child in the current region a pill (any usable item) to take at once. Takes no time.
+func give_to_child(child_id: String, item_id: String) -> void:
+	if not _can_act():
+		return
+	var child: CharacterData = npcs.get(child_id)
+	if not _child_is_here(child):
+		return
+	var result := Training.give(player, child, item_id, data, world_flags)
+	if result["ok"]:
+		EventBus.post("%s takes the %s. (%s)" % [child.name, data.items[item_id]["name"], ", ".join(result["notes"])], "progress")
+	else:
+		EventBus.post(result["reason"], "warning")
+	EventBus.player_changed.emit()
+
+
 func learn_technique(tech_id: String) -> void:
 	if not _can_act():
 		return
@@ -780,6 +842,10 @@ func _on_days_advanced(days: int) -> void:
 			continue
 		EventBus.post(event["text"], event["category"])
 	_advance_pregnancies(days)
+	@warning_ignore("integer_division")
+	var months := player.age_days / Calendar.DAYS_PER_MONTH - age_before / Calendar.DAYS_PER_MONTH
+	for event in Training.advance(player, npcs, data, months):
+		EventBus.post(event["text"], event["category"])
 	if player.age_years() >= Cultivation.lifespan_years(player, data):
 		_kill("Your lifespan is exhausted. You die of old age at %d." % player.age_years())
 
@@ -803,6 +869,15 @@ func _advance_pregnancies(days: int) -> void:
 		var child := Children.give_birth(mother, father, npcs, data, rng, region)
 		var mother_name := "you" if mother == player else mother.name
 		EventBus.post("A child is born to %s: %s, a %s with %s." % [mother_name, child.name, "son" if child.gender == "male" else "daughter", SpiritualRoots.describe(child.spiritual_roots, data)], "progress")
+
+
+## Whether `child` (a living NPC) is in the current region; posts a warning if not.
+func _child_is_here(child: CharacterData) -> bool:
+	if child != null and child.alive and Npcs.region_of(child, data) != current_region:
+		EventBus.post("%s is not here." % child.name, "warning")
+		EventBus.player_changed.emit()
+		return false
+	return true
 
 
 ## A death by violence: the Creation Artifact respawns the player if it has a
