@@ -89,6 +89,7 @@ func _rebuild() -> void:
 	t += "Alignment: %s (%d)   |   %s\n\n" % [Alignment.tier_name(p.alignment, data), p.alignment, Sects.describe(p, data)]
 	_gender_row.visible = p.gender == ""
 	var family := Family.describe_links(p, GameState.npcs, data)
+	family.append_array(Children.describe_pregnancies(p, GameState.npcs))
 	if not family.is_empty():
 		t += "[color=#%s]Family[/color]\n" % accent
 		for line in family:
