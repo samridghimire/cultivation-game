@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-03 [VIS-003] Places are drawn as what they are (qi pools, market stalls, workshops, sect halls, gates, herb patches, caves, robed NPC figures) instead of rectangles, and the current interaction target pulses.
 - 2026-10-03 [G-005c] Talisman content: a talisman stall in Fallen Star Market, Gold-Thread Talisman Paper, 7 higher-rank talismans (buffs, Foundation/Core combat talismans, a demonic Blood Sacrifice talisman) taught by manuals, and talisman finds while exploring.
 - 2026-10-03 [G-004c] Higher-grade equipment: Profound Iron and Dragon-Blood Gold ores, 4 Foundation/Core Formation forge recipes taught by forging manuals, a Heavenforge Smithy in Fallen Star Market, and equipment/ore finds while exploring.
 - 2026-10-03 [LIFE-001e] Evil artifacts are now obtainable: the Blood-Drinker Saber plus the new Corpse-Silk Burial Armor and Myriad Souls Banner (lifespan-draining) are once-per-life exploration finds; righteous players can destroy them for alignment and qi instead.

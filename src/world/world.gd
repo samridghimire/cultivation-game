@@ -74,6 +74,7 @@ func _build_places() -> void:
 	for place: Dictionary in _region.get("places", []):
 		var node: Interactable = PLACE_SCRIPTS[place["type"]].new()
 		node.position = _vec(place.get("pos", [0, 0]))
+		node.art_kind = place["type"]
 		for key in place:
 			if LAYOUT_KEYS.has(key):
 				continue
@@ -89,6 +90,7 @@ func _build_npcs() -> void:
 			continue  # Generated NPCs are placed by _build_generated_npcs().
 		var def: Dictionary = GameState.data.npcs[c.id]
 		var node: Interactable = NPC_SCRIPT.new()
+		node.art_kind = "npc"
 		node.npc_id = c.id
 		node.display_name = "%s (%s)" % [c.name, def["title"]] if def.has("title") else c.name
 		node.position = _vec(def.get("pos", [0, 0]))
@@ -108,6 +110,7 @@ func _build_generated_npcs() -> void:
 	for i in people.size():
 		var c := people[i]
 		var node: Interactable = NPC_SCRIPT.new()
+		node.art_kind = "npc"
 		node.npc_id = c.id
 		node.display_name = "%s (%s)" % [c.name, Npcs.world_title(c, GameState.player, data)]
 		node.position = spots[i]
