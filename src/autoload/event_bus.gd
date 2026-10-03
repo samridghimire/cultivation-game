@@ -24,6 +24,12 @@ signal region_changed(region_id: String)
 ## A fight ended (GameState.fight). `log` is the full blow-by-blow.
 signal combat_finished(enemy_name: String, victory: bool, log: PackedStringArray)
 
+## An explored encounter offers choices: render GameState.encounter_choices()
+## and call GameState.choose_encounter(index).
+signal encounter_choice_requested(encounter_id: String)
+## The pending encounter choice was made (its outcome was applied).
+signal encounter_choice_resolved
+
 ## A conversation with an NPC started; render GameState.dialogue_view().
 signal dialogue_requested(npc_id: String)
 ## The conversation ended (after its effects and time were applied).
