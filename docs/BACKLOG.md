@@ -96,7 +96,6 @@ ART-001/ART-001b are done; ART-002 and ART-005 are in P1 above.
 | QA-005 | qa | todo | Family edge cases: spouse dies while pregnant, carrier spouse divorces/dies mid-pregnancy, save/load mid-pregnancy, child of a deceased parent, player respawn during pregnancy. Add tests, fix small bugs, file tasks for big ones. |
 | QA-006 | qa | todo | Economy sim (tests/sim/simulate_economy.gd): spirit stone income (professions, sales, missions once G-008 lands) vs costs (pills, gear, artifact recharge growth) across a 200-year life; report whether the player can afford breakthroughs and recharges, and propose data tweaks. |
 | QA-007 | qa | todo | Combat balance sim: per realm, a typical player (realm, gear, techniques, talismans) vs every enemy in enemies.json; report win rates and flag enemies that are trivial or unbeatable for the realm they appear at in encounters.json. |
-| QA-008 | qa | todo | Gamepad/focus audit: a scene test that opens each HUD screen (inventory, techniques, character sheet, crafting, pause, load, settings, combat report) and asserts something has focus and ui_cancel closes it. Fix screens that fail. |
 | QA-009 | qa | todo | Review recently merged code (G-005b combat talismans, FAM-003 children, FAM-002c eligible NPCs) for correctness and missing tests; fix small bugs, file tasks for larger ones. |
 | UI-LEAK-001 | world-ui | todo | Most HUD screens call `UIStyle.panel().get_theme_stylebox("panel")` in _init and leak the temporary PanelContainer (shows as "ObjectDB instances leaked" when screens are built in tests). Add a `UIStyle.panel_style()` helper returning just the StyleBox and use it everywhere (character_sheet already frees its temp panel). |
 
@@ -154,3 +153,4 @@ The local sessions that built combat/techniques, world/exploration/NPCs/dialogue
 | W-002 | NPC model: 5 named NPCs (data/npcs.json) age, cultivate monthly, break through and die; saved in GameState.npcs with per-NPC favor. |
 | W-003 | Dialogue rules + data (src/core/systems/dialogue.gd, data/dialogue/*.json): entry conditions, hidden/locked choices, effects, favor, time. Inline choice-menu fallback. |
 | F-000 | Project foundation: data-driven core systems, autoloads, village slice, save/load, tests, tooling. |
+| QA-008 | Gamepad/focus audit (tests/unit/test_focus_audit.gd): every HUD modal (character sheet, inventory, techniques, crafting, combat report, choice menu, pause, settings, load) gets focus inside itself and closes on ui_cancel; the test runner now awaits async tests. All screens passed, no fixes needed. |

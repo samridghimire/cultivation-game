@@ -35,7 +35,7 @@ src/world/             The world. Regions are built from data/regions.json (worl
                        Interactables are Area2D subclasses that return menu entries from get_options().
 src/ui/                UI, mostly built in code. Shared look in UIStyle. HUD modals register via
                        hud._add_screen(action, screen); a screen needs open()/close() and a `closed` signal.
-tests/unit/test_*.gd   Tests extend TestCase. Methods named test_* run automatically.
+tests/unit/test_*.gd   Tests extend TestCase. Methods named test_* run automatically (they may `await` frames, see test_focus_audit.gd).
 ```
 
 ### Rules
