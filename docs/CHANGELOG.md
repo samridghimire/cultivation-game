@@ -2,7 +2,6 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
-
 - 2026-10-03 [LIFE-001d] 3 more forbidden secret arts (Blood Shadow Flight, Ten-Thousand Bones Armor, Heaven-Devouring Burst) with manuals sold at the Night Market or found in ruins; righteous players can seal the cursed manuals for alignment and qi.
 - 2026-10-03 [G-005] Talismans: Talisman Masters inscribe single-use talismans at the workshop; new `buff` effect key for temporary combat buffs from items; Blank Talisman Paper and 4 starter buff talismans.
 - 2026-10-03 [F-005b] Lifespan balance: gentler breakthrough-failure qi loss, faster qi gathering in high realms, Soul Formation lifespan 2500; Cultivation.expected_realm_years + a data test that keeps lifespan gains >= 10x realm time; balance sim now heals injuries.
