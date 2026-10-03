@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-03 [QA-005] When a pregnant NPC dies, the pregnancy ends and the news mentions the lost child; new family edge-case tests cover posthumous births, respawning while pregnant and saving/loading mid-pregnancy.
 - 2026-10-03 [QA-002] End-to-end life test: one character goes from creation through sect, profession, alchemy, gear, an artifact respawn, marriage and a child, and the whole family survives a save/load round trip.
 - 2026-10-03 [QA-20261003-2] The message log now reports news about your own children and parents (deaths, breakthroughs) even when they are generated NPCs; the stranger-noise filter moved to Npcs.is_newsworthy.
 - 2026-10-03 [G-004b] Equipment is usable in-game: the inventory shows slot, stats and what an item would replace with an "Equip" button, and the character sheet lists equipped weapon/armor with Unequip buttons. InventoryScreen no longer leaks its temporary style panel.
