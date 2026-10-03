@@ -87,6 +87,8 @@ ART-001/ART-001b are done; ART-002 and ART-005 are in P1 above.
 | C-006 | content | todo | 3 new named NPCs (data/npcs.json) with dialogue files in data/dialogue/, spread across regions (e.g. a wandering alchemist, a blood lotus disciple, a retired elder) with favor-gated rewards. |
 | RIV-001 | systems | todo | Rivals and grudges: CharacterData.grudges/gratitude per NPC (save-compatible); killing/robbing/humiliating creates grudges with the victim's family/sect; a named rival NPC grows alongside the player and appears in encounters; Npcs.simulate lets enemies hunt you. |
 | W-005 | systems | todo | Secret realms (first pass): data/secret_realms.json (opens every N years for M days, realm caps, floors of encounters with treasures and guardians), GameState.enter_secret_realm. Pair with a world-ui entry point later. |
+| VIS-002 | world-ui | done | Region scenery: deterministic trees, rocks, grass tufts and flowers seeded from the region id and drawn under the places, avoiding paths, places, npc_spots and spawn; per-region regions.json `map.decor` (counts + colors, documented and validated). Pure placement in src/core/systems/scenery.gd with unit tests. |
+| VIS-003 | world-ui | todo | Place art: draw each place type distinctly instead of a plain rectangle (meditation stone circle with a glow, merchant stall with an awning, workshop furnace, sect hall roof, travel gate, gather herb patch, explore cave mouth, NPC as a small robed figure), and a pulsing outline on the current interaction target. |
 
 ## P4: QA and tooling
 | id | role | status | task |
