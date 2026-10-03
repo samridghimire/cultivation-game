@@ -1,5 +1,6 @@
 extends Interactable
-## A named NPC from data/npcs.json. Talking opens its dialogue: in the dialogue
+## An NPC: a named one from data/npcs.json or a generated one (Npcs.spawn,
+## no def), who can be looked at. Talking opens its dialogue: in the dialogue
 ## window if one listens to EventBus.dialogue_requested, otherwise inline in
 ## this menu (each line is posted to the message log).
 
@@ -17,6 +18,8 @@ func is_available() -> bool:
 func get_options() -> Array[Dictionary]:
 	var options: Array[Dictionary] = []
 	var def: Dictionary = GameState.data.npcs.get(npc_id, {})
+	if def.is_empty():
+		options.append({"label": "Look", "action": _look, "keep_open": true})
 	if def.has("dialogue"):
 		if _has_dialogue_window():
 			options.append({"label": "Talk", "action": GameState.start_dialogue.bind(npc_id)})
@@ -26,6 +29,12 @@ func get_options() -> Array[Dictionary]:
 		for deed in Deeds.available(GameState.data, def["deed_context"], GameState.world_flags):
 			options.append({"label": deed["name"], "action": GameState.perform_deed.bind(deed["id"])})
 	return options
+
+
+func _look() -> void:
+	var npc: CharacterData = GameState.npcs.get(npc_id)
+	if npc != null:
+		EventBus.post(Npcs.describe(npc, GameState.data))
 
 
 func _has_dialogue_window() -> bool:

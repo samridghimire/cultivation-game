@@ -56,6 +56,9 @@ static func eligible_encounters(c: CharacterData, data: GameData, tags: Array, f
 		var blocker: String = e.get("blocked_by_flag", "")
 		if blocker != "" and flags.get(blocker, false):
 			continue
+		var needed_flag: String = e.get("requires_flag", "")
+		if needed_flag != "" and not flags.get(needed_flag, false):
+			continue
 		if e.get("only_if_applicable", false) and Effects.check(c, data, e.get("effects", {})) != "":
 			continue
 		var weight := float(e.get("weight", 1))
@@ -95,6 +98,80 @@ static func resolve(c: CharacterData, data: GameData, encounter: Dictionary, fla
 	if not effects.is_empty():
 		notes = Effects.apply(c, data, effects, flags)
 	return {"ok": true, "reason": "", "notes": notes, "days": int(encounter.get("days", 0)), "enemy": encounter.get("enemy", "")}
+
+
+# --- Choices (W-004c) ----------------------------------------------------------
+
+## Why `c` cannot pick `choice` (an entry of an encounter's `choices`), or ""
+## if they can. `requires`: {min_realm, min_alignment, max_alignment, flag};
+## the choice's effects must also be payable (e.g. items it costs).
+static func check_choice(c: CharacterData, data: GameData, choice: Dictionary, flags: Dictionary) -> String:
+	var req: Dictionary = choice.get("requires", {})
+	if req.has("min_realm") and c.realm_index < data.realm_index_of(req["min_realm"]):
+		return "Only a cultivator of %s or above could do that." % data.realms[data.realm_index_of(req["min_realm"])].name
+	if req.has("min_alignment") and c.alignment < int(req["min_alignment"]):
+		return "Your heart is too dark for that."
+	if req.has("max_alignment") and c.alignment > int(req["max_alignment"]):
+		return "You are too soft-hearted for that."
+	if req.has("flag") and not flags.get(req["flag"], false):
+		return "You lack the knowledge for that."
+	return Effects.check(c, data, choice.get("effects", {}))
+
+
+## The choices of `encounter` for `c`: [{index, label, disabled, reason}].
+static func choices(c: CharacterData, data: GameData, encounter: Dictionary, flags: Dictionary) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	var list: Array = encounter.get("choices", [])
+	for i in list.size():
+		var reason := check_choice(c, data, list[i], flags)
+		out.append({"index": i, "label": String(list[i].get("label", "")), "disabled": reason != "", "reason": reason})
+	return out
+
+
+## Applies choice `index` of `encounter`. Returns {ok, reason, text, notes,
+## days, enemy, karma}; `enemy` is an enemy id the caller must fight ("" = none)
+## and `karma` is true when the choice shifted alignment.
+static func resolve_choice(c: CharacterData, data: GameData, encounter: Dictionary, index: int, flags: Dictionary) -> Dictionary:
+	var list: Array = encounter.get("choices", [])
+	if index < 0 or index >= list.size():
+		return {"ok": false, "reason": "That is not a choice here.", "text": "", "notes": PackedStringArray(), "days": 0, "enemy": "", "karma": false}
+	var choice: Dictionary = list[index]
+	var reason := check_choice(c, data, choice, flags)
+	if reason != "":
+		return {"ok": false, "reason": reason, "text": "", "notes": PackedStringArray(), "days": 0, "enemy": "", "karma": false}
+	var effects: Dictionary = choice.get("effects", {})
+	var notes := Effects.apply(c, data, effects, flags) if not effects.is_empty() else PackedStringArray()
+	return {"ok": true, "reason": "", "text": String(choice.get("text", "")), "notes": notes, "days": int(choice.get("days", 0)), "enemy": String(choice.get("enemy", "")), "karma": effects.has("alignment")}
+
+
+## Load errors for encounter `choices` and `requires_flag`.
+static func validate_choices(data: GameData) -> PackedStringArray:
+	var errors: PackedStringArray = []
+	for e: Dictionary in data.encounters.values():
+		if e.has("requires_flag") and String(e["requires_flag"]) == "":
+			errors.append("Encounter '%s' has an empty requires_flag" % e["id"])
+		if not e.has("choices"):
+			continue
+		var list: Array = e["choices"]
+		if list.size() < 2:
+			errors.append("Encounter '%s' needs at least 2 choices" % e["id"])
+		if e.has("enemy"):
+			errors.append("Encounter '%s' with choices must put its enemy in a choice" % e["id"])
+		for choice: Dictionary in list:
+			var label := String(choice.get("label", ""))
+			if label == "":
+				errors.append("Encounter '%s' has a choice without a label" % e["id"])
+			if choice.has("enemy") and not data.enemies.has(choice["enemy"]):
+				errors.append("Encounter '%s' choice '%s' has unknown enemy '%s'" % [e["id"], label, choice["enemy"]])
+			for item_id in choice.get("effects", {}).get("items", {}):
+				if not data.items.has(item_id):
+					errors.append("Encounter '%s' choice '%s' references unknown item '%s'" % [e["id"], label, item_id])
+			var req: Dictionary = choice.get("requires", {})
+			if req.has("min_realm") and data.realm_index_of(String(req["min_realm"])) < 0:
+				errors.append("Encounter '%s' choice '%s' has unknown min_realm '%s'" % [e["id"], label, req["min_realm"]])
+			if int(choice.get("days", 0)) < 0:
+				errors.append("Encounter '%s' choice '%s' needs days >= 0" % [e["id"], label])
+	return errors
 
 
 ## Draws from a gathering table [{item, weight, min, max}] ("" item = nothing).

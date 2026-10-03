@@ -278,3 +278,14 @@ func test_game_state_refine() -> void:
 	for item_id in ingredients:
 		assert_eq(c.item_count(item_id), 0)
 	gs.end_session()
+
+
+func test_scroll_recipes_lists_carried_unknown_scrolls() -> void:
+	var c := new_character()
+	c.inventory = {}
+	assert_true(Alchemy.scroll_recipes(c, data(), "alchemist").is_empty())
+	c.add_item("recipe_meridian_mending_pill", 1)
+	assert_eq(Alchemy.scroll_recipes(c, data(), "alchemist"), {"meridian_mending_pill": "recipe_meridian_mending_pill"})
+	assert_true(Alchemy.scroll_recipes(c, data(), "blacksmith").is_empty())
+	Alchemy.learn(c, data(), "meridian_mending_pill")
+	assert_true(Alchemy.scroll_recipes(c, data(), "alchemist").is_empty())
