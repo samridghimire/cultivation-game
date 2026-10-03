@@ -3,6 +3,10 @@
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
 - 2026-10-03 [G-008c] Sect contribution shop: members claim pills, manuals, recipe scrolls and gear from their sect's treasury at the sect hall (GameState.buy_with_contribution); spending contribution never lowers rank.
+- 2026-10-03 [FAM-002f] Generated NPCs (courtship candidates, spouses, children) now appear in the world at per-region npc_spots, colored by gender with a realm or relation title, and can be looked at.
+- 2026-10-03 [FAM-002e] Meditation spots offer "Dual cultivate with <spouse>" (1 month, shows the qi bonus %, disabled with a reason) for spouses living in the current region.
+- 2026-10-03 [FAM-001b] Character sheet: gender + family header, Family section (spouses by rank, children, parents), one-time gender picker for old saves (GameState.choose_gender).
+- 2026-10-03 [W-004c] Encounter choices: encounters can offer choices (help, rob, pay, fight...) gated by realm, alignment, flags and cost, and follow-up encounters can require a flag set by an earlier choice (GameState.choose_encounter). UI and content follow in W-004d/W-004e.
 - 2026-10-03 [G-008] Sect missions: disciples take data-driven missions (gather, hunt, deliver, guard) for contribution, stones and alignment; hunts and guard duties are real fights, missions have rank/realm requirements and cooldowns (GameState.take_mission). 9 missions across the three sects.
 - 2026-10-03 [FAM-002g] Widowed spouses: a dead spouse no longer takes up a wife/concubine/Dao companion slot, so the player can remarry, and widowed NPCs can be courted again; the dead stay in the family history.
 - 2026-10-03 [G-002g] Crafting screen: "x5" batch button (GameState.refine_batch stops when ingredients run out) and recipe scrolls in your pouch show as "(scroll)" entries with a Study button.
