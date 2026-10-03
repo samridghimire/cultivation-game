@@ -54,7 +54,7 @@ Roles: `systems` (core rules + tests), `content` (data/*.json + small hooks), `w
 | FAM-009 | systems | todo | NPC clans (data/clans.json) with their own families; marriage alliances between clans; clan feuds and favor. Family members can join sects (clan + sect dual membership). Depends on FAM-005. |
 | FAM-010 | world-ui | todo | Family tree & clan screen (HUD modal, gamepad-friendly): spouses, children with realm/age/roots, clan members, ranks, treasury, estate buildings; actions to assign training (FAM-004). Build incrementally on FAM-005b. |
 | FAM-011 | world-ui | todo | Family home place type in regions where family members live (spouses/children appear there as NPCs); adoption entry at a temple/orphanage once FAM-003b lands. |
-| FAM-012 | content | todo | Family content: names.json lists (100+ surnames, 200+ given names), eligible-NPC templates per region, data/family.json tuning, bloodline definitions and clan building definitions (once those systems exist). |
+| FAM-012b | content | todo | Family content part 2: bloodline definitions (data/bloodlines.json once FAM-007 lands), clan building definitions (data/clan_buildings.json once FAM-006 lands), and data/family.json tuning after FAM-013's generational sim. Per-region eligible-NPC realms already exist (family.json eligible_npcs.realms_by_danger). |
 | FAM-013 | qa | todo | Generational sim: simulate 300 years with families headless; check population doesn't explode (cap/fertility tuning), save size stays reasonable, descendants' power curve is fun. Depends on FAM-003d. |
 
 ## P1c: The Creation Artifact (owner priority, see DESIGN.md "The Creation Artifact")
@@ -123,6 +123,7 @@ The local sessions that built combat/techniques, world/exploration/NPCs/dialogue
 | QA-007 | Combat balance sim (tests/sim/simulate_combat.gd + combat_balance.gd): typical/bare player win rates vs every enemy where it first appears; guard test that no forced fight is unbeatable; fixed Purge a Demonic Cultivator opening at Qi Refining (0% win, lethal). |
 | G-007b | Clinic place type (Village Clinic, Hall of Gentle Hands Clinic): treat patients, treat own injuries, pay the doctor. |
 | W-004d | Encounter choice window (EncounterWindow): choices with lock reasons, gamepad focus, "Walk away" (GameState.dismiss_encounter) when every choice is locked. |
+| FAM-012 | Name pools: names.json grown to 126 surnames (incl. compound clan names like Zhuge, Dugu, Nangong) and 258 given names (131 male, 127 female). Rest split to FAM-012b. |
 | G-004c | Higher-grade equipment: Profound Iron / Dragon-Blood Gold ores, 4 new forge recipes with manuals, Heavenforge Smithy in Fallen Star Market, equipment encounters. |
 | LIFE-001e | Evil artifacts obtainable: Blood-Drinker Saber (wild), Corpse-Silk Burial Armor and Myriad Souls Banner (ruins), once per life, each with a righteous destroy alternative. |
 | FAM-002f | Generated NPCs placed in the world: regions.json `npc_spots`, Npcs.generated_in_region/spot_positions/world_title/describe, gender colors, "Look" option. |
