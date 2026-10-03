@@ -2,6 +2,7 @@ class_name InventoryScreen
 extends PanelContainer
 ## Modal inventory: item list on the left, details and actions for the
 ## selected item on the right. Selection follows focus so it works on gamepad.
+## Equipment shows its slot and stats and is equipped instead of used.
 
 signal closed
 
@@ -105,6 +106,16 @@ static func describe_effects(effects: Dictionary, data: GameData) -> PackedStrin
 	return lines
 
 
+## Detail lines for an equipment item: slot + stats, and what it would replace.
+static func describe_equipment(c: CharacterData, data: GameData, item_id: String) -> PackedStringArray:
+	var slot := Equipment.slot_of(data, item_id)
+	var lines: PackedStringArray = ["%s: %s" % [slot.capitalize(), Equipment.describe_stats(data, item_id)]]
+	var worn := String(c.equipment.get(slot, ""))
+	if worn != "":
+		lines.append("Replaces your %s (%s)" % [_item_name(data, worn), Equipment.describe_stats(data, worn)])
+	return lines
+
+
 static func _item_name(data: GameData, item_id: String) -> String:
 	return String(data.items.get(item_id, {}).get("name", item_id))
 
@@ -149,10 +160,18 @@ func _show_details() -> void:
 	var lines := describe_effects(item.get("effects", {}), data)
 	if int(item.get("price", 0)) > 0:
 		lines.append("Market price: %d spirit stones" % int(item["price"]))
+	var equippable := _selected != "" and Equipment.is_equipment(data, _selected)
+	if equippable:
+		lines.append_array(describe_equipment(GameState.player, data, _selected))
 	_effects.text = "\n".join(lines)
-	_use_button.visible = bool(item.get("usable", false))
+	_use_button.visible = bool(item.get("usable", false)) or equippable
+	_use_button.text = "Equip" if equippable else "Use"
 	# Show why an item can't be used now (e.g. nothing to heal) instead of a failed use.
-	var reason := Effects.check(GameState.player, data, item.get("effects", {})) if _use_button.visible else ""
+	var reason := ""
+	if equippable:
+		reason = Equipment.check_equip(GameState.player, data, _selected)
+	elif _use_button.visible:
+		reason = Effects.check(GameState.player, data, item.get("effects", {}))
 	_use_button.disabled = reason != ""
 	_use_button.tooltip_text = reason
 	if reason != "":
@@ -162,7 +181,10 @@ func _show_details() -> void:
 func _use_selected() -> void:
 	if _selected == "":
 		return
-	GameState.use_item(_selected)
+	if Equipment.is_equipment(GameState.data, _selected):
+		GameState.equip_item(_selected)
+	else:
+		GameState.use_item(_selected)
 	# player_changed has rebuilt the list; keep focus somewhere sensible.
 	_focus_selected.call_deferred()
 
