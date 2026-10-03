@@ -69,7 +69,7 @@ Every great cultivation protagonist has something that sets them apart. Ours is 
 | Sects (join/leave, requirements, ranks, contribution) | ✅ basic (no missions/shop yet) | `data/sects.json`, `Sects` |
 | Professions (ranks, XP, income) | ✅ basic | `data/professions.json`, `Professions` |
 | Alchemy (recipes, scrolls, pill quality) + crafting screen | ✅ | `data/recipes.json`, `Alchemy`, `src/ui/crafting_screen.gd` |
-| Blacksmithing and equipment (weapon/armor) | ✅ core, 🚧 no equip UI (G-004b) | `Equipment`, `data/recipes.json` |
+| Blacksmithing and equipment (weapon/armor) | ✅ (equip from inventory, unequip on the character sheet) | `Equipment`, `data/recipes.json` |
 | Talismans (buff talismans, combat strike/shield/escape) | ✅ core, 🚧 no ready UI (G-005d) | `Alchemy`, `Buffs`, `CombatTalismans` |
 | Temporary buffs and forbidden secret arts | ✅ | `Buffs`, `data/techniques.json` |
 | Medicine / Doctor (treat injuries, clinic, patients) | ✅ core, 🚧 no clinic place (G-007b) | `Medicine` |
@@ -109,6 +109,7 @@ Void Refinement → Body Integration → Mahayana → Tribulation Transcendence.
 - Should evil paths include demonic cultivation techniques (blood refining, soul devouring) as a separate progression tree?
 - (FAM-002) Smallest version implemented, tunable in `data/family.json`: courting is only between opposite genders, an NPC of a higher major realm (or flagged `proud`) refuses to be a concubine, proposals need favor 60, at most 1 major realm apart and alignment within 600. Should same-gender Dao companions be allowed, and are these thresholds right?
 - (FAM-002g) **Widowed spouses.** Default the agents will build: a dead spouse stays in your family history but no longer takes up a wife/concubine/Dao companion slot, so you can remarry. Should there be a mourning period or an alignment/favor penalty for remarrying quickly?
+- (QA-007) **How lopsided should fights be?** Today realm power x3 per major realm makes combat binary: a geared player wins ~100% against any enemy of their realm and ~0% one realm up. Default the agents will aim for (QA-007d): ~60-85% win rate against an enemy of your own realm and stage, near 0% a full realm up (realm gaps stay nearly impossible, as in the genre). Is that right?
 - (TRIB-001) **Heavenly Tribulations.** Default: tribulations strike at every major-realm breakthrough from Core Formation upward, as several lightning waves you survive with HP, defense, talismans and pills. Failing injures you, and the last wave can kill you, in which case the Creation Artifact respawns you and spends a life. Demonic cultivators face an extra heart-demon wave. Is this right, and should a tribulation also hit at Foundation Establishment?
 - (FAM-005) **Clan founding requirements.** Default: Foundation Establishment, 500 spirit stones and a claimed estate/abode, all in `data/family.json`. Can a rogue still in a sect found a clan, or must they leave or get permission?
 - (W-005/G-008) **Founding your own sect** (roadmap item 3) is not scheduled yet. Default proposal: it unlocks at Nascent Soul, needs a mountain gate place, and reuses the clan treasury/buildings model. Should it be a separate system from clans, or a clan that grows into a sect?
