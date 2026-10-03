@@ -1,8 +1,8 @@
 {
-  "_doc": "Sects the player can join. Alignment bounds are inclusive. min_realm is a realm id. cultivation_bonus multiplies qi gathering for members. Rank promotion is automatic once contribution reaches a rank's threshold.",
+  "_doc": "Sects the player can join. Alignment bounds are inclusive. min_realm is a realm id. cultivation_bonus multiplies qi gathering for members. Rank promotion is automatic once contribution reaches a rank's threshold. robe_color (optional, hex) is the robe members wear on the world map.",
   "sects": [
     {
-      "id": "azure_cloud_sect", "name": "Azure Cloud Sect", "alignment": "righteous",
+      "id": "azure_cloud_sect", "name": "Azure Cloud Sect", "alignment": "righteous", "robe_color": "3f6fb5",
       "description": "An orthodox sect on misty peaks. Values virtue, discipline and the protection of mortals.",
       "min_alignment": -100, "max_alignment": 1000, "min_realm": "qi_refining", "cultivation_bonus": 1.5,
       "favored_professions": ["alchemist", "array_master"],
@@ -14,7 +14,7 @@
       ]
     },
     {
-      "id": "blood_lotus_sect", "name": "Blood Lotus Sect", "alignment": "demonic",
+      "id": "blood_lotus_sect", "name": "Blood Lotus Sect", "alignment": "demonic", "robe_color": "8b1e2d",
       "description": "A feared demonic sect. Strength is the only law; the weak are resources.",
       "min_alignment": -1000, "max_alignment": 0, "min_realm": "mortal", "cultivation_bonus": 1.4,
       "favored_professions": ["talisman_master", "beast_tamer"],
@@ -26,7 +26,7 @@
       ]
     },
     {
-      "id": "myriad_treasure_pavilion", "name": "Myriad Treasure Pavilion", "alignment": "neutral",
+      "id": "myriad_treasure_pavilion", "name": "Myriad Treasure Pavilion", "alignment": "neutral", "robe_color": "b08a2e",
       "description": "A merchant sect that trades with anyone who pays. Rewards craftsmen generously.",
       "min_alignment": -500, "max_alignment": 1000, "min_realm": "qi_refining", "cultivation_bonus": 1.2,
       "favored_professions": ["blacksmith", "alchemist", "doctor"],
