@@ -154,8 +154,10 @@ static func ensure_all(npcs: Dictionary, data: GameData, rng: RandomNumberGenera
 			npcs[def["id"]] = create(def, data, rng)
 
 
-## Lives `days` for every NPC. Returns notable events as [{npc_id, text, category}].
-static func simulate(npcs: Dictionary, data: GameData, days: int, rng: RandomNumberGenerator) -> Array[Dictionary]:
+## Lives `days` for every NPC, then their family life (NpcFamilies: marriages,
+## children; NPCs in `reserved` never marry off-screen). Returns notable events
+## as [{npc_id, text, category}] (family events also carry a "kind").
+static func simulate(npcs: Dictionary, data: GameData, days: int, rng: RandomNumberGenerator, reserved: Dictionary = {}) -> Array[Dictionary]:
 	var events: Array[Dictionary] = []
 	for npc_id in npcs:
 		var c: CharacterData = npcs[npc_id]
@@ -164,6 +166,7 @@ static func simulate(npcs: Dictionary, data: GameData, days: int, rng: RandomNum
 			var step := mini(remaining, STEP_DAYS)
 			remaining -= step
 			_live(c, data, step, rng, events)
+	events.append_array(NpcFamilies.simulate(npcs, data, days, rng, reserved))
 	return events
 
 

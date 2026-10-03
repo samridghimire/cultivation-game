@@ -461,6 +461,43 @@ func try_for_child(spouse_id: String) -> void:
 	_pass_time(result["days"])
 
 
+## Adopt an orphaned child NPC in the current region (data/family.json "adoption").
+func adopt(npc_id: String) -> void:
+	if not _can_act():
+		return
+	var child: CharacterData = npcs.get(npc_id)
+	if child != null and child.alive and Npcs.region_of(child, data) != current_region:
+		EventBus.post("%s is not here." % child.name, "warning")
+		EventBus.player_changed.emit()
+		return
+	var result := Adoption.adopt(player, child, npcs, data)
+	if not result["ok"]:
+		EventBus.post(result["reason"], "warning")
+		EventBus.player_changed.emit()
+		return
+	_welcome_adopted(child, result)
+
+
+## Adopt a foundling from an orphanage or temple in the current region, for a
+## donation (Adoption.foundling_donation).
+func adopt_foundling() -> void:
+	if not _can_act():
+		return
+	var result := Adoption.adopt_foundling(player, npcs, data, rng, current_region)
+	if not result["ok"]:
+		EventBus.post(result["reason"], "warning")
+		EventBus.player_changed.emit()
+		return
+	EventBus.post("You donate %d spirit stones to the caretakers." % result["donation"])
+	_welcome_adopted(result["child"], result)
+
+
+func _welcome_adopted(child: CharacterData, result: Dictionary) -> void:
+	npc_favor[child.id] = maxi(int(npc_favor.get(child.id, 0)), int(result["favor"]))
+	EventBus.post("You take in %s, a %d-year-old %s with %s, as your own." % [child.name, child.age_years(), "boy" if child.gender == "male" else "girl", SpiritualRoots.describe(child.spiritual_roots, data)], "progress")
+	_pass_time(result["days"])
+
+
 func learn_technique(tech_id: String) -> void:
 	if not _can_act():
 		return
@@ -618,6 +655,19 @@ func take_mission(mission_id: String) -> void:
 	_pass_time(result["days"])
 
 
+## Buy an item from your sect's contribution shop (sects.json `shop`).
+## Spending contribution never lowers your rank. Takes no time.
+func buy_with_contribution(item_id: String) -> void:
+	if not _can_act():
+		return
+	var result := Sects.buy_with_contribution(player, data, item_id)
+	if not result["ok"]:
+		EventBus.post(result["reason"], "warning")
+	else:
+		EventBus.post("The sect treasury grants you %s for %d contribution. (%d left)" % [data.items[item_id].get("name", item_id), result["cost"], Sects.contribution_balance(player)], "progress")
+	EventBus.player_changed.emit()
+
+
 ## Fight an enemy from data/enemies.json.
 func fight(enemy_id: String) -> void:
 	if not data.enemies.has(enemy_id):
@@ -773,11 +823,19 @@ func _on_days_advanced(days: int) -> void:
 		EventBus.post("Your %s has healed." % Injuries.injury_name(data, injury_id), "progress")
 	for buff_name in Buffs.pass_days(player, days):
 		EventBus.post("The power of your %s fades." % buff_name)
-	for event in Npcs.simulate(npcs, data, days, rng):
+	# NPCs the player knows (favor) or married never marry off-screen.
+	var reserved := npc_favor.duplicate()
+	for spouse_id in player.spouses:
+		reserved[spouse_id] = true
+	var married_off := false
+	for event in Npcs.simulate(npcs, data, days, rng, reserved):
+		married_off = married_off or event.get("kind", "") == "marriage"
 		# News about generated strangers is noise; only report people the player knows.
 		if not Npcs.is_newsworthy(String(event["npc_id"]), player, npc_favor):
 			continue
 		EventBus.post(event["text"], event["category"])
+	if married_off:
+		Npcs.ensure_eligible(npcs, data, rng)  # keep courtship candidates in every region
 	_advance_pregnancies(days)
 	if player.age_years() >= Cultivation.lifespan_years(player, data):
 		_kill("Your lifespan is exhausted. You die of old age at %d." % player.age_years())
