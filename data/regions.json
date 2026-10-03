@@ -1,5 +1,5 @@
 {
-  "_doc": "World regions. The world scene builds itself from the current region. qi_density multiplies cultivation everywhere in the region (meditation spots multiply again). routes: travel targets with days and an optional min_realm (realm id). places: interactables; 'anchor_id' (optional, globally unique) makes the place a Creation Artifact anchor (data/artifact.json); 'type' picks the script (meditation, merchant, sect_hall, workshop, deed_giver, explore, travel, gather), 'pos' and 'size' are in pixels, other keys are passed to the script as exported properties. npc_spots (optional): list of [x, y] positions where generated NPCs living in the region stand (in id order; extra NPCs gather around the spawn point). encounter_tags select entries from data/encounters.json when exploring.",
+  "_doc": "World regions. The world scene builds itself from the current region. qi_density multiplies cultivation everywhere in the region (meditation spots multiply again). routes: travel targets with days and an optional min_realm (realm id). places: interactables; 'anchor_id' (optional, globally unique) makes the place a Creation Artifact anchor (data/artifact.json); 'type' picks the script (meditation, merchant, sect_hall, workshop, deed_giver, explore, travel, gather), 'pos' and 'size' are in pixels, other keys are passed to the script as exported properties. npc_spots (optional): list of [x, y] positions where generated NPCs living in the region stand (in id order; extra NPCs gather around the spawn point). encounter_tags select entries from data/encounters.json when exploring. abodes (optional, G-010): claimable cave abodes in the region, each {id (globally unique), display_name, cost (spirit stones), min_realm (optional realm id), qi_density (multiplies cultivation in seclusion there, like a meditation spot), storage_slots (distinct item stacks its chest holds), anchor_id (optional, globally unique: the abode can be bound as a Creation Artifact anchor), pos, size, color (layout for the world scene)}. The player owns at most one abode (Abodes).",
   "start_region": "qingshi_village",
   "regions": [
     {
@@ -33,6 +33,7 @@
       "map": {"size": [1600, 1000], "ground": "2f4f2f", "border": "16261a", "paths": [[0, 470, 1600, 60]], "path_color": "5c5238"},
       "spawn": [120, 500],
       "npc_spots": [[300, 380], [700, 600], [1000, 380], [1450, 300], [250, 750], [1450, 850]],
+      "abodes": [{"id": "waterfall_cave", "display_name": "Waterfall Cave (abode)", "cost": 300, "min_realm": "qi_refining", "qi_density": 1.5, "storage_slots": 20, "anchor_id": "waterfall_cave_abode", "pos": [200, 150], "size": [90, 70], "color": "4a6f7a"}],
       "routes": [
         {"to": "qingshi_village", "days": 3},
         {"to": "azure_peak", "days": 7, "min_realm": "qi_refining"},
@@ -86,6 +87,7 @@
       "map": {"size": [1600, 1000], "ground": "5a6f80", "border": "2b3540", "paths": [[0, 470, 1600, 60]], "path_color": "8f9aa3"},
       "spawn": [120, 500],
       "npc_spots": [[500, 380], [900, 380], [1000, 620], [600, 620], [1450, 350], [300, 850]],
+      "abodes": [{"id": "cloud_piercing_grotto", "display_name": "Cloud-Piercing Grotto (abode)", "cost": 2500, "min_realm": "foundation_establishment", "qi_density": 2.5, "storage_slots": 30, "anchor_id": "cloud_grotto_abode", "pos": [900, 850], "size": [100, 70], "color": "9fb4c9"}],
       "routes": [
         {"to": "misty_forest", "days": 7},
         {"to": "fallen_star_market", "days": 12}

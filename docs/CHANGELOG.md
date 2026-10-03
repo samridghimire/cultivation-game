@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-03 [G-010] Cave abodes: claim one dwelling for spirit stones (Waterfall Cave in Misty Forest, Cloud-Piercing Grotto on Azure Peak), cultivate there in seclusion at its qi density, keep items in its storage chest, and bind it as a Creation Artifact anchor (auto-bound when a slot is free). UI follows in G-010b.
 - 2026-10-03 [ART-002] Creation Artifact functions: feed spirit stones and treasures to the artifact for energy and spend it to unseal data-driven functions (realm/energy/flag conditions); the first, Storage Space (Qi Refining, 100 energy), holds 12 kinds of items that are never lost, even through death.
 - 2026-10-03 [FAM-002h] Befriending NPCs: chat with NPCs who have no dialogue (a few days, Charisma-scaled favor up to the courtship threshold) and give them items (favor from the item's price, capped below the proposal threshold), so generated courtship candidates can be courted (GameState.chat/give_gift, data/family.json acquaintance).
 - 2026-10-03 [QA-005] When a pregnant NPC dies, the pregnancy ends and the news mentions the lost child; new family edge-case tests cover posthumous births, respawning while pregnant and saving/loading mid-pregnancy.
