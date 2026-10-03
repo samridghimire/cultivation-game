@@ -205,6 +205,7 @@ func _validate() -> void:
 	load_errors.append_array(Equipment.validate(self))
 	load_errors.append_array(CombatTalismans.validate(self))
 	load_errors.append_array(Family.validate(self))
+	load_errors.append_array(ArtifactFunctions.validate(self))
 	load_errors.append_array(Children.validate(self))
 	load_errors.append_array(NpcFamilies.validate(self))
 	load_errors.append_array(Sects.validate_missions(self))

@@ -788,6 +788,55 @@ func recharge_artifact() -> void:
 	EventBus.player_changed.emit()
 
 
+## Feed items (spirit stones, treasures) to the Creation Artifact for energy.
+func feed_artifact(item_id: String, quantity: int = 1) -> void:
+	if not _can_act():
+		return
+	var result := ArtifactFunctions.feed(player, data, item_id, quantity)
+	if result["ok"]:
+		EventBus.post("The artifact devours %d %s. (+%d energy, %d total)" % [quantity, data.items.get(item_id, {}).get("name", item_id), result["energy"], player.artifact_energy], "progress")
+	else:
+		EventBus.post(result["reason"], "warning")
+	EventBus.player_changed.emit()
+
+
+## Spend artifact energy to unseal a function (data/artifact.json "functions").
+func unlock_artifact_function(function_id: String) -> void:
+	if not _can_act():
+		return
+	var result := ArtifactFunctions.unlock(player, data, function_id, world_flags)
+	if result["ok"]:
+		var def := ArtifactFunctions.get_def(data, function_id)
+		EventBus.post("A seal on the Creation Artifact shatters: %s. %s" % [def.get("name", function_id), def.get("description", "")], "progress")
+	else:
+		EventBus.post(result["reason"], "warning")
+	EventBus.player_changed.emit()
+
+
+## Move items into the artifact's storage space (kept even through death).
+func store_in_artifact(item_id: String, quantity: int = 1) -> void:
+	if not _can_act():
+		return
+	var result := ArtifactFunctions.store(player, data, item_id, quantity)
+	if result["ok"]:
+		EventBus.post("You tuck %d %s away inside the artifact." % [quantity, data.items.get(item_id, {}).get("name", item_id)])
+	else:
+		EventBus.post(result["reason"], "warning")
+	EventBus.player_changed.emit()
+
+
+## Take items back out of the artifact's storage space.
+func retrieve_from_artifact(item_id: String, quantity: int = 1) -> void:
+	if not _can_act():
+		return
+	var result := ArtifactFunctions.retrieve(player, item_id, quantity)
+	if result["ok"]:
+		EventBus.post("You draw %d %s out of the artifact." % [quantity, data.items.get(item_id, {}).get("name", item_id)])
+	else:
+		EventBus.post(result["reason"], "warning")
+	EventBus.player_changed.emit()
+
+
 # --- Save data ---------------------------------------------------------------
 
 func to_save_dict() -> Dictionary:
