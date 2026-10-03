@@ -82,6 +82,7 @@ Every great cultivation protagonist has something that sets them apart. Ours is 
 | NPCs (named + generated), aging, monthly sim | ✅ | `data/npcs.json`, `Npcs`, `Names` |
 | Dialogue | ✅ core, 🚧 choice-menu fallback (W-003b) | `Dialogue`, `data/dialogue/` |
 | Family: identity, courtship, marriage, dual cultivation, children | ✅ core, ❌ not reachable in-game (P0 tasks) | `data/family.json`, `Family`, `Children` |
+| Grudges and gratitude (rob/kill/humiliate NPCs, kin vengeance, amends) | ✅ core, 🚧 no UI (RIV-001d), no avengers yet (RIV-001b) | `data/karma.json`, `Karma` |
 | Clans, estates, bloodlines | ❌ (FAM-005+) | |
 | Cultivation methods, Dao insights, Heavenly Tribulations | ❌ (CM-001, DAO-001, TRIB-001) | |
 | Inventory, techniques, character sheet, settings, pause, load screens | ✅ | `src/ui/` |
@@ -113,3 +114,4 @@ Void Refinement → Body Integration → Mahayana → Tribulation Transcendence.
 - (FAM-005) **Clan founding requirements.** Default: Foundation Establishment, 500 spirit stones and a claimed estate/abode, all in `data/family.json`. Can a rogue still in a sect found a clan, or must they leave or get permission?
 - (W-005/G-008) **Founding your own sect** (roadmap item 3) is not scheduled yet. Default proposal: it unlocks at Nascent Soul, needs a mountain gate place, and reuses the clan treasury/buildings model. Should it be a separate system from clans, or a clan that grows into a sect?
 - **Main story / Creation Artifact origin.** Agents keep the artifact's maker, why it chose the player and who hunts it vague until you decide. Do you want to outline the main story arc (acts, antagonist faction), or should agents propose 2-3 options for you to pick from?
+- (RIV-001) **Hostile acts against NPCs.** Smallest version built: you can humiliate (only someone weaker), rob or kill any adult NPC who is not your own family; children and family members are off limits, and grudges fade 5 points a year. Should demonic players be able to harm children or their own kin (e.g. a blood-sacrifice path), and should grudges from a killing never fade?

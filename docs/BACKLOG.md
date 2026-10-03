@@ -84,7 +84,10 @@ ART-001/ART-001b are done; ART-002 and ART-005 are in P1 above.
 | C-002 | content | todo | Enemies expansion: data/enemies.json has 9 enemies; add 10+ for Foundation and Core Formation (beasts with ore/herb loot, rogue and demonic cultivators), and use them in encounters.json realm-gated entries. |
 | C-005 | content | todo | A fifth region (e.g. a marsh or ruined city with a demonic lean): regions.json places (meditation, gather, explore, merchant), routes with realm gates, gather tables, 8+ encounters tagged for it. Pure data; follow regions.json `_doc`. |
 | C-006 | content | todo | 3 new named NPCs (data/npcs.json) with dialogue files in data/dialogue/, spread across regions (e.g. a wandering alchemist, a blood lotus disciple, a retired elder) with favor-gated rewards. |
-| RIV-001 | systems | todo | Rivals and grudges: CharacterData.grudges/gratitude per NPC (save-compatible); killing/robbing/humiliating creates grudges with the victim's family/sect; a named rival NPC grows alongside the player and appears in encounters; Npcs.simulate lets enemies hunt you. |
+| RIV-001b | systems | todo | Avengers hunt you: grudge holders (Karma, CharacterData.grudges) at or above a data threshold (data/karma.json) who are within reach (region, realm gap) can ambush the player during exploration/travel (fight via Karma.npc_enemy, lethal at high grudge), and NPCs with a grudge refuse to court/trade. Npcs.simulate: avengers with a grudge cultivate harder (diligence bonus). Depends on RIV-001. |
+| RIV-001c | systems | todo | Named rival: one generated rival NPC at character creation (same age, similar roots) who cultivates alongside the player (catch-up diligence when behind), shows up in encounters (duel, insult, steal an opportunity) and keeps a rivalry score; save-compatible. Depends on RIV-001. |
+| RIV-001d | world-ui | todo | Surface karma: NPC menu entries "Humiliate / Rob / Kill <name>" (GameState.hostile_act, Karma.check_act reasons on disabled entries, Combat.danger_label of Karma.npc_enemy for fights) and "Make amends (N stones)" (GameState.make_amends, Karma.check_amends); Karma.describe lines (grudges, gratitude) on the character sheet. Depends on RIV-001. |
+| RIV-001e | systems | todo | Gratitude sources: Karma.add_gratitude when the player saves/heals/helps an NPC (G-007c treat_npc, choice encounters, gifts); grateful NPCs give favor bonuses and can repay the debt (an item, a technique hint, help in a fight). Depends on RIV-001. |
 | W-005 | systems | todo | Secret realms (first pass): data/secret_realms.json (opens every N years for M days, realm caps, floors of encounters with treasures and guardians), GameState.enter_secret_realm. Pair with a world-ui entry point later. |
 
 ## P4: QA and tooling
@@ -105,6 +108,7 @@ The local sessions that built combat/techniques, world/exploration/NPCs/dialogue
 ## Done
 | id | task |
 |---|---|
+| RIV-001 | Grudges and gratitude core: data/karma.json, Karma (ledgers, kin grudges, decay, amends), CharacterData.grudges/gratitude, GameState.hostile_act (humiliate/rob/kill NPCs) and make_amends. |
 | G-004c | Higher-grade equipment: Profound Iron / Dragon-Blood Gold ores, 4 new forge recipes with manuals, Heavenforge Smithy in Fallen Star Market, equipment encounters. |
 | LIFE-001e | Evil artifacts obtainable: Blood-Drinker Saber (wild), Corpse-Silk Burial Armor and Myriad Souls Banner (ruins), once per life, each with a righteous destroy alternative. |
 | FAM-002f | Generated NPCs placed in the world: regions.json `npc_spots`, Npcs.generated_in_region/spot_positions/world_title/describe, gender colors, "Look" option. |
