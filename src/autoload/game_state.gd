@@ -563,6 +563,19 @@ func take_mission(mission_id: String) -> void:
 	_pass_time(result["days"])
 
 
+## Buy an item from your sect's contribution shop (sects.json `shop`).
+## Spending contribution never lowers your rank. Takes no time.
+func buy_with_contribution(item_id: String) -> void:
+	if not _can_act():
+		return
+	var result := Sects.buy_with_contribution(player, data, item_id)
+	if not result["ok"]:
+		EventBus.post(result["reason"], "warning")
+	else:
+		EventBus.post("The sect treasury grants you %s for %d contribution. (%d left)" % [data.items[item_id].get("name", item_id), result["cost"], Sects.contribution_balance(player)], "progress")
+	EventBus.player_changed.emit()
+
+
 ## Fight an enemy from data/enemies.json.
 func fight(enemy_id: String) -> void:
 	if not data.enemies.has(enemy_id):

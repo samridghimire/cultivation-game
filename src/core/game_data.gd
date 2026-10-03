@@ -207,6 +207,7 @@ func _validate() -> void:
 	load_errors.append_array(Family.validate(self))
 	load_errors.append_array(Children.validate(self))
 	load_errors.append_array(Sects.validate_missions(self))
+	load_errors.append_array(Sects.validate_shops(self))
 	for item: Dictionary in items.values():
 		if item.get("effects", {}).has("buff"):
 			for error in Buffs.validate_effect(item["effects"]["buff"]):
