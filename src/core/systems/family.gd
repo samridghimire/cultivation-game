@@ -230,3 +230,13 @@ static func validate(data: GameData) -> PackedStringArray:
 			if data.realm_index_of(String(realm_id)) < 0:
 				errors.append("family.json eligible_npcs has unknown realm '%s'" % realm_id)
 	return errors
+
+
+## `c`'s living spouses whose home is `region_id`, in marriage order.
+static func spouses_in_region(c: CharacterData, people: Dictionary, data: GameData, region_id: String) -> Array[CharacterData]:
+	var out: Array[CharacterData] = []
+	for spouse_id in c.spouses:
+		var spouse: CharacterData = people.get(spouse_id)
+		if spouse != null and spouse.alive and Npcs.region_of(spouse, data) == region_id:
+			out.append(spouse)
+	return out

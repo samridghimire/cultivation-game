@@ -219,3 +219,44 @@ func test_game_state_dual_cultivate() -> void:
 	assert_true(spouse.qi != spouse_qi or spouse.stage > 0, "spouse gained qi")
 	assert_gt(int(gs.npc_favor["xiao_ling"]), 60, "favor from the session and the month passing")
 	gs.end_session()
+
+
+func test_spouses_in_region_lists_living_local_spouses() -> void:
+	var he := _person("male", "player")
+	var here := _person("female", "gen_1")
+	here.home_region = "village"
+	var away := _person("female", "gen_2")
+	away.home_region = "far_away"
+	var gone := _person("female", "gen_3")
+	gone.home_region = "village"
+	gone.alive = false
+	for s in [here, away, gone]:
+		Family.marry(he, s, "concubine")
+	var people := {here.id: here, away.id: away, gone.id: gone}
+	var found := Family.spouses_in_region(he, people, data(), "village")
+	assert_eq(found.size(), 1)
+	assert_eq(found[0].id, "gen_1")
+
+
+func test_meditation_spot_offers_dual_cultivation_with_local_spouse() -> void:
+	var gs: Node = _root().get_node("GameState")
+	var c := CharacterFactory.create("Husband", gs.data, seeded_rng())
+	c.gender = "male"
+	c.spiritual_roots = {"fire": 60}
+	gs.start_session(c)
+	var spot: Node = load("res://src/world/interactables/meditation_spot.gd").new()
+	var spouse: CharacterData = gs.npcs["xiao_ling"]
+	gs.current_region = Npcs.region_of(spouse, gs.data)
+	var labels := func() -> Array: return spot.get_options().map(func(o): return o["label"])
+	assert_false(str(labels.call()).contains("Dual cultivate"), "no spouse, no option")
+	Family.marry(c, spouse, "wife")
+	spouse.spiritual_roots = {"water": 60}
+	var dual: Array = spot.get_options().filter(func(o): return String(o["label"]).begins_with("Dual cultivate"))
+	assert_eq(dual.size(), 1)
+	assert_true(String(dual[0]["label"]).contains("%"), dual[0]["label"])
+	assert_false(dual[0]["disabled"])
+	spouse.spiritual_roots = {}
+	dual = spot.get_options().filter(func(o): return String(o["label"]).begins_with("Dual cultivate"))
+	assert_true(dual[0]["disabled"], "rootless spouse: disabled with a reason")
+	spot.free()
+	gs.end_session()
