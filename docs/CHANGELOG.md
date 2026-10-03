@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-03 [ART-003a] The Creation Artifact's second function, the Appraising Eye (Qi Refining, 400 energy): once unsealed it reads an NPC's realm, spiritual root, talent tier, attributes, remaining years and the colour of their heart, and an item's grade, power and worth (Appraisal.describe_npc/describe_item; everything stays hidden while sealed). UI follows in ART-003c.
 - 2026-10-03 [W-003b] Dialogue window: talking to a named NPC opens a conversation window (speaker, line, choices; locked choices show why, e.g. "Need 10 spirit stones"), gamepad-focusable, Esc/B ends the conversation. Replaces the inline choice-menu fallback in-game.
 - 2026-10-03 [LIFE-001f] The Shadow Curio Den in Fallen Star Market sells the lifespan-draining evil artifacts, but only to players at alignment -200 or below; demonic goods never show up at ordinary smithies (items.json restricted_tags, merchant alignment bounds).
 - 2026-10-03 [G-007c] NPCs now get injured now and then and heal with time; a doctor can treat an NPC's worst injury (GameState.treat_npc) for Doctor xp, alignment and their favor (more if fully healed). Menu entry follows in G-007d.
