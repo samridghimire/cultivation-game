@@ -72,6 +72,8 @@
         {"type": "workshop", "display_name": "Artisan Quarter", "pos": [400, 750], "size": [150, 100], "color": "8c6640"},
         {"type": "sect_hall", "display_name": "Sect Envoy Hall", "pos": [1200, 750], "size": [160, 110], "color": "b33f33"},
         {"type": "meditation", "anchor_id": "fallen_star_room", "display_name": "Rented Cultivation Room", "pos": [1450, 120], "size": [90, 70], "color": "8c919e", "qi_density": 1.3},
+        {"type": "gather", "display_name": "Meteor Crater Field", "pos": [800, 760], "size": [130, 80], "color": "7a3b2a", "gather_days": 15,
+         "gather_table": [{"item": "fire_marrow_crystal", "weight": 1, "min": 1, "max": 1}, {"item": "earth_vein_jade", "weight": 2, "min": 1, "max": 1}, {"item": "scarlet_flame_fruit", "weight": 1, "min": 1, "max": 1}, {"item": "iron_essence", "weight": 4, "min": 1, "max": 3}, {"item": "star_silver", "weight": 0.3, "min": 1, "max": 1}, {"item": "", "weight": 5}]},
         {"type": "deed_giver", "display_name": "Street Child", "pos": [1050, 420], "size": [24, 24], "color": "b39b7a", "deed_context": "street_child", "hidden_by_flag": "street_child_gone"},
         {"type": "explore", "display_name": "Back Alleys", "pos": [150, 120], "size": [120, 80], "color": "4a4438"},
         {"type": "travel", "display_name": "City Gate", "pos": [800, 970], "size": [120, 40], "color": "5c4630"}
@@ -95,6 +97,8 @@
          "gather_table": [{"item": "iron_essence", "weight": 5, "min": 2, "max": 4}, {"item": "cold_iron", "weight": 3, "min": 1, "max": 2}, {"item": "azure_crystal", "weight": 2, "min": 1, "max": 1}, {"item": "star_silver", "weight": 0.3, "min": 1, "max": 1}, {"item": "profound_iron", "weight": 1.5, "min": 1, "max": 2}, {"item": "dragonblood_gold", "weight": 0.15, "min": 1, "max": 1}, {"item": "", "weight": 2}]},
         {"type": "gather", "display_name": "Frost Ledge", "pos": [1450, 560], "size": [100, 70], "color": "e0ecf5", "gather_days": 10,
          "gather_table": [{"item": "ice_soul_flower", "weight": 2, "min": 1, "max": 1}, {"item": "flame_lotus", "weight": 1, "min": 1, "max": 1}, {"item": "thousand_year_lingzhi", "weight": 0.2, "min": 1, "max": 1}, {"item": "spirit_herb", "weight": 3, "min": 1, "max": 3}, {"item": "", "weight": 4}]},
+        {"type": "gather", "display_name": "Cloud-Sea Orchid Terraces", "pos": [760, 830], "size": [130, 80], "color": "b9c7e6", "gather_days": 15,
+         "gather_table": [{"item": "cloud_mist_orchid", "weight": 3, "min": 1, "max": 2}, {"item": "hundred_year_snow_lotus", "weight": 1.5, "min": 1, "max": 1}, {"item": "nine_leaf_soul_grass", "weight": 0.5, "min": 1, "max": 1}, {"item": "earth_marrow_fungus", "weight": 0.4, "min": 1, "max": 1}, {"item": "spirit_herb", "weight": 3, "min": 2, "max": 4}, {"item": "", "weight": 4}]},
         {"type": "deed_giver", "display_name": "Bandit Camp", "pos": [1450, 820], "size": [60, 50], "color": "6b4a2e", "deed_context": "bandit_camp", "hidden_by_flag": "bandit_camp_gone"},
         {"type": "explore", "display_name": "Beast Ridge", "pos": [700, 200], "size": [170, 100], "color": "3d4b57"},
         {"type": "explore", "display_name": "Ancient Cave", "pos": [1200, 800], "size": [110, 90], "color": "1e2228", "explore_tags": ["ruins"]},
