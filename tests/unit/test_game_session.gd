@@ -195,3 +195,15 @@ func test_violent_death_does_not_also_drain_lifespan() -> void:
 	gs.fight_enemy(doom)
 	assert_eq(c.lifespan_spent_years, 0, "a respawned soul keeps its years; the saber drinks only after survived fights")
 	gs.end_session()
+
+
+func test_choose_gender_once_for_old_saves() -> void:
+	var c := _start()
+	var gs := _game_state()
+	c.gender = ""
+	gs.choose_gender("dragon")
+	assert_eq(c.gender, "")
+	gs.choose_gender("female")
+	assert_eq(c.gender, "female")
+	gs.choose_gender("male")
+	assert_eq(c.gender, "female", "gender can only be picked once")
