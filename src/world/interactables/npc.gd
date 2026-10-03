@@ -4,7 +4,8 @@ extends Interactable
 ## window if one listens to EventBus.dialogue_requested, otherwise inline in
 ## this menu (each line is posted to the message log).
 ## Eligible partners also offer Court / Propose entries (FAM-002d); disabled
-## entries show why (Family.check_court / check_proposal).
+## entries show why (Family.check_court / check_proposal). Orphaned children
+## offer "Adopt <name>" (FAM-003e, Adoption.check_adoption).
 
 @export var npc_id := ""
 
@@ -30,7 +31,24 @@ func get_options() -> Array[Dictionary]:
 	if def.has("deed_context"):
 		for deed in Deeds.available(GameState.data, def["deed_context"], GameState.world_flags):
 			options.append({"label": deed["name"], "action": GameState.perform_deed.bind(deed["id"])})
+	options.append_array(_adoption_options())
 	options.append_array(_courtship_options())
+	return options
+
+
+## "Adopt <name>" for orphaned children young enough to adopt, not already the player's.
+func _adoption_options() -> Array[Dictionary]:
+	var options: Array[Dictionary] = []
+	var p := GameState.player
+	var data := GameState.data
+	var child: CharacterData = GameState.npcs.get(npc_id)
+	if p == null or child == null or Adoption.rules(data).is_empty():
+		return options
+	if child.age_years() > int(Adoption.rules(data).get("max_age", 12)) or child.parents.has(p.id) or not Adoption.is_orphan(child, GameState.npcs):
+		return options
+	var days := int(Adoption.rules(data).get("days", 1))
+	var label := "Adopt %s (%s)" % [child.name, Calendar.format_duration(days)]
+	options.append(_entry(label, Adoption.check_adoption(p, child, GameState.npcs, data), GameState.adopt.bind(npc_id)))
 	return options
 
 
