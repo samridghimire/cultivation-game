@@ -49,6 +49,7 @@ func start_session(character: CharacterData) -> void:
 	Npcs.ensure_all(npcs, data, rng)
 	Npcs.ensure_eligible(npcs, data, rng)
 	GameClock.reset()
+	EventBus.clear_history()
 	EventBus.session_started.emit()
 	EventBus.post("%s sets out on the path of cultivation." % player.name, "progress")
 	EventBus.player_changed.emit()
@@ -741,6 +742,7 @@ func load_save_dict(d: Dictionary) -> void:
 	if not data.regions.has(current_region):
 		current_region = data.start_region
 	GameClock.from_dict(d.get("clock", {}))
+	EventBus.clear_history()
 	rng.seed = String(d.get("rng_seed", "0")).to_int()
 	rng.state = String(d.get("rng_state", "0")).to_int()
 	EventBus.session_started.emit()
