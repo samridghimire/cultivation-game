@@ -21,6 +21,8 @@ var sects: Dictionary = {}  # id -> SectDef
 ## sects.json top-level "reputation" rules (Reputation system).
 var sect_reputation: Dictionary = {}
 var items: Dictionary = {}  # id -> Dictionary
+## items.json "restricted_tags": only merchants that stock these tags explicitly sell such items.
+var restricted_item_tags: PackedStringArray = []
 var deeds: Dictionary = {}  # id -> Dictionary
 var regions: Dictionary = {}  # id -> Dictionary
 var start_region := ""
@@ -106,7 +108,9 @@ func _load(dir: String) -> void:
 		var def := SectDef.from_dict(s)
 		sects[def.id] = def
 
-	for item in _read(dir, "items.json").get("items", []):
+	var item_file := _read(dir, "items.json")
+	restricted_item_tags = PackedStringArray(item_file.get("restricted_tags", []))
+	for item in item_file.get("items", []):
 		items[item["id"]] = item
 
 	for mission in _read(dir, "sect_missions.json").get("missions", []):

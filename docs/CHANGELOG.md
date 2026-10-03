@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-03 [LIFE-001f] The Shadow Curio Den in Fallen Star Market sells the lifespan-draining evil artifacts, but only to players at alignment -200 or below; demonic goods never show up at ordinary smithies (items.json restricted_tags, merchant alignment bounds).
 - 2026-10-03 [G-007c] NPCs now get injured now and then and heal with time; a doctor can treat an NPC's worst injury (GameState.treat_npc) for Doctor xp, alignment and their favor (more if fully healed). Menu entry follows in G-007d.
 - 2026-10-03 [G-009] Sect reputation, separate from alignment: witnessed deeds move each sect's opinion (righteous sects condemn evil, Blood Lotus admires it), low reputation blocks joining, faction merchants (the Pill Pavilion is Myriad Treasure Pavilion's) price by reputation tier, missions earn and leaving a sect costs reputation.
 - 2026-10-03 [G-010] Cave abodes: claim one dwelling for spirit stones (Waterfall Cave in Misty Forest, Cloud-Piercing Grotto on Azure Peak), cultivate there in seclusion at its qi density, keep items in its storage chest, and bind it as a Creation Artifact anchor (auto-bound when a slot is free). UI follows in G-010b.
