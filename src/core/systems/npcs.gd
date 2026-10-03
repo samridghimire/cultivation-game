@@ -109,8 +109,10 @@ static func is_eligible(c: CharacterData, data: GameData) -> bool:
 
 ## Tops every region up to data/family.json eligible_npcs.per_gender eligible
 ## generated NPCs of each gender, so every region has courtship candidates.
-## Realms come from realms_by_danger for the region's danger. Returns the new NPCs.
-static func ensure_eligible(npcs: Dictionary, data: GameData, rng: RandomNumberGenerator) -> Array[CharacterData]:
+## Realms come from realms_by_danger for the region's danger. NPCs in `exclude`
+## (the player's own descendants) are not candidates and do not fill a slot.
+## Returns the new NPCs.
+static func ensure_eligible(npcs: Dictionary, data: GameData, rng: RandomNumberGenerator, exclude: Array[String] = []) -> Array[CharacterData]:
 	var rules: Dictionary = data.family.get("eligible_npcs", {})
 	var by_danger: Array = rules.get("realms_by_danger", [])
 	var spawned: Array[CharacterData] = []
@@ -121,7 +123,7 @@ static func ensure_eligible(npcs: Dictionary, data: GameData, rng: RandomNumberG
 	for region_id in region_ids:
 		var counts := {}
 		for c: CharacterData in npcs.values():
-			if region_of(c, data) == region_id and is_eligible(c, data):
+			if region_of(c, data) == region_id and is_eligible(c, data) and not exclude.has(c.id):
 				counts[c.gender] = int(counts.get(c.gender, 0)) + 1
 		var realms: Array = by_danger[clampi(int(data.regions[region_id].get("danger", 0)), 0, by_danger.size() - 1)]
 		for gender in Names.genders(data):
