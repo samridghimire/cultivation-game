@@ -207,3 +207,19 @@ func test_choose_gender_once_for_old_saves() -> void:
 	assert_eq(c.gender, "female")
 	gs.choose_gender("male")
 	assert_eq(c.gender, "female", "gender can only be picked once")
+
+
+func test_deed_with_enemy_needs_a_win() -> void:
+	var c := _start()
+	var gs := _game_state()
+	c.realm_index = 0
+	c.stage = 0
+	var alignment_before := c.alignment
+	gs.perform_deed("free_bandit_captives")
+	assert_false(gs.world_flags.get("bandit_camp_gone", false), "a mortal loses to the bandit lord")
+	assert_eq(c.alignment, alignment_before)
+	assert_true(c.alive, "the bandit lord is not lethal")
+	c.realm_index = gs.data.realm_index_of("foundation_establishment")
+	gs.perform_deed("free_bandit_captives")
+	assert_true(gs.world_flags.get("bandit_camp_gone", false), "a Foundation cultivator wins and frees them")
+	assert_gt(c.alignment, alignment_before)

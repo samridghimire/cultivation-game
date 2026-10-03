@@ -128,3 +128,40 @@ func test_every_deed_context_has_a_giver_and_a_moral_choice() -> void:
 	for ctx: String in contexts:
 		assert_true(givers.has(ctx), "deed context '%s' has no deed giver" % ctx)
 		assert_true(contexts[ctx]["good"] and contexts[ctx]["evil"], "deed context '%s' needs a righteous and a demonic option" % ctx)
+
+
+# --- Deed requirements and fights (DEED-001) ---------------------------------
+
+func test_deed_requirements_disable_with_reason() -> void:
+	var c := new_character()
+	c.realm_index = 0
+	var deed: Dictionary = data().deeds["extort_bandit_lord"]
+	assert_true(Deeds.check(c, data(), deed, {}) != "", "a mortal cannot pose as a senior")
+	assert_false(Deeds.perform(c, data(), "extort_bandit_lord", {})["ok"])
+	var entry: Dictionary = {}
+	for option in Deeds.options(c, data(), "bandit_camp", {}):
+		if option["deed"]["id"] == "extort_bandit_lord":
+			entry = option
+	assert_true(entry["disabled"])
+	assert_true(String(entry["reason"]) != "")
+	c.realm_index = data().realm_index_of("qi_refining")
+	assert_eq(Deeds.check(c, data(), deed, {}), "")
+
+
+func test_deed_with_enemy_reports_danger() -> void:
+	var c := new_character()
+	for option in Deeds.options(c, data(), "bandit_camp", {}):
+		var has_enemy: bool = option["deed"].has("enemy")
+		assert_eq(String(option["danger"]) != "", has_enemy, "danger only for deeds with a fight")
+	assert_true(data().deeds["free_bandit_captives"].has("enemy"))
+
+
+func test_deed_validation() -> void:
+	var d := GameData.new()
+	d.items = data().items
+	d.enemies = data().enemies
+	d.realms = data().realms
+	d.deeds = {"a": {"id": "a", "enemy": "nobody", "requires": {"min_realm": "nowhere", "height": 3}, "effects": {}}}
+	assert_eq(Deeds.validate(d).size(), 3)
+	d.deeds = data().deeds
+	assert_eq(Deeds.validate(d).size(), 0)
