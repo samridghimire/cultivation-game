@@ -45,7 +45,8 @@ func test_every_talisman_item_has_a_recipe() -> void:
 	for item: Dictionary in data().items.values():
 		if item.get("tags", []).has("talisman"):
 			assert_true(outputs.has(item["id"]), item["id"])
-			assert_true(item.get("usable", false), item["id"])
+			# Combat talismans (G-005b) are readied for fights instead of used.
+			assert_true(item.get("usable", false) or item.has("combat"), item["id"])
 
 
 func test_starter_talisman_recipes_are_known_by_talisman_masters() -> void:

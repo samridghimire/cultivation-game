@@ -530,6 +530,26 @@ func fight(enemy_id: String) -> void:
 	fight_enemy(data.enemies[enemy_id])
 
 
+## Ready a combat talisman so it is burned automatically in the next fights.
+func ready_talisman(item_id: String) -> void:
+	if not _can_act():
+		return
+	var reason := CombatTalismans.ready_talisman(player, data, item_id)
+	if reason != "":
+		EventBus.post(reason, "warning")
+	else:
+		EventBus.post("You tuck a %s into your sleeve, ready for battle." % data.items[item_id].get("name", item_id))
+	EventBus.player_changed.emit()
+
+
+func unready_talisman(item_id: String) -> void:
+	if not _can_act():
+		return
+	if CombatTalismans.unready_talisman(player, item_id):
+		EventBus.post("You put the %s away." % data.items.get(item_id, {}).get("name", item_id))
+	EventBus.player_changed.emit()
+
+
 ## Fight any enemy dictionary in the enemies.json format.
 func fight_enemy(enemy: Dictionary) -> void:
 	if not _can_act():

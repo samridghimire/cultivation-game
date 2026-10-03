@@ -199,6 +199,7 @@ func _validate() -> void:
 	_validate_artifact()
 	_validate_recipes()
 	load_errors.append_array(Equipment.validate(self))
+	load_errors.append_array(CombatTalismans.validate(self))
 	load_errors.append_array(Family.validate(self))
 	load_errors.append_array(Children.validate(self))
 	for item: Dictionary in items.values():
