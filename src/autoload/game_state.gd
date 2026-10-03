@@ -333,6 +333,17 @@ func choose_encounter(index: int) -> void:
 		fight(result["enemy"])
 
 
+## Leave the pending encounter without choosing (the UI offers this only when
+## every choice is locked).
+func dismiss_encounter() -> void:
+	if pending_encounter == "":
+		return
+	pending_encounter = ""
+	EventBus.post("You leave the matter be and walk away.")
+	EventBus.encounter_choice_resolved.emit()
+	EventBus.player_changed.emit()
+
+
 ## Gather materials from a place's gathering table (see Exploration.gather).
 func gather(table: Array, days: int) -> void:
 	if not _can_act():
