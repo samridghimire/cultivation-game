@@ -46,6 +46,8 @@ var artifact: Dictionary = {}
 var family: Dictionary = {}  # data/family.json (Family system)
 ## Anchor id -> {"region": String, "name": String}, from places with an anchor_id.
 var anchors: Dictionary = {}
+## Claimable cave abodes: abode id -> regions.json abode def plus "region" (Abodes).
+var abodes: Dictionary = {}
 var recipes: Dictionary = {}  # id -> Dictionary (data/recipes.json)
 ## Alchemy tunables (see Alchemy).
 var alchemy: Dictionary = {}
@@ -124,6 +126,16 @@ func _load(dir: String) -> void:
 			if anchors.has(anchor_id):
 				load_errors.append("Duplicate anchor_id '%s'" % anchor_id)
 			anchors[anchor_id] = {"region": region["id"], "name": place.get("display_name", anchor_id)}
+		for abode: Dictionary in region.get("abodes", []):
+			if abodes.has(abode.get("id", "")):
+				load_errors.append("Duplicate abode id '%s'" % abode.get("id", ""))
+			abodes[String(abode.get("id", ""))] = abode.merged({"region": region["id"]})
+			var abode_anchor: String = abode.get("anchor_id", "")
+			if abode_anchor == "":
+				continue
+			if anchors.has(abode_anchor):
+				load_errors.append("Duplicate anchor_id '%s'" % abode_anchor)
+			anchors[abode_anchor] = {"region": region["id"], "name": abode.get("display_name", abode_anchor)}
 
 	artifact = _read(dir, "artifact.json")
 
@@ -209,10 +221,15 @@ func _validate() -> void:
 	load_errors.append_array(Equipment.validate(self))
 	load_errors.append_array(CombatTalismans.validate(self))
 	load_errors.append_array(Family.validate(self))
+	load_errors.append_array(Abodes.validate(self))
+	load_errors.append_array(ArtifactFunctions.validate(self))
 	load_errors.append_array(Children.validate(self))
+	load_errors.append_array(NpcFamilies.validate(self))
 	load_errors.append_array(Sects.validate_missions(self))
 	load_errors.append_array(Reputation.validate(self))
 	load_errors.append_array(Exploration.validate_choices(self))
+	load_errors.append_array(Adoption.validate(self))
+	load_errors.append_array(Sects.validate_shops(self))
 	for item: Dictionary in items.values():
 		if item.get("effects", {}).has("buff"):
 			for error in Buffs.validate_effect(item["effects"]["buff"]):
