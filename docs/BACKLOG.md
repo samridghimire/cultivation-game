@@ -81,7 +81,7 @@ ART-001/ART-001b are done; ART-002 and ART-005 are in P1 above.
 | id | role | status | task |
 |---|---|---|---|
 | C-001 | content | todo | Generic dialogue for generated NPCs: data/dialogue/generic_cultivator.json (greet, chat, small gift, ask about the region) with favor gains, so courtship candidates have something to say. If Dialogue only resolves files by def id, add a small `generic` fallback in GameState._npc_dialogue with a test. Depends on W-003 (done). |
-| C-002 | content | todo | Enemies expansion: data/enemies.json has 9 enemies; add 10+ for Foundation and Core Formation (beasts with ore/herb loot, rogue and demonic cultivators), and use them in encounters.json realm-gated entries. |
+| W-004f | systems | todo | Encounter-level `min_alignment`/`max_alignment` (not only on choices), validated in GameData, so e.g. the Azure Cloud Enforcer (C-002) hunts only demonic-leaning players and Blood Lotus recruiters only approach demonic ones. Add tests. |
 | C-005 | content | todo | A fifth region (e.g. a marsh or ruined city with a demonic lean): regions.json places (meditation, gather, explore, merchant), routes with realm gates, gather tables, 8+ encounters tagged for it. Pure data; follow regions.json `_doc`. |
 | C-006 | content | todo | 3 new named NPCs (data/npcs.json) with dialogue files in data/dialogue/, spread across regions (e.g. a wandering alchemist, a blood lotus disciple, a retired elder) with favor-gated rewards. |
 | RIV-001 | systems | todo | Rivals and grudges: CharacterData.grudges/gratitude per NPC (save-compatible); killing/robbing/humiliating creates grudges with the victim's family/sect; a named rival NPC grows alongside the player and appears in encounters; Npcs.simulate lets enemies hunt you. |
@@ -94,7 +94,7 @@ ART-001/ART-001b are done; ART-002 and ART-005 are in P1 above.
 | QA-004 | qa | todo | Obtainability audit test: every item in items.json is reachable (merchant stock tags, recipe output, encounter/deed/enemy loot, dialogue reward or starting item) and every recipe scroll is obtainable; known exceptions listed in an explicit allowlist with a task id (e.g. Blood-Drinker Saber → LIFE-001e). |
 | QA-005 | qa | todo | Family edge cases: spouse dies while pregnant, carrier spouse divorces/dies mid-pregnancy, save/load mid-pregnancy, child of a deceased parent, player respawn during pregnancy. Add tests, fix small bugs, file tasks for big ones. |
 | QA-006 | qa | todo | Economy sim (tests/sim/simulate_economy.gd): spirit stone income (professions, sales, missions once G-008 lands) vs costs (pills, gear, artifact recharge growth) across a 200-year life; report whether the player can afford breakthroughs and recharges, and propose data tweaks. |
-| QA-007 | qa | todo | Combat balance sim: per realm, a typical player (realm, gear, techniques, talismans) vs every enemy in enemies.json; report win rates and flag enemies that are trivial or unbeatable for the realm they appear at in encounters.json. |
+| QA-007 | qa | todo | Combat balance sim: per realm, a typical player (realm, gear, techniques, talismans) vs every enemy in enemies.json; report win rates and flag enemies that are trivial or unbeatable for the realm they appear at in encounters.json. Note from C-002: win chances are nearly binary (0% or 100%) because technique levels dominate base stats; consider whether that is intended. |
 | QA-008 | qa | todo | Gamepad/focus audit: a scene test that opens each HUD screen (inventory, techniques, character sheet, crafting, pause, load, settings, combat report) and asserts something has focus and ui_cancel closes it. Fix screens that fail. |
 | QA-009 | qa | todo | Review recently merged code (G-005b combat talismans, FAM-003 children, FAM-002c eligible NPCs) for correctness and missing tests; fix small bugs, file tasks for larger ones. |
 | UI-LEAK-001 | world-ui | todo | Most HUD screens call `UIStyle.panel().get_theme_stylebox("panel")` in _init and leak the temporary PanelContainer (shows as "ObjectDB instances leaked" when screens are built in tests). Add a `UIStyle.panel_style()` helper returning just the StyleBox and use it everywhere (character_sheet already frees its temp panel). |
@@ -105,6 +105,7 @@ The local sessions that built combat/techniques, world/exploration/NPCs/dialogue
 ## Done
 | id | task |
 |---|---|
+| C-002 | Enemies expansion: 12 Foundation/Core Formation enemies (beasts dropping herbs/ores, sword madman, Blood Lotus executioner/elder, a non-lethal righteous enforcer whose defeat costs alignment, corpse puppet, ghost king) in 12 realm-gated encounters. |
 | G-004c | Higher-grade equipment: Profound Iron / Dragon-Blood Gold ores, 4 new forge recipes with manuals, Heavenforge Smithy in Fallen Star Market, equipment encounters. |
 | LIFE-001e | Evil artifacts obtainable: Blood-Drinker Saber (wild), Corpse-Silk Burial Armor and Myriad Souls Banner (ruins), once per life, each with a righteous destroy alternative. |
 | FAM-002f | Generated NPCs placed in the world: regions.json `npc_spots`, Npcs.generated_in_region/spot_positions/world_title/describe, gender colors, "Look" option. |
