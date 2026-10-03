@@ -19,6 +19,9 @@ static func check_join(c: CharacterData, data: GameData, sect_id: String) -> Dic
 		return {"ok": false, "reason": "%s will not accept someone of your evil reputation." % sect.name}
 	if c.alignment > sect.max_alignment:
 		return {"ok": false, "reason": "%s has no use for someone so soft-hearted." % sect.name}
+	var rep_reason := Reputation.check_join(c, data, sect_id)
+	if rep_reason != "":
+		return {"ok": false, "reason": rep_reason}
 	return {"ok": true, "reason": ""}
 
 
@@ -191,7 +194,8 @@ static func check_mission(c: CharacterData, data: GameData, mission_id: String) 
 
 ## Completes `mission_id` (any fight must already be won): hands in the
 ## required items, applies the rewards, adds contribution and starts the
-## cooldown. Returns {ok, reason, contribution, promoted, notes, days}.
+## cooldown. Contribution also earns reputation with the sect.
+## Returns {ok, reason, contribution, promoted, notes, days}.
 static func complete_mission(c: CharacterData, data: GameData, mission_id: String, flags: Dictionary) -> Dictionary:
 	var reason := check_mission(c, data, mission_id)
 	if reason != "":
@@ -202,6 +206,9 @@ static func complete_mission(c: CharacterData, data: GameData, mission_id: Strin
 		c.add_item(item_id, -int(needed[item_id]))
 	var notes := Effects.apply(c, data, mission.get("rewards", {}), flags)
 	var contribution := int(mission.get("contribution", 0))
+	var rep := Reputation.change(c, data, String(c.sect["id"]), Reputation.mission_gain(data, contribution))
+	if rep != 0:
+		notes.append("%s reputation %+d" % [data.sects[c.sect["id"]].name, rep])
 	var promoted := add_contribution(c, data, contribution)
 	c.mission_cooldowns[mission_id] = c.age_days + int(mission.get("cooldown_days", 0))
 	return {"ok": true, "reason": "", "contribution": contribution, "promoted": promoted, "notes": notes, "days": int(mission.get("days", 1))}

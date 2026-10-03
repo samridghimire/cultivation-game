@@ -74,6 +74,8 @@ var artifact_functions: Array[String] = []
 var artifact_storage: Dictionary = {}
 ## Sect mission id -> age_days when it may be taken again (Sects missions).
 var mission_cooldowns: Dictionary = {}
+## Sect id -> reputation with that sect (Reputation system; missing = start value).
+var reputation: Dictionary = {}
 
 
 func attribute(attr_id: String) -> int:
@@ -146,6 +148,7 @@ func to_dict() -> Dictionary:
 		"artifact_functions": artifact_functions.duplicate(),
 		"artifact_storage": artifact_storage.duplicate(),
 		"mission_cooldowns": mission_cooldowns.duplicate(),
+		"reputation": reputation.duplicate(),
 		"abode": abode,
 		"abode_storage": abode_storage.duplicate(),
 	}
@@ -208,6 +211,7 @@ static func from_dict(d: Dictionary) -> CharacterData:
 	c.artifact_functions = _strings(d.get("artifact_functions", []))
 	c.artifact_storage = _int_values(d.get("artifact_storage", {}))
 	c.mission_cooldowns = _int_values(d.get("mission_cooldowns", {}))
+	c.reputation = _int_values(d.get("reputation", {}))
 	c.abode = String(d.get("abode", ""))
 	c.abode_storage = _int_values(d.get("abode_storage", {}))
 	for anchor_id in d.get("anchors", []):
