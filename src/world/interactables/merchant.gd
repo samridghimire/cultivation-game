@@ -6,18 +6,21 @@ extends Interactable
 @export var max_price := 0
 ## Only stock items with one of these tags. Empty = untagged goods (pills, manuals).
 @export var stock_tags: Array = []
+## Sect this merchant belongs to (data/sects.json id); prices follow your reputation with it.
+@export var faction := ""
 
 
 func get_options() -> Array[Dictionary]:
 	var options: Array[Dictionary] = []
 	var data := GameState.data
 	for item: Dictionary in data.items.values():
-		var price := int(item.get("price", 0))
-		if price <= 0 or (max_price > 0 and price > max_price) or not _stocks(item):
+		var base := int(item.get("price", 0))
+		if base <= 0 or (max_price > 0 and base > max_price) or not _stocks(item):
 			continue
+		var price := Reputation.buy_price(GameState.player, data, item["id"], faction)
 		options.append({
 			"label": "Buy %s (%d spirit stones)" % [item["name"], price],
-			"action": GameState.buy_item.bind(item["id"]),
+			"action": GameState.buy_item.bind(item["id"], faction),
 			"disabled": GameState.player.item_count("spirit_stone") < price,
 			"keep_open": true,
 		})
