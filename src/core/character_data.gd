@@ -38,7 +38,8 @@ var qi := 0.0
 var breakthrough_bonus := 0.0
 var alignment := 0
 var professions: Dictionary = {}  # profession id -> {"rank": int, "xp": float}
-## Empty = rogue cultivator. Otherwise {"id": String, "rank": int, "contribution": int}.
+## Empty = rogue cultivator. Otherwise {"id": String, "rank": int, "contribution": int, "spent": int (optional)}.
+## contribution is lifetime earned (drives rank); spent is what went to the sect shop (Sects.contribution_balance).
 var sect: Dictionary = {}
 var inventory: Dictionary = {}  # item id -> count
 ## Equipped artifacts: slot (Equipment.SLOTS) -> item id. Equipped items are not in inventory.
@@ -181,6 +182,8 @@ static func from_dict(d: Dictionary) -> CharacterData:
 	var s: Dictionary = d.get("sect", {})
 	if not s.is_empty():
 		c.sect = {"id": String(s.get("id", "")), "rank": int(s.get("rank", 0)), "contribution": int(s.get("contribution", 0))}
+		if s.has("spent"):
+			c.sect["spent"] = int(s["spent"])
 	c.inventory = _int_values(d.get("inventory", {}))
 	c.injuries = _int_values(d.get("injuries", {}))
 	var equipped: Dictionary = d.get("equipment", {})

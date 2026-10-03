@@ -1,6 +1,7 @@
 extends Interactable
 ## A place to cultivate. Denser spiritual energy = faster qi gathering.
-## Spouses living in this region can join for dual cultivation (FAM-002b).
+## Spouses living in this region can join for dual cultivation (FAM-002b)
+## or try for a child (FAM-003c).
 
 @export var qi_density := 1.0
 
@@ -33,4 +34,10 @@ func _dual_cultivation_options() -> Array[Dictionary]:
 		if reason != "":
 			label += " (%s)" % reason
 		options.append({"label": label, "action": GameState.dual_cultivate.bind(spouse.id, Calendar.DAYS_PER_MONTH, qi_density), "disabled": reason != "", "keep_open": true})
+		var child_days := int(Children.rules(data).get("conception_days", 30))
+		label = "Try for a child with %s (%s)" % [spouse.name, Calendar.format_duration(child_days)]
+		reason = Children.check_conception(p, spouse, data)
+		if reason != "":
+			label += " (%s)" % reason
+		options.append({"label": label, "action": GameState.try_for_child.bind(spouse.id), "disabled": reason != "", "keep_open": true})
 	return options
