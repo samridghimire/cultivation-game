@@ -92,7 +92,6 @@ ART-001/ART-001b are done; ART-002 and ART-005 are in P1 above.
 |---|---|---|---|
 | QA-003 | qa | todo | Save compatibility fixtures: commit tests/fixtures/saves/ with a save from the oldest supported SAVE_VERSION and one from the current version (hand-written JSON), and a test that both load via SaveManager/GameState with sane defaults for every newer field. Document "add a fixture when bumping SAVE_VERSION" in CLAUDE.md. |
 | QA-004 | qa | todo | Obtainability audit test: every item in items.json is reachable (merchant stock tags, recipe output, encounter/deed/enemy loot, dialogue reward or starting item) and every recipe scroll is obtainable; known exceptions listed in an explicit allowlist with a task id (e.g. Blood-Drinker Saber → LIFE-001e). |
-| QA-005 | qa | todo | Family edge cases: spouse dies while pregnant, carrier spouse divorces/dies mid-pregnancy, save/load mid-pregnancy, child of a deceased parent, player respawn during pregnancy. Add tests, fix small bugs, file tasks for big ones. |
 | QA-006 | qa | todo | Economy sim (tests/sim/simulate_economy.gd): spirit stone income (professions, sales, missions once G-008 lands) vs costs (pills, gear, artifact recharge growth) across a 200-year life; report whether the player can afford breakthroughs and recharges, and propose data tweaks. |
 | QA-007 | qa | todo | Combat balance sim: per realm, a typical player (realm, gear, techniques, talismans) vs every enemy in enemies.json; report win rates and flag enemies that are trivial or unbeatable for the realm they appear at in encounters.json. |
 | QA-008 | qa | todo | Gamepad/focus audit: a scene test that opens each HUD screen (inventory, techniques, character sheet, crafting, pause, load, settings, combat report) and asserts something has focus and ui_cancel closes it. Fix screens that fail. |
@@ -105,6 +104,7 @@ The local sessions that built combat/techniques, world/exploration/NPCs/dialogue
 ## Done
 | id | task |
 |---|---|
+| QA-005 | Family edge cases (tests/unit/test_family_edge_cases.gd): a pregnant NPC who dies now loses the pregnancy and the news says so (it used to stay pregnant forever, silently); posthumous births, respawn while pregnant and save/load mid-pregnancy verified. Divorce does not exist yet, so it isn't covered. |
 | G-004c | Higher-grade equipment: Profound Iron / Dragon-Blood Gold ores, 4 new forge recipes with manuals, Heavenforge Smithy in Fallen Star Market, equipment encounters. |
 | LIFE-001e | Evil artifacts obtainable: Blood-Drinker Saber (wild), Corpse-Silk Burial Armor and Myriad Souls Banner (ruins), once per life, each with a righteous destroy alternative. |
 | FAM-002f | Generated NPCs placed in the world: regions.json `npc_spots`, Npcs.generated_in_region/spot_positions/world_title/describe, gender colors, "Look" option. |

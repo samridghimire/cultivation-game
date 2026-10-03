@@ -172,7 +172,11 @@ static func _live(c: CharacterData, data: GameData, days: int, rng: RandomNumber
 	if c.age_years() >= Cultivation.lifespan_years(c, data):
 		c.alive = false
 		c.cause_of_death = "old age"
-		events.append({"npc_id": c.id, "text": "News arrives: %s has died of old age at %d." % [c.name, c.age_years()], "category": "warning"})
+		var text := "News arrives: %s has died of old age at %d." % [c.name, c.age_years()]
+		if Children.is_pregnant(c):
+			c.pregnancy = {}  # the unborn child dies with its mother
+			text += " The unborn child is lost as well."
+		events.append({"npc_id": c.id, "text": text, "category": "warning"})
 		return
 	if not cultivates(c, data) or not Children.can_cultivate_yet(c, data):
 		return
