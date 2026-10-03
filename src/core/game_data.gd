@@ -47,6 +47,7 @@ var anchors: Dictionary = {}
 var recipes: Dictionary = {}  # id -> Dictionary (data/recipes.json)
 ## Alchemy tunables (see Alchemy).
 var alchemy: Dictionary = {}
+var sect_missions: Dictionary = {}  # id -> Dictionary (data/sect_missions.json)
 ## Problems found while loading. Empty when all data files are valid.
 var load_errors: PackedStringArray = []
 
@@ -101,6 +102,9 @@ func _load(dir: String) -> void:
 
 	for item in _read(dir, "items.json").get("items", []):
 		items[item["id"]] = item
+
+	for mission in _read(dir, "sect_missions.json").get("missions", []):
+		sect_missions[mission["id"]] = mission
 
 	for deed in _read(dir, "deeds.json").get("deeds", []):
 		deeds[deed["id"]] = deed
@@ -202,6 +206,7 @@ func _validate() -> void:
 	load_errors.append_array(CombatTalismans.validate(self))
 	load_errors.append_array(Family.validate(self))
 	load_errors.append_array(Children.validate(self))
+	load_errors.append_array(Sects.validate_missions(self))
 	load_errors.append_array(Exploration.validate_choices(self))
 	for item: Dictionary in items.values():
 		if item.get("effects", {}).has("buff"):
