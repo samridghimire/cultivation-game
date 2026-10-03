@@ -10,7 +10,7 @@ var _close_button: Button
 
 
 func _init() -> void:
-	add_theme_stylebox_override("panel", UIStyle.panel().get_theme_stylebox("panel"))
+	add_theme_stylebox_override("panel", UIStyle.panel_style())
 	custom_minimum_size = Vector2(620, 0)
 	visible = false
 	var box := VBoxContainer.new()
