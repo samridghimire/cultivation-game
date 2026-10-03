@@ -110,6 +110,8 @@ func claim_abode(abode_id: String) -> void:
 	if result["previous"] != "":
 		EventBus.post("You leave %s behind." % Abodes.abode_name(data, result["previous"]))
 	EventBus.post("You pay %d spirit stones and claim %s as your abode." % [result["cost"], Abodes.abode_name(data, abode_id)], "progress")
+	if Clans.move_seat(clan, abode_id, data):
+		EventBus.post("The %s moves its seat to %s." % [clan.name, Abodes.abode_name(data, abode_id)], "progress")
 	var anchor_id := String(result["anchor_id"])
 	if anchor_id != "" and not player.anchors.has(anchor_id) and player.anchors.size() < CreationArtifact.anchor_slots(player, data):
 		bind_anchor(anchor_id)
@@ -617,6 +619,8 @@ func found_clan() -> void:
 		return
 	clan = result["clan"]
 	EventBus.post("You found the %s and become its %s. %d members gather under your banner." % [clan.name, Clans.rank_name(data, Clans.head_rank(data), player.gender), clan.members.size()], "progress")
+	if clan.seat != "":
+		EventBus.post("%s becomes the seat of the %s." % [Clans.seat_name(clan, data), clan.name])
 	_pass_time(result["days"])
 
 
@@ -1137,6 +1141,8 @@ func load_save_dict(d: Dictionary) -> void:
 		npc_favor[npc_id] = int(d["npc_favor"][npc_id])
 	var saved_clan: Dictionary = d.get("clan", {})
 	clan = ClanData.from_dict(saved_clan) if not saved_clan.is_empty() else null
+	if clan != null and clan.seat == "":
+		Clans.move_seat(clan, player.abode, data)
 	dialogue_npc = ""
 	dialogue_node = ""
 	pending_encounter = ""
