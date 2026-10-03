@@ -40,6 +40,8 @@ static func create(def: Dictionary, data: GameData, rng: RandomNumberGenerator) 
 	c.home_region = String(def.get("region", ""))
 	c.cultivates = bool(def.get("cultivates", false))
 	c.diligence = float(def.get("diligence", DEFAULT_DILIGENCE))
+	c.bloodline = String(def.get("bloodline", ""))
+	Bloodlines.update(c, data)
 	return c
 
 
@@ -154,8 +156,10 @@ static func ensure_all(npcs: Dictionary, data: GameData, rng: RandomNumberGenera
 			npcs[def["id"]] = create(def, data, rng)
 
 
-## Lives `days` for every NPC. Returns notable events as [{npc_id, text, category}].
-static func simulate(npcs: Dictionary, data: GameData, days: int, rng: RandomNumberGenerator) -> Array[Dictionary]:
+## Lives `days` for every NPC, then their family life (NpcFamilies: marriages,
+## children; NPCs in `reserved` never marry off-screen). Returns notable events
+## as [{npc_id, text, category}] (family events also carry a "kind").
+static func simulate(npcs: Dictionary, data: GameData, days: int, rng: RandomNumberGenerator, reserved: Dictionary = {}) -> Array[Dictionary]:
 	var events: Array[Dictionary] = []
 	for npc_id in npcs:
 		var c: CharacterData = npcs[npc_id]
@@ -164,6 +168,7 @@ static func simulate(npcs: Dictionary, data: GameData, days: int, rng: RandomNum
 			var step := mini(remaining, STEP_DAYS)
 			remaining -= step
 			_live(c, data, step, rng, events)
+	events.append_array(NpcFamilies.simulate(npcs, data, days, rng, reserved))
 	return events
 
 
@@ -172,8 +177,16 @@ static func _live(c: CharacterData, data: GameData, days: int, rng: RandomNumber
 	if c.age_years() >= Cultivation.lifespan_years(c, data):
 		c.alive = false
 		c.cause_of_death = "old age"
-		events.append({"npc_id": c.id, "text": "News arrives: %s has died of old age at %d." % [c.name, c.age_years()], "category": "warning"})
+		var text := "News arrives: %s has died of old age at %d." % [c.name, c.age_years()]
+		if Children.is_pregnant(c):
+			c.pregnancy = {}  # the unborn child dies with its mother
+			text += " The unborn child is lost as well."
+		events.append({"npc_id": c.id, "text": text, "category": "warning"})
 		return
+	# Injuries heal with time; adults may get hurt (injuries.json "npc_mishap", per month).
+	Injuries.pass_days(c, days)
+	if Children.can_cultivate_yet(c, data):
+		Injuries.roll(c, data, "npc_mishap", rng, float(days) / STEP_DAYS)
 	if not cultivates(c, data) or not Children.can_cultivate_yet(c, data):
 		return
 	if SpiritualRoots.cultivation_multiplier(c.spiritual_roots, data) <= 0.0:
@@ -186,6 +199,17 @@ static func _live(c: CharacterData, data: GameData, days: int, rng: RandomNumber
 			events.append({"npc_id": c.id, "text": "Rumours spread: %s has broken through to %s!" % [c.name, result["realm_name"]], "category": "info"})
 		elif result["success"] and c.realm_index == 1:
 			events.append({"npc_id": c.id, "text": "%s has begun Qi Refining." % c.name, "category": "info"})
+		if result["success"] and Bloodlines.update(c, data):
+			events.append({"npc_id": c.id, "text": "Heaven and earth tremble: the %s of %s has awakened!" % [Bloodlines.bloodline_name(data, c.bloodline), c.name], "category": "progress"})
+
+
+## Whether simulate() news about `npc_id` should reach `player`: named NPCs
+## always; generated ones only if the player knows them (has favor with them)
+## or they are family (spouse, child or parent).
+static func is_newsworthy(npc_id: String, player: CharacterData, favor: Dictionary) -> bool:
+	if not npc_id.begins_with(SPAWN_PREFIX) or favor.has(npc_id):
+		return true
+	return player.spouses.has(npc_id) or player.children.has(npc_id) or player.parents.has(npc_id)
 
 
 ## NPCs whose home is `region_id` and who are still alive.
