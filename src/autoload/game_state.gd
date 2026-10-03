@@ -382,6 +382,30 @@ func dual_cultivate(spouse_id: String, days: int, location_density: float = 1.0)
 	_pass_time(days)
 
 
+## Spend time with a spouse in the current region trying for a child
+## (data/family.json "children"). On conception the carrier's pregnancy begins;
+## the birth happens as time passes (see _advance_pregnancies).
+func try_for_child(spouse_id: String) -> void:
+	if not _can_act():
+		return
+	var spouse: CharacterData = npcs.get(spouse_id)
+	if spouse != null and spouse.alive and Npcs.region_of(spouse, data) != current_region:
+		EventBus.post("%s is not here." % spouse.name, "warning")
+		EventBus.player_changed.emit()
+		return
+	var result := Children.try_conceive(player, spouse, data, rng)
+	if not result["ok"]:
+		EventBus.post(result["reason"], "warning")
+		EventBus.player_changed.emit()
+		return
+	if result["conceived"]:
+		var carrier := "You are" if Children.is_pregnant(player) else spouse.name + " is"
+		EventBus.post("Heaven smiles on your union: %s with child!" % carrier, "progress")
+	else:
+		EventBus.post("You and %s spend %s together, but no child is conceived yet." % [spouse.name, Calendar.format_duration(result["days"])])
+	_pass_time(result["days"])
+
+
 func learn_technique(tech_id: String) -> void:
 	if not _can_act():
 		return
@@ -656,8 +680,30 @@ func _on_days_advanced(days: int) -> void:
 		if npc_id.begins_with(Npcs.SPAWN_PREFIX) and not npc_favor.has(npc_id) and not player.spouses.has(npc_id):
 			continue
 		EventBus.post(event["text"], event["category"])
+	_advance_pregnancies(days)
 	if player.age_years() >= Cultivation.lifespan_years(player, data):
 		_kill("Your lifespan is exhausted. You die of old age at %d." % player.age_years())
+
+
+## Pregnancies of the player and the player's spouses progress; due ones give birth.
+func _advance_pregnancies(days: int) -> void:
+	var expecting: Array[CharacterData] = [player]
+	for spouse_id in player.spouses:
+		var spouse: CharacterData = npcs.get(spouse_id)
+		if spouse != null and spouse.alive:
+			expecting.append(spouse)
+	for mother in expecting:
+		if not Children.advance_pregnancy(mother, days):
+			continue
+		var father_id := String(mother.pregnancy.get("partner", ""))
+		var father: CharacterData = player if father_id == player.id else npcs.get(father_id)
+		if father == null:
+			mother.pregnancy = {}
+			continue
+		var region := current_region if mother == player else Npcs.region_of(mother, data)
+		var child := Children.give_birth(mother, father, npcs, data, rng, region)
+		var mother_name := "you" if mother == player else mother.name
+		EventBus.post("A child is born to %s: %s, a %s with %s." % [mother_name, child.name, "son" if child.gender == "male" else "daughter", SpiritualRoots.describe(child.spiritual_roots, data)], "progress")
 
 
 ## A death by violence: the Creation Artifact respawns the player if it has a

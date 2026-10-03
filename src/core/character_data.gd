@@ -15,6 +15,10 @@ var children: Array[String] = []
 var spouses: Array[String] = []
 ## Spouse id -> rank id of that marriage (data/family.json, e.g. "wife", "concubine", "dao_companion").
 var spouse_ranks: Dictionary = {}
+## Ongoing pregnancy (FAM-003): {} or {"partner": other parent id, "days_left": int}. See Children.
+var pregnancy: Dictionary = {}
+## The mother's spousal rank to the father at birth ("" = unknown or adopted); used for heir priority.
+var birth_rank := ""
 ## NPC behavior. Empty/negative values fall back to the data/npcs.json def (see Npcs).
 var home_region := ""
 var cultivates := false
@@ -95,6 +99,8 @@ func to_dict() -> Dictionary:
 		"children": children.duplicate(),
 		"spouses": spouses.duplicate(),
 		"spouse_ranks": spouse_ranks.duplicate(),
+		"pregnancy": pregnancy.duplicate(),
+		"birth_rank": birth_rank,
 		"home_region": home_region,
 		"cultivates": cultivates,
 		"diligence": diligence,
@@ -139,6 +145,10 @@ static func from_dict(d: Dictionary) -> CharacterData:
 	var saved_ranks: Dictionary = d.get("spouse_ranks", {})
 	for spouse_id in saved_ranks:
 		c.spouse_ranks[String(spouse_id)] = String(saved_ranks[spouse_id])
+	var saved_pregnancy: Dictionary = d.get("pregnancy", {})
+	if not saved_pregnancy.is_empty():
+		c.pregnancy = {"partner": String(saved_pregnancy.get("partner", "")), "days_left": int(saved_pregnancy.get("days_left", 0))}
+	c.birth_rank = String(d.get("birth_rank", ""))
 	c.home_region = String(d.get("home_region", ""))
 	c.cultivates = bool(d.get("cultivates", false))
 	c.diligence = float(d.get("diligence", -1.0))
