@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-03 [PROD] Backlog grooming (12:00 UTC): 31 tasks marked in-progress with their PR numbers and a merge order for the integrator; new tasks for sect rank duties (G-008e-g), auctions (AUC-001), Dao UI/content, tribulation prep, secret realms UI/content and inheritance grounds (W-005b/c, W-006), rivals split into karma/rival/hunters (RIV-001-003), spirit beasts (BEAST-001), devouring (DEM-001), world events and living sects (LW-001/002), higher-grade herbs and deeds content, QA fuzz/cross-reference/P0 review, log history and help screens; DEM-002, SECT-001 and STORY-001 blocked on owner questions; DESIGN.md systems table refreshed.
 - 2026-10-03 [G-004c] Higher-grade equipment: Profound Iron and Dragon-Blood Gold ores, 4 Foundation/Core Formation forge recipes taught by forging manuals, a Heavenforge Smithy in Fallen Star Market, and equipment/ore finds while exploring.
 - 2026-10-03 [LIFE-001e] Evil artifacts are now obtainable: the Blood-Drinker Saber plus the new Corpse-Silk Burial Armor and Myriad Souls Banner (lifespan-draining) are once-per-life exploration finds; righteous players can destroy them for alignment and qi instead.
 - 2026-10-03 [FAM-002f] Generated NPCs (courtship candidates, spouses, children) now appear in the world at per-region npc_spots, colored by gender with a realm or relation title, and can be looked at.
