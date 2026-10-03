@@ -42,6 +42,8 @@ var medicine: Dictionary = {}
 ## Creation Artifact tunables (data/artifact.json, see CreationArtifact).
 var artifact: Dictionary = {}
 var family: Dictionary = {}  # data/family.json (Family system)
+## Grudge/gratitude rules (data/karma.json, Karma). "acts" is keyed by id after loading.
+var karma: Dictionary = {}
 ## Anchor id -> {"region": String, "name": String}, from places with an anchor_id.
 var anchors: Dictionary = {}
 var recipes: Dictionary = {}  # id -> Dictionary (data/recipes.json)
@@ -131,6 +133,11 @@ func _load(dir: String) -> void:
 
 	names = _read(dir, "names.json")
 	family = _read(dir, "family.json")
+	karma = _read(dir, "karma.json")
+	var karma_acts := {}
+	for act in karma.get("acts", []):
+		karma_acts[act["id"]] = act
+	karma["acts"] = karma_acts
 
 	var dialogue_dir := dir.path_join("dialogue")
 	for file_name in DirAccess.get_files_at(dialogue_dir):
@@ -205,6 +212,7 @@ func _validate() -> void:
 	load_errors.append_array(Equipment.validate(self))
 	load_errors.append_array(CombatTalismans.validate(self))
 	load_errors.append_array(Family.validate(self))
+	load_errors.append_array(Karma.validate(self))
 	load_errors.append_array(Children.validate(self))
 	load_errors.append_array(Sects.validate_missions(self))
 	load_errors.append_array(Exploration.validate_choices(self))

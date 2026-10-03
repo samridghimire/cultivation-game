@@ -63,6 +63,9 @@ var artifact_recharges := 0
 var anchors: Array[String] = []
 ## Sect mission id -> age_days when it may be taken again (Sects missions).
 var mission_cooldowns: Dictionary = {}
+## Karma (RIV-001): NPC id -> how much that NPC hates / owes this character (0-100, see Karma).
+var grudges: Dictionary = {}
+var gratitude: Dictionary = {}
 
 
 func attribute(attr_id: String) -> int:
@@ -132,6 +135,8 @@ func to_dict() -> Dictionary:
 		"artifact_recharges": artifact_recharges,
 		"anchors": anchors.duplicate(),
 		"mission_cooldowns": mission_cooldowns.duplicate(),
+		"grudges": grudges.duplicate(),
+		"gratitude": gratitude.duplicate(),
 	}
 
 
@@ -187,6 +192,8 @@ static func from_dict(d: Dictionary) -> CharacterData:
 	c.artifact_lives = int(d.get("artifact_lives", -1))
 	c.artifact_recharges = int(d.get("artifact_recharges", 0))
 	c.mission_cooldowns = _int_values(d.get("mission_cooldowns", {}))
+	c.grudges = _int_values(d.get("grudges", {}))
+	c.gratitude = _int_values(d.get("gratitude", {}))
 	for anchor_id in d.get("anchors", []):
 		c.anchors.append(String(anchor_id))
 	for recipe_id in d.get("known_recipes", []):
