@@ -61,6 +61,10 @@ var artifact_lives := -1
 var artifact_recharges := 0
 ## Bound anchor ids (data/regions.json "anchor_id"), most recently bound last.
 var anchors: Array[String] = []
+## Claimed cave abode id (data/regions.json "abodes"), "" if none (Abodes).
+var abode := ""
+## Items kept in the abode's storage chest: item id -> count.
+var abode_storage: Dictionary = {}
 ## Sect mission id -> age_days when it may be taken again (Sects missions).
 var mission_cooldowns: Dictionary = {}
 
@@ -132,6 +136,8 @@ func to_dict() -> Dictionary:
 		"artifact_recharges": artifact_recharges,
 		"anchors": anchors.duplicate(),
 		"mission_cooldowns": mission_cooldowns.duplicate(),
+		"abode": abode,
+		"abode_storage": abode_storage.duplicate(),
 	}
 
 
@@ -187,6 +193,8 @@ static func from_dict(d: Dictionary) -> CharacterData:
 	c.artifact_lives = int(d.get("artifact_lives", -1))
 	c.artifact_recharges = int(d.get("artifact_recharges", 0))
 	c.mission_cooldowns = _int_values(d.get("mission_cooldowns", {}))
+	c.abode = String(d.get("abode", ""))
+	c.abode_storage = _int_values(d.get("abode_storage", {}))
 	for anchor_id in d.get("anchors", []):
 		c.anchors.append(String(anchor_id))
 	for recipe_id in d.get("known_recipes", []):

@@ -84,6 +84,58 @@ func cultivate(days: int, location_density: float = 1.0) -> void:
 	_pass_time(days)
 
 
+## Claim a cave abode in the current region for spirit stones. Its anchor is
+## bound right away if the artifact has a free anchor slot.
+func claim_abode(abode_id: String) -> void:
+	if not _can_act():
+		return
+	var result := Abodes.claim(player, data, abode_id, current_region)
+	if not result["ok"]:
+		EventBus.post(result["reason"], "warning")
+		EventBus.player_changed.emit()
+		return
+	if result["previous"] != "":
+		EventBus.post("You leave %s behind." % Abodes.abode_name(data, result["previous"]))
+	EventBus.post("You pay %d spirit stones and claim %s as your abode." % [result["cost"], Abodes.abode_name(data, abode_id)], "progress")
+	var anchor_id := String(result["anchor_id"])
+	if anchor_id != "" and not player.anchors.has(anchor_id) and player.anchors.size() < CreationArtifact.anchor_slots(player, data):
+		bind_anchor(anchor_id)
+	EventBus.player_changed.emit()
+
+
+## Cultivate in seclusion at the player's abode (must be in its region).
+func cultivate_in_seclusion(days: int) -> void:
+	if not _can_act():
+		return
+	var density := Abodes.seclusion_density(player, data, current_region)
+	if density <= 0.0:
+		EventBus.post("You have no abode here to seclude yourself in.", "warning")
+		return
+	cultivate(days, density)
+
+
+func store_in_abode(item_id: String, quantity: int = 1) -> void:
+	if not _can_act():
+		return
+	var result := Abodes.store(player, data, current_region, item_id, quantity)
+	if result["ok"]:
+		EventBus.post("You put %d %s in your abode's chest." % [quantity, data.items.get(item_id, {}).get("name", item_id)])
+	else:
+		EventBus.post(result["reason"], "warning")
+	EventBus.player_changed.emit()
+
+
+func retrieve_from_abode(item_id: String, quantity: int = 1) -> void:
+	if not _can_act():
+		return
+	var result := Abodes.retrieve(player, data, current_region, item_id, quantity)
+	if result["ok"]:
+		EventBus.post("You take %d %s from your abode's chest." % [quantity, data.items.get(item_id, {}).get("name", item_id)])
+	else:
+		EventBus.post(result["reason"], "warning")
+	EventBus.player_changed.emit()
+
+
 func attempt_breakthrough() -> void:
 	if not _can_act():
 		return
