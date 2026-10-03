@@ -23,6 +23,7 @@ var _load_screen: LoadScreen
 var _crafting: CraftingScreen
 var _mission_board: MissionBoard
 var _banner: Banner
+var _respawn: RespawnScreen
 var _death_screen: Control
 
 
@@ -67,6 +68,10 @@ func _ready() -> void:
 	_load_screen.slot_chosen.connect(_on_slot_chosen)
 	add_child(UIStyle.centered(_load_screen))
 	_pause_menu.load_requested.connect(_open_load)
+	_respawn = RespawnScreen.new()
+	_respawn.closed.connect(_update_modal)
+	add_child(UIStyle.centered(_respawn))
+	_combat_report.closed.connect(_open_pending_respawn)
 	_banner = Banner.new()
 	add_child(_banner)
 	_build_death_screen()
@@ -80,6 +85,7 @@ func _ready() -> void:
 	EventBus.crafting_requested.connect(_on_crafting_requested)
 	EventBus.mission_board_requested.connect(_on_mission_board_requested)
 	EventBus.player_died.connect(_on_player_died)
+	EventBus.player_respawned.connect(func(_anchor_id: String, _lives: int): _open_pending_respawn())
 	EventBus.combat_finished.connect(_on_combat_finished)
 	EventBus.breakthrough_attempted.connect(_on_breakthrough)
 	EventBus.dialogue_requested.connect(_on_dialogue_requested)
@@ -87,10 +93,12 @@ func _ready() -> void:
 	EventBus.encounter_choice_requested.connect(_on_encounter_choice_requested)
 	EventBus.encounter_choice_resolved.connect(_encounter.close)
 	_refresh()
+	# A respawn that moved the player reloads the world; ask where to awaken now.
+	_open_pending_respawn.call_deferred()
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if _choice_menu.visible or _dialogue.visible or _encounter.visible or _combat_report.visible or _pause_menu.visible or _settings.visible or _load_screen.visible or _death_screen.visible:
+	if _choice_menu.visible or _dialogue.visible or _encounter.visible or _combat_report.visible or _respawn.visible or _pause_menu.visible or _settings.visible or _load_screen.visible or _death_screen.visible:
 		return
 	if event.is_action_pressed("pause_menu"):
 		# Consumed here so the world's own Esc handling never runs mid-session.
@@ -234,7 +242,7 @@ func _on_target_changed(display_name: String) -> void:
 
 
 func _on_menu_requested(source: Node) -> void:
-	if _any_screen_open() or _dialogue.visible or _encounter.visible or _combat_report.visible or _pause_menu.visible or _settings.visible or _load_screen.visible or _death_screen.visible:
+	if _any_screen_open() or _dialogue.visible or _encounter.visible or _combat_report.visible or _respawn.visible or _pause_menu.visible or _settings.visible or _load_screen.visible or _death_screen.visible:
 		return
 	_choice_menu.open_for(source)
 	_update_modal()
@@ -244,6 +252,7 @@ func _on_player_died(cause: String) -> void:
 	_choice_menu.close()
 	_close_screens()
 	_combat_report.close()
+	_respawn.close()
 	_dialogue.close()
 	_encounter.close()
 	_pause_menu.close()
@@ -261,6 +270,17 @@ func _on_combat_finished(enemy_name: String, victory: bool, lines: PackedStringA
 	_choice_menu.close()
 	_close_screens()
 	_combat_report.show_fight(enemy_name, victory, lines)
+	_update_modal()
+
+
+## The artifact saved the player: once the fight report is read, let them
+## choose which anchor to awaken at.
+func _open_pending_respawn() -> void:
+	if GameState.pending_respawn.is_empty() or _combat_report.visible or _death_screen.visible:
+		return
+	_choice_menu.close()
+	_close_screens()
+	_respawn.open()
 	_update_modal()
 
 
@@ -319,7 +339,7 @@ func _on_settings_closed() -> void:
 
 
 func _update_modal() -> void:
-	EventBus.ui_modal_changed.emit(_choice_menu.visible or _dialogue.visible or _encounter.visible or _any_screen_open() or _combat_report.visible or _pause_menu.visible or _settings.visible or _load_screen.visible or _death_screen.visible)
+	EventBus.ui_modal_changed.emit(_choice_menu.visible or _dialogue.visible or _encounter.visible or _any_screen_open() or _combat_report.visible or _respawn.visible or _pause_menu.visible or _settings.visible or _load_screen.visible or _death_screen.visible)
 
 
 func _return_to_menu() -> void:

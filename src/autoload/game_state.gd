@@ -23,6 +23,11 @@ var dialogue_node := ""
 ## Encounter id waiting for the player's choice (W-004c, "" = none). Like a
 ## conversation it is not saved: loading a save drops it.
 var pending_encounter := ""
+## Set when the Creation Artifact just respawned the player (ART-005) until
+## they pick where to awaken: {cause, anchor_id, lives_left, qi_lost}. Not saved.
+var pending_respawn: Dictionary = {}
+## Anchor the world should place the player at after the next region load ("" = region spawn).
+var spawn_anchor := ""
 var rng := RandomNumberGenerator.new()
 ## The player's clan (FAM-005), null until founded.
 var clan: ClanData = null
@@ -49,6 +54,8 @@ func start_session(character: CharacterData) -> void:
 	clan = null
 	dialogue_npc = ""
 	pending_encounter = ""
+	pending_respawn = {}
+	spawn_anchor = ""
 	Npcs.ensure_all(npcs, data, rng)
 	Npcs.ensure_eligible(npcs, data, rng)
 	GameClock.reset()
@@ -65,6 +72,8 @@ func end_session() -> void:
 	clan = null
 	dialogue_npc = ""
 	pending_encounter = ""
+	pending_respawn = {}
+	spawn_anchor = ""
 
 
 # --- Actions -----------------------------------------------------------------
@@ -1186,10 +1195,33 @@ func _die_violently(cause: String) -> void:
 	EventBus.post("The Creation Artifact pulls your soul back. You awaken at %s, %d qi lost. (%d lives left)" % [place, int(result["qi_lost"]), result["lives_left"]], "warning")
 	var moved: bool = result["region"] != current_region
 	current_region = result["region"]
+	pending_respawn = {"cause": cause, "anchor_id": result["anchor_id"], "lives_left": result["lives_left"], "qi_lost": result["qi_lost"]}
+	if moved:
+		spawn_anchor = result["anchor_id"]
 	EventBus.player_respawned.emit(result["anchor_id"], result["lives_left"])
 	_pass_time(result["days"])
 	if moved:
 		EventBus.region_changed.emit(current_region)
+
+
+## After a respawn, awaken at `anchor_id` (any bound anchor, or "" for the
+## start region when none are bound) instead of the default respawn point.
+## Reloads the region so the player stands at the chosen anchor.
+func choose_respawn_anchor(anchor_id: String) -> void:
+	if pending_respawn.is_empty() or not _can_act():
+		return
+	var valid := CreationArtifact.respawn_choices(player, data).any(func(choice: Dictionary) -> bool: return choice["anchor_id"] == anchor_id)
+	if not valid:
+		push_error("Not a respawn choice: '%s'" % anchor_id)
+		return
+	if anchor_id != String(pending_respawn["anchor_id"]):
+		var place := CreationArtifact.anchor_name(data, anchor_id) if anchor_id != "" else Exploration.region_name(data, data.start_region)
+		EventBus.post("You let the artifact carry your soul to %s instead." % place, "warning")
+	pending_respawn = {}
+	current_region = CreationArtifact.anchor_region(data, anchor_id)
+	spawn_anchor = anchor_id
+	EventBus.player_changed.emit()
+	EventBus.region_changed.emit(current_region)
 
 
 func _kill(cause: String) -> void:
