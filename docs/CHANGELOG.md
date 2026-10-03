@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-03 [FAM-013] Generational sim (tests/sim/simulate_generations.gd). Fixed: off-screen NPC marriages kept refilling courtship candidates past the population cap, so the population grew forever and births stopped. Marriages now stop at the cap, and the world levels off at about 300 NPCs.
 - 2026-10-03 [QA-20261003-2] The message log now reports news about your own children and parents (deaths, breakthroughs) even when they are generated NPCs; the stranger-noise filter moved to Npcs.is_newsworthy.
 - 2026-10-03 [G-004b] Equipment is usable in-game: the inventory shows slot, stats and what an item would replace with an "Equip" button, and the character sheet lists equipped weapon/armor with Unequip buttons. InventoryScreen no longer leaks its temporary style panel.
 - 2026-10-03 [FAM-003c] Meditation spots offer "Try for a child with <spouse>" next to dual cultivation (disabled with the Children.check_conception reason), and the character sheet's Family section shows ongoing pregnancies with time to the birth (Children.describe_pregnancies).
