@@ -43,7 +43,7 @@ Roles: `systems` (core rules + tests), `content` (data/*.json + small hooks), `w
 | id | role | status | task |
 |---|---|---|---|
 | FAM-003b | systems | todo | Adoption: GameState.adopt(npc_id) for an orphaned/unrelated child NPC (or a generated foundling at an orphanage/temple), links parents/children with birth_rank "" (adopted), favor/alignment rules in data/family.json; lets female players and couples without a carrier grow a family. |
-| FAM-004 | systems | todo | Training descendants: monthly training assignment for each child/disciple (cultivate, profession, study technique), teaching techniques the player knows, spending pills/stones on them; progress reported in the message log. CharacterData.training (save-compatible), Npcs.simulate honors it. |
+| FAM-004b | world-ui | todo | Surface child training (FAM-004): per child on the family/character sheet, "Assign training" choosing among Training.assignments (name, stones/month, profession picker for kind `profession`) with Training.check_assign reasons on disabled entries, "Stop training" (GameState.clear_training); in the NPC menu for your own child in the region, "Teach <technique>" per known technique (GameState.teach_technique, Training.check_teach reasons) and "Give <pill>" per usable item (GameState.give_to_child, Training.check_give). |
 | FAM-005 | systems | todo | Found a clan: requirements in data/family.json `clan` (default: Foundation Establishment, spirit stones, a claimed estate place). Player becomes Patriarch/Matriarch; clan has a name (player surname), members (family, spouses, recruited retainers), ranks (Patriarch, Elder, Core, Outer), treasury, reputation. New ClanData (src/core) saved in GameState.to_save_dict. GameState.found_clan / recruit / promote / deposit. |
 | FAM-005b | world-ui | todo | Surface clan founding: a "Found the <Surname> Clan" option at an estate/abode place with Clans.check_found reasons, and a first version of the clan screen (members, ranks, treasury, promote/recruit). Depends on FAM-005. Grows into FAM-010. |
 | FAM-006 | systems | todo | Clan estate: buildings in data/clan_buildings.json (ancestral hall, spirit field, alchemy room, protective array, library) with costs, build time and monthly effects (income, qi density, herb yield, training speed). Depends on FAM-005. |
@@ -105,6 +105,7 @@ The local sessions that built combat/techniques, world/exploration/NPCs/dialogue
 ## Done
 | id | task |
 |---|---|
+| FAM-004 | Training descendants: data/family.json `training` assignments (cultivate/profession/technique) paid monthly in spirit stones, Training system, CharacterData.training, GameState.assign_training/clear_training/teach_technique/give_to_child. UI → FAM-004b. |
 | G-004c | Higher-grade equipment: Profound Iron / Dragon-Blood Gold ores, 4 new forge recipes with manuals, Heavenforge Smithy in Fallen Star Market, equipment encounters. |
 | LIFE-001e | Evil artifacts obtainable: Blood-Drinker Saber (wild), Corpse-Silk Burial Armor and Myriad Souls Banner (ruins), once per life, each with a righteous destroy alternative. |
 | FAM-002f | Generated NPCs placed in the world: regions.json `npc_spots`, Npcs.generated_in_region/spot_positions/world_title/describe, gender colors, "Look" option. |
