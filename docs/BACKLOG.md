@@ -25,7 +25,7 @@ Roles: `systems` (core rules + tests), `content` (data/*.json + small hooks), `w
 |---|---|---|---|
 | W-004d | world-ui | todo | Encounter choice window: on EventBus.encounter_choice_requested show the encounter text and GameState.encounter_choices() (disabled entries show their reason), call GameState.choose_encounter(index), close on encounter_choice_resolved. Can reuse ChoiceMenu with a small source object. Gamepad focus. |
 | W-004e | content | todo | Convert split moral encounters into choice encounters (e.g. the wounded traveller: help / rob / walk away) with set_flag follow-ups (`requires_flag`: the grateful traveller returns, the robbed one's kin seek revenge). Only after W-004d lands, so choices are visible in-game. Depends on W-004d. |
-| G-008b | world-ui | todo | Mission board in the sect hall: list Sects.available_missions for the player's sect with kind, days, required items (have/need), enemy danger (Combat.danger_label), contribution/rewards and cooldown (Sects.mission_cooldown_left); disabled entries show Sects.check_mission reasons; "Take mission" calls GameState.take_mission. Gamepad-friendly. |
+| G-008e | world-ui | todo | Contribution shop tab on the MissionBoard (src/ui/mission_board.gd): list Sects.shop_items with cost/min rank, disabled entries show Sects.check_purchase reasons, "Buy" calls GameState.buy_with_contribution. Depends on G-008c. |
 | G-008c | systems | todo | Sect contribution shop: sects.json per-sect `shop` [{item_id, contribution, min_rank}] (technique manuals, pills, recipe scrolls), Sects.shop_items/check_purchase, GameState.buy_with_contribution(item_id); spending contribution never demotes (track spent separately from earned). Plus a sect-hall menu entry listing the shop (small UI, or split to world-ui if large). |
 | G-008d | content | todo | Sect missions and shops content: 6+ missions per sect in data/sect_missions.json fitting each sect's alignment (Azure Cloud righteous patrols, Blood Lotus raids/sacrifices, Myriad Treasure Pavilion trade runs), and each sect's contribution shop stock. Depends on G-008 (schema) and G-008c. |
 | ART-002 | systems | todo | Artifact functions framework: `data/artifact.json` "functions" list with unlock conditions (realm, artifact energy, flags) and effects. GameState.feed_artifact(item_id) converts spirit stones/treasures into artifact energy. Implement the first function: **Storage space** (separate item storage that is never dropped on death). |
@@ -105,6 +105,7 @@ The local sessions that built combat/techniques, world/exploration/NPCs/dialogue
 ## Done
 | id | task |
 |---|---|
+| G-008b | Sect mission board (MissionBoard screen from the sect hall): kind, days, hand-in items have/need, enemy danger, rewards, cooldowns, check_mission reasons, Take mission. |
 | G-004c | Higher-grade equipment: Profound Iron / Dragon-Blood Gold ores, 4 new forge recipes with manuals, Heavenforge Smithy in Fallen Star Market, equipment encounters. |
 | LIFE-001e | Evil artifacts obtainable: Blood-Drinker Saber (wild), Corpse-Silk Burial Armor and Myriad Souls Banner (ruins), once per life, each with a righteous destroy alternative. |
 | FAM-002f | Generated NPCs placed in the world: regions.json `npc_spots`, Npcs.generated_in_region/spot_positions/world_title/describe, gender colors, "Look" option. |
