@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-03 [ART-005] After the Creation Artifact saves you, a respawn screen shows how you died, lives left and qi lost, and lets you choose which bound anchor to awaken at; you appear beside it. Anchor places now show a gold diamond (filled when bound, ringed for the respawn point).
 - 2026-10-03 [G-004c] Higher-grade equipment: Profound Iron and Dragon-Blood Gold ores, 4 Foundation/Core Formation forge recipes taught by forging manuals, a Heavenforge Smithy in Fallen Star Market, and equipment/ore finds while exploring.
 - 2026-10-03 [LIFE-001e] Evil artifacts are now obtainable: the Blood-Drinker Saber plus the new Corpse-Silk Burial Armor and Myriad Souls Banner (lifespan-draining) are once-per-life exploration finds; righteous players can destroy them for alignment and qi instead.
 - 2026-10-03 [FAM-002f] Generated NPCs (courtship candidates, spouses, children) now appear in the world at per-region npc_spots, colored by gender with a realm or relation title, and can be looked at.
