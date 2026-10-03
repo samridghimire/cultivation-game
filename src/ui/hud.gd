@@ -4,9 +4,14 @@ extends CanvasLayer
 
 const MAIN_MENU := "res://src/ui/main_menu.tscn"
 const MAX_LOG_LINES := 60
+## Lifespan cue thresholds (fraction of the lifespan left).
+const LIFESPAN_WARNING := 0.15
+const LIFESPAN_DANGER := 0.05
 
+var _age: Label
 var _status: Label
 var _qi_bar: ProgressBar
+var _bottleneck: Label
 var _injuries: Label
 var _log: RichTextLabel
 var _prompt: Label
@@ -121,12 +126,17 @@ func _build_status_panel() -> void:
 	panel.position = Vector2(16, 16)
 	var box := VBoxContainer.new()
 	panel.add_child(box)
+	_age = UIStyle.label("", 15)
+	box.add_child(_age)
 	_status = UIStyle.label("", 15)
 	box.add_child(_status)
 	_qi_bar = ProgressBar.new()
 	_qi_bar.custom_minimum_size = Vector2(300, 14)
 	_qi_bar.show_percentage = false
 	box.add_child(_qi_bar)
+	_bottleneck = UIStyle.label("", 14, UIStyle.ACCENT)
+	_bottleneck.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	box.add_child(_bottleneck)
 	_injuries = UIStyle.label("", 14, UIStyle.CATEGORY_COLORS["danger"])
 	_injuries.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	box.add_child(_injuries)
@@ -179,8 +189,14 @@ func _refresh() -> void:
 	if p == null:
 		return
 	var data := GameState.data
+	var lifespan := Cultivation.lifespan_years(p, data)
+	var years_left := Cultivation.years_left(p, data)
+	var age_cue := lifespan_category(years_left, lifespan)
+	_age.text = "%s   Age %d / %d" % [p.name, p.age_years(), lifespan]
+	if age_cue != "":
+		_age.text += "   (%d %s left)" % [years_left, "year" if years_left == 1 else "years"]
+	_age.add_theme_color_override("font_color", UIStyle.CATEGORY_COLORS.get(age_cue, Color.WHITE))
 	var lines: PackedStringArray = [
-		"%s   Age %d / %d" % [p.name, p.age_years(), Cultivation.lifespan_years(p, data)],
 		Cultivation.realm_label(p, data),
 		"Qi: %d / %d" % [int(p.qi), int(Cultivation.qi_required(p, data))],
 	]
@@ -195,8 +211,31 @@ func _refresh() -> void:
 	_status.text += "\n%s   (Qi x%s)" % [Exploration.region_name(data, GameState.current_region), String.num(density, 2)]
 	_qi_bar.max_value = maxf(Cultivation.qi_required(p, data), 1.0)
 	_qi_bar.value = p.qi
+	_bottleneck.text = bottleneck_hint(p, data)
+	_bottleneck.visible = _bottleneck.text != ""
+	_qi_bar.modulate = UIStyle.ACCENT if _bottleneck.visible else Color.WHITE
 	_injuries.visible = Injuries.has_any(p)
 	_injuries.text = "Injured: " + ", ".join(Injuries.describe(p, data))
+
+
+## Message category for the age line: "danger" or "warning" when little of
+## the lifespan is left, "" otherwise.
+static func lifespan_category(years_left: int, lifespan: int) -> String:
+	var fraction := float(years_left) / maxf(float(lifespan), 1.0)
+	if years_left <= 3 or fraction <= LIFESPAN_DANGER:
+		return "danger"
+	if fraction <= LIFESPAN_WARNING:
+		return "warning"
+	return ""
+
+
+## Hint under the qi bar once the character must break through ("" = none).
+static func bottleneck_hint(c: CharacterData, data: GameData) -> String:
+	if Cultivation.can_attempt_breakthrough(c, data):
+		return "Bottleneck! Attempt a breakthrough at a meditation spot (%d%% chance)." % int(Cultivation.breakthrough_chance(c, data) * 100)
+	if Cultivation.is_at_bottleneck(c, data):
+		return "You stand at the peak of the known realms."
+	return ""
 
 
 func _on_message(text: String, category: String) -> void:

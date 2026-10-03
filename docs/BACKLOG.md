@@ -98,6 +98,8 @@ ART-001/ART-001b are done; ART-002 and ART-005 are in P1 above.
 | QA-008 | qa | todo | Gamepad/focus audit: a scene test that opens each HUD screen (inventory, techniques, character sheet, crafting, pause, load, settings, combat report) and asserts something has focus and ui_cancel closes it. Fix screens that fail. |
 | QA-009 | qa | todo | Review recently merged code (G-005b combat talismans, FAM-003 children, FAM-002c eligible NPCs) for correctness and missing tests; fix small bugs, file tasks for larger ones. |
 | UI-LEAK-001 | world-ui | todo | Most HUD screens call `UIStyle.panel().get_theme_stylebox("panel")` in _init and leak the temporary PanelContainer (shows as "ObjectDB instances leaked" when screens are built in tests). Add a `UIStyle.panel_style()` helper returning just the StyleBox and use it everywhere (character_sheet already frees its temp panel). |
+| UI-004 | world-ui | todo | Time-passing feedback: when an action advances time by a month or more (GameClock.days_advanced), briefly dim the screen with a centered "N months pass..." line (non-blocking, like Banner) and a short summary of what changed (qi gained, realm/stage, new injuries) from a before/after snapshot of the player. Skippable with any button. |
+| UI-005 | world-ui | todo | Region scenery: optional regions.json `map.scenery` block (trees, rocks, grass tufts: count, colors, size) drawn deterministically in world._draw (seeded by region id), kept off paths and away from places/npc_spots. Document in regions.json `_doc` and validate in GameData. Placeholder shapes only. |
 
 ## Local sessions
 The local sessions that built combat/techniques, world/exploration/NPCs/dialogue and the UI screens have finished (2026-10-02); their work is on main and these areas are open to anyone. Add follow-up tasks above.
@@ -105,6 +107,7 @@ The local sessions that built combat/techniques, world/exploration/NPCs/dialogue
 ## Done
 | id | task |
 |---|---|
+| UI-006 | HUD cues: the age line turns orange/red with "(N years left)" when 15%/5% (or 3 years) of the lifespan is left; at a bottleneck the qi bar turns gold with "Bottleneck! Attempt a breakthrough at a meditation spot (N% chance)". |
 | G-004c | Higher-grade equipment: Profound Iron / Dragon-Blood Gold ores, 4 new forge recipes with manuals, Heavenforge Smithy in Fallen Star Market, equipment encounters. |
 | LIFE-001e | Evil artifacts obtainable: Blood-Drinker Saber (wild), Corpse-Silk Burial Armor and Myriad Souls Banner (ruins), once per life, each with a righteous destroy alternative. |
 | FAM-002f | Generated NPCs placed in the world: regions.json `npc_spots`, Npcs.generated_in_region/spot_positions/world_title/describe, gender colors, "Look" option. |
