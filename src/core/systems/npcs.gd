@@ -210,3 +210,61 @@ static func from_dict(d: Dictionary) -> Dictionary:
 	for npc_id in d:
 		out[npc_id] = CharacterData.from_dict(d[npc_id])
 	return out
+
+
+## Living generated NPCs (no data/npcs.json def) whose home is `region_id`,
+## sorted by id so they keep their spots between visits.
+static func generated_in_region(npcs: Dictionary, data: GameData, region_id: String) -> Array[CharacterData]:
+	var result: Array[CharacterData] = []
+	for c in in_region(npcs, data, region_id):
+		if not data.npcs.has(c.id):
+			result.append(c)
+	result.sort_custom(func(a: CharacterData, b: CharacterData) -> bool: return a.id.naturalnocasecmp_to(b.id) < 0)
+	return result
+
+
+## World positions for `count` NPCs: the region's npc_spots first, then a ring
+## around `center` for any overflow.
+static func spot_positions(count: int, spots: Array, center: Vector2) -> Array[Vector2]:
+	var out: Array[Vector2] = []
+	for i in count:
+		if i < spots.size():
+			out.append(Vector2(float(spots[i][0]), float(spots[i][1])))
+		else:
+			var k := i - spots.size()
+			var radius := 140.0 + 50.0 * float(k / 8)
+			out.append(center + Vector2.from_angle(TAU * float(k % 8) / 8.0) * radius)
+	return out
+
+
+## Short label shown under a generated NPC's name in the world: their relation
+## to `player` (spouse rank, child) or else their realm, "Child" if underage.
+static func world_title(c: CharacterData, player: CharacterData, data: GameData) -> String:
+	if player != null and player.spouses.has(c.id):
+		return "Your %s" % Family.rank_name(data, player.gender, String(player.spouse_ranks.get(c.id, ""))).capitalize()
+	if player != null and player.children.has(c.id):
+		return "Your %s" % _gender_word(c, "Son", "Daughter", "Child")
+	if c.age_years() < int(data.family.get("adult_age", 16)):
+		return "Child"
+	return Cultivation.realm_label(c, data)
+
+
+## One sentence describing a generated NPC as the player sees them.
+static func describe(c: CharacterData, data: GameData) -> String:
+	var adult := c.age_years() >= int(data.family.get("adult_age", 16))
+	var who := _gender_word(c, "man", "woman", "person") if adult else _gender_word(c, "boy", "girl", "child")
+	var text := "%s, a %s of %d" % [c.name, who, c.age_years()]
+	if c.realm_index > 0:
+		text += ", cultivating at %s" % Cultivation.realm_label(c, data)
+	if not c.spouses.is_empty():
+		text += ", married"
+	return text + "."
+
+
+static func _gender_word(c: CharacterData, male: String, female: String, other: String) -> String:
+	match c.gender:
+		"male":
+			return male
+		"female":
+			return female
+	return other

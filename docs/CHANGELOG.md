@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-03 [FAM-002f] Generated NPCs (courtship candidates, spouses, children) now appear in the world at per-region npc_spots, colored by gender with a realm or relation title, and can be looked at.
 - 2026-10-03 [FAM-002e] Meditation spots offer "Dual cultivate with <spouse>" (1 month, shows the qi bonus %, disabled with a reason) for spouses living in the current region.
 - 2026-10-03 [FAM-001b] Character sheet: gender + family header, Family section (spouses by rank, children, parents), one-time gender picker for old saves (GameState.choose_gender).
 - 2026-10-03 [W-004c] Encounter choices: encounters can offer choices (help, rob, pay, fight...) gated by realm, alignment, flags and cost, and follow-up encounters can require a flag set by an earlier choice (GameState.choose_encounter). UI and content follow in W-004d/W-004e.

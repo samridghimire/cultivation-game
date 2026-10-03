@@ -18,6 +18,8 @@ const PLACE_SCRIPTS := {
 ## Place keys that are layout, not script properties.
 const LAYOUT_KEYS := ["type", "pos"]
 const NPC_SCRIPT := preload("res://src/world/interactables/npc.gd")
+## Placeholder body color of generated NPCs by gender.
+const GENDER_COLORS := {"male": Color("8fb3e0"), "female": Color("e6a3c4")}
 
 var map_size := Vector2(1600, 1000)
 var _region: Dictionary = {}
@@ -83,9 +85,8 @@ func _build_places() -> void:
 
 func _build_npcs() -> void:
 	for c in Npcs.in_region(GameState.npcs, GameState.data, GameState.current_region):
-		# Generated NPCs (Npcs.spawn) have no def or placement yet.
 		if not GameState.data.npcs.has(c.id):
-			continue
+			continue  # Generated NPCs are placed by _build_generated_npcs().
 		var def: Dictionary = GameState.data.npcs[c.id]
 		var node: Interactable = NPC_SCRIPT.new()
 		node.npc_id = c.id
@@ -93,6 +94,26 @@ func _build_npcs() -> void:
 		node.position = _vec(def.get("pos", [0, 0]))
 		node.size = _vec(def.get("size", [30, 30]))
 		node.color = Color(def.get("color", "e6bf99"))
+		add_child(node)
+		move_child(node, player.get_index())
+	_build_generated_npcs()
+
+
+## Generated NPCs (Npcs.spawn, no def) stand at the region's npc_spots,
+## colored by gender; children are drawn smaller.
+func _build_generated_npcs() -> void:
+	var data := GameState.data
+	var people := Npcs.generated_in_region(GameState.npcs, data, GameState.current_region)
+	var spots := Npcs.spot_positions(people.size(), _region.get("npc_spots", []), player.position)
+	for i in people.size():
+		var c := people[i]
+		var node: Interactable = NPC_SCRIPT.new()
+		node.npc_id = c.id
+		node.display_name = "%s (%s)" % [c.name, Npcs.world_title(c, GameState.player, data)]
+		node.position = spots[i]
+		var adult := c.age_years() >= int(data.family.get("adult_age", 16))
+		node.size = Vector2(28, 28) if adult else Vector2(20, 20)
+		node.color = GENDER_COLORS.get(c.gender, Color("e6bf99"))
 		add_child(node)
 		move_child(node, player.get_index())
 

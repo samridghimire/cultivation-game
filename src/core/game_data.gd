@@ -233,6 +233,9 @@ func _validate_world() -> void:
 				load_errors.append("Region '%s' has a route to unknown region '%s'" % [region["id"], route.get("to", "")])
 			if route.has("min_realm") and realm_index_of(route["min_realm"]) < 0:
 				load_errors.append("Region '%s' route has unknown min_realm '%s'" % [region["id"], route["min_realm"]])
+		for spot in region.get("npc_spots", []):
+			if not (spot is Array and (spot as Array).size() == 2):
+				load_errors.append("Region '%s' has an npc_spot that is not [x, y]: %s" % [region["id"], spot])
 		for place: Dictionary in region.get("places", []):
 			for entry: Dictionary in place.get("gather_table", []):
 				if entry.get("item", "") != "" and not items.has(entry["item"]):
