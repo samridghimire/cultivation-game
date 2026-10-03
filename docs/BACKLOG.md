@@ -88,6 +88,8 @@ ART-001 (respawn core) is in P1 because it is prioritized.
 | W-004b | content | done | Added 22 encounters (now 42): righteous/neutral/demonic fortunes, realm-gated foes (demonic cultivator, jade python), NPC cameo flags (met_fox_spirit, met_peak_hermit). |
 | W-004c | systems | todo | Encounters with player choices (e.g. help vs rob the traveller) and flag-checked follow-up encounters; currently each encounter has one outcome, so moral choices are split into separate encounters. |
 
+| QA-20261003-1 | qa | done | Evil-weapon drain in GameState.fight_enemy: fixed drain-on-violent-death, added integration tests. Open observation: dead spouses stay in CharacterData.spouses and keep counting against Family.rank_limit (a widowed player cannot remarry the same rank); needs a design call (FAM-002). |
+
 ## Local sessions
 The local sessions that built combat/techniques, world/exploration/NPCs/dialogue and the UI screens have finished (2026-10-02); their work is on main and these areas are open to anyone. Add follow-up tasks above.
 
