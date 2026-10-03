@@ -132,7 +132,9 @@ func leave_sect() -> void:
 		return
 	var old_id := Sects.leave(player)
 	if old_id != "":
-		EventBus.post("You leave the %s and walk the path alone." % data.sects[old_id].name, "warning")
+		var rep := Reputation.on_leave(player, data, old_id)
+		var suffix := " (reputation %+d)" % rep if rep != 0 else ""
+		EventBus.post("You leave the %s and walk the path alone.%s" % [data.sects[old_id].name, suffix], "warning")
 	EventBus.player_changed.emit()
 
 
@@ -148,12 +150,13 @@ func perform_deed(deed_id: String) -> void:
 	_pass_time(result["days"])
 
 
-func buy_item(item_id: String) -> void:
+## Buys one item; `faction` is the sect the merchant belongs to (prices follow reputation).
+func buy_item(item_id: String, faction: String = "") -> void:
 	if not _can_act():
 		return
-	var result := Items.buy(player, data, item_id)
+	var result := Items.buy(player, data, item_id, 1, faction)
 	if result["ok"]:
-		EventBus.post("You buy a %s." % data.items[item_id]["name"])
+		EventBus.post("You buy a %s for %d spirit stones." % [data.items[item_id]["name"], result["stones"]])
 	else:
 		EventBus.post(result["reason"], "warning")
 	EventBus.player_changed.emit()

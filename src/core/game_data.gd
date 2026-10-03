@@ -18,6 +18,8 @@ var alignment_tiers: Array[Dictionary] = []
 var profession_rank_names: PackedStringArray = []
 var professions: Dictionary = {}  # id -> ProfessionDef
 var sects: Dictionary = {}  # id -> SectDef
+## sects.json top-level "reputation" rules (Reputation system).
+var sect_reputation: Dictionary = {}
 var items: Dictionary = {}  # id -> Dictionary
 var deeds: Dictionary = {}  # id -> Dictionary
 var regions: Dictionary = {}  # id -> Dictionary
@@ -96,7 +98,9 @@ func _load(dir: String) -> void:
 		var def := ProfessionDef.from_dict(p)
 		professions[def.id] = def
 
-	for s in _read(dir, "sects.json").get("sects", []):
+	var sect_file := _read(dir, "sects.json")
+	sect_reputation = sect_file.get("reputation", {})
+	for s in sect_file.get("sects", []):
 		var def := SectDef.from_dict(s)
 		sects[def.id] = def
 
@@ -207,6 +211,7 @@ func _validate() -> void:
 	load_errors.append_array(Family.validate(self))
 	load_errors.append_array(Children.validate(self))
 	load_errors.append_array(Sects.validate_missions(self))
+	load_errors.append_array(Reputation.validate(self))
 	load_errors.append_array(Exploration.validate_choices(self))
 	for item: Dictionary in items.values():
 		if item.get("effects", {}).has("buff"):
@@ -242,6 +247,8 @@ func _validate_world() -> void:
 					load_errors.append("Region '%s' gathers unknown item '%s'" % [region["id"], entry["item"]])
 			if not place_types.has(place.get("type", "")):
 				load_errors.append("Region '%s' has a place of unknown type '%s'" % [region["id"], place.get("type", "")])
+			if place.has("faction") and not sects.has(place["faction"]):
+				load_errors.append("Region '%s' place has unknown faction '%s'" % [region["id"], place["faction"]])
 	for e: Dictionary in encounters.values():
 		for key in ["min_realm", "max_realm"]:
 			if e.has(key) and realm_index_of(e[key]) < 0:

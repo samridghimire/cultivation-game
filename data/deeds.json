@@ -1,11 +1,11 @@
 {
-  "_doc": "Moral choices offered by interactables. 'context' groups deeds by where they appear. blocked_by_flag hides the deed once a world flag is set. 'days' is how long the deed takes. effects use the shared effect keys.",
+  "_doc": "Moral choices offered by interactables. 'context' groups deeds by where they appear. blocked_by_flag hides the deed once a world flag is set. 'days' is how long the deed takes. effects use the shared effect keys; \"witnessed\": true means people saw it, so sects' reputation reacts to the alignment change (data/sects.json deed_scale).",
   "deeds": [
-    {"id": "help_villager", "name": "Help with the farm work", "context": "villager", "days": 3, "blocked_by_flag": "villager_dead", "effects": {"alignment": 15}},
-    {"id": "donate_stones", "name": "Donate 5 spirit stones", "context": "villager", "days": 0, "blocked_by_flag": "villager_dead", "effects": {"alignment": 40, "items": {"spirit_stone": -5}}},
-    {"id": "rob_villager", "name": "Rob the villager", "context": "villager", "days": 0, "blocked_by_flag": "villager_dead", "effects": {"alignment": -60, "items": {"spirit_stone": 8}}},
-    {"id": "kill_villager", "name": "Kill the villager and refine their blood essence", "context": "villager", "days": 1, "blocked_by_flag": "villager_dead", "effects": {"alignment": -250, "qi": 250, "set_flag": "villager_dead"}},
-    {"id": "guide_traveller", "name": "Guide the traveller out of the mist", "context": "traveller", "days": 2, "blocked_by_flag": "traveller_gone", "effects": {"alignment": 30, "items": {"spirit_stone": 3}, "set_flag": "traveller_gone"}},
+    {"id": "help_villager", "name": "Help with the farm work", "context": "villager", "days": 3, "blocked_by_flag": "villager_dead", "effects": {"witnessed": true, "alignment": 15}},
+    {"id": "donate_stones", "name": "Donate 5 spirit stones", "context": "villager", "days": 0, "blocked_by_flag": "villager_dead", "effects": {"witnessed": true, "alignment": 40, "items": {"spirit_stone": -5}}},
+    {"id": "rob_villager", "name": "Rob the villager", "context": "villager", "days": 0, "blocked_by_flag": "villager_dead", "effects": {"witnessed": true, "alignment": -60, "items": {"spirit_stone": 8}}},
+    {"id": "kill_villager", "name": "Kill the villager and refine their blood essence", "context": "villager", "days": 1, "blocked_by_flag": "villager_dead", "effects": {"witnessed": true, "alignment": -250, "qi": 250, "set_flag": "villager_dead"}},
+    {"id": "guide_traveller", "name": "Guide the traveller out of the mist", "context": "traveller", "days": 2, "blocked_by_flag": "traveller_gone", "effects": {"witnessed": true, "alignment": 30, "items": {"spirit_stone": 3}, "set_flag": "traveller_gone"}},
     {"id": "rob_traveller", "name": "Rob the traveller and leave them to the wolves", "context": "traveller", "days": 0, "blocked_by_flag": "traveller_gone", "effects": {"alignment": -120, "items": {"spirit_stone": 15}, "set_flag": "traveller_gone"}}
   ]
 }

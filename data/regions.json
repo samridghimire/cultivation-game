@@ -1,5 +1,5 @@
 {
-  "_doc": "World regions. The world scene builds itself from the current region. qi_density multiplies cultivation everywhere in the region (meditation spots multiply again). routes: travel targets with days and an optional min_realm (realm id). places: interactables; 'anchor_id' (optional, globally unique) makes the place a Creation Artifact anchor (data/artifact.json); 'type' picks the script (meditation, merchant, sect_hall, workshop, deed_giver, explore, travel, gather), 'pos' and 'size' are in pixels, other keys are passed to the script as exported properties. npc_spots (optional): list of [x, y] positions where generated NPCs living in the region stand (in id order; extra NPCs gather around the spawn point). encounter_tags select entries from data/encounters.json when exploring.",
+  "_doc": "World regions. The world scene builds itself from the current region. qi_density multiplies cultivation everywhere in the region (meditation spots multiply again). routes: travel targets with days and an optional min_realm (realm id). places: interactables; 'anchor_id' (optional, globally unique) makes the place a Creation Artifact anchor (data/artifact.json); 'type' picks the script (meditation, merchant, sect_hall, workshop, deed_giver, explore, travel, gather), 'pos' and 'size' are in pixels, other keys are passed to the script as exported properties. npc_spots (optional): list of [x, y] positions where generated NPCs living in the region stand (in id order; extra NPCs gather around the spawn point). A merchant's optional 'faction' (sect id) makes its prices follow your reputation with that sect (data/sects.json reputation tiers). encounter_tags select entries from data/encounters.json when exploring.",
   "start_region": "qingshi_village",
   "regions": [
     {
@@ -62,7 +62,7 @@
       ],
       "encounter_tags": ["city"],
       "places": [
-        {"type": "merchant", "display_name": "Pill Pavilion", "pos": [400, 300], "size": [140, 100], "color": "c9823a"},
+        {"type": "merchant", "display_name": "Pill Pavilion", "pos": [400, 300], "size": [140, 100], "color": "c9823a", "faction": "myriad_treasure_pavilion"},
         {"type": "merchant", "display_name": "Herb & Ore Stall", "pos": [1200, 140], "size": [90, 60], "color": "6f9f4a", "stock_tags": ["herb", "ore"]},
         {"type": "merchant", "display_name": "Heavenforge Smithy", "pos": [1450, 450], "size": [110, 80], "color": "5a5f66", "stock_tags": ["equipment", "ore", "smithing"]},
         {"type": "merchant", "display_name": "Night Market Stall", "pos": [1200, 300], "size": [80, 60], "color": "7a4fa0", "max_price": 100},
