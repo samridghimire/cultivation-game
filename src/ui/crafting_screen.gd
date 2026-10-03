@@ -7,6 +7,7 @@ extends PanelContainer
 signal closed
 
 const TITLES := {"alchemist": "Alchemy", "blacksmith": "Forge", "talisman_master": "Talisman Inscription"}
+const BATCH_SIZE := 5
 const VERBS := {"alchemist": "Refine", "blacksmith": "Forge", "talisman_master": "Inscribe"}
 
 var _title: Label
@@ -116,14 +117,21 @@ func _rebuild() -> void:
 		_list.remove_child(child)
 		child.queue_free()
 	var ids := Alchemy.known_recipes(GameState.player, data, _prof_id)
-	if not ids.has(_selected):
-		_selected = ids[0] if not ids.is_empty() else ""
-	if ids.is_empty():
+	var scrolls := Alchemy.scroll_recipes(GameState.player, data, _prof_id)
+	var all_ids := ids.duplicate()
+	for recipe_id in scrolls:
+		all_ids.append(recipe_id)
+	if not all_ids.has(_selected):
+		_selected = all_ids[0] if not all_ids.is_empty() else ""
+	if all_ids.is_empty():
 		var hint := _wrapped(UIStyle.label("You know no recipes. Recipe scrolls can be bought or found while exploring.", 16, Color(0.7, 0.7, 0.7)))
 		hint.custom_minimum_size = Vector2(300, 0)
 		_list.add_child(hint)
-	for recipe_id in ids:
-		var b := UIStyle.button(data.recipes[recipe_id]["name"], _select.bind(recipe_id))
+	for recipe_id in all_ids:
+		var label: String = data.recipes[recipe_id]["name"]
+		if scrolls.has(recipe_id):
+			label += " (scroll)"
+		var b := UIStyle.button(label, _select.bind(recipe_id))
 		b.name = recipe_id
 		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		b.toggle_mode = true
@@ -155,6 +163,7 @@ func _show_details() -> void:
 	if recipe.is_empty():
 		return
 	_name.text = recipe["name"]
+	var scroll_item: String = Alchemy.scroll_recipes(p, data, _prof_id).get(_selected, "")
 	var min_rank := int(recipe.get("min_rank", 0))
 	var prof: ProfessionDef = data.professions[recipe["profession"]]
 	_info.text = "Requires %s %s  |  takes %s" % [data.profession_rank_names[min_rank], prof.name, Calendar.format_duration(int(recipe["days"]))]
@@ -167,17 +176,32 @@ func _show_details() -> void:
 	if recipe.has("great_output"):
 		odds += "   Great: %d%%" % roundi(Alchemy.great_chance(p, data, _selected) * 100)
 	_odds.text = odds
+	if scroll_item != "":
+		_odds.text = "You carry a scroll for this recipe but have not studied it yet."
+		var study := UIStyle.button("Study scroll", _study.bind(scroll_item))
+		study.name = "Study"
+		_actions.add_child(study)
+		return
 	var reason := Alchemy.check(p, data, _selected)
 	_status.text = reason
 	var craft := UIStyle.button(VERBS.get(_prof_id, "Craft"), _craft)
 	craft.name = "Craft"
 	craft.disabled = reason != ""
 	_actions.add_child(craft)
+	var batch := UIStyle.button("%s x%d" % [VERBS.get(_prof_id, "Craft"), BATCH_SIZE], _craft.bind(BATCH_SIZE))
+	batch.name = "CraftBatch"
+	batch.disabled = reason != ""
+	_actions.add_child(batch)
 
 
-func _craft() -> void:
-	GameState.refine(_selected)
+func _craft(times: int = 1) -> void:
+	GameState.refine_batch(_selected, times)
 	_focus_after_craft.call_deferred()
+
+
+func _study(item_id: String) -> void:
+	GameState.use_item(item_id)
+	_focus_selected.call_deferred()
 
 
 func _focus_after_craft() -> void:
