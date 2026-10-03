@@ -62,6 +62,9 @@ var artifact_lives := -1
 var artifact_recharges := 0
 ## Bound anchor ids (data/regions.json "anchor_id"), most recently bound last.
 var anchors: Array[String] = []
+## Item ids whose one-time binding cost has been paid (equip
+## `alignment_on_first_equip`, LIFE-001g), so it is never charged twice.
+var bound_artifacts: Array[String] = []
 ## Claimed cave abode id (data/regions.json "abodes"), "" if none (Abodes).
 var abode := ""
 ## Items kept in the abode's storage chest: item id -> count.
@@ -149,6 +152,7 @@ func to_dict() -> Dictionary:
 		"artifact_storage": artifact_storage.duplicate(),
 		"mission_cooldowns": mission_cooldowns.duplicate(),
 		"reputation": reputation.duplicate(),
+		"bound_artifacts": bound_artifacts.duplicate(),
 		"abode": abode,
 		"abode_storage": abode_storage.duplicate(),
 	}
@@ -212,6 +216,8 @@ static func from_dict(d: Dictionary) -> CharacterData:
 	c.artifact_storage = _int_values(d.get("artifact_storage", {}))
 	c.mission_cooldowns = _int_values(d.get("mission_cooldowns", {}))
 	c.reputation = _int_values(d.get("reputation", {}))
+	for item_id in d.get("bound_artifacts", []):
+		c.bound_artifacts.append(String(item_id))
 	c.abode = String(d.get("abode", ""))
 	c.abode_storage = _int_values(d.get("abode_storage", {}))
 	for anchor_id in d.get("anchors", []):

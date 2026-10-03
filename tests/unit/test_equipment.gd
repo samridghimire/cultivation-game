@@ -194,3 +194,64 @@ func test_every_evil_artifact_is_found_in_an_encounter_with_a_righteous_alternat
 			if e["id"] != taker["id"] and e.get("blocked_by_flag", "") == flag and int(e.get("effects", {}).get("alignment", 0)) > 0:
 				has_alternative = true
 		assert_true(has_alternative, "%s needs a righteous way to destroy it" % item["id"])
+
+
+func test_binding_an_evil_artifact_costs_alignment_once() -> void:
+	var c := new_character()
+	c.add_item("blood_drinker_saber", 1)
+	assert_eq(Equipment.first_equip_alignment(data(), "blood_drinker_saber"), -120)
+	assert_eq(Equipment.first_equip_alignment(data(), "iron_sword"), 0)
+	assert_false(Equipment.is_bound(c, "blood_drinker_saber"))
+	Equipment.equip(c, data(), "blood_drinker_saber")
+	assert_eq(Equipment.bind_artifact(c, data(), "blood_drinker_saber"), -120)
+	assert_eq(c.alignment, -120)
+	assert_true(Equipment.is_bound(c, "blood_drinker_saber"))
+	Equipment.unequip(c, "weapon")
+	Equipment.equip(c, data(), "blood_drinker_saber")
+	assert_eq(Equipment.bind_artifact(c, data(), "blood_drinker_saber"), 0, "bound only once")
+	assert_eq(c.alignment, -120)
+	assert_eq(Equipment.bind_artifact(c, data(), "iron_sword"), 0, "ordinary gear is free")
+
+
+func test_binding_is_clamped_to_the_alignment_range() -> void:
+	var c := new_character()
+	c.alignment = data().alignment_min
+	assert_eq(Equipment.bind_artifact(c, data(), "myriad_souls_banner"), 0, "already as demonic as it gets")
+	assert_eq(c.alignment, data().alignment_min)
+	assert_true(Equipment.is_bound(c, "myriad_souls_banner"), "the pact is still sealed")
+
+
+func test_every_evil_artifact_costs_alignment_to_bind() -> void:
+	var d := data()
+	for item: Dictionary in d.items.values():
+		if Equipment.item_drain(d, item["id"]) > 0:
+			assert_true(Equipment.first_equip_alignment(d, item["id"]) < 0, "%s should stain its wielder when bound" % item["id"])
+	assert_true(Equipment.describe_stats(d, "blood_drinker_saber").contains("alignment to bind"))
+	var bad := GameData.new()
+	bad.items = {"cursed": {"id": "cursed", "equip": {"slot": "weapon", "grade": 1, "alignment_on_first_equip": -9000}}}
+	assert_eq(Equipment.validate(bad).size(), 1)
+
+
+func test_bound_artifacts_round_trip_in_saves() -> void:
+	var c := new_character()
+	c.bound_artifacts.append("blood_drinker_saber")
+	var loaded := CharacterData.from_dict(JSON.parse_string(JSON.stringify(c.to_dict())))
+	assert_eq(loaded.bound_artifacts, ["blood_drinker_saber"] as Array[String])
+	assert_true(CharacterData.from_dict({"name": "Old"}).bound_artifacts.is_empty())
+
+
+func test_game_state_equipping_an_evil_artifact_stains_you() -> void:
+	var gs: Node = _root().get_node("GameState")
+	var c := CharacterFactory.create("Blade Fiend", gs.data, seeded_rng())
+	gs.start_session(c)
+	c.add_item("corpse_silk_burial_armor", 1)
+	gs.equip_item("corpse_silk_burial_armor")
+	assert_eq(c.equipment.get("armor", ""), "corpse_silk_burial_armor")
+	assert_eq(c.alignment, -120)
+	gs.unequip("armor")
+	gs.equip_item("corpse_silk_burial_armor")
+	assert_eq(c.alignment, -120, "re-equipping the same artifact is free")
+	var saved: Dictionary = gs.to_save_dict()
+	gs.load_save_dict(JSON.parse_string(JSON.stringify(saved)))
+	assert_true(gs.player.bound_artifacts.has("corpse_silk_burial_armor"))
+	gs.end_session()

@@ -6,7 +6,9 @@ extends RefCounted
 ## Equipping moves the item out of the inventory into CharacterData.equipment;
 ## the bonuses are added flat to Combat.stats (before injuries and buffs scale them).
 ## Evil artifacts may also have `lifespan_drain` (int years): each fight fought
-## while wielding them burns that many years of the wielder's lifespan.
+## while wielding them burns that many years of the wielder's lifespan, and
+## `alignment_on_first_equip` (int): a one-time alignment shift the first time
+## the wielder binds that artifact (tracked in CharacterData.bound_artifacts).
 
 const SLOTS: PackedStringArray = ["weapon", "armor"]
 const STAT_KEYS: PackedStringArray = ["attack", "defense", "max_hp", "speed"]
@@ -84,6 +86,29 @@ static func drain_after_fight(c: CharacterData, data: GameData) -> int:
 	return years
 
 
+## One-time alignment shift for first binding `item_id` (0 for ordinary gear).
+static func first_equip_alignment(data: GameData, item_id: String) -> int:
+	return int(data.items.get(item_id, {}).get("equip", {}).get("alignment_on_first_equip", 0))
+
+
+## Whether `c` has already paid `item_id`'s one-time binding cost.
+static func is_bound(c: CharacterData, item_id: String) -> bool:
+	return c.bound_artifacts.has(item_id)
+
+
+## Pays the one-time binding cost of `item_id` (an alignment shift for evil
+## artifacts) if `c` has not paid it before. Returns the alignment change
+## applied, 0 if there is nothing to pay.
+static func bind_artifact(c: CharacterData, data: GameData, item_id: String) -> int:
+	var shift := first_equip_alignment(data, item_id)
+	if shift == 0 or is_bound(c, item_id):
+		return 0
+	c.bound_artifacts.append(item_id)
+	var before := c.alignment
+	Alignment.shift(c, data, shift)
+	return c.alignment - before
+
+
 ## "+12 attack, +2 speed" for an item's equip stats, plus any lifespan drain.
 static func describe_stats(data: GameData, item_id: String) -> String:
 	var parts: PackedStringArray = []
@@ -94,6 +119,9 @@ static func describe_stats(data: GameData, item_id: String) -> String:
 	var drain := item_drain(data, item_id)
 	if drain > 0:
 		parts.append("drinks %d %s of lifespan per fight" % [drain, "year" if drain == 1 else "years"])
+	var shift := first_equip_alignment(data, item_id)
+	if shift != 0:
+		parts.append("%+d alignment to bind" % shift)
 	return ", ".join(parts)
 
 
@@ -108,6 +136,8 @@ static func validate(data: GameData) -> PackedStringArray:
 			errors.append("Item '%s' has unknown equip slot '%s'" % [item["id"], e.get("slot", "")])
 		if int(e.get("grade", 0)) < 1:
 			errors.append("Item '%s' needs equip grade >= 1" % item["id"])
+		if absi(int(e.get("alignment_on_first_equip", 0))) > data.alignment_max - data.alignment_min:
+			errors.append("Item '%s' equip alignment_on_first_equip is out of the alignment range" % item["id"])
 		if int(e.get("lifespan_drain", 0)) < 0:
 			errors.append("Item '%s' needs equip lifespan_drain >= 0" % item["id"])
 		for key in e.get("stats", {}):
