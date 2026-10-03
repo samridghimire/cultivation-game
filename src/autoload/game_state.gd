@@ -332,7 +332,7 @@ func _dialogue_ctx(npc_id: String) -> Dictionary:
 func court(npc_id: String) -> void:
 	if not _can_act():
 		return
-	var result := Family.court(player, npcs.get(npc_id), int(npc_favor.get(npc_id, 0)), data)
+	var result := Family.court(player, npcs.get(npc_id), int(npc_favor.get(npc_id, 0)), data, npcs)
 	if not result["ok"]:
 		EventBus.post(result["reason"], "warning")
 		EventBus.player_changed.emit()
@@ -346,7 +346,7 @@ func court(npc_id: String) -> void:
 func propose(npc_id: String, rank: String) -> void:
 	if not _can_act():
 		return
-	var result := Family.propose(player, npcs.get(npc_id), int(npc_favor.get(npc_id, 0)), rank, data)
+	var result := Family.propose(player, npcs.get(npc_id), int(npc_favor.get(npc_id, 0)), rank, data, npcs)
 	if not result["ok"]:
 		EventBus.post(result["reason"], "warning")
 		EventBus.player_changed.emit()
