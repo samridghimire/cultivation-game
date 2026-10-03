@@ -16,6 +16,7 @@
   ],
   "sources": {
     "breakthrough_failure": {"chance": 0.6, "table": [{"id": "qi_deviation", "weight": 3}, {"id": "damaged_meridians", "weight": 1}]},
+    "tribulation_failure": {"chance": 1.0, "table": [{"id": "internal_injury", "weight": 2}, {"id": "damaged_meridians", "weight": 1}]},
     "combat_defeat": {"chance": 1.0, "table": [{"id": "broken_bones", "weight": 2}, {"id": "internal_injury", "weight": 1}]}
   }
 }
