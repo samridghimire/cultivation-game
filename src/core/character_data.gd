@@ -66,6 +66,8 @@ var anchors: Array[String] = []
 var abode := ""
 ## Items kept in the abode's storage chest: item id -> count.
 var abode_storage: Dictionary = {}
+## Item id of the array set up at the abode (items.json `array`), "" if none (G-006).
+var abode_array := ""
 ## Creation Artifact energy fed from spirit stones and treasures (ArtifactFunctions).
 var artifact_energy := 0
 ## Unlocked artifact function ids (data/artifact.json "functions").
@@ -151,6 +153,7 @@ func to_dict() -> Dictionary:
 		"reputation": reputation.duplicate(),
 		"abode": abode,
 		"abode_storage": abode_storage.duplicate(),
+		"abode_array": abode_array,
 	}
 
 
@@ -214,6 +217,7 @@ static func from_dict(d: Dictionary) -> CharacterData:
 	c.reputation = _int_values(d.get("reputation", {}))
 	c.abode = String(d.get("abode", ""))
 	c.abode_storage = _int_values(d.get("abode_storage", {}))
+	c.abode_array = String(d.get("abode_array", ""))
 	for anchor_id in d.get("anchors", []):
 		c.anchors.append(String(anchor_id))
 	for recipe_id in d.get("known_recipes", []):
