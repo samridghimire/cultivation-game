@@ -79,6 +79,7 @@ static func spawn(npcs: Dictionary, data: GameData, rng: RandomNumberGenerator, 
 	c.home_region = String(opts.get("region", ""))
 	c.cultivates = bool(opts.get("cultivates", true))
 	c.diligence = float(opts.get("diligence", rng.randf_range(SPAWN_DILIGENCE_MIN, SPAWN_DILIGENCE_MAX)))
+	c.proud = bool(opts.get("proud", false))
 	npcs[c.id] = c
 	return c
 
@@ -95,6 +96,44 @@ static func region_of(c: CharacterData, data: GameData) -> String:
 	if c.home_region != "":
 		return c.home_region
 	return String(data.npcs.get(c.id, {}).get("region", ""))
+
+
+static func is_proud(c: CharacterData, data: GameData) -> bool:
+	return c.proud or bool(data.npcs.get(c.id, {}).get("proud", false))
+
+
+## Whether `c` is a generated courtship candidate: alive, adult, unmarried.
+static func is_eligible(c: CharacterData, data: GameData) -> bool:
+	return c.id.begins_with(SPAWN_PREFIX) and c.alive and c.spouses.is_empty() and c.age_years() >= int(data.family.get("adult_age", 16))
+
+
+## Tops every region up to data/family.json eligible_npcs.per_gender eligible
+## generated NPCs of each gender, so every region has courtship candidates.
+## Realms come from realms_by_danger for the region's danger. Returns the new NPCs.
+static func ensure_eligible(npcs: Dictionary, data: GameData, rng: RandomNumberGenerator) -> Array[CharacterData]:
+	var rules: Dictionary = data.family.get("eligible_npcs", {})
+	var by_danger: Array = rules.get("realms_by_danger", [])
+	var spawned: Array[CharacterData] = []
+	if by_danger.is_empty():
+		return spawned
+	var region_ids: Array = data.regions.keys()
+	region_ids.sort()
+	for region_id in region_ids:
+		var counts := {}
+		for c: CharacterData in npcs.values():
+			if region_of(c, data) == region_id and is_eligible(c, data):
+				counts[c.gender] = int(counts.get(c.gender, 0)) + 1
+		var realms: Array = by_danger[clampi(int(data.regions[region_id].get("danger", 0)), 0, by_danger.size() - 1)]
+		for gender in Names.genders(data):
+			for i in range(int(counts.get(gender, 0)), int(rules.get("per_gender", 0))):
+				spawned.append(spawn(npcs, data, rng, {
+					"gender": gender,
+					"region": region_id,
+					"age_years": rng.randi_range(int(rules.get("age_min", 16)), int(rules.get("age_max", 30))),
+					"realm": String(realms[rng.randi_range(0, realms.size() - 1)]),
+					"proud": rng.randf() < float(rules.get("proud_chance", 0.0)),
+				}))
+	return spawned
 
 
 static func cultivates(c: CharacterData, data: GameData) -> bool:

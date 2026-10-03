@@ -3,6 +3,9 @@
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
 - 2026-10-03 [LIFE-001d] 3 more forbidden secret arts (Blood Shadow Flight, Ten-Thousand Bones Armor, Heaven-Devouring Burst) with manuals sold at the Night Market or found in ruins; righteous players can seal the cursed manuals for alignment and qi.
+- 2026-10-03 [FAM-002c] Every region keeps unmarried adult generated NPCs of each gender as courtship candidates (data/family.json eligible_npcs, realms by region danger); proud flag on CharacterData; no message-log news about generated strangers.
+- 2026-10-03 [FAM-002b] Dual cultivation: spouses cultivate together for a data-driven qi bonus (scaled by partner roots and realm) that both partners receive; spouses gain favor monthly and per session; GameState.dual_cultivate.
+- 2026-10-03 [G-002b] Crafting screen: the workshop opens a gamepad-friendly modal (recipe list, ingredients have/need, yields, success/great odds, Craft button) for alchemy, forging and talisman inscription.
 - 2026-10-03 [G-005] Talismans: Talisman Masters inscribe single-use talismans at the workshop; new `buff` effect key for temporary combat buffs from items; Blank Talisman Paper and 4 starter buff talismans.
 - 2026-10-03 [F-005b] Lifespan balance: gentler breakthrough-failure qi loss, faster qi gathering in high realms, Soul Formation lifespan 2500; Cultivation.expected_realm_years + a data test that keeps lifespan gains >= 10x realm time; balance sim now heals injuries.
 - 2026-10-02 [G-002f] Core Forming recipe scroll is now findable as one-per-life ruins loot (Foundation+): neutral find, righteous ghost purification, demonic desecration.
@@ -31,3 +34,4 @@ One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 - 2026-10-02 [F-003] Breakthrough banner + screen flash (src/ui/banner.gd).
 - 2026-10-02 [F-002] Pause menu: Resume / Save / Load / Settings stub / Save & Quit (src/ui/pause_menu.gd).
 - 2026-10-02 [F-000] Project foundation: Godot 4.7 project, data-driven realms/roots/sects/professions/items/deeds, GameState/EventBus/GameClock/SaveManager, village slice, 78 tests, tools/test.sh.
+- [QA-20261003-1] Fixed: a lifespan-draining weapon also burned a year when the fight killed the player (before respawn). Added GameState integration tests for the drain (burn, last-year old-age death, no drain on violent death).

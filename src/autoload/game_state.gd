@@ -43,6 +43,7 @@ func start_session(character: CharacterData) -> void:
 	npc_favor = {}
 	dialogue_npc = ""
 	Npcs.ensure_all(npcs, data, rng)
+	Npcs.ensure_eligible(npcs, data, rng)
 	GameClock.reset()
 	EventBus.session_started.emit()
 	EventBus.post("%s sets out on the path of cultivation." % player.name, "progress")
@@ -354,6 +355,33 @@ func propose(npc_id: String, rank: String) -> void:
 	_pass_time(result["days"])
 
 
+## Cultivate together with a spouse who is in the current region: both gain
+## qi with the dual cultivation bonus (data/family.json) and favor rises.
+func dual_cultivate(spouse_id: String, days: int, location_density: float = 1.0) -> void:
+	if not _can_act():
+		return
+	var spouse: CharacterData = npcs.get(spouse_id)
+	if spouse != null and spouse.alive and Npcs.region_of(spouse, data) != current_region:
+		EventBus.post("%s is not here." % spouse.name, "warning")
+		EventBus.player_changed.emit()
+		return
+	var density := location_density * Exploration.qi_density(data, current_region) * Sects.cultivation_bonus(player, data)
+	var result := Family.dual_cultivate(player, spouse, data, days, density)
+	if not result["ok"]:
+		EventBus.post(result["reason"], "warning")
+		EventBus.player_changed.emit()
+		return
+	npc_favor[spouse_id] = Family.add_spouse_favor(data, int(npc_favor.get(spouse_id, 0)), result["favor"])
+	EventBus.post("You and %s cultivate together for %s. You gather %d qi; they gather %d." % [spouse.name, Calendar.format_duration(days), int(result["qi_gained"]), int(result["spouse_qi"])])
+	if result["stages_gained"] > 0:
+		EventBus.post("Your cultivation rises to %s!" % Cultivation.realm_label(player, data), "progress")
+	if result["spouse_stages"] > 0:
+		EventBus.post("%s rises to %s." % [spouse.name, Cultivation.realm_label(spouse, data)], "progress")
+	if result["at_bottleneck"]:
+		EventBus.post("You have reached a bottleneck. Attempt a breakthrough to advance.", "warning")
+	_pass_time(days)
+
+
 func learn_technique(tech_id: String) -> void:
 	if not _can_act():
 		return
@@ -491,7 +519,7 @@ func fight_enemy(enemy: Dictionary) -> void:
 	if not outcome["notes"].is_empty():
 		EventBus.post("(%s)" % ", ".join(outcome["notes"]), "progress" if result["victory"] else "warning")
 	EventBus.combat_finished.emit(enemy.get("name", "enemy"), result["victory"], result["log"])
-	var drained := Equipment.drain_after_fight(player, data)
+	var drained := 0 if outcome["died"] else Equipment.drain_after_fight(player, data)
 	if drained > 0:
 		EventBus.post("Your weapon drinks %d %s of your life. %d years remain." % [drained, "year" if drained == 1 else "years", Cultivation.years_left(player, data)], "danger")
 		if player.age_years() >= Cultivation.lifespan_years(player, data):
@@ -561,6 +589,7 @@ func load_save_dict(d: Dictionary) -> void:
 	current_region = d.get("region", data.start_region)
 	npcs = Npcs.from_dict(d.get("npcs", {}))
 	Npcs.ensure_all(npcs, data, rng)
+	Npcs.ensure_eligible(npcs, data, rng)
 	npc_favor = {}
 	for npc_id in d.get("npc_favor", {}):
 		npc_favor[npc_id] = int(d["npc_favor"][npc_id])
@@ -589,12 +618,23 @@ func _pass_time(days: int) -> void:
 func _on_days_advanced(days: int) -> void:
 	if not _can_act():
 		return
+	var age_before := player.age_days
 	player.age_days += days
+	var spouse_favor := Family.spouse_favor_gain(data, age_before, player.age_days)
+	if spouse_favor > 0:
+		for spouse_id in player.spouses:
+			var spouse: CharacterData = npcs.get(spouse_id)
+			if spouse != null and spouse.alive:
+				npc_favor[spouse_id] = Family.add_spouse_favor(data, int(npc_favor.get(spouse_id, 0)), spouse_favor)
 	for injury_id in Injuries.pass_days(player, days):
 		EventBus.post("Your %s has healed." % Injuries.injury_name(data, injury_id), "progress")
 	for buff_name in Buffs.pass_days(player, days):
 		EventBus.post("The power of your %s fades." % buff_name)
 	for event in Npcs.simulate(npcs, data, days, rng):
+		# News about generated strangers is noise; only report people the player knows.
+		var npc_id := String(event["npc_id"])
+		if npc_id.begins_with(Npcs.SPAWN_PREFIX) and not npc_favor.has(npc_id) and not player.spouses.has(npc_id):
+			continue
 		EventBus.post(event["text"], event["category"])
 	if player.age_years() >= Cultivation.lifespan_years(player, data):
 		_kill("Your lifespan is exhausted. You die of old age at %d." % player.age_years())

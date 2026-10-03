@@ -20,6 +20,8 @@ var home_region := ""
 var cultivates := false
 ## Fraction of days spent cultivating; < 0 = unset.
 var diligence := -1.0
+## Proud NPCs refuse to become concubines (named NPCs can also set it in data/npcs.json).
+var proud := false
 var age_days := 0
 var alive := true
 var cause_of_death := ""
@@ -94,6 +96,7 @@ func to_dict() -> Dictionary:
 		"home_region": home_region,
 		"cultivates": cultivates,
 		"diligence": diligence,
+		"proud": proud,
 		"age_days": age_days,
 		"alive": alive,
 		"cause_of_death": cause_of_death,
@@ -136,6 +139,7 @@ static func from_dict(d: Dictionary) -> CharacterData:
 	c.home_region = String(d.get("home_region", ""))
 	c.cultivates = bool(d.get("cultivates", false))
 	c.diligence = float(d.get("diligence", -1.0))
+	c.proud = bool(d.get("proud", false))
 	c.age_days = int(d.get("age_days", 0))
 	c.alive = bool(d.get("alive", true))
 	c.cause_of_death = d.get("cause_of_death", "")
