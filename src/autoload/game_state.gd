@@ -486,6 +486,23 @@ func practice_technique(tech_id: String, days: int) -> void:
 	_pass_time(days)
 
 
+## Make a known cultivation method your main method. Re-circulating your qi takes
+## techniques.json method_switch_days.
+func set_main_method(tech_id: String) -> void:
+	if not _can_act():
+		return
+	var result := Techniques.set_main_method(player, data, tech_id)
+	if not result["ok"]:
+		EventBus.post(result["reason"], "warning")
+		return
+	var def: TechniqueDef = data.techniques[tech_id]
+	EventBus.post("You spend %s re-circulating your qi along the paths of the %s: %s." % [Calendar.format_duration(result["days"]), def.name, Techniques.describe_method(player, data, tech_id)], "progress")
+	if result["days"] > 0:
+		_pass_time(result["days"])
+	else:
+		EventBus.player_changed.emit()
+
+
 ## Activate a secret art: burn its lifespan cost for a temporary combat buff. Takes no time.
 func activate_technique(tech_id: String) -> void:
 	if not _can_act():

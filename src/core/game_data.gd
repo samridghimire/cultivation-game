@@ -29,6 +29,11 @@ var dialogues: Dictionary = {}  # id -> Dictionary, one per data/dialogue/*.json
 var techniques: Dictionary = {}  # id -> TechniqueDef
 var technique_affinity_bonus := 0.5
 var technique_mismatch_penalty := 0.5
+## Cultivation methods (techniques.json): the method everyone uses until they set
+## another, days it takes to switch, and the qi rate of a method past its max_realm.
+var starter_method := ""
+var method_switch_days := 7
+var method_over_cap_rate := 1.0
 var enemies: Dictionary = {}  # id -> Dictionary
 var enemy_technique_level := 3
 ## Fraction of spirit stones lost when beaten by a non-lethal enemy.
@@ -141,6 +146,9 @@ func _load(dir: String) -> void:
 	var tech := _read(dir, "techniques.json")
 	technique_affinity_bonus = float(tech.get("element_affinity_bonus", technique_affinity_bonus))
 	technique_mismatch_penalty = float(tech.get("element_mismatch_penalty", technique_mismatch_penalty))
+	starter_method = tech.get("starter_method", starter_method)
+	method_switch_days = int(tech.get("method_switch_days", method_switch_days))
+	method_over_cap_rate = float(tech.get("method_over_cap_rate", method_over_cap_rate))
 	for t in tech.get("techniques", []):
 		var def := TechniqueDef.from_dict(t)
 		techniques[def.id] = def
@@ -284,6 +292,11 @@ func _validate_combat() -> void:
 		for key in def.bonuses:
 			if not TechniqueDef.BONUS_KEYS.has(key):
 				load_errors.append("Technique '%s' has unknown bonus '%s'" % [def.id, key])
+		if def.is_method():
+			if def.qi_rate <= 0.0:
+				load_errors.append("Method '%s' needs qi_rate > 0" % def.id)
+			if def.max_realm != "" and realm_index_of(def.max_realm) < realm_index_of(def.min_realm):
+				load_errors.append("Method '%s' has unknown or too-low max_realm '%s'" % [def.id, def.max_realm])
 		if not def.activation.is_empty():
 			if int(def.activation.get("days", 0)) <= 0:
 				load_errors.append("Technique '%s' activation needs days > 0" % def.id)
@@ -295,6 +308,14 @@ func _validate_combat() -> void:
 			for key in buff:
 				if not Buffs.STAT_KEYS.has(key):
 					load_errors.append("Technique '%s' activation buffs unknown stat '%s'" % [def.id, key])
+	if starter_method != "":
+		var starter: TechniqueDef = techniques.get(starter_method)
+		if starter == null or not starter.is_method():
+			load_errors.append("starter_method '%s' is not a method in techniques.json" % starter_method)
+		elif starter.min_realm != "mortal" or starter.max_realm != "":
+			load_errors.append("starter_method '%s' must be usable from mortal with no max_realm" % starter_method)
+	if method_switch_days < 0 or method_over_cap_rate <= 0.0:
+		load_errors.append("techniques.json method_switch_days must be >= 0 and method_over_cap_rate > 0")
 	for item: Dictionary in items.values():
 		var tech_id: String = item.get("effects", {}).get("learn_technique", "")
 		if tech_id != "" and not techniques.has(tech_id):

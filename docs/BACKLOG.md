@@ -69,8 +69,7 @@ ART-001/ART-001b are done; ART-002 and ART-005 are in P1 above.
 ## P2: Cultivation depth (roadmap item 4)
 | id | role | status | task |
 |---|---|---|---|
-| CM-001 | systems | todo | Cultivation methods: techniques.json `kind: "method"` with element affinity, qi rate multiplier, max realm and passive effects; one active main method (CharacterData.main_method, save-compatible) that multiplies Cultivation qi gain (bonus when it matches your root element). GameState.set_main_method. Starter method for everyone so old saves keep their speed. |
-| CM-001b | world-ui | todo | Techniques screen: show methods separately, mark the main method, "Set as main method" action with the qi rate / affinity shown. Depends on CM-001. |
+| CM-001b | world-ui | todo | Techniques screen: show methods (kind "method") separately, mark the main method (Techniques.main_method; the starter method is not in CharacterData.techniques, show it anyway), "Set as main method" action (GameState.set_main_method, Techniques.check_set_main reasons, takes techniques.json method_switch_days) with Techniques.describe_method (rate, cap, "outgrown"). Depends on CM-001 (done). |
 | CM-001c | content | todo | Method content: 8+ methods across elements and alignments (righteous sect methods sold in contribution shops, demonic blood methods, rare ruins inheritances), with higher-realm caps so players must find better ones. Depends on CM-001. |
 | TRIB-001 | systems | todo | Heavenly Tribulations: data/realms.json `tribulation` block on major breakthroughs (Core Formation and up by default): N lightning waves with damage scaled by realm; survive via HP/defense, talismans, pills, arrays; failure injures, and the last wave can kill via GameState._die_violently (artifact respawn). Demonic alignment adds an extra heart-demon wave. See DESIGN.md open question for defaults. |
 | TRIB-001b | world-ui | todo | Tribulation sequence: a banner/screen showing each wave, damage taken and survival, plus a "prepare" warning before attempting a breakthrough that triggers a tribulation. Depends on TRIB-001. |
@@ -105,6 +104,7 @@ The local sessions that built combat/techniques, world/exploration/NPCs/dialogue
 ## Done
 | id | task |
 |---|---|
+| CM-001 | Cultivation methods: techniques.json `kind: "method"` (qi_rate, max_realm cap, element affinity), one active CharacterData.main_method, starter_method at x1.0, GameState.set_main_method; Verdant Spring Method as the first method. |
 | G-004c | Higher-grade equipment: Profound Iron / Dragon-Blood Gold ores, 4 new forge recipes with manuals, Heavenforge Smithy in Fallen Star Market, equipment encounters. |
 | LIFE-001e | Evil artifacts obtainable: Blood-Drinker Saber (wild), Corpse-Silk Burial Armor and Myriad Souls Banner (ruins), once per life, each with a righteous destroy alternative. |
 | FAM-002f | Generated NPCs placed in the world: regions.json `npc_spots`, Npcs.generated_in_region/spot_positions/world_title/describe, gender colors, "Look" option. |
