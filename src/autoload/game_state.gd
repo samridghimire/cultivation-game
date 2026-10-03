@@ -384,6 +384,38 @@ func court(npc_id: String) -> void:
 	_pass_time(result["days"])
 
 
+## Pass a few days chatting with an NPC who has no dialogue file; raises favor
+## up to data/family.json acquaintance.chat_max_favor (enough to court).
+func chat(npc_id: String) -> void:
+	if not _can_act():
+		return
+	var favor := int(npc_favor.get(npc_id, 0))
+	var result := Family.chat(player, npcs.get(npc_id), favor, data)
+	if not result["ok"]:
+		EventBus.post(result["reason"], "warning")
+		EventBus.player_changed.emit()
+		return
+	npc_favor[npc_id] = favor + result["favor"]
+	EventBus.post("You pass some time talking with %s. (+%d favor)" % [npcs[npc_id].name, result["favor"]])
+	_pass_time(result["days"])
+
+
+## Give one item to an NPC; favor scales with its price, up to
+## data/family.json acquaintance.gift_max_favor.
+func give_gift(npc_id: String, item_id: String) -> void:
+	if not _can_act():
+		return
+	var favor := int(npc_favor.get(npc_id, 0))
+	var result := Family.give_gift(player, npcs.get(npc_id), favor, item_id, data)
+	if not result["ok"]:
+		EventBus.post(result["reason"], "warning")
+		EventBus.player_changed.emit()
+		return
+	npc_favor[npc_id] = favor + result["favor"]
+	EventBus.post("%s accepts your %s. (+%d favor)" % [npcs[npc_id].name, data.items[item_id].get("name", item_id), result["favor"]])
+	_pass_time(result["days"])
+
+
 ## Pick the player's gender once, for old saves where it is unknown ("").
 func choose_gender(gender: String) -> void:
 	if not _can_act():

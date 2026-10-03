@@ -12,7 +12,7 @@ Roles: `systems` (core rules + tests), `content` (data/*.json + small hooks), `w
 | id | role | status | task |
 |---|---|---|---|
 | FAM-002d | world-ui | todo | NPC menu entries (src/world/interactables/npc.gd get_options): "Court <name>" (GameState.court) once favor allows, and "Propose as <rank>" per Family.ranks(player gender) with Family.check_proposal reasons shown on disabled entries. Works for both def NPCs and generated NPCs (FAM-002f). Add a scene/menu test. |
-| FAM-002h | systems | todo | Favor with generated NPCs: they have no dialogue, so nothing raises favor to the courtship threshold (family.json courtship.min_favor). Add a generic interaction, e.g. GameState.chat(npc_id) (a few days, small favor scaled by Charisma, capped) and/or gifting items, rules in data/family.json, so FAM-002d Court/Propose entries become reachable. |
+| FAM-002i | world-ui | todo | NPC menu entries for befriending (src/world/interactables/npc.gd get_options): "Chat with <name>" (GameState.chat, Family.check_chat reason on the disabled entry; hidden for NPCs with a dialogue file) and "Give a gift" opening an item picker of carried items with Family.gift_value shown (GameState.give_gift, Family.check_gift reasons). Generated NPCs and named NPCs alike. Add a menu test. |
 | FAM-003c | world-ui | todo | "Try for a child with <spouse>" entry (GameState.try_for_child, Children.check_conception reason shown when unavailable) next to dual cultivation, and pregnancy (days left) + children by name on the character sheet. |
 | G-004b | world-ui | todo | Show equipped weapon/armor with Equipment.describe_stats on the character sheet with Unequip buttons (GameState.unequip), and equip stats + an "Equip" label instead of "Use" for equipment in the inventory screen (GameState.equip_item). |
 | G-005d | world-ui | todo | Ready/unready combat talismans (items with a `combat` block) from the inventory screen via GameState.ready_talisman/unready_talisman, show the readied list (max CombatTalismans.MAX_READIED) and the talisman kind/power (CombatTalismans.amount) in item details. |
@@ -105,6 +105,7 @@ The local sessions that built combat/techniques, world/exploration/NPCs/dialogue
 ## Done
 | id | task |
 |---|---|
+| FAM-002h | Befriending NPCs without dialogue: GameState.chat (favor up to the courtship threshold, Charisma-scaled) and GameState.give_gift (favor from item price, capped below proposal), rules in data/family.json `acquaintance` (UI → FAM-002i). |
 | G-004c | Higher-grade equipment: Profound Iron / Dragon-Blood Gold ores, 4 new forge recipes with manuals, Heavenforge Smithy in Fallen Star Market, equipment encounters. |
 | LIFE-001e | Evil artifacts obtainable: Blood-Drinker Saber (wild), Corpse-Silk Burial Armor and Myriad Souls Banner (ruins), once per life, each with a righteous destroy alternative. |
 | FAM-002f | Generated NPCs placed in the world: regions.json `npc_spots`, Npcs.generated_in_region/spot_positions/world_title/describe, gender colors, "Look" option. |
