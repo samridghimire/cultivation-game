@@ -11,7 +11,7 @@ Roles: `systems` (core rules + tests), `content` (data/*.json + small hooks), `w
 ## P0: Close the loop (surface what is already built)
 | id | role | status | task |
 |---|---|---|---|
-| FAM-002d | world-ui | todo | NPC menu entries (src/world/interactables/npc.gd get_options): "Court <name>" (GameState.court) once favor allows, and "Propose as <rank>" per Family.ranks(player gender) with Family.check_proposal reasons shown on disabled entries. Works for both def NPCs and generated NPCs (FAM-002f). Add a scene/menu test. |
+| FAM-002d | world-ui | done | NPC menu entries (src/world/interactables/npc.gd get_options): "Court <name>" (GameState.court) once favor allows, and "Propose as <rank>" per Family.ranks(player gender) with Family.check_proposal reasons shown on disabled entries. Works for both def NPCs and generated NPCs (FAM-002f). Add a scene/menu test. |
 | FAM-002h | systems | todo | Favor with generated NPCs: they have no dialogue, so nothing raises favor to the courtship threshold (family.json courtship.min_favor). Add a generic interaction, e.g. GameState.chat(npc_id) (a few days, small favor scaled by Charisma, capped) and/or gifting items, rules in data/family.json, so FAM-002d Court/Propose entries become reachable. |
 | FAM-003c | world-ui | todo | "Try for a child with <spouse>" entry (GameState.try_for_child, Children.check_conception reason shown when unavailable) next to dual cultivation, and pregnancy (days left) + children by name on the character sheet. |
 | G-004b | world-ui | todo | Show equipped weapon/armor with Equipment.describe_stats on the character sheet with Unequip buttons (GameState.unequip), and equip stats + an "Equip" label instead of "Use" for equipment in the inventory screen (GameState.equip_item). |
