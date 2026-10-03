@@ -1,0 +1,43 @@
+{
+  "id": "hermit_gu",
+  "entries": [
+    {"node": "demonic", "if": {"max_alignment": -300}},
+    {"node": "inheritance", "if": {"min_favor": 40, "min_realm": "foundation_establishment", "not_flag": "gu_inheritance"}},
+    {"node": "greet"}
+  ],
+  "nodes": {
+    "greet": {"text": "Mm. A visitor on this cold ledge. I was an Elder of the Azure Cloud Sect once, before I gave my seat to younger hands. Now I wait for the snow and the end, in that order.",
+      "choices": [
+        {"label": "Senior, how long do you have?", "next": "time"},
+        {"label": "Brew him tea and listen to his stories. (3 days)", "next": "stories", "days": 3, "favor": 5, "effects": {"qi": 400}},
+        {"label": "Bring him a Thousand-Year Lingzhi.", "next": "lingzhi", "if": {"not_flag": "gu_lingzhi"}, "effects": {"items": {"thousand_year_lingzhi": -1}, "set_flag": "gu_lingzhi"}, "favor": 20, "show_locked": true},
+        {"label": "Ask him about the Flowing Water Sutra.", "next": "water", "if": {"min_favor": 20, "not_knows_technique": "flowing_water_sutra"}, "show_locked": true},
+        {"label": "Ask what he would pass on.", "next": "not_yet", "if": {"min_favor": 40, "max_realm": "qi_refining"}},
+        {"label": "Farewell, senior.", "next": "end"}
+      ]},
+    "time": {"text": "Thirty winters, perhaps. Core Formation gave me five hundred years and I spent most of them on sect politics. Do not repeat my mistake, young one.",
+      "choices": [{"label": "...", "next": "greet"}]},
+    "stories": {"text": "...and that is how Yun's master lost his left ear to a Frost Ape. Ha! Your qi settles when you listen; good.",
+      "choices": [{"label": "...", "next": "greet"}]},
+    "lingzhi": {"text": "A thousand-year root, for an old stump like me? It will not buy me a century, but it eases these bones. I will remember this.",
+      "choices": [{"label": "...", "next": "greet"}]},
+    "water": {"text": "Water does not fight the stone; it outlives it. Sit by the falls with me and I will show you its first three currents.",
+      "choices": [{"label": "Study by the falls. (20 days)", "next": "greet", "days": 20, "favor": 5, "effects": {"learn_technique": "flowing_water_sutra"}}]},
+    "not_yet": {"text": "What I hold would crack a Qi Refining dantian like an egg. Lay your Foundation first, then come back. If I am still here.",
+      "choices": [{"label": "I will hurry.", "next": "end"}]},
+    "inheritance": {"text": "Foundation Established. Good, you came in time. Take these. A longevity pill I hoarded for myself, and my insights on Core Formation. Do not waste five hundred years.",
+      "choices": [
+        {"label": "Kneel and accept his legacy. (7 days)", "next": "end", "days": 7, "favor": 10, "effects": {"items": {"longevity_pill": 1}, "qi": 15000, "breakthrough_bonus": 0.1, "alignment": 20, "set_flag": "gu_inheritance"}},
+        {"label": "Tell him to keep the pill and live a while longer.", "next": "refuse", "favor": 25, "effects": {"qi": 15000, "alignment": 60, "set_flag": "gu_inheritance"}}
+      ]},
+    "refuse": {"text": "Stubborn child. Then take only the words, and know that an old man will watch the snow a little longer because of you.",
+      "choices": [{"label": "...", "next": "end"}]},
+    "demonic": {"text": "Your qi reeks of other men's blood. I am old, not blind. I have one strike left in me; do not make me spend it on you.",
+      "choices": [
+        {"label": "Strip the dying elder's hut while he meditates.", "next": "rob", "if": {"not_flag": "gu_robbed"}, "effects": {"items": {"spirit_stone": 300, "longevity_pill": 1}, "alignment": -80, "set_flag": "gu_robbed"}, "favor": -100},
+        {"label": "Leave.", "next": "end"}
+      ]},
+    "rob": {"text": "He does not open his eyes. 'Take it,' he says. 'Heaven keeps the ledger, not me.' The words follow you down the mountain.",
+      "choices": [{"label": "...", "next": "end"}]}
+  }
+}
