@@ -18,7 +18,6 @@ Roles: `systems` (core rules + tests), `content` (data/*.json + small hooks), `w
 | G-005d | world-ui | todo | Ready/unready combat talismans (items with a `combat` block) from the inventory screen via GameState.ready_talisman/unready_talisman, show the readied list (max CombatTalismans.MAX_READIED) and the talisman kind/power (CombatTalismans.amount) in item details. |
 | W-003b | world-ui | todo | Dialogue window UI: open on EventBus.dialogue_requested, render GameState.dialogue_view() ({id, speaker, text, choices[{index,label,disabled,reason}]}), call GameState.choose_dialogue(index), close on dialogue_ended. Follow src/ui/combat_report.gd; register in hud.gd. NPCs fall back to the choice menu until it exists. |
 | G-007b | world-ui | todo | Clinic: new `clinic` place type (interactable in src/world/interactables, registered like workshop) with options "Treat patients (1 month)" (GameState.treat_patients), "Treat your <injury>" per injury (treat_own_injury), "Pay doctor (N stones)" (visit_clinic, Medicine.clinic_cost). Add one clinic place to qingshi_village and fallen_star_market in regions.json. |
-| QA-002 | qa | todo | End-to-end life script test (tests/unit/test_full_life.gd): drive one character through GameState only: create, cultivate to Qi Refining 3, join a sect, work a profession, refine a pill, buy/equip gear, fight + respawn via the artifact, court + propose + marry an eligible NPC, try for a child until born, save, load, and assert state survives the round trip. Fix any bug you find (small) or file a task. |
 
 ## P1: Core gameplay loops
 | id | role | status | task |
@@ -111,6 +110,7 @@ The local sessions that built combat/techniques, world/exploration/NPCs/dialogue
 ## Done
 | id | task |
 |---|---|
+| QA-002 | End-to-end life test (tests/unit/test_full_life.gd): Qi Refining, sect, profession, alchemy, gear, artifact respawn, courtship, marriage, a child, save/load round trip. Favor with generated NPCs is still seeded by hand (FAM-002h). |
 | QA-20261003-2 | News about the player's generated children/parents (e.g. a child dying of old age) was dropped as stranger noise; Npcs.is_newsworthy + tests. |
 | C-006 | 3 named NPCs with dialogue: Hua Qingyi (wandering alchemist, Fallen Star Market), Xue Yao (Blood Lotus disciple, Misty Forest), Hermit Gu (dying retired Azure Cloud elder, Azure Peak), with righteous/neutral/demonic branches and favor-gated rewards. |
 | C-007 | Higher-grade herbs and ores: 6 Foundation/Core herbs + 2 ores, Cloud-Sea Orchid Terraces (Azure Peak) and Meteor Crater Field (Fallen Star Market) gather sites, 6 realm-gated herb encounters, 3 alchemy recipes (Cloud-Mist Qi, Soul Nourishing, Earth Marrow Essence pills) with scrolls. |
