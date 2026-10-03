@@ -17,6 +17,8 @@ signal interaction_target_changed(display_name: String)
 signal interaction_menu_requested(source: Node)
 ## The player chose to craft at a workshop; open the crafting screen for this profession id.
 signal crafting_requested(prof_id: String)
+## The player opened their sect's mission board (sect hall); show the MissionBoard.
+signal mission_board_requested
 ## A modal UI (menu, character sheet) opened or closed; world input should pause.
 signal ui_modal_changed(is_open: bool)
 ## The player travelled to another region; the world scene rebuilds itself.
