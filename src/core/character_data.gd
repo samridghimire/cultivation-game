@@ -19,6 +19,9 @@ var spouse_ranks: Dictionary = {}
 var pregnancy: Dictionary = {}
 ## The mother's spousal rank to the father at birth ("" = unknown or adopted); used for heir priority.
 var birth_rank := ""
+## Bloodline id (data/bloodlines.json, "" = none) and whether it has awakened (FAM-007).
+var bloodline := ""
+var bloodline_awakened := false
 ## NPC behavior. Empty/negative values fall back to the data/npcs.json def (see Npcs).
 var home_region := ""
 var cultivates := false
@@ -103,6 +106,8 @@ func to_dict() -> Dictionary:
 		"spouse_ranks": spouse_ranks.duplicate(),
 		"pregnancy": pregnancy.duplicate(),
 		"birth_rank": birth_rank,
+		"bloodline": bloodline,
+		"bloodline_awakened": bloodline_awakened,
 		"home_region": home_region,
 		"cultivates": cultivates,
 		"diligence": diligence,
@@ -152,6 +157,8 @@ static func from_dict(d: Dictionary) -> CharacterData:
 	if not saved_pregnancy.is_empty():
 		c.pregnancy = {"partner": String(saved_pregnancy.get("partner", "")), "days_left": int(saved_pregnancy.get("days_left", 0))}
 	c.birth_rank = String(d.get("birth_rank", ""))
+	c.bloodline = String(d.get("bloodline", ""))
+	c.bloodline_awakened = bool(d.get("bloodline_awakened", false))
 	c.home_region = String(d.get("home_region", ""))
 	c.cultivates = bool(d.get("cultivates", false))
 	c.diligence = float(d.get("diligence", -1.0))
