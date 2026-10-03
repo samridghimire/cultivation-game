@@ -11,6 +11,7 @@ Roles: `systems` (core rules + tests), `content` (data/*.json + small hooks), `w
 ## P0: Close the loop (surface what is already built)
 | id | role | status | task |
 |---|---|---|---|
+| FAM-002i | world-ui | todo | NPC menu entries for befriending (src/world/interactables/npc.gd get_options): "Chat with <name>" (GameState.chat, Family.check_chat reason on the disabled entry; hidden for NPCs with a dialogue file) and "Give a gift" opening an item picker of carried items with Family.gift_value shown (GameState.give_gift, Family.check_gift reasons). Generated NPCs and named NPCs alike. Add a menu test. |
 | FAM-002d | world-ui | done | NPC menu entries (src/world/interactables/npc.gd get_options): "Court <name>" (GameState.court) once favor allows, and "Propose as <rank>" per Family.ranks(player gender) with Family.check_proposal reasons shown on disabled entries. Works for both def NPCs and generated NPCs (FAM-002f). Add a scene/menu test. |
 | FAM-002h | systems | todo | Favor with generated NPCs: they have no dialogue, so nothing raises favor to the courtship threshold (family.json courtship.min_favor). Add a generic interaction, e.g. GameState.chat(npc_id) (a few days, small favor scaled by Charisma, capped) and/or gifting items, rules in data/family.json, so FAM-002d Court/Propose entries become reachable. |
 | G-004b | world-ui | done | Show equipped weapon/armor with Equipment.describe_stats on the character sheet with Unequip buttons (GameState.unequip), and equip stats + an "Equip" label instead of "Use" for equipment in the inventory screen (GameState.equip_item). |
@@ -109,6 +110,7 @@ The local sessions that built combat/techniques, world/exploration/NPCs/dialogue
 ## Done
 | id | task |
 |---|---|
+| FAM-002h | Befriending NPCs without dialogue: GameState.chat (favor up to the courtship threshold, Charisma-scaled) and GameState.give_gift (favor from item price, capped below proposal), rules in data/family.json `acquaintance` (UI → FAM-002i). |
 | QA-005 | Family edge cases (tests/unit/test_family_edge_cases.gd): a pregnant NPC who dies now loses the pregnancy and the news says so (it used to stay pregnant forever, silently); posthumous births, respawn while pregnant and save/load mid-pregnancy verified. Divorce does not exist yet, so it isn't covered. |
 | QA-002 | End-to-end life test (tests/unit/test_full_life.gd): Qi Refining, sect, profession, alchemy, gear, artifact respawn, courtship, marriage, a child, save/load round trip. Favor with generated NPCs is still seeded by hand (FAM-002h). |
 | QA-20261003-2 | News about the player's generated children/parents (e.g. a child dying of old age) was dropped as stranger noise; Npcs.is_newsworthy + tests. |
