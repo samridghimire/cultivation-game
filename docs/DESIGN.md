@@ -68,6 +68,7 @@ Every great cultivation protagonist has something that sets them apart. Ours is 
 | Sects (join/leave, requirements, ranks, contribution) | ✅ | `data/sects.json`, `Sects` |
 | Professions (ranks, XP, income) | ✅ basic | `data/professions.json`, `Professions` |
 | Alchemy (recipes, refining pills) | ✅ basic | `data/recipes.json`, `Alchemy` |
+| Talismans (inscribing, buff talismans) | ✅ basic | `data/recipes.json`, `Alchemy`, `Buffs` |
 | Items, merchant, using pills | ✅ basic | `data/items.json`, `Items` |
 | Save/load | ✅ | `SaveManager` |
 | Creation Artifact: lives, anchors, respawn | ✅ core | `data/artifact.json`, `CreationArtifact` |

@@ -201,6 +201,9 @@ func _validate() -> void:
 	load_errors.append_array(Equipment.validate(self))
 	load_errors.append_array(Family.validate(self))
 	for item: Dictionary in items.values():
+		if item.get("effects", {}).has("buff"):
+			for error in Buffs.validate_effect(item["effects"]["buff"]):
+				load_errors.append("Item '%s': %s" % [item["id"], error])
 		for key in ["burn_lifespan", "extend_lifespan"]:
 			if item.get("effects", {}).has(key) and int(item["effects"][key]) <= 0:
 				load_errors.append("Item '%s' needs a positive %s" % [item["id"], key])

@@ -12,6 +12,8 @@ extends RefCounted
 ##   burn_lifespan: int         spend years of lifespan (refused if it would kill outright)
 ##   extend_lifespan: int       gain years of lifespan
 ##   learn_recipe: String       learn a crafting recipe (see alchemy.gd)
+##   buff: {id, name, days, mults: {stat: fraction}}  temporary combat buff (see buffs.gd),
+##                              e.g. from a talisman; re-using it refreshes the duration
 
 
 ## Returns "" if the effects can be applied, otherwise a reason they cannot.
@@ -66,6 +68,10 @@ static func apply(c: CharacterData, data: GameData, effects: Dictionary, flags: 
 	if effects.has("heal_injury"):
 		for injury_id in Injuries.heal(c, effects["heal_injury"]):
 			notes.append("%s healed" % Injuries.injury_name(data, injury_id))
+	if effects.has("buff"):
+		var note := Buffs.add_from_effect(c, effects["buff"])
+		if note != "":
+			notes.append(note)
 	if effects.has("set_flag"):
 		flags[effects["set_flag"]] = true
 	return notes
