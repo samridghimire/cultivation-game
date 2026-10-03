@@ -10,7 +10,7 @@ extends RefCounted
 static func qi_per_day(c: CharacterData, data: GameData, density: float = 1.0) -> float:
 	var realm: RealmDef = data.realms[c.realm_index]
 	var comprehension_mult := 0.5 + c.attribute("comprehension") / 20.0
-	return realm.base_qi_per_day * SpiritualRoots.cultivation_multiplier(c.spiritual_roots, data) * comprehension_mult * density * Techniques.cultivation_multiplier(c, data) * Injuries.cultivation_multiplier(c, data)
+	return realm.base_qi_per_day * SpiritualRoots.cultivation_multiplier(c.spiritual_roots, data) * comprehension_mult * density * Techniques.cultivation_multiplier(c, data) * Injuries.cultivation_multiplier(c, data) * (1.0 + Bloodlines.bonus(c, data, "qi_mult"))
 
 
 ## Cultivate for `days`. Returns {qi_gained, stages_gained, at_bottleneck}.
@@ -59,7 +59,7 @@ static func breakthrough_chance(c: CharacterData, data: GameData) -> float:
 		return 0.0
 	var next: RealmDef = data.realms[c.realm_index + 1]
 	var fortune_bonus := (c.attribute("fortune") - 10) * 0.01
-	return clampf(next.breakthrough_chance + c.breakthrough_bonus + fortune_bonus, 0.01, 0.99)
+	return clampf(next.breakthrough_chance + c.breakthrough_bonus + fortune_bonus + Bloodlines.bonus(c, data, "breakthrough"), 0.01, 0.99)
 
 
 ## Attempts a major breakthrough. Consumes any pending breakthrough bonus.
