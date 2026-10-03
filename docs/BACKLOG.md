@@ -111,6 +111,7 @@ The local sessions that built combat/techniques, world/exploration/NPCs/dialogue
 ## Done
 | id | task |
 |---|---|
+| QA-20261003-2 | News about the player's generated children/parents (e.g. a child dying of old age) was dropped as stranger noise; Npcs.is_newsworthy + tests. |
 | C-006 | 3 named NPCs with dialogue: Hua Qingyi (wandering alchemist, Fallen Star Market), Xue Yao (Blood Lotus disciple, Misty Forest), Hermit Gu (dying retired Azure Cloud elder, Azure Peak), with righteous/neutral/demonic branches and favor-gated rewards. |
 | C-007 | Higher-grade herbs and ores: 6 Foundation/Core herbs + 2 ores, Cloud-Sea Orchid Terraces (Azure Peak) and Meteor Crater Field (Fallen Star Market) gather sites, 6 realm-gated herb encounters, 3 alchemy recipes (Cloud-Mist Qi, Soul Nourishing, Earth Marrow Essence pills) with scrolls. |
 | C-008 | Deeds expansion: 12 deeds in 4 new contexts with deed givers (Hooded Stranger well-poisoner in Qingshi, Wounded Sect Disciple in Misty Forest, Street Child in Fallen Star Market, Bandit Camp on Azure Peak), each with righteous/neutral/demonic options; test that every deed context has a giver and both moral sides. |

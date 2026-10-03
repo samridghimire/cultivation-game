@@ -831,8 +831,7 @@ func _on_days_advanced(days: int) -> void:
 	for event in Npcs.simulate(npcs, data, days, rng, reserved):
 		married_off = married_off or event.get("kind", "") == "marriage"
 		# News about generated strangers is noise; only report people the player knows.
-		var npc_id := String(event["npc_id"])
-		if npc_id.begins_with(Npcs.SPAWN_PREFIX) and not reserved.has(npc_id) and not player.children.has(npc_id):
+		if not Npcs.is_newsworthy(String(event["npc_id"]), player, npc_favor):
 			continue
 		EventBus.post(event["text"], event["category"])
 	if married_off:
