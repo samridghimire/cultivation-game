@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-03 [FAM-003] Children: married couples try for a child (GameState.try_for_child); the carrying spouse tracks a ~10-month pregnancy (several at once), and the child is born as a new NPC with roots/attributes mixed from both parents (mutation, rare genius), the father's surname and the mother's spousal rank; children cannot cultivate before 6.
 - 2026-10-03 [LIFE-001d] 3 more forbidden secret arts (Blood Shadow Flight, Ten-Thousand Bones Armor, Heaven-Devouring Burst) with manuals sold at the Night Market or found in ruins; righteous players can seal the cursed manuals for alignment and qi.
 - 2026-10-03 [FAM-002c] Every region keeps unmarried adult generated NPCs of each gender as courtship candidates (data/family.json eligible_npcs, realms by region danger); proud flag on CharacterData; no message-log news about generated strangers.
 - 2026-10-03 [FAM-002b] Dual cultivation: spouses cultivate together for a data-driven qi bonus (scaled by partner roots and realm) that both partners receive; spouses gain favor monthly and per session; GameState.dual_cultivate.
