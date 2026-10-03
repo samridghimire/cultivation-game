@@ -313,3 +313,54 @@ func test_meditation_spot_offers_dual_cultivation_with_local_spouse() -> void:
 	assert_true(dual[0]["disabled"], "rootless spouse: disabled with a reason")
 	spot.free()
 	gs.end_session()
+
+
+# --- QA-20261003-3: no marrying close kin --------------------------------------
+
+func test_close_kin_cannot_court_or_marry() -> void:
+	var he := _person("male", "player", 40)
+	var wife := _person("female", "npc_a", 40)
+	Family.marry(he, wife, "wife")
+	var daughter := _person("female", "npc_d", 20)
+	var son := _person("male", "npc_s", 20)
+	for child in [daughter, son]:
+		(child as CharacterData).parents.assign(["npc_a", "player"])
+		he.children.append(child.id)
+		wife.children.append(child.id)
+	var people := {"npc_a": wife, "npc_d": daughter, "npc_s": son}
+	assert_true(Family.check_partner(he, daughter, data(), people).contains("kin"), "father and daughter")
+	assert_true(Family.check_partner(daughter, he, data(), people).contains("kin"), "daughter and father")
+	assert_true(Family.check_partner(son, wife, data(), people).contains("kin"), "son and mother")
+	assert_true(Family.check_partner(son, daughter, data(), people).contains("kin"), "siblings")
+	assert_false(Family.propose(he, daughter, 100, "concubine", data(), people)["ok"])
+	assert_false(he.spouses.has("npc_d"))
+	var grandchild := _person("female", "npc_g", 18)
+	grandchild.parents.assign(["npc_x", "npc_s"])
+	son.children.append("npc_g")
+	people["npc_g"] = grandchild
+	assert_true(Family.check_partner(he, grandchild, data(), people).contains("kin"), "grandfather and granddaughter")
+	var half := _person("female", "npc_h", 20)
+	half.parents.assign(["npc_y", "player"])
+	assert_true(Family.check_partner(son, half, data(), people).contains("kin"), "half-siblings share a parent")
+	var stranger := _person("female", "npc_z", 20)
+	stranger.parents.assign(["npc_p", "npc_q"])
+	assert_eq(Family.check_partner(son, stranger, data(), people), "", "unrelated people may court")
+
+
+func test_game_state_cannot_marry_own_child() -> void:
+	var gs: Node = _root().get_node("GameState")
+	var c := CharacterFactory.create("Lin Feng", gs.data, seeded_rng(), "male")
+	gs.start_session(c)
+	var wife: CharacterData = gs.npcs["xiao_ling"]
+	Family.marry(c, wife, "wife")
+	var child := Children.give_birth(wife, c, gs.npcs, gs.data, seeded_rng(), Npcs.region_of(wife, gs.data))
+	child.gender = "female"
+	child.age_days = 20 * Calendar.DAYS_PER_YEAR
+	child.realm_index = c.realm_index
+	child.alignment = c.alignment
+	gs.npc_favor[child.id] = 100
+	gs.court(child.id)
+	assert_eq(int(gs.npc_favor[child.id]), 100, "courting your own daughter is refused")
+	gs.propose(child.id, "concubine")
+	assert_false(c.spouses.has(child.id), "and so is marrying her")
+	gs.end_session()
