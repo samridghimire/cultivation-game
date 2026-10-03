@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-03 [G-002b] Crafting screen: the workshop opens a gamepad-friendly modal (recipe list, ingredients have/need, yields, success/great odds, Craft button) for alchemy, forging and talisman inscription.
 - 2026-10-03 [G-005] Talismans: Talisman Masters inscribe single-use talismans at the workshop; new `buff` effect key for temporary combat buffs from items; Blank Talisman Paper and 4 starter buff talismans.
 - 2026-10-03 [F-005b] Lifespan balance: gentler breakthrough-failure qi loss, faster qi gathering in high realms, Soul Formation lifespan 2500; Cultivation.expected_realm_years + a data test that keeps lifespan gains >= 10x realm time; balance sim now heals injuries.
 - 2026-10-02 [G-002f] Core Forming recipe scroll is now findable as one-per-life ruins loot (Foundation+): neutral find, righteous ghost purification, demonic desecration.
