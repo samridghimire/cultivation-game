@@ -11,7 +11,7 @@ Roles: `systems` (core rules + tests), `content` (data/*.json + small hooks), `w
 ## P0: Close the loop (surface what is already built)
 | id | role | status | task |
 |---|---|---|---|
-| FAM-002i | world-ui | todo | NPC menu entries for befriending (src/world/interactables/npc.gd get_options): "Chat with <name>" (GameState.chat, Family.check_chat reason on the disabled entry; hidden for NPCs with a dialogue file) and "Give a gift" opening an item picker of carried items with Family.gift_value shown (GameState.give_gift, Family.check_gift reasons). Generated NPCs and named NPCs alike. Add a menu test. |
+| FAM-002i | world-ui | done | NPC menu entries for befriending (src/world/interactables/npc.gd get_options): "Chat with <name>" (GameState.chat, Family.check_chat reason on the disabled entry; hidden for NPCs with a dialogue file) and "Give a gift" opening an item picker of carried items with Family.gift_value shown (GameState.give_gift, Family.check_gift reasons). Generated NPCs and named NPCs alike. Add a menu test. |
 | FAM-002d | world-ui | done | NPC menu entries (src/world/interactables/npc.gd get_options): "Court <name>" (GameState.court) once favor allows, and "Propose as <rank>" per Family.ranks(player gender) with Family.check_proposal reasons shown on disabled entries. Works for both def NPCs and generated NPCs (FAM-002f). Add a scene/menu test. |
 | G-004b | world-ui | done | Show equipped weapon/armor with Equipment.describe_stats on the character sheet with Unequip buttons (GameState.unequip), and equip stats + an "Equip" label instead of "Use" for equipment in the inventory screen (GameState.equip_item). |
 | FAM-003c | world-ui | done | "Try for a child with <spouse>" entry (GameState.try_for_child, Children.check_conception reason shown when unavailable) next to dual cultivation, and pregnancy (days left) + children by name on the character sheet. |
@@ -108,6 +108,7 @@ The local sessions that built combat/techniques, world/exploration/NPCs/dialogue
 ## Done
 | id | task |
 |---|---|
+| FAM-002i | NPC menu: "Chat with <name>" for NPCs without dialogue and "Give <name> a gift" opening an in-menu picker of carried items with the favor each is worth; disabled entries show Family.check_chat/check_gift reasons. |
 | W-003b | Dialogue window: HUD modal (DialogueWindow) renders GameState.dialogue_view(), locked choices show their reason, gamepad focus, Esc ends the talk. |
 | LIFE-001f | Evil artifacts can be bought: items.json `restricted_tags` (demonic) are only sold by merchants that stock that tag, merchant `min_alignment`/`max_alignment` gate (Items.merchant_sells/check_merchant), Shadow Curio Den in Fallen Star Market for the wicked, prices for the 3 lifespan-drain artifacts. |
 | G-007c | NPCs get hurt (injuries.json `npc_mishap`, monthly for adults) and heal over time; Medicine.treat_npc / GameState.treat_npc heal their worst injury for Doctor xp, alignment and favor. |
