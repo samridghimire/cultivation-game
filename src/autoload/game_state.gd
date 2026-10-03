@@ -483,6 +483,24 @@ func practice_technique(tech_id: String, days: int) -> void:
 	if result["levels_gained"] > 0:
 		var mastered := " (mastered)" if Techniques.is_mastered(player, data, tech_id) else ""
 		EventBus.post("Your %s reaches level %d%s!" % [def.name, Techniques.level(player, tech_id), mastered], "progress")
+	var insights := Dao.on_practice(player, data, tech_id, days, rng)
+	for insight_id in insights:
+		EventBus.post("Practicing the %s, you comprehend the %s more deeply (level %d)!" % [def.name, Dao.def_of(data, insight_id)["name"], Dao.level(player, insight_id)], "progress")
+	_pass_time(days)
+
+
+## Contemplate a Dao insight you have already glimpsed, in seclusion, for `days`.
+func contemplate_dao(insight_id: String, days: int) -> void:
+	if not _can_act():
+		return
+	var result := Dao.contemplate(player, data, insight_id, days, rng)
+	if not result["ok"]:
+		EventBus.post(result["reason"], "warning")
+		return
+	var insight := Dao.def_of(data, insight_id)
+	EventBus.post("You sit in seclusion for %s, contemplating the %s." % [Calendar.format_duration(days), insight["name"]])
+	if result["levels"] > 0:
+		EventBus.post("Enlightenment! Your %s reaches level %d." % [insight["name"], Dao.level(player, insight_id)], "progress")
 	_pass_time(days)
 
 
