@@ -12,8 +12,12 @@ extends RefCounted
 ##   burn_lifespan: int         spend years of lifespan (refused if it would kill outright)
 ##   extend_lifespan: int       gain years of lifespan
 ##   learn_recipe: String       learn a crafting recipe (see alchemy.gd)
+##   dao_insight: String        gain one level of a Dao insight (see dao.gd), e.g. a sudden enlightenment
 ##   buff: {id, name, days, mults: {stat: fraction}}  temporary combat buff (see buffs.gd),
 ##                              e.g. from a talisman; re-using it refreshes the duration
+##   reputation: {sect_id: int} change reputation with sects (see reputation.gd)
+##   witnessed: bool            the alignment change was seen: every sect's reputation
+##                              moves by alignment * its deed_scale (data/sects.json)
 
 
 ## Returns "" if the effects can be applied, otherwise a reason they cannot.
@@ -46,6 +50,10 @@ static func apply(c: CharacterData, data: GameData, effects: Dictionary, flags: 
 		var delta := int(effects["alignment"])
 		Alignment.shift(c, data, delta)
 		notes.append("Alignment %+d" % delta)
+		if effects.get("witnessed", false):
+			notes.append_array(Reputation.on_witnessed(c, data, delta))
+	if effects.has("reputation"):
+		notes.append_array(Reputation.apply_changes(c, data, effects["reputation"]))
 	if effects.has("items"):
 		for item_id in effects["items"]:
 			var delta := int(effects["items"][item_id])
@@ -68,6 +76,8 @@ static func apply(c: CharacterData, data: GameData, effects: Dictionary, flags: 
 	if effects.has("heal_injury"):
 		for injury_id in Injuries.heal(c, effects["heal_injury"]):
 			notes.append("%s healed" % Injuries.injury_name(data, injury_id))
+	if effects.has("dao_insight") and Dao.gain_levels(c, data, effects["dao_insight"]) > 0:
+		notes.append("Insight into the %s (level %d)" % [Dao.def_of(data, effects["dao_insight"])["name"], Dao.level(c, effects["dao_insight"])])
 	if effects.has("buff"):
 		var note := Buffs.add_from_effect(c, effects["buff"])
 		if note != "":

@@ -76,3 +76,21 @@ func _draw() -> void:
 	var font := ThemeDB.fallback_font
 	var text_width := font.get_string_size(display_name, HORIZONTAL_ALIGNMENT_LEFT, -1, 14).x
 	draw_string(font, Vector2(-text_width / 2.0, -size.y / 2.0 - 8.0), display_name, HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color.WHITE)
+	if anchor_id != "":
+		_draw_anchor_marker()
+
+
+## A small diamond in the top-right corner of artifact anchor places: hollow
+## when unbound, filled when bound, ringed when it is the respawn point.
+func _draw_anchor_marker() -> void:
+	var anchors: Array = GameState.player.anchors if GameState.player != null else []
+	var center := Vector2(size.x / 2.0 - 2.0, -size.y / 2.0 + 2.0)
+	var r := 8.0
+	var points := PackedVector2Array([center + Vector2(0, -r), center + Vector2(r, 0), center + Vector2(0, r), center + Vector2(-r, 0), center + Vector2(0, -r)])
+	var gold := UIStyle.ACCENT
+	if anchors.has(anchor_id):
+		draw_colored_polygon(points.slice(0, 4), gold)
+		if anchors[-1] == anchor_id:
+			draw_arc(center, r + 4.0, 0.0, TAU, 24, gold, 2.0)
+	else:
+		draw_polyline(points, gold.darkened(0.3), 2.0)
