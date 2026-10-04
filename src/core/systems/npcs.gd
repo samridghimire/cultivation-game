@@ -178,14 +178,23 @@ static func simulate(npcs: Dictionary, data: GameData, days: int, rng: RandomNum
 	return events
 
 
+## Marks NPC `c` dead of `cause`. An unborn child dies with its mother: the
+## pregnancy ends. Returns true if a pregnancy was lost. Every NPC death goes
+## through here.
+static func die(c: CharacterData, cause: String) -> bool:
+	c.alive = false
+	c.cause_of_death = cause
+	if not Children.is_pregnant(c):
+		return false
+	c.pregnancy = {}
+	return true
+
+
 static func _live(c: CharacterData, data: GameData, days: int, rng: RandomNumberGenerator, events: Array[Dictionary]) -> void:
 	c.age_days += days
 	if c.age_years() >= Cultivation.lifespan_years(c, data):
-		c.alive = false
-		c.cause_of_death = "old age"
 		var text := "News arrives: %s has died of old age at %d." % [c.name, c.age_years()]
-		if Children.is_pregnant(c):
-			c.pregnancy = {}  # the unborn child dies with its mother
+		if die(c, "old age"):
 			text += " The unborn child is lost as well."
 		events.append({"npc_id": c.id, "text": text, "category": "warning"})
 		return
@@ -201,9 +210,10 @@ static func _live(c: CharacterData, data: GameData, days: int, rng: RandomNumber
 	if Cultivation.can_attempt_breakthrough(c, data):
 		var result := Cultivation.attempt_breakthrough(c, data, rng, true)
 		if result["died"]:
-			c.alive = false
-			c.cause_of_death = "heavenly tribulation"
-			events.append({"npc_id": c.id, "text": "Heaven's lightning falls: %s perished in the tribulation of %s." % [c.name, result["realm_name"]], "category": "warning"})
+			var text := "Heaven's lightning falls: %s perished in the tribulation of %s." % [c.name, result["realm_name"]]
+			if die(c, "heavenly tribulation"):
+				text += " The unborn child is lost as well."
+			events.append({"npc_id": c.id, "text": text, "category": "warning"})
 			return
 		# Mortal to Qi Refining is routine; only report real breakthroughs.
 		if result["success"] and c.realm_index > 1:

@@ -175,6 +175,7 @@ The local sessions that built combat/techniques, world/exploration/NPCs/dialogue
 ## Done
 | id | task |
 |---|---|
+| QA-20261004-3 | NPCs killed by the player (RIV-001 Karma kill) or by a heavenly tribulation stayed pregnant forever (only old-age deaths cleared it, QA-005). Every NPC death now goes through Npcs.die, which ends the pregnancy; the news line / kill note say the unborn child is lost. Tests. |
 | UI-003b | Help from the title screen: a "Help" button on the main menu opens HelpScreen (controls + guide pages) before any session exists; closing returns focus to the button. Rebinding split to UI-003c. |
 | RIV-001b | Karma in the NPC "Look" text: every NPC (named ones too) has a Look entry that adds how much they hate or owe you, in words from karma.json `attitudes` tiers (Karma.attitude, validated). The sheet "Grudges & Debts" section is part of RIV-001d. |
 | RIV-001d | Karma in the NPC menu: "Turn hostile..." reveals Humiliate/Rob/Kill entries (fight danger label, alignment cost, Karma.check_act reasons), "Make amends (N stones)" while a grudge is held; "Grudges & Debts" section on the character sheet (Karma.describe). |

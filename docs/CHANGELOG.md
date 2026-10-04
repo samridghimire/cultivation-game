@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-04 [QA-20261004-3] A pregnant NPC who is slain or dies in a tribulation now loses the unborn child (it used to stay pregnant forever); all NPC deaths go through Npcs.die.
 - 2026-10-04 [VIS-002b] Scenery stays clear of cave abodes, and the Withered Bone Marsh gets dead trees, pale bone-colored rocks and blood-red flowers.
 - 2026-10-04 [UI-003b] The title screen has a Help button: read the controls and the beginner guide pages before starting a game.
 - 2026-10-04 [RIV-001b] Looking at an NPC now tells you whether they resent, hate or have sworn to kill you, or feel grateful or indebted to you (karma.json `attitudes`); named NPCs gained a Look entry too.

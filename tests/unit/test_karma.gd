@@ -292,3 +292,15 @@ func test_attitude_tiers_validated() -> void:
 	d.karma["attitudes"] = {"grudge": [[1, "a"], [40, "b"]], "gratitude": [[5, ""]]}
 	assert_eq(Karma.validate(d).size(), 1, "empty sentence rejected")
 	assert_eq(Karma.validate(data()).size(), 0, "shipped data is valid")
+
+
+func test_killing_a_pregnant_npc_ends_the_pregnancy() -> void:
+	# QA-20261004-3: only old-age deaths used to clear an NPC's pregnancy.
+	var c := _person("player")
+	var people := _family()
+	var victim: CharacterData = people["victim"]
+	victim.pregnancy = {"partner": "father", "days_left": 120}
+	var result := Karma.commit(c, victim, "kill", true, people, data(), seeded_rng())
+	assert_false(victim.alive)
+	assert_false(Children.is_pregnant(victim), "the dead do not stay pregnant")
+	assert_true(", ".join(result["notes"]).contains("unborn child"), "the note mentions the lost child")
