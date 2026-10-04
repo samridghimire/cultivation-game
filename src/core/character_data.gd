@@ -57,6 +57,8 @@ var known_recipes: Array[String] = []
 var injuries: Dictionary = {}  # injury id -> days left to heal
 ## Temporary combat buffs: buff id -> {"name", "days", "mults": {stat: fraction}} (see Buffs).
 var buffs: Dictionary = {}
+## Dao insights: insight id -> {"level": int, "progress": float} (see Dao).
+var dao: Dictionary = {}
 ## Combat talisman item ids burned automatically in fights (see CombatTalismans).
 var readied_talismans: Array[String] = []
 ## Years of lifespan burned for power (forbidden arts, demonic pills); see Cultivation.lifespan_years.
@@ -83,6 +85,11 @@ var artifact_storage: Dictionary = {}
 var mission_cooldowns: Dictionary = {}
 ## Sect id -> reputation with that sect (Reputation system; missing = start value).
 var reputation: Dictionary = {}
+## Karma (RIV-001): NPC id -> how much that NPC hates / owes this character (0-100, see Karma).
+var grudges: Dictionary = {}
+var gratitude: Dictionary = {}
+## Secret realm id -> {"opening": int, "floor": int}: floors cleared in that opening (see SecretRealms).
+var secret_realms: Dictionary = {}
 
 
 func attribute(attr_id: String) -> int:
@@ -149,6 +156,7 @@ func to_dict() -> Dictionary:
 		"known_recipes": known_recipes.duplicate(),
 		"injuries": injuries.duplicate(),
 		"buffs": buffs.duplicate(true),
+		"dao": dao.duplicate(true),
 		"readied_talismans": readied_talismans.duplicate(),
 		"lifespan_spent_years": lifespan_spent_years,
 		"lifespan_bonus_years": lifespan_bonus_years,
@@ -162,6 +170,9 @@ func to_dict() -> Dictionary:
 		"reputation": reputation.duplicate(),
 		"abode": abode,
 		"abode_storage": abode_storage.duplicate(),
+		"grudges": grudges.duplicate(),
+		"gratitude": gratitude.duplicate(),
+		"secret_realms": secret_realms.duplicate(true),
 	}
 
 
@@ -230,10 +241,18 @@ static func from_dict(d: Dictionary) -> CharacterData:
 	c.reputation = _int_values(d.get("reputation", {}))
 	c.abode = String(d.get("abode", ""))
 	c.abode_storage = _int_values(d.get("abode_storage", {}))
+	c.grudges = _int_values(d.get("grudges", {}))
+	c.gratitude = _int_values(d.get("gratitude", {}))
+	var delves: Dictionary = d.get("secret_realms", {})
+	for realm_id in delves:
+		c.secret_realms[String(realm_id)] = {"opening": int(delves[realm_id].get("opening", -1)), "floor": int(delves[realm_id].get("floor", 0))}
 	for anchor_id in d.get("anchors", []):
 		c.anchors.append(String(anchor_id))
 	for recipe_id in d.get("known_recipes", []):
 		c.known_recipes.append(String(recipe_id))
+	var saved_dao: Dictionary = d.get("dao", {})
+	for insight_id in saved_dao:
+		c.dao[String(insight_id)] = {"level": int(saved_dao[insight_id].get("level", 0)), "progress": float(saved_dao[insight_id].get("progress", 0))}
 	c.main_method = String(d.get("main_method", ""))
 	var techs: Dictionary = d.get("techniques", {})
 	for tech_id in techs:

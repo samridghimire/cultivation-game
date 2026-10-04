@@ -33,6 +33,9 @@ var npcs: Dictionary = {}  # id -> Dictionary (definitions; live NPCs are in Gam
 var names: Dictionary = {}  # data/names.json: {"surnames": [...], "given_names": {gender: [...]}}
 var dialogues: Dictionary = {}  # id -> Dictionary, one per data/dialogue/*.json
 var techniques: Dictionary = {}  # id -> TechniqueDef
+## data/dao.json tunables (see Dao) and its insights by id.
+var dao: Dictionary = {}
+var dao_insights: Dictionary = {}  # id -> Dictionary
 var technique_affinity_bonus := 0.5
 var technique_mismatch_penalty := 0.5
 ## Cultivation methods (techniques.json): the method everyone uses until they set
@@ -56,6 +59,8 @@ var family: Dictionary = {}  # data/family.json (Family system)
 var bloodlines: Dictionary = {}  # id -> Dictionary (data/bloodlines.json)
 ## data/bloodlines.json top-level rules (inherit chances).
 var bloodline_rules: Dictionary = {}
+## Grudge/gratitude rules (data/karma.json, Karma). "acts" is keyed by id after loading.
+var karma: Dictionary = {}
 ## Anchor id -> {"region": String, "name": String}, from places with an anchor_id.
 var anchors: Dictionary = {}
 ## Claimable cave abodes: abode id -> regions.json abode def plus "region" (Abodes).
@@ -64,6 +69,11 @@ var recipes: Dictionary = {}  # id -> Dictionary (data/recipes.json)
 ## Alchemy tunables (see Alchemy).
 var alchemy: Dictionary = {}
 var sect_missions: Dictionary = {}  # id -> Dictionary (data/sect_missions.json)
+## Help screen pages, in order: [{id, title, body: [paragraph]}] (data/help.json).
+var help_pages: Array = []
+## Input action id -> display name for the help screen's Controls page.
+var help_action_names: Dictionary = {}
+var secret_realms: Dictionary = {}  # id -> Dictionary (data/secret_realms.json, SecretRealms)
 ## Problems found while loading. Empty when all data files are valid.
 var load_errors: PackedStringArray = []
 
@@ -166,6 +176,11 @@ func _load(dir: String) -> void:
 	bloodline_rules = _read(dir, "bloodlines.json")
 	for bloodline in bloodline_rules.get("bloodlines", []):
 		bloodlines[bloodline["id"]] = bloodline
+	karma = _read(dir, "karma.json")
+	var karma_acts := {}
+	for act in karma.get("acts", []):
+		karma_acts[act["id"]] = act
+	karma["acts"] = karma_acts
 
 	var dialogue_dir := dir.path_join("dialogue")
 	for file_name in DirAccess.get_files_at(dialogue_dir):
@@ -182,6 +197,10 @@ func _load(dir: String) -> void:
 	for t in tech.get("techniques", []):
 		var def := TechniqueDef.from_dict(t)
 		techniques[def.id] = def
+
+	dao = _read(dir, "dao.json")
+	for insight: Dictionary in dao.get("insights", []):
+		dao_insights[insight["id"]] = insight
 
 	var foes := _read(dir, "enemies.json")
 	enemy_technique_level = int(foes.get("enemy_technique_level", enemy_technique_level))
@@ -201,6 +220,12 @@ func _load(dir: String) -> void:
 	for recipe in crafting.get("recipes", []):
 		recipes[recipe["id"]] = recipe
 
+	var help := _read(dir, "help.json")
+	help_pages = help.get("pages", [])
+	help_action_names = help.get("action_names", {})
+
+	for secret_realm in _read(dir, "secret_realms.json").get("realms", []):
+		secret_realms[secret_realm["id"]] = secret_realm
 	_validate()
 
 
@@ -221,6 +246,7 @@ func _validate() -> void:
 	if realms.is_empty():
 		load_errors.append("No realms defined")
 	load_errors.append_array(Tribulation.validate(self))
+	load_errors.append_array(Dao.validate(self))
 	var attr_ids := attribute_ids()
 	for def: ProfessionDef in professions.values():
 		if not attr_ids.has(def.primary_attribute):
@@ -241,11 +267,14 @@ func _validate() -> void:
 	_validate_combat()
 	_validate_artifact()
 	_validate_recipes()
+	_validate_help()
 	load_errors.append_array(Equipment.validate(self))
 	load_errors.append_array(CombatTalismans.validate(self))
 	load_errors.append_array(Family.validate(self))
 	load_errors.append_array(Abodes.validate(self))
 	load_errors.append_array(ArtifactFunctions.validate(self))
+	load_errors.append_array(Karma.validate(self))
+	load_errors.append_array(SecretRealms.validate(self))
 	load_errors.append_array(Children.validate(self))
 	load_errors.append_array(NpcFamilies.validate(self))
 	load_errors.append_array(Training.validate(self))
@@ -384,6 +413,23 @@ func _validate_combat() -> void:
 		for item_id in enemy.get("rewards", {}).get("items", {}):
 			if not items.has(item_id):
 				load_errors.append("Enemy '%s' rewards unknown item '%s'" % [enemy["id"], item_id])
+
+
+func _validate_help() -> void:
+	var ids := {}
+	for page in help_pages:
+		if not page is Dictionary or String(page.get("id", "")) == "" or String(page.get("title", "")) == "":
+			load_errors.append("help.json page needs an id and a title: %s" % [page])
+			continue
+		if ids.has(page["id"]):
+			load_errors.append("help.json has a duplicate page id '%s'" % page["id"])
+		ids[page["id"]] = true
+		var body: Variant = page.get("body", [])
+		if not body is Array or (body as Array).is_empty() or (body as Array).any(func(p): return not p is String):
+			load_errors.append("help.json page '%s' needs a non-empty body of strings" % page["id"])
+	for action in help_action_names:
+		if not help_action_names[action] is String:
+			load_errors.append("help.json action_names['%s'] must be a string" % action)
 
 
 func _validate_artifact() -> void:

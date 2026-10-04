@@ -6,6 +6,8 @@ extends Node
 ## Keep rules out of this file; put them in the systems so they stay testable.
 
 const BREAKTHROUGH_DAYS := 7
+## Dialogue id (data/dialogue/) for generated NPCs without their own file.
+const GENERIC_DIALOGUE := "generic_cultivator"
 
 var data: GameData
 var player: CharacterData
@@ -59,6 +61,7 @@ func start_session(character: CharacterData) -> void:
 	Npcs.ensure_all(npcs, data, rng)
 	Npcs.ensure_eligible(npcs, data, rng)
 	GameClock.reset()
+	EventBus.clear_history()
 	EventBus.session_started.emit()
 	EventBus.post("%s sets out on the path of cultivation." % player.name, "progress")
 	EventBus.player_changed.emit()
@@ -349,6 +352,37 @@ func explore(tags: Array = []) -> void:
 	fight(result["enemy"])
 
 
+## Delve one floor deeper into an open secret realm in the current region
+## (data/secret_realms.json): pay the entry cost once per opening, beat the
+## floor's guardian, then claim one of its treasures. Losing drives you out.
+func enter_secret_realm(realm_id: String) -> void:
+	if not _can_act():
+		return
+	var today: int = GameClock.total_days
+	var reason := SecretRealms.check_enter(player, data, realm_id, current_region, today)
+	if reason != "":
+		EventBus.post(reason, "warning")
+		EventBus.player_changed.emit()
+		return
+	var def := SecretRealms.realm(data, realm_id)
+	var cost := SecretRealms.pay_entry(player, def, today)
+	if cost > 0:
+		EventBus.post("You pour %d spirit stones into the barrier of the %s and slip inside." % [cost, def["name"]], "info")
+	var floor_def := SecretRealms.next_floor(player, def, today)
+	EventBus.post("%s: %s" % [floor_def.get("name", ""), floor_def.get("text", "")], "info")
+	var guardian := String(floor_def.get("guardian", ""))
+	if guardian != "" and not fight_enemy(data.enemies[guardian]):
+		if _can_act():
+			EventBus.post("You are driven out of the %s." % def["name"], "warning")
+		return
+	var result := SecretRealms.claim_floor(player, data, realm_id, today, world_flags, rng)
+	var notes: PackedStringArray = result["notes"]
+	EventBus.post("You claim the treasure of the %s. (%s)" % [result["floor_name"], ", ".join(notes)], "progress")
+	if result["last"]:
+		EventBus.post("You have plundered every floor of the %s." % def["name"], "progress")
+	_pass_time(result["days"])
+
+
 ## The pending encounter's choices for the UI: [{index, label, disabled, reason}]
 ## ([] when no encounter is waiting).
 func encounter_choices() -> Array[Dictionary]:
@@ -474,8 +508,20 @@ func end_dialogue() -> void:
 	EventBus.player_changed.emit()
 
 
+## True if talking to `npc_id` would open a conversation file.
+func has_dialogue(npc_id: String) -> bool:
+	return not _npc_dialogue(npc_id).is_empty()
+
+
+## A named NPC's own dialogue file; generated adults (no def) fall back to
+## GENERIC_DIALOGUE, children have nothing to say.
 func _npc_dialogue(npc_id: String) -> Dictionary:
-	return data.dialogues.get(data.npcs.get(npc_id, {}).get("dialogue", ""), {})
+	if data.npcs.has(npc_id):
+		return data.dialogues.get(data.npcs[npc_id].get("dialogue", ""), {})
+	var npc: CharacterData = npcs.get(npc_id)
+	if npc == null or npc.age_years() < int(data.family.get("adult_age", 16)):
+		return {}
+	return data.dialogues.get(GENERIC_DIALOGUE, {})
 
 
 func _dialogue_ctx(npc_id: String) -> Dictionary:
@@ -552,6 +598,49 @@ func propose(npc_id: String, rank: String) -> void:
 		return
 	EventBus.post("%s accepts your proposal and becomes your %s." % [npcs[npc_id].name, Family.rank_name(data, player.gender, rank).to_lower()], "progress")
 	_pass_time(result["days"])
+
+
+## Commit a hostile act (data/karma.json: humiliate, rob, kill) against an NPC.
+## Acts with "fight" make you beat them first. The victim and their kin hold a grudge.
+func hostile_act(npc_id: String, act_id: String) -> void:
+	if not _can_act():
+		return
+	var npc: CharacterData = npcs.get(npc_id)
+	var reason := Karma.check_act(player, npc, act_id, data)
+	if reason != "":
+		EventBus.post(reason, "warning")
+		EventBus.player_changed.emit()
+		return
+	var act := Karma.act(data, act_id)
+	var won := true
+	if bool(act.get("fight", false)):
+		EventBus.post("You turn on %s." % npc.name, "danger")
+		won = fight_enemy(Karma.npc_enemy(npc, data))
+		if not _can_act():
+			return
+	var result := Karma.commit(player, npc, act_id, won, npcs, data, rng)
+	npc_favor[npc_id] = int(npc_favor.get(npc_id, 0)) + int(result["favor"])
+	var notes: PackedStringArray = result["notes"]
+	var suffix := " (%s)" % ", ".join(notes) if not notes.is_empty() else ""
+	if not won:
+		EventBus.post("%s drives you off.%s" % [npc.name, suffix], "warning")
+	elif not npc.alive:
+		EventBus.post("You kill %s.%s" % [npc.name, suffix], "danger")
+	else:
+		EventBus.post("%s: %s.%s" % [String(act.get("name", act_id)), npc.name, suffix], "warning")
+	_pass_time(result["days"])
+
+
+## Pay spirit stones to clear an NPC's grudge against you (Karma.amends_cost).
+func make_amends(npc_id: String) -> void:
+	if not _can_act():
+		return
+	var result := Karma.make_amends(player, npcs.get(npc_id), data)
+	if not result["ok"]:
+		EventBus.post(result["reason"], "warning")
+	else:
+		EventBus.post("You offer %s %d spirit stones and an apology. The grudge is settled." % [npcs[npc_id].name, result["cost"]], "progress")
+	EventBus.player_changed.emit()
 
 
 ## Cultivate together with a spouse who is in the current region: both gain
@@ -784,6 +873,24 @@ func practice_technique(tech_id: String, days: int) -> void:
 	if result["levels_gained"] > 0:
 		var mastered := " (mastered)" if Techniques.is_mastered(player, data, tech_id) else ""
 		EventBus.post("Your %s reaches level %d%s!" % [def.name, Techniques.level(player, tech_id), mastered], "progress")
+	var insights := Dao.on_practice(player, data, tech_id, days, rng)
+	for insight_id in insights:
+		EventBus.post("Practicing the %s, you comprehend the %s more deeply (level %d)!" % [def.name, Dao.def_of(data, insight_id)["name"], Dao.level(player, insight_id)], "progress")
+	_pass_time(days)
+
+
+## Contemplate a Dao insight you have already glimpsed, in seclusion, for `days`.
+func contemplate_dao(insight_id: String, days: int) -> void:
+	if not _can_act():
+		return
+	var result := Dao.contemplate(player, data, insight_id, days, rng)
+	if not result["ok"]:
+		EventBus.post(result["reason"], "warning")
+		return
+	var insight := Dao.def_of(data, insight_id)
+	EventBus.post("You sit in seclusion for %s, contemplating the %s." % [Calendar.format_duration(days), insight["name"]])
+	if result["levels"] > 0:
+		EventBus.post("Enlightenment! Your %s reaches level %d." % [insight["name"], Dao.level(player, insight_id)], "progress")
 	_pass_time(days)
 
 
@@ -1143,6 +1250,7 @@ func load_save_dict(d: Dictionary) -> void:
 	if not data.regions.has(current_region):
 		current_region = data.start_region
 	GameClock.from_dict(d.get("clock", {}))
+	EventBus.clear_history()
 	rng.seed = String(d.get("rng_seed", "0")).to_int()
 	rng.state = String(d.get("rng_state", "0")).to_int()
 	EventBus.session_started.emit()
@@ -1171,6 +1279,7 @@ func _on_days_advanced(days: int) -> void:
 			var spouse: CharacterData = npcs.get(spouse_id)
 			if spouse != null and spouse.alive:
 				npc_favor[spouse_id] = Family.add_spouse_favor(data, int(npc_favor.get(spouse_id, 0)), spouse_favor)
+	Karma.decay(player, data, Karma.decay_amount(data, age_before, player.age_days))
 	for injury_id in Injuries.pass_days(player, days):
 		EventBus.post("Your %s has healed." % Injuries.injury_name(data, injury_id), "progress")
 	for buff_name in Buffs.pass_days(player, days):

@@ -4,9 +4,14 @@ extends CanvasLayer
 
 const MAIN_MENU := "res://src/ui/main_menu.tscn"
 const MAX_LOG_LINES := 60
+## Lifespan cue thresholds (fraction of the lifespan left).
+const LIFESPAN_WARNING := 0.15
+const LIFESPAN_DANGER := 0.05
 
+var _age: Label
 var _status: Label
 var _qi_bar: ProgressBar
+var _bottleneck: Label
 var _injuries: Label
 var _log: RichTextLabel
 var _prompt: Label
@@ -20,6 +25,7 @@ var _encounter: EncounterWindow
 var _pause_menu: PauseMenu
 var _settings: SettingsScreen
 var _load_screen: LoadScreen
+var _help: HelpScreen
 var _crafting: CraftingScreen
 var _mission_board: MissionBoard
 var _banner: Banner
@@ -41,6 +47,7 @@ func _ready() -> void:
 	_add_screen("toggle_character_sheet", CharacterSheet.new())
 	_add_screen("toggle_inventory", InventoryScreen.new())
 	_add_screen("toggle_techniques", TechniquesScreen.new())
+	_add_screen("toggle_message_log", MessageLogScreen.new())
 	_add_screen("toggle_clan", ClanScreen.new())
 	_crafting = CraftingScreen.new()
 	_crafting.closed.connect(_update_modal)
@@ -69,6 +76,10 @@ func _ready() -> void:
 	_load_screen.slot_chosen.connect(_on_slot_chosen)
 	add_child(UIStyle.centered(_load_screen))
 	_pause_menu.load_requested.connect(_open_load)
+	_help = HelpScreen.new()
+	_help.closed.connect(_on_settings_closed)
+	add_child(UIStyle.centered(_help))
+	_pause_menu.help_requested.connect(_open_help)
 	_respawn = RespawnScreen.new()
 	_respawn.closed.connect(_update_modal)
 	add_child(UIStyle.centered(_respawn))
@@ -99,7 +110,7 @@ func _ready() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if _choice_menu.visible or _dialogue.visible or _encounter.visible or _combat_report.visible or _respawn.visible or _pause_menu.visible or _settings.visible or _load_screen.visible or _death_screen.visible:
+	if _choice_menu.visible or _dialogue.visible or _encounter.visible or _combat_report.visible or _respawn.visible or _pause_menu.visible or _settings.visible or _help.visible or _load_screen.visible or _death_screen.visible:
 		return
 	if event.is_action_pressed("pause_menu"):
 		# Consumed here so the world's own Esc handling never runs mid-session.
@@ -153,16 +164,21 @@ func _build_status_panel() -> void:
 	panel.position = Vector2(16, 16)
 	var box := VBoxContainer.new()
 	panel.add_child(box)
+	_age = UIStyle.label("", 15)
+	box.add_child(_age)
 	_status = UIStyle.label("", 15)
 	box.add_child(_status)
 	_qi_bar = ProgressBar.new()
 	_qi_bar.custom_minimum_size = Vector2(300, 14)
 	_qi_bar.show_percentage = false
 	box.add_child(_qi_bar)
+	_bottleneck = UIStyle.label("", 14, UIStyle.ACCENT)
+	_bottleneck.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	box.add_child(_bottleneck)
 	_injuries = UIStyle.label("", 14, UIStyle.CATEGORY_COLORS["danger"])
 	_injuries.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	box.add_child(_injuries)
-	box.add_child(UIStyle.label("[E] interact   [C] character   [I] inventory   [K] techniques   [L] clan   [F5] save   [Esc] pause", 12, Color(0.7, 0.7, 0.7)))
+	box.add_child(UIStyle.label("[E] interact   [C] character   [I] inventory   [K] techniques   [L] log   [G] clan   [F5] save   [Esc] pause", 12, Color(0.7, 0.7, 0.7)))
 	add_child(panel)
 
 
@@ -211,8 +227,14 @@ func _refresh() -> void:
 	if p == null:
 		return
 	var data := GameState.data
+	var lifespan := Cultivation.lifespan_years(p, data)
+	var years_left := Cultivation.years_left(p, data)
+	var age_cue := lifespan_category(years_left, lifespan)
+	_age.text = "%s   Age %d / %d" % [p.name, p.age_years(), lifespan]
+	if age_cue != "":
+		_age.text += "   (%d %s left)" % [years_left, "year" if years_left == 1 else "years"]
+	_age.add_theme_color_override("font_color", UIStyle.CATEGORY_COLORS.get(age_cue, Color.WHITE))
 	var lines: PackedStringArray = [
-		"%s   Age %d / %d" % [p.name, p.age_years(), Cultivation.lifespan_years(p, data)],
 		Cultivation.realm_label(p, data),
 		"Qi: %d / %d" % [int(p.qi), int(Cultivation.qi_required(p, data))],
 	]
@@ -227,8 +249,31 @@ func _refresh() -> void:
 	_status.text += "\n%s   (Qi x%s)" % [Exploration.region_name(data, GameState.current_region), String.num(density, 2)]
 	_qi_bar.max_value = maxf(Cultivation.qi_required(p, data), 1.0)
 	_qi_bar.value = p.qi
+	_bottleneck.text = bottleneck_hint(p, data)
+	_bottleneck.visible = _bottleneck.text != ""
+	_qi_bar.modulate = UIStyle.ACCENT if _bottleneck.visible else Color.WHITE
 	_injuries.visible = Injuries.has_any(p)
 	_injuries.text = "Injured: " + ", ".join(Injuries.describe(p, data))
+
+
+## Message category for the age line: "danger" or "warning" when little of
+## the lifespan is left, "" otherwise.
+static func lifespan_category(years_left: int, lifespan: int) -> String:
+	var fraction := float(years_left) / maxf(float(lifespan), 1.0)
+	if years_left <= 3 or fraction <= LIFESPAN_DANGER:
+		return "danger"
+	if fraction <= LIFESPAN_WARNING:
+		return "warning"
+	return ""
+
+
+## Hint under the qi bar once the character must break through ("" = none).
+static func bottleneck_hint(c: CharacterData, data: GameData) -> String:
+	if Cultivation.can_attempt_breakthrough(c, data):
+		return "Bottleneck! Attempt a breakthrough at a meditation spot (%d%% chance)." % int(Cultivation.breakthrough_chance(c, data) * 100)
+	if Cultivation.is_at_bottleneck(c, data):
+		return "You stand at the peak of the known realms."
+	return ""
 
 
 func _on_message(text: String, category: String) -> void:
@@ -243,7 +288,7 @@ func _on_target_changed(display_name: String) -> void:
 
 
 func _on_menu_requested(source: Node) -> void:
-	if _any_screen_open() or _dialogue.visible or _encounter.visible or _combat_report.visible or _respawn.visible or _pause_menu.visible or _settings.visible or _load_screen.visible or _death_screen.visible:
+	if _any_screen_open() or _dialogue.visible or _encounter.visible or _combat_report.visible or _respawn.visible or _pause_menu.visible or _settings.visible or _help.visible or _load_screen.visible or _death_screen.visible:
 		return
 	_choice_menu.open_for(source)
 	_update_modal()
@@ -258,6 +303,7 @@ func _on_player_died(cause: String) -> void:
 	_encounter.close()
 	_pause_menu.close()
 	_settings.close()
+	_help.close()
 	_load_screen.close()
 	(_death_screen.find_child("Cause", true, false) as Label).text = cause
 	_death_screen.visible = true
@@ -314,6 +360,12 @@ func _open_settings() -> void:
 	_settings.open()
 
 
+## Help replaces the pause menu while open, then returns to it.
+func _open_help() -> void:
+	_pause_menu.visible = false
+	_help.open()
+
+
 ## Load replaces the pause menu while open, then returns to it.
 func _open_load() -> void:
 	_pause_menu.visible = false
@@ -340,7 +392,7 @@ func _on_settings_closed() -> void:
 
 
 func _update_modal() -> void:
-	EventBus.ui_modal_changed.emit(_choice_menu.visible or _dialogue.visible or _encounter.visible or _any_screen_open() or _combat_report.visible or _respawn.visible or _pause_menu.visible or _settings.visible or _load_screen.visible or _death_screen.visible)
+	EventBus.ui_modal_changed.emit(_choice_menu.visible or _dialogue.visible or _encounter.visible or _any_screen_open() or _combat_report.visible or _respawn.visible or _pause_menu.visible or _settings.visible or _help.visible or _load_screen.visible or _death_screen.visible)
 
 
 func _return_to_menu() -> void:
