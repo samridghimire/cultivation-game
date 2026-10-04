@@ -22,6 +22,8 @@ signal crafting_requested(prof_id: String)
 signal shop_requested(merchant_name: String, max_price: int, stock_tags: Array, faction: String)
 ## The player opened their sect's mission board (sect hall); show the MissionBoard.
 signal mission_board_requested
+## An auction house place wants the AuctionScreen for `house_id` (AUC-001b).
+signal auction_requested(house_id: String)
 ## The player wants to direct their children's training; show the ChildTrainingScreen.
 signal child_training_requested
 ## A modal UI (menu, character sheet) opened or closed; world input should pause.

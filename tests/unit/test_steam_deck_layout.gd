@@ -88,11 +88,24 @@ func test_every_screen_fits_1280x800() -> void:
 	shop._set_tab(true)
 	await _assert_fits(shop, "shop (sell)")
 	shop.close()
+	var board: MissionBoard = hud.get("_mission_board")
+	board.open()
+	board._set_tab("rank")
+	await _assert_fits(board, "mission board (rank)")
+	board.close()
 	for name: String in ["_mission_board", "_child_training", "_pause_menu", "_settings", "_help", "_load_screen"]:
 		var screen: Control = hud.get(name)
 		screen.open()
 		await _assert_fits(screen, name)
 		screen.close()
+	var auction: Control = hud.get("_auction")
+	var clock: Node = root.get_node("GameClock")
+	var day: int = clock.total_days
+	clock.total_days = int(Auctions.house(gs.data, "fallen_star_auction")["offset_days"])
+	auction.open("fallen_star_auction")
+	await _assert_fits(auction, "auction")
+	auction.close()
+	clock.total_days = day
 	var report: Control = hud.get("_combat_report")
 	var lines := PackedStringArray()
 	for i in 80:

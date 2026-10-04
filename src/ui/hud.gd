@@ -30,6 +30,7 @@ var _help: HelpScreen
 var _crafting: CraftingScreen
 var _shop: ShopScreen
 var _mission_board: MissionBoard
+var _auction: AuctionScreen
 var _child_training: ChildTrainingScreen
 var _banner: Banner
 var _time_skip: TimeSkipOverlay
@@ -68,6 +69,9 @@ func _ready() -> void:
 	_mission_board = MissionBoard.new()
 	_mission_board.closed.connect(_update_modal)
 	add_child(UIStyle.centered(_mission_board))
+	_auction = AuctionScreen.new()
+	_auction.closed.connect(_update_modal)
+	add_child(UIStyle.centered(_auction))
 	_child_training = ChildTrainingScreen.new()
 	_child_training.closed.connect(_update_modal)
 	add_child(UIStyle.centered(_child_training))
@@ -121,6 +125,7 @@ func _ready() -> void:
 	EventBus.crafting_requested.connect(_on_crafting_requested)
 	EventBus.shop_requested.connect(_on_shop_requested)
 	EventBus.mission_board_requested.connect(_on_mission_board_requested)
+	EventBus.auction_requested.connect(_on_auction_requested)
 	EventBus.child_training_requested.connect(_on_child_training_requested)
 	EventBus.player_died.connect(_on_player_died)
 	EventBus.player_respawned.connect(func(_anchor_id: String, _lives: int): _open_pending_respawn())
@@ -177,6 +182,7 @@ func _close_screens() -> void:
 	_crafting.close()
 	_shop.close()
 	_mission_board.close()
+	_auction.close()
 	_child_training.close()
 
 
@@ -195,6 +201,11 @@ func _on_mission_board_requested() -> void:
 	_update_modal()
 
 
+func _on_auction_requested(house_id: String) -> void:
+	_auction.open(house_id)
+	_update_modal()
+
+
 func _on_child_training_requested() -> void:
 	_close_screens()
 	_child_training.open()
@@ -202,7 +213,7 @@ func _on_child_training_requested() -> void:
 
 
 func _any_screen_open() -> bool:
-	return _crafting.visible or _shop.visible or _mission_board.visible or _child_training.visible or _screens.values().any(func(s): return s.visible)
+	return _crafting.visible or _shop.visible or _mission_board.visible or _auction.visible or _child_training.visible or _screens.values().any(func(s): return s.visible)
 
 
 func _build_status_panel() -> void:
