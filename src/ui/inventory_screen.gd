@@ -204,6 +204,9 @@ func _show_details() -> void:
 	var array := Abodes.array_def(data, _selected) if _selected != "" else {}
 	if not array.is_empty():
 		lines.append("Gathering array: +%d%% qi density in seclusion once set up at your abode" % roundi(float(array.get("qi_density_bonus", 0.0)) * 100.0))
+	if _selected != "":
+		for line in Appraisal.describe_item(GameState.player, data, _selected):
+			lines.append("Appraisal: " + line)
 	var talisman := _selected != "" and CombatTalismans.is_combat_talisman(data, _selected)
 	if talisman:
 		lines.append_array(describe_talisman(GameState.player, data, _selected))
