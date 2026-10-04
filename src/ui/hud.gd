@@ -13,6 +13,7 @@ var _status: Label
 var _qi_bar: ProgressBar
 var _bottleneck: Label
 var _injuries: Label
+var _hint: Label
 var _log: RichTextLabel
 var _prompt: Label
 var _choice_menu: ChoiceMenu
@@ -28,8 +29,14 @@ var _load_screen: LoadScreen
 var _help: HelpScreen
 var _crafting: CraftingScreen
 var _mission_board: MissionBoard
+var _child_training: ChildTrainingScreen
 var _banner: Banner
+var _time_skip: TimeSkipOverlay
+## The time-skip summary on screen, kept across the scene reload that travel
+## triggers so the new HUD can finish showing it ({} = none).
+static var _showing_skip: Dictionary = {}
 var _respawn: RespawnScreen
+var _tribulation: TribulationScreen
 var _death_screen: Control
 
 
@@ -47,13 +54,19 @@ func _ready() -> void:
 	_add_screen("toggle_character_sheet", CharacterSheet.new())
 	_add_screen("toggle_inventory", InventoryScreen.new())
 	_add_screen("toggle_techniques", TechniquesScreen.new())
+	_add_screen("toggle_artifact", ArtifactScreen.new())
+	_add_screen("toggle_map", WorldMapScreen.new())
 	_add_screen("toggle_message_log", MessageLogScreen.new())
+	_add_screen("toggle_clan", ClanScreen.new())
 	_crafting = CraftingScreen.new()
 	_crafting.closed.connect(_update_modal)
 	add_child(UIStyle.centered(_crafting))
 	_mission_board = MissionBoard.new()
 	_mission_board.closed.connect(_update_modal)
 	add_child(UIStyle.centered(_mission_board))
+	_child_training = ChildTrainingScreen.new()
+	_child_training.closed.connect(_update_modal)
+	add_child(UIStyle.centered(_child_training))
 	_combat_report = CombatReport.new()
 	_combat_report.closed.connect(_update_modal)
 	add_child(UIStyle.centered(_combat_report))
@@ -83,33 +96,49 @@ func _ready() -> void:
 	_respawn.closed.connect(_update_modal)
 	add_child(UIStyle.centered(_respawn))
 	_combat_report.closed.connect(_open_pending_respawn)
+	_tribulation = TribulationScreen.new()
+	_tribulation.closed.connect(_update_modal)
+	_tribulation.closed.connect(_open_pending_respawn)
+	add_child(UIStyle.centered(_tribulation))
 	_banner = Banner.new()
 	add_child(_banner)
+	_time_skip = TimeSkipOverlay.new()
+	_time_skip.closed.connect(_on_time_skip_closed)
+	add_child(_time_skip)
 	_build_death_screen()
 
 	EventBus.player_changed.connect(_refresh)
 	EventBus.session_started.connect(_refresh)
 	EventBus.region_changed.connect(func(_id): _refresh())
 	EventBus.message_posted.connect(_on_message)
+	Settings.changed.connect(func(key: String, _v): if key == "show_hints": _refresh())
 	EventBus.interaction_target_changed.connect(_on_target_changed)
 	EventBus.interaction_menu_requested.connect(_on_menu_requested)
 	EventBus.crafting_requested.connect(_on_crafting_requested)
 	EventBus.mission_board_requested.connect(_on_mission_board_requested)
+	EventBus.child_training_requested.connect(_on_child_training_requested)
 	EventBus.player_died.connect(_on_player_died)
 	EventBus.player_respawned.connect(func(_anchor_id: String, _lives: int): _open_pending_respawn())
 	EventBus.combat_finished.connect(_on_combat_finished)
+	EventBus.tribulation_prepare_requested.connect(_on_tribulation_prepare)
+	EventBus.tribulation_endured.connect(_on_tribulation_endured)
 	EventBus.breakthrough_attempted.connect(_on_breakthrough)
 	EventBus.dialogue_requested.connect(_on_dialogue_requested)
 	EventBus.dialogue_ended.connect(func(_id): _dialogue.close())
 	EventBus.encounter_choice_requested.connect(_on_encounter_choice_requested)
 	EventBus.encounter_choice_resolved.connect(_encounter.close)
+	EventBus.time_skipped.connect(_on_time_skipped)
 	_refresh()
 	# A respawn that moved the player reloads the world; ask where to awaken now.
 	_open_pending_respawn.call_deferred()
+	# A fresh character opens with the artifact's intro event (ART-006b).
+	GameState.start_pending_event.call_deferred()
+	if not _showing_skip.is_empty():
+		_show_time_skip.call_deferred(_showing_skip)
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if _choice_menu.visible or _dialogue.visible or _encounter.visible or _combat_report.visible or _respawn.visible or _pause_menu.visible or _settings.visible or _help.visible or _load_screen.visible or _death_screen.visible:
+	if _choice_menu.visible or _dialogue.visible or _encounter.visible or _combat_report.visible or _tribulation.visible or _respawn.visible or _pause_menu.visible or _settings.visible or _help.visible or _load_screen.visible or _death_screen.visible:
 		return
 	if event.is_action_pressed("pause_menu"):
 		# Consumed here so the world's own Esc handling never runs mid-session.
@@ -142,6 +171,7 @@ func _close_screens() -> void:
 		screen.close()
 	_crafting.close()
 	_mission_board.close()
+	_child_training.close()
 
 
 func _on_crafting_requested(prof_id: String) -> void:
@@ -154,8 +184,14 @@ func _on_mission_board_requested() -> void:
 	_update_modal()
 
 
+func _on_child_training_requested() -> void:
+	_close_screens()
+	_child_training.open()
+	_update_modal()
+
+
 func _any_screen_open() -> bool:
-	return _crafting.visible or _mission_board.visible or _screens.values().any(func(s): return s.visible)
+	return _crafting.visible or _mission_board.visible or _child_training.visible or _screens.values().any(func(s): return s.visible)
 
 
 func _build_status_panel() -> void:
@@ -177,7 +213,11 @@ func _build_status_panel() -> void:
 	_injuries = UIStyle.label("", 14, UIStyle.CATEGORY_COLORS["danger"])
 	_injuries.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	box.add_child(_injuries)
-	box.add_child(UIStyle.label("[E] interact   [C] character   [I] inventory   [K] techniques   [L] log   [F5] save   [Esc] pause", 12, Color(0.7, 0.7, 0.7)))
+	_hint = UIStyle.label("", 14, Color("9fd3c7"))
+	_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_hint.custom_minimum_size = Vector2(316, 0)
+	box.add_child(_hint)
+	box.add_child(UIStyle.label("[E] interact   [C] character   [I] inventory   [K] techniques   [M] map   [L] log   [O] artifact   [G] clan   [F5] save   [Esc] pause", 12, Color(0.7, 0.7, 0.7)))
 	add_child(panel)
 
 
@@ -253,6 +293,9 @@ func _refresh() -> void:
 	_qi_bar.modulate = UIStyle.ACCENT if _bottleneck.visible else Color.WHITE
 	_injuries.visible = Injuries.has_any(p)
 	_injuries.text = "Injured: " + ", ".join(Injuries.describe(p, data))
+	var hints := Guidance.hints(p, data, density * Sects.cultivation_bonus(p, data), 1)
+	_hint.visible = bool(Settings.get_value("show_hints")) and not hints.is_empty()
+	_hint.text = "Next: " + hints[0] if not hints.is_empty() else ""
 
 
 ## Message category for the age line: "danger" or "warning" when little of
@@ -287,7 +330,7 @@ func _on_target_changed(display_name: String) -> void:
 
 
 func _on_menu_requested(source: Node) -> void:
-	if _any_screen_open() or _dialogue.visible or _encounter.visible or _combat_report.visible or _respawn.visible or _pause_menu.visible or _settings.visible or _help.visible or _load_screen.visible or _death_screen.visible:
+	if _any_screen_open() or _dialogue.visible or _encounter.visible or _combat_report.visible or _tribulation.visible or _respawn.visible or _pause_menu.visible or _settings.visible or _help.visible or _load_screen.visible or _death_screen.visible:
 		return
 	_choice_menu.open_for(source)
 	_update_modal()
@@ -298,12 +341,14 @@ func _on_player_died(cause: String) -> void:
 	_close_screens()
 	_combat_report.close()
 	_respawn.close()
+	_tribulation.close()
 	_dialogue.close()
 	_encounter.close()
 	_pause_menu.close()
 	_settings.close()
 	_help.close()
 	_load_screen.close()
+	_time_skip.close()
 	(_death_screen.find_child("Cause", true, false) as Label).text = cause
 	_death_screen.visible = true
 	_death_screen.find_children("*", "Button", true, false)[0].grab_focus()
@@ -319,10 +364,26 @@ func _on_combat_finished(enemy_name: String, victory: bool, lines: PackedStringA
 	_update_modal()
 
 
+## A breakthrough would bring a Heavenly Tribulation: warn before attempting.
+func _on_tribulation_prepare() -> void:
+	_choice_menu.close()
+	_close_screens()
+	_tribulation.open_prepare()
+	_update_modal()
+
+
+## Play the tribulation's waves; a respawn (if it killed) waits until it closes.
+func _on_tribulation_endured(realm_name: String, result: Dictionary) -> void:
+	_choice_menu.close()
+	_close_screens()
+	_tribulation.show_result(realm_name, result)
+	_update_modal()
+
+
 ## The artifact saved the player: once the fight report is read, let them
 ## choose which anchor to awaken at.
 func _open_pending_respawn() -> void:
-	if GameState.pending_respawn.is_empty() or _combat_report.visible or _death_screen.visible:
+	if GameState.pending_respawn.is_empty() or _combat_report.visible or _tribulation.visible or _death_screen.visible:
 		return
 	_choice_menu.close()
 	_close_screens()
@@ -343,6 +404,27 @@ func _on_encounter_choice_requested(_encounter_id: String) -> void:
 	_choice_menu.close()
 	_close_screens()
 	_encounter.open()
+	_update_modal()
+
+
+## A long action skipped time: show the overlay unless fast skips are on or
+## another window (combat report, encounter, death...) has taken the screen.
+func _on_time_skipped(days: int, summary: Dictionary) -> void:
+	if not TimeSkip.should_show(days, Settings.get_value("fast_time_skips")):
+		return
+	if _combat_report.visible or _encounter.visible or _dialogue.visible or _respawn.visible or _death_screen.visible:
+		return
+	_show_time_skip(summary)
+
+
+func _show_time_skip(summary: Dictionary) -> void:
+	_showing_skip = summary
+	_time_skip.show_skip(summary)
+	_update_modal()
+
+
+func _on_time_skip_closed() -> void:
+	_showing_skip = {}
 	_update_modal()
 
 
@@ -391,9 +473,10 @@ func _on_settings_closed() -> void:
 
 
 func _update_modal() -> void:
-	EventBus.ui_modal_changed.emit(_choice_menu.visible or _dialogue.visible or _encounter.visible or _any_screen_open() or _combat_report.visible or _respawn.visible or _pause_menu.visible or _settings.visible or _help.visible or _load_screen.visible or _death_screen.visible)
+	EventBus.ui_modal_changed.emit(_choice_menu.visible or _dialogue.visible or _encounter.visible or _any_screen_open() or _combat_report.visible or _tribulation.visible or _respawn.visible or _pause_menu.visible or _settings.visible or _help.visible or _load_screen.visible or _death_screen.visible or _time_skip.visible)
 
 
 func _return_to_menu() -> void:
+	_showing_skip = {}
 	GameState.end_session()
 	get_tree().change_scene_to_file(MAIN_MENU)

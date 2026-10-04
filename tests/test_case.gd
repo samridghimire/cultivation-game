@@ -15,6 +15,15 @@ func data() -> GameData:
 	return _data
 
 
+## Every outcome effects dictionary of `encounter`: its own effects, then each
+## choice's effects (W-004c), so content audits see choice rewards too.
+func encounter_outcomes(encounter: Dictionary) -> Array[Dictionary]:
+	var out: Array[Dictionary] = [encounter.get("effects", {})]
+	for choice: Dictionary in encounter.get("choices", []):
+		out.append(choice.get("effects", {}))
+	return out
+
+
 func seeded_rng(seed_value: int = 12345) -> RandomNumberGenerator:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = seed_value

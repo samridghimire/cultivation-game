@@ -18,7 +18,9 @@ extends RefCounted
 ##   npc_alive: bool                      above_npc: bool (player realm > NPC realm)
 ##
 ## `ctx` everywhere is {player: CharacterData, npc: CharacterData, data: GameData,
-## flags: Dictionary, favor: int}.
+## flags: Dictionary, favor: int}. `npc` is null for a story event (a dialogue
+## not bound to an NPC, ART-006b): nodes name their own "speaker" and choice
+## "favor" is ignored.
 
 const END := "end"
 
@@ -72,7 +74,7 @@ static func choose(dialogue: Dictionary, node_id: String, index: int, ctx: Dicti
 	var effects: Dictionary = choice.get("effects", {})
 	if not effects.is_empty():
 		notes = Effects.apply(ctx["player"], ctx["data"], effects, ctx["flags"])
-	var favor := int(choice.get("favor", 0))
+	var favor := int(choice.get("favor", 0)) if ctx["npc"] != null else 0
 	if favor != 0:
 		notes.append("%s's favor %+d" % [(ctx["npc"] as CharacterData).name, favor])
 	var next: String = choice.get("next", "")
