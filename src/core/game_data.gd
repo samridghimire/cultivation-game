@@ -73,6 +73,7 @@ var sect_missions: Dictionary = {}  # id -> Dictionary (data/sect_missions.json)
 var help_pages: Array = []
 ## Input action id -> display name for the help screen's Controls page.
 var help_action_names: Dictionary = {}
+var secret_realms: Dictionary = {}  # id -> Dictionary (data/secret_realms.json, SecretRealms)
 ## Problems found while loading. Empty when all data files are valid.
 var load_errors: PackedStringArray = []
 
@@ -223,6 +224,8 @@ func _load(dir: String) -> void:
 	help_pages = help.get("pages", [])
 	help_action_names = help.get("action_names", {})
 
+	for secret_realm in _read(dir, "secret_realms.json").get("realms", []):
+		secret_realms[secret_realm["id"]] = secret_realm
 	_validate()
 
 
@@ -253,6 +256,8 @@ func _validate() -> void:
 			load_errors.append("Sect '%s' has unknown min_realm '%s'" % [def.id, def.min_realm])
 		if def.ranks.is_empty():
 			load_errors.append("Sect '%s' has no ranks" % def.id)
+		if def.robe_color != "" and not Color.html_is_valid(def.robe_color):
+			load_errors.append("Sect '%s' has an invalid robe_color '%s'" % [def.id, def.robe_color])
 		for prof_id in def.favored_professions:
 			if not professions.has(prof_id):
 				load_errors.append("Sect '%s' favors unknown profession '%s'" % [def.id, prof_id])
@@ -271,6 +276,7 @@ func _validate() -> void:
 	load_errors.append_array(Abodes.validate(self))
 	load_errors.append_array(ArtifactFunctions.validate(self))
 	load_errors.append_array(Karma.validate(self))
+	load_errors.append_array(SecretRealms.validate(self))
 	load_errors.append_array(Children.validate(self))
 	load_errors.append_array(NpcFamilies.validate(self))
 	load_errors.append_array(Training.validate(self))
@@ -440,6 +446,9 @@ func _validate_artifact() -> void:
 
 
 func _validate_recipes() -> void:
+	var markup: Variant = alchemy.get("crafted_sell_markup", 1.3)
+	if not (markup is float or markup is int) or float(markup) < 1.0:
+		load_errors.append("recipes.json alchemy.crafted_sell_markup must be a number >= 1")
 	for recipe: Dictionary in recipes.values():
 		var id: String = recipe["id"]
 		if not professions.has(recipe.get("profession", "")):

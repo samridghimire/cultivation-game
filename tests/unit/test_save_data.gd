@@ -75,6 +75,7 @@ func test_every_character_field_survives_a_save() -> void:
 	c.artifact_storage = {"spirit_stone": 12}
 	c.reputation = {"azure_cloud_sect": 150}
 	c.abode_storage = {"iron_ore": 4}
+	c.secret_realms = {"verdant_remnant": {"opening": 2, "floor": 1}}
 	c.grudges = {"npc_test_victim": 40}
 	c.gratitude = {"npc_test_friend": 25}
 	c.dao = {"sword_dao": {"level": 2, "progress": 30.5}}

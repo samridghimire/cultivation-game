@@ -352,6 +352,37 @@ func explore(tags: Array = []) -> void:
 	fight(result["enemy"])
 
 
+## Delve one floor deeper into an open secret realm in the current region
+## (data/secret_realms.json): pay the entry cost once per opening, beat the
+## floor's guardian, then claim one of its treasures. Losing drives you out.
+func enter_secret_realm(realm_id: String) -> void:
+	if not _can_act():
+		return
+	var today: int = GameClock.total_days
+	var reason := SecretRealms.check_enter(player, data, realm_id, current_region, today)
+	if reason != "":
+		EventBus.post(reason, "warning")
+		EventBus.player_changed.emit()
+		return
+	var def := SecretRealms.realm(data, realm_id)
+	var cost := SecretRealms.pay_entry(player, def, today)
+	if cost > 0:
+		EventBus.post("You pour %d spirit stones into the barrier of the %s and slip inside." % [cost, def["name"]], "info")
+	var floor_def := SecretRealms.next_floor(player, def, today)
+	EventBus.post("%s: %s" % [floor_def.get("name", ""), floor_def.get("text", "")], "info")
+	var guardian := String(floor_def.get("guardian", ""))
+	if guardian != "" and not fight_enemy(data.enemies[guardian]):
+		if _can_act():
+			EventBus.post("You are driven out of the %s." % def["name"], "warning")
+		return
+	var result := SecretRealms.claim_floor(player, data, realm_id, today, world_flags, rng)
+	var notes: PackedStringArray = result["notes"]
+	EventBus.post("You claim the treasure of the %s. (%s)" % [result["floor_name"], ", ".join(notes)], "progress")
+	if result["last"]:
+		EventBus.post("You have plundered every floor of the %s." % def["name"], "progress")
+	_pass_time(result["days"])
+
+
 ## The pending encounter's choices for the UI: [{index, label, disabled, reason}]
 ## ([] when no encounter is waiting).
 func encounter_choices() -> Array[Dictionary]:

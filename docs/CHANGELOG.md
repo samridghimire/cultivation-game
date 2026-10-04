@@ -3,6 +3,12 @@
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
 - 2026-10-04 [QA-20261004-1] Fixed a flaky Dao test (it depended on the shared GameState rng) that turned main red after unrelated tests were added.
+- 2026-10-03 [VIS-001] The player is drawn as a robed cultivator facing where they walk: sect-colored robe (sects.json robe_color), alignment-colored sash and qi aura rings that grow with the realm.
+- 2026-10-04 [QA-006] Economy sim (tests/sim/simulate_economy.gd): profession income vs breakthrough pills and artifact recharges across whole lives; findings in BACKLOG (ART-007, QA-006b) and a DESIGN.md question on recharge costs.
+- 2026-10-04 [QA-004] Obtainability audit test: fails if any item or recipe in the data cannot be bought, gathered, looted, rewarded or crafted in play (explicit allowlist with task ids for intentional exceptions).
+- 2026-10-03 [G-005e] Crafted goods (talismans, forged gear) now sell back for at most 1.3x their material cost (still capped at half price), so buying materials to inscribe and resell talismans is a modest trade instead of a money press.
+- 2026-10-03 [QA-003] Save compatibility fixtures: an oldest-format (F-000) and a current-format save in tests/fixtures/saves/ are loaded through SaveManager in tests; every missing field must load as its default and no saved field may be dropped.
+- 2026-10-03 [W-005] Secret realms: the Verdant Remnant (Misty Forest, Qi Refining) and Sunken Sword Tomb (Azure Peak, Foundation to Core Formation) open for a few months every 5/10 years; pay an entry fee once per opening, beat each floor's guardian and claim a random treasure (GameState.enter_secret_realm). Entrance UI follows in W-005b.
 - 2026-10-03 [RIV-001] Grudges and gratitude: humiliate, rob or kill adult NPCs (GameState.hostile_act, fights via Karma.npc_enemy), victims and their living kin hold grudges that fade over years, make amends with spirit stones (GameState.make_amends). Rules in data/karma.json; saved on CharacterData.
 - 2026-10-03 [C-005] New region: the Withered Bone Marsh, a drowned ancient battlefield thick with yin qi (Qi Refining to enter), with two anchors, a bog to gather in, a herb/ore buyer and 12 marsh encounters (bury or rob the dead, refine or purify a blood pool, corpse refiners, a blood-robed hunter).
 - 2026-10-03 [C-001] Generated adult NPCs can now be talked to (generic_cultivator dialogue): tea and chat, gifts, sparring, guarding their seclusion, rumors, and for darker players extortion; talk alone raises favor up to the courtship threshold.

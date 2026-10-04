@@ -113,6 +113,7 @@ func test_game_state_contemplate_and_practice() -> void:
 	assert_eq(clock.total_days, days_before)
 	Dao.gain_levels(c, gs.data, "fire_dao")
 	c.attributes["comprehension"] = 1000
+	gs.rng.seed = 7  # the check still fails 5% of the time; keep the outcome independent of earlier tests
 	gs.contemplate_dao("fire_dao", 365)
 	assert_eq(clock.total_days, days_before + 365)
 	assert_gt(Dao.level(c, "fire_dao"), 1)
