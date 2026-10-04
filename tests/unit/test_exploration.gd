@@ -103,3 +103,40 @@ func test_every_encounter_enemy_exists() -> void:
 	for e: Dictionary in data().encounters.values():
 		if e.has("enemy"):
 			assert_true(data().enemies.has(e["enemy"]), e["id"])
+
+
+func test_encounter_alignment_bounds() -> void:
+	var c := new_character()
+	c.realm_index = data().realm_index_of("foundation_establishment")
+	var ids := func() -> Array:
+		return Exploration.eligible_encounters(c, data(), ["city"], {}).map(func(e): return e["encounter"]["id"])
+	c.alignment = 0
+	assert_false(ids.call().has("city_righteous_enforcer"), "enforcers leave neutral cultivators alone")
+	c.alignment = -200
+	assert_true(ids.call().has("city_righteous_enforcer"), "max_alignment is inclusive")
+	c.alignment = -800
+	assert_true(ids.call().has("city_righteous_enforcer"))
+	var entry := {"min_alignment": 100, "max_alignment": 300}
+	c.alignment = 99
+	assert_false(Exploration.alignment_allows(c, entry))
+	c.alignment = 100
+	assert_true(Exploration.alignment_allows(c, entry))
+	c.alignment = 301
+	assert_false(Exploration.alignment_allows(c, entry))
+	assert_true(Exploration.alignment_allows(c, {}))
+
+
+func test_encounter_alignment_validation() -> void:
+	var d := GameData.new()
+	d.realms = data().realms
+	d.items = data().items
+	d.enemies = data().enemies
+	d.encounters = {
+		"ok": {"id": "ok", "min_alignment": -1000, "max_alignment": 0},
+		"swapped": {"id": "swapped", "min_alignment": 200, "max_alignment": -200},
+		"out": {"id": "out", "max_alignment": 5000},
+		"text": {"id": "text", "min_alignment": "evil"},
+		"choice": {"id": "choice", "choices": [{"label": "a", "requires": {"min_alignment": 1.5}}, {"label": "b"}]},
+	}
+	var errors := Exploration.validate_choices(d)
+	assert_eq(errors.size(), 4, str(errors))
