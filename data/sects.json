@@ -18,7 +18,7 @@
       "min_alignment": -100, "max_alignment": 1000, "min_realm": "qi_refining", "cultivation_bonus": 1.5,
       "favored_professions": ["alchemist", "array_master"],
       "reputation": {"min_join": -100, "deed_scale": 1.0},
-      "shop": [{"item_id": "qi_gathering_pill", "contribution": 15, "min_rank": 0}, {"item_id": "superior_qi_gathering_pill", "contribution": 40, "min_rank": 0}, {"item_id": "meridian_mending_pill", "contribution": 100, "min_rank": 0}, {"item_id": "recipe_clear_heart_pill", "contribution": 80, "min_rank": 0}, {"item_id": "manual_flowing_water", "contribution": 200, "min_rank": 1}, {"item_id": "foundation_establishment_pill", "contribution": 250, "min_rank": 1}, {"item_id": "recipe_foundation_establishment_pill", "contribution": 400, "min_rank": 2}],
+      "shop": [{"item_id": "qi_gathering_pill", "contribution": 15, "min_rank": 0}, {"item_id": "superior_qi_gathering_pill", "contribution": 40, "min_rank": 0}, {"item_id": "meridian_mending_pill", "contribution": 100, "min_rank": 0}, {"item_id": "recipe_clear_heart_pill", "contribution": 80, "min_rank": 0}, {"item_id": "manual_flowing_water", "contribution": 200, "min_rank": 1}, {"item_id": "foundation_establishment_pill", "contribution": 250, "min_rank": 1}, {"item_id": "recipe_foundation_establishment_pill", "contribution": 400, "min_rank": 2}, {"item_id": "manual_azure_cloud_heart", "contribution": 700, "min_rank": 1}],
       "ranks": [
         {"name": "Outer Disciple", "contribution": 0},
         {"name": "Inner Disciple", "contribution": 500},
@@ -32,7 +32,7 @@
       "min_alignment": -1000, "max_alignment": 0, "min_realm": "mortal", "cultivation_bonus": 1.4,
       "favored_professions": ["talisman_master", "beast_tamer"],
       "reputation": {"min_join": -300, "deed_scale": -0.5},
-      "shop": [{"item_id": "qi_gathering_pill", "contribution": 15, "min_rank": 0}, {"item_id": "blood_essence_pill", "contribution": 100, "min_rank": 0}, {"item_id": "blood_demon_pill", "contribution": 120, "min_rank": 0}, {"item_id": "recipe_blood_demon_pill", "contribution": 90, "min_rank": 0}, {"item_id": "manual_blood_shadow_flight", "contribution": 80, "min_rank": 1}, {"item_id": "foundation_establishment_pill", "contribution": 250, "min_rank": 1}],
+      "shop": [{"item_id": "qi_gathering_pill", "contribution": 15, "min_rank": 0}, {"item_id": "blood_essence_pill", "contribution": 100, "min_rank": 0}, {"item_id": "blood_demon_pill", "contribution": 120, "min_rank": 0}, {"item_id": "recipe_blood_demon_pill", "contribution": 90, "min_rank": 0}, {"item_id": "manual_blood_shadow_flight", "contribution": 80, "min_rank": 1}, {"item_id": "foundation_establishment_pill", "contribution": 250, "min_rank": 1}, {"item_id": "manual_blood_lotus_rebirth", "contribution": 600, "min_rank": 1}],
       "ranks": [
         {"name": "Blood Servant", "contribution": 0},
         {"name": "Blood Disciple", "contribution": 400},
@@ -46,7 +46,7 @@
       "min_alignment": -500, "max_alignment": 1000, "min_realm": "qi_refining", "cultivation_bonus": 1.2,
       "favored_professions": ["blacksmith", "alchemist", "doctor"],
       "reputation": {"min_join": -400, "deed_scale": 0.25},
-      "shop": [{"item_id": "qi_gathering_pill", "contribution": 12, "min_rank": 0}, {"item_id": "spirit_gathering_pill", "contribution": 80, "min_rank": 0}, {"item_id": "recipe_spirit_gathering_pill", "contribution": 100, "min_rank": 0}, {"item_id": "manual_wind_step", "contribution": 160, "min_rank": 0}, {"item_id": "cold_iron_saber", "contribution": 200, "min_rank": 1}, {"item_id": "foundation_establishment_pill", "contribution": 260, "min_rank": 1}, {"item_id": "recipe_meridian_rebuilding_pill", "contribution": 280, "min_rank": 1}],
+      "shop": [{"item_id": "qi_gathering_pill", "contribution": 12, "min_rank": 0}, {"item_id": "spirit_gathering_pill", "contribution": 80, "min_rank": 0}, {"item_id": "recipe_spirit_gathering_pill", "contribution": 100, "min_rank": 0}, {"item_id": "manual_wind_step", "contribution": 160, "min_rank": 0}, {"item_id": "cold_iron_saber", "contribution": 200, "min_rank": 1}, {"item_id": "foundation_establishment_pill", "contribution": 260, "min_rank": 1}, {"item_id": "recipe_meridian_rebuilding_pill", "contribution": 280, "min_rank": 1}, {"item_id": "manual_golden_abacus", "contribution": 650, "min_rank": 1}],
       "ranks": [
         {"name": "Junior Steward", "contribution": 0},
         {"name": "Steward", "contribution": 600},
