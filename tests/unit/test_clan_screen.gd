@@ -133,3 +133,61 @@ func test_hud_registers_clan_screen_on_its_action() -> void:
 	_root().add_child(hud)
 	assert_true(hud._screens.get("toggle_clan") is ClanScreen)
 	hud.free()
+
+
+## FAM-008b: the heir is named in the summary and marked in the list, and a
+## descendant member can be named heir.
+func test_heir_shown_and_designated() -> void:
+	var gs := _root().get_node("GameState")
+	gs.start_session(_founder())
+	gs.found_clan()
+	var kids: Array = []
+	for i in 2:
+		var kid := Npcs.spawn(gs.npcs, gs.data, seeded_rng(30 + i), {"age_years": 18 - i * 4, "region": gs.current_region, "gender": "male"})
+		kid.parents = [gs.player.id] as Array[String]
+		gs.player.children.append(kid.id)
+		gs.clan.members[kid.id] = "core"
+		kids.append(kid)
+	var screen := ClanScreen.new()
+	screen.open()
+	var eldest: CharacterData = kids[0]
+	var younger: CharacterData = kids[1]
+	assert_true(screen._summary.text.contains("%s: %s" % [Clans.heir_title(gs.data), eldest.name]), screen._summary.text)
+	assert_true((screen._list.get_node("m_" + eldest.id) as Button).text.contains("(%s)" % Clans.heir_title(gs.data, "male")))
+	screen._select("m:" + younger.id)
+	var name_heir := _button(screen, "Name as")
+	assert_true(name_heir != null and not name_heir.disabled, "a descendant can be named heir")
+	name_heir.pressed.emit()
+	assert_eq(gs.clan.heir, younger.id)
+	assert_true(screen._summary.text.contains(younger.name), screen._summary.text)
+	screen._select("m:" + younger.id)
+	assert_true(_button(screen, "Name as").disabled, "already the heir")
+	screen.free()
+	gs.end_session()
+
+
+## FAM-006b: the Estate section lists buildings and starts construction.
+func test_estate_section_builds() -> void:
+	var gs := _root().get_node("GameState")
+	gs.start_session(_founder())
+	gs.found_clan()
+	var screen := ClanScreen.new()
+	screen.open()
+	var building_id: String = ClanEstate.building_ids(gs.data)[0]
+	var row := screen._list.get_node("b_" + building_id) as Button
+	assert_true(row != null and row.text.contains("(not built)"), row.text if row != null else "no row")
+	screen._select("b:" + building_id)
+	assert_true(screen._info.text.contains("Costs "), screen._info.text)
+	var build := _button(screen, "Build")
+	assert_true(build != null and build.disabled, "the treasury is empty")
+	gs.clan.treasury = 100000
+	screen._rebuild()
+	screen._select("b:" + building_id)
+	build = _button(screen, "Build")
+	assert_false(build.disabled, screen._status.text)
+	build.pressed.emit()
+	assert_eq(String(gs.clan.construction.get("building", "")), building_id)
+	assert_true(screen._summary.text.contains("Builders: "), screen._summary.text)
+	assert_true((screen._list.get_node("b_" + building_id) as Button).text.contains("[building]"))
+	screen.free()
+	gs.end_session()

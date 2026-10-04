@@ -4,7 +4,10 @@ extends PanelContainer
 ## requirements and a "Found the <Surname> Clan" button (Clans.check_found
 ## reason when unavailable). With a clan: treasury and deposits, members by
 ## rank on the left with rank changes, and people in the current region who
-## could be recruited as retainers. Rules live in Clans / GameState.
+## could be recruited as retainers. The heir (Clans.heir, FAM-008b) is named in
+## the summary and marked in the list; descendant members can be named heir.
+## The Estate section (FAM-006b) lists buildings with their level, effects and
+## a build/upgrade action (ClanEstate). Rules live in Clans / ClanEstate / GameState.
 
 signal closed
 
@@ -24,7 +27,8 @@ var _info: Label
 var _status: Label
 var _actions: VBoxContainer
 var _close_button: Button
-## "m:<id>" for a member, "r:<id>" for a recruit candidate, or "".
+## "m:<id>" for a member, "r:<id>" for a recruit candidate, "b:<id>" for an
+## estate building, or "".
 var _selected := ""
 
 
@@ -146,6 +150,41 @@ static func recruit_candidates(clan: ClanData, people: Dictionary, data: GameDat
 	return out
 
 
+## "Spirit Field  2/3" (or "not built").
+static func building_label(clan: ClanData, data: GameData, building_id: String) -> String:
+	var lvl := ClanEstate.level(clan, building_id)
+	var text := ClanEstate.building_name(data, building_id)
+	text += "  %d/%d" % [lvl, ClanEstate.max_level(data, building_id)] if lvl > 0 else "  (not built)"
+	if String(clan.construction.get("building", "")) == building_id:
+		text += "  [building]"
+	return text
+
+
+## "Builders: Spirit Field level 2, 40 days left" or "No construction under way."
+static func construction_text(clan: ClanData, data: GameData) -> String:
+	if clan.construction.is_empty():
+		return "No construction under way."
+	return "Builders: %s level %d, %s left" % [ClanEstate.building_name(data, String(clan.construction.get("building", ""))), int(clan.construction.get("level", 1)), Calendar.format_duration(maxi(0, int(clan.construction.get("days_left", 0))))]
+
+
+## Detail lines for a building: description, current effects and the next level.
+static func building_lines(clan: ClanData, data: GameData, building_id: String) -> PackedStringArray:
+	var lines: PackedStringArray = [String(data.clan_buildings.get(building_id, {}).get("description", ""))]
+	var lvl := ClanEstate.level(clan, building_id)
+	if lvl > 0:
+		lines.append("Level %d: %s" % [lvl, ", ".join(ClanEstate.describe_effects(data, building_id, lvl))])
+	var next := ClanEstate.level_def(data, building_id, lvl + 1)
+	if next.is_empty():
+		lines.append("Fully built.")
+	else:
+		lines.append("Level %d: %s" % [lvl + 1, ", ".join(ClanEstate.describe_effects(data, building_id, lvl + 1))])
+		var cost := "%d spirit stones, %s" % [int(next.get("cost", 0)), Calendar.format_duration(int(next.get("build_days", 0)))]
+		if next.has("min_realm"):
+			cost += ", head of %s" % data.realms[data.realm_index_of(String(next["min_realm"]))].name
+		lines.append("Costs %s." % cost)
+	return lines
+
+
 static func _person_name(id: String, people: Dictionary) -> String:
 	var c: CharacterData = people.get(id)
 	return c.name if c != null else id
@@ -182,6 +221,11 @@ func _rebuild() -> void:
 		Calendar.format_date(clan.founded_day), clan.members.size(), clan.treasury, p.item_count("spirit_stone")]
 	var seat := Clans.seat_name(clan, data)
 	_summary.text += "\nSeat: %s" % (seat if seat != "" else "none (claim an abode to give the clan a seat)")
+	var people_all := GameState.npcs.duplicate()
+	people_all[p.id] = p
+	var heir_id := Clans.heir(clan, p, people_all, data)
+	_summary.text += "   |   %s: %s" % [Clans.heir_title(data), _person_name(heir_id, people_all) if heir_id != "" else "none yet"]
+	_summary.text += "\n" + construction_text(clan, data)
 	for b: Button in _deposit_box.get_children():
 		b.disabled = p.item_count("spirit_stone") < int(String(b.name).trim_prefix("Deposit"))
 
@@ -192,6 +236,8 @@ func _rebuild() -> void:
 	for member_id in sorted_members(clan, people, data):
 		var member := _person(member_id)
 		var label := "%s  -  %s" % [_person_name(member_id, people), Clans.rank_name(data, String(clan.members[member_id]), member.gender if member != null else "")]
+		if member_id == heir_id:
+			label += "  (%s)" % Clans.heir_title(data, member.gender if member != null else "")
 		keys.append("m:" + member_id)
 		_list.add_child(_entry(label, "m:" + member_id, false))
 	var candidates := recruit_candidates(clan, GameState.npcs, data, GameState.current_region)
@@ -202,6 +248,10 @@ func _rebuild() -> void:
 		var reason := Clans.check_recruit(p, clan, c, int(GameState.npc_favor.get(c.id, 0)), data)
 		keys.append("r:" + c.id)
 		_list.add_child(_entry(c.name, "r:" + c.id, reason != ""))
+	_list.add_child(UIStyle.label("Estate", 16, Color(0.75, 0.75, 0.75)))
+	for building_id in ClanEstate.building_ids(data):
+		keys.append("b:" + building_id)
+		_list.add_child(_entry(building_label(clan, data, building_id), "b:" + building_id, ClanEstate.check_build(p, clan, building_id, data) != ""))
 	if not keys.has(_selected):
 		_selected = keys[0] if not keys.is_empty() else ""
 	for b in _list.get_children():
@@ -244,6 +294,9 @@ func _show_details() -> void:
 		_actions.remove_child(child)
 		child.queue_free()
 	var id := _selected.substr(2)
+	if _selected.begins_with("b:") and clan != null:
+		_show_building(id)
+		return
 	var person := _person(id) if _selected != "" else null
 	for c in [_name, _info, _status]:
 		c.visible = person != null
@@ -264,6 +317,16 @@ func _show_details() -> void:
 			_status.text = "The head of the clan."
 			return
 		var reasons: PackedStringArray = []
+		var people := GameState.npcs.duplicate()
+		people[p.id] = p
+		if Clans.descendants(p, people).has(id):
+			var heir_reason := Clans.check_designate(p, clan, person, people)
+			var heir_button := UIStyle.button("Name as %s" % Clans.heir_title(data, person.gender), _designate.bind(id))
+			heir_button.name = "NameHeir"
+			heir_button.disabled = heir_reason != ""
+			_actions.add_child(heir_button)
+			if heir_reason != "":
+				reasons.append(heir_reason)
 		for rank_id in Clans.ranks(data):
 			if rank_id == Clans.head_rank(data) or rank_id == String(clan.members[id]):
 				continue
@@ -283,6 +346,34 @@ func _show_details() -> void:
 		b.disabled = reason != ""
 		_actions.add_child(b)
 	_status.visible = _status.text != ""
+
+
+func _show_building(building_id: String) -> void:
+	var p := GameState.player
+	var data := GameState.data
+	var clan: ClanData = GameState.clan
+	for c in [_name, _info, _status]:
+		c.visible = true
+	_name.text = ClanEstate.building_name(data, building_id)
+	_info.text = "\n".join(building_lines(clan, data, building_id))
+	var reason := ClanEstate.check_build(p, clan, building_id, data)
+	_status.text = reason
+	_status.visible = reason != ""
+	if ClanEstate.level(clan, building_id) < ClanEstate.max_level(data, building_id):
+		var b := UIStyle.button("Build" if ClanEstate.level(clan, building_id) == 0 else "Upgrade", _build.bind(building_id))
+		b.name = "Build"
+		b.disabled = reason != ""
+		_actions.add_child(b)
+
+
+func _build(building_id: String) -> void:
+	GameState.build_clan_building(building_id)
+	_focus_default.call_deferred()
+
+
+func _designate(person_id: String) -> void:
+	GameState.designate_heir(person_id)
+	_focus_default.call_deferred()
 
 
 func _found() -> void:
