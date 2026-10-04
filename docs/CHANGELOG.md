@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-04 [RIV-002] A named rival: someone your age with a heavenly root starts the path with you, climbs faster than other cultivators, and crosses your path to sneer when ahead, duel when even, ambush you when you pull ahead, or maybe make peace one day.
 - 2026-10-04 [C-010] Higher-realm medicine: Foundation and Core Formation cultivators can suffer meridian ruptures, cracked dantians, soul scars, golden core fissures and more, each with its own pill or salve, recipe scroll and clinic price.
 - 2026-10-04 [C-009] First hour in Qingshi Village: Elder Mo now explains where to begin (meditation, trades, sects, the clinic), and Headman Zhou offers three paid chores for newcomers (gather herbs, drive off a boar, mend a widow's roof).
 - 2026-10-04 [UI-009b] Next-step hints now point at ready sect missions and open promotion trials, warn of the Heavenly Tribulation before a breakthrough, and suggest Dao contemplation, abode seclusion, courting and trying for a child.

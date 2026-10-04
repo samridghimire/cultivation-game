@@ -78,6 +78,8 @@ var anchors: Array[String] = []
 var bound_artifacts: Array[String] = []
 ## Cultivators whose cultivation this character has devoured (Devouring, DEM-001).
 var devoured := 0
+## Id of the player's named rival NPC (Rivals, RIV-002), "" if none.
+var rival := ""
 ## Claimed cave abode id (data/regions.json "abodes"), "" if none (Abodes).
 var abode := ""
 ## Items kept in the abode's storage chest: item id -> count.
@@ -187,6 +189,7 @@ func to_dict() -> Dictionary:
 		"reputation": reputation.duplicate(),
 		"bound_artifacts": bound_artifacts.duplicate(),
 		"devoured": devoured,
+		"rival": rival,
 		"abode": abode,
 		"abode_storage": abode_storage.duplicate(),
 		"grudges": grudges.duplicate(),
@@ -270,6 +273,7 @@ static func from_dict(d: Dictionary) -> CharacterData:
 	for item_id in d.get("bound_artifacts", []):
 		c.bound_artifacts.append(String(item_id))
 	c.devoured = int(d.get("devoured", 0))
+	c.rival = String(d.get("rival", ""))
 	c.abode = String(d.get("abode", ""))
 	c.abode_storage = _int_values(d.get("abode_storage", {}))
 	c.grudges = _int_values(d.get("grudges", {}))

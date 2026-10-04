@@ -230,7 +230,7 @@ static func _live(c: CharacterData, data: GameData, days: int, rng: RandomNumber
 static func is_newsworthy(npc_id: String, player: CharacterData, favor: Dictionary) -> bool:
 	if not npc_id.begins_with(SPAWN_PREFIX) or favor.has(npc_id):
 		return true
-	return player.spouses.has(npc_id) or player.children.has(npc_id) or player.parents.has(npc_id)
+	return player.spouses.has(npc_id) or player.children.has(npc_id) or player.parents.has(npc_id) or player.rival == npc_id
 
 
 ## NPCs whose home is `region_id` and who are still alive.
