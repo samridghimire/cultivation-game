@@ -3,11 +3,26 @@ extends Interactable
 ## no def), who can be looked at. Talking opens its dialogue: in the dialogue
 ## window if one listens to EventBus.dialogue_requested, otherwise inline in
 ## this menu (each line is posted to the message log).
+## "Look" also says whether they hate or owe you (RIV-001b, Karma.attitude).
+## Eligible partners also offer Court / Propose entries (FAM-002d); disabled
+## entries show why (Family.check_court / check_proposal).
+## Injured NPCs offer "Treat <name>'s <injury>" (G-007d, Medicine.check_treat_npc)
+## and "Look" lists their injuries.
+## Orphaned children offer "Adopt <name>" (FAM-003e, Adoption.check_adoption).
+## Hostile acts (RIV-001d: humiliate, rob, kill) hide behind a "Turn hostile"
+## entry so a stray button press never kills anyone; "Make amends" appears
+## while the NPC holds a grudge (Karma.check_act / check_amends reasons).
+## NPCs without a dialogue file can be chatted with, and anyone can be given a
+## gift from a carried-item picker shown in this menu (FAM-002i).
 
 @export var npc_id := ""
 
 ## Set when an inline conversation ends, so the menu does not restart it.
 var _just_ended := false
+## True while the hostile-act entries are shown instead of the normal menu.
+var _hostile := false
+## True while the menu shows the gift picker instead of the main entries.
+var _gift_mode := false
 
 
 func is_available() -> bool:
@@ -16,11 +31,14 @@ func is_available() -> bool:
 
 
 func get_options() -> Array[Dictionary]:
+	if _hostile:
+		return _hostile_options()
+	if _gift_mode:
+		return _gift_options()
 	var options: Array[Dictionary] = []
 	var def: Dictionary = GameState.data.npcs.get(npc_id, {})
-	if def.is_empty():
-		options.append({"label": "Look", "action": _look, "keep_open": true})
-	if def.has("dialogue"):
+	options.append({"label": "Look", "action": _look, "keep_open": true})
+	if GameState.has_dialogue(npc_id):
 		if _has_dialogue_window():
 			options.append({"label": "Talk", "action": GameState.start_dialogue.bind(npc_id)})
 		else:
@@ -28,13 +46,195 @@ func get_options() -> Array[Dictionary]:
 	if def.has("deed_context"):
 		for deed in Deeds.available(GameState.data, def["deed_context"], GameState.world_flags):
 			options.append({"label": deed["name"], "action": GameState.perform_deed.bind(deed["id"])})
+	options.append_array(_acquaintance_options())
+	options.append_array(_treatment_options())
+	options.append_array(_adoption_options())
+	options.append_array(_courtship_options())
+	options.append_array(_karma_options())
 	return options
+
+
+## Called by ChoiceMenu when it closes, so the next visit starts at the main entries.
+func on_menu_closed() -> void:
+	_gift_mode = false
+
+
+## "Chat with <name>" (only for NPCs without a dialogue file) and "Give a gift".
+func _acquaintance_options() -> Array[Dictionary]:
+	var options: Array[Dictionary] = []
+	var p := GameState.player
+	var data := GameState.data
+	var npc: CharacterData = GameState.npcs.get(npc_id)
+	if p == null or npc == null:
+		return options
+	var favor := int(GameState.npc_favor.get(npc_id, 0))
+	if String(data.npcs.get(npc_id, {}).get("dialogue", "")) == "":
+		var days := int(data.family.get("acquaintance", {}).get("chat_days", 1))
+		var label := "Chat with %s (%s, favor %d)" % [npc.name, Calendar.format_duration(days), favor]
+		options.append(_entry(label, Family.check_chat(p, npc, favor, data), GameState.chat.bind(npc_id)))
+	var reason := "" if not p.inventory.is_empty() else "you carry nothing"
+	options.append(_entry("Give %s a gift" % npc.name, reason, _set_gift_mode.bind(true)))
+	return options
+
+
+## One entry per carried item with the favor it is worth, then Back.
+func _gift_options() -> Array[Dictionary]:
+	var options: Array[Dictionary] = []
+	var p := GameState.player
+	var data := GameState.data
+	var npc: CharacterData = GameState.npcs.get(npc_id)
+	if p == null or npc == null:
+		_gift_mode = false
+		return options
+	var favor := int(GameState.npc_favor.get(npc_id, 0))
+	var ids: Array = p.inventory.keys()
+	ids.sort_custom(func(a: String, b: String) -> bool:
+		return String(data.items.get(a, {}).get("name", a)) < String(data.items.get(b, {}).get("name", b)))
+	for item_id: String in ids:
+		var label := "%s x%d (+%d favor)" % [data.items.get(item_id, {}).get("name", item_id), p.item_count(item_id), Family.gift_value(data, item_id)]
+		var reason := Family.check_gift(p, npc, favor, item_id, data)
+		options.append(_entry(label, reason, GameState.give_gift.bind(npc_id, item_id)))
+	options.append({"label": "Back (favor %d)" % favor, "action": _set_gift_mode.bind(false), "keep_open": true})
+	return options
+
+
+func _set_gift_mode(on: bool) -> void:
+	_gift_mode = on
+
+
+## One entry treating the NPC's worst injury, only while they are injured.
+func _treatment_options() -> Array[Dictionary]:
+	var options: Array[Dictionary] = []
+	var npc: CharacterData = GameState.npcs.get(npc_id)
+	if GameState.player == null or npc == null:
+		return options
+	var injury_id := Medicine.worst_injury(npc)
+	if injury_id == "":
+		return options
+	var days := int(GameState.data.medicine.get("npc_treatment_days", 3))
+	var label := "Treat %s's %s (%s)" % [npc.name, Injuries.injury_name(GameState.data, injury_id).to_lower(), Calendar.format_duration(days)]
+	var reason := Medicine.check_treat_npc(GameState.player, npc)
+	options.append(_entry(label, reason, GameState.treat_npc.bind(npc_id)))
+	return options
+
+
+## "Adopt <name>" for orphaned children young enough to adopt, not already the player's.
+func _adoption_options() -> Array[Dictionary]:
+	var options: Array[Dictionary] = []
+	var p := GameState.player
+	var data := GameState.data
+	var child: CharacterData = GameState.npcs.get(npc_id)
+	if p == null or child == null or Adoption.rules(data).is_empty():
+		return options
+	if child.age_years() > int(Adoption.rules(data).get("max_age", 12)) or child.parents.has(p.id) or not Adoption.is_orphan(child, GameState.npcs):
+		return options
+	var days := int(Adoption.rules(data).get("days", 1))
+	var label := "Adopt %s (%s)" % [child.name, Calendar.format_duration(days)]
+	options.append(_entry(label, Adoption.check_adoption(p, child, GameState.npcs, data), GameState.adopt.bind(npc_id)))
+	return options
+
+
+## "Make amends" while the NPC holds a grudge, and the "Turn hostile" entry
+## for adults who are not family (other targets would only show refusals).
+func _karma_options() -> Array[Dictionary]:
+	var options: Array[Dictionary] = []
+	var p := GameState.player
+	var data := GameState.data
+	var npc: CharacterData = GameState.npcs.get(npc_id)
+	if p == null or npc == null or data.karma.is_empty():
+		return options
+	var cost := Karma.amends_cost(p, npc_id, data)
+	if cost > 0:
+		var label := "Make amends with %s (%d stones, grudge %d)" % [npc.name, cost, Karma.grudge(p, npc_id)]
+		options.append(_entry(label, Karma.check_amends(p, npc, data), GameState.make_amends.bind(npc_id)))
+	for act_id in Karma.act_ids(data):
+		if Karma.check_act(p, npc, act_id, data) == "":
+			options.append({"label": "Turn hostile...", "action": _set_hostile.bind(true), "keep_open": true})
+			break
+	return options
+
+
+## One entry per karma act: fights show Combat.danger_label of the NPC, and
+## every entry names its alignment cost. "Back" returns to the normal menu.
+func _hostile_options() -> Array[Dictionary]:
+	var options: Array[Dictionary] = []
+	var p := GameState.player
+	var data := GameState.data
+	var npc: CharacterData = GameState.npcs.get(npc_id)
+	if p == null or npc == null or not npc.alive:
+		_hostile = false
+		return options
+	for act_id in Karma.act_ids(data):
+		var act := Karma.act(data, act_id)
+		var bits: PackedStringArray = []
+		if bool(act.get("fight", false)):
+			bits.append("fight: %s" % Combat.danger_label(p, data, Karma.npc_enemy(npc, data)))
+		if int(act.get("alignment", 0)) != 0:
+			bits.append("alignment %+d" % int(act["alignment"]))
+		var label := "%s %s" % [String(act.get("name", act_id)), npc.name]
+		if not bits.is_empty():
+			label += " [%s]" % ", ".join(bits)
+		var reason := Karma.check_act(p, npc, act_id, data)
+		options.append(_entry(label, reason, _commit_hostile.bind(act_id)))
+	options.append({"label": "Back", "action": _set_hostile.bind(false), "keep_open": true})
+	return options
+
+
+func _on_body_exited(body: Node2D) -> void:
+	super(body)
+	if body is Player:
+		_hostile = false
+
+
+func _set_hostile(on: bool) -> void:
+	_hostile = on
+
+
+func _commit_hostile(act_id: String) -> void:
+	_hostile = false
+	GameState.hostile_act(npc_id, act_id)
+
+
+## Court and one Propose entry per spousal rank, only for NPCs the player
+## could pursue at all (Family.check_partner), so children, the married and
+## the wrong gender do not clutter the menu.
+func _courtship_options() -> Array[Dictionary]:
+	var options: Array[Dictionary] = []
+	var p := GameState.player
+	var data := GameState.data
+	var npc: CharacterData = GameState.npcs.get(npc_id)
+	if p == null or Family.check_partner(p, npc, data, GameState.npcs) != "":
+		return options
+	var favor := int(GameState.npc_favor.get(npc_id, 0))
+	var days := int(data.family.get("courtship", {}).get("days", 1))
+	var label := "Court %s (%s, favor %d)" % [npc.name, Calendar.format_duration(days), favor]
+	var reason := Family.check_court(p, npc, favor, data, GameState.npcs)
+	options.append(_entry(label, reason, GameState.court.bind(npc_id)))
+	for rank in Family.ranks(data, p.gender):
+		label = "Propose to %s as your %s" % [npc.name, Family.rank_name(data, p.gender, rank).to_lower()]
+		reason = Family.check_proposal(p, npc, favor, rank, data, GameState.npcs)
+		options.append(_entry(label, reason, GameState.propose.bind(npc_id, rank)))
+	return options
+
+
+func _entry(label: String, reason: String, action: Callable) -> Dictionary:
+	if reason != "":
+		label += " (%s)" % reason
+	return {"label": label, "action": action, "disabled": reason != "", "keep_open": true}
 
 
 func _look() -> void:
 	var npc: CharacterData = GameState.npcs.get(npc_id)
-	if npc != null:
-		EventBus.post(Npcs.describe(npc, GameState.data))
+	if npc == null:
+		return
+	var text := Npcs.describe(npc, GameState.data)
+	var injuries := Injuries.describe(npc, GameState.data)
+	if not injuries.is_empty():
+		text += " Injuries: %s." % ", ".join(injuries)
+	var lines: Array[String] = [text]
+	if GameState.player != null:
+		lines.append_array(Karma.attitude(GameState.player, npc, GameState.data))
+	EventBus.post(" ".join(lines))
 
 
 func _has_dialogue_window() -> bool:

@@ -30,6 +30,21 @@ static func cultivation_start_age(data: GameData) -> int:
 	return int(rules(data).get("cultivation_start_age", 6))
 
 
+## Ids of `c`'s children, grandchildren and so on (looked up in `people`).
+static func descendants(c: CharacterData, people: Dictionary) -> Array[String]:
+	var out: Array[String] = []
+	var queue: Array[String] = c.children.duplicate()
+	while not queue.is_empty():
+		var id: String = queue.pop_front()
+		if out.has(id):
+			continue
+		out.append(id)
+		var descendant: CharacterData = people.get(id)
+		if descendant != null:
+			queue.append_array(descendant.children)
+	return out
+
+
 ## Whether `c` is old enough to start cultivating.
 static func can_cultivate_yet(c: CharacterData, data: GameData) -> bool:
 	return c.age_years() >= cultivation_start_age(data)
@@ -148,8 +163,31 @@ static func give_birth(mother: CharacterData, father: CharacterData, npcs: Dicti
 	for parent: CharacterData in [mother, father]:
 		if not parent.children.has(child.id):
 			parent.children.append(child.id)
+	# Rolled last so the roots/attribute rolls stay the same for a given seed.
+	child.bloodline = Bloodlines.inherit(mother, father, data, rng)
 	mother.pregnancy = {}
 	return child
+
+
+## Display lines for pregnancies in `c`'s family: `c`'s own and each living
+## spouse's (looked up in `people`) where `c` is the other parent, e.g.
+## "Mei Lin is with your child (3 months to the birth)".
+static func describe_pregnancies(c: CharacterData, people: Dictionary) -> Array[String]:
+	var out: Array[String] = []
+	if is_pregnant(c):
+		var partner: CharacterData = people.get(String(c.pregnancy.get("partner", "")))
+		var by := " by %s" % partner.name if partner != null else ""
+		out.append("You are with child%s (%s)" % [by, _due_in(c)])
+	for spouse_id in Family.living_spouses(c, people):
+		var spouse: CharacterData = people.get(spouse_id)
+		if spouse != null and is_pregnant(spouse) and String(spouse.pregnancy.get("partner", "")) == c.id:
+			out.append("%s is with your child (%s)" % [spouse.name, _due_in(spouse)])
+	return out
+
+
+static func _due_in(carrier: CharacterData) -> String:
+	var days := int(carrier.pregnancy.get("days_left", 0))
+	return "due any day" if days <= 0 else "%s to the birth" % Calendar.format_duration(days)
 
 
 ## "You are" when `who` is `c`, else "<name> is".

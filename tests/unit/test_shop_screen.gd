@@ -54,14 +54,14 @@ func test_merchant_browse_opens_shop_and_screen_trades() -> void:
 	merchant.stock_tags = ["herb"]
 	var seen: Array = []
 	var bus := root.get_node("EventBus")
-	var cb := func(n: String, max_price: int, tags: Array): seen.append([n, max_price, tags])
+	var cb := func(n: String, max_price: int, tags: Array, faction: String): seen.append([n, max_price, tags, faction])
 	bus.shop_requested.connect(cb)
 	var options: Array[Dictionary] = merchant.get_options()
 	assert_eq(options.size(), 1)
 	options[0]["action"].call()
 	bus.shop_requested.disconnect(cb)
 	merchant.free()
-	assert_eq(seen, [["Herb Stall", 0, ["herb"]]])
+	assert_eq(seen, [["Herb Stall", 0, ["herb"], ""]])
 
 	var screen := ShopScreen.new()
 	root.add_child(screen)
@@ -79,4 +79,26 @@ func test_merchant_browse_opens_shop_and_screen_trades() -> void:
 	assert_eq(gs.player.item_count("spirit_herb"), 0)
 	screen.close()
 	screen.free()
+	gs.end_session()
+
+
+func test_restricted_goods_only_at_merchants_that_stock_them() -> void:
+	var general := Items.shop_stock(data(), 0, ["equipment"])
+	var black_market := Items.shop_stock(data(), 0, ["demonic"])
+	for item_id in black_market:
+		assert_false(general.has(item_id), "%s is restricted to its own merchants" % item_id)
+
+
+func test_merchant_refuses_wrong_alignment_without_opening_the_shop() -> void:
+	var gs: Node = (Engine.get_main_loop() as SceneTree).root.get_node("GameState")
+	var c := new_character()
+	c.alignment = 500
+	gs.start_session(c)
+	var merchant: Node = load("res://src/world/interactables/merchant.gd").new()
+	merchant.max_alignment = -200
+	var options: Array[Dictionary] = merchant.get_options()
+	assert_eq(options.size(), 1)
+	assert_true(options[0]["disabled"], options[0]["label"])
+	assert_true(String(options[0]["label"]).contains("righteous"), options[0]["label"])
+	merchant.free()
 	gs.end_session()

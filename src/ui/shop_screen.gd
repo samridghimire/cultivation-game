@@ -3,7 +3,8 @@ extends PanelContainer
 ## Modal merchant screen with Buy and Sell tabs: goods on the left; details,
 ## equipment comparison, a quantity stepper and the trade button on the right.
 ## Left/right on an item steps the quantity (works on a gamepad d-pad).
-## Stock rules live in Items.shop_stock / Items.buyback_ids; trades go through
+## Stock rules live in Items.shop_stock / Items.buyback_ids; a faction merchant's
+## prices follow your sect reputation (Reputation.buy_price). Trades go through
 ## GameState.buy_item / sell_item.
 
 signal closed
@@ -24,15 +25,14 @@ var _trade_button: Button
 var _close_button: Button
 var _max_price := 0
 var _stock_tags: Array = []
+var _faction := ""
 var _selling := false
 var _selected := ""
 var _quantity := 1
 
 
 func _init() -> void:
-	var temp := UIStyle.panel()
-	add_theme_stylebox_override("panel", temp.get_theme_stylebox("panel"))
-	temp.free()
+	add_theme_stylebox_override("panel", UIStyle.panel_style())
 	custom_minimum_size = Vector2(800, 0)
 	visible = false
 	var box := VBoxContainer.new()
@@ -113,11 +113,12 @@ func _unhandled_input(event: InputEvent) -> void:
 		close()
 
 
-## Opens the merchant's wares (see merchant.gd for max_price / stock_tags).
-func open(merchant_name: String = "Merchant", max_price: int = 0, stock_tags: Array = []) -> void:
-	_title.text = merchant_name
+## Opens the merchant's wares (see merchant.gd for max_price / stock_tags / faction).
+func open(merchant_name: String = "Merchant", max_price: int = 0, stock_tags: Array = [], faction: String = "") -> void:
+	_title.text = merchant_name + price_note(GameState.player, GameState.data, faction)
 	_max_price = max_price
 	_stock_tags = stock_tags
+	_faction = faction
 	_selling = false
 	_selected = ""
 	_quantity = 1
@@ -140,11 +141,24 @@ func item_ids() -> Array:
 	return Items.shop_stock(GameState.data, _max_price, _stock_tags)
 
 
-## Most of `item_id` that can be bought with `stones` or sold from `c`'s pouch.
-static func max_quantity(c: CharacterData, data: GameData, item_id: String, selling: bool) -> int:
+## " (Honored price)" when `faction`'s reputation changes `c`'s prices, else "".
+static func price_note(c: CharacterData, data: GameData, faction: String) -> String:
+	if is_equal_approx(Reputation.price_multiplier(c, data, faction), 1.0):
+		return ""
+	return " (%s price)" % Reputation.tier_name(c, data, faction)
+
+
+## Price of one `item_id` on the current tab.
+static func unit_price(c: CharacterData, data: GameData, item_id: String, selling: bool, faction: String = "") -> int:
+	return Items.sell_price(data, item_id) if selling else Reputation.buy_price(c, data, item_id, faction)
+
+
+## Most of `item_id` that `c` can buy with their stones or sell from their pouch.
+@warning_ignore("integer_division")
+static func max_quantity(c: CharacterData, data: GameData, item_id: String, selling: bool, faction: String = "") -> int:
 	if selling:
 		return mini(c.item_count(item_id), MAX_QUANTITY)
-	var price := int(data.items.get(item_id, {}).get("price", 0))
+	var price := unit_price(c, data, item_id, false, faction)
 	return 0 if price <= 0 else mini(c.item_count("spirit_stone") / price, MAX_QUANTITY)
 
 
@@ -185,7 +199,7 @@ func _rebuild() -> void:
 		var empty := "You have nothing this merchant wants." if _selling else "Nothing for sale."
 		_list.add_child(UIStyle.label(empty, 16, Color(0.7, 0.7, 0.7)))
 	for item_id in ids:
-		var price := Items.sell_price(data, item_id) if _selling else int(data.items[item_id]["price"])
+		var price := unit_price(p, data, item_id, _selling, _faction)
 		var label := "%s  %d" % [data.items[item_id]["name"], price]
 		if _selling:
 			label += "  (have %d)" % p.item_count(item_id)
@@ -223,7 +237,7 @@ func _on_item_input(event: InputEvent) -> void:
 func _step(delta: int) -> void:
 	if _selected == "":
 		return
-	var most := max_quantity(GameState.player, GameState.data, _selected, _selling)
+	var most := max_quantity(GameState.player, GameState.data, _selected, _selling, _faction)
 	_quantity = clampi(_quantity + delta, 1, maxi(most, 1))
 	_show_details()
 
@@ -244,9 +258,9 @@ func _show_details() -> void:
 	_effects.text = "\n".join(lines)
 	_compare.text = compare_text(p, data, _selected)
 	_compare.visible = _compare.text != ""
-	var most := max_quantity(p, data, _selected, _selling)
+	var most := max_quantity(p, data, _selected, _selling, _faction)
 	_quantity = clampi(_quantity, 1, maxi(most, 1))
-	var unit := Items.sell_price(data, _selected) if _selling else int(item["price"])
+	var unit := unit_price(p, data, _selected, _selling, _faction)
 	_quantity_label.text = "x%d  (you have %d)" % [_quantity, p.item_count(_selected)]
 	_trade_button.text = "%s %d for %d spirit stones" % ["Sell" if _selling else "Buy", _quantity, unit * _quantity]
 	_trade_button.disabled = most < 1
@@ -259,7 +273,7 @@ func _trade() -> void:
 	if _selling:
 		GameState.sell_item(_selected, _quantity)
 	else:
-		GameState.buy_item(_selected, _quantity)
+		GameState.buy_item(_selected, _faction, _quantity)
 	_quantity = 1
 	_focus_selected.call_deferred()
 

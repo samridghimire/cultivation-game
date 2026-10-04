@@ -22,6 +22,10 @@ func test_mission_data_is_valid() -> void:
 	assert_eq(Sects.validate_missions(d).size(), 5, "kind, sect, days, enemy, item")
 	d.sect_missions = {"hunt": {"id": "hunt", "kind": "hunt", "days": 1}}
 	assert_eq(Sects.validate_missions(d).size(), 1, "hunts need an enemy")
+	d.sect_missions = {"deep": {"id": "deep", "kind": "gather", "days": 1, "min_realm": "mortal", "min_stage": 1}}
+	assert_eq(Sects.validate_missions(d).size(), 1, "mortals have a single stage")
+	d.sect_missions["deep"]["min_realm"] = "qi_refining"
+	assert_eq(Sects.validate_missions(d).size(), 0)
 
 
 func test_missions_offered_per_sect() -> void:
@@ -42,10 +46,35 @@ func test_mission_requirements() -> void:
 	assert_eq(Sects.check_mission(c, data(), "gather_spirit_herbs"), "")
 	assert_true(Sects.check_mission(c, data(), "purge_demonic_cultivator") != "", "rank too low")
 	c.sect["rank"] = 1
+	assert_true(Sects.check_mission(c, data(), "purge_demonic_cultivator") != "", "realm too low for a Foundation foe")
+	c.realm_index = 2
 	assert_eq(Sects.check_mission(c, data(), "purge_demonic_cultivator"), "")
 	c.realm_index = 0
 	assert_true(Sects.check_mission(c, data(), "cull_mist_wolves") != "", "realm too low")
 	assert_true(Sects.check_mission(c, data(), "no_such_mission") != "")
+
+
+func test_mission_min_stage() -> void:
+	var c := _disciple("blood_lotus_sect")
+	var stage := int(data().sect_missions["harvest_rogue_cultivator"]["min_stage"])
+	assert_gt(stage, 0, "the rogue cultivator hunt waits for a later layer")
+	c.stage = stage - 1
+	assert_true(Sects.check_mission(c, data(), "harvest_rogue_cultivator").contains(data().realms[1].stage_label(stage)), "names the stage needed")
+	c.stage = stage
+	assert_eq(Sects.check_mission(c, data(), "harvest_rogue_cultivator"), "")
+	c.realm_index = 2
+	c.stage = 0
+	assert_eq(Sects.check_mission(c, data(), "harvest_rogue_cultivator"), "", "a higher realm always qualifies")
+
+
+func test_mission_danger() -> void:
+	var c := _disciple()
+	assert_eq(Sects.mission_danger(c, data(), "gather_spirit_herbs"), "", "no fight")
+	assert_eq(Sects.mission_danger(c, data(), "no_such_mission"), "")
+	assert_eq(Sects.mission_danger(c, data(), "purge_demonic_cultivator"), "Deadly", "a Foundation foe for a Qi Refining disciple")
+	assert_eq(Sects.mission_danger(c, data(), "escort_mortal_villagers"), "Weak")
+	c.realm_index = 3
+	assert_eq(Sects.mission_danger(c, data(), "purge_demonic_cultivator"), "Weak")
 
 
 func test_complete_mission_hands_in_items_and_rewards() -> void:

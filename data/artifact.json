@@ -1,9 +1,18 @@
 {
-  "_doc": "The Creation Artifact (see docs/DESIGN.md). starting_lives: lives a new character has. max_lives: cap on stored lives. anchor_slots: realm id -> anchors that can be bound once the player reaches that realm (the highest reached realm listed applies). start_anchor: anchor id bound automatically for a new character. recharge: buying a life costs round(base_cost * cost_growth ^ lives bought so far) spirit stones. respawn: on a violent death with a life left, the player respawns at their most recently bound anchor (the start region if none), losing qi_loss_fraction of current qi while days pass. Anchors are places in data/regions.json with an 'anchor_id' (globally unique).",
+  "_doc": "The Creation Artifact (see docs/DESIGN.md). starting_lives: lives a new character has. max_lives: cap on stored lives. anchor_slots: realm id -> anchors that can be bound once the player reaches that realm (the highest reached realm listed applies). start_anchor: anchor id bound automatically for a new character. recharge: buying a life costs round(base_cost * cost_growth ^ lives bought so far) spirit stones. respawn: on a violent death with a life left, the player respawns at their most recently bound anchor (the start region if none; the respawn screen then lets them awaken at any other bound anchor instead), losing qi_loss_fraction of current qi while days pass. Anchors are places in data/regions.json with an 'anchor_id' (globally unique). energy (ART-002): feeding the artifact gives stone_energy per spirit stone, and floor(price * item_energy_per_price) per other item (price-0 items cannot be fed); energy is capped at max_energy and spent to unlock functions. functions: sealed powers the player unlocks (ArtifactFunctions): {id (must be a function the code implements: storage, appraisal), name, description, unlock: {realm (optional realm id reached), energy (spent on unlocking), flag (optional world flag that must be set)}, plus per-function fields: storage has storage_slots (distinct item stacks the storage space holds), appraisal has talent_tiers [{min_multiplier (of SpiritualRoots.cultivation_multiplier), name}] in rising order, the highest matching tier naming a character's talent}. intro_event (optional, ART-006b): a dialogue id (data/dialogue/, not bound to an NPC; nodes set their own speaker) played once when a new character starts; loaded saves never play it.",
+  "intro_event": "artifact_awakening",
   "starting_lives": 3,
   "max_lives": 9,
   "anchor_slots": {"mortal": 1, "qi_refining": 2, "foundation_establishment": 3, "core_formation": 4, "nascent_soul": 5, "soul_formation": 6},
   "start_anchor": "qingshi_rock",
   "recharge": {"base_cost": 100, "cost_growth": 2.0},
-  "respawn": {"qi_loss_fraction": 0.3, "days": 7}
+  "respawn": {"qi_loss_fraction": 0.3, "days": 7},
+  "energy": {"stone_energy": 1, "item_energy_per_price": 0.5, "max_energy": 1000000},
+  "functions": [
+    {"id": "storage", "name": "Storage Space", "description": "A pocket of folded space opens inside the artifact. Whatever you keep there stays with your soul, even through death.",
+     "unlock": {"realm": "qi_refining", "energy": 100}, "storage_slots": 12},
+    {"id": "appraisal", "name": "Appraising Eye", "description": "A cold eye opens behind your own. Spiritual roots, talent, the years left to a person and the true grade of a treasure are laid bare to you.",
+     "unlock": {"realm": "qi_refining", "energy": 400},
+     "talent_tiers": [{"min_multiplier": 0.0, "name": "Rootless"}, {"min_multiplier": 0.1, "name": "Dull"}, {"min_multiplier": 0.6, "name": "Ordinary"}, {"min_multiplier": 1.1, "name": "Gifted"}, {"min_multiplier": 1.7, "name": "Outstanding"}, {"min_multiplier": 2.6, "name": "Peerless"}, {"min_multiplier": 4.0, "name": "Heaven-chosen"}]}
+  ]
 }
