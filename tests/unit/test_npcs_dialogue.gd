@@ -139,3 +139,72 @@ func test_hermit_gu_is_near_the_end_of_his_life() -> void:
 	var gu: CharacterData = npcs["hermit_gu"]
 	var left := Cultivation.years_left(gu, data())
 	assert_true(left > 0 and left <= 40, "Hermit Gu should have only a few decades left, has %d" % left)
+
+
+func _choice_index(view: Dictionary, label_start: String) -> int:
+	for choice: Dictionary in view.get("choices", []):
+		if (choice["label"] as String).begins_with(label_start) and not choice["disabled"]:
+			return choice["index"]
+	return -2
+
+
+func test_generated_adults_use_generic_dialogue() -> void:
+	var gs := (Engine.get_main_loop() as SceneTree).root.get_node("GameState")
+	var c := CharacterFactory.create("Talker", gs.data, seeded_rng(5), "male")
+	gs.start_session(c)
+	var adult := Npcs.spawn(gs.npcs, gs.data, seeded_rng(6), {"age_years": 25})
+	var child := Npcs.spawn(gs.npcs, gs.data, seeded_rng(7), {"age_years": 3})
+	assert_true(gs.has_dialogue(adult.id))
+	assert_false(gs.has_dialogue(child.id), "children have nothing to say")
+	gs.start_dialogue(adult.id)
+	assert_eq(gs.dialogue_npc, adult.id)
+	var view: Dictionary = gs.dialogue_view()
+	assert_true((view["text"] as String).contains(adult.name), view["text"])
+	var days: int = c.age_days
+	gs.choose_dialogue(_choice_index(view, "Chat about the Dao"))
+	assert_eq(int(gs.npc_favor.get(adult.id, 0)), 3)
+	assert_eq(c.age_days, days + 3)
+	gs.end_dialogue()
+	gs.end_session()
+
+
+func test_generic_dialogue_favor_is_capped_and_extortion_sours() -> void:
+	var gs := (Engine.get_main_loop() as SceneTree).root.get_node("GameState")
+	var c := CharacterFactory.create("Talker", gs.data, seeded_rng(5), "male")
+	gs.start_session(c)
+	var adult := Npcs.spawn(gs.npcs, gs.data, seeded_rng(6), {"age_years": 25})
+	gs.npc_favor[adult.id] = int(gs.data.family["courtship"]["min_favor"])
+	gs.start_dialogue(adult.id)
+	assert_eq(_choice_index(gs.dialogue_view(), "Chat about the Dao"), -2, "idle chat stops at the courtship threshold")
+	gs.npc_favor[adult.id] = 0
+	var stones := c.item_count("spirit_stone")
+	gs.choose_dialogue(_choice_index(gs.dialogue_view(), "Shake them down"))
+	assert_eq(c.item_count("spirit_stone"), stones + 12)
+	assert_eq(int(gs.npc_favor[adult.id]), -15)
+	gs.end_dialogue()
+	gs.npc_favor[adult.id] = -20
+	gs.start_dialogue(adult.id)
+	assert_eq(gs.dialogue_node, "cold", "a soured NPC remembers")
+	gs.end_dialogue()
+	gs.end_session()
+
+
+func test_event_dialogue_without_npc_ignores_favor() -> void:
+	var dialogue := {"id": "evt", "entries": [{"node": "a"}], "nodes": {
+		"a": {"speaker": "A Voice", "text": "Hello, {player}.", "choices": [{"label": "Hi", "next": "end", "favor": 5, "effects": {"qi": 10}}]}}}
+	var c := new_character()
+	var ctx := {"player": c, "npc": null, "data": data(), "flags": {}, "favor": 0}
+	assert_eq(Dialogue.entry_node(dialogue, ctx), "a")
+	var view := Dialogue.view(dialogue, "a", ctx)
+	assert_eq(view["speaker"], "A Voice")
+	assert_eq(view["text"], "Hello, %s." % c.name)
+	var result := Dialogue.choose(dialogue, "a", 0, ctx)
+	assert_true(result["ok"])
+	assert_eq(result["favor"], 0)
+	assert_eq(result["next"], "")
+
+
+func test_intro_event_is_a_valid_dialogue() -> void:
+	var intro := String(data().artifact.get("intro_event", ""))
+	assert_true(data().dialogues.has(intro))
+	assert_eq(Dialogue.validate(data().dialogues[intro], data()).size(), 0)

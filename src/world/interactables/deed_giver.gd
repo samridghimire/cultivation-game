@@ -12,6 +12,12 @@ func is_available() -> bool:
 
 func get_options() -> Array[Dictionary]:
 	var options: Array[Dictionary] = []
-	for deed in Deeds.available(GameState.data, deed_context, GameState.world_flags):
-		options.append({"label": deed["name"], "action": GameState.perform_deed.bind(deed["id"])})
+	for entry in Deeds.options(GameState.player, GameState.data, deed_context, GameState.world_flags):
+		var deed: Dictionary = entry["deed"]
+		var label := String(deed["name"])
+		if entry["danger"] != "":
+			label += " [fight: %s]" % entry["danger"]
+		if entry["disabled"]:
+			label += " (%s)" % entry["reason"]
+		options.append({"label": label, "action": GameState.perform_deed.bind(deed["id"]), "disabled": entry["disabled"]})
 	return options

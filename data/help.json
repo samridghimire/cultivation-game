@@ -1,0 +1,81 @@
+{
+  "_doc": "Help screen content (pause menu > Help). action_names: display name for each InputConfig action on the Controls page (actions without a name are listed by id). pages: [{id, title, body: [paragraph, ...]}] shown in order after the Controls page; keep each page short enough to fit on a 1280x800 screen.",
+  "action_names": {
+    "move_up": "Move up",
+    "move_down": "Move down",
+    "move_left": "Move left",
+    "move_right": "Move right",
+    "interact": "Interact / talk",
+    "toggle_character_sheet": "Character sheet",
+    "toggle_inventory": "Inventory",
+    "toggle_techniques": "Techniques",
+    "toggle_message_log": "Message log",
+    "toggle_map": "World map",
+    "toggle_artifact": "Creation Artifact",
+    "toggle_clan": "Clan",
+    "scroll_up": "Scroll up",
+    "scroll_down": "Scroll down",
+    "quick_save": "Quick save",
+    "quick_load": "Quick load",
+    "pause_menu": "Pause menu"
+  },
+  "pages": [
+    {
+      "id": "cultivate",
+      "title": "How to Cultivate",
+      "body": [
+        "You begin as a mortal with a spiritual root. Walk to a meditation spot and interact with it to cultivate: time passes and qi flows into your dantian. Denser spots and regions gather qi faster, and roots that match a technique's element help too.",
+        "Your status panel shows your qi. When it is full you have reached a bottleneck and must break through to the next stage or realm.",
+        "Time only passes when you act. Watch your age: every realm extends your lifespan, and an old cultivator who never breaks through dies of old age."
+      ]
+    },
+    {
+      "id": "breakthrough",
+      "title": "Breakthroughs",
+      "body": [
+        "Attempting a breakthrough at a meditation spot is risky. Failure scatters your qi and may leave you with an injury such as Qi Deviation.",
+        "Pills, a calm body and the right preparation raise your odds. Heal injuries first: they slow cultivation and weaken you in combat."
+      ]
+    },
+    {
+      "id": "sects",
+      "title": "Sects and the Rogue Path",
+      "body": [
+        "Sect halls accept disciples who meet their realm and alignment requirements. A sect pays a monthly stipend, offers missions for contribution and promotes loyal disciples through its ranks.",
+        "You may also stay a rogue cultivator, free to go anywhere and do anything, with nobody to protect you."
+      ]
+    },
+    {
+      "id": "professions",
+      "title": "Professions",
+      "body": [
+        "Alchemists refine pills, Blacksmiths forge weapons and armor, Talisman Masters inscribe talismans and Doctors heal injuries. Learn recipes from scrolls and manuals, gather herbs and ores, then craft at a workshop.",
+        "Crafting raises your profession rank, and higher ranks unlock stronger recipes and better results."
+      ]
+    },
+    {
+      "id": "alignment",
+      "title": "Righteous and Demonic Paths",
+      "body": [
+        "Your deeds move your alignment between righteous and demonic. Both paths are real: righteous sects shun the wicked, and some forbidden arts and treasures only answer to a dark heart.",
+        "Many forbidden arts burn your lifespan. Power always has a price."
+      ]
+    },
+    {
+      "id": "artifact",
+      "title": "The Creation Artifact",
+      "body": [
+        "A mysterious artifact is bound to your soul. When you are killed, it pulls your soul back and you awaken at one of your anchors, at the cost of one of its stored lives.",
+        "Recharge it with spirit stones to store more lives, and bind anchors at places you trust. More anchor slots open as your realm rises. With no lives left, death is final."
+      ]
+    },
+    {
+      "id": "family",
+      "title": "Family",
+      "body": [
+        "Win the favor of other cultivators, court them and propose marriage. Spouses cultivate beside you, dual cultivation speeds both of you, and children inherit roots from both parents.",
+        "A family can grow into a clan that outlives you. Its future is yours to shape."
+      ]
+    }
+  ]
+}

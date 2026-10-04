@@ -6,11 +6,17 @@ extends Node
 ## Keep rules out of this file; put them in the systems so they stay testable.
 
 const BREAKTHROUGH_DAYS := 7
+## Dialogue id (data/dialogue/) for generated NPCs without their own file.
+const GENERIC_DIALOGUE := "generic_cultivator"
+## World flag set once the intro event (data/artifact.json intro_event) has played.
+const INTRO_EVENT_FLAG := "intro_event_seen"
 
 var data: GameData
 var player: CharacterData
 ## Persistent world facts, e.g. {"villager_dead": true}.
 var world_flags: Dictionary = {}
+## Open auctions (Auctions): house_id -> {opening, lots}.
+var auctions: Dictionary = {}
 ## Id of the region (data/regions.json) the player is in.
 var current_region := ""
 ## Live NPCs: id -> CharacterData (definitions in data/npcs.json).
@@ -20,10 +26,27 @@ var npc_favor: Dictionary = {}
 ## The conversation in progress ("" = none) and its current node.
 var dialogue_npc := ""
 var dialogue_node := ""
+## Dialogue id of the story event (a dialogue without an NPC) in progress.
+var dialogue_event := ""
+## Story event a fresh character opens with (data/artifact.json intro_event),
+## started by the HUD once it is ready (start_pending_event).
+var pending_event := ""
 ## Encounter id waiting for the player's choice (W-004c, "" = none). Like a
 ## conversation it is not saved: loading a save drops it.
 var pending_encounter := ""
+## Set when the Creation Artifact just respawned the player (ART-005) until
+## they pick where to awaken: {cause, anchor_id, lives_left, qi_lost}. Not saved.
+var pending_respawn: Dictionary = {}
+## Anchor the world should place the player at after the next region load ("" = region spawn).
+var spawn_anchor := ""
 var rng := RandomNumberGenerator.new()
+## The player's clan (FAM-005), null until founded.
+var clan: ClanData = null
+## NPC clans (FAM-009, data/clans.json): clan id -> ClanData. See NpcClans.
+var npc_clans: Dictionary = {}
+## Player numbers before the current long action (TimeSkip.snapshot), for the
+## time-skip summary. Set by _start_time_skip(), read by _pass_time().
+var _skip_before: Dictionary = {}
 
 
 func _ready() -> void:
@@ -41,14 +64,23 @@ func start_session(character: CharacterData) -> void:
 	player = character
 	CreationArtifact.ensure(player, data)
 	world_flags = {}
+	auctions = {}
 	current_region = data.start_region
 	npcs = {}
 	npc_favor = {}
+	clan = null
 	dialogue_npc = ""
 	pending_encounter = ""
+	pending_respawn = {}
+	spawn_anchor = ""
+	dialogue_event = ""
+	pending_event = String(data.artifact.get("intro_event", ""))
 	Npcs.ensure_all(npcs, data, rng)
-	Npcs.ensure_eligible(npcs, data, rng)
+	Npcs.ensure_eligible(npcs, data, rng, Children.descendants(player, npcs))
+	npc_clans = {}
+	NpcClans.ensure(npc_clans, npcs, data, rng)
 	GameClock.reset()
+	EventBus.clear_history()
 	EventBus.session_started.emit()
 	EventBus.post("%s sets out on the path of cultivation." % player.name, "progress")
 	EventBus.player_changed.emit()
@@ -57,10 +89,17 @@ func start_session(character: CharacterData) -> void:
 func end_session() -> void:
 	player = null
 	world_flags = {}
+	auctions = {}
 	npcs = {}
 	npc_favor = {}
+	clan = null
+	npc_clans = {}
 	dialogue_npc = ""
 	pending_encounter = ""
+	pending_respawn = {}
+	spawn_anchor = ""
+	dialogue_event = ""
+	pending_event = ""
 
 
 # --- Actions -----------------------------------------------------------------
@@ -75,13 +114,14 @@ func cultivate(days: int, location_density: float = 1.0) -> void:
 		EventBus.post("You are at a bottleneck. More meditation will not help; attempt a breakthrough.", "warning")
 		return
 	var density := location_density * Exploration.qi_density(data, current_region) * Sects.cultivation_bonus(player, data)
+	_start_time_skip()
 	var result := Cultivation.cultivate(player, data, days, density)
 	EventBus.post("You cultivate for %s and gather %d qi." % [Calendar.format_duration(days), int(result["qi_gained"])])
 	if result["stages_gained"] > 0:
 		EventBus.post("Your cultivation rises to %s!" % Cultivation.realm_label(player, data), "progress")
 	if result["at_bottleneck"]:
 		EventBus.post("You have reached a bottleneck. Attempt a breakthrough to advance.", "warning")
-	_pass_time(days)
+	_pass_time(days, "Meditating")
 
 
 ## Claim a cave abode in the current region for spirit stones. Its anchor is
@@ -96,7 +136,11 @@ func claim_abode(abode_id: String) -> void:
 		return
 	if result["previous"] != "":
 		EventBus.post("You leave %s behind." % Abodes.abode_name(data, result["previous"]))
+	if result["array_returned"] != "":
+		EventBus.post("You pack up your %s." % data.items.get(result["array_returned"], {}).get("name", result["array_returned"]))
 	EventBus.post("You pay %d spirit stones and claim %s as your abode." % [result["cost"], Abodes.abode_name(data, abode_id)], "progress")
+	if Clans.move_seat(clan, abode_id, data):
+		EventBus.post("The %s moves its seat to %s." % [clan.name, Abodes.abode_name(data, abode_id)], "progress")
 	var anchor_id := String(result["anchor_id"])
 	if anchor_id != "" and not player.anchors.has(anchor_id) and player.anchors.size() < CreationArtifact.anchor_slots(player, data):
 		bind_anchor(anchor_id)
@@ -111,7 +155,34 @@ func cultivate_in_seclusion(days: int) -> void:
 	if density <= 0.0:
 		EventBus.post("You have no abode here to seclude yourself in.", "warning")
 		return
-	cultivate(days, density)
+	cultivate(days, density * ClanEstate.qi_multiplier(clan, data))
+
+
+## Set up an array (items.json `array`) at the player's abode; takes a day.
+func place_abode_array(item_id: String) -> void:
+	if not _can_act():
+		return
+	var result := Abodes.place_array(player, data, current_region, item_id)
+	if not result["ok"]:
+		EventBus.post(result["reason"], "warning")
+		EventBus.player_changed.emit()
+		return
+	if result["replaced"] != "":
+		EventBus.post("You pack up the %s." % data.items.get(result["replaced"], {}).get("name", result["replaced"]))
+	EventBus.post("You plant the %s around %s; qi density there rises by %d%%." % [data.items[item_id].get("name", item_id), Abodes.abode_name(data, player.abode), roundi(Abodes.array_bonus(player, data) * 100.0)], "progress")
+	_pass_time(1)
+
+
+## Pack up the array at the player's abode into the inventory.
+func remove_abode_array() -> void:
+	if not _can_act():
+		return
+	var result := Abodes.remove_array(player, data, current_region)
+	if result["ok"]:
+		EventBus.post("You pack up the %s." % data.items.get(result["item"], {}).get("name", result["item"]))
+	else:
+		EventBus.post(result["reason"], "warning")
+	EventBus.player_changed.emit()
 
 
 func store_in_abode(item_id: String, quantity: int = 1) -> void:
@@ -143,19 +214,54 @@ func attempt_breakthrough() -> void:
 		EventBus.post("You are not ready to break through.", "warning")
 		return
 	var result := Cultivation.attempt_breakthrough(player, data, rng)
+	_report_tribulation(result)
+	if result["died"]:
+		EventBus.breakthrough_attempted.emit(false, result["realm_name"])
+		_die_violently("The final bolt of the %s tribulation tears through you. Your body turns to ash." % result["realm_name"])
+		return
 	if result["success"]:
 		EventBus.post("Breakthrough! You have entered the %s realm." % result["realm_name"], "progress")
+		if Bloodlines.update(player, data):
+			EventBus.post("Your blood boils and sings: your %s awakens!" % Bloodlines.bloodline_name(data, player.bloodline), "progress")
 	else:
-		EventBus.post("Your breakthrough to %s failed (%d%% chance). Your qi scatters." % [result["realm_name"], int(result["chance"] * 100)], "danger")
+		if result["tribulation"].is_empty():
+			EventBus.post("Your breakthrough to %s failed (%d%% chance). Your qi scatters." % [result["realm_name"], int(result["chance"] * 100)], "danger")
+		else:
+			EventBus.post("Your breakthrough to %s fails in the tribulation. Your qi scatters." % result["realm_name"], "danger")
 		if result["injury"] != "":
 			EventBus.post("You suffer %s." % Injuries.injury_name(data, result["injury"]), "danger")
 	EventBus.breakthrough_attempted.emit(result["success"], result["realm_name"])
 	_pass_time(BREAKTHROUGH_DAYS)
 
 
+## Expected tribulation for breaking into the next realm (Tribulation.preview),
+## for a "prepare" warning before attempting a breakthrough.
+func tribulation_preview() -> Dictionary:
+	return Tribulation.preview(player, data, player.realm_index + 1)
+
+
+func _report_tribulation(result: Dictionary) -> void:
+	var trib: Dictionary = result["tribulation"]
+	if trib.is_empty():
+		return
+	EventBus.tribulation_endured.emit(result["realm_name"], trib)
+	EventBus.post("Heaven answers your breakthrough: tribulation clouds gather over the %s threshold!" % result["realm_name"], "danger")
+	if not trib["talismans_used"].is_empty():
+		EventBus.post("You burn %s to shield yourself." % ", ".join(trib["talismans_used"]), "info")
+	for i in trib["waves"].size():
+		var wave: Dictionary = trib["waves"][i]
+		var what := "Your heart demon rises" if wave["kind"] == "heart_demon" else "Lightning wave %d strikes" % (i + 1)
+		EventBus.post("%s: %d damage (%d/%d left)." % [what, wave["damage"], wave["hp_left"], trib["max_hp"]], "danger")
+	if trib["survived"]:
+		EventBus.post("You endure the tribulation and are reforged by its lightning.", "progress")
+	elif not trib["died"]:
+		EventBus.post("You are struck down before the tribulation ends.", "danger")
+
+
 func work_profession(prof_id: String, days: int) -> void:
 	if not _can_act():
 		return
+	_start_time_skip()
 	var result := Professions.work(player, data, prof_id, days)
 	var def: ProfessionDef = data.professions[prof_id]
 	EventBus.post("You work as a %s for %s: +%d xp, +%d spirit stones." % [def.name, Calendar.format_duration(days), int(result["xp"]), result["income"]])
@@ -165,7 +271,7 @@ func work_profession(prof_id: String, days: int) -> void:
 		var contribution := int(result["xp"] / (1.0 if Sects.is_favored_profession(player, data, prof_id) else 2.0))
 		if Sects.add_contribution(player, data, contribution):
 			EventBus.post("Your sect promotes you to %s." % Sects.describe(player, data), "progress")
-	_pass_time(days)
+	_pass_time(days, "Working as a %s" % def.name)
 
 
 func join_sect(sect_id: String) -> void:
@@ -193,11 +299,23 @@ func leave_sect() -> void:
 func perform_deed(deed_id: String) -> void:
 	if not _can_act():
 		return
+	var deed: Dictionary = data.deeds.get(deed_id, {})
+	var reason := Deeds.check(player, data, deed, world_flags) if not deed.is_empty() else "Unknown deed."
+	if reason != "":
+		EventBus.post(reason, "warning")
+		return
+	var enemy_id := String(deed.get("enemy", ""))
+	if enemy_id != "":
+		EventBus.post("%s: first you must fight." % deed["name"], "danger")
+		if not fight_enemy(data.enemies[enemy_id]):
+			if _can_act():
+				EventBus.post("Beaten, you abandon the attempt.", "warning")
+				_pass_time(int(deed.get("days", 0)))
+			return
 	var result := Deeds.perform(player, data, deed_id, world_flags)
 	if not result["ok"]:
 		EventBus.post(result["reason"], "warning")
 		return
-	var deed: Dictionary = data.deeds[deed_id]
 	EventBus.post("%s. (%s)" % [deed["name"], ", ".join(result["notes"])], "karma")
 	_pass_time(result["days"])
 
@@ -268,9 +386,10 @@ func travel(region_id: String) -> void:
 	if not check["ok"]:
 		EventBus.post(check["reason"], "warning")
 		return
+	_start_time_skip()
 	current_region = region_id
 	EventBus.post("After %s on the road you arrive at %s." % [Calendar.format_duration(check["days"]), Exploration.region_name(data, region_id)], "progress")
-	_pass_time(check["days"])
+	_pass_time(check["days"], "Travelling to %s" % Exploration.region_name(data, region_id))
 	EventBus.region_changed.emit(region_id)
 
 
@@ -306,6 +425,86 @@ func explore(tags: Array = []) -> void:
 	fight(result["enemy"])
 
 
+## Delve one floor deeper into an open secret realm in the current region
+## (data/secret_realms.json): pay the entry cost once per opening, beat the
+## floor's guardian, then claim one of its treasures. Losing drives you out,
+## and so does a realm that closes before the floor is done (W-005d). Clearing
+## the last floor grants the realm's inheritance once per life.
+func enter_secret_realm(realm_id: String) -> void:
+	if not _can_act():
+		return
+	var today: int = GameClock.total_days
+	var reason := SecretRealms.check_enter(player, data, realm_id, current_region, today)
+	if reason != "":
+		EventBus.post(reason, "warning")
+		EventBus.player_changed.emit()
+		return
+	var def := SecretRealms.realm(data, realm_id)
+	var cost := SecretRealms.pay_entry(player, def, today)
+	if cost > 0:
+		EventBus.post("You pour %d spirit stones into the barrier of the %s and slip inside." % [cost, def["name"]], "info")
+	var floor_def := SecretRealms.next_floor(player, def, today)
+	EventBus.post("%s: %s" % [floor_def.get("name", ""), floor_def.get("text", "")], "info")
+	if SecretRealms.closes_mid_floor(player, def, today):
+		var expelled := SecretRealms.expel(player, data, def, today)
+		var hurt := " (%s)" % Injuries.injury_name(data, expelled["injury"]) if expelled["injury"] != "" else ""
+		EventBus.post("The %s shudders and begins to close. Its barrier hurls you out before you can claim the %s.%s" % [def["name"], floor_def.get("name", ""), hurt], "danger")
+		_pass_time(expelled["days"])
+		return
+	var guardian := String(floor_def.get("guardian", ""))
+	if guardian != "" and not fight_enemy(data.enemies[guardian]):
+		if _can_act():
+			EventBus.post("You are driven out of the %s." % def["name"], "warning")
+		return
+	var result := SecretRealms.claim_floor(player, data, realm_id, today, world_flags, rng)
+	var notes: PackedStringArray = result["notes"]
+	EventBus.post("You claim the treasure of the %s. (%s)" % [result["floor_name"], ", ".join(notes)], "progress")
+	if result["last"]:
+		EventBus.post("You have plundered every floor of the %s." % def["name"], "progress")
+		_receive_inheritance(realm_id)
+	_pass_time(result["days"])
+
+
+func _receive_inheritance(realm_id: String) -> void:
+	var legacy: Dictionary = SecretRealms.realm(data, realm_id).get("inheritance", {})
+	if legacy.is_empty() or SecretRealms.has_inherited(player, realm_id):
+		return
+	var reason := SecretRealms.check_inheritance(player, data, realm_id)
+	if reason != "":
+		EventBus.post(reason, "warning")
+		return
+	var notes := SecretRealms.claim_inheritance(player, data, realm_id, world_flags)
+	EventBus.post("%s: %s (%s)" % [legacy.get("name", ""), legacy.get("text", ""), ", ".join(notes)], "progress")
+
+
+## Attempt the next trial of an inheritance ground in the current region
+## (data/inheritances.json): realm/attribute/alignment tests pass at once if
+## met, fight trials must be won (losing is never lethal). Passing the last
+## trial claims the inheritance; no one else can claim it after you.
+func attempt_inheritance(inheritance_id: String) -> void:
+	if not _can_act():
+		return
+	var reason := Inheritances.check_attempt(player, data, inheritance_id, current_region, GameClock.total_days, world_flags)
+	if reason != "":
+		EventBus.post(reason, "warning")
+		EventBus.player_changed.emit()
+		return
+	var def := Inheritances.inheritance(data, inheritance_id)
+	var stage := Inheritances.next_stage(player, def)
+	EventBus.post("%s: %s" % [stage.get("name", ""), stage.get("text", "")], "info")
+	var enemy := Inheritances.stage_enemy(data, stage)
+	if not enemy.is_empty() and not fight_enemy(enemy):
+		if _can_act():
+			EventBus.post("You fail the trial of the %s. You may try again." % def["name"], "warning")
+		return
+	var result := Inheritances.pass_stage(player, data, inheritance_id, world_flags)
+	if result["last"]:
+		EventBus.post("You claim the %s! (%s)" % [def["name"], ", ".join(result["notes"])], "progress")
+	else:
+		EventBus.post("You pass the %s." % result["stage_name"], "progress")
+	_pass_time(result["days"])
+
+
 ## The pending encounter's choices for the UI: [{index, label, disabled, reason}]
 ## ([] when no encounter is waiting).
 func encounter_choices() -> Array[Dictionary]:
@@ -336,11 +535,22 @@ func choose_encounter(index: int) -> void:
 		fight(result["enemy"])
 
 
+## Leave the pending encounter without choosing (the UI offers this only when
+## every choice is locked).
+func dismiss_encounter() -> void:
+	if pending_encounter == "":
+		return
+	pending_encounter = ""
+	EventBus.post("You leave the matter be and walk away.")
+	EventBus.encounter_choice_resolved.emit()
+	EventBus.player_changed.emit()
+
+
 ## Gather materials from a place's gathering table (see Exploration.gather).
 func gather(table: Array, days: int) -> void:
 	if not _can_act():
 		return
-	var found := Exploration.gather(player, table, rng)
+	var found := Exploration.gather(player, Exploration.gather_table_for(player, data, table), rng)
 	var notes: PackedStringArray = []
 	for item_id in found:
 		player.add_item(item_id, found[item_id])
@@ -349,6 +559,8 @@ func gather(table: Array, days: int) -> void:
 		EventBus.post("You search for %s but find nothing worth taking." % Calendar.format_duration(days))
 	else:
 		EventBus.post("You gather for %s. (%s)" % [Calendar.format_duration(days), ", ".join(notes)], "progress")
+	if Exploration.locked_gather_count(player, data, table) > 0:
+		EventBus.post("You sense rarer treasures here, but your cultivation is too shallow to find them.")
 	_pass_time(days)
 
 
@@ -378,29 +590,64 @@ func start_dialogue(npc_id: String) -> void:
 	if node == "":
 		return
 	dialogue_npc = npc_id
+	dialogue_event = ""
 	dialogue_node = node
 	EventBus.dialogue_requested.emit(npc_id)
+
+
+## Start a story event: a dialogue file (data/dialogue/) not bound to an NPC.
+## `once_flag` (optional) is a world flag set when it starts; an event whose
+## flag is already set does not start. Returns true if it started.
+func start_event(dialogue_id: String, once_flag: String = "") -> bool:
+	if not _can_act() or in_dialogue() or not data.dialogues.has(dialogue_id):
+		return false
+	if once_flag != "" and world_flags.get(once_flag, false):
+		return false
+	var node := Dialogue.entry_node(data.dialogues[dialogue_id], _dialogue_ctx(""))
+	if node == "":
+		return false
+	if once_flag != "":
+		world_flags[once_flag] = true
+	dialogue_npc = ""
+	dialogue_event = dialogue_id
+	dialogue_node = node
+	EventBus.dialogue_requested.emit("")
+	return true
+
+
+## Starts the pending intro event of a fresh character, once (world flag
+## INTRO_EVENT_FLAG). Called by the HUD when it is ready to show it.
+func start_pending_event() -> void:
+	var event_id := pending_event
+	pending_event = ""
+	if event_id != "":
+		start_event(event_id, INTRO_EVENT_FLAG)
+
+
+## True while a conversation or story event is in progress.
+func in_dialogue() -> bool:
+	return dialogue_npc != "" or dialogue_event != ""
 
 
 ## The current node: {id, speaker, text, choices: [{index, label, disabled,
 ## reason}]}, or {} when no conversation is in progress.
 func dialogue_view() -> Dictionary:
-	if dialogue_npc == "":
+	if not in_dialogue():
 		return {}
-	return Dialogue.view(_npc_dialogue(dialogue_npc), dialogue_node, _dialogue_ctx(dialogue_npc))
+	return Dialogue.view(_current_dialogue(), dialogue_node, _dialogue_ctx(dialogue_npc))
 
 
 ## Picks choice `index` (from dialogue_view) of the current node. Emits
 ## dialogue_ended once effects and time are applied if the conversation is over.
 func choose_dialogue(index: int) -> void:
-	if dialogue_npc == "" or not _can_act():
+	if not in_dialogue() or not _can_act():
 		return
 	var npc_id := dialogue_npc
-	var result := Dialogue.choose(_npc_dialogue(npc_id), dialogue_node, index, _dialogue_ctx(npc_id))
+	var result := Dialogue.choose(_current_dialogue(), dialogue_node, index, _dialogue_ctx(npc_id))
 	if not result["ok"]:
 		EventBus.post(result["reason"], "warning")
 		return
-	if result["favor"] != 0:
+	if result["favor"] != 0 and npc_id != "":
 		npc_favor[npc_id] = int(npc_favor.get(npc_id, 0)) + result["favor"]
 	if not result["notes"].is_empty():
 		EventBus.post("(%s)" % ", ".join(result["notes"]), "karma")
@@ -416,12 +663,32 @@ func end_dialogue() -> void:
 	var npc_id := dialogue_npc
 	dialogue_npc = ""
 	dialogue_node = ""
+	dialogue_event = ""
 	EventBus.dialogue_ended.emit(npc_id)
 	EventBus.player_changed.emit()
 
 
+## True if talking to `npc_id` would open a conversation file.
+func has_dialogue(npc_id: String) -> bool:
+	return not _npc_dialogue(npc_id).is_empty()
+
+
+## A named NPC's own dialogue file; generated adults (no def) fall back to
+## GENERIC_DIALOGUE, children have nothing to say.
 func _npc_dialogue(npc_id: String) -> Dictionary:
-	return data.dialogues.get(data.npcs.get(npc_id, {}).get("dialogue", ""), {})
+	if data.npcs.has(npc_id):
+		return data.dialogues.get(data.npcs[npc_id].get("dialogue", ""), {})
+	var npc: CharacterData = npcs.get(npc_id)
+	if npc == null or npc.age_years() < int(data.family.get("adult_age", 16)):
+		return {}
+	return data.dialogues.get(GENERIC_DIALOGUE, {})
+
+
+## The dialogue file in progress: the story event's, else the NPC's.
+func _current_dialogue() -> Dictionary:
+	if dialogue_event != "":
+		return data.dialogues.get(dialogue_event, {})
+	return _npc_dialogue(dialogue_npc)
 
 
 func _dialogue_ctx(npc_id: String) -> Dictionary:
@@ -453,8 +720,10 @@ func chat(npc_id: String) -> void:
 		EventBus.post(result["reason"], "warning")
 		EventBus.player_changed.emit()
 		return
-	npc_favor[npc_id] = favor + result["favor"]
-	EventBus.post("You pass some time talking with %s. (+%d favor)" % [npcs[npc_id].name, result["favor"]])
+	var room := int(data.family.get("acquaintance", {}).get("chat_max_favor", 0)) - favor - int(result["favor"])
+	var gain: int = result["favor"] + Karma.favor_bonus(player, data, npc_id, result["favor"], room)
+	npc_favor[npc_id] = favor + gain
+	EventBus.post("You pass some time talking with %s. (+%d favor)" % [npcs[npc_id].name, gain])
 	_pass_time(result["days"])
 
 
@@ -469,8 +738,11 @@ func give_gift(npc_id: String, item_id: String) -> void:
 		EventBus.post(result["reason"], "warning")
 		EventBus.player_changed.emit()
 		return
-	npc_favor[npc_id] = favor + result["favor"]
-	EventBus.post("%s accepts your %s. (+%d favor)" % [npcs[npc_id].name, data.items[item_id].get("name", item_id), result["favor"]])
+	var room := int(data.family.get("acquaintance", {}).get("gift_max_favor", 0)) - favor - int(result["favor"])
+	var gain: int = result["favor"] + Karma.favor_bonus(player, data, npc_id, result["favor"], room)
+	npc_favor[npc_id] = favor + gain
+	Karma.on_kindness(player, data, npc_id, "gift")
+	EventBus.post("%s accepts your %s. (+%d favor)" % [npcs[npc_id].name, data.items[item_id].get("name", item_id), gain])
 	_pass_time(result["days"])
 
 
@@ -500,6 +772,49 @@ func propose(npc_id: String, rank: String) -> void:
 	_pass_time(result["days"])
 
 
+## Commit a hostile act (data/karma.json: humiliate, rob, kill) against an NPC.
+## Acts with "fight" make you beat them first. The victim and their kin hold a grudge.
+func hostile_act(npc_id: String, act_id: String) -> void:
+	if not _can_act():
+		return
+	var npc: CharacterData = npcs.get(npc_id)
+	var reason := Karma.check_act(player, npc, act_id, data)
+	if reason != "":
+		EventBus.post(reason, "warning")
+		EventBus.player_changed.emit()
+		return
+	var act := Karma.act(data, act_id)
+	var won := true
+	if bool(act.get("fight", false)):
+		EventBus.post("You turn on %s." % npc.name, "danger")
+		won = fight_enemy(Karma.npc_enemy(npc, data))
+		if not _can_act():
+			return
+	var result := Karma.commit(player, npc, act_id, won, npcs, data, rng)
+	npc_favor[npc_id] = int(npc_favor.get(npc_id, 0)) + int(result["favor"])
+	var notes: PackedStringArray = result["notes"]
+	var suffix := " (%s)" % ", ".join(notes) if not notes.is_empty() else ""
+	if not won:
+		EventBus.post("%s drives you off.%s" % [npc.name, suffix], "warning")
+	elif not npc.alive:
+		EventBus.post("You kill %s.%s" % [npc.name, suffix], "danger")
+	else:
+		EventBus.post("%s: %s.%s" % [String(act.get("name", act_id)), npc.name, suffix], "warning")
+	_pass_time(result["days"])
+
+
+## Pay spirit stones to clear an NPC's grudge against you (Karma.amends_cost).
+func make_amends(npc_id: String) -> void:
+	if not _can_act():
+		return
+	var result := Karma.make_amends(player, npcs.get(npc_id), data)
+	if not result["ok"]:
+		EventBus.post(result["reason"], "warning")
+	else:
+		EventBus.post("You offer %s %d spirit stones and an apology. The grudge is settled." % [npcs[npc_id].name, result["cost"]], "progress")
+	EventBus.player_changed.emit()
+
+
 ## Cultivate together with a spouse who is in the current region: both gain
 ## qi with the dual cultivation bonus (data/family.json) and favor rises.
 func dual_cultivate(spouse_id: String, days: int, location_density: float = 1.0) -> void:
@@ -511,6 +826,7 @@ func dual_cultivate(spouse_id: String, days: int, location_density: float = 1.0)
 		EventBus.player_changed.emit()
 		return
 	var density := location_density * Exploration.qi_density(data, current_region) * Sects.cultivation_bonus(player, data)
+	_start_time_skip()
 	var result := Family.dual_cultivate(player, spouse, data, days, density)
 	if not result["ok"]:
 		EventBus.post(result["reason"], "warning")
@@ -524,7 +840,7 @@ func dual_cultivate(spouse_id: String, days: int, location_density: float = 1.0)
 		EventBus.post("%s rises to %s." % [spouse.name, Cultivation.realm_label(spouse, data)], "progress")
 	if result["at_bottleneck"]:
 		EventBus.post("You have reached a bottleneck. Attempt a breakthrough to advance.", "warning")
-	_pass_time(days)
+	_pass_time(days, "Cultivating with %s" % spouse.name)
 
 
 ## Spend time with a spouse in the current region trying for a child
@@ -549,6 +865,112 @@ func try_for_child(spouse_id: String) -> void:
 	else:
 		EventBus.post("You and %s spend %s together, but no child is conceived yet." % [spouse.name, Calendar.format_duration(result["days"])])
 	_pass_time(result["days"])
+
+
+## Found the player's clan (data/family.json "clan"): the player becomes its
+## Patriarch/Matriarch and their spouses and descendants join.
+func found_clan() -> void:
+	if not _can_act():
+		return
+	var result := Clans.found(player, clan, npcs, data, GameClock.total_days)
+	if not result["ok"]:
+		EventBus.post(result["reason"], "warning")
+		EventBus.player_changed.emit()
+		return
+	clan = result["clan"]
+	EventBus.post("You found the %s and become its %s. %d members gather under your banner." % [clan.name, Clans.rank_name(data, Clans.head_rank(data), player.gender), clan.members.size()], "progress")
+	if clan.seat != "":
+		EventBus.post("%s becomes the seat of the %s." % [Clans.seat_name(clan, data), clan.name])
+	_pass_time(result["days"])
+
+
+## Recruit an NPC in the current region as a clan retainer.
+func recruit_to_clan(npc_id: String) -> void:
+	if not _can_act():
+		return
+	var npc: CharacterData = npcs.get(npc_id)
+	if npc != null and npc.alive and Npcs.region_of(npc, data) != current_region:
+		EventBus.post("%s is not here." % npc.name, "warning")
+		EventBus.player_changed.emit()
+		return
+	var result := Clans.recruit(player, clan, npc, int(npc_favor.get(npc_id, 0)), data)
+	if not result["ok"]:
+		EventBus.post(result["reason"], "warning")
+		EventBus.player_changed.emit()
+		return
+	EventBus.post("%s swears allegiance to the %s." % [npc.name, clan.name], "progress")
+	_pass_time(result["days"])
+
+
+## Give a clan member a rank (data/family.json clan.ranks). Takes no time.
+func set_clan_rank(member_id: String, rank_id: String) -> void:
+	if not _can_act():
+		return
+	var member: CharacterData = npcs.get(member_id)
+	var result := Clans.promote(clan, member, rank_id, data)
+	if result["ok"]:
+		EventBus.post("%s is now a %s of the %s." % [member.name, Clans.rank_name(data, rank_id, member.gender), clan.name], "progress")
+	else:
+		EventBus.post(result["reason"], "warning")
+	EventBus.player_changed.emit()
+
+
+## Start building (or upgrading) a clan estate building (data/clan_buildings.json),
+## paid from the clan treasury. The builders work while the world moves on;
+## giving the order takes no time.
+func build_clan_building(building_id: String) -> void:
+	if not _can_act():
+		return
+	var result := ClanEstate.start_build(player, clan, building_id, data)
+	if not result["ok"]:
+		EventBus.post(result["reason"], "warning")
+	else:
+		var what := ClanEstate.building_name(data, building_id)
+		if int(result["level"]) > 1:
+			what += " (level %d)" % int(result["level"])
+		EventBus.post("The %s spends %d spirit stones to raise the %s. It will take %s." % [clan.name, result["cost"], what, Calendar.format_duration(result["days"])], "progress")
+	EventBus.player_changed.emit()
+
+
+## Clan estate over `days` days / `months` month boundaries: construction
+## progress, then monthly income, reputation and herb harvests.
+func _advance_estate(days: int, months: int) -> void:
+	var built := ClanEstate.advance_construction(clan, days)
+	if not built.is_empty():
+		EventBus.post("The %s's %s is complete (level %d)." % [clan.name, ClanEstate.building_name(data, built["building"]), built["level"]], "progress")
+	var yields := ClanEstate.apply_months(clan, player, data, months)
+	var herbs: Dictionary = yields["herbs"]
+	if not herbs.is_empty():
+		var parts: PackedStringArray = []
+		for item_id in herbs:
+			parts.append("%d %s" % [herbs[item_id], data.items[item_id].get("name", item_id)])
+		EventBus.post("Your clan's spirit fields send you %s." % ", ".join(parts))
+
+
+## Name one of the player's descendants in the clan as its heir (Young
+## Master/Mistress). Takes no time.
+func designate_heir(person_id: String) -> void:
+	if not _can_act():
+		return
+	var person: CharacterData = npcs.get(person_id)
+	var result := Clans.designate_heir(player, clan, person, npcs)
+	if result["ok"]:
+		EventBus.post("You name %s heir of the %s, its %s." % [person.name, clan.name, Clans.heir_title(data, person.gender)], "progress")
+	else:
+		EventBus.post(result["reason"], "warning")
+	EventBus.player_changed.emit()
+
+
+## Move spirit stones into the clan treasury. Takes no time.
+func deposit_to_clan(amount: int) -> void:
+	if not _can_act():
+		return
+	var result := Clans.deposit(player, clan, amount)
+	if result["ok"]:
+		EventBus.post("You deposit %d spirit stones. The %s treasury holds %d." % [amount, clan.name, clan.treasury])
+	else:
+		EventBus.post(result["reason"], "warning")
+	EventBus.player_changed.emit()
 
 
 ## Adopt an orphaned child NPC in the current region (data/family.json "adoption").
@@ -588,6 +1010,68 @@ func _welcome_adopted(child: CharacterData, result: Dictionary) -> void:
 	_pass_time(result["days"])
 
 
+## Give one of your children a monthly training assignment (data/family.json
+## "training"), paid in spirit stones each month. Takes no time.
+func assign_training(child_id: String, assignment_id: String, profession: String = "") -> void:
+	if not _can_act():
+		return
+	var child: CharacterData = npcs.get(child_id)
+	var result := Training.assign(player, child, assignment_id, profession, data)
+	if result["ok"]:
+		var what := Training.assignment_name(data, assignment_id)
+		if profession != "" and child.training.has("profession"):
+			what += " (%s)" % data.professions[profession].name
+		EventBus.post("%s will train: %s, %d spirit stones a month." % [child.name, what, Training.monthly_cost(data, assignment_id)])
+	else:
+		EventBus.post(result["reason"], "warning")
+	EventBus.player_changed.emit()
+
+
+## Stop paying for a child's training. Takes no time.
+func clear_training(child_id: String) -> void:
+	if not _can_act():
+		return
+	var child: CharacterData = npcs.get(child_id)
+	var reason := Training.check_child(player, child)
+	if reason != "":
+		EventBus.post(reason, "warning")
+	elif Training.current(child) != "":
+		Training.clear(child)
+		EventBus.post("%s's training is stopped." % child.name)
+	EventBus.player_changed.emit()
+
+
+## Teach a child in the current region a technique you know.
+func teach_technique(child_id: String, tech_id: String) -> void:
+	if not _can_act():
+		return
+	var child: CharacterData = npcs.get(child_id)
+	if not _child_is_here(child):
+		return
+	var result := Training.teach(player, child, tech_id, data)
+	if not result["ok"]:
+		EventBus.post(result["reason"], "warning")
+		EventBus.player_changed.emit()
+		return
+	EventBus.post("You teach %s the %s." % [child.name, data.techniques[tech_id].name], "progress")
+	_pass_time(result["days"])
+
+
+## Give a child in the current region a pill (any usable item) to take at once. Takes no time.
+func give_to_child(child_id: String, item_id: String) -> void:
+	if not _can_act():
+		return
+	var child: CharacterData = npcs.get(child_id)
+	if not _child_is_here(child):
+		return
+	var result := Training.give(player, child, item_id, data, world_flags)
+	if result["ok"]:
+		EventBus.post("%s takes the %s. (%s)" % [child.name, data.items[item_id]["name"], ", ".join(result["notes"])], "progress")
+	else:
+		EventBus.post(result["reason"], "warning")
+	EventBus.player_changed.emit()
+
+
 func learn_technique(tech_id: String) -> void:
 	if not _can_act():
 		return
@@ -610,7 +1094,58 @@ func practice_technique(tech_id: String, days: int) -> void:
 	if result["levels_gained"] > 0:
 		var mastered := " (mastered)" if Techniques.is_mastered(player, data, tech_id) else ""
 		EventBus.post("Your %s reaches level %d%s!" % [def.name, Techniques.level(player, tech_id), mastered], "progress")
+	var insights := Dao.on_practice(player, data, tech_id, days, rng)
+	for insight_id in insights:
+		EventBus.post("Practicing the %s, you comprehend the %s more deeply (level %d)!" % [def.name, Dao.def_of(data, insight_id)["name"], Dao.level(player, insight_id)], "progress")
 	_pass_time(days)
+
+
+## Contemplate a Dao insight you have already glimpsed, in seclusion, for `days`.
+func contemplate_dao(insight_id: String, days: int) -> void:
+	if not _can_act():
+		return
+	var result := Dao.contemplate(player, data, insight_id, days, rng)
+	if not result["ok"]:
+		EventBus.post(result["reason"], "warning")
+		return
+	var insight := Dao.def_of(data, insight_id)
+	EventBus.post("You sit in seclusion for %s, contemplating the %s." % [Calendar.format_duration(days), insight["name"]])
+	if result["levels"] > 0:
+		EventBus.post("Enlightenment! Your %s reaches level %d." % [insight["name"], Dao.level(player, insight_id)], "progress")
+	_pass_time(days)
+
+
+## Temper your body to its next stage (BodyTempering): consumes the stage's
+## items and days, and may injure you.
+func temper_body() -> void:
+	if not _can_act():
+		return
+	var result := BodyTempering.temper(player, data, rng)
+	if not result["ok"]:
+		EventBus.post(result["reason"], "warning")
+		EventBus.player_changed.emit()
+		return
+	EventBus.post("You spend %s tempering your body. You attain %s! (%s)" % [Calendar.format_duration(result["days"]), result["name"], BodyTempering.describe_bonuses(player, data)], "progress")
+	if result["injury"] != "":
+		EventBus.post("The tempering leaves you with %s." % Injuries.injury_name(data, result["injury"]), "danger")
+	_pass_time(result["days"])
+
+
+## Make a known cultivation method your main method. Re-circulating your qi takes
+## techniques.json method_switch_days.
+func set_main_method(tech_id: String) -> void:
+	if not _can_act():
+		return
+	var result := Techniques.set_main_method(player, data, tech_id)
+	if not result["ok"]:
+		EventBus.post(result["reason"], "warning")
+		return
+	var def: TechniqueDef = data.techniques[tech_id]
+	EventBus.post("You spend %s re-circulating your qi along the paths of the %s: %s." % [Calendar.format_duration(result["days"]), def.name, Techniques.describe_method(player, data, tech_id)], "progress")
+	if result["days"] > 0:
+		_pass_time(result["days"])
+	else:
+		EventBus.player_changed.emit()
 
 
 ## Activate a secret art: burn its lifespan cost for a temporary combat buff. Takes no time.
@@ -671,7 +1206,9 @@ func treat_npc(npc_id: String) -> void:
 	npc_favor[npc_id] = int(npc_favor.get(npc_id, 0)) + result["favor"]
 	var injury_name := Injuries.injury_name(data, result["injury"])
 	var outcome := "it is fully healed" if result["healed"] else "%s left" % Calendar.format_duration(patient.injuries[result["injury"]])
-	EventBus.post("You treat %s's %s: %s. (+%d favor, alignment %+d)" % [patient.name, injury_name, outcome, result["favor"], result["alignment"]], "karma")
+	var owed := Karma.on_kindness(player, data, npc_id, "treat_npc")
+	var debt := ", they owe you" if owed > 0 else ""
+	EventBus.post("You treat %s's %s: %s. (+%d favor, alignment %+d%s)" % [patient.name, injury_name, outcome, result["favor"], result["alignment"], debt], "karma")
 	if result["ranks_gained"] > 0:
 		EventBus.post("You are now a %s!" % Professions.rank_title(player, data, Medicine.DOCTOR), "progress")
 	_pass_time(result["days"])
@@ -693,6 +1230,7 @@ const CRAFT_FLAVOR := {
 	"alchemist": {"verb": "refine", "great": "Pill fragrance fills the room!", "fail": "The cauldron cracks and your herbs turn to ash."},
 	"blacksmith": {"verb": "forge", "great": "The blade sings as it leaves the forge!", "fail": "The metal cracks under the hammer and the ore is ruined."},
 	"talisman_master": {"verb": "inscribe", "great": "The runes blaze with golden light!", "fail": "Your brush slips; the talisman flares and burns to ash."},
+	"array_master": {"verb": "refine", "great": "The array flags hum in perfect resonance!", "fail": "A rune line breaks and the array materials crumble to dust."},
 }
 
 
@@ -751,6 +1289,7 @@ func take_mission(mission_id: String) -> void:
 			if _can_act():
 				EventBus.post("You fail the mission: %s." % mission["name"], "warning")
 			return
+	_start_time_skip()
 	var result := Sects.complete_mission(player, data, mission_id, world_flags)
 	if not result["ok"]:
 		EventBus.post(result["reason"], "warning")
@@ -761,7 +1300,29 @@ func take_mission(mission_id: String) -> void:
 	EventBus.post("Mission complete: %s. (%s)" % [mission["name"], ", ".join(notes)], "progress")
 	if result["promoted"]:
 		EventBus.post("Your sect promotes you to %s." % Sects.describe(player, data), "progress")
-	_pass_time(result["days"])
+	_pass_time(result["days"], "On a sect mission")
+
+
+## Fight your sect's promotion trial (sects.json rank `trial`) for the next
+## rank. A sparring match: losing can injure you but never kills or robs you.
+func attempt_promotion_trial() -> void:
+	if not _can_act():
+		return
+	var reason := Sects.check_promotion(player, data)
+	if reason != "":
+		EventBus.post(reason, "warning")
+		EventBus.player_changed.emit()
+		return
+	var sect: SectDef = data.sects[player.sect["id"]]
+	var rank_name := sect.rank_name(Sects.next_rank(player, data))
+	var enemy := Sects.trial_opponent(data, Sects.trial_enemy(player, data))
+	EventBus.post("You step into the trial arena to earn the rank of %s." % rank_name)
+	if fight_enemy(enemy):
+		Sects.pass_trial(player, data)
+		EventBus.post("You pass the trial. Your sect promotes you to %s." % Sects.describe(player, data), "progress")
+		EventBus.player_changed.emit()
+	elif _can_act():
+		EventBus.post("You fail the trial for %s. You may try again." % rank_name, "warning")
 
 
 ## Buy an item from your sect's contribution shop (sects.json `shop`).
@@ -774,6 +1335,36 @@ func buy_with_contribution(item_id: String) -> void:
 		EventBus.post(result["reason"], "warning")
 	else:
 		EventBus.post("The sect treasury grants you %s for %d contribution. (%d left)" % [data.items[item_id].get("name", item_id), result["cost"], Sects.contribution_balance(player)], "progress")
+	EventBus.player_changed.emit()
+
+
+## The lots of `house_id`'s open auction ([] when none is being held).
+func auction_lots(house_id: String) -> Array:
+	return Auctions.current_lots(auctions, data, house_id, GameClock.total_days, rng.seed)
+
+
+## Why a bid of `amount` on lot `lot_index` would be refused ("" = allowed).
+func check_bid(house_id: String, lot_index: int, amount: int) -> String:
+	if not _can_act():
+		return "You cannot act."
+	return Auctions.check_bid(player, data, auctions, house_id, lot_index, amount, current_region, GameClock.total_days, rng.seed)
+
+
+## Place one sealed bid on an auction lot (data/auctions.json). Beating the
+## hidden NPC maximum wins the lot; otherwise a rival takes it. Takes no time.
+func bid(house_id: String, lot_index: int, amount: int) -> void:
+	if not _can_act():
+		return
+	var result := Auctions.bid(player, data, auctions, house_id, lot_index, amount, current_region, GameClock.total_days, rng.seed)
+	if not result["ok"]:
+		EventBus.post(result["reason"], "warning")
+	else:
+		var item_name: String = data.items[result["item"]].get("name", result["item"])
+		var lot_name := item_name if result["count"] == 1 else "%d %s" % [result["count"], item_name]
+		if result["won"]:
+			EventBus.post("The hammer falls: you win %s for %d spirit stones." % [lot_name, result["price"]], "progress")
+		else:
+			EventBus.post("A rival bidder outbids you and takes %s for %d spirit stones." % [lot_name, result["price"]], "warning")
 	EventBus.player_changed.emit()
 
 
@@ -829,8 +1420,37 @@ func fight_enemy(enemy: Dictionary) -> bool:
 	if outcome["died"]:
 		_die_violently(outcome["cause"])
 		return false
+	if result["victory"]:
+		_try_tame(String(enemy.get("id", "")))
 	_pass_time(outcome["days"])
 	return bool(result["victory"]) and _can_act()
+
+
+## A Beast Tamer who defeats a tameable beast tries to tame it (Beasts.try_tame).
+func _try_tame(enemy_id: String) -> void:
+	var tame := Beasts.try_tame(player, data, enemy_id, rng)
+	if not tame["attempted"]:
+		return
+	var beast_name := Beasts.beast_name(data, tame["beast"])
+	if tame["tamed"]:
+		EventBus.post("The beaten %s lowers its head and accepts you as its master. It follows you now." % beast_name, "progress")
+	else:
+		EventBus.post("You try to tame the %s, but it tears free and flees." % beast_name)
+	if tame["ranks_gained"] > 0:
+		EventBus.post("You are now a %s!" % Professions.rank_title(player, data, Beasts.PROFESSION), "progress")
+	EventBus.player_changed.emit()
+
+
+## Release spirit beast companion `index` back to the wild.
+func release_companion(index: int) -> void:
+	if not _can_act():
+		return
+	var released := Beasts.release(player, data, index)
+	if released == "":
+		EventBus.post("You have no such companion.", "warning")
+	else:
+		EventBus.post("You set your %s free. It looks back once before vanishing into the wild." % released)
+	EventBus.player_changed.emit()
 
 
 ## Bind the Creation Artifact to an anchor place (data/regions.json "anchor_id").
@@ -920,9 +1540,12 @@ func to_save_dict() -> Dictionary:
 	return {
 		"player": player.to_dict(),
 		"world_flags": world_flags.duplicate(),
+		"auctions": auctions.duplicate(true),
 		"region": current_region,
 		"npcs": Npcs.to_dict(npcs),
 		"npc_favor": npc_favor.duplicate(),
+		"clan": clan.to_dict() if clan != null else {},
+		"npc_clans": NpcClans.to_dict(npc_clans),
 		"clock": GameClock.to_dict(),
 		# 64-bit ints do not survive JSON floats, so store them as strings.
 		"rng_seed": str(rng.seed),
@@ -936,19 +1559,29 @@ func load_save_dict(d: Dictionary) -> void:
 		Alchemy.grant_rank_recipes(player, data)  # saves from before recipe learning
 	CreationArtifact.ensure(player, data)
 	world_flags = d.get("world_flags", {})
+	auctions = d.get("auctions", {})
 	current_region = d.get("region", data.start_region)
 	npcs = Npcs.from_dict(d.get("npcs", {}))
 	Npcs.ensure_all(npcs, data, rng)
-	Npcs.ensure_eligible(npcs, data, rng)
+	Npcs.ensure_eligible(npcs, data, rng, Children.descendants(player, npcs))
 	npc_favor = {}
 	for npc_id in d.get("npc_favor", {}):
 		npc_favor[npc_id] = int(d["npc_favor"][npc_id])
+	var saved_clan: Dictionary = d.get("clan", {})
+	clan = ClanData.from_dict(saved_clan) if not saved_clan.is_empty() else null
+	if clan != null and clan.seat == "":
+		Clans.move_seat(clan, player.abode, data)
+	npc_clans = NpcClans.from_dict(d.get("npc_clans", {}))
+	NpcClans.ensure(npc_clans, npcs, data, rng)  # older saves gain the clans
 	dialogue_npc = ""
 	dialogue_node = ""
+	dialogue_event = ""
+	pending_event = ""  # a loaded game never replays the intro event
 	pending_encounter = ""
 	if not data.regions.has(current_region):
 		current_region = data.start_region
 	GameClock.from_dict(d.get("clock", {}))
+	EventBus.clear_history()
 	rng.seed = String(d.get("rng_seed", "0")).to_int()
 	rng.state = String(d.get("rng_state", "0")).to_int()
 	EventBus.session_started.emit()
@@ -961,9 +1594,22 @@ func _can_act() -> bool:
 	return player != null and player.alive
 
 
-func _pass_time(days: int) -> void:
+## Advance the clock. A non-empty `skip_title` (e.g. "Meditating") also emits
+## EventBus.time_skipped with a summary against _start_time_skip()'s snapshot.
+func _pass_time(days: int, skip_title: String = "") -> void:
+	var posted_before := EventBus.posted_count
 	GameClock.advance(days)
+	if skip_title != "" and _can_act() and not _skip_before.is_empty():
+		var summary := TimeSkip.summarize(skip_title, days, _skip_before, TimeSkip.snapshot(player),
+				Cultivation.realm_label(player, data), EventBus.posted_count - posted_before)
+		EventBus.time_skipped.emit(days, summary)
+	_skip_before = {}
 	EventBus.player_changed.emit()
+
+
+## Remember the player's numbers before a long action (see _pass_time).
+func _start_time_skip() -> void:
+	_skip_before = TimeSkip.snapshot(player)
 
 
 func _on_days_advanced(days: int) -> void:
@@ -977,6 +1623,7 @@ func _on_days_advanced(days: int) -> void:
 			var spouse: CharacterData = npcs.get(spouse_id)
 			if spouse != null and spouse.alive:
 				npc_favor[spouse_id] = Family.add_spouse_favor(data, int(npc_favor.get(spouse_id, 0)), spouse_favor)
+	Karma.decay(player, data, Karma.decay_amount(data, age_before, player.age_days))
 	for injury_id in Injuries.pass_days(player, days):
 		EventBus.post("Your %s has healed." % Injuries.injury_name(data, injury_id), "progress")
 	for buff_name in Buffs.pass_days(player, days):
@@ -993,18 +1640,57 @@ func _on_days_advanced(days: int) -> void:
 			continue
 		EventBus.post(event["text"], event["category"])
 	if married_off:
-		Npcs.ensure_eligible(npcs, data, rng)  # keep courtship candidates in every region
+		Npcs.ensure_eligible(npcs, data, rng, Children.descendants(player, npcs))  # keep courtship candidates in every region
+	for event in NpcClans.simulate(npc_clans, npcs, data):
+		EventBus.post(event["text"], event["category"])
 	_advance_pregnancies(days)
+	for legacy: Dictionary in data.inheritances.values():
+		if Inheritances.lost_between(legacy, GameClock.total_days - days, GameClock.total_days, world_flags):
+			EventBus.post(String(legacy.get("rival_news", "Word spreads that someone has claimed the %s." % legacy["name"])), "info")
+	@warning_ignore("integer_division")
+	var months := player.age_days / Calendar.DAYS_PER_MONTH - age_before / Calendar.DAYS_PER_MONTH
+	for i in months:
+		_sect_month_end()
+	for event in Training.advance(player, npcs, data, months, ClanEstate.training_multiplier(clan, data)):
+		EventBus.post(event["text"], event["category"])
+	for repaid in Karma.repay_debts(player, npcs, data, months, rng, world_flags):
+		EventBus.post("%s repays a debt of gratitude. (%s)" % [npcs[repaid["npc_id"]].name, ", ".join(repaid["notes"])], "progress")
+	if clan != null:
+		_advance_estate(days, months)
+		for joined in Clans.sync_family(player, clan, npcs, data):
+			EventBus.post("%s joins the %s." % [joined, clan.name], "progress")
+	for line in SecretRealms.opening_news(player, data, current_region, GameClock.total_days - days, GameClock.total_days):
+		EventBus.post(line, "progress")
 	if player.age_years() >= Cultivation.lifespan_years(player, data):
 		_kill("Your lifespan is exhausted. You die of old age at %d." % player.age_years())
 
 
-## Pregnancies of the player and the player's spouses progress; due ones give birth.
+## Pays the sect stipend for the month that just ended (if the duty was met).
+func _sect_month_end() -> void:
+	var duty := Sects.monthly_duty(player, data)
+	var earned := Sects.duty_progress(player)
+	var result := Sects.month_end(player, data)
+	if result["paid"]:
+		var parts: PackedStringArray = []
+		if result["stones"] > 0:
+			parts.append("%d spirit stones" % result["stones"])
+		for item_id in result["items"]:
+			parts.append("%d %s" % [result["items"][item_id], data.items[item_id].get("name", item_id)])
+		EventBus.post("Your sect pays your monthly stipend: %s." % ", ".join(parts), "progress")
+	elif result["skipped"]:
+		EventBus.post("You fell short of your sect duty (%d/%d contribution), so this month's stipend is withheld." % [earned, duty], "warning")
+	if result["promoted"]:
+		EventBus.post("Your sect promotes you to %s." % Sects.describe(player, data), "progress")
+
+
+## Pregnancies of the player and of spouses carrying the player's child
+## progress; due ones give birth. A spouse carrying an NPC's child (e.g. a
+## widow's late husband's) is left to NpcFamilies, which already advances it.
 func _advance_pregnancies(days: int) -> void:
 	var expecting: Array[CharacterData] = [player]
 	for spouse_id in player.spouses:
 		var spouse: CharacterData = npcs.get(spouse_id)
-		if spouse != null and spouse.alive:
+		if spouse != null and spouse.alive and String(spouse.pregnancy.get("partner", "")) == player.id:
 			expecting.append(spouse)
 	for mother in expecting:
 		if not Children.advance_pregnancy(mother, days):
@@ -1020,6 +1706,15 @@ func _advance_pregnancies(days: int) -> void:
 		EventBus.post("A child is born to %s: %s, a %s with %s." % [mother_name, child.name, "son" if child.gender == "male" else "daughter", SpiritualRoots.describe(child.spiritual_roots, data)], "progress")
 
 
+## Whether `child` (a living NPC) is in the current region; posts a warning if not.
+func _child_is_here(child: CharacterData) -> bool:
+	if child != null and child.alive and Npcs.region_of(child, data) != current_region:
+		EventBus.post("%s is not here." % child.name, "warning")
+		EventBus.player_changed.emit()
+		return false
+	return true
+
+
 ## A death by violence: the Creation Artifact respawns the player if it has a
 ## life left; otherwise death is final. (Old age always goes straight to _kill.)
 func _die_violently(cause: String) -> void:
@@ -1033,10 +1728,33 @@ func _die_violently(cause: String) -> void:
 	EventBus.post("The Creation Artifact pulls your soul back. You awaken at %s, %d qi lost. (%d lives left)" % [place, int(result["qi_lost"]), result["lives_left"]], "warning")
 	var moved: bool = result["region"] != current_region
 	current_region = result["region"]
+	pending_respawn = {"cause": cause, "anchor_id": result["anchor_id"], "lives_left": result["lives_left"], "qi_lost": result["qi_lost"]}
+	if moved:
+		spawn_anchor = result["anchor_id"]
 	EventBus.player_respawned.emit(result["anchor_id"], result["lives_left"])
 	_pass_time(result["days"])
 	if moved:
 		EventBus.region_changed.emit(current_region)
+
+
+## After a respawn, awaken at `anchor_id` (any bound anchor, or "" for the
+## start region when none are bound) instead of the default respawn point.
+## Reloads the region so the player stands at the chosen anchor.
+func choose_respawn_anchor(anchor_id: String) -> void:
+	if pending_respawn.is_empty() or not _can_act():
+		return
+	var valid := CreationArtifact.respawn_choices(player, data).any(func(choice: Dictionary) -> bool: return choice["anchor_id"] == anchor_id)
+	if not valid:
+		push_error("Not a respawn choice: '%s'" % anchor_id)
+		return
+	if anchor_id != String(pending_respawn["anchor_id"]):
+		var place := CreationArtifact.anchor_name(data, anchor_id) if anchor_id != "" else Exploration.region_name(data, data.start_region)
+		EventBus.post("You let the artifact carry your soul to %s instead." % place, "warning")
+	pending_respawn = {}
+	current_region = CreationArtifact.anchor_region(data, anchor_id)
+	spawn_anchor = anchor_id
+	EventBus.player_changed.emit()
+	EventBus.region_changed.emit(current_region)
 
 
 func _kill(cause: String) -> void:
