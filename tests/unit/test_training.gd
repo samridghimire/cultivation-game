@@ -177,3 +177,44 @@ func test_game_state_training_actions() -> void:
 	gs.npcs[child.id].home_region = "nowhere"
 	gs.teach_technique(child.id, "basic_breathing")
 	gs.end_session()
+
+
+## FAM-004c: the NPC menu of your own child offers teaching and pills.
+func test_child_npc_menu_teaches_and_gives() -> void:
+	var gs := _root().get_node("GameState")
+	var c := new_character()
+	gs.start_session(c)
+	var child := Npcs.spawn(gs.npcs, gs.data, seeded_rng(4), {"age_years": 12, "region": gs.current_region, "realm": "qi_refining", "roots": {"fire": 60}})
+	c.children.append(child.id)
+	child.parents = [c.id] as Array[String]
+	Techniques.learn(c, gs.data, "basic_breathing")
+	c.add_item("qi_gathering_pill", 2)
+	var npc: Node = load("res://src/world/interactables/npc.gd").new()
+	npc.npc_id = child.id
+	var labels: Array = npc.get_options().map(func(o: Dictionary) -> String: return o["label"])
+	assert_true(labels.has("Teach %s a technique" % child.name), str(labels))
+	assert_true(labels.has("Give %s a pill" % child.name), str(labels))
+	var find := func(prefix: String) -> Dictionary:
+		for o: Dictionary in npc.get_options():
+			if String(o["label"]).begins_with(prefix):
+				return o
+		return {}
+	(find.call("Teach %s" % child.name)["action"] as Callable).call()
+	var teach: Dictionary = find.call("Teach the Basic Breathing Method")
+	assert_false(teach.is_empty() or teach["disabled"], str(teach))
+	(teach["action"] as Callable).call()
+	assert_true(Techniques.knows(child, "basic_breathing"))
+	assert_true(find.call("Teach the Basic Breathing Method")["disabled"], "already taught")
+	(find.call("Back")["action"] as Callable).call()
+	(find.call("Give %s" % child.name)["action"] as Callable).call()
+	var give: Dictionary = find.call("Give Qi Gathering Pill")
+	assert_false(give.is_empty() or give["disabled"], str(give))
+	(give["action"] as Callable).call()
+	assert_eq(c.item_count("qi_gathering_pill"), 1)
+	npc.on_menu_closed()
+	var stranger := Npcs.spawn(gs.npcs, gs.data, seeded_rng(5), {"age_years": 12, "region": gs.current_region})
+	npc.npc_id = stranger.id
+	labels = npc.get_options().map(func(o: Dictionary) -> String: return o["label"])
+	assert_false(labels.any(func(l: String) -> bool: return l.begins_with("Teach ")), "only your own children")
+	npc.free()
+	gs.end_session()
