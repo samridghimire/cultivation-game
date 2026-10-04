@@ -3,7 +3,9 @@ extends RefCounted
 ## Cave abodes (G-010): the player may claim one dwelling (data/regions.json
 ## region "abodes") for spirit stones, keep items in its storage chest and
 ## cultivate there in seclusion at its qi density. An abode with an anchor_id
-## can be bound as a Creation Artifact anchor.
+## can be bound as a Creation Artifact anchor. One array (items.json `array`,
+## made by Array Masters, G-006) can be set up at the abode to raise its qi
+## density further.
 
 
 ## The abode def (with "region") for `abode_id`, or {}.
@@ -46,18 +48,23 @@ static func check_claim(c: CharacterData, data: GameData, abode_id: String, regi
 	return ""
 
 
-## Claims `abode_id` (giving up any previous abode). Returns {ok, reason, cost,
-## previous (old abode id or ""), anchor_id (the abode's anchor or "")}.
+## Claims `abode_id` (giving up any previous abode, whose array is packed back
+## into the inventory). Returns {ok, reason, cost, previous (old abode id or ""),
+## anchor_id (the abode's anchor or ""), array_returned (item id or "")}.
 static func claim(c: CharacterData, data: GameData, abode_id: String, region_id: String) -> Dictionary:
 	var reason := check_claim(c, data, abode_id, region_id)
 	if reason != "":
-		return {"ok": false, "reason": reason, "cost": 0, "previous": "", "anchor_id": ""}
+		return {"ok": false, "reason": reason, "cost": 0, "previous": "", "anchor_id": "", "array_returned": ""}
 	var def := get_def(data, abode_id)
 	var cost := int(def.get("cost", 0))
 	var previous := c.abode
 	c.add_item("spirit_stone", -cost)
+	var array_returned := c.abode_array
+	if array_returned != "":
+		c.add_item(array_returned, 1)
+		c.abode_array = ""
 	c.abode = abode_id
-	return {"ok": true, "reason": "", "cost": cost, "previous": previous, "anchor_id": String(def.get("anchor_id", ""))}
+	return {"ok": true, "reason": "", "cost": cost, "previous": previous, "anchor_id": String(def.get("anchor_id", "")), "array_returned": array_returned}
 
 
 ## Qi density multiplier for cultivating in seclusion at `c`'s abode while in
@@ -65,7 +72,58 @@ static func claim(c: CharacterData, data: GameData, abode_id: String, region_id:
 static func seclusion_density(c: CharacterData, data: GameData, region_id: String) -> float:
 	if not owns_in_region(c, data, region_id):
 		return 0.0
-	return float(get_def(data, c.abode).get("qi_density", 1.0))
+	return float(get_def(data, c.abode).get("qi_density", 1.0)) * (1.0 + array_bonus(c, data))
+
+
+## The `array` block of item `item_id` (items.json), or {} if it is not an array.
+static func array_def(data: GameData, item_id: String) -> Dictionary:
+	return data.items.get(item_id, {}).get("array", {})
+
+
+## Fractional qi density bonus of the array set up at `c`'s abode (0.0 if none).
+static func array_bonus(c: CharacterData, data: GameData) -> float:
+	if c.abode == "" or c.abode_array == "":
+		return 0.0
+	return float(array_def(data, c.abode_array).get("qi_density_bonus", 0.0))
+
+
+## Why `c` (in `region_id`) cannot set up array `item_id` at their abode, or "".
+static func check_place_array(c: CharacterData, data: GameData, region_id: String, item_id: String) -> String:
+	if not owns_in_region(c, data, region_id):
+		return "You have no abode here."
+	if array_def(data, item_id).is_empty():
+		return "That is not an array."
+	if c.item_count(item_id) < 1:
+		return "You do not have one."
+	if c.abode_array == item_id:
+		return "That array already guards your abode."
+	return ""
+
+
+## Sets up array `item_id` at the abode, packing up any array already there
+## into the inventory. Returns {ok, reason, replaced (item id or "")}.
+static func place_array(c: CharacterData, data: GameData, region_id: String, item_id: String) -> Dictionary:
+	var reason := check_place_array(c, data, region_id, item_id)
+	if reason != "":
+		return {"ok": false, "reason": reason, "replaced": ""}
+	var replaced := c.abode_array
+	if replaced != "":
+		c.add_item(replaced, 1)
+	c.add_item(item_id, -1)
+	c.abode_array = item_id
+	return {"ok": true, "reason": "", "replaced": replaced}
+
+
+## Packs the abode's array back into the inventory. Returns {ok, reason, item}.
+static func remove_array(c: CharacterData, data: GameData, region_id: String) -> Dictionary:
+	if not owns_in_region(c, data, region_id):
+		return {"ok": false, "reason": "You have no abode here.", "item": ""}
+	if c.abode_array == "":
+		return {"ok": false, "reason": "No array is set up here.", "item": ""}
+	var item_id := c.abode_array
+	c.abode_array = ""
+	c.add_item(item_id, 1)
+	return {"ok": true, "reason": "", "item": item_id}
 
 
 static func storage_slots(c: CharacterData, data: GameData) -> int:
@@ -119,4 +177,7 @@ static func validate(data: GameData) -> PackedStringArray:
 		var realm_id := String(def.get("min_realm", ""))
 		if realm_id != "" and data.realm_index_of(realm_id) < 0:
 			errors.append("Abode '%s' has unknown min_realm '%s'" % [abode_id, realm_id])
+	for item: Dictionary in data.items.values():
+		if item.has("array") and float(array_def(data, String(item.get("id", ""))).get("qi_density_bonus", 0.0)) <= 0.0:
+			errors.append("Item '%s' array needs qi_density_bonus > 0" % item.get("id", ""))
 	return errors

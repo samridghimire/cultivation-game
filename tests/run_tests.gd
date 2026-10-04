@@ -3,6 +3,7 @@ extends SceneTree
 ##   godot --headless --path . -s res://tests/run_tests.gd
 ## Or simply: tools/test.sh
 ## Runs every test_* method in tests/unit/test_*.gd. Exit code 1 on failure.
+## Test methods may `await` (e.g. process frames so deferred UI focus lands).
 
 const TEST_DIR := "res://tests/unit"
 
@@ -48,7 +49,7 @@ func _run() -> void:
 				continue
 			instance.failures = PackedStringArray()
 			var errors_before := errors.count
-			instance.call(method_name)
+			await instance.call(method_name)
 			if errors.count > errors_before:
 				instance.failures.append("engine logged %d error(s) (see output above)" % (errors.count - errors_before))
 			if instance.failures.is_empty():

@@ -6,9 +6,9 @@ extends PanelContainer
 
 signal closed
 
-const TITLES := {"alchemist": "Alchemy", "blacksmith": "Forge", "talisman_master": "Talisman Inscription"}
+const TITLES := {"alchemist": "Alchemy", "blacksmith": "Forge", "talisman_master": "Talisman Inscription", "array_master": "Array Refining"}
 const BATCH_SIZE := 5
-const VERBS := {"alchemist": "Refine", "blacksmith": "Forge", "talisman_master": "Inscribe"}
+const VERBS := {"alchemist": "Refine", "blacksmith": "Forge", "talisman_master": "Inscribe", "array_master": "Refine"}
 
 var _title: Label
 var _list: VBoxContainer
@@ -25,7 +25,7 @@ var _selected := ""
 
 
 func _init() -> void:
-	add_theme_stylebox_override("panel", UIStyle.panel().get_theme_stylebox("panel"))
+	add_theme_stylebox_override("panel", UIStyle.panel_style())
 	custom_minimum_size = Vector2(800, 0)
 	visible = false
 	var box := VBoxContainer.new()
