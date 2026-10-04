@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-04 [VIS-002b] Scenery stays clear of cave abodes, and the Withered Bone Marsh gets dead trees, pale bone-colored rocks and blood-red flowers.
 - 2026-10-03 [VIS-002] Region maps get scenery: trees, rocks, grass and flowers placed deterministically per region off paths and places, themed per region via regions.json map.decor.
 - 2026-10-04 [QA-20261004-1] Fixed a flaky Dao test (it depended on the shared GameState rng) that turned main red after unrelated tests were added.
 - 2026-10-03 [VIS-001] The player is drawn as a robed cultivator facing where they walk: sect-colored robe (sects.json robe_color), alignment-colored sash and qi aura rings that grow with the realm.
