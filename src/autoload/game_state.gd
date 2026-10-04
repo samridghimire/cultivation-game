@@ -196,6 +196,7 @@ func _report_tribulation(result: Dictionary) -> void:
 	var trib: Dictionary = result["tribulation"]
 	if trib.is_empty():
 		return
+	EventBus.tribulation_endured.emit(result["realm_name"], trib)
 	EventBus.post("Heaven answers your breakthrough: tribulation clouds gather over the %s threshold!" % result["realm_name"], "danger")
 	if not trib["talismans_used"].is_empty():
 		EventBus.post("You burn %s to shield yourself." % ", ".join(trib["talismans_used"]), "info")
