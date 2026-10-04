@@ -84,6 +84,7 @@ Every great cultivation protagonist has something that sets them apart. Ours is 
 | Dialogue | ✅ (dialogue window) | `Dialogue`, `data/dialogue/` |
 | Family: identity, courtship, marriage, dual cultivation, children | ✅ core, ❌ not reachable in-game (P0 tasks) | `data/family.json`, `Family`, `Children` |
 | Clans, estates, bloodlines | ✅ clan core (FAM-005), bloodlines core (FAM-007), ❌ UI (FAM-005b), estates (FAM-006) | `data/family.json`, `data/bloodlines.json`, `Clans`, `ClanData`, `Bloodlines` |
+| Spirit beast companions (Beast Tamer taming, combat bonus) | ✅ core, 🚧 no UI (BEAST-001c) | `data/beasts.json`, `Beasts` |
 | Cultivation methods (one main method, qi rate, realm cap) | ✅ core, 🚧 no UI (CM-001b) | `Techniques`, `data/techniques.json` |
 | Dao insights, Heavenly Tribulations | ❌ (DAO-001, TRIB-001) | |
 | Inventory, techniques, character sheet, settings, pause, load screens | ✅ | `src/ui/` |
@@ -117,3 +118,4 @@ Void Refinement → Body Integration → Mahayana → Tribulation Transcendence.
 - (W-005/G-008) **Founding your own sect** (roadmap item 3) is not scheduled yet. Default proposal: it unlocks at Nascent Soul, needs a mountain gate place, and reuses the clan treasury/buildings model. Should it be a separate system from clans, or a clan that grows into a sect?
 - (F-005d) **Cultivation pacing.** With sensible play (best qi spot reachable, joining a sect), the balance sim reaches Core Formation by age ~20 and the final realm by ~800, so lifespan never pressures anyone and pills don't matter. What pacing do you want? Agents' default proposal for a sensible, average-root player: Foundation ~25-35, Core Formation ~80-120, Nascent Soul ~300-450, with each later realm taking a large share of its lifespan, and Heavenly Roots about 2-3x faster.
 - **Main story / Creation Artifact origin.** Agents keep the artifact's maker, why it chose the player and who hunts it vague until you decide. Do you want to outline the main story arc (acts, antagonist faction), or should agents propose 2-3 options for you to pick from?
+- (BEAST-001) **Taming spirit beasts.** Default: a Beast Tamer automatically tries to tame a tameable beast they defeat (15% at rank 0, up to 75%), keeps one companion (`max_companions` in data/beasts.json), and the companion adds a share of their combat stats that fades once they outgrow its realm. Should taming be a choice after the fight (tame vs slay for its materials), should non-tamers tame at all, and how many companions should a master keep?

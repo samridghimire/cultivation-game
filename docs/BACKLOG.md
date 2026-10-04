@@ -95,6 +95,9 @@ ART-001/ART-001b/ART-002 are done; ART-002b and ART-005 are in P1 above.
 | GATHER-001 | systems | todo | Realm-gated gathering: optional `min_realm` per gather_table entry (or per gather place) in regions.json, skipped (or the place disabled with a reason) below that realm, validated in GameData. Then move C-007's Nine-Leaf Soul Grass / Earth Marrow Fungus / Golden Core seeds behind Foundation/Core gates in the gather tables (today they are only rare drops there, plus realm-gated encounters). |
 | DEED-001 | systems | todo | Deed requirements and fights: optional `requires` on deeds (min_realm, min/max_alignment, like encounter choices) shown as disabled reasons by deed_giver, and an optional `enemy` fought before the effects apply (e.g. C-008's "free the captives" should mean beating the bandit lord). Then gate C-008's bandit camp deeds behind a fight. |
 | W-005 | systems | todo | Secret realms (first pass): data/secret_realms.json (opens every N years for M days, realm caps, floors of encounters with treasures and guardians), GameState.enter_secret_realm. Pair with a world-ui entry point later. |
+| BEAST-001c | world-ui | todo | Surface spirit beast companions: list Beasts.describe lines on the character sheet with a "Release" button per companion (GameState.release_companion, gamepad focus), and mention in the Beast Tamer workshop entry / help screen that defeated beasts (beasts.json) can be tamed. Depends on BEAST-001. |
+| BEAST-001b | systems | todo | Companion growth: feed companions spirit stones/beast cores or herbs (beasts.json `food`) to raise a per-companion level (CharacterData.companions becomes [{beast, level, name}] with a save migration from plain ids) that offsets outgrown_scale, and let a companion be named. Depends on BEAST-001. |
+| AUC-001 | systems | todo | Auctions (roadmap 6): data/auctions.json auction houses (place ids, held every N days), lot tables (item, weight, min_realm, reserve price), Auctions system drawing the current lots deterministically from the day, sealed bids against a rolled NPC ceiling (reserve x random factor), GameState.bid_at_auction(lot, stones) with a world-ui follow-up for the auction screen. |
 
 ## P4: QA and tooling
 | id | role | status | task |
@@ -114,6 +117,7 @@ The local sessions that built combat/techniques, world/exploration/NPCs/dialogue
 ## Done
 | id | task |
 |---|---|
+| BEAST-001 | Spirit beast companions: data/beasts.json (7 beasts tied to enemies, Beast Tamer min ranks, stat bonuses), Beasts system (tame chance by Beast Tamer rank after a victory, +tamer xp, companion bonuses scaled by rank and faded once outgrown, release, validation), CharacterData.companions (save-compatible), Combat.stats bonus, GameState taming on victory + release_companion. UI → BEAST-001c, growth → BEAST-001b. |
 | W-003b | Dialogue window: HUD modal (DialogueWindow) renders GameState.dialogue_view(), locked choices show their reason, gamepad focus, Esc ends the talk. |
 | LIFE-001f | Evil artifacts can be bought: items.json `restricted_tags` (demonic) are only sold by merchants that stock that tag, merchant `min_alignment`/`max_alignment` gate (Items.merchant_sells/check_merchant), Shadow Curio Den in Fallen Star Market for the wicked, prices for the 3 lifespan-drain artifacts. |
 | G-007c | NPCs get hurt (injuries.json `npc_mishap`, monthly for adults) and heal over time; Medicine.treat_npc / GameState.treat_npc heal their worst injury for Doctor xp, alignment and favor. |

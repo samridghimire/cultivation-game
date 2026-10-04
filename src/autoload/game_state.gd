@@ -1020,8 +1020,37 @@ func fight_enemy(enemy: Dictionary) -> bool:
 	if outcome["died"]:
 		_die_violently(outcome["cause"])
 		return false
+	if result["victory"]:
+		_try_tame(String(enemy.get("id", "")))
 	_pass_time(outcome["days"])
 	return bool(result["victory"]) and _can_act()
+
+
+## A Beast Tamer who defeats a tameable beast tries to tame it (Beasts.try_tame).
+func _try_tame(enemy_id: String) -> void:
+	var tame := Beasts.try_tame(player, data, enemy_id, rng)
+	if not tame["attempted"]:
+		return
+	var beast_name := Beasts.beast_name(data, tame["beast"])
+	if tame["tamed"]:
+		EventBus.post("The beaten %s lowers its head and accepts you as its master. It follows you now." % beast_name, "progress")
+	else:
+		EventBus.post("You try to tame the %s, but it tears free and flees." % beast_name)
+	if tame["ranks_gained"] > 0:
+		EventBus.post("You are now a %s!" % Professions.rank_title(player, data, Beasts.PROFESSION), "progress")
+	EventBus.player_changed.emit()
+
+
+## Release spirit beast companion `index` back to the wild.
+func release_companion(index: int) -> void:
+	if not _can_act():
+		return
+	var released := Beasts.release(player, data, index)
+	if released == "":
+		EventBus.post("You have no such companion.", "warning")
+	else:
+		EventBus.post("You set your %s free. It looks back once before vanishing into the wild." % released)
+	EventBus.player_changed.emit()
 
 
 ## Bind the Creation Artifact to an anchor place (data/regions.json "anchor_id").

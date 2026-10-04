@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-04 [BEAST-001] Spirit beast companions: practise the Beast Tamer profession and a beaten boar, mist wolf, stone ape, cloud eagle, flame fox, jade python or thunderwing roc may submit to you (higher ranks tame more often and stronger beasts). A companion boosts your combat stats and fades once you outgrow it; you can release it.
 - 2026-10-03 [W-003b] Dialogue window: talking to a named NPC opens a conversation window (speaker, line, choices; locked choices show why, e.g. "Need 10 spirit stones"), gamepad-focusable, Esc/B ends the conversation. Replaces the inline choice-menu fallback in-game.
 - 2026-10-03 [LIFE-001f] The Shadow Curio Den in Fallen Star Market sells the lifespan-draining evil artifacts, but only to players at alignment -200 or below; demonic goods never show up at ordinary smithies (items.json restricted_tags, merchant alignment bounds).
 - 2026-10-03 [G-007c] NPCs now get injured now and then and heal with time; a doctor can treat an NPC's worst injury (GameState.treat_npc) for Doctor xp, alignment and their favor (more if fully healed). Menu entry follows in G-007d.
