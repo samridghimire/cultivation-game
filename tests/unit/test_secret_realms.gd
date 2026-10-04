@@ -223,3 +223,41 @@ func test_secret_realm_content_per_region() -> void:
 			assert_true(floors >= 3 and floors <= 5, "%s has %d floors" % [realm_id, floors])
 			top = maxi(top, d.realm_index_of(String(def["max_realm"])))
 	assert_eq(top, d.realm_index_of("nascent_soul"), "some realm reaches Nascent Soul")
+
+
+## W-005f: rivals inside realms and rivals claiming inheritances.
+func test_realm_rivals() -> void:
+	var d := data()
+	var def := SecretRealms.realm(d, "sunken_sword_tomb")
+	var people := {}
+	var rival := SecretRealms.spawn_rival(people, d, def, seeded_rng())
+	assert_true(rival.realm_index >= d.realm_index_of(String(def["min_realm"])) and rival.realm_index <= d.realm_index_of(String(def["max_realm"])))
+	assert_eq(rival.home_region, String(def["region"]))
+	var hits := 0
+	for i in 200:
+		if SecretRealms.roll_rival(d, seeded_rng(i)):
+			hits += 1
+	assert_true(hits > 20 and hits < 120, "about chance_per_floor of floors: %d / 200" % hits)
+
+
+func test_closing_and_lost_inheritance() -> void:
+	var d := data()
+	var def := SecretRealms.realm(d, "verdant_remnant")
+	var open_day := int(def["offset_years"]) * Calendar.DAYS_PER_YEAR
+	var close_day := open_day + int(def["open_days"])
+	assert_false(SecretRealms.closed_between(def, open_day, close_day - 1))
+	assert_true(SecretRealms.closed_between(def, close_day - 1, close_day))
+	assert_true(SecretRealms.closed_between(def, open_day + 5, close_day + 200))
+	var c := new_character()
+	assert_false(SecretRealms.cleared_last_opening(c, def, close_day))
+	c.secret_realms["verdant_remnant"] = {"opening": 0, "floor": (def["floors"] as Array).size()}
+	assert_true(SecretRealms.cleared_last_opening(c, def, close_day))
+	var flags := {}
+	assert_false(SecretRealms.rival_claims_inheritance(c, d, "verdant_remnant", true, flags, seeded_rng()), "cleared: nobody beats you to it")
+	var lost := false
+	for i in 40:
+		if SecretRealms.rival_claims_inheritance(c, d, "verdant_remnant", false, flags, seeded_rng(i)):
+			lost = true
+			break
+	assert_true(lost)
+	assert_true(SecretRealms.check_inheritance(c, d, "verdant_remnant", flags).contains("rival claimed"))

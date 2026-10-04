@@ -188,13 +188,16 @@ static func has_inherited(c: CharacterData, realm_id: String) -> bool:
 
 
 ## Why `c` cannot receive the inheritance of `realm_id` now ("" = can).
-static func check_inheritance(c: CharacterData, data: GameData, realm_id: String) -> String:
+## `flags` (world flags) tell whether a rival claimed it first (W-005f).
+static func check_inheritance(c: CharacterData, data: GameData, realm_id: String, flags: Dictionary = {}) -> String:
 	var def := realm(data, realm_id)
 	var legacy: Dictionary = def.get("inheritance", {})
 	if legacy.is_empty():
 		return "The %s holds no inheritance." % def.get("name", realm_id)
 	if has_inherited(c, realm_id):
 		return "You already carry the %s." % legacy.get("name", "inheritance")
+	if flags.get(lost_flag(realm_id), false):
+		return "A rival claimed the %s long ago." % legacy.get("name", "inheritance")
 	var needed := int(legacy.get("min_comprehension", 0))
 	if c.attribute("comprehension") < needed:
 		return "The %s is beyond your comprehension (needs %d)." % [legacy.get("name", "inheritance"), needed]
@@ -207,6 +210,60 @@ static func claim_inheritance(c: CharacterData, data: GameData, realm_id: String
 	var legacy: Dictionary = realm(data, realm_id).get("inheritance", {})
 	c.inheritances.append(realm_id)
 	return Effects.apply(c, data, legacy.get("effects", {}), flags)
+
+
+# --- Rivals (W-005f) ------------------------------------------------------------
+
+## World flag set when a rival claims `realm_id`'s inheritance for good.
+static func lost_flag(realm_id: String) -> String:
+	return "secret_realm_lost_" + realm_id
+
+
+## Whether a rival cultivator contests the floor `c` is entering.
+static func roll_rival(data: GameData, rng: RandomNumberGenerator) -> bool:
+	return rng.randf() < float(data.secret_realm_rivals.get("chance_per_floor", 0.0))
+
+
+## Spawns a rival cultivator of `def`'s realm range who lives in its region.
+static func spawn_rival(people: Dictionary, data: GameData, def: Dictionary, rng: RandomNumberGenerator) -> CharacterData:
+	var low := maxi(1, data.realm_index_of(String(def.get("min_realm", "qi_refining"))))
+	var high := maxi(low, data.realm_index_of(String(def.get("max_realm", "qi_refining"))))
+	var realm_index := rng.randi_range(low, high)
+	var r: RealmDef = data.realms[realm_index]
+	return Npcs.spawn(people, data, rng, {"realm": r.id, "stage": rng.randi_range(0, r.stage_count() - 1), "age_years": rng.randi_range(20, 60 + 20 * realm_index), "region": String(def.get("region", ""))})
+
+
+## True if an opening of `def` closed while time passed from `from_day` to `to_day`.
+static func closed_between(def: Dictionary, from_day: int, to_day: int) -> bool:
+	if to_day <= from_day:
+		return false
+	var index := opening_index(def, to_day)
+	# The opening that ended last: the current one if closed, else the one before.
+	if is_open(def, to_day):
+		index -= 1
+	if index < 0:
+		return false
+	var close_day := _offset_days(def) + index * _period_days(def) + int(def.get("open_days", 0))
+	return close_day > from_day and close_day <= to_day
+
+
+## Whether `c` cleared every floor of the opening that ended by `to_day`.
+static func cleared_last_opening(c: CharacterData, def: Dictionary, to_day: int) -> bool:
+	var index := opening_index(def, to_day) - (1 if is_open(def, to_day) else 0)
+	var progress: Dictionary = c.secret_realms.get(String(def.get("id", "")), {})
+	return int(progress.get("opening", -1)) == index and int(progress.get("floor", 0)) >= (def.get("floors", []) as Array).size()
+
+
+## Once an opening closes with `c` short of the last floor, a rival may claim
+## the inheritance for good. Returns true (and sets the lost flag) if one did.
+static func rival_claims_inheritance(c: CharacterData, data: GameData, realm_id: String, cleared_all: bool, flags: Dictionary, rng: RandomNumberGenerator) -> bool:
+	var def := realm(data, realm_id)
+	if (def.get("inheritance", {}) as Dictionary).is_empty() or cleared_all or has_inherited(c, realm_id) or flags.get(lost_flag(realm_id), false):
+		return false
+	if rng.randf() >= float(data.secret_realm_rivals.get("inheritance_claim_chance", 0.0)):
+		return false
+	flags[lost_flag(realm_id)] = true
+	return true
 
 
 static func _draw(table: Array, rng: RandomNumberGenerator) -> Dictionary:
