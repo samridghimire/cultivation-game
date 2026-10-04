@@ -47,6 +47,7 @@ func _ready() -> void:
 	_add_screen("toggle_character_sheet", CharacterSheet.new())
 	_add_screen("toggle_inventory", InventoryScreen.new())
 	_add_screen("toggle_techniques", TechniquesScreen.new())
+	_add_screen("toggle_map", WorldMapScreen.new())
 	_add_screen("toggle_message_log", MessageLogScreen.new())
 	_crafting = CraftingScreen.new()
 	_crafting.closed.connect(_update_modal)
@@ -177,6 +178,7 @@ func _build_status_panel() -> void:
 	_injuries = UIStyle.label("", 14, UIStyle.CATEGORY_COLORS["danger"])
 	_injuries.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	box.add_child(_injuries)
+	box.add_child(UIStyle.label("[E] interact   [C] character   [I] inventory   [K] techniques   [M] map   [F5] save   [Esc] pause", 12, Color(0.7, 0.7, 0.7)))
 	box.add_child(UIStyle.label("[E] interact   [C] character   [I] inventory   [K] techniques   [L] log   [F5] save   [Esc] pause", 12, Color(0.7, 0.7, 0.7)))
 	add_child(panel)
 
