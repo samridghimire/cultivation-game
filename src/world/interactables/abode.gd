@@ -1,8 +1,12 @@
 extends Interactable
 ## A claimable cave abode (data/regions.json region "abodes", G-010b).
 ## Strangers see "Claim" (Abodes.check_claim reason when disabled). The owner
-## cultivates in seclusion, opens the storage chest (an in-menu picker) and
-## gets the artifact anchor entries; owned abodes are outlined in gold.
+## cultivates in seclusion, sets up or packs up gathering arrays (G-006b),
+## tempers their body (BODY-001c), founds their clan here (FAM-005d), opens the
+## storage chest (an in-menu picker) and gets the artifact anchor entries;
+## owned abodes are outlined in gold.
+
+const MeditationSpot := preload("res://src/world/interactables/meditation_spot.gd")
 
 const SECLUSION_DAYS := 30
 
@@ -42,8 +46,35 @@ func get_options() -> Array[Dictionary]:
 		return _chest_options(p, data)
 	var density := Abodes.seclusion_density(p, data, GameState.current_region)
 	options.append({"label": "Cultivate in seclusion (%s, qi x%s)" % [Calendar.format_duration(SECLUSION_DAYS), String.num(density, 2)], "action": GameState.cultivate_in_seclusion.bind(SECLUSION_DAYS), "keep_open": true})
+	options.append_array(_array_options(p, data))
+	var temper := MeditationSpot._temper_option()
+	if not temper.is_empty():
+		options.append(temper)
+	if GameState.clan == null:
+		var found_label := "Found the %s here (%d spirit stones)" % [Clans.clan_name(p, data), int(Clans.rules(data).get("found_cost", 0))]
+		options.append(_entry(found_label, Clans.check_found(p, GameState.clan, data), GameState.found_clan))
 	options.append({"label": "Open the storage chest (%d / %d kinds)" % [p.abode_storage.size(), Abodes.storage_slots(p, data)], "action": _set_chest_mode.bind(true), "keep_open": true})
 	return options
+
+
+## "Pack up <array>" for the array set up here, then "Set up <array>" per
+## carried array item with its qi bonus (Abodes.check_place_array reasons).
+func _array_options(p: CharacterData, data: GameData) -> Array[Dictionary]:
+	var options: Array[Dictionary] = []
+	if p.abode_array != "":
+		options.append(_entry("Pack up the %s (+%d%% qi density)" % [_item_name(data, p.abode_array), _bonus_percent(data, p.abode_array)], "", GameState.remove_abode_array))
+	for item_id in _sorted(p.inventory, data):
+		if Abodes.array_def(data, item_id).is_empty():
+			continue
+		var label := "Set up the %s (+%d%% qi density)" % [_item_name(data, item_id), _bonus_percent(data, item_id)]
+		if p.abode_array != "" and p.abode_array != item_id:
+			label += ", replacing the %s" % _item_name(data, p.abode_array)
+		options.append(_entry(label, Abodes.check_place_array(p, data, GameState.current_region, item_id), GameState.place_abode_array.bind(item_id)))
+	return options
+
+
+static func _bonus_percent(data: GameData, item_id: String) -> int:
+	return roundi(float(Abodes.array_def(data, item_id).get("qi_density_bonus", 0.0)) * 100.0)
 
 
 ## Called by ChoiceMenu when it closes, so the next visit starts at the main entries.

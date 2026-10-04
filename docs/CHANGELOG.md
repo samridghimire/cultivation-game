@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-04 [G-006b, BODY-001c, FAM-005d] Your cave abode's menu now sets up and packs up qi-gathering arrays (seclusion shows the boosted density), tempers your body and founds your clan with the abode as its seat; the clan screen shows the seat.
 - 2026-10-04 [ART-005b] Artifact screen: a Lives & Anchors page to buy lives, choose your respawn point or release anchors from anywhere.
 - 2026-10-04 [G-008f] Sect missions: rogue-cultivator and stone-ape missions now wait for late Qi Refining, eight new missions (a Blood Lotus ambush on an Azure Cloud patrol, a Pavilion beast-cage escort, two Core Formation missions per sect), more missions move your standing with rival sects; tests/sim/simulate_stage_rates.gd shows per-stage win rates.
 - 2026-10-04 [QA-007e] Mission board: each mission with a fight shows its danger (Weak/Even/Dangerous/Deadly) in color in the list and details, with a warning that mission foes can't be evaded.
