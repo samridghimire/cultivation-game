@@ -115,3 +115,45 @@ func test_game_state_explore_and_choose() -> void:
 	gs.end_session()
 	gs.data.encounters.erase("test_traveller")
 	gs.data.encounters.erase("test_grateful")
+
+
+func test_wounded_traveller_choices_unlock_their_follow_ups() -> void:
+	var d := data()
+	var c := new_character()
+	var traveller: Dictionary = d.encounters["forest_wounded_traveller"]
+	var ids := func(flags: Dictionary) -> Array:
+		return Exploration.eligible_encounters(c, d, ["forest"], flags).map(func(e): return e["encounter"]["id"])
+	assert_false(ids.call({}).has("wounded_traveller_repays"))
+	assert_false(ids.call({}).has("wounded_traveller_kin_revenge"))
+	var helped := {}
+	Exploration.resolve_choice(c, d, traveller, 0, helped)
+	assert_gt(c.alignment, 0)
+	assert_true(ids.call(helped).has("wounded_traveller_repays"))
+	assert_false(ids.call(helped).has("wounded_traveller_kin_revenge"))
+	var robbed := {}
+	Exploration.resolve_choice(c, d, traveller, 1, robbed)
+	assert_true(ids.call(robbed).has("wounded_traveller_kin_revenge"))
+	assert_false(ids.call(robbed).has("wounded_traveller_repays"))
+	assert_eq(String(d.encounters["wounded_traveller_kin_revenge"]["enemy"]), "rogue_cultivator")
+
+
+## W-004e: a once-per-life choice encounter gives its prize once: every choice
+## with an outcome sets the encounter's blocked_by_flag, and every
+## requires_flag is set by some encounter or choice.
+func test_choice_encounters_set_their_flags() -> void:
+	var d := data()
+	var set_flags := {}
+	for e: Dictionary in d.encounters.values():
+		for effects: Dictionary in encounter_outcomes(e):
+			if effects.has("set_flag"):
+				set_flags[effects["set_flag"]] = true
+	for e: Dictionary in d.encounters.values():
+		if e.has("requires_flag"):
+			assert_true(set_flags.has(e["requires_flag"]), "%s waits on a flag nothing sets" % e["id"])
+		var flag: String = e.get("blocked_by_flag", "")
+		if flag == "" or not e.has("choices"):
+			continue
+		for choice: Dictionary in e["choices"]:
+			var effects: Dictionary = choice.get("effects", {})
+			if not effects.is_empty():
+				assert_eq(String(effects.get("set_flag", "")), flag, "%s: %s" % [e["id"], choice["label"]])
