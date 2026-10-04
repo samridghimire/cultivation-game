@@ -76,7 +76,7 @@ ART-001/ART-001b/ART-002 are done; ART-002b and ART-005 are in P1 above.
 ## P2: Cultivation depth (roadmap item 4)
 | id | role | status | task |
 |---|---|---|---|
-| CM-001b | world-ui | todo | Techniques screen: show methods (kind "method") separately, mark the main method (Techniques.main_method; the starter method is not in CharacterData.techniques, show it anyway), "Set as main method" action (GameState.set_main_method, Techniques.check_set_main reasons, takes techniques.json method_switch_days) with Techniques.describe_method (rate, cap, "outgrown"). Depends on CM-001 (done). |
+| CM-001b | world-ui | done | Techniques screen: show methods (kind "method") separately, mark the main method (Techniques.main_method; the starter method is not in CharacterData.techniques, show it anyway), "Set as main method" action (GameState.set_main_method, Techniques.check_set_main reasons, takes techniques.json method_switch_days) with Techniques.describe_method (rate, cap, "outgrown"). Depends on CM-001 (done). Done: methods listed in their own section (main first, starter always shown), "(main)" marker, rate/cap and main-only bonuses via TechniquesScreen.method_text, "Set as main method (N days)". |
 | CM-001c | content | todo | Method content: 8+ methods across elements and alignments (righteous sect methods sold in contribution shops, demonic blood methods, rare ruins inheritances), with higher-realm caps so players must find better ones. Depends on CM-001. |
 | TRIB-001 | systems | done | Heavenly Tribulations: data/realms.json `tribulation` block on major breakthroughs (Core Formation and up by default): N lightning waves with damage scaled by realm; survive via HP/defense, talismans, pills, arrays; failure injures, and the last wave can kill via GameState._die_violently (artifact respawn). Demonic alignment adds an extra heart-demon wave. See DESIGN.md open question for defaults. |
 | TRIB-001b | world-ui | todo | Tribulation sequence: a banner/screen showing each wave, damage taken and survival, plus a "prepare" warning before attempting a breakthrough that triggers a tribulation. Depends on TRIB-001. |
@@ -116,6 +116,7 @@ The local sessions that built combat/techniques, world/exploration/NPCs/dialogue
 | id | task |
 |---|---|
 | DAO-001 | Dao insights: data/dao.json (6 insights), CharacterData.dao, Dao system (levels, Comprehension checks, technique and breakthrough bonuses), dao_insight effect key + 2 encounters, insight progress from practice, GameState.contemplate_dao. |
+| CM-001b | Techniques screen shows cultivation methods in their own section: main method marked, rate/realm cap, "Set as main method" (takes method_switch_days). |
 | W-003b | Dialogue window: HUD modal (DialogueWindow) renders GameState.dialogue_view(), locked choices show their reason, gamepad focus, Esc ends the talk. |
 | LIFE-001f | Evil artifacts can be bought: items.json `restricted_tags` (demonic) are only sold by merchants that stock that tag, merchant `min_alignment`/`max_alignment` gate (Items.merchant_sells/check_merchant), Shadow Curio Den in Fallen Star Market for the wicked, prices for the 3 lifespan-drain artifacts. |
 | G-007c | NPCs get hurt (injuries.json `npc_mishap`, monthly for adults) and heal over time; Medicine.treat_npc / GameState.treat_npc heal their worst injury for Doctor xp, alignment and favor. |
