@@ -59,7 +59,7 @@ func start_session(character: CharacterData) -> void:
 	pending_respawn = {}
 	spawn_anchor = ""
 	Npcs.ensure_all(npcs, data, rng)
-	Npcs.ensure_eligible(npcs, data, rng)
+	Npcs.ensure_eligible(npcs, data, rng, Children.descendants(player, npcs))
 	GameClock.reset()
 	EventBus.clear_history()
 	EventBus.session_started.emit()
@@ -1252,7 +1252,7 @@ func load_save_dict(d: Dictionary) -> void:
 	current_region = d.get("region", data.start_region)
 	npcs = Npcs.from_dict(d.get("npcs", {}))
 	Npcs.ensure_all(npcs, data, rng)
-	Npcs.ensure_eligible(npcs, data, rng)
+	Npcs.ensure_eligible(npcs, data, rng, Children.descendants(player, npcs))
 	npc_favor = {}
 	for npc_id in d.get("npc_favor", {}):
 		npc_favor[npc_id] = int(d["npc_favor"][npc_id])
@@ -1310,7 +1310,7 @@ func _on_days_advanced(days: int) -> void:
 			continue
 		EventBus.post(event["text"], event["category"])
 	if married_off:
-		Npcs.ensure_eligible(npcs, data, rng)  # keep courtship candidates in every region
+		Npcs.ensure_eligible(npcs, data, rng, Children.descendants(player, npcs))  # keep courtship candidates in every region
 	_advance_pregnancies(days)
 	@warning_ignore("integer_division")
 	var months := player.age_days / Calendar.DAYS_PER_MONTH - age_before / Calendar.DAYS_PER_MONTH

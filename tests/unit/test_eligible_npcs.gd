@@ -46,6 +46,28 @@ func test_top_up_replaces_married_and_dead_candidates_only() -> void:
 	assert_eq(npcs.size(), total + 2)
 
 
+
+func test_the_players_own_descendants_do_not_fill_candidate_slots() -> void:
+	var npcs := {}
+	var rng := seeded_rng()
+	Npcs.ensure_eligible(npcs, data(), rng)
+	var player := new_character()
+	var grandchild_parent: CharacterData = null
+	for c: CharacterData in npcs.values():
+		if c.home_region == data().start_region:
+			if grandchild_parent == null:
+				grandchild_parent = c
+				player.children.append(c.id)
+			else:
+				grandchild_parent.children.append(c.id)
+	var kin := Children.descendants(player, npcs)
+	assert_eq(kin.size(), Names.genders(data()).size() * int(data().family["eligible_npcs"]["per_gender"]), "child and grandchildren")
+	assert_eq(Npcs.ensure_eligible(npcs, data(), rng).size(), 0, "without exclusions the region looks full")
+	var spawned := Npcs.ensure_eligible(npcs, data(), rng, kin)
+	assert_eq(spawned.size(), kin.size(), "every slot held by the player's kin is refilled")
+	for c: CharacterData in spawned:
+		assert_eq(c.home_region, data().start_region)
+
 func test_proud_npcs_refuse_concubinage_and_save() -> void:
 	var npcs := {}
 	var rng := seeded_rng()
