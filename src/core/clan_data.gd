@@ -12,6 +12,10 @@ var treasury := 0
 var reputation := 0
 ## Game day (GameClock.total_days) the clan was founded.
 var founded_day := 0
+## Clan seat (FAM-005c): the abode id (data/regions.json "abodes") the clan
+## was founded at or moved to, and its region id. "" for none.
+var seat := ""
+var seat_region := ""
 
 
 func to_dict() -> Dictionary:
@@ -22,6 +26,8 @@ func to_dict() -> Dictionary:
 		"treasury": treasury,
 		"reputation": reputation,
 		"founded_day": founded_day,
+		"seat": seat,
+		"seat_region": seat_region,
 	}
 
 
@@ -35,4 +41,6 @@ static func from_dict(d: Dictionary) -> ClanData:
 	clan.treasury = int(d.get("treasury", 0))
 	clan.reputation = int(d.get("reputation", 0))
 	clan.founded_day = int(d.get("founded_day", 0))
+	clan.seat = String(d.get("seat", ""))
+	clan.seat_region = String(d.get("seat_region", ""))
 	return clan

@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-03 [FAM-005c] Founding a clan now needs a claimed abode, which becomes the clan seat; claiming another abode moves the seat. Older saves give an existing clan the player's abode as its seat.
 - 2026-10-03 [QA-20261003-7] Your own grown children and grandchildren no longer take up a region's courtship-candidate slots, so new candidates keep appearing where your family lives.
 - 2026-10-03 [QA-009] Combat talismans you have run out of no longer block a readied slot; readying a new one drops them.
 - 2026-10-03 [QA-20261003-6] Qi and breakthrough pills can no longer be wasted on a child without spiritual roots or too young to cultivate; giving one says why instead.
