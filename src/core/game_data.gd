@@ -74,6 +74,7 @@ var help_pages: Array = []
 ## Input action id -> display name for the help screen's Controls page.
 var help_action_names: Dictionary = {}
 var secret_realms: Dictionary = {}  # id -> Dictionary (data/secret_realms.json, SecretRealms)
+var auction_houses: Dictionary = {}  # id -> Dictionary (data/auctions.json, Auctions)
 ## Problems found while loading. Empty when all data files are valid.
 var load_errors: PackedStringArray = []
 
@@ -226,6 +227,8 @@ func _load(dir: String) -> void:
 
 	for secret_realm in _read(dir, "secret_realms.json").get("realms", []):
 		secret_realms[secret_realm["id"]] = secret_realm
+	for auction_house in _read(dir, "auctions.json").get("houses", []):
+		auction_houses[auction_house["id"]] = auction_house
 	_validate()
 
 
@@ -285,6 +288,7 @@ func _validate() -> void:
 	load_errors.append_array(Exploration.validate_choices(self))
 	load_errors.append_array(Adoption.validate(self))
 	load_errors.append_array(Sects.validate_shops(self))
+	load_errors.append_array(Auctions.validate(self))
 	for item: Dictionary in items.values():
 		if item.get("effects", {}).has("buff"):
 			for error in Buffs.validate_effect(item["effects"]["buff"]):
