@@ -1,7 +1,8 @@
 class_name MessageLogScreen
 extends PanelContainer
 ## Modal message history: the last EventBus.HISTORY_LIMIT messages grouped by
-## date, filterable by category, so players can reread what happened while
+## date, filterable by category and by topic (UI-002b: combat, cultivation,
+## family, sect, trade, world), so players can reread what happened while
 ## time skipped. Gamepad: d-pad picks a filter, right stick scrolls.
 
 signal closed
@@ -15,11 +16,23 @@ const FILTERS := [
 	["Danger", "danger"],
 	["Karma", "karma"],
 ]
+## [label, topic] pairs (EventBus.TOPICS); "" shows every topic.
+const TOPIC_FILTERS := [
+	["All topics", ""],
+	["Combat", "combat"],
+	["Cultivation", "cultivation"],
+	["Family", "family"],
+	["Sect", "sect"],
+	["Trade", "trade"],
+	["World", "world"],
+]
 const SCROLL_SPEED := 900.0
 const DATE_COLOR := Color(0.6, 0.6, 0.6)
 
 var _filter := ""
 var _filter_buttons: Array[Button] = []
+var _topic := ""
+var _topic_buttons: Array[Button] = []
 var _scroll: ScrollContainer
 var _text: RichTextLabel
 var _count: Label
@@ -49,6 +62,16 @@ func _init() -> void:
 			b.add_theme_color_override("font_color", UIStyle.CATEGORY_COLORS[category])
 		filters.add_child(b)
 		_filter_buttons.append(b)
+	var topics := HBoxContainer.new()
+	topics.add_theme_constant_override("separation", 6)
+	box.add_child(topics)
+	var topic_group := ButtonGroup.new()
+	for f in TOPIC_FILTERS:
+		var b := UIStyle.button(f[0], _set_topic.bind(String(f[1])))
+		b.toggle_mode = true
+		b.button_group = topic_group
+		topics.add_child(b)
+		_topic_buttons.append(b)
 
 	_scroll = ScrollContainer.new()
 	_scroll.custom_minimum_size = Vector2(736, 440)
@@ -90,6 +113,8 @@ func _process(delta: float) -> void:
 func open() -> void:
 	_filter = ""
 	_filter_buttons[0].button_pressed = true
+	_topic = ""
+	_topic_buttons[0].button_pressed = true
 	_rebuild()
 	visible = true
 	_filter_buttons[0].grab_focus.call_deferred()
@@ -102,11 +127,10 @@ func close() -> void:
 	closed.emit()
 
 
-## History entries matching `category` ("" = all), oldest first.
-static func filtered(history: Array, category: String) -> Array:
-	if category == "":
-		return history.duplicate()
-	return history.filter(func(e: Dictionary) -> bool: return e.get("category", "") == category)
+## History entries matching `category` and `topic` ("" = any), oldest first.
+static func filtered(history: Array, category: String, topic: String = "") -> Array:
+	return history.filter(func(e: Dictionary) -> bool:
+		return (category == "" or e.get("category", "") == category) and (topic == "" or e.get("topic", "") == topic))
 
 
 ## BBCode for `entries`, with a date line whenever the day changes.
@@ -128,8 +152,13 @@ func _set_filter(category: String) -> void:
 	_rebuild()
 
 
+func _set_topic(topic: String) -> void:
+	_topic = topic
+	_rebuild()
+
+
 func _rebuild() -> void:
-	var entries := filtered(EventBus.history, _filter)
+	var entries := filtered(EventBus.history, _filter, _topic)
 	_text.clear()
 	if entries.is_empty():
 		_text.append_text("[color=#%s]Nothing to show yet.[/color]" % DATE_COLOR.to_html(false))
