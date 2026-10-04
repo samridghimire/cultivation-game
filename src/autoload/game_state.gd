@@ -1760,6 +1760,10 @@ func _on_days_advanced(days: int) -> void:
 			if spouse != null and spouse.alive:
 				npc_favor[spouse_id] = Family.add_spouse_favor(data, int(npc_favor.get(spouse_id, 0)), spouse_favor)
 	Karma.decay(player, data, Karma.decay_amount(data, age_before, player.age_days))
+	var drift := Bloodlines.drift_amount(player, data, age_before, player.age_days)
+	if drift != 0:
+		Alignment.shift(player, data, drift)
+		EventBus.post("The %s in your veins stirs; your heart shifts (alignment %+d)." % [Bloodlines.bloodline_name(data, player.bloodline), drift], "karma")
 	for injury_id in Injuries.pass_days(player, days):
 		EventBus.post("Your %s has healed." % Injuries.injury_name(data, injury_id), "progress")
 	for buff_name in Buffs.pass_days(player, days):

@@ -3,7 +3,10 @@ extends RefCounted
 ## Bloodlines (FAM-007), defined in data/bloodlines.json: rare traits passed
 ## from parents to children. A bloodline lies dormant until its bearer reaches
 ## the bloodline's awaken_realm, then grants its bonuses (cultivation speed,
-## breakthrough chance, combat stats). Stored as CharacterData.bloodline (id)
+## breakthrough chance, combat stats). Attribute bonuses (an attribute id as the
+## bonus key, in points, FAM-007d) are added to the bearer's attributes once,
+## when the bloodline awakens; `alignment_drift` shifts an awakened bearer's
+## alignment by that much each year. Stored as CharacterData.bloodline (id)
 ## and CharacterData.bloodline_awakened.
 
 const BONUS_KEYS := ["qi_mult", "breakthrough", "max_hp", "attack", "defense", "speed"]
@@ -81,7 +84,31 @@ static func update(c: CharacterData, data: GameData) -> bool:
 	if c.realm_index < data.realm_index_of(String(def(data, c.bloodline).get("awaken_realm", "mortal"))):
 		return false
 	c.bloodline_awakened = true
+	for key in def(data, c.bloodline).get("bonuses", {}):
+		if data.attribute_ids().has(String(key)):
+			c.attributes[key] = c.attribute(String(key)) + int(def(data, c.bloodline)["bonuses"][key])
 	return true
+
+
+## Attribute points `id`'s bonuses add on awakening: {attribute id: points}.
+static func attribute_bonuses(data: GameData, id: String) -> Dictionary:
+	var out := {}
+	var bonuses: Dictionary = def(data, id).get("bonuses", {})
+	for key in bonuses:
+		if data.attribute_ids().has(String(key)):
+			out[String(key)] = int(bonuses[key])
+	return out
+
+
+## Alignment shift an awakened bloodline applies to `c` between two ages
+## (in days): alignment_drift per whole year crossed.
+@warning_ignore("integer_division")
+static func drift_amount(c: CharacterData, data: GameData, age_days_before: int, age_days_after: int) -> int:
+	if c.bloodline == "" or not c.bloodline_awakened:
+		return 0
+	var drift := int(def(data, c.bloodline).get("alignment_drift", 0))
+	var years := age_days_after / Calendar.DAYS_PER_YEAR - age_days_before / Calendar.DAYS_PER_YEAR
+	return drift * maxi(0, years)
 
 
 ## e.g. "Azure Dragon Bloodline (dormant until Foundation Establishment)", or "" without one.
@@ -111,8 +138,12 @@ static func validate(data: GameData) -> PackedStringArray:
 		if rarity < 0.0 or rarity > 1.0:
 			errors.append("Bloodline '%s' rarity must be within 0..1" % id)
 		for key in b.get("bonuses", {}):
-			if not BONUS_KEYS.has(String(key)):
+			if not BONUS_KEYS.has(String(key)) and not data.attribute_ids().has(String(key)):
 				errors.append("Bloodline '%s' has unknown bonus '%s'" % [id, key])
+			elif data.attribute_ids().has(String(key)) and float(b["bonuses"][key]) != floorf(float(b["bonuses"][key])):
+				errors.append("Bloodline '%s' attribute bonus '%s' must be whole points" % [id, key])
+		if b.has("alignment_drift") and absi(int(b["alignment_drift"])) > 200:
+			errors.append("Bloodline '%s' alignment_drift must be within -200..200 per year" % id)
 	for npc: Dictionary in data.npcs.values():
 		if npc.has("bloodline") and not data.bloodlines.has(String(npc["bloodline"])):
 			errors.append("NPC '%s' has unknown bloodline '%s'" % [npc["id"], npc["bloodline"]])

@@ -9,7 +9,8 @@ func _root() -> Node:
 
 func test_bonus_text_lists_each_bonus() -> void:
 	assert_eq(CharacterSheet.bloodline_bonus_text(data(), "azure_dragon"), "+15% cultivation speed, +10% attack")
-	assert_eq(CharacterSheet.bloodline_bonus_text(data(), "black_tortoise"), "+10% health, +20% defense")
+	assert_eq(CharacterSheet.bloodline_bonus_text(data(), "black_tortoise"), "+10% health, +20% defense, +2 Constitution")
+	assert_eq(CharacterSheet.bloodline_bonus_text(data(), "blood_asura"), "-3% breakthrough chance, +15% health, +20% attack, alignment -12 a year")
 	assert_eq(CharacterSheet.bloodline_bonus_text(data(), "nope"), "")
 
 
