@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-04 [W-006b, W-006c] Inheritance grounds are now in the world: every region has one (a village founder's well, the Fist Saint's cairn, a sword immortal's cave, a blood merchant's vault, the Corpse Lord's altar), each listing its trials, what they test and how dangerous their guardians are.
 - 2026-10-04 [RIV-003] Enemies hunt you: people who hold a strong grudge (or whose kin you wronged) may ambush you on the road, and someone who owes you a debt may arrive to fight at your side.
 - 2026-10-04 [RIV-002] A named rival: someone your age with a heavenly root starts the path with you, climbs faster than other cultivators, and crosses your path to sneer when ahead, duel when even, ambush you when you pull ahead, or maybe make peace one day.
 - 2026-10-04 [C-010] Higher-realm medicine: Foundation and Core Formation cultivators can suffer meridian ruptures, cracked dantians, soul scars, golden core fissures and more, each with its own pill or salve, recipe scroll and clinic price.
