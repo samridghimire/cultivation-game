@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-04 [W-004g] Encounter chains: kill the robbed traveller's vengeful brother and their sect elder hunts you at Foundation Establishment; the traveller you saved vouches for you with the Azure Cloud Sect; catch a pickpocket (hand over / extort / let go), and a spared thief later teaches you the knock for a hidden thieves' market.
 - 2026-10-04 [G-005d] Inventory: ready combat talismans for battle (or put them away) with a button, see what each strike/shield/escape talisman does and which ones are readied (up to 3 kinds).
 - 2026-10-04 [QA-015] Bug hunt: new interactable fuzz (every menu option in every region for three character types, with and without the HUD), data cross-reference check (QA-012) and Steam Deck layout test (QA-013). Fixed what they found: fight logs said "the Xue Yao" for people, a fight's spoils were an orphan "(...)" log line, "1 rounds", "a Alchemist"/"a Outer Disciple" articles, map hints like "(2x qi)" inside sentences, the character sheet overflowing a Steam Deck screen (now scrolls), and a world reload with no running scene.
 - 2026-10-04 [QA-20261004-4] Tests are order-independent: the runner reseeds GameState.rng before every test (TEST_SEED_SALT varies it; the suite passes under six salts), and TEST_ONLY=<name> runs a single test file.

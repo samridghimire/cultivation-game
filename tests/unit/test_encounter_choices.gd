@@ -134,7 +134,58 @@ func test_wounded_traveller_choices_unlock_their_follow_ups() -> void:
 	Exploration.resolve_choice(c, d, traveller, 1, robbed)
 	assert_true(ids.call(robbed).has("wounded_traveller_kin_revenge"))
 	assert_false(ids.call(robbed).has("wounded_traveller_repays"))
-	assert_eq(String(d.encounters["wounded_traveller_kin_revenge"]["enemy"]), "rogue_cultivator")
+	assert_eq(String(d.encounters["wounded_traveller_kin_revenge"]["enemy"]), "vengeful_brother")
+
+
+## W-004g: slaying the vengeful brother brings his sect elder at Foundation
+## Establishment; the repaid traveller later vouches for you at his sect.
+func test_wounded_traveller_chain_continues() -> void:
+	var d := data()
+	var c := new_character()
+	var ids := func(flags: Dictionary) -> Array:
+		return Exploration.eligible_encounters(c, d, ["forest", "city"], flags).map(func(e): return e["encounter"]["id"])
+	var flags := {"robbed_wounded_traveller": true, "wounded_traveller_avenged": true}
+	c.realm_index = d.realm_index_of("foundation_establishment")
+	assert_false(ids.call(flags).has("wounded_traveller_sect_elder"), "the brother was not slain")
+	Effects.apply(c, d, d.enemies["vengeful_brother"]["rewards"], flags)
+	assert_true(flags.get("slew_vengeful_brother", false))
+	assert_true(ids.call(flags).has("wounded_traveller_sect_elder"))
+	c.realm_index = d.realm_index_of("qi_refining")
+	assert_false(ids.call(flags).has("wounded_traveller_sect_elder"), "the elder waits for Foundation Establishment")
+	var repaid := {"helped_wounded_traveller": true, "wounded_traveller_repaid": true}
+	assert_false(ids.call(repaid).has("wounded_traveller_vouches"), "later: at Foundation Establishment")
+	c.realm_index = d.realm_index_of("foundation_establishment")
+	assert_true(ids.call(repaid).has("wounded_traveller_vouches"))
+	var before := Reputation.value(c, d, "azure_cloud_sect")
+	Exploration.resolve(c, d, d.encounters["wounded_traveller_vouches"], repaid)
+	assert_gt(Reputation.value(c, d, "azure_cloud_sect"), before)
+	assert_false(ids.call(repaid).has("wounded_traveller_vouches"), "once")
+
+
+## W-004g: sparing the pickpocket teaches the thieves' knock, which opens
+## the red door's flag-locked choice.
+func test_pickpocket_secret_unlocks_red_door() -> void:
+	var d := data()
+	var c := new_character()
+	c.realm_index = 1
+	c.inventory = {"spirit_stone": 500}
+	var flags := {}
+	var door: Dictionary = d.encounters["city_red_door"]
+	var list := Exploration.choices(c, d, door, flags)
+	assert_true(list[0]["disabled"], "nobody told you the knock")
+	assert_eq(String(list[0]["reason"]), "You lack the knowledge for that.")
+	assert_false(list[1]["disabled"] or list[2]["disabled"])
+	assert_true(Exploration.resolve_choice(c, d, d.encounters["city_pickpocket_caught"], 2, flags)["ok"])
+	var ids := func() -> Array:
+		return Exploration.eligible_encounters(c, d, ["city"], flags).map(func(e): return e["encounter"]["id"])
+	assert_true(ids.call().has("pickpocket_shares_secret"))
+	Exploration.resolve(c, d, d.encounters["pickpocket_shares_secret"], flags)
+	assert_false(ids.call().has("pickpocket_shares_secret"))
+	assert_false(Exploration.choices(c, d, door, flags)[0]["disabled"])
+	assert_true(Exploration.resolve_choice(c, d, door, 0, flags)["ok"])
+	assert_eq(c.item_count("foundation_establishment_pill"), 1)
+	assert_gt(int(d.items["foundation_establishment_pill"]["price"]), 200, "a thief's price is a bargain")
+	assert_gt(200, Items.sell_price(d, "foundation_establishment_pill"), "but not a resale profit")
 
 
 ## W-004e: a once-per-life choice encounter gives its prize once: every choice
@@ -147,6 +198,9 @@ func test_choice_encounters_set_their_flags() -> void:
 		for effects: Dictionary in encounter_outcomes(e):
 			if effects.has("set_flag"):
 				set_flags[effects["set_flag"]] = true
+	for enemy: Dictionary in d.enemies.values():
+		if enemy.get("rewards", {}).has("set_flag"):
+			set_flags[enemy["rewards"]["set_flag"]] = true
 	for e: Dictionary in d.encounters.values():
 		if e.has("requires_flag"):
 			assert_true(set_flags.has(e["requires_flag"]), "%s waits on a flag nothing sets" % e["id"])
