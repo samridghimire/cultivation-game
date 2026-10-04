@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-04 [FAM-004b] Train your children: a "Train children" button on the character sheet opens a screen listing your living children (age, realm, roots, current training) where you assign Cultivation, a Profession apprenticeship (pick the craft) or Technique drills, with the reason shown on unavailable choices, or stop their training. Gamepad-focusable.
 - 2026-10-03 [W-003b] Dialogue window: talking to a named NPC opens a conversation window (speaker, line, choices; locked choices show why, e.g. "Need 10 spirit stones"), gamepad-focusable, Esc/B ends the conversation. Replaces the inline choice-menu fallback in-game.
 - 2026-10-03 [LIFE-001f] The Shadow Curio Den in Fallen Star Market sells the lifespan-draining evil artifacts, but only to players at alignment -200 or below; demonic goods never show up at ordinary smithies (items.json restricted_tags, merchant alignment bounds).
 - 2026-10-03 [G-007c] NPCs now get injured now and then and heal with time; a doctor can treat an NPC's worst injury (GameState.treat_npc) for Doctor xp, alignment and their favor (more if fully healed). Menu entry follows in G-007d.

@@ -22,6 +22,7 @@ var _settings: SettingsScreen
 var _load_screen: LoadScreen
 var _crafting: CraftingScreen
 var _mission_board: MissionBoard
+var _child_training: ChildTrainingScreen
 var _banner: Banner
 var _respawn: RespawnScreen
 var _death_screen: Control
@@ -47,6 +48,9 @@ func _ready() -> void:
 	_mission_board = MissionBoard.new()
 	_mission_board.closed.connect(_update_modal)
 	add_child(UIStyle.centered(_mission_board))
+	_child_training = ChildTrainingScreen.new()
+	_child_training.closed.connect(_update_modal)
+	add_child(UIStyle.centered(_child_training))
 	_combat_report = CombatReport.new()
 	_combat_report.closed.connect(_update_modal)
 	add_child(UIStyle.centered(_combat_report))
@@ -84,6 +88,7 @@ func _ready() -> void:
 	EventBus.interaction_menu_requested.connect(_on_menu_requested)
 	EventBus.crafting_requested.connect(_on_crafting_requested)
 	EventBus.mission_board_requested.connect(_on_mission_board_requested)
+	EventBus.child_training_requested.connect(_on_child_training_requested)
 	EventBus.player_died.connect(_on_player_died)
 	EventBus.player_respawned.connect(func(_anchor_id: String, _lives: int): _open_pending_respawn())
 	EventBus.combat_finished.connect(_on_combat_finished)
@@ -131,6 +136,7 @@ func _close_screens() -> void:
 		screen.close()
 	_crafting.close()
 	_mission_board.close()
+	_child_training.close()
 
 
 func _on_crafting_requested(prof_id: String) -> void:
@@ -143,8 +149,14 @@ func _on_mission_board_requested() -> void:
 	_update_modal()
 
 
+func _on_child_training_requested() -> void:
+	_close_screens()
+	_child_training.open()
+	_update_modal()
+
+
 func _any_screen_open() -> bool:
-	return _crafting.visible or _mission_board.visible or _screens.values().any(func(s): return s.visible)
+	return _crafting.visible or _mission_board.visible or _child_training.visible or _screens.values().any(func(s): return s.visible)
 
 
 func _build_status_panel() -> void:
