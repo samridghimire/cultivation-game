@@ -40,16 +40,27 @@ static func check_ready(c: CharacterData, data: GameData, item_id: String) -> St
 		return "You have no %s." % data.items[item_id].get("name", item_id)
 	if c.readied_talismans.has(item_id):
 		return "That talisman is already readied."
-	if c.readied_talismans.size() >= MAX_READIED:
+	if _carried_readied(c).size() >= MAX_READIED:
 		return "You can only keep %d kinds of talisman at hand." % MAX_READIED
 	return ""
 
 
+## Readies `item_id`; readied talismans `c` has run out of give up their slot.
 static func ready_talisman(c: CharacterData, data: GameData, item_id: String) -> String:
 	var reason := check_ready(c, data, item_id)
 	if reason == "":
+		c.readied_talismans = _carried_readied(c)
 		c.readied_talismans.append(item_id)
 	return reason
+
+
+## Readied talismans `c` still carries at least one of.
+static func _carried_readied(c: CharacterData) -> Array[String]:
+	var out: Array[String] = []
+	for item_id in c.readied_talismans:
+		if c.item_count(item_id) > 0:
+			out.append(item_id)
+	return out
 
 
 static func unready_talisman(c: CharacterData, item_id: String) -> bool:

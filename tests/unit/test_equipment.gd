@@ -169,8 +169,9 @@ func test_every_learned_forging_recipe_has_an_obtainable_manual() -> void:
 			if int(item.get("price", 0)) > 0:
 				obtainable = true
 			for e: Dictionary in d.encounters.values():
-				if e.get("effects", {}).get("items", {}).has(item["id"]):
-					obtainable = true
+				for effects: Dictionary in encounter_outcomes(e):
+					if effects.get("items", {}).has(item["id"]):
+						obtainable = true
 		assert_true(obtainable, "no manual for the %s recipe can be bought or found" % recipe["id"])
 
 
@@ -179,18 +180,25 @@ func test_every_evil_artifact_is_found_in_an_encounter_with_a_righteous_alternat
 	for item: Dictionary in d.items.values():
 		if Equipment.item_drain(d, item["id"]) <= 0:
 			continue
+		# The outcome (encounter or choice effects) that grants it, and its encounter.
 		var taker: Dictionary = {}
+		var source: Dictionary = {}
 		for e: Dictionary in d.encounters.values():
-			if e.get("effects", {}).get("items", {}).has(item["id"]):
-				taker = e
+			for effects: Dictionary in encounter_outcomes(e):
+				if effects.get("items", {}).has(item["id"]):
+					taker = effects
+					source = e
 		assert_false(taker.is_empty(), "%s has no encounter that grants it" % item["id"])
 		if taker.is_empty():
 			continue
-		assert_true(int(taker["effects"].get("alignment", 0)) < 0, "taking %s is a demonic act" % item["id"])
-		var flag: String = taker.get("blocked_by_flag", "")
+		assert_true(int(taker.get("alignment", 0)) < 0, "taking %s is a demonic act" % item["id"])
+		var flag: String = source.get("blocked_by_flag", "")
 		assert_true(flag != "", "%s is found once per life" % item["id"])
 		var has_alternative := false
 		for e: Dictionary in d.encounters.values():
-			if e["id"] != taker["id"] and e.get("blocked_by_flag", "") == flag and int(e.get("effects", {}).get("alignment", 0)) > 0:
-				has_alternative = true
+			if e.get("blocked_by_flag", "") != flag:
+				continue
+			for effects: Dictionary in encounter_outcomes(e):
+				if effects != taker and int(effects.get("alignment", 0)) > 0:
+					has_alternative = true
 		assert_true(has_alternative, "%s needs a righteous way to destroy it" % item["id"])

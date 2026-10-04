@@ -1,7 +1,9 @@
 extends Interactable
 ## A place to cultivate. Denser spiritual energy = faster qi gathering.
 ## Spouses living in this region can join for dual cultivation (FAM-002b)
-## or try for a child (FAM-003c). Glimpsed Dao insights can be contemplated here (DAO-001b).
+## or try for a child (FAM-003c). A breakthrough that brings a Heavenly
+## Tribulation opens the TribulationScreen first (TRIB-001b).
+## Glimpsed Dao insights can be contemplated here (DAO-001b).
 
 @export var qi_density := 1.0
 
@@ -14,7 +16,11 @@ func get_options() -> Array[Dictionary]:
 	options.append_array(_dual_cultivation_options())
 	if Cultivation.can_attempt_breakthrough(GameState.player, GameState.data):
 		var chance := Cultivation.breakthrough_chance(GameState.player, GameState.data)
-		options.append({"label": "Attempt breakthrough (%d%% chance)" % int(chance * 100), "action": GameState.attempt_breakthrough, "keep_open": true})
+		if GameState.tribulation_preview()["has_tribulation"]:
+			# A tribulation can kill: show the preparation screen before attempting.
+			options.append({"label": "Attempt breakthrough (%d%% chance, Heavenly Tribulation!)" % int(chance * 100), "action": EventBus.tribulation_prepare_requested.emit})
+		else:
+			options.append({"label": "Attempt breakthrough (%d%% chance)" % int(chance * 100), "action": GameState.attempt_breakthrough, "keep_open": true})
 	for tech_id in GameState.player.techniques:
 		if Techniques.is_mastered(GameState.player, GameState.data, tech_id):
 			continue

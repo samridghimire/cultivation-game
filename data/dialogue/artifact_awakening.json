@@ -1,0 +1,33 @@
+{
+  "id": "artifact_awakening",
+  "entries": [
+    {"node": "dream"}
+  ],
+  "nodes": {
+    "dream": {"speaker": "", "text": "The night before you set out, you dream of a sky with no stars. Something small and warm rests against your heart: a seal of dark bronze, older than any sect, that you have carried since before you can remember.",
+      "choices": [
+        {"label": "Reach for it.", "next": "voice"},
+        {"label": "Pull away from it.", "next": "voice"}
+      ]},
+    "voice": {"speaker": "The Creation Artifact", "text": "...Bound. At last, bound. Little mortal, your soul is anchored to me now. Fall, and I will pull you back to the places you have marked. But every return costs me a life, and I have only a few to give.",
+      "choices": [
+        {"label": "What are you?", "next": "what"},
+        {"label": "Why me?", "next": "why"},
+        {"label": "Then I will not waste them.", "next": "wake"}
+      ]},
+    "what": {"speaker": "The Creation Artifact", "text": "Something that was sealed, and is waking. Feed me spirit stones and treasures, rise through the realms, and my seals will break one by one. That is all you need to know, for now.",
+      "choices": [
+        {"label": "Why me?", "next": "why"},
+        {"label": "...", "next": "wake"}
+      ]},
+    "why": {"speaker": "The Creation Artifact", "text": "Why the river, why the stone? You were there, and you were not yet broken. Others will come looking for me one day. Be strong by then.",
+      "choices": [
+        {"label": "What are you?", "next": "what"},
+        {"label": "...", "next": "wake"}
+      ]},
+    "wake": {"speaker": "", "text": "You wake on Meditation Rock in Qingshi Village, the morning cold on your face. Against your chest, the bronze seal is faintly warm. Your road begins today.",
+      "choices": [
+        {"label": "Set out.", "next": "end"}
+      ]}
+  }
+}

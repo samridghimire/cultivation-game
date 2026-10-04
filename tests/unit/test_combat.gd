@@ -104,3 +104,46 @@ func test_win_chance_does_not_use_game_rng_or_mutate() -> void:
 	var a := Combat.win_chance(c, data(), data().enemies["mountain_bandit"])
 	assert_eq(Combat.win_chance(c, data(), data().enemies["mountain_bandit"]), a)
 	assert_eq(c.to_dict(), before)
+
+
+func test_realm_training_strengthens_enemies_and_repeats_last_entry() -> void:
+	var d := data()
+	assert_false(d.enemy_realm_training.is_empty())
+	var last: Dictionary = d.enemy_realm_training[-1]
+	assert_eq(Combat.realm_training(d, d.realms.size() - 1), last, "higher realms use the last entry")
+	var enemy := {"name": "x", "realm": "foundation_establishment", "stage": 0, "techniques": []}
+	var saved := d.enemy_realm_training
+	d.enemy_realm_training = []
+	var untrained := Combat.enemy_stats(enemy, d)
+	d.enemy_realm_training = saved
+	var trained := Combat.enemy_stats(enemy, d)
+	assert_gt(trained["attack"], untrained["attack"])
+	assert_gt(trained["max_hp"], untrained["max_hp"])
+
+
+func test_form_roll_stays_in_spread() -> void:
+	var d := data()
+	var rng := seeded_rng()
+	for i in 50:
+		var form := Combat.roll_form(d, rng)
+		assert_true(form >= 1.0 - d.combat_form_spread and form <= 1.0 + d.combat_form_spread)
+	var saved := d.combat_form_spread
+	d.combat_form_spread = 0.0
+	assert_eq(Combat.roll_form(d, rng), 1.0)
+	d.combat_form_spread = saved
+
+
+func test_combat_tuning_is_validated() -> void:
+	var d := data()
+	var saved_spread := d.combat_form_spread
+	var saved_training := d.enemy_realm_training
+	d.load_errors = []
+	d.combat_form_spread = 1.5
+	d.enemy_realm_training = [{"luck": 3}, 4]
+	d._validate_combat()
+	var errors := d.load_errors.duplicate()
+	d.combat_form_spread = saved_spread
+	d.enemy_realm_training = saved_training
+	d.load_errors = []
+	d._validate_combat()
+	assert_eq(errors.size() - d.load_errors.size(), 3, ", ".join(errors))

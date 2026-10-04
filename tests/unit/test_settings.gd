@@ -24,6 +24,8 @@ func test_sanitize_clamps_and_rejects_bad_values() -> void:
 	assert_almost_eq(SettingsScript.sanitize("ui_scale", 0.1), SettingsScript.UI_SCALE_RANGE.x)
 	assert_almost_eq(SettingsScript.sanitize("sfx_volume", -1.0), 0.0)
 	assert_almost_eq(SettingsScript.sanitize("music_volume", 0.4), 0.4)
+	assert_eq(SettingsScript.sanitize("show_hints", false), false)
+	assert_eq(SettingsScript.sanitize("show_hints", "yes"), true)
 
 
 func test_missing_file_gives_defaults() -> void:

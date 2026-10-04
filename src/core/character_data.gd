@@ -61,6 +61,8 @@ var buffs: Dictionary = {}
 var dao: Dictionary = {}
 ## Combat talisman item ids burned automatically in fights (see CombatTalismans).
 var readied_talismans: Array[String] = []
+## Tamed spirit beast ids (data/beasts.json), BEAST-001.
+var companions: Array[String] = []
 ## Years of lifespan burned for power (forbidden arts, demonic pills); see Cultivation.lifespan_years.
 var lifespan_spent_years := 0
 ## Years of lifespan gained from longevity pills and treasures.
@@ -158,6 +160,7 @@ func to_dict() -> Dictionary:
 		"buffs": buffs.duplicate(true),
 		"dao": dao.duplicate(true),
 		"readied_talismans": readied_talismans.duplicate(),
+		"companions": companions.duplicate(),
 		"lifespan_spent_years": lifespan_spent_years,
 		"lifespan_bonus_years": lifespan_bonus_years,
 		"artifact_lives": artifact_lives,
@@ -220,6 +223,10 @@ static func from_dict(d: Dictionary) -> CharacterData:
 		c.sect = {"id": String(s.get("id", "")), "rank": int(s.get("rank", 0)), "contribution": int(s.get("contribution", 0))}
 		if s.has("spent"):
 			c.sect["spent"] = int(s["spent"])
+		if s.has("month_earned"):
+			c.sect["month_earned"] = int(s["month_earned"])
+		if s.has("duty_grace"):
+			c.sect["duty_grace"] = bool(s["duty_grace"])
 	c.inventory = _int_values(d.get("inventory", {}))
 	c.injuries = _int_values(d.get("injuries", {}))
 	var equipped: Dictionary = d.get("equipment", {})
@@ -230,6 +237,7 @@ static func from_dict(d: Dictionary) -> CharacterData:
 		var b: Dictionary = saved_buffs[buff_id]
 		Buffs.add(c, String(buff_id), String(b.get("name", buff_id)), int(b.get("days", 0)), b.get("mults", {}))
 	c.readied_talismans = _strings(d.get("readied_talismans", []))
+	c.companions = _strings(d.get("companions", []))
 	c.lifespan_spent_years = int(d.get("lifespan_spent_years", 0))
 	c.lifespan_bonus_years = int(d.get("lifespan_bonus_years", 0))
 	c.artifact_lives = int(d.get("artifact_lives", -1))
