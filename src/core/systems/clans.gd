@@ -58,6 +58,8 @@ static func check_found(c: CharacterData, clan: ClanData, data: GameData) -> Str
 	var min_index := data.realm_index_of(String(r.get("min_realm", "mortal")))
 	if c.realm_index < min_index:
 		return "Only a cultivator of the %s realm can found a clan." % data.realms[min_index].name
+	if bool(r.get("requires_abode", false)) and c.abode == "":
+		return "A clan needs a seat: claim an abode first."
 	var cost := int(r.get("found_cost", 0))
 	if c.item_count("spirit_stone") < cost:
 		return "Founding a clan costs %d spirit stones." % cost
@@ -76,6 +78,7 @@ static func found(c: CharacterData, clan: ClanData, people: Dictionary, data: Ga
 	founded.head = c.id
 	founded.founded_day = day
 	founded.members[c.id] = head_rank(data)
+	move_seat(founded, c.abode, data)
 	sync_family(c, founded, people, data)
 	return {"ok": true, "reason": "", "clan": founded, "days": int(rules(data).get("found_days", 0))}
 
@@ -108,6 +111,23 @@ static func sync_family(c: CharacterData, clan: ClanData, people: Dictionary, da
 			clan.members[id] = family_rank
 			joined.append(person.name)
 	return joined
+
+
+## Makes `abode_id` the seat of `clan` (recording its region). Returns true if
+## the seat changed. An empty `abode_id` leaves the seat as it is.
+static func move_seat(clan: ClanData, abode_id: String, data: GameData) -> bool:
+	if clan == null or abode_id == "" or clan.seat == abode_id:
+		return false
+	clan.seat = abode_id
+	clan.seat_region = String(Abodes.get_def(data, abode_id).get("region", ""))
+	return true
+
+
+## Display name of the clan seat, or "" if the clan has none.
+static func seat_name(clan: ClanData, data: GameData) -> String:
+	if clan == null or clan.seat == "":
+		return ""
+	return Abodes.abode_name(data, clan.seat)
 
 
 ## Why `npc` cannot be recruited into `clan` by `c`, or "".
@@ -321,6 +341,8 @@ static func validate(data: GameData) -> PackedStringArray:
 			errors.append("family.json clan ranks need an id and a name")
 		if rank.has("min_realm") and data.realm_index_of(String(rank["min_realm"])) < 0:
 			errors.append("family.json clan rank '%s' has unknown min_realm" % rank.get("id", ""))
+	if r.has("requires_abode") and typeof(r["requires_abode"]) != TYPE_BOOL:
+		errors.append("family.json clan.requires_abode must be true or false")
 	var heir_rule := heir_rules(data)
 	if not heir_rule.is_empty() and not heir_rule.get("birth_rank_order", []) is Array:
 		errors.append("family.json clan.heir.birth_rank_order must be a list of spousal rank ids")
