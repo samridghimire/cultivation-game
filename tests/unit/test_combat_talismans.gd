@@ -28,6 +28,20 @@ func test_readying_rules() -> void:
 	assert_true(CombatTalismans.available(c, data(), "strike").is_empty(), "readied but none left")
 
 
+
+func test_used_up_talismans_free_their_slot() -> void:
+	var c := new_character()
+	for item_id in ["fire_strike_talisman", "earth_wall_talisman", "thousand_li_escape_talisman"]:
+		c.add_item(item_id, 1)
+		assert_eq(CombatTalismans.ready_talisman(c, data(), item_id), "")
+	c.add_item("fire_strike_talisman", -1)  # burned in a fight, sold or stored away
+	var other := "five_thunder_talisman"
+	c.add_item(other, 1)
+	assert_eq(CombatTalismans.check_ready(c, data(), other), "", "an empty readied slot does not count")
+	assert_eq(CombatTalismans.ready_talisman(c, data(), other), "")
+	assert_false(c.readied_talismans.has("fire_strike_talisman"), "the used-up talisman is dropped")
+	assert_eq(c.readied_talismans.size(), CombatTalismans.MAX_READIED)
+
 func test_grade_scales_power() -> void:
 	var power := float(CombatTalismans.combat_def(data(), "fire_strike_talisman")["power"])
 	var grade := int(CombatTalismans.combat_def(data(), "fire_strike_talisman")["grade"])
@@ -51,7 +65,7 @@ func test_strike_opens_the_fight_and_is_consumed() -> void:
 func test_strike_and_shield_raise_win_chance() -> void:
 	var c := new_character()
 	c.realm_index = 1
-	var enemy := _enemy("qi_refining", 5)
+	var enemy := _enemy("qi_refining", 0)
 	var without := Combat.win_chance(c, data(), enemy)
 	c.add_item("fire_strike_talisman", 1)
 	c.add_item("earth_wall_talisman", 1)

@@ -128,6 +128,7 @@ func test_game_state_designate_heir() -> void:
 	var daughter := Npcs.spawn(gs.npcs, gs.data, seeded_rng(6), {"age_years": 3, "region": gs.current_region})
 	c.children.append_array([son.id, daughter.id])
 	gs.designate_heir(daughter.id)  # no clan yet: a warning
+	c.abode = "waterfall_cave"  # a clan needs a seat (FAM-005c)
 	gs.found_clan()
 	assert_true(gs.clan.members.has(daughter.id))
 	var clock: Node = _root().get_node("GameClock")
