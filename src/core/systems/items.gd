@@ -2,7 +2,7 @@ class_name Items
 extends RefCounted
 ## Buying, selling and using items. Item definitions live in data/items.json.
 
-## Merchants buy items back at this fraction of their price.
+## Merchants buy items back at this fraction of their price (see sell_price).
 const SELL_RATE := 0.5
 
 
@@ -58,8 +58,42 @@ static func has_tag(data: GameData, item_id: String, tags: Array) -> bool:
 	return false
 
 
+## Merchants buy items back at SELL_RATE of their price. Crafted goods (the
+## output of any recipe) are also capped at their material cost per unit times
+## recipes.json alchemy.crafted_sell_markup, so crafting cheap materials into
+## pricey talismans or gear is a modest trade, not a money press.
 static func sell_price(data: GameData, item_id: String) -> int:
-	return int(int(data.items.get(item_id, {}).get("price", 0)) * SELL_RATE)
+	var price := int(int(data.items.get(item_id, {}).get("price", 0)) * SELL_RATE)
+	var material := material_value(data, item_id)
+	if price <= 0 or material < 0.0:
+		return price
+	var markup := float(data.alchemy.get("crafted_sell_markup", 1.3))
+	return clampi(ceili(material * markup), 1, price)
+
+
+## Spirit-stone value of the ingredients behind one unit of a crafted item
+## (cheapest recipe that outputs it), or -1.0 if no
+## recipe makes it. Ingredients use their shop price.
+static func material_value(data: GameData, item_id: String) -> float:
+	var best := -1.0
+	for recipe: Dictionary in data.recipes.values():
+		# The normal output sets the yield; great_output only counts for an item
+		# made solely by great successes (e.g. a higher-grade pill).
+		var count := 0
+		for key in ["great_output", "output"]:
+			var output: Dictionary = recipe.get(key, {})
+			if output.get("item", "") == item_id:
+				count = int(output.get("count", 1))
+		if count <= 0:
+			continue
+		var cost := 0
+		var ingredients: Dictionary = recipe.get("ingredients", {})
+		for ingredient in ingredients:
+			cost += int(data.items.get(ingredient, {}).get("price", 0)) * int(ingredients[ingredient])
+		var per_unit := float(cost) / count
+		if best < 0.0 or per_unit < best:
+			best = per_unit
+	return best
 
 
 ## Returns {ok, reason, stones}.

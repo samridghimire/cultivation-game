@@ -10,8 +10,7 @@ var _buttons: VBoxContainer
 
 
 func _init() -> void:
-	var style := UIStyle.panel().get_theme_stylebox("panel")
-	add_theme_stylebox_override("panel", style)
+	add_theme_stylebox_override("panel", UIStyle.panel_style())
 	custom_minimum_size = Vector2(440, 0)
 	visible = false
 	var box := VBoxContainer.new()
@@ -39,6 +38,8 @@ func close() -> void:
 	if not visible:
 		return
 	visible = false
+	if is_instance_valid(_source) and _source.has_method("on_menu_closed"):
+		_source.on_menu_closed()
 	_source = null
 	closed.emit()
 

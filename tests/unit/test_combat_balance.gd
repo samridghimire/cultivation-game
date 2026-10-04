@@ -56,6 +56,19 @@ func test_no_forced_fight_is_unbeatable_where_it_appears() -> void:
 		assert_true(rate >= Balance.UNBEATABLE_BELOW, "%s (%s) opens at %s but wins only %d%%" % [a["enemy"], a["source"], data().realms[realm].name, roundi(rate * 100)])
 
 
+## QA-007b: a foe is first met at (or before) its own realm, so it is a real
+## fight there instead of a pushover one realm later. A lethal foe met early
+## is sensed as Deadly and evaded until the player can face it.
+func test_no_enemy_first_appears_above_its_realm() -> void:
+	var first := {}
+	for a: Dictionary in Balance.appearances(data()):
+		var enemy_id: String = a["enemy"]
+		first[enemy_id] = mini(int(first.get(enemy_id, 999)), int(a["realm_index"]))
+	for enemy_id: String in first:
+		var own := data().realm_index_of(String(data().enemies[enemy_id]["realm"]))
+		assert_true(first[enemy_id] <= own, "%s (%s) is first met at realm %d" % [enemy_id, data().realms[own].name, first[enemy_id]])
+
+
 ## QA-007d: same-realm fights carry tension, realm gaps stay nearly impossible.
 func test_same_realm_fights_are_not_foregone() -> void:
 	for realm in range(1, 5):
