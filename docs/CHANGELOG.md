@@ -2,8 +2,8 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
-- 2026-10-03 [W-003b] Dialogue window: talking to a named NPC opens a conversation window (speaker, line, choices; locked choices show why, e.g. "Need 10 spirit stones"), gamepad-focusable, Esc/B ends the conversation. Replaces the inline choice-menu fallback in-game.
 - 2026-10-04 [G-008e] Sect treasury: the Mission Board has a "Treasury" tab listing the sect's contribution shop (cost, minimum rank, effects or equipment stats, items carried); locked entries show why, "Buy" spends contribution (GameState.buy_with_contribution). Gamepad-focusable tabs.
+- 2026-10-03 [W-003b] Dialogue window: talking to a named NPC opens a conversation window (speaker, line, choices; locked choices show why, e.g. "Need 10 spirit stones"), gamepad-focusable, Esc/B ends the conversation. Replaces the inline choice-menu fallback in-game.
 - 2026-10-03 [LIFE-001f] The Shadow Curio Den in Fallen Star Market sells the lifespan-draining evil artifacts, but only to players at alignment -200 or below; demonic goods never show up at ordinary smithies (items.json restricted_tags, merchant alignment bounds).
 - 2026-10-03 [G-007c] NPCs now get injured now and then and heal with time; a doctor can treat an NPC's worst injury (GameState.treat_npc) for Doctor xp, alignment and their favor (more if fully healed). Menu entry follows in G-007d.
 - 2026-10-03 [G-009] Sect reputation, separate from alignment: witnessed deeds move each sect's opinion (righteous sects condemn evil, Blood Lotus admires it), low reputation blocks joining, faction merchants (the Pill Pavilion is Myriad Treasure Pavilion's) price by reputation tier, missions earn and leaving a sect costs reputation.
