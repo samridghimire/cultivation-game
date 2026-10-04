@@ -5,6 +5,9 @@ extends Interactable
 ## this menu (each line is posted to the message log).
 ## Eligible partners also offer Court / Propose entries (FAM-002d); disabled
 ## entries show why (Family.check_court / check_proposal).
+## Injured NPCs offer "Treat <name>'s <injury>" (G-007d, Medicine.check_treat_npc)
+## and "Look" lists their injuries.
+## Orphaned children offer "Adopt <name>" (FAM-003e, Adoption.check_adoption).
 
 @export var npc_id := ""
 
@@ -22,7 +25,7 @@ func get_options() -> Array[Dictionary]:
 	var def: Dictionary = GameState.data.npcs.get(npc_id, {})
 	if def.is_empty():
 		options.append({"label": "Look", "action": _look, "keep_open": true})
-	if def.has("dialogue"):
+	if GameState.has_dialogue(npc_id):
 		if _has_dialogue_window():
 			options.append({"label": "Talk", "action": GameState.start_dialogue.bind(npc_id)})
 		else:
@@ -30,7 +33,41 @@ func get_options() -> Array[Dictionary]:
 	if def.has("deed_context"):
 		for deed in Deeds.available(GameState.data, def["deed_context"], GameState.world_flags):
 			options.append({"label": deed["name"], "action": GameState.perform_deed.bind(deed["id"])})
+	options.append_array(_treatment_options())
+	options.append_array(_adoption_options())
 	options.append_array(_courtship_options())
+	return options
+
+
+## One entry treating the NPC's worst injury, only while they are injured.
+func _treatment_options() -> Array[Dictionary]:
+	var options: Array[Dictionary] = []
+	var npc: CharacterData = GameState.npcs.get(npc_id)
+	if GameState.player == null or npc == null:
+		return options
+	var injury_id := Medicine.worst_injury(npc)
+	if injury_id == "":
+		return options
+	var days := int(GameState.data.medicine.get("npc_treatment_days", 3))
+	var label := "Treat %s's %s (%s)" % [npc.name, Injuries.injury_name(GameState.data, injury_id).to_lower(), Calendar.format_duration(days)]
+	var reason := Medicine.check_treat_npc(GameState.player, npc)
+	options.append(_entry(label, reason, GameState.treat_npc.bind(npc_id)))
+	return options
+
+
+## "Adopt <name>" for orphaned children young enough to adopt, not already the player's.
+func _adoption_options() -> Array[Dictionary]:
+	var options: Array[Dictionary] = []
+	var p := GameState.player
+	var data := GameState.data
+	var child: CharacterData = GameState.npcs.get(npc_id)
+	if p == null or child == null or Adoption.rules(data).is_empty():
+		return options
+	if child.age_years() > int(Adoption.rules(data).get("max_age", 12)) or child.parents.has(p.id) or not Adoption.is_orphan(child, GameState.npcs):
+		return options
+	var days := int(Adoption.rules(data).get("days", 1))
+	var label := "Adopt %s (%s)" % [child.name, Calendar.format_duration(days)]
+	options.append(_entry(label, Adoption.check_adoption(p, child, GameState.npcs, data), GameState.adopt.bind(npc_id)))
 	return options
 
 
@@ -64,8 +101,13 @@ func _entry(label: String, reason: String, action: Callable) -> Dictionary:
 
 func _look() -> void:
 	var npc: CharacterData = GameState.npcs.get(npc_id)
-	if npc != null:
-		EventBus.post(Npcs.describe(npc, GameState.data))
+	if npc == null:
+		return
+	var text := Npcs.describe(npc, GameState.data)
+	var injuries := Injuries.describe(npc, GameState.data)
+	if not injuries.is_empty():
+		text += " Injuries: %s." % ", ".join(injuries)
+	EventBus.post(text)
 
 
 func _has_dialogue_window() -> bool:

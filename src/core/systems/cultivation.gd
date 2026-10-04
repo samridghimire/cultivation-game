@@ -59,7 +59,7 @@ static func breakthrough_chance(c: CharacterData, data: GameData) -> float:
 		return 0.0
 	var next: RealmDef = data.realms[c.realm_index + 1]
 	var fortune_bonus := (c.attribute("fortune") - 10) * 0.01
-	return clampf(next.breakthrough_chance + c.breakthrough_bonus + fortune_bonus + Bloodlines.bonus(c, data, "breakthrough"), 0.01, 0.99)
+	return clampf(next.breakthrough_chance + c.breakthrough_bonus + fortune_bonus + Bloodlines.bonus(c, data, "breakthrough") + Dao.breakthrough_bonus(c, data), 0.01, 0.99)
 
 
 ## Attempts a major breakthrough. Consumes any pending breakthrough bonus.
@@ -69,7 +69,8 @@ static func breakthrough_chance(c: CharacterData, data: GameData) -> float:
 ## final wave kills (died = true; the caller handles death).
 ## Returns {attempted, success, chance, realm_name, injury, tribulation, died}
 ## (injury id or ""; tribulation is Tribulation.endure's result or {}).
-static func attempt_breakthrough(c: CharacterData, data: GameData, rng: RandomNumberGenerator) -> Dictionary:
+## `npc`: NPCs face the tribulation's npc_strength (Tribulation.waves).
+static func attempt_breakthrough(c: CharacterData, data: GameData, rng: RandomNumberGenerator, npc: bool = false) -> Dictionary:
 	if not can_attempt_breakthrough(c, data):
 		return {"attempted": false, "success": false, "chance": 0.0, "realm_name": "", "injury": "", "tribulation": {}, "died": false}
 	var chance := breakthrough_chance(c, data)
@@ -79,7 +80,7 @@ static func attempt_breakthrough(c: CharacterData, data: GameData, rng: RandomNu
 	var injury := ""
 	var trib := {}
 	if success and Tribulation.has_tribulation(data, c.realm_index + 1):
-		trib = Tribulation.endure(c, data, c.realm_index + 1, rng)
+		trib = Tribulation.endure(c, data, c.realm_index + 1, rng, npc)
 		success = trib["survived"]
 		injury = trib["injury"]
 	if success:

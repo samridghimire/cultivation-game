@@ -33,6 +33,9 @@ var npcs: Dictionary = {}  # id -> Dictionary (definitions; live NPCs are in Gam
 var names: Dictionary = {}  # data/names.json: {"surnames": [...], "given_names": {gender: [...]}}
 var dialogues: Dictionary = {}  # id -> Dictionary, one per data/dialogue/*.json
 var techniques: Dictionary = {}  # id -> TechniqueDef
+## data/dao.json tunables (see Dao) and its insights by id.
+var dao: Dictionary = {}
+var dao_insights: Dictionary = {}  # id -> Dictionary
 var technique_affinity_bonus := 0.5
 var technique_mismatch_penalty := 0.5
 ## Cultivation methods (techniques.json): the method everyone uses until they set
@@ -42,6 +45,14 @@ var method_switch_days := 7
 var method_over_cap_rate := 1.0
 var enemies: Dictionary = {}  # id -> Dictionary
 var enemy_technique_level := 3
+## Per realm index: flat {attack, defense, max_hp, speed} bonuses every enemy of
+## that realm gets on top of realm power (scaled like technique bonuses). The
+## last entry applies to higher realms. Stands in for the techniques and gear
+## a same-realm player has (QA-007d).
+var enemy_realm_training: Array = []
+## Each side's attack in a fight is multiplied by a random form in
+## [1 - spread, 1 + spread], so close fights are not foregone conclusions.
+var combat_form_spread := 0.0
 ## Fraction of spirit stones lost when beaten by a non-lethal enemy.
 var defeat_stone_loss := 0.2
 var injuries: Dictionary = {}  # id -> Dictionary
@@ -59,6 +70,12 @@ var beasts: Dictionary = {}  # id -> Dictionary (data/beasts.json)
 var beast_rules: Dictionary = {}
 ## data/bloodlines.json top-level rules (inherit chances).
 var bloodline_rules: Dictionary = {}
+## Grudge/gratitude rules (data/karma.json, Karma). "acts" is keyed by id after loading.
+var karma: Dictionary = {}
+## data/clan_buildings.json (ClanEstate): top-level rules plus "buildings".
+var clan_estate: Dictionary = {}
+var clan_buildings: Dictionary = {}  # id -> Dictionary (data/clan_buildings.json)
+var npc_clans: Dictionary = {}  # id -> Dictionary (data/clans.json, NpcClans)
 ## Anchor id -> {"region": String, "name": String}, from places with an anchor_id.
 var anchors: Dictionary = {}
 ## Claimable cave abodes: abode id -> regions.json abode def plus "region" (Abodes).
@@ -67,6 +84,11 @@ var recipes: Dictionary = {}  # id -> Dictionary (data/recipes.json)
 ## Alchemy tunables (see Alchemy).
 var alchemy: Dictionary = {}
 var sect_missions: Dictionary = {}  # id -> Dictionary (data/sect_missions.json)
+## Help screen pages, in order: [{id, title, body: [paragraph]}] (data/help.json).
+var help_pages: Array = []
+## Input action id -> display name for the help screen's Controls page.
+var help_action_names: Dictionary = {}
+var secret_realms: Dictionary = {}  # id -> Dictionary (data/secret_realms.json, SecretRealms)
 ## Problems found while loading. Empty when all data files are valid.
 var load_errors: PackedStringArray = []
 
@@ -169,6 +191,16 @@ func _load(dir: String) -> void:
 	bloodline_rules = _read(dir, "bloodlines.json")
 	for bloodline in bloodline_rules.get("bloodlines", []):
 		bloodlines[bloodline["id"]] = bloodline
+	karma = _read(dir, "karma.json")
+	var karma_acts := {}
+	for act in karma.get("acts", []):
+		karma_acts[act["id"]] = act
+	karma["acts"] = karma_acts
+	clan_estate = _read(dir, "clan_buildings.json")
+	for building in clan_estate.get("buildings", []):
+		clan_buildings[building["id"]] = building
+	for npc_clan in _read(dir, "clans.json").get("clans", []):
+		npc_clans[npc_clan["id"]] = npc_clan
 	beast_rules = _read(dir, "beasts.json")
 	for beast in beast_rules.get("beasts", []):
 		beasts[beast["id"]] = beast
@@ -189,8 +221,14 @@ func _load(dir: String) -> void:
 		var def := TechniqueDef.from_dict(t)
 		techniques[def.id] = def
 
+	dao = _read(dir, "dao.json")
+	for insight: Dictionary in dao.get("insights", []):
+		dao_insights[insight["id"]] = insight
+
 	var foes := _read(dir, "enemies.json")
 	enemy_technique_level = int(foes.get("enemy_technique_level", enemy_technique_level))
+	enemy_realm_training = foes.get("realm_training", [])
+	combat_form_spread = float(foes.get("form_spread", combat_form_spread))
 	defeat_stone_loss = float(foes.get("defeat_stone_loss", defeat_stone_loss))
 	for enemy in foes.get("enemies", []):
 		enemies[enemy["id"]] = enemy
@@ -207,6 +245,12 @@ func _load(dir: String) -> void:
 	for recipe in crafting.get("recipes", []):
 		recipes[recipe["id"]] = recipe
 
+	var help := _read(dir, "help.json")
+	help_pages = help.get("pages", [])
+	help_action_names = help.get("action_names", {})
+
+	for secret_realm in _read(dir, "secret_realms.json").get("realms", []):
+		secret_realms[secret_realm["id"]] = secret_realm
 	_validate()
 
 
@@ -227,6 +271,7 @@ func _validate() -> void:
 	if realms.is_empty():
 		load_errors.append("No realms defined")
 	load_errors.append_array(Tribulation.validate(self))
+	load_errors.append_array(Dao.validate(self))
 	var attr_ids := attribute_ids()
 	for def: ProfessionDef in professions.values():
 		if not attr_ids.has(def.primary_attribute):
@@ -236,31 +281,36 @@ func _validate() -> void:
 			load_errors.append("Sect '%s' has unknown min_realm '%s'" % [def.id, def.min_realm])
 		if def.ranks.is_empty():
 			load_errors.append("Sect '%s' has no ranks" % def.id)
+		if def.robe_color != "" and not Color.html_is_valid(def.robe_color):
+			load_errors.append("Sect '%s' has an invalid robe_color '%s'" % [def.id, def.robe_color])
 		for prof_id in def.favored_professions:
 			if not professions.has(prof_id):
 				load_errors.append("Sect '%s' favors unknown profession '%s'" % [def.id, prof_id])
-	for deed: Dictionary in deeds.values():
-		for item_id in deed.get("effects", {}).get("items", {}):
-			if not items.has(item_id):
-				load_errors.append("Deed '%s' references unknown item '%s'" % [deed["id"], item_id])
+	load_errors.append_array(Deeds.validate(self))
 	_validate_world()
 	_validate_combat()
 	_validate_artifact()
 	_validate_recipes()
+	_validate_help()
 	load_errors.append_array(Equipment.validate(self))
 	load_errors.append_array(CombatTalismans.validate(self))
 	load_errors.append_array(Family.validate(self))
 	load_errors.append_array(Abodes.validate(self))
 	load_errors.append_array(ArtifactFunctions.validate(self))
+	load_errors.append_array(Karma.validate(self))
+	load_errors.append_array(SecretRealms.validate(self))
 	load_errors.append_array(Children.validate(self))
 	load_errors.append_array(NpcFamilies.validate(self))
 	load_errors.append_array(Training.validate(self))
 	load_errors.append_array(Clans.validate(self))
+	load_errors.append_array(ClanEstate.validate(self))
+	load_errors.append_array(NpcClans.validate(self))
 	load_errors.append_array(Bloodlines.validate(self))
 	load_errors.append_array(Beasts.validate(self))
 	load_errors.append_array(Sects.validate_missions(self))
 	load_errors.append_array(Reputation.validate(self))
 	load_errors.append_array(Exploration.validate_choices(self))
+	load_errors.append_array(Scenery.validate(self))
 	load_errors.append_array(Adoption.validate(self))
 	load_errors.append_array(Sects.validate_shops(self))
 	for item: Dictionary in items.values():
@@ -281,13 +331,17 @@ func _validate() -> void:
 func _validate_world() -> void:
 	if not regions.has(start_region):
 		load_errors.append("start_region '%s' is not a region" % start_region)
-	var place_types := ["meditation", "merchant", "sect_hall", "workshop", "clinic", "deed_giver", "explore", "travel", "gather"]
+	var place_types := ["meditation", "merchant", "sect_hall", "workshop", "clinic", "orphanage", "deed_giver", "explore", "travel", "gather"]
 	for region: Dictionary in regions.values():
 		for route: Dictionary in region.get("routes", []):
 			if not regions.has(route.get("to", "")):
 				load_errors.append("Region '%s' has a route to unknown region '%s'" % [region["id"], route.get("to", "")])
 			if route.has("min_realm") and realm_index_of(route["min_realm"]) < 0:
 				load_errors.append("Region '%s' route has unknown min_realm '%s'" % [region["id"], route["min_realm"]])
+		if region.has("map_pos"):
+			var map_pos: Variant = region["map_pos"]
+			if not (map_pos is Array and (map_pos as Array).size() == 2 and (map_pos as Array).all(func(v): return (v is float or v is int) and v >= 0.0 and v <= 1.0)):
+				load_errors.append("Region '%s' map_pos must be [x, y] with values in 0..1" % region["id"])
 		for spot in region.get("npc_spots", []):
 			if not (spot is Array and (spot as Array).size() == 2):
 				load_errors.append("Region '%s' has an npc_spot that is not [x, y]: %s" % [region["id"], spot])
@@ -295,6 +349,8 @@ func _validate_world() -> void:
 			for entry: Dictionary in place.get("gather_table", []):
 				if entry.get("item", "") != "" and not items.has(entry["item"]):
 					load_errors.append("Region '%s' gathers unknown item '%s'" % [region["id"], entry["item"]])
+				if entry.has("min_realm") and realm_index_of(String(entry["min_realm"])) < 0:
+					load_errors.append("Region '%s' gather entry '%s' has unknown min_realm '%s'" % [region["id"], entry.get("item", ""), entry["min_realm"]])
 			if not place_types.has(place.get("type", "")):
 				load_errors.append("Region '%s' has a place of unknown type '%s'" % [region["id"], place.get("type", "")])
 			if place.has("faction") and not sects.has(place["faction"]):
@@ -330,6 +386,15 @@ func _validate_world() -> void:
 
 
 func _validate_combat() -> void:
+	if combat_form_spread < 0.0 or combat_form_spread >= 1.0:
+		load_errors.append("enemies.json form_spread must be in [0, 1)")
+	for entry in enemy_realm_training:
+		if not entry is Dictionary:
+			load_errors.append("enemies.json realm_training entries must be objects")
+			continue
+		for key in entry:
+			if not key in ["attack", "defense", "max_hp", "speed"]:
+				load_errors.append("enemies.json realm_training has unknown stat '%s'" % key)
 	var element_ids: Array = root_elements.map(func(e): return e["id"])
 	for def: TechniqueDef in techniques.values():
 		if realm_index_of(def.min_realm) < 0:
@@ -393,6 +458,23 @@ func _validate_combat() -> void:
 				load_errors.append("Enemy '%s' rewards unknown item '%s'" % [enemy["id"], item_id])
 
 
+func _validate_help() -> void:
+	var ids := {}
+	for page in help_pages:
+		if not page is Dictionary or String(page.get("id", "")) == "" or String(page.get("title", "")) == "":
+			load_errors.append("help.json page needs an id and a title: %s" % [page])
+			continue
+		if ids.has(page["id"]):
+			load_errors.append("help.json has a duplicate page id '%s'" % page["id"])
+		ids[page["id"]] = true
+		var body: Variant = page.get("body", [])
+		if not body is Array or (body as Array).is_empty() or (body as Array).any(func(p): return not p is String):
+			load_errors.append("help.json page '%s' needs a non-empty body of strings" % page["id"])
+	for action in help_action_names:
+		if not help_action_names[action] is String:
+			load_errors.append("help.json action_names['%s'] must be a string" % action)
+
+
 func _validate_artifact() -> void:
 	if int(artifact.get("starting_lives", 0)) < 0 or int(artifact.get("max_lives", 0)) < int(artifact.get("starting_lives", 0)):
 		load_errors.append("artifact.json needs 0 <= starting_lives <= max_lives")
@@ -405,6 +487,9 @@ func _validate_artifact() -> void:
 
 
 func _validate_recipes() -> void:
+	var markup: Variant = alchemy.get("crafted_sell_markup", 1.3)
+	if not (markup is float or markup is int) or float(markup) < 1.0:
+		load_errors.append("recipes.json alchemy.crafted_sell_markup must be a number >= 1")
 	for recipe: Dictionary in recipes.values():
 		var id: String = recipe["id"]
 		if not professions.has(recipe.get("profession", "")):

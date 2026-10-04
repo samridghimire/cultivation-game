@@ -115,6 +115,17 @@ func test_buy_item_spends_stones() -> void:
 	gs.end_session()
 
 
+func test_sell_crafted_talisman_pays_material_capped_price() -> void:
+	var c := _start()
+	var gs := _game_state()
+	c.inventory = {"golden_bell_talisman": 3}
+	gs.sell_item("golden_bell_talisman", 2)
+	assert_eq(c.item_count("golden_bell_talisman"), 1)
+	assert_eq(c.item_count("spirit_stone"), 2 * Items.sell_price(gs.data, "golden_bell_talisman"))
+	assert_gt(30, c.item_count("spirit_stone"))  # not the old 15 stones apiece
+	gs.end_session()
+
+
 func test_use_item_consumes_and_applies() -> void:
 	var c := _start()
 	var gs := _game_state()
@@ -207,3 +218,32 @@ func test_choose_gender_once_for_old_saves() -> void:
 	assert_eq(c.gender, "female")
 	gs.choose_gender("male")
 	assert_eq(c.gender, "female", "gender can only be picked once")
+
+
+func test_gathering_skips_realm_gated_finds() -> void:
+	var c := _start()
+	var gs := _game_state()
+	c.realm_index = 0
+	var table := [{"item": "nine_leaf_soul_grass", "weight": 1, "min": 1, "max": 1, "min_realm": "foundation_establishment"}]
+	gs.gather(table, 5)
+	assert_eq(c.item_count("nine_leaf_soul_grass"), 0, "too shallow to find it")
+	c.realm_index = gs.data.realm_index_of("foundation_establishment")
+	gs.gather(table, 5)
+	assert_gt(c.item_count("nine_leaf_soul_grass"), 0)
+
+
+func test_deed_with_enemy_needs_a_win() -> void:
+	var c := _start()
+	var gs := _game_state()
+	c.realm_index = 0
+	c.stage = 0
+	var alignment_before := c.alignment
+	gs.perform_deed("free_bandit_captives")
+	assert_false(gs.world_flags.get("bandit_camp_gone", false), "a mortal loses to the bandit lord")
+	assert_eq(c.alignment, alignment_before)
+	assert_true(c.alive, "the bandit lord is not lethal")
+	c.injuries.clear()  # the beating's injuries would halve a Foundation cultivator's strength
+	c.realm_index = gs.data.realm_index_of("foundation_establishment")
+	gs.perform_deed("free_bandit_captives")
+	assert_true(gs.world_flags.get("bandit_camp_gone", false), "a Foundation cultivator wins and frees them")
+	assert_gt(c.alignment, alignment_before)

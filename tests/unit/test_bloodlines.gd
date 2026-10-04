@@ -118,3 +118,66 @@ func test_game_state_breakthrough_awakens_player_bloodline() -> void:
 	assert_eq(c.realm_index, 1)
 	assert_true(c.bloodline_awakened)
 	gs.end_session()
+
+
+# --- FAM-007c: bloodline content and the `bloodline` effect ---
+
+func test_bloodline_effect_grants_only_to_the_bloodless() -> void:
+	var c := _person("male", "player")
+	c.realm_index = 1
+	var flags := {}
+	assert_eq(Effects.check(c, data(), {"bloodline": "qilin"}), "")
+	var notes := Effects.apply(c, data(), {"bloodline": "qilin"}, flags)
+	assert_eq(c.bloodline, "qilin")
+	assert_false(c.bloodline_awakened, "Qilin sleeps until Foundation Establishment")
+	assert_true(notes[0].contains("Qilin"))
+	assert_true(Effects.check(c, data(), {"bloodline": "blood_asura"}).contains("Qilin"), "one bloodline per person")
+	Effects.apply(c, data(), {"bloodline": "blood_asura"}, flags)
+	assert_eq(c.bloodline, "qilin")
+	var late := _person("female", "late")
+	late.realm_index = 2
+	Effects.apply(late, data(), {"bloodline": "qilin"}, flags)
+	assert_true(late.bloodline_awakened, "a cultivator past the awaken realm awakens it at once")
+
+
+func test_roll_any_is_weighted_by_rarity() -> void:
+	var rng := seeded_rng()
+	var counts := {}
+	for i in 4000:
+		var id := Bloodlines.roll_any(data(), rng)
+		counts[id] = int(counts.get(id, 0)) + 1
+	assert_eq(counts.size(), data().bloodlines.size(), "every bloodline can come up")
+	assert_gt(int(counts["white_tiger"]), int(counts["blood_asura"]), "rarer bloodlines come up less")
+
+
+func test_some_eligible_npcs_carry_bloodlines() -> void:
+	var d := GameData.load_from_dir()
+	d.family["eligible_npcs"]["bloodline_chance"] = 1.0
+	var spawned := Npcs.ensure_eligible({}, d, seeded_rng())
+	assert_gt(spawned.size(), 0)
+	for c: CharacterData in spawned:
+		assert_true(d.bloodlines.has(c.bloodline), c.name)
+	d.family["eligible_npcs"]["bloodline_chance"] = 0.0
+	for c: CharacterData in Npcs.ensure_eligible({}, d, seeded_rng()):
+		assert_eq(c.bloodline, "")
+	d.family["eligible_npcs"]["bloodline_chance"] = 1.5
+	assert_eq(Bloodlines.validate(d).size(), 1)
+
+
+func test_bloodline_content_is_reachable() -> void:
+	var d := data()
+	var carriers := d.npcs.values().filter(func(n: Dictionary) -> bool: return n.has("bloodline"))
+	assert_gt(carriers.size(), 1, "named NPCs to marry into a bloodline")
+	assert_gt(float(d.family["eligible_npcs"].get("bloodline_chance", 0.0)), 0.0)
+	var granted := {}
+	for e: Dictionary in d.encounters.values():
+		for effects: Dictionary in [e.get("effects", {})] + e.get("choices", []).map(func(ch: Dictionary) -> Dictionary: return ch.get("effects", {})):
+			if effects.has("bloodline"):
+				granted[effects["bloodline"]] = true
+			for item_id in effects.get("items", {}):
+				if d.items.get(item_id, {}).get("effects", {}).has("bloodline"):
+					granted[d.items[item_id]["effects"]["bloodline"]] = true
+	assert_gt(granted.size(), 2, str(granted))
+	var broken := GameData.load_from_dir()
+	broken.items["fox_essence_blood"]["effects"]["bloodline"] = "nope"
+	assert_eq(Bloodlines.validate(broken).size(), 1)
