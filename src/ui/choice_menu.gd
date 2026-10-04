@@ -38,6 +38,8 @@ func close() -> void:
 	if not visible:
 		return
 	visible = false
+	if is_instance_valid(_source) and _source.has_method("on_menu_closed"):
+		_source.on_menu_closed()
 	_source = null
 	closed.emit()
 

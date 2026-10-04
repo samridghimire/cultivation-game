@@ -61,6 +61,8 @@ var buffs: Dictionary = {}
 var dao: Dictionary = {}
 ## Combat talisman item ids burned automatically in fights (see CombatTalismans).
 var readied_talismans: Array[String] = []
+## Tamed spirit beast ids (data/beasts.json), BEAST-001.
+var companions: Array[String] = []
 ## Years of lifespan burned for power (forbidden arts, demonic pills); see Cultivation.lifespan_years.
 var lifespan_spent_years := 0
 ## Years of lifespan gained from longevity pills and treasures.
@@ -83,6 +85,8 @@ var artifact_functions: Array[String] = []
 var artifact_storage: Dictionary = {}
 ## Sect mission id -> age_days when it may be taken again (Sects missions).
 var mission_cooldowns: Dictionary = {}
+## Inheritance id -> trial stages passed (W-006, Inheritances).
+var trial_progress: Dictionary = {}
 ## Sect id -> reputation with that sect (Reputation system; missing = start value).
 var reputation: Dictionary = {}
 ## Karma (RIV-001): NPC id -> how much that NPC hates / owes this character (0-100, see Karma).
@@ -90,6 +94,8 @@ var grudges: Dictionary = {}
 var gratitude: Dictionary = {}
 ## Secret realm id -> {"opening": int, "floor": int}: floors cleared in that opening (see SecretRealms).
 var secret_realms: Dictionary = {}
+## Secret realm ids whose inheritance this character received (once per life, W-005d).
+var inheritances: Array[String] = []
 
 
 func attribute(attr_id: String) -> int:
@@ -158,6 +164,7 @@ func to_dict() -> Dictionary:
 		"buffs": buffs.duplicate(true),
 		"dao": dao.duplicate(true),
 		"readied_talismans": readied_talismans.duplicate(),
+		"companions": companions.duplicate(),
 		"lifespan_spent_years": lifespan_spent_years,
 		"lifespan_bonus_years": lifespan_bonus_years,
 		"artifact_lives": artifact_lives,
@@ -167,12 +174,14 @@ func to_dict() -> Dictionary:
 		"artifact_functions": artifact_functions.duplicate(),
 		"artifact_storage": artifact_storage.duplicate(),
 		"mission_cooldowns": mission_cooldowns.duplicate(),
+		"trial_progress": trial_progress.duplicate(),
 		"reputation": reputation.duplicate(),
 		"abode": abode,
 		"abode_storage": abode_storage.duplicate(),
 		"grudges": grudges.duplicate(),
 		"gratitude": gratitude.duplicate(),
 		"secret_realms": secret_realms.duplicate(true),
+		"inheritances": inheritances.duplicate(),
 	}
 
 
@@ -220,6 +229,10 @@ static func from_dict(d: Dictionary) -> CharacterData:
 		c.sect = {"id": String(s.get("id", "")), "rank": int(s.get("rank", 0)), "contribution": int(s.get("contribution", 0))}
 		if s.has("spent"):
 			c.sect["spent"] = int(s["spent"])
+		if s.has("month_earned"):
+			c.sect["month_earned"] = int(s["month_earned"])
+		if s.has("duty_grace"):
+			c.sect["duty_grace"] = bool(s["duty_grace"])
 	c.inventory = _int_values(d.get("inventory", {}))
 	c.injuries = _int_values(d.get("injuries", {}))
 	var equipped: Dictionary = d.get("equipment", {})
@@ -230,6 +243,7 @@ static func from_dict(d: Dictionary) -> CharacterData:
 		var b: Dictionary = saved_buffs[buff_id]
 		Buffs.add(c, String(buff_id), String(b.get("name", buff_id)), int(b.get("days", 0)), b.get("mults", {}))
 	c.readied_talismans = _strings(d.get("readied_talismans", []))
+	c.companions = _strings(d.get("companions", []))
 	c.lifespan_spent_years = int(d.get("lifespan_spent_years", 0))
 	c.lifespan_bonus_years = int(d.get("lifespan_bonus_years", 0))
 	c.artifact_lives = int(d.get("artifact_lives", -1))
@@ -238,6 +252,7 @@ static func from_dict(d: Dictionary) -> CharacterData:
 	c.artifact_functions = _strings(d.get("artifact_functions", []))
 	c.artifact_storage = _int_values(d.get("artifact_storage", {}))
 	c.mission_cooldowns = _int_values(d.get("mission_cooldowns", {}))
+	c.trial_progress = _int_values(d.get("trial_progress", {}))
 	c.reputation = _int_values(d.get("reputation", {}))
 	c.abode = String(d.get("abode", ""))
 	c.abode_storage = _int_values(d.get("abode_storage", {}))
@@ -246,6 +261,8 @@ static func from_dict(d: Dictionary) -> CharacterData:
 	var delves: Dictionary = d.get("secret_realms", {})
 	for realm_id in delves:
 		c.secret_realms[String(realm_id)] = {"opening": int(delves[realm_id].get("opening", -1)), "floor": int(delves[realm_id].get("floor", 0))}
+	for realm_id in d.get("inheritances", []):
+		c.inheritances.append(String(realm_id))
 	for anchor_id in d.get("anchors", []):
 		c.anchors.append(String(anchor_id))
 	for recipe_id in d.get("known_recipes", []):
