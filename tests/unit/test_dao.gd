@@ -118,6 +118,7 @@ func test_game_state_contemplate_and_practice() -> void:
 	assert_eq(clock.total_days, days_before + 365)
 	assert_gt(Dao.level(c, "fire_dao"), 1)
 	Techniques.learn(c, gs.data, "basic_breathing")
+	gs.rng.seed = 7  # the year of contemplation drew a varying number of rolls (world sim); reseed for the practice check
 	gs.practice_technique("basic_breathing", 400)
 	assert_gt(Dao.level(c, "dao_of_breath"), 0)
 	gs.end_session()
