@@ -611,10 +611,31 @@ func choose_encounter(index: int) -> void:
 		EventBus.post(text, "danger" if result["enemy"] != "" else "karma" if result["karma"] else "info")
 	EventBus.encounter_choice_resolved.emit()
 	_pass_time(result["days"])
+	var choice: Dictionary = encounter["choices"][index]
 	if _can_act():
-		_rival_consequences(encounter["choices"][index])
+		_rival_consequences(choice)
 	if result["enemy"] != "" and _can_act():
-		fight(result["enemy"])
+		if fight(result["enemy"]):
+			_grateful_npc(choice)
+	elif _can_act():
+		_grateful_npc(choice)
+
+
+## RIV-001f: a choice with grateful_npc spawns the person it helped in the
+## current region, owing the player that much gratitude (after a won fight
+## when the choice has one).
+func _grateful_npc(choice: Dictionary) -> void:
+	var def: Dictionary = choice.get("grateful_npc", {})
+	if def.is_empty():
+		return
+	var ages: Array = def.get("age_years", [18, 40])
+	var opts := {"region": current_region, "age_years": rng.randi_range(int(ages[0]), int(ages[1])), "realm": String(def.get("realm", "mortal"))}
+	if def.has("gender"):
+		opts["gender"] = String(def["gender"])
+	var npc := Npcs.spawn(npcs, data, rng, opts)
+	npc_favor[npc.id] = int(def.get("favor", 0))
+	Karma.add_gratitude(player, data, npc.id, int(def.get("amount", 0)))
+	EventBus.post("%s will not forget what you did. (They owe you a debt.)" % npc.name, "karma")
 
 
 ## Encounter text with the rival's name and realm filled in (Rivals.fill).
@@ -1651,12 +1672,12 @@ func _world_events_month() -> void:
 
 
 ## Fight an enemy from data/enemies.json.
-func fight(enemy_id: String) -> void:
+func fight(enemy_id: String) -> bool:
 	EventBus.topic = "combat"
 	if not data.enemies.has(enemy_id):
 		push_error("Unknown enemy '%s'" % enemy_id)
-		return
-	fight_enemy(data.enemies[enemy_id])
+		return false
+	return fight_enemy(data.enemies[enemy_id])
 
 
 ## Ready a combat talisman so it is burned automatically in the next fights.
@@ -1688,7 +1709,12 @@ func fight_enemy(enemy: Dictionary) -> bool:
 	if not _can_act():
 		return false
 	devour_target = {}
-	var result := Combat.resolve(player, data, enemy, rng)
+	var allies: Array = []
+	if not enemy.get("spar", false):
+		var ally_id := Karma.strike_ally(player, npcs, data, current_region, String(enemy.get("id", "")))
+		if ally_id != "":
+			allies.append(Karma.ally_strike(player, npcs, data, ally_id))
+	var result := Combat.resolve(player, data, enemy, rng, allies)
 	# The full blow-by-blow goes out with combat_finished; the log gets a summary.
 	var lines: PackedStringArray = result["log"]
 	EventBus.post(lines[0], "danger")

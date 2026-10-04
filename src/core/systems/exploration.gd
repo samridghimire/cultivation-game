@@ -189,6 +189,23 @@ static func validate_choices(data: GameData) -> PackedStringArray:
 			errors.append_array(_validate_alignment_bounds(data, req, "Encounter '%s' choice '%s'" % [e["id"], label]))
 			if int(choice.get("days", 0)) < 0:
 				errors.append("Encounter '%s' choice '%s' needs days >= 0" % [e["id"], label])
+			if choice.has("grateful_npc"):
+				errors.append_array(_validate_grateful(data, choice["grateful_npc"], "Encounter '%s' choice '%s'" % [e["id"], label]))
+	return errors
+
+
+## Load errors for a choice's grateful_npc (RIV-001f).
+static func _validate_grateful(data: GameData, def: Dictionary, where: String) -> PackedStringArray:
+	var errors: PackedStringArray = []
+	if int(def.get("amount", 0)) <= 0:
+		errors.append("%s grateful_npc needs amount > 0" % where)
+	if data.realm_index_of(String(def.get("realm", "mortal"))) < 0:
+		errors.append("%s grateful_npc has unknown realm '%s'" % [where, def.get("realm", "")])
+	var ages: Array = def.get("age_years", [18, 40])
+	if ages.size() != 2 or int(ages[0]) < 0 or int(ages[0]) > int(ages[1]):
+		errors.append("%s grateful_npc age_years must be [min, max]" % where)
+	if def.has("gender") and not Names.is_gender(data, String(def["gender"])):
+		errors.append("%s grateful_npc has unknown gender '%s'" % [where, def["gender"]])
 	return errors
 
 

@@ -110,7 +110,8 @@ static func dodge_chance(defender_speed: int, attacker_speed: int) -> float:
 ## player_max_hp, enemy_hp, enemy_max_hp, talismans_used}. Readied combat
 ## talismans (CombatTalismans) strike first, shield the player, or turn a
 ## defeat into an escape. Does not modify `c`.
-static func resolve(c: CharacterData, data: GameData, enemy: Dictionary, rng: RandomNumberGenerator) -> Dictionary:
+## `allies`: [{name, damage}] opening blows from grateful NPCs (RIV-001f).
+static func resolve(c: CharacterData, data: GameData, enemy: Dictionary, rng: RandomNumberGenerator, allies: Array = []) -> Dictionary:
 	var p := stats(c, data)
 	var e := enemy_stats(enemy, data)
 	var foe := foe_name(enemy)
@@ -140,6 +141,12 @@ static func resolve(c: CharacterData, data: GameData, enemy: Dictionary, rng: Ra
 		used.append(item_id)
 		enemy_hp -= CombatTalismans.amount(data, item_id)
 		lines.append("You hurl %s for %d. (%s: %d hp)" % [Text.a(_item_name(data, item_id)), CombatTalismans.amount(data, item_id), foe_cap, maxi(enemy_hp, 0)])
+	# Grateful allies (RIV-001f, Karma.ally_strike) open with their own blows.
+	for ally: Dictionary in allies:
+		if enemy_hp <= 0:
+			break
+		enemy_hp -= int(ally["damage"])
+		lines.append("%s, who owes you a debt, strikes %s for %d. (%s: %d hp)" % [ally["name"], foe, int(ally["damage"]), foe_cap, maxi(enemy_hp, 0)])
 	var rounds := 0
 	while rounds < MAX_ROUNDS and player_hp > 0 and enemy_hp > 0:
 		rounds += 1
