@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-04 [UI-010b] The time-skip summary also appears after practicing a technique, contemplating the Dao, treating patients and cultivating in seclusion.
 - 2026-10-04 [AUC-001b] The Fallen Star Auction House opens in Fallen Star Market: see when the next auction opens, browse the lots by rarity and place sealed bids with a left/right bid selector.
 - 2026-10-04 [G-011b, G-011c] Sect ranks: every rank above the first now needs a sparring trial (a sword examiner, a blood-pit champion, a Pavilion vault guard...); the mission board's new Rank tab shows each rank's requirements, stipend and monthly duty, and the sect hall offers the trial.
 - 2026-10-04 [G-006b, BODY-001c, FAM-005d] Your cave abode's menu now sets up and packs up qi-gathering arrays (seclusion shows the boosted density), tempers your body and founds your clan with the abode as its seat; the clan screen shows the seat.

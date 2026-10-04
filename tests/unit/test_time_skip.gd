@@ -150,3 +150,34 @@ func test_hud_shows_overlay_unless_fast_skips() -> void:
 	settings._values["fast_time_skips"] = fast_before
 	hud.free()
 	_gs().end_session()
+
+
+## UI-010b: practice, Dao contemplation, treating patients and seclusion get
+## their own overlay titles.
+func test_other_long_actions_emit_time_skipped() -> void:
+	var c := _start()
+	var gs := _gs()
+	var tech_id := String(c.techniques.keys()[0]) if not c.techniques.is_empty() else ""
+	if tech_id == "":
+		Techniques.learn(c, gs.data, "basic_breathing")
+		tech_id = "basic_breathing"
+	var got := _capture(func(): gs.practice_technique(tech_id, Calendar.DAYS_PER_MONTH))
+	assert_eq(got.size(), 1)
+	assert_eq(got[0][1]["title"], "Practicing the %s" % (gs.data.techniques[tech_id] as TechniqueDef).name)
+	got = _capture(func(): gs.treat_patients(Calendar.DAYS_PER_MONTH))
+	assert_eq(got.size(), 1)
+	assert_eq(got[0][1]["title"], "Treating patients")
+	var insight_id: String = gs.data.dao_insights.keys()[0]
+	Dao.gain_levels(c, gs.data, insight_id, 1)
+	assert_eq(Dao.check_contemplate(c, gs.data, insight_id), "")
+	got = _capture(func(): gs.contemplate_dao(insight_id, Calendar.DAYS_PER_MONTH))
+	assert_eq(got.size(), 1)
+	assert_eq(got[0][1]["title"], "Contemplating the %s" % Dao.def_of(gs.data, insight_id)["name"])
+	c.realm_index = gs.data.realm_index_of("qi_refining")
+	c.qi = 0.0
+	gs.current_region = "misty_forest"
+	c.abode = "waterfall_cave"
+	got = _capture(func(): gs.cultivate_in_seclusion(Calendar.DAYS_PER_MONTH))
+	assert_eq(got.size(), 1)
+	assert_eq(got[0][1]["title"], "In seclusion")
+	gs.end_session()

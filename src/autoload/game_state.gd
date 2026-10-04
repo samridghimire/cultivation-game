@@ -104,7 +104,8 @@ func end_session() -> void:
 
 # --- Actions -----------------------------------------------------------------
 
-func cultivate(days: int, location_density: float = 1.0) -> void:
+## `skip_title` heads the time-skip overlay ("In seclusion" at an abode).
+func cultivate(days: int, location_density: float = 1.0, skip_title: String = "Meditating") -> void:
 	if not _can_act():
 		return
 	if SpiritualRoots.cultivation_multiplier(player.spiritual_roots, data) <= 0.0:
@@ -121,7 +122,7 @@ func cultivate(days: int, location_density: float = 1.0) -> void:
 		EventBus.post("Your cultivation rises to %s!" % Cultivation.realm_label(player, data), "progress")
 	if result["at_bottleneck"]:
 		EventBus.post("You have reached a bottleneck. Attempt a breakthrough to advance.", "warning")
-	_pass_time(days, "Meditating")
+	_pass_time(days, skip_title)
 
 
 ## Claim a cave abode in the current region for spirit stones. Its anchor is
@@ -155,7 +156,7 @@ func cultivate_in_seclusion(days: int) -> void:
 	if density <= 0.0:
 		EventBus.post("You have no abode here to seclude yourself in.", "warning")
 		return
-	cultivate(days, density * ClanEstate.qi_multiplier(clan, data))
+	cultivate(days, density * ClanEstate.qi_multiplier(clan, data), "In seclusion")
 
 
 ## Set up an array (items.json `array`) at the player's abode; takes a day.
@@ -1087,6 +1088,7 @@ func learn_technique(tech_id: String) -> void:
 func practice_technique(tech_id: String, days: int) -> void:
 	if not _can_act():
 		return
+	_start_time_skip()
 	var result := Techniques.practice(player, data, tech_id, days)
 	if not result["ok"]:
 		EventBus.post(result["reason"], "warning")
@@ -1099,13 +1101,14 @@ func practice_technique(tech_id: String, days: int) -> void:
 	var insights := Dao.on_practice(player, data, tech_id, days, rng)
 	for insight_id in insights:
 		EventBus.post("Practicing the %s, you comprehend the %s more deeply (level %d)!" % [def.name, Dao.def_of(data, insight_id)["name"], Dao.level(player, insight_id)], "progress")
-	_pass_time(days)
+	_pass_time(days, "Practicing the %s" % def.name)
 
 
 ## Contemplate a Dao insight you have already glimpsed, in seclusion, for `days`.
 func contemplate_dao(insight_id: String, days: int) -> void:
 	if not _can_act():
 		return
+	_start_time_skip()
 	var result := Dao.contemplate(player, data, insight_id, days, rng)
 	if not result["ok"]:
 		EventBus.post(result["reason"], "warning")
@@ -1114,7 +1117,7 @@ func contemplate_dao(insight_id: String, days: int) -> void:
 	EventBus.post("You sit in seclusion for %s, contemplating the %s." % [Calendar.format_duration(days), insight["name"]])
 	if result["levels"] > 0:
 		EventBus.post("Enlightenment! Your %s reaches level %d." % [insight["name"], Dao.level(player, insight_id)], "progress")
-	_pass_time(days)
+	_pass_time(days, "Contemplating the %s" % insight["name"])
 
 
 ## Temper your body to its next stage (BodyTempering): consumes the stage's
@@ -1220,11 +1223,12 @@ func treat_npc(npc_id: String) -> void:
 func treat_patients(days: int) -> void:
 	if not _can_act():
 		return
+	_start_time_skip()
 	var result := Medicine.treat_patients(player, data, days)
 	EventBus.post("You treat patients for %s: +%d xp, +%d spirit stones, alignment %+d." % [Calendar.format_duration(days), int(result["xp"]), result["income"], result["alignment"]], "karma")
 	if result["ranks_gained"] > 0:
 		EventBus.post("You are now %s!" % Text.a(Professions.rank_title(player, data, Medicine.DOCTOR)), "progress")
-	_pass_time(days)
+	_pass_time(days, "Treating patients")
 
 
 ## Crafting messages per profession (GameState.refine).
