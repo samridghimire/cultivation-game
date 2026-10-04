@@ -1,0 +1,13 @@
+{
+  "_doc": "Demonic arts (DEM-001). devouring: after beating an enemy that has the `tag` tag in data/enemies.json (never a sparring trial), the player may devour its cultivation once: they gain qi_fraction * the qi the enemy's realm needs at its stage (Cultivation.add_qi, so it can raise stages but stops at the bottleneck), shift alignment by `alignment` (negative), and may suffer `injury` (an injuries.json id) with chance heart_demon_chance + heart_demon_per_devour * cultivators devoured before (capped at heart_demon_max_chance, reduced like other injury rolls by Fortune and body tempering). `days` is the time it takes.",
+  "devouring": {
+    "tag": "cultivator",
+    "qi_fraction": 0.6,
+    "alignment": -100,
+    "injury": "heart_demon",
+    "heart_demon_chance": 0.25,
+    "heart_demon_per_devour": 0.05,
+    "heart_demon_max_chance": 0.75,
+    "days": 1
+  }
+}

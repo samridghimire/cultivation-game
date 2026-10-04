@@ -17,6 +17,10 @@ var player: CharacterData
 var world_flags: Dictionary = {}
 ## Open auctions (Auctions): house_id -> {opening, lots}.
 var auctions: Dictionary = {}
+## The cultivator just beaten whose cultivation may still be devoured
+## (Devouring, DEM-001); {} when none. Not saved: the chance passes with the
+## combat report.
+var devour_target: Dictionary = {}
 ## Id of the region (data/regions.json) the player is in.
 var current_region := ""
 ## Live NPCs: id -> CharacterData (definitions in data/npcs.json).
@@ -65,6 +69,7 @@ func start_session(character: CharacterData) -> void:
 	CreationArtifact.ensure(player, data)
 	world_flags = {}
 	auctions = {}
+	devour_target = {}
 	current_region = data.start_region
 	npcs = {}
 	npc_favor = {}
@@ -90,6 +95,7 @@ func end_session() -> void:
 	player = null
 	world_flags = {}
 	auctions = {}
+	devour_target = {}
 	npcs = {}
 	npc_favor = {}
 	clan = null
@@ -1407,6 +1413,7 @@ func unready_talisman(item_id: String) -> void:
 func fight_enemy(enemy: Dictionary) -> bool:
 	if not _can_act():
 		return false
+	devour_target = {}
 	var result := Combat.resolve(player, data, enemy, rng)
 	# The full blow-by-blow goes out with combat_finished; the log gets a summary.
 	var lines: PackedStringArray = result["log"]
@@ -1417,6 +1424,8 @@ func fight_enemy(enemy: Dictionary) -> bool:
 	if not outcome["notes"].is_empty():
 		summary += "; " + ", ".join(outcome["notes"])
 	EventBus.post("%s (%s)" % [lines[-1], summary], "progress" if result["victory"] else "danger")
+	if result["victory"] and not outcome["died"] and Devouring.is_devourable(data, enemy):
+		devour_target = enemy
 	EventBus.combat_finished.emit(enemy.get("name", "enemy"), result["victory"], result["log"])
 	var drained := 0 if outcome["died"] else Equipment.drain_after_fight(player, data)
 	if drained > 0:
@@ -1432,6 +1441,26 @@ func fight_enemy(enemy: Dictionary) -> bool:
 		_try_tame(String(enemy.get("id", "")))
 	_pass_time(outcome["days"])
 	return bool(result["victory"]) and _can_act()
+
+
+## Devour the cultivation of the cultivator just beaten (devour_target):
+## qi, a big alignment drop and a chance of a heart demon (Devouring).
+func devour() -> void:
+	if not _can_act() or devour_target.is_empty():
+		return
+	var enemy := devour_target
+	devour_target = {}
+	var result := Devouring.devour(player, data, enemy, rng)
+	if not result["ok"]:
+		EventBus.post(result["reason"], "warning")
+		EventBus.player_changed.emit()
+		return
+	EventBus.post("You press your palm to the fallen %s's dantian and drink their cultivation dry: +%d qi. (Alignment %+d)" % [enemy.get("name", "cultivator"), result["qi"], result["alignment"]], "karma")
+	if result["stages"] > 0:
+		EventBus.post("Your cultivation rises to %s!" % Cultivation.realm_label(player, data), "progress")
+	if result["injury"] != "":
+		EventBus.post("Their dying will takes root in your heart: you suffer %s." % Injuries.injury_name(data, result["injury"]), "danger")
+	_pass_time(result["days"])
 
 
 ## A Beast Tamer who defeats a tameable beast tries to tame it (Beasts.try_tame).
