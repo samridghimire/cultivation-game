@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-03 [QA-20261003-6] Qi and breakthrough pills can no longer be wasted on a child without spiritual roots or too young to cultivate; giving one says why instead.
 - 2026-10-03 [FAM-003e] Adoption is reachable in-game: the Temple of Mercy in Qingshi Village takes in foundlings for a donation, and orphaned children's menus offer "Adopt <name>" (locked entries show why).
 - 2026-10-03 [G-009b] The character sheet lists your reputation with every sect (tier and value), and faction merchants mark their prices when your standing changes them, e.g. "(Honored price)".
 - 2026-10-03 [G-007d] Injured NPCs can be treated in-game: their menu offers "Treat <name>'s <injury> (3 days)" (worst injury first), and "Look" lists their injuries and how long they take to heal.
