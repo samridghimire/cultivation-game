@@ -133,7 +133,6 @@ ART-001/ART-001b/ART-002 are done; ART-002b and ART-005 are in P1 above.
 ## P4: QA and tooling
 | id | role | status | task |
 |---|---|---|---|
-| QA-003 | qa | todo | Save compatibility fixtures: commit tests/fixtures/saves/ with a save from the oldest supported SAVE_VERSION and one from the current version (hand-written JSON), and a test that both load via SaveManager/GameState with sane defaults for every newer field. Document "add a fixture when bumping SAVE_VERSION" in CLAUDE.md. |
 | QA-004 | qa | todo | Obtainability audit test: every item in items.json is reachable (merchant stock tags, recipe output, encounter/deed/enemy loot, dialogue reward or starting item) and every recipe scroll is obtainable; known exceptions listed in an explicit allowlist with a task id (e.g. Blood-Drinker Saber → LIFE-001e). |
 | QA-006 | qa | todo | Economy sim (tests/sim/simulate_economy.gd): spirit stone income (professions, sales, missions once G-008 lands) vs costs (pills, gear, artifact recharge growth) across a 200-year life; report whether the player can afford breakthroughs and recharges, and propose data tweaks. |
 | QA-007b | content | todo | Re-gate encounters by the QA-007 combat sim (tests/sim/simulate_combat.gd): Rogue Cultivator (QR 4) and Stone Ape (QR 7) only appear from Foundation Establishment, where a typical player wins 100%; move them (or new same-realm foes) to qi_refining so they are fought at their own realm (they are lethal, so a Deadly foe is still evaded). Likewise every Foundation/Core encounter is 100% for a geared player entering that realm: use later stages or add tougher foes. Re-run the sim and paste the before/after in the PR. |
@@ -154,6 +153,7 @@ The local sessions that built combat/techniques, world/exploration/NPCs/dialogue
 ## Done
 | id | task |
 |---|---|
+| QA-003 | Save fixtures: tests/fixtures/saves/v1_oldest.json (F-000 format) and v1_current.json, test_save_fixtures.gd (defaults for missing fields, no field dropped, load + play + round trip); CLAUDE.md rule to add a fixture per SAVE_VERSION bump. |
 | W-005 | Secret realms first pass: data/secret_realms.json (Verdant Remnant, Sunken Sword Tomb), SecretRealms (opening schedule, realm caps, entry fee, floors with guardians and weighted treasures), CharacterData.secret_realms, GameState.enter_secret_realm. |
 | RIV-001 | Grudges and gratitude core: data/karma.json, Karma (ledgers, kin grudges, decay, amends), CharacterData.grudges/gratitude, GameState.hostile_act (humiliate/rob/kill NPCs) and make_amends. |
 | C-005 | Fifth region: Withered Bone Marsh (yin qi 1.8, danger 2, demonic lean; routes from Misty Forest/Fallen Star Market at Qi Refining), 2 anchors, bog gathering, herb/ore buyer, 12 marsh encounters with righteous and demonic options. |
