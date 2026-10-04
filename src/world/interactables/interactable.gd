@@ -15,6 +15,16 @@ extends Area2D
 @export var reach := 28.0
 ## Creation Artifact anchor id (data/regions.json "anchor_id"); "" = not an anchor.
 @export var anchor_id := ""
+## PlaceArt look: the regions.json place type or "npc" ("" = plain box).
+var art_kind := ""
+## The player's current interaction target pulses (set by Player).
+var highlighted := false:
+	set(value):
+		highlighted = value
+		set_process(value)
+		queue_redraw()
+
+var _pulse_time := 0.0
 
 
 func _ready() -> void:
@@ -26,7 +36,13 @@ func _ready() -> void:
 	body_entered.connect(_on_body_entered)
 	body_exited.connect(_on_body_exited)
 	EventBus.player_changed.connect(_refresh)
+	set_process(highlighted)
 	_refresh()
+
+
+func _process(delta: float) -> void:
+	_pulse_time += delta
+	queue_redraw()
 
 
 func get_options() -> Array[Dictionary]:
@@ -71,8 +87,10 @@ func _on_body_exited(body: Node2D) -> void:
 
 
 func _draw() -> void:
-	draw_rect(Rect2(-size / 2.0, size), color)
-	draw_rect(Rect2(-size / 2.0, size), color.darkened(0.5), false, 2.0)
+	PlaceArt.draw(self, art_kind, size, color)
+	if highlighted:
+		var glow := 0.5 + 0.5 * sin(_pulse_time * 5.0)
+		draw_rect(Rect2(-size / 2.0, size).grow(6.0 + 2.0 * glow), Color(1.0, 0.9, 0.5, 0.45 + 0.4 * glow), false, 2.0)
 	var font := ThemeDB.fallback_font
 	var text_width := font.get_string_size(display_name, HORIZONTAL_ALIGNMENT_LEFT, -1, 14).x
 	draw_string(font, Vector2(-text_width / 2.0, -size.y / 2.0 - 8.0), display_name, HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color.WHITE)
