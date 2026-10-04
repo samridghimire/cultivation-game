@@ -205,3 +205,21 @@ func test_game_state_inheritance_and_expulsion() -> void:
 	assert_eq(SecretRealms.floors_cleared(c, def, next_open), floors, "the heart pavilion is plundered")
 	assert_true(SecretRealms.has_inherited(c, "verdant_remnant"))
 	assert_true(Techniques.knows(c, tech))
+
+
+## W-005c: one secret realm per region, Qi Refining to Nascent Soul, each with
+## an entrance place.
+func test_secret_realm_content_per_region() -> void:
+	var d := data()
+	var top := 0
+	for region_id: String in d.regions:
+		var realms := SecretRealms.in_region(d, region_id)
+		assert_false(realms.is_empty(), "%s has no secret realm" % region_id)
+		var has_entrance: bool = (d.regions[region_id].get("places", []) as Array).any(func(p: Dictionary) -> bool: return p.get("type", "") == "secret_realm")
+		assert_true(has_entrance, "%s has no entrance" % region_id)
+		for realm_id in realms:
+			var def := SecretRealms.realm(d, realm_id)
+			var floors: int = (def["floors"] as Array).size()
+			assert_true(floors >= 3 and floors <= 5, "%s has %d floors" % [realm_id, floors])
+			top = maxi(top, d.realm_index_of(String(def["max_realm"])))
+	assert_eq(top, d.realm_index_of("nascent_soul"), "some realm reaches Nascent Soul")

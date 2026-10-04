@@ -27,6 +27,7 @@
         {"type": "deed_giver", "display_name": "Villager", "pos": [1000, 400], "size": [30, 30], "color": "e6bf99", "deed_context": "villager", "hidden_by_flag": "villager_dead"},
         {"type": "explore", "display_name": "Village Outskirts", "pos": [150, 880], "size": [120, 70], "color": "6b7d4a"},
         {"type": "inheritance", "display_name": "Founder's Old Well", "pos": [1250, 280], "size": [90, 60], "color": "7d8a7a"},
+        {"type": "secret_realm", "display_name": "Blossom Crack in the Hill", "pos": [1000, 760], "size": [90, 80], "color": "e8a0c0"},
         {"type": "travel", "display_name": "Village Gate", "pos": [1540, 500], "size": [40, 120], "color": "5c4630"}
       ]
     },
@@ -91,6 +92,7 @@
         {"type": "deed_giver", "display_name": "Street Child", "pos": [1050, 420], "size": [24, 24], "color": "b39b7a", "deed_context": "street_child", "hidden_by_flag": "street_child_gone"},
         {"type": "explore", "anchor_id": "fallen_star_alleys", "display_name": "Back Alleys", "pos": [150, 120], "size": [120, 80], "color": "4a4438"},
         {"type": "inheritance", "display_name": "Sealed Vault Door", "pos": [600, 880], "size": [100, 60], "color": "6b2a2a"},
+        {"type": "secret_realm", "display_name": "Crater Vault Seal", "pos": [1180, 900], "size": [90, 70], "color": "c0a060"},
         {"type": "travel", "display_name": "City Gate", "pos": [800, 970], "size": [120, 40], "color": "5c4630"}
       ]
     },
@@ -144,6 +146,7 @@
          "gather_table": [{"item": "purple_cloud_mushroom", "weight": 3, "min": 1, "max": 2}, {"item": "qi_condensing_grass", "weight": 3, "min": 1, "max": 2}, {"item": "spirit_herb", "weight": 3, "min": 1, "max": 3}, {"item": "blood_ginseng", "weight": 0.5, "min": 1, "max": 1}, {"item": "cold_iron", "weight": 1, "min": 1, "max": 1}, {"item": "", "weight": 3}]},
         {"type": "merchant", "display_name": "Corpse Peddler's Skiff", "pos": [1450, 450], "size": [80, 60], "color": "6b5a4a", "stock_tags": ["herb", "ore"]},
         {"type": "inheritance", "display_name": "Corpse Lord's Altar", "pos": [1150, 300], "size": [110, 80], "color": "4f4a5a"},
+        {"type": "secret_realm", "display_name": "Sunken Palace Gate", "pos": [800, 650], "size": [90, 80], "color": "4a6a8a"},
         {"type": "travel", "display_name": "Rotting Boardwalk", "pos": [40, 500], "size": [40, 120], "color": "5c4630"}
       ]
     }

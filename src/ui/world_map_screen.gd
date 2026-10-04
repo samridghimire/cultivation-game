@@ -57,10 +57,17 @@ func _init() -> void:
 	_canvas.draw.connect(_draw_map)
 	columns.add_child(_canvas)
 
+	# The details scroll so long region notes never push the screen past a
+	# Steam Deck's height.
+	var details_scroll := ScrollContainer.new()
+	details_scroll.custom_minimum_size = Vector2(380, CANVAS_SIZE.y)
+	details_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	columns.add_child(details_scroll)
 	var details := VBoxContainer.new()
 	details.custom_minimum_size = Vector2(360, 0)
+	details.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	details.add_theme_constant_override("separation", 8)
-	columns.add_child(details)
+	details_scroll.add_child(details)
 	_name = UIStyle.label("", 20, UIStyle.ACCENT)
 	details.add_child(_name)
 	_info = UIStyle.label("", 15, Color(0.75, 0.75, 0.75))
