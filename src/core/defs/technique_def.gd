@@ -8,7 +8,8 @@ const BONUS_KEYS: PackedStringArray = ["qi_mult", "attack", "defense", "max_hp",
 var id := ""
 var name := ""
 var description := ""
-## "cultivation", "combat" or "body".
+## "cultivation", "combat", "body" or "method" (a main cultivation method, see
+## Techniques.main_method: only one is active at a time).
 var kind := ""
 ## Element id, or "" for techniques any root can use at full strength.
 var element := ""
@@ -23,6 +24,10 @@ var xp_growth := 1.5
 ## Optional activation (forbidden secret arts): {"lifespan_cost": int years,
 ## "days": int, "buff": {stat: fraction}}. Empty = cannot be activated.
 var activation: Dictionary = {}
+## Methods only: multiplier on qi gathered while this is the main method (1.0 = no change).
+var qi_rate := 1.0
+## Methods only: highest realm id the method can carry you through ("" = no cap).
+var max_realm := ""
 
 
 static func from_dict(d: Dictionary) -> TechniqueDef:
@@ -40,7 +45,13 @@ static func from_dict(d: Dictionary) -> TechniqueDef:
 	t.xp_base = float(d.get("xp_base", 60))
 	t.xp_growth = float(d.get("xp_growth", 1.5))
 	t.activation = d.get("activation", {})
+	t.qi_rate = float(d.get("qi_rate", 1.0))
+	t.max_realm = d.get("max_realm", "")
 	return t
+
+
+func is_method() -> bool:
+	return kind == "method"
 
 
 ## Practice xp needed to advance from `level` to `level + 1`.
