@@ -64,3 +64,50 @@ static func treat_patients(c: CharacterData, data: GameData, days: int) -> Dicti
 	Alignment.shift(c, data, alignment)
 	result["alignment"] = alignment
 	return result
+
+
+# --- Treating NPCs (G-007c) -----------------------------------------------------
+
+## The injury a doctor would treat first on `patient`: the one with the most days left, or "".
+static func worst_injury(patient: CharacterData) -> String:
+	var worst := ""
+	for id in patient.injuries:
+		if worst == "" or int(patient.injuries[id]) > int(patient.injuries[worst]):
+			worst = id
+	return worst
+
+
+## Why `doctor` cannot treat `patient` now, or "" if they can.
+static func check_treat_npc(doctor: CharacterData, patient: CharacterData) -> String:
+	if patient == null or not patient.alive:
+		return "There is no one to treat."
+	if patient == doctor:
+		return "Treat your own injuries instead."
+	if patient.injuries.is_empty():
+		return "%s is not injured." % patient.name
+	return ""
+
+
+## Treat `patient`'s worst injury: cuts its days left by self_treatment_power,
+## trains Doctor, and earns favor (more if fully healed) and alignment
+## (data/injuries.json medicine npc_* keys).
+## Returns {ok, reason, days, injury, days_healed, healed, xp, ranks_gained, favor, alignment}.
+static func treat_npc(doctor: CharacterData, patient: CharacterData, data: GameData) -> Dictionary:
+	var reason := check_treat_npc(doctor, patient)
+	if reason != "":
+		return {"ok": false, "reason": reason, "days": 0, "injury": "", "days_healed": 0, "healed": false, "xp": 0.0, "ranks_gained": 0, "favor": 0, "alignment": 0}
+	var injury_id := worst_injury(patient)
+	var left := int(patient.injuries[injury_id])
+	var healed_days := mini(self_treatment_power(doctor, data), left)
+	if healed_days >= left:
+		patient.injuries.erase(injury_id)
+	else:
+		patient.injuries[injury_id] = left - healed_days
+	var healed := not patient.injuries.has(injury_id)
+	var days := int(data.medicine.get("npc_treatment_days", 3))
+	var xp := days * doctor.attribute("spirit") / 10.0 * float(data.medicine.get("patient_xp_multiplier", 1.5))
+	var favor := int(data.medicine.get("npc_treatment_favor", 5)) + (int(data.medicine.get("npc_healed_favor", 10)) if healed else 0)
+	var alignment := int(data.medicine.get("npc_treatment_alignment", 5))
+	Alignment.shift(doctor, data, alignment)
+	return {"ok": true, "reason": "", "days": days, "injury": injury_id, "days_healed": healed_days, "healed": healed, "xp": xp,
+		"ranks_gained": Professions.add_xp(doctor, data, DOCTOR, xp), "favor": favor, "alignment": alignment}
