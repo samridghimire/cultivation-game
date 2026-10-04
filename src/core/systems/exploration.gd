@@ -174,7 +174,35 @@ static func validate_choices(data: GameData) -> PackedStringArray:
 	return errors
 
 
+## The gathering table `c` can actually draw from: entries whose optional
+## `min_realm` is above the character's realm become "nothing found" (same
+## weight), so the odds of the common finds stay the same.
+static func gather_table_for(c: CharacterData, data: GameData, table: Array) -> Array:
+	var result: Array = []
+	for entry: Dictionary in table:
+		if _gather_entry_locked(c, data, entry):
+			result.append({"item": "", "weight": entry.get("weight", 1)})
+		else:
+			result.append(entry)
+	return result
+
+
+## Number of gathering entries at `table` hidden from `c` by their min_realm.
+static func locked_gather_count(c: CharacterData, data: GameData, table: Array) -> int:
+	var count := 0
+	for entry: Dictionary in table:
+		if _gather_entry_locked(c, data, entry):
+			count += 1
+	return count
+
+
+static func _gather_entry_locked(c: CharacterData, data: GameData, entry: Dictionary) -> bool:
+	var min_realm: String = entry.get("min_realm", "")
+	return min_realm != "" and String(entry.get("item", "")) != "" and c.realm_index < data.realm_index_of(min_realm)
+
+
 ## Draws from a gathering table [{item, weight, min, max}] ("" item = nothing).
+## Ignores `min_realm`: filter with gather_table_for first.
 ## Rolls GATHER_ROLLS times, plus one more per 5 Fortune above 10.
 ## Returns {item_id: count}.
 @warning_ignore("integer_division")

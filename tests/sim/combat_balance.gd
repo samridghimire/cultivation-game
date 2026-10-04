@@ -149,6 +149,17 @@ static func rate(data: GameData, appearance: Dictionary, samples: int) -> Dictio
 	return {"entry": entry, "peak": peak, "talisman": talisman, "bare": bare, "verdict": verdict(entry, peak)}
 
 
+## A plain enemy of `realm_index`/`stage`: realm power and enemies.json
+## realm_training only, no techniques or flat tweaks (QA-007d yardstick).
+static func plain_enemy(data: GameData, realm_index: int, stage: int) -> Dictionary:
+	return {"name": "Plain foe", "realm": data.realms[realm_index].id, "stage": stage, "techniques": []}
+
+
+## Typical player vs a plain enemy of the same realm and `stage`.
+static func same_stage_rate(data: GameData, realm_index: int, stage: int, samples: int) -> float:
+	return win_rate(typical_player(data, realm_index, stage), data, plain_enemy(data, realm_index, stage), samples)
+
+
 static func verdict(entry: float, peak: float) -> String:
 	if peak < UNBEATABLE_BELOW:
 		return "unbeatable"
