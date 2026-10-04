@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-04 [DAO-001c] Dao content: Thunder, Wind, Space, Slaughter (demonic) and Vajra (righteous) insights, and nine rare glimpse encounters (a thunderstorm summit, a slaughter field with a demonic or righteous choice, a temple bell, an undying furnace...) so every Dao can be found in the world.
 - 2026-10-04 [TRIB-001c] Tribulation preparation: Lightning-Warding and Heaven-Screening Umbrella shield talismans (grades 4 and 5), Thunder-Tempering, Heart-Guarding (righteous) and Blood Shroud (demonic) buff pills with recipes, and a Core Formation tribulation-crater encounter with bury/take/refine choices.
 - 2026-10-04 [C-003b] Scripture Pavilion: the Ten Thousand Scrolls Pavilion in Fallen Star Market now sells the mid and high technique manuals (tag scripture), village and general stores keep only starter manuals, and three new Qi Refining arts (Rippling Moon Sword, Mountain-Splitting Fist, Gold-Piercing Finger).
 - 2026-10-04 [W-005b] Secret realm entrances: a Shimmering Rift in the Misty Forest and a Sword-Scarred Rift on Azure Peak list each realm with its status and, while open, "Delve into floor N" with the guardian's danger, entry cost and days (disabled entries give the reason). The log announces a realm opening in your region, and rumors reach you of openings elsewhere that would admit you.

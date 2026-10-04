@@ -122,3 +122,34 @@ func test_game_state_contemplate_and_practice() -> void:
 	gs.practice_technique("basic_breathing", 400)
 	assert_gt(Dao.level(c, "dao_of_breath"), 0)
 	gs.end_session()
+
+
+func test_every_insight_can_be_glimpsed_and_strengthens_an_art() -> void:
+	var d := data()
+	var granted := {}
+	for item: Dictionary in d.items.values():
+		granted[item.get("effects", {}).get("dao_insight", "")] = true
+	for enc: Dictionary in d.encounters.values():
+		granted[enc.get("effects", {}).get("dao_insight", "")] = true
+		for choice: Dictionary in enc.get("choices", []):
+			granted[choice.get("effects", {}).get("dao_insight", "")] = true
+	for insight_id in d.dao_insights:
+		var insight: Dictionary = d.dao_insights[insight_id]
+		assert_true(granted.has(insight_id), "%s is granted by an item or encounter" % insight_id)
+		var arts := 0
+		for tech: TechniqueDef in d.techniques.values():
+			if Dao.matches(insight, tech):
+				arts += 1
+		assert_gt(arts, 0, "%s strengthens at least one technique" % insight_id)
+
+
+func test_slaughter_field_offers_opposite_daos() -> void:
+	var enc: Dictionary = data().encounters["marsh_slaughter_field"]
+	var c := new_character()
+	c.alignment = -500
+	Effects.apply(c, data(), enc["choices"][0]["effects"], {})
+	assert_eq(Dao.level(c, "dao_of_slaughter"), 1)
+	assert_true(c.alignment < -500)
+	var saint := new_character()
+	Effects.apply(saint, data(), enc["choices"][1]["effects"], {})
+	assert_eq(Dao.level(saint, "vajra_dao"), 1)
