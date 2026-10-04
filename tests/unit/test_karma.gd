@@ -202,3 +202,15 @@ func test_grudges_fade_with_years() -> void:
 	Karma.add_grudge(c, gs.data, "someone", 50)
 	gs.work_profession("doctor", Calendar.DAYS_PER_YEAR)
 	assert_eq(Karma.grudge(c, "someone"), 50 - int(gs.data.karma["decay_per_year"]))
+
+
+func test_killing_a_pregnant_npc_ends_the_pregnancy() -> void:
+	# QA-20261004-3: only old-age deaths used to clear an NPC's pregnancy.
+	var c := _person("player")
+	var people := _family()
+	var victim: CharacterData = people["victim"]
+	victim.pregnancy = {"partner": "father", "days_left": 120}
+	var result := Karma.commit(c, victim, "kill", true, people, data(), seeded_rng())
+	assert_false(victim.alive)
+	assert_false(Children.is_pregnant(victim), "the dead do not stay pregnant")
+	assert_true(", ".join(result["notes"]).contains("unborn child"), "the note mentions the lost child")

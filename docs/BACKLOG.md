@@ -159,6 +159,7 @@ The local sessions that built combat/techniques, world/exploration/NPCs/dialogue
 ## Done
 | id | task |
 |---|---|
+| QA-20261004-3 | NPCs killed by the player (RIV-001 Karma kill) or by a heavenly tribulation stayed pregnant forever (only old-age deaths cleared it, QA-005). Every NPC death now goes through Npcs.die, which ends the pregnancy; the news line / kill note say the unborn child is lost. Tests. |
 | QA-003 | Save fixtures: tests/fixtures/saves/v1_oldest.json (F-000 format) and v1_current.json, test_save_fixtures.gd (defaults for missing fields, no field dropped, load + play + round trip); CLAUDE.md rule to add a fixture per SAVE_VERSION bump. |
 | W-005 | Secret realms first pass: data/secret_realms.json (Verdant Remnant, Sunken Sword Tomb), SecretRealms (opening schedule, realm caps, entry fee, floors with guardians and weighted treasures), CharacterData.secret_realms, GameState.enter_secret_realm. |
 | VIS-001 | world-ui | done | Player avatar placeholder art: robed cultivator facing the walking direction with a walking bob; robe color from the sect (sects.json `robe_color`), sash color from the alignment tier, pulsing qi aura rings that grow with the realm (src/world/player_look.gd, tested). |

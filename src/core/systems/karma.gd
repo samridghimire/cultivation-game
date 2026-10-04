@@ -120,8 +120,8 @@ static func commit(c: CharacterData, npc: CharacterData, act_id: String, won: bo
 			notes.append("+%d %s" % [npc.item_count(item_id), data.items.get(item_id, {}).get("name", item_id)])
 		npc.inventory.clear()
 	if bool(a.get("kills", false)):
-		npc.alive = false
-		npc.cause_of_death = "slain by %s" % c.name
+		if Npcs.die(npc, "slain by %s" % c.name):
+			notes.append("the unborn child dies with them")
 		c.grudges.erase(npc.id)
 		c.gratitude.erase(npc.id)
 	elif int(a.get("grudge", 0)) > 0:

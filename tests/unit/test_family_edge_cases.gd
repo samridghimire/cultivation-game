@@ -117,3 +117,15 @@ func test_save_and_load_mid_pregnancy_then_birth() -> void:
 	assert_false(Children.is_pregnant(loaded_wife))
 	DirAccess.remove_absolute(saves.save_path(TEST_SLOT))
 	gs.end_session()
+
+
+func test_npc_die_clears_pregnancy_for_any_cause() -> void:
+	# QA-20261004-3: tribulation and violent deaths go through Npcs.die too.
+	var mother := new_character()
+	mother.pregnancy = {"partner": "someone", "days_left": 50}
+	assert_true(Npcs.die(mother, "heavenly tribulation"), "reports the lost pregnancy")
+	assert_false(mother.alive)
+	assert_eq(mother.cause_of_death, "heavenly tribulation")
+	assert_false(Children.is_pregnant(mother))
+	var other := new_character()
+	assert_false(Npcs.die(other, "slain"), "no pregnancy to lose")
