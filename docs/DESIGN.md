@@ -66,24 +66,27 @@ Every great cultivation protagonist has something that sets them apart. Ours is 
 | Breakthroughs with risk, pills that boost odds | ✅ | `Cultivation.attempt_breakthrough` |
 | Lifespan, death by old age, burning/extending lifespan | ✅ | `Cultivation`, `GameState._on_days_advanced` |
 | Alignment (Demonic … Righteous) and deeds | ✅ | `data/alignment.json`, `data/deeds.json` |
-| Sects (join/leave, requirements, ranks, contribution) | ✅ basic (no missions/shop yet) | `data/sects.json`, `Sects` |
+| Sects (join/leave, requirements, ranks, contribution, missions) | ✅ (shop: G-008c) | `data/sects.json`, `Sects` |
+| Sect reputation (witnessed deeds, join gating, faction prices) | ✅ core, 🚧 no sheet UI (G-009b) | `data/sects.json`, `Reputation` |
 | Professions (ranks, XP, income) | ✅ basic | `data/professions.json`, `Professions` |
 | Alchemy (recipes, scrolls, pill quality) + crafting screen | ✅ | `data/recipes.json`, `Alchemy`, `src/ui/crafting_screen.gd` |
-| Blacksmithing and equipment (weapon/armor) | ✅ core, 🚧 no equip UI (G-004b) | `Equipment`, `data/recipes.json` |
+| Blacksmithing and equipment (weapon/armor) | ✅ (equip from inventory, unequip on the character sheet) | `Equipment`, `data/recipes.json` |
 | Talismans (buff talismans, combat strike/shield/escape) | ✅ core, 🚧 no ready UI (G-005d) | `Alchemy`, `Buffs`, `CombatTalismans` |
 | Temporary buffs and forbidden secret arts | ✅ | `Buffs`, `data/techniques.json` |
-| Medicine / Doctor (treat injuries, clinic, patients) | ✅ core, 🚧 no clinic place (G-007b) | `Medicine` |
+| Medicine / Doctor (treat injuries, clinic, patients) | ✅ (clinic places) | `Medicine` |
 | Items, merchants, using pills | ✅ basic | `data/items.json`, `Items` |
 | Save/load, multiple slots | ✅ | `SaveManager` |
 | Creation Artifact: lives, anchors, respawn, recharge | ✅ core (functions: ART-002+) | `data/artifact.json`, `CreationArtifact` |
-| Data-driven regions (4), travel, exploration encounters | ✅ (choices: W-004c) | `data/regions.json`, `data/encounters.json`, `Exploration` |
+| Data-driven regions (4), travel, exploration encounters | ✅ (choice window: W-004d) | `data/regions.json`, `data/encounters.json`, `Exploration` |
 | Injuries (from breakthroughs and combat) | ✅ | `data/injuries.json`, `Injuries` |
 | Combat (auto-resolved) and techniques | ✅ basic | `Combat`, `Techniques`, `data/enemies.json`, `data/techniques.json` |
 | NPCs (named + generated), aging, monthly sim | ✅ | `data/npcs.json`, `Npcs`, `Names` |
-| Dialogue | ✅ core, 🚧 choice-menu fallback (W-003b) | `Dialogue`, `data/dialogue/` |
+| Dialogue | ✅ (dialogue window) | `Dialogue`, `data/dialogue/` |
 | Family: identity, courtship, marriage, dual cultivation, children | ✅ core, ❌ not reachable in-game (P0 tasks) | `data/family.json`, `Family`, `Children` |
-| Clans, estates, bloodlines | ❌ (FAM-005+) | |
-| Cultivation methods, Dao insights, Heavenly Tribulations | ❌ (CM-001, DAO-001, TRIB-001) | |
+| Clans, estates, bloodlines | ✅ clan core (FAM-005), bloodlines core (FAM-007), ❌ UI (FAM-005b), estates (FAM-006) | `data/family.json`, `data/bloodlines.json`, `Clans`, `ClanData`, `Bloodlines` |
+| Cultivation methods (one main method, qi rate, realm cap) | ✅ core, 🚧 no UI (CM-001b) | `Techniques`, `data/techniques.json` |
+| Dao insights (encounters, practice, seclusion; technique + breakthrough bonuses) | ✅ core, 🚧 no UI (DAO-001b) | `data/dao.json`, `Dao` |
+| Heavenly Tribulations (Core Formation+, heart demon for demonic) | ✅ core, 🚧 no wave screen (TRIB-001b) | `Tribulation`, `data/realms.json` |
 | Inventory, techniques, character sheet, settings, pause, load screens | ✅ | `src/ui/` |
 | Top-down world with interactables | ✅ placeholder art | `src/world/` |
 
@@ -109,7 +112,13 @@ Void Refinement → Body Integration → Mahayana → Tribulation Transcendence.
 - Should evil paths include demonic cultivation techniques (blood refining, soul devouring) as a separate progression tree?
 - (FAM-002) Smallest version implemented, tunable in `data/family.json`: courting is only between opposite genders, an NPC of a higher major realm (or flagged `proud`) refuses to be a concubine, proposals need favor 60, at most 1 major realm apart and alignment within 600. Should same-gender Dao companions be allowed, and are these thresholds right?
 - (FAM-002g) **Widowed spouses.** Default the agents will build: a dead spouse stays in your family history but no longer takes up a wife/concubine/Dao companion slot, so you can remarry. Should there be a mourning period or an alignment/favor penalty for remarrying quickly?
-- (TRIB-001) **Heavenly Tribulations.** Default: tribulations strike at every major-realm breakthrough from Core Formation upward, as several lightning waves you survive with HP, defense, talismans and pills. Failing injures you, and the last wave can kill you, in which case the Creation Artifact respawns you and spends a life. Demonic cultivators face an extra heart-demon wave. Is this right, and should a tribulation also hit at Foundation Establishment?
-- (FAM-005) **Clan founding requirements.** Default: Foundation Establishment, 500 spirit stones and a claimed estate/abode, all in `data/family.json`. Can a rogue still in a sect found a clan, or must they leave or get permission?
+- (QA-007) **How lopsided should fights be?** Today realm power x3 per major realm makes combat binary: a geared player wins ~100% against any enemy of their realm and ~0% one realm up. Default the agents will aim for (QA-007d): ~60-85% win rate against an enemy of your own realm and stage, near 0% a full realm up (realm gaps stay nearly impossible, as in the genre). Is that right?
+- (TRIB-001) **Heavenly Tribulations.** Default: tribulations strike at every major-realm breakthrough from Core Formation upward, as several lightning waves you survive with HP, defense, talismans and pills. Failing injures you, and the last wave can kill you, in which case the Creation Artifact respawns you and spends a life. Demonic cultivators face an extra heart-demon wave. Is this right, and should a tribulation also hit at Foundation Establishment? *(Implemented as this default, none at Foundation; the heart demon wave hits at alignment <= -300 and scales with how demonic you are. Tunable in realms.json.)*
+- (FAM-005) **Clan founding requirements.** Default: Foundation Establishment, 500 spirit stones and a claimed estate/abode, all in `data/family.json`. Can a rogue still in a sect found a clan, or must they leave or get permission? (FAM-005 core: sect members may found a clan for now; the estate requirement waits for abodes, FAM-005c.)
 - (W-005/G-008) **Founding your own sect** (roadmap item 3) is not scheduled yet. Default proposal: it unlocks at Nascent Soul, needs a mountain gate place, and reuses the clan treasury/buildings model. Should it be a separate system from clans, or a clan that grows into a sect?
+- (F-005d) **Cultivation pacing.** With sensible play (best qi spot reachable, joining a sect), the balance sim reaches Core Formation by age ~20 and the final realm by ~800, so lifespan never pressures anyone and pills don't matter. What pacing do you want? Agents' default proposal for a sensible, average-root player: Foundation ~25-35, Core Formation ~80-120, Nascent Soul ~300-450, with each later realm taking a large share of its lifespan, and Heavenly Roots about 2-3x faster.
 - **Main story / Creation Artifact origin.** Agents keep the artifact's maker, why it chose the player and who hunts it vague until you decide. Do you want to outline the main story arc (acts, antagonist faction), or should agents propose 2-3 options for you to pick from?
+- (G-011) **Sect promotion.** Default: promotion to Inner Disciple and above needs a realm minimum plus a trial fight, ranks pay a monthly stipend, and missing the monthly duty only skips the stipend (no demotion). Should neglecting duties demote or expel a disciple?
+- (BEAST-001) **Spirit beasts.** Default: only Beast Tamers can tame, one active companion fights alongside you, beasts grow by feeding. Should non-tamers be able to keep a beast (e.g. one bought or gifted), and how many companions at once?
+- (DEM-001) **Devouring.** Default: after defeating a cultivator the player can devour their cultivation for qi at a big alignment cost and a heart-demon injury risk. This is the smallest demonic art; the separate demonic tree (DEM-002) stays blocked on the question above.
+- (BODY-001) **Body cultivation.** Default: a separate body-tempering track that runs alongside qi cultivation (stages that add HP/defense, paid in herbs/ores and days, with injury risk), open to everyone and not tied to a profession. Should it instead be an alternative path that replaces qi cultivation (pure body cultivators), and should it extend lifespan?
