@@ -11,14 +11,17 @@ const PLACE_SCRIPTS := {
 	"sect_hall": preload("res://src/world/interactables/sect_hall.gd"),
 	"workshop": preload("res://src/world/interactables/workshop.gd"),
 	"clinic": preload("res://src/world/interactables/clinic.gd"),
+	"orphanage": preload("res://src/world/interactables/orphanage.gd"),
 	"deed_giver": preload("res://src/world/interactables/deed_giver.gd"),
 	"explore": preload("res://src/world/interactables/explore_site.gd"),
 	"travel": preload("res://src/world/interactables/travel_point.gd"),
 	"gather": preload("res://src/world/interactables/gather_site.gd"),
+	"secret_realm": preload("res://src/world/interactables/secret_realm_entrance.gd"),
 }
 ## Place keys that are layout, not script properties.
 const LAYOUT_KEYS := ["type", "pos"]
 const NPC_SCRIPT := preload("res://src/world/interactables/npc.gd")
+const ABODE_SCRIPT := preload("res://src/world/interactables/abode.gd")
 ## Placeholder body color of generated NPCs by gender.
 const GENDER_COLORS := {"male": Color("8fb3e0"), "female": Color("e6a3c4")}
 
@@ -87,11 +90,27 @@ func _build_places() -> void:
 	for place: Dictionary in _region.get("places", []):
 		var node: Interactable = PLACE_SCRIPTS[place["type"]].new()
 		node.position = _vec(place.get("pos", [0, 0]))
+		node.art_kind = place["type"]
 		for key in place:
 			if LAYOUT_KEYS.has(key):
 				continue
 			node.set(key, _convert(place[key], node.get(key)))
 		# Add before the player so the player draws on top.
+		add_child(node)
+		move_child(node, player.get_index())
+	_build_abodes()
+
+
+## Claimable cave abodes (region "abodes", G-010b).
+func _build_abodes() -> void:
+	for abode: Dictionary in _region.get("abodes", []):
+		var node: Interactable = ABODE_SCRIPT.new()
+		node.abode_id = String(abode.get("id", ""))
+		node.display_name = String(abode.get("display_name", node.abode_id))
+		node.anchor_id = String(abode.get("anchor_id", ""))
+		node.position = _vec(abode.get("pos", [0, 0]))
+		node.size = _vec(abode.get("size", [80, 60]))
+		node.color = Color(String(abode.get("color", "6f6a5a")))
 		add_child(node)
 		move_child(node, player.get_index())
 
@@ -114,6 +133,7 @@ func _build_npcs() -> void:
 			continue  # Generated NPCs are placed by _build_generated_npcs().
 		var def: Dictionary = GameState.data.npcs[c.id]
 		var node: Interactable = NPC_SCRIPT.new()
+		node.art_kind = "npc"
 		node.npc_id = c.id
 		node.display_name = "%s (%s)" % [c.name, def["title"]] if def.has("title") else c.name
 		node.position = _vec(def.get("pos", [0, 0]))
@@ -133,6 +153,7 @@ func _build_generated_npcs() -> void:
 	for i in people.size():
 		var c := people[i]
 		var node: Interactable = NPC_SCRIPT.new()
+		node.art_kind = "npc"
 		node.npc_id = c.id
 		node.display_name = "%s (%s)" % [c.name, Npcs.world_title(c, GameState.player, data)]
 		node.position = spots[i]

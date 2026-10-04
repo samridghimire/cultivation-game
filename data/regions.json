@@ -1,9 +1,9 @@
 {
-  "_doc": "World regions. The world scene builds itself from the current region. qi_density multiplies cultivation everywhere in the region (meditation spots multiply again). routes: travel targets with days and an optional min_realm (realm id). places: interactables; 'anchor_id' (optional, globally unique) makes the place a Creation Artifact anchor (data/artifact.json); 'type' picks the script (meditation, merchant, sect_hall, workshop, clinic, deed_giver, explore, travel, gather), 'pos' and 'size' are in pixels, other keys are passed to the script as exported properties. npc_spots (optional): list of [x, y] positions where generated NPCs living in the region stand (in id order; extra NPCs gather around the spawn point). encounter_tags select entries from data/encounters.json when exploring. abodes (optional, G-010): claimable cave abodes in the region, each {id (globally unique), display_name, cost (spirit stones), min_realm (optional realm id), qi_density (multiplies cultivation in seclusion there, like a meditation spot), storage_slots (distinct item stacks its chest holds), anchor_id (optional, globally unique: the abode can be bound as a Creation Artifact anchor), pos, size, color (layout for the world scene)}. The player owns at most one abode (Abodes). A merchant's optional 'faction' (sect id) makes its prices follow your reputation with that sect (data/sects.json reputation tiers). encounter_tags select entries from data/encounters.json when exploring. map.decor (optional): scenery drawn on the map, counts trees/rocks/grass/flowers (0-300) and colors tree_color/rock_color/grass_color/flower_color (hex); missing keys use Scenery.DEFAULTS.",
+"_doc": "World regions. The world scene builds itself from the current region. qi_density multiplies cultivation everywhere in the region (meditation spots multiply again). routes: travel targets with days and an optional min_realm (realm id). places: interactables; 'anchor_id' (optional, globally unique) makes the place a Creation Artifact anchor (data/artifact.json); 'type' picks the script (meditation, merchant, sect_hall, workshop, clinic, orphanage (adopt a foundling, FAM-003e), deed_giver, explore, travel, gather, secret_realm: lists every data/secret_realms.json realm whose region is this one; a gather place's gather_table entries are {item ('' = nothing), weight, min, max, min_realm (optional realm id: below it the entry counts as nothing found)}), 'pos' and 'size' are in pixels, other keys are passed to the script as exported properties. npc_spots (optional): list of [x, y] positions where generated NPCs living in the region stand (in id order; extra NPCs gather around the spawn point). encounter_tags select entries from data/encounters.json when exploring. map_pos (optional): [x, y] fractions 0..1 placing the region on the world map screen (regions without it are spread around the map edge). abodes (optional, G-010): claimable cave abodes in the region, each {id (globally unique), display_name, cost (spirit stones), min_realm (optional realm id), qi_density (multiplies cultivation in seclusion there, like a meditation spot), storage_slots (distinct item stacks its chest holds), anchor_id (optional, globally unique: the abode can be bound as a Creation Artifact anchor), pos, size, color (layout for the world scene)}. The player owns at most one abode (Abodes). A merchant's optional 'faction' (sect id) makes its prices follow your reputation with that sect (data/sects.json reputation tiers). encounter_tags select entries from data/encounters.json when exploring. map.decor (optional): scenery drawn on the map, counts trees/rocks/grass/flowers (0-300) and colors tree_color/rock_color/grass_color/flower_color (hex); missing keys use Scenery.DEFAULTS.",
   "start_region": "qingshi_village",
   "regions": [
     {
-      "id": "qingshi_village", "name": "Qingshi Village",
+      "id": "qingshi_village", "map_pos": [0.08, 0.72], "name": "Qingshi Village",
       "description": "A sleepy mortal village where your journey begins.",
       "qi_density": 1.0, "danger": 0,
       "map": {"size": [1600, 1000], "ground": "4d6b3c", "border": "2a3a20", "paths": [[0, 470, 1600, 60], [770, 0, 60, 1000]], "path_color": "8a7350", "decor": {"trees": 22, "rocks": 8, "grass": 40, "flowers": 16}},
@@ -20,6 +20,7 @@
         {"type": "sect_hall", "display_name": "Sect Recruitment Hall", "pos": [1250, 750], "size": [160, 110], "color": "b33f33"},
         {"type": "workshop", "display_name": "Village Workshop", "pos": [400, 720], "size": [130, 90], "color": "8c6640"},
         {"type": "clinic", "display_name": "Village Clinic", "pos": [220, 420], "size": [100, 75], "color": "7fbf9f"},
+        {"type": "orphanage", "display_name": "Temple of Mercy (orphanage)", "pos": [760, 640], "size": [110, 80], "color": "c9b37a"},
         {"type": "merchant", "display_name": "Wandering Merchant", "pos": [620, 380], "size": [60, 60], "color": "d9b34d"},
         {"type": "deed_giver", "display_name": "Hooded Stranger", "pos": [800, 250], "size": [30, 30], "color": "7a2f3a", "deed_context": "poisoner", "hidden_by_flag": "poisoner_gone"},
         {"type": "deed_giver", "display_name": "Villager", "pos": [1000, 400], "size": [30, 30], "color": "e6bf99", "deed_context": "villager", "hidden_by_flag": "villager_dead"},
@@ -28,7 +29,7 @@
       ]
     },
     {
-      "id": "misty_forest", "name": "Misty Forest",
+      "id": "misty_forest", "map_pos": [0.4, 0.4], "name": "Misty Forest",
       "description": "Ancient trees veiled in mist. Spirit herbs grow here, and so do spirit beasts.",
       "qi_density": 1.5, "danger": 1,
       "map": {"size": [1600, 1000], "ground": "2f4f2f", "border": "16261a", "paths": [[0, 470, 1600, 60]], "path_color": "5c5238", "decor": {"trees": 45, "rocks": 10, "grass": 60, "flowers": 4, "tree_color": "1d3b22", "grass_color": "3f6b3a", "flower_color": "c9e0f2"}},
@@ -46,6 +47,7 @@
         {"type": "meditation", "anchor_id": "misty_clearing", "display_name": "Mossy Clearing", "pos": [500, 220], "size": [110, 80], "color": "4f8f5a", "qi_density": 1.2},
         {"type": "explore", "display_name": "Deep Woods", "pos": [1100, 260], "size": [160, 110], "color": "1f3a22"},
         {"type": "explore", "anchor_id": "misty_herb_valley", "display_name": "Herb Valley", "pos": [800, 800], "size": [180, 90], "color": "6f9f4a", "explore_tags": ["herbs"]},
+        {"type": "secret_realm", "display_name": "Shimmering Rift", "pos": [500, 820], "size": [90, 80], "color": "7a5fbf"},
         {"type": "gather", "display_name": "Herb Patch", "pos": [1000, 650], "size": [120, 70], "color": "7fae58", "gather_days": 5,
          "gather_table": [{"item": "spirit_herb", "weight": 4, "min": 1, "max": 3}, {"item": "dew_grass", "weight": 5, "min": 2, "max": 4}, {"item": "qi_condensing_grass", "weight": 3, "min": 1, "max": 2}, {"item": "purple_cloud_mushroom", "weight": 1, "min": 1, "max": 1}, {"item": "", "weight": 2}]},
         {"type": "deed_giver", "display_name": "Wounded Sect Disciple", "pos": [1400, 520], "size": [30, 30], "color": "a8c4e0", "deed_context": "sect_brother", "hidden_by_flag": "sect_brother_gone"},
@@ -54,7 +56,7 @@
       ]
     },
     {
-      "id": "fallen_star_market", "name": "Fallen Star Market",
+      "id": "fallen_star_market", "map_pos": [0.5, 0.92], "name": "Fallen Star Market",
       "description": "A bustling free city where rogue cultivators trade treasures and rumours.",
       "qi_density": 1.1, "danger": 0,
       "map": {"size": [1600, 1000], "ground": "6b6250", "border": "3a3428", "paths": [[0, 470, 1600, 60], [770, 0, 60, 1000]], "path_color": "9c917a", "decor": {"trees": 5, "rocks": 12, "grass": 12, "flowers": 4, "rock_color": "8a8170", "grass_color": "7a8a55"}},
@@ -74,6 +76,8 @@
         {"type": "merchant", "display_name": "Heavenforge Smithy", "pos": [1450, 300], "size": [110, 80], "color": "5a5f66", "stock_tags": ["equipment", "ore", "smithing"]},
         {"type": "merchant", "display_name": "Night Market Stall", "pos": [1200, 300], "size": [80, 60], "color": "7a4fa0", "max_price": 100},
         {"type": "merchant", "display_name": "Shadow Curio Den", "pos": [150, 300], "size": [80, 60], "color": "4a1f2a", "stock_tags": ["demonic"], "max_alignment": -200},
+        {"type": "merchant", "display_name": "Blood Lotus Apothecary", "pos": [150, 780], "size": [90, 70], "color": "8a1c2b", "stock_tags": ["blood_art"], "max_alignment": 0, "faction": "blood_lotus_sect"},
+        {"type": "merchant", "display_name": "Ten Thousand Scrolls Pavilion", "pos": [800, 160], "size": [110, 80], "color": "3f6e8c", "stock_tags": ["scripture"]},
         {"type": "workshop", "display_name": "Artisan Quarter", "pos": [400, 750], "size": [150, 100], "color": "8c6640"},
         {"type": "clinic", "display_name": "Hall of Gentle Hands Clinic", "pos": [800, 380], "size": [120, 85], "color": "7fbf9f"},
         {"type": "sect_hall", "display_name": "Sect Envoy Hall", "pos": [1200, 750], "size": [160, 110], "color": "b33f33"},
@@ -86,7 +90,7 @@
       ]
     },
     {
-      "id": "azure_peak", "name": "Azure Peak",
+      "id": "azure_peak", "map_pos": [0.88, 0.1], "name": "Azure Peak",
       "description": "Cloud-wreathed mountains thick with qi. Fierce beasts guard the heights.",
       "qi_density": 2.5, "danger": 3,
       "map": {"size": [1600, 1000], "ground": "5a6f80", "border": "2b3540", "paths": [[0, 470, 1600, 60]], "path_color": "8f9aa3", "decor": {"trees": 10, "rocks": 35, "grass": 20, "flowers": 8, "tree_color": "37574c", "rock_color": "a3adb5", "grass_color": "6f8a7a", "flower_color": "f2f2ff"}},
@@ -105,10 +109,11 @@
         {"type": "gather", "display_name": "Frost Ledge", "pos": [1450, 560], "size": [100, 70], "color": "e0ecf5", "gather_days": 10,
          "gather_table": [{"item": "ice_soul_flower", "weight": 2, "min": 1, "max": 1}, {"item": "flame_lotus", "weight": 1, "min": 1, "max": 1}, {"item": "thousand_year_lingzhi", "weight": 0.2, "min": 1, "max": 1}, {"item": "spirit_herb", "weight": 3, "min": 1, "max": 3}, {"item": "", "weight": 4}]},
         {"type": "gather", "display_name": "Cloud-Sea Orchid Terraces", "pos": [760, 830], "size": [130, 80], "color": "b9c7e6", "gather_days": 15,
-         "gather_table": [{"item": "cloud_mist_orchid", "weight": 3, "min": 1, "max": 2}, {"item": "hundred_year_snow_lotus", "weight": 1.5, "min": 1, "max": 1}, {"item": "nine_leaf_soul_grass", "weight": 0.5, "min": 1, "max": 1}, {"item": "earth_marrow_fungus", "weight": 0.4, "min": 1, "max": 1}, {"item": "spirit_herb", "weight": 3, "min": 2, "max": 4}, {"item": "", "weight": 4}]},
+         "gather_table": [{"item": "cloud_mist_orchid", "weight": 3, "min": 1, "max": 2}, {"item": "hundred_year_snow_lotus", "weight": 1.5, "min": 1, "max": 1}, {"item": "nine_leaf_soul_grass", "weight": 0.5, "min": 1, "max": 1, "min_realm": "foundation_establishment"}, {"item": "earth_marrow_fungus", "weight": 0.4, "min": 1, "max": 1, "min_realm": "core_formation"}, {"item": "golden_core_lotus_seed", "weight": 0.2, "min": 1, "max": 1, "min_realm": "core_formation"}, {"item": "spirit_herb", "weight": 3, "min": 2, "max": 4}, {"item": "", "weight": 4}]},
         {"type": "deed_giver", "display_name": "Bandit Camp", "pos": [1450, 820], "size": [60, 50], "color": "6b4a2e", "deed_context": "bandit_camp", "hidden_by_flag": "bandit_camp_gone"},
         {"type": "explore", "display_name": "Beast Ridge", "pos": [700, 200], "size": [170, 100], "color": "3d4b57"},
         {"type": "explore", "anchor_id": "azure_ancient_cave", "display_name": "Ancient Cave", "pos": [1200, 800], "size": [110, 90], "color": "1e2228", "explore_tags": ["ruins"]},
+        {"type": "secret_realm", "display_name": "Sword-Scarred Rift", "pos": [380, 680], "size": [90, 80], "color": "6f7fbf"},
         {"type": "travel", "display_name": "Mountain Path", "pos": [40, 500], "size": [40, 120], "color": "5c4630"}
       ]
     },
