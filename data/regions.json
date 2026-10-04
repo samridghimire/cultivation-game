@@ -1,5 +1,5 @@
 {
-"_doc": "World regions. The world scene builds itself from the current region. qi_density multiplies cultivation everywhere in the region (meditation spots multiply again). routes: travel targets with days and an optional min_realm (realm id). places: interactables; 'anchor_id' (optional, globally unique) makes the place a Creation Artifact anchor (data/artifact.json); 'type' picks the script (meditation, merchant, sect_hall, workshop, clinic, orphanage (adopt a foundling, FAM-003e), auction (an auction house: house_id names a data/auctions.json house, AUC-001b), deed_giver, explore, travel, gather, secret_realm: lists every data/secret_realms.json realm whose region is this one; a gather place's gather_table entries are {item ('' = nothing), weight, min, max, min_realm (optional realm id: below it the entry counts as nothing found)}), 'pos' and 'size' are in pixels, other keys are passed to the script as exported properties. npc_spots (optional): list of [x, y] positions where generated NPCs living in the region stand (in id order; extra NPCs gather around the spawn point). encounter_tags select entries from data/encounters.json when exploring. map_pos (optional): [x, y] fractions 0..1 placing the region on the world map screen (regions without it are spread around the map edge). abodes (optional, G-010): claimable cave abodes in the region, each {id (globally unique), display_name, cost (spirit stones), min_realm (optional realm id), qi_density (multiplies cultivation in seclusion there, like a meditation spot), storage_slots (distinct item stacks its chest holds), anchor_id (optional, globally unique: the abode can be bound as a Creation Artifact anchor), pos, size, color (layout for the world scene)}. The player owns at most one abode (Abodes). A merchant's optional 'faction' (sect id) makes its prices follow your reputation with that sect (data/sects.json reputation tiers). encounter_tags select entries from data/encounters.json when exploring. map.decor (optional): scenery drawn on the map, counts trees/rocks/grass/flowers (0-300) and colors tree_color/rock_color/grass_color/flower_color (hex); missing keys use Scenery.DEFAULTS.",
+"_doc": "World regions. The world scene builds itself from the current region. qi_density multiplies cultivation everywhere in the region (meditation spots multiply again). routes: travel targets with days and an optional min_realm (realm id). places: interactables; 'anchor_id' (optional, globally unique) makes the place a Creation Artifact anchor (data/artifact.json); 'type' picks the script (meditation, merchant, sect_hall, workshop, clinic, orphanage (adopt a foundling, FAM-003e), auction (an auction house: house_id names a data/auctions.json house, AUC-001b), inheritance (inheritance grounds listing every data/inheritances.json inheritance in the region, W-006b), deed_giver, explore, travel, gather, secret_realm: lists every data/secret_realms.json realm whose region is this one; a gather place's gather_table entries are {item ('' = nothing), weight, min, max, min_realm (optional realm id: below it the entry counts as nothing found)}), 'pos' and 'size' are in pixels, other keys are passed to the script as exported properties. npc_spots (optional): list of [x, y] positions where generated NPCs living in the region stand (in id order; extra NPCs gather around the spawn point). encounter_tags select entries from data/encounters.json when exploring. map_pos (optional): [x, y] fractions 0..1 placing the region on the world map screen (regions without it are spread around the map edge). abodes (optional, G-010): claimable cave abodes in the region, each {id (globally unique), display_name, cost (spirit stones), min_realm (optional realm id), qi_density (multiplies cultivation in seclusion there, like a meditation spot), storage_slots (distinct item stacks its chest holds), anchor_id (optional, globally unique: the abode can be bound as a Creation Artifact anchor), pos, size, color (layout for the world scene)}. The player owns at most one abode (Abodes). A merchant's optional 'faction' (sect id) makes its prices follow your reputation with that sect (data/sects.json reputation tiers). encounter_tags select entries from data/encounters.json when exploring. map.decor (optional): scenery drawn on the map, counts trees/rocks/grass/flowers (0-300) and colors tree_color/rock_color/grass_color/flower_color (hex); missing keys use Scenery.DEFAULTS.",
   "start_region": "qingshi_village",
   "regions": [
     {
@@ -26,6 +26,7 @@
         {"type": "deed_giver", "display_name": "Headman Zhou", "pos": [920, 640], "size": [30, 30], "color": "c9a26b", "deed_context": "headman"},
         {"type": "deed_giver", "display_name": "Villager", "pos": [1000, 400], "size": [30, 30], "color": "e6bf99", "deed_context": "villager", "hidden_by_flag": "villager_dead"},
         {"type": "explore", "display_name": "Village Outskirts", "pos": [150, 880], "size": [120, 70], "color": "6b7d4a"},
+        {"type": "inheritance", "display_name": "Founder's Old Well", "pos": [1250, 280], "size": [90, 60], "color": "7d8a7a"},
         {"type": "travel", "display_name": "Village Gate", "pos": [1540, 500], "size": [40, 120], "color": "5c4630"}
       ]
     },
@@ -53,6 +54,7 @@
          "gather_table": [{"item": "spirit_herb", "weight": 4, "min": 1, "max": 3}, {"item": "dew_grass", "weight": 5, "min": 2, "max": 4}, {"item": "qi_condensing_grass", "weight": 3, "min": 1, "max": 2}, {"item": "purple_cloud_mushroom", "weight": 1, "min": 1, "max": 1}, {"item": "", "weight": 2}]},
         {"type": "deed_giver", "display_name": "Wounded Sect Disciple", "pos": [1400, 520], "size": [30, 30], "color": "a8c4e0", "deed_context": "sect_brother", "hidden_by_flag": "sect_brother_gone"},
         {"type": "deed_giver", "display_name": "Lost Traveller", "pos": [1300, 700], "size": [30, 30], "color": "c9a27a", "deed_context": "traveller", "hidden_by_flag": "traveller_gone"},
+        {"type": "inheritance", "display_name": "Mossy Cairn", "pos": [1400, 140], "size": [100, 70], "color": "6f7d5c"},
         {"type": "travel", "display_name": "Forest Trail", "pos": [40, 500], "size": [40, 120], "color": "5c4630"}
       ]
     },
@@ -88,6 +90,7 @@
         {"type": "auction", "display_name": "Fallen Star Auction House", "pos": [1000, 640], "size": [140, 100], "color": "8a5a2b", "house_id": "fallen_star_auction"},
         {"type": "deed_giver", "display_name": "Street Child", "pos": [1050, 420], "size": [24, 24], "color": "b39b7a", "deed_context": "street_child", "hidden_by_flag": "street_child_gone"},
         {"type": "explore", "anchor_id": "fallen_star_alleys", "display_name": "Back Alleys", "pos": [150, 120], "size": [120, 80], "color": "4a4438"},
+        {"type": "inheritance", "display_name": "Sealed Vault Door", "pos": [600, 880], "size": [100, 60], "color": "6b2a2a"},
         {"type": "travel", "display_name": "City Gate", "pos": [800, 970], "size": [120, 40], "color": "5c4630"}
       ]
     },
@@ -116,6 +119,7 @@
         {"type": "explore", "display_name": "Beast Ridge", "pos": [700, 200], "size": [170, 100], "color": "3d4b57"},
         {"type": "explore", "anchor_id": "azure_ancient_cave", "display_name": "Ancient Cave", "pos": [1200, 800], "size": [110, 90], "color": "1e2228", "explore_tags": ["ruins"]},
         {"type": "secret_realm", "display_name": "Sword-Scarred Rift", "pos": [380, 680], "size": [90, 80], "color": "6f7fbf"},
+        {"type": "inheritance", "display_name": "Cloud-Sword Cave", "pos": [1150, 330], "size": [100, 70], "color": "8fa3b8"},
         {"type": "travel", "display_name": "Mountain Path", "pos": [40, 500], "size": [40, 120], "color": "5c4630"}
       ]
     },
@@ -139,6 +143,7 @@
         {"type": "gather", "display_name": "Corpse-Lily Bog", "pos": [700, 230], "size": [130, 80], "color": "5f6b3a", "gather_days": 7,
          "gather_table": [{"item": "purple_cloud_mushroom", "weight": 3, "min": 1, "max": 2}, {"item": "qi_condensing_grass", "weight": 3, "min": 1, "max": 2}, {"item": "spirit_herb", "weight": 3, "min": 1, "max": 3}, {"item": "blood_ginseng", "weight": 0.5, "min": 1, "max": 1}, {"item": "cold_iron", "weight": 1, "min": 1, "max": 1}, {"item": "", "weight": 3}]},
         {"type": "merchant", "display_name": "Corpse Peddler's Skiff", "pos": [1450, 450], "size": [80, 60], "color": "6b5a4a", "stock_tags": ["herb", "ore"]},
+        {"type": "inheritance", "display_name": "Corpse Lord's Altar", "pos": [1150, 300], "size": [110, 80], "color": "4f4a5a"},
         {"type": "travel", "display_name": "Rotting Boardwalk", "pos": [40, 500], "size": [40, 120], "color": "5c4630"}
       ]
     }
