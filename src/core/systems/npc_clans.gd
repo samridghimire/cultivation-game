@@ -1,0 +1,134 @@
+class_name NpcClans
+extends RefCounted
+## NPC clans (FAM-009), defined in data/clans.json. Each clan is founded once
+## per game as generated NPCs (a head, a spouse and children sharing the clan
+## surname) and kept as a ClanData keyed by clan id in GameState.npc_clans.
+## Members follow the head's family (Clans.sync_family); when the head dies the
+## heir succeeds (Clans.succeed), and a clan whose line ends is extinct.
+
+
+static func clan_ids(data: GameData) -> Array[String]:
+	var out: Array[String] = []
+	for id in data.npc_clans:
+		out.append(String(id))
+	out.sort()
+	return out
+
+
+## Founds every clan in data/clans.json missing from `clans` (id -> ClanData),
+## spawning its family into `npcs`. Returns the ids founded.
+static func ensure(clans: Dictionary, npcs: Dictionary, data: GameData, rng: RandomNumberGenerator) -> Array[String]:
+	var founded: Array[String] = []
+	for id in clan_ids(data):
+		if not clans.has(id):
+			clans[id] = found(data.npc_clans[id], npcs, data, rng)
+			founded.append(id)
+	return founded
+
+
+## Spawns `def`'s founding family into `npcs` and returns its ClanData.
+static func found(def: Dictionary, npcs: Dictionary, data: GameData, rng: RandomNumberGenerator) -> ClanData:
+	var surname := String(def.get("surname", ""))
+	var region := String(def.get("region", ""))
+	var alignment := int(def.get("alignment", 0))
+	var head_def: Dictionary = def.get("head", {})
+	var head := Npcs.spawn(npcs, data, rng, {"surname": surname, "region": region, "alignment": alignment, "gender": String(head_def.get("gender", "")), "age_years": int(head_def.get("age_years", 60)), "realm": String(head_def.get("realm", "mortal")), "stage": int(head_def.get("stage", 0))})
+	var spouse_def: Dictionary = def.get("spouse", {})
+	var partner_genders: Array = Family.gender_rules(data, head.gender).get("partner_genders", [])
+	var spouse_ranks := Family.ranks(data, head.gender)
+	var spouse: CharacterData = null
+	if not partner_genders.is_empty() and not spouse_ranks.is_empty():
+		spouse = Npcs.spawn(npcs, data, rng, {"gender": String(partner_genders[0]), "region": region, "alignment": alignment, "age_years": int(spouse_def.get("age_years", head.age_years())), "realm": String(spouse_def.get("realm", "mortal"))})
+		Family.marry(head, spouse, spouse_ranks[0])
+	var kids: Dictionary = def.get("children", {})
+	var count_range: Array = kids.get("count", [0, 0])
+	var age_range: Array = kids.get("age_years", [16, 30])
+	for i in rng.randi_range(int(count_range[0]), int(count_range[1])):
+		var child := Npcs.spawn(npcs, data, rng, {"surname": surname, "region": region, "alignment": alignment, "age_years": rng.randi_range(int(age_range[0]), int(age_range[1])), "realm": String(kids.get("realm", "mortal"))})
+		head.children.append(child.id)
+		child.parents.append(head.id)
+		if spouse != null:
+			spouse.children.append(child.id)
+			child.parents.append(spouse.id)
+			child.birth_rank = String(head.spouse_ranks.get(spouse.id, ""))
+	var clan := ClanData.new()
+	clan.name = String(def.get("name", Clans.clan_name(head, data)))
+	clan.head = head.id
+	clan.members[head.id] = Clans.head_rank(data)
+	Clans.sync_family(head, clan, npcs, data)
+	return clan
+
+
+## Whether the clan's line has ended (no head left).
+static func is_extinct(clan: ClanData) -> bool:
+	return clan.head == ""
+
+
+## Keeps every clan in `clans` in step with its people after time passed:
+## succession when the head has died, then new spouses/descendants join and
+## the dead leave. Returns news events [{clan_id, text, category}].
+static func simulate(clans: Dictionary, npcs: Dictionary, data: GameData) -> Array[Dictionary]:
+	var events: Array[Dictionary] = []
+	for id in clans:
+		var clan: ClanData = clans[id]
+		if is_extinct(clan):
+			continue
+		var old: CharacterData = npcs.get(clan.head)
+		if old == null or not old.alive:
+			var result := Clans.succeed(clan, npcs, data)
+			var old_name := old.name if old != null else "its head"
+			if result["succeeded"]:
+				var heir: CharacterData = npcs[result["head"]]
+				events.append({"clan_id": id, "text": "The %s mourns %s. %s now leads the clan as its %s." % [clan.name, old_name, heir.name, Clans.rank_name(data, Clans.head_rank(data), heir.gender)], "category": "info"})
+			else:
+				events.append({"clan_id": id, "text": "With the death of %s, the line of the %s has ended." % [old_name, clan.name], "category": "info"})
+				continue
+		Clans.sync_family(npcs[clan.head], clan, npcs, data)
+	return events
+
+
+## The clan id that `npc_id` belongs to ("" if none).
+static func clan_of(clans: Dictionary, npc_id: String) -> String:
+	for id in clans:
+		if (clans[id] as ClanData).members.has(npc_id):
+			return String(id)
+	return ""
+
+
+static func to_dict(clans: Dictionary) -> Dictionary:
+	var out := {}
+	for id in clans:
+		out[id] = (clans[id] as ClanData).to_dict()
+	return out
+
+
+static func from_dict(d: Dictionary) -> Dictionary:
+	var out := {}
+	for id in d:
+		out[String(id)] = ClanData.from_dict(d[id])
+	return out
+
+
+## Load errors for data/clans.json.
+static func validate(data: GameData) -> PackedStringArray:
+	var errors: PackedStringArray = []
+	for id in clan_ids(data):
+		var def: Dictionary = data.npc_clans[id]
+		if String(def.get("name", "")) == "" or String(def.get("surname", "")) == "":
+			errors.append("clans.json clan '%s' needs a name and a surname" % id)
+		if not data.regions.has(String(def.get("region", ""))):
+			errors.append("clans.json clan '%s' has unknown region '%s'" % [id, def.get("region", "")])
+		var head: Dictionary = def.get("head", {})
+		var gender := String(head.get("gender", ""))
+		if gender != "" and not Names.is_gender(data, gender):
+			errors.append("clans.json clan '%s' head has unknown gender '%s'" % [id, gender])
+		for part in ["head", "spouse", "children"]:
+			var section: Dictionary = def.get(part, {})
+			if section.has("realm") and data.realm_index_of(String(section["realm"])) < 0:
+				errors.append("clans.json clan '%s' %s has unknown realm '%s'" % [id, part, section["realm"]])
+		var kids: Dictionary = def.get("children", {})
+		for key in ["count", "age_years"]:
+			var range_value: Array = kids.get(key, [0, 0])
+			if range_value.size() != 2 or int(range_value[0]) < 0 or int(range_value[0]) > int(range_value[1]):
+				errors.append("clans.json clan '%s' children.%s must be [min, max] with 0 <= min <= max" % [id, key])
+	return errors
