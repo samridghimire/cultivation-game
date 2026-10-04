@@ -509,6 +509,8 @@ func enter_secret_realm(realm_id: String) -> void:
 		EventBus.post("The %s shudders and begins to close. Its barrier hurls you out before you can claim the %s.%s" % [def["name"], floor_def.get("name", ""), hurt], "danger")
 		_pass_time(expelled["days"])
 		return
+	if SecretRealms.roll_rival(data, rng) and not _contest_realm_rival(def):
+		return
 	var guardian := String(floor_def.get("guardian", ""))
 	if guardian != "" and not fight_enemy(data.enemies[guardian]):
 		if _can_act():
@@ -523,11 +525,28 @@ func enter_secret_realm(realm_id: String) -> void:
 	_pass_time(result["days"])
 
 
+## A rival cultivator contests the floor (W-005f): beat them and spare them
+## (gratitude; rob or kill them later from their menu), or lose the floor.
+## Returns true if the delve goes on.
+func _contest_realm_rival(def: Dictionary) -> bool:
+	var rival := SecretRealms.spawn_rival(npcs, data, def, rng)
+	EventBus.post("%s, a %s cultivator, is here for the same treasure and attacks!" % [rival.name, Cultivation.realm_label(rival, data)], "danger")
+	if not fight_enemy(Karma.npc_enemy(rival, data)):
+		if _can_act():
+			EventBus.post("%s claims the floor's treasure and leaves you in the dust." % rival.name, "warning")
+		return false
+	var gratitude := int(data.secret_realm_rivals.get("spare_gratitude", 0))
+	if gratitude > 0:
+		Karma.add_gratitude(player, data, rival.id, gratitude)
+	EventBus.post("You let the beaten %s go. They will remember your mercy, and you may meet again in %s." % [rival.name, Exploration.region_name(data, String(def.get("region", "")))], "karma")
+	return _can_act()
+
+
 func _receive_inheritance(realm_id: String) -> void:
 	var legacy: Dictionary = SecretRealms.realm(data, realm_id).get("inheritance", {})
 	if legacy.is_empty() or SecretRealms.has_inherited(player, realm_id):
 		return
-	var reason := SecretRealms.check_inheritance(player, data, realm_id)
+	var reason := SecretRealms.check_inheritance(player, data, realm_id, world_flags)
 	if reason != "":
 		EventBus.post(reason, "warning")
 		return
@@ -1960,6 +1979,11 @@ func _on_days_advanced(days: int) -> void:
 	EventBus.topic = "world"
 	for line in SecretRealms.opening_news(player, data, current_region, GameClock.total_days - days, GameClock.total_days):
 		EventBus.post(line, "progress")
+	for def: Dictionary in data.secret_realms.values():
+		if SecretRealms.closed_between(def, GameClock.total_days - days, GameClock.total_days):
+			var cleared := SecretRealms.cleared_last_opening(player, def, GameClock.total_days)
+			if SecretRealms.rival_claims_inheritance(player, data, String(def["id"]), cleared, world_flags, rng):
+				EventBus.post("Word spreads that a rival emerged from the %s carrying the %s. That legacy is gone for good." % [def["name"], def["inheritance"].get("name", "inheritance")], "warning")
 	EventBus.topic = action_topic
 	if player.age_years() >= Cultivation.lifespan_years(player, data):
 		_kill("Your lifespan is exhausted. You die of old age at %d." % player.age_years())

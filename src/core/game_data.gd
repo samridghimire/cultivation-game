@@ -89,6 +89,8 @@ var help_pages: Array = []
 ## Input action id -> display name for the help screen's Controls page.
 var help_action_names: Dictionary = {}
 var secret_realms: Dictionary = {}  # id -> Dictionary (data/secret_realms.json, SecretRealms)
+## data/secret_realms.json "rivals" rules (W-005f).
+var secret_realm_rivals: Dictionary = {}
 var auction_houses: Dictionary = {}  # id -> Dictionary (data/auctions.json, Auctions)
 var inheritances: Dictionary = {}  # id -> Dictionary (data/inheritances.json, Inheritances)
 ## data/body_tempering.json: rules and ordered "stages" (BodyTempering).
@@ -263,7 +265,9 @@ func _load(dir: String) -> void:
 	help_pages = help.get("pages", [])
 	help_action_names = help.get("action_names", {})
 
-	for secret_realm in _read(dir, "secret_realms.json").get("realms", []):
+	var secret_file := _read(dir, "secret_realms.json")
+	secret_realm_rivals = secret_file.get("rivals", {})
+	for secret_realm in secret_file.get("realms", []):
 		secret_realms[secret_realm["id"]] = secret_realm
 	for auction_house in _read(dir, "auctions.json").get("houses", []):
 		auction_houses[auction_house["id"]] = auction_house
