@@ -85,6 +85,9 @@ static func describe_item(c: CharacterData, data: GameData, item_id: String) -> 
 		var amount := CombatTalismans.amount(data, item_id)
 		var power := "turns a defeat into an escape" if kind == "escape" else "%d at your realm" % amount
 		lines.append("Grade %d %s talisman: %s" % [int(CombatTalismans.combat_def(data, item_id).get("grade", 1)), kind, power])
+	var array := Abodes.array_def(data, item_id)
+	if not array.is_empty():
+		lines.append("Gathering array: +%d%% qi density in seclusion at your abode" % roundi(float(array.get("qi_density_bonus", 0.0)) * 100.0))
 	var price := int(item.get("price", 0))
 	lines.append("Worth: %d spirit stones" % price if price > 0 else "Worth: priceless, or worthless; no merchant will name a price")
 	return lines

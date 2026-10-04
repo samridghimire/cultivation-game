@@ -208,3 +208,22 @@ func test_game_state_craft_and_place_array() -> void:
 	assert_eq(gs.player.abode_array, "")
 	assert_eq(gs.player.item_count("minor_spirit_gathering_array"), 1)
 	gs.end_session()
+
+
+## G-006c: higher-grade gathering arrays are craftable, obtainable and climb
+## past the Five-Element array; ART-003d: appraisal names the bonus.
+func test_higher_grade_arrays() -> void:
+	var d := data()
+	var bonuses: Array = []
+	for item_id in ["minor_spirit_gathering_array", "five_element_gathering_array", "nine_palaces_gathering_array", "heaven_earth_spirit_array", "myriad_star_gathering_array"]:
+		bonuses.append(float(Abodes.array_def(d, item_id)["qi_density_bonus"]))
+		assert_true(d.recipes.has(item_id), "%s can be refined" % item_id)
+	var sorted := bonuses.duplicate()
+	sorted.sort()
+	assert_eq(bonuses, sorted, "each array beats the last")
+	assert_true(bonuses[-1] >= 1.5)
+	var c := new_character()
+	assert_true(Appraisal.describe_item(c, d, "nine_palaces_gathering_array").is_empty(), "sealed appraisal shows nothing")
+	c.artifact_functions.append("appraisal")
+	var lines := Appraisal.describe_item(c, d, "nine_palaces_gathering_array")
+	assert_true(lines.has("Gathering array: +80% qi density in seclusion at your abode"), str(lines))
