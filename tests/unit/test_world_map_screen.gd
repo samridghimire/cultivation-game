@@ -59,3 +59,31 @@ func test_screen_opens_on_current_region() -> void:
 	screen.close()
 	screen.free()
 	gs.end_session()
+
+
+## UI-008b: the map marks your sect hall, abode, family, anchors, secret
+## realms and world events.
+func test_region_marks() -> void:
+	var d := data()
+	var c := new_character()
+	var people := {}
+	var kinds := func(region_id: String, events: Array = []) -> Array:
+		return WorldMapScreen.region_marks(c, d, people, events, 0, region_id).map(func(m: Dictionary) -> String: return m["kind"])
+	c.anchors = []
+	assert_false(kinds.call("misty_forest").has("abode"))
+	c.abode = "waterfall_cave"
+	assert_true(kinds.call(String(d.abodes["waterfall_cave"]["region"])).has("abode"))
+	c.anchors = ["qingshi_rock"]
+	var anchor_marks := WorldMapScreen.region_marks(c, d, people, [], 0, "qingshi_village").filter(func(m: Dictionary) -> bool: return m["kind"] == "anchor")
+	assert_true(String(anchor_marks[0]["text"]).ends_with("(respawn point)"))
+	assert_false(kinds.call("qingshi_village").has("sect"), "rogues have no sect hall mark")
+	c.sect = {"id": "azure_cloud_sect", "rank": 0, "contribution": 0}
+	assert_true(kinds.call("qingshi_village").has("sect"))
+	var wife := Npcs.spawn(people, d, seeded_rng(), {"gender": "female", "region": "fallen_star_market"})
+	c.spouses.append(wife.id)
+	assert_true(kinds.call("fallen_star_market").has("family"))
+	assert_true(kinds.call("misty_forest").has("secret_realm"), "the Verdant Remnant lies in Misty Forest")
+	var events: Array = [{"id": "beast_tide", "region": "azure_peak", "start_day": 0, "end_day": 30}]
+	assert_true(kinds.call("azure_peak", events).has("event"))
+	for kind in ["sect", "abode", "family", "anchor", "secret_realm", "event"]:
+		assert_true(WorldMapScreen.MARK_COLORS.has(kind), kind)
