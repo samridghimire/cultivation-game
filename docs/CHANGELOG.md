@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-04 [W-006] Inheritance grounds: one-time trials of a fallen master's legacy (the Wandering Fist Saint's grave in the Misty Forest, the Corpse Lord's altar in the Bone Marsh) test your realm, attributes, heart and fists; claim one before the deadline or a rival takes it (GameState.attempt_inheritance). UI follows in W-006b.
 - 2026-10-04 [RIV-001e] Gratitude: healing an NPC or giving them gifts puts them in your debt; grateful NPCs warm to you faster and now and then repay you with spirit stones and a small gift (data/karma.json `gratitude`).
 - 2026-10-04 [W-005d] Secret realm depth: a floor that would outlast the realm's opening gets you hurled out with no treasure (and an injury), and clearing a realm's last floor grants its inheritance once per life if your Comprehension is high enough (Verdant Spring Method from the Verdant Remnant; Nine Frost Sword Intent and Sword Dao from the Sunken Sword Tomb).
 - 2026-10-04 [DAO-001c] Dao content: Thunder, Wind, Space, Slaughter (demonic) and Vajra (righteous) insights, and nine rare glimpse encounters (a thunderstorm summit, a slaughter field with a demonic or righteous choice, a temple bell, an undying furnace...) so every Dao can be found in the world.

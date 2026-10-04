@@ -90,6 +90,7 @@ var help_pages: Array = []
 var help_action_names: Dictionary = {}
 var secret_realms: Dictionary = {}  # id -> Dictionary (data/secret_realms.json, SecretRealms)
 var auction_houses: Dictionary = {}  # id -> Dictionary (data/auctions.json, Auctions)
+var inheritances: Dictionary = {}  # id -> Dictionary (data/inheritances.json, Inheritances)
 ## Problems found while loading. Empty when all data files are valid.
 var load_errors: PackedStringArray = []
 
@@ -254,6 +255,8 @@ func _load(dir: String) -> void:
 		secret_realms[secret_realm["id"]] = secret_realm
 	for auction_house in _read(dir, "auctions.json").get("houses", []):
 		auction_houses[auction_house["id"]] = auction_house
+	for legacy in _read(dir, "inheritances.json").get("inheritances", []):
+		inheritances[legacy["id"]] = legacy
 	_validate()
 
 
@@ -302,6 +305,7 @@ func _validate() -> void:
 	load_errors.append_array(ArtifactFunctions.validate(self))
 	load_errors.append_array(Karma.validate(self))
 	load_errors.append_array(SecretRealms.validate(self))
+	load_errors.append_array(Inheritances.validate(self))
 	load_errors.append_array(Children.validate(self))
 	load_errors.append_array(NpcFamilies.validate(self))
 	load_errors.append_array(Training.validate(self))
