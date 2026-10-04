@@ -223,6 +223,10 @@ static func from_dict(d: Dictionary) -> CharacterData:
 		c.sect = {"id": String(s.get("id", "")), "rank": int(s.get("rank", 0)), "contribution": int(s.get("contribution", 0))}
 		if s.has("spent"):
 			c.sect["spent"] = int(s["spent"])
+		if s.has("month_earned"):
+			c.sect["month_earned"] = int(s["month_earned"])
+		if s.has("duty_grace"):
+			c.sect["duty_grace"] = bool(s["duty_grace"])
 	c.inventory = _int_values(d.get("inventory", {}))
 	c.injuries = _int_values(d.get("injuries", {}))
 	var equipped: Dictionary = d.get("equipment", {})

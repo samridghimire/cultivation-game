@@ -230,7 +230,8 @@ static func _outcome(c: CharacterData, data: GameData, enemy: Dictionary, enemy_
 		return {"notes": PackedStringArray(), "died": false, "cause": "", "days": 1, "injury": ""}
 	if enemy.get("lethal", false):
 		return {"notes": PackedStringArray(), "died": true, "cause": "You were slain by a %s at age %d." % [enemy_name, c.age_years()], "days": 0, "injury": ""}
-	var lost := int(c.item_count("spirit_stone") * data.defeat_stone_loss)
+	# A sparring match (enemy "spar", e.g. a sect promotion trial) takes no stones.
+	var lost := 0 if enemy.get("spar", false) else int(c.item_count("spirit_stone") * data.defeat_stone_loss)
 	var notes: PackedStringArray = []
 	if lost > 0:
 		c.add_item("spirit_stone", -lost)

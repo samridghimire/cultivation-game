@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-04 [G-011] Sect ranks with real duties: higher ranks need a realm minimum, ranks can require a non-lethal promotion trial fight (GameState.attempt_promotion_trial), and ranks pay a monthly stipend that is withheld when you miss the monthly contribution duty (never a demotion).
 - 2026-10-04 [TRIB-001b] Heavenly Tribulations are visible: attempting a breakthrough that brings one first shows a warning (lightning waves, heart demon, expected damage against your health and readied shield talismans), and the tribulation itself plays out wave by wave with a falling health bar, a lightning flash and the outcome.
 - 2026-10-04 [CM-001b] The techniques screen [K] lists cultivation methods in their own section with your main method marked, each method's cultivation speed and realm cap ("outgrown" once you pass it), and a "Set as main method" action; the starter method stays listed so you can switch back.
 - 2026-10-04 [BEAST-001] Spirit beast companions: practise the Beast Tamer profession and a beaten boar, mist wolf, stone ape, cloud eagle, flame fox, jade python or thunderwing roc may submit to you (higher ranks tame more often and stronger beasts). A companion boosts your combat stats and fades once you outgrow it; you can release it.
