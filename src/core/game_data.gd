@@ -72,6 +72,7 @@ var karma: Dictionary = {}
 ## data/clan_buildings.json (ClanEstate): top-level rules plus "buildings".
 var clan_estate: Dictionary = {}
 var clan_buildings: Dictionary = {}  # id -> Dictionary (data/clan_buildings.json)
+var npc_clans: Dictionary = {}  # id -> Dictionary (data/clans.json, NpcClans)
 ## Anchor id -> {"region": String, "name": String}, from places with an anchor_id.
 var anchors: Dictionary = {}
 ## Claimable cave abodes: abode id -> regions.json abode def plus "region" (Abodes).
@@ -195,6 +196,8 @@ func _load(dir: String) -> void:
 	clan_estate = _read(dir, "clan_buildings.json")
 	for building in clan_estate.get("buildings", []):
 		clan_buildings[building["id"]] = building
+	for npc_clan in _read(dir, "clans.json").get("clans", []):
+		npc_clans[npc_clan["id"]] = npc_clan
 
 	var dialogue_dir := dir.path_join("dialogue")
 	for file_name in DirAccess.get_files_at(dialogue_dir):
@@ -295,6 +298,7 @@ func _validate() -> void:
 	load_errors.append_array(Training.validate(self))
 	load_errors.append_array(Clans.validate(self))
 	load_errors.append_array(ClanEstate.validate(self))
+	load_errors.append_array(NpcClans.validate(self))
 	load_errors.append_array(Bloodlines.validate(self))
 	load_errors.append_array(Sects.validate_missions(self))
 	load_errors.append_array(Reputation.validate(self))

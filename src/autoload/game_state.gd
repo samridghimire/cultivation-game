@@ -33,6 +33,8 @@ var spawn_anchor := ""
 var rng := RandomNumberGenerator.new()
 ## The player's clan (FAM-005), null until founded.
 var clan: ClanData = null
+## NPC clans (FAM-009, data/clans.json): clan id -> ClanData. See NpcClans.
+var npc_clans: Dictionary = {}
 
 
 func _ready() -> void:
@@ -60,6 +62,8 @@ func start_session(character: CharacterData) -> void:
 	spawn_anchor = ""
 	Npcs.ensure_all(npcs, data, rng)
 	Npcs.ensure_eligible(npcs, data, rng, Children.descendants(player, npcs))
+	npc_clans = {}
+	NpcClans.ensure(npc_clans, npcs, data, rng)
 	GameClock.reset()
 	EventBus.clear_history()
 	EventBus.session_started.emit()
@@ -73,6 +77,7 @@ func end_session() -> void:
 	npcs = {}
 	npc_favor = {}
 	clan = null
+	npc_clans = {}
 	dialogue_npc = ""
 	pending_encounter = ""
 	pending_respawn = {}
@@ -1286,6 +1291,7 @@ func to_save_dict() -> Dictionary:
 		"npcs": Npcs.to_dict(npcs),
 		"npc_favor": npc_favor.duplicate(),
 		"clan": clan.to_dict() if clan != null else {},
+		"npc_clans": NpcClans.to_dict(npc_clans),
 		"clock": GameClock.to_dict(),
 		# 64-bit ints do not survive JSON floats, so store them as strings.
 		"rng_seed": str(rng.seed),
@@ -1310,6 +1316,8 @@ func load_save_dict(d: Dictionary) -> void:
 	clan = ClanData.from_dict(saved_clan) if not saved_clan.is_empty() else null
 	if clan != null and clan.seat == "":
 		Clans.move_seat(clan, player.abode, data)
+	npc_clans = NpcClans.from_dict(d.get("npc_clans", {}))
+	NpcClans.ensure(npc_clans, npcs, data, rng)  # older saves gain the clans
 	dialogue_npc = ""
 	dialogue_node = ""
 	pending_encounter = ""
@@ -1363,6 +1371,8 @@ func _on_days_advanced(days: int) -> void:
 		EventBus.post(event["text"], event["category"])
 	if married_off:
 		Npcs.ensure_eligible(npcs, data, rng, Children.descendants(player, npcs))  # keep courtship candidates in every region
+	for event in NpcClans.simulate(npc_clans, npcs, data):
+		EventBus.post(event["text"], event["category"])
 	_advance_pregnancies(days)
 	@warning_ignore("integer_division")
 	var months := player.age_days / Calendar.DAYS_PER_MONTH - age_before / Calendar.DAYS_PER_MONTH
