@@ -74,6 +74,7 @@
         {"type": "merchant", "display_name": "Heavenforge Smithy", "pos": [1450, 300], "size": [110, 80], "color": "5a5f66", "stock_tags": ["equipment", "ore", "smithing"]},
         {"type": "merchant", "display_name": "Night Market Stall", "pos": [1200, 300], "size": [80, 60], "color": "7a4fa0", "max_price": 100},
         {"type": "merchant", "display_name": "Shadow Curio Den", "pos": [150, 300], "size": [80, 60], "color": "4a1f2a", "stock_tags": ["demonic"], "max_alignment": -200},
+        {"type": "merchant", "display_name": "Ten Thousand Scrolls Pavilion", "pos": [150, 750], "size": [110, 80], "color": "3f6e8c", "stock_tags": ["scripture"]},
         {"type": "workshop", "display_name": "Artisan Quarter", "pos": [400, 750], "size": [150, 100], "color": "8c6640"},
         {"type": "clinic", "display_name": "Hall of Gentle Hands Clinic", "pos": [800, 380], "size": [120, 85], "color": "7fbf9f"},
         {"type": "sect_hall", "display_name": "Sect Envoy Hall", "pos": [1200, 750], "size": [160, 110], "color": "b33f33"},
