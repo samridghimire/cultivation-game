@@ -95,6 +95,38 @@ static func clan_of(clans: Dictionary, npc_id: String) -> String:
 	return ""
 
 
+## "Patriarch of the Zhao Clan", "Young Master of the Zhao Clan" (the heir) or
+## "Elder of the Zhao Clan" for a member of an NPC clan; "" for anyone else.
+static func membership_text(clans: Dictionary, npcs: Dictionary, data: GameData, npc_id: String) -> String:
+	var clan_id := clan_of(clans, npc_id)
+	if clan_id == "":
+		return ""
+	var clan: ClanData = clans[clan_id]
+	var npc: CharacterData = npcs.get(npc_id)
+	var gender := npc.gender if npc != null else ""
+	var head: CharacterData = npcs.get(clan.head)
+	if npc_id != clan.head and head != null and Clans.heir(clan, head, npcs, data) == npc_id:
+		return "%s of the %s" % [Clans.heir_title(data, gender), clan.name]
+	return "%s of the %s" % [Clans.rank_name(data, String(clan.members[npc_id]), gender), clan.name]
+
+
+## "Zhao Clan (Qingshi Village): led by Zhao Tianba, 5 members" per living
+## NPC clan, sorted by name; extinct clans say so.
+static func summary_lines(clans: Dictionary, npcs: Dictionary, data: GameData) -> PackedStringArray:
+	var lines: PackedStringArray = []
+	var ids: Array = clans.keys()
+	ids.sort()
+	for id in ids:
+		var clan: ClanData = clans[id]
+		var region := Exploration.region_name(data, String(data.npc_clans.get(id, {}).get("region", "")))
+		if is_extinct(clan):
+			lines.append("%s (%s): its line has ended" % [clan.name, region])
+			continue
+		var head: CharacterData = npcs.get(clan.head)
+		lines.append("%s (%s): led by %s, %d %s" % [clan.name, region, head.name if head != null else "?", clan.members.size(), "member" if clan.members.size() == 1 else "members"])
+	return lines
+
+
 static func to_dict(clans: Dictionary) -> Dictionary:
 	var out := {}
 	for id in clans:

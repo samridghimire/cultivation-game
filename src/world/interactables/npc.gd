@@ -3,7 +3,8 @@ extends Interactable
 ## no def), who can be looked at. Talking opens its dialogue: in the dialogue
 ## window if one listens to EventBus.dialogue_requested, otherwise inline in
 ## this menu (each line is posted to the message log).
-## "Look" also says whether they hate or owe you (RIV-001b, Karma.attitude).
+## "Look" also says whether they hate or owe you (RIV-001b, Karma.attitude)
+## and which NPC clan they belong to, with their rank or heir title (FAM-009d).
 ## Eligible partners also offer Court / Propose entries (FAM-002d); disabled
 ## entries show why (Family.check_court / check_proposal).
 ## Injured NPCs offer "Treat <name>'s <injury>" (G-007d, Medicine.check_treat_npc)
@@ -299,6 +300,9 @@ func _look() -> void:
 	if npc == null:
 		return
 	var text := Npcs.describe(npc, GameState.data)
+	var membership := NpcClans.membership_text(GameState.npc_clans, GameState.npcs, GameState.data, npc_id)
+	if membership != "":
+		text += " %s." % membership
 	var injuries := Injuries.describe(npc, GameState.data)
 	if not injuries.is_empty():
 		text += " Injuries: %s." % ", ".join(injuries)
