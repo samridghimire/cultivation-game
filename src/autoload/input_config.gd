@@ -12,6 +12,10 @@ const KEYS := {
 	"toggle_inventory": [KEY_I],
 	"toggle_techniques": [KEY_K],
 	"toggle_artifact": [KEY_O],
+	"toggle_map": [KEY_M],
+	"toggle_message_log": [KEY_L],
+	"scroll_up": [KEY_PAGEUP],
+	"scroll_down": [KEY_PAGEDOWN],
 	"quick_save": [KEY_F5],
 	"quick_load": [KEY_F9],
 	"pause_menu": [KEY_ESCAPE],
@@ -27,6 +31,8 @@ const JOY_BUTTONS := {
 	"toggle_inventory": [JOY_BUTTON_X],
 	"toggle_techniques": [JOY_BUTTON_LEFT_SHOULDER],
 	"toggle_artifact": [JOY_BUTTON_RIGHT_SHOULDER],
+	"toggle_map": [JOY_BUTTON_BACK],
+	"toggle_message_log": [JOY_BUTTON_BACK],
 	"pause_menu": [JOY_BUTTON_START],
 }
 
@@ -36,6 +42,8 @@ const JOY_AXES := {
 	"move_down": [JOY_AXIS_LEFT_Y, 1.0],
 	"move_left": [JOY_AXIS_LEFT_X, -1.0],
 	"move_right": [JOY_AXIS_LEFT_X, 1.0],
+	"scroll_up": [JOY_AXIS_RIGHT_Y, -1.0],
+	"scroll_down": [JOY_AXIS_RIGHT_Y, 1.0],
 }
 
 
