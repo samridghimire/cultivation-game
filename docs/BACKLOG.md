@@ -153,6 +153,7 @@ The local sessions that built combat/techniques, world/exploration/NPCs/dialogue
 ## Done
 | id | task |
 |---|---|
+| UI-006 | HUD cues: the age line turns orange/red with "(N years left)" when 15%/5% (or 3 years) of the lifespan is left; at a bottleneck the qi bar turns gold with "Bottleneck! Attempt a breakthrough at a meditation spot (N% chance)". |
 | UI-003 | Help screen (pause menu > Help): Controls page generated from InputConfig (keyboard + gamepad), plus guide pages from data/help.json (GameData.help_pages, validated). |
 | UI-002 | Message log history screen (L / Select): last 200 messages grouped by date with category filters (EventBus.history), right-stick/PgUp-PgDn scrolling; cleared on new/loaded sessions. |
 | DAO-001 | Dao insights: data/dao.json (6 insights), CharacterData.dao, Dao system (levels, Comprehension checks, technique and breakthrough bonuses), dao_insight effect key + 2 encounters, insight progress from practice, GameState.contemplate_dao. |

@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-03 [UI-006] HUD cues: the age line warns (orange, then red, with years left) as your lifespan runs out, and a full qi bar turns gold with a breakthrough hint and its odds.
 - 2026-10-03 [UI-003] Help screen in the pause menu: every control with its keyboard and gamepad binding, plus short guides (cultivating, breakthroughs, sects, professions, alignment, the artifact, family) from data/help.json.
 - 2026-10-03 [UI-002] Message log screen (L / gamepad Select): reread the last 200 messages grouped by date, filter by category (progress, info, warnings, danger, karma), scroll with PgUp/PgDn or the right stick.
 - 2026-10-04 [PROD] Backlog grooming from 2026-10-03 17:00 UTC (#85, supersedes #73) merged by the integrator: new tasks AUC-001, BEAST-001, BODY-001, C-009/C-010, DEM-001/002, LW-001/002, RIV-001b/002/003, SECT-001, STORY-001, QA-011..QA-015, UI-002/003/007..010, W-005b/c, W-006; sect rank duties renumbered to G-011/G-011b/G-011c and the interactable fuzz test to QA-015 to avoid id clashes; owner questions on sect promotion, spirit beasts, devouring and body cultivation added to DESIGN.md.
