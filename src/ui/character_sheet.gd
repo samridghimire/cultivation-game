@@ -1,7 +1,8 @@
 class_name CharacterSheet
 extends PanelContainer
 ## Modal character overview: identity and family, sect reputation, attributes, roots and
-## professions, and equipped gear with Unequip buttons. Items live in
+## professions, and equipped gear with Unequip buttons. "Train children" opens
+## the ChildTrainingScreen. Items live in
 ## InventoryScreen. Old saves without a gender get a one-time gender picker here.
 
 signal closed
@@ -10,6 +11,7 @@ var _text: RichTextLabel
 var _recharge: Button
 var _gender_row: HBoxContainer
 var _equip_row: HBoxContainer
+var _train_children: Button
 
 
 func _init() -> void:
@@ -35,6 +37,8 @@ func _init() -> void:
 	box.add_child(_equip_row)
 	_recharge = UIStyle.button("Recharge artifact", func(): GameState.recharge_artifact())
 	box.add_child(_recharge)
+	_train_children = UIStyle.button("Train children", func(): EventBus.child_training_requested.emit())
+	box.add_child(_train_children)
 	box.add_child(UIStyle.button("Close", close))
 	EventBus.player_changed.connect(func(): if visible: _rebuild())
 
@@ -117,6 +121,7 @@ func _rebuild() -> void:
 		else:
 			t += "  %s: %s (%s)\n" % [slot.capitalize(), data.items[item_id]["name"], Equipment.describe_stats(data, item_id)]
 	_rebuild_equip_row()
+	_train_children.visible = not ChildTrainingScreen.living_children(p, GameState.npcs).is_empty()
 	if Injuries.has_any(p):
 		var danger := UIStyle.CATEGORY_COLORS["danger"].to_html(false)
 		t += "\n[color=#%s]Injuries[/color]  (cultivation x%s, combat x%s)\n" % [danger, String.num(Injuries.cultivation_multiplier(p, data), 2), String.num(Injuries.combat_multiplier(p, data), 2)]
