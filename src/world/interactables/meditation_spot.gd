@@ -1,7 +1,7 @@
 extends Interactable
 ## A place to cultivate. Denser spiritual energy = faster qi gathering.
 ## Spouses living in this region can join for dual cultivation (FAM-002b)
-## or try for a child (FAM-003c).
+## or try for a child (FAM-003c). Body tempering (BODY-001) happens here too.
 
 @export var qi_density := 1.0
 
@@ -20,7 +20,25 @@ func get_options() -> Array[Dictionary]:
 			continue
 		var tech_name: String = GameState.data.techniques[tech_id].name
 		options.append({"label": "Practice %s (1 month)" % tech_name, "action": GameState.practice_technique.bind(tech_id, Calendar.DAYS_PER_MONTH), "keep_open": true})
+	var temper := _temper_option()
+	if not temper.is_empty():
+		options.append(temper)
 	return options
+
+
+## "Temper your body: <stage> (cost)" with the BodyTempering.check_temper reason
+## when disabled; {} once the body is fully tempered.
+static func _temper_option() -> Dictionary:
+	var p := GameState.player
+	var data := GameState.data
+	var stage := BodyTempering.next_stage(p, data)
+	if stage.is_empty():
+		return {}
+	var label := "Temper your body: %s (%s)" % [stage["name"], BodyTempering.describe_next(p, data)]
+	var reason := BodyTempering.check_temper(p, data)
+	if reason != "":
+		label += " (%s)" % reason
+	return {"label": label, "action": GameState.temper_body, "disabled": reason != "", "keep_open": true}
 
 
 func _dual_cultivation_options() -> Array[Dictionary]:

@@ -39,18 +39,18 @@ static func _build_stats(power: float, attrs: Dictionary, tech: Callable) -> Dic
 
 
 ## Combat stats of a character: {max_hp, attack, defense, speed, crit}.
-## Equipment adds flat bonuses first and an awakened bloodline scales them up;
-## injuries then scale down max_hp, attack and defense, and temporary buffs
-## (Buffs) scale them up.
+## Equipment adds flat bonuses first; an awakened bloodline and body tempering
+## (BodyTempering) scale them up; injuries then scale down max_hp, attack and
+## defense, and temporary buffs (Buffs) scale them up.
 static func stats(c: CharacterData, data: GameData) -> Dictionary:
 	var power := realm_power(c.realm_index, c.stage)
 	var s := _build_stats(power, c.attributes, func(key: String) -> float: return Techniques.bonus(c, data, key))
 	for key in Equipment.STAT_KEYS:
 		s[key] = maxi(1 if key != "defense" else 0, s[key] + Equipment.bonus(c, data, key))
 	for key in ["max_hp", "attack", "defense", "speed"]:
-		var blood := Bloodlines.bonus(c, data, key)
-		if blood != 0.0:
-			s[key] = maxi(1, roundi(s[key] * (1.0 + blood)))
+		var grow := Bloodlines.bonus(c, data, key) + BodyTempering.bonus(c, data, key)
+		if grow != 0.0:
+			s[key] = maxi(1, roundi(s[key] * (1.0 + grow)))
 	var hurt := Injuries.combat_multiplier(c, data)
 	if hurt < 1.0:
 		for key in ["max_hp", "attack", "defense"]:

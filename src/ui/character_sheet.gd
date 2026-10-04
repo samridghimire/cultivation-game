@@ -106,6 +106,10 @@ func _rebuild() -> void:
 	var stats := Combat.stats(p, data)
 	t += "\n[color=#%s]Combat[/color]\n" % accent
 	t += "  Health %d   Attack %d   Defense %d   Speed %d   Crit %d%%\n" % [int(stats["max_hp"]), int(stats["attack"]), int(stats["defense"]), int(stats["speed"]), roundi(stats["crit"] * 100)]
+	var body := BodyTempering.describe(p, data)
+	t += "  Body: %s\n" % body[0]
+	for i in range(1, body.size()):
+		t += "    %s\n" % body[i]
 	t += "\n[color=#%s]Equipment[/color]\n" % accent
 	for slot in Equipment.SLOTS:
 		var item_id := String(p.equipment.get(slot, ""))

@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-04 [BODY-001] Body tempering: five stages from Copper Skin to the Indestructible Vajra Body, tempered at meditation spots with ores, herbs and pills (risk of injury falls with Constitution); each stage adds health/defense/attack and injury resistance, shown on the character sheet.
 - 2026-10-03 [QA-20261003-5] Fixed: a widow carrying her late husband's child who married the player went through pregnancy twice as fast; it now runs at normal speed and still ends in exactly one birth.
 - 2026-10-03 [UI-009] "Next steps" hints on the character sheet and a HUD hint line (toggle in Settings): qi to next stage, breakthrough odds and pills, injuries, lifespan, pregnancy, artifact lives, sect and profession pointers.
 - 2026-10-03 [UI-008] World map screen (M / gamepad Back): regions, roads with travel days and realm gates, region details and places.

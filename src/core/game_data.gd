@@ -74,6 +74,8 @@ var help_pages: Array = []
 ## Input action id -> display name for the help screen's Controls page.
 var help_action_names: Dictionary = {}
 var secret_realms: Dictionary = {}  # id -> Dictionary (data/secret_realms.json, SecretRealms)
+## data/body_tempering.json: rules and ordered "stages" (BodyTempering).
+var body_tempering: Dictionary = {}
 ## Problems found while loading. Empty when all data files are valid.
 var load_errors: PackedStringArray = []
 
@@ -226,6 +228,7 @@ func _load(dir: String) -> void:
 
 	for secret_realm in _read(dir, "secret_realms.json").get("realms", []):
 		secret_realms[secret_realm["id"]] = secret_realm
+	body_tempering = _read(dir, "body_tempering.json")
 	_validate()
 
 
@@ -288,6 +291,7 @@ func _validate() -> void:
 	load_errors.append_array(Scenery.validate(self))
 	load_errors.append_array(Adoption.validate(self))
 	load_errors.append_array(Sects.validate_shops(self))
+	load_errors.append_array(BodyTempering.validate(self))
 	for item: Dictionary in items.values():
 		if item.get("effects", {}).has("buff"):
 			for error in Buffs.validate_effect(item["effects"]["buff"]):

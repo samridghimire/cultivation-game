@@ -894,6 +894,22 @@ func contemplate_dao(insight_id: String, days: int) -> void:
 	_pass_time(days)
 
 
+## Temper your body to its next stage (BodyTempering): consumes the stage's
+## items and days, and may injure you.
+func temper_body() -> void:
+	if not _can_act():
+		return
+	var result := BodyTempering.temper(player, data, rng)
+	if not result["ok"]:
+		EventBus.post(result["reason"], "warning")
+		EventBus.player_changed.emit()
+		return
+	EventBus.post("You spend %s tempering your body. You attain %s! (%s)" % [Calendar.format_duration(result["days"]), result["name"], BodyTempering.describe_bonuses(player, data)], "progress")
+	if result["injury"] != "":
+		EventBus.post("The tempering leaves you with %s." % Injuries.injury_name(data, result["injury"]), "danger")
+	_pass_time(result["days"])
+
+
 ## Make a known cultivation method your main method. Re-circulating your qi takes
 ## techniques.json method_switch_days.
 func set_main_method(tech_id: String) -> void:
