@@ -2,8 +2,10 @@ class_name ArtifactScreen
 extends PanelContainer
 ## Modal Creation Artifact screen (ART-002b): energy and sealed/unsealed
 ## functions (ArtifactFunctions.describe), feeding spirit stones or carried
-## items for energy, unsealing functions, and the Storage Space panel that
-## moves items between the inventory and the artifact. ui_cancel goes back
+## items for energy, unsealing functions, the Storage Space panel that
+## moves items between the inventory and the artifact, and the Lives & Anchors
+## page (ART-005b): recharge lives, pick the respawn point or release anchors
+## from anywhere. ui_cancel goes back
 ## from a sub-page, then closes.
 
 signal closed
@@ -12,6 +14,7 @@ const STONE_AMOUNTS: Array[int] = [10, 100]
 const PAGE_MAIN := "main"
 const PAGE_FEED := "feed"
 const PAGE_STORAGE := "storage"
+const PAGE_ANCHORS := "anchors"
 
 var _title: Label
 var _info: Label
@@ -71,7 +74,7 @@ func close() -> void:
 	closed.emit()
 
 
-## The page currently shown (PAGE_MAIN, PAGE_FEED or PAGE_STORAGE).
+## The page currently shown (PAGE_MAIN, PAGE_FEED, PAGE_STORAGE or PAGE_ANCHORS).
 func page() -> String:
 	return _page
 
@@ -106,6 +109,8 @@ func _rebuild() -> void:
 			_build_feed(p, data)
 		PAGE_STORAGE:
 			_build_storage(p, data)
+		PAGE_ANCHORS:
+			_build_anchors(p, data)
 		_:
 			_build_main(p, data)
 	if focused_name != "":
@@ -114,7 +119,7 @@ func _rebuild() -> void:
 
 func _build_main(p: CharacterData, data: GameData) -> void:
 	_title.text = "Creation Artifact"
-	var lines: Array[String] = []
+	var lines: Array[String] = [CreationArtifact.describe(p, data)[0]]
 	for line in ArtifactFunctions.describe(p, data, GameState.world_flags):
 		if not line.begins_with("  "):
 			lines.append(line)
@@ -122,6 +127,7 @@ func _build_main(p: CharacterData, data: GameData) -> void:
 	for amount in STONE_AMOUNTS:
 		var reason := ArtifactFunctions.check_feed(p, data, "spirit_stone", amount)
 		_add_button("feed_stones_%d" % amount, "Feed %d spirit stones (+%d energy)" % [amount, amount * ArtifactFunctions.energy_value(data, "spirit_stone")], reason, GameState.feed_artifact.bind("spirit_stone", amount))
+	_add_button("anchors", "Lives & anchors...", "", _show_page.bind(PAGE_ANCHORS))
 	_add_button("feed_item", "Feed an item...", "", _show_page.bind(PAGE_FEED))
 	for def: Dictionary in data.artifact.get("functions", []):
 		var function_id := String(def.get("id", ""))
@@ -169,6 +175,23 @@ func _build_storage(p: CharacterData, data: GameData) -> void:
 		_add_button("store1_" + item_id, "Store 1", ArtifactFunctions.check_store(p, data, item_id, 1), GameState.store_in_artifact.bind(item_id, 1), row)
 		if count > 1:
 			_add_button("storeall_" + item_id, "Store all", ArtifactFunctions.check_store(p, data, item_id, count), GameState.store_in_artifact.bind(item_id, count), row)
+
+
+func _build_anchors(p: CharacterData, data: GameData) -> void:
+	_title.text = "Lives & Anchors"
+	var lines := CreationArtifact.describe(p, data)
+	_info.text = "%s\n%s. If you fall with a life left, you may awaken at any bound anchor; the respawn point is offered first. Bind new anchors at anchor places in the world." % [lines[0], lines[1]]
+	_add_button("back", "Back", "", _show_page.bind(PAGE_MAIN))
+	_add_button("recharge", "Recharge: buy a life (%d spirit stones)" % CreationArtifact.recharge_cost(p, data), CreationArtifact.check_recharge(p, data), GameState.recharge_artifact)
+	if p.anchors.is_empty():
+		_rows.add_child(UIStyle.label("No anchors are bound. You would awaken in %s." % Exploration.region_name(data, data.start_region), 15, Color(0.7, 0.7, 0.7)))
+	for i in range(p.anchors.size() - 1, -1, -1):
+		var anchor_id: String = p.anchors[i]
+		var current := i == p.anchors.size() - 1
+		var row := _add_row(CreationArtifact.anchor_name(data, anchor_id) + ("  (respawn point)" if current else ""))
+		if not current:
+			_add_button("respawn_" + anchor_id, "Make respawn point", "", GameState.bind_anchor.bind(anchor_id), row)
+		_add_button("release_" + anchor_id, "Release", "", GameState.unbind_anchor.bind(anchor_id), row)
 
 
 ## A row with a label; buttons are added to it by _add_button.

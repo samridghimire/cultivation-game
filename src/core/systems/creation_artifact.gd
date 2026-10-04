@@ -64,13 +64,22 @@ static func recharge_cost(c: CharacterData, data: GameData) -> int:
 	return roundi(float(t.get("base_cost", 100)) * pow(float(t.get("cost_growth", 2.0)), c.artifact_recharges))
 
 
+## Why `c` cannot buy a life now, or "" if they can.
+static func check_recharge(c: CharacterData, data: GameData) -> String:
+	if c.artifact_lives >= int(data.artifact.get("max_lives", 9)):
+		return "The artifact cannot hold more lives."
+	var cost := recharge_cost(c, data)
+	if c.item_count("spirit_stone") < cost:
+		return "The artifact hungers for %d spirit stones." % cost
+	return ""
+
+
 ## Buy one life with spirit stones. Returns {ok, reason, cost}.
 static func recharge(c: CharacterData, data: GameData) -> Dictionary:
 	var cost := recharge_cost(c, data)
-	if c.artifact_lives >= int(data.artifact.get("max_lives", 9)):
-		return {"ok": false, "reason": "The artifact cannot hold more lives.", "cost": cost}
-	if c.item_count("spirit_stone") < cost:
-		return {"ok": false, "reason": "The artifact hungers for %d spirit stones." % cost, "cost": cost}
+	var reason := check_recharge(c, data)
+	if reason != "":
+		return {"ok": false, "reason": reason, "cost": cost}
 	c.add_item("spirit_stone", -cost)
 	c.artifact_lives += 1
 	c.artifact_recharges += 1
