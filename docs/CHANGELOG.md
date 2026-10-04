@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-04 [FAM-007b] Bloodlines are visible: the character sheet shows your bloodline (dormant/awakened) and what it grants, the family list shows spouses' and children's bloodlines, and "Look" at an NPC reveals an awakened bloodline (dormant ones stay hidden).
 - 2026-10-04 [FAM-004b] Train your children: a "Train children" button on the character sheet opens a screen listing your living children (age, realm, roots, current training) where you assign Cultivation, a Profession apprenticeship (pick the craft) or Technique drills, with the reason shown on unavailable choices, or stop their training. Gamepad-focusable.
 - 2026-10-04 [G-008e] Sect treasury: the Mission Board has a "Treasury" tab listing the sect's contribution shop (cost, minimum rank, effects or equipment stats, items carried); locked entries show why, "Buy" spends contribution (GameState.buy_with_contribution). Gamepad-focusable tabs.
 - 2026-10-04 [FAM-009] NPC clans: the Zhao (Qingshi Village), Mo (Fallen Star Market) and Yun (Azure Peak) clans are founded at game start as real NPC families (data/clans.json); when a clan head dies the heir takes over and the news reaches you, and a clan whose line ends dies out. Older saves gain the clans on load.
