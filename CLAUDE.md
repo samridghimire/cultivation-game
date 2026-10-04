@@ -4,7 +4,7 @@ A 2D top-down xianxia cultivation RPG built in **Godot 4.7 (GDScript)**, eventua
 The player starts as a mortal, cultivates through realms (Qi Refining → Foundation Establishment → …), may join a sect or stay rogue,
 practices professions (Alchemist, Blacksmith, Talisman Master, Array Master, Doctor, …), and chooses a moral path (righteous ↔ demonic).
 
-Read `docs/DESIGN.md` for the game vision and `docs/BACKLOG.md` for the work queue.
+Read `docs/DESIGN.md` for the game vision, `docs/BACKLOG.md` for the work queue and `docs/HANDOFF.md` for notes from the last session.
 
 ## Commands
 
