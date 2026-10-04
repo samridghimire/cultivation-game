@@ -55,3 +55,19 @@ func test_window_closes_when_conversation_ends() -> void:
 	assert_false(window.visible)
 	assert_true(closed[0])
 	window.free()
+
+
+func test_window_plays_a_story_event() -> void:
+	var gs := _gs()
+	gs.start_session(new_character())
+	gs.start_pending_event()
+	var window := DialogueWindow.new()
+	window.open()
+	assert_true(window.visible, "an event without an NPC opens the window")
+	assert_eq(window.line_text(), gs.dialogue_view()["text"])
+	window.choice_buttons()[0].pressed.emit()
+	assert_true(window.visible, "the event continues to its next node")
+	assert_eq(window.speaker_text(), "The Creation Artifact")
+	gs.end_dialogue()
+	gs.end_session()
+	window.free()

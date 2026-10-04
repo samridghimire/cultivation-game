@@ -30,6 +30,21 @@ static func cultivation_start_age(data: GameData) -> int:
 	return int(rules(data).get("cultivation_start_age", 6))
 
 
+## Ids of `c`'s children, grandchildren and so on (looked up in `people`).
+static func descendants(c: CharacterData, people: Dictionary) -> Array[String]:
+	var out: Array[String] = []
+	var queue: Array[String] = c.children.duplicate()
+	while not queue.is_empty():
+		var id: String = queue.pop_front()
+		if out.has(id):
+			continue
+		out.append(id)
+		var descendant: CharacterData = people.get(id)
+		if descendant != null:
+			queue.append_array(descendant.children)
+	return out
+
+
 ## Whether `c` is old enough to start cultivating.
 static func can_cultivate_yet(c: CharacterData, data: GameData) -> bool:
 	return c.age_years() >= cultivation_start_age(data)
