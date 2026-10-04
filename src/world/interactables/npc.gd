@@ -14,6 +14,8 @@ extends Interactable
 ## while the NPC holds a grudge (Karma.check_act / check_amends reasons).
 ## NPCs without a dialogue file can be chatted with, and anyone can be given a
 ## gift from a carried-item picker shown in this menu (FAM-002i).
+## Your own children also offer "Teach a technique" and "Give a pill" pickers
+## (FAM-004c, Training.check_teach / check_give reasons on disabled entries).
 
 @export var npc_id := ""
 
@@ -23,6 +25,8 @@ var _just_ended := false
 var _hostile := false
 ## True while the menu shows the gift picker instead of the main entries.
 var _gift_mode := false
+## "" (main entries), "teach" or "give": the child pickers (FAM-004c).
+var _child_mode := ""
 
 
 func is_available() -> bool:
@@ -35,6 +39,10 @@ func get_options() -> Array[Dictionary]:
 		return _hostile_options()
 	if _gift_mode:
 		return _gift_options()
+	if _child_mode == "teach":
+		return _teach_options()
+	if _child_mode == "give":
+		return _give_options()
 	var options: Array[Dictionary] = []
 	var def: Dictionary = GameState.data.npcs.get(npc_id, {})
 	options.append({"label": "Look", "action": _look, "keep_open": true})
@@ -46,6 +54,7 @@ func get_options() -> Array[Dictionary]:
 	if def.has("deed_context"):
 		for deed in Deeds.available(GameState.data, def["deed_context"], GameState.world_flags):
 			options.append({"label": deed["name"], "action": GameState.perform_deed.bind(deed["id"])})
+	options.append_array(_child_options())
 	options.append_array(_acquaintance_options())
 	options.append_array(_treatment_options())
 	options.append_array(_adoption_options())
@@ -57,6 +66,7 @@ func get_options() -> Array[Dictionary]:
 ## Called by ChoiceMenu when it closes, so the next visit starts at the main entries.
 func on_menu_closed() -> void:
 	_gift_mode = false
+	_child_mode = ""
 
 
 ## "Chat with <name>" (only for NPCs without a dialogue file) and "Give a gift".
@@ -100,6 +110,67 @@ func _gift_options() -> Array[Dictionary]:
 
 func _set_gift_mode(on: bool) -> void:
 	_gift_mode = on
+
+
+## "Teach <name> a technique" and "Give <name> a pill" for the player's own children.
+func _child_options() -> Array[Dictionary]:
+	var options: Array[Dictionary] = []
+	var p := GameState.player
+	var npc: CharacterData = GameState.npcs.get(npc_id)
+	if p == null or npc == null or not p.children.has(npc_id):
+		return options
+	var reason := "" if not p.techniques.is_empty() else "you know no techniques"
+	options.append(_entry("Teach %s a technique" % npc.name, reason, _set_child_mode.bind("teach")))
+	reason = "" if not usable_item_ids(p, GameState.data).is_empty() else "you carry nothing usable"
+	options.append(_entry("Give %s a pill" % npc.name, reason, _set_child_mode.bind("give")))
+	return options
+
+
+## One "Teach <technique>" per technique the player knows, then Back.
+func _teach_options() -> Array[Dictionary]:
+	var options: Array[Dictionary] = []
+	var p := GameState.player
+	var data := GameState.data
+	var npc: CharacterData = GameState.npcs.get(npc_id)
+	if p == null or npc == null:
+		_child_mode = ""
+		return options
+	var days := Calendar.format_duration(int(Training.rules(data).get("teach_days", 30)))
+	var ids: Array = p.techniques.keys()
+	ids.sort_custom(func(a: String, b: String) -> bool: return (data.techniques[a] as TechniqueDef).name < (data.techniques[b] as TechniqueDef).name)
+	for tech_id: String in ids:
+		var label := "Teach the %s (%s)" % [(data.techniques[tech_id] as TechniqueDef).name, days]
+		options.append(_entry(label, Training.check_teach(p, npc, tech_id, data), GameState.teach_technique.bind(npc_id, tech_id)))
+	options.append({"label": "Back", "action": _set_child_mode.bind(""), "keep_open": true})
+	return options
+
+
+## One "Give <item>" per usable carried item (pills, salves), then Back.
+func _give_options() -> Array[Dictionary]:
+	var options: Array[Dictionary] = []
+	var p := GameState.player
+	var data := GameState.data
+	var npc: CharacterData = GameState.npcs.get(npc_id)
+	if p == null or npc == null:
+		_child_mode = ""
+		return options
+	for item_id in usable_item_ids(p, data):
+		var label := "Give %s x%d" % [data.items[item_id].get("name", item_id), p.item_count(item_id)]
+		options.append(_entry(label, Training.check_give(p, npc, item_id, data), GameState.give_to_child.bind(npc_id, item_id)))
+	options.append({"label": "Back", "action": _set_child_mode.bind(""), "keep_open": true})
+	return options
+
+
+## Carried items a child could be handed to use (usable, not equipment), by name.
+static func usable_item_ids(p: CharacterData, data: GameData) -> Array:
+	var ids: Array = p.inventory.keys().filter(func(id: String) -> bool:
+		return p.item_count(id) > 0 and bool(data.items.get(id, {}).get("usable", false)) and not Equipment.is_equipment(data, id))
+	ids.sort_custom(func(a: String, b: String) -> bool: return String(data.items[a].get("name", a)) < String(data.items[b].get("name", b)))
+	return ids
+
+
+func _set_child_mode(mode: String) -> void:
+	_child_mode = mode
 
 
 ## One entry treating the NPC's worst injury, only while they are injured.
