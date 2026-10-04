@@ -19,13 +19,16 @@ static func check_join(c: CharacterData, data: GameData, sect_id: String) -> Dic
 		return {"ok": false, "reason": "%s will not accept someone of your evil reputation." % sect.name}
 	if c.alignment > sect.max_alignment:
 		return {"ok": false, "reason": "%s has no use for someone so soft-hearted." % sect.name}
+	var rep_reason := Reputation.check_join(c, data, sect_id)
+	if rep_reason != "":
+		return {"ok": false, "reason": rep_reason}
 	return {"ok": true, "reason": ""}
 
 
 static func join(c: CharacterData, data: GameData, sect_id: String) -> Dictionary:
 	var check := check_join(c, data, sect_id)
 	if check["ok"]:
-		c.sect = {"id": sect_id, "rank": 0, "contribution": 0, "spent": 0}
+		c.sect = {"id": sect_id, "rank": 0, "contribution": 0, "spent": 0, "month_earned": 0}
 	return check
 
 
@@ -36,17 +39,15 @@ static func leave(c: CharacterData) -> String:
 	return old_id
 
 
-## Adds contribution and auto-promotes. Returns true if rank increased.
+## Adds contribution (also counted toward this month's duty) and promotes
+## through ranks that need no trial. Returns true if rank increased.
 static func add_contribution(c: CharacterData, data: GameData, amount: int) -> bool:
 	if c.is_rogue():
 		return false
-	var sect: SectDef = data.sects[c.sect["id"]]
 	c.sect["contribution"] = int(c.sect["contribution"]) + amount
-	var new_rank := sect.rank_for_contribution(c.sect["contribution"])
-	if new_rank > int(c.sect["rank"]):
-		c.sect["rank"] = new_rank
-		return true
-	return false
+	if amount > 0:
+		c.sect["month_earned"] = int(c.sect.get("month_earned", 0)) + amount
+	return auto_promote(c, data)
 
 
 static func cultivation_bonus(c: CharacterData, data: GameData) -> float:
@@ -64,6 +65,168 @@ static func describe(c: CharacterData, data: GameData) -> String:
 		return "Rogue Cultivator"
 	var sect: SectDef = data.sects[c.sect["id"]]
 	return "%s, %s" % [sect.name, sect.rank_name(c.sect["rank"])]
+
+
+# --- Ranks: realm minimums, trials, stipends and duties (G-011) --------------
+
+## The rank above `c`'s current one, or -1 for rogues and the top rank.
+static func next_rank(c: CharacterData, data: GameData) -> int:
+	if c.is_rogue():
+		return -1
+	var rank := int(c.sect["rank"]) + 1
+	return rank if rank < (data.sects[c.sect["id"]] as SectDef).ranks.size() else -1
+
+
+## The enemy id `c` must defeat to reach the next rank ("" if none).
+static func trial_enemy(c: CharacterData, data: GameData) -> String:
+	var rank := next_rank(c, data)
+	if rank < 0:
+		return ""
+	return String((data.sects[c.sect["id"]] as SectDef).ranks[rank].get("trial", ""))
+
+
+## Why `c` cannot take the next rank yet, ignoring any trial, or "".
+static func _rank_requirement_reason(c: CharacterData, data: GameData, rank: int) -> String:
+	var sect: SectDef = data.sects[c.sect["id"]]
+	var def: Dictionary = sect.ranks[rank]
+	var needed := int(def.get("contribution", 0))
+	if int(c.sect["contribution"]) < needed:
+		return "%s needs %d contribution (you have %d)." % [sect.rank_name(rank), needed, int(c.sect["contribution"])]
+	var min_realm := data.realm_index_of(String(def.get("min_realm", "mortal")))
+	if c.realm_index < min_realm:
+		return "%s needs a cultivator of %s or above." % [sect.rank_name(rank), data.realms[min_realm].name]
+	return ""
+
+
+## Promotes `c` through every next rank whose contribution and realm minimum
+## are met and which has no trial. Returns true if rank increased.
+static func auto_promote(c: CharacterData, data: GameData) -> bool:
+	var promoted := false
+	while true:
+		var rank := next_rank(c, data)
+		if rank < 0 or trial_enemy(c, data) != "" or _rank_requirement_reason(c, data, rank) != "":
+			break
+		_set_rank(c, rank)
+		promoted = true
+	return promoted
+
+
+## Why `c` cannot attempt the promotion trial now, or "" if they can.
+static func check_promotion(c: CharacterData, data: GameData) -> String:
+	if c.is_rogue():
+		return "Only sect disciples can be promoted."
+	var rank := next_rank(c, data)
+	if rank < 0:
+		return "You already hold your sect's highest rank."
+	var reason := _rank_requirement_reason(c, data, rank)
+	if reason != "":
+		return reason
+	if trial_enemy(c, data) == "":
+		return "No trial is needed: your rank follows your contribution."
+	return ""
+
+
+## The trial opponent for `enemy_id`: a sparring match that never kills, takes
+## no spirit stones and grants no loot (a defeat can still injure).
+static func trial_opponent(data: GameData, enemy_id: String) -> Dictionary:
+	var enemy: Dictionary = (data.enemies[enemy_id] as Dictionary).duplicate(true)
+	enemy["lethal"] = false
+	enemy["spar"] = true
+	enemy["rewards"] = {}
+	return enemy
+
+
+## Promotes `c` one rank after a won trial (then through any trial-free ranks
+## that follow). Returns false if `c` could not attempt the trial.
+static func pass_trial(c: CharacterData, data: GameData) -> bool:
+	if check_promotion(c, data) != "":
+		return false
+	_set_rank(c, next_rank(c, data))
+	auto_promote(c, data)
+	return true
+
+
+static func _set_rank(c: CharacterData, rank: int) -> void:
+	c.sect["rank"] = rank
+	c.sect["duty_grace"] = true  # no duty is owed for the month you were promoted
+
+
+## Contribution `c` owes each month at their rank (0 = none).
+static func monthly_duty(c: CharacterData, data: GameData) -> int:
+	if c.is_rogue():
+		return 0
+	return int((data.sects[c.sect["id"]] as SectDef).ranks[int(c.sect["rank"])].get("monthly_duty", 0))
+
+
+## Contribution `c` earned so far this month.
+static func duty_progress(c: CharacterData) -> int:
+	return 0 if c.is_rogue() else int(c.sect.get("month_earned", 0))
+
+
+## The monthly stipend of `c`'s rank: {spirit_stones, items} ({} if none).
+static func stipend(c: CharacterData, data: GameData) -> Dictionary:
+	if c.is_rogue():
+		return {}
+	return (data.sects[c.sect["id"]] as SectDef).ranks[int(c.sect["rank"])].get("stipend", {})
+
+
+## Closes `c`'s sect month: pays the rank stipend if the monthly duty was met
+## (or waived the month of a promotion), resets duty progress and applies
+## promotions a realm breakthrough has unlocked. Never demotes.
+## Returns {paid, skipped, stones, items, promoted}.
+static func month_end(c: CharacterData, data: GameData) -> Dictionary:
+	var result := {"paid": false, "skipped": false, "stones": 0, "items": {}, "promoted": false}
+	if c.is_rogue():
+		return result
+	var duty := monthly_duty(c, data)
+	var met := duty <= 0 or duty_progress(c) >= duty or bool(c.sect.get("duty_grace", false))
+	var pay := stipend(c, data)
+	c.sect["month_earned"] = 0
+	c.sect.erase("duty_grace")
+	if not pay.is_empty():
+		if met:
+			var stones := int(pay.get("spirit_stones", 0))
+			if stones > 0:
+				c.add_item("spirit_stone", stones)
+			var items: Dictionary = pay.get("items", {})
+			for item_id in items:
+				c.add_item(item_id, int(items[item_id]))
+			result["paid"] = true
+			result["stones"] = stones
+			result["items"] = items.duplicate()
+		else:
+			result["skipped"] = true
+	result["promoted"] = auto_promote(c, data)
+	return result
+
+
+## Load errors for the sects.json rank fields.
+static func validate_ranks(data: GameData) -> PackedStringArray:
+	var errors: PackedStringArray = []
+	for sect: SectDef in data.sects.values():
+		var last := -1
+		for i in sect.ranks.size():
+			var rank: Dictionary = sect.ranks[i]
+			var label := "Sect '%s' rank %d" % [sect.id, i]
+			var contribution := int(rank.get("contribution", 0))
+			if contribution < last or (i == 0 and contribution != 0):
+				errors.append("%s: contribution must start at 0 and never decrease" % label)
+			last = contribution
+			if data.realm_index_of(String(rank.get("min_realm", "mortal"))) < 0:
+				errors.append("%s has unknown min_realm '%s'" % [label, rank.get("min_realm", "")])
+			var trial := String(rank.get("trial", ""))
+			if trial != "" and (i == 0 or not data.enemies.has(trial)):
+				errors.append("%s has a bad trial '%s' (unknown enemy, or on the first rank)" % [label, trial])
+			if int(rank.get("monthly_duty", 0)) < 0:
+				errors.append("%s needs monthly_duty >= 0" % label)
+			var pay: Dictionary = rank.get("stipend", {})
+			if int(pay.get("spirit_stones", 0)) < 0:
+				errors.append("%s stipend needs spirit_stones >= 0" % label)
+			var items: Dictionary = pay.get("items", {})
+			for item_id in items:
+				if not data.items.has(item_id) or int(items[item_id]) <= 0:
+					errors.append("%s stipend has unknown item or bad count '%s'" % [label, item_id])
+	return errors
 
 
 # --- Contribution shop (G-008c) ---------------------------------------------
@@ -177,8 +340,9 @@ static func check_mission(c: CharacterData, data: GameData, mission_id: String) 
 	if int(c.sect["rank"]) < min_rank:
 		return "Only a %s or above may take this mission." % sect.rank_name(min_rank)
 	var min_realm := data.realm_index_of(String(mission.get("min_realm", "mortal")))
-	if c.realm_index < min_realm:
-		return "This mission needs a cultivator of %s or above." % data.realms[min_realm].name
+	var min_stage := int(mission.get("min_stage", 0))
+	if c.realm_index < min_realm or (c.realm_index == min_realm and c.stage < min_stage):
+		return "This mission needs a cultivator of %s or above." % data.realms[min_realm].stage_label(min_stage)
 	var wait := mission_cooldown_left(c, mission_id)
 	if wait > 0:
 		return "This mission is not offered again for %s." % Calendar.format_duration(wait)
@@ -189,9 +353,20 @@ static func check_mission(c: CharacterData, data: GameData, mission_id: String) 
 	return ""
 
 
+## Danger label (Combat.danger_label: Weak/Even/Dangerous/Deadly) of the
+## mission's fight for `c`, or "" if the mission has no enemy. Missions are
+## always fought (a Deadly foe is not evaded), so the board should show this.
+static func mission_danger(c: CharacterData, data: GameData, mission_id: String) -> String:
+	var enemy_id := String(data.sect_missions.get(mission_id, {}).get("enemy", ""))
+	if enemy_id == "" or not data.enemies.has(enemy_id):
+		return ""
+	return Combat.danger_label(c, data, data.enemies[enemy_id])
+
+
 ## Completes `mission_id` (any fight must already be won): hands in the
 ## required items, applies the rewards, adds contribution and starts the
-## cooldown. Returns {ok, reason, contribution, promoted, notes, days}.
+## cooldown. Contribution also earns reputation with the sect.
+## Returns {ok, reason, contribution, promoted, notes, days}.
 static func complete_mission(c: CharacterData, data: GameData, mission_id: String, flags: Dictionary) -> Dictionary:
 	var reason := check_mission(c, data, mission_id)
 	if reason != "":
@@ -202,6 +377,9 @@ static func complete_mission(c: CharacterData, data: GameData, mission_id: Strin
 		c.add_item(item_id, -int(needed[item_id]))
 	var notes := Effects.apply(c, data, mission.get("rewards", {}), flags)
 	var contribution := int(mission.get("contribution", 0))
+	var rep := Reputation.change(c, data, String(c.sect["id"]), Reputation.mission_gain(data, contribution))
+	if rep != 0:
+		notes.append("%s reputation %+d" % [data.sects[c.sect["id"]].name, rep])
 	var promoted := add_contribution(c, data, contribution)
 	c.mission_cooldowns[mission_id] = c.age_days + int(mission.get("cooldown_days", 0))
 	return {"ok": true, "reason": "", "contribution": contribution, "promoted": promoted, "notes": notes, "days": int(mission.get("days", 1))}
@@ -218,8 +396,11 @@ static func validate_missions(data: GameData) -> PackedStringArray:
 		for sect_id in mission.get("sects", []):
 			if not data.sects.has(sect_id):
 				errors.append("Mission '%s' has unknown sect '%s'" % [id, sect_id])
-		if data.realm_index_of(String(mission.get("min_realm", "mortal"))) < 0:
+		var realm_index := data.realm_index_of(String(mission.get("min_realm", "mortal")))
+		if realm_index < 0:
 			errors.append("Mission '%s' has unknown min_realm '%s'" % [id, mission.get("min_realm", "")])
+		elif int(mission.get("min_stage", 0)) < 0 or int(mission.get("min_stage", 0)) >= data.realms[realm_index].stage_count():
+			errors.append("Mission '%s' has min_stage %d outside its min_realm's stages" % [id, int(mission.get("min_stage", 0))])
 		if int(mission.get("min_rank", 0)) < 0:
 			errors.append("Mission '%s' needs min_rank >= 0" % id)
 		if int(mission.get("days", 0)) < 1:

@@ -6,18 +6,30 @@ extends Interactable
 @export var max_price := 0
 ## Only stock items with one of these tags. Empty = untagged goods (pills, manuals).
 @export var stock_tags: Array = []
+## Only trades with players whose alignment is within these bounds (inclusive).
+@export var min_alignment := -1000000
+@export var max_alignment := 1000000
+## Sect this merchant belongs to (data/sects.json id); prices follow your reputation with it.
+@export var faction := ""
 
 
 func get_options() -> Array[Dictionary]:
 	var options: Array[Dictionary] = []
 	var data := GameState.data
+	var refusal := Items.check_merchant(GameState.player, min_alignment, max_alignment)
+	if refusal != "":
+		options.append({"label": refusal, "action": Callable(), "disabled": true})
+		return options
+	var price_note := ""
+	if not is_equal_approx(Reputation.price_multiplier(GameState.player, data, faction), 1.0):
+		price_note = " (%s price)" % Reputation.tier_name(GameState.player, data, faction)
 	for item: Dictionary in data.items.values():
-		var price := int(item.get("price", 0))
-		if price <= 0 or (max_price > 0 and price > max_price) or not _stocks(item):
+		if not Items.merchant_sells(data, item, stock_tags, max_price):
 			continue
+		var price := Reputation.buy_price(GameState.player, data, item["id"], faction)
 		options.append({
-			"label": "Buy %s (%d spirit stones)" % [item["name"], price],
-			"action": GameState.buy_item.bind(item["id"]),
+			"label": "Buy %s (%d spirit stones)%s" % [item["name"], price, price_note],
+			"action": GameState.buy_item.bind(item["id"], faction),
 			"disabled": GameState.player.item_count("spirit_stone") < price,
 			"keep_open": true,
 		})
@@ -30,13 +42,3 @@ func get_options() -> Array[Dictionary]:
 					"keep_open": true,
 				})
 	return options
-
-
-func _stocks(item: Dictionary) -> bool:
-	var tags: Array = item.get("tags", [])
-	if stock_tags.is_empty():
-		return tags.is_empty()
-	for tag in tags:
-		if stock_tags.has(tag):
-			return true
-	return false

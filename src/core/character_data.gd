@@ -19,6 +19,11 @@ var spouse_ranks: Dictionary = {}
 var pregnancy: Dictionary = {}
 ## The mother's spousal rank to the father at birth ("" = unknown or adopted); used for heir priority.
 var birth_rank := ""
+## Training assigned by a parent (FAM-004): {} or {"assignment": id, "profession": id}. See Training.
+var training: Dictionary = {}
+## Bloodline id (data/bloodlines.json, "" = none) and whether it has awakened (FAM-007).
+var bloodline := ""
+var bloodline_awakened := false
 ## NPC behavior. Empty/negative values fall back to the data/npcs.json def (see Npcs).
 var home_region := ""
 var cultivates := false
@@ -45,13 +50,19 @@ var inventory: Dictionary = {}  # item id -> count
 ## Equipped artifacts: slot (Equipment.SLOTS) -> item id. Equipped items are not in inventory.
 var equipment: Dictionary = {}
 var techniques: Dictionary = {}  # technique id -> {"level": int, "xp": float}
+## Active main cultivation method (a known "method" technique); "" = the starter method.
+var main_method := ""
 ## Recipe ids learned from scrolls (data/recipes.json "starter" recipes are known without learning).
 var known_recipes: Array[String] = []
 var injuries: Dictionary = {}  # injury id -> days left to heal
 ## Temporary combat buffs: buff id -> {"name", "days", "mults": {stat: fraction}} (see Buffs).
 var buffs: Dictionary = {}
+## Dao insights: insight id -> {"level": int, "progress": float} (see Dao).
+var dao: Dictionary = {}
 ## Combat talisman item ids burned automatically in fights (see CombatTalismans).
 var readied_talismans: Array[String] = []
+## Tamed spirit beast ids (data/beasts.json), BEAST-001.
+var companions: Array[String] = []
 ## Years of lifespan burned for power (forbidden arts, demonic pills); see Cultivation.lifespan_years.
 var lifespan_spent_years := 0
 ## Years of lifespan gained from longevity pills and treasures.
@@ -62,8 +73,31 @@ var artifact_lives := -1
 var artifact_recharges := 0
 ## Bound anchor ids (data/regions.json "anchor_id"), most recently bound last.
 var anchors: Array[String] = []
+## Claimed cave abode id (data/regions.json "abodes"), "" if none (Abodes).
+var abode := ""
+## Items kept in the abode's storage chest: item id -> count.
+var abode_storage: Dictionary = {}
+## Creation Artifact energy fed from spirit stones and treasures (ArtifactFunctions).
+var artifact_energy := 0
+## Unlocked artifact function ids (data/artifact.json "functions").
+var artifact_functions: Array[String] = []
+## Items kept in the artifact's storage space: item id -> count. Never lost.
+var artifact_storage: Dictionary = {}
 ## Sect mission id -> age_days when it may be taken again (Sects missions).
 var mission_cooldowns: Dictionary = {}
+## Inheritance id -> trial stages passed (W-006, Inheritances).
+var trial_progress: Dictionary = {}
+## Sect id -> reputation with that sect (Reputation system; missing = start value).
+var reputation: Dictionary = {}
+## Karma (RIV-001): NPC id -> how much that NPC hates / owes this character (0-100, see Karma).
+var grudges: Dictionary = {}
+var gratitude: Dictionary = {}
+## Secret realm id -> {"opening": int, "floor": int}: floors cleared in that opening (see SecretRealms).
+var secret_realms: Dictionary = {}
+## Secret realm ids whose inheritance this character received (once per life, W-005d).
+var inheritances: Array[String] = []
+## Body tempering stages reached (data/body_tempering.json, BodyTempering); 0 = untempered.
+var body_stage := 0
 
 
 func attribute(attr_id: String) -> int:
@@ -104,6 +138,9 @@ func to_dict() -> Dictionary:
 		"spouse_ranks": spouse_ranks.duplicate(),
 		"pregnancy": pregnancy.duplicate(),
 		"birth_rank": birth_rank,
+		"training": training.duplicate(),
+		"bloodline": bloodline,
+		"bloodline_awakened": bloodline_awakened,
 		"home_region": home_region,
 		"cultivates": cultivates,
 		"diligence": diligence,
@@ -123,16 +160,31 @@ func to_dict() -> Dictionary:
 		"inventory": inventory.duplicate(),
 		"equipment": equipment.duplicate(),
 		"techniques": techniques.duplicate(true),
+		"main_method": main_method,
 		"known_recipes": known_recipes.duplicate(),
 		"injuries": injuries.duplicate(),
 		"buffs": buffs.duplicate(true),
+		"dao": dao.duplicate(true),
 		"readied_talismans": readied_talismans.duplicate(),
+		"companions": companions.duplicate(),
 		"lifespan_spent_years": lifespan_spent_years,
 		"lifespan_bonus_years": lifespan_bonus_years,
 		"artifact_lives": artifact_lives,
 		"artifact_recharges": artifact_recharges,
 		"anchors": anchors.duplicate(),
+		"artifact_energy": artifact_energy,
+		"artifact_functions": artifact_functions.duplicate(),
+		"artifact_storage": artifact_storage.duplicate(),
 		"mission_cooldowns": mission_cooldowns.duplicate(),
+		"trial_progress": trial_progress.duplicate(),
+		"reputation": reputation.duplicate(),
+		"abode": abode,
+		"abode_storage": abode_storage.duplicate(),
+		"grudges": grudges.duplicate(),
+		"gratitude": gratitude.duplicate(),
+		"secret_realms": secret_realms.duplicate(true),
+		"inheritances": inheritances.duplicate(),
+		"body_stage": body_stage,
 	}
 
 
@@ -153,6 +205,11 @@ static func from_dict(d: Dictionary) -> CharacterData:
 	if not saved_pregnancy.is_empty():
 		c.pregnancy = {"partner": String(saved_pregnancy.get("partner", "")), "days_left": int(saved_pregnancy.get("days_left", 0))}
 	c.birth_rank = String(d.get("birth_rank", ""))
+	var saved_training: Dictionary = d.get("training", {})
+	for key in saved_training:
+		c.training[String(key)] = String(saved_training[key])
+	c.bloodline = String(d.get("bloodline", ""))
+	c.bloodline_awakened = bool(d.get("bloodline_awakened", false))
 	c.home_region = String(d.get("home_region", ""))
 	c.cultivates = bool(d.get("cultivates", false))
 	c.diligence = float(d.get("diligence", -1.0))
@@ -175,6 +232,10 @@ static func from_dict(d: Dictionary) -> CharacterData:
 		c.sect = {"id": String(s.get("id", "")), "rank": int(s.get("rank", 0)), "contribution": int(s.get("contribution", 0))}
 		if s.has("spent"):
 			c.sect["spent"] = int(s["spent"])
+		if s.has("month_earned"):
+			c.sect["month_earned"] = int(s["month_earned"])
+		if s.has("duty_grace"):
+			c.sect["duty_grace"] = bool(s["duty_grace"])
 	c.inventory = _int_values(d.get("inventory", {}))
 	c.injuries = _int_values(d.get("injuries", {}))
 	var equipped: Dictionary = d.get("equipment", {})
@@ -185,15 +246,35 @@ static func from_dict(d: Dictionary) -> CharacterData:
 		var b: Dictionary = saved_buffs[buff_id]
 		Buffs.add(c, String(buff_id), String(b.get("name", buff_id)), int(b.get("days", 0)), b.get("mults", {}))
 	c.readied_talismans = _strings(d.get("readied_talismans", []))
+	c.companions = _strings(d.get("companions", []))
 	c.lifespan_spent_years = int(d.get("lifespan_spent_years", 0))
 	c.lifespan_bonus_years = int(d.get("lifespan_bonus_years", 0))
 	c.artifact_lives = int(d.get("artifact_lives", -1))
 	c.artifact_recharges = int(d.get("artifact_recharges", 0))
+	c.artifact_energy = int(d.get("artifact_energy", 0))
+	c.artifact_functions = _strings(d.get("artifact_functions", []))
+	c.artifact_storage = _int_values(d.get("artifact_storage", {}))
 	c.mission_cooldowns = _int_values(d.get("mission_cooldowns", {}))
+	c.trial_progress = _int_values(d.get("trial_progress", {}))
+	c.reputation = _int_values(d.get("reputation", {}))
+	c.abode = String(d.get("abode", ""))
+	c.abode_storage = _int_values(d.get("abode_storage", {}))
+	c.grudges = _int_values(d.get("grudges", {}))
+	c.gratitude = _int_values(d.get("gratitude", {}))
+	c.body_stage = int(d.get("body_stage", 0))
+	var delves: Dictionary = d.get("secret_realms", {})
+	for realm_id in delves:
+		c.secret_realms[String(realm_id)] = {"opening": int(delves[realm_id].get("opening", -1)), "floor": int(delves[realm_id].get("floor", 0))}
+	for realm_id in d.get("inheritances", []):
+		c.inheritances.append(String(realm_id))
 	for anchor_id in d.get("anchors", []):
 		c.anchors.append(String(anchor_id))
 	for recipe_id in d.get("known_recipes", []):
 		c.known_recipes.append(String(recipe_id))
+	var saved_dao: Dictionary = d.get("dao", {})
+	for insight_id in saved_dao:
+		c.dao[String(insight_id)] = {"level": int(saved_dao[insight_id].get("level", 0)), "progress": float(saved_dao[insight_id].get("progress", 0))}
+	c.main_method = String(d.get("main_method", ""))
 	var techs: Dictionary = d.get("techniques", {})
 	for tech_id in techs:
 		c.techniques[tech_id] = {"level": int(techs[tech_id].get("level", 1)), "xp": float(techs[tech_id].get("xp", 0))}
