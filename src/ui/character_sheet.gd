@@ -118,7 +118,8 @@ func _rebuild() -> void:
 		if bonuses != "":
 			t += "  [color=#aaaaaa]%s: %s[/color]\n" % ["Grants" if p.bloodline_awakened else "Will grant", bonuses]
 	t += "Cultivation speed: %.2f qi/day here\n" % Cultivation.qi_per_day(p, data, Exploration.qi_density(data, GameState.current_region) * Sects.cultivation_bonus(p, data))
-	t += "Alignment: %s (%d)   |   %s\n\n" % [Alignment.tier_name(p.alignment, data), p.alignment, Sects.describe(p, data)]
+	var devoured := "   |   Cultivators devoured: %d" % p.devoured if p.devoured > 0 else ""
+	t += "Alignment: %s (%d)%s   |   %s\n\n" % [Alignment.tier_name(p.alignment, data), p.alignment, devoured, Sects.describe(p, data)]
 	_gender_row.visible = p.gender == ""
 	var density := Exploration.qi_density(data, GameState.current_region) * Sects.cultivation_bonus(p, data)
 	var hints := Guidance.hints(p, data, density)

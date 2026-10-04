@@ -12,7 +12,8 @@
     {"id": "qi_deviation", "name": "Qi Deviation", "description": "Qi runs wild through your meridians. Cultivating is slow and painful.", "cultivation_mult": 0.5, "combat_mult": 0.9, "heal_days": 180, "treatment_cost": 80},
     {"id": "damaged_meridians", "name": "Damaged Meridians", "description": "Your meridians are torn. Qi leaks out faster than you can gather it.", "cultivation_mult": 0.25, "combat_mult": 0.8, "heal_days": 365, "treatment_cost": 250},
     {"id": "broken_bones", "name": "Broken Bones", "description": "Several bones are broken. Fighting is out of the question.", "cultivation_mult": 0.9, "combat_mult": 0.5, "heal_days": 60, "treatment_cost": 20},
-    {"id": "internal_injury", "name": "Internal Injury", "description": "A blow bruised your organs. You cough blood when you exert yourself.", "cultivation_mult": 0.7, "combat_mult": 0.7, "heal_days": 120, "treatment_cost": 50}
+    {"id": "internal_injury", "name": "Internal Injury", "description": "A blow bruised your organs. You cough blood when you exert yourself.", "cultivation_mult": 0.7, "combat_mult": 0.7, "heal_days": 120, "treatment_cost": 50},
+    {"id": "heart_demon", "name": "Heart Demon", "description": "The devoured cultivator's dying will lingers in your sea of consciousness, whispering while you meditate and clouding your moves in battle.", "cultivation_mult": 0.6, "combat_mult": 0.85, "heal_days": 240, "treatment_cost": 300}
   ],
   "sources": {
     "npc_mishap": {"chance": 0.05, "table": [{"id": "broken_bones", "weight": 3}, {"id": "internal_injury", "weight": 2}, {"id": "qi_deviation", "weight": 1}]},

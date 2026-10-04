@@ -76,6 +76,8 @@ var anchors: Array[String] = []
 ## Item ids whose one-time binding cost has been paid (equip
 ## `alignment_on_first_equip`, LIFE-001g), so it is never charged twice.
 var bound_artifacts: Array[String] = []
+## Cultivators whose cultivation this character has devoured (Devouring, DEM-001).
+var devoured := 0
 ## Claimed cave abode id (data/regions.json "abodes"), "" if none (Abodes).
 var abode := ""
 ## Items kept in the abode's storage chest: item id -> count.
@@ -184,6 +186,7 @@ func to_dict() -> Dictionary:
 		"trial_progress": trial_progress.duplicate(),
 		"reputation": reputation.duplicate(),
 		"bound_artifacts": bound_artifacts.duplicate(),
+		"devoured": devoured,
 		"abode": abode,
 		"abode_storage": abode_storage.duplicate(),
 		"grudges": grudges.duplicate(),
@@ -266,6 +269,7 @@ static func from_dict(d: Dictionary) -> CharacterData:
 	c.reputation = _int_values(d.get("reputation", {}))
 	for item_id in d.get("bound_artifacts", []):
 		c.bound_artifacts.append(String(item_id))
+	c.devoured = int(d.get("devoured", 0))
 	c.abode = String(d.get("abode", ""))
 	c.abode_storage = _int_values(d.get("abode_storage", {}))
 	c.grudges = _int_values(d.get("grudges", {}))

@@ -93,6 +93,8 @@ var auction_houses: Dictionary = {}  # id -> Dictionary (data/auctions.json, Auc
 var inheritances: Dictionary = {}  # id -> Dictionary (data/inheritances.json, Inheritances)
 ## data/body_tempering.json: rules and ordered "stages" (BodyTempering).
 var body_tempering: Dictionary = {}
+## data/demonic_arts.json: demonic art rules, e.g. "devouring" (Devouring).
+var demonic_arts: Dictionary = {}
 ## Problems found while loading. Empty when all data files are valid.
 var load_errors: PackedStringArray = []
 
@@ -267,6 +269,7 @@ func _load(dir: String) -> void:
 	for legacy in _read(dir, "inheritances.json").get("inheritances", []):
 		inheritances[legacy["id"]] = legacy
 	body_tempering = _read(dir, "body_tempering.json")
+	demonic_arts = _read(dir, "demonic_arts.json")
 	_validate()
 
 
@@ -333,6 +336,7 @@ func _validate() -> void:
 	load_errors.append_array(Sects.validate_ranks(self))
 	load_errors.append_array(Auctions.validate(self))
 	load_errors.append_array(BodyTempering.validate(self))
+	load_errors.append_array(Devouring.validate(self))
 	for item: Dictionary in items.values():
 		if item.get("effects", {}).has("buff"):
 			for error in Buffs.validate_effect(item["effects"]["buff"]):
