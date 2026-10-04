@@ -13,6 +13,8 @@ var data: GameData
 var player: CharacterData
 ## Persistent world facts, e.g. {"villager_dead": true}.
 var world_flags: Dictionary = {}
+## Open auctions (Auctions): house_id -> {opening, lots}.
+var auctions: Dictionary = {}
 ## Id of the region (data/regions.json) the player is in.
 var current_region := ""
 ## Live NPCs: id -> CharacterData (definitions in data/npcs.json).
@@ -52,6 +54,7 @@ func start_session(character: CharacterData) -> void:
 	player = character
 	CreationArtifact.ensure(player, data)
 	world_flags = {}
+	auctions = {}
 	current_region = data.start_region
 	npcs = {}
 	npc_favor = {}
@@ -74,6 +77,7 @@ func start_session(character: CharacterData) -> void:
 func end_session() -> void:
 	player = null
 	world_flags = {}
+	auctions = {}
 	npcs = {}
 	npc_favor = {}
 	clan = null
@@ -1167,6 +1171,36 @@ func buy_with_contribution(item_id: String) -> void:
 	EventBus.player_changed.emit()
 
 
+## The lots of `house_id`'s open auction ([] when none is being held).
+func auction_lots(house_id: String) -> Array:
+	return Auctions.current_lots(auctions, data, house_id, GameClock.total_days, rng.seed)
+
+
+## Why a bid of `amount` on lot `lot_index` would be refused ("" = allowed).
+func check_bid(house_id: String, lot_index: int, amount: int) -> String:
+	if not _can_act():
+		return "You cannot act."
+	return Auctions.check_bid(player, data, auctions, house_id, lot_index, amount, current_region, GameClock.total_days, rng.seed)
+
+
+## Place one sealed bid on an auction lot (data/auctions.json). Beating the
+## hidden NPC maximum wins the lot; otherwise a rival takes it. Takes no time.
+func bid(house_id: String, lot_index: int, amount: int) -> void:
+	if not _can_act():
+		return
+	var result := Auctions.bid(player, data, auctions, house_id, lot_index, amount, current_region, GameClock.total_days, rng.seed)
+	if not result["ok"]:
+		EventBus.post(result["reason"], "warning")
+	else:
+		var item_name: String = data.items[result["item"]].get("name", result["item"])
+		var lot_name := item_name if result["count"] == 1 else "%d %s" % [result["count"], item_name]
+		if result["won"]:
+			EventBus.post("The hammer falls: you win %s for %d spirit stones." % [lot_name, result["price"]], "progress")
+		else:
+			EventBus.post("A rival bidder outbids you and takes %s for %d spirit stones." % [lot_name, result["price"]], "warning")
+	EventBus.player_changed.emit()
+
+
 ## Fight an enemy from data/enemies.json.
 func fight(enemy_id: String) -> void:
 	if not data.enemies.has(enemy_id):
@@ -1339,6 +1373,7 @@ func to_save_dict() -> Dictionary:
 	return {
 		"player": player.to_dict(),
 		"world_flags": world_flags.duplicate(),
+		"auctions": auctions.duplicate(true),
 		"region": current_region,
 		"npcs": Npcs.to_dict(npcs),
 		"npc_favor": npc_favor.duplicate(),
@@ -1357,6 +1392,7 @@ func load_save_dict(d: Dictionary) -> void:
 		Alchemy.grant_rank_recipes(player, data)  # saves from before recipe learning
 	CreationArtifact.ensure(player, data)
 	world_flags = d.get("world_flags", {})
+	auctions = d.get("auctions", {})
 	current_region = d.get("region", data.start_region)
 	npcs = Npcs.from_dict(d.get("npcs", {}))
 	Npcs.ensure_all(npcs, data, rng)

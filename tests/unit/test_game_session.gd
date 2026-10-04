@@ -271,3 +271,28 @@ func test_promotion_trial_and_stipend() -> void:
 	gs.cultivate(Calendar.DAYS_PER_MONTH)
 	assert_eq(c.item_count("spirit_stone"), stones + int(Sects.stipend(c, gs.data)["spirit_stones"]))
 	gs.end_session()
+
+
+func test_auction_bid_and_save() -> void:
+	var c := _start()
+	var gs := _game_state()
+	var house := "fallen_star_auction"
+	var def := Auctions.house(gs.data, house)
+	assert_eq(gs.auction_lots(house).size(), 0, "no auction on day 0")
+	gs.cultivate(int(def["offset_days"]))
+	gs.current_region = String(def["region"])
+	var lots: Array = gs.auction_lots(house)
+	assert_eq(lots.size(), int(def["lots"]))
+	var amount := int(lots[0]["npc_max"]) + 1
+	c.add_item("spirit_stone", amount)
+	var stones := c.item_count("spirit_stone")
+	var days: int = _root().get_node("GameClock").total_days
+	assert_eq(gs.check_bid(house, 0, amount), "")
+	gs.bid(house, 0, amount)
+	assert_eq(c.item_count("spirit_stone"), stones - amount)
+	assert_eq(_root().get_node("GameClock").total_days, days, "bidding takes no time")
+	var saved: Dictionary = JSON.parse_string(JSON.stringify(gs.to_save_dict()))
+	gs.load_save_dict(saved)
+	assert_eq(String(gs.auction_lots(house)[0]["sold"]), "player", "sold lots survive a save")
+	assert_true(gs.check_bid(house, 0, amount).contains("already been sold"))
+	gs.end_session()
