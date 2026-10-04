@@ -23,6 +23,7 @@
         {"type": "orphanage", "display_name": "Temple of Mercy (orphanage)", "pos": [760, 640], "size": [110, 80], "color": "c9b37a"},
         {"type": "merchant", "display_name": "Wandering Merchant", "pos": [620, 380], "size": [60, 60], "color": "d9b34d"},
         {"type": "deed_giver", "display_name": "Hooded Stranger", "pos": [800, 250], "size": [30, 30], "color": "7a2f3a", "deed_context": "poisoner", "hidden_by_flag": "poisoner_gone"},
+        {"type": "deed_giver", "display_name": "Headman Zhou", "pos": [920, 640], "size": [30, 30], "color": "c9a26b", "deed_context": "headman"},
         {"type": "deed_giver", "display_name": "Villager", "pos": [1000, 400], "size": [30, 30], "color": "e6bf99", "deed_context": "villager", "hidden_by_flag": "villager_dead"},
         {"type": "explore", "display_name": "Village Outskirts", "pos": [150, 880], "size": [120, 70], "color": "6b7d4a"},
         {"type": "travel", "display_name": "Village Gate", "pos": [1540, 500], "size": [40, 120], "color": "5c4630"}
