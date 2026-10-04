@@ -4,6 +4,9 @@ extends PanelContainer
 ## Every region in data/regions.json is a focusable node placed by its
 ## `map_pos`; routes are drawn between them with their travel days. The panel
 ## on the right describes the focused region and how to reach it from here.
+## Colored dots under a region mark what is yours there or happening there
+## (UI-008b): your sect hall, abode, family, artifact anchors, secret realms
+## and world events; the details list them.
 
 signal closed
 
@@ -12,12 +15,22 @@ const NODE_SIZE := Vector2(132, 40)
 const DANGER_NAMES: PackedStringArray = ["Safe", "Low", "Moderate", "High", "Deadly"]
 const ROUTE_COLOR := Color(0.85, 0.76, 0.5, 0.8)
 const LOCKED_COLOR := Color(0.9, 0.38, 0.32, 0.8)
+## Mark kind -> dot color (see region_marks).
+const MARK_COLORS := {
+	"sect": Color("6fa8e8"),
+	"abode": Color("e8c76a"),
+	"family": Color("e6a3c4"),
+	"anchor": Color("7fe0d0"),
+	"secret_realm": Color("b58ae8"),
+	"event": Color("e85a4a"),
+}
 
 var _canvas: Control
 var _name: Label
 var _info: Label
 var _description: Label
 var _places: Label
+var _marks: Label
 var _routes: Label
 var _close_button: Button
 var _selected := ""
@@ -56,9 +69,11 @@ func _init() -> void:
 	details.add_child(_description)
 	_places = _wrapped(UIStyle.label("", 15))
 	details.add_child(_places)
+	_marks = _wrapped(UIStyle.label("", 15, Color(0.85, 0.85, 0.95)))
+	details.add_child(_marks)
 	_routes = _wrapped(UIStyle.label("", 15, UIStyle.CATEGORY_COLORS["progress"]))
 	details.add_child(_routes)
-	details.add_child(_wrapped(UIStyle.label("Red roads need a higher realm. Travel at a region's gate.", 14, Color(0.6, 0.6, 0.6))))
+	details.add_child(_wrapped(UIStyle.label("Red roads need a higher realm. Travel at a region's gate. Dots: blue sect hall, gold abode, pink family, teal anchor, purple secret realm, red world event.", 14, Color(0.6, 0.6, 0.6))))
 
 	_close_button = UIStyle.button("Close", close)
 	box.add_child(_close_button)
@@ -138,6 +153,36 @@ static func place_names(data: GameData, region_id: String) -> PackedStringArray:
 	return names
 
 
+## What `c` has or what is going on in `region_id`: [{kind, text}] with kind
+## a MARK_COLORS key. `people` are the NPCs, `events` the active world events.
+static func region_marks(c: CharacterData, data: GameData, people: Dictionary, events: Array, total_days: int, region_id: String) -> Array[Dictionary]:
+	var marks: Array[Dictionary] = []
+	var region: Dictionary = data.regions.get(region_id, {})
+	if not c.is_rogue() and (region.get("places", []) as Array).any(func(p: Dictionary) -> bool: return p.get("type", "") == "sect_hall"):
+		marks.append({"kind": "sect", "text": "A hall of the %s (missions, rank)" % (data.sects[c.sect["id"]] as SectDef).name})
+	if c.abode != "" and String(data.abodes.get(c.abode, {}).get("region", "")) == region_id:
+		marks.append({"kind": "abode", "text": "Your abode: %s" % Abodes.abode_name(data, c.abode)})
+	var family: PackedStringArray = []
+	for person_id in c.spouses + c.children:
+		var person: CharacterData = people.get(person_id)
+		if person != null and person.alive and Npcs.region_of(person, data) == region_id:
+			family.append(person.name)
+	if not family.is_empty():
+		marks.append({"kind": "family", "text": "Family: %s" % ", ".join(family)})
+	for i in c.anchors.size():
+		if String(data.anchors.get(c.anchors[i], {}).get("region", "")) == region_id:
+			var tag := " (respawn point)" if i == c.anchors.size() - 1 else ""
+			marks.append({"kind": "anchor", "text": "Artifact anchor: %s%s" % [CreationArtifact.anchor_name(data, c.anchors[i]), tag]})
+	for def: Dictionary in data.secret_realms.values():
+		if String(def.get("region", "")) != region_id:
+			continue
+		var when := "open, closes in %s" % Calendar.format_duration(SecretRealms.days_until_close(def, total_days)) if SecretRealms.is_open(def, total_days) else "opens in %s" % Calendar.format_duration(SecretRealms.days_until_open(def, total_days))
+		marks.append({"kind": "secret_realm", "text": "Secret realm: %s (%s)" % [def.get("name", def["id"]), when]})
+	for instance in WorldEvents.active_in(events, region_id):
+		marks.append({"kind": "event", "text": "%s! (%s left)" % [WorldEvents.event_name(data, instance["id"]), Calendar.format_duration(maxi(0, int(instance["end_day"]) - total_days))]})
+	return marks
+
+
 static func danger_name(data: GameData, region_id: String) -> String:
 	var danger := int(data.regions.get(region_id, {}).get("danger", 0))
 	return DANGER_NAMES[clampi(danger, 0, DANGER_NAMES.size() - 1)]
@@ -195,6 +240,14 @@ func _draw_map() -> void:
 			_canvas.draw_line(a, b, LOCKED_COLOR if _route_gated(data, region_id, to) else ROUTE_COLOR, 4.0)
 			var days := "%dd" % int(route.get("days", 1))
 			_canvas.draw_string(font, (a + b) / 2.0 + Vector2(4, -4), days, HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color(0.9, 0.9, 0.85))
+	for region_id in _positions:
+		var kinds: Array = []
+		for mark in region_marks(GameState.player, data, GameState.npcs, GameState.world_events, GameClock.total_days, region_id):
+			if not kinds.has(mark["kind"]):
+				kinds.append(mark["kind"])
+		var start: Vector2 = Vector2(_positions[region_id]) + Vector2(-(kinds.size() - 1) * 7.0, NODE_SIZE.y / 2.0 + 8.0)
+		for i in kinds.size():
+			_canvas.draw_circle(start + Vector2(i * 14.0, 0), 5.0, MARK_COLORS[kinds[i]])
 	if _positions.has(GameState.current_region):
 		var here := Rect2(Vector2(_positions[GameState.current_region]) - NODE_SIZE / 2.0, NODE_SIZE).grow(5.0)
 		_canvas.draw_rect(here, UIStyle.ACCENT, false, 3.0)
@@ -223,10 +276,13 @@ func _show_details() -> void:
 	if region.is_empty():
 		return
 	_name.text = String(region.get("name", _selected))
-	_info.text = "Qi density x%s   |   Danger: %s" % [String.num(Exploration.qi_density(data, _selected), 2), danger_name(data, _selected)]
+	_info.text = "Qi density x%s   |   Danger: %s" % [String.num(Exploration.qi_density(data, _selected) * WorldEvents.qi_multiplier(data, GameState.world_events, _selected), 2), danger_name(data, _selected)]
 	_description.text = String(region.get("description", ""))
 	var places := place_names(data, _selected)
 	_places.text = "Places: " + (", ".join(places) if not places.is_empty() else "none known")
+	var marks := region_marks(GameState.player, data, GameState.npcs, GameState.world_events, GameClock.total_days, _selected)
+	_marks.visible = not marks.is_empty()
+	_marks.text = "\n".join(marks.map(func(m: Dictionary) -> String: return "• " + String(m["text"])))
 	_routes.text = "\n".join(route_lines(GameState.player, data, GameState.current_region, _selected))
 
 
