@@ -193,7 +193,7 @@ static func _live(c: CharacterData, data: GameData, days: int, rng: RandomNumber
 		return
 	Cultivation.cultivate(c, data, days, Exploration.qi_density(data, region_of(c, data)) * diligence_of(c, data))
 	if Cultivation.can_attempt_breakthrough(c, data):
-		var result := Cultivation.attempt_breakthrough(c, data, rng)
+		var result := Cultivation.attempt_breakthrough(c, data, rng, true)
 		if result["died"]:
 			c.alive = false
 			c.cause_of_death = "heavenly tribulation"
