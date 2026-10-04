@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-03 [QA-008] Gamepad/focus audit test: every HUD modal must take focus and close on ui_cancel (all pass today); unit tests may now await frames.
 - 2026-10-03 [QA-007c] Sect missions can require a stage within their realm (`min_stage`), and Sects.mission_danger rates a mission's fight; Harvest a Rogue Cultivator now opens at Qi Refining 5th Layer instead of sending 1st Layer disciples to near-certain death.
 - 2026-10-03 [VIS-003] Places are drawn as what they are (qi pools, market stalls, workshops, sect halls, gates, herb patches, caves, robed NPC figures) instead of rectangles, and the current interaction target pulses.
 - 2026-10-03 [VIS-002] Region maps get scenery: trees, rocks, grass and flowers placed deterministically per region off paths and places, themed per region via regions.json map.decor.
