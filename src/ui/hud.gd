@@ -48,6 +48,7 @@ func _ready() -> void:
 	_add_screen("toggle_character_sheet", CharacterSheet.new())
 	_add_screen("toggle_inventory", InventoryScreen.new())
 	_add_screen("toggle_techniques", TechniquesScreen.new())
+	_add_screen("toggle_artifact", ArtifactScreen.new())
 	_add_screen("toggle_map", WorldMapScreen.new())
 	_add_screen("toggle_message_log", MessageLogScreen.new())
 	_crafting = CraftingScreen.new()
@@ -184,7 +185,7 @@ func _build_status_panel() -> void:
 	_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_hint.custom_minimum_size = Vector2(316, 0)
 	box.add_child(_hint)
-	box.add_child(UIStyle.label("[E] interact   [C] character   [I] inventory   [K] techniques   [M] map   [L] log   [F5] save   [Esc] pause", 12, Color(0.7, 0.7, 0.7)))
+	box.add_child(UIStyle.label("[E] interact   [C] character   [I] inventory   [K] techniques   [M] map   [L] log   [O] artifact   [F5] save   [Esc] pause", 12, Color(0.7, 0.7, 0.7)))
 	add_child(panel)
 
 
