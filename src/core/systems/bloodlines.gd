@@ -45,6 +45,35 @@ static func inherit(mother: CharacterData, father: CharacterData, data: GameData
 	return ""
 
 
+## A random bloodline weighted by rarity (rarer ones come up less often), for
+## generated NPCs that roll family.json eligible_npcs.bloodline_chance.
+static func roll_any(data: GameData, rng: RandomNumberGenerator) -> String:
+	var ids: Array = data.bloodlines.keys()
+	ids.sort()
+	var total := 0.0
+	for id in ids:
+		total += float(data.bloodlines[id].get("rarity", 0.0))
+	if total <= 0.0:
+		return ""
+	var roll := rng.randf() * total
+	for id in ids:
+		roll -= float(data.bloodlines[id].get("rarity", 0.0))
+		if roll < 0.0:
+			return String(id)
+	return String(ids.back())
+
+
+## Gives `c` bloodline `id` if they have none (the `bloodline` effect), awakening
+## it at once if they already stand at its realm. Returns true if granted.
+static func grant(c: CharacterData, data: GameData, id: String) -> bool:
+	if c.bloodline != "" or not data.bloodlines.has(id):
+		return false
+	c.bloodline = id
+	c.bloodline_awakened = false
+	update(c, data)
+	return true
+
+
 ## Awakens `c`'s dormant bloodline once they reach its realm. Returns true if it awoke now.
 static func update(c: CharacterData, data: GameData) -> bool:
 	if c.bloodline == "" or c.bloodline_awakened or not data.bloodlines.has(c.bloodline):
@@ -87,4 +116,18 @@ static func validate(data: GameData) -> PackedStringArray:
 	for npc: Dictionary in data.npcs.values():
 		if npc.has("bloodline") and not data.bloodlines.has(String(npc["bloodline"])):
 			errors.append("NPC '%s' has unknown bloodline '%s'" % [npc["id"], npc["bloodline"]])
+	var eligible_chance := float(data.family.get("eligible_npcs", {}).get("bloodline_chance", 0.0))
+	if eligible_chance < 0.0 or eligible_chance > 1.0:
+		errors.append("family.json eligible_npcs bloodline_chance must be within 0..1")
+	var sources := {}
+	for item: Dictionary in data.items.values():
+		sources["Item '%s'" % item["id"]] = item.get("effects", {})
+	for e: Dictionary in data.encounters.values():
+		sources["Encounter '%s'" % e["id"]] = e.get("effects", {})
+		for choice: Dictionary in e.get("choices", []):
+			sources["Encounter '%s' choice '%s'" % [e["id"], choice.get("label", "")]] = choice.get("effects", {})
+	for source: String in sources:
+		var effects: Dictionary = sources[source]
+		if effects.has("bloodline") and not data.bloodlines.has(String(effects["bloodline"])):
+			errors.append("%s grants unknown bloodline '%s'" % [source, effects["bloodline"]])
 	return errors

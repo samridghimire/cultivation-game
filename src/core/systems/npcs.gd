@@ -111,8 +111,10 @@ static func is_eligible(c: CharacterData, data: GameData) -> bool:
 
 ## Tops every region up to data/family.json eligible_npcs.per_gender eligible
 ## generated NPCs of each gender, so every region has courtship candidates.
-## Realms come from realms_by_danger for the region's danger. Returns the new NPCs.
-static func ensure_eligible(npcs: Dictionary, data: GameData, rng: RandomNumberGenerator) -> Array[CharacterData]:
+## Realms come from realms_by_danger for the region's danger. NPCs in `exclude`
+## (the player's own descendants) are not candidates and do not fill a slot.
+## Returns the new NPCs.
+static func ensure_eligible(npcs: Dictionary, data: GameData, rng: RandomNumberGenerator, exclude: Array[String] = []) -> Array[CharacterData]:
 	var rules: Dictionary = data.family.get("eligible_npcs", {})
 	var by_danger: Array = rules.get("realms_by_danger", [])
 	var spawned: Array[CharacterData] = []
@@ -123,18 +125,22 @@ static func ensure_eligible(npcs: Dictionary, data: GameData, rng: RandomNumberG
 	for region_id in region_ids:
 		var counts := {}
 		for c: CharacterData in npcs.values():
-			if region_of(c, data) == region_id and is_eligible(c, data):
+			if region_of(c, data) == region_id and is_eligible(c, data) and not exclude.has(c.id):
 				counts[c.gender] = int(counts.get(c.gender, 0)) + 1
 		var realms: Array = by_danger[clampi(int(data.regions[region_id].get("danger", 0)), 0, by_danger.size() - 1)]
 		for gender in Names.genders(data):
 			for i in range(int(counts.get(gender, 0)), int(rules.get("per_gender", 0))):
-				spawned.append(spawn(npcs, data, rng, {
+				var c := spawn(npcs, data, rng, {
 					"gender": gender,
 					"region": region_id,
 					"age_years": rng.randi_range(int(rules.get("age_min", 16)), int(rules.get("age_max", 30))),
 					"realm": String(realms[rng.randi_range(0, realms.size() - 1)]),
 					"proud": rng.randf() < float(rules.get("proud_chance", 0.0)),
-				}))
+				})
+				# A rare candidate carries a bloodline, so players can marry into one.
+				if rules.has("bloodline_chance") and rng.randf() < float(rules["bloodline_chance"]):
+					Bloodlines.grant(c, data, Bloodlines.roll_any(data, rng))
+				spawned.append(c)
 	return spawned
 
 
@@ -287,6 +293,9 @@ static func describe(c: CharacterData, data: GameData) -> String:
 		text += ", cultivating at %s" % Cultivation.realm_label(c, data)
 	if not c.spouses.is_empty():
 		text += ", married"
+	# An awakened bloodline shakes heaven and earth; a dormant one is hidden.
+	if c.bloodline_awakened and data.bloodlines.has(c.bloodline):
+		text += ", bearing the awakened %s" % Bloodlines.bloodline_name(data, c.bloodline)
 	return text + "."
 
 

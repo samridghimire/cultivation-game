@@ -76,16 +76,19 @@ Every great cultivation protagonist has something that sets them apart. Ours is 
 | Medicine / Doctor (treat injuries, clinic, patients) | ✅ (clinic places) | `Medicine` |
 | Items, merchants, using pills | ✅ basic | `data/items.json`, `Items` |
 | Save/load, multiple slots | ✅ | `SaveManager` |
-| Creation Artifact: lives, anchors, respawn, recharge | ✅ core (functions: ART-002+) | `data/artifact.json`, `CreationArtifact` |
+| Creation Artifact: lives, anchors, respawn, recharge, functions (storage) | ✅ (artifact screen: O) | `data/artifact.json`, `CreationArtifact` |
 | Data-driven regions (4), travel, exploration encounters | ✅ (choice window: W-004d) | `data/regions.json`, `data/encounters.json`, `Exploration` |
 | Injuries (from breakthroughs and combat) | ✅ | `data/injuries.json`, `Injuries` |
 | Combat (auto-resolved) and techniques | ✅ basic | `Combat`, `Techniques`, `data/enemies.json`, `data/techniques.json` |
 | NPCs (named + generated), aging, monthly sim | ✅ | `data/npcs.json`, `Npcs`, `Names` |
 | Dialogue | ✅ (dialogue window) | `Dialogue`, `data/dialogue/` |
 | Family: identity, courtship, marriage, dual cultivation, children | ✅ core, ❌ not reachable in-game (P0 tasks) | `data/family.json`, `Family`, `Children` |
-| Clans, estates, bloodlines | ✅ clan core (FAM-005), bloodlines core (FAM-007), ❌ UI (FAM-005b), estates (FAM-006) | `data/family.json`, `data/bloodlines.json`, `Clans`, `ClanData`, `Bloodlines` |
+| Clans, estates, bloodlines | ✅ clan core (FAM-005), heirs (FAM-008), NPC clans core (FAM-009), bloodlines core (FAM-007), ❌ UI (FAM-005b), estates core (FAM-006) | `data/family.json`, `data/bloodlines.json`, `Clans`, `ClanData`, `Bloodlines` |
 | Cultivation methods (one main method, qi rate, realm cap) | ✅ core, 🚧 no UI (CM-001b) | `Techniques`, `data/techniques.json` |
-| Dao insights, Heavenly Tribulations | ❌ (DAO-001, TRIB-001) | |
+| Dao insights (encounters, practice, seclusion; technique + breakthrough bonuses) | ✅ core, 🚧 no UI (DAO-001b) | `data/dao.json`, `Dao` |
+| Heavenly Tribulations (Core Formation+, heart demon for demonic) | ✅ core, 🚧 no wave screen (TRIB-001b) | `Tribulation`, `data/realms.json` |
+| Grudges and gratitude (rob/kill/humiliate NPCs, kin vengeance, amends) | ✅ core, 🚧 no UI (RIV-001d), no avengers yet (RIV-003), no karma view (RIV-001b) | `data/karma.json`, `Karma` |
+| Secret realms (periodic openings, realm caps, guarded floors) | ✅ core, 🚧 no entrance UI (W-005b) | `data/secret_realms.json`, `SecretRealms` |
 | Inventory, techniques, character sheet, settings, pause, load screens | ✅ | `src/ui/` |
 | Top-down world with interactables | ✅ placeholder art | `src/world/` |
 
@@ -118,3 +121,9 @@ Void Refinement → Body Integration → Mahayana → Tribulation Transcendence.
 - (W-005/G-008) **Founding your own sect** (roadmap item 3) is not scheduled yet. Default proposal: it unlocks at Nascent Soul, needs a mountain gate place, and reuses the clan treasury/buildings model. Should it be a separate system from clans, or a clan that grows into a sect?
 - (F-005d) **Cultivation pacing.** With sensible play (best qi spot reachable, joining a sect), the balance sim reaches Core Formation by age ~20 and the final realm by ~800, so lifespan never pressures anyone and pills don't matter. What pacing do you want? Agents' default proposal for a sensible, average-root player: Foundation ~25-35, Core Formation ~80-120, Nascent Soul ~300-450, with each later realm taking a large share of its lifespan, and Heavenly Roots about 2-3x faster.
 - **Main story / Creation Artifact origin.** Agents keep the artifact's maker, why it chose the player and who hunts it vague until you decide. Do you want to outline the main story arc (acts, antagonist faction), or should agents propose 2-3 options for you to pick from?
+- (G-011) **Sect promotion.** Default: promotion to Inner Disciple and above needs a realm minimum plus a trial fight, ranks pay a monthly stipend, and missing the monthly duty only skips the stipend (no demotion). Should neglecting duties demote or expel a disciple?
+- (BEAST-001) **Spirit beasts.** Default: only Beast Tamers can tame, one active companion fights alongside you, beasts grow by feeding. Should non-tamers be able to keep a beast (e.g. one bought or gifted), and how many companions at once?
+- (DEM-001) **Devouring.** Default: after defeating a cultivator the player can devour their cultivation for qi at a big alignment cost and a heart-demon injury risk. This is the smallest demonic art; the separate demonic tree (DEM-002) stays blocked on the question above.
+- (BODY-001) **Body cultivation.** Default: a separate body-tempering track that runs alongside qi cultivation (stages that add HP/defense, paid in herbs/ores and days, with injury risk), open to everyone and not tied to a profession. Should it instead be an alternative path that replaces qi cultivation (pure body cultivators), and should it extend lifespan?
+- (RIV-001) **Hostile acts against NPCs.** Smallest version built: you can humiliate (only someone weaker), rob or kill any adult NPC who is not your own family; children and family members are off limits, and grudges fade 5 points a year. Should demonic players be able to harm children or their own kin (e.g. a blood-sacrifice path), and should grudges from a killing never fade?
+- (QA-006) **Artifact recharge cost.** `data/artifact.json` doubles the recharge price for every life ever bought (100, 200, 400 ... 409,600 for the 13th). The economy sim shows that any steady rate of violent deaths eventually empties the artifact for good: at 3 deaths per century every simulated life ended by about age 400, and at 1 per century by about age 1,400. Is that the intended "death is final eventually" pressure? Default proposal (ART-007): price scales with realm, and the doubling applies only to lives bought within the current major realm.
