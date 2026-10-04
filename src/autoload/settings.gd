@@ -1,5 +1,5 @@
 extends Node
-## Player preferences (window mode, UI scale, volume) persisted to
+## Player preferences (window mode, UI scale, volume, HUD hints) persisted to
 ## user://settings.cfg and applied on boot. Change values with set_value() so
 ## they are applied and saved together.
 
@@ -17,6 +17,7 @@ const DEFAULTS := {
 	"master_volume": 0.8,
 	"music_volume": 0.7,
 	"sfx_volume": 0.8,
+	"show_hints": true,
 }
 
 var path := DEFAULT_PATH
@@ -57,6 +58,8 @@ static func sanitize(key: String, value: Variant) -> Variant:
 			return str(value) if WINDOW_MODES.has(str(value)) else DEFAULTS["window_mode"]
 		"ui_scale":
 			return clampf(float(value), UI_SCALE_RANGE.x, UI_SCALE_RANGE.y)
+		"show_hints":
+			return value if value is bool else DEFAULTS["show_hints"]
 		_:
 			return clampf(float(value), 0.0, 1.0)
 

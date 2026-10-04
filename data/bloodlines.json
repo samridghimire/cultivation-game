@@ -1,0 +1,11 @@
+{
+  "_doc": "Bloodlines (FAM-007): rare inheritable traits that lie dormant until their bearer reaches awaken_realm, then grant bonuses. A child inherits a parent's bloodline with inherit_chance_one (one parent carries it) or inherit_chance_both (both parents carry the same one); if the parents carry different bloodlines, each is tried in random order. A child who inherits nothing may still be born with one: each bloodline's 'rarity' (0..1) is its chance per birth. Named NPCs can carry one via npcs.json 'bloodline'. Per bloodline: id, name, description, rarity, awaken_realm (realm id), bonuses: qi_mult (extra cultivation speed fraction), breakthrough (flat breakthrough chance), max_hp/attack/defense/speed (combat stat fractions, e.g. 0.1 = +10%).",
+  "inherit_chance_one": 0.5,
+  "inherit_chance_both": 0.9,
+  "bloodlines": [
+    {"id": "azure_dragon", "name": "Azure Dragon Bloodline", "description": "A trace of the Azure Dragon of the East. Its bearers' qi surges like spring rivers.", "rarity": 0.003, "awaken_realm": "foundation_establishment", "bonuses": {"qi_mult": 0.15, "attack": 0.1}},
+    {"id": "vermilion_phoenix", "name": "Vermilion Phoenix Bloodline", "description": "Phoenix fire sleeps in the blood. Its bearers rise from every setback stronger.", "rarity": 0.003, "awaken_realm": "foundation_establishment", "bonuses": {"breakthrough": 0.08, "max_hp": 0.15}},
+    {"id": "white_tiger", "name": "White Tiger Bloodline", "description": "The killing intent of the White Tiger of the West. Born warriors.", "rarity": 0.003, "awaken_realm": "qi_refining", "bonuses": {"attack": 0.15, "speed": 0.1}},
+    {"id": "black_tortoise", "name": "Black Tortoise Bloodline", "description": "The patience of the Black Tortoise of the North. Hard to wound, harder to kill.", "rarity": 0.003, "awaken_realm": "qi_refining", "bonuses": {"defense": 0.2, "max_hp": 0.1}}
+  ]
+}
