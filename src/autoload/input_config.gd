@@ -11,6 +11,7 @@ const KEYS := {
 	"toggle_character_sheet": [KEY_C],
 	"toggle_inventory": [KEY_I],
 	"toggle_techniques": [KEY_K],
+	"toggle_clan": [KEY_L],
 	"quick_save": [KEY_F5],
 	"quick_load": [KEY_F9],
 	"pause_menu": [KEY_ESCAPE],
@@ -25,6 +26,7 @@ const JOY_BUTTONS := {
 	"toggle_character_sheet": [JOY_BUTTON_Y],
 	"toggle_inventory": [JOY_BUTTON_X],
 	"toggle_techniques": [JOY_BUTTON_LEFT_SHOULDER],
+	"toggle_clan": [JOY_BUTTON_RIGHT_SHOULDER],
 	"pause_menu": [JOY_BUTTON_START],
 }
 
