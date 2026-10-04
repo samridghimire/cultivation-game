@@ -184,9 +184,7 @@ func _build_status_panel() -> void:
 	_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_hint.custom_minimum_size = Vector2(316, 0)
 	box.add_child(_hint)
-	box.add_child(UIStyle.label("[E] interact   [C] character   [I] inventory   [K] techniques   [F5] save   [Esc] pause", 12, Color(0.7, 0.7, 0.7)))
-	box.add_child(UIStyle.label("[E] interact   [C] character   [I] inventory   [K] techniques   [M] map   [F5] save   [Esc] pause", 12, Color(0.7, 0.7, 0.7)))
-	box.add_child(UIStyle.label("[E] interact   [C] character   [I] inventory   [K] techniques   [L] log   [F5] save   [Esc] pause", 12, Color(0.7, 0.7, 0.7)))
+	box.add_child(UIStyle.label("[E] interact   [C] character   [I] inventory   [K] techniques   [M] map   [L] log   [F5] save   [Esc] pause", 12, Color(0.7, 0.7, 0.7)))
 	add_child(panel)
 
 
