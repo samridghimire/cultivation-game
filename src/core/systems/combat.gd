@@ -39,13 +39,18 @@ static func _build_stats(power: float, attrs: Dictionary, tech: Callable) -> Dic
 
 
 ## Combat stats of a character: {max_hp, attack, defense, speed, crit}.
-## Equipment adds flat bonuses first; injuries then scale down max_hp, attack
-## and defense, and temporary buffs (Buffs) scale them up.
+## Equipment adds flat bonuses first and an awakened bloodline scales them up;
+## injuries then scale down max_hp, attack and defense, and temporary buffs
+## (Buffs) scale them up.
 static func stats(c: CharacterData, data: GameData) -> Dictionary:
 	var power := realm_power(c.realm_index, c.stage)
 	var s := _build_stats(power, c.attributes, func(key: String) -> float: return Techniques.bonus(c, data, key))
 	for key in Equipment.STAT_KEYS:
 		s[key] = maxi(1 if key != "defense" else 0, s[key] + Equipment.bonus(c, data, key))
+	for key in ["max_hp", "attack", "defense", "speed"]:
+		var blood := Bloodlines.bonus(c, data, key)
+		if blood != 0.0:
+			s[key] = maxi(1, roundi(s[key] * (1.0 + blood)))
 	var hurt := Injuries.combat_multiplier(c, data)
 	if hurt < 1.0:
 		for key in ["max_hp", "attack", "defense"]:
@@ -65,12 +70,29 @@ static func enemy_stats(enemy: Dictionary, data: GameData) -> Dictionary:
 	var levels := {}
 	for tech_id in enemy.get("techniques", []):
 		levels[tech_id] = data.enemy_technique_level
-	var s := _build_stats(power, {}, func(key: String) -> float: return Techniques.bonus_from(levels, {}, data, key))
+	var training := realm_training(data, realm_index)
+	var s := _build_stats(power, {}, func(key: String) -> float: return Techniques.bonus_from(levels, {}, data, key) + float(training.get(key, 0.0)))
 	s["max_hp"] = maxi(1, s["max_hp"] + int(enemy.get("hp", 0)))
 	s["attack"] = maxi(1, s["attack"] + int(enemy.get("attack", 0)))
 	s["defense"] = maxi(0, s["defense"] + int(enemy.get("defense", 0)))
 	s["speed"] = s["speed"] + int(enemy.get("speed", 0))
 	return s
+
+
+## The enemies.json realm_training entry for `realm_index` (the last entry
+## covers higher realms; {} when there is none).
+static func realm_training(data: GameData, realm_index: int) -> Dictionary:
+	if data.enemy_realm_training.is_empty():
+		return {}
+	return data.enemy_realm_training[mini(realm_index, data.enemy_realm_training.size() - 1)]
+
+
+## A side's fighting form for one fight: an attack multiplier in
+## [1 - form_spread, 1 + form_spread].
+static func roll_form(data: GameData, rng: RandomNumberGenerator) -> float:
+	if data.combat_form_spread <= 0.0:
+		return 1.0
+	return rng.randf_range(1.0 - data.combat_form_spread, 1.0 + data.combat_form_spread)
 
 
 ## Damage before randomness. Defense reduces damage proportionally, so it
@@ -95,7 +117,15 @@ static func resolve(c: CharacterData, data: GameData, enemy: Dictionary, rng: Ra
 	var enemy_hp: int = e["max_hp"]
 	var lines: PackedStringArray = []
 	var player_first: bool = p["speed"] >= e["speed"]
+	var player_form := roll_form(data, rng)
+	var enemy_form := roll_form(data, rng)
+	p["attack"] = maxi(1, roundi(p["attack"] * player_form))
+	e["attack"] = maxi(1, roundi(e["attack"] * enemy_form))
 	lines.append("You face the %s. (You: %d hp, %d atk. Foe: %d hp, %d atk.)" % [enemy_name, player_hp, p["attack"], enemy_hp, e["attack"]])
+	if player_form - enemy_form >= data.combat_form_spread and data.combat_form_spread > 0.0:
+		lines.append("Your qi flows smoothly today; the %s seems off balance." % enemy_name)
+	elif enemy_form - player_form >= data.combat_form_spread and data.combat_form_spread > 0.0:
+		lines.append("Your qi feels sluggish, and the %s fights with fury." % enemy_name)
 	var used: Array[String] = []
 	var shield := 0
 	for item_id in CombatTalismans.available(c, data, "shield"):

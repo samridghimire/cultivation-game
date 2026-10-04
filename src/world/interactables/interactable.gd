@@ -15,6 +15,16 @@ extends Area2D
 @export var reach := 28.0
 ## Creation Artifact anchor id (data/regions.json "anchor_id"); "" = not an anchor.
 @export var anchor_id := ""
+## PlaceArt look: the regions.json place type or "npc" ("" = plain box).
+var art_kind := ""
+## The player's current interaction target pulses (set by Player).
+var highlighted := false:
+	set(value):
+		highlighted = value
+		set_process(value)
+		queue_redraw()
+
+var _pulse_time := 0.0
 
 
 func _ready() -> void:
@@ -26,7 +36,13 @@ func _ready() -> void:
 	body_entered.connect(_on_body_entered)
 	body_exited.connect(_on_body_exited)
 	EventBus.player_changed.connect(_refresh)
+	set_process(highlighted)
 	_refresh()
+
+
+func _process(delta: float) -> void:
+	_pulse_time += delta
+	queue_redraw()
 
 
 func get_options() -> Array[Dictionary]:
@@ -71,8 +87,28 @@ func _on_body_exited(body: Node2D) -> void:
 
 
 func _draw() -> void:
-	draw_rect(Rect2(-size / 2.0, size), color)
-	draw_rect(Rect2(-size / 2.0, size), color.darkened(0.5), false, 2.0)
+	PlaceArt.draw(self, art_kind, size, color)
+	if highlighted:
+		var glow := 0.5 + 0.5 * sin(_pulse_time * 5.0)
+		draw_rect(Rect2(-size / 2.0, size).grow(6.0 + 2.0 * glow), Color(1.0, 0.9, 0.5, 0.45 + 0.4 * glow), false, 2.0)
 	var font := ThemeDB.fallback_font
 	var text_width := font.get_string_size(display_name, HORIZONTAL_ALIGNMENT_LEFT, -1, 14).x
 	draw_string(font, Vector2(-text_width / 2.0, -size.y / 2.0 - 8.0), display_name, HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color.WHITE)
+	if anchor_id != "":
+		_draw_anchor_marker()
+
+
+## A small diamond in the top-right corner of artifact anchor places: hollow
+## when unbound, filled when bound, ringed when it is the respawn point.
+func _draw_anchor_marker() -> void:
+	var anchors: Array = GameState.player.anchors if GameState.player != null else []
+	var center := Vector2(size.x / 2.0 - 2.0, -size.y / 2.0 + 2.0)
+	var r := 8.0
+	var points := PackedVector2Array([center + Vector2(0, -r), center + Vector2(r, 0), center + Vector2(0, r), center + Vector2(-r, 0), center + Vector2(0, -r)])
+	var gold := UIStyle.ACCENT
+	if anchors.has(anchor_id):
+		draw_colored_polygon(points.slice(0, 4), gold)
+		if anchors[-1] == anchor_id:
+			draw_arc(center, r + 4.0, 0.0, TAU, 24, gold, 2.0)
+	else:
+		draw_polyline(points, gold.darkened(0.3), 2.0)

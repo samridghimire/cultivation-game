@@ -1,0 +1,12 @@
+{
+  "_doc": "Grudges and gratitude (RIV-001, Karma system). acts: hostile acts the player can commit against an NPC. Per act: name, days (time taken), fight (the NPC must be beaten first), requires_stronger (your realm must be above theirs), alignment (shift when done), grudge (added to the victim's grudge), kin_grudge (added for each living parent, child and spouse of the victim), failed_grudge (victim's grudge if you attack and lose), favor (victim's favor change), kills (the victim dies), loot_stones [min, max] spirit stones per (victim realm index + 1) plus everything they carry. max_grudge / max_gratitude cap the ledgers. decay_per_year: grudges fade by this much each year (gratitude does not). amends: stones_per_point (spirit stones per grudge point to make amends), min_cost. Grudges are never held against the player by their own family, and children (younger than family.json adult_age) cannot be targeted.",
+  "max_grudge": 100,
+  "max_gratitude": 100,
+  "decay_per_year": 5,
+  "amends": {"stones_per_point": 2, "min_cost": 10},
+  "acts": [
+    {"id": "humiliate", "name": "Humiliate", "days": 0, "fight": false, "requires_stronger": true, "alignment": -20, "grudge": 30, "kin_grudge": 10, "failed_grudge": 0, "favor": -40, "kills": false},
+    {"id": "rob", "name": "Rob", "days": 0, "fight": true, "requires_stronger": false, "alignment": -60, "grudge": 50, "kin_grudge": 20, "failed_grudge": 25, "favor": -60, "kills": false, "loot_stones": [3, 8]},
+    {"id": "kill", "name": "Kill", "days": 1, "fight": true, "requires_stronger": false, "alignment": -200, "grudge": 0, "kin_grudge": 80, "failed_grudge": 60, "favor": -100, "kills": true, "loot_stones": [3, 8]}
+  ]
+}
