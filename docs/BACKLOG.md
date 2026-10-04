@@ -154,11 +154,8 @@ The local sessions that built combat/techniques, world/exploration/NPCs/dialogue
 ## Done
 | id | task |
 |---|---|
-<<<<<<< HEAD
 | QA-20261004-1 | Main was red: test_dao contemplate test rolled on the shared GameState.rng (95% capped check), so new tests elsewhere shifted it into a failure. Seeded the rng in the test. |
-=======
 | RIV-001 | Grudges and gratitude core: data/karma.json, Karma (ledgers, kin grudges, decay, amends), CharacterData.grudges/gratitude, GameState.hostile_act (humiliate/rob/kill NPCs) and make_amends. |
->>>>>>> origin/main
 | C-005 | Fifth region: Withered Bone Marsh (yin qi 1.8, danger 2, demonic lean; routes from Misty Forest/Fallen Star Market at Qi Refining), 2 anchors, bog gathering, herb/ore buyer, 12 marsh encounters with righteous and demonic options. |
 | C-001 | Generic dialogue for generated adult NPCs (data/dialogue/generic_cultivator.json via GameState.GENERIC_DIALOGUE fallback): chat, gifts, spar, guard, rumors, extortion/tribute, a cold greeting once soured; favor capped so talk reaches courtship but not proposals. |
 | ART-006 | Two artifact anchors per region: Spirit Spring, Herb Valley, Back Alleys and Ancient Cave are now anchor places (intro event/flavor split to ART-006b/c). |
