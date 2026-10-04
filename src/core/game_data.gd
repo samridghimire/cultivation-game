@@ -256,6 +256,8 @@ func _validate() -> void:
 			load_errors.append("Sect '%s' has unknown min_realm '%s'" % [def.id, def.min_realm])
 		if def.ranks.is_empty():
 			load_errors.append("Sect '%s' has no ranks" % def.id)
+		if def.robe_color != "" and not Color.html_is_valid(def.robe_color):
+			load_errors.append("Sect '%s' has an invalid robe_color '%s'" % [def.id, def.robe_color])
 		for prof_id in def.favored_professions:
 			if not professions.has(prof_id):
 				load_errors.append("Sect '%s' favors unknown profession '%s'" % [def.id, prof_id])
