@@ -88,6 +88,8 @@ var reputation: Dictionary = {}
 ## Karma (RIV-001): NPC id -> how much that NPC hates / owes this character (0-100, see Karma).
 var grudges: Dictionary = {}
 var gratitude: Dictionary = {}
+## Secret realm id -> {"opening": int, "floor": int}: floors cleared in that opening (see SecretRealms).
+var secret_realms: Dictionary = {}
 
 
 func attribute(attr_id: String) -> int:
@@ -170,6 +172,7 @@ func to_dict() -> Dictionary:
 		"abode_storage": abode_storage.duplicate(),
 		"grudges": grudges.duplicate(),
 		"gratitude": gratitude.duplicate(),
+		"secret_realms": secret_realms.duplicate(true),
 	}
 
 
@@ -240,6 +243,9 @@ static func from_dict(d: Dictionary) -> CharacterData:
 	c.abode_storage = _int_values(d.get("abode_storage", {}))
 	c.grudges = _int_values(d.get("grudges", {}))
 	c.gratitude = _int_values(d.get("gratitude", {}))
+	var delves: Dictionary = d.get("secret_realms", {})
+	for realm_id in delves:
+		c.secret_realms[String(realm_id)] = {"opening": int(delves[realm_id].get("opening", -1)), "floor": int(delves[realm_id].get("floor", 0))}
 	for anchor_id in d.get("anchors", []):
 		c.anchors.append(String(anchor_id))
 	for recipe_id in d.get("known_recipes", []):

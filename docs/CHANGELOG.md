@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-03 [W-005] Secret realms: the Verdant Remnant (Misty Forest, Qi Refining) and Sunken Sword Tomb (Azure Peak, Foundation to Core Formation) open for a few months every 5/10 years; pay an entry fee once per opening, beat each floor's guardian and claim a random treasure (GameState.enter_secret_realm). Entrance UI follows in W-005b.
 - 2026-10-03 [RIV-001] Grudges and gratitude: humiliate, rob or kill adult NPCs (GameState.hostile_act, fights via Karma.npc_enemy), victims and their living kin hold grudges that fade over years, make amends with spirit stones (GameState.make_amends). Rules in data/karma.json; saved on CharacterData.
 - 2026-10-03 [C-005] New region: the Withered Bone Marsh, a drowned ancient battlefield thick with yin qi (Qi Refining to enter), with two anchors, a bog to gather in, a herb/ore buyer and 12 marsh encounters (bury or rob the dead, refine or purify a blood pool, corpse refiners, a blood-robed hunter).
 - 2026-10-03 [C-001] Generated adult NPCs can now be talked to (generic_cultivator dialogue): tea and chat, gifts, sparring, guarding their seclusion, rumors, and for darker players extortion; talk alone raises favor up to the courtship threshold.
