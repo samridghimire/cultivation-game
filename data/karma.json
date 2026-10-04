@@ -1,9 +1,21 @@
 {
-  "_doc": "Grudges and gratitude (RIV-001, Karma system). acts: hostile acts the player can commit against an NPC. Per act: name, days (time taken), fight (the NPC must be beaten first), requires_stronger (your realm must be above theirs), alignment (shift when done), grudge (added to the victim's grudge), kin_grudge (added for each living parent, child and spouse of the victim), failed_grudge (victim's grudge if you attack and lose), favor (victim's favor change), kills (the victim dies), loot_stones [min, max] spirit stones per (victim realm index + 1) plus everything they carry. max_grudge / max_gratitude cap the ledgers. decay_per_year: grudges fade by this much each year (gratitude does not). amends: stones_per_point (spirit stones per grudge point to make amends), min_cost. Grudges are never held against the player by their own family, and children (younger than family.json adult_age) cannot be targeted.",
+  "_doc": "Grudges and gratitude (RIV-001, Karma system). acts: hostile acts the player can commit against an NPC. Per act: name, days (time taken), fight (the NPC must be beaten first), requires_stronger (your realm must be above theirs), alignment (shift when done), grudge (added to the victim's grudge), kin_grudge (added for each living parent, child and spouse of the victim), failed_grudge (victim's grudge if you attack and lose), favor (victim's favor change), kills (the victim dies), loot_stones [min, max] spirit stones per (victim realm index + 1) plus everything they carry. max_grudge / max_gratitude cap the ledgers. decay_per_year: grudges fade by this much each year (gratitude does not). amends: stones_per_point (spirit stones per grudge point to make amends), min_cost. Grudges are never held against the player by their own family, and children (younger than family.json adult_age) cannot be targeted. gratitude (RIV-001e): sources {kind: points} of gratitude earned per kind act (treat_npc: healing their injury, gift: giving them an item); favor_bonus_per_point: a grateful NPC's chat/gift favor gain is raised by gain x gratitude x this (still capped by family.json acquaintance limits); repay: each month an NPC owing at least min_gratitude has chance_per_month to send spirit stones (stones_per_realm [min, max] x their realm index + 1) plus one weighted gift ({weight, effects}, shared Effects keys, {} = stones only), spending cost gratitude.",
   "max_grudge": 100,
   "max_gratitude": 100,
   "decay_per_year": 5,
   "amends": {"stones_per_point": 2, "min_cost": 10},
+  "gratitude": {
+    "sources": {"treat_npc": 25, "gift": 3},
+    "favor_bonus_per_point": 0.01,
+    "repay": {
+      "min_gratitude": 40, "chance_per_month": 0.15, "cost": 40, "stones_per_realm": [8, 20],
+      "gifts": [
+        {"weight": 3, "effects": {}},
+        {"weight": 2, "effects": {"items": {"qi_gathering_pill": 2}}},
+        {"weight": 2, "effects": {"items": {"spirit_herb": 5}}}
+      ]
+    }
+  },
   "acts": [
     {"id": "humiliate", "name": "Humiliate", "days": 0, "fight": false, "requires_stronger": true, "alignment": -20, "grudge": 30, "kin_grudge": 10, "failed_grudge": 0, "favor": -40, "kills": false},
     {"id": "rob", "name": "Rob", "days": 0, "fight": true, "requires_stronger": false, "alignment": -60, "grudge": 50, "kin_grudge": 20, "failed_grudge": 25, "favor": -60, "kills": false, "loot_stones": [3, 8]},

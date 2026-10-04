@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-04 [RIV-001e] Gratitude: healing an NPC or giving them gifts puts them in your debt; grateful NPCs warm to you faster and now and then repay you with spirit stones and a small gift (data/karma.json `gratitude`).
 - 2026-10-04 [W-005d] Secret realm depth: a floor that would outlast the realm's opening gets you hurled out with no treasure (and an injury), and clearing a realm's last floor grants its inheritance once per life if your Comprehension is high enough (Verdant Spring Method from the Verdant Remnant; Nine Frost Sword Intent and Sword Dao from the Sunken Sword Tomb).
 - 2026-10-04 [DAO-001c] Dao content: Thunder, Wind, Space, Slaughter (demonic) and Vajra (righteous) insights, and nine rare glimpse encounters (a thunderstorm summit, a slaughter field with a demonic or righteous choice, a temple bell, an undying furnace...) so every Dao can be found in the world.
 - 2026-10-04 [TRIB-001c] Tribulation preparation: Lightning-Warding and Heaven-Screening Umbrella shield talismans (grades 4 and 5), Thunder-Tempering, Heart-Guarding (righteous) and Blood Shroud (demonic) buff pills with recipes, and a Core Formation tribulation-crater encounter with bury/take/refine choices.
