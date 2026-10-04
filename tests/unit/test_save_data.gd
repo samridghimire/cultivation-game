@@ -75,6 +75,7 @@ func test_every_character_field_survives_a_save() -> void:
 	c.artifact_storage = {"spirit_stone": 12}
 	c.reputation = {"azure_cloud_sect": 150}
 	c.abode_storage = {"iron_ore": 4}
+	c.dao = {"sword_dao": {"level": 2, "progress": 30.5}}
 	var restored := CharacterData.from_dict(JSON.parse_string(JSON.stringify(c.to_dict())))
 	var before := c.to_dict()
 	var after := restored.to_dict()

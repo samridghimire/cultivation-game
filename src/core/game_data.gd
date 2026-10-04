@@ -33,6 +33,9 @@ var npcs: Dictionary = {}  # id -> Dictionary (definitions; live NPCs are in Gam
 var names: Dictionary = {}  # data/names.json: {"surnames": [...], "given_names": {gender: [...]}}
 var dialogues: Dictionary = {}  # id -> Dictionary, one per data/dialogue/*.json
 var techniques: Dictionary = {}  # id -> TechniqueDef
+## data/dao.json tunables (see Dao) and its insights by id.
+var dao: Dictionary = {}
+var dao_insights: Dictionary = {}  # id -> Dictionary
 var technique_affinity_bonus := 0.5
 var technique_mismatch_penalty := 0.5
 ## Cultivation methods (techniques.json): the method everyone uses until they set
@@ -183,6 +186,10 @@ func _load(dir: String) -> void:
 		var def := TechniqueDef.from_dict(t)
 		techniques[def.id] = def
 
+	dao = _read(dir, "dao.json")
+	for insight: Dictionary in dao.get("insights", []):
+		dao_insights[insight["id"]] = insight
+
 	var foes := _read(dir, "enemies.json")
 	enemy_technique_level = int(foes.get("enemy_technique_level", enemy_technique_level))
 	defeat_stone_loss = float(foes.get("defeat_stone_loss", defeat_stone_loss))
@@ -221,6 +228,7 @@ func _validate() -> void:
 	if realms.is_empty():
 		load_errors.append("No realms defined")
 	load_errors.append_array(Tribulation.validate(self))
+	load_errors.append_array(Dao.validate(self))
 	var attr_ids := attribute_ids()
 	for def: ProfessionDef in professions.values():
 		if not attr_ids.has(def.primary_attribute):

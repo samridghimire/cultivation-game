@@ -83,7 +83,8 @@ ART-001/ART-001b/ART-002 are done; ART-002b and ART-005 are in P1 above.
 | C-003b | content | todo | Scripture Pavilion: a merchant in fallen_star_market with `stock_tags: ["scripture"]`, tag the sold technique manuals `scripture` so they leave the general stores (Wandering Merchant, Pill Pavilion), and add 2-3 more mid-price manuals. Coordinate with G-005c (also edits fallen_star_market places). Seed sect shops with C-003 manuals in G-008d (e.g. Cloud-Parting Palm for Azure Cloud, Scarlet Blood Palm for Blood Lotus). |
 | TRIB-001c | content | todo | Tribulation preparation content: high-grade shield talismans (combat kind shield, grade 4+) and defense/max_hp buff pills or talismans meant for tribulations, sold in the market town or as Core Formation+ loot. Optional systems hook: a `tribulation` effect key (e.g. damage reduction for the next tribulation) if buffs are not enough. |
 | QA-010 | qa | todo | Tribulation balance: with tests/sim (F-005 balance sim) check survival odds per realm (Core Formation .. Tribulation Transcendence) for a sensible cultivator with typical techniques/gear, and for deep-demonic ones (heart demon). Default tuning gives ~87% survival at Core Formation for a bare 10-attribute character and ~36% at alignment -1000; tune realms.json tribulation/heart_demon. |
-| DAO-001 | systems | todo | Dao insights: data/dao.json insights (Sword Dao, Fire Dao, Dao of Life…) gained by rare encounters, practicing techniques long enough, or seclusion with a Comprehension check; each insight level boosts related techniques and breakthrough odds. CharacterData.dao (save-compatible). |
+| DAO-001b | world-ui | todo | Surface Dao insights: a "Dao insights" section on the character sheet (Dao.describe, progress vs Dao.progress_needed), and "Contemplate the <insight> (1 month)" entries at meditation spots for insights with level >= 1 (GameState.contemplate_dao, Dao.check_contemplate reasons on disabled entries). Depends on DAO-001 (done). |
+| DAO-001c | content | todo | Dao content: insights for more paths (Dao of Slaughter / Blood for demonic arts, Thunder, Wind, Space) in data/dao.json, rare encounters and ruins treasures granting them (effect key dao_insight), and technique lists so forbidden arts and new C-003 techniques have a matching Dao. Depends on DAO-001 (done). |
 
 ## P3: World
 | id | role | status | task |
@@ -114,6 +115,7 @@ The local sessions that built combat/techniques, world/exploration/NPCs/dialogue
 ## Done
 | id | task |
 |---|---|
+| DAO-001 | Dao insights: data/dao.json (6 insights), CharacterData.dao, Dao system (levels, Comprehension checks, technique and breakthrough bonuses), dao_insight effect key + 2 encounters, insight progress from practice, GameState.contemplate_dao. |
 | W-003b | Dialogue window: HUD modal (DialogueWindow) renders GameState.dialogue_view(), locked choices show their reason, gamepad focus, Esc ends the talk. |
 | LIFE-001f | Evil artifacts can be bought: items.json `restricted_tags` (demonic) are only sold by merchants that stock that tag, merchant `min_alignment`/`max_alignment` gate (Items.merchant_sells/check_merchant), Shadow Curio Den in Fallen Star Market for the wicked, prices for the 3 lifespan-drain artifacts. |
 | G-007c | NPCs get hurt (injuries.json `npc_mishap`, monthly for adults) and heal over time; Medicine.treat_npc / GameState.treat_npc heal their worst injury for Doctor xp, alignment and favor. |
