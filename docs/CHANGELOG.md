@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-04 [FAM-008] Clan heirs: the main wife's eldest child is the heir by default (concubines' children next, adopted last); the Patriarch can name any descendant in the clan as Young Master/Mistress (GameState.designate_heir), and Clans.succeed passes an NPC clan to its heir when the head dies.
 - 2026-10-04 [FAM-006] Clan estate: build and upgrade an Ancestral Hall, Spirit Field, Alchemy Room, Protective Array and Scripture Library (data/clan_buildings.json) from the clan treasury; they earn monthly income and reputation, send herbs to the clan head, raise seclusion qi at your abode and speed up children's training. UI follows in FAM-006b.
 - 2026-10-03 [FAM-005c] Founding a clan now needs a claimed abode, which becomes the clan seat; claiming another abode moves the seat. Older saves give an existing clan the player's abode as its seat.
 - 2026-10-03 [QA-20261003-7] Your own grown children and grandchildren no longer take up a region's courtship-candidate slots, so new candidates keep appearing where your family lives.

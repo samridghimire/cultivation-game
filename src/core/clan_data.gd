@@ -20,6 +20,8 @@ var seat_region := ""
 var buildings: Dictionary = {}
 ## The project under way, {"building": id, "level": int, "days_left": int}, or {}.
 var construction: Dictionary = {}
+## Character id of the designated heir (FAM-008), "" = the default heir.
+var heir := ""
 
 
 func to_dict() -> Dictionary:
@@ -34,6 +36,7 @@ func to_dict() -> Dictionary:
 		"seat_region": seat_region,
 		"buildings": buildings.duplicate(),
 		"construction": construction.duplicate(),
+		"heir": heir,
 	}
 
 
@@ -55,4 +58,5 @@ static func from_dict(d: Dictionary) -> ClanData:
 	var project: Dictionary = d.get("construction", {})
 	if not project.is_empty():
 		clan.construction = {"building": String(project.get("building", "")), "level": int(project.get("level", 1)), "days_left": int(project.get("days_left", 0))}
+	clan.heir = String(d.get("heir", ""))
 	return clan

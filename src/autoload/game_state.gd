@@ -790,6 +790,20 @@ func _advance_estate(days: int, months: int) -> void:
 		EventBus.post("Your clan's spirit fields send you %s." % ", ".join(parts))
 
 
+## Name one of the player's descendants in the clan as its heir (Young
+## Master/Mistress). Takes no time.
+func designate_heir(person_id: String) -> void:
+	if not _can_act():
+		return
+	var person: CharacterData = npcs.get(person_id)
+	var result := Clans.designate_heir(player, clan, person, npcs)
+	if result["ok"]:
+		EventBus.post("You name %s heir of the %s, its %s." % [person.name, clan.name, Clans.heir_title(data, person.gender)], "progress")
+	else:
+		EventBus.post(result["reason"], "warning")
+	EventBus.player_changed.emit()
+
+
 ## Move spirit stones into the clan treasury. Takes no time.
 func deposit_to_clan(amount: int) -> void:
 	if not _can_act():
