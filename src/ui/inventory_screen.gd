@@ -3,6 +3,7 @@ extends PanelContainer
 ## Modal inventory: item list on the left, details and actions for the
 ## selected item on the right. Selection follows focus so it works on gamepad.
 ## Equipment shows its slot and stats and is equipped instead of used.
+## Combat talismans can be readied for battle (CombatTalismans) or put away.
 
 signal closed
 
@@ -11,6 +12,8 @@ var _name: Label
 var _description: Label
 var _effects: Label
 var _use_button: Button
+var _ready_button: Button
+var _readied: Label
 var _close_button: Button
 var _selected := ""
 
@@ -23,6 +26,9 @@ func _init() -> void:
 	box.add_theme_constant_override("separation", 10)
 	add_child(box)
 	box.add_child(UIStyle.label("Inventory", 24, UIStyle.ACCENT))
+	_readied = UIStyle.label("", 15, Color(0.75, 0.75, 0.85))
+	_readied.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	box.add_child(_readied)
 
 	var columns := HBoxContainer.new()
 	columns.add_theme_constant_override("separation", 16)
@@ -49,6 +55,8 @@ func _init() -> void:
 	details.add_child(_effects)
 	_use_button = UIStyle.button("Use", _use_selected)
 	details.add_child(_use_button)
+	_ready_button = UIStyle.button("Ready for battle", _toggle_ready)
+	details.add_child(_ready_button)
 
 	_close_button = UIStyle.button("Close", close)
 	box.add_child(_close_button)
@@ -116,6 +124,32 @@ static func describe_equipment(c: CharacterData, data: GameData, item_id: String
 	return lines
 
 
+## Detail line for a combat talisman: its kind and power, and whether it is readied.
+static func describe_talisman(c: CharacterData, data: GameData, item_id: String) -> PackedStringArray:
+	var lines: PackedStringArray = []
+	match CombatTalismans.kind_of(data, item_id):
+		"strike":
+			lines.append("Strike talisman: deals %d damage at the start of a fight" % CombatTalismans.amount(data, item_id))
+		"shield":
+			lines.append("Shield talisman: absorbs %d damage in a fight" % CombatTalismans.amount(data, item_id))
+		"escape":
+			lines.append("Escape talisman: turns a defeat into a flight")
+	if c.readied_talismans.has(item_id):
+		lines.append("Readied: one burns in each fight while you carry it.")
+	return lines
+
+
+## "Readied for battle: A, B (2/3)" or a hint when no talisman is readied.
+static func readied_summary(c: CharacterData, data: GameData) -> String:
+	var names: PackedStringArray = []
+	for item_id in c.readied_talismans:
+		if c.item_count(item_id) > 0:
+			names.append("%s x%d" % [_item_name(data, item_id), c.item_count(item_id)])
+	if names.is_empty():
+		return "No talismans readied for battle."
+	return "Readied for battle: %s (%d/%d)" % [", ".join(names), names.size(), CombatTalismans.MAX_READIED]
+
+
 static func _item_name(data: GameData, item_id: String) -> String:
 	return String(data.items.get(item_id, {}).get("name", item_id))
 
@@ -126,13 +160,17 @@ func _rebuild() -> void:
 	for child in _list.get_children():
 		_list.remove_child(child)
 		child.queue_free()
+	_readied.text = readied_summary(p, data)
 	var ids := sorted_item_ids(p, data)
 	if not ids.has(_selected):
 		_selected = ids[0] if not ids.is_empty() else ""
 	if ids.is_empty():
 		_list.add_child(UIStyle.label("Your pouch is empty.", 16, Color(0.7, 0.7, 0.7)))
 	for item_id in ids:
-		var b := UIStyle.button("%s  x%d" % [_item_name(data, item_id), p.item_count(item_id)], _select.bind(item_id))
+		var label := "%s  x%d" % [_item_name(data, item_id), p.item_count(item_id)]
+		if p.readied_talismans.has(item_id):
+			label += "  (readied)"
+		var b := UIStyle.button(label, _select.bind(item_id))
 		b.name = item_id
 		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		b.toggle_mode = true
@@ -163,7 +201,11 @@ func _show_details() -> void:
 	var equippable := _selected != "" and Equipment.is_equipment(data, _selected)
 	if equippable:
 		lines.append_array(describe_equipment(GameState.player, data, _selected))
+	var talisman := _selected != "" and CombatTalismans.is_combat_talisman(data, _selected)
+	if talisman:
+		lines.append_array(describe_talisman(GameState.player, data, _selected))
 	_effects.text = "\n".join(lines)
+	_show_ready_button(talisman)
 	_use_button.visible = bool(item.get("usable", false)) or equippable
 	_use_button.text = "Equip" if equippable else "Use"
 	# Show why an item can't be used now (e.g. nothing to heal) instead of a failed use.
@@ -176,6 +218,29 @@ func _show_details() -> void:
 	_use_button.tooltip_text = reason
 	if reason != "":
 		_effects.text += "\n" + reason
+
+
+func _show_ready_button(talisman: bool) -> void:
+	_ready_button.visible = talisman
+	if not talisman:
+		return
+	var readied := GameState.player.readied_talismans.has(_selected)
+	_ready_button.text = "Put away" if readied else "Ready for battle"
+	var reason := "" if readied else CombatTalismans.check_ready(GameState.player, GameState.data, _selected)
+	_ready_button.disabled = reason != ""
+	_ready_button.tooltip_text = reason
+	if reason != "":
+		_effects.text += "\n" + reason
+
+
+func _toggle_ready() -> void:
+	if _selected == "":
+		return
+	if GameState.player.readied_talismans.has(_selected):
+		GameState.unready_talisman(_selected)
+	else:
+		GameState.ready_talisman(_selected)
+	_ready_button.grab_focus.call_deferred()
 
 
 func _use_selected() -> void:

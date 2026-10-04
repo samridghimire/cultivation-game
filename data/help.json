@@ -50,7 +50,8 @@
       "title": "Professions",
       "body": [
         "Alchemists refine pills, Blacksmiths forge weapons and armor, Talisman Masters inscribe talismans and Doctors heal injuries. Learn recipes from scrolls and manuals, gather herbs and ores, then craft at a workshop.",
-        "Crafting raises your profession rank, and higher ranks unlock stronger recipes and better results."
+        "Crafting raises your profession rank, and higher ranks unlock stronger recipes and better results.",
+        "Combat talismans work only when readied: pick up to three kinds in your inventory, and one of each burns in every fight while you carry it."
       ]
     },
     {

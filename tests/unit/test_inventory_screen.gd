@@ -76,3 +76,56 @@ func test_equipment_button_equips_and_sheet_unequips() -> void:
 	assert_false(sheet._equip_row.visible, "no gear, no unequip row")
 	sheet.free()
 	gs.end_session()
+
+
+func test_describe_talisman_kind_power_and_readied() -> void:
+	var c := new_character()
+	c.inventory = {"fire_strike_talisman": 2}
+	var amount := CombatTalismans.amount(data(), "fire_strike_talisman")
+	assert_eq(InventoryScreen.describe_talisman(c, data(), "fire_strike_talisman"), PackedStringArray(["Strike talisman: deals %d damage at the start of a fight" % amount]))
+	assert_true(InventoryScreen.describe_talisman(c, data(), "earth_wall_talisman")[0].begins_with("Shield talisman: absorbs"))
+	assert_true(InventoryScreen.describe_talisman(c, data(), "thousand_li_escape_talisman")[0].begins_with("Escape talisman"))
+	CombatTalismans.ready_talisman(c, data(), "fire_strike_talisman")
+	assert_eq(InventoryScreen.describe_talisman(c, data(), "fire_strike_talisman").size(), 2)
+
+
+func test_readied_summary() -> void:
+	var c := new_character()
+	c.inventory = {"fire_strike_talisman": 2, "earth_wall_talisman": 1}
+	assert_eq(InventoryScreen.readied_summary(c, data()), "No talismans readied for battle.")
+	CombatTalismans.ready_talisman(c, data(), "fire_strike_talisman")
+	CombatTalismans.ready_talisman(c, data(), "earth_wall_talisman")
+	var text := InventoryScreen.readied_summary(c, data())
+	assert_true(text.contains("Fire Strike Talisman x2") and text.contains("Earth Wall Talisman x1") and text.ends_with("(2/%d)" % CombatTalismans.MAX_READIED), text)
+
+
+func test_ready_button_readies_and_puts_away_talismans() -> void:
+	var root := (Engine.get_main_loop() as SceneTree).root
+	var gs := root.get_node("GameState")
+	var c := CharacterFactory.create("Inscriber", gs.data, seeded_rng())
+	gs.start_session(c)
+	c.inventory = {"fire_strike_talisman": 1, "earth_wall_talisman": 1, "five_thunder_talisman": 1, "black_tortoise_shell_talisman": 1, "spirit_stone": 3}
+	var inv := InventoryScreen.new()
+	root.add_child(inv)
+	inv.open()
+	inv._select("spirit_stone")
+	assert_false(inv._ready_button.visible, "not a talisman")
+	for item_id in ["black_tortoise_shell_talisman", "earth_wall_talisman", "fire_strike_talisman"]:
+		inv._select(item_id)
+		assert_true(inv._ready_button.visible and not inv._ready_button.disabled, item_id)
+		assert_eq(inv._ready_button.text, "Ready for battle")
+		inv._toggle_ready()
+		assert_true(c.readied_talismans.has(item_id), item_id)
+	assert_eq(inv._ready_button.text, "Put away")
+	assert_true((inv._list.get_node("fire_strike_talisman") as Button).text.contains("(readied)"))
+	assert_true(inv._readied.text.contains("(3/3)"), inv._readied.text)
+	inv._select("five_thunder_talisman")
+	assert_true(inv._ready_button.disabled, "all slots taken")
+	assert_true(inv._effects.text.contains("kinds of talisman"), inv._effects.text)
+	inv._select("fire_strike_talisman")
+	inv._toggle_ready()
+	assert_false(c.readied_talismans.has("fire_strike_talisman"))
+	inv._select("five_thunder_talisman")
+	assert_false(inv._ready_button.disabled, "a slot is free again")
+	inv.free()
+	gs.end_session()
