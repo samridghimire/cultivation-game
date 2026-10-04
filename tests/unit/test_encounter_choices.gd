@@ -227,3 +227,32 @@ func test_qilin_choice_grants_bloodline_and_is_locked_for_bloodline_bearers() ->
 	var list := Exploration.choices(c, d, qilin, flags)
 	assert_true(list[0]["disabled"] and list[1]["disabled"], "already carries a bloodline")
 	assert_false(list[2]["disabled"], "walking away is always possible")
+
+
+## W-004h: the Blood Lotus recruiter only seeks out the wicked, the wandering
+## Azure Cloud elder only the virtuous, and Blood Lotus hunters spare their own.
+func test_alignment_gated_encounters() -> void:
+	var d := data()
+	var c := new_character()
+	c.realm_index = d.realm_index_of("foundation_establishment")
+	var ids := func() -> Array:
+		return Exploration.eligible_encounters(c, d, ["wild", "village", "city"], {}).map(func(e): return e["encounter"]["id"])
+	c.alignment = 0
+	assert_false(ids.call().has("wild_blood_lotus_recruiter"))
+	assert_false(ids.call().has("village_righteous_elder"))
+	assert_true(ids.call().has("wild_blood_lotus_executioner"))
+	assert_true(ids.call().has("wild_sect_patrol"))
+	c.alignment = 250
+	assert_true(ids.call().has("village_righteous_elder"))
+	assert_false(ids.call().has("wild_blood_lotus_recruiter"))
+	c.alignment = -450
+	assert_true(ids.call().has("wild_blood_lotus_recruiter"))
+	assert_false(ids.call().has("village_righteous_elder"))
+	assert_false(ids.call().has("wild_sect_patrol"), "righteous patrols don't share fire with the wicked")
+	c.alignment = -700
+	assert_false(ids.call().has("wild_blood_lotus_executioner"), "the Blood Lotus spares its own kind")
+	var flags := {}
+	var before := Reputation.value(c, d, "blood_lotus_sect")
+	assert_true(Exploration.resolve_choice(c, d, d.encounters["wild_blood_lotus_recruiter"], 0, flags)["ok"])
+	assert_gt(Reputation.value(c, d, "blood_lotus_sect"), before)
+	assert_true(flags.get("met_blood_lotus_recruiter", false))
