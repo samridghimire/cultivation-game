@@ -7,7 +7,7 @@ extends RefCounted
 ## separate item store that is never lost, even on death.
 
 ## Function ids this code implements; data/artifact.json may only list these.
-const KNOWN := ["storage", "appraisal", "inner_world"]
+const KNOWN := ["storage", "appraisal", "inner_world", "spirit_garden"]
 
 
 ## The data/artifact.json function def for `function_id` ({} if none).
@@ -70,6 +70,9 @@ static func check_unlock(c: CharacterData, data: GameData, function_id: String, 
 	var realm_id := String(unlock.get("realm", ""))
 	if realm_id != "" and c.realm_index < data.realm_index_of(realm_id):
 		return "The seal on %s will not yield before %s." % [def.get("name", function_id), data.realms[data.realm_index_of(realm_id)].name]
+	var needed := String(unlock.get("function", ""))
+	if needed != "" and not is_unlocked(c, needed):
+		return "%s must be unsealed first." % function_name(data, needed)
 	var flag := String(unlock.get("flag", ""))
 	if flag != "" and not flags.get(flag, false):
 		return "Something is still missing before %s can awaken." % def.get("name", function_id)
@@ -167,10 +170,13 @@ static func validate(data: GameData) -> PackedStringArray:
 		var realm_id := String(unlock.get("realm", ""))
 		if realm_id != "" and data.realm_index_of(realm_id) < 0:
 			errors.append("artifact.json function '%s' has unknown realm '%s'" % [function_id, realm_id])
+		if unlock.has("function") and not KNOWN.has(String(unlock["function"])):
+			errors.append("artifact.json function '%s' needs unknown function '%s'" % [function_id, unlock["function"]])
 		if int(unlock.get("energy", 0)) < 0:
 			errors.append("artifact.json function '%s' needs energy >= 0" % function_id)
 		if function_id == "storage" and int(def.get("storage_slots", 0)) < 1:
 			errors.append("artifact.json storage needs storage_slots >= 1")
 	errors.append_array(Appraisal.validate(data))
 	errors.append_array(InnerWorld.validate(data))
+	errors.append_array(SpiritGarden.validate(data))
 	return errors

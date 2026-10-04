@@ -1634,6 +1634,33 @@ func enter_inner_world(days: int) -> void:
 	_pass_time(days, "In the inner world")
 
 
+## Plant one carried herb in the artifact's spirit garden (ART-004). Takes no time.
+func plant_in_garden(item_id: String) -> void:
+	if not _can_act():
+		return
+	var result := SpiritGarden.plant(player, data, item_id)
+	if result["ok"]:
+		EventBus.post("You plant %s in the spirit garden." % Text.a(String(data.items[item_id].get("name", item_id))))
+	else:
+		EventBus.post(result["reason"], "warning")
+	EventBus.player_changed.emit()
+
+
+## Harvest every ready plot of the spirit garden. Takes no time.
+func harvest_garden() -> void:
+	if not _can_act():
+		return
+	var gained := SpiritGarden.harvest(player, data, rng)
+	if gained.is_empty():
+		EventBus.post("Nothing in the spirit garden is ready yet.", "warning")
+	else:
+		var parts: PackedStringArray = []
+		for item_id in gained:
+			parts.append("%d %s" % [gained[item_id], data.items.get(item_id, {}).get("name", item_id)])
+		EventBus.post("You harvest the spirit garden: %s." % ", ".join(parts), "progress")
+	EventBus.player_changed.emit()
+
+
 ## Feed items (spirit stones, treasures) to the Creation Artifact for energy.
 func feed_artifact(item_id: String, quantity: int = 1) -> void:
 	if not _can_act():
@@ -1788,6 +1815,8 @@ func _on_days_advanced(days: int) -> void:
 		EventBus.post("Your %s has healed." % Injuries.injury_name(data, injury_id), "progress")
 	for buff_name in Buffs.pass_days(player, days):
 		EventBus.post("The power of your %s fades." % buff_name)
+	for item_id in SpiritGarden.advance(player, data, days):
+		EventBus.post("The %s in your spirit garden is ready to harvest." % data.items.get(item_id, {}).get("name", item_id), "progress")
 	# NPCs the player knows (favor) or married never marry off-screen.
 	var reserved := npc_favor.duplicate()
 	for spouse_id in player.spouses:
