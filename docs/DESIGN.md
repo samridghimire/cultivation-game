@@ -87,7 +87,7 @@ Every great cultivation protagonist has something that sets them apart. Ours is 
 | Cultivation methods (one main method, qi rate, realm cap) | ✅ core, 🚧 no UI (CM-001b) | `Techniques`, `data/techniques.json` |
 | Dao insights (encounters, practice, seclusion; technique + breakthrough bonuses) | ✅ core, 🚧 no UI (DAO-001b) | `data/dao.json`, `Dao` |
 | Heavenly Tribulations (Core Formation+, heart demon for demonic) | ✅ core, 🚧 no wave screen (TRIB-001b) | `Tribulation`, `data/realms.json` |
-| Grudges and gratitude (rob/kill/humiliate NPCs, kin vengeance, amends) | ✅ core, 🚧 no UI (RIV-001d), no avengers yet (RIV-003), no karma view (RIV-001b) | `data/karma.json`, `Karma` |
+| Grudges and gratitude (rob/kill/humiliate NPCs, kin vengeance, amends) | ✅ (NPC menu + sheet), 🚧 no avengers yet (RIV-003), not in NPC Look text (RIV-001b) | `data/karma.json`, `Karma` |
 | Secret realms (periodic openings, realm caps, guarded floors) | ✅ core, 🚧 no entrance UI (W-005b) | `data/secret_realms.json`, `SecretRealms` |
 | Inventory, techniques, character sheet, settings, pause, load screens | ✅ | `src/ui/` |
 | Top-down world with interactables | ✅ placeholder art | `src/world/` |
