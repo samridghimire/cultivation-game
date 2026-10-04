@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-04 [QA-010] Heavenly Tribulations are now a real danger: a typical cultivator survives each one ~87-90% of the time (it was 100%), shield talismans and preparation matter, and the heart demon wave is smaller so a deeply demonic cultivator still survives ~60%. NPCs face a softer tribulation so the world's elders still rise. New report: tests/sim/simulate_tribulation.gd.
 - 2026-10-04 [W-004f] Encounters can be limited to an alignment range (min_alignment/max_alignment in encounters.json): the Azure Cloud Enforcer now only accosts players whose alignment is -200 or lower, instead of arresting saints for "demonic qi".
 - 2026-10-04 [CM-001c] Ten new cultivation methods: a cheap starter method for every element, each sect's own method in its contribution shop (Blood Lotus's stains the heart), and rare inheritances up to Nascent Soul from the peak hermit, a storm sect's lightning trial and a corpse patriarch's hall.
 - 2026-10-04 [FAM-007c] Four new bloodlines (Qilin, Nine-Tailed Fox, Golden Crow, demonic Blood Asura); Yun Feng and Xue Yao carry bloodlines and some generated courtship candidates do too, so you can marry into one; rare encounters can plant a bloodline in you (tend or drink from a dying qilin, bathe in an Asura's blood pool, guard or ambush the white fox at its tribulation).
