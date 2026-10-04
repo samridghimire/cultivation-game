@@ -19,12 +19,19 @@ signal interaction_menu_requested(source: Node)
 signal crafting_requested(prof_id: String)
 ## The player opened their sect's mission board (sect hall); show the MissionBoard.
 signal mission_board_requested
+## The player wants to direct their children's training; show the ChildTrainingScreen.
+signal child_training_requested
 ## A modal UI (menu, character sheet) opened or closed; world input should pause.
 signal ui_modal_changed(is_open: bool)
 ## The player travelled to another region; the world scene rebuilds itself.
 signal region_changed(region_id: String)
 ## A fight ended (GameState.fight). `log` is the full blow-by-blow.
 signal combat_finished(enemy_name: String, victory: bool, log: PackedStringArray)
+## The player wants to attempt a breakthrough that brings a Heavenly
+## Tribulation: show GameState.tribulation_preview() and let them confirm.
+signal tribulation_prepare_requested
+## A tribulation was endured during a breakthrough (Tribulation.endure result).
+signal tribulation_endured(realm_name: String, result: Dictionary)
 
 ## An explored encounter offers choices: render GameState.encounter_choices()
 ## and call GameState.choose_encounter(index).
