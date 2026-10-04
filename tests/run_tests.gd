@@ -4,7 +4,8 @@ extends SceneTree
 ## Or simply: tools/test.sh
 ## Runs every test_* method in tests/unit/test_*.gd. Exit code 1 on failure.
 ## Test methods may `await` (e.g. process frames so deferred UI focus lands).
-## TEST_ONLY=<substring> runs only the test files whose name contains it.
+## TEST_ONLY=<substring> runs only the test files whose name contains it;
+## TEST_SEED_SALT=<text> changes every test's GameState.rng seed (hunting flaky tests).
 
 const TEST_DIR := "res://tests/unit"
 
@@ -51,6 +52,9 @@ func _run() -> void:
 			if not method_name.begins_with("test_"):
 				continue
 			instance.failures = PackedStringArray()
+			# Each test starts from its own seed, so no test depends on how much
+			# randomness the tests before it happened to use.
+			root.get_node("GameState").rng.seed = hash(file_name + "::" + method_name + OS.get_environment("TEST_SEED_SALT"))
 			var errors_before := errors.count
 			await instance.call(method_name)
 			if errors.count > errors_before:

@@ -181,7 +181,8 @@ static func check_promote(clan: ClanData, member: CharacterData, rank_id: String
 		return "The clan already has %d %ss." % [int(rank["max"]), rank_name(data, rank_id)]
 	var min_index := data.realm_index_of(String(rank.get("min_realm", "mortal")))
 	if member.realm_index < min_index:
-		return "A %s must have reached %s." % [rank_name(data, rank_id), data.realms[min_index].name]
+		var who := Text.a(rank_name(data, rank_id))
+		return "%s must have reached %s." % [who.left(1).to_upper() + who.substr(1), data.realms[min_index].name]
 	return ""
 
 

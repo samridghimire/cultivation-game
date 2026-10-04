@@ -56,7 +56,7 @@ static func check_build(c: CharacterData, clan: ClanData, building_id: String, d
 	var def := level_def(data, building_id, next)
 	var min_index := data.realm_index_of(String(def.get("min_realm", "mortal")))
 	if c.realm_index < min_index:
-		return "Only a clan head of the %s realm can raise such a %s." % [data.realms[min_index].name, name]
+		return "Only a clan head of the %s realm can raise such %s." % [data.realms[min_index].name, Text.a(name)]
 	var cost := int(def.get("cost", 0))
 	if clan.treasury < cost:
 		return "The %s costs %d spirit stones from the clan treasury (it holds %d)." % [name, cost, clan.treasury]

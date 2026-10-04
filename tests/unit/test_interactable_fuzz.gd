@@ -178,6 +178,16 @@ func test_fuzz_righteous_disciple() -> void:
 	assert_gt(_calls, 80, "the fuzz should reach many options")
 
 
+## Same walk with the HUD loaded, so the screens that react to actions (shop,
+## combat report, time-skip overlay, dialogue and encounter windows) run too.
+func test_fuzz_with_hud() -> void:
+	var hud: CanvasLayer = load("res://src/ui/hud.tscn").instantiate()
+	_tree().root.add_child(hud)
+	await _fuzz_all_regions("disciple")
+	hud.queue_free()
+	await _tree().process_frame
+
+
 func test_fuzz_demonic_foundation() -> void:
 	await _fuzz_all_regions("demonic")
 	assert_gt(_calls, 80, "the fuzz should reach many options")

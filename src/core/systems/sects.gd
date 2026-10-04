@@ -267,7 +267,7 @@ static func check_purchase(c: CharacterData, data: GameData, item_id: String) ->
 	var sect: SectDef = data.sects[c.sect["id"]]
 	var min_rank := int(entry.get("min_rank", 0))
 	if int(c.sect["rank"]) < min_rank:
-		return "Only a %s or above may claim this." % sect.rank_name(min_rank)
+		return "Only %s or above may claim this." % Text.a(sect.rank_name(min_rank))
 	var cost := int(entry["contribution"])
 	if contribution_balance(c) < cost:
 		return "You need %d contribution (you have %d)." % [cost, contribution_balance(c)]
@@ -338,7 +338,7 @@ static func check_mission(c: CharacterData, data: GameData, mission_id: String) 
 	var sect: SectDef = data.sects[c.sect["id"]]
 	var min_rank := int(mission.get("min_rank", 0))
 	if int(c.sect["rank"]) < min_rank:
-		return "Only a %s or above may take this mission." % sect.rank_name(min_rank)
+		return "Only %s or above may take this mission." % Text.a(sect.rank_name(min_rank))
 	var min_realm := data.realm_index_of(String(mission.get("min_realm", "mortal")))
 	var min_stage := int(mission.get("min_stage", 0))
 	if c.realm_index < min_realm or (c.realm_index == min_realm and c.stage < min_stage):

@@ -264,14 +264,14 @@ func work_profession(prof_id: String, days: int) -> void:
 	_start_time_skip()
 	var result := Professions.work(player, data, prof_id, days)
 	var def: ProfessionDef = data.professions[prof_id]
-	EventBus.post("You work as a %s for %s: +%d xp, +%d spirit stones." % [def.name, Calendar.format_duration(days), int(result["xp"]), result["income"]])
+	EventBus.post("You work as %s for %s: +%d xp, +%d spirit stones." % [Text.a(def.name), Calendar.format_duration(days), int(result["xp"]), result["income"]])
 	if result["ranks_gained"] > 0:
-		EventBus.post("You are now a %s!" % Professions.rank_title(player, data, prof_id), "progress")
+		EventBus.post("You are now %s!" % Text.a(Professions.rank_title(player, data, prof_id)), "progress")
 	if not player.is_rogue():
 		var contribution := int(result["xp"] / (1.0 if Sects.is_favored_profession(player, data, prof_id) else 2.0))
 		if Sects.add_contribution(player, data, contribution):
 			EventBus.post("Your sect promotes you to %s." % Sects.describe(player, data), "progress")
-	_pass_time(days, "Working as a %s" % def.name)
+	_pass_time(days, "Working as %s" % Text.a(def.name))
 
 
 func join_sect(sect_id: String) -> void:
@@ -327,7 +327,7 @@ func buy_item(item_id: String, faction: String = "", quantity: int = 1) -> void:
 	var result := Items.buy(player, data, item_id, quantity, faction)
 	if result["ok"]:
 		var item_name: String = data.items[item_id]["name"]
-		var what := "a %s" % item_name if quantity == 1 else "%d %s" % [quantity, item_name]
+		var what := Text.a(item_name) if quantity == 1 else "%d %s" % [quantity, item_name]
 		EventBus.post("You buy %s for %d spirit stones." % [what, result["stones"]])
 	else:
 		EventBus.post(result["reason"], "warning")
@@ -342,7 +342,7 @@ func use_item(item_id: String) -> void:
 		return
 	var result := Items.use(player, data, item_id, world_flags)
 	if result["ok"]:
-		EventBus.post("You use a %s. (%s)" % [data.items[item_id]["name"], ", ".join(result["notes"])], "progress")
+		EventBus.post("You use %s. (%s)" % [Text.a(String(data.items[item_id]["name"])), ", ".join(result["notes"])], "progress")
 		var burned := int(data.items[item_id].get("effects", {}).get("burn_lifespan", 0))
 		if burned > 0:
 			EventBus.post("You feel %d years of life drain away. %d years remain." % [burned, Cultivation.years_left(player, data)], "danger")
@@ -911,7 +911,7 @@ func set_clan_rank(member_id: String, rank_id: String) -> void:
 	var member: CharacterData = npcs.get(member_id)
 	var result := Clans.promote(clan, member, rank_id, data)
 	if result["ok"]:
-		EventBus.post("%s is now a %s of the %s." % [member.name, Clans.rank_name(data, rank_id, member.gender), clan.name], "progress")
+		EventBus.post("%s is now %s of the %s." % [member.name, Text.a(Clans.rank_name(data, rank_id, member.gender)), clan.name], "progress")
 	else:
 		EventBus.post(result["reason"], "warning")
 	EventBus.player_changed.emit()
@@ -1178,7 +1178,7 @@ func treat_own_injury(injury_id: String) -> void:
 	else:
 		EventBus.post("You treat your %s: %d days of healing. (%s left)" % [injury_name, result["days_healed"], Calendar.format_duration(player.injuries[injury_id])])
 	if result["ranks_gained"] > 0:
-		EventBus.post("You are now a %s!" % Professions.rank_title(player, data, Medicine.DOCTOR), "progress")
+		EventBus.post("You are now %s!" % Text.a(Professions.rank_title(player, data, Medicine.DOCTOR)), "progress")
 	_pass_time(result["days"])
 
 
@@ -1212,7 +1212,7 @@ func treat_npc(npc_id: String) -> void:
 	var debt := ", they owe you" if owed > 0 else ""
 	EventBus.post("You treat %s's %s: %s. (+%d favor, alignment %+d%s)" % [patient.name, injury_name, outcome, result["favor"], result["alignment"], debt], "karma")
 	if result["ranks_gained"] > 0:
-		EventBus.post("You are now a %s!" % Professions.rank_title(player, data, Medicine.DOCTOR), "progress")
+		EventBus.post("You are now %s!" % Text.a(Professions.rank_title(player, data, Medicine.DOCTOR)), "progress")
 	_pass_time(result["days"])
 
 
@@ -1223,7 +1223,7 @@ func treat_patients(days: int) -> void:
 	var result := Medicine.treat_patients(player, data, days)
 	EventBus.post("You treat patients for %s: +%d xp, +%d spirit stones, alignment %+d." % [Calendar.format_duration(days), int(result["xp"]), result["income"], result["alignment"]], "karma")
 	if result["ranks_gained"] > 0:
-		EventBus.post("You are now a %s!" % Professions.rank_title(player, data, Medicine.DOCTOR), "progress")
+		EventBus.post("You are now %s!" % Text.a(Professions.rank_title(player, data, Medicine.DOCTOR)), "progress")
 	_pass_time(days)
 
 
@@ -1255,7 +1255,7 @@ func refine(recipe_id: String) -> void:
 	else:
 		EventBus.post("%s %s failed (+%d xp)." % [flavor["fail"], recipe_name, int(result["xp"])], "warning")
 	if result["ranks_gained"] > 0:
-		EventBus.post("You are now a %s!" % Professions.rank_title(player, data, prof_id), "progress")
+		EventBus.post("You are now %s!" % Text.a(Professions.rank_title(player, data, prof_id)), "progress")
 	if not player.is_rogue():
 		var contribution := int(result["xp"] / (1.0 if Sects.is_favored_profession(player, data, prof_id) else 2.0))
 		if Sects.add_contribution(player, data, contribution):
@@ -1386,7 +1386,7 @@ func ready_talisman(item_id: String) -> void:
 	if reason != "":
 		EventBus.post(reason, "warning")
 	else:
-		EventBus.post("You tuck a %s into your sleeve, ready for battle." % data.items[item_id].get("name", item_id))
+		EventBus.post("You tuck %s into your sleeve, ready for battle." % Text.a(String(data.items[item_id].get("name", item_id))))
 	EventBus.player_changed.emit()
 
 
@@ -1441,7 +1441,7 @@ func _try_tame(enemy_id: String) -> void:
 	else:
 		EventBus.post("You try to tame the %s, but it tears free and flees." % beast_name)
 	if tame["ranks_gained"] > 0:
-		EventBus.post("You are now a %s!" % Professions.rank_title(player, data, Beasts.PROFESSION), "progress")
+		EventBus.post("You are now %s!" % Text.a(Professions.rank_title(player, data, Beasts.PROFESSION)), "progress")
 	EventBus.player_changed.emit()
 
 

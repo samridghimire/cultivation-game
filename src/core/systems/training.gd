@@ -189,7 +189,7 @@ static func train_month(child: CharacterData, data: GameData, speed: float = 1.0
 			if data.professions.has(prof_id):
 				var def: ProfessionDef = data.professions[prof_id]
 				if Professions.add_xp(child, data, prof_id, days * child.attribute(def.primary_attribute) / 10.0) > 0:
-					return "%s's training pays off: now a %s." % [child.name, Professions.rank_title(child, data, prof_id)]
+					return "%s's training pays off: now %s." % [child.name, Text.a(Professions.rank_title(child, data, prof_id))]
 		"technique":
 			var tech_id := _least_practiced(child, data)
 			if tech_id != "":

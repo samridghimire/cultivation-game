@@ -48,7 +48,7 @@ static func check_tame(c: CharacterData, data: GameData, beast_id: String) -> St
 		return "Only a Beast Tamer knows how to tame a spirit beast."
 	var min_rank := int(def(data, beast_id).get("min_rank", 0))
 	if Professions.rank_of(c, PROFESSION) < min_rank:
-		return "You need to be a %s Beast Tamer to tame a %s." % [data.profession_rank_names[min_rank], beast_name(data, beast_id)]
+		return "You need to be %s Beast Tamer to tame %s." % [Text.a(data.profession_rank_names[min_rank]), Text.a(beast_name(data, beast_id))]
 	if c.companions.size() >= max_companions(data):
 		return "You cannot keep another companion."
 	return ""

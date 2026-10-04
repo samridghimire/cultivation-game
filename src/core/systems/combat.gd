@@ -133,13 +133,13 @@ static func resolve(c: CharacterData, data: GameData, enemy: Dictionary, rng: Ra
 	for item_id in CombatTalismans.available(c, data, "shield"):
 		used.append(item_id)
 		shield += CombatTalismans.amount(data, item_id)
-		lines.append("You burn a %s: a barrier of qi surrounds you. (%d shield)" % [_item_name(data, item_id), CombatTalismans.amount(data, item_id)])
+		lines.append("You burn %s: a barrier of qi surrounds you. (%d shield)" % [Text.a(_item_name(data, item_id)), CombatTalismans.amount(data, item_id)])
 	for item_id in CombatTalismans.available(c, data, "strike"):
 		if enemy_hp <= 0:
 			break
 		used.append(item_id)
 		enemy_hp -= CombatTalismans.amount(data, item_id)
-		lines.append("You hurl a %s for %d. (%s: %d hp)" % [_item_name(data, item_id), CombatTalismans.amount(data, item_id), foe_cap, maxi(enemy_hp, 0)])
+		lines.append("You hurl %s for %d. (%s: %d hp)" % [Text.a(_item_name(data, item_id)), CombatTalismans.amount(data, item_id), foe_cap, maxi(enemy_hp, 0)])
 	var rounds := 0
 	while rounds < MAX_ROUNDS and player_hp > 0 and enemy_hp > 0:
 		rounds += 1
@@ -176,7 +176,7 @@ static func resolve(c: CharacterData, data: GameData, enemy: Dictionary, rng: Ra
 	elif escaped:
 		used.append(escapes[0])
 		player_hp = 1
-		lines.append("On the brink of death you burn a %s and flee from %s!" % [_item_name(data, escapes[0]), foe])
+		lines.append("On the brink of death you burn %s and flee from %s!" % [Text.a(_item_name(data, escapes[0])), foe])
 	else:
 		lines.append("You are defeated by %s." % foe)
 	return {
@@ -237,7 +237,7 @@ static func _outcome(c: CharacterData, data: GameData, enemy: Dictionary, enemy_
 	if result["draw"] or result.get("escaped", false):
 		return {"notes": PackedStringArray(), "died": false, "cause": "", "days": 1, "injury": ""}
 	if enemy.get("lethal", false):
-		return {"notes": PackedStringArray(), "died": true, "cause": "You were slain by a %s at age %d." % [enemy_name, c.age_years()], "days": 0, "injury": ""}
+		return {"notes": PackedStringArray(), "died": true, "cause": "You were slain by %s at age %d." % [enemy_name if bool(enemy.get("proper_name", false)) else Text.a(enemy_name), c.age_years()], "days": 0, "injury": ""}
 	# A sparring match (enemy "spar", e.g. a sect promotion trial) takes no stones.
 	var lost := 0 if enemy.get("spar", false) else int(c.item_count("spirit_stone") * data.defeat_stone_loss)
 	var notes: PackedStringArray = []
