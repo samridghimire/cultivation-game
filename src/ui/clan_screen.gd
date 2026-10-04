@@ -180,6 +180,8 @@ func _rebuild() -> void:
 	_summary.visible = true
 	_summary.text = "Founded %s   |   %d members   |   Treasury: %d spirit stones   (you carry %d)" % [
 		Calendar.format_date(clan.founded_day), clan.members.size(), clan.treasury, p.item_count("spirit_stone")]
+	var seat := Clans.seat_name(clan, data)
+	_summary.text += "\nSeat: %s" % (seat if seat != "" else "none (claim an abode to give the clan a seat)")
 	for b: Button in _deposit_box.get_children():
 		b.disabled = p.item_count("spirit_stone") < int(String(b.name).trim_prefix("Deposit"))
 
