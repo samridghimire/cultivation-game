@@ -89,7 +89,7 @@ Every great cultivation protagonist has something that sets them apart. Ours is 
 | Dao insights (encounters, practice, seclusion; technique + breakthrough bonuses) | ✅ (sheet + contemplation at meditation spots) | `data/dao.json`, `Dao` |
 | Heavenly Tribulations (Core Formation+, heart demon for demonic) | ✅ core, 🚧 no wave screen (TRIB-001b) | `Tribulation`, `data/realms.json` |
 | Grudges and gratitude (rob/kill/humiliate NPCs, kin vengeance, amends) | ✅ core, 🚧 no UI (RIV-001d), no avengers yet (RIV-003), no karma view (RIV-001b) | `data/karma.json`, `Karma` |
-| Secret realms (periodic openings, realm caps, guarded floors) | ✅ core, 🚧 no entrance UI (W-005b) | `data/secret_realms.json`, `SecretRealms` |
+| Secret realms (periodic openings, realm caps, guarded floors) | ✅ (entrances in Misty Forest and Azure Peak) | `data/secret_realms.json`, `SecretRealms` |
 | Auctions (seasonal lots, sealed bids vs hidden NPC maximums) | ✅ core, 🚧 no auction house UI (AUC-001b) | `data/auctions.json`, `Auctions` |
 | Inventory, techniques, character sheet, settings, pause, load screens | ✅ | `src/ui/` |
 | Top-down world with interactables | ✅ placeholder art | `src/world/` |

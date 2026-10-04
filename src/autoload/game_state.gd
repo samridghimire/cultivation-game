@@ -1549,6 +1549,8 @@ func _on_days_advanced(days: int) -> void:
 		_advance_estate(days, months)
 		for joined in Clans.sync_family(player, clan, npcs, data):
 			EventBus.post("%s joins the %s." % [joined, clan.name], "progress")
+	for line in SecretRealms.opening_news(player, data, current_region, GameClock.total_days - days, GameClock.total_days):
+		EventBus.post(line, "progress")
 	if player.age_years() >= Cultivation.lifespan_years(player, data):
 		_kill("Your lifespan is exhausted. You die of old age at %d." % player.age_years())
 

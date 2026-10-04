@@ -16,6 +16,7 @@ const PLACE_SCRIPTS := {
 	"explore": preload("res://src/world/interactables/explore_site.gd"),
 	"travel": preload("res://src/world/interactables/travel_point.gd"),
 	"gather": preload("res://src/world/interactables/gather_site.gd"),
+	"secret_realm": preload("res://src/world/interactables/secret_realm_entrance.gd"),
 }
 ## Place keys that are layout, not script properties.
 const LAYOUT_KEYS := ["type", "pos"]
