@@ -324,6 +324,8 @@ func _validate_world() -> void:
 			for entry: Dictionary in place.get("gather_table", []):
 				if entry.get("item", "") != "" and not items.has(entry["item"]):
 					load_errors.append("Region '%s' gathers unknown item '%s'" % [region["id"], entry["item"]])
+				if entry.has("min_realm") and realm_index_of(String(entry["min_realm"])) < 0:
+					load_errors.append("Region '%s' gather entry '%s' has unknown min_realm '%s'" % [region["id"], entry.get("item", ""), entry["min_realm"]])
 			if not place_types.has(place.get("type", "")):
 				load_errors.append("Region '%s' has a place of unknown type '%s'" % [region["id"], place.get("type", "")])
 			if place.has("faction") and not sects.has(place["faction"]):

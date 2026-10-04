@@ -218,3 +218,15 @@ func test_choose_gender_once_for_old_saves() -> void:
 	assert_eq(c.gender, "female")
 	gs.choose_gender("male")
 	assert_eq(c.gender, "female", "gender can only be picked once")
+
+
+func test_gathering_skips_realm_gated_finds() -> void:
+	var c := _start()
+	var gs := _game_state()
+	c.realm_index = 0
+	var table := [{"item": "nine_leaf_soul_grass", "weight": 1, "min": 1, "max": 1, "min_realm": "foundation_establishment"}]
+	gs.gather(table, 5)
+	assert_eq(c.item_count("nine_leaf_soul_grass"), 0, "too shallow to find it")
+	c.realm_index = gs.data.realm_index_of("foundation_establishment")
+	gs.gather(table, 5)
+	assert_gt(c.item_count("nine_leaf_soul_grass"), 0)
