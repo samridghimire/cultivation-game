@@ -113,7 +113,8 @@ static func dodge_chance(defender_speed: int, attacker_speed: int) -> float:
 static func resolve(c: CharacterData, data: GameData, enemy: Dictionary, rng: RandomNumberGenerator) -> Dictionary:
 	var p := stats(c, data)
 	var e := enemy_stats(enemy, data)
-	var enemy_name: String = enemy.get("name", "The enemy")
+	var foe := foe_name(enemy)
+	var foe_cap := foe.left(1).to_upper() + foe.substr(1)
 	var player_hp: int = p["max_hp"]
 	var enemy_hp: int = e["max_hp"]
 	var lines: PackedStringArray = []
@@ -122,23 +123,23 @@ static func resolve(c: CharacterData, data: GameData, enemy: Dictionary, rng: Ra
 	var enemy_form := roll_form(data, rng)
 	p["attack"] = maxi(1, roundi(p["attack"] * player_form))
 	e["attack"] = maxi(1, roundi(e["attack"] * enemy_form))
-	lines.append("You face the %s. (You: %d hp, %d atk. Foe: %d hp, %d atk.)" % [enemy_name, player_hp, p["attack"], enemy_hp, e["attack"]])
+	lines.append("You face %s. (You: %d hp, %d atk. Foe: %d hp, %d atk.)" % [foe, player_hp, p["attack"], enemy_hp, e["attack"]])
 	if player_form - enemy_form >= data.combat_form_spread and data.combat_form_spread > 0.0:
-		lines.append("Your qi flows smoothly today; the %s seems off balance." % enemy_name)
+		lines.append("Your qi flows smoothly today; %s seems off balance." % foe)
 	elif enemy_form - player_form >= data.combat_form_spread and data.combat_form_spread > 0.0:
-		lines.append("Your qi feels sluggish, and the %s fights with fury." % enemy_name)
+		lines.append("Your qi feels sluggish, and %s fights with fury." % foe)
 	var used: Array[String] = []
 	var shield := 0
 	for item_id in CombatTalismans.available(c, data, "shield"):
 		used.append(item_id)
 		shield += CombatTalismans.amount(data, item_id)
-		lines.append("You burn a %s: a barrier of qi surrounds you. (%d shield)" % [_item_name(data, item_id), CombatTalismans.amount(data, item_id)])
+		lines.append("You burn %s: a barrier of qi surrounds you. (%d shield)" % [Text.a(_item_name(data, item_id)), CombatTalismans.amount(data, item_id)])
 	for item_id in CombatTalismans.available(c, data, "strike"):
 		if enemy_hp <= 0:
 			break
 		used.append(item_id)
 		enemy_hp -= CombatTalismans.amount(data, item_id)
-		lines.append("You hurl a %s for %d. (%s: %d hp)" % [_item_name(data, item_id), CombatTalismans.amount(data, item_id), enemy_name, maxi(enemy_hp, 0)])
+		lines.append("You hurl %s for %d. (%s: %d hp)" % [Text.a(_item_name(data, item_id)), CombatTalismans.amount(data, item_id), foe_cap, maxi(enemy_hp, 0)])
 	var rounds := 0
 	while rounds < MAX_ROUNDS and player_hp > 0 and enemy_hp > 0:
 		rounds += 1
@@ -151,33 +152,33 @@ static func resolve(c: CharacterData, data: GameData, enemy: Dictionary, rng: Ra
 			if player_turn:
 				enemy_hp -= hit["damage"]
 				if hit["dodged"]:
-					lines.append("The %s evades your strike." % enemy_name)
+					lines.append("%s evades your strike." % foe_cap)
 				else:
-					lines.append("You strike%s for %d. (%s: %d hp)" % [" critically" if hit["crit"] else "", hit["damage"], enemy_name, maxi(enemy_hp, 0)])
+					lines.append("You strike%s for %d. (%s: %d hp)" % [" critically" if hit["crit"] else "", hit["damage"], foe_cap, maxi(enemy_hp, 0)])
 			else:
 				var absorbed := mini(shield, int(hit["damage"]))
 				shield -= absorbed
 				player_hp -= int(hit["damage"]) - absorbed
 				if absorbed > 0 and absorbed == int(hit["damage"]):
-					lines.append("Your barrier absorbs the %s's attack. (%d shield left)" % [enemy_name, shield])
+					lines.append("Your barrier absorbs %s's attack. (%d shield left)" % [foe, shield])
 				elif hit["dodged"]:
-					lines.append("You evade the %s's attack." % enemy_name)
+					lines.append("You evade %s's attack." % foe)
 				else:
-					lines.append("The %s hits you%s for %d. (You: %d hp)" % [enemy_name, " critically" if hit["crit"] else "", hit["damage"], maxi(player_hp, 0)])
+					lines.append("%s hits you%s for %d. (You: %d hp)" % [foe_cap, " critically" if hit["crit"] else "", hit["damage"], maxi(player_hp, 0)])
 	var victory := enemy_hp <= 0
 	var draw := not victory and player_hp > 0
 	var escapes := CombatTalismans.available(c, data, "escape")
 	var escaped := not victory and not draw and not escapes.is_empty()
 	if victory:
-		lines.append("You defeat the %s!" % enemy_name)
+		lines.append("You defeat %s!" % foe)
 	elif draw:
 		lines.append("Neither side can finish the fight. You disengage.")
 	elif escaped:
 		used.append(escapes[0])
 		player_hp = 1
-		lines.append("On the brink of death you burn a %s and flee from the %s!" % [_item_name(data, escapes[0]), enemy_name])
+		lines.append("On the brink of death you burn %s and flee from %s!" % [Text.a(_item_name(data, escapes[0])), foe])
 	else:
-		lines.append("You are defeated by the %s." % enemy_name)
+		lines.append("You are defeated by %s." % foe)
 	return {
 		"victory": victory,
 		"draw": draw,
@@ -190,6 +191,13 @@ static func resolve(c: CharacterData, data: GameData, enemy: Dictionary, rng: Ra
 		"enemy_max_hp": e["max_hp"],
 		"talismans_used": used,
 	}
+
+
+## How the fight log names `enemy`: "the Mist Wolf", or just "Xue Yao" for a
+## person (enemy "proper_name": true, e.g. Karma.npc_enemy).
+static func foe_name(enemy: Dictionary) -> String:
+	var enemy_name := String(enemy.get("name", "enemy"))
+	return enemy_name if bool(enemy.get("proper_name", false)) else "the " + enemy_name
 
 
 static func _item_name(data: GameData, item_id: String) -> String:
@@ -229,7 +237,7 @@ static func _outcome(c: CharacterData, data: GameData, enemy: Dictionary, enemy_
 	if result["draw"] or result.get("escaped", false):
 		return {"notes": PackedStringArray(), "died": false, "cause": "", "days": 1, "injury": ""}
 	if enemy.get("lethal", false):
-		return {"notes": PackedStringArray(), "died": true, "cause": "You were slain by a %s at age %d." % [enemy_name, c.age_years()], "days": 0, "injury": ""}
+		return {"notes": PackedStringArray(), "died": true, "cause": "You were slain by %s at age %d." % [enemy_name if bool(enemy.get("proper_name", false)) else Text.a(enemy_name), c.age_years()], "days": 0, "injury": ""}
 	# A sparring match (enemy "spar", e.g. a sect promotion trial) takes no stones.
 	var lost := 0 if enemy.get("spar", false) else int(c.item_count("spirit_stone") * data.defeat_stone_loss)
 	var notes: PackedStringArray = []

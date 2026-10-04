@@ -4,9 +4,15 @@ extends PanelContainer
 ## professions, and equipped gear with Unequip buttons. "Train children" opens
 ## the ChildTrainingScreen. Items live in
 ## InventoryScreen. Old saves without a gender get a one-time gender picker here.
+## The text scrolls (PgUp/PgDn, right stick) so a long sheet still fits a Steam Deck.
 
 signal closed
 
+## Tallest the text area may grow before it scrolls, so the sheet fits 1280x800.
+const MAX_TEXT_HEIGHT := 470.0
+const SCROLL_SPEED := 900.0
+
+var _scroll: ScrollContainer
 var _text: RichTextLabel
 var _recharge: Button
 var _gender_row: HBoxContainer
@@ -21,11 +27,15 @@ func _init() -> void:
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 10)
 	add_child(box)
+	_scroll = ScrollContainer.new()
+	_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	box.add_child(_scroll)
 	_text = RichTextLabel.new()
 	_text.bbcode_enabled = true
 	_text.fit_content = true
 	_text.custom_minimum_size = Vector2(596, 0)
-	box.add_child(_text)
+	_text.resized.connect(_fit_scroll)
+	_scroll.add_child(_text)
 	_gender_row = HBoxContainer.new()
 	_gender_row.add_theme_constant_override("separation", 8)
 	_gender_row.add_child(UIStyle.label("Your gender is unknown. Choose:", 16))
@@ -49,8 +59,22 @@ func _unhandled_input(event: InputEvent) -> void:
 		close()
 
 
+func _process(delta: float) -> void:
+	if not visible:
+		return
+	var dir := Input.get_axis("scroll_up", "scroll_down")
+	if dir != 0.0:
+		_scroll.scroll_vertical += int(dir * SCROLL_SPEED * delta)
+
+
+## The scroll area is as tall as the text, up to MAX_TEXT_HEIGHT.
+func _fit_scroll() -> void:
+	_scroll.custom_minimum_size = Vector2(596, minf(_text.size.y, MAX_TEXT_HEIGHT))
+
+
 func open() -> void:
 	_rebuild()
+	_scroll.scroll_vertical = 0
 	visible = true
 	_default_focus().grab_focus.call_deferred()
 

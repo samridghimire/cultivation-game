@@ -147,3 +147,18 @@ func test_combat_tuning_is_validated() -> void:
 	d.load_errors = []
 	d._validate_combat()
 	assert_eq(errors.size() - d.load_errors.size(), 3, ", ".join(errors))
+
+
+func test_fight_log_names_people_without_an_article() -> void:
+	var c := new_character()
+	var boar: Dictionary = data().enemies["wild_boar"]
+	assert_eq(Combat.foe_name(boar), "the Wild Boar")
+	var person := {"name": "Lin Feng", "proper_name": true, "realm": "mortal", "stage": 0}
+	assert_eq(Combat.foe_name(person), "Lin Feng")
+	var log: PackedStringArray = Combat.resolve(c, data(), person, seeded_rng())["log"]
+	assert_true(log[0].begins_with("You face Lin Feng."), log[0])
+	for line in log:
+		assert_false(line.contains("the Lin Feng"), line)
+	var npc := new_character(99)
+	npc.name = "Xue Yao"
+	assert_eq(Combat.foe_name(Karma.npc_enemy(npc, data())), "Xue Yao", "NPC foes are people")

@@ -103,6 +103,9 @@ func test_game_state_claims_the_fist_saint_grave() -> void:
 	assert_eq(Inheritances.stages_cleared(c, "fist_saint_grave"), 0, "a mortal is turned away")
 	c.realm_index = 2  # Foundation Establishment: the stone ape is no match
 	c.attributes["constitution"] = 15
+	# Geared like a typical player: a bare one wins only ~70% since QA-007d, which made this test depend on the shared rng.
+	c.equipment = {"weapon": "iron_sword", "armor": "iron_scale_armor"}
+	c.techniques["iron_fist"] = {"level": 3, "xp": 0.0}
 	for i in 3:
 		gs.attempt_inheritance("fist_saint_grave")
 	assert_eq(Inheritances.stages_cleared(c, "fist_saint_grave"), 3)

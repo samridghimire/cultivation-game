@@ -86,6 +86,7 @@ static func npc_enemy(npc: CharacterData, data: GameData) -> Dictionary:
 	return {
 		"id": npc.id,
 		"name": npc.name,
+		"proper_name": true,
 		"realm": data.realms[npc.realm_index].id,
 		"stage": npc.stage,
 		"lethal": false,

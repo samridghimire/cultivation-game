@@ -48,7 +48,14 @@ func _ready() -> void:
 	_build_bounds()
 	_limit_camera()
 	EventBus.ui_modal_changed.connect(func(is_open: bool): player.input_enabled = not is_open)
-	EventBus.region_changed.connect(func(_id: String): get_tree().reload_current_scene.call_deferred())
+	EventBus.region_changed.connect(_on_region_changed)
+
+
+## Travel or an artifact respawn moved the player: rebuild the world for the
+## new region (only when this world is the running scene, not a preview or test).
+func _on_region_changed(_region_id: String) -> void:
+	if get_tree().current_scene == self:
+		get_tree().reload_current_scene.call_deferred()
 
 
 func _unhandled_input(event: InputEvent) -> void:
