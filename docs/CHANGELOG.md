@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-03 [G-009b] The character sheet lists your reputation with every sect (tier and value), and faction merchants mark their prices when your standing changes them, e.g. "(Honored price)".
 - 2026-10-03 [G-007d] Injured NPCs can be treated in-game: their menu offers "Treat <name>'s <injury> (3 days)" (worst injury first), and "Look" lists their injuries and how long they take to heal.
 - 2026-10-03 [QA-007d] Fights within your realm are no longer foregone: enemies train with their realm (enemies.json realm_training) and each fight rolls both sides' form, so a typical cultivator beats a same-stage foe ~80-90% of the time instead of always, while a full realm gap stays nearly hopeless. The combat sim reports the new same-stage curve.
 - 2026-10-03 [DEED-001] Deeds can have requirements (realm, alignment, a world flag; shown greyed out with the reason) and a fight first: freeing the bandit captives now means beating the Bandit Lord, and only a Qi Refining cultivator can extort him.

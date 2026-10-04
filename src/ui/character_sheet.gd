@@ -1,6 +1,6 @@
 class_name CharacterSheet
 extends PanelContainer
-## Modal character overview: identity and family, attributes, roots and
+## Modal character overview: identity and family, sect reputation, attributes, roots and
 ## professions, and equipped gear with Unequip buttons. Items live in
 ## InventoryScreen. Old saves without a gender get a one-time gender picker here.
 
@@ -100,7 +100,10 @@ func _rebuild() -> void:
 		for line in family:
 			t += "  %s\n" % line
 		t += "\n"
-	t += "[color=#%s]Attributes[/color]\n" % accent
+	t += "[color=#%s]Sect Reputation[/color]\n" % accent
+	for line in Reputation.describe(p, data):
+		t += "  %s\n" % line
+	t += "\n[color=#%s]Attributes[/color]\n" % accent
 	for attr in data.attributes:
 		t += "  %s: %d\n" % [attr["name"], p.attribute(attr["id"])]
 	var stats := Combat.stats(p, data)
