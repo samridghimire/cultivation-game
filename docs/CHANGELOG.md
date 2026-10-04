@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-04 [FAM-007c] Four new bloodlines (Qilin, Nine-Tailed Fox, Golden Crow, demonic Blood Asura); Yun Feng and Xue Yao carry bloodlines and some generated courtship candidates do too, so you can marry into one; rare encounters can plant a bloodline in you (tend or drink from a dying qilin, bathe in an Asura's blood pool, guard or ambush the white fox at its tribulation).
 - 2026-10-04 [W-004e] Moral encounters are now choices: finding a demonic manual, an evil artifact, a dead alchemist's legacy or the Spear Saint's grave lets you take it, destroy/honour it, or walk away in one encounter; the blood peddler can be bought from, seized or ignored; and a wounded traveller you help later repays you, while one you rob sends his kin after you.
 - 2026-10-04 [FAM-007b] Bloodlines are visible: the character sheet shows your bloodline (dormant/awakened) and what it grants, the family list shows spouses' and children's bloodlines, and "Look" at an NPC reveals an awakened bloodline (dormant ones stay hidden).
 - 2026-10-04 [FAM-004b] Train your children: a "Train children" button on the character sheet opens a screen listing your living children (age, realm, roots, current training) where you assign Cultivation, a Profession apprenticeship (pick the craft) or Technique drills, with the reason shown on unavailable choices, or stop their training. Gamepad-focusable.
