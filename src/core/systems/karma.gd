@@ -267,6 +267,21 @@ static func describe(c: CharacterData, people: Dictionary) -> Array[String]:
 	return out
 
 
+## Sentences for an NPC's "Look" text: how much `npc` hates or owes `c`, in
+## words from data/karma.json "attitudes" (empty when neither ledger has them).
+static func attitude(c: CharacterData, npc: CharacterData, data: GameData) -> Array[String]:
+	var out: Array[String] = []
+	var attitudes: Dictionary = data.karma.get("attitudes", {})
+	for entry in [["grudge", grudge(c, npc.id)], ["gratitude", gratitude(c, npc.id)]]:
+		var sentence := ""
+		for tier: Array in attitudes.get(entry[0], []):
+			if int(entry[1]) >= int(tier[0]):
+				sentence = String(tier[1])
+		if sentence != "":
+			out.append(sentence.replace("{name}", npc.name))
+	return out
+
+
 static func validate(data: GameData) -> PackedStringArray:
 	var errors: PackedStringArray = []
 	if data.karma.is_empty():
@@ -294,4 +309,11 @@ static func validate(data: GameData) -> PackedStringArray:
 		for item_id in gift.get("effects", {}).get("items", {}):
 			if not data.items.has(item_id):
 				errors.append("karma gratitude repay gift has unknown item '%s'" % item_id)
+	for ledger in ["grudge", "gratitude"]:
+		var last := 0
+		for tier: Variant in data.karma.get("attitudes", {}).get(ledger, []):
+			if not tier is Array or tier.size() != 2 or int(tier[0]) <= last or String(tier[1]) == "":
+				errors.append("karma attitudes.%s: tiers must be [min_points > 0, sentence] in ascending order" % ledger)
+				break
+			last = int(tier[0])
 	return errors

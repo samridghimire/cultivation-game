@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-04 [RIV-001b] Looking at an NPC now tells you whether they resent, hate or have sworn to kill you, or feel grateful or indebted to you (karma.json `attitudes`); named NPCs gained a Look entry too.
 - 2026-10-04 [RIV-001d] NPC menus gain "Turn hostile...", which reveals Humiliate / Rob / Kill (fights show the danger rating, every act its alignment cost, refusals say why), and "Make amends" while someone holds a grudge; the character sheet lists your grudges and debts.
 - 2026-10-04 [W-006] Inheritance grounds: one-time trials of a fallen master's legacy (the Wandering Fist Saint's grave in the Misty Forest, the Corpse Lord's altar in the Bone Marsh) test your realm, attributes, heart and fists; claim one before the deadline or a rival takes it (GameState.attempt_inheritance). UI follows in W-006b.
 - 2026-10-04 [RIV-001e] Gratitude: healing an NPC or giving them gifts puts them in your debt; grateful NPCs warm to you faster and now and then repay you with spirit stones and a small gift (data/karma.json `gratitude`).

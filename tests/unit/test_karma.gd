@@ -266,3 +266,29 @@ func test_game_state_treat_and_gift_earn_gratitude_that_is_repaid() -> void:
 	var owed := Karma.gratitude(c, patient.id)
 	gs.work_profession("doctor", 2 * Calendar.DAYS_PER_YEAR)
 	assert_true(Karma.gratitude(c, patient.id) < owed, "a grateful NPC repays within two years")
+
+
+func test_attitude_words_follow_ledger_tiers() -> void:
+	var c := _person("player")
+	var npc := _person("Lin")
+	assert_eq(Karma.attitude(c, npc, data()).size(), 0, "no ledger, no words")
+	Karma.add_grudge(c, data(), "Lin", 10)
+	var words := Karma.attitude(c, npc, data())
+	assert_eq(words.size(), 1)
+	assert_true(words[0].contains("resentment"), words[0])
+	assert_true(words[0].begins_with("Lin"), "name filled in: %s" % words[0])
+	Karma.add_grudge(c, data(), "Lin", 80)
+	assert_true(Karma.attitude(c, npc, data())[0].contains("sworn"), "top tier at 90")
+	Karma.add_gratitude(c, data(), "Lin", 45)
+	words = Karma.attitude(c, npc, data())
+	assert_eq(words.size(), 2, "grudge and gratitude both shown")
+	assert_true(words[1].contains("indebted"), words[1])
+
+
+func test_attitude_tiers_validated() -> void:
+	var d := GameData.new()
+	d.karma = {"acts": {}, "attitudes": {"grudge": [[40, "a"], [10, "b"]]}}
+	assert_eq(Karma.validate(d).size(), 1, "descending tiers rejected")
+	d.karma["attitudes"] = {"grudge": [[1, "a"], [40, "b"]], "gratitude": [[5, ""]]}
+	assert_eq(Karma.validate(d).size(), 1, "empty sentence rejected")
+	assert_eq(Karma.validate(data()).size(), 0, "shipped data is valid")
