@@ -1,7 +1,8 @@
 extends TestCase
 ## QA-010: tribulation balance guards (tests/sim/tribulation_balance.gd). Every
 ## tribulation is a real but survivable risk for a typical cultivator at the
-## previous realm's peak (~85% target), a readied shield never hurts, and deep
+## previous realm's peak (~85% target), a readied ward helps without making it
+## safe (TRIB-001d), and deep
 ## demonic cultivators pay for the heart demon without it being a death sentence.
 ## Full report: tests/sim/simulate_tribulation.gd.
 
@@ -26,6 +27,10 @@ func test_typical_cultivator_faces_real_but_survivable_risk() -> void:
 		assert_true(typical >= 0.7 and typical <= 0.97, "%s typical survival %.2f outside 0.70..0.97" % [name, typical])
 		var prepared: float = Trib.odds(data(), realm, "prepared", 0, SAMPLES)["survive"]
 		assert_true(prepared >= typical, "%s: a readied shield never lowers survival" % name)
+		# TRIB-001d / QA-010b: the best buyable ward matters at every realm but never trivializes it.
+		assert_true(Trib.best_ward(data(), realm - 1) != "", "%s: a ward is for sale" % name)
+		assert_true(prepared >= typical + 0.03, "%s: a ward should matter (%.2f vs %.2f)" % [name, prepared, typical])
+		assert_true(prepared <= 0.98, "%s: a ward should not make the tribulation safe (%.2f)" % [name, prepared])
 
 
 func test_heart_demon_is_costly_not_hopeless() -> void:
