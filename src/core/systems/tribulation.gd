@@ -3,8 +3,10 @@ extends RefCounted
 ## Heavenly Tribulations: when a breakthrough into a realm with a `tribulation`
 ## block (data/realms.json) succeeds, heaven answers with lightning waves. Each
 ## wave strikes with an attack scaled by the new realm's combat power and is
-## resisted like a blow in combat (Combat.base_damage vs defense); readied shield
-## talismans absorb damage first. Demonic cultivators also face a heart-demon
+## resisted like a blow in combat (Combat.base_damage vs defense); the strongest
+## readied shield talisman absorbs damage first, at only a fraction of its combat
+## value against heavenly lightning (realms.json tribulation_shield_scale, or the
+## item's own combat.tribulation for wards made for tribulations, TRIB-001d). Demonic cultivators also face a heart-demon
 ## wave that ignores defense. Falling before the final wave fails the
 ## breakthrough with an injury; falling to the final wave kills.
 
@@ -51,12 +53,27 @@ static func waves(c: CharacterData, data: GameData, realm_index: int, npc: bool 
 	return out
 
 
-## Shield points `c`'s readied shield talismans would absorb.
-static func shield_of(c: CharacterData, data: GameData) -> int:
-	var total := 0
+## Shield points shield talisman `item_id` holds against heavenly lightning:
+## its combat amount times its combat.tribulation (else tribulation_shield_scale).
+static func ward_amount(data: GameData, item_id: String) -> int:
+	var scale := float(CombatTalismans.combat_def(data, item_id).get("tribulation", data.tribulation_shield_scale))
+	return roundi(CombatTalismans.amount(data, item_id) * scale)
+
+
+## The readied shield talisman `c` carries that holds best against lightning
+## (only one ward stands against heaven), or "".
+static func best_ward(c: CharacterData, data: GameData) -> String:
+	var best := ""
 	for item_id in CombatTalismans.available(c, data, "shield"):
-		total += CombatTalismans.amount(data, item_id)
-	return total
+		if best == "" or ward_amount(data, item_id) > ward_amount(data, best):
+			best = item_id
+	return best
+
+
+## Shield points `c`'s best readied ward would absorb.
+static func shield_of(c: CharacterData, data: GameData) -> int:
+	var ward := best_ward(c, data)
+	return ward_amount(data, ward) if ward != "" else 0
 
 
 ## Expected outcome before attempting, for a "prepare" warning:
@@ -78,15 +95,16 @@ static func preview(c: CharacterData, data: GameData, realm_index: int) -> Dicti
 	}
 
 
-## Endures the tribulation for breaking into `realm_index`. Burns readied shield
-## talismans and, on a non-lethal failure, inflicts a "tribulation_failure"
+## Endures the tribulation for breaking into `realm_index`. Burns the best
+## readied ward (best_ward) and, on a non-lethal failure, inflicts a "tribulation_failure"
 ## injury. Returns {survived, died, waves: [{kind, damage, hp_left}], hp,
 ## max_hp, talismans_used: PackedStringArray of names, injury}. `npc`: see waves().
 static func endure(c: CharacterData, data: GameData, realm_index: int, rng: RandomNumberGenerator, npc: bool = false) -> Dictionary:
 	var list := waves(c, data, realm_index, npc)
 	var max_hp: int = Combat.stats(c, data)["max_hp"]
 	var shield := shield_of(c, data)
-	var used := CombatTalismans.consume(c, data, CombatTalismans.available(c, data, "shield")) if not list.is_empty() else PackedStringArray()
+	var ward := best_ward(c, data)
+	var used := CombatTalismans.consume(c, data, [ward]) if not list.is_empty() and ward != "" else PackedStringArray()
 	var variance := float(def_for(data, realm_index).get("variance", 0.0))
 	var hp := float(max_hp)
 	var struck: Array[Dictionary] = []
@@ -120,6 +138,12 @@ static func endure(c: CharacterData, data: GameData, realm_index: int, rng: Rand
 ## Load errors for tribulation blocks and heart_demon in realms.json.
 static func validate(data: GameData) -> PackedStringArray:
 	var errors: PackedStringArray = []
+	if data.tribulation_shield_scale < 0.0 or data.tribulation_shield_scale > 1.0:
+		errors.append("realms.json tribulation_shield_scale must be 0..1")
+	for item_id: String in data.items:
+		var ward: Variant = CombatTalismans.combat_def(data, item_id).get("tribulation")
+		if ward != null and (CombatTalismans.kind_of(data, item_id) != "shield" or float(ward) < 0.0 or float(ward) > 1.0):
+			errors.append("Item '%s' combat.tribulation must be 0..1 on a shield" % item_id)
 	for realm: RealmDef in data.realms:
 		var trib: Dictionary = realm.tribulation
 		if trib.is_empty():

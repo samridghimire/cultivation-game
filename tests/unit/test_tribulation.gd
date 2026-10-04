@@ -102,7 +102,7 @@ func test_shield_talismans_absorb_and_burn() -> void:
 	assert_eq(with_shield["talismans_used"].size(), 1)
 	var bare := TribBalance.attempter(data(), CORE, "typical")
 	var without := Tribulation.endure(bare, data(), CORE, seeded_rng(7))
-	assert_gt(with_shield["hp"], without["hp"])
+	assert_eq(with_shield["waves"][0]["damage"], without["waves"][0]["damage"] - shield, "the ward soaks the first wave")
 
 
 func test_validation_rejects_bad_tribulation() -> void:
@@ -168,5 +168,36 @@ func test_tribulation_preparations_raise_survival() -> void:
 		assert_true(Items.use(prepared, data(), "thunder_tempering_pill", {})["ok"])
 		if Tribulation.endure(prepared, data(), CORE, seeded_rng(i))["survived"]:
 			prepared_survived += 1
-	assert_gt(prepared_survived, bare_survived)
-	assert_gt(prepared_survived, 190, "a ward and a body pill should all but guarantee Core Formation (%d/200)" % prepared_survived)
+	# TRIB-001d: preparation matters a lot, but heaven is never made safe.
+	assert_gt(prepared_survived, bare_survived + 20, "a ward and a body pill raise survival (%d vs %d of 200)" % [prepared_survived, bare_survived])
+	assert_true(prepared_survived < 200, "preparations do not guarantee Core Formation")
+
+
+## TRIB-001d: shields hold at a fraction against lightning (wards made for it
+## hold more), and only the strongest readied one counts and burns.
+func test_only_the_best_ward_counts() -> void:
+	var d := data()
+	var scale := d.tribulation_shield_scale
+	assert_true(scale > 0.0 and scale < 1.0)
+	assert_eq(Tribulation.ward_amount(d, "earth_wall_talisman"), roundi(CombatTalismans.amount(d, "earth_wall_talisman") * scale))
+	assert_eq(Tribulation.ward_amount(d, "soul_sheltering_thunder_ward"), CombatTalismans.amount(d, "soul_sheltering_thunder_ward"), "a purpose-made ward holds fully")
+	var c := TribBalance.attempter(data(), CORE, "typical")
+	c.add_item("earth_wall_talisman", 1)
+	c.add_item("black_tortoise_shell_talisman", 1)
+	CombatTalismans.ready_talisman(c, d, "earth_wall_talisman")
+	CombatTalismans.ready_talisman(c, d, "black_tortoise_shell_talisman")
+	assert_eq(Tribulation.best_ward(c, d), "black_tortoise_shell_talisman")
+	assert_eq(Tribulation.shield_of(c, d), Tribulation.ward_amount(d, "black_tortoise_shell_talisman"), "shields do not stack against heaven")
+	var result := Tribulation.endure(c, d, CORE, seeded_rng(3))
+	assert_eq(result["talismans_used"].size(), 1)
+	assert_eq(c.item_count("black_tortoise_shell_talisman"), 0, "the ward burns")
+	assert_eq(c.item_count("earth_wall_talisman"), 1, "the weaker shield is kept")
+
+
+func test_validation_rejects_bad_ward_fractions() -> void:
+	var d := GameData.load_from_dir()
+	d.items["earth_wall_talisman"]["combat"]["tribulation"] = 1.5
+	d.items["qi_gathering_pill"]["combat"] = {"kind": "strike", "grade": 1, "power": 5, "tribulation": 0.5}
+	var errors := Tribulation.validate(d)
+	assert_true(Array(errors).any(func(e: String) -> bool: return e.contains("earth_wall_talisman")), str(errors))
+	assert_true(Array(errors).any(func(e: String) -> bool: return e.contains("qi_gathering_pill")), str(errors))

@@ -9,6 +9,9 @@ const DEFAULT_DIR := "res://data"
 var realms: Array[RealmDef] = []
 ## realms.json heart_demon: {max_alignment, hp_fraction} (see Tribulation); {} = none.
 var heart_demon: Dictionary = {}
+## realms.json tribulation_shield_scale (TRIB-001d): fraction of a shield talisman's
+## combat value that holds against tribulation lightning.
+var tribulation_shield_scale := 1.0
 var attributes: Array[Dictionary] = []
 var root_elements: Array[Dictionary] = []
 var root_grades: Array[Dictionary] = []
@@ -135,6 +138,7 @@ func _load(dir: String) -> void:
 	for r in realm_file.get("realms", []):
 		realms.append(RealmDef.from_dict(r))
 	heart_demon = realm_file.get("heart_demon", {})
+	tribulation_shield_scale = float(realm_file.get("tribulation_shield_scale", 1.0))
 
 	attributes.assign(_read(dir, "attributes.json").get("attributes", []))
 
