@@ -128,7 +128,13 @@ static func check_give(c: CharacterData, child: CharacterData, item_id: String, 
 		return "That cannot be given to a child to use."
 	if c.item_count(item_id) <= 0:
 		return "You have none left."
-	var effects_reason := Effects.check(child, data, item.get("effects", {}))
+	var effects: Dictionary = item.get("effects", {})
+	if effects.has("qi") or effects.has("breakthrough_bonus"):
+		if SpiritualRoots.cultivation_multiplier(child.spiritual_roots, data) <= 0.0:
+			return "%s has no spiritual roots to absorb its qi." % child.name
+		if not Children.can_cultivate_yet(child, data):
+			return "%s is too young to cultivate (age %d)." % [child.name, Children.cultivation_start_age(data)]
+	var effects_reason := Effects.check(child, data, effects)
 	if effects_reason != "":
 		return "%s cannot use it: %s" % [child.name, effects_reason]
 	return ""

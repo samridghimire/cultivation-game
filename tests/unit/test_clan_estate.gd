@@ -116,6 +116,7 @@ func test_game_state_estate() -> void:
 	gs.build_clan_building("alchemy_room")  # no clan: just a warning
 	c.realm_index = gs.data.realm_index_of("foundation_establishment")
 	c.inventory["spirit_stone"] = 5000
+	c.abode = "waterfall_cave"  # a clan needs a seat (FAM-005c)
 	gs.found_clan()
 	gs.deposit_to_clan(1000)
 	var clock: Node = _root().get_node("GameClock")

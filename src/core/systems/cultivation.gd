@@ -59,7 +59,7 @@ static func breakthrough_chance(c: CharacterData, data: GameData) -> float:
 		return 0.0
 	var next: RealmDef = data.realms[c.realm_index + 1]
 	var fortune_bonus := (c.attribute("fortune") - 10) * 0.01
-	return clampf(next.breakthrough_chance + c.breakthrough_bonus + fortune_bonus + Bloodlines.bonus(c, data, "breakthrough"), 0.01, 0.99)
+	return clampf(next.breakthrough_chance + c.breakthrough_bonus + fortune_bonus + Bloodlines.bonus(c, data, "breakthrough") + Dao.breakthrough_bonus(c, data), 0.01, 0.99)
 
 
 ## Attempts a major breakthrough. Consumes any pending breakthrough bonus.
