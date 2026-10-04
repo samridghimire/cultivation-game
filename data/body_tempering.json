@@ -1,0 +1,15 @@
+{
+  "_doc": "Body tempering (BODY-001): a body-cultivation track that runs alongside qi cultivation and is open to everyone. Stages are reached in order; CharacterData.body_stage counts the stages reached (0 = untempered). Per stage: id, name, description, days (time one tempering session takes), items ({item id: count} consumed), optional min_realm (realm id), bonuses (combat stat fractions max_hp/attack/defense/speed, e.g. 0.1 = +10%; the bonuses of every reached stage add up and scale Combat.stats like a bloodline), injury_resist (fraction added to the character's resistance; every injury-source chance in injuries.json is multiplied by 1 - resistance, capped at max_injury_resist) and risk (base chance that the session injures you; minus (constitution - 10) * risk_per_constitution, clamped to min_risk..max_risk). An injured session still reaches the stage: the pain is the price. You cannot temper while injured. injury_table: [{id (injuries.json), weight}] picks the injury.",
+  "risk_per_constitution": 0.02,
+  "min_risk": 0.02,
+  "max_risk": 0.9,
+  "max_injury_resist": 0.6,
+  "injury_table": [{"id": "broken_bones", "weight": 3}, {"id": "internal_injury", "weight": 2}],
+  "stages": [
+    {"id": "copper_skin", "name": "Copper Skin", "description": "Beaten with iron rods and soaked in salve until the skin turns hard and coppery.", "days": 30, "items": {"iron_essence": 5, "bone_setting_salve": 1}, "bonuses": {"max_hp": 0.08, "defense": 0.08}, "injury_resist": 0.05, "risk": 0.2},
+    {"id": "iron_bone", "name": "Iron Bone", "description": "The bones are broken and reset around cold iron powder until they ring like metal.", "days": 60, "min_realm": "qi_refining", "items": {"cold_iron": 4, "iron_essence": 6, "visceral_mending_pill": 1}, "bonuses": {"max_hp": 0.08, "defense": 0.1}, "injury_resist": 0.1, "risk": 0.25},
+    {"id": "jade_marrow", "name": "Jade Marrow", "description": "Spirit crystal and mushroom essence wash the marrow until it glows faintly green.", "days": 90, "min_realm": "foundation_establishment", "items": {"azure_crystal": 3, "purple_cloud_mushroom": 4, "jade_marrow_pill": 1}, "bonuses": {"max_hp": 0.1, "attack": 0.05}, "injury_resist": 0.1, "risk": 0.3},
+    {"id": "golden_body", "name": "Golden Body", "description": "Earth-fire and dragon-blood gold forge flesh that turns aside common blades.", "days": 180, "min_realm": "core_formation", "items": {"profound_iron": 6, "flame_lotus": 4, "dragonblood_gold": 1, "thousand_year_lingzhi": 1}, "bonuses": {"max_hp": 0.12, "defense": 0.12, "attack": 0.05}, "injury_resist": 0.15, "risk": 0.35},
+    {"id": "vajra_body", "name": "Indestructible Vajra Body", "description": "Star silver is beaten into every sinew. Legends say such a body can weather a tribulation bolt.", "days": 365, "min_realm": "nascent_soul", "items": {"star_silver": 5, "dragonblood_gold": 4, "thousand_year_lingzhi": 2}, "bonuses": {"max_hp": 0.15, "defense": 0.15, "attack": 0.05}, "injury_resist": 0.15, "risk": 0.4}
+  ]
+}

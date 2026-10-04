@@ -12,9 +12,7 @@ var _choices: VBoxContainer
 
 
 func _init() -> void:
-	var style_source := UIStyle.panel()
-	add_theme_stylebox_override("panel", style_source.get_theme_stylebox("panel"))
-	style_source.free()
+	add_theme_stylebox_override("panel", UIStyle.panel_style())
 	custom_minimum_size = Vector2(680, 0)
 	visible = false
 	var box := VBoxContainer.new()
@@ -94,7 +92,7 @@ func line_text() -> String:
 func _choose(index: int) -> void:
 	GameState.choose_dialogue(index)
 	# dialogue_ended (via the HUD) closes us when the conversation is over.
-	if GameState.dialogue_npc != "":
+	if GameState.in_dialogue():
 		open()
 	else:
 		close()

@@ -4,8 +4,8 @@ extends RefCounted
 ## "npc_families". Each month, unmarried generated NPCs may marry an unrelated
 ## eligible NPC of their region, married NPC couples may try for a child
 ## (Children.try_conceive) and due NPC pregnancies give birth
-## (Children.give_birth). Conception stops while the living NPC population is
-## at `population_cap`. Couples involving the player are left to GameState.
+## (Children.give_birth). Conception and marriage stop while the living NPC
+## population is at `population_cap`. Couples involving the player are left to GameState.
 
 
 static func rules(data: GameData) -> Dictionary:
@@ -72,7 +72,9 @@ static func simulate(npcs: Dictionary, data: GameData, days: int, rng: RandomNum
 
 static func _marriages(npcs: Dictionary, data: GameData, days: int, rng: RandomNumberGenerator, reserved: Dictionary, events: Array[Dictionary]) -> void:
 	var chance := float(rules(data).get("marriage_chance_per_year", 0.0)) * days / Calendar.DAYS_PER_YEAR
-	if chance <= 0.0:
+	# Each off-screen marriage makes GameState spawn new courtship candidates
+	# (Npcs.ensure_eligible), so a full world must not marry either (FAM-013).
+	if chance <= 0.0 or population(npcs) >= int(rules(data).get("population_cap", 0)):
 		return
 	var by_region := {}
 	for c: CharacterData in npcs.values():
