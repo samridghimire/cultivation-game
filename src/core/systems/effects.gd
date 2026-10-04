@@ -17,6 +17,8 @@ extends RefCounted
 ##   reputation: {sect_id: int} change reputation with sects (see reputation.gd)
 ##   witnessed: bool            the alignment change was seen: every sect's reputation
 ##                              moves by alignment * its deed_scale (data/sects.json)
+##   bloodline: String          grant a bloodline (data/bloodlines.json) to someone who has
+##                              none; it awakens at once if they are past its awaken_realm
 
 
 ## Returns "" if the effects can be applied, otherwise a reason they cannot.
@@ -30,6 +32,8 @@ static func check(c: CharacterData, data: GameData, effects: Dictionary) -> Stri
 		return "Burning %d years of life would kill you." % int(effects["burn_lifespan"])
 	if effects.has("heal_injury") and not _has_healable(c, effects["heal_injury"]):
 		return "You have no injury that this would heal."
+	if effects.has("bloodline") and c.bloodline != "":
+		return "Your blood already carries the %s." % Bloodlines.bloodline_name(data, c.bloodline)
 	if effects.has("learn_technique"):
 		var reason := Techniques.can_learn(c, data, effects["learn_technique"])
 		if reason != "":
@@ -79,6 +83,8 @@ static func apply(c: CharacterData, data: GameData, effects: Dictionary, flags: 
 		var note := Buffs.add_from_effect(c, effects["buff"])
 		if note != "":
 			notes.append(note)
+	if effects.has("bloodline") and Bloodlines.grant(c, data, String(effects["bloodline"])):
+		notes.append("Your blood now carries the %s%s" % [Bloodlines.bloodline_name(data, c.bloodline), ", and it awakens" if c.bloodline_awakened else ""])
 	if effects.has("set_flag"):
 		flags[effects["set_flag"]] = true
 	return notes

@@ -128,13 +128,17 @@ static func ensure_eligible(npcs: Dictionary, data: GameData, rng: RandomNumberG
 		var realms: Array = by_danger[clampi(int(data.regions[region_id].get("danger", 0)), 0, by_danger.size() - 1)]
 		for gender in Names.genders(data):
 			for i in range(int(counts.get(gender, 0)), int(rules.get("per_gender", 0))):
-				spawned.append(spawn(npcs, data, rng, {
+				var c := spawn(npcs, data, rng, {
 					"gender": gender,
 					"region": region_id,
 					"age_years": rng.randi_range(int(rules.get("age_min", 16)), int(rules.get("age_max", 30))),
 					"realm": String(realms[rng.randi_range(0, realms.size() - 1)]),
 					"proud": rng.randf() < float(rules.get("proud_chance", 0.0)),
-				}))
+				})
+				# A rare candidate carries a bloodline, so players can marry into one.
+				if rules.has("bloodline_chance") and rng.randf() < float(rules["bloodline_chance"]):
+					Bloodlines.grant(c, data, Bloodlines.roll_any(data, rng))
+				spawned.append(c)
 	return spawned
 
 

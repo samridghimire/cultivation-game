@@ -115,3 +115,18 @@ func test_game_state_explore_and_choose() -> void:
 	gs.end_session()
 	gs.data.encounters.erase("test_traveller")
 	gs.data.encounters.erase("test_grateful")
+
+
+func test_qilin_choice_grants_bloodline_and_is_locked_for_bloodline_bearers() -> void:
+	var d := data()
+	var c := new_character()
+	c.realm_index = 2
+	var qilin: Dictionary = d.encounters["mountain_dying_qilin"]
+	var flags := {}
+	assert_true(Exploration.resolve_choice(c, d, qilin, 0, flags)["ok"])
+	assert_eq(c.bloodline, "qilin")
+	assert_true(c.bloodline_awakened)
+	assert_true(flags.get("met_dying_qilin", false))
+	var list := Exploration.choices(c, d, qilin, flags)
+	assert_true(list[0]["disabled"] and list[1]["disabled"], "already carries a bloodline")
+	assert_false(list[2]["disabled"], "walking away is always possible")
