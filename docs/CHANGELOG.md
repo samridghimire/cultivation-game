@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-03 [ART-003a] The Creation Artifact's second function, the Appraising Eye (Qi Refining, 400 energy): once unsealed it reads an NPC's realm, spiritual root, talent tier, attributes, remaining years and the colour of their heart, and an item's grade, power and worth (Appraisal.describe_npc/describe_item; everything stays hidden while sealed). UI follows in ART-003c.
 - 2026-10-03 [G-008d] Sect missions content: 17 new missions, so every sect offers 10-11 fitting its path (Azure Cloud patrols, fever relief, array upkeep and a Jade Python hunt; Blood Lotus press-gangs, blood pool offerings, silencing talebearers and soul offerings; Pavilion herb and sword orders, stolen consignments, star silver escorts and auction lots), and contribution shops stock rank 2-3 rewards up to the Core Forming Pill.
 - 2026-10-04 [QA-20261004-dao-practice-flake] test_dao: reseed GameState.rng before the practice check too, so the Dao-of-Breath assertion no longer fails ~1 run in 4.
 - 2026-10-03 [QA-20261003-5] Fixed: a widow carrying her late husband's child who married the player went through pregnancy twice as fast; it now runs at normal speed and still ends in exactly one birth.
