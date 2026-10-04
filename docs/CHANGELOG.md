@@ -2,6 +2,9 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-04 [QA-015] Bug hunt: new interactable fuzz (every menu option in every region for three character types, with and without the HUD), data cross-reference check (QA-012) and Steam Deck layout test (QA-013). Fixed what they found: fight logs said "the Xue Yao" for people, a fight's spoils were an orphan "(...)" log line, "1 rounds", "a Alchemist"/"a Outer Disciple" articles, map hints like "(2x qi)" inside sentences, the character sheet overflowing a Steam Deck screen (now scrolls), and a world reload with no running scene.
+- 2026-10-04 [QA-20261004-4] Tests are order-independent: the runner reseeds GameState.rng before every test (TEST_SEED_SALT varies it; the suite passes under six salts), and TEST_ONLY=<name> runs a single test file.
+- 2026-10-04 [G-004d] Forged gear sells back for at least its material cost: Azure Guard Robe 800, Profound Iron Spear 750, Profound Iron Lamellar 900, Star River Sword 2600, Vermilion Dragon-Scale Armor 3200.
 - 2026-10-04 [INT-20261004] Integrator pass: merged the 55 open PRs (#96, #100-#134, #136-#151, #153-#155; #152 closed as a duplicate of #151) with conflict fixes; gamepad: clan on R3 and message log on L3 (they shared buttons with other screens), a test that no two input actions share a binding, and the obtainability audit now counts sect shops and secret realm treasures.
 - 2026-10-04 [UI-007] Shop screen: merchants open a Buy/Sell window with item details, a comparison with your equipped gear, a quantity stepper (left/right) and reputation prices at faction merchants, instead of a long menu of Buy/Sell lines.
 - 2026-10-03 [FAM-002i] NPC menus offer "Chat with <name>" (NPCs without dialogue) and "Give <name> a gift", which lists carried items with the favor each is worth; refusals show their reason. Generated courtship candidates can now be befriended in-game.

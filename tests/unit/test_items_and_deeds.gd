@@ -236,3 +236,13 @@ func test_deed_validation() -> void:
 	assert_eq(Deeds.validate(d).size(), 3)
 	d.deeds = data().deeds
 	assert_eq(Deeds.validate(d).size(), 0)
+
+
+func test_forged_gear_sells_back_for_at_least_its_materials() -> void:
+	# G-004d: a smith who sells what they forge should at least break even.
+	for recipe: Dictionary in data().recipes.values():
+		if recipe["profession"] != "blacksmith":
+			continue
+		var item_id: String = recipe["output"]["item"]
+		var material := Items.material_value(data(), item_id)
+		assert_true(Items.sell_price(data(), item_id) >= floori(material), "%s sells for %d, materials cost %.0f" % [item_id, Items.sell_price(data(), item_id), material])
