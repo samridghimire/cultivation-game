@@ -242,6 +242,7 @@ func test_deed_with_enemy_needs_a_win() -> void:
 	assert_false(gs.world_flags.get("bandit_camp_gone", false), "a mortal loses to the bandit lord")
 	assert_eq(c.alignment, alignment_before)
 	assert_true(c.alive, "the bandit lord is not lethal")
+	c.injuries.clear()  # the beating's injuries would halve a Foundation cultivator's strength
 	c.realm_index = gs.data.realm_index_of("foundation_establishment")
 	gs.perform_deed("free_bandit_captives")
 	assert_true(gs.world_flags.get("bandit_camp_gone", false), "a Foundation cultivator wins and frees them")

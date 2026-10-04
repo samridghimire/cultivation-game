@@ -51,7 +51,7 @@ func test_strike_opens_the_fight_and_is_consumed() -> void:
 func test_strike_and_shield_raise_win_chance() -> void:
 	var c := new_character()
 	c.realm_index = 1
-	var enemy := _enemy("qi_refining", 5)
+	var enemy := _enemy("qi_refining", 0)
 	var without := Combat.win_chance(c, data(), enemy)
 	c.add_item("fire_strike_talisman", 1)
 	c.add_item("earth_wall_talisman", 1)

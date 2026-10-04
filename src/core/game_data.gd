@@ -45,6 +45,14 @@ var method_switch_days := 7
 var method_over_cap_rate := 1.0
 var enemies: Dictionary = {}  # id -> Dictionary
 var enemy_technique_level := 3
+## Per realm index: flat {attack, defense, max_hp, speed} bonuses every enemy of
+## that realm gets on top of realm power (scaled like technique bonuses). The
+## last entry applies to higher realms. Stands in for the techniques and gear
+## a same-realm player has (QA-007d).
+var enemy_realm_training: Array = []
+## Each side's attack in a fight is multiplied by a random form in
+## [1 - spread, 1 + spread], so close fights are not foregone conclusions.
+var combat_form_spread := 0.0
 ## Fraction of spirit stones lost when beaten by a non-lethal enemy.
 var defeat_stone_loss := 0.2
 var injuries: Dictionary = {}  # id -> Dictionary
@@ -204,6 +212,8 @@ func _load(dir: String) -> void:
 
 	var foes := _read(dir, "enemies.json")
 	enemy_technique_level = int(foes.get("enemy_technique_level", enemy_technique_level))
+	enemy_realm_training = foes.get("realm_training", [])
+	combat_form_spread = float(foes.get("form_spread", combat_form_spread))
 	defeat_stone_loss = float(foes.get("defeat_stone_loss", defeat_stone_loss))
 	for enemy in foes.get("enemies", []):
 		enemies[enemy["id"]] = enemy
@@ -358,6 +368,15 @@ func _validate_world() -> void:
 
 
 func _validate_combat() -> void:
+	if combat_form_spread < 0.0 or combat_form_spread >= 1.0:
+		load_errors.append("enemies.json form_spread must be in [0, 1)")
+	for entry in enemy_realm_training:
+		if not entry is Dictionary:
+			load_errors.append("enemies.json realm_training entries must be objects")
+			continue
+		for key in entry:
+			if not key in ["attack", "defense", "max_hp", "speed"]:
+				load_errors.append("enemies.json realm_training has unknown stat '%s'" % key)
 	var element_ids: Array = root_elements.map(func(e): return e["id"])
 	for def: TechniqueDef in techniques.values():
 		if realm_index_of(def.min_realm) < 0:
