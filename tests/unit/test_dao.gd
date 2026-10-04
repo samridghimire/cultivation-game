@@ -106,6 +106,7 @@ func test_game_state_contemplate_and_practice() -> void:
 	var gs := (Engine.get_main_loop() as SceneTree).root.get_node("GameState")
 	var c := CharacterFactory.create("Sage", gs.data, seeded_rng())
 	gs.start_session(c)
+	gs.rng.seed = 12345  # Comprehension checks cap at 95%: don't depend on what earlier tests rolled
 	var clock := (Engine.get_main_loop() as SceneTree).root.get_node("GameClock")
 	var days_before: int = clock.total_days
 	gs.contemplate_dao("fire_dao", 30)  # refused: not glimpsed, no time passes
@@ -117,6 +118,7 @@ func test_game_state_contemplate_and_practice() -> void:
 	assert_eq(clock.total_days, days_before + 365)
 	assert_gt(Dao.level(c, "fire_dao"), 1)
 	Techniques.learn(c, gs.data, "basic_breathing")
+	gs.rng.seed = 7  # the year of contemplation drew a varying number of rolls (world sim); reseed for the practice check
 	gs.practice_technique("basic_breathing", 400)
 	assert_gt(Dao.level(c, "dao_of_breath"), 0)
 	gs.end_session()
