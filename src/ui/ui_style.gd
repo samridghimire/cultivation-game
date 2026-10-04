@@ -14,15 +14,21 @@ const CATEGORY_COLORS := {
 }
 
 
-static func panel(min_size: Vector2 = Vector2.ZERO) -> PanelContainer:
-	var p := PanelContainer.new()
+## The shared panel look, for Controls that are themselves the panel (screens
+## extending PanelContainer): add_theme_stylebox_override("panel", UIStyle.panel_style()).
+static func panel_style() -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
 	style.bg_color = PANEL
 	style.set_corner_radius_all(6)
 	style.set_content_margin_all(12)
 	style.border_color = ACCENT.darkened(0.5)
 	style.set_border_width_all(1)
-	p.add_theme_stylebox_override("panel", style)
+	return style
+
+
+static func panel(min_size: Vector2 = Vector2.ZERO) -> PanelContainer:
+	var p := PanelContainer.new()
+	p.add_theme_stylebox_override("panel", panel_style())
 	p.custom_minimum_size = min_size
 	return p
 

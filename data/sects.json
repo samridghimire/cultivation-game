@@ -1,11 +1,23 @@
 {
-  "_doc": "Sects the player can join. Alignment bounds are inclusive. min_realm is a realm id. cultivation_bonus multiplies qi gathering for members. Rank promotion is automatic once contribution reaches a rank's threshold. shop (optional, G-008c): contribution shop entries [{item_id, contribution (cost, >= 1), min_rank (rank index needed, default 0)}]; spending contribution never lowers rank (rank follows lifetime contribution).",
+  "_doc": "Sects the player can join. Alignment bounds are inclusive. min_realm is a realm id. cultivation_bonus multiplies qi gathering for members. Rank promotion is automatic once contribution reaches a rank's threshold. robe_color (optional, hex) is the robe members wear on the world map. shop (optional, G-008c): contribution shop entries [{item_id, contribution (cost, >= 1), min_rank (rank index needed, default 0)}]; spending contribution never lowers rank (rank follows lifetime contribution). reputation (top level): standing with each sect, separate from alignment; start value, min/max range, leave_penalty (lost with a sect when you leave it), mission_rate (reputation per point of mission contribution with your own sect), tiers [{min, name, price_mult}] ascending by min (price_mult applies at merchants whose region place has that sect as 'faction'). Per-sect reputation: min_join (reputation needed to join) and deed_scale (a witnessed alignment change of D moves this sect's reputation by D * deed_scale; negative = the sect admires what others condemn). Effects can also change reputation directly with {\"reputation\": {sect_id: delta}}.",
+  "reputation": {
+    "start": 0, "min": -1000, "max": 1000, "leave_penalty": 150, "mission_rate": 0.1,
+    "tiers": [
+      {"min": -1000, "name": "Hated", "price_mult": 1.5},
+      {"min": -400, "name": "Distrusted", "price_mult": 1.2},
+      {"min": -100, "name": "Unknown", "price_mult": 1.0},
+      {"min": 100, "name": "Respected", "price_mult": 0.95},
+      {"min": 300, "name": "Honored", "price_mult": 0.9},
+      {"min": 700, "name": "Revered", "price_mult": 0.8}
+    ]
+  },
   "sects": [
     {
-      "id": "azure_cloud_sect", "name": "Azure Cloud Sect", "alignment": "righteous",
+      "id": "azure_cloud_sect", "name": "Azure Cloud Sect", "alignment": "righteous", "robe_color": "3f6fb5",
       "description": "An orthodox sect on misty peaks. Values virtue, discipline and the protection of mortals.",
       "min_alignment": -100, "max_alignment": 1000, "min_realm": "qi_refining", "cultivation_bonus": 1.5,
       "favored_professions": ["alchemist", "array_master"],
+      "reputation": {"min_join": -100, "deed_scale": 1.0},
       "shop": [{"item_id": "qi_gathering_pill", "contribution": 15, "min_rank": 0}, {"item_id": "superior_qi_gathering_pill", "contribution": 40, "min_rank": 0}, {"item_id": "meridian_mending_pill", "contribution": 100, "min_rank": 0}, {"item_id": "recipe_clear_heart_pill", "contribution": 80, "min_rank": 0}, {"item_id": "manual_flowing_water", "contribution": 200, "min_rank": 1}, {"item_id": "foundation_establishment_pill", "contribution": 250, "min_rank": 1}, {"item_id": "recipe_foundation_establishment_pill", "contribution": 400, "min_rank": 2}],
       "ranks": [
         {"name": "Outer Disciple", "contribution": 0},
@@ -15,10 +27,11 @@
       ]
     },
     {
-      "id": "blood_lotus_sect", "name": "Blood Lotus Sect", "alignment": "demonic",
+      "id": "blood_lotus_sect", "name": "Blood Lotus Sect", "alignment": "demonic", "robe_color": "8b1e2d",
       "description": "A feared demonic sect. Strength is the only law; the weak are resources.",
       "min_alignment": -1000, "max_alignment": 0, "min_realm": "mortal", "cultivation_bonus": 1.4,
       "favored_professions": ["talisman_master", "beast_tamer"],
+      "reputation": {"min_join": -300, "deed_scale": -0.5},
       "shop": [{"item_id": "qi_gathering_pill", "contribution": 15, "min_rank": 0}, {"item_id": "blood_essence_pill", "contribution": 100, "min_rank": 0}, {"item_id": "blood_demon_pill", "contribution": 120, "min_rank": 0}, {"item_id": "recipe_blood_demon_pill", "contribution": 90, "min_rank": 0}, {"item_id": "manual_blood_shadow_flight", "contribution": 80, "min_rank": 1}, {"item_id": "foundation_establishment_pill", "contribution": 250, "min_rank": 1}],
       "ranks": [
         {"name": "Blood Servant", "contribution": 0},
@@ -28,10 +41,11 @@
       ]
     },
     {
-      "id": "myriad_treasure_pavilion", "name": "Myriad Treasure Pavilion", "alignment": "neutral",
+      "id": "myriad_treasure_pavilion", "name": "Myriad Treasure Pavilion", "alignment": "neutral", "robe_color": "b08a2e",
       "description": "A merchant sect that trades with anyone who pays. Rewards craftsmen generously.",
       "min_alignment": -500, "max_alignment": 1000, "min_realm": "qi_refining", "cultivation_bonus": 1.2,
       "favored_professions": ["blacksmith", "alchemist", "doctor"],
+      "reputation": {"min_join": -400, "deed_scale": 0.25},
       "shop": [{"item_id": "qi_gathering_pill", "contribution": 12, "min_rank": 0}, {"item_id": "spirit_gathering_pill", "contribution": 80, "min_rank": 0}, {"item_id": "recipe_spirit_gathering_pill", "contribution": 100, "min_rank": 0}, {"item_id": "manual_wind_step", "contribution": 160, "min_rank": 0}, {"item_id": "cold_iron_saber", "contribution": 200, "min_rank": 1}, {"item_id": "foundation_establishment_pill", "contribution": 260, "min_rank": 1}, {"item_id": "recipe_meridian_rebuilding_pill", "contribution": 280, "min_rank": 1}],
       "ranks": [
         {"name": "Junior Steward", "contribution": 0},
