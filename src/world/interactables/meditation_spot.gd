@@ -3,7 +3,8 @@ extends Interactable
 ## Spouses living in this region can join for dual cultivation (FAM-002b)
 ## or try for a child (FAM-003c). A breakthrough that brings a Heavenly
 ## Tribulation opens the TribulationScreen first (TRIB-001b).
-## Glimpsed Dao insights can be contemplated here (DAO-001b).
+## Glimpsed Dao insights can be contemplated here (DAO-001b), and the body
+## tempered (BODY-001).
 
 @export var qi_density := 1.0
 
@@ -27,6 +28,9 @@ func get_options() -> Array[Dictionary]:
 		var tech_name: String = GameState.data.techniques[tech_id].name
 		options.append({"label": "Practice %s (1 month)" % tech_name, "action": GameState.practice_technique.bind(tech_id, Calendar.DAYS_PER_MONTH), "keep_open": true})
 	options.append_array(_contemplation_options())
+	var temper := _temper_option()
+	if not temper.is_empty():
+		options.append(temper)
 	return options
 
 
@@ -42,6 +46,21 @@ func _contemplation_options() -> Array[Dictionary]:
 			label += " (%s)" % reason
 		options.append({"label": label, "action": GameState.contemplate_dao.bind(insight_id, Calendar.DAYS_PER_MONTH), "disabled": reason != "", "keep_open": true})
 	return options
+
+
+## "Temper your body: <stage> (cost)" with the BodyTempering.check_temper reason
+## when disabled; {} once the body is fully tempered.
+static func _temper_option() -> Dictionary:
+	var p := GameState.player
+	var data := GameState.data
+	var stage := BodyTempering.next_stage(p, data)
+	if stage.is_empty():
+		return {}
+	var label := "Temper your body: %s (%s)" % [stage["name"], BodyTempering.describe_next(p, data)]
+	var reason := BodyTempering.check_temper(p, data)
+	if reason != "":
+		label += " (%s)" % reason
+	return {"label": label, "action": GameState.temper_body, "disabled": reason != "", "keep_open": true}
 
 
 func _dual_cultivation_options() -> Array[Dictionary]:

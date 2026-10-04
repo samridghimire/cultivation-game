@@ -96,6 +96,8 @@ var gratitude: Dictionary = {}
 var secret_realms: Dictionary = {}
 ## Secret realm ids whose inheritance this character received (once per life, W-005d).
 var inheritances: Array[String] = []
+## Body tempering stages reached (data/body_tempering.json, BodyTempering); 0 = untempered.
+var body_stage := 0
 
 
 func attribute(attr_id: String) -> int:
@@ -182,6 +184,7 @@ func to_dict() -> Dictionary:
 		"gratitude": gratitude.duplicate(),
 		"secret_realms": secret_realms.duplicate(true),
 		"inheritances": inheritances.duplicate(),
+		"body_stage": body_stage,
 	}
 
 
@@ -258,6 +261,7 @@ static func from_dict(d: Dictionary) -> CharacterData:
 	c.abode_storage = _int_values(d.get("abode_storage", {}))
 	c.grudges = _int_values(d.get("grudges", {}))
 	c.gratitude = _int_values(d.get("gratitude", {}))
+	c.body_stage = int(d.get("body_stage", 0))
 	var delves: Dictionary = d.get("secret_realms", {})
 	for realm_id in delves:
 		c.secret_realms[String(realm_id)] = {"opening": int(delves[realm_id].get("opening", -1)), "floor": int(delves[realm_id].get("floor", 0))}

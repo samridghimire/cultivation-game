@@ -91,6 +91,8 @@ var help_action_names: Dictionary = {}
 var secret_realms: Dictionary = {}  # id -> Dictionary (data/secret_realms.json, SecretRealms)
 var auction_houses: Dictionary = {}  # id -> Dictionary (data/auctions.json, Auctions)
 var inheritances: Dictionary = {}  # id -> Dictionary (data/inheritances.json, Inheritances)
+## data/body_tempering.json: rules and ordered "stages" (BodyTempering).
+var body_tempering: Dictionary = {}
 ## Problems found while loading. Empty when all data files are valid.
 var load_errors: PackedStringArray = []
 
@@ -257,6 +259,7 @@ func _load(dir: String) -> void:
 		auction_houses[auction_house["id"]] = auction_house
 	for legacy in _read(dir, "inheritances.json").get("inheritances", []):
 		inheritances[legacy["id"]] = legacy
+	body_tempering = _read(dir, "body_tempering.json")
 	_validate()
 
 
@@ -322,6 +325,7 @@ func _validate() -> void:
 	load_errors.append_array(Sects.validate_shops(self))
 	load_errors.append_array(Sects.validate_ranks(self))
 	load_errors.append_array(Auctions.validate(self))
+	load_errors.append_array(BodyTempering.validate(self))
 	for item: Dictionary in items.values():
 		if item.get("effects", {}).has("buff"):
 			for error in Buffs.validate_effect(item["effects"]["buff"]):
