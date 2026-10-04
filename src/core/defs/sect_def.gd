@@ -13,6 +13,12 @@ var cultivation_bonus := 1.0
 var favored_professions: PackedStringArray = []
 var ranks: Array[Dictionary] = []  # [{name, contribution}], ascending
 var robe_color := ""  # hex; "" = the default rogue robe
+## Reputation (Reputation system) needed to join.
+var reputation_min_join := -1000000
+## Witnessed alignment changes move this sect's reputation by delta * deed_scale.
+var reputation_deed_scale := 0.0
+## Contribution shop (G-008c): [{item_id, contribution, min_rank}].
+var shop: Array[Dictionary] = []
 
 
 static func from_dict(d: Dictionary) -> SectDef:
@@ -28,6 +34,10 @@ static func from_dict(d: Dictionary) -> SectDef:
 	s.favored_professions = PackedStringArray(d.get("favored_professions", []))
 	s.ranks.assign(d.get("ranks", []))
 	s.robe_color = String(d.get("robe_color", ""))
+	var rep: Dictionary = d.get("reputation", {})
+	s.reputation_min_join = int(rep.get("min_join", s.reputation_min_join))
+	s.reputation_deed_scale = float(rep.get("deed_scale", 0))
+	s.shop.assign(d.get("shop", []))
 	return s
 
 
