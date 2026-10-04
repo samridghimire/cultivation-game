@@ -569,6 +569,49 @@ func propose(npc_id: String, rank: String) -> void:
 	_pass_time(result["days"])
 
 
+## Commit a hostile act (data/karma.json: humiliate, rob, kill) against an NPC.
+## Acts with "fight" make you beat them first. The victim and their kin hold a grudge.
+func hostile_act(npc_id: String, act_id: String) -> void:
+	if not _can_act():
+		return
+	var npc: CharacterData = npcs.get(npc_id)
+	var reason := Karma.check_act(player, npc, act_id, data)
+	if reason != "":
+		EventBus.post(reason, "warning")
+		EventBus.player_changed.emit()
+		return
+	var act := Karma.act(data, act_id)
+	var won := true
+	if bool(act.get("fight", false)):
+		EventBus.post("You turn on %s." % npc.name, "danger")
+		won = fight_enemy(Karma.npc_enemy(npc, data))
+		if not _can_act():
+			return
+	var result := Karma.commit(player, npc, act_id, won, npcs, data, rng)
+	npc_favor[npc_id] = int(npc_favor.get(npc_id, 0)) + int(result["favor"])
+	var notes: PackedStringArray = result["notes"]
+	var suffix := " (%s)" % ", ".join(notes) if not notes.is_empty() else ""
+	if not won:
+		EventBus.post("%s drives you off.%s" % [npc.name, suffix], "warning")
+	elif not npc.alive:
+		EventBus.post("You kill %s.%s" % [npc.name, suffix], "danger")
+	else:
+		EventBus.post("%s: %s.%s" % [String(act.get("name", act_id)), npc.name, suffix], "warning")
+	_pass_time(result["days"])
+
+
+## Pay spirit stones to clear an NPC's grudge against you (Karma.amends_cost).
+func make_amends(npc_id: String) -> void:
+	if not _can_act():
+		return
+	var result := Karma.make_amends(player, npcs.get(npc_id), data)
+	if not result["ok"]:
+		EventBus.post(result["reason"], "warning")
+	else:
+		EventBus.post("You offer %s %d spirit stones and an apology. The grudge is settled." % [npcs[npc_id].name, result["cost"]], "progress")
+	EventBus.player_changed.emit()
+
+
 ## Cultivate together with a spouse who is in the current region: both gain
 ## qi with the dual cultivation bonus (data/family.json) and favor rises.
 func dual_cultivate(spouse_id: String, days: int, location_density: float = 1.0) -> void:
@@ -1205,6 +1248,7 @@ func _on_days_advanced(days: int) -> void:
 			var spouse: CharacterData = npcs.get(spouse_id)
 			if spouse != null and spouse.alive:
 				npc_favor[spouse_id] = Family.add_spouse_favor(data, int(npc_favor.get(spouse_id, 0)), spouse_favor)
+	Karma.decay(player, data, Karma.decay_amount(data, age_before, player.age_days))
 	for injury_id in Injuries.pass_days(player, days):
 		EventBus.post("Your %s has healed." % Injuries.injury_name(data, injury_id), "progress")
 	for buff_name in Buffs.pass_days(player, days):
