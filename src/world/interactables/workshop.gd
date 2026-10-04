@@ -1,9 +1,9 @@
 extends Interactable
 ## Odd jobs that train a profession and pay spirit stones. Alchemists refine
-## pills, Blacksmiths forge artifacts and Talisman Masters inscribe talismans and Array Masters refine array discs from recipes (data/recipes.json)
+## pills, Blacksmiths forge artifacts and Talisman Masters inscribe talismans and Array Masters refine array discs and Beast Tamers mix beast feed from recipes (data/recipes.json)
 ## instead of doing odd jobs; each craft opens the CraftingScreen.
 
-const CRAFTS := ["alchemist", "blacksmith", "talisman_master", "array_master"]
+const CRAFTS := ["alchemist", "blacksmith", "talisman_master", "array_master", "beast_tamer"]
 
 
 func get_options() -> Array[Dictionary]:

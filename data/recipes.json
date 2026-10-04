@@ -54,6 +54,8 @@
     {"id": "soul_calming_pill", "name": "Soul Calming Pill", "profession": "alchemist", "ingredients": {"nine_leaf_soul_grass": 1, "hundred_year_snow_lotus": 1, "dew_grass": 2}, "output": {"item": "soul_calming_pill", "count": 1}, "min_rank": 5, "days": 20, "difficulty": 0.3, "xp": 420},
     {"id": "purifying_lotus_pill", "name": "Purifying Lotus Pill", "profession": "alchemist", "ingredients": {"hundred_year_snow_lotus": 2, "ice_soul_flower": 1}, "output": {"item": "purifying_lotus_pill", "count": 1}, "min_rank": 5, "days": 18, "difficulty": 0.28, "xp": 380},
     {"id": "core_mending_pill", "name": "Core Mending Pill", "profession": "alchemist", "ingredients": {"golden_core_lotus_seed": 1, "earth_marrow_fungus": 1, "thousand_year_lingzhi": 1}, "output": {"item": "core_mending_pill", "count": 1}, "min_rank": 5, "days": 25, "difficulty": 0.34, "xp": 600},
-    {"id": "tiger_bone_plaster", "name": "Tiger-Bone Plaster", "profession": "alchemist", "ingredients": {"blood_ginseng": 1, "flame_lotus": 2}, "output": {"item": "tiger_bone_plaster", "count": 1}, "min_rank": 4, "days": 10, "difficulty": 0.22, "xp": 240}
+    {"id": "tiger_bone_plaster", "name": "Tiger-Bone Plaster", "profession": "alchemist", "ingredients": {"blood_ginseng": 1, "flame_lotus": 2}, "output": {"item": "tiger_bone_plaster", "count": 1}, "min_rank": 4, "days": 10, "difficulty": 0.22, "xp": 240},
+    {"id": "spirit_beast_pellet", "name": "Spirit Beast Pellet", "profession": "beast_tamer", "ingredients": {"spirit_herb": 2, "dew_grass": 1}, "output": {"item": "spirit_beast_pellet", "count": 3}, "min_rank": 0, "days": 3, "difficulty": 0.0, "xp": 30, "starter": true},
+    {"id": "beast_marrow_pill", "name": "Beast Marrow Pill", "profession": "beast_tamer", "ingredients": {"blood_ginseng": 1, "qi_condensing_grass": 2, "spirit_stone": 10}, "output": {"item": "beast_marrow_pill", "count": 2}, "min_rank": 2, "days": 8, "difficulty": 0.12, "xp": 110, "starter": true}
 ]
 }
