@@ -1,14 +1,42 @@
 class_name Player
 extends CharacterBody2D
 ## Top-down player avatar: movement and choosing which interactable to use.
-## Placeholder art is drawn in _draw() until real sprites exist.
+## Placeholder art is drawn in _draw() until real sprites exist: a robed
+## cultivator facing the walking direction, colored by PlayerLook.
 
 const SPEED := 220.0
 const RADIUS := 14.0
 
+## Walking bob height and speed, aura pulse speed.
+const BOB_PIXELS := 2.0
+const BOB_SPEED := 14.0
+const AURA_SPEED := 2.5
+
 var input_enabled := true
 var _nearby: Array[Interactable] = []
 var _target: Interactable
+var _look: Dictionary = {}
+var _facing := Vector2.DOWN
+var _time := 0.0
+
+
+func _ready() -> void:
+	EventBus.player_changed.connect(refresh_look)
+	EventBus.session_started.connect(refresh_look)
+	refresh_look.call_deferred()
+
+
+## Re-reads the player's sect, alignment and realm for the placeholder art.
+func refresh_look() -> void:
+	if GameState.has_session():
+		_look = PlayerLook.of(GameState.player, GameState.data)
+	queue_redraw()
+
+
+func _process(delta: float) -> void:
+	_time += delta
+	if velocity != Vector2.ZERO or int(_look.get("aura_rings", 0)) > 0:
+		queue_redraw()
 
 
 func _physics_process(_delta: float) -> void:
@@ -16,6 +44,8 @@ func _physics_process(_delta: float) -> void:
 	if input_enabled:
 		direction = Input.get_vector("move_left", "move_right", "move_up", "move_down")
 	velocity = direction * SPEED
+	if direction != Vector2.ZERO:
+		_facing = direction.normalized()
 	move_and_slide()
 	_update_target()
 
@@ -46,10 +76,52 @@ func _update_target() -> void:
 			best = i
 			best_dist = d
 	if best != _target:
+		if is_instance_valid(_target):
+			_target.highlighted = false
 		_target = best
+		if best:
+			best.highlighted = true
 		EventBus.interaction_target_changed.emit(best.display_name if best else "")
 
 
 func _draw() -> void:
-	draw_circle(Vector2.ZERO, RADIUS, Color("e8d9a8"))
-	draw_arc(Vector2.ZERO, RADIUS, 0, TAU, 32, Color("3b2f1e"), 2.0)
+	var robe: Color = _look.get("robe", PlayerLook.ROGUE_ROBE)
+	var sash: Color = _look.get("sash", PlayerLook.SASH_COLORS["neutral"])
+	var outline := Color("3b2f1e")
+	_draw_aura()
+	# Shadow stays on the ground; the body bobs while walking.
+	draw_set_transform(Vector2(0, RADIUS - 2), 0.0, Vector2(1.0, 0.4))
+	draw_circle(Vector2.ZERO, RADIUS, Color(0, 0, 0, 0.3))
+	draw_set_transform(Vector2.ZERO)
+	var bob := -absf(sin(_time * BOB_SPEED)) * BOB_PIXELS if velocity != Vector2.ZERO else 0.0
+	var o := Vector2(0, bob)
+	# Robe: a flared trapezoid with a sash across the waist.
+	var robe_shape := PackedVector2Array([o + Vector2(-7, -6), o + Vector2(7, -6), o + Vector2(12, 12), o + Vector2(-12, 12)])
+	draw_colored_polygon(robe_shape, robe)
+	robe_shape.append(robe_shape[0])
+	draw_polyline(robe_shape, outline, 1.5)
+	draw_line(o + Vector2(-9, 2), o + Vector2(9, 2), sash, 3.0)
+	# Head, hair bun and a face that looks where the player walks.
+	var head := o + Vector2(0, -12)
+	draw_circle(head, 7.0, Color("e8d9a8"))
+	draw_arc(head, 7.0, 0, TAU, 24, outline, 1.5)
+	var away := -_facing * 4.0 if _facing.y > -0.5 else Vector2(0, -2)
+	draw_circle(head + away + Vector2(0, -3), 3.5, Color("2a2018"))
+	if _facing.y > -0.5:
+		var eyes := head + Vector2(_facing.x * 3.0, 1.0 + _facing.y)
+		draw_circle(eyes + Vector2(-2.5, 0), 1.0, outline)
+		draw_circle(eyes + Vector2(2.5, 0), 1.0, outline)
+
+
+## Pulsing qi rings at the feet: one per realm above mortal (PlayerLook).
+func _draw_aura() -> void:
+	var rings := int(_look.get("aura_rings", 0))
+	if rings <= 0:
+		return
+	var aura: Color = _look["aura"]
+	var pulse := 0.5 + 0.5 * sin(_time * AURA_SPEED)
+	draw_set_transform(Vector2(0, RADIUS - 2), 0.0, Vector2(1.0, 0.45))
+	for i in rings:
+		var r := RADIUS + 4.0 + i * 5.0 + pulse * 2.0
+		draw_arc(Vector2.ZERO, r, 0, TAU, 32, Color(aura, 0.55 - 0.1 * i), 2.0)
+	draw_set_transform(Vector2.ZERO)

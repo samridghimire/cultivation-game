@@ -139,3 +139,12 @@ func test_describe_lists_lives_and_anchors() -> void:
 	assert_true(lines[0].begins_with("Lives: %d" % c.artifact_lives))
 	assert_true(lines[0].contains("%d spirit stones" % CreationArtifact.recharge_cost(c, data())))
 	assert_true(lines[-1].contains("respawn point"))
+
+
+func test_every_region_offers_a_choice_of_anchors() -> void:
+	var per_region := {}
+	for anchor_id: String in data().anchors:
+		var region: String = data().anchors[anchor_id]["region"]
+		per_region[region] = int(per_region.get(region, 0)) + 1
+	for region_id: String in data().regions:
+		assert_true(int(per_region.get(region_id, 0)) >= 2, "%s has at least two artifact anchors" % region_id)
