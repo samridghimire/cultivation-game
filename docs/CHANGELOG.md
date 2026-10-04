@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-04 [QA-20261004-2] Scenery no longer grows on cave abode sites; abodes get the same clearance as places.
 - 2026-10-03 [VIS-003] Places are drawn as what they are (qi pools, market stalls, workshops, sect halls, gates, herb patches, caves, robed NPC figures) instead of rectangles, and the current interaction target pulses.
 - 2026-10-03 [VIS-002] Region maps get scenery: trees, rocks, grass and flowers placed deterministically per region off paths and places, themed per region via regions.json map.decor.
 - 2026-10-04 [QA-20261004-1] Fixed a flaky Dao test (it depended on the shared GameState rng) that turned main red after unrelated tests were added.

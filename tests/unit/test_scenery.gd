@@ -55,3 +55,23 @@ func test_validate_flags_bad_decor() -> void:
 	var d := GameData.new()
 	d.regions = {"bad": {"id": "bad", "map": {"decor": {"trees": -1, "rock_color": "nope", "dragons": 2}}}}
 	assert_eq(Scenery.validate(d).size(), 3)
+
+
+func test_decor_avoids_abodes() -> void:
+	# QA-20261004-2: abodes (G-010) are drawn on the map too; trees must not cover them.
+	var region := _region()
+	region["abodes"] = [{"id": "cave", "pos": [600, 150], "size": [90, 70]}]
+	region["map"]["decor"] = {"trees": 300, "rocks": 0, "grass": 0, "flowers": 0}
+	var abode := Rect2(Vector2(600, 150) - Vector2(45, 35), Vector2(90, 70)).grow(Scenery.CLEARANCE)
+	for d in Scenery.place(region, seeded_rng(11)):
+		assert_false(abode.has_point(d["pos"]), "tree at %s on the abode" % d["pos"])
+
+
+func test_real_abodes_are_clear_of_scenery() -> void:
+	for region: Dictionary in data().regions.values():
+		var placed := Scenery.place(region, seeded_rng())
+		for abode: Dictionary in region.get("abodes", []):
+			var size := Vector2(float(abode["size"][0]), float(abode["size"][1]))
+			var rect := Rect2(Vector2(float(abode["pos"][0]), float(abode["pos"][1])) - size / 2.0, size)
+			for d in placed:
+				assert_false(rect.has_point(d["pos"]), "%s decor on abode %s" % [region["id"], abode["id"]])
