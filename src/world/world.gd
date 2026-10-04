@@ -24,6 +24,7 @@ const PLACE_SCRIPTS := {
 const LAYOUT_KEYS := ["type", "pos"]
 const NPC_SCRIPT := preload("res://src/world/interactables/npc.gd")
 const ABODE_SCRIPT := preload("res://src/world/interactables/abode.gd")
+const FAMILY_HOME_SCRIPT := preload("res://src/world/interactables/family_home.gd")
 ## Placeholder body color of generated NPCs by gender.
 const GENDER_COLORS := {"male": Color("8fb3e0"), "female": Color("e6a3c4")}
 
@@ -108,6 +109,22 @@ func _build_places() -> void:
 		add_child(node)
 		move_child(node, player.get_index())
 	_build_abodes()
+	_build_family_home()
+
+
+## The Family Home (FAM-011) while the player's spouses or children live here.
+func _build_family_home() -> void:
+	if not FamilyHome.has_home(GameState.player, GameState.npcs, GameState.data, GameState.current_region):
+		return
+	var home: Dictionary = _region["family_home"]
+	var node: Interactable = FAMILY_HOME_SCRIPT.new()
+	node.display_name = "Family Home"
+	node.position = _vec(home.get("pos", [0, 0]))
+	node.size = _vec(home.get("size", [90, 64]))
+	node.color = Color(String(home.get("color", "c9a77a")))
+	node.art_kind = "family_home"
+	add_child(node)
+	move_child(node, player.get_index())
 
 
 ## Claimable cave abodes (region "abodes", G-010b).
@@ -154,12 +171,25 @@ func _build_npcs() -> void:
 	_build_generated_npcs()
 
 
-## Generated NPCs (Npcs.spawn, no def) stand at the region's npc_spots,
-## colored by gender; children are drawn smaller.
+## Generated NPCs (Npcs.spawn, no def) stand at the region's npc_spots (the
+## player's family at those nearest the Family Home), colored by gender; children are
+## drawn smaller.
 func _build_generated_npcs() -> void:
 	var data := GameState.data
 	var people := Npcs.generated_in_region(GameState.npcs, data, GameState.current_region)
-	var spots := Npcs.spot_positions(people.size(), _region.get("npc_spots", []), player.position)
+	# The player's family takes the spots nearest the Family Home (FAM-011).
+	var family: Array[CharacterData] = []
+	if FamilyHome.has_home(GameState.player, GameState.npcs, data, GameState.current_region):
+		family.assign(people.filter(func(c: CharacterData) -> bool: return GameState.player.spouses.has(c.id) or GameState.player.children.has(c.id)))
+		var others: Array[CharacterData] = []
+		others.assign(people.filter(func(c: CharacterData) -> bool: return not family.has(c)))
+		people = others
+	var spots := Npcs.spot_positions(people.size() + family.size(), _region.get("npc_spots", []), player.position)
+	if not family.is_empty():
+		var split := FamilyHome.split_spots(spots, family.size(), _vec(_region["family_home"].get("pos", [0, 0])))
+		spots = split[1]
+		spots.append_array(split[0])
+		people.append_array(family)
 	for i in people.size():
 		var c := people[i]
 		var node: Interactable = NPC_SCRIPT.new()
