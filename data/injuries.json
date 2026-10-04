@@ -1,24 +1,47 @@
 {
-  "_doc": "Injuries. A character holds {injury_id: days_left}; time heals them day by day. cultivation_mult multiplies qi gathering, combat_mult multiplies max_hp/attack/defense; several injuries stack multiplicatively. Suffering an injury you already have resets it to the longer of the two durations. sources: when an injury may be inflicted. chance is the base probability (reduced by (fortune - 10) * fortune_step), table picks which injury by weight. Pills heal with the Effects key heal_injury: an injury id, or \"all\". treatment_cost: spirit stones a clinic charges to heal it fully (scaled by days left). medicine: Doctor rules (see medicine.gd); npc_treatment_days/npc_treatment_favor/npc_healed_favor (extra favor when the injury is fully healed)/npc_treatment_alignment apply when treating an injured NPC. The npc_mishap source is rolled monthly for every adult NPC (chance scaled by the fraction of a month simulated).",
+  "_doc": "Injuries. A character holds {injury_id: days_left}; time heals them day by day. cultivation_mult multiplies qi gathering, combat_mult multiplies max_hp/attack/defense; several injuries stack multiplicatively. Suffering an injury you already have resets it to the longer of the two durations. sources: when an injury may be inflicted. Table entries may set min_realm (a realm id): below it the entry is skipped, so higher-realm injuries only strike higher-realm cultivators. chance is the base probability (reduced by (fortune - 10) * fortune_step), table picks which injury by weight. Pills heal with the Effects key heal_injury: an injury id, or \"all\". treatment_cost: spirit stones a clinic charges to heal it fully (scaled by days left). medicine: Doctor rules (see medicine.gd); npc_treatment_days/npc_treatment_favor/npc_healed_favor (extra favor when the injury is fully healed)/npc_treatment_alignment apply when treating an injured NPC. The npc_mishap source is rolled monthly for every adult NPC (chance scaled by the fraction of a month simulated).",
   "fortune_step": 0.02,
-  "medicine": {
-    "self_treatment_days": 7,
-    "heal_days_per_rank": 15,
-    "clinic_days": 3,
-    "patient_xp_multiplier": 1.5,
-    "patient_alignment_per_month": 3, "npc_treatment_days": 3, "npc_treatment_favor": 5, "npc_healed_favor": 10, "npc_treatment_alignment": 5
-  },
+  "medicine": {"self_treatment_days": 7, "heal_days_per_rank": 15, "clinic_days": 3, "patient_xp_multiplier": 1.5, "patient_alignment_per_month": 3, "npc_treatment_days": 3, "npc_treatment_favor": 5, "npc_healed_favor": 10, "npc_treatment_alignment": 5},
   "injuries": [
     {"id": "qi_deviation", "name": "Qi Deviation", "description": "Qi runs wild through your meridians. Cultivating is slow and painful.", "cultivation_mult": 0.5, "combat_mult": 0.9, "heal_days": 180, "treatment_cost": 80},
     {"id": "damaged_meridians", "name": "Damaged Meridians", "description": "Your meridians are torn. Qi leaks out faster than you can gather it.", "cultivation_mult": 0.25, "combat_mult": 0.8, "heal_days": 365, "treatment_cost": 250},
     {"id": "broken_bones", "name": "Broken Bones", "description": "Several bones are broken. Fighting is out of the question.", "cultivation_mult": 0.9, "combat_mult": 0.5, "heal_days": 60, "treatment_cost": 20},
     {"id": "internal_injury", "name": "Internal Injury", "description": "A blow bruised your organs. You cough blood when you exert yourself.", "cultivation_mult": 0.7, "combat_mult": 0.7, "heal_days": 120, "treatment_cost": 50},
+    {"id": "meridian_rupture", "name": "Meridian Rupture", "description": "Foundation-level qi tore through meridians too narrow to hold it. Every breath of qi burns.", "cultivation_mult": 0.3, "combat_mult": 0.75, "heal_days": 300, "treatment_cost": 450},
+    {"id": "cracked_dantian", "name": "Cracked Dantian", "description": "A hairline crack runs through your liquid foundation. Qi seeps out as fast as you gather it.", "cultivation_mult": 0.4, "combat_mult": 0.85, "heal_days": 240, "treatment_cost": 500},
+    {"id": "spirit_burn", "name": "Spirit Burn", "description": "Scorched by a foe's qi, your skin and channels blister. It hurts to raise a hand in battle.", "cultivation_mult": 0.85, "combat_mult": 0.7, "heal_days": 90, "treatment_cost": 200},
+    {"id": "soul_scar", "name": "Soul Scar", "description": "A wound on the soul itself. Your divine sense flickers, and meditation brings nightmares.", "cultivation_mult": 0.5, "combat_mult": 0.8, "heal_days": 400, "treatment_cost": 1200},
+    {"id": "demonic_qi_corrosion", "name": "Demonic Qi Corrosion", "description": "Foul demonic qi lodged in your body eats at your meridians from within.", "cultivation_mult": 0.6, "combat_mult": 0.75, "heal_days": 300, "treatment_cost": 900},
+    {"id": "golden_core_fissure", "name": "Golden Core Fissure", "description": "A fissure runs across your golden core. Push it too hard and it may shatter.", "cultivation_mult": 0.25, "combat_mult": 0.8, "heal_days": 500, "treatment_cost": 1800},
+    {"id": "sundered_body", "name": "Sundered Body", "description": "Bones shattered and flesh torn by a Core Formation blow. You can barely stand, let alone fight.", "cultivation_mult": 0.9, "combat_mult": 0.45, "heal_days": 120, "treatment_cost": 600},
     {"id": "heart_demon", "name": "Heart Demon", "description": "The devoured cultivator's dying will lingers in your sea of consciousness, whispering while you meditate and clouding your moves in battle.", "cultivation_mult": 0.6, "combat_mult": 0.85, "heal_days": 240, "treatment_cost": 300}
   ],
   "sources": {
-    "npc_mishap": {"chance": 0.05, "table": [{"id": "broken_bones", "weight": 3}, {"id": "internal_injury", "weight": 2}, {"id": "qi_deviation", "weight": 1}]},
-    "breakthrough_failure": {"chance": 0.6, "table": [{"id": "qi_deviation", "weight": 3}, {"id": "damaged_meridians", "weight": 1}]},
-    "tribulation_failure": {"chance": 1.0, "table": [{"id": "internal_injury", "weight": 2}, {"id": "damaged_meridians", "weight": 1}]},
-    "combat_defeat": {"chance": 1.0, "table": [{"id": "broken_bones", "weight": 2}, {"id": "internal_injury", "weight": 1}]}
+    "npc_mishap": {"chance": 0.05, "table": [
+      {"id": "broken_bones", "weight": 3},
+      {"id": "internal_injury", "weight": 2},
+      {"id": "qi_deviation", "weight": 1}
+    ]},
+    "breakthrough_failure": {"chance": 0.6, "table": [
+      {"id": "qi_deviation", "weight": 3},
+      {"id": "damaged_meridians", "weight": 1},
+      {"id": "meridian_rupture", "weight": 2, "min_realm": "foundation_establishment"},
+      {"id": "cracked_dantian", "weight": 1, "min_realm": "foundation_establishment"},
+      {"id": "golden_core_fissure", "weight": 2, "min_realm": "core_formation"},
+      {"id": "soul_scar", "weight": 1, "min_realm": "core_formation"}
+    ]},
+    "tribulation_failure": {"chance": 1.0, "table": [
+      {"id": "internal_injury", "weight": 2},
+      {"id": "damaged_meridians", "weight": 1},
+      {"id": "golden_core_fissure", "weight": 1, "min_realm": "core_formation"},
+      {"id": "soul_scar", "weight": 1, "min_realm": "core_formation"}
+    ]},
+    "combat_defeat": {"chance": 1.0, "table": [
+      {"id": "broken_bones", "weight": 2},
+      {"id": "internal_injury", "weight": 1},
+      {"id": "spirit_burn", "weight": 1, "min_realm": "foundation_establishment"},
+      {"id": "sundered_body", "weight": 1, "min_realm": "core_formation"},
+      {"id": "demonic_qi_corrosion", "weight": 1, "min_realm": "core_formation"}
+    ]}
   }
 }
