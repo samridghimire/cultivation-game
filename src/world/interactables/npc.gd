@@ -7,6 +7,7 @@ extends Interactable
 ## entries show why (Family.check_court / check_proposal).
 ## Injured NPCs offer "Treat <name>'s <injury>" (G-007d, Medicine.check_treat_npc)
 ## and "Look" lists their injuries.
+## Orphaned children offer "Adopt <name>" (FAM-003e, Adoption.check_adoption).
 
 @export var npc_id := ""
 
@@ -33,6 +34,7 @@ func get_options() -> Array[Dictionary]:
 		for deed in Deeds.available(GameState.data, def["deed_context"], GameState.world_flags):
 			options.append({"label": deed["name"], "action": GameState.perform_deed.bind(deed["id"])})
 	options.append_array(_treatment_options())
+	options.append_array(_adoption_options())
 	options.append_array(_courtship_options())
 	return options
 
@@ -50,6 +52,22 @@ func _treatment_options() -> Array[Dictionary]:
 	var label := "Treat %s's %s (%s)" % [npc.name, Injuries.injury_name(GameState.data, injury_id).to_lower(), Calendar.format_duration(days)]
 	var reason := Medicine.check_treat_npc(GameState.player, npc)
 	options.append(_entry(label, reason, GameState.treat_npc.bind(npc_id)))
+	return options
+
+
+## "Adopt <name>" for orphaned children young enough to adopt, not already the player's.
+func _adoption_options() -> Array[Dictionary]:
+	var options: Array[Dictionary] = []
+	var p := GameState.player
+	var data := GameState.data
+	var child: CharacterData = GameState.npcs.get(npc_id)
+	if p == null or child == null or Adoption.rules(data).is_empty():
+		return options
+	if child.age_years() > int(Adoption.rules(data).get("max_age", 12)) or child.parents.has(p.id) or not Adoption.is_orphan(child, GameState.npcs):
+		return options
+	var days := int(Adoption.rules(data).get("days", 1))
+	var label := "Adopt %s (%s)" % [child.name, Calendar.format_duration(days)]
+	options.append(_entry(label, Adoption.check_adoption(p, child, GameState.npcs, data), GameState.adopt.bind(npc_id)))
 	return options
 
 
