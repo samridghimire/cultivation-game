@@ -16,6 +16,7 @@ const KEYS := {
 	"toggle_message_log": [KEY_L],
 	"scroll_up": [KEY_PAGEUP],
 	"scroll_down": [KEY_PAGEDOWN],
+	"toggle_clan": [KEY_G],
 	"quick_save": [KEY_F5],
 	"quick_load": [KEY_F9],
 	"pause_menu": [KEY_ESCAPE],
@@ -32,7 +33,8 @@ const JOY_BUTTONS := {
 	"toggle_techniques": [JOY_BUTTON_LEFT_SHOULDER],
 	"toggle_artifact": [JOY_BUTTON_RIGHT_SHOULDER],
 	"toggle_map": [JOY_BUTTON_BACK],
-	"toggle_message_log": [JOY_BUTTON_BACK],
+	"toggle_message_log": [JOY_BUTTON_LEFT_STICK],
+	"toggle_clan": [JOY_BUTTON_RIGHT_STICK],
 	"pause_menu": [JOY_BUTTON_START],
 }
 
