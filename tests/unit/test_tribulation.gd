@@ -152,3 +152,21 @@ func test_npcs_face_npc_strength() -> void:
 	assert_eq(float(Tribulation.waves(c, d, CORE, true)[0]["attack"]), float(Tribulation.waves(c, d, CORE)[0]["attack"]), "npc_strength defaults to strength")
 	d.realms[CORE].tribulation["npc_strength"] = 0.0
 	assert_eq(Tribulation.validate(d).size(), 1)
+
+
+func test_tribulation_preparations_raise_survival() -> void:
+	var bare_survived := 0
+	var prepared_survived := 0
+	for i in 200:
+		var bare := _at_peak(new_character(), data())
+		if Tribulation.endure(bare, data(), CORE, seeded_rng(i))["survived"]:
+			bare_survived += 1
+		var prepared := _at_peak(new_character(), data())
+		prepared.add_item("lightning_warding_talisman", 1)
+		prepared.add_item("thunder_tempering_pill", 1)
+		assert_eq(CombatTalismans.ready_talisman(prepared, data(), "lightning_warding_talisman"), "")
+		assert_true(Items.use(prepared, data(), "thunder_tempering_pill", {})["ok"])
+		if Tribulation.endure(prepared, data(), CORE, seeded_rng(i))["survived"]:
+			prepared_survived += 1
+	assert_gt(prepared_survived, bare_survived)
+	assert_gt(prepared_survived, 190, "a ward and a body pill should all but guarantee Core Formation (%d/200)" % prepared_survived)
