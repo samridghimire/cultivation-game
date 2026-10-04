@@ -1309,12 +1309,14 @@ func _on_days_advanced(days: int) -> void:
 		_kill("Your lifespan is exhausted. You die of old age at %d." % player.age_years())
 
 
-## Pregnancies of the player and the player's spouses progress; due ones give birth.
+## Pregnancies of the player and of spouses carrying the player's child
+## progress; due ones give birth. A spouse carrying an NPC's child (e.g. a
+## widow's late husband's) is left to NpcFamilies, which already advances it.
 func _advance_pregnancies(days: int) -> void:
 	var expecting: Array[CharacterData] = [player]
 	for spouse_id in player.spouses:
 		var spouse: CharacterData = npcs.get(spouse_id)
-		if spouse != null and spouse.alive:
+		if spouse != null and spouse.alive and String(spouse.pregnancy.get("partner", "")) == player.id:
 			expecting.append(spouse)
 	for mother in expecting:
 		if not Children.advance_pregnancy(mother, days):
