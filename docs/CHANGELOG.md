@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-04 [QA-014] Long-session sim (tests/sim/simulate_world.gd): over 200 game years the world stays at ~340 NPCs, ~430 kB saves and ~15 ms per simulated month.
 - 2026-10-04 [FAM-013b] Long-dead strangers are forgotten: generated NPCs dead for 50 years with no tie to you are pruned from the world, so saves stop growing over the centuries (300-year sim: 400 kB flat instead of 640 kB and rising).
 - 2026-10-04 [FAM-009d] Looking at a clan member now tells you their clan and rank (or that they are its heir), and the clan screen lists the clans of the realm.
 - 2026-10-04 [FAM-007d] Bloodlines raise attributes when they awaken (the Nine-Tailed Fox's charm, the Qilin's luck, the Golden Crow's insight...), and Blood Asura bearers slowly slide toward the demonic path.
