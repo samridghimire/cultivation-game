@@ -3,6 +3,7 @@ extends Interactable
 ## no def), who can be looked at. Talking opens its dialogue: in the dialogue
 ## window if one listens to EventBus.dialogue_requested, otherwise inline in
 ## this menu (each line is posted to the message log).
+## "Look" also says whether they hate or owe you (RIV-001b, Karma.attitude).
 ## Eligible partners also offer Court / Propose entries (FAM-002d); disabled
 ## entries show why (Family.check_court / check_proposal).
 
@@ -20,8 +21,7 @@ func is_available() -> bool:
 func get_options() -> Array[Dictionary]:
 	var options: Array[Dictionary] = []
 	var def: Dictionary = GameState.data.npcs.get(npc_id, {})
-	if def.is_empty():
-		options.append({"label": "Look", "action": _look, "keep_open": true})
+	options.append({"label": "Look", "action": _look, "keep_open": true})
 	if GameState.has_dialogue(npc_id):
 		if _has_dialogue_window():
 			options.append({"label": "Talk", "action": GameState.start_dialogue.bind(npc_id)})
@@ -65,7 +65,10 @@ func _entry(label: String, reason: String, action: Callable) -> Dictionary:
 func _look() -> void:
 	var npc: CharacterData = GameState.npcs.get(npc_id)
 	if npc != null:
-		EventBus.post(Npcs.describe(npc, GameState.data))
+		var lines: Array[String] = [Npcs.describe(npc, GameState.data)]
+		if GameState.player != null:
+			lines.append_array(Karma.attitude(GameState.player, npc, GameState.data))
+		EventBus.post(" ".join(lines))
 
 
 func _has_dialogue_window() -> bool:
