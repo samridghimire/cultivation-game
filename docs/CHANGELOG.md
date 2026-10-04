@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-04 [UI-009b] Next-step hints now point at ready sect missions and open promotion trials, warn of the Heavenly Tribulation before a breakthrough, and suggest Dao contemplation, abode seclusion, courting and trying for a child.
 - 2026-10-04 [UI-008b] World map: colored dots mark regions with your sect hall, abode, family, artifact anchors, secret realms and world events, listed in the region details.
 - 2026-10-04 [LW-001b] The HUD names world events in your region, and merchants share rumors of events across the realm and the next auction date.
 - 2026-10-04 [LW-001] World events: beast tides, sect tournaments, auction seasons, demonic incursions and spirit qi tides now break out in regions for a month or two, with their own encounters (tournament bouts, refugees, stampedes), merchant price swings and qi density changes.

@@ -86,3 +86,44 @@ func test_sect_hints_for_rogue_and_member() -> void:
 	c.sect = {"id": sect.id, "rank": 0, "contribution": 100, "spent": 0}
 	var need := int(sect.ranks[1]["contribution"]) - 100
 	assert_true(_has(Guidance.hints(c, data(), 1.0, 10), "Earn %d more sect contribution" % need))
+
+
+## UI-009b: missions, promotion trials, tribulations, Dao, abodes and family.
+func test_system_hints() -> void:
+	var d := data()
+	var c := new_character()
+	c.realm_index = 1
+	c.sect = {"id": "azure_cloud_sect", "rank": 0, "contribution": 0}
+	c.inventory["spirit_herb"] = 5
+	assert_true(_has(Guidance.hints(c, d, 1.0, 20), "ready on the mission board"))
+	c.sect["contribution"] = 600
+	assert_true(_has(Guidance.hints(c, d, 1.0, 20), "The trial for Inner Disciple is open"))
+	var insight_id: String = d.dao_insights.keys()[0]
+	Dao.gain_levels(c, d, insight_id, 1)
+	assert_true(_has(Guidance.hints(c, d, 1.0, 20), "Contemplate the %s" % Dao.def_of(d, insight_id)["name"]))
+	assert_true(_has(Guidance.hints(c, d, 1.0, 20), "Claim a cave abode"))
+	c.abode = "waterfall_cave"
+	assert_true(_has(Guidance.hints(c, d, 1.0, 20), "Cultivate in seclusion at %s" % Abodes.abode_name(d, "waterfall_cave")))
+	var people := {}
+	c.age_days = 20 * Calendar.DAYS_PER_YEAR
+	assert_true(_has(Guidance.hints(c, d, 1.0, 20, people), "court") == false, "no family hints without people")
+	people["someone"] = new_character()
+	assert_true(_has(Guidance.hints(c, d, 1.0, 20, people), "court them"))
+	var spouse := Npcs.spawn(people, d, seeded_rng(), {"gender": "female" if c.gender == "male" else "male", "region": "qingshi_village"})
+	spouse.age_days = 20 * Calendar.DAYS_PER_YEAR
+	Family.marry(c, spouse, Family.ranks(d, c.gender)[0])
+	assert_eq(Children.check_conception(c, spouse, d), "")
+	assert_true(_has(Guidance.hints(c, d, 1.0, 20, people), "try for a child with %s" % spouse.name))
+
+
+func test_tribulation_warning_at_the_bottleneck() -> void:
+	var d := data()
+	var c := new_character()
+	for i in d.realms.size() - 1:
+		if Tribulation.has_tribulation(d, i + 1):
+			c.realm_index = i
+			break
+	c.stage = d.realms[c.realm_index].stage_count() - 1
+	c.qi = d.realms[c.realm_index].qi_required(c.stage)
+	assert_true(Cultivation.can_attempt_breakthrough(c, d))
+	assert_true(_has(Guidance.hints(c, d, 1.0, 20), "Heavenly Tribulation"))
