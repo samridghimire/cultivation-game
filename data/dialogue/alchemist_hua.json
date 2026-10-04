@@ -1,0 +1,36 @@
+{
+  "id": "alchemist_hua",
+  "entries": [
+    {"node": "greet_friend", "if": {"min_favor": 30}},
+    {"node": "greet"}
+  ],
+  "nodes": {
+    "greet": {"text": "Mind the furnace, it bites. I am Hua Qingyi; I go wherever the herbs are cheap and the buyers are rich. Are you buying, selling or just breathing my pill smoke?",
+      "choices": [
+        {"label": "What makes a good alchemist?", "next": "craft"},
+        {"label": "Sell her a Flame Lotus. (+45 stones)", "next": "greet", "effects": {"items": {"flame_lotus": -1, "spirit_stone": 45}}, "favor": 4, "show_locked": true},
+        {"label": "Sell her 3 Purple Cloud Mushrooms. (+55 stones)", "next": "greet", "effects": {"items": {"purple_cloud_mushroom": -3, "spirit_stone": 55}}, "favor": 3, "show_locked": true},
+        {"label": "Tend her furnace for ten days.", "next": "tend", "days": 10, "favor": 6, "effects": {"items": {"qi_gathering_pill": 2}}},
+        {"label": "Slip a handful of pills from her drying rack.", "next": "steal", "if": {"max_alignment": -100, "not_flag": "hua_robbed"}, "effects": {"items": {"superior_qi_gathering_pill": 2, "spirit_gathering_pill": 1}, "alignment": -30, "set_flag": "hua_robbed"}, "favor": -40},
+        {"label": "Farewell.", "next": "end"}
+      ]},
+    "greet_friend": {"text": "{player}! Sit, sit. The furnace has been sulking all morning; perhaps it likes you better than me.",
+      "choices": [
+        {"label": "What makes a good alchemist?", "next": "craft"},
+        {"label": "Tend her furnace for ten days.", "next": "tend", "days": 10, "favor": 6, "effects": {"items": {"qi_gathering_pill": 2}}},
+        {"label": "Ask her to teach you the Spirit Gathering formula.", "next": "teach", "if": {"not_flag": "hua_formula"}},
+        {"label": "Commission a Foundation Establishment Pill. (Flame Lotus, Ice Soul Flower, 100 stones)", "next": "commission", "if": {"max_realm": "qi_refining", "not_flag": "hua_commission"}, "effects": {"items": {"flame_lotus": -1, "ice_soul_flower": -1, "spirit_stone": -100, "foundation_establishment_pill": 1}, "set_flag": "hua_commission"}, "show_locked": true},
+        {"label": "Farewell.", "next": "end"}
+      ]},
+    "craft": {"text": "Patience, a nose for scorched qi, and never trusting a pill you did not refine yourself. Learn the Alchemist profession at a workshop; formulas come from scrolls, and the good ones from friends.",
+      "choices": [{"label": "...", "next": "greet"}]},
+    "tend": {"text": "Not one batch burned. Here, two of the better ones. Do not sell them to that rat Qian.",
+      "choices": [{"label": "...", "next": "end"}]},
+    "steal": {"text": "She turns back to the furnace a moment too late. When she counts the rack, her eyes find you and go cold.",
+      "choices": [{"label": "Walk away quickly.", "next": "end"}]},
+    "teach": {"text": "You have earned it. Spirit Gathering is simple in theory: four spirit herbs for the base, one purple cloud mushroom to bind them. Copy the slip and keep it from the sects; they charge a fortune for this.",
+      "choices": [{"label": "Copy the formula. (3 days)", "next": "end", "days": 3, "favor": 5, "effects": {"items": {"recipe_spirit_gathering_pill": 1}, "set_flag": "hua_formula"}}]},
+    "commission": {"text": "Three days and three nights, and only one pill out of the batch survived. It is yours. Break through well, {player}; I like having friends who live long.",
+      "choices": [{"label": "Thank you, Master Hua.", "next": "end", "days": 3, "favor": 3}]}
+  }
+}
