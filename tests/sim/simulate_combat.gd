@@ -44,4 +44,13 @@ func _run() -> void:
 		for realm in mini(GRID_REALMS, data.realms.size()):
 			line += " %9d%%" % roundi(Balance.win_rate(Balance.typical_player(data, realm, 0), data, data.enemies[enemy_id], samples) * 100)
 		print(line)
+	print("")
+	print("Typical player vs a plain enemy of the same realm and stage (QA-007d target ~60-90%), and at the realm's peak vs a plain enemy one realm up:")
+	for realm in range(1, mini(GRID_REALMS, data.realms.size() - 1)):
+		var peak := data.realms[realm].stage_count() - 1
+		var line := "  %-22s" % data.realms[realm].name
+		for stage in [0, peak / 2, peak]:
+			line += "  stage %d: %3d%%" % [stage, roundi(Balance.same_stage_rate(data, realm, stage, samples) * 100)]
+		var up := Balance.win_rate(Balance.typical_player(data, realm, peak), data, Balance.plain_enemy(data, realm + 1, 0), samples)
+		print(line + "   next realm: %3d%%" % roundi(up * 100))
 	quit()

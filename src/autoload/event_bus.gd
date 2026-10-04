@@ -39,5 +39,20 @@ signal dialogue_requested(npc_id: String)
 ## The conversation ended (after its effects and time were applied).
 signal dialogue_ended(npc_id: String)
 
+## How many past messages the message log screen can show.
+const HISTORY_LIMIT := 200
+
+## Recent messages, oldest first: {text, category, day} (day = GameClock.total_days).
+var history: Array[Dictionary] = []
+
+
 func post(text: String, category: String = "info") -> void:
+	history.append({"text": text, "category": category, "day": GameClock.total_days})
+	if history.size() > HISTORY_LIMIT:
+		history = history.slice(history.size() - HISTORY_LIMIT)
 	message_posted.emit(text, category)
+
+
+## Forget past messages (a new or loaded session starts with an empty log).
+func clear_history() -> void:
+	history.clear()
