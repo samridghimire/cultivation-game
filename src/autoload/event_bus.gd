@@ -17,6 +17,8 @@ signal interaction_target_changed(display_name: String)
 signal interaction_menu_requested(source: Node)
 ## The player chose to craft at a workshop; open the crafting screen for this profession id.
 signal crafting_requested(prof_id: String)
+## The player opened their sect's mission board (sect hall); show the MissionBoard.
+signal mission_board_requested
 ## A modal UI (menu, character sheet) opened or closed; world input should pause.
 signal ui_modal_changed(is_open: bool)
 ## The player travelled to another region; the world scene rebuilds itself.
@@ -35,5 +37,20 @@ signal dialogue_requested(npc_id: String)
 ## The conversation ended (after its effects and time were applied).
 signal dialogue_ended(npc_id: String)
 
+## How many past messages the message log screen can show.
+const HISTORY_LIMIT := 200
+
+## Recent messages, oldest first: {text, category, day} (day = GameClock.total_days).
+var history: Array[Dictionary] = []
+
+
 func post(text: String, category: String = "info") -> void:
+	history.append({"text": text, "category": category, "day": GameClock.total_days})
+	if history.size() > HISTORY_LIMIT:
+		history = history.slice(history.size() - HISTORY_LIMIT)
 	message_posted.emit(text, category)
+
+
+## Forget past messages (a new or loaded session starts with an empty log).
+func clear_history() -> void:
+	history.clear()
