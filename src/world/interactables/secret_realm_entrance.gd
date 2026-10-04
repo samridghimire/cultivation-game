@@ -4,6 +4,11 @@ extends Interactable
 ## while it is open, a "Delve into floor N" entry (GameState.enter_secret_realm).
 
 
+## The rift glows while any realm here is open (W-005e).
+func art_active() -> bool:
+	return GameState.data != null and SecretRealms.open_in_region(GameState.data, GameState.current_region, GameClock.total_days)
+
+
 func get_options() -> Array[Dictionary]:
 	var options: Array[Dictionary] = []
 	var c := GameState.player

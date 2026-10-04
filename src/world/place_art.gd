@@ -1,17 +1,20 @@
 class_name PlaceArt
 extends RefCounted
 ## Placeholder art for world places (VIS-003), drawn in the place's _draw():
-## one look per regions.json place type plus "npc". Shapes scale with the
-## place's size and are tinted with its color. Unknown kinds draw a plain box.
+## one look per regions.json place type plus "npc" and "abode" (VIS-004 added
+## clinic, orphanage, secret realm, auction, inheritance and abode). Shapes scale
+## with the place's size and are tinted with its color. `active` brightens kinds
+## that have a live state (an open secret realm). Unknown kinds draw a plain box.
 
 ## Kinds with their own look; anything else is a plain box.
-const KINDS := ["meditation", "merchant", "workshop", "sect_hall", "travel", "gather", "explore", "deed_giver", "npc"]
+const KINDS := ["meditation", "merchant", "workshop", "sect_hall", "travel", "gather", "explore", "deed_giver", "npc",
+	"clinic", "orphanage", "secret_realm", "auction", "inheritance", "abode"]
 const OUTLINE := Color("2a2018")
 const WOOD := Color("6b4a2e")
 const STONE := Color("8d8a82")
 
 
-static func draw(ci: CanvasItem, kind: String, size: Vector2, color: Color) -> void:
+static func draw(ci: CanvasItem, kind: String, size: Vector2, color: Color, active: bool = false) -> void:
 	var h := size / 2.0
 	match kind:
 		"meditation":
@@ -30,6 +33,18 @@ static func draw(ci: CanvasItem, kind: String, size: Vector2, color: Color) -> v
 			_cave(ci, h, color)
 		"deed_giver", "npc":
 			_figure(ci, h, color)
+		"clinic":
+			_clinic(ci, h, color)
+		"orphanage":
+			_temple(ci, h, color)
+		"secret_realm":
+			_rift(ci, h, color, active)
+		"auction":
+			_auction_hall(ci, h, color)
+		"inheritance":
+			_stele(ci, h, color)
+		"abode":
+			_cave_dwelling(ci, h, color)
 		_:
 			ci.draw_rect(Rect2(-h, size), color)
 			ci.draw_rect(Rect2(-h, size), color.darkened(0.5), false, 2.0)
@@ -156,3 +171,82 @@ static func _figure(ci: CanvasItem, h: Vector2, c: Color) -> void:
 	ci.draw_circle(head, h.x * 0.45, Color("e8d9a8"))
 	ci.draw_arc(head, h.x * 0.45, 0, TAU, 20, OUTLINE, 1.5)
 	ci.draw_circle(head + Vector2(0, -h.y * 0.35), h.x * 0.22, Color("2a2018"))
+
+
+## A white-walled house with a medicine gourd hanging by the door.
+static func _clinic(ci: CanvasItem, h: Vector2, c: Color) -> void:
+	var wall := Rect2(Vector2(-h.x, -h.y * 0.2), Vector2(h.x * 2.0, h.y * 1.2))
+	ci.draw_rect(wall, Color("e8e2d0"))
+	ci.draw_rect(wall, OUTLINE, false, 2.0)
+	ci.draw_colored_polygon(PackedVector2Array([Vector2(-h.x - 6, -h.y * 0.2), Vector2(0, -h.y * 0.95), Vector2(h.x + 6, -h.y * 0.2)]), c.darkened(0.3))
+	ci.draw_rect(Rect2(Vector2(-h.x * 0.2, h.y * 0.35), Vector2(h.x * 0.4, h.y * 0.65)), WOOD)
+	var gourd := Vector2(h.x * 0.55, h.y * 0.25)
+	ci.draw_line(gourd + Vector2(0, -h.y * 0.45), gourd + Vector2(0, -h.y * 0.25), OUTLINE, 1.5)
+	ci.draw_circle(gourd + Vector2(0, -h.y * 0.18), h.y * 0.1, Color("c98a3a"))
+	ci.draw_circle(gourd, h.y * 0.16, Color("c98a3a"))
+	ci.draw_line(gourd + Vector2(-h.y * 0.08, 0), gourd + Vector2(h.y * 0.08, 0), c, 2.0)
+	ci.draw_line(gourd + Vector2(0, -h.y * 0.08), gourd + Vector2(0, h.y * 0.08), c, 2.0)
+
+
+## A small temple: red pillars, a curved roof and an incense burner.
+static func _temple(ci: CanvasItem, h: Vector2, c: Color) -> void:
+	var wall := Rect2(Vector2(-h.x * 0.8, -h.y * 0.15), Vector2(h.x * 1.6, h.y * 1.05))
+	ci.draw_rect(wall, c)
+	ci.draw_rect(wall, OUTLINE, false, 2.0)
+	for x in [-0.55, 0.55]:
+		ci.draw_line(Vector2(h.x * x, -h.y * 0.15), Vector2(h.x * x, h.y * 0.9), Color("a33a2a"), 4.0)
+	ci.draw_colored_polygon(PackedVector2Array([Vector2(-h.x - 6, -h.y * 0.1), Vector2(-h.x * 0.6, -h.y * 0.75), Vector2(h.x * 0.6, -h.y * 0.75), Vector2(h.x + 6, -h.y * 0.1), Vector2(h.x * 0.8, -h.y * 0.15), Vector2(-h.x * 0.8, -h.y * 0.15)]), Color("4a3a2a"))
+	var burner := Vector2(0, h.y * 0.75)
+	ci.draw_rect(Rect2(burner - Vector2(h.x * 0.15, h.y * 0.1), Vector2(h.x * 0.3, h.y * 0.2)), Color("8a6a3a"))
+	for i in 3:
+		ci.draw_line(burner + Vector2((i - 1) * 4, -h.y * 0.1), burner + Vector2((i - 1) * 4 + 2, -h.y * 0.45), Color(0.9, 0.9, 0.9, 0.5), 1.0)
+
+
+## A swirling rift in the air; brighter and wider while a realm is open.
+static func _rift(ci: CanvasItem, h: Vector2, c: Color, active: bool) -> void:
+	var glow := 0.55 if active else 0.2
+	ellipse(ci, Vector2.ZERO, h, Color(c.r, c.g, c.b, glow * 0.6))
+	for i in 5:
+		var r := h * (0.95 - i * 0.17)
+		var start := i * 0.9
+		var arc := PackedVector2Array()
+		for k in 13:
+			arc.append(Vector2.from_angle(start + PI * 1.3 * k / 12.0) * r)
+		ci.draw_polyline(arc, c.lightened(0.15 * i) if active else c.darkened(0.2), 2.5 if active else 1.5)
+	ellipse(ci, Vector2.ZERO, h * 0.2, Color(1, 1, 1, 0.8 if active else 0.25))
+
+
+## A grand hall with three hanging banners.
+static func _auction_hall(ci: CanvasItem, h: Vector2, c: Color) -> void:
+	var wall := Rect2(Vector2(-h.x, -h.y * 0.25), Vector2(h.x * 2.0, h.y * 1.25))
+	ci.draw_rect(wall, c)
+	ci.draw_rect(wall, OUTLINE, false, 2.0)
+	ci.draw_colored_polygon(PackedVector2Array([Vector2(-h.x - 8, -h.y * 0.25), Vector2(-h.x * 0.7, -h.y), Vector2(h.x * 0.7, -h.y), Vector2(h.x + 8, -h.y * 0.25)]), Color("3a2a20"))
+	for i in 3:
+		var x := -h.x * 0.6 + i * h.x * 0.6
+		ci.draw_rect(Rect2(Vector2(x - h.x * 0.12, -h.y * 0.15), Vector2(h.x * 0.24, h.y * 0.6)), Color("c9a24a") if i == 1 else Color("a33a2a"))
+	ci.draw_rect(Rect2(Vector2(-h.x * 0.15, h.y * 0.55), Vector2(h.x * 0.3, h.y * 0.45)), c.darkened(0.6))
+
+
+## A weathered stone stele carved with runes in the place color.
+static func _stele(ci: CanvasItem, h: Vector2, c: Color) -> void:
+	ellipse(ci, Vector2(0, h.y * 0.85), Vector2(h.x * 0.9, h.y * 0.2), Color(0, 0, 0, 0.3))
+	var slab := PackedVector2Array([Vector2(-h.x * 0.45, h.y * 0.8), Vector2(-h.x * 0.45, -h.y * 0.6), Vector2(0, -h.y), Vector2(h.x * 0.45, -h.y * 0.6), Vector2(h.x * 0.45, h.y * 0.8)])
+	ci.draw_colored_polygon(slab, STONE.lerp(c, 0.3))
+	slab.append(slab[0])
+	ci.draw_polyline(slab, OUTLINE, 2.0)
+	for row in 4:
+		var y := -h.y * 0.45 + row * h.y * 0.3
+		ci.draw_line(Vector2(-h.x * 0.25, y), Vector2(h.x * 0.25, y), c.lightened(0.4), 2.0)
+
+
+## A cliff face with a curtained cave door: a cultivator's dwelling.
+static func _cave_dwelling(ci: CanvasItem, h: Vector2, c: Color) -> void:
+	var rock := STONE.lerp(c, 0.5)
+	ci.draw_colored_polygon(PackedVector2Array([Vector2(-h.x, h.y), Vector2(-h.x, -h.y * 0.4), Vector2(-h.x * 0.4, -h.y), Vector2(h.x * 0.5, -h.y * 0.8), Vector2(h.x, -h.y * 0.2), Vector2(h.x, h.y)]), rock)
+	var door := PackedVector2Array()
+	for i in 17:
+		door.append(Vector2.from_angle(PI + PI * i / 16.0) * Vector2(h.x * 0.35, h.y * 0.8) + Vector2(0, h.y))
+	ci.draw_colored_polygon(door, Color("1a1410"))
+	ci.draw_rect(Rect2(Vector2(-h.x * 0.25, h.y * 0.3), Vector2(h.x * 0.5, h.y * 0.7)), Color("7a3a2a"))
+	ci.draw_line(Vector2(-h.x * 0.3, h.y * 0.3), Vector2(h.x * 0.3, h.y * 0.3), WOOD, 3.0)

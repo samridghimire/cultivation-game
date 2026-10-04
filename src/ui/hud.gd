@@ -317,6 +317,8 @@ func _refresh() -> void:
 	var density := GameState.region_qi_density()
 	_status.text += "\n%s   (Qi x%s)" % [Exploration.region_name(data, GameState.current_region), String.num(density, 2)]
 	_status.text += region_event_suffix(data, GameState.world_events, GameState.current_region)
+	if SecretRealms.open_in_region(data, GameState.current_region, GameClock.total_days):
+		_status.text += "   (Secret realm open)"
 	_qi_bar.max_value = maxf(Cultivation.qi_required(p, data), 1.0)
 	_qi_bar.value = p.qi
 	_bottleneck.text = bottleneck_hint(p, data)

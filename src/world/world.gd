@@ -120,6 +120,7 @@ func _build_abodes() -> void:
 		node.position = _vec(abode.get("pos", [0, 0]))
 		node.size = _vec(abode.get("size", [80, 60]))
 		node.color = Color(String(abode.get("color", "6f6a5a")))
+		node.art_kind = "abode"
 		add_child(node)
 		move_child(node, player.get_index())
 

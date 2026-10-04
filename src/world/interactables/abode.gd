@@ -121,5 +121,3 @@ func _draw() -> void:
 	super._draw()
 	if is_owned():
 		draw_rect(Rect2(-size / 2.0 - Vector2(4, 4), size + Vector2(8, 8)), UIStyle.ACCENT, false, 3.0)
-		# A small doorway marks a dwelling.
-		draw_rect(Rect2(Vector2(-8, size.y / 2.0 - 22), Vector2(16, 22)), color.darkened(0.6))

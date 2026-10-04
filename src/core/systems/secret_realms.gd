@@ -36,6 +36,14 @@ static func is_open(def: Dictionary, total_days: int) -> bool:
 
 
 ## Days until the realm opens (0 while open).
+## True if any secret realm whose entrance is in `region_id` is open.
+static func open_in_region(data: GameData, region_id: String, total_days: int) -> bool:
+	for realm_id in in_region(data, region_id):
+		if is_open(realm(data, realm_id), total_days):
+			return true
+	return false
+
+
 static func days_until_open(def: Dictionary, total_days: int) -> int:
 	if is_open(def, total_days):
 		return 0
