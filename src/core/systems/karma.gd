@@ -262,6 +262,35 @@ static func roll_ally(c: CharacterData, people: Dictionary, data: GameData, rng:
 	return best
 
 
+## RIV-001f: the grateful NPC who joins a fight `c` starts in `region_id`: the
+## most grateful living adult there owing at least ally_strike.min_gratitude,
+## other than `exclude_id` (the foe), or "".
+static func strike_ally(c: CharacterData, people: Dictionary, data: GameData, region_id: String, exclude_id: String = "") -> String:
+	var rules: Dictionary = _gratitude_rules(data).get("ally_strike", {})
+	if rules.is_empty():
+		return ""
+	var best := ""
+	for npc_id in c.gratitude:
+		var npc: CharacterData = people.get(npc_id)
+		if npc == null or not npc.alive or npc_id == exclude_id or Npcs.region_of(npc, data) != region_id:
+			continue
+		if npc.age_years() < int(data.family.get("adult_age", 16)) or gratitude(c, npc_id) < int(rules.get("min_gratitude", 1)):
+			continue
+		if best == "" or gratitude(c, npc_id) > gratitude(c, best):
+			best = String(npc_id)
+	return best
+
+
+## `ally_id` strikes for `c`: {name, damage} (ally_strike.blows x their attack),
+## spending ally_strike.cost of their gratitude.
+static func ally_strike(c: CharacterData, people: Dictionary, data: GameData, ally_id: String) -> Dictionary:
+	var rules: Dictionary = _gratitude_rules(data).get("ally_strike", {})
+	var ally: CharacterData = people[ally_id]
+	add_gratitude(c, data, ally_id, -int(rules.get("cost", 0)))
+	var damage := int(Combat.stats(ally, data)["attack"]) * int(rules.get("blows", 1))
+	return {"name": ally.name, "damage": maxi(1, damage)}
+
+
 ## After an ambush by `npc_id`: beating them humbles them, losing to them
 ## partly satisfies their vengeance (hunt.beaten_grudge / victory_grudge).
 static func after_hunt(c: CharacterData, data: GameData, npc_id: String, player_won: bool) -> void:
