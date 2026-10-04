@@ -114,8 +114,8 @@ func test_game_state_set_main_method_takes_time() -> void:
 
 # --- CM-001c: method content ---
 
-## Where a manual comes from: a shop price, a sect contribution shop, or an
-## encounter outcome (including choices).
+## Where a manual comes from: a shop price, a sect contribution shop, an
+## encounter outcome (including choices) or a secret realm's inheritance.
 func _manual_sources(d: GameData, item_id: String) -> PackedStringArray:
 	var sources: PackedStringArray = []
 	if int(d.items.get(item_id, {}).get("price", 0)) > 0:
@@ -128,6 +128,9 @@ func _manual_sources(d: GameData, item_id: String) -> PackedStringArray:
 		for effects: Dictionary in [e.get("effects", {})] + e.get("choices", []).map(func(ch: Dictionary) -> Dictionary: return ch.get("effects", {})):
 			if effects.get("items", {}).has(item_id):
 				sources.append(e["id"])
+	for realm: Dictionary in d.secret_realms.values():
+		if realm.get("inheritance", {}).get("effects", {}).get("items", {}).has(item_id):
+			sources.append(realm["id"])
 	return sources
 
 
@@ -149,6 +152,7 @@ func test_every_method_can_be_obtained_and_better_ones_wait_higher_up() -> void:
 	assert_true(cap_by_method.values().has(d.realm_index_of("foundation_establishment")))
 	assert_true(cap_by_method.values().has(d.realm_index_of("core_formation")))
 	assert_true(cap_by_method.values().has(d.realm_index_of("nascent_soul")))
+	assert_true(cap_by_method.values().has(d.realm_index_of("void_refinement")), "CM-001d: methods past Nascent Soul")
 	# Each sect hands out its own method.
 	for sect_id in ["azure_cloud_sect", "blood_lotus_sect", "myriad_treasure_pavilion"]:
 		var has_method := false
@@ -172,3 +176,23 @@ func test_thunder_trial_has_a_costly_path_below_core_formation() -> void:
 	assert_eq(c.item_count("manual_nine_heavens_thunder"), 1)
 	assert_eq(Cultivation.years_left(c, d), before - 15)
 	assert_true(flags.get("found_nine_heavens_thunder", false))
+
+
+## CM-001d: each sect keeps a secret canon past Nascent Soul for its Elders,
+## and the Drowned Yin Palace holds another.
+func test_elder_canons_and_the_yin_king_inheritance() -> void:
+	var d := data()
+	var nascent := d.realm_index_of("nascent_soul")
+	for sect_id in ["azure_cloud_sect", "blood_lotus_sect", "myriad_treasure_pavilion"]:
+		var found := false
+		for entry: Dictionary in d.sects[sect_id].shop:
+			var tech_id: String = d.items.get(entry["item_id"], {}).get("effects", {}).get("learn_technique", "")
+			if tech_id != "" and d.techniques[tech_id].is_method() and d.realm_index_of(d.techniques[tech_id].max_realm) > nascent:
+				found = true
+				assert_eq(int(entry["min_rank"]), d.sects[sect_id].ranks.size() - 1, "%s's canon is for Elders" % sect_id)
+		assert_true(found, "%s has a canon past Nascent Soul" % sect_id)
+	var palace: Dictionary = d.secret_realms["drowned_yin_palace"]
+	assert_true(palace["inheritance"]["effects"]["items"].has("manual_netherwater_yin_king"))
+	var heir := new_character()
+	heir.realm_index = d.realm_index_of("core_formation")
+	assert_eq(Effects.check(heir, d, palace["inheritance"]["effects"]), "", "a Core Formation heir can claim it")
