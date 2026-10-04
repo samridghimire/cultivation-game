@@ -120,6 +120,8 @@
     {"id": "earth_marrow_essence_pill", "name": "Earth Marrow Essence Pill", "description": "A heavy golden pill that feeds a formed core like a river feeds a lake.", "price": 2500, "usable": true, "effects": {"qi": 40000}},
     {"id": "recipe_cloud_mist_qi_pill", "name": "Recipe Scroll: Cloud-Mist Qi Pill", "description": "An Azure Cloud outer-court formula, copied many times. Teaches the recipe.", "price": 400, "usable": true, "effects": {"learn_recipe": "cloud_mist_qi_pill"}},
     {"id": "recipe_soul_nourishing_pill", "name": "Recipe Scroll: Soul Nourishing Pill", "description": "A jade slip humming with a dead alchemist's calm. Teaches the recipe.", "price": 0, "usable": true, "effects": {"learn_recipe": "soul_nourishing_pill"}},
-    {"id": "recipe_earth_marrow_essence_pill", "name": "Recipe Scroll: Earth Marrow Essence Pill", "description": "A heavy stone tablet carved by a Core Formation alchemist. Teaches the recipe.", "price": 1500, "usable": true, "effects": {"learn_recipe": "earth_marrow_essence_pill"}}
-  ]
+    {"id": "recipe_earth_marrow_essence_pill", "name": "Recipe Scroll: Earth Marrow Essence Pill", "description": "A heavy stone tablet carved by a Core Formation alchemist. Teaches the recipe.", "price": 1500, "usable": true, "effects": {"learn_recipe": "earth_marrow_essence_pill"}},
+    {"id": "slaughter_stele_rubbing", "name": "Slaughter Stele Rubbing", "description": "Ink rubbings from a stele that a demonic patriarch carved after razing a city. Studying them grants a glimpse of the Dao of Slaughter, and stains the soul.", "price": 1500, "usable": true, "tags": ["demonic"], "effects": {"alignment": -10, "dao_insight": "dao_of_slaughter"}},
+    {"id": "thunder_scarred_jade", "name": "Thunder-Scarred Jade", "description": "Jade struck by heavenly lightning, its veins still crackling. Holding it, you glimpse the Thunder Dao.", "price": 0, "usable": true, "effects": {"dao_insight": "thunder_dao"}}
+]
 }
