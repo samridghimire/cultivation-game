@@ -201,6 +201,9 @@ func _show_details() -> void:
 	var equippable := _selected != "" and Equipment.is_equipment(data, _selected)
 	if equippable:
 		lines.append_array(describe_equipment(GameState.player, data, _selected))
+	var array := Abodes.array_def(data, _selected) if _selected != "" else {}
+	if not array.is_empty():
+		lines.append("Gathering array: +%d%% qi density in seclusion once set up at your abode" % roundi(float(array.get("qi_density_bonus", 0.0)) * 100.0))
 	var talisman := _selected != "" and CombatTalismans.is_combat_talisman(data, _selected)
 	if talisman:
 		lines.append_array(describe_talisman(GameState.player, data, _selected))
