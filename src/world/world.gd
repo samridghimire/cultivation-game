@@ -10,6 +10,7 @@ const PLACE_SCRIPTS := {
 	"merchant": preload("res://src/world/interactables/merchant.gd"),
 	"sect_hall": preload("res://src/world/interactables/sect_hall.gd"),
 	"workshop": preload("res://src/world/interactables/workshop.gd"),
+	"clinic": preload("res://src/world/interactables/clinic.gd"),
 	"deed_giver": preload("res://src/world/interactables/deed_giver.gd"),
 	"explore": preload("res://src/world/interactables/explore_site.gd"),
 	"travel": preload("res://src/world/interactables/travel_point.gd"),
@@ -39,6 +40,7 @@ func _ready() -> void:
 	player.position = _vec(_region.get("spawn", [map_size.x / 2.0, map_size.y / 2.0]))
 	_build_decor()
 	_build_places()
+	_place_at_spawn_anchor()
 	_build_npcs()
 	_build_bounds()
 	_limit_camera()
@@ -92,6 +94,18 @@ func _build_places() -> void:
 		# Add before the player so the player draws on top.
 		add_child(node)
 		move_child(node, player.get_index())
+
+
+## After an artifact respawn the player awakens beside their anchor place.
+func _place_at_spawn_anchor() -> void:
+	var anchor_id := GameState.spawn_anchor
+	GameState.spawn_anchor = ""
+	if anchor_id == "":
+		return
+	for node in get_children():
+		if node is Interactable and node.anchor_id == anchor_id:
+			player.position = node.position + Vector2(0, node.size.y / 2.0 + 48.0)
+			return
 
 
 func _build_npcs() -> void:
