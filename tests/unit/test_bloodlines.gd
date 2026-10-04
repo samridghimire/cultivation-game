@@ -181,3 +181,34 @@ func test_bloodline_content_is_reachable() -> void:
 	var broken := GameData.load_from_dir()
 	broken.items["fox_essence_blood"]["effects"]["bloodline"] = "nope"
 	assert_eq(Bloodlines.validate(broken).size(), 1)
+
+
+## FAM-007d: attribute bonuses on awakening and the Blood Asura's drift.
+func test_attribute_bonuses_and_alignment_drift() -> void:
+	var d := data()
+	var c := new_character()
+	c.realm_index = 0
+	c.attributes["charisma"] = 10
+	assert_true(Bloodlines.grant(c, d, "nine_tailed_fox"))
+	assert_false(c.bloodline_awakened, "dormant until Qi Refining")
+	assert_eq(c.attribute("charisma"), 10)
+	c.realm_index = d.realm_index_of("qi_refining")
+	assert_true(Bloodlines.update(c, d))
+	assert_eq(c.attribute("charisma"), 13, "+3 charisma on awakening")
+	assert_false(Bloodlines.update(c, d))
+	assert_eq(c.attribute("charisma"), 13, "applied once")
+	assert_true(CharacterSheet.bloodline_bonus_text(d, "nine_tailed_fox").contains("+3 Charisma"), CharacterSheet.bloodline_bonus_text(d, "nine_tailed_fox"))
+	var asura := new_character()
+	asura.realm_index = d.realm_index_of("foundation_establishment")
+	Bloodlines.grant(asura, d, "blood_asura")
+	assert_eq(Bloodlines.drift_amount(asura, d, 0, 3 * Calendar.DAYS_PER_YEAR), -36)
+	assert_eq(Bloodlines.drift_amount(asura, d, 0, 100), 0, "less than a year")
+	assert_eq(Bloodlines.drift_amount(c, d, 0, 10 * Calendar.DAYS_PER_YEAR), 0, "no drift for the fox")
+
+
+func test_attribute_bonus_validation() -> void:
+	var dd := GameData.load_from_dir()
+	dd.bloodlines["azure_dragon"]["bonuses"]["charisma"] = 1.5
+	dd.bloodlines["azure_dragon"]["alignment_drift"] = 500
+	var errors := Bloodlines.validate(dd)
+	assert_eq(errors.size(), 2, ", ".join(errors))

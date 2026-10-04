@@ -217,6 +217,13 @@ static func bloodline_bonus_text(data: GameData, bloodline_id: String) -> String
 	for key in Bloodlines.BONUS_KEYS:
 		if bonuses.has(key):
 			parts.append("%+d%% %s" % [roundi(float(bonuses[key]) * 100), names.get(key, key.replace("_", " "))])
+	var attrs := Bloodlines.attribute_bonuses(data, bloodline_id)
+	for attr: Dictionary in data.attributes:
+		if attrs.has(attr["id"]):
+			parts.append("%+d %s" % [int(attrs[attr["id"]]), attr.get("name", attr["id"])])
+	var drift := int(Bloodlines.def(data, bloodline_id).get("alignment_drift", 0))
+	if drift != 0:
+		parts.append("alignment %+d a year" % drift)
 	return ", ".join(parts)
 
 

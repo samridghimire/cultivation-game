@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-04 [FAM-007d] Bloodlines raise attributes when they awaken (the Nine-Tailed Fox's charm, the Qilin's luck, the Golden Crow's insight...), and Blood Asura bearers slowly slide toward the demonic path.
 - 2026-10-04 [FAM-006c] The clan's protective array now guards the clan seat: its qi bonus applies there, and it keeps hostile encounters and ambushes away from the seat's region (up to -65%).
 - 2026-10-04 [FAM-008b, FAM-006b] Clan screen: see and name your heir, and build or upgrade estate buildings (with their effects, costs and construction progress); built halls appear beside your clan seat.
 - 2026-10-04 [FAM-004c] Talk to your own child to teach them a technique you know or hand them a pill.
