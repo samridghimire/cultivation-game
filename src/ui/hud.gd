@@ -324,7 +324,7 @@ func _refresh() -> void:
 	_qi_bar.modulate = UIStyle.ACCENT if _bottleneck.visible else Color.WHITE
 	_injuries.visible = Injuries.has_any(p)
 	_injuries.text = "Injured: " + ", ".join(Injuries.describe(p, data))
-	var hints := Guidance.hints(p, data, density * Sects.cultivation_bonus(p, data), 1)
+	var hints := Guidance.hints(p, data, density * Sects.cultivation_bonus(p, data), 1, GameState.npcs)
 	_hint.visible = bool(Settings.get_value("show_hints")) and not hints.is_empty()
 	_hint.text = "Next: " + hints[0] if not hints.is_empty() else ""
 

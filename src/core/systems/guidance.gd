@@ -12,7 +12,8 @@ const LOW_ARTIFACT_LIVES := 1
 
 ## Up to `limit` hints for `c`. `density` is the qi density where the player
 ## stands (region x sect bonus), used for the days-to-next-stage estimate.
-static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit: int = 5) -> PackedStringArray:
+## `people` (the NPCs, optional) enables the family hints.
+static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit: int = 5, people: Dictionary = {}) -> PackedStringArray:
 	var out: PackedStringArray = []
 	var years := Cultivation.years_left(c, data)
 	if years <= LIFESPAN_WARNING_YEARS:
@@ -28,10 +29,16 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 	var sect := _sect_hint(c, data)
 	if sect != "":
 		out.append(sect)
+	var missions := _mission_hint(c, data)
+	if missions != "":
+		out.append(missions)
 	if c.professions.is_empty():
 		out.append("Work at a workshop to learn a profession and earn spirit stones.")
 	if c.techniques.is_empty():
 		out.append("Learn a technique from a manual. Merchants sell them.")
+	for hint in [_dao_hint(c, data), _abode_hint(c, data), _family_hint(c, data, people)]:
+		if hint != "":
+			out.append(hint)
 	if out.size() > limit:
 		out.resize(limit)
 	return out
@@ -47,6 +54,9 @@ static func _cultivation_hint(c: CharacterData, data: GameData, density: float) 
 			text += " Using %s first raises the odds." % ", ".join(pills)
 		elif c.breakthrough_bonus <= 0.0:
 			text += " Breakthrough pills raise the odds."
+		if Tribulation.has_tribulation(data, c.realm_index + 1):
+			text += " Success calls down a Heavenly Tribulation: ready shield talismans"
+			text += ", and steel yourself against a heart demon." if Tribulation.faces_heart_demon(c, data) else "."
 		return text
 	if Cultivation.is_at_bottleneck(c, data):
 		return "You stand at the peak of the highest realm known."
@@ -81,5 +91,53 @@ static func _sect_hint(c: CharacterData, data: GameData) -> String:
 	var rank := int(c.sect["rank"])
 	if rank + 1 >= sect.ranks.size():
 		return ""
+	if Sects.check_promotion(c, data) == "":
+		return "The trial for %s is open. Attempt it at a sect hall." % sect.rank_name(rank + 1)
 	var need := int(sect.ranks[rank + 1].get("contribution", 0)) - int(c.sect["contribution"])
 	return "Earn %d more sect contribution (missions, duties) to become %s." % [maxi(need, 0), sect.rank_name(rank + 1)]
+
+
+## Members: how many sect missions they can take right now.
+static func _mission_hint(c: CharacterData, data: GameData) -> String:
+	if c.is_rogue():
+		return ""
+	var ready := Sects.available_missions(c, data).filter(func(id: String) -> bool: return Sects.check_mission(c, data, id) == "").size()
+	if ready == 0:
+		return ""
+	return "%d sect %s ready on the mission board at a sect hall." % [ready, "mission is" if ready == 1 else "missions are"]
+
+
+## The first glimpsed Dao insight that can still be deepened.
+static func _dao_hint(c: CharacterData, data: GameData) -> String:
+	for insight_id in Dao.known_ids(c, data):
+		if Dao.check_contemplate(c, data, insight_id) == "":
+			return "Contemplate the %s at a meditation spot to deepen it (%s)." % [Dao.def_of(data, insight_id)["name"], Dao.progress_text(c, data, insight_id)]
+	return ""
+
+
+## Seclusion at the player's abode, or claiming one once they cultivate.
+static func _abode_hint(c: CharacterData, data: GameData) -> String:
+	if c.abode != "":
+		var density := float(Abodes.get_def(data, c.abode).get("qi_density", 1.0)) * (1.0 + Abodes.array_bonus(c, data))
+		return "Cultivate in seclusion at %s (qi x%s)." % [Abodes.abode_name(data, c.abode), String.num(density, 2)]
+	if c.realm_index >= 1 and not data.abodes.is_empty():
+		return "Claim a cave abode to cultivate in seclusion and store your treasures."
+	return ""
+
+
+## Trying for a child with a spouse, or courting someone when unmarried.
+static func _family_hint(c: CharacterData, data: GameData, people: Dictionary) -> String:
+	if people.is_empty() or Children.is_pregnant(c):
+		return ""
+	var spouses := Family.living_spouses(c, people)
+	if spouses.is_empty():
+		if c.age_years() >= int(data.family.get("adult_age", 16)):
+			return "Win someone's favor with chats and gifts, then court them to start a family."
+		return ""
+	if not c.children.is_empty():
+		return ""
+	for spouse_id in spouses:
+		var spouse: CharacterData = people[spouse_id]
+		if Children.check_conception(c, spouse, data) == "":
+			return "You could try for a child with %s at a meditation spot." % spouse.name
+	return ""
