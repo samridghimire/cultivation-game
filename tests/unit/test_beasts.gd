@@ -175,3 +175,18 @@ func test_sheet_shows_and_feeds_companions() -> void:
 	assert_gt(int(c.companion_xp.get("boar", 0)), 0)
 	sheet.free()
 	gs.end_session()
+
+
+## BEAST-001c: enough tameable beasts, each met in some encounter, and beast
+## food a Beast Tamer can mix.
+func test_beast_content() -> void:
+	var d := data()
+	assert_true(d.beasts.size() >= 12, "%d beasts" % d.beasts.size())
+	for beast: Dictionary in d.beasts.values():
+		var enemy_id := String(beast["enemy"])
+		var met := d.encounters.values().any(func(e: Dictionary) -> bool:
+			return String(e.get("enemy", "")) == enemy_id or (e.get("choices", []) as Array).any(func(ch: Dictionary) -> bool: return String(ch.get("enemy", "")) == enemy_id))
+		assert_true(met, "%s's enemy %s appears in no encounter" % [beast["id"], enemy_id])
+	for item_id in ["spirit_beast_pellet", "beast_marrow_pill"]:
+		assert_gt(Beasts.food_xp(d, item_id), 0)
+		assert_eq(String(d.recipes[item_id]["profession"]), "beast_tamer")

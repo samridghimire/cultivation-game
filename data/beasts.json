@@ -4,7 +4,7 @@
   "rank_scale": 0.1,
   "outgrown_scale": 0.5,
   "growth": {"max_level": 6, "xp_per_level": 100, "realms_per_level": 0.5},
-  "food": {"spirit_stone": 2, "spirit_herb": 6, "dew_grass": 6, "purple_cloud_mushroom": 10, "qi_condensing_grass": 15, "blood_ginseng": 60, "thousand_year_lingzhi": 160},
+  "food": {"spirit_beast_pellet": 25, "beast_marrow_pill": 120, "spirit_stone": 2, "spirit_herb": 6, "dew_grass": 6, "purple_cloud_mushroom": 10, "qi_condensing_grass": 15, "blood_ginseng": 60, "thousand_year_lingzhi": 160},
   "tame": {"base_chance": 0.15, "chance_per_rank": 0.08, "max_chance": 0.75, "xp": 40},
   "beasts": [
     {"id": "boar", "name": "Fields Boar", "enemy": "wild_boar", "min_rank": 0, "description": "A stubborn boar that now charges at your enemies instead of you.", "bonuses": {"max_hp": 0.1}},
@@ -13,6 +13,13 @@
     {"id": "cloud_eagle", "name": "Cloud Eagle", "enemy": "cloud_eagle", "min_rank": 2, "description": "A spirit eagle that dives from the clouds at your foes.", "bonuses": {"attack": 0.1, "speed": 0.08}},
     {"id": "flame_fox", "name": "Flame-Tailed Fox", "enemy": "flame_tailed_fox", "min_rank": 2, "description": "A sly three-tailed fox that sets the air ablaze around your enemies.", "bonuses": {"attack": 0.14}},
     {"id": "jade_python", "name": "Jade-Scaled Python", "enemy": "jade_python", "min_rank": 3, "description": "An ancient serpent whose coils turn aside blades.", "bonuses": {"max_hp": 0.12, "defense": 0.12}},
-    {"id": "thunderwing_roc", "name": "Thunderwing Roc", "enemy": "thunderwing_roc", "min_rank": 4, "description": "A storm-riding roc. Lightning answers its cry.", "bonuses": {"attack": 0.15, "speed": 0.1}}
+    {"id": "thunderwing_roc", "name": "Thunderwing Roc", "enemy": "thunderwing_roc", "min_rank": 4, "description": "A storm-riding roc. Lightning answers its cry.", "bonuses": {"attack": 0.15, "speed": 0.1}},
+    {"id": "mist_fox", "name": "Mist Fox", "enemy": "mist_fox", "min_rank": 0, "description": "A silver fox that drags its master's foes into the fog.", "bonuses": {"speed": 0.1, "attack": 0.04}},
+    {"id": "iron_back_boar", "name": "Iron-Back Boar", "enemy": "iron_back_boar", "min_rank": 0, "description": "A spiked boar that soaks up blows like a wall.", "bonuses": {"max_hp": 0.12, "defense": 0.05}},
+    {"id": "azure_crane", "name": "Azure Crane", "enemy": "azure_crane", "min_rank": 1, "description": "A crane that strikes from above and carries messages for its master.", "bonuses": {"speed": 0.12, "attack": 0.06}},
+    {"id": "blood_eyed_wolf", "name": "Blood-Eyed Wolf", "enemy": "blood_eyed_wolf", "min_rank": 2, "description": "A red-eyed hound of the marsh, the favorite beast of demonic tamers.", "bonuses": {"attack": 0.16}},
+    {"id": "iron_horn_rhino", "name": "Iron-Horn Rhino", "enemy": "iron_horn_rhino", "min_rank": 2, "description": "A rhino that charges through the enemy's line and stands guard after.", "bonuses": {"defense": 0.1, "max_hp": 0.1}},
+    {"id": "ice_soul_spider", "name": "Ice Soul Spider", "enemy": "ice_soul_spider", "min_rank": 2, "description": "A frost spider whose webs slow anything they touch.", "bonuses": {"speed": 0.08, "attack": 0.1}},
+    {"id": "black_iron_bear", "name": "Black Iron Bear King", "enemy": "black_iron_bear_king", "min_rank": 4, "description": "A bear king as heavy as a war chariot. Even Core Formation foes hesitate before it.", "bonuses": {"max_hp": 0.18, "attack": 0.1}}
   ]
 }

@@ -1297,6 +1297,7 @@ const CRAFT_FLAVOR := {
 	"blacksmith": {"verb": "forge", "great": "The blade sings as it leaves the forge!", "fail": "The metal cracks under the hammer and the ore is ruined."},
 	"talisman_master": {"verb": "inscribe", "great": "The runes blaze with golden light!", "fail": "Your brush slips; the talisman flares and burns to ash."},
 	"array_master": {"verb": "refine", "great": "The array flags hum in perfect resonance!", "fail": "A rune line breaks and the array materials crumble to dust."},
+	"beast_tamer": {"verb": "mix", "great": "The feed smells so rich that every beast in the street turns its head!", "fail": "The mixture curdles into a reeking mess no beast will touch."},
 }
 
 
