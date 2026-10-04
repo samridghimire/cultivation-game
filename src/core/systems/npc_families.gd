@@ -142,4 +142,6 @@ static func validate(data: GameData) -> PackedStringArray:
 			errors.append("family.json npc_families.%s must be within 0..1" % key)
 	if int(r.get("max_children", -1)) < 0 or int(r.get("population_cap", -1)) < 0:
 		errors.append("family.json npc_families needs max_children and population_cap >= 0")
+	if int(r.get("prune_dead_years", 0)) < 0:
+		errors.append("family.json npc_families.prune_dead_years must be >= 0")
 	return errors

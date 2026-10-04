@@ -86,12 +86,58 @@ static func spawn(npcs: Dictionary, data: GameData, rng: RandomNumberGenerator, 
 	return c
 
 
-## The first free generated id. Deterministic, and stable across saves.
+## The first free generated id. Deterministic, stable across saves, and never
+## below the highest generated id in use, so ids of pruned NPCs (prune keeps
+## the highest) are never handed out again.
 static func next_id(npcs: Dictionary) -> String:
-	var n := npcs.size() + 1
+	var n := maxi(npcs.size() + 1, highest_generated(npcs) + 1)
 	while npcs.has(SPAWN_PREFIX + str(n)):
 		n += 1
 	return SPAWN_PREFIX + str(n)
+
+
+## The largest number N of a "gen_N" id in `npcs` (0 if none).
+static func highest_generated(npcs: Dictionary) -> int:
+	var best := 0
+	for npc_id: String in npcs:
+		if npc_id.begins_with(SPAWN_PREFIX) and npc_id.substr(SPAWN_PREFIX.length()).is_valid_int():
+			best = maxi(best, npc_id.substr(SPAWN_PREFIX.length()).to_int())
+	return best
+
+
+## Removes generated NPCs dead for at least `min_dead_days` who are not in
+## `keep` (the player's family, rival, ledgers, favor...) and whom no living
+## NPC in `keep` lists as parent, child or spouse: no living family the player
+## knows. Strangers keep a pruned parent's or child's id in their lists
+## (kinship checks skip ids that are gone); pruned spouses are removed from
+## spouse lists, since unknown ids would count as living spouses. The highest generated id always stays so
+## ids keep growing (next_id). Returns the pruned ids (FAM-013b).
+static func prune(npcs: Dictionary, keep: Dictionary, min_dead_days: int) -> Array[String]:
+	var referenced := {}
+	for c: CharacterData in npcs.values():
+		if not c.alive or not keep.has(c.id):
+			continue
+		for other_id in c.parents + c.children + c.spouses:
+			referenced[other_id] = true
+	var anchor := SPAWN_PREFIX + str(highest_generated(npcs))
+	var pruned: Array[String] = []
+	for npc_id: String in npcs.keys():
+		var c: CharacterData = npcs[npc_id]
+		if c.alive or not npc_id.begins_with(SPAWN_PREFIX) or npc_id == anchor:
+			continue
+		if c.dead_days < min_dead_days or keep.has(npc_id) or referenced.has(npc_id):
+			continue
+		npcs.erase(npc_id)
+		pruned.append(npc_id)
+	# Unknown ids count as living spouses (Family.is_living), so widows and
+	# widowers forget a pruned spouse; parent/child ids stay for kinship checks.
+	if not pruned.is_empty():
+		for c: CharacterData in npcs.values():
+			for npc_id in pruned:
+				if c.spouses.has(npc_id):
+					c.spouses.erase(npc_id)
+					c.spouse_ranks.erase(npc_id)
+	return pruned
 
 
 static func region_of(c: CharacterData, data: GameData) -> String:
@@ -169,6 +215,9 @@ static func simulate(npcs: Dictionary, data: GameData, days: int, rng: RandomNum
 	var events: Array[Dictionary] = []
 	for npc_id in npcs:
 		var c: CharacterData = npcs[npc_id]
+		if not c.alive:
+			c.dead_days += days
+			continue
 		var remaining := days
 		while remaining > 0 and c.alive:
 			var step := mini(remaining, STEP_DAYS)

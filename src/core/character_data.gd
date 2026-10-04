@@ -34,6 +34,8 @@ var proud := false
 var age_days := 0
 var alive := true
 var cause_of_death := ""
+## Days since this NPC died (Npcs.simulate counts on; Npcs.prune uses it).
+var dead_days := 0
 var attributes: Dictionary = {}  # attribute id -> int
 var spiritual_roots: Dictionary = {}  # element id -> purity (int)
 var realm_index := 0
@@ -157,6 +159,7 @@ func to_dict() -> Dictionary:
 		"age_days": age_days,
 		"alive": alive,
 		"cause_of_death": cause_of_death,
+		"dead_days": dead_days,
 		"attributes": attributes.duplicate(),
 		"spiritual_roots": spiritual_roots.duplicate(),
 		"realm_index": realm_index,
@@ -230,6 +233,7 @@ static func from_dict(d: Dictionary) -> CharacterData:
 	c.age_days = int(d.get("age_days", 0))
 	c.alive = bool(d.get("alive", true))
 	c.cause_of_death = d.get("cause_of_death", "")
+	c.dead_days = int(d.get("dead_days", 0))
 	c.attributes = _int_values(d.get("attributes", {}))
 	c.spiritual_roots = _int_values(d.get("spiritual_roots", {}))
 	c.realm_index = int(d.get("realm_index", 0))
