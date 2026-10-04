@@ -404,7 +404,27 @@ func travel(region_id: String) -> void:
 	current_region = region_id
 	EventBus.post("After %s on the road you arrive at %s." % [Calendar.format_duration(check["days"]), Exploration.region_name(data, region_id)], "progress")
 	_pass_time(check["days"], "Travelling to %s" % Exploration.region_name(data, region_id))
+	_road_ambush()
 	EventBus.region_changed.emit(region_id)
+
+
+## After a journey, an NPC with a strong grudge may ambush the player, and a
+## grateful one may come to help (Karma, RIV-003).
+func _road_ambush() -> void:
+	if not _can_act():
+		return
+	var hunter_id := Karma.roll_hunter(player, npcs, data, rng)
+	if hunter_id == "":
+		return
+	var hunter: CharacterData = npcs[hunter_id]
+	EventBus.post("%s has hunted you down on the road. Your old grudge (%d) will be settled with blood!" % [hunter.name, Karma.grudge(player, hunter_id)], "danger")
+	var ally_id := Karma.roll_ally(player, npcs, data, rng, hunter_id)
+	if ally_id != "":
+		EventBus.post("%s, who owes you a debt, rushes to fight at your side!" % npcs[ally_id].name, "progress")
+	var won := fight_enemy(Karma.npc_enemy(hunter, data))
+	Karma.after_hunt(player, data, hunter_id, won)
+	if ally_id != "":
+		player.buffs.erase("ally_aid")
 
 
 ## Explore a place tagged with `tags` (defaults to the region's encounter tags).

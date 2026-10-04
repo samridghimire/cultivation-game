@@ -209,6 +209,65 @@ static func _repay(c: CharacterData, npc: CharacterData, rules: Dictionary, data
 	return notes
 
 
+# --- Hunting the player (RIV-003) -----------------------------------------------
+
+static func _hunt_rules(data: GameData) -> Dictionary:
+	return data.karma.get("hunt", {})
+
+
+## Chance that `npc` ambushes `c` after a journey (0 below hunt.min_grudge).
+static func hunt_chance(c: CharacterData, npc: CharacterData, data: GameData) -> float:
+	var r := _hunt_rules(data)
+	var g := grudge(c, npc.id)
+	if r.is_empty() or g < int(r.get("min_grudge", 1)):
+		return 0.0
+	var chance := minf(float(r.get("max_chance", 1.0)), g * float(r.get("chance_per_point", 0.0)))
+	return chance * pow(float(r.get("weaker_scale", 1.0)), maxi(0, c.realm_index - npc.realm_index))
+
+
+## The living NPC with the strongest grudge (ties by id) if it decides to
+## ambush `c` on the road; "" if nobody does.
+static func roll_hunter(c: CharacterData, people: Dictionary, data: GameData, rng: RandomNumberGenerator) -> String:
+	var best := ""
+	var family := Children.descendants(c, people)
+	for npc_id in c.grudges:
+		var npc: CharacterData = people.get(npc_id)
+		if npc == null or not npc.alive or family.has(npc_id):
+			continue
+		if best == "" or grudge(c, npc_id) > grudge(c, best) or (grudge(c, npc_id) == grudge(c, best) and String(npc_id) < best):
+			best = String(npc_id)
+	if best == "" or rng.randf() >= hunt_chance(c, people[best], data):
+		return ""
+	return best
+
+
+## The grateful NPC who comes to `c`'s aid in an ambush, or "". Spends their
+## gratitude and grants the aid buff when they come.
+static func roll_ally(c: CharacterData, people: Dictionary, data: GameData, rng: RandomNumberGenerator, hunter_id: String) -> String:
+	var aid: Dictionary = _hunt_rules(data).get("aid", {})
+	if aid.is_empty():
+		return ""
+	var best := ""
+	for npc_id in c.gratitude:
+		var npc: CharacterData = people.get(npc_id)
+		if npc == null or not npc.alive or npc_id == hunter_id or gratitude(c, npc_id) < int(aid.get("min_gratitude", 1)):
+			continue
+		if best == "" or gratitude(c, npc_id) > gratitude(c, best):
+			best = String(npc_id)
+	if best == "" or rng.randf() >= float(aid.get("chance", 0.0)):
+		return ""
+	add_gratitude(c, data, best, -int(aid.get("gratitude_cost", 0)))
+	Buffs.add_from_effect(c, aid.get("buff", {}))
+	return best
+
+
+## After an ambush by `npc_id`: beating them humbles them, losing to them
+## partly satisfies their vengeance (hunt.beaten_grudge / victory_grudge).
+static func after_hunt(c: CharacterData, data: GameData, npc_id: String, player_won: bool) -> void:
+	var r := _hunt_rules(data)
+	add_grudge(c, data, npc_id, int(r.get("beaten_grudge" if player_won else "victory_grudge", 0)))
+
+
 ## Spirit stones it takes to make amends with `npc_id` (0 = no grudge).
 static func amends_cost(c: CharacterData, npc_id: String, data: GameData) -> int:
 	var g := grudge(c, npc_id)
@@ -287,6 +346,17 @@ static func validate(data: GameData) -> PackedStringArray:
 	var errors: PackedStringArray = []
 	if data.karma.is_empty():
 		return errors
+	var hunt := _hunt_rules(data)
+	for key in ["chance_per_point", "max_chance", "weaker_scale"]:
+		if hunt.has(key) and (float(hunt[key]) < 0.0 or float(hunt[key]) > 1.0):
+			errors.append("karma.json hunt %s must be in 0..1" % key)
+	var aid: Dictionary = hunt.get("aid", {})
+	if not aid.is_empty():
+		if float(aid.get("chance", 0.0)) < 0.0 or float(aid.get("chance", 0.0)) > 1.0:
+			errors.append("karma.json hunt aid chance must be in 0..1")
+		for key in aid.get("buff", {}).get("mults", {}):
+			if not Buffs.STAT_KEYS.has(key):
+				errors.append("karma.json hunt aid buff has unknown stat '%s'" % key)
 	for a: Dictionary in data.karma.get("acts", {}).values():
 		var loot: Array = a.get("loot_stones", [])
 		if not loot.is_empty() and (loot.size() != 2 or int(loot[0]) > int(loot[1]) or int(loot[0]) < 0):
