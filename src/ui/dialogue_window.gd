@@ -92,7 +92,7 @@ func line_text() -> String:
 func _choose(index: int) -> void:
 	GameState.choose_dialogue(index)
 	# dialogue_ended (via the HUD) closes us when the conversation is over.
-	if GameState.dialogue_npc != "":
+	if GameState.in_dialogue():
 		open()
 	else:
 		close()

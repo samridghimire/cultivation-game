@@ -435,6 +435,9 @@ func _validate_help() -> void:
 func _validate_artifact() -> void:
 	if int(artifact.get("starting_lives", 0)) < 0 or int(artifact.get("max_lives", 0)) < int(artifact.get("starting_lives", 0)):
 		load_errors.append("artifact.json needs 0 <= starting_lives <= max_lives")
+	var intro: String = artifact.get("intro_event", "")
+	if intro != "" and not dialogues.has(intro):
+		load_errors.append("artifact.json intro_event '%s' is not a dialogue" % intro)
 	var start: String = artifact.get("start_anchor", "")
 	if start != "" and not anchors.has(start):
 		load_errors.append("artifact.json start_anchor '%s' is not an anchor" % start)

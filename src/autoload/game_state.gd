@@ -8,6 +8,8 @@ extends Node
 const BREAKTHROUGH_DAYS := 7
 ## Dialogue id (data/dialogue/) for generated NPCs without their own file.
 const GENERIC_DIALOGUE := "generic_cultivator"
+## World flag set once the intro event (data/artifact.json intro_event) has played.
+const INTRO_EVENT_FLAG := "intro_event_seen"
 
 var data: GameData
 var player: CharacterData
@@ -22,6 +24,11 @@ var npc_favor: Dictionary = {}
 ## The conversation in progress ("" = none) and its current node.
 var dialogue_npc := ""
 var dialogue_node := ""
+## Dialogue id of the story event (a dialogue without an NPC) in progress.
+var dialogue_event := ""
+## Story event a fresh character opens with (data/artifact.json intro_event),
+## started by the HUD once it is ready (start_pending_event).
+var pending_event := ""
 ## Encounter id waiting for the player's choice (W-004c, "" = none). Like a
 ## conversation it is not saved: loading a save drops it.
 var pending_encounter := ""
@@ -58,6 +65,8 @@ func start_session(character: CharacterData) -> void:
 	pending_encounter = ""
 	pending_respawn = {}
 	spawn_anchor = ""
+	dialogue_event = ""
+	pending_event = String(data.artifact.get("intro_event", ""))
 	Npcs.ensure_all(npcs, data, rng)
 	Npcs.ensure_eligible(npcs, data, rng)
 	GameClock.reset()
@@ -77,6 +86,8 @@ func end_session() -> void:
 	pending_encounter = ""
 	pending_respawn = {}
 	spawn_anchor = ""
+	dialogue_event = ""
+	pending_event = ""
 
 
 # --- Actions -----------------------------------------------------------------
@@ -466,29 +477,64 @@ func start_dialogue(npc_id: String) -> void:
 	if node == "":
 		return
 	dialogue_npc = npc_id
+	dialogue_event = ""
 	dialogue_node = node
 	EventBus.dialogue_requested.emit(npc_id)
+
+
+## Start a story event: a dialogue file (data/dialogue/) not bound to an NPC.
+## `once_flag` (optional) is a world flag set when it starts; an event whose
+## flag is already set does not start. Returns true if it started.
+func start_event(dialogue_id: String, once_flag: String = "") -> bool:
+	if not _can_act() or in_dialogue() or not data.dialogues.has(dialogue_id):
+		return false
+	if once_flag != "" and world_flags.get(once_flag, false):
+		return false
+	var node := Dialogue.entry_node(data.dialogues[dialogue_id], _dialogue_ctx(""))
+	if node == "":
+		return false
+	if once_flag != "":
+		world_flags[once_flag] = true
+	dialogue_npc = ""
+	dialogue_event = dialogue_id
+	dialogue_node = node
+	EventBus.dialogue_requested.emit("")
+	return true
+
+
+## Starts the pending intro event of a fresh character, once (world flag
+## INTRO_EVENT_FLAG). Called by the HUD when it is ready to show it.
+func start_pending_event() -> void:
+	var event_id := pending_event
+	pending_event = ""
+	if event_id != "":
+		start_event(event_id, INTRO_EVENT_FLAG)
+
+
+## True while a conversation or story event is in progress.
+func in_dialogue() -> bool:
+	return dialogue_npc != "" or dialogue_event != ""
 
 
 ## The current node: {id, speaker, text, choices: [{index, label, disabled,
 ## reason}]}, or {} when no conversation is in progress.
 func dialogue_view() -> Dictionary:
-	if dialogue_npc == "":
+	if not in_dialogue():
 		return {}
-	return Dialogue.view(_npc_dialogue(dialogue_npc), dialogue_node, _dialogue_ctx(dialogue_npc))
+	return Dialogue.view(_current_dialogue(), dialogue_node, _dialogue_ctx(dialogue_npc))
 
 
 ## Picks choice `index` (from dialogue_view) of the current node. Emits
 ## dialogue_ended once effects and time are applied if the conversation is over.
 func choose_dialogue(index: int) -> void:
-	if dialogue_npc == "" or not _can_act():
+	if not in_dialogue() or not _can_act():
 		return
 	var npc_id := dialogue_npc
-	var result := Dialogue.choose(_npc_dialogue(npc_id), dialogue_node, index, _dialogue_ctx(npc_id))
+	var result := Dialogue.choose(_current_dialogue(), dialogue_node, index, _dialogue_ctx(npc_id))
 	if not result["ok"]:
 		EventBus.post(result["reason"], "warning")
 		return
-	if result["favor"] != 0:
+	if result["favor"] != 0 and npc_id != "":
 		npc_favor[npc_id] = int(npc_favor.get(npc_id, 0)) + result["favor"]
 	if not result["notes"].is_empty():
 		EventBus.post("(%s)" % ", ".join(result["notes"]), "karma")
@@ -504,6 +550,7 @@ func end_dialogue() -> void:
 	var npc_id := dialogue_npc
 	dialogue_npc = ""
 	dialogue_node = ""
+	dialogue_event = ""
 	EventBus.dialogue_ended.emit(npc_id)
 	EventBus.player_changed.emit()
 
@@ -522,6 +569,13 @@ func _npc_dialogue(npc_id: String) -> Dictionary:
 	if npc == null or npc.age_years() < int(data.family.get("adult_age", 16)):
 		return {}
 	return data.dialogues.get(GENERIC_DIALOGUE, {})
+
+
+## The dialogue file in progress: the story event's, else the NPC's.
+func _current_dialogue() -> Dictionary:
+	if dialogue_event != "":
+		return data.dialogues.get(dialogue_event, {})
+	return _npc_dialogue(dialogue_npc)
 
 
 func _dialogue_ctx(npc_id: String) -> Dictionary:
@@ -1246,6 +1300,8 @@ func load_save_dict(d: Dictionary) -> void:
 	clan = ClanData.from_dict(saved_clan) if not saved_clan.is_empty() else null
 	dialogue_npc = ""
 	dialogue_node = ""
+	dialogue_event = ""
+	pending_event = ""  # a loaded game never replays the intro event
 	pending_encounter = ""
 	if not data.regions.has(current_region):
 		current_region = data.start_region

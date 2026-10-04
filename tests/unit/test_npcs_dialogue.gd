@@ -187,3 +187,24 @@ func test_generic_dialogue_favor_is_capped_and_extortion_sours() -> void:
 	assert_eq(gs.dialogue_node, "cold", "a soured NPC remembers")
 	gs.end_dialogue()
 	gs.end_session()
+
+
+func test_event_dialogue_without_npc_ignores_favor() -> void:
+	var dialogue := {"id": "evt", "entries": [{"node": "a"}], "nodes": {
+		"a": {"speaker": "A Voice", "text": "Hello, {player}.", "choices": [{"label": "Hi", "next": "end", "favor": 5, "effects": {"qi": 10}}]}}}
+	var c := new_character()
+	var ctx := {"player": c, "npc": null, "data": data(), "flags": {}, "favor": 0}
+	assert_eq(Dialogue.entry_node(dialogue, ctx), "a")
+	var view := Dialogue.view(dialogue, "a", ctx)
+	assert_eq(view["speaker"], "A Voice")
+	assert_eq(view["text"], "Hello, %s." % c.name)
+	var result := Dialogue.choose(dialogue, "a", 0, ctx)
+	assert_true(result["ok"])
+	assert_eq(result["favor"], 0)
+	assert_eq(result["next"], "")
+
+
+func test_intro_event_is_a_valid_dialogue() -> void:
+	var intro := String(data().artifact.get("intro_event", ""))
+	assert_true(data().dialogues.has(intro))
+	assert_eq(Dialogue.validate(data().dialogues[intro], data()).size(), 0)
