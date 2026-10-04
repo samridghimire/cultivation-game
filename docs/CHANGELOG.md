@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-03 [QA-007b] Rogue cultivators and stone apes now roam from Qi Refining (sensed and avoided as Deadly by newcomers, a real fight at the peak) instead of appearing as pushovers at Foundation Establishment; a guard test keeps every foe first met at or before its own realm.
 - 2026-10-03 [G-009c] Reputation content: public good and evil deeds (feeding a beggar child, catching a thief, selling a street child, riding with bandits) are now witnessed and move sect reputation; sect missions against a rival sect's interests cost reputation with it; a Blood Lotus Apothecary in Fallen Star Market (demonic-leaning players only, priced by Blood Lotus reputation) now holds the blood pills and Blood Shadow Flight manual instead of general stores.
 - 2026-10-03 [ART-002b] Creation Artifact screen (O key / right shoulder): see artifact energy and sealed functions, feed it spirit stones (x10/x100) or any carried item, unseal functions (disabled entries say why), and move items in and out of the Storage Space.
 - 2026-10-03 [ART-003a] The Creation Artifact's second function, the Appraising Eye (Qi Refining, 400 energy): once unsealed it reads an NPC's realm, spiritual root, talent tier, attributes, remaining years and the colour of their heart, and an item's grade, power and worth (Appraisal.describe_npc/describe_item; everything stays hidden while sealed). UI follows in ART-003c.
