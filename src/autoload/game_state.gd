@@ -96,6 +96,7 @@ func start_session(character: CharacterData) -> void:
 
 
 func end_session() -> void:
+	EventBus.topic = ""
 	player = null
 	world_flags = {}
 	auctions = {}
@@ -117,6 +118,7 @@ func end_session() -> void:
 
 ## `skip_title` heads the time-skip overlay ("In seclusion" at an abode).
 func cultivate(days: int, location_density: float = 1.0, skip_title: String = "Meditating") -> void:
+	EventBus.topic = "cultivation"
 	if not _can_act():
 		return
 	if SpiritualRoots.cultivation_multiplier(player.spiritual_roots, data) <= 0.0:
@@ -139,6 +141,7 @@ func cultivate(days: int, location_density: float = 1.0, skip_title: String = "M
 ## Claim a cave abode in the current region for spirit stones. Its anchor is
 ## bound right away if the artifact has a free anchor slot.
 func claim_abode(abode_id: String) -> void:
+	EventBus.topic = "cultivation"
 	if not _can_act():
 		return
 	var result := Abodes.claim(player, data, abode_id, current_region)
@@ -161,6 +164,7 @@ func claim_abode(abode_id: String) -> void:
 
 ## Cultivate in seclusion at the player's abode (must be in its region).
 func cultivate_in_seclusion(days: int) -> void:
+	EventBus.topic = "cultivation"
 	if not _can_act():
 		return
 	var density := Abodes.seclusion_density(player, data, current_region)
@@ -172,6 +176,7 @@ func cultivate_in_seclusion(days: int) -> void:
 
 ## Set up an array (items.json `array`) at the player's abode; takes a day.
 func place_abode_array(item_id: String) -> void:
+	EventBus.topic = "cultivation"
 	if not _can_act():
 		return
 	var result := Abodes.place_array(player, data, current_region, item_id)
@@ -187,6 +192,7 @@ func place_abode_array(item_id: String) -> void:
 
 ## Pack up the array at the player's abode into the inventory.
 func remove_abode_array() -> void:
+	EventBus.topic = "cultivation"
 	if not _can_act():
 		return
 	var result := Abodes.remove_array(player, data, current_region)
@@ -198,6 +204,7 @@ func remove_abode_array() -> void:
 
 
 func store_in_abode(item_id: String, quantity: int = 1) -> void:
+	EventBus.topic = "cultivation"
 	if not _can_act():
 		return
 	var result := Abodes.store(player, data, current_region, item_id, quantity)
@@ -209,6 +216,7 @@ func store_in_abode(item_id: String, quantity: int = 1) -> void:
 
 
 func retrieve_from_abode(item_id: String, quantity: int = 1) -> void:
+	EventBus.topic = "cultivation"
 	if not _can_act():
 		return
 	var result := Abodes.retrieve(player, data, current_region, item_id, quantity)
@@ -220,6 +228,7 @@ func retrieve_from_abode(item_id: String, quantity: int = 1) -> void:
 
 
 func attempt_breakthrough() -> void:
+	EventBus.topic = "cultivation"
 	if not _can_act():
 		return
 	if not Cultivation.can_attempt_breakthrough(player, data):
@@ -271,6 +280,7 @@ func _report_tribulation(result: Dictionary) -> void:
 
 
 func work_profession(prof_id: String, days: int) -> void:
+	EventBus.topic = "trade"
 	if not _can_act():
 		return
 	_start_time_skip()
@@ -287,6 +297,7 @@ func work_profession(prof_id: String, days: int) -> void:
 
 
 func join_sect(sect_id: String) -> void:
+	EventBus.topic = "sect"
 	if not _can_act():
 		return
 	var result := Sects.join(player, data, sect_id)
@@ -298,6 +309,7 @@ func join_sect(sect_id: String) -> void:
 
 
 func leave_sect() -> void:
+	EventBus.topic = "sect"
 	if not _can_act():
 		return
 	var old_id := Sects.leave(player)
@@ -309,6 +321,7 @@ func leave_sect() -> void:
 
 
 func perform_deed(deed_id: String) -> void:
+	EventBus.topic = "world"
 	if not _can_act():
 		return
 	var deed: Dictionary = data.deeds.get(deed_id, {})
@@ -334,6 +347,7 @@ func perform_deed(deed_id: String) -> void:
 
 ## Buys one item; `faction` is the sect the merchant belongs to (prices follow reputation).
 func buy_item(item_id: String, faction: String = "", quantity: int = 1) -> void:
+	EventBus.topic = "trade"
 	if not _can_act():
 		return
 	var result := Items.buy(player, data, item_id, quantity, faction, market_multiplier())
@@ -347,6 +361,7 @@ func buy_item(item_id: String, faction: String = "", quantity: int = 1) -> void:
 
 
 func use_item(item_id: String) -> void:
+	EventBus.topic = "cultivation"
 	if not _can_act():
 		return
 	if Equipment.is_equipment(data, item_id):
@@ -365,6 +380,7 @@ func use_item(item_id: String) -> void:
 
 ## Equip a weapon/armor from the inventory (takes no time).
 func equip_item(item_id: String) -> void:
+	EventBus.topic = "cultivation"
 	if not _can_act():
 		return
 	var reason := Equipment.check_equip(player, data, item_id)
@@ -385,6 +401,7 @@ func equip_item(item_id: String) -> void:
 
 
 func unequip(slot: String) -> void:
+	EventBus.topic = "cultivation"
 	if not _can_act():
 		return
 	var item_id := Equipment.unequip(player, slot)
@@ -394,6 +411,7 @@ func unequip(slot: String) -> void:
 
 
 func travel(region_id: String) -> void:
+	EventBus.topic = "world"
 	if not _can_act():
 		return
 	var check := Exploration.check_travel(player, data, current_region, region_id)
@@ -429,6 +447,7 @@ func _road_ambush() -> void:
 
 ## Explore a place tagged with `tags` (defaults to the region's encounter tags).
 func explore(tags: Array = []) -> void:
+	EventBus.topic = "world"
 	if not _can_act():
 		return
 	if tags.is_empty():
@@ -469,6 +488,7 @@ func explore(tags: Array = []) -> void:
 ## and so does a realm that closes before the floor is done (W-005d). Clearing
 ## the last floor grants the realm's inheritance once per life.
 func enter_secret_realm(realm_id: String) -> void:
+	EventBus.topic = "world"
 	if not _can_act():
 		return
 	var today: int = GameClock.total_days
@@ -520,6 +540,7 @@ func _receive_inheritance(realm_id: String) -> void:
 ## met, fight trials must be won (losing is never lethal). Passing the last
 ## trial claims the inheritance; no one else can claim it after you.
 func attempt_inheritance(inheritance_id: String) -> void:
+	EventBus.topic = "world"
 	if not _can_act():
 		return
 	var reason := Inheritances.check_attempt(player, data, inheritance_id, current_region, GameClock.total_days, world_flags)
@@ -554,6 +575,7 @@ func encounter_choices() -> Array[Dictionary]:
 ## Pick choice `index` of the pending encounter: applies its outcome, passes
 ## its days and starts its fight, if any (a chosen fight is never evaded).
 func choose_encounter(index: int) -> void:
+	EventBus.topic = "world"
 	if pending_encounter == "" or not _can_act():
 		return
 	var encounter: Dictionary = data.encounters.get(pending_encounter, {})
@@ -601,6 +623,7 @@ func _rival_consequences(entry: Dictionary) -> void:
 ## Leave the pending encounter without choosing (the UI offers this only when
 ## every choice is locked).
 func dismiss_encounter() -> void:
+	EventBus.topic = "world"
 	if pending_encounter == "":
 		return
 	pending_encounter = ""
@@ -611,6 +634,7 @@ func dismiss_encounter() -> void:
 
 ## Gather materials from a place's gathering table (see Exploration.gather).
 func gather(table: Array, days: int) -> void:
+	EventBus.topic = "trade"
 	if not _can_act():
 		return
 	var found := Exploration.gather(player, Exploration.gather_table_for(player, data, table), rng)
@@ -628,6 +652,7 @@ func gather(table: Array, days: int) -> void:
 
 
 func sell_item(item_id: String, quantity: int = 1) -> void:
+	EventBus.topic = "trade"
 	if not _can_act():
 		return
 	var result := Items.sell(player, data, item_id, quantity)
@@ -643,6 +668,7 @@ func sell_item(item_id: String, quantity: int = 1) -> void:
 # dialogue_view() and calls choose_dialogue until dialogue_ended fires.
 
 func start_dialogue(npc_id: String) -> void:
+	EventBus.topic = "world"
 	if not _can_act():
 		return
 	var dialogue := _npc_dialogue(npc_id)
@@ -662,6 +688,7 @@ func start_dialogue(npc_id: String) -> void:
 ## `once_flag` (optional) is a world flag set when it starts; an event whose
 ## flag is already set does not start. Returns true if it started.
 func start_event(dialogue_id: String, once_flag: String = "") -> bool:
+	EventBus.topic = "world"
 	if not _can_act() or in_dialogue() or not data.dialogues.has(dialogue_id):
 		return false
 	if once_flag != "" and world_flags.get(once_flag, false):
@@ -703,6 +730,7 @@ func dialogue_view() -> Dictionary:
 ## Picks choice `index` (from dialogue_view) of the current node. Emits
 ## dialogue_ended once effects and time are applied if the conversation is over.
 func choose_dialogue(index: int) -> void:
+	EventBus.topic = "world"
 	if not in_dialogue() or not _can_act():
 		return
 	var npc_id := dialogue_npc
@@ -760,6 +788,7 @@ func _dialogue_ctx(npc_id: String) -> Dictionary:
 
 ## Spend time courting an NPC (needs some favor first); raises their favor.
 func court(npc_id: String) -> void:
+	EventBus.topic = "family"
 	if not _can_act():
 		return
 	var result := Family.court(player, npcs.get(npc_id), int(npc_favor.get(npc_id, 0)), data, npcs)
@@ -775,6 +804,7 @@ func court(npc_id: String) -> void:
 ## Pass a few days chatting with an NPC who has no dialogue file; raises favor
 ## up to data/family.json acquaintance.chat_max_favor (enough to court).
 func chat(npc_id: String) -> void:
+	EventBus.topic = "family"
 	if not _can_act():
 		return
 	var favor := int(npc_favor.get(npc_id, 0))
@@ -793,6 +823,7 @@ func chat(npc_id: String) -> void:
 ## Give one item to an NPC; favor scales with its price, up to
 ## data/family.json acquaintance.gift_max_favor.
 func give_gift(npc_id: String, item_id: String) -> void:
+	EventBus.topic = "family"
 	if not _can_act():
 		return
 	var favor := int(npc_favor.get(npc_id, 0))
@@ -811,6 +842,7 @@ func give_gift(npc_id: String, item_id: String) -> void:
 
 ## Pick the player's gender once, for old saves where it is unknown ("").
 func choose_gender(gender: String) -> void:
+	EventBus.topic = "family"
 	if not _can_act():
 		return
 	var reason := Names.check_choose_gender(player, data, gender)
@@ -824,6 +856,7 @@ func choose_gender(gender: String) -> void:
 
 ## Propose marriage to an NPC, offering spousal `rank` (data/family.json).
 func propose(npc_id: String, rank: String) -> void:
+	EventBus.topic = "family"
 	if not _can_act():
 		return
 	var result := Family.propose(player, npcs.get(npc_id), int(npc_favor.get(npc_id, 0)), rank, data, npcs)
@@ -838,6 +871,7 @@ func propose(npc_id: String, rank: String) -> void:
 ## Commit a hostile act (data/karma.json: humiliate, rob, kill) against an NPC.
 ## Acts with "fight" make you beat them first. The victim and their kin hold a grudge.
 func hostile_act(npc_id: String, act_id: String) -> void:
+	EventBus.topic = "combat"
 	if not _can_act():
 		return
 	var npc: CharacterData = npcs.get(npc_id)
@@ -868,6 +902,7 @@ func hostile_act(npc_id: String, act_id: String) -> void:
 
 ## Pay spirit stones to clear an NPC's grudge against you (Karma.amends_cost).
 func make_amends(npc_id: String) -> void:
+	EventBus.topic = "combat"
 	if not _can_act():
 		return
 	var result := Karma.make_amends(player, npcs.get(npc_id), data)
@@ -881,6 +916,7 @@ func make_amends(npc_id: String) -> void:
 ## Cultivate together with a spouse who is in the current region: both gain
 ## qi with the dual cultivation bonus (data/family.json) and favor rises.
 func dual_cultivate(spouse_id: String, days: int, location_density: float = 1.0) -> void:
+	EventBus.topic = "family"
 	if not _can_act():
 		return
 	var spouse: CharacterData = npcs.get(spouse_id)
@@ -910,6 +946,7 @@ func dual_cultivate(spouse_id: String, days: int, location_density: float = 1.0)
 ## (data/family.json "children"). On conception the carrier's pregnancy begins;
 ## the birth happens as time passes (see _advance_pregnancies).
 func try_for_child(spouse_id: String) -> void:
+	EventBus.topic = "family"
 	if not _can_act():
 		return
 	var spouse: CharacterData = npcs.get(spouse_id)
@@ -933,6 +970,7 @@ func try_for_child(spouse_id: String) -> void:
 ## Found the player's clan (data/family.json "clan"): the player becomes its
 ## Patriarch/Matriarch and their spouses and descendants join.
 func found_clan() -> void:
+	EventBus.topic = "family"
 	if not _can_act():
 		return
 	var result := Clans.found(player, clan, npcs, data, GameClock.total_days)
@@ -949,6 +987,7 @@ func found_clan() -> void:
 
 ## Recruit an NPC in the current region as a clan retainer.
 func recruit_to_clan(npc_id: String) -> void:
+	EventBus.topic = "family"
 	if not _can_act():
 		return
 	var npc: CharacterData = npcs.get(npc_id)
@@ -967,6 +1006,7 @@ func recruit_to_clan(npc_id: String) -> void:
 
 ## Give a clan member a rank (data/family.json clan.ranks). Takes no time.
 func set_clan_rank(member_id: String, rank_id: String) -> void:
+	EventBus.topic = "family"
 	if not _can_act():
 		return
 	var member: CharacterData = npcs.get(member_id)
@@ -982,6 +1022,7 @@ func set_clan_rank(member_id: String, rank_id: String) -> void:
 ## paid from the clan treasury. The builders work while the world moves on;
 ## giving the order takes no time.
 func build_clan_building(building_id: String) -> void:
+	EventBus.topic = "family"
 	if not _can_act():
 		return
 	var result := ClanEstate.start_build(player, clan, building_id, data)
@@ -1013,6 +1054,7 @@ func _advance_estate(days: int, months: int) -> void:
 ## Name one of the player's descendants in the clan as its heir (Young
 ## Master/Mistress). Takes no time.
 func designate_heir(person_id: String) -> void:
+	EventBus.topic = "family"
 	if not _can_act():
 		return
 	var person: CharacterData = npcs.get(person_id)
@@ -1026,6 +1068,7 @@ func designate_heir(person_id: String) -> void:
 
 ## Move spirit stones into the clan treasury. Takes no time.
 func deposit_to_clan(amount: int) -> void:
+	EventBus.topic = "family"
 	if not _can_act():
 		return
 	var result := Clans.deposit(player, clan, amount)
@@ -1038,6 +1081,7 @@ func deposit_to_clan(amount: int) -> void:
 
 ## Adopt an orphaned child NPC in the current region (data/family.json "adoption").
 func adopt(npc_id: String) -> void:
+	EventBus.topic = "family"
 	if not _can_act():
 		return
 	var child: CharacterData = npcs.get(npc_id)
@@ -1056,6 +1100,7 @@ func adopt(npc_id: String) -> void:
 ## Adopt a foundling from an orphanage or temple in the current region, for a
 ## donation (Adoption.foundling_donation).
 func adopt_foundling() -> void:
+	EventBus.topic = "family"
 	if not _can_act():
 		return
 	var result := Adoption.adopt_foundling(player, npcs, data, rng, current_region)
@@ -1076,6 +1121,7 @@ func _welcome_adopted(child: CharacterData, result: Dictionary) -> void:
 ## Give one of your children a monthly training assignment (data/family.json
 ## "training"), paid in spirit stones each month. Takes no time.
 func assign_training(child_id: String, assignment_id: String, profession: String = "") -> void:
+	EventBus.topic = "family"
 	if not _can_act():
 		return
 	var child: CharacterData = npcs.get(child_id)
@@ -1092,6 +1138,7 @@ func assign_training(child_id: String, assignment_id: String, profession: String
 
 ## Stop paying for a child's training. Takes no time.
 func clear_training(child_id: String) -> void:
+	EventBus.topic = "family"
 	if not _can_act():
 		return
 	var child: CharacterData = npcs.get(child_id)
@@ -1106,6 +1153,7 @@ func clear_training(child_id: String) -> void:
 
 ## Teach a child in the current region a technique you know.
 func teach_technique(child_id: String, tech_id: String) -> void:
+	EventBus.topic = "family"
 	if not _can_act():
 		return
 	var child: CharacterData = npcs.get(child_id)
@@ -1122,6 +1170,7 @@ func teach_technique(child_id: String, tech_id: String) -> void:
 
 ## Give a child in the current region a pill (any usable item) to take at once. Takes no time.
 func give_to_child(child_id: String, item_id: String) -> void:
+	EventBus.topic = "family"
 	if not _can_act():
 		return
 	var child: CharacterData = npcs.get(child_id)
@@ -1136,6 +1185,7 @@ func give_to_child(child_id: String, item_id: String) -> void:
 
 
 func learn_technique(tech_id: String) -> void:
+	EventBus.topic = "cultivation"
 	if not _can_act():
 		return
 	var def: TechniqueDef = data.techniques.get(tech_id)
@@ -1146,6 +1196,7 @@ func learn_technique(tech_id: String) -> void:
 
 
 func practice_technique(tech_id: String, days: int) -> void:
+	EventBus.topic = "cultivation"
 	if not _can_act():
 		return
 	_start_time_skip()
@@ -1166,6 +1217,7 @@ func practice_technique(tech_id: String, days: int) -> void:
 
 ## Contemplate a Dao insight you have already glimpsed, in seclusion, for `days`.
 func contemplate_dao(insight_id: String, days: int) -> void:
+	EventBus.topic = "cultivation"
 	if not _can_act():
 		return
 	_start_time_skip()
@@ -1183,6 +1235,7 @@ func contemplate_dao(insight_id: String, days: int) -> void:
 ## Temper your body to its next stage (BodyTempering): consumes the stage's
 ## items and days, and may injure you.
 func temper_body() -> void:
+	EventBus.topic = "cultivation"
 	if not _can_act():
 		return
 	var result := BodyTempering.temper(player, data, rng)
@@ -1199,6 +1252,7 @@ func temper_body() -> void:
 ## Make a known cultivation method your main method. Re-circulating your qi takes
 ## techniques.json method_switch_days.
 func set_main_method(tech_id: String) -> void:
+	EventBus.topic = "cultivation"
 	if not _can_act():
 		return
 	var result := Techniques.set_main_method(player, data, tech_id)
@@ -1215,6 +1269,7 @@ func set_main_method(tech_id: String) -> void:
 
 ## Activate a secret art: burn its lifespan cost for a temporary combat buff. Takes no time.
 func activate_technique(tech_id: String) -> void:
+	EventBus.topic = "cultivation"
 	if not _can_act():
 		return
 	var result := Techniques.activate(player, data, tech_id)
@@ -1229,6 +1284,7 @@ func activate_technique(tech_id: String) -> void:
 
 ## Treat one of your own injuries with your Doctor skill.
 func treat_own_injury(injury_id: String) -> void:
+	EventBus.topic = "cultivation"
 	if not _can_act():
 		return
 	var result := Medicine.treat_self(player, data, injury_id)
@@ -1247,6 +1303,7 @@ func treat_own_injury(injury_id: String) -> void:
 
 ## Pay a clinic to heal an injury fully.
 func visit_clinic(injury_id: String) -> void:
+	EventBus.topic = "trade"
 	if not _can_act():
 		return
 	var result := Medicine.visit_clinic(player, data, injury_id)
@@ -1260,6 +1317,7 @@ func visit_clinic(injury_id: String) -> void:
 
 ## Treat an injured NPC's worst injury: Doctor xp, alignment and their favor.
 func treat_npc(npc_id: String) -> void:
+	EventBus.topic = "family"
 	if not _can_act():
 		return
 	var patient: CharacterData = npcs.get(npc_id)
@@ -1281,6 +1339,7 @@ func treat_npc(npc_id: String) -> void:
 
 ## Work as a doctor: treat village patients for income, Doctor xp and alignment.
 func treat_patients(days: int) -> void:
+	EventBus.topic = "trade"
 	if not _can_act():
 		return
 	_start_time_skip()
@@ -1303,6 +1362,7 @@ const CRAFT_FLAVOR := {
 
 ## Refine one batch of a recipe from data/recipes.json. Failure burns the ingredients.
 func refine(recipe_id: String) -> void:
+	EventBus.topic = "trade"
 	if not _can_act():
 		return
 	var result := Alchemy.refine(player, data, recipe_id, rng)
@@ -1331,6 +1391,7 @@ func refine(recipe_id: String) -> void:
 ## Craft `times` batches in a row, stopping when one is no longer possible
 ## (missing ingredients, rank) or the character dies.
 func refine_batch(recipe_id: String, times: int) -> void:
+	EventBus.topic = "trade"
 	for i in times:
 		if not _can_act() or Alchemy.check(player, data, recipe_id) != "":
 			break
@@ -1341,6 +1402,7 @@ func refine_batch(recipe_id: String, times: int) -> void:
 ## one (losing fails the mission), then hand in items, earn contribution and
 ## rewards, and spend the mission's days.
 func take_mission(mission_id: String) -> void:
+	EventBus.topic = "sect"
 	if not _can_act():
 		return
 	var reason := Sects.check_mission(player, data, mission_id)
@@ -1373,6 +1435,7 @@ func take_mission(mission_id: String) -> void:
 ## Fight your sect's promotion trial (sects.json rank `trial`) for the next
 ## rank. A sparring match: losing can injure you but never kills or robs you.
 func attempt_promotion_trial() -> void:
+	EventBus.topic = "sect"
 	if not _can_act():
 		return
 	var reason := Sects.check_promotion(player, data)
@@ -1395,6 +1458,7 @@ func attempt_promotion_trial() -> void:
 ## Buy an item from your sect's contribution shop (sects.json `shop`).
 ## Spending contribution never lowers your rank. Takes no time.
 func buy_with_contribution(item_id: String) -> void:
+	EventBus.topic = "sect"
 	if not _can_act():
 		return
 	var result := Sects.buy_with_contribution(player, data, item_id)
@@ -1420,6 +1484,7 @@ func check_bid(house_id: String, lot_index: int, amount: int) -> String:
 ## Place one sealed bid on an auction lot (data/auctions.json). Beating the
 ## hidden NPC maximum wins the lot; otherwise a rival takes it. Takes no time.
 func bid(house_id: String, lot_index: int, amount: int) -> void:
+	EventBus.topic = "trade"
 	if not _can_act():
 		return
 	var result := Auctions.bid(player, data, auctions, house_id, lot_index, amount, current_region, GameClock.total_days, rng.seed)
@@ -1448,6 +1513,7 @@ func market_multiplier() -> float:
 ## Hear the market gossip: world events under way and when the next auction
 ## opens (LW-001b). Takes no time.
 func hear_rumors() -> void:
+	EventBus.topic = "world"
 	if not _can_act():
 		return
 	for line in WorldEvents.rumors(data, world_events, auction_rumors(), GameClock.total_days):
@@ -1475,6 +1541,7 @@ func _world_events_month() -> void:
 
 ## Fight an enemy from data/enemies.json.
 func fight(enemy_id: String) -> void:
+	EventBus.topic = "combat"
 	if not data.enemies.has(enemy_id):
 		push_error("Unknown enemy '%s'" % enemy_id)
 		return
@@ -1483,6 +1550,7 @@ func fight(enemy_id: String) -> void:
 
 ## Ready a combat talisman so it is burned automatically in the next fights.
 func ready_talisman(item_id: String) -> void:
+	EventBus.topic = "combat"
 	if not _can_act():
 		return
 	var reason := CombatTalismans.ready_talisman(player, data, item_id)
@@ -1494,6 +1562,7 @@ func ready_talisman(item_id: String) -> void:
 
 
 func unready_talisman(item_id: String) -> void:
+	EventBus.topic = "combat"
 	if not _can_act():
 		return
 	if CombatTalismans.unready_talisman(player, item_id):
@@ -1504,6 +1573,7 @@ func unready_talisman(item_id: String) -> void:
 ## Fight any enemy dictionary in the enemies.json format. Returns true if the
 ## player won and is still alive.
 func fight_enemy(enemy: Dictionary) -> bool:
+	EventBus.topic = "combat"
 	if not _can_act():
 		return false
 	devour_target = {}
@@ -1539,6 +1609,7 @@ func fight_enemy(enemy: Dictionary) -> bool:
 ## Devour the cultivation of the cultivator just beaten (devour_target):
 ## qi, a big alignment drop and a chance of a heart demon (Devouring).
 func devour() -> void:
+	EventBus.topic = "combat"
 	if not _can_act() or devour_target.is_empty():
 		return
 	var enemy := devour_target
@@ -1573,6 +1644,7 @@ func _try_tame(enemy_id: String) -> void:
 
 ## Feed companion `beast_id` the best beast food you carry (BEAST-001d). Takes no time.
 func feed_companion(beast_id: String) -> void:
+	EventBus.topic = "cultivation"
 	if not _can_act():
 		return
 	var item_id := Beasts.best_food(player, data)
@@ -1588,6 +1660,7 @@ func feed_companion(beast_id: String) -> void:
 
 ## Release spirit beast companion `index` back to the wild.
 func release_companion(index: int) -> void:
+	EventBus.topic = "cultivation"
 	if not _can_act():
 		return
 	var released := Beasts.release(player, data, index)
@@ -1600,6 +1673,7 @@ func release_companion(index: int) -> void:
 
 ## Bind the Creation Artifact to an anchor place (data/regions.json "anchor_id").
 func bind_anchor(anchor_id: String) -> void:
+	EventBus.topic = "cultivation"
 	if not _can_act():
 		return
 	var result := CreationArtifact.bind_anchor(player, data, anchor_id)
@@ -1611,6 +1685,7 @@ func bind_anchor(anchor_id: String) -> void:
 
 
 func unbind_anchor(anchor_id: String) -> void:
+	EventBus.topic = "cultivation"
 	if not _can_act():
 		return
 	if CreationArtifact.unbind_anchor(player, anchor_id):
@@ -1620,6 +1695,7 @@ func unbind_anchor(anchor_id: String) -> void:
 
 ## Feed spirit stones to the Creation Artifact for one more life.
 func recharge_artifact() -> void:
+	EventBus.topic = "cultivation"
 	if not _can_act():
 		return
 	var result := CreationArtifact.recharge(player, data)
@@ -1633,6 +1709,7 @@ func recharge_artifact() -> void:
 ## Cultivate inside the artifact's Inner World for `days` of world time: the
 ## dilated inner days count for cultivation and age the body (InnerWorld).
 func enter_inner_world(days: int) -> void:
+	EventBus.topic = "cultivation"
 	if not _can_act():
 		return
 	_start_time_skip()
@@ -1652,6 +1729,7 @@ func enter_inner_world(days: int) -> void:
 
 ## Plant one carried herb in the artifact's spirit garden (ART-004). Takes no time.
 func plant_in_garden(item_id: String) -> void:
+	EventBus.topic = "cultivation"
 	if not _can_act():
 		return
 	var result := SpiritGarden.plant(player, data, item_id)
@@ -1664,6 +1742,7 @@ func plant_in_garden(item_id: String) -> void:
 
 ## Harvest every ready plot of the spirit garden. Takes no time.
 func harvest_garden() -> void:
+	EventBus.topic = "cultivation"
 	if not _can_act():
 		return
 	var gained := SpiritGarden.harvest(player, data, rng)
@@ -1679,6 +1758,7 @@ func harvest_garden() -> void:
 
 ## Feed items (spirit stones, treasures) to the Creation Artifact for energy.
 func feed_artifact(item_id: String, quantity: int = 1) -> void:
+	EventBus.topic = "cultivation"
 	if not _can_act():
 		return
 	var result := ArtifactFunctions.feed(player, data, item_id, quantity)
@@ -1691,6 +1771,7 @@ func feed_artifact(item_id: String, quantity: int = 1) -> void:
 
 ## Spend artifact energy to unseal a function (data/artifact.json "functions").
 func unlock_artifact_function(function_id: String) -> void:
+	EventBus.topic = "cultivation"
 	if not _can_act():
 		return
 	var result := ArtifactFunctions.unlock(player, data, function_id, world_flags)
@@ -1704,6 +1785,7 @@ func unlock_artifact_function(function_id: String) -> void:
 
 ## Move items into the artifact's storage space (kept even through death).
 func store_in_artifact(item_id: String, quantity: int = 1) -> void:
+	EventBus.topic = "cultivation"
 	if not _can_act():
 		return
 	var result := ArtifactFunctions.store(player, data, item_id, quantity)
@@ -1716,6 +1798,7 @@ func store_in_artifact(item_id: String, quantity: int = 1) -> void:
 
 ## Take items back out of the artifact's storage space.
 func retrieve_from_artifact(item_id: String, quantity: int = 1) -> void:
+	EventBus.topic = "cultivation"
 	if not _can_act():
 		return
 	var result := ArtifactFunctions.retrieve(player, item_id, quantity)
@@ -1814,6 +1897,8 @@ func _start_time_skip() -> void:
 func _on_days_advanced(days: int) -> void:
 	if not _can_act():
 		return
+	var action_topic := EventBus.topic
+	EventBus.topic = "cultivation"
 	var age_before := player.age_days
 	player.age_days += days
 	var spouse_favor := Family.spouse_favor_gain(data, age_before, player.age_days)
@@ -1833,6 +1918,7 @@ func _on_days_advanced(days: int) -> void:
 		EventBus.post("The power of your %s fades." % buff_name)
 	for item_id in SpiritGarden.advance(player, data, days):
 		EventBus.post("The %s in your spirit garden is ready to harvest." % data.items.get(item_id, {}).get("name", item_id), "progress")
+	EventBus.topic = "family"
 	# NPCs the player knows (favor) or married never marry off-screen.
 	var reserved := npc_favor.duplicate()
 	for spouse_id in player.spouses:
@@ -1858,8 +1944,11 @@ func _on_days_advanced(days: int) -> void:
 	@warning_ignore("integer_division")
 	var months := player.age_days / Calendar.DAYS_PER_MONTH - age_before / Calendar.DAYS_PER_MONTH
 	for i in months:
+		EventBus.topic = "sect"
 		_sect_month_end()
+		EventBus.topic = "world"
 		_world_events_month()
+	EventBus.topic = "family"
 	for event in Training.advance(player, npcs, data, months, ClanEstate.training_multiplier(clan, data)):
 		EventBus.post(event["text"], event["category"])
 	for repaid in Karma.repay_debts(player, npcs, data, months, rng, world_flags):
@@ -1868,8 +1957,10 @@ func _on_days_advanced(days: int) -> void:
 		_advance_estate(days, months)
 		for joined in Clans.sync_family(player, clan, npcs, data):
 			EventBus.post("%s joins the %s." % [joined, clan.name], "progress")
+	EventBus.topic = "world"
 	for line in SecretRealms.opening_news(player, data, current_region, GameClock.total_days - days, GameClock.total_days):
 		EventBus.post(line, "progress")
+	EventBus.topic = action_topic
 	if player.age_years() >= Cultivation.lifespan_years(player, data):
 		_kill("Your lifespan is exhausted. You die of old age at %d." % player.age_years())
 
@@ -1971,6 +2062,7 @@ func _die_violently(cause: String) -> void:
 ## start region when none are bound) instead of the default respawn point.
 ## Reloads the region so the player stands at the chosen anchor.
 func choose_respawn_anchor(anchor_id: String) -> void:
+	EventBus.topic = "cultivation"
 	if pending_respawn.is_empty() or not _can_act():
 		return
 	var valid := CreationArtifact.respawn_choices(player, data).any(func(choice: Dictionary) -> bool: return choice["anchor_id"] == anchor_id)

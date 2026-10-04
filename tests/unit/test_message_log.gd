@@ -14,7 +14,7 @@ func test_history_records_posts_with_day_and_is_capped() -> void:
 	clock.total_days = 40
 	bus.post("A breeze stirs.", "info")
 	assert_eq(bus.history.size(), 1)
-	assert_eq(bus.history[0], {"text": "A breeze stirs.", "category": "info", "day": 40})
+	assert_eq(bus.history[0], {"text": "A breeze stirs.", "category": "info", "day": 40, "topic": ""})
 	for i in bus.HISTORY_LIMIT + 5:
 		bus.post("line %d" % i, "progress")
 	assert_eq(bus.history.size(), bus.HISTORY_LIMIT)
@@ -61,4 +61,37 @@ func test_new_session_clears_history_and_screen_shows_it() -> void:
 	screen.close()
 	assert_false(screen.visible)
 	screen.free()
+	gs.end_session()
+
+
+## UI-002b: messages carry the topic of the action that posted them, the log
+## filters by topic, and the HUD log is seeded from the history.
+func test_topics_tag_and_filter() -> void:
+	var root := (Engine.get_main_loop() as SceneTree).root
+	var gs := root.get_node("GameState")
+	var bus := root.get_node("EventBus")
+	var c := new_character()
+	c.spiritual_roots = {"fire": 70}
+	gs.start_session(c)
+	gs.cultivate(10)
+	assert_eq(String(bus.history[-1].get("topic", "")), "cultivation", str(bus.history[-1]))
+	gs.buy_item("qi_gathering_pill")
+	assert_eq(String(bus.history[-1].get("topic", "")), "trade")
+	bus.post("A manual line", "info", "world")
+	assert_eq(String(bus.history[-1]["topic"]), "world", "an explicit topic wins")
+	var trade_only := MessageLogScreen.filtered(bus.history, "", "trade")
+	assert_true(trade_only.size() >= 1 and trade_only.all(func(e: Dictionary) -> bool: return e["topic"] == "trade"))
+	var warn_trade := MessageLogScreen.filtered(bus.history, "warning", "trade")
+	assert_true(warn_trade.all(func(e: Dictionary) -> bool: return e["category"] == "warning" and e["topic"] == "trade"))
+	var screen := MessageLogScreen.new()
+	root.add_child(screen)
+	screen.open()
+	screen._set_topic("cultivation")
+	assert_true(screen._count.text.begins_with("%d of" % MessageLogScreen.filtered(bus.history, "", "cultivation").size()), screen._count.text)
+	screen.free()
+	var hud: CanvasLayer = load("res://src/ui/hud.tscn").instantiate()
+	root.add_child(hud)
+	var log_label: RichTextLabel = hud.get("_log")
+	assert_true(log_label.get_parsed_text().contains("A manual line"), "the HUD log starts from the history")
+	hud.free()
 	gs.end_session()

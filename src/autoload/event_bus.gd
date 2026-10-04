@@ -56,15 +56,22 @@ signal time_skipped(days: int, summary: Dictionary)
 ## How many past messages the message log screen can show.
 const HISTORY_LIMIT := 200
 
-## Recent messages, oldest first: {text, category, day} (day = GameClock.total_days).
+## Recent messages, oldest first: {text, category, day, topic} (day = GameClock.total_days).
 var history: Array[Dictionary] = []
 ## Messages posted since boot (never trimmed, unlike history), so callers can count news.
 var posted_count := 0
 
 
-func post(text: String, category: String = "info") -> void:
+## Topic of the action under way ("combat", "cultivation", "family", "sect",
+## "trade", "world" or ""): GameState sets it at the start of each action, and
+## post() files messages under it unless given a topic (UI-002b).
+var topic := ""
+const TOPICS: Array[String] = ["combat", "cultivation", "family", "sect", "trade", "world"]
+
+
+func post(text: String, category: String = "info", topic_override: String = "") -> void:
 	posted_count += 1
-	history.append({"text": text, "category": category, "day": GameClock.total_days})
+	history.append({"text": text, "category": category, "day": GameClock.total_days, "topic": topic_override if topic_override != "" else topic})
 	if history.size() > HISTORY_LIMIT:
 		history = history.slice(history.size() - HISTORY_LIMIT)
 	message_posted.emit(text, category)
@@ -73,3 +80,4 @@ func post(text: String, category: String = "info") -> void:
 ## Forget past messages (a new or loaded session starts with an empty log).
 func clear_history() -> void:
 	history.clear()
+	topic = ""

@@ -253,6 +253,10 @@ func _build_log() -> void:
 	panel.add_child(_log)
 	add_child(panel)
 	_set_anchored_rect(panel, Vector4(0, 1, 0, 1), Vector4(16, -196, 536, -16))
+	# Seed from the history so the log survives a world reload (travel, respawn).
+	var recent: Array = EventBus.history.slice(maxi(0, EventBus.history.size() - MAX_LOG_LINES))
+	for e: Dictionary in recent:
+		_on_message(String(e.get("text", "")), String(e.get("category", "info")))
 
 
 ## Anchors and offsets as (left, top, right, bottom).
