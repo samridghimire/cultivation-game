@@ -1,6 +1,6 @@
 class_name CharacterSheet
 extends PanelContainer
-## Modal character overview: identity and family, attributes, roots and
+## Modal character overview: identity and family, sect reputation, attributes, roots and
 ## professions, and equipped gear with Unequip buttons. Items live in
 ## InventoryScreen. Old saves without a gender get a one-time gender picker here.
 
@@ -13,9 +13,7 @@ var _equip_row: HBoxContainer
 
 
 func _init() -> void:
-	var style_source := UIStyle.panel()
-	add_theme_stylebox_override("panel", style_source.get_theme_stylebox("panel"))
-	style_source.free()
+	add_theme_stylebox_override("panel", UIStyle.panel_style())
 	custom_minimum_size = Vector2(620, 0)
 	visible = false
 	var box := VBoxContainer.new()
@@ -88,6 +86,13 @@ func _rebuild() -> void:
 	t += "Cultivation speed: %.2f qi/day here\n" % Cultivation.qi_per_day(p, data, Exploration.qi_density(data, GameState.current_region) * Sects.cultivation_bonus(p, data))
 	t += "Alignment: %s (%d)   |   %s\n\n" % [Alignment.tier_name(p.alignment, data), p.alignment, Sects.describe(p, data)]
 	_gender_row.visible = p.gender == ""
+	var density := Exploration.qi_density(data, GameState.current_region) * Sects.cultivation_bonus(p, data)
+	var hints := Guidance.hints(p, data, density)
+	if not hints.is_empty():
+		t += "[color=#%s]Next steps[/color]\n" % accent
+		for line in hints:
+			t += "  - %s\n" % line
+		t += "\n"
 	var family := Family.describe_links(p, GameState.npcs, data)
 	family.append_array(Children.describe_pregnancies(p, GameState.npcs))
 	if not family.is_empty():
@@ -95,7 +100,10 @@ func _rebuild() -> void:
 		for line in family:
 			t += "  %s\n" % line
 		t += "\n"
-	t += "[color=#%s]Attributes[/color]\n" % accent
+	t += "[color=#%s]Sect Reputation[/color]\n" % accent
+	for line in Reputation.describe(p, data):
+		t += "  %s\n" % line
+	t += "\n[color=#%s]Attributes[/color]\n" % accent
 	for attr in data.attributes:
 		t += "  %s: %d\n" % [attr["name"], p.attribute(attr["id"])]
 	var stats := Combat.stats(p, data)
@@ -118,6 +126,10 @@ func _rebuild() -> void:
 		t += "\n[color=#%s]Active arts[/color]\n" % accent
 		for line in Buffs.describe(p):
 			t += "  %s\n" % line
+	if p.abode != "":
+		var abode := Abodes.get_def(data, p.abode)
+		t += "\n[color=#%s]Abode[/color]\n" % accent
+		t += "  %s in %s (seclusion qi x%s, chest %d / %d kinds)\n" % [Abodes.abode_name(data, p.abode), Exploration.region_name(data, String(abode.get("region", ""))), String.num(float(abode.get("qi_density", 1.0)), 2), p.abode_storage.size(), Abodes.storage_slots(p, data)]
 	t += "\n[color=#%s]Creation Artifact[/color]\n" % accent
 	for line in CreationArtifact.describe(p, data):
 		t += "  %s\n" % line

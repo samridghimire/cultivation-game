@@ -35,7 +35,7 @@ src/world/             The world. Regions are built from data/regions.json (worl
                        Interactables are Area2D subclasses that return menu entries from get_options().
 src/ui/                UI, mostly built in code. Shared look in UIStyle. HUD modals register via
                        hud._add_screen(action, screen); a screen needs open()/close() and a `closed` signal.
-tests/unit/test_*.gd   Tests extend TestCase. Methods named test_* run automatically.
+tests/unit/test_*.gd   Tests extend TestCase. Methods named test_* run automatically (they may `await` frames, see test_focus_audit.gd).
 ```
 
 ### Rules
@@ -44,6 +44,8 @@ tests/unit/test_*.gd   Tests extend TestCase. Methods named test_* run automatic
 3. **Every system change gets unit tests.** Every new player action gets a GameState integration test (see `tests/unit/test_game_session.gd`).
 4. **Determinism:** all randomness goes through a `RandomNumberGenerator` passed in (GameState.rng in-game, `seeded_rng()` in tests). Never use global `randf()`/`shuffle()` in core.
 5. **Save compatibility:** new persistent state must be added to `to_dict`/`from_dict` (or `GameState.to_save_dict`) with defaults so older saves still load.
+   When you bump `SaveManager.SAVE_VERSION`, add a fixture save of the new version to `tests/fixtures/saves/` (keep the old ones);
+   `tests/unit/test_save_fixtures.gd` loads every fixture.
 6. **Static typing everywhere** (`var x: int`, `-> void`). Tabs for indentation. `snake_case` files/functions, `PascalCase` classes. A `##` doc comment at the top of every script.
 7. Placeholder art is drawn in `_draw()`. Don't add binary assets without a clear license; note the source in `docs/ASSETS.md`.
 8. Keep the game controllable with a gamepad: every new menu must have keyboard/gamepad focus (`grab_focus`).
