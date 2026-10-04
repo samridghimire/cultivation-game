@@ -12,10 +12,28 @@ const CATEGORY_COLORS := {
 	"danger": Color("e85a4a"),
 	"karma": Color("b58ae8"),
 }
+## Colors for Combat.danger_label ratings.
+const DANGER_COLORS := {
+	"Weak": Color("8fd18a"),
+	"Even": Color("dddddd"),
+	"Dangerous": Color("e8a04a"),
+	"Deadly": Color("e85a4a"),
+}
 
 
 ## The shared panel look, for Controls that are themselves the panel (screens
 ## extending PanelContainer): add_theme_stylebox_override("panel", UIStyle.panel_style()).
+## The color for a Combat.danger_label rating (white for anything else).
+static func danger_color(danger: String) -> Color:
+	return DANGER_COLORS.get(danger, Color.WHITE)
+
+
+## Recolors a button's text in every state (normal, hover, focus, pressed).
+static func tint_button_text(b: Button, color: Color) -> void:
+	for state in ["font_color", "font_hover_color", "font_focus_color", "font_pressed_color", "font_hover_pressed_color"]:
+		b.add_theme_color_override(state, color)
+
+
 static func panel_style() -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
 	style.bg_color = PANEL

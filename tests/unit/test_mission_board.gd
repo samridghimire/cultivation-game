@@ -138,3 +138,37 @@ func test_treasury_is_empty_for_rogues() -> void:
 	assert_eq(board._selected, "")
 	assert_false(board._take_button.visible)
 	board.free()
+
+
+func test_danger_text_warns_about_forced_fights() -> void:
+	assert_eq(MissionBoard.danger_text(""), "")
+	assert_eq(MissionBoard.danger_text("Weak"), "Danger: Weak.")
+	assert_true(MissionBoard.danger_text("Deadly").contains("always fought"))
+	assert_eq(UIStyle.danger_color("Deadly"), UIStyle.DANGER_COLORS["Deadly"])
+	assert_eq(UIStyle.danger_color("nonsense"), Color.WHITE)
+
+
+func test_board_shows_colored_danger_for_fight_missions() -> void:
+	var gs := _root().get_node("GameState")
+	var c := _disciple()
+	gs.start_session(c)
+	var board := MissionBoard.new()
+	board._rebuild()
+	var fights := 0
+	for mission_id in Sects.available_missions(gs.player, data()):
+		var b := board._list.get_node(NodePath(mission_id)) as Button
+		var danger := Sects.mission_danger(gs.player, data(), mission_id)
+		if danger == "":
+			assert_false(b.text.contains("["), b.text)
+			continue
+		fights += 1
+		assert_true(b.text.ends_with("[%s]" % danger), b.text)
+		assert_eq(b.get_theme_color("font_color"), UIStyle.danger_color(danger))
+		board._select(mission_id)
+		assert_true(board._danger.visible)
+		assert_eq(board._danger.text, MissionBoard.danger_text(danger))
+	assert_gt(fights, 0, "the sect posts at least one fight")
+	board._select("gather_spirit_herbs")
+	assert_false(board._danger.visible, "a gathering mission has no foe")
+	board.free()
+	gs.end_session()

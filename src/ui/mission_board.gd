@@ -2,7 +2,9 @@ class_name MissionBoard
 extends PanelContainer
 ## Modal sect mission board, opened from the sect hall: the missions the
 ## player's sect offers on the left; kind, duration, hand-in items (have/need),
-## enemy danger, rewards and cooldown on the right, with a Take button. A second
+## enemy danger, rewards and cooldown on the right, with a Take button. Missions
+## with a fight show its danger (Sects.mission_danger), colored, in the list and
+## details, since a mission's foe is always fought. A second
 ## "Treasury" tab is the sect's contribution shop (G-008e): items with cost and
 ## minimum rank, bought with GameState.buy_with_contribution. All rules live in
 ## Sects / GameState.
@@ -19,6 +21,7 @@ var _name: Label
 var _info: Label
 var _description: Label
 var _requirements: Label
+var _danger: Label
 var _rewards: Label
 var _status: Label
 var _take_button: Button
@@ -69,6 +72,8 @@ func _init() -> void:
 	details.add_child(_description)
 	_requirements = _wrapped(UIStyle.label("", 16))
 	details.add_child(_requirements)
+	_danger = _wrapped(UIStyle.label("", 16))
+	details.add_child(_danger)
 	_rewards = _wrapped(UIStyle.label("", 16, UIStyle.CATEGORY_COLORS["progress"]))
 	details.add_child(_rewards)
 	_status = _wrapped(UIStyle.label("", 15, UIStyle.CATEGORY_COLORS["warning"]))
@@ -137,6 +142,17 @@ static func requirement_lines(c: CharacterData, data: GameData, mission: Diction
 
 
 ## "Costs 40 contribution  |  Inner Disciple or above" for a shop entry.
+## "Danger: Deadly. A mission's foe is always fought; there is no slipping away."
+## for missions with a fight, "" otherwise.
+static func danger_text(danger: String) -> String:
+	if danger == "":
+		return ""
+	var text := "Danger: %s." % danger
+	if danger == "Deadly" or danger == "Dangerous":
+		text += " A mission's foe is always fought; there is no slipping away."
+	return text
+
+
 static func shop_info_text(c: CharacterData, data: GameData, entry: Dictionary) -> String:
 	var parts: PackedStringArray = ["Costs %d contribution" % int(entry.get("contribution", 0))]
 	var min_rank := int(entry.get("min_rank", 0))
@@ -248,7 +264,12 @@ func _rebuild_missions() -> void:
 		var wait := Sects.mission_cooldown_left(p, mission_id)
 		if wait > 0:
 			label += " (in %s)" % Calendar.format_duration(wait)
+		var danger := Sects.mission_danger(p, data, mission_id)
+		if danger != "":
+			label += "  [%s]" % danger
 		_add_entry(mission_id, label, Sects.check_mission(p, data, mission_id) == "")
+		if danger != "":
+			UIStyle.tint_button_text(_list.get_child(-1) as Button, UIStyle.danger_color(danger))
 	_show_details()
 
 
@@ -272,6 +293,10 @@ func _show_details() -> void:
 	var mission: Dictionary = data.sect_missions.get(_selected, {})
 	for c in [_name, _info, _description, _requirements, _rewards, _status, _take_button]:
 		c.visible = not mission.is_empty()
+	var danger := Sects.mission_danger(p, data, _selected) if not mission.is_empty() else ""
+	_danger.visible = danger != ""
+	_danger.text = danger_text(danger)
+	_danger.add_theme_color_override("font_color", UIStyle.danger_color(danger))
 	if mission.is_empty():
 		return
 	_name.text = mission["name"]
@@ -297,6 +322,7 @@ func _show_shop_details() -> void:
 	var entry := Sects.shop_entry(p, data, _selected)
 	for c in [_name, _info, _description, _requirements, _rewards, _status, _take_button]:
 		c.visible = not entry.is_empty()
+	_danger.visible = false
 	if entry.is_empty():
 		return
 	var item: Dictionary = data.items.get(_selected, {})
