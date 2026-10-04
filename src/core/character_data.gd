@@ -90,6 +90,8 @@ var grudges: Dictionary = {}
 var gratitude: Dictionary = {}
 ## Secret realm id -> {"opening": int, "floor": int}: floors cleared in that opening (see SecretRealms).
 var secret_realms: Dictionary = {}
+## Secret realm ids whose inheritance this character received (once per life, W-005d).
+var inheritances: Array[String] = []
 
 
 func attribute(attr_id: String) -> int:
@@ -173,6 +175,7 @@ func to_dict() -> Dictionary:
 		"grudges": grudges.duplicate(),
 		"gratitude": gratitude.duplicate(),
 		"secret_realms": secret_realms.duplicate(true),
+		"inheritances": inheritances.duplicate(),
 	}
 
 
@@ -246,6 +249,8 @@ static func from_dict(d: Dictionary) -> CharacterData:
 	var delves: Dictionary = d.get("secret_realms", {})
 	for realm_id in delves:
 		c.secret_realms[String(realm_id)] = {"opening": int(delves[realm_id].get("opening", -1)), "floor": int(delves[realm_id].get("floor", 0))}
+	for realm_id in d.get("inheritances", []):
+		c.inheritances.append(String(realm_id))
 	for anchor_id in d.get("anchors", []):
 		c.anchors.append(String(anchor_id))
 	for recipe_id in d.get("known_recipes", []):
