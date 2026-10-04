@@ -43,13 +43,13 @@ func open() -> void:
 	if choices.is_empty():
 		close()
 		return
-	_text.text = String(GameState.data.encounters.get(GameState.pending_encounter, {}).get("text", ""))
+	_text.text = GameState.rival_text(String(GameState.data.encounters.get(GameState.pending_encounter, {}).get("text", "")))
 	for child in _choices.get_children():
 		_choices.remove_child(child)
 		child.queue_free()
 	var any_enabled := false
 	for choice in choices:
-		var b := UIStyle.button(choice_label(choice), GameState.choose_encounter.bind(choice["index"]))
+		var b := UIStyle.button(GameState.rival_text(choice_label(choice)), GameState.choose_encounter.bind(choice["index"]))
 		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		b.disabled = choice["disabled"]
 		any_enabled = any_enabled or not b.disabled

@@ -87,6 +87,7 @@ func start_session(character: CharacterData) -> void:
 	Npcs.ensure_eligible(npcs, data, rng, Children.descendants(player, npcs))
 	npc_clans = {}
 	NpcClans.ensure(npc_clans, npcs, data, rng)
+	Rivals.spawn(player, npcs, data, rng, data.start_region)
 	GameClock.reset()
 	EventBus.clear_history()
 	EventBus.session_started.emit()
@@ -413,18 +414,21 @@ func explore(tags: Array = []) -> void:
 	if tags.is_empty():
 		tags = data.regions.get(current_region, {}).get("encounter_tags", [])
 	tags = tags + WorldEvents.encounter_tags(data, world_events, current_region)
-	var encounter := Exploration.roll_encounter(player, data, tags, world_flags, rng)
+	var encounter := Exploration.roll_encounter(player, data, tags, world_flags, rng, Rivals.rival_of(player, npcs))
 	if encounter.is_empty():
 		EventBus.post("You search the area but find nothing.")
 		_pass_time(1)
 		return
 	var result := Exploration.resolve(player, data, encounter, world_flags)
-	var text: String = encounter.get("text", "")
+	var text := rival_text(String(encounter.get("text", "")))
 	if not result["notes"].is_empty():
 		text += " (%s)" % ", ".join(result["notes"])
 	EventBus.post(text, "danger" if result["enemy"] != "" else "info")
 	pending_encounter = ""
 	_pass_time(result["days"])
+	if not _can_act():
+		return
+	_rival_consequences(encounter)
 	if not _can_act():
 		return
 	if encounter.has("choices"):
@@ -532,21 +536,46 @@ func encounter_choices() -> Array[Dictionary]:
 func choose_encounter(index: int) -> void:
 	if pending_encounter == "" or not _can_act():
 		return
-	var result := Exploration.resolve_choice(player, data, data.encounters.get(pending_encounter, {}), index, world_flags)
+	var encounter: Dictionary = data.encounters.get(pending_encounter, {})
+	var result := Exploration.resolve_choice(player, data, encounter, index, world_flags)
 	if not result["ok"]:
 		EventBus.post(result["reason"], "warning")
 		EventBus.player_changed.emit()
 		return
 	pending_encounter = ""
-	var text: String = result["text"]
+	var text := rival_text(String(result["text"]))
 	if not result["notes"].is_empty():
 		text += " (%s)" % ", ".join(result["notes"])
 	if text != "":
 		EventBus.post(text, "danger" if result["enemy"] != "" else "karma" if result["karma"] else "info")
 	EventBus.encounter_choice_resolved.emit()
 	_pass_time(result["days"])
+	if _can_act():
+		_rival_consequences(encounter["choices"][index])
 	if result["enemy"] != "" and _can_act():
 		fight(result["enemy"])
+
+
+## Encounter text with the rival's name and realm filled in (Rivals.fill).
+func rival_text(text: String) -> String:
+	return Rivals.fill(text, Rivals.rival_of(player, npcs), data)
+
+
+## Applies an encounter's (or choice's) rival fields: rival_grudge and
+## rival_favor change the rival's ledger and favor, fight_rival starts a
+## non-lethal fight with the rival (RIV-002).
+func _rival_consequences(entry: Dictionary) -> void:
+	var rival := Rivals.rival_of(player, npcs)
+	if rival == null:
+		return
+	var grudge := int(entry.get("rival_grudge", 0))
+	if grudge > 0:
+		Karma.add_grudge(player, data, rival.id, grudge)
+	var favor := int(entry.get("rival_favor", 0))
+	if favor != 0:
+		npc_favor[rival.id] = clampi(int(npc_favor.get(rival.id, 0)) + favor, -100, 100)
+	if bool(entry.get("fight_rival", false)):
+		fight_enemy(Karma.npc_enemy(rival, data))
 
 
 ## Leave the pending encounter without choosing (the UI offers this only when
@@ -1658,6 +1687,8 @@ func load_save_dict(d: Dictionary) -> void:
 		Clans.move_seat(clan, player.abode, data)
 	npc_clans = NpcClans.from_dict(d.get("npc_clans", {}))
 	NpcClans.ensure(npc_clans, npcs, data, rng)  # older saves gain the clans
+	if player.rival == "" or not npcs.has(player.rival):
+		Rivals.spawn(player, npcs, data, rng, data.start_region)  # older saves gain a rival
 	dialogue_npc = ""
 	dialogue_node = ""
 	dialogue_event = ""

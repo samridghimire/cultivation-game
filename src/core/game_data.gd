@@ -341,6 +341,7 @@ func _validate() -> void:
 	load_errors.append_array(BodyTempering.validate(self))
 	load_errors.append_array(Devouring.validate(self))
 	load_errors.append_array(WorldEvents.validate(self))
+	load_errors.append_array(Rivals.validate(self))
 	for item: Dictionary in items.values():
 		if item.get("effects", {}).has("buff"):
 			for error in Buffs.validate_effect(item["effects"]["buff"]):
