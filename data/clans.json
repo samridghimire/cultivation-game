@@ -12,6 +12,14 @@
     {"id": "yun_clan", "name": "Yun Clan", "surname": "Yun", "region": "azure_peak", "alignment": 200, "description": "An old sword clan dwelling among the clouds of Azure Peak, proud of a Foundation patriarch.",
       "head": {"gender": "male", "age_years": 180, "realm": "foundation_establishment", "stage": 3},
       "spouse": {"age_years": 150, "realm": "foundation_establishment"},
+      "children": {"count": [1, 3], "age_years": [30, 90], "realm": "qi_refining"}},
+    {"id": "hu_clan", "name": "Hu Clan", "surname": "Hu", "region": "misty_forest", "alignment": 0, "description": "Hunters and beast tamers of the Misty Forest who sell pelts and spirit-beast cores at the market and know every wolf trail by scent.",
+      "head": {"gender": "female", "age_years": 95, "realm": "qi_refining", "stage": 9},
+      "spouse": {"age_years": 90, "realm": "qi_refining"},
+      "children": {"count": [2, 4], "age_years": [16, 50], "realm": "qi_refining"}},
+    {"id": "yin_clan", "name": "Yin Clan", "surname": "Yin", "region": "withered_bone_marsh", "alignment": -400, "description": "Corpse refiners who raise the marsh dead as servants. The righteous sects would burn their stilt halls if they could find them in the fog.",
+      "head": {"gender": "male", "age_years": 150, "realm": "foundation_establishment", "stage": 5},
+      "spouse": {"age_years": 130, "realm": "foundation_establishment"},
       "children": {"count": [1, 3], "age_years": [30, 90], "realm": "qi_refining"}}
   ],
   "relations": {
@@ -19,7 +27,11 @@
     "start": [
       {"clans": ["zhao_clan", "mo_clan"], "value": -30},
       {"clans": ["mo_clan", "yun_clan"], "value": -45},
-      {"clans": ["zhao_clan", "yun_clan"], "value": 20}
+      {"clans": ["zhao_clan", "yun_clan"], "value": 20},
+      {"clans": ["hu_clan", "zhao_clan"], "value": 15},
+      {"clans": ["hu_clan", "yin_clan"], "value": -35},
+      {"clans": ["yin_clan", "yun_clan"], "value": -55},
+      {"clans": ["yin_clan", "mo_clan"], "value": 20}
     ],
     "acts": {"humiliate": -15, "rob": -30, "kill": -60},
     "kindness": {"gift": 2, "treat_npc": 8},
