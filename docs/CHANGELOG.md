@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-04 [ART-006b] Story events: dialogues can now play without an NPC (GameState.start_event), and a new character opens with the Creation Artifact's awakening dream (data/artifact.json intro_event), once.
 - 2026-10-04 [AUC-001] Auctions core: the Fallen Star Auction House holds a seasonal auction of rare pills, manuals, treasures and weapons; place one sealed bid per lot (GameState.bid) and beat the hidden rival bids to win it. Auction house UI follows in AUC-001b.
 - 2026-10-04 [G-011] Sect ranks with real duties: higher ranks need a realm minimum, ranks can require a non-lethal promotion trial fight (GameState.attempt_promotion_trial), and ranks pay a monthly stipend that is withheld when you miss the monthly contribution duty (never a demotion).
 - 2026-10-04 [TRIB-001b] Heavenly Tribulations are visible: attempting a breakthrough that brings one first shows a warning (lightning waves, heart demon, expected damage against your health and readied shield talismans), and the tribulation itself plays out wave by wave with a falling health bar, a lightning flash and the outcome.

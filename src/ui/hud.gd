@@ -123,6 +123,8 @@ func _ready() -> void:
 	_refresh()
 	# A respawn that moved the player reloads the world; ask where to awaken now.
 	_open_pending_respawn.call_deferred()
+	# A fresh character opens with the artifact's intro event (ART-006b).
+	GameState.start_pending_event.call_deferred()
 
 
 func _unhandled_input(event: InputEvent) -> void:

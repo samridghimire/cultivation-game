@@ -296,3 +296,36 @@ func test_auction_bid_and_save() -> void:
 	assert_eq(String(gs.auction_lots(house)[0]["sold"]), "player", "sold lots survive a save")
 	assert_true(gs.check_bid(house, 0, amount).contains("already been sold"))
 	gs.end_session()
+
+
+func test_story_event_without_npc() -> void:
+	var c := _start()
+	var gs := _game_state()
+	assert_eq(gs.pending_event, String(gs.data.artifact.get("intro_event", "")), "a new character has the intro event pending")
+	assert_false(gs.start_event("no_such_dialogue"))
+	gs.start_pending_event()
+	assert_eq(gs.pending_event, "")
+	assert_true(gs.in_dialogue())
+	assert_true(gs.world_flags.get(gs.INTRO_EVENT_FLAG, false))
+	var view: Dictionary = gs.dialogue_view()
+	assert_eq(String(view["speaker"]), "", "the opening is narration")
+	var steps := 0
+	while gs.in_dialogue() and steps < 10:
+		gs.choose_dialogue(int(gs.dialogue_view()["choices"][-1]["index"]))
+		steps += 1
+	assert_false(gs.in_dialogue(), "the event ends")
+	assert_eq(gs.dialogue_event, "")
+	assert_true(c.alive)
+	assert_false(gs.start_event(gs.data.artifact["intro_event"], gs.INTRO_EVENT_FLAG), "the intro never repeats")
+	gs.end_session()
+
+
+func test_loaded_save_skips_the_intro_event() -> void:
+	_start()
+	var gs := _game_state()
+	var saved: Dictionary = JSON.parse_string(JSON.stringify(gs.to_save_dict()))
+	gs.load_save_dict(saved)
+	assert_eq(gs.pending_event, "")
+	gs.start_pending_event()
+	assert_false(gs.in_dialogue())
+	gs.end_session()
