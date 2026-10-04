@@ -115,6 +115,17 @@ func test_buy_item_spends_stones() -> void:
 	gs.end_session()
 
 
+func test_sell_crafted_talisman_pays_material_capped_price() -> void:
+	var c := _start()
+	var gs := _game_state()
+	c.inventory = {"golden_bell_talisman": 3}
+	gs.sell_item("golden_bell_talisman", 2)
+	assert_eq(c.item_count("golden_bell_talisman"), 1)
+	assert_eq(c.item_count("spirit_stone"), 2 * Items.sell_price(gs.data, "golden_bell_talisman"))
+	assert_gt(30, c.item_count("spirit_stone"))  # not the old 15 stones apiece
+	gs.end_session()
+
+
 func test_use_item_consumes_and_applies() -> void:
 	var c := _start()
 	var gs := _game_state()
