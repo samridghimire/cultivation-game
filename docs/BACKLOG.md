@@ -102,7 +102,6 @@ ART-001/ART-001b/ART-002 are done; ART-002b and ART-005 are in P1 above.
 ## P3: World
 | id | role | status | task |
 |---|---|---|---|
-| C-001 | content | todo | Generic dialogue for generated NPCs: data/dialogue/generic_cultivator.json (greet, chat, small gift, ask about the region) with favor gains, so courtship candidates have something to say. If Dialogue only resolves files by def id, add a small `generic` fallback in GameState._npc_dialogue with a test. Depends on W-003 (done). |
 | W-004f | systems | todo | Encounter-level `min_alignment`/`max_alignment` (not only on choices), validated in GameData, so e.g. the Azure Cloud Enforcer (C-002) hunts only demonic-leaning players and Blood Lotus recruiters only approach demonic ones. Add tests. |
 | C-005 | content | todo | A fifth region (e.g. a marsh or ruined city with a demonic lean): regions.json places (meditation, gather, explore, merchant), routes with realm gates, gather tables, 8+ encounters tagged for it. Pure data; follow regions.json `_doc`. |
 | RIV-001 | systems | todo | Rivals and grudges: CharacterData.grudges/gratitude per NPC (save-compatible); killing/robbing/humiliating creates grudges with the victim's family/sect; a named rival NPC grows alongside the player and appears in encounters; Npcs.simulate lets enemies hunt you. |
@@ -154,6 +153,7 @@ The local sessions that built combat/techniques, world/exploration/NPCs/dialogue
 ## Done
 | id | task |
 |---|---|
+| C-001 | Generic dialogue for generated adult NPCs (data/dialogue/generic_cultivator.json via GameState.GENERIC_DIALOGUE fallback): chat, gifts, spar, guard, rumors, extortion/tribute, a cold greeting once soured; favor capped so talk reaches courtship but not proposals. |
 | ART-006 | Two artifact anchors per region: Spirit Spring, Herb Valley, Back Alleys and Ancient Cave are now anchor places (intro event/flavor split to ART-006b/c). |
 | UI-006 | HUD cues: the age line turns orange/red with "(N years left)" when 15%/5% (or 3 years) of the lifespan is left; at a bottleneck the qi bar turns gold with "Bottleneck! Attempt a breakthrough at a meditation spot (N% chance)". |
 | UI-003 | Help screen (pause menu > Help): Controls page generated from InputConfig (keyboard + gamepad), plus guide pages from data/help.json (GameData.help_pages, validated). |
