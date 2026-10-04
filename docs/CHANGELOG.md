@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-03 [VIS-002] Region maps get scenery: trees, rocks, grass and flowers placed deterministically per region off paths and places, themed per region via regions.json map.decor.
 - 2026-10-04 [QA-20261004-1] Fixed a flaky Dao test (it depended on the shared GameState rng) that turned main red after unrelated tests were added.
 - 2026-10-03 [VIS-001] The player is drawn as a robed cultivator facing where they walk: sect-colored robe (sects.json robe_color), alignment-colored sash and qi aura rings that grow with the realm.
 - 2026-10-04 [QA-006] Economy sim (tests/sim/simulate_economy.gd): profession income vs breakthrough pills and artifact recharges across whole lives; findings in BACKLOG (ART-007, QA-006b) and a DESIGN.md question on recharge costs.

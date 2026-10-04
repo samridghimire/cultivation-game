@@ -1,12 +1,12 @@
 {
-  "_doc": "World regions. The world scene builds itself from the current region. qi_density multiplies cultivation everywhere in the region (meditation spots multiply again). routes: travel targets with days and an optional min_realm (realm id). places: interactables; 'anchor_id' (optional, globally unique) makes the place a Creation Artifact anchor (data/artifact.json); 'type' picks the script (meditation, merchant, sect_hall, workshop, clinic, deed_giver, explore, travel, gather), 'pos' and 'size' are in pixels, other keys are passed to the script as exported properties. npc_spots (optional): list of [x, y] positions where generated NPCs living in the region stand (in id order; extra NPCs gather around the spawn point). encounter_tags select entries from data/encounters.json when exploring. abodes (optional, G-010): claimable cave abodes in the region, each {id (globally unique), display_name, cost (spirit stones), min_realm (optional realm id), qi_density (multiplies cultivation in seclusion there, like a meditation spot), storage_slots (distinct item stacks its chest holds), anchor_id (optional, globally unique: the abode can be bound as a Creation Artifact anchor), pos, size, color (layout for the world scene)}. The player owns at most one abode (Abodes). A merchant's optional 'faction' (sect id) makes its prices follow your reputation with that sect (data/sects.json reputation tiers). encounter_tags select entries from data/encounters.json when exploring.",
+  "_doc": "World regions. The world scene builds itself from the current region. qi_density multiplies cultivation everywhere in the region (meditation spots multiply again). routes: travel targets with days and an optional min_realm (realm id). places: interactables; 'anchor_id' (optional, globally unique) makes the place a Creation Artifact anchor (data/artifact.json); 'type' picks the script (meditation, merchant, sect_hall, workshop, clinic, deed_giver, explore, travel, gather), 'pos' and 'size' are in pixels, other keys are passed to the script as exported properties. npc_spots (optional): list of [x, y] positions where generated NPCs living in the region stand (in id order; extra NPCs gather around the spawn point). encounter_tags select entries from data/encounters.json when exploring. abodes (optional, G-010): claimable cave abodes in the region, each {id (globally unique), display_name, cost (spirit stones), min_realm (optional realm id), qi_density (multiplies cultivation in seclusion there, like a meditation spot), storage_slots (distinct item stacks its chest holds), anchor_id (optional, globally unique: the abode can be bound as a Creation Artifact anchor), pos, size, color (layout for the world scene)}. The player owns at most one abode (Abodes). A merchant's optional 'faction' (sect id) makes its prices follow your reputation with that sect (data/sects.json reputation tiers). encounter_tags select entries from data/encounters.json when exploring. map.decor (optional): scenery drawn on the map, counts trees/rocks/grass/flowers (0-300) and colors tree_color/rock_color/grass_color/flower_color (hex); missing keys use Scenery.DEFAULTS.",
   "start_region": "qingshi_village",
   "regions": [
     {
       "id": "qingshi_village", "name": "Qingshi Village",
       "description": "A sleepy mortal village where your journey begins.",
       "qi_density": 1.0, "danger": 0,
-      "map": {"size": [1600, 1000], "ground": "4d6b3c", "border": "2a3a20", "paths": [[0, 470, 1600, 60], [770, 0, 60, 1000]], "path_color": "8a7350"},
+      "map": {"size": [1600, 1000], "ground": "4d6b3c", "border": "2a3a20", "paths": [[0, 470, 1600, 60], [770, 0, 60, 1000]], "path_color": "8a7350", "decor": {"trees": 22, "rocks": 8, "grass": 40, "flowers": 16}},
       "spawn": [800, 500],
       "npc_spots": [[600, 600], [950, 250], [1150, 560], [200, 560], [650, 880], [1000, 880]],
       "routes": [
@@ -31,7 +31,7 @@
       "id": "misty_forest", "name": "Misty Forest",
       "description": "Ancient trees veiled in mist. Spirit herbs grow here, and so do spirit beasts.",
       "qi_density": 1.5, "danger": 1,
-      "map": {"size": [1600, 1000], "ground": "2f4f2f", "border": "16261a", "paths": [[0, 470, 1600, 60]], "path_color": "5c5238"},
+      "map": {"size": [1600, 1000], "ground": "2f4f2f", "border": "16261a", "paths": [[0, 470, 1600, 60]], "path_color": "5c5238", "decor": {"trees": 45, "rocks": 10, "grass": 60, "flowers": 4, "tree_color": "1d3b22", "grass_color": "3f6b3a", "flower_color": "c9e0f2"}},
       "spawn": [120, 500],
       "npc_spots": [[300, 380], [700, 600], [1000, 380], [1450, 300], [250, 750], [1450, 850]],
       "abodes": [{"id": "waterfall_cave", "display_name": "Waterfall Cave (abode)", "cost": 300, "min_realm": "qi_refining", "qi_density": 1.5, "storage_slots": 20, "anchor_id": "waterfall_cave_abode", "pos": [200, 150], "size": [90, 70], "color": "4a6f7a"}],
@@ -57,7 +57,7 @@
       "id": "fallen_star_market", "name": "Fallen Star Market",
       "description": "A bustling free city where rogue cultivators trade treasures and rumours.",
       "qi_density": 1.1, "danger": 0,
-      "map": {"size": [1600, 1000], "ground": "6b6250", "border": "3a3428", "paths": [[0, 470, 1600, 60], [770, 0, 60, 1000]], "path_color": "9c917a"},
+      "map": {"size": [1600, 1000], "ground": "6b6250", "border": "3a3428", "paths": [[0, 470, 1600, 60], [770, 0, 60, 1000]], "path_color": "9c917a", "decor": {"trees": 5, "rocks": 12, "grass": 12, "flowers": 4, "rock_color": "8a8170", "grass_color": "7a8a55"}},
       "spawn": [800, 900],
       "npc_spots": [[600, 600], [1000, 600], [600, 200], [1000, 200], [1450, 450], [200, 600]],
       "routes": [
@@ -89,7 +89,7 @@
       "id": "azure_peak", "name": "Azure Peak",
       "description": "Cloud-wreathed mountains thick with qi. Fierce beasts guard the heights.",
       "qi_density": 2.5, "danger": 3,
-      "map": {"size": [1600, 1000], "ground": "5a6f80", "border": "2b3540", "paths": [[0, 470, 1600, 60]], "path_color": "8f9aa3"},
+      "map": {"size": [1600, 1000], "ground": "5a6f80", "border": "2b3540", "paths": [[0, 470, 1600, 60]], "path_color": "8f9aa3", "decor": {"trees": 10, "rocks": 35, "grass": 20, "flowers": 8, "tree_color": "37574c", "rock_color": "a3adb5", "grass_color": "6f8a7a", "flower_color": "f2f2ff"}},
       "spawn": [120, 500],
       "npc_spots": [[500, 380], [900, 380], [1000, 620], [600, 620], [1450, 350], [300, 850]],
       "abodes": [{"id": "cloud_piercing_grotto", "display_name": "Cloud-Piercing Grotto (abode)", "cost": 2500, "min_realm": "foundation_establishment", "qi_density": 2.5, "storage_slots": 30, "anchor_id": "cloud_grotto_abode", "pos": [900, 850], "size": [100, 70], "color": "9fb4c9"}],
