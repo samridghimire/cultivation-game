@@ -98,7 +98,7 @@ func test_every_screen_fits_1280x800() -> void:
 	board._set_tab("rank")
 	await _assert_fits(board, "mission board (rank)")
 	board.close()
-	for name: String in ["_mission_board", "_child_training", "_pause_menu", "_settings", "_help", "_load_screen"]:
+	for name: String in ["_mission_board", "_child_training", "_family", "_pause_menu", "_settings", "_help", "_load_screen"]:
 		var screen: Control = hud.get(name)
 		screen.open()
 		await _assert_fits(screen, name)

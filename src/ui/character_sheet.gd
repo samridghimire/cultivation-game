@@ -18,6 +18,7 @@ var _recharge: Button
 var _gender_row: HBoxContainer
 var _equip_row: HBoxContainer
 var _train_children: Button
+var _family_button: Button
 
 
 func _init() -> void:
@@ -49,6 +50,8 @@ func _init() -> void:
 	box.add_child(_recharge)
 	_train_children = UIStyle.button("Train children", func(): EventBus.child_training_requested.emit())
 	box.add_child(_train_children)
+	_family_button = UIStyle.button("Family tree", func(): EventBus.family_requested.emit())
+	box.add_child(_family_button)
 	box.add_child(UIStyle.button("Close", close))
 	EventBus.player_changed.connect(func(): if visible: _rebuild())
 
@@ -167,6 +170,7 @@ func _rebuild() -> void:
 			t += "  %s\n" % line
 	_rebuild_equip_row()
 	_train_children.visible = not ChildTrainingScreen.living_children(p, GameState.npcs).is_empty()
+	_family_button.visible = not (p.parents.is_empty() and p.spouses.is_empty() and p.children.is_empty())
 	if Injuries.has_any(p):
 		var danger := UIStyle.CATEGORY_COLORS["danger"].to_html(false)
 		t += "\n[color=#%s]Injuries[/color]  (cultivation x%s, combat x%s)\n" % [danger, String.num(Injuries.cultivation_multiplier(p, data), 2), String.num(Injuries.combat_multiplier(p, data), 2)]

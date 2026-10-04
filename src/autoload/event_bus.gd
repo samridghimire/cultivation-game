@@ -26,6 +26,8 @@ signal mission_board_requested
 signal auction_requested(house_id: String)
 ## The player wants to direct their children's training; show the ChildTrainingScreen.
 signal child_training_requested
+## The character sheet wants the FamilyScreen (FAM-010).
+signal family_requested
 ## A modal UI (menu, character sheet) opened or closed; world input should pause.
 signal ui_modal_changed(is_open: bool)
 ## The player travelled to another region; the world scene rebuilds itself.
