@@ -83,7 +83,8 @@ ART-001/ART-001b/ART-002 are done; ART-002b and ART-005 are in P1 above.
 |---|---|---|---|
 | ART-003 | systems | todo | Artifact function: **Appraisal** (reveals NPC roots/realm/talent and item grades in the UI via a query API) and **Inner world** (cultivate inside with high qi density and time dilation: N world days pass per M inner days). Depends on ART-002. |
 | ART-004 | systems | todo | Artifact function: **Spirit garden** inside the inner world; plant herbs (G-003 herbs) that grow at accelerated speed and can be harvested. Depends on ART-003. |
-| ART-006 | content | todo | Artifact lore and intro: an opening event at character creation where the mortal finds the artifact (dialogue file), artifact flavor text per function, and anchor-capable places across existing regions. Keep the artifact's maker/origin vague (owner has not decided it). |
+| ART-006b | systems | todo | Story events without an NPC: let Dialogue/GameState run a dialogue file that is not bound to an NPC (e.g. GameState.start_event(dialogue_id), npc ctx optional, speaker from the node), and fire a configurable `intro_event` from data/artifact.json once for a new character (world flag so it never repeats; old saves skip it). Tests. |
+| ART-006c | content | todo | Artifact intro and flavor: data/dialogue/artifact_awakening.json (the mortal finds the artifact; choices flavored righteous/neutral/ambitious, small attribute or flag effects) and flavor text per artifact function in data/artifact.json. Keep the maker/origin vague. Depends on ART-006b and ART-002. |
 
 ## P2: Cultivation depth (roadmap item 4)
 | id | role | status | task |
@@ -153,6 +154,7 @@ The local sessions that built combat/techniques, world/exploration/NPCs/dialogue
 ## Done
 | id | task |
 |---|---|
+| ART-006 | Two artifact anchors per region: Spirit Spring, Herb Valley, Back Alleys and Ancient Cave are now anchor places (intro event/flavor split to ART-006b/c). |
 | UI-006 | HUD cues: the age line turns orange/red with "(N years left)" when 15%/5% (or 3 years) of the lifespan is left; at a bottleneck the qi bar turns gold with "Bottleneck! Attempt a breakthrough at a meditation spot (N% chance)". |
 | UI-003 | Help screen (pause menu > Help): Controls page generated from InputConfig (keyboard + gamepad), plus guide pages from data/help.json (GameData.help_pages, validated). |
 | UI-002 | Message log history screen (L / Select): last 200 messages grouped by date with category filters (EventBus.history), right-stick/PgUp-PgDn scrolling; cleared on new/loaded sessions. |
