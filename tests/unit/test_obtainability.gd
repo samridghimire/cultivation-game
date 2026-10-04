@@ -1,6 +1,7 @@
 extends TestCase
 ## QA-004: every item and recipe in the data can actually be obtained in play.
 ## Sources: merchant stock (regions.json merchants, stock_tags, max_price),
+## sect contribution shops (sects.json shop),
 ## gather tables, positive `items` grants in effects/rewards (encounters,
 ## deeds, enemies, sect missions, dialogue), the starting inventory, and
 ## recipe outputs whose recipe is known (starter or taught by an obtainable
@@ -51,6 +52,9 @@ func _audit() -> Dictionary:
 	for item_id: String in gd.items:
 		if _sold_by_a_merchant(gd.items[item_id]):
 			items[item_id] = true
+	for sect: SectDef in gd.sects.values():
+		for entry: Dictionary in sect.shop:
+			items[String(entry["item_id"])] = true
 	for item_id: String in new_character().inventory:
 		items[item_id] = true
 	var recipes := {}
