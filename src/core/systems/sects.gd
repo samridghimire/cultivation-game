@@ -19,6 +19,9 @@ static func check_join(c: CharacterData, data: GameData, sect_id: String) -> Dic
 		return {"ok": false, "reason": "%s will not accept someone of your evil reputation." % sect.name}
 	if c.alignment > sect.max_alignment:
 		return {"ok": false, "reason": "%s has no use for someone so soft-hearted." % sect.name}
+	var rep_reason := Reputation.check_join(c, data, sect_id)
+	if rep_reason != "":
+		return {"ok": false, "reason": rep_reason}
 	return {"ok": true, "reason": ""}
 
 
@@ -177,8 +180,9 @@ static func check_mission(c: CharacterData, data: GameData, mission_id: String) 
 	if int(c.sect["rank"]) < min_rank:
 		return "Only a %s or above may take this mission." % sect.rank_name(min_rank)
 	var min_realm := data.realm_index_of(String(mission.get("min_realm", "mortal")))
-	if c.realm_index < min_realm:
-		return "This mission needs a cultivator of %s or above." % data.realms[min_realm].name
+	var min_stage := int(mission.get("min_stage", 0))
+	if c.realm_index < min_realm or (c.realm_index == min_realm and c.stage < min_stage):
+		return "This mission needs a cultivator of %s or above." % data.realms[min_realm].stage_label(min_stage)
 	var wait := mission_cooldown_left(c, mission_id)
 	if wait > 0:
 		return "This mission is not offered again for %s." % Calendar.format_duration(wait)
@@ -189,9 +193,20 @@ static func check_mission(c: CharacterData, data: GameData, mission_id: String) 
 	return ""
 
 
+## Danger label (Combat.danger_label: Weak/Even/Dangerous/Deadly) of the
+## mission's fight for `c`, or "" if the mission has no enemy. Missions are
+## always fought (a Deadly foe is not evaded), so the board should show this.
+static func mission_danger(c: CharacterData, data: GameData, mission_id: String) -> String:
+	var enemy_id := String(data.sect_missions.get(mission_id, {}).get("enemy", ""))
+	if enemy_id == "" or not data.enemies.has(enemy_id):
+		return ""
+	return Combat.danger_label(c, data, data.enemies[enemy_id])
+
+
 ## Completes `mission_id` (any fight must already be won): hands in the
 ## required items, applies the rewards, adds contribution and starts the
-## cooldown. Returns {ok, reason, contribution, promoted, notes, days}.
+## cooldown. Contribution also earns reputation with the sect.
+## Returns {ok, reason, contribution, promoted, notes, days}.
 static func complete_mission(c: CharacterData, data: GameData, mission_id: String, flags: Dictionary) -> Dictionary:
 	var reason := check_mission(c, data, mission_id)
 	if reason != "":
@@ -202,6 +217,9 @@ static func complete_mission(c: CharacterData, data: GameData, mission_id: Strin
 		c.add_item(item_id, -int(needed[item_id]))
 	var notes := Effects.apply(c, data, mission.get("rewards", {}), flags)
 	var contribution := int(mission.get("contribution", 0))
+	var rep := Reputation.change(c, data, String(c.sect["id"]), Reputation.mission_gain(data, contribution))
+	if rep != 0:
+		notes.append("%s reputation %+d" % [data.sects[c.sect["id"]].name, rep])
 	var promoted := add_contribution(c, data, contribution)
 	c.mission_cooldowns[mission_id] = c.age_days + int(mission.get("cooldown_days", 0))
 	return {"ok": true, "reason": "", "contribution": contribution, "promoted": promoted, "notes": notes, "days": int(mission.get("days", 1))}
@@ -218,8 +236,11 @@ static func validate_missions(data: GameData) -> PackedStringArray:
 		for sect_id in mission.get("sects", []):
 			if not data.sects.has(sect_id):
 				errors.append("Mission '%s' has unknown sect '%s'" % [id, sect_id])
-		if data.realm_index_of(String(mission.get("min_realm", "mortal"))) < 0:
+		var realm_index := data.realm_index_of(String(mission.get("min_realm", "mortal")))
+		if realm_index < 0:
 			errors.append("Mission '%s' has unknown min_realm '%s'" % [id, mission.get("min_realm", "")])
+		elif int(mission.get("min_stage", 0)) < 0 or int(mission.get("min_stage", 0)) >= data.realms[realm_index].stage_count():
+			errors.append("Mission '%s' has min_stage %d outside its min_realm's stages" % [id, int(mission.get("min_stage", 0))])
 		if int(mission.get("min_rank", 0)) < 0:
 			errors.append("Mission '%s' needs min_rank >= 0" % id)
 		if int(mission.get("days", 0)) < 1:
