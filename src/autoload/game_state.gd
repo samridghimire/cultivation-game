@@ -167,7 +167,7 @@ func cultivate_in_seclusion(days: int) -> void:
 	if density <= 0.0:
 		EventBus.post("You have no abode here to seclude yourself in.", "warning")
 		return
-	cultivate(days, density * ClanEstate.qi_multiplier(clan, data), "In seclusion")
+	cultivate(days, density * ClanEstate.seat_qi_multiplier(clan, data, player.abode), "In seclusion")
 
 
 ## Set up an array (items.json `array`) at the player's abode; takes a day.
@@ -413,7 +413,7 @@ func travel(region_id: String) -> void:
 func _road_ambush() -> void:
 	if not _can_act():
 		return
-	var hunter_id := Karma.roll_hunter(player, npcs, data, rng)
+	var hunter_id := Karma.roll_hunter(player, npcs, data, rng, 1.0 - ClanEstate.ward(clan, data, current_region))
 	if hunter_id == "":
 		return
 	var hunter: CharacterData = npcs[hunter_id]
@@ -434,7 +434,7 @@ func explore(tags: Array = []) -> void:
 	if tags.is_empty():
 		tags = data.regions.get(current_region, {}).get("encounter_tags", [])
 	tags = tags + WorldEvents.encounter_tags(data, world_events, current_region)
-	var encounter := Exploration.roll_encounter(player, data, tags, world_flags, rng, Rivals.rival_of(player, npcs))
+	var encounter := Exploration.roll_encounter(player, data, tags, world_flags, rng, Rivals.rival_of(player, npcs), 1.0 - ClanEstate.ward(clan, data, current_region))
 	if encounter.is_empty():
 		EventBus.post("You search the area but find nothing.")
 		_pass_time(1)

@@ -44,7 +44,8 @@ static func check_travel(c: CharacterData, data: GameData, from_id: String, to_i
 ## Encounters that can happen for a place with `tags`, each paired with its
 ## Fortune-adjusted weight: [{encounter, weight}]. `rival` is `c`'s living
 ## rival (Rivals) or null; encounters with a `rival` condition need one.
-static func eligible_encounters(c: CharacterData, data: GameData, tags: Array, flags: Dictionary, rival: CharacterData = null) -> Array[Dictionary]:
+## `misfortune_scale` multiplies misfortune weights (a clan estate's ward).
+static func eligible_encounters(c: CharacterData, data: GameData, tags: Array, flags: Dictionary, rival: CharacterData = null, misfortune_scale: float = 1.0) -> Array[Dictionary]:
 	var result: Array[Dictionary] = []
 	var fortune_shift := (c.attribute("fortune") - 10) * FORTUNE_WEIGHT_PER_POINT
 	for e: Dictionary in data.encounters.values():
@@ -71,14 +72,14 @@ static func eligible_encounters(c: CharacterData, data: GameData, tags: Array, f
 			"fortune":
 				weight *= maxf(0.1, 1.0 + fortune_shift)
 			"misfortune":
-				weight *= maxf(0.1, 1.0 - fortune_shift)
+				weight *= maxf(0.1, 1.0 - fortune_shift) * misfortune_scale
 		result.append({"encounter": e, "weight": weight})
 	return result
 
 
 ## Picks a weighted random encounter, or {} if none are eligible.
-static func roll_encounter(c: CharacterData, data: GameData, tags: Array, flags: Dictionary, rng: RandomNumberGenerator, rival: CharacterData = null) -> Dictionary:
-	var pool := eligible_encounters(c, data, tags, flags, rival)
+static func roll_encounter(c: CharacterData, data: GameData, tags: Array, flags: Dictionary, rng: RandomNumberGenerator, rival: CharacterData = null, misfortune_scale: float = 1.0) -> Dictionary:
+	var pool := eligible_encounters(c, data, tags, flags, rival, misfortune_scale)
 	var total := 0.0
 	for entry in pool:
 		total += entry["weight"]

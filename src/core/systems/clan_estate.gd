@@ -4,11 +4,15 @@ extends RefCounted
 ## builds or upgrades one building at a time, paid from its treasury; the work
 ## finishes after build_days of world time. Each built building applies the
 ## effects of its current level: monthly income and reputation, herbs
-## harvested for the clan head, extra seclusion qi density at the head's abode
-## and faster training for children. State lives on ClanData.
+## harvested for the clan head, extra seclusion qi density at the clan seat
+## abode, faster training for children and a ward that keeps hostile
+## encounters and ambushes away from the seat's region (FAM-006c). State lives
+## on ClanData.
 
 ## Effect keys a building level may have (see the data file's _doc).
-const EFFECTS := ["income", "reputation", "qi_density", "training_speed", "herbs"]
+const EFFECTS := ["income", "reputation", "qi_density", "training_speed", "herbs", "ward"]
+## The ward never removes hostile encounters entirely.
+const MAX_WARD := 0.9
 
 
 ## Building ids in data order.
@@ -113,9 +117,25 @@ static func monthly_herbs(clan: ClanData, data: GameData) -> Dictionary:
 	return out
 
 
-## Multiplier on seclusion qi density at the clan head's abode.
+## Multiplier on seclusion qi density at the clan seat.
 static func qi_multiplier(clan: ClanData, data: GameData) -> float:
 	return 1.0 + total(clan, data, "qi_density")
+
+
+## The qi_density bonus applies only at the clan seat abode (FAM-006c):
+## the multiplier for secluding at `abode_id`.
+static func seat_qi_multiplier(clan: ClanData, data: GameData, abode_id: String) -> float:
+	if clan == null or abode_id == "" or clan.seat != abode_id:
+		return 1.0
+	return qi_multiplier(clan, data)
+
+
+## Fraction by which hostile encounters (misfortune) and road ambushes are
+## reduced in `region_id`: the estate's ward while it is the seat's region.
+static func ward(clan: ClanData, data: GameData, region_id: String) -> float:
+	if clan == null or region_id == "" or clan.seat_region != region_id:
+		return 0.0
+	return minf(MAX_WARD, total(clan, data, "ward"))
 
 
 ## Multiplier on the days of children's monthly training.
@@ -150,9 +170,11 @@ static func describe_effects(data: GameData, building_id: String, building_level
 	if effects.has("reputation"):
 		lines.append("+%d clan reputation a month" % int(effects["reputation"]))
 	if effects.has("qi_density"):
-		lines.append("+%d%% qi in seclusion at your abode" % roundi(float(effects["qi_density"]) * 100.0))
+		lines.append("+%d%% qi in seclusion at the clan seat" % roundi(float(effects["qi_density"]) * 100.0))
 	if effects.has("training_speed"):
 		lines.append("+%d%% children's training" % roundi(float(effects["training_speed"]) * 100.0))
+	if effects.has("ward"):
+		lines.append("-%d%% hostile encounters and ambushes around the seat" % roundi(float(effects["ward"]) * 100.0))
 	var herbs: Dictionary = effects.get("herbs", {})
 	for item_id in herbs:
 		lines.append("%d %s a month" % [int(herbs[item_id]), String(data.items.get(item_id, {}).get("name", item_id))])
