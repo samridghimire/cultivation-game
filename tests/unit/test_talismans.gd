@@ -93,9 +93,7 @@ func test_every_learned_talisman_recipe_has_an_obtainable_manual() -> void:
 			if int(item.get("price", 0)) > 0:
 				obtainable = true
 			for e: Dictionary in d.encounters.values():
-				if e.get("effects", {}).get("items", {}).has(item["id"]):
-					obtainable = true
-				for choice: Dictionary in e.get("choices", []):
-					if choice.get("effects", {}).get("items", {}).has(item["id"]):
+				for effects: Dictionary in encounter_outcomes(e):
+					if effects.get("items", {}).has(item["id"]):
 						obtainable = true
 		assert_true(obtainable, "no manual for the %s recipe can be bought or found" % recipe["id"])
