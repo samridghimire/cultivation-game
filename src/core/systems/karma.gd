@@ -226,8 +226,9 @@ static func hunt_chance(c: CharacterData, npc: CharacterData, data: GameData) ->
 
 
 ## The living NPC with the strongest grudge (ties by id) if it decides to
-## ambush `c` on the road; "" if nobody does.
-static func roll_hunter(c: CharacterData, people: Dictionary, data: GameData, rng: RandomNumberGenerator) -> String:
+## ambush `c` on the road; "" if nobody does. `chance_scale` multiplies the
+## chance (a clan estate's ward at the destination).
+static func roll_hunter(c: CharacterData, people: Dictionary, data: GameData, rng: RandomNumberGenerator, chance_scale: float = 1.0) -> String:
 	var best := ""
 	var family := Children.descendants(c, people)
 	for npc_id in c.grudges:
@@ -236,7 +237,7 @@ static func roll_hunter(c: CharacterData, people: Dictionary, data: GameData, rn
 			continue
 		if best == "" or grudge(c, npc_id) > grudge(c, best) or (grudge(c, npc_id) == grudge(c, best) and String(npc_id) < best):
 			best = String(npc_id)
-	if best == "" or rng.randf() >= hunt_chance(c, people[best], data):
+	if best == "" or rng.randf() >= hunt_chance(c, people[best], data) * chance_scale:
 		return ""
 	return best
 

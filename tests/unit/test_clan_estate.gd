@@ -132,3 +132,31 @@ func test_game_state_estate() -> void:
 	assert_eq(ClanEstate.level(gs.clan, "alchemy_room"), 1, "built after its build days")
 	assert_gt(gs.clan.treasury, treasury, "the alchemy room earns income")
 	gs.end_session()
+
+
+## FAM-006c: the protective array's qi bonus applies only at the clan seat,
+## and its ward thins hostile encounters and ambushes in the seat's region.
+func test_seat_bound_qi_and_ward() -> void:
+	var d := data()
+	var clan := ClanData.new()
+	clan.seat = "waterfall_cave"
+	clan.seat_region = String(d.abodes["waterfall_cave"]["region"])
+	clan.buildings["protective_array"] = 2
+	assert_gt(ClanEstate.seat_qi_multiplier(clan, d, "waterfall_cave"), 1.0)
+	assert_eq(ClanEstate.seat_qi_multiplier(clan, d, "cloud_grotto"), 1.0, "only at the seat")
+	assert_almost_eq(ClanEstate.ward(clan, d, clan.seat_region), 0.45)
+	assert_eq(ClanEstate.ward(clan, d, "azure_peak"), 0.0, "only around the seat")
+	assert_true(Array(ClanEstate.describe_effects(d, "protective_array", 2)).any(func(l: String) -> bool: return l.contains("hostile encounters")))
+	var c := new_character()
+	c.realm_index = 1
+	var plain := Exploration.eligible_encounters(c, d, ["forest", "wild"], {})
+	var warded := Exploration.eligible_encounters(c, d, ["forest", "wild"], {}, null, 1.0 - ClanEstate.ward(clan, d, clan.seat_region))
+	var misfortune := func(pool: Array) -> float:
+		var sum := 0.0
+		for entry: Dictionary in pool:
+			if entry["encounter"].get("kind", "") == "misfortune":
+				sum += float(entry["weight"])
+		return sum
+	assert_almost_eq(misfortune.call(warded), misfortune.call(plain) * 0.55, 0.01)
+	clan.buildings["protective_array"] = 99
+	assert_true(ClanEstate.ward(clan, d, clan.seat_region) <= ClanEstate.MAX_WARD)
