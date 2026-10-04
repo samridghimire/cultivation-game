@@ -80,6 +80,7 @@ func test_every_character_field_survives_a_save() -> void:
 	c.grudges = {"npc_test_victim": 40}
 	c.gratitude = {"npc_test_friend": 25}
 	c.dao = {"sword_dao": {"level": 2, "progress": 30.5}}
+	c.garden = [{"item": "flame_lotus", "days_left": 40}]
 	var restored := CharacterData.from_dict(JSON.parse_string(JSON.stringify(c.to_dict())))
 	var before := c.to_dict()
 	var after := restored.to_dict()

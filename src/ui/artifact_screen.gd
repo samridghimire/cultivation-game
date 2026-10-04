@@ -16,6 +16,7 @@ const PAGE_MAIN := "main"
 const PAGE_FEED := "feed"
 const PAGE_STORAGE := "storage"
 const PAGE_ANCHORS := "anchors"
+const PAGE_GARDEN := "garden"
 
 var _title: Label
 var _info: Label
@@ -112,6 +113,8 @@ func _rebuild() -> void:
 			_build_storage(p, data)
 		PAGE_ANCHORS:
 			_build_anchors(p, data)
+		PAGE_GARDEN:
+			_build_garden(p, data)
 		_:
 			_build_main(p, data)
 	if focused_name != "":
@@ -140,6 +143,8 @@ func _build_main(p: CharacterData, data: GameData) -> void:
 	if ArtifactFunctions.is_unlocked(p, InnerWorld.FUNCTION):
 		var days := InnerWorld.max_days(data)
 		_add_button("inner_world", "Enter the Inner World (%s outside, %s inside)" % [Calendar.format_duration(days), Calendar.format_duration(InnerWorld.inner_days(data, days))], InnerWorld.check_enter(p, data, days), GameState.enter_inner_world.bind(days))
+	if ArtifactFunctions.is_unlocked(p, SpiritGarden.FUNCTION):
+		_add_button("garden", "%s..." % ArtifactFunctions.function_name(data, SpiritGarden.FUNCTION), "", _show_page.bind(PAGE_GARDEN))
 	var storage_reason := "" if ArtifactFunctions.is_unlocked(p, "storage") else "sealed"
 	_add_button("storage", "%s..." % ArtifactFunctions.function_name(data, "storage"), storage_reason, _show_page.bind(PAGE_STORAGE))
 
@@ -196,6 +201,21 @@ func _build_anchors(p: CharacterData, data: GameData) -> void:
 		if not current:
 			_add_button("respawn_" + anchor_id, "Make respawn point", "", GameState.bind_anchor.bind(anchor_id), row)
 		_add_button("release_" + anchor_id, "Release", "", GameState.unbind_anchor.bind(anchor_id), row)
+
+
+func _build_garden(p: CharacterData, data: GameData) -> void:
+	_title.text = ArtifactFunctions.function_name(data, SpiritGarden.FUNCTION)
+	_info.text = "Herbs grow on inner-world time: %d inner days for every day outside.\n%s" % [InnerWorld.inner_days(data, 1), "\n".join(SpiritGarden.describe(p, data))]
+	_add_button("back", "Back", "", _show_page.bind(PAGE_MAIN))
+	var ready := p.garden.any(func(plot: Dictionary) -> bool: return int(plot["days_left"]) <= 0)
+	_add_button("harvest", "Harvest", "" if ready else "nothing is ready", GameState.harvest_garden)
+	for item_id in SpiritGarden.plantable(data):
+		if p.item_count(item_id) <= 0:
+			continue
+		var plant := SpiritGarden.plant_def(data, item_id)
+		var days := ceili(float(plant.get("days", 1)) / float(InnerWorld.inner_days(data, 1)))
+		var label := "Plant %s (x%d carried; ready in %s, yields %d-%d)" % [_item_name(data, item_id), p.item_count(item_id), Calendar.format_duration(days), int(plant["yield"][0]), int(plant["yield"][1])]
+		_add_button("plant_" + item_id, label, SpiritGarden.check_plant(p, data, item_id), GameState.plant_in_garden.bind(item_id))
 
 
 ## A row with a label; buttons are added to it by _add_button.

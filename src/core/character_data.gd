@@ -94,6 +94,8 @@ var artifact_energy := 0
 var artifact_functions: Array[String] = []
 ## Items kept in the artifact's storage space: item id -> count. Never lost.
 var artifact_storage: Dictionary = {}
+## Spirit garden plots in the inner world (SpiritGarden, ART-004): [{item, days_left}].
+var garden: Array = []
 ## Sect mission id -> age_days when it may be taken again (Sects missions).
 var mission_cooldowns: Dictionary = {}
 ## Inheritance id -> trial stages passed (W-006, Inheritances).
@@ -187,6 +189,7 @@ func to_dict() -> Dictionary:
 		"artifact_energy": artifact_energy,
 		"artifact_functions": artifact_functions.duplicate(),
 		"artifact_storage": artifact_storage.duplicate(),
+		"garden": garden.duplicate(true),
 		"mission_cooldowns": mission_cooldowns.duplicate(),
 		"trial_progress": trial_progress.duplicate(),
 		"reputation": reputation.duplicate(),
@@ -271,6 +274,9 @@ static func from_dict(d: Dictionary) -> CharacterData:
 	c.artifact_energy = int(d.get("artifact_energy", 0))
 	c.artifact_functions = _strings(d.get("artifact_functions", []))
 	c.artifact_storage = _int_values(d.get("artifact_storage", {}))
+	for plot in d.get("garden", []):
+		if plot is Dictionary:
+			c.garden.append({"item": String(plot.get("item", "")), "days_left": int(plot.get("days_left", 0))})
 	c.mission_cooldowns = _int_values(d.get("mission_cooldowns", {}))
 	c.trial_progress = _int_values(d.get("trial_progress", {}))
 	c.reputation = _int_values(d.get("reputation", {}))
