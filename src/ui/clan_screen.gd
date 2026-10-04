@@ -209,7 +209,9 @@ func _rebuild() -> void:
 		_title.text = "Found a Clan"
 		_summary.text = ""
 		_summary.visible = false
-		_found_info.text = founding_text(data) + "\n\nClans of the realm:\n  " + "\n  ".join(NpcClans.summary_lines(GameState.npc_clans, GameState.npcs, data))
+		var realm_lines := NpcClans.summary_lines(GameState.npc_clans, GameState.npcs, data)
+		realm_lines.append_array(NpcClans.rivalry_lines(GameState.npc_clans, data))
+		_found_info.text = founding_text(data) + "\n\nClans of the realm:\n  " + "\n  ".join(realm_lines)
 		var reason := Clans.check_found(p, clan, data)
 		_found_status.text = reason
 		_found_status.visible = reason != ""
@@ -250,7 +252,9 @@ func _rebuild() -> void:
 		keys.append("r:" + c.id)
 		_list.add_child(_entry(c.name, "r:" + c.id, reason != ""))
 	_list.add_child(UIStyle.label("Clans of the realm", 16, Color(0.75, 0.75, 0.75)))
-	for line in NpcClans.summary_lines(GameState.npc_clans, GameState.npcs, data):
+	var realm_lines := NpcClans.summary_lines(GameState.npc_clans, GameState.npcs, data)
+	realm_lines.append_array(NpcClans.rivalry_lines(GameState.npc_clans, data))
+	for line in realm_lines:
 		var l := _wrapped(UIStyle.label(line, 14, Color(0.7, 0.7, 0.7)))
 		l.custom_minimum_size = Vector2(300, 0)
 		_list.add_child(l)

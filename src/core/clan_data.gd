@@ -22,6 +22,11 @@ var buildings: Dictionary = {}
 var construction: Dictionary = {}
 ## Character id of the designated heir (FAM-008), "" = the default heir.
 var heir := ""
+## Relations (FAM-009b, NpcClans): other clan id, or "player" for the player
+## and their clan -> relation value. Missing keys use clans.json relations.start.
+var relations: Dictionary = {}
+## Clans bound to this one by marriage (FAM-009b): clan ids or "player".
+var allies: Array[String] = []
 
 
 func to_dict() -> Dictionary:
@@ -37,6 +42,8 @@ func to_dict() -> Dictionary:
 		"buildings": buildings.duplicate(),
 		"construction": construction.duplicate(),
 		"heir": heir,
+		"relations": relations.duplicate(),
+		"allies": allies.duplicate(),
 	}
 
 
@@ -59,4 +66,9 @@ static func from_dict(d: Dictionary) -> ClanData:
 	if not project.is_empty():
 		clan.construction = {"building": String(project.get("building", "")), "level": int(project.get("level", 1)), "days_left": int(project.get("days_left", 0))}
 	clan.heir = String(d.get("heir", ""))
+	var saved_relations: Dictionary = d.get("relations", {})
+	for key in saved_relations:
+		clan.relations[String(key)] = int(saved_relations[key])
+	for ally in d.get("allies", []):
+		clan.allies.append(String(ally))
 	return clan
