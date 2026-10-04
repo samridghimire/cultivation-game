@@ -1,0 +1,31 @@
+{
+  "_doc": "Clan estate buildings (FAM-006, ClanEstate). The clan builds one project at a time, paid from the clan treasury; the work finishes after build_days of world time (the patriarch need not wait). Per building: id, name, description, levels (index 0 = level 1). Per level: cost (treasury spirit stones), build_days, optional min_realm (realm id the clan head must have reached), effects. A building's effects are those of its current level (not summed over levels). Effect keys: income (spirit stones into the treasury each month), reputation (clan reputation each month), qi_density (fraction added to seclusion qi density at the patriarch's abode, e.g. 0.2 = +20%), training_speed (fraction added to the days of children's monthly training), herbs ({item id: quantity} harvested to the patriarch's inventory each month). Top level: max_projects (only 1 is supported).",
+  "max_projects": 1,
+  "buildings": [
+    {"id": "ancestral_hall", "name": "Ancestral Hall", "description": "Tablets of the ancestors and the clan's records. Its incense draws admirers and binds the family together.", "levels": [
+      {"cost": 200, "build_days": 60, "effects": {"reputation": 1}},
+      {"cost": 600, "build_days": 120, "effects": {"reputation": 3, "training_speed": 0.05}},
+      {"cost": 1800, "build_days": 240, "min_realm": "core_formation", "effects": {"reputation": 6, "training_speed": 0.1}}
+    ]},
+    {"id": "spirit_field", "name": "Spirit Field", "description": "Terraced fields watered with spring qi, tended by clan servants.", "levels": [
+      {"cost": 150, "build_days": 45, "effects": {"herbs": {"dew_grass": 3}}},
+      {"cost": 500, "build_days": 90, "effects": {"herbs": {"dew_grass": 4, "qi_condensing_grass": 2}}},
+      {"cost": 1500, "build_days": 180, "min_realm": "core_formation", "effects": {"herbs": {"qi_condensing_grass": 4, "spirit_herb": 2}}}
+    ]},
+    {"id": "alchemy_room", "name": "Alchemy Room", "description": "A furnace chamber where clan disciples refine common pills for sale.", "levels": [
+      {"cost": 300, "build_days": 60, "effects": {"income": 15}},
+      {"cost": 900, "build_days": 120, "effects": {"income": 40}},
+      {"cost": 2500, "build_days": 240, "min_realm": "core_formation", "effects": {"income": 90}}
+    ]},
+    {"id": "protective_array", "name": "Protective Array", "description": "Array flags buried around the estate. They keep intruders out and the gathered qi in.", "levels": [
+      {"cost": 400, "build_days": 90, "effects": {"qi_density": 0.1}},
+      {"cost": 1200, "build_days": 180, "effects": {"qi_density": 0.2}},
+      {"cost": 3600, "build_days": 360, "min_realm": "core_formation", "effects": {"qi_density": 0.35}}
+    ]},
+    {"id": "library", "name": "Scripture Library", "description": "Jade slips and manuals collected for the clan's young.", "levels": [
+      {"cost": 250, "build_days": 60, "effects": {"training_speed": 0.15}},
+      {"cost": 800, "build_days": 120, "effects": {"training_speed": 0.3}},
+      {"cost": 2400, "build_days": 240, "min_realm": "core_formation", "effects": {"training_speed": 0.5}}
+    ]}
+  ]
+}
