@@ -65,6 +65,9 @@ var medicine: Dictionary = {}
 var artifact: Dictionary = {}
 var family: Dictionary = {}  # data/family.json (Family system)
 var bloodlines: Dictionary = {}  # id -> Dictionary (data/bloodlines.json)
+var beasts: Dictionary = {}  # id -> Dictionary (data/beasts.json)
+## data/beasts.json top-level rules (max_companions, tame, rank_scale, outgrown_scale).
+var beast_rules: Dictionary = {}
 ## data/bloodlines.json top-level rules (inherit chances).
 var bloodline_rules: Dictionary = {}
 ## Grudge/gratitude rules (data/karma.json, Karma). "acts" is keyed by id after loading.
@@ -198,6 +201,9 @@ func _load(dir: String) -> void:
 		clan_buildings[building["id"]] = building
 	for npc_clan in _read(dir, "clans.json").get("clans", []):
 		npc_clans[npc_clan["id"]] = npc_clan
+	beast_rules = _read(dir, "beasts.json")
+	for beast in beast_rules.get("beasts", []):
+		beasts[beast["id"]] = beast
 
 	var dialogue_dir := dir.path_join("dialogue")
 	for file_name in DirAccess.get_files_at(dialogue_dir):
@@ -300,6 +306,7 @@ func _validate() -> void:
 	load_errors.append_array(ClanEstate.validate(self))
 	load_errors.append_array(NpcClans.validate(self))
 	load_errors.append_array(Bloodlines.validate(self))
+	load_errors.append_array(Beasts.validate(self))
 	load_errors.append_array(Sects.validate_missions(self))
 	load_errors.append_array(Reputation.validate(self))
 	load_errors.append_array(Exploration.validate_choices(self))

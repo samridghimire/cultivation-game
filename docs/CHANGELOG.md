@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-04 [BEAST-001] Spirit beast companions: practise the Beast Tamer profession and a beaten boar, mist wolf, stone ape, cloud eagle, flame fox, jade python or thunderwing roc may submit to you (higher ranks tame more often and stronger beasts). A companion boosts your combat stats and fades once you outgrow it; you can release it.
 - 2026-10-04 [FAM-005b] Clan screen on [G] (gamepad: right shoulder): found the <Surname> Clan once you meet the requirements (reasons shown otherwise), deposit spirit stones into the treasury, give members ranks (Elder, Core, Outer) and recruit people in your region as retainers.
 - 2026-10-04 [QA-010] Heavenly Tribulations are now a real danger: a typical cultivator survives each one ~87-90% of the time (it was 100%), shield talismans and preparation matter, and the heart demon wave is smaller so a deeply demonic cultivator still survives ~60%. NPCs face a softer tribulation so the world's elders still rise. New report: tests/sim/simulate_tribulation.gd.
 - 2026-10-04 [W-004f] Encounters can be limited to an alignment range (min_alignment/max_alignment in encounters.json): the Azure Cloud Enforcer now only accosts players whose alignment is -200 or lower, instead of arresting saints for "demonic qi".
