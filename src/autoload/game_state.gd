@@ -1407,10 +1407,12 @@ func fight_enemy(enemy: Dictionary) -> bool:
 	# The full blow-by-blow goes out with combat_finished; the log gets a summary.
 	var lines: PackedStringArray = result["log"]
 	EventBus.post(lines[0], "danger")
-	EventBus.post("%s (%d rounds, %d/%d hp left)" % [lines[-1], result["rounds"], result["player_hp"], result["player_max_hp"]], "progress" if result["victory"] else "danger")
 	var outcome := Combat.apply_outcome(player, data, enemy, result, world_flags, rng)
+	var rounds := int(result["rounds"])
+	var summary := "%d %s, %d/%d hp left" % [rounds, "round" if rounds == 1 else "rounds", result["player_hp"], result["player_max_hp"]]
 	if not outcome["notes"].is_empty():
-		EventBus.post("(%s)" % ", ".join(outcome["notes"]), "progress" if result["victory"] else "warning")
+		summary += "; " + ", ".join(outcome["notes"])
+	EventBus.post("%s (%s)" % [lines[-1], summary], "progress" if result["victory"] else "danger")
 	EventBus.combat_finished.emit(enemy.get("name", "enemy"), result["victory"], result["log"])
 	var drained := 0 if outcome["died"] else Equipment.drain_after_fight(player, data)
 	if drained > 0:

@@ -103,6 +103,13 @@ static func load_from_dir(dir: String = DEFAULT_DIR) -> GameData:
 	return data
 
 
+## A place's display name without its trailing map hint, for use in sentences:
+## "Cloud-Sea Cliff (2x qi)" -> "Cloud-Sea Cliff", "Waterfall Cave (abode)" -> "Waterfall Cave".
+static func plain_name(display_name: String) -> String:
+	var cut := display_name.rfind(" (")
+	return display_name.left(cut) if cut > 0 and display_name.ends_with(")") else display_name
+
+
 func realm_index_of(realm_id: String) -> int:
 	for i in realms.size():
 		if realms[i].id == realm_id:
@@ -170,7 +177,7 @@ func _load(dir: String) -> void:
 				continue
 			if anchors.has(anchor_id):
 				load_errors.append("Duplicate anchor_id '%s'" % anchor_id)
-			anchors[anchor_id] = {"region": region["id"], "name": place.get("display_name", anchor_id)}
+			anchors[anchor_id] = {"region": region["id"], "name": plain_name(String(place.get("display_name", anchor_id)))}
 		for abode: Dictionary in region.get("abodes", []):
 			if abodes.has(abode.get("id", "")):
 				load_errors.append("Duplicate abode id '%s'" % abode.get("id", ""))
@@ -180,7 +187,7 @@ func _load(dir: String) -> void:
 				continue
 			if anchors.has(abode_anchor):
 				load_errors.append("Duplicate anchor_id '%s'" % abode_anchor)
-			anchors[abode_anchor] = {"region": region["id"], "name": abode.get("display_name", abode_anchor)}
+			anchors[abode_anchor] = {"region": region["id"], "name": plain_name(String(abode.get("display_name", abode_anchor)))}
 
 	artifact = _read(dir, "artifact.json")
 

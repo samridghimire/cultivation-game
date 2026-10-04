@@ -14,7 +14,7 @@ static func get_def(data: GameData, abode_id: String) -> Dictionary:
 
 
 static func abode_name(data: GameData, abode_id: String) -> String:
-	return String(get_def(data, abode_id).get("display_name", abode_id))
+	return GameData.plain_name(String(get_def(data, abode_id).get("display_name", abode_id)))
 
 
 ## Abode ids in `region_id`, in data order.

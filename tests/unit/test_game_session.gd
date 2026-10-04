@@ -341,3 +341,30 @@ func test_loaded_save_skips_the_intro_event() -> void:
 	gs.start_pending_event()
 	assert_false(gs.in_dialogue())
 	gs.end_session()
+
+
+func test_fight_summary_is_one_line_with_its_spoils() -> void:
+	var c := _start()
+	var gs := _game_state()
+	c.realm_index = gs.data.realm_index_of("qi_refining")
+	var bus := _root().get_node("EventBus")
+	var before: int = bus.history.size()
+	gs.fight("wild_boar")
+	var lines: Array = bus.history.slice(before).map(func(e: Dictionary) -> String: return e["text"])
+	for line: String in lines:
+		assert_false(line.begins_with("("), "spoils are not posted as an orphan line: %s" % line)
+	var summary: Array = lines.filter(func(l: String) -> bool: return l.begins_with("You defeat the Wild Boar!"))
+	assert_eq(summary.size(), 1, str(lines))
+	assert_true(String(summary[0]).contains("Spirit Stone"), "the spoils ride on the summary: %s" % summary[0])
+	assert_true(String(summary[0]).contains(" round, ") or String(summary[0]).contains(" rounds, "), summary[0])
+	assert_false(String(summary[0]).contains("1 rounds"), summary[0])
+	gs.end_session()
+
+
+func test_place_names_in_sentences_drop_map_hints() -> void:
+	assert_eq(GameData.plain_name("Cloud-Sea Cliff (2x qi)"), "Cloud-Sea Cliff")
+	assert_eq(GameData.plain_name("Waterfall Cave (abode)"), "Waterfall Cave")
+	assert_eq(GameData.plain_name("Meditation Rock"), "Meditation Rock")
+	var gs := _game_state()
+	assert_eq(Abodes.abode_name(gs.data, "waterfall_cave"), "Waterfall Cave")
+	assert_eq(CreationArtifact.anchor_name(gs.data, "azure_cliff"), "Cloud-Sea Cliff (Azure Peak)")

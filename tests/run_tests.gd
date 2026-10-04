@@ -4,6 +4,7 @@ extends SceneTree
 ## Or simply: tools/test.sh
 ## Runs every test_* method in tests/unit/test_*.gd. Exit code 1 on failure.
 ## Test methods may `await` (e.g. process frames so deferred UI focus lands).
+## TEST_ONLY=<substring> runs only the test files whose name contains it.
 
 const TEST_DIR := "res://tests/unit"
 
@@ -36,6 +37,8 @@ func _run() -> void:
 
 	for file_name in DirAccess.get_files_at(TEST_DIR):
 		if not (file_name.begins_with("test_") and file_name.ends_with(".gd")):
+			continue
+		if OS.get_environment("TEST_ONLY") != "" and not file_name.contains(OS.get_environment("TEST_ONLY")):
 			continue
 		var path := TEST_DIR.path_join(file_name)
 		var script := load(path) as GDScript
