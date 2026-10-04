@@ -1,0 +1,59 @@
+{
+  "id": "generic_cultivator",
+  "_doc": "Fallback conversation for generated adult NPCs who have no def in npcs.json (GameState._npc_dialogue). Favor choices are capped with max_favor so talking alone gets you to courtship (family.json courtship.min_favor), gifts a little further; proposals still need courtship.",
+  "entries": [
+    {"node": "cold", "if": {"max_favor": -20}},
+    {"node": "deferent", "if": {"above_npc": true}},
+    {"node": "greet"}
+  ],
+  "nodes": {
+    "greet": {"text": "Fellow daoist. I am {npc}, {npc_realm}. The road is long and companions are few. What brings you to me?",
+      "choices": [
+        {"label": "Chat about the Dao over tea. (3 days)", "next": "chat", "days": 3, "favor": 3, "if": {"max_favor": 19}},
+        {"label": "Talk cultivation insights. (3 days)", "next": "insight", "days": 3, "favor": 2, "if": {"min_favor": 20, "max_favor": 34}, "show_locked": true},
+        {"label": "Offer a pouch of 10 spirit stones.", "next": "gift", "favor": 4, "effects": {"items": {"spirit_stone": -10}}, "if": {"max_favor": 39}, "show_locked": true},
+        {"label": "Give 3 Spirit Herbs.", "next": "gift", "favor": 3, "effects": {"items": {"spirit_herb": -3}}, "if": {"max_favor": 39}, "show_locked": true},
+        {"label": "Give a Qi Gathering Pill.", "next": "gift_pill", "favor": 6, "effects": {"items": {"qi_gathering_pill": -1}}, "if": {"max_favor": 49}, "show_locked": true},
+        {"label": "Spar with them. (5 days)", "next": "spar", "days": 5, "favor": 4, "if": {"min_realm": "qi_refining", "max_favor": 39}, "show_locked": true},
+        {"label": "Guard their seclusion for a week. (7 days)", "next": "guard", "days": 7, "favor": 5, "effects": {"alignment": 2}, "if": {"min_alignment": -199, "max_favor": 49}},
+        {"label": "Ask about these lands.", "next": "rumors"},
+        {"label": "Ask about the cultivation world.", "next": "world"},
+        {"label": "Shake them down for spirit stones.", "next": "extort", "favor": -15, "effects": {"alignment": -15, "items": {"spirit_stone": 12}}, "if": {"max_alignment": 199, "min_favor": -19}},
+        {"label": "Take your leave.", "next": "end"}
+      ]},
+    "deferent": {"text": "Senior! This junior {npc} greets you. Forgive my poor cultivation, {npc_realm} is nothing before your eyes. How may I serve?",
+      "choices": [
+        {"label": "Share a few pointers on their cultivation. (3 days)", "next": "pointers", "days": 3, "favor": 5, "if": {"max_favor": 39}},
+        {"label": "Speak with them as an equal.", "next": "greet"},
+        {"label": "Demand tribute for your protection.", "next": "tribute", "favor": -15, "effects": {"alignment": -20, "items": {"spirit_stone": 20}}, "if": {"min_favor": -19}},
+        {"label": "Take your leave.", "next": "end"}
+      ]},
+    "cold": {"text": "You. I remember what you did. Say what you want and be gone.",
+      "choices": [
+        {"label": "Apologize and offer 30 spirit stones.", "next": "end", "favor": 12, "effects": {"items": {"spirit_stone": -30}}, "show_locked": true},
+        {"label": "Leave them be.", "next": "end"}
+      ]},
+    "chat": {"text": "Ha, it has been a long while since I talked of anything but herbs and stones. You are good company, {player}.",
+      "choices": [{"label": "...", "next": "greet"}]},
+    "insight": {"text": "So you also find the third meridian sluggish? Try guiding the qi in a slower circuit before dawn. My master swore by it.",
+      "choices": [{"label": "...", "next": "greet"}]},
+    "gift": {"text": "For me? You are too courteous. I will not forget this kindness.",
+      "choices": [{"label": "...", "next": "greet"}]},
+    "gift_pill": {"text": "A Qi Gathering Pill... Fellow daoist, these are not cheap for one at my level. Thank you, truly.",
+      "choices": [{"label": "...", "next": "greet"}]},
+    "spar": {"text": "Good! Your footwork is sharper than I expected. Again tomorrow? My meridians have not burned like this in years.",
+      "choices": [{"label": "...", "next": "greet"}]},
+    "guard": {"text": "I came out of seclusion with my qi settled and my heart calm. Knowing someone stood watch made all the difference.",
+      "choices": [{"label": "...", "next": "greet"}]},
+    "pointers": {"text": "So that is where my circulation went wrong... Senior's guidance is worth ten years of blind practice!",
+      "choices": [{"label": "...", "next": "deferent"}]},
+    "extort": {"text": "Take it, take it! May the heavens remember your face.",
+      "choices": [{"label": "...", "next": "end"}]},
+    "tribute": {"text": "Y-yes, Senior. Here is all this junior has saved. Please spare me.",
+      "choices": [{"label": "...", "next": "end"}]},
+    "rumors": {"text": "They say the Misty Forest hides herbs a hundred years old, and wolves that hunt in the mist. Up on Azure Peak the qi is thick, but so are the beasts. If you want treasures, the Fallen Star Market has everything, for a price, and the Night Market stalls ask no questions.",
+      "choices": [{"label": "...", "next": "greet"}]},
+    "world": {"text": "The Azure Cloud Sect guards the righteous path, the Blood Lotus devours the weak, and the merchants weigh everything in spirit stones. A rogue cultivator lives by their own wits. Which road will you walk, {player}?",
+      "choices": [{"label": "...", "next": "greet"}]}
+  }
+}

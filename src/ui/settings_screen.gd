@@ -13,12 +13,13 @@ const SLIDERS := [
 ]
 
 var _fullscreen: CheckButton
+var _hints: CheckButton
 var _sliders: Dictionary = {}  # setting key -> HSlider
 var _value_labels: Dictionary = {}  # setting key -> Label
 
 
 func _init() -> void:
-	add_theme_stylebox_override("panel", UIStyle.panel().get_theme_stylebox("panel"))
+	add_theme_stylebox_override("panel", UIStyle.panel_style())
 	custom_minimum_size = Vector2(480, 0)
 	visible = false
 	var box := VBoxContainer.new()
@@ -31,6 +32,11 @@ func _init() -> void:
 	_fullscreen.add_theme_font_size_override("font_size", 18)
 	_fullscreen.toggled.connect(func(on: bool): Settings.set_value("window_mode", "fullscreen" if on else "windowed"))
 	box.add_child(_fullscreen)
+	_hints = CheckButton.new()
+	_hints.text = "Show next-step hint on the HUD"
+	_hints.add_theme_font_size_override("font_size", 18)
+	_hints.toggled.connect(func(on: bool): Settings.set_value("show_hints", on))
+	box.add_child(_hints)
 
 	var grid := GridContainer.new()
 	grid.columns = 3
@@ -101,6 +107,7 @@ static func format_value(key: String, value: float) -> String:
 
 func _sync() -> void:
 	_fullscreen.set_pressed_no_signal(Settings.get_value("window_mode") == "fullscreen")
+	_hints.set_pressed_no_signal(Settings.get_value("show_hints"))
 	for key in _sliders:
 		_sliders[key].set_value_no_signal(Settings.get_value(key))
 		_value_labels[key].text = format_value(key, Settings.get_value(key))
