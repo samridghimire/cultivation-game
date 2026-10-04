@@ -21,6 +21,8 @@ var auctions: Dictionary = {}
 ## (Devouring, DEM-001); {} when none. Not saved: the chance passes with the
 ## combat report.
 var devour_target: Dictionary = {}
+## Active world events (WorldEvents, LW-001): [{id, region, start_day, end_day}].
+var world_events: Array = []
 ## Id of the region (data/regions.json) the player is in.
 var current_region := ""
 ## Live NPCs: id -> CharacterData (definitions in data/npcs.json).
@@ -70,6 +72,7 @@ func start_session(character: CharacterData) -> void:
 	world_flags = {}
 	auctions = {}
 	devour_target = {}
+	world_events = []
 	current_region = data.start_region
 	npcs = {}
 	npc_favor = {}
@@ -96,6 +99,7 @@ func end_session() -> void:
 	world_flags = {}
 	auctions = {}
 	devour_target = {}
+	world_events = []
 	npcs = {}
 	npc_favor = {}
 	clan = null
@@ -120,7 +124,7 @@ func cultivate(days: int, location_density: float = 1.0, skip_title: String = "M
 	if Cultivation.is_at_bottleneck(player, data):
 		EventBus.post("You are at a bottleneck. More meditation will not help; attempt a breakthrough.", "warning")
 		return
-	var density := location_density * Exploration.qi_density(data, current_region) * Sects.cultivation_bonus(player, data)
+	var density := location_density * region_qi_density() * Sects.cultivation_bonus(player, data)
 	_start_time_skip()
 	var result := Cultivation.cultivate(player, data, days, density)
 	EventBus.post("You cultivate for %s and gather %d qi." % [Calendar.format_duration(days), int(result["qi_gained"])])
@@ -331,7 +335,7 @@ func perform_deed(deed_id: String) -> void:
 func buy_item(item_id: String, faction: String = "", quantity: int = 1) -> void:
 	if not _can_act():
 		return
-	var result := Items.buy(player, data, item_id, quantity, faction)
+	var result := Items.buy(player, data, item_id, quantity, faction, market_multiplier())
 	if result["ok"]:
 		var item_name: String = data.items[item_id]["name"]
 		var what := Text.a(item_name) if quantity == 1 else "%d %s" % [quantity, item_name]
@@ -408,6 +412,7 @@ func explore(tags: Array = []) -> void:
 		return
 	if tags.is_empty():
 		tags = data.regions.get(current_region, {}).get("encounter_tags", [])
+	tags = tags + WorldEvents.encounter_tags(data, world_events, current_region)
 	var encounter := Exploration.roll_encounter(player, data, tags, world_flags, rng)
 	if encounter.is_empty():
 		EventBus.post("You search the area but find nothing.")
@@ -834,7 +839,7 @@ func dual_cultivate(spouse_id: String, days: int, location_density: float = 1.0)
 		EventBus.post("%s is not here." % spouse.name, "warning")
 		EventBus.player_changed.emit()
 		return
-	var density := location_density * Exploration.qi_density(data, current_region) * Sects.cultivation_bonus(player, data)
+	var density := location_density * region_qi_density() * Sects.cultivation_bonus(player, data)
 	_start_time_skip()
 	var result := Family.dual_cultivate(player, spouse, data, days, density)
 	if not result["ok"]:
@@ -1380,6 +1385,24 @@ func bid(house_id: String, lot_index: int, amount: int) -> void:
 	EventBus.player_changed.emit()
 
 
+## Qi density of the current region, including active world events (LW-001).
+func region_qi_density() -> float:
+	return Exploration.qi_density(data, current_region) * WorldEvents.qi_multiplier(data, world_events, current_region)
+
+
+## Merchant price multiplier of the current region's active world events.
+func market_multiplier() -> float:
+	return WorldEvents.price_multiplier(data, world_events, current_region)
+
+
+## Expire and roll world events at a month boundary, posting the news.
+func _world_events_month() -> void:
+	for ended in WorldEvents.expire(world_events, GameClock.total_days):
+		EventBus.post(WorldEvents.news(data, ended, false), "info")
+	for started in WorldEvents.roll(data, world_events, GameClock.total_days, rng):
+		EventBus.post(WorldEvents.news(data, started, true), "warning")
+
+
 ## Fight an enemy from data/enemies.json.
 func fight(enemy_id: String) -> void:
 	if not data.enemies.has(enemy_id):
@@ -1578,6 +1601,7 @@ func to_save_dict() -> Dictionary:
 		"player": player.to_dict(),
 		"world_flags": world_flags.duplicate(),
 		"auctions": auctions.duplicate(true),
+		"world_events": world_events.duplicate(true),
 		"region": current_region,
 		"npcs": Npcs.to_dict(npcs),
 		"npc_favor": npc_favor.duplicate(),
@@ -1597,6 +1621,10 @@ func load_save_dict(d: Dictionary) -> void:
 	CreationArtifact.ensure(player, data)
 	world_flags = d.get("world_flags", {})
 	auctions = d.get("auctions", {})
+	world_events = []
+	for instance in d.get("world_events", []):
+		if instance is Dictionary and data.world_events.has(String(instance.get("id", ""))):
+			world_events.append({"id": String(instance["id"]), "region": String(instance.get("region", "")), "start_day": int(instance.get("start_day", 0)), "end_day": int(instance.get("end_day", 0))})
 	current_region = d.get("region", data.start_region)
 	npcs = Npcs.from_dict(d.get("npcs", {}))
 	Npcs.ensure_all(npcs, data, rng)
@@ -1688,6 +1716,7 @@ func _on_days_advanced(days: int) -> void:
 	var months := player.age_days / Calendar.DAYS_PER_MONTH - age_before / Calendar.DAYS_PER_MONTH
 	for i in months:
 		_sect_month_end()
+		_world_events_month()
 	for event in Training.advance(player, npcs, data, months, ClanEstate.training_multiplier(clan, data)):
 		EventBus.post(event["text"], event["category"])
 	for repaid in Karma.repay_debts(player, npcs, data, months, rng, world_flags):

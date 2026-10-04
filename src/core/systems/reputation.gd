@@ -73,11 +73,12 @@ static func price_multiplier(c: CharacterData, data: GameData, sect_id: String) 
 
 
 ## What `item_id` costs `c` at a merchant affiliated with `sect_id` (never below 1).
-static func buy_price(c: CharacterData, data: GameData, item_id: String, sect_id: String) -> int:
+## `market_mult` is the region's world-event price multiplier (WorldEvents).
+static func buy_price(c: CharacterData, data: GameData, item_id: String, sect_id: String, market_mult: float = 1.0) -> int:
 	var base := int(data.items.get(item_id, {}).get("price", 0))
 	if base <= 0:
 		return 0
-	return maxi(1, roundi(base * price_multiplier(c, data, sect_id)))
+	return maxi(1, roundi(base * price_multiplier(c, data, sect_id) * market_mult))
 
 
 ## Why `sect_id` refuses `c` on reputation grounds, or "".
