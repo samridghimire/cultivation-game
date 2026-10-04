@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-04 [VIS-005] Generated NPCs now spread across each region instead of crowding the spawn point; a screenshot tool (tests/sim/screenshot_regions.gd) renders every region headless under xvfb.
 - 2026-10-04 [VIS-004, W-005e] Placeholder art for clinics, temples, secret realm rifts (glowing while open), the auction house, inheritance steles and cave abodes; artifact anchor places sit on a golden ring, and the HUD notes when a secret realm is open nearby.
 - 2026-10-04 [W-006b, W-006c] Inheritance grounds are now in the world: every region has one (a village founder's well, the Fist Saint's cairn, a sword immortal's cave, a blood merchant's vault, the Corpse Lord's altar), each listing its trials, what they test and how dangerous their guardians are.
 - 2026-10-04 [RIV-003] Enemies hunt you: people who hold a strong grudge (or whose kin you wronged) may ambush you on the road, and someone who owes you a debt may arrive to fight at your side.

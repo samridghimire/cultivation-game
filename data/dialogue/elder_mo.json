@@ -29,7 +29,7 @@
       "choices": [{"label": "I see.", "next": "first_steps"}]},
     "trades_info": {"text": "Alchemists refine pills and are never poor. Blacksmiths forge the swords everyone else dies holding. Talisman masters, array masters, doctors... The workshop will let you try them. Learn recipes from scrolls the merchants sell, and gather herbs and ores in the Misty Forest.",
       "choices": [{"label": "I see.", "next": "first_steps"}]},
-    "chores_info": {"text": "Headman Zhou always has chores no one else wants: herbs for the clinic, a boar in the fields, Widow Chen's roof. Small work for small pay, but a good name in the village is worth something. Find him near the temple.",
+    "chores_info": {"text": "Headman Zhou always has chores no one else wants: herbs for the clinic, a boar in the fields, Widow Chen's roof. Small work for small pay, but a good name in the village is worth something. Find him up by the old well, north of the crossroads.",
       "choices": [{"label": "I will see him.", "next": "first_steps"}]},
     "world": {"text": "East lies the Misty Forest, rich in herbs and beasts. Beyond it the Fallen Star Market, where rogue cultivators trade. Azure Peak is no place for those still in Qi Refining's lower layers.",
       "choices": [{"label": "I understand.", "next": "greet"}]},
