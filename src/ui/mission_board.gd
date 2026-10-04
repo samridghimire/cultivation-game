@@ -2,14 +2,18 @@ class_name MissionBoard
 extends PanelContainer
 ## Modal sect mission board, opened from the sect hall: the missions the
 ## player's sect offers on the left; kind, duration, hand-in items (have/need),
-## enemy danger, rewards and cooldown on the right, with a Take button. All
-## rules live in Sects / GameState.take_mission.
+## enemy danger, rewards and cooldown on the right, with a Take button. A second
+## "Treasury" tab is the sect's contribution shop (G-008e): items with cost and
+## minimum rank, bought with GameState.buy_with_contribution. All rules live in
+## Sects / GameState.
 
 signal closed
 
 const KIND_NAMES := {"gather": "Gathering", "hunt": "Hunt", "deliver": "Delivery", "guard": "Escort"}
 
 var _title: Label
+var _missions_tab: Button
+var _shop_tab: Button
 var _list: VBoxContainer
 var _name: Label
 var _info: Label
@@ -20,6 +24,8 @@ var _status: Label
 var _take_button: Button
 var _close_button: Button
 var _selected := ""
+## "missions" or "shop" (the contribution treasury).
+var _tab := "missions"
 
 
 func _init() -> void:
@@ -31,6 +37,14 @@ func _init() -> void:
 	add_child(box)
 	_title = UIStyle.label("", 24, UIStyle.ACCENT)
 	box.add_child(_title)
+	var tabs := HBoxContainer.new()
+	tabs.add_theme_constant_override("separation", 8)
+	box.add_child(tabs)
+	_missions_tab = UIStyle.button("Missions", _set_tab.bind("missions"))
+	_shop_tab = UIStyle.button("Treasury", _set_tab.bind("shop"))
+	for b: Button in [_missions_tab, _shop_tab]:
+		b.toggle_mode = true
+		tabs.add_child(b)
 
 	var columns := HBoxContainer.new()
 	columns.add_theme_constant_override("separation", 16)
@@ -59,7 +73,7 @@ func _init() -> void:
 	details.add_child(_rewards)
 	_status = _wrapped(UIStyle.label("", 15, UIStyle.CATEGORY_COLORS["warning"]))
 	details.add_child(_status)
-	_take_button = UIStyle.button("Take mission", _take)
+	_take_button = UIStyle.button("Take mission", _act)
 	_take_button.name = "Take"
 	details.add_child(_take_button)
 
@@ -81,6 +95,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func open() -> void:
 	_selected = ""
+	_tab = "missions"
 	_rebuild()
 	visible = true
 	_focus_selected.call_deferred()
@@ -121,16 +136,102 @@ static func requirement_lines(c: CharacterData, data: GameData, mission: Diction
 	return lines
 
 
-func _rebuild() -> void:
-	var p := GameState.player
-	var data := GameState.data
+## "Costs 40 contribution  |  Inner Disciple or above" for a shop entry.
+static func shop_info_text(c: CharacterData, data: GameData, entry: Dictionary) -> String:
+	var parts: PackedStringArray = ["Costs %d contribution" % int(entry.get("contribution", 0))]
+	var min_rank := int(entry.get("min_rank", 0))
+	if min_rank > 0 and not c.is_rogue():
+		parts.append("%s or above" % (data.sects[c.sect["id"]] as SectDef).rank_name(min_rank))
+	var owned := c.item_count(String(entry.get("item_id", "")))
+	if owned > 0:
+		parts.append("you carry %d" % owned)
+	return "  |  ".join(parts)
+
+
+## What a shop item does: its effects, or its equipment slot and stats.
+static func shop_item_lines(c: CharacterData, data: GameData, item_id: String) -> PackedStringArray:
+	if Equipment.is_equipment(data, item_id):
+		return InventoryScreen.describe_equipment(c, data, item_id)
+	return InventoryScreen.describe_effects(data.items.get(item_id, {}).get("effects", {}), data)
+
+
+func _set_tab(tab: String) -> void:
+	_missions_tab.set_pressed_no_signal(tab == "missions")
+	_shop_tab.set_pressed_no_signal(tab == "shop")
+	if tab == _tab:
+		return
+	_tab = tab
+	_selected = ""
+	_rebuild()
+	_focus_selected.call_deferred()
+
+
+func _clear_list() -> void:
 	for child in _list.get_children():
 		_list.remove_child(child)
 		child.queue_free()
-	var ids := Sects.available_missions(p, data)
+
+
+func _add_entry(id: String, label: String, available: bool) -> void:
+	var b := UIStyle.button(label, _select.bind(id))
+	b.name = id
+	b.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	b.toggle_mode = true
+	b.button_pressed = id == _selected
+	b.focus_entered.connect(_select.bind(id))
+	if not available:
+		b.modulate = Color(1, 1, 1, 0.6)
+	_list.add_child(b)
+
+
+func _add_hint(text: String) -> void:
+	var hint := _wrapped(UIStyle.label(text, 16, Color(0.7, 0.7, 0.7)))
+	hint.custom_minimum_size = Vector2(300, 0)
+	_list.add_child(hint)
+
+
+func _rebuild() -> void:
+	var p := GameState.player
+	var data := GameState.data
+	_clear_list()
+	_missions_tab.set_pressed_no_signal(_tab == "missions")
+	_shop_tab.set_pressed_no_signal(_tab == "shop")
 	_title.text = "Mission Board"
 	if not p.is_rogue():
-		_title.text = "%s Mission Board   (contribution %d)" % [(data.sects[p.sect["id"]] as SectDef).name, int(p.sect["contribution"])]
+		_title.text = "%s Mission Board   (contribution %d, %d to spend)" % [(data.sects[p.sect["id"]] as SectDef).name, int(p.sect["contribution"]), Sects.contribution_balance(p)]
+	if _tab == "shop":
+		_rebuild_shop()
+	else:
+		_rebuild_missions()
+
+
+func _rebuild_shop() -> void:
+	var p := GameState.player
+	var data := GameState.data
+	var ids: Array[String] = []
+	for entry in Sects.shop_items(p, data):
+		ids.append(String(entry["item_id"]))
+	if not ids.has(_selected):
+		_selected = ""
+		for item_id in ids:
+			if Sects.check_purchase(p, data, item_id) == "":
+				_selected = item_id
+				break
+		if _selected == "" and not ids.is_empty():
+			_selected = ids[0]
+	if ids.is_empty():
+		_add_hint("The sect treasury has nothing to offer you.")
+	for item_id in ids:
+		var entry := Sects.shop_entry(p, data, item_id)
+		var label := "%s (%d)" % [data.items.get(item_id, {}).get("name", item_id), int(entry["contribution"])]
+		_add_entry(item_id, label, Sects.check_purchase(p, data, item_id) == "")
+	_show_details()
+
+
+func _rebuild_missions() -> void:
+	var p := GameState.player
+	var data := GameState.data
+	var ids := Sects.available_missions(p, data)
 	if not ids.has(_selected):
 		_selected = ""
 		for mission_id in ids:
@@ -140,24 +241,14 @@ func _rebuild() -> void:
 		if _selected == "" and not ids.is_empty():
 			_selected = ids[0]
 	if ids.is_empty():
-		var hint := _wrapped(UIStyle.label("No missions are posted for you. Only sect disciples receive sect missions.", 16, Color(0.7, 0.7, 0.7)))
-		hint.custom_minimum_size = Vector2(300, 0)
-		_list.add_child(hint)
+		_add_hint("No missions are posted for you. Only sect disciples receive sect missions.")
 	for mission_id in ids:
 		var mission: Dictionary = data.sect_missions[mission_id]
 		var label := String(mission["name"])
 		var wait := Sects.mission_cooldown_left(p, mission_id)
 		if wait > 0:
 			label += " (in %s)" % Calendar.format_duration(wait)
-		var b := UIStyle.button(label, _select.bind(mission_id))
-		b.name = mission_id
-		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
-		b.toggle_mode = true
-		b.button_pressed = mission_id == _selected
-		b.focus_entered.connect(_select.bind(mission_id))
-		if Sects.check_mission(p, data, mission_id) != "":
-			b.modulate = Color(1, 1, 1, 0.6)
-		_list.add_child(b)
+		_add_entry(mission_id, label, Sects.check_mission(p, data, mission_id) == "")
 	_show_details()
 
 
@@ -172,6 +263,10 @@ func _select(mission_id: String) -> void:
 
 
 func _show_details() -> void:
+	if _tab == "shop":
+		_show_shop_details()
+		return
+	_take_button.text = "Take mission"
 	var p := GameState.player
 	var data := GameState.data
 	var mission: Dictionary = data.sect_missions.get(_selected, {})
@@ -194,6 +289,44 @@ func _show_details() -> void:
 	if reason == "" and cooldown > 0:
 		_status.text = "Offered again %s after you take it." % Calendar.format_duration(cooldown)
 	_take_button.disabled = reason != ""
+
+
+func _show_shop_details() -> void:
+	var p := GameState.player
+	var data := GameState.data
+	var entry := Sects.shop_entry(p, data, _selected)
+	for c in [_name, _info, _description, _requirements, _rewards, _status, _take_button]:
+		c.visible = not entry.is_empty()
+	if entry.is_empty():
+		return
+	var item: Dictionary = data.items.get(_selected, {})
+	_name.text = String(item.get("name", _selected))
+	_info.text = shop_info_text(p, data, entry)
+	_description.text = String(item.get("description", ""))
+	_requirements.visible = false
+	var lines := shop_item_lines(p, data, _selected)
+	_rewards.visible = not lines.is_empty()
+	_rewards.text = "\n".join(lines)
+	var reason := Sects.check_purchase(p, data, _selected)
+	_status.text = reason
+	_status.visible = reason != ""
+	_take_button.text = "Buy"
+	_take_button.disabled = reason != ""
+
+
+func _act() -> void:
+	if _tab == "shop":
+		_buy()
+	else:
+		_take()
+
+
+func _buy() -> void:
+	if _selected == "":
+		return
+	GameState.buy_with_contribution(_selected)
+	if visible:
+		_focus_selected.call_deferred()
 
 
 func _take() -> void:

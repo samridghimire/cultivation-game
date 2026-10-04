@@ -111,8 +111,10 @@ static func is_eligible(c: CharacterData, data: GameData) -> bool:
 
 ## Tops every region up to data/family.json eligible_npcs.per_gender eligible
 ## generated NPCs of each gender, so every region has courtship candidates.
-## Realms come from realms_by_danger for the region's danger. Returns the new NPCs.
-static func ensure_eligible(npcs: Dictionary, data: GameData, rng: RandomNumberGenerator) -> Array[CharacterData]:
+## Realms come from realms_by_danger for the region's danger. NPCs in `exclude`
+## (the player's own descendants) are not candidates and do not fill a slot.
+## Returns the new NPCs.
+static func ensure_eligible(npcs: Dictionary, data: GameData, rng: RandomNumberGenerator, exclude: Array[String] = []) -> Array[CharacterData]:
 	var rules: Dictionary = data.family.get("eligible_npcs", {})
 	var by_danger: Array = rules.get("realms_by_danger", [])
 	var spawned: Array[CharacterData] = []
@@ -123,18 +125,22 @@ static func ensure_eligible(npcs: Dictionary, data: GameData, rng: RandomNumberG
 	for region_id in region_ids:
 		var counts := {}
 		for c: CharacterData in npcs.values():
-			if region_of(c, data) == region_id and is_eligible(c, data):
+			if region_of(c, data) == region_id and is_eligible(c, data) and not exclude.has(c.id):
 				counts[c.gender] = int(counts.get(c.gender, 0)) + 1
 		var realms: Array = by_danger[clampi(int(data.regions[region_id].get("danger", 0)), 0, by_danger.size() - 1)]
 		for gender in Names.genders(data):
 			for i in range(int(counts.get(gender, 0)), int(rules.get("per_gender", 0))):
-				spawned.append(spawn(npcs, data, rng, {
+				var c := spawn(npcs, data, rng, {
 					"gender": gender,
 					"region": region_id,
 					"age_years": rng.randi_range(int(rules.get("age_min", 16)), int(rules.get("age_max", 30))),
 					"realm": String(realms[rng.randi_range(0, realms.size() - 1)]),
 					"proud": rng.randf() < float(rules.get("proud_chance", 0.0)),
-				}))
+				})
+				# A rare candidate carries a bloodline, so players can marry into one.
+				if rules.has("bloodline_chance") and rng.randf() < float(rules["bloodline_chance"]):
+					Bloodlines.grant(c, data, Bloodlines.roll_any(data, rng))
+				spawned.append(c)
 	return spawned
 
 
@@ -172,14 +178,23 @@ static func simulate(npcs: Dictionary, data: GameData, days: int, rng: RandomNum
 	return events
 
 
+## Marks NPC `c` dead of `cause`. An unborn child dies with its mother: the
+## pregnancy ends. Returns true if a pregnancy was lost. Every NPC death goes
+## through here.
+static func die(c: CharacterData, cause: String) -> bool:
+	c.alive = false
+	c.cause_of_death = cause
+	if not Children.is_pregnant(c):
+		return false
+	c.pregnancy = {}
+	return true
+
+
 static func _live(c: CharacterData, data: GameData, days: int, rng: RandomNumberGenerator, events: Array[Dictionary]) -> void:
 	c.age_days += days
 	if c.age_years() >= Cultivation.lifespan_years(c, data):
-		c.alive = false
-		c.cause_of_death = "old age"
 		var text := "News arrives: %s has died of old age at %d." % [c.name, c.age_years()]
-		if Children.is_pregnant(c):
-			c.pregnancy = {}  # the unborn child dies with its mother
+		if die(c, "old age"):
 			text += " The unborn child is lost as well."
 		events.append({"npc_id": c.id, "text": text, "category": "warning"})
 		return
@@ -193,11 +208,12 @@ static func _live(c: CharacterData, data: GameData, days: int, rng: RandomNumber
 		return
 	Cultivation.cultivate(c, data, days, Exploration.qi_density(data, region_of(c, data)) * diligence_of(c, data))
 	if Cultivation.can_attempt_breakthrough(c, data):
-		var result := Cultivation.attempt_breakthrough(c, data, rng)
+		var result := Cultivation.attempt_breakthrough(c, data, rng, true)
 		if result["died"]:
-			c.alive = false
-			c.cause_of_death = "heavenly tribulation"
-			events.append({"npc_id": c.id, "text": "Heaven's lightning falls: %s perished in the tribulation of %s." % [c.name, result["realm_name"]], "category": "warning"})
+			var text := "Heaven's lightning falls: %s perished in the tribulation of %s." % [c.name, result["realm_name"]]
+			if die(c, "heavenly tribulation"):
+				text += " The unborn child is lost as well."
+			events.append({"npc_id": c.id, "text": text, "category": "warning"})
 			return
 		# Mortal to Qi Refining is routine; only report real breakthroughs.
 		if result["success"] and c.realm_index > 1:
@@ -287,6 +303,9 @@ static func describe(c: CharacterData, data: GameData) -> String:
 		text += ", cultivating at %s" % Cultivation.realm_label(c, data)
 	if not c.spouses.is_empty():
 		text += ", married"
+	# An awakened bloodline shakes heaven and earth; a dormant one is hidden.
+	if c.bloodline_awakened and data.bloodlines.has(c.bloodline):
+		text += ", bearing the awakened %s" % Bloodlines.bloodline_name(data, c.bloodline)
 	return text + "."
 
 

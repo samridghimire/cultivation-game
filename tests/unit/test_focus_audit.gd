@@ -51,6 +51,7 @@ func test_every_hud_screen_has_focus_and_closes_on_cancel() -> void:
 	var c := new_character()
 	c.add_item("qi_gathering_pill", 1)
 	gs.start_session(c)
+	gs.pending_event = ""  # skip the intro story event (ART-006b); its window would hold the input
 	var hud: CanvasLayer = load("res://src/ui/hud.tscn").instantiate()
 	root.add_child(hud)
 	await _frames()

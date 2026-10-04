@@ -110,3 +110,65 @@ func test_game_state_set_main_method_takes_time() -> void:
 	assert_eq(clock.total_days, days_before + gs.data.method_switch_days)
 	gs.end_session()
 
+
+
+# --- CM-001c: method content ---
+
+## Where a manual comes from: a shop price, a sect contribution shop, or an
+## encounter outcome (including choices).
+func _manual_sources(d: GameData, item_id: String) -> PackedStringArray:
+	var sources: PackedStringArray = []
+	if int(d.items.get(item_id, {}).get("price", 0)) > 0:
+		sources.append("shop")
+	for sect: SectDef in d.sects.values():
+		for entry: Dictionary in sect.shop:
+			if entry["item_id"] == item_id:
+				sources.append(sect.id)
+	for e: Dictionary in d.encounters.values():
+		for effects: Dictionary in [e.get("effects", {})] + e.get("choices", []).map(func(ch: Dictionary) -> Dictionary: return ch.get("effects", {})):
+			if effects.get("items", {}).has(item_id):
+				sources.append(e["id"])
+	return sources
+
+
+func test_every_method_can_be_obtained_and_better_ones_wait_higher_up() -> void:
+	var d := data()
+	var elements := {}
+	var cap_by_method := {}
+	for def: TechniqueDef in d.techniques.values():
+		if not def.is_method() or def.id == d.starter_method:
+			continue
+		elements[def.element] = true
+		assert_true(def.manual_item != "", "%s needs a manual" % def.id)
+		assert_false(_manual_sources(d, def.manual_item).is_empty(), "%s cannot be obtained" % def.manual_item)
+		cap_by_method[def.id] = d.realm_index_of(def.max_realm) if def.max_realm != "" else 99
+	assert_gt(cap_by_method.size(), 8)
+	for element in ["metal", "wood", "water", "fire", "earth"]:
+		assert_true(elements.has(element), "a method for %s roots" % element)
+	# Entry methods stop at Foundation Establishment; rarer ones carry further.
+	assert_true(cap_by_method.values().has(d.realm_index_of("foundation_establishment")))
+	assert_true(cap_by_method.values().has(d.realm_index_of("core_formation")))
+	assert_true(cap_by_method.values().has(d.realm_index_of("nascent_soul")))
+	# Each sect hands out its own method.
+	for sect_id in ["azure_cloud_sect", "blood_lotus_sect", "myriad_treasure_pavilion"]:
+		var has_method := false
+		for entry: Dictionary in d.sects[sect_id].shop:
+			var tech_id: String = d.items.get(entry["item_id"], {}).get("effects", {}).get("learn_technique", "")
+			if tech_id != "" and d.techniques[tech_id].is_method():
+				has_method = true
+		assert_true(has_method, "%s sells a method for contribution" % sect_id)
+
+
+func test_thunder_trial_has_a_costly_path_below_core_formation() -> void:
+	var d := data()
+	var c := new_character()
+	c.realm_index = 2
+	var list := Exploration.choices(c, d, d.encounters["ruins_thunder_inheritance"], {})
+	assert_true(list[0]["disabled"], "the true trial needs Core Formation")
+	assert_false(list[1]["disabled"], "a Foundation cultivator can pay in lifespan")
+	var flags := {}
+	var before := Cultivation.years_left(c, d)
+	assert_true(Exploration.resolve_choice(c, d, d.encounters["ruins_thunder_inheritance"], 1, flags)["ok"])
+	assert_eq(c.item_count("manual_nine_heavens_thunder"), 1)
+	assert_eq(Cultivation.years_left(c, d), before - 15)
+	assert_true(flags.get("found_nine_heavens_thunder", false))

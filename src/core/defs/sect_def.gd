@@ -11,7 +11,7 @@ var max_alignment := 1000
 var min_realm := "mortal"
 var cultivation_bonus := 1.0
 var favored_professions: PackedStringArray = []
-var ranks: Array[Dictionary] = []  # [{name, contribution}], ascending
+var ranks: Array[Dictionary] = []  # [{name, contribution, min_realm?, trial?, stipend?, monthly_duty?}], ascending
 var robe_color := ""  # hex; "" = the default rogue robe
 ## Reputation (Reputation system) needed to join.
 var reputation_min_join := -1000000
@@ -39,15 +39,6 @@ static func from_dict(d: Dictionary) -> SectDef:
 	s.reputation_deed_scale = float(rep.get("deed_scale", 0))
 	s.shop.assign(d.get("shop", []))
 	return s
-
-
-## Highest rank index whose contribution threshold has been reached.
-func rank_for_contribution(contribution: int) -> int:
-	var result := 0
-	for i in ranks.size():
-		if contribution >= int(ranks[i].get("contribution", 0)):
-			result = i
-	return result
 
 
 func rank_name(rank: int) -> String:

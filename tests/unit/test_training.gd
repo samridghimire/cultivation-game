@@ -121,6 +121,23 @@ func test_giving_a_pill_to_a_child() -> void:
 	assert_gt(child.qi + child.stage * 100000.0, qi_before)
 
 
+func test_qi_pills_are_not_wasted_on_children_who_cannot_cultivate() -> void:
+	var f := _family()
+	var parent: CharacterData = f["parent"]
+	var child: CharacterData = f["child"]
+	parent.add_item("qi_gathering_pill", 1)
+	child.spiritual_roots = {}
+	assert_true(Training.check_give(parent, child, "qi_gathering_pill", data()).contains("spiritual roots"))
+	assert_false(Training.give(parent, child, "qi_gathering_pill", data(), {})["ok"])
+	assert_eq(parent.item_count("qi_gathering_pill"), 1, "the pill is kept")
+	child.spiritual_roots = {"fire": 60}
+	child.age_days = (Children.cultivation_start_age(data()) - 1) * Calendar.DAYS_PER_YEAR
+	assert_true(Training.check_give(parent, child, "qi_gathering_pill", data()).contains("too young"))
+	parent.add_item("bone_setting_salve", 1)
+	child.injuries = {"broken_bones": 30}
+	assert_eq(Training.check_give(parent, child, "bone_setting_salve", data()), "", "healing pills still work for any child")
+
+
 func test_training_survives_save_round_trip() -> void:
 	var f := _family()
 	Training.assign(f["parent"], f["child"], "profession", "doctor", data())

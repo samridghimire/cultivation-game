@@ -1,5 +1,5 @@
 extends Node
-## Player preferences (window mode, UI scale, volume, HUD hints) persisted to
+## Player preferences (window mode, UI scale, volume, HUD hints, fast time skips) persisted to
 ## user://settings.cfg and applied on boot. Change values with set_value() so
 ## they are applied and saved together.
 
@@ -18,6 +18,8 @@ const DEFAULTS := {
 	"music_volume": 0.7,
 	"sfx_volume": 0.8,
 	"show_hints": true,
+	# Skip the time-skip overlay after meditation, travel... (UI-010).
+	"fast_time_skips": false,
 }
 
 var path := DEFAULT_PATH
@@ -60,6 +62,8 @@ static func sanitize(key: String, value: Variant) -> Variant:
 			return clampf(float(value), UI_SCALE_RANGE.x, UI_SCALE_RANGE.y)
 		"show_hints":
 			return value if value is bool else DEFAULTS["show_hints"]
+		"fast_time_skips":
+			return (value is bool and value) or str(value).to_lower() == "true"
 		_:
 			return clampf(float(value), 0.0, 1.0)
 
