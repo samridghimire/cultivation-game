@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-04 [FAM-009] NPC clans: the Zhao (Qingshi Village), Mo (Fallen Star Market) and Yun (Azure Peak) clans are founded at game start as real NPC families (data/clans.json); when a clan head dies the heir takes over and the news reaches you, and a clan whose line ends dies out. Older saves gain the clans on load.
 - 2026-10-04 [FAM-008] Clan heirs: the main wife's eldest child is the heir by default (concubines' children next, adopted last); the Patriarch can name any descendant in the clan as Young Master/Mistress (GameState.designate_heir), and Clans.succeed passes an NPC clan to its heir when the head dies.
 - 2026-10-03 [W-003b] Dialogue window: talking to a named NPC opens a conversation window (speaker, line, choices; locked choices show why, e.g. "Need 10 spirit stones"), gamepad-focusable, Esc/B ends the conversation. Replaces the inline choice-menu fallback in-game.
 - 2026-10-03 [LIFE-001f] The Shadow Curio Den in Fallen Star Market sells the lifespan-draining evil artifacts, but only to players at alignment -200 or below; demonic goods never show up at ordinary smithies (items.json restricted_tags, merchant alignment bounds).
