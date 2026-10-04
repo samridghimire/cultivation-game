@@ -1783,6 +1783,9 @@ func _on_days_advanced(days: int) -> void:
 		Npcs.ensure_eligible(npcs, data, rng, Children.descendants(player, npcs))  # keep courtship candidates in every region
 	for event in NpcClans.simulate(npc_clans, npcs, data):
 		EventBus.post(event["text"], event["category"])
+	@warning_ignore("integer_division")
+	if player.age_years() > age_before / Calendar.DAYS_PER_YEAR:
+		_prune_dead_npcs()
 	_advance_pregnancies(days)
 	for legacy: Dictionary in data.inheritances.values():
 		if Inheritances.lost_between(legacy, GameClock.total_days - days, GameClock.total_days, world_flags):
@@ -1804,6 +1807,27 @@ func _on_days_advanced(days: int) -> void:
 		EventBus.post(line, "progress")
 	if player.age_years() >= Cultivation.lifespan_years(player, data):
 		_kill("Your lifespan is exhausted. You die of old age at %d." % player.age_years())
+
+
+## Forgets generated NPCs long dead whom the player has no tie to, so saves
+## do not grow forever (FAM-013b, family.json npc_families.prune_dead_years).
+func _prune_dead_npcs() -> void:
+	var years := int(NpcFamilies.rules(data).get("prune_dead_years", 0))
+	if years <= 0:
+		return
+	var keep := npc_favor.duplicate()
+	for id in player.parents + player.children + player.spouses:
+		keep[id] = true
+	for id in player.grudges.keys() + player.gratitude.keys():
+		keep[id] = true
+	keep[player.rival] = true
+	if clan != null:
+		keep[clan.heir] = true
+		for id in clan.members:
+			keep[id] = true
+	for id in Children.descendants(player, npcs):
+		keep[id] = true
+	Npcs.prune(npcs, keep, years * Calendar.DAYS_PER_YEAR)
 
 
 ## Pays the sect stipend for the month that just ended (if the duty was met).

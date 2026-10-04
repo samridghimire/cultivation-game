@@ -5,7 +5,8 @@ extends SceneTree
 ## off-screen marriages), with no player. Reports, every `report_every` years:
 ## living / total NPCs, married couples, births and deaths so far, the deepest
 ## generation alive, the save size of the NPC table, and the realm spread of
-## living first-generation NPCs vs. those born in the sim.
+## living first-generation NPCs vs. those born in the sim. Long-dead NPCs are
+## pruned yearly like GameState does (FAM-013b, npc_families.prune_dead_years).
 ## Usage: tools/godot.sh --headless --path . -s res://tests/sim/simulate_generations.gd -- [years] [seed] [report_every]
 
 
@@ -43,6 +44,9 @@ func _run() -> void:
 					married_off = true
 		if married_off:
 			Npcs.ensure_eligible(npcs, data, rng)  # as GameState._on_days_advanced does
+		var prune_years := int(NpcFamilies.rules(data).get("prune_dead_years", 0))
+		if prune_years > 0:
+			Npcs.prune(npcs, {}, prune_years * Calendar.DAYS_PER_YEAR)
 		if year % report_every == 0 or year == years:
 			_report(year, npcs, data, founders, births, marriages)
 	print("Done in %.1f s." % ((Time.get_ticks_msec() - started) / 1000.0))
