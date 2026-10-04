@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-04 [FAM-009c] NPCs can belong to sects: clan youths join sects at founding, sect disciples cultivate faster and rise in rank as they break through, and you can send your children (12+) to a sect from the family screen.
 - 2026-10-04 [FAM-009b] Clan relations: NPC clans remember deeds against their members (a killing can start a blood feud and a hunt), warm to gifts and healing, scale favor by standing, and form marriage alliances with you and each other.
 - 2026-10-04 [FAM-010] Family tree screen from the character sheet: relatives by generation with realm, roots, bloodline, favor, clan rank and training, plus Training and Name-as-heir actions.
 - 2026-10-04 [W-005f] Secret realms are contested: rival cultivators fight you for floors (spare them and they remember your mercy), and if you leave a realm unfinished when it closes, a rival may carry off its inheritance forever.

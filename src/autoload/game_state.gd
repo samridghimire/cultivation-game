@@ -1093,6 +1093,37 @@ func _advance_estate(days: int, months: int) -> void:
 		EventBus.post("Your clan's spirit fields send you %s." % ", ".join(parts))
 
 
+## Send one of the player's children to a sect as a disciple (FAM-009c).
+func send_child_to_sect(child_id: String, sect_id: String) -> void:
+	EventBus.topic = "family"
+	if not _can_act():
+		return
+	var child: CharacterData = npcs.get(child_id)
+	var result := Sects.send_child(player, child, data, sect_id)
+	if not result["ok"]:
+		EventBus.post(result["reason"], "warning")
+		EventBus.player_changed.emit()
+		return
+	EventBus.post("You escort %s to the %s. %s is now %s." % [child.name, (data.sects[sect_id] as SectDef).name, child.name, Sects.member_text(child, data)], "progress")
+	_pass_time(result["days"])
+
+
+## Call one of the player's children home from their sect. Takes no time.
+func recall_child_from_sect(child_id: String) -> void:
+	EventBus.topic = "family"
+	if not _can_act():
+		return
+	var child: CharacterData = npcs.get(child_id)
+	if child == null or not player.children.has(child_id) or child.is_rogue():
+		EventBus.post("They are not in a sect.", "warning")
+		EventBus.player_changed.emit()
+		return
+	var sect_name := (data.sects[child.sect["id"]] as SectDef).name if data.sects.has(String(child.sect["id"])) else "sect"
+	Sects.leave(child)
+	EventBus.post("%s leaves the %s and returns home." % [child.name, sect_name])
+	EventBus.player_changed.emit()
+
+
 ## Name one of the player's descendants in the clan as its heir (Young
 ## Master/Mistress). Takes no time.
 func designate_heir(person_id: String) -> void:

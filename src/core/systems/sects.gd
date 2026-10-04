@@ -50,6 +50,86 @@ static func add_contribution(c: CharacterData, data: GameData, amount: int) -> b
 	return auto_promote(c, data)
 
 
+# --- NPC members (FAM-009c) ----------------------------------------------------
+
+static func _entry_rules(data: GameData) -> Dictionary:
+	return data.family.get("sect_entry", {})
+
+
+## An NPC's rank in `sect_id` from their realm: the highest rank whose min_realm
+## they reach (ranks without one only count as the first).
+static func npc_rank(data: GameData, sect_id: String, realm_index: int) -> int:
+	var sect: SectDef = data.sects.get(sect_id)
+	if sect == null:
+		return 0
+	var rank := 0
+	for i in sect.ranks.size():
+		var min_realm := String(sect.ranks[i].get("min_realm", ""))
+		if min_realm != "" and realm_index >= data.realm_index_of(min_realm):
+			rank = i
+	return rank
+
+
+## Puts NPC `c` into `sect_id` at the rank their realm earns.
+static func npc_join(c: CharacterData, data: GameData, sect_id: String) -> void:
+	c.sect = {"id": sect_id, "rank": npc_rank(data, sect_id, c.realm_index), "contribution": 0}
+
+
+## Raises NPC `c`'s sect rank after a breakthrough. True if it rose.
+static func npc_promote(c: CharacterData, data: GameData) -> bool:
+	if c.is_rogue() or not data.sects.has(String(c.sect["id"])):
+		return false
+	var rank := npc_rank(data, String(c.sect["id"]), c.realm_index)
+	if rank <= int(c.sect["rank"]):
+		return false
+	c.sect["rank"] = rank
+	return true
+
+
+## Sect ids (sorted) that would accept `c` (Sects.check_join).
+static func accepting_sects(c: CharacterData, data: GameData) -> Array[String]:
+	var out: Array[String] = []
+	for sect_id in data.sects:
+		if check_join(c, data, sect_id)["ok"]:
+			out.append(String(sect_id))
+	out.sort()
+	return out
+
+
+## "an Outer Disciple of the Azure Cloud Sect" for a sect member, else "".
+static func member_text(c: CharacterData, data: GameData) -> String:
+	if c.is_rogue() or not data.sects.has(String(c.sect["id"])):
+		return ""
+	var sect: SectDef = data.sects[c.sect["id"]]
+	return "%s of the %s" % [Text.a(sect.rank_name(int(c.sect["rank"]))), sect.name]
+
+
+## Why `parent` cannot send their child `child` to `sect_id`, or "".
+static func check_send_child(parent: CharacterData, child: CharacterData, data: GameData, sect_id: String) -> String:
+	if child == null or not child.alive or not parent.children.has(child.id):
+		return "Only your own living children can be sent to a sect."
+	if not data.sects.has(sect_id):
+		return "No such sect."
+	if not child.is_rogue():
+		return "%s already belongs to the %s." % [child.name, (data.sects[child.sect["id"]] as SectDef).name]
+	var min_age := int(_entry_rules(data).get("min_age_years", 12))
+	if child.age_years() < min_age:
+		return "%s is too young; sects take disciples from age %d." % [child.name, min_age]
+	var check := check_join(child, data, sect_id)
+	if not check["ok"]:
+		return "%s: %s" % [child.name, check["reason"]]
+	return ""
+
+
+## Sends `child` to `sect_id`. Returns {ok, reason, days}.
+static func send_child(parent: CharacterData, child: CharacterData, data: GameData, sect_id: String) -> Dictionary:
+	var reason := check_send_child(parent, child, data, sect_id)
+	if reason != "":
+		return {"ok": false, "reason": reason, "days": 0}
+	npc_join(child, data, sect_id)
+	return {"ok": true, "reason": "", "days": int(_entry_rules(data).get("days", 1))}
+
+
 static func cultivation_bonus(c: CharacterData, data: GameData) -> float:
 	if c.is_rogue():
 		return 1.0
