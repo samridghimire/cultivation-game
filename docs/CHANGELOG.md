@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-04 [UI-003b] The title screen has a Help button: read the controls and the beginner guide pages before starting a game.
 - 2026-10-04 [RIV-001b] Looking at an NPC now tells you whether they resent, hate or have sworn to kill you, or feel grateful or indebted to you (karma.json `attitudes`); named NPCs gained a Look entry too.
 - 2026-10-04 [RIV-001d] NPC menus gain "Turn hostile...", which reveals Humiliate / Rob / Kill (fights show the danger rating, every act its alignment cost, refusals say why), and "Make amends" while someone holds a grudge; the character sheet lists your grudges and debts.
 - 2026-10-04 [W-006] Inheritance grounds: one-time trials of a fallen master's legacy (the Wandering Fist Saint's grave in the Misty Forest, the Corpse Lord's altar in the Bone Marsh) test your realm, attributes, heart and fists; claim one before the deadline or a rival takes it (GameState.attempt_inheritance). UI follows in W-006b.
