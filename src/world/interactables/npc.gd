@@ -8,11 +8,16 @@ extends Interactable
 ## Injured NPCs offer "Treat <name>'s <injury>" (G-007d, Medicine.check_treat_npc)
 ## and "Look" lists their injuries.
 ## Orphaned children offer "Adopt <name>" (FAM-003e, Adoption.check_adoption).
+## Hostile acts (RIV-001d: humiliate, rob, kill) hide behind a "Turn hostile"
+## entry so a stray button press never kills anyone; "Make amends" appears
+## while the NPC holds a grudge (Karma.check_act / check_amends reasons).
 
 @export var npc_id := ""
 
 ## Set when an inline conversation ends, so the menu does not restart it.
 var _just_ended := false
+## True while the hostile-act entries are shown instead of the normal menu.
+var _hostile := false
 
 
 func is_available() -> bool:
@@ -21,6 +26,8 @@ func is_available() -> bool:
 
 
 func get_options() -> Array[Dictionary]:
+	if _hostile:
+		return _hostile_options()
 	var options: Array[Dictionary] = []
 	var def: Dictionary = GameState.data.npcs.get(npc_id, {})
 	if def.is_empty():
@@ -36,6 +43,7 @@ func get_options() -> Array[Dictionary]:
 	options.append_array(_treatment_options())
 	options.append_array(_adoption_options())
 	options.append_array(_courtship_options())
+	options.append_array(_karma_options())
 	return options
 
 
@@ -69,6 +77,67 @@ func _adoption_options() -> Array[Dictionary]:
 	var label := "Adopt %s (%s)" % [child.name, Calendar.format_duration(days)]
 	options.append(_entry(label, Adoption.check_adoption(p, child, GameState.npcs, data), GameState.adopt.bind(npc_id)))
 	return options
+
+
+## "Make amends" while the NPC holds a grudge, and the "Turn hostile" entry
+## for adults who are not family (other targets would only show refusals).
+func _karma_options() -> Array[Dictionary]:
+	var options: Array[Dictionary] = []
+	var p := GameState.player
+	var data := GameState.data
+	var npc: CharacterData = GameState.npcs.get(npc_id)
+	if p == null or npc == null or data.karma.is_empty():
+		return options
+	var cost := Karma.amends_cost(p, npc_id, data)
+	if cost > 0:
+		var label := "Make amends with %s (%d stones, grudge %d)" % [npc.name, cost, Karma.grudge(p, npc_id)]
+		options.append(_entry(label, Karma.check_amends(p, npc, data), GameState.make_amends.bind(npc_id)))
+	for act_id in Karma.act_ids(data):
+		if Karma.check_act(p, npc, act_id, data) == "":
+			options.append({"label": "Turn hostile...", "action": _set_hostile.bind(true), "keep_open": true})
+			break
+	return options
+
+
+## One entry per karma act: fights show Combat.danger_label of the NPC, and
+## every entry names its alignment cost. "Back" returns to the normal menu.
+func _hostile_options() -> Array[Dictionary]:
+	var options: Array[Dictionary] = []
+	var p := GameState.player
+	var data := GameState.data
+	var npc: CharacterData = GameState.npcs.get(npc_id)
+	if p == null or npc == null or not npc.alive:
+		_hostile = false
+		return options
+	for act_id in Karma.act_ids(data):
+		var act := Karma.act(data, act_id)
+		var bits: PackedStringArray = []
+		if bool(act.get("fight", false)):
+			bits.append("fight: %s" % Combat.danger_label(p, data, Karma.npc_enemy(npc, data)))
+		if int(act.get("alignment", 0)) != 0:
+			bits.append("alignment %+d" % int(act["alignment"]))
+		var label := "%s %s" % [String(act.get("name", act_id)), npc.name]
+		if not bits.is_empty():
+			label += " [%s]" % ", ".join(bits)
+		var reason := Karma.check_act(p, npc, act_id, data)
+		options.append(_entry(label, reason, _commit_hostile.bind(act_id)))
+	options.append({"label": "Back", "action": _set_hostile.bind(false), "keep_open": true})
+	return options
+
+
+func _on_body_exited(body: Node2D) -> void:
+	super(body)
+	if body is Player:
+		_hostile = false
+
+
+func _set_hostile(on: bool) -> void:
+	_hostile = on
+
+
+func _commit_hostile(act_id: String) -> void:
+	_hostile = false
+	GameState.hostile_act(npc_id, act_id)
 
 
 ## Court and one Propose entry per spousal rank, only for NPCs the player

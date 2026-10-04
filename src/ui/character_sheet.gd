@@ -110,6 +110,12 @@ func _rebuild() -> void:
 		for line in family:
 			t += "  %s\n" % line
 		t += "\n"
+	var karma := Karma.describe(p, GameState.npcs)
+	if not karma.is_empty():
+		t += "[color=#%s]Grudges & Debts[/color]\n" % accent
+		for line in karma:
+			t += "  %s\n" % line
+		t += "\n"
 	t += "[color=#%s]Sect Reputation[/color]\n" % accent
 	for line in Reputation.describe(p, data):
 		t += "  %s\n" % line
