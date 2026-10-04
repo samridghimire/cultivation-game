@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-04 [C-003b] Scripture Pavilion: the Ten Thousand Scrolls Pavilion in Fallen Star Market now sells the mid and high technique manuals (tag scripture), village and general stores keep only starter manuals, and three new Qi Refining arts (Rippling Moon Sword, Mountain-Splitting Fist, Gold-Piercing Finger).
 - 2026-10-04 [W-005b] Secret realm entrances: a Shimmering Rift in the Misty Forest and a Sword-Scarred Rift on Azure Peak list each realm with its status and, while open, "Delve into floor N" with the guardian's danger, entry cost and days (disabled entries give the reason). The log announces a realm opening in your region, and rumors reach you of openings elsewhere that would admit you.
 - 2026-10-04 [DAO-001b] Dao insights are visible and usable: the character sheet lists each glimpsed insight (level, arts bonus, progress toward the next level, total breakthrough bonus), and meditation spots offer "Contemplate the <insight> (1 month)", disabled once fully comprehended.
 - 2026-10-04 [UI-010] Time-skip feedback: meditating, dual cultivation, profession work, travel and sect missions now show a short overlay ("Meditating... 1 month", a filling bar, then qi gained / stones earned / news count). Input is locked while it shows and any key or gamepad button dismisses it; Settings has a "Fast time skips" toggle to turn it off. New EventBus.time_skipped signal and TimeSkip helper.
