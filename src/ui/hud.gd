@@ -13,6 +13,7 @@ var _status: Label
 var _qi_bar: ProgressBar
 var _bottleneck: Label
 var _injuries: Label
+var _hint: Label
 var _log: RichTextLabel
 var _prompt: Label
 var _choice_menu: ChoiceMenu
@@ -28,6 +29,7 @@ var _load_screen: LoadScreen
 var _help: HelpScreen
 var _crafting: CraftingScreen
 var _mission_board: MissionBoard
+var _child_training: ChildTrainingScreen
 var _banner: Banner
 var _respawn: RespawnScreen
 var _death_screen: Control
@@ -47,6 +49,8 @@ func _ready() -> void:
 	_add_screen("toggle_character_sheet", CharacterSheet.new())
 	_add_screen("toggle_inventory", InventoryScreen.new())
 	_add_screen("toggle_techniques", TechniquesScreen.new())
+	_add_screen("toggle_artifact", ArtifactScreen.new())
+	_add_screen("toggle_map", WorldMapScreen.new())
 	_add_screen("toggle_message_log", MessageLogScreen.new())
 	_add_screen("toggle_clan", ClanScreen.new())
 	_crafting = CraftingScreen.new()
@@ -55,6 +59,9 @@ func _ready() -> void:
 	_mission_board = MissionBoard.new()
 	_mission_board.closed.connect(_update_modal)
 	add_child(UIStyle.centered(_mission_board))
+	_child_training = ChildTrainingScreen.new()
+	_child_training.closed.connect(_update_modal)
+	add_child(UIStyle.centered(_child_training))
 	_combat_report = CombatReport.new()
 	_combat_report.closed.connect(_update_modal)
 	add_child(UIStyle.centered(_combat_report))
@@ -92,10 +99,12 @@ func _ready() -> void:
 	EventBus.session_started.connect(_refresh)
 	EventBus.region_changed.connect(func(_id): _refresh())
 	EventBus.message_posted.connect(_on_message)
+	Settings.changed.connect(func(key: String, _v): if key == "show_hints": _refresh())
 	EventBus.interaction_target_changed.connect(_on_target_changed)
 	EventBus.interaction_menu_requested.connect(_on_menu_requested)
 	EventBus.crafting_requested.connect(_on_crafting_requested)
 	EventBus.mission_board_requested.connect(_on_mission_board_requested)
+	EventBus.child_training_requested.connect(_on_child_training_requested)
 	EventBus.player_died.connect(_on_player_died)
 	EventBus.player_respawned.connect(func(_anchor_id: String, _lives: int): _open_pending_respawn())
 	EventBus.combat_finished.connect(_on_combat_finished)
@@ -143,6 +152,7 @@ func _close_screens() -> void:
 		screen.close()
 	_crafting.close()
 	_mission_board.close()
+	_child_training.close()
 
 
 func _on_crafting_requested(prof_id: String) -> void:
@@ -155,8 +165,14 @@ func _on_mission_board_requested() -> void:
 	_update_modal()
 
 
+func _on_child_training_requested() -> void:
+	_close_screens()
+	_child_training.open()
+	_update_modal()
+
+
 func _any_screen_open() -> bool:
-	return _crafting.visible or _mission_board.visible or _screens.values().any(func(s): return s.visible)
+	return _crafting.visible or _mission_board.visible or _child_training.visible or _screens.values().any(func(s): return s.visible)
 
 
 func _build_status_panel() -> void:
@@ -178,7 +194,11 @@ func _build_status_panel() -> void:
 	_injuries = UIStyle.label("", 14, UIStyle.CATEGORY_COLORS["danger"])
 	_injuries.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	box.add_child(_injuries)
-	box.add_child(UIStyle.label("[E] interact   [C] character   [I] inventory   [K] techniques   [L] log   [G] clan   [F5] save   [Esc] pause", 12, Color(0.7, 0.7, 0.7)))
+	_hint = UIStyle.label("", 14, Color("9fd3c7"))
+	_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_hint.custom_minimum_size = Vector2(316, 0)
+	box.add_child(_hint)
+	box.add_child(UIStyle.label("[E] interact   [C] character   [I] inventory   [K] techniques   [M] map   [L] log   [O] artifact   [G] clan   [F5] save   [Esc] pause", 12, Color(0.7, 0.7, 0.7)))
 	add_child(panel)
 
 
@@ -254,6 +274,9 @@ func _refresh() -> void:
 	_qi_bar.modulate = UIStyle.ACCENT if _bottleneck.visible else Color.WHITE
 	_injuries.visible = Injuries.has_any(p)
 	_injuries.text = "Injured: " + ", ".join(Injuries.describe(p, data))
+	var hints := Guidance.hints(p, data, density * Sects.cultivation_bonus(p, data), 1)
+	_hint.visible = bool(Settings.get_value("show_hints")) and not hints.is_empty()
+	_hint.text = "Next: " + hints[0] if not hints.is_empty() else ""
 
 
 ## Message category for the age line: "danger" or "warning" when little of
