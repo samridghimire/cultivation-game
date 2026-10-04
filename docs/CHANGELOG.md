@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-04 [QA-007e] Mission board: each mission with a fight shows its danger (Weak/Even/Dangerous/Deadly) in color in the list and details, with a warning that mission foes can't be evaded.
 - 2026-10-04 [W-004h] Alignment-gated encounters: a Blood Lotus recruiter courts wicked players (a lotus token for sect standing or a blood pill), a wandering Azure Cloud elder rewards virtuous ones, Blood Lotus hunters spare their own kind and righteous patrols no longer feed the wicked.
 - 2026-10-04 [W-004g] Encounter chains: kill the robbed traveller's vengeful brother and their sect elder hunts you at Foundation Establishment; the traveller you saved vouches for you with the Azure Cloud Sect; catch a pickpocket (hand over / extort / let go), and a spared thief later teaches you the knock for a hidden thieves' market.
 - 2026-10-04 [G-005d] Inventory: ready combat talismans for battle (or put them away) with a button, see what each strike/shield/escape talisman does and which ones are readied (up to 3 kinds).
