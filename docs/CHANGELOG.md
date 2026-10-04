@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-03 [FAM-013] Generational sim (tests/sim/simulate_generations.gd). Fixed: off-screen NPC marriages kept refilling courtship candidates past the population cap, so the population grew forever and births stopped. Marriages now stop at the cap, and the world levels off at about 300 NPCs.
 - 2026-10-04 [BODY-001] Body tempering: five stages from Copper Skin to the Indestructible Vajra Body, tempered at meditation spots with ores, herbs and pills (risk of injury falls with Constitution); each stage adds health/defense/attack and injury resistance, shown on the character sheet.
 - 2026-10-04 [QA-20261004-3] A pregnant NPC who is slain or dies in a tribulation now loses the unborn child (it used to stay pregnant forever); all NPC deaths go through Npcs.die.
 - 2026-10-04 [VIS-002b] Scenery stays clear of cave abodes, and the Withered Bone Marsh gets dead trees, pale bone-colored rocks and blood-red flowers.

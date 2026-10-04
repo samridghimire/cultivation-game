@@ -60,6 +60,23 @@ func test_npcs_marry_within_their_region() -> void:
 	assert_eq(events.filter(func(e): return e["kind"] == "marriage").size(), 1)
 
 
+## FAM-013: every off-screen marriage makes GameState spawn fresh courtship
+## candidates, so marriages must stop at the population cap too, or the
+## population grows without bound (and, above the cap, nobody is ever born).
+func test_no_marriages_at_the_population_cap() -> void:
+	var d := _data_with({"marriage_chance_per_year": 1.0, "attempt_chance_per_month": 0.0, "population_cap": 3})
+	var npcs := {}
+	var he := _single(npcs, "male", 1)
+	var she := _single(npcs, "female", 2)
+	var elder := _single(npcs, "female", 3, "azure_peak")
+	var events := NpcFamilies.simulate(npcs, d, Calendar.DAYS_PER_YEAR, seeded_rng())
+	assert_true(he.spouses.is_empty() and she.spouses.is_empty(), "no one marries while the world is full")
+	assert_true(events.is_empty())
+	elder.alive = false
+	NpcFamilies.simulate(npcs, d, Calendar.DAYS_PER_YEAR, seeded_rng())
+	assert_true(Family.is_married_to(he, she), "below the cap again (a death), marriages resume")
+
+
 func test_couples_have_children_until_the_cap() -> void:
 	var d := _data_with({"marriage_chance_per_year": 0.0, "attempt_chance_per_month": 1.0, "max_children": 2})
 	var npcs := {}
