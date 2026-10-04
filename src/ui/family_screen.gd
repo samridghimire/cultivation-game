@@ -4,8 +4,9 @@ extends PanelContainer
 ## parents, spouses, children and grandchildren grouped by generation on the
 ## left (the departed marked), and for the selected relative their realm, age,
 ## spiritual roots, bloodline, home, favor, clan rank and training on the right,
-## with "Training..." (the ChildTrainingScreen) for living children and
-## "Name as heir" for clan members. Rules live in Family / Clans / Training.
+## with "Training..." (the ChildTrainingScreen) and "Send to <sect>" / "Recall"
+## (FAM-009c) for living children and "Name as heir" for clan members. Rules
+## live in Family / Clans / Training / Sects.
 
 signal closed
 
@@ -13,6 +14,7 @@ var _list: VBoxContainer
 var _name: Label
 var _info: Label
 var _actions: HBoxContainer
+var _sect_actions: VBoxContainer
 var _close_button: Button
 var _selected := ""
 
@@ -47,6 +49,9 @@ func _init() -> void:
 	_actions = HBoxContainer.new()
 	_actions.add_theme_constant_override("separation", 8)
 	details.add_child(_actions)
+	_sect_actions = VBoxContainer.new()
+	_sect_actions.add_theme_constant_override("separation", 6)
+	details.add_child(_sect_actions)
 	_close_button = UIStyle.button("Close", close)
 	box.add_child(_close_button)
 	EventBus.player_changed.connect(func(): if visible: _rebuild())
@@ -102,6 +107,9 @@ static func person_lines(c: CharacterData, person: CharacterData, data: GameData
 	if bloodline != "":
 		lines.append("Bloodline: %s" % bloodline)
 	lines.append("Lives in %s" % Exploration.region_name(data, Npcs.region_of(person, data)))
+	var sect := Sects.member_text(person, data)
+	if sect != "":
+		lines.append("%s%s" % [sect.left(1).to_upper(), sect.substr(1)])
 	if favor.has(person.id):
 		lines.append("Favor: %d" % int(favor[person.id]))
 	if clan != null and clan.members.has(person.id):
@@ -158,9 +166,10 @@ func _show_details() -> void:
 	for b in _list.get_children():
 		if b is Button:
 			b.set_pressed_no_signal(b.name == _selected)
-	for child in _actions.get_children():
-		_actions.remove_child(child)
-		child.queue_free()
+	for row in [_actions, _sect_actions]:
+		for child in row.get_children():
+			row.remove_child(child)
+			child.queue_free()
 	var person: CharacterData = GameState.npcs.get(_selected)
 	_name.visible = person != null
 	_info.visible = person != null
@@ -174,6 +183,7 @@ func _show_details() -> void:
 		var training := UIStyle.button("Training...", func(): EventBus.child_training_requested.emit())
 		training.name = "Training"
 		_actions.add_child(training)
+		_add_sect_actions(p, person, data)
 	var clan: ClanData = GameState.clan
 	if clan != null and clan.members.has(person.id):
 		var people := GameState.npcs.duplicate()
@@ -184,6 +194,30 @@ func _show_details() -> void:
 		heir.disabled = reason != ""
 		heir.tooltip_text = reason
 		_actions.add_child(heir)
+
+
+## "Send to <sect>" per sect for a child outside any sect (disabled with the
+## Sects.check_send_child reason), or "Recall from <sect>" (FAM-009c).
+func _add_sect_actions(p: CharacterData, child: CharacterData, data: GameData) -> void:
+	if not child.is_rogue():
+		var sect_name := (data.sects[child.sect["id"]] as SectDef).name if data.sects.has(String(child.sect["id"])) else "sect"
+		var recall := UIStyle.button("Recall from the %s" % sect_name, func(): GameState.recall_child_from_sect(child.id))
+		recall.name = "Recall"
+		_sect_actions.add_child(recall)
+		return
+	var min_age := int(data.family.get("sect_entry", {}).get("min_age_years", 12))
+	if child.age_years() < min_age:
+		_sect_actions.add_child(UIStyle.label("Sects take disciples from age %d." % min_age, 14, Color(0.6, 0.6, 0.6)))
+		return
+	var ids: Array = data.sects.keys()
+	ids.sort()
+	for sect_id: String in ids:
+		var reason := Sects.check_send_child(p, child, data, sect_id)
+		var send := UIStyle.button("Send to the %s" % (data.sects[sect_id] as SectDef).name, func(): GameState.send_child_to_sect(child.id, sect_id))
+		send.name = "Send_" + sect_id
+		send.disabled = reason != ""
+		send.tooltip_text = reason
+		_sect_actions.add_child(send)
 
 
 func _focus_selected() -> void:

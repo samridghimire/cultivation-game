@@ -3,6 +3,7 @@ extends RefCounted
 ## NPC clans (FAM-009), defined in data/clans.json. Each clan is founded once
 ## per game as generated NPCs (a head, a spouse and children sharing the clan
 ## surname) and kept as a ClanData keyed by clan id in GameState.npc_clans.
+## Some clan youths are sent to sects at founding (FAM-009c).
 ## Members follow the head's family (Clans.sync_family); when the head dies the
 ## heir succeeds (Clans.succeed), and a clan whose line ends is extinct.
 ## Relations (FAM-009b, clans.json "relations"): each clan's standing toward the
@@ -56,12 +57,29 @@ static func found(def: Dictionary, npcs: Dictionary, data: GameData, rng: Random
 			spouse.children.append(child.id)
 			child.parents.append(spouse.id)
 			child.birth_rank = String(head.spouse_ranks.get(spouse.id, ""))
+	_send_youths(head, npcs, data, rng)
 	var clan := ClanData.new()
 	clan.name = String(def.get("name", Clans.clan_name(head, data)))
 	clan.head = head.id
 	clan.members[head.id] = Clans.head_rank(data)
 	Clans.sync_family(head, clan, npcs, data)
 	return clan
+
+
+## FAM-009c: each of `head`'s children old enough (family.json sect_entry)
+## joins, with clan_youth_chance, a sect that would accept them.
+static func _send_youths(head: CharacterData, npcs: Dictionary, data: GameData, rng: RandomNumberGenerator) -> void:
+	var rules: Dictionary = data.family.get("sect_entry", {})
+	var chance := float(rules.get("clan_youth_chance", 0.0))
+	if chance <= 0.0:
+		return
+	for child_id in head.children:
+		var child: CharacterData = npcs.get(child_id)
+		if child == null or child.age_years() < int(rules.get("min_age_years", 12)) or rng.randf() >= chance:
+			continue
+		var sects := Sects.accepting_sects(child, data)
+		if not sects.is_empty():
+			Sects.npc_join(child, data, sects[rng.randi_range(0, sects.size() - 1)])
 
 
 ## Whether the clan's line has ended (no head left).

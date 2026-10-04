@@ -255,7 +255,7 @@ static func _live(c: CharacterData, data: GameData, days: int, rng: RandomNumber
 		return
 	if SpiritualRoots.cultivation_multiplier(c.spiritual_roots, data) <= 0.0:
 		return
-	Cultivation.cultivate(c, data, days, Exploration.qi_density(data, region_of(c, data)) * diligence_of(c, data))
+	Cultivation.cultivate(c, data, days, Exploration.qi_density(data, region_of(c, data)) * diligence_of(c, data) * Sects.cultivation_bonus(c, data))
 	if Cultivation.can_attempt_breakthrough(c, data):
 		var result := Cultivation.attempt_breakthrough(c, data, rng, true)
 		if result["died"]:
@@ -271,6 +271,8 @@ static func _live(c: CharacterData, data: GameData, days: int, rng: RandomNumber
 			events.append({"npc_id": c.id, "text": "%s has begun Qi Refining." % c.name, "category": "info"})
 		if result["success"] and Bloodlines.update(c, data):
 			events.append({"npc_id": c.id, "text": "Heaven and earth tremble: the %s of %s has awakened!" % [Bloodlines.bloodline_name(data, c.bloodline), c.name], "category": "progress"})
+		if result["success"] and Sects.npc_promote(c, data):
+			events.append({"npc_id": c.id, "text": "%s is now %s." % [c.name, Sects.member_text(c, data)], "category": "info"})
 
 
 ## Whether simulate() news about `npc_id` should reach `player`: named NPCs
@@ -352,6 +354,9 @@ static func describe(c: CharacterData, data: GameData) -> String:
 		text += ", cultivating at %s" % Cultivation.realm_label(c, data)
 	if not c.spouses.is_empty():
 		text += ", married"
+	var sect := Sects.member_text(c, data)
+	if sect != "":
+		text += ", %s" % sect
 	# An awakened bloodline shakes heaven and earth; a dormant one is hidden.
 	if c.bloodline_awakened and data.bloodlines.has(c.bloodline):
 		text += ", bearing the awakened %s" % Bloodlines.bloodline_name(data, c.bloodline)
