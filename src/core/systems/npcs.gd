@@ -287,6 +287,9 @@ static func describe(c: CharacterData, data: GameData) -> String:
 		text += ", cultivating at %s" % Cultivation.realm_label(c, data)
 	if not c.spouses.is_empty():
 		text += ", married"
+	# An awakened bloodline shakes heaven and earth; a dormant one is hidden.
+	if c.bloodline_awakened and data.bloodlines.has(c.bloodline):
+		text += ", bearing the awakened %s" % Bloodlines.bloodline_name(data, c.bloodline)
 	return text + "."
 
 

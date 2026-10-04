@@ -83,6 +83,12 @@ func _rebuild() -> void:
 		t += "%s\n" % " ".join(identity)
 	t += "%s, age %d of %d\n" % [Cultivation.realm_label(p, data), p.age_years(), Cultivation.lifespan_years(p, data)]
 	t += "Spiritual Root: %s\n" % SpiritualRoots.describe(p.spiritual_roots, data)
+	var bloodline := Bloodlines.describe(p, data)
+	if bloodline != "":
+		t += "Bloodline: %s\n" % bloodline
+		var bonuses := bloodline_bonus_text(data, p.bloodline)
+		if bonuses != "":
+			t += "  [color=#aaaaaa]%s: %s[/color]\n" % ["Grants" if p.bloodline_awakened else "Will grant", bonuses]
 	t += "Cultivation speed: %.2f qi/day here\n" % Cultivation.qi_per_day(p, data, Exploration.qi_density(data, GameState.current_region) * Sects.cultivation_bonus(p, data))
 	t += "Alignment: %s (%d)   |   %s\n\n" % [Alignment.tier_name(p.alignment, data), p.alignment, Sects.describe(p, data)]
 	_gender_row.visible = p.gender == ""
@@ -140,6 +146,17 @@ func _rebuild() -> void:
 
 
 ## One Unequip button per filled equipment slot.
+## "+15% cultivation speed, +10% attack" for a bloodline's bonuses.
+static func bloodline_bonus_text(data: GameData, bloodline_id: String) -> String:
+	var names := {"qi_mult": "cultivation speed", "breakthrough": "breakthrough chance", "max_hp": "health"}
+	var parts: PackedStringArray = []
+	var bonuses: Dictionary = Bloodlines.def(data, bloodline_id).get("bonuses", {})
+	for key in Bloodlines.BONUS_KEYS:
+		if bonuses.has(key):
+			parts.append("%+d%% %s" % [roundi(float(bonuses[key]) * 100), names.get(key, key.replace("_", " "))])
+	return ", ".join(parts)
+
+
 func _rebuild_equip_row() -> void:
 	for child in _equip_row.get_children():
 		_equip_row.remove_child(child)
