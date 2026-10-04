@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-04 [CM-001d] Cultivation methods past Nascent Soul: each sect's Elders can buy a secret canon good to Void Refinement, and the Drowned Yin Palace's inheritance now holds the Yin King's own method.
 - 2026-10-04 [ART-006c] The artifact awakening now asks what you will do with your second life (righteous, free or ambitious answers with small attribute and alignment effects), and each artifact seal speaks a line when it breaks.
 - 2026-10-04 [FAM-012b] Two new NPC clans (the Hu beast hunters of the Misty Forest and the Yin corpse refiners of the marsh) and three clan estate buildings (Spirit Ore Vein, Guest Pavilion, Martial Training Grounds).
 - 2026-10-04 [FAM-011] Family Home: a house in every region where your spouses or children live; spend a week with them, gather the household under one roof, or open the family tree.
