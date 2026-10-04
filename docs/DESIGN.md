@@ -87,6 +87,7 @@ Every great cultivation protagonist has something that sets them apart. Ours is 
 | Cultivation methods (one main method, qi rate, realm cap) | ✅ core, 🚧 no UI (CM-001b) | `Techniques`, `data/techniques.json` |
 | Dao insights (encounters, practice, seclusion; technique + breakthrough bonuses) | ✅ core, 🚧 no UI (DAO-001b) | `data/dao.json`, `Dao` |
 | Heavenly Tribulations (Core Formation+, heart demon for demonic) | ✅ core, 🚧 no wave screen (TRIB-001b) | `Tribulation`, `data/realms.json` |
+| Grudges and gratitude (rob/kill/humiliate NPCs, kin vengeance, amends) | ✅ core, 🚧 no UI (RIV-001d), no avengers yet (RIV-003), no karma view (RIV-001b) | `data/karma.json`, `Karma` |
 | Inventory, techniques, character sheet, settings, pause, load screens | ✅ | `src/ui/` |
 | Top-down world with interactables | ✅ placeholder art | `src/world/` |
 
@@ -122,3 +123,4 @@ Void Refinement → Body Integration → Mahayana → Tribulation Transcendence.
 - (BEAST-001) **Spirit beasts.** Default: only Beast Tamers can tame, one active companion fights alongside you, beasts grow by feeding. Should non-tamers be able to keep a beast (e.g. one bought or gifted), and how many companions at once?
 - (DEM-001) **Devouring.** Default: after defeating a cultivator the player can devour their cultivation for qi at a big alignment cost and a heart-demon injury risk. This is the smallest demonic art; the separate demonic tree (DEM-002) stays blocked on the question above.
 - (BODY-001) **Body cultivation.** Default: a separate body-tempering track that runs alongside qi cultivation (stages that add HP/defense, paid in herbs/ores and days, with injury risk), open to everyone and not tied to a profession. Should it instead be an alternative path that replaces qi cultivation (pure body cultivators), and should it extend lifespan?
+- (RIV-001) **Hostile acts against NPCs.** Smallest version built: you can humiliate (only someone weaker), rob or kill any adult NPC who is not your own family; children and family members are off limits, and grudges fade 5 points a year. Should demonic players be able to harm children or their own kin (e.g. a blood-sacrifice path), and should grudges from a killing never fade?

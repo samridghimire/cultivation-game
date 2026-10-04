@@ -85,6 +85,9 @@ var artifact_storage: Dictionary = {}
 var mission_cooldowns: Dictionary = {}
 ## Sect id -> reputation with that sect (Reputation system; missing = start value).
 var reputation: Dictionary = {}
+## Karma (RIV-001): NPC id -> how much that NPC hates / owes this character (0-100, see Karma).
+var grudges: Dictionary = {}
+var gratitude: Dictionary = {}
 
 
 func attribute(attr_id: String) -> int:
@@ -165,6 +168,8 @@ func to_dict() -> Dictionary:
 		"reputation": reputation.duplicate(),
 		"abode": abode,
 		"abode_storage": abode_storage.duplicate(),
+		"grudges": grudges.duplicate(),
+		"gratitude": gratitude.duplicate(),
 	}
 
 
@@ -233,6 +238,8 @@ static func from_dict(d: Dictionary) -> CharacterData:
 	c.reputation = _int_values(d.get("reputation", {}))
 	c.abode = String(d.get("abode", ""))
 	c.abode_storage = _int_values(d.get("abode_storage", {}))
+	c.grudges = _int_values(d.get("grudges", {}))
+	c.gratitude = _int_values(d.get("gratitude", {}))
 	for anchor_id in d.get("anchors", []):
 		c.anchors.append(String(anchor_id))
 	for recipe_id in d.get("known_recipes", []):

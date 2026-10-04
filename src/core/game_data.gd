@@ -59,6 +59,8 @@ var family: Dictionary = {}  # data/family.json (Family system)
 var bloodlines: Dictionary = {}  # id -> Dictionary (data/bloodlines.json)
 ## data/bloodlines.json top-level rules (inherit chances).
 var bloodline_rules: Dictionary = {}
+## Grudge/gratitude rules (data/karma.json, Karma). "acts" is keyed by id after loading.
+var karma: Dictionary = {}
 ## Anchor id -> {"region": String, "name": String}, from places with an anchor_id.
 var anchors: Dictionary = {}
 ## Claimable cave abodes: abode id -> regions.json abode def plus "region" (Abodes).
@@ -173,6 +175,11 @@ func _load(dir: String) -> void:
 	bloodline_rules = _read(dir, "bloodlines.json")
 	for bloodline in bloodline_rules.get("bloodlines", []):
 		bloodlines[bloodline["id"]] = bloodline
+	karma = _read(dir, "karma.json")
+	var karma_acts := {}
+	for act in karma.get("acts", []):
+		karma_acts[act["id"]] = act
+	karma["acts"] = karma_acts
 
 	var dialogue_dir := dir.path_join("dialogue")
 	for file_name in DirAccess.get_files_at(dialogue_dir):
@@ -263,6 +270,7 @@ func _validate() -> void:
 	load_errors.append_array(Family.validate(self))
 	load_errors.append_array(Abodes.validate(self))
 	load_errors.append_array(ArtifactFunctions.validate(self))
+	load_errors.append_array(Karma.validate(self))
 	load_errors.append_array(Children.validate(self))
 	load_errors.append_array(NpcFamilies.validate(self))
 	load_errors.append_array(Training.validate(self))
