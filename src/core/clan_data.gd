@@ -12,6 +12,8 @@ var treasury := 0
 var reputation := 0
 ## Game day (GameClock.total_days) the clan was founded.
 var founded_day := 0
+## Character id of the designated heir (FAM-008), "" = the default heir.
+var heir := ""
 
 
 func to_dict() -> Dictionary:
@@ -22,6 +24,7 @@ func to_dict() -> Dictionary:
 		"treasury": treasury,
 		"reputation": reputation,
 		"founded_day": founded_day,
+		"heir": heir,
 	}
 
 
@@ -35,4 +38,5 @@ static func from_dict(d: Dictionary) -> ClanData:
 	clan.treasury = int(d.get("treasury", 0))
 	clan.reputation = int(d.get("reputation", 0))
 	clan.founded_day = int(d.get("founded_day", 0))
+	clan.heir = String(d.get("heir", ""))
 	return clan

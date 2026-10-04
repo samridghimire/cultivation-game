@@ -88,6 +88,8 @@ static func sync_family(c: CharacterData, clan: ClanData, people: Dictionary, da
 		var member: CharacterData = people.get(member_id)
 		if member_id != clan.head and (member == null or not member.alive):
 			clan.members.erase(member_id)
+	if not clan.members.has(clan.heir):
+		clan.heir = ""
 	var family_rank := String(rules(data).get("family_rank", lowest_rank(data)))
 	var kin: Array[String] = []
 	kin.append_array(c.spouses)
@@ -185,6 +187,122 @@ static func deposit(c: CharacterData, clan: ClanData, amount: int) -> Dictionary
 	return {"ok": true, "reason": ""}
 
 
+## Heir rules (data/family.json clan.heir).
+static func heir_rules(data: GameData) -> Dictionary:
+	return rules(data).get("heir", {})
+
+
+## Title of the clan heir of `gender` (e.g. Young Master / Young Mistress).
+static func heir_title(data: GameData, gender: String = "") -> String:
+	var r := heir_rules(data)
+	return String(r.get("titles", {}).get(gender, r.get("title", "Clan Heir")))
+
+
+## Living descendants of `head` (children first, then grandchildren...).
+static func descendants(head: CharacterData, people: Dictionary) -> Array[String]:
+	var out: Array[String] = []
+	var queue: Array[String] = head.children.duplicate()
+	while not queue.is_empty():
+		var id: String = queue.pop_front()
+		if out.has(id):
+			continue
+		var person: CharacterData = people.get(id)
+		if person == null:
+			continue
+		out.append(id)
+		queue.append_array(person.children)
+	var living: Array[String] = []
+	for id in out:
+		if (people[id] as CharacterData).alive:
+			living.append(id)
+	return living
+
+
+## The heir by custom when none is designated: among `head`'s living children
+## who are clan members, the best birth rank (clan.heir.birth_rank_order),
+## then the eldest. "" if there is none.
+static func default_heir(clan: ClanData, head: CharacterData, people: Dictionary, data: GameData) -> String:
+	var order: Array = heir_rules(data).get("birth_rank_order", [])
+	var best := ""
+	var best_key := Vector2i(0, 0)
+	for child_id in head.children:
+		var child: CharacterData = people.get(child_id)
+		if child == null or not child.alive or not clan.members.has(child_id):
+			continue
+		var rank_index := order.find(child.birth_rank)
+		# Lower key wins: birth rank first (unlisted ranks last), then the eldest.
+		var key := Vector2i(rank_index if rank_index >= 0 else order.size(), -child.age_days)
+		if best == "" or key < best_key:
+			best = child_id
+			best_key = key
+	return best
+
+
+## The clan's heir: the designated one while they are a living member, else the default heir.
+static func heir(clan: ClanData, head: CharacterData, people: Dictionary, data: GameData) -> String:
+	if clan == null or head == null:
+		return ""
+	var designated: CharacterData = people.get(clan.heir)
+	if designated != null and designated.alive and clan.members.has(clan.heir):
+		return clan.heir
+	return default_heir(clan, head, people, data)
+
+
+## Why `head` cannot designate `person` as the clan heir, or "".
+static func check_designate(head: CharacterData, clan: ClanData, person: CharacterData, people: Dictionary) -> String:
+	if clan == null:
+		return "You have no clan."
+	if clan.head != head.id:
+		return "Only the head of the clan names its heir."
+	if person == null or not person.alive:
+		return "There is no one to name."
+	if not clan.members.has(person.id):
+		return "%s is not of the %s." % [person.name, clan.name]
+	if not descendants(head, people).has(person.id):
+		return "Only your own descendants can inherit the %s." % clan.name
+	if clan.heir == person.id:
+		return "%s is already your heir." % person.name
+	return ""
+
+
+## Names `person` the clan heir. Returns {ok, reason}.
+static func designate_heir(head: CharacterData, clan: ClanData, person: CharacterData, people: Dictionary) -> Dictionary:
+	var reason := check_designate(head, clan, person, people)
+	if reason != "":
+		return {"ok": false, "reason": reason}
+	clan.heir = person.id
+	return {"ok": true, "reason": ""}
+
+
+## When the clan head in `people` has died, the heir (else the highest-ranked,
+## then eldest, living member) becomes head at the head rank. For NPC clans
+## (the player never permadies while the artifact has lives). Returns
+## {succeeded: bool, previous: id, head: id}; head "" means the line ended.
+static func succeed(clan: ClanData, people: Dictionary, data: GameData) -> Dictionary:
+	var old: CharacterData = people.get(clan.head)
+	if old != null and old.alive:
+		return {"succeeded": false, "previous": clan.head, "head": clan.head}
+	var previous := clan.head
+	var next := heir(clan, old, people, data) if old != null else ""
+	if next == "":
+		var all := ranks(data)
+		var best_key := Vector2i(0, 0)
+		for member_id in clan.members:
+			var member: CharacterData = people.get(member_id)
+			if member_id == previous or member == null or not member.alive:
+				continue
+			var key := Vector2i(all.find(String(clan.members[member_id])), -member.age_days)
+			if next == "" or key < best_key:
+				next = member_id
+				best_key = key
+	clan.members.erase(previous)
+	clan.heir = ""
+	clan.head = next
+	if next != "":
+		clan.members[next] = head_rank(data)
+	return {"succeeded": next != "", "previous": previous, "head": next}
+
+
 ## Load errors for data/family.json "clan" (optional block).
 static func validate(data: GameData) -> PackedStringArray:
 	var errors: PackedStringArray = []
@@ -203,6 +321,16 @@ static func validate(data: GameData) -> PackedStringArray:
 			errors.append("family.json clan ranks need an id and a name")
 		if rank.has("min_realm") and data.realm_index_of(String(rank["min_realm"])) < 0:
 			errors.append("family.json clan rank '%s' has unknown min_realm" % rank.get("id", ""))
+	var heir_rule := heir_rules(data)
+	if not heir_rule.is_empty() and not heir_rule.get("birth_rank_order", []) is Array:
+		errors.append("family.json clan.heir.birth_rank_order must be a list of spousal rank ids")
+	else:
+		for rank_id in heir_rule.get("birth_rank_order", []):
+			var known := String(rank_id) == ""
+			for gender in data.family.get("genders", {}):
+				known = known or data.family["genders"][gender].get("ranks", {}).has(rank_id)
+			if not known:
+				errors.append("family.json clan.heir.birth_rank_order has unknown spousal rank '%s'" % rank_id)
 	for key in ["found_cost", "found_days", "recruit_cost", "recruit_days", "recruit_min_favor"]:
 		if int(r.get(key, 0)) < 0:
 			errors.append("family.json clan.%s must be >= 0" % key)
