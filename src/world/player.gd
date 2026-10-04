@@ -76,7 +76,11 @@ func _update_target() -> void:
 			best = i
 			best_dist = d
 	if best != _target:
+		if is_instance_valid(_target):
+			_target.highlighted = false
 		_target = best
+		if best:
+			best.highlighted = true
 		EventBus.interaction_target_changed.emit(best.display_name if best else "")
 
 
