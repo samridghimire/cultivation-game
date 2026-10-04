@@ -37,6 +37,18 @@ func test_every_input_action_has_a_help_name() -> void:
 		assert_true(names.has(action), "help.json action_names is missing '%s'" % action)
 
 
+func test_no_two_actions_share_a_key_or_button() -> void:
+	# The HUD opens the first screen whose action matches, so a shared binding
+	# makes the later screen unreachable.
+	var input_config := _root().get_node("InputConfig")
+	for table: Dictionary in [input_config.KEYS, input_config.JOY_BUTTONS]:
+		var owner := {}
+		for action: String in table:
+			for code in table[action]:
+				assert_false(owner.has(code), "'%s' and '%s' share binding %s" % [owner.get(code, ""), action, code])
+				owner[code] = action
+
+
 func test_screen_shows_controls_then_pages() -> void:
 	var screen := HelpScreen.new()
 	_root().add_child(screen)

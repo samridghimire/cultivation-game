@@ -12,6 +12,7 @@ func _founder() -> CharacterData:
 	c.surname = "Lin"
 	c.realm_index = data().realm_index_of("foundation_establishment")
 	c.inventory = {"spirit_stone": 1000}
+	c.abode = "waterfall_cave"
 	return c
 
 
@@ -40,6 +41,27 @@ func test_founding_needs_realm_and_stones() -> void:
 	c.inventory = {}
 	assert_true(Clans.check_found(c, null, data()).contains("spirit stones"))
 	assert_true(Clans.check_found(c, ClanData.new(), data()).contains("already"))
+
+
+func test_founding_needs_an_abode_as_seat() -> void:
+	assert_true(bool(Clans.rules(data()).get("requires_abode", false)))
+	var c := _founder()
+	c.abode = ""
+	assert_true(Clans.check_found(c, null, data()).contains("abode"))
+	assert_false(Clans.found(c, null, {}, data(), 0)["ok"])
+	c.abode = "waterfall_cave"
+	var clan: ClanData = Clans.found(c, null, {}, data(), 0)["clan"]
+	assert_eq(clan.seat, "waterfall_cave")
+	assert_eq(clan.seat_region, String(Abodes.get_def(data(), "waterfall_cave")["region"]))
+	assert_eq(Clans.seat_name(clan, data()), Abodes.abode_name(data(), "waterfall_cave"))
+	assert_false(Clans.move_seat(clan, "waterfall_cave", data()), "same seat is no move")
+	assert_false(Clans.move_seat(clan, "", data()))
+	assert_true(Clans.move_seat(clan, "cloud_piercing_grotto", data()))
+	assert_eq(clan.seat_region, String(Abodes.get_def(data(), "cloud_piercing_grotto")["region"]))
+	var copy := ClanData.from_dict(JSON.parse_string(JSON.stringify(clan.to_dict())))
+	assert_eq(copy.seat, "cloud_piercing_grotto")
+	assert_eq(copy.seat_region, clan.seat_region)
+	assert_eq(ClanData.from_dict({"name": "Old Clan"}).seat, "", "old saves have no seat")
 
 
 func test_founding_brings_in_the_living_family() -> void:
@@ -117,11 +139,17 @@ func test_game_state_clan_actions() -> void:
 	gs.found_clan()
 	assert_eq(gs.clan, null, "a mortal cannot found a clan")
 	c.realm_index = gs.data.realm_index_of("foundation_establishment")
-	c.inventory["spirit_stone"] = 2000
+	c.inventory["spirit_stone"] = 5000
 	var clock: Node = _root().get_node("GameClock")
 	var days: int = clock.total_days
 	gs.found_clan()
+	assert_eq(gs.clan, null, "no abode, no seat")
+	gs.current_region = String(Abodes.get_def(gs.data, "waterfall_cave")["region"])
+	gs.claim_abode("waterfall_cave")
+	assert_eq(c.abode, "waterfall_cave")
+	gs.found_clan()
 	assert_true(gs.clan != null)
+	assert_eq(gs.clan.seat, "waterfall_cave")
 	assert_gt(clock.total_days, days, "founding takes time")
 	var retainer := Npcs.spawn(gs.npcs, gs.data, seeded_rng(4), {"age_years": 25, "region": gs.current_region})
 	gs.recruit_to_clan(retainer.id)
@@ -137,6 +165,15 @@ func test_game_state_clan_actions() -> void:
 	gs.load_save_dict(JSON.parse_string(JSON.stringify(saved)))
 	assert_eq(gs.clan.treasury, 300, "clan survives a save")
 	assert_eq(gs.clan.members[retainer.id], "core")
+	assert_eq(gs.clan.seat, "waterfall_cave", "seat survives a save")
+	var old_save: Dictionary = JSON.parse_string(JSON.stringify(saved))
+	old_save["clan"].erase("seat")
+	old_save["clan"].erase("seat_region")
+	gs.load_save_dict(old_save)
+	assert_eq(gs.clan.seat, "waterfall_cave", "pre-FAM-005c clans take the player's abode as seat")
+	gs.current_region = String(Abodes.get_def(gs.data, "cloud_piercing_grotto")["region"])
+	gs.claim_abode("cloud_piercing_grotto")
+	assert_eq(gs.clan.seat, "cloud_piercing_grotto", "claiming a new abode moves the seat")
 	saved.erase("clan")
 	gs.load_save_dict(JSON.parse_string(JSON.stringify(saved)))
 	assert_eq(gs.clan, null, "old saves have no clan")
