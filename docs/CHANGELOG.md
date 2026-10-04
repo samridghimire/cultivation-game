@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-03 [FAM-002i] NPC menus offer "Chat with <name>" (NPCs without dialogue) and "Give <name> a gift", which lists carried items with the favor each is worth; refusals show their reason. Generated courtship candidates can now be befriended in-game.
 - 2026-10-03 [LIFE-001g] Binding an evil artifact stains you: the first time you equip one of the lifespan-drinking demonic artifacts it drinks your blood and shifts your alignment (-120 for the Blood-Drinker Saber and Corpse-Silk Burial Armor, -250 for the Myriad Souls Banner), charged once per artifact (items.json equip `alignment_on_first_equip`, CharacterData.bound_artifacts).
 - 2026-10-03 [G-006] Arrays: Array Masters refine qi-gathering array discs in the workshop (Minor Spirit Gathering Array +20%, Five-Element Qi Gathering Array +50% from a manual at the talisman stall); set one up at your cave abode to raise its seclusion qi density (GameState.place_abode_array/remove_abode_array). UI entries follow in G-006b.
 - 2026-10-03 [FAM-013] Generational sim (tests/sim/simulate_generations.gd). Fixed: off-screen NPC marriages kept refilling courtship candidates past the population cap, so the population grew forever and births stopped. Marriages now stop at the cap, and the world levels off at about 300 NPCs.
