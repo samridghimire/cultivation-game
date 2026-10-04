@@ -78,7 +78,9 @@ func _live(c: CharacterData, data: GameData, rng: RandomNumberGenerator, profile
 		if Cultivation.can_attempt_breakthrough(c, data):
 			if real and c.breakthrough_bonus <= 0.0 and _buy_pill(c, data):
 				pills += 1
-			if Cultivation.attempt_breakthrough(c, data, rng)["success"]:
+			# No techniques or gear are modelled here, so tribulations strike
+			# at the NPC strength tuned for such cultivators (QA-010).
+			if Cultivation.attempt_breakthrough(c, data, rng, true)["success"]:
 				reached[c.realm_index] = c.age_years()
 		elif c.realm_index >= data.realms.size() - 1 and Cultivation.is_at_bottleneck(c, data):
 			return {"ages": reached, "final_realm": c.realm_index, "old_age": false, "pills": pills}

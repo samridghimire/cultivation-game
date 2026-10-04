@@ -20,12 +20,15 @@ func get_options() -> Array[Dictionary]:
 	if refusal != "":
 		options.append({"label": refusal, "action": Callable(), "disabled": true})
 		return options
+	var price_note := ""
+	if not is_equal_approx(Reputation.price_multiplier(GameState.player, data, faction), 1.0):
+		price_note = " (%s price)" % Reputation.tier_name(GameState.player, data, faction)
 	for item: Dictionary in data.items.values():
 		if not Items.merchant_sells(data, item, stock_tags, max_price):
 			continue
 		var price := Reputation.buy_price(GameState.player, data, item["id"], faction)
 		options.append({
-			"label": "Buy %s (%d spirit stones)" % [item["name"], price],
+			"label": "Buy %s (%d spirit stones)%s" % [item["name"], price, price_note],
 			"action": GameState.buy_item.bind(item["id"], faction),
 			"disabled": GameState.player.item_count("spirit_stone") < price,
 			"keep_open": true,

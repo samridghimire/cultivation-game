@@ -1,0 +1,16 @@
+{
+  "_doc": "Spirit beast companions (BEAST-001, Beasts system). A character who practises the Beast Tamer profession (any rank) and defeats an enemy listed as a beast's `enemy` may tame it: chance = tame.base_chance + tame.chance_per_rank * Beast Tamer rank, capped at tame.max_chance (min_rank: lowest Beast Tamer rank that may try). Each attempt gives tame.xp Beast Tamer xp. A character keeps at most max_companions beasts. Each companion adds its `bonuses` (fractions of the master's combat stats: max_hp, attack, defense, speed), scaled by (1 + rank_scale * Beast Tamer rank) and by outgrown_scale ^ (master's realm - the beast's enemy realm) once the master outgrows it, so stronger beasts stay useful longer.",
+  "max_companions": 1,
+  "rank_scale": 0.1,
+  "outgrown_scale": 0.5,
+  "tame": {"base_chance": 0.15, "chance_per_rank": 0.08, "max_chance": 0.75, "xp": 40},
+  "beasts": [
+    {"id": "boar", "name": "Fields Boar", "enemy": "wild_boar", "min_rank": 0, "description": "A stubborn boar that now charges at your enemies instead of you.", "bonuses": {"max_hp": 0.1}},
+    {"id": "mist_wolf", "name": "Mist Wolf", "enemy": "mist_wolf", "min_rank": 0, "description": "A grey wolf that fades into fog and bites from where the enemy is not looking.", "bonuses": {"attack": 0.08, "speed": 0.05}},
+    {"id": "stone_ape", "name": "Stone Ape", "enemy": "stone_ape", "min_rank": 1, "description": "A granite-hided ape that takes blows meant for its master.", "bonuses": {"max_hp": 0.1, "defense": 0.08}},
+    {"id": "cloud_eagle", "name": "Cloud Eagle", "enemy": "cloud_eagle", "min_rank": 2, "description": "A spirit eagle that dives from the clouds at your foes.", "bonuses": {"attack": 0.1, "speed": 0.08}},
+    {"id": "flame_fox", "name": "Flame-Tailed Fox", "enemy": "flame_tailed_fox", "min_rank": 2, "description": "A sly three-tailed fox that sets the air ablaze around your enemies.", "bonuses": {"attack": 0.14}},
+    {"id": "jade_python", "name": "Jade-Scaled Python", "enemy": "jade_python", "min_rank": 3, "description": "An ancient serpent whose coils turn aside blades.", "bonuses": {"max_hp": 0.12, "defense": 0.12}},
+    {"id": "thunderwing_roc", "name": "Thunderwing Roc", "enemy": "thunderwing_roc", "min_rank": 4, "description": "A storm-riding roc. Lightning answers its cry.", "bonuses": {"attack": 0.15, "speed": 0.1}}
+  ]
+}

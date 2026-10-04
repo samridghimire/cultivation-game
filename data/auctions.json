@@ -1,0 +1,32 @@
+{
+  "_doc": "Auction houses (AUC-001, Auctions). Each house in `region` (regions.json id) holds an auction every period_days days, first at offset_days after the game starts, lasting open_days days. Each auction draws `lots` distinct entries from lot_table by weight. Lot entry: item (items.json id), count (default 1), base_price (spirit stones, the opening bid), weight (> 0), rarity (one of Auctions.RARITIES, for display). `bidders` NPC bidders each roll a hidden maximum of base_price * a random factor in bid_spread [low, high]; the lot's NPC max is the highest of them (0 bidders = no competition). The player places one sealed bid per lot (at least base_price): above the NPC max wins and pays the bid, otherwise a rival takes the lot. Lots are rolled from the world seed, so an auction's lots are fixed once it opens.",
+  "houses": [
+    {
+      "id": "fallen_star_auction",
+      "name": "Fallen Star Auction House",
+      "description": "Every season the Myriad Treasure Pavilion auctions relics, pills and manuals dug from ruins across the realm.",
+      "region": "fallen_star_market",
+      "period_days": 90,
+      "offset_days": 30,
+      "open_days": 10,
+      "lots": 4,
+      "bidders": 3,
+      "bid_spread": [0.8, 1.5],
+      "lot_table": [
+        {"item": "foundation_establishment_pill", "count": 1, "base_price": 250, "weight": 4, "rarity": "rare"},
+        {"item": "flawless_foundation_establishment_pill", "count": 1, "base_price": 550, "weight": 1.5, "rarity": "epic"},
+        {"item": "jade_marrow_pill", "count": 1, "base_price": 450, "weight": 2, "rarity": "rare"},
+        {"item": "thousand_year_lingzhi", "count": 1, "base_price": 320, "weight": 3, "rarity": "rare"},
+        {"item": "golden_core_lotus_seed", "count": 1, "base_price": 500, "weight": 1.5, "rarity": "epic"},
+        {"item": "star_silver", "count": 2, "base_price": 300, "weight": 3, "rarity": "uncommon"},
+        {"item": "dragonblood_gold", "count": 1, "base_price": 320, "weight": 2, "rarity": "rare"},
+        {"item": "manual_five_thunders_palm", "count": 1, "base_price": 700, "weight": 1, "rarity": "epic"},
+        {"item": "manual_thousand_leaves_step", "count": 1, "base_price": 600, "weight": 1, "rarity": "epic"},
+        {"item": "recipe_foundation_establishment_pill", "count": 1, "base_price": 380, "weight": 2, "rarity": "rare"},
+        {"item": "heaven_splitting_sword_talisman", "count": 1, "base_price": 480, "weight": 1.5, "rarity": "rare"},
+        {"item": "star_river_sword", "count": 1, "base_price": 1800, "weight": 0.5, "rarity": "legendary"},
+        {"item": "core_forming_pill", "count": 1, "base_price": 2500, "weight": 0.3, "rarity": "legendary"}
+      ]
+    }
+  ]
+}
