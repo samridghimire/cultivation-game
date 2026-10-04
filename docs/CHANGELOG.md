@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-04 [UI-003c] Remappable controls: Settings > Controls lets you rebind every action's key and gamepad button (conflicts swap), saved between sessions.
 - 2026-10-04 [UI-002b] The message log can be filtered by topic (combat, cultivation, family, sect, trade, world) as well as severity, and the on-screen log keeps its lines after travelling.
 - 2026-10-04 [BEAST-001c] Seven more spirit beasts to tame (mist foxes, iron-backed boars, azure cranes, blood-eyed marsh wolves, rhinos, frost spiders and a bear king), and Beast Tamers can mix beast feed at the workshop.
 - 2026-10-04 [BEAST-001b, BEAST-001d] Spirit beast companions show on the character sheet, follow you around the world, and grow stronger when you feed them herbs and treasures, staying useful long after you outgrow them.
