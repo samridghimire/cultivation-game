@@ -76,9 +76,35 @@ static func check_partner(c: CharacterData, other: CharacterData, data: GameData
 		return "%s does not return that kind of interest." % other.name
 	if is_married_to(c, other):
 		return "%s is already your spouse." % other.name
+	if is_close_kin(c, other, people):
+		return "%s is your kin." % other.name
 	if not living_spouses(other, people).is_empty():
 		return "%s is already married." % other.name
 	return ""
+
+
+## Whether `a` and `b` are close kin who may not marry: parent and child,
+## grandparent and grandchild, or (half-)siblings. Grandparents are looked up
+## through `people` (ids missing from it are skipped).
+static func is_close_kin(a: CharacterData, b: CharacterData, people: Dictionary = {}) -> bool:
+	if a.children.has(b.id) or b.children.has(a.id):
+		return true
+	for parent_id in a.parents:
+		if b.parents.has(parent_id):
+			return true
+	return _ancestors(a, people, a, b).has(b.id) or _ancestors(b, people, a, b).has(a.id)
+
+
+## Parent and grandparent ids of `c`. `a` and `b` are found by id even when
+## they are not in `people` (e.g. the player).
+static func _ancestors(c: CharacterData, people: Dictionary, a: CharacterData, b: CharacterData) -> Array[String]:
+	var out: Array[String] = []
+	for parent_id in c.parents:
+		out.append(parent_id)
+		var parent: CharacterData = a if parent_id == a.id else b if parent_id == b.id else people.get(parent_id)
+		if parent != null:
+			out.append_array(parent.parents)
+	return out
 
 
 ## Favor gained per courtship outing: base, adjusted by Charisma (minimum 1).
