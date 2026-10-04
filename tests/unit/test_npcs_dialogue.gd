@@ -115,6 +115,32 @@ func test_doctor_only_finds_the_injured() -> void:
 	assert_false(ids.has("wild_doctor"))
 
 
+func test_c006_npcs_open_by_alignment_and_favor() -> void:
+	var npcs := _npcs()
+	var c := new_character()
+	var xue: Dictionary = data().dialogues["blood_lotus_xue"]
+	assert_eq(Dialogue.entry_node(xue, _ctx("blood_lotus_xue", c, npcs)), "greet")
+	c.alignment = -400
+	assert_eq(Dialogue.entry_node(xue, _ctx("blood_lotus_xue", c, npcs)), "kin")
+	c.alignment = 400
+	assert_eq(Dialogue.entry_node(xue, _ctx("blood_lotus_xue", c, npcs)), "righteous")
+	var gu: Dictionary = data().dialogues["hermit_gu"]
+	c.alignment = 0
+	assert_eq(Dialogue.entry_node(gu, _ctx("hermit_gu", c, npcs, {}, 50)), "greet", "Qi Refining is too weak for his legacy")
+	c.realm_index = data().realm_index_of("foundation_establishment")
+	assert_eq(Dialogue.entry_node(gu, _ctx("hermit_gu", c, npcs, {}, 50)), "inheritance")
+	assert_eq(Dialogue.entry_node(gu, _ctx("hermit_gu", c, npcs, {"gu_inheritance": true}, 50)), "greet")
+	var hua: Dictionary = data().dialogues["alchemist_hua"]
+	assert_eq(Dialogue.entry_node(hua, _ctx("alchemist_hua", c, npcs, {}, 30)), "greet_friend")
+
+
+func test_hermit_gu_is_near_the_end_of_his_life() -> void:
+	var npcs := _npcs()
+	var gu: CharacterData = npcs["hermit_gu"]
+	var left := Cultivation.years_left(gu, data())
+	assert_true(left > 0 and left <= 40, "Hermit Gu should have only a few decades left, has %d" % left)
+
+
 func _choice_index(view: Dictionary, label_start: String) -> int:
 	for choice: Dictionary in view.get("choices", []):
 		if (choice["label"] as String).begins_with(label_start) and not choice["disabled"]:
