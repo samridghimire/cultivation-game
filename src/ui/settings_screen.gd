@@ -18,7 +18,7 @@ var _value_labels: Dictionary = {}  # setting key -> Label
 
 
 func _init() -> void:
-	add_theme_stylebox_override("panel", UIStyle.panel().get_theme_stylebox("panel"))
+	add_theme_stylebox_override("panel", UIStyle.panel_style())
 	custom_minimum_size = Vector2(480, 0)
 	visible = false
 	var box := VBoxContainer.new()
