@@ -25,6 +25,7 @@ var _crafting: CraftingScreen
 var _mission_board: MissionBoard
 var _banner: Banner
 var _respawn: RespawnScreen
+var _tribulation: TribulationScreen
 var _death_screen: Control
 
 
@@ -78,6 +79,10 @@ func _ready() -> void:
 	_respawn.closed.connect(_update_modal)
 	add_child(UIStyle.centered(_respawn))
 	_combat_report.closed.connect(_open_pending_respawn)
+	_tribulation = TribulationScreen.new()
+	_tribulation.closed.connect(_update_modal)
+	_tribulation.closed.connect(_open_pending_respawn)
+	add_child(UIStyle.centered(_tribulation))
 	_banner = Banner.new()
 	add_child(_banner)
 	_build_death_screen()
@@ -93,6 +98,8 @@ func _ready() -> void:
 	EventBus.player_died.connect(_on_player_died)
 	EventBus.player_respawned.connect(func(_anchor_id: String, _lives: int): _open_pending_respawn())
 	EventBus.combat_finished.connect(_on_combat_finished)
+	EventBus.tribulation_prepare_requested.connect(_on_tribulation_prepare)
+	EventBus.tribulation_endured.connect(_on_tribulation_endured)
 	EventBus.breakthrough_attempted.connect(_on_breakthrough)
 	EventBus.dialogue_requested.connect(_on_dialogue_requested)
 	EventBus.dialogue_ended.connect(func(_id): _dialogue.close())
@@ -104,7 +111,7 @@ func _ready() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if _choice_menu.visible or _dialogue.visible or _encounter.visible or _combat_report.visible or _respawn.visible or _pause_menu.visible or _settings.visible or _help.visible or _load_screen.visible or _death_screen.visible:
+	if _choice_menu.visible or _dialogue.visible or _encounter.visible or _combat_report.visible or _tribulation.visible or _respawn.visible or _pause_menu.visible or _settings.visible or _help.visible or _load_screen.visible or _death_screen.visible:
 		return
 	if event.is_action_pressed("pause_menu"):
 		# Consumed here so the world's own Esc handling never runs mid-session.
@@ -248,7 +255,7 @@ func _on_target_changed(display_name: String) -> void:
 
 
 func _on_menu_requested(source: Node) -> void:
-	if _any_screen_open() or _dialogue.visible or _encounter.visible or _combat_report.visible or _respawn.visible or _pause_menu.visible or _settings.visible or _help.visible or _load_screen.visible or _death_screen.visible:
+	if _any_screen_open() or _dialogue.visible or _encounter.visible or _combat_report.visible or _tribulation.visible or _respawn.visible or _pause_menu.visible or _settings.visible or _help.visible or _load_screen.visible or _death_screen.visible:
 		return
 	_choice_menu.open_for(source)
 	_update_modal()
@@ -259,6 +266,7 @@ func _on_player_died(cause: String) -> void:
 	_close_screens()
 	_combat_report.close()
 	_respawn.close()
+	_tribulation.close()
 	_dialogue.close()
 	_encounter.close()
 	_pause_menu.close()
@@ -280,10 +288,26 @@ func _on_combat_finished(enemy_name: String, victory: bool, lines: PackedStringA
 	_update_modal()
 
 
+## A breakthrough would bring a Heavenly Tribulation: warn before attempting.
+func _on_tribulation_prepare() -> void:
+	_choice_menu.close()
+	_close_screens()
+	_tribulation.open_prepare()
+	_update_modal()
+
+
+## Play the tribulation's waves; a respawn (if it killed) waits until it closes.
+func _on_tribulation_endured(realm_name: String, result: Dictionary) -> void:
+	_choice_menu.close()
+	_close_screens()
+	_tribulation.show_result(realm_name, result)
+	_update_modal()
+
+
 ## The artifact saved the player: once the fight report is read, let them
 ## choose which anchor to awaken at.
 func _open_pending_respawn() -> void:
-	if GameState.pending_respawn.is_empty() or _combat_report.visible or _death_screen.visible:
+	if GameState.pending_respawn.is_empty() or _combat_report.visible or _tribulation.visible or _death_screen.visible:
 		return
 	_choice_menu.close()
 	_close_screens()
@@ -352,7 +376,7 @@ func _on_settings_closed() -> void:
 
 
 func _update_modal() -> void:
-	EventBus.ui_modal_changed.emit(_choice_menu.visible or _dialogue.visible or _encounter.visible or _any_screen_open() or _combat_report.visible or _respawn.visible or _pause_menu.visible or _settings.visible or _help.visible or _load_screen.visible or _death_screen.visible)
+	EventBus.ui_modal_changed.emit(_choice_menu.visible or _dialogue.visible or _encounter.visible or _any_screen_open() or _combat_report.visible or _tribulation.visible or _respawn.visible or _pause_menu.visible or _settings.visible or _help.visible or _load_screen.visible or _death_screen.visible)
 
 
 func _return_to_menu() -> void:
