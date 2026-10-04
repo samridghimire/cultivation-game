@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-03 [UI-009] "Next steps" hints on the character sheet and a HUD hint line (toggle in Settings): qi to next stage, breakthrough odds and pills, injuries, lifespan, pregnancy, artifact lives, sect and profession pointers.
 - 2026-10-03 [UI-008] World map screen (M / gamepad Back): regions, roads with travel days and realm gates, region details and places.
 - 2026-10-03 [QA-008] Gamepad/focus audit test: every HUD modal must take focus and close on ui_cancel (all pass today); unit tests may now await frames.
 - 2026-10-03 [QA-007c] Sect missions can require a stage within their realm (`min_stage`), and Sects.mission_danger rates a mission's fight; Harvest a Rogue Cultivator now opens at Qi Refining 5th Layer instead of sending 1st Layer disciples to near-certain death.
