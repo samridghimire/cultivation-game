@@ -1614,6 +1614,26 @@ func recharge_artifact() -> void:
 	EventBus.player_changed.emit()
 
 
+## Cultivate inside the artifact's Inner World for `days` of world time: the
+## dilated inner days count for cultivation and age the body (InnerWorld).
+func enter_inner_world(days: int) -> void:
+	if not _can_act():
+		return
+	_start_time_skip()
+	var result := InnerWorld.cultivate(player, data, days, Sects.cultivation_bonus(player, data))
+	if not result["ok"]:
+		_skip_before = {}
+		EventBus.post(result["reason"], "warning")
+		EventBus.player_changed.emit()
+		return
+	EventBus.post("You spend %s in the inner world while %s pass outside, and gather %d qi." % [Calendar.format_duration(result["inner_days"]), Calendar.format_duration(days), int(result["qi_gained"])], "progress")
+	if result["stages_gained"] > 0:
+		EventBus.post("Your cultivation rises to %s!" % Cultivation.realm_label(player, data), "progress")
+	if result["at_bottleneck"]:
+		EventBus.post("You have reached a bottleneck. Attempt a breakthrough to advance.", "warning")
+	_pass_time(days, "In the inner world")
+
+
 ## Feed items (spirit stones, treasures) to the Creation Artifact for energy.
 func feed_artifact(item_id: String, quantity: int = 1) -> void:
 	if not _can_act():

@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-04 [ART-003b] The Creation Artifact's Inner World: unseal it at Foundation Establishment to cultivate in a pocket valley of thick qi where two days pass for every one outside (and your body ages with them).
 - 2026-10-04 [ART-003c] With the artifact's appraising eye unsealed, looking at people reveals their roots, talent and heart, and item details reveal grades and true worth.
 - 2026-10-04 [G-006c, ART-003d] Three higher-grade gathering arrays for Foundation and Core Formation array masters (+80%, +120%, +150% seclusion qi), formation flags and formation jade to build them, and array bonuses shown by appraisal and in the inventory.
 - 2026-10-04 [QA-014] Long-session sim (tests/sim/simulate_world.gd): over 200 game years the world stays at ~340 NPCs, ~430 kB saves and ~15 ms per simulated month.
