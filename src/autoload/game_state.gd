@@ -362,6 +362,9 @@ func equip_item(item_id: String) -> void:
 		if previous != "":
 			text += " The %s goes back into your pack." % data.items[previous]["name"]
 		EventBus.post(text, "progress")
+		var shift := Equipment.bind_artifact(player, data, item_id)
+		if shift != 0:
+			EventBus.post("The %s drinks a drop of your blood and binds itself to you. Your heart shifts: alignment %+d (%s)." % [data.items[item_id]["name"], shift, Alignment.tier_name(player.alignment, data)], "karma")
 		if Equipment.item_drain(data, item_id) > 0:
 			EventBus.post("It thirsts for your life. %d years remain to you." % Cultivation.years_left(player, data), "danger")
 	EventBus.player_changed.emit()
