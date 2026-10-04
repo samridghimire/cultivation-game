@@ -37,6 +37,18 @@ func test_every_input_action_has_a_help_name() -> void:
 		assert_true(names.has(action), "help.json action_names is missing '%s'" % action)
 
 
+func test_no_two_actions_share_a_key_or_button() -> void:
+	# The HUD opens the first screen whose action matches, so a shared binding
+	# makes the later screen unreachable.
+	var input_config := _root().get_node("InputConfig")
+	for table: Dictionary in [input_config.KEYS, input_config.JOY_BUTTONS]:
+		var owner := {}
+		for action: String in table:
+			for code in table[action]:
+				assert_false(owner.has(code), "'%s' and '%s' share binding %s" % [owner.get(code, ""), action, code])
+				owner[code] = action
+
+
 func test_screen_shows_controls_then_pages() -> void:
 	var screen := HelpScreen.new()
 	_root().add_child(screen)
@@ -54,3 +66,21 @@ func test_screen_shows_controls_then_pages() -> void:
 	screen.close()
 	assert_false(screen.visible)
 	screen.free()
+
+
+func test_main_menu_help_opens_without_a_session() -> void:
+	var menu: Node = load("res://src/ui/main_menu.tscn").instantiate()
+	_root().add_child(menu)
+	var help_button: Button = null
+	for b in menu.find_children("*", "Button", true, false):
+		if (b as Button).text == "Help":
+			help_button = b
+	assert_true(help_button != null, "main menu has a Help button")
+	help_button.pressed.emit()
+	var help: HelpScreen = menu.help_screen()
+	assert_true(help.visible, "help opens")
+	assert_false(menu._menu.visible, "title buttons hidden behind help")
+	help.close()
+	assert_false(help.visible)
+	assert_true(menu._menu.visible, "closing help returns to the title menu")
+	menu.queue_free()

@@ -1,7 +1,7 @@
 class_name Scenery
 extends RefCounted
 ## Decorative scenery for a region map (VIS-002): trees, rocks, grass tufts and
-## flowers scattered off the paths, places, npc_spots and spawn point.
+## flowers scattered off the paths, places, abodes, npc_spots and spawn point.
 ## Pure placement: the world scene draws the result. Counts and colors come
 ## from regions.json `map.decor`, falling back to DEFAULTS.
 
@@ -57,12 +57,12 @@ static func place(region: Dictionary, rng: RandomNumberGenerator) -> Array[Dicti
 	return out
 
 
-## Paths as-is and places grown by CLEARANCE (places are centered on pos).
+## Paths as-is, places and abodes grown by CLEARANCE (both are centered on pos).
 static func blocked_rects(region: Dictionary) -> Array[Rect2]:
 	var out: Array[Rect2] = []
 	for r in region.get("map", {}).get("paths", []):
 		out.append(Rect2(float(r[0]), float(r[1]), float(r[2]), float(r[3])))
-	for p: Dictionary in region.get("places", []):
+	for p: Dictionary in region.get("places", []) + region.get("abodes", []):
 		var pos: Array = p.get("pos", [0, 0])
 		var sz: Array = p.get("size", [64, 64])
 		var size := Vector2(float(sz[0]), float(sz[1]))

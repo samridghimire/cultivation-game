@@ -1,8 +1,9 @@
 extends TestCase
 ## QA-004: every item and recipe in the data can actually be obtained in play.
 ## Sources: merchant stock (regions.json merchants, stock_tags, max_price),
+## sect contribution shops (sects.json shop),
 ## gather tables, positive `items` grants in effects/rewards (encounters,
-## deeds, enemies, sect missions, dialogue), the starting inventory, and
+## deeds, enemies, sect missions, dialogue, secret realm treasures), the starting inventory, and
 ## recipe outputs whose recipe is known (starter or taught by an obtainable
 ## item) and whose ingredients are obtainable.
 
@@ -51,6 +52,9 @@ func _audit() -> Dictionary:
 	for item_id: String in gd.items:
 		if _sold_by_a_merchant(gd.items[item_id]):
 			items[item_id] = true
+	for sect: SectDef in gd.sects.values():
+		for entry: Dictionary in sect.shop:
+			items[String(entry["item_id"])] = true
 	for item_id: String in new_character().inventory:
 		items[item_id] = true
 	var recipes := {}
@@ -115,6 +119,7 @@ func _collect_grants(granted: Dictionary) -> void:
 		"enemies.json": gd.enemies,
 		"sect_missions.json": gd.sect_missions,
 		"dialogue": gd.dialogues,
+		"secret_realms.json": gd.secret_realms,
 	}
 	for label: String in sources:
 		_walk(sources[label], label, "", granted)

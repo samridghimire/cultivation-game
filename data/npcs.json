@@ -1,5 +1,5 @@
 {
-  "_doc": "Named NPCs. Each becomes a CharacterData at session start and lives on: it ages, cultivates off-screen (if 'cultivates') at its region's qi density times 'diligence' (fraction of days spent cultivating, default 0.3), attempts breakthroughs and can die of old age. realm is a realm id; roots map element ids to purity (omit to roll randomly); attributes default to 10. region/pos/size/color place the NPC in the world. gender (optional) is a data/names.json gender; surname/given_name are optional (name stays the display name). NPCs generated at runtime (Npcs.spawn) have no entry here. dialogue is a file id in data/dialogue/. deed_context (optional) also offers deeds from data/deeds.json.",
+  "_doc": "Named NPCs. Each becomes a CharacterData at session start and lives on: it ages, cultivates off-screen (if 'cultivates') at its region's qi density times 'diligence' (fraction of days spent cultivating, default 0.3), attempts breakthroughs and can die of old age. realm is a realm id; roots map element ids to purity (omit to roll randomly); attributes default to 10. region/pos/size/color place the NPC in the world. gender (optional) is a data/names.json gender; surname/given_name are optional (name stays the display name). NPCs generated at runtime (Npcs.spawn) have no entry here. dialogue is a file id in data/dialogue/. deed_context (optional) also offers deeds from data/deeds.json. bloodline (optional) is a data/bloodlines.json id the NPC carries (and may pass to children).",
   "npcs": [
     {"id": "elder_mo", "name": "Elder Mo", "title": "Retired Cultivator", "region": "qingshi_village", "pos": [560, 170], "color": "9fa3c9",
      "gender": "male",
@@ -20,7 +20,7 @@
     {"id": "swordsman_yun", "name": "Yun Feng", "title": "Wandering Swordsman", "region": "azure_peak", "pos": [420, 760], "color": "b8d4e8",
      "gender": "male", "surname": "Yun", "given_name": "Feng",
      "realm": "foundation_establishment", "stage": 3, "age_years": 88, "alignment": 300, "roots": {"metal": 90},
-     "attributes": {"constitution": 14, "spirit": 13}, "cultivates": true, "dialogue": "swordsman_yun"},
+     "attributes": {"constitution": 14, "spirit": 13}, "cultivates": true, "bloodline": "white_tiger", "dialogue": "swordsman_yun"},
     {"id": "alchemist_hua", "name": "Hua Qingyi", "title": "Wandering Alchemist", "region": "fallen_star_market", "pos": [700, 470], "color": "c99ad8",
      "gender": "female", "surname": "Hua", "given_name": "Qingyi",
      "realm": "qi_refining", "stage": 8, "age_years": 74, "alignment": 40, "roots": {"fire": 68, "wood": 52},
@@ -28,7 +28,7 @@
     {"id": "blood_lotus_xue", "name": "Xue Yao", "title": "Blood Lotus Disciple", "region": "misty_forest", "pos": [1250, 480], "color": "b0303c",
      "gender": "female", "surname": "Xue", "given_name": "Yao",
      "realm": "qi_refining", "stage": 7, "age_years": 29, "alignment": -480, "roots": {"fire": 62, "metal": 47},
-     "attributes": {"constitution": 13, "charisma": 13}, "cultivates": true, "diligence": 0.5, "dialogue": "blood_lotus_xue"},
+     "attributes": {"constitution": 13, "charisma": 13}, "cultivates": true, "diligence": 0.5, "bloodline": "blood_asura", "dialogue": "blood_lotus_xue"},
     {"id": "hermit_gu", "name": "Hermit Gu", "title": "Retired Azure Cloud Elder", "region": "azure_peak", "pos": [1050, 180], "color": "e6e0c8",
      "gender": "male", "surname": "Gu", "given_name": "Changhe",
      "realm": "core_formation", "stage": 0, "age_years": 471, "alignment": 380, "roots": {"water": 77, "metal": 41},

@@ -7,6 +7,8 @@ extends RefCounted
 ## Hostile acts (humiliate, rob, kill) raise the victim's grudge and spread a
 ## kin_grudge to their living parents, children and spouses, so killing a man
 ## earns you his son's hatred. Making amends with spirit stones clears a grudge.
+## RIV-001e: healing and gifts earn gratitude (karma.json `gratitude`); grateful
+## NPCs warm to you faster and now and then repay the debt with a gift.
 
 
 static func act(data: GameData, act_id: String) -> Dictionary:
@@ -139,6 +141,73 @@ static func commit(c: CharacterData, npc: CharacterData, act_id: String, won: bo
 	return {"notes": notes, "favor": int(a.get("favor", 0)), "days": int(a.get("days", 0)), "kin": kin}
 
 
+static func _gratitude_rules(data: GameData) -> Dictionary:
+	return data.karma.get("gratitude", {})
+
+
+## Gratitude earned from a kind act (karma.json gratitude.sources, e.g.
+## "treat_npc", "gift"). Adds it to `npc_id`'s ledger and returns the amount.
+static func on_kindness(c: CharacterData, data: GameData, npc_id: String, source: String) -> int:
+	var amount := int(_gratitude_rules(data).get("sources", {}).get(source, 0))
+	if amount <= 0:
+		return 0
+	var before := gratitude(c, npc_id)
+	return add_gratitude(c, data, npc_id, amount) - before
+
+
+## Extra favor a grateful NPC gives on top of `gain` (gain x gratitude x
+## favor_bonus_per_point, rounded down), never more than `room`.
+static func favor_bonus(c: CharacterData, data: GameData, npc_id: String, gain: int, room: int) -> int:
+	if gain <= 0:
+		return 0
+	var bonus := int(gain * gratitude(c, npc_id) * float(_gratitude_rules(data).get("favor_bonus_per_point", 0.0)))
+	return clampi(bonus, 0, maxi(0, room))
+
+
+## Grateful NPCs repay their debt over `months`: each living NPC owing at least
+## repay.min_gratitude has chance_per_month to send spirit stones (stones_per_realm
+## [min, max] x (their realm index + 1)) plus one weighted gift, which spends
+## repay.cost gratitude. Returns [{npc_id, notes}].
+static func repay_debts(c: CharacterData, people: Dictionary, data: GameData, months: int, rng: RandomNumberGenerator, flags: Dictionary) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	var rules: Dictionary = _gratitude_rules(data).get("repay", {})
+	if rules.is_empty() or months <= 0:
+		return out
+	var ids: Array = c.gratitude.keys()
+	ids.sort()
+	for npc_id in ids:
+		var npc: CharacterData = people.get(npc_id)
+		if npc == null or not npc.alive:
+			continue
+		for i in months:
+			if gratitude(c, npc_id) < int(rules.get("min_gratitude", 1)) or rng.randf() >= float(rules.get("chance_per_month", 0.0)):
+				continue
+			out.append({"npc_id": String(npc_id), "notes": _repay(c, npc, rules, data, rng, flags)})
+			add_gratitude(c, data, npc_id, -int(rules.get("cost", 0)))
+	return out
+
+
+static func _repay(c: CharacterData, npc: CharacterData, rules: Dictionary, data: GameData, rng: RandomNumberGenerator, flags: Dictionary) -> PackedStringArray:
+	var notes: PackedStringArray = []
+	var range_: Array = rules.get("stones_per_realm", [])
+	if range_.size() == 2:
+		var stones := rng.randi_range(int(range_[0]), int(range_[1])) * (npc.realm_index + 1)
+		if stones > 0:
+			c.add_item("spirit_stone", stones)
+			notes.append("+%d Spirit Stone" % stones)
+	var total := 0
+	for gift: Dictionary in rules.get("gifts", []):
+		total += maxi(0, int(gift.get("weight", 1)))
+	if total > 0:
+		var roll := rng.randi_range(1, total)
+		for gift: Dictionary in rules.get("gifts", []):
+			roll -= maxi(0, int(gift.get("weight", 1)))
+			if roll <= 0:
+				notes.append_array(Effects.apply(c, data, gift.get("effects", {}), flags))
+				break
+	return notes
+
+
 ## Spirit stones it takes to make amends with `npc_id` (0 = no grudge).
 static func amends_cost(c: CharacterData, npc_id: String, data: GameData) -> int:
 	var g := grudge(c, npc_id)
@@ -198,6 +267,21 @@ static func describe(c: CharacterData, people: Dictionary) -> Array[String]:
 	return out
 
 
+## Sentences for an NPC's "Look" text: how much `npc` hates or owes `c`, in
+## words from data/karma.json "attitudes" (empty when neither ledger has them).
+static func attitude(c: CharacterData, npc: CharacterData, data: GameData) -> Array[String]:
+	var out: Array[String] = []
+	var attitudes: Dictionary = data.karma.get("attitudes", {})
+	for entry in [["grudge", grudge(c, npc.id)], ["gratitude", gratitude(c, npc.id)]]:
+		var sentence := ""
+		for tier: Array in attitudes.get(entry[0], []):
+			if int(entry[1]) >= int(tier[0]):
+				sentence = String(tier[1])
+		if sentence != "":
+			out.append(sentence.replace("{name}", npc.name))
+	return out
+
+
 static func validate(data: GameData) -> PackedStringArray:
 	var errors: PackedStringArray = []
 	if data.karma.is_empty():
@@ -211,4 +295,25 @@ static func validate(data: GameData) -> PackedStringArray:
 				errors.append("karma act '%s': %s must not be negative" % [a.get("id", "?"), key])
 		if String(a.get("name", "")) == "":
 			errors.append("karma act '%s' has no name" % a.get("id", "?"))
+	var rules := _gratitude_rules(data)
+	for source in rules.get("sources", {}):
+		if int(rules["sources"][source]) < 0:
+			errors.append("karma gratitude source '%s' must not be negative" % source)
+	var repay: Dictionary = rules.get("repay", {})
+	var range_: Array = repay.get("stones_per_realm", [])
+	if not range_.is_empty() and (range_.size() != 2 or int(range_[0]) > int(range_[1]) or int(range_[0]) < 0):
+		errors.append("karma gratitude repay.stones_per_realm must be [min, max]")
+	if not repay.is_empty() and int(repay.get("cost", 0)) <= 0:
+		errors.append("karma gratitude repay.cost must be positive")
+	for gift: Dictionary in repay.get("gifts", []):
+		for item_id in gift.get("effects", {}).get("items", {}):
+			if not data.items.has(item_id):
+				errors.append("karma gratitude repay gift has unknown item '%s'" % item_id)
+	for ledger in ["grudge", "gratitude"]:
+		var last := 0
+		for tier: Variant in data.karma.get("attitudes", {}).get(ledger, []):
+			if not tier is Array or tier.size() != 2 or int(tier[0]) <= last or String(tier[1]) == "":
+				errors.append("karma attitudes.%s: tiers must be [min_points > 0, sentence] in ascending order" % ledger)
+				break
+			last = int(tier[0])
 	return errors
