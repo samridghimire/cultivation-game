@@ -105,3 +105,30 @@ func test_game_state_npc_clans() -> void:
 	assert_true((gs.npc_clans["yun_clan"] as ClanData).head != head.id, "succession runs as time passes")
 	gs.end_session()
 	assert_eq(gs.npc_clans.size(), 0)
+
+
+## FAM-009d: clan membership in the NPC Look text and the clan list.
+func test_membership_text_and_summary() -> void:
+	var gs := (Engine.get_main_loop() as SceneTree).root.get_node("GameState")
+	gs.start_session(new_character())
+	var clan_id: String = gs.npc_clans.keys()[0]
+	var clan: ClanData = gs.npc_clans[clan_id]
+	var head: CharacterData = gs.npcs[clan.head]
+	assert_eq(NpcClans.membership_text(gs.npc_clans, gs.npcs, gs.data, clan.head), "%s of the %s" % [Clans.rank_name(gs.data, Clans.head_rank(gs.data), head.gender), clan.name])
+	var heir_id := Clans.heir(clan, head, gs.npcs, gs.data)
+	assert_true(heir_id != "", "founded clans have children")
+	assert_true(NpcClans.membership_text(gs.npc_clans, gs.npcs, gs.data, heir_id).begins_with(Clans.heir_title(gs.data, (gs.npcs[heir_id] as CharacterData).gender)))
+	assert_eq(NpcClans.membership_text(gs.npc_clans, gs.npcs, gs.data, gs.player.rival), "", "the rival belongs to no clan")
+	var lines := NpcClans.summary_lines(gs.npc_clans, gs.npcs, gs.data)
+	assert_eq(lines.size(), gs.npc_clans.size())
+	assert_true(Array(lines).any(func(l: String) -> bool: return l.begins_with(clan.name) and l.contains("led by %s" % head.name)), str(lines))
+	var npc: Node = load("res://src/world/interactables/npc.gd").new()
+	npc.npc_id = clan.head
+	var posted: Array = []
+	var cb := func(text: String, _c: String) -> void: posted.append(text)
+	gs.get_node("/root/EventBus").message_posted.connect(cb)
+	npc._look()
+	gs.get_node("/root/EventBus").message_posted.disconnect(cb)
+	assert_true(String(posted[-1]).contains("of the %s" % clan.name), str(posted))
+	npc.free()
+	gs.end_session()

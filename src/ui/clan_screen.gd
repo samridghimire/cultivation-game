@@ -7,7 +7,8 @@ extends PanelContainer
 ## could be recruited as retainers. The heir (Clans.heir, FAM-008b) is named in
 ## the summary and marked in the list; descendant members can be named heir.
 ## The Estate section (FAM-006b) lists buildings with their level, effects and
-## a build/upgrade action (ClanEstate). Rules live in Clans / ClanEstate / GameState.
+## a build/upgrade action (ClanEstate), and the NPC clans of the realm are
+## summarized (FAM-009d). Rules live in Clans / ClanEstate / GameState.
 
 signal closed
 
@@ -208,7 +209,7 @@ func _rebuild() -> void:
 		_title.text = "Found a Clan"
 		_summary.text = ""
 		_summary.visible = false
-		_found_info.text = founding_text(data)
+		_found_info.text = founding_text(data) + "\n\nClans of the realm:\n  " + "\n  ".join(NpcClans.summary_lines(GameState.npc_clans, GameState.npcs, data))
 		var reason := Clans.check_found(p, clan, data)
 		_found_status.text = reason
 		_found_status.visible = reason != ""
@@ -248,6 +249,11 @@ func _rebuild() -> void:
 		var reason := Clans.check_recruit(p, clan, c, int(GameState.npc_favor.get(c.id, 0)), data)
 		keys.append("r:" + c.id)
 		_list.add_child(_entry(c.name, "r:" + c.id, reason != ""))
+	_list.add_child(UIStyle.label("Clans of the realm", 16, Color(0.75, 0.75, 0.75)))
+	for line in NpcClans.summary_lines(GameState.npc_clans, GameState.npcs, data):
+		var l := _wrapped(UIStyle.label(line, 14, Color(0.7, 0.7, 0.7)))
+		l.custom_minimum_size = Vector2(300, 0)
+		_list.add_child(l)
 	_list.add_child(UIStyle.label("Estate", 16, Color(0.75, 0.75, 0.75)))
 	for building_id in ClanEstate.building_ids(data):
 		keys.append("b:" + building_id)
