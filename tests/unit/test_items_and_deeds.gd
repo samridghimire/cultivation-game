@@ -175,3 +175,40 @@ func test_selling_crafted_goods_pays_capped_price() -> void:
 	var result := Items.sell(c, data(), "golden_bell_talisman", 2)
 	assert_true(result["ok"])
 	assert_eq(c.item_count("spirit_stone"), 2 * Items.sell_price(data(), "golden_bell_talisman"))
+
+
+# --- Deed requirements and fights (DEED-001) ---------------------------------
+
+func test_deed_requirements_disable_with_reason() -> void:
+	var c := new_character()
+	c.realm_index = 0
+	var deed: Dictionary = data().deeds["extort_bandit_lord"]
+	assert_true(Deeds.check(c, data(), deed, {}) != "", "a mortal cannot pose as a senior")
+	assert_false(Deeds.perform(c, data(), "extort_bandit_lord", {})["ok"])
+	var entry: Dictionary = {}
+	for option in Deeds.options(c, data(), "bandit_camp", {}):
+		if option["deed"]["id"] == "extort_bandit_lord":
+			entry = option
+	assert_true(entry["disabled"])
+	assert_true(String(entry["reason"]) != "")
+	c.realm_index = data().realm_index_of("qi_refining")
+	assert_eq(Deeds.check(c, data(), deed, {}), "")
+
+
+func test_deed_with_enemy_reports_danger() -> void:
+	var c := new_character()
+	for option in Deeds.options(c, data(), "bandit_camp", {}):
+		var has_enemy: bool = option["deed"].has("enemy")
+		assert_eq(String(option["danger"]) != "", has_enemy, "danger only for deeds with a fight")
+	assert_true(data().deeds["free_bandit_captives"].has("enemy"))
+
+
+func test_deed_validation() -> void:
+	var d := GameData.new()
+	d.items = data().items
+	d.enemies = data().enemies
+	d.realms = data().realms
+	d.deeds = {"a": {"id": "a", "enemy": "nobody", "requires": {"min_realm": "nowhere", "height": 3}, "effects": {}}}
+	assert_eq(Deeds.validate(d).size(), 3)
+	d.deeds = data().deeds
+	assert_eq(Deeds.validate(d).size(), 0)

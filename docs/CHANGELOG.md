@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-03 [DEED-001] Deeds can have requirements (realm, alignment, a world flag; shown greyed out with the reason) and a fight first: freeing the bandit captives now means beating the Bandit Lord, and only a Qi Refining cultivator can extort him.
 - 2026-10-03 [GATHER-001] Realm-gated gathering: gather table entries can require a realm (`min_realm`); the Cloud-Sea Orchid Terraces only yield Nine-Leaf Soul Grass from Foundation Establishment and Earth Marrow Fungus / Golden Core Lotus Seeds from Core Formation, and shallower cultivators sense they are missing something.
 - 2026-10-03 [G-010b] Cave abodes are in the world: claim the Waterfall Cave (Misty Forest) or Cloud-Piercing Grotto (Azure Peak), then cultivate there in seclusion for a month, keep items in its storage chest and bind it as your artifact anchor. Your abode is outlined in gold and shown on the character sheet.
 - 2026-10-03 [QA-007b] Rogue cultivators and stone apes now roam from Qi Refining (sensed and avoided as Deadly by newcomers, a real fight at the peak) instead of appearing as pushovers at Foundation Establishment; a guard test keeps every foe first met at or before its own realm.

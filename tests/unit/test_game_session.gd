@@ -230,3 +230,19 @@ func test_gathering_skips_realm_gated_finds() -> void:
 	c.realm_index = gs.data.realm_index_of("foundation_establishment")
 	gs.gather(table, 5)
 	assert_gt(c.item_count("nine_leaf_soul_grass"), 0)
+
+
+func test_deed_with_enemy_needs_a_win() -> void:
+	var c := _start()
+	var gs := _game_state()
+	c.realm_index = 0
+	c.stage = 0
+	var alignment_before := c.alignment
+	gs.perform_deed("free_bandit_captives")
+	assert_false(gs.world_flags.get("bandit_camp_gone", false), "a mortal loses to the bandit lord")
+	assert_eq(c.alignment, alignment_before)
+	assert_true(c.alive, "the bandit lord is not lethal")
+	c.realm_index = gs.data.realm_index_of("foundation_establishment")
+	gs.perform_deed("free_bandit_captives")
+	assert_true(gs.world_flags.get("bandit_camp_gone", false), "a Foundation cultivator wins and frees them")
+	assert_gt(c.alignment, alignment_before)

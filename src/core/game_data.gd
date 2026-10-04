@@ -261,10 +261,7 @@ func _validate() -> void:
 		for prof_id in def.favored_professions:
 			if not professions.has(prof_id):
 				load_errors.append("Sect '%s' favors unknown profession '%s'" % [def.id, prof_id])
-	for deed: Dictionary in deeds.values():
-		for item_id in deed.get("effects", {}).get("items", {}):
-			if not items.has(item_id):
-				load_errors.append("Deed '%s' references unknown item '%s'" % [deed["id"], item_id])
+	load_errors.append_array(Deeds.validate(self))
 	_validate_world()
 	_validate_combat()
 	_validate_artifact()
