@@ -53,6 +53,8 @@ static func eligible_encounters(c: CharacterData, data: GameData, tags: Array, f
 			continue
 		if e.has("max_realm") and c.realm_index > data.realm_index_of(e["max_realm"]):
 			continue
+		if not alignment_allows(c, e):
+			continue
 		var blocker: String = e.get("blocked_by_flag", "")
 		if blocker != "" and flags.get(blocker, false):
 			continue
@@ -100,6 +102,16 @@ static func resolve(c: CharacterData, data: GameData, encounter: Dictionary, fla
 	return {"ok": true, "reason": "", "notes": notes, "days": int(encounter.get("days", 0)), "enemy": encounter.get("enemy", "")}
 
 
+## Whether `c`'s alignment is within `entry`'s optional `min_alignment` /
+## `max_alignment` (inclusive), e.g. righteous enforcers only hunt the wicked.
+static func alignment_allows(c: CharacterData, entry: Dictionary) -> bool:
+	if entry.has("min_alignment") and c.alignment < int(entry["min_alignment"]):
+		return false
+	if entry.has("max_alignment") and c.alignment > int(entry["max_alignment"]):
+		return false
+	return true
+
+
 # --- Choices (W-004c) ----------------------------------------------------------
 
 ## Why `c` cannot pick `choice` (an entry of an encounter's `choices`), or ""
@@ -144,12 +156,13 @@ static func resolve_choice(c: CharacterData, data: GameData, encounter: Dictiona
 	return {"ok": true, "reason": "", "text": String(choice.get("text", "")), "notes": notes, "days": int(choice.get("days", 0)), "enemy": String(choice.get("enemy", "")), "karma": effects.has("alignment")}
 
 
-## Load errors for encounter `choices` and `requires_flag`.
+## Load errors for encounter `choices`, `requires_flag` and alignment bounds.
 static func validate_choices(data: GameData) -> PackedStringArray:
 	var errors: PackedStringArray = []
 	for e: Dictionary in data.encounters.values():
 		if e.has("requires_flag") and String(e["requires_flag"]) == "":
 			errors.append("Encounter '%s' has an empty requires_flag" % e["id"])
+		errors.append_array(_validate_alignment_bounds(data, e, "Encounter '%s'" % e["id"]))
 		if not e.has("choices"):
 			continue
 		var list: Array = e["choices"]
@@ -169,12 +182,41 @@ static func validate_choices(data: GameData) -> PackedStringArray:
 			var req: Dictionary = choice.get("requires", {})
 			if req.has("min_realm") and data.realm_index_of(String(req["min_realm"])) < 0:
 				errors.append("Encounter '%s' choice '%s' has unknown min_realm '%s'" % [e["id"], label, req["min_realm"]])
+			errors.append_array(_validate_alignment_bounds(data, req, "Encounter '%s' choice '%s'" % [e["id"], label]))
 			if int(choice.get("days", 0)) < 0:
 				errors.append("Encounter '%s' choice '%s' needs days >= 0" % [e["id"], label])
 	return errors
 
 
+## The gathering table `c` can actually draw from: entries whose optional
+## `min_realm` is above the character's realm become "nothing found" (same
+## weight), so the odds of the common finds stay the same.
+static func gather_table_for(c: CharacterData, data: GameData, table: Array) -> Array:
+	var result: Array = []
+	for entry: Dictionary in table:
+		if _gather_entry_locked(c, data, entry):
+			result.append({"item": "", "weight": entry.get("weight", 1)})
+		else:
+			result.append(entry)
+	return result
+
+
+## Number of gathering entries at `table` hidden from `c` by their min_realm.
+static func locked_gather_count(c: CharacterData, data: GameData, table: Array) -> int:
+	var count := 0
+	for entry: Dictionary in table:
+		if _gather_entry_locked(c, data, entry):
+			count += 1
+	return count
+
+
+static func _gather_entry_locked(c: CharacterData, data: GameData, entry: Dictionary) -> bool:
+	var min_realm: String = entry.get("min_realm", "")
+	return min_realm != "" and String(entry.get("item", "")) != "" and c.realm_index < data.realm_index_of(min_realm)
+
+
 ## Draws from a gathering table [{item, weight, min, max}] ("" item = nothing).
+## Ignores `min_realm`: filter with gather_table_for first.
 ## Rolls GATHER_ROLLS times, plus one more per 5 Fortune above 10.
 ## Returns {item_id: count}.
 @warning_ignore("integer_division")
@@ -222,6 +264,23 @@ static func _clamp_losses(c: CharacterData, effects: Dictionary) -> Dictionary:
 	if item_changes.is_empty():
 		clamped.erase("items")
 	return clamped
+
+
+## Load errors for optional `min_alignment`/`max_alignment` in `entry`: whole
+## numbers on the alignment axis, min <= max. `what` prefixes each message.
+static func _validate_alignment_bounds(data: GameData, entry: Dictionary, what: String) -> PackedStringArray:
+	var errors: PackedStringArray = []
+	var lo := data.alignment_min
+	var hi := data.alignment_max
+	for key in ["min_alignment", "max_alignment"]:
+		if not entry.has(key):
+			continue
+		var value: Variant = entry[key]
+		if not (value is int or value is float) or float(value) != floorf(float(value)) or int(value) < lo or int(value) > hi:
+			errors.append("%s has %s '%s' outside %d..%d" % [what, key, value, lo, hi])
+	if entry.has("min_alignment") and entry.has("max_alignment") and int(entry["min_alignment"]) > int(entry["max_alignment"]):
+		errors.append("%s has min_alignment above max_alignment" % what)
+	return errors
 
 
 static func _shares_tag(a: Array, b: Array) -> bool:

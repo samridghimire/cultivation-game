@@ -39,6 +39,7 @@ func test_contribution_promotes() -> void:
 	var c := new_character()
 	c.alignment = -300
 	Sects.join(c, data(), "blood_lotus_sect")
+	c.realm_index = data().realm_index_of("core_formation")  # high ranks have realm minimums
 	var promoted := Sects.add_contribution(c, data(), 100000)
 	assert_true(promoted)
 	assert_eq(c.sect["rank"], data().sects["blood_lotus_sect"].ranks.size() - 1)

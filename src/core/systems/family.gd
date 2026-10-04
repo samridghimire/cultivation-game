@@ -357,7 +357,7 @@ static func validate(data: GameData) -> PackedStringArray:
 
 ## Display lines for `c`'s family links (spouses with their rank, children,
 ## parents), looked up by id in `people` (e.g. GameState.npcs). Ids that are
-## not in `people` show as "Unknown".
+## not in `people` show as "Unknown". Kin's bloodlines are known, even dormant ones.
 static func describe_links(c: CharacterData, people: Dictionary, data: GameData) -> Array[String]:
 	var out: Array[String] = []
 	for spouse_id in c.spouses:
@@ -386,7 +386,11 @@ static func _describe_relative(other: CharacterData, data: GameData) -> String:
 		return "Unknown"
 	if not other.alive:
 		return "%s (deceased)" % other.name
-	return "%s (%s, age %d)" % [other.name, Cultivation.realm_label(other, data), other.age_years()]
+	var text := "%s (%s, age %d" % [other.name, Cultivation.realm_label(other, data), other.age_years()]
+	var bloodline := Bloodlines.describe(other, data)
+	if bloodline != "":
+		text += ", " + bloodline
+	return text + ")"
 
 
 ## `c`'s living spouses whose home is `region_id`, in marriage order.
