@@ -86,8 +86,17 @@ func _on_body_exited(body: Node2D) -> void:
 		body.remove_interactable(self)
 
 
+## Whether the place's art shows its live state (e.g. an open secret realm).
+func art_active() -> bool:
+	return false
+
+
 func _draw() -> void:
-	PlaceArt.draw(self, art_kind, size, color)
+	if anchor_id != "":
+		# Artifact anchor places sit on a faint golden ring (VIS-004).
+		PlaceArt.ellipse(self, Vector2(0, size.y * 0.35), Vector2(size.x * 0.65, size.y * 0.3), Color(UIStyle.ACCENT.r, UIStyle.ACCENT.g, UIStyle.ACCENT.b, 0.18))
+		PlaceArt.ellipse(self, Vector2(0, size.y * 0.35), Vector2(size.x * 0.65, size.y * 0.3), Color(UIStyle.ACCENT.r, UIStyle.ACCENT.g, UIStyle.ACCENT.b, 0.5), 1.5)
+	PlaceArt.draw(self, art_kind, size, color, art_active())
 	if highlighted:
 		var glow := 0.5 + 0.5 * sin(_pulse_time * 5.0)
 		draw_rect(Rect2(-size / 2.0, size).grow(6.0 + 2.0 * glow), Color(1.0, 0.9, 0.5, 0.45 + 0.4 * glow), false, 2.0)
