@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-03 [G-010b] Cave abodes are in the world: claim the Waterfall Cave (Misty Forest) or Cloud-Piercing Grotto (Azure Peak), then cultivate there in seclusion for a month, keep items in its storage chest and bind it as your artifact anchor. Your abode is outlined in gold and shown on the character sheet.
 - 2026-10-03 [QA-007b] Rogue cultivators and stone apes now roam from Qi Refining (sensed and avoided as Deadly by newcomers, a real fight at the peak) instead of appearing as pushovers at Foundation Establishment; a guard test keeps every foe first met at or before its own realm.
 - 2026-10-03 [G-009c] Reputation content: public good and evil deeds (feeding a beggar child, catching a thief, selling a street child, riding with bandits) are now witnessed and move sect reputation; sect missions against a rival sect's interests cost reputation with it; a Blood Lotus Apothecary in Fallen Star Market (demonic-leaning players only, priced by Blood Lotus reputation) now holds the blood pills and Blood Shadow Flight manual instead of general stores.
 - 2026-10-03 [ART-002b] Creation Artifact screen (O key / right shoulder): see artifact energy and sealed functions, feed it spirit stones (x10/x100) or any carried item, unseal functions (disabled entries say why), and move items in and out of the Storage Space.
