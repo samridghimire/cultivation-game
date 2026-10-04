@@ -1,0 +1,16 @@
+{
+  "_doc": "Dao insights (Dao system). A character holds {insight_id: {level, progress}} (CharacterData.dao). Each level (up to max_level) makes every matching technique (its element is in the insight's elements, or its id is in techniques) stronger by technique_bonus (0.1 = +10% of its bonuses) and adds breakthrough_bonus to every breakthrough chance. Insights are gained three ways: the dao_insight effect key (rare encounters: +1 level), practicing a matching technique (each practice day adds 1 progress, also toward a first level), and contemplating an insight you already have in seclusion (each day adds seclusion_mult progress). When progress reaches progress_needed[level] a Comprehension check is rolled: chance = check.base + (comprehension - 10) * check.per_comprehension, clamped to [check.min, check.max]. Success grants a level and resets progress; failure keeps failure_keep of it.",
+  "max_level": 5,
+  "progress_needed": [365, 180, 365, 730, 1460],
+  "seclusion_mult": 2.0,
+  "failure_keep": 0.5,
+  "check": {"base": 0.4, "per_comprehension": 0.03, "min": 0.05, "max": 0.95},
+  "insights": [
+    {"id": "sword_dao", "name": "Sword Dao", "description": "The intent of the blade: to cut through everything, including hesitation.", "elements": ["metal"], "techniques": [], "technique_bonus": 0.12, "breakthrough_bonus": 0.01},
+    {"id": "fire_dao", "name": "Fire Dao", "description": "Flame consumes and renews. Fire arts burn hotter in your hands.", "elements": ["fire"], "techniques": [], "technique_bonus": 0.1, "breakthrough_bonus": 0.01},
+    {"id": "water_dao", "name": "Water Dao", "description": "Water yields and yet wears down mountains.", "elements": ["water"], "techniques": [], "technique_bonus": 0.1, "breakthrough_bonus": 0.01},
+    {"id": "dao_of_life", "name": "Dao of Life", "description": "The patience of roots and the stubbornness of spring.", "elements": ["wood"], "techniques": [], "technique_bonus": 0.1, "breakthrough_bonus": 0.015},
+    {"id": "earth_dao", "name": "Dao of the Mountain", "description": "Stillness that nothing can move.", "elements": ["earth"], "techniques": [], "technique_bonus": 0.1, "breakthrough_bonus": 0.01},
+    {"id": "dao_of_breath", "name": "Dao of Breath", "description": "Qi enters, qi leaves. Everything else follows.", "elements": [], "techniques": ["basic_breathing"], "technique_bonus": 0.1, "breakthrough_bonus": 0.02}
+  ]
+}
