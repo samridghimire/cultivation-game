@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-04 [W-005c] Three new secret realms: the Peach Blossom Grotto behind Qingshi, the Fallen Star Vault beneath the market and the Drowned Yin Palace under the marsh, with manuals, recipes, rare herbs and lifespan treasures.
 - 2026-10-04 [UI-003c] Remappable controls: Settings > Controls lets you rebind every action's key and gamepad button (conflicts swap), saved between sessions.
 - 2026-10-04 [UI-002b] The message log can be filtered by topic (combat, cultivation, family, sect, trade, world) as well as severity, and the on-screen log keeps its lines after travelling.
 - 2026-10-04 [BEAST-001c] Seven more spirit beasts to tame (mist foxes, iron-backed boars, azure cranes, blood-eyed marsh wolves, rhinos, frost spiders and a bear king), and Beast Tamers can mix beast feed at the workshop.
