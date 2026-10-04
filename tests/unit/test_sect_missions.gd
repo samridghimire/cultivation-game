@@ -138,3 +138,20 @@ func test_game_state_take_missions() -> void:
 	gs.load_save_dict(JSON.parse_string(JSON.stringify(saved)))
 	assert_gt(Sects.mission_cooldown_left(gs.player, "escort_mortal_villagers"), 0, "cooldown survives a save")
 	gs.end_session()
+
+
+## G-008f: every sect posts at least two Core Formation missions, and missions
+## against late-Qi-Refining foes wait for a late-Qi-Refining disciple.
+func test_mission_content_spans_realms() -> void:
+	var d := data()
+	var core := d.realm_index_of("core_formation")
+	for sect_id in d.sects:
+		var count := 0
+		for m: Dictionary in d.sect_missions.values():
+			var sects: Array = m.get("sects", [])
+			if (sects.is_empty() or sects.has(sect_id)) and d.realm_index_of(String(m.get("min_realm", "mortal"))) == core:
+				count += 1
+		assert_true(count >= 2, "%s has %d Core Formation missions" % [sect_id, count])
+	for m: Dictionary in d.sect_missions.values():
+		if String(m.get("enemy", "")) in ["rogue_cultivator", "stone_ape"]:
+			assert_true(int(m.get("min_stage", 0)) >= 6, "%s sends a fresh Qi Refining disciple to a late-Qi-Refining foe" % m["id"])
