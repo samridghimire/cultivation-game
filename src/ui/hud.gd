@@ -31,6 +31,7 @@ var _crafting: CraftingScreen
 var _shop: ShopScreen
 var _mission_board: MissionBoard
 var _auction: AuctionScreen
+var _family: FamilyScreen
 var _child_training: ChildTrainingScreen
 var _banner: Banner
 var _time_skip: TimeSkipOverlay
@@ -72,6 +73,9 @@ func _ready() -> void:
 	_auction = AuctionScreen.new()
 	_auction.closed.connect(_update_modal)
 	add_child(UIStyle.centered(_auction))
+	_family = FamilyScreen.new()
+	_family.closed.connect(_update_modal)
+	add_child(UIStyle.centered(_family))
 	_child_training = ChildTrainingScreen.new()
 	_child_training.closed.connect(_update_modal)
 	add_child(UIStyle.centered(_child_training))
@@ -126,6 +130,7 @@ func _ready() -> void:
 	EventBus.shop_requested.connect(_on_shop_requested)
 	EventBus.mission_board_requested.connect(_on_mission_board_requested)
 	EventBus.auction_requested.connect(_on_auction_requested)
+	EventBus.family_requested.connect(_on_family_requested)
 	EventBus.child_training_requested.connect(_on_child_training_requested)
 	EventBus.player_died.connect(_on_player_died)
 	EventBus.player_respawned.connect(func(_anchor_id: String, _lives: int): _open_pending_respawn())
@@ -183,6 +188,7 @@ func _close_screens() -> void:
 	_shop.close()
 	_mission_board.close()
 	_auction.close()
+	_family.close()
 	_child_training.close()
 
 
@@ -206,6 +212,12 @@ func _on_auction_requested(house_id: String) -> void:
 	_update_modal()
 
 
+func _on_family_requested() -> void:
+	_close_screens()
+	_family.open()
+	_update_modal()
+
+
 func _on_child_training_requested() -> void:
 	_close_screens()
 	_child_training.open()
@@ -213,7 +225,7 @@ func _on_child_training_requested() -> void:
 
 
 func _any_screen_open() -> bool:
-	return _crafting.visible or _shop.visible or _mission_board.visible or _auction.visible or _child_training.visible or _screens.values().any(func(s): return s.visible)
+	return _crafting.visible or _shop.visible or _mission_board.visible or _auction.visible or _family.visible or _child_training.visible or _screens.values().any(func(s): return s.visible)
 
 
 func _build_status_panel() -> void:
