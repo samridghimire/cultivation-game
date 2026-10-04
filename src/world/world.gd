@@ -10,6 +10,7 @@ const PLACE_SCRIPTS := {
 	"merchant": preload("res://src/world/interactables/merchant.gd"),
 	"sect_hall": preload("res://src/world/interactables/sect_hall.gd"),
 	"workshop": preload("res://src/world/interactables/workshop.gd"),
+	"clinic": preload("res://src/world/interactables/clinic.gd"),
 	"deed_giver": preload("res://src/world/interactables/deed_giver.gd"),
 	"explore": preload("res://src/world/interactables/explore_site.gd"),
 	"travel": preload("res://src/world/interactables/travel_point.gd"),
@@ -23,6 +24,8 @@ const GENDER_COLORS := {"male": Color("8fb3e0"), "female": Color("e6a3c4")}
 
 var map_size := Vector2(1600, 1000)
 var _region: Dictionary = {}
+## Scenery.place() output, drawn under everything else.
+var _decor: Array[Dictionary] = []
 
 @onready var player: Player = $Player
 
@@ -35,7 +38,9 @@ func _ready() -> void:
 	var map: Dictionary = _region.get("map", {})
 	map_size = _vec(map.get("size", [map_size.x, map_size.y]))
 	player.position = _vec(_region.get("spawn", [map_size.x / 2.0, map_size.y / 2.0]))
+	_build_decor()
 	_build_places()
+	_place_at_spawn_anchor()
 	_build_npcs()
 	_build_bounds()
 	_limit_camera()
@@ -70,10 +75,19 @@ func _build_bounds() -> void:
 		walls.add_child(shape)
 
 
+## Scenery is seeded from the region id, so a region always looks the same.
+func _build_decor() -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash(GameState.current_region)
+	_decor = Scenery.place(_region, rng)
+	_decor.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return a["pos"].y < b["pos"].y)
+
+
 func _build_places() -> void:
 	for place: Dictionary in _region.get("places", []):
 		var node: Interactable = PLACE_SCRIPTS[place["type"]].new()
 		node.position = _vec(place.get("pos", [0, 0]))
+		node.art_kind = place["type"]
 		for key in place:
 			if LAYOUT_KEYS.has(key):
 				continue
@@ -83,12 +97,25 @@ func _build_places() -> void:
 		move_child(node, player.get_index())
 
 
+## After an artifact respawn the player awakens beside their anchor place.
+func _place_at_spawn_anchor() -> void:
+	var anchor_id := GameState.spawn_anchor
+	GameState.spawn_anchor = ""
+	if anchor_id == "":
+		return
+	for node in get_children():
+		if node is Interactable and node.anchor_id == anchor_id:
+			player.position = node.position + Vector2(0, node.size.y / 2.0 + 48.0)
+			return
+
+
 func _build_npcs() -> void:
 	for c in Npcs.in_region(GameState.npcs, GameState.data, GameState.current_region):
 		if not GameState.data.npcs.has(c.id):
 			continue  # Generated NPCs are placed by _build_generated_npcs().
 		var def: Dictionary = GameState.data.npcs[c.id]
 		var node: Interactable = NPC_SCRIPT.new()
+		node.art_kind = "npc"
 		node.npc_id = c.id
 		node.display_name = "%s (%s)" % [c.name, def["title"]] if def.has("title") else c.name
 		node.position = _vec(def.get("pos", [0, 0]))
@@ -108,6 +135,7 @@ func _build_generated_npcs() -> void:
 	for i in people.size():
 		var c := people[i]
 		var node: Interactable = NPC_SCRIPT.new()
+		node.art_kind = "npc"
 		node.npc_id = c.id
 		node.display_name = "%s (%s)" % [c.name, Npcs.world_title(c, GameState.player, data)]
 		node.position = spots[i]
@@ -152,4 +180,33 @@ func _draw() -> void:
 	var path_color := Color(map.get("path_color", "8a7350"))
 	for r in map.get("paths", []):
 		draw_rect(Rect2(r[0], r[1], r[2], r[3]), path_color)
+	for d in _decor:
+		_draw_decor(d)
 	draw_rect(Rect2(Vector2.ZERO, map_size), Color(map.get("border", "2a3a20")), false, 6.0)
+
+
+func _draw_decor(d: Dictionary) -> void:
+	var p: Vector2 = d["pos"]
+	var k: float = d["scale"]
+	var c: Color = d["color"]
+	match d["kind"]:
+		"tree":
+			draw_circle(p + Vector2(4, 6) * k, 20.0 * k, Color(0, 0, 0, 0.25))
+			draw_rect(Rect2(p + Vector2(-3, 2) * k, Vector2(6, 14) * k), Color("4a3524"))
+			draw_circle(p + Vector2(0, -6) * k, 18.0 * k, c)
+			draw_circle(p + Vector2(-8, -2) * k, 12.0 * k, c.darkened(0.15))
+			draw_circle(p + Vector2(6, -14) * k, 9.0 * k, c.lightened(0.15))
+		"rock":
+			var pts := PackedVector2Array([Vector2(-12, 6), Vector2(-9, -5), Vector2(-1, -9), Vector2(10, -4), Vector2(12, 6)])
+			for i in pts.size():
+				pts[i] = p + pts[i] * k
+			draw_colored_polygon(pts, c)
+			draw_line(p + Vector2(-9, -5) * k, p + Vector2(-1, -9) * k, c.lightened(0.3), 2.0)
+		"grass":
+			for x in [-4.0, 0.0, 4.0]:
+				draw_line(p + Vector2(x, 4) * k, p + Vector2(x * 1.6, -5 + absf(x) * 0.5) * k, c, 1.5)
+		"flower":
+			draw_line(p, p + Vector2(0, 6) * k, Color("4f7a3a"), 1.5)
+			for i in 5:
+				draw_circle(p + Vector2.from_angle(TAU * i / 5.0) * 3.0 * k, 2.2 * k, c)
+			draw_circle(p, 1.6 * k, Color("f2d24b"))

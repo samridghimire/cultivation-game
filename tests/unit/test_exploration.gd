@@ -103,3 +103,25 @@ func test_every_encounter_enemy_exists() -> void:
 	for e: Dictionary in data().encounters.values():
 		if e.has("enemy"):
 			assert_true(data().enemies.has(e["enemy"]), e["id"])
+
+
+func test_every_explore_spot_has_encounters_at_its_lowest_realm() -> void:
+	# A Qi Refining 1 cultivator (the realm most gated routes need) always finds something.
+	var c := new_character()
+	c.realm_index = 1
+	for region: Dictionary in data().regions.values():
+		for place: Dictionary in region.get("places", []):
+			if place["type"] != "explore":
+				continue
+			var tags: Array = place.get("explore_tags", [])
+			if tags.is_empty():
+				tags = region.get("encounter_tags", [])
+			assert_false(Exploration.eligible_encounters(c, data(), tags, {}).is_empty(), "%s: %s" % [region["id"], place["display_name"]])
+
+
+func test_withered_bone_marsh_offers_both_paths() -> void:
+	var marsh: Array = data().encounters.values().filter(func(e: Dictionary) -> bool: return (e.get("tags", []) as Array).has("marsh"))
+	assert_true(marsh.size() >= 8, "8+ marsh encounters")
+	var good := marsh.filter(func(e: Dictionary) -> bool: return int(e.get("effects", {}).get("alignment", 0)) > 0)
+	var evil := marsh.filter(func(e: Dictionary) -> bool: return int(e.get("effects", {}).get("alignment", 0)) < 0)
+	assert_true(good.size() >= 2 and evil.size() >= 2, "righteous and demonic options")

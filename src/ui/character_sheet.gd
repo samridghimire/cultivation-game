@@ -13,9 +13,7 @@ var _equip_row: HBoxContainer
 
 
 func _init() -> void:
-	var style_source := UIStyle.panel()
-	add_theme_stylebox_override("panel", style_source.get_theme_stylebox("panel"))
-	style_source.free()
+	add_theme_stylebox_override("panel", UIStyle.panel_style())
 	custom_minimum_size = Vector2(620, 0)
 	visible = false
 	var box := VBoxContainer.new()
@@ -88,6 +86,13 @@ func _rebuild() -> void:
 	t += "Cultivation speed: %.2f qi/day here\n" % Cultivation.qi_per_day(p, data, Exploration.qi_density(data, GameState.current_region) * Sects.cultivation_bonus(p, data))
 	t += "Alignment: %s (%d)   |   %s\n\n" % [Alignment.tier_name(p.alignment, data), p.alignment, Sects.describe(p, data)]
 	_gender_row.visible = p.gender == ""
+	var density := Exploration.qi_density(data, GameState.current_region) * Sects.cultivation_bonus(p, data)
+	var hints := Guidance.hints(p, data, density)
+	if not hints.is_empty():
+		t += "[color=#%s]Next steps[/color]\n" % accent
+		for line in hints:
+			t += "  - %s\n" % line
+		t += "\n"
 	var family := Family.describe_links(p, GameState.npcs, data)
 	family.append_array(Children.describe_pregnancies(p, GameState.npcs))
 	if not family.is_empty():

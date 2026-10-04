@@ -73,7 +73,7 @@ func test_purchase_checks() -> void:
 	Sects.add_contribution(c, data(), 400)
 	assert_eq(int(c.sect["rank"]), 0)
 	assert_true(Sects.check_purchase(c, data(), String(ranked["item_id"])).contains("Inner Disciple"), "rank gate")
-	assert_true(Sects.check_purchase(c, data(), "core_forming_pill").contains("does not offer"))
+	assert_true(Sects.check_purchase(c, data(), "blood_demon_pill").contains("does not offer"))
 
 
 func test_spent_contribution_round_trips_and_old_saves_default() -> void:
