@@ -1,5 +1,6 @@
 extends Control
-## Title screen.
+## Title screen. Help (UI-003b) opens the same HelpScreen as the pause menu;
+## it only needs GameState.data, so it works before a session exists.
 
 const CHARACTER_CREATION := "res://src/ui/character_creation.tscn"
 const WORLD := "res://src/world/world.tscn"
@@ -7,6 +8,7 @@ const WORLD := "res://src/world/world.tscn"
 var _menu: Control
 var _settings: SettingsScreen
 var _load_screen: LoadScreen
+var _help: HelpScreen
 
 
 func _ready() -> void:
@@ -36,6 +38,8 @@ func _ready() -> void:
 	box.add_child(load_button)
 	var settings_button := UIStyle.button("Settings", _open_settings)
 	box.add_child(settings_button)
+	var help_button := UIStyle.button("Help", _open_help)
+	box.add_child(help_button)
 	box.add_child(UIStyle.button("Quit", func(): get_tree().quit()))
 	add_child(UIStyle.centered(box))
 	_menu = box
@@ -44,6 +48,12 @@ func _ready() -> void:
 		_menu.visible = true
 		settings_button.grab_focus())
 	add_child(UIStyle.centered(_settings))
+
+	_help = HelpScreen.new()
+	_help.closed.connect(func():
+		_menu.visible = true
+		help_button.grab_focus())
+	add_child(UIStyle.centered(_help))
 
 	_load_screen = LoadScreen.new()
 	_load_screen.closed.connect(func():
@@ -58,6 +68,16 @@ func _ready() -> void:
 func _open_settings() -> void:
 	_menu.visible = false
 	_settings.open()
+
+
+func _open_help() -> void:
+	_menu.visible = false
+	_help.open()
+
+
+## The help screen, for tests.
+func help_screen() -> HelpScreen:
+	return _help
 
 
 func _open_load() -> void:

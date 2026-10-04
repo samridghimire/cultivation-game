@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-04 [UI-003b] The title screen has a Help button: read the controls and the beginner guide pages before starting a game.
 - 2026-10-03 [VIS-001] The player is drawn as a robed cultivator facing where they walk: sect-colored robe (sects.json robe_color), alignment-colored sash and qi aura rings that grow with the realm.
 - 2026-10-04 [QA-006] Economy sim (tests/sim/simulate_economy.gd): profession income vs breakthrough pills and artifact recharges across whole lives; findings in BACKLOG (ART-007, QA-006b) and a DESIGN.md question on recharge costs.
 - 2026-10-04 [QA-004] Obtainability audit test: fails if any item or recipe in the data cannot be bought, gathered, looted, rewarded or crafted in play (explicit allowlist with task ids for intentional exceptions).
