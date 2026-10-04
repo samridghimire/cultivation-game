@@ -88,20 +88,21 @@ static func element_factor(def: TechniqueDef, roots: Dictionary, data: GameData)
 	return 1.0 - data.technique_mismatch_penalty
 
 
-## Total of one bonus key over `levels` ({tech_id: level}).
-static func bonus_from(levels: Dictionary, roots: Dictionary, data: GameData, key: String) -> float:
+## Total of one bonus key over `levels` ({tech_id: level}). `dao` (CharacterData.dao)
+## strengthens techniques matching the character's Dao insights.
+static func bonus_from(levels: Dictionary, roots: Dictionary, data: GameData, key: String, dao: Dictionary = {}) -> float:
 	var total := 0.0
 	for tech_id in levels:
 		var def: TechniqueDef = data.techniques.get(tech_id)
 		if def == null:
 			continue
-		total += float(def.bonuses.get(key, 0.0)) * int(levels[tech_id]) * element_factor(def, roots, data)
+		total += float(def.bonuses.get(key, 0.0)) * int(levels[tech_id]) * element_factor(def, roots, data) * Dao.technique_multiplier(dao, data, def)
 	return total
 
 
 ## Total of one bonus key (qi_mult, attack, defense, max_hp, speed) over everything `c` knows.
 static func bonus(c: CharacterData, data: GameData, key: String) -> float:
-	return bonus_from(levels_of(c, data), c.spiritual_roots, data, key)
+	return bonus_from(levels_of(c, data), c.spiritual_roots, data, key, c.dao)
 
 
 ## Levels of every known technique that is in effect: all of them except
@@ -194,7 +195,7 @@ static func describe_bonuses(c: CharacterData, data: GameData, tech_id: String) 
 	if def == null:
 		return ""
 	var lvl := maxi(level(c, tech_id), 1)
-	var factor := element_factor(def, c.spiritual_roots, data)
+	var factor := element_factor(def, c.spiritual_roots, data) * Dao.technique_multiplier(c.dao, data, def)
 	var parts: PackedStringArray = []
 	for key in TechniqueDef.BONUS_KEYS:
 		if not def.bonuses.has(key):
