@@ -67,14 +67,14 @@ Every great cultivation protagonist has something that sets them apart. Ours is 
 | Lifespan, death by old age, burning/extending lifespan | ✅ | `Cultivation`, `GameState._on_days_advanced` |
 | Alignment (Demonic … Righteous) and deeds | ✅ | `data/alignment.json`, `data/deeds.json` |
 | Sects (join/leave, requirements, ranks, contribution, missions, trials/stipends/duties) | ✅ (shop: G-008c; rank UI: G-011b) | `data/sects.json`, `Sects` |
-| Sect reputation (witnessed deeds, join gating, faction prices) | ✅ core, 🚧 no sheet UI (G-009b) | `data/sects.json`, `Reputation` |
+| Sect reputation (witnessed deeds, join gating, faction prices) | ✅ (sheet + faction shop prices) | `data/sects.json`, `Reputation` |
 | Professions (ranks, XP, income) | ✅ basic | `data/professions.json`, `Professions` |
 | Alchemy (recipes, scrolls, pill quality) + crafting screen | ✅ | `data/recipes.json`, `Alchemy`, `src/ui/crafting_screen.gd` |
 | Blacksmithing and equipment (weapon/armor) | ✅ (equip from inventory, unequip on the character sheet) | `Equipment`, `data/recipes.json` |
 | Talismans (buff talismans, combat strike/shield/escape) | ✅ core, 🚧 no ready UI (G-005d) | `Alchemy`, `Buffs`, `CombatTalismans` |
 | Temporary buffs and forbidden secret arts | ✅ | `Buffs`, `data/techniques.json` |
 | Medicine / Doctor (treat injuries, clinic, patients) | ✅ (clinic places) | `Medicine` |
-| Items, merchants, using pills | ✅ basic | `data/items.json`, `Items` |
+| Items, merchants (shop screen with Buy/Sell tabs), using pills | ✅ | `data/items.json`, `Items`, `src/ui/shop_screen.gd` |
 | Save/load, multiple slots | ✅ | `SaveManager` |
 | Creation Artifact: lives, anchors, respawn, recharge, functions (storage) | ✅ (artifact screen: O) | `data/artifact.json`, `CreationArtifact` |
 | Data-driven regions (4), travel, exploration encounters | ✅ (choice window: W-004d) | `data/regions.json`, `data/encounters.json`, `Exploration` |
@@ -82,14 +82,17 @@ Every great cultivation protagonist has something that sets them apart. Ours is 
 | Combat (auto-resolved) and techniques | ✅ basic | `Combat`, `Techniques`, `data/enemies.json`, `data/techniques.json` |
 | NPCs (named + generated), aging, monthly sim | ✅ | `data/npcs.json`, `Npcs`, `Names` |
 | Dialogue | ✅ (dialogue window) | `Dialogue`, `data/dialogue/` |
-| Family: identity, courtship, marriage, dual cultivation, children | ✅ core, ❌ not reachable in-game (P0 tasks) | `data/family.json`, `Family`, `Children` |
+| Family: identity, courtship, marriage, dual cultivation, children, adoption, training | ✅ (NPC menu: chat, gifts, court, propose, adopt; meditation spots; child training screen) | `data/family.json`, `Family`, `Children` |
 | Clans, estates, bloodlines | ✅ clan core (FAM-005), heirs (FAM-008), NPC clans core (FAM-009), bloodlines core (FAM-007), clan screen UI (FAM-005b), estates core (FAM-006) | `data/family.json`, `data/bloodlines.json`, `Clans`, `ClanData`, `Bloodlines` |
 | Spirit beast companions (Beast Tamer taming, combat bonus) | ✅ core, 🚧 no UI (BEAST-001b) | `data/beasts.json`, `Beasts` |
 | Cultivation methods (one main method, qi rate, realm cap) | ✅ (techniques screen) | `Techniques`, `data/techniques.json` |
 | Dao insights (encounters, practice, seclusion; technique + breakthrough bonuses) | ✅ (sheet + contemplation at meditation spots) | `data/dao.json`, `Dao` |
-| Heavenly Tribulations (Core Formation+, heart demon for demonic) | ✅ core, 🚧 no wave screen (TRIB-001b) | `Tribulation`, `data/realms.json` |
-| Grudges and gratitude (rob/kill/humiliate NPCs, kin vengeance, amends) | ✅ (NPC menu + sheet), 🚧 no avengers yet (RIV-003), not in NPC Look text (RIV-001b) | `data/karma.json`, `Karma` |
-| Secret realms (periodic openings, realm caps, guarded floors) | ✅ (entrances in Misty Forest and Azure Peak) | `data/secret_realms.json`, `SecretRealms` |
+| Heavenly Tribulations (Core Formation+, heart demon for demonic) | ✅ (prepare warning + wave screen) | `Tribulation`, `data/realms.json` |
+| Grudges and gratitude (rob/kill/humiliate NPCs, kin vengeance, amends) | ✅ (NPC menu, sheet, NPC Look text, grateful NPCs repay debts), 🚧 no avengers yet (RIV-003) | `data/karma.json`, `Karma` |
+| Secret realms (periodic openings, realm caps, guarded floors, inheritances) | ✅ (entrances in Misty Forest and Azure Peak) | `data/secret_realms.json`, `SecretRealms` |
+| Inheritance grounds (one-claimant trials) | ✅ core | `data/inheritances.json`, `Inheritances` |
+| Cave abodes (seclusion, storage chest) and arrays | ✅ (abode places; arrays from the Array Master) | `data/regions.json`, `Abodes` |
+| Body tempering (Copper Skin … Vajra Body) | ✅ (meditation spots, sheet), 🚧 not at abodes (BODY-001c) | `data/body_tempering.json`, `BodyTempering` |
 | Auctions (seasonal lots, sealed bids vs hidden NPC maximums) | ✅ core, 🚧 no auction house UI (AUC-001b) | `data/auctions.json`, `Auctions` |
 | Inventory, techniques, character sheet, settings, pause, load screens | ✅ | `src/ui/` |
 | Top-down world with interactables | ✅ placeholder art | `src/world/` |
