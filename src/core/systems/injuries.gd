@@ -21,10 +21,13 @@ static func inflict(c: CharacterData, data: GameData, injury_id: String) -> bool
 ## Maybe inflicts an injury from a source in injuries.json (e.g.
 ## "breakthrough_failure"). `scale` multiplies the base chance (e.g. the
 ## fraction of a month for per-month sources); a tempered body resists
-## (BodyTempering.injury_resistance). Returns the injury id, or "" if spared.
+## (BodyTempering.injury_resistance). Table entries with a min_realm only
+## strike cultivators of that realm or above. Returns the injury id, or "" if spared.
 static func roll(c: CharacterData, data: GameData, source: String, rng: RandomNumberGenerator, scale: float = 1.0) -> String:
 	var src: Dictionary = data.injury_sources.get(source, {})
-	var table: Array = src.get("table", [])
+	# Entries with a min_realm above `c`'s realm are skipped (C-010).
+	var table: Array = (src.get("table", []) as Array).filter(func(entry: Dictionary) -> bool:
+		return not entry.has("min_realm") or c.realm_index >= data.realm_index_of(String(entry["min_realm"])))
 	if table.is_empty():
 		return ""
 	var chance := (float(src.get("chance", 0.0)) - (c.attribute("fortune") - 10) * data.injury_fortune_step) * scale

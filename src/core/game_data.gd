@@ -468,6 +468,8 @@ func _validate_combat() -> void:
 		for entry in injury_sources[source].get("table", []):
 			if not injuries.has(entry.get("id", "")):
 				load_errors.append("Injury source '%s' references unknown injury '%s'" % [source, entry.get("id", "")])
+			if entry.has("min_realm") and realm_index_of(String(entry["min_realm"])) < 0:
+				load_errors.append("Injury source '%s' entry '%s' has unknown min_realm '%s'" % [source, entry.get("id", ""), entry["min_realm"]])
 	for injury: Dictionary in injuries.values():
 		if int(injury.get("heal_days", 0)) <= 0:
 			load_errors.append("Injury '%s' needs heal_days > 0" % injury["id"])
