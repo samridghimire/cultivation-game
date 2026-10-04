@@ -106,6 +106,7 @@ func test_game_state_contemplate_and_practice() -> void:
 	var gs := (Engine.get_main_loop() as SceneTree).root.get_node("GameState")
 	var c := CharacterFactory.create("Sage", gs.data, seeded_rng())
 	gs.start_session(c)
+	gs.rng.seed = 12345  # Comprehension checks cap at 95%: don't depend on what earlier tests rolled
 	var clock := (Engine.get_main_loop() as SceneTree).root.get_node("GameClock")
 	var days_before: int = clock.total_days
 	gs.contemplate_dao("fire_dao", 30)  # refused: not glimpsed, no time passes
