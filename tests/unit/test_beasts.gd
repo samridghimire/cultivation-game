@@ -131,3 +131,47 @@ func test_game_state_tames_after_victory_and_releases() -> void:
 	gs.release_companion(0)
 	assert_true(c.companions.is_empty())
 	gs.end_session()
+
+
+## BEAST-001d: feeding raises a companion's level, which offsets outgrowing it.
+func test_feeding_levels_companions() -> void:
+	var d := data()
+	var c := new_character()
+	c.companions = ["mist_wolf"] as Array[String]
+	c.realm_index = d.realm_index_of("core_formation")
+	var weak := Beasts.strength_of(c, d, "mist_wolf")
+	assert_eq(Beasts.level(c, d, "mist_wolf"), 1)
+	assert_true(Beasts.check_feed(c, d, "mist_wolf", "spirit_herb").contains("You have no"))
+	assert_true(Beasts.check_feed(c, d, "mist_wolf", "iron_sword") != "", "not food")
+	c.inventory = {"blood_ginseng": 5, "spirit_herb": 1}
+	assert_eq(Beasts.best_food(c, d), "blood_ginseng")
+	for i in 4:
+		assert_true(Beasts.feed(c, d, "mist_wolf", "blood_ginseng")["ok"])
+	assert_eq(Beasts.level(c, d, "mist_wolf"), 3)
+	assert_gt(Beasts.strength_of(c, d, "mist_wolf"), weak, "levels offset outgrowing")
+	assert_true(Beasts.describe(c, d)[0].contains("(level 3)"))
+	var back := CharacterData.from_dict(JSON.parse_string(JSON.stringify(c.to_dict())))
+	assert_eq(int(back.companion_xp["mist_wolf"]), int(c.companion_xp["mist_wolf"]))
+	Beasts.release(c, d, 0)
+	assert_false(c.companion_xp.has("mist_wolf"), "released beasts take their growth with them")
+
+
+## BEAST-001b: the character sheet lists companions with a Feed button.
+func test_sheet_shows_and_feeds_companions() -> void:
+	var root := (Engine.get_main_loop() as SceneTree).root
+	var gs := root.get_node("GameState")
+	var c := new_character()
+	gs.start_session(c)
+	c.companions = ["boar"] as Array[String]
+	c.inventory = {"spirit_herb": 3}
+	var sheet := CharacterSheet.new()
+	root.add_child(sheet)
+	sheet.open()
+	assert_true(sheet._text.get_parsed_text().contains("Spirit Beasts"))
+	var feed := sheet._equip_row.get_node("feed_boar") as Button
+	assert_true(feed != null and not feed.disabled, "feed button")
+	feed.pressed.emit()
+	assert_eq(c.item_count("spirit_herb"), 2)
+	assert_gt(int(c.companion_xp.get("boar", 0)), 0)
+	sheet.free()
+	gs.end_session()

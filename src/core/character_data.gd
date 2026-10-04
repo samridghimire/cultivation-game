@@ -65,6 +65,8 @@ var dao: Dictionary = {}
 var readied_talismans: Array[String] = []
 ## Tamed spirit beast ids (data/beasts.json), BEAST-001.
 var companions: Array[String] = []
+## Growth xp per companion beast id (Beasts, BEAST-001d).
+var companion_xp: Dictionary = {}
 ## Years of lifespan burned for power (forbidden arts, demonic pills); see Cultivation.lifespan_years.
 var lifespan_spent_years := 0
 ## Years of lifespan gained from longevity pills and treasures.
@@ -181,6 +183,7 @@ func to_dict() -> Dictionary:
 		"dao": dao.duplicate(true),
 		"readied_talismans": readied_talismans.duplicate(),
 		"companions": companions.duplicate(),
+		"companion_xp": companion_xp.duplicate(),
 		"lifespan_spent_years": lifespan_spent_years,
 		"lifespan_bonus_years": lifespan_bonus_years,
 		"artifact_lives": artifact_lives,
@@ -267,6 +270,7 @@ static func from_dict(d: Dictionary) -> CharacterData:
 		Buffs.add(c, String(buff_id), String(b.get("name", buff_id)), int(b.get("days", 0)), b.get("mults", {}))
 	c.readied_talismans = _strings(d.get("readied_talismans", []))
 	c.companions = _strings(d.get("companions", []))
+	c.companion_xp = _int_values(d.get("companion_xp", {}))
 	c.lifespan_spent_years = int(d.get("lifespan_spent_years", 0))
 	c.lifespan_bonus_years = int(d.get("lifespan_bonus_years", 0))
 	c.artifact_lives = int(d.get("artifact_lives", -1))
