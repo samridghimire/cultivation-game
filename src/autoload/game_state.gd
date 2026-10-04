@@ -383,6 +383,34 @@ func enter_secret_realm(realm_id: String) -> void:
 	_pass_time(result["days"])
 
 
+## Attempt the next trial of an inheritance ground in the current region
+## (data/inheritances.json): realm/attribute/alignment tests pass at once if
+## met, fight trials must be won (losing is never lethal). Passing the last
+## trial claims the inheritance; no one else can claim it after you.
+func attempt_inheritance(inheritance_id: String) -> void:
+	if not _can_act():
+		return
+	var reason := Inheritances.check_attempt(player, data, inheritance_id, current_region, GameClock.total_days, world_flags)
+	if reason != "":
+		EventBus.post(reason, "warning")
+		EventBus.player_changed.emit()
+		return
+	var def := Inheritances.inheritance(data, inheritance_id)
+	var stage := Inheritances.next_stage(player, def)
+	EventBus.post("%s: %s" % [stage.get("name", ""), stage.get("text", "")], "info")
+	var enemy := Inheritances.stage_enemy(data, stage)
+	if not enemy.is_empty() and not fight_enemy(enemy):
+		if _can_act():
+			EventBus.post("You fail the trial of the %s. You may try again." % def["name"], "warning")
+		return
+	var result := Inheritances.pass_stage(player, data, inheritance_id, world_flags)
+	if result["last"]:
+		EventBus.post("You claim the %s! (%s)" % [def["name"], ", ".join(result["notes"])], "progress")
+	else:
+		EventBus.post("You pass the %s." % result["stage_name"], "progress")
+	_pass_time(result["days"])
+
+
 ## The pending encounter's choices for the UI: [{index, label, disabled, reason}]
 ## ([] when no encounter is waiting).
 func encounter_choices() -> Array[Dictionary]:
@@ -1298,6 +1326,9 @@ func _on_days_advanced(days: int) -> void:
 	if married_off:
 		Npcs.ensure_eligible(npcs, data, rng)  # keep courtship candidates in every region
 	_advance_pregnancies(days)
+	for legacy: Dictionary in data.inheritances.values():
+		if Inheritances.lost_between(legacy, GameClock.total_days - days, GameClock.total_days, world_flags):
+			EventBus.post(String(legacy.get("rival_news", "Word spreads that someone has claimed the %s." % legacy["name"])), "info")
 	@warning_ignore("integer_division")
 	var months := player.age_days / Calendar.DAYS_PER_MONTH - age_before / Calendar.DAYS_PER_MONTH
 	for event in Training.advance(player, npcs, data, months):

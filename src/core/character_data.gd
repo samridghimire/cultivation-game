@@ -83,6 +83,8 @@ var artifact_functions: Array[String] = []
 var artifact_storage: Dictionary = {}
 ## Sect mission id -> age_days when it may be taken again (Sects missions).
 var mission_cooldowns: Dictionary = {}
+## Inheritance id -> trial stages passed (W-006, Inheritances).
+var trial_progress: Dictionary = {}
 ## Sect id -> reputation with that sect (Reputation system; missing = start value).
 var reputation: Dictionary = {}
 ## Karma (RIV-001): NPC id -> how much that NPC hates / owes this character (0-100, see Karma).
@@ -167,6 +169,7 @@ func to_dict() -> Dictionary:
 		"artifact_functions": artifact_functions.duplicate(),
 		"artifact_storage": artifact_storage.duplicate(),
 		"mission_cooldowns": mission_cooldowns.duplicate(),
+		"trial_progress": trial_progress.duplicate(),
 		"reputation": reputation.duplicate(),
 		"abode": abode,
 		"abode_storage": abode_storage.duplicate(),
@@ -238,6 +241,7 @@ static func from_dict(d: Dictionary) -> CharacterData:
 	c.artifact_functions = _strings(d.get("artifact_functions", []))
 	c.artifact_storage = _int_values(d.get("artifact_storage", {}))
 	c.mission_cooldowns = _int_values(d.get("mission_cooldowns", {}))
+	c.trial_progress = _int_values(d.get("trial_progress", {}))
 	c.reputation = _int_values(d.get("reputation", {}))
 	c.abode = String(d.get("abode", ""))
 	c.abode_storage = _int_values(d.get("abode_storage", {}))

@@ -74,6 +74,7 @@ var help_pages: Array = []
 ## Input action id -> display name for the help screen's Controls page.
 var help_action_names: Dictionary = {}
 var secret_realms: Dictionary = {}  # id -> Dictionary (data/secret_realms.json, SecretRealms)
+var inheritances: Dictionary = {}  # id -> Dictionary (data/inheritances.json, Inheritances)
 ## Problems found while loading. Empty when all data files are valid.
 var load_errors: PackedStringArray = []
 
@@ -226,6 +227,8 @@ func _load(dir: String) -> void:
 
 	for secret_realm in _read(dir, "secret_realms.json").get("realms", []):
 		secret_realms[secret_realm["id"]] = secret_realm
+	for legacy in _read(dir, "inheritances.json").get("inheritances", []):
+		inheritances[legacy["id"]] = legacy
 	_validate()
 
 
@@ -275,6 +278,7 @@ func _validate() -> void:
 	load_errors.append_array(ArtifactFunctions.validate(self))
 	load_errors.append_array(Karma.validate(self))
 	load_errors.append_array(SecretRealms.validate(self))
+	load_errors.append_array(Inheritances.validate(self))
 	load_errors.append_array(Children.validate(self))
 	load_errors.append_array(NpcFamilies.validate(self))
 	load_errors.append_array(Training.validate(self))
