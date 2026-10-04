@@ -160,6 +160,9 @@ static func validate(dialogue: Dictionary, data: GameData) -> PackedStringArray:
 			for item_id in choice.get("effects", {}).get("items", {}):
 				if not data.items.has(item_id):
 					errors.append("Dialogue '%s' node '%s' references unknown item '%s'" % [id, node_id, item_id])
+			for attr_id in choice.get("effects", {}).get("attributes", {}):
+				if not data.attribute_ids().has(attr_id):
+					errors.append("Dialogue '%s' node '%s' changes unknown attribute '%s'" % [id, node_id, attr_id])
 			var tech: String = choice.get("effects", {}).get("learn_technique", "")
 			if tech != "" and not data.techniques.has(tech):
 				errors.append("Dialogue '%s' node '%s' teaches unknown technique '%s'" % [id, node_id, tech])
