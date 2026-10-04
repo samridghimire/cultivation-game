@@ -108,3 +108,30 @@ func test_event_tags_join_exploration() -> void:
 			break
 	assert_true(seen, "tournament encounters join the explore pool")
 	gs.end_session()
+
+
+## LW-001b: the HUD names events in the current region; merchants share rumors.
+func test_hud_suffix_and_rumors() -> void:
+	var d := data()
+	var active: Array = [{"id": "beast_tide", "region": "misty_forest", "start_day": 0, "end_day": 45}]
+	assert_eq(load("res://src/ui/hud.gd").region_event_suffix(d, active, "misty_forest"), "   Beast Tide!")
+	assert_eq(load("res://src/ui/hud.gd").region_event_suffix(d, active, "azure_peak"), "")
+	var lines := WorldEvents.rumors(d, active, PackedStringArray(["extra"]), 15)
+	assert_eq(lines.size(), 2)
+	assert_true(lines[0].begins_with("Rumor has it the Beast Tide in %s will last another" % Exploration.region_name(d, "misty_forest")), lines[0])
+	assert_eq(lines[1], "extra")
+	assert_true(WorldEvents.rumors(d, [], PackedStringArray(), 0)[0].contains("nothing worth gossiping"))
+	var gs := _root().get_node("GameState")
+	gs.start_session(new_character())
+	var merchant: Node = load("res://src/world/interactables/merchant.gd").new()
+	var rumor_option: Dictionary = merchant.get_options()[1]
+	assert_eq(rumor_option["label"], "Ask about rumors")
+	var bus := _root().get_node("EventBus")
+	var posted: Array = []
+	var cb := func(text: String, _category: String) -> void: posted.append(text)
+	bus.message_posted.connect(cb)
+	(rumor_option["action"] as Callable).call()
+	bus.message_posted.disconnect(cb)
+	assert_true(posted.any(func(t: String) -> bool: return t.contains("Auction House")), str(posted))
+	merchant.free()
+	gs.end_session()

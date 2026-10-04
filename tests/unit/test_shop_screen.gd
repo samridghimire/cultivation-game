@@ -57,7 +57,7 @@ func test_merchant_browse_opens_shop_and_screen_trades() -> void:
 	var cb := func(n: String, max_price: int, tags: Array, faction: String): seen.append([n, max_price, tags, faction])
 	bus.shop_requested.connect(cb)
 	var options: Array[Dictionary] = merchant.get_options()
-	assert_eq(options.size(), 1)
+	assert_eq(options.size(), 2, "Browse wares and Ask about rumors")
 	options[0]["action"].call()
 	bus.shop_requested.disconnect(cb)
 	merchant.free()
