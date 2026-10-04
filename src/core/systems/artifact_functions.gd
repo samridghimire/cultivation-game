@@ -172,6 +172,8 @@ static func validate(data: GameData) -> PackedStringArray:
 			errors.append("artifact.json function '%s' has unknown realm '%s'" % [function_id, realm_id])
 		if unlock.has("function") and not KNOWN.has(String(unlock["function"])):
 			errors.append("artifact.json function '%s' needs unknown function '%s'" % [function_id, unlock["function"]])
+		if def.has("flavor") and not (def["flavor"] is String):
+			errors.append("artifact.json function '%s' flavor must be text" % function_id)
 		if int(unlock.get("energy", 0)) < 0:
 			errors.append("artifact.json function '%s' needs energy >= 0" % function_id)
 		if function_id == "storage" and int(def.get("storage_slots", 0)) < 1:

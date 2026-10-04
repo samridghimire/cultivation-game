@@ -7,15 +7,37 @@
     "dream": {"speaker": "", "text": "The night before you set out, you dream of a sky with no stars. Something small and warm rests against your heart: a seal of dark bronze, older than any sect, that you have carried since before you can remember.",
       "choices": [
         {"label": "Reach for it.", "next": "voice"},
-        {"label": "Pull away from it.", "next": "voice"}
+        {"label": "Pull away from it.", "next": "voice_reluctant"}
       ]},
-    "voice": {"speaker": "The Creation Artifact", "text": "...Bound. At last, bound. Little mortal, your soul is anchored to me now. Fall, and I will pull you back to the places you have marked. But every return costs me a life, and I have only a few to give.",
+    "voice_reluctant": {"speaker": "The Creation Artifact", "text": "Too late to pull away, little mortal. We were bound long before tonight. Listen.",
+      "choices": [
+        {"label": "...", "next": "voice"}
+      ]},
+    "voice": {"speaker": "The Creation Artifact", "text": "...Bound. At last, bound. Your soul is anchored to me now. Fall, and I will pull you back to the places you have marked. But every return costs me a life, and I have only a few to give. So tell me: what will you do with a life that does not end where it should?",
+      "choices": [
+        {"label": "Protect those who cannot protect themselves.", "next": "path_righteous", "effects": {"alignment": 20, "attributes": {"charisma": 1}, "set_flag": "intro_path_righteous"}},
+        {"label": "Walk my own road, and see where it leads.", "next": "path_neutral", "effects": {"attributes": {"fortune": 1}, "set_flag": "intro_path_neutral"}},
+        {"label": "Stand above everyone who ever looked down on me.", "next": "path_ambitious", "effects": {"alignment": -20, "attributes": {"comprehension": 1}, "set_flag": "intro_path_ambitious"}}
+      ]},
+    "path_righteous": {"speaker": "The Creation Artifact", "text": "A shield, then. I have been carried by shields before. They break in the end, but some of them break beautifully. People will feel the warmth in you and trust it. Try to deserve that.",
       "choices": [
         {"label": "What are you?", "next": "what"},
         {"label": "Why me?", "next": "why"},
         {"label": "Then I will not waste them.", "next": "wake"}
       ]},
-    "what": {"speaker": "The Creation Artifact", "text": "Something that was sealed, and is waking. Feed me spirit stones and treasures, rise through the realms, and my seals will break one by one. That is all you need to know, for now.",
+    "path_neutral": {"speaker": "The Creation Artifact", "text": "No banner and no oath. Good. Banners burn and oaths rot, and the wind still blows. Heaven's luck favors those it cannot predict. Let us see where your road bends.",
+      "choices": [
+        {"label": "What are you?", "next": "what"},
+        {"label": "Why me?", "next": "why"},
+        {"label": "Then I will not waste them.", "next": "wake"}
+      ]},
+    "path_ambitious": {"speaker": "The Creation Artifact", "text": "Ha. Hunger. I know hunger better than anything in this world. Hunger sharpens the mind; let yours cut through every technique they hide from you. Only remember that those you climb over will remember you, too.",
+      "choices": [
+        {"label": "What are you?", "next": "what"},
+        {"label": "Why me?", "next": "why"},
+        {"label": "Then I will not waste them.", "next": "wake"}
+      ]},
+    "what": {"speaker": "The Creation Artifact", "text": "Something that was sealed, and is waking. Whoever made me is not your concern, and whoever broke me is not your concern yet. Feed me spirit stones and treasures, rise through the realms, and my seals will break one by one. That is all you need to know, for now.",
       "choices": [
         {"label": "Why me?", "next": "why"},
         {"label": "...", "next": "wake"}

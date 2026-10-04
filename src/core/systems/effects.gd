@@ -18,6 +18,7 @@ extends RefCounted
 ##   reputation: {sect_id: int} change reputation with sects (see reputation.gd)
 ##   witnessed: bool            the alignment change was seen: every sect's reputation
 ##                              moves by alignment * its deed_scale (data/sects.json)
+##   attributes: {attr_id: int} raise (or lower) attributes (data/attributes.json ids)
 ##   bloodline: String          grant a bloodline (data/bloodlines.json) to someone who has
 ##                              none; it awakens at once if they are past its awaken_realm
 
@@ -88,6 +89,11 @@ static func apply(c: CharacterData, data: GameData, effects: Dictionary, flags: 
 			notes.append(note)
 	if effects.has("bloodline") and Bloodlines.grant(c, data, String(effects["bloodline"])):
 		notes.append("Your blood now carries the %s%s" % [Bloodlines.bloodline_name(data, c.bloodline), ", and it awakens" if c.bloodline_awakened else ""])
+	var attribute_changes: Dictionary = effects.get("attributes", {})
+	for attr_id in attribute_changes:
+		var delta := int(attribute_changes[attr_id])
+		c.attributes[attr_id] = c.attribute(attr_id) + delta
+		notes.append("%s %+d" % [String(attr_id).capitalize(), delta])
 	if effects.has("set_flag"):
 		flags[effects["set_flag"]] = true
 	return notes

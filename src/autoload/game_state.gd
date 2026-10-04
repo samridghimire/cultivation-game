@@ -1889,6 +1889,8 @@ func unlock_artifact_function(function_id: String) -> void:
 	if result["ok"]:
 		var def := ArtifactFunctions.get_def(data, function_id)
 		EventBus.post("A seal on the Creation Artifact shatters: %s. %s" % [def.get("name", function_id), def.get("description", "")], "progress")
+		if String(def.get("flavor", "")) != "":
+			EventBus.post(String(def["flavor"]))
 	else:
 		EventBus.post(result["reason"], "warning")
 	EventBus.player_changed.emit()
