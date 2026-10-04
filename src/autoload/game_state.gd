@@ -1395,6 +1395,26 @@ func market_multiplier() -> float:
 	return WorldEvents.price_multiplier(data, world_events, current_region)
 
 
+## Hear the market gossip: world events under way and when the next auction
+## opens (LW-001b). Takes no time.
+func hear_rumors() -> void:
+	if not _can_act():
+		return
+	for line in WorldEvents.rumors(data, world_events, auction_rumors(), GameClock.total_days):
+		EventBus.post(line)
+
+
+## "The Fallen Star Auction House holds its next auction in 3 weeks." per house.
+func auction_rumors() -> PackedStringArray:
+	var lines: PackedStringArray = []
+	for def: Dictionary in data.auction_houses.values():
+		if Auctions.is_open(def, GameClock.total_days):
+			lines.append("The %s is holding an auction right now." % def.get("name", def["id"]))
+		else:
+			lines.append("The %s holds its next auction in %s." % [def.get("name", def["id"]), Calendar.format_duration(Auctions.days_until_open(def, GameClock.total_days))])
+	return lines
+
+
 ## Expire and roll world events at a month boundary, posting the news.
 func _world_events_month() -> void:
 	for ended in WorldEvents.expire(world_events, GameClock.total_days):
