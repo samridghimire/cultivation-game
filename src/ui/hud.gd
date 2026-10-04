@@ -13,6 +13,7 @@ var _status: Label
 var _qi_bar: ProgressBar
 var _bottleneck: Label
 var _injuries: Label
+var _hint: Label
 var _log: RichTextLabel
 var _prompt: Label
 var _choice_menu: ChoiceMenu
@@ -47,6 +48,7 @@ func _ready() -> void:
 	_add_screen("toggle_character_sheet", CharacterSheet.new())
 	_add_screen("toggle_inventory", InventoryScreen.new())
 	_add_screen("toggle_techniques", TechniquesScreen.new())
+	_add_screen("toggle_map", WorldMapScreen.new())
 	_add_screen("toggle_message_log", MessageLogScreen.new())
 	_crafting = CraftingScreen.new()
 	_crafting.closed.connect(_update_modal)
@@ -91,6 +93,7 @@ func _ready() -> void:
 	EventBus.session_started.connect(_refresh)
 	EventBus.region_changed.connect(func(_id): _refresh())
 	EventBus.message_posted.connect(_on_message)
+	Settings.changed.connect(func(key: String, _v): if key == "show_hints": _refresh())
 	EventBus.interaction_target_changed.connect(_on_target_changed)
 	EventBus.interaction_menu_requested.connect(_on_menu_requested)
 	EventBus.crafting_requested.connect(_on_crafting_requested)
@@ -177,7 +180,11 @@ func _build_status_panel() -> void:
 	_injuries = UIStyle.label("", 14, UIStyle.CATEGORY_COLORS["danger"])
 	_injuries.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	box.add_child(_injuries)
-	box.add_child(UIStyle.label("[E] interact   [C] character   [I] inventory   [K] techniques   [L] log   [F5] save   [Esc] pause", 12, Color(0.7, 0.7, 0.7)))
+	_hint = UIStyle.label("", 14, Color("9fd3c7"))
+	_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_hint.custom_minimum_size = Vector2(316, 0)
+	box.add_child(_hint)
+	box.add_child(UIStyle.label("[E] interact   [C] character   [I] inventory   [K] techniques   [M] map   [L] log   [F5] save   [Esc] pause", 12, Color(0.7, 0.7, 0.7)))
 	add_child(panel)
 
 
@@ -253,6 +260,9 @@ func _refresh() -> void:
 	_qi_bar.modulate = UIStyle.ACCENT if _bottleneck.visible else Color.WHITE
 	_injuries.visible = Injuries.has_any(p)
 	_injuries.text = "Injured: " + ", ".join(Injuries.describe(p, data))
+	var hints := Guidance.hints(p, data, density * Sects.cultivation_bonus(p, data), 1)
+	_hint.visible = bool(Settings.get_value("show_hints")) and not hints.is_empty()
+	_hint.text = "Next: " + hints[0] if not hints.is_empty() else ""
 
 
 ## Message category for the age line: "danger" or "warning" when little of

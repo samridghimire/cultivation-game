@@ -3,6 +3,9 @@
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
 - 2026-10-04 [QA-20261004-dao-practice-flake] test_dao: reseed GameState.rng before the practice check too, so the Dao-of-Breath assertion no longer fails ~1 run in 4.
+- 2026-10-03 [QA-20261003-5] Fixed: a widow carrying her late husband's child who married the player went through pregnancy twice as fast; it now runs at normal speed and still ends in exactly one birth.
+- 2026-10-03 [UI-009] "Next steps" hints on the character sheet and a HUD hint line (toggle in Settings): qi to next stage, breakthrough odds and pills, injuries, lifespan, pregnancy, artifact lives, sect and profession pointers.
+- 2026-10-03 [UI-008] World map screen (M / gamepad Back): regions, roads with travel days and realm gates, region details and places.
 - 2026-10-03 [QA-008] Gamepad/focus audit test: every HUD modal must take focus and close on ui_cancel (all pass today); unit tests may now await frames.
 - 2026-10-03 [QA-007c] Sect missions can require a stage within their realm (`min_stage`), and Sects.mission_danger rates a mission's fight; Harvest a Rogue Cultivator now opens at Qi Refining 5th Layer instead of sending 1st Layer disciples to near-certain death.
 - 2026-10-03 [VIS-003] Places are drawn as what they are (qi pools, market stalls, workshops, sect halls, gates, herb patches, caves, robed NPC figures) instead of rectangles, and the current interaction target pulses.

@@ -11,6 +11,7 @@ const KEYS := {
 	"toggle_character_sheet": [KEY_C],
 	"toggle_inventory": [KEY_I],
 	"toggle_techniques": [KEY_K],
+	"toggle_map": [KEY_M],
 	"toggle_message_log": [KEY_L],
 	"scroll_up": [KEY_PAGEUP],
 	"scroll_down": [KEY_PAGEDOWN],
@@ -28,6 +29,7 @@ const JOY_BUTTONS := {
 	"toggle_character_sheet": [JOY_BUTTON_Y],
 	"toggle_inventory": [JOY_BUTTON_X],
 	"toggle_techniques": [JOY_BUTTON_LEFT_SHOULDER],
+	"toggle_map": [JOY_BUTTON_BACK],
 	"toggle_message_log": [JOY_BUTTON_BACK],
 	"pause_menu": [JOY_BUTTON_START],
 }
