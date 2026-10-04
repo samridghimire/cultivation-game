@@ -29,7 +29,7 @@ const JOY_AXIS_NAMES := {
 	JOY_AXIS_RIGHT_X: ["Right stick Left", "Right stick Right"],
 	JOY_AXIS_RIGHT_Y: ["Right stick Up", "Right stick Down"],
 }
-const MENU_HINT := "In menus: arrow keys / d-pad move, Enter / A chooses, Esc / B goes back."
+const MENU_HINT := "In menus: arrow keys / d-pad move, Enter / A chooses, Esc / B goes back.\nRebind keys and buttons in Settings > Controls."
 
 var _list: VBoxContainer
 var _title: Label
@@ -158,7 +158,7 @@ func _show_page(id: String) -> void:
 	_body.clear()
 	if id == CONTROLS_ID:
 		_title.text = "Controls"
-		_body.append_text(controls_text(control_rows(InputConfig.KEYS, InputConfig.JOY_BUTTONS, InputConfig.JOY_AXES, GameState.data.help_action_names)))
+		_body.append_text(controls_text(control_rows(InputConfig.keys, InputConfig.joy_buttons, InputConfig.JOY_AXES, GameState.data.help_action_names)))
 		return
 	for page: Dictionary in GameState.data.help_pages:
 		if page["id"] == id:
