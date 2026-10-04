@@ -351,7 +351,7 @@ func _validate() -> void:
 func _validate_world() -> void:
 	if not regions.has(start_region):
 		load_errors.append("start_region '%s' is not a region" % start_region)
-	var place_types := ["meditation", "merchant", "sect_hall", "workshop", "clinic", "orphanage", "deed_giver", "explore", "travel", "gather", "secret_realm"]
+	var place_types := ["meditation", "merchant", "sect_hall", "workshop", "clinic", "orphanage", "deed_giver", "explore", "travel", "gather", "secret_realm", "auction"]
 	for region: Dictionary in regions.values():
 		for route: Dictionary in region.get("routes", []):
 			if not regions.has(route.get("to", "")):
@@ -373,6 +373,8 @@ func _validate_world() -> void:
 					load_errors.append("Region '%s' gather entry '%s' has unknown min_realm '%s'" % [region["id"], entry.get("item", ""), entry["min_realm"]])
 			if not place_types.has(place.get("type", "")):
 				load_errors.append("Region '%s' has a place of unknown type '%s'" % [region["id"], place.get("type", "")])
+			if place.get("type", "") == "auction" and not auction_houses.has(String(place.get("house_id", ""))):
+				load_errors.append("Region '%s' auction place has unknown house_id '%s'" % [region["id"], place.get("house_id", "")])
 			if place.has("faction") and not sects.has(place["faction"]):
 				load_errors.append("Region '%s' place has unknown faction '%s'" % [region["id"], place["faction"]])
 	for e: Dictionary in encounters.values():
