@@ -97,6 +97,25 @@ static func respawn(c: CharacterData, data: GameData, anchor_id: String = "") ->
 	return {"ok": true, "anchor_id": anchor_id, "region": region, "days": int(t.get("days", 7)), "qi_lost": qi_lost, "lives_left": c.artifact_lives}
 
 
+## Region an anchor lies in, or the start region for "" / unknown anchors.
+static func anchor_region(data: GameData, anchor_id: String) -> String:
+	return String(data.anchors.get(anchor_id, {}).get("region", data.start_region))
+
+
+## Where `c` may awaken after a respawn: every bound anchor, the current
+## respawn point first, then the rest from most to least recently bound.
+## Each entry is {anchor_id, label, respawn_point}; with no anchors the only
+## choice is the start region (anchor_id "").
+static func respawn_choices(c: CharacterData, data: GameData) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	for i in range(c.anchors.size() - 1, -1, -1):
+		var anchor_id: String = c.anchors[i]
+		out.append({"anchor_id": anchor_id, "label": anchor_name(data, anchor_id), "respawn_point": i == c.anchors.size() - 1})
+	if out.is_empty():
+		out.append({"anchor_id": "", "label": Exploration.region_name(data, data.start_region), "respawn_point": true})
+	return out
+
+
 ## Display lines for the character sheet: lives, recharge cost, bound anchors.
 ## The latest bound anchor (the respawn point) is marked.
 static func describe(c: CharacterData, data: GameData) -> Array[String]:
