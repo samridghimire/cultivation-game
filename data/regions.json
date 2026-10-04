@@ -38,7 +38,8 @@
       "routes": [
         {"to": "qingshi_village", "days": 3},
         {"to": "azure_peak", "days": 7, "min_realm": "qi_refining"},
-        {"to": "fallen_star_market", "days": 8}
+        {"to": "fallen_star_market", "days": 8},
+        {"to": "withered_bone_marsh", "days": 6, "min_realm": "qi_refining"}
       ],
       "encounter_tags": ["forest", "wild"],
       "places": [
@@ -62,7 +63,8 @@
       "routes": [
         {"to": "qingshi_village", "days": 10},
         {"to": "misty_forest", "days": 8},
-        {"to": "azure_peak", "days": 12, "min_realm": "qi_refining"}
+        {"to": "azure_peak", "days": 12, "min_realm": "qi_refining"},
+        {"to": "withered_bone_marsh", "days": 9, "min_realm": "qi_refining"}
       ],
       "encounter_tags": ["city"],
       "places": [
@@ -108,6 +110,29 @@
         {"type": "explore", "display_name": "Beast Ridge", "pos": [700, 200], "size": [170, 100], "color": "3d4b57"},
         {"type": "explore", "anchor_id": "azure_ancient_cave", "display_name": "Ancient Cave", "pos": [1200, 800], "size": [110, 90], "color": "1e2228", "explore_tags": ["ruins"]},
         {"type": "travel", "display_name": "Mountain Path", "pos": [40, 500], "size": [40, 120], "color": "5c4630"}
+      ]
+    },
+    {
+      "id": "withered_bone_marsh", "name": "Withered Bone Marsh",
+      "description": "A drowned battlefield from an ancient sect war. Yin qi pools in the black water, and demonic cultivators come to refine it.",
+      "qi_density": 1.8, "danger": 2,
+      "map": {"size": [1600, 1000], "ground": "2e3328", "border": "15180f", "paths": [[0, 470, 1600, 60], [900, 0, 50, 470]], "path_color": "4a4636"},
+      "spawn": [120, 500],
+      "npc_spots": [[350, 380], [650, 620], [1100, 620], [1300, 380], [250, 800], [1450, 850]],
+      "routes": [
+        {"to": "misty_forest", "days": 6},
+        {"to": "fallen_star_market", "days": 9}
+      ],
+      "encounter_tags": ["marsh", "wild"],
+      "places": [
+        {"type": "meditation", "anchor_id": "bone_marsh_altar", "display_name": "Yin Gathering Altar (1.6x qi)", "pos": [1300, 180], "size": [110, 80], "color": "4a3a5c", "qi_density": 1.6},
+        {"type": "meditation", "anchor_id": "bone_marsh_isle", "display_name": "Pure Lotus Isle", "pos": [400, 200], "size": [100, 70], "color": "c9d9b0", "qi_density": 1.2},
+        {"type": "explore", "display_name": "Drowned Battlefield", "pos": [1150, 780], "size": [180, 100], "color": "3a3530", "explore_tags": ["marsh", "ruins"]},
+        {"type": "explore", "display_name": "Black Reed Shallows", "pos": [600, 800], "size": [160, 90], "color": "263020"},
+        {"type": "gather", "display_name": "Corpse-Lily Bog", "pos": [700, 230], "size": [130, 80], "color": "5f6b3a", "gather_days": 7,
+         "gather_table": [{"item": "purple_cloud_mushroom", "weight": 3, "min": 1, "max": 2}, {"item": "qi_condensing_grass", "weight": 3, "min": 1, "max": 2}, {"item": "spirit_herb", "weight": 3, "min": 1, "max": 3}, {"item": "blood_ginseng", "weight": 0.5, "min": 1, "max": 1}, {"item": "cold_iron", "weight": 1, "min": 1, "max": 1}, {"item": "", "weight": 3}]},
+        {"type": "merchant", "display_name": "Corpse Peddler's Skiff", "pos": [1450, 450], "size": [80, 60], "color": "6b5a4a", "stock_tags": ["herb", "ore"]},
+        {"type": "travel", "display_name": "Rotting Boardwalk", "pos": [40, 500], "size": [40, 120], "color": "5c4630"}
       ]
     }
   ]

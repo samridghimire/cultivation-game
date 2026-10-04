@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-03 [C-005] New region: the Withered Bone Marsh, a drowned ancient battlefield thick with yin qi (Qi Refining to enter), with two anchors, a bog to gather in, a herb/ore buyer and 12 marsh encounters (bury or rob the dead, refine or purify a blood pool, corpse refiners, a blood-robed hunter).
 - 2026-10-03 [C-001] Generated adult NPCs can now be talked to (generic_cultivator dialogue): tea and chat, gifts, sparring, guarding their seclusion, rumors, and for darker players extortion; talk alone raises favor up to the courtship threshold.
 - 2026-10-03 [ART-006] More Creation Artifact anchors: every region now has two (Spirit Spring, Herb Valley, Back Alleys, Ancient Cave added); intro event and function flavor split into ART-006b/ART-006c.
 - 2026-10-03 [UI-006] HUD cues: the age line warns (orange, then red, with years left) as your lifespan runs out, and a full qi bar turns gold with a breakthrough hint and its odds.

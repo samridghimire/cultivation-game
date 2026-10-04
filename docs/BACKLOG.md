@@ -102,8 +102,8 @@ ART-001/ART-001b/ART-002 are done; ART-002b and ART-005 are in P1 above.
 ## P3: World
 | id | role | status | task |
 |---|---|---|---|
+| C-005b | content | todo | Withered Bone Marsh follow-ups: marsh enemies (corpse puppet, drowned yin ghost, blood-lotus scout) once C-002 lands, a marsh deed_giver context in deeds.json (e.g. a corpse-refiner's captive to free or sell), and a named marsh NPC. Depends on C-002. |
 | W-004f | systems | todo | Encounter-level `min_alignment`/`max_alignment` (not only on choices), validated in GameData, so e.g. the Azure Cloud Enforcer (C-002) hunts only demonic-leaning players and Blood Lotus recruiters only approach demonic ones. Add tests. |
-| C-005 | content | todo | A fifth region (e.g. a marsh or ruined city with a demonic lean): regions.json places (meditation, gather, explore, merchant), routes with realm gates, gather tables, 8+ encounters tagged for it. Pure data; follow regions.json `_doc`. |
 | RIV-001 | systems | todo | Rivals and grudges: CharacterData.grudges/gratitude per NPC (save-compatible); killing/robbing/humiliating creates grudges with the victim's family/sect; a named rival NPC grows alongside the player and appears in encounters; Npcs.simulate lets enemies hunt you. |
 | GATHER-001 | systems | todo | Realm-gated gathering: optional `min_realm` per gather_table entry (or per gather place) in regions.json, skipped (or the place disabled with a reason) below that realm, validated in GameData. Then move C-007's Nine-Leaf Soul Grass / Earth Marrow Fungus / Golden Core seeds behind Foundation/Core gates in the gather tables (today they are only rare drops there, plus realm-gated encounters). |
 | DEED-001 | systems | todo | Deed requirements and fights: optional `requires` on deeds (min_realm, min/max_alignment, like encounter choices) shown as disabled reasons by deed_giver, and an optional `enemy` fought before the effects apply (e.g. C-008's "free the captives" should mean beating the bandit lord). Then gate C-008's bandit camp deeds behind a fight. |
@@ -153,6 +153,7 @@ The local sessions that built combat/techniques, world/exploration/NPCs/dialogue
 ## Done
 | id | task |
 |---|---|
+| C-005 | Fifth region: Withered Bone Marsh (yin qi 1.8, danger 2, demonic lean; routes from Misty Forest/Fallen Star Market at Qi Refining), 2 anchors, bog gathering, herb/ore buyer, 12 marsh encounters with righteous and demonic options. |
 | C-001 | Generic dialogue for generated adult NPCs (data/dialogue/generic_cultivator.json via GameState.GENERIC_DIALOGUE fallback): chat, gifts, spar, guard, rumors, extortion/tribute, a cold greeting once soured; favor capped so talk reaches courtship but not proposals. |
 | ART-006 | Two artifact anchors per region: Spirit Spring, Herb Valley, Back Alleys and Ancient Cave are now anchor places (intro event/flavor split to ART-006b/c). |
 | UI-006 | HUD cues: the age line turns orange/red with "(N years left)" when 15%/5% (or 3 years) of the lifespan is left; at a bottleneck the qi bar turns gold with "Bottleneck! Attempt a breakthrough at a meditation spot (N% chance)". |
