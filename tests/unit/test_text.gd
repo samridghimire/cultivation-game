@@ -20,3 +20,10 @@ func test_profession_messages_use_the_right_article() -> void:
 	var lines: Array = bus.history.slice(before).map(func(e: Dictionary) -> String: return e["text"])
 	assert_true(lines.any(func(l: String) -> bool: return l.begins_with("You work as an Alchemist")), str(lines))
 	gs.end_session()
+
+
+func test_join_and() -> void:
+	assert_eq(Text.join_and(PackedStringArray()), "")
+	assert_eq(Text.join_and(PackedStringArray(["Mei"])), "Mei")
+	assert_eq(Text.join_and(PackedStringArray(["Mei", "Bao"])), "Mei and Bao")
+	assert_eq(Text.join_and(PackedStringArray(["Mei", "Bao", "Lan"])), "Mei, Bao and Lan")

@@ -1093,6 +1093,42 @@ func _advance_estate(days: int, months: int) -> void:
 		EventBus.post("Your clan's spirit fields send you %s." % ", ".join(parts))
 
 
+## Spend time at the Family Home in the current region (FAM-011): the family
+## living here grows fonder of the player.
+func visit_family_home() -> void:
+	EventBus.topic = "family"
+	if not _can_act():
+		return
+	var result := FamilyHome.visit(player, npcs, npc_favor, data, current_region)
+	if not result["ok"]:
+		EventBus.post(result["reason"], "warning")
+		EventBus.player_changed.emit()
+		return
+	var names: PackedStringArray = []
+	for id in result["gains"]:
+		names.append(npcs[id].name)
+	EventBus.post("You spend %s at home with %s. The house is warm with laughter." % [Calendar.format_duration(result["days"]), Text.join_and(names)], "progress")
+	_pass_time(result["days"], "At home with your family")
+
+
+## Bring the player's spouses and minor children to live at the Family Home in
+## the current region (FAM-011).
+func move_household_here() -> void:
+	EventBus.topic = "family"
+	if not _can_act():
+		return
+	var result := FamilyHome.move_household(player, npcs, data, current_region)
+	if not result["ok"]:
+		EventBus.post(result["reason"], "warning")
+		EventBus.player_changed.emit()
+		return
+	var names: PackedStringArray = []
+	for id in result["moved"]:
+		names.append(npcs[id].name)
+	EventBus.post("%s %s to the family home in %s." % [Text.join_and(names), "moves" if names.size() == 1 else "move", Exploration.region_name(data, current_region)], "progress")
+	_pass_time(result["days"])
+
+
 ## Send one of the player's children to a sect as a disciple (FAM-009c).
 func send_child_to_sect(child_id: String, sect_id: String) -> void:
 	EventBus.topic = "family"

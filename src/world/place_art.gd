@@ -2,13 +2,14 @@ class_name PlaceArt
 extends RefCounted
 ## Placeholder art for world places (VIS-003), drawn in the place's _draw():
 ## one look per regions.json place type plus "npc" and "abode" (VIS-004 added
-## clinic, orphanage, secret realm, auction, inheritance and abode). Shapes scale
+## clinic, orphanage, secret realm, auction, inheritance and abode; FAM-011 the
+## family home). Shapes scale
 ## with the place's size and are tinted with its color. `active` brightens kinds
 ## that have a live state (an open secret realm). Unknown kinds draw a plain box.
 
 ## Kinds with their own look; anything else is a plain box.
 const KINDS := ["meditation", "merchant", "workshop", "sect_hall", "travel", "gather", "explore", "deed_giver", "npc",
-	"clinic", "orphanage", "secret_realm", "auction", "inheritance", "abode"]
+	"clinic", "orphanage", "secret_realm", "auction", "inheritance", "abode", "family_home"]
 const OUTLINE := Color("2a2018")
 const WOOD := Color("6b4a2e")
 const STONE := Color("8d8a82")
@@ -45,6 +46,8 @@ static func draw(ci: CanvasItem, kind: String, size: Vector2, color: Color, acti
 			_stele(ci, h, color)
 		"abode":
 			_cave_dwelling(ci, h, color)
+		"family_home":
+			_family_home(ci, h, color)
 		_:
 			ci.draw_rect(Rect2(-h, size), color)
 			ci.draw_rect(Rect2(-h, size), color.darkened(0.5), false, 2.0)
@@ -200,6 +203,22 @@ static func _temple(ci: CanvasItem, h: Vector2, c: Color) -> void:
 	ci.draw_rect(Rect2(burner - Vector2(h.x * 0.15, h.y * 0.1), Vector2(h.x * 0.3, h.y * 0.2)), Color("8a6a3a"))
 	for i in 3:
 		ci.draw_line(burner + Vector2((i - 1) * 4, -h.y * 0.1), burner + Vector2((i - 1) * 4 + 2, -h.y * 0.45), Color(0.9, 0.9, 0.9, 0.5), 1.0)
+
+
+## A courtyard house: walls in the place color, a tiled roof, a lit window and
+## a pair of red lanterns by the door.
+static func _family_home(ci: CanvasItem, h: Vector2, c: Color) -> void:
+	var wall := Rect2(Vector2(-h.x * 0.85, -h.y * 0.2), Vector2(h.x * 1.7, h.y * 1.2))
+	ci.draw_rect(wall, c)
+	ci.draw_rect(wall, OUTLINE, false, 2.0)
+	ci.draw_colored_polygon(PackedVector2Array([Vector2(-h.x - 4, -h.y * 0.15), Vector2(-h.x * 0.55, -h.y * 0.85), Vector2(h.x * 0.55, -h.y * 0.85), Vector2(h.x + 4, -h.y * 0.15)]), Color("5a2e24"))
+	ci.draw_line(Vector2(-h.x * 0.55, -h.y * 0.85), Vector2(h.x * 0.55, -h.y * 0.85), Color("3a1e18"), 3.0)
+	var door := Rect2(Vector2(-h.x * 0.15, h.y * 0.35), Vector2(h.x * 0.3, h.y * 0.65))
+	ci.draw_rect(door, WOOD.darkened(0.2))
+	ci.draw_rect(Rect2(Vector2(-h.x * 0.65, h.y * 0.05), Vector2(h.x * 0.3, h.y * 0.3)), Color("ffd98a"))
+	ci.draw_rect(Rect2(Vector2(h.x * 0.35, h.y * 0.05), Vector2(h.x * 0.3, h.y * 0.3)), Color("ffd98a"))
+	for x in [-0.27, 0.27]:
+		ellipse(ci, Vector2(h.x * x, h.y * 0.3), Vector2(4, 6), Color("d2302a"))
 
 
 ## A swirling rift in the air; brighter and wider while a realm is open.

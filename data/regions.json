@@ -1,5 +1,5 @@
 {
-"_doc": "World regions. The world scene builds itself from the current region. qi_density multiplies cultivation everywhere in the region (meditation spots multiply again). routes: travel targets with days and an optional min_realm (realm id). places: interactables; 'anchor_id' (optional, globally unique) makes the place a Creation Artifact anchor (data/artifact.json); 'type' picks the script (meditation, merchant, sect_hall, workshop, clinic, orphanage (adopt a foundling, FAM-003e), auction (an auction house: house_id names a data/auctions.json house, AUC-001b), inheritance (inheritance grounds listing every data/inheritances.json inheritance in the region, W-006b), deed_giver, explore, travel, gather, secret_realm: lists every data/secret_realms.json realm whose region is this one; a gather place's gather_table entries are {item ('' = nothing), weight, min, max, min_realm (optional realm id: below it the entry counts as nothing found)}), 'pos' and 'size' are in pixels, other keys are passed to the script as exported properties. npc_spots (optional): list of [x, y] positions where generated NPCs living in the region stand (in id order; extra NPCs gather around the spawn point). encounter_tags select entries from data/encounters.json when exploring. map_pos (optional): [x, y] fractions 0..1 placing the region on the world map screen (regions without it are spread around the map edge). abodes (optional, G-010): claimable cave abodes in the region, each {id (globally unique), display_name, cost (spirit stones), min_realm (optional realm id), qi_density (multiplies cultivation in seclusion there, like a meditation spot), storage_slots (distinct item stacks its chest holds), anchor_id (optional, globally unique: the abode can be bound as a Creation Artifact anchor), pos, size, color (layout for the world scene)}. The player owns at most one abode (Abodes). A merchant's optional 'faction' (sect id) makes its prices follow your reputation with that sect (data/sects.json reputation tiers). encounter_tags select entries from data/encounters.json when exploring. map.decor (optional): scenery drawn on the map, counts trees/rocks/grass/flowers (0-300) and colors tree_color/rock_color/grass_color/flower_color (hex); missing keys use Scenery.DEFAULTS.",
+"_doc": "World regions. The world scene builds itself from the current region. qi_density multiplies cultivation everywhere in the region (meditation spots multiply again). routes: travel targets with days and an optional min_realm (realm id). places: interactables; 'anchor_id' (optional, globally unique) makes the place a Creation Artifact anchor (data/artifact.json); 'type' picks the script (meditation, merchant, sect_hall, workshop, clinic, orphanage (adopt a foundling, FAM-003e), auction (an auction house: house_id names a data/auctions.json house, AUC-001b), inheritance (inheritance grounds listing every data/inheritances.json inheritance in the region, W-006b), deed_giver, explore, travel, gather, secret_realm: lists every data/secret_realms.json realm whose region is this one; a gather place's gather_table entries are {item ('' = nothing), weight, min, max, min_realm (optional realm id: below it the entry counts as nothing found)}), 'pos' and 'size' are in pixels, other keys are passed to the script as exported properties. npc_spots (optional): list of [x, y] positions where generated NPCs living in the region stand (in id order; extra NPCs gather around the spawn point). family_home (optional, FAM-011): {pos, size} of the Family Home drawn in the region while any of the player's living spouses or children live there; they take the npc_spots nearest to it. encounter_tags select entries from data/encounters.json when exploring. map_pos (optional): [x, y] fractions 0..1 placing the region on the world map screen (regions without it are spread around the map edge). abodes (optional, G-010): claimable cave abodes in the region, each {id (globally unique), display_name, cost (spirit stones), min_realm (optional realm id), qi_density (multiplies cultivation in seclusion there, like a meditation spot), storage_slots (distinct item stacks its chest holds), anchor_id (optional, globally unique: the abode can be bound as a Creation Artifact anchor), pos, size, color (layout for the world scene)}. The player owns at most one abode (Abodes). A merchant's optional 'faction' (sect id) makes its prices follow your reputation with that sect (data/sects.json reputation tiers). encounter_tags select entries from data/encounters.json when exploring. map.decor (optional): scenery drawn on the map, counts trees/rocks/grass/flowers (0-300) and colors tree_color/rock_color/grass_color/flower_color (hex); missing keys use Scenery.DEFAULTS.",
   "start_region": "qingshi_village",
   "regions": [
     {
@@ -8,6 +8,7 @@
       "qi_density": 1.0, "danger": 0,
       "map": {"size": [1600, 1000], "ground": "4d6b3c", "border": "2a3a20", "paths": [[0, 470, 1600, 60], [770, 0, 60, 1000]], "path_color": "8a7350", "decor": {"trees": 22, "rocks": 8, "grass": 40, "flowers": 16}},
       "spawn": [800, 500],
+      "family_home": {"pos": [380, 580], "size": [90, 64]},
       "npc_spots": [[600, 600], [950, 250], [1150, 560], [200, 560], [650, 880], [1000, 880], [460, 110], [1500, 910], [1500, 270], [100, 190], [300, 910], [1220, 110], [1460, 630], [420, 390]],
       "routes": [
         {"to": "misty_forest", "days": 3},
@@ -37,6 +38,7 @@
       "qi_density": 1.5, "danger": 1,
       "map": {"size": [1600, 1000], "ground": "2f4f2f", "border": "16261a", "paths": [[0, 470, 1600, 60]], "path_color": "5c5238", "decor": {"trees": 45, "rocks": 10, "grass": 60, "flowers": 4, "tree_color": "1d3b22", "grass_color": "3f6b3a", "flower_color": "c9e0f2"}},
       "spawn": [120, 500],
+      "family_home": {"pos": [320, 280], "size": [90, 64]},
       "npc_spots": [[300, 380], [700, 600], [1000, 380], [1450, 300], [250, 750], [1450, 850], [660, 110], [1020, 910], [580, 910], [1180, 110], [1260, 590], [380, 110], [580, 350], [100, 230]],
       "abodes": [{"id": "waterfall_cave", "display_name": "Waterfall Cave (abode)", "cost": 300, "min_realm": "qi_refining", "qi_density": 1.5, "storage_slots": 20, "anchor_id": "waterfall_cave_abode", "pos": [200, 150], "size": [90, 70], "color": "4a6f7a"}],
       "routes": [
@@ -65,6 +67,7 @@
       "qi_density": 1.1, "danger": 0,
       "map": {"size": [1600, 1000], "ground": "6b6250", "border": "3a3428", "paths": [[0, 470, 1600, 60], [770, 0, 60, 1000]], "path_color": "9c917a", "decor": {"trees": 5, "rocks": 12, "grass": 12, "flowers": 4, "rock_color": "8a8170", "grass_color": "7a8a55"}},
       "spawn": [800, 900],
+      "family_home": {"pos": [320, 460], "size": [90, 64]},
       "npc_spots": [[600, 600], [1000, 600], [600, 200], [1000, 200], [1450, 450], [200, 600], [1380, 910], [380, 910], [1340, 110], [260, 230], [940, 910], [100, 870], [1180, 390], [420, 430]],
       "routes": [
         {"to": "qingshi_village", "days": 10},
@@ -102,6 +105,7 @@
       "qi_density": 2.5, "danger": 3,
       "map": {"size": [1600, 1000], "ground": "5a6f80", "border": "2b3540", "paths": [[0, 470, 1600, 60]], "path_color": "8f9aa3", "decor": {"trees": 10, "rocks": 35, "grass": 20, "flowers": 8, "tree_color": "37574c", "rock_color": "a3adb5", "grass_color": "6f8a7a", "flower_color": "f2f2ff"}},
       "spawn": [120, 500],
+      "family_home": {"pos": [1100, 640], "size": [90, 64]},
       "npc_spots": [[500, 380], [900, 380], [1000, 620], [600, 620], [1450, 350], [300, 850], [1500, 910], [100, 110], [1140, 110], [1140, 910], [1300, 630], [100, 630], [620, 910], [460, 110]],
       "abodes": [{"id": "cloud_piercing_grotto", "display_name": "Cloud-Piercing Grotto (abode)", "cost": 2500, "min_realm": "foundation_establishment", "qi_density": 2.5, "storage_slots": 30, "anchor_id": "cloud_grotto_abode", "pos": [900, 850], "size": [100, 70], "color": "9fb4c9"}],
       "routes": [
@@ -131,6 +135,7 @@
       "qi_density": 1.8, "danger": 2,
       "map": {"size": [1600, 1000], "ground": "2e3328", "border": "15180f", "paths": [[0, 470, 1600, 60], [900, 0, 50, 470]], "path_color": "4a4636", "decor": {"trees": 18, "rocks": 20, "grass": 50, "flowers": 3, "tree_color": "3b3a2c", "rock_color": "c9c2ad", "grass_color": "4f5a38", "flower_color": "9c2b3a"}},
       "spawn": [120, 500],
+      "family_home": {"pos": [1000, 260], "size": [90, 64]},
       "npc_spots": [[350, 380], [650, 620], [1100, 620], [1300, 380], [250, 800], [1450, 850], [820, 110], [100, 110], [860, 910], [1500, 110], [1140, 110], [540, 910], [980, 350], [540, 150]],
       "routes": [
         {"to": "misty_forest", "days": 6},

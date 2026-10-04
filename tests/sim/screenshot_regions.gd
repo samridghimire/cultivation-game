@@ -19,6 +19,14 @@ func _start() -> void:
 	gs.start_session(CharacterFactory.create("Shot", gs.data, RandomNumberGenerator.new()))
 	gs.pending_event = ""
 	regions = gs.data.regions.keys()
+	# A spouse and children in every region, so the Family Home (FAM-011) shows.
+	var rng := RandomNumberGenerator.new()
+	for region_id: String in regions:
+		var spouse := Npcs.spawn(gs.npcs, gs.data, rng, {"gender": "female", "region": region_id, "age_years": 28})
+		Family.marry(gs.player, spouse, "wife" if gs.player.spouses.is_empty() else "concubine")
+		for k in 3:
+			var kid := Npcs.spawn(gs.npcs, gs.data, rng, {"age_years": 4 + k * 3, "region": region_id})
+			gs.player.children.append(kid.id)
 	_load()
 
 func _load() -> void:
