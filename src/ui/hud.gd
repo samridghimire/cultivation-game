@@ -28,6 +28,7 @@ var _settings: SettingsScreen
 var _load_screen: LoadScreen
 var _help: HelpScreen
 var _crafting: CraftingScreen
+var _shop: ShopScreen
 var _mission_board: MissionBoard
 var _child_training: ChildTrainingScreen
 var _banner: Banner
@@ -61,6 +62,9 @@ func _ready() -> void:
 	_crafting = CraftingScreen.new()
 	_crafting.closed.connect(_update_modal)
 	add_child(UIStyle.centered(_crafting))
+	_shop = ShopScreen.new()
+	_shop.closed.connect(_update_modal)
+	add_child(UIStyle.centered(_shop))
 	_mission_board = MissionBoard.new()
 	_mission_board.closed.connect(_update_modal)
 	add_child(UIStyle.centered(_mission_board))
@@ -115,6 +119,7 @@ func _ready() -> void:
 	EventBus.interaction_target_changed.connect(_on_target_changed)
 	EventBus.interaction_menu_requested.connect(_on_menu_requested)
 	EventBus.crafting_requested.connect(_on_crafting_requested)
+	EventBus.shop_requested.connect(_on_shop_requested)
 	EventBus.mission_board_requested.connect(_on_mission_board_requested)
 	EventBus.child_training_requested.connect(_on_child_training_requested)
 	EventBus.player_died.connect(_on_player_died)
@@ -170,12 +175,18 @@ func _close_screens() -> void:
 	for screen in _screens.values():
 		screen.close()
 	_crafting.close()
+	_shop.close()
 	_mission_board.close()
 	_child_training.close()
 
 
 func _on_crafting_requested(prof_id: String) -> void:
 	_crafting.open(prof_id)
+	_update_modal()
+
+
+func _on_shop_requested(merchant_name: String, max_price: int, stock_tags: Array, faction: String) -> void:
+	_shop.open(merchant_name, max_price, stock_tags, faction)
 	_update_modal()
 
 
@@ -191,7 +202,7 @@ func _on_child_training_requested() -> void:
 
 
 func _any_screen_open() -> bool:
-	return _crafting.visible or _mission_board.visible or _child_training.visible or _screens.values().any(func(s): return s.visible)
+	return _crafting.visible or _shop.visible or _mission_board.visible or _child_training.visible or _screens.values().any(func(s): return s.visible)
 
 
 func _build_status_panel() -> void:

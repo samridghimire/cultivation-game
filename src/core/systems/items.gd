@@ -58,6 +58,38 @@ static func has_tag(data: GameData, item_id: String, tags: Array) -> bool:
 	return false
 
 
+## Item ids a merchant stocking `stock_tags` up to `max_price` sells
+## (merchant_sells), cheapest first.
+static func shop_stock(data: GameData, max_price: int, stock_tags: Array) -> Array:
+	var ids: Array = []
+	for item: Dictionary in data.items.values():
+		if merchant_sells(data, item, stock_tags, max_price):
+			ids.append(item["id"])
+	ids.sort_custom(func(a, b): return _price_then_name(data, a, b))
+	return ids
+
+
+## Item ids `c` holds that a merchant with `stock_tags` buys back. Only
+## specialist (tagged) merchants buy, and only goods matching their tags.
+static func buyback_ids(c: CharacterData, data: GameData, stock_tags: Array) -> Array:
+	var ids: Array = []
+	if stock_tags.is_empty():
+		return ids
+	for item_id in c.inventory:
+		if c.item_count(item_id) > 0 and has_tag(data, item_id, stock_tags) and sell_price(data, item_id) > 0:
+			ids.append(item_id)
+	ids.sort_custom(func(a, b): return _price_then_name(data, a, b))
+	return ids
+
+
+static func _price_then_name(data: GameData, a: String, b: String) -> bool:
+	var pa := int(data.items[a].get("price", 0))
+	var pb := int(data.items[b].get("price", 0))
+	if pa != pb:
+		return pa < pb
+	return String(data.items[a]["name"]).naturalnocasecmp_to(String(data.items[b]["name"])) < 0
+
+
 ## Merchants buy items back at SELL_RATE of their price. Crafted goods (the
 ## output of any recipe) are also capped at their material cost per unit times
 ## recipes.json alchemy.crafted_sell_markup, so crafting cheap materials into

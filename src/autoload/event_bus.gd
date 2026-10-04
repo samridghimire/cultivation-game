@@ -17,6 +17,9 @@ signal interaction_target_changed(display_name: String)
 signal interaction_menu_requested(source: Node)
 ## The player chose to craft at a workshop; open the crafting screen for this profession id.
 signal crafting_requested(prof_id: String)
+## The player browses a merchant; open the ShopScreen with its stock filters and
+## faction (sect id whose reputation sets the prices, "" = none). See merchant.gd.
+signal shop_requested(merchant_name: String, max_price: int, stock_tags: Array, faction: String)
 ## The player opened their sect's mission board (sect hall); show the MissionBoard.
 signal mission_board_requested
 ## The player wants to direct their children's training; show the ChildTrainingScreen.

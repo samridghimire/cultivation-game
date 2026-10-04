@@ -321,12 +321,14 @@ func perform_deed(deed_id: String) -> void:
 
 
 ## Buys one item; `faction` is the sect the merchant belongs to (prices follow reputation).
-func buy_item(item_id: String, faction: String = "") -> void:
+func buy_item(item_id: String, faction: String = "", quantity: int = 1) -> void:
 	if not _can_act():
 		return
-	var result := Items.buy(player, data, item_id, 1, faction)
+	var result := Items.buy(player, data, item_id, quantity, faction)
 	if result["ok"]:
-		EventBus.post("You buy a %s for %d spirit stones." % [data.items[item_id]["name"], result["stones"]])
+		var item_name: String = data.items[item_id]["name"]
+		var what := "a %s" % item_name if quantity == 1 else "%d %s" % [quantity, item_name]
+		EventBus.post("You buy %s for %d spirit stones." % [what, result["stones"]])
 	else:
 		EventBus.post(result["reason"], "warning")
 	EventBus.player_changed.emit()

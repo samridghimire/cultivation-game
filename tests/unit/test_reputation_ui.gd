@@ -8,25 +8,23 @@ func _root() -> Node:
 	return (Engine.get_main_loop() as SceneTree).root
 
 
-func _buy_labels(merchant: Node) -> Array:
-	return merchant.get_options().map(func(o: Dictionary) -> String: return o["label"]).filter(func(l: String) -> bool: return l.begins_with("Buy "))
-
-
-func test_faction_merchant_labels_show_reputation_price() -> void:
+func test_faction_shop_shows_reputation_price() -> void:
 	var gs: Node = _root().get_node("GameState")
 	gs.start_session(CharacterFactory.create("Trader", gs.data, seeded_rng()))
-	var merchant: Node = load("res://src/world/interactables/merchant.gd").new()
-	merchant.faction = FACTION
-	var labels := _buy_labels(merchant)
-	assert_gt(labels.size(), 0)
-	for label: String in labels:
-		assert_false(label.contains(" price)"), "neutral standing has no note: %s" % label)
+	var screen := ShopScreen.new()
+	_root().add_child(screen)
+	screen.open("Pavilion", 0, [], FACTION)
+	assert_false(screen._title.text.contains(" price)"), "neutral standing has no note: %s" % screen._title.text)
+	var item_id: String = screen.item_ids()[-1]  # priciest, so the discount survives rounding
+	var list_price := ShopScreen.unit_price(gs.player, gs.data, item_id, false, FACTION)
+	assert_eq(list_price, int(gs.data.items[item_id]["price"]))
 	Reputation.change(gs.player, gs.data, FACTION, 350)
-	labels = _buy_labels(merchant)
-	assert_true(String(labels[0]).ends_with("(Honored price)"), labels[0])
-	merchant.faction = ""
-	assert_false(String(_buy_labels(merchant)[0]).contains(" price)"), "unaffiliated merchants ignore reputation")
-	merchant.free()
+	screen.open("Pavilion", 0, [], FACTION)
+	assert_true(screen._title.text.ends_with("(Honored price)"), screen._title.text)
+	assert_true(ShopScreen.unit_price(gs.player, gs.data, item_id, false, FACTION) < list_price, "honored customers pay less")
+	screen.open("Pavilion", 0, [], "")
+	assert_false(screen._title.text.contains(" price)"), "unaffiliated merchants ignore reputation")
+	screen.free()
 	gs.end_session()
 
 

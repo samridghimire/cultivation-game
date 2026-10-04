@@ -102,6 +102,18 @@ func test_join_sect_rejects_wrong_alignment() -> void:
 	gs.end_session()
 
 
+func test_buy_item_quantity_buys_all_or_nothing() -> void:
+	var c := _start()
+	var gs := _game_state()
+	c.inventory["spirit_stone"] = 50
+	gs.buy_item("qi_gathering_pill", "", 4)  # 60 > 50
+	assert_eq(c.item_count("qi_gathering_pill"), 0)
+	gs.buy_item("qi_gathering_pill", "", 3)
+	assert_eq(c.item_count("qi_gathering_pill"), 3)
+	assert_eq(c.item_count("spirit_stone"), 5)
+	gs.end_session()
+
+
 func test_buy_item_spends_stones() -> void:
 	var c := _start()
 	var gs := _game_state()
