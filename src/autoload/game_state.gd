@@ -395,7 +395,9 @@ func explore(tags: Array = []) -> void:
 
 ## Delve one floor deeper into an open secret realm in the current region
 ## (data/secret_realms.json): pay the entry cost once per opening, beat the
-## floor's guardian, then claim one of its treasures. Losing drives you out.
+## floor's guardian, then claim one of its treasures. Losing drives you out,
+## and so does a realm that closes before the floor is done (W-005d). Clearing
+## the last floor grants the realm's inheritance once per life.
 func enter_secret_realm(realm_id: String) -> void:
 	if not _can_act():
 		return
@@ -411,6 +413,12 @@ func enter_secret_realm(realm_id: String) -> void:
 		EventBus.post("You pour %d spirit stones into the barrier of the %s and slip inside." % [cost, def["name"]], "info")
 	var floor_def := SecretRealms.next_floor(player, def, today)
 	EventBus.post("%s: %s" % [floor_def.get("name", ""), floor_def.get("text", "")], "info")
+	if SecretRealms.closes_mid_floor(player, def, today):
+		var expelled := SecretRealms.expel(player, data, def, today)
+		var hurt := " (%s)" % Injuries.injury_name(data, expelled["injury"]) if expelled["injury"] != "" else ""
+		EventBus.post("The %s shudders and begins to close. Its barrier hurls you out before you can claim the %s.%s" % [def["name"], floor_def.get("name", ""), hurt], "danger")
+		_pass_time(expelled["days"])
+		return
 	var guardian := String(floor_def.get("guardian", ""))
 	if guardian != "" and not fight_enemy(data.enemies[guardian]):
 		if _can_act():
@@ -421,7 +429,20 @@ func enter_secret_realm(realm_id: String) -> void:
 	EventBus.post("You claim the treasure of the %s. (%s)" % [result["floor_name"], ", ".join(notes)], "progress")
 	if result["last"]:
 		EventBus.post("You have plundered every floor of the %s." % def["name"], "progress")
+		_receive_inheritance(realm_id)
 	_pass_time(result["days"])
+
+
+func _receive_inheritance(realm_id: String) -> void:
+	var legacy: Dictionary = SecretRealms.realm(data, realm_id).get("inheritance", {})
+	if legacy.is_empty() or SecretRealms.has_inherited(player, realm_id):
+		return
+	var reason := SecretRealms.check_inheritance(player, data, realm_id)
+	if reason != "":
+		EventBus.post(reason, "warning")
+		return
+	var notes := SecretRealms.claim_inheritance(player, data, realm_id, world_flags)
+	EventBus.post("%s: %s (%s)" % [legacy.get("name", ""), legacy.get("text", ""), ", ".join(notes)], "progress")
 
 
 ## The pending encounter's choices for the UI: [{index, label, disabled, reason}]

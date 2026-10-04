@@ -112,3 +112,96 @@ func test_game_state_delves_the_verdant_remnant() -> void:
 	c.realm_index = 2
 	gs.enter_secret_realm("verdant_remnant")
 	assert_eq(SecretRealms.floors_cleared(c, def, clock.total_days), 1, "too strong to pass the barrier now")
+
+
+# --- W-005d: expulsion and inheritances -----------------------------------------
+
+func test_closing_realm_expels_mid_floor() -> void:
+	var data := data()
+	var def := _def()
+	def["expulsion_injury"] = "broken_bones"
+	data.secret_realms["test_realm"] = def
+	var c := _cultivator()
+	var close_day := Y + 59  # one day left, the first floor takes two
+	assert_false(SecretRealms.closes_mid_floor(c, def, Y), "plenty of time")
+	assert_true(SecretRealms.closes_mid_floor(c, def, close_day))
+	assert_false(SecretRealms.closes_mid_floor(c, def, Y + 60), "closed realms do not expel")
+	assert_true(SecretRealms.status_text(c, data, "test_realm", close_day).ends_with("closing before the next floor ends"))
+	var result := SecretRealms.expel(c, data, def, close_day)
+	assert_eq(result["days"], 1)
+	assert_eq(result["injury"], "broken_bones")
+	assert_true(c.injuries.has("broken_bones"))
+	def.erase("expulsion_injury")
+	assert_eq(SecretRealms.expel(c, data, def, close_day)["injury"], "", "no injury configured")
+	data.secret_realms.erase("test_realm")
+
+
+func test_inheritance_once_per_life() -> void:
+	var data := data()
+	var def := _def()
+	def["inheritance"] = {"name": "Test Legacy", "text": "", "min_comprehension": 12, "effects": {"learn_technique": "iron_fist"}}
+	data.secret_realms["test_realm"] = def
+	var c := _cultivator()
+	c.attributes["comprehension"] = 8
+	assert_true(SecretRealms.check_inheritance(c, data, "test_realm").contains("comprehension"), "too dull")
+	c.attributes["comprehension"] = 12
+	assert_eq(SecretRealms.check_inheritance(c, data, "test_realm"), "")
+	var notes := SecretRealms.claim_inheritance(c, data, "test_realm", {})
+	assert_true(Techniques.knows(c, "iron_fist"))
+	assert_eq(notes.size(), 1)
+	assert_true(SecretRealms.has_inherited(c, "test_realm"))
+	assert_true(SecretRealms.check_inheritance(c, data, "test_realm") != "", "only once")
+	var restored := CharacterData.from_dict(JSON.parse_string(JSON.stringify(c.to_dict())))
+	assert_true(SecretRealms.has_inherited(restored, "test_realm"), "saved")
+	def.erase("inheritance")
+	assert_true(SecretRealms.check_inheritance(new_character(), data, "test_realm") != "", "no inheritance")
+	data.secret_realms.erase("test_realm")
+
+
+func test_validate_rejects_bad_depth_fields() -> void:
+	var data := data()
+	var def := _def()
+	def["id"] = "bad_realm"
+	def["expulsion_injury"] = "nope"
+	def["inheritance"] = {"name": "", "effects": {"learn_technique": "nope"}}
+	(def["floors"] as Array)[0]["days"] = 60
+	data.secret_realms["bad_realm"] = def
+	var errors := SecretRealms.validate(data)
+	data.secret_realms.erase("bad_realm")
+	assert_eq(errors.size(), 4, str(errors))
+
+
+func test_game_state_inheritance_and_expulsion() -> void:
+	var gs := _root().get_node("GameState")
+	var clock := _root().get_node("GameClock")
+	var c := CharacterFactory.create("Heir", gs.data, seeded_rng(9))
+	gs.start_session(c)
+	gs.current_region = "misty_forest"
+	c.realm_index = 1
+	c.stage = 8
+	c.attributes["comprehension"] = 15
+	var def := SecretRealms.realm(gs.data, "verdant_remnant")
+	var opening := SecretRealms.days_until_open(def, clock.total_days)
+	# Skip the guarded floors: the last one is left.
+	var floors: int = (def["floors"] as Array).size()
+	c.secret_realms["verdant_remnant"] = {"opening": SecretRealms.opening_index(def, opening), "floor": floors - 1}
+	clock.total_days = opening + int(def["open_days"]) - 1
+	gs.enter_secret_realm("verdant_remnant")
+	assert_eq(SecretRealms.floors_cleared(c, def, opening), floors - 1, "expelled without the floor")
+	assert_true(c.injuries.has(String(def["expulsion_injury"])))
+	assert_false(SecretRealms.is_open(def, clock.total_days), "time ran out with the realm")
+	# Next opening, with time to spare: clear the last floor (its guardian set aside for the test).
+	c.injuries.clear()
+	var last_floor: Dictionary = (def["floors"] as Array)[floors - 1]
+	var guardian: String = last_floor["guardian"]
+	last_floor["guardian"] = ""
+	var next_open: int = clock.total_days + SecretRealms.days_until_open(def, clock.total_days)
+	c.secret_realms["verdant_remnant"] = {"opening": SecretRealms.opening_index(def, next_open), "floor": floors - 1}
+	clock.total_days = next_open
+	var tech := String(def["inheritance"]["effects"]["learn_technique"])
+	c.techniques.erase(tech)
+	gs.enter_secret_realm("verdant_remnant")
+	last_floor["guardian"] = guardian
+	assert_eq(SecretRealms.floors_cleared(c, def, next_open), floors, "the heart pavilion is plundered")
+	assert_true(SecretRealms.has_inherited(c, "verdant_remnant"))
+	assert_true(Techniques.knows(c, tech))

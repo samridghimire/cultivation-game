@@ -4,6 +4,9 @@ extends RefCounted
 ## for open_days every period_years, only admit cultivators within a realm
 ## range, and hold floors of guardians and treasures cleared one per entry.
 ## Progress (c.secret_realms) resets when the realm opens again.
+## W-005d: a floor that would outlast the opening casts the delver out
+## (expulsion_injury), and clearing the last floor can grant the realm's
+## `inheritance` once per life (c.inheritances).
 
 
 static func realm(data: GameData, realm_id: String) -> Dictionary:
@@ -156,6 +159,48 @@ static func claim_floor(c: CharacterData, data: GameData, realm_id: String, tota
 	return {"floor_name": String(floor_def.get("name", "")), "notes": notes, "days": int(floor_def.get("days", 1)), "last": cleared >= (def.get("floors", []) as Array).size()}
 
 
+## Whether the next floor would outlast the current opening, so the closing
+## realm casts `c` out before they can claim it.
+static func closes_mid_floor(c: CharacterData, def: Dictionary, total_days: int) -> bool:
+	var floor_def := next_floor(c, def, total_days)
+	return is_open(def, total_days) and not floor_def.is_empty() and int(floor_def.get("days", 1)) > days_until_close(def, total_days)
+
+
+## Casts `c` out of a realm closing mid-floor: inflicts its expulsion_injury
+## (if any). Returns {days: days spent until it closes, injury: id or ""}.
+static func expel(c: CharacterData, data: GameData, def: Dictionary, total_days: int) -> Dictionary:
+	var injury := String(def.get("expulsion_injury", ""))
+	if injury != "" and not Injuries.inflict(c, data, injury):
+		injury = ""
+	return {"days": days_until_close(def, total_days), "injury": injury}
+
+
+static func has_inherited(c: CharacterData, realm_id: String) -> bool:
+	return c.inheritances.has(realm_id)
+
+
+## Why `c` cannot receive the inheritance of `realm_id` now ("" = can).
+static func check_inheritance(c: CharacterData, data: GameData, realm_id: String) -> String:
+	var def := realm(data, realm_id)
+	var legacy: Dictionary = def.get("inheritance", {})
+	if legacy.is_empty():
+		return "The %s holds no inheritance." % def.get("name", realm_id)
+	if has_inherited(c, realm_id):
+		return "You already carry the %s." % legacy.get("name", "inheritance")
+	var needed := int(legacy.get("min_comprehension", 0))
+	if c.attribute("comprehension") < needed:
+		return "The %s is beyond your comprehension (needs %d)." % [legacy.get("name", "inheritance"), needed]
+	return Effects.check(c, data, legacy.get("effects", {}))
+
+
+## Grants the inheritance of `realm_id` (once per life). Call after
+## check_inheritance. Returns the effect notes.
+static func claim_inheritance(c: CharacterData, data: GameData, realm_id: String, flags: Dictionary) -> PackedStringArray:
+	var legacy: Dictionary = realm(data, realm_id).get("inheritance", {})
+	c.inheritances.append(realm_id)
+	return Effects.apply(c, data, legacy.get("effects", {}), flags)
+
+
 static func _draw(table: Array, rng: RandomNumberGenerator) -> Dictionary:
 	var total := 0
 	for entry: Dictionary in table:
@@ -176,7 +221,10 @@ static func status_text(c: CharacterData, data: GameData, realm_id: String, tota
 	if not is_open(def, total_days):
 		return "Sealed, opens in %s" % Calendar.format_duration(days_until_open(def, total_days))
 	var floors: int = (def.get("floors", []) as Array).size()
-	return "Open (%s left), %d/%d floors cleared" % [Calendar.format_duration(days_until_close(def, total_days)), floors_cleared(c, def, total_days), floors]
+	var text := "Open (%s left), %d/%d floors cleared" % [Calendar.format_duration(days_until_close(def, total_days)), floors_cleared(c, def, total_days), floors]
+	if closes_mid_floor(c, def, total_days):
+		text += ", closing before the next floor ends"
+	return text
 
 
 ## Secret realm ids whose entrance is in `region_id`, sorted.
@@ -207,8 +255,23 @@ static func validate(data: GameData) -> PackedStringArray:
 			var guardian := String(floor_def.get("guardian", ""))
 			if guardian != "" and not data.enemies.has(guardian):
 				errors.append("Secret realm '%s' floor '%s' has unknown guardian '%s'" % [id, floor_def.get("name", "?"), guardian])
+			if int(floor_def.get("days", 1)) >= int(def.get("open_days", 0)):
+				errors.append("Secret realm '%s' floor '%s' takes longer than the realm stays open" % [id, floor_def.get("name", "?")])
 			for treasure: Dictionary in floor_def.get("treasures", []):
 				for item_id in treasure.get("effects", {}).get("items", {}):
 					if not data.items.has(item_id):
 						errors.append("Secret realm '%s' treasure has unknown item '%s'" % [id, item_id])
+		var expulsion := String(def.get("expulsion_injury", ""))
+		if expulsion != "" and not data.injuries.has(expulsion):
+			errors.append("Secret realm '%s' has unknown expulsion_injury '%s'" % [id, expulsion])
+		var legacy: Dictionary = def.get("inheritance", {})
+		if not legacy.is_empty():
+			if String(legacy.get("name", "")) == "" or (legacy.get("effects", {}) as Dictionary).is_empty():
+				errors.append("Secret realm '%s' inheritance needs a name and effects" % id)
+			var tech := String(legacy.get("effects", {}).get("learn_technique", ""))
+			if tech != "" and not data.techniques.has(tech):
+				errors.append("Secret realm '%s' inheritance teaches unknown technique '%s'" % [id, tech])
+			for item_id in legacy.get("effects", {}).get("items", {}):
+				if not data.items.has(item_id):
+					errors.append("Secret realm '%s' inheritance has unknown item '%s'" % [id, item_id])
 	return errors
