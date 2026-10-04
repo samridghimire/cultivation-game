@@ -5,7 +5,8 @@ extends PanelContainer
 ## items for energy, unsealing functions, the Storage Space panel that
 ## moves items between the inventory and the artifact, and the Lives & Anchors
 ## page (ART-005b): recharge lives, pick the respawn point or release anchors
-## from anywhere. ui_cancel goes back
+## from anywhere. Once unsealed, "Enter the Inner World" cultivates there
+## (ART-003b, GameState.enter_inner_world). ui_cancel goes back
 ## from a sub-page, then closes.
 
 signal closed
@@ -136,6 +137,9 @@ func _build_main(p: CharacterData, data: GameData) -> void:
 		var cost := int(def.get("unlock", {}).get("energy", 0))
 		var reason := ArtifactFunctions.check_unlock(p, data, function_id, GameState.world_flags)
 		_add_button("unseal_" + function_id, "Unseal %s (%d energy)" % [def.get("name", function_id), cost], reason, GameState.unlock_artifact_function.bind(function_id))
+	if ArtifactFunctions.is_unlocked(p, InnerWorld.FUNCTION):
+		var days := InnerWorld.max_days(data)
+		_add_button("inner_world", "Enter the Inner World (%s outside, %s inside)" % [Calendar.format_duration(days), Calendar.format_duration(InnerWorld.inner_days(data, days))], InnerWorld.check_enter(p, data, days), GameState.enter_inner_world.bind(days))
 	var storage_reason := "" if ArtifactFunctions.is_unlocked(p, "storage") else "sealed"
 	_add_button("storage", "%s..." % ArtifactFunctions.function_name(data, "storage"), storage_reason, _show_page.bind(PAGE_STORAGE))
 

@@ -7,7 +7,7 @@ extends RefCounted
 ## separate item store that is never lost, even on death.
 
 ## Function ids this code implements; data/artifact.json may only list these.
-const KNOWN := ["storage", "appraisal"]
+const KNOWN := ["storage", "appraisal", "inner_world"]
 
 
 ## The data/artifact.json function def for `function_id` ({} if none).
@@ -172,4 +172,5 @@ static func validate(data: GameData) -> PackedStringArray:
 		if function_id == "storage" and int(def.get("storage_slots", 0)) < 1:
 			errors.append("artifact.json storage needs storage_slots >= 1")
 	errors.append_array(Appraisal.validate(data))
+	errors.append_array(InnerWorld.validate(data))
 	return errors
