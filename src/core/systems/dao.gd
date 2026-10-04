@@ -145,6 +145,23 @@ static func describe(c: CharacterData, data: GameData) -> PackedStringArray:
 	return lines
 
 
+## Insight ids the character has glimpsed (level >= 1), in data order.
+static func known_ids(c: CharacterData, data: GameData) -> Array[String]:
+	var ids: Array[String] = []
+	for insight_id in data.dao_insights:
+		if level(c, insight_id) > 0:
+			ids.append(String(insight_id))
+	return ids
+
+
+## e.g. "34/120 toward level 3", or "fully comprehended" at max level.
+static func progress_text(c: CharacterData, data: GameData, insight_id: String) -> String:
+	var needed := progress_needed(c, data, insight_id)
+	if needed <= 0.0:
+		return "fully comprehended"
+	return "%d/%d toward level %d" % [int(progress(c, insight_id)), int(needed), level(c, insight_id) + 1]
+
+
 ## Load errors for data/dao.json.
 static func validate(data: GameData) -> PackedStringArray:
 	var errors: PackedStringArray = []
