@@ -86,7 +86,7 @@ Every great cultivation protagonist has something that sets them apart. Ours is 
 | Clans, estates, bloodlines | ✅ clan core (FAM-005), heirs (FAM-008), NPC clans core (FAM-009), bloodlines core (FAM-007), clan screen UI (FAM-005b), estates core (FAM-006) | `data/family.json`, `data/bloodlines.json`, `Clans`, `ClanData`, `Bloodlines` |
 | Spirit beast companions (Beast Tamer taming, combat bonus) | ✅ core, 🚧 no UI (BEAST-001b) | `data/beasts.json`, `Beasts` |
 | Cultivation methods (one main method, qi rate, realm cap) | ✅ (techniques screen) | `Techniques`, `data/techniques.json` |
-| Dao insights (encounters, practice, seclusion; technique + breakthrough bonuses) | ✅ core, 🚧 no UI (DAO-001b) | `data/dao.json`, `Dao` |
+| Dao insights (encounters, practice, seclusion; technique + breakthrough bonuses) | ✅ (sheet + contemplation at meditation spots) | `data/dao.json`, `Dao` |
 | Heavenly Tribulations (Core Formation+, heart demon for demonic) | ✅ core, 🚧 no wave screen (TRIB-001b) | `Tribulation`, `data/realms.json` |
 | Grudges and gratitude (rob/kill/humiliate NPCs, kin vengeance, amends) | ✅ core, 🚧 no UI (RIV-001d), no avengers yet (RIV-003), no karma view (RIV-001b) | `data/karma.json`, `Karma` |
 | Secret realms (periodic openings, realm caps, guarded floors) | ✅ core, 🚧 no entrance UI (W-005b) | `data/secret_realms.json`, `SecretRealms` |

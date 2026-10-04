@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-04 [DAO-001b] Dao insights are visible and usable: the character sheet lists each glimpsed insight (level, arts bonus, progress toward the next level, total breakthrough bonus), and meditation spots offer "Contemplate the <insight> (1 month)", disabled once fully comprehended.
 - 2026-10-04 [UI-010] Time-skip feedback: meditating, dual cultivation, profession work, travel and sect missions now show a short overlay ("Meditating... 1 month", a filling bar, then qi gained / stones earned / news count). Input is locked while it shows and any key or gamepad button dismisses it; Settings has a "Fast time skips" toggle to turn it off. New EventBus.time_skipped signal and TimeSkip helper.
 - 2026-10-04 [ART-006b] Story events: dialogues can now play without an NPC (GameState.start_event), and a new character opens with the Creation Artifact's awakening dream (data/artifact.json intro_event), once.
 - 2026-10-04 [AUC-001] Auctions core: the Fallen Star Auction House holds a seasonal auction of rare pills, manuals, treasures and weapons; place one sealed bid per lot (GameState.bid) and beat the hidden rival bids to win it. Auction house UI follows in AUC-001b.

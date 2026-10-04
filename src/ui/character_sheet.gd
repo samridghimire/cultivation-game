@@ -152,6 +152,15 @@ func _rebuild() -> void:
 	for tech_id in TechniquesScreen.listed_ids(p, data):
 		if Techniques.knows(p, tech_id):
 			t += "  %s (level %d)\n" % [data.techniques[tech_id].name, Techniques.level(p, tech_id)]
+	t += "\n[color=#%s]Dao insights[/color]\n" % accent
+	var insights := Dao.known_ids(p, data)
+	if insights.is_empty():
+		t += "  None glimpsed yet. Rare encounters and long practice of a technique can reveal one.\n"
+	for insight_id in insights:
+		var insight := Dao.def_of(data, insight_id)
+		t += "  %s %d/%d (+%d%% to its arts), %s\n" % [insight["name"], Dao.level(p, insight_id), Dao.max_level(data), roundi(float(insight.get("technique_bonus", 0.0)) * Dao.level(p, insight_id) * 100), Dao.progress_text(p, data, insight_id)]
+	if not insights.is_empty():
+		t += "  Breakthrough chance +%d%%. Contemplate an insight at a meditation spot.\n" % roundi(Dao.breakthrough_bonus(p, data) * 100)
 	t += "\n[color=#%s]Professions[/color]\n" % accent
 	if p.professions.is_empty():
 		t += "  None yet. Work at the Village Workshop to learn a craft.\n"
