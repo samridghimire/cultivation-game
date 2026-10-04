@@ -310,6 +310,10 @@ func _look() -> void:
 	if GameState.player != null:
 		lines.append_array(Karma.attitude(GameState.player, npc, GameState.data))
 	EventBus.post(" ".join(lines))
+	# The Creation Artifact's appraising eye sees what the eye cannot (ART-003c).
+	var appraisal := Appraisal.describe_npc(GameState.player, npc, GameState.data) if GameState.player != null else []
+	if not appraisal.is_empty():
+		EventBus.post("Appraisal: %s." % "; ".join(appraisal), "progress")
 
 
 func _has_dialogue_window() -> bool:

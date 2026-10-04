@@ -257,6 +257,9 @@ func _show_details() -> void:
 	if Equipment.is_equipment(data, _selected):
 		lines.insert(0, Equipment.describe_stats(data, _selected))
 	_effects.text = "\n".join(lines)
+	for line in Appraisal.describe_item(p, data, _selected):
+		lines.append("Appraisal: " + line)
+	_effects.text = "\n".join(lines)
 	_compare.text = compare_text(p, data, _selected)
 	_compare.visible = _compare.text != ""
 	var most := max_quantity(p, data, _selected, _selling, _faction, GameState.market_multiplier())

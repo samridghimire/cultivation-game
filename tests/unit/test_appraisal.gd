@@ -113,3 +113,32 @@ func test_game_state_unlocks_and_appraises() -> void:
 	gs.load_save_dict(JSON.parse_string(JSON.stringify(saved)))
 	assert_true(Appraisal.is_available(gs.player), "the unsealed eye survives a save")
 	gs.end_session()
+
+
+## ART-003c: the appraising eye shows up in NPC Look, the inventory and shops.
+func test_appraisal_surfaces_in_the_ui() -> void:
+	var root := (Engine.get_main_loop() as SceneTree).root
+	var gs := root.get_node("GameState")
+	var c := new_character()
+	gs.start_session(c)
+	c.inventory = {"iron_sword": 1}
+	var rival: CharacterData = Rivals.rival_of(c, gs.npcs)
+	var npc: Node = load("res://src/world/interactables/npc.gd").new()
+	npc.npc_id = rival.id
+	var posted: Array = []
+	var cb := func(text: String, _cat: String) -> void: posted.append(text)
+	var bus := root.get_node("EventBus")
+	bus.message_posted.connect(cb)
+	npc._look()
+	assert_false(posted.any(func(t: String) -> bool: return t.begins_with("Appraisal:")), "sealed: nothing extra")
+	c.artifact_functions.append("appraisal")
+	npc._look()
+	bus.message_posted.disconnect(cb)
+	assert_true(posted.any(func(t: String) -> bool: return t.begins_with("Appraisal:") and t.contains("Talent:")), str(posted))
+	npc.free()
+	var inv := InventoryScreen.new()
+	root.add_child(inv)
+	inv.open()
+	assert_true(inv._effects.text.contains("Appraisal: Grade"), inv._effects.text)
+	inv.free()
+	gs.end_session()
