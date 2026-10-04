@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-04 [LW-001] World events: beast tides, sect tournaments, auction seasons, demonic incursions and spirit qi tides now break out in regions for a month or two, with their own encounters (tournament bouts, refugees, stampedes), merchant price swings and qi density changes.
 - 2026-10-04 [DEM-001] Devouring: after beating a human cultivator you can devour their cultivation from the combat report for a burst of qi, at -100 alignment and a growing risk of a Heart Demon injury.
 - 2026-10-04 [UI-010b] The time-skip summary also appears after practicing a technique, contemplating the Dao, treating patients and cultivating in seclusion.
 - 2026-10-04 [AUC-001b] The Fallen Star Auction House opens in Fallen Star Market: see when the next auction opens, browse the lots by rarity and place sealed bids with a left/right bid selector.

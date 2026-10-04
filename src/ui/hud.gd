@@ -306,7 +306,7 @@ func _refresh() -> void:
 		"Spirit Stones: %d" % p.item_count("spirit_stone"),
 		GameClock.date_string(),
 	]))
-	var density := Exploration.qi_density(data, GameState.current_region)
+	var density := GameState.region_qi_density()
 	_status.text += "\n%s   (Qi x%s)" % [Exploration.region_name(data, GameState.current_region), String.num(density, 2)]
 	_qi_bar.max_value = maxf(Cultivation.qi_required(p, data), 1.0)
 	_qi_bar.value = p.qi

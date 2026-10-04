@@ -1,0 +1,110 @@
+extends TestCase
+## LW-001: world events (WorldEvents) and their GameState hooks.
+
+
+func _root() -> Node:
+	return (Engine.get_main_loop() as SceneTree).root
+
+
+func test_real_data_is_valid() -> void:
+	assert_eq(WorldEvents.validate(data()).size(), 0, ", ".join(WorldEvents.validate(data())))
+	for event_id in ["beast_tide", "sect_tournament", "auction_season", "demonic_incursion"]:
+		assert_true(data().world_events.has(event_id), event_id)
+
+
+func test_validation_catches_bad_events() -> void:
+	var d := GameData.load_from_dir()
+	d.world_events["bad"] = {"id": "bad", "monthly_chance": 2.0, "min_days": 0, "max_days": 0, "regions": ["nowhere"], "modifiers": {"weather": 1, "price_mult": 0}}
+	assert_eq(WorldEvents.validate(d).size(), 5, ", ".join(WorldEvents.validate(d)))
+
+
+func test_every_event_tag_has_encounters() -> void:
+	var d := data()
+	for def: Dictionary in d.world_events.values():
+		for tag in def.get("modifiers", {}).get("encounter_tags", []):
+			var found := d.encounters.values().any(func(e: Dictionary) -> bool: return (e.get("tags", []) as Array).has(tag))
+			assert_true(found, "%s adds tag '%s' but no encounter uses it" % [def["id"], tag])
+
+
+func test_roll_starts_each_event_once_and_expire_ends_it() -> void:
+	var d := data()
+	var active: Array = []
+	var rng := seeded_rng()
+	var started_ids := {}
+	for month in 400:
+		for ended in WorldEvents.expire(active, month * 30):
+			assert_true(int(ended["end_day"]) <= month * 30)
+		for started in WorldEvents.roll(d, active, month * 30, rng):
+			started_ids[started["id"]] = true
+			var def := WorldEvents.def_of(d, started["id"])
+			assert_true((def["regions"] as Array).has(started["region"]))
+			var days := int(started["end_day"]) - int(started["start_day"])
+			assert_true(days >= int(def["min_days"]) and days <= int(def["max_days"]), str(started))
+		var ids := active.map(func(i: Dictionary) -> String: return i["id"])
+		for id in ids:
+			assert_eq(ids.count(id), 1, "%s runs twice at once" % id)
+	assert_eq(started_ids.size(), d.world_events.size(), "every event happens over 400 months: %s" % str(started_ids.keys()))
+	WorldEvents.expire(active, 1000000)
+	assert_true(active.is_empty(), "everything ends eventually")
+
+
+func test_modifiers_apply_only_in_the_region() -> void:
+	var d := data()
+	var active: Array = [{"id": "demonic_incursion", "region": "misty_forest", "start_day": 0, "end_day": 60}, {"id": "spirit_qi_tide", "region": "misty_forest", "start_day": 0, "end_day": 60}]
+	assert_almost_eq(WorldEvents.qi_multiplier(d, active, "misty_forest"), 0.85 * 1.5)
+	assert_almost_eq(WorldEvents.qi_multiplier(d, active, "azure_peak"), 1.0)
+	assert_almost_eq(WorldEvents.price_multiplier(d, active, "misty_forest"), 1.15)
+	assert_eq(WorldEvents.encounter_tags(d, active, "misty_forest"), ["incursion"] as Array[String])
+	assert_true(WorldEvents.encounter_tags(d, active, "azure_peak").is_empty())
+	assert_true(WorldEvents.news(d, active[0], true).contains(Exploration.region_name(d, "misty_forest")))
+	assert_true(WorldEvents.describe(d, active, 30)[0].contains("left"))
+	var base := Reputation.buy_price(new_character(), d, "qi_gathering_pill", "")
+	assert_eq(Reputation.buy_price(new_character(), d, "qi_gathering_pill", "", 1.25), roundi(base * 1.25))
+
+
+func test_game_state_rolls_saves_and_applies_events() -> void:
+	var gs := _root().get_node("GameState")
+	var c := new_character()
+	c.spiritual_roots = {"fire": 80}
+	gs.start_session(c)
+	assert_true(gs.world_events.is_empty())
+	gs.current_region = "fallen_star_market"
+	var day: int = _root().get_node("GameClock").total_days
+	gs.world_events = [{"id": "auction_season", "region": "fallen_star_market", "start_day": day, "end_day": day + 40}]
+	assert_almost_eq(gs.market_multiplier(), 1.25)
+	c.inventory = {"spirit_stone": 1000}
+	var price := Reputation.buy_price(c, gs.data, "qi_gathering_pill", "", 1.25)
+	gs.buy_item("qi_gathering_pill")
+	assert_eq(c.item_count("spirit_stone"), 1000 - price, "auction season prices")
+	var saved: Dictionary = JSON.parse_string(JSON.stringify(gs.to_save_dict()))
+	gs.world_events = []
+	gs.load_save_dict(saved)
+	assert_eq(gs.world_events.size(), 1, "active events are saved")
+	assert_eq(int(gs.world_events[0]["end_day"]), day + 40)
+	saved.erase("world_events")
+	gs.load_save_dict(saved)
+	assert_true(gs.world_events.is_empty(), "old saves load without events")
+	gs.world_events = [{"id": "spirit_qi_tide", "region": "fallen_star_market", "start_day": day, "end_day": day + 40}]
+	assert_almost_eq(gs.region_qi_density(), Exploration.qi_density(gs.data, "fallen_star_market") * 1.5)
+	gs.cultivate(Calendar.DAYS_PER_MONTH * 2)
+	assert_true(gs.world_events.all(func(i: Dictionary) -> bool: return int(i["end_day"]) > _root().get_node("GameClock").total_days), "the tide ended at a month boundary")
+	gs.end_session()
+
+
+func test_event_tags_join_exploration() -> void:
+	var gs := _root().get_node("GameState")
+	var c := new_character()
+	gs.start_session(c)
+	c.realm_index = 1
+	gs.current_region = "fallen_star_market"
+	var day: int = _root().get_node("GameClock").total_days
+	gs.world_events = [{"id": "sect_tournament", "region": "fallen_star_market", "start_day": day, "end_day": day + 400}]
+	var seen := false
+	for i in 40:
+		gs.pending_encounter = ""
+		gs.explore(["no_such_tag_lw001"])
+		if gs.pending_encounter == "tournament_bout":
+			seen = true
+			break
+	assert_true(seen, "tournament encounters join the explore pool")
+	gs.end_session()

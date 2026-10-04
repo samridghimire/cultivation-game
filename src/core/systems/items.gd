@@ -9,9 +9,9 @@ const SELL_RATE := 0.5
 ## Buys at a merchant affiliated with sect `faction` ("" = none), whose
 ## prices follow the buyer's reputation (Reputation.buy_price).
 ## Returns {ok, reason, stones}.
-static func buy(c: CharacterData, data: GameData, item_id: String, quantity: int = 1, faction: String = "") -> Dictionary:
+static func buy(c: CharacterData, data: GameData, item_id: String, quantity: int = 1, faction: String = "", market_mult: float = 1.0) -> Dictionary:
 	var item: Dictionary = data.items.get(item_id, {})
-	var price := Reputation.buy_price(c, data, item_id, faction) * quantity
+	var price := Reputation.buy_price(c, data, item_id, faction, market_mult) * quantity
 	if item.is_empty() or price <= 0:
 		return {"ok": false, "reason": "That is not for sale."}
 	if c.item_count("spirit_stone") < price:
