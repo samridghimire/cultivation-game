@@ -126,19 +126,20 @@ func _draw() -> void:
 
 
 ## The clan seat shows one small hut per built estate building (FAM-006b),
-## taller the higher its level, in a row beside the abode.
+## taller the higher its level, in rows of four beside the abode.
 func _draw_estate() -> void:
 	var clan: ClanData = GameState.clan
 	if clan == null or clan.seat != abode_id:
 		return
-	var x := size.x / 2.0 + 14.0
+	var built := 0
 	for building_id in ClanEstate.building_ids(GameState.data):
 		var lvl := ClanEstate.level(clan, building_id)
 		if lvl <= 0:
 			continue
 		var h := 14.0 + 6.0 * lvl
-		var base := Vector2(x, size.y / 2.0)
+		@warning_ignore("integer_division")
+		var base := Vector2(size.x / 2.0 + 14.0 + 24.0 * (built % 4), size.y / 2.0 + 38.0 * (built / 4))
+		built += 1
 		draw_rect(Rect2(base + Vector2(0, -h), Vector2(18, h)), Color("b08a5a"))
 		draw_rect(Rect2(base + Vector2(0, -h), Vector2(18, h)), PlaceArt.OUTLINE, false, 1.5)
 		draw_colored_polygon(PackedVector2Array([base + Vector2(-3, -h), base + Vector2(9, -h - 9), base + Vector2(21, -h)]), Color("5a3a2a"))
-		x += 24.0

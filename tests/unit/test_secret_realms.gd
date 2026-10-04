@@ -176,6 +176,9 @@ func test_game_state_inheritance_and_expulsion() -> void:
 	var clock := _root().get_node("GameClock")
 	var c := CharacterFactory.create("Heir", gs.data, seeded_rng(9))
 	gs.start_session(c)
+	# No rival contests the floors or claims the inheritance (W-005f has its own test).
+	var rivals: Dictionary = gs.data.secret_realm_rivals
+	gs.data.secret_realm_rivals = {}
 	gs.current_region = "misty_forest"
 	c.realm_index = 1
 	c.stage = 8
@@ -205,6 +208,7 @@ func test_game_state_inheritance_and_expulsion() -> void:
 	assert_eq(SecretRealms.floors_cleared(c, def, next_open), floors, "the heart pavilion is plundered")
 	assert_true(SecretRealms.has_inherited(c, "verdant_remnant"))
 	assert_true(Techniques.knows(c, tech))
+	gs.data.secret_realm_rivals = rivals
 
 
 ## W-005c: one secret realm per region, Qi Refining to Nascent Soul, each with

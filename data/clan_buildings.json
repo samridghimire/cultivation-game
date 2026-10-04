@@ -26,6 +26,9 @@
       {"cost": 250, "build_days": 60, "effects": {"training_speed": 0.15}},
       {"cost": 800, "build_days": 120, "effects": {"training_speed": 0.3}},
       {"cost": 2400, "build_days": 240, "min_realm": "core_formation", "effects": {"training_speed": 0.5}}
-    ]}
+    ]},
+    {"id": "ore_vein", "name": "Spirit Ore Vein", "description": "A shaft sunk into a thin vein of spirit iron beneath the seat, worked by clan servants.", "levels": [{"cost": 250, "build_days": 60, "effects": {"herbs": {"iron_essence": 3}}}, {"cost": 750, "build_days": 120, "effects": {"herbs": {"iron_essence": 3, "cold_iron": 2}}}, {"cost": 2200, "build_days": 240, "min_realm": "core_formation", "effects": {"herbs": {"cold_iron": 3, "azure_crystal": 1}}}]},
+    {"id": "guest_pavilion", "name": "Guest Pavilion", "description": "Elegant halls where travelling cultivators and merchants lodge, paying in stones and spreading the clan's name.", "levels": [{"cost": 350, "build_days": 60, "effects": {"income": 10, "reputation": 1}}, {"cost": 1000, "build_days": 120, "effects": {"income": 25, "reputation": 2}}, {"cost": 3000, "build_days": 240, "min_realm": "core_formation", "effects": {"income": 50, "reputation": 4}}]},
+    {"id": "training_grounds", "name": "Martial Training Grounds", "description": "Sparring rings and archery butts where clan youths drill, and clan guards keep watch over the road.", "levels": [{"cost": 300, "build_days": 60, "effects": {"training_speed": 0.1, "ward": 0.1}}, {"cost": 900, "build_days": 120, "effects": {"training_speed": 0.2, "ward": 0.15}}, {"cost": 2700, "build_days": 240, "min_realm": "core_formation", "effects": {"training_speed": 0.3, "ward": 0.2}}]}
   ]
 }
