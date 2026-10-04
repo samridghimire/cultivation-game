@@ -1,6 +1,7 @@
 extends Interactable
 ## Recruitment hall where sects accept (or reject) new disciples, and where
-## members spend contribution in their sect's shop (Sects.shop_items).
+## members open the mission board, attempt promotion trials (G-011b) and spend
+## contribution in their sect's shop (Sects.shop_items).
 
 
 func get_options() -> Array[Dictionary]:
@@ -10,6 +11,9 @@ func get_options() -> Array[Dictionary]:
 		var ids := Sects.available_missions(player, GameState.data)
 		var ready := ids.filter(func(id: String) -> bool: return Sects.check_mission(player, GameState.data, id) == "").size()
 		options.append({"label": "Mission board (%d of %d available)" % [ready, ids.size()], "action": EventBus.mission_board_requested.emit})
+		var trial := trial_option()
+		if not trial.is_empty():
+			options.append(trial)
 	for sect: SectDef in GameState.data.sects.values():
 		if player.sect.get("id", "") == sect.id:
 			options.append({"label": "Leave the %s" % sect.name, "action": GameState.leave_sect, "keep_open": true})
@@ -19,6 +23,24 @@ func get_options() -> Array[Dictionary]:
 			options.append({"label": label, "action": GameState.join_sect.bind(sect.id), "disabled": not check["ok"], "keep_open": true})
 	options.append_array(shop_options())
 	return options
+
+
+## "Attempt the trial for <rank> (vs <foe>, <danger>)" when the next rank of the
+## player's sect has a promotion trial (Sects.check_promotion reason when
+## disabled); {} otherwise.
+func trial_option() -> Dictionary:
+	var player := GameState.player
+	var data := GameState.data
+	var enemy_id := Sects.trial_enemy(player, data)
+	if enemy_id == "":
+		return {}
+	var sect: SectDef = data.sects[player.sect["id"]]
+	var enemy: Dictionary = data.enemies[enemy_id]
+	var label := "Attempt the trial for %s (vs %s, %s)" % [sect.rank_name(Sects.next_rank(player, data)), enemy["name"], Combat.danger_label(player, data, enemy)]
+	var reason := Sects.check_promotion(player, data)
+	if reason != "":
+		label += " (%s)" % reason
+	return {"label": label, "action": GameState.attempt_promotion_trial, "disabled": reason != ""}
 
 
 ## One "Claim <item>" entry per item in the player's sect shop; unavailable

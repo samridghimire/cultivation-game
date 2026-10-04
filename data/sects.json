@@ -21,9 +21,9 @@
       "shop": [{"item_id": "qi_gathering_pill", "contribution": 15, "min_rank": 0}, {"item_id": "superior_qi_gathering_pill", "contribution": 40, "min_rank": 0}, {"item_id": "meridian_mending_pill", "contribution": 100, "min_rank": 0}, {"item_id": "recipe_clear_heart_pill", "contribution": 80, "min_rank": 0}, {"item_id": "manual_flowing_water", "contribution": 200, "min_rank": 1}, {"item_id": "foundation_establishment_pill", "contribution": 250, "min_rank": 1}, {"item_id": "recipe_foundation_establishment_pill", "contribution": 400, "min_rank": 2}, {"item_id": "manual_stone_skin", "contribution": 45, "min_rank": 0}, {"item_id": "golden_bell_talisman", "contribution": 30, "min_rank": 0}, {"item_id": "recipe_meridian_mending_pill", "contribution": 100, "min_rank": 0}, {"item_id": "cloud_mist_qi_pill", "contribution": 250, "min_rank": 2}, {"item_id": "azure_guard_robe", "contribution": 650, "min_rank": 2}, {"item_id": "jade_marrow_pill", "contribution": 650, "min_rank": 2}, {"item_id": "core_forming_pill", "contribution": 3200, "min_rank": 3}, {"item_id": "manual_azure_cloud_heart", "contribution": 700, "min_rank": 1}],
       "ranks": [
         {"name": "Outer Disciple", "contribution": 0},
-        {"name": "Inner Disciple", "contribution": 500, "monthly_duty": 30, "stipend": {"spirit_stones": 15}},
-        {"name": "Core Disciple", "contribution": 3000, "min_realm": "foundation_establishment", "monthly_duty": 80, "stipend": {"spirit_stones": 50, "items": {"qi_gathering_pill": 1}}},
-        {"name": "Elder", "contribution": 20000, "min_realm": "core_formation", "monthly_duty": 200, "stipend": {"spirit_stones": 200}}
+        {"name": "Inner Disciple", "contribution": 500, "trial": "azure_sword_examiner", "monthly_duty": 30, "stipend": {"spirit_stones": 15}},
+        {"name": "Core Disciple", "contribution": 3000, "min_realm": "foundation_establishment", "trial": "azure_pavilion_warden", "monthly_duty": 80, "stipend": {"spirit_stones": 50, "items": {"qi_gathering_pill": 1}}},
+        {"name": "Elder", "contribution": 20000, "min_realm": "core_formation", "trial": "azure_grand_elder_shadow", "monthly_duty": 200, "stipend": {"spirit_stones": 200, "items": {"spirit_gathering_pill": 1}}}
       ]
     },
     {
@@ -35,9 +35,9 @@
       "shop": [{"item_id": "qi_gathering_pill", "contribution": 15, "min_rank": 0}, {"item_id": "blood_essence_pill", "contribution": 100, "min_rank": 0}, {"item_id": "blood_demon_pill", "contribution": 120, "min_rank": 0}, {"item_id": "recipe_blood_demon_pill", "contribution": 90, "min_rank": 0}, {"item_id": "manual_blood_shadow_flight", "contribution": 80, "min_rank": 1}, {"item_id": "foundation_establishment_pill", "contribution": 250, "min_rank": 1}, {"item_id": "recipe_blood_sacrifice_talisman", "contribution": 110, "min_rank": 1}, {"item_id": "manual_blood_demon_rage", "contribution": 500, "min_rank": 2}, {"item_id": "blood_drinker_saber", "contribution": 1900, "min_rank": 2}, {"item_id": "corpse_silk_burial_armor", "contribution": 2000, "min_rank": 2}, {"item_id": "core_forming_pill", "contribution": 3200, "min_rank": 3}, {"item_id": "manual_blood_lotus_rebirth", "contribution": 600, "min_rank": 1}],
       "ranks": [
         {"name": "Blood Servant", "contribution": 0},
-        {"name": "Blood Disciple", "contribution": 400, "monthly_duty": 30, "stipend": {"spirit_stones": 12}},
-        {"name": "Blood Son", "contribution": 2500, "min_realm": "foundation_establishment", "monthly_duty": 80, "stipend": {"spirit_stones": 40, "items": {"blood_essence_pill": 1}}},
-        {"name": "Blood Elder", "contribution": 18000, "min_realm": "core_formation", "monthly_duty": 200, "stipend": {"spirit_stones": 180}}
+        {"name": "Blood Disciple", "contribution": 400, "trial": "blood_pit_gladiator", "monthly_duty": 30, "stipend": {"spirit_stones": 12}},
+        {"name": "Blood Son", "contribution": 2500, "min_realm": "foundation_establishment", "trial": "blood_pit_champion", "monthly_duty": 80, "stipend": {"spirit_stones": 40, "items": {"blood_essence_pill": 1}}},
+        {"name": "Blood Elder", "contribution": 18000, "min_realm": "core_formation", "trial": "blood_lotus_ancestor_puppet", "monthly_duty": 200, "stipend": {"spirit_stones": 180, "items": {"blood_essence_pill": 2}}}
       ]
     },
     {
@@ -49,9 +49,9 @@
       "shop": [{"item_id": "qi_gathering_pill", "contribution": 12, "min_rank": 0}, {"item_id": "spirit_gathering_pill", "contribution": 80, "min_rank": 0}, {"item_id": "recipe_spirit_gathering_pill", "contribution": 100, "min_rank": 0}, {"item_id": "manual_wind_step", "contribution": 160, "min_rank": 0}, {"item_id": "cold_iron_saber", "contribution": 200, "min_rank": 1}, {"item_id": "foundation_establishment_pill", "contribution": 260, "min_rank": 1}, {"item_id": "recipe_meridian_rebuilding_pill", "contribution": 280, "min_rank": 1}, {"item_id": "thousand_li_escape_talisman", "contribution": 110, "min_rank": 0}, {"item_id": "profound_iron", "contribution": 90, "min_rank": 0}, {"item_id": "recipe_profound_iron_spear", "contribution": 300, "min_rank": 1}, {"item_id": "recipe_profound_iron_lamellar", "contribution": 300, "min_rank": 1}, {"item_id": "star_river_sword", "contribution": 2300, "min_rank": 2}, {"item_id": "recipe_star_river_sword", "contribution": 950, "min_rank": 2}, {"item_id": "core_forming_pill", "contribution": 3300, "min_rank": 3}, {"item_id": "manual_golden_abacus", "contribution": 650, "min_rank": 1}],
       "ranks": [
         {"name": "Junior Steward", "contribution": 0},
-        {"name": "Steward", "contribution": 600, "monthly_duty": 30, "stipend": {"spirit_stones": 20}},
-        {"name": "Senior Steward", "contribution": 3500, "min_realm": "foundation_establishment", "monthly_duty": 80, "stipend": {"spirit_stones": 70}},
-        {"name": "Pavilion Elder", "contribution": 22000, "min_realm": "core_formation", "monthly_duty": 200, "stipend": {"spirit_stones": 250}}
+        {"name": "Steward", "contribution": 600, "trial": "pavilion_vault_guard", "monthly_duty": 30, "stipend": {"spirit_stones": 20}},
+        {"name": "Senior Steward", "contribution": 3500, "min_realm": "foundation_establishment", "trial": "pavilion_treasure_guardian", "monthly_duty": 80, "stipend": {"spirit_stones": 70}},
+        {"name": "Pavilion Elder", "contribution": 22000, "min_realm": "core_formation", "trial": "golden_abacus_guardian", "monthly_duty": 200, "stipend": {"spirit_stones": 250}}
       ]
     }
   ]

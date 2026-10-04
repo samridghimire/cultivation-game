@@ -99,7 +99,9 @@ func test_mission_contribution_promotes() -> void:
 	var c := _disciple()
 	c.sect["contribution"] = 490
 	c.add_item("spirit_herb", 5)
-	assert_true(Sects.complete_mission(c, data(), "gather_spirit_herbs", {})["promoted"])
+	var d := GameData.load_from_dir()
+	(d.sects[c.sect["id"]] as SectDef).ranks[1].erase("trial")
+	assert_true(Sects.complete_mission(c, d, "gather_spirit_herbs", {})["promoted"])
 	assert_eq(int(c.sect["rank"]), 1)
 
 

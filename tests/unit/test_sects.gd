@@ -36,13 +36,26 @@ func test_cannot_join_two_sects() -> void:
 
 
 func test_contribution_promotes() -> void:
+	var d := GameData.load_from_dir()
+	for rank: Dictionary in (d.sects["blood_lotus_sect"] as SectDef).ranks:
+		rank.erase("trial")
+	var c := new_character()
+	c.alignment = -300
+	Sects.join(c, d, "blood_lotus_sect")
+	c.realm_index = d.realm_index_of("core_formation")  # high ranks have realm minimums
+	var promoted := Sects.add_contribution(c, d, 100000)
+	assert_true(promoted)
+	assert_eq(c.sect["rank"], d.sects["blood_lotus_sect"].ranks.size() - 1)
+
+
+func test_contribution_stops_at_a_trial_rank() -> void:
 	var c := new_character()
 	c.alignment = -300
 	Sects.join(c, data(), "blood_lotus_sect")
-	c.realm_index = data().realm_index_of("core_formation")  # high ranks have realm minimums
-	var promoted := Sects.add_contribution(c, data(), 100000)
-	assert_true(promoted)
-	assert_eq(c.sect["rank"], data().sects["blood_lotus_sect"].ranks.size() - 1)
+	c.realm_index = data().realm_index_of("core_formation")
+	assert_false(Sects.add_contribution(c, data(), 100000))
+	assert_eq(int(c.sect["rank"]), 0)
+	assert_eq(Sects.check_promotion(c, data()), "", "the trial is open")
 
 
 func test_leave_returns_to_rogue() -> void:

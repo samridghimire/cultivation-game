@@ -6,8 +6,11 @@ extends PanelContainer
 ## with a fight show its danger (Sects.mission_danger), colored, in the list and
 ## details, since a mission's foe is always fought. A second
 ## "Treasury" tab is the sect's contribution shop (G-008e): items with cost and
-## minimum rank, bought with GameState.buy_with_contribution. All rules live in
-## Sects / GameState.
+## minimum rank, bought with GameState.buy_with_contribution. A third "Rank" tab
+## (G-011b) lists the sect's ranks with their requirements (contribution, realm,
+## trial foe and its danger), stipend and monthly duty, your duty progress this
+## month, and "Attempt promotion trial" (GameState.attempt_promotion_trial).
+## All rules live in Sects / GameState.
 
 signal closed
 
@@ -16,6 +19,7 @@ const KIND_NAMES := {"gather": "Gathering", "hunt": "Hunt", "deliver": "Delivery
 var _title: Label
 var _missions_tab: Button
 var _shop_tab: Button
+var _rank_tab: Button
 var _list: VBoxContainer
 var _name: Label
 var _info: Label
@@ -27,7 +31,7 @@ var _status: Label
 var _take_button: Button
 var _close_button: Button
 var _selected := ""
-## "missions" or "shop" (the contribution treasury).
+## "missions", "shop" (the contribution treasury) or "rank".
 var _tab := "missions"
 
 
@@ -45,7 +49,8 @@ func _init() -> void:
 	box.add_child(tabs)
 	_missions_tab = UIStyle.button("Missions", _set_tab.bind("missions"))
 	_shop_tab = UIStyle.button("Treasury", _set_tab.bind("shop"))
-	for b: Button in [_missions_tab, _shop_tab]:
+	_rank_tab = UIStyle.button("Rank", _set_tab.bind("rank"))
+	for b: Button in [_missions_tab, _shop_tab, _rank_tab]:
 		b.toggle_mode = true
 		tabs.add_child(b)
 
@@ -153,6 +158,51 @@ static func danger_text(danger: String) -> String:
 	return text
 
 
+## What reaching `rank` of `c`'s sect takes: contribution (have/need), realm
+## and the trial foe with its danger for `c`.
+static func rank_requirement_lines(c: CharacterData, data: GameData, rank: int) -> PackedStringArray:
+	var lines: PackedStringArray = []
+	var def: Dictionary = (data.sects[c.sect["id"]] as SectDef).ranks[rank]
+	var need := int(def.get("contribution", 0))
+	if need > 0:
+		lines.append("%d / %d lifetime contribution" % [mini(int(c.sect["contribution"]), need), need])
+	if def.has("min_realm"):
+		lines.append("Realm: %s or above" % data.realms[data.realm_index_of(String(def["min_realm"]))].name)
+	var trial := String(def.get("trial", ""))
+	if trial != "" and data.enemies.has(trial):
+		lines.append("Trial: defeat %s in a sparring match (%s)" % [data.enemies[trial]["name"], Combat.danger_label(c, data, data.enemies[trial])])
+	return lines
+
+
+## A rank's monthly stipend and duty, e.g. ["Stipend: 50 spirit stones, 1 Qi
+## Gathering Pill a month", "Monthly duty: 80 contribution"].
+static func rank_benefit_lines(data: GameData, sect_id: String, rank: int) -> PackedStringArray:
+	var lines: PackedStringArray = []
+	var def: Dictionary = (data.sects[sect_id] as SectDef).ranks[rank]
+	var stipend: Dictionary = def.get("stipend", {})
+	var parts: PackedStringArray = []
+	if int(stipend.get("spirit_stones", 0)) > 0:
+		parts.append("%d spirit stones" % int(stipend["spirit_stones"]))
+	var items: Dictionary = stipend.get("items", {})
+	for item_id in items:
+		parts.append("%d %s" % [int(items[item_id]), data.items.get(item_id, {}).get("name", item_id)])
+	lines.append("Stipend: %s" % (", ".join(parts) + " a month" if not parts.is_empty() else "none"))
+	var duty := int(def.get("monthly_duty", 0))
+	lines.append("Monthly duty: %s" % ("%d contribution (or the stipend is withheld)" % duty if duty > 0 else "none"))
+	return lines
+
+
+## "Duty this month: 20 / 30 contribution" for `c`'s current rank.
+static func duty_text(c: CharacterData, data: GameData) -> String:
+	var duty := Sects.monthly_duty(c, data)
+	if duty <= 0:
+		return "Your rank owes no monthly duty."
+	var text := "Duty this month: %d / %d contribution" % [mini(Sects.duty_progress(c), duty), duty]
+	if bool(c.sect.get("duty_grace", false)):
+		text += " (waived: promoted this month)"
+	return text
+
+
 static func shop_info_text(c: CharacterData, data: GameData, entry: Dictionary) -> String:
 	var parts: PackedStringArray = ["Costs %d contribution" % int(entry.get("contribution", 0))]
 	var min_rank := int(entry.get("min_rank", 0))
@@ -174,6 +224,7 @@ static func shop_item_lines(c: CharacterData, data: GameData, item_id: String) -
 func _set_tab(tab: String) -> void:
 	_missions_tab.set_pressed_no_signal(tab == "missions")
 	_shop_tab.set_pressed_no_signal(tab == "shop")
+	_rank_tab.set_pressed_no_signal(tab == "rank")
 	if tab == _tab:
 		return
 	_tab = tab
@@ -212,11 +263,14 @@ func _rebuild() -> void:
 	_clear_list()
 	_missions_tab.set_pressed_no_signal(_tab == "missions")
 	_shop_tab.set_pressed_no_signal(_tab == "shop")
+	_rank_tab.set_pressed_no_signal(_tab == "rank")
 	_title.text = "Mission Board"
 	if not p.is_rogue():
 		_title.text = "%s Mission Board   (contribution %d, %d to spend)" % [(data.sects[p.sect["id"]] as SectDef).name, int(p.sect["contribution"]), Sects.contribution_balance(p)]
 	if _tab == "shop":
 		_rebuild_shop()
+	elif _tab == "rank":
+		_rebuild_ranks()
 	else:
 		_rebuild_missions()
 
@@ -273,6 +327,60 @@ func _rebuild_missions() -> void:
 	_show_details()
 
 
+func _rebuild_ranks() -> void:
+	var p := GameState.player
+	if p.is_rogue():
+		_selected = ""
+		_add_hint("Rogue cultivators hold no rank.")
+		_show_details()
+		return
+	var sect: SectDef = GameState.data.sects[p.sect["id"]]
+	var current := int(p.sect["rank"])
+	if not _selected.begins_with("rank_"):
+		_selected = "rank_%d" % (current + 1 if current + 1 < sect.ranks.size() else current)
+	for i in sect.ranks.size():
+		var label := sect.rank_name(i)
+		if i == current:
+			label += "  (your rank)"
+		elif i == current + 1:
+			label += "  (next)"
+		_add_entry("rank_%d" % i, label, i <= current + 1)
+	_show_details()
+
+
+func _show_rank_details() -> void:
+	var p := GameState.player
+	var data := GameState.data
+	var rank := int(_selected.trim_prefix("rank_")) if _selected.begins_with("rank_") else -1
+	for c in [_name, _info, _description, _requirements, _rewards, _status, _take_button]:
+		c.visible = rank >= 0
+	_danger.visible = false
+	if rank < 0:
+		return
+	var sect: SectDef = data.sects[p.sect["id"]]
+	var current := int(p.sect["rank"])
+	_name.text = sect.rank_name(rank)
+	_info.text = "Your rank: %s  |  %d lifetime contribution, %d to spend" % [sect.rank_name(current), int(p.sect["contribution"]), Sects.contribution_balance(p)]
+	_description.text = duty_text(p, data)
+	var reqs := rank_requirement_lines(p, data, rank)
+	_requirements.visible = not reqs.is_empty() and rank > current
+	_requirements.text = "Requires:\n  " + "\n  ".join(reqs)
+	_rewards.text = "\n".join(rank_benefit_lines(data, sect.id, rank))
+	_take_button.text = "Attempt promotion trial"
+	var is_next := rank == current + 1
+	_take_button.visible = is_next and String(sect.ranks[rank].get("trial", "")) != ""
+	var reason := ""
+	if rank <= current:
+		reason = "You hold this rank." if rank == current else "You have risen past this rank."
+	elif not is_next:
+		reason = "Reach %s first." % sect.rank_name(current + 1)
+	else:
+		reason = Sects.check_promotion(p, data)
+	_status.text = reason
+	_status.visible = reason != ""
+	_take_button.disabled = reason != ""
+
+
 func _select(mission_id: String) -> void:
 	if mission_id == _selected:
 		return
@@ -286,6 +394,9 @@ func _select(mission_id: String) -> void:
 func _show_details() -> void:
 	if _tab == "shop":
 		_show_shop_details()
+		return
+	if _tab == "rank":
+		_show_rank_details()
 		return
 	_take_button.text = "Take mission"
 	var p := GameState.player
@@ -343,6 +454,10 @@ func _show_shop_details() -> void:
 func _act() -> void:
 	if _tab == "shop":
 		_buy()
+	elif _tab == "rank":
+		GameState.attempt_promotion_trial()
+		if visible:
+			_focus_selected.call_deferred()
 	else:
 		_take()
 

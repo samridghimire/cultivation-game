@@ -172,3 +172,59 @@ func test_board_shows_colored_danger_for_fight_missions() -> void:
 	assert_false(board._danger.visible, "a gathering mission has no foe")
 	board.free()
 	gs.end_session()
+
+
+## G-011b: the Rank tab shows requirements, stipend and duty, and the trial.
+func test_rank_tab_shows_requirements_and_trial() -> void:
+	var gs := _root().get_node("GameState")
+	var c := _disciple()
+	gs.start_session(c)
+	var sect: SectDef = gs.data.sects[c.sect["id"]]
+	var board := MissionBoard.new()
+	board._set_tab("rank")
+	var ranks := board._list.get_children().filter(func(n: Node) -> bool: return n is Button)
+	assert_eq(ranks.size(), sect.ranks.size())
+	assert_eq(board._selected, "rank_1", "the next rank is preselected")
+	assert_true(board._requirements.text.contains("Trial: defeat"), board._requirements.text)
+	assert_true(board._rewards.text.contains("Stipend:"), board._rewards.text)
+	assert_true(board._take_button.visible and board._take_button.disabled, "not enough contribution yet")
+	assert_true(board._status.text.contains("contribution"), board._status.text)
+	c.sect["contribution"] = int(sect.ranks[1]["contribution"])
+	board._rebuild()
+	assert_false(board._take_button.disabled, board._status.text)
+	board._select("rank_0")
+	assert_false(board._take_button.visible, "no trial for the rank you hold")
+	assert_eq(board._status.text, "You hold this rank.")
+	board._select("rank_2")
+	assert_true(board._status.text.begins_with("Reach "), board._status.text)
+	board.free()
+	gs.end_session()
+
+
+func test_rank_text_helpers() -> void:
+	var c := _disciple()
+	var d := data()
+	var sect: SectDef = d.sects[c.sect["id"]]
+	var lines := MissionBoard.rank_requirement_lines(c, d, 2)
+	assert_true(lines[0].begins_with("0 / %d" % int(sect.ranks[2]["contribution"])), lines[0])
+	assert_true(lines[1].begins_with("Realm: "), lines[1])
+	var benefits := MissionBoard.rank_benefit_lines(d, sect.id, 0)
+	assert_eq(benefits, PackedStringArray(["Stipend: none", "Monthly duty: none"]))
+	assert_eq(MissionBoard.duty_text(c, d), "Your rank owes no monthly duty.")
+	c.sect["rank"] = 1
+	c.sect["month_earned"] = 10
+	assert_true(MissionBoard.duty_text(c, d).begins_with("Duty this month: 10 / "), MissionBoard.duty_text(c, d))
+
+
+func test_sect_hall_offers_promotion_trial() -> void:
+	var gs := _root().get_node("GameState")
+	var c := _disciple()
+	gs.start_session(c)
+	var hall: Node = load("res://src/world/interactables/sect_hall.gd").new()
+	var trial: Dictionary = hall.trial_option()
+	assert_true(String(trial["label"]).begins_with("Attempt the trial for "), trial["label"])
+	assert_true(trial["disabled"])
+	c.sect["contribution"] = 100000
+	assert_false(hall.trial_option()["disabled"])
+	hall.free()
+	gs.end_session()

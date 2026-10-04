@@ -9,6 +9,16 @@ func _trial_data() -> GameData:
 	return d
 
 
+## Fresh data with every promotion trial removed, for the automatic-promotion
+## rules (the real sects put a trial on every rank above the first, G-011c).
+func _no_trial_data() -> GameData:
+	var d := GameData.load_from_dir()
+	for sect: SectDef in d.sects.values():
+		for rank: Dictionary in sect.ranks:
+			rank.erase("trial")
+	return d
+
+
 func _disciple(d: GameData) -> CharacterData:
 	var c := CharacterFactory.create("Disciple", d, seeded_rng())
 	c.alignment = -300
@@ -31,12 +41,13 @@ func test_validation_catches_bad_rank_fields() -> void:
 
 
 func test_realm_minimum_holds_back_auto_promotion() -> void:
-	var c := _disciple(data())
-	Sects.add_contribution(c, data(), 3000)
+	var d := _no_trial_data()
+	var c := _disciple(d)
+	Sects.add_contribution(c, d, 3000)
 	assert_eq(int(c.sect["rank"]), 1, "Blood Son needs Foundation Establishment")
-	assert_true(Sects.check_promotion(c, data()).contains("Foundation"))
-	c.realm_index = data().realm_index_of("foundation_establishment")
-	var result := Sects.month_end(c, data())
+	assert_true(Sects.check_promotion(c, d).contains("Foundation"))
+	c.realm_index = d.realm_index_of("foundation_establishment")
+	var result := Sects.month_end(c, d)
 	assert_true(result["promoted"], "a breakthrough unlocks the rank at month end")
 	assert_eq(int(c.sect["rank"]), 2)
 
@@ -90,24 +101,26 @@ func test_spar_defeat_takes_no_stones() -> void:
 
 
 func test_stipend_paid_when_duty_met() -> void:
-	var c := _disciple(data())
-	Sects.add_contribution(c, data(), 400)
+	var d := _no_trial_data()
+	var c := _disciple(d)
+	Sects.add_contribution(c, d, 400)
 	assert_eq(int(c.sect["rank"]), 1)
-	Sects.month_end(c, data())  # month of promotion: duty waived
+	Sects.month_end(c, d)  # month of promotion: duty waived
 	var stones := c.item_count("spirit_stone")
-	Sects.add_contribution(c, data(), Sects.monthly_duty(c, data()))
-	var result := Sects.month_end(c, data())
+	Sects.add_contribution(c, d, Sects.monthly_duty(c, d))
+	var result := Sects.month_end(c, d)
 	assert_true(result["paid"])
-	assert_eq(c.item_count("spirit_stone"), stones + int(Sects.stipend(c, data())["spirit_stones"]))
+	assert_eq(c.item_count("spirit_stone"), stones + int(Sects.stipend(c, d)["spirit_stones"]))
 	assert_eq(Sects.duty_progress(c), 0, "duty progress resets each month")
 
 
 func test_missed_duty_withholds_stipend_without_demotion() -> void:
-	var c := _disciple(data())
-	Sects.add_contribution(c, data(), 400)
-	Sects.month_end(c, data())
+	var d := _no_trial_data()
+	var c := _disciple(d)
+	Sects.add_contribution(c, d, 400)
+	Sects.month_end(c, d)
 	var stones := c.item_count("spirit_stone")
-	var result := Sects.month_end(c, data())
+	var result := Sects.month_end(c, d)
 	assert_true(result["skipped"])
 	assert_false(result["paid"])
 	assert_eq(c.item_count("spirit_stone"), stones)
@@ -115,9 +128,10 @@ func test_missed_duty_withholds_stipend_without_demotion() -> void:
 
 
 func test_promotion_month_waives_duty() -> void:
-	var c := _disciple(data())
-	Sects.add_contribution(c, data(), 400)
-	assert_true(Sects.month_end(c, data())["paid"])
+	var d := _no_trial_data()
+	var c := _disciple(d)
+	Sects.add_contribution(c, d, 400)
+	assert_true(Sects.month_end(c, d)["paid"])
 
 
 func test_first_rank_has_no_stipend() -> void:
@@ -128,18 +142,20 @@ func test_first_rank_has_no_stipend() -> void:
 
 
 func test_stipend_items() -> void:
-	var c := _disciple(data())
-	c.realm_index = data().realm_index_of("foundation_establishment")
-	Sects.add_contribution(c, data(), 2500)
+	var d := _no_trial_data()
+	var c := _disciple(d)
+	c.realm_index = d.realm_index_of("foundation_establishment")
+	Sects.add_contribution(c, d, 2500)
 	assert_eq(int(c.sect["rank"]), 2)
 	var pills := c.item_count("blood_essence_pill")
-	Sects.month_end(c, data())
+	Sects.month_end(c, d)
 	assert_eq(c.item_count("blood_essence_pill"), pills + 1)
 
 
 func test_duty_state_survives_save() -> void:
-	var c := _disciple(data())
-	Sects.add_contribution(c, data(), 420)
+	var d := _no_trial_data()
+	var c := _disciple(d)
+	Sects.add_contribution(c, d, 420)
 	var loaded := CharacterData.from_dict(c.to_dict())
 	assert_eq(Sects.duty_progress(loaded), 420)
 	assert_true(bool(loaded.sect.get("duty_grace", false)))
@@ -151,3 +167,15 @@ func test_old_save_sect_loads_without_duty_fields() -> void:
 	var c := CharacterData.from_dict(d)
 	assert_eq(Sects.duty_progress(c), 0)
 	assert_true(Sects.month_end(c, data())["skipped"])
+
+
+## G-011c: every rank above the first in the real sects has a promotion trial
+## against a sparring opponent of the rank's realm.
+func test_real_sects_have_rank_trials() -> void:
+	var d := data()
+	for sect: SectDef in d.sects.values():
+		for i in range(1, sect.ranks.size()):
+			var enemy_id := String(sect.ranks[i].get("trial", ""))
+			assert_true(d.enemies.has(enemy_id), "%s %s has trial '%s'" % [sect.id, sect.rank_name(i), enemy_id])
+			var min_realm := d.realm_index_of(String(sect.ranks[i].get("min_realm", "mortal")))
+			assert_true(d.realm_index_of(String(d.enemies[enemy_id]["realm"])) >= min_realm, "%s trial is below the rank's realm" % enemy_id)
