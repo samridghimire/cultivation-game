@@ -171,7 +171,8 @@ func test_work_profession_promotes_in_sect() -> void:
 	gs.join_sect("blood_lotus_sect")
 	c.sect["contribution"] = 399
 	gs.work_profession("talisman_master", Calendar.DAYS_PER_MONTH)
-	assert_eq(int(c.sect["rank"]), 1)
+	assert_gt(int(c.sect["contribution"]), 399)
+	assert_eq(Sects.check_promotion(c, gs.data), "", "enough contribution: the Blood Disciple trial opens")
 	gs.end_session()
 
 

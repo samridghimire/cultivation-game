@@ -45,7 +45,9 @@ func test_rogues_have_no_shop() -> void:
 
 func test_buying_spends_balance_but_keeps_rank() -> void:
 	var c := _disciple("azure_cloud_sect", 600)
-	assert_eq(int(c.sect["rank"]), 1, "600 contribution = Inner Disciple")
+	assert_eq(Sects.check_promotion(c, data()), "", "600 contribution: the Inner Disciple trial is open")
+	assert_true(Sects.pass_trial(c, data()))
+	assert_eq(int(c.sect["rank"]), 1)
 	var entry := _entry(c, 1)
 	assert_false(entry.is_empty(), "azure sells a rank-1 item")
 	var item_id := String(entry["item_id"])
