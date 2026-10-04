@@ -553,8 +553,10 @@ func chat(npc_id: String) -> void:
 		EventBus.post(result["reason"], "warning")
 		EventBus.player_changed.emit()
 		return
-	npc_favor[npc_id] = favor + result["favor"]
-	EventBus.post("You pass some time talking with %s. (+%d favor)" % [npcs[npc_id].name, result["favor"]])
+	var room := int(data.family.get("acquaintance", {}).get("chat_max_favor", 0)) - favor - int(result["favor"])
+	var gain: int = result["favor"] + Karma.favor_bonus(player, data, npc_id, result["favor"], room)
+	npc_favor[npc_id] = favor + gain
+	EventBus.post("You pass some time talking with %s. (+%d favor)" % [npcs[npc_id].name, gain])
 	_pass_time(result["days"])
 
 
@@ -569,8 +571,11 @@ func give_gift(npc_id: String, item_id: String) -> void:
 		EventBus.post(result["reason"], "warning")
 		EventBus.player_changed.emit()
 		return
-	npc_favor[npc_id] = favor + result["favor"]
-	EventBus.post("%s accepts your %s. (+%d favor)" % [npcs[npc_id].name, data.items[item_id].get("name", item_id), result["favor"]])
+	var room := int(data.family.get("acquaintance", {}).get("gift_max_favor", 0)) - favor - int(result["favor"])
+	var gain: int = result["favor"] + Karma.favor_bonus(player, data, npc_id, result["favor"], room)
+	npc_favor[npc_id] = favor + gain
+	Karma.on_kindness(player, data, npc_id, "gift")
+	EventBus.post("%s accepts your %s. (+%d favor)" % [npcs[npc_id].name, data.items[item_id].get("name", item_id), gain])
 	_pass_time(result["days"])
 
 
@@ -969,7 +974,9 @@ func treat_npc(npc_id: String) -> void:
 	npc_favor[npc_id] = int(npc_favor.get(npc_id, 0)) + result["favor"]
 	var injury_name := Injuries.injury_name(data, result["injury"])
 	var outcome := "it is fully healed" if result["healed"] else "%s left" % Calendar.format_duration(patient.injuries[result["injury"]])
-	EventBus.post("You treat %s's %s: %s. (+%d favor, alignment %+d)" % [patient.name, injury_name, outcome, result["favor"], result["alignment"]], "karma")
+	var owed := Karma.on_kindness(player, data, npc_id, "treat_npc")
+	var debt := ", they owe you" if owed > 0 else ""
+	EventBus.post("You treat %s's %s: %s. (+%d favor, alignment %+d%s)" % [patient.name, injury_name, outcome, result["favor"], result["alignment"], debt], "karma")
 	if result["ranks_gained"] > 0:
 		EventBus.post("You are now a %s!" % Professions.rank_title(player, data, Medicine.DOCTOR), "progress")
 	_pass_time(result["days"])
@@ -1302,6 +1309,8 @@ func _on_days_advanced(days: int) -> void:
 	var months := player.age_days / Calendar.DAYS_PER_MONTH - age_before / Calendar.DAYS_PER_MONTH
 	for event in Training.advance(player, npcs, data, months):
 		EventBus.post(event["text"], event["category"])
+	for repaid in Karma.repay_debts(player, npcs, data, months, rng, world_flags):
+		EventBus.post("%s repays a debt of gratitude. (%s)" % [npcs[repaid["npc_id"]].name, ", ".join(repaid["notes"])], "progress")
 	if clan != null:
 		for joined in Clans.sync_family(player, clan, npcs, data):
 			EventBus.post("%s joins the %s." % [joined, clan.name], "progress")
