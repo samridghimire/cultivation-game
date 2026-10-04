@@ -6,9 +6,9 @@ extends PanelContainer
 
 signal closed
 
-const TITLES := {"alchemist": "Alchemy", "blacksmith": "Forge", "talisman_master": "Talisman Inscription"}
+const TITLES := {"alchemist": "Alchemy", "blacksmith": "Forge", "talisman_master": "Talisman Inscription", "array_master": "Array Refining"}
 const BATCH_SIZE := 5
-const VERBS := {"alchemist": "Refine", "blacksmith": "Forge", "talisman_master": "Inscribe"}
+const VERBS := {"alchemist": "Refine", "blacksmith": "Forge", "talisman_master": "Inscribe", "array_master": "Refine"}
 
 var _title: Label
 var _list: VBoxContainer

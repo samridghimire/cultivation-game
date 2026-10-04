@@ -72,7 +72,7 @@
       "places": [
         {"type": "merchant", "display_name": "Pill Pavilion", "pos": [400, 300], "size": [140, 100], "color": "c9823a", "faction": "myriad_treasure_pavilion"},
         {"type": "merchant", "display_name": "Herb & Ore Stall", "pos": [1200, 140], "size": [90, 60], "color": "6f9f4a", "stock_tags": ["herb", "ore"]},
-        {"type": "merchant", "display_name": "Vermilion Script Talisman Stall", "pos": [1450, 600], "size": [100, 70], "color": "c23b2e", "stock_tags": ["talisman", "inscription"]},
+        {"type": "merchant", "display_name": "Vermilion Script Talisman Stall", "pos": [1450, 600], "size": [100, 70], "color": "c23b2e", "stock_tags": ["talisman", "inscription", "formation"]},
         {"type": "merchant", "display_name": "Heavenforge Smithy", "pos": [1450, 300], "size": [110, 80], "color": "5a5f66", "stock_tags": ["equipment", "ore", "smithing"]},
         {"type": "merchant", "display_name": "Night Market Stall", "pos": [1200, 300], "size": [80, 60], "color": "7a4fa0", "max_price": 100},
         {"type": "merchant", "display_name": "Shadow Curio Den", "pos": [150, 300], "size": [80, 60], "color": "4a1f2a", "stock_tags": ["demonic"], "max_alignment": -200},

@@ -77,6 +77,8 @@ var anchors: Array[String] = []
 var abode := ""
 ## Items kept in the abode's storage chest: item id -> count.
 var abode_storage: Dictionary = {}
+## Item id of the array set up at the abode (items.json `array`), "" if none (G-006).
+var abode_array := ""
 ## Creation Artifact energy fed from spirit stones and treasures (ArtifactFunctions).
 var artifact_energy := 0
 ## Unlocked artifact function ids (data/artifact.json "functions").
@@ -185,6 +187,7 @@ func to_dict() -> Dictionary:
 		"secret_realms": secret_realms.duplicate(true),
 		"inheritances": inheritances.duplicate(),
 		"body_stage": body_stage,
+		"abode_array": abode_array,
 	}
 
 
@@ -267,6 +270,7 @@ static func from_dict(d: Dictionary) -> CharacterData:
 		c.secret_realms[String(realm_id)] = {"opening": int(delves[realm_id].get("opening", -1)), "floor": int(delves[realm_id].get("floor", 0))}
 	for realm_id in d.get("inheritances", []):
 		c.inheritances.append(String(realm_id))
+	c.abode_array = String(d.get("abode_array", ""))
 	for anchor_id in d.get("anchors", []):
 		c.anchors.append(String(anchor_id))
 	for recipe_id in d.get("known_recipes", []):

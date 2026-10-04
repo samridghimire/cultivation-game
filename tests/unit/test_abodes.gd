@@ -123,3 +123,88 @@ func test_game_state_claim_seclude_store() -> void:
 	gs.retrieve_from_abode("dew_grass", 1)
 	assert_eq(gs.player.item_count("dew_grass"), 1)
 	gs.end_session()
+
+
+func test_array_data_and_recipes() -> void:
+	assert_eq(Abodes.array_def(data(), "minor_spirit_gathering_array")["qi_density_bonus"], 0.2)
+	assert_true(Abodes.array_def(data(), "spirit_herb").is_empty())
+	assert_eq(data().recipes["minor_spirit_gathering_array"]["profession"], "array_master")
+	assert_true(Alchemy.known_recipes(new_character(), data(), "array_master").size() >= 1, "a starter array recipe")
+	var d := GameData.new()
+	d.items = {"bad_array": {"id": "bad_array", "array": {"qi_density_bonus": 0.0}}}
+	assert_eq(Abodes.validate(d).size(), 1)
+
+
+func test_array_raises_seclusion_density() -> void:
+	var c := _cultivator()
+	c.add_item("minor_spirit_gathering_array", 1)
+	c.add_item("five_element_gathering_array", 1)
+	assert_true(Abodes.check_place_array(c, data(), "misty_forest", "minor_spirit_gathering_array").contains("no abode"))
+	Abodes.claim(c, data(), "waterfall_cave", "misty_forest")
+	var base := Abodes.seclusion_density(c, data(), "misty_forest")
+	assert_true(Abodes.check_place_array(c, data(), "azure_peak", "minor_spirit_gathering_array") != "", "not at home")
+	assert_true(Abodes.check_place_array(c, data(), "misty_forest", "spirit_stone").contains("not an array"))
+	assert_true(Abodes.place_array(c, data(), "misty_forest", "minor_spirit_gathering_array")["ok"])
+	assert_eq(c.item_count("minor_spirit_gathering_array"), 0)
+	assert_almost_eq(Abodes.seclusion_density(c, data(), "misty_forest"), base * 1.2)
+	assert_true(Abodes.check_place_array(c, data(), "misty_forest", "minor_spirit_gathering_array") != "", "none left / already set")
+	var swap := Abodes.place_array(c, data(), "misty_forest", "five_element_gathering_array")
+	assert_eq(swap["replaced"], "minor_spirit_gathering_array")
+	assert_eq(c.item_count("minor_spirit_gathering_array"), 1, "the old array is packed up")
+	assert_almost_eq(Abodes.seclusion_density(c, data(), "misty_forest"), base * 1.5)
+	var removed := Abodes.remove_array(c, data(), "misty_forest")
+	assert_eq(removed["item"], "five_element_gathering_array")
+	assert_eq(c.abode_array, "")
+	assert_false(Abodes.remove_array(c, data(), "misty_forest")["ok"])
+
+
+func test_moving_packs_up_the_array() -> void:
+	var c := _cultivator("foundation_establishment")
+	c.add_item("minor_spirit_gathering_array", 1)
+	Abodes.claim(c, data(), "waterfall_cave", "misty_forest")
+	Abodes.place_array(c, data(), "misty_forest", "minor_spirit_gathering_array")
+	var result := Abodes.claim(c, data(), "cloud_piercing_grotto", "azure_peak")
+	assert_eq(result["array_returned"], "minor_spirit_gathering_array")
+	assert_eq(c.abode_array, "")
+	assert_eq(c.item_count("minor_spirit_gathering_array"), 1)
+
+
+func test_array_round_trips_in_saves() -> void:
+	var c := _cultivator()
+	c.abode = "waterfall_cave"
+	c.abode_array = "minor_spirit_gathering_array"
+	var loaded := CharacterData.from_dict(JSON.parse_string(JSON.stringify(c.to_dict())))
+	assert_eq(loaded.abode_array, "minor_spirit_gathering_array")
+	assert_eq(CharacterData.from_dict({"name": "Old"}).abode_array, "")
+
+
+func test_game_state_craft_and_place_array() -> void:
+	var gs: Node = _root().get_node("GameState")
+	var c := CharacterFactory.create("Formation Master", gs.data, seeded_rng())
+	gs.start_session(c)
+	c.realm_index = gs.data.realm_index_of("qi_refining")
+	c.add_item("spirit_stone", 1000)
+	c.add_item("talisman_paper", 20)
+	c.add_item("iron_essence", 20)
+	for i in 10:
+		if c.item_count("minor_spirit_gathering_array") > 0:
+			break
+		gs.refine("minor_spirit_gathering_array")
+	assert_true(c.item_count("minor_spirit_gathering_array") > 0, "refined an array disc")
+	assert_true(c.professions.has("array_master"), "array master xp")
+	gs.current_region = "misty_forest"
+	gs.place_abode_array("minor_spirit_gathering_array")
+	assert_eq(c.abode_array, "", "needs an abode")
+	gs.claim_abode("waterfall_cave")
+	var clock: Node = _root().get_node("GameClock")
+	var days: int = clock.total_days
+	gs.place_abode_array("minor_spirit_gathering_array")
+	assert_eq(c.abode_array, "minor_spirit_gathering_array")
+	assert_eq(clock.total_days, days + 1, "setting up an array takes a day")
+	var saved: Dictionary = gs.to_save_dict()
+	gs.load_save_dict(JSON.parse_string(JSON.stringify(saved)))
+	assert_eq(gs.player.abode_array, "minor_spirit_gathering_array")
+	gs.remove_abode_array()
+	assert_eq(gs.player.abode_array, "")
+	assert_eq(gs.player.item_count("minor_spirit_gathering_array"), 1)
+	gs.end_session()

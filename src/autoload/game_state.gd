@@ -136,6 +136,8 @@ func claim_abode(abode_id: String) -> void:
 		return
 	if result["previous"] != "":
 		EventBus.post("You leave %s behind." % Abodes.abode_name(data, result["previous"]))
+	if result["array_returned"] != "":
+		EventBus.post("You pack up your %s." % data.items.get(result["array_returned"], {}).get("name", result["array_returned"]))
 	EventBus.post("You pay %d spirit stones and claim %s as your abode." % [result["cost"], Abodes.abode_name(data, abode_id)], "progress")
 	if Clans.move_seat(clan, abode_id, data):
 		EventBus.post("The %s moves its seat to %s." % [clan.name, Abodes.abode_name(data, abode_id)], "progress")
@@ -154,6 +156,33 @@ func cultivate_in_seclusion(days: int) -> void:
 		EventBus.post("You have no abode here to seclude yourself in.", "warning")
 		return
 	cultivate(days, density * ClanEstate.qi_multiplier(clan, data))
+
+
+## Set up an array (items.json `array`) at the player's abode; takes a day.
+func place_abode_array(item_id: String) -> void:
+	if not _can_act():
+		return
+	var result := Abodes.place_array(player, data, current_region, item_id)
+	if not result["ok"]:
+		EventBus.post(result["reason"], "warning")
+		EventBus.player_changed.emit()
+		return
+	if result["replaced"] != "":
+		EventBus.post("You pack up the %s." % data.items.get(result["replaced"], {}).get("name", result["replaced"]))
+	EventBus.post("You plant the %s around %s; qi density there rises by %d%%." % [data.items[item_id].get("name", item_id), Abodes.abode_name(data, player.abode), roundi(Abodes.array_bonus(player, data) * 100.0)], "progress")
+	_pass_time(1)
+
+
+## Pack up the array at the player's abode into the inventory.
+func remove_abode_array() -> void:
+	if not _can_act():
+		return
+	var result := Abodes.remove_array(player, data, current_region)
+	if result["ok"]:
+		EventBus.post("You pack up the %s." % data.items.get(result["item"], {}).get("name", result["item"]))
+	else:
+		EventBus.post(result["reason"], "warning")
+	EventBus.player_changed.emit()
 
 
 func store_in_abode(item_id: String, quantity: int = 1) -> void:
@@ -1198,6 +1227,7 @@ const CRAFT_FLAVOR := {
 	"alchemist": {"verb": "refine", "great": "Pill fragrance fills the room!", "fail": "The cauldron cracks and your herbs turn to ash."},
 	"blacksmith": {"verb": "forge", "great": "The blade sings as it leaves the forge!", "fail": "The metal cracks under the hammer and the ore is ruined."},
 	"talisman_master": {"verb": "inscribe", "great": "The runes blaze with golden light!", "fail": "Your brush slips; the talisman flares and burns to ash."},
+	"array_master": {"verb": "refine", "great": "The array flags hum in perfect resonance!", "fail": "A rune line breaks and the array materials crumble to dust."},
 }
 
 

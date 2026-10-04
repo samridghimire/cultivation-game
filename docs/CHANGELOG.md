@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-03 [G-006] Arrays: Array Masters refine qi-gathering array discs in the workshop (Minor Spirit Gathering Array +20%, Five-Element Qi Gathering Array +50% from a manual at the talisman stall); set one up at your cave abode to raise its seclusion qi density (GameState.place_abode_array/remove_abode_array). UI entries follow in G-006b.
 - 2026-10-03 [FAM-013] Generational sim (tests/sim/simulate_generations.gd). Fixed: off-screen NPC marriages kept refilling courtship candidates past the population cap, so the population grew forever and births stopped. Marriages now stop at the cap, and the world levels off at about 300 NPCs.
 - 2026-10-04 [BODY-001] Body tempering: five stages from Copper Skin to the Indestructible Vajra Body, tempered at meditation spots with ores, herbs and pills (risk of injury falls with Constitution); each stage adds health/defense/attack and injury resistance, shown on the character sheet.
 - 2026-10-04 [QA-20261004-3] A pregnant NPC who is slain or dies in a tribulation now loses the unborn child (it used to stay pregnant forever); all NPC deaths go through Npcs.die.
