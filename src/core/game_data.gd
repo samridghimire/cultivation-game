@@ -76,6 +76,7 @@ var karma: Dictionary = {}
 var clan_estate: Dictionary = {}
 var clan_buildings: Dictionary = {}  # id -> Dictionary (data/clan_buildings.json)
 var npc_clans: Dictionary = {}  # id -> Dictionary (data/clans.json, NpcClans)
+var clan_relations: Dictionary = {}  # data/clans.json "relations" (FAM-009b)
 ## Anchor id -> {"region": String, "name": String}, from places with an anchor_id.
 var anchors: Dictionary = {}
 ## Claimable cave abodes: abode id -> regions.json abode def plus "region" (Abodes).
@@ -215,8 +216,10 @@ func _load(dir: String) -> void:
 	clan_estate = _read(dir, "clan_buildings.json")
 	for building in clan_estate.get("buildings", []):
 		clan_buildings[building["id"]] = building
-	for npc_clan in _read(dir, "clans.json").get("clans", []):
+	var clans_file := _read(dir, "clans.json")
+	for npc_clan in clans_file.get("clans", []):
 		npc_clans[npc_clan["id"]] = npc_clan
+	clan_relations = clans_file.get("relations", {})
 	beast_rules = _read(dir, "beasts.json")
 	for beast in beast_rules.get("beasts", []):
 		beasts[beast["id"]] = beast

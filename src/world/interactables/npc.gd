@@ -303,6 +303,9 @@ func _look() -> void:
 	var membership := NpcClans.membership_text(GameState.npc_clans, GameState.npcs, GameState.data, npc_id)
 	if membership != "":
 		text += " %s." % membership
+		var clan_id := NpcClans.clan_of(GameState.npc_clans, npc_id)
+		if not GameState.data.clan_relations.is_empty():
+			text += " The %s is %s." % [(GameState.npc_clans[clan_id] as ClanData).name, NpcClans.standing_text(GameState.npc_clans, GameState.data, clan_id)]
 	var injuries := Injuries.describe(npc, GameState.data)
 	if not injuries.is_empty():
 		text += " Injuries: %s." % ", ".join(injuries)

@@ -1,5 +1,5 @@
 {
-  "_doc": "NPC clans (FAM-009, NpcClans). Each clan is founded when a game starts (or an older save loads) as generated NPCs: a head, the head's spouse and children, all with the clan surname, living in the clan's region. Members are the head's spouses and descendants (Clans.sync_family); when the head dies the heir succeeds (Clans.succeed, FAM-008), and a clan whose line ends is extinct. Per clan: id, name, surname, region (regions.json id), description, optional alignment (all members), head: {gender (optional, rolled if missing), age_years, realm, stage}, spouse: {age_years, realm}, children: {count: [min, max], age_years: [min, max], realm}. Realms are realm ids.",
+  "_doc": "NPC clans (FAM-009, NpcClans). Each clan is founded when a game starts (or an older save loads) as generated NPCs: a head, the head's spouse and children, all with the clan surname, living in the clan's region. Members are the head's spouses and descendants (Clans.sync_family); when the head dies the heir succeeds (Clans.succeed, FAM-008), and a clan whose line ends is extinct. Per clan: id, name, surname, region (regions.json id), description, optional alignment (all members), head: {gender (optional, rolled if missing), age_years, realm, stage}, spouse: {age_years, realm}, children: {count: [min, max], age_years: [min, max], realm}. Realms are realm ids. relations (FAM-009b): each clan's standing toward the player (and the player's clan) and toward the other clans, from min to max. start: [{clans: [id, id], value}] starting relation between two clans (both ways; unlisted pairs and the player start at 0). acts: karma.json act id -> relation change toward the player when the act targets a member (attempted or done). kindness: karma.json gratitude source (gift, treat_npc) -> relation gain when done for a member. marriage: relation gain both ways when a marriage first binds two clans into an alliance (a member wed to the player or to a member of the player's clan, or to a member of another clan). standings: ascending [{min, name, favor_scale, grudge (optional)}]; a clan's standing is the last whose min the value reaches. favor_scale multiplies favor gained with its members (chat, gifts, courting); grudge: on falling to that standing every living member holds at least that grudge against the player (Karma).",
   "clans": [
     {"id": "zhao_clan", "name": "Zhao Clan", "surname": "Zhao", "region": "qingshi_village", "alignment": 50, "description": "The landlords of Qingshi Village. Their patriarch once served an outer sect and came home to farm spirit rice.",
       "head": {"gender": "male", "age_years": 78, "realm": "qi_refining", "stage": 8},
@@ -13,5 +13,24 @@
       "head": {"gender": "male", "age_years": 180, "realm": "foundation_establishment", "stage": 3},
       "spouse": {"age_years": 150, "realm": "foundation_establishment"},
       "children": {"count": [1, 3], "age_years": [30, 90], "realm": "qi_refining"}}
-  ]
+  ],
+  "relations": {
+    "min": -100, "max": 100,
+    "start": [
+      {"clans": ["zhao_clan", "mo_clan"], "value": -30},
+      {"clans": ["mo_clan", "yun_clan"], "value": -45},
+      {"clans": ["zhao_clan", "yun_clan"], "value": 20}
+    ],
+    "acts": {"humiliate": -15, "rob": -30, "kill": -60},
+    "kindness": {"gift": 2, "treat_npc": 8},
+    "marriage": 30,
+    "standings": [
+      {"min": -100, "name": "Blood feud", "favor_scale": 0.0, "grudge": 30},
+      {"min": -59, "name": "Hostile", "favor_scale": 0.5},
+      {"min": -29, "name": "Wary", "favor_scale": 0.75},
+      {"min": -9, "name": "Neutral", "favor_scale": 1.0},
+      {"min": 15, "name": "Friendly", "favor_scale": 1.25},
+      {"min": 50, "name": "Honored", "favor_scale": 1.5}
+    ]
+  }
 }

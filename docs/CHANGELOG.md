@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-04 [FAM-009b] Clan relations: NPC clans remember deeds against their members (a killing can start a blood feud and a hunt), warm to gifts and healing, scale favor by standing, and form marriage alliances with you and each other.
 - 2026-10-04 [FAM-010] Family tree screen from the character sheet: relatives by generation with realm, roots, bloodline, favor, clan rank and training, plus Training and Name-as-heir actions.
 - 2026-10-04 [W-005f] Secret realms are contested: rival cultivators fight you for floors (spare them and they remember your mercy), and if you leave a realm unfinished when it closes, a rival may carry off its inheritance forever.
 - 2026-10-04 [W-005c] Three new secret realms: the Peach Blossom Grotto behind Qingshi, the Fallen Star Vault beneath the market and the Drowned Yin Palace under the marsh, with manuals, recipes, rare herbs and lifespan treasures.

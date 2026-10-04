@@ -815,8 +815,9 @@ func court(npc_id: String) -> void:
 		EventBus.post(result["reason"], "warning")
 		EventBus.player_changed.emit()
 		return
-	npc_favor[npc_id] = int(npc_favor.get(npc_id, 0)) + result["favor"]
-	EventBus.post("You spend days in %s's company. They warm to you. (+%d favor)" % [npcs[npc_id].name, result["favor"]], "progress")
+	var courted := NpcClans.scaled_favor(npc_clans, data, npc_id, int(result["favor"]), int(result["favor"]))
+	npc_favor[npc_id] = int(npc_favor.get(npc_id, 0)) + courted
+	EventBus.post("You spend days in %s's company. They warm to you. (+%d favor)" % [npcs[npc_id].name, courted], "progress")
 	_pass_time(result["days"])
 
 
@@ -832,8 +833,9 @@ func chat(npc_id: String) -> void:
 		EventBus.post(result["reason"], "warning")
 		EventBus.player_changed.emit()
 		return
-	var room := int(data.family.get("acquaintance", {}).get("chat_max_favor", 0)) - favor - int(result["favor"])
-	var gain: int = result["favor"] + Karma.favor_bonus(player, data, npc_id, result["favor"], room)
+	var cap := int(data.family.get("acquaintance", {}).get("chat_max_favor", 0))
+	var base := NpcClans.scaled_favor(npc_clans, data, npc_id, int(result["favor"]), cap - favor)
+	var gain: int = base + Karma.favor_bonus(player, data, npc_id, base, cap - favor - base)
 	npc_favor[npc_id] = favor + gain
 	EventBus.post("You pass some time talking with %s. (+%d favor)" % [npcs[npc_id].name, gain])
 	_pass_time(result["days"])
@@ -851,11 +853,13 @@ func give_gift(npc_id: String, item_id: String) -> void:
 		EventBus.post(result["reason"], "warning")
 		EventBus.player_changed.emit()
 		return
-	var room := int(data.family.get("acquaintance", {}).get("gift_max_favor", 0)) - favor - int(result["favor"])
-	var gain: int = result["favor"] + Karma.favor_bonus(player, data, npc_id, result["favor"], room)
+	var cap := int(data.family.get("acquaintance", {}).get("gift_max_favor", 0))
+	var base := NpcClans.scaled_favor(npc_clans, data, npc_id, int(result["favor"]), cap - favor)
+	var gain: int = base + Karma.favor_bonus(player, data, npc_id, base, cap - favor - base)
 	npc_favor[npc_id] = favor + gain
 	Karma.on_kindness(player, data, npc_id, "gift")
 	EventBus.post("%s accepts your %s. (+%d favor)" % [npcs[npc_id].name, data.items[item_id].get("name", item_id), gain])
+	_clan_deed(npc_id, "gift")
 	_pass_time(result["days"])
 
 
@@ -916,7 +920,26 @@ func hostile_act(npc_id: String, act_id: String) -> void:
 		EventBus.post("You kill %s.%s" % [npc.name, suffix], "danger")
 	else:
 		EventBus.post("%s: %s.%s" % [String(act.get("name", act_id)), npc.name, suffix], "warning")
+	_clan_deed(npc_id, act_id)
 	_pass_time(result["days"])
+
+
+## FAM-009b: a deed toward an NPC clan member (a karma act or a kindness)
+## shifts the clan's relation to the player; a blood feud sets its members
+## hunting the player.
+func _clan_deed(npc_id: String, deed: String) -> void:
+	var result := NpcClans.on_deed(npc_clans, npcs, data, player, npc_id, deed)
+	if result.is_empty():
+		return
+	var clan_name: String = (npc_clans[result["clan_id"]] as ClanData).name
+	var change := int(result["change"])
+	var standing := NpcClans.standing_name(data, int(result["value"]))
+	if change < 0:
+		EventBus.post("The %s will remember this. (Relations %+d: %s)" % [clan_name, change, standing], "karma")
+	elif change > 0 and result["standing_changed"]:
+		EventBus.post("Your kindness to its members warms the %s toward you. (Now %s)" % [clan_name, standing], "karma")
+	if int(result["feud"]) > 0:
+		EventBus.post("The %s swears a blood feud against you! Its members will hunt you." % clan_name, "danger")
 
 
 ## Pay spirit stones to clear an NPC's grudge against you (Karma.amends_cost).
@@ -1345,12 +1368,14 @@ func treat_npc(npc_id: String) -> void:
 		EventBus.post(result["reason"], "warning")
 		EventBus.player_changed.emit()
 		return
-	npc_favor[npc_id] = int(npc_favor.get(npc_id, 0)) + result["favor"]
+	var treated := NpcClans.scaled_favor(npc_clans, data, npc_id, int(result["favor"]), int(result["favor"]))
+	npc_favor[npc_id] = int(npc_favor.get(npc_id, 0)) + treated
 	var injury_name := Injuries.injury_name(data, result["injury"])
 	var outcome := "it is fully healed" if result["healed"] else "%s left" % Calendar.format_duration(patient.injuries[result["injury"]])
 	var owed := Karma.on_kindness(player, data, npc_id, "treat_npc")
 	var debt := ", they owe you" if owed > 0 else ""
-	EventBus.post("You treat %s's %s: %s. (+%d favor, alignment %+d%s)" % [patient.name, injury_name, outcome, result["favor"], result["alignment"], debt], "karma")
+	EventBus.post("You treat %s's %s: %s. (+%d favor, alignment %+d%s)" % [patient.name, injury_name, outcome, treated, result["alignment"], debt], "karma")
+	_clan_deed(npc_id, "treat_npc")
 	if result["ranks_gained"] > 0:
 		EventBus.post("You are now %s!" % Text.a(Professions.rank_title(player, data, Medicine.DOCTOR)), "progress")
 	_pass_time(result["days"])
@@ -1953,6 +1978,8 @@ func _on_days_advanced(days: int) -> void:
 		Npcs.ensure_eligible(npcs, data, rng, Children.descendants(player, npcs))  # keep courtship candidates in every region
 	for event in NpcClans.simulate(npc_clans, npcs, data):
 		EventBus.post(event["text"], event["category"])
+	for event in NpcClans.sync_alliances(npc_clans, npcs, data, player, clan):
+		EventBus.post(event["text"], "progress" if event["ally"] == NpcClans.PLAYER else "info", "family")
 	@warning_ignore("integer_division")
 	if player.age_years() > age_before / Calendar.DAYS_PER_YEAR:
 		_prune_dead_npcs()
