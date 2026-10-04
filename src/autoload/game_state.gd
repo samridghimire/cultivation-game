@@ -129,7 +129,7 @@ func cultivate_in_seclusion(days: int) -> void:
 	if density <= 0.0:
 		EventBus.post("You have no abode here to seclude yourself in.", "warning")
 		return
-	cultivate(days, density)
+	cultivate(days, density * ClanEstate.qi_multiplier(clan, data))
 
 
 func store_in_abode(item_id: String, quantity: int = 1) -> void:
@@ -758,6 +758,38 @@ func set_clan_rank(member_id: String, rank_id: String) -> void:
 	EventBus.player_changed.emit()
 
 
+## Start building (or upgrading) a clan estate building (data/clan_buildings.json),
+## paid from the clan treasury. The builders work while the world moves on;
+## giving the order takes no time.
+func build_clan_building(building_id: String) -> void:
+	if not _can_act():
+		return
+	var result := ClanEstate.start_build(player, clan, building_id, data)
+	if not result["ok"]:
+		EventBus.post(result["reason"], "warning")
+	else:
+		var what := ClanEstate.building_name(data, building_id)
+		if int(result["level"]) > 1:
+			what += " (level %d)" % int(result["level"])
+		EventBus.post("The %s spends %d spirit stones to raise the %s. It will take %s." % [clan.name, result["cost"], what, Calendar.format_duration(result["days"])], "progress")
+	EventBus.player_changed.emit()
+
+
+## Clan estate over `days` days / `months` month boundaries: construction
+## progress, then monthly income, reputation and herb harvests.
+func _advance_estate(days: int, months: int) -> void:
+	var built := ClanEstate.advance_construction(clan, days)
+	if not built.is_empty():
+		EventBus.post("The %s's %s is complete (level %d)." % [clan.name, ClanEstate.building_name(data, built["building"]), built["level"]], "progress")
+	var yields := ClanEstate.apply_months(clan, player, data, months)
+	var herbs: Dictionary = yields["herbs"]
+	if not herbs.is_empty():
+		var parts: PackedStringArray = []
+		for item_id in herbs:
+			parts.append("%d %s" % [herbs[item_id], data.items[item_id].get("name", item_id)])
+		EventBus.post("Your clan's spirit fields send you %s." % ", ".join(parts))
+
+
 ## Move spirit stones into the clan treasury. Takes no time.
 func deposit_to_clan(amount: int) -> void:
 	if not _can_act():
@@ -1320,9 +1352,10 @@ func _on_days_advanced(days: int) -> void:
 	_advance_pregnancies(days)
 	@warning_ignore("integer_division")
 	var months := player.age_days / Calendar.DAYS_PER_MONTH - age_before / Calendar.DAYS_PER_MONTH
-	for event in Training.advance(player, npcs, data, months):
+	for event in Training.advance(player, npcs, data, months, ClanEstate.training_multiplier(clan, data)):
 		EventBus.post(event["text"], event["category"])
 	if clan != null:
+		_advance_estate(days, months)
 		for joined in Clans.sync_family(player, clan, npcs, data):
 			EventBus.post("%s joins the %s." % [joined, clan.name], "progress")
 	if player.age_years() >= Cultivation.lifespan_years(player, data):
