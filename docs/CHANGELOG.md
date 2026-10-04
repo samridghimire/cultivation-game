@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-03 [G-008d] Sect missions content: 17 new missions, so every sect offers 10-11 fitting its path (Azure Cloud patrols, fever relief, array upkeep and a Jade Python hunt; Blood Lotus press-gangs, blood pool offerings, silencing talebearers and soul offerings; Pavilion herb and sword orders, stolen consignments, star silver escorts and auction lots), and contribution shops stock rank 2-3 rewards up to the Core Forming Pill.
 - 2026-10-04 [QA-20261004-dao-practice-flake] test_dao: reseed GameState.rng before the practice check too, so the Dao-of-Breath assertion no longer fails ~1 run in 4.
 - 2026-10-03 [QA-20261003-5] Fixed: a widow carrying her late husband's child who married the player went through pregnancy twice as fast; it now runs at normal speed and still ends in exactly one birth.
 - 2026-10-03 [UI-009] "Next steps" hints on the character sheet and a HUD hint line (toggle in Settings): qi to next stage, breakthrough odds and pills, injuries, lifespan, pregnancy, artifact lives, sect and profession pointers.
