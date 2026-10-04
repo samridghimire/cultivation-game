@@ -340,8 +340,9 @@ static func check_mission(c: CharacterData, data: GameData, mission_id: String) 
 	if int(c.sect["rank"]) < min_rank:
 		return "Only a %s or above may take this mission." % sect.rank_name(min_rank)
 	var min_realm := data.realm_index_of(String(mission.get("min_realm", "mortal")))
-	if c.realm_index < min_realm:
-		return "This mission needs a cultivator of %s or above." % data.realms[min_realm].name
+	var min_stage := int(mission.get("min_stage", 0))
+	if c.realm_index < min_realm or (c.realm_index == min_realm and c.stage < min_stage):
+		return "This mission needs a cultivator of %s or above." % data.realms[min_realm].stage_label(min_stage)
 	var wait := mission_cooldown_left(c, mission_id)
 	if wait > 0:
 		return "This mission is not offered again for %s." % Calendar.format_duration(wait)
@@ -350,6 +351,16 @@ static func check_mission(c: CharacterData, data: GameData, mission_id: String) 
 		if c.item_count(item_id) < int(needed[item_id]):
 			return "You need %d %s." % [int(needed[item_id]), data.items.get(item_id, {}).get("name", item_id)]
 	return ""
+
+
+## Danger label (Combat.danger_label: Weak/Even/Dangerous/Deadly) of the
+## mission's fight for `c`, or "" if the mission has no enemy. Missions are
+## always fought (a Deadly foe is not evaded), so the board should show this.
+static func mission_danger(c: CharacterData, data: GameData, mission_id: String) -> String:
+	var enemy_id := String(data.sect_missions.get(mission_id, {}).get("enemy", ""))
+	if enemy_id == "" or not data.enemies.has(enemy_id):
+		return ""
+	return Combat.danger_label(c, data, data.enemies[enemy_id])
 
 
 ## Completes `mission_id` (any fight must already be won): hands in the
@@ -385,8 +396,11 @@ static func validate_missions(data: GameData) -> PackedStringArray:
 		for sect_id in mission.get("sects", []):
 			if not data.sects.has(sect_id):
 				errors.append("Mission '%s' has unknown sect '%s'" % [id, sect_id])
-		if data.realm_index_of(String(mission.get("min_realm", "mortal"))) < 0:
+		var realm_index := data.realm_index_of(String(mission.get("min_realm", "mortal")))
+		if realm_index < 0:
 			errors.append("Mission '%s' has unknown min_realm '%s'" % [id, mission.get("min_realm", "")])
+		elif int(mission.get("min_stage", 0)) < 0 or int(mission.get("min_stage", 0)) >= data.realms[realm_index].stage_count():
+			errors.append("Mission '%s' has min_stage %d outside its min_realm's stages" % [id, int(mission.get("min_stage", 0))])
 		if int(mission.get("min_rank", 0)) < 0:
 			errors.append("Mission '%s' needs min_rank >= 0" % id)
 		if int(mission.get("days", 0)) < 1:
