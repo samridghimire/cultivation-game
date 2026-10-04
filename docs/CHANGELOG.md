@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-04 [QA-006] Economy sim (tests/sim/simulate_economy.gd): profession income vs breakthrough pills and artifact recharges across whole lives; findings in BACKLOG (ART-007, QA-006b) and a DESIGN.md question on recharge costs.
 - 2026-10-04 [QA-004] Obtainability audit test: fails if any item or recipe in the data cannot be bought, gathered, looted, rewarded or crafted in play (explicit allowlist with task ids for intentional exceptions).
 - 2026-10-03 [G-005e] Crafted goods (talismans, forged gear) now sell back for at most 1.3x their material cost (still capped at half price), so buying materials to inscribe and resell talismans is a modest trade instead of a money press.
 - 2026-10-03 [QA-003] Save compatibility fixtures: an oldest-format (F-000) and a current-format save in tests/fixtures/saves/ are loaded through SaveManager in tests; every missing field must load as its default and no saved field may be dropped.
