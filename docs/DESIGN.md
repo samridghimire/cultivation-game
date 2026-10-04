@@ -83,7 +83,7 @@ Every great cultivation protagonist has something that sets them apart. Ours is 
 | NPCs (named + generated), aging, monthly sim | ✅ | `data/npcs.json`, `Npcs`, `Names` |
 | Dialogue | ✅ (dialogue window) | `Dialogue`, `data/dialogue/` |
 | Family: identity, courtship, marriage, dual cultivation, children | ✅ core, ❌ not reachable in-game (P0 tasks) | `data/family.json`, `Family`, `Children` |
-| Clans, estates, bloodlines | ✅ clan core (FAM-005), bloodlines core (FAM-007), ❌ UI (FAM-005b), estates (FAM-006) | `data/family.json`, `data/bloodlines.json`, `Clans`, `ClanData`, `Bloodlines` |
+| Clans, estates, bloodlines | ✅ clan core (FAM-005), bloodlines core (FAM-007), ❌ UI (FAM-005b), estates core (FAM-006) | `data/family.json`, `data/bloodlines.json`, `Clans`, `ClanData`, `Bloodlines` |
 | Cultivation methods (one main method, qi rate, realm cap) | ✅ core, 🚧 no UI (CM-001b) | `Techniques`, `data/techniques.json` |
 | Dao insights, Heavenly Tribulations | ❌ (DAO-001, TRIB-001) | |
 | Inventory, techniques, character sheet, settings, pause, load screens | ✅ | `src/ui/` |

@@ -12,6 +12,10 @@ var treasury := 0
 var reputation := 0
 ## Game day (GameClock.total_days) the clan was founded.
 var founded_day := 0
+## Estate building id -> built level (1 = first level), FAM-006.
+var buildings: Dictionary = {}
+## The project under way, {"building": id, "level": int, "days_left": int}, or {}.
+var construction: Dictionary = {}
 
 
 func to_dict() -> Dictionary:
@@ -22,6 +26,8 @@ func to_dict() -> Dictionary:
 		"treasury": treasury,
 		"reputation": reputation,
 		"founded_day": founded_day,
+		"buildings": buildings.duplicate(),
+		"construction": construction.duplicate(),
 	}
 
 
@@ -35,4 +41,10 @@ static func from_dict(d: Dictionary) -> ClanData:
 	clan.treasury = int(d.get("treasury", 0))
 	clan.reputation = int(d.get("reputation", 0))
 	clan.founded_day = int(d.get("founded_day", 0))
+	var built: Dictionary = d.get("buildings", {})
+	for building_id in built:
+		clan.buildings[String(building_id)] = int(built[building_id])
+	var project: Dictionary = d.get("construction", {})
+	if not project.is_empty():
+		clan.construction = {"building": String(project.get("building", "")), "level": int(project.get("level", 1)), "days_left": int(project.get("days_left", 0))}
 	return clan

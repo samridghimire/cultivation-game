@@ -145,8 +145,9 @@ static func give(c: CharacterData, child: CharacterData, item_id: String, data: 
 
 ## Runs `months` months of training for `c`'s children in `people`: each month
 ## and child, pay the assignment's stones (an unpaid month is skipped) and
-## train. Returns notable events [{text, category}].
-static func advance(c: CharacterData, people: Dictionary, data: GameData, months: int) -> Array[Dictionary]:
+## train; `speed` scales the training days (clan library, FAM-006). Returns
+## notable events [{text, category}].
+static func advance(c: CharacterData, people: Dictionary, data: GameData, months: int, speed: float = 1.0) -> Array[Dictionary]:
 	var events: Array[Dictionary] = []
 	for i in months:
 		for child_id in c.children:
@@ -162,16 +163,17 @@ static func advance(c: CharacterData, people: Dictionary, data: GameData, months
 				events.append({"text": "You cannot pay %d spirit stones for %s's training this month." % [cost, child.name], "category": "warning"})
 				continue
 			c.add_item("spirit_stone", -cost)
-			var note := train_month(child, data)
+			var note := train_month(child, data, speed)
 			if note != "":
 				events.append({"text": note, "category": "progress"})
 	return events
 
 
-## One month of `child`'s assignment. Returns a message for anything notable, else "".
-static func train_month(child: CharacterData, data: GameData) -> String:
+## One month of `child`'s assignment, its days scaled by `speed`. Returns a
+## message for anything notable, else "".
+static func train_month(child: CharacterData, data: GameData, speed: float = 1.0) -> String:
 	var a := assignment(data, current(child))
-	var days := int(a.get("days", 0))
+	var days := roundi(int(a.get("days", 0)) * speed)
 	match String(a.get("kind", "")):
 		"cultivate":
 			if Children.can_cultivate_yet(child, data):
