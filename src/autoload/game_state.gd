@@ -33,6 +33,9 @@ var spawn_anchor := ""
 var rng := RandomNumberGenerator.new()
 ## The player's clan (FAM-005), null until founded.
 var clan: ClanData = null
+## Player numbers before the current long action (TimeSkip.snapshot), for the
+## time-skip summary. Set by _start_time_skip(), read by _pass_time().
+var _skip_before: Dictionary = {}
 
 
 func _ready() -> void:
@@ -91,13 +94,14 @@ func cultivate(days: int, location_density: float = 1.0) -> void:
 		EventBus.post("You are at a bottleneck. More meditation will not help; attempt a breakthrough.", "warning")
 		return
 	var density := location_density * Exploration.qi_density(data, current_region) * Sects.cultivation_bonus(player, data)
+	_start_time_skip()
 	var result := Cultivation.cultivate(player, data, days, density)
 	EventBus.post("You cultivate for %s and gather %d qi." % [Calendar.format_duration(days), int(result["qi_gained"])])
 	if result["stages_gained"] > 0:
 		EventBus.post("Your cultivation rises to %s!" % Cultivation.realm_label(player, data), "progress")
 	if result["at_bottleneck"]:
 		EventBus.post("You have reached a bottleneck. Attempt a breakthrough to advance.", "warning")
-	_pass_time(days)
+	_pass_time(days, "Meditating")
 
 
 ## Claim a cave abode in the current region for spirit stones. Its anchor is
@@ -205,6 +209,7 @@ func _report_tribulation(result: Dictionary) -> void:
 func work_profession(prof_id: String, days: int) -> void:
 	if not _can_act():
 		return
+	_start_time_skip()
 	var result := Professions.work(player, data, prof_id, days)
 	var def: ProfessionDef = data.professions[prof_id]
 	EventBus.post("You work as a %s for %s: +%d xp, +%d spirit stones." % [def.name, Calendar.format_duration(days), int(result["xp"]), result["income"]])
@@ -214,7 +219,7 @@ func work_profession(prof_id: String, days: int) -> void:
 		var contribution := int(result["xp"] / (1.0 if Sects.is_favored_profession(player, data, prof_id) else 2.0))
 		if Sects.add_contribution(player, data, contribution):
 			EventBus.post("Your sect promotes you to %s." % Sects.describe(player, data), "progress")
-	_pass_time(days)
+	_pass_time(days, "Working as a %s" % def.name)
 
 
 func join_sect(sect_id: String) -> void:
@@ -314,9 +319,10 @@ func travel(region_id: String) -> void:
 	if not check["ok"]:
 		EventBus.post(check["reason"], "warning")
 		return
+	_start_time_skip()
 	current_region = region_id
 	EventBus.post("After %s on the road you arrive at %s." % [Calendar.format_duration(check["days"]), Exploration.region_name(data, region_id)], "progress")
-	_pass_time(check["days"])
+	_pass_time(check["days"], "Travelling to %s" % Exploration.region_name(data, region_id))
 	EventBus.region_changed.emit(region_id)
 
 
@@ -654,6 +660,7 @@ func dual_cultivate(spouse_id: String, days: int, location_density: float = 1.0)
 		EventBus.player_changed.emit()
 		return
 	var density := location_density * Exploration.qi_density(data, current_region) * Sects.cultivation_bonus(player, data)
+	_start_time_skip()
 	var result := Family.dual_cultivate(player, spouse, data, days, density)
 	if not result["ok"]:
 		EventBus.post(result["reason"], "warning")
@@ -667,7 +674,7 @@ func dual_cultivate(spouse_id: String, days: int, location_density: float = 1.0)
 		EventBus.post("%s rises to %s." % [spouse.name, Cultivation.realm_label(spouse, data)], "progress")
 	if result["at_bottleneck"]:
 		EventBus.post("You have reached a bottleneck. Attempt a breakthrough to advance.", "warning")
-	_pass_time(days)
+	_pass_time(days, "Cultivating with %s" % spouse.name)
 
 
 ## Spend time with a spouse in the current region trying for a child
@@ -1049,6 +1056,7 @@ func take_mission(mission_id: String) -> void:
 			if _can_act():
 				EventBus.post("You fail the mission: %s." % mission["name"], "warning")
 			return
+	_start_time_skip()
 	var result := Sects.complete_mission(player, data, mission_id, world_flags)
 	if not result["ok"]:
 		EventBus.post(result["reason"], "warning")
@@ -1059,7 +1067,7 @@ func take_mission(mission_id: String) -> void:
 	EventBus.post("Mission complete: %s. (%s)" % [mission["name"], ", ".join(notes)], "progress")
 	if result["promoted"]:
 		EventBus.post("Your sect promotes you to %s." % Sects.describe(player, data), "progress")
-	_pass_time(result["days"])
+	_pass_time(result["days"], "On a sect mission")
 
 
 ## Buy an item from your sect's contribution shop (sects.json `shop`).
@@ -1263,9 +1271,22 @@ func _can_act() -> bool:
 	return player != null and player.alive
 
 
-func _pass_time(days: int) -> void:
+## Advance the clock. A non-empty `skip_title` (e.g. "Meditating") also emits
+## EventBus.time_skipped with a summary against _start_time_skip()'s snapshot.
+func _pass_time(days: int, skip_title: String = "") -> void:
+	var posted_before := EventBus.posted_count
 	GameClock.advance(days)
+	if skip_title != "" and _can_act() and not _skip_before.is_empty():
+		var summary := TimeSkip.summarize(skip_title, days, _skip_before, TimeSkip.snapshot(player),
+				Cultivation.realm_label(player, data), EventBus.posted_count - posted_before)
+		EventBus.time_skipped.emit(days, summary)
+	_skip_before = {}
 	EventBus.player_changed.emit()
+
+
+## Remember the player's numbers before a long action (see _pass_time).
+func _start_time_skip() -> void:
+	_skip_before = TimeSkip.snapshot(player)
 
 
 func _on_days_advanced(days: int) -> void:

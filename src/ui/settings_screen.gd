@@ -13,6 +13,7 @@ const SLIDERS := [
 ]
 
 var _fullscreen: CheckButton
+var _fast_skips: CheckButton
 var _sliders: Dictionary = {}  # setting key -> HSlider
 var _value_labels: Dictionary = {}  # setting key -> Label
 
@@ -31,6 +32,12 @@ func _init() -> void:
 	_fullscreen.add_theme_font_size_override("font_size", 18)
 	_fullscreen.toggled.connect(func(on: bool): Settings.set_value("window_mode", "fullscreen" if on else "windowed"))
 	box.add_child(_fullscreen)
+
+	_fast_skips = CheckButton.new()
+	_fast_skips.text = "Fast time skips (no meditation/travel overlay)"
+	_fast_skips.add_theme_font_size_override("font_size", 18)
+	_fast_skips.toggled.connect(func(on: bool): Settings.set_value("fast_time_skips", on))
+	box.add_child(_fast_skips)
 
 	var grid := GridContainer.new()
 	grid.columns = 3
@@ -101,6 +108,7 @@ static func format_value(key: String, value: float) -> String:
 
 func _sync() -> void:
 	_fullscreen.set_pressed_no_signal(Settings.get_value("window_mode") == "fullscreen")
+	_fast_skips.set_pressed_no_signal(Settings.get_value("fast_time_skips"))
 	for key in _sliders:
 		_sliders[key].set_value_no_signal(Settings.get_value(key))
 		_value_labels[key].text = format_value(key, Settings.get_value(key))

@@ -37,14 +37,21 @@ signal dialogue_requested(npc_id: String)
 ## The conversation ended (after its effects and time were applied).
 signal dialogue_ended(npc_id: String)
 
+## A long action skipped time (UI-010). summary = TimeSkip.summarize():
+## {title, days, lines}. The HUD shows it as a short skippable overlay.
+signal time_skipped(days: int, summary: Dictionary)
+
 ## How many past messages the message log screen can show.
 const HISTORY_LIMIT := 200
 
 ## Recent messages, oldest first: {text, category, day} (day = GameClock.total_days).
 var history: Array[Dictionary] = []
+## Messages posted since boot (never trimmed, unlike history), so callers can count news.
+var posted_count := 0
 
 
 func post(text: String, category: String = "info") -> void:
+	posted_count += 1
 	history.append({"text": text, "category": category, "day": GameClock.total_days})
 	if history.size() > HISTORY_LIMIT:
 		history = history.slice(history.size() - HISTORY_LIMIT)

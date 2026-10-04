@@ -29,6 +29,10 @@ var _help: HelpScreen
 var _crafting: CraftingScreen
 var _mission_board: MissionBoard
 var _banner: Banner
+var _time_skip: TimeSkipOverlay
+## The time-skip summary on screen, kept across the scene reload that travel
+## triggers so the new HUD can finish showing it ({} = none).
+static var _showing_skip: Dictionary = {}
 var _respawn: RespawnScreen
 var _death_screen: Control
 
@@ -85,6 +89,9 @@ func _ready() -> void:
 	_combat_report.closed.connect(_open_pending_respawn)
 	_banner = Banner.new()
 	add_child(_banner)
+	_time_skip = TimeSkipOverlay.new()
+	_time_skip.closed.connect(_on_time_skip_closed)
+	add_child(_time_skip)
 	_build_death_screen()
 
 	EventBus.player_changed.connect(_refresh)
@@ -103,9 +110,12 @@ func _ready() -> void:
 	EventBus.dialogue_ended.connect(func(_id): _dialogue.close())
 	EventBus.encounter_choice_requested.connect(_on_encounter_choice_requested)
 	EventBus.encounter_choice_resolved.connect(_encounter.close)
+	EventBus.time_skipped.connect(_on_time_skipped)
 	_refresh()
 	# A respawn that moved the player reloads the world; ask where to awaken now.
 	_open_pending_respawn.call_deferred()
+	if not _showing_skip.is_empty():
+		_show_time_skip.call_deferred(_showing_skip)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -304,6 +314,7 @@ func _on_player_died(cause: String) -> void:
 	_settings.close()
 	_help.close()
 	_load_screen.close()
+	_time_skip.close()
 	(_death_screen.find_child("Cause", true, false) as Label).text = cause
 	_death_screen.visible = true
 	_death_screen.find_children("*", "Button", true, false)[0].grab_focus()
@@ -343,6 +354,27 @@ func _on_encounter_choice_requested(_encounter_id: String) -> void:
 	_choice_menu.close()
 	_close_screens()
 	_encounter.open()
+	_update_modal()
+
+
+## A long action skipped time: show the overlay unless fast skips are on or
+## another window (combat report, encounter, death...) has taken the screen.
+func _on_time_skipped(days: int, summary: Dictionary) -> void:
+	if not TimeSkip.should_show(days, Settings.get_value("fast_time_skips")):
+		return
+	if _combat_report.visible or _encounter.visible or _dialogue.visible or _respawn.visible or _death_screen.visible:
+		return
+	_show_time_skip(summary)
+
+
+func _show_time_skip(summary: Dictionary) -> void:
+	_showing_skip = summary
+	_time_skip.show_skip(summary)
+	_update_modal()
+
+
+func _on_time_skip_closed() -> void:
+	_showing_skip = {}
 	_update_modal()
 
 
@@ -391,9 +423,10 @@ func _on_settings_closed() -> void:
 
 
 func _update_modal() -> void:
-	EventBus.ui_modal_changed.emit(_choice_menu.visible or _dialogue.visible or _encounter.visible or _any_screen_open() or _combat_report.visible or _respawn.visible or _pause_menu.visible or _settings.visible or _help.visible or _load_screen.visible or _death_screen.visible)
+	EventBus.ui_modal_changed.emit(_choice_menu.visible or _dialogue.visible or _encounter.visible or _any_screen_open() or _combat_report.visible or _respawn.visible or _pause_menu.visible or _settings.visible or _help.visible or _load_screen.visible or _death_screen.visible or _time_skip.visible)
 
 
 func _return_to_menu() -> void:
+	_showing_skip = {}
 	GameState.end_session()
 	get_tree().change_scene_to_file(MAIN_MENU)
