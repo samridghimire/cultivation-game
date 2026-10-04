@@ -28,14 +28,18 @@ static func faces_heart_demon(c: CharacterData, data: GameData) -> bool:
 ## The waves `c` would face breaking into `realm_index`, in order, before
 ## randomness: [{kind: "lightning"|"heart_demon", attack, damage}]. Lightning
 ## damage already accounts for `c`'s defense; the heart demon wave comes just
-## before the final lightning wave.
-static func waves(c: CharacterData, data: GameData, realm_index: int) -> Array[Dictionary]:
+## before the final lightning wave. `npc` uses the block's `npc_strength`
+## (NPCs carry no modelled techniques or gear), defaulting to `strength`.
+static func waves(c: CharacterData, data: GameData, realm_index: int, npc: bool = false) -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
 	var trib := def_for(data, realm_index)
 	if trib.is_empty():
 		return out
 	var s := Combat.stats(c, data)
-	var attack := Combat.realm_power(realm_index, 0) * float(trib.get("strength", 1.0))
+	var strength := float(trib.get("strength", 1.0))
+	if npc:
+		strength = float(trib.get("npc_strength", strength))
+	var attack := Combat.realm_power(realm_index, 0) * strength
 	var count := int(trib.get("waves", 1))
 	for i in count:
 		var a := attack * pow(float(trib.get("growth", 1.0)), i)
@@ -77,9 +81,9 @@ static func preview(c: CharacterData, data: GameData, realm_index: int) -> Dicti
 ## Endures the tribulation for breaking into `realm_index`. Burns readied shield
 ## talismans and, on a non-lethal failure, inflicts a "tribulation_failure"
 ## injury. Returns {survived, died, waves: [{kind, damage, hp_left}], hp,
-## max_hp, talismans_used: PackedStringArray of names, injury}.
-static func endure(c: CharacterData, data: GameData, realm_index: int, rng: RandomNumberGenerator) -> Dictionary:
-	var list := waves(c, data, realm_index)
+## max_hp, talismans_used: PackedStringArray of names, injury}. `npc`: see waves().
+static func endure(c: CharacterData, data: GameData, realm_index: int, rng: RandomNumberGenerator, npc: bool = false) -> Dictionary:
+	var list := waves(c, data, realm_index, npc)
 	var max_hp: int = Combat.stats(c, data)["max_hp"]
 	var shield := shield_of(c, data)
 	var used := CombatTalismans.consume(c, data, CombatTalismans.available(c, data, "shield")) if not list.is_empty() else PackedStringArray()
@@ -124,6 +128,8 @@ static func validate(data: GameData) -> PackedStringArray:
 			errors.append("Realm '%s' tribulation needs waves >= 1" % realm.id)
 		if float(trib.get("strength", 0.0)) <= 0.0 or float(trib.get("growth", 1.0)) <= 0.0:
 			errors.append("Realm '%s' tribulation needs strength > 0 and growth > 0" % realm.id)
+		if trib.has("npc_strength") and float(trib["npc_strength"]) <= 0.0:
+			errors.append("Realm '%s' tribulation needs npc_strength > 0" % realm.id)
 		var variance := float(trib.get("variance", 0.0))
 		if variance < 0.0 or variance >= 1.0:
 			errors.append("Realm '%s' tribulation variance must be in [0, 1)" % realm.id)

@@ -1,6 +1,7 @@
 extends TestCase
 ## Heavenly Tribulations (TRIB-001): lightning waves at major breakthroughs.
 
+const TribBalance := preload("res://tests/sim/tribulation_balance.gd")
 const CORE := 3  # core_formation, the first realm with a tribulation
 
 
@@ -53,7 +54,7 @@ func test_waves_grow_and_heart_demon_for_demonic() -> void:
 func test_typical_cultivator_usually_survives() -> void:
 	var survived := 0
 	for i in 200:
-		var c := _at_peak(new_character(), data())
+		var c := TribBalance.attempter(data(), CORE, "typical")
 		if Tribulation.endure(c, data(), CORE, seeded_rng(i))["survived"]:
 			survived += 1
 	assert_gt(survived, 100, "a typical cultivator should survive more often than not (%d/200)" % survived)
@@ -91,7 +92,7 @@ func test_falling_to_final_wave_kills_and_fails_breakthrough() -> void:
 
 
 func test_shield_talismans_absorb_and_burn() -> void:
-	var c := _at_peak(new_character(), data())
+	var c := TribBalance.attempter(data(), CORE, "typical")
 	c.add_item("earth_wall_talisman", 2)
 	assert_eq(CombatTalismans.ready_talisman(c, data(), "earth_wall_talisman"), "")
 	var shield := Tribulation.shield_of(c, data())
@@ -99,7 +100,7 @@ func test_shield_talismans_absorb_and_burn() -> void:
 	var with_shield := Tribulation.endure(c, data(), CORE, seeded_rng(7))
 	assert_eq(c.item_count("earth_wall_talisman"), 1)
 	assert_eq(with_shield["talismans_used"].size(), 1)
-	var bare := _at_peak(new_character(), data())
+	var bare := TribBalance.attempter(data(), CORE, "typical")
 	var without := Tribulation.endure(bare, data(), CORE, seeded_rng(7))
 	assert_gt(with_shield["hp"], without["hp"])
 
@@ -138,3 +139,34 @@ func test_game_state_tribulation_death_respawns_player() -> void:
 	assert_eq(c.artifact_lives, lives - 1)
 	assert_eq(c.realm_index, CORE - 1)
 	gs.end_session()
+
+
+func test_npcs_face_npc_strength() -> void:
+	var c := _at_peak(new_character(), data())
+	var player_waves := Tribulation.waves(c, data(), CORE)
+	var npc_waves := Tribulation.waves(c, data(), CORE, true)
+	var trib: Dictionary = data().realms[CORE].tribulation
+	assert_true(abs(float(npc_waves[0]["attack"]) / float(player_waves[0]["attack"]) - float(trib["npc_strength"]) / float(trib["strength"])) < 0.001)
+	var d := GameData.load_from_dir()
+	d.realms[CORE].tribulation.erase("npc_strength")
+	assert_eq(float(Tribulation.waves(c, d, CORE, true)[0]["attack"]), float(Tribulation.waves(c, d, CORE)[0]["attack"]), "npc_strength defaults to strength")
+	d.realms[CORE].tribulation["npc_strength"] = 0.0
+	assert_eq(Tribulation.validate(d).size(), 1)
+
+
+func test_tribulation_preparations_raise_survival() -> void:
+	var bare_survived := 0
+	var prepared_survived := 0
+	for i in 200:
+		var bare := _at_peak(new_character(), data())
+		if Tribulation.endure(bare, data(), CORE, seeded_rng(i))["survived"]:
+			bare_survived += 1
+		var prepared := _at_peak(new_character(), data())
+		prepared.add_item("lightning_warding_talisman", 1)
+		prepared.add_item("thunder_tempering_pill", 1)
+		assert_eq(CombatTalismans.ready_talisman(prepared, data(), "lightning_warding_talisman"), "")
+		assert_true(Items.use(prepared, data(), "thunder_tempering_pill", {})["ok"])
+		if Tribulation.endure(prepared, data(), CORE, seeded_rng(i))["survived"]:
+			prepared_survived += 1
+	assert_gt(prepared_survived, bare_survived)
+	assert_gt(prepared_survived, 190, "a ward and a body pill should all but guarantee Core Formation (%d/200)" % prepared_survived)

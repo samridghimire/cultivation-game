@@ -53,6 +53,40 @@ static func days_until_close(def: Dictionary, total_days: int) -> int:
 	return int(def.get("open_days", 0)) - since % _period_days(def)
 
 
+## True if the realm is open on `to_day` and that opening began after `from_day`
+## (it opened while time passed from `from_day` to `to_day`).
+static func opened_between(def: Dictionary, from_day: int, to_day: int) -> bool:
+	if not is_open(def, to_day):
+		return false
+	var start := _offset_days(def) + opening_index(def, to_day) * _period_days(def)
+	return start > from_day
+
+
+## True if `c`'s realm is inside the realm's min_realm..max_realm barrier.
+static func admits(c: CharacterData, data: GameData, def: Dictionary) -> bool:
+	var min_index := data.realm_index_of(String(def.get("min_realm", "mortal")))
+	var max_index := data.realm_index_of(String(def.get("max_realm", "tribulation_transcendence")))
+	return c.realm_index >= min_index and (max_index < 0 or c.realm_index <= max_index)
+
+
+## Message-log lines for realms that opened between the two days: always for
+## realms in `region_id`, and as rumors for realms elsewhere that admit `c`.
+static func opening_news(c: CharacterData, data: GameData, region_id: String, from_day: int, to_day: int) -> PackedStringArray:
+	var lines: PackedStringArray = []
+	var ids: Array = data.secret_realms.keys()
+	ids.sort()
+	for realm_id in ids:
+		var def: Dictionary = data.secret_realms[realm_id]
+		if not opened_between(def, from_day, to_day):
+			continue
+		var left := Calendar.format_duration(days_until_close(def, to_day))
+		if String(def.get("region", "")) == region_id:
+			lines.append("The %s has opened here! Its barrier holds for %s." % [def["name"], left])
+		elif admits(c, data, def):
+			lines.append("Rumors spread that the %s has opened in %s, for %s." % [def["name"], Exploration.region_name(data, String(def.get("region", ""))), left])
+	return lines
+
+
 ## `c`'s progress record for the current opening ({} = not entered yet).
 static func _progress(c: CharacterData, def: Dictionary, total_days: int) -> Dictionary:
 	var progress: Dictionary = c.secret_realms.get(String(def.get("id", "")), {})

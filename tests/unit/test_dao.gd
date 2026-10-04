@@ -106,6 +106,7 @@ func test_game_state_contemplate_and_practice() -> void:
 	var gs := (Engine.get_main_loop() as SceneTree).root.get_node("GameState")
 	var c := CharacterFactory.create("Sage", gs.data, seeded_rng())
 	gs.start_session(c)
+	gs.rng.seed = 12345  # Comprehension checks cap at 95%: don't depend on what earlier tests rolled
 	var clock := (Engine.get_main_loop() as SceneTree).root.get_node("GameClock")
 	var days_before: int = clock.total_days
 	gs.contemplate_dao("fire_dao", 30)  # refused: not glimpsed, no time passes
@@ -117,6 +118,38 @@ func test_game_state_contemplate_and_practice() -> void:
 	assert_eq(clock.total_days, days_before + 365)
 	assert_gt(Dao.level(c, "fire_dao"), 1)
 	Techniques.learn(c, gs.data, "basic_breathing")
+	gs.rng.seed = 7  # the year of contemplation drew a varying number of rolls (world sim); reseed for the practice check
 	gs.practice_technique("basic_breathing", 400)
 	assert_gt(Dao.level(c, "dao_of_breath"), 0)
 	gs.end_session()
+
+
+func test_every_insight_can_be_glimpsed_and_strengthens_an_art() -> void:
+	var d := data()
+	var granted := {}
+	for item: Dictionary in d.items.values():
+		granted[item.get("effects", {}).get("dao_insight", "")] = true
+	for enc: Dictionary in d.encounters.values():
+		granted[enc.get("effects", {}).get("dao_insight", "")] = true
+		for choice: Dictionary in enc.get("choices", []):
+			granted[choice.get("effects", {}).get("dao_insight", "")] = true
+	for insight_id in d.dao_insights:
+		var insight: Dictionary = d.dao_insights[insight_id]
+		assert_true(granted.has(insight_id), "%s is granted by an item or encounter" % insight_id)
+		var arts := 0
+		for tech: TechniqueDef in d.techniques.values():
+			if Dao.matches(insight, tech):
+				arts += 1
+		assert_gt(arts, 0, "%s strengthens at least one technique" % insight_id)
+
+
+func test_slaughter_field_offers_opposite_daos() -> void:
+	var enc: Dictionary = data().encounters["marsh_slaughter_field"]
+	var c := new_character()
+	c.alignment = -500
+	Effects.apply(c, data(), enc["choices"][0]["effects"], {})
+	assert_eq(Dao.level(c, "dao_of_slaughter"), 1)
+	assert_true(c.alignment < -500)
+	var saint := new_character()
+	Effects.apply(saint, data(), enc["choices"][1]["effects"], {})
+	assert_eq(Dao.level(saint, "vajra_dao"), 1)

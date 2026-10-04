@@ -97,6 +97,9 @@ func test_game_state_delves_the_verdant_remnant() -> void:
 	gs.current_region = "misty_forest"
 	c.realm_index = 1
 	c.stage = 8
+	# Geared like a typical player: since QA-007d a bare one wins only ~70% of these fights.
+	c.equipment = {"weapon": "iron_sword", "armor": "iron_scale_armor"}
+	c.techniques["iron_fist"] = {"level": 3, "xp": 0.0}
 	c.add_item("spirit_stone", 50)
 	var def := SecretRealms.realm(gs.data, "verdant_remnant")
 	gs.enter_secret_realm("verdant_remnant")
