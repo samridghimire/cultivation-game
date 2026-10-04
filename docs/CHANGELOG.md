@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-04 [G-008e] Sect treasury: the Mission Board has a "Treasury" tab listing the sect's contribution shop (cost, minimum rank, effects or equipment stats, items carried); locked entries show why, "Buy" spends contribution (GameState.buy_with_contribution). Gamepad-focusable tabs.
 - 2026-10-04 [FAM-009] NPC clans: the Zhao (Qingshi Village), Mo (Fallen Star Market) and Yun (Azure Peak) clans are founded at game start as real NPC families (data/clans.json); when a clan head dies the heir takes over and the news reaches you, and a clan whose line ends dies out. Older saves gain the clans on load.
 - 2026-10-04 [FAM-008] Clan heirs: the main wife's eldest child is the heir by default (concubines' children next, adopted last); the Patriarch can name any descendant in the clan as Young Master/Mistress (GameState.designate_heir), and Clans.succeed passes an NPC clan to its heir when the head dies.
 - 2026-10-04 [FAM-006] Clan estate: build and upgrade an Ancestral Hall, Spirit Field, Alchemy Room, Protective Array and Scripture Library (data/clan_buildings.json) from the clan treasury; they earn monthly income and reputation, send herbs to the clan head, raise seclusion qi at your abode and speed up children's training. UI follows in FAM-006b.
