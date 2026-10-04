@@ -85,6 +85,7 @@ func _update_target() -> void:
 
 
 func _draw() -> void:
+	_draw_companion()
 	var robe: Color = _look.get("robe", PlayerLook.ROGUE_ROBE)
 	var sash: Color = _look.get("sash", PlayerLook.SASH_COLORS["neutral"])
 	var outline := Color("3b2f1e")
@@ -111,6 +112,22 @@ func _draw() -> void:
 		var eyes := head + Vector2(_facing.x * 3.0, 1.0 + _facing.y)
 		draw_circle(eyes + Vector2(-2.5, 0), 1.0, outline)
 		draw_circle(eyes + Vector2(2.5, 0), 1.0, outline)
+
+
+## A spirit beast companion trots a step behind the player (BEAST-001b).
+func _draw_companion() -> void:
+	if not GameState.has_session() or GameState.player.companions.is_empty():
+		return
+	var at := -_facing * 22.0 + Vector2(10, 6)
+	var hop := -absf(sin(_time * BOB_SPEED + 1.0)) * 2.0 if velocity != Vector2.ZERO else 0.0
+	at.y += hop
+	draw_set_transform(at + Vector2(0, 6), 0.0, Vector2(1.0, 0.4))
+	draw_circle(Vector2.ZERO, 7.0, Color(0, 0, 0, 0.25))
+	draw_set_transform(Vector2.ZERO)
+	var fur := Color("b9a07a")
+	draw_circle(at, 6.0, fur)
+	draw_circle(at + Vector2(signf(-_facing.x + 0.01) * -5.0, -4.0), 4.0, fur.lightened(0.15))
+	draw_arc(at, 6.0, 0, TAU, 16, Color("3b2f1e"), 1.2)
 
 
 ## Pulsing qi rings at the feet: one per realm above mortal (PlayerLook).

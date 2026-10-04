@@ -1570,6 +1570,21 @@ func _try_tame(enemy_id: String) -> void:
 	EventBus.player_changed.emit()
 
 
+## Feed companion `beast_id` the best beast food you carry (BEAST-001d). Takes no time.
+func feed_companion(beast_id: String) -> void:
+	if not _can_act():
+		return
+	var item_id := Beasts.best_food(player, data)
+	var result := Beasts.feed(player, data, beast_id, item_id) if item_id != "" else {"ok": false, "reason": "You carry nothing your %s would eat." % Beasts.beast_name(data, beast_id)}
+	if not result["ok"]:
+		EventBus.post(result["reason"], "warning")
+	else:
+		EventBus.post("Your %s gobbles down %s. (+%d growth)" % [Beasts.beast_name(data, beast_id), Text.a(String(data.items[item_id].get("name", item_id))), result["xp"]])
+		if result["levels"] > 0:
+			EventBus.post("Your %s grows stronger: level %d!" % [Beasts.beast_name(data, beast_id), Beasts.level(player, data, beast_id)], "progress")
+	EventBus.player_changed.emit()
+
+
 ## Release spirit beast companion `index` back to the wild.
 func release_companion(index: int) -> void:
 	if not _can_act():

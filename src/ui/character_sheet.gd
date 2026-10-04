@@ -161,6 +161,10 @@ func _rebuild() -> void:
 			t += "  %s: none\n" % slot.capitalize()
 		else:
 			t += "  %s: %s (%s)\n" % [slot.capitalize(), data.items[item_id]["name"], Equipment.describe_stats(data, item_id)]
+	if not p.companions.is_empty():
+		t += "\n[color=#%s]Spirit Beasts[/color]\n" % accent
+		for line in Beasts.describe(p, data):
+			t += "  %s\n" % line
 	_rebuild_equip_row()
 	_train_children.visible = not ChildTrainingScreen.living_children(p, GameState.npcs).is_empty()
 	if Injuries.has_any(p):
@@ -227,10 +231,20 @@ static func bloodline_bonus_text(data: GameData, bloodline_id: String) -> String
 	return ", ".join(parts)
 
 
+## Unequip buttons for worn gear and "Feed <beast>" for spirit beast companions.
 func _rebuild_equip_row() -> void:
 	for child in _equip_row.get_children():
 		_equip_row.remove_child(child)
 		child.queue_free()
+	for beast_id in GameState.player.companions:
+		var food := Beasts.best_food(GameState.player, GameState.data)
+		var label := "Feed %s" % Beasts.beast_name(GameState.data, beast_id)
+		if food != "":
+			label += " (%s)" % GameState.data.items[food].get("name", food)
+		var feed := UIStyle.button(label, func(): GameState.feed_companion(beast_id))
+		feed.name = "feed_" + beast_id
+		feed.disabled = food == "" or Beasts.check_feed(GameState.player, GameState.data, beast_id, food) != ""
+		_equip_row.add_child(feed)
 	var p := GameState.player
 	for slot in Equipment.SLOTS:
 		var item_id := String(p.equipment.get(slot, ""))

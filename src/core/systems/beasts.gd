@@ -2,7 +2,7 @@ class_name Beasts
 extends RefCounted
 ## Spirit beast companions (BEAST-001), defined in data/beasts.json. A Beast
 ## Tamer who defeats a beast's enemy may tame it; companions (CharacterData.
-## companions, beast ids) add a fraction of their master's combat stats,
+## companions, beast ids; growth xp in companion_xp) add a fraction of their master's combat stats,
 ## stronger with Beast Tamer rank and fading once the master outgrows them.
 
 const PROFESSION := "beast_tamer"
@@ -77,8 +77,54 @@ static func strength_of(c: CharacterData, data: GameData, beast_id: String) -> f
 	var rank_mult := 1.0 + float(data.beast_rules.get("rank_scale", 0.0)) * Professions.rank_of(c, PROFESSION)
 	var enemy: Dictionary = data.enemies.get(String(def(data, beast_id).get("enemy", "")), {})
 	var beast_realm := data.realm_index_of(String(enemy.get("realm", "mortal")))
-	var outgrown := maxi(0, c.realm_index - beast_realm)
+	var offset := float(level(c, data, beast_id) - 1) * float(data.beast_rules.get("growth", {}).get("realms_per_level", 0.0))
+	var outgrown := maxf(0.0, c.realm_index - beast_realm - offset)
 	return rank_mult * pow(float(data.beast_rules.get("outgrown_scale", 1.0)), outgrown)
+
+
+## A companion's level from its growth xp (1 .. growth.max_level).
+static func level(c: CharacterData, data: GameData, beast_id: String) -> int:
+	var growth: Dictionary = data.beast_rules.get("growth", {})
+	var per := maxi(1, int(growth.get("xp_per_level", 100)))
+	return clampi(1 + int(c.companion_xp.get(beast_id, 0)) / per, 1, maxi(1, int(growth.get("max_level", 1))))
+
+
+## Growth xp one `item_id` gives a companion (0 = not beast food).
+static func food_xp(data: GameData, item_id: String) -> int:
+	return int(data.beast_rules.get("food", {}).get(item_id, 0))
+
+
+## The carried food worth the most xp ("" if none).
+static func best_food(c: CharacterData, data: GameData) -> String:
+	var best := ""
+	for item_id in data.beast_rules.get("food", {}):
+		if c.item_count(item_id) > 0 and (best == "" or food_xp(data, item_id) > food_xp(data, best)):
+			best = String(item_id)
+	return best
+
+
+## Why `c` cannot feed `item_id` to companion `beast_id`, or "".
+static func check_feed(c: CharacterData, data: GameData, beast_id: String, item_id: String) -> String:
+	if not c.companions.has(beast_id):
+		return "You have no such companion."
+	if food_xp(data, item_id) <= 0:
+		return "Your %s turns up its nose at that." % beast_name(data, beast_id)
+	if c.item_count(item_id) < 1:
+		return "You have no %s." % data.items.get(item_id, {}).get("name", item_id)
+	if level(c, data, beast_id) >= int(data.beast_rules.get("growth", {}).get("max_level", 1)):
+		return "Your %s has grown as strong as it can." % beast_name(data, beast_id)
+	return ""
+
+
+## Feeds one `item_id` to companion `beast_id`. Returns {ok, reason, xp, levels}.
+static func feed(c: CharacterData, data: GameData, beast_id: String, item_id: String) -> Dictionary:
+	var reason := check_feed(c, data, beast_id, item_id)
+	if reason != "":
+		return {"ok": false, "reason": reason, "xp": 0, "levels": 0}
+	var before := level(c, data, beast_id)
+	c.add_item(item_id, -1)
+	c.companion_xp[beast_id] = int(c.companion_xp.get(beast_id, 0)) + food_xp(data, item_id)
+	return {"ok": true, "reason": "", "xp": food_xp(data, item_id), "levels": level(c, data, beast_id) - before}
 
 
 ## The combat stat fraction (`key` in BONUS_KEYS) all of `c`'s companions add.
@@ -95,6 +141,7 @@ static func release(c: CharacterData, data: GameData, index: int) -> String:
 		return ""
 	var beast_id: String = c.companions[index]
 	c.companions.remove_at(index)
+	c.companion_xp.erase(beast_id)
 	return beast_name(data, beast_id)
 
 
@@ -108,7 +155,7 @@ static func describe(c: CharacterData, data: GameData) -> PackedStringArray:
 		for key in BONUS_KEYS:
 			if bonuses.has(key):
 				parts.append("+%d%% %s" % [roundi(float(bonuses[key]) * strength * 100.0), key.replace("max_hp", "hp")])
-		lines.append("%s: %s" % [beast_name(data, beast_id), ", ".join(parts)])
+		lines.append("%s (level %d): %s" % [beast_name(data, beast_id), level(c, data, beast_id), ", ".join(parts)])
 	return lines
 
 
@@ -119,6 +166,12 @@ static func validate(data: GameData) -> PackedStringArray:
 		return errors
 	if max_companions(data) < 1:
 		errors.append("beasts.json needs max_companions >= 1")
+	var growth: Dictionary = data.beast_rules.get("growth", {})
+	if not growth.is_empty() and (int(growth.get("max_level", 0)) < 1 or int(growth.get("xp_per_level", 0)) < 1 or float(growth.get("realms_per_level", -1.0)) < 0.0):
+		errors.append("beasts.json growth needs max_level >= 1, xp_per_level >= 1, realms_per_level >= 0")
+	for item_id in data.beast_rules.get("food", {}):
+		if not data.items.has(item_id) or int(data.beast_rules["food"][item_id]) < 1:
+			errors.append("beasts.json food has unknown item '%s' (or xp < 1)" % item_id)
 	var tame: Dictionary = data.beast_rules.get("tame", {})
 	var max_chance := float(tame.get("max_chance", 1.0))
 	if float(tame.get("base_chance", 0.0)) < 0.0 or max_chance <= 0.0 or max_chance > 1.0:

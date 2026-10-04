@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-04 [BEAST-001b, BEAST-001d] Spirit beast companions show on the character sheet, follow you around the world, and grow stronger when you feed them herbs and treasures, staying useful long after you outgrow them.
 - 2026-10-04 [ART-004] The Spirit Garden: once the Inner World is open, plant herbs in its valley; they grow on its quickened time and multiply (a thousand-year lingzhi in a year).
 - 2026-10-04 [ART-003b] The Creation Artifact's Inner World: unseal it at Foundation Establishment to cultivate in a pocket valley of thick qi where two days pass for every one outside (and your body ages with them).
 - 2026-10-04 [ART-003c] With the artifact's appraising eye unsealed, looking at people reveals their roots, talent and heart, and item details reveal grades and true worth.
