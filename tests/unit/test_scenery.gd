@@ -55,3 +55,12 @@ func test_validate_flags_bad_decor() -> void:
 	var d := GameData.new()
 	d.regions = {"bad": {"id": "bad", "map": {"decor": {"trees": -1, "rock_color": "nope", "dragons": 2}}}}
 	assert_eq(Scenery.validate(d).size(), 3)
+
+
+func test_abodes_are_kept_clear() -> void:
+	var region := _region()
+	region["abodes"] = [{"id": "a", "pos": [600, 150], "size": [120, 90]}]
+	var abode := Rect2(Vector2(600, 150) - Vector2(60, 45), Vector2(120, 90)).grow(Scenery.CLEARANCE)
+	assert_true(Scenery.blocked_rects(region).has(abode))
+	for d in Scenery.place(region, seeded_rng(5)):
+		assert_false(abode.has_point(d["pos"]), "%s inside the abode" % d["kind"])
