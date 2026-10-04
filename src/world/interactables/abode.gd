@@ -4,7 +4,8 @@ extends Interactable
 ## cultivates in seclusion, sets up or packs up gathering arrays (G-006b),
 ## tempers their body (BODY-001c), founds their clan here (FAM-005d), opens the
 ## storage chest (an in-menu picker) and gets the artifact anchor entries;
-## owned abodes are outlined in gold.
+## owned abodes are outlined in gold, and the clan seat shows the estate's
+## built buildings as small huts beside it.
 
 const MeditationSpot := preload("res://src/world/interactables/meditation_spot.gd")
 
@@ -121,3 +122,23 @@ func _draw() -> void:
 	super._draw()
 	if is_owned():
 		draw_rect(Rect2(-size / 2.0 - Vector2(4, 4), size + Vector2(8, 8)), UIStyle.ACCENT, false, 3.0)
+	_draw_estate()
+
+
+## The clan seat shows one small hut per built estate building (FAM-006b),
+## taller the higher its level, in a row beside the abode.
+func _draw_estate() -> void:
+	var clan: ClanData = GameState.clan
+	if clan == null or clan.seat != abode_id:
+		return
+	var x := size.x / 2.0 + 14.0
+	for building_id in ClanEstate.building_ids(GameState.data):
+		var lvl := ClanEstate.level(clan, building_id)
+		if lvl <= 0:
+			continue
+		var h := 14.0 + 6.0 * lvl
+		var base := Vector2(x, size.y / 2.0)
+		draw_rect(Rect2(base + Vector2(0, -h), Vector2(18, h)), Color("b08a5a"))
+		draw_rect(Rect2(base + Vector2(0, -h), Vector2(18, h)), PlaceArt.OUTLINE, false, 1.5)
+		draw_colored_polygon(PackedVector2Array([base + Vector2(-3, -h), base + Vector2(9, -h - 9), base + Vector2(21, -h)]), Color("5a3a2a"))
+		x += 24.0
