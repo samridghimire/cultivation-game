@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-04 [G-011] Sect ranks with real duties: higher ranks need a realm minimum, ranks can require a non-lethal promotion trial fight (GameState.attempt_promotion_trial), and ranks pay a monthly stipend that is withheld when you miss the monthly contribution duty (never a demotion).
 - 2026-10-03 [QA-003] Save compatibility fixtures: an oldest-format (F-000) and a current-format save in tests/fixtures/saves/ are loaded through SaveManager in tests; every missing field must load as its default and no saved field may be dropped.
 - 2026-10-03 [W-005] Secret realms: the Verdant Remnant (Misty Forest, Qi Refining) and Sunken Sword Tomb (Azure Peak, Foundation to Core Formation) open for a few months every 5/10 years; pay an entry fee once per opening, beat each floor's guardian and claim a random treasure (GameState.enter_secret_realm). Entrance UI follows in W-005b.
 - 2026-10-03 [RIV-001] Grudges and gratitude: humiliate, rob or kill adult NPCs (GameState.hostile_act, fights via Karma.npc_enemy), victims and their living kin hold grudges that fade over years, make amends with spirit stones (GameState.make_amends). Rules in data/karma.json; saved on CharacterData.

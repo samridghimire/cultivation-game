@@ -207,3 +207,27 @@ func test_choose_gender_once_for_old_saves() -> void:
 	assert_eq(c.gender, "female")
 	gs.choose_gender("male")
 	assert_eq(c.gender, "female", "gender can only be picked once")
+
+
+func test_promotion_trial_and_stipend() -> void:
+	var c := _start()
+	var gs := _game_state()
+	var ranks := (gs.data.sects["blood_lotus_sect"] as SectDef).ranks
+	ranks[1]["trial"] = "wild_boar"
+	c.alignment = -300
+	gs.join_sect("blood_lotus_sect")
+	gs.attempt_promotion_trial()
+	assert_eq(int(c.sect["rank"]), 0, "not enough contribution for the trial yet")
+	c.sect["contribution"] = 400
+	c.realm_index = gs.data.realm_index_of("foundation_establishment")  # beats a boar for sure
+	var days_before: int = _root().get_node("GameClock").total_days
+	gs.attempt_promotion_trial()
+	ranks[1].erase("trial")
+	assert_eq(int(c.sect["rank"]), 1, "winning the trial promotes")
+	assert_gt(_root().get_node("GameClock").total_days, days_before)
+	assert_true(c.alive)
+	# The promotion month waives the duty, so the stipend is paid at month end.
+	var stones := c.item_count("spirit_stone")
+	gs.cultivate(Calendar.DAYS_PER_MONTH)
+	assert_eq(c.item_count("spirit_stone"), stones + int(Sects.stipend(c, gs.data)["spirit_stones"]))
+	gs.end_session()

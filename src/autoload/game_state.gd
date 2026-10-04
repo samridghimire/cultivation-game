@@ -1062,6 +1062,28 @@ func take_mission(mission_id: String) -> void:
 	_pass_time(result["days"])
 
 
+## Fight your sect's promotion trial (sects.json rank `trial`) for the next
+## rank. A sparring match: losing can injure you but never kills or robs you.
+func attempt_promotion_trial() -> void:
+	if not _can_act():
+		return
+	var reason := Sects.check_promotion(player, data)
+	if reason != "":
+		EventBus.post(reason, "warning")
+		EventBus.player_changed.emit()
+		return
+	var sect: SectDef = data.sects[player.sect["id"]]
+	var rank_name := sect.rank_name(Sects.next_rank(player, data))
+	var enemy := Sects.trial_opponent(data, Sects.trial_enemy(player, data))
+	EventBus.post("You step into the trial arena to earn the rank of %s." % rank_name)
+	if fight_enemy(enemy):
+		Sects.pass_trial(player, data)
+		EventBus.post("You pass the trial. Your sect promotes you to %s." % Sects.describe(player, data), "progress")
+		EventBus.player_changed.emit()
+	elif _can_act():
+		EventBus.post("You fail the trial for %s. You may try again." % rank_name, "warning")
+
+
 ## Buy an item from your sect's contribution shop (sects.json `shop`).
 ## Spending contribution never lowers your rank. Takes no time.
 func buy_with_contribution(item_id: String) -> void:
@@ -1300,6 +1322,8 @@ func _on_days_advanced(days: int) -> void:
 	_advance_pregnancies(days)
 	@warning_ignore("integer_division")
 	var months := player.age_days / Calendar.DAYS_PER_MONTH - age_before / Calendar.DAYS_PER_MONTH
+	for i in months:
+		_sect_month_end()
 	for event in Training.advance(player, npcs, data, months):
 		EventBus.post(event["text"], event["category"])
 	if clan != null:
@@ -1307,6 +1331,24 @@ func _on_days_advanced(days: int) -> void:
 			EventBus.post("%s joins the %s." % [joined, clan.name], "progress")
 	if player.age_years() >= Cultivation.lifespan_years(player, data):
 		_kill("Your lifespan is exhausted. You die of old age at %d." % player.age_years())
+
+
+## Pays the sect stipend for the month that just ended (if the duty was met).
+func _sect_month_end() -> void:
+	var duty := Sects.monthly_duty(player, data)
+	var earned := Sects.duty_progress(player)
+	var result := Sects.month_end(player, data)
+	if result["paid"]:
+		var parts: PackedStringArray = []
+		if result["stones"] > 0:
+			parts.append("%d spirit stones" % result["stones"])
+		for item_id in result["items"]:
+			parts.append("%d %s" % [result["items"][item_id], data.items[item_id].get("name", item_id)])
+		EventBus.post("Your sect pays your monthly stipend: %s." % ", ".join(parts), "progress")
+	elif result["skipped"]:
+		EventBus.post("You fell short of your sect duty (%d/%d contribution), so this month's stipend is withheld." % [earned, duty], "warning")
+	if result["promoted"]:
+		EventBus.post("Your sect promotes you to %s." % Sects.describe(player, data), "progress")
 
 
 ## Pregnancies of the player and the player's spouses progress; due ones give birth.
