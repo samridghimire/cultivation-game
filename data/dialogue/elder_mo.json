@@ -9,6 +9,7 @@
     "greet": {"text": "Hm? A young one with spiritual roots, in Qingshi of all places. I am Mo. Once I walked the path you are on.",
       "choices": [
         {"label": "Senior, please teach me how to cultivate.", "next": "breathing", "if": {"not_knows_technique": "basic_breathing"}},
+        {"label": "I am new to all this. Where should I begin?", "next": "first_steps", "if": {"max_realm": "qi_refining"}},
         {"label": "What lies beyond the village?", "next": "world"},
         {"label": "How do I break through a bottleneck?", "next": "bottleneck", "if": {"min_realm": "qi_refining"}},
         {"label": "Offer 10 spirit stones as a token of respect.", "next": "gift", "effects": {"items": {"spirit_stone": -10}}, "favor": 10, "show_locked": true},
@@ -17,6 +18,19 @@
       ]},
     "breathing": {"text": "Sit. Breathe in through the crown, sink it to the dantian, and let the world's qi follow. The Basic Breathing Method. Every immortal began here.",
       "choices": [{"label": "Thank you, senior. (Learn Basic Breathing Method)", "next": "greet", "days": 3, "favor": 5, "effects": {"learn_technique": "basic_breathing"}}]},
+    "first_steps": {"text": "Ha, an honest question. Listen well. First, cultivate: sit at the Meditation Rock, or the Spirit Spring if you want qi twice as fast, and let the days pass. When your qi fills, break through. Second, stones: a cultivator without spirit stones starves. Learn a trade at the workshop. Third, protection: the sects recruit at the hall by the east road. And if you get hurt, the clinic by the west path will patch you up.",
+      "choices": [
+        {"label": "Tell me about the sects.", "next": "sects_info"},
+        {"label": "What trade should I learn?", "next": "trades_info"},
+        {"label": "Is there honest work in the village?", "next": "chores_info"},
+        {"label": "Thank you, senior.", "next": "greet"}
+      ]},
+    "sects_info": {"text": "The Azure Cloud Sect wants virtue, the Blood Lotus Sect wants ruthlessness, and the Myriad Treasure Pavilion wants profit. Each pays its disciples and sends them on missions. Or stay rogue, free as the wind and just as unprotected. Most sects want you in Qi Refining first.",
+      "choices": [{"label": "I see.", "next": "first_steps"}]},
+    "trades_info": {"text": "Alchemists refine pills and are never poor. Blacksmiths forge the swords everyone else dies holding. Talisman masters, array masters, doctors... The workshop will let you try them. Learn recipes from scrolls the merchants sell, and gather herbs and ores in the Misty Forest.",
+      "choices": [{"label": "I see.", "next": "first_steps"}]},
+    "chores_info": {"text": "Headman Zhou always has chores no one else wants: herbs for the clinic, a boar in the fields, Widow Chen's roof. Small work for small pay, but a good name in the village is worth something. Find him near the temple.",
+      "choices": [{"label": "I will see him.", "next": "first_steps"}]},
     "world": {"text": "East lies the Misty Forest, rich in herbs and beasts. Beyond it the Fallen Star Market, where rogue cultivators trade. Azure Peak is no place for those still in Qi Refining's lower layers.",
       "choices": [{"label": "I understand.", "next": "greet"}]},
     "bottleneck": {"text": "Steady your mind, gather your qi, and do not attempt it on a whim. Pills help. Fortune helps more. Failure scatters your qi; it does not end the path.",
