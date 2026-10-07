@@ -2,6 +2,12 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-10-07 (planner, 23:30 UTC)
+- BACKLOG.md was rebuilt: 242 finished rows moved to docs/BACKLOG_DONE.md; new task groups FH-* (first hour), REL-* (Steam
+  basics: autosave, final death, audio, credits, export), NS-* (content past Core Formation), QA-016..020. Specs in docs/specs/.
+- Audits found the first hour's HUD hint only says "gather qi", the Qingshi workshop has no ingredients, lethal 15-50% fights are
+  forced, and content stops at Core Formation. The owner's three most urgent questions are at the top of DESIGN.md's open list.
+
 ## State on 2026-10-07 (evening)
 - **New team design:** an Opus planner, an Opus reviewer and six Sonnet workers. Workers land straight on main and there are no
   PRs. See docs/AGENTS.md. The old PR/integrator flow piled up ~200 PRs that the owner merged by hand.

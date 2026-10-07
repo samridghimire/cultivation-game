@@ -71,29 +71,35 @@ Every great cultivation protagonist has something that sets them apart. Ours is 
 | Professions (ranks, XP, income) | ✅ basic | `data/professions.json`, `Professions` |
 | Alchemy (recipes, scrolls, pill quality) + crafting screen | ✅ | `data/recipes.json`, `Alchemy`, `src/ui/crafting_screen.gd` |
 | Blacksmithing and equipment (weapon/armor) | ✅ (equip from inventory, unequip on the character sheet) | `Equipment`, `data/recipes.json` |
-| Talismans (buff talismans, combat strike/shield/escape) | ✅ core, 🚧 no ready UI (G-005d) | `Alchemy`, `Buffs`, `CombatTalismans` |
+| Talismans (buff talismans, combat strike/shield/escape) | ✅ (ready/unready in the inventory) | `Alchemy`, `Buffs`, `CombatTalismans` |
 | Temporary buffs and forbidden secret arts | ✅ | `Buffs`, `data/techniques.json` |
 | Medicine / Doctor (treat injuries, clinic, patients) | ✅ (clinic places) | `Medicine` |
 | Items, merchants (shop screen with Buy/Sell tabs), using pills | ✅ | `data/items.json`, `Items`, `src/ui/shop_screen.gd` |
 | Save/load, multiple slots | ✅ | `SaveManager` |
 | Creation Artifact: lives, anchors, respawn, recharge, functions (storage) | ✅ (artifact screen: O) | `data/artifact.json`, `CreationArtifact` |
-| Data-driven regions (4), travel, exploration encounters | ✅ (choice window: W-004d) | `data/regions.json`, `data/encounters.json`, `Exploration` |
+| Data-driven regions (5), travel, exploration encounters | ✅ (choice window: W-004d) | `data/regions.json`, `data/encounters.json`, `Exploration` |
 | Injuries (from breakthroughs and combat) | ✅ | `data/injuries.json`, `Injuries` |
 | Combat (auto-resolved) and techniques | ✅ basic | `Combat`, `Techniques`, `data/enemies.json`, `data/techniques.json` |
 | NPCs (named + generated), aging, monthly sim | ✅ | `data/npcs.json`, `Npcs`, `Names` |
 | Dialogue | ✅ (dialogue window) | `Dialogue`, `data/dialogue/` |
 | Family: identity, courtship, marriage, dual cultivation, children, adoption, training | ✅ (NPC menu: chat, gifts, court, propose, adopt; meditation spots; child training screen) | `data/family.json`, `Family`, `Children` |
 | Clans, estates, bloodlines | ✅ clan core (FAM-005), heirs (FAM-008), NPC clans core (FAM-009), bloodlines core (FAM-007), clan screen UI (FAM-005b), estates core (FAM-006) | `data/family.json`, `data/bloodlines.json`, `Clans`, `ClanData`, `Bloodlines` |
-| Spirit beast companions (Beast Tamer taming, combat bonus) | ✅ core, 🚧 no UI (BEAST-001b) | `data/beasts.json`, `Beasts` |
+| Spirit beast companions (Beast Tamer taming, combat bonus, growth) | ✅ (character sheet, feeding; 🚧 no Release button: FH-015) | `data/beasts.json`, `Beasts` |
 | Cultivation methods (one main method, qi rate, realm cap) | ✅ (techniques screen) | `Techniques`, `data/techniques.json` |
 | Dao insights (encounters, practice, seclusion; technique + breakthrough bonuses) | ✅ (sheet + contemplation at meditation spots) | `data/dao.json`, `Dao` |
 | Heavenly Tribulations (Core Formation+, heart demon for demonic) | ✅ (prepare warning + wave screen) | `Tribulation`, `data/realms.json` |
-| Grudges and gratitude (rob/kill/humiliate NPCs, kin vengeance, amends) | ✅ (NPC menu, sheet, NPC Look text, grateful NPCs repay debts), 🚧 no avengers yet (RIV-003) | `data/karma.json`, `Karma` |
+| Grudges and gratitude (rob/kill/humiliate NPCs, kin vengeance, amends) | ✅ (NPC menu, sheet, NPC Look text, grateful NPCs repay debts and join fights, grudge holders ambush travellers) | `data/karma.json`, `Karma` |
 | Secret realms (periodic openings, realm caps, guarded floors, inheritances) | ✅ (entrances in Misty Forest and Azure Peak) | `data/secret_realms.json`, `SecretRealms` |
 | Inheritance grounds (one-claimant trials) | ✅ core | `data/inheritances.json`, `Inheritances` |
 | Cave abodes (seclusion, storage chest) and arrays | ✅ (abode places; arrays from the Array Master) | `data/regions.json`, `Abodes` |
-| Body tempering (Copper Skin … Vajra Body) | ✅ (meditation spots, sheet), 🚧 not at abodes (BODY-001c) | `data/body_tempering.json`, `BodyTempering` |
-| Auctions (seasonal lots, sealed bids vs hidden NPC maximums) | ✅ core, 🚧 no auction house UI (AUC-001b) | `data/auctions.json`, `Auctions` |
+| Body tempering (Copper Skin … Vajra Body) | ✅ (meditation spots, abodes, sheet) | `data/body_tempering.json`, `BodyTempering` |
+| Auctions (seasonal lots, sealed bids vs hidden NPC maximums) | ✅ (auction house in Fallen Star Market) | `data/auctions.json`, `Auctions` |
+| Creation Artifact inner world and spirit garden | ✅ (artifact screen) | `InnerWorld`, `SpiritGarden` |
+| World events (beast tides, tournaments, auctions, incursions) | ✅ passive effects + HUD/map/rumors; 🚧 nothing to join yet (LW-003) | `data/world_events.json`, `WorldEvents` |
+| NPC clans and NPC sect membership, family tree, Family Home | ✅ | `NpcClans`, `FamilyHome`, `src/ui/family_screen.gd` |
+| Audio, autosave, export presets, credits | 🚧 none yet (REL-001..005) | |
+| Content past Core Formation | 🚧 none: no enemies/encounters/pills at Nascent Soul+ (NS-001..005) | |
+| Ending (ascension) | 🚧 none, waiting on the owner (END-001) | |
 | Inventory, techniques, character sheet, settings, pause, load screens | ✅ | `src/ui/` |
 | Top-down world with interactables | ✅ placeholder art | `src/world/` |
 
@@ -107,6 +113,13 @@ Mortal → Qi Refining (9 layers) → Foundation Establishment → Core Formatio
 Void Refinement → Body Integration → Mahayana → Tribulation Transcendence. Post-Qi-Refining realms have Early/Middle/Late/Peak stages.
 
 ## Open design questions (for the human)
+**Most urgent (2026-10-07 planner):** these three decide what the agents build next.
+1. **(F-005d) Pacing**: a sensible player reaches Core Formation at ~20 and Nascent Soul at ~36; content currently stops at Core. How long should each realm take?
+2. **(C-009) The first fights**: a newcomer can't win any Qi Refining fight for ~3 in-game years. Soften the first realm, or keep it hard?
+3. **(END-001) Ascension**: there is no ending at all yet. See the question below.
+
+- (END-001) **Ascension, the ending.** Today a breakthrough at the last realm is simply refused and the run never ends. Default proposal: at Tribulation Transcendence Peak the player can attempt Ascension (the hardest tribulation; dying to it spends an artifact life as usual), and success ends the run with an epilogue screen summing up the life (realm, age, alignment, deeds, clan, descendants), after which the save is closed (or, if you want, "Continue as your clan's heir" in the mortal world). Is there an Immortal Realm to play after ascending, or is ascension the end credits?
+- (FH-013) **Rerolling the spiritual root at creation.** Rerolls are free and unlimited today (talent 0.35x-4.5x), so most players will reroll for a Heavenly Root. Default: keep unlimited rerolls (agents only make the talent scale clearer). Alternatives: a fixed number of rerolls, or none (the trash-root story).
 - **Decided:** player picks gender at creation; a male character can have one main wife + multiple concubines and multiple simultaneous pregnancies.
 - **Decided:** no permadeath for the player; the Creation Artifact respawns them at bound anchors, with more anchors and functions unlocking as they level up.
 - **Decided:** a female player character has a single Dao companion plus adoption.
