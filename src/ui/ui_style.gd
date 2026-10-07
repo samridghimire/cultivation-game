@@ -63,7 +63,9 @@ static func button(text: String, on_pressed: Callable) -> Button:
 	var b := Button.new()
 	b.text = text
 	b.add_theme_font_size_override("font_size", 18)
-	b.pressed.connect(on_pressed)
+	# An empty Callable means the caller connects its own handler (e.g. one bound to the button).
+	if on_pressed.is_valid():
+		b.pressed.connect(on_pressed)
 	return b
 
 

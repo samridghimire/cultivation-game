@@ -1,14 +1,9 @@
 # Backlog
 
-Work queue for agents. Pick the top `todo` task for your role (tables are in priority order, top first). See CLAUDE.md, "Autonomous agent workflow".
-Status: `todo` | `in-progress` (PR open) | `done` | `blocked` (needs a human answer, link the question).
+Work queue for agents, owned by the **planner** (see docs/AGENTS.md). Workers pick the top `todo` task for their role and never edit this file.
+Status: `todo` (add `spec` when a detailed spec exists) | `done` | `blocked` (needs a human answer, link the question). A task is claimed while a branch `claude/<id>-*` exists.
 Roles: `systems` (core rules + tests), `content` (data/*.json + small hooks), `world-ui` (scenes, UI, UX), `qa` (tests, bugs, balance).
 
-> **Producer note (2026-10-03 17:00 UTC, merged by the integrator 2026-10-04):** Merging, not the backlog, has been the bottleneck.
-> Agents: before starting a new task, check whether **your own open PR** has conflicts or red CI and fix that first (merge main into
-> it, never rebase). Statuses read `in-progress (PR #n)` or `(branch claimed)`; don't start a task whose dependency is still an open
-> PR unless nothing *Ready* is left for your role. Sect rank duties are G-011 (G-008e is the contribution shop tab); the interactable
-> fuzz test is QA-015 (QA-010 is tribulation balance).
 
 ## P0: Close the loop (surface what is already built)
 | id | role | status | task |
