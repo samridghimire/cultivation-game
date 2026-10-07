@@ -45,6 +45,8 @@ var pending_threat := ""
 ## Set when the Creation Artifact just respawned the player (ART-005) until
 ## they pick where to awaken: {cause, anchor_id, lives_left, qi_lost}. Not saved.
 var pending_respawn: Dictionary = {}
+## New sessions start beside this anchor place: the awakening dream ends "You wake on Meditation Rock".
+const INTRO_SPAWN_ANCHOR := "qingshi_rock"
 ## Anchor the world should place the player at after the next region load ("" = region spawn).
 var spawn_anchor := ""
 var rng := RandomNumberGenerator.new()
@@ -83,7 +85,7 @@ func start_session(character: CharacterData) -> void:
 	pending_encounter = ""
 	pending_threat = ""
 	pending_respawn = {}
-	spawn_anchor = ""
+	spawn_anchor = INTRO_SPAWN_ANCHOR  # the awakening ends on Meditation Rock (FH-011)
 	dialogue_event = ""
 	pending_event = String(data.artifact.get("intro_event", ""))
 	Npcs.ensure_all(npcs, data, rng)

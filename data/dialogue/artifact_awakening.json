@@ -47,7 +47,7 @@
         {"label": "What are you?", "next": "what"},
         {"label": "...", "next": "wake"}
       ]},
-    "wake": {"speaker": "", "text": "You wake on Meditation Rock in Qingshi Village, the morning cold on your face. Against your chest, the bronze seal is faintly warm. Your road begins today.",
+    "wake": {"speaker": "", "text": "You wake on Meditation Rock in Qingshi Village, the morning cold on your face. Against your chest, the bronze seal is faintly warm. Your road begins today. Elder Mo, a retired cultivator standing a little way east of the rock, helps those just starting out.",
       "choices": [
         {"label": "Set out.", "next": "end"}
       ]}
