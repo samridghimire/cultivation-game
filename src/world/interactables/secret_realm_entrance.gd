@@ -37,7 +37,7 @@ static func delve_option(c: CharacterData, data: GameData, realm_id: String, tod
 	var guardian := String(floor_def.get("guardian", ""))
 	if guardian != "" and data.enemies.has(guardian):
 		var enemy: Dictionary = data.enemies[guardian]
-		notes.append("guardian: %s, %s" % [enemy.get("name", guardian), Combat.danger_label(c, data, enemy)])
+		notes.append("guardian: %s, %s" % [enemy.get("name", guardian), UIStyle.fight_label(c, data, enemy)])
 	var cost := SecretRealms.entry_cost(c, def, today)
 	if cost > 0:
 		notes.append("entry %d spirit stones" % cost)

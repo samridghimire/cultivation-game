@@ -29,13 +29,11 @@ func test_named_npc_court_and_propose_follow_favor() -> void:
 	var gs: Node = _root().get_node("GameState")
 	_start(gs, "male")
 	var menu := _npc_menu("xiao_ling")
-	var entries := _family_entries(menu)
-	assert_eq(entries.size(), 3, "court + wife + concubine: %s" % str(entries))
-	for e: Dictionary in entries:
-		assert_true(e["disabled"], "no favor yet: %s" % e["label"])
-		assert_true(String(e["label"]).contains("("), "disabled entries show a reason")
+	assert_eq(_family_entries(menu).size(), 0, "FH-010: hidden below the courtship favor threshold")
+	gs.npc_favor["xiao_ling"] = int(gs.data.family["courtship"]["min_favor"]) - 1
+	assert_eq(_family_entries(menu).size(), 0, "still hidden just below the threshold")
 	gs.npc_favor["xiao_ling"] = 20
-	entries = _family_entries(menu)
+	var entries := _family_entries(menu)
 	assert_false(entries[0]["disabled"], "court unlocks at min_favor")
 	assert_true(String(entries[0]["label"]).contains("favor 20"), entries[0]["label"])
 	assert_true(entries[1]["disabled"], "proposal still needs more favor")
@@ -61,6 +59,8 @@ func test_generated_npc_offers_entries_and_ineligible_ones_do_not() -> void:
 	var menu := _npc_menu(man.id)
 	var labels: Array = menu.get_options().map(func(o: Dictionary) -> String: return o["label"])
 	assert_true(labels.has("Look"), str(labels))
+	assert_eq(_family_entries(menu).size(), 0, "stranger: hidden at favor 0")
+	gs.npc_favor[man.id] = 20
 	var entries := _family_entries(menu)
 	assert_eq(entries.size(), 1 + Family.ranks(gs.data, "female").size(), str(entries))
 	man.gender = "female"

@@ -59,10 +59,14 @@ func menu_options() -> Array[Dictionary]:
 		var label := "Release artifact anchor" if c.anchors[-1] != anchor_id else "Release artifact anchor (current respawn point)"
 		if c.anchors[-1] != anchor_id:
 			options.append({"label": "Make this your respawn point", "action": GameState.bind_anchor.bind(anchor_id), "keep_open": true})
-		options.append({"label": label, "action": GameState.unbind_anchor.bind(anchor_id), "keep_open": true})
+		if c.anchors.size() > 1:
+			options.append({"label": label, "action": GameState.unbind_anchor.bind(anchor_id), "keep_open": true})
 	else:
 		var slots := CreationArtifact.anchor_slots(c, GameState.data)
-		options.append({"label": "Bind artifact anchor here (%d/%d used)" % [c.anchors.size(), slots], "action": GameState.bind_anchor.bind(anchor_id), "keep_open": true})
+		if c.anchors.size() >= slots:
+			options.append({"label": "Bind artifact anchor here (All %d anchor slots are bound; release one first)" % slots, "action": GameState.bind_anchor.bind(anchor_id), "disabled": true, "keep_open": true})
+		else:
+			options.append({"label": "Bind artifact anchor here (%d/%d used)" % [c.anchors.size(), slots], "action": GameState.bind_anchor.bind(anchor_id), "keep_open": true})
 	return options
 
 

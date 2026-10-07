@@ -240,7 +240,7 @@ func _hostile_options() -> Array[Dictionary]:
 		var act := Karma.act(data, act_id)
 		var bits: PackedStringArray = []
 		if bool(act.get("fight", false)):
-			bits.append("fight: %s" % Combat.danger_label(p, data, Karma.npc_enemy(npc, data)))
+			bits.append("fight: %s" % UIStyle.fight_label(p, data, Karma.npc_enemy(npc, data)))
 		if int(act.get("alignment", 0)) != 0:
 			bits.append("alignment %+d" % int(act["alignment"]))
 		var label := "%s %s" % [String(act.get("name", act_id)), npc.name]
@@ -278,6 +278,8 @@ func _courtship_options() -> Array[Dictionary]:
 	if p == null or Family.check_partner(p, npc, data, GameState.npcs) != "":
 		return options
 	var favor := int(GameState.npc_favor.get(npc_id, 0))
+	if favor < int(data.family.get("courtship", {}).get("min_favor", 0)):
+		return options
 	var days := int(data.family.get("courtship", {}).get("days", 1))
 	var label := "Court %s (%s, favor %d)" % [npc.name, Calendar.format_duration(days), favor]
 	var reason := Family.check_court(p, npc, favor, data, GameState.npcs)

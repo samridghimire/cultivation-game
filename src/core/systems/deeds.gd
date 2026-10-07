@@ -23,7 +23,7 @@ static func check(c: CharacterData, data: GameData, deed: Dictionary, flags: Dic
 
 
 ## The deeds offered at `context` for `c`:
-## [{deed, disabled, reason, danger}]; `danger` is Combat.danger_label of the
+## [{deed, disabled, reason, danger, lethal}]; `danger` is Combat.danger_label of the
 ## deed's `enemy` ("" if the deed has no fight).
 static func options(c: CharacterData, data: GameData, context: String, flags: Dictionary) -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
@@ -31,7 +31,8 @@ static func options(c: CharacterData, data: GameData, context: String, flags: Di
 		var reason := check(c, data, deed, flags)
 		var enemy_id := String(deed.get("enemy", ""))
 		var danger := Combat.danger_label(c, data, data.enemies[enemy_id]) if data.enemies.has(enemy_id) else ""
-		out.append({"deed": deed, "disabled": reason != "", "reason": reason, "danger": danger})
+		var lethal := data.enemies.has(enemy_id) and bool(data.enemies[enemy_id].get("lethal", false))
+		out.append({"deed": deed, "disabled": reason != "", "reason": reason, "danger": danger, "lethal": lethal})
 	return out
 
 

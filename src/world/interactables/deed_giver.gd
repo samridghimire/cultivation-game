@@ -16,7 +16,7 @@ func get_options() -> Array[Dictionary]:
 		var deed: Dictionary = entry["deed"]
 		var label := String(deed["name"])
 		if entry["danger"] != "":
-			label += " [fight: %s]" % entry["danger"]
+			label += " [fight: %s%s]" % [entry["danger"], ", to the death" if entry.get("lethal", false) else ""]
 		if entry["disabled"]:
 			label += " (%s)" % entry["reason"]
 		options.append({"label": label, "action": GameState.perform_deed.bind(deed["id"]), "disabled": entry["disabled"]})

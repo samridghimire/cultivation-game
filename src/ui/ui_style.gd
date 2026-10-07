@@ -23,6 +23,15 @@ const DANGER_COLORS := {
 
 ## The shared panel look, for Controls that are themselves the panel (screens
 ## extending PanelContainer): add_theme_stylebox_override("panel", UIStyle.panel_style()).
+## "Dangerous, to the death" / "Even": Combat.danger_label of `enemy`, plus
+## ", to the death" when losing the fight is lethal.
+static func fight_label(c: CharacterData, data: GameData, enemy: Dictionary) -> String:
+	var label := Combat.danger_label(c, data, enemy)
+	if bool(enemy.get("lethal", false)):
+		label += ", to the death"
+	return label
+
+
 ## The color for a Combat.danger_label rating (white for anything else).
 static func danger_color(danger: String) -> Color:
 	return DANGER_COLORS.get(danger, Color.WHITE)

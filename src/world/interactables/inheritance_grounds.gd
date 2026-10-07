@@ -45,7 +45,7 @@ static func test_text(c: CharacterData, data: GameData, stage: Dictionary) -> St
 	match String(stage.get("test", "")):
 		"fight":
 			var enemy := Inheritances.stage_enemy(data, stage)
-			return "fight: %s, %s" % [enemy.get("name", "?"), Combat.danger_label(c, data, enemy)] if not enemy.is_empty() else "fight"
+			return "fight: %s, %s" % [enemy.get("name", "?"), UIStyle.fight_label(c, data, enemy)] if not enemy.is_empty() else "fight"
 		"realm":
 			return "needs %s" % data.realms[data.realm_index_of(String(stage.get("min_realm", "mortal")))].name
 		"attribute":

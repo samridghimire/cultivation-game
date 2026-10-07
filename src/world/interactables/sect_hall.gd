@@ -20,6 +20,8 @@ func get_options() -> Array[Dictionary]:
 		else:
 			var check := Sects.check_join(player, GameState.data, sect.id)
 			var label := "Join the %s (%s)" % [sect.name, sect.alignment_tag]
+			if not check["ok"]:
+				label += " (%s)" % check["reason"]
 			options.append({"label": label, "action": GameState.join_sect.bind(sect.id), "disabled": not check["ok"], "keep_open": true})
 	options.append_array(shop_options())
 	return options
@@ -36,7 +38,7 @@ func trial_option() -> Dictionary:
 		return {}
 	var sect: SectDef = data.sects[player.sect["id"]]
 	var enemy: Dictionary = data.enemies[enemy_id]
-	var label := "Attempt the trial for %s (vs %s, %s)" % [sect.rank_name(Sects.next_rank(player, data)), enemy["name"], Combat.danger_label(player, data, enemy)]
+	var label := "Attempt the trial for %s (vs %s, %s)" % [sect.rank_name(Sects.next_rank(player, data)), enemy["name"], UIStyle.fight_label(player, data, enemy)]
 	var reason := Sects.check_promotion(player, data)
 	if reason != "":
 		label += " (%s)" % reason
