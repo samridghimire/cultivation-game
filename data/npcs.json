@@ -32,6 +32,10 @@
     {"id": "hermit_gu", "name": "Hermit Gu", "title": "Retired Azure Cloud Elder", "region": "azure_peak", "pos": [1050, 180], "color": "e6e0c8",
      "gender": "male", "surname": "Gu", "given_name": "Changhe",
      "realm": "core_formation", "stage": 0, "age_years": 471, "alignment": 380, "roots": {"water": 77, "metal": 41},
-     "attributes": {"comprehension": 17, "spirit": 15, "constitution": 9}, "cultivates": true, "diligence": 0.15, "dialogue": "hermit_gu"}
+     "attributes": {"comprehension": 17, "spirit": 15, "constitution": 9}, "cultivates": true, "diligence": 0.15, "dialogue": "hermit_gu"},
+    {"id": "peddler_hei", "name": "Peddler Hei", "title": "Corpse Peddler", "region": "withered_bone_marsh", "pos": [1380, 520], "color": "7a6a58",
+     "gender": "male", "surname": "Hei", "given_name": "Wu",
+     "realm": "qi_refining", "stage": 7, "age_years": 94, "alignment": -140, "roots": {"water": 52, "wood": 38},
+     "attributes": {"charisma": 12, "fortune": 11}, "cultivates": true, "diligence": 0.4, "dialogue": "peddler_hei", "deed_context": "marsh_captive"}
   ]
 }

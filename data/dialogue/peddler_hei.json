@@ -1,0 +1,19 @@
+{
+  "id": "peddler_hei",
+  "entries": [{"node": "greet"}],
+  "nodes": {
+    "greet": {"text": "Fresh herbs, cold iron, or something deader? The marsh gives, and Hei sells. Mind the girl in the back of the skiff; she bites.",
+      "choices": [
+        {"label": "Who is the girl?", "next": "girl"},
+        {"label": "What do you pay for corpses?", "next": "corpses"},
+        {"label": "Ask about the Yin Gathering Altar.", "next": "altar"},
+        {"label": "Leave.", "next": "end"}
+      ]},
+    "girl": {"text": "A herb-gatherer's daughter from Qingshi, caught in the reeds. The Blood Lotus scouts want her for the pools, a refiner wants her for his puppets. Me, I only want a fair price. Someone with a conscience might want her more.",
+      "choices": [{"label": "...", "next": "greet"}]},
+    "corpses": {"text": "Drowned cultivators with their pouches intact fetch the best price. The marsh has an endless supply. Do not ask where I find the rest.",
+      "choices": [{"label": "...", "next": "greet"}]},
+    "altar": {"text": "Yin qi so thick it beads on the stones. It speeds cultivation for anyone who can bear the cold, but it chills the heart as well. Sit there too long and you start to like the dead.",
+      "choices": [{"label": "...", "next": "greet"}]}
+  }
+}
