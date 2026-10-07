@@ -43,6 +43,8 @@ signal tribulation_endured(realm_name: String, result: Dictionary)
 ## An explored encounter offers choices: render GameState.encounter_choices()
 ## and call GameState.choose_encounter(index).
 signal encounter_choice_requested(encounter_id: String)
+## Exploring sensed a lethal, Dangerous foe: answer with GameState.face_threat(fight_it).
+signal threat_sensed(enemy_id: String)
 ## The pending encounter choice was made (its outcome was applied).
 signal encounter_choice_resolved
 

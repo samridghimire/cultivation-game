@@ -40,6 +40,8 @@ var pending_event := ""
 ## Encounter id waiting for the player's choice (W-004c, "" = none). Like a
 ## conversation it is not saved: loading a save drops it.
 var pending_encounter := ""
+## A lethal foe sensed while exploring, awaiting face_threat() (transient, not saved).
+var pending_threat := ""
 ## Set when the Creation Artifact just respawned the player (ART-005) until
 ## they pick where to awaken: {cause, anchor_id, lives_left, qi_lost}. Not saved.
 var pending_respawn: Dictionary = {}
@@ -79,6 +81,7 @@ func start_session(character: CharacterData) -> void:
 	clan = null
 	dialogue_npc = ""
 	pending_encounter = ""
+	pending_threat = ""
 	pending_respawn = {}
 	spawn_anchor = ""
 	dialogue_event = ""
@@ -108,6 +111,7 @@ func end_session() -> void:
 	npc_clans = {}
 	dialogue_npc = ""
 	pending_encounter = ""
+	pending_threat = ""
 	pending_respawn = {}
 	spawn_anchor = ""
 	dialogue_event = ""
@@ -464,6 +468,7 @@ func explore(tags: Array = []) -> void:
 		text += " (%s)" % ", ".join(result["notes"])
 	EventBus.post(text, "danger" if result["enemy"] != "" else "info")
 	pending_encounter = ""
+	pending_threat = ""
 	_pass_time(result["days"])
 	if not _can_act():
 		return
@@ -476,10 +481,36 @@ func explore(tags: Array = []) -> void:
 		return
 	if result["enemy"] == "":
 		return
-	if Exploration.should_evade(player, data, result["enemy"]):
-		EventBus.post("You sense overwhelming killing intent and slip away before the %s notices you." % data.enemies[result["enemy"]]["name"], "warning")
+	_resolve_explore_enemy(result["enemy"])
+
+
+## A foe met while exploring: Deadly lethal foes are evaded, Dangerous lethal
+## foes are sensed first and the player chooses (face_threat), the rest fight.
+func _resolve_explore_enemy(enemy_id: String) -> void:
+	var enemy: Dictionary = data.enemies[enemy_id]
+	if Exploration.should_evade(player, data, enemy_id):
+		EventBus.post("You sense overwhelming killing intent and slip away before the %s notices you." % enemy["name"], "warning")
 		return
-	fight(result["enemy"])
+	if Exploration.should_offer_flee(player, data, enemy_id):
+		pending_threat = enemy_id
+		EventBus.post("You sense a %s nearby, hungry for a kill (%s, %d%% to win)." % [enemy["name"], Combat.danger_label(player, data, enemy), roundi(Combat.win_chance(player, data, enemy) * 100.0)], "danger")
+		EventBus.threat_sensed.emit(enemy_id)
+		return
+	fight(enemy_id)
+
+
+## Answer a sensed threat: fight it, or slip away (one day).
+func face_threat(fight_it: bool) -> void:
+	if pending_threat == "" or not _can_act():
+		push_warning("face_threat called with no pending threat")
+		return
+	var enemy_id := pending_threat
+	pending_threat = ""
+	if fight_it:
+		fight(enemy_id)
+		return
+	EventBus.post("You slip away before it finds you.")
+	_pass_time(1)
 
 
 ## Delve one floor deeper into an open secret realm in the current region
@@ -604,6 +635,7 @@ func choose_encounter(index: int) -> void:
 		EventBus.player_changed.emit()
 		return
 	pending_encounter = ""
+	pending_threat = ""
 	var text := rival_text(String(result["text"]))
 	if not result["notes"].is_empty():
 		text += " (%s)" % ", ".join(result["notes"])
@@ -667,6 +699,7 @@ func dismiss_encounter() -> void:
 	if pending_encounter == "":
 		return
 	pending_encounter = ""
+	pending_threat = ""
 	EventBus.post("You leave the matter be and walk away.")
 	EventBus.encounter_choice_resolved.emit()
 	EventBus.player_changed.emit()
@@ -1999,6 +2032,7 @@ func load_save_dict(d: Dictionary) -> void:
 	dialogue_event = ""
 	pending_event = ""  # a loaded game never replays the intro event
 	pending_encounter = ""
+	pending_threat = ""
 	if not data.regions.has(current_region):
 		current_region = data.start_region
 	GameClock.from_dict(d.get("clock", {}))

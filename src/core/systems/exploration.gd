@@ -269,6 +269,13 @@ static func should_evade(c: CharacterData, data: GameData, enemy_id: String) -> 
 	return bool(enemy.get("lethal", false)) and Combat.danger_label(c, data, enemy) == "Deadly"
 
 
+## True if a lethal foe rated Dangerous (not Deadly) is met: the player is
+## told and chooses whether to fight or flee instead of being forced.
+static func should_offer_flee(c: CharacterData, data: GameData, enemy_id: String) -> bool:
+	var enemy: Dictionary = data.enemies.get(enemy_id, {})
+	return bool(enemy.get("lethal", false)) and Combat.danger_label(c, data, enemy) == "Dangerous"
+
+
 static func _clamp_losses(c: CharacterData, effects: Dictionary) -> Dictionary:
 	if not effects.has("items"):
 		return effects
