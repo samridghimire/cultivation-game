@@ -169,3 +169,13 @@ func test_no_newcomer_hints_past_qi_refining() -> void:
 	assert_false(_has(hints, "Elder Mo"))
 	assert_false(_has(hints, "Use your"))
 	assert_false(_has(hints, "Headman Zhou"))
+
+
+func test_newcomer_pill_hint_skips_harmful_pills() -> void:
+	var c := _fresh()
+	c.inventory = {"blood_essence_pill": 1, "blood_demon_pill": 1}
+	var hints := Guidance.hints(c, data(), 1.0, 10, {}, {Guidance.ELDER_MO_FLAG: true}, "qingshi_village")
+	assert_false(_has(hints, "Use your"))
+	c.inventory["qi_gathering_pill"] = 1
+	hints = Guidance.hints(c, data(), 1.0, 10, {}, {Guidance.ELDER_MO_FLAG: true}, "qingshi_village")
+	assert_true(_has(hints, "Use your Qi Gathering Pill"))

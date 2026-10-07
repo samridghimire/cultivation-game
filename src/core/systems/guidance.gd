@@ -160,7 +160,10 @@ static func _newcomer_hints(c: CharacterData, data: GameData, flags: Dictionary,
 	if not Cultivation.is_at_bottleneck(c, data):
 		for item_id in c.inventory:
 			var item: Dictionary = data.items.get(item_id, {})
-			if c.item_count(item_id) > 0 and float(item.get("effects", {}).get("qi", 0.0)) > 0.0:
+			var fx: Dictionary = item.get("effects", {})
+			# Never steer a newcomer toward pills that burn lifespan or taint the heart.
+			var harmful := fx.has("burn_lifespan") or int(fx.get("alignment", 0)) < 0
+			if c.item_count(item_id) > 0 and float(fx.get("qi", 0.0)) > 0.0 and not harmful:
 				out.append("Use your %s (Inventory, I) to gather qi at once." % item["name"])
 				break
 	if region_id == CHORE_REGION:
