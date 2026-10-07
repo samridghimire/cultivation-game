@@ -2,7 +2,6 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
-- 2026-10-07 [QA-006b] Economy sim covers crafting resale, gathering, sect missions, gear and clinic costs; found that sect shops sell the Core Forming Pill only to ranks that already need Core Formation (QA-006c) and that gathering out-earns professions (QA-006d).
 - 2026-10-04 [RIV-001f] People you save remember: three new rescue encounters create NPCs who owe you, and a deeply grateful NPC living nearby joins your fights with an opening strike.
 - 2026-10-04 [QA-010b/TRIB-001d] Tribulation wards rebalanced: ordinary shields hold only a quarter of their strength against heaven's lightning and only your best ward counts, so preparation helps (+6-8% survival) without making tribulations safe; new buyable and craftable wards for every realm up to Tribulation Transcendence.
 - 2026-10-04 [CM-001d] Cultivation methods past Nascent Soul: each sect's Elders can buy a secret canon good to Void Refinement, and the Drowned Yin Palace's inheritance now holds the Yin King's own method.
