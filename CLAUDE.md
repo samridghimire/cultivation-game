@@ -52,19 +52,29 @@ tests/unit/test_*.gd   Tests extend TestCase. Methods named test_* run automatic
 
 ## Autonomous agent workflow
 
-Agents (scheduled cloud routines, and local sessions) share this repo. Follow this exactly:
+The team is described in `docs/AGENTS.md`: an **Opus planner** writes task specs, **Sonnet workers** build, test and land work
+directly on `main`, and an **Opus reviewer** reviews what landed. There are **no pull requests and no merge queue**.
 
+### Worker loop (Sonnet)
 1. `git checkout main && git pull`.
-2. Read `docs/BACKLOG.md`. Pick the **highest-priority task with status `todo`** that matches your role and isn't claimed by an open PR
-   (`gh pr list` or check remote branches named `claude/<task-id>-*`).
-3. Branch `claude/<task-id>-<short-slug>` from main and **claim it immediately**: `git push -u origin <branch>` before writing
-   any code, so agents starting later see the task is taken. Re-check right before pushing: if another branch for the same
-   task id appeared first, abandon yours (delete your remote branch) and pick another task.
-4. Implement it, small and complete. If a task is too big, split it in BACKLOG.md and do the first part.
-5. Run `tools/test.sh` until it passes. (A brand-new `class_name` is only visible after an import; test.sh imports first.)
-6. Update `docs/BACKLOG.md`: set the task to `done` (or add follow-up tasks you discovered, with ids). Add a line to `docs/CHANGELOG.md`.
-7. Commit, push, open a PR titled `[<task-id>] <title>` describing what changed and how it was tested.
-8. Never force-push main, never rewrite history, never delete other agents' branches.
+2. Pick the top `todo` task for your role in `docs/BACKLOG.md` (tables are in priority order) that is **not claimed**: no remote
+   branch named `claude/<task-id>-*` exists (`git fetch --prune && git branch -r`). Prefer tasks marked `spec` (the planner wrote
+   a detailed spec for them).
+3. **Claim it**: `git checkout -b claude/<task-id>-<slug>` and `git push -u origin HEAD` before writing code.
+4. Implement it, small and complete, with tests. **Do not edit `docs/BACKLOG.md` or `docs/CHANGELOG.md`**. The planner keeps
+   them, which avoids the merge conflicts that used to block everything. Put follow-up ideas in your commit message under
+   `Follow-ups:`.
+5. Run `tools/test.sh` until it prints `ALL CHECKS PASSED`. (A brand-new `class_name` is only visible after an import; test.sh imports first.)
+6. Commit with the subject `[<task-id>] <title>` (the planner marks tasks done by finding that id on main).
+7. **Land it on main yourself:** `git pull --rebase origin main`, run `tools/test.sh` again, then `git push origin HEAD:main`.
+   If the push is rejected because main moved, repeat this step (up to 5 times). If direct pushes to main are refused by
+   permissions, open a PR and squash-merge it yourself immediately (never leave a PR open).
+8. Delete your claim branch: `git push origin --delete <branch>`.
+9. If you can't get the task green in this run, don't land it. Delete your claim branch so someone can retry, and say why in your
+   final summary.
+
+Never force-push main, never rewrite main's history, never delete another agent's branch, and never create scheduled tasks,
+reminders or "check-ins".
 
 If something is ambiguous and it's a game-design decision (not a technical one), don't guess big. Implement the smallest
 reasonable version, and add a question under "Open design questions" in `docs/DESIGN.md` for the human.
