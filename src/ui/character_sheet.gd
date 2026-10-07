@@ -125,7 +125,7 @@ func _rebuild() -> void:
 	t += "Alignment: %s (%d)%s   |   %s\n\n" % [Alignment.tier_name(p.alignment, data), p.alignment, devoured, Sects.describe(p, data)]
 	_gender_row.visible = p.gender == ""
 	var density := GameState.region_qi_density() * Sects.cultivation_bonus(p, data)
-	var hints := Guidance.hints(p, data, density, 6, GameState.npcs)
+	var hints := Guidance.hints(p, data, density, 6, GameState.npcs, GameState.world_flags, GameState.current_region)
 	if not hints.is_empty():
 		t += "[color=#%s]Next steps[/color]\n" % accent
 		for line in hints:

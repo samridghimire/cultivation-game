@@ -8,12 +8,18 @@ extends RefCounted
 const LIFESPAN_WARNING_YEARS := 10
 ## Artifact lives at or below which recharging is suggested.
 const LOW_ARTIFACT_LIVES := 1
+## Highest realm index (Qi Refining) that still gets newcomer hints.
+const NEWCOMER_MAX_REALM := 1
+const TECHNIQUE_HINT := "Learn a technique from a manual. Merchants sell them."
+const ELDER_MO_FLAG := "talked_elder_mo"
+const CHORE_REGION := "qingshi_village"
 
 
 ## Up to `limit` hints for `c`. `density` is the qi density where the player
 ## stands (region x sect bonus), used for the days-to-next-stage estimate.
-## `people` (the NPCs, optional) enables the family hints.
-static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit: int = 5, people: Dictionary = {}) -> PackedStringArray:
+## `people` (the NPCs, optional) enables the family hints. `flags` (world flags)
+## and `region_id` drive the newcomer hints shown while Mortal or Qi Refining.
+static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit: int = 5, people: Dictionary = {}, flags: Dictionary = {}, region_id: String = "") -> PackedStringArray:
 	var out: PackedStringArray = []
 	var years := Cultivation.years_left(c, data)
 	if years <= LIFESPAN_WARNING_YEARS:
@@ -23,19 +29,22 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 	if Children.is_pregnant(c):
 		var days := int(c.pregnancy.get("days_left", 0))
 		out.append("A child is due in %s." % Calendar.format_duration(days))
+	var newcomer := _newcomer_hints(c, data, flags, region_id) if c.realm_index <= NEWCOMER_MAX_REALM else PackedStringArray()
+	out.append_array(newcomer)
 	out.append(_cultivation_hint(c, data, density))
 	if c.artifact_lives >= 0 and c.artifact_lives <= LOW_ARTIFACT_LIVES:
 		out.append("Your Creation Artifact holds %d %s. Recharge it for %d spirit stones before you take risks." % [c.artifact_lives, "life" if c.artifact_lives == 1 else "lives", CreationArtifact.recharge_cost(c, data)])
-	var sect := _sect_hint(c, data)
-	if sect != "":
-		out.append(sect)
+	if c.realm_index > NEWCOMER_MAX_REALM:
+		var sect := _sect_hint(c, data)
+		if sect != "":
+			out.append(sect)
 	var missions := _mission_hint(c, data)
 	if missions != "":
 		out.append(missions)
 	if c.professions.is_empty():
 		out.append("Work at a workshop to learn a profession and earn spirit stones.")
-	if c.techniques.is_empty():
-		out.append("Learn a technique from a manual. Merchants sell them.")
+	if c.techniques.is_empty() and c.realm_index > NEWCOMER_MAX_REALM:
+		out.append(TECHNIQUE_HINT)
 	for hint in [_dao_hint(c, data), _abode_hint(c, data), _family_hint(c, data, people)]:
 		if hint != "":
 			out.append(hint)
@@ -141,3 +150,27 @@ static func _family_hint(c: CharacterData, data: GameData, people: Dictionary) -
 		if Children.check_conception(c, spouse, data) == "":
 			return "You could try for a child with %s at a meditation spot." % spouse.name
 	return ""
+
+
+## First-steps pointers for Mortal and Qi Refining players, most useful first.
+static func _newcomer_hints(c: CharacterData, data: GameData, flags: Dictionary, region_id: String) -> PackedStringArray:
+	var out: PackedStringArray = []
+	if not flags.get(ELDER_MO_FLAG, false):
+		out.append("Ask Elder Mo in Qingshi Village where to begin.")
+	if not Cultivation.is_at_bottleneck(c, data):
+		for item_id in c.inventory:
+			var item: Dictionary = data.items.get(item_id, {})
+			if c.item_count(item_id) > 0 and float(item.get("effects", {}).get("qi", 0.0)) > 0.0:
+				out.append("Use your %s (Inventory, I) to gather qi at once." % item["name"])
+				break
+	if region_id == CHORE_REGION:
+		for deed: Dictionary in data.deeds.values():
+			if String(deed["id"]).begins_with("chore_") and not flags.get(String(deed.get("blocked_by_flag", "")), false):
+				out.append("Headman Zhou has chores that pay stones and pills.")
+				break
+	if c.techniques.is_empty():
+		out.append(TECHNIQUE_HINT)
+	var sect := _sect_hint(c, data)
+	if sect != "":
+		out.append(sect)
+	return out

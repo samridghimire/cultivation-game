@@ -342,9 +342,9 @@ func _refresh() -> void:
 	_qi_bar.modulate = UIStyle.ACCENT if _bottleneck.visible else Color.WHITE
 	_injuries.visible = Injuries.has_any(p)
 	_injuries.text = "Injured: " + ", ".join(Injuries.describe(p, data))
-	var hints := Guidance.hints(p, data, density * Sects.cultivation_bonus(p, data), 1, GameState.npcs)
+	var hints := Guidance.hints(p, data, density * Sects.cultivation_bonus(p, data), 2, GameState.npcs, GameState.world_flags, GameState.current_region)
 	_hint.visible = bool(Settings.get_value("show_hints")) and not hints.is_empty()
-	_hint.text = "Next: " + hints[0] if not hints.is_empty() else ""
+	_hint.text = "\n".join(Array(hints).map(func(h: String) -> String: return "> " + h))
 
 
 ## Message category for the age line: "danger" or "warning" when little of

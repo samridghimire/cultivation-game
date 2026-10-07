@@ -127,3 +127,45 @@ func test_tribulation_warning_at_the_bottleneck() -> void:
 	c.qi = d.realms[c.realm_index].qi_required(c.stage)
 	assert_true(Cultivation.can_attempt_breakthrough(c, d))
 	assert_true(_has(Guidance.hints(c, d, 1.0, 20), "Heavenly Tribulation"))
+
+
+func test_newcomer_points_to_elder_mo_until_talked() -> void:
+	var c := _fresh()
+	var hints := Guidance.hints(c, data(), 1.0, 5, {}, {}, "qingshi_village")
+	assert_true(hints[0].contains("Elder Mo"))
+	hints = Guidance.hints(c, data(), 1.0, 5, {}, {Guidance.ELDER_MO_FLAG: true}, "qingshi_village")
+	assert_false(_has(hints, "Elder Mo"))
+
+
+func test_newcomer_pill_hint_precedes_cultivation_hint() -> void:
+	var c := _fresh()
+	c.inventory = {"qi_gathering_pill": 1}
+	var hints := Guidance.hints(c, data(), 1.0, 10, {}, {Guidance.ELDER_MO_FLAG: true}, "qingshi_village")
+	assert_true(hints[0].contains("Use your Qi Gathering Pill"))
+	var pill_at := 0
+	var qi_at := 0
+	for i in hints.size():
+		if hints[i].contains("Use your"):
+			pill_at = i
+		if hints[i].contains("more qi to reach"):
+			qi_at = i
+	assert_true(pill_at < qi_at)
+
+
+func test_headman_chores_hint_only_in_village_until_done() -> void:
+	var c := _fresh()
+	var flags := {Guidance.ELDER_MO_FLAG: true}
+	assert_true(_has(Guidance.hints(c, data(), 1.0, 10, {}, flags, "qingshi_village"), "Headman Zhou"))
+	assert_false(_has(Guidance.hints(c, data(), 1.0, 10, {}, flags, "misty_forest"), "Headman Zhou"))
+	flags.merge({"chore_herbs_done": true, "chore_boar_done": true, "chore_roof_done": true})
+	assert_false(_has(Guidance.hints(c, data(), 1.0, 10, {}, flags, "qingshi_village"), "Headman Zhou"))
+
+
+func test_no_newcomer_hints_past_qi_refining() -> void:
+	var c := _fresh()
+	c.realm_index = 2
+	c.inventory = {"qi_gathering_pill": 1}
+	var hints := Guidance.hints(c, data(), 1.0, 10, {}, {}, "qingshi_village")
+	assert_false(_has(hints, "Elder Mo"))
+	assert_false(_has(hints, "Use your"))
+	assert_false(_has(hints, "Headman Zhou"))
