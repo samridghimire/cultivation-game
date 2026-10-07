@@ -1648,7 +1648,9 @@ func hear_rumors() -> void:
 	EventBus.topic = "world"
 	if not _can_act():
 		return
-	for line in WorldEvents.rumors(data, world_events, auction_rumors(), GameClock.total_days):
+	var extra := auction_rumors()
+	extra.append_array(SectFactions.rumors(data, npcs))
+	for line in WorldEvents.rumors(data, world_events, extra, GameClock.total_days):
 		EventBus.post(line)
 
 
@@ -1661,6 +1663,23 @@ func auction_rumors() -> PackedStringArray:
 		else:
 			lines.append("The %s holds its next auction in %s." % [def.get("name", def["id"]), Calendar.format_duration(Auctions.days_until_open(def, GameClock.total_days))])
 	return lines
+
+
+## NPC sects recruit rogue NPCs at a month boundary (LW-002). The player's
+## spouses and descendants are never recruited; news only about people the
+## player knows.
+func _sect_factions_month() -> void:
+	var reserved := {}
+	for id in player.spouses + Children.descendants(player, npcs):
+		reserved[id] = true
+	for event in SectFactions.recruit(data, npcs, rng, reserved):
+		if Npcs.is_newsworthy(String(event["npc_id"]), player, npc_favor):
+			EventBus.post(event["text"], event["category"])
+
+
+## Sects strongest first as {id, name, strength, members} (LW-002).
+func sect_standings() -> Array[Dictionary]:
+	return SectFactions.standings(data, npcs)
 
 
 ## Expire and roll world events at a month boundary, posting the news.
@@ -2089,6 +2108,7 @@ func _on_days_advanced(days: int) -> void:
 		_sect_month_end()
 		EventBus.topic = "world"
 		_world_events_month()
+		_sect_factions_month()
 	EventBus.topic = "family"
 	for event in Training.advance(player, npcs, data, months, ClanEstate.training_multiplier(clan, data)):
 		EventBus.post(event["text"], event["category"])
