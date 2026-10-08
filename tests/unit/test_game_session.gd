@@ -525,6 +525,7 @@ func test_journal_entries_on_new_game() -> void:
 	_start()
 	var entries: Array[Dictionary] = _game_state().journal_entries()
 	assert_false(entries.is_empty())
+	assert_true(entries.any(func(e: Dictionary) -> bool: return e["section"] == "First goals"))
 
 
 func _duty_warnings() -> int:

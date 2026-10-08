@@ -29,7 +29,7 @@ func test_new_character_gets_qi_and_starter_hints() -> void:
 	var hints := Guidance.hints(c, data(), 1.0, 10)
 	assert_true(_has(hints, "more qi to reach the next stage"))
 	assert_true(_has(hints, "learn a profession"))
-	assert_true(_has(hints, "Learn a technique"))
+	assert_true(_has(hints, "breathing technique"))
 
 
 func test_limit_caps_hint_count() -> void:
@@ -100,6 +100,7 @@ func test_pregnancy_and_low_artifact_lives() -> void:
 func test_sect_hints_for_rogue_and_member() -> void:
 	var c := _fresh()
 	c.alignment = -500
+	c.realm_index = 1
 	var rogue := Guidance.hints(c, data(), 1.0, 10)
 	var open_sects: PackedStringArray = []
 	for sect: SectDef in data().sects.values():
@@ -159,7 +160,8 @@ func test_newcomer_points_to_elder_mo_until_talked() -> void:
 	var hints := Guidance.hints(c, data(), 1.0, 5, {}, {}, "qingshi_village")
 	assert_true(hints[0].contains("Elder Mo"))
 	hints = Guidance.hints(c, data(), 1.0, 5, {}, {Guidance.ELDER_MO_FLAG: true}, "qingshi_village")
-	assert_false(_has(hints, "Elder Mo"))
+	assert_true(_has(hints, "teaches a breathing technique for free"))
+	assert_false(_has(hints, "Ask Elder Mo"))
 
 
 func test_newcomer_pill_hint_precedes_cultivation_hint() -> void:
@@ -416,3 +418,58 @@ func test_untried_hint_does_not_duplicate_and_respects_limit() -> void:
 	assert_gt(idx, -1)
 	assert_false(_has(Guidance.hints(c, data(), 1.0, idx, {}, {}, "", 400), "Explore the wilds"), "limit cuts it")
 	assert_true(_has(Guidance.hints(c, data(), 1.0, idx + 1, {}, {}, "", 400), "Explore the wilds"))
+
+
+## FH-030: honest newcomer hints and the first-goals ladder.
+func test_mortal_sect_hint_is_not_a_recommendation() -> void:
+	var c := _fresh()
+	var hint := Guidance._sect_hint(c, data())
+	assert_true(hint.contains("Reach Qi Refining"))
+	assert_true(hint.contains("Azure Cloud"))
+	assert_false(hint.begins_with("As a rogue cultivator you could join Blood Lotus"))
+	if hint.contains("Blood Lotus"):
+		assert_true(hint.contains("demonic"))
+
+
+func test_qi_refining_rogue_sect_hint_wording_unchanged() -> void:
+	var c := _fresh()
+	c.realm_index = 1
+	var hint := Guidance._sect_hint(c, data())
+	assert_true(hint == "" or hint.begins_with("As a rogue cultivator you could join"))
+
+
+func test_one_elder_mo_line_mentions_breathing() -> void:
+	var c := _fresh()
+	c.techniques = {}
+	var n := 0
+	for h in Guidance._newcomer_hints(c, data(), {}, "qingshi_village"):
+		if h.contains("Elder Mo"):
+			n += 1
+			assert_true(h.contains("breathing technique"))
+	assert_eq(n, 1)
+	c.techniques = {"basic_breathing": {"level": 1}}
+	assert_false(_has(Guidance._newcomer_hints(c, data(), {}, "qingshi_village"), "technique"))
+
+
+func test_first_goals_ladder_and_journal_section() -> void:
+	var c := _fresh()
+	var goals := Guidance.first_goals(c, data(), {})
+	assert_eq(goals.size(), 6)
+	for g in goals:
+		assert_false(g["done"])
+		for bad in ["%", "{", "<null>"]:
+			assert_false(String(g["text"]).contains(bad))
+	var section := Guidance.journal(c, data(), {}, 0, "qingshi_village").filter(func(e: Dictionary) -> bool: return e["section"] == "First goals")
+	assert_eq(section.size(), 6)
+	assert_eq(section.filter(func(e: Dictionary) -> bool: return e["tone"] == "warning").size(), 1)
+	assert_eq(section[0]["tone"], "warning")
+	assert_true(String(section[0]["text"]).begins_with("[ ] "))
+	c.techniques = {"basic_breathing": {"level": 1}}
+	c.realm_index = 1
+	c.stage = 2
+	c.sect = {"id": data().sects.keys()[0], "rank": 0, "contribution": 0, "spent": 0}
+	LifeStats.add(c, "fights_won")
+	var flags := {Guidance.ELDER_MO_FLAG: true}
+	assert_true(Guidance.first_goals_done(c, data(), flags))
+	var after := Guidance.journal(c, data(), flags, 0, "qingshi_village").filter(func(e: Dictionary) -> bool: return e["section"] == "First goals")
+	assert_true(after.is_empty())

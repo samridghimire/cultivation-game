@@ -290,6 +290,8 @@ static func _sect_hint(c: CharacterData, data: GameData) -> String:
 		for sect: SectDef in data.sects.values():
 			if Sects.check_join(c, data, sect.id)["ok"]:
 				open.append(sect.name)
+		if c.realm_index == 0:
+			return _mortal_sect_hint(c, data, open)
 		if open.is_empty():
 			return ""
 		return "As a rogue cultivator you could join %s at a sect hall." % " or ".join(open)
@@ -301,6 +303,26 @@ static func _sect_hint(c: CharacterData, data: GameData) -> String:
 		return "The trial for %s is open. Attempt it at a sect hall." % sect.rank_name(rank + 1)
 	var need := int(sect.ranks[rank + 1].get("contribution", 0)) - int(c.sect["contribution"])
 	return "Earn %d more sect contribution (missions, duties) to become %s." % [maxi(need, 0), sect.rank_name(rank + 1)]
+
+
+## Mortals: sects that wait for Qi Refining, and the ones that take mortals now.
+## Uses a copy of the character raised to each sect's minimum realm.
+static func _mortal_sect_hint(c: CharacterData, data: GameData, open: PackedStringArray) -> String:
+	var later: PackedStringArray = []
+	for sect: SectDef in data.sects.values():
+		if Sects.check_join(c, data, sect.id)["ok"]:
+			continue
+		var probe := CharacterData.from_dict(c.to_dict())
+		probe.realm_index = maxi(c.realm_index, data.realm_index_of(sect.min_realm))
+		if Sects.check_join(probe, data, sect.id)["ok"]:
+			later.append(sect.name)
+	if later.is_empty():
+		return "" if open.is_empty() else "As a rogue cultivator you could join %s at a sect hall." % " or ".join(open)
+	var text := "Reach Qi Refining and %s will take you." % " or ".join(later)
+	for sect: SectDef in data.sects.values():
+		if open.has(sect.name):
+			text += " %s takes mortals now%s." % [sect.name, ", but walks a demonic path" if sect.max_alignment <= 0 else ""]
+	return text
 
 
 ## Members: how many sect missions they can take right now.
@@ -352,8 +374,14 @@ static func _family_hint(c: CharacterData, data: GameData, people: Dictionary) -
 ## First-steps pointers for Mortal and Qi Refining players, most useful first.
 static func _newcomer_hints(c: CharacterData, data: GameData, flags: Dictionary, region_id: String) -> PackedStringArray:
 	var out: PackedStringArray = []
+	var breathing := c.techniques.is_empty() and data.techniques.has("basic_breathing")
+	var technique_done := false
 	if not flags.get(ELDER_MO_FLAG, false):
-		out.append("Ask Elder Mo in Qingshi Village where to begin.")
+		if breathing:
+			out.append("Ask Elder Mo in Qingshi Village where to begin; he also teaches a breathing technique.")
+			technique_done = true
+		else:
+			out.append("Ask Elder Mo in Qingshi Village where to begin.")
 	if not Cultivation.is_at_bottleneck(c, data):
 		for item_id in c.inventory:
 			var item: Dictionary = data.items.get(item_id, {})
@@ -368,12 +396,36 @@ static func _newcomer_hints(c: CharacterData, data: GameData, flags: Dictionary,
 			if String(deed["id"]).begins_with("chore_") and not flags.get(String(deed.get("blocked_by_flag", "")), false):
 				out.append("Headman Zhou has chores that pay stones and pills.")
 				break
-	if c.techniques.is_empty():
-		out.append(TECHNIQUE_HINT)
+	if c.techniques.is_empty() and not technique_done:
+		out.append("Elder Mo in Qingshi Village teaches a breathing technique for free." if breathing else TECHNIQUE_HINT)
 	var sect := _sect_hint(c, data)
 	if sect != "":
 		out.append(sect)
 	return out
+
+
+## The newcomer ladder: {text, done} in order.
+static func first_goals(c: CharacterData, data: GameData, flags: Dictionary) -> Array[Dictionary]:
+	var stage_3 := c.realm_index > 1 or (c.realm_index == 1 and c.stage >= 2)
+	var rows: Array = [
+		["Talk to Elder Mo", bool(flags.get(ELDER_MO_FLAG, false))],
+		["Learn your first technique", not c.techniques.is_empty()],
+		["Reach Qi Refining", c.realm_index >= 1],
+		["Join a sect, or explore the wilds as a rogue", not c.is_rogue() or LifeStats.get_stat(c, "encounters") >= 5],
+		["Win your first fight", LifeStats.get_stat(c, "fights_won") >= 1],
+		["Reach the 3rd Layer of Qi Refining", stage_3],
+	]
+	var out: Array[Dictionary] = []
+	for row: Array in rows:
+		out.append({"text": row[0], "done": row[1]})
+	return out
+
+
+static func first_goals_done(c: CharacterData, data: GameData, flags: Dictionary) -> bool:
+	for goal in first_goals(c, data, flags):
+		if not goal["done"]:
+			return false
+	return true
 
 
 ## "Where you left off" lines for a freshly loaded save (RECAP-001): who and where
@@ -410,6 +462,14 @@ static func journal(c: CharacterData, data: GameData, flags: Dictionary, today: 
 	# The duty reminder lives in the Sect section; keep it out of Next steps.
 	var duty_line := Sects.duty_reminder(c, data) if Sects.duty_days_left(c) <= Sects.DUTY_REMINDER_DAYS else ""
 	var method_line := _method_hint(c, data)
+	if not first_goals_done(c, data, flags):
+		var flagged := false
+		for goal in first_goals(c, data, flags):
+			var tone := "dim"
+			if not goal["done"]:
+				tone = "normal" if flagged else "warning"
+				flagged = true
+			_add(out, "First goals", ("[x] " if goal["done"] else "[ ] ") + String(goal["text"]), tone)
 	var shown := 0
 	for line in hint_lines:
 		if duty_line != "" and line == duty_line:
