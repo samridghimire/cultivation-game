@@ -16,6 +16,8 @@ const STEP_DAYS := 30
 const BREAKTHROUGH_PILLS := {
 	"foundation_establishment": "foundation_establishment_pill",
 	"core_formation": "core_forming_pill",
+	"nascent_soul": "nascent_soul_pill",
+	"soul_formation": "soul_formation_pill",
 }
 
 

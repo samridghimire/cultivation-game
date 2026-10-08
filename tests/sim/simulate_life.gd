@@ -24,6 +24,8 @@ const WORK_MONTHS_PER_YEAR := 1
 const PILLS := {
 	"foundation_establishment": ["flawless_foundation_establishment_pill", "foundation_establishment_pill"],
 	"core_formation": ["core_forming_pill"],
+	"nascent_soul": ["nascent_soul_pill"],
+	"soul_formation": ["soul_formation_pill"],
 }
 const HEAVENLY_ELEMENTS := 1
 
