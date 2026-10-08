@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: ba0f095
+Last reviewed commit: 1b1df8b
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -105,3 +105,22 @@ Last reviewed commit: ba0f095
     (2) WU-025 clears `load_recap` only when a HUD boots; if a quick-load doesn't rebuild the HUD the card can
     show late, harmless. (3) Most menu options still carry the reason only in the label, not in `reason`, so
     WU-022's description line is blank for them; fine since the label already says it.
+- 2026-10-08 (reviewer, 7th run): reviewed ba0f095..1b1df8b (GUIDE-005, MS-004 (landed after the last review's
+  range), WU-026, C-015, WU-021, QA-031, CMB-001, BT-001, MED-001, EXP-001, C-017, WU-024, WU-027, YEAR-001,
+  GUIDE-007, QA-030, WU-031, WU-030; [PLAN]/[REVIEW] skipped). Main green before and after (1171 tests). No
+  BACKLOG/CHANGELOG edits by workers; YEAR-001's `year_start_stats`/`year_start_realm` default to {}/"" (no
+  SAVE_VERSION bump needed; the first new year after loading an old save only stores a snapshot).
+  - Fixed in one [REVIEW] commit: (1) WU-031 changed `HUD._showing_skip` from `static var` to an instance var, so a
+    time-skip overlay showing when travel reloads the world scene was dropped (the UI-010 behaviour). Restored, with a
+    regression test that rebuilds the HUD. (2) BT-001 `pill_source_hint` ran `String.capitalize()` over "a <pill>",
+    which rewrites hyphenated/camel names; now upper-cases only the first letter.
+  - Checked: BT-001 `breakthrough_chance` = clamp(sum of `chance_breakdown`), unchanged maths; MED-001 previews on a
+    `to_dict` copy (no side effects); EXP-001 outlook uses the same tags + world-event tags as exploring, and the
+    "slip away" note matches the Deadly+lethal evade rule; WU-027 kept a `reason` on every option it stripped from
+    labels (secret realm and inheritance included); QA-031 tops up the eligible-NPC pool every day pass (cheap when
+    full; perf sim still fine).
+  - Notes, not filed: (1) YEAR-001: a seclusion that crosses two new years emits `year_changed` once, so the review
+    covers both years under one "Year N" title; MS-004's backfill on load can also inflate the first review's floor
+    count for veterans. Cosmetic. (2) CMB-001 computes advice after `apply_outcome`, so a fresh injury already
+    weakens the player's stats in the comparison; harmless. (3) MED-001's preview is not shown anywhere yet; WU-029
+    (todo) wires it into the meditation menu. (4) C-017's Follow-ups ask for a first-hour sim re-run (tools/balance.sh).
