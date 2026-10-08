@@ -45,6 +45,11 @@ func test_beast_materials_are_dropped_and_bought() -> void:
 			if enemy.get("rewards", {}).get("items", {}).has(id):
 				dropped = true
 		assert_true(dropped, "%s is dropped by no enemy" % id)
+		var used := false
+		for recipe: Dictionary in d.recipes.values():
+			if (recipe.get("ingredients", {}) as Dictionary).has(id):
+				used = true
+		assert_true(used, "%s is an ingredient of no recipe" % id)
 	assert_eq(count, 8)
 
 
