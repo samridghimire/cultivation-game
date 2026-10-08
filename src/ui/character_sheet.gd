@@ -130,6 +130,9 @@ func _rebuild() -> void:
 	var rank_line := SectFactions.rank_line(p, GameState.sect_standings())
 	if rank_line != "":
 		t += rank_line + "\n\n"
+	var rival_line := rival_line(p, data, GameState.npcs, GameState.npc_favor)
+	if rival_line != "":
+		t += "[color=#%s]Rival[/color]\n  %s\n\n" % [accent, rival_line]
 	_gender_row.visible = p.gender == ""
 	var density := GameState.hint_density()
 	var hints := Guidance.hints(p, data, density, 6, GameState.npcs, GameState.world_flags, GameState.current_region)
@@ -237,6 +240,25 @@ func _rebuild() -> void:
 			t += "  [color=#888888]%s%s[/color]\n" % [def["name"], "" if count == "" else " (%s)" % count]
 	t += "\n[color=#888888]Press [I] for your inventory and [K] for techniques.[/color]"
 	_text.text = t
+
+
+## "Han Li, Qi Refining (ahead of you), grudge 3" for the player's named rival,
+## "<name> has died" if they are dead, "" when there is no rival.
+static func rival_line(c: CharacterData, data: GameData, people: Dictionary, favor: Dictionary) -> String:
+	if c.rival == "" or not people.has(c.rival):
+		return ""
+	var r: CharacterData = people[c.rival]
+	if not r.alive:
+		return "%s has died." % r.name
+	var relation := {"stronger": "ahead of you", "weaker": "behind you"}.get(Rivals.relation(c, r), "your equal") as String
+	var line := "%s, %s (%s)" % [r.name, Cultivation.realm_label(r, data), relation]
+	var grudge := Karma.grudge(c, r.id)
+	if grudge != 0:
+		line += ", grudge %d" % grudge
+	var fav := int(favor.get(r.id, 0))
+	if fav != 0:
+		line += ", favor %d" % fav
+	return line
 
 
 ## One Unequip button per filled equipment slot.
