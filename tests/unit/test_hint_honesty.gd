@@ -92,3 +92,56 @@ func _check_pill(c: CharacterData, d: GameData, h: String, label: String) -> voi
 		var item_name := String(item.get("name", ""))
 		if item_name != "" and h.contains(item_name + " (+") and Items.sources(d, String(item["id"]))[0].begins_with("Sold at"):
 			assert_true(c.item_count("spirit_stone") >= int(item.get("price", 0)) or c.realm_index > 1, "%s: hint sends you to buy %s (%d) beyond your means: %s" % [label, item_name, int(item.get("price", 0)), h])
+
+
+## QA-036: family guidance. A married Qi Refining character with a child and a clan.
+func _household(child_age: int, rootless: bool) -> Dictionary:
+	var d := data()
+	var c := new_character()
+	c.realm_index = 1
+	c.age_days = 25 * Calendar.DAYS_PER_YEAR
+	var people := {}
+	var spouse := Npcs.spawn(people, d, seeded_rng(), {"gender": "female" if c.gender == "male" else "male", "region": "qingshi_village"})
+	spouse.age_days = 24 * Calendar.DAYS_PER_YEAR
+	Family.marry(c, spouse, Family.ranks(d, c.gender)[0])
+	var child := Npcs.spawn(people, d, seeded_rng(), {"region": "qingshi_village"})
+	child.age_days = child_age * Calendar.DAYS_PER_YEAR
+	if rootless:
+		child.spiritual_roots = {}
+	c.children.append(child.id)
+	return {"c": c, "people": people, "spouse": spouse, "child": child}
+
+
+func _family_lines(c: CharacterData, people: Dictionary, flags: Dictionary = {}) -> Array[String]:
+	var d := data()
+	var out: Array[String] = []
+	for h: String in Guidance.hints(c, d, 1.0, 99, people, flags, "qingshi_village"):
+		out.append(h)
+	for e: Dictionary in Guidance.journal(c, d, flags, 100, "qingshi_village", 1.0, people):
+		if e.get("section", "") == "Household":
+			out.append(String(e.get("text", "")))
+	return out
+
+
+func test_household_lines_name_real_people_and_possible_actions() -> void:
+	var d := data()
+	for age: int in [0, 3, 6, 10, 14, 18, 30]:
+		for rootless: bool in [false, true]:
+			var h := _household(age, rootless)
+			var c: CharacterData = h["c"]
+			var people: Dictionary = h["people"]
+			var child: CharacterData = h["child"]
+			var label := "child age %d rootless %s" % [age, rootless]
+			for line in _family_lines(c, people):
+				if line.contains(child.name):
+					# Training/teaching claims: the child must be able to take some training or lesson.
+					if line.contains("trained or taught"):
+						var can := false
+						for id: String in Training.assignments(d):
+							can = can or Training.check_assign(c, child, id, "alchemist", d) == ""
+						for tech_id: String in c.techniques.keys():
+							can = can or Training.check_teach(c, child, tech_id, d) == ""
+						assert_true(can, "%s: '%s' but nothing can be done" % [label, line])
+				if line.contains("try for a child with"):
+					assert_true(line.contains((h["spouse"] as CharacterData).name), label + ": " + line)
+					assert_eq(Children.check_conception(c, h["spouse"], d), "", label + ": conception blocked: " + line)

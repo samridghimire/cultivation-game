@@ -74,6 +74,20 @@ static func check_assign(c: CharacterData, child: CharacterData, assignment_id: 
 	return ""
 
 
+## True if `child` can take any training assignment or learn any of `c`'s techniques right now.
+static func has_options(c: CharacterData, child: CharacterData, data: GameData) -> bool:
+	if check_child(c, child) != "":
+		return false
+	var profession := String(data.professions.keys()[0]) if not data.professions.is_empty() else ""
+	for id in assignments(data):
+		if check_assign(c, child, id, profession, data) == "":
+			return true
+	for tech_id: String in c.techniques.keys():
+		if check_teach(c, child, tech_id, data) == "":
+			return true
+	return false
+
+
 ## Sets `child`'s assignment. Returns {ok, reason}.
 static func assign(c: CharacterData, child: CharacterData, assignment_id: String, profession: String, data: GameData) -> Dictionary:
 	var reason := check_assign(c, child, assignment_id, profession, data)

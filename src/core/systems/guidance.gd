@@ -565,7 +565,7 @@ static func _household_entries(out: Array[Dictionary], c: CharacterData, data: G
 		var child: CharacterData = people.get(child_id)
 		if child == null or Training.check_child(c, child) != "":
 			continue
-		if Children.can_cultivate_yet(child, data) and Training.current(child) == "":
+		if Children.can_cultivate_yet(child, data) and Training.current(child) == "" and Training.has_options(c, child, data):
 			_add(out, "Household", "%s (age %d) can be trained or taught now." % [child.name, child.age_years()], "normal")
 	var ready := 0
 	for plot: Dictionary in c.garden:
