@@ -64,6 +64,7 @@ func _ready() -> void:
 	for err in data.load_errors:
 		push_error("Data error: " + err)
 	GameClock.days_advanced.connect(_on_days_advanced)
+	EventBus.player_changed.connect(check_milestones)
 
 
 func has_session() -> bool:
@@ -2203,6 +2204,14 @@ static func _month_of(age_days: int) -> int:
 ## Remember the player's numbers before a long action (see _pass_time).
 func _start_time_skip() -> void:
 	_skip_before = TimeSkip.snapshot(player)
+
+
+## Awards and announces any newly reached milestones (GOAL-001). Runs on player_changed.
+func check_milestones() -> void:
+	if player == null:
+		return
+	for def in Milestones.award(player, data, world_flags, clan):
+		EventBus.post("Milestone: %s. %s" % [def["name"], def.get("description", "")], "progress")
 
 
 func _on_days_advanced(days: int) -> void:

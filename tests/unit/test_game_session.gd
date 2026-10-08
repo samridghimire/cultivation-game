@@ -465,3 +465,16 @@ func test_life_stats_track_actions() -> void:
 	gs.attempt_breakthrough()
 	assert_eq(LifeStats.get_stat(c, "breakthroughs") + LifeStats.get_stat(c, "breakthroughs_failed"), 1)
 	gs.end_session()
+
+
+func test_milestone_posted_on_player_change() -> void:
+	var c := _start()
+	var gs := _game_state()
+	LifeStats.add(c, "fights_won")
+	EventBus.clear_history()
+	EventBus.player_changed.emit()
+	assert_true(c.milestones.has("first_fight"))
+	var posted := EventBus.history.filter(func(m): return String(m["text"]).begins_with("Milestone: First Blood"))
+	assert_eq(posted.size(), 1)
+	EventBus.player_changed.emit()
+	assert_eq(EventBus.history.filter(func(m): return String(m["text"]).begins_with("Milestone: First Blood")).size(), 1)

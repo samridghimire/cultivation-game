@@ -94,6 +94,8 @@ var sect_missions: Dictionary = {}  # id -> Dictionary (data/sect_missions.json)
 var help_pages: Array = []
 ## Input action id -> display name for the help screen's Controls page.
 var help_action_names: Dictionary = {}
+## Milestones in file order (data/milestones.json, Milestones).
+var milestones: Array = []
 var secret_realms: Dictionary = {}  # id -> Dictionary (data/secret_realms.json, SecretRealms)
 ## data/secret_realms.json "rivals" rules (W-005f).
 var secret_realm_rivals: Dictionary = {}
@@ -275,6 +277,8 @@ func _load(dir: String) -> void:
 	help_pages = help.get("pages", [])
 	help_action_names = help.get("action_names", {})
 
+	milestones = _read(dir, "milestones.json").get("milestones", [])
+
 	var secret_file := _read(dir, "secret_realms.json")
 	secret_realm_rivals = secret_file.get("rivals", {})
 	for secret_realm in secret_file.get("realms", []):
@@ -328,6 +332,7 @@ func _validate() -> void:
 	_validate_artifact()
 	_validate_recipes()
 	_validate_help()
+	_validate_milestones()
 	load_errors.append_array(Equipment.validate(self))
 	load_errors.append_array(CombatTalismans.validate(self))
 	load_errors.append_array(Family.validate(self))
@@ -505,6 +510,39 @@ func _validate_combat() -> void:
 		for item_id in enemy.get("rewards", {}).get("items", {}):
 			if not items.has(item_id):
 				load_errors.append("Enemy '%s' rewards unknown item '%s'" % [enemy["id"], item_id])
+
+
+func milestone_def(id: String) -> Dictionary:
+	for def in milestones:
+		if def["id"] == id:
+			return def
+	return {}
+
+
+func _validate_milestones() -> void:
+	var ids := {}
+	for def in milestones:
+		if not def is Dictionary or String(def.get("id", "")) == "" or String(def.get("name", "")) == "" or not def.get("check") is Dictionary:
+			load_errors.append("milestones.json entry needs id, name and a check object: %s" % [def])
+			continue
+		var id := String(def["id"])
+		if ids.has(id):
+			load_errors.append("milestones.json has a duplicate id '%s'" % id)
+		ids[id] = true
+		var check: Dictionary = def["check"]
+		var type := String(check.get("type", ""))
+		if not Milestones.CHECK_TYPES.has(type):
+			load_errors.append("Milestone '%s' has unknown check type '%s'" % [id, type])
+		elif type == "realm":
+			var realm_id := String(check.get("realm", ""))
+			if realm_index_of(realm_id) < 0:
+				load_errors.append("Milestone '%s' names unknown realm '%s'" % [id, realm_id])
+			elif int(check.get("stage", 0)) < 0 or int(check.get("stage", 0)) >= realms[realm_index_of(realm_id)].stage_count():
+				load_errors.append("Milestone '%s' stage is out of range" % id)
+		elif type == "life_stat" and not LifeStats.KEYS.has(String(check.get("stat", ""))):
+			load_errors.append("Milestone '%s' names unknown life stat '%s'" % [id, check.get("stat", "")])
+		elif type == "flag" and String(check.get("flag", "")) == "":
+			load_errors.append("Milestone '%s' flag check needs a flag" % id)
 
 
 func _validate_help() -> void:

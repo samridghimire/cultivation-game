@@ -1,0 +1,21 @@
+{
+	"_doc": "Milestones (GOAL-001): first steps the player is congratulated for (later mirrored as Steam achievements, REL-009). Each entry {id, name, description, check}. check.type is one of: realm {realm: realm id, stage: int = 0} (reached that realm and stage), life_stat {stat: LifeStats key, min: int = 1}, flag {flag: world flag}, sect_joined {}, married {}, clan_founded {}, item_crafted {min: int = 1} (LifeStats items_crafted). No rewards, recognition only. Checked by Milestones.newly_reached; earned ids live in CharacterData.milestones.",
+	"milestones": [
+		{"id": "first_fight", "name": "First Blood", "description": "Win your first fight.", "check": {"type": "life_stat", "stat": "fights_won", "min": 1}},
+		{"id": "veteran", "name": "Battle-Hardened", "description": "Win 25 fights.", "check": {"type": "life_stat", "stat": "fights_won", "min": 25}},
+		{"id": "first_craft", "name": "Steady Hands", "description": "Craft your first item.", "check": {"type": "item_crafted", "min": 1}},
+		{"id": "master_crafter", "name": "Workshop Regular", "description": "Craft 20 items.", "check": {"type": "item_crafted", "min": 20}},
+		{"id": "first_breakthrough", "name": "A Step Forward", "description": "Break through to a new stage.", "check": {"type": "life_stat", "stat": "breakthroughs", "min": 1}},
+		{"id": "first_mission", "name": "Sect Errand", "description": "Finish a sect mission.", "check": {"type": "life_stat", "stat": "missions_done", "min": 1}},
+		{"id": "first_deed", "name": "Good Deed", "description": "Perform a deed.", "check": {"type": "life_stat", "stat": "deeds_done", "min": 1}},
+		{"id": "pulled_back", "name": "Second Chance", "description": "Be pulled back from death by the artifact.", "check": {"type": "life_stat", "stat": "respawns", "min": 1}},
+		{"id": "tribulation", "name": "Struck by Heaven", "description": "Survive a heavenly tribulation.", "check": {"type": "life_stat", "stat": "tribulations_survived", "min": 1}},
+		{"id": "joined_sect", "name": "Under a Banner", "description": "Join a sect.", "check": {"type": "sect_joined"}},
+		{"id": "married", "name": "Paired Hearts", "description": "Marry a dao companion.", "check": {"type": "married"}},
+		{"id": "clan_founded", "name": "Founder", "description": "Found your own clan.", "check": {"type": "clan_founded"}},
+		{"id": "qi_refining", "name": "Awakened", "description": "Reach Qi Refining.", "check": {"type": "realm", "realm": "qi_refining", "stage": 0}},
+		{"id": "foundation", "name": "Foundation Laid", "description": "Reach Foundation Establishment.", "check": {"type": "realm", "realm": "foundation_establishment", "stage": 0}},
+		{"id": "core_formation", "name": "Golden Core", "description": "Reach Core Formation.", "check": {"type": "realm", "realm": "core_formation", "stage": 0}},
+		{"id": "nascent_soul", "name": "Soul Born", "description": "Reach Nascent Soul.", "check": {"type": "realm", "realm": "nascent_soul", "stage": 0}}
+	]
+}

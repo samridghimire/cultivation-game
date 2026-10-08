@@ -101,6 +101,7 @@ var garden: Array = []
 ## Sect mission id -> age_days when it may be taken again (Sects missions).
 var mission_cooldowns: Dictionary = {}
 var life_stats: Dictionary = {}  # LifeStats key -> count
+var milestones: Array[String] = []  # earned Milestones ids
 var deed_days: Dictionary = {}  # deed id -> GameClock day it was last done
 ## Inheritance id -> trial stages passed (W-006, Inheritances).
 var trial_progress: Dictionary = {}
@@ -198,6 +199,7 @@ func to_dict() -> Dictionary:
 		"mission_cooldowns": mission_cooldowns.duplicate(),
 		"deed_days": deed_days.duplicate(),
 		"life_stats": life_stats.duplicate(),
+		"milestones": milestones.duplicate(),
 		"trial_progress": trial_progress.duplicate(),
 		"reputation": reputation.duplicate(),
 		"bound_artifacts": bound_artifacts.duplicate(),
@@ -288,6 +290,7 @@ static func from_dict(d: Dictionary) -> CharacterData:
 	c.mission_cooldowns = _int_values(d.get("mission_cooldowns", {}))
 	c.deed_days = _int_values(d.get("deed_days", {}))
 	c.life_stats = _int_values(d.get("life_stats", {}))
+	c.milestones = _strings(d.get("milestones", []))
 	c.trial_progress = _int_values(d.get("trial_progress", {}))
 	c.reputation = _int_values(d.get("reputation", {}))
 	for item_id in d.get("bound_artifacts", []):
