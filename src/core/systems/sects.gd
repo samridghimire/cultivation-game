@@ -180,6 +180,19 @@ static func _rank_requirement_reason(c: CharacterData, data: GameData, rank: int
 	return ""
 
 
+## True when the next rank exists and is gated by a trial.
+static func needs_trial(c: CharacterData, data: GameData) -> bool:
+	return next_rank(c, data) >= 0 and trial_enemy(c, data) != ""
+
+
+## Why `c` falls short of the next rank's contribution/realm, or "" (also "" with no next rank).
+static func rank_requirement_reason(c: CharacterData, data: GameData) -> String:
+	var rank := next_rank(c, data)
+	if rank < 0:
+		return ""
+	return _rank_requirement_reason(c, data, rank)
+
+
 ## Promotes `c` through every next rank whose contribution and realm minimum
 ## are met and which has no trial. Returns true if rank increased.
 static func auto_promote(c: CharacterData, data: GameData) -> bool:

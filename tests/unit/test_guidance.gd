@@ -674,3 +674,31 @@ func test_profession_goal_line() -> void:
 	assert_true(_has(Guidance.goals(c, data(), {}), "Doctor: "), str(Guidance.goals(c, data(), {})))
 	for l in Guidance.goals(c, data(), {}):
 		assert_false(l.contains("workshop"), l)
+
+
+func test_rank_goal_without_trial_uses_requirement_helpers() -> void:
+	var d := GameData.load_from_dir()
+	var sect_id: String = d.sects.keys()[0]
+	var sect: SectDef = d.sects[sect_id]
+	sect.ranks[1].erase("trial")
+	sect.ranks[1].erase("min_realm")
+	sect.ranks[1]["contribution"] = 500
+	var c := new_character()
+	c.realm_index = 2
+	c.stage = 1
+	c.sect = {"id": sect_id, "rank": 0, "contribution": 0, "spent": 0}
+	var rank_name: String = sect.rank_name(1)
+	var line := ""
+	for l in Guidance.goals(c, d, {}):
+		if l.begins_with("Become "):
+			line = l
+	assert_true(line.begins_with("Become %s:" % rank_name) and line.contains("contribution"), line)
+	c.sect["contribution"] = 500
+	for l in Guidance.goals(c, d, {}):
+		assert_false(l.begins_with("Become "), "met requirements, trial-free: no rank line")
+	sect.ranks[1]["trial"] = "wolf"
+	var found := false
+	for l in Guidance.goals(c, d, {}):
+		if l.contains("you can seek promotion"):
+			found = true
+	assert_true(found)

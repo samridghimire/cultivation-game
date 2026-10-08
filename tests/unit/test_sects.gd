@@ -144,3 +144,20 @@ func test_rank_min_stage_validation() -> void:
 	assert_eq(Sects.validate_ranks(d).size(), 0)
 	(d.sects["blood_lotus_sect"] as SectDef).ranks[1]["min_stage"] = 99
 	assert_true(Sects.validate_ranks(d).size() > 0)
+
+
+func test_needs_trial_and_rank_requirement_reason() -> void:
+	var d := GameData.load_from_dir()
+	var c := new_character()
+	assert_false(Sects.needs_trial(c, d), "a rogue has no trial")
+	assert_eq(Sects.rank_requirement_reason(c, d), "")
+	c.alignment = -300
+	Sects.join(c, d, "blood_lotus_sect")
+	var sect: SectDef = d.sects["blood_lotus_sect"]
+	assert_true(Sects.needs_trial(c, d), "the next rank has a trial")
+	assert_true(Sects.rank_requirement_reason(c, d).contains("contribution"))
+	sect.ranks[1].erase("trial")
+	assert_false(Sects.needs_trial(c, d), "a trial-free next rank")
+	c.sect["rank"] = sect.ranks.size() - 1
+	assert_false(Sects.needs_trial(c, d), "top rank")
+	assert_eq(Sects.rank_requirement_reason(c, d), "")

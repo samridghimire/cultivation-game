@@ -529,11 +529,11 @@ static func goals(c: CharacterData, data: GameData, flags: Dictionary, clan: Cla
 		var rank := Sects.next_rank(c, data)
 		if rank >= 0:
 			var rank_name: String = (data.sects[c.sect["id"]] as SectDef).rank_name(rank)
-			var reason := Sects.check_promotion(c, data)
-			if reason == "":
+			var need := Sects.rank_requirement_reason(c, data)
+			if need != "":
+				out.append("Become %s: %s" % [rank_name, need])
+			elif Sects.needs_trial(c, data):
 				out.append("Become %s: you can seek promotion at the sect hall." % rank_name)
-			elif not reason.begins_with("No trial"):
-				out.append("Become %s: %s" % [rank_name, reason])
 	elif clan == null:
 		var why := Clans.check_found(c, clan, data)
 		if why != "":
