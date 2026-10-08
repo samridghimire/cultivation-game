@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: d5121fd
+Last reviewed commit: b241ba7
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -172,3 +172,18 @@ Last reviewed commit: d5121fd
     new game and load. RV-010/RV-011 resolve the GUIDE-008 burst and the readied-talisman sell notes. C-024/C-025/C-030
     data: new gear and pill recipes use previously unused beast materials (test enforces it), baseline refreshed.
     WU-048, C-029 (deterministic quiet lines, validated), QA-020, QA-037, WU-049, MSG-002: match specs, tests present.
+- 2026-10-08 (reviewer, 7th run): reviewed d5121fd..b241ba7 (C-028, CMB-004, WU-046/047/056/057, YEAR-002, GUIDE-010/011,
+  QA-029/038, SECT-004/005, C-031, RV-012; [PLAN]/[REVIEW] commits skipped). Main green (1294 tests, ALL CHECKS PASSED).
+  No BACKLOG/CHANGELOG edits by workers; no SAVE_VERSION change (`year_start_year` defaults to 0, `sect.lecture_month`
+  is read only when present, `ambient_effects` setting is sanitized). No fixes needed; nothing filed.
+  - RV-012 resolves note (3) from the last run (goals use `Sects.rank_requirement_reason`/`needs_trial`). CMB-004 now
+    traces each talisman/ally opener line. SECT-004 adds `min_stage` to ranks (validated) but no rank uses it yet.
+    C-031 gates 17 encounters by stage; baseline refreshed. QA-038 shop fuzz checks Sell all against protected goods.
+  - Notes, not filed: (1) YEAR-002 titles a two-year review "Years <start+1>-<N>" (the spec said "<start>-<N>"); with
+    `year_changed` carrying the new year, both "Year N" and the span name the year just begun, not the ones reviewed
+    (e.g. year 1 is reviewed as "Year 2 of your journey"). A labeling call for the planner. (2) RV-010 only quiets
+    notices for saves with no `notice_` flags, so a save made before GUIDE-010/011 announces every road, secret realm
+    and clan notice it already qualifies for on its first action after load (a few banners for a Core save). Intended
+    by test_save_with_some_notice_flags_still_announces_new_features; road notices also fire for roads already walked
+    (there is no visited-region record). (3) `GameData._validate_world` reads `Ambient.KINDS` from src/world; harmless
+    (a const), but core now depends on a world script. (4) A lecture at a bottleneck posts "(+0 qi)".
