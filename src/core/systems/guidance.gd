@@ -271,10 +271,9 @@ static func _sect_entries(out: Array[Dictionary], c: CharacterData, data: GameDa
 	if duty > 0:
 		var days_left := Calendar.DAYS_PER_MONTH - c.age_days % Calendar.DAYS_PER_MONTH
 		_add(out, "Sect", "Monthly duty: %d / %d contribution, %d days left this month." % [Sects.duty_progress(c), duty, days_left], "warning" if Sects.duty_reminder(c, data) != "" and days_left <= 7 else "normal")
-	var call_key := "sect_call_" + String(c.sect.get("id", ""))
-	if flags.get(call_key, false) and flags.has("sect_call_day_" + String(c.sect.get("id", ""))):
-		var left := maxi(0, SectFactions.CALL_DAYS - (today - int(flags["sect_call_day_" + String(c.sect["id"])])))
-		_add(out, "Sect", "The sect's call: %d days left" % left, "warning" if left <= 7 else "normal")
+	var call_left := SectFactions.call_days_left(flags, String(c.sect.get("id", "")), today)
+	if call_left >= 0:
+		_add(out, "Sect", "The sect's call: %d days left" % call_left, "warning" if call_left <= 7 else "normal")
 	for id in Sects.available_missions(c, data, flags):
 		var name := String(data.sect_missions[id].get("name", id))
 		var reason := Sects.check_mission(c, data, id, flags)

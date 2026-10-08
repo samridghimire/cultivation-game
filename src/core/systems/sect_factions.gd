@@ -199,6 +199,21 @@ static func rank_line(c: CharacterData, standings: Array[Dictionary]) -> String:
 	return ""
 
 
+## Days left on `sect_id`'s call (it lapses CALL_DAYS after `sect_call_day_<sect>`), -1 if there is none.
+static func call_days_left(flags: Dictionary, sect_id: String, today: int) -> int:
+	if sect_id == "" or not flags.get("sect_call_" + sect_id, false) or not flags.has("sect_call_day_" + sect_id):
+		return -1
+	return maxi(0, CALL_DAYS - (today - int(flags["sect_call_day_" + sect_id])))
+
+
+## The id of the sect mission that answers `sect_id`'s call (requires_flag sect_call_<sect>), "" if none.
+static func call_mission_id(data: GameData, sect_id: String) -> String:
+	for mission_id: String in data.sect_missions:
+		if String(data.sect_missions[mission_id].get("requires_flag", "")) == "sect_call_" + sect_id:
+			return mission_id
+	return ""
+
+
 ## Sect calls (LW-002b) lapse CALL_DAYS after they were made, or as soon as the call mission
 ## clears the flag. Tidies the `sect_call_*` / `sect_call_day_*` keys in `flags` and returns the
 ## ids of the sects whose call lapsed at the deadline.

@@ -228,3 +228,27 @@ func test_sect_hall_offers_promotion_trial() -> void:
 	assert_false(hall.trial_option()["disabled"])
 	hall.free()
 	gs.end_session()
+
+
+func test_sect_call_mission_is_listed_first_with_days_left() -> void:
+	var gs := _root().get_node("GameState")
+	var c := _disciple()
+	c.stage = 8
+	gs.start_session(c)
+	gs.world_flags["sect_call_azure_cloud_sect"] = true
+	gs.world_flags["sect_call_day_azure_cloud_sect"] = GameClock.total_days
+	var board := MissionBoard.new()
+	board._rebuild()
+	var first := board._list.get_child(0) as Button
+	assert_eq(String(first.name), "answer_azure_call")
+	assert_true(first.text.contains("%d days left" % SectFactions.CALL_DAYS), first.text)
+	board.free()
+
+
+func test_call_days_left_helper() -> void:
+	var flags := {"sect_call_x": true, "sect_call_day_x": 100}
+	assert_eq(SectFactions.call_days_left(flags, "x", 110), SectFactions.CALL_DAYS - 10)
+	assert_eq(SectFactions.call_days_left(flags, "x", 100 + SectFactions.CALL_DAYS + 5), 0)
+	assert_eq(SectFactions.call_days_left(flags, "y", 110), -1)
+	assert_eq(SectFactions.call_days_left({}, "x", 110), -1)
+	assert_eq(SectFactions.call_mission_id(data(), "azure_cloud_sect"), "answer_azure_call")

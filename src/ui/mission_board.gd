@@ -302,6 +302,14 @@ func _rebuild_missions() -> void:
 	var p := GameState.player
 	var data := GameState.data
 	var ids := Sects.available_missions(p, data, GameState.world_flags)
+	var sect_id := String(p.sect.get("id", ""))
+	var call_left := SectFactions.call_days_left(GameState.world_flags, sect_id, GameClock.total_days)
+	var call_id := SectFactions.call_mission_id(data, sect_id)
+	if call_left >= 0 and ids.has(call_id):
+		ids.erase(call_id)
+		ids.insert(0, call_id)
+	else:
+		call_id = ""
 	if not ids.has(_selected):
 		_selected = ""
 		for mission_id in ids:
@@ -315,6 +323,8 @@ func _rebuild_missions() -> void:
 	for mission_id in ids:
 		var mission: Dictionary = data.sect_missions[mission_id]
 		var label := String(mission["name"])
+		if mission_id == call_id:
+			label += " (the sect's call: %d days left)" % call_left
 		var wait := Sects.mission_cooldown_left(p, mission_id)
 		if wait > 0:
 			label += " (in %s)" % Calendar.format_duration(wait)
