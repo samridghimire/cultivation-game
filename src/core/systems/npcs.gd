@@ -14,6 +14,7 @@ const STEP_DAYS := Calendar.DAYS_PER_MONTH
 const DEFAULT_DILIGENCE := 0.3
 ## Prefix of generated NPC ids ("gen_1", "gen_2", ...).
 const SPAWN_PREFIX := "gen_"
+const NAME_REROLLS := 10
 ## Diligence range for generated NPCs.
 const SPAWN_DILIGENCE_MIN := 0.15
 const SPAWN_DILIGENCE_MAX := 0.6
@@ -62,6 +63,11 @@ static func spawn(npcs: Dictionary, data: GameData, rng: RandomNumberGenerator, 
 	var given := String(opts.get("given_name", ""))
 	if given == "":
 		given = Names.roll_given_name(data, c.gender, rng)
+		# Re-roll while a living NPC already has this full name.
+		for _try in NAME_REROLLS:
+			if not _living_has_name(npcs, Names.full_name(surname, given)):
+				break
+			given = Names.roll_given_name(data, c.gender, rng)
 	Names.apply(c, surname, given)
 	var age_years := int(opts.get("age_years", rng.randi_range(16, 40)))
 	c.age_days = age_years * Calendar.DAYS_PER_YEAR + rng.randi_range(0, Calendar.DAYS_PER_YEAR - 1)
@@ -84,6 +90,13 @@ static func spawn(npcs: Dictionary, data: GameData, rng: RandomNumberGenerator, 
 	c.proud = bool(opts.get("proud", false))
 	npcs[c.id] = c
 	return c
+
+
+static func _living_has_name(npcs: Dictionary, full_name: String) -> bool:
+	for other: CharacterData in npcs.values():
+		if other.alive and other.name == full_name:
+			return true
+	return false
 
 
 ## The first free generated id. Deterministic, stable across saves, and never
