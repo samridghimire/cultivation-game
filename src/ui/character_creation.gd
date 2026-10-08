@@ -10,6 +10,7 @@ var _surname_edit: LineEdit
 var _name_edit: LineEdit
 var _gender: OptionButton
 var _summary: RichTextLabel
+var _begin_button: Button
 
 
 func _ready() -> void:
@@ -54,9 +55,10 @@ func _ready() -> void:
 
 	var buttons := HBoxContainer.new()
 	buttons.add_theme_constant_override("separation", 10)
-	var reroll := UIStyle.button("Reroll Fate", _roll)
+	var reroll := UIStyle.button("Reroll Fate", _reroll)
 	buttons.add_child(reroll)
-	buttons.add_child(UIStyle.button("Begin", _begin))
+	_begin_button = UIStyle.button("Begin", _begin)
+	buttons.add_child(_begin_button)
 	buttons.add_child(UIStyle.button("Back", func(): get_tree().change_scene_to_file(MAIN_MENU)))
 	box.add_child(buttons)
 	add_child(UIStyle.centered(panel))
@@ -65,11 +67,22 @@ func _ready() -> void:
 	reroll.grab_focus.call_deferred()
 
 
+## Reroll button: new fate, then focus Begin so a gamepad player can start at once.
+func _reroll() -> void:
+	_roll()
+	_begin_button.grab_focus()
+
+
+## "1.60x, Earth Root (average is 1.0x)" for the talent line.
+static func talent_text(roots: Dictionary, data: GameData) -> String:
+	return "%.2fx, %s (average is 1.0x)" % [SpiritualRoots.cultivation_multiplier(roots, data), SpiritualRoots.grade_for(roots, data).get("name", "Unknown")]
+
+
 func _roll() -> void:
 	var data := GameState.data
 	_candidate = CharacterFactory.create(_name_edit.text, data, GameState.rng, _selected_gender())
 	var t := "Spiritual Root: [color=#%s]%s[/color]\n" % [UIStyle.ACCENT.to_html(false), SpiritualRoots.describe(_candidate.spiritual_roots, data)]
-	t += "Cultivation talent: %.2fx\n\n" % SpiritualRoots.cultivation_multiplier(_candidate.spiritual_roots, data)
+	t += "Cultivation talent: %s\n\n" % talent_text(_candidate.spiritual_roots, data)
 	for attr in data.attributes:
 		t += "%s: %d   [color=#888888]%s[/color]\n" % [attr["name"], _candidate.attribute(attr["id"]), attr["description"]]
 	_summary.text = t
