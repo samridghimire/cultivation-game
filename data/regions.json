@@ -22,7 +22,7 @@
         {"type": "workshop", "display_name": "Village Workshop", "pos": [210, 660], "size": [130, 90], "color": "8c6640"},
         {"type": "clinic", "display_name": "Village Clinic", "pos": [900, 130], "size": [100, 75], "color": "7fbf9f"},
         {"type": "orphanage", "display_name": "Temple of Mercy (orphanage)", "pos": [760, 640], "size": [110, 80], "color": "c9b37a"},
-        {"type": "merchant", "display_name": "Wandering Merchant", "pos": [620, 380], "size": [60, 60], "color": "d9b34d"},
+        {"type": "merchant", "display_name": "Wandering Merchant", "pos": [620, 380], "size": [60, 60], "color": "d9b34d", "buy_tags": ["herb", "ore"]},
         {"type": "merchant", "display_name": "Village Herb Seller", "pos": [900, 540], "size": [70, 60], "color": "6f9f4a", "stock_tags": ["herb", "ore"], "max_price": 8},
         {"type": "gather", "display_name": "Village Herb Slope", "pos": [570, 110], "size": [120, 70], "color": "7fae58", "gather_days": 3, "gather_table": [{"item": "spirit_herb", "weight": 4, "min": 1, "max": 1}, {"item": "dew_grass", "weight": 5, "min": 1, "max": 1}, {"item": "iron_essence", "weight": 1, "min": 1, "max": 1}, {"item": "", "weight": 8.5}]},
         {"type": "deed_giver", "display_name": "Hooded Stranger", "pos": [800, 250], "size": [30, 30], "color": "7a2f3a", "deed_context": "poisoner", "hidden_by_flag": "poisoner_gone"},

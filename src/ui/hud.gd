@@ -227,8 +227,8 @@ func _on_crafting_requested(prof_id: String) -> void:
 	_update_modal()
 
 
-func _on_shop_requested(merchant_name: String, max_price: int, stock_tags: Array, faction: String) -> void:
-	_shop.open(merchant_name, max_price, stock_tags, faction)
+func _on_shop_requested(merchant_name: String, max_price: int, stock_tags: Array, faction: String, buy_tags: Array) -> void:
+	_shop.open(merchant_name, max_price, stock_tags, faction, buy_tags)
 	_update_modal()
 
 

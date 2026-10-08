@@ -106,13 +106,15 @@ static func shop_stock(data: GameData, max_price: int, stock_tags: Array) -> Arr
 
 
 ## Item ids `c` holds that a merchant with `stock_tags` buys back. Only
-## specialist (tagged) merchants buy, and only goods matching their tags.
-static func buyback_ids(c: CharacterData, data: GameData, stock_tags: Array) -> Array:
+## specialist (tagged) merchants buy, and only goods matching their tags
+## (plus `buy_tags`, which a merchant buys without selling).
+static func buyback_ids(c: CharacterData, data: GameData, stock_tags: Array, buy_tags: Array = []) -> Array:
 	var ids: Array = []
-	if stock_tags.is_empty():
+	var tags: Array = stock_tags + buy_tags
+	if tags.is_empty():
 		return ids
 	for item_id in c.inventory:
-		if c.item_count(item_id) > 0 and has_tag(data, item_id, stock_tags) and sell_price(data, item_id) > 0:
+		if c.item_count(item_id) > 0 and has_tag(data, item_id, tags) and sell_price(data, item_id) > 0:
 			ids.append(item_id)
 	ids.sort_custom(func(a, b): return _price_then_name(data, a, b))
 	return ids

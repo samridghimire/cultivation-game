@@ -8,6 +8,8 @@ extends Interactable
 @export var max_price := 0
 ## Only stock items with one of these tags. Empty = untagged goods (pills, manuals).
 @export var stock_tags: Array = []
+## Extra item tags this merchant buys back without selling them (e.g. a general trader taking herbs and ore).
+@export var buy_tags: Array = []
 ## Only trades with players whose alignment is within these bounds (inclusive).
 @export var min_alignment := -1000000
 @export var max_alignment := 1000000
@@ -20,6 +22,6 @@ func get_options() -> Array[Dictionary]:
 	if refusal != "":
 		return [{"label": refusal, "action": Callable(), "disabled": true}]
 	return [
-		{"label": "Browse wares", "action": EventBus.shop_requested.emit.bind(display_name, max_price, stock_tags, faction)},
+		{"label": "Browse wares", "action": EventBus.shop_requested.emit.bind(display_name, max_price, stock_tags, faction, buy_tags)},
 		{"label": "Ask about rumors", "action": GameState.hear_rumors, "keep_open": true},
 	]

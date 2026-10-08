@@ -20,7 +20,7 @@
       ]},
     "breathing": {"text": "Sit. Breathe in through the crown, sink it to the dantian, and let the world's qi follow. The Basic Breathing Method. Every immortal began here.",
       "choices": [{"label": "Thank you, senior. (Learn Basic Breathing Method)", "next": "greet", "days": 3, "favor": 5, "effects": {"learn_technique": "basic_breathing"}}]},
-    "first_steps": {"text": "Ha, an honest question. Listen well. First, cultivate: sit at the Meditation Rock, or the Spirit Spring if you want qi twice as fast, and let the days pass. When your qi fills, break through. Second, stones: a cultivator without spirit stones starves. Learn a trade at the workshop. Third, protection: the sects recruit at the hall by the east road. And if you get hurt, the clinic by the west path will patch you up.",
+    "first_steps": {"text": "Ha, an honest question. Listen well. First, cultivate: sit at the Meditation Rock, or the Spirit Spring if you want qi twice as fast, and let the days pass. When your qi fills, break through. Second, stones: a cultivator without spirit stones starves. Learn a trade at the workshop. Third, protection: the sects recruit at the hall by the east road. And if you get hurt, the clinic north of the square will patch you up.",
       "choices": [
         {"label": "Tell me about the sects.", "next": "sects_info"},
         {"label": "What trade should I learn?", "next": "trades_info"},

@@ -19,7 +19,7 @@ signal interaction_menu_requested(source: Node)
 signal crafting_requested(prof_id: String)
 ## The player browses a merchant; open the ShopScreen with its stock filters and
 ## faction (sect id whose reputation sets the prices, "" = none). See merchant.gd.
-signal shop_requested(merchant_name: String, max_price: int, stock_tags: Array, faction: String)
+signal shop_requested(merchant_name: String, max_price: int, stock_tags: Array, faction: String, buy_tags: Array)
 ## The player opened their sect's mission board (sect hall); show the MissionBoard.
 signal mission_board_requested
 ## The sect hall wants the read-only sect balance-of-power window (WU-002).

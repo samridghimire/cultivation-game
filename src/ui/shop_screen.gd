@@ -25,6 +25,7 @@ var _trade_button: Button
 var _close_button: Button
 var _max_price := 0
 var _stock_tags: Array = []
+var _buy_tags: Array = []
 var _faction := ""
 var _selling := false
 var _selected := ""
@@ -114,10 +115,11 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 ## Opens the merchant's wares (see merchant.gd for max_price / stock_tags / faction).
-func open(merchant_name: String = "Merchant", max_price: int = 0, stock_tags: Array = [], faction: String = "") -> void:
+func open(merchant_name: String = "Merchant", max_price: int = 0, stock_tags: Array = [], faction: String = "", buy_tags: Array = []) -> void:
 	_title.text = merchant_name + price_note(GameState.player, GameState.data, faction)
 	_max_price = max_price
 	_stock_tags = stock_tags
+	_buy_tags = buy_tags
 	_faction = faction
 	_selling = false
 	_selected = ""
@@ -137,7 +139,7 @@ func close() -> void:
 ## Item ids shown on the current tab.
 func item_ids() -> Array:
 	if _selling:
-		return Items.buyback_ids(GameState.player, GameState.data, _stock_tags)
+		return Items.buyback_ids(GameState.player, GameState.data, _stock_tags, _buy_tags)
 	return Items.shop_stock(GameState.data, _max_price, _stock_tags)
 
 
@@ -187,8 +189,9 @@ func _rebuild() -> void:
 	_stones.text = "Spirit Stones: %d" % p.item_count("spirit_stone")
 	_buy_tab.set_pressed_no_signal(not _selling)
 	_sell_tab.set_pressed_no_signal(_selling)
-	_sell_tab.disabled = _stock_tags.is_empty()
-	_sell_tab.tooltip_text = "This merchant buys nothing." if _stock_tags.is_empty() else ""
+	var buys := not (_stock_tags.is_empty() and _buy_tags.is_empty())
+	_sell_tab.disabled = not buys
+	_sell_tab.tooltip_text = "This merchant buys nothing." if not buys else ""
 	for child in _list.get_children():
 		_list.remove_child(child)
 		child.queue_free()

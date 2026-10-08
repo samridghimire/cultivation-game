@@ -25,6 +25,19 @@ func test_only_tagged_merchants_buy_matching_goods() -> void:
 	assert_eq(Items.buyback_ids(c, data(), ["herb"]), ["spirit_herb"])
 
 
+func test_wandering_merchant_buys_common_loot_without_selling_it() -> void:
+	var c := new_character()
+	c.inventory = {"spirit_herb": 2, "iron_essence": 1, "qi_gathering_pill": 1}
+	var place := {}
+	for p: Dictionary in data().regions["qingshi_village"]["places"]:
+		if p.get("display_name", "") == "Wandering Merchant":
+			place = p
+	var buy_tags: Array = place.get("buy_tags", [])
+	assert_false(buy_tags.is_empty())
+	assert_eq(Items.buyback_ids(c, data(), place.get("stock_tags", []), buy_tags), ["spirit_herb", "iron_essence"])
+	assert_false(Items.shop_stock(data(), 0, place.get("stock_tags", [])).has("spirit_herb"))
+
+
 func test_max_quantity_limited_by_stones_or_pouch() -> void:
 	var c := new_character()
 	c.inventory = {"spirit_stone": 50, "spirit_herb": 3}
@@ -54,14 +67,14 @@ func test_merchant_browse_opens_shop_and_screen_trades() -> void:
 	merchant.stock_tags = ["herb"]
 	var seen: Array = []
 	var bus := root.get_node("EventBus")
-	var cb := func(n: String, max_price: int, tags: Array, faction: String): seen.append([n, max_price, tags, faction])
+	var cb := func(n: String, max_price: int, tags: Array, faction: String, buy_tags: Array): seen.append([n, max_price, tags, faction, buy_tags])
 	bus.shop_requested.connect(cb)
 	var options: Array[Dictionary] = merchant.get_options()
 	assert_eq(options.size(), 2, "Browse wares and Ask about rumors")
 	options[0]["action"].call()
 	bus.shop_requested.disconnect(cb)
 	merchant.free()
-	assert_eq(seen, [["Herb Stall", 0, ["herb"], ""]])
+	assert_eq(seen, [["Herb Stall", 0, ["herb"], "", []]])
 
 	var screen := ShopScreen.new()
 	root.add_child(screen)

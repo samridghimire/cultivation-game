@@ -2,18 +2,18 @@
 
 First-hour sim: 10 seeds, 12 months
   seed  QR1  QR3  QR9  sect  injuries  won  lost  fled  lines/month
-     1   14  138    -    14         0    2     0     0  3.6
-     2   14  108    -    14         0    0     1     0  3.6
-     3   14  139    -    14         0    3     0     0  3.4
-     4   14  169    -    14         0    2     0     0  3.6
-     5   14   45  292    14         0    1     0     0  4.0
-     6   62  279    -    62         0    2     0     0  3.8
-     7   14  107    -    14         0    1     0     0  3.2
-     8   14  106    -    14         0    2     1     0  3.8
-     9   14  203    -    14         0    1     0     0  3.8
-    10   14  106    -    14         0    1     1     0  3.8
-Medians (day): QR1 14, QR3 138, QR9 292, sect 14; injuries 0; fights won 2, lost 0, fled 0; 3.8 log lines/month
-Lines by category: { "warning": 32, "progress": 115, "info": 265, "danger": 25 }
+     1   14  141    -    14         0    1     0     0  3.8
+     2   14  108    -    14         0    0     1     0  3.9
+     3   14  137    -    14         0    1     0     0  3.6
+     4   14  170    -    14         0    2     0     0  3.6
+     5   14   48  295    14         0    2     0     0  3.5
+     6   62  280    -    62         0    2     0     0  4.0
+     7   14  137    -    14         0    2     0     0  3.3
+     8   14  106    -    14         0    1     1     0  4.0
+     9   14  171    -    14         0    2     0     0  3.3
+    10   14  107    -    14         0    1     1     0  3.6
+Medians (day): QR1 14, QR3 137, QR9 295, sect 14; injuries 0; fights won 2, lost 0, fled 0; 3.6 log lines/month
+Lines by category: { "warning": 34, "progress": 114, "info": 268, "danger": 23 }
 
 ## combat (200 fights per cell)
 
@@ -21,7 +21,6 @@ Combat balance, 200 fights per cell. Typical player: attributes 10, Iron Fist + 
 
 Where each enemy first appears (typical player entering the realm / at its peak / entering with talismans; bare player entering):
   Mortal    mountain_bandit        choice city_cornered_merchan forced                   entry 100%  peak 100%  talisman 100%  bare  30%  veteran on appearance 100%  TRIVIAL
-  Mortal    mountain_bandit        encounter village_bandit     forced                   entry 100%  peak 100%  talisman 100%  bare  30%  veteran on appearance 100%  TRIVIAL
   Mortal    mountain_bandit        mission collect_a_debt       forced                   entry 100%  peak 100%  talisman 100%  bare  30%  veteran on appearance 100%  TRIVIAL
   Mortal    mountain_bandit        mission press_gang_bandits   forced                   entry 100%  peak 100%  talisman 100%  bare  30%  veteran on appearance 100%  TRIVIAL
   Mortal    wild_boar              encounter village_boar       forced                   entry 100%  peak 100%  talisman 100%  bare  96%  veteran on appearance 100%  TRIVIAL
@@ -47,6 +46,7 @@ Where each enemy first appears (typical player entering the realm / at its peak 
   Qi Refini mist_wolf              realm verdant_remnant floor  forced                   entry  72%  peak 100%  talisman 100%  bare   0%  veteran on appearance 100%  OK
   Qi Refini mountain_bandit        choice wild_wounded_disciple forced                   entry 100%  peak 100%  talisman 100%  bare 100%  veteran on appearance 100%  TRIVIAL
   Qi Refini mountain_bandit        encounter city_alley_thugs   forced                   entry 100%  peak 100%  talisman 100%  bare 100%  veteran on appearance 100%  TRIVIAL
+  Qi Refini mountain_bandit        encounter village_bandit     forced                   entry 100%  peak 100%  talisman 100%  bare 100%  veteran on appearance 100%  TRIVIAL
   Qi Refini mountain_bandit        mission escort_mortal_villag forced                   entry 100%  peak 100%  talisman 100%  bare 100%  veteran on appearance 100%  TRIVIAL
   Qi Refini mountain_bandit        mission guard_pavilion_carav forced                   entry 100%  peak 100%  talisman 100%  bare 100%  veteran on appearance 100%  TRIVIAL
   Qi Refini pavilion_vault_guard   trial myriad_treasure_pavili forced                   entry   1%  peak  99%  talisman  32%  bare   0%  veteran on appearance  17%  HARD
