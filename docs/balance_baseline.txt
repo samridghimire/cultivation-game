@@ -2,18 +2,18 @@
 
 First-hour sim: 10 seeds, 12 months
   seed  QR1  QR3  QR9  sect  injuries  won  lost  fled  lines/month
-     1   14  141    -    14         0    1     0     0  3.8
-     2   14  108    -    14         0    0     1     0  4.0
-     3   14  137    -    14         0    1     0     0  3.6
-     4   14  170    -    14         0    2     0     0  3.6
-     5   14   48  295    14         0    2     0     0  3.5
-     6   62  280    -    62         0    2     0     0  4.0
-     7   14  137    -    14         0    2     0     0  3.3
-     8   14  106    -    14         0    1     1     0  4.0
-     9   14  171    -    14         0    2     0     0  3.3
-    10   14  107    -    14         0    1     1     0  3.6
-Medians (day): QR1 14, QR3 137, QR9 295, sect 14; injuries 0; fights won 2, lost 0, fled 0; 3.6 log lines/month
-Lines by category: { "warning": 34, "progress": 116, "info": 268, "danger": 23 }
+     1   14  141    -    14         0    1     0     0  4.0
+     2   14  108    -    14         0    0     1     0  4.1
+     3   14  137    -    14         0    1     0     0  3.7
+     4   14  170    -    14         0    2     0     0  3.8
+     5   14   48  295    14         0    2     0     0  3.7
+     6   62  280    -    62         0    2     0     0  4.2
+     7   14  137    -    14         0    2     0     0  3.5
+     8   14  106    -    14         0    1     1     0  4.2
+     9   14  171    -    14         0    2     0     0  3.5
+    10   14  107    -    14         0    1     1     0  3.7
+Medians (day): QR1 14, QR3 137, QR9 295, sect 14; injuries 0; fights won 2, lost 0, fled 0; 3.8 log lines/month
+Lines by category: { "warning": 34, "progress": 133, "info": 268, "danger": 23 }
 
 ## combat (200 fights per cell)
 
@@ -26,11 +26,11 @@ Where each enemy first appears (typical player entering the realm / at its peak 
   Mortal    wild_boar              encounter village_boar       forced                   entry 100%  peak 100%  talisman 100%  bare  96%  veteran on appearance 100%  TRIVIAL
   Qi Refini azure_cloud_raider     mission answer_blood_lotus_c forced                   entry 100%  peak 100%  talisman 100%  bare  72%  veteran on appearance 100%  TRIVIAL
   Qi Refini azure_crane            encounter mountain_azure_cra evadable                 entry  43%  peak  86%  talisman  84%  bare   0%  veteran on appearance  79%  HARD
-  Qi Refini azure_sword_examiner   trial azure_cloud_sect rank  forced                   entry   1%  peak  98%  talisman  30%  bare   0%  veteran on appearance  23%  HARD
+  Qi Refini azure_sword_examiner   trial azure_cloud_sect rank  forced                   entry  45%  peak 100%  talisman  97%  bare   0%  veteran on appearance  94%  HARD
   Qi Refini bandit_lord            choice city_red_door/Kick th forced                   entry  42%  peak 100%  talisman  96%  bare   0%  veteran on appearance  75%  HARD
   Qi Refini blood_lotus_raider     mission answer_azure_call    forced                   entry 100%  peak 100%  talisman 100%  bare  72%  veteran on appearance 100%  TRIVIAL
   Qi Refini blood_lotus_scout      encounter marsh_blood_lotus_ evadable                 entry  48%  peak  93%  talisman  92%  bare   0%  veteran on appearance  98%  HARD
-  Qi Refini blood_pit_gladiator    trial blood_lotus_sect rank  forced                   entry   4%  peak 100%  talisman  38%  bare   0%  veteran on appearance  24%  HARD
+  Qi Refini blood_pit_gladiator    trial blood_lotus_sect rank  forced                   entry  52%  peak 100%  talisman  97%  bare   0%  veteran on appearance  80%  OK
   Qi Refini garden_poacher         realm verdant_remnant floor  forced                   entry  60%  peak 100%  talisman 100%  bare   0%  veteran on appearance  94%  OK
   Qi Refini grave_guardian_ape     trial fist_saint_grave stage forced                   entry  42%  peak 100%  talisman  92%  bare   0%  veteran on appearance  82%  HARD
   Qi Refini grotto_hermit_guest    realm peach_blossom_grotto f forced                   entry  42%  peak 100%  talisman  95%  bare   0%  veteran on appearance  81%  HARD
@@ -51,7 +51,7 @@ Where each enemy first appears (typical player entering the realm / at its peak 
   Qi Refini mountain_bandit        encounter village_bandit     forced                   entry 100%  peak 100%  talisman 100%  bare 100%  veteran on appearance 100%  TRIVIAL
   Qi Refini mountain_bandit        mission escort_mortal_villag forced                   entry 100%  peak 100%  talisman 100%  bare 100%  veteran on appearance 100%  TRIVIAL
   Qi Refini mountain_bandit        mission guard_pavilion_carav forced                   entry 100%  peak 100%  talisman 100%  bare 100%  veteran on appearance 100%  TRIVIAL
-  Qi Refini pavilion_vault_guard   trial myriad_treasure_pavili forced                   entry   1%  peak  99%  talisman  32%  bare   0%  veteran on appearance  17%  HARD
+  Qi Refini pavilion_vault_guard   trial myriad_treasure_pavili forced                   entry  50%  peak 100%  talisman  93%  bare   0%  veteran on appearance  76%  HARD
   Qi Refini rogue_cultivator       encounter incursion_blood_sc evadable                 entry  47%  peak  87%  talisman  93%  bare   0%  veteran on appearance  97%  HARD
   Qi Refini rogue_cultivator       encounter marsh_corpse_refin evadable                 entry  47%  peak  87%  talisman  93%  bare   0%  veteran on appearance  97%  HARD
   Qi Refini rogue_cultivator       encounter wild_rogue         evadable                 entry  47%  peak  87%  talisman  93%  bare   0%  veteran on appearance  97%  HARD
@@ -142,14 +142,14 @@ Win rate at stage 0 of each realm (no talismans):
   rogue_cultivator               0%         0%       100%       100%       100%
   vengeful_brother               0%         4%       100%       100%       100%
   vengeful_sect_elder            0%         0%         1%       100%       100%
-  azure_sword_examiner           0%         1%       100%       100%       100%
+  azure_sword_examiner           0%        45%       100%       100%       100%
   azure_pavilion_warden          0%         0%        31%       100%       100%
   azure_grand_elder_shadow         0%         0%         0%        38%       100%
-  blood_pit_gladiator            0%         4%       100%       100%       100%
+  blood_pit_gladiator            0%        52%       100%       100%       100%
   blood_pit_champion             0%         0%        23%       100%       100%
   vault_blood_warden             0%         0%         0%        87%       100%
   blood_lotus_ancestor_puppet         0%         0%         0%        49%       100%
-  pavilion_vault_guard           0%         1%       100%       100%       100%
+  pavilion_vault_guard           0%        50%       100%       100%       100%
   pavilion_treasure_guardian         0%         0%        32%       100%       100%
   golden_abacus_guardian         0%         0%         0%        52%       100%
   thunder_patriarch_puppet         0%         0%         0%        52%       100%
