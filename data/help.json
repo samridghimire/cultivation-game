@@ -13,7 +13,7 @@
     "toggle_map": "World map",
     "toggle_artifact": "Creation Artifact",
     "toggle_clan": "Clan",
-    "toggle_journal": "Journal",
+    "toggle_journal": "Journal (left trigger)",
     "toggle_family": "Family (right trigger)",
     "scroll_up": "Scroll up",
     "scroll_down": "Scroll down",
@@ -206,7 +206,7 @@
       "id": "journal",
       "title": "The Journal",
       "body": [
-        "Press J to open your journal. It keeps track of what you have been doing and what is still waiting for you, so you do not have to remember every promise and every open order.",
+        "Press J (left trigger on a gamepad) to open your journal. It keeps track of what you have been doing and what is still waiting for you, so you do not have to remember every promise and every open order.",
         "Look there whenever you come back to the game after a break and wonder what to do next."
       ]
     },

@@ -52,6 +52,7 @@ const JOY_AXES := {
 	"scroll_up": [JOY_AXIS_RIGHT_Y, -1.0],
 	"scroll_down": [JOY_AXIS_RIGHT_Y, 1.0],
 	"toggle_family": [JOY_AXIS_TRIGGER_RIGHT, 1.0],
+	"toggle_journal": [JOY_AXIS_TRIGGER_LEFT, 1.0],
 }
 
 

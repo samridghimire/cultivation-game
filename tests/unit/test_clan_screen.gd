@@ -161,6 +161,35 @@ func test_family_hotkey_opens_family_screen() -> void:
 	hud.free()
 
 
+## WU-015: the journal opens with the left trigger on a gamepad, and the pad key bar has no empty brackets.
+func test_journal_left_trigger_opens_journal() -> void:
+	var has_trigger := false
+	for ev in InputMap.action_get_events("toggle_journal"):
+		has_trigger = has_trigger or (ev is InputEventJoypadMotion and ev.axis == JOY_AXIS_TRIGGER_LEFT and ev.axis_value == 1.0)
+	assert_true(has_trigger, "left trigger binding")
+	var hud: Node = load("res://src/ui/hud.tscn").instantiate()
+	_root().get_node("GameState").start_session(_founder())
+	_root().add_child(hud)
+	var journal: Control = hud._screens.get("toggle_journal")
+	var ev := InputEventJoypadMotion.new()
+	ev.axis = JOY_AXIS_TRIGGER_LEFT
+	ev.axis_value = 1.0
+	assert_true(ev.is_action("toggle_journal"), "trigger matches the action")
+	var act := InputEventAction.new()
+	act.action = "toggle_journal"
+	act.pressed = true
+	hud._unhandled_input(act)
+	assert_true(journal.visible, "opened")
+	hud.free()
+	var ic: Node = _root().get_node("InputConfig")
+	var saved: bool = ic.last_input_joypad
+	ic.last_input_joypad = true
+	var bar: String = ic.key_bar_text(load("res://src/ui/hud.gd").KEY_HINTS)
+	assert_false(bar.contains("[]"), "no empty glyphs")
+	assert_true(bar.contains("] journal"))
+	ic.last_input_joypad = saved
+
+
 ## FAM-008b: the heir is named in the summary and marked in the list, and a
 ## descendant member can be named heir.
 func test_heir_shown_and_designated() -> void:

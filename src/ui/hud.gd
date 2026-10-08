@@ -23,7 +23,7 @@ var _target_name := ""
 const KEY_HINTS := [
 	["interact", "interact"], ["toggle_character_sheet", "character"], ["toggle_inventory", "inventory"],
 	["toggle_techniques", "techniques"], ["toggle_map", "map"], ["toggle_message_log", "log"],
-	["toggle_artifact", "artifact"], ["toggle_clan", "clan"], ["toggle_family", "family"], ["toggle_journal", "journal"], ["quick_save", "save"], ["pause_menu", "pause"],
+	["toggle_artifact", "artifact"], ["toggle_clan", "clan"], ["toggle_family", "family"], ["toggle_journal", "journal"], ["quick_save", "save"], ["quick_load", "load"], ["pause_menu", "pause"],
 ]
 var _choice_menu: ChoiceMenu
 var _threat_prompt: ThreatPrompt
