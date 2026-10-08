@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-08 [LW-003] Join the world's events: fight through a sect tournament bracket for prizes, or help drive back a demonic incursion.
 - 2026-10-08 [QA-018] The combat sim gains a veteran loadout per realm through Soul Formation, with guards that no forced late fight is unbeatable.
 - 2026-10-08 [REL-003] A Credits screen on the main menu, with the Godot Engine license.
 - 2026-10-08 [REL-004] First sounds: UI clicks, log chimes, breakthrough, combat and lightning effects, all synthesized in code, with working SFX and Master volume sliders.

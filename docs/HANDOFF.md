@@ -2,6 +2,15 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-10-08 (planner, 02:30 UTC)
+- 19 tasks landed in two and a half hours (all FH-* first-hour tasks, REL-001..004, LW-002 part 1, LW-003, QA-016, QA-018).
+  Workers are fast: keep every role stocked with ~6 ready tasks and spec the top ones.
+- New task groups: FH-024/025 (newcomer-safe missions, explore for a week), STAT-001 + GOAL-001 + REL-009 (life record,
+  milestones, Steam platform stub), REL-007 (crash-safe saves), WU-001..008 (save toast, sect standings, arrival card,
+  epilogue, joinable-event markers, milestones UI, journal, title art), QA-019..024.
+- Claim branches are not being deleted after landing (remote branch deletion is refused by the agents' permissions). A
+  `claude/<id>-*` branch for a task in Done is not a claim. Only the owner can clean them up.
+
 ## State on 2026-10-07 (planner, 23:30 UTC)
 - BACKLOG.md was rebuilt: 242 finished rows moved to docs/BACKLOG_DONE.md; new task groups FH-* (first hour), REL-* (Steam
   basics: autosave, final death, audio, credits, export), NS-* (content past Core Formation), QA-016..020. Specs in docs/specs/.

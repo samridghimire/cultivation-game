@@ -95,7 +95,7 @@ Every great cultivation protagonist has something that sets them apart. Ours is 
 | Body tempering (Copper Skin … Vajra Body) | ✅ (meditation spots, abodes, sheet) | `data/body_tempering.json`, `BodyTempering` |
 | Auctions (seasonal lots, sealed bids vs hidden NPC maximums) | ✅ (auction house in Fallen Star Market) | `data/auctions.json`, `Auctions` |
 | Creation Artifact inner world and spirit garden | ✅ (artifact screen) | `InnerWorld`, `SpiritGarden` |
-| World events (beast tides, tournaments, auctions, incursions) | ✅ passive effects + HUD/map/rumors; 🚧 nothing to join yet (LW-003) | `data/world_events.json`, `WorldEvents` |
+| World events (beast tides, tournaments, auctions, incursions) | ✅ passive effects + HUD/map/rumors; tournaments and incursion defence can be joined (LW-003) | `data/world_events.json`, `WorldEvents` |
 | NPC clans and NPC sect membership, family tree, Family Home | ✅ | `NpcClans`, `FamilyHome`, `src/ui/family_screen.gd` |
 | NPC sects as factions (strength, recruitment) | ✅ core (LW-002); 🚧 clashes (LW-002b), no UI yet (WU-002) | `SectFactions` |
 | Audio, autosave, export presets, credits | ✅ procedural SFX, autosave, credits; 🚧 music (REL-008), export presets (REL-005), crash-safe saves (REL-007) | `Audio`, `SaveManager`, `src/ui/credits_screen.gd` |

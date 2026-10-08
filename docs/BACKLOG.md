@@ -53,9 +53,9 @@ Nascent Soul content.
 ## P3: World and systems
 | id | role | status | task |
 |---|---|---|---|
-| LW-003 | systems | todo | World events you can join: `sect_tournament` gets an action (a bracket of 3 non-lethal fights in a row against generated cultivators of your realm, no healing between; prize stones + sect reputation + a technique manual from a data list) and `demonic_incursion` a defence action (beat one incursion foe for alignment + reputation). New optional fields in data/world_events.json (`tournament`: {rounds, prize}, `defence`: {enemy, effects}), documented in `_doc` and validated. Core in WorldEvents + GameState.enter_tournament(event_id) / defend_against_incursion(event_id); menu entries on the sect hall / explore place of the event's region (keep the UI small, or leave it as a Follow-up). Tests per action. |
+| LW-003b | systems | todo | Tournament bouts without healing (LW-003 Follow-up): LW-003 approximates "no healing between bouts" by making each rival a stage tougher. Add an optional `start_hp: int = -1` to `Combat.resolve` (-1 = full hp) and return the player's remaining hp (already in the result as `player_hp`); `GameState.enter_tournament` carries `player_hp` from bout to bout and drops the stage bump. Tests: resolve with start_hp starts at that hp; a 3-bout tournament passes the remaining hp along (seeded rng). |
 | LW-002b | systems | todo spec | Sect clashes and the sect's call: righteous and demonic sects fight monthly (losers lose members), and the player's sect posts a mission asking for help. [spec](specs/LW-002b.md) |
-| WU-005 | world-ui | todo | Joinable world events in the UI, after LW-003 lands: the HUD's world-event line / the world map marks events you can join ("Tournament at Azure Peak: you can enter"), and the region's place menu offers the action with its danger label. Follow LW-003's Follow-ups if it left the UI out. |
+| WU-005 | world-ui | todo | Joinable world events are easy to miss: LW-003 added the actions to the explore site and sect hall menus (src/world/interactables/explore_site.gd, sect_hall.gd). Make the HUD's world-event line and the world map say when an event can be joined ("Tournament at Azure Peak: you can enter", using WorldEvents' join checks from LW-003), and show the danger label on the menu entries if they lack it. Test: an active tournament in the current region shows "you can enter" in the HUD text. |
 | WU-006 | world-ui | todo | Milestones on the character sheet after GOAL-001 lands: a "Milestones" section listing reached ones (name, description) and the count "7 of 15"; a Banner (src/ui/banner.gd, short hold) when one is reached. Gamepad-scrollable. Depends on GOAL-001. |
 
 ## P4: QA and tooling
@@ -83,6 +83,7 @@ Nascent Soul content.
 Tasks finished since the 2026-10-07 archive. The planner moves rows here from `[ID]` commits on main.
 | id | role | task |
 |---|---|---|
+| LW-003 | systems | Joinable world events: sect tournament bracket and demonic incursion defence. |
 | FH-003 | systems | Deed cooldowns (`cooldown_days`, `once`, CharacterData.deed_days). |
 | FH-004b | world-ui | Threat prompt: slip away or fight a sensed Dangerous foe. |
 | FH-015 | world-ui | Companion Release button; no "0 rounds" in combat summaries. |
