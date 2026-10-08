@@ -56,16 +56,16 @@ Where each enemy first appears (typical player entering the realm / at its peak 
   Qi Refini rogue_cultivator       encounter marsh_corpse_refin evadable                 entry  47%  peak  87%  talisman  93%  bare   0%  veteran on appearance  97%  HARD
   Qi Refini rogue_cultivator       encounter wild_rogue         evadable                 entry  47%  peak  87%  talisman  93%  bare   0%  veteran on appearance  97%  HARD
   Qi Refini stone_ape              encounter mountain_ape       evadable                 entry  53%  peak  68%  talisman  91%  bare   0%  veteran on appearance  86%  OK
-  Qi Refini tournament_contender   choice tournament_bout/Enter forced                   entry   0%  peak  74%  talisman   5%  bare   0%  veteran on appearance   3%  HARD
-  Qi Refini vengeful_brother       encounter wounded_traveller_ evadable                 entry   4%  peak 100%  talisman  59%  bare   0%  veteran on appearance  54%  HARD
+  Qi Refini tournament_contender   choice tournament_bout/Enter forced                   entry  55%  peak 100%  talisman  96%  bare   0%  veteran on appearance  97%  OK
+  Qi Refini vengeful_brother       encounter wounded_traveller_ evadable                 entry  84%  peak 100%  talisman 100%  bare   0%  veteran on appearance 100%  OK
   Qi Refini well_bandit            trial village_founder_well s forced                   entry  60%  peak 100%  talisman 100%  bare   0%  veteran on appearance  94%  OK
   Foundatio azure_cloud_enforcer   encounter city_righteous_enf forced                   entry  59%  peak  78%  talisman  98%  bare   0%  veteran on appearance 100%  OK
   Foundatio azure_cloud_enforcer   mission ambush_azure_patrol  forced                   entry  59%  peak  78%  talisman  98%  bare   0%  veteran on appearance 100%  OK
-  Foundatio azure_pavilion_warden  trial azure_cloud_sect rank  forced                   entry  31%  peak  95%  talisman  93%  bare   0%  veteran on appearance  92%  HARD
+  Foundatio azure_pavilion_warden  trial azure_cloud_sect rank  forced                   entry  65%  peak 100%  talisman 100%  bare   0%  veteran on appearance 100%  OK
   Foundatio blood_eyed_wolf        encounter marsh_blood_eyed_w evadable                 entry  29%  peak  94%  talisman  95%  bare   0%  veteran on appearance  97%  HARD
   Foundatio blood_lotus_executioner encounter incursion_raiders  evadable                 entry   2%  peak  48%  talisman  37%  bare   0%  veteran on appearance  52%  HARD
   Foundatio blood_lotus_executioner encounter wild_blood_lotus_e evadable                 entry   2%  peak  48%  talisman  37%  bare   0%  veteran on appearance  52%  HARD
-  Foundatio blood_pit_champion     trial blood_lotus_sect rank  forced                   entry  23%  peak  87%  talisman  87%  bare   0%  veteran on appearance  84%  HARD
+  Foundatio blood_pit_champion     trial blood_lotus_sect rank  forced                   entry  55%  peak  99%  talisman  97%  bare   0%  veteran on appearance  98%  OK
   Foundatio bronze_corpse_puppet   encounter ruins_bronze_puppe evadable                 entry   7%  peak  75%  talisman  51%  bare   0%  veteran on appearance  73%  HARD
   Foundatio bronze_corpse_puppet   realm fallen_star_vault floo forced                   entry   7%  peak  75%  talisman  51%  bare   0%  veteran on appearance  73%  HARD
   Foundatio bronze_corpse_puppet   trial corpse_lord_altar stag forced                   entry   7%  peak  75%  talisman  51%  bare   0%  veteran on appearance  73%  HARD
@@ -143,10 +143,10 @@ Win rate at stage 0 of each realm (no talismans):
   vengeful_brother               0%         4%       100%       100%       100%
   vengeful_sect_elder            0%         0%         1%       100%       100%
   azure_sword_examiner           0%        45%       100%       100%       100%
-  azure_pavilion_warden          0%         0%        31%       100%       100%
+  azure_pavilion_warden          0%         0%        65%       100%       100%
   azure_grand_elder_shadow         0%         0%         0%        38%       100%
   blood_pit_gladiator            0%        52%       100%       100%       100%
-  blood_pit_champion             0%         0%        23%       100%       100%
+  blood_pit_champion             0%         0%        55%       100%       100%
   vault_blood_warden             0%         0%         0%        87%       100%
   blood_lotus_ancestor_puppet         0%         0%         0%        49%       100%
   pavilion_vault_guard           0%        50%       100%       100%       100%
@@ -156,7 +156,7 @@ Win rate at stage 0 of each realm (no talismans):
   blood_lotus_raider             0%        78%       100%       100%       100%
   azure_cloud_raider             0%        78%       100%       100%       100%
   incursion_raider               0%        20%       100%       100%       100%
-  tournament_contender           0%         0%       100%       100%       100%
+  tournament_contender           0%         4%       100%       100%       100%
   tournament_champion            0%         0%        13%       100%       100%
   mist_fox                       0%        46%       100%       100%       100%
   iron_back_boar                 0%        14%       100%       100%       100%

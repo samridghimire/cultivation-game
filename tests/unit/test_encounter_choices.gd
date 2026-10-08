@@ -121,6 +121,7 @@ func test_wounded_traveller_choices_unlock_their_follow_ups() -> void:
 	var d := data()
 	var c := new_character()
 	c.realm_index = 1
+	c.stage = 5
 	var traveller: Dictionary = d.encounters["forest_wounded_traveller"]
 	var ids := func(flags: Dictionary) -> Array:
 		return Exploration.eligible_encounters(c, d, ["forest"], flags).map(func(e): return e["encounter"]["id"])

@@ -96,6 +96,7 @@ func test_event_tags_join_exploration() -> void:
 	var c := new_character()
 	gs.start_session(c)
 	c.realm_index = 1
+	c.stage = 3
 	gs.current_region = "fallen_star_market"
 	var day: int = _root().get_node("GameClock").total_days
 	gs.world_events = [{"id": "sect_tournament", "region": "fallen_star_market", "start_day": day, "end_day": day + 400}]
