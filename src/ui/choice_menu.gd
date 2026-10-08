@@ -7,6 +7,7 @@ signal closed
 var _source: Node
 var _title: Label
 var _buttons: VBoxContainer
+var _description: Label
 
 
 func _init() -> void:
@@ -20,6 +21,10 @@ func _init() -> void:
 	box.add_child(_title)
 	_buttons = VBoxContainer.new()
 	box.add_child(_buttons)
+	_description = UIStyle.label("", 14, Color(0.7, 0.7, 0.75))
+	_description.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_description.custom_minimum_size = Vector2(0, 40)
+	box.add_child(_description)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -54,13 +59,27 @@ func _rebuild() -> void:
 	for option in options:
 		var b := UIStyle.button(option["label"], _choose.bind(option))
 		b.disabled = option.get("disabled", false)
-		b.tooltip_text = String(option.get("reason", ""))
+		var reason: String = String(option.get("reason", ""))
+		b.tooltip_text = reason
+		if b.disabled:
+			b.focus_mode = Control.FOCUS_ALL
+		b.focus_entered.connect(_show_reason.bind(reason))
+		b.mouse_entered.connect(_show_reason.bind(reason))
 		_buttons.add_child(b)
-	_buttons.add_child(UIStyle.button("Leave", close))
+	var leave := UIStyle.button("Leave", close)
+	leave.focus_entered.connect(_show_reason.bind(""))
+	_buttons.add_child(leave)
+	_description.text = ""
 	_focus_first.call_deferred()
 
 
+func _show_reason(reason: String) -> void:
+	_description.text = reason
+
+
 func _choose(option: Dictionary) -> void:
+	if option.get("disabled", false):
+		return
 	(option["action"] as Callable).call()
 	if option.get("keep_open", false) and visible and GameState.player.alive:
 		_rebuild()

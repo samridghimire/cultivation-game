@@ -37,7 +37,7 @@ static func attempt_option(c: CharacterData, data: GameData, id: String, today: 
 	var reason := Inheritances.check_attempt(c, data, id, GameState.current_region, today, GameState.world_flags)
 	if reason != "":
 		label += " [%s]" % reason
-	return {"label": label, "action": GameState.attempt_inheritance.bind(id), "disabled": reason != "", "keep_open": true}
+	return {"label": label, "action": GameState.attempt_inheritance.bind(id), "disabled": reason != "", "reason": reason, "keep_open": true}
 
 
 ## What a trial tests, e.g. "fight: Stone Ape, Dangerous" or "needs Constitution 11".

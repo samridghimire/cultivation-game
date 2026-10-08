@@ -115,3 +115,36 @@ func test_every_hud_screen_has_focus_and_closes_on_cancel() -> void:
 	hud.free()
 	gs.end_session()
 	await _frames()
+
+
+class ReasonSource extends Node:
+	var display_name := "Reason Stone"
+	var used := false
+
+	func menu_options() -> Array[Dictionary]:
+		return [
+			{"label": "Open", "action": func() -> void: pass},
+			{"label": "Locked", "action": _use, "disabled": true, "reason": "Needs a key."},
+		]
+
+	func _use() -> void:
+		used = true
+
+
+## WU-022: a gamepad can land on a disabled option and read why; accepting does nothing.
+func test_choice_menu_shows_reason_of_focused_disabled_option() -> void:
+	var menu := ChoiceMenu.new()
+	_tree().root.add_child(menu)
+	var src := ReasonSource.new()
+	menu.open_for(src)
+	await _frames()
+	var locked: Button = menu._buttons.get_child(1)
+	assert_true(locked.disabled and locked.focus_mode == Control.FOCUS_ALL, "disabled option is focusable")
+	assert_true((menu._buttons.get_child(0) as Button).has_focus(), "first enabled option gets focus first")
+	locked.grab_focus()
+	await _frames()
+	assert_eq(menu._description.text, "Needs a key.", "reason shown")
+	locked.emit_signal("pressed")
+	assert_false(src.used, "disabled option does nothing")
+	menu.queue_free()
+	src.free()
