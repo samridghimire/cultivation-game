@@ -5,7 +5,7 @@ extends Node
 ## Muted while the window is unfocused.
 ## Ambient music (REL-008) is a procedural guqin-like pluck loop plus a soft drone, built
 ## lazily per mood and played on the "Music" bus: calm in safe regions, a minor scale where
-## danger >= DARK_DANGER.
+## danger >= DARK_DANGER. Mood changes crossfade between two players (WU-010).
 
 const MIX_RATE := 22050
 const BUS := "SFX"
@@ -32,6 +32,7 @@ const MUSIC_BEATS := 8
 const MUSIC_BEAT_SECONDS := 1.5
 const MUSIC_BUS := "Music"
 const DARK_DANGER := 3
+const SILENT_DB := -40.0
 ## Mood -> {scale: semitones above root, root: Hz, density: chance a beat plucks, gain}.
 const MOODS := {
 	"calm": {"scale": [0, 2, 4, 7, 9], "root": 196.0, "density": 0.6, "gain": 0.30},
@@ -45,6 +46,9 @@ var _next_voice := 0
 var mood := ""
 var _music_streams: Dictionary = {}
 var _music_player: AudioStreamPlayer
+var _old_music_player: AudioStreamPlayer
+var crossfade_seconds := 2.0
+var _fade_tween: Tween
 var _focused := true
 
 
@@ -60,6 +64,9 @@ func _ready() -> void:
 	_music_player = AudioStreamPlayer.new()
 	_music_player.bus = MUSIC_BUS if AudioServer.get_bus_index(MUSIC_BUS) != -1 else "Master"
 	add_child(_music_player)
+	_old_music_player = AudioStreamPlayer.new()
+	_old_music_player.bus = _music_player.bus
+	add_child(_old_music_player)
 	set_mood("calm")
 	EventBus.region_changed.connect(func(id: String) -> void: set_mood(mood_for_region(id)))
 	EventBus.message_posted.connect(_on_message)
@@ -76,6 +83,7 @@ func _notification(what: int) -> void:
 		_focused = true
 	if _music_player != null and (what == NOTIFICATION_APPLICATION_FOCUS_OUT or what == NOTIFICATION_APPLICATION_FOCUS_IN):
 		_music_player.stream_paused = not _focused
+		_old_music_player.stream_paused = not _focused
 
 
 func play(sfx_name: String) -> void:
@@ -110,9 +118,24 @@ func set_mood(new_mood: String) -> void:
 	mood = new_mood
 	if _music_player == null:
 		return
+	if _fade_tween != null:
+		_fade_tween.kill()
+	# The player that was fading in becomes the outgoing one; the other starts the new mood.
+	var outgoing := _music_player
+	_music_player = _old_music_player
+	_old_music_player = outgoing
 	_music_player.stream = music_stream(new_mood)
 	_music_player.stream_paused = not _focused
+	_music_player.volume_db = SILENT_DB if outgoing.playing else 0.0
 	_music_player.play()
+	if not outgoing.playing or not is_inside_tree():
+		outgoing.stop()
+		_music_player.volume_db = 0.0
+		return
+	_fade_tween = create_tween().set_parallel(true)
+	_fade_tween.tween_property(outgoing, "volume_db", SILENT_DB, crossfade_seconds)
+	_fade_tween.tween_property(_music_player, "volume_db", 0.0, crossfade_seconds)
+	_fade_tween.chain().tween_callback(outgoing.stop)
 
 
 func music_stream(for_mood: String) -> AudioStreamWAV:

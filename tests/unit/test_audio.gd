@@ -67,6 +67,30 @@ func test_music_mood_follows_region_danger() -> void:
 	Audio.set_mood("calm")
 
 
+func _tree() -> SceneTree:
+	return Engine.get_main_loop() as SceneTree
+
+
+func test_music_mood_change_crossfades() -> void:
+	Audio.crossfade_seconds = 0.1
+	Audio.set_mood("calm")
+	Audio.set_mood("dark")
+	var fresh: AudioStreamPlayer = Audio._music_player
+	var old: AudioStreamPlayer = Audio._old_music_player
+	assert_true(fresh.playing)
+	assert_true(fresh.stream == Audio.music_stream("dark"))
+	var before := Audio.mood
+	Audio.set_mood("dark")  # same mood: no restart
+	assert_true(Audio._music_player == fresh)
+	assert_eq(Audio.mood, before)
+	await _tree().create_timer(0.4).timeout
+	assert_false(old.playing)
+	assert_true(fresh.playing)
+	assert_true(fresh.volume_db > -1.0)
+	Audio.crossfade_seconds = 2.0
+	Audio.set_mood("calm")
+
+
 func test_music_bus_follows_volume_setting() -> void:
 	var idx := AudioServer.get_bus_index("Music")
 	assert_true(idx != -1)
