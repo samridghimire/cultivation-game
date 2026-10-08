@@ -22,6 +22,11 @@
 		{"id": "trusted_artisan", "name": "Trusted Artisan", "description": "Fill your first commission.", "check": {"type": "life_stat", "stat": "commissions_done", "min": 1}},
 		{"id": "favor_repaid", "name": "A Favor Repaid", "description": "Finish a favor errand for someone.", "check": {"type": "flag_count", "prefix": "errand_", "suffix": "_done", "min": 1}},
 		{"id": "into_secret_realm", "name": "Into the Secret Realm", "description": "Clear your first secret realm floor.", "check": {"type": "life_stat", "stat": "realm_floors_cleared", "min": 1}},
-		{"id": "heir_to_ancients", "name": "Heir to the Ancients", "description": "Claim an inheritance.", "check": {"type": "life_stat", "stat": "inheritances_claimed", "min": 1}}
+		{"id": "heir_to_ancients", "name": "Heir to the Ancients", "description": "Claim an inheritance.", "check": {"type": "life_stat", "stat": "inheritances_claimed", "min": 1}},
+		{"id": "coin_in_purse", "name": "Coin in the Purse", "description": "Earn 1,000 spirit stones.", "check": {"type": "life_stat", "stat": "stones_earned", "min": 1000}},
+		{"id": "merchants_eye", "name": "Merchant's Eye", "description": "Earn 20,000 spirit stones.", "check": {"type": "life_stat", "stat": "stones_earned", "min": 20000}},
+		{"id": "qi_stream", "name": "Stream of Qi", "description": "Gather 5,000 points of qi.", "check": {"type": "life_stat", "stat": "qi_gathered", "min": 5000}},
+		{"id": "sea_of_qi", "name": "Sea of Qi", "description": "Gather 100,000 points of qi.", "check": {"type": "life_stat", "stat": "qi_gathered", "min": 100000}},
+		{"id": "wanderer", "name": "Tireless Wanderer", "description": "Meet 50 chance encounters on the road.", "check": {"type": "life_stat", "stat": "encounters", "min": 50}}
 	]
 }
