@@ -5,6 +5,9 @@ extends Node
 ## Bump SAVE_VERSION and add a migration in _migrate() whenever the save
 ## format changes in a way old saves can't load.
 
+## Emitted after a successful save; the HUD shows a toast.
+signal saved(slot: String, is_auto: bool)
+
 const SAVE_DIR := "user://saves"
 const SAVE_VERSION := 1
 const DEFAULT_SLOT := "slot1"
@@ -109,7 +112,7 @@ func delete_save(slot: String) -> bool:
 	return DirAccess.remove_absolute(save_path(slot)) == OK
 
 
-func save_game(slot: String = DEFAULT_SLOT) -> bool:
+func save_game(slot: String = DEFAULT_SLOT, is_auto: bool = false) -> bool:
 	if not GameState.has_session() or not is_valid_slot_name(slot):
 		return false
 	DirAccess.make_dir_recursive_absolute(SAVE_DIR)
@@ -127,6 +130,7 @@ func save_game(slot: String = DEFAULT_SLOT) -> bool:
 		return false
 	file.store_string(JSON.stringify(payload, "\t"))
 	current_slot = slot
+	saved.emit(slot, is_auto)
 	return true
 
 
@@ -141,9 +145,9 @@ func autosave(force: bool = false) -> bool:
 	if not force and _last_autosave_day == GameClock.total_days:
 		return false
 	var keep := current_slot
-	var saved := save_game(AUTOSAVE_SLOT)
+	var ok := save_game(AUTOSAVE_SLOT, true)
 	current_slot = keep
-	if not saved:
+	if not ok:
 		return false
 	_last_autosave_day = GameClock.total_days
 	_autosaved_this_session = true

@@ -127,6 +127,7 @@ func _ready() -> void:
 	add_child(UIStyle.centered(_tribulation))
 	_banner = Banner.new()
 	add_child(_banner)
+	add_child(SaveToast.new())
 	_time_skip = TimeSkipOverlay.new()
 	_time_skip.closed.connect(_on_time_skip_closed)
 	add_child(_time_skip)
