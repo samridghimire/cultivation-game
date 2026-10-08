@@ -128,7 +128,7 @@ func _init() -> void:
 	_trade_button.name = "Trade"
 	_trade_button.gui_input.connect(_on_item_input)
 	details.add_child(_trade_button)
-	details.add_child(UIStyle.label("Left/Right: change quantity. LB/RB or PgUp/PgDn: by 10", 14, Color(0.6, 0.6, 0.6)))
+	details.add_child(UIStyle.label("Left/Right: change quantity. %s/%s or PgUp/PgDn: by 10" % [InputConfig.binding_label("toggle_techniques", true), InputConfig.binding_label("toggle_artifact", true)], 14, Color(0.6, 0.6, 0.6)))
 
 	_close_button = UIStyle.button("Close", close)
 	box.add_child(_close_button)
@@ -377,15 +377,12 @@ func _on_item_input(event: InputEvent) -> void:
 		accept_event()
 
 
-## LB/RB (gamepad) or PageUp/PageDown step the quantity by 10.
+## The shoulder actions (LB/RB by default) or PageUp/PageDown step the quantity by 10.
 func _is_ten_step(event: InputEvent, up: bool) -> bool:
 	if not event.is_pressed() or event.is_echo():
 		return false
-	if event is InputEventJoypadButton:
-		return (event as InputEventJoypadButton).button_index == (JOY_BUTTON_RIGHT_SHOULDER if up else JOY_BUTTON_LEFT_SHOULDER)
-	if event is InputEventKey:
-		return (event as InputEventKey).keycode == (KEY_PAGEDOWN if up else KEY_PAGEUP)
-	return false
+	return event.is_action_pressed("toggle_artifact" if up else "toggle_techniques") \
+			or event.is_action_pressed("ui_page_down" if up else "ui_page_up")
 
 
 func _step(delta: int) -> void:

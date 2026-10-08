@@ -144,6 +144,12 @@ func test_quantity_max_and_ten_steps() -> void:
 	key.pressed = true
 	key.keycode = KEY_PAGEUP
 	assert_true(screen._is_ten_step(key, false))
+	for pair in [["toggle_techniques", false], ["toggle_artifact", true], ["ui_page_up", false], ["ui_page_down", true]]:
+		var act := InputEventAction.new()
+		act.action = pair[0]
+		act.pressed = true
+		assert_true(screen._is_ten_step(act, pair[1]), "%s steps by ten" % pair[0])
+		assert_false(screen._is_ten_step(act, not pair[1]))
 	screen.close()
 	screen.free()
 	gs.end_session()
