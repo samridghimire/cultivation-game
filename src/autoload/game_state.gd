@@ -1830,6 +1830,8 @@ func _sect_factions_month() -> void:
 					call_mission = mission_id
 			if call_mission != "" and Sects.check_mission(player, data, call_mission, world_flags) == "":
 				EventBus.post("Your sect calls on its disciples. A new mission waits on the mission board.", "warning")
+			elif call_mission != "" and Sects.mission_rank_realm_reason(player, data, data.sect_missions[call_mission]) == "":
+				EventBus.post("Your sect calls on its disciples again.", "warning")  # held back by something else, e.g. cooldown
 			else:
 				EventBus.post("Your sect calls on its senior disciples.", "warning")
 			continue
@@ -1863,28 +1865,11 @@ func _expire_world_events() -> void:
 	_expire_sect_calls()
 
 
-## Sect calls (LW-002b) lapse SectFactions.CALL_DAYS after they were made, or as
-## soon as the call mission clears the flag.
+## Sect calls (LW-002b) lapse; tells the player when their own sect's call is answered by others.
 func _expire_sect_calls() -> void:
-	for key: String in world_flags.keys():
-		if key.begins_with("sect_call_day_") and not world_flags.has("sect_call_" + key.trim_prefix("sect_call_day_")):
-			world_flags.erase(key)  # the call mission cleared its flag
-			continue
-		if not key.begins_with("sect_call_") or key.begins_with("sect_call_day_"):
-			continue
-		var sect_id := key.trim_prefix("sect_call_")
-		var day_key := "sect_call_day_" + sect_id
-		if not world_flags.get(key, false):
-			world_flags.erase(day_key)
-			continue
-		if not world_flags.has(day_key):
-			world_flags[day_key] = GameClock.total_days  # a call from an older save starts counting now
-			continue
-		if GameClock.total_days - int(world_flags[day_key]) > SectFactions.CALL_DAYS:
-			world_flags.erase(key)
-			world_flags.erase(day_key)
-			if not player.is_rogue() and String(player.sect["id"]) == sect_id:
-				EventBus.post("The sect's call has been answered by others.", "info", "sect")
+	var lapsed := SectFactions.expire_calls(world_flags, GameClock.total_days)
+	if not player.is_rogue() and lapsed.has(String(player.sect["id"])):
+		EventBus.post("The sect's call has been answered by others.", "info", "sect")
 
 
 ## Enter the bracket of the tournament under way here (LW-003): `rounds` spars in

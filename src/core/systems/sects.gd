@@ -427,6 +427,21 @@ static func mission_cooldown_left(c: CharacterData, mission_id: String) -> int:
 	return maxi(0, int(c.mission_cooldowns.get(mission_id, 0)) - c.age_days)
 
 
+## Why `c` falls short of `mission`'s min_rank / min_realm / min_stage, or "" if they meet both.
+static func mission_rank_realm_reason(c: CharacterData, data: GameData, mission: Dictionary) -> String:
+	if c.is_rogue():
+		return "Only sect disciples receive sect missions."
+	var sect: SectDef = data.sects[c.sect["id"]]
+	var min_rank := int(mission.get("min_rank", 0))
+	if int(c.sect["rank"]) < min_rank:
+		return "Only %s or above may take this mission." % Text.a(sect.rank_name(min_rank))
+	var min_realm := data.realm_index_of(String(mission.get("min_realm", "mortal")))
+	var min_stage := int(mission.get("min_stage", 0))
+	if c.realm_index < min_realm or (c.realm_index == min_realm and c.stage < min_stage):
+		return "This mission needs a cultivator of %s or above." % data.realms[min_realm].stage_label(min_stage)
+	return ""
+
+
 ## Why `c` cannot take `mission_id` now, or "" if they can.
 static func check_mission(c: CharacterData, data: GameData, mission_id: String, flags: Dictionary = {}) -> String:
 	if not data.sect_missions.has(mission_id):
@@ -439,14 +454,9 @@ static func check_mission(c: CharacterData, data: GameData, mission_id: String, 
 	if not available_missions(c, data, flags).has(mission_id):
 		return "Your sect has no need of this now."
 	var mission: Dictionary = data.sect_missions[mission_id]
-	var sect: SectDef = data.sects[c.sect["id"]]
-	var min_rank := int(mission.get("min_rank", 0))
-	if int(c.sect["rank"]) < min_rank:
-		return "Only %s or above may take this mission." % Text.a(sect.rank_name(min_rank))
-	var min_realm := data.realm_index_of(String(mission.get("min_realm", "mortal")))
-	var min_stage := int(mission.get("min_stage", 0))
-	if c.realm_index < min_realm or (c.realm_index == min_realm and c.stage < min_stage):
-		return "This mission needs a cultivator of %s or above." % data.realms[min_realm].stage_label(min_stage)
+	var rank_realm := mission_rank_realm_reason(c, data, mission)
+	if rank_realm != "":
+		return rank_realm
 	var wait := mission_cooldown_left(c, mission_id)
 	if wait > 0:
 		return "This mission is not offered again for %s." % Calendar.format_duration(wait)

@@ -197,3 +197,29 @@ static func rank_line(c: CharacterData, standings: Array[Dictionary]) -> String:
 		if String(standings[i]["id"]) == String(c.sect.get("id", "")):
 			return "Your sect ranks %s of %d in strength." % [ordinal(i + 1), standings.size()]
 	return ""
+
+
+## Sect calls (LW-002b) lapse CALL_DAYS after they were made, or as soon as the call mission
+## clears the flag. Tidies the `sect_call_*` / `sect_call_day_*` keys in `flags` and returns the
+## ids of the sects whose call lapsed at the deadline.
+static func expire_calls(flags: Dictionary, today: int) -> Array[String]:
+	var lapsed: Array[String] = []
+	for key: String in flags.keys():
+		if key.begins_with("sect_call_day_") and not flags.has("sect_call_" + key.trim_prefix("sect_call_day_")):
+			flags.erase(key)  # the call mission cleared its flag
+			continue
+		if not key.begins_with("sect_call_") or key.begins_with("sect_call_day_"):
+			continue
+		var sect_id := key.trim_prefix("sect_call_")
+		var day_key := "sect_call_day_" + sect_id
+		if not flags.get(key, false):
+			flags.erase(day_key)
+			continue
+		if not flags.has(day_key):
+			flags[day_key] = today  # a call from an older save starts counting now
+			continue
+		if today - int(flags[day_key]) > CALL_DAYS:
+			flags.erase(key)
+			flags.erase(day_key)
+			lapsed.append(sect_id)
+	return lapsed

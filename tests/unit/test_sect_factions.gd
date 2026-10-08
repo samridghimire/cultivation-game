@@ -276,3 +276,65 @@ func test_sect_call_without_day_key_starts_counting() -> void:
 	gs._expire_world_events()
 	assert_false(gs.world_flags.has("sect_call_day_azure_cloud_sect"))
 	gs.end_session()
+
+
+func test_expire_calls_lapses_after_call_days() -> void:
+	var flags := {"sect_call_azure_cloud_sect": true, "sect_call_day_azure_cloud_sect": 100}
+	assert_eq(SectFactions.expire_calls(flags, 100 + SectFactions.CALL_DAYS), [] as Array[String], "kept through the deadline")
+	assert_true(flags.has("sect_call_azure_cloud_sect"))
+	assert_eq(SectFactions.expire_calls(flags, 100 + SectFactions.CALL_DAYS + 1), ["azure_cloud_sect"] as Array[String])
+	assert_false(flags.has("sect_call_azure_cloud_sect"))
+	assert_false(flags.has("sect_call_day_azure_cloud_sect"))
+
+
+func test_expire_calls_starts_counting_and_tidies_cleared_calls() -> void:
+	var flags := {"sect_call_azure_cloud_sect": true}
+	assert_true(SectFactions.expire_calls(flags, 50).is_empty())
+	assert_eq(int(flags["sect_call_day_azure_cloud_sect"]), 50)
+	flags.erase("sect_call_azure_cloud_sect")  # the call mission cleared it
+	assert_true(SectFactions.expire_calls(flags, 60).is_empty(), "answered, not lapsed")
+	assert_false(flags.has("sect_call_day_azure_cloud_sect"))
+
+
+func test_mission_rank_realm_reason_ignores_cooldowns() -> void:
+	var c := new_character()
+	c.realm_index = 1
+	c.stage = 8
+	Sects.join(c, data(), "azure_cloud_sect")
+	var mission: Dictionary = data().sect_missions["answer_azure_call"]
+	assert_eq(Sects.mission_rank_realm_reason(c, data(), mission), "")
+	c.mission_cooldowns["answer_azure_call"] = c.age_days + 10
+	assert_eq(Sects.mission_rank_realm_reason(c, data(), mission), "")
+	c.stage = 0
+	assert_true(Sects.mission_rank_realm_reason(c, data(), mission) != "")
+
+
+func test_sect_call_on_cooldown_says_again() -> void:
+	var gs := _root().get_node("GameState")
+	var c := new_character()
+	c.realm_index = 1
+	c.stage = 8
+	gs.start_session(c)
+	Sects.join(c, gs.data, "azure_cloud_sect")
+	c.mission_cooldowns["answer_azure_call"] = c.age_days + 10
+	var old_rule: Dictionary = gs.data.sect_factions.get("clash", {})
+	gs.data.sect_factions["clash"] = {"monthly_chance": 1.0, "casualties": 1}
+	for sect_id in ["azure_cloud_sect", "blood_lotus_sect"]:
+		var npc := Npcs.spawn(gs.npcs, gs.data, seeded_rng(5), {"realm": "qi_refining", "alignment": 100 if sect_id == "azure_cloud_sect" else -600, "age_years": 20})
+		Sects.npc_join(npc, gs.data, sect_id)
+	_call_posts.clear()
+	EventBus.message_posted.connect(_collect_call_post)
+	gs._sect_factions_month()
+	EventBus.message_posted.disconnect(_collect_call_post)
+	gs.data.sect_factions["clash"] = old_rule
+	var text := "\n".join(_call_posts)
+	assert_true(text.contains("calls on its disciples again"), text)
+	assert_false(text.contains("senior disciples"), text)
+	gs.end_session()
+
+
+var _call_posts: PackedStringArray = []
+
+
+func _collect_call_post(text: String, _category: String) -> void:
+	_call_posts.append(text)
