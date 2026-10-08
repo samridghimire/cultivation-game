@@ -94,6 +94,15 @@
       ]
     },
     {
+      "id": "fights",
+      "title": "Fights",
+      "body": [
+        "A fight resolves itself: you do not steer the blows. Each exchange is written to the log, naming the technique used, and a hit is called a glancing, solid or crushing blow by how much of the target's health it took.",
+        "Two bars show the fight, yours and the foe's health. Press Skip to see the result at once. If you would rather watch the blows appear one by one, turn on \"Animate fights\" in Settings; with it off the whole report shows immediately.",
+        "When you win, the report lists the spoils and what they are worth. When you lose, it ends with a line of advice on why: the foe outclassed your realm, hit too hard, or you hit too softly."
+      ]
+    },
+    {
       "id": "exploring",
       "title": "Exploring and Encounters",
       "body": [
@@ -109,6 +118,15 @@
         "Early on, take chores and odd jobs from the villagers for a few spirit stones. Gather herbs at gather spots and sell them to a merchant.",
         "A profession pays far better: brew pills, forge gear, draw talismans or treat the sick, and sell the results.",
         "Sect members take missions from the mission board for stones and contribution points. Stones buy pills, gear and manuals; spend them on what speeds your cultivation first."
+      ]
+    },
+    {
+      "id": "selling",
+      "title": "Selling Loot",
+      "body": [
+        "Only specialist merchants buy goods back, and only what matches their trade: a herb seller takes herbs and ore. Some general traders also take a few extra kinds (herbs, ore, beast materials) without selling them. If one will not take an item, try another stall.",
+        "Open a shop and choose the Sell tab to sell a stack at a time, or press \"Sell all loot\" to sell every full stack that merchant buys. The button shows the total and what it will sell; press it again to confirm.",
+        "Sell all loot never sells what you wear, manuals and scrolls, breakthrough pills, readied talismans, or anything that carries a warning. Sell those by hand if you mean to."
       ]
     },
     {
@@ -209,7 +227,8 @@
       "title": "The Journal",
       "body": [
         "Press J (left trigger on a gamepad) to open your journal. It keeps track of what you have been doing and what is still waiting for you, so you do not have to remember every promise and every open order.",
-        "Look there whenever you come back to the game after a break and wonder what to do next."
+        "Look there whenever you come back to the game after a break and wonder what to do next.",
+        "A newcomer sees \"First goals\", a short ladder with the next step marked, which goes away once it is done. After that the \"Goals\" section lists the longer reaches still ahead: the next realm and roughly how many days of meditation it needs, the next sect rank, a profession to advance, or a clan to found."
       ]
     },
     {
