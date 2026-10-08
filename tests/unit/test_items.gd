@@ -24,3 +24,25 @@ func test_describe_effects_new_kinds() -> void:
 	assert_eq(Items.describe_effects({"buff": {"id": "x", "name": "X", "days": 7, "mults": {"max_hp": 0.2, "attack": 0.6}}}, d)[0], "+20% max hp, +60% attack for 7 days")
 	var sect_id: String = d.sects.keys()[0]
 	assert_eq(Items.describe_effects({"reputation": {sect_id: 5}}, d)[0], "+5 standing with %s" % d.sects[sect_id].name)
+
+
+## C-023: every beast material drops from an enemy and sells to a merchant.
+func test_beast_materials_are_dropped_and_bought() -> void:
+	var d := data()
+	var bought: Array = []
+	for region: Dictionary in d.regions.values():
+		for place: Dictionary in region.get("places", []):
+			if place.get("type", "") == "merchant" and (place.get("buy_tags", []) as Array).has("beast_material"):
+				bought.append(place)
+	assert_true(bought.size() >= 4, "beast materials need buyers")
+	var count := 0
+	for id: String in d.items:
+		if not (d.items[id].get("tags", []) as Array).has("beast_material"):
+			continue
+		count += 1
+		var dropped := false
+		for enemy: Dictionary in d.enemies.values():
+			if enemy.get("rewards", {}).get("items", {}).has(id):
+				dropped = true
+		assert_true(dropped, "%s is dropped by no enemy" % id)
+	assert_eq(count, 8)

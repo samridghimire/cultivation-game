@@ -57,11 +57,11 @@ func test_mortal_vs_boar_is_winnable() -> void:
 
 func test_victory_grants_rewards() -> void:
 	var c := new_character()
-	var stones := c.item_count("spirit_stone")
+	var hides := c.item_count("boar_hide")
 	var enemy: Dictionary = data().enemies["wild_boar"]
 	var outcome := Combat.apply_outcome(c, data(), enemy, {"victory": true, "draw": false}, {}, seeded_rng())
 	assert_false(outcome["died"])
-	assert_eq(c.item_count("spirit_stone"), stones + int(enemy["rewards"]["items"]["spirit_stone"]))
+	assert_eq(c.item_count("boar_hide"), hides + int(enemy["rewards"]["items"]["boar_hide"]))
 
 
 func test_nonlethal_defeat_costs_stones_and_injures() -> void:

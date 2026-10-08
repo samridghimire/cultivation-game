@@ -394,7 +394,7 @@ func test_fight_summary_is_one_line_with_its_spoils() -> void:
 		assert_false(line.begins_with("("), "spoils are not posted as an orphan line: %s" % line)
 	var summary: Array = lines.filter(func(l: String) -> bool: return l.begins_with("You defeat the Wild Boar!"))
 	assert_eq(summary.size(), 1, str(lines))
-	assert_true(String(summary[0]).contains("Spirit Stone"), "the spoils ride on the summary: %s" % summary[0])
+	assert_true(String(summary[0]).contains("Boar Hide"), "the spoils ride on the summary: %s" % summary[0])
 	assert_true(String(summary[0]).contains(" round, ") or String(summary[0]).contains(" rounds, "), summary[0])
 	assert_false(String(summary[0]).contains("1 rounds"), summary[0])
 	gs.end_session()
