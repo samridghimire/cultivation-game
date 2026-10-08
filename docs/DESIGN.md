@@ -79,7 +79,7 @@ Every great cultivation protagonist has something that sets them apart. Ours is 
 | Creation Artifact: lives, anchors, respawn, recharge, functions (storage) | ✅ (artifact screen: O) | `data/artifact.json`, `CreationArtifact` |
 | Data-driven regions (6), travel, exploration encounters | ✅ (choice window: W-004d; Dangerous lethal foes are sensed first and prompted: slip away or fight) | `data/regions.json`, `data/encounters.json`, `Exploration` |
 | Injuries (from breakthroughs and combat) | ✅ | `data/injuries.json`, `Injuries` |
-| Combat (auto-resolved) and techniques | ✅ basic | `Combat`, `Techniques`, `data/enemies.json`, `data/techniques.json` |
+| Combat (auto-resolved) and techniques | ✅ techniques named in the log, playback with hp bars, spoils and loss advice in the report | `Combat`, `Techniques`, `data/enemies.json`, `data/techniques.json` |
 | NPCs (named + generated), aging, monthly sim | ✅ | `data/npcs.json`, `Npcs`, `Names` |
 | Dialogue (incl. favor errands for five named NPCs, C-011) | ✅ (dialogue window) | `Dialogue`, `data/dialogue/` |
 | Family: identity, courtship, marriage, dual cultivation, children, adoption, training | ✅ (NPC menu: chat, gifts, court, propose, adopt; meditation spots; child training screen) | `data/family.json`, `Family`, `Children` |
@@ -98,7 +98,7 @@ Every great cultivation protagonist has something that sets them apart. Ours is 
 | World events (beast tides, tournaments, auctions, incursions) | ✅ passive effects + HUD/map/rumors; tournaments and incursion defence can be joined (LW-003) | `data/world_events.json`, `WorldEvents` |
 | NPC clans and NPC sect membership, family tree, Family Home | ✅ | `NpcClans`, `FamilyHome`, `src/ui/family_screen.gd` |
 | NPC sects as factions (strength, recruitment) | ✅ core (LW-002), sect hall standings (WU-002), monthly clashes and the sect's call (LW-002b) | `SectFactions` |
-| Audio, autosave, export presets, credits | ✅ procedural SFX and music, autosave with toast (also on suspend), crash-safe saves, credits, title art, Steam platform stub (REL-009), Windows/Linux export presets + tools/export.sh (REL-005); 🚧 Steam upload scripts (REL-011) | `Audio`, `SaveManager`, `src/ui/credits_screen.gd` |
+| Audio, autosave, export presets, credits | ✅ procedural SFX and music, autosave with toast (also on suspend), crash-safe saves, credits, title art, Steam platform stub (REL-009), Windows/Linux export presets + tools/export.sh (REL-005), Steam upload scripts and docs/RELEASE.md (REL-011, needs the owner's app/depot ids) | `Audio`, `SaveManager`, `src/ui/credits_screen.gd` |
 | Content past Core Formation | ✅ Nascent Soul foes/encounters (NS-001), pills (NS-002), Myriad Peaks Ridge region (NS-003); late methods to Mahayana+ (NS-005), late people with errands (NS-004), flawless late pills (NS-002b); 🚧 Soul Formation content (NS-006) | |
 | Life record and milestones | ✅ sheet life record (STAT-001), 22 milestones with progress on the sheet and a banner (GOAL-001, WU-006, MS-002, MS-003), journal screen (J / LT) with opportunities, errands and commissions, epilogue on final death, a yearly review banner (YEAR-001, WU-031) | `LifeStats`, `Milestones`, `data/milestones.json` |
 | Ending (ascension) | 🚧 none, waiting on the owner (END-001) | |

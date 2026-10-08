@@ -2,6 +2,24 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-08 [QA-020] Gamepad focus and Steam Deck layout checks cover every screen added since QA-013.
+- 2026-10-08 [GOAL-003] The journal's Goals section points past the first hour: next realm, next sect rank or clan, nearest milestone.
+- 2026-10-08 [MSG-002] Reputation changes name your standing ("now Friendly"); devoured qi counts in your life record.
+- 2026-10-08 [WU-042] Newly available features get a "New" banner.
+- 2026-10-08 [WU-036] Fights play out line by line with hp bars (Skip, or turn off "Animate fights" in Settings).
+- 2026-10-08 [GUIDE-009] A hint tells you when a merchant here would pay well for your loot.
+- 2026-10-08 [QA-036] Household hints no longer offer training for children who can't be trained.
+- 2026-10-08 [C-022] Qi Refining sect rank trials are fair on entry (about half the time).
+- 2026-10-08 [REL-011] Steam upload prep: depot templates, tools/steam_upload.sh and docs/RELEASE.md.
+- 2026-10-08 [GOAL-002] The journal shows your breakthrough odds and where to get a pill to raise them.
+- 2026-10-08 [WU-041] The HUD shows about how many days to your next layer.
+- 2026-10-08 [WU-043] The combat report lists your spoils.
+- 2026-10-08 [C-023] Beasts drop hides, pelts, feathers and scales you can sell or craft into a jerkin, a talisman or a pill.
+- 2026-10-08 [GUIDE-008] One-time notices when body tempering, Dao contemplation, artifact functions or a rival become relevant.
+- 2026-10-08 [WU-040] "Sell all loot" in the shop's Sell tab.
+- 2026-10-08 [QA-033] Fuzz passes for an open secret realm and a pending sect promotion trial.
+- 2026-10-08 [WU-039] Shop category tabs.
+- 2026-10-08 [CMB-002] The combat log names the techniques you and your foe strike with.
 - 2026-10-08 [WU-037] Press F1 or H to open the help pages.
 - 2026-10-08 [C-016] Core Formation's forced trial and vault guardian are beatable on arrival.
 - 2026-10-08 [WU-035] Inventory category tabs (pills, herbs and ores, equipment, talismans, manuals...).

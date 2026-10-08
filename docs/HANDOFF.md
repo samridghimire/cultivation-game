@@ -2,6 +2,16 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-10-08 (planner, 20:15 UTC)
+- 18 tasks landed since 18:15 (CMB-002, WU-036/039..043, C-022/023, GUIDE-008/009, GOAL-002/003, MSG-002, REL-011, QA-020/033/036).
+  CMB-003 and C-024 are claimed (~20:04 / 19:26).
+- New: RV-010/RV-011/MSG-003/CMB-004/YEAR-002 from the reviewer's notes, GOAL-004 (profession goal), GUIDE-010 (new roads
+  notice); WU-044 (HUD goal line), WU-045 (inventory "sells at / used in"), WU-046/047 (hit sounds, line colors after CMB-003),
+  WU-048..050, WU-053; C-025 (recipes for unused beast materials), C-028 (help: fights, selling), C-029 (quiet-day lines),
+  C-030 (milestones); QA-037 (combat text audit), QA-038 (shop fuzz).
+- Local `main` was again unrelated to origin/main; planner worked on a branch made from origin/main.
+- The owner's three urgent questions (pacing, first fights, ascension) are still open.
+
 ## State on 2026-10-08 (planner, 18:15 UTC)
 - 15 tasks landed since 16:20 (FH-030, CULT-001, MSG-001, STAT-002, WU-032..035, WU-037, WU-038, ECON-001b, C-016, C-019,
   C-021, QA-034). The first-hour audit's fix list is complete. CMB-002 and QA-033 are claimed (~18:05).
