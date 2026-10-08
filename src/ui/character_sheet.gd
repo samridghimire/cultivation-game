@@ -15,6 +15,7 @@ const SCROLL_SPEED := 900.0
 var _scroll: ScrollContainer
 var _text: RichTextLabel
 var _recharge: Button
+var _action_row: HFlowContainer
 var _gender_row: HBoxContainer
 var _equip_row: HBoxContainer
 var _train_children: Button
@@ -48,13 +49,20 @@ func _init() -> void:
 	_equip_row = HBoxContainer.new()
 	_equip_row.add_theme_constant_override("separation", 8)
 	box.add_child(_equip_row)
+	var spacer := Control.new()
+	spacer.custom_minimum_size = Vector2(0, 8)
+	box.add_child(spacer)
+	_action_row = HFlowContainer.new()
+	_action_row.add_theme_constant_override("h_separation", 12)
+	_action_row.add_theme_constant_override("v_separation", 8)
+	box.add_child(_action_row)
 	_recharge = UIStyle.button("Recharge artifact", func(): GameState.recharge_artifact())
-	box.add_child(_recharge)
+	_action_row.add_child(_recharge)
 	_train_children = UIStyle.button("Train children", func(): EventBus.child_training_requested.emit())
-	box.add_child(_train_children)
+	_action_row.add_child(_train_children)
 	_family_button = UIStyle.button("Family tree", func(): EventBus.family_requested.emit())
-	box.add_child(_family_button)
-	box.add_child(UIStyle.button("Close", close))
+	_action_row.add_child(_family_button)
+	_action_row.add_child(UIStyle.button("Close", close))
 	EventBus.player_changed.connect(func(): if visible: _rebuild())
 
 
@@ -88,7 +96,7 @@ func open() -> void:
 func _default_focus() -> Button:
 	if _gender_row.visible:
 		return _gender_row.get_child(1) as Button
-	return get_child(0).get_child(-1) as Button
+	return _action_row.get_child(-1) as Button
 
 
 func _choose_gender(gender: String) -> void:

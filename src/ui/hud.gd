@@ -15,6 +15,8 @@ var _bottleneck: Label
 var _injuries: Label
 var _hint: Label
 var _log: RichTextLabel
+var _status_panel: Control
+var _log_panel: Control
 var _prompt: Label
 var _key_bar: Label
 var _target_name := ""
@@ -263,6 +265,7 @@ func _any_screen_open() -> bool:
 
 func _build_status_panel() -> void:
 	var panel := UIStyle.panel(Vector2(340, 0))
+	_status_panel = panel
 	panel.position = Vector2(16, 16)
 	var box := VBoxContainer.new()
 	panel.add_child(box)
@@ -294,6 +297,7 @@ func _build_status_panel() -> void:
 
 func _build_log() -> void:
 	var panel := UIStyle.panel()
+	_log_panel = panel
 	_log = RichTextLabel.new()
 	_log.bbcode_enabled = true
 	_log.scroll_following = true
@@ -646,7 +650,11 @@ func _on_settings_closed() -> void:
 
 
 func _update_modal() -> void:
-	EventBus.ui_modal_changed.emit(_choice_menu.visible or _dialogue.visible or _encounter.visible or _any_screen_open() or _combat_report.visible or _tribulation.visible or _respawn.visible or _pause_menu.visible or _settings.visible or _help.visible or _load_screen.visible or _death_screen.visible or _time_skip.visible)
+	var blocking := _choice_menu.visible or _dialogue.visible or _encounter.visible or _any_screen_open() or _combat_report.visible or _tribulation.visible or _respawn.visible or _pause_menu.visible or _settings.visible or _help.visible or _load_screen.visible or _death_screen.visible
+	# The status panel, hints and log hide behind modals; a time-skip overlay alone keeps them.
+	_status_panel.visible = not blocking
+	_log_panel.visible = not blocking
+	EventBus.ui_modal_changed.emit(blocking or _time_skip.visible)
 
 
 func _return_to_menu() -> void:

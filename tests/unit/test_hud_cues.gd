@@ -54,3 +54,32 @@ func test_hud_hint_panel_follows_setting() -> void:
 	st.set_value("hud_hints", old)
 	hud.queue_free()
 	gs.end_session()
+
+
+## WU-028: the status panel and log hide behind modals, not behind the time-skip overlay.
+func test_hud_panels_hide_behind_modals() -> void:
+	var tree := Engine.get_main_loop() as SceneTree
+	var gs: Node = tree.root.get_node("GameState")
+	gs.start_session(new_character())
+	gs.pending_event = ""
+	var hud: CanvasLayer = load("res://src/ui/hud.tscn").instantiate()
+	tree.root.add_child(hud)
+	await tree.process_frame
+	var status: Control = hud.get("_status_panel")
+	var log_panel: Control = hud.get("_log_panel")
+	assert_true(status.visible and log_panel.visible)
+	var screens: Dictionary = hud.get("_screens")
+	var inv: Control = screens["toggle_inventory"]
+	inv.open()
+	hud.call("_update_modal")
+	assert_false(status.visible, "status panel hidden behind the inventory")
+	assert_false(log_panel.visible, "log hidden behind the inventory")
+	inv.close()
+	hud.call("_update_modal")
+	assert_true(status.visible and log_panel.visible)
+	var skip: Control = hud.get("_time_skip")
+	skip.visible = true
+	hud.call("_update_modal")
+	assert_true(status.visible and log_panel.visible, "time-skip overlay keeps the HUD")
+	skip.visible = false
+	hud.queue_free()
