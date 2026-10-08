@@ -462,7 +462,9 @@ static func journal(c: CharacterData, data: GameData, flags: Dictionary, today: 
 	# The duty reminder lives in the Sect section; keep it out of Next steps.
 	var duty_line := Sects.duty_reminder(c, data) if Sects.duty_days_left(c) <= Sects.DUTY_REMINDER_DAYS else ""
 	var method_line := _method_hint(c, data)
-	if not first_goals_done(c, data, flags):
+	# Newcomers only: past Qi Refining (or on saves from before the Elder Mo flag
+	# and life stats) the ladder would otherwise never go away.
+	if c.realm_index <= 1 and not first_goals_done(c, data, flags):
 		var flagged := false
 		for goal in first_goals(c, data, flags):
 			var tone := "dim"

@@ -1790,11 +1790,12 @@ func _cultivation_density(location_density: float) -> float:
 	return location_density * region_qi_density() * Sects.cultivation_bonus(player, data)
 
 
-## Preview line for cultivating `days` at a spot of `location_density` (same density as cultivate()).
+## Days of meditation at a spot of `location_density` until the next stage (-1 = at the bottleneck).
 func days_to_next_stage(location_density: float = 1.0) -> int:
 	return Cultivation.days_to_next_stage(player, data, _cultivation_density(location_density))
 
 
+## Preview line for cultivating `days` at a spot of `location_density` (same density as cultivate()).
 func meditation_preview(days: int, location_density: float = 1.0) -> String:
 	return Guidance.meditation_preview(player, data, days, _cultivation_density(location_density))
 

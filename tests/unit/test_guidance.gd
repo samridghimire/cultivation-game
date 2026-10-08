@@ -473,3 +473,13 @@ func test_first_goals_ladder_and_journal_section() -> void:
 	assert_true(Guidance.first_goals_done(c, data(), flags))
 	var after := Guidance.journal(c, data(), flags, 0, "qingshi_village").filter(func(e: Dictionary) -> bool: return e["section"] == "First goals")
 	assert_true(after.is_empty())
+
+
+func test_first_goals_hidden_past_qi_refining() -> void:
+	# An old save past Qi Refining with no Elder Mo flag or life stats must not keep the ladder.
+	var c := _fresh()
+	c.realm_index = 2
+	c.techniques = {"basic_breathing": {"level": 1}}
+	assert_false(Guidance.first_goals_done(c, data(), {}))
+	var section := Guidance.journal(c, data(), {}, 0, "qingshi_village").filter(func(e: Dictionary) -> bool: return e["section"] == "First goals")
+	assert_true(section.is_empty())

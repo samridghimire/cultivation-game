@@ -71,8 +71,12 @@ static func next_stage_option(density: float, run: Callable) -> Array[Dictionary
 	var days := GameState.days_to_next_stage(density)
 	if days < 0 or days > Calendar.DAYS_PER_YEAR:
 		return []
-	var noun := "layer" if GameState.data.realms[GameState.player.realm_index].id == "qi_refining" else "stage"
-	return [{"label": "Meditate until the next %s (~%s)" % [noun, Calendar.format_duration(days)], "description": GameState.meditation_preview(days, density), "action": run.bind(days), "keep_open": true}]
+	var p := GameState.player
+	var realm: RealmDef = GameState.data.realms[p.realm_index]
+	var goal := "the next layer" if realm.id == "qi_refining" else "the next stage"
+	if p.stage == realm.stage_count() - 1:
+		goal = "your bottleneck"
+	return [{"label": "Meditate until %s (~%s)" % [goal, Calendar.format_duration(days)], "description": GameState.meditation_preview(days, density), "action": run.bind(days), "keep_open": true}]
 
 
 func _dual_cultivation_options() -> Array[Dictionary]:

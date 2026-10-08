@@ -59,3 +59,18 @@ func test_meditate_until_next_layer() -> void:
 	assert_true(absi(int(clock.total_days) - start - days) <= 1, "days passed")
 	assert_eq(gs.player.stage, stage_before + 1)
 	spot.free()
+
+
+func test_meditate_until_bottleneck_on_last_stage() -> void:
+	var gs := _gs()
+	var c := new_character()
+	c.realm_index = 1
+	c.stage = gs.data.realms[1].stage_count() - 1
+	c.qi = gs.data.realms[1].qi_required(c.stage) - 1.0
+	gs.start_session(c)
+	gs.current_region = "qingshi_village"
+	var spot: Node = load("res://src/world/interactables/meditation_spot.gd").new()
+	var options: Array = spot.get_options()
+	assert_true(_find(options, "Meditate until the next layer").is_empty())
+	assert_false(_find(options, "Meditate until your bottleneck").is_empty())
+	spot.free()
