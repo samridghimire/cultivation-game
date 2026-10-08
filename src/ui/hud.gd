@@ -466,7 +466,7 @@ func _on_player_died(cause: String) -> void:
 func _on_combat_finished(enemy_name: String, victory: bool, lines: PackedStringArray) -> void:
 	_choice_menu.close()
 	_close_screens()
-	_combat_report.show_fight(enemy_name, victory, lines)
+	_combat_report.show_fight(enemy_name, victory, lines, GameState.last_loss_advice)
 	_update_modal()
 
 

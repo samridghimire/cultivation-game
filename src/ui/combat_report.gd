@@ -41,7 +41,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		close()
 
 
-func show_fight(enemy_name: String, victory: bool, lines: PackedStringArray) -> void:
+func show_fight(enemy_name: String, victory: bool, lines: PackedStringArray, advice: String = "") -> void:
 	var color: Color = UIStyle.ACCENT if victory else UIStyle.CATEGORY_COLORS["danger"]
 	_title.text = "%s: %s" % ["Victory" if victory else "Defeat", enemy_name]
 	_title.add_theme_color_override("font_color", color)
@@ -51,6 +51,8 @@ func show_fight(enemy_name: String, victory: bool, lines: PackedStringArray) -> 
 		if i == 0 or i == lines.size() - 1:
 			line = "[color=#%s]%s[/color]" % [color.to_html(false), line]
 		_log.append_text(line + "\n")
+	if not victory and advice != "":
+		_log.append_text("[color=#%s]%s[/color]\n" % [UIStyle.CATEGORY_COLORS["warning"].to_html(false), advice])
 	_show_devour(victory)
 	visible = true
 	_close_button.grab_focus.call_deferred()

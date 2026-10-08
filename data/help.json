@@ -87,6 +87,7 @@
       "body": [
         "Before a fight the game rates the foe against you: Weak (you win nearly always), Even (a coin flip or better), Dangerous (you will probably lose) and Deadly (you almost surely die). Deadly foes are sensed and avoided while you explore.",
         "A fight is either lethal (to the death) or non-lethal (you are beaten, robbed or driven off). Read the prompt before you accept: slipping away costs a day, not your life.",
+        "When you lose, the report ends with a line of advice: whether the foe outclassed your realm, hit too hard, or you hit too softly.",
         "Losing can leave an injury that slows cultivation or weakens you in battle; a doctor or the clinic can heal it, or time will.",
         "A violent death with a life left in your Creation Artifact respawns you at a bound anchor. With none left, death is final."
       ]

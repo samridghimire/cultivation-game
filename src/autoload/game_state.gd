@@ -21,6 +21,8 @@ var auctions: Dictionary = {}
 ## (Devouring, DEM-001); {} when none. Not saved: the chance passes with the
 ## combat report.
 var devour_target: Dictionary = {}
+## Why the last fight was lost (Combat.loss_advice), "" after a win; shown in the combat report.
+var last_loss_advice: String = ""
 ## Active world events (WorldEvents, LW-001): [{id, region, start_day, end_day}].
 var world_events: Array = []
 ## Id of the region (data/regions.json) the player is in.
@@ -2003,6 +2005,7 @@ func fight_enemy(enemy: Dictionary, start_hp: int = -1) -> bool:
 		summary += "; " + ", ".join(outcome["notes"])
 	EventBus.post("%s (%s)" % [lines[-1], summary], "progress" if result["victory"] else "danger")
 	var advice := Combat.loss_advice(player, data, enemy, result)
+	last_loss_advice = advice
 	if advice != "" and not outcome["died"]:
 		EventBus.post(advice, "danger")
 	if result["victory"] and not outcome["died"] and Devouring.is_devourable(data, enemy):

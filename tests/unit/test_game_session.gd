@@ -248,6 +248,14 @@ func test_lost_fight_posts_advice() -> void:
 	gs.fight_enemy(foe)
 	assert_true(c.alive)
 	assert_true(EventBus.history.any(func(e: Dictionary) -> bool: return String(e["text"]).contains("far above you")))
+	assert_true(gs.last_loss_advice.contains("far above you"))
+	var report := CombatReport.new()
+	(Engine.get_main_loop() as SceneTree).root.add_child(report)
+	report.show_fight("Test Foe", false, PackedStringArray(["start", "end"]), gs.last_loss_advice)
+	assert_true(report._log.get_parsed_text().contains("far above you"), "the report carries the advice")
+	report.show_fight("Test Foe", true, PackedStringArray(["start", "end"]), gs.last_loss_advice)
+	assert_false(report._log.get_parsed_text().contains("far above you"), "no advice after a win")
+	report.queue_free()
 	gs.end_session()
 
 
