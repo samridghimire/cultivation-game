@@ -12,6 +12,10 @@ static func rules(data: GameData) -> Dictionary:
 	return data.sect_factions
 
 
+## Days a sect's call for its disciples stays open (LW-002c).
+const CALL_DAYS := 30
+
+
 ## Living NPC members of `sect_id`, sorted by id.
 static func members(npcs: Dictionary, sect_id: String) -> Array[CharacterData]:
 	var out: Array[CharacterData] = []

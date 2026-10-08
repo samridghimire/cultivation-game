@@ -1820,8 +1820,17 @@ func _sect_factions_month() -> void:
 		var own_sect := "" if player.is_rogue() else String(player.sect["id"])
 		if own_sect != "" and (own_sect == event["winner"] or own_sect == event["loser"]):
 			EventBus.post(event["text"], event["category"])
-			world_flags["sect_call_" + own_sect] = true
-			EventBus.post("Your sect calls on its disciples. A new mission waits on the mission board.", "warning")
+			var call_flag := "sect_call_" + own_sect
+			world_flags[call_flag] = true
+			world_flags["sect_call_day_" + own_sect] = GameClock.total_days
+			var call_mission := ""
+			for mission_id: String in data.sect_missions:
+				if String(data.sect_missions[mission_id].get("requires_flag", "")) == call_flag:
+					call_mission = mission_id
+			if call_mission != "" and Sects.check_mission(player, data, call_mission, world_flags) == "":
+				EventBus.post("Your sect calls on its disciples. A new mission waits on the mission board.", "warning")
+			else:
+				EventBus.post("Your sect calls on its senior disciples.", "warning")
 			continue
 		for npc_id: String in event["dead_ids"]:
 			if Npcs.is_newsworthy(npc_id, player, npc_favor):
@@ -1850,6 +1859,31 @@ func _expire_world_events() -> void:
 	for ended in WorldEvents.expire(world_events, GameClock.total_days):
 		if Exploration.is_nearby(data, current_region, String(ended.get("region", ""))):
 			EventBus.post(WorldEvents.news(data, ended, false), "info")
+	_expire_sect_calls()
+
+
+## Sect calls (LW-002b) lapse SectFactions.CALL_DAYS after they were made, or as
+## soon as the call mission clears the flag.
+func _expire_sect_calls() -> void:
+	for key: String in world_flags.keys():
+		if key.begins_with("sect_call_day_") and not world_flags.has("sect_call_" + key.trim_prefix("sect_call_day_")):
+			world_flags.erase(key)  # the call mission cleared its flag
+			continue
+		if not key.begins_with("sect_call_") or key.begins_with("sect_call_day_"):
+			continue
+		var sect_id := key.trim_prefix("sect_call_")
+		var day_key := "sect_call_day_" + sect_id
+		if not world_flags.get(key, false):
+			world_flags.erase(day_key)
+			continue
+		if not world_flags.has(day_key):
+			world_flags[day_key] = GameClock.total_days  # a call from an older save starts counting now
+			continue
+		if GameClock.total_days - int(world_flags[day_key]) > SectFactions.CALL_DAYS:
+			world_flags.erase(key)
+			world_flags.erase(day_key)
+			if not player.is_rogue() and String(player.sect["id"]) == sect_id:
+				EventBus.post("The sect's call has been answered by others.", "info", "sect")
 
 
 ## Enter the bracket of the tournament under way here (LW-003): `rounds` spars in

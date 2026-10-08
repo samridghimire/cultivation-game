@@ -220,3 +220,59 @@ func test_player_sect_clash_posts_a_call_in_a_session() -> void:
 	assert_true(result["ok"], str(result))
 	assert_false(gs.world_flags.has("sect_call_azure_cloud_sect"))
 	gs.end_session()
+
+
+func _call_session(stage: int) -> CharacterData:
+	var gs := _root().get_node("GameState")
+	var c := new_character()
+	c.realm_index = 1
+	c.stage = stage
+	gs.start_session(c)
+	Sects.join(c, gs.data, "azure_cloud_sect")
+	var old_rule: Dictionary = gs.data.sect_factions.get("clash", {})
+	gs.data.sect_factions["clash"] = {"monthly_chance": 1.0, "casualties": 1}
+	for sect_id in ["azure_cloud_sect", "blood_lotus_sect"]:
+		var npc := Npcs.spawn(gs.npcs, gs.data, seeded_rng(5), {"realm": "qi_refining", "alignment": 100 if sect_id == "azure_cloud_sect" else -600, "age_years": 20})
+		Sects.npc_join(npc, gs.data, sect_id)
+	gs._sect_factions_month()
+	gs.data.sect_factions["clash"] = old_rule
+	return c
+
+
+func test_sect_call_expires_after_call_days() -> void:
+	var gs := _root().get_node("GameState")
+	var c := _call_session(8)
+	var clock := gs.get_node("/root/GameClock")
+	var start: int = int(gs.world_flags["sect_call_day_azure_cloud_sect"])
+	assert_true(Sects.available_missions(c, gs.data, gs.world_flags).has("answer_azure_call"))
+	clock.total_days = start + SectFactions.CALL_DAYS - 1
+	gs._expire_world_events()
+	assert_true(gs.world_flags.get("sect_call_azure_cloud_sect", false), "kept before the deadline")
+	var rows := Guidance.journal(c, gs.data, gs.world_flags, clock.total_days, c.home_region)
+	assert_true(rows.any(func(r: Dictionary) -> bool: return r["text"] == "The sect's call: 1 days left" and r["tone"] == "warning"))
+	clock.total_days = start + SectFactions.CALL_DAYS + 1
+	gs._expire_world_events()
+	assert_false(gs.world_flags.has("sect_call_azure_cloud_sect"))
+	assert_false(gs.world_flags.has("sect_call_day_azure_cloud_sect"))
+	gs.end_session()
+
+
+func test_sect_call_for_a_junior_disciple_names_the_seniors() -> void:
+	var gs := _root().get_node("GameState")
+	var c := _call_session(0)
+	assert_true(gs.world_flags.get("sect_call_azure_cloud_sect", false))
+	assert_true(Sects.check_mission(c, gs.data, "answer_azure_call", gs.world_flags) != "")
+	gs.end_session()
+
+
+func test_sect_call_without_day_key_starts_counting() -> void:
+	var gs := _root().get_node("GameState")
+	var c := new_character()
+	gs.start_session(c)
+	gs.world_flags["sect_call_azure_cloud_sect"] = true
+	gs._expire_world_events()
+	assert_true(gs.world_flags.has("sect_call_day_azure_cloud_sect"))
+	gs.world_flags.erase("sect_call_azure_cloud_sect")
+	gs._expire_world_events()
+	assert_false(gs.world_flags.has("sect_call_day_azure_cloud_sect"))
+	gs.end_session()
