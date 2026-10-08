@@ -58,6 +58,8 @@ signal dialogue_ended(npc_id: String)
 ## A long action skipped time (UI-010). summary = TimeSkip.summarize():
 ## {title, days, lines}. The HUD shows it as a short skippable overlay.
 signal time_skipped(days: int, summary: Dictionary)
+## A milestone was just earned (GOAL-001).
+signal milestone_reached(id: String, name: String)
 
 ## How many past messages the message log screen can show.
 const HISTORY_LIMIT := 200

@@ -2230,6 +2230,7 @@ func check_milestones() -> void:
 	for def in Milestones.award(player, data, world_flags, clan):
 		EventBus.post("Milestone: %s. %s" % [def["name"], def.get("description", "")], "progress")
 		Platform.unlock_achievement(String(def["id"]))
+		EventBus.milestone_reached.emit(String(def["id"]), String(def["name"]))
 
 
 func _on_days_advanced(days: int) -> void:

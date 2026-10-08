@@ -51,3 +51,31 @@ func test_sheet_shows_spouse_pregnancy_and_meditation_offers_try_for_child() -> 
 	assert_true(text.contains("%s is with your child (2 months to the birth)" % wife.name), text)
 	sheet.free()
 	gs.end_session()
+
+
+func test_milestones_section_and_signal() -> void:
+	var gs := _game_state()
+	var bus := (Engine.get_main_loop() as SceneTree).root.get_node("EventBus")
+	var c := CharacterFactory.create("Han Li", gs.data, seeded_rng(79), "male")
+	gs.start_session(c)
+	var sheet := CharacterSheet.new()
+	(Engine.get_main_loop() as SceneTree).root.add_child(sheet)
+	sheet.open()
+	var text := sheet._text.get_parsed_text()
+	assert_true(text.contains("Milestones (%d of %d)" % [c.milestones.size(), gs.data.milestones.size()]), text)
+	# Award one directly and see it listed with its description.
+	var def: Dictionary = gs.data.milestones[0]
+	var id := String(def["id"])
+	c.milestones.erase(id)
+	var fired: Array = []
+	var cb := func(mid: String, _n: String) -> void: fired.append(mid)
+	bus.milestone_reached.connect(cb)
+	bus.milestone_reached.emit(id, String(def["name"]))
+	bus.milestone_reached.disconnect(cb)
+	assert_eq(fired, [id])
+	c.milestones.append(id)
+	sheet.open()
+	text = sheet._text.get_parsed_text()
+	assert_true(text.contains("%s: %s" % [def["name"], def.get("description", "")]), text)
+	sheet.free()
+	gs.end_session()

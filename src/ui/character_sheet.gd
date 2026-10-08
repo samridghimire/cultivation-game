@@ -225,6 +225,15 @@ func _rebuild() -> void:
 		t += "  Nothing of note yet.\n"
 	for line in record:
 		t += "  %s\n" % line
+	t += "\n[color=#%s]Milestones (%d of %d)[/color]\n" % [accent, p.milestones.size(), data.milestones.size()]
+	var upcoming := 0
+	for def in data.milestones:
+		var mid := String(def["id"])
+		if p.milestones.has(mid):
+			t += "  %s: %s\n" % [def["name"], def.get("description", "")]
+		elif upcoming < 3:
+			upcoming += 1
+			t += "  [color=#888888]%s[/color]\n" % def["name"]
 	t += "\n[color=#888888]Press [I] for your inventory and [K] for techniques.[/color]"
 	_text.text = t
 

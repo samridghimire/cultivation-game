@@ -167,6 +167,7 @@ func _ready() -> void:
 	EventBus.encounter_choice_resolved.connect(_encounter.close)
 	EventBus.threat_sensed.connect(_on_threat_sensed)
 	EventBus.time_skipped.connect(_on_time_skipped)
+	EventBus.milestone_reached.connect(_on_milestone)
 	_refresh()
 	# A respawn that moved the player reloads the world; ask where to awaken now.
 	_open_pending_respawn.call_deferred()
@@ -516,6 +517,11 @@ func _on_encounter_choice_requested(_encounter_id: String) -> void:
 
 ## A long action skipped time: show the overlay unless fast skips are on or
 ## another window (combat report, encounter, death...) has taken the screen.
+## Several milestones in one step: each call replaces the banner, so the last one shows (the log lists all).
+func _on_milestone(_id: String, milestone_name: String) -> void:
+	_banner.announce("Milestone", milestone_name, UIStyle.ACCENT, 1.2)
+
+
 func _on_time_skipped(days: int, summary: Dictionary) -> void:
 	if not TimeSkip.should_show(days, Settings.get_value("fast_time_skips")):
 		return
