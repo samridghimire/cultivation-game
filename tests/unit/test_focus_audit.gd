@@ -81,6 +81,18 @@ func test_every_hud_screen_has_focus_and_closes_on_cancel() -> void:
 	await _check(menu, "choice menu")
 	source.free()
 
+	var gs_threat := CharacterFactory.create("Hunted", gs.data, seeded_rng(5))
+	gs_threat.spiritual_roots = {"fire": 80}
+	gs.start_session(gs_threat)
+	var foe: Dictionary = gs.data.enemies["mist_wolf"].duplicate(true)
+	foe["id"] = "audit_foe"
+	foe["lethal"] = true
+	gs.data.enemies["audit_foe"] = foe
+	gs.pending_threat = "audit_foe"
+	EventBus.threat_sensed.emit("audit_foe")
+	await _check(menu, "threat prompt")
+	assert_eq(gs.pending_threat, "", "closing the threat prompt slips away")
+
 	_press("pause_menu")
 	var pause: Control = hud.get("_pause_menu")
 	await _check(pause, "pause menu")

@@ -125,6 +125,7 @@ func end_session() -> void:
 ## `skip_title` heads the time-skip overlay ("In seclusion" at an abode).
 func cultivate(days: int, location_density: float = 1.0, skip_title: String = "Meditating") -> void:
 	EventBus.topic = "cultivation"
+	pending_threat = ""
 	if not _can_act():
 		return
 	if SpiritualRoots.cultivation_multiplier(player.spiritual_roots, data) <= 0.0:
@@ -177,6 +178,7 @@ func claim_abode(abode_id: String) -> void:
 ## Cultivate in seclusion at the player's abode (must be in its region).
 func cultivate_in_seclusion(days: int) -> void:
 	EventBus.topic = "cultivation"
+	pending_threat = ""
 	if not _can_act():
 		return
 	var density := Abodes.seclusion_density(player, data, current_region)
@@ -424,6 +426,7 @@ func unequip(slot: String) -> void:
 
 func travel(region_id: String) -> void:
 	EventBus.topic = "world"
+	pending_threat = ""
 	if not _can_act():
 		return
 	var check := Exploration.check_travel(player, data, current_region, region_id)

@@ -17,6 +17,7 @@ var _hint: Label
 var _log: RichTextLabel
 var _prompt: Label
 var _choice_menu: ChoiceMenu
+var _threat_prompt: ThreatPrompt
 ## Toggleable modal screens keyed by the input action that opens them. Each
 ## must have open(), close() and a `closed` signal.
 var _screens: Dictionary = {}
@@ -54,6 +55,8 @@ func _ready() -> void:
 	_choice_menu = ChoiceMenu.new()
 	_choice_menu.closed.connect(_update_modal)
 	add_child(UIStyle.centered(_choice_menu))
+	_threat_prompt = ThreatPrompt.new()
+	add_child(_threat_prompt)
 	_add_screen("toggle_character_sheet", CharacterSheet.new())
 	_add_screen("toggle_inventory", InventoryScreen.new())
 	_add_screen("toggle_techniques", TechniquesScreen.new())
@@ -142,6 +145,7 @@ func _ready() -> void:
 	EventBus.dialogue_ended.connect(func(_id): _dialogue.close())
 	EventBus.encounter_choice_requested.connect(_on_encounter_choice_requested)
 	EventBus.encounter_choice_resolved.connect(_encounter.close)
+	EventBus.threat_sensed.connect(_on_threat_sensed)
 	EventBus.time_skipped.connect(_on_time_skipped)
 	_refresh()
 	# A respawn that moved the player reloads the world; ask where to awaken now.
@@ -449,6 +453,15 @@ func _on_dialogue_requested(_npc_id: String) -> void:
 
 
 ## An explored encounter asks the player to choose (help, rob, fight...).
+func _on_threat_sensed(enemy_id: String) -> void:
+	_time_skip.close()
+	_choice_menu.close()
+	_close_screens()
+	_threat_prompt.prepare(enemy_id)
+	_choice_menu.open_for(_threat_prompt)
+	_update_modal()
+
+
 func _on_encounter_choice_requested(_encounter_id: String) -> void:
 	_choice_menu.close()
 	_close_screens()
