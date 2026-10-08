@@ -18,6 +18,9 @@ var _ready_button: Button
 var _readied: Label
 var _close_button: Button
 var _selected := ""
+var _tabs: HBoxContainer
+## Selected category tab; remembered while the game runs.
+static var _category := "All"
 
 
 func _init() -> void:
@@ -31,6 +34,15 @@ func _init() -> void:
 	_readied = UIStyle.label("", 15, Color(0.75, 0.75, 0.85))
 	_readied.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	box.add_child(_readied)
+
+	_tabs = HBoxContainer.new()
+	_tabs.add_theme_constant_override("separation", 4)
+	box.add_child(_tabs)
+	for cat in Items.CATEGORIES:
+		var tb := UIStyle.button(cat, _set_category.bind(cat))
+		tb.name = cat
+		tb.toggle_mode = true
+		_tabs.add_child(tb)
 
 	var columns := HBoxContainer.new()
 	columns.add_theme_constant_override("separation", 16)
@@ -74,8 +86,22 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func open() -> void:
 	_selected = ""
+	_sync_tabs()
 	_rebuild()
 	visible = true
+	_focus_selected.call_deferred()
+
+
+func _sync_tabs() -> void:
+	for tb in _tabs.get_children():
+		(tb as Button).set_pressed_no_signal(tb.name == _category)
+
+
+func _set_category(cat: String) -> void:
+	_category = cat
+	_selected = ""
+	_sync_tabs()
+	_rebuild()
 	_focus_selected.call_deferred()
 
 
@@ -91,6 +117,14 @@ static func sorted_item_ids(c: CharacterData, data: GameData) -> Array:
 	var ids := c.inventory.keys()
 	ids.sort_custom(func(a, b): return _item_name(data, a).naturalnocasecmp_to(_item_name(data, b)) < 0)
 	return ids
+
+
+## Sorted item ids in one category tab ("All" = everything).
+static func filtered_ids(c: CharacterData, data: GameData, category: String) -> Array:
+	var ids := sorted_item_ids(c, data)
+	if category == "All":
+		return ids
+	return ids.filter(func(id): return Items.category(data.items.get(id, {})) == category)
 
 
 ## Human-readable summary of an effects dictionary; see Items.describe_effects.
@@ -145,11 +179,11 @@ func _rebuild() -> void:
 		_list.remove_child(child)
 		child.queue_free()
 	_readied.text = readied_summary(p, data)
-	var ids := sorted_item_ids(p, data)
+	var ids := filtered_ids(p, data, _category)
 	if not ids.has(_selected):
 		_selected = ids[0] if not ids.is_empty() else ""
 	if ids.is_empty():
-		_list.add_child(UIStyle.label("Your pouch is empty.", 16, Color(0.7, 0.7, 0.7)))
+		_list.add_child(UIStyle.label("Nothing here." if _category != "All" else "Your pouch is empty.", 16, Color(0.7, 0.7, 0.7)))
 	for item_id in ids:
 		var label := "%s  x%d" % [_item_name(data, item_id), p.item_count(item_id)]
 		if p.readied_talismans.has(item_id):

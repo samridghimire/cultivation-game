@@ -129,3 +129,37 @@ func test_ready_button_readies_and_puts_away_talismans() -> void:
 	assert_false(inv._ready_button.disabled, "a slot is free again")
 	inv.free()
 	gs.end_session()
+
+
+func test_item_categories() -> void:
+	var d := data()
+	assert_eq(Items.category(d.items["iron_sword"]), "Equipment")
+	assert_eq(Items.category(d.items["qi_gathering_pill"]), "Pills")
+	assert_eq(Items.category(d.items["spirit_stone"]), "Other")
+	for id in d.items:
+		assert_true(Items.CATEGORIES.has(Items.category(d.items[id])), id)
+	var kinds := {}
+	for id in d.items:
+		kinds[Items.category(d.items[id])] = true
+	for cat in Items.CATEGORIES:
+		if cat != "All":
+			assert_true(kinds.has(cat), "no item in " + cat)
+
+
+func test_category_tabs_filter_list_and_focus_first() -> void:
+	var root := (Engine.get_main_loop() as SceneTree).root
+	var gs := root.get_node("GameState")
+	gs.start_session(CharacterFactory.create("Tabber", gs.data, seeded_rng()))
+	gs.player.inventory = {"iron_sword": 1, "qi_gathering_pill": 2}
+	var inv := InventoryScreen.new()
+	root.add_child(inv)
+	inv.open()
+	assert_eq(inv._list.get_child_count(), 2)
+	inv._set_category("Equipment")
+	assert_eq(inv._list.get_child_count(), 1)
+	assert_eq(inv._selected, "iron_sword")
+	inv._set_category("Talismans")
+	assert_eq(inv._list.get_child_count(), 1)
+	assert_eq((inv._list.get_child(0) as Label).text, "Nothing here.")
+	inv._set_category("All")
+	inv.queue_free()

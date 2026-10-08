@@ -115,6 +115,26 @@ static func check_merchant(c: CharacterData, min_alignment: int, max_alignment: 
 	return ""
 
 
+## Inventory tab an item belongs to, one of CATEGORIES (minus "All").
+static func category(item: Dictionary) -> String:
+	var tags: Array = item.get("tags", [])
+	var effects: Dictionary = item.get("effects", {})
+	if item.has("equip"):
+		return "Equipment"
+	if tags.has("talisman") or item.has("combat"):
+		return "Talismans"
+	if tags.has("herb") or tags.has("ore"):
+		return "Herbs & Ores"
+	if effects.has("learn_recipe") or effects.has("learn_technique"):
+		return "Manuals & Scrolls"
+	if bool(item.get("usable", false)):
+		return "Pills"
+	return "Other"
+
+
+const CATEGORIES: Array[String] = ["All", "Pills", "Herbs & Ores", "Equipment", "Talismans", "Manuals & Scrolls", "Other"]
+
+
 static func has_tag(data: GameData, item_id: String, tags: Array) -> bool:
 	for tag in data.items.get(item_id, {}).get("tags", []):
 		if tags.has(tag):
