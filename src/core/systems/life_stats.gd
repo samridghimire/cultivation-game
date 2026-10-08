@@ -46,15 +46,18 @@ static func lines(c: CharacterData) -> PackedStringArray:
 	return result
 
 
-## Epilogue for the final-death screen (WU-007b): who they were, then up to
+## Epilogue for the final-death screen (EPI-001): who they were, then up to
 ## `max_stats` of their life-record lines.
-static func epilogue(c: CharacterData, data: GameData, clan_name: String = "", max_stats: int = 8) -> PackedStringArray:
+static func epilogue(c: CharacterData, data: GameData, clan: ClanData = null, max_stats: int = 8) -> PackedStringArray:
 	var out := PackedStringArray()
-	out.append("%s, aged %d, %s." % [c.name, c.age_years(), Cultivation.realm_label(c, data)])
-	var line := "%s (%d). %s" % [Alignment.tier_name(c.alignment, data), c.alignment, Sects.describe(c, data)]
-	if clan_name != "":
-		line += " Founder of the %s." % clan_name
-	out.append(line)
+	out.append("%s, fallen at age %d" % [c.name, c.age_years()])
+	out.append("Realm: %s" % Cultivation.realm_label(c, data))
+	out.append("Path: %s" % Alignment.tier_name(c.alignment, data))
+	out.append("A rogue cultivator" if c.is_rogue() else "Sect: %s" % Sects.describe(c, data))
+	if clan != null and clan.name != "":
+		out.append("Clan: %s, %d members" % [clan.name, clan.members.size()])
+	if not c.children.is_empty():
+		out.append("Children: %d" % c.children.size())
 	var stats := lines(c)
 	for i in mini(stats.size(), max_stats):
 		out.append(stats[i])
