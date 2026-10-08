@@ -220,3 +220,40 @@ func test_preview_at_bottleneck_is_empty() -> void:
 	var p := Cultivation.preview(c, data(), 30, 1.0)
 	assert_eq(p["days"], 0)
 	assert_eq(p["qi_gain"], 0)
+
+
+## CULT-001: days to the next stage and progress text.
+func test_days_to_next_stage_matches_hand_calculation() -> void:
+	var c := new_character()
+	c.realm_index = 1
+	c.stage = 0
+	c.qi = 10.0
+	for density in [1.0, 2.5]:
+		var per_day := Cultivation.qi_per_day(c, data(), density)
+		var expected := maxi(1, ceili((data().realms[1].qi_required(0) - 10.0) / per_day - 0.000001))
+		assert_eq(Cultivation.days_to_next_stage(c, data(), density), expected)
+	assert_true(Cultivation.days_to_next_stage(c, data(), 2.5) < Cultivation.days_to_next_stage(c, data(), 1.0))
+
+
+func test_days_to_next_stage_is_minus_one_at_bottleneck() -> void:
+	var c := new_character()
+	c.realm_index = 1
+	c.stage = data().realms[1].stage_count() - 1
+	c.qi = data().realms[1].qi_required(c.stage)
+	assert_eq(Cultivation.days_to_next_stage(c, data()), -1)
+	assert_true(Cultivation.progress_text(c, data()).begins_with("ready to break through to "))
+
+
+func test_progress_text_names_the_next_stage() -> void:
+	var c := new_character()
+	c.realm_index = 1
+	c.stage = 0
+	c.qi = 12.0
+	var text := Cultivation.progress_text(c, data())
+	assert_true(text.begins_with("12/"))
+	assert_true(text.ends_with("qi to the 2nd Layer"))
+	for bad in ["%", "{"]:
+		assert_false(text.contains(bad))
+	c.stage = data().realms[1].stage_count() - 1
+	c.qi = 1.0
+	assert_true(Cultivation.progress_text(c, data()).ends_with("qi to the bottleneck"))

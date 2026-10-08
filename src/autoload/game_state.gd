@@ -155,7 +155,7 @@ func cultivate(days: int, location_density: float = 1.0, skip_title: String = "M
 		days = needed
 	_start_time_skip()
 	var result := Cultivation.cultivate(player, data, days, density)
-	EventBus.post("You cultivate for %s and gather %d qi." % [Calendar.format_duration(days), int(result["qi_gained"])])
+	EventBus.post("You cultivate for %s and gather %d qi (%s)." % [Calendar.format_duration(days), int(result["qi_gained"]), Cultivation.progress_text(player, data)])
 	if result["stages_gained"] > 0:
 		EventBus.post("Your cultivation rises to %s!" % Cultivation.realm_label(player, data), "progress")
 	if result["at_bottleneck"]:
@@ -1778,6 +1778,10 @@ func _cultivation_density(location_density: float) -> float:
 
 
 ## Preview line for cultivating `days` at a spot of `location_density` (same density as cultivate()).
+func days_to_next_stage(location_density: float = 1.0) -> int:
+	return Cultivation.days_to_next_stage(player, data, _cultivation_density(location_density))
+
+
 func meditation_preview(days: int, location_density: float = 1.0) -> String:
 	return Guidance.meditation_preview(player, data, days, _cultivation_density(location_density))
 

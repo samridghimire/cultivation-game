@@ -82,6 +82,31 @@ static func days_to_bottleneck(c: CharacterData, data: GameData, density: float 
 	return maxi(1, ceili(remaining / per_day - 0.000001))
 
 
+## Days of meditation at `density` until the next stage (or the realm's bottleneck
+## when the next step is the breakthrough). -1 at the bottleneck or with no qi gathered.
+static func days_to_next_stage(c: CharacterData, data: GameData, density: float = 1.0) -> int:
+	if is_at_bottleneck(c, data):
+		return -1
+	var per_day := qi_per_day(c, data, density)
+	if per_day <= 0.0:
+		return -1
+	var remaining := data.realms[c.realm_index].qi_required(c.stage) - c.qi
+	return maxi(1, ceili(remaining / per_day - 0.000001))
+
+
+## "450/900 qi to the 2nd Layer", or the breakthrough state at the bottleneck.
+static func progress_text(c: CharacterData, data: GameData) -> String:
+	var realm: RealmDef = data.realms[c.realm_index]
+	if is_at_bottleneck(c, data):
+		if is_final_realm(c, data):
+			return "at the peak of the path"
+		return "ready to break through to %s" % data.realms[c.realm_index + 1].name
+	var goal := "the bottleneck"
+	if c.stage + 1 < realm.stage_count():
+		goal = "the %s" % realm.stage_names[c.stage + 1] if realm.stage_names[c.stage + 1] != "" else "the next stage"
+	return "%d/%d qi to %s" % [int(c.qi), ceili(realm.qi_required(c.stage)), goal]
+
+
 static func is_at_bottleneck(c: CharacterData, data: GameData) -> bool:
 	var realm: RealmDef = data.realms[c.realm_index]
 	return c.stage == realm.stage_count() - 1 and c.qi >= realm.qi_required(c.stage)

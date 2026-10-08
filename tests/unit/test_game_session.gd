@@ -647,3 +647,15 @@ func test_new_year_posts_a_review_once_and_restores_snapshot() -> void:
 	assert_eq(seen.size(), 1)
 	assert_true(c.year_start_realm != "")
 	assert_eq(gs.player, c)
+
+
+func test_meditation_line_shows_progress() -> void:
+	var c := _start()
+	c.realm_index = 1
+	_game_state().cultivate(Calendar.DAYS_PER_MONTH)
+	var lines: Array = _root().get_node("EventBus").history.filter(func(m): return String(m["text"]).begins_with("You cultivate for"))
+	assert_false(lines.is_empty())
+	var text := String(lines[-1]["text"])
+	assert_true(text.contains("qi to"))
+	assert_false(text.contains("%") or text.contains("{"))
+	assert_true(_game_state().days_to_next_stage(1.0) != 0)
