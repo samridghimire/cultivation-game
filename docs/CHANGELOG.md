@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-08 [QA-006b] The economy sim now earns and spends like a player (crafting, gathering, missions, gear, clinics).
 - 2026-10-08 [LW-003b] Tournament bouts no longer heal you in between: each bout starts with the hp the last one left.
 - 2026-10-08 [REL-009] A Steam platform layer (achievements and rich presence) that stays silent until Steam is present; milestones unlock achievements.
 - 2026-10-08 [GOAL-001] Milestones: 16 first steps (first fight won, first craft, first tribulation...) are recognised as you reach them.
