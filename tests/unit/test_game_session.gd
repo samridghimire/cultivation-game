@@ -450,7 +450,11 @@ func test_life_stats_track_actions() -> void:
 	var gs := _game_state()
 	var foe: Dictionary = gs.data.enemies["wild_boar"].duplicate(true)
 	foe["id"] = "t_stat_boar"
-	foe["hp"] = 1
+	# Enemy stats are modifiers on realm power; make the foe a 1-hp, harmless, undodging target
+	# so the win does not depend on the seed.
+	foe["hp"] = -1000
+	foe["attack"] = -1000
+	foe["speed"] = -1000
 	gs.data.enemies["t_stat_boar"] = foe
 	assert_true(gs.fight_enemy(foe))
 	assert_eq(LifeStats.get_stat(c, "fights_won"), 1)
