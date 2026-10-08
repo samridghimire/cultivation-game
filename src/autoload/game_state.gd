@@ -1764,7 +1764,11 @@ func fight_enemy(enemy: Dictionary) -> bool:
 	EventBus.post(lines[0], "danger")
 	var outcome := Combat.apply_outcome(player, data, enemy, result, world_flags, rng)
 	var rounds := int(result["rounds"])
-	var summary := "%d %s, %d/%d hp left" % [rounds, "round" if rounds == 1 else "rounds", result["player_hp"], result["player_max_hp"]]
+	var summary := "%d/%d hp left" % [result["player_hp"], result["player_max_hp"]]
+	if rounds == 0:
+		summary = "defeated before it could strike, " + summary
+	else:
+		summary = "%d %s, %s" % [rounds, "round" if rounds == 1 else "rounds", summary]
 	if not outcome["notes"].is_empty():
 		summary += "; " + ", ".join(outcome["notes"])
 	EventBus.post("%s (%s)" % [lines[-1], summary], "progress" if result["victory"] else "danger")

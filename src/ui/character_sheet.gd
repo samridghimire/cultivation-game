@@ -19,6 +19,8 @@ var _gender_row: HBoxContainer
 var _equip_row: HBoxContainer
 var _train_children: Button
 var _family_button: Button
+## Beast whose Release button awaits its confirming second press (FH-015).
+var _release_confirm := ""
 
 
 func _init() -> void:
@@ -76,6 +78,7 @@ func _fit_scroll() -> void:
 
 
 func open() -> void:
+	_release_confirm = ""
 	_rebuild()
 	_scroll.scroll_vertical = 0
 	visible = true
@@ -94,6 +97,7 @@ func _choose_gender(gender: String) -> void:
 
 
 func close() -> void:
+	_release_confirm = ""
 	if not visible:
 		return
 	visible = false
@@ -249,6 +253,11 @@ func _rebuild_equip_row() -> void:
 		feed.name = "feed_" + beast_id
 		feed.disabled = food == "" or Beasts.check_feed(GameState.player, GameState.data, beast_id, food) != ""
 		_equip_row.add_child(feed)
+		var release := UIStyle.button("Confirm release?" if _release_confirm == beast_id else "Release", _release_pressed.bind(beast_id))
+		release.name = "release_" + beast_id
+		if _release_confirm == beast_id:
+			release.focus_exited.connect(_release_focus_lost.bind(release).call_deferred)
+		_equip_row.add_child(release)
 	var p := GameState.player
 	for slot in Equipment.SLOTS:
 		var item_id := String(p.equipment.get(slot, ""))
@@ -257,6 +266,34 @@ func _rebuild_equip_row() -> void:
 			b.name = "unequip_" + slot
 			_equip_row.add_child(b)
 	_equip_row.visible = _equip_row.get_child_count() > 0
+
+
+## First press arms "Confirm release?", the second frees the beast.
+func _release_pressed(beast_id: String) -> void:
+	if _release_confirm != beast_id:
+		_release_confirm = beast_id
+		_rebuild_equip_row()
+		var armed := _equip_row.get_node_or_null("release_" + beast_id) as Button
+		if armed != null:
+			_focus_if_in_tree.call_deferred(armed)
+		return
+	_release_confirm = ""
+	GameState.release_companion(GameState.player.companions.find(beast_id))
+	_rebuild_equip_row()
+	_default_focus().grab_focus.call_deferred()
+
+
+func _focus_if_in_tree(button: Control) -> void:
+	if is_instance_valid(button) and button.is_inside_tree():
+		button.grab_focus()
+
+
+## Moving focus away from an armed Release button disarms it.
+func _release_focus_lost(button: Button) -> void:
+	if _release_confirm == "" or (is_instance_valid(button) and button.has_focus()):
+		return
+	_release_confirm = ""
+	_rebuild_equip_row()
 
 
 func _unequip(slot: String) -> void:

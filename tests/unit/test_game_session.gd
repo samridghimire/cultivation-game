@@ -384,3 +384,30 @@ func test_long_cultivation_stops_at_the_bottleneck() -> void:
 	assert_true(Cultivation.is_at_bottleneck(c, gs.data))
 	gs.cultivate(30)
 	assert_eq(clock.total_days, needed)
+
+
+var _zero_round_posts: Array[String] = []
+
+
+func _collect_post(text: String, _category: String) -> void:
+	_zero_round_posts.append(text)
+
+
+## FH-015: a foe felled by a talisman before any exchange posts no "0 rounds".
+func test_fight_won_in_zero_rounds_posts_no_round_count() -> void:
+	var c := _start()
+	var gs := _game_state()
+	var foe: Dictionary = gs.data.enemies["wild_boar"].duplicate(true)
+	foe["id"] = "t_glass_boar"
+	foe["hp"] = 1
+	gs.data.enemies["t_glass_boar"] = foe
+	c.add_item("fire_strike_talisman", 5)
+	CombatTalismans.ready_talisman(c, gs.data, "fire_strike_talisman")
+	_zero_round_posts.clear()
+	EventBus.message_posted.connect(_collect_post)
+	gs.fight("t_glass_boar")
+	EventBus.message_posted.disconnect(_collect_post)
+	var text := "\n".join(_zero_round_posts)
+	assert_false(text.contains("0 rounds"), text)
+	assert_true(text.contains("before it could strike"), text)
+	gs.end_session()

@@ -177,6 +177,28 @@ func test_sheet_shows_and_feeds_companions() -> void:
 	gs.end_session()
 
 
+## FH-015: Release needs a confirming second press.
+func test_sheet_release_needs_confirmation() -> void:
+	var root := (Engine.get_main_loop() as SceneTree).root
+	var gs := root.get_node("GameState")
+	var c := new_character()
+	gs.start_session(c)
+	c.companions = ["boar"] as Array[String]
+	var sheet := CharacterSheet.new()
+	root.add_child(sheet)
+	sheet.open()
+	var release := sheet._equip_row.get_node("release_boar") as Button
+	assert_eq(release.text, "Release")
+	release.pressed.emit()
+	assert_eq(c.companions.size(), 1, "first press only arms")
+	release = sheet._equip_row.get_node("release_boar") as Button
+	assert_eq(release.text, "Confirm release?")
+	release.pressed.emit()
+	assert_true(c.companions.is_empty(), "second press frees the beast")
+	sheet.free()
+	gs.end_session()
+
+
 ## BEAST-001c: enough tameable beasts, each met in some encounter, and beast
 ## food a Beast Tamer can mix.
 func test_beast_content() -> void:
