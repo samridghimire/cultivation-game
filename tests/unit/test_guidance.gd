@@ -259,3 +259,53 @@ func test_loaded_save_starts_the_log_with_a_recap() -> void:
 	for entry: Dictionary in history:
 		assert_false(String(entry["text"]).contains("%") or String(entry["text"]).contains("{"))
 	gs.end_session()
+
+
+# --- GUIDE-005: outgrown cultivation method ---------------------------------
+
+func _outgrown() -> CharacterData:
+	var c := _fresh()
+	c.techniques["verdant_spring_method"] = {"level": 1, "xp": 0.0}
+	c.main_method = "verdant_spring_method"
+	c.realm_index = data().realm_index_of("core_formation")
+	return c
+
+
+func test_outgrown_method_hint_names_cap_and_rate() -> void:
+	var c := _outgrown()
+	var hints := Guidance.hints(c, data(), 1.0, 20)
+	assert_true(_has(hints, "Verdant Spring Method teaches nothing past Foundation Establishment"))
+	assert_true(_has(hints, "fallen to x%s" % String.num(data().method_over_cap_rate, 2)))
+	assert_true(_has(hints, "Look for the"), "points at a manual")
+	for h in hints:
+		if h.contains("teaches nothing past"):
+			assert_false(h.contains("%") or h.contains("{"), h)
+
+
+func test_outgrown_method_hint_names_a_known_better_method() -> void:
+	var c := _outgrown()
+	c.techniques["azure_cloud_heart_sutra"] = {"level": 1, "xp": 0.0}
+	var hints := Guidance.hints(c, data(), 1.0, 20)
+	assert_true(_has(hints, "you know the Azure Cloud Heart Sutra"))
+	assert_false(_has(hints, "Look for the"))
+
+
+func test_method_hint_warns_before_outgrowing_and_is_absent_when_fine() -> void:
+	assert_false(_has(Guidance.hints(_fresh(), data(), 1.0, 20), "teaches nothing"))
+	var c := _outgrown()
+	c.realm_index = data().realm_index_of("foundation_establishment")
+	c.stage = data().realms[c.realm_index].stage_names.size() - 1
+	c.qi = 1.0e12
+	assert_true(Cultivation.is_at_bottleneck(c, data()))
+	assert_true(_has(Guidance.hints(c, data(), 1.0, 20), "stops at Foundation Establishment"))
+
+
+func test_outgrown_method_is_a_warning_in_the_journal() -> void:
+	var c := _outgrown()
+	var rows := Guidance.journal(c, data(), {}, 0, c.home_region)
+	var found := false
+	for row in rows:
+		if String(row["text"]).contains("teaches nothing past"):
+			found = true
+			assert_eq(row["tone"], "warning")
+	assert_true(found)

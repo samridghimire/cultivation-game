@@ -37,6 +37,9 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 	var newcomer := _newcomer_hints(c, data, flags, region_id) if c.realm_index <= NEWCOMER_MAX_REALM else PackedStringArray()
 	out.append_array(newcomer)
 	out.append(_cultivation_hint(c, data, density))
+	var method := _method_hint(c, data)
+	if method != "":
+		out.append(method)
 	var better_qi := _better_qi_hint(c, data, region_id)
 	if better_qi != "":
 		out.append(better_qi)
@@ -122,6 +125,55 @@ static func best_qi_reachable(c: CharacterData, data: GameData, region_id: Strin
 				seen[to] = true
 				queue.append(to)
 	return best
+
+
+## Warns when the main cultivation method is outgrown (qi gathering has fallen)
+## or will be at the next breakthrough, and points at a better one.
+static func _method_hint(c: CharacterData, data: GameData) -> String:
+	var main_id := Techniques.main_method(c, data)
+	var main_def: TechniqueDef = data.techniques.get(main_id)
+	if main_def == null or main_def.max_realm == "":
+		return ""
+	var cap_name: String = data.realms[data.realm_index_of(main_def.max_realm)].name
+	if Techniques.is_outgrown(c, data, main_id):
+		var text := "Your %s teaches nothing past %s: qi gathering has fallen to x%s. Switch to a better method (techniques screen)" % [main_def.name, cap_name, String.num(data.method_over_cap_rate, 2)]
+		var best := ""
+		var best_rate := data.method_over_cap_rate
+		for tech_id in c.techniques:
+			var def: TechniqueDef = data.techniques.get(tech_id)
+			if def == null or not def.is_method() or Techniques.is_outgrown(c, data, tech_id):
+				continue
+			var rate := Techniques.method_rate_of(c, data, tech_id)
+			if rate > best_rate:
+				best_rate = rate
+				best = def.name
+		if best != "":
+			return text + " - you know the %s." % best
+		text += "."
+		var manual := _better_manual(c, data)
+		if manual != "":
+			text += " " + manual
+		return text
+	if Cultivation.is_at_bottleneck(c, data) and c.realm_index + 1 > data.realm_index_of(main_def.max_realm):
+		return "Your %s stops at %s; find a new one before you break through." % [main_def.name, cap_name]
+	return ""
+
+
+## "Look for the <manual> (<source>)." for a method manual that reaches past the player's realm.
+static func _better_manual(c: CharacterData, data: GameData) -> String:
+	var ids: Array = data.items.keys()
+	ids.sort()
+	for item_id in ids:
+		for tech: TechniqueDef in data.techniques.values():
+			if not tech.is_method() or tech.manual_item != item_id or Techniques.knows(c, tech.id):
+				continue
+			if tech.max_realm != "" and data.realm_index_of(tech.max_realm) <= c.realm_index:
+				continue
+			var sources := Items.sources(data, item_id)
+			if sources.is_empty():
+				continue
+			return "Look for the %s (%s)." % [String(data.items[item_id].get("name", item_id)), sources[0]]
+	return ""
 
 
 ## A pointer to much better qi elsewhere (>= BETTER_QI_RATIO x the best spot here).
@@ -282,11 +334,12 @@ static func journal(c: CharacterData, data: GameData, flags: Dictionary, today: 
 		urgent += 1
 	# The duty reminder lives in the Sect section; keep it out of Next steps.
 	var duty_line := Sects.duty_reminder(c, data) if Sects.duty_days_left(c) <= Sects.DUTY_REMINDER_DAYS else ""
+	var method_line := _method_hint(c, data)
 	var shown := 0
 	for line in hint_lines:
 		if duty_line != "" and line == duty_line:
 			continue
-		_add(out, "Next steps", line, "warning" if shown < urgent else "normal")
+		_add(out, "Next steps", line, "warning" if shown < urgent or (method_line != "" and line == method_line) else "normal")
 		shown += 1
 	_breakthrough_entries(out, c, data, density)
 	if not c.is_rogue():
