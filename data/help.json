@@ -78,6 +78,93 @@
         "Win the favor of other cultivators, court them and propose marriage. Spouses cultivate beside you, dual cultivation speeds both of you, and children inherit roots from both parents.",
         "A family can grow into a clan that outlives you. Its future is yours to shape."
       ]
+    },
+    {
+      "id": "combat",
+      "title": "Combat and Danger",
+      "body": [
+        "Before a fight the game rates the foe against you: Weak (you win nearly always), Even (a coin flip or better), Dangerous (you will probably lose) and Deadly (you almost surely die). Deadly foes are sensed and avoided while you explore.",
+        "A fight is either lethal (to the death) or non-lethal (you are beaten, robbed or driven off). Read the prompt before you accept: slipping away costs a day, not your life.",
+        "Losing can leave an injury that slows cultivation or weakens you in battle; a doctor or the clinic can heal it, or time will.",
+        "A violent death with a life left in your Creation Artifact respawns you at a bound anchor. With none left, death is final."
+      ]
+    },
+    {
+      "id": "exploring",
+      "title": "Exploring and Encounters",
+      "body": [
+        "Interact with an Explore spot to wander the region for a few days. Each trip rolls an encounter chosen from what the place offers: herbs, windfalls, travellers, strangers, beasts or bandits.",
+        "Some encounters ask you to choose. Kindness and cruelty move you along the righteous and demonic paths, and people remember.",
+        "Stronger realms unlock stranger events, and many one-time stories will not repeat once you have lived them."
+      ]
+    },
+    {
+      "id": "money",
+      "title": "Making Money",
+      "body": [
+        "Early on, take chores and odd jobs from the villagers for a few spirit stones. Gather herbs at gather spots and sell them to a merchant.",
+        "A profession pays far better: brew pills, forge gear, draw talismans or treat the sick, and sell the results.",
+        "Sect members take missions from the mission board for stones and contribution points. Stones buy pills, gear and manuals; spend them on what speeds your cultivation first."
+      ]
+    },
+    {
+      "id": "techniques",
+      "title": "Techniques and Methods",
+      "body": [
+        "Open the Techniques screen to see what you know. A technique is used in combat and grows with levels; learn more from manuals, sect halls and teachers.",
+        "A cultivation method is different: it shapes how fast you gather qi and how far you can go. You follow one method at a time, and some require a particular alignment or sect.",
+        "Keep both in step with your realm; a strong method with a weak technique still loses fights."
+      ]
+    },
+    {
+      "id": "crafting",
+      "title": "Crafting and Ingredients",
+      "body": [
+        "Visit a workshop to craft once you have the profession and the recipe. The crafting screen shows each recipe and what you are missing.",
+        "Ingredients come from three places: a merchant's shelves, gather spots in the wild, and rare finds while exploring. Higher herbs need a higher realm to gather.",
+        "Learn new recipes from scrolls and teachers, and rank up your profession to unlock more."
+      ]
+    },
+    {
+      "id": "injuries",
+      "title": "Injuries and Healing",
+      "body": [
+        "Defeat and failed breakthroughs can leave an injury. The character sheet lists each one with its penalty and how long it takes to heal.",
+        "You can rest and let the days pass, pay a doctor at a clinic, or find a healer who treats you for free. Cultivating with an injury is slow, so heal before big efforts."
+      ]
+    },
+    {
+      "id": "tribulation",
+      "title": "Heavenly Tribulations",
+      "body": [
+        "Some great breakthroughs draw heavenly lightning. You must survive it or your cultivation is shaken, and failure may leave a grave injury.",
+        "Prepare first: protective talismans, defensive gear and pills improve your odds, and a strong body helps. You get a screen to prepare before the first bolt falls."
+      ]
+    },
+    {
+      "id": "secret_realms",
+      "title": "Secret Realms and Inheritances",
+      "body": [
+        "Secret realms open only at certain times. Walk to a realm entrance while it is open, and descend floor by floor for treasure and danger.",
+        "Inheritance grounds hold the legacy of dead cultivators. Passing their trials can reward you with techniques, methods and gear.",
+        "Both are risky: go in healed, supplied, and at a realm that matches the depth you plan to reach."
+      ]
+    },
+    {
+      "id": "abodes",
+      "title": "Abodes and Arrays",
+      "body": [
+        "Buy a cave abode in a region to claim a private place to cultivate. Its qi density is higher than the open road, and its chest stores your goods.",
+        "You may hold one abode at a time. Arrays, set up by an Array Master, gather qi, guard or conceal a place."
+      ]
+    },
+    {
+      "id": "karma",
+      "title": "Karma, Grudges and Debts",
+      "body": [
+        "The world keeps score. Those you spare, save or help may repay you; those you wrong may hunt you.",
+        "Open the Character sheet to see grudges and debts. Settle them with force, stones or a kindness, or run: grudges outlive the years."
+      ]
     }
   ]
 }
