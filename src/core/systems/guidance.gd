@@ -555,7 +555,8 @@ static func _profession_goal(c: CharacterData, data: GameData) -> String:
 	var def: ProfessionDef = data.professions[best_id]
 	var rank := Professions.rank_of(c, best_id)
 	var more := ceili(def.xp_to_next(rank) - Professions.xp_of(c, best_id))
-	return "Become %s %s: %d more xp (craft or work at a workshop)." % [data.profession_rank_names[rank + 1], def.name, more]
+	var how := "treat patients at a clinic" if best_id == Medicine.DOCTOR else "craft or work at a workshop"
+	return "Become %s %s: %d more xp (%s)." % [data.profession_rank_names[rank + 1], def.name, more, how]
 
 
 ## "Where you left off" lines for a freshly loaded save (RECAP-001): who and where

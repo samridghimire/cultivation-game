@@ -653,3 +653,7 @@ func test_profession_goal_line() -> void:
 		assert_false(l.contains("_") or l.contains("%"), l)
 	c.professions["alchemist"] = {"rank": Professions.max_rank(data()), "xp": 0.0}
 	assert_false(_has(Guidance.goals(c, data(), {}), "more xp"))
+	c.professions = {"doctor": {"rank": 0, "xp": 0.0}}
+	assert_true(_has(Guidance.goals(c, data(), {}), "Doctor: "), str(Guidance.goals(c, data(), {})))
+	for l in Guidance.goals(c, data(), {}):
+		assert_false(l.contains("workshop"), l)

@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: fd22b14
+Last reviewed commit: d5121fd
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -156,3 +156,19 @@ Last reviewed commit: fd22b14
   - Data retunes C-016/C-021/C-022 only touch trial/guardian-only foes or add new ones (star_vault_warden,
     garden_poacher...); shared foes unchanged. C-023 keeps per-kill income level. REL-011 script refuses placeholder ids
     and keeps no secrets. STAT-002, WU-035/039, WU-041, WU-043, GOAL-002, QA-036, QA-033: match specs, tests present.
+- 2026-10-08 (reviewer): reviewed fd22b14..d5121fd (MSG-002, GOAL-003, QA-020, CMB-003, C-024, RV-011, RV-010, C-025,
+  WU-048, C-029, QA-037, WU-049, MSG-003, WU-053, GOAL-004, WU-050, C-030; [PLAN] skipped). Main green before and after
+  (1264 tests). No BACKLOG/CHANGELOG edits by workers; no SAVE_VERSION change. (Local clone was shallow and showed a
+  false divergence; reset to origin/main.)
+  - Fixed in one [REVIEW] commit: GOAL-004's profession goal told a Doctor to "craft or work at a workshop"; Doctor xp
+    comes from treating patients, so it now says "treat patients at a clinic" (test added).
+  - Notes, not filed: (1) WU-053 writes "+3 Mist Wolf Pelt (sells for 7)" where 7 is the per-item price; reads like
+    the stack's worth when the count is above 1. (2) WU-050's "LB/RB or PgUp/PgDn" hint is built in ShopScreen._init,
+    so a rebind made while the game runs shows the old buttons until the screen is rebuilt. (3) GOAL-003 hides the
+    sect-rank line by matching Sects.check_promotion's "No trial" prefix; rewording that reason would show it.
+    (4) CMB-003 says a named non-lethal foe "yields" (good for sect trials; also used for named bandits who are beaten
+    but not killed).
+  - MSG-003 resolves last review's note: the tier announcement now runs on player_changed and _announced_tier is set on
+    new game and load. RV-010/RV-011 resolve the GUIDE-008 burst and the readied-talisman sell notes. C-024/C-025/C-030
+    data: new gear and pill recipes use previously unused beast materials (test enforces it), baseline refreshed.
+    WU-048, C-029 (deterministic quiet lines, validated), QA-020, QA-037, WU-049, MSG-002: match specs, tests present.
