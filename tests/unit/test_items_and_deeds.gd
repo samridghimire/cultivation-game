@@ -13,6 +13,7 @@ func test_buy_requires_stones() -> void:
 
 func test_using_pill_applies_effects_and_consumes_it() -> void:
 	var c := new_character()
+	c.realm_index = data().realm_index_of("qi_refining")
 	c.add_item("foundation_establishment_pill", 1)
 	assert_true(Items.use(c, data(), "foundation_establishment_pill", {})["ok"])
 	assert_almost_eq(c.breakthrough_bonus, 0.25)

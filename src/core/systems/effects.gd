@@ -6,6 +6,8 @@ extends RefCounted
 ##   alignment: int             shift alignment
 ##   items: {item_id: int}      add (or remove, if negative) items
 ##   breakthrough_bonus: float  bonus to next breakthrough attempt
+##   breakthrough_realm: String realm id this breakthrough_bonus is meant for; refused
+##                              for any other next realm, and while a bonus is already waiting
 ##   set_flag: String           set a world flag
 ##   clear_flag: String         clear a world flag
 ##   learn_technique: String    learn a technique (see techniques.gd)
@@ -31,6 +33,10 @@ static func check(c: CharacterData, data: GameData, effects: Dictionary) -> Stri
 		var delta := int(item_changes[item_id])
 		if delta < 0 and c.item_count(item_id) < -delta:
 			return "You need %d %s." % [-delta, data.items.get(item_id, {}).get("name", item_id)]
+	if effects.has("breakthrough_realm"):
+		var realm_reason := _check_breakthrough_realm(c, data, String(effects["breakthrough_realm"]))
+		if realm_reason != "":
+			return realm_reason
 	if effects.has("burn_lifespan") and int(effects["burn_lifespan"]) >= Cultivation.years_left(c, data):
 		return "Burning %d years of life would kill you." % int(effects["burn_lifespan"])
 	if effects.has("heal_injury") and not _has_healable(c, effects["heal_injury"]):
@@ -45,6 +51,19 @@ static func check(c: CharacterData, data: GameData, effects: Dictionary) -> Stri
 		var reason := Alchemy.can_learn(c, data, effects["learn_recipe"])
 		if reason != "":
 			return reason
+	return ""
+
+
+static func _check_breakthrough_realm(c: CharacterData, data: GameData, realm_id: String) -> String:
+	var target := ""
+	if c.realm_index + 1 < data.realms.size():
+		target = data.realms[c.realm_index + 1].id
+	if target != realm_id:
+		var idx := data.realm_index_of(realm_id)
+		var realm_name := data.realms[idx].name if idx >= 0 else realm_id
+		return "This pill is meant for the breakthrough into %s." % realm_name
+	if c.breakthrough_bonus > 0.0:
+		return "A breakthrough boost already steadies you; one pill per attempt."
 	return ""
 
 

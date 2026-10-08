@@ -367,6 +367,12 @@ func _validate() -> void:
 		if item.get("effects", {}).has("buff"):
 			for error in Buffs.validate_effect(item["effects"]["buff"]):
 				load_errors.append("Item '%s': %s" % [item["id"], error])
+		var fx: Dictionary = item.get("effects", {})
+		if fx.has("breakthrough_realm"):
+			if not fx.has("breakthrough_bonus"):
+				load_errors.append("Item '%s': breakthrough_realm needs breakthrough_bonus" % item["id"])
+			if realm_index_of(String(fx["breakthrough_realm"])) < 1:
+				load_errors.append("Item '%s': unknown breakthrough_realm '%s'" % [item["id"], fx["breakthrough_realm"]])
 		for key in ["burn_lifespan", "extend_lifespan"]:
 			if item.get("effects", {}).has(key) and int(item["effects"][key]) <= 0:
 				load_errors.append("Item '%s' needs a positive %s" % [item["id"], key])
