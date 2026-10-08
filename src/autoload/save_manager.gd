@@ -107,6 +107,8 @@ func _parse_file(path: String) -> Dictionary:
 		return {}
 	var parsed: Variant = json.data
 	if parsed is Dictionary and (parsed as Dictionary).has("game"):
+		if int((parsed as Dictionary).get("version", 1)) > SAVE_VERSION:
+			return {}  # written by a newer build; loading it could corrupt it
 		return parsed
 	return {}
 
