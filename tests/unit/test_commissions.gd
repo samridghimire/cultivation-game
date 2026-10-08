@@ -124,3 +124,29 @@ func test_short_label_fits_and_has_no_doubled_count() -> void:
 	var worst := {"item": longest_id, "count": 3, "reward": 99, "xp": 99, "due_day": 60}
 	var worst_label := Commissions.short_label(c, data(), worst, 0)
 	assert_true(worst_label.length() <= 60, "%d: %s" % [worst_label.length(), worst_label])
+
+
+func test_delivery_hint_needs_the_items() -> void:
+	var c := _alchemist()
+	Commissions.roll(c, data(), seeded_rng(), 0)
+	var order: Dictionary = c.commissions[0]
+	assert_eq(Commissions.delivery_hint(c, data(), 0), "")
+	assert_eq(Guidance.hints(c, data(), 1.0, 99, {}, {}, "", 0).size(), Guidance.hints(c, data(), 1.0, 99).size())
+	c.add_item(order["item"], int(order["count"]))
+	var hint := Commissions.delivery_hint(c, data(), 0)
+	assert_true(hint.begins_with("Deliver your"), hint)
+	assert_true(hint.contains("%d days left" % int(data().commissions["days"])))
+	assert_true(Array(Guidance.hints(c, data(), 1.0, 99, {}, {}, "", 0)).has(hint))
+
+
+func test_lapse_warning_posts_once_across_the_seventh_day() -> void:
+	var c := _alchemist()
+	Commissions.roll(c, data(), seeded_rng(), 0)
+	var due := int(c.commissions[0]["due_day"])
+	var posted := 0
+	for day in range(due - 9, due - 4):
+		posted += Commissions.lapse_warnings(c, data(), day, day + 1).size()
+	assert_eq(posted, 1)
+	assert_eq(Commissions.lapse_warnings(c, data(), due - 8, due - 7).size(), 1)
+	assert_eq(Commissions.lapse_warnings(c, data(), due - 7, due - 6).size(), 0)
+	assert_eq(Commissions.lapse_warnings(c, data(), due - 20, due + 5).size(), 0, "already lapsed")

@@ -561,5 +561,4 @@ func test_commission_ordered_and_delivered() -> void:
 	gs.deliver_commission(0)
 	assert_eq(c.item_count("spirit_stone"), stones + int(order["reward"]))
 	assert_eq(c.commissions.size(), 0)
-	assert_eq(gs.commission_lines().size(), 0)
 	gs.end_session()

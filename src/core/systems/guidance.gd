@@ -19,7 +19,7 @@ const CHORE_REGION := "qingshi_village"
 ## stands (region x sect bonus), used for the days-to-next-stage estimate.
 ## `people` (the NPCs, optional) enables the family hints. `flags` (world flags)
 ## and `region_id` drive the newcomer hints shown while Mortal or Qi Refining.
-static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit: int = 5, people: Dictionary = {}, flags: Dictionary = {}, region_id: String = "") -> PackedStringArray:
+static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit: int = 5, people: Dictionary = {}, flags: Dictionary = {}, region_id: String = "", today: int = -1) -> PackedStringArray:
 	var out: PackedStringArray = []
 	var years := Cultivation.years_left(c, data)
 	if years <= LIFESPAN_WARNING_YEARS:
@@ -45,6 +45,10 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 	var missions := _mission_hint(c, data, flags)
 	if missions != "":
 		out.append(missions)
+	if today >= 0:
+		var delivery := Commissions.delivery_hint(c, data, today)
+		if delivery != "":
+			out.append(delivery)
 	if c.professions.is_empty():
 		out.append("Work at a workshop to learn a profession and earn spirit stones.")
 	if c.techniques.is_empty() and c.realm_index > NEWCOMER_MAX_REALM:
@@ -194,7 +198,7 @@ static func _newcomer_hints(c: CharacterData, data: GameData, flags: Dictionary,
 ## world events. Pure: nothing is mutated.
 static func journal(c: CharacterData, data: GameData, flags: Dictionary, today: int, region_id: String, density: float = 1.0, people: Dictionary = {}, events: Array = [], clan: ClanData = null) -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
-	var hint_lines := hints(c, data, density, 99, people, flags, region_id)
+	var hint_lines := hints(c, data, density, 99, people, flags, region_id, today)
 	var urgent := 0
 	if Cultivation.years_left(c, data) <= LIFESPAN_WARNING_YEARS:
 		urgent += 1

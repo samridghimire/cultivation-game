@@ -353,14 +353,6 @@ func deliver_commission(index: int) -> void:
 	EventBus.player_changed.emit()
 
 
-## One line per open crafting order, for the UI.
-func commission_lines() -> PackedStringArray:
-	var lines := PackedStringArray()
-	for order in player.commissions:
-		lines.append(Commissions.describe(player, data, order, GameClock.total_days))
-	return lines
-
-
 func join_sect(sect_id: String) -> void:
 	EventBus.topic = "sect"
 	if not _can_act():
@@ -2383,6 +2375,8 @@ func _on_days_advanced(days: int) -> void:
 	_expire_world_events()
 	if not player.commissions.is_empty():
 		EventBus.topic = "trade"
+		for warning in Commissions.lapse_warnings(player, data, GameClock.total_days - days, GameClock.total_days):
+			EventBus.post(warning, "info")
 		for lapsed in Commissions.expire(player, GameClock.total_days):
 			EventBus.post("The order for %d %s lapsed." % [int(lapsed["count"]), data.items.get(lapsed["item"], {}).get("name", lapsed["item"])], "info")
 		EventBus.topic = "world"

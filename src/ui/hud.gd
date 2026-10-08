@@ -388,7 +388,7 @@ func _refresh() -> void:
 	var hint_count := int(Settings.get_value("hud_hints"))
 	var hints: PackedStringArray = []
 	if hint_count > 0:
-		hints = Guidance.hints(p, data, GameState.hint_density(), hint_count, GameState.npcs, GameState.world_flags, GameState.current_region)
+		hints = Guidance.hints(p, data, GameState.hint_density(), hint_count, GameState.npcs, GameState.world_flags, GameState.current_region, GameClock.total_days)
 	_hint.visible = not hints.is_empty()
 	_hint.text = "\n".join(Array(hints).map(func(h: String) -> String: return "> " + h))
 

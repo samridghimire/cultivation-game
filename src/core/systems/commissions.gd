@@ -3,6 +3,10 @@ extends RefCounted
 ## Crafting commissions (PROF-001): each month a buyer orders a few units of
 ## something a crafter can already make, for a multiple of its material value
 ## plus profession xp. Rules live in data/recipes.json `commissions`.
+## PROF-002: delivery_hint and lapse_warnings remind the player about open orders.
+
+
+const LAPSE_WARNING_DAYS := 7
 
 
 static func rules(data: GameData) -> Dictionary:
@@ -107,6 +111,27 @@ static func expire(c: CharacterData, today: int) -> Array[Dictionary]:
 			kept.append(order)
 	c.commissions = kept
 	return lapsed
+
+
+## "Deliver your 3 Qi Gathering Pills order at a workshop (12 days left)." for the first open
+## order whose items you hold, else "" (orders you cannot fill yet are not nagged about).
+static func delivery_hint(c: CharacterData, data: GameData, today: int) -> String:
+	for i in c.commissions.size():
+		if check_deliver(c, data, i) == "":
+			var order: Dictionary = c.commissions[i]
+			return "Deliver your %d %s order at a workshop (%d days left)." % [int(order["count"]), _item_name(data, String(order["item"])), days_left(order, today)]
+	return ""
+
+
+## Orders whose time left dropped to LAPSE_WARNING_DAYS while the clock went from `from_day`
+## to `to_day` (each order crosses that day once, so each is warned about once).
+static func lapse_warnings(c: CharacterData, data: GameData, from_day: int, to_day: int) -> PackedStringArray:
+	var out: PackedStringArray = []
+	for order in c.commissions:
+		var warn_day := int(order["due_day"]) - LAPSE_WARNING_DAYS
+		if from_day < warn_day and warn_day <= to_day and int(order["due_day"]) >= to_day:
+			out.append("The order for %d %s lapses in %d days." % [int(order["count"]), _item_name(data, String(order["item"])), LAPSE_WARNING_DAYS])
+	return out
 
 
 static func days_left(entry: Dictionary, today: int) -> int:
