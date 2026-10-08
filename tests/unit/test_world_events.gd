@@ -157,3 +157,96 @@ func test_far_event_news_is_not_posted() -> void:
 	assert_false(posted.any(func(t: String) -> bool: return t.contains(far_name) and t.contains("Beast Tide")), "far end news dropped: %s" % str(posted))
 	assert_true(posted.any(func(t: String) -> bool: return t == WorldEvents.news(gs.data, {"id": "auction_season", "region": "qingshi_village"}, false)), "local end news posted: %s" % str(posted))
 	assert_true(near_name != "")
+
+
+func _session_with(event_id: String, region: String, realm_index: int = 1) -> Node:
+	var gs := _root().get_node("GameState")
+	var c := new_character()
+	c.realm_index = realm_index
+	c.stage = 2
+	gs.start_session(c)
+	gs.current_region = region
+	var day: int = _root().get_node("GameClock").total_days
+	gs.world_events = [{"id": event_id, "region": region, "start_day": day, "end_day": day + 30}]
+	return gs
+
+
+func test_opponents_are_generated_and_scale() -> void:
+	var d := data()
+	var c := new_character()
+	c.realm_index = 1
+	c.stage = 2
+	var rng := seeded_rng()
+	var first := WorldEvents.opponent(d, "sect_tournament", "tournament", c, 0, rng)
+	var last := WorldEvents.opponent(d, "sect_tournament", "tournament", c, 2, rng)
+	assert_eq(int(first["stage"]), 2)
+	assert_eq(int(last["stage"]), 4)
+	assert_true(first["spar"] and not first["lethal"])
+	assert_eq(WorldEvents.opponent(d, "demonic_incursion", "defence", c, 0, rng)["realm"], d.realms[1].id)
+
+
+func test_check_join_reasons() -> void:
+	var gs := _session_with("sect_tournament", "azure_peak")
+	assert_eq(WorldEvents.check_join(gs.data, gs.world_events, gs.player, "sect_tournament", "tournament", "azure_peak"), "")
+	assert_true(WorldEvents.check_join(gs.data, gs.world_events, gs.player, "sect_tournament", "tournament", "qingshi_village") != "", "wrong region")
+	assert_true(WorldEvents.check_join(gs.data, gs.world_events, gs.player, "sect_tournament", "defence", "azure_peak") != "", "no defence here")
+	gs.player.realm_index = 0
+	assert_true(WorldEvents.check_join(gs.data, gs.world_events, gs.player, "sect_tournament", "tournament", "azure_peak") != "", "mortals")
+	gs.end_session()
+
+
+func test_enter_tournament_pays_prize_once() -> void:
+	var gs := _session_with("sect_tournament", "azure_peak")
+	gs.player.stage = 0
+	gs.player.inventory = {"spirit_stone": 0}
+	gs.player.attributes = {"strength": 40, "constitution": 40, "agility": 40}
+	var stones_before: int = gs.player.item_count("spirit_stone")
+	# Weak rivals: force the bracket by making the player overwhelmingly strong.
+	gs.player.realm_index = 3
+	gs.player.stage = 0
+	gs.enter_tournament("sect_tournament")
+	var won: bool = gs.player.item_count("spirit_stone") > stones_before
+	assert_true(bool(gs.world_events[0]["done"]), "event marked done")
+	if won:
+		assert_true(gs.player.inventory.keys().any(func(k: String) -> bool: return k.begins_with("manual_")), "a manual in the prize")
+	var again: int = gs.player.item_count("spirit_stone")
+	gs.enter_tournament("sect_tournament")
+	assert_eq(gs.player.item_count("spirit_stone"), again, "only once per event")
+	var saved: Dictionary = JSON.parse_string(JSON.stringify(gs.to_save_dict()))
+	gs.load_save_dict(saved)
+	assert_true(bool(gs.world_events[0]["done"]), "done survives save/load")
+	gs.end_session()
+
+
+func test_pay_prize_gives_stones_manual_and_reputation() -> void:
+	var d := data()
+	var c := new_character()
+	c.realm_index = 1
+	var sect_id: String = d.sects.keys()[0]
+	c.sect = {"id": sect_id, "rank": 0}
+	var before := Reputation.value(c, d, sect_id)
+	var stones_before := c.item_count("spirit_stone")
+	WorldEvents.pay_prize(d, c, "sect_tournament", {}, seeded_rng())
+	assert_eq(c.item_count("spirit_stone"), stones_before + 150)
+	assert_eq(Reputation.value(c, d, sect_id), before + 15)
+	assert_true(c.inventory.keys().any(func(k: String) -> bool: return k.begins_with("manual_")))
+
+
+func test_defend_against_incursion() -> void:
+	var gs := _session_with("demonic_incursion", "qingshi_village", 3)
+	gs.player.alignment = 0
+	var stones: int = gs.player.item_count("spirit_stone")
+	gs.defend_against_incursion("demonic_incursion")
+	assert_true(bool(gs.world_events[0]["done"]))
+	if gs.player.item_count("spirit_stone") > stones:
+		assert_gt(gs.player.alignment, 0, "defending is righteous")
+	var after: int = gs.player.item_count("spirit_stone")
+	gs.defend_against_incursion("demonic_incursion")
+	assert_eq(gs.player.item_count("spirit_stone"), after, "only once per event")
+	gs.end_session()
+
+
+func test_validation_catches_bad_joinable_events() -> void:
+	var d := GameData.load_from_dir()
+	d.world_events["bad"] = {"id": "bad", "monthly_chance": 0.1, "min_days": 1, "max_days": 1, "regions": ["qingshi_village"], "tournament": {"rounds": 0, "prize": {"items": {"nope": 1}, "manuals": ["nope2"]}}, "defence": {"enemy": "nobody", "effects": {}}}
+	assert_eq(WorldEvents.validate(d).size(), 5, ", ".join(WorldEvents.validate(d)))

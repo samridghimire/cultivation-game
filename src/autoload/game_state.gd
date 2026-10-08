@@ -1740,6 +1740,57 @@ func _world_events_month() -> void:
 			EventBus.post(WorldEvents.news(data, started, true), "warning")
 
 
+## Enter the bracket of the tournament under way here (LW-003): `rounds` spars in
+## a row, each against a tougher generated cultivator. Losing one ends your run;
+## winning all pays the prize. Once per event.
+func enter_tournament(event_id: String) -> void:
+	EventBus.topic = "world"
+	if not _can_act():
+		return
+	var reason := WorldEvents.check_join(data, world_events, player, event_id, "tournament", current_region)
+	if reason != "":
+		EventBus.post(reason, "warning")
+		EventBus.player_changed.emit()
+		return
+	WorldEvents.instance_in(world_events, event_id, current_region)["done"] = true
+	var rounds := int(WorldEvents.def_of(data, event_id)["tournament"]["rounds"])
+	EventBus.post("You sign your name on the tournament roll. %d bouts stand between you and the prize." % rounds)
+	for round_index in rounds:
+		var rival := WorldEvents.opponent(data, event_id, "tournament", player, round_index, rng)
+		EventBus.post("Bout %d of %d: %s steps into the ring." % [round_index + 1, rounds, rival["name"]])
+		if not fight_enemy(rival):
+			if _can_act():
+				EventBus.post("You are knocked out of the tournament in bout %d." % (round_index + 1), "warning")
+			return
+	for note in WorldEvents.pay_prize(data, player, event_id, world_flags, rng):
+		EventBus.post(note, "progress")
+	EventBus.post("You win the tournament! The sects applaud the new champion.", "progress")
+	EventBus.player_changed.emit()
+
+
+## Beat a raider of the incursion under way here (LW-003) for the event's
+## `defence` effects. Once per event.
+func defend_against_incursion(event_id: String) -> void:
+	EventBus.topic = "world"
+	if not _can_act():
+		return
+	var reason := WorldEvents.check_join(data, world_events, player, event_id, "defence", current_region)
+	if reason != "":
+		EventBus.post(reason, "warning")
+		EventBus.player_changed.emit()
+		return
+	WorldEvents.instance_in(world_events, event_id, current_region)["done"] = true
+	var raider := WorldEvents.opponent(data, event_id, "defence", player, 0, rng)
+	EventBus.post("You rush to the defence against %s." % raider["name"])
+	if fight_enemy(raider):
+		for note in Effects.apply(player, data, WorldEvents.def_of(data, event_id)["defence"]["effects"], world_flags):
+			EventBus.post(note, "progress")
+		EventBus.post("The raiders fall back. The people of %s thank you." % Exploration.region_name(data, current_region), "progress")
+		EventBus.player_changed.emit()
+	elif _can_act():
+		EventBus.post("The raider drives you off.", "warning")
+
+
 ## Fight an enemy from data/enemies.json.
 func fight(enemy_id: String) -> bool:
 	EventBus.topic = "combat"
@@ -2051,7 +2102,7 @@ func load_save_dict(d: Dictionary) -> void:
 	world_events = []
 	for instance in d.get("world_events", []):
 		if instance is Dictionary and data.world_events.has(String(instance.get("id", ""))):
-			world_events.append({"id": String(instance["id"]), "region": String(instance.get("region", "")), "start_day": int(instance.get("start_day", 0)), "end_day": int(instance.get("end_day", 0))})
+			world_events.append({"id": String(instance["id"]), "region": String(instance.get("region", "")), "start_day": int(instance.get("start_day", 0)), "end_day": int(instance.get("end_day", 0)), "done": bool(instance.get("done", false))})
 	current_region = d.get("region", data.start_region)
 	npcs = Npcs.from_dict(d.get("npcs", {}))
 	Npcs.ensure_all(npcs, data, rng)

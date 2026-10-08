@@ -115,6 +115,65 @@ static func rumors(data: GameData, active: Array, extra: PackedStringArray, tota
 	return lines
 
 
+## The active instance of `event_id` in `region_id` ({} when none).
+static func instance_in(active: Array, event_id: String, region_id: String) -> Dictionary:
+	for instance: Dictionary in active:
+		if String(instance.get("id", "")) == event_id and String(instance.get("region", "")) == region_id:
+			return instance
+	return {}
+
+
+## "" if `c` can take part in the event's `kind` ("tournament" or "defence") in
+## `region_id`, otherwise the reason they cannot (LW-003).
+static func check_join(data: GameData, active: Array, c: CharacterData, event_id: String, kind: String, region_id: String) -> String:
+	var def := def_of(data, event_id)
+	if not def.has(kind):
+		return "Nothing like that is going on."
+	var instance := instance_in(active, event_id, region_id)
+	if instance.is_empty():
+		return "The %s is not happening here." % String(def.get("name", event_id))
+	if bool(instance.get("done", false)):
+		return "You have already taken part."
+	if c.realm_index < 1:
+		return "Only cultivators can take part."
+	return ""
+
+
+## A generated cultivator for `kind` round `round_index` (0-based), of `c`'s own
+## realm and stage plus `round_index` stages, as a non-lethal sparring enemy.
+static func opponent(data: GameData, event_id: String, kind: String, c: CharacterData, round_index: int, rng: RandomNumberGenerator) -> Dictionary:
+	var def := def_of(data, event_id)
+	var base: Dictionary = data.enemies[def["defence"]["enemy"]] if kind == "defence" else {"id": "tournament_rival", "description": "A cultivator fighting for the prize.", "tags": ["cultivator"]}
+	var enemy := (base as Dictionary).duplicate(true)
+	var gender := Names.roll_gender(data, rng)
+	var title := Names.full_name(Names.roll_surname(data, rng), Names.roll_given_name(data, gender, rng))
+	enemy["name"] = title if kind == "tournament" else "%s, %s" % [title, base.get("name", "raider")]
+	enemy["proper_name"] = kind == "tournament"
+	enemy["realm"] = data.realms[c.realm_index].id
+	enemy["stage"] = mini(c.stage + round_index, data.realms[c.realm_index].stage_count() - 1)
+	enemy["lethal"] = false
+	enemy["rewards"] = {}
+	enemy["spar"] = kind == "tournament"
+	for key in ["hp", "attack", "defense", "speed"]:
+		enemy[key] = int(enemy.get(key, 0))
+	return enemy
+
+
+## Pays the tournament prize. Returns the notes to show.
+static func pay_prize(data: GameData, c: CharacterData, event_id: String, flags: Dictionary, rng: RandomNumberGenerator) -> PackedStringArray:
+	var prize: Dictionary = def_of(data, event_id)["tournament"].get("prize", {})
+	var effects := {"items": (prize.get("items", {}) as Dictionary).duplicate()}
+	var manuals: Array = prize.get("manuals", [])
+	if not manuals.is_empty():
+		var manual := String(manuals[rng.randi_range(0, manuals.size() - 1)])
+		effects["items"][manual] = int(effects["items"].get(manual, 0)) + 1
+	var notes := Effects.apply(c, data, effects, flags)
+	var rep := int(prize.get("reputation", 0))
+	if rep != 0 and not c.is_rogue():
+		notes.append_array(Reputation.apply_changes(c, data, {String(c.sect["id"]): rep}))
+	return notes
+
+
 ## Load errors for data/world_events.json.
 static func validate(data: GameData) -> PackedStringArray:
 	var errors: PackedStringArray = []
@@ -138,4 +197,20 @@ static func validate(data: GameData) -> PackedStringArray:
 		for key in ["price_mult", "qi_density"]:
 			if float(mods.get(key, 1.0)) <= 0.0:
 				errors.append("World event '%s' %s must be > 0" % [id, key])
+		var tournament: Dictionary = def.get("tournament", {})
+		if def.has("tournament"):
+			if int(tournament.get("rounds", 0)) < 1:
+				errors.append("World event '%s' tournament needs rounds >= 1" % id)
+			var prize: Dictionary = tournament.get("prize", {})
+			for item_id in prize.get("items", {}):
+				if not data.items.has(item_id):
+					errors.append("World event '%s' prize has unknown item '%s'" % [id, item_id])
+			for item_id in prize.get("manuals", []):
+				if not data.items.has(item_id):
+					errors.append("World event '%s' prize has unknown manual '%s'" % [id, item_id])
+		if def.has("defence"):
+			if not data.enemies.has(String(def["defence"].get("enemy", ""))):
+				errors.append("World event '%s' defence has unknown enemy" % id)
+			if (def["defence"].get("effects", {}) as Dictionary).is_empty():
+				errors.append("World event '%s' defence needs effects" % id)
 	return errors

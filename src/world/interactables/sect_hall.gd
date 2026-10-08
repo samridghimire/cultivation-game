@@ -24,6 +24,7 @@ func get_options() -> Array[Dictionary]:
 				label += " (%s)" % check["reason"]
 			options.append({"label": label, "action": GameState.join_sect.bind(sect.id), "disabled": not check["ok"], "keep_open": true})
 	options.append_array(shop_options())
+	options.append_array(preload("res://src/world/interactables/explore_site.gd").event_options())
 	return options
 
 

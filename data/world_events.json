@@ -1,5 +1,5 @@
 {
-  "_doc": "World events (LW-001, WorldEvents). At every month boundary each event that is not already under way starts with probability monthly_chance in one region picked at random from `regions` (regions.json ids), lasting a random min_days..max_days. start_text/end_text are logged when it starts and ends ({region} = the region's name). modifiers apply in that region while it lasts: encounter_tags (extra encounters.json tags added to every exploration there, so events can have their own encounters), price_mult (multiplies what merchants there charge), qi_density (multiplies cultivation there). Active events are saved with the game.",
+  "_doc": "World events (LW-001, WorldEvents). At every month boundary each event that is not already under way starts with probability monthly_chance in one region picked at random from `regions` (regions.json ids), lasting a random min_days..max_days. start_text/end_text are logged when it starts and ends ({region} = the region's name). modifiers apply in that region while it lasts: encounter_tags (extra encounters.json tags added to every exploration there, so events can have their own encounters), price_mult (multiplies what merchants there charge), qi_density (multiplies cultivation there). Active events are saved with the game. Optional `tournament` (LW-003): {rounds, prize: {items, manuals, reputation}} lets the player enter a bracket of `rounds` non-lethal spars in a row against generated cultivators of their own realm (each a stage tougher, no healing between); a win pays `prize.items` ({item_id: n}), one random manual from `prize.manuals` (items.json ids) and `prize.reputation` with the player's sect. Optional `defence`: {enemy, effects} lets the player beat one raider (enemies.json id, scaled to the player's realm and stage) for `effects` (shared Effects keys). Each can be done once per event instance.",
   "events": [
     {
       "id": "beast_tide", "name": "Beast Tide",
@@ -17,6 +17,7 @@
       "regions": ["fallen_star_market", "azure_peak"],
       "start_text": "The great sects open a tournament in {region}. Any cultivator may enter the ring.",
       "end_text": "The tournament in {region} ends; the stands empty and the banners come down.",
+      "tournament": {"rounds": 3, "prize": {"items": {"spirit_stone": 150}, "manuals": ["manual_iron_fist", "manual_stone_skin", "manual_verdant_spring"], "reputation": 15}},
       "modifiers": {"encounter_tags": ["tournament"], "price_mult": 1.1, "qi_density": 1.0}
     },
     {
@@ -35,6 +36,7 @@
       "regions": ["qingshi_village", "misty_forest", "withered_bone_marsh"],
       "start_text": "A demonic incursion! Blood-path cultivators descend on {region}, and the air turns heavy with the smell of blood.",
       "end_text": "The demonic cultivators withdraw from {region}, leaving burned homes behind.",
+      "defence": {"enemy": "incursion_raider", "effects": {"alignment": 10, "witnessed": true, "items": {"spirit_stone": 60}}},
       "modifiers": {"encounter_tags": ["incursion"], "price_mult": 1.15, "qi_density": 0.85}
     },
     {
