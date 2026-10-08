@@ -139,3 +139,26 @@ func test_game_state_ready_and_fight() -> void:
 	gs.unready_talisman("fire_strike_talisman")
 	assert_true(c.readied_talismans.is_empty())
 	gs.end_session()
+
+
+func test_trace_steps_with_each_opener() -> void:
+	var c := new_character()
+	c.realm_index = 1
+	for id in ["fire_strike_talisman", "five_thunder_talisman"]:
+		c.add_item(id, 1)
+		CombatTalismans.ready_talisman(c, data(), id)
+	var allies := [{"name": "Old Friend", "damage": 7}]
+	var r := Combat.resolve(c, data(), _enemy("foundation_establishment", 8), seeded_rng(), allies)
+	assert_eq(r["trace"].size(), r["log"].size())
+	var re := RegEx.create_from_string("\\(Foe: (\\d+) hp\\)|\\(\\w[\\w ]*: (\\d+) hp\\)")
+	var seen: Array[int] = []
+	for i in r["log"].size():
+		var line := String(r["log"][i])
+		if line.contains("You hurl") or line.contains("who owes you"):
+			var m := re.search(line)
+			assert_true(m != null, line)
+			var shown := int((m.get_string(1) if m.get_string(1) != "" else m.get_string(2)))
+			assert_eq(int(r["trace"][i][1]), shown, line)
+			seen.append(shown)
+	assert_eq(seen.size(), 3, "two talismans and the ally")
+	assert_true(seen[0] > seen[1] and seen[1] > seen[2], "the foe bar drops opener by opener")
