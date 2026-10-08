@@ -259,6 +259,28 @@ func test_lost_fight_posts_advice() -> void:
 	gs.end_session()
 
 
+func test_fight_spoils_in_report() -> void:
+	var c := _start()
+	c.realm_index = 2
+	var gs := _game_state()
+	var weak := {"id": "w", "name": "Weak Foe", "realm": "mortal", "stage": 0, "hp": -50, "attack": -50, "defense": -50, "speed": 0, "techniques": [], "rewards": {"items": {"spirit_stone": 8}}}
+	assert_true(gs.fight_enemy(weak))
+	assert_false(gs.last_fight_spoils.is_empty(), "a win records its spoils")
+	var report := CombatReport.new()
+	(Engine.get_main_loop() as SceneTree).root.add_child(report)
+	report.show_fight("Weak Foe", true, PackedStringArray(["start", "end"]), "", gs.last_fight_spoils)
+	assert_true(report._log.get_parsed_text().contains("Spoils:"))
+	assert_true(report._log.get_parsed_text().contains("Spirit Stone"))
+	report.show_fight("Weak Foe", false, PackedStringArray(["start", "end"]), "", gs.last_fight_spoils)
+	assert_false(report._log.get_parsed_text().contains("Spoils:"), "no spoils line on a loss")
+	var strong := {"id": "t", "name": "Test Foe", "realm": "foundation_establishment", "stage": 5, "hp": 500, "attack": 500, "defense": 500, "speed": 50, "techniques": [], "rewards": {}}
+	gs.fight_enemy(strong)
+	assert_true(gs.last_fight_spoils.is_empty(), "spoils are cleared between fights")
+	assert_true(c.alive)
+	report.queue_free()
+	gs.end_session()
+
+
 func test_choose_gender_once_for_old_saves() -> void:
 	var c := _start()
 	var gs := _game_state()

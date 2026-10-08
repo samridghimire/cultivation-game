@@ -23,6 +23,8 @@ var auctions: Dictionary = {}
 var devour_target: Dictionary = {}
 ## Why the last fight was lost (Combat.loss_advice), "" after a win; shown in the combat report.
 var last_loss_advice: String = ""
+## Reward notes of the last won fight ("+8 Spirit Stone"...), shown in the combat report.
+var last_fight_spoils: PackedStringArray = PackedStringArray()
 ## Active world events (WorldEvents, LW-001): [{id, region, start_day, end_day}].
 var world_events: Array = []
 ## Id of the region (data/regions.json) the player is in.
@@ -2028,6 +2030,7 @@ func fight_enemy(enemy: Dictionary, start_hp: int = -1) -> bool:
 	if not _can_act():
 		return false
 	devour_target = {}
+	last_fight_spoils = PackedStringArray()
 	var allies: Array = []
 	if not enemy.get("spar", false):
 		var ally_id := Karma.strike_ally(player, npcs, data, current_region, String(enemy.get("id", "")))
@@ -2048,6 +2051,10 @@ func fight_enemy(enemy: Dictionary, start_hp: int = -1) -> bool:
 	if not outcome["notes"].is_empty():
 		summary += "; " + ", ".join(outcome["notes"])
 	EventBus.post("%s (%s)" % [lines[-1], summary], "progress" if result["victory"] else "danger")
+	if result["victory"]:
+		for note in outcome["notes"]:
+			if not String(note).begins_with("Burned:"):
+				last_fight_spoils.append(note)
 	var advice := Combat.loss_advice(player, data, enemy, result)
 	last_loss_advice = advice
 	if advice != "" and not outcome["died"]:
