@@ -45,6 +45,8 @@ var pending_threat := ""
 ## Set when the Creation Artifact just respawned the player (ART-005) until
 ## they pick where to awaken: {cause, anchor_id, lives_left, qi_lost}. Not saved.
 var pending_respawn: Dictionary = {}
+## Recap lines of the save that was just loaded (WU-025); the HUD shows them once on its arrival card and clears them.
+var load_recap: PackedStringArray = []
 ## New sessions start beside this anchor place: the awakening dream ends "You wake on Meditation Rock".
 const INTRO_SPAWN_ANCHOR := "qingshi_rock"
 ## Anchor the world should place the player at after the next region load ("" = region spawn).
@@ -90,6 +92,7 @@ func start_session(character: CharacterData) -> void:
 	pending_encounter = ""
 	pending_threat = ""
 	pending_respawn = {}
+	load_recap = []
 	spawn_anchor = INTRO_SPAWN_ANCHOR  # the awakening ends on Meditation Rock (FH-011)
 	dialogue_event = ""
 	pending_event = String(data.artifact.get("intro_event", ""))
@@ -121,6 +124,7 @@ func end_session() -> void:
 	pending_encounter = ""
 	pending_threat = ""
 	pending_respawn = {}
+	load_recap = []
 	spawn_anchor = ""
 	dialogue_event = ""
 	pending_event = ""
@@ -2260,7 +2264,8 @@ func load_save_dict(d: Dictionary) -> void:
 		current_region = data.start_region
 	GameClock.from_dict(d.get("clock", {}))
 	EventBus.clear_history()
-	for line in Guidance.recap(player, data, world_flags, GameClock.total_days, current_region, hint_density(), npcs, world_events, clan):
+	load_recap = Guidance.recap(player, data, world_flags, GameClock.total_days, current_region, hint_density(), npcs, world_events, clan)
+	for line in load_recap:
 		EventBus.post(line, "info")
 	rng.seed = String(d.get("rng_seed", "0")).to_int()
 	rng.state = String(d.get("rng_state", "0")).to_int()

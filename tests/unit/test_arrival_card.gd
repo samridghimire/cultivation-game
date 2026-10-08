@@ -26,3 +26,33 @@ func test_arrival_banner_on_region_change_only() -> void:
 	assert_true(banner.visible, "card shows once the respawn is chosen")
 	hud.free()
 	gs.end_session()
+
+
+func test_load_recap_shows_on_card_once() -> void:
+	var root := (Engine.get_main_loop() as SceneTree).root
+	var gs := root.get_node("GameState")
+	gs.start_session(CharacterFactory.create("Wanderer", gs.data, seeded_rng(3)))
+	assert_true(gs.load_recap.is_empty(), "a new session has no recap")
+	var d: Dictionary = gs.to_save_dict()
+	gs.load_save_dict(d)
+	assert_false(gs.load_recap.is_empty(), "loading builds the recap")
+	var first: String = gs.load_recap[0]
+	var hud: CanvasLayer = load("res://src/ui/hud.tscn").instantiate()
+	root.add_child(hud)
+	var banner: Banner = hud.get("_banner")
+	assert_true(banner.visible, "recap card shows on boot after a load")
+	assert_eq(banner.title_text(), first)
+	assert_true(gs.load_recap.is_empty(), "consumed so it shows once")
+	hud.free()
+	var hud2: CanvasLayer = load("res://src/ui/hud.tscn").instantiate()
+	root.add_child(hud2)
+	assert_false((hud2.get("_banner") as Banner).visible, "no card on a later boot")
+	hud2.free()
+	gs.pending_respawn = {"cause": "test", "anchor_id": "x", "lives_left": 1, "qi_lost": 0}
+	gs.load_save_dict(d)
+	gs.pending_respawn = {"cause": "test", "anchor_id": "x", "lives_left": 1, "qi_lost": 0}
+	var hud3: CanvasLayer = load("res://src/ui/hud.tscn").instantiate()
+	root.add_child(hud3)
+	assert_false((hud3.get("_banner") as Banner).visible, "not over the respawn screen")
+	hud3.free()
+	gs.end_session()

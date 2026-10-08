@@ -137,6 +137,7 @@ func _ready() -> void:
 	_time_skip.closed.connect(_on_time_skip_closed)
 	add_child(_time_skip)
 	_build_death_screen()
+	_show_load_recap()
 
 	EventBus.player_changed.connect(_refresh)
 	EventBus.session_started.connect(_refresh)
@@ -545,6 +546,15 @@ func _show_time_skip(summary: Dictionary) -> void:
 func _on_time_skip_closed() -> void:
 	_showing_skip = {}
 	_update_modal()
+
+
+## Loaded-save card (WU-025): the recap lines, shown once when the HUD boots after a load.
+func _show_load_recap() -> void:
+	var lines: PackedStringArray = GameState.load_recap
+	GameState.load_recap = []
+	if lines.is_empty() or GameState.player == null or not GameState.player.alive or not GameState.pending_respawn.is_empty():
+		return
+	_banner.announce(lines[0], "\n".join(lines.slice(1)), UIStyle.ACCENT, 4.0)
 
 
 ## Arrival card: region name with qi density and danger, shown on real travel.
