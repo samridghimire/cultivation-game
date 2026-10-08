@@ -83,3 +83,28 @@ func test_hud_panels_hide_behind_modals() -> void:
 	assert_true(status.visible and log_panel.visible, "time-skip overlay keeps the HUD")
 	skip.visible = false
 	hud.queue_free()
+
+
+## WU-041: a dim line under the qi bar says how long until the next layer.
+func test_hud_next_layer_label() -> void:
+	var tree := Engine.get_main_loop() as SceneTree
+	var gs: Node = tree.root.get_node("GameState")
+	var c := new_character()
+	gs.start_session(c)
+	gs.pending_event = ""
+	var hud: CanvasLayer = load("res://src/ui/hud.tscn").instantiate()
+	tree.root.add_child(hud)
+	await tree.process_frame
+	var label: Label = hud.get("_next_layer")
+	var days: int = gs.days_to_next_stage(gs.region_qi_density())
+	assert_true(days > 0 and days <= 3650)
+	assert_true(label.visible)
+	assert_true(label.text.contains("~%d " % days), "shows %d days, got '%s'" % [days, label.text])
+	c.qi = Cultivation.qi_required(c, gs.data) - 0.0
+	c.stage = gs.data.realms[c.realm_index].stage_names.size() - 1
+	c.qi = Cultivation.qi_required(c, gs.data)
+	assert_true(Cultivation.is_at_bottleneck(c, gs.data))
+	assert_eq(HUD.next_layer_text(-1, c, gs.data), "")
+	assert_eq(HUD.next_layer_text(5, c, gs.data), "", "hidden at the bottleneck")
+	hud.queue_free()
+	gs.end_session()

@@ -12,6 +12,7 @@ var _age: Label
 var _status: Label
 var _qi_bar: ProgressBar
 var _bottleneck: Label
+var _next_layer: Label
 var _injuries: Label
 var _hint: Label
 var _log: RichTextLabel
@@ -288,6 +289,8 @@ func _build_status_panel() -> void:
 	_bottleneck = UIStyle.label("", 14, UIStyle.ACCENT)
 	_bottleneck.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	box.add_child(_bottleneck)
+	_next_layer = UIStyle.label("", 14, Color(0.62, 0.64, 0.7))
+	box.add_child(_next_layer)
 	_injuries = UIStyle.label("", 14, UIStyle.CATEGORY_COLORS["danger"])
 	_injuries.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	box.add_child(_injuries)
@@ -399,6 +402,8 @@ func _refresh() -> void:
 	_bottleneck.text = bottleneck_hint(p, data)
 	_bottleneck.visible = _bottleneck.text != ""
 	_qi_bar.modulate = UIStyle.ACCENT if _bottleneck.visible else Color.WHITE
+	_next_layer.text = next_layer_text(GameState.days_to_next_stage(density), p, data)
+	_next_layer.visible = _next_layer.text != ""
 	_injuries.visible = Injuries.has_any(p)
 	_injuries.text = "Injured: " + ", ".join(Injuries.describe(p, data))
 	var hint_count := int(Settings.get_value("hud_hints"))
@@ -407,6 +412,14 @@ func _refresh() -> void:
 		hints = Guidance.hints(p, data, GameState.hint_density(), hint_count, GameState.npcs, GameState.world_flags, GameState.current_region, GameClock.total_days)
 	_hint.visible = not hints.is_empty()
 	_hint.text = "\n".join(Array(hints).map(func(h: String) -> String: return "> " + h))
+
+
+## "~N days to the next layer here" ("" at a bottleneck, with no qi rate, or beyond ten years).
+static func next_layer_text(days: int, c: CharacterData, data: GameData) -> String:
+	if days < 0 or days > 3650 or Cultivation.is_at_bottleneck(c, data):
+		return ""
+	var target := "layer" if data.realms[c.realm_index].id == "qi_refining" else "stage"
+	return "~%d %s to the next %s here" % [days, "day" if days == 1 else "days", target]
 
 
 ## Message category for the age line: "danger" or "warning" when little of
