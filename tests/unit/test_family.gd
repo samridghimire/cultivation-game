@@ -364,3 +364,9 @@ func test_game_state_cannot_marry_own_child() -> void:
 	gs.propose(child.id, "concubine")
 	assert_false(c.spouses.has(child.id), "and so is marrying her")
 	gs.end_session()
+
+
+func test_favor_progress_names_the_next_threshold() -> void:
+	assert_eq(Family.favor_progress(5, data()), "favor 5; 15 to court")
+	assert_eq(Family.favor_progress(25, data()), "favor 25; 35 to propose")
+	assert_eq(Family.favor_progress(80, data()), "favor 80")

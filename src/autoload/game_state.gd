@@ -82,6 +82,7 @@ func has_session() -> bool:
 
 func start_session(character: CharacterData) -> void:
 	player = character
+	_announced_tier = Alignment.tier_name(player.alignment, data)
 	CreationArtifact.ensure(player, data)
 	world_flags = {}
 	auctions = {}
@@ -505,7 +506,7 @@ func _road_ambush() -> void:
 	if hunter_id == "":
 		return
 	var hunter: CharacterData = npcs[hunter_id]
-	EventBus.post("%s has hunted you down on the road. Your old grudge (%d) will be settled with blood!" % [hunter.name, Karma.grudge(player, hunter_id)], "danger")
+	EventBus.post("%s has hunted you down on the road. Your old grudge (%s) will be settled with blood!" % [hunter.name, Karma.grudge_word(Karma.grudge(player, hunter_id), data)], "danger")
 	var ally_id := Karma.roll_ally(player, npcs, data, rng, hunter_id)
 	if ally_id != "":
 		EventBus.post("%s, who owes you a debt, rushes to fight at your side!" % npcs[ally_id].name, "progress")
@@ -975,7 +976,7 @@ func court(npc_id: String) -> void:
 		return
 	var courted := NpcClans.scaled_favor(npc_clans, data, npc_id, int(result["favor"]), int(result["favor"]))
 	npc_favor[npc_id] = int(npc_favor.get(npc_id, 0)) + courted
-	EventBus.post("You spend days in %s's company. They warm to you. (+%d favor)" % [npcs[npc_id].name, courted], "progress")
+	EventBus.post("You spend days in %s's company. They warm to you. (%s)" % [npcs[npc_id].name, Family.favor_progress(int(npc_favor[npc_id]), data)], "progress")
 	_pass_time(result["days"])
 
 
@@ -995,7 +996,7 @@ func chat(npc_id: String) -> void:
 	var base := NpcClans.scaled_favor(npc_clans, data, npc_id, int(result["favor"]), cap - favor)
 	var gain: int = base + Karma.favor_bonus(player, data, npc_id, base, cap - favor - base)
 	npc_favor[npc_id] = favor + gain
-	EventBus.post("You pass some time talking with %s. (+%d favor)" % [npcs[npc_id].name, gain])
+	EventBus.post("You pass some time talking with %s. (%s)" % [npcs[npc_id].name, Family.favor_progress(int(npc_favor[npc_id]), data)])
 	_pass_time(result["days"])
 
 
@@ -1016,7 +1017,7 @@ func give_gift(npc_id: String, item_id: String) -> void:
 	var gain: int = base + Karma.favor_bonus(player, data, npc_id, base, cap - favor - base)
 	npc_favor[npc_id] = favor + gain
 	Karma.on_kindness(player, data, npc_id, "gift")
-	EventBus.post("%s accepts your %s. (+%d favor)" % [npcs[npc_id].name, data.items[item_id].get("name", item_id), gain])
+	EventBus.post("%s accepts your %s. (%s)" % [npcs[npc_id].name, data.items[item_id].get("name", item_id), Family.favor_progress(int(npc_favor[npc_id]), data)])
 	_clan_deed(npc_id, "gift")
 	_pass_time(result["days"])
 
@@ -1074,10 +1075,9 @@ func hostile_act(npc_id: String, act_id: String) -> void:
 	var suffix := " (%s)" % ", ".join(notes) if not notes.is_empty() else ""
 	if not won:
 		EventBus.post("%s drives you off.%s" % [npc.name, suffix], "warning")
-	elif not npc.alive:
-		EventBus.post("You kill %s.%s" % [npc.name, suffix], "danger")
 	else:
-		EventBus.post("%s: %s.%s" % [String(act.get("name", act_id)), npc.name, suffix], "warning")
+		EventBus.post(Karma.act_sentence(npc, act_id, result) + suffix, "danger" if not npc.alive else "warning")
+	_announce_tier()
 	_clan_deed(npc_id, act_id)
 	_pass_time(result["days"])
 
@@ -1098,6 +1098,17 @@ func _clan_deed(npc_id: String, deed: String) -> void:
 		EventBus.post("Your kindness to its members warms the %s toward you. (Now %s)" % [clan_name, standing], "karma")
 	if int(result["feud"]) > 0:
 		EventBus.post("The %s swears a blood feud against you! Its members will hunt you." % clan_name, "danger")
+
+
+## Posts "Your path has shifted" once when the alignment tier differs from the
+## last one announced (the first call only remembers the tier).
+var _announced_tier: String = ""
+
+func _announce_tier() -> void:
+	var tier := Alignment.tier_name(player.alignment, data)
+	if _announced_tier != "" and tier != _announced_tier:
+		EventBus.post("Your path has shifted: you are now %s." % tier, "karma")
+	_announced_tier = tier
 
 
 ## Pay spirit stones to clear an NPC's grudge against you (Karma.amends_cost).
@@ -1599,7 +1610,8 @@ func treat_npc(npc_id: String) -> void:
 	var outcome := "it is fully healed" if result["healed"] else "%s left" % Calendar.format_duration(patient.injuries[result["injury"]])
 	var owed := Karma.on_kindness(player, data, npc_id, "treat_npc")
 	var debt := ", they owe you" if owed > 0 else ""
-	EventBus.post("You treat %s's %s: %s. (+%d favor, alignment %+d%s)" % [patient.name, injury_name, outcome, treated, result["alignment"], debt], "karma")
+	EventBus.post("You treat %s's %s: %s. (+%d favor, alignment %+d, now %s%s)" % [patient.name, injury_name, outcome, treated, result["alignment"], Alignment.tier_name(player.alignment, data), debt], "karma")
+	_announce_tier()
 	_clan_deed(npc_id, "treat_npc")
 	if result["ranks_gained"] > 0:
 		EventBus.post("You are now %s!" % Text.a(Professions.rank_title(player, data, Medicine.DOCTOR)), "progress")
@@ -1613,7 +1625,8 @@ func treat_patients(days: int) -> void:
 		return
 	_start_time_skip()
 	var result := Medicine.treat_patients(player, data, days)
-	EventBus.post("You treat patients for %s: +%d xp, +%d spirit stones, alignment %+d." % [Calendar.format_duration(days), int(result["xp"]), result["income"], result["alignment"]], "karma")
+	EventBus.post("You treat patients for %s: +%d xp, +%d spirit stones, alignment %+d, now %s." % [Calendar.format_duration(days), int(result["xp"]), result["income"], result["alignment"], Alignment.tier_name(player.alignment, data)], "karma")
+	_announce_tier()
 	if result["ranks_gained"] > 0:
 		EventBus.post("You are now %s!" % Text.a(Professions.rank_title(player, data, Medicine.DOCTOR)), "progress")
 	_pass_time(days, "Treating patients")
@@ -1737,7 +1750,7 @@ func buy_with_contribution(item_id: String) -> void:
 	if not result["ok"]:
 		EventBus.post(result["reason"], "warning")
 	else:
-		EventBus.post("The sect treasury grants you %s for %d contribution. (%d left)" % [data.items[item_id].get("name", item_id), result["cost"], Sects.contribution_balance(player)], "progress")
+		EventBus.post("The sect treasury grants you %s for %d contribution. (%d contribution left)" % [data.items[item_id].get("name", item_id), result["cost"], Sects.contribution_balance(player)], "progress")
 	EventBus.player_changed.emit()
 
 
@@ -2048,7 +2061,8 @@ func devour() -> void:
 		EventBus.post(result["reason"], "warning")
 		EventBus.player_changed.emit()
 		return
-	EventBus.post("You press your palm to the fallen %s's dantian and drink their cultivation dry: +%d qi. (Alignment %+d)" % [enemy.get("name", "cultivator"), result["qi"], result["alignment"]], "karma")
+	EventBus.post("You press your palm to the fallen %s's dantian and drink their cultivation dry: +%d qi. (Alignment %+d, now %s)" % [enemy.get("name", "cultivator"), result["qi"], result["alignment"], Alignment.tier_name(player.alignment, data)], "karma")
+	_announce_tier()
 	if result["stages"] > 0:
 		EventBus.post("Your cultivation rises to %s!" % Cultivation.realm_label(player, data), "progress")
 	if result["injury"] != "":
@@ -2262,6 +2276,7 @@ func to_save_dict() -> Dictionary:
 
 func load_save_dict(d: Dictionary) -> void:
 	player = CharacterData.from_dict(d.get("player", {}))
+	_announced_tier = Alignment.tier_name(player.alignment, data)
 	if not d.get("player", {}).has("known_recipes"):
 		Alchemy.grant_rank_recipes(player, data)  # saves from before recipe learning
 	CreationArtifact.ensure(player, data)

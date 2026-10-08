@@ -304,3 +304,27 @@ func test_killing_a_pregnant_npc_ends_the_pregnancy() -> void:
 	assert_false(victim.alive)
 	assert_false(Children.is_pregnant(victim), "the dead do not stay pregnant")
 	assert_true(", ".join(result["notes"]).contains("unborn child"), "the note mentions the lost child")
+
+
+func test_grudge_words_and_ledger_wording() -> void:
+	assert_eq(Karma.grudge_word(5, data()), "a slight")
+	assert_eq(Karma.grudge_word(20, data()), "a bitter grudge")
+	assert_eq(Karma.grudge_word(99, data()), "a blood feud")
+	var c := _person("hero")
+	c.grudges["gone_npc"] = 70
+	var people := {"hero": c}
+	var lines := Karma.describe(c, people, data())
+	assert_true(lines[0].contains("someone long gone") and not lines[0].contains("gone_npc"), "never a raw id")
+	assert_true(lines[0].contains("a blood feud"))
+	var foe := _person("foe")
+	people["foe"] = foe
+	c.grudges["foe"] = 30
+	lines = Karma.describe(c, people, data())
+	assert_true(lines[1].contains("foe (a bitter grudge, 30)"), lines[1])
+
+
+func test_act_sentences() -> void:
+	var npc := _person("Li Wei")
+	assert_eq(Karma.act_sentence(npc, "rob", {"stones": 5}), "You rob Li Wei of 5 spirit stones.")
+	assert_eq(Karma.act_sentence(npc, "humiliate", {}), "You humiliate Li Wei before onlookers.")
+	assert_eq(Karma.act_sentence(npc, "kill", {}), "You kill Li Wei.")

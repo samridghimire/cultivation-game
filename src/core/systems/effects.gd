@@ -74,7 +74,7 @@ static func apply(c: CharacterData, data: GameData, effects: Dictionary, flags: 
 	if effects.has("alignment"):
 		var delta := int(effects["alignment"])
 		Alignment.shift(c, data, delta)
-		notes.append("Alignment %+d" % delta)
+		notes.append("Alignment %+d, now %s" % [delta, Alignment.tier_name(c.alignment, data)])
 		if effects.get("witnessed", false):
 			notes.append_array(Reputation.on_witnessed(c, data, delta))
 	if effects.has("reputation"):

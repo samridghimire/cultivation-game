@@ -401,3 +401,13 @@ static func spouses_in_region(c: CharacterData, people: Dictionary, data: GameDa
 		if spouse != null and spouse.alive and Npcs.region_of(spouse, data) == region_id:
 			out.append(spouse)
 	return out
+
+
+## "favor 25; 60 to propose": the next courtship threshold above `favor`
+## (data/family.json courtship.min_favor, proposal.min_favor), or just "favor N".
+static func favor_progress(favor: int, data: GameData) -> String:
+	for step in [["court", data.family.get("courtship", {}).get("min_favor", 0)], ["propose", data.family.get("proposal", {}).get("min_favor", 0)]]:
+		var needed := int(step[1])
+		if needed > favor:
+			return "favor %d; %d to %s" % [favor, needed - favor, step[0]]
+	return "favor %d" % favor

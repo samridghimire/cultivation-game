@@ -103,6 +103,7 @@ static func commit(c: CharacterData, npc: CharacterData, act_id: String, won: bo
 	var a := act(data, act_id)
 	var notes: PackedStringArray = []
 	var kin: Array[String] = []
+	var looted := 0
 	if not won:
 		var failed := int(a.get("failed_grudge", 0))
 		if failed > 0:
@@ -117,6 +118,7 @@ static func commit(c: CharacterData, npc: CharacterData, act_id: String, won: bo
 	if loot.size() == 2:
 		var stones := rng.randi_range(int(loot[0]), int(loot[1])) * (npc.realm_index + 1)
 		c.add_item("spirit_stone", stones)
+		looted = stones
 		notes.append("+%d Spirit Stone" % stones)
 		for item_id in npc.inventory.keys():
 			c.add_item(item_id, npc.item_count(item_id))
@@ -139,7 +141,20 @@ static func commit(c: CharacterData, npc: CharacterData, act_id: String, won: bo
 			kin.append(kin_id)
 	if not kin.is_empty():
 		notes.append("%d of their kin swear vengeance" % kin.size())
-	return {"notes": notes, "favor": int(a.get("favor", 0)), "days": int(a.get("days", 0)), "kin": kin}
+	return {"notes": notes, "favor": int(a.get("favor", 0)), "days": int(a.get("days", 0)), "kin": kin, "stones": looted}
+
+
+## One sentence for a committed act, from the result of commit().
+static func act_sentence(npc: CharacterData, act_id: String, result: Dictionary) -> String:
+	match act_id:
+		"rob":
+			var stones := int(result.get("stones", 0))
+			return "You rob %s of %d spirit stone%s." % [npc.name, stones, "" if stones == 1 else "s"]
+		"humiliate":
+			return "You humiliate %s before onlookers." % npc.name
+		"kill":
+			return "You kill %s." % npc.name
+	return "You act against %s." % npc.name
 
 
 static func _gratitude_rules(data: GameData) -> Dictionary:
@@ -344,8 +359,17 @@ static func decay(c: CharacterData, data: GameData, amount: int) -> void:
 		add_grudge(c, data, npc_id, -amount)
 
 
+## A grudge value in words (data/karma.json "grudge_words": [[min_points, word], ...]).
+static func grudge_word(value: int, data: GameData) -> String:
+	var word := "a slight"
+	for tier: Array in data.karma.get("grudge_words", []):
+		if value >= int(tier[0]):
+			word = String(tier[1])
+	return word
+
+
 ## Lines for the character sheet: living people who hate or owe `c`, strongest first.
-static func describe(c: CharacterData, people: Dictionary) -> Array[String]:
+static func describe(c: CharacterData, people: Dictionary, data: GameData = null) -> Array[String]:
 	var out: Array[String] = []
 	for entry in [[c.grudges, "Grudge"], [c.gratitude, "Owes you"]]:
 		var ledger: Dictionary = entry[0]
@@ -353,7 +377,11 @@ static func describe(c: CharacterData, people: Dictionary) -> Array[String]:
 		ids.sort_custom(func(a: Variant, b: Variant) -> bool: return int(ledger[a]) > int(ledger[b]))
 		for id in ids:
 			var who: CharacterData = people.get(id)
-			out.append("%s: %s (%d)" % [entry[1], who.name if who != null else String(id), int(ledger[id])])
+			var shown := who.name if who != null else "someone long gone"
+			if data != null and entry[0] == c.grudges:
+				out.append("%s: %s (%s, %d)" % [entry[1], shown, grudge_word(int(ledger[id]), data), int(ledger[id])])
+			else:
+				out.append("%s: %s (%d)" % [entry[1], shown, int(ledger[id])])
 	return out
 
 
@@ -410,6 +438,12 @@ static func validate(data: GameData) -> PackedStringArray:
 		for item_id in gift.get("effects", {}).get("items", {}):
 			if not data.items.has(item_id):
 				errors.append("karma gratitude repay gift has unknown item '%s'" % item_id)
+	var last_word := -1
+	for tier: Variant in data.karma.get("grudge_words", []):
+		if not tier is Array or tier.size() != 2 or int(tier[0]) <= last_word or String(tier[1]) == "":
+			errors.append("karma grudge_words: tiers must be [min_points, word] in ascending order")
+			break
+		last_word = int(tier[0])
 	for ledger in ["grudge", "gratitude"]:
 		var last := 0
 		for tier: Variant in data.karma.get("attitudes", {}).get(ledger, []):

@@ -659,3 +659,32 @@ func test_meditation_line_shows_progress() -> void:
 	assert_true(text.contains("qi to"))
 	assert_false(text.contains("%") or text.contains("{"))
 	assert_true(_game_state().days_to_next_stage(1.0) != 0)
+
+
+func _last_text() -> String:
+	return String(_root().get_node("EventBus").history[-1]["text"])
+
+
+func test_messages_use_words_not_raw_numbers() -> void:
+	var c := _start()
+	var gs := _game_state()
+	c.realm_index = 2
+	var npc := CharacterFactory.create("Li Wei", gs.data, seeded_rng(9))
+	npc.id = "li_wei"
+	npc.age_days = 30 * Calendar.DAYS_PER_YEAR
+	gs.npcs["li_wei"] = npc
+	var eb := _root().get_node("EventBus")
+	eb.clear_history()
+	gs.chat("li_wei")
+	if eb.history.size() > 0 and _last_text().contains("talking with"):
+		assert_true(_last_text().contains("to court"), _last_text())
+	c.alignment = 210
+	gs._announced_tier = "Virtuous"
+	eb.clear_history()
+	gs.hostile_act("li_wei", "humiliate")
+	var texts: Array = eb.history.map(func(m): return String(m["text"]))
+	assert_true(texts.any(func(t: String) -> bool: return t.contains("You humiliate Li Wei before onlookers.")), str(texts))
+	assert_true(texts.any(func(t: String) -> bool: return t.contains("Your path has shifted: you are now Neutral.")), str(texts))
+	for t: String in texts:
+		assert_false(t.contains("%") or t.contains("{") or t.contains("li_wei"), t)
+	gs.end_session()
