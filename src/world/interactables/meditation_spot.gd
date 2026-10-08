@@ -10,10 +10,12 @@ extends Interactable
 
 
 func get_options() -> Array[Dictionary]:
-	var options: Array[Dictionary] = [
+	var options: Array[Dictionary] = []
+	options.append_array(next_stage_option(qi_density, func(days: int) -> void: GameState.cultivate(days, qi_density)))
+	options.append_array([
 		{"label": "Meditate (1 month)", "description": GameState.meditation_preview(Calendar.DAYS_PER_MONTH, qi_density), "action": GameState.cultivate.bind(Calendar.DAYS_PER_MONTH, qi_density), "keep_open": true},
 		{"label": "Closed-door cultivation (1 year)", "description": GameState.meditation_preview(Calendar.DAYS_PER_YEAR, qi_density), "action": GameState.cultivate.bind(Calendar.DAYS_PER_YEAR, qi_density), "keep_open": true},
-	]
+	])
 	options.append_array(_dual_cultivation_options())
 	if Cultivation.can_attempt_breakthrough(GameState.player, GameState.data):
 		var chance := Cultivation.breakthrough_chance(GameState.player, GameState.data)
@@ -61,6 +63,16 @@ static func _temper_option() -> Dictionary:
 	var label := "Temper your body: %s (%s)" % [stage["name"], BodyTempering.describe_next(p, data)]
 	var reason := BodyTempering.check_temper(p, data)
 	return {"label": label, "action": GameState.temper_body, "disabled": reason != "", "reason": reason, "keep_open": true}
+
+
+## "Meditate until the next layer (~N days)" (WU-034); empty at the bottleneck or when
+## the wait is over a year. `run` takes the number of days to meditate.
+static func next_stage_option(density: float, run: Callable) -> Array[Dictionary]:
+	var days := GameState.days_to_next_stage(density)
+	if days < 0 or days > Calendar.DAYS_PER_YEAR:
+		return []
+	var noun := "layer" if GameState.data.realms[GameState.player.realm_index].id == "qi_refining" else "stage"
+	return [{"label": "Meditate until the next %s (~%s)" % [noun, Calendar.format_duration(days)], "description": GameState.meditation_preview(days, density), "action": run.bind(days), "keep_open": true}]
 
 
 func _dual_cultivation_options() -> Array[Dictionary]:

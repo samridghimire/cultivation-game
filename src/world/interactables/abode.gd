@@ -47,6 +47,7 @@ func get_options() -> Array[Dictionary]:
 		return _chest_options(p, data)
 	var density := Abodes.seclusion_density(p, data, GameState.current_region)
 	var seat := density * ClanEstate.seat_qi_multiplier(GameState.clan, data, p.abode)
+	options.append_array(MeditationSpot.next_stage_option(seat, GameState.cultivate_in_seclusion))
 	options.append({"label": "Cultivate in seclusion (%s, qi x%s)" % [Calendar.format_duration(SECLUSION_DAYS), String.num(density, 2)], "description": GameState.meditation_preview(SECLUSION_DAYS, seat), "action": GameState.cultivate_in_seclusion.bind(SECLUSION_DAYS), "keep_open": true})
 	options.append_array(_array_options(p, data))
 	var temper := MeditationSpot._temper_option()
