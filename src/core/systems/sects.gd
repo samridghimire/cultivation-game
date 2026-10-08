@@ -173,8 +173,10 @@ static func _rank_requirement_reason(c: CharacterData, data: GameData, rank: int
 	if int(c.sect["contribution"]) < needed:
 		return "%s needs %d contribution (you have %d)." % [sect.rank_name(rank), needed, int(c.sect["contribution"])]
 	var min_realm := data.realm_index_of(String(def.get("min_realm", "mortal")))
-	if c.realm_index < min_realm:
-		return "%s needs a cultivator of %s or above." % [sect.rank_name(rank), data.realms[min_realm].name]
+	var min_stage := int(def.get("min_stage", 0)) if min_realm > 0 else 0
+	if c.realm_index < min_realm or (c.realm_index == min_realm and c.stage < min_stage):
+		var needed_label: String = data.realms[min_realm].stage_label(min_stage) if min_stage > 0 else data.realms[min_realm].name
+		return "%s needs a cultivator of %s or above." % [sect.rank_name(rank), needed_label]
 	return ""
 
 
@@ -310,8 +312,11 @@ static func validate_ranks(data: GameData) -> PackedStringArray:
 			if contribution < last or (i == 0 and contribution != 0):
 				errors.append("%s: contribution must start at 0 and never decrease" % label)
 			last = contribution
-			if data.realm_index_of(String(rank.get("min_realm", "mortal"))) < 0:
+			var rank_realm := data.realm_index_of(String(rank.get("min_realm", "mortal")))
+			if rank_realm < 0:
 				errors.append("%s has unknown min_realm '%s'" % [label, rank.get("min_realm", "")])
+			elif int(rank.get("min_stage", 0)) < 0 or int(rank.get("min_stage", 0)) >= data.realms[rank_realm].stage_count():
+				errors.append("%s has min_stage %d outside its min_realm's stages" % [label, int(rank.get("min_stage", 0))])
 			var trial := String(rank.get("trial", ""))
 			if trial != "" and (i == 0 or not data.enemies.has(trial)):
 				errors.append("%s has a bad trial '%s' (unknown enemy, or on the first rank)" % [label, trial])

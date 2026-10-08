@@ -239,7 +239,7 @@ static func _add_sect_trials(data: GameData, out: Array[Dictionary]) -> void:
 			if enemy_id == "" or not data.enemies.has(enemy_id):
 				continue
 			var realm := data.realm_index_of(String(rank.get("min_realm", data.enemies[enemy_id].get("realm", "mortal"))))
-			out.append({"enemy": enemy_id, "source": "trial %s rank %d" % [sect_id, rank_no], "realm_index": maxi(0, realm), "forced": true})
+			out.append({"enemy": enemy_id, "source": "trial %s rank %d" % [sect_id, rank_no], "realm_index": maxi(0, realm), "stage": int(rank.get("min_stage", 0)), "forced": true})
 
 
 ## Win rates at the first realm an appearance allows: a typical player entering

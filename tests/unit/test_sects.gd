@@ -110,3 +110,37 @@ func test_hints_show_duty_only_within_seven_days() -> void:
 	for h in late:
 		found = found or h.begins_with("Your sect duty")
 	assert_true(found)
+
+
+func _staged_rank_data() -> GameData:
+	var d := GameData.load_from_dir()
+	var ranks: Array = (d.sects["blood_lotus_sect"] as SectDef).ranks
+	for rank: Dictionary in ranks:
+		rank.erase("trial")
+	ranks[1]["min_realm"] = "foundation_establishment"
+	ranks[1]["min_stage"] = 3
+	return d
+
+
+func test_rank_min_stage_gates_promotion() -> void:
+	var d := _staged_rank_data()
+	var c := new_character()
+	c.alignment = -300
+	Sects.join(c, d, "blood_lotus_sect")
+	c.realm_index = d.realm_index_of("foundation_establishment")
+	c.stage = 0
+	assert_false(Sects.add_contribution(c, d, 100000), "auto_promote stops at the staged rank")
+	assert_eq(int(c.sect["rank"]), 0)
+	var reason := Sects._rank_requirement_reason(c, d, 1)
+	assert_true(reason.contains(d.realms[c.realm_index].stage_label(3)), reason)
+	c.stage = 3
+	assert_eq(Sects._rank_requirement_reason(c, d, 1), "")
+	assert_true(Sects.auto_promote(c, d))
+	assert_true(int(c.sect["rank"]) >= 1)
+
+
+func test_rank_min_stage_validation() -> void:
+	var d := _staged_rank_data()
+	assert_eq(Sects.validate_ranks(d).size(), 0)
+	(d.sects["blood_lotus_sect"] as SectDef).ranks[1]["min_stage"] = 99
+	assert_true(Sects.validate_ranks(d).size() > 0)
