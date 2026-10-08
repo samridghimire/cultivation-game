@@ -37,3 +37,40 @@ func test_a_chime_does_not_cut_off_a_big_sound() -> void:
 		held.append(p.stream)
 	assert_true(held.has(Audio.streams["lightning"]), "lightning still on a voice")
 	assert_true(held.has(Audio.streams["chime_danger"]), "chime on another voice")
+
+
+func test_music_streams_loop_and_are_deterministic() -> void:
+	for m: String in Audio.MOODS:
+		var wav := Audio.music_stream(m)
+		assert_true(wav.data.size() > 0, m)
+		assert_eq(wav.loop_mode, AudioStreamWAV.LOOP_FORWARD, m)
+		assert_eq(wav.loop_end, wav.data.size() / 2, m)
+	var a := Audio.synth_music(Audio.MOODS["dark"], 5)
+	var b := Audio.synth_music(Audio.MOODS["dark"], 5)
+	assert_eq(a.data, b.data)
+	assert_true(Audio.music_stream("calm").data != Audio.music_stream("dark").data)
+
+
+func test_music_mood_follows_region_danger() -> void:
+	var calm := ""
+	var dark := ""
+	for id: String in GameState.data.regions:
+		var d: int = int(GameState.data.regions[id].get("danger", 0))
+		if d <= 0 and calm == "":
+			calm = id
+		if d >= Audio.DARK_DANGER and dark == "":
+			dark = id
+	assert_eq(Audio.mood_for_region(calm), "calm")
+	assert_eq(Audio.mood_for_region(dark), "dark")
+	Audio.set_mood("dark")
+	assert_eq(Audio.mood, "dark")
+	Audio.set_mood("calm")
+
+
+func test_music_bus_follows_volume_setting() -> void:
+	var idx := AudioServer.get_bus_index("Music")
+	assert_true(idx != -1)
+	var old: Variant = Settings.get_value("music_volume")
+	Settings.set_value("music_volume", 0.4)
+	assert_almost_eq(AudioServer.get_bus_volume_db(idx), linear_to_db(0.4), 0.01)
+	Settings.set_value("music_volume", old)
