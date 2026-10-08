@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-08 [CMB-003] Fights read with weight: glancing, solid and crushing blows, and a finishing line.
 - 2026-10-08 [QA-020] Gamepad focus and Steam Deck layout checks cover every screen added since QA-013.
 - 2026-10-08 [GOAL-003] The journal's Goals section points past the first hour: next realm, next sect rank or clan, nearest milestone.
 - 2026-10-08 [MSG-002] Reputation changes name your standing ("now Friendly"); devoured qi counts in your life record.
