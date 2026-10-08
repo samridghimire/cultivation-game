@@ -94,6 +94,7 @@ func test_game_state_delves_the_verdant_remnant() -> void:
 	var c := CharacterFactory.create("Delver", gs.data, seeded_rng(9))
 	c.spiritual_roots = {"fire": 80}
 	gs.start_session(c)
+	gs.rng.seed = 1  # the fight rolls a random form; pin it so adding regions (NPC generation) cannot flip it
 	gs.current_region = "misty_forest"
 	c.realm_index = 1
 	c.stage = 8

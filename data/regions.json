@@ -112,7 +112,8 @@
       "abodes": [{"id": "cloud_piercing_grotto", "display_name": "Cloud-Piercing Grotto (abode)", "cost": 2500, "min_realm": "foundation_establishment", "qi_density": 2.5, "storage_slots": 30, "anchor_id": "cloud_grotto_abode", "pos": [900, 850], "size": [100, 70], "color": "9fb4c9"}],
       "routes": [
         {"to": "misty_forest", "days": 7},
-        {"to": "fallen_star_market", "days": 12}
+        {"to": "fallen_star_market", "days": 12},
+        {"to": "myriad_peaks_ridge", "days": 10, "min_realm": "core_formation"}
       ],
       "encounter_tags": ["mountain", "wild"],
       "places": [
@@ -141,7 +142,8 @@
       "npc_spots": [[350, 380], [650, 620], [1100, 620], [1300, 380], [250, 800], [1450, 850], [820, 110], [100, 110], [860, 910], [1500, 110], [1140, 110], [540, 910], [980, 350], [540, 150]],
       "routes": [
         {"to": "misty_forest", "days": 6},
-        {"to": "fallen_star_market", "days": 9}
+        {"to": "fallen_star_market", "days": 9},
+        {"to": "myriad_peaks_ridge", "days": 14, "min_realm": "core_formation"}
       ],
       "encounter_tags": ["marsh", "wild"],
       "places": [
@@ -155,6 +157,42 @@
         {"type": "inheritance", "display_name": "Corpse Lord's Altar", "pos": [1150, 300], "size": [110, 80], "color": "4f4a5a"},
         {"type": "secret_realm", "display_name": "Sunken Palace Gate", "pos": [800, 650], "size": [90, 80], "color": "4a6a8a"},
         {"type": "travel", "display_name": "Rotting Boardwalk", "pos": [40, 500], "size": [40, 120], "color": "5c4630"}
+      ]
+    }
+    ,{
+      "id": "myriad_peaks_ridge", "map_pos": [0.66, 0.2], "name": "Myriad Peaks Ridge",
+      "description": "A knife-edge ridge above the cloud sea where the ten thousand peaks meet. Ancient cultivators fought and died here, and the qi runs thick and hungry.",
+      "qi_density": 4.0, "danger": 3,
+      "map": {"size": [1600, 1000], "ground": "4d5568", "border": "20242e", "paths": [[0, 470, 1600, 60]], "path_color": "8a8fa0",
+        "decor": {"trees": 8, "rocks": 60, "grass": 10, "flowers": 6, "tree_color": "2f4a44", "rock_color": "9a9fb0", "grass_color": "5f7468", "flower_color": "e8e4ff"}},
+      "spawn": [120, 500],
+      "family_home": {"pos": [1100, 640], "size": [90, 64]},
+      "npc_spots": [[500, 380], [900, 380], [1000, 620], [600, 620], [1450, 350], [300, 850], [1500, 910], [100, 110], [1140, 110], [1140, 910], [1300, 630], [100, 630], [620, 910], [460, 110]],
+      "abodes": [
+        {"id": "myriad_aerie_abode", "display_name": "Cloud-Sea Aerie (abode)", "cost": 20000, "min_realm": "core_formation", "qi_density": 4.0, "storage_slots": 40, "pos": [900, 850], "size": [100, 70], "color": "aab4d0"}
+      ],
+      "routes": [
+        {"to": "azure_peak", "days": 10, "min_realm": "core_formation"},
+        {"to": "withered_bone_marsh", "days": 14, "min_realm": "core_formation"}
+      ],
+      "encounter_tags": ["mountain", "wild", "ruins"],
+      "places": [
+        {"type": "meditation", "anchor_id": "myriad_ridge_throne", "display_name": "Heaven-Facing Ledge (2x qi)", "pos": [1300, 180], "size": [120, 70], "color": "d8dcf0", "qi_density": 2.0},
+        {"type": "merchant", "display_name": "Ridge Hermit's Stall", "pos": [400, 300], "size": [110, 80], "color": "7a8fb0", "stock_tags": ["equipment", "herb"]},
+        {"type": "gather", "display_name": "Thunder-Struck Terraces", "pos": [760, 200], "size": [130, 80], "color": "9aa8d0", "gather_days": 15, "gather_table": [
+          {"item": "cloud_mist_orchid", "weight": 2, "min": 1, "max": 2},
+          {"item": "earth_marrow_fungus", "weight": 1, "min": 1, "max": 1, "min_realm": "core_formation"},
+          {"item": "golden_core_lotus_seed", "weight": 0.6, "min": 1, "max": 1, "min_realm": "core_formation"},
+          {"item": "soul_infant_fruit", "weight": 0.3, "min": 1, "max": 1, "min_realm": "core_formation"},
+          {"item": "soul_severing_lotus", "weight": 0.12, "min": 1, "max": 1, "min_realm": "nascent_soul"},
+          {"item": "profound_iron", "weight": 1.5, "min": 1, "max": 2},
+          {"item": "", "weight": 4}
+        ]},
+        {"type": "explore", "display_name": "Sundered Peak Trail", "pos": [700, 700], "size": [170, 100], "color": "3d4256"},
+        {"type": "explore", "anchor_id": "myriad_ridge_battlefield", "display_name": "Fallen Immortal's Battlefield", "pos": [1200, 760], "size": [110, 90], "color": "262a36", "explore_tags": ["ruins"]},
+        {"type": "secret_realm", "display_name": "Skyfall Thunder Pavilion", "pos": [380, 680], "size": [90, 80], "color": "8f8fe0"},
+        {"type": "inheritance", "display_name": "Patriarch's Last Seat", "pos": [1150, 330], "size": [100, 70], "color": "a8a0c8"},
+        {"type": "travel", "display_name": "Cloud-Bridge", "pos": [40, 500], "size": [40, 120], "color": "5c4630"}
       ]
     }
   ]
