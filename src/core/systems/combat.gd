@@ -257,6 +257,34 @@ static func _outcome(c: CharacterData, data: GameData, enemy: Dictionary, enemy_
 	return {"notes": notes, "died": false, "cause": "", "days": 1, "injury": injury}
 
 
+## One or two sentences on why a fight was lost ("" after a victory, draw or
+## escape): the biggest gap between the two sides, plus a nudge toward unreadied
+## combat talismans the player carries.
+static func loss_advice(c: CharacterData, data: GameData, enemy: Dictionary, result: Dictionary) -> String:
+	if result.get("victory", false) or result.get("draw", false) or result.get("escaped", false):
+		return ""
+	var p := stats(c, data)
+	var e := enemy_stats(enemy, data)
+	var foe := foe_name(enemy)
+	var foe_cap := foe.left(1).to_upper() + foe.substr(1)
+	var enemy_realm := maxi(0, data.realm_index_of(enemy.get("realm", "mortal")))
+	var enemy_stage := int(enemy.get("stage", 0))
+	var advice: String
+	if enemy_realm > c.realm_index or (enemy_realm == c.realm_index and enemy_stage >= c.stage + 3):
+		advice = "%s is far above you; grow stronger before facing it again." % foe_cap
+	elif base_damage(e["attack"], p["defense"]) >= 0.25 * p["max_hp"]:
+		advice = "%s hits too hard for your defense: armor or a defense technique (Stone Skin) would help." % foe_cap
+	elif base_damage(p["attack"], e["defense"]) < 0.1 * e["max_hp"]:
+		advice = "You barely scratch %s: a better weapon or training your attack technique would help." % foe
+	else:
+		advice = "%s was the stronger fighter today; practice your techniques and come back." % foe_cap
+	for item_id in c.inventory:
+		if c.item_count(item_id) > 0 and CombatTalismans.is_combat_talisman(data, item_id) and not c.readied_talismans.has(item_id):
+			advice += " Readied talismans can turn a fight."
+			break
+	return advice
+
+
 ## Estimated chance (0..1) that `c` beats `enemy`, by simulating fights with
 ## a private fixed-seed rng (so it is stable and never touches game rng).
 static func win_chance(c: CharacterData, data: GameData, enemy: Dictionary, samples: int = 40) -> float:

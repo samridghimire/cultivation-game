@@ -222,6 +222,16 @@ func test_violent_death_does_not_also_drain_lifespan() -> void:
 	gs.end_session()
 
 
+func test_lost_fight_posts_advice() -> void:
+	var c := _start()
+	var gs := _game_state()
+	var foe := {"id": "t", "name": "Test Foe", "realm": "foundation_establishment", "stage": 5, "hp": 500, "attack": 500, "defense": 500, "speed": 50, "techniques": [], "rewards": {}}
+	gs.fight_enemy(foe)
+	assert_true(c.alive)
+	assert_true(EventBus.history.any(func(e: Dictionary) -> bool: return String(e["text"]).contains("far above you")))
+	gs.end_session()
+
+
 func test_choose_gender_once_for_old_saves() -> void:
 	var c := _start()
 	var gs := _game_state()

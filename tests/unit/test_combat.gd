@@ -173,3 +173,33 @@ func test_resolve_starts_at_given_hp() -> void:
 	assert_eq(low["player_max_hp"], full["player_max_hp"])
 	var over := Combat.resolve(c, data(), data().enemies["mountain_bandit"], seeded_rng(3), [], 99999)
 	assert_true(String(over["log"][0]).contains("You: %d hp" % full["player_max_hp"]))
+
+
+func _foe(realm: String, stage: int, hp: int, attack: int, defense: int) -> Dictionary:
+	return {"id": "t", "name": "Test Foe", "realm": realm, "stage": stage, "hp": hp, "attack": attack, "defense": defense, "speed": 0, "techniques": [], "rewards": {}}
+
+
+func test_loss_advice_branches() -> void:
+	var c := new_character()
+	var lost := {"victory": false, "draw": false, "escaped": false}
+	var d := data()
+	assert_true(Combat.loss_advice(c, d, _foe("foundation_establishment", 0, 0, 0, 0), lost).contains("far above you"), Combat.loss_advice(c, d, _foe("foundation", 0, 0, 0, 0), lost))
+	var p := Combat.stats(c, d)
+	var hard := _foe("mortal", 0, 0, p["max_hp"] * 4, 0)
+	assert_true(Combat.loss_advice(c, d, hard, lost).contains("hits too hard"), Combat.loss_advice(c, d, hard, lost))
+	var tank := _foe("mortal", 0, 100000, 0, 100000)
+	assert_true(Combat.loss_advice(c, d, tank, lost).contains("barely scratch"), Combat.loss_advice(c, d, tank, lost))
+	var even := _foe("mortal", 0, 0, 0, 0)
+	assert_true(Combat.loss_advice(c, d, even, lost).contains("stronger fighter today"), Combat.loss_advice(c, d, even, lost))
+	for r in [{"victory": true, "draw": false}, {"victory": false, "draw": true}, {"victory": false, "draw": false, "escaped": true}]:
+		assert_eq(Combat.loss_advice(c, d, even, r), "")
+
+
+func test_loss_advice_nudges_unreadied_talismans() -> void:
+	var c := new_character()
+	var lost := {"victory": false, "draw": false, "escaped": false}
+	var even := _foe("mortal", 0, 0, 0, 0)
+	c.inventory["fire_strike_talisman"] = 1
+	assert_true(Combat.loss_advice(c, data(), even, lost).ends_with("Readied talismans can turn a fight."))
+	CombatTalismans.ready_talisman(c, data(), "fire_strike_talisman")
+	assert_false(Combat.loss_advice(c, data(), even, lost).contains("talisman"))

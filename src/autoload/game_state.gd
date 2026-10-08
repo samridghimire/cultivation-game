@@ -1982,6 +1982,9 @@ func fight_enemy(enemy: Dictionary, start_hp: int = -1) -> bool:
 	if not outcome["notes"].is_empty():
 		summary += "; " + ", ".join(outcome["notes"])
 	EventBus.post("%s (%s)" % [lines[-1], summary], "progress" if result["victory"] else "danger")
+	var advice := Combat.loss_advice(player, data, enemy, result)
+	if advice != "" and not outcome["died"]:
+		EventBus.post(advice, "danger")
 	if result["victory"] and not outcome["died"] and Devouring.is_devourable(data, enemy):
 		devour_target = enemy
 	if not enemy.get("spar", false):
