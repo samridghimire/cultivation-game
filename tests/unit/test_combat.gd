@@ -203,3 +203,31 @@ func test_loss_advice_nudges_unreadied_talismans() -> void:
 	assert_true(Combat.loss_advice(c, data(), even, lost).ends_with("Readied talismans can turn a fight."))
 	CombatTalismans.ready_talisman(c, data(), "fire_strike_talisman")
 	assert_false(Combat.loss_advice(c, data(), even, lost).contains("talisman"))
+
+
+func test_log_names_attack_techniques() -> void:
+	var plain := new_character()
+	var log_plain := "\n".join(Combat.resolve(plain, data(), data().enemies["mountain_bandit"], seeded_rng())["log"])
+	assert_false(log_plain.contains(" with "))
+	var c := new_character()
+	assert_true(Techniques.learn(c, data(), "iron_fist")["ok"])
+	var log_known := "\n".join(Combat.resolve(c, data(), data().enemies["mountain_bandit"], seeded_rng())["log"])
+	assert_true(log_known.contains("You strike with Iron Fist") or log_known.contains("You strike critically with Iron Fist"))
+
+
+func test_enemy_techniques_named_in_log() -> void:
+	var c := new_character()
+	var lines: Array = Combat.resolve(c, data(), data().enemies["rogue_cultivator"], seeded_rng())["log"]
+	assert_true("\n".join(lines).contains("attacks with Metal Edge Sword"))
+	var plain: Array = Combat.resolve(c, data(), data().enemies["wild_boar"], seeded_rng())["log"]
+	assert_true("\n".join(plain).contains("hits you"))
+
+
+func test_trace_matches_log_and_final_hp() -> void:
+	var c := new_character()
+	var r := Combat.resolve(c, data(), data().enemies["mountain_bandit"], seeded_rng())
+	assert_eq(r["trace"].size(), r["log"].size())
+	var last: Array = r["trace"][r["trace"].size() - 1]
+	assert_eq(last[0], r["player_hp"])
+	assert_eq(last[1], r["enemy_hp"])
+

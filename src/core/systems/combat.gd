@@ -119,6 +119,9 @@ static func resolve(c: CharacterData, data: GameData, enemy: Dictionary, rng: Ra
 	var player_hp: int = p["max_hp"] if start_hp < 0 else clampi(start_hp, 1, p["max_hp"])
 	var enemy_hp: int = e["max_hp"]
 	var lines: PackedStringArray = []
+	var trace: Array = []
+	var player_moves := _attack_technique_names(Techniques.levels_of(c, data).keys(), data)
+	var enemy_moves := _attack_technique_names(enemy.get("techniques", []), data)
 	var player_first: bool = p["speed"] >= e["speed"]
 	var player_form := roll_form(data, rng)
 	var enemy_form := roll_form(data, rng)
@@ -147,6 +150,8 @@ static func resolve(c: CharacterData, data: GameData, enemy: Dictionary, rng: Ra
 			break
 		enemy_hp -= int(ally["damage"])
 		lines.append("%s, who owes you a debt, strikes %s for %d. (%s: %d hp)" % [ally["name"], foe, int(ally["damage"]), foe_cap, maxi(enemy_hp, 0)])
+	while trace.size() < lines.size():
+		trace.append([player_hp, maxi(enemy_hp, 0)])
 	var rounds := 0
 	while rounds < MAX_ROUNDS and player_hp > 0 and enemy_hp > 0:
 		rounds += 1
@@ -161,7 +166,8 @@ static func resolve(c: CharacterData, data: GameData, enemy: Dictionary, rng: Ra
 				if hit["dodged"]:
 					lines.append("%s evades your strike." % foe_cap)
 				else:
-					lines.append("You strike%s for %d. (%s: %d hp)" % [" critically" if hit["crit"] else "", hit["damage"], foe_cap, maxi(enemy_hp, 0)])
+					var move := "" if player_moves.is_empty() else " with " + player_moves[(rounds - 1) % player_moves.size()]
+					lines.append("You strike%s%s for %d. (%s: %d hp)" % [move, " critically" if hit["crit"] else "", hit["damage"], foe_cap, maxi(enemy_hp, 0)])
 			else:
 				var absorbed := mini(shield, int(hit["damage"]))
 				shield -= absorbed
@@ -171,7 +177,11 @@ static func resolve(c: CharacterData, data: GameData, enemy: Dictionary, rng: Ra
 				elif hit["dodged"]:
 					lines.append("You evade %s's attack." % foe)
 				else:
-					lines.append("%s hits you%s for %d. (You: %d hp)" % [foe_cap, " critically" if hit["crit"] else "", hit["damage"], maxi(player_hp, 0)])
+					if enemy_moves.is_empty():
+						lines.append("%s hits you%s for %d. (You: %d hp)" % [foe_cap, " critically" if hit["crit"] else "", hit["damage"], maxi(player_hp, 0)])
+					else:
+						lines.append("%s attacks with %s%s for %d. (You: %d hp)" % [foe_cap, enemy_moves[(rounds - 1) % enemy_moves.size()], " critically" if hit["crit"] else "", hit["damage"], maxi(player_hp, 0)])
+			trace.append([maxi(player_hp, 0), maxi(enemy_hp, 0)])
 	var victory := enemy_hp <= 0
 	var draw := not victory and player_hp > 0
 	var escapes := CombatTalismans.available(c, data, "escape")
@@ -186,12 +196,15 @@ static func resolve(c: CharacterData, data: GameData, enemy: Dictionary, rng: Ra
 		lines.append("On the brink of death you burn %s and flee from %s!" % [Text.a(_item_name(data, escapes[0])), foe])
 	else:
 		lines.append("You are defeated by %s." % foe)
+	while trace.size() < lines.size():
+		trace.append([maxi(player_hp, 0), maxi(enemy_hp, 0)])
 	return {
 		"victory": victory,
 		"draw": draw,
 		"escaped": escaped,
 		"rounds": rounds,
 		"log": lines,
+		"trace": trace,
 		"player_hp": maxi(player_hp, 0),
 		"player_max_hp": p["max_hp"],
 		"enemy_hp": maxi(enemy_hp, 0),
@@ -205,6 +218,17 @@ static func resolve(c: CharacterData, data: GameData, enemy: Dictionary, rng: Ra
 static func foe_name(enemy: Dictionary) -> String:
 	var enemy_name := String(enemy.get("name", "enemy"))
 	return enemy_name if bool(enemy.get("proper_name", false)) else "the " + enemy_name
+
+
+## Names of the techniques in `ids` that add attack, for the fight log. Never
+## touches an rng.
+static func _attack_technique_names(ids: Array, data: GameData) -> Array[String]:
+	var out: Array[String] = []
+	for tech_id in ids:
+		var def: TechniqueDef = data.techniques.get(tech_id)
+		if def != null and float(def.bonuses.get("attack", 0.0)) > 0.0:
+			out.append(def.name)
+	return out
 
 
 static func _item_name(data: GameData, item_id: String) -> String:
