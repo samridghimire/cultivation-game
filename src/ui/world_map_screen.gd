@@ -10,6 +10,7 @@ extends PanelContainer
 
 signal closed
 
+const HudScript := preload("res://src/ui/hud.gd")
 const CANVAS_SIZE := Vector2(560, 420)
 const NODE_SIZE := Vector2(132, 40)
 const DANGER_NAMES: PackedStringArray = ["Safe", "Low", "Moderate", "High", "Deadly"]
@@ -162,7 +163,7 @@ static func place_names(data: GameData, region_id: String) -> PackedStringArray:
 
 ## What `c` has or what is going on in `region_id`: [{kind, text}] with kind
 ## a MARK_COLORS key. `people` are the NPCs, `events` the active world events.
-static func region_marks(c: CharacterData, data: GameData, people: Dictionary, events: Array, total_days: int, region_id: String) -> Array[Dictionary]:
+static func region_marks(c: CharacterData, data: GameData, people: Dictionary, events: Array, total_days: int, region_id: String, current_region: String = "") -> Array[Dictionary]:
 	var marks: Array[Dictionary] = []
 	var region: Dictionary = data.regions.get(region_id, {})
 	if not c.is_rogue() and (region.get("places", []) as Array).any(func(p: Dictionary) -> bool: return p.get("type", "") == "sect_hall"):
@@ -186,7 +187,10 @@ static func region_marks(c: CharacterData, data: GameData, people: Dictionary, e
 		var when := "open, closes in %s" % Calendar.format_duration(SecretRealms.days_until_close(def, total_days)) if SecretRealms.is_open(def, total_days) else "opens in %s" % Calendar.format_duration(SecretRealms.days_until_open(def, total_days))
 		marks.append({"kind": "secret_realm", "text": "Secret realm: %s (%s)" % [def.get("name", def["id"]), when]})
 	for instance in WorldEvents.active_in(events, region_id):
-		marks.append({"kind": "event", "text": "%s! (%s left)" % [WorldEvents.event_name(data, instance["id"]), Calendar.format_duration(maxi(0, int(instance["end_day"]) - total_days))]})
+		var enter := ""
+		if region_id == current_region and HudScript.region_event_suffix(data, [instance], region_id, c).contains("(you can enter)"):
+			enter = " (you can enter)"
+		marks.append({"kind": "event", "text": "%s! (%s left)%s" % [WorldEvents.event_name(data, instance["id"]), Calendar.format_duration(maxi(0, int(instance["end_day"]) - total_days)), enter]})
 	return marks
 
 
@@ -249,7 +253,7 @@ func _draw_map() -> void:
 			_canvas.draw_string(font, (a + b) / 2.0 + Vector2(4, -4), days, HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color(0.9, 0.9, 0.85))
 	for region_id in _positions:
 		var kinds: Array = []
-		for mark in region_marks(GameState.player, data, GameState.npcs, GameState.world_events, GameClock.total_days, region_id):
+		for mark in region_marks(GameState.player, data, GameState.npcs, GameState.world_events, GameClock.total_days, region_id, GameState.current_region):
 			if not kinds.has(mark["kind"]):
 				kinds.append(mark["kind"])
 		var start: Vector2 = Vector2(_positions[region_id]) + Vector2(-(kinds.size() - 1) * 7.0, NODE_SIZE.y / 2.0 + 8.0)
@@ -287,7 +291,7 @@ func _show_details() -> void:
 	_description.text = String(region.get("description", ""))
 	var places := place_names(data, _selected)
 	_places.text = "Places: " + (", ".join(places) if not places.is_empty() else "none known")
-	var marks := region_marks(GameState.player, data, GameState.npcs, GameState.world_events, GameClock.total_days, _selected)
+	var marks := region_marks(GameState.player, data, GameState.npcs, GameState.world_events, GameClock.total_days, _selected, GameState.current_region)
 	_marks.visible = not marks.is_empty()
 	_marks.text = "\n".join(marks.map(func(m: Dictionary) -> String: return "• " + String(m["text"])))
 	_routes.text = "\n".join(route_lines(GameState.player, data, GameState.current_region, _selected))

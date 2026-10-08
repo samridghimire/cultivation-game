@@ -87,3 +87,25 @@ func test_region_marks() -> void:
 	assert_true(kinds.call("azure_peak", events).has("event"))
 	for kind in ["sect", "abode", "family", "anchor", "secret_realm", "event"]:
 		assert_true(WorldMapScreen.MARK_COLORS.has(kind), kind)
+
+
+## WU-011: the current region's joinable events say so on the map.
+func test_region_marks_joinable_event() -> void:
+	var d := data()
+	var events: Array = [{"id": "sect_tournament", "region": "fallen_star_market", "start_day": 0, "end_day": 40}]
+	var c := new_character()
+	c.realm_index = 1
+	var here := WorldMapScreen.region_marks(c, d, {}, events, 0, "fallen_star_market", "fallen_star_market")
+	assert_true(String(_event_text(here)).contains("(you can enter)"), _event_text(here))
+	var away := WorldMapScreen.region_marks(c, d, {}, events, 0, "fallen_star_market", "qingshi_village")
+	assert_false(String(_event_text(away)).contains("(you can enter)"))
+	c.realm_index = 0
+	var mortal := WorldMapScreen.region_marks(c, d, {}, events, 0, "fallen_star_market", "fallen_star_market")
+	assert_false(String(_event_text(mortal)).contains("(you can enter)"))
+
+
+func _event_text(marks: Array[Dictionary]) -> String:
+	for m in marks:
+		if m["kind"] == "event":
+			return String(m["text"])
+	return ""
