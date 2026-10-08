@@ -14,6 +14,12 @@ func get_options() -> Array[Dictionary]:
 		if data.professions.has(prof_id):
 			var known := Alchemy.known_recipes(c, data, prof_id).size()
 			options.append({"label": "%s (%s, %d recipes)" % [CraftingScreen.TITLES[prof_id], Professions.rank_title(c, data, prof_id), known], "action": EventBus.crafting_requested.emit.bind(prof_id)})
+	for i in c.commissions.size():
+		var reason := Commissions.check_deliver(c, data, i)
+		var label := "Deliver: %s" % Commissions.describe(c, data, c.commissions[i], GameClock.total_days)
+		if reason != "":
+			label += " (%s)" % reason
+		options.append({"label": label, "action": GameState.deliver_commission.bind(i), "disabled": reason != "", "keep_open": true})
 	for def: ProfessionDef in data.professions.values():
 		if CRAFTS.has(def.id):
 			continue
