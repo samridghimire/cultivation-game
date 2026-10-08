@@ -65,7 +65,7 @@ Every great cultivation protagonist has something that sets them apart. Ours is 
 | Attributes (Constitution, Comprehension, Spirit, Fortune, Charisma) | ✅ | `data/attributes.json` |
 | Breakthroughs with risk, pills that boost odds | ✅ | `Cultivation.attempt_breakthrough` |
 | Lifespan, death by old age, burning/extending lifespan | ✅ | `Cultivation`, `GameState._on_days_advanced` |
-| Alignment (Demonic … Righteous) and deeds | ✅ | `data/alignment.json`, `data/deeds.json` |
+| Alignment (Demonic … Righteous) and deeds (with cooldowns) | ✅ | `data/alignment.json`, `data/deeds.json` |
 | Sects (join/leave, requirements, ranks, contribution, missions, trials/stipends/duties) | ✅ (shop: G-008c; rank UI: G-011b) | `data/sects.json`, `Sects` |
 | Sect reputation (witnessed deeds, join gating, faction prices) | ✅ (sheet + faction shop prices) | `data/sects.json`, `Reputation` |
 | Professions (ranks, XP, income) | ✅ basic | `data/professions.json`, `Professions` |
@@ -77,14 +77,14 @@ Every great cultivation protagonist has something that sets them apart. Ours is 
 | Items, merchants (shop screen with Buy/Sell tabs), using pills | ✅ | `data/items.json`, `Items`, `src/ui/shop_screen.gd` |
 | Save/load, multiple slots | ✅ | `SaveManager` |
 | Creation Artifact: lives, anchors, respawn, recharge, functions (storage) | ✅ (artifact screen: O) | `data/artifact.json`, `CreationArtifact` |
-| Data-driven regions (5), travel, exploration encounters | ✅ (choice window: W-004d; Dangerous lethal foes are sensed first, prompt UI: FH-004b) | `data/regions.json`, `data/encounters.json`, `Exploration` |
+| Data-driven regions (5), travel, exploration encounters | ✅ (choice window: W-004d; Dangerous lethal foes are sensed first and prompted: slip away or fight) | `data/regions.json`, `data/encounters.json`, `Exploration` |
 | Injuries (from breakthroughs and combat) | ✅ | `data/injuries.json`, `Injuries` |
 | Combat (auto-resolved) and techniques | ✅ basic | `Combat`, `Techniques`, `data/enemies.json`, `data/techniques.json` |
 | NPCs (named + generated), aging, monthly sim | ✅ | `data/npcs.json`, `Npcs`, `Names` |
 | Dialogue | ✅ (dialogue window) | `Dialogue`, `data/dialogue/` |
 | Family: identity, courtship, marriage, dual cultivation, children, adoption, training | ✅ (NPC menu: chat, gifts, court, propose, adopt; meditation spots; child training screen) | `data/family.json`, `Family`, `Children` |
 | Clans, estates, bloodlines | ✅ clan core (FAM-005), heirs (FAM-008), NPC clans core (FAM-009), bloodlines core (FAM-007), clan screen UI (FAM-005b), estates core (FAM-006) | `data/family.json`, `data/bloodlines.json`, `Clans`, `ClanData`, `Bloodlines` |
-| Spirit beast companions (Beast Tamer taming, combat bonus, growth) | ✅ (character sheet, feeding; 🚧 no Release button: FH-015) | `data/beasts.json`, `Beasts` |
+| Spirit beast companions (Beast Tamer taming, combat bonus, growth) | ✅ (character sheet, feeding, release) | `data/beasts.json`, `Beasts` |
 | Cultivation methods (one main method, qi rate, realm cap) | ✅ (techniques screen) | `Techniques`, `data/techniques.json` |
 | Dao insights (encounters, practice, seclusion; technique + breakthrough bonuses) | ✅ (sheet + contemplation at meditation spots) | `data/dao.json`, `Dao` |
 | Heavenly Tribulations (Core Formation+, heart demon for demonic) | ✅ (prepare warning + wave screen) | `Tribulation`, `data/realms.json` |
@@ -97,7 +97,8 @@ Every great cultivation protagonist has something that sets them apart. Ours is 
 | Creation Artifact inner world and spirit garden | ✅ (artifact screen) | `InnerWorld`, `SpiritGarden` |
 | World events (beast tides, tournaments, auctions, incursions) | ✅ passive effects + HUD/map/rumors; 🚧 nothing to join yet (LW-003) | `data/world_events.json`, `WorldEvents` |
 | NPC clans and NPC sect membership, family tree, Family Home | ✅ | `NpcClans`, `FamilyHome`, `src/ui/family_screen.gd` |
-| Audio, autosave, export presets, credits | 🚧 none yet (REL-001..005) | |
+| NPC sects as factions (strength, recruitment) | ✅ core (LW-002); 🚧 clashes (LW-002b), no UI yet (WU-002) | `SectFactions` |
+| Audio, autosave, export presets, credits | ✅ procedural SFX, autosave, credits; 🚧 music (REL-008), export presets (REL-005), crash-safe saves (REL-007) | `Audio`, `SaveManager`, `src/ui/credits_screen.gd` |
 | Content past Core Formation | 🚧 none: no enemies/encounters/pills at Nascent Soul+ (NS-001..005) | |
 | Ending (ascension) | 🚧 none, waiting on the owner (END-001) | |
 | Inventory, techniques, character sheet, settings, pause, load screens | ✅ | `src/ui/` |

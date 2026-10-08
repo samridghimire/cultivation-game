@@ -2,6 +2,24 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-08 [QA-018] The combat sim gains a veteran loadout per realm through Soul Formation, with guards that no forced late fight is unbeatable.
+- 2026-10-08 [REL-003] A Credits screen on the main menu, with the Godot Engine license.
+- 2026-10-08 [REL-004] First sounds: UI clicks, log chimes, breakthrough, combat and lightning effects, all synthesized in code, with working SFX and Master volume sliders.
+- 2026-10-08 [LW-002] NPC sects are living factions: their strength follows their members' realms and they recruit rogue cultivators each month.
+- 2026-10-08 [FH-022] Ten new help pages: combat and danger, exploring, money, techniques, crafting, injuries, tribulations, secret realms, abodes and karma.
+- 2026-10-08 [FH-021] Fairer first fights: the iron-back boar and bandit moved to the forest, a failed first breakthrough can't damage your meridians, and one-time village stories no longer repeat.
+- 2026-10-08 [FH-014] The crafting screen tells you where each missing ingredient is sold or gathered.
+- 2026-10-08 [REL-002] Final death is final: a fallen character's saves show "fallen at age N" and can't be loaded.
+- 2026-10-08 [QA-016] First-hour guard sim and tests (median: Qi Refining 1st layer by day 14, a sect by day 14).
+- 2026-10-08 [REL-001] Autosave on travel, breakthroughs, each month and window close, with a setting to turn it off.
+- 2026-10-08 [FH-013] Character creation shows your talent against the average, and rerolling puts focus on Begin.
+- 2026-10-08 [FH-012] Key hints follow your bindings and switch between keyboard and gamepad names.
+- 2026-10-08 [FH-006] No more two NPCs with the same name.
+- 2026-10-08 [FH-005] Far-off world events no longer flood the log; rumors still tell of them.
+- 2026-10-08 [FH-020] Qingshi Village gets a herb slope, a herb seller and a newcomer-safe mission for each sect.
+- 2026-10-08 [FH-015] Release a beast companion from the character sheet; fights won before the foe strikes read naturally.
+- 2026-10-08 [FH-004b] When you sense a dangerous foe, choose to slip away or fight it to the death.
+- 2026-10-08 [FH-003] Deeds have cooldowns, so robbing and donating can't be farmed.
 - 2026-10-08 [FH-002] Closed-door cultivation ends when your qi reaches a bottleneck, so a long seclusion no longer ages you for nothing.
 - 2026-10-07 [QA-017] Exploit audit test: every deed and repeatable choice encounter is checked for stones and alignment per day; rob_villager and donate_stones are the known offenders until deed cooldowns land.
 - 2026-10-07 [FH-011] A new life begins beside Meditation Rock, and the awakening tells you Elder Mo helps those just starting out.
