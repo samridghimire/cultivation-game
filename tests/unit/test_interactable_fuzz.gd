@@ -14,6 +14,7 @@ const SKIP_PREFIXES := ["Travel to ", "Closed-door cultivation"]
 
 var _last_day := 0
 var _calls := 0
+var _window_realm := ""
 
 
 func _tree() -> SceneTree:
@@ -49,6 +50,10 @@ func _start(kind: String) -> CharacterData:
 	Techniques.learn(c, gs.data, "iron_fist")
 	if kind == "veteran":
 		_build_veteran(c)
+	elif kind == "realm_window":
+		_build_realm_window(c)
+	elif kind == "trial":
+		_build_trial_candidate(c)
 	elif kind == "disciple":
 		c.realm_index = gs.data.realm_index_of("qi_refining")
 		c.stage = 6
@@ -95,6 +100,41 @@ func _build_veteran(c: CharacterData) -> void:
 		gs.build_clan_building(String(building["id"]))
 	if gs.data.beasts.has("boar"):
 		c.companions.append("boar")
+
+
+## QA-033: a Qi Refining disciple standing at the entrance of a secret realm
+## they qualify for, with the clock inside its opening window.
+func _build_realm_window(c: CharacterData) -> void:
+	var gs := _gs()
+	c.realm_index = gs.data.realm_index_of("qi_refining")
+	c.stage = 6
+	gs.join_sect("azure_cloud_sect")
+	var ids: Array = gs.data.secret_realms.keys()
+	ids.sort()
+	for realm_id: String in ids:
+		var def: Variant = gs.data.secret_realms[realm_id]
+		if not (def is Dictionary) or not (def as Dictionary).has("period_years") or not SecretRealms.admits(c, gs.data, def):
+			continue
+		var offset := int(def.get("offset_years", 0)) * Calendar.DAYS_PER_YEAR
+		var period := int(def.get("period_years", 1)) * Calendar.DAYS_PER_YEAR
+		# The start of the second opening, so the first is already over.
+		_clock().total_days = offset + period + 1
+		gs.current_region = String(def["region"])
+		_window_realm = realm_id
+		return
+	_window_realm = ""
+
+
+## QA-033: an Azure Cloud disciple whose contribution and realm meet the next
+## rank, which needs a trial fight.
+func _build_trial_candidate(c: CharacterData) -> void:
+	var gs := _gs()
+	c.realm_index = gs.data.realm_index_of("foundation_establishment")
+	c.stage = 2
+	gs.join_sect("azure_cloud_sect")
+	c.sect["rank"] = 1
+	c.sect["contribution"] = 3500
+	c.alignment = 200
 
 
 func _check_state(context: String) -> void:
@@ -170,7 +210,11 @@ func _fuzz_region(region_id: String) -> void:
 	var world: Node = load("res://src/world/world.tscn").instantiate()
 	_tree().root.add_child(world)
 	await _tree().process_frame
-	for node in world.get_children():
+	# Secret realm entrances first: meditation spots would run out the clock
+	# of a short opening before the entrance gets its turn.
+	var nodes: Array = world.get_children()
+	nodes.sort_custom(func(a: Node, b: Node) -> bool: return a is SecretRealmEntrance and not b is SecretRealmEntrance)
+	for node in nodes:
 		if node is Interactable and node.is_available():
 			_fuzz_node(node, region_id)
 		if not gs.player.alive:
@@ -195,6 +239,11 @@ func _fuzz_all_regions(kind: String) -> void:
 	_last_day = _clock().total_days
 	var ids: Array = _gs().data.regions.keys()
 	ids.sort()
+	if _window_realm != "" and kind == "realm_window":
+		# The window is open now; visit its entrance before time moves on.
+		var entrance := String(_gs().data.secret_realms[_window_realm]["region"])
+		ids.erase(entrance)
+		ids.push_front(entrance)
 	for region_id: String in ids:
 		if not _gs().player.alive:
 			_start(kind)
@@ -249,3 +298,16 @@ func _check_message(text: String, _category: String) -> void:
 
 func _log_message(text: String, category: String) -> void:
 	print("MSG ", category, " | ", text)
+
+
+## QA-033: a profile spawned while a secret realm's window is open.
+func test_fuzz_secret_realm_window() -> void:
+	await _fuzz_all_regions("realm_window")
+	assert_true(_window_realm != "", "a realm admits a Qi Refining disciple")
+	assert_gt(_calls, 50, "the fuzz should reach many options")
+
+
+## QA-033: a profile with a sect promotion trial available.
+func test_fuzz_promotion_trial() -> void:
+	await _fuzz_all_regions("trial")
+	assert_gt(_calls, 80, "the fuzz should reach many options")

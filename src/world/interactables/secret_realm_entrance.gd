@@ -1,3 +1,4 @@
+class_name SecretRealmEntrance
 extends Interactable
 ## The entrance to the region's secret realms (W-005b, data/secret_realms.json).
 ## Lists each realm whose entrance is in the current region with its status and,
