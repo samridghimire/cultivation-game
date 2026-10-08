@@ -64,9 +64,7 @@ func open() -> void:
 
 ## The journal for the current session.
 static func entries() -> Array[Dictionary]:
-	var p := GameState.player
-	var density := GameState.region_qi_density() * Sects.cultivation_bonus(p, GameState.data)
-	return Guidance.journal(p, GameState.data, GameState.world_flags, GameClock.total_days, GameState.world_events, GameState.npcs, density, GameState.current_region)
+	return GameState.journal_entries()
 
 
 func close() -> void:

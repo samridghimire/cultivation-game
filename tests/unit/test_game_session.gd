@@ -478,3 +478,9 @@ func test_milestone_posted_on_player_change() -> void:
 	assert_eq(posted.size(), 1)
 	EventBus.player_changed.emit()
 	assert_eq(EventBus.history.filter(func(m): return String(m["text"]).begins_with("Milestone: First Blood")).size(), 1)
+
+
+func test_journal_entries_on_new_game() -> void:
+	_start()
+	var entries: Array[Dictionary] = _game_state().journal_entries()
+	assert_false(entries.is_empty())

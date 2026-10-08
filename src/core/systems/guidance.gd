@@ -179,47 +179,108 @@ static func _newcomer_hints(c: CharacterData, data: GameData, flags: Dictionary,
 	return out
 
 
-## Journal entries [{section, text}] answering "what can I do now?": every hint,
-## the next breakthrough, sect duty and missions, cooldowns, and the world
-## events under way (WU-007). `today` is the GameClock day; `active_events` the
-## live world events.
-static func journal(c: CharacterData, data: GameData, flags: Dictionary, today: int, active_events: Array = [], people: Dictionary = {}, density: float = 1.0, region_id: String = "") -> Array[Dictionary]:
+## Journal entries {section, text, tone} answering "what can I do now?", in
+## display order (WU-007 renders them). tone is "normal", "warning" (urgent) or
+## "dim" (waiting / on cooldown). `today` is the GameClock day, `events` the live
+## world events. Pure: nothing is mutated.
+static func journal(c: CharacterData, data: GameData, flags: Dictionary, today: int, region_id: String, density: float = 1.0, people: Dictionary = {}, events: Array = [], clan: ClanData = null) -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
-	for hint in hints(c, data, density, 50, people, flags, region_id):
-		out.append({"section": "Next steps", "text": hint})
-	out.append({"section": "Breakthrough", "text": _breakthrough_line(c, data, density)})
-	var pills := breakthrough_items(c, data)
-	if not pills.is_empty():
-		out.append({"section": "Breakthrough", "text": "Held items that raise the odds: %s." % ", ".join(pills)})
-	if c.breakthrough_bonus > 0.0:
-		out.append({"section": "Breakthrough", "text": "Pill bonus active: +%d%% chance." % roundi(c.breakthrough_bonus * 100)})
+	var hint_lines := hints(c, data, density, 99, people, flags, region_id)
+	var urgent := 0
+	if Cultivation.years_left(c, data) <= LIFESPAN_WARNING_YEARS:
+		urgent += 1
+	if Injuries.has_any(c):
+		urgent += 1
+	for i in hint_lines.size():
+		_add(out, "Next steps", hint_lines[i], "warning" if i < urgent else "normal")
+	_breakthrough_entries(out, c, data, density)
 	if not c.is_rogue():
-		var sect: SectDef = data.sects[c.sect["id"]]
-		out.append({"section": "Sect", "text": "%s, %s: %d contribution." % [sect.name, sect.rank_name(int(c.sect["rank"])), int(c.sect["contribution"])]})
-		var duty := Sects.monthly_duty(c, data)
-		if duty > 0:
-			out.append({"section": "Sect", "text": "Monthly duty: %d of %d contribution earned this month." % [Sects.duty_progress(c), duty]})
-		var ready := Sects.available_missions(c, data).filter(func(id: String) -> bool: return Sects.check_mission(c, data, id) == "")
-		for id: String in ready:
-			out.append({"section": "Sect", "text": "Mission ready: %s." % String(data.sect_missions[id].get("name", id))})
-	for id: String in c.mission_cooldowns:
-		var wait := Sects.mission_cooldown_left(c, id)
-		if wait > 0 and data.sect_missions.has(id):
-			out.append({"section": "Cooldowns", "text": "%s (mission): %s left." % [String(data.sect_missions[id].get("name", id)), Calendar.format_duration(wait)]})
+		_sect_entries(out, c, data)
 	for id: String in c.deed_days:
 		var deed: Dictionary = data.deeds.get(id, {})
-		var left := int(c.deed_days[id]) + int(deed.get("cooldown_days", 0)) - today
-		if not deed.is_empty() and not bool(deed.get("once", false)) and left > 0:
-			out.append({"section": "Cooldowns", "text": "%s: %s left." % [String(deed.get("name", id)), Calendar.format_duration(left)]})
-	for line in WorldEvents.describe(data, active_events, today):
-		out.append({"section": "World events", "text": line})
+		var left := Deeds.cooldown_left(c, deed, today)
+		if left > 0:
+			_add(out, "Deeds", "%s: again in %d days" % [String(deed.get("name", id)), left], "dim")
+	for instance in WorldEvents.active_in(events, region_id):
+		var event_id := String(instance["id"])
+		var def := WorldEvents.def_of(data, event_id)
+		var days_left := maxi(0, int(instance["end_day"]) - today)
+		_add(out, "World events", "%s here (%d days left)" % [WorldEvents.event_name(data, event_id), days_left], "normal")
+		for kind in ["tournament", "defence"]:
+			if def.has(kind):
+				var reason := WorldEvents.check_join(data, events, c, event_id, kind, region_id)
+				_add(out, "World events", "%s: %s" % [kind.capitalize(), "you can enter" if reason == "" else reason], "normal" if reason == "" else "dim")
+	_milestone_entries(out, c, data)
 	return out
 
 
-static func _breakthrough_line(c: CharacterData, data: GameData, density: float) -> String:
-	if Cultivation.is_at_bottleneck(c, data) and not Cultivation.can_attempt_breakthrough(c, data):
-		return "You stand at the peak of the highest realm known."
-	if Cultivation.can_attempt_breakthrough(c, data):
-		return "At a bottleneck: ready to break through (%d%% chance)." % roundi(Cultivation.breakthrough_chance(c, data) * 100)
-	var needed := maxf(Cultivation.qi_required(c, data) - c.qi, 0.0)
-	return "%d more qi to the next stage (about %s of meditation here)." % [ceili(needed), Calendar.format_duration(ceili(needed / maxf(Cultivation.qi_per_day(c, data, density), 0.001)))]
+static func _add(out: Array[Dictionary], section: String, text: String, tone: String) -> void:
+	out.append({"section": section, "text": text, "tone": tone})
+
+
+static func _breakthrough_entries(out: Array[Dictionary], c: CharacterData, data: GameData, density: float) -> void:
+	var realm: RealmDef = data.realms[c.realm_index]
+	var next_label := ""
+	if c.stage + 1 < realm.stage_count():
+		next_label = realm.stage_label(c.stage + 1)
+	elif c.realm_index + 1 < data.realms.size():
+		next_label = data.realms[c.realm_index + 1].name
+	if next_label != "":
+		_add(out, "Breakthrough", "Qi: %s / %s for %s" % [_commas(int(c.qi)), _commas(int(Cultivation.qi_required(c, data))), next_label], "normal")
+	if Cultivation.is_at_bottleneck(c, data):
+		_add(out, "Breakthrough", "You are at a bottleneck: break through to go further.", "warning")
+	else:
+		var days := Cultivation.days_to_bottleneck(c, data, density)
+		if days > 0:
+			_add(out, "Breakthrough", "About %d days of meditation here." % days, "normal")
+	var pills: PackedStringArray = []
+	for item_id in c.inventory:
+		var item: Dictionary = data.items.get(item_id, {})
+		if c.item_count(item_id) > 0 and float(item.get("effects", {}).get("breakthrough_bonus", 0.0)) > 0.0:
+			pills.append("%s (held %d)" % [String(item["name"]), c.item_count(item_id)])
+	pills.sort()
+	if not pills.is_empty():
+		_add(out, "Breakthrough", "Pills that help: %s" % ", ".join(pills), "normal")
+
+
+static func _sect_entries(out: Array[Dictionary], c: CharacterData, data: GameData) -> void:
+	var duty := Sects.monthly_duty(c, data)
+	if duty > 0:
+		var days_left := Calendar.DAYS_PER_MONTH - c.age_days % Calendar.DAYS_PER_MONTH
+		var unmet := Sects.duty_progress(c) < duty
+		_add(out, "Sect", "Monthly duty: %d / %d contribution, %d days left this month." % [Sects.duty_progress(c), duty, days_left], "warning" if unmet and days_left <= 7 else "normal")
+	for id in Sects.available_missions(c, data):
+		var name := String(data.sect_missions[id].get("name", id))
+		var reason := Sects.check_mission(c, data, id)
+		if reason == "":
+			var danger := Sects.mission_danger(c, data, id)
+			var tail := "%d days" % int(data.sect_missions[id].get("days", 1))
+			if danger != "":
+				tail += ", danger: %s" % danger
+			_add(out, "Sect", "Ready: %s (%s)" % [name, tail], "normal")
+		elif Sects.mission_cooldown_left(c, id) > 0 and reason.begins_with("This mission is not offered again"):
+			_add(out, "Sect", "%s: again in %d days" % [name, Sects.mission_cooldown_left(c, id)], "dim")
+
+
+static func _milestone_entries(out: Array[Dictionary], c: CharacterData, data: GameData) -> void:
+	if data.milestones.is_empty():
+		return
+	var earned := 0
+	var pending: Array[Dictionary] = []
+	for def: Dictionary in data.milestones:
+		if c.milestones.has(String(def["id"])):
+			earned += 1
+		else:
+			pending.append(def)
+	_add(out, "Milestones", "Milestones: %d of %d" % [earned, data.milestones.size()], "normal")
+	for def in pending.slice(0, 3):
+		_add(out, "Milestones", "%s: %s" % [String(def.get("name", def["id"])), String(def.get("description", ""))], "dim")
+
+
+static func _commas(n: int) -> String:
+	var s := str(absi(n))
+	var out := ""
+	while s.length() > 3:
+		out = "," + s.substr(s.length() - 3) + out
+		s = s.substr(0, s.length() - 3)
+	return ("-" if n < 0 else "") + s + out

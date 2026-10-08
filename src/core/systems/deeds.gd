@@ -24,11 +24,19 @@ static func check(c: CharacterData, data: GameData, deed: Dictionary, flags: Dic
 	if c.deed_days.has(id):
 		if bool(deed.get("once", false)):
 			return "You have already done this."
-		var cooldown := int(deed.get("cooldown_days", 0))
-		var left := int(c.deed_days[id]) + cooldown - today
-		if cooldown > 0 and left > 0:
+		var left := cooldown_left(c, deed, today)
+		if left > 0:
 			return "You did this recently. Try again in %d days." % left
 	return Exploration.check_choice(c, data, deed, flags)
+
+
+## Days until `deed` can be repeated (0 when ready, once-only or no cooldown).
+static func cooldown_left(c: CharacterData, deed: Dictionary, today: int) -> int:
+	var id := String(deed.get("id", ""))
+	var cooldown := int(deed.get("cooldown_days", 0))
+	if not c.deed_days.has(id) or cooldown <= 0 or bool(deed.get("once", false)):
+		return 0
+	return maxi(0, int(c.deed_days[id]) + cooldown - today)
 
 
 ## The deeds offered at `context` for `c`:

@@ -124,14 +124,14 @@ func _rebuild() -> void:
 		var bonuses := bloodline_bonus_text(data, p.bloodline)
 		if bonuses != "":
 			t += "  [color=#aaaaaa]%s: %s[/color]\n" % ["Grants" if p.bloodline_awakened else "Will grant", bonuses]
-	t += "Cultivation speed: %.2f qi/day here\n" % Cultivation.qi_per_day(p, data, GameState.region_qi_density() * Sects.cultivation_bonus(p, data))
+	t += "Cultivation speed: %.2f qi/day here\n" % Cultivation.qi_per_day(p, data, GameState.hint_density())
 	var devoured := "   |   Cultivators devoured: %d" % p.devoured if p.devoured > 0 else ""
 	t += "Alignment: %s (%d)%s   |   %s\n\n" % [Alignment.tier_name(p.alignment, data), p.alignment, devoured, Sects.describe(p, data)]
 	var rank_line := SectBalanceWindow.rank_line(p, GameState.sect_standings())
 	if rank_line != "":
 		t += rank_line + "\n\n"
 	_gender_row.visible = p.gender == ""
-	var density := GameState.region_qi_density() * Sects.cultivation_bonus(p, data)
+	var density := GameState.hint_density()
 	var hints := Guidance.hints(p, data, density, 6, GameState.npcs, GameState.world_flags, GameState.current_region)
 	if not hints.is_empty():
 		t += "[color=#%s]Next steps[/color]\n" % accent

@@ -1723,6 +1723,15 @@ func bid(house_id: String, lot_index: int, amount: int) -> void:
 
 
 ## Qi density of the current region, including active world events (LW-001).
+func hint_density() -> float:
+	return region_qi_density() * Sects.cultivation_bonus(player, data)
+
+
+## Journal entries for the current session (Guidance.journal); no side effects.
+func journal_entries() -> Array[Dictionary]:
+	return Guidance.journal(player, data, world_flags, GameClock.total_days, current_region, hint_density(), npcs, world_events, clan)
+
+
 func region_qi_density() -> float:
 	return Exploration.qi_density(data, current_region) * WorldEvents.qi_multiplier(data, world_events, current_region)
 
