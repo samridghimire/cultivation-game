@@ -409,6 +409,15 @@ func _validate_world() -> void:
 			var map_pos: Variant = region["map_pos"]
 			if not (map_pos is Array and (map_pos as Array).size() == 2 and (map_pos as Array).all(func(v): return (v is float or v is int) and v >= 0.0 and v <= 1.0)):
 				load_errors.append("Region '%s' map_pos must be [x, y] with values in 0..1" % region["id"])
+		var ambient: Variant = region.get("map", {}).get("ambient", {})
+		if not ambient is Dictionary:
+			load_errors.append("Region '%s' map.ambient must be an object" % region["id"])
+		else:
+			for key: String in ambient:
+				if not ["spring", "summer", "autumn", "winter", "any"].has(key):
+					load_errors.append("Region '%s' map.ambient has unknown season '%s'" % [region["id"], key])
+				elif not Ambient.KINDS.has(String(ambient[key])):
+					load_errors.append("Region '%s' map.ambient kind '%s' is not one of %s" % [region["id"], ambient[key], ", ".join(Ambient.KINDS)])
 		for spot in region.get("npc_spots", []):
 			if not (spot is Array and (spot as Array).size() == 2):
 				load_errors.append("Region '%s' has an npc_spot that is not [x, y]: %s" % [region["id"], spot])

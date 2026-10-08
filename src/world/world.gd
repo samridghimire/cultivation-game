@@ -35,6 +35,7 @@ var _decor: Array[Dictionary] = []
 ## Seasonal tint (CanvasModulate only affects this canvas, not the HUD CanvasLayer).
 var _season_tint: CanvasModulate
 var _season := ""
+var _ambient: CPUParticles2D
 
 @onready var player: Player = $Player
 
@@ -49,6 +50,8 @@ func _ready() -> void:
 	player.position = _vec(_region.get("spawn", [map_size.x / 2.0, map_size.y / 2.0]))
 	_build_season_tint()
 	_build_decor()
+	_refresh_ambient()
+	Settings.changed.connect(_on_setting_changed)
 	_build_places()
 	_place_at_spawn_anchor()
 	_build_npcs()
@@ -72,11 +75,33 @@ func _on_days_advanced(_days: int) -> void:
 	if season == _season:
 		return
 	_season = season
+	_refresh_ambient()
 	var tween := create_tween()
 	tween.tween_property(_season_tint, "color", Calendar.season_tint(season), 0.6)
 
 
+## Rebuilds the particle layer for the region, season and "Ambient effects" setting.
+func _refresh_ambient() -> void:
+	if _ambient != null:
+		_ambient.queue_free()
+		_ambient = null
+	if not Settings.get_value("ambient_effects"):
+		return
+	var kind := Ambient.kind_for(_region.get("map", {}).get("ambient", {}), _season)
+	if kind == "":
+		return
+	_ambient = Ambient.make_emitter(kind, map_size)
+	add_child(_ambient)
+
+
+func _on_setting_changed(key: String, _value: Variant) -> void:
+	if key == "ambient_effects":
+		_refresh_ambient()
+
+
 func _exit_tree() -> void:
+	if Settings.changed.is_connected(_on_setting_changed):
+		Settings.changed.disconnect(_on_setting_changed)
 	if GameClock.days_advanced.is_connected(_on_days_advanced):
 		GameClock.days_advanced.disconnect(_on_days_advanced)
 	if is_inside_tree():
