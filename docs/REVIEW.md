@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 6c7e35d
+Last reviewed commit: 3c067b3
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -47,3 +47,19 @@ Last reviewed commit: 6c7e35d
     notices, journal tone/regressions/duplicate duty line, breakthrough pills not realm-gated (cheap pills beat NS-002's),
     tests that can't fail (world events, QA-019 tautology, economy sim buying for unavailable missions), NS-003 text
     mismatches, and the missing claim-cleanup workflow / over-broad cleanup script / empty claim commits.
+- 2026-10-08 (reviewer, 3rd run): reviewed 6c7e35d..3c067b3 (REL-008, LW-002b/c, QA-022/024/025, MS-002, RV-001..005,
+  RV-007, C-011, C-012, PROF-001, WU-011/012/014, ART-008, WE-001, NS-005; [PLAN], claim and earlier [REVIEW] commits
+  skipped). Main green before and after (1071 -> 1074 tests). No BACKLOG/CHANGELOG edits by workers; no SAVE_VERSION
+  change (`commissions` defaults to []; legacy `show_hints=false` maps to `hud_hints=0`).
+  - Fixed in one [REVIEW] commit: (1) RV-005 tied breakthrough pills to their realm, but the HUD hint and journal still
+    recommended every held breakthrough pill (a Core Forming Pill to a Qi Refining cultivator, a second pill after one
+    was taken); Guidance now lists only pills Effects.check accepts. (2) PROF-001 paid material value x2 per unit even
+    for items shops sell cheaper (22 recipes; Jade Marrow Pill bought for 600 paid 1100), so orders could be filled from
+    a shop for stones plus free profession xp and sect contribution. New `commissions.max_price_fraction` (0.8) caps
+    the per-unit reward below the shop price. Tests added for both.
+  - RV-001/002/003/004/007 resolve their findings. LW-002b/c, MS-002, ART-008, WU-011/012/014, C-011/012, NS-005 match
+    their specs.
+  - Notes, not filed: `_expire_sect_calls` is flag bookkeeping in GameState (belongs in SectFactions); a clash while the
+    call mission is on cooldown posts "calls on its senior disciples", which reads oddly for a senior. Sect clashes can
+    kill the player's spouse/descendants in sects (only recruitment reserves them); acceptable as world drama but worth
+    a design check. Commissions can't be delivered in-game until WU-013 lands.
