@@ -1,0 +1,12 @@
+"AppBuild"
+{
+	"AppID" "${STEAM_APP_ID}"
+	"Desc" "Cultivation Game build"
+	"ContentRoot" "${ROOT}/build"
+	"BuildOutput" "${ROOT}/build/steam_output"
+	"Depots"
+	{
+		"${STEAM_DEPOT_WINDOWS}" "depot_build_windows.vdf"
+		"${STEAM_DEPOT_LINUX}" "depot_build_linux.vdf"
+	}
+}
