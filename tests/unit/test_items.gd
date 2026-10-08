@@ -46,3 +46,14 @@ func test_beast_materials_are_dropped_and_bought() -> void:
 				dropped = true
 		assert_true(dropped, "%s is dropped by no enemy" % id)
 	assert_eq(count, 8)
+
+
+## RV-011: "sell all loot" keeps talismans readied for the next fight.
+func test_bulk_sell_keeps_readied_talismans() -> void:
+	var c := new_character()
+	c.inventory = {"fire_strike_talisman": 3, "swift_wind_talisman": 2}
+	c.readied_talismans = ["fire_strike_talisman"]
+	var ids := Items.bulk_sell_ids(c, data(), ["talisman"])
+	assert_true(ids.has("swift_wind_talisman"))
+	assert_false(ids.has("fire_strike_talisman"), "readied")
+	assert_eq(Items.bulk_sell_total(c, data(), ids), 2 * Items.sell_price(data(), "swift_wind_talisman"))
