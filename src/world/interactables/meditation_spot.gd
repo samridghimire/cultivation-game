@@ -11,17 +11,21 @@ extends Interactable
 
 func get_options() -> Array[Dictionary]:
 	var options: Array[Dictionary] = [
-		{"label": "Meditate (1 month)", "action": GameState.cultivate.bind(Calendar.DAYS_PER_MONTH, qi_density), "keep_open": true},
-		{"label": "Closed-door cultivation (1 year)", "action": GameState.cultivate.bind(Calendar.DAYS_PER_YEAR, qi_density), "keep_open": true},
+		{"label": "Meditate (1 month)", "description": GameState.meditation_preview(Calendar.DAYS_PER_MONTH, qi_density), "action": GameState.cultivate.bind(Calendar.DAYS_PER_MONTH, qi_density), "keep_open": true},
+		{"label": "Closed-door cultivation (1 year)", "description": GameState.meditation_preview(Calendar.DAYS_PER_YEAR, qi_density), "action": GameState.cultivate.bind(Calendar.DAYS_PER_YEAR, qi_density), "keep_open": true},
 	]
 	options.append_array(_dual_cultivation_options())
 	if Cultivation.can_attempt_breakthrough(GameState.player, GameState.data):
 		var chance := Cultivation.breakthrough_chance(GameState.player, GameState.data)
+		var odds := Guidance.chance_text(GameState.player, GameState.data)
+		var pill_hint := Guidance.pill_source_hint(GameState.player, GameState.data)
+		if pill_hint != "":
+			odds += "\n" + pill_hint
 		if GameState.tribulation_preview()["has_tribulation"]:
 			# A tribulation can kill: show the preparation screen before attempting.
-			options.append({"label": "Attempt breakthrough (%d%% chance, Heavenly Tribulation!)" % int(chance * 100), "action": EventBus.tribulation_prepare_requested.emit})
+			options.append({"label": "Attempt breakthrough (%d%% chance, Heavenly Tribulation!)" % int(chance * 100), "description": odds, "action": EventBus.tribulation_prepare_requested.emit})
 		else:
-			options.append({"label": "Attempt breakthrough (%d%% chance)" % int(chance * 100), "action": GameState.attempt_breakthrough, "keep_open": true})
+			options.append({"label": "Attempt breakthrough (%d%% chance)" % int(chance * 100), "description": odds, "action": GameState.attempt_breakthrough, "keep_open": true})
 	for tech_id in GameState.player.techniques:
 		if Techniques.is_mastered(GameState.player, GameState.data, tech_id):
 			continue
@@ -67,7 +71,7 @@ func _dual_cultivation_options() -> Array[Dictionary]:
 		var bonus := roundi((Family.dual_multiplier(p, spouse, data) - 1.0) * 100.0)
 		var label := "Dual cultivate with %s (1 month, +%d%% qi)" % [spouse.name, bonus]
 		var reason := Family.check_dual_cultivation(p, spouse, data)
-		options.append({"label": label, "action": GameState.dual_cultivate.bind(spouse.id, Calendar.DAYS_PER_MONTH, qi_density), "disabled": reason != "", "reason": reason, "keep_open": true})
+		options.append({"label": label, "description": GameState.meditation_preview(Calendar.DAYS_PER_MONTH, qi_density * Family.dual_multiplier(p, spouse, data)), "action": GameState.dual_cultivate.bind(spouse.id, Calendar.DAYS_PER_MONTH, qi_density), "disabled": reason != "", "reason": reason, "keep_open": true})
 		var child_days := int(Children.rules(data).get("conception_days", 30))
 		label = "Try for a child with %s (%s)" % [spouse.name, Calendar.format_duration(child_days)]
 		reason = Children.check_conception(p, spouse, data)
