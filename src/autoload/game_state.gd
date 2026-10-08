@@ -2260,6 +2260,8 @@ func load_save_dict(d: Dictionary) -> void:
 		current_region = data.start_region
 	GameClock.from_dict(d.get("clock", {}))
 	EventBus.clear_history()
+	for line in Guidance.recap(player, data, world_flags, GameClock.total_days, current_region, hint_density(), npcs, world_events, clan):
+		EventBus.post(line, "info")
 	rng.seed = String(d.get("rng_seed", "0")).to_int()
 	rng.state = String(d.get("rng_state", "0")).to_int()
 	# Milestones reached before this save (or before GOAL-001) are awarded silently, so

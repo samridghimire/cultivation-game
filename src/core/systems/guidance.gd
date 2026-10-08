@@ -249,6 +249,25 @@ static func _newcomer_hints(c: CharacterData, data: GameData, flags: Dictionary,
 	return out
 
 
+## "Where you left off" lines for a freshly loaded save (RECAP-001): who and where
+## the player is, the first "Next steps" line and the first warning line if different.
+static func recap(c: CharacterData, data: GameData, flags: Dictionary, today: int, region_id: String, density: float = 1.0, people: Dictionary = {}, events: Array = [], clan: ClanData = null) -> PackedStringArray:
+	var out: PackedStringArray = []
+	out.append("%s, %s, age %d, in %s." % [c.name, Cultivation.realm_label(c, data), c.age_years(), Exploration.region_name(data, region_id)])
+	var next_step := ""
+	var warning := ""
+	for entry in journal(c, data, flags, today, region_id, density, people, events, clan):
+		if next_step == "" and entry["section"] == "Next steps":
+			next_step = String(entry["text"])
+		if warning == "" and entry["tone"] == "warning":
+			warning = String(entry["text"])
+	if next_step != "":
+		out.append(next_step)
+	if warning != "" and warning != next_step:
+		out.append(warning)
+	return out
+
+
 ## Journal entries {section, text, tone} answering "what can I do now?", in
 ## display order (WU-007 renders them). tone is "normal", "warning" (urgent) or
 ## "dim" (waiting / on cooldown). `today` is the GameClock day, `events` the live

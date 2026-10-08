@@ -11,6 +11,10 @@ func _fresh() -> CharacterData:
 	return c
 
 
+func _root() -> Node:
+	return (Engine.get_main_loop() as SceneTree).root
+
+
 func _has(hints: PackedStringArray, fragment: String) -> bool:
 	for h in hints:
 		if h.contains(fragment):
@@ -224,3 +228,34 @@ func test_better_qi_hint_absent_at_the_best_spot_or_bottleneck() -> void:
 	c.stage = data().realms[1].stage_count() - 1
 	c.qi = Cultivation.qi_required(c, data()) * 10.0
 	assert_false(_has(Guidance.hints(c, data(), 1.0, 20, {}, {}, "qingshi_village"), "Meditation at"))
+
+
+func test_recap_names_character_place_and_next_step() -> void:
+	var c := _fresh()
+	c.name = "Lin"
+	var lines := Guidance.recap(c, data(), {}, 0, "qingshi_village")
+	assert_true(lines.size() >= 2 and lines.size() <= 3)
+	assert_true(lines[0].begins_with("Lin, "))
+	assert_true(lines[0].contains("in Qingshi Village."))
+	assert_eq(lines[1], Guidance.hints(c, data(), 1.0, 99, {}, {}, "qingshi_village", 0)[0])
+
+
+func test_recap_adds_a_different_warning_line() -> void:
+	var c := _fresh()
+	c.age_days = (Cultivation.lifespan_years(c, data()) - 2) * Calendar.DAYS_PER_YEAR
+	var lines := Guidance.recap(c, data(), {}, 0, "qingshi_village")
+	assert_true(_has(lines, "of life remain"))
+
+
+func test_loaded_save_starts_the_log_with_a_recap() -> void:
+	var gs: Node = _root().get_node("GameState")
+	var c := CharacterFactory.create("Hermit", gs.data, seeded_rng())
+	gs.start_session(c)
+	var saved: Dictionary = gs.to_save_dict()
+	gs.load_save_dict(JSON.parse_string(JSON.stringify(saved)))
+	var history: Array = _root().get_node("EventBus").history
+	assert_true(history.size() >= 2)
+	assert_true(String(history[0]["text"]).begins_with("Hermit, "))
+	for entry: Dictionary in history:
+		assert_false(String(entry["text"]).contains("%") or String(entry["text"]).contains("{"))
+	gs.end_session()
