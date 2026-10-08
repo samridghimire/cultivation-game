@@ -195,10 +195,14 @@ static func journal(c: CharacterData, data: GameData, flags: Dictionary, today: 
 		urgent += 1
 	if Injuries.has_any(c):
 		urgent += 1
-	if Sects.duty_days_left(c) <= Sects.DUTY_REMINDER_DAYS and Sects.duty_reminder(c, data) != "":
-		urgent += 1
-	for i in hint_lines.size():
-		_add(out, "Next steps", hint_lines[i], "warning" if i < urgent else "normal")
+	# The duty reminder lives in the Sect section; keep it out of Next steps.
+	var duty_line := Sects.duty_reminder(c, data) if Sects.duty_days_left(c) <= Sects.DUTY_REMINDER_DAYS else ""
+	var shown := 0
+	for line in hint_lines:
+		if duty_line != "" and line == duty_line:
+			continue
+		_add(out, "Next steps", line, "warning" if shown < urgent else "normal")
+		shown += 1
 	_breakthrough_entries(out, c, data, density)
 	if not c.is_rogue():
 		_sect_entries(out, c, data, flags, today)
@@ -235,8 +239,10 @@ static func _breakthrough_entries(out: Array[Dictionary], c: CharacterData, data
 		next_label = data.realms[c.realm_index + 1].name
 	if next_label != "":
 		_add(out, "Breakthrough", "Qi: %s / %s for %s" % [_commas(int(c.qi)), _commas(int(Cultivation.qi_required(c, data))), next_label], "normal")
-	if Cultivation.is_at_bottleneck(c, data):
+	if Cultivation.can_attempt_breakthrough(c, data):
 		_add(out, "Breakthrough", "You are at a bottleneck: break through to go further.", "warning")
+	elif Cultivation.is_at_bottleneck(c, data):
+		_add(out, "Breakthrough", "You stand at the peak of the highest realm known.", "normal")
 	else:
 		var days := Cultivation.days_to_bottleneck(c, data, density)
 		if days > 0:
@@ -249,14 +255,18 @@ static func _breakthrough_entries(out: Array[Dictionary], c: CharacterData, data
 	pills.sort()
 	if not pills.is_empty():
 		_add(out, "Breakthrough", "Pills that help: %s" % ", ".join(pills), "normal")
+	if c.breakthrough_bonus > 0.0:
+		_add(out, "Breakthrough", "Pill bonus active: +%d%%" % roundi(c.breakthrough_bonus * 100), "normal")
 
 
 static func _sect_entries(out: Array[Dictionary], c: CharacterData, data: GameData, flags: Dictionary = {}, today: int = 0) -> void:
+	var member := Sects.member_text(c, data)
+	if member != "":
+		_add(out, "Sect", "%s: %d contribution." % [member.substr(0, 1).to_upper() + member.substr(1), int(c.sect.get("contribution", 0))], "normal")
 	var duty := Sects.monthly_duty(c, data)
 	if duty > 0:
 		var days_left := Calendar.DAYS_PER_MONTH - c.age_days % Calendar.DAYS_PER_MONTH
-		var unmet := Sects.duty_progress(c) < duty
-		_add(out, "Sect", "Monthly duty: %d / %d contribution, %d days left this month." % [Sects.duty_progress(c), duty, days_left], "warning" if unmet and days_left <= 7 else "normal")
+		_add(out, "Sect", "Monthly duty: %d / %d contribution, %d days left this month." % [Sects.duty_progress(c), duty, days_left], "warning" if Sects.duty_reminder(c, data) != "" and days_left <= 7 else "normal")
 	var call_key := "sect_call_" + String(c.sect.get("id", ""))
 	if flags.get(call_key, false) and flags.has("sect_call_day_" + String(c.sect.get("id", ""))):
 		var left := maxi(0, SectFactions.CALL_DAYS - (today - int(flags["sect_call_day_" + String(c.sect["id"])])))

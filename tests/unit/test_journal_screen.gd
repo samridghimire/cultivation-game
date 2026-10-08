@@ -30,3 +30,15 @@ func test_hud_registers_journal_key_and_pause_entry() -> void:
 	assert_true(journal._text.get_parsed_text().contains("Breakthrough"))
 	journal.close()
 	hud.queue_free()
+
+
+func test_format_entries_colors_by_tone() -> void:
+	var text := JournalScreen.format_entries([
+		{"section": "S", "text": "Urgent", "tone": "warning"},
+		{"section": "S", "text": "Waiting", "tone": "dim"},
+		{"section": "S", "text": "Plain", "tone": "normal"},
+	])
+	var lines := text.split("\n")
+	assert_true(lines[1].contains("[color=#e8a04a]"))
+	assert_true(lines[2].contains("[color=#999999]"))
+	assert_false(lines[3].contains("[color"))

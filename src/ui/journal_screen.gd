@@ -85,5 +85,11 @@ static func format_entries(entries: Array) -> String:
 				out.append("")
 			out.append("[color=#%s]%s[/color]" % [UIStyle.ACCENT.to_html(false), section])
 			last = section
-		out.append("  - %s" % String(e["text"]).replace("[", "[lb]"))
+		var line := "  - %s" % String(e["text"]).replace("[", "[lb]")
+		match String(e.get("tone", "normal")):
+			"warning":
+				line = "[color=#%s]%s[/color]" % [(UIStyle.CATEGORY_COLORS["warning"] as Color).to_html(false), line]
+			"dim":
+				line = "[color=#%s]%s[/color]" % [DIM.to_html(false), line]
+		out.append(line)
 	return "\n".join(out)

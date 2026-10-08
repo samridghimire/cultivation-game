@@ -175,3 +175,25 @@ static func validate(data: GameData) -> PackedStringArray:
 		if int(clash_rule.get("casualties", 1)) < 1:
 			errors.append("sects.json factions.clash.casualties must be >= 1")
 	return errors
+
+
+## "1st", "2nd", "3rd", "4th", "11th"...
+static func ordinal(n: int) -> String:
+	var tail := n % 100
+	if tail >= 11 and tail <= 13:
+		return "%dth" % n
+	match n % 10:
+		1: return "%dst" % n
+		2: return "%dnd" % n
+		3: return "%drd" % n
+	return "%dth" % n
+
+
+## "Your sect ranks 2nd of 3 in strength." for a sect member, "" for a rogue.
+static func rank_line(c: CharacterData, standings: Array[Dictionary]) -> String:
+	if c.is_rogue():
+		return ""
+	for i in standings.size():
+		if String(standings[i]["id"]) == String(c.sect.get("id", "")):
+			return "Your sect ranks %s of %d in strength." % [ordinal(i + 1), standings.size()]
+	return ""

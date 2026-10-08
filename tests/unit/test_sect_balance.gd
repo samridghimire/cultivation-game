@@ -6,12 +6,12 @@ func _gs() -> Node:
 
 
 func test_ordinals() -> void:
-	assert_eq(SectBalanceWindow.ordinal(1), "1st")
-	assert_eq(SectBalanceWindow.ordinal(2), "2nd")
-	assert_eq(SectBalanceWindow.ordinal(3), "3rd")
-	assert_eq(SectBalanceWindow.ordinal(4), "4th")
-	assert_eq(SectBalanceWindow.ordinal(11), "11th")
-	assert_eq(SectBalanceWindow.ordinal(22), "22nd")
+	assert_eq(SectFactions.ordinal(1), "1st")
+	assert_eq(SectFactions.ordinal(2), "2nd")
+	assert_eq(SectFactions.ordinal(3), "3rd")
+	assert_eq(SectFactions.ordinal(4), "4th")
+	assert_eq(SectFactions.ordinal(11), "11th")
+	assert_eq(SectFactions.ordinal(22), "22nd")
 
 
 func test_hall_offers_balance_and_text_names_sects() -> void:
@@ -30,8 +30,8 @@ func test_hall_offers_balance_and_text_names_sects() -> void:
 		assert_true(text.contains(sect.name), sect.name)
 	assert_true(text.contains("(your sect)"))
 	assert_true(text.contains("A rumor."))
-	assert_true(SectBalanceWindow.rank_line(c, standings).begins_with("Your sect ranks "))
+	assert_true(SectFactions.rank_line(c, standings).begins_with("Your sect ranks "))
 	c.sect = {}
 	assert_false(SectBalanceWindow.window_text(c, standings, PackedStringArray()).contains("(your sect)"))
-	assert_eq(SectBalanceWindow.rank_line(c, standings), "")
+	assert_eq(SectFactions.rank_line(c, standings), "")
 	gs.end_session()

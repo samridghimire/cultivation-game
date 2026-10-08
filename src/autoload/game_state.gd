@@ -1762,7 +1762,7 @@ func bid(house_id: String, lot_index: int, amount: int) -> void:
 	EventBus.player_changed.emit()
 
 
-## Qi density of the current region, including active world events (LW-001).
+## Qi density where the player stands, with the sect cultivation bonus (for hints and the journal).
 func hint_density() -> float:
 	return region_qi_density() * Sects.cultivation_bonus(player, data)
 
@@ -1772,6 +1772,7 @@ func journal_entries() -> Array[Dictionary]:
 	return Guidance.journal(player, data, world_flags, GameClock.total_days, current_region, hint_density(), npcs, world_events, clan)
 
 
+## Qi density of the current region, including active world events (LW-001).
 func region_qi_density() -> float:
 	return Exploration.qi_density(data, current_region) * WorldEvents.qi_multiplier(data, world_events, current_region)
 

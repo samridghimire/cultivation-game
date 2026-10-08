@@ -122,3 +122,46 @@ func test_journal_does_not_mutate_character() -> void:
 	var before := c.to_dict()
 	_entries(c, 5)
 	assert_eq(c.to_dict(), before)
+
+
+func test_peak_of_highest_realm_is_not_a_bottleneck_warning() -> void:
+	var d := data()
+	var c := _fresh()
+	c.realm_index = d.realms.size() - 1
+	c.stage = d.realms[c.realm_index].stage_count() - 1
+	c.qi = Cultivation.qi_required(c, d)
+	var texts: Array = _entries(c).filter(func(e: Dictionary) -> bool: return e["section"] == "Breakthrough").map(func(e: Dictionary) -> String: return e["text"])
+	assert_false(texts.has("You are at a bottleneck: break through to go further."))
+	if Cultivation.is_at_bottleneck(c, d):
+		assert_true(texts.has("You stand at the peak of the highest realm known."))
+
+
+func test_pill_bonus_and_sect_status_lines() -> void:
+	var d := data()
+	var c := _fresh()
+	c.breakthrough_bonus = 0.15
+	assert_eq(_find(_entries(c), "Pill bonus active")["text"], "Pill bonus active: +15%")
+	var sect: SectDef = d.sects.values()[0]
+	c.sect = {"id": sect.id, "rank": 0, "contribution": 42, "spent": 0, "month_earned": 0}
+	var line := _find(_entries(c), "42 contribution")
+	assert_true(String(line["text"]).contains(sect.name))
+
+
+func test_duty_reminder_only_in_sect_section_and_grace_is_not_warned() -> void:
+	var d := data()
+	var c := _fresh()
+	c.realm_index = 2
+	for sect: SectDef in d.sects.values():
+		for r in sect.ranks.size():
+			if int(sect.ranks[r].get("monthly_duty", 0)) > 0 and c.is_rogue():
+				c.sect = {"id": sect.id, "rank": r, "contribution": 0, "spent": 0, "month_earned": 0}
+	assert_false(c.is_rogue())
+	c.age_days = 6000 - 6000 % Calendar.DAYS_PER_MONTH + 25
+	var reminder := Sects.duty_reminder(c, d)
+	assert_true(reminder != "")
+	for e in _entries(c):
+		if e["section"] == "Next steps":
+			assert_false(e["text"] == reminder)
+	assert_eq(_find(_entries(c), "Monthly duty")["tone"], "warning")
+	c.sect["duty_grace"] = true
+	assert_eq(_find(_entries(c), "Monthly duty")["tone"], "normal")

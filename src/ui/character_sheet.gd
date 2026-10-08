@@ -127,7 +127,7 @@ func _rebuild() -> void:
 	t += "Cultivation speed: %.2f qi/day here\n" % Cultivation.qi_per_day(p, data, GameState.hint_density())
 	var devoured := "   |   Cultivators devoured: %d" % p.devoured if p.devoured > 0 else ""
 	t += "Alignment: %s (%d)%s   |   %s\n\n" % [Alignment.tier_name(p.alignment, data), p.alignment, devoured, Sects.describe(p, data)]
-	var rank_line := SectBalanceWindow.rank_line(p, GameState.sect_standings())
+	var rank_line := SectFactions.rank_line(p, GameState.sect_standings())
 	if rank_line != "":
 		t += rank_line + "\n\n"
 	_gender_row.visible = p.gender == ""
