@@ -39,7 +39,15 @@ func _init() -> void:
 	box.add_child(_subtitle)
 
 
-func announce(title: String, subtitle: String, color: Color) -> void:
+func title_text() -> String:
+	return _title.text
+
+
+func subtitle_text() -> String:
+	return _subtitle.text
+
+
+func announce(title: String, subtitle: String, color: Color, hold: float = HOLD_SECONDS) -> void:
 	if _tween != null:
 		_tween.kill()
 	_title.text = title
@@ -50,6 +58,6 @@ func announce(title: String, subtitle: String, color: Color) -> void:
 	visible = true
 	_tween = create_tween()
 	_tween.tween_property(_flash, "color:a", 0.0, 0.5)
-	_tween.tween_interval(HOLD_SECONDS - 0.5)
+	_tween.tween_interval(maxf(hold - 0.5, 0.0))
 	_tween.tween_property(self, "modulate:a", 0.0, FADE_SECONDS)
 	_tween.tween_callback(hide)

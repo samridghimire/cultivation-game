@@ -140,6 +140,7 @@ func _ready() -> void:
 	EventBus.player_changed.connect(_refresh)
 	EventBus.session_started.connect(_refresh)
 	EventBus.region_changed.connect(func(_id): _refresh())
+	EventBus.region_changed.connect(_on_arrival)
 	EventBus.message_posted.connect(_on_message)
 	Settings.changed.connect(func(key: String, _v): if key == "show_hints": _refresh())
 	EventBus.interaction_target_changed.connect(_on_target_changed)
@@ -524,6 +525,15 @@ func _show_time_skip(summary: Dictionary) -> void:
 func _on_time_skip_closed() -> void:
 	_showing_skip = {}
 	_update_modal()
+
+
+## Arrival card: region name with qi density and danger, shown on real travel.
+func _on_arrival(region_id: String) -> void:
+	var data: GameData = GameState.data
+	if data == null or not data.regions.has(region_id):
+		return
+	var qi := Exploration.qi_density(data, region_id)
+	_banner.announce(Exploration.region_name(data, region_id), "Qi x%s · Danger: %s" % [String.num(qi, 2), WorldMapScreen.danger_name(data, region_id)], UIStyle.ACCENT, 1.0)
 
 
 func _on_breakthrough(success: bool, realm_name: String) -> void:
