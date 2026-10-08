@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-08 [GUIDE-010] A notice tells you when you are strong enough to travel a new road.
 - 2026-10-08 [WU-047] The combat report colors your blows, the foe's blows and the finishing line.
 - 2026-10-08 [YEAR-002] A seclusion that spans two new years reviews both years together.
 - 2026-10-08 [WU-046] Hits sound lighter or heavier with the weight of the blow.
