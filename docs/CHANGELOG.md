@@ -2,6 +2,24 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-08 [WU-047] The combat report colors your blows, the foe's blows and the finishing line.
+- 2026-10-08 [YEAR-002] A seclusion that spans two new years reviews both years together.
+- 2026-10-08 [WU-046] Hits sound lighter or heavier with the weight of the blow.
+- 2026-10-08 [CMB-004] Fight playback moves the hp bars with each opening strike, talisman and ally.
+- 2026-10-08 [C-028] Help pages for fights, selling loot and the journal's goals.
+- 2026-10-08 [C-030] New milestones for spirit stones earned, qi gathered and encounters met.
+- 2026-10-08 [GOAL-004] The journal's Goals section points crafters and doctors at their next profession rank.
+- 2026-10-08 [WU-050] The shop's quantity keys follow your control bindings.
+- 2026-10-08 [WU-053] Combat spoils say what they sell for.
+- 2026-10-08 [MSG-003] "Your path has shifted" is announced after any change of alignment, not just hostile acts.
+- 2026-10-08 [WU-049] "Sell all loot" shows what it will sell and for how much.
+- 2026-10-08 [QA-037] Every enemy's combat log is checked for clean prose.
+- 2026-10-08 [C-029] Quiet exploring days get a line of local color instead of "you find nothing".
+- 2026-10-08 [WU-048] The main menu's Continue button names who you continue as.
+- 2026-10-08 [C-025] New gear and pill recipes use the beast materials that had no purpose.
+- 2026-10-08 [RV-010] Loading an older save no longer floods the log with feature notices.
+- 2026-10-08 [RV-011] "Sell all loot" keeps your readied combat talismans.
+- 2026-10-08 [C-024] Fairer Foundation sect rank trials, tournament ring and vengeful brother fights.
 - 2026-10-08 [CMB-003] Fights read with weight: glancing, solid and crushing blows, and a finishing line.
 - 2026-10-08 [QA-020] Gamepad focus and Steam Deck layout checks cover every screen added since QA-013.
 - 2026-10-08 [GOAL-003] The journal's Goals section points past the first hour: next realm, next sect rank or clan, nearest milestone.
