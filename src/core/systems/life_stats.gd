@@ -98,6 +98,15 @@ static func backfill(c: CharacterData, data: GameData, flags: Dictionary) -> voi
 		c.life_stats["inheritances_claimed"] = claimed
 
 
+## Title of a year review (YEAR-002). The snapshot was taken in `start_year`
+## (0 = unknown); a review of a single year says "Year N", one that spans a
+## long seclusion says "Years A-N".
+static func review_title(start_year: int, year: int) -> String:
+	if start_year > 0 and start_year < year - 1:
+		return "Years %d-%d" % [start_year + 1, year]
+	return "Year %d" % year
+
+
 ## The year in review (YEAR-001): up to 4 short lines from what changed between
 ## two life_stats snapshots, a realm change first. A quiet year gets one line.
 static func year_summary(before: Dictionary, after: Dictionary, realm_before: String, realm_after: String) -> PackedStringArray:

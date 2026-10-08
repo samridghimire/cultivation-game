@@ -666,7 +666,7 @@ func test_new_year_posts_a_review_once_and_restores_snapshot() -> void:
 	assert_true(c.year_start_realm != "", "a new session stores a snapshot")
 	LifeStats.add(c, "deeds_done", 2)
 	var seen: Array = []
-	var cb := func(year: int, lines: PackedStringArray) -> void: seen.append([year, lines])
+	var cb := func(year: int, lines: PackedStringArray, _start: int) -> void: seen.append([year, lines])
 	bus.year_reviewed.connect(cb)
 	clock.advance(Calendar.DAYS_PER_YEAR)
 	bus.year_reviewed.disconnect(cb)
@@ -813,3 +813,26 @@ func test_save_with_some_notice_flags_still_announces_new_features() -> void:
 	assert_true(gs.world_flags.get("notice_body_tempering", false))
 	assert_gt(EventBus.posted_count, before, "the new feature is announced")
 	gs.end_session()
+
+
+## YEAR-002: a seclusion that crosses two new years posts one review titled for both.
+func test_long_seclusion_reviews_both_years() -> void:
+	var c := _start()
+	var clock := _root().get_node("GameClock")
+	var bus := _root().get_node("EventBus")
+	clock.advance(Calendar.DAYS_PER_YEAR / 2) # mid-year, still the year of the snapshot
+	LifeStats.add(c, "deeds_done", 1)
+	var start_year := c.year_start_year
+	assert_true(start_year >= 1, "the snapshot remembers its year")
+	var seen: Array = []
+	var cb := func(year: int, _lines: PackedStringArray, start: int) -> void: seen.append([year, start])
+	bus.year_reviewed.connect(cb)
+	clock.advance(Calendar.DAYS_PER_YEAR * 3 / 2 + 40) # crosses two new years
+	bus.year_reviewed.disconnect(cb)
+	assert_eq(seen.size(), 1, "one review for the whole stretch")
+	assert_eq(LifeStats.review_title(seen[0][1], seen[0][0]), "Years %d-%d" % [start_year + 1, seen[0][0]])
+	assert_eq(c.year_start_year, seen[0][0], "the new snapshot is for the current year")
+	assert_eq(LifeStats.review_title(seen[0][0], seen[0][0] + 1), "Year %d" % (seen[0][0] + 1), "a normal year")
+	assert_eq(LifeStats.review_title(0, 5), "Year 5", "old saves have no start year")
+	assert_eq(CharacterData.from_dict(c.to_dict()).year_start_year, c.year_start_year)
+	assert_eq(CharacterData.from_dict({}).year_start_year, 0)

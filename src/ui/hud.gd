@@ -50,7 +50,7 @@ var _family: FamilyScreen
 var _child_training: ChildTrainingScreen
 var _banner: Banner
 var _time_skip: TimeSkipOverlay
-var _pending_year: Array = []  # [year, lines] waiting for a free screen (WU-031)
+var _pending_year: Array = []  # [year, lines, start_year] waiting for a free screen (WU-031)
 ## The time-skip summary on screen, kept across the scene reload that travel
 ## triggers so the new HUD can finish showing it ({} = none).
 static var _showing_skip: Dictionary = {}
@@ -588,10 +588,10 @@ func _on_time_skip_closed() -> void:
 
 ## Yearly recap (WU-031): queued, then shown by a deferred flush so a time-skip overlay
 ## that follows the same action goes first; death/respawn screens hold it back.
-func _on_year_reviewed(year: int, lines: PackedStringArray) -> void:
+func _on_year_reviewed(year: int, lines: PackedStringArray, start_year: int = 0) -> void:
 	if not Settings.get_value("yearly_recap") or lines.is_empty():
 		return
-	_pending_year = [year, lines]
+	_pending_year = [year, lines, start_year]
 	_flush_year_review.call_deferred()
 
 
@@ -601,7 +601,7 @@ func _flush_year_review() -> void:
 	if GameState.player == null or not GameState.player.alive:
 		return
 	var lines: PackedStringArray = _pending_year[1]
-	_banner.announce("Year %d of your journey" % int(_pending_year[0]), "\n".join(lines), UIStyle.ACCENT, 4.0)
+	_banner.announce("%s of your journey" % LifeStats.review_title(int(_pending_year[2]), int(_pending_year[0])), "\n".join(lines), UIStyle.ACCENT, 4.0)
 	_pending_year = []
 
 

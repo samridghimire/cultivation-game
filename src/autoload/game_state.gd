@@ -2426,6 +2426,7 @@ func check_unlock_notices() -> void:
 func _store_year_snapshot() -> void:
 	player.year_start_stats = player.life_stats.duplicate()
 	player.year_start_realm = Cultivation.realm_label(player, data)
+	player.year_start_year = Calendar.year_of(GameClock.total_days)
 
 
 ## Sums up the year that just ended (YEAR-001). A save from before the snapshot
@@ -2437,7 +2438,7 @@ func _on_year_changed(year: int) -> void:
 		var lines := LifeStats.year_summary(player.year_start_stats, player.life_stats, player.year_start_realm, Cultivation.realm_label(player, data))
 		for line in lines:
 			EventBus.post(line, "progress", "life")
-		EventBus.year_reviewed.emit(year, lines)
+		EventBus.year_reviewed.emit(year, lines, player.year_start_year)
 	_store_year_snapshot()
 
 

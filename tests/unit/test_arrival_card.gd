@@ -69,14 +69,14 @@ func test_year_review_banner_and_setting() -> void:
 	root.add_child(hud)
 	var banner: Banner = hud.get("_banner")
 	var lines := PackedStringArray(["You did 2 deeds.", "You grew a stage."])
-	bus.year_reviewed.emit(3, lines)
+	bus.year_reviewed.emit(3, lines, 0)
 	hud.call("_flush_year_review")
 	assert_true(banner.visible)
 	assert_eq(banner.title_text(), "Year 3 of your journey")
 	assert_true(banner.subtitle_text().contains("You did 2 deeds."))
 	banner.visible = false
 	gs.pending_respawn = {"cause": "test", "anchor_id": "x", "lives_left": 1, "qi_lost": 0}
-	bus.year_reviewed.emit(4, lines)
+	bus.year_reviewed.emit(4, lines, 0)
 	hud.call("_flush_year_review")
 	assert_false(banner.visible, "held back while the respawn screen is up")
 	gs.pending_respawn = {}
@@ -85,7 +85,7 @@ func test_year_review_banner_and_setting() -> void:
 	banner.visible = false
 	var old: Variant = settings.get_value("yearly_recap")
 	settings.set_value("yearly_recap", false)
-	bus.year_reviewed.emit(5, lines)
+	bus.year_reviewed.emit(5, lines, 0)
 	hud.call("_flush_year_review")
 	assert_false(banner.visible, "nothing with the setting off")
 	settings.set_value("yearly_recap", old)
