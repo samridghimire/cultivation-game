@@ -2,6 +2,27 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-08 [QA-007g] The demonic cultivator purge mission waits until Foundation stage 1, where it is a fair fight.
+- 2026-10-08 [ECON-001] Gathering trips pay less, so profession work now earns about as much as gathering.
+- 2026-10-08 [WU-013] Workshops list your open commissions with a Deliver entry.
+- 2026-10-08 [QA-026] Tests for milestone announcements, milestone progress and clean journal text.
+- 2026-10-08 [WU-010] Music crossfades smoothly when the mood changes.
+- 2026-10-08 [NS-005] Three late cultivation methods (righteous, demonic, neutral) reaching Mahayana and beyond, won at Soul Formation inheritance grounds.
+- 2026-10-08 [C-011] Favor errands: Elder Mo, Herbalist Lan, Hermit Gu, Alchemist Hua and Peddler Hei each ask you to bring them something.
+- 2026-10-08 [WU-014] A setting for how many hints the HUD shows (0-3).
+- 2026-10-08 [WE-001] Winning a tournament or repelling an incursion counts in your life record, with two new milestones.
+- 2026-10-08 [WU-011] The world map marks events in your region that you can enter.
+- 2026-10-08 [QA-024] tools/balance.sh records a balance baseline and flags any change to it.
+- 2026-10-08 [ART-008] Once the artifact's appraisal is unsealed, danger labels show your odds, e.g. "Even (60%)".
+- 2026-10-08 [WU-012] Your rival appears on the character sheet: realm, ahead or behind you, grudge or favor.
+- 2026-10-08 [QA-025] The combat sim checks Nascent Soul encounters at the moment they first appear.
+- 2026-10-08 [RV-004] Journal fixes: colored warnings, no false bottleneck at the peak, pill and sect lines back, no duplicate duty line.
+- 2026-10-08 [LW-002c] The sect's call lapses after 30 days and is only promised to disciples who can answer it.
+- 2026-10-08 [PROF-001] Crafting commissions: each month buyers order things you can craft, for good pay and profession xp.
+- 2026-10-08 [RV-005] Breakthrough pills only work for the realm they are made for, one per attempt.
+- 2026-10-08 [C-012] Workshops in Azure Peak, the Withered Bone Marsh and Myriad Peaks Ridge; you can fight off a beast tide.
+- 2026-10-08 [RV-007] Myriad Peaks Ridge's thunder realm and inheritance texts now match the foes you meet there.
+- 2026-10-08 [RV-001] Saves are safer: a newer save is never replaced by an older backup, and a crash mid-save no longer hides the slot.
 - 2026-10-08 [RV-003] The credits scroll with a gamepad and list the third-party licenses Godot ships with.
 - 2026-10-08 [RV-002] Banners queue up, so a milestone no longer hides the "Breakthrough!" banner.
 - 2026-10-08 [MS-002] Milestones show progress, e.g. "Battle-Hardened (4/25)", on the character sheet and in the journal.

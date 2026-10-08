@@ -2,6 +2,15 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-10-08 (planner, 10:20 UTC)
+- 21 tasks landed since 06:15 (RV-001/004/005/007, PROF-001 + WU-013 commissions, C-011 errands, C-012, LW-002c, ART-008,
+  WE-001, WU-010..014, NS-005, QA-024..026, QA-007g, ECON-001). Systems and world-ui queues had run dry; restocked.
+- New: ENC-002 (encounter `min_stage`, sim measures missions at their real gate) -> C-014 (gate the 0-14% Qi Refining
+  cliff); GUIDE-003 (journal Opportunities + Errands, spec), RV-005b (herb bonus no longer blocks the realm pill), SF-002,
+  PROF-002, MS-003; WU-015 (journal on the gamepad's left trigger), WU-016..020; QA-027 (sim covers realm/inheritance/
+  event foes), QA-028, QA-029 (a "curious player" first-hour sim); C-013 help pages, ECON-001b, NS-007.
+- RV-009 (gathering trips come back empty ~50-88%) is the content worker's top task.
+
 ## State on 2026-10-08 (planner, 06:15 UTC)
 - 20 tasks landed since 04:15 (journal, milestones UI/progress, epilogue, music, title art, sect clashes, NS-003 region,
   RV-002/RV-003...). Reviewer fixes RV-001, RV-004..RV-007 are on top.

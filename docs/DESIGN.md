@@ -68,7 +68,7 @@ Every great cultivation protagonist has something that sets them apart. Ours is 
 | Alignment (Demonic … Righteous) and deeds (with cooldowns) | ✅ | `data/alignment.json`, `data/deeds.json` |
 | Sects (join/leave, requirements, ranks, contribution, missions, trials/stipends/duties) | ✅ (shop: G-008c; rank UI: G-011b) | `data/sects.json`, `Sects` |
 | Sect reputation (witnessed deeds, join gating, faction prices) | ✅ (sheet + faction shop prices) | `data/sects.json`, `Reputation` |
-| Professions (ranks, XP, income) | ✅ basic | `data/professions.json`, `Professions` |
+| Professions (ranks, XP, income, monthly crafting commissions delivered at workshops) | ✅ basic + commissions (PROF-001) | `data/professions.json`, `Professions` |
 | Alchemy (recipes, scrolls, pill quality) + crafting screen | ✅ | `data/recipes.json`, `Alchemy`, `src/ui/crafting_screen.gd` |
 | Blacksmithing and equipment (weapon/armor) | ✅ (equip from inventory, unequip on the character sheet) | `Equipment`, `data/recipes.json` |
 | Talismans (buff talismans, combat strike/shield/escape) | ✅ (ready/unready in the inventory) | `Alchemy`, `Buffs`, `CombatTalismans` |
@@ -81,7 +81,7 @@ Every great cultivation protagonist has something that sets them apart. Ours is 
 | Injuries (from breakthroughs and combat) | ✅ | `data/injuries.json`, `Injuries` |
 | Combat (auto-resolved) and techniques | ✅ basic | `Combat`, `Techniques`, `data/enemies.json`, `data/techniques.json` |
 | NPCs (named + generated), aging, monthly sim | ✅ | `data/npcs.json`, `Npcs`, `Names` |
-| Dialogue | ✅ (dialogue window) | `Dialogue`, `data/dialogue/` |
+| Dialogue (incl. favor errands for five named NPCs, C-011) | ✅ (dialogue window) | `Dialogue`, `data/dialogue/` |
 | Family: identity, courtship, marriage, dual cultivation, children, adoption, training | ✅ (NPC menu: chat, gifts, court, propose, adopt; meditation spots; child training screen) | `data/family.json`, `Family`, `Children` |
 | Clans, estates, bloodlines | ✅ clan core (FAM-005), heirs (FAM-008), NPC clans core (FAM-009), bloodlines core (FAM-007), clan screen UI (FAM-005b), estates core (FAM-006) | `data/family.json`, `data/bloodlines.json`, `Clans`, `ClanData`, `Bloodlines` |
 | Spirit beast companions (Beast Tamer taming, combat bonus, growth) | ✅ (character sheet, feeding, release) | `data/beasts.json`, `Beasts` |
@@ -99,7 +99,7 @@ Every great cultivation protagonist has something that sets them apart. Ours is 
 | NPC clans and NPC sect membership, family tree, Family Home | ✅ | `NpcClans`, `FamilyHome`, `src/ui/family_screen.gd` |
 | NPC sects as factions (strength, recruitment) | ✅ core (LW-002), sect hall standings (WU-002), monthly clashes and the sect's call (LW-002b) | `SectFactions` |
 | Audio, autosave, export presets, credits | ✅ procedural SFX and music, autosave with toast (also on suspend), crash-safe saves, credits, title art, Steam platform stub (REL-009); 🚧 export presets (REL-005) | `Audio`, `SaveManager`, `src/ui/credits_screen.gd` |
-| Content past Core Formation | ✅ Nascent Soul foes/encounters (NS-001), pills (NS-002), Myriad Peaks Ridge region (NS-003); 🚧 late people, methods and Soul Formation content (NS-004..006) | |
+| Content past Core Formation | ✅ Nascent Soul foes/encounters (NS-001), pills (NS-002), Myriad Peaks Ridge region (NS-003); late methods to Mahayana+ (NS-005); 🚧 late people and Soul Formation content (NS-004, NS-006) | |
 | Life record and milestones | ✅ sheet life record (STAT-001), 16 milestones with progress on the sheet and a banner (GOAL-001, WU-006, MS-002), journal screen (J), epilogue on final death | `LifeStats`, `Milestones`, `data/milestones.json` |
 | Ending (ascension) | 🚧 none, waiting on the owner (END-001) | |
 | Inventory, techniques, character sheet, settings, pause, load screens | ✅ | `src/ui/` |
@@ -152,3 +152,4 @@ Void Refinement → Body Integration → Mahayana → Tribulation Transcendence.
 - (RV-005) **Breakthrough pills.** Pills stacked for any realm, so four cheap Foundation pills capped the odds at Nascent Soul. Default the agents will build: each breakthrough pill only works for the realm it is made for, and only one pill can be active per attempt. Should stronger players be able to stack two pills (at a cost, e.g. an injury risk)?
 - (PROF-001) **Crafting commissions.** Default being built: each month a buyer orders 1-3 of something you can craft for about twice its material value; an order you ignore simply lapses after 60 days with no penalty. Should lapsed orders cost reputation, and should famous crafters get bigger orders from sects and clans?
 - (FAM-013) **NPC population over the generations.** `npc_families.population_cap` is 300 and every generated child cultivates, so few NPCs die. The world fills to the cap by year 50, then often has no births for a century until the elders die of old age. Defaults for now: keep the cap, all children cultivate. Options: some NPC children are born without usable roots (mortals live about 80 years, so the world turns over), raise the cap, or scale it by region. Which do you want?
+- (LW-002b) **Sect clashes and your family.** Monthly sect clashes can kill NPC members, including the player's spouse or descendants who joined a sect (only recruitment spares them). Default: keep it as world drama (the news is posted). Should the player's family be spared, or should the player at least be warned/called to defend them?
