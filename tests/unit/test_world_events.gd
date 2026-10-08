@@ -218,6 +218,9 @@ func test_enter_tournament_pays_prize_once() -> void:
 	assert_true(bool(gs.world_events[0]["done"]), "event marked done")
 	if won:
 		assert_true(gs.player.inventory.keys().any(func(k: String) -> bool: return k.begins_with("manual_")), "a manual in the prize")
+	if won:
+		assert_eq(LifeStats.get_stat(gs.player, "tournaments_won"), 1)
+		assert_true(gs.player.milestones.has("tournament_champion"), "milestone awarded")
 	var again: int = gs.player.item_count("spirit_stone")
 	gs.enter_tournament("sect_tournament")
 	assert_eq(gs.player.item_count("spirit_stone"), again, "only once per event")
@@ -280,6 +283,8 @@ func test_defend_against_incursion() -> void:
 	assert_true(bool(gs.world_events[0]["done"]))
 	if gs.player.item_count("spirit_stone") > stones:
 		assert_gt(gs.player.alignment, 0, "defending is righteous")
+		assert_eq(LifeStats.get_stat(gs.player, "incursions_repelled"), 1)
+		assert_true(gs.player.milestones.has("incursion_repelled"), "milestone awarded")
 	var after: int = gs.player.item_count("spirit_stone")
 	gs.defend_against_incursion("demonic_incursion")
 	assert_eq(gs.player.item_count("spirit_stone"), after, "only once per event")

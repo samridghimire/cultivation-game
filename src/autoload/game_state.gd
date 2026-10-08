@@ -1914,6 +1914,7 @@ func enter_tournament(event_id: String) -> void:
 			return
 	for note in WorldEvents.pay_prize(data, player, event_id, world_flags, rng):
 		EventBus.post(note, "progress")
+	LifeStats.add(player, "tournaments_won")
 	EventBus.post("You win the tournament! The sects applaud the new champion.", "progress")
 	EventBus.player_changed.emit()
 
@@ -1933,6 +1934,7 @@ func defend_against_incursion(event_id: String) -> void:
 	var raider := WorldEvents.opponent(data, event_id, "defence", player, 0, rng)
 	EventBus.post("You rush to the defence against %s." % raider["name"])
 	if fight_enemy(raider):
+		LifeStats.add(player, "incursions_repelled")
 		for note in Effects.apply(player, data, WorldEvents.def_of(data, event_id)["defence"]["effects"], world_flags):
 			EventBus.post(note, "progress")
 		EventBus.post("The raiders fall back. The people of %s thank you." % Exploration.region_name(data, current_region), "progress")

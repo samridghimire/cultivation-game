@@ -8,6 +8,8 @@
 		{"id": "first_breakthrough", "name": "A Step Forward", "description": "Break through to a new stage.", "check": {"type": "life_stat", "stat": "breakthroughs", "min": 1}},
 		{"id": "first_mission", "name": "Sect Errand", "description": "Finish a sect mission.", "check": {"type": "life_stat", "stat": "missions_done", "min": 1}},
 		{"id": "first_deed", "name": "Good Deed", "description": "Perform a deed.", "check": {"type": "life_stat", "stat": "deeds_done", "min": 1}},
+		{"id": "tournament_champion", "name": "Champion of the Ring", "description": "Win a sect tournament.", "check": {"type": "life_stat", "stat": "tournaments_won", "min": 1}},
+		{"id": "incursion_repelled", "name": "Shield of the Realm", "description": "Beat back a raider of an incursion.", "check": {"type": "life_stat", "stat": "incursions_repelled", "min": 1}},
 		{"id": "pulled_back", "name": "Second Chance", "description": "Be pulled back from death by the artifact.", "check": {"type": "life_stat", "stat": "respawns", "min": 1}},
 		{"id": "tribulation", "name": "Struck by Heaven", "description": "Survive a heavenly tribulation.", "check": {"type": "life_stat", "stat": "tribulations_survived", "min": 1}},
 		{"id": "joined_sect", "name": "Under a Banner", "description": "Join a sect.", "check": {"type": "sect_joined"}},
