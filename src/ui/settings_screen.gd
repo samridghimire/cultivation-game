@@ -20,6 +20,7 @@ var _hints: OptionButton
 var _autosave: CheckButton
 var _yearly_recap: CheckButton
 var _fast_skips: CheckButton
+var _animate_fights: CheckButton
 var _sliders: Dictionary = {}  # setting key -> HSlider
 var _value_labels: Dictionary = {}  # setting key -> Label
 var _general: VBoxContainer
@@ -76,6 +77,11 @@ func _init() -> void:
 	_fast_skips.add_theme_font_size_override("font_size", 18)
 	_fast_skips.toggled.connect(func(on: bool): Settings.set_value("fast_time_skips", on))
 	box.add_child(_fast_skips)
+	_animate_fights = CheckButton.new()
+	_animate_fights.text = "Animate fights (reveal the blows one by one)"
+	_animate_fights.add_theme_font_size_override("font_size", 18)
+	_animate_fights.toggled.connect(func(on: bool): Settings.set_value("animate_fights", on))
+	box.add_child(_animate_fights)
 
 	var grid := GridContainer.new()
 	grid.columns = 3
@@ -276,6 +282,7 @@ func _sync() -> void:
 	_autosave.set_pressed_no_signal(Settings.get_value("autosave"))
 	_yearly_recap.set_pressed_no_signal(Settings.get_value("yearly_recap"))
 	_fast_skips.set_pressed_no_signal(Settings.get_value("fast_time_skips"))
+	_animate_fights.set_pressed_no_signal(Settings.get_value("animate_fights"))
 	for key in _sliders:
 		_sliders[key].set_value_no_signal(Settings.get_value(key))
 		_value_labels[key].text = format_value(key, Settings.get_value(key))

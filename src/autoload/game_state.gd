@@ -25,6 +25,8 @@ var devour_target: Dictionary = {}
 var last_loss_advice: String = ""
 ## Reward notes of the last won fight ("+8 Spirit Stone"...), shown in the combat report.
 var last_fight_spoils: PackedStringArray = PackedStringArray()
+## Last fight's playback data from Combat.resolve: trace, player_max_hp, enemy_max_hp (WU-036).
+var last_fight_playback: Dictionary = {}
 ## Active world events (WorldEvents, LW-001): [{id, region, start_day, end_day}].
 var world_events: Array = []
 ## Id of the region (data/regions.json) the player is in.
@@ -2038,6 +2040,7 @@ func fight_enemy(enemy: Dictionary, start_hp: int = -1) -> bool:
 			allies.append(Karma.ally_strike(player, npcs, data, ally_id))
 	var result := Combat.resolve(player, data, enemy, rng, allies, start_hp)
 	last_fight_hp = int(result["player_hp"])
+	last_fight_playback = {"trace": result["trace"], "player_max": result["player_max_hp"], "enemy_max": result["enemy_max_hp"]}
 	# The full blow-by-blow goes out with combat_finished; the log gets a summary.
 	var lines: PackedStringArray = result["log"]
 	EventBus.post(lines[0], "danger")
