@@ -14,6 +14,20 @@ const AUTOSAVE_SLOT := "autosave"
 var _last_autosave_day := -1
 ## The slot last saved to or loaded from; a final death overwrites it (REL-002).
 var current_slot := ""
+## Whether this session wrote the autosave slot (so a final death may overwrite it).
+var _autosaved_this_session := false
+
+
+func _ready() -> void:
+	EventBus.session_started.connect(_on_session_started)
+
+
+## A new or loaded character: forget the previous character's slot so its death
+## can't overwrite another character's save (load_game sets current_slot after).
+func _on_session_started() -> void:
+	current_slot = ""
+	_last_autosave_day = -1
+	_autosaved_this_session = false
 
 
 func save_path(slot: String) -> String:
@@ -132,6 +146,7 @@ func autosave(force: bool = false) -> bool:
 	if not saved:
 		return false
 	_last_autosave_day = GameClock.total_days
+	_autosaved_this_session = true
 	return true
 
 
@@ -143,12 +158,20 @@ func record_final_death() -> void:
 	var slots: Array[String] = []
 	if current_slot != "":
 		slots.append(current_slot)
-	if has_save(AUTOSAVE_SLOT) and not slots.has(AUTOSAVE_SLOT):
+	if _autosave_is_ours() and not slots.has(AUTOSAVE_SLOT):
 		slots.append(AUTOSAVE_SLOT)
 	var keep := current_slot
 	for slot in slots:
 		save_game(slot)
 	current_slot = keep
+
+
+## The autosave slot holds this character: written this session, or saved under
+## the same name (an older run of the character loaded from another slot).
+func _autosave_is_ours() -> bool:
+	if not has_save(AUTOSAVE_SLOT):
+		return false
+	return _autosaved_this_session or String(read_meta(AUTOSAVE_SLOT).get("name", "")) == GameState.player.name
 
 
 ## Whether the slot holds a living character (a fallen one can't be loaded).

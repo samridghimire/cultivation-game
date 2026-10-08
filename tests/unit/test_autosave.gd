@@ -76,3 +76,19 @@ func test_final_death_overwrites_saves_and_blocks_loading() -> void:
 	assert_true(LoadScreen.describe_slot(saves.read_meta("_test_final")).contains("fallen at age"))
 	saves.delete_save("_test_final")
 	_cleanup(gs, saves)
+
+
+func test_new_character_death_leaves_other_saves_alone() -> void:
+	var s := _setup()
+	var gs: Node = s[0]
+	var saves: Node = s[1]
+	assert_true(saves.save_game("_test_other"))
+	assert_true(saves.autosave())
+	# A different character starts without loading: its death must not touch them.
+	gs.start_session(CharacterFactory.create("Other", gs.data, seeded_rng(6)))
+	assert_eq(saves.current_slot, "", "a new session forgets the old slot")
+	gs._kill("Test death.")
+	for slot in ["_test_other", "autosave"]:
+		assert_true(bool(saves.read_meta(slot).get("alive", false)), slot + " keeps the other character")
+	saves.delete_save("_test_other")
+	_cleanup(gs, saves)
