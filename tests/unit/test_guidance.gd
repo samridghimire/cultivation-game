@@ -638,3 +638,18 @@ func test_rogue_goal_names_clan_and_final_realm_has_no_realm_line() -> void:
 	c.realm_index = data().realms.size() - 1
 	for l in Guidance.goals(c, data(), {}):
 		assert_false(l.begins_with("Reach "))
+
+
+func test_profession_goal_line() -> void:
+	var c := CharacterData.new()
+	c.realm_index = 1
+	assert_false(_has(Guidance.goals(c, data(), {}), "Become "))
+	c.professions["alchemist"] = {"rank": 0, "xp": 10.0}
+	var def: ProfessionDef = data().professions["alchemist"]
+	var want := "Become %s Alchemist: %d more xp" % [data().profession_rank_names[1], ceili(def.xp_to_next(0) - 10.0)]
+	assert_true(_has(Guidance.goals(c, data(), {}), want), str(Guidance.goals(c, data(), {})))
+	assert_true(Guidance.goals(c, data(), {}).size() <= 4)
+	for l in Guidance.goals(c, data(), {}):
+		assert_false(l.contains("_") or l.contains("%"), l)
+	c.professions["alchemist"] = {"rank": Professions.max_rank(data()), "xp": 0.0}
+	assert_false(_has(Guidance.goals(c, data(), {}), "more xp"))

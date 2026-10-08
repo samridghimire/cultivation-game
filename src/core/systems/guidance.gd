@@ -521,6 +521,9 @@ static func goals(c: CharacterData, data: GameData, flags: Dictionary, clan: Cla
 		var why := Clans.check_found(c, clan, data)
 		if why != "":
 			out.append("Found a clan: %s" % why)
+	var craft := _profession_goal(c, data)
+	if craft != "":
+		out.append(craft)
 	var best := ""
 	var best_frac := -1.0
 	for def: Dictionary in data.milestones:
@@ -536,6 +539,23 @@ static func goals(c: CharacterData, data: GameData, flags: Dictionary, clan: Cla
 	if best != "":
 		out.append(best)
 	return out
+
+
+## The next rank of the player's highest-ranked unmaxed profession (GOAL-004), or "".
+static func _profession_goal(c: CharacterData, data: GameData) -> String:
+	var best_id := ""
+	for id: String in c.professions:
+		if not data.professions.has(id) or Professions.rank_of(c, id) >= Professions.max_rank(data):
+			continue
+		if best_id == "" or Professions.rank_of(c, id) > Professions.rank_of(c, best_id) \
+				or (Professions.rank_of(c, id) == Professions.rank_of(c, best_id) and Professions.xp_of(c, id) > Professions.xp_of(c, best_id)):
+			best_id = id
+	if best_id == "":
+		return ""
+	var def: ProfessionDef = data.professions[best_id]
+	var rank := Professions.rank_of(c, best_id)
+	var more := ceili(def.xp_to_next(rank) - Professions.xp_of(c, best_id))
+	return "Become %s %s: %d more xp (craft or work at a workshop)." % [data.profession_rank_names[rank + 1], def.name, more]
 
 
 ## "Where you left off" lines for a freshly loaded save (RECAP-001): who and where
