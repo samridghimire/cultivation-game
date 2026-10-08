@@ -100,7 +100,7 @@ Every great cultivation protagonist has something that sets them apart. Ours is 
 | NPC sects as factions (strength, recruitment) | ✅ core (LW-002), sect hall standings (WU-002), monthly clashes and the sect's call (LW-002b) | `SectFactions` |
 | Audio, autosave, export presets, credits | ✅ procedural SFX and music, autosave with toast (also on suspend), crash-safe saves, credits, title art, Steam platform stub (REL-009), Windows/Linux export presets + tools/export.sh (REL-005); 🚧 Steam upload scripts (REL-011) | `Audio`, `SaveManager`, `src/ui/credits_screen.gd` |
 | Content past Core Formation | ✅ Nascent Soul foes/encounters (NS-001), pills (NS-002), Myriad Peaks Ridge region (NS-003); late methods to Mahayana+ (NS-005), late people with errands (NS-004), flawless late pills (NS-002b); 🚧 Soul Formation content (NS-006) | |
-| Life record and milestones | ✅ sheet life record (STAT-001), 22 milestones with progress on the sheet and a banner (GOAL-001, WU-006, MS-002, MS-003), journal screen (J / LT) with opportunities, errands and commissions, epilogue on final death | `LifeStats`, `Milestones`, `data/milestones.json` |
+| Life record and milestones | ✅ sheet life record (STAT-001), 22 milestones with progress on the sheet and a banner (GOAL-001, WU-006, MS-002, MS-003), journal screen (J / LT) with opportunities, errands and commissions, epilogue on final death, a yearly review banner (YEAR-001, WU-031) | `LifeStats`, `Milestones`, `data/milestones.json` |
 | Ending (ascension) | 🚧 none, waiting on the owner (END-001) | |
 | Inventory, techniques, character sheet, settings, pause, load screens | ✅ | `src/ui/` |
 | Top-down world with interactables | ✅ placeholder art | `src/world/` |

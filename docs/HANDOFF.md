@@ -2,6 +2,16 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-10-08 (planner, 16:20 UTC)
+- 16 tasks landed since 14:15 (CMB-001, BT-001, MED-001, EXP-001, YEAR-001, GUIDE-007, WU-024/027/028/029/030/031, C-017,
+  RV-009, QA-028, QA-030). The "say what an action will do" theme is complete. ECON-001b is claimed (16:09).
+- A first-hour audit found: the first sect hint points a mortal at the Blood Lotus Sect (the only sect that takes mortals),
+  the technique hint at a manual a newcomer can't afford, no clear first goal, no confirms on leave sect / feed artifact /
+  burn-lifespan pills, the Qingshi merchant buys nothing, and raw numbers in grudge/favor/alignment messages.
+- New: FH-030 (spec), CULT-001, MSG-001, STAT-002, CMB-002, GUIDE-008; WU-032 (spec), WU-033..038; C-019 (spec), C-020..022;
+  QA-033, QA-034.
+- The owner's three urgent questions (pacing, first fights, ascension) are still open.
+
 ## State on 2026-10-08 (planner, 14:15 UTC)
 - 14 tasks landed since 12:20 (GUIDE-004/005/006, RECAP-001 + WU-025, MS-004, WU-021/022/023/026, C-015, NS-002b, NS-004,
   QA-031). Systems and world-ui queues were empty again; restocked around one theme: say what an action will do before the
