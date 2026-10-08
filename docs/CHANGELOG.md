@@ -2,6 +2,22 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-08 [RV-009] Gathering trips find something most of the time again; the income cut now comes from rarer valuable finds.
+- 2026-10-08 [QA-028] Journal test with a busy sect disciple (missions, the sect's call, commissions, errands, secret realms).
+- 2026-10-08 [WU-029] Meditation and abode menus say what a month or a year of cultivation will yield and your breakthrough odds.
+- 2026-10-08 [WU-028] The HUD status, hints and log hide while a menu is open; the character sheet's buttons get their own row.
+- 2026-10-08 [WU-030] Explore options say what lurks there; the world map lists the region's foes by danger.
+- 2026-10-08 [WU-031] A "year in review" banner card each new year (can be turned off in Settings).
+- 2026-10-08 [QA-030] The menu fuzz test now also plays a mid-game clan head with a sect rank, abode, children and a companion.
+- 2026-10-08 [GUIDE-007] A "try something new" hint for players stuck in one loop.
+- 2026-10-08 [YEAR-001] A short review of each year: fights, crafting, deeds, realm gained.
+- 2026-10-08 [WU-027] Menus show an option's description, or why it is disabled, under the buttons.
+- 2026-10-08 [WU-024] The combat report says why you lost.
+- 2026-10-08 [C-017] Seven new village and forest encounters for the first hours (runaway mule, gambling den, a disguised elder...).
+- 2026-10-08 [EXP-001] Know what lurks at an explore site before you go: odds of fights, fortunes and the foes you may meet.
+- 2026-10-08 [MED-001] A preview of what meditation will yield before you start.
+- 2026-10-08 [BT-001] Breakthrough odds explained, with where to get the right pill and a tip after a failure.
+- 2026-10-08 [CMB-001] After a lost fight, a line on why you lost and what would help.
 - 2026-10-08 [QA-031] A 50-year save/load soak test; world events and the pool of marriageable NPCs no longer change when you save and load.
 - 2026-10-08 [WU-021] A tool that screenshots every screen; modal panels are opaque so the HUD no longer bleeds through.
 - 2026-10-08 [C-015] Fairer forced fights: rogue and stone-ape missions, the city enforcer and the Blood Merchant Vault trial now sit near 60-90% where they appear.
