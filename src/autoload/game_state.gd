@@ -57,6 +57,8 @@ var npc_clans: Dictionary = {}
 ## Player numbers before the current long action (TimeSkip.snapshot), for the
 ## time-skip summary. Set by _start_time_skip(), read by _pass_time().
 var _skip_before: Dictionary = {}
+## Player hp at the end of the last fight_enemy() (carried between tournament bouts).
+var last_fight_hp: int = -1
 
 
 func _ready() -> void:
@@ -1796,10 +1798,13 @@ func enter_tournament(event_id: String) -> void:
 	WorldEvents.instance_in(world_events, event_id, current_region)["done"] = true
 	var rounds := int(WorldEvents.def_of(data, event_id)["tournament"]["rounds"])
 	EventBus.post("You sign your name on the tournament roll. %d bouts stand between you and the prize." % rounds)
+	var hp := -1  # no healing between bouts: each starts with what the last left
 	for round_index in rounds:
-		var rival := WorldEvents.opponent(data, event_id, "tournament", player, round_index, rng)
+		var rival := WorldEvents.opponent(data, event_id, "tournament", player, 0, rng)
 		EventBus.post("Bout %d of %d: %s steps into the ring." % [round_index + 1, rounds, rival["name"]])
-		if not fight_enemy(rival):
+		var won := fight_enemy(rival, hp)
+		hp = last_fight_hp
+		if not won:
 			if _can_act():
 				EventBus.post("You are knocked out of the tournament in bout %d." % (round_index + 1), "warning")
 			return
@@ -1865,7 +1870,7 @@ func unready_talisman(item_id: String) -> void:
 
 ## Fight any enemy dictionary in the enemies.json format. Returns true if the
 ## player won and is still alive.
-func fight_enemy(enemy: Dictionary) -> bool:
+func fight_enemy(enemy: Dictionary, start_hp: int = -1) -> bool:
 	EventBus.topic = "combat"
 	if not _can_act():
 		return false
@@ -1875,7 +1880,8 @@ func fight_enemy(enemy: Dictionary) -> bool:
 		var ally_id := Karma.strike_ally(player, npcs, data, current_region, String(enemy.get("id", "")))
 		if ally_id != "":
 			allies.append(Karma.ally_strike(player, npcs, data, ally_id))
-	var result := Combat.resolve(player, data, enemy, rng, allies)
+	var result := Combat.resolve(player, data, enemy, rng, allies, start_hp)
+	last_fight_hp = int(result["player_hp"])
 	# The full blow-by-blow goes out with combat_finished; the log gets a summary.
 	var lines: PackedStringArray = result["log"]
 	EventBus.post(lines[0], "danger")

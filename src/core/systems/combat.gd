@@ -111,12 +111,12 @@ static func dodge_chance(defender_speed: int, attacker_speed: int) -> float:
 ## talismans (CombatTalismans) strike first, shield the player, or turn a
 ## defeat into an escape. Does not modify `c`.
 ## `allies`: [{name, damage}] opening blows from grateful NPCs (RIV-001f).
-static func resolve(c: CharacterData, data: GameData, enemy: Dictionary, rng: RandomNumberGenerator, allies: Array = []) -> Dictionary:
+static func resolve(c: CharacterData, data: GameData, enemy: Dictionary, rng: RandomNumberGenerator, allies: Array = [], start_hp: int = -1) -> Dictionary:
 	var p := stats(c, data)
 	var e := enemy_stats(enemy, data)
 	var foe := foe_name(enemy)
 	var foe_cap := foe.left(1).to_upper() + foe.substr(1)
-	var player_hp: int = p["max_hp"]
+	var player_hp: int = p["max_hp"] if start_hp < 0 else clampi(start_hp, 1, p["max_hp"])
 	var enemy_hp: int = e["max_hp"]
 	var lines: PackedStringArray = []
 	var player_first: bool = p["speed"] >= e["speed"]

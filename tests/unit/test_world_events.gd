@@ -218,6 +218,37 @@ func test_enter_tournament_pays_prize_once() -> void:
 	gs.end_session()
 
 
+var _bout_logs: Array = []
+
+
+func _on_bout(_name: String, _victory: bool, log: PackedStringArray) -> void:
+	_bout_logs.append(log)
+
+
+func _hp_in(line: String, marker: String) -> int:
+	var rx := RegEx.create_from_string(marker + ": (\\d+) hp")
+	var found := rx.search_all(line)
+	return int(found[-1].get_string(1)) if not found.is_empty() else -1
+
+
+func test_tournament_carries_hp_between_bouts() -> void:
+	var gs := _session_with("sect_tournament", "azure_peak")
+	gs.player.realm_index = 3
+	gs.player.stage = 0
+	_bout_logs = []
+	EventBus.combat_finished.connect(_on_bout)
+	gs.enter_tournament("sect_tournament")
+	EventBus.combat_finished.disconnect(_on_bout)
+	assert_true(_bout_logs.size() >= 1)
+	for i in range(1, _bout_logs.size()):
+		var prev: PackedStringArray = _bout_logs[i - 1]
+		var left := _hp_in("\n".join(prev), "You")
+		if left < 0:
+			left = _hp_in(prev[0], "You")
+		assert_eq(_hp_in(_bout_logs[i][0], "You"), left, "bout %d starts where bout %d ended" % [i + 1, i])
+	gs.end_session()
+
+
 func test_pay_prize_gives_stones_manual_and_reputation() -> void:
 	var d := data()
 	var c := new_character()

@@ -162,3 +162,14 @@ func test_fight_log_names_people_without_an_article() -> void:
 	var npc := new_character(99)
 	npc.name = "Xue Yao"
 	assert_eq(Combat.foe_name(Karma.npc_enemy(npc, data())), "Xue Yao", "NPC foes are people")
+
+
+func test_resolve_starts_at_given_hp() -> void:
+	var c := new_character()
+	var full := Combat.resolve(c, data(), data().enemies["mountain_bandit"], seeded_rng(3))
+	var low := Combat.resolve(c, data(), data().enemies["mountain_bandit"], seeded_rng(3), [], 2)
+	assert_true(String(low["log"][0]).contains("You: 2 hp"))
+	assert_true(int(low["player_hp"]) <= 2)
+	assert_eq(low["player_max_hp"], full["player_max_hp"])
+	var over := Combat.resolve(c, data(), data().enemies["mountain_bandit"], seeded_rng(3), [], 99999)
+	assert_true(String(over["log"][0]).contains("You: %d hp" % full["player_max_hp"]))
