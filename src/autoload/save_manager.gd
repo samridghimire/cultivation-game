@@ -53,7 +53,7 @@ func is_valid_slot_name(slot: String) -> bool:
 
 ## Every save on disk, newest first:
 ## [{slot, name, realm_label, game_date, age, alive, saved_at, saved_unix}].
-## Corrupt files are skipped.
+## A slot file that can't be read (and has no backup) is listed with damaged=true.
 func list_slots() -> Array[Dictionary]:
 	var slots: Array[Dictionary] = []
 	for file_name in DirAccess.get_files_at(SAVE_DIR):
@@ -61,18 +61,17 @@ func list_slots() -> Array[Dictionary]:
 			continue
 		var slot := file_name.get_basename()
 		var meta := read_meta(slot)
-		if not meta.is_empty():
-			slots.append(meta)
+		if meta.is_empty():
+			meta = {"slot": slot, "damaged": true, "name": slot, "saved_unix": 0, "alive": true}
+		slots.append(meta)
 	slots.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return a["saved_unix"] > b["saved_unix"])
 	return slots
 
 
 ## Metadata for one slot (see list_slots), or {} if missing or corrupt.
 func read_meta(slot: String) -> Dictionary:
-	if not has_save(slot):
-		return {}
-	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(save_path(slot)))
-	if not parsed is Dictionary:
+	var parsed := _read_payload(slot)
+	if parsed.is_empty():
 		return {}
 	var meta: Dictionary = parsed.get("meta", {})
 	if meta.is_empty():
@@ -81,7 +80,35 @@ func read_meta(slot: String) -> Dictionary:
 	meta["slot"] = slot
 	meta["saved_at"] = String(parsed.get("saved_at", ""))
 	meta["saved_unix"] = int(parsed.get("saved_unix", 0))
+	if parsed.get("from_backup", false):
+		meta["from_backup"] = true
 	return meta
+
+
+## Parses <slot>.json, falling back to <slot>.json.bak; {} if neither is usable.
+## Adds "from_backup": true when the backup was used.
+func _read_payload(slot: String) -> Dictionary:
+	if not is_valid_slot_name(slot):
+		return {}
+	var main := _parse_file(save_path(slot))
+	if not main.is_empty():
+		return main
+	var backup := _parse_file(save_path(slot) + ".bak")
+	if not backup.is_empty():
+		backup["from_backup"] = true
+	return backup
+
+
+func _parse_file(path: String) -> Dictionary:
+	if not FileAccess.file_exists(path):
+		return {}
+	var json := JSON.new()  # parse() reports errors quietly, unlike parse_string
+	if json.parse(FileAccess.get_file_as_string(path)) != OK:
+		return {}
+	var parsed: Variant = json.data
+	if parsed is Dictionary and (parsed as Dictionary).has("game"):
+		return parsed
+	return {}
 
 
 ## The newest save's slot name, or "" if there are no saves.
@@ -93,7 +120,7 @@ func most_recent_slot() -> String:
 ## The newest save with a living character, or "" (what Continue loads).
 func most_recent_living_slot() -> String:
 	for meta in list_slots():
-		if bool(meta.get("alive", true)):
+		if bool(meta.get("alive", true)) and not bool(meta.get("damaged", false)):
 			return String(meta["slot"])
 	return ""
 
@@ -109,6 +136,9 @@ func next_free_slot() -> String:
 func delete_save(slot: String) -> bool:
 	if not has_save(slot):
 		return false
+	for extra in [".bak", ".tmp"]:
+		if FileAccess.file_exists(save_path(slot) + extra):
+			DirAccess.remove_absolute(save_path(slot) + extra)
 	return DirAccess.remove_absolute(save_path(slot)) == OK
 
 
@@ -124,13 +154,37 @@ func save_game(slot: String = DEFAULT_SLOT, is_auto: bool = false) -> bool:
 		"meta": _meta_from_game(game),
 		"game": game,
 	}
-	var file := FileAccess.open(save_path(slot), FileAccess.WRITE)
-	if file == null:
-		push_error("Could not write save %s: %s" % [slot, error_string(FileAccess.get_open_error())])
+	if not _write_atomic(save_path(slot), JSON.stringify(payload, "\t")):
+		push_error("Could not write save %s" % slot)
 		return false
-	file.store_string(JSON.stringify(payload, "\t"))
 	current_slot = slot
 	saved.emit(slot, is_auto)
+	return true
+
+
+## Writes to <path>.tmp, keeps the previous file as <path>.bak, then renames the
+## .tmp into place, so a crash mid-write never destroys the existing save.
+func _write_atomic(path: String, text: String) -> bool:
+	var tmp := path + ".tmp"
+	var file := FileAccess.open(tmp, FileAccess.WRITE)
+	if file == null:
+		return false
+	file.store_string(text)
+	var ok := file.get_error() == OK
+	file.close()
+	if not ok:
+		DirAccess.remove_absolute(tmp)
+		return false
+	if FileAccess.file_exists(path):
+		var bak := path + ".bak"
+		if FileAccess.file_exists(bak):
+			DirAccess.remove_absolute(bak)
+		if DirAccess.rename_absolute(path, bak) != OK:
+			DirAccess.remove_absolute(tmp)
+			return false
+	if DirAccess.rename_absolute(tmp, path) != OK:
+		DirAccess.remove_absolute(tmp)
+		return false
 	return true
 
 
@@ -185,17 +239,15 @@ func is_loadable(slot: String) -> bool:
 
 
 func load_game(slot: String = DEFAULT_SLOT) -> bool:
-	if not has_save(slot):
+	var parsed := _read_payload(slot)
+	if parsed.is_empty() or not is_loadable(slot):
 		return false
-	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(save_path(slot)))
-	if not parsed is Dictionary:
-		push_error("Save %s is corrupt" % slot)
-		return false
-	if not is_loadable(slot):
-		return false
+	var from_backup := bool(parsed.get("from_backup", false))
 	var payload := _migrate(parsed)
 	GameState.load_save_dict(payload.get("game", {}))
 	current_slot = slot
+	if from_backup:
+		EventBus.post("Your last save was damaged; loaded the one before it.", "warning")
 	return true
 
 
