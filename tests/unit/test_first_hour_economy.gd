@@ -42,12 +42,15 @@ func test_every_sect_has_safe_rank0_mission() -> void:
 		assert_true(ok, "%s has a safe rank-0 mission" % sect_id)
 
 
-## FH-024: missions are always fought, so a rank-0 mission with an enemy must not
+## FH-024/FH-026: missions are always fought, so a Qi Refining mission with an enemy must not
 ## be a likely death for the first-hour player (starter technique, Qingshi iron sword and scale armor) at
 ## the mission's own min_realm / min_stage.
-func test_rank0_mission_fights_are_weak_or_even_for_newcomers() -> void:
+func test_qi_refining_mission_fights_are_weak_or_even_for_newcomers() -> void:
 	for m: Variant in data().sect_missions.values():
-		if int(m.get("min_rank", 0)) != 0 or String(m.get("enemy", "")) == "":
+		if String(m.get("enemy", "")) == "":
+			continue
+		var is_early := int(m.get("min_rank", 0)) == 0 or String(m.get("min_realm", "mortal")) == "qi_refining"
+		if not is_early:
 			continue
 		var c := new_character(31)
 		c.realm_index = maxi(0, data().realm_index_of(String(m.get("min_realm", "mortal"))))
