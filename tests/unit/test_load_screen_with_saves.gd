@@ -23,3 +23,18 @@ func test_load_screen_lists_existing_saves() -> void:
 	screen.queue_free()
 	saves.delete_save(TEST_SLOT)
 	gs.end_session()
+
+
+func test_continue_label_names_the_character() -> void:
+	var root := (Engine.get_main_loop() as SceneTree).root
+	var gs := root.get_node("GameState")
+	var saves := root.get_node("SaveManager")
+	var c := CharacterFactory.create("Continuer", gs.data, seeded_rng(8))
+	gs.start_session(c)
+	assert_true(saves.save_game(TEST_SLOT))
+	var label := MainMenu.continue_label()
+	assert_true(label.begins_with("Continue: "), label)
+	assert_true(label.contains("Continuer"), label)
+	assert_true(label.contains("age"), label)
+	saves.delete_save(TEST_SLOT)
+	gs.end_session()

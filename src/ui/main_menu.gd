@@ -1,3 +1,4 @@
+class_name MainMenu
 extends Control
 ## Title screen. Help (UI-003b) opens the same HelpScreen as the pause menu;
 ## it only needs GameState.data, so it works before a session exists.
@@ -33,8 +34,10 @@ func _ready() -> void:
 
 	var new_game := UIStyle.button("New Game", func(): get_tree().change_scene_to_file(CHARACTER_CREATION))
 	box.add_child(new_game)
-	var continue_button := UIStyle.button("Continue", _continue)
+	var continue_button := UIStyle.button(continue_label(), _continue)
 	continue_button.disabled = SaveManager.most_recent_living_slot() == ""
+	continue_button.clip_text = true
+	continue_button.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	box.add_child(continue_button)
 	var load_button := UIStyle.button("Load Game", _open_load)
 	load_button.disabled = SaveManager.list_slots().is_empty()
@@ -109,6 +112,15 @@ func _open_load() -> void:
 func _load_slot(slot: String) -> void:
 	if SaveManager.load_game(slot):
 		get_tree().change_scene_to_file(WORLD)
+
+
+## "Continue: Li Wei, Qi Refining 3, age 16" for the newest live slot, or plain "Continue".
+static func continue_label() -> String:
+	var slot := SaveManager.most_recent_living_slot()
+	if slot == "":
+		return "Continue"
+	var meta := SaveManager.read_meta(slot)
+	return "Continue: %s, %s, age %d" % [meta.get("name", "?"), meta.get("realm_label", "?"), int(meta.get("age", 0))]
 
 
 func _continue() -> void:
