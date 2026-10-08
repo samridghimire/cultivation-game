@@ -174,3 +174,39 @@ func test_category_tabs_filter_and_reset() -> void:
 	screen.close()
 	screen.free()
 	gs.end_session()
+
+
+func test_bulk_sell_skips_worn_manuals_and_breakthrough_pills() -> void:
+	var c := new_character()
+	c.inventory = {"spirit_herb": 3, "iron_sword": 1, "foundation_establishment_pill": 1, "iron_essence": 2}
+	c.equipment = {"weapon": "iron_sword"}
+	var tags := ["herb", "ore", "equipment", "pill"]
+	var ids := Items.bulk_sell_ids(c, data(), tags)
+	assert_true(ids.has("spirit_herb"))
+	assert_false(ids.has("iron_sword"), "worn")
+	assert_false(ids.has("foundation_establishment_pill"), "breakthrough pill")
+	assert_eq(Items.bulk_sell_total(c, data(), ["spirit_herb"]), 3 * Items.sell_price(data(), "spirit_herb"))
+
+
+func test_sell_all_button_needs_two_presses() -> void:
+	var root := (Engine.get_main_loop() as SceneTree).root
+	var gs := root.get_node("GameState")
+	var c := new_character()
+	c.inventory = {"spirit_herb": 4}
+	gs.start_session(c)
+	var screen := ShopScreen.new()
+	root.add_child(screen)
+	screen.open("Herb Stall", 0, ["herb"])
+	assert_false(screen._sell_all_button.visible, "only on the Sell tab")
+	screen._set_tab(true)
+	assert_true(screen._sell_all_button.visible)
+	var stones_before: int = gs.player.item_count("spirit_stone")
+	screen._sell_all()
+	assert_eq(gs.player.item_count("spirit_herb"), 4, "first press only arms")
+	assert_true(screen._sell_all_button.text.begins_with("Press again"))
+	screen._sell_all()
+	assert_eq(gs.player.item_count("spirit_herb"), 0)
+	assert_eq(gs.player.item_count("spirit_stone"), stones_before + 4 * Items.sell_price(gs.data, "spirit_herb"))
+	screen.close()
+	screen.free()
+	gs.end_session()

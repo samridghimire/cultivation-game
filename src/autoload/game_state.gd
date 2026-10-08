@@ -841,6 +841,28 @@ func sell_item(item_id: String, quantity: int = 1) -> void:
 	EventBus.player_changed.emit()
 
 
+## Sells every full stack in `ids` (see Items.bulk_sell_ids) with one message.
+## Returns the stones earned.
+func sell_all(ids: Array) -> int:
+	EventBus.topic = "trade"
+	if not _can_act():
+		return 0
+	var sold := 0
+	var stones := 0
+	for id in ids:
+		var count := player.item_count(id)
+		var result := Items.sell(player, data, id, count)
+		if result["ok"]:
+			sold += count
+			stones += int(result["stones"])
+	if sold > 0:
+		EventBus.post("You sell %d %s for %d spirit stones." % [sold, "item" if sold == 1 else "items", stones])
+	else:
+		EventBus.post("You have nothing to sell.", "warning")
+	EventBus.player_changed.emit()
+	return stones
+
+
 # --- Dialogue ----------------------------------------------------------------
 # A dialogue window (or the NPC's own menu) calls start_dialogue, renders
 # dialogue_view() and calls choose_dialogue until dialogue_ended fires.

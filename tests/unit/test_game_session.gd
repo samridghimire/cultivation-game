@@ -688,3 +688,15 @@ func test_messages_use_words_not_raw_numbers() -> void:
 	for t: String in texts:
 		assert_false(t.contains("%") or t.contains("{") or t.contains("li_wei"), t)
 	gs.end_session()
+
+
+func test_sell_all_pays_sum_with_one_message() -> void:
+	var c := _start()
+	var gs := _game_state()
+	c.inventory = {"spirit_herb": 3, "iron_essence": 2}
+	var before := c.item_count("spirit_stone")
+	var expected := 3 * Items.sell_price(gs.data, "spirit_herb") + 2 * Items.sell_price(gs.data, "iron_essence")
+	var stones: int = gs.sell_all(["spirit_herb", "iron_essence"])
+	assert_eq(stones, expected)
+	assert_eq(c.item_count("spirit_stone"), before + expected)
+	assert_eq(c.item_count("spirit_herb"), 0)

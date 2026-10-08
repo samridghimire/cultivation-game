@@ -190,6 +190,27 @@ static func buyback_ids(c: CharacterData, data: GameData, stock_tags: Array, buy
 	return ids
 
 
+## Ids `sell all loot` may sell: buyback_ids minus anything worn, manuals and
+## scrolls, breakthrough pills and items whose use/equip carries a warning.
+static func bulk_sell_ids(c: CharacterData, data: GameData, stock_tags: Array, buy_tags: Array = []) -> Array:
+	var worn: Array = c.equipment.values()
+	return buyback_ids(c, data, stock_tags, buy_tags).filter(func(id: String) -> bool:
+		var item: Dictionary = data.items[id]
+		if worn.has(id) or category(item) == "Manuals & Scrolls":
+			return false
+		if float(item.get("effects", {}).get("breakthrough_bonus", 0.0)) > 0.0:
+			return false
+		return use_warning(data, id) == "" and Equipment.equip_warning(c, data, id) == "")
+
+
+## Spirit stones selling every full stack of `ids` would pay.
+static func bulk_sell_total(c: CharacterData, data: GameData, ids: Array) -> int:
+	var total := 0
+	for id in ids:
+		total += sell_price(data, id) * c.item_count(id)
+	return total
+
+
 static func _price_then_name(data: GameData, a: String, b: String) -> bool:
 	var pa := int(data.items[a].get("price", 0))
 	var pb := int(data.items[b].get("price", 0))

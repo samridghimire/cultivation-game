@@ -30,6 +30,9 @@ var _faction := ""
 var _selling := false
 var _selected := ""
 var _cat_row: HBoxContainer
+var _sell_all_button: Button
+## True after the first press of "Sell all loot", until focus leaves or the list changes.
+var _sell_all_armed := false
 ## Selected category tab ("All" = everything); reset when switching Buy/Sell.
 var _category := "All"
 const MAX_STEP := 1000000  ## a step too big to be anything but "Max"
@@ -66,6 +69,11 @@ func _init() -> void:
 	_cat_row = HBoxContainer.new()
 	_cat_row.add_theme_constant_override("separation", 4)
 	box.add_child(_cat_row)
+
+	_sell_all_button = UIStyle.button("", _sell_all)
+	_sell_all_button.name = "SellAll"
+	_sell_all_button.focus_exited.connect(_disarm_sell_all.call_deferred)
+	box.add_child(_sell_all_button)
 
 	var columns := HBoxContainer.new()
 	columns.add_theme_constant_override("separation", 16)
@@ -258,6 +266,7 @@ func _rebuild() -> void:
 		tb.set_pressed_no_signal(cat == _category)
 		_cat_row.add_child(tb)
 	var ids := filter_by_category(data, all_ids, _category)
+	_refresh_sell_all()
 	if not ids.has(_selected):
 		_selected = ids[0] if not ids.is_empty() else ""
 		_quantity = 1
@@ -281,6 +290,42 @@ func _rebuild() -> void:
 		b.gui_input.connect(_on_item_input)
 		_list.add_child(b)
 	_show_details()
+
+
+func _loot_ids() -> Array:
+	return Items.bulk_sell_ids(GameState.player, GameState.data, _stock_tags, _buy_tags)
+
+
+func _refresh_sell_all() -> void:
+	var loot := _loot_ids()
+	var total := Items.bulk_sell_total(GameState.player, GameState.data, loot)
+	_sell_all_button.visible = _selling and total > 0
+	if not _sell_all_button.visible:
+		_sell_all_armed = false
+		return
+	var count := 0
+	for id in loot:
+		count += GameState.player.item_count(id)
+	if _sell_all_armed:
+		_sell_all_button.text = "Press again to sell %d items for %d stones" % [count, total]
+	else:
+		_sell_all_button.text = "Sell all loot (%d stones)" % total
+
+
+func _sell_all() -> void:
+	if not _sell_all_armed:
+		_sell_all_armed = true
+		_refresh_sell_all()
+		return
+	_sell_all_armed = false
+	GameState.sell_all(_loot_ids())
+	_focus_selected.call_deferred()
+
+
+func _disarm_sell_all() -> void:
+	if _sell_all_armed and not _sell_all_button.has_focus():
+		_sell_all_armed = false
+		_refresh_sell_all()
 
 
 func _select(item_id: String) -> void:
