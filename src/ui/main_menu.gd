@@ -9,6 +9,7 @@ var _menu: Control
 var _settings: SettingsScreen
 var _load_screen: LoadScreen
 var _help: HelpScreen
+var _credits: CreditsScreen
 
 
 func _ready() -> void:
@@ -40,6 +41,8 @@ func _ready() -> void:
 	box.add_child(settings_button)
 	var help_button := UIStyle.button("Help", _open_help)
 	box.add_child(help_button)
+	var credits_button := UIStyle.button("Credits", _open_credits)
+	box.add_child(credits_button)
 	box.add_child(UIStyle.button("Quit", func(): get_tree().quit()))
 	add_child(UIStyle.centered(box))
 	_menu = box
@@ -54,6 +57,12 @@ func _ready() -> void:
 		_menu.visible = true
 		help_button.grab_focus())
 	add_child(UIStyle.centered(_help))
+
+	_credits = CreditsScreen.new()
+	_credits.closed.connect(func():
+		_menu.visible = true
+		credits_button.grab_focus())
+	add_child(UIStyle.centered(_credits))
 
 	_load_screen = LoadScreen.new()
 	_load_screen.closed.connect(func():
@@ -73,6 +82,16 @@ func _open_settings() -> void:
 func _open_help() -> void:
 	_menu.visible = false
 	_help.open()
+
+
+func _open_credits() -> void:
+	_menu.visible = false
+	_credits.open()
+
+
+## The credits screen, for tests.
+func credits_screen() -> CreditsScreen:
+	return _credits
 
 
 ## The help screen, for tests.

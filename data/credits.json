@@ -1,0 +1,8 @@
+{
+	"_doc": "Credits screen content (REL-003). 'third_party' lists every non-original asset or library: name, what it is, license. Mirrors docs/ASSETS.md (docs/ is not exported). Keep both in sync.",
+	"third_party": [
+		{"name": "Godot Engine", "what": "Game engine", "license": "MIT"},
+		{"name": "Procedural sound effects", "what": "Synthesized in code (src/autoload/audio.gd), no audio files", "license": "Original"},
+		{"name": "Placeholder art", "what": "Drawn in code (_draw), no image files", "license": "Original"}
+	]
+}

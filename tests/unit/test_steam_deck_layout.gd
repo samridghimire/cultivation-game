@@ -103,6 +103,12 @@ func test_every_screen_fits_1280x800() -> void:
 		screen.open()
 		await _assert_fits(screen, name)
 		screen.close()
+	var credits := CreditsScreen.new()
+	hud.add_child(credits)
+	credits.open()
+	await _assert_fits(credits, "credits")
+	credits.close()
+	credits.queue_free()
 	var auction: Control = hud.get("_auction")
 	var clock: Node = root.get_node("GameClock")
 	var day: int = clock.total_days
