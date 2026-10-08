@@ -21,8 +21,12 @@ const RECIPES := {
 	"lightning": {"notes": [[90.0, 0.25]], "noise": 0.9, "gain": 0.55},
 }
 
+## Voices that can sound at once, so a click or chime never cuts off a breakthrough or thunderclap.
+const VOICES := 6
+
 var streams: Dictionary = {}
-var _player: AudioStreamPlayer
+var _players: Array[AudioStreamPlayer] = []
+var _next_voice := 0
 var _focused := true
 
 
@@ -30,9 +34,11 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	for sfx_name in RECIPES:
 		streams[sfx_name] = synth(RECIPES[sfx_name])
-	_player = AudioStreamPlayer.new()
-	_player.bus = BUS if AudioServer.get_bus_index(BUS) != -1 else "Master"
-	add_child(_player)
+	for i in VOICES:
+		var p := AudioStreamPlayer.new()
+		p.bus = BUS if AudioServer.get_bus_index(BUS) != -1 else "Master"
+		add_child(p)
+		_players.append(p)
 	EventBus.message_posted.connect(_on_message)
 	EventBus.breakthrough_attempted.connect(func(ok: bool, _r: String) -> void: play("breakthrough_success" if ok else "breakthrough_fail"))
 	EventBus.combat_finished.connect(func(_n: String, win: bool, _l: PackedStringArray) -> void: play("combat_win" if win else "combat_loss"))
@@ -48,10 +54,20 @@ func _notification(what: int) -> void:
 
 
 func play(sfx_name: String) -> void:
-	if not _focused or _player == null or not streams.has(sfx_name):
+	if not _focused or _players.is_empty() or not streams.has(sfx_name):
 		return
-	_player.stream = streams[sfx_name]
-	_player.play()
+	var voice := _free_voice()
+	voice.stream = streams[sfx_name]
+	voice.play()
+
+
+## An idle player if there is one, else the next one round-robin (the oldest sound is cut).
+func _free_voice() -> AudioStreamPlayer:
+	for p in _players:
+		if not p.playing:
+			return p
+	_next_voice = (_next_voice + 1) % _players.size()
+	return _players[_next_voice]
 
 
 func _on_message(_text: String, category: String) -> void:

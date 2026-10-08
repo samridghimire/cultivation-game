@@ -73,9 +73,9 @@ static func button(text: String, on_pressed: Callable) -> Button:
 	b.text = text
 	b.add_theme_font_size_override("font_size", 18)
 	# An empty Callable means the caller connects its own handler (e.g. one bound to the button).
+	b.pressed.connect(func() -> void: Audio.play("press"))  # first, so the action's own sound plays over it
 	if on_pressed.is_valid():
 		b.pressed.connect(on_pressed)
-	b.pressed.connect(func() -> void: Audio.play("press"))
 	return b
 
 

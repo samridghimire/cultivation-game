@@ -27,3 +27,13 @@ func test_sfx_bus_follows_volume_setting() -> void:
 func test_play_unknown_is_harmless() -> void:
 	Audio.play("nope")
 	Audio.play("press")
+
+
+func test_a_chime_does_not_cut_off_a_big_sound() -> void:
+	Audio.play("lightning")
+	Audio.play("chime_danger")
+	var held: Array = []
+	for p: AudioStreamPlayer in Audio._players:
+		held.append(p.stream)
+	assert_true(held.has(Audio.streams["lightning"]), "lightning still on a voice")
+	assert_true(held.has(Audio.streams["chime_danger"]), "chime on another voice")

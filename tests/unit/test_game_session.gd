@@ -518,3 +518,31 @@ func test_no_duty_reminder_when_duty_met() -> void:
 	c.sect["month_earned"] = Sects.monthly_duty(c, _game_state().data)
 	_game_state().cultivate(5)
 	assert_eq(_duty_warnings(), 0)
+
+
+func test_loading_does_not_reannounce_milestones() -> void:
+	var c := _start()
+	var gs := _game_state()
+	var saved: Dictionary = JSON.parse_string(JSON.stringify(gs.to_save_dict()))
+	# A save written before the milestone was announced (e.g. a month-end autosave mid-action)
+	var player_dict: Dictionary = saved["player"]
+	player_dict["milestones"] = []
+	player_dict["life_stats"] = {"fights_won": 1}
+	var reached: Array = []
+	var cb := func(id: String, _n: String) -> void: reached.append(id)
+	var bus := _root().get_node("EventBus")
+	bus.milestone_reached.connect(cb)
+	gs.load_save_dict(saved)
+	bus.milestone_reached.disconnect(cb)
+	assert_eq(reached.size(), 0, str(reached))
+	assert_true(gs.player.milestones.has("first_fight"), "awarded silently on load")
+	assert_true(c != null)
+	gs.end_session()
+
+
+func test_spar_does_not_count_as_a_fight() -> void:
+	var c := _start()
+	var gs := _game_state()
+	gs.fight_enemy(Sects.trial_opponent(gs.data, "rogue_cultivator"))
+	assert_eq(LifeStats.get_stat(c, "fights_won") + LifeStats.get_stat(c, "fights_lost"), 0)
+	gs.end_session()

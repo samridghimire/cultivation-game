@@ -1906,7 +1906,8 @@ func fight_enemy(enemy: Dictionary, start_hp: int = -1) -> bool:
 	EventBus.post("%s (%s)" % [lines[-1], summary], "progress" if result["victory"] else "danger")
 	if result["victory"] and not outcome["died"] and Devouring.is_devourable(data, enemy):
 		devour_target = enemy
-	LifeStats.add(player, "fights_won" if result["victory"] else "fights_lost")
+	if not enemy.get("spar", false):
+		LifeStats.add(player, "fights_won" if result["victory"] else "fights_lost")
 	EventBus.combat_finished.emit(enemy.get("name", "enemy"), result["victory"], result["log"])
 	var drained := 0 if outcome["died"] else Equipment.drain_after_fight(player, data)
 	if drained > 0:
@@ -2187,6 +2188,11 @@ func load_save_dict(d: Dictionary) -> void:
 	EventBus.clear_history()
 	rng.seed = String(d.get("rng_seed", "0")).to_int()
 	rng.state = String(d.get("rng_state", "0")).to_int()
+	# Milestones reached before this save (or before GOAL-001) are awarded silently, so
+	# loading never re-announces them; every earned one is re-synced to Steam (idempotent).
+	Milestones.award(player, data, world_flags, clan)
+	for id in player.milestones:
+		Platform.unlock_achievement(String(id))
 	EventBus.session_started.emit()
 	EventBus.player_changed.emit()
 
