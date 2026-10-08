@@ -147,3 +147,30 @@ func test_quantity_max_and_ten_steps() -> void:
 	screen.close()
 	screen.free()
 	gs.end_session()
+
+
+func test_category_tabs_filter_and_reset() -> void:
+	var root := (Engine.get_main_loop() as SceneTree).root
+	var gs := root.get_node("GameState")
+	var c := new_character()
+	c.inventory = {"spirit_stone": 100, "spirit_herb": 2, "qi_gathering_pill": 1}
+	gs.start_session(c)
+	var screen := ShopScreen.new()
+	root.add_child(screen)
+	screen.open("General Store", 0, [], "", ["herb", "pill"])
+	var cats := ShopScreen.categories_in(data(), screen.item_ids())
+	assert_eq(cats[0], "All")
+	assert_true(cats.has("Pills"))
+	screen._set_category("Pills")
+	assert_true(screen.visible_ids().size() > 0)
+	for id in screen.visible_ids():
+		assert_eq(Items.category(data().items[id]), "Pills")
+	screen._set_tab(true)
+	assert_eq(screen._category, "All", "switching Buy/Sell resets")
+	screen._set_category("Herbs & Ores")
+	assert_eq(screen.visible_ids(), ["spirit_herb"])
+	screen._set_tab(false)
+	assert_eq(screen._category, "All")
+	screen.close()
+	screen.free()
+	gs.end_session()

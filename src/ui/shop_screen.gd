@@ -29,6 +29,9 @@ var _buy_tags: Array = []
 var _faction := ""
 var _selling := false
 var _selected := ""
+var _cat_row: HBoxContainer
+## Selected category tab ("All" = everything); reset when switching Buy/Sell.
+var _category := "All"
 const MAX_STEP := 1000000  ## a step too big to be anything but "Max"
 
 var _quantity := 1
@@ -59,6 +62,10 @@ func _init() -> void:
 	_sell_tab.name = "SellTab"
 	_sell_tab.toggle_mode = true
 	tabs.add_child(_sell_tab)
+
+	_cat_row = HBoxContainer.new()
+	_cat_row.add_theme_constant_override("separation", 4)
+	box.add_child(_cat_row)
 
 	var columns := HBoxContainer.new()
 	columns.add_theme_constant_override("separation", 16)
@@ -133,6 +140,7 @@ func open(merchant_name: String = "Merchant", max_price: int = 0, stock_tags: Ar
 	_buy_tags = buy_tags
 	_faction = faction
 	_selling = false
+	_category = "All"
 	_selected = ""
 	_quantity = 1
 	_rebuild()
@@ -152,6 +160,34 @@ func item_ids() -> Array:
 	if _selling:
 		return Items.buyback_ids(GameState.player, GameState.data, _stock_tags, _buy_tags)
 	return Items.shop_stock(GameState.data, _max_price, _stock_tags)
+
+
+## Item ids on the current Buy/Sell tab that fall in the selected category.
+func visible_ids() -> Array:
+	return filter_by_category(GameState.data, item_ids(), _category)
+
+
+## Categories (Items.CATEGORIES order, "All" first) that have a row in `ids`.
+static func categories_in(data: GameData, ids: Array) -> Array[String]:
+	var found: Array[String] = ["All"]
+	for cat in Items.CATEGORIES:
+		if cat != "All" and not filter_by_category(data, ids, cat).is_empty():
+			found.append(cat)
+	return found
+
+
+static func filter_by_category(data: GameData, ids: Array, category: String) -> Array:
+	if category == "All":
+		return ids
+	return ids.filter(func(id): return Items.category(data.items.get(id, {})) == category)
+
+
+func _set_category(cat: String) -> void:
+	_category = cat
+	_selected = ""
+	_quantity = 1
+	_rebuild()
+	_focus_selected.call_deferred()
 
 
 ## " (Honored price)" when `faction`'s reputation changes `c`'s prices, else "".
@@ -188,6 +224,7 @@ static func compare_text(c: CharacterData, data: GameData, item_id: String) -> S
 
 func _set_tab(selling: bool) -> void:
 	_selling = selling
+	_category = "All"
 	_selected = ""
 	_quantity = 1
 	_rebuild()
@@ -206,12 +243,28 @@ func _rebuild() -> void:
 	for child in _list.get_children():
 		_list.remove_child(child)
 		child.queue_free()
-	var ids := item_ids()
+	var all_ids := item_ids()
+	var cats := categories_in(data, all_ids)
+	if not cats.has(_category):
+		_category = "All"
+	for child in _cat_row.get_children():
+		_cat_row.remove_child(child)
+		child.queue_free()
+	_cat_row.visible = cats.size() > 2
+	for cat in cats:
+		var tb := UIStyle.button(cat, _set_category.bind(cat))
+		tb.name = "Cat" + cat.replace(" ", "").replace("&", "")
+		tb.toggle_mode = true
+		tb.set_pressed_no_signal(cat == _category)
+		_cat_row.add_child(tb)
+	var ids := filter_by_category(data, all_ids, _category)
 	if not ids.has(_selected):
 		_selected = ids[0] if not ids.is_empty() else ""
 		_quantity = 1
 	if ids.is_empty():
-		var empty := "You have nothing this merchant wants." if _selling else "Nothing for sale."
+		var empty := "Nothing here."
+		if _category == "All":
+			empty = "You have nothing this merchant wants." if _selling else "Nothing for sale."
 		_list.add_child(UIStyle.label(empty, 16, Color(0.7, 0.7, 0.7)))
 	for item_id in ids:
 		var price := unit_price(p, data, item_id, _selling, _faction, GameState.market_multiplier())
