@@ -537,6 +537,8 @@ func _on_time_skip_closed() -> void:
 
 ## Arrival card: region name with qi density and danger, shown on real travel.
 func _on_arrival(region_id: String) -> void:
+	if not GameState.pending_respawn.is_empty():
+		return # the respawn screen is up; the card shows once the player picks where to wake
 	var data: GameData = GameState.data
 	if data == null or not data.regions.has(region_id):
 		return

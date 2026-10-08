@@ -17,5 +17,12 @@ func test_arrival_banner_on_region_change_only() -> void:
 	assert_eq(banner.title_text(), Exploration.region_name(gs.data, dest))
 	assert_true(banner.subtitle_text().begins_with("Qi x"))
 	assert_true(banner.subtitle_text().contains("Danger: "))
+	banner.visible = false
+	gs.pending_respawn = {"cause": "test", "anchor_id": "x", "lives_left": 1, "qi_lost": 0}
+	bus.region_changed.emit(dest)
+	assert_false(banner.visible, "no arrival card while the respawn screen is up")
+	gs.pending_respawn = {}
+	bus.region_changed.emit(dest)
+	assert_true(banner.visible, "card shows once the respawn is chosen")
 	hud.free()
 	gs.end_session()
