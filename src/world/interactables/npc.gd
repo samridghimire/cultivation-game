@@ -17,6 +17,15 @@ extends Interactable
 ## gift from a carried-item picker shown in this menu (FAM-002i).
 ## Your own children also offer "Teach a technique" and "Give a pill" pickers
 ## (FAM-004c, Training.check_teach / check_give reasons on disabled entries).
+## Idle life (WU-058): NPCs bob and occasionally shuffle a few pixels from
+## their home spot, using a local rng seeded from the npc id (never GameState.rng).
+## They hold still while a modal is open and while off screen.
+
+## Furthest an NPC strays from home (wander radius + bob stay under this).
+const MAX_DRIFT := 10.0
+const WANDER_RADIUS := 7.0
+const BOB_AMPLITUDE := 1.5
+const WALK_SPEED := 5.0
 
 @export var npc_id := ""
 
@@ -28,6 +37,48 @@ var _hostile := false
 var _gift_mode := false
 ## "" (main entries), "teach" or "give": the child pickers (FAM-004c).
 var _child_mode := ""
+## Where the NPC stands when idle (set in _ready; the world places the node first).
+var home := Vector2.ZERO
+var _rng := RandomNumberGenerator.new()
+var _phase := 0.0
+var _time := 0.0
+var _wander := Vector2.ZERO
+var _wander_target := Vector2.ZERO
+var _wait := 0.0
+var _modal_open := false
+var _on_screen := true
+
+
+func _ready() -> void:
+	super._ready()
+	home = position
+	var h := hash(npc_id)
+	_rng.seed = h
+	_phase = float(absi(h) % 628) / 100.0
+	_wait = _rng.randf_range(1.0, 4.0)
+	EventBus.ui_modal_changed.connect(func(is_open: bool): _modal_open = is_open)
+	var notifier := VisibleOnScreenNotifier2D.new()
+	notifier.rect = Rect2(-size / 2.0 - Vector2(MAX_DRIFT, MAX_DRIFT), size + Vector2(MAX_DRIFT, MAX_DRIFT) * 2.0)
+	notifier.screen_entered.connect(func(): _on_screen = true)
+	notifier.screen_exited.connect(func(): _on_screen = false)
+	add_child(notifier)
+
+
+func _physics_process(delta: float) -> void:
+	if _modal_open or not _on_screen:
+		return
+	breathe(delta)
+
+
+## Advances the idle bob and wander by delta seconds (public for tests).
+func breathe(delta: float) -> void:
+	_time += delta
+	_wait -= delta
+	if _wait <= 0.0:
+		_wait = _rng.randf_range(3.0, 8.0)
+		_wander_target = Vector2.ZERO if _wander_target != Vector2.ZERO and _rng.randf() < 0.5 else Vector2.from_angle(_rng.randf() * TAU) * _rng.randf_range(3.0, WANDER_RADIUS)
+	_wander = _wander.move_toward(_wander_target, WALK_SPEED * delta)
+	position = home + _wander + Vector2(0, sin(_time * 2.0 + _phase) * BOB_AMPLITUDE)
 
 
 func is_available() -> bool:
