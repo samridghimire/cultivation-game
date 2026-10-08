@@ -6,6 +6,20 @@ extends RefCounted
 const SELL_RATE := 0.5
 
 
+## What using `item_id` costs that cannot be undone ("" = nothing worth a
+## confirmation): burned lifespan or a darkened heart (WU-032).
+static func use_warning(data: GameData, item_id: String) -> String:
+	var effects: Dictionary = data.items.get(item_id, {}).get("effects", {})
+	var parts: PackedStringArray = []
+	var burned := int(effects.get("burn_lifespan", 0))
+	if burned > 0:
+		parts.append("Burn %d %s of your life" % [burned, "year" if burned == 1 else "years"])
+	var shift := int(effects.get("alignment", 0))
+	if shift < 0:
+		parts.append("stain your heart (alignment %d)" % shift)
+	return ", ".join(parts)
+
+
 ## Buys at a merchant affiliated with sect `faction` ("" = none), whose
 ## prices follow the buyer's reputation (Reputation.buy_price).
 ## Returns {ok, reason, stones}.

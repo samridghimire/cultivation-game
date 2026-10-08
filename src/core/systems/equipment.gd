@@ -69,6 +69,19 @@ static func item_drain(data: GameData, item_id: String) -> int:
 	return int(data.items.get(item_id, {}).get("equip", {}).get("lifespan_drain", 0))
 
 
+## What equipping `item_id` commits you to ("" = nothing): a lifespan drain
+## every fight, or a first-time blood binding that shifts your heart (WU-032).
+static func equip_warning(c: CharacterData, data: GameData, item_id: String) -> String:
+	var parts: PackedStringArray = []
+	var drain := item_drain(data, item_id)
+	if drain > 0:
+		parts.append("it drinks %d %s of your life every fight" % [drain, "year" if drain == 1 else "years"])
+	var shift := first_equip_alignment(data, item_id)
+	if shift != 0 and not is_bound(c, item_id):
+		parts.append("it binds itself with your blood (alignment %+d)" % shift)
+	return ", ".join(parts)
+
+
 ## Total years per fight drained by everything `c` has equipped.
 static func lifespan_drain(c: CharacterData, data: GameData) -> int:
 	var total := 0

@@ -12,6 +12,8 @@ extends PanelContainer
 signal closed
 
 const STONE_AMOUNTS: Array[int] = [10, 100]
+## Stone feeds of at least this many stones ask for a second press.
+const CONFIRM_STONES := 100
 const PAGE_MAIN := "main"
 const PAGE_FEED := "feed"
 const PAGE_STORAGE := "storage"
@@ -23,6 +25,8 @@ var _info: Label
 var _rows: VBoxContainer
 var _close_button: Button
 var _page := PAGE_MAIN
+## Node name of the button waiting for a second press (WU-032), "" = none.
+var _armed := ""
 
 
 func _init() -> void:
@@ -91,6 +95,7 @@ func buttons() -> Array[Button]:
 
 
 func _show_page(new_page: String) -> void:
+	_armed = ""
 	_page = new_page
 	_rebuild()
 	_focus("")
@@ -130,7 +135,11 @@ func _build_main(p: CharacterData, data: GameData) -> void:
 	_info.text = "\n".join(lines)
 	for amount in STONE_AMOUNTS:
 		var reason := ArtifactFunctions.check_feed(p, data, "spirit_stone", amount)
-		_add_button("feed_stones_%d" % amount, "Feed %d spirit stones (+%d energy)" % [amount, amount * ArtifactFunctions.energy_value(data, "spirit_stone")], reason, GameState.feed_artifact.bind("spirit_stone", amount))
+		var feed_text := "Feed %d spirit stones (+%d energy)" % [amount, amount * ArtifactFunctions.energy_value(data, "spirit_stone")]
+		if amount >= CONFIRM_STONES:
+			_add_confirm_button("feed_stones_%d" % amount, feed_text, reason, GameState.feed_artifact.bind("spirit_stone", amount), "Confirm: feed %d stones?" % amount)
+		else:
+			_add_button("feed_stones_%d" % amount, feed_text, reason, GameState.feed_artifact.bind("spirit_stone", amount))
 	_add_button("anchors", "Lives & anchors...", "", _show_page.bind(PAGE_ANCHORS))
 	_add_button("feed_item", "Feed an item...", "", _show_page.bind(PAGE_FEED))
 	for def: Dictionary in data.artifact.get("functions", []):
@@ -161,7 +170,7 @@ func _build_feed(p: CharacterData, data: GameData) -> void:
 		var row := _add_row("%s x%d (+%d energy each)" % [_item_name(data, item_id), count, value])
 		_add_button("feed1_" + item_id, "Feed 1", ArtifactFunctions.check_feed(p, data, item_id, 1), GameState.feed_artifact.bind(item_id, 1), row)
 		if count > 1:
-			_add_button("feedall_" + item_id, "Feed all", ArtifactFunctions.check_feed(p, data, item_id, count), GameState.feed_artifact.bind(item_id, count), row)
+			_add_confirm_button("feedall_" + item_id, "Feed all", ArtifactFunctions.check_feed(p, data, item_id, count), GameState.feed_artifact.bind(item_id, count), "Confirm: feed %d items?" % count, row)
 
 
 func _build_storage(p: CharacterData, data: GameData) -> void:
@@ -248,12 +257,41 @@ func _add_button(node_name: String, text: String, reason: String, action: Callab
 	return b
 
 
+## A button that needs two presses: the first arms it ("Confirm: ..."), the
+## second runs `action`. Moving focus away disarms it.
+func _add_confirm_button(node_name: String, text: String, reason: String, action: Callable, confirm_text: String, parent: Control = null) -> Button:
+	var id := node_name.validate_node_name()
+	var armed := _armed == id and reason == ""
+	var b := _add_button(node_name, confirm_text if armed else text, reason, _confirm_pressed.bind(id, action), parent)
+	if armed:
+		b.focus_exited.connect(_disarm_if_unfocused.bind(b).call_deferred)
+	return b
+
+
+func _confirm_pressed(node_name: String, action: Callable) -> void:
+	if _armed != node_name:
+		_armed = node_name
+		_rebuild()
+		_focus(node_name)
+		return
+	_armed = ""
+	action.call()
+	_focus(node_name)
+
+
+func _disarm_if_unfocused(button: Button) -> void:
+	if _armed == "" or (is_instance_valid(button) and button.has_focus()):
+		return
+	_armed = ""
+	_rebuild()
+
+
 func _focus(node_name: String) -> void:
 	_focus_now.call_deferred(node_name)
 
 
 func _focus_now(node_name: String) -> void:
-	if not visible:
+	if not visible or not is_inside_tree():
 		return
 	var enabled := buttons().filter(func(b: Button) -> bool: return not b.disabled)
 	for b: Button in enabled:

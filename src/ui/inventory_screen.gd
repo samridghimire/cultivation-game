@@ -12,6 +12,8 @@ var _name: Label
 var _description: Label
 var _effects: Label
 var _use_button: Button
+## Item whose risky Use/Equip waits for a second press (WU-032), "" = none.
+var _use_armed := ""
 var _ready_button: Button
 var _readied: Label
 var _close_button: Button
@@ -54,6 +56,7 @@ func _init() -> void:
 	_effects.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	details.add_child(_effects)
 	_use_button = UIStyle.button("Use", _use_selected)
+	_use_button.focus_exited.connect(_disarm_use.call_deferred)
 	details.add_child(_use_button)
 	_ready_button = UIStyle.button("Ready for battle", _toggle_ready)
 	details.add_child(_ready_button)
@@ -213,7 +216,11 @@ func _show_details() -> void:
 	_effects.text = "\n".join(lines)
 	_show_ready_button(talisman)
 	_use_button.visible = bool(item.get("usable", false)) or equippable
+	if _use_armed != _selected:
+		_use_armed = ""
 	_use_button.text = "Equip" if equippable else "Use"
+	if _use_armed != "":
+		_use_button.text = "%s? Press again" % _use_warning(_selected)
 	# Show why an item can't be used now (e.g. nothing to heal) instead of a failed use.
 	var reason := ""
 	if equippable:
@@ -252,12 +259,34 @@ func _toggle_ready() -> void:
 func _use_selected() -> void:
 	if _selected == "":
 		return
+	var warning := _use_warning(_selected)
+	if warning != "" and _use_armed != _selected:
+		_use_armed = _selected
+		_use_button.text = "%s? Press again" % warning
+		return
+	_use_armed = ""
 	if Equipment.is_equipment(GameState.data, _selected):
 		GameState.equip_item(_selected)
 	else:
 		GameState.use_item(_selected)
 	# player_changed has rebuilt the list; keep focus somewhere sensible.
 	_focus_selected.call_deferred()
+
+
+## What the selected item's Use/Equip would cost irreversibly ("" = nothing).
+func _use_warning(item_id: String) -> String:
+	var data := GameState.data
+	if Equipment.is_equipment(data, item_id):
+		var risk := Equipment.equip_warning(GameState.player, data, item_id)
+		return "" if risk == "" else "Equip (%s)" % risk
+	return Items.use_warning(data, item_id)
+
+
+func _disarm_use() -> void:
+	if _use_armed == "" or _use_button.has_focus():
+		return
+	_use_armed = ""
+	_show_details()
 
 
 func _focus_selected() -> void:

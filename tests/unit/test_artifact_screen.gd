@@ -33,6 +33,7 @@ func test_feed_unseal_and_storage_round_trip() -> void:
 	assert_true(_button(screen, "unseal_storage").disabled, "mortals cannot unseal storage")
 	assert_true(_button(screen, "unseal_storage").text.contains("("), "disabled unseal shows why")
 	assert_true(_button(screen, "storage").disabled, "storage page is sealed")
+	_press(screen, "feed_stones_100")  # arms (WU-032)
 	_press(screen, "feed_stones_100")
 	assert_eq(c.artifact_energy, 100, "fed 100 stones")
 	assert_eq(c.item_count("spirit_stone"), 50)
