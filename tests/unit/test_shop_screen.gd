@@ -210,3 +210,17 @@ func test_sell_all_button_needs_two_presses() -> void:
 	screen.close()
 	screen.free()
 	gs.end_session()
+
+
+func test_sell_all_note_names_top_stacks() -> void:
+	var c := new_character()
+	c.inventory = {"spirit_herb": 1, "mist_wolf_pelt": 9, "iron_sword": 1, "iron_essence": 1, "spirit_stone": 5}
+	var ids: Array = []
+	for id: String in ["spirit_herb", "mist_wolf_pelt", "iron_sword", "iron_essence"]:
+		if data().items.has(id):
+			ids.append(id)
+	assert_true(ids.size() >= 4, "test items exist")
+	var text := ShopScreen.sell_all_summary(c, data(), ids)
+	assert_true(text.begins_with("Sells: 9 Mist Wolf Pelt"), text)
+	assert_true(text.ends_with("and 1 more kind"), text)
+	assert_false(ShopScreen.sell_all_summary(c, data(), ids.slice(0, 2)).contains("more"))

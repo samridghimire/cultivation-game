@@ -31,6 +31,7 @@ var _selling := false
 var _selected := ""
 var _cat_row: HBoxContainer
 var _sell_all_button: Button
+var _sell_all_note: Label
 ## True after the first press of "Sell all loot", until focus leaves or the list changes.
 var _sell_all_armed := false
 ## Selected category tab ("All" = everything); reset when switching Buy/Sell.
@@ -74,6 +75,11 @@ func _init() -> void:
 	_sell_all_button.name = "SellAll"
 	_sell_all_button.focus_exited.connect(_disarm_sell_all.call_deferred)
 	box.add_child(_sell_all_button)
+	_sell_all_note = UIStyle.label("", 14, Color(0.7, 0.7, 0.7))
+	_sell_all_note.name = "SellAllNote"
+	_sell_all_note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_sell_all_note.visible = false
+	box.add_child(_sell_all_note)
 
 	var columns := HBoxContainer.new()
 	columns.add_theme_constant_override("separation", 16)
@@ -300,16 +306,33 @@ func _refresh_sell_all() -> void:
 	var loot := _loot_ids()
 	var total := Items.bulk_sell_total(GameState.player, GameState.data, loot)
 	_sell_all_button.visible = _selling and total > 0
+	_sell_all_note.visible = _sell_all_button.visible
 	if not _sell_all_button.visible:
 		_sell_all_armed = false
 		return
 	var count := 0
 	for id in loot:
 		count += GameState.player.item_count(id)
+	_sell_all_note.text = sell_all_summary(GameState.player, GameState.data, loot)
 	if _sell_all_armed:
 		_sell_all_button.text = "Press again to sell %d items for %d stones" % [count, total]
 	else:
 		_sell_all_button.text = "Sell all loot (%d stones)" % total
+
+
+## "Sells: 6 Mist Wolf Pelt, 3 Iron Essence and 4 more kinds": the three most valuable stacks.
+static func sell_all_summary(c: CharacterData, data: GameData, ids: Array) -> String:
+	var sorted := ids.duplicate()
+	sorted.sort_custom(func(a: String, b: String) -> bool:
+		return Items.sell_price(data, a) * c.item_count(a) > Items.sell_price(data, b) * c.item_count(b))
+	var parts: Array[String] = []
+	for id: String in sorted.slice(0, 3):
+		parts.append("%d %s" % [c.item_count(id), data.items[id]["name"]])
+	var text := "Sells: " + ", ".join(parts)
+	var rest := sorted.size() - parts.size()
+	if rest > 0:
+		text += " and %d more kind%s" % [rest, "" if rest == 1 else "s"]
+	return text
 
 
 func _sell_all() -> void:
