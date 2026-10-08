@@ -130,6 +130,35 @@ func _check_all_screens(scale: float) -> void:
 	await _assert_fits(auction, "auction")
 	auction.close()
 	clock.total_days = day
+	# QA-020: the artifact's sub-pages, the sect balance window, tribulation and respawn.
+	var artifact: ArtifactScreen = hud.get("_screens")["toggle_artifact"]
+	for page: String in [ArtifactScreen.PAGE_FEED, ArtifactScreen.PAGE_STORAGE, ArtifactScreen.PAGE_ANCHORS, ArtifactScreen.PAGE_GARDEN]:
+		artifact.open()
+		artifact._show_page(page)
+		await _assert_fits(artifact, "artifact (%s)" % page)
+		artifact.close()
+	var balance: Control = hud.get("_sect_balance")
+	balance.open()
+	await _assert_fits(balance, "sect balance")
+	balance.close()
+	var tribulation: Control = hud.get("_tribulation")
+	tribulation.open_prepare()
+	await _assert_fits(tribulation, "tribulation (prepare)")
+	var waves: Array = []
+	for i in 12:
+		waves.append({"damage": 1234, "hp_left": 9999 - i, "kind": "heart_demon" if i == 11 else "lightning"})
+	tribulation.show_result("Nascent Soul", {"max_hp": 10000, "waves": waves, "survived": true, "talismans_used": PackedStringArray(["Shield Talisman", "Thunder Ward Talisman"])})
+	tribulation.reveal_all()
+	await _assert_fits(tribulation, "tribulation (result)")
+	tribulation.close()
+	var choices: Array = CreationArtifact.respawn_choices(gs.player, gs.data)
+	if not choices.is_empty():
+		gs.pending_respawn = {"cause": "Struck down by heavenly lightning while crossing the Misty Peaks.", "anchor_id": String(choices[0]["anchor_id"]), "lives_left": 1, "qi_lost": 12345.0}
+		var respawn: Control = hud.get("_respawn")
+		respawn.open()
+		await _assert_fits(respawn, "respawn")
+		respawn.close()
+		gs.pending_respawn = {}
 	var report: Control = hud.get("_combat_report")
 	var lines := PackedStringArray()
 	for i in 80:

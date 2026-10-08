@@ -148,3 +148,93 @@ func test_choice_menu_shows_reason_of_focused_disabled_option() -> void:
 	assert_false(src.used, "disabled option does nothing")
 	menu.queue_free()
 	src.free()
+
+
+## QA-020: screens added after QA-008 that are not in the HUD's screen table: the
+## respawn choice, tribulation (prepare and result), credits, auction, mission
+## board, child training, help, the artifact's garden page and the save toast.
+func test_late_screens_have_focus_and_close_on_cancel() -> void:
+	var root := _tree().root
+	var gs: Node = root.get_node("GameState")
+	var c := new_character()
+	c.add_item("spirit_stone", 5000)
+	gs.start_session(c)
+	gs.pending_event = ""
+	var hud: CanvasLayer = load("res://src/ui/hud.tscn").instantiate()
+	root.add_child(hud)
+	await _frames()
+
+	var board: Control = hud.get("_mission_board")
+	board.open()
+	await _check(board, "mission board")
+	var training: Control = hud.get("_child_training")
+	training.open()
+	await _check(training, "child training")
+
+	var clock: Node = root.get_node("GameClock")
+	var day: int = clock.total_days
+	clock.total_days = int(Auctions.house(gs.data, "fallen_star_auction")["offset_days"])
+	var auction: Control = hud.get("_auction")
+	auction.open("fallen_star_auction")
+	await _check(auction, "auction")
+	clock.total_days = day
+
+	var help: Control = hud.get("_help")
+	hud.set("_help_from_key", true)  # opened by its key it returns to the world, not the pause menu
+	help.open()
+	await _check(help, "help")
+	var credits := CreditsScreen.new()
+	hud.add_child(credits)
+	credits.open()
+	await _check(credits, "credits")
+	credits.queue_free()
+
+	var tribulation: Control = hud.get("_tribulation")
+	tribulation.open_prepare()
+	await _check(tribulation, "tribulation prepare")
+	var wave := {"damage": 10, "hp_left": 90}
+	tribulation.show_result("Foundation Establishment", {"max_hp": 100, "waves": [wave], "survived": true, "talismans_used": PackedStringArray()})
+	await _frames()
+	assert_true(tribulation.visible, "tribulation result opens")
+	var owner := root.gui_get_focus_owner()
+	assert_true(owner != null and tribulation.is_ancestor_of(owner), "tribulation result: focus is inside the screen")
+	tribulation.close()
+
+	var artifact: ArtifactScreen = hud.get("_screens")["toggle_artifact"]
+	artifact.open()
+	artifact._show_page(ArtifactScreen.PAGE_GARDEN)
+	await _frames()
+	owner = root.gui_get_focus_owner()
+	assert_true(owner != null and artifact.is_ancestor_of(owner), "artifact garden page: focus is inside the screen")
+	_press("ui_cancel")
+	await _frames()
+	assert_eq(artifact.page(), ArtifactScreen.PAGE_MAIN, "cancel leaves the garden page")
+	assert_true(artifact.visible, "cancel on a sub-page does not close the screen")
+	artifact.close()
+
+	# The respawn choice: waits for the player; accept (cancel) takes the default anchor.
+	var choices: Array = CreationArtifact.respawn_choices(c, gs.data)
+	if not choices.is_empty():
+		gs.pending_respawn = {"cause": "Test", "anchor_id": String(choices[0]["anchor_id"]), "lives_left": 1, "qi_lost": 5.0}
+		var respawn: Control = hud.get("_respawn")
+		respawn.open()
+		await _frames()
+		assert_true(respawn.visible, "respawn opens")
+		owner = root.gui_get_focus_owner()
+		assert_true(owner != null and respawn.is_ancestor_of(owner), "respawn: focus is inside the screen")
+		respawn.close()
+		gs.pending_respawn = {}
+
+	# The save toast is display only: it never takes focus or blocks input.
+	var toast := SaveToast.new()
+	hud.add_child(toast)
+	assert_eq(toast.focus_mode, Control.FOCUS_NONE)
+	assert_eq(toast.mouse_filter, Control.MOUSE_FILTER_IGNORE)
+	for node in toast.find_children("*", "Control", true, false):
+		assert_true((node as Control).focus_mode == Control.FOCUS_NONE, "save toast: %s takes no focus" % node.name)
+	toast.queue_free()
+
+	root.remove_child(hud)
+	hud.free()
+	gs.end_session()
+	await _frames()
