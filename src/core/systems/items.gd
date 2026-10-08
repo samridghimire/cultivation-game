@@ -225,6 +225,7 @@ static func sell(c: CharacterData, data: GameData, item_id: String, quantity: in
 		return {"ok": false, "reason": "You do not have enough.", "stones": 0}
 	c.add_item(item_id, -quantity)
 	c.add_item("spirit_stone", price)
+	LifeStats.record_stones(c, price)
 	return {"ok": true, "reason": "", "stones": price}
 
 

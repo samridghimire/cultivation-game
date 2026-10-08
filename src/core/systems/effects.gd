@@ -83,9 +83,12 @@ static func apply(c: CharacterData, data: GameData, effects: Dictionary, flags: 
 		for item_id in effects["items"]:
 			var delta := int(effects["items"][item_id])
 			c.add_item(item_id, delta)
+			if item_id == "spirit_stone":
+				LifeStats.record_stones(c, delta)
 			notes.append("%+d %s" % [delta, data.items.get(item_id, {}).get("name", item_id)])
 	if effects.has("qi"):
 		var result := Cultivation.add_qi(c, data, float(effects["qi"]))
+		LifeStats.add(c, "qi_gathered", int(result["qi_gained"]))
 		notes.append("+%d qi" % int(result["qi_gained"]))
 	if effects.has("burn_lifespan") and Cultivation.burn_lifespan(c, int(effects["burn_lifespan"])):
 		notes.append("-%d years of lifespan" % int(effects["burn_lifespan"]))

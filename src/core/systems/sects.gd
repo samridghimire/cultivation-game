@@ -285,6 +285,7 @@ static func month_end(c: CharacterData, data: GameData) -> Dictionary:
 			var stones := int(pay.get("spirit_stones", 0))
 			if stones > 0:
 				c.add_item("spirit_stone", stones)
+				LifeStats.record_stones(c, stones)
 			var items: Dictionary = pay.get("items", {})
 			for item_id in items:
 				c.add_item(item_id, int(items[item_id]))

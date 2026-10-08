@@ -118,6 +118,7 @@ static func commit(c: CharacterData, npc: CharacterData, act_id: String, won: bo
 	if loot.size() == 2:
 		var stones := rng.randi_range(int(loot[0]), int(loot[1])) * (npc.realm_index + 1)
 		c.add_item("spirit_stone", stones)
+		LifeStats.record_stones(c, stones)
 		looted = stones
 		notes.append("+%d Spirit Stone" % stones)
 		for item_id in npc.inventory.keys():
@@ -210,6 +211,7 @@ static func _repay(c: CharacterData, npc: CharacterData, rules: Dictionary, data
 		var stones := rng.randi_range(int(range_[0]), int(range_[1])) * (npc.realm_index + 1)
 		if stones > 0:
 			c.add_item("spirit_stone", stones)
+			LifeStats.record_stones(c, stones)
 			notes.append("+%d Spirit Stone" % stones)
 	var total := 0
 	for gift: Dictionary in rules.get("gifts", []):

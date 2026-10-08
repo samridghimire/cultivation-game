@@ -93,6 +93,7 @@ static func deliver(c: CharacterData, data: GameData, index: int) -> Dictionary:
 	var order: Dictionary = c.commissions[index]
 	c.add_item(String(order["item"]), -int(order["count"]))
 	c.add_item("spirit_stone", int(order["reward"]))
+	LifeStats.record_stones(c, int(order["reward"]))
 	var ranks := Professions.add_xp(c, data, String(order["profession"]), float(order["xp"]))
 	c.commissions.remove_at(index)
 	LifeStats.add(c, "commissions_done")

@@ -15,7 +15,9 @@ static func qi_per_day(c: CharacterData, data: GameData, density: float = 1.0) -
 
 ## Cultivate for `days`. Returns {qi_gained, stages_gained, at_bottleneck}.
 static func cultivate(c: CharacterData, data: GameData, days: int, density: float = 1.0) -> Dictionary:
-	return add_qi(c, data, qi_per_day(c, data, density) * days)
+	var result := add_qi(c, data, qi_per_day(c, data, density) * days)
+	LifeStats.add(c, "qi_gathered", int(result["qi_gained"]))
+	return result
 
 
 ## What cultivating `days` at `density` would do, without changing `c`:

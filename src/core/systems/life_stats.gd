@@ -5,7 +5,7 @@ extends RefCounted
 ## the end-of-life summary.
 
 const KEYS: Array[String] = ["fights_won", "fights_lost", "threats_fled", "breakthroughs", "breakthroughs_failed",
-	"tribulations_survived", "respawns", "items_crafted", "missions_done", "deeds_done", "encounters", "days_in_seclusion", "commissions_done", "tournaments_won", "incursions_repelled", "realm_floors_cleared", "inheritances_claimed"]
+	"tribulations_survived", "respawns", "items_crafted", "missions_done", "deeds_done", "encounters", "days_in_seclusion", "commissions_done", "tournaments_won", "incursions_repelled", "realm_floors_cleared", "inheritances_claimed", "stones_earned", "qi_gathered"]
 
 const LABELS := {
 	"fights_won": "Fights won",
@@ -22,6 +22,8 @@ const LABELS := {
 	"incursions_repelled": "Incursions repelled",
 	"realm_floors_cleared": "Secret realm floors cleared",
 	"inheritances_claimed": "Inheritances claimed",
+	"stones_earned": "Spirit stones earned",
+	"qi_gathered": "Qi gathered",
 	"deeds_done": "Deeds done",
 	"encounters": "Encounters",
 	"days_in_seclusion": "Days in seclusion",
@@ -35,6 +37,12 @@ static func add(c: CharacterData, key: String, amount: int = 1) -> void:
 	if amount <= 0:
 		return
 	c.life_stats[key] = get_stat(c, key) + amount
+
+
+## Counts spirit stones earned (income only: not the starting purse, not
+## stones moved between your own stores). Ignores zero and negative amounts.
+static func record_stones(c: CharacterData, amount: int) -> void:
+	add(c, "stones_earned", amount)
 
 
 static func get_stat(c: CharacterData, key: String) -> int:
@@ -103,6 +111,9 @@ static func year_summary(before: Dictionary, after: Dictionary, realm_before: St
 	var crafted := _delta(before, after, "items_crafted")
 	if crafted > 0:
 		out.append("You crafted %d item%s." % [crafted, "" if crafted == 1 else "s"])
+	var earned := _delta(before, after, "stones_earned")
+	if earned > 0:
+		out.append("You earned %d spirit stone%s." % [earned, "" if earned == 1 else "s"])
 	var deeds := _delta(before, after, "deeds_done")
 	if deeds > 0:
 		out.append("You did %d deed%s." % [deeds, "" if deeds == 1 else "s"])

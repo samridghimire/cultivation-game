@@ -44,4 +44,5 @@ static func work(c: CharacterData, data: GameData, prof_id: String, days: int) -
 	var income := int(def.work_income * (rank_of(c, prof_id) + 1) * days / float(Calendar.DAYS_PER_MONTH))
 	var ranks_gained := add_xp(c, data, prof_id, xp)
 	c.add_item("spirit_stone", income)
+	LifeStats.record_stones(c, income)
 	return {"xp": xp, "ranks_gained": ranks_gained, "income": income}
