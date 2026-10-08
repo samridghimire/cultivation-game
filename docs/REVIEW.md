@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 1cf2753
+Last reviewed commit: 6c7e35d
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -31,3 +31,19 @@ Last reviewed commit: 1cf2753
   - FH-003, FH-004b, FH-002, LW-002, REL-001: match specs, tests present. LW-002 only reserves spouses/descendants from
     recruitment; other known NPCs (companions with favor) can be recruited, acceptable for part 1.
   - Fixed in one [REVIEW] commit; nothing filed.
+- 2026-10-08 (reviewer, 2nd run): reviewed 1cf2753..6c7e35d (36 task commits: REL-003/004/007/009/010, QA-018/019/023/006b,
+  LW-003/003b, FH-024/025/026, WU-001..009, STAT-001, GOAL-001, NS-001/002/003, GUIDE-001, SECT-003, EPI-001, ECON-002;
+  [PLAN] commits skipped). Main green before and after (1020 -> 1024 tests). No BACKLOG/CHANGELOG edits by workers; no
+  SAVE_VERSION change (`life_stats` and `milestones` default to {} / []). Two empty `claim` commits landed on main (RV-008).
+  - Fixed (2 [REVIEW] commits): loading re-announced milestones (a month-end autosave is written before
+    `check_milestones` runs; pre-GOAL-001 saves got a burst) -> awarded silently on load and re-synced to Steam; sect
+    trial spars counted as fights won/lost; one AudioStreamPlayer meant every chime/click cut off breakthrough,
+    lightning and combat sounds -> 6-voice pool, click before the action; arrival card over the final-death screen;
+    "Saved" toast over the death screen; world events only expired at month end, so ended tournaments stayed joinable
+    with the full prize for up to a month -> daily expiry; Cloud-Sea Aerie abode had no anchor_id; harvest_rogue_cultivator
+    missed FH-026's x1.5 reward for its Foundation gate; stale "each bout tougher" doc. Tests added for each core fix.
+  - Filed P0 RV-001..RV-008: save data-loss edges (newer-version save falls back to older .bak; crash between renames
+    hides the slot), banner queue (milestones hide "Breakthrough!"), credits not gamepad-scrollable + missing third-party
+    notices, journal tone/regressions/duplicate duty line, breakthrough pills not realm-gated (cheap pills beat NS-002's),
+    tests that can't fail (world events, QA-019 tautology, economy sim buying for unavailable missions), NS-003 text
+    mismatches, and the missing claim-cleanup workflow / over-broad cleanup script / empty claim commits.
