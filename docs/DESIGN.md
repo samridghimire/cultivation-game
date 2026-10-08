@@ -97,9 +97,10 @@ Every great cultivation protagonist has something that sets them apart. Ours is 
 | Creation Artifact inner world and spirit garden | ✅ (artifact screen) | `InnerWorld`, `SpiritGarden` |
 | World events (beast tides, tournaments, auctions, incursions) | ✅ passive effects + HUD/map/rumors; tournaments and incursion defence can be joined (LW-003) | `data/world_events.json`, `WorldEvents` |
 | NPC clans and NPC sect membership, family tree, Family Home | ✅ | `NpcClans`, `FamilyHome`, `src/ui/family_screen.gd` |
-| NPC sects as factions (strength, recruitment) | ✅ core (LW-002); 🚧 clashes (LW-002b), no UI yet (WU-002) | `SectFactions` |
-| Audio, autosave, export presets, credits | ✅ procedural SFX, autosave, credits; 🚧 music (REL-008), export presets (REL-005), crash-safe saves (REL-007) | `Audio`, `SaveManager`, `src/ui/credits_screen.gd` |
-| Content past Core Formation | 🚧 none: no enemies/encounters/pills at Nascent Soul+ (NS-001..005) | |
+| NPC sects as factions (strength, recruitment) | ✅ core (LW-002), sect hall standings (WU-002); 🚧 clashes (LW-002b) | `SectFactions` |
+| Audio, autosave, export presets, credits | ✅ procedural SFX, autosave with toast, crash-safe saves, credits, Steam platform stub (REL-009); 🚧 music (REL-008), export presets (REL-005), save on suspend (REL-010) | `Audio`, `SaveManager`, `src/ui/credits_screen.gd` |
+| Content past Core Formation | 🚧 Nascent Soul foes/encounters (NS-001) and pills (NS-002); no late region, people or Soul Formation content yet (NS-003..006) | |
+| Life record and milestones | ✅ sheet life record (STAT-001), 16 milestones posted (GOAL-001); 🚧 milestones UI (WU-006), journal (GUIDE-001/WU-007), epilogue (EPI-001/WU-004) | `LifeStats`, `Milestones`, `data/milestones.json` |
 | Ending (ascension) | 🚧 none, waiting on the owner (END-001) | |
 | Inventory, techniques, character sheet, settings, pause, load screens | ✅ | `src/ui/` |
 | Top-down world with interactables | ✅ placeholder art | `src/world/` |

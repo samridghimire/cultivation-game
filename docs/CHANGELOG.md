@@ -2,6 +2,19 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-08 [LW-003b] Tournament bouts no longer heal you in between: each bout starts with the hp the last one left.
+- 2026-10-08 [REL-009] A Steam platform layer (achievements and rich presence) that stays silent until Steam is present; milestones unlock achievements.
+- 2026-10-08 [GOAL-001] Milestones: 16 first steps (first fight won, first craft, first tribulation...) are recognised as you reach them.
+- 2026-10-08 [NS-002] Breakthrough pills past Core Formation: the Soul Infant Pill and Spirit Severing Pill, with new late herbs and recipe scrolls.
+- 2026-10-08 [NS-001] Nascent Soul content: eight new foes and fifteen encounters for cultivators past Core Formation.
+- 2026-10-08 [WU-003] Travelling shows an arrival card with the region's qi density and danger.
+- 2026-10-08 [REL-007] Saves survive crashes: writes are atomic with a backup, and damaged slots are shown instead of hidden.
+- 2026-10-08 [QA-019] A newcomer-path test plays from Elder Mo to the first sect mission, checking hints and message text.
+- 2026-10-08 [WU-002] A sect hall "Balance of power" window ranks the sects, and the character sheet says where yours stands.
+- 2026-10-08 [STAT-001] A life record on the character sheet: fights won and lost, breakthroughs, crafts, missions and more.
+- 2026-10-08 [WU-001] A small "Saved" / "Autosaved" toast confirms every save.
+- 2026-10-08 [FH-025] "Explore for a week" explores day after day and stops as soon as something happens.
+- 2026-10-08 [FH-024] Sect missions with a fight are no longer offered to newcomers who would be killed by them.
 - 2026-10-08 [LW-003] Join the world's events: fight through a sect tournament bracket for prizes, or help drive back a demonic incursion.
 - 2026-10-08 [QA-018] The combat sim gains a veteran loadout per realm through Soul Formation, with guards that no forced late fight is unbeatable.
 - 2026-10-08 [REL-003] A Credits screen on the main menu, with the Godot Engine license.

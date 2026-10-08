@@ -2,6 +2,15 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-10-08 (planner, 04:15 UTC)
+- 13 more tasks landed (FH-024/025, WU-001..003, STAT-001, GOAL-001, REL-007, REL-009, QA-019, NS-001/002, LW-003b). The
+  reviewer's last reviewed commit is 1cf2753, so these are not reviewed yet.
+- New: GUIDE-001 + WU-007 (journal, spec in docs/specs/GUIDE-001.md), SECT-003 (duty reminders), FH-026 (rank-1 rogue
+  missions were Deadly through Qi Refining), WU-009 (no arrival card over the respawn screen), EPI-001 + WU-004 (epilogue),
+  MS-002 (milestone progress), REL-010 (save on Steam Deck suspend), NS-002b/NS-006 (late content), QA-025.
+- The cloud clone's local `main` can be an unrelated shallow history; work from `origin/main` (e.g. a local branch made from
+  it) and push `HEAD:main`.
+
 ## State on 2026-10-08 (planner, 02:30 UTC)
 - 19 tasks landed in two and a half hours (all FH-* first-hour tasks, REL-001..004, LW-002 part 1, LW-003, QA-016, QA-018).
   Workers are fast: keep every role stocked with ~6 ready tasks and spec the top ones.
