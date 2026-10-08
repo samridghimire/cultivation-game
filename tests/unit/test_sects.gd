@@ -65,3 +65,48 @@ func test_leave_returns_to_rogue() -> void:
 	assert_eq(Sects.leave(c), "blood_lotus_sect")
 	assert_true(c.is_rogue())
 	assert_eq(Sects.cultivation_bonus(c, data()), 1.0)
+
+
+func _duty_member(month_earned: int = 0) -> CharacterData:
+	var c := new_character()
+	c.realm_index = 2
+	for sect: SectDef in data().sects.values():
+		for r in sect.ranks.size():
+			if c.is_rogue() and int(sect.ranks[r].get("monthly_duty", 0)) > 0:
+				c.sect = {"id": sect.id, "rank": r, "contribution": 0, "spent": 0, "month_earned": month_earned}
+	return c
+
+
+func test_duty_days_left_at_month_start_and_end() -> void:
+	var c := new_character()
+	c.age_days = 30 * 100
+	assert_eq(Sects.duty_days_left(c), 30)
+	c.age_days += 29
+	assert_eq(Sects.duty_days_left(c), 1)
+
+
+func test_duty_reminder_text_and_empty_cases() -> void:
+	var c := _duty_member(10)
+	c.age_days = 30 * 100 + 25
+	var duty := Sects.monthly_duty(c, data())
+	assert_eq(Sects.duty_reminder(c, data()), "Your sect duty is 10 / %d contribution with 5 days left this month." % duty)
+	c.sect["month_earned"] = duty
+	assert_eq(Sects.duty_reminder(c, data()), "")
+	c.sect["month_earned"] = 0
+	c.sect["duty_grace"] = true
+	assert_eq(Sects.duty_reminder(c, data()), "")
+	assert_eq(Sects.duty_reminder(new_character(), data()), "")
+
+
+func test_hints_show_duty_only_within_seven_days() -> void:
+	var c := _duty_member()
+	c.age_days = 30 * 100 + 10
+	var early := Guidance.hints(c, data(), 1.0, 99)
+	for h in early:
+		assert_false(h.begins_with("Your sect duty"))
+	c.age_days = 30 * 100 + 23
+	var late := Guidance.hints(c, data(), 1.0, 99)
+	var found := false
+	for h in late:
+		found = found or h.begins_with("Your sect duty")
+	assert_true(found)

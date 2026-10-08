@@ -2289,6 +2289,11 @@ func _on_days_advanced(days: int) -> void:
 		EventBus.topic = "world"
 		_world_events_month()
 		_sect_factions_month()
+	if months > 0 or Calendar.DAYS_PER_MONTH - age_before % Calendar.DAYS_PER_MONTH > Sects.DUTY_REMINDER_DAYS:
+		if Sects.duty_days_left(player) <= Sects.DUTY_REMINDER_DAYS:
+			var reminder := Sects.duty_reminder(player, data)
+			if reminder != "":
+				EventBus.post(reminder, "warning", "sect")
 	EventBus.topic = "family"
 	for event in Training.advance(player, npcs, data, months, ClanEstate.training_multiplier(clan, data)):
 		EventBus.post(event["text"], event["category"])

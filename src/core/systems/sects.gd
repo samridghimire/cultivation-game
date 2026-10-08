@@ -243,6 +243,23 @@ static func duty_progress(c: CharacterData) -> int:
 	return 0 if c.is_rogue() else int(c.sect.get("month_earned", 0))
 
 
+## Days left in the current sect month (months close on `age_days`).
+static func duty_days_left(c: CharacterData) -> int:
+	return Calendar.DAYS_PER_MONTH - c.age_days % Calendar.DAYS_PER_MONTH
+
+
+## Days left at which the duty reminder appears.
+const DUTY_REMINDER_DAYS := 7
+
+
+## "" for rogues, no duty, duty met or grace; else how much is still owed this month.
+static func duty_reminder(c: CharacterData, data: GameData) -> String:
+	var duty := monthly_duty(c, data)
+	if duty <= 0 or duty_progress(c) >= duty or bool(c.sect.get("duty_grace", false)):
+		return ""
+	return "Your sect duty is %d / %d contribution with %d days left this month." % [duty_progress(c), duty, duty_days_left(c)]
+
+
 ## The monthly stipend of `c`'s rank: {spirit_stones, items} ({} if none).
 static func stipend(c: CharacterData, data: GameData) -> Dictionary:
 	if c.is_rogue():

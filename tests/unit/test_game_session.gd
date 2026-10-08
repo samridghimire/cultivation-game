@@ -484,3 +484,37 @@ func test_journal_entries_on_new_game() -> void:
 	_start()
 	var entries: Array[Dictionary] = _game_state().journal_entries()
 	assert_false(entries.is_empty())
+
+
+func _duty_warnings() -> int:
+	var n := 0
+	for m: Dictionary in _root().get_node("EventBus").history:
+		if String(m["text"]).begins_with("Your sect duty is"):
+			n += 1
+	return n
+
+
+func _start_duty_member(earned: int) -> CharacterData:
+	var c := _start()
+	c.realm_index = 2
+	for sect: SectDef in _game_state().data.sects.values():
+		for r in sect.ranks.size():
+			if c.is_rogue() and int(sect.ranks[r].get("monthly_duty", 0)) > 0:
+				c.sect = {"id": sect.id, "rank": r, "contribution": 0, "spent": 0, "month_earned": earned}
+	c.age_days = 30 * 100 + 20
+	return c
+
+
+func test_duty_reminder_posts_once_when_seven_days_remain() -> void:
+	var c := _start_duty_member(0)
+	_game_state().cultivate(5)  # day 20 -> 25
+	assert_eq(_duty_warnings(), 1)
+	_game_state().cultivate(2)
+	assert_eq(_duty_warnings(), 1)
+
+
+func test_no_duty_reminder_when_duty_met() -> void:
+	var c := _start_duty_member(0)
+	c.sect["month_earned"] = Sects.monthly_duty(c, _game_state().data)
+	_game_state().cultivate(5)
+	assert_eq(_duty_warnings(), 0)

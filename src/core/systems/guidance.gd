@@ -26,6 +26,10 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 		out.append("Only %d %s of life remain. Break through to a higher realm or find a longevity treasure." % [years, "year" if years == 1 else "years"])
 	if Injuries.has_any(c):
 		out.append("Treat your injuries (%s): they slow your cultivation to x%s. Use a healing item or see a doctor." % [", ".join(Injuries.describe(c, data)), String.num(Injuries.cultivation_multiplier(c, data), 2)])
+	if Sects.duty_days_left(c) <= Sects.DUTY_REMINDER_DAYS:
+		var duty := Sects.duty_reminder(c, data)
+		if duty != "":
+			out.append(duty)
 	if Children.is_pregnant(c):
 		var days := int(c.pregnancy.get("days_left", 0))
 		out.append("A child is due in %s." % Calendar.format_duration(days))
@@ -190,6 +194,8 @@ static func journal(c: CharacterData, data: GameData, flags: Dictionary, today: 
 	if Cultivation.years_left(c, data) <= LIFESPAN_WARNING_YEARS:
 		urgent += 1
 	if Injuries.has_any(c):
+		urgent += 1
+	if Sects.duty_days_left(c) <= Sects.DUTY_REMINDER_DAYS and Sects.duty_reminder(c, data) != "":
 		urgent += 1
 	for i in hint_lines.size():
 		_add(out, "Next steps", hint_lines[i], "warning" if i < urgent else "normal")
