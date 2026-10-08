@@ -109,3 +109,25 @@ func _event_text(marks: Array[Dictionary]) -> String:
 		if m["kind"] == "event":
 			return String(m["text"])
 	return ""
+
+
+## WU-030: explore entries carry the outlook; the map lists foes with danger colors.
+func test_explore_options_describe_foes_in_misty_forest() -> void:
+	var gs := (Engine.get_main_loop() as SceneTree).root.get_node("GameState")
+	gs.start_session(new_character(11))
+	gs.current_region = "misty_forest"
+	var site: Node = load("res://src/world/interactables/explore_site.gd").new()
+	var options: Array[Dictionary] = site.get_options()
+	site.free()
+	assert_eq(options[0]["label"], "Explore")
+	var desc := String(options[0]["description"])
+	assert_true(desc.contains("Fights"), desc)
+	assert_eq(options[1]["description"], desc)
+	gs.end_session()
+
+
+func test_foes_bbcode_colors_each_danger() -> void:
+	var text := WorldMapScreen.foes_bbcode([{"name": "Wolf", "danger": "Weak"}, {"name": "Tiger", "danger": "Deadly"}])
+	assert_true(text.contains("Wolf (Weak)") and text.contains("Tiger (Deadly)"))
+	assert_true(text.contains("[color=#%s]" % UIStyle.danger_color("Deadly").to_html(false)))
+	assert_eq(WorldMapScreen.foes_bbcode([]), "")

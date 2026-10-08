@@ -32,6 +32,7 @@ var _info: Label
 var _description: Label
 var _places: Label
 var _marks: Label
+var _foes: RichTextLabel
 var _routes: Label
 var _close_button: Button
 var _selected := ""
@@ -77,6 +78,13 @@ func _init() -> void:
 	details.add_child(_description)
 	_places = _wrapped(UIStyle.label("", 15))
 	details.add_child(_places)
+	_foes = RichTextLabel.new()
+	_foes.bbcode_enabled = true
+	_foes.fit_content = true
+	_foes.scroll_active = false
+	_foes.add_theme_font_size_override("normal_font_size", 15)
+	_foes.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	details.add_child(_foes)
 	_marks = _wrapped(UIStyle.label("", 15, Color(0.85, 0.85, 0.95)))
 	details.add_child(_marks)
 	_routes = _wrapped(UIStyle.label("", 15, UIStyle.CATEGORY_COLORS["progress"]))
@@ -194,6 +202,15 @@ static func region_marks(c: CharacterData, data: GameData, people: Dictionary, e
 	return marks
 
 
+## Foes met while exploring the current region, as BBCode with each danger colored (WU-030).
+static func foes_bbcode(foes: Array) -> String:
+	var parts := PackedStringArray()
+	for foe: Dictionary in foes:
+		var danger := String(foe["danger"])
+		parts.append("[color=#%s]%s (%s)[/color]" % [UIStyle.danger_color(danger).to_html(false), foe["name"], danger])
+	return "" if parts.is_empty() else "You may meet: " + ", ".join(parts)
+
+
 static func danger_name(data: GameData, region_id: String) -> String:
 	var danger := int(data.regions.get(region_id, {}).get("danger", 0))
 	return DANGER_NAMES[clampi(danger, 0, DANGER_NAMES.size() - 1)]
@@ -291,6 +308,12 @@ func _show_details() -> void:
 	_description.text = String(region.get("description", ""))
 	var places := place_names(data, _selected)
 	_places.text = "Places: " + (", ".join(places) if not places.is_empty() else "none known")
+	var foes_text := ""
+	if _selected == GameState.current_region:
+		var tags: Array = region.get("encounter_tags", []) + WorldEvents.encounter_tags(data, GameState.world_events, _selected)
+		foes_text = foes_bbcode(Exploration.outlook(GameState.player, data, tags, GameState.world_flags)["foes"])
+	_foes.text = foes_text
+	_foes.visible = foes_text != ""
 	var marks := region_marks(GameState.player, data, GameState.npcs, GameState.world_events, GameClock.total_days, _selected, GameState.current_region)
 	_marks.visible = not marks.is_empty()
 	_marks.text = "\n".join(marks.map(func(m: Dictionary) -> String: return "• " + String(m["text"])))
