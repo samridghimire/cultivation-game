@@ -75,6 +75,7 @@ static func button(text: String, on_pressed: Callable) -> Button:
 	# An empty Callable means the caller connects its own handler (e.g. one bound to the button).
 	if on_pressed.is_valid():
 		b.pressed.connect(on_pressed)
+	b.pressed.connect(func() -> void: Audio.play("press"))
 	return b
 
 

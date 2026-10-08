@@ -20,6 +20,7 @@ GameClock="*res://src/autoload/game_clock.gd"
 GameState="*res://src/autoload/game_state.gd"
 SaveManager="*res://src/autoload/save_manager.gd"
 Settings="*res://src/autoload/settings.gd"
+Audio="*res://src/autoload/audio.gd"
 
 [display]
 
