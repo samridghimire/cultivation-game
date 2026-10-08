@@ -106,6 +106,26 @@ static func dodge_chance(defender_speed: int, attacker_speed: int) -> float:
 	return clampf((defender_speed - attacker_speed) * 0.02, 0.0, MAX_DODGE)
 
 
+## A hit below this share of the target's max hp is "a glancing blow"; below
+## BLOW_SOLID plain; below BLOW_CRUSHING "a solid blow"; otherwise "a crushing blow".
+const BLOW_GLANCING := 0.08
+const BLOW_SOLID := 0.20
+const BLOW_CRUSHING := 0.35
+
+
+## ": a crushing blow" for a hit of `damage` against `max_hp` (plain hits give "").
+## Never touches an rng.
+static func blow_phrase(damage: int, max_hp: int) -> String:
+	var share := float(damage) / float(maxi(1, max_hp))
+	if share < BLOW_GLANCING:
+		return ": a glancing blow"
+	if share < BLOW_SOLID:
+		return ""
+	if share < BLOW_CRUSHING:
+		return ": a solid blow"
+	return ": a crushing blow"
+
+
 ## Fights to the end. Returns {victory, draw, escaped, rounds, log, player_hp,
 ## player_max_hp, enemy_hp, enemy_max_hp, talismans_used}. Readied combat
 ## talismans (CombatTalismans) strike first, shield the player, or turn a
@@ -167,7 +187,7 @@ static func resolve(c: CharacterData, data: GameData, enemy: Dictionary, rng: Ra
 					lines.append("%s evades your strike." % foe_cap)
 				else:
 					var move := "" if player_moves.is_empty() else " with " + player_moves[(rounds - 1) % player_moves.size()]
-					lines.append("You strike%s%s for %d. (%s: %d hp)" % [move, " critically" if hit["crit"] else "", hit["damage"], foe_cap, maxi(enemy_hp, 0)])
+					lines.append("You strike%s%s%s for %d. (%s: %d hp)" % [move, " critically" if hit["crit"] else "", blow_phrase(int(hit["damage"]), int(e["max_hp"])), hit["damage"], foe_cap, maxi(enemy_hp, 0)])
 			else:
 				var absorbed := mini(shield, int(hit["damage"]))
 				shield -= absorbed
@@ -178,16 +198,19 @@ static func resolve(c: CharacterData, data: GameData, enemy: Dictionary, rng: Ra
 					lines.append("You evade %s's attack." % foe)
 				else:
 					if enemy_moves.is_empty():
-						lines.append("%s hits you%s for %d. (You: %d hp)" % [foe_cap, " critically" if hit["crit"] else "", hit["damage"], maxi(player_hp, 0)])
+						lines.append("%s hits you%s%s for %d. (You: %d hp)" % [foe_cap, " critically" if hit["crit"] else "", blow_phrase(int(hit["damage"]), int(p["max_hp"])), hit["damage"], maxi(player_hp, 0)])
 					else:
-						lines.append("%s attacks with %s%s for %d. (You: %d hp)" % [foe_cap, enemy_moves[(rounds - 1) % enemy_moves.size()], " critically" if hit["crit"] else "", hit["damage"], maxi(player_hp, 0)])
+						lines.append("%s attacks with %s%s%s for %d. (You: %d hp)" % [foe_cap, enemy_moves[(rounds - 1) % enemy_moves.size()], " critically" if hit["crit"] else "", blow_phrase(int(hit["damage"]), int(p["max_hp"])), hit["damage"], maxi(player_hp, 0)])
 			trace.append([maxi(player_hp, 0), maxi(enemy_hp, 0)])
 	var victory := enemy_hp <= 0
 	var draw := not victory and player_hp > 0
 	var escapes := CombatTalismans.available(c, data, "escape")
 	var escaped := not victory and not draw and not escapes.is_empty()
 	if victory:
-		lines.append("You defeat %s!" % foe)
+		if bool(enemy.get("spar", false)) or (bool(enemy.get("proper_name", false)) and not bool(enemy.get("lethal", false))):
+			lines.append("%s yields." % foe_cap)
+		else:
+			lines.append("%s collapses." % foe_cap)
 	elif draw:
 		lines.append("Neither side can finish the fight. You disengage.")
 	elif escaped:
@@ -195,7 +218,7 @@ static func resolve(c: CharacterData, data: GameData, enemy: Dictionary, rng: Ra
 		player_hp = 1
 		lines.append("On the brink of death you burn %s and flee from %s!" % [Text.a(_item_name(data, escapes[0])), foe])
 	else:
-		lines.append("You are defeated by %s." % foe)
+		lines.append("You fall." if bool(enemy.get("lethal", false)) else "You are beaten down.")
 	while trace.size() < lines.size():
 		trace.append([maxi(player_hp, 0), maxi(enemy_hp, 0)])
 	return {

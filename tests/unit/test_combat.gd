@@ -231,3 +231,56 @@ func test_trace_matches_log_and_final_hp() -> void:
 	assert_eq(last[0], r["player_hp"])
 	assert_eq(last[1], r["enemy_hp"])
 
+
+
+# --- CMB-003: fights read with weight ----------------------------------------
+
+func test_blow_phrase_thresholds() -> void:
+	assert_eq(Combat.blow_phrase(1, 100), ": a glancing blow")
+	assert_eq(Combat.blow_phrase(10, 100), "")
+	assert_eq(Combat.blow_phrase(25, 100), ": a solid blow")
+	assert_eq(Combat.blow_phrase(40, 100), ": a crushing blow")
+
+
+func test_fight_log_has_weighted_blows_and_finishing_line() -> void:
+	var c := new_character()
+	var boar: Dictionary = data().enemies["wild_boar"].duplicate(true)
+	var r := Combat.resolve(c, data(), boar, seeded_rng())
+	var text := "\n".join(r["log"])
+	assert_true(text.contains("blow"), text)
+	var last := String(r["log"][r["log"].size() - 1])
+	if r["victory"]:
+		assert_true(last.ends_with("collapses."), last)
+	elif r["draw"] or r["escaped"]:
+		assert_false(last.contains("collapses"))
+	else:
+		assert_eq(last, "You are beaten down.")
+	assert_eq(r["trace"].size(), r["log"].size())
+
+
+func test_finishing_lines_by_outcome() -> void:
+	var c := new_character()
+	var weak: Dictionary = data().enemies["wild_boar"].duplicate(true)
+	weak["attack"] = 1
+	weak["hp"] = 1
+	weak["spar"] = true
+	var r := Combat.resolve(c, data(), weak, seeded_rng())
+	if r["victory"]:
+		assert_true(String(r["log"][r["log"].size() - 1]).ends_with("yields."))
+	var deadly: Dictionary = data().enemies["wild_boar"].duplicate(true)
+	deadly["lethal"] = true
+	deadly["hp"] = 100000
+	deadly["attack"] = 100000
+	var r2 := Combat.resolve(c, data(), deadly, seeded_rng())
+	assert_eq(String(r2["log"][r2["log"].size() - 1]), "You fall.")
+	assert_eq(r2["trace"].size(), r2["log"].size())
+
+
+func test_wording_does_not_change_the_fight() -> void:
+	var c := new_character()
+	var boar: Dictionary = data().enemies["wild_boar"]
+	var a := Combat.resolve(c, data(), boar, seeded_rng())
+	var b := Combat.resolve(c, data(), boar, seeded_rng())
+	assert_eq(a["victory"], b["victory"])
+	assert_eq(a["rounds"], b["rounds"])
+	assert_eq(a["player_hp"], b["player_hp"])

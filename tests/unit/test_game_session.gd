@@ -414,7 +414,7 @@ func test_fight_summary_is_one_line_with_its_spoils() -> void:
 	var lines: Array = bus.history.slice(before).map(func(e: Dictionary) -> String: return e["text"])
 	for line: String in lines:
 		assert_false(line.begins_with("("), "spoils are not posted as an orphan line: %s" % line)
-	var summary: Array = lines.filter(func(l: String) -> bool: return l.begins_with("You defeat the Wild Boar!"))
+	var summary: Array = lines.filter(func(l: String) -> bool: return l.begins_with("The Wild Boar collapses."))
 	assert_eq(summary.size(), 1, str(lines))
 	assert_true(String(summary[0]).contains("Boar Hide"), "the spoils ride on the summary: %s" % summary[0])
 	assert_true(String(summary[0]).contains(" round, ") or String(summary[0]).contains(" rounds, "), summary[0])
