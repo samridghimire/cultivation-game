@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 3c067b3
+Last reviewed commit: 9f0fade
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -63,3 +63,16 @@ Last reviewed commit: 3c067b3
     call mission is on cooldown posts "calls on its senior disciples", which reads oddly for a senior. Sect clashes can
     kill the player's spouse/descendants in sects (only recruitment reserves them); acceptable as world drama but worth
     a design check. Commissions can't be delivered in-game until WU-013 lands.
+- 2026-10-08 (reviewer, 4th run): reviewed 3c067b3..9f0fade (WU-010, QA-026, WU-013, ECON-001, QA-007g; [REVIEW] commits skipped).
+  Main green (1079 tests). No BACKLOG/CHANGELOG edits by workers; no persistent-state or SAVE_VERSION changes. WU-010,
+  QA-026, WU-013 and QA-007g match their specs; no code fixes needed.
+  - Filed P0 RV-009: ECON-001 hit its income target by making gather rolls miss 73-96% of the time at the higher
+    places (min_realm-locked entries count as misses), so a pre-Core 20-day Thunder-Struck Terraces trip finds nothing
+    ~88% of the time. Cut income through item value / yields instead, and add a miss-chance test.
+  - QA-007g: purge_demonic_cultivator gated at Foundation stage 1 (69% win). Rogue Cultivator now 87%, slightly above
+    the 60-85% band; acceptable.
+  - WU-010: swapping players on each mood change and killing the running tween handles rapid region hops; focus pause
+    covers both players. WU-013: entries are index-bound but the menu rebuilds after each `keep_open` action, so the
+    indices stay valid after a delivery; gamepad focus comes from ChoiceMenu.
+  - Notes, not filed: a disabled Deliver label repeats the count ("(you have 0) (You need 3 more ...)") and gets long
+    on narrow screens; QA-026's "disciple" journal case holds no missions, so the missions section is not exercised.
