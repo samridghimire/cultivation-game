@@ -15,6 +15,15 @@ static func region_name(data: GameData, region_id: String) -> String:
 	return data.regions.get(region_id, {}).get("name", region_id)
 
 
+## A flavour line for a quiet exploring day (C-029): deterministic by day number,
+## draws no randomness. "" when the region defines none.
+static func quiet_line(data: GameData, region_id: String, day: int) -> String:
+	var lines: Array = data.regions.get(region_id, {}).get("quiet_lines", [])
+	if lines.is_empty():
+		return ""
+	return String(lines[posmod(day, lines.size())])
+
+
 static func qi_density(data: GameData, region_id: String) -> float:
 	return float(data.regions.get(region_id, {}).get("qi_density", 1.0))
 

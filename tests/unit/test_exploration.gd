@@ -297,3 +297,17 @@ func test_every_gather_place_finds_something_at_least_half_the_rolls() -> void:
 			assert_true(found / maxf(total, 0.001) >= 0.5, "%s: a roll finds something >= 50%% of the time (%.2f)" % [place.get("display_name", "?"), found / maxf(total, 0.001)])
 			checked += 1
 	assert_gt(checked, 0, "gather places checked")
+
+
+## C-029: quiet days have deterministic flavour lines.
+func test_quiet_line_is_stable_per_day_and_varies() -> void:
+	var d := data()
+	var region_id := "misty_forest"
+	assert_true(((d.regions[region_id]["quiet_lines"]) as Array).size() >= 2)
+	var today := Exploration.quiet_line(d, region_id, 100)
+	assert_true(today != "")
+	assert_eq(Exploration.quiet_line(d, region_id, 100), today)
+	assert_true(Exploration.quiet_line(d, region_id, 101) != today)
+	assert_eq(Exploration.quiet_line(d, "no_such_region", 5), "")
+	for region: Dictionary in d.regions.values():
+		assert_true((region.get("quiet_lines", []) as Array).size() >= 6, "%s needs quiet lines" % region["id"])

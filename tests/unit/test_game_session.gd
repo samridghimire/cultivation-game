@@ -486,6 +486,8 @@ func test_explore_many_quiet_days_post_one_summary() -> void:
 	var text := "\n".join(_zero_round_posts)
 	assert_true(text.contains("find nothing of note"), text)
 	assert_false(text.contains("You search the area"), text)
+	var lines: Array = gs.data.regions[gs.current_region]["quiet_lines"]
+	assert_true(lines.any(func(l): return text.ends_with(String(l))), text)
 	gs.end_session()
 
 

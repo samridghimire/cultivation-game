@@ -400,6 +400,10 @@ func _validate_world() -> void:
 				load_errors.append("Region '%s' has a route to unknown region '%s'" % [region["id"], route.get("to", "")])
 			if route.has("min_realm") and realm_index_of(route["min_realm"]) < 0:
 				load_errors.append("Region '%s' route has unknown min_realm '%s'" % [region["id"], route["min_realm"]])
+		if region.has("quiet_lines"):
+			var quiet: Variant = region["quiet_lines"]
+			if not (quiet is Array and (quiet as Array).all(func(v): return v is String and (v as String).strip_edges() != "")):
+				load_errors.append("Region '%s' quiet_lines must be an array of non-empty strings" % region["id"])
 		if region.has("map_pos"):
 			var map_pos: Variant = region["map_pos"]
 			if not (map_pos is Array and (map_pos as Array).size() == 2 and (map_pos as Array).all(func(v): return (v is float or v is int) and v >= 0.0 and v <= 1.0)):

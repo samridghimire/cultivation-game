@@ -543,7 +543,7 @@ func explore_many(max_days: int, tags: Array = []) -> int:
 			break
 		quiet_days += 1
 	if quiet_days > 0 and _can_act():
-		EventBus.post("You explore for %s and find nothing of note." % Calendar.format_duration(quiet_days))
+		EventBus.post(("You explore for %s and find nothing of note. %s" % [Calendar.format_duration(quiet_days), Exploration.quiet_line(data, current_region, GameClock.total_days)]).strip_edges())
 	return days
 
 
@@ -567,7 +567,7 @@ func _explore_once(tags: Array, quiet: bool) -> Dictionary:
 	var encounter := Exploration.roll_encounter(player, data, tags, world_flags, rng, Rivals.rival_of(player, npcs), 1.0 - ClanEstate.ward(clan, data, current_region))
 	if encounter.is_empty():
 		if not quiet:
-			EventBus.post("You search the area but find nothing.")
+			EventBus.post(("You search the area but find nothing. %s" % Exploration.quiet_line(data, current_region, GameClock.total_days)).strip_edges())
 		_pass_time(1)
 		return {"event": "nothing"}
 	LifeStats.add(player, "encounters")
