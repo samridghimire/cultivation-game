@@ -420,6 +420,11 @@ func _validate_world() -> void:
 		for key in ["min_realm", "max_realm"]:
 			if e.has(key) and realm_index_of(e[key]) < 0:
 				load_errors.append("Encounter '%s' has unknown %s '%s'" % [e["id"], key, e[key]])
+		if e.has("min_stage"):
+			if not e.has("min_realm") or realm_index_of(e["min_realm"]) < 0:
+				load_errors.append("Encounter '%s' has min_stage without min_realm" % e["id"])
+			elif int(e["min_stage"]) < 0 or int(e["min_stage"]) >= realms[realm_index_of(e["min_realm"])].stage_count():
+				load_errors.append("Encounter '%s' has min_stage %d outside its min_realm's stages" % [e["id"], int(e["min_stage"])])
 		for item_id in e.get("effects", {}).get("items", {}):
 			if not items.has(item_id):
 				load_errors.append("Encounter '%s' references unknown item '%s'" % [e["id"], item_id])

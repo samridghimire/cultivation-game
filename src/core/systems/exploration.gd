@@ -52,6 +52,20 @@ static func check_travel(c: CharacterData, data: GameData, from_id: String, to_i
 	return {"ok": false, "reason": "There is no road from here to %s." % region_name(data, to_id), "days": 0}
 
 
+## True when `c`'s realm (and, inside min_realm, stage) fits the encounter's
+## min_realm / min_stage / max_realm.
+static func realm_allows(c: CharacterData, data: GameData, e: Dictionary) -> bool:
+	if e.has("min_realm"):
+		var min_index := data.realm_index_of(e["min_realm"])
+		if c.realm_index < min_index:
+			return false
+		if e.has("min_stage") and c.realm_index == min_index and c.stage < int(e["min_stage"]):
+			return false
+	if e.has("max_realm") and c.realm_index > data.realm_index_of(e["max_realm"]):
+		return false
+	return true
+
+
 ## Encounters that can happen for a place with `tags`, each paired with its
 ## Fortune-adjusted weight: [{encounter, weight}]. `rival` is `c`'s living
 ## rival (Rivals) or null; encounters with a `rival` condition need one.
@@ -62,9 +76,7 @@ static func eligible_encounters(c: CharacterData, data: GameData, tags: Array, f
 	for e: Dictionary in data.encounters.values():
 		if not _shares_tag(e.get("tags", []), tags):
 			continue
-		if e.has("min_realm") and c.realm_index < data.realm_index_of(e["min_realm"]):
-			continue
-		if e.has("max_realm") and c.realm_index > data.realm_index_of(e["max_realm"]):
+		if not realm_allows(c, data, e):
 			continue
 		if not alignment_allows(c, e):
 			continue

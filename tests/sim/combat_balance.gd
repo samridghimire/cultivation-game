@@ -168,17 +168,17 @@ static func appearances(data: GameData) -> Array[Dictionary]:
 		var min_realm := maxi(0, data.realm_index_of(String(enc.get("min_realm", "mortal"))))
 		if enc.has("enemy"):
 			var enemy_id := String(enc["enemy"])
-			out.append({"enemy": enemy_id, "source": "encounter " + enc_id, "realm_index": min_realm, "forced": not data.enemies.get(enemy_id, {}).get("lethal", false)})
+			out.append({"enemy": enemy_id, "source": "encounter " + enc_id, "realm_index": min_realm, "stage": int(enc.get("min_stage", 0)), "forced": not data.enemies.get(enemy_id, {}).get("lethal", false)})
 		for choice: Dictionary in enc.get("choices", []):
 			if not choice.has("enemy"):
 				continue
 			var need := String(choice.get("requires", {}).get("min_realm", "mortal"))
-			out.append({"enemy": String(choice["enemy"]), "source": "choice %s/%s" % [enc_id, choice.get("label", "?")], "realm_index": maxi(min_realm, data.realm_index_of(need)), "forced": true})
+			out.append({"enemy": String(choice["enemy"]), "source": "choice %s/%s" % [enc_id, choice.get("label", "?")], "realm_index": maxi(min_realm, data.realm_index_of(need)), "stage": int(enc.get("min_stage", 0)) if data.realm_index_of(need) <= min_realm else 0, "forced": true})
 	for mission_id: String in data.sect_missions:
 		var mission: Dictionary = data.sect_missions[mission_id]
 		if String(mission.get("enemy", "")) == "":
 			continue
-		out.append({"enemy": String(mission["enemy"]), "source": "mission " + mission_id, "realm_index": maxi(0, data.realm_index_of(String(mission.get("min_realm", "mortal")))), "forced": true})
+		out.append({"enemy": String(mission["enemy"]), "source": "mission " + mission_id, "realm_index": maxi(0, data.realm_index_of(String(mission.get("min_realm", "mortal")))), "stage": int(mission.get("min_stage", 0)), "forced": true})
 	_add_secret_realm_guardians(data, out)
 	_add_inheritance_trials(data, out)
 	_add_world_event_foes(data, out)
@@ -243,18 +243,19 @@ static func _add_sect_trials(data: GameData, out: Array[Dictionary]) -> void:
 
 
 ## Win rates at the first realm an appearance allows: a typical player entering
-## it (stage 0), at its peak (last stage) and entering it with talismans, and a
+## it at its gate (stage 0, or the appearance's min_stage), at its peak (last stage) and entering it with talismans, and a
 ## bare player entering it.
 static func rate(data: GameData, appearance: Dictionary, samples: int) -> Dictionary:
 	var enemy: Dictionary = data.enemies.get(appearance["enemy"], {})
 	var realm: int = appearance["realm_index"]
 	var peak_stage := data.realms[realm].stage_count() - 1
 	var scaled: bool = appearance.get("scaled", false)
-	var entry := win_rate(typical_player(data, realm, 0), data, _scaled(data, enemy, realm, 0, scaled), samples)
+	var gate: int = appearance.get("stage", 0)
+	var entry := win_rate(typical_player(data, realm, gate), data, _scaled(data, enemy, realm, gate, scaled), samples)
 	var peak := win_rate(typical_player(data, realm, peak_stage), data, _scaled(data, enemy, realm, peak_stage, scaled), samples)
-	var talisman := win_rate(typical_player(data, realm, 0, true), data, _scaled(data, enemy, realm, 0, scaled), samples)
-	var bare := win_rate(bare_player(data, realm, 0), data, _scaled(data, enemy, realm, 0, scaled), samples)
-	var veteran := win_rate(veteran_player(data, realm, 0), data, _scaled(data, enemy, realm, 0, scaled), samples)
+	var talisman := win_rate(typical_player(data, realm, gate, true), data, _scaled(data, enemy, realm, gate, scaled), samples)
+	var bare := win_rate(bare_player(data, realm, gate), data, _scaled(data, enemy, realm, gate, scaled), samples)
+	var veteran := win_rate(veteran_player(data, realm, gate), data, _scaled(data, enemy, realm, gate, scaled), samples)
 	return {"entry": entry, "veteran": veteran, "peak": peak, "talisman": talisman, "bare": bare, "verdict": verdict(entry, peak)}
 
 

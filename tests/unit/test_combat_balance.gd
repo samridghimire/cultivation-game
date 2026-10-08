@@ -38,6 +38,19 @@ func test_appearances_cover_encounters_and_missions() -> void:
 
 ## QA-027: every fight source is in the sim: secret realm floors, inheritance
 ## trials, world event defences and sect rank trials, not only encounters and missions.
+func test_appearances_carry_the_gate_stage() -> void:
+	var d := data()
+	var mission_id := ""
+	for id: String in d.sect_missions:
+		if d.sect_missions[id].has("min_stage") and String(d.sect_missions[id].get("enemy", "")) != "":
+			mission_id = id
+			break
+	assert_true(mission_id != "", "no mission with a min_stage and enemy")
+	for a: Dictionary in Balance.appearances(d):
+		if a["source"] == "mission " + mission_id:
+			assert_eq(a["stage"], int(d.sect_missions[mission_id]["min_stage"]))
+
+
 func test_appearances_cover_every_enemy() -> void:
 	var seen := {}
 	var kinds := {}

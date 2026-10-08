@@ -53,6 +53,32 @@ func test_encounters_respect_realm_and_flags() -> void:
 	assert_true(ids.has("village_lost_coin"))
 
 
+func test_encounter_min_stage_gates_within_min_realm() -> void:
+	var d := GameData.load_from_dir()
+	d.encounters["stage_test"] = {"id": "stage_test", "tags": ["stage_tag"], "weight": 1, "min_realm": "qi_refining", "min_stage": 4}
+	var c := new_character()
+	c.realm_index = d.realm_index_of("qi_refining")
+	c.stage = 3
+	assert_eq(Exploration.eligible_encounters(c, d, ["stage_tag"], {}).size(), 0)
+	c.stage = 4
+	assert_eq(Exploration.eligible_encounters(c, d, ["stage_tag"], {}).size(), 1)
+	c.realm_index = d.realm_index_of("foundation_establishment")
+	c.stage = 0
+	assert_eq(Exploration.eligible_encounters(c, d, ["stage_tag"], {}).size(), 1)
+
+
+func test_encounter_min_stage_is_validated() -> void:
+	var d := GameData.load_from_dir()
+	var before := d.load_errors.size()
+	d.encounters["bad_a"] = {"id": "bad_a", "tags": ["x"], "min_stage": 1}
+	d.encounters["bad_b"] = {"id": "bad_b", "tags": ["x"], "min_realm": "qi_refining", "min_stage": 99}
+	d._validate_world()
+	var text := ", ".join(d.load_errors)
+	assert_true(text.contains("'bad_a' has min_stage without min_realm"), text)
+	assert_true(text.contains("'bad_b' has min_stage 99 outside"), text)
+	assert_eq(d.load_errors.size(), before + 2, text)
+
+
 func test_fortune_shifts_weights() -> void:
 	var lucky := new_character()
 	lucky.attributes["fortune"] = 20
