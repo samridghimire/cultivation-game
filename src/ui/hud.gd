@@ -46,9 +46,10 @@ var _family: FamilyScreen
 var _child_training: ChildTrainingScreen
 var _banner: Banner
 var _time_skip: TimeSkipOverlay
+var _pending_year: Array = []  # [year, lines] waiting for a free screen (WU-031)
 ## The time-skip summary on screen, kept across the scene reload that travel
 ## triggers so the new HUD can finish showing it ({} = none).
-static var _showing_skip: Dictionary = {}
+var _showing_skip: Dictionary = {}
 var _respawn: RespawnScreen
 var _tribulation: TribulationScreen
 var _death_screen: Control
@@ -124,6 +125,7 @@ func _ready() -> void:
 	_pause_menu.journal_requested.connect(_open_journal)
 	_respawn = RespawnScreen.new()
 	_respawn.closed.connect(_update_modal)
+	_respawn.closed.connect(_flush_year_review)
 	add_child(UIStyle.centered(_respawn))
 	_combat_report.closed.connect(_open_pending_respawn)
 	_tribulation = TribulationScreen.new()
@@ -167,6 +169,7 @@ func _ready() -> void:
 	EventBus.encounter_choice_resolved.connect(_encounter.close)
 	EventBus.threat_sensed.connect(_on_threat_sensed)
 	EventBus.time_skipped.connect(_on_time_skipped)
+	EventBus.year_reviewed.connect(_on_year_reviewed)
 	EventBus.milestone_reached.connect(_on_milestone)
 	_refresh()
 	# A respawn that moved the player reloads the world; ask where to awaken now.
@@ -546,6 +549,26 @@ func _show_time_skip(summary: Dictionary) -> void:
 func _on_time_skip_closed() -> void:
 	_showing_skip = {}
 	_update_modal()
+	_flush_year_review()
+
+
+## Yearly recap (WU-031): queued, then shown by a deferred flush so a time-skip overlay
+## that follows the same action goes first; death/respawn screens hold it back.
+func _on_year_reviewed(year: int, lines: PackedStringArray) -> void:
+	if not Settings.get_value("yearly_recap") or lines.is_empty():
+		return
+	_pending_year = [year, lines]
+	_flush_year_review.call_deferred()
+
+
+func _flush_year_review() -> void:
+	if _pending_year.is_empty() or _time_skip.visible or _respawn.visible or _death_screen.visible or not GameState.pending_respawn.is_empty():
+		return
+	if GameState.player == null or not GameState.player.alive:
+		return
+	var lines: PackedStringArray = _pending_year[1]
+	_banner.announce("Year %d of your journey" % int(_pending_year[0]), "\n".join(lines), UIStyle.ACCENT, 4.0)
+	_pending_year = []
 
 
 ## Loaded-save card (WU-025): the recap lines, shown once when the HUD boots after a load.

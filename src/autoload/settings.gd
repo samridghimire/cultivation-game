@@ -23,6 +23,8 @@ const DEFAULTS := {
 	"fast_time_skips": false,
 	# Silent autosave on travel, breakthrough, each month and window close (REL-001).
 	"autosave": true,
+	# Banner card with the year's review on each new year (WU-031).
+	"yearly_recap": true,
 }
 
 var path := DEFAULT_PATH
@@ -65,8 +67,8 @@ static func sanitize(key: String, value: Variant) -> Variant:
 			return clampf(float(value), UI_SCALE_RANGE.x, UI_SCALE_RANGE.y)
 		"hud_hints":
 			return clampi(int(value), 0, 3) if value is int or value is float else DEFAULTS["hud_hints"]
-		"autosave":
-			return value if value is bool else DEFAULTS["autosave"]
+		"autosave", "yearly_recap":
+			return value if value is bool else DEFAULTS[key]
 		"fast_time_skips":
 			return (value is bool and value) or str(value).to_lower() == "true"
 		_:

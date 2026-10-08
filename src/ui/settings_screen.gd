@@ -18,6 +18,7 @@ const SLIDERS := [
 var _fullscreen: CheckButton
 var _hints: OptionButton
 var _autosave: CheckButton
+var _yearly_recap: CheckButton
 var _fast_skips: CheckButton
 var _sliders: Dictionary = {}  # setting key -> HSlider
 var _value_labels: Dictionary = {}  # setting key -> Label
@@ -64,6 +65,11 @@ func _init() -> void:
 	_autosave.add_theme_font_size_override("font_size", 18)
 	_autosave.toggled.connect(func(on: bool): Settings.set_value("autosave", on))
 	box.add_child(_autosave)
+	_yearly_recap = CheckButton.new()
+	_yearly_recap.text = "Yearly recap (card with your year in review)"
+	_yearly_recap.add_theme_font_size_override("font_size", 18)
+	_yearly_recap.toggled.connect(func(on: bool): Settings.set_value("yearly_recap", on))
+	box.add_child(_yearly_recap)
 
 	_fast_skips = CheckButton.new()
 	_fast_skips.text = "Fast time skips (no meditation/travel overlay)"
@@ -268,6 +274,7 @@ func _sync() -> void:
 	_fullscreen.set_pressed_no_signal(Settings.get_value("window_mode") == "fullscreen")
 	_hints.select(int(Settings.get_value("hud_hints")))
 	_autosave.set_pressed_no_signal(Settings.get_value("autosave"))
+	_yearly_recap.set_pressed_no_signal(Settings.get_value("yearly_recap"))
 	_fast_skips.set_pressed_no_signal(Settings.get_value("fast_time_skips"))
 	for key in _sliders:
 		_sliders[key].set_value_no_signal(Settings.get_value(key))
