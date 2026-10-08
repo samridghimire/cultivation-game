@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: de04a40
+Last reviewed commit: ba0f095
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -92,3 +92,16 @@ Last reviewed commit: de04a40
     (3) QA-027 found jade_python, blood_lotus_elder and cloud_devouring_condor unbeatable at min_realm and four
     inheritance foes TRIVIAL; it is in the commit's Follow-ups for the planner (balance, not a bug). (4) MS-003's
     milestones count only from now on: veterans who already cleared floors/claimed inheritances must do it again.
+- 2026-10-08 (reviewer, 6th run): reviewed de04a40..ba0f095 (GUIDE-003, PROF-002, C-014, WU-015, WU-016, REL-005,
+  GUIDE-006, RECAP-001, WU-022, NS-004, NS-002b, WU-023, QA-20261008-1, WU-025, GUIDE-004; [PLAN]/[REVIEW] skipped).
+  Main green (1125 tests). No BACKLOG/CHANGELOG edits by workers; no persistent-state or SAVE_VERSION changes.
+  - Fixed in one [REVIEW] commit: GUIDE-004's journal line read "Your Fields Boar has outgrown you" when the player has
+    outgrown the beast; now "You have outgrown your Fields Boar"; test tightened.
+  - Checked: every errand's asked/done flag is set by its NPC dialogue and the named herbs are gatherable where the
+    text says; PROF-002 lapse warnings fire once per order (crossing the 7-day mark); WU-022 disabled options are
+    focusable but inert and initial focus still skips them; WU-015 LT label works through the RT fallback from the
+    last review; NS-002b flawless pills mirror the Foundation one (breakthrough_realm set).
+  - Notes, not filed: (1) GUIDE-006 ignores the sect hall bonus and sect-only grounds when comparing qi (hint only).
+    (2) WU-025 clears `load_recap` only when a HUD boots; if a quick-load doesn't rebuild the HUD the card can
+    show late, harmless. (3) Most menu options still carry the reason only in the label, not in `reason`, so
+    WU-022's description line is blank for them; fine since the label already says it.
