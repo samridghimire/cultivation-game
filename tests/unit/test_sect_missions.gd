@@ -56,15 +56,15 @@ func test_mission_requirements() -> void:
 
 func test_mission_min_stage() -> void:
 	var c := _disciple("blood_lotus_sect")
-	var stage := int(data().sect_missions["harvest_rogue_cultivator"]["min_stage"])
-	assert_gt(stage, 0, "the rogue cultivator hunt waits for a later layer")
+	var stage := int(data().sect_missions["cull_mist_wolves"]["min_stage"])
+	assert_gt(stage, 0, "the mist wolf hunt waits for a later layer")
 	c.stage = stage - 1
-	assert_true(Sects.check_mission(c, data(), "harvest_rogue_cultivator").contains(data().realms[1].stage_label(stage)), "names the stage needed")
+	assert_true(Sects.check_mission(c, data(), "cull_mist_wolves").contains(data().realms[1].stage_label(stage)), "names the stage needed")
 	c.stage = stage
-	assert_eq(Sects.check_mission(c, data(), "harvest_rogue_cultivator"), "")
+	assert_eq(Sects.check_mission(c, data(), "cull_mist_wolves"), "")
 	c.realm_index = 2
 	c.stage = 0
-	assert_eq(Sects.check_mission(c, data(), "harvest_rogue_cultivator"), "", "a higher realm always qualifies")
+	assert_eq(Sects.check_mission(c, data(), "cull_mist_wolves"), "", "a higher realm always qualifies")
 
 
 func test_mission_danger() -> void:
@@ -156,4 +156,4 @@ func test_mission_content_spans_realms() -> void:
 		assert_true(count >= 2, "%s has %d Core Formation missions" % [sect_id, count])
 	for m: Dictionary in d.sect_missions.values():
 		if String(m.get("enemy", "")) in ["rogue_cultivator", "stone_ape"]:
-			assert_true(int(m.get("min_stage", 0)) >= 6, "%s sends a fresh Qi Refining disciple to a late-Qi-Refining foe" % m["id"])
+			assert_true(int(m.get("min_stage", 0)) >= 6 or d.realm_index_of(String(m.get("min_realm", "mortal"))) > 1, "%s sends a fresh Qi Refining disciple to a late-Qi-Refining foe" % m["id"])

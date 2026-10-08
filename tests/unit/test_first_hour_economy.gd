@@ -40,3 +40,19 @@ func test_every_sect_has_safe_rank0_mission() -> void:
 				if enemy == "" or not data().enemies[enemy].get("lethal", true):
 					ok = true
 		assert_true(ok, "%s has a safe rank-0 mission" % sect_id)
+
+
+## FH-024: missions are always fought, so a rank-0 mission with an enemy must not
+## be a likely death for the first-hour player (starter technique, Qingshi iron sword and scale armor) at
+## the mission's own min_realm / min_stage.
+func test_rank0_mission_fights_are_weak_or_even_for_newcomers() -> void:
+	for m: Variant in data().sect_missions.values():
+		if int(m.get("min_rank", 0)) != 0 or String(m.get("enemy", "")) == "":
+			continue
+		var c := new_character(31)
+		c.realm_index = maxi(0, data().realm_index_of(String(m.get("min_realm", "mortal"))))
+		c.stage = int(m.get("min_stage", 0))
+		c.techniques["basic_breathing"] = {"level": 1, "xp": 0.0}
+		c.equipment = {"weapon": "iron_sword", "armor": "iron_scale_armor"}
+		var label := Combat.danger_label(c, data(), data().enemies[String(m["enemy"])])
+		assert_true(label == "Weak" or label == "Even", "%s is %s for a newcomer at its min stage" % [m["id"], label])
