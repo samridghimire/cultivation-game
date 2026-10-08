@@ -39,6 +39,8 @@ const INCOME_KINDS: Array[String] = ["work", "craft", "gather", "sect"]
 
 var sources := "all"
 var sect_id := "none"
+## Net spirit stones (reward minus items bought) per sect mission id, over every life.
+var mission_stones := {}
 
 
 func _initialize() -> void:
@@ -67,6 +69,13 @@ func _run() -> void:
 		for n in lives:
 			_add(totals, _simulate_life(data, prof_id, work_every, deaths_per_century, rng))
 		_report(data, prof_id, totals, lives)
+	if not mission_stones.is_empty():
+		var ids: Array = mission_stones.keys()
+		ids.sort_custom(func(a: String, b: String) -> bool: return mission_stones[a] > mission_stones[b])
+		var lines: PackedStringArray = []
+		for mission_id: String in ids.slice(0, 12):
+			lines.append("%s %d" % [mission_id, mission_stones[mission_id]])
+		print("Net stones per sect mission over all lives (top 12): %s" % ", ".join(lines))
 	quit()
 
 
@@ -75,7 +84,7 @@ func _simulate_life(data: GameData, prof_id: String, work_every: int, deaths_per
 	var c := CharacterFactory.create("Sim", data, rng)
 	c.age_days = START_AGE_YEARS * Calendar.DAYS_PER_YEAR
 	CreationArtifact.ensure(c, data)
-	var stats := {"earned": 0, "pills": 0, "no_pill": 0, "recharges": 0, "max_recharge": 0, "final_deaths": 0, "final_age": 0, "old_age": 0, "realm": 0, "rank": 0, "stones_left": 0, "gear": 0, "clinic": 0, "sect_rank": 0, "contribution": 0, "contribution_pills": 0, "pill_stones_at_peak": 0}
+	var stats := {"earned": 0, "pills": 0, "no_pill": 0, "recharges": 0, "max_recharge": 0, "final_deaths": 0, "final_age": 0, "old_age": 0, "realm": 0, "rank": 0, "stones_left": 0, "gear": 0, "clinic": 0, "sect_rank": 0, "contribution": 0, "contribution_pills": 0, "pill_stones_at_peak": 0, "stones_stipend": 0}
 	for kind in INCOME_KINDS:
 		stats["months_" + kind] = 0
 		stats["stones_" + kind] = 0
@@ -116,6 +125,7 @@ func _simulate_life(data: GameData, prof_id: String, work_every: int, deaths_per
 			var before_stipend := c.item_count("spirit_stone")
 			Sects.month_end(c, data)
 			stats["stones_sect"] += c.item_count("spirit_stone") - before_stipend
+			stats["stones_stipend"] += c.item_count("spirit_stone") - before_stipend
 			while Sects.check_promotion(c, data) == "":
 				Sects.pass_trial(c, data)  # optimistic: every trial is won
 		if c.realm_index > geared_realm:
@@ -302,6 +312,7 @@ func _sect_missions(c: CharacterData, data: GameData) -> void:
 			cost += maxi(0, int(needed[item_id]) - c.item_count(item_id)) * int(data.items[item_id].get("price", 0))
 		if cost > int(mission.get("contribution", 0)) * MAX_STONES_PER_CONTRIBUTION or Sects.mission_cooldown_left(c, mission_id) > 0:
 			continue
+		var stones_before := c.item_count("spirit_stone")
 		for item_id in needed:
 			var short := int(needed[item_id]) - c.item_count(item_id)
 			if short > 0:
@@ -311,6 +322,7 @@ func _sect_missions(c: CharacterData, data: GameData) -> void:
 		var result := Sects.complete_mission(c, data, mission_id, {})
 		if result["ok"]:
 			days_left -= int(result["days"])
+			mission_stones[mission_id] = int(mission_stones.get(mission_id, 0)) + c.item_count("spirit_stone") - stones_before
 			for item_id in c.inventory.keys():
 				if item_id != "spirit_stone" and c.item_count(item_id) > 0 and not data.items[item_id].has("effects"):
 					Items.sell(c, data, item_id, c.item_count(item_id))
@@ -379,6 +391,6 @@ func _report(data: GameData, prof_id: String, totals: Dictionary, lives: int) ->
 	var parts: PackedStringArray = []
 	for kind in INCOME_KINDS:
 		parts.append("%s %d mo / %d stones" % [kind, totals["months_" + kind], totals["stones_" + kind]])
-	print("    income (all lives): %s" % ", ".join(parts))
+	print("    income (all lives): %s (stipends %d)" % [", ".join(parts), totals["stones_stipend"]])
 	print("    spent: gear %d, clinic %d; savings alone covered the Core Forming Pill at the Foundation peak for %d/%d; pills bought with contribution %d; avg sect rank %.1f, contribution %d" % [
 		totals["gear"], totals["clinic"], totals["pill_stones_at_peak"], totals["faced_core_formation"], totals["contribution_pills"], avg.call("sect_rank"), roundi(avg.call("contribution"))])
