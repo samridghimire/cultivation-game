@@ -130,3 +130,18 @@ func test_game_state_rival_news_at_the_deadline() -> void:
 	c.realm_index = 2
 	gs.attempt_inheritance("fist_saint_grave")
 	assert_eq(Inheritances.stages_cleared(c, "fist_saint_grave"), 0, "too late")
+
+
+## WU-016: character-sheet lines.
+func test_progress_lines() -> void:
+	var data := data()
+	data.inheritances.clear()
+	_with_def(data)
+	var c := new_character()
+	var flags := {}
+	assert_eq(Inheritances.progress_lines(c, data, flags).size(), 0)
+	c.trial_progress["test_legacy"] = 2
+	assert_eq(Inheritances.progress_lines(c, data, flags), ["Test Legacy: 2/4 trials"] as Array[String])
+	c.trial_progress["test_legacy"] = 4
+	flags[Inheritances.claimed_flag("test_legacy")] = true
+	assert_eq(Inheritances.progress_lines(c, data, flags), ["Test Legacy: claimed"] as Array[String])

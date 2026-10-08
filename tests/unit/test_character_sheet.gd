@@ -79,3 +79,20 @@ func test_milestones_section_and_signal() -> void:
 	assert_true(text.contains("%s: %s" % [def["name"], def.get("description", "")]), text)
 	sheet.free()
 	gs.end_session()
+
+
+## WU-016: the Adventures section appears only once there is progress.
+func test_adventures_section() -> void:
+	var gs := _game_state()
+	var c := CharacterFactory.create("Han Li", gs.data, seeded_rng(80), "male")
+	gs.start_session(c)
+	var sheet := CharacterSheet.new()
+	(Engine.get_main_loop() as SceneTree).root.add_child(sheet)
+	sheet.open()
+	assert_false(sheet._text.get_parsed_text().contains("Adventures"), "hidden when empty")
+	var id: String = gs.data.inheritances.keys()[0]
+	c.trial_progress[id] = 1
+	sheet.open()
+	var text := sheet._text.get_parsed_text()
+	assert_true(text.contains("Adventures") and text.contains("%s: 1/" % gs.data.inheritances[id]["name"]), text)
+	sheet.free()

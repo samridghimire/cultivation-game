@@ -294,6 +294,19 @@ static func status_text(c: CharacterData, data: GameData, realm_id: String, tota
 	return text
 
 
+## Character-sheet lines (WU-016): "Name: 2/3 floors (this opening)" for realms
+## entered in the current opening, "Name: inheritance claimed" for claimed ones.
+static func progress_lines(c: CharacterData, data: GameData, total_days: int) -> Array[String]:
+	var out: Array[String] = []
+	for id: String in data.secret_realms:
+		var def: Dictionary = data.secret_realms[id]
+		if has_inherited(c, id):
+			out.append("%s: inheritance claimed" % def.get("name", id))
+		elif not _progress(c, def, total_days).is_empty():
+			out.append("%s: %d/%d floors (this opening)" % [def.get("name", id), floors_cleared(c, def, total_days), (def.get("floors", []) as Array).size()])
+	return out
+
+
 ## Secret realm ids whose entrance is in `region_id`, sorted.
 static func in_region(data: GameData, region_id: String) -> Array[String]:
 	var out: Array[String] = []

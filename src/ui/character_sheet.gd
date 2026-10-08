@@ -154,6 +154,13 @@ func _rebuild() -> void:
 		for line in karma:
 			t += "  %s\n" % line
 		t += "\n"
+	var adventures := SecretRealms.progress_lines(p, data, GameClock.total_days)
+	adventures.append_array(Inheritances.progress_lines(p, data, GameState.world_flags))
+	if not adventures.is_empty():
+		t += "[color=#%s]Adventures[/color]\n" % accent
+		for line in adventures:
+			t += "  %s\n" % line
+		t += "\n"
 	t += "[color=#%s]Sect Reputation[/color]\n" % accent
 	for line in Reputation.describe(p, data):
 		t += "  %s\n" % line

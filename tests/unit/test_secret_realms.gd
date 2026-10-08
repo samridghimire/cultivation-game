@@ -268,3 +268,17 @@ func test_closing_and_lost_inheritance() -> void:
 			break
 	assert_true(lost)
 	assert_true(SecretRealms.check_inheritance(c, d, "verdant_remnant", flags).contains("rival claimed"))
+
+
+## WU-016: character-sheet lines.
+func test_progress_lines() -> void:
+	var data := data()
+	data.secret_realms.clear()
+	data.secret_realms["test_realm"] = _def()
+	var c := _cultivator()
+	var day := Y + 1
+	assert_eq(SecretRealms.progress_lines(c, data, day).size(), 0, "nothing yet")
+	c.secret_realms["test_realm"] = {"opening": SecretRealms.opening_index(_def(), day), "floor": 1}
+	assert_eq(SecretRealms.progress_lines(c, data, day), ["Test Realm: 1/2 floors (this opening)"] as Array[String])
+	c.inheritances.append("test_realm")
+	assert_eq(SecretRealms.progress_lines(c, data, day), ["Test Realm: inheritance claimed"] as Array[String])

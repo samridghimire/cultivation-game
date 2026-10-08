@@ -44,6 +44,23 @@ static func stages_cleared(c: CharacterData, id: String) -> int:
 	return int(c.trial_progress.get(id, 0))
 
 
+## Character-sheet lines (WU-016): "Name: 1/3 trials" or "Name: claimed" for
+## inheritance grounds `c` has started.
+static func progress_lines(c: CharacterData, data: GameData, flags: Dictionary) -> Array[String]:
+	var out: Array[String] = []
+	for id: String in data.inheritances:
+		var def: Dictionary = data.inheritances[id]
+		var cleared := stages_cleared(c, id)
+		var total := (def.get("stages", []) as Array).size()
+		if cleared <= 0:
+			continue
+		if cleared >= total and is_claimed(id, flags):
+			out.append("%s: claimed" % def.get("name", id))
+		else:
+			out.append("%s: %d/%d trials" % [def.get("name", id), cleared, total])
+	return out
+
+
 ## The stage `c` faces next ({} when all are cleared).
 static func next_stage(c: CharacterData, def: Dictionary) -> Dictionary:
 	var stages: Array = def.get("stages", [])
