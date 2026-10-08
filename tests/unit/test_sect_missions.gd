@@ -157,3 +157,15 @@ func test_mission_content_spans_realms() -> void:
 	for m: Dictionary in d.sect_missions.values():
 		if String(m.get("enemy", "")) in ["rogue_cultivator", "stone_ape"]:
 			assert_true(int(m.get("min_stage", 0)) >= 6 or d.realm_index_of(String(m.get("min_realm", "mortal"))) > 1, "%s sends a fresh Qi Refining disciple to a late-Qi-Refining foe" % m["id"])
+
+
+func test_item_missions_pay_at_least_the_items_cost() -> void:
+	for id in data().sect_missions:
+		var m: Dictionary = data().sect_missions[id]
+		var cost := 0
+		for item_id in m.get("requires", {}).get("items", {}):
+			cost += int(data().items[item_id].get("price", 0)) * int(m["requires"]["items"][item_id])
+		if cost == 0:
+			continue
+		var pay := int(m.get("rewards", {}).get("items", {}).get("spirit_stone", 0))
+		assert_true(pay >= int(ceil(cost * 1.2)), "%s pays %d for items costing %d" % [id, pay, cost])
