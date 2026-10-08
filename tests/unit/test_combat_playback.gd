@@ -5,9 +5,16 @@ const LINES := ["You face the foe.", "You strike for 5.", "Foe hits you for 3.",
 const TRACE := [[20, 10], [20, 5], [17, 5], [17, 0]]
 
 
+var _old_animate: Variant = null
+
+
+func _settings() -> Node:
+	return (Engine.get_main_loop() as SceneTree).root.get_node("Settings")
+
+
 func _report(animate: bool) -> CombatReport:
-	var settings: Node = (Engine.get_main_loop() as SceneTree).root.get_node("Settings")
-	settings.set_value("animate_fights", animate)
+	_old_animate = _settings().get_value("animate_fights")
+	_settings().set_value("animate_fights", animate)
 	var r := CombatReport.new()
 	(Engine.get_main_loop() as SceneTree).root.add_child(r)
 	return r
@@ -35,7 +42,7 @@ func test_animated_report_reveals_line_by_line() -> void:
 	assert_false(r._close_button.disabled)
 	assert_true(_text(r).contains("You defeat"))
 	assert_eq(int(r._enemy_bar.value), 0)
-	r.queue_free()
+	_done(r)
 
 
 func test_skip_shows_everything() -> void:
@@ -48,7 +55,7 @@ func test_skip_shows_everything() -> void:
 	assert_true(_text(r).contains("Spoils: a herb"))
 	assert_eq(int(r._player_bar.value), 17)
 	assert_false(r._close_button.disabled)
-	r.queue_free()
+	_done(r)
 
 
 func test_setting_off_is_instant() -> void:
@@ -58,7 +65,7 @@ func test_setting_off_is_instant() -> void:
 	assert_true(_text(r).contains("You defeat"))
 	assert_eq(int(r._enemy_bar.value), 0)
 	assert_false(r._close_button.disabled)
-	r.queue_free()
+	_done(r)
 
 
 func test_no_trace_is_instant() -> void:
@@ -66,4 +73,10 @@ func test_no_trace_is_instant() -> void:
 	r.show_fight("Foe", false, PackedStringArray(LINES), "")
 	assert_false(r.playing)
 	assert_true(_text(r).contains("You defeat"))
+	_done(r)
+
+
+## Frees the report and restores the player's "Animate fights" setting (set_value saves it).
+func _done(r: CombatReport) -> void:
 	r.queue_free()
+	_settings().set_value("animate_fights", _old_animate)

@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 589ae9d
+Last reviewed commit: fd22b14
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -139,3 +139,20 @@ Last reviewed commit: 589ae9d
     patients, so a tier change from an item or encounter is announced at the next of those. Karma.act_sentence
     hard-codes the three act ids (unknown acts fall back to a generic sentence).
   - WU-032, WU-033, CULT-001, ECON-001b, RV-009, C-019: match specs, tests present.
+- 2026-10-08 (reviewer): reviewed 589ae9d..fd22b14 (STAT-002, C-021, WU-035, C-016, WU-037, CMB-002, WU-039, QA-033,
+  WU-040, GUIDE-008, C-023, WU-043, WU-041, GOAL-002, REL-011, C-022, QA-036, GUIDE-009, WU-036, WU-042; [PLAN]
+  skipped). Main green before and after (1244 tests). No BACKLOG/CHANGELOG edits by workers; no SAVE_VERSION change.
+  (Local main had diverged from origin again; reset to origin/main before reviewing.)
+  - Fixed in one [REVIEW] commit: WU-036's test_combat_playback left the player's "Animate fights" setting off
+    (Settings.set_value saves to user://), so running the tests flipped a real setting; it now restores the old value.
+    GUIDE-009 test adds the spec's "no buyer in the region" case (misty_forest).
+  - Notes, not filed: (1) GUIDE-008 only pre-sets `notice_rival` on a new game, so loading an older mid-game save posts
+    every notice at once (body tempering, Dao, artifact functions, the old rival) and WU-042 queues a "New" banner for
+    each. One-time burst. (2) The artifact notice hard-codes "(Artifact screen, O)" in core; wrong after a rebind.
+    (3) CMB-002's trace gives every pre-round line (talismans, allies) the hp after all openers, so the foe bar drops
+    in one step at the first round. Cosmetic. (4) WU-040 "Sell all loot" also sells readied talismans and unworn spare
+    equipment at equipment-buying merchants (matches the spec's filter list). (5) GUIDE-009 skipped extending
+    test_hint_honesty for the sell hint; the hint takes its name from the region's place display_name, so it is honest.
+  - Data retunes C-016/C-021/C-022 only touch trial/guardian-only foes or add new ones (star_vault_warden,
+    garden_poacher...); shared foes unchanged. C-023 keeps per-kill income level. REL-011 script refuses placeholder ids
+    and keeps no secrets. STAT-002, WU-035/039, WU-041, WU-043, GOAL-002, QA-036, QA-033: match specs, tests present.

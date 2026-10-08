@@ -595,3 +595,4 @@ func test_sell_hint() -> void:
 	assert_true(hint.contains("herbs"), hint)
 	assert_true(Guidance.hints(c, d, 1.0, 99, {}, {}, "qingshi_village").has(hint))
 	assert_eq(Guidance._sell_hint(c, d, ""), "")
+	assert_eq(Guidance._sell_hint(c, d, "misty_forest"), "", "no merchant in the region")
