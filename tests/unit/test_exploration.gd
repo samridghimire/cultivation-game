@@ -276,3 +276,24 @@ func test_outlook_text_reads_cleanly() -> void:
 	var text := Guidance.outlook_text(o)
 	assert_true(text.contains("Fights %d%%: Mountain Bandit (" % roundi(float(o["fight"]) * 100)))
 	assert_false(text.contains("{") or text.contains("%s") or text.contains("%d"))
+
+
+## RV-009: every gather place yields something on at least half the rolls for a
+## newcomer (locked min_realm entries count as misses), so trips are not empty.
+func test_every_gather_place_finds_something_at_least_half_the_rolls() -> void:
+	var c := new_character()
+	var checked := 0
+	for region: Dictionary in data().regions.values():
+		for place: Dictionary in region.get("places", []):
+			if place.get("type", "") != "gather":
+				continue
+			var table := Exploration.gather_table_for(c, data(), place.get("gather_table", []))
+			var total := 0.0
+			var found := 0.0
+			for entry: Dictionary in table:
+				total += float(entry.get("weight", 1))
+				if String(entry.get("item", "")) != "":
+					found += float(entry.get("weight", 1))
+			assert_true(found / maxf(total, 0.001) >= 0.5, "%s: a roll finds something >= 50%% of the time (%.2f)" % [place.get("display_name", "?"), found / maxf(total, 0.001)])
+			checked += 1
+	assert_gt(checked, 0, "gather places checked")
