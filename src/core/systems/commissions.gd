@@ -44,13 +44,26 @@ static func roll(c: CharacterData, data: GameData, rng: RandomNumberGenerator, t
 		var count := rng.randi_range(int(r["count"][0]), int(r["count"][1]))
 		var order := {
 			"profession": prof_id, "recipe": String(recipe["id"]), "item": item_id, "count": count,
-			"reward": maxi(1, ceili(Items.material_value(data, item_id) * count * float(r["reward_mult"]))),
+			"reward": maxi(1, ceili(unit_reward(data, item_id) * count)),
 			"xp": float(recipe.get("xp", 0)) * float(r["xp_fraction"]) * count,
 			"due_day": today + int(r["days"]),
 		}
 		c.commissions.append(order)
 		added.append(order)
 	return added
+
+
+## Spirit stones paid per unit of `item_id`: material value x reward_mult, but
+## for an item shops sell, at most max_price_fraction of its price, so buying
+## the order in a shop and handing it in loses stones (review of PROF-001).
+static func unit_reward(data: GameData, item_id: String) -> float:
+	var r := rules(data)
+	var material := Items.material_value(data, item_id)
+	var reward := material * float(r.get("reward_mult", 1.0))
+	var price := int(data.items.get(item_id, {}).get("price", 0))
+	if price > 0 and r.has("max_price_fraction"):
+		reward = minf(reward, price * float(r["max_price_fraction"]))
+	return reward
 
 
 static func _item_name(data: GameData, item_id: String) -> String:

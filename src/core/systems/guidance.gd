@@ -79,15 +79,20 @@ static func _cultivation_hint(c: CharacterData, data: GameData, density: float) 
 	return "Gather %d more qi to reach the next stage%s." % [ceili(needed), eta]
 
 
-## Names of held items whose effects add a breakthrough bonus.
+## Names of held items whose effects add a breakthrough bonus and can be used
+## now (a realm-tied pill only before its own breakthrough, one per attempt).
 static func breakthrough_items(c: CharacterData, data: GameData) -> PackedStringArray:
 	var names: PackedStringArray = []
 	for item_id in c.inventory:
-		var item: Dictionary = data.items.get(item_id, {})
-		if c.item_count(item_id) > 0 and float(item.get("effects", {}).get("breakthrough_bonus", 0.0)) > 0.0:
-			names.append(String(item["name"]))
+		if _usable_breakthrough_item(c, data, item_id):
+			names.append(String(data.items[item_id]["name"]))
 	names.sort()
 	return names
+
+
+static func _usable_breakthrough_item(c: CharacterData, data: GameData, item_id: String) -> bool:
+	var effects: Dictionary = data.items.get(item_id, {}).get("effects", {})
+	return c.item_count(item_id) > 0 and float(effects.get("breakthrough_bonus", 0.0)) > 0.0 and Effects.check(c, data, effects) == ""
 
 
 ## Rogues: which sects would take them. Members: contribution to the next rank.
@@ -249,9 +254,8 @@ static func _breakthrough_entries(out: Array[Dictionary], c: CharacterData, data
 			_add(out, "Breakthrough", "About %d days of meditation here." % days, "normal")
 	var pills: PackedStringArray = []
 	for item_id in c.inventory:
-		var item: Dictionary = data.items.get(item_id, {})
-		if c.item_count(item_id) > 0 and float(item.get("effects", {}).get("breakthrough_bonus", 0.0)) > 0.0:
-			pills.append("%s (held %d)" % [String(item["name"]), c.item_count(item_id)])
+		if _usable_breakthrough_item(c, data, item_id):
+			pills.append("%s (held %d)" % [String(data.items[item_id]["name"]), c.item_count(item_id)])
 	pills.sort()
 	if not pills.is_empty():
 		_add(out, "Breakthrough", "Pills that help: %s" % ", ".join(pills), "normal")

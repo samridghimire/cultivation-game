@@ -46,12 +46,32 @@ func test_bottleneck_shows_breakthrough_odds_and_held_pills() -> void:
 	assert_true(_has(hints, "Breakthrough pills raise the odds"))
 	var pill := ""
 	for item: Dictionary in data().items.values():
-		if float(item.get("effects", {}).get("breakthrough_bonus", 0.0)) > 0.0:
+		var fx: Dictionary = item.get("effects", {})
+		if float(fx.get("breakthrough_bonus", 0.0)) > 0.0 and Effects.check(c, data(), fx) == "":
 			pill = item["id"]
 			break
 	c.add_item(pill, 1)
 	assert_eq(Guidance.breakthrough_items(c, data()), PackedStringArray([data().items[pill]["name"]]))
 	assert_true(_has(Guidance.hints(c, data(), 1.0, 10), "Using %s first" % data().items[pill]["name"]))
+
+
+## RV-005 pills are tied to their realm, one per attempt: hints and the journal
+## must not recommend a pill the player cannot use now.
+func test_realm_tied_pills_are_only_recommended_when_usable() -> void:
+	var c := _fresh()
+	c.realm_index = data().realm_index_of("qi_refining")
+	var realm: RealmDef = data().realms[c.realm_index]
+	c.stage = realm.stage_count() - 1
+	c.qi = realm.qi_required(c.stage)
+	c.add_item("core_forming_pill", 1)
+	c.add_item("foundation_establishment_pill", 2)
+	var core_name: String = data().items["core_forming_pill"]["name"]
+	var fe_name: String = data().items["foundation_establishment_pill"]["name"]
+	assert_eq(Guidance.breakthrough_items(c, data()), PackedStringArray([fe_name]))
+	c.breakthrough_bonus = 0.25  # one pill already taken
+	assert_eq(Guidance.breakthrough_items(c, data()), PackedStringArray())
+	var rows := Guidance.journal(c, data(), {}, 0, c.home_region)
+	assert_false(rows.any(func(r: Dictionary) -> bool: return String(r["text"]).contains(core_name) or String(r["text"]).contains(fe_name)))
 
 
 func test_urgent_hints_come_first() -> void:

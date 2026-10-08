@@ -24,7 +24,7 @@ func test_reward_and_xp() -> void:
 	var recipe: Dictionary = data().recipes[order["recipe"]]
 	var count := int(order["count"])
 	assert_true(count >= 1 and count <= 3)
-	assert_eq(int(order["reward"]), maxi(1, ceili(Items.material_value(data(), order["item"]) * count * 2.0)))
+	assert_eq(int(order["reward"]), maxi(1, ceili(Commissions.unit_reward(data(), order["item"]) * count)))
 	assert_eq(float(order["xp"]), float(recipe["xp"]) * 0.5 * count)
 
 
@@ -85,5 +85,24 @@ func test_validation_rejects_bad_values() -> void:
 	var g := GameData.load_from_dir()
 	g.load_errors.clear()
 	g.commissions["reward_mult"] = 0.5
+	g._validate_commissions()
+	assert_eq(g.load_errors.size(), 1)
+
+
+## Review of PROF-001: an order for an item shops sell must not pay more than
+## buying it costs (e.g. Jade Marrow Pills sold for 600 paid 1100 each).
+func test_shop_bought_items_never_profit() -> void:
+	for recipe: Dictionary in data().recipes.values():
+		var item_id := String(recipe["output"]["item"])
+		var price := int(data().items.get(item_id, {}).get("price", 0))
+		var reward := Commissions.unit_reward(data(), item_id)
+		if price > 0:
+			assert_true(reward < price, "%s: reward %.0f vs shop price %d" % [item_id, reward, price])
+
+
+func test_validation_rejects_bad_price_fraction() -> void:
+	var g := GameData.load_from_dir()
+	g.load_errors.clear()
+	g.commissions["max_price_fraction"] = 1.5
 	g._validate_commissions()
 	assert_eq(g.load_errors.size(), 1)

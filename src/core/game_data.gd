@@ -604,6 +604,10 @@ func _validate_commissions() -> void:
 	var days: Variant = commissions.get("days")
 	if not (days is float or days is int) or int(days) < 1:
 		load_errors.append("recipes.json commissions.days must be an integer >= 1")
+	if commissions.has("max_price_fraction"):
+		var fraction: Variant = commissions["max_price_fraction"]
+		if not (fraction is float or fraction is int) or float(fraction) <= 0.0 or float(fraction) > 1.0:
+			load_errors.append("recipes.json commissions.max_price_fraction must be a number in (0, 1]")
 
 
 func _validate_recipes() -> void:
