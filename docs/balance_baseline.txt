@@ -3,7 +3,7 @@
 First-hour sim: 10 seeds, 12 months
   seed  QR1  QR3  QR9  sect  injuries  won  lost  fled  lines/month
      1   14  141    -    14         0    1     0     0  3.8
-     2   14  108    -    14         0    0     1     0  3.9
+     2   14  108    -    14         0    0     1     0  4.0
      3   14  137    -    14         0    1     0     0  3.6
      4   14  170    -    14         0    2     0     0  3.6
      5   14   48  295    14         0    2     0     0  3.5
@@ -13,7 +13,7 @@ First-hour sim: 10 seeds, 12 months
      9   14  171    -    14         0    2     0     0  3.3
     10   14  107    -    14         0    1     1     0  3.6
 Medians (day): QR1 14, QR3 137, QR9 295, sect 14; injuries 0; fights won 2, lost 0, fled 0; 3.6 log lines/month
-Lines by category: { "warning": 34, "progress": 114, "info": 268, "danger": 23 }
+Lines by category: { "warning": 34, "progress": 116, "info": 268, "danger": 23 }
 
 ## combat (200 fights per cell)
 
@@ -63,7 +63,6 @@ Where each enemy first appears (typical player entering the realm / at its peak 
   Foundatio azure_cloud_enforcer   mission ambush_azure_patrol  forced                   entry  59%  peak  78%  talisman  98%  bare   0%  veteran on appearance 100%  OK
   Foundatio azure_pavilion_warden  trial azure_cloud_sect rank  forced                   entry  31%  peak  95%  talisman  93%  bare   0%  veteran on appearance  92%  HARD
   Foundatio blood_eyed_wolf        encounter marsh_blood_eyed_w evadable                 entry  29%  peak  94%  talisman  95%  bare   0%  veteran on appearance  97%  HARD
-  Foundatio blood_lotus_elder      realm fallen_star_vault floo forced                   entry   0%  peak   0%  talisman   0%  bare   0%  veteran on appearance   0%  UNBEATABLE
   Foundatio blood_lotus_executioner encounter incursion_raiders  evadable                 entry   2%  peak  48%  talisman  37%  bare   0%  veteran on appearance  52%  HARD
   Foundatio blood_lotus_executioner encounter wild_blood_lotus_e evadable                 entry   2%  peak  48%  talisman  37%  bare   0%  veteran on appearance  52%  HARD
   Foundatio blood_pit_champion     trial blood_lotus_sect rank  forced                   entry  23%  peak  87%  talisman  87%  bare   0%  veteran on appearance  84%  HARD
@@ -93,6 +92,7 @@ Where each enemy first appears (typical player entering the realm / at its peak 
   Foundatio jade_python            encounter marsh_sunken_serpe evadable                 entry   0%  peak   0%  talisman   0%  bare   0%  veteran on appearance   0%  UNBEATABLE (lethal: a Deadly foe is sensed and evaded)
   Foundatio jade_python            realm sunken_sword_tomb floo forced                   entry   0%  peak   0%  talisman   0%  bare   0%  veteran on appearance   0%  UNBEATABLE
   Foundatio pavilion_treasure_guardian trial myriad_treasure_pavili forced                   entry  32%  peak  97%  talisman  95%  bare   0%  veteran on appearance  96%  HARD
+  Foundatio star_vault_warden      realm fallen_star_vault floo forced                   entry   0%  peak   0%  talisman   0%  bare   0%  veteran on appearance   0%  UNBEATABLE
   Foundatio sword_madman           encounter wild_sword_madman  evadable                 entry   3%  peak  46%  talisman  49%  bare   0%  veteran on appearance  70%  HARD
   Foundatio sword_madman           realm fallen_star_vault floo forced                   entry   3%  peak  46%  talisman  49%  bare   0%  veteran on appearance  70%  HARD
   Foundatio tournament_champion    choice tournament_final/Chal forced                   entry  13%  peak  74%  talisman  74%  bare   0%  veteran on appearance  78%  HARD
@@ -102,7 +102,7 @@ Where each enemy first appears (typical player entering the realm / at its peak 
   Core Form black_iron_bear_king   mission tear_bear_kings_hear forced                   entry  71%  peak  90%  talisman  96%  bare   0%  veteran on appearance 100%  OK
   Core Form black_iron_bear_king   realm drowned_yin_palace flo forced                   entry  24%  peak  90%  talisman  73%  bare   0%  veteran on appearance 100%  HARD
   Core Form black_iron_bear_king   realm skyfall_thunder_pavili forced                   entry  24%  peak  90%  talisman  73%  bare   0%  veteran on appearance 100%  HARD
-  Core Form blood_lotus_ancestor_puppet trial blood_lotus_sect rank  forced                   entry  31%  peak  94%  talisman  77%  bare   0%  veteran on appearance 100%  HARD
+  Core Form blood_lotus_ancestor_puppet trial blood_lotus_sect rank  forced                   entry  49%  peak  97%  talisman  91%  bare   0%  veteran on appearance 100%  HARD
   Core Form blood_lotus_elder      encounter wild_blood_lotus_e evadable                 entry  16%  peak  89%  talisman  71%  bare   0%  veteran on appearance 100%  HARD
   Core Form blood_lotus_elder      mission purge_blood_lotus_el forced                   entry  71%  peak  89%  talisman  97%  bare   0%  veteran on appearance 100%  OK
   Core Form cloud_devouring_condor realm skyfall_thunder_pavili forced                   entry   0%  peak   0%  talisman   0%  bare   0%  veteran on appearance   0%  UNBEATABLE
@@ -148,7 +148,7 @@ Win rate at stage 0 of each realm (no talismans):
   blood_pit_gladiator            0%         4%       100%       100%       100%
   blood_pit_champion             0%         0%        23%       100%       100%
   vault_blood_warden             0%         0%         0%        87%       100%
-  blood_lotus_ancestor_puppet         0%         0%         0%        31%       100%
+  blood_lotus_ancestor_puppet         0%         0%         0%        49%       100%
   pavilion_vault_guard           0%         1%       100%       100%       100%
   pavilion_treasure_guardian         0%         0%        32%       100%       100%
   golden_abacus_guardian         0%         0%         0%        52%       100%
@@ -184,6 +184,7 @@ Win rate at stage 0 of each realm (no talismans):
   myriad_poison_toad             0%         0%         0%        69%       100%
   black_iron_bear_king           0%         0%         0%        24%       100%
   blood_lotus_elder              0%         0%         0%        16%       100%
+  star_vault_warden              0%         0%         0%        45%       100%
   nether_ghost_king              0%         0%         0%         5%       100%
   marsh_corpse_puppet            0%         1%       100%       100%       100%
   drowned_yin_ghost              0%         0%        18%       100%       100%
