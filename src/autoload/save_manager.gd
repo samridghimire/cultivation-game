@@ -41,8 +41,17 @@ func save_path(slot: String) -> String:
 	return SAVE_DIR.path_join(slot + ".json")
 
 
+## True when the slot has a save file or, after a crash mid-save, only its backup.
 func has_save(slot: String = DEFAULT_SLOT) -> bool:
-	return is_valid_slot_name(slot) and FileAccess.file_exists(save_path(slot))
+	if not is_valid_slot_name(slot):
+		return false
+	return FileAccess.file_exists(save_path(slot)) or FileAccess.file_exists(save_path(slot) + ".bak")
+
+
+## The slot's main file was written by a newer build (RV-001). Such a slot is
+## neither loaded, repaired from its backup, nor overwritten.
+func is_newer_version(slot: String) -> bool:
+	return is_valid_slot_name(slot) and _file_version(save_path(slot)) > SAVE_VERSION
 
 
 ## Slot names become file names, so only letters, digits, '_' and '-' are allowed.
@@ -60,12 +69,24 @@ func is_valid_slot_name(slot: String) -> bool:
 ## A slot file that can't be read (and has no backup) is listed with damaged=true.
 func list_slots() -> Array[Dictionary]:
 	var slots: Array[Dictionary] = []
+	var seen := {}
 	for file_name in DirAccess.get_files_at(SAVE_DIR):
-		if not file_name.ends_with(".json"):
+		var slot := ""
+		if file_name.ends_with(".json"):
+			slot = file_name.get_basename()
+		elif file_name.ends_with(".json.bak"):
+			slot = file_name.trim_suffix(".json.bak")  # main lost to a crash mid-save
+			if FileAccess.file_exists(save_path(slot)) or _parse_file(save_path(slot) + ".bak").is_empty():
+				continue
+		else:
 			continue
-		var slot := file_name.get_basename()
+		if seen.has(slot) or not is_valid_slot_name(slot):
+			continue
+		seen[slot] = true
 		var meta := read_meta(slot)
-		if meta.is_empty():
+		if meta.is_empty() and is_newer_version(slot):
+			meta = {"slot": slot, "damaged": false, "newer_version": true, "name": slot, "saved_unix": 0, "alive": true}
+		elif meta.is_empty():
 			meta = {"slot": slot, "damaged": true, "name": slot, "saved_unix": 0, "alive": true}
 		slots.append(meta)
 	slots.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return a["saved_unix"] > b["saved_unix"])
@@ -97,10 +118,25 @@ func _read_payload(slot: String) -> Dictionary:
 	var main := _parse_file(save_path(slot))
 	if not main.is_empty():
 		return main
+	if is_newer_version(slot):
+		return {}  # never fall back to an older backup under a newer save
 	var backup := _parse_file(save_path(slot) + ".bak")
 	if not backup.is_empty():
 		backup["from_backup"] = true
 	return backup
+
+
+## The "version" of a parseable save file, or 0 if missing or unreadable.
+func _file_version(path: String) -> int:
+	if not FileAccess.file_exists(path):
+		return 0
+	var json := JSON.new()
+	if json.parse(FileAccess.get_file_as_string(path)) != OK:
+		return 0
+	var parsed: Variant = json.data
+	if parsed is Dictionary and (parsed as Dictionary).has("game"):
+		return int((parsed as Dictionary).get("version", 1))
+	return 0
 
 
 func _parse_file(path: String) -> Dictionary:
@@ -126,7 +162,7 @@ func most_recent_slot() -> String:
 ## The newest save with a living character, or "" (what Continue loads).
 func most_recent_living_slot() -> String:
 	for meta in list_slots():
-		if bool(meta.get("alive", true)) and not bool(meta.get("damaged", false)):
+		if bool(meta.get("alive", true)) and not bool(meta.get("damaged", false)) and not bool(meta.get("newer_version", false)):
 			return String(meta["slot"])
 	return ""
 
@@ -145,11 +181,16 @@ func delete_save(slot: String) -> bool:
 	for extra in [".bak", ".tmp"]:
 		if FileAccess.file_exists(save_path(slot) + extra):
 			DirAccess.remove_absolute(save_path(slot) + extra)
+	if not FileAccess.file_exists(save_path(slot)):
+		return true  # only the backup was left
 	return DirAccess.remove_absolute(save_path(slot)) == OK
 
 
 func save_game(slot: String = DEFAULT_SLOT, is_auto: bool = false) -> bool:
 	if not GameState.has_session() or not is_valid_slot_name(slot):
+		return false
+	if is_newer_version(slot):
+		push_warning("Save %s was made by a newer version; not overwriting it" % slot)
 		return false
 	DirAccess.make_dir_recursive_absolute(SAVE_DIR)
 	var game := GameState.to_save_dict()
@@ -168,8 +209,8 @@ func save_game(slot: String = DEFAULT_SLOT, is_auto: bool = false) -> bool:
 	return true
 
 
-## Writes to <path>.tmp, keeps the previous file as <path>.bak, then renames the
-## .tmp into place, so a crash mid-write never destroys the existing save.
+## Writes to <path>.tmp, copies the previous file to <path>.bak, then renames the
+## .tmp over it, so a crash mid-write never destroys the existing save.
 func _write_atomic(path: String, text: String) -> bool:
 	var tmp := path + ".tmp"
 	var file := FileAccess.open(tmp, FileAccess.WRITE)
@@ -185,7 +226,8 @@ func _write_atomic(path: String, text: String) -> bool:
 		var bak := path + ".bak"
 		if FileAccess.file_exists(bak):
 			DirAccess.remove_absolute(bak)
-		if DirAccess.rename_absolute(path, bak) != OK:
+		# Copy (not rename) so the main file never vanishes between the two steps.
+		if DirAccess.copy_absolute(path, bak) != OK:
 			DirAccess.remove_absolute(tmp)
 			return false
 	if DirAccess.rename_absolute(tmp, path) != OK:

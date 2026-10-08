@@ -106,6 +106,7 @@ func start_session(character: CharacterData) -> void:
 
 
 func end_session() -> void:
+	Platform.set_rich_presence("")
 	EventBus.topic = ""
 	player = null
 	world_flags = {}

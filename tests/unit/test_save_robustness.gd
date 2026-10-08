@@ -43,15 +43,12 @@ func _real_save_text() -> String:
 
 func test_bad_files_are_damaged_and_deletable() -> void:
 	var real := _real_save_text()
-	var newer := JSON.parse_string(real) as Dictionary
-	newer["version"] = int(_saves().SAVE_VERSION) + 1
 	var cases := {
 		"truncated": real.substr(0, real.length() / 2),
 		"empty": "",
 		"array": "[]",
 		"string": "\"text\"",
 		"no_version": "{\"saved_unix\": 5}",
-		"newer_version": JSON.stringify(newer),
 	}
 	for label in cases:
 		_cleanup()

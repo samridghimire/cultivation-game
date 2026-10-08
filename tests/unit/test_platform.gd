@@ -58,3 +58,16 @@ func test_presence_follows_realm_and_region() -> void:
 	assert_true(fake.calls.has(["status", expected]))
 	Platform.backend = old
 	GameState.end_session()
+
+
+func test_end_session_clears_presence() -> void:
+	var old: Object = Platform.backend
+	var fake := FakeSteam.new()
+	Platform.backend = fake
+	_start()
+	EventBus.region_changed.emit(GameState.current_region)
+	assert_true(Platform.presence != "")
+	GameState.end_session()
+	assert_eq(Platform.presence, "")
+	assert_true(fake.calls.has(["status", ""]))
+	Platform.backend = old

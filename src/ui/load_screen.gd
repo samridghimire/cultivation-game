@@ -55,6 +55,8 @@ func close() -> void:
 static func describe_slot(meta: Dictionary) -> String:
 	if bool(meta.get("damaged", false)):
 		return "%s: damaged save" % meta.get("slot", "?")
+	if bool(meta.get("newer_version", false)):
+		return "%s: made by a newer version of the game" % meta.get("slot", "?")
 	var label := "Autosave: " if String(meta.get("slot", "")) == SaveManager.AUTOSAVE_SLOT else ""
 	var text := label + "%s  |  %s  |  %s  |  age %d" % [meta.get("name", "?"), meta.get("realm_label", "?"), meta.get("game_date", "?"), int(meta.get("age", 0))]
 	if not bool(meta.get("alive", true)):
@@ -77,7 +79,7 @@ func _rebuild() -> void:
 		var load_button := UIStyle.button(describe_slot(meta), slot_chosen.emit.bind(slot))
 		load_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		load_button.alignment = HORIZONTAL_ALIGNMENT_LEFT
-		load_button.disabled = bool(meta.get("damaged", false)) or not bool(meta.get("alive", true))
+		load_button.disabled = bool(meta.get("damaged", false)) or bool(meta.get("newer_version", false)) or not bool(meta.get("alive", true))
 		load_button.tooltip_text = "%s (saved %s)" % [slot, meta.get("saved_at", "")]
 		row.add_child(load_button)
 		var delete_button := UIStyle.button("Delete", Callable())
