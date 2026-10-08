@@ -121,3 +121,23 @@ func test_expected_realm_years_final_realm_has_no_breakthrough() -> void:
 	for stage in realm.stage_count():
 		qi += realm.qi_required(stage)
 	assert_almost_eq(Cultivation.expected_realm_years(data(), last), qi / realm.base_qi_per_day / Calendar.DAYS_PER_YEAR, 0.001)
+
+
+func test_days_to_bottleneck_matches_hand_computation() -> void:
+	var c := new_character()
+	var realm: RealmDef = data().realms[0]
+	var per_day := Cultivation.qi_per_day(c, data())
+	var remaining := 0.0
+	for stage in realm.stage_count():
+		remaining += realm.qi_required(stage)
+	assert_eq(Cultivation.days_to_bottleneck(c, data()), ceili(remaining / per_day - 0.000001))
+	c.qi = 0.0
+	c.stage = realm.stage_count() - 1
+	c.qi = realm.qi_required(c.stage)
+	assert_eq(Cultivation.days_to_bottleneck(c, data()), 0)
+
+
+func test_days_to_bottleneck_without_qi_rate_is_minus_one() -> void:
+	var c := new_character()
+	c.spiritual_roots = {}
+	assert_eq(Cultivation.days_to_bottleneck(c, data()), -1)

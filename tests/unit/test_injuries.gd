@@ -139,6 +139,6 @@ func test_game_time_heals_injuries() -> void:
 	c.spiritual_roots = {"fire": 80}
 	gs.start_session(c)
 	Injuries.inflict(c, gs.data, "broken_bones")
-	gs.cultivate(Calendar.DAYS_PER_YEAR)
+	gs._pass_time(Calendar.DAYS_PER_YEAR)
 	assert_false(Injuries.has_any(c), "a year of rest heals broken bones")
 	gs.end_session()

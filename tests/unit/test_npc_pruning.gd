@@ -65,7 +65,7 @@ func test_game_state_prunes_yearly() -> void:
 	Npcs.die(ghost, "test")
 	ghost.dead_days = 49 * Calendar.DAYS_PER_YEAR
 	var rival_id: String = gs.player.rival
-	gs.cultivate(Calendar.DAYS_PER_YEAR * 2)
+	gs._pass_time(Calendar.DAYS_PER_YEAR * 2)
 	assert_false(gs.npcs.has(ghost.id), "pruned once dead 50 years")
 	assert_true(gs.npcs.has(rival_id), "the rival is never pruned")
 	gs.end_session()

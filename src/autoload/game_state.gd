@@ -134,6 +134,10 @@ func cultivate(days: int, location_density: float = 1.0, skip_title: String = "M
 		EventBus.post("You are at a bottleneck. More meditation will not help; attempt a breakthrough.", "warning")
 		return
 	var density := location_density * region_qi_density() * Sects.cultivation_bonus(player, data)
+	var needed := Cultivation.days_to_bottleneck(player, data, density)
+	var ends_early := needed > 0 and needed < days
+	if ends_early:
+		days = needed
 	_start_time_skip()
 	var result := Cultivation.cultivate(player, data, days, density)
 	EventBus.post("You cultivate for %s and gather %d qi." % [Calendar.format_duration(days), int(result["qi_gained"])])
@@ -141,6 +145,8 @@ func cultivate(days: int, location_density: float = 1.0, skip_title: String = "M
 		EventBus.post("Your cultivation rises to %s!" % Cultivation.realm_label(player, data), "progress")
 	if result["at_bottleneck"]:
 		EventBus.post("You have reached a bottleneck. Attempt a breakthrough to advance.", "warning")
+	if ends_early:
+		EventBus.post("Your qi reaches a bottleneck after %s; you end your seclusion." % Calendar.format_duration(days))
 	_pass_time(days, skip_title)
 
 

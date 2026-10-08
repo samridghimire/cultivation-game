@@ -24,6 +24,7 @@ func test_cultivating_advances_time_and_age() -> void:
 	var c := _start()
 	var clock := _root().get_node("GameClock")
 	var age_before := c.age_days
+	c.realm_index = 1  # a month of meditation must not hit the first bottleneck
 	_game_state().cultivate(Calendar.DAYS_PER_MONTH)
 	assert_eq(clock.total_days, Calendar.DAYS_PER_MONTH)
 	assert_eq(c.age_days, age_before + Calendar.DAYS_PER_MONTH)
@@ -292,7 +293,7 @@ func test_auction_bid_and_save() -> void:
 	var house := "fallen_star_auction"
 	var def := Auctions.house(gs.data, house)
 	assert_eq(gs.auction_lots(house).size(), 0, "no auction on day 0")
-	gs.cultivate(int(def["offset_days"]))
+	gs._pass_time(int(def["offset_days"]))
 	gs.current_region = String(def["region"])
 	var lots: Array = gs.auction_lots(house)
 	assert_eq(lots.size(), int(def["lots"]))
@@ -369,3 +370,17 @@ func test_place_names_in_sentences_drop_map_hints() -> void:
 	var gs := _game_state()
 	assert_eq(Abodes.abode_name(gs.data, "waterfall_cave"), "Waterfall Cave")
 	assert_eq(CreationArtifact.anchor_name(gs.data, "azure_cliff"), "Cloud-Sea Cliff (Azure Peak)")
+
+
+func test_long_cultivation_stops_at_the_bottleneck() -> void:
+	var c := _start()
+	var gs := _game_state()
+	var clock := _root().get_node("GameClock")
+	var needed := Cultivation.days_to_bottleneck(c, gs.data, gs.region_qi_density() * Sects.cultivation_bonus(c, gs.data))
+	assert_gt(needed, 0)
+	assert_true(needed < Calendar.DAYS_PER_YEAR * 10)
+	gs.cultivate(needed + 500)
+	assert_eq(clock.total_days, needed)
+	assert_true(Cultivation.is_at_bottleneck(c, gs.data))
+	gs.cultivate(30)
+	assert_eq(clock.total_days, needed)

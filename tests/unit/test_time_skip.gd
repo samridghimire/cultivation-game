@@ -14,6 +14,7 @@ func _gs() -> Node:
 func _start() -> CharacterData:
 	var c := new_character(777)
 	c.spiritual_roots = {"fire": 80}  # guarantee a usable root
+	c.realm_index = 1  # a month of meditation must not hit the first bottleneck
 	_gs().start_session(c)
 	return c
 

@@ -45,6 +45,21 @@ static func add_qi(c: CharacterData, data: GameData, amount: float) -> Dictionar
 	}
 
 
+## Days of cultivation at `density` needed to fill qi up to the bottleneck of the
+## current realm (rounded up). 0 if already there; -1 if no qi is gathered.
+static func days_to_bottleneck(c: CharacterData, data: GameData, density: float = 1.0) -> int:
+	if is_at_bottleneck(c, data):
+		return 0
+	var per_day := qi_per_day(c, data, density)
+	if per_day <= 0.0:
+		return -1
+	var realm: RealmDef = data.realms[c.realm_index]
+	var remaining := realm.qi_required(c.stage) - c.qi
+	for stage in range(c.stage + 1, realm.stage_count()):
+		remaining += realm.qi_required(stage)
+	return maxi(1, ceili(remaining / per_day - 0.000001))
+
+
 static func is_at_bottleneck(c: CharacterData, data: GameData) -> bool:
 	var realm: RealmDef = data.realms[c.realm_index]
 	return c.stage == realm.stage_count() - 1 and c.qi >= realm.qi_required(c.stage)

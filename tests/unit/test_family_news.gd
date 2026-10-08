@@ -39,7 +39,7 @@ func test_death_of_generated_child_is_reported() -> void:
 	var log: Array[String] = []
 	var on_post := func(text: String, _category: String) -> void: log.append(text)
 	EventBus.message_posted.connect(on_post)
-	gs.cultivate(Calendar.DAYS_PER_YEAR)
+	gs._pass_time(Calendar.DAYS_PER_YEAR)
 	EventBus.message_posted.disconnect(on_post)
 	gs.end_session()
 	assert_false(child.alive, "the child should have died of old age")

@@ -55,7 +55,7 @@ func test_pregnant_wife_dying_reports_lost_child_and_no_birth() -> void:
 	var log: Array[String] = []
 	var on_post := func(text: String, _category: String) -> void: log.append(text)
 	EventBus.message_posted.connect(on_post)
-	gs.cultivate(Calendar.DAYS_PER_YEAR)
+	gs._pass_time(Calendar.DAYS_PER_YEAR)
 	EventBus.message_posted.disconnect(on_post)
 	assert_false(wife.alive)
 	assert_true(c.children.is_empty(), "no child is born to a dead mother")
@@ -76,7 +76,7 @@ func test_child_born_after_the_father_died() -> void:
 	c.pregnancy = {"partner": husband.id, "days_left": 60}
 	husband.alive = false
 	husband.cause_of_death = "old age"
-	gs.cultivate(Calendar.DAYS_PER_MONTH * 3)
+	gs._pass_time(Calendar.DAYS_PER_MONTH * 3)
 	assert_eq(c.children.size(), 1, "a posthumous child is still born")
 	var child: CharacterData = gs.npcs[c.children[0]]
 	assert_eq(child.parents, [c.id, husband.id] as Array[String])
@@ -112,7 +112,7 @@ func test_save_and_load_mid_pregnancy_then_birth() -> void:
 	assert_true(saves.load_game(TEST_SLOT))
 	var loaded_wife: CharacterData = gs.npcs[wife.id]
 	assert_eq(loaded_wife.pregnancy, {"partner": c.id, "days_left": 45})
-	gs.cultivate(Calendar.DAYS_PER_MONTH * 2)
+	gs._pass_time(Calendar.DAYS_PER_MONTH * 2)
 	assert_eq(gs.player.children.size(), 1, "the child is born after loading")
 	assert_false(Children.is_pregnant(loaded_wife))
 	DirAccess.remove_absolute(saves.save_path(TEST_SLOT))
