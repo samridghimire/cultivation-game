@@ -145,7 +145,16 @@ func _reveal(i: int, sound: bool = true) -> void:
 		_set_bar(_player_bar, int(_trace[i][0]), int(_player_bar.get_meta("max")))
 		_set_bar(_enemy_bar, int(_trace[i][1]), int(_enemy_bar.get_meta("max")))
 	if sound and _is_hit(_lines[i]):
-		Audio.play("press")
+		Audio.play(_sound_for_line(_lines[i]))
+
+
+## Sound name for a log line by blow weight (hits only; callers check _is_hit).
+static func _sound_for_line(line: String) -> String:
+	if line.contains(Combat.BLOW_WORD_CRUSHING):
+		return "hit_heavy"
+	if line.contains(Combat.BLOW_WORD_GLANCING):
+		return "hit_light"
+	return "hit"
 
 
 func _is_hit(line: String) -> bool:

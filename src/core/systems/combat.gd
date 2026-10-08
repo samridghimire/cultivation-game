@@ -111,6 +111,9 @@ static func dodge_chance(defender_speed: int, attacker_speed: int) -> float:
 const BLOW_GLANCING := 0.08
 const BLOW_SOLID := 0.20
 const BLOW_CRUSHING := 0.35
+const BLOW_WORD_GLANCING := "glancing blow"
+const BLOW_WORD_SOLID := "solid blow"
+const BLOW_WORD_CRUSHING := "crushing blow"
 
 
 ## ": a crushing blow" for a hit of `damage` against `max_hp` (plain hits give "").
@@ -118,12 +121,12 @@ const BLOW_CRUSHING := 0.35
 static func blow_phrase(damage: int, max_hp: int) -> String:
 	var share := float(damage) / float(maxi(1, max_hp))
 	if share < BLOW_GLANCING:
-		return ": a glancing blow"
+		return ": a " + BLOW_WORD_GLANCING
 	if share < BLOW_SOLID:
 		return ""
 	if share < BLOW_CRUSHING:
-		return ": a solid blow"
-	return ": a crushing blow"
+		return ": a " + BLOW_WORD_SOLID
+	return ": a " + BLOW_WORD_CRUSHING
 
 
 ## Fights to the end. Returns {victory, draw, escaped, rounds, log, player_hp,

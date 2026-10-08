@@ -21,6 +21,9 @@ const RECIPES := {
 	"breakthrough_fail": {"notes": [[300.0, 0.15], [200.0, 0.15], [120.0, 0.3]], "noise": 0.2, "gain": 0.45},
 	"combat_win": {"notes": [[523.0, 0.08], [659.0, 0.08], [784.0, 0.16]], "gain": 0.4},
 	"combat_loss": {"notes": [[330.0, 0.12], [247.0, 0.12], [165.0, 0.25]], "gain": 0.4},
+	"hit_light": {"notes": [[1400.0, 0.03]], "noise": 0.6, "gain": 0.25},
+	"hit": {"notes": [[140.0, 0.07]], "noise": 0.35, "gain": 0.4},
+	"hit_heavy": {"notes": [[80.0, 0.14]], "noise": 0.5, "gain": 0.5},
 	"lightning": {"notes": [[90.0, 0.25]], "noise": 0.9, "gain": 0.55},
 }
 

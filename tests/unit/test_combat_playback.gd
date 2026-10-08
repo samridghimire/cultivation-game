@@ -80,3 +80,9 @@ func test_no_trace_is_instant() -> void:
 func _done(r: CombatReport) -> void:
 	r.queue_free()
 	_settings().set_value("animate_fights", _old_animate)
+
+
+func test_sound_for_line_by_blow_weight() -> void:
+	assert_eq(CombatReport._sound_for_line("You strike the wolf for 30: a crushing blow"), "hit_heavy")
+	assert_eq(CombatReport._sound_for_line("You strike the wolf for 2: a glancing blow"), "hit_light")
+	assert_eq(CombatReport._sound_for_line("You strike the wolf for 10"), "hit")
