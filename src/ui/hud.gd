@@ -391,7 +391,7 @@ func _refresh() -> void:
 		"Alignment: %s (%d)" % [Alignment.tier_name(p.alignment, data), p.alignment],
 		Sects.describe(p, data),
 		"Spirit Stones: %d" % p.item_count("spirit_stone"),
-		GameClock.date_string(),
+		"%s · %s" % [GameClock.date_string(), Calendar.season_of(GameClock.total_days)],
 	]))
 	var density := GameState.region_qi_density()
 	_status.text += "\n%s   (Qi x%s)" % [Exploration.region_name(data, GameState.current_region), String.num(density, 2)]

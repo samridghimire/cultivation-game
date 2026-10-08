@@ -32,6 +32,9 @@ var map_size := Vector2(1600, 1000)
 var _region: Dictionary = {}
 ## Scenery.place() output, drawn under everything else.
 var _decor: Array[Dictionary] = []
+## Seasonal tint (CanvasModulate only affects this canvas, not the HUD CanvasLayer).
+var _season_tint: CanvasModulate
+var _season := ""
 
 @onready var player: Player = $Player
 
@@ -44,6 +47,7 @@ func _ready() -> void:
 	var map: Dictionary = _region.get("map", {})
 	map_size = _vec(map.get("size", [map_size.x, map_size.y]))
 	player.position = _vec(_region.get("spawn", [map_size.x / 2.0, map_size.y / 2.0]))
+	_build_season_tint()
 	_build_decor()
 	_build_places()
 	_place_at_spawn_anchor()
@@ -55,7 +59,26 @@ func _ready() -> void:
 	get_tree().auto_accept_quit = false
 
 
+func _build_season_tint() -> void:
+	_season_tint = CanvasModulate.new()
+	_season = Calendar.season_of(GameClock.total_days)
+	_season_tint.color = Calendar.season_tint(_season)
+	add_child(_season_tint)
+	GameClock.days_advanced.connect(_on_days_advanced)
+
+
+func _on_days_advanced(_days: int) -> void:
+	var season := Calendar.season_of(GameClock.total_days)
+	if season == _season:
+		return
+	_season = season
+	var tween := create_tween()
+	tween.tween_property(_season_tint, "color", Calendar.season_tint(season), 0.6)
+
+
 func _exit_tree() -> void:
+	if GameClock.days_advanced.is_connected(_on_days_advanced):
+		GameClock.days_advanced.disconnect(_on_days_advanced)
 	if is_inside_tree():
 		get_tree().auto_accept_quit = true
 

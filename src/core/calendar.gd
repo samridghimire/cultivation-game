@@ -22,6 +22,31 @@ static func day_of(total_days: int) -> int:
 	return total_days % DAYS_PER_MONTH + 1
 
 
+static func season_of(total_days: int) -> String:
+	var month := month_of(total_days)
+	if month <= 3:
+		return "Spring"
+	if month <= 6:
+		return "Summer"
+	if month <= 9:
+		return "Autumn"
+	return "Winter"
+
+
+## Subtle world tint multiplier for a season (close to white).
+static func season_tint(season: String) -> Color:
+	match season:
+		"Spring":
+			return Color(1.0, 1.0, 0.98)
+		"Summer":
+			return Color(1.0, 0.98, 0.92)
+		"Autumn":
+			return Color(1.0, 0.93, 0.85)
+		"Winter":
+			return Color(0.88, 0.92, 1.0)
+	return Color.WHITE
+
+
 static func format_date(total_days: int) -> String:
 	return "Year %d, Month %d, Day %d" % [year_of(total_days), month_of(total_days), day_of(total_days)]
 
