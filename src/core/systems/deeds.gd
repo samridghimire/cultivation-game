@@ -47,7 +47,7 @@ static func options(c: CharacterData, data: GameData, context: String, flags: Di
 	for deed in available(data, context, flags):
 		var reason := check(c, data, deed, flags, today)
 		var enemy_id := String(deed.get("enemy", ""))
-		var danger := Combat.danger_label(c, data, data.enemies[enemy_id]) if data.enemies.has(enemy_id) else ""
+		var danger := Appraisal.danger_text(c, data, data.enemies[enemy_id]) if data.enemies.has(enemy_id) else ""
 		var lethal := data.enemies.has(enemy_id) and bool(data.enemies[enemy_id].get("lethal", false))
 		out.append({"deed": deed, "disabled": reason != "", "reason": reason, "danger": danger, "lethal": lethal})
 	return out

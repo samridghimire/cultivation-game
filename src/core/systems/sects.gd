@@ -467,6 +467,14 @@ static func mission_danger(c: CharacterData, data: GameData, mission_id: String)
 	return Combat.danger_label(c, data, data.enemies[enemy_id])
 
 
+## Like mission_danger, but as shown to the player (odds once appraisal is unsealed).
+static func mission_danger_text(c: CharacterData, data: GameData, mission_id: String) -> String:
+	var enemy_id := String(data.sect_missions.get(mission_id, {}).get("enemy", ""))
+	if enemy_id == "" or not data.enemies.has(enemy_id):
+		return ""
+	return Appraisal.danger_text(c, data, data.enemies[enemy_id])
+
+
 ## Completes `mission_id` (any fight must already be won): hands in the
 ## required items, applies the rewards, adds contribution and starts the
 ## cooldown. Contribution also earns reputation with the sect.

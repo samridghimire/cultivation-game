@@ -50,6 +50,17 @@ static func talent_label(target: CharacterData, data: GameData) -> String:
 	return "%s (x%.2f cultivation speed)" % [talent_name(data, multiplier), multiplier]
 
 
+## The danger label of `enemy` for display: with the appraising eye unsealed it
+## carries the odds ("Even (60%)", the win chance rounded to 5%), otherwise it
+## is plain Combat.danger_label. Evasion logic keeps using danger_label.
+static func danger_text(c: CharacterData, data: GameData, enemy: Dictionary) -> String:
+	var label := Combat.danger_label(c, data, enemy)
+	if not is_available(c) or check(c, data) != "":
+		return label
+	var pct := int(roundf(Combat.win_chance(c, data, enemy) * 20.0)) * 5
+	return "%s (%d%%)" % [label, pct]
+
+
 ## Hidden detail about `target` (an NPC or the player), or [] while the
 ## appraising eye is sealed.
 static func describe_npc(c: CharacterData, target: CharacterData, data: GameData) -> Array[String]:

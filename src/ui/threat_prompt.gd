@@ -19,7 +19,7 @@ func menu_options() -> Array[Dictionary]:
 	var options: Array[Dictionary] = []
 	options.append({"label": "Slip away (1 day)", "action": GameState.face_threat.bind(false)})
 	options.append({
-		"label": "Fight it (%s, %d%% to win)" % [UIStyle.fight_label(GameState.player, GameState.data, enemy), pct],
+		"label": "Fight it (%s, %d%% to win)" % [UIStyle.fight_label(GameState.player, GameState.data, enemy, false), pct],
 		"action": GameState.face_threat.bind(true),
 	})
 	return options

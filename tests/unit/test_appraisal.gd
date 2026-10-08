@@ -142,3 +142,17 @@ func test_appraisal_surfaces_in_the_ui() -> void:
 	assert_true(inv._effects.text.contains("Appraisal: Grade"), inv._effects.text)
 	inv.free()
 	gs.end_session()
+
+
+## ART-008: danger labels carry the odds once the eye is unsealed.
+func test_danger_text_shows_odds_only_when_unsealed() -> void:
+	var d := data()
+	var enemy: Dictionary = d.enemies[d.enemies.keys()[0]]
+	var blind := new_character()
+	assert_eq(Appraisal.danger_text(blind, d, enemy), Combat.danger_label(blind, d, enemy))
+	var seer := _seer()
+	var text := Appraisal.danger_text(seer, d, enemy)
+	assert_true(text.begins_with(Combat.danger_label(seer, d, enemy)))
+	assert_true(text.contains("%"))
+	var pct := int(text.get_slice("(", 1).trim_suffix("%)"))
+	assert_eq(pct % 5, 0)

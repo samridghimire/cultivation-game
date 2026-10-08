@@ -25,8 +25,8 @@ const DANGER_COLORS := {
 ## extending PanelContainer): add_theme_stylebox_override("panel", UIStyle.panel_style()).
 ## "Dangerous, to the death" / "Even": Combat.danger_label of `enemy`, plus
 ## ", to the death" when losing the fight is lethal.
-static func fight_label(c: CharacterData, data: GameData, enemy: Dictionary) -> String:
-	var label := Combat.danger_label(c, data, enemy)
+static func fight_label(c: CharacterData, data: GameData, enemy: Dictionary, with_odds: bool = true) -> String:
+	var label := Appraisal.danger_text(c, data, enemy) if with_odds else Combat.danger_label(c, data, enemy)
 	if bool(enemy.get("lethal", false)):
 		label += ", to the death"
 	return label

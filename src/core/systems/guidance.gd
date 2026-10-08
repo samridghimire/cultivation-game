@@ -275,7 +275,7 @@ static func _sect_entries(out: Array[Dictionary], c: CharacterData, data: GameDa
 		var name := String(data.sect_missions[id].get("name", id))
 		var reason := Sects.check_mission(c, data, id, flags)
 		if reason == "":
-			var danger := Sects.mission_danger(c, data, id)
+			var danger := Sects.mission_danger_text(c, data, id)
 			var tail := "%d days" % int(data.sect_missions[id].get("days", 1))
 			if danger != "":
 				tail += ", danger: %s" % danger
