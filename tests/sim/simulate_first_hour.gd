@@ -26,9 +26,12 @@ func _run() -> void:
 	var sects: Array = []
 	var injuries: Array = []
 	var lines: Array = []
+	var won: Array = []
+	var lost: Array = []
+	var fled: Array = []
 	var by_cat := {}
 	print("First-hour sim: %d seeds, %d months" % [seeds, months])
-	print("  seed  QR1  QR3  QR9  sect  injuries  lines/month")
+	print("  seed  QR1  QR3  QR9  sect  injuries  won  lost  fled  lines/month")
 	for s in range(1, seeds + 1):
 		var r: Dictionary = FirstHour.play(gs, clock, s, months)
 		var total := 0
@@ -44,8 +47,11 @@ func _run() -> void:
 			sects.append(r["sect_day"])
 		injuries.append(r["injuries"])
 		lines.append(per_month)
-		print("  %4d  %3s  %3s  %3s  %4s  %8d  %.1f" % [s, r["layer_day"].get(1, "-"), r["layer_day"].get(3, "-"), r["layer_day"].get(9, "-"), r["sect_day"] if r["sect_day"] >= 0 else "-", r["injuries"], per_month])
+		won.append(r["fights_won"])
+		lost.append(r["fights_lost"])
+		fled.append(r["fights_fled"])
+		print("  %4d  %3s  %3s  %3s  %4s  %8d  %3d  %4d  %4d  %.1f" % [s, r["layer_day"].get(1, "-"), r["layer_day"].get(3, "-"), r["layer_day"].get(9, "-"), r["sect_day"] if r["sect_day"] >= 0 else "-", r["injuries"], r["fights_won"], r["fights_lost"], r["fights_fled"], per_month])
 		gs.end_session()
-	print("Medians (day): QR1 %.0f, QR3 %.0f, QR9 %.0f, sect %.0f; injuries %.0f; %.1f log lines/month" % [_median(layers[1]), _median(layers[3]), _median(layers[9]), _median(sects), _median(injuries), _median(lines)])
+	print("Medians (day): QR1 %.0f, QR3 %.0f, QR9 %.0f, sect %.0f; injuries %.0f; fights won %.0f, lost %.0f, fled %.0f; %.1f log lines/month" % [_median(layers[1]), _median(layers[3]), _median(layers[9]), _median(sects), _median(injuries), _median(won), _median(lost), _median(fled), _median(lines)])
 	print("Lines by category: %s" % str(by_cat))
 	quit()

@@ -5,6 +5,10 @@ const FirstHour := preload("res://tests/sim/first_hour.gd")
 const SEEDS := 5
 ## Known offenders, tracked by FH-021 (content fix). Empty this list when it lands:
 ## the test fails if a listed foe is no longer an offender, so it cannot go stale.
+## Observed max over seeds 1-5 is 0 lost fights (+2).
+const MAX_FIGHTS_LOST := 2
+## Observed max over seeds 1-5 is 2 quiet lines in a year of meditation (+50%).
+const MAX_QUIET_LINES := 3
 const KNOWN_OFFENDERS: Array[String] = []
 
 
@@ -65,10 +69,12 @@ func test_qingshi_forced_fights_are_winnable_for_newcomers() -> void:
 	assert_eq(found, known, "forced Qingshi fights below 15%% (new offenders, or fixed ones to drop from KNOWN_OFFENDERS, FH-021): %s" % "; ".join(offenders))
 
 
-func test_meditating_a_year_posts_little_news() -> void:
+## Lines of the player's own doing: world news (topic "world") and cultivation
+## progress are not counted, so a quiet year stays quiet however busy the world is.
+func _quiet_lines(seed_value: int) -> int:
 	var gs := _root().get_node("GameState")
 	var bus := _root().get_node("EventBus")
-	var c := CharacterFactory.create("Calm", gs.data, seeded_rng(5))
+	var c := CharacterFactory.create("Calm", gs.data, seeded_rng(seed_value))
 	gs.start_session(c)
 	gs.pending_event = ""
 	bus.clear_history()
@@ -76,9 +82,28 @@ func test_meditating_a_year_posts_little_news() -> void:
 		gs.cultivate(Calendar.DAYS_PER_MONTH, 1.0)
 		if not c.alive:
 			break
-	var world_lines := 0
+	var lines := 0
 	for entry: Dictionary in bus.history:
-		if entry["topic"] != "cultivation":
-			world_lines += 1
+		if not entry["topic"] in ["cultivation", "world"]:
+			lines += 1
 	gs.end_session()
-	assert_true(world_lines <= 24, "%d non-cultivation log lines in 12 months of meditation" % world_lines)
+	return lines
+
+
+func test_meditating_a_year_posts_little_news() -> void:
+	var worst := 0
+	for s in range(1, SEEDS + 1):
+		worst = maxi(worst, _quiet_lines(s))
+	assert_true(worst <= MAX_QUIET_LINES, "%d non-cultivation, non-world log lines in 12 months of meditation (limit %d)" % [worst, MAX_QUIET_LINES])
+
+
+## QA-022: a newcomer's first year is not a gauntlet.
+func test_first_year_loses_few_fights() -> void:
+	var gs := _root().get_node("GameState")
+	var clock := _root().get_node("GameClock")
+	var worst := 0
+	for s in range(1, SEEDS + 1):
+		var r: Dictionary = FirstHour.play(gs, clock, s, 12)
+		worst = maxi(worst, int(r["fights_lost"]))
+		gs.end_session()
+	assert_true(worst <= MAX_FIGHTS_LOST, "a newcomer lost %d fights in 12 months (limit %d)" % [worst, MAX_FIGHTS_LOST])

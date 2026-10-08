@@ -9,7 +9,7 @@ const SPRING_DENSITY := 2.0  # Spirit Spring, see data/regions.json
 
 ## Starts a fresh session for `seed_value` and returns the counters dict.
 ## Keys: layer_day (layer number -> first day), sect_day, month_lines (Array of
-## {category: count} per month), fights, injuries.
+## {category: count} per month), injuries, fights_won, fights_lost, fights_fled.
 static func play(gs: Node, clock: Node, seed_value: int, months: int) -> Dictionary:
 	gs.rng.seed = seed_value
 	var rng := RandomNumberGenerator.new()
@@ -51,6 +51,9 @@ static func play(gs: Node, clock: Node, seed_value: int, months: int) -> Diction
 			counts[cat] = int(counts.get(cat, 0)) + 1
 		out["month_lines"].append(counts)
 	out["injuries"] = c.injuries.size()
+	out["fights_won"] = LifeStats.get_stat(c, "fights_won")
+	out["fights_lost"] = LifeStats.get_stat(c, "fights_lost")
+	out["fights_fled"] = LifeStats.get_stat(c, "threats_fled")
 	return out
 
 
