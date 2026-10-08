@@ -579,3 +579,19 @@ func test_journal_prepare_line_only_close_to_the_bottleneck() -> void:
 	c.qi = 0.0
 	assert_true(Cultivation.days_to_bottleneck(c, data(), 1.0) > 30)
 	assert_true(_line_starting(_breakthrough_lines(c), "Prepare: ").is_empty())
+
+func test_sell_hint() -> void:
+	var d := data()
+	var c := _fresh()
+	assert_eq(Guidance._sell_hint(c, d, "qingshi_village"), "", "nothing to sell")
+	c.add_item("spirit_herb", 10)
+	assert_eq(Guidance._sell_hint(c, d, "qingshi_village"), "", "below the minimum")
+	c.add_item("spirit_herb", 30)
+	var total := Items.sell_price(d, "spirit_herb") * 40
+	var hint := Guidance._sell_hint(c, d, "qingshi_village")
+	assert_true(total >= Guidance.SELL_HINT_MIN)
+	assert_true(hint.contains("Wandering Merchant"), hint)
+	assert_true(hint.contains("%d spirit stones" % total), hint)
+	assert_true(hint.contains("herbs"), hint)
+	assert_true(Guidance.hints(c, d, 1.0, 99, {}, {}, "qingshi_village").has(hint))
+	assert_eq(Guidance._sell_hint(c, d, ""), "")

@@ -36,6 +36,9 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 		out.append("A child is due in %s." % Calendar.format_duration(days))
 	var newcomer := _newcomer_hints(c, data, flags, region_id) if c.realm_index <= NEWCOMER_MAX_REALM else PackedStringArray()
 	out.append_array(newcomer)
+	var sell := _sell_hint(c, data, region_id)
+	if sell != "":
+		out.append(sell)
 	var untried := _untried_hint(c, data, today)
 	if untried != "":
 		out.append(untried)
@@ -69,6 +72,40 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 	if out.size() > limit:
 		out.resize(limit)
 	return out
+
+
+## Spirit stones a merchant's buyback must reach before the "your loot is worth money" hint.
+const SELL_HINT_MIN := 50
+const SELL_GOODS_NAMES := {"herb": "herbs", "ore": "ore", "beast_material": "beast materials"}
+
+
+## "A merchant here would pay about N spirit stones for your herbs": the best
+## buyer in the region for what "sell all loot" would sell (nothing worn).
+static func _sell_hint(c: CharacterData, data: GameData, region_id: String) -> String:
+	if region_id == "" or not data.regions.has(region_id):
+		return ""
+	var best_total := 0
+	var best_name := ""
+	var best_goods := ""
+	for place: Dictionary in data.regions[region_id].get("places", []):
+		if String(place.get("type", "")) != "merchant":
+			continue
+		var stock: Array = place.get("stock_tags", [])
+		var buy: Array = place.get("buy_tags", [])
+		var ids := Items.bulk_sell_ids(c, data, stock, buy)
+		var total := Items.bulk_sell_total(c, data, ids)
+		if total <= best_total:
+			continue
+		var names: PackedStringArray = []
+		for tag: String in stock + buy:
+			if SELL_GOODS_NAMES.has(tag) and ids.any(func(id: String) -> bool: return Items.has_tag(data, id, [tag])):
+				names.append(SELL_GOODS_NAMES[tag])
+		best_total = total
+		best_name = String(place.get("display_name", "A merchant"))
+		best_goods = " and ".join(names.slice(0, 2)) if not names.is_empty() else "goods"
+	if best_total < SELL_HINT_MIN:
+		return ""
+	return "The %s here would pay about %d spirit stones for your %s." % [best_name, best_total, best_goods]
 
 
 ## Game days that must pass (GameClock) before "try something new" is suggested (GUIDE-007).
