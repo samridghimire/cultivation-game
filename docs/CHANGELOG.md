@@ -2,6 +2,21 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-08 [WU-037] Press F1 or H to open the help pages.
+- 2026-10-08 [C-016] Core Formation's forced trial and vault guardian are beatable on arrival.
+- 2026-10-08 [WU-035] Inventory category tabs (pills, herbs and ores, equipment, talismans, manuals...).
+- 2026-10-08 [C-021] The first secret realms and trials have fair guardians for a newcomer.
+- 2026-10-08 [STAT-002] Your life record counts spirit stones earned and qi gathered.
+- 2026-10-08 [WU-038] Shops: buy or sell the most you can, or step by 10.
+- 2026-10-08 [WU-034] "Meditate until the next layer" at meditation spots and abodes.
+- 2026-10-08 [WU-033] Items describe every effect they have, in plain words.
+- 2026-10-08 [MSG-001] Messages say what numbers mean: grudges, favor, alignment tiers, contribution left.
+- 2026-10-08 [C-019] Qingshi Village: right directions from Elder Mo, fewer empty days, no forced fight for mortals, a merchant who buys herbs and ore.
+- 2026-10-08 [QA-034] A test that newcomer hints never point at something you can't do.
+- 2026-10-08 [WU-032] Confirm before leaving a sect, feeding the artifact or using a dangerous item.
+- 2026-10-08 [CULT-001] Meditation messages show your qi progress toward the next layer.
+- 2026-10-08 [ECON-001b] Sect stipends and newcomer errands pay less, so sect life no longer out-earns every profession.
+- 2026-10-08 [FH-030] Honest newcomer hints and a "First goals" checklist in the journal.
 - 2026-10-08 [RV-009] Gathering trips find something most of the time again; the income cut now comes from rarer valuable finds.
 - 2026-10-08 [QA-028] Journal test with a busy sect disciple (missions, the sect's call, commissions, errands, secret realms).
 - 2026-10-08 [WU-029] Meditation and abode menus say what a month or a year of cultivation will yield and your breakthrough odds.

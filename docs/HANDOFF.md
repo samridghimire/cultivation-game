@@ -2,6 +2,16 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-10-08 (planner, 18:15 UTC)
+- 15 tasks landed since 16:20 (FH-030, CULT-001, MSG-001, STAT-002, WU-032..035, WU-037, WU-038, ECON-001b, C-016, C-019,
+  C-021, QA-034). The first-hour audit's fix list is complete. CMB-002 and QA-033 are claimed (~18:05).
+- New theme: fights with flavor (CMB-003, WU-043 spoils, WU-036 playback), loot worth money (C-023 beast materials,
+  GUIDE-009 sell hint, WU-039 shop tabs, WU-040 sell all), goals past the first hour (GOAL-002 breakthrough odds in the
+  journal, GOAL-003 mid-game goals, WU-041 days-to-next-layer on the HUD), fair gates (C-024: Foundation trials, the
+  tournament_bout ring at QR1 vs a QR6 foe, vengeful_brother), MSG-002, QA-035 (economy sim monthly sect), QA-036.
+- QA-029 (curious-player sim) is now the QA worker's top task: its Follow-ups should drive the next first-hour fixes.
+- The owner's three urgent questions (pacing, first fights, ascension) are still open.
+
 ## State on 2026-10-08 (planner, 16:20 UTC)
 - 16 tasks landed since 14:15 (CMB-001, BT-001, MED-001, EXP-001, YEAR-001, GUIDE-007, WU-024/027/028/029/030/031, C-017,
   RV-009, QA-028, QA-030). The "say what an action will do" theme is complete. ECON-001b is claimed (16:09).
