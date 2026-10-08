@@ -33,3 +33,17 @@ func test_npc_spots_keep_clear_of_places() -> void:
 				assert_false(_rect(place, [30, 30]).grow(20.0).has_point(p), "%s: NPC spot %s stands on %s" % [region["id"], p, place.get("display_name", place["type"])])
 			if region.has("family_home"):
 				assert_false(_rect(region["family_home"], [90, 64]).grow(20.0).has_point(p), "%s: NPC spot %s stands on the Family Home" % [region["id"], p])
+
+
+## WU-023: NPC name labels stay 90 px clear of place positions.
+func test_npc_spots_are_90px_from_place_centers() -> void:
+	for region: Dictionary in data().regions.values():
+		var centers: Array[Vector2] = []
+		for entry: Dictionary in region.get("places", []) + region.get("abodes", []):
+			centers.append(Vector2(float(entry["pos"][0]), float(entry["pos"][1])))
+		if region.has("family_home"):
+			centers.append(Vector2(float(region["family_home"]["pos"][0]), float(region["family_home"]["pos"][1])))
+		for spot: Array in region.get("npc_spots", []):
+			var p := Vector2(float(spot[0]), float(spot[1]))
+			for c in centers:
+				assert_true(p.distance_to(c) >= Npcs.SPOT_CLEARANCE, "%s: NPC spot %s is within 90px of %s" % [region["id"], p, c])

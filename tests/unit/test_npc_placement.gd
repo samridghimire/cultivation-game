@@ -35,6 +35,24 @@ func test_spot_positions_use_spots_then_ring() -> void:
 	assert_true(pos[2] != pos[3], "overflow NPCs do not stack")
 
 
+func test_spot_positions_avoid_points() -> void:
+	var center := Vector2(500, 500)
+	var avoid: Array[Vector2] = []
+	for k in 8:
+		avoid.append(center + Vector2.from_angle(TAU * float(k) / 8.0) * 140.0)
+	var plain := Npcs.spot_positions(5, [], center)
+	assert_eq(plain, Npcs.spot_positions(5, [], center, []), "no avoid behaves as before")
+	var pos := Npcs.spot_positions(10, [[10, 20]], center, avoid)
+	assert_eq(pos.size(), 10, "count is honored")
+	for i in range(1, pos.size()):
+		for p in avoid:
+			assert_true(pos[i].distance_to(p) >= Npcs.SPOT_CLEARANCE, "spot %d clear of avoid point" % i)
+		for j in range(1, i):
+			assert_true(pos[i].distance_to(pos[j]) >= Npcs.SPOT_CLEARANCE, "ring spots do not crowd")
+	var crowded: Array[Vector2] = [center]
+	assert_eq(Npcs.spot_positions(3, [], center, crowded).size(), 3, "count honored even when nothing is clear")
+
+
 func test_world_title_and_describe() -> void:
 	var player := new_character()
 	player.gender = "male"

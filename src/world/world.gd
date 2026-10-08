@@ -200,7 +200,14 @@ func _build_generated_npcs() -> void:
 		var others: Array[CharacterData] = []
 		others.assign(people.filter(func(c: CharacterData) -> bool: return not family.has(c)))
 		people = others
-	var spots := Npcs.spot_positions(people.size() + family.size(), _region.get("npc_spots", []), player.position)
+	var avoid: Array[Vector2] = []
+	for place: Dictionary in _region.get("places", []):
+		avoid.append(_vec(place.get("pos", [0, 0])))
+	for abode: Dictionary in _region.get("abodes", []):
+		avoid.append(_vec(abode.get("pos", [0, 0])))
+	if _region.has("family_home"):
+		avoid.append(_vec(_region["family_home"].get("pos", [0, 0])))
+	var spots := Npcs.spot_positions(people.size() + family.size(), _region.get("npc_spots", []), player.position, avoid)
 	if not family.is_empty():
 		var split := FamilyHome.split_spots(spots, family.size(), _vec(_region["family_home"].get("pos", [0, 0])))
 		spots = split[1]

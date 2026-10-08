@@ -332,18 +332,41 @@ static func generated_in_region(npcs: Dictionary, data: GameData, region_id: Str
 	return result
 
 
+## Ring positions closer than this to a place (or another NPC) are skipped.
+const SPOT_CLEARANCE := 90.0
+const SPOT_SEARCH_CAP := 64
+
+
 ## World positions for `count` NPCs: the region's npc_spots first, then a ring
-## around `center` for any overflow.
-static func spot_positions(count: int, spots: Array, center: Vector2) -> Array[Vector2]:
+## around `center` for any overflow. Ring candidates within SPOT_CLEARANCE of an
+## `avoid` point or an already chosen spot are skipped (after SPOT_SEARCH_CAP
+## candidates the next one is accepted anyway), so labels stay readable.
+static func spot_positions(count: int, spots: Array, center: Vector2, avoid: Array[Vector2] = []) -> Array[Vector2]:
 	var out: Array[Vector2] = []
+	var candidate := 0
 	for i in count:
 		if i < spots.size():
 			out.append(Vector2(float(spots[i][0]), float(spots[i][1])))
-		else:
-			var k := i - spots.size()
-			var radius := 140.0 + 50.0 * float(k / 8)
-			out.append(center + Vector2.from_angle(TAU * float(k % 8) / 8.0) * radius)
+			continue
+		var pos := center
+		for tries in SPOT_SEARCH_CAP:
+			var radius := 140.0 + 50.0 * float(candidate / 8)
+			pos = center + Vector2.from_angle(TAU * float(candidate % 8) / 8.0) * radius
+			candidate += 1
+			if _spot_clear(pos, avoid, out):
+				break
+		out.append(pos)
 	return out
+
+
+static func _spot_clear(pos: Vector2, avoid: Array[Vector2], chosen: Array[Vector2]) -> bool:
+	for p in avoid:
+		if pos.distance_to(p) < SPOT_CLEARANCE:
+			return false
+	for p in chosen:
+		if pos.distance_to(p) < SPOT_CLEARANCE:
+			return false
+	return true
 
 
 ## Short label shown under a generated NPC's name in the world: their relation
