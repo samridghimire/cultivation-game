@@ -76,6 +76,7 @@ func _ready() -> void:
 	GameClock.days_advanced.connect(_on_days_advanced)
 	GameClock.year_changed.connect(_on_year_changed)
 	EventBus.player_changed.connect(check_milestones)
+	EventBus.player_changed.connect(_announce_tier)
 	EventBus.player_changed.connect(check_unlock_notices)
 	EventBus.player_changed.connect(Platform.refresh_presence)
 	EventBus.region_changed.connect(func(_id: String) -> void: Platform.refresh_presence())
@@ -113,6 +114,7 @@ func start_session(character: CharacterData) -> void:
 	world_flags["notice_rival"] = true  # a rival from the start is not news (GUIDE-008)
 	GameClock.reset()
 	_store_year_snapshot()
+	_announced_tier = Alignment.tier_name(player.alignment, data)
 	EventBus.clear_history()
 	EventBus.session_started.emit()
 	EventBus.post("%s sets out on the path of cultivation." % player.name, "progress")
@@ -1105,7 +1107,6 @@ func hostile_act(npc_id: String, act_id: String) -> void:
 		EventBus.post("%s drives you off.%s" % [npc.name, suffix], "warning")
 	else:
 		EventBus.post(Karma.act_sentence(npc, act_id, result) + suffix, "danger" if not npc.alive else "warning")
-	_announce_tier()
 	_clan_deed(npc_id, act_id)
 	_pass_time(result["days"])
 
@@ -1133,6 +1134,8 @@ func _clan_deed(npc_id: String, deed: String) -> void:
 var _announced_tier: String = ""
 
 func _announce_tier() -> void:
+	if player == null:
+		return
 	var tier := Alignment.tier_name(player.alignment, data)
 	if _announced_tier != "" and tier != _announced_tier:
 		EventBus.post("Your path has shifted: you are now %s." % tier, "karma")
@@ -1639,7 +1642,6 @@ func treat_npc(npc_id: String) -> void:
 	var owed := Karma.on_kindness(player, data, npc_id, "treat_npc")
 	var debt := ", they owe you" if owed > 0 else ""
 	EventBus.post("You treat %s's %s: %s. (+%d favor, alignment %+d, now %s%s)" % [patient.name, injury_name, outcome, treated, result["alignment"], Alignment.tier_name(player.alignment, data), debt], "karma")
-	_announce_tier()
 	_clan_deed(npc_id, "treat_npc")
 	if result["ranks_gained"] > 0:
 		EventBus.post("You are now %s!" % Text.a(Professions.rank_title(player, data, Medicine.DOCTOR)), "progress")
@@ -1654,7 +1656,6 @@ func treat_patients(days: int) -> void:
 	_start_time_skip()
 	var result := Medicine.treat_patients(player, data, days)
 	EventBus.post("You treat patients for %s: +%d xp, +%d spirit stones, alignment %+d, now %s." % [Calendar.format_duration(days), int(result["xp"]), result["income"], result["alignment"], Alignment.tier_name(player.alignment, data)], "karma")
-	_announce_tier()
 	if result["ranks_gained"] > 0:
 		EventBus.post("You are now %s!" % Text.a(Professions.rank_title(player, data, Medicine.DOCTOR)), "progress")
 	_pass_time(days, "Treating patients")
@@ -2097,7 +2098,6 @@ func devour() -> void:
 		EventBus.player_changed.emit()
 		return
 	EventBus.post("You press your palm to the fallen %s's dantian and drink their cultivation dry: +%d qi. (Alignment %+d, now %s)" % [enemy.get("name", "cultivator"), result["qi"], result["alignment"], Alignment.tier_name(player.alignment, data)], "karma")
-	_announce_tier()
 	if result["stages"] > 0:
 		EventBus.post("Your cultivation rises to %s!" % Cultivation.realm_label(player, data), "progress")
 	if result["injury"] != "":

@@ -689,6 +689,27 @@ func _last_text() -> String:
 	return String(_root().get_node("EventBus").history[-1]["text"])
 
 
+func test_path_shift_announced_on_any_alignment_change() -> void:
+	var c := _start()
+	var gs := _game_state()
+	var eb := _root().get_node("EventBus")
+	eb.clear_history()
+	eb.player_changed.emit()
+	assert_eq(eb.history.filter(func(m): return String(m["text"]).contains("Your path has shifted")).size(), 0)
+	c.alignment = -400
+	eb.clear_history()
+	eb.player_changed.emit()
+	eb.player_changed.emit()
+	var shifted: Array = eb.history.filter(func(m): return String(m["text"]).contains("Your path has shifted"))
+	assert_eq(shifted.size(), 1)
+	assert_eq(String(shifted[0]["category"]), "karma")
+	c.alignment -= 1
+	eb.clear_history()
+	eb.player_changed.emit()
+	assert_eq(eb.history.filter(func(m): return String(m["text"]).contains("Your path has shifted")).size(), 0)
+	gs.end_session()
+
+
 func test_messages_use_words_not_raw_numbers() -> void:
 	var c := _start()
 	var gs := _game_state()
