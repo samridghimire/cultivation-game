@@ -78,14 +78,14 @@ func test_workshop_deliver_commission_entries() -> void:
 	var shop: Node = load("res://src/world/interactables/workshop.gd").new()
 	var entry: Dictionary = {}
 	for option: Dictionary in shop.get_options():
-		if option["label"].begins_with("Deliver:"):
+		if option["label"].begins_with("Deliver "):
 			entry = option
 	assert_true(entry["disabled"], "no items yet")
-	assert_true(entry["label"].contains("You need"))
+	assert_true(String(entry["reason"]).begins_with("You need"))
 	gs.player.add_item(order["item"], int(order["count"]))
 	var stones: int = gs.player.item_count("spirit_stone")
 	for option: Dictionary in shop.get_options():
-		if option["label"].begins_with("Deliver:"):
+		if option["label"].begins_with("Deliver "):
 			assert_false(option["disabled"])
 			option["action"].call()
 	shop.free()

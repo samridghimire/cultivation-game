@@ -119,3 +119,13 @@ static func describe(c: CharacterData, data: GameData, entry: Dictionary, today:
 	return "%d %s for %d spirit stones and %d %s xp, %d days left (you have %d)" % [
 		int(entry["count"]), _item_name(data, String(entry["item"])), int(entry["reward"]), int(entry["xp"]),
 		prof_name, days_left(entry, today), c.item_count(String(entry["item"]))]
+
+
+## Menu label: "Deliver 3 Qi Gathering Pills: 54 stones, 30 xp, 41 days (have 1/3)".
+static func short_label(c: CharacterData, data: GameData, entry: Dictionary, today: int) -> String:
+	var name := _item_name(data, String(entry["item"]))
+	if name.length() > 15:
+		name = name.substr(0, 14) + "…"
+	return "Deliver %d %s: %d stones, %d xp, %dd (have %d/%d)" % [
+		int(entry["count"]), name, int(entry["reward"]), int(entry["xp"]),
+		days_left(entry, today), mini(c.item_count(String(entry["item"])), int(entry["count"])), int(entry["count"])]

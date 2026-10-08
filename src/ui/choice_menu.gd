@@ -54,6 +54,7 @@ func _rebuild() -> void:
 	for option in options:
 		var b := UIStyle.button(option["label"], _choose.bind(option))
 		b.disabled = option.get("disabled", false)
+		b.tooltip_text = String(option.get("reason", ""))
 		_buttons.add_child(b)
 	_buttons.add_child(UIStyle.button("Leave", close))
 	_focus_first.call_deferred()

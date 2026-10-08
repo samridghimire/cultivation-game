@@ -106,3 +106,21 @@ func test_validation_rejects_bad_price_fraction() -> void:
 	g.commissions["max_price_fraction"] = 1.5
 	g._validate_commissions()
 	assert_eq(g.load_errors.size(), 1)
+
+
+func test_short_label_fits_and_has_no_doubled_count() -> void:
+	var c := _alchemist()
+	Commissions.roll(c, data(), seeded_rng(), 0)
+	var order: Dictionary = c.commissions[0]
+	var label := Commissions.short_label(c, data(), order, 0)
+	assert_true(label.begins_with("Deliver %d " % int(order["count"])), label)
+	assert_true(label.contains("(have 0/%d)" % int(order["count"])), label)
+	assert_false(label.contains("you have"), label)
+	var longest_id := ""
+	for recipe: Dictionary in data().recipes.values():
+		var item_id := String(recipe["output"]["item"])
+		if longest_id == "" or String(data().items[item_id]["name"]).length() > String(data().items[longest_id]["name"]).length():
+			longest_id = item_id
+	var worst := {"item": longest_id, "count": 3, "reward": 99, "xp": 99, "due_day": 60}
+	var worst_label := Commissions.short_label(c, data(), worst, 0)
+	assert_true(worst_label.length() <= 60, "%d: %s" % [worst_label.length(), worst_label])
