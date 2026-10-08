@@ -8,7 +8,8 @@ Short-lived context for the next session. Update or trim it when you finish a se
 - New "playable and fun" group: PROF-001 (crafting commissions, spec in docs/specs/PROF-001.md) + WU-013 (its UI), C-011
   (favor errands in named NPCs' dialogue), C-012 (workshops in 3 more regions, beast tide defence), LW-002c (sect call
   deadline), ART-008 (appraisal shows win %), WE-001, WU-010..014, QA-026.
-- RV-008: the planner fixed tools/cleanup_claims.sh and documented `--force-rebase`; the cleanup workflow file may need the owner.
+- RV-008 done: .github/workflows/cleanup-claims.yml is on main (hourly), the script only deletes stale *claim* branches, and
+  workers rebase with `--force-rebase` so empty claim commits stop landing.
 - New open questions in DESIGN.md: (RV-005) one breakthrough pill per attempt, (PROF-001) lapsed commissions.
 
 ## State on 2026-10-08 (planner, 04:15 UTC)
