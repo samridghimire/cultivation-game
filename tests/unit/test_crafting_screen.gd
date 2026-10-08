@@ -48,3 +48,21 @@ func test_refine_batch_crafts_until_ingredients_run_out() -> void:
 	assert_eq(gs.player.age_days, before + 2 * int(recipe["days"]))
 	for item_id in recipe["ingredients"]:
 		assert_eq(gs.player.item_count(item_id), 0)
+
+
+func test_missing_ingredients_list_sources() -> void:
+	var c := new_character()
+	c.inventory = {}
+	var text := CraftingScreen.missing_sources_text(c, data(), "qi_gathering_pill")
+	assert_true(text.contains("Sold at") or text.contains("Gathered at"), text)
+	var recipe: Dictionary = data().recipes["qi_gathering_pill"]
+	for item_id in recipe["ingredients"]:
+		c.add_item(item_id, int(recipe["ingredients"][item_id]))
+	assert_eq(CraftingScreen.missing_sources_text(c, data(), "qi_gathering_pill"), "")
+
+
+func test_items_sources_names_places_and_regions() -> void:
+	var lines := Items.sources(data(), "spirit_herb")
+	assert_true(lines.any(func(l: String) -> bool: return l.begins_with("Gathered at Village Herb Slope (Qingshi Village)")), str(lines))
+	assert_true(lines.any(func(l: String) -> bool: return l.begins_with("Sold at Village Herb Seller")), str(lines))
+	assert_eq(Items.sources(data(), "no_such_item"), ["Found exploring"] as Array[String])

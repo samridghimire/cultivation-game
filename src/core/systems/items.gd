@@ -58,6 +58,28 @@ static func has_tag(data: GameData, item_id: String, tags: Array) -> bool:
 	return false
 
 
+## Where `item_id` can be had, as "Sold at <merchant> (<region>)" /
+## "Gathered at <place> (<region>)" lines; "Found exploring" when no merchant
+## or gather site has it (loot, rewards).
+static func sources(data: GameData, item_id: String) -> Array[String]:
+	var lines: Array[String] = []
+	var item: Dictionary = data.items.get(item_id, {})
+	for region: Dictionary in data.regions.values():
+		for place: Dictionary in region.get("places", []):
+			var kind: String = place.get("type", "")
+			var where := "%s (%s)" % [place.get("display_name", kind), region.get("name", region["id"])]
+			if kind == "merchant" and merchant_sells(data, item, place.get("stock_tags", []), int(place.get("max_price", 0))):
+				lines.append("Sold at " + where)
+			elif kind == "gather":
+				for entry: Dictionary in place.get("gather_table", []):
+					if entry.get("item", "") == item_id:
+						lines.append("Gathered at " + where)
+						break
+	if lines.is_empty():
+		lines.append("Found exploring")
+	return lines
+
+
 ## Item ids a merchant stocking `stock_tags` up to `max_price` sells
 ## (merchant_sells), cheapest first.
 static func shop_stock(data: GameData, max_price: int, stock_tags: Array) -> Array:

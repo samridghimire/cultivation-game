@@ -89,24 +89,7 @@ func _all_obtainable(ingredients: Dictionary, items: Dictionary) -> bool:
 
 
 func _sold_by_a_merchant(item: Dictionary) -> bool:
-	var price := int(item.get("price", 0))
-	if price <= 0:
-		return false
-	var tags: Array = item.get("tags", [])
-	for region: Dictionary in data().regions.values():
-		for place: Dictionary in region.get("places", []):
-			if place.get("type", "") != "merchant":
-				continue
-			var max_price := int(place.get("max_price", 0))
-			if max_price > 0 and price > max_price:
-				continue
-			var stock_tags: Array = place.get("stock_tags", [])
-			if stock_tags.is_empty() and tags.is_empty():
-				return true
-			for tag in tags:
-				if stock_tags.has(tag):
-					return true
-	return false
+	return Items.sources(data(), item["id"]).any(func(line: String) -> bool: return line.begins_with("Sold at"))
 
 
 ## Fills granted with item_id -> source label for every positive `items` grant

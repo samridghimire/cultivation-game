@@ -15,6 +15,7 @@ var _list: VBoxContainer
 var _name: Label
 var _info: Label
 var _ingredients: Label
+var _where: Label
 var _output: Label
 var _odds: Label
 var _status: Label
@@ -55,6 +56,8 @@ func _init() -> void:
 	details.add_child(_info)
 	_ingredients = _wrapped(UIStyle.label("", 16))
 	details.add_child(_ingredients)
+	_where = _wrapped(UIStyle.label("", 14, Color(0.7, 0.7, 0.7)))
+	details.add_child(_where)
 	_output = _wrapped(UIStyle.label("", 16, UIStyle.CATEGORY_COLORS["progress"]))
 	details.add_child(_output)
 	_odds = _wrapped(UIStyle.label("", 16))
@@ -103,6 +106,17 @@ static func ingredient_lines(c: CharacterData, data: GameData, recipe_id: String
 	for item_id in ingredients:
 		lines.append("%d / %d %s" % [c.item_count(item_id), int(ingredients[item_id]), data.items[item_id].get("name", item_id)])
 	return lines
+
+
+## For each ingredient the player lacks, where to get it ("" when none is missing).
+static func missing_sources_text(c: CharacterData, data: GameData, recipe_id: String) -> String:
+	var lines: PackedStringArray = []
+	var ingredients: Dictionary = data.recipes[recipe_id]["ingredients"]
+	for item_id in ingredients:
+		if c.item_count(item_id) >= int(ingredients[item_id]):
+			continue
+		lines.append("%s: %s" % [data.items[item_id].get("name", item_id), "; ".join(Items.sources(data, item_id))])
+	return "\n".join(lines)
 
 
 ## "2x Qi Gathering Pill" for a recipe output block ({item, count}).
@@ -158,7 +172,7 @@ func _show_details() -> void:
 		_actions.remove_child(child)
 		child.queue_free()
 	var recipe: Dictionary = data.recipes.get(_selected, {})
-	for c in [_name, _info, _ingredients, _output, _odds, _status]:
+	for c in [_name, _info, _ingredients, _where, _output, _odds, _status]:
 		c.visible = not recipe.is_empty()
 	if recipe.is_empty():
 		return
@@ -168,6 +182,8 @@ func _show_details() -> void:
 	var prof: ProfessionDef = data.professions[recipe["profession"]]
 	_info.text = "Requires %s %s  |  takes %s" % [data.profession_rank_names[min_rank], prof.name, Calendar.format_duration(int(recipe["days"]))]
 	_ingredients.text = "Ingredients:\n  " + "\n  ".join(ingredient_lines(p, data, _selected))
+	_where.text = missing_sources_text(p, data, _selected)
+	_where.visible = _where.text != ""
 	var out := "Yields: %s" % output_text(data, recipe["output"])
 	if recipe.has("great_output"):
 		out += "\nGreat success: %s" % output_text(data, recipe["great_output"])
