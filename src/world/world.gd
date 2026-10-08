@@ -60,11 +60,14 @@ func _exit_tree() -> void:
 		get_tree().auto_accept_quit = true
 
 
-## Closing the window saves first (bypassing the once-a-day limit).
+## Closing the window saves first (bypassing the once-a-day limit); suspending or
+## losing focus saves too, rate-limited (Steam Deck sleeps rather than closes).
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_WM_CLOSE_REQUEST:
 		SaveManager.autosave(true)
 		get_tree().quit()
+	elif what == NOTIFICATION_APPLICATION_PAUSED or what == NOTIFICATION_APPLICATION_FOCUS_OUT:
+		SaveManager.autosave_on_suspend()
 
 
 ## Travel or an artifact respawn moved the player: rebuild the world for the

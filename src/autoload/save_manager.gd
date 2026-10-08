@@ -15,6 +15,9 @@ const AUTOSAVE_SLOT := "autosave"
 
 ## GameClock.total_days of the last autosave; -1 = none yet this run.
 var _last_autosave_day := -1
+## Real-time stamp (ms) of the last suspend save; -1 = none yet.
+var _last_suspend_save_msec := -1
+const SUSPEND_SAVE_INTERVAL_MSEC := 60000
 ## The slot last saved to or loaded from; a final death overwrites it (REL-002).
 var current_slot := ""
 ## Whether this session wrote the autosave slot (so a final death may overwrite it).
@@ -30,6 +33,7 @@ func _ready() -> void:
 func _on_session_started() -> void:
 	current_slot = ""
 	_last_autosave_day = -1
+	_last_suspend_save_msec = -1
 	_autosaved_this_session = false
 
 
@@ -207,6 +211,18 @@ func autosave(force: bool = false) -> bool:
 		return false
 	_last_autosave_day = GameClock.total_days
 	_autosaved_this_session = true
+	return true
+
+
+## The app was suspended or lost focus (Steam Deck sleep, alt-tab): force an
+## autosave, at most once per 60 s of real time. Returns true if it saved.
+func autosave_on_suspend() -> bool:
+	var now := Time.get_ticks_msec()
+	if _last_suspend_save_msec >= 0 and now - _last_suspend_save_msec < SUSPEND_SAVE_INTERVAL_MSEC:
+		return false
+	if not autosave(true):
+		return false
+	_last_suspend_save_msec = now
 	return true
 
 

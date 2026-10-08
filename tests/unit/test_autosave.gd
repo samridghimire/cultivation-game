@@ -92,3 +92,26 @@ func test_new_character_death_leaves_other_saves_alone() -> void:
 		assert_true(bool(saves.read_meta(slot).get("alive", false)), slot + " keeps the other character")
 	saves.delete_save("_test_other")
 	_cleanup(gs, saves)
+
+
+func test_suspend_save_is_rate_limited() -> void:
+	var s := _setup()
+	var gs: Node = s[0]
+	var saves: Node = s[1]
+	saves._last_suspend_save_msec = -1
+	assert_true(saves.autosave_on_suspend(), "first suspend writes")
+	assert_true(saves.has_save("autosave"))
+	assert_false(saves.autosave_on_suspend(), "second within 60 s does not")
+	saves._last_suspend_save_msec = Time.get_ticks_msec() - SaveManager.SUSPEND_SAVE_INTERVAL_MSEC - 1
+	assert_true(saves.autosave_on_suspend(), "after the interval it saves again")
+	_cleanup(gs, saves)
+	saves._last_suspend_save_msec = -1
+
+
+func test_suspend_save_refuses_without_session() -> void:
+	var gs := (Engine.get_main_loop() as SceneTree).root.get_node("GameState")
+	var saves := (Engine.get_main_loop() as SceneTree).root.get_node("SaveManager")
+	gs.end_session()
+	saves._last_suspend_save_msec = -1
+	assert_false(saves.autosave_on_suspend(), "no session")
+	assert_eq(saves._last_suspend_save_msec, -1)
