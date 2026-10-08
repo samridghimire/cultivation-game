@@ -112,6 +112,8 @@ func start_session(character: CharacterData) -> void:
 	NpcClans.ensure(npc_clans, npcs, data, rng)
 	Rivals.spawn(player, npcs, data, rng, data.start_region)
 	world_flags["notice_rival"] = true  # a rival from the start is not news (GUIDE-008)
+	for notice in Guidance.unlock_notices(player, data, world_flags, npcs):
+		world_flags["notice_" + String(notice["id"])] = true  # roads already open are not news
 	GameClock.reset()
 	_store_year_snapshot()
 	_announced_tier = Alignment.tier_name(player.alignment, data)

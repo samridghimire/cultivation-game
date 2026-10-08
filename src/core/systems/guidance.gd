@@ -393,7 +393,24 @@ static func unlock_notices(c: CharacterData, data: GameData, flags: Dictionary, 
 	var rival := Rivals.rival_of(c, people)
 	if rival != null:
 		_add_notice(out, flags, "rival", "%s has named you a rival." % rival.name)
+	for region_id: String in data.regions:
+		var route := _shortest_gated_route(data, region_id)
+		if route.is_empty() or c.realm_index < data.realm_index_of(String(route["min_realm"])):
+			continue
+		_add_notice(out, flags, "road_" + region_id, "You are strong enough to travel to %s (%d days from %s)." % [Exploration.region_name(data, region_id), int(route["days"]), Exploration.region_name(data, String(route["from"]))])
 	return out
+
+
+## The quickest route into a region that has a min_realm gate ({} when none is gated).
+static func _shortest_gated_route(data: GameData, region_id: String) -> Dictionary:
+	var best: Dictionary = {}
+	for from_id: String in data.regions:
+		for route: Dictionary in data.regions[from_id].get("routes", []):
+			if route.get("to", "") != region_id or String(route.get("min_realm", "")) == "":
+				continue
+			if best.is_empty() or int(route.get("days", 0)) < int(best["days"]):
+				best = {"from": from_id, "days": int(route.get("days", 0)), "min_realm": String(route["min_realm"])}
+	return best
 
 
 static func _add_notice(out: Array[Dictionary], flags: Dictionary, id: String, text: String) -> void:

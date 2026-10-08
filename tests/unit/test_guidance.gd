@@ -499,6 +499,23 @@ func test_unlock_notices_body_tempering_needs_the_realm() -> void:
 	assert_false(_notice_ids(Guidance.unlock_notices(c, d, {"notice_body_tempering": true})).has("body_tempering"))
 
 
+func test_unlock_notices_new_roads() -> void:
+	var d := data()
+	var c := _fresh()
+	var ids := _notice_ids(Guidance.unlock_notices(c, d, {}))
+	assert_false(ids.any(func(i: String) -> bool: return i.begins_with("road_")))
+	c.realm_index = 1
+	var notices := Guidance.unlock_notices(c, d, {})
+	ids = _notice_ids(notices)
+	assert_true(ids.has("road_azure_peak"))
+	assert_true(ids.has("road_withered_bone_marsh"))
+	assert_false(ids.has("road_myriad_peaks_ridge"))
+	for n in notices:
+		if n["id"] == "road_azure_peak":
+			assert_true(String(n["text"]).contains("7 days"))
+	assert_false(_notice_ids(Guidance.unlock_notices(c, d, {"notice_road_azure_peak": true})).has("road_azure_peak"))
+
+
 func test_unlock_notices_dao_insight() -> void:
 	var d := data()
 	var c := _fresh()
