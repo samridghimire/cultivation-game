@@ -131,6 +131,9 @@ func _manual_sources(d: GameData, item_id: String) -> PackedStringArray:
 	for realm: Dictionary in d.secret_realms.values():
 		if realm.get("inheritance", {}).get("effects", {}).get("items", {}).has(item_id):
 			sources.append(realm["id"])
+	for legacy: Dictionary in d.inheritances.values():
+		if legacy.get("reward", {}).get("items", {}).has(item_id):
+			sources.append(legacy["id"])
 	return sources
 
 
@@ -153,6 +156,9 @@ func test_every_method_can_be_obtained_and_better_ones_wait_higher_up() -> void:
 	assert_true(cap_by_method.values().has(d.realm_index_of("core_formation")))
 	assert_true(cap_by_method.values().has(d.realm_index_of("nascent_soul")))
 	assert_true(cap_by_method.values().has(d.realm_index_of("void_refinement")), "CM-001d: methods past Nascent Soul")
+	# NS-005: one method per alignment past Void Refinement.
+	assert_true(cap_by_method.values().has(d.realm_index_of("mahayana")), "NS-005: methods up to Mahayana")
+	assert_true(cap_by_method.values().has(d.realm_index_of("tribulation_transcendence")), "NS-005: a method up to Tribulation Transcendence")
 	# Each sect hands out its own method.
 	for sect_id in ["azure_cloud_sect", "blood_lotus_sect", "myriad_treasure_pavilion"]:
 		var has_method := false
