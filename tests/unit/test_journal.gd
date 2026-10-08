@@ -270,3 +270,25 @@ func test_events_in_other_regions_are_listed() -> void:
 	line = _find(_entries(c, 5, events), "Sect Tournament in Azure Peak")
 	assert_eq(line["tone"], "dim")
 	assert_true(_find(_entries(c, 5, events, "azure_peak"), "Sect Tournament in").is_empty(), "current region keeps the old lines")
+
+
+## QA-028: a busy sect disciple fills every section; no line leaks format junk or repeats.
+func test_busy_disciple_journal_is_complete_clean_and_unrepeated() -> void:
+	var d := data()
+	var c := _fresh()
+	c.realm_index = 0
+	c.stage = 8
+	c.sect = {"id": "azure_cloud_sect", "rank": 0, "contribution": 0, "spent": 0, "month_earned": 0}
+	var flags := {"sect_call_azure_cloud_sect": true, "sect_call_day_azure_cloud_sect": 5, "errand_mo_asked": true}
+	c.commissions.append({"profession": "alchemist", "recipe": "qi_gathering_pill", "item": "qi_gathering_pill", "count": 3, "reward": 54, "xp": 30.0, "due_day": 40})
+	var entries := Guidance.journal(c, d, flags, 10, "qingshi_village", 1.0, {}, [])
+	var sections := _sections(entries)
+	for name in ["Sect", "Commissions", "Errands", "Opportunities"]:
+		assert_true(sections.has(name), "section %s present" % name)
+	var seen := {}
+	for e in entries:
+		var text := String(e["text"])
+		for bad in ["%", "{", "<null>"]:
+			assert_false(text.contains(bad), "'%s' in: %s" % [bad, text])
+		assert_false(seen.has(text), "repeated line: %s" % text)
+		seen[text] = true
