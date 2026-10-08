@@ -77,7 +77,7 @@ Every great cultivation protagonist has something that sets them apart. Ours is 
 | Items, merchants (shop screen with Buy/Sell tabs), using pills | ✅ | `data/items.json`, `Items`, `src/ui/shop_screen.gd` |
 | Save/load, multiple slots | ✅ | `SaveManager` |
 | Creation Artifact: lives, anchors, respawn, recharge, functions (storage) | ✅ (artifact screen: O) | `data/artifact.json`, `CreationArtifact` |
-| Data-driven regions (5), travel, exploration encounters | ✅ (choice window: W-004d) | `data/regions.json`, `data/encounters.json`, `Exploration` |
+| Data-driven regions (5), travel, exploration encounters | ✅ (choice window: W-004d; Dangerous lethal foes are sensed first, prompt UI: FH-004b) | `data/regions.json`, `data/encounters.json`, `Exploration` |
 | Injuries (from breakthroughs and combat) | ✅ | `data/injuries.json`, `Injuries` |
 | Combat (auto-resolved) and techniques | ✅ basic | `Combat`, `Techniques`, `data/enemies.json`, `data/techniques.json` |
 | NPCs (named + generated), aging, monthly sim | ✅ | `data/npcs.json`, `Npcs`, `Names` |

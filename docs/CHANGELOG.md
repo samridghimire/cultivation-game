@@ -2,6 +2,11 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-07 [QA-017] Exploit audit test: every deed and repeatable choice encounter is checked for stones and alignment per day; rob_villager and donate_stones are the known offenders until deed cooldowns land.
+- 2026-10-07 [FH-011] A new life begins beside Meditation Rock, and the awakening tells you Elder Mo helps those just starting out.
+- 2026-10-07 [FH-010] Clearer menus: sects say why you can't join, courting options appear only once an NPC likes you, your only artifact anchor can't be released by accident, and fights to the death say so.
+- 2026-10-07 [FH-004] You sense a dangerous killer before it finds you and can choose to fight or slip away (the prompt itself comes with FH-004b).
+- 2026-10-07 [FH-001] The HUD now shows two hints and points newcomers to Elder Mo, their qi pills, the Headman's chores, a first technique and the sects before "gather qi".
 - 2026-10-07 [C-005b] The Withered Bone Marsh grows teeth: corpse puppets, drowned yin ghosts and Blood Lotus scouts prowl it, a corpse-refiner's captive can be freed, sold or ransomed, and Peddler Hei trades in the mist.
 - 2026-10-04 [RIV-001f] People you save remember: three new rescue encounters create NPCs who owe you, and a deeply grateful NPC living nearby joins your fights with an opening strike.
 - 2026-10-04 [QA-010b/TRIB-001d] Tribulation wards rebalanced: ordinary shields hold only a quarter of their strength against heaven's lightning and only your best ward counts, so preparation helps (+6-8% survival) without making tribulations safe; new buyable and craftable wards for every realm up to Tribulation Transcendence.
