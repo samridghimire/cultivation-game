@@ -322,6 +322,45 @@ func work_profession(prof_id: String, days: int) -> void:
 	_pass_time(days, "Working as %s" % Text.a(def.name))
 
 
+func _commissions_month() -> void:
+	EventBus.topic = "trade"
+	for order in Commissions.roll(player, data, rng, GameClock.total_days):
+		var days := Commissions.days_left(order, GameClock.total_days)
+		EventBus.post("A buyer at the workshop orders %d %s for %d spirit stones (%d days)." % [
+			int(order["count"]), data.items.get(order["item"], {}).get("name", order["item"]), int(order["reward"]), days], "progress")
+	EventBus.topic = "world"
+
+
+## Fills open crafting order `index` (PROF-001). Takes no time.
+func deliver_commission(index: int) -> void:
+	EventBus.topic = "trade"
+	if not _can_act():
+		return
+	var result := Commissions.deliver(player, data, index)
+	if not result["ok"]:
+		EventBus.post(result["reason"], "warning")
+		EventBus.player_changed.emit()
+		return
+	var item_name: String = data.items.get(result["item"], {}).get("name", result["item"])
+	EventBus.post("You deliver %d %s: +%d spirit stones, +%d xp." % [int(result["count"]), item_name, int(result["stones"]), int(result["xp"])], "progress")
+	var prof_id: String = result["profession"]
+	if result["ranks_gained"] > 0:
+		EventBus.post("You are now %s!" % Text.a(Professions.rank_title(player, data, prof_id)), "progress")
+	if not player.is_rogue():
+		var contribution := int(result["xp"] / (1.0 if Sects.is_favored_profession(player, data, prof_id) else 2.0))
+		if Sects.add_contribution(player, data, contribution):
+			EventBus.post("Your sect promotes you to %s." % Sects.describe(player, data), "progress")
+	EventBus.player_changed.emit()
+
+
+## One line per open crafting order, for the UI.
+func commission_lines() -> PackedStringArray:
+	var lines := PackedStringArray()
+	for order in player.commissions:
+		lines.append(Commissions.describe(player, data, order, GameClock.total_days))
+	return lines
+
+
 func join_sect(sect_id: String) -> void:
 	EventBus.topic = "sect"
 	if not _can_act():
@@ -2317,8 +2356,14 @@ func _on_days_advanced(days: int) -> void:
 		EventBus.topic = "world"
 		_world_events_month()
 		_sect_factions_month()
+		_commissions_month()
 	EventBus.topic = "world"
 	_expire_world_events()
+	if not player.commissions.is_empty():
+		EventBus.topic = "trade"
+		for lapsed in Commissions.expire(player, GameClock.total_days):
+			EventBus.post("The order for %d %s lapsed." % [int(lapsed["count"]), data.items.get(lapsed["item"], {}).get("name", lapsed["item"])], "info")
+		EventBus.topic = "world"
 	if months > 0 or Calendar.DAYS_PER_MONTH - age_before % Calendar.DAYS_PER_MONTH > Sects.DUTY_REMINDER_DAYS:
 		if Sects.duty_days_left(player) <= Sects.DUTY_REMINDER_DAYS:
 			var reminder := Sects.duty_reminder(player, data)

@@ -546,3 +546,20 @@ func test_spar_does_not_count_as_a_fight() -> void:
 	gs.fight_enemy(Sects.trial_opponent(gs.data, "rogue_cultivator"))
 	assert_eq(LifeStats.get_stat(c, "fights_won") + LifeStats.get_stat(c, "fights_lost"), 0)
 	gs.end_session()
+
+
+func test_commission_ordered_and_delivered() -> void:
+	var c := _start()
+	var gs := _game_state()
+	c.professions["alchemist"] = {"rank": 0, "xp": 0.0}
+	c.realm_index = 1
+	gs.cultivate(Calendar.DAYS_PER_MONTH + 1)
+	assert_eq(c.commissions.size(), 1)
+	var order: Dictionary = c.commissions[0]
+	c.add_item(order["item"], int(order["count"]))
+	var stones := c.item_count("spirit_stone")
+	gs.deliver_commission(0)
+	assert_eq(c.item_count("spirit_stone"), stones + int(order["reward"]))
+	assert_eq(c.commissions.size(), 0)
+	assert_eq(gs.commission_lines().size(), 0)
+	gs.end_session()

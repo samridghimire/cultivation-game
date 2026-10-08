@@ -216,6 +216,8 @@ static func journal(c: CharacterData, data: GameData, flags: Dictionary, today: 
 			if def.has(kind):
 				var reason := WorldEvents.check_join(data, events, c, event_id, kind, region_id)
 				_add(out, "World events", "%s: %s" % [kind.capitalize(), "you can enter" if reason == "" else reason], "normal" if reason == "" else "dim")
+	for order in c.commissions:
+		_add(out, "Commissions", Commissions.describe(c, data, order, today), "warning" if Commissions.days_left(order, today) <= 7 else "normal")
 	_milestone_entries(out, c, data, flags, clan)
 	return out
 

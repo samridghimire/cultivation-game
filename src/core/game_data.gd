@@ -89,6 +89,8 @@ var abodes: Dictionary = {}
 var recipes: Dictionary = {}  # id -> Dictionary (data/recipes.json)
 ## Alchemy tunables (see Alchemy).
 var alchemy: Dictionary = {}
+## recipes.json commissions block (PROF-001, Commissions); empty = none.
+var commissions: Dictionary = {}
 var sect_missions: Dictionary = {}  # id -> Dictionary (data/sect_missions.json)
 ## Help screen pages, in order: [{id, title, body: [paragraph]}] (data/help.json).
 var help_pages: Array = []
@@ -270,6 +272,7 @@ func _load(dir: String) -> void:
 
 	var crafting := _read(dir, "recipes.json")
 	alchemy = crafting.get("alchemy", {})
+	commissions = crafting.get("commissions", {})
 	for recipe in crafting.get("recipes", []):
 		recipes[recipe["id"]] = recipe
 
@@ -582,10 +585,32 @@ func _validate_artifact() -> void:
 			load_errors.append("artifact.json anchor_slots has unknown realm '%s'" % realm_id)
 
 
+func _validate_commissions() -> void:
+	if commissions.is_empty():
+		return
+	var per: Variant = commissions.get("per_profession")
+	if not (per is int or per is float) or int(per) < 1:
+		load_errors.append("recipes.json commissions.per_profession must be an integer >= 1")
+	var count: Variant = commissions.get("count")
+	if not (count is Array) or count.size() != 2 or not (count[0] is float or count[0] is int) or not (count[1] is float or count[1] is int) \
+			or int(count[0]) < 1 or int(count[0]) > int(count[1]):
+		load_errors.append("recipes.json commissions.count must be [min, max] with 1 <= min <= max")
+	var mult: Variant = commissions.get("reward_mult")
+	if not (mult is float or mult is int) or float(mult) < 1.0:
+		load_errors.append("recipes.json commissions.reward_mult must be a number >= 1")
+	var xp_fraction: Variant = commissions.get("xp_fraction")
+	if not (xp_fraction is float or xp_fraction is int) or float(xp_fraction) < 0.0:
+		load_errors.append("recipes.json commissions.xp_fraction must be a number >= 0")
+	var days: Variant = commissions.get("days")
+	if not (days is float or days is int) or int(days) < 1:
+		load_errors.append("recipes.json commissions.days must be an integer >= 1")
+
+
 func _validate_recipes() -> void:
 	var markup: Variant = alchemy.get("crafted_sell_markup", 1.3)
 	if not (markup is float or markup is int) or float(markup) < 1.0:
 		load_errors.append("recipes.json alchemy.crafted_sell_markup must be a number >= 1")
+	_validate_commissions()
 	for recipe: Dictionary in recipes.values():
 		var id: String = recipe["id"]
 		if not professions.has(recipe.get("profession", "")):
