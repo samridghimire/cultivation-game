@@ -14,6 +14,8 @@
         {"label": "How do I break through a bottleneck?", "next": "bottleneck", "if": {"min_realm": "qi_refining"}},
         {"label": "Offer 10 spirit stones as a token of respect.", "next": "gift", "effects": {"items": {"spirit_stone": -10}}, "favor": 10, "show_locked": true},
         {"label": "Ask for his personal guidance.", "next": "guidance", "if": {"min_favor": 20, "not_flag": "mo_guidance"}, "show_locked": true},
+        {"label": "Ask if there is any small favor you can do for him.", "next": "errand_ask", "if": {"not_flag": "errand_mo_asked"}},
+        {"label": "Bring the six Spirit Herbs Elder Mo asked for.", "next": "errand_thanks", "if": {"has_items": {"spirit_herb": 6}, "flag": "errand_mo_asked", "not_flag": "errand_mo_done"}, "effects": {"items": {"spirit_herb": -6, "spirit_stone": 30, "qi_gathering_pill": 1}, "set_flag": "errand_mo_done"}, "favor": 15},
         {"label": "Farewell, senior.", "next": "end"}
       ]},
     "breathing": {"text": "Sit. Breathe in through the crown, sink it to the dantian, and let the world's qi follow. The Basic Breathing Method. Every immortal began here.",
@@ -45,6 +47,11 @@
         {"label": "Farewell.", "next": "end"}
       ]},
     "demonic": {"text": "The stench of blood clings to you. Leave my sight before I forget I am retired.",
-      "choices": [{"label": "Leave.", "next": "end"}]}
+      "choices": [{"label": "Leave.", "next": "end"}]},
+    "errand_ask": {"text": "A favor? Hm. These old bones ache when the rain comes. Six Spirit Herbs from the slope above the village, brewed into a tonic, would ease them. Bring them and I will not let you go unthanked.",
+      "choices": [{"label": "I will bring them.", "next": "greet", "effects": {"set_flag": "errand_mo_asked"}}]},
+    "errand_thanks": {"text": "Good, fresh ones. Qingshi still has a few honest youngsters. Take these stones and a pill; do not spend it all on sweets.",
+      "choices": [{"label": "Thank you, senior.", "next": "greet"}]}
+
   }
 }

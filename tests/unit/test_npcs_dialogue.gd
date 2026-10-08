@@ -208,3 +208,37 @@ func test_intro_event_is_a_valid_dialogue() -> void:
 	var intro := String(data().artifact.get("intro_event", ""))
 	assert_true(data().dialogues.has(intro))
 	assert_eq(Dialogue.validate(data().dialogues[intro], data()).size(), 0)
+
+
+## C-011: each named NPC's errand turn-in is hidden without the items or the asked flag.
+func test_npc_errand_turn_ins_need_items_and_asked_flag() -> void:
+	var errands := {
+		"elder_mo": ["Bring the six Spirit Herbs", {"spirit_herb": 6}, "errand_mo"],
+		"herbalist_lan": ["Bring the five Qi Condensing Grass", {"qi_condensing_grass": 5}, "errand_lan"],
+		"hermit_gu": ["Bring the three Cold Iron", {"cold_iron": 3}, "errand_gu"],
+		"alchemist_hua": ["Bring the four Qi Gathering Pills", {"qi_gathering_pill": 4}, "errand_hua"],
+		"peddler_hei": ["Bring the three Purple Cloud Mushrooms", {"purple_cloud_mushroom": 3}, "errand_hei"],
+	}
+	var npcs := _npcs()
+	for npc_id: String in errands:
+		var label: String = errands[npc_id][0]
+		var items: Dictionary = errands[npc_id][1]
+		var prefix: String = errands[npc_id][2]
+		var dlg: Dictionary = data().dialogues[npc_id]
+		var node := "greet_friend" if npc_id == "alchemist_hua" else "greet"
+		var c := CharacterData.new()
+		var flags := {}
+		var shown := func() -> bool:
+			var ctx := _ctx(npc_id, c, npcs, flags, 50)
+			return _choice_index(Dialogue.view(dlg, node, ctx), label) != -2
+		assert_false(shown.call(), npc_id + ": hidden with no items and no asked flag")
+		flags[prefix + "_asked"] = true
+		assert_false(shown.call(), npc_id + ": hidden without the items")
+		for id: String in items:
+			c.add_item(id, items[id])
+		flags.erase(prefix + "_asked")
+		assert_false(shown.call(), npc_id + ": hidden without the asked flag")
+		flags[prefix + "_asked"] = true
+		assert_true(shown.call(), npc_id + ": shown with items and the asked flag")
+		flags[prefix + "_done"] = true
+		assert_false(shown.call(), npc_id + ": hidden once done")

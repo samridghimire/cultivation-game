@@ -9,6 +9,8 @@
         {"label": "Help her gather for a week.", "next": "help", "days": 7, "favor": 8, "effects": {"items": {"spirit_herb": 2, "qi_condensing_grass": 1}}},
         {"label": "Ask about the mist wolves.", "next": "wolves"},
         {"label": "Ask her to share her secret valley.", "next": "secret", "if": {"min_favor": 25, "not_flag": "lan_secret"}, "show_locked": true},
+        {"label": "Ask if she needs anything fetched.", "next": "errand_ask", "if": {"not_flag": "errand_lan_asked"}},
+        {"label": "Bring the five Qi Condensing Grass Lan asked for.", "next": "errand_thanks", "if": {"has_items": {"qi_condensing_grass": 5}, "flag": "errand_lan_asked", "not_flag": "errand_lan_done"}, "effects": {"items": {"qi_condensing_grass": -5, "spirit_stone": 70}, "set_flag": "errand_lan_done"}, "favor": 15},
         {"label": "Goodbye.", "next": "end"}
       ]},
     "herbs": {"text": "The Herb Patch by the trail is safe enough. The valley to the south hides older roots. Up on Azure Peak, frost flowers grow on the ledges, if the beasts let you live.",
@@ -18,6 +20,11 @@
     "wolves": {"text": "They hunt in the mist. A mortal won't see them coming, so don't wander the deep woods until you can sense qi.",
       "choices": [{"label": "...", "next": "greet"}]},
     "secret": {"text": "Hush. Follow me. Few have seen this place. The ginseng here is older than the village.",
-      "choices": [{"label": "Dig carefully. (5 days)", "next": "end", "days": 5, "effects": {"items": {"blood_ginseng": 1, "purple_cloud_mushroom": 2}, "set_flag": "lan_secret"}}]}
+      "choices": [{"label": "Dig carefully. (5 days)", "next": "end", "days": 5, "effects": {"items": {"blood_ginseng": 1, "purple_cloud_mushroom": 2}, "set_flag": "lan_secret"}}]},
+    "errand_ask": {"text": "My knees do not climb the ledges like they used to. Five stalks of Qi Condensing Grass from the Herb Patch, uncrushed and with the roots, and I will pay you properly.",
+      "choices": [{"label": "I will find them.", "next": "greet", "effects": {"set_flag": "errand_lan_asked"}}]},
+    "errand_thanks": {"text": "Roots and all, and not a bruise on them. You have a gatherer's hands. Here, seventy stones, and no haggling.",
+      "choices": [{"label": "...", "next": "greet"}]}
+
   }
 }

@@ -12,6 +12,8 @@
         {"label": "Sell her 3 Purple Cloud Mushrooms. (+55 stones)", "next": "greet", "effects": {"items": {"purple_cloud_mushroom": -3, "spirit_stone": 55}}, "favor": 3, "show_locked": true},
         {"label": "Tend her furnace for ten days.", "next": "tend", "days": 10, "favor": 6, "effects": {"items": {"qi_gathering_pill": 2}}},
         {"label": "Slip a handful of pills from her drying rack.", "next": "steal", "if": {"max_alignment": -100, "not_flag": "hua_robbed"}, "effects": {"items": {"superior_qi_gathering_pill": 2, "spirit_gathering_pill": 1}, "alignment": -30, "set_flag": "hua_robbed"}, "favor": -40},
+        {"label": "Ask if she needs a hand with her stock.", "next": "errand_ask", "if": {"not_flag": "errand_hua_asked"}},
+        {"label": "Bring the four Qi Gathering Pills Hua asked for.", "next": "errand_thanks", "if": {"has_items": {"qi_gathering_pill": 4}, "flag": "errand_hua_asked", "not_flag": "errand_hua_done"}, "effects": {"items": {"qi_gathering_pill": -4, "recipe_meridian_mending_pill": 1}, "set_flag": "errand_hua_done"}, "favor": 15},
         {"label": "Farewell.", "next": "end"}
       ]},
     "greet_friend": {"text": "{player}! Sit, sit. The furnace has been sulking all morning; perhaps it likes you better than me.",
@@ -20,6 +22,8 @@
         {"label": "Tend her furnace for ten days.", "next": "tend", "days": 10, "favor": 6, "effects": {"items": {"qi_gathering_pill": 2}}},
         {"label": "Ask her to teach you the Spirit Gathering formula.", "next": "teach", "if": {"not_flag": "hua_formula"}},
         {"label": "Commission a Foundation Establishment Pill. (Flame Lotus, Ice Soul Flower, 100 stones)", "next": "commission", "if": {"max_realm": "qi_refining", "not_flag": "hua_commission"}, "effects": {"items": {"flame_lotus": -1, "ice_soul_flower": -1, "spirit_stone": -100, "foundation_establishment_pill": 1}, "set_flag": "hua_commission"}, "show_locked": true},
+        {"label": "Ask if she needs a hand with her stock.", "next": "errand_ask", "if": {"not_flag": "errand_hua_asked"}},
+        {"label": "Bring the four Qi Gathering Pills Hua asked for.", "next": "errand_thanks", "if": {"has_items": {"qi_gathering_pill": 4}, "flag": "errand_hua_asked", "not_flag": "errand_hua_done"}, "effects": {"items": {"qi_gathering_pill": -4, "recipe_meridian_mending_pill": 1}, "set_flag": "errand_hua_done"}, "favor": 15},
         {"label": "Farewell.", "next": "end"}
       ]},
     "craft": {"text": "Patience, a nose for scorched qi, and never trusting a pill you did not refine yourself. Learn the Alchemist profession at a workshop; formulas come from scrolls, and the good ones from friends.",
@@ -31,6 +35,10 @@
     "teach": {"text": "You have earned it. Spirit Gathering is simple in theory: four spirit herbs for the base, one purple cloud mushroom to bind them. Copy the slip and keep it from the sects; they charge a fortune for this.",
       "choices": [{"label": "Copy the formula. (3 days)", "next": "end", "days": 3, "favor": 5, "effects": {"items": {"recipe_spirit_gathering_pill": 1}, "set_flag": "hua_formula"}}]},
     "commission": {"text": "Three days and three nights, and only one pill out of the batch survived. It is yours. Break through well, {player}; I like having friends who live long.",
-      "choices": [{"label": "Thank you, Master Hua.", "next": "end", "days": 3, "favor": 3}]}
+      "choices": [{"label": "Thank you, Master Hua.", "next": "end", "days": 3, "favor": 3}]},
+    "errand_ask": {"text": "A buyer wants a dozen cheap pills and my furnace is busy with better things. Bring me four Qi Gathering Pills made with your own hands, and I will trade you a formula I do not use. The base recipe is easy; even you cannot ruin it.",
+      "choices": [{"label": "I will make them.", "next": "end", "effects": {"set_flag": "errand_hua_asked"}}]},
+    "errand_thanks": {"text": "Even, clean, no scorch. Not bad. Take this: Meridian Mending, a mild formula. Do not sell it to that rat Qian.",
+      "choices": [{"label": "Thank you, Master Hua.", "next": "end"}]}
   }
 }

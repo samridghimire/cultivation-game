@@ -7,6 +7,8 @@
         {"label": "Who is the girl?", "next": "girl"},
         {"label": "What do you pay for corpses?", "next": "corpses"},
         {"label": "Ask about the Yin Gathering Altar.", "next": "altar"},
+        {"label": "Ask if he needs anything from the bog.", "next": "errand_ask", "if": {"not_flag": "errand_hei_asked"}},
+        {"label": "Bring the three Purple Cloud Mushrooms Hei asked for.", "next": "errand_thanks", "if": {"has_items": {"purple_cloud_mushroom": 3}, "flag": "errand_hei_asked", "not_flag": "errand_hei_done"}, "effects": {"items": {"purple_cloud_mushroom": -3, "spirit_stone": 100}, "set_flag": "errand_hei_done"}, "favor": 15},
         {"label": "Leave.", "next": "end"}
       ]},
     "girl": {"text": "A herb-gatherer's daughter from Qingshi, caught in the reeds. The Blood Lotus scouts want her for the pools, a refiner wants her for his puppets. Me, I only want a fair price. Someone with a conscience might want her more.",
@@ -14,6 +16,11 @@
     "corpses": {"text": "Drowned cultivators with their pouches intact fetch the best price. The marsh has an endless supply. Do not ask where I find the rest.",
       "choices": [{"label": "...", "next": "greet"}]},
     "altar": {"text": "Yin qi so thick it beads on the stones. It speeds cultivation for anyone who can bear the cold, but it chills the heart as well. Sit there too long and you start to like the dead.",
+      "choices": [{"label": "...", "next": "greet"}]},
+    "errand_ask": {"text": "Three purple cloud mushrooms from the Corpse-Lily Bog. Plump, still damp. A buyer upriver pays well and does not ask where I got them. I pay a hundred stones.",
+      "choices": [{"label": "I will bring them.", "next": "greet", "effects": {"set_flag": "errand_hei_asked"}}]},
+    "errand_thanks": {"text": "Plump and damp. The marsh gives, and so do you. A hundred stones, as promised.",
       "choices": [{"label": "...", "next": "greet"}]}
+
   }
 }

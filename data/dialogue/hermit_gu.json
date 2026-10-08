@@ -13,6 +13,8 @@
         {"label": "Bring him a Thousand-Year Lingzhi.", "next": "lingzhi", "if": {"not_flag": "gu_lingzhi"}, "effects": {"items": {"thousand_year_lingzhi": -1}, "set_flag": "gu_lingzhi"}, "favor": 20, "show_locked": true},
         {"label": "Ask him about the Flowing Water Sutra.", "next": "water", "if": {"min_favor": 20, "not_knows_technique": "flowing_water_sutra"}, "show_locked": true},
         {"label": "Ask what he would pass on.", "next": "not_yet", "if": {"min_favor": 40, "max_realm": "qi_refining"}},
+        {"label": "Ask if the mountain wants anything from him.", "next": "errand_ask", "if": {"not_flag": "errand_gu_asked"}},
+        {"label": "Bring the three Cold Iron Gu asked for.", "next": "errand_thanks", "if": {"has_items": {"cold_iron": 3}, "flag": "errand_gu_asked", "not_flag": "errand_gu_done"}, "effects": {"items": {"cold_iron": -3, "manual_cloud_parting_palm": 1}, "qi": 400, "set_flag": "errand_gu_done"}, "favor": 15},
         {"label": "Farewell, senior.", "next": "end"}
       ]},
     "time": {"text": "Thirty winters, perhaps. Core Formation gave me five hundred years and I spent most of them on sect politics. Do not repeat my mistake, young one.",
@@ -38,6 +40,11 @@
         {"label": "Leave.", "next": "end"}
       ]},
     "rob": {"text": "He does not open his eyes. 'Take it,' he says. 'Heaven keeps the ledger, not me.' The words follow you down the mountain.",
-      "choices": [{"label": "...", "next": "end"}]}
+      "choices": [{"label": "...", "next": "end"}]},
+    "errand_ask": {"text": "My old sword-stand has rusted through. Three lumps of cold iron from the crystal vein would let me forge a new one, and my hands remember how. Bring them and I will give you something for the trouble.",
+      "choices": [{"label": "I will bring the iron.", "next": "greet", "effects": {"set_flag": "errand_gu_asked"}}]},
+    "errand_thanks": {"text": "Cold and true. Hm. Here is a palm technique I used to part the clouds before a battle: Cloud-Parting Palm. Study the manual, and let some qi settle in you while you listen.",
+      "choices": [{"label": "...", "next": "greet"}]}
+
   }
 }
