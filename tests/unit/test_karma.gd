@@ -325,6 +325,15 @@ func test_grudge_words_and_ledger_wording() -> void:
 
 func test_act_sentences() -> void:
 	var npc := _person("Li Wei")
-	assert_eq(Karma.act_sentence(npc, "rob", {"stones": 5}), "You rob Li Wei of 5 spirit stones.")
-	assert_eq(Karma.act_sentence(npc, "humiliate", {}), "You humiliate Li Wei before onlookers.")
-	assert_eq(Karma.act_sentence(npc, "kill", {}), "You kill Li Wei.")
+	var d := data()
+	assert_eq(Karma.act_sentence(npc, "rob", {"stones": 5}, d), "You rob Li Wei of 5 spirit stones.")
+	assert_eq(Karma.act_sentence(npc, "rob", {"stones": 1}, d), "You rob Li Wei of 1 spirit stone.")
+	assert_eq(Karma.act_sentence(npc, "humiliate", {}, d), "You humiliate Li Wei before onlookers.")
+	assert_eq(Karma.act_sentence(npc, "kill", {}, d), "You kill Li Wei.")
+	assert_eq(Karma.act_sentence(npc, "nonsense", {}, d), "You act against Li Wei.")
+
+
+func test_act_sentence_template_validated() -> void:
+	var d := data()
+	d.karma["acts"]["kill"]["sentence"] = "You end them."
+	assert_eq(Karma.validate(d).size(), 1, "template without {name} rejected")

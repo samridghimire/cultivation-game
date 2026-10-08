@@ -1108,7 +1108,7 @@ func hostile_act(npc_id: String, act_id: String) -> void:
 	if not won:
 		EventBus.post("%s drives you off.%s" % [npc.name, suffix], "warning")
 	else:
-		EventBus.post(Karma.act_sentence(npc, act_id, result) + suffix, "danger" if not npc.alive else "warning")
+		EventBus.post(Karma.act_sentence(npc, act_id, result, data) + suffix, "danger" if not npc.alive else "warning")
 	_clan_deed(npc_id, act_id)
 	_pass_time(result["days"])
 

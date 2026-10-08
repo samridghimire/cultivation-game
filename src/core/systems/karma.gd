@@ -145,17 +145,14 @@ static func commit(c: CharacterData, npc: CharacterData, act_id: String, won: bo
 	return {"notes": notes, "favor": int(a.get("favor", 0)), "days": int(a.get("days", 0)), "kin": kin, "stones": looted}
 
 
-## One sentence for a committed act, from the result of commit().
-static func act_sentence(npc: CharacterData, act_id: String, result: Dictionary) -> String:
-	match act_id:
-		"rob":
-			var stones := int(result.get("stones", 0))
-			return "You rob %s of %d spirit stone%s." % [npc.name, stones, "" if stones == 1 else "s"]
-		"humiliate":
-			return "You humiliate %s before onlookers." % npc.name
-		"kill":
-			return "You kill %s." % npc.name
-	return "You act against %s." % npc.name
+## One sentence for a committed act, from the result of commit(). Uses the
+## act's karma.json `sentence` template ({name}, {stones}), else a generic line.
+static func act_sentence(npc: CharacterData, act_id: String, result: Dictionary, data: GameData) -> String:
+	var template := String(act(data, act_id).get("sentence", ""))
+	if template == "":
+		return "You act against %s." % npc.name
+	var stones := int(result.get("stones", 0))
+	return template.replace("{name}", npc.name).replace("{stones}", "%d spirit stone%s" % [stones, "" if stones == 1 else "s"])
 
 
 static func _gratitude_rules(data: GameData) -> Dictionary:
@@ -426,6 +423,8 @@ static func validate(data: GameData) -> PackedStringArray:
 				errors.append("karma act '%s': %s must not be negative" % [a.get("id", "?"), key])
 		if String(a.get("name", "")) == "":
 			errors.append("karma act '%s' has no name" % a.get("id", "?"))
+		if a.has("sentence") and not String(a["sentence"]).contains("{name}"):
+			errors.append("karma act '%s': sentence must contain {name}" % a.get("id", "?"))
 	var rules := _gratitude_rules(data)
 	for source in rules.get("sources", {}):
 		if int(rules["sources"][source]) < 0:
