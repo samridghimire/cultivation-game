@@ -110,3 +110,113 @@ func test_sects_grow_over_years_in_a_session() -> void:
 	bus.message_posted.disconnect(cb)
 	assert_true(posted.any(func(t: String) -> bool: return t.contains("mightiest sect")), str(posted))
 	gs.end_session()
+
+
+# --- Clashes (LW-002b) -------------------------------------------------------
+
+func _clash_data(chance: float, casualties: int = 1) -> GameData:
+	var d := GameData.load_from_dir()
+	d.sect_factions["clash"] = {"monthly_chance": chance, "casualties": casualties}
+	return d
+
+
+func test_hostile_pairs_are_righteous_against_demonic() -> void:
+	assert_eq(SectFactions.hostile_pairs(data()), [["azure_cloud_sect", "blood_lotus_sect"]], "neutral sects never clash")
+
+
+func test_clash_kills_casualties_of_the_loser_only() -> void:
+	var d := _clash_data(1.0, 2)
+	var npcs := {}
+	var azure: Array[CharacterData] = []
+	var blood: Array[CharacterData] = []
+	for i in 3:
+		var a := _rogue(npcs, 100)
+		Sects.npc_join(a, d, "azure_cloud_sect")
+		azure.append(a)
+		var b := _rogue(npcs, -600)
+		Sects.npc_join(b, d, "blood_lotus_sect")
+		blood.append(b)
+	var events := SectFactions.clash(d, npcs, seeded_rng(3))
+	assert_eq(events.size(), 1)
+	var event: Dictionary = events[0]
+	assert_eq(event["dead_ids"].size(), 2)
+	var losers: Array[CharacterData] = azure if event["loser"] == "azure_cloud_sect" else blood
+	var winners: Array[CharacterData] = blood if event["loser"] == "azure_cloud_sect" else azure
+	assert_eq(losers.filter(func(c: CharacterData) -> bool: return not c.alive).size(), 2)
+	assert_eq(winners.filter(func(c: CharacterData) -> bool: return not c.alive).size(), 0)
+	assert_true(String(event["text"]).contains("lost 2 disciples"), event["text"])
+	assert_true(losers.filter(func(c: CharacterData) -> bool: return not c.alive)[0].cause_of_death.begins_with("fell in battle against the"))
+
+
+func test_clash_sect_without_members_always_loses() -> void:
+	var d := _clash_data(1.0)
+	var npcs := {}
+	var demon := _rogue(npcs, -600)
+	Sects.npc_join(demon, d, "blood_lotus_sect")
+	for seed_value in 10:
+		var events := SectFactions.clash(d, npcs, seeded_rng(seed_value))
+		assert_eq(events.size(), 1)
+		assert_eq(events[0]["winner"], "blood_lotus_sect")
+		assert_eq(events[0]["dead_ids"].size(), 0, "nobody left to lose")
+	assert_eq(SectFactions.clash(d, {}, seeded_rng()).size(), 0, "no clash when both are empty")
+
+
+func test_clash_needs_chance() -> void:
+	var d := _clash_data(0.0)
+	var npcs := {}
+	Sects.npc_join(_rogue(npcs, -600), d, "blood_lotus_sect")
+	Sects.npc_join(_rogue(npcs, 100), d, "azure_cloud_sect")
+	assert_eq(SectFactions.clash(d, npcs, seeded_rng()).size(), 0)
+
+
+func test_clash_validation() -> void:
+	var d := _clash_data(1.5, 0)
+	assert_eq(SectFactions.validate(d).size(), 2, ", ".join(SectFactions.validate(d)))
+
+
+func test_clear_flag_effect() -> void:
+	var flags := {"a": true, "b": true}
+	Effects.apply(new_character(), data(), {"clear_flag": "a"}, flags)
+	assert_false(flags.has("a"))
+	assert_true(flags.has("b"))
+
+
+func test_flagged_missions_wait_for_their_flag() -> void:
+	var c := new_character()
+	c.realm_index = 1
+	c.stage = 8
+	Sects.join(c, data(), "azure_cloud_sect")
+	assert_false(Sects.available_missions(c, data()).has("answer_azure_call"))
+	assert_eq(Sects.check_mission(c, data(), "answer_azure_call"), "Your sect has no need of this now.")
+	var flags := {"sect_call_azure_cloud_sect": true}
+	assert_true(Sects.available_missions(c, data(), flags).has("answer_azure_call"))
+	assert_eq(Sects.check_mission(c, data(), "answer_azure_call", flags), "")
+	var blood := new_character()
+	blood.realm_index = 1
+	Sects.join(blood, data(), "blood_lotus_sect")
+	assert_eq(Sects.check_mission(blood, data(), "answer_azure_call", flags), "Your sect does not offer that mission.")
+	var result := Sects.complete_mission(c, data(), "answer_azure_call", flags)
+	assert_true(result["ok"], str(result))
+	assert_false(flags.has("sect_call_azure_cloud_sect"), "the call is answered")
+
+
+func test_player_sect_clash_posts_a_call_in_a_session() -> void:
+	var gs := _root().get_node("GameState")
+	var c := new_character()
+	c.realm_index = 1
+	c.stage = 8
+	gs.start_session(c)
+	var old_rule: Dictionary = gs.data.sect_factions.get("clash", {})
+	gs.data.sect_factions["clash"] = {"monthly_chance": 1.0, "casualties": 1}
+	Sects.join(c, gs.data, "azure_cloud_sect")
+	for sect_id in ["azure_cloud_sect", "blood_lotus_sect"]:
+		var npc := Npcs.spawn(gs.npcs, gs.data, seeded_rng(5), {"realm": "qi_refining", "alignment": 100 if sect_id == "azure_cloud_sect" else -600, "age_years": 20})
+		Sects.npc_join(npc, gs.data, sect_id)
+	gs._sect_factions_month()
+	gs.data.sect_factions["clash"] = old_rule
+	assert_true(gs.world_flags.get("sect_call_azure_cloud_sect", false))
+	assert_true(Sects.available_missions(c, gs.data, gs.world_flags).has("answer_azure_call"))
+	var result := Sects.complete_mission(c, gs.data, "answer_azure_call", gs.world_flags)
+	assert_true(result["ok"], str(result))
+	assert_false(gs.world_flags.has("sect_call_azure_cloud_sect"))
+	gs.end_session()

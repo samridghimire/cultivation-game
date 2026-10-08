@@ -406,13 +406,17 @@ static func validate_shops(data: GameData) -> PackedStringArray:
 
 ## Mission ids offered by `c`'s sect (missions without a `sects` list are
 ## offered by every sect), in data order, whether or not `c` qualifies yet.
-## Rogues get none.
-static func available_missions(c: CharacterData, data: GameData) -> Array[String]:
+## Rogues get none. A mission with `requires_flag` is offered only while that
+## world flag is set in `flags`.
+static func available_missions(c: CharacterData, data: GameData, flags: Dictionary = {}) -> Array[String]:
 	var out: Array[String] = []
 	if c.is_rogue():
 		return out
 	for mission: Dictionary in data.sect_missions.values():
 		var sects: Array = mission.get("sects", [])
+		var needed_flag := String(mission.get("requires_flag", ""))
+		if needed_flag != "" and not flags.get(needed_flag, false):
+			continue
 		if sects.is_empty() or sects.has(c.sect["id"]):
 			out.append(String(mission["id"]))
 	return out
@@ -424,13 +428,16 @@ static func mission_cooldown_left(c: CharacterData, mission_id: String) -> int:
 
 
 ## Why `c` cannot take `mission_id` now, or "" if they can.
-static func check_mission(c: CharacterData, data: GameData, mission_id: String) -> String:
+static func check_mission(c: CharacterData, data: GameData, mission_id: String, flags: Dictionary = {}) -> String:
 	if not data.sect_missions.has(mission_id):
 		return "No such mission."
 	if c.is_rogue():
 		return "Only sect disciples receive sect missions."
-	if not available_missions(c, data).has(mission_id):
+	var offered: Array = data.sect_missions[mission_id].get("sects", [])
+	if not offered.is_empty() and not offered.has(c.sect["id"]):
 		return "Your sect does not offer that mission."
+	if not available_missions(c, data, flags).has(mission_id):
+		return "Your sect has no need of this now."
 	var mission: Dictionary = data.sect_missions[mission_id]
 	var sect: SectDef = data.sects[c.sect["id"]]
 	var min_rank := int(mission.get("min_rank", 0))
@@ -465,7 +472,7 @@ static func mission_danger(c: CharacterData, data: GameData, mission_id: String)
 ## cooldown. Contribution also earns reputation with the sect.
 ## Returns {ok, reason, contribution, promoted, notes, days}.
 static func complete_mission(c: CharacterData, data: GameData, mission_id: String, flags: Dictionary) -> Dictionary:
-	var reason := check_mission(c, data, mission_id)
+	var reason := check_mission(c, data, mission_id, flags)
 	if reason != "":
 		return {"ok": false, "reason": reason, "contribution": 0, "promoted": false, "notes": PackedStringArray(), "days": 0}
 	var mission: Dictionary = data.sect_missions[mission_id]
@@ -493,6 +500,8 @@ static func validate_missions(data: GameData) -> PackedStringArray:
 		for sect_id in mission.get("sects", []):
 			if not data.sects.has(sect_id):
 				errors.append("Mission '%s' has unknown sect '%s'" % [id, sect_id])
+		if mission.has("requires_flag") and String(mission["requires_flag"]) == "":
+			errors.append("Mission '%s' has an empty requires_flag" % id)
 		var realm_index := data.realm_index_of(String(mission.get("min_realm", "mortal")))
 		if realm_index < 0:
 			errors.append("Mission '%s' has unknown min_realm '%s'" % [id, mission.get("min_realm", "")])

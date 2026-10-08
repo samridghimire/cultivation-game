@@ -42,7 +42,7 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 		var sect := _sect_hint(c, data)
 		if sect != "":
 			out.append(sect)
-	var missions := _mission_hint(c, data)
+	var missions := _mission_hint(c, data, flags)
 	if missions != "":
 		out.append(missions)
 	if c.professions.is_empty():
@@ -111,10 +111,10 @@ static func _sect_hint(c: CharacterData, data: GameData) -> String:
 
 
 ## Members: how many sect missions they can take right now.
-static func _mission_hint(c: CharacterData, data: GameData) -> String:
+static func _mission_hint(c: CharacterData, data: GameData, flags: Dictionary = {}) -> String:
 	if c.is_rogue():
 		return ""
-	var ready := Sects.available_missions(c, data).filter(func(id: String) -> bool: return Sects.check_mission(c, data, id) == "").size()
+	var ready := Sects.available_missions(c, data, flags).filter(func(id: String) -> bool: return Sects.check_mission(c, data, id, flags) == "").size()
 	if ready == 0:
 		return ""
 	return "%d sect %s ready on the mission board at a sect hall." % [ready, "mission is" if ready == 1 else "missions are"]
@@ -201,7 +201,7 @@ static func journal(c: CharacterData, data: GameData, flags: Dictionary, today: 
 		_add(out, "Next steps", hint_lines[i], "warning" if i < urgent else "normal")
 	_breakthrough_entries(out, c, data, density)
 	if not c.is_rogue():
-		_sect_entries(out, c, data)
+		_sect_entries(out, c, data, flags)
 	for id: String in c.deed_days:
 		var deed: Dictionary = data.deeds.get(id, {})
 		var left := Deeds.cooldown_left(c, deed, today)
@@ -249,15 +249,15 @@ static func _breakthrough_entries(out: Array[Dictionary], c: CharacterData, data
 		_add(out, "Breakthrough", "Pills that help: %s" % ", ".join(pills), "normal")
 
 
-static func _sect_entries(out: Array[Dictionary], c: CharacterData, data: GameData) -> void:
+static func _sect_entries(out: Array[Dictionary], c: CharacterData, data: GameData, flags: Dictionary = {}) -> void:
 	var duty := Sects.monthly_duty(c, data)
 	if duty > 0:
 		var days_left := Calendar.DAYS_PER_MONTH - c.age_days % Calendar.DAYS_PER_MONTH
 		var unmet := Sects.duty_progress(c) < duty
 		_add(out, "Sect", "Monthly duty: %d / %d contribution, %d days left this month." % [Sects.duty_progress(c), duty, days_left], "warning" if unmet and days_left <= 7 else "normal")
-	for id in Sects.available_missions(c, data):
+	for id in Sects.available_missions(c, data, flags):
 		var name := String(data.sect_missions[id].get("name", id))
-		var reason := Sects.check_mission(c, data, id)
+		var reason := Sects.check_mission(c, data, id, flags)
 		if reason == "":
 			var danger := Sects.mission_danger(c, data, id)
 			var tail := "%d days" % int(data.sect_missions[id].get("days", 1))

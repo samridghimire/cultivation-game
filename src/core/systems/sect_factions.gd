@@ -5,7 +5,7 @@ extends RefCounted
 ## ^ realm index), so it grows as members break through and shrinks as they
 ## die. Each month every sect may recruit one rogue generated NPC it would
 ## accept (Sects.check_join). Membership lives on CharacterData.sect, so
-## nothing new is saved. Clashes and help missions build on this (LW-002b/c).
+## nothing new is saved. Righteous and demonic sects clash monthly (LW-002b).
 
 
 static func rules(data: GameData) -> Dictionary:
@@ -83,6 +83,60 @@ static func recruit(data: GameData, npcs: Dictionary, rng: RandomNumberGenerator
 	return events
 
 
+## Every [righteous_id, demonic_id] sect pair (sects.json `alignment` tags;
+## neutral sects never clash), sorted for determinism.
+static func hostile_pairs(data: GameData) -> Array:
+	var righteous: Array[String] = []
+	var demonic: Array[String] = []
+	for sect_id: String in data.sects:
+		match (data.sects[sect_id] as SectDef).alignment_tag:
+			"righteous":
+				righteous.append(sect_id)
+			"demonic":
+				demonic.append(sect_id)
+	righteous.sort()
+	demonic.sort()
+	var pairs: Array = []
+	for a in righteous:
+		for b in demonic:
+			pairs.append([a, b])
+	return pairs
+
+
+## Monthly sect clashes: each hostile pair clashes with `clash.monthly_chance`.
+## The winner is rolled by relative strength; the loser loses `clash.casualties`
+## random living NPC members. Returns [{winner, loser, dead_ids, text, category}].
+static func clash(data: GameData, npcs: Dictionary, rng: RandomNumberGenerator) -> Array[Dictionary]:
+	var events: Array[Dictionary] = []
+	var rule: Dictionary = rules(data).get("clash", {})
+	var chance := float(rule.get("monthly_chance", 0.0))
+	if chance <= 0.0:
+		return events
+	for pair: Array in hostile_pairs(data):
+		if rng.randf() >= chance:
+			continue
+		var strength_a: int = strength(data, npcs, pair[0])
+		var strength_b: int = strength(data, npcs, pair[1])
+		if strength_a + strength_b <= 0:
+			continue
+		var a_wins := rng.randf() < strength_a / float(strength_a + strength_b)
+		var winner: String = pair[0] if a_wins else pair[1]
+		var loser: String = pair[1] if a_wins else pair[0]
+		var winner_name := (data.sects[winner] as SectDef).name
+		var loser_name := (data.sects[loser] as SectDef).name
+		var pool := members(npcs, loser)
+		var dead_ids: Array = []
+		for i in int(rule.get("casualties", 1)):
+			if pool.is_empty():
+				break
+			var victim: CharacterData = pool.pop_at(rng.randi_range(0, pool.size() - 1))
+			Npcs.die(victim, "fell in battle against the %s" % winner_name)
+			dead_ids.append(victim.id)
+		events.append({"winner": winner, "loser": loser, "dead_ids": dead_ids, "category": "danger",
+			"text": "The %s and the %s clashed at the border. The %s lost %s." % [(data.sects[pair[0]] as SectDef).name, (data.sects[pair[1]] as SectDef).name, loser_name, "%d disciple%s" % [dead_ids.size(), "" if dead_ids.size() == 1 else "s"]]})
+	return events
+
+
 ## Gossip about the balance of power, for a merchant's rumors.
 static func rumors(data: GameData, npcs: Dictionary) -> PackedStringArray:
 	var lines: PackedStringArray = []
@@ -109,4 +163,11 @@ static func validate(data: GameData) -> PackedStringArray:
 		errors.append("sects.json factions.recruit.monthly_chance must be in 0..1")
 	if int(recruit.get("min_age_years", 16)) > int(recruit.get("max_age_years", 40)):
 		errors.append("sects.json factions.recruit needs min_age_years <= max_age_years")
+	var clash_rule: Dictionary = r.get("clash", {})
+	if not clash_rule.is_empty():
+		var clash_chance := float(clash_rule.get("monthly_chance", 0.0))
+		if clash_chance < 0.0 or clash_chance > 1.0:
+			errors.append("sects.json factions.clash.monthly_chance must be in 0..1")
+		if int(clash_rule.get("casualties", 1)) < 1:
+			errors.append("sects.json factions.clash.casualties must be >= 1")
 	return errors

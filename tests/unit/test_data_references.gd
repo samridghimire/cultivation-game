@@ -5,6 +5,8 @@ extends TestCase
 ## dialogues, merchant stock tags with no items, and flags that are read
 ## (requires/blocked_by/hidden_by/not_flag) but never set by data or code.
 
+## Flags the code builds from a prefix plus an id (GameState sets "sect_call_<sect id>" after a sect clash).
+const CODE_FLAG_PREFIXES := ["sect_call_"]
 const FLAG_READ_KEYS := ["requires_flag", "blocked_by_flag", "hidden_by_flag", "not_flag"]
 
 var _errors: PackedStringArray = []
@@ -107,6 +109,9 @@ func _walk(value: Variant, where: String) -> void:
 
 ## Flags the code sets itself (string literals in src/), e.g. GameState.INTRO_EVENT_FLAG.
 func _code_mentions(flag: String) -> bool:
+	for prefix in CODE_FLAG_PREFIXES:
+		if flag.begins_with(prefix) and _source_text().contains('"%s"' % prefix):
+			return true
 	return _source_text().contains('"%s"' % flag)
 
 

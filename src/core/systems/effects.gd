@@ -7,6 +7,7 @@ extends RefCounted
 ##   items: {item_id: int}      add (or remove, if negative) items
 ##   breakthrough_bonus: float  bonus to next breakthrough attempt
 ##   set_flag: String           set a world flag
+##   clear_flag: String         clear a world flag
 ##   learn_technique: String    learn a technique (see techniques.gd)
 ##   heal_injury: String        heal one injury id, or "all" (see injuries.gd)
 ##   burn_lifespan: int         spend years of lifespan (refused if it would kill outright)
@@ -96,6 +97,8 @@ static func apply(c: CharacterData, data: GameData, effects: Dictionary, flags: 
 		notes.append("%s %+d" % [String(attr_id).capitalize(), delta])
 	if effects.has("set_flag"):
 		flags[effects["set_flag"]] = true
+	if effects.has("clear_flag"):
+		flags.erase(effects["clear_flag"])
 	return notes
 
 

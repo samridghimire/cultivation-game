@@ -1626,7 +1626,7 @@ func take_mission(mission_id: String) -> void:
 	EventBus.topic = "sect"
 	if not _can_act():
 		return
-	var reason := Sects.check_mission(player, data, mission_id)
+	var reason := Sects.check_mission(player, data, mission_id, world_flags)
 	if reason != "":
 		EventBus.post(reason, "warning")
 		EventBus.player_changed.emit()
@@ -1774,6 +1774,20 @@ func _sect_factions_month() -> void:
 	for event in SectFactions.recruit(data, npcs, rng, reserved):
 		if Npcs.is_newsworthy(String(event["npc_id"]), player, npc_favor):
 			EventBus.post(event["text"], event["category"])
+	var fallen := false
+	for event in SectFactions.clash(data, npcs, rng):
+		fallen = fallen or not event["dead_ids"].is_empty()
+		var own_sect := "" if player.is_rogue() else String(player.sect["id"])
+		if own_sect != "" and (own_sect == event["winner"] or own_sect == event["loser"]):
+			EventBus.post(event["text"], event["category"])
+			world_flags["sect_call_" + own_sect] = true
+			EventBus.post("Your sect calls on its disciples. A new mission waits on the mission board.", "warning")
+			continue
+		for npc_id: String in event["dead_ids"]:
+			if Npcs.is_newsworthy(npc_id, player, npc_favor):
+				EventBus.post("News arrives: %s %s." % [npcs[npc_id].name, npcs[npc_id].cause_of_death], "info")
+	if fallen:
+		Npcs.ensure_eligible(npcs, data, rng, Children.descendants(player, npcs))  # a fallen candidate is replaced
 
 
 ## Sects strongest first as {id, name, strength, members} (LW-002).

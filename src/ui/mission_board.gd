@@ -301,11 +301,11 @@ func _rebuild_shop() -> void:
 func _rebuild_missions() -> void:
 	var p := GameState.player
 	var data := GameState.data
-	var ids := Sects.available_missions(p, data)
+	var ids := Sects.available_missions(p, data, GameState.world_flags)
 	if not ids.has(_selected):
 		_selected = ""
 		for mission_id in ids:
-			if Sects.check_mission(p, data, mission_id) == "":
+			if Sects.check_mission(p, data, mission_id, GameState.world_flags) == "":
 				_selected = mission_id
 				break
 		if _selected == "" and not ids.is_empty():
@@ -321,7 +321,7 @@ func _rebuild_missions() -> void:
 		var danger := Sects.mission_danger(p, data, mission_id)
 		if danger != "":
 			label += "  [%s]" % danger
-		_add_entry(mission_id, label, Sects.check_mission(p, data, mission_id) == "")
+		_add_entry(mission_id, label, Sects.check_mission(p, data, mission_id, GameState.world_flags) == "")
 		if danger != "":
 			UIStyle.tint_button_text(_list.get_child(-1) as Button, UIStyle.danger_color(danger))
 	_show_details()
@@ -419,7 +419,7 @@ func _show_details() -> void:
 	var rewards := InventoryScreen.describe_effects(mission.get("rewards", {}), data)
 	_rewards.visible = not rewards.is_empty()
 	_rewards.text = "Rewards:\n  " + "\n  ".join(rewards)
-	var reason := Sects.check_mission(p, data, _selected)
+	var reason := Sects.check_mission(p, data, _selected, GameState.world_flags)
 	var cooldown := int(mission.get("cooldown_days", 0))
 	_status.text = reason
 	if reason == "" and cooldown > 0:
