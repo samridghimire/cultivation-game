@@ -366,3 +366,15 @@ func test_event_ends_on_its_end_day_not_the_month_end() -> void:
 	assert_true(gs.world_events.is_empty(), "expired mid-month")
 	assert_true(WorldEvents.check_join(gs.data, gs.world_events, gs.player, "sect_tournament", "tournament", "azure_peak") != "", "can't join an ended event")
 	gs.end_session()
+
+
+func test_rolled_instances_carry_done_flag_so_save_round_trips_are_stable() -> void:
+	var d := data()
+	var rolled: Array = []
+	for seed_value in 200:
+		rolled = WorldEvents.roll(d, [], 0, seeded_rng(seed_value))
+		if not rolled.is_empty():
+			break
+	assert_false(rolled.is_empty(), "some event rolled")
+	for inst: Dictionary in rolled:
+		assert_true(inst.has("done") and inst["done"] == false, "fresh instance has done=false")

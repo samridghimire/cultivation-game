@@ -2,7 +2,7 @@ class_name WorldEvents
 extends RefCounted
 ## World events (LW-001): beast tides, tournaments, auction seasons, demonic
 ## incursions... defined in data/world_events.json. GameState keeps the active
-## ones as [{id, region, start_day, end_day}] (saved) and calls expire() and
+## ones as [{id, region, start_day, end_day, done}] (saved) and calls expire() and
 ## roll() at every month boundary. While an event lasts, its region gets extra
 ## encounter tags, a merchant price multiplier and a qi density multiplier.
 
@@ -52,7 +52,7 @@ static func roll(data: GameData, active: Array, total_days: int, rng: RandomNumb
 			continue
 		var region := String(regions[rng.randi_range(0, regions.size() - 1)])
 		var days := rng.randi_range(int(def.get("min_days", 1)), maxi(int(def.get("min_days", 1)), int(def.get("max_days", 1))))
-		var instance := {"id": event_id, "region": region, "start_day": total_days, "end_day": total_days + days}
+		var instance := {"id": event_id, "region": region, "start_day": total_days, "end_day": total_days + days, "done": false}
 		active.append(instance)
 		started.append(instance)
 	return started

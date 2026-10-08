@@ -2350,15 +2350,13 @@ func _on_days_advanced(days: int) -> void:
 	var reserved := npc_favor.duplicate()
 	for spouse_id in player.spouses:
 		reserved[spouse_id] = true
-	var married_off := false
 	for event in Npcs.simulate(npcs, data, days, rng, reserved):
-		married_off = married_off or event.get("kind", "") == "marriage"
 		# News about generated strangers is noise; only report people the player knows.
 		if not Npcs.is_newsworthy(String(event["npc_id"]), player, npc_favor):
 			continue
 		EventBus.post(event["text"], event["category"])
-	if married_off:
-		Npcs.ensure_eligible(npcs, data, rng, Children.descendants(player, npcs))  # keep courtship candidates in every region
+	# Marriages, deaths and moves all thin the pool, so top it up every pass (a load tops it up too).
+	Npcs.ensure_eligible(npcs, data, rng, Children.descendants(player, npcs))
 	for event in NpcClans.simulate(npc_clans, npcs, data):
 		EventBus.post(event["text"], event["category"])
 	for event in NpcClans.sync_alliances(npc_clans, npcs, data, player, clan):
