@@ -115,3 +115,35 @@ func test_merchant_refuses_wrong_alignment_without_opening_the_shop() -> void:
 	assert_true(String(options[0]["label"]).contains("righteous"), options[0]["label"])
 	merchant.free()
 	gs.end_session()
+
+
+func test_quantity_max_and_ten_steps() -> void:
+	var root := (Engine.get_main_loop() as SceneTree).root
+	var gs := root.get_node("GameState")
+	var c := new_character()
+	c.inventory = {"spirit_stone": 100, "spirit_herb": 25}
+	gs.start_session(c)
+	var screen := ShopScreen.new()
+	root.add_child(screen)
+	screen.open("Herb Stall", 0, ["herb"])
+	screen._set_tab(true)
+	screen._select("spirit_herb")
+	screen._step(ShopScreen.MAX_STEP)
+	assert_eq(screen._quantity, 25, "Max on sell = held count")
+	screen._step(-10)
+	assert_eq(screen._quantity, 15)
+	screen._step(-100)
+	assert_eq(screen._quantity, 1, "clamps to 1")
+	screen._step(10)
+	assert_eq(screen._quantity, 11)
+	screen._set_tab(false)
+	screen._select("spirit_herb")
+	screen._step(ShopScreen.MAX_STEP)
+	assert_eq(screen._quantity, ShopScreen.max_quantity(gs.player, gs.data, "spirit_herb", false), "Max on buy is capped by stones")
+	var key := InputEventKey.new()
+	key.pressed = true
+	key.keycode = KEY_PAGEUP
+	assert_true(screen._is_ten_step(key, false))
+	screen.close()
+	screen.free()
+	gs.end_session()

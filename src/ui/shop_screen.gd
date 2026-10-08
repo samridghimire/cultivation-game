@@ -29,6 +29,8 @@ var _buy_tags: Array = []
 var _faction := ""
 var _selling := false
 var _selected := ""
+const MAX_STEP := 1000000  ## a step too big to be anything but "Max"
+
 var _quantity := 1
 
 
@@ -84,6 +86,9 @@ func _init() -> void:
 	var stepper := HBoxContainer.new()
 	stepper.add_theme_constant_override("separation", 8)
 	details.add_child(stepper)
+	var less10 := UIStyle.button("-10", _step.bind(-10))
+	less10.focus_mode = Control.FOCUS_NONE
+	stepper.add_child(less10)
 	var less := UIStyle.button("<", _step.bind(-1))
 	less.focus_mode = Control.FOCUS_NONE
 	stepper.add_child(less)
@@ -92,11 +97,17 @@ func _init() -> void:
 	var more := UIStyle.button(">", _step.bind(1))
 	more.focus_mode = Control.FOCUS_NONE
 	stepper.add_child(more)
+	var more10 := UIStyle.button("+10", _step.bind(10))
+	more10.focus_mode = Control.FOCUS_NONE
+	stepper.add_child(more10)
+	var most_button := UIStyle.button("Max", _step.bind(MAX_STEP))
+	most_button.focus_mode = Control.FOCUS_NONE
+	stepper.add_child(most_button)
 	_trade_button = UIStyle.button("", _trade)
 	_trade_button.name = "Trade"
 	_trade_button.gui_input.connect(_on_item_input)
 	details.add_child(_trade_button)
-	details.add_child(UIStyle.label("Left/Right: change quantity", 14, Color(0.6, 0.6, 0.6)))
+	details.add_child(UIStyle.label("Left/Right: change quantity. LB/RB or PgUp/PgDn: by 10", 14, Color(0.6, 0.6, 0.6)))
 
 	_close_button = UIStyle.button("Close", close)
 	box.add_child(_close_button)
@@ -237,6 +248,23 @@ func _on_item_input(event: InputEvent) -> void:
 	elif event.is_action_pressed("ui_right"):
 		_step(1)
 		accept_event()
+	elif _is_ten_step(event, false):
+		_step(-10)
+		accept_event()
+	elif _is_ten_step(event, true):
+		_step(10)
+		accept_event()
+
+
+## LB/RB (gamepad) or PageUp/PageDown step the quantity by 10.
+func _is_ten_step(event: InputEvent, up: bool) -> bool:
+	if not event.is_pressed() or event.is_echo():
+		return false
+	if event is InputEventJoypadButton:
+		return (event as InputEventJoypadButton).button_index == (JOY_BUTTON_RIGHT_SHOULDER if up else JOY_BUTTON_LEFT_SHOULDER)
+	if event is InputEventKey:
+		return (event as InputEventKey).keycode == (KEY_PAGEDOWN if up else KEY_PAGEUP)
+	return false
 
 
 func _step(delta: int) -> void:
