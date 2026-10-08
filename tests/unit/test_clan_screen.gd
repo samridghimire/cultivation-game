@@ -135,6 +135,32 @@ func test_hud_registers_clan_screen_on_its_action() -> void:
 	hud.free()
 
 
+## WU-020: the family screen opens from anywhere with F or the right trigger.
+func test_family_hotkey_opens_family_screen() -> void:
+	assert_true(InputMap.has_action("toggle_family"))
+	var has_key := false
+	var has_trigger := false
+	for ev in InputMap.action_get_events("toggle_family"):
+		has_key = has_key or ev is InputEventKey
+		has_trigger = has_trigger or (ev is InputEventJoypadMotion and ev.axis == JOY_AXIS_TRIGGER_RIGHT)
+	assert_true(has_key, "keyboard binding")
+	assert_true(has_trigger, "right trigger binding")
+	var hud: Node = load("res://src/ui/hud.tscn").instantiate()
+	var gs := _root().get_node("GameState")
+	gs.start_session(_founder())
+	_root().add_child(hud)
+	var family: Control = hud._screens.get("toggle_family")
+	assert_true(family is FamilyScreen)
+	var ev := InputEventAction.new()
+	ev.action = "toggle_family"
+	ev.pressed = true
+	hud._unhandled_input(ev)
+	assert_true(family.visible, "opened")
+	hud._unhandled_input(ev)
+	assert_false(family.visible, "toggled closed")
+	hud.free()
+
+
 ## FAM-008b: the heir is named in the summary and marked in the list, and a
 ## descendant member can be named heir.
 func test_heir_shown_and_designated() -> void:

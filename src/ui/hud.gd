@@ -23,7 +23,7 @@ var _target_name := ""
 const KEY_HINTS := [
 	["interact", "interact"], ["toggle_character_sheet", "character"], ["toggle_inventory", "inventory"],
 	["toggle_techniques", "techniques"], ["toggle_map", "map"], ["toggle_message_log", "log"],
-	["toggle_artifact", "artifact"], ["toggle_clan", "clan"], ["toggle_journal", "journal"], ["quick_save", "save"], ["pause_menu", "pause"],
+	["toggle_artifact", "artifact"], ["toggle_clan", "clan"], ["toggle_family", "family"], ["toggle_journal", "journal"], ["quick_save", "save"], ["pause_menu", "pause"],
 ]
 var _choice_menu: ChoiceMenu
 var _threat_prompt: ThreatPrompt
@@ -92,8 +92,7 @@ func _ready() -> void:
 	_sect_balance.closed.connect(_update_modal)
 	add_child(UIStyle.centered(_sect_balance))
 	_family = FamilyScreen.new()
-	_family.closed.connect(_update_modal)
-	add_child(UIStyle.centered(_family))
+	_add_screen("toggle_family", _family)
 	_child_training = ChildTrainingScreen.new()
 	_child_training.closed.connect(_update_modal)
 	add_child(UIStyle.centered(_child_training))
@@ -214,7 +213,6 @@ func _close_screens() -> void:
 	_mission_board.close()
 	_auction.close()
 	_sect_balance.close()
-	_family.close()
 	_child_training.close()
 
 
@@ -256,7 +254,7 @@ func _on_child_training_requested() -> void:
 
 
 func _any_screen_open() -> bool:
-	return _crafting.visible or _shop.visible or _mission_board.visible or _auction.visible or _sect_balance.visible or _family.visible or _child_training.visible or _screens.values().any(func(s): return s.visible)
+	return _crafting.visible or _shop.visible or _mission_board.visible or _auction.visible or _sect_balance.visible or _child_training.visible or _screens.values().any(func(s): return s.visible)
 
 
 func _build_status_panel() -> void:

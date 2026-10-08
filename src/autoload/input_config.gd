@@ -21,6 +21,7 @@ const KEYS := {
 	"scroll_down": [KEY_PAGEDOWN],
 	"toggle_clan": [KEY_G],
 	"toggle_journal": [KEY_J],
+	"toggle_family": [KEY_F],
 	"quick_save": [KEY_F5],
 	"quick_load": [KEY_F9],
 	"pause_menu": [KEY_ESCAPE],
@@ -50,6 +51,7 @@ const JOY_AXES := {
 	"move_right": [JOY_AXIS_LEFT_X, 1.0],
 	"scroll_up": [JOY_AXIS_RIGHT_Y, -1.0],
 	"scroll_down": [JOY_AXIS_RIGHT_Y, 1.0],
+	"toggle_family": [JOY_AXIS_TRIGGER_RIGHT, 1.0],
 }
 
 
