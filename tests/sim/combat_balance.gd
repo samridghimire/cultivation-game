@@ -194,7 +194,8 @@ static func rate(data: GameData, appearance: Dictionary, samples: int) -> Dictio
 	var peak := win_rate(typical_player(data, realm, peak_stage), data, enemy, samples)
 	var talisman := win_rate(typical_player(data, realm, 0, true), data, enemy, samples)
 	var bare := win_rate(bare_player(data, realm, 0), data, enemy, samples)
-	return {"entry": entry, "peak": peak, "talisman": talisman, "bare": bare, "verdict": verdict(entry, peak)}
+	var veteran := win_rate(veteran_player(data, realm, 0), data, enemy, samples)
+	return {"entry": entry, "veteran": veteran, "peak": peak, "talisman": talisman, "bare": bare, "verdict": verdict(entry, peak)}
 
 
 ## A plain enemy of `realm_index`/`stage`: realm power and enemies.json

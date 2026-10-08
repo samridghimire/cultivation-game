@@ -107,3 +107,18 @@ func test_no_forced_fight_is_unbeatable_for_veteran_through_soul_formation() -> 
 		var peak := Balance.veteran_player(data(), realm, data().realms[realm].stage_count() - 1)
 		var rate := Balance.win_rate(peak, data(), data().enemies[a["enemy"]], 40)
 		assert_true(rate >= Balance.UNBEATABLE_BELOW, "%s (%s): veteran wins only %d%%" % [a["enemy"], a["source"], roundi(rate * 100)])
+
+
+## QA-025: the Nascent Soul encounters, read at the player's stage on appearance
+## (stage 0 of the encounter's min_realm), are never near-hopeless for a veteran
+## when they cannot be evaded.
+func test_forced_nascent_soul_fights_are_fair_on_appearance_for_veteran() -> void:
+	var ns := data().realm_index_of("nascent_soul")
+	var checked := 0
+	for a: Dictionary in Balance.appearances(data()):
+		if not a["forced"] or a["realm_index"] != ns:
+			continue
+		checked += 1
+		var rate := Balance.win_rate(Balance.veteran_player(data(), ns, 0), data(), data().enemies[a["enemy"]], 40)
+		assert_true(rate >= 0.15, "%s (%s): veteran on appearance wins only %d%%" % [a["enemy"], a["source"], roundi(rate * 100)])
+	assert_gt(checked, 0)

@@ -27,9 +27,9 @@ func _run() -> void:
 		var note := ""
 		if r["verdict"] == "unbeatable" and not a["forced"]:
 			note = " (lethal: a Deadly foe is sensed and evaded)"
-		print("  %-9s %-22s %-28s %-24s entry %3d%%  peak %3d%%  talisman %3d%%  bare %3d%%  %s%s" % [
+		print("  %-9s %-22s %-28s %-24s entry %3d%%  peak %3d%%  talisman %3d%%  bare %3d%%  veteran on appearance %3d%%  %s%s" % [
 			data.realms[a["realm_index"]].name.substr(0, 9), a["enemy"], a["source"].substr(0, 28), "forced" if a["forced"] else "evadable",
-			roundi(r["entry"] * 100), roundi(r["peak"] * 100), roundi(r["talisman"] * 100), roundi(r["bare"] * 100), r["verdict"].to_upper(), note])
+			roundi(r["entry"] * 100), roundi(r["peak"] * 100), roundi(r["talisman"] * 100), roundi(r["bare"] * 100), roundi(r["veteran"] * 100), r["verdict"].to_upper(), note])
 	for enemy_id: String in data.enemies:
 		if not seen.has(enemy_id):
 			print("  UNUSED   %s never appears in an encounter or mission" % enemy_id)
