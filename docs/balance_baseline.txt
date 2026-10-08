@@ -2,18 +2,18 @@
 
 First-hour sim: 10 seeds, 12 months
   seed  QR1  QR3  QR9  sect  injuries  won  lost  fled  lines/month
-     1   14  137    -    14         0    1     0     0  2.9
-     2   14   77    -    14         0    2     0     0  3.7
-     3   14  138    -    14         0    2     0     0  3.3
-     4   14  171    -    14         0    2     0     0  3.1
-     5   14   48  294    14         0    3     0     0  4.6
-     6  111  268    -   111         0    3     0     0  4.2
-     7   14  109    -    14         0    3     0     0  3.9
-     8   14   77    -    14         0    3     0     0  4.2
-     9   14  202    -    14         0    2     0     0  3.7
-    10   14  106    -    14         0    1     0     0  3.7
-Medians (day): QR1 14, QR3 137, QR9 294, sect 14; injuries 0; fights won 2, lost 0, fled 0; 3.7 log lines/month
-Lines by category: { "warning": 33, "progress": 110, "info": 265, "danger": 38 }
+     1   14  138    -    14         0    1     0     0  3.5
+     2   14  107    -    14         0    0     1     0  3.6
+     3   14  140    -    14         0    2     0     0  3.1
+     4   14  168    -    14         0    1     0     0  3.1
+     5   14   45  291    14         0    1     0     0  4.1
+     6   62  277    -    62         0    1     0     0  3.5
+     7   14  136    -    14         0    2     0     0  3.2
+     8   14  108    -    14         0    0     1     0  3.4
+     9   14  202    -    14         0    1     0     0  3.2
+    10   14  108    -    14         0    0     1     0  3.4
+Medians (day): QR1 14, QR3 138, QR9 291, sect 14; injuries 0; fights won 1, lost 0, fled 0; 3.4 log lines/month
+Lines by category: { "warning": 31, "progress": 97, "info": 269, "danger": 12 }
 
 ## combat (200 fights per cell)
 
@@ -59,7 +59,7 @@ Where each enemy first appears (typical player entering the realm / at its peak 
   Qi Refini stone_ape              trial fist_saint_grave stage forced                   entry   0%  peak  68%  talisman   1%  bare   0%  veteran on appearance   2%  HARD
   Qi Refini tournament_contender   choice tournament_bout/Enter forced                   entry   0%  peak  74%  talisman   5%  bare   0%  veteran on appearance   3%  HARD
   Qi Refini vengeful_brother       encounter wounded_traveller_ evadable                 entry   4%  peak 100%  talisman  59%  bare   0%  veteran on appearance  54%  HARD
-  Foundatio azure_cloud_enforcer   encounter city_righteous_enf forced                   entry  12%  peak  78%  talisman  72%  bare   0%  veteran on appearance  85%  HARD
+  Foundatio azure_cloud_enforcer   encounter city_righteous_enf forced                   entry  59%  peak  78%  talisman  98%  bare   0%  veteran on appearance 100%  OK
   Foundatio azure_cloud_enforcer   mission ambush_azure_patrol  forced                   entry  59%  peak  78%  talisman  98%  bare   0%  veteran on appearance 100%  OK
   Foundatio azure_pavilion_warden  trial azure_cloud_sect rank  forced                   entry  31%  peak  95%  talisman  93%  bare   0%  veteran on appearance  92%  HARD
   Foundatio blood_eyed_wolf        encounter marsh_blood_eyed_w evadable                 entry  29%  peak  94%  talisman  95%  bare   0%  veteran on appearance  97%  HARD
@@ -77,22 +77,22 @@ Where each enemy first appears (typical player entering the realm / at its peak 
   Foundatio cloud_eagle            mission escort_star_silver   forced                   entry  63%  peak  96%  talisman  99%  bare   0%  veteran on appearance  98%  OK
   Foundatio demonic_cultivator     encounter forest_demonic_amb evadable                 entry  32%  peak  95%  talisman  93%  bare   0%  veteran on appearance  92%  HARD
   Foundatio demonic_cultivator     encounter marsh_demonic_hunt evadable                 entry  32%  peak  95%  talisman  93%  bare   0%  veteran on appearance  92%  HARD
+  Foundatio demonic_cultivator     mission harvest_rogue_cultiv forced                   entry  69%  peak  95%  talisman  98%  bare   0%  veteran on appearance  98%  OK
   Foundatio demonic_cultivator     mission purge_demonic_cultiv forced                   entry  69%  peak  95%  talisman  98%  bare   0%  veteran on appearance  98%  OK
+  Foundatio demonic_cultivator     mission recover_stolen_consi forced                   entry  69%  peak  95%  talisman  98%  bare   0%  veteran on appearance  98%  OK
+  Foundatio demonic_cultivator     mission silence_a_talebearer forced                   entry  69%  peak  95%  talisman  98%  bare   0%  veteran on appearance  98%  OK
   Foundatio demonic_cultivator     realm sunken_sword_tomb floo forced                   entry  32%  peak  95%  talisman  93%  bare   0%  veteran on appearance  92%  HARD
   Foundatio drowned_yin_ghost      encounter marsh_drowned_yin_ evadable                 entry  18%  peak  83%  talisman  78%  bare   0%  veteran on appearance  92%  HARD
   Foundatio flame_tailed_fox       encounter wild_flame_fox     evadable                 entry  24%  peak  89%  talisman  86%  bare   0%  veteran on appearance  98%  HARD
   Foundatio ice_soul_spider        encounter forest_ice_spider  evadable                 entry   5%  peak  67%  talisman  57%  bare   0%  veteran on appearance  78%  HARD
   Foundatio iron_horn_rhino        encounter mountain_iron_rhin evadable                 entry   6%  peak  66%  talisman  48%  bare   0%  veteran on appearance  64%  HARD
   Foundatio iron_horn_rhino        encounter tide_rhino_stamped evadable                 entry   6%  peak  66%  talisman  48%  bare   0%  veteran on appearance  64%  HARD
+  Foundatio iron_horn_rhino        mission drain_stone_ape_marr forced                   entry  66%  peak  66%  talisman  97%  bare   0%  veteran on appearance  99%  OK
   Foundatio iron_horn_rhino        mission escort_beast_cages   forced                   entry  66%  peak  66%  talisman  97%  bare   0%  veteran on appearance  99%  OK
+  Foundatio iron_horn_rhino        mission subdue_stone_ape     forced                   entry  66%  peak  66%  talisman  97%  bare   0%  veteran on appearance  99%  OK
   Foundatio jade_python            encounter marsh_sunken_serpe evadable                 entry   0%  peak   0%  talisman   0%  bare   0%  veteran on appearance   0%  UNBEATABLE (lethal: a Deadly foe is sensed and evaded)
   Foundatio jade_python            realm sunken_sword_tomb floo forced                   entry   0%  peak   0%  talisman   0%  bare   0%  veteran on appearance   0%  UNBEATABLE
   Foundatio pavilion_treasure_guardian trial myriad_treasure_pavili forced                   entry  32%  peak  97%  talisman  95%  bare   0%  veteran on appearance  96%  HARD
-  Foundatio rogue_cultivator       mission harvest_rogue_cultiv forced                   entry 100%  peak 100%  talisman 100%  bare  80%  veteran on appearance 100%  TRIVIAL
-  Foundatio rogue_cultivator       mission recover_stolen_consi forced                   entry 100%  peak 100%  talisman 100%  bare  80%  veteran on appearance 100%  TRIVIAL
-  Foundatio rogue_cultivator       mission silence_a_talebearer forced                   entry 100%  peak 100%  talisman 100%  bare  80%  veteran on appearance 100%  TRIVIAL
-  Foundatio stone_ape              mission drain_stone_ape_marr forced                   entry 100%  peak 100%  talisman 100%  bare  60%  veteran on appearance 100%  TRIVIAL
-  Foundatio stone_ape              mission subdue_stone_ape     forced                   entry 100%  peak 100%  talisman 100%  bare  60%  veteran on appearance 100%  TRIVIAL
   Foundatio sword_madman           encounter wild_sword_madman  evadable                 entry   3%  peak  46%  talisman  49%  bare   0%  veteran on appearance  70%  HARD
   Foundatio sword_madman           realm fallen_star_vault floo forced                   entry   3%  peak  46%  talisman  49%  bare   0%  veteran on appearance  70%  HARD
   Foundatio tournament_champion    choice tournament_final/Chal forced                   entry  13%  peak  74%  talisman  74%  bare   0%  veteran on appearance  78%  HARD
@@ -105,7 +105,6 @@ Where each enemy first appears (typical player entering the realm / at its peak 
   Core Form blood_lotus_ancestor_puppet trial blood_lotus_sect rank  forced                   entry  31%  peak  94%  talisman  77%  bare   0%  veteran on appearance 100%  HARD
   Core Form blood_lotus_elder      encounter wild_blood_lotus_e evadable                 entry  16%  peak  89%  talisman  71%  bare   0%  veteran on appearance 100%  HARD
   Core Form blood_lotus_elder      mission purge_blood_lotus_el forced                   entry  71%  peak  89%  talisman  97%  bare   0%  veteran on appearance 100%  OK
-  Core Form blood_lotus_executioner trial blood_merchant_vault s forced                   entry 100%  peak 100%  talisman 100%  bare  58%  veteran on appearance 100%  TRIVIAL
   Core Form cloud_devouring_condor realm skyfall_thunder_pavili forced                   entry   0%  peak   0%  talisman   0%  bare   0%  veteran on appearance   0%  UNBEATABLE
   Core Form golden_abacus_guardian trial myriad_treasure_pavili forced                   entry  52%  peak  99%  talisman  95%  bare   0%  veteran on appearance 100%  OK
   Core Form jade_python            encounter wild_python_lair   evadable                 entry  87%  peak 100%  talisman 100%  bare   0%  veteran on appearance 100%  OK
@@ -122,6 +121,7 @@ Where each enemy first appears (typical player entering the realm / at its peak 
   Core Form thunderwing_roc        realm drowned_yin_palace flo forced                   entry  30%  peak  92%  talisman  90%  bare   0%  veteran on appearance 100%  HARD
   Core Form thunderwing_roc        realm skyfall_thunder_pavili forced                   entry  30%  peak  92%  talisman  90%  bare   0%  veteran on appearance 100%  HARD
   Core Form thunderwing_roc        trial cloud_sword_immortal_c forced                   entry  30%  peak  92%  talisman  90%  bare   0%  veteran on appearance 100%  HARD
+  Core Form vault_blood_warden     trial blood_merchant_vault s forced                   entry  87%  peak 100%  talisman 100%  bare   0%  veteran on appearance 100%  OK
   Nascent S ancient_puppet_guardian encounter ruins_puppet_guard evadable                 entry  35%  peak  97%  talisman  53%  bare   0%  veteran on appearance 100%  HARD
   Nascent S ancient_tortoise_sage  encounter wild_tortoise_sage evadable                 entry  40%  peak  94%  talisman  53%  bare   0%  veteran on appearance 100%  HARD
   Nascent S azure_law_enforcer     encounter wild_azure_law_enf forced                   entry  40%  peak  97%  talisman  62%  bare   0%  veteran on appearance 100%  HARD
@@ -147,6 +147,7 @@ Win rate at stage 0 of each realm (no talismans):
   azure_grand_elder_shadow         0%         0%         0%        38%       100%
   blood_pit_gladiator            0%         4%       100%       100%       100%
   blood_pit_champion             0%         0%        23%       100%       100%
+  vault_blood_warden             0%         0%         0%        87%       100%
   blood_lotus_ancestor_puppet         0%         0%         0%        31%       100%
   pavilion_vault_guard           0%         1%       100%       100%       100%
   pavilion_treasure_guardian         0%         0%        32%       100%       100%

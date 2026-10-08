@@ -187,6 +187,7 @@ func test_high_grade_herbs_are_realm_gated_in_gather_tables() -> void:
 func test_encounter_alignment_bounds() -> void:
 	var c := new_character()
 	c.realm_index = data().realm_index_of("foundation_establishment")
+	c.stage = 2  # city_righteous_enforcer has min_stage 2 (C-015)
 	var ids := func() -> Array:
 		return Exploration.eligible_encounters(c, data(), ["city"], {}).map(func(e): return e["encounter"]["id"])
 	c.alignment = 0
