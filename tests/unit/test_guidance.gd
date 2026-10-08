@@ -353,3 +353,66 @@ func test_meditation_preview_forms() -> void:
 	assert_true(stuck.contains("bottleneck"))
 	for t in [normal, big, stuck]:
 		assert_false(t.contains("%") or t.contains("{"))
+
+
+# --- GUIDE-007: try something new --------------------------------------------
+
+func _veteran() -> CharacterData:
+	var c := new_character()
+	c.realm_index = 1
+	c.stage = 0
+	c.known_recipes.clear()
+	for key in LifeStats.KEYS:
+		c.life_stats[key] = 1
+	return c
+
+
+func test_untried_explore_hint_and_age_gates() -> void:
+	var c := _veteran()
+	c.life_stats["encounters"] = 0
+	assert_true(_has(Guidance.hints(c, data(), 1.0, 99, {}, {}, "", 400), "Explore the wilds"))
+	assert_false(_has(Guidance.hints(c, data(), 1.0, 99, {}, {}, "", 100), "Explore the wilds"), "too early")
+	assert_false(_has(Guidance.hints(c, data(), 1.0, 99, {}, {}, "", -1), "Explore the wilds"), "no clock")
+	c.realm_index = 0
+	assert_false(_has(Guidance.hints(c, data(), 1.0, 99, {}, {}, "", 400), "Explore the wilds"), "not for Mortals")
+
+
+func test_untried_recipe_hint() -> void:
+	var c := _veteran()
+	c.life_stats["items_crafted"] = 0
+	assert_false(_has(Guidance.hints(c, data(), 1.0, 99, {}, {}, "", 400), "You know a recipe"), "no recipe known")
+	c.known_recipes.append("any_recipe")
+	assert_true(_has(Guidance.hints(c, data(), 1.0, 99, {}, {}, "", 400), "You know a recipe"))
+
+
+func test_untried_secret_realm_hint_and_done_character() -> void:
+	var c := _veteran()
+	c.life_stats["realm_floors_cleared"] = 0
+	var d := data()
+	var def := {"id": "test_realm", "name": "Test Realm", "region": "misty_forest", "period_years": 5, "offset_years": 1, "open_days": 60,
+		"min_realm": "qi_refining", "max_realm": "qi_refining", "floors": []}
+	d.secret_realms["test_realm"] = def
+	var open_day := Calendar.DAYS_PER_YEAR
+	assert_true(_has(Guidance.hints(c, d, 1.0, 99, {}, {}, "", open_day), "Test Realm is open: delve for treasure."))
+	assert_false(_has(Guidance.hints(c, d, 1.0, 99, {}, {}, "", open_day + 100), "delve for treasure"), "closed")
+	c.life_stats["realm_floors_cleared"] = 1
+	assert_false(_has(Guidance.hints(c, d, 1.0, 99, {}, {}, "", open_day), "delve for treasure"))
+	d.secret_realms.erase("test_realm")
+	assert_eq(Guidance._untried_hint(c, d, open_day), "", "someone who has done everything gets nothing")
+
+
+func test_untried_hint_does_not_duplicate_and_respects_limit() -> void:
+	var c := _veteran()
+	c.life_stats["encounters"] = 0
+	var all := Guidance.hints(c, data(), 1.0, 99, {}, {}, "", 400)
+	var seen := {}
+	for h in all:
+		assert_false(seen.has(h), "duplicate hint: " + h)
+		seen[h] = true
+	var idx := -1
+	for i in all.size():
+		if all[i].contains("Explore the wilds"):
+			idx = i
+	assert_gt(idx, -1)
+	assert_false(_has(Guidance.hints(c, data(), 1.0, idx, {}, {}, "", 400), "Explore the wilds"), "limit cuts it")
+	assert_true(_has(Guidance.hints(c, data(), 1.0, idx + 1, {}, {}, "", 400), "Explore the wilds"))

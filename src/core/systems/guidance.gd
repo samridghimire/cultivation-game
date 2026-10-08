@@ -36,6 +36,9 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 		out.append("A child is due in %s." % Calendar.format_duration(days))
 	var newcomer := _newcomer_hints(c, data, flags, region_id) if c.realm_index <= NEWCOMER_MAX_REALM else PackedStringArray()
 	out.append_array(newcomer)
+	var untried := _untried_hint(c, data, today)
+	if untried != "":
+		out.append(untried)
 	out.append(_cultivation_hint(c, data, density))
 	var method := _method_hint(c, data)
 	if method != "":
@@ -66,6 +69,31 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 	if out.size() > limit:
 		out.resize(limit)
 	return out
+
+
+## Game days that must pass (GameClock) before "try something new" is suggested (GUIDE-007).
+const UNTRIED_MIN_DAYS := 180
+
+
+## "Try something new" for a cultivator stuck in one loop: the first feature never
+## used, judged from the life record. Not for Mortals or the first six months.
+## The profession and sect nudges already exist as their own hints, so they are
+## not repeated here.
+static func _untried_hint(c: CharacterData, data: GameData, today: int) -> String:
+	if c.realm_index < 1 or today < UNTRIED_MIN_DAYS:
+		return ""
+	if LifeStats.get_stat(c, "encounters") == 0:
+		return "Explore the wilds (an explore site): fortunes, foes and strangers wait there."
+	if LifeStats.get_stat(c, "items_crafted") == 0 and not c.known_recipes.is_empty():
+		return "You know a recipe: craft it at a workshop."
+	if LifeStats.get_stat(c, "realm_floors_cleared") == 0:
+		var realm_ids: Array = data.secret_realms.keys()
+		realm_ids.sort()
+		for realm_id: String in realm_ids:
+			var def: Dictionary = data.secret_realms[realm_id]
+			if SecretRealms.admits(c, data, def) and SecretRealms.is_open(def, today):
+				return "%s is open: delve for treasure." % String(def.get("name", realm_id))
+	return ""
 
 
 ## Breakthrough odds (and pills that help) at a bottleneck, else qi and days to the next stage.
