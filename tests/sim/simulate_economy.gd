@@ -244,7 +244,6 @@ func _craft_month(c: CharacterData, data: GameData, recipe_id: String, rng: Rand
 		if result["count"] > 0:
 			Items.sell(c, data, result["item"], result["count"])
 		days_left -= maxi(1, int(result["days"]))
-	Alchemy.grant_rank_recipes(c, data)
 
 
 ## The gather place (any region the cultivator may travel to) with the best
@@ -307,6 +306,8 @@ func _sect_missions(c: CharacterData, data: GameData) -> void:
 			var short := int(needed[item_id]) - c.item_count(item_id)
 			if short > 0:
 				Items.buy(c, data, item_id, short)
+		if Sects.check_mission(c, data, mission_id) != "":
+			continue
 		var result := Sects.complete_mission(c, data, mission_id, {})
 		if result["ok"]:
 			days_left -= int(result["days"])

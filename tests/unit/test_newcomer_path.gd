@@ -107,6 +107,7 @@ func test_newcomer_path() -> void:
 		_gs.join_sect(sects[0])
 		assert_false(_c.is_rogue(), "joined a sect")
 		_check("join sect")
+		var took := false
 		for id: String in Sects.available_missions(_c, _gs.data):
 			var reason := Sects.check_mission(_c, _gs.data, id)
 			if reason != "":
@@ -117,11 +118,14 @@ func test_newcomer_path() -> void:
 				continue
 			_gs.take_mission(id)
 			_check("mission " + id)
+			took = true
 			break
+		assert_true(took, "a rank-0 mission could be taken")
 		for id: String in Sects.available_missions(_c, _gs.data):
-			if Sects.check_mission(_c, _gs.data, id) == "":
+			var why := Sects.check_mission(_c, _gs.data, id)
+			if why == "":
 				continue
-			assert_true(Sects.check_mission(_c, _gs.data, id) != "", "disabled mission has a reason")
+			assert_false(why.contains("%") or why.contains("{"), "mission reason is formatted: " + why)
 
 	# Explore 10 times
 	for i in 10:
@@ -135,8 +139,10 @@ func test_newcomer_path() -> void:
 			for ch in choices:
 				if ch.get("disabled", false):
 					assert_true(String(ch.get("reason", "")) != "", "disabled encounter choice needs a reason")
-			if not choices.is_empty():
-				_gs.choose_encounter(0)
+			for k in choices.size():
+				if not choices[k].get("disabled", false):
+					_gs.choose_encounter(k)
+					break
 		_gs.pending_event = ""
 		_check("explore %d" % i)
 	_gs.end_session()

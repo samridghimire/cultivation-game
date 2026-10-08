@@ -1904,7 +1904,7 @@ func enter_tournament(event_id: String) -> void:
 	EventBus.post("You sign your name on the tournament roll. %d bouts stand between you and the prize." % rounds)
 	var hp := -1  # no healing between bouts: each starts with what the last left
 	for round_index in rounds:
-		var rival := WorldEvents.opponent(data, event_id, "tournament", player, 0, rng)
+		var rival := WorldEvents.opponent(data, event_id, "tournament", player, round_index, rng)
 		EventBus.post("Bout %d of %d: %s steps into the ring." % [round_index + 1, rounds, rival["name"]])
 		var won := fight_enemy(rival, hp)
 		hp = last_fight_hp

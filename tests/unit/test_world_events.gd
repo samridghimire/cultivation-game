@@ -204,29 +204,68 @@ func test_check_join_reasons() -> void:
 	gs.end_session()
 
 
+func _overwhelm(c: CharacterData) -> void:
+	Buffs.add(c, "test_might", "Test Might", 100000, {"attack": 30.0, "defense": 30.0, "max_hp": 30.0, "speed": 5.0})
+
+
+func _prize_manuals(c: CharacterData) -> int:
+	var n := 0
+	for k in c.inventory.keys():
+		if String(k).begins_with("manual_"):
+			n += 1
+	return n
+
+
 func test_enter_tournament_pays_prize_once() -> void:
-	var gs := _session_with("sect_tournament", "azure_peak")
+	var gs := _session_with("sect_tournament", "azure_peak", 3)
 	gs.player.stage = 0
 	gs.player.inventory = {"spirit_stone": 0}
-	gs.player.attributes = {"strength": 40, "constitution": 40, "agility": 40}
-	var stones_before: int = gs.player.item_count("spirit_stone")
-	# Weak rivals: force the bracket by making the player overwhelmingly strong.
-	gs.player.realm_index = 3
-	gs.player.stage = 0
+	_overwhelm(gs.player)
 	gs.enter_tournament("sect_tournament")
-	var won: bool = gs.player.item_count("spirit_stone") > stones_before
 	assert_true(bool(gs.world_events[0]["done"]), "event marked done")
-	if won:
-		assert_true(gs.player.inventory.keys().any(func(k: String) -> bool: return k.begins_with("manual_")), "a manual in the prize")
-	if won:
-		assert_eq(LifeStats.get_stat(gs.player, "tournaments_won"), 1)
-		assert_true(gs.player.milestones.has("tournament_champion"), "milestone awarded")
-	var again: int = gs.player.item_count("spirit_stone")
+	assert_eq(gs.player.item_count("spirit_stone"), 150, "prize stones")
+	assert_eq(_prize_manuals(gs.player), 1, "a manual in the prize")
+	assert_eq(LifeStats.get_stat(gs.player, "tournaments_won"), 1)
+	assert_true(gs.player.milestones.has("tournament_champion"), "milestone awarded")
 	gs.enter_tournament("sect_tournament")
-	assert_eq(gs.player.item_count("spirit_stone"), again, "only once per event")
+	assert_eq(gs.player.item_count("spirit_stone"), 150, "only once per event")
 	var saved: Dictionary = JSON.parse_string(JSON.stringify(gs.to_save_dict()))
 	gs.load_save_dict(saved)
 	assert_true(bool(gs.world_events[0]["done"]), "done survives save/load")
+	gs.end_session()
+
+
+func test_enter_tournament_loss_pays_nothing() -> void:
+	var gs := _session_with("sect_tournament", "azure_peak", 3)
+	gs.player.stage = 0
+	gs.player.inventory = {"spirit_stone": 0}
+	Buffs.add(gs.player, "test_frail", "Test Frail", 100000, {"attack": -0.95, "defense": -0.95, "max_hp": -0.95, "speed": -0.95})
+	var rounds := int(gs.data.world_events["sect_tournament"]["tournament"]["rounds"])
+	_bout_logs = []
+	EventBus.combat_finished.connect(_on_bout)
+	gs.enter_tournament("sect_tournament")
+	EventBus.combat_finished.disconnect(_on_bout)
+	assert_true(bool(gs.world_events[0]["done"]), "a lost tournament is still used up")
+	assert_eq(gs.player.item_count("spirit_stone"), 0, "no prize")
+	assert_eq(_prize_manuals(gs.player), 0)
+	assert_eq(LifeStats.get_stat(gs.player, "tournaments_won"), 0)
+	assert_true(_bout_logs.size() >= 1 and _bout_logs.size() < rounds, "knocked out before the last bout")
+	gs.end_session()
+
+
+func test_tournament_bouts_get_tougher() -> void:
+	var gs := _session_with("sect_tournament", "azure_peak", 3)
+	gs.player.stage = 0
+	_overwhelm(gs.player)
+	_bout_logs = []
+	EventBus.combat_finished.connect(_on_bout)
+	gs.enter_tournament("sect_tournament")
+	EventBus.combat_finished.disconnect(_on_bout)
+	var foe_hp: Array = []
+	for l: PackedStringArray in _bout_logs:
+		foe_hp.append(_hp_in(l[0], "Foe"))
+	assert_eq(foe_hp.size(), 3)
+	assert_true(foe_hp[0] < foe_hp[1] and foe_hp[1] < foe_hp[2], "each bout a stage tougher: %s" % str(foe_hp))
 	gs.end_session()
 
 
@@ -244,14 +283,15 @@ func _hp_in(line: String, marker: String) -> int:
 
 
 func test_tournament_carries_hp_between_bouts() -> void:
-	var gs := _session_with("sect_tournament", "azure_peak")
-	gs.player.realm_index = 3
+	var gs := _session_with("sect_tournament", "azure_peak", 3)
 	gs.player.stage = 0
+	_overwhelm(gs.player)
+	var rounds := int(gs.data.world_events["sect_tournament"]["tournament"]["rounds"])
 	_bout_logs = []
 	EventBus.combat_finished.connect(_on_bout)
 	gs.enter_tournament("sect_tournament")
 	EventBus.combat_finished.disconnect(_on_bout)
-	assert_true(_bout_logs.size() >= 1)
+	assert_eq(_bout_logs.size(), rounds, "every bout fought")
 	for i in range(1, _bout_logs.size()):
 		var prev: PackedStringArray = _bout_logs[i - 1]
 		var left := _hp_in("\n".join(prev), "You")
@@ -278,13 +318,14 @@ func test_pay_prize_gives_stones_manual_and_reputation() -> void:
 func test_defend_against_incursion() -> void:
 	var gs := _session_with("demonic_incursion", "qingshi_village", 3)
 	gs.player.alignment = 0
+	_overwhelm(gs.player)
 	var stones: int = gs.player.item_count("spirit_stone")
 	gs.defend_against_incursion("demonic_incursion")
 	assert_true(bool(gs.world_events[0]["done"]))
-	if gs.player.item_count("spirit_stone") > stones:
-		assert_gt(gs.player.alignment, 0, "defending is righteous")
-		assert_eq(LifeStats.get_stat(gs.player, "incursions_repelled"), 1)
-		assert_true(gs.player.milestones.has("incursion_repelled"), "milestone awarded")
+	assert_gt(gs.player.item_count("spirit_stone"), stones, "defence pays")
+	assert_gt(gs.player.alignment, 0, "defending is righteous")
+	assert_eq(LifeStats.get_stat(gs.player, "incursions_repelled"), 1)
+	assert_true(gs.player.milestones.has("incursion_repelled"), "milestone awarded")
 	var after: int = gs.player.item_count("spirit_stone")
 	gs.defend_against_incursion("demonic_incursion")
 	assert_eq(gs.player.item_count("spirit_stone"), after, "only once per event")
