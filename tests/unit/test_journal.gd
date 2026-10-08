@@ -165,3 +165,50 @@ func test_duty_reminder_only_in_sect_section_and_grace_is_not_warned() -> void:
 	assert_eq(_find(_entries(c), "Monthly duty")["tone"], "warning")
 	c.sect["duty_grace"] = true
 	assert_eq(_find(_entries(c), "Monthly duty")["tone"], "normal")
+
+
+func _flags_journal(c: CharacterData, flags: Dictionary, today: int) -> Array[Dictionary]:
+	return Guidance.journal(c, data(), flags, today, "qingshi_village")
+
+
+func _has_section(entries: Array[Dictionary], section: String) -> bool:
+	return _sections(entries).has(section)
+
+
+func test_open_admitting_secret_realm_is_an_opportunity() -> void:
+	var c := _fresh()
+	c.realm_index = data().realm_index_of("qi_refining")
+	var entry := _find(_flags_journal(c, {}, 10), "Peach Blossom")
+	assert_eq(entry.get("section", ""), "Opportunities")
+	assert_true(String(entry.get("text", "")).contains("is open"))
+	var mortal := _fresh()
+	assert_true(_find(_flags_journal(mortal, {}, 10), "Peach Blossom").is_empty())
+
+
+func test_claimed_inheritance_is_not_listed() -> void:
+	var c := _fresh()
+	c.realm_index = data().realm_index_of("qi_refining")
+	var id: String = data().inheritances.keys()[0]
+	var def: Dictionary = data().inheritances[id]
+	var today := Inheritances.appears_day(def)
+	var name_text := String(def["name"])
+	assert_false(_find(_flags_journal(c, {}, today), name_text).is_empty())
+	var flags := {Inheritances.claimed_flag(id): true}
+	assert_true(_find(_flags_journal(c, flags, today), name_text).is_empty())
+
+
+func test_errand_listed_until_done() -> void:
+	var c := _fresh()
+	assert_false(_has_section(_flags_journal(c, {}, 0), "Errands"))
+	var asked := {"errand_lan_asked": true}
+	assert_false(_find(_flags_journal(c, asked, 0), "Herbalist Lan").is_empty())
+	asked["errand_lan_done"] = true
+	assert_false(_has_section(_flags_journal(c, asked, 0), "Errands"))
+
+
+func test_errand_with_unknown_npc_is_a_load_error() -> void:
+	var d := GameData.load_from_dir()
+	d.errands = [{"npc": "nobody", "asked_flag": "a", "done_flag": "b", "text": "x"}]
+	d.load_errors.clear()
+	d._validate()
+	assert_true(", ".join(d.load_errors).contains("unknown npc 'nobody'"))

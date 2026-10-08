@@ -22,7 +22,7 @@ static func is_claimed(id: String, flags: Dictionary) -> bool:
 	return bool(flags.get(claimed_flag(id), false))
 
 
-static func _appears_day(def: Dictionary) -> int:
+static func appears_day(def: Dictionary) -> int:
 	return int(def.get("appears_years", 0)) * Calendar.DAYS_PER_YEAR
 
 
@@ -86,7 +86,7 @@ static func check_attempt(c: CharacterData, data: GameData, id: String, region_i
 		return "You have already claimed the %s." % def["name"]
 	if is_lost(def, total_days, flags):
 		return "Someone else claimed the %s before you." % def["name"]
-	if total_days < _appears_day(def):
+	if total_days < appears_day(def):
 		return "No one has found the %s yet." % def["name"]
 	var stage := next_stage(c, def)
 	if stage.is_empty():
@@ -127,7 +127,7 @@ static func status_text(c: CharacterData, data: GameData, id: String, total_days
 		return "Claimed by you"
 	if is_lost(def, total_days, flags):
 		return "Claimed by a rival"
-	if total_days < _appears_day(def):
+	if total_days < appears_day(def):
 		return "Undiscovered"
 	var stages: Array = def.get("stages", [])
 	var stage := next_stage(c, def)

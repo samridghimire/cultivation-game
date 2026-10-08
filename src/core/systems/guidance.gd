@@ -225,6 +225,8 @@ static func journal(c: CharacterData, data: GameData, flags: Dictionary, today: 
 			if def.has(kind):
 				var reason := WorldEvents.check_join(data, events, c, event_id, kind, region_id)
 				_add(out, "World events", "%s: %s" % [kind.capitalize(), "you can enter" if reason == "" else reason], "normal" if reason == "" else "dim")
+	_opportunity_entries(out, c, data, flags, today)
+	_errand_entries(out, data, flags)
 	for order in c.commissions:
 		_add(out, "Commissions", Commissions.describe(c, data, order, today), "warning" if Commissions.days_left(order, today) <= 7 else "normal")
 	_milestone_entries(out, c, data, flags, clan)
@@ -233,6 +235,44 @@ static func journal(c: CharacterData, data: GameData, flags: Dictionary, today: 
 
 static func _add(out: Array[Dictionary], section: String, text: String, tone: String) -> void:
 	out.append({"section": section, "text": text, "tone": tone})
+
+
+static func _region_name(data: GameData, region_id: String) -> String:
+	return String(data.regions.get(region_id, {}).get("name", region_id))
+
+
+static func _opportunity_entries(out: Array[Dictionary], c: CharacterData, data: GameData, flags: Dictionary, today: int) -> void:
+	var realm_ids: Array = data.secret_realms.keys()
+	realm_ids.sort()
+	for realm_id: String in realm_ids:
+		var def: Dictionary = data.secret_realms[realm_id]
+		if not SecretRealms.admits(c, data, def) or SecretRealms.has_inherited(c, realm_id):
+			continue
+		var label := "%s (%s)" % [String(def.get("name", realm_id)), _region_name(data, String(def.get("region", "")))]
+		if SecretRealms.is_open(def, today):
+			var left := SecretRealms.days_until_close(def, today)
+			_add(out, "Opportunities", "%s is open: %d days left, %d/%d floors cleared" % [label, left, SecretRealms.floors_cleared(c, def, today), (def.get("floors", []) as Array).size()], "warning" if left <= 7 else "normal")
+		elif SecretRealms.days_until_open(def, today) <= 60:
+			_add(out, "Opportunities", "%s opens in %d days" % [label, SecretRealms.days_until_open(def, today)], "dim")
+	var legacy_ids: Array = data.inheritances.keys()
+	legacy_ids.sort()
+	for id: String in legacy_ids:
+		var def: Dictionary = data.inheritances[id]
+		if Inheritances.is_claimed(id, flags) or Inheritances.is_lost(def, today, flags) or today < Inheritances.appears_day(def):
+			continue
+		var stage_count := (def.get("stages", []) as Array).size()
+		var cleared := Inheritances.stages_cleared(c, id)
+		if cleared >= stage_count:
+			continue
+		var text := "%s (%s): %d/%d trials passed" % [String(def.get("name", id)), _region_name(data, String(def.get("region", ""))), cleared, stage_count]
+		var reason := Inheritances.check_attempt(c, data, id, String(def.get("region", "")), today, flags)
+		_add(out, "Opportunities", text if reason == "" else "%s. %s" % [text, reason], "normal" if reason == "" else "dim")
+
+
+static func _errand_entries(out: Array[Dictionary], data: GameData, flags: Dictionary) -> void:
+	for errand: Dictionary in data.errands:
+		if bool(flags.get(String(errand["asked_flag"]), false)) and not bool(flags.get(String(errand["done_flag"]), false)):
+			_add(out, "Errands", String(errand["text"]), "normal")
 
 
 static func _breakthrough_entries(out: Array[Dictionary], c: CharacterData, data: GameData, density: float) -> void:

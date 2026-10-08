@@ -34,6 +34,7 @@ var deeds: Dictionary = {}  # id -> Dictionary
 var regions: Dictionary = {}  # id -> Dictionary
 var start_region := ""
 var encounters: Dictionary = {}  # id -> Dictionary
+var errands: Array = []  # data/npcs.json "errands" (journal reminders, GUIDE-003)
 var npcs: Dictionary = {}  # id -> Dictionary (definitions; live NPCs are in GameState.npcs)
 var names: Dictionary = {}  # data/names.json: {"surnames": [...], "given_names": {gender: [...]}}
 var dialogues: Dictionary = {}  # id -> Dictionary, one per data/dialogue/*.json
@@ -211,8 +212,10 @@ func _load(dir: String) -> void:
 	for encounter in _read(dir, "encounters.json").get("encounters", []):
 		encounters[encounter["id"]] = encounter
 
-	for npc in _read(dir, "npcs.json").get("npcs", []):
+	var npc_file := _read(dir, "npcs.json")
+	for npc in npc_file.get("npcs", []):
 		npcs[npc["id"]] = npc
+	errands = npc_file.get("errands", [])
 
 	names = _read(dir, "names.json")
 	family = _read(dir, "family.json")
@@ -447,6 +450,12 @@ func _validate_world() -> void:
 			load_errors.append("NPC '%s' has unknown realm '%s'" % [npc["id"], npc.get("realm", "")])
 		if npc.has("dialogue") and not dialogues.has(npc["dialogue"]):
 			load_errors.append("NPC '%s' has unknown dialogue '%s'" % [npc["id"], npc["dialogue"]])
+	for errand: Dictionary in errands:
+		if not npcs.has(String(errand.get("npc", ""))):
+			load_errors.append("Errand has unknown npc '%s'" % errand.get("npc", ""))
+		for key in ["asked_flag", "done_flag", "text"]:
+			if String(errand.get(key, "")) == "":
+				load_errors.append("Errand of '%s' has no %s" % [errand.get("npc", ""), key])
 	for dialogue: Dictionary in dialogues.values():
 		load_errors.append_array(Dialogue.validate(dialogue, self))
 

@@ -1,5 +1,5 @@
 {
-  "_doc": "Named NPCs. Each becomes a CharacterData at session start and lives on: it ages, cultivates off-screen (if 'cultivates') at its region's qi density times 'diligence' (fraction of days spent cultivating, default 0.3), attempts breakthroughs and can die of old age. realm is a realm id; roots map element ids to purity (omit to roll randomly); attributes default to 10. region/pos/size/color place the NPC in the world. gender (optional) is a data/names.json gender; surname/given_name are optional (name stays the display name). NPCs generated at runtime (Npcs.spawn) have no entry here. dialogue is a file id in data/dialogue/. deed_context (optional) also offers deeds from data/deeds.json. bloodline (optional) is a data/bloodlines.json id the NPC carries (and may pass to children).",
+  "_doc": "Named NPCs. Each becomes a CharacterData at session start and lives on: it ages, cultivates off-screen (if 'cultivates') at its region's qi density times 'diligence' (fraction of days spent cultivating, default 0.3), attempts breakthroughs and can die of old age. realm is a realm id; roots map element ids to purity (omit to roll randomly); attributes default to 10. region/pos/size/color place the NPC in the world. gender (optional) is a data/names.json gender; surname/given_name are optional (name stays the display name). NPCs generated at runtime (Npcs.spawn) have no entry here. dialogue is a file id in data/dialogue/. deed_context (optional) also offers deeds from data/deeds.json. bloodline (optional) is a data/bloodlines.json id the NPC carries (and may pass to children). Optional top-level \"errands\" (GUIDE-003) feed the journal: {npc: named npc id, asked_flag, done_flag, text}; listed while the asked flag is set and the done flag is not.",
   "npcs": [
     {"id": "elder_mo", "name": "Elder Mo", "title": "Retired Cultivator", "region": "qingshi_village", "pos": [560, 170], "color": "9fa3c9",
      "gender": "male",
@@ -37,5 +37,12 @@
      "gender": "male", "surname": "Hei", "given_name": "Wu",
      "realm": "qi_refining", "stage": 7, "age_years": 94, "alignment": -140, "roots": {"water": 52, "wood": 38},
      "attributes": {"charisma": 12, "fortune": 11}, "cultivates": true, "diligence": 0.4, "dialogue": "peddler_hei", "deed_context": "marsh_captive"}
+  ],
+  "errands": [
+    {"npc": "elder_mo", "asked_flag": "errand_mo_asked", "done_flag": "errand_mo_done", "text": "Elder Mo asked for 6 Spirit Herbs (the slope above Qingshi Village)."},
+    {"npc": "herbalist_lan", "asked_flag": "errand_lan_asked", "done_flag": "errand_lan_done", "text": "Herbalist Lan asked for 5 Qi Condensing Grass (Herb Patch, Misty Forest)."},
+    {"npc": "alchemist_hua", "asked_flag": "errand_hua_asked", "done_flag": "errand_hua_done", "text": "Hua Qingyi asked for 4 Qi Gathering Pills you made yourself."},
+    {"npc": "hermit_gu", "asked_flag": "errand_gu_asked", "done_flag": "errand_gu_done", "text": "Hermit Gu asked for 3 Cold Iron (the crystal vein, Azure Peak)."},
+    {"npc": "peddler_hei", "asked_flag": "errand_hei_asked", "done_flag": "errand_hei_done", "text": "Peddler Hei asked for 3 Purple Cloud Mushrooms (Corpse-Lily Bog)."}
   ]
 }
