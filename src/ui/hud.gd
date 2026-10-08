@@ -23,7 +23,7 @@ var _target_name := ""
 const KEY_HINTS := [
 	["interact", "interact"], ["toggle_character_sheet", "character"], ["toggle_inventory", "inventory"],
 	["toggle_techniques", "techniques"], ["toggle_map", "map"], ["toggle_message_log", "log"],
-	["toggle_artifact", "artifact"], ["toggle_clan", "clan"], ["quick_save", "save"], ["pause_menu", "pause"],
+	["toggle_artifact", "artifact"], ["toggle_clan", "clan"], ["toggle_journal", "journal"], ["quick_save", "save"], ["pause_menu", "pause"],
 ]
 var _choice_menu: ChoiceMenu
 var _threat_prompt: ThreatPrompt
@@ -75,6 +75,7 @@ func _ready() -> void:
 	_add_screen("toggle_map", WorldMapScreen.new())
 	_add_screen("toggle_message_log", MessageLogScreen.new())
 	_add_screen("toggle_clan", ClanScreen.new())
+	_add_screen("toggle_journal", JournalScreen.new())
 	_crafting = CraftingScreen.new()
 	_crafting.closed.connect(_update_modal)
 	add_child(UIStyle.centered(_crafting))
@@ -121,6 +122,7 @@ func _ready() -> void:
 	_help.closed.connect(_on_settings_closed)
 	add_child(UIStyle.centered(_help))
 	_pause_menu.help_requested.connect(_open_help)
+	_pause_menu.journal_requested.connect(_open_journal)
 	_respawn = RespawnScreen.new()
 	_respawn.closed.connect(_update_modal)
 	add_child(UIStyle.centered(_respawn))
@@ -553,6 +555,14 @@ func _open_settings() -> void:
 func _open_help() -> void:
 	_pause_menu.visible = false
 	_help.open()
+
+
+## The journal opens from the pause menu (no free gamepad button), closing it first.
+func _open_journal() -> void:
+	_pause_menu.close()
+	var journal: Control = _screens["toggle_journal"]
+	journal.open()
+	_update_modal()
 
 
 ## Load replaces the pause menu while open, then returns to it.

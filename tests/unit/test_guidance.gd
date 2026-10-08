@@ -179,3 +179,37 @@ func test_newcomer_pill_hint_skips_harmful_pills() -> void:
 	c.inventory["qi_gathering_pill"] = 1
 	hints = Guidance.hints(c, data(), 1.0, 10, {}, {Guidance.ELDER_MO_FLAG: true}, "qingshi_village")
 	assert_true(_has(hints, "Use your Qi Gathering Pill"))
+
+
+func test_journal_sections_cover_breakthrough_cooldowns_and_events() -> void:
+	var c := _fresh()
+	c.deed_days["donate_stones"] = 100
+	var events: Array = [{"id": "beast_tide", "region": "misty_forest", "start_day": 100, "end_day": 130}]
+	var d := data()
+	if not d.world_events.has("beast_tide"):
+		events = []
+	var entries := Guidance.journal(c, d, {}, 105, events)
+	var sections := {}
+	for e in entries:
+		sections[e["section"]] = true
+	assert_true(sections.has("Next steps"))
+	assert_true(sections.has("Breakthrough"))
+	assert_true(sections.has("Cooldowns"), "a recent deed is on cooldown")
+	for e in entries:
+		if e["section"] == "Cooldowns":
+			assert_true(String(e["text"]).contains("left"), e["text"])
+	assert_eq(sections.has("World events"), not events.is_empty())
+
+
+func test_journal_shows_sect_duty_for_members() -> void:
+	var c := _fresh()
+	var rogue := Guidance.journal(c, data(), {}, 0)
+	for e in rogue:
+		assert_true(e["section"] != "Sect")
+	var sect_id: String = data().sects.keys()[0]
+	c.sect = {"id": sect_id, "rank": 0, "contribution": 5, "month_earned": 0}
+	var member := Guidance.journal(c, data(), {}, 0)
+	var found := false
+	for e in member:
+		found = found or e["section"] == "Sect"
+	assert_true(found)

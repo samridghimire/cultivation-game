@@ -10,6 +10,9 @@ signal load_requested
 ## The player chose Help; the owner shows a HelpScreen.
 signal help_requested
 
+## The player chose Journal; the owner shows a JournalScreen.
+signal journal_requested
+
 const MAIN_MENU := "res://src/ui/main_menu.tscn"
 
 var _load_button: Button
@@ -30,6 +33,7 @@ func _init() -> void:
 	box.add_child(UIStyle.button("Save Game", _save))
 	_load_button = UIStyle.button("Load Game", load_requested.emit)
 	box.add_child(_load_button)
+	box.add_child(UIStyle.button("Journal", journal_requested.emit))
 	box.add_child(UIStyle.button("Settings", settings_requested.emit))
 	box.add_child(UIStyle.button("Help", help_requested.emit))
 	box.add_child(UIStyle.button("Save and Quit to Menu", _quit_to_menu))

@@ -177,3 +177,49 @@ static func _newcomer_hints(c: CharacterData, data: GameData, flags: Dictionary,
 	if sect != "":
 		out.append(sect)
 	return out
+
+
+## Journal entries [{section, text}] answering "what can I do now?": every hint,
+## the next breakthrough, sect duty and missions, cooldowns, and the world
+## events under way (WU-007). `today` is the GameClock day; `active_events` the
+## live world events.
+static func journal(c: CharacterData, data: GameData, flags: Dictionary, today: int, active_events: Array = [], people: Dictionary = {}, density: float = 1.0, region_id: String = "") -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	for hint in hints(c, data, density, 50, people, flags, region_id):
+		out.append({"section": "Next steps", "text": hint})
+	out.append({"section": "Breakthrough", "text": _breakthrough_line(c, data, density)})
+	var pills := breakthrough_items(c, data)
+	if not pills.is_empty():
+		out.append({"section": "Breakthrough", "text": "Held items that raise the odds: %s." % ", ".join(pills)})
+	if c.breakthrough_bonus > 0.0:
+		out.append({"section": "Breakthrough", "text": "Pill bonus active: +%d%% chance." % roundi(c.breakthrough_bonus * 100)})
+	if not c.is_rogue():
+		var sect: SectDef = data.sects[c.sect["id"]]
+		out.append({"section": "Sect", "text": "%s, %s: %d contribution." % [sect.name, sect.rank_name(int(c.sect["rank"])), int(c.sect["contribution"])]})
+		var duty := Sects.monthly_duty(c, data)
+		if duty > 0:
+			out.append({"section": "Sect", "text": "Monthly duty: %d of %d contribution earned this month." % [Sects.duty_progress(c), duty]})
+		var ready := Sects.available_missions(c, data).filter(func(id: String) -> bool: return Sects.check_mission(c, data, id) == "")
+		for id: String in ready:
+			out.append({"section": "Sect", "text": "Mission ready: %s." % String(data.sect_missions[id].get("name", id))})
+	for id: String in c.mission_cooldowns:
+		var wait := Sects.mission_cooldown_left(c, id)
+		if wait > 0 and data.sect_missions.has(id):
+			out.append({"section": "Cooldowns", "text": "%s (mission): %s left." % [String(data.sect_missions[id].get("name", id)), Calendar.format_duration(wait)]})
+	for id: String in c.deed_days:
+		var deed: Dictionary = data.deeds.get(id, {})
+		var left := int(c.deed_days[id]) + int(deed.get("cooldown_days", 0)) - today
+		if not deed.is_empty() and not bool(deed.get("once", false)) and left > 0:
+			out.append({"section": "Cooldowns", "text": "%s: %s left." % [String(deed.get("name", id)), Calendar.format_duration(left)]})
+	for line in WorldEvents.describe(data, active_events, today):
+		out.append({"section": "World events", "text": line})
+	return out
+
+
+static func _breakthrough_line(c: CharacterData, data: GameData, density: float) -> String:
+	if Cultivation.is_at_bottleneck(c, data) and not Cultivation.can_attempt_breakthrough(c, data):
+		return "You stand at the peak of the highest realm known."
+	if Cultivation.can_attempt_breakthrough(c, data):
+		return "At a bottleneck: ready to break through (%d%% chance)." % roundi(Cultivation.breakthrough_chance(c, data) * 100)
+	var needed := maxf(Cultivation.qi_required(c, data) - c.qi, 0.0)
+	return "%d more qi to the next stage (about %s of meditation here)." % [ceili(needed), Calendar.format_duration(ceili(needed / maxf(Cultivation.qi_per_day(c, data, density), 0.001)))]

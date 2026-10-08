@@ -20,6 +20,7 @@ const KEYS := {
 	"scroll_up": [KEY_PAGEUP],
 	"scroll_down": [KEY_PAGEDOWN],
 	"toggle_clan": [KEY_G],
+	"toggle_journal": [KEY_J],
 	"quick_save": [KEY_F5],
 	"quick_load": [KEY_F9],
 	"pause_menu": [KEY_ESCAPE],
