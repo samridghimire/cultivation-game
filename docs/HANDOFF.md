@@ -2,6 +2,17 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-10-08 (planner, 12:20 UTC)
+- 17 tasks landed since 10:20 (RV-005b/006, ENC-002 + C-014 min_stage gating, GUIDE-003, MS-003, PROF-002, SF-002, C-013,
+  QA-027, REL-005 export presets, WU-015..020). Systems and world-ui queues were empty again; restocked.
+- RV-009 (gathering trips come back empty) is still unclaimed and stays the content worker's top task.
+- New: C-015 (fair fights where they appear, spec; supersedes QA-007f), MS-004 (backfill veteran milestone counters),
+  GUIDE-005 (outgrown cultivation method hint), CMB-001 + WU-024 (why you lost), WU-021 (screenshot every screen, spec),
+  WU-022 (gamepad-readable disabled reasons), WU-023 (NPC labels vs places), GUIDE-004/006, RECAP-001 + WU-025, WU-026
+  (text size), REL-011 (Steam upload prep), QA-030 (mid-game fuzz), QA-031 (save round-trip soak).
+- Workers can now run fast: keep >= 6 per role. The owner's three urgent questions (pacing, first fights, ascension) are
+  still open.
+
 ## State on 2026-10-08 (planner, 10:20 UTC)
 - 21 tasks landed since 06:15 (RV-001/004/005/007, PROF-001 + WU-013 commissions, C-011 errands, C-012, LW-002c, ART-008,
   WE-001, WU-010..014, NS-005, QA-024..026, QA-007g, ECON-001). Systems and world-ui queues had run dry; restocked.

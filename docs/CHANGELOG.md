@@ -2,6 +2,23 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-08 [REL-005] Export presets for Windows and Linux, and tools/export.sh to build both.
+- 2026-10-08 [WU-016] The character sheet has an Adventures section: secret realm floors and inheritance trials you have cleared.
+- 2026-10-08 [WU-015] The journal opens with the gamepad's left trigger; the key bar shows LT/RT.
+- 2026-10-08 [C-014] The first realm's toughest foes (iron-back boar, azure crane, corpse puppet, rogue cultivators, stone ape) wait until you are a few layers in.
+- 2026-10-08 [PROF-002] Reminders for crafting commissions: a hint when you can deliver, a warning 7 days before an order lapses.
+- 2026-10-08 [GUIDE-003] The journal lists open secret realms, inheritance grounds and the errands people asked of you.
+- 2026-10-08 [C-013] Help pages for commissions, favors, world events, the sect's call, the journal and appraisal.
+- 2026-10-08 [MS-003] Four new milestones: Trusted Artisan, A Favor Repaid, Into the Secret Realm, Heir to the Ancients.
+- 2026-10-08 [ENC-002] Encounters can wait for a stage within a realm (`min_stage`); the combat sim rates fights where they really appear.
+- 2026-10-08 [WU-017] Places hidden behind the HUD panels moved into view in every region.
+- 2026-10-08 [WU-020] The family screen opens from anywhere (F / right trigger).
+- 2026-10-08 [QA-027] The combat sim now rates secret realm guardians, inheritance trials, world event defences and sect rank trials.
+- 2026-10-08 [WU-019] The sect's call is listed first on the mission board with its days left.
+- 2026-10-08 [WU-018] Shorter commission Deliver labels.
+- 2026-10-08 [SF-002] Sect-call cleanups: a disciple whose call mission is on cooldown hears "calls on its disciples again".
+- 2026-10-08 [RV-005b] Eating a herb with a small breakthrough bonus no longer blocks the realm's breakthrough pill.
+- 2026-10-08 [RV-006] Stronger tournament and newcomer tests; tournament bouts really get a stage tougher each round.
 - 2026-10-08 [QA-007g] The demonic cultivator purge mission waits until Foundation stage 1, where it is a fair fight.
 - 2026-10-08 [ECON-001] Gathering trips pay less, so profession work now earns about as much as gathering.
 - 2026-10-08 [WU-013] Workshops list your open commissions with a Deliver entry.

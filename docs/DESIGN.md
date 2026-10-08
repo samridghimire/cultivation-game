@@ -89,8 +89,8 @@ Every great cultivation protagonist has something that sets them apart. Ours is 
 | Dao insights (encounters, practice, seclusion; technique + breakthrough bonuses) | ✅ (sheet + contemplation at meditation spots) | `data/dao.json`, `Dao` |
 | Heavenly Tribulations (Core Formation+, heart demon for demonic) | ✅ (prepare warning + wave screen) | `Tribulation`, `data/realms.json` |
 | Grudges and gratitude (rob/kill/humiliate NPCs, kin vengeance, amends) | ✅ (NPC menu, sheet, NPC Look text, grateful NPCs repay debts and join fights, grudge holders ambush travellers) | `data/karma.json`, `Karma` |
-| Secret realms (periodic openings, realm caps, guarded floors, inheritances) | ✅ (entrances in Misty Forest and Azure Peak) | `data/secret_realms.json`, `SecretRealms` |
-| Inheritance grounds (one-claimant trials) | ✅ core | `data/inheritances.json`, `Inheritances` |
+| Secret realms (periodic openings, realm caps, guarded floors, inheritances) | ✅ (six realms with entrances across the regions; journal Opportunities, sheet Adventures) | `data/secret_realms.json`, `SecretRealms` |
+| Inheritance grounds (one-claimant trials) | ✅ (inheritance ground places; journal Opportunities, sheet Adventures) | `data/inheritances.json`, `Inheritances` |
 | Cave abodes (seclusion, storage chest) and arrays | ✅ (abode places; arrays from the Array Master) | `data/regions.json`, `Abodes` |
 | Body tempering (Copper Skin … Vajra Body) | ✅ (meditation spots, abodes, sheet) | `data/body_tempering.json`, `BodyTempering` |
 | Auctions (seasonal lots, sealed bids vs hidden NPC maximums) | ✅ (auction house in Fallen Star Market) | `data/auctions.json`, `Auctions` |
@@ -98,9 +98,9 @@ Every great cultivation protagonist has something that sets them apart. Ours is 
 | World events (beast tides, tournaments, auctions, incursions) | ✅ passive effects + HUD/map/rumors; tournaments and incursion defence can be joined (LW-003) | `data/world_events.json`, `WorldEvents` |
 | NPC clans and NPC sect membership, family tree, Family Home | ✅ | `NpcClans`, `FamilyHome`, `src/ui/family_screen.gd` |
 | NPC sects as factions (strength, recruitment) | ✅ core (LW-002), sect hall standings (WU-002), monthly clashes and the sect's call (LW-002b) | `SectFactions` |
-| Audio, autosave, export presets, credits | ✅ procedural SFX and music, autosave with toast (also on suspend), crash-safe saves, credits, title art, Steam platform stub (REL-009); 🚧 export presets (REL-005) | `Audio`, `SaveManager`, `src/ui/credits_screen.gd` |
+| Audio, autosave, export presets, credits | ✅ procedural SFX and music, autosave with toast (also on suspend), crash-safe saves, credits, title art, Steam platform stub (REL-009), Windows/Linux export presets + tools/export.sh (REL-005); 🚧 Steam upload scripts (REL-011) | `Audio`, `SaveManager`, `src/ui/credits_screen.gd` |
 | Content past Core Formation | ✅ Nascent Soul foes/encounters (NS-001), pills (NS-002), Myriad Peaks Ridge region (NS-003); late methods to Mahayana+ (NS-005); 🚧 late people and Soul Formation content (NS-004, NS-006) | |
-| Life record and milestones | ✅ sheet life record (STAT-001), 16 milestones with progress on the sheet and a banner (GOAL-001, WU-006, MS-002), journal screen (J), epilogue on final death | `LifeStats`, `Milestones`, `data/milestones.json` |
+| Life record and milestones | ✅ sheet life record (STAT-001), 22 milestones with progress on the sheet and a banner (GOAL-001, WU-006, MS-002, MS-003), journal screen (J / LT) with opportunities, errands and commissions, epilogue on final death | `LifeStats`, `Milestones`, `data/milestones.json` |
 | Ending (ascension) | 🚧 none, waiting on the owner (END-001) | |
 | Inventory, techniques, character sheet, settings, pause, load screens | ✅ | `src/ui/` |
 | Top-down world with interactables | ✅ placeholder art | `src/world/` |
