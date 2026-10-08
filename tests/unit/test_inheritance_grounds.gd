@@ -36,7 +36,7 @@ func test_grounds_list_trials_and_attempt_them() -> void:
 	c.attributes["constitution"] = 15
 	assert_true(String(_labels(place.get_options())[1]).contains("needs Constitution 11"), str(_labels(place.get_options())))
 	(place.get_options()[1]["action"] as Callable).call()
-	assert_true(String(_labels(place.get_options())[1]).contains("fight: Stone Ape, "), "fight trials show their danger")
+	assert_true(String(_labels(place.get_options())[1]).contains("fight: Grave Guardian Ape, "), "fight trials show their danger")
 	gs.world_flags[Inheritances.claimed_flag("fist_saint_grave")] = true
 	labels = _labels(place.get_options())
 	assert_eq(labels.size(), 1, "claimed: no attempt entry")

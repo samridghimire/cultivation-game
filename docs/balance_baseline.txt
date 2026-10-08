@@ -28,14 +28,15 @@ Where each enemy first appears (typical player entering the realm / at its peak 
   Qi Refini azure_crane            encounter mountain_azure_cra evadable                 entry  43%  peak  86%  talisman  84%  bare   0%  veteran on appearance  79%  HARD
   Qi Refini azure_sword_examiner   trial azure_cloud_sect rank  forced                   entry   1%  peak  98%  talisman  30%  bare   0%  veteran on appearance  23%  HARD
   Qi Refini bandit_lord            choice city_red_door/Kick th forced                   entry  42%  peak 100%  talisman  96%  bare   0%  veteran on appearance  75%  HARD
-  Qi Refini bandit_lord            trial village_founder_well s forced                   entry  42%  peak 100%  talisman  96%  bare   0%  veteran on appearance  75%  HARD
   Qi Refini blood_lotus_raider     mission answer_azure_call    forced                   entry 100%  peak 100%  talisman 100%  bare  72%  veteran on appearance 100%  TRIVIAL
   Qi Refini blood_lotus_scout      encounter marsh_blood_lotus_ evadable                 entry  48%  peak  93%  talisman  92%  bare   0%  veteran on appearance  98%  HARD
   Qi Refini blood_pit_gladiator    trial blood_lotus_sect rank  forced                   entry   4%  peak 100%  talisman  38%  bare   0%  veteran on appearance  24%  HARD
+  Qi Refini garden_poacher         realm verdant_remnant floor  forced                   entry  60%  peak 100%  talisman 100%  bare   0%  veteran on appearance  94%  OK
+  Qi Refini grave_guardian_ape     trial fist_saint_grave stage forced                   entry  42%  peak 100%  talisman  92%  bare   0%  veteran on appearance  82%  HARD
+  Qi Refini grotto_hermit_guest    realm peach_blossom_grotto f forced                   entry  42%  peak 100%  talisman  95%  bare   0%  veteran on appearance  81%  HARD
   Qi Refini incursion_raider       defence demonic_incursion    forced                   entry  89%  peak  80%  talisman 100%  bare   0%  veteran on appearance 100%  OK
   Qi Refini iron_back_boar         defence beast_tide           forced                   entry  86%  peak  79%  talisman 100%  bare   0%  veteran on appearance  99%  OK
   Qi Refini iron_back_boar         encounter village_iron_back_ forced                   entry  63%  peak 100%  talisman  99%  bare   0%  veteran on appearance  91%  OK
-  Qi Refini iron_back_boar         realm peach_blossom_grotto f forced                   entry  14%  peak 100%  talisman  77%  bare   0%  veteran on appearance  60%  HARD
   Qi Refini marsh_corpse_puppet    encounter marsh_corpse_puppe evadable                 entry  50%  peak  96%  talisman  91%  bare   0%  veteran on appearance  84%  HARD
   Qi Refini mist_fox               encounter forest_mist_fox    forced                   entry  46%  peak 100%  talisman  97%  bare   0%  veteran on appearance  98%  HARD
   Qi Refini mist_fox               realm peach_blossom_grotto f forced                   entry  46%  peak 100%  talisman  97%  bare   0%  veteran on appearance  98%  HARD
@@ -44,6 +45,7 @@ Where each enemy first appears (typical player entering the realm / at its peak 
   Qi Refini mist_wolf              mission cull_mist_wolves     forced                   entry 100%  peak 100%  talisman 100%  bare  62%  veteran on appearance 100%  TRIVIAL
   Qi Refini mist_wolf              mission patrol_misty_peaks   forced                   entry 100%  peak 100%  talisman 100%  bare  62%  veteran on appearance 100%  TRIVIAL
   Qi Refini mist_wolf              realm verdant_remnant floor  forced                   entry  72%  peak 100%  talisman 100%  bare   0%  veteran on appearance 100%  OK
+  Qi Refini moss_back_ape          realm verdant_remnant floor  forced                   entry  42%  peak 100%  talisman  92%  bare   0%  veteran on appearance  82%  HARD
   Qi Refini mountain_bandit        choice wild_wounded_disciple forced                   entry 100%  peak 100%  talisman 100%  bare 100%  veteran on appearance 100%  TRIVIAL
   Qi Refini mountain_bandit        encounter city_alley_thugs   forced                   entry 100%  peak 100%  talisman 100%  bare 100%  veteran on appearance 100%  TRIVIAL
   Qi Refini mountain_bandit        encounter village_bandit     forced                   entry 100%  peak 100%  talisman 100%  bare 100%  veteran on appearance 100%  TRIVIAL
@@ -53,12 +55,10 @@ Where each enemy first appears (typical player entering the realm / at its peak 
   Qi Refini rogue_cultivator       encounter incursion_blood_sc evadable                 entry  47%  peak  87%  talisman  93%  bare   0%  veteran on appearance  97%  HARD
   Qi Refini rogue_cultivator       encounter marsh_corpse_refin evadable                 entry  47%  peak  87%  talisman  93%  bare   0%  veteran on appearance  97%  HARD
   Qi Refini rogue_cultivator       encounter wild_rogue         evadable                 entry  47%  peak  87%  talisman  93%  bare   0%  veteran on appearance  97%  HARD
-  Qi Refini rogue_cultivator       realm verdant_remnant floor  forced                   entry   0%  peak  87%  talisman  14%  bare   0%  veteran on appearance  16%  HARD
   Qi Refini stone_ape              encounter mountain_ape       evadable                 entry  53%  peak  68%  talisman  91%  bare   0%  veteran on appearance  86%  OK
-  Qi Refini stone_ape              realm verdant_remnant floor  forced                   entry   0%  peak  68%  talisman   1%  bare   0%  veteran on appearance   2%  HARD
-  Qi Refini stone_ape              trial fist_saint_grave stage forced                   entry   0%  peak  68%  talisman   1%  bare   0%  veteran on appearance   2%  HARD
   Qi Refini tournament_contender   choice tournament_bout/Enter forced                   entry   0%  peak  74%  talisman   5%  bare   0%  veteran on appearance   3%  HARD
   Qi Refini vengeful_brother       encounter wounded_traveller_ evadable                 entry   4%  peak 100%  talisman  59%  bare   0%  veteran on appearance  54%  HARD
+  Qi Refini well_bandit            trial village_founder_well s forced                   entry  60%  peak 100%  talisman 100%  bare   0%  veteran on appearance  94%  OK
   Foundatio azure_cloud_enforcer   encounter city_righteous_enf forced                   entry  59%  peak  78%  talisman  98%  bare   0%  veteran on appearance 100%  OK
   Foundatio azure_cloud_enforcer   mission ambush_azure_patrol  forced                   entry  59%  peak  78%  talisman  98%  bare   0%  veteran on appearance 100%  OK
   Foundatio azure_pavilion_warden  trial azure_cloud_sect rank  forced                   entry  31%  peak  95%  talisman  93%  bare   0%  veteran on appearance  92%  HARD
@@ -164,6 +164,11 @@ Win rate at stage 0 of each realm (no talismans):
   blood_eyed_wolf                0%         0%        29%       100%       100%
   bandit_lord                    0%        42%       100%       100%       100%
   stone_ape                      0%         0%       100%       100%       100%
+  grotto_hermit_guest            0%        42%       100%       100%       100%
+  well_bandit                    0%        60%       100%       100%       100%
+  garden_poacher                 0%        60%       100%       100%       100%
+  moss_back_ape                  0%        42%       100%       100%       100%
+  grave_guardian_ape             0%        42%       100%       100%       100%
   cloud_eagle                    0%         0%        63%       100%       100%
   cave_guardian                  0%         0%        26%       100%       100%
   demonic_cultivator             0%         0%        32%       100%       100%
