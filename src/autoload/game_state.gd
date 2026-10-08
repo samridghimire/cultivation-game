@@ -2271,6 +2271,7 @@ func load_save_dict(d: Dictionary) -> void:
 	rng.state = String(d.get("rng_state", "0")).to_int()
 	# Milestones reached before this save (or before GOAL-001) are awarded silently, so
 	# loading never re-announces them; every earned one is re-synced to Steam (idempotent).
+	LifeStats.backfill(player, data, world_flags)
 	Milestones.award(player, data, world_flags, clan)
 	for id in player.milestones:
 		Platform.unlock_achievement(String(id))

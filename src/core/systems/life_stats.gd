@@ -67,3 +67,24 @@ static func epilogue(c: CharacterData, data: GameData, clan: ClanData = null, ma
 	for i in mini(stats.size(), max_stats):
 		out.append(stats[i])
 	return out
+
+
+## Credits a veteran's past (MS-004): saves from before the counters existed get
+## `realm_floors_cleared` and `inheritances_claimed` from the secret realm
+## progress and inheritances they already hold. Never lowers a value; idempotent.
+static func backfill(c: CharacterData, data: GameData, flags: Dictionary) -> void:
+	var floors := 0
+	for entry in c.secret_realms.values():
+		if entry is Dictionary:
+			floors += int((entry as Dictionary).get("floor", 0))
+	var claimed := 0
+	for id in c.inheritances:
+		if data.secret_realms.has(id):
+			claimed += 1
+	for id in data.inheritances:
+		if Inheritances.is_claimed(String(id), flags):
+			claimed += 1
+	if floors > get_stat(c, "realm_floors_cleared"):
+		c.life_stats["realm_floors_cleared"] = floors
+	if claimed > get_stat(c, "inheritances_claimed"):
+		c.life_stats["inheritances_claimed"] = claimed

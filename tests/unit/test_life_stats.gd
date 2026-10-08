@@ -36,3 +36,44 @@ func test_round_trip_and_old_saves() -> void:
 	var d := c.to_dict()
 	d.erase("life_stats")
 	assert_eq(CharacterData.from_dict(d).life_stats, {})
+
+
+# --- MS-004: backfill ---------------------------------------------------------
+
+func _root() -> Node:
+	return (Engine.get_main_loop() as SceneTree).root
+
+
+func test_backfill_counts_past_realm_progress() -> void:
+	var c := new_character()
+	c.secret_realms = {"verdant_remnant": {"opening": 0, "floor": 2}}
+	c.inheritances.append("verdant_remnant")
+	LifeStats.backfill(c, data(), {})
+	assert_eq(LifeStats.get_stat(c, "realm_floors_cleared"), 2)
+	assert_eq(LifeStats.get_stat(c, "inheritances_claimed"), 1)
+	LifeStats.backfill(c, data(), {})
+	assert_eq(LifeStats.get_stat(c, "realm_floors_cleared"), 2, "idempotent")
+	assert_eq(LifeStats.get_stat(c, "inheritances_claimed"), 1, "idempotent")
+
+
+func test_backfill_counts_claimed_grounds_and_keeps_higher_values() -> void:
+	var c := new_character()
+	var ground := String(data().inheritances.keys()[0])
+	LifeStats.add(c, "realm_floors_cleared", 5)
+	c.secret_realms = {"verdant_remnant": {"opening": 0, "floor": 2}}
+	LifeStats.backfill(c, data(), {Inheritances.claimed_flag(ground): true})
+	assert_eq(LifeStats.get_stat(c, "realm_floors_cleared"), 5, "never lowers")
+	assert_eq(LifeStats.get_stat(c, "inheritances_claimed"), 1)
+
+
+func test_load_backfills_and_awards_silently() -> void:
+	var gs: Node = _root().get_node("GameState")
+	var c := CharacterFactory.create("Veteran", gs.data, seeded_rng())
+	gs.start_session(c)
+	c.secret_realms = {"verdant_remnant": {"opening": 0, "floor": 1}}
+	var saved: Dictionary = JSON.parse_string(JSON.stringify(gs.to_save_dict()))
+	gs.load_save_dict(saved)
+	assert_true(gs.player.milestones.has("into_secret_realm"))
+	for line in _root().get_node("EventBus").history:
+		assert_false(String(line["text"]).contains("Into the Secret Realm"), "no announcement")
+	gs.end_session()
