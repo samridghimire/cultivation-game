@@ -164,6 +164,7 @@ static func claim_floor(c: CharacterData, data: GameData, realm_id: String, tota
 		notes = Effects.apply(c, data, treasure.get("effects", {}), flags)
 	var cleared := floors_cleared(c, def, total_days) + 1
 	c.secret_realms[realm_id] = {"opening": opening_index(def, total_days), "floor": cleared}
+	LifeStats.add(c, "realm_floors_cleared")
 	return {"floor_name": String(floor_def.get("name", "")), "notes": notes, "days": int(floor_def.get("days", 1)), "last": cleared >= (def.get("floors", []) as Array).size()}
 
 
@@ -209,6 +210,7 @@ static func check_inheritance(c: CharacterData, data: GameData, realm_id: String
 static func claim_inheritance(c: CharacterData, data: GameData, realm_id: String, flags: Dictionary) -> PackedStringArray:
 	var legacy: Dictionary = realm(data, realm_id).get("inheritance", {})
 	c.inheritances.append(realm_id)
+	LifeStats.add(c, "inheritances_claimed")
 	return Effects.apply(c, data, legacy.get("effects", {}), flags)
 
 

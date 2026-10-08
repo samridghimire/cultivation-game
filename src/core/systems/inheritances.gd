@@ -115,6 +115,7 @@ static func pass_stage(c: CharacterData, data: GameData, id: String, flags: Dict
 	var notes: PackedStringArray = []
 	if last:
 		flags[claimed_flag(id)] = true
+		LifeStats.add(c, "inheritances_claimed")
 		notes = Effects.apply(c, data, def.get("reward", {}), flags)
 	return {"stage_name": String(stage.get("name", "")), "days": int(stage.get("days", 1)), "last": last, "notes": notes}
 

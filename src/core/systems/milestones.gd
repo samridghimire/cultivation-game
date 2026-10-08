@@ -3,7 +3,7 @@ extends RefCounted
 ## Milestones (GOAL-001): data/milestones.json entries the player earns once.
 ## Earned ids are kept in CharacterData.milestones.
 
-const CHECK_TYPES: Array[String] = ["realm", "life_stat", "flag", "sect_joined", "married", "clan_founded", "item_crafted"]
+const CHECK_TYPES: Array[String] = ["realm", "life_stat", "flag", "sect_joined", "married", "clan_founded", "item_crafted", "flag_count"]
 
 
 ## Ids of milestones whose check holds now and that are not yet earned, in file order.
@@ -26,6 +26,8 @@ static func is_met(c: CharacterData, data: GameData, flags: Dictionary, clan: Cl
 			return LifeStats.get_stat(c, String(check.get("stat", ""))) >= int(check.get("min", 1))
 		"flag":
 			return bool(flags.get(String(check.get("flag", "")), false))
+		"flag_count":
+			return flag_count(flags, check) >= int(check.get("min", 1))
 		"sect_joined":
 			return not c.sect.is_empty()
 		"married":
@@ -35,6 +37,18 @@ static func is_met(c: CharacterData, data: GameData, flags: Dictionary, clan: Cl
 		"item_crafted":
 			return LifeStats.get_stat(c, "items_crafted") >= int(check.get("min", 1))
 	return false
+
+
+## Set world flags that start with check.prefix and end with check.suffix
+## (e.g. errand_*_done counts finished favor errands).
+static func flag_count(flags: Dictionary, check: Dictionary) -> int:
+	var prefix := String(check.get("prefix", ""))
+	var suffix := String(check.get("suffix", ""))
+	var n := 0
+	for key: String in flags:
+		if bool(flags[key]) and key.begins_with(prefix) and key.ends_with(suffix):
+			n += 1
+	return n
 
 
 ## Progress toward milestone `id` as {current, target}. Countable checks (life_stat,
@@ -54,6 +68,9 @@ static func progress(c: CharacterData, data: GameData, flags: Dictionary, clan: 
 		"item_crafted":
 			target = maxi(1, int(check.get("min", 1)))
 			current = LifeStats.get_stat(c, "items_crafted")
+		"flag_count":
+			target = maxi(1, int(check.get("min", 1)))
+			current = flag_count(flags, check)
 		"realm":
 			var realm_index := data.realm_index_of(String(check.get("realm", "")))
 			if realm_index >= 0:

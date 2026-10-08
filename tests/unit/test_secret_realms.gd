@@ -109,6 +109,7 @@ func test_game_state_delves_the_verdant_remnant() -> void:
 	var stones := c.item_count("spirit_stone")
 	gs.enter_secret_realm("verdant_remnant")
 	assert_eq(SecretRealms.floors_cleared(c, def, clock.total_days), 1, "a late Qi Refining cultivator beats the mist wolf")
+	assert_eq(LifeStats.get_stat(c, "realm_floors_cleared"), 1, "MS-003: counted once per floor")
 	assert_true(c.item_count("spirit_stone") >= stones - int(def["entry_stones"]))
 	c.realm_index = 2
 	gs.enter_secret_realm("verdant_remnant")
@@ -209,6 +210,7 @@ func test_game_state_inheritance_and_expulsion() -> void:
 	assert_eq(SecretRealms.floors_cleared(c, def, next_open), floors, "the heart pavilion is plundered")
 	assert_true(SecretRealms.has_inherited(c, "verdant_remnant"))
 	assert_true(Techniques.knows(c, tech))
+	assert_eq(LifeStats.get_stat(c, "inheritances_claimed"), 1, "MS-003: counted once")
 	gs.data.secret_realm_rivals = rivals
 
 

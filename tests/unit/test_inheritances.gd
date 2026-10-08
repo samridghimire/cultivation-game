@@ -111,6 +111,7 @@ func test_game_state_claims_the_fist_saint_grave() -> void:
 	assert_eq(Inheritances.stages_cleared(c, "fist_saint_grave"), 3)
 	assert_true(Inheritances.is_claimed("fist_saint_grave", gs.world_flags))
 	assert_true(Techniques.knows(c, "immovable_mountain_stance"))
+	assert_eq(LifeStats.get_stat(c, "inheritances_claimed"), 1, "MS-003: counted once")
 	assert_true(clock.total_days > 0, "trials take time")
 
 

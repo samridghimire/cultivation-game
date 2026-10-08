@@ -555,6 +555,8 @@ func _validate_milestones() -> void:
 				load_errors.append("Milestone '%s' stage is out of range" % id)
 		elif type == "life_stat" and not LifeStats.KEYS.has(String(check.get("stat", ""))):
 			load_errors.append("Milestone '%s' names unknown life stat '%s'" % [id, check.get("stat", "")])
+		elif type == "flag_count" and String(check.get("prefix", "")) + String(check.get("suffix", "")) == "":
+			load_errors.append("Milestone '%s' flag_count check needs a prefix or suffix" % id)
 		elif type == "flag" and String(check.get("flag", "")) == "":
 			load_errors.append("Milestone '%s' flag check needs a flag" % id)
 

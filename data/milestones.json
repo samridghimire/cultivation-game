@@ -1,5 +1,5 @@
 {
-	"_doc": "Milestones (GOAL-001): first steps the player is congratulated for (later mirrored as Steam achievements, REL-009). Each entry {id, name, description, check}. check.type is one of: realm {realm: realm id, stage: int = 0} (reached that realm and stage), life_stat {stat: LifeStats key, min: int = 1}, flag {flag: world flag}, sect_joined {}, married {}, clan_founded {}, item_crafted {min: int = 1} (LifeStats items_crafted). No rewards, recognition only. Checked by Milestones.newly_reached; earned ids live in CharacterData.milestones.",
+	"_doc": "Milestones (GOAL-001): first steps the player is congratulated for (later mirrored as Steam achievements, REL-009). Each entry {id, name, description, check}. check.type is one of: realm {realm: realm id, stage: int = 0} (reached that realm and stage), life_stat {stat: LifeStats key, min: int = 1}, flag {flag: world flag}, sect_joined {}, married {}, clan_founded {}, item_crafted {min: int = 1} (LifeStats items_crafted), flag_count {prefix, suffix, min: int = 1} (world flags with that prefix and suffix that are set, e.g. errand_*_done). No rewards, recognition only. Checked by Milestones.newly_reached; earned ids live in CharacterData.milestones.",
 	"milestones": [
 		{"id": "first_fight", "name": "First Blood", "description": "Win your first fight.", "check": {"type": "life_stat", "stat": "fights_won", "min": 1}},
 		{"id": "veteran", "name": "Battle-Hardened", "description": "Win 25 fights.", "check": {"type": "life_stat", "stat": "fights_won", "min": 25}},
@@ -18,6 +18,10 @@
 		{"id": "qi_refining", "name": "Awakened", "description": "Reach Qi Refining.", "check": {"type": "realm", "realm": "qi_refining", "stage": 0}},
 		{"id": "foundation", "name": "Foundation Laid", "description": "Reach Foundation Establishment.", "check": {"type": "realm", "realm": "foundation_establishment", "stage": 0}},
 		{"id": "core_formation", "name": "Golden Core", "description": "Reach Core Formation.", "check": {"type": "realm", "realm": "core_formation", "stage": 0}},
-		{"id": "nascent_soul", "name": "Soul Born", "description": "Reach Nascent Soul.", "check": {"type": "realm", "realm": "nascent_soul", "stage": 0}}
+		{"id": "nascent_soul", "name": "Soul Born", "description": "Reach Nascent Soul.", "check": {"type": "realm", "realm": "nascent_soul", "stage": 0}},
+		{"id": "trusted_artisan", "name": "Trusted Artisan", "description": "Fill your first commission.", "check": {"type": "life_stat", "stat": "commissions_done", "min": 1}},
+		{"id": "favor_repaid", "name": "A Favor Repaid", "description": "Finish a favor errand for someone.", "check": {"type": "flag_count", "prefix": "errand_", "suffix": "_done", "min": 1}},
+		{"id": "into_secret_realm", "name": "Into the Secret Realm", "description": "Clear your first secret realm floor.", "check": {"type": "life_stat", "stat": "realm_floors_cleared", "min": 1}},
+		{"id": "heir_to_ancients", "name": "Heir to the Ancients", "description": "Claim an inheritance.", "check": {"type": "life_stat", "stat": "inheritances_claimed", "min": 1}}
 	]
 }

@@ -98,3 +98,32 @@ func test_progress_counts_stats_and_stages() -> void:
 	assert_eq(Milestones.progress(c, d, {}, ClanData.new(), "g")["current"], 1)
 	c.milestones.append("a")
 	assert_eq(Milestones.progress(c, d, {}, null, "a"), {"current": 25, "target": 25}, "earned shows full")
+
+
+func test_flag_count_check_counts_matching_set_flags() -> void:
+	var c := new_character()
+	var check := {"type": "flag_count", "prefix": "errand_", "suffix": "_done", "min": 2}
+	var flags := {"errand_lan_done": true, "errand_lan_asked": true, "errand_hei_done": false}
+	assert_false(Milestones.is_met(c, data(), flags, null, check))
+	flags["errand_hei_done"] = true
+	assert_true(Milestones.is_met(c, data(), flags, null, check))
+
+
+func test_ms003_milestones_are_earned_from_their_counters() -> void:
+	var c := new_character()
+	assert_eq(Milestones.newly_reached(c, data(), {}).size(), 0)
+	LifeStats.add(c, "commissions_done")
+	LifeStats.add(c, "realm_floors_cleared")
+	LifeStats.add(c, "inheritances_claimed")
+	var got := Milestones.newly_reached(c, data(), {"errand_mo_done": true})
+	for id in ["trusted_artisan", "favor_repaid", "into_secret_realm", "heir_to_ancients"]:
+		assert_true(got.has(id), "%s in %s" % [id, got])
+	var p := Milestones.progress(c, data(), {}, null, "favor_repaid")
+	assert_eq(int(p["current"]), 0)
+
+
+func test_flag_count_needs_prefix_or_suffix() -> void:
+	var d := GameData.load_from_dir()
+	d.milestones.append(_milestone("bad_fc", {"type": "flag_count"}))
+	d._validate_milestones()
+	assert_true(", ".join(d.load_errors).contains("flag_count check needs"))
