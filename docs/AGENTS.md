@@ -16,7 +16,8 @@ How the 24/7 cloud agents (claude.ai routines) build this game. Manage them at h
 ## Flow
 1. The planner writes or updates a task in BACKLOG.md with status `todo`, plus `spec` when it has a detailed implementation spec.
 2. A worker claims it by pushing a branch `claude/<task-id>-<slug>` with an empty "claim" commit, builds it, runs
-   `tools/test.sh`, rebases on main, re-tests and pushes straight to `main`. There are no PRs. The cloud can't delete branches,
+   `tools/test.sh`, rebases on main (`git rebase --no-keep-empty --force-rebase origin/main`, which drops the empty claim commit
+   even when main hasn't moved), re-tests and pushes straight to `main`. There are no PRs. The cloud can't delete branches,
    so the hourly `cleanup-claims` GitHub Action removes claims whose task landed or that are 4h+ old.
 3. The reviewer reviews what landed and fixes or reverts anything bad.
 4. The planner sees `[<task-id>]` on main, marks it done, and adds the CHANGELOG line and any `Follow-ups:` from the commit message.

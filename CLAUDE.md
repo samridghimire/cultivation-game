@@ -68,7 +68,7 @@ directly on `main`, and an **Opus reviewer** reviews what landed. There are **no
    `Follow-ups:`.
 5. Run `tools/test.sh` until it prints `ALL CHECKS PASSED`. (A brand-new `class_name` is only visible after an import; test.sh imports first.)
 6. Commit with the subject `[<task-id>] <title>` (the planner marks tasks done by finding that id on main).
-7. **Land it on main yourself:** `git fetch origin main && git rebase --no-keep-empty origin/main` (this also drops the empty
+7. **Land it on main yourself:** `git fetch origin main && git rebase --no-keep-empty --force-rebase origin/main` (this also drops the empty
    claim commit), run `tools/test.sh` again, then `git push origin HEAD:main`.
    - **The cloud git proxy often prints `HTTP 403` / "remote end hung up" even when the push succeeded.** Always verify with
      `git fetch origin main && git log origin/main --oneline -3` before retrying.

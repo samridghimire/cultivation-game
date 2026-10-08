@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 # Deletes remote claude/* claim branches that are no longer needed:
 #   - the task already landed on main (a commit subject starts with "[<task-id>]"), or
-#   - the newest commit on the branch is older than MAX_AGE_HOURS (an abandoned claim).
+#   - the newest commit on the branch is older than MAX_AGE_HOURS and the branch is a claim
+#     (its first commit above main is "claim <id>"), i.e. an abandoned claim. Other old
+#     claude/* work branches are kept.
 # Cloud agents can't delete branches (the git proxy returns 403), so the hourly GitHub
 # Action in .github/workflows/cleanup-claims.yml runs this. Safe to run by hand too.
 set -euo pipefail
@@ -24,11 +26,19 @@ for ref in $(git for-each-ref --format='%(refname:strip=4)' refs/remotes/origin/
   if [[ -n "$task_id" ]]; then
     reason="landed ($task_id on main)"
   elif (( age_h >= MAX_AGE_HOURS )); then
-    reason="stale (${age_h}h old)"
+    first=$(git log --reverse --format=%s "origin/main..origin/$branch" | head -n 1)
+    if [[ "$first" == claim\ * ]]; then
+      reason="stale claim (${age_h}h old)"
+    else
+      echo "keep   $branch (${age_h}h old, not a claim branch)"
+      continue
+    fi
   fi
   if [[ -n "$reason" ]]; then
     echo "delete $branch: $reason"
-    [[ "$DRY_RUN" == "1" ]] || git push --quiet origin --delete "$branch"
+    if [[ "$DRY_RUN" != "1" ]]; then
+      git push --quiet origin --delete "$branch" || echo "  failed to delete $branch, continuing"
+    fi
   else
     echo "keep   $branch (${age_h}h old, active claim)"
   fi

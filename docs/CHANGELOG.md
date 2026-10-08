@@ -2,6 +2,26 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-08 [RV-003] The credits scroll with a gamepad and list the third-party licenses Godot ships with.
+- 2026-10-08 [RV-002] Banners queue up, so a milestone no longer hides the "Breakthrough!" banner.
+- 2026-10-08 [MS-002] Milestones show progress, e.g. "Battle-Hardened (4/25)", on the character sheet and in the journal.
+- 2026-10-08 [QA-022] The first-hour sim reports fights won, lost and fled, with tighter guards on log volume and early losses.
+- 2026-10-08 [LW-002b] Righteous and demonic sects clash each month, and when your sect is in the fight it calls on you with a new mission.
+- 2026-10-08 [REL-008] Ambient music: a soft procedural guqin-like loop whose mood follows the region, with its own volume slider.
+- 2026-10-08 [ECON-002] Sect missions that ask for items now pay at least 20% more than buying those items costs.
+- 2026-10-08 [WU-005] The HUD tells you when you can enter a world event here, and event entries show the rival's danger.
+- 2026-10-08 [WU-008] The title screen gets a painted ink-wash backdrop with drifting mist and a pale moon.
+- 2026-10-08 [REL-010] The game autosaves when the Steam Deck suspends or the window loses focus.
+- 2026-10-08 [EPI-001] An epilogue sums up a fallen cultivator's life: age, realm, path, sect, clan, children and deeds.
+- 2026-10-08 [QA-023] Saves from a newer version are refused instead of loaded wrongly; damaged save files are handled safely.
+- 2026-10-08 [WU-006] Milestones appear on the character sheet, and reaching one shows a banner.
+- 2026-10-08 [SECT-003] A reminder in the last week of the month when your sect duty isn't met yet.
+- 2026-10-08 [GUIDE-001] The game can now answer "what can I do now?": next steps, breakthrough, sect duty, cooldowns, events and milestones.
+- 2026-10-08 [WU-009] No arrival card pops up over the respawn screen.
+- 2026-10-08 [NS-003] A sixth region, Myriad Peaks Ridge, for Core Formation cultivators: a thunder secret realm, an inheritance, late herbs and an abode.
+- 2026-10-08 [FH-026] Rogue cultivator and stone ape missions now wait until Foundation Establishment instead of being deadly in Qi Refining.
+- 2026-10-08 [WU-004] The final-death screen shows your life record and epilogue.
+- 2026-10-08 [WU-007] A Journal screen (J, or from the pause menu) lists what you can do now.
 - 2026-10-08 [QA-006b] The economy sim now earns and spends like a player (crafting, gathering, missions, gear, clinics).
 - 2026-10-08 [LW-003b] Tournament bouts no longer heal you in between: each bout starts with the hp the last one left.
 - 2026-10-08 [REL-009] A Steam platform layer (achievements and rich presence) that stays silent until Steam is present; milestones unlock achievements.

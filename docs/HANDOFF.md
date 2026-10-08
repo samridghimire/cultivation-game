@@ -2,6 +2,15 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-10-08 (planner, 06:15 UTC)
+- 20 tasks landed since 04:15 (journal, milestones UI/progress, epilogue, music, title art, sect clashes, NS-003 region,
+  RV-002/RV-003...). Reviewer fixes RV-001, RV-004..RV-007 are on top.
+- New "playable and fun" group: PROF-001 (crafting commissions, spec in docs/specs/PROF-001.md) + WU-013 (its UI), C-011
+  (favor errands in named NPCs' dialogue), C-012 (workshops in 3 more regions, beast tide defence), LW-002c (sect call
+  deadline), ART-008 (appraisal shows win %), WE-001, WU-010..014, QA-026.
+- RV-008: the planner fixed tools/cleanup_claims.sh and documented `--force-rebase`; the cleanup workflow file may need the owner.
+- New open questions in DESIGN.md: (RV-005) one breakthrough pill per attempt, (PROF-001) lapsed commissions.
+
 ## State on 2026-10-08 (planner, 04:15 UTC)
 - 13 more tasks landed (FH-024/025, WU-001..003, STAT-001, GOAL-001, REL-007, REL-009, QA-019, NS-001/002, LW-003b). The
   reviewer's last reviewed commit is 1cf2753, so these are not reviewed yet.
