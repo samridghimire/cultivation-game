@@ -8,6 +8,7 @@ extends Interactable
 
 func get_options() -> Array[Dictionary]:
 	var options: Array[Dictionary] = [{"label": "Explore", "action": GameState.explore.bind(explore_tags), "keep_open": true}]
+	options.append({"label": "Explore for a week (stops when something happens)", "action": GameState.explore_many.bind(7, explore_tags), "keep_open": true})
 	options.append_array(event_options())
 	return options
 

@@ -411,3 +411,34 @@ func test_fight_won_in_zero_rounds_posts_no_round_count() -> void:
 	assert_false(text.contains("0 rounds"), text)
 	assert_true(text.contains("before it could strike"), text)
 	gs.end_session()
+
+
+## FH-025: exploring for a while sums up quiet days in one line.
+func test_explore_many_quiet_days_post_one_summary() -> void:
+	_start()
+	var gs := _game_state()
+	_zero_round_posts.clear()
+	EventBus.message_posted.connect(_collect_post)
+	var start_day: int = _root().get_node("GameClock").total_days
+	var days: int = gs.explore_many(7, ["t_no_such_tag"])
+	EventBus.message_posted.disconnect(_collect_post)
+	assert_eq(days, 7)
+	assert_eq(_root().get_node("GameClock").total_days, start_day + 7)
+	var text := "\n".join(_zero_round_posts)
+	assert_true(text.contains("find nothing of note"), text)
+	assert_false(text.contains("You search the area"), text)
+	gs.end_session()
+
+
+## FH-025: an encounter on day one stops the exploring there.
+func test_explore_many_stops_when_something_happens() -> void:
+	_start()
+	var gs := _game_state()
+	gs.data.encounters["t_ex_find"] = {"id": "t_ex_find", "tags": ["t_ex"], "weight": 1, "text": "You find a stone.", "effects": {}, "days": 1}
+	var start_day: int = _root().get_node("GameClock").total_days
+	var days: int = gs.explore_many(7, ["t_ex"])
+	assert_eq(days, 1)
+	assert_eq(_root().get_node("GameClock").total_days, start_day + 1)
+	assert_eq(gs.explore_many(99, ["t_no_such_tag"]), 30, "clamped to 30 days")
+	gs.data.encounters.erase("t_ex_find")
+	gs.end_session()

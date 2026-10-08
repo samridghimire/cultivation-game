@@ -465,17 +465,44 @@ func _road_ambush() -> void:
 
 ## Explore a place tagged with `tags` (defaults to the region's encounter tags).
 func explore(tags: Array = []) -> void:
+	_explore_once(tags, false)
+
+
+## Explore for up to `max_days` days (1..30), one day at a time, stopping as
+## soon as anything happens that needs the player (an encounter, a choice, a
+## sensed threat, a fight, death). Returns the days spent. Quiet days are
+## summed up in one line at the end (FH-025).
+func explore_many(max_days: int, tags: Array = []) -> int:
+	EventBus.topic = "world"
+	var limit := clampi(max_days, 1, 30)
+	var days := 0
+	var quiet_days := 0
+	while days < limit and _can_act():
+		var result := _explore_once(tags, true)
+		days += 1
+		if result["event"] != "nothing":
+			break
+		quiet_days += 1
+	if quiet_days > 0 and _can_act():
+		EventBus.post("You explore for %s and find nothing of note." % Calendar.format_duration(quiet_days))
+	return days
+
+
+## One day of exploring. Returns {event: "nothing"|"fight"|"choice"|"threat"|"story"}.
+## `quiet` skips the per-day "find nothing" line (explore_many sums it up).
+func _explore_once(tags: Array, quiet: bool) -> Dictionary:
 	EventBus.topic = "world"
 	if not _can_act():
-		return
+		return {"event": "nothing"}
 	if tags.is_empty():
 		tags = data.regions.get(current_region, {}).get("encounter_tags", [])
 	tags = tags + WorldEvents.encounter_tags(data, world_events, current_region)
 	var encounter := Exploration.roll_encounter(player, data, tags, world_flags, rng, Rivals.rival_of(player, npcs), 1.0 - ClanEstate.ward(clan, data, current_region))
 	if encounter.is_empty():
-		EventBus.post("You search the area but find nothing.")
+		if not quiet:
+			EventBus.post("You search the area but find nothing.")
 		_pass_time(1)
-		return
+		return {"event": "nothing"}
 	var result := Exploration.resolve(player, data, encounter, world_flags)
 	var text := rival_text(String(encounter.get("text", "")))
 	if not result["notes"].is_empty():
@@ -485,17 +512,18 @@ func explore(tags: Array = []) -> void:
 	pending_threat = ""
 	_pass_time(result["days"])
 	if not _can_act():
-		return
+		return {"event": "story"}
 	_rival_consequences(encounter)
 	if not _can_act():
-		return
+		return {"event": "story"}
 	if encounter.has("choices"):
 		pending_encounter = String(encounter["id"])
 		EventBus.encounter_choice_requested.emit(pending_encounter)
-		return
+		return {"event": "choice"}
 	if result["enemy"] == "":
-		return
+		return {"event": "story"}
 	_resolve_explore_enemy(result["enemy"])
+	return {"event": "threat" if pending_threat != "" else "fight"}
 
 
 ## A foe met while exploring: Deadly lethal foes are evaded, Dangerous lethal
