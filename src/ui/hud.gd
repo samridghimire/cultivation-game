@@ -175,6 +175,7 @@ func _ready() -> void:
 	EventBus.time_skipped.connect(_on_time_skipped)
 	EventBus.year_reviewed.connect(_on_year_reviewed)
 	EventBus.milestone_reached.connect(_on_milestone)
+	EventBus.feature_unlocked.connect(_on_feature_unlocked)
 	_refresh()
 	# A respawn that moved the player reloads the world; ask where to awaken now.
 	_open_pending_respawn.call_deferred()
@@ -556,6 +557,13 @@ func _on_encounter_choice_requested(_encounter_id: String) -> void:
 ## Several milestones in one step: each call replaces the banner, so the last one shows (the log lists all).
 func _on_milestone(_id: String, milestone_name: String) -> void:
 	_banner.announce("Milestone", milestone_name, UIStyle.ACCENT, 1.2)
+
+
+## New-feature notices (WU-042): a banner besides the log line; hidden when hints are off.
+func _on_feature_unlocked(text: String) -> void:
+	if int(Settings.get_value("hud_hints")) <= 0:
+		return
+	_banner.announce("New", text, UIStyle.ACCENT, 2.5)
 
 
 func _on_time_skipped(days: int, summary: Dictionary) -> void:

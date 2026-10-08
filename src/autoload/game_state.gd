@@ -2410,6 +2410,7 @@ func check_unlock_notices() -> void:
 	for notice in Guidance.unlock_notices(player, data, world_flags, npcs):
 		world_flags["notice_" + String(notice["id"])] = true
 		EventBus.post(String(notice["text"]), "progress")
+		EventBus.feature_unlocked.emit(String(notice["text"]))
 
 
 func _store_year_snapshot() -> void:
