@@ -1783,17 +1783,23 @@ func sect_standings() -> Array[Dictionary]:
 
 ## Expire and roll world events at a month boundary, posting the news.
 func _world_events_month() -> void:
-	## News of far-off events is dropped; "Hear rumors" still lists active ones.
-	for ended in WorldEvents.expire(world_events, GameClock.total_days):
-		if Exploration.is_nearby(data, current_region, String(ended.get("region", ""))):
-			EventBus.post(WorldEvents.news(data, ended, false), "info")
+	_expire_world_events()
 	for started in WorldEvents.roll(data, world_events, GameClock.total_days, rng):
 		if Exploration.is_nearby(data, current_region, String(started.get("region", ""))):
 			EventBus.post(WorldEvents.news(data, started, true), "warning")
 
 
+## Expire world events whose end_day has passed (checked every day, so an ended event
+## can't be joined until the month rolls over), posting the news.
+func _expire_world_events() -> void:
+	## News of far-off events is dropped; "Hear rumors" still lists active ones.
+	for ended in WorldEvents.expire(world_events, GameClock.total_days):
+		if Exploration.is_nearby(data, current_region, String(ended.get("region", ""))):
+			EventBus.post(WorldEvents.news(data, ended, false), "info")
+
+
 ## Enter the bracket of the tournament under way here (LW-003): `rounds` spars in
-## a row, each against a tougher generated cultivator. Losing one ends your run;
+## a row against generated cultivators of your own realm and stage, with no healing between bouts. Losing one ends your run;
 ## winning all pays the prize. Once per event.
 func enter_tournament(event_id: String) -> void:
 	EventBus.topic = "world"
@@ -2296,6 +2302,8 @@ func _on_days_advanced(days: int) -> void:
 		EventBus.topic = "world"
 		_world_events_month()
 		_sect_factions_month()
+	EventBus.topic = "world"
+	_expire_world_events()
 	if months > 0 or Calendar.DAYS_PER_MONTH - age_before % Calendar.DAYS_PER_MONTH > Sects.DUTY_REMINDER_DAYS:
 		if Sects.duty_days_left(player) <= Sects.DUTY_REMINDER_DAYS:
 			var reminder := Sects.duty_reminder(player, data)

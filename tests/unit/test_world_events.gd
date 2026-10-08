@@ -309,3 +309,14 @@ func test_event_options_show_danger() -> void:
 		danger = danger or String(labels[0]).contains("(%s)" % word)
 	assert_true(danger, "label shows a danger word: %s" % labels[0])
 	gs.end_session()
+
+
+func test_event_ends_on_its_end_day_not_the_month_end() -> void:
+	var gs := _session_with("sect_tournament", "azure_peak")
+	var day: int = _root().get_node("GameClock").total_days
+	gs.world_events[0]["end_day"] = day + 3
+	assert_eq(WorldEvents.check_join(gs.data, gs.world_events, gs.player, "sect_tournament", "tournament", "azure_peak"), "")
+	gs._pass_time(4)
+	assert_true(gs.world_events.is_empty(), "expired mid-month")
+	assert_true(WorldEvents.check_join(gs.data, gs.world_events, gs.player, "sect_tournament", "tournament", "azure_peak") != "", "can't join an ended event")
+	gs.end_session()

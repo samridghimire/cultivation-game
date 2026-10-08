@@ -39,6 +39,8 @@ func _ready() -> void:
 
 
 func show_toast(_slot: String, is_auto: bool) -> void:
+	if GameState.player != null and not GameState.player.alive:
+		return # record_final_death's save: the death screen is up
 	_label.text = "Autosaved" if is_auto else "Saved"
 	_label.modulate = Color(1, 1, 1, 0.6) if is_auto else Color.WHITE
 	_panel.modulate = Color.WHITE

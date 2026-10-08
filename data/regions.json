@@ -169,7 +169,7 @@
       "family_home": {"pos": [1100, 640], "size": [90, 64]},
       "npc_spots": [[500, 380], [900, 380], [1000, 620], [600, 620], [1450, 350], [300, 850], [1500, 910], [100, 110], [1140, 110], [1140, 910], [1300, 630], [100, 630], [620, 910], [460, 110]],
       "abodes": [
-        {"id": "myriad_aerie_abode", "display_name": "Cloud-Sea Aerie (abode)", "cost": 20000, "min_realm": "core_formation", "qi_density": 4.0, "storage_slots": 40, "pos": [900, 850], "size": [100, 70], "color": "aab4d0"}
+        {"id": "myriad_aerie_abode", "display_name": "Cloud-Sea Aerie (abode)", "cost": 20000, "min_realm": "core_formation", "qi_density": 4.0, "storage_slots": 40, "anchor_id": "myriad_aerie_abode_anchor", "pos": [900, 850], "size": [100, 70], "color": "aab4d0"}
       ],
       "routes": [
         {"to": "azure_peak", "days": 10, "min_realm": "core_formation"},
