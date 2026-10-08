@@ -53,7 +53,8 @@ func close() -> void:
 
 ## One line describing a slot, e.g. "Li Wei - Qi Refining 3 - Year 1, Spring 4 - age 16".
 static func describe_slot(meta: Dictionary) -> String:
-	var text := "%s  |  %s  |  %s  |  age %d" % [meta.get("name", "?"), meta.get("realm_label", "?"), meta.get("game_date", "?"), int(meta.get("age", 0))]
+	var label := "Autosave: " if String(meta.get("slot", "")) == SaveManager.AUTOSAVE_SLOT else ""
+	var text := label + "%s  |  %s  |  %s  |  age %d" % [meta.get("name", "?"), meta.get("realm_label", "?"), meta.get("game_date", "?"), int(meta.get("age", 0))]
 	if not bool(meta.get("alive", true)):
 		text += "  (deceased)"
 	return text

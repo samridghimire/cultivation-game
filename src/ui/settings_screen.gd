@@ -17,6 +17,7 @@ const SLIDERS := [
 
 var _fullscreen: CheckButton
 var _hints: CheckButton
+var _autosave: CheckButton
 var _fast_skips: CheckButton
 var _sliders: Dictionary = {}  # setting key -> HSlider
 var _value_labels: Dictionary = {}  # setting key -> Label
@@ -53,6 +54,11 @@ func _init() -> void:
 	_hints.add_theme_font_size_override("font_size", 18)
 	_hints.toggled.connect(func(on: bool): Settings.set_value("show_hints", on))
 	box.add_child(_hints)
+	_autosave = CheckButton.new()
+	_autosave.text = "Autosave (travel, breakthroughs, monthly)"
+	_autosave.add_theme_font_size_override("font_size", 18)
+	_autosave.toggled.connect(func(on: bool): Settings.set_value("autosave", on))
+	box.add_child(_autosave)
 
 	_fast_skips = CheckButton.new()
 	_fast_skips.text = "Fast time skips (no meditation/travel overlay)"
@@ -256,6 +262,7 @@ static func format_value(key: String, value: float) -> String:
 func _sync() -> void:
 	_fullscreen.set_pressed_no_signal(Settings.get_value("window_mode") == "fullscreen")
 	_hints.set_pressed_no_signal(Settings.get_value("show_hints"))
+	_autosave.set_pressed_no_signal(Settings.get_value("autosave"))
 	_fast_skips.set_pressed_no_signal(Settings.get_value("fast_time_skips"))
 	for key in _sliders:
 		_sliders[key].set_value_no_signal(Settings.get_value(key))

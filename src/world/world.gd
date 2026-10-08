@@ -52,6 +52,19 @@ func _ready() -> void:
 	_limit_camera()
 	EventBus.ui_modal_changed.connect(func(is_open: bool): player.input_enabled = not is_open)
 	EventBus.region_changed.connect(_on_region_changed)
+	get_tree().auto_accept_quit = false
+
+
+func _exit_tree() -> void:
+	if is_inside_tree():
+		get_tree().auto_accept_quit = true
+
+
+## Closing the window saves first (bypassing the once-a-day limit).
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_WM_CLOSE_REQUEST:
+		SaveManager.autosave(true)
+		get_tree().quit()
 
 
 ## Travel or an artifact respawn moved the player: rebuild the world for the

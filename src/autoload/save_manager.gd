@@ -8,6 +8,10 @@ extends Node
 const SAVE_DIR := "user://saves"
 const SAVE_VERSION := 1
 const DEFAULT_SLOT := "slot1"
+const AUTOSAVE_SLOT := "autosave"
+
+## GameClock.total_days of the last autosave; -1 = none yet this run.
+var _last_autosave_day := -1
 
 
 func save_path(slot: String) -> String:
@@ -98,6 +102,22 @@ func save_game(slot: String = DEFAULT_SLOT) -> bool:
 		push_error("Could not write save %s: %s" % [slot, error_string(FileAccess.get_open_error())])
 		return false
 	file.store_string(JSON.stringify(payload, "\t"))
+	return true
+
+
+## Silent save to the autosave slot. Skipped when the setting is off, the player
+## is dead, an encounter is pending, or it already ran today (unless `force`,
+## used when the window closes). Returns whether it saved.
+func autosave(force: bool = false) -> bool:
+	if not GameState.has_session() or not GameState.player.alive:
+		return false
+	if not bool(Settings.get_value("autosave")) or GameState.pending_encounter != "":
+		return false
+	if not force and _last_autosave_day == GameClock.total_days:
+		return false
+	if not save_game(AUTOSAVE_SLOT):
+		return false
+	_last_autosave_day = GameClock.total_days
 	return true
 
 

@@ -267,6 +267,8 @@ func attempt_breakthrough() -> void:
 			EventBus.post("You suffer %s." % Injuries.injury_name(data, result["injury"]), "danger")
 	EventBus.breakthrough_attempted.emit(result["success"], result["realm_name"])
 	_pass_time(BREAKTHROUGH_DAYS)
+	if result["success"]:
+		SaveManager.autosave()
 
 
 ## Expected tribulation for breaking into the next realm (Tribulation.preview),
@@ -439,6 +441,7 @@ func travel(region_id: String) -> void:
 	_pass_time(check["days"], "Travelling to %s" % Exploration.region_name(data, region_id))
 	_road_ambush()
 	EventBus.region_changed.emit(region_id)
+	SaveManager.autosave()
 
 
 ## After a journey, an NPC with a strong grudge may ambush the player, and a
@@ -2071,13 +2074,21 @@ func _can_act() -> bool:
 ## EventBus.time_skipped with a summary against _start_time_skip()'s snapshot.
 func _pass_time(days: int, skip_title: String = "") -> void:
 	var posted_before := EventBus.posted_count
+	var age_before := player.age_days if player != null else 0
 	GameClock.advance(days)
+	if player != null and _month_of(player.age_days) > _month_of(age_before):
+		SaveManager.autosave()
 	if skip_title != "" and _can_act() and not _skip_before.is_empty():
 		var summary := TimeSkip.summarize(skip_title, days, _skip_before, TimeSkip.snapshot(player),
 				Cultivation.realm_label(player, data), EventBus.posted_count - posted_before)
 		EventBus.time_skipped.emit(days, summary)
 	_skip_before = {}
 	EventBus.player_changed.emit()
+
+
+@warning_ignore("integer_division")
+static func _month_of(age_days: int) -> int:
+	return age_days / Calendar.DAYS_PER_MONTH
 
 
 ## Remember the player's numbers before a long action (see _pass_time).

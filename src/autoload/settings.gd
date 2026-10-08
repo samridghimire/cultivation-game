@@ -20,6 +20,8 @@ const DEFAULTS := {
 	"show_hints": true,
 	# Skip the time-skip overlay after meditation, travel... (UI-010).
 	"fast_time_skips": false,
+	# Silent autosave on travel, breakthrough, each month and window close (REL-001).
+	"autosave": true,
 }
 
 var path := DEFAULT_PATH
@@ -62,6 +64,8 @@ static func sanitize(key: String, value: Variant) -> Variant:
 			return clampf(float(value), UI_SCALE_RANGE.x, UI_SCALE_RANGE.y)
 		"show_hints":
 			return value if value is bool else DEFAULTS["show_hints"]
+		"autosave":
+			return value if value is bool else DEFAULTS["autosave"]
 		"fast_time_skips":
 			return (value is bool and value) or str(value).to_lower() == "true"
 		_:
