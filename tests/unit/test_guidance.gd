@@ -702,3 +702,42 @@ func test_rank_goal_without_trial_uses_requirement_helpers() -> void:
 		if l.contains("you can seek promotion"):
 			found = true
 	assert_true(found)
+
+
+func test_unlock_notices_secret_realms_follow_the_realm() -> void:
+	var d := data()
+	var c := _fresh()
+	c.realm_index = 1
+	var ids := _notice_ids(Guidance.unlock_notices(c, d, {}))
+	for realm_id: String in d.secret_realms:
+		var def: Dictionary = d.secret_realms[realm_id]
+		var open := String(def["min_realm"]) == "qi_refining"
+		assert_eq(ids.has("secret_realm_" + realm_id), open, realm_id)
+	assert_false(ids.has("clan"))
+	assert_false(ids.any(func(i: String) -> bool: return i.begins_with("promotion_")))
+	assert_false(_notice_ids(Guidance.unlock_notices(c, d, {"notice_secret_realm_verdant_remnant": true})).has("secret_realm_verdant_remnant"))
+	for n in Guidance.unlock_notices(c, d, {}):
+		if n["id"] == "secret_realm_verdant_remnant":
+			assert_true(String(n["text"]).contains("Verdant Remnant") and String(n["text"]).contains("5 years"))
+
+
+func test_unlock_notices_promotion_trial() -> void:
+	var d := data()
+	var c := _fresh()
+	c.realm_index = 2
+	c.sect = {"id": "azure_cloud_sect", "rank": 0, "contribution": 0, "spent": 0}
+	assert_false(_notice_ids(Guidance.unlock_notices(c, d, {})).any(func(i: String) -> bool: return i.begins_with("promotion_")))
+	c.sect["contribution"] = 500
+	var notices := Guidance.unlock_notices(c, d, {})
+	assert_true(_notice_ids(notices).has("promotion_azure_cloud_sect_1"))
+	assert_false(_notice_ids(Guidance.unlock_notices(c, d, {"notice_promotion_azure_cloud_sect_1": true})).has("promotion_azure_cloud_sect_1"))
+
+
+func test_unlock_notices_clan() -> void:
+	var d := data()
+	var c := _fresh()
+	c.realm_index = d.realm_index_of("foundation_establishment")
+	c.inventory = {"spirit_stone": 1000}
+	c.abode = "waterfall_cave"
+	assert_true(_notice_ids(Guidance.unlock_notices(c, d, {})).has("clan"))
+	assert_false(_notice_ids(Guidance.unlock_notices(c, d, {}, {}, ClanData.new())).has("clan"))

@@ -112,7 +112,7 @@ func start_session(character: CharacterData) -> void:
 	NpcClans.ensure(npc_clans, npcs, data, rng)
 	Rivals.spawn(player, npcs, data, rng, data.start_region)
 	world_flags["notice_rival"] = true  # a rival from the start is not news (GUIDE-008)
-	for notice in Guidance.unlock_notices(player, data, world_flags, npcs):
+	for notice in Guidance.unlock_notices(player, data, world_flags, npcs, clan):
 		world_flags["notice_" + String(notice["id"])] = true  # roads already open are not news
 	GameClock.reset()
 	_store_year_snapshot()
@@ -2362,7 +2362,7 @@ func load_save_dict(d: Dictionary) -> void:
 	# A save from before GUIDE-008 has no notice flags: mark what it already
 	# qualifies for as seen, quietly, so loading never floods the log (RV-010).
 	if not world_flags.keys().any(func(k: Variant) -> bool: return String(k).begins_with("notice_")):
-		for notice in Guidance.unlock_notices(player, data, world_flags, npcs):
+		for notice in Guidance.unlock_notices(player, data, world_flags, npcs, clan):
 			world_flags["notice_" + String(notice["id"])] = true
 	NpcClans.ensure(npc_clans, npcs, data, rng)  # older saves gain the clans
 	if player.rival == "" or not npcs.has(player.rival):
@@ -2438,7 +2438,7 @@ func check_milestones() -> void:
 func check_unlock_notices() -> void:
 	if player == null:
 		return
-	for notice in Guidance.unlock_notices(player, data, world_flags, npcs):
+	for notice in Guidance.unlock_notices(player, data, world_flags, npcs, clan):
 		world_flags["notice_" + String(notice["id"])] = true
 		EventBus.post(String(notice["text"]), "progress")
 		EventBus.feature_unlocked.emit(String(notice["text"]))

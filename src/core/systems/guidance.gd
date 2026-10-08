@@ -374,8 +374,9 @@ static func _mission_hint(c: CharacterData, data: GameData, flags: Dictionary = 
 
 ## Announcements for features that just became available and whose flag
 ## `notice_<id>` is not yet set in `flags`: [{id, text}]. The caller posts each
-## once and sets the flag. `people` is the NPC table (for the rival's name).
-static func unlock_notices(c: CharacterData, data: GameData, flags: Dictionary, people: Dictionary = {}) -> Array[Dictionary]:
+## once and sets the flag. `people` is the NPC table (for the rival's name);
+## `clan` is the player's clan, if any (GUIDE-011).
+static func unlock_notices(c: CharacterData, data: GameData, flags: Dictionary, people: Dictionary = {}, clan: ClanData = null) -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
 	if c == null or not c.alive:
 		return out
@@ -398,6 +399,20 @@ static func unlock_notices(c: CharacterData, data: GameData, flags: Dictionary, 
 		if route.is_empty() or c.realm_index < data.realm_index_of(String(route["min_realm"])):
 			continue
 		_add_notice(out, flags, "road_" + region_id, "You are strong enough to travel to %s (%d days from %s)." % [Exploration.region_name(data, region_id), int(route["days"]), Exploration.region_name(data, String(route["from"]))])
+	if not c.is_rogue():
+		var promo_rank := Sects.next_rank(c, data)
+		if promo_rank >= 0 and Sects.needs_trial(c, data) and Sects.check_promotion(c, data) == "":
+			var sect: SectDef = data.sects[c.sect["id"]]
+			_add_notice(out, flags, "promotion_%s_%d" % [sect.id, promo_rank], "You may challenge the %s trial at the %s hall." % [sect.rank_name(promo_rank), sect.name])
+	if clan == null and Clans.check_found(c, null, data) == "":
+		_add_notice(out, flags, "clan", "You can found a clan of your own at your cave abode.")
+	for realm_id: String in data.secret_realms:
+		var def: Dictionary = data.secret_realms[realm_id]
+		var low := data.realm_index_of(String(def.get("min_realm", "")))
+		var high := data.realm_index_of(String(def.get("max_realm", "")))
+		if c.realm_index < low or c.realm_index > high or not data.regions.has(String(def.get("region", ""))):
+			continue
+		_add_notice(out, flags, "secret_realm_" + realm_id, "The %s admits cultivators of your realm (%s; opens every %d years)." % [def["name"], Exploration.region_name(data, String(def["region"])), int(def.get("period_years", 0))])
 	return out
 
 
