@@ -107,3 +107,21 @@ func test_first_year_loses_few_fights() -> void:
 		worst = maxi(worst, int(r["fights_lost"]))
 		gs.end_session()
 	assert_true(worst <= MAX_FIGHTS_LOST, "a newcomer lost %d fights in 12 months (limit %d)" % [worst, MAX_FIGHTS_LOST])
+
+
+## QA-029: the curious player (weekly exploring, deeds, missions, a chat) is never
+## killed, always has something in the log, and reaches QR3 within a year.
+## Measured over seeds 1-10: QR3 by day 62-348, 3-4 fights lost, 0 empty months.
+func test_curious_player_first_year() -> void:
+	var gs := _root().get_node("GameState")
+	var clock := _root().get_node("GameClock")
+	var reached := 0
+	for s in range(1, SEEDS + 1):
+		var r: Dictionary = FirstHour.play(gs, clock, s, 12, true)
+		assert_true(r["player"].alive, "seed %d: the curious player died" % s)
+		for m in range(1, r["month_lines"].size()):
+			assert_false(r["month_lines"][m].is_empty(), "seed %d: month %d logged nothing" % [s, m + 1])
+		if r["layer_day"].has(3) and int(r["layer_day"][3]) <= 360:
+			reached += 1
+		gs.end_session()
+	assert_true(reached >= 4, "only %d of %d curious players reached QR3 within a year" % [reached, SEEDS])

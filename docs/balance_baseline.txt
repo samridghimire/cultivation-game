@@ -2,18 +2,36 @@
 
 First-hour sim: 10 seeds, 12 months
   seed  QR1  QR3  QR9  sect  injuries  won  lost  fled  lines/month
-     1   14  141    -    14         0    1     0     0  4.0
-     2   14  108    -    14         0    0     1     0  4.1
-     3   14  137    -    14         0    1     0     0  3.7
+     1   14  141    -    14         0    1     0     0  4.1
+     2   14  108    -    14         0    0     1     0  4.2
+     3   14  137    -    14         0    1     0     0  3.8
      4   14  170    -    14         0    2     0     0  3.8
-     5   14   48  295    14         0    2     0     0  3.7
+     5   14   48  295    14         0    2     0     0  3.8
      6   62  280    -    62         0    2     0     0  4.2
-     7   14  137    -    14         0    2     0     0  3.5
+     7   14  137    -    14         0    2     0     0  3.6
      8   14  106    -    14         0    1     1     0  4.2
      9   14  171    -    14         0    2     0     0  3.5
-    10   14  107    -    14         0    1     1     0  3.7
+    10   14  107    -    14         0    1     1     0  3.8
 Medians (day): QR1 14, QR3 137, QR9 295, sect 14; injuries 0; fights won 2, lost 0, fled 0; 3.8 log lines/month
-Lines by category: { "warning": 34, "progress": 133, "info": 268, "danger": 23 }
+Lines by category: { "warning": 34, "progress": 140, "info": 268, "danger": 23 }
+
+## first hour, curious player (seeds 1-10)
+
+First-hour sim (curious player): 10 seeds, 12 months
+  seed  QR1  QR3  QR9  sect  injuries  won  lost  fled  lines/month
+     1   14  198    -    14         0   17     4     0  14.7
+     2   14  164    -    14         0   18     4     0  14.8
+     3   14  204    -    14         1   16     4     0  14.0
+     4   14  198    -    14         0   11     3     0  13.5
+     5   14   62  436    14         0   13     3     0  14.2
+     6   26  348    -    26         0   19     3     0  15.0
+     7   14  196    -    14         0   18     3     0  15.0
+     8   14  158    -    14         0   16     2     0  13.8
+     9   14  288    -    14         0   16     3     0  14.3
+    10   14  156    -    14         0   17     4     0  15.8
+Medians (day): QR1 14, QR3 198, QR9 436, sect 14; injuries 0; fights won 17, lost 3, fled 0; 14.7 log lines/month
+Distinct action kinds per month: 2.3; months after the first with no log lines: 0
+Lines by category: { "warning": 58, "progress": 474, "info": 754, "karma": 144, "danger": 311 }
 
 ## combat (200 fights per cell)
 
@@ -248,4 +266,23 @@ Array Master (rank 5.4 at the end): avg final realm 2.02 (~Foundation Establishm
     Nascent Soul: 1/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
     Soul Formation: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
     pills 375, attempts without a pill 3935; lives bought 182 (dearest 6400); ended for good 10 (avg age 188), old age 40
-    income (all lives): work 8634 mo / 295547 stones, craft 0 mo / 0 stones, gather 8608 mo / 367038 stones, sect 8591 mo / 424957
+    income (all lives): work 8634 mo / 295547 stones, craft 0 mo / 0 stones, gather 8608 mo / 367038 stones, sect 8591 mo / 424957 stones (stipends 211180)
+    spent: gear 0, clinic 1060; savings alone covered the Core Forming Pill at the Foundation peak for 14/50; pills bought with contribution 70; avg sect rank 2.0, contribution 31556
+Doctor (rank 6.2 at the end): avg final realm 2.04 (~Foundation Establishment); earned 18114, left 2218 stones
+    Foundation Establishment: 50/50 lives reached the bottleneck, 34 could afford the pill on the first attempt
+    Core Formation: 50/50 lives reached the bottleneck, 12 could afford the pill on the first attempt
+    Nascent Soul: 2/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
+    Soul Formation: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
+    pills 361, attempts without a pill 3977; lives bought 169 (dearest 12800); ended for good 4 (avg age 214), old age 46
+    income (all lives): work 9080 mo / 257365 stones, craft 0 mo / 0 stones, gather 9060 mo / 402124 stones, sect 9039 mo / 441497 stones (stipends 212844)
+    spent: gear 0, clinic 400; savings alone covered the Core Forming Pill at the Foundation peak for 12/50; pills bought with contribution 63; avg sect rank 2.0, contribution 33298
+Beast Tamer (rank 6.4 at the end): avg final realm 2.00 (~Foundation Establishment); earned 16824, left 1645 stones
+    Foundation Establishment: 50/50 lives reached the bottleneck, 35 could afford the pill on the first attempt
+    Core Formation: 50/50 lives reached the bottleneck, 11 could afford the pill on the first attempt
+    Nascent Soul: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
+    Soul Formation: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
+    pills 356, attempts without a pill 3911; lives bought 178 (dearest 1600); ended for good 7 (avg age 164), old age 43
+    income (all lives): work 7855 mo / 220690 stones, craft 621 mo / 24015 stones, gather 8463 mo / 363888 stones, sect 8443 mo / 426718 stones (stipends 210012)
+    spent: gear 0, clinic 460; savings alone covered the Core Forming Pill at the Foundation peak for 11/50; pills bought with contribution 65; avg sect rank 2.0, contribution 31116
+Net stones per sect mission over all lives (top 12): procure_azure_crystal 756285, gather_spirit_herbs 516090, carry_goods_to_market 103496, alchemist_rare_order 18040, fill_herb_order 17010, auction_consignment 11520
+
