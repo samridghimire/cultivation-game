@@ -19,6 +19,8 @@ var reputation_min_join := -1000000
 var reputation_deed_scale := 0.0
 ## Contribution shop (G-008c): [{item_id, contribution, min_rank}].
 var shop: Array[Dictionary] = []
+## The elder's monthly lecture (SECT-005): {name, days, qi_days, insight_chance, insights}; {} = none.
+var lecture: Dictionary = {}
 
 
 static func from_dict(d: Dictionary) -> SectDef:
@@ -38,6 +40,7 @@ static func from_dict(d: Dictionary) -> SectDef:
 	s.reputation_min_join = int(rep.get("min_join", s.reputation_min_join))
 	s.reputation_deed_scale = float(rep.get("deed_scale", 0))
 	s.shop.assign(d.get("shop", []))
+	s.lecture = d.get("lecture", {})
 	return s
 
 

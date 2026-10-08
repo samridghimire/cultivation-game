@@ -113,6 +113,25 @@ func test_join_and_leave_sect() -> void:
 	gs.end_session()
 
 
+func test_attend_lecture_once_a_month() -> void:
+	var c := _start()
+	var gs := _game_state()
+	var clock := _root().get_node("GameClock")
+	c.alignment = 0
+	gs.attend_lecture()  # rogue: refused, no time passes
+	assert_eq(clock.total_days, 0)
+	gs.join_sect("blood_lotus_sect")
+	var qi_before := c.qi
+	gs.attend_lecture()
+	assert_gt(c.qi, qi_before)
+	assert_eq(clock.total_days, 2)
+	var qi_after := c.qi
+	gs.attend_lecture()  # same month: refused
+	assert_eq(c.qi, qi_after)
+	assert_eq(clock.total_days, 2)
+	gs.end_session()
+
+
 func test_join_sect_rejects_wrong_alignment() -> void:
 	var c := _start()
 	var gs := _game_state()

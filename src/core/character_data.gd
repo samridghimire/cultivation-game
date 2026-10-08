@@ -276,6 +276,8 @@ static func from_dict(d: Dictionary) -> CharacterData:
 			c.sect["spent"] = int(s["spent"])
 		if s.has("month_earned"):
 			c.sect["month_earned"] = int(s["month_earned"])
+		if s.has("lecture_month"):
+			c.sect["lecture_month"] = int(s["lecture_month"])
 		if s.has("duty_grace"):
 			c.sect["duty_grace"] = bool(s["duty_grace"])
 	c.inventory = _int_values(d.get("inventory", {}))

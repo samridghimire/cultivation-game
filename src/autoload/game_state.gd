@@ -1785,6 +1785,25 @@ func buy_with_contribution(item_id: String) -> void:
 	EventBus.player_changed.emit()
 
 
+## Attend the sect elder's monthly lecture (sects.json `lecture`): qi, maybe a Dao glimpse.
+func attend_lecture() -> void:
+	EventBus.topic = "sect"
+	if not _can_act():
+		return
+	var reason := Sects.check_lecture(player, data, GameClock.total_days)
+	if reason != "":
+		EventBus.post(reason, "warning")
+		return
+	_start_time_skip()
+	var result := Sects.attend_lecture(player, data, rng, GameClock.total_days, _cultivation_density(1.0))
+	EventBus.post("You attend %s. (+%d qi)" % [result["name"], int(result["qi"])], "progress")
+	if result["insight_id"] != "":
+		var insight: Dictionary = Dao.def_of(data, result["insight_id"])
+		EventBus.post("A line of the lecture clicks: you glimpse the %s." % insight.get("name", "Dao"), "progress")
+	_pass_time(int(result["days"]), "Attending a lecture")
+	EventBus.player_changed.emit()
+
+
 ## The lots of `house_id`'s open auction ([] when none is being held).
 func auction_lots(house_id: String) -> Array:
 	return Auctions.current_lots(auctions, data, house_id, GameClock.total_days, rng.seed)

@@ -388,6 +388,77 @@ static func buy_with_contribution(c: CharacterData, data: GameData, item_id: Str
 	return {"ok": true, "reason": "", "cost": cost}
 
 
+# --- The elder's monthly lecture (SECT-005) ----------------------------------
+
+## year * 12 + month index of `total_days`, for once-a-month checks.
+static func _month_index(total_days: int) -> int:
+	return (Calendar.year_of(total_days) - 1) * Calendar.MONTHS_PER_YEAR + Calendar.month_of(total_days) - 1
+
+
+## The lecture definition of `c`'s sect ({} for rogues and sects without one).
+static func lecture_def(c: CharacterData, data: GameData) -> Dictionary:
+	if c.is_rogue() or not data.sects.has(c.sect["id"]):
+		return {}
+	return (data.sects[c.sect["id"]] as SectDef).lecture
+
+
+## Why `c` cannot attend the monthly lecture now, or "".
+static func check_lecture(c: CharacterData, data: GameData, total_days: int) -> String:
+	if c.is_rogue():
+		return "Only sect disciples may attend the lecture."
+	var lecture := lecture_def(c, data)
+	if lecture.is_empty():
+		return "Your sect holds no lectures."
+	if int(c.sect.get("lecture_month", -1)) == _month_index(total_days):
+		return "You have already attended %s this month." % lecture.get("name", "the lecture")
+	return ""
+
+
+## Attends the lecture: qi_days of qi at `density`, and maybe a glimpse of the
+## first listed insight not yet known. Returns {ok, reason, name, days, qi, insight_id}.
+static func attend_lecture(c: CharacterData, data: GameData, rng: RandomNumberGenerator, total_days: int, density: float = 1.0) -> Dictionary:
+	var reason := check_lecture(c, data, total_days)
+	if reason != "":
+		return {"ok": false, "reason": reason}
+	var lecture := lecture_def(c, data)
+	c.sect["lecture_month"] = _month_index(total_days)
+	var qi := 0
+	var qi_days := int(lecture.get("qi_days", 0))
+	if qi_days > 0 and not Cultivation.is_at_bottleneck(c, data):
+		qi = int(Cultivation.cultivate(c, data, qi_days, density)["qi_gained"])
+	var chance := float(lecture.get("insight_chance", 0.0)) + 0.005 * maxf(0.0, c.attribute("comprehension") - 10.0)
+	var insight_id := ""
+	if rng.randf() < chance:
+		for id: String in lecture.get("insights", []):
+			if Dao.level(c, id) <= 0 and Dao.gain_levels(c, data, id) > 0:
+				insight_id = id
+				break
+	return {"ok": true, "reason": "", "name": String(lecture.get("name", "the lecture")), "days": int(lecture.get("days", 1)), "qi": qi, "insight_id": insight_id}
+
+
+## Load errors for the sects.json `lecture` blocks.
+static func validate_lectures(data: GameData) -> PackedStringArray:
+	var errors := PackedStringArray()
+	for sect_id: String in data.sects:
+		var lecture: Dictionary = (data.sects[sect_id] as SectDef).lecture
+		if lecture.is_empty():
+			continue
+		var label := "Sect '%s' lecture" % sect_id
+		if String(lecture.get("name", "")) == "":
+			errors.append("%s needs a name" % label)
+		if int(lecture.get("days", 0)) < 1:
+			errors.append("%s needs days >= 1" % label)
+		if int(lecture.get("qi_days", 0)) < 0:
+			errors.append("%s needs qi_days >= 0" % label)
+		var chance := float(lecture.get("insight_chance", 0.0))
+		if chance < 0.0 or chance > 1.0:
+			errors.append("%s needs insight_chance within 0..1" % label)
+		for id: String in lecture.get("insights", []):
+			if not data.dao_insights.has(id):
+				errors.append("%s lists unknown insight '%s'" % [label, id])
+	return errors
+
+
 ## Load errors for the sects.json `shop` lists.
 static func validate_shops(data: GameData) -> PackedStringArray:
 	var errors: PackedStringArray = []

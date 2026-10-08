@@ -21,6 +21,9 @@ func get_options() -> Array[Dictionary]:
 		var ids := Sects.available_missions(player, GameState.data, GameState.world_flags)
 		var ready := ids.filter(func(id: String) -> bool: return Sects.check_mission(player, GameState.data, id, GameState.world_flags) == "").size()
 		options.append({"label": "Mission board (%d of %d available)" % [ready, ids.size()], "action": EventBus.mission_board_requested.emit})
+		var lecture := lecture_option()
+		if not lecture.is_empty():
+			options.append(lecture)
 		var trial := trial_option()
 		if not trial.is_empty():
 			options.append(trial)
@@ -72,6 +75,16 @@ static func confirm_text(player: CharacterData, data: GameData, what: String) ->
 	if not join.ranks.is_empty() and int(join.ranks[0].get("monthly_duty", 0)) > 0:
 		duty = " Monthly duty: %d contribution." % int(join.ranks[0]["monthly_duty"])
 	return "Join %s (%s sect)?%s You can leave later, at a cost." % [join.name, join.alignment_tag, duty]
+
+
+## "Attend <lecture> (N days)" for a disciple whose sect holds a monthly lecture
+## (disabled with Sects.check_lecture's reason); {} otherwise.
+func lecture_option() -> Dictionary:
+	var lecture := Sects.lecture_def(GameState.player, GameState.data)
+	if lecture.is_empty():
+		return {}
+	var reason := Sects.check_lecture(GameState.player, GameState.data, GameClock.total_days)
+	return {"label": "Attend %s (%s)" % [lecture.get("name", "the lecture"), Calendar.format_duration(int(lecture.get("days", 1)))], "action": GameState.attend_lecture, "disabled": reason != "", "reason": reason, "keep_open": true}
 
 
 ## "Attempt the trial for <rank> (vs <foe>, <danger>)" when the next rank of the
