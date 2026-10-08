@@ -138,14 +138,39 @@ func tick() -> void:
 
 func _reveal(i: int, sound: bool = true) -> void:
 	var line := _lines[i]
-	if i == 0 or i == _lines.size() - 1:
+	if i == 0:
 		line = "[color=#%s]%s[/color]" % [_color.to_html(false), line]
+	elif i == _lines.size() - 1:
+		line = finishing_line(line, _color)
+	else:
+		line = styled_line(line)
 	_log.append_text(line + "\n")
 	if i < _trace.size() and _player_bar.get_parent().visible:
 		_set_bar(_player_bar, int(_trace[i][0]), int(_player_bar.get_meta("max")))
 		_set_bar(_enemy_bar, int(_trace[i][1]), int(_enemy_bar.get_meta("max")))
 	if sound and _is_hit(_lines[i]):
 		Audio.play(_sound_for_line(_lines[i]))
+
+
+## The last log line: larger, bold, in the result color.
+static func finishing_line(line: String, color: Color) -> String:
+	return "[b][font_size=19][color=#%s]%s[/color][/font_size][/b]" % [color.to_html(false), line]
+
+
+## BBCode tone for a middle log line: blows that hit you in the warning color,
+## crushing blows (either way) in the accent, talisman and ally lines dim-accent,
+## your own blows and the rest plain.
+static func styled_line(line: String) -> String:
+	var tint := Color.WHITE
+	if line.contains(Combat.BLOW_WORD_CRUSHING):
+		tint = UIStyle.ACCENT
+	elif line.begins_with("You burn ") or line.begins_with("You hurl ") or line.contains("who owes you a debt"):
+		tint = UIStyle.ACCENT.darkened(0.35)
+	elif line.contains(" hits you") or line.contains(" attacks with "):
+		tint = UIStyle.CATEGORY_COLORS["warning"]
+	if tint == Color.WHITE:
+		return line
+	return "[color=#%s]%s[/color]" % [tint.to_html(false), line]
 
 
 ## Sound name for a log line by blow weight (hits only; callers check _is_hit).

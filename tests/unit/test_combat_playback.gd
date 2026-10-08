@@ -86,3 +86,18 @@ func test_sound_for_line_by_blow_weight() -> void:
 	assert_eq(CombatReport._sound_for_line("You strike the wolf for 30: a crushing blow"), "hit_heavy")
 	assert_eq(CombatReport._sound_for_line("You strike the wolf for 2: a glancing blow"), "hit_light")
 	assert_eq(CombatReport._sound_for_line("You strike the wolf for 10"), "hit")
+
+
+func test_styled_line_tones() -> void:
+	var warn := UIStyle.CATEGORY_COLORS["warning"].to_html(false)
+	var enemy_hit := CombatReport.styled_line("The wolf hits you for 4. (You: 20 hp)")
+	assert_true(enemy_hit.contains(warn))
+	assert_eq(CombatReport.styled_line("You strike the wolf for 4. (Wolf: 9 hp)"), "You strike the wolf for 4. (Wolf: 9 hp)")
+	assert_true(CombatReport.styled_line("The wolf hits you: a crushing blow for 9.").contains(UIStyle.ACCENT.to_html(false)))
+	assert_true(CombatReport.styled_line("You hurl a Fire Talisman for 5.").contains(UIStyle.ACCENT.darkened(0.35).to_html(false)))
+
+
+func test_finishing_line_is_bold_and_large() -> void:
+	var t := CombatReport.finishing_line("You defeat the wolf.", Color.RED)
+	assert_true(t.begins_with("[b][font_size=19]"))
+	assert_true(t.contains("You defeat the wolf."))
