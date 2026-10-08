@@ -1,0 +1,30 @@
+{
+  "id": "alchemist_ye",
+  "entries": [
+    {"node": "greet"}
+  ],
+  "nodes": {
+    "greet": {"text": "A woman in patched green robes squats before a cracked cauldron on a ledge with thunder-clouds below her feet, tasting something off a spoon. 'Don't stand in my light. Or do, I suppose. Have you eaten? I make the best soup in three realms and the worst in two.'",
+      "choices": [
+        {"label": "Ask what she is brewing.", "next": "brew"},
+        {"label": "Fetch water and tend the fire for her. (3 days)", "next": "tend", "days": 3, "favor": 5, "effects": {"qi": 2000}},
+        {"label": "Ask about the sealed hall on the ridge.", "next": "pavilion", "if": {"min_favor": 30}, "show_locked": true},
+        {"label": "Ask if she would teach the Soul Infant Pill.", "next": "recipe", "if": {"min_favor": 45, "min_realm": "core_formation", "not_flag": "ye_recipe"}, "show_locked": true},
+        {"label": "Ask if she needs anything.", "next": "errand_ask", "if": {"not_flag": "errand_ye_asked"}},
+        {"label": "Bring the three Cloud Mist Orchids Ye asked for.", "next": "errand_thanks", "if": {"has_items": {"cloud_mist_orchid": 3}, "flag": "errand_ye_asked", "not_flag": "errand_ye_done"}, "effects": {"items": {"cloud_mist_orchid": -3, "nine_leaf_soul_grass": 2}, "set_flag": "errand_ye_done"}, "favor": 15},
+        {"label": "Leave her to her soup.", "next": "end"}
+      ]},
+    "brew": {"text": "'Today: nothing fancy, a thunder-tempering draught. Tomorrow: whatever a dying man begs me for. An alchemist's whole career is deciding who to sell the cure to. I decided long ago it would be whoever asks politely.'",
+      "choices": [{"label": "...", "next": "greet"}]},
+    "tend": {"text": "She watches you bank the flame with something between approval and amusement. 'You don't ask why. Most apprentices ask why. You'll go far or die early.' Thunder rolls below the ledge; your breathing slows to the beat of it.",
+      "choices": [{"label": "...", "next": "greet"}]},
+    "pavilion": {"text": "'The Skyfall Thunder Pavilion up the ridge? It opens when the storm turns on itself, about every thirty years. A thunder-sage's old hall, full of tempered iron and bad advice. Go in with a full pouch of ward talismans, and eat before you do.'",
+      "choices": [{"label": "I will remember.", "next": "greet", "favor": 5}]},
+    "recipe": {"text": "She wipes her hands, studies you for a long moment, and scrawls a recipe on a jade slip with her thumbnail. 'Soul Infant Pill. Two parts patience, one part luck, and a prayer to whichever heaven you prefer. It does not work for everyone; it works for those who finish the brew. Do not waste the lotus seeds.'",
+      "choices": [{"label": "Accept the formula with thanks. (7 days)", "next": "greet", "days": 7, "favor": 10, "effects": {"items": {"recipe_nascent_soul_pill": 1}, "set_flag": "ye_recipe"}}]},
+    "errand_ask": {"text": "'My cloud mist orchids ran out in the last storm, and the Terraces are a day's climb in lightning that doesn't care about my knees. Three of them, fresh. I'll repay you in leaf-grass that I've been saving. It only grows where lightning has struck twice.'",
+      "choices": [{"label": "I'll climb the terraces.", "next": "greet", "effects": {"set_flag": "errand_ye_asked"}}]},
+    "errand_thanks": {"text": "'Still dewy. Lovely.' She presses two Nine-Leaf Soul Grass stems into your hands. 'Don't boil them. Grind them cold and thank the lightning.'",
+      "choices": [{"label": "...", "next": "greet"}]}
+  }
+}

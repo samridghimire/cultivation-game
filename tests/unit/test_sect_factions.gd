@@ -96,7 +96,7 @@ func test_sects_grow_over_years_in_a_session() -> void:
 	for row: Dictionary in gs.sect_standings():
 		before += int(row["members"])
 	for i in 24:
-		gs.cultivate(Calendar.DAYS_PER_MONTH)
+		GameClock.advance(Calendar.DAYS_PER_MONTH)  # not cultivate(): a qi bottleneck stops time passing
 	var after := 0
 	for row: Dictionary in gs.sect_standings():
 		after += int(row["members"])

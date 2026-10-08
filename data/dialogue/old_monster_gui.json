@@ -1,0 +1,38 @@
+{
+  "id": "old_monster_gui",
+  "entries": [
+    {"node": "righteous", "if": {"min_alignment": 300}},
+    {"node": "greet"}
+  ],
+  "nodes": {
+    "greet": {"text": "A lantern of green fire hangs over a crooked hut, and beneath it an old man picks his teeth with a finger bone. 'A visitor. Most do not make it past the reeds. I am Gui. They call me old monster; I prefer \"patient\".'",
+      "choices": [
+        {"label": "Ask how he outlived the sects that hunted him.", "next": "outlive"},
+        {"label": "Sit by the lantern and trade war stories. (3 days)", "next": "stories", "days": 3, "favor": 5, "effects": {"qi": 2000}},
+        {"label": "Ask about the palace under the marsh.", "next": "palace", "if": {"min_favor": 30}, "show_locked": true},
+        {"label": "Ask for the Blood Sea Sovereign Scripture.", "next": "scripture", "if": {"min_favor": 60, "min_realm": "core_formation", "max_alignment": -250, "not_flag": "gui_scripture", "not_knows_technique": "blood_sea_sovereign_scripture"}, "show_locked": true},
+        {"label": "Ask what a monster needs from a mortal.", "next": "errand_ask", "if": {"not_flag": "errand_gui_asked"}},
+        {"label": "Bring the three Blood Ginseng Gui asked for.", "next": "errand_thanks", "if": {"has_items": {"blood_ginseng": 3}, "flag": "errand_gui_asked", "not_flag": "errand_gui_done"}, "effects": {"items": {"blood_ginseng": -3, "blood_demon_pill": 2}, "alignment": -15, "set_flag": "errand_gui_done"}, "favor": 15},
+        {"label": "Leave quickly.", "next": "end"}
+      ]},
+    "outlive": {"text": "'I never fought them. I fed them. A sect hunts a monster for a hundred years; I fed their prodigies a hundred years of lies, and when the lies ran out the sect was a ghost town. Learn to be boring, little cultivator. Boring lives long.'",
+      "choices": [{"label": "...", "next": "greet"}]},
+    "stories": {"text": "He has eaten at three coronations and three massacres and does not distinguish them. You leave with your ears ringing and the lantern's green flame still in your eyes.",
+      "choices": [{"label": "...", "next": "greet"}]},
+    "palace": {"text": "'The Drowned Yin Palace? The Yin King drowned himself there on purpose, and left a testament for whoever was fool enough to follow. It opens once a dozen years when the reeds go black and the water turns to ink. Bring a lantern and a strong stomach. And do not drink anything in the third hall.'",
+      "choices": [{"label": "I will remember.", "next": "greet", "favor": 5}]},
+    "scripture": {"text": "He tosses you a thin skin scroll, as if it were a dried fish. 'The Blood Sea Sovereign Scripture. It was an Elder's canon, once, until its Elder lost an argument with me. Do not read it on an empty stomach. Do not read it on a full one either.'",
+      "choices": [{"label": "Catch it and thank him. (7 days)", "next": "greet", "days": 7, "favor": 10, "effects": {"items": {"manual_blood_sea_sovereign": 1}, "alignment": -30, "set_flag": "gui_scripture"}}]},
+    "errand_ask": {"text": "'My old bones want blood ginseng, three roots, from the Corpse-Lily Bog where the bog-things guard the good ones. I would fetch them myself, but monsters have an image to keep. Bring them and I will pay in pills I made for dead men who did not need them.'",
+      "choices": [{"label": "Three Blood Ginseng, as you wish.", "next": "greet", "effects": {"set_flag": "errand_gui_asked"}}]},
+    "errand_thanks": {"text": "'Fresh, and still bleeding. You have manners for a thief.' He passes you two black pills. 'Blood Demon Pills. They work whether or not you believe in me.'",
+      "choices": [{"label": "...", "next": "greet"}]},
+    "righteous": {"text": "The lantern flares white. 'Righteous qi, here. You are either a very brave fool or a very patient hunter. The marsh has swallowed nine of your kind, little saint.'",
+      "choices": [
+        {"label": "Say you only seek passage and a little hospitality. (3 days)", "next": "hospitality", "days": 3, "favor": 5, "effects": {"qi": 1000}},
+        {"label": "Condemn him and leave.", "next": "end", "effects": {"alignment": 10}}
+      ]},
+    "hospitality": {"text": "He laughs until it becomes a cough. 'Tea? Hospitality? Heaven wrings out the old jokes! Fine, sit. But no sermons, or the reeds will hear.'",
+      "choices": [{"label": "...", "next": "greet"}]}
+  }
+}

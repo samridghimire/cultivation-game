@@ -218,6 +218,9 @@ func test_npc_errand_turn_ins_need_items_and_asked_flag() -> void:
 		"hermit_gu": ["Bring the three Cold Iron", {"cold_iron": 3}, "errand_gu"],
 		"alchemist_hua": ["Bring the four Qi Gathering Pills", {"qi_gathering_pill": 4}, "errand_hua"],
 		"peddler_hei": ["Bring the three Purple Cloud Mushrooms", {"purple_cloud_mushroom": 3}, "errand_hei"],
+		"patriarch_lin": ["Bring the three Ice Soul Flowers", {"ice_soul_flower": 3}, "errand_lin"],
+		"old_monster_gui": ["Bring the three Blood Ginseng", {"blood_ginseng": 3}, "errand_gui"],
+		"alchemist_ye": ["Bring the three Cloud Mist Orchids", {"cloud_mist_orchid": 3}, "errand_ye"],
 	}
 	var npcs := _npcs()
 	for npc_id: String in errands:

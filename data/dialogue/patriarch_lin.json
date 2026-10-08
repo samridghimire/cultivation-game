@@ -1,0 +1,41 @@
+{
+  "id": "patriarch_lin",
+  "entries": [
+    {"node": "demonic", "if": {"max_alignment": -300}},
+    {"node": "greet"}
+  ],
+  "nodes": {
+    "greet": {"text": "The old man sits beneath a pine with a sword across his knees, rust on the blade and no dust on the man. 'I founded the Azure Cloud Sect when this peak had no name. Sit, child. I have not been asked a good question in two hundred years.'",
+      "choices": [
+        {"label": "Ask what a sect is for.", "next": "sect"},
+        {"label": "Pour his tea and listen to the old days. (3 days)", "next": "days", "days": 3, "favor": 5, "effects": {"qi": 2000}},
+        {"label": "Ask about the sealed hall on the Myriad Peaks.", "next": "pavilion", "if": {"min_favor": 30}, "show_locked": true},
+        {"label": "Ask if the sect's Elder canon may pass to you.", "next": "canon", "if": {"min_favor": 60, "min_realm": "core_formation", "min_alignment": 100, "not_flag": "lin_canon", "not_knows_technique": "azure_sky_primordial_canon"}, "show_locked": true},
+        {"label": "Ask if anything weighs on him.", "next": "errand_ask", "if": {"not_flag": "errand_lin_asked"}},
+        {"label": "Bring the three Ice Soul Flowers Lin asked for.", "next": "errand_thanks", "if": {"has_items": {"ice_soul_flower": 3}, "flag": "errand_lin_asked", "not_flag": "errand_lin_done"}, "effects": {"items": {"ice_soul_flower": -3, "longevity_pill": 1}, "alignment": 15, "set_flag": "errand_lin_done"}, "favor": 15},
+        {"label": "Farewell, Patriarch.", "next": "end"}
+      ]},
+    "sect": {"text": "'To keep a lamp lit for those who come after. Strength is only the oil.' He looks at your hands. 'You carry yourself like someone who has already decided what the lamp is for. Good. Keep deciding.'",
+      "choices": [{"label": "...", "next": "greet"}]},
+    "days": {"text": "He tells of the first disciples, nine of them, and how only two kept the vow. By the end the pine's shadow has crossed the clearing twice, and your qi has settled like silt in still water.",
+      "choices": [{"label": "...", "next": "greet"}]},
+    "pavilion": {"text": "'Every thirty years the Skyfall Thunder Pavilion opens its doors on the Myriad Peaks, when the storms there run backwards. A thunder-sage left a sword-oath in it. Go with a clear heart, and do not bring a debt you cannot pay.'",
+      "choices": [{"label": "I will remember.", "next": "greet", "favor": 5}]},
+    "canon": {"text": "He is quiet for a long breath, then lays two fingers on your brow. 'Azure Sky Primordial Canon. It lends the ocean to a man who knows he is a cup. If you ever forget which one you are, the sword on my knee will remember for you.'",
+      "choices": [{"label": "Bow deeply and accept it. (7 days)", "next": "greet", "days": 7, "favor": 10, "effects": {"items": {"manual_azure_sky_primordial": 1}, "alignment": 20, "set_flag": "lin_canon"}}]},
+    "errand_ask": {"text": "'My knees ache whenever the frost comes early, and the Frost Ledge flowers would ease them. Three Ice Soul Flowers, if you pass that way. I cannot walk it any more without a squad of disciples fussing. Bring them and I will repay you with something that buys years.'",
+      "choices": [{"label": "I will bring the flowers.", "next": "greet", "effects": {"set_flag": "errand_lin_asked"}}]},
+    "errand_thanks": {"text": "'Cold and unsullied, just as they grow. Take this. A longevity pill I made when I was your age and too proud to eat it. Spend the years better than I did.'",
+      "choices": [{"label": "...", "next": "greet"}]},
+    "demonic": {"text": "The old man does not rise. The sword on his knees hums. 'Blood on your qi, child, and not the blood of a hunt. This peak was kept clean for a reason. Say what you came for or go back down.'",
+      "choices": [
+        {"label": "Steal the offering bowl at his shrine while he sits.", "next": "steal", "if": {"not_flag": "lin_robbed"}, "effects": {"items": {"spirit_stone": 800}, "alignment": -90, "set_flag": "lin_robbed"}, "favor": -100},
+        {"label": "Kneel and ask whether the road can be left. (burn 2 years)", "next": "repent", "if": {"not_flag": "lin_repent"}, "effects": {"burn_lifespan": 2, "alignment": 120, "set_flag": "lin_repent"}, "favor": 15},
+        {"label": "Leave.", "next": "end"}
+      ]},
+    "steal": {"text": "He watches you with open eyes the whole time and does nothing. 'The bowl was never what I was guarding,' he says, and says no more. It is a long walk down.",
+      "choices": [{"label": "...", "next": "end"}]},
+    "repent": {"text": "'Every road can be left. The first step is the only one that costs.' He taps the ground beside him. 'Sit. We will begin with your breathing.'",
+      "choices": [{"label": "...", "next": "end"}]}
+  }
+}

@@ -36,13 +36,28 @@
     {"id": "peddler_hei", "name": "Peddler Hei", "title": "Corpse Peddler", "region": "withered_bone_marsh", "pos": [1380, 520], "color": "7a6a58",
      "gender": "male", "surname": "Hei", "given_name": "Wu",
      "realm": "qi_refining", "stage": 7, "age_years": 94, "alignment": -140, "roots": {"water": 52, "wood": 38},
-     "attributes": {"charisma": 12, "fortune": 11}, "cultivates": true, "diligence": 0.4, "dialogue": "peddler_hei", "deed_context": "marsh_captive"}
+     "attributes": {"charisma": 12, "fortune": 11}, "cultivates": true, "diligence": 0.4, "dialogue": "peddler_hei", "deed_context": "marsh_captive"},
+    {"id": "patriarch_lin", "name": "Patriarch Lin", "title": "Founding Patriarch of the Azure Cloud Sect", "region": "azure_peak", "pos": [900, 450], "color": "dfe8f2",
+     "gender": "male", "surname": "Lin", "given_name": "Wuya",
+     "realm": "nascent_soul", "stage": 2, "age_years": 640, "alignment": 520, "roots": {"water": 82, "metal": 58},
+     "attributes": {"comprehension": 19, "spirit": 18, "constitution": 12}, "cultivates": true, "diligence": 0.1, "dialogue": "patriarch_lin"},
+    {"id": "old_monster_gui", "name": "Old Monster Gui", "title": "Ghost-Lantern Old Monster", "region": "withered_bone_marsh", "pos": [420, 520], "color": "5a4a6a",
+     "gender": "male", "surname": "Gui", "given_name": "Deng",
+     "realm": "nascent_soul", "stage": 1, "age_years": 780, "alignment": -640, "roots": {"water": 74, "wood": 51},
+     "attributes": {"spirit": 18, "charisma": 8, "fortune": 12}, "cultivates": true, "diligence": 0.1, "dialogue": "old_monster_gui"},
+    {"id": "alchemist_ye", "name": "Ye Zhuoran", "title": "Cloud-Walking Alchemist", "region": "myriad_peaks_ridge", "pos": [520, 520], "color": "9ac4b0",
+     "gender": "female", "surname": "Ye", "given_name": "Zhuoran",
+     "realm": "nascent_soul", "stage": 0, "age_years": 560, "alignment": 20, "roots": {"wood": 70, "fire": 48, "earth": 35},
+     "attributes": {"comprehension": 18, "fortune": 15, "charisma": 13}, "cultivates": true, "diligence": 0.1, "dialogue": "alchemist_ye"}
   ],
   "errands": [
     {"npc": "elder_mo", "asked_flag": "errand_mo_asked", "done_flag": "errand_mo_done", "text": "Elder Mo asked for 6 Spirit Herbs (the slope above Qingshi Village)."},
     {"npc": "herbalist_lan", "asked_flag": "errand_lan_asked", "done_flag": "errand_lan_done", "text": "Herbalist Lan asked for 5 Qi Condensing Grass (Herb Patch, Misty Forest)."},
     {"npc": "alchemist_hua", "asked_flag": "errand_hua_asked", "done_flag": "errand_hua_done", "text": "Hua Qingyi asked for 4 Qi Gathering Pills you made yourself."},
     {"npc": "hermit_gu", "asked_flag": "errand_gu_asked", "done_flag": "errand_gu_done", "text": "Hermit Gu asked for 3 Cold Iron (the crystal vein, Azure Peak)."},
-    {"npc": "peddler_hei", "asked_flag": "errand_hei_asked", "done_flag": "errand_hei_done", "text": "Peddler Hei asked for 3 Purple Cloud Mushrooms (Corpse-Lily Bog)."}
+    {"npc": "peddler_hei", "asked_flag": "errand_hei_asked", "done_flag": "errand_hei_done", "text": "Peddler Hei asked for 3 Purple Cloud Mushrooms (Corpse-Lily Bog)."},
+    {"npc": "patriarch_lin", "asked_flag": "errand_lin_asked", "done_flag": "errand_lin_done", "text": "Patriarch Lin asked for 3 Ice Soul Flowers (Frost Ledge, Azure Peak)."},
+    {"npc": "old_monster_gui", "asked_flag": "errand_gui_asked", "done_flag": "errand_gui_done", "text": "Old Monster Gui asked for 3 Blood Ginseng (Corpse-Lily Bog, Withered Bone Marsh)."},
+    {"npc": "alchemist_ye", "asked_flag": "errand_ye_asked", "done_flag": "errand_ye_done", "text": "Ye Zhuoran asked for 3 Cloud Mist Orchids (Thunder-Struck Terraces, Myriad Peaks Ridge)."}
   ]
 }
