@@ -91,6 +91,7 @@ static func attempt_breakthrough(c: CharacterData, data: GameData, rng: RandomNu
 	var chance := breakthrough_chance(c, data)
 	var next: RealmDef = data.realms[c.realm_index + 1]
 	c.breakthrough_bonus = 0.0
+	c.breakthrough_pill = ""
 	var success := rng.randf() < chance
 	var injury := ""
 	var trib := {}

@@ -44,3 +44,28 @@ func test_every_pill_names_a_valid_realm() -> void:
 		if fx.has("breakthrough_realm"):
 			assert_true(data().realm_index_of(String(fx["breakthrough_realm"])) >= 1, item["id"])
 	assert_true(data().load_errors.is_empty())
+
+
+func test_herb_bonus_does_not_block_realm_pill() -> void:
+	var c := new_character()
+	c.realm_index = data().realm_index_of("qi_refining")
+	c.add_item("blood_ginseng", 1)
+	c.add_item("foundation_establishment_pill", 2)
+	assert_true(_use(c, "blood_ginseng")["ok"])
+	assert_eq(c.breakthrough_pill, "")
+	assert_true(_use(c, "foundation_establishment_pill")["ok"])
+	assert_eq(c.breakthrough_pill, "foundation_establishment")
+	assert_almost_eq(c.breakthrough_bonus, 0.30)
+	assert_false(_use(c, "foundation_establishment_pill")["ok"])
+	Cultivation.add_qi(c, data(), 1e9)
+	Cultivation.attempt_breakthrough(c, data(), seeded_rng())
+	assert_eq(c.breakthrough_pill, "")
+
+
+func test_breakthrough_pill_round_trips() -> void:
+	var c := new_character()
+	c.breakthrough_pill = "foundation_establishment"
+	assert_eq(CharacterData.from_dict(c.to_dict()).breakthrough_pill, "foundation_establishment")
+	var d := c.to_dict()
+	d.erase("breakthrough_pill")
+	assert_eq(CharacterData.from_dict(d).breakthrough_pill, "")

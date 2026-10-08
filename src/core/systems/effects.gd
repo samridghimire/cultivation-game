@@ -62,7 +62,7 @@ static func _check_breakthrough_realm(c: CharacterData, data: GameData, realm_id
 		var idx := data.realm_index_of(realm_id)
 		var realm_name := data.realms[idx].name if idx >= 0 else realm_id
 		return "This pill is meant for the breakthrough into %s." % realm_name
-	if c.breakthrough_bonus > 0.0:
+	if c.breakthrough_pill != "":
 		return "A breakthrough boost already steadies you; one pill per attempt."
 	return ""
 
@@ -93,6 +93,8 @@ static func apply(c: CharacterData, data: GameData, effects: Dictionary, flags: 
 		notes.append("+%d years of lifespan" % int(effects["extend_lifespan"]))
 	if effects.has("breakthrough_bonus"):
 		c.breakthrough_bonus += float(effects["breakthrough_bonus"])
+		if effects.has("breakthrough_realm"):
+			c.breakthrough_pill = String(effects["breakthrough_realm"])
 		notes.append("Next breakthrough +%d%%" % int(float(effects["breakthrough_bonus"]) * 100))
 	if effects.has("learn_technique") and Techniques.learn(c, data, effects["learn_technique"])["ok"]:
 		notes.append("Learned %s" % data.techniques[effects["learn_technique"]].name)

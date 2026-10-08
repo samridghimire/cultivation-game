@@ -69,6 +69,7 @@ func test_realm_tied_pills_are_only_recommended_when_usable() -> void:
 	var fe_name: String = data().items["foundation_establishment_pill"]["name"]
 	assert_eq(Guidance.breakthrough_items(c, data()), PackedStringArray([fe_name]))
 	c.breakthrough_bonus = 0.25  # one pill already taken
+	c.breakthrough_pill = "foundation_establishment"
 	assert_eq(Guidance.breakthrough_items(c, data()), PackedStringArray())
 	var rows := Guidance.journal(c, data(), {}, 0, c.home_region)
 	assert_false(rows.any(func(r: Dictionary) -> bool: return String(r["text"]).contains(core_name) or String(r["text"]).contains(fe_name)))

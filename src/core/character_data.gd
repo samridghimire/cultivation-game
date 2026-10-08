@@ -43,6 +43,8 @@ var stage := 0
 var qi := 0.0
 ## Bonus added to the next breakthrough attempt, then reset (e.g. from pills).
 var breakthrough_bonus := 0.0
+## Realm id of the breakthrough pill taken for the next attempt, "" if none (herbs don't set it).
+var breakthrough_pill := ""
 var alignment := 0
 var professions: Dictionary = {}  # profession id -> {"rank": int, "xp": float}
 ## Empty = rogue cultivator. Otherwise {"id": String, "rank": int, "contribution": int, "spent": int (optional)}.
@@ -175,6 +177,7 @@ func to_dict() -> Dictionary:
 		"stage": stage,
 		"qi": qi,
 		"breakthrough_bonus": breakthrough_bonus,
+		"breakthrough_pill": breakthrough_pill,
 		"alignment": alignment,
 		"professions": professions.duplicate(true),
 		"sect": sect.duplicate(),
@@ -255,6 +258,7 @@ static func from_dict(d: Dictionary) -> CharacterData:
 	c.stage = int(d.get("stage", 0))
 	c.qi = float(d.get("qi", 0))
 	c.breakthrough_bonus = float(d.get("breakthrough_bonus", 0))
+	c.breakthrough_pill = String(d.get("breakthrough_pill", ""))
 	c.alignment = int(d.get("alignment", 0))
 	var profs: Dictionary = d.get("professions", {})
 	for prof_id in profs:
