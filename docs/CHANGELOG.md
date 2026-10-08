@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-08 [FH-002] Closed-door cultivation ends when your qi reaches a bottleneck, so a long seclusion no longer ages you for nothing.
 - 2026-10-07 [QA-017] Exploit audit test: every deed and repeatable choice encounter is checked for stones and alignment per day; rob_villager and donate_stones are the known offenders until deed cooldowns land.
 - 2026-10-07 [FH-011] A new life begins beside Meditation Rock, and the awakening tells you Elder Mo helps those just starting out.
 - 2026-10-07 [FH-010] Clearer menus: sects say why you can't join, courting options appear only once an NPC likes you, your only artifact anchor can't be released by accident, and fights to the death say so.
