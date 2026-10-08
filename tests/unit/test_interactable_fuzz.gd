@@ -29,7 +29,9 @@ func _clock() -> Node:
 
 
 ## A fresh session for `kind`: "mortal", "disciple" (righteous Qi Refining sect
-## member with money and goods) or "demonic" (Foundation, Blood Lotus).
+## member with money and goods), "demonic" (Foundation, Blood Lotus) or
+## "veteran" (QA-030: Foundation inner disciple, married with two children, an
+## abode, a clan with an estate and a companion beast).
 func _start(kind: String) -> CharacterData:
 	var gs := _gs()
 	var c := CharacterFactory.create("Fuzz %s" % kind, gs.data, seeded_rng(hash(kind)), "female" if kind == "disciple" else "male")
@@ -45,7 +47,9 @@ func _start(kind: String) -> CharacterData:
 			c.add_item(item_id, 2)
 	Professions.add_xp(c, gs.data, "alchemist", 500.0)
 	Techniques.learn(c, gs.data, "iron_fist")
-	if kind == "disciple":
+	if kind == "veteran":
+		_build_veteran(c)
+	elif kind == "disciple":
 		c.realm_index = gs.data.realm_index_of("qi_refining")
 		c.stage = 6
 		c.alignment = 300
@@ -56,6 +60,41 @@ func _start(kind: String) -> CharacterData:
 		c.alignment = -500
 		gs.join_sect("blood_lotus_sect")
 	return c
+
+
+func _build_veteran(c: CharacterData) -> void:
+	var gs := _gs()
+	c.realm_index = gs.data.realm_index_of("foundation_establishment")
+	c.stage = 3
+	c.alignment = 200
+	c.add_item("spirit_stone", 30000)
+	gs.join_sect("azure_cloud_sect")
+	var def: SectDef = gs.data.sects["azure_cloud_sect"]
+	c.sect["rank"] = mini(2, def.ranks.size() - 1)
+	# Abode first (a clan needs a seat), then move the family into its region.
+	var abode_id := "cloud_piercing_grotto"
+	var abode_region := String(Abodes.get_def(gs.data, abode_id)["region"])
+	gs.current_region = abode_region
+	gs.claim_abode(abode_id)
+	var spouse := Npcs.spawn(gs.npcs, gs.data, seeded_rng(77), {"region": abode_region, "gender": "male" if c.gender == "female" else "female", "age_years": 25})
+	var rank := "wife" if c.gender == "male" else "dao_companion"
+	c.spouses.append(spouse.id)
+	c.spouse_ranks[spouse.id] = rank
+	spouse.spouses.append(c.id)
+	spouse.spouse_ranks[c.id] = rank
+	gs.npc_favor[spouse.id] = 100
+	var mother: CharacterData = spouse if c.gender == "male" else c
+	var father: CharacterData = c if c.gender == "male" else spouse
+	for i in 2:
+		Children.give_birth(mother, father, gs.npcs, gs.data, seeded_rng(80 + i), abode_region)
+	for child_id: String in c.children:
+		var child: CharacterData = gs.npcs[child_id]
+		child.age_days = 12 * Calendar.DAYS_PER_YEAR
+	gs.found_clan()
+	for building: Dictionary in gs.data.clan_estate.get("buildings", []):
+		gs.build_clan_building(String(building["id"]))
+	if gs.data.beasts.has("boar"):
+		c.companions.append("boar")
 
 
 func _check_state(context: String) -> void:
@@ -151,6 +190,8 @@ func _fuzz_all_regions(kind: String) -> void:
 	if OS.get_environment("FUZZ_LOG") != "" and not _tree().root.get_node("EventBus").message_posted.is_connected(_log_message):
 		_tree().root.get_node("EventBus").message_posted.connect(_log_message)
 	_start(kind)
+	var bus := _tree().root.get_node("EventBus")
+	bus.message_posted.connect(_check_message)
 	_last_day = _clock().total_days
 	var ids: Array = _gs().data.regions.keys()
 	ids.sort()
@@ -165,6 +206,7 @@ func _fuzz_all_regions(kind: String) -> void:
 	_check_state("%s after save/load" % kind)
 	if OS.get_environment("FUZZ_LOG") != "":
 		print("FUZZ %s calls=%d day=%d" % [kind, _calls, _clock().total_days])
+	bus.message_posted.disconnect(_check_message)
 	_gs().end_session()
 
 
@@ -188,9 +230,21 @@ func test_fuzz_with_hud() -> void:
 	await _tree().process_frame
 
 
+func test_fuzz_veteran_family_head() -> void:
+	await _fuzz_all_regions("veteran")
+	assert_gt(_calls, 80, "the fuzz should reach many options")
+	assert_true(_gs().clan == null or _gs().clan.members.size() >= 1)
+
+
 func test_fuzz_demonic_foundation() -> void:
 	await _fuzz_all_regions("demonic")
 	assert_gt(_calls, 80, "the fuzz should reach many options")
+
+
+## QA-030: no unformatted template or null leaks into the message log.
+func _check_message(text: String, _category: String) -> void:
+	for bad: String in ["<null>", "{", "}", "%s", "%d", "%f", "null", "<Object"]:
+		assert_false(text.contains(bad), "message leaks '%s': %s" % [bad, text])
 
 
 func _log_message(text: String, category: String) -> void:
