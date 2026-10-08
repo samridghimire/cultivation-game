@@ -8,6 +8,7 @@
       "regions": ["misty_forest", "azure_peak", "withered_bone_marsh"],
       "start_text": "A beast tide boils out of the deep wilds of {region}! Hunters and fools rush in.",
       "end_text": "The beast tide in {region} ebbs away into the wilds.",
+      "defence": {"enemy": "iron_back_boar", "effects": {"alignment": 5, "witnessed": true, "items": {"spirit_stone": 60, "iron_essence": 2}}},
       "modifiers": {"encounter_tags": ["beast_tide"], "price_mult": 1.0, "qi_density": 1.0}
     },
     {

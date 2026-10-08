@@ -128,6 +128,7 @@
         {"type": "explore", "display_name": "Beast Ridge", "pos": [700, 200], "size": [170, 100], "color": "3d4b57"},
         {"type": "explore", "anchor_id": "azure_ancient_cave", "display_name": "Ancient Cave", "pos": [1200, 800], "size": [110, 90], "color": "1e2228", "explore_tags": ["ruins"]},
         {"type": "secret_realm", "display_name": "Sword-Scarred Rift", "pos": [380, 680], "size": [90, 80], "color": "6f7fbf"},
+        {"type": "workshop", "display_name": "Hermit Forge", "pos": [1000, 480], "size": [130, 90], "color": "8c6640"},
         {"type": "inheritance", "display_name": "Cloud-Sword Cave", "pos": [1150, 330], "size": [100, 70], "color": "8fa3b8"},
         {"type": "travel", "display_name": "Mountain Path", "pos": [40, 500], "size": [40, 120], "color": "5c4630"}
       ]
@@ -156,6 +157,7 @@
         {"type": "merchant", "display_name": "Corpse Peddler's Skiff", "pos": [1450, 450], "size": [80, 60], "color": "6b5a4a", "stock_tags": ["herb", "ore"]},
         {"type": "inheritance", "display_name": "Corpse Lord's Altar", "pos": [1150, 300], "size": [110, 80], "color": "4f4a5a"},
         {"type": "secret_realm", "display_name": "Sunken Palace Gate", "pos": [800, 650], "size": [90, 80], "color": "4a6a8a"},
+        {"type": "workshop", "display_name": "Bonefire Workbench", "pos": [250, 500], "size": [130, 90], "color": "8c6640"},
         {"type": "travel", "display_name": "Rotting Boardwalk", "pos": [40, 500], "size": [40, 120], "color": "5c4630"}
       ]
     }
@@ -191,6 +193,7 @@
         {"type": "explore", "display_name": "Sundered Peak Trail", "pos": [700, 700], "size": [170, 100], "color": "3d4256"},
         {"type": "explore", "anchor_id": "myriad_ridge_battlefield", "display_name": "Fallen Immortal's Battlefield", "pos": [1200, 760], "size": [110, 90], "color": "262a36", "explore_tags": ["ruins"]},
         {"type": "secret_realm", "display_name": "Skyfall Thunder Pavilion", "pos": [380, 680], "size": [90, 80], "color": "8f8fe0"},
+        {"type": "workshop", "display_name": "Thunder-Scorched Anvil", "pos": [400, 520], "size": [130, 90], "color": "8c6640"},
         {"type": "inheritance", "display_name": "Patriarch's Last Seat", "pos": [1150, 330], "size": [100, 70], "color": "a8a0c8"},
         {"type": "travel", "display_name": "Cloud-Bridge", "pos": [40, 500], "size": [40, 120], "color": "5c4630"}
       ]
