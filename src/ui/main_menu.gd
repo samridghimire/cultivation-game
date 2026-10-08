@@ -13,18 +13,20 @@ var _credits: CreditsScreen
 
 
 func _ready() -> void:
-	var bg := ColorRect.new()
-	bg.color = UIStyle.BG
-	bg.set_anchors_preset(PRESET_FULL_RECT)
-	add_child(bg)
+	add_child(TitleBackdrop.new())
 
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 14)
 	box.alignment = BoxContainer.ALIGNMENT_CENTER
 	var title := UIStyle.label(ProjectSettings.get_setting("application/config/name"), 48, UIStyle.ACCENT)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_font_size_override("font_size", 64)
+	title.add_theme_color_override("font_outline_color", Color(0.02, 0.03, 0.06))
+	title.add_theme_constant_override("outline_size", 10)
 	box.add_child(title)
-	var subtitle := UIStyle.label("Mortal today. Immortal, perhaps, tomorrow.", 18, Color(0.75, 0.75, 0.8))
+	var subtitle := UIStyle.label("Mortal today. Immortal, perhaps, tomorrow.", 18, Color(0.85, 0.87, 0.92))
+	subtitle.add_theme_color_override("font_outline_color", Color(0.02, 0.03, 0.06))
+	subtitle.add_theme_constant_override("outline_size", 6)
 	subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(subtitle)
 	box.add_child(Control.new())
