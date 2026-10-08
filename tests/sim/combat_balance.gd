@@ -15,6 +15,10 @@ extends RefCounted
 ## - no injuries, buffs, pills or forbidden arts.
 
 const TECHNIQUES: Array[String] = ["iron_fist", "stone_skin"]
+## QA-018 veteran profile: technique kinds that fill the loadout, one art each.
+## Last realm index (Soul Formation) the veteran profile and its guard cover.
+const LATE_REALMS := 5
+const LOADOUT_KINDS: Array[String] = ["combat", "body"]
 ## A player at the realm's peak wins less often than this: flagged unbeatable.
 const UNBEATABLE_BELOW := 0.1
 ## A player entering the realm wins at least this often: flagged trivial.
@@ -23,13 +27,45 @@ const TRIVIAL_FROM := 0.99
 const HARD_BELOW := 0.5
 
 
-static func tech_level(data: GameData, realm_index: int) -> int:
+static func tech_level(data: GameData, realm_index: int, tech_ids: Array[String] = TECHNIQUES) -> int:
 	var lvl := 1 + 2 * realm_index
-	for tech_id in TECHNIQUES:
+	for tech_id in tech_ids:
 		var def: TechniqueDef = data.techniques.get(tech_id)
 		if def != null:
 			lvl = mini(lvl, def.max_level)
 	return lvl
+
+
+## The strongest passive-bonus art of `kind` a player at `realm_index` can have: its
+## min_realm is reached, it has no activation (forbidden arts burn lifespan), and
+## its manual exists and is not demonic.
+static func best_technique(data: GameData, realm_index: int, kind: String) -> String:
+	var best := ""
+	var best_score := -1.0
+	for tech_id: String in data.techniques:
+		var def: TechniqueDef = data.techniques[tech_id]
+		if def.kind != kind or not def.activation.is_empty() or data.realm_index_of(def.min_realm) > realm_index:
+			continue
+		var manual: Dictionary = data.items.get(def.manual_item, {})
+		if manual.is_empty() or manual.get("tags", []).has("demonic") or int(manual.get("effects", {}).get("alignment", 0)) < 0 or String(manual.get("description", "")).to_lower().contains("demonic"):
+			continue
+		var score := 0.0
+		for key: String in def.bonuses:
+			score += float(def.bonuses[key]) * (0.2 if key == "max_hp" else 1.0)
+		if score > best_score:
+			best_score = score
+			best = tech_id
+	return best
+
+
+## The techniques a typical player knows at `realm_index`.
+static func loadout(data: GameData, realm_index: int) -> Array[String]:
+	var out: Array[String] = []
+	for kind in LOADOUT_KINDS:
+		var tech_id := best_technique(data, realm_index, kind)
+		if tech_id != "":
+			out.append(tech_id)
+	return out
 
 
 ## The best item for `slot` that a player at `realm_index` can normally buy.
@@ -96,6 +132,18 @@ static func typical_player(data: GameData, realm_index: int, stage: int, talisma
 			if item_id != "":
 				c.add_item(item_id, 1)
 				c.readied_talismans.append(item_id)
+	return c
+
+
+## QA-018: like typical_player but with the best art of each kind in the data for
+## the realm (loadout()) at the matching level, so late realms are not judged
+## with Iron Fist. Optimistic: some arts come only from ruins or secret realms.
+static func veteran_player(data: GameData, realm_index: int, stage: int, talismans: bool = false) -> CharacterData:
+	var c := typical_player(data, realm_index, stage, talismans)
+	c.techniques.clear()
+	var arts := loadout(data, realm_index)
+	for tech_id in arts:
+		c.techniques[tech_id] = {"level": mini(tech_level(data, realm_index, [tech_id]), data.techniques[tech_id].max_level), "xp": 0.0}
 	return c
 
 

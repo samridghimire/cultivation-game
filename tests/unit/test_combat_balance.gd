@@ -78,3 +78,32 @@ func test_same_realm_fights_are_not_foregone() -> void:
 			assert_true(rate >= 0.6 and rate <= 0.95, "%s stage %d: typical player wins %d%% vs a plain same-stage foe" % [data().realms[realm].name, stage, roundi(rate * 100)])
 		var up := Balance.win_rate(Balance.typical_player(data(), realm, peak), data(), Balance.plain_enemy(data(), realm + 1, 0), 60)
 		assert_true(up < 0.1, "%s peak beats the next realm %d%% of the time" % [data().realms[realm].name, roundi(up * 100)])
+
+
+## QA-018: the veteran loadout is derived from data, never demonic or activated,
+## and gets stronger with realm.
+func test_veteran_loadout_is_derived_from_data() -> void:
+	assert_eq(Balance.loadout(data(), 0), ["iron_fist", "stone_skin"] as Array[String])
+	for realm in Balance.LATE_REALMS + 1:
+		var arts := Balance.loadout(data(), realm)
+		assert_eq(arts.size(), 2, "realm %d has a combat and a body art" % realm)
+		for tech_id in arts:
+			var def: TechniqueDef = data().techniques[tech_id]
+			assert_true(def.activation.is_empty(), "%s is not a forbidden art" % tech_id)
+			assert_true(data().realm_index_of(def.min_realm) <= realm, "%s is learnable at realm %d" % [tech_id, realm])
+			assert_false(String(data().items[def.manual_item].get("description", "")).to_lower().contains("demonic"), "%s is not demonic" % tech_id)
+	var v := Balance.veteran_player(data(), 4, 0)
+	var t := Balance.typical_player(data(), 4, 0)
+	assert_true(Combat.stats(v, data())["attack"] >= Combat.stats(t, data())["attack"], "a veteran hits at least as hard")
+
+
+## QA-018: through Soul Formation, no fight the player cannot avoid is unwinnable
+## for a veteran at the peak of the realm where it opens.
+func test_no_forced_fight_is_unbeatable_for_veteran_through_soul_formation() -> void:
+	for a: Dictionary in Balance.appearances(data()):
+		var realm: int = a["realm_index"]
+		if not a["forced"] or realm > Balance.LATE_REALMS:
+			continue
+		var peak := Balance.veteran_player(data(), realm, data().realms[realm].stage_count() - 1)
+		var rate := Balance.win_rate(peak, data(), data().enemies[a["enemy"]], 40)
+		assert_true(rate >= Balance.UNBEATABLE_BELOW, "%s (%s): veteran wins only %d%%" % [a["enemy"], a["source"], roundi(rate * 100)])

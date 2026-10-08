@@ -53,4 +53,13 @@ func _run() -> void:
 			line += "  stage %d: %3d%%" % [stage, roundi(Balance.same_stage_rate(data, realm, stage, samples) * 100)]
 		var up := Balance.win_rate(Balance.typical_player(data, realm, peak), data, Balance.plain_enemy(data, realm + 1, 0), samples)
 		print(line + "   next realm: %3d%%" % roundi(up * 100))
+	print("")
+	print("Veteran player (best art of each kind per realm, QA-018) vs a plain same-stage enemy, and at the peak vs a plain enemy one realm up:")
+	for realm in range(1, mini(Balance.LATE_REALMS + 1, data.realms.size() - 1)):
+		var peak := data.realms[realm].stage_count() - 1
+		var line := "  %-26s" % data.realms[realm].name
+		for stage in [0, peak]:
+			line += "  stage %d: %3d%%" % [stage, roundi(Balance.win_rate(Balance.veteran_player(data, realm, stage), data, Balance.plain_enemy(data, realm, stage), samples) * 100)]
+		var up := Balance.win_rate(Balance.veteran_player(data, realm, peak), data, Balance.plain_enemy(data, realm + 1, 0), samples)
+		print(line + "   next realm: %3d%%   arts: %s" % [roundi(up * 100), ", ".join(Balance.loadout(data, realm))])
 	quit()
