@@ -116,6 +116,15 @@ func test_hud_suffix_and_rumors() -> void:
 	var active: Array = [{"id": "beast_tide", "region": "misty_forest", "start_day": 0, "end_day": 45}]
 	assert_eq(load("res://src/ui/hud.gd").region_event_suffix(d, active, "misty_forest"), "   Beast Tide!")
 	assert_eq(load("res://src/ui/hud.gd").region_event_suffix(d, active, "azure_peak"), "")
+	var hud = load("res://src/ui/hud.gd")
+	var tournament: Array = [{"id": "sect_tournament", "region": "fallen_star_market", "start_day": 0, "end_day": 40}]
+	var cultivator := new_character()
+	cultivator.realm_index = 1
+	var mortal := new_character()
+	mortal.realm_index = 0
+	assert_true(hud.region_event_suffix(d, tournament, "fallen_star_market", cultivator).contains("(you can enter)"), "QR can enter")
+	assert_false(hud.region_event_suffix(d, tournament, "fallen_star_market", mortal).contains("(you can enter)"), "mortal cannot")
+	assert_false(hud.region_event_suffix(d, tournament, "fallen_star_market").contains("(you can enter)"), "no character, no hint")
 	var lines := WorldEvents.rumors(d, active, PackedStringArray(["extra"]), 15)
 	assert_eq(lines.size(), 2)
 	assert_true(lines[0].begins_with("Rumor has it the Beast Tide in %s will last another" % Exploration.region_name(d, "misty_forest")), lines[0])
@@ -281,3 +290,22 @@ func test_validation_catches_bad_joinable_events() -> void:
 	var d := GameData.load_from_dir()
 	d.world_events["bad"] = {"id": "bad", "monthly_chance": 0.1, "min_days": 1, "max_days": 1, "regions": ["qingshi_village"], "tournament": {"rounds": 0, "prize": {"items": {"nope": 1}, "manuals": ["nope2"]}}, "defence": {"enemy": "nobody", "effects": {}}}
 	assert_eq(WorldEvents.validate(d).size(), 5, ", ".join(WorldEvents.validate(d)))
+
+
+## WU-005: joinable event entries show how dangerous the rivals are.
+func test_event_options_show_danger() -> void:
+	var gs := _root().get_node("GameState")
+	var c := new_character()
+	gs.start_session(c)
+	c.realm_index = 1
+	gs.current_region = "fallen_star_market"
+	var day: int = _root().get_node("GameClock").total_days
+	gs.world_events = [{"id": "sect_tournament", "region": "fallen_star_market", "start_day": day, "end_day": day + 40}]
+	var labels: Array = load("res://src/world/interactables/explore_site.gd").event_options().map(func(o: Dictionary) -> String: return o["label"])
+	assert_eq(labels.size(), 1)
+	assert_true(String(labels[0]).begins_with("Enter the"), labels[0])
+	var danger := false
+	for word in ["Weak", "Even", "Dangerous", "Deadly"]:
+		danger = danger or String(labels[0]).contains("(%s)" % word)
+	assert_true(danger, "label shows a danger word: %s" % labels[0])
+	gs.end_session()

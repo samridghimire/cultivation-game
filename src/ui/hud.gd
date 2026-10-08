@@ -338,11 +338,17 @@ func _build_death_screen() -> void:
 	add_child(_death_screen)
 
 
-## "   Beast Tide!" for each world event under way in `region_id` (LW-001b).
-static func region_event_suffix(data: GameData, events: Array, region_id: String) -> String:
+## "   Beast Tide!" for each world event under way in `region_id` (LW-001b), plus
+## " (you can enter)" when `c` can take part in one (WU-005).
+static func region_event_suffix(data: GameData, events: Array, region_id: String, c: CharacterData = null) -> String:
 	var text := ""
 	for instance in WorldEvents.active_in(events, region_id):
 		text += "   %s!" % WorldEvents.event_name(data, instance["id"])
+		if c != null:
+			for kind in ["tournament", "defence"]:
+				if WorldEvents.def_of(data, instance["id"]).has(kind) and WorldEvents.check_join(data, events, c, instance["id"], kind, region_id) == "":
+					text += " (you can enter)"
+					break
 	return text
 
 
@@ -371,7 +377,7 @@ func _refresh() -> void:
 	]))
 	var density := GameState.region_qi_density()
 	_status.text += "\n%s   (Qi x%s)" % [Exploration.region_name(data, GameState.current_region), String.num(density, 2)]
-	_status.text += region_event_suffix(data, GameState.world_events, GameState.current_region)
+	_status.text += region_event_suffix(data, GameState.world_events, GameState.current_region, p)
 	if SecretRealms.open_in_region(data, GameState.current_region, GameClock.total_days):
 		_status.text += "   (Secret realm open)"
 	_qi_bar.max_value = maxf(Cultivation.qi_required(p, data), 1.0)
