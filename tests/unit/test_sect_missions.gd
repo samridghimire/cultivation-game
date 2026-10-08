@@ -48,7 +48,10 @@ func test_mission_requirements() -> void:
 	c.sect["rank"] = 1
 	assert_true(Sects.check_mission(c, data(), "purge_demonic_cultivator") != "", "realm too low for a Foundation foe")
 	c.realm_index = 2
+	assert_true(Sects.check_mission(c, data(), "purge_demonic_cultivator") != "", "stage 0 Foundation is too raw for the demonic cultivator (QA-007g)")
+	c.stage = 1
 	assert_eq(Sects.check_mission(c, data(), "purge_demonic_cultivator"), "")
+	c.stage = 0
 	c.realm_index = 0
 	assert_true(Sects.check_mission(c, data(), "cull_mist_wolves") != "", "realm too low")
 	assert_true(Sects.check_mission(c, data(), "no_such_mission") != "")
