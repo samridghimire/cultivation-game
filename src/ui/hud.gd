@@ -144,7 +144,7 @@ func _ready() -> void:
 	EventBus.region_changed.connect(func(_id): _refresh())
 	EventBus.region_changed.connect(_on_arrival)
 	EventBus.message_posted.connect(_on_message)
-	Settings.changed.connect(func(key: String, _v): if key == "show_hints": _refresh())
+	Settings.changed.connect(func(key: String, _v): if key == "hud_hints": _refresh())
 	EventBus.interaction_target_changed.connect(_on_target_changed)
 	InputConfig.controls_changed.connect(_refresh_key_hints)
 	EventBus.interaction_menu_requested.connect(_on_menu_requested)
@@ -387,8 +387,11 @@ func _refresh() -> void:
 	_qi_bar.modulate = UIStyle.ACCENT if _bottleneck.visible else Color.WHITE
 	_injuries.visible = Injuries.has_any(p)
 	_injuries.text = "Injured: " + ", ".join(Injuries.describe(p, data))
-	var hints := Guidance.hints(p, data, GameState.hint_density(), 2, GameState.npcs, GameState.world_flags, GameState.current_region)
-	_hint.visible = bool(Settings.get_value("show_hints")) and not hints.is_empty()
+	var hint_count := int(Settings.get_value("hud_hints"))
+	var hints: PackedStringArray = []
+	if hint_count > 0:
+		hints = Guidance.hints(p, data, GameState.hint_density(), hint_count, GameState.npcs, GameState.world_flags, GameState.current_region)
+	_hint.visible = not hints.is_empty()
 	_hint.text = "\n".join(Array(hints).map(func(h: String) -> String: return "> " + h))
 
 

@@ -17,7 +17,8 @@ const DEFAULTS := {
 	"master_volume": 0.8,
 	"music_volume": 0.7,
 	"sfx_volume": 0.8,
-	"show_hints": true,
+	# How many next-step hints the HUD shows, 0-3 (0 hides the panel).
+	"hud_hints": 2,
 	# Skip the time-skip overlay after meditation, travel... (UI-010).
 	"fast_time_skips": false,
 	# Silent autosave on travel, breakthrough, each month and window close (REL-001).
@@ -62,8 +63,8 @@ static func sanitize(key: String, value: Variant) -> Variant:
 			return str(value) if WINDOW_MODES.has(str(value)) else DEFAULTS["window_mode"]
 		"ui_scale":
 			return clampf(float(value), UI_SCALE_RANGE.x, UI_SCALE_RANGE.y)
-		"show_hints":
-			return value if value is bool else DEFAULTS["show_hints"]
+		"hud_hints":
+			return clampi(int(value), 0, 3) if value is int or value is float else DEFAULTS["hud_hints"]
 		"autosave":
 			return value if value is bool else DEFAULTS["autosave"]
 		"fast_time_skips":
@@ -79,6 +80,9 @@ func load_settings() -> void:
 		return
 	for key in DEFAULTS:
 		_values[key] = sanitize(key, cfg.get_value(SECTION, key, DEFAULTS[key]))
+	# Older settings files had a show_hints checkbox.
+	if not cfg.has_section_key(SECTION, "hud_hints") and cfg.get_value(SECTION, "show_hints", true) == false:
+		_values["hud_hints"] = 0
 
 
 func save_settings() -> void:

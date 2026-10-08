@@ -24,8 +24,9 @@ func test_sanitize_clamps_and_rejects_bad_values() -> void:
 	assert_almost_eq(SettingsScript.sanitize("ui_scale", 0.1), SettingsScript.UI_SCALE_RANGE.x)
 	assert_almost_eq(SettingsScript.sanitize("sfx_volume", -1.0), 0.0)
 	assert_almost_eq(SettingsScript.sanitize("music_volume", 0.4), 0.4)
-	assert_eq(SettingsScript.sanitize("show_hints", false), false)
-	assert_eq(SettingsScript.sanitize("show_hints", "yes"), true)
+	assert_eq(SettingsScript.sanitize("hud_hints", 9), 3)
+	assert_eq(SettingsScript.sanitize("hud_hints", -1), 0)
+	assert_eq(SettingsScript.sanitize("hud_hints", "many"), 2)
 
 
 func test_missing_file_gives_defaults() -> void:
@@ -66,3 +67,23 @@ func test_slider_labels() -> void:
 	assert_eq(SettingsScreen.format_value("master_volume", 0.0), "Off")
 	assert_eq(SettingsScreen.format_value("master_volume", 0.8), "80%")
 	assert_eq(SettingsScreen.format_value("ui_scale", 1.25), "125%")
+
+
+## WU-014: the hint count round-trips, and a legacy show_hints=false means 0.
+func test_hud_hints_round_trip_and_legacy() -> void:
+	var s := _fresh()
+	assert_eq(s.get_value("hud_hints"), 2)
+	s._values["hud_hints"] = 3
+	s.save_settings()
+	var t := _fresh()
+	t.load_settings()
+	assert_eq(t.get_value("hud_hints"), 3)
+	t.free()
+	_cleanup(s)
+	var cfg := ConfigFile.new()
+	cfg.set_value(SettingsScript.SECTION, "show_hints", false)
+	cfg.save(TEST_PATH)
+	var u := _fresh()
+	u.load_settings()
+	assert_eq(u.get_value("hud_hints"), 0)
+	_cleanup(u)

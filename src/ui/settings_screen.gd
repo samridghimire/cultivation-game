@@ -16,7 +16,7 @@ const SLIDERS := [
 ]
 
 var _fullscreen: CheckButton
-var _hints: CheckButton
+var _hints: OptionButton
 var _autosave: CheckButton
 var _fast_skips: CheckButton
 var _sliders: Dictionary = {}  # setting key -> HSlider
@@ -49,11 +49,16 @@ func _init() -> void:
 	_fullscreen.add_theme_font_size_override("font_size", 18)
 	_fullscreen.toggled.connect(func(on: bool): Settings.set_value("window_mode", "fullscreen" if on else "windowed"))
 	box.add_child(_fullscreen)
-	_hints = CheckButton.new()
-	_hints.text = "Show next-step hint on the HUD"
+	var hints_row := HBoxContainer.new()
+	hints_row.add_theme_constant_override("separation", 12)
+	hints_row.add_child(UIStyle.label("HUD hints", 18))
+	_hints = OptionButton.new()
 	_hints.add_theme_font_size_override("font_size", 18)
-	_hints.toggled.connect(func(on: bool): Settings.set_value("show_hints", on))
-	box.add_child(_hints)
+	for n in 4:
+		_hints.add_item("Off" if n == 0 else str(n), n)
+	_hints.item_selected.connect(func(i: int): Settings.set_value("hud_hints", i))
+	hints_row.add_child(_hints)
+	box.add_child(hints_row)
 	_autosave = CheckButton.new()
 	_autosave.text = "Autosave (travel, breakthroughs, monthly)"
 	_autosave.add_theme_font_size_override("font_size", 18)
@@ -261,7 +266,7 @@ static func format_value(key: String, value: float) -> String:
 
 func _sync() -> void:
 	_fullscreen.set_pressed_no_signal(Settings.get_value("window_mode") == "fullscreen")
-	_hints.set_pressed_no_signal(Settings.get_value("show_hints"))
+	_hints.select(int(Settings.get_value("hud_hints")))
 	_autosave.set_pressed_no_signal(Settings.get_value("autosave"))
 	_fast_skips.set_pressed_no_signal(Settings.get_value("fast_time_skips"))
 	for key in _sliders:
