@@ -37,3 +37,22 @@ func test_main_menu_opens_credits_with_focus_and_closes() -> void:
 	assert_false(credits.visible, "ui_cancel closes")
 	assert_true(menu._menu.visible)
 	menu.queue_free()
+
+
+func test_credits_include_third_party_notices() -> void:
+	assert_true(CreditsScreen.credits_text().contains("FreeType"))
+
+
+func test_credits_scroll_with_stick() -> void:
+	var credits := CreditsScreen.new()
+	_tree().root.add_child(credits)
+	credits.open()
+	await _tree().process_frame
+	await _tree().process_frame
+	var scroll: ScrollContainer = credits._scroll
+	assert_eq(scroll.scroll_vertical, 0)
+	Input.action_press("scroll_down", 1.0)
+	credits._process(0.1)
+	Input.action_release("scroll_down")
+	assert_true(scroll.scroll_vertical > 0, "scrolled down")
+	credits.queue_free()

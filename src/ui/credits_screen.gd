@@ -6,10 +6,13 @@ extends PanelContainer
 
 signal closed
 
+const SCROLL_SPEED := 900.0
+const DIM := Color(0.6, 0.6, 0.6)
 const DATA_PATH := "res://data/credits.json"
 
 var _body: RichTextLabel
 var _back: Button
+var _scroll: ScrollContainer
 
 
 func _init() -> void:
@@ -22,16 +25,17 @@ func _init() -> void:
 	box.add_theme_constant_override("separation", 10)
 	add_child(box)
 	box.add_child(UIStyle.label("Credits", 24, UIStyle.ACCENT))
-	var scroll := ScrollContainer.new()
-	scroll.custom_minimum_size = Vector2(860, 480)
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	box.add_child(scroll)
+	_scroll = ScrollContainer.new()
+	_scroll.custom_minimum_size = Vector2(860, 480)
+	_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	box.add_child(_scroll)
 	_body = RichTextLabel.new()
 	_body.fit_content = true
 	_body.scroll_active = false
 	_body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_body.add_theme_font_size_override("normal_font_size", 16)
-	scroll.add_child(_body)
+	_scroll.add_child(_body)
+	box.add_child(UIStyle.label("Right stick / PgUp, PgDn: scroll    B / Esc: back", 14, DIM))
 	_back = UIStyle.button("Back", close)
 	box.add_child(_back)
 
@@ -51,7 +55,49 @@ static func credits_text() -> String:
 	lines.append("")
 	lines.append("Godot Engine license:")
 	lines.append(Engine.get_license_text())
+	lines.append_array(third_party_notices())
 	return "\n".join(lines)
+
+
+## Godot's bundled third-party components (FreeType, ENet, mbedTLS...) with their
+## licenses, as its "Complying with licenses" page requires.
+static func third_party_notices() -> PackedStringArray:
+	var lines := PackedStringArray()
+	lines.append("")
+	lines.append("Third-party components bundled with Godot:")
+	var used := {}
+	for comp: Dictionary in Engine.get_copyright_info():
+		var licenses := {}
+		var holders := PackedStringArray()
+		for part: Dictionary in comp.get("parts", []):
+			licenses[str(part.get("license", "?"))] = true
+			for c: String in part.get("copyright", []):
+				if not holders.has(c):
+					holders.append(c)
+		for l: String in licenses:
+			used[l] = true
+		lines.append("")
+		lines.append("%s (%s)" % [comp.get("name", "?"), ", ".join(PackedStringArray(licenses.keys()))])
+		for h in holders:
+			lines.append("  (c) " + h)
+	var texts: Dictionary = Engine.get_license_info()
+	lines.append("")
+	lines.append("License texts:")
+	for l: String in used:
+		for name: String in l.split(" and "):
+			if texts.has(name.strip_edges()):
+				lines.append("")
+				lines.append(name.strip_edges())
+				lines.append(str(texts[name.strip_edges()]))
+	return lines
+
+
+func _process(delta: float) -> void:
+	if not visible:
+		return
+	var dir := Input.get_axis("scroll_up", "scroll_down")
+	if dir != 0.0:
+		_scroll.scroll_vertical += int(dir * SCROLL_SPEED * delta)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -62,6 +108,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func open() -> void:
 	_body.text = credits_text()
+	_scroll.scroll_vertical = 0
 	visible = true
 	_back.grab_focus.call_deferred()
 
