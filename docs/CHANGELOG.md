@@ -2,6 +2,20 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-08 [QA-031] A 50-year save/load soak test; world events and the pool of marriageable NPCs no longer change when you save and load.
+- 2026-10-08 [WU-021] A tool that screenshots every screen; modal panels are opaque so the HUD no longer bleeds through.
+- 2026-10-08 [C-015] Fairer forced fights: rogue and stone-ape missions, the city enforcer and the Blood Merchant Vault trial now sit near 60-90% where they appear.
+- 2026-10-08 [WU-026] Every HUD screen fits at 115% UI scale; long shop names are clipped.
+- 2026-10-08 [GUIDE-005] A warning when your cultivation method is outgrown, naming a better method or where to find one.
+- 2026-10-08 [MS-004] Veterans get credit for secret realm floors and inheritances cleared before those milestones existed.
+- 2026-10-08 [GUIDE-004] The journal lists your household (children to train, garden plots, companions, pregnancies) and joinable events in other regions.
+- 2026-10-08 [WU-025] Loading a save shows "where you left off" on the arrival card.
+- 2026-10-08 [WU-023] NPC names no longer overlap place labels.
+- 2026-10-08 [NS-002b] Flawless Soul Infant and Spirit Severing pills; the Soul Formation pill recipe in the Chaos Alchemist's furnace.
+- 2026-10-08 [NS-004] Three Nascent Soul people (Patriarch Lin, Old Monster Gui, alchemist Ye Zhuoran) with favor rewards and errands.
+- 2026-10-08 [WU-022] Gamepad players can read why an option is disabled.
+- 2026-10-08 [RECAP-001] Loading a save posts a short "where you left off" recap.
+- 2026-10-08 [GUIDE-006] A hint when a reachable meditation spot gathers qi much faster than where you are.
 - 2026-10-08 [REL-005] Export presets for Windows and Linux, and tools/export.sh to build both.
 - 2026-10-08 [WU-016] The character sheet has an Adventures section: secret realm floors and inheritance trials you have cleared.
 - 2026-10-08 [WU-015] The journal opens with the gamepad's left trigger; the key bar shows LT/RT.

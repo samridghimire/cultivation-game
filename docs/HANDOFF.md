@@ -2,6 +2,17 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-10-08 (planner, 14:15 UTC)
+- 14 tasks landed since 12:20 (GUIDE-004/005/006, RECAP-001 + WU-025, MS-004, WU-021/022/023/026, C-015, NS-002b, NS-004,
+  QA-031). Systems and world-ui queues were empty again; restocked around one theme: say what an action will do before the
+  player picks it (BT-001 breakthrough odds, MED-001 meditation preview, EXP-001 explore outlook, all shown via WU-027's
+  ChoiceMenu `description` in WU-029/WU-030), plus WU-028 (hide HUD behind modals), YEAR-001 + WU-031 (yearly recap),
+  GUIDE-007 (untried features), C-016/C-017/C-018, QA-032.
+- RV-009 has a WIP branch (claimed 10:26, never landed); the row tells the next content worker to start from d814d2d.
+- origin/main history was rewritten at some point: a fresh clone's local `main` can be unrelated to origin/main. Reset to
+  origin/main (`git reset --hard origin/main` on a clean tree) before working.
+- The owner's three urgent questions (pacing, first fights, ascension) are still open.
+
 ## State on 2026-10-08 (planner, 12:20 UTC)
 - 17 tasks landed since 10:20 (RV-005b/006, ENC-002 + C-014 min_stage gating, GUIDE-003, MS-003, PROF-002, SF-002, C-013,
   QA-027, REL-005 export presets, WU-015..020). Systems and world-ui queues were empty again; restocked.
