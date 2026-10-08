@@ -179,8 +179,67 @@ static func appearances(data: GameData) -> Array[Dictionary]:
 		if String(mission.get("enemy", "")) == "":
 			continue
 		out.append({"enemy": String(mission["enemy"]), "source": "mission " + mission_id, "realm_index": maxi(0, data.realm_index_of(String(mission.get("min_realm", "mortal")))), "forced": true})
+	_add_secret_realm_guardians(data, out)
+	_add_inheritance_trials(data, out)
+	_add_world_event_foes(data, out)
+	_add_sect_trials(data, out)
 	out.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return [a["realm_index"], a["enemy"], a["source"]] < [b["realm_index"], b["enemy"], b["source"]])
 	return out
+
+
+## QA-027: secret realm floor guardians, rated at the realm's min_realm (or its
+## max_realm when it has none). "optional": the player chooses to enter and a
+## lost fight only expels them, so the beatable-at-the-peak guard skips them.
+static func _add_secret_realm_guardians(data: GameData, out: Array[Dictionary]) -> void:
+	for realm_id: String in data.secret_realms:
+		var def: Dictionary = data.secret_realms[realm_id]
+		var realm := maxi(0, data.realm_index_of(String(def.get("min_realm", def.get("max_realm", "mortal")))))
+		var floor_no := 0
+		for floor_def: Dictionary in def.get("floors", []):
+			floor_no += 1
+			var guardian := String(floor_def.get("guardian", ""))
+			if guardian != "":
+				out.append({"enemy": guardian, "source": "realm %s floor %d" % [realm_id, floor_no], "realm_index": realm, "forced": true, "optional": true})
+
+
+## QA-027: inheritance trial fights, rated at the highest realm any stage of the
+## inheritance requires. Trials never kill (Inheritances.stage_enemy).
+static func _add_inheritance_trials(data: GameData, out: Array[Dictionary]) -> void:
+	for id: String in data.inheritances:
+		var def: Dictionary = data.inheritances[id]
+		var realm := 0
+		for stage: Dictionary in def.get("stages", []):
+			if String(stage.get("test", "")) == "realm":
+				realm = maxi(realm, data.realm_index_of(String(stage.get("min_realm", "mortal"))))
+		var stage_no := 0
+		for stage: Dictionary in def.get("stages", []):
+			stage_no += 1
+			if String(stage.get("test", "")) == "fight" and data.enemies.has(String(stage.get("enemy", ""))):
+				out.append({"enemy": String(stage["enemy"]), "source": "trial %s stage %d" % [id, stage_no], "realm_index": realm, "forced": true})
+
+
+## QA-027: world event defence foes. WorldEvents.opponent() rebuilds them at the
+## player's own realm and stage, so they are rated "scaled" from Qi Refining on
+## (the realm a player may join at).
+static func _add_world_event_foes(data: GameData, out: Array[Dictionary]) -> void:
+	for event_id: String in data.world_events:
+		var def: Dictionary = data.world_events[event_id]
+		if def.has("defence") and data.enemies.has(String(def["defence"].get("enemy", ""))):
+			out.append({"enemy": String(def["defence"]["enemy"]), "source": "defence " + event_id, "realm_index": 1, "forced": true, "scaled": true})
+
+
+## QA-027: sect rank trials (sparring matches), rated at the rank's min_realm, or
+## at the foe's own realm when the rank has none.
+static func _add_sect_trials(data: GameData, out: Array[Dictionary]) -> void:
+	for sect_id: String in data.sects:
+		var rank_no := 0
+		for rank: Dictionary in (data.sects[sect_id] as SectDef).ranks:
+			rank_no += 1
+			var enemy_id := String(rank.get("trial", ""))
+			if enemy_id == "" or not data.enemies.has(enemy_id):
+				continue
+			var realm := data.realm_index_of(String(rank.get("min_realm", data.enemies[enemy_id].get("realm", "mortal"))))
+			out.append({"enemy": enemy_id, "source": "trial %s rank %d" % [sect_id, rank_no], "realm_index": maxi(0, realm), "forced": true})
 
 
 ## Win rates at the first realm an appearance allows: a typical player entering
@@ -190,12 +249,24 @@ static func rate(data: GameData, appearance: Dictionary, samples: int) -> Dictio
 	var enemy: Dictionary = data.enemies.get(appearance["enemy"], {})
 	var realm: int = appearance["realm_index"]
 	var peak_stage := data.realms[realm].stage_count() - 1
-	var entry := win_rate(typical_player(data, realm, 0), data, enemy, samples)
-	var peak := win_rate(typical_player(data, realm, peak_stage), data, enemy, samples)
-	var talisman := win_rate(typical_player(data, realm, 0, true), data, enemy, samples)
-	var bare := win_rate(bare_player(data, realm, 0), data, enemy, samples)
-	var veteran := win_rate(veteran_player(data, realm, 0), data, enemy, samples)
+	var scaled: bool = appearance.get("scaled", false)
+	var entry := win_rate(typical_player(data, realm, 0), data, _scaled(data, enemy, realm, 0, scaled), samples)
+	var peak := win_rate(typical_player(data, realm, peak_stage), data, _scaled(data, enemy, realm, peak_stage, scaled), samples)
+	var talisman := win_rate(typical_player(data, realm, 0, true), data, _scaled(data, enemy, realm, 0, scaled), samples)
+	var bare := win_rate(bare_player(data, realm, 0), data, _scaled(data, enemy, realm, 0, scaled), samples)
+	var veteran := win_rate(veteran_player(data, realm, 0), data, _scaled(data, enemy, realm, 0, scaled), samples)
 	return {"entry": entry, "veteran": veteran, "peak": peak, "talisman": talisman, "bare": bare, "verdict": verdict(entry, peak)}
+
+
+## `enemy` at the player's realm and stage, like WorldEvents.opponent() does.
+static func _scaled(data: GameData, enemy: Dictionary, realm: int, stage: int, scaled: bool) -> Dictionary:
+	if not scaled:
+		return enemy
+	var out := enemy.duplicate(true)
+	out["realm"] = data.realms[realm].id
+	out["stage"] = stage
+	out["lethal"] = false
+	return out
 
 
 ## A plain enemy of `realm_index`/`stage`: realm power and enemies.json

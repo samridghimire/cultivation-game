@@ -36,6 +36,38 @@ func test_appearances_cover_encounters_and_missions() -> void:
 	assert_false(sources["encounter forest_wolf"]["forced"], "a lethal Deadly foe is evaded")
 
 
+## QA-027: every fight source is in the sim: secret realm floors, inheritance
+## trials, world event defences and sect rank trials, not only encounters and missions.
+func test_appearances_cover_every_enemy() -> void:
+	var seen := {}
+	var kinds := {}
+	for a: Dictionary in Balance.appearances(data()):
+		seen[a["enemy"]] = true
+		kinds[String(a["source"]).split(" ")[0]] = true
+	for kind in ["encounter", "choice", "mission", "realm", "trial", "defence"]:
+		assert_true(kinds.has(kind), "no %s fights in appearances()" % kind)
+	for enemy_id: String in data().enemies:
+		assert_true(seen.has(enemy_id), "%s never appears in a fight source; add it to appearances() or remove it" % enemy_id)
+
+
+## QA-027: secret realm guardians are optional (a loss only expels you), but a
+## typical player at the peak of the realm's top allowed realm can beat each one.
+func test_secret_realm_guardians_are_beatable_at_the_top_of_their_range() -> void:
+	var checked := 0
+	for realm_id: String in data().secret_realms:
+		var def: Dictionary = data().secret_realms[realm_id]
+		var top := data().realm_index_of(String(def.get("max_realm", def.get("min_realm", "mortal"))))
+		var peak := Balance.typical_player(data(), top, data().realms[top].stage_count() - 1)
+		for floor_def: Dictionary in def.get("floors", []):
+			var guardian := String(floor_def.get("guardian", ""))
+			if guardian == "":
+				continue
+			checked += 1
+			var rate := Balance.win_rate(peak, data(), data().enemies[guardian], 40)
+			assert_true(rate >= Balance.UNBEATABLE_BELOW, "%s (%s) wins only %d%% even at the top of the range" % [guardian, realm_id, roundi(rate * 100)])
+	assert_true(checked > 0)
+
+
 func test_verdicts() -> void:
 	assert_eq(Balance.verdict(0.0, 0.05), "unbeatable")
 	assert_eq(Balance.verdict(1.0, 1.0), "trivial")
@@ -47,7 +79,7 @@ func test_verdicts() -> void:
 ## so a typical player at the peak of the realm where it opens must be able to win.
 func test_no_forced_fight_is_unbeatable_where_it_appears() -> void:
 	for a: Dictionary in Balance.appearances(data()):
-		if not a["forced"]:
+		if not a["forced"] or a.get("optional", false):
 			continue
 		var enemy: Dictionary = data().enemies[a["enemy"]]
 		var realm: int = a["realm_index"]
@@ -102,7 +134,7 @@ func test_veteran_loadout_is_derived_from_data() -> void:
 func test_no_forced_fight_is_unbeatable_for_veteran_through_soul_formation() -> void:
 	for a: Dictionary in Balance.appearances(data()):
 		var realm: int = a["realm_index"]
-		if not a["forced"] or realm > Balance.LATE_REALMS:
+		if not a["forced"] or a.get("optional", false) or realm > Balance.LATE_REALMS:
 			continue
 		var peak := Balance.veteran_player(data(), realm, data().realms[realm].stage_count() - 1)
 		var rate := Balance.win_rate(peak, data(), data().enemies[a["enemy"]], 40)
