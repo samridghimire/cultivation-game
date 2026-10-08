@@ -2293,3 +2293,4 @@ func _kill(cause: String) -> void:
 	player.cause_of_death = cause
 	EventBus.post(cause, "danger")
 	EventBus.player_died.emit(cause)
+	SaveManager.record_final_death()

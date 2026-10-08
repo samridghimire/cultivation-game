@@ -61,3 +61,18 @@ func test_travel_autosaves_and_loads() -> void:
 		assert_true(saves.load_game("autosave"))
 		assert_eq(gs.current_region, target)
 	_cleanup(gs, saves)
+
+
+func test_final_death_overwrites_saves_and_blocks_loading() -> void:
+	var s := _setup()
+	var gs: Node = s[0]
+	var saves: Node = s[1]
+	assert_true(saves.save_game("_test_final"))
+	assert_true(saves.autosave())
+	gs._kill("Test death.")
+	for slot in ["_test_final", "autosave"]:
+		assert_false(bool(saves.read_meta(slot).get("alive", true)), slot + " records the fall")
+		assert_false(saves.load_game(slot), slot + " refuses to load")
+	assert_true(LoadScreen.describe_slot(saves.read_meta("_test_final")).contains("fallen at age"))
+	saves.delete_save("_test_final")
+	_cleanup(gs, saves)

@@ -12,6 +12,8 @@ const AUTOSAVE_SLOT := "autosave"
 
 ## GameClock.total_days of the last autosave; -1 = none yet this run.
 var _last_autosave_day := -1
+## The slot last saved to or loaded from; a final death overwrites it (REL-002).
+var current_slot := ""
 
 
 func save_path(slot: String) -> String:
@@ -71,6 +73,14 @@ func most_recent_slot() -> String:
 	return "" if slots.is_empty() else String(slots[0]["slot"])
 
 
+## The newest save with a living character, or "" (what Continue loads).
+func most_recent_living_slot() -> String:
+	for meta in list_slots():
+		if bool(meta.get("alive", true)):
+			return String(meta["slot"])
+	return ""
+
+
 ## First unused name of the form "slotN", for a "New save" button.
 func next_free_slot() -> String:
 	var n := 1
@@ -102,6 +112,7 @@ func save_game(slot: String = DEFAULT_SLOT) -> bool:
 		push_error("Could not write save %s: %s" % [slot, error_string(FileAccess.get_open_error())])
 		return false
 	file.store_string(JSON.stringify(payload, "\t"))
+	current_slot = slot
 	return true
 
 
@@ -115,10 +126,35 @@ func autosave(force: bool = false) -> bool:
 		return false
 	if not force and _last_autosave_day == GameClock.total_days:
 		return false
-	if not save_game(AUTOSAVE_SLOT):
+	var keep := current_slot
+	var saved := save_game(AUTOSAVE_SLOT)
+	current_slot = keep
+	if not saved:
 		return false
 	_last_autosave_day = GameClock.total_days
 	return true
+
+
+## The player died for good: overwrite the slot being played (and the autosave,
+## if there is one) with the dead character, so reloading can't undo the death.
+func record_final_death() -> void:
+	if not GameState.has_session() or GameState.player.alive:
+		return
+	var slots: Array[String] = []
+	if current_slot != "":
+		slots.append(current_slot)
+	if has_save(AUTOSAVE_SLOT) and not slots.has(AUTOSAVE_SLOT):
+		slots.append(AUTOSAVE_SLOT)
+	var keep := current_slot
+	for slot in slots:
+		save_game(slot)
+	current_slot = keep
+
+
+## Whether the slot holds a living character (a fallen one can't be loaded).
+func is_loadable(slot: String) -> bool:
+	var meta := read_meta(slot)
+	return not meta.is_empty() and bool(meta.get("alive", true))
 
 
 func load_game(slot: String = DEFAULT_SLOT) -> bool:
@@ -128,8 +164,11 @@ func load_game(slot: String = DEFAULT_SLOT) -> bool:
 	if not parsed is Dictionary:
 		push_error("Save %s is corrupt" % slot)
 		return false
+	if not is_loadable(slot):
+		return false
 	var payload := _migrate(parsed)
 	GameState.load_save_dict(payload.get("game", {}))
+	current_slot = slot
 	return true
 
 

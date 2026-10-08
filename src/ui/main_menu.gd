@@ -31,7 +31,7 @@ func _ready() -> void:
 	var new_game := UIStyle.button("New Game", func(): get_tree().change_scene_to_file(CHARACTER_CREATION))
 	box.add_child(new_game)
 	var continue_button := UIStyle.button("Continue", _continue)
-	continue_button.disabled = SaveManager.most_recent_slot() == ""
+	continue_button.disabled = SaveManager.most_recent_living_slot() == ""
 	box.add_child(continue_button)
 	var load_button := UIStyle.button("Load Game", _open_load)
 	load_button.disabled = SaveManager.list_slots().is_empty()
@@ -91,4 +91,4 @@ func _load_slot(slot: String) -> void:
 
 
 func _continue() -> void:
-	_load_slot(SaveManager.most_recent_slot())
+	_load_slot(SaveManager.most_recent_living_slot())
