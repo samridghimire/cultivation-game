@@ -700,3 +700,15 @@ func test_sell_all_pays_sum_with_one_message() -> void:
 	assert_eq(stones, expected)
 	assert_eq(c.item_count("spirit_stone"), before + expected)
 	assert_eq(c.item_count("spirit_herb"), 0)
+func test_unlock_notice_is_posted_once() -> void:
+	var gs := _game_state()
+	var c := _start()
+	c.realm_index = 1
+	gs.world_flags.erase("notice_body_tempering")
+	var before := EventBus.posted_count
+	gs.check_unlock_notices()
+	assert_true(gs.world_flags.get("notice_body_tempering", false))
+	assert_gt(EventBus.posted_count, before)
+	var after := EventBus.posted_count
+	gs.check_unlock_notices()
+	assert_eq(EventBus.posted_count, after)

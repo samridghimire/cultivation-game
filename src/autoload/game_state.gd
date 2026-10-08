@@ -72,6 +72,7 @@ func _ready() -> void:
 	GameClock.days_advanced.connect(_on_days_advanced)
 	GameClock.year_changed.connect(_on_year_changed)
 	EventBus.player_changed.connect(check_milestones)
+	EventBus.player_changed.connect(check_unlock_notices)
 	EventBus.player_changed.connect(Platform.refresh_presence)
 	EventBus.region_changed.connect(func(_id: String) -> void: Platform.refresh_presence())
 
@@ -105,6 +106,7 @@ func start_session(character: CharacterData) -> void:
 	npc_clans = {}
 	NpcClans.ensure(npc_clans, npcs, data, rng)
 	Rivals.spawn(player, npcs, data, rng, data.start_region)
+	world_flags["notice_rival"] = true  # a rival from the start is not news (GUIDE-008)
 	GameClock.reset()
 	_store_year_snapshot()
 	EventBus.clear_history()
@@ -2389,6 +2391,15 @@ func check_milestones() -> void:
 		EventBus.post("Milestone: %s. %s" % [def["name"], def.get("description", "")], "progress")
 		Platform.unlock_achievement(String(def["id"]))
 		EventBus.milestone_reached.emit(String(def["id"]), String(def["name"]))
+
+
+## Announces each newly available feature once (GUIDE-008). Runs on player_changed.
+func check_unlock_notices() -> void:
+	if player == null:
+		return
+	for notice in Guidance.unlock_notices(player, data, world_flags, npcs):
+		world_flags["notice_" + String(notice["id"])] = true
+		EventBus.post(String(notice["text"]), "progress")
 
 
 func _store_year_snapshot() -> void:

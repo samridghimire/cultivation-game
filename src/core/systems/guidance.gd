@@ -335,6 +335,35 @@ static func _mission_hint(c: CharacterData, data: GameData, flags: Dictionary = 
 	return "%d sect %s ready on the mission board at a sect hall." % [ready, "mission is" if ready == 1 else "missions are"]
 
 
+## Announcements for features that just became available and whose flag
+## `notice_<id>` is not yet set in `flags`: [{id, text}]. The caller posts each
+## once and sets the flag. `people` is the NPC table (for the rival's name).
+static func unlock_notices(c: CharacterData, data: GameData, flags: Dictionary, people: Dictionary = {}) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	if c == null or not c.alive:
+		return out
+	var stage := BodyTempering.next_stage(c, data)
+	# Mortals are not yet "strong enough": the notice waits for Qi Refining.
+	if not stage.is_empty() and c.realm_index >= 1:
+		var realm_id := String(stage.get("min_realm", ""))
+		if realm_id == "" or c.realm_index >= data.realm_index_of(realm_id):
+			_add_notice(out, flags, "body_tempering", "You are strong enough to temper your body at a meditation spot.")
+	if not Dao.known_ids(c, data).is_empty():
+		_add_notice(out, flags, "dao", "Contemplate your glimpsed insight at a meditation spot.")
+	for function_id in ["inner_world", "spirit_garden"]:
+		if ArtifactFunctions.check_unlock(c, data, function_id, flags) == "":
+			_add_notice(out, flags, function_id, "The Creation Artifact can unseal %s (Artifact screen, O)." % ArtifactFunctions.function_name(data, function_id))
+	var rival := Rivals.rival_of(c, people)
+	if rival != null:
+		_add_notice(out, flags, "rival", "%s has named you a rival." % rival.name)
+	return out
+
+
+static func _add_notice(out: Array[Dictionary], flags: Dictionary, id: String, text: String) -> void:
+	if not flags.get("notice_" + id, false):
+		out.append({"id": id, "text": text})
+
+
 ## The first glimpsed Dao insight that can still be deepened.
 static func _dao_hint(c: CharacterData, data: GameData) -> String:
 	for insight_id in Dao.known_ids(c, data):

@@ -483,3 +483,48 @@ func test_first_goals_hidden_past_qi_refining() -> void:
 	assert_false(Guidance.first_goals_done(c, data(), {}))
 	var section := Guidance.journal(c, data(), {}, 0, "qingshi_village").filter(func(e: Dictionary) -> bool: return e["section"] == "First goals")
 	assert_true(section.is_empty())
+
+
+func _notice_ids(notices: Array[Dictionary]) -> Array:
+	return notices.map(func(n: Dictionary) -> String: return n["id"])
+
+
+func test_unlock_notices_body_tempering_needs_the_realm() -> void:
+	var d := data()
+	var c := _fresh()
+	assert_false(_notice_ids(Guidance.unlock_notices(c, d, {})).has("body_tempering"))
+	c.realm_index = 1
+	var notices := Guidance.unlock_notices(c, d, {})
+	assert_true(_notice_ids(notices).has("body_tempering"))
+	assert_false(_notice_ids(Guidance.unlock_notices(c, d, {"notice_body_tempering": true})).has("body_tempering"))
+
+
+func test_unlock_notices_dao_insight() -> void:
+	var d := data()
+	var c := _fresh()
+	assert_false(_notice_ids(Guidance.unlock_notices(c, d, {})).has("dao"))
+	Dao.gain_levels(c, d, d.dao_insights.keys()[0], 1)
+	assert_true(_notice_ids(Guidance.unlock_notices(c, d, {})).has("dao"))
+
+
+func test_unlock_notices_artifact_functions() -> void:
+	var d := data()
+	var c := _fresh()
+	assert_false(_notice_ids(Guidance.unlock_notices(c, d, {})).has("inner_world"))
+	c.realm_index = d.realm_index_of("foundation_establishment")
+	c.artifact_energy = 1500
+	var notices := Guidance.unlock_notices(c, d, {})
+	assert_true(_notice_ids(notices).has("inner_world"))
+	assert_false(_notice_ids(notices).has("spirit_garden"), "the garden needs the inner world first")
+	assert_true(String(notices.filter(func(n: Dictionary) -> bool: return n["id"] == "inner_world")[0]["text"]).contains("Inner World"))
+
+
+func test_unlock_notices_rival() -> void:
+	var d := data()
+	var c := _fresh()
+	var people := {}
+	assert_false(_notice_ids(Guidance.unlock_notices(c, d, {}, people)).has("rival"))
+	var rival := Rivals.spawn(c, people, d, seeded_rng(), "qingshi_village")
+	var notices := Guidance.unlock_notices(c, d, {}, people)
+	assert_true(_notice_ids(notices).has("rival"))
+	assert_true(String(notices.filter(func(n: Dictionary) -> bool: return n["id"] == "rival")[0]["text"]).contains(rival.name))
