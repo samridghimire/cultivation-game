@@ -23,6 +23,8 @@ var alignment_tiers: Array[Dictionary] = []
 var profession_rank_names: PackedStringArray = []
 var professions: Dictionary = {}  # id -> ProfessionDef
 var sects: Dictionary = {}  # id -> SectDef
+## sects.json top-level "factions" rules (SectFactions, LW-002).
+var sect_factions: Dictionary = {}
 ## sects.json top-level "reputation" rules (Reputation system).
 var sect_reputation: Dictionary = {}
 var items: Dictionary = {}  # id -> Dictionary
@@ -162,6 +164,7 @@ func _load(dir: String) -> void:
 
 	var sect_file := _read(dir, "sects.json")
 	sect_reputation = sect_file.get("reputation", {})
+	sect_factions = sect_file.get("factions", {})
 	for s in sect_file.get("sects", []):
 		var def := SectDef.from_dict(s)
 		sects[def.id] = def
@@ -349,6 +352,7 @@ func _validate() -> void:
 	load_errors.append_array(Adoption.validate(self))
 	load_errors.append_array(Sects.validate_shops(self))
 	load_errors.append_array(Sects.validate_ranks(self))
+	load_errors.append_array(SectFactions.validate(self))
 	load_errors.append_array(Auctions.validate(self))
 	load_errors.append_array(BodyTempering.validate(self))
 	load_errors.append_array(Devouring.validate(self))
