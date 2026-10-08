@@ -278,6 +278,8 @@ func attempt_breakthrough() -> void:
 			EventBus.post("Your breakthrough to %s fails in the tribulation. Your qi scatters." % result["realm_name"], "danger")
 		if result["injury"] != "":
 			EventBus.post("You suffer %s." % Injuries.injury_name(data, result["injury"]), "danger")
+		var tip := Guidance.pill_source_hint(player, data)
+		EventBus.post(tip if tip != "" else "Fortune, Dao insights and pills raise your odds.", "info")
 	EventBus.breakthrough_attempted.emit(result["success"], result["realm_name"])
 	_pass_time(BREAKTHROUGH_DAYS)
 	if result["success"]:

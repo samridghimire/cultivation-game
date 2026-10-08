@@ -70,11 +70,46 @@ static func can_attempt_breakthrough(c: CharacterData, data: GameData) -> bool:
 
 
 static func breakthrough_chance(c: CharacterData, data: GameData) -> float:
-	if c.realm_index >= data.realms.size() - 1:
-		return 0.0
+	var total := 0.0
+	for term in chance_breakdown(c, data):
+		total += float(term["value"])
+	return clampf(total, 0.01, 0.99) if not is_final_realm(c, data) else 0.0
+
+
+## The terms of breakthrough_chance(), largest first, zero terms left out:
+## [{label: String, value: float}], e.g. [{"Base (Foundation Establishment)", 0.30},
+## {"Foundation Establishment Pill", 0.25}, {"Fortune 14", 0.04}]. Base is always
+## present. Values sum (before the clamp) to the unclamped chance. [] in the final realm.
+static func chance_breakdown(c: CharacterData, data: GameData) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	if is_final_realm(c, data):
+		return out
 	var next: RealmDef = data.realms[c.realm_index + 1]
-	var fortune_bonus := (c.attribute("fortune") - 10) * 0.01
-	return clampf(next.breakthrough_chance + c.breakthrough_bonus + fortune_bonus + Bloodlines.bonus(c, data, "breakthrough") + Dao.breakthrough_bonus(c, data), 0.01, 0.99)
+	out.append({"label": "Base (%s)" % next.name, "value": next.breakthrough_chance})
+	var terms: Array[Dictionary] = [
+		{"label": _pill_label(c, data), "value": c.breakthrough_bonus},
+		{"label": "Fortune %d" % c.attribute("fortune"), "value": (c.attribute("fortune") - 10) * 0.01},
+		{"label": "Dao insights", "value": Dao.breakthrough_bonus(c, data)},
+		{"label": "Bloodline", "value": Bloodlines.bonus(c, data, "breakthrough")},
+	]
+	for term in terms:
+		if not is_zero_approx(float(term["value"])):
+			out.append(term)
+	out.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return absf(float(a["value"])) > absf(float(b["value"])))
+	return out
+
+
+static func is_final_realm(c: CharacterData, data: GameData) -> bool:
+	return c.realm_index >= data.realms.size() - 1
+
+
+## "<Realm> Pill" style name when the pending bonus came from a realm pill, else a generic one.
+static func _pill_label(c: CharacterData, data: GameData) -> String:
+	if c.breakthrough_pill != "":
+		for item: Dictionary in data.items.values():
+			if String(item.get("effects", {}).get("breakthrough_realm", "")) == c.breakthrough_pill:
+				return String(item["name"])
+	return "Pills and herbs taken"
 
 
 ## Attempts a major breakthrough. Consumes any pending breakthrough bonus.

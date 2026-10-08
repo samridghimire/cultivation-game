@@ -141,3 +141,46 @@ func test_days_to_bottleneck_without_qi_rate_is_minus_one() -> void:
 	var c := new_character()
 	c.spiritual_roots = {}
 	assert_eq(Cultivation.days_to_bottleneck(c, data()), -1)
+
+
+func _old_chance(c: CharacterData) -> float:
+	var next: RealmDef = data().realms[c.realm_index + 1]
+	return clampf(next.breakthrough_chance + c.breakthrough_bonus + (c.attribute("fortune") - 10) * 0.01 + Bloodlines.bonus(c, data(), "breakthrough") + Dao.breakthrough_bonus(c, data()), 0.01, 0.99)
+
+
+func test_chance_breakdown_sums_to_chance() -> void:
+	var c := new_character()
+	c.realm_index = 1
+	c.attributes["fortune"] = 14
+	c.breakthrough_bonus = 0.25
+	c.breakthrough_pill = "foundation_establishment"
+	var terms := Cultivation.chance_breakdown(c, data())
+	assert_true(String(terms[0]["label"]).begins_with("Base") or float(terms[0]["value"]) >= float(terms[-1]["value"]))
+	var sum := 0.0
+	for term in terms:
+		assert_false(is_zero_approx(float(term["value"])))
+		sum += float(term["value"])
+	assert_almost_eq(clampf(sum, 0.01, 0.99), Cultivation.breakthrough_chance(c, data()), 0.0001)
+	assert_true(terms.any(func(t: Dictionary) -> bool: return String(t["label"]) == "Fortune 14"))
+	assert_true(terms.any(func(t: Dictionary) -> bool: return String(t["label"]).contains("Pill")))
+
+
+func test_breakthrough_chance_matches_old_formula() -> void:
+	for i in 3:
+		var c := new_character(100 + i)
+		c.realm_index = i
+		c.attributes["fortune"] = 6 + i * 6
+		c.breakthrough_bonus = [0.0, 0.25, 5.0][i]
+		assert_almost_eq(Cultivation.breakthrough_chance(c, data()), _old_chance(c), 0.0001)
+
+
+func test_low_fortune_is_a_negative_term_and_final_realm_is_empty() -> void:
+	var c := new_character()
+	c.attributes["fortune"] = 7
+	var terms := Cultivation.chance_breakdown(c, data())
+	var fortune := terms.filter(func(t: Dictionary) -> bool: return String(t["label"]) == "Fortune 7")
+	assert_eq(fortune.size(), 1)
+	assert_almost_eq(float(fortune[0]["value"]), -0.03, 0.0001)
+	c.realm_index = data().realms.size() - 1
+	assert_eq(Cultivation.chance_breakdown(c, data()).size(), 0)
+	assert_eq(Cultivation.breakthrough_chance(c, data()), 0.0)

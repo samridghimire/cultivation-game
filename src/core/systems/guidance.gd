@@ -77,7 +77,8 @@ static func _cultivation_hint(c: CharacterData, data: GameData, density: float) 
 		if not pills.is_empty():
 			text += " Using %s first raises the odds." % ", ".join(pills)
 		elif c.breakthrough_bonus <= 0.0:
-			text += " Breakthrough pills raise the odds."
+			var source := pill_source_hint(c, data)
+			text += " " + source if source != "" else " Breakthrough pills raise the odds."
 		if Tribulation.has_tribulation(data, c.realm_index + 1):
 			text += " Success calls down a Heavenly Tribulation: ready shield talismans"
 			text += ", and steel yourself against a heart demon." if Tribulation.faces_heart_demon(c, data) else "."
@@ -190,6 +191,51 @@ static func _better_qi_hint(c: CharacterData, data: GameData, region_id: String)
 	if place == "":
 		place = "the grounds"
 	return "Meditation at %s in %s gathers qi x%s faster than here." % [place, Exploration.region_name(data, String(best["region"])), String.num(float(best["density"]) / here, 1)]
+
+
+## "Base 30% + Foundation Establishment Pill 25% + Fortune 4% = 59%." (percent rounded;
+## "(capped at 99%)" when clamped). "" in the final realm.
+static func chance_text(c: CharacterData, data: GameData) -> String:
+	var terms := Cultivation.chance_breakdown(c, data)
+	if terms.is_empty():
+		return ""
+	var parts: PackedStringArray = []
+	var raw := 0.0
+	for term in terms:
+		var value := float(term["value"])
+		raw += value
+		var label := String(term["label"]).get_slice(" (", 0) if String(term["label"]).begins_with("Base") else String(term["label"])
+		var pct := "%d%%" % roundi(absf(value) * 100)
+		parts.append(("%s %s" % [label, pct]) if parts.is_empty() else ("%s %s %s" % ["+" if value >= 0.0 else "-", label, pct]))
+	var text := " ".join(parts)
+	text += " = %d%%." % roundi(Cultivation.breakthrough_chance(c, data) * 100)
+	if raw > 0.99:
+		text = text.trim_suffix(".") + " (capped at 99%)."
+	elif raw < 0.01:
+		text = text.trim_suffix(".") + " (at least 1%)."
+	return text
+
+
+## Where to get a pill for the NEXT realm that the player is not holding, e.g.
+## "A Core Forming Pill (+25%): Sold at Pill Pavilion (Fallen Star Market)." "" when
+## one is held or already taken, or none has a known source.
+static func pill_source_hint(c: CharacterData, data: GameData) -> String:
+	if Cultivation.is_final_realm(c, data) or c.breakthrough_pill != "" or not breakthrough_items(c, data).is_empty():
+		return ""
+	var next_id: String = data.realms[c.realm_index + 1].id
+	var best: Dictionary = {}
+	for item: Dictionary in data.items.values():
+		var effects: Dictionary = item.get("effects", {})
+		if String(effects.get("breakthrough_realm", "")) != next_id or float(effects.get("breakthrough_bonus", 0.0)) <= 0.0:
+			continue
+		if Items.sources(data, String(item["id"]))[0] == "Found exploring":
+			continue
+		if best.is_empty() or int(item.get("price", 0)) < int(best.get("price", 0)):
+			best = item
+	if best.is_empty():
+		return ""
+	var source := Items.sources(data, String(best["id"]))[0]
+	return "%s (+%d%%): %s." % [Text.a(String(best["name"])).capitalize(), roundi(float(best["effects"]["breakthrough_bonus"]) * 100), source]
 
 
 ## Names of held items whose effects add a breakthrough bonus and can be used

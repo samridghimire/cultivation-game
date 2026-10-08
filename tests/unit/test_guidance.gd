@@ -309,3 +309,30 @@ func test_outgrown_method_is_a_warning_in_the_journal() -> void:
 			found = true
 			assert_eq(row["tone"], "warning")
 	assert_true(found)
+
+
+func test_chance_text_format() -> void:
+	var c := _fresh()
+	c.attributes["fortune"] = 14
+	var text := Guidance.chance_text(c, data())
+	assert_true(text.begins_with("Base "), text)
+	assert_true(text.contains("Fortune 14 4%"), text)
+	assert_true(text.ends_with("= %d%%." % roundi(Cultivation.breakthrough_chance(c, data()) * 100)), text)
+	c.breakthrough_bonus = 5.0
+	assert_true(Guidance.chance_text(c, data()).ends_with("(capped at 99%)."))
+	assert_false(text.contains("{"))
+
+
+func test_pill_source_hint_for_next_realm() -> void:
+	var c := _fresh()
+	c.realm_index = 1
+	var hint := Guidance.pill_source_hint(c, data())
+	assert_true(hint.contains("Pill"), hint)
+	assert_true(hint.contains("(+"), hint)
+	for item: Dictionary in data().items.values():
+		if String(item.get("effects", {}).get("breakthrough_realm", "")) == "foundation_establishment":
+			c.add_item(item["id"], 1)
+	assert_eq(Guidance.pill_source_hint(c, data()), "")
+	c.inventory = {}
+	c.breakthrough_pill = "foundation_establishment"
+	assert_eq(Guidance.pill_source_hint(c, data()), "")

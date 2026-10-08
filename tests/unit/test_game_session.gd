@@ -47,6 +47,25 @@ func test_mortal_can_reach_qi_refining() -> void:
 	assert_eq(c.realm_index, 1)
 
 
+func test_failed_breakthrough_posts_a_hint() -> void:
+	var c := _start()
+	var gs := _game_state()
+	var failed := false
+	for i in 20:
+		c.realm_index = 1
+		c.stage = gs.data.realms[1].stage_count() - 1
+		Cultivation.add_qi(c, gs.data, 1e12)
+		c.breakthrough_bonus = -5.0
+		EventBus.clear_history()
+		gs.attempt_breakthrough()
+		if c.realm_index == 1:
+			failed = true
+			break
+	assert_true(failed)
+	assert_true(EventBus.history.any(func(e: Dictionary) -> bool: return String(e["text"]).contains("raise your odds") or String(e["text"]).contains("(+")))
+	gs.end_session()
+
+
 func test_player_dies_of_old_age() -> void:
 	var c := _start()
 	var gs := _game_state()
