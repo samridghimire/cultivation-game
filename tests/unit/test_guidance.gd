@@ -200,3 +200,27 @@ func test_newcomer_pill_hint_skips_harmful_pills() -> void:
 	c.inventory["qi_gathering_pill"] = 1
 	hints = Guidance.hints(c, data(), 1.0, 10, {}, {Guidance.ELDER_MO_FLAG: true}, "qingshi_village")
 	assert_true(_has(hints, "Use your Qi Gathering Pill"))
+
+
+func test_better_qi_hint_names_the_best_reachable_spot() -> void:
+	var c := _fresh()
+	c.realm_index = 1
+	var hints := Guidance.hints(c, data(), 1.0, 20, {}, {}, "qingshi_village")
+	assert_true(_has(hints, "Meditation at Cloud-Sea Cliff (2x qi) in Azure Peak gathers qi x2.5 faster than here."))
+
+
+func test_better_qi_hint_respects_travel_gating() -> void:
+	var c := _fresh()
+	c.realm_index = 0
+	var hints := Guidance.hints(c, data(), 1.0, 20, {}, {}, "qingshi_village")
+	assert_false(_has(hints, "Meditation at"))
+
+
+func test_better_qi_hint_absent_at_the_best_spot_or_bottleneck() -> void:
+	var c := _fresh()
+	c.realm_index = 1
+	assert_false(_has(Guidance.hints(c, data(), 1.0, 20, {}, {}, "azure_peak"), "Meditation at"))
+	assert_false(_has(Guidance.hints(c, data(), 1.0, 20), "Meditation at"))
+	c.stage = data().realms[1].stage_count() - 1
+	c.qi = Cultivation.qi_required(c, data()) * 10.0
+	assert_false(_has(Guidance.hints(c, data(), 1.0, 20, {}, {}, "qingshi_village"), "Meditation at"))

@@ -12,6 +12,7 @@ const LOW_ARTIFACT_LIVES := 1
 const NEWCOMER_MAX_REALM := 1
 const TECHNIQUE_HINT := "Learn a technique from a manual. Merchants sell them."
 const ELDER_MO_FLAG := "talked_elder_mo"
+const BETTER_QI_RATIO := 1.5
 const CHORE_REGION := "qingshi_village"
 
 
@@ -36,6 +37,9 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 	var newcomer := _newcomer_hints(c, data, flags, region_id) if c.realm_index <= NEWCOMER_MAX_REALM else PackedStringArray()
 	out.append_array(newcomer)
 	out.append(_cultivation_hint(c, data, density))
+	var better_qi := _better_qi_hint(c, data, region_id)
+	if better_qi != "":
+		out.append(better_qi)
 	if c.artifact_lives >= 0 and c.artifact_lives <= LOW_ARTIFACT_LIVES:
 		out.append("Your Creation Artifact holds %d %s. Recharge it for %d spirit stones before you take risks." % [c.artifact_lives, "life" if c.artifact_lives == 1 else "lives", CreationArtifact.recharge_cost(c, data)])
 	if c.realm_index > NEWCOMER_MAX_REALM:
@@ -81,6 +85,59 @@ static func _cultivation_hint(c: CharacterData, data: GameData, density: float) 
 	var rate := Cultivation.qi_per_day(c, data, density)
 	var eta := " (about %s of meditation here)" % Calendar.format_duration(ceili(needed / rate)) if rate > 0.0 else ""
 	return "Gather %d more qi to reach the next stage%s." % [ceili(needed), eta]
+
+
+## Qi density multiplier of the best place to meditate in `region_id`: the region's
+## own density times its best meditation spot, or the player's abode there (seclusion).
+static func best_qi_in_region(c: CharacterData, data: GameData, region_id: String) -> Dictionary:
+	var region: Dictionary = data.regions.get(region_id, {})
+	var base := Exploration.qi_density(data, region_id)
+	var best := {"region": region_id, "name": "", "density": base}
+	for place: Dictionary in region.get("places", []):
+		if place.get("type", "") != "meditation":
+			continue
+		var value := base * float(place.get("qi_density", 1.0))
+		if value > float(best["density"]):
+			best = {"region": region_id, "name": String(place.get("display_name", "")), "density": value}
+	var seclusion := Abodes.seclusion_density(c, data, region_id)
+	if seclusion > 0.0 and base * seclusion > float(best["density"]):
+		best = {"region": region_id, "name": Abodes.abode_name(data, c.abode), "density": base * seclusion}
+	return best
+
+
+## The best meditation place in any region the player can travel to now (following
+## routes whose realm requirement they meet), as {region, name, density}.
+static func best_qi_reachable(c: CharacterData, data: GameData, region_id: String) -> Dictionary:
+	var seen := {region_id: true}
+	var queue: Array[String] = [region_id]
+	var best := {}
+	while not queue.is_empty():
+		var here: String = queue.pop_front()
+		var candidate := best_qi_in_region(c, data, here)
+		if best.is_empty() or float(candidate["density"]) > float(best["density"]):
+			best = candidate
+		for route: Dictionary in Exploration.routes(c, data, here):
+			var to: String = route["to"]
+			if route["ok"] and not seen.has(to):
+				seen[to] = true
+				queue.append(to)
+	return best
+
+
+## A pointer to much better qi elsewhere (>= BETTER_QI_RATIO x the best spot here).
+static func _better_qi_hint(c: CharacterData, data: GameData, region_id: String) -> String:
+	if region_id == "" or not data.regions.has(region_id):
+		return ""
+	if Cultivation.is_at_bottleneck(c, data) or Cultivation.can_attempt_breakthrough(c, data):
+		return ""
+	var here := float(best_qi_in_region(c, data, region_id)["density"])
+	var best := best_qi_reachable(c, data, region_id)
+	if here <= 0.0 or float(best["density"]) < here * BETTER_QI_RATIO:
+		return ""
+	var place := String(best["name"])
+	if place == "":
+		place = "the grounds"
+	return "Meditation at %s in %s gathers qi x%s faster than here." % [place, Exploration.region_name(data, String(best["region"])), String.num(float(best["density"]) / here, 1)]
 
 
 ## Names of held items whose effects add a breakthrough bonus and can be used
