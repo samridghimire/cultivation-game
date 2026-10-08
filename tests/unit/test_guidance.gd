@@ -336,3 +336,20 @@ func test_pill_source_hint_for_next_realm() -> void:
 	c.inventory = {}
 	c.breakthrough_pill = "foundation_establishment"
 	assert_eq(Guidance.pill_source_hint(c, data()), "")
+
+
+func test_meditation_preview_forms() -> void:
+	var c := _fresh()
+	c.realm_index = 1
+	var normal := Guidance.meditation_preview(c, data(), 1, 1.8)
+	assert_true(normal.begins_with("About +"))
+	assert_true(normal.contains("x1.8 qi here"))
+	var big := Guidance.meditation_preview(c, data(), 3600, 1.0)
+	assert_true(big.contains("reaches the bottleneck after"))
+	var realm: RealmDef = data().realms[1]
+	c.stage = realm.stage_count() - 1
+	c.qi = realm.qi_required(c.stage)
+	var stuck := Guidance.meditation_preview(c, data(), 30, 1.0)
+	assert_true(stuck.contains("bottleneck"))
+	for t in [normal, big, stuck]:
+		assert_false(t.contains("%") or t.contains("{"))

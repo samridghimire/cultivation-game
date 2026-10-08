@@ -184,3 +184,39 @@ func test_low_fortune_is_a_negative_term_and_final_realm_is_empty() -> void:
 	c.realm_index = data().realms.size() - 1
 	assert_eq(Cultivation.chance_breakdown(c, data()).size(), 0)
 	assert_eq(Cultivation.breakthrough_chance(c, data()), 0.0)
+
+
+func test_preview_matches_real_cultivation_and_is_pure() -> void:
+	var c := new_character()
+	c.realm_index = 1
+	c.stage = 2
+	for days in [30, 360]:
+		var before := c.to_dict()
+		var p := Cultivation.preview(c, data(), days, 1.5)
+		assert_eq(c.to_dict(), before)
+		var copy := CharacterData.from_dict(c.to_dict())
+		var capped: int = mini(days, maxi(Cultivation.days_to_bottleneck(copy, data(), 1.5), 1))
+		var real := Cultivation.cultivate(copy, data(), capped, 1.5)
+		assert_eq(p["days"], capped)
+		assert_eq(p["qi_gain"], int(real["qi_gained"]))
+		assert_eq(p["stages_gained"], real["stages_gained"])
+		assert_eq(p["realm_label"], Cultivation.realm_label(copy, data()))
+
+
+func test_preview_caps_days_at_the_bottleneck() -> void:
+	var c := new_character()
+	c.realm_index = 1
+	var needed := Cultivation.days_to_bottleneck(c, data(), 1.0)
+	var p := Cultivation.preview(c, data(), needed + 500, 1.0)
+	assert_eq(p["days"], needed)
+	assert_true(p["stops_at_bottleneck"])
+
+
+func test_preview_at_bottleneck_is_empty() -> void:
+	var c := new_character()
+	var realm: RealmDef = data().realms[0]
+	c.stage = realm.stage_count() - 1
+	c.qi = realm.qi_required(c.stage)
+	var p := Cultivation.preview(c, data(), 30, 1.0)
+	assert_eq(p["days"], 0)
+	assert_eq(p["qi_gain"], 0)

@@ -18,6 +18,28 @@ static func cultivate(c: CharacterData, data: GameData, days: int, density: floa
 	return add_qi(c, data, qi_per_day(c, data, density) * days)
 
 
+## What cultivating `days` at `density` would do, without changing `c`:
+## {days (capped at the bottleneck), qi_gain, stages_gained, realm_label (after),
+## stops_at_bottleneck, qi_per_day}. days and qi_gain are 0 at the bottleneck or with no qi gathered.
+static func preview(c: CharacterData, data: GameData, days: int, density: float = 1.0) -> Dictionary:
+	var copy := CharacterData.from_dict(c.to_dict())
+	var per_day := qi_per_day(copy, data, density)
+	var out := {"days": 0, "qi_gain": 0, "stages_gained": 0, "realm_label": realm_label(copy, data), "stops_at_bottleneck": false, "qi_per_day": per_day}
+	if per_day <= 0.0 or is_at_bottleneck(copy, data):
+		return out
+	var needed := days_to_bottleneck(copy, data, density)
+	var capped := needed > 0 and needed < days
+	if capped:
+		days = needed
+	var result := add_qi(copy, data, per_day * days)
+	out["days"] = days
+	out["qi_gain"] = int(result["qi_gained"])
+	out["stages_gained"] = result["stages_gained"]
+	out["realm_label"] = realm_label(copy, data)
+	out["stops_at_bottleneck"] = capped or bool(result["at_bottleneck"])
+	return out
+
+
 ## Adds qi, advancing minor stages automatically. Qi stops accumulating at the
 ## final stage of a realm (the bottleneck) until a breakthrough succeeds.
 static func add_qi(c: CharacterData, data: GameData, amount: float) -> Dictionary:

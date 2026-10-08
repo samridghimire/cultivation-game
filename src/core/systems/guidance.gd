@@ -566,6 +566,21 @@ static func _milestone_entries(out: Array[Dictionary], c: CharacterData, data: G
 		_add(out, "Milestones", "%s%s: %s" % [String(def.get("name", def["id"])), "" if count == "" else " (%s)" % count, String(def.get("description", ""))], "dim")
 
 
+## One line for a meditation menu entry: expected qi, the stage reached, or the bottleneck.
+static func meditation_preview(c: CharacterData, data: GameData, days: int, density: float) -> String:
+	if SpiritualRoots.cultivation_multiplier(c.spiritual_roots, data) <= 0.0:
+		return "Without a spiritual root, qi slips through you."
+	var p := Cultivation.preview(c, data, days, density)
+	if int(p["days"]) <= 0:
+		return "You are at a bottleneck: meditation will not help. Attempt a breakthrough."
+	if bool(p["stops_at_bottleneck"]) and int(p["days"]) < days:
+		return "Your qi reaches the bottleneck after %s; then attempt a breakthrough." % Calendar.format_duration(int(p["days"]))
+	var text := "About +%s qi (x%s qi here)" % [_commas(int(p["qi_gain"])), String.num(density, 1)]
+	if int(p["stages_gained"]) > 0:
+		text += "; you would reach %s" % p["realm_label"]
+	return text + "."
+
+
 static func _commas(n: int) -> String:
 	var s := str(absi(n))
 	var out := ""

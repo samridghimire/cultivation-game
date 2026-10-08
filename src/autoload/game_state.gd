@@ -144,7 +144,7 @@ func cultivate(days: int, location_density: float = 1.0, skip_title: String = "M
 	if Cultivation.is_at_bottleneck(player, data):
 		EventBus.post("You are at a bottleneck. More meditation will not help; attempt a breakthrough.", "warning")
 		return
-	var density := location_density * region_qi_density() * Sects.cultivation_bonus(player, data)
+	var density := _cultivation_density(location_density)
 	var needed := Cultivation.days_to_bottleneck(player, data, density)
 	var ends_early := needed > 0 and needed < days
 	if ends_early:
@@ -1112,7 +1112,7 @@ func dual_cultivate(spouse_id: String, days: int, location_density: float = 1.0)
 		EventBus.post("%s is not here." % spouse.name, "warning")
 		EventBus.player_changed.emit()
 		return
-	var density := location_density * region_qi_density() * Sects.cultivation_bonus(player, data)
+	var density := _cultivation_density(location_density)
 	_start_time_skip()
 	var result := Family.dual_cultivate(player, spouse, data, days, density)
 	if not result["ok"]:
@@ -1758,6 +1758,16 @@ func bid(house_id: String, lot_index: int, amount: int) -> void:
 		else:
 			EventBus.post("A rival bidder outbids you and takes %s for %d spirit stones." % [lot_name, result["price"]], "warning")
 	EventBus.player_changed.emit()
+
+
+## The density cultivate() and dual_cultivate() use at a spot of `location_density`.
+func _cultivation_density(location_density: float) -> float:
+	return location_density * region_qi_density() * Sects.cultivation_bonus(player, data)
+
+
+## Preview line for cultivating `days` at a spot of `location_density` (same density as cultivate()).
+func meditation_preview(days: int, location_density: float = 1.0) -> String:
+	return Guidance.meditation_preview(player, data, days, _cultivation_density(location_density))
 
 
 ## Qi density where the player stands, with the sect cultivation bonus (for hints and the journal).

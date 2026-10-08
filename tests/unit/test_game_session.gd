@@ -595,3 +595,10 @@ func test_commission_ordered_and_delivered() -> void:
 	assert_eq(c.item_count("spirit_stone"), stones + int(order["reward"]))
 	assert_eq(c.commissions.size(), 0)
 	gs.end_session()
+
+
+func test_meditation_preview_describes_qi() -> void:
+	_start()
+	var text: String = _game_state().meditation_preview(30, 1.0)
+	assert_true(text != "")
+	assert_true(text.contains("qi"))
