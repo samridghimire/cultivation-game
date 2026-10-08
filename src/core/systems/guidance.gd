@@ -216,7 +216,7 @@ static func journal(c: CharacterData, data: GameData, flags: Dictionary, today: 
 			if def.has(kind):
 				var reason := WorldEvents.check_join(data, events, c, event_id, kind, region_id)
 				_add(out, "World events", "%s: %s" % [kind.capitalize(), "you can enter" if reason == "" else reason], "normal" if reason == "" else "dim")
-	_milestone_entries(out, c, data)
+	_milestone_entries(out, c, data, flags, clan)
 	return out
 
 
@@ -268,7 +268,7 @@ static func _sect_entries(out: Array[Dictionary], c: CharacterData, data: GameDa
 			_add(out, "Sect", "%s: again in %d days" % [name, Sects.mission_cooldown_left(c, id)], "dim")
 
 
-static func _milestone_entries(out: Array[Dictionary], c: CharacterData, data: GameData) -> void:
+static func _milestone_entries(out: Array[Dictionary], c: CharacterData, data: GameData, flags: Dictionary = {}, clan: ClanData = null) -> void:
 	if data.milestones.is_empty():
 		return
 	var earned := 0
@@ -280,7 +280,8 @@ static func _milestone_entries(out: Array[Dictionary], c: CharacterData, data: G
 			pending.append(def)
 	_add(out, "Milestones", "Milestones: %d of %d" % [earned, data.milestones.size()], "normal")
 	for def in pending.slice(0, 3):
-		_add(out, "Milestones", "%s: %s" % [String(def.get("name", def["id"])), String(def.get("description", ""))], "dim")
+		var count := Milestones.progress_text(c, data, flags, clan, String(def["id"]))
+		_add(out, "Milestones", "%s%s: %s" % [String(def.get("name", def["id"])), "" if count == "" else " (%s)" % count, String(def.get("description", ""))], "dim")
 
 
 static func _commas(n: int) -> String:

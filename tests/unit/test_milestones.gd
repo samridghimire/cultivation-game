@@ -57,3 +57,44 @@ func test_old_save_without_milestones_loads() -> void:
 	var d := new_character().to_dict()
 	d.erase("milestones")
 	assert_eq(CharacterData.from_dict(d).milestones.size(), 0)
+
+
+# --- MS-002: progress ---------------------------------------------------------
+
+func test_progress_counts_stats_and_stages() -> void:
+	var c := new_character()
+	var crafted := Milestones.progress(c, data(), {}, null, "alchemist")
+	for def in data().milestones:
+		var p := Milestones.progress(c, data(), {}, null, String(def["id"]))
+		assert_true(int(p["target"]) >= 1 and int(p["current"]) <= int(p["target"]), String(def["id"]))
+	assert_eq(Milestones.progress(c, data(), {}, null, "no_such")["target"], 1)
+	assert_true(crafted.has("current"))
+	var check := {"type": "life_stat", "stat": "fights_won", "min": 25}
+	var d := GameData.load_from_dir()
+	d.milestones = [_milestone("a", check), _milestone("b", {"type": "item_crafted", "min": 5}), _milestone("c", {"type": "realm", "realm": "foundation_establishment", "stage": 2}), _milestone("d", {"type": "flag", "flag": "f"}), _milestone("e", {"type": "married"}), _milestone("f", {"type": "sect_joined"}), _milestone("g", {"type": "clan_founded"})]
+	LifeStats.add(c, "fights_won", 4)
+	LifeStats.add(c, "items_crafted", 7)
+	assert_eq(Milestones.progress(c, d, {}, null, "a"), {"current": 4, "target": 25})
+	assert_eq(Milestones.progress(c, d, {}, null, "b"), {"current": 5, "target": 5}, "capped at the target")
+	assert_eq(Milestones.progress_text(c, d, {}, null, "a"), "4/25")
+	assert_eq(Milestones.progress_text(c, d, {}, null, "d"), "", "yes/no checks have no count")
+	var qr := data().realm_index_of("qi_refining")
+	var fe := data().realm_index_of("foundation_establishment")
+	c.realm_index = qr
+	c.stage = 3
+	var before: int = Milestones.progress(c, d, {}, null, "c")["current"]
+	var target: int = Milestones.progress(c, d, {}, null, "c")["target"]
+	assert_eq(before, Milestones.stage_total(data(), qr) + 3)
+	assert_eq(target, Milestones.stage_total(data(), fe) + 2)
+	c.realm_index = fe
+	c.stage = 1
+	assert_eq(Milestones.progress(c, d, {}, null, "c")["current"], target - 1)
+	assert_eq(Milestones.progress(c, d, {"f": true}, null, "d"), {"current": 1, "target": 1})
+	assert_eq(Milestones.progress(c, d, {}, null, "e"), {"current": 0, "target": 1})
+	c.spouses.append("x")
+	c.sect = {"id": "azure_cloud_sect", "rank": 0, "contribution": 0}
+	assert_eq(Milestones.progress(c, d, {}, ClanData.new(), "e")["current"], 1)
+	assert_eq(Milestones.progress(c, d, {}, ClanData.new(), "f")["current"], 1)
+	assert_eq(Milestones.progress(c, d, {}, ClanData.new(), "g")["current"], 1)
+	c.milestones.append("a")
+	assert_eq(Milestones.progress(c, d, {}, null, "a"), {"current": 25, "target": 25}, "earned shows full")

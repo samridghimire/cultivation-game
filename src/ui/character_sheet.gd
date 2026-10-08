@@ -233,7 +233,8 @@ func _rebuild() -> void:
 			t += "  %s: %s\n" % [def["name"], def.get("description", "")]
 		elif upcoming < 3:
 			upcoming += 1
-			t += "  [color=#888888]%s[/color]\n" % def["name"]
+			var count := Milestones.progress_text(p, data, GameState.world_flags, GameState.clan, mid)
+			t += "  [color=#888888]%s%s[/color]\n" % [def["name"], "" if count == "" else " (%s)" % count]
 	t += "\n[color=#888888]Press [I] for your inventory and [K] for techniques.[/color]"
 	_text.text = t
 
