@@ -193,3 +193,11 @@ func test_encounter_alignment_validation() -> void:
 	}
 	var errors := Exploration.validate_choices(d)
 	assert_eq(errors.size(), 4, str(errors))
+
+
+func test_is_nearby() -> void:
+	var d := data()
+	assert_true(Exploration.is_nearby(d, "qingshi_village", "qingshi_village"))
+	assert_true(Exploration.is_nearby(d, "qingshi_village", "misty_forest"), "direct route")
+	assert_true(Exploration.is_nearby(d, "qingshi_village", ""), "realm-wide")
+	assert_false(Exploration.is_nearby(d, "qingshi_village", "azure_peak"), "not a direct route")

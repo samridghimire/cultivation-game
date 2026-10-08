@@ -19,6 +19,17 @@ static func qi_density(data: GameData, region_id: String) -> float:
 	return float(data.regions.get(region_id, {}).get("qi_density", 1.0))
 
 
+## True if region_id is the region you are in or a direct route target of it.
+## An empty region_id (a realm-wide matter) counts as nearby.
+static func is_nearby(data: GameData, from_region: String, region_id: String) -> bool:
+	if region_id == "" or region_id == from_region:
+		return true
+	for route: Dictionary in data.regions.get(from_region, {}).get("routes", []):
+		if route.get("to", "") == region_id:
+			return true
+	return false
+
+
 ## Routes out of a region, each {to, name, days, ok, reason}.
 static func routes(c: CharacterData, data: GameData, region_id: String) -> Array[Dictionary]:
 	var result: Array[Dictionary] = []

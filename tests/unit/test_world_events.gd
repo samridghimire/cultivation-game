@@ -135,3 +135,25 @@ func test_hud_suffix_and_rumors() -> void:
 	assert_true(posted.any(func(t: String) -> bool: return t.contains("Auction House")), str(posted))
 	merchant.free()
 	gs.end_session()
+
+
+func test_far_event_news_is_not_posted() -> void:
+	var gs := _root().get_node("GameState")
+	gs.start_session(new_character())
+	gs.current_region = "qingshi_village"
+	var day: int = _root().get_node("GameClock").total_days
+	var posted: Array = []
+	var bus := _root().get_node("EventBus")
+	var cb := func(text: String, _category: String) -> void: posted.append(text)
+	bus.message_posted.connect(cb)
+	gs.world_events = [
+		{"id": "beast_tide", "region": "azure_peak", "start_day": day - 40, "end_day": day - 1},
+		{"id": "auction_season", "region": "qingshi_village", "start_day": day - 40, "end_day": day - 1},
+	]
+	gs._world_events_month()
+	bus.message_posted.disconnect(cb)
+	var far_name := Exploration.region_name(gs.data, "azure_peak")
+	var near_name := Exploration.region_name(gs.data, "qingshi_village")
+	assert_false(posted.any(func(t: String) -> bool: return t.contains(far_name) and t.contains("Beast Tide")), "far end news dropped: %s" % str(posted))
+	assert_true(posted.any(func(t: String) -> bool: return t == WorldEvents.news(gs.data, {"id": "auction_season", "region": "qingshi_village"}, false)), "local end news posted: %s" % str(posted))
+	assert_true(near_name != "")

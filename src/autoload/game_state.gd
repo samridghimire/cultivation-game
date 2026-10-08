@@ -1709,10 +1709,13 @@ func auction_rumors() -> PackedStringArray:
 
 ## Expire and roll world events at a month boundary, posting the news.
 func _world_events_month() -> void:
+	## News of far-off events is dropped; "Hear rumors" still lists active ones.
 	for ended in WorldEvents.expire(world_events, GameClock.total_days):
-		EventBus.post(WorldEvents.news(data, ended, false), "info")
+		if Exploration.is_nearby(data, current_region, String(ended.get("region", ""))):
+			EventBus.post(WorldEvents.news(data, ended, false), "info")
 	for started in WorldEvents.roll(data, world_events, GameClock.total_days, rng):
-		EventBus.post(WorldEvents.news(data, started, true), "warning")
+		if Exploration.is_nearby(data, current_region, String(started.get("region", ""))):
+			EventBus.post(WorldEvents.news(data, started, true), "warning")
 
 
 ## Fight an enemy from data/enemies.json.
