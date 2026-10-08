@@ -44,3 +44,18 @@ static func lines(c: CharacterData) -> PackedStringArray:
 		if n > 0:
 			result.append("%s: %d" % [LABELS[key], n])
 	return result
+
+
+## Epilogue for the final-death screen (WU-007b): who they were, then up to
+## `max_stats` of their life-record lines.
+static func epilogue(c: CharacterData, data: GameData, clan_name: String = "", max_stats: int = 8) -> PackedStringArray:
+	var out := PackedStringArray()
+	out.append("%s, aged %d, %s." % [c.name, c.age_years(), Cultivation.realm_label(c, data)])
+	var line := "%s (%d). %s" % [Alignment.tier_name(c.alignment, data), c.alignment, Sects.describe(c, data)]
+	if clan_name != "":
+		line += " Founder of the %s." % clan_name
+	out.append(line)
+	var stats := lines(c)
+	for i in mini(stats.size(), max_stats):
+		out.append(stats[i])
+	return out

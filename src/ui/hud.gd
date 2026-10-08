@@ -327,6 +327,10 @@ func _build_death_screen() -> void:
 	cause.name = "Cause"
 	cause.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	box.add_child(cause)
+	var epilogue := UIStyle.label("", 15, Color(0.75, 0.75, 0.75))
+	epilogue.name = "Epilogue"
+	epilogue.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	box.add_child(epilogue)
 	box.add_child(UIStyle.button("Return to Main Menu", _return_to_menu))
 	_death_screen = UIStyle.centered(panel)
 	_death_screen.visible = false
@@ -442,6 +446,8 @@ func _on_player_died(cause: String) -> void:
 	_load_screen.close()
 	_time_skip.close()
 	(_death_screen.find_child("Cause", true, false) as Label).text = cause
+	var clan_name: String = GameState.clan.name if GameState.clan != null else ""
+	(_death_screen.find_child("Epilogue", true, false) as Label).text = "\n".join(LifeStats.epilogue(GameState.player, GameState.data, clan_name))
 	_death_screen.visible = true
 	_death_screen.find_children("*", "Button", true, false)[0].grab_focus()
 	_update_modal()
