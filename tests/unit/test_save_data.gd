@@ -72,6 +72,7 @@ func test_every_character_field_survives_a_save() -> void:
 	Buffs.add(c, "x_buff", "X Buff", 5, {"attack": 1.5})
 	c.mission_cooldowns = {"x_mission": 400}
 	c.deed_days = {"help_villager": 12}
+	c.life_stats = {"fights_won": 3}
 	c.trial_progress = {"fist_saint_grave": 2}
 	c.training = {"assignment": "profession", "profession": "alchemist"}
 	c.artifact_storage = {"spirit_stone": 12}

@@ -216,6 +216,12 @@ func _rebuild() -> void:
 		var rank := Professions.rank_of(p, prof_id)
 		var next := "max" if rank >= Professions.max_rank(data) else "%d / %d xp" % [int(Professions.xp_of(p, prof_id)), int(def.xp_to_next(rank))]
 		t += "  %s (%s)\n" % [Professions.rank_title(p, data, prof_id), next]
+	t += "\n[color=#%s]Life record[/color]\n" % accent
+	var record := LifeStats.lines(p)
+	if record.is_empty():
+		t += "  Nothing of note yet.\n"
+	for line in record:
+		t += "  %s\n" % line
 	t += "\n[color=#888888]Press [I] for your inventory and [K] for techniques.[/color]"
 	_text.text = t
 

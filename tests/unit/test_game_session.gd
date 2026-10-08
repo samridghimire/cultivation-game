@@ -442,3 +442,26 @@ func test_explore_many_stops_when_something_happens() -> void:
 	assert_eq(gs.explore_many(99, ["t_no_such_tag"]), 30, "clamped to 30 days")
 	gs.data.encounters.erase("t_ex_find")
 	gs.end_session()
+
+
+## STAT-001: fights, fleeing and breakthroughs feed the life record.
+func test_life_stats_track_actions() -> void:
+	var c := _start()
+	var gs := _game_state()
+	var foe: Dictionary = gs.data.enemies["wild_boar"].duplicate(true)
+	foe["id"] = "t_stat_boar"
+	foe["hp"] = 1
+	gs.data.enemies["t_stat_boar"] = foe
+	assert_true(gs.fight_enemy(foe))
+	assert_eq(LifeStats.get_stat(c, "fights_won"), 1)
+	gs.pending_threat = "wild_boar"
+	gs.face_threat(false)
+	assert_eq(LifeStats.get_stat(c, "threats_fled"), 1)
+	for i in 24:
+		if Cultivation.can_attempt_breakthrough(c, gs.data):
+			break
+		gs.cultivate(Calendar.DAYS_PER_MONTH)
+	assert_true(Cultivation.can_attempt_breakthrough(c, gs.data))
+	gs.attempt_breakthrough()
+	assert_eq(LifeStats.get_stat(c, "breakthroughs") + LifeStats.get_stat(c, "breakthroughs_failed"), 1)
+	gs.end_session()

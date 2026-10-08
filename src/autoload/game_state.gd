@@ -148,6 +148,8 @@ func cultivate(days: int, location_density: float = 1.0, skip_title: String = "M
 		EventBus.post("You have reached a bottleneck. Attempt a breakthrough to advance.", "warning")
 	if ends_early:
 		EventBus.post("Your qi reaches a bottleneck after %s; you end your seclusion." % Calendar.format_duration(days))
+	if skip_title == "In seclusion":
+		LifeStats.add(player, "days_in_seclusion", days)
 	_pass_time(days, skip_title)
 
 
@@ -254,6 +256,7 @@ func attempt_breakthrough() -> void:
 		EventBus.breakthrough_attempted.emit(false, result["realm_name"])
 		_die_violently("The final bolt of the %s tribulation tears through you. Your body turns to ash." % result["realm_name"])
 		return
+	LifeStats.add(player, "breakthroughs" if result["success"] else "breakthroughs_failed")
 	if result["success"]:
 		EventBus.post("Breakthrough! You have entered the %s realm." % result["realm_name"], "progress")
 		if Bloodlines.update(player, data):
@@ -290,6 +293,7 @@ func _report_tribulation(result: Dictionary) -> void:
 		var what := "Your heart demon rises" if wave["kind"] == "heart_demon" else "Lightning wave %d strikes" % (i + 1)
 		EventBus.post("%s: %d damage (%d/%d left)." % [what, wave["damage"], wave["hp_left"], trib["max_hp"]], "danger")
 	if trib["survived"]:
+		LifeStats.add(player, "tribulations_survived")
 		EventBus.post("You endure the tribulation and are reforged by its lightning.", "progress")
 	elif not trib["died"]:
 		EventBus.post("You are struck down before the tribulation ends.", "danger")
@@ -357,6 +361,7 @@ func perform_deed(deed_id: String) -> void:
 	if not result["ok"]:
 		EventBus.post(result["reason"], "warning")
 		return
+	LifeStats.add(player, "deeds_done")
 	EventBus.post("%s. (%s)" % [deed["name"], ", ".join(result["notes"])], "karma")
 	_pass_time(result["days"])
 
@@ -503,6 +508,7 @@ func _explore_once(tags: Array, quiet: bool) -> Dictionary:
 			EventBus.post("You search the area but find nothing.")
 		_pass_time(1)
 		return {"event": "nothing"}
+	LifeStats.add(player, "encounters")
 	var result := Exploration.resolve(player, data, encounter, world_flags)
 	var text := rival_text(String(encounter.get("text", "")))
 	if not result["notes"].is_empty():
@@ -551,6 +557,7 @@ func face_threat(fight_it: bool) -> void:
 	if fight_it:
 		fight(enemy_id)
 		return
+	LifeStats.add(player, "threats_fled")
 	EventBus.post("You slip away before it finds you.")
 	_pass_time(1)
 
@@ -1579,6 +1586,8 @@ func refine(recipe_id: String) -> void:
 		return
 	var recipe_name: String = data.recipes[recipe_id].get("name", recipe_id)
 	var prof_id: String = data.recipes[recipe_id]["profession"]
+	if result["success"]:
+		LifeStats.add(player, "items_crafted", int(result["count"]))
 	var flavor: Dictionary = CRAFT_FLAVOR.get(prof_id, CRAFT_FLAVOR["alchemist"])
 	if result["great"]:
 		EventBus.post("%s A great success: %s yields +%d %s, +%d xp." % [flavor["great"], recipe_name, result["count"], data.items[result["item"]].get("name", result["item"]), int(result["xp"])], "progress")
@@ -1631,6 +1640,7 @@ func take_mission(mission_id: String) -> void:
 		EventBus.post(result["reason"], "warning")
 		EventBus.player_changed.emit()
 		return
+	LifeStats.add(player, "missions_done")
 	var notes: PackedStringArray = result["notes"]
 	notes.insert(0, "+%d contribution" % result["contribution"])
 	EventBus.post("Mission complete: %s. (%s)" % [mission["name"], ", ".join(notes)], "progress")
@@ -1878,6 +1888,7 @@ func fight_enemy(enemy: Dictionary) -> bool:
 	EventBus.post("%s (%s)" % [lines[-1], summary], "progress" if result["victory"] else "danger")
 	if result["victory"] and not outcome["died"] and Devouring.is_devourable(data, enemy):
 		devour_target = enemy
+	LifeStats.add(player, "fights_won" if result["victory"] else "fights_lost")
 	EventBus.combat_finished.emit(enemy.get("name", "enemy"), result["victory"], result["log"])
 	var drained := 0 if outcome["died"] else Equipment.drain_after_fight(player, data)
 	if drained > 0:
@@ -2360,6 +2371,7 @@ func _die_violently(cause: String) -> void:
 	pending_respawn = {"cause": cause, "anchor_id": result["anchor_id"], "lives_left": result["lives_left"], "qi_lost": result["qi_lost"]}
 	if moved:
 		spawn_anchor = result["anchor_id"]
+	LifeStats.add(player, "respawns")
 	EventBus.player_respawned.emit(result["anchor_id"], result["lives_left"])
 	_pass_time(result["days"])
 	if moved:
