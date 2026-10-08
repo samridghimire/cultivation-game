@@ -596,3 +596,44 @@ func test_sell_hint() -> void:
 	assert_true(Guidance.hints(c, d, 1.0, 99, {}, {}, "qingshi_village").has(hint))
 	assert_eq(Guidance._sell_hint(c, d, ""), "")
 	assert_eq(Guidance._sell_hint(c, d, "misty_forest"), "", "no merchant in the region")
+
+
+# --- GOAL-003: mid-game goals ------------------------------------------------
+
+func _goal_lines(c: CharacterData, flags: Dictionary = {}, clan: ClanData = null) -> PackedStringArray:
+	var out: PackedStringArray = []
+	for e in Guidance.journal(c, data(), flags, 0, "qingshi_village", 1.0, {}, [], clan):
+		if e["section"] == "Goals":
+			out.append(String(e["text"]))
+	return out
+
+
+func test_newcomer_sees_first_goals_not_goals() -> void:
+	var c := _fresh()
+	c.realm_index = 1
+	c.stage = 2
+	assert_true(_goal_lines(c).is_empty())
+
+
+func test_disciple_goals_have_realm_and_rank_lines() -> void:
+	var c := new_character()
+	c.realm_index = 2
+	c.stage = 1
+	c.sect = {"id": data().sects.keys()[0], "rank": 0, "contribution": 0, "spent": 0}
+	var lines := _goal_lines(c)
+	assert_true(lines.size() >= 2 and lines.size() <= 3)
+	assert_true(lines[0].begins_with("Reach "))
+	assert_true(lines[1].begins_with("Become "))
+	for l in lines:
+		for bad in ["%d", "{", "<null>", "null"]:
+			assert_false(l.contains(bad))
+
+
+func test_rogue_goal_names_clan_and_final_realm_has_no_realm_line() -> void:
+	var c := new_character()
+	c.realm_index = 2
+	c.sect = {}
+	assert_true(_has(Guidance.goals(c, data(), {}), "Found a clan: "))
+	c.realm_index = data().realms.size() - 1
+	for l in Guidance.goals(c, data(), {}):
+		assert_false(l.begins_with("Reach "))

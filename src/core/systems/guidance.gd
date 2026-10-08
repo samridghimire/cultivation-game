@@ -494,6 +494,50 @@ static func first_goals_done(c: CharacterData, data: GameData, flags: Dictionary
 	return true
 
 
+## Mid-game goals (GOAL-003), up to 3 plain lines: the next realm, the next sect
+## rank (or founding a clan for a rogue) and the nearest unearned milestone.
+static func goals(c: CharacterData, data: GameData, flags: Dictionary, clan: ClanData = null, density: float = 1.0) -> PackedStringArray:
+	var out: PackedStringArray = []
+	if not Cultivation.is_final_realm(c, data):
+		var next_name: String = data.realms[c.realm_index + 1].name
+		var odds := "%d percent" % roundi(Cultivation.breakthrough_chance(c, data) * 100)
+		var days := Cultivation.days_to_bottleneck(c, data, density)
+		if days == 0:
+			out.append("Reach %s: attempt the breakthrough (%s)." % [next_name, odds])
+		elif days > 0:
+			out.append("Reach %s: about %d days of meditation, then a breakthrough (%s)." % [next_name, days, odds])
+		else:
+			out.append("Reach %s: gather qi, then attempt a breakthrough (%s)." % [next_name, odds])
+	if not c.is_rogue():
+		var rank := Sects.next_rank(c, data)
+		if rank >= 0:
+			var rank_name: String = (data.sects[c.sect["id"]] as SectDef).rank_name(rank)
+			var reason := Sects.check_promotion(c, data)
+			if reason == "":
+				out.append("Become %s: you can seek promotion at the sect hall." % rank_name)
+			elif not reason.begins_with("No trial"):
+				out.append("Become %s: %s" % [rank_name, reason])
+	elif clan == null:
+		var why := Clans.check_found(c, clan, data)
+		if why != "":
+			out.append("Found a clan: %s" % why)
+	var best := ""
+	var best_frac := -1.0
+	for def: Dictionary in data.milestones:
+		var id := String(def["id"])
+		if c.milestones.has(id):
+			continue
+		var p := Milestones.progress(c, data, flags, clan, id)
+		var frac := float(p["current"]) / float(p["target"])
+		if frac > best_frac:
+			best_frac = frac
+			var count := Milestones.progress_text(c, data, flags, clan, id)
+			best = String(def["name"]) + ((" (%s)" % count) if count != "" else "")
+	if best != "":
+		out.append(best)
+	return out
+
+
 ## "Where you left off" lines for a freshly loaded save (RECAP-001): who and where
 ## the player is, the first "Next steps" line and the first warning line if different.
 static func recap(c: CharacterData, data: GameData, flags: Dictionary, today: int, region_id: String, density: float = 1.0, people: Dictionary = {}, events: Array = [], clan: ClanData = null) -> PackedStringArray:
@@ -538,6 +582,9 @@ static func journal(c: CharacterData, data: GameData, flags: Dictionary, today: 
 				tone = "normal" if flagged else "warning"
 				flagged = true
 			_add(out, "First goals", ("[x] " if goal["done"] else "[ ] ") + String(goal["text"]), tone)
+	if c.realm_index >= 2 or first_goals_done(c, data, flags):
+		for line in goals(c, data, flags, clan, density):
+			_add(out, "Goals", line, "normal")
 	var shown := 0
 	for line in hint_lines:
 		if duty_line != "" and line == duty_line:
