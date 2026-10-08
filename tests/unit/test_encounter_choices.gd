@@ -236,6 +236,7 @@ func test_alignment_gated_encounters() -> void:
 	var d := data()
 	var c := new_character()
 	c.realm_index = d.realm_index_of("foundation_establishment")
+	c.stage = 3  # the executioner is stage-gated (C-031)
 	var ids := func() -> Array:
 		return Exploration.eligible_encounters(c, d, ["wild", "village", "city"], {}).map(func(e): return e["encounter"]["id"])
 	c.alignment = 0
