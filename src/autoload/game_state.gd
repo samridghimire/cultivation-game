@@ -536,6 +536,14 @@ func explore_many(max_days: int, tags: Array = []) -> int:
 	return days
 
 
+## What exploring here (or a place with `tags`) might bring, as one line.
+func explore_outlook(tags: Array = []) -> String:
+	if tags.is_empty():
+		tags = data.regions.get(current_region, {}).get("encounter_tags", [])
+	tags = tags + WorldEvents.encounter_tags(data, world_events, current_region)
+	return Guidance.outlook_text(Exploration.outlook(player, data, tags, world_flags))
+
+
 ## One day of exploring. Returns {event: "nothing"|"fight"|"choice"|"threat"|"story"}.
 ## `quiet` skips the per-day "find nothing" line (explore_many sums it up).
 func _explore_once(tags: Array, quiet: bool) -> Dictionary:

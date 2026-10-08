@@ -566,6 +566,33 @@ static func _milestone_entries(out: Array[Dictionary], c: CharacterData, data: G
 		_add(out, "Milestones", "%s%s: %s" % [String(def.get("name", def["id"])), "" if count == "" else " (%s)" % count, String(def.get("description", ""))], "dim")
 
 
+## One line describing an Exploration.outlook(): "Mostly quiet (60%). Fights 25%: Mist Wolf (Even). Fortunes 10%."
+static func outlook_text(outlook: Dictionary) -> String:
+	var parts := PackedStringArray()
+	var quiet := roundi(float(outlook.get("other", 0.0)) * 100)
+	if quiet > 0:
+		parts.append("%s (%d%%)." % ["Mostly quiet" if quiet >= 50 else "Often quiet", quiet])
+	var fight := roundi(float(outlook.get("fight", 0.0)) * 100)
+	if fight > 0:
+		var foes := PackedStringArray()
+		var evade := false
+		for foe: Dictionary in outlook.get("foes", []):
+			foes.append("%s (%s)" % [foe["name"], foe["danger"]])
+			if foe["danger"] == "Deadly" and bool(foe.get("lethal", false)):
+				evade = true
+		var line := "Fights %d%%" % fight
+		if not foes.is_empty():
+			line += ": " + ", ".join(foes)
+		if evade:
+			line += " - you would sense the deadliest and slip away"
+		parts.append(line + ".")
+	for entry: Array in [["choice", "Crossroads"], ["fortune", "Fortunes"], ["misfortune", "Mishaps"]]:
+		var pct := roundi(float(outlook.get(entry[0], 0.0)) * 100)
+		if pct > 0:
+			parts.append("%s %d%%." % [entry[1], pct])
+	return " ".join(parts)
+
+
 ## One line for a meditation menu entry: expected qi, the stage reached, or the bottleneck.
 static func meditation_preview(c: CharacterData, data: GameData, days: int, density: float) -> String:
 	if SpiritualRoots.cultivation_multiplier(c.spiritual_roots, data) <= 0.0:

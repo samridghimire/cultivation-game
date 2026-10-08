@@ -228,3 +228,51 @@ func test_is_nearby() -> void:
 	assert_true(Exploration.is_nearby(d, "qingshi_village", "misty_forest"), "direct route")
 	assert_true(Exploration.is_nearby(d, "qingshi_village", ""), "realm-wide")
 	assert_false(Exploration.is_nearby(d, "qingshi_village", "azure_peak"), "not a direct route")
+
+
+func _outlook_data() -> GameData:
+	var d := GameData.load_from_dir()
+	d.encounters.clear()
+	d.encounters["o_fight"] = {"id": "o_fight", "tags": ["ot"], "weight": 2, "kind": "misfortune", "enemy": "mountain_bandit"}
+	d.encounters["o_fight2"] = {"id": "o_fight2", "tags": ["ot"], "weight": 1, "kind": "misfortune", "enemy": "mountain_bandit"}
+	d.encounters["o_gift"] = {"id": "o_gift", "tags": ["ot"], "weight": 1, "kind": "neutral"}
+	d.encounters["o_late"] = {"id": "o_late", "tags": ["ot"], "weight": 5, "kind": "misfortune", "min_realm": "qi_refining", "min_stage": 4, "enemy": "mist_wolf"}
+	return d
+
+
+func test_outlook_shares_sum_to_one_and_dedupe_foes() -> void:
+	var d := _outlook_data()
+	var c := new_character()
+	var o := Exploration.outlook(c, d, ["ot"], {})
+	var sum: float = o["fight"] + o["choice"] + o["fortune"] + o["misfortune"] + o["other"]
+	assert_almost_eq(sum, 1.0)
+	var pool := Exploration.eligible_encounters(c, d, ["ot"], {})
+	var weights := 0.0
+	for entry in pool:
+		weights += entry["weight"]
+	assert_almost_eq(float(o["fight"]), (pool[0]["weight"] + pool[1]["weight"]) / weights)
+	assert_eq(o["foes"].size(), 1)
+	assert_eq(o["foes"][0]["name"], "Mountain Bandit")
+
+
+func test_outlook_min_stage_fight_is_absent_below_its_stage() -> void:
+	var d := _outlook_data()
+	var c := new_character()
+	c.realm_index = d.realm_index_of("qi_refining")
+	c.stage = 3
+	assert_eq(Exploration.outlook(c, d, ["ot"], {})["foes"].size(), 1)
+	c.stage = 4
+	assert_eq(Exploration.outlook(c, d, ["ot"], {})["foes"].size(), 2)
+
+
+func test_outlook_with_no_encounters_is_quiet() -> void:
+	var o := Exploration.outlook(new_character(), _outlook_data(), ["nothing_here"], {})
+	assert_almost_eq(float(o["other"]), 1.0)
+	assert_eq(Guidance.outlook_text(o), "Mostly quiet (100%).")
+
+
+func test_outlook_text_reads_cleanly() -> void:
+	var o := Exploration.outlook(new_character(), _outlook_data(), ["ot"], {})
+	var text := Guidance.outlook_text(o)
+	assert_true(text.contains("Fights %d%%: Mountain Bandit (" % roundi(float(o["fight"]) * 100)))
+	assert_false(text.contains("{") or text.contains("%s") or text.contains("%d"))

@@ -100,6 +100,41 @@ static func eligible_encounters(c: CharacterData, data: GameData, tags: Array, f
 	return result
 
 
+## What exploring a place with `tags` might bring, from the eligible encounters (no rival):
+## {fight, choice, fortune, misfortune, other: shares 0..1 summing to 1,
+## foes: [{name, danger, lethal}] most dangerous first, at most 4}. Encounters with an
+## enemy count as `fight`, those with choices as `choice`, the rest by their kind.
+static func outlook(c: CharacterData, data: GameData, tags: Array, flags: Dictionary) -> Dictionary:
+	var sums := {"fight": 0.0, "choice": 0.0, "fortune": 0.0, "misfortune": 0.0, "other": 0.0}
+	var foes: Array[Dictionary] = []
+	var seen := {}
+	var total := 0.0
+	for entry in eligible_encounters(c, data, tags, flags):
+		var e: Dictionary = entry["encounter"]
+		var weight: float = entry["weight"]
+		var bucket := "other"
+		if String(e.get("enemy", "")) != "":
+			bucket = "fight"
+			var enemy_id := String(e["enemy"])
+			if not seen.has(enemy_id) and data.enemies.has(enemy_id):
+				seen[enemy_id] = true
+				var enemy: Dictionary = data.enemies[enemy_id]
+				foes.append({"name": String(enemy.get("name", enemy_id)), "danger": Combat.danger_label(c, data, enemy), "lethal": bool(enemy.get("lethal", false))})
+		elif e.has("choices"):
+			bucket = "choice"
+		elif e.get("kind", "neutral") in ["fortune", "misfortune"]:
+			bucket = String(e["kind"])
+		sums[bucket] += weight
+		total += weight
+	var out := {"foes": []}
+	for key: String in sums:
+		out[key] = sums[key] / total if total > 0.0 else (1.0 if key == "other" else 0.0)
+	var rank := {"Deadly": 0, "Dangerous": 1, "Even": 2, "Weak": 3}
+	foes.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return rank.get(a["danger"], 4) < rank.get(b["danger"], 4))
+	out["foes"] = foes.slice(0, 4)
+	return out
+
+
 ## Picks a weighted random encounter, or {} if none are eligible.
 static func roll_encounter(c: CharacterData, data: GameData, tags: Array, flags: Dictionary, rng: RandomNumberGenerator, rival: CharacterData = null, misfortune_scale: float = 1.0) -> Dictionary:
 	var pool := eligible_encounters(c, data, tags, flags, rival, misfortune_scale)

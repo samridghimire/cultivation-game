@@ -602,3 +602,10 @@ func test_meditation_preview_describes_qi() -> void:
 	var text: String = _game_state().meditation_preview(30, 1.0)
 	assert_true(text != "")
 	assert_true(text.contains("qi"))
+
+
+func test_explore_outlook_is_a_line() -> void:
+	_start()
+	var text: String = _game_state().explore_outlook()
+	assert_true(text != "")
+	assert_true(text.contains("%"))
