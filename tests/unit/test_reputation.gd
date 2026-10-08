@@ -129,3 +129,23 @@ func test_game_state_deed_leave_and_faction_purchase() -> void:
 	gs.buy_item("qi_gathering_pill", "myriad_treasure_pavilion")
 	assert_eq(c.item_count("spirit_stone"), 100 - roundi(15 * 0.9))
 	gs.end_session()
+
+
+func test_notes_say_the_tier() -> void:
+	var c := new_character()
+	var d := data()
+	var sect_id := "azure_cloud_sect"
+	var tiers: Array = d.sect_reputation["tiers"]
+	# Land mid-tier so a small change keeps the tier, a huge one changes it.
+	c.reputation[sect_id] = int(tiers[tiers.size() - 1]["min"])
+	var notes := Reputation.apply_changes(c, d, {sect_id: 1})
+	var tier := Reputation.tier_name(c, d, sect_id)
+	assert_eq(notes[0], "Azure Cloud Sect reputation +1 (now %s)" % tier)
+	var before := Reputation.value(c, d, sect_id)
+	notes = Reputation.apply_changes(c, d, {sect_id: -5000})
+	var low := Reputation.tier_name(c, d, sect_id)
+	assert_true(low != tier, "the tier changed")
+	var applied := Reputation.value(c, d, sect_id) - before
+	assert_eq(notes[0], "Azure Cloud Sect reputation %+d: you are now %s with Azure Cloud Sect" % [applied, low])
+	for n in notes:
+		assert_false(n.contains("%") or n.contains("{"))

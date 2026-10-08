@@ -27,7 +27,7 @@ static func change(c: CharacterData, data: GameData, sect_id: String, delta: int
 static func apply_changes(c: CharacterData, data: GameData, changes: Dictionary) -> PackedStringArray:
 	var notes: PackedStringArray = []
 	for sect_id in changes:
-		_note(notes, data, String(sect_id), change(c, data, String(sect_id), int(changes[sect_id])))
+		_change_noted(notes, c, data, String(sect_id), int(changes[sect_id]))
 	return notes
 
 
@@ -37,7 +37,7 @@ static func on_witnessed(c: CharacterData, data: GameData, alignment_delta: int)
 	var notes: PackedStringArray = []
 	for sect: SectDef in data.sects.values():
 		var delta := roundi(alignment_delta * sect.reputation_deed_scale)
-		_note(notes, data, sect.id, change(c, data, sect.id, delta))
+		_change_noted(notes, c, data, sect.id, delta)
 	return notes
 
 
@@ -135,6 +135,17 @@ static func _check_effects(node: Variant, data: GameData, where: String, errors:
 			_check_effects(v, data, where, errors)
 
 
-static func _note(notes: PackedStringArray, data: GameData, sect_id: String, delta: int) -> void:
-	if delta != 0:
-		notes.append("%s reputation %+d" % [data.sects[sect_id].name, delta])
+## Changes reputation and appends a note saying where it stands now, or that the tier changed.
+static func _change_noted(notes: PackedStringArray, c: CharacterData, data: GameData, sect_id: String, delta: int) -> void:
+	if not data.sects.has(sect_id):
+		return
+	var old_tier := tier_name(c, data, sect_id)
+	var applied := change(c, data, sect_id, delta)
+	if applied == 0:
+		return
+	var sect_name: String = data.sects[sect_id].name
+	var new_tier := tier_name(c, data, sect_id)
+	if new_tier == old_tier:
+		notes.append("%s reputation %+d (now %s)" % [sect_name, applied, new_tier])
+	else:
+		notes.append("%s reputation %+d: you are now %s with %s" % [sect_name, applied, new_tier, sect_name])

@@ -37,6 +37,7 @@ func test_devour_gives_qi_drops_alignment_and_counts() -> void:
 	assert_gt(int(result["qi"]), 0)
 	assert_eq(c.alignment, int(Devouring.rules(data())["alignment"]))
 	assert_eq(c.devoured, 1)
+	assert_eq(LifeStats.get_stat(c, "qi_gathered"), int(result["qi"]), "devoured qi counts as gathered")
 	assert_gt(Devouring.heart_demon_chance(c, data()), float(Devouring.rules(data())["heart_demon_chance"]), "each victim raises the risk")
 	var back := CharacterData.from_dict(JSON.parse_string(JSON.stringify(c.to_dict())))
 	assert_eq(back.devoured, 1, "saved")

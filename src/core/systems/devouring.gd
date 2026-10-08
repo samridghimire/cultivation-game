@@ -53,6 +53,7 @@ static func devour(c: CharacterData, data: GameData, enemy: Dictionary, rng: Ran
 	var r := rules(data)
 	var chance := heart_demon_chance(c, data)
 	var gained := Cultivation.add_qi(c, data, qi_gain(data, enemy))
+	LifeStats.add(c, "qi_gathered", int(gained["qi_gained"]))
 	var shift := int(r.get("alignment", 0))
 	Alignment.shift(c, data, shift)
 	c.devoured += 1
