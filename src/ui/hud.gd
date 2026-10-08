@@ -16,6 +16,15 @@ var _injuries: Label
 var _hint: Label
 var _log: RichTextLabel
 var _prompt: Label
+var _key_bar: Label
+var _target_name := ""
+
+## [action, caption] pairs shown in the key bar.
+const KEY_HINTS := [
+	["interact", "interact"], ["toggle_character_sheet", "character"], ["toggle_inventory", "inventory"],
+	["toggle_techniques", "techniques"], ["toggle_map", "map"], ["toggle_message_log", "log"],
+	["toggle_artifact", "artifact"], ["toggle_clan", "clan"], ["quick_save", "save"], ["pause_menu", "pause"],
+]
 var _choice_menu: ChoiceMenu
 var _threat_prompt: ThreatPrompt
 ## Toggleable modal screens keyed by the input action that opens them. Each
@@ -51,6 +60,7 @@ func _ready() -> void:
 	_set_anchored_rect(_prompt, Vector4(0, 1, 1, 1), Vector4(0, -100, 0, -70))
 	_prompt.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	add_child(_prompt)
+	_refresh_key_hints()
 
 	_choice_menu = ChoiceMenu.new()
 	_choice_menu.closed.connect(_update_modal)
@@ -128,6 +138,7 @@ func _ready() -> void:
 	EventBus.message_posted.connect(_on_message)
 	Settings.changed.connect(func(key: String, _v): if key == "show_hints": _refresh())
 	EventBus.interaction_target_changed.connect(_on_target_changed)
+	InputConfig.controls_changed.connect(_refresh_key_hints)
 	EventBus.interaction_menu_requested.connect(_on_menu_requested)
 	EventBus.crafting_requested.connect(_on_crafting_requested)
 	EventBus.shop_requested.connect(_on_shop_requested)
@@ -255,7 +266,11 @@ func _build_status_panel() -> void:
 	_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_hint.custom_minimum_size = Vector2(316, 0)
 	box.add_child(_hint)
-	box.add_child(UIStyle.label("[E] interact   [C] character   [I] inventory   [K] techniques   [M] map   [L] log   [O] artifact   [G] clan   [F5] save   [Esc] pause", 12, Color(0.7, 0.7, 0.7)))
+	_key_bar = UIStyle.label("", 12, Color(0.7, 0.7, 0.7))
+	_key_bar.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_key_bar.custom_minimum_size = Vector2(316, 0)
+	box.add_child(_key_bar)
+	_refresh_key_hints()
 	add_child(panel)
 
 
@@ -379,7 +394,16 @@ func _on_message(text: String, category: String) -> void:
 
 
 func _on_target_changed(display_name: String) -> void:
-	_prompt.text = "[E] %s" % display_name if display_name != "" else ""
+	_target_name = display_name
+	_refresh_key_hints()
+
+
+## Rebuilds the key bar and the interact prompt from the current bindings.
+func _refresh_key_hints() -> void:
+	if _key_bar == null or _prompt == null:
+		return
+	_key_bar.text = InputConfig.key_bar_text(KEY_HINTS)
+	_prompt.text = "[%s] %s" % [InputConfig.current_label("interact"), _target_name] if _target_name != "" else ""
 
 
 func _on_menu_requested(source: Node) -> void:

@@ -84,3 +84,27 @@ func test_main_menu_help_opens_without_a_session() -> void:
 	assert_false(help.visible)
 	assert_true(menu._menu.visible, "closing help returns to the title menu")
 	menu.queue_free()
+
+
+func test_binding_label_and_key_bar_follow_device_and_rebinds() -> void:
+	var ic: Node = InputConfig
+	var hints: Array = load("res://src/ui/hud.gd").KEY_HINTS
+	var saved_path: String = ic.path
+	ic.path = "user://test_controls_fh012.cfg"
+	ic.reset_controls()
+	assert_eq(ic.binding_label("interact", false), "E")
+	assert_eq(ic.binding_label("interact", true), "A")
+	assert_eq(ic.binding_label("quick_save", true), "", "no gamepad binding")
+	ic.last_input_joypad = false
+	assert_true(ic.key_bar_text(hints).contains("[E] interact"))
+	assert_true(ic.key_bar_text(hints).contains("[F5] save"))
+	ic.last_input_joypad = true
+	var pad_bar: String = ic.key_bar_text(hints)
+	assert_true(pad_bar.contains("[A] interact"), pad_bar)
+	assert_false(pad_bar.contains("save"))
+	ic.last_input_joypad = false
+	ic.rebind_key("interact", KEY_F)
+	assert_true(ic.key_bar_text(hints).contains("[F] interact"))
+	ic.reset_controls()
+	ic.path = saved_path
+	DirAccess.remove_absolute("user://test_controls_fh012.cfg")

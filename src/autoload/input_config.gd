@@ -52,6 +52,9 @@ const JOY_AXES := {
 }
 
 
+## Emitted after bindings or the last-used input device change (HUD key hints).
+signal controls_changed
+
 const CONTROLS_PATH := "user://controls.cfg"
 
 ## Where rebinds are saved (tests point this elsewhere).
@@ -59,6 +62,8 @@ var path := CONTROLS_PATH
 ## Current bindings: action -> [keycode...] / [joy button...].
 var keys: Dictionary = {}
 var joy_buttons: Dictionary = {}
+## True once the last real input came from a gamepad (drives the HUD key hints).
+var last_input_joypad := false
 
 
 func _ready() -> void:
@@ -70,6 +75,46 @@ func _ready() -> void:
 		ev.axis = JOY_AXES[action][0]
 		ev.axis_value = JOY_AXES[action][1]
 		InputMap.action_add_event(action, ev)
+
+
+func _input(event: InputEvent) -> void:
+	var pad: bool
+	if event is InputEventJoypadButton:
+		pad = true
+	elif event is InputEventKey:
+		pad = false
+	else:
+		return
+	if pad != last_input_joypad:
+		last_input_joypad = pad
+		controls_changed.emit()
+
+
+## Short name of the first binding of `action` ("E", "A"), "" when unbound.
+func binding_label(action: String, joypad: bool) -> String:
+	if joypad:
+		var buttons: Array = joy_buttons.get(action, [])
+		if buttons.is_empty():
+			return ""
+		return HelpScreen.JOY_BUTTON_NAMES.get(buttons[0], "Button %d" % buttons[0])
+	var codes: Array = keys.get(action, [])
+	return "" if codes.is_empty() else OS.get_keycode_string(codes[0])
+
+
+## binding_label for whichever device was used last.
+func current_label(action: String) -> String:
+	return binding_label(action, last_input_joypad)
+
+
+## "[E] interact   [C] character ..." in the current device's names; actions
+## with no binding on that device are left out.
+func key_bar_text(entries: Array) -> String:
+	var parts: Array[String] = []
+	for e: Array in entries:
+		var label := current_label(e[0])
+		if label != "":
+			parts.append("[%s] %s" % [label, e[1]])
+	return "   ".join(parts)
 
 
 ## Rebuilds the key and gamepad-button events of every action from `keys` and
@@ -154,12 +199,14 @@ func rebind_key(action: String, keycode: int) -> void:
 	keys = rebound(keys, action, keycode)
 	apply()
 	save_controls()
+	controls_changed.emit()
 
 
 func rebind_joy(action: String, button: int) -> void:
 	joy_buttons = rebound(joy_buttons, action, button)
 	apply()
 	save_controls()
+	controls_changed.emit()
 
 
 func reset_controls() -> void:
@@ -167,6 +214,7 @@ func reset_controls() -> void:
 	joy_buttons = _copy(JOY_BUTTONS)
 	apply()
 	save_controls()
+	controls_changed.emit()
 
 
 static func _copy(bindings: Dictionary) -> Dictionary:
