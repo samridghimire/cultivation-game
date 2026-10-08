@@ -24,7 +24,7 @@
     ]},
     "breakthrough_failure": {"chance": 0.6, "table": [
       {"id": "qi_deviation", "weight": 3},
-      {"id": "damaged_meridians", "weight": 1},
+      {"id": "damaged_meridians", "weight": 1, "min_realm": "qi_refining"},
       {"id": "meridian_rupture", "weight": 2, "min_realm": "foundation_establishment"},
       {"id": "cracked_dantian", "weight": 1, "min_realm": "foundation_establishment"},
       {"id": "golden_core_fissure", "weight": 2, "min_realm": "core_formation"},

@@ -5,7 +5,7 @@ const FirstHour := preload("res://tests/sim/first_hour.gd")
 const SEEDS := 5
 ## Known offenders, tracked by FH-021 (content fix). Empty this list when it lands:
 ## the test fails if a listed foe is no longer an offender, so it cannot go stale.
-const KNOWN_OFFENDERS: Array[String] = ["mountain_bandit", "iron_back_boar"]
+const KNOWN_OFFENDERS: Array[String] = []
 
 
 func _root() -> Node:
