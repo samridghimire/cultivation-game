@@ -207,6 +207,7 @@ func _rebuild() -> void:
 		var b := UIStyle.button(label, _select.bind(item_id))
 		b.name = item_id
 		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		b.clip_text = true
 		b.toggle_mode = true
 		b.button_pressed = item_id == _selected
 		b.focus_entered.connect(_select.bind(item_id))

@@ -5,6 +5,10 @@ extends TestCase
 
 const DECK := Vector2(1280, 800)
 
+## WU-026: the "UI Scale" setting (a 75-150% slider, applied through the root
+## window's content_scale_factor) must keep every screen inside the window.
+var _scale := 1.0
+
 
 func _tree() -> SceneTree:
 	return Engine.get_main_loop() as SceneTree
@@ -57,15 +61,24 @@ func _assert_fits(screen: Control, label: String) -> void:
 	await _frames()
 	assert_true(screen.is_visible_in_tree(), "%s opens" % label)
 	var rect := screen.get_global_rect()
-	var view := Rect2(Vector2.ZERO, DECK)
+	var view := Rect2(Vector2.ZERO, DECK / _scale)
 	assert_true(view.encloses(rect), "%s does not fit on a Steam Deck: %s" % [label, rect])
 
 
 func test_every_screen_fits_1280x800() -> void:
+	await _check_all_screens(1.0)
+
+
+func test_every_screen_fits_at_115_percent() -> void:
+	await _check_all_screens(1.15)
+
+
+func _check_all_screens(scale: float) -> void:
+	_scale = scale
 	var root := _tree().root
 	var old_size := root.size
 	root.size = Vector2i(DECK)
-	Settings.set_value("ui_scale", 1.0)
+	Settings.set_value("ui_scale", scale)
 	var gs: Node = root.get_node("GameState")
 	_rich_character(gs)
 	var hud: CanvasLayer = load("res://src/ui/hud.tscn").instantiate()
@@ -127,4 +140,6 @@ func test_every_screen_fits_1280x800() -> void:
 	hud.queue_free()
 	await _frames(1)
 	gs.end_session()
+	Settings.set_value("ui_scale", 1.0)
+	_scale = 1.0
 	root.size = old_size
