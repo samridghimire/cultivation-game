@@ -517,6 +517,7 @@ func test_unlock_notices_artifact_functions() -> void:
 	assert_true(_notice_ids(notices).has("inner_world"))
 	assert_false(_notice_ids(notices).has("spirit_garden"), "the garden needs the inner world first")
 	assert_true(String(notices.filter(func(n: Dictionary) -> bool: return n["id"] == "inner_world")[0]["text"]).contains("Inner World"))
+	assert_false(String(notices.filter(func(n: Dictionary) -> bool: return n["id"] == "inner_world")[0]["text"]).contains("("), "no key named in core text")
 
 
 func test_unlock_notices_rival() -> void:

@@ -2333,6 +2333,11 @@ func load_save_dict(d: Dictionary) -> void:
 	if clan != null and clan.seat == "":
 		Clans.move_seat(clan, player.abode, data)
 	npc_clans = NpcClans.from_dict(d.get("npc_clans", {}))
+	# A save from before GUIDE-008 has no notice flags: mark what it already
+	# qualifies for as seen, quietly, so loading never floods the log (RV-010).
+	if not world_flags.keys().any(func(k: Variant) -> bool: return String(k).begins_with("notice_")):
+		for notice in Guidance.unlock_notices(player, data, world_flags, npcs):
+			world_flags["notice_" + String(notice["id"])] = true
 	NpcClans.ensure(npc_clans, npcs, data, rng)  # older saves gain the clans
 	if player.rival == "" or not npcs.has(player.rival):
 		Rivals.spawn(player, npcs, data, rng, data.start_region)  # older saves gain a rival

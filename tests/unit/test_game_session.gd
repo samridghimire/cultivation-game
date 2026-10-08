@@ -722,6 +722,8 @@ func test_sell_all_pays_sum_with_one_message() -> void:
 	assert_eq(stones, expected)
 	assert_eq(c.item_count("spirit_stone"), before + expected)
 	assert_eq(c.item_count("spirit_herb"), 0)
+
+
 func test_unlock_notice_is_posted_once() -> void:
 	var gs := _game_state()
 	var c := _start()
@@ -734,3 +736,43 @@ func test_unlock_notice_is_posted_once() -> void:
 	var after := EventBus.posted_count
 	gs.check_unlock_notices()
 	assert_eq(EventBus.posted_count, after)
+
+
+## RV-010: an old save with no notice flags is marked quietly on load.
+func test_loading_an_old_save_marks_notices_without_posting() -> void:
+	var gs := _game_state()
+	var c := _start()
+	c.realm_index = 3
+	Dao.gain_levels(c, gs.data, gs.data.dao_insights.keys()[0], 1)
+	var saved: Dictionary = JSON.parse_string(JSON.stringify(gs.to_save_dict()))
+	var flags: Dictionary = saved["world_flags"]
+	for k in flags.keys():
+		if String(k).begins_with("notice_"):
+			flags.erase(k)
+	var before: int = EventBus.history.size()
+	gs.load_save_dict(saved)
+	gs.check_unlock_notices()
+	var texts: Array = EventBus.history.slice(before).map(func(e: Dictionary) -> String: return e["text"])
+	for t: String in texts:
+		assert_false(t.contains("temper your body") or t.contains("Contemplate"), t)
+	assert_true(gs.world_flags.get("notice_body_tempering", false))
+	assert_true(gs.world_flags.get("notice_dao", false))
+	gs.end_session()
+
+
+func test_save_with_some_notice_flags_still_announces_new_features() -> void:
+	var gs := _game_state()
+	var c := _start()
+	c.realm_index = 3
+	var saved: Dictionary = JSON.parse_string(JSON.stringify(gs.to_save_dict()))
+	var flags: Dictionary = saved["world_flags"]
+	for k in flags.keys():
+		if String(k).begins_with("notice_"):
+			flags.erase(k)
+	flags["notice_rival"] = true
+	var before: int = EventBus.posted_count
+	gs.load_save_dict(saved)
+	gs.check_unlock_notices()
+	assert_true(gs.world_flags.get("notice_body_tempering", false))
+	assert_gt(EventBus.posted_count, before, "the new feature is announced")
+	gs.end_session()

@@ -389,7 +389,7 @@ static func unlock_notices(c: CharacterData, data: GameData, flags: Dictionary, 
 		_add_notice(out, flags, "dao", "Contemplate your glimpsed insight at a meditation spot.")
 	for function_id in ["inner_world", "spirit_garden"]:
 		if ArtifactFunctions.check_unlock(c, data, function_id, flags) == "":
-			_add_notice(out, flags, function_id, "The Creation Artifact can unseal %s (Artifact screen, O)." % ArtifactFunctions.function_name(data, function_id))
+			_add_notice(out, flags, function_id, "The Creation Artifact can unseal %s on the Artifact screen." % ArtifactFunctions.function_name(data, function_id))
 	var rival := Rivals.rival_of(c, people)
 	if rival != null:
 		_add_notice(out, flags, "rival", "%s has named you a rival." % rival.name)
