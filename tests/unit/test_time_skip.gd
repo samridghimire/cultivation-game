@@ -153,6 +153,29 @@ func test_hud_shows_overlay_unless_fast_skips() -> void:
 	_gs().end_session()
 
 
+## The overlay on screen survives the HUD rebuild that travel's scene reload
+## causes (static _showing_skip; WU-031 had made it per-instance).
+func test_overlay_survives_hud_rebuild() -> void:
+	_start()
+	var settings: Node = _root().get_node("Settings")
+	var fast_before: bool = settings.get_value("fast_time_skips")
+	settings._values["fast_time_skips"] = false
+	var hud: CanvasLayer = load("res://src/ui/hud.tscn").instantiate()
+	_root().add_child(hud)
+	_gs().cultivate(Calendar.DAYS_PER_MONTH)
+	assert_true(hud._time_skip.visible, "overlay after a month of meditation")
+	hud.free()
+	var hud2: CanvasLayer = load("res://src/ui/hud.tscn").instantiate()
+	_root().add_child(hud2)
+	await (Engine.get_main_loop() as SceneTree).process_frame
+	assert_true(hud2._time_skip.visible, "the new HUD finishes showing it")
+	hud2._time_skip.close()
+	assert_true(hud2.get("_showing_skip").is_empty(), "closing clears it")
+	settings._values["fast_time_skips"] = fast_before
+	hud2.free()
+	_gs().end_session()
+
+
 ## UI-010b: practice, Dao contemplation, treating patients and seclusion get
 ## their own overlay titles.
 func test_other_long_actions_emit_time_skipped() -> void:

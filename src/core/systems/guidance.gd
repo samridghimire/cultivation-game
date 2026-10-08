@@ -263,7 +263,8 @@ static func pill_source_hint(c: CharacterData, data: GameData) -> String:
 	if best.is_empty():
 		return ""
 	var source := Items.sources(data, String(best["id"]))[0]
-	return "%s (+%d%%): %s." % [Text.a(String(best["name"])).capitalize(), roundi(float(best["effects"]["breakthrough_bonus"]) * 100), source]
+	var article := Text.a(String(best["name"]))  # capitalize() turns "Nine-Turn" into "Nine Turn"
+	return "%s (+%d%%): %s." % [article.left(1).to_upper() + article.substr(1), roundi(float(best["effects"]["breakthrough_bonus"]) * 100), source]
 
 
 ## Names of held items whose effects add a breakthrough bonus and can be used

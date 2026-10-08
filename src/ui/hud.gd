@@ -51,7 +51,7 @@ var _time_skip: TimeSkipOverlay
 var _pending_year: Array = []  # [year, lines] waiting for a free screen (WU-031)
 ## The time-skip summary on screen, kept across the scene reload that travel
 ## triggers so the new HUD can finish showing it ({} = none).
-var _showing_skip: Dictionary = {}
+static var _showing_skip: Dictionary = {}
 var _respawn: RespawnScreen
 var _tribulation: TribulationScreen
 var _death_screen: Control
