@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 1b1df8b
+Last reviewed commit: 589ae9d
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -124,3 +124,18 @@ Last reviewed commit: 1b1df8b
     count for veterans. Cosmetic. (2) CMB-001 computes advice after `apply_outcome`, so a fresh injury already
     weakens the player's stats in the comparison; harmless. (3) MED-001's preview is not shown anywhere yet; WU-029
     (todo) wires it into the meditation menu. (4) C-017's Follow-ups ask for a first-hour sim re-run (tools/balance.sh).
+- 2026-10-08 (reviewer): reviewed 1b1df8b..589ae9d (RV-009, QA-028, FH-030, ECON-001b, CULT-001, WU-032, QA-034, C-019,
+  MSG-001, WU-033, WU-034, WU-038; [PLAN] commits skipped). Main green before and after (1198 -> 1200 tests). No
+  BACKLOG/CHANGELOG edits by workers; no SAVE_VERSION change. (This session's local main had diverged from origin with
+  50 stale commits; reset to origin/main before reviewing, nothing pushed from it.)
+  - Fixed in one [REVIEW] commit: FH-030's First goals section never went away for characters past Qi Refining on saves
+    from before the Elder Mo flag / life stats (now shown only at realm index <= 1, test added); WU-034 labelled the
+    last-stage option "until the next layer" though it stops at the bottleneck (now "until your bottleneck", test
+    added); CULT-001 moved meditation_preview's doc comment onto days_to_next_stage; C-019's merchant `buy_tags` (and
+    `stock_tags`) documented in regions.json `_doc`.
+  - Notes, not filed: WU-038 reads LB/RB and PgUp/PgDn as raw keys in ShopScreen instead of InputConfig actions (they
+    are also toggle_techniques/toggle_artifact, consumed by gui_input while the shop has focus; works, but not
+    remappable). MSG-001's "Your path has shifted" is only checked after hostile acts, treating, devouring and
+    patients, so a tier change from an item or encounter is announced at the next of those. Karma.act_sentence
+    hard-codes the three act ids (unknown acts fall back to a generic sentence).
+  - WU-032, WU-033, CULT-001, ECON-001b, RV-009, C-019: match specs, tests present.
