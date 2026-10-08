@@ -105,6 +105,8 @@ var mission_cooldowns: Dictionary = {}
 ## Open crafting orders (PROF-001, Commissions): [{profession, recipe, item, count, reward, xp, due_day}].
 var commissions: Array = []
 var life_stats: Dictionary = {}  # LifeStats key -> count
+var year_start_stats: Dictionary = {}  # life_stats at the last new year (YEAR-001)
+var year_start_realm: String = ""  # realm label then; "" = no snapshot yet
 var milestones: Array[String] = []  # earned Milestones ids
 var deed_days: Dictionary = {}  # deed id -> GameClock day it was last done
 ## Inheritance id -> trial stages passed (W-006, Inheritances).
@@ -204,6 +206,8 @@ func to_dict() -> Dictionary:
 		"mission_cooldowns": mission_cooldowns.duplicate(),
 		"deed_days": deed_days.duplicate(),
 		"life_stats": life_stats.duplicate(),
+		"year_start_stats": year_start_stats.duplicate(),
+		"year_start_realm": year_start_realm,
 		"commissions": commissions.duplicate(true),
 		"milestones": milestones.duplicate(),
 		"trial_progress": trial_progress.duplicate(),
@@ -297,6 +301,8 @@ static func from_dict(d: Dictionary) -> CharacterData:
 	c.mission_cooldowns = _int_values(d.get("mission_cooldowns", {}))
 	c.deed_days = _int_values(d.get("deed_days", {}))
 	c.life_stats = _int_values(d.get("life_stats", {}))
+	c.year_start_stats = _int_values(d.get("year_start_stats", {}))
+	c.year_start_realm = String(d.get("year_start_realm", ""))
 	for order in d.get("commissions", []):
 		if order is Dictionary:
 			c.commissions.append({"profession": String(order.get("profession", "")), "recipe": String(order.get("recipe", "")),

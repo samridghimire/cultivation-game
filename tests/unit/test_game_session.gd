@@ -617,3 +617,32 @@ func test_explore_outlook_is_a_line() -> void:
 	var text: String = _game_state().explore_outlook()
 	assert_true(text != "")
 	assert_true(text.contains("%"))
+
+
+func test_new_year_posts_a_review_once_and_restores_snapshot() -> void:
+	var c := _start()
+	var gs := _game_state()
+	var clock := _root().get_node("GameClock")
+	var bus := _root().get_node("EventBus")
+	assert_true(c.year_start_realm != "", "a new session stores a snapshot")
+	LifeStats.add(c, "deeds_done", 2)
+	var seen: Array = []
+	var cb := func(year: int, lines: PackedStringArray) -> void: seen.append([year, lines])
+	bus.year_reviewed.connect(cb)
+	clock.advance(Calendar.DAYS_PER_YEAR)
+	bus.year_reviewed.disconnect(cb)
+	assert_eq(seen.size(), 1)
+	assert_true("You did 2 deeds." in (seen[0][1] as PackedStringArray))
+	var posted := 0
+	for m in bus.history:
+		if String(m["text"]) == "You did 2 deeds.":
+			posted += 1
+	assert_eq(posted, 1)
+	assert_eq(c.year_start_stats.get("deeds_done", 0), 2)
+	# an old save (no snapshot) just stores one on the next new year
+	c.year_start_realm = ""
+	c.year_start_stats = {}
+	clock.advance(Calendar.DAYS_PER_YEAR)
+	assert_eq(seen.size(), 1)
+	assert_true(c.year_start_realm != "")
+	assert_eq(gs.player, c)

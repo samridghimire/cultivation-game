@@ -70,6 +70,7 @@ func _ready() -> void:
 	for err in data.load_errors:
 		push_error("Data error: " + err)
 	GameClock.days_advanced.connect(_on_days_advanced)
+	GameClock.year_changed.connect(_on_year_changed)
 	EventBus.player_changed.connect(check_milestones)
 	EventBus.player_changed.connect(Platform.refresh_presence)
 	EventBus.region_changed.connect(func(_id: String) -> void: Platform.refresh_presence())
@@ -104,6 +105,7 @@ func start_session(character: CharacterData) -> void:
 	NpcClans.ensure(npc_clans, npcs, data, rng)
 	Rivals.spawn(player, npcs, data, rng, data.start_region)
 	GameClock.reset()
+	_store_year_snapshot()
 	EventBus.clear_history()
 	EventBus.session_started.emit()
 	EventBus.post("%s sets out on the path of cultivation." % player.name, "progress")
@@ -2345,6 +2347,24 @@ func check_milestones() -> void:
 		EventBus.post("Milestone: %s. %s" % [def["name"], def.get("description", "")], "progress")
 		Platform.unlock_achievement(String(def["id"]))
 		EventBus.milestone_reached.emit(String(def["id"]), String(def["name"]))
+
+
+func _store_year_snapshot() -> void:
+	player.year_start_stats = player.life_stats.duplicate()
+	player.year_start_realm = Cultivation.realm_label(player, data)
+
+
+## Sums up the year that just ended (YEAR-001). A save from before the snapshot
+## existed only stores one.
+func _on_year_changed(year: int) -> void:
+	if not _can_act():
+		return
+	if player.year_start_realm != "":
+		var lines := LifeStats.year_summary(player.year_start_stats, player.life_stats, player.year_start_realm, Cultivation.realm_label(player, data))
+		for line in lines:
+			EventBus.post(line, "progress", "life")
+		EventBus.year_reviewed.emit(year, lines)
+	_store_year_snapshot()
 
 
 func _on_days_advanced(days: int) -> void:

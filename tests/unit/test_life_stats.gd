@@ -77,3 +77,35 @@ func test_load_backfills_and_awards_silently() -> void:
 	for line in _root().get_node("EventBus").history:
 		assert_false(String(line["text"]).contains("Into the Secret Realm"), "no announcement")
 	gs.end_session()
+
+
+# --- YEAR-001: year in review -------------------------------------------------
+
+func test_year_summary_quiet_year() -> void:
+	var s := {"fights_won": 3}
+	assert_eq(LifeStats.year_summary(s, s.duplicate(), "Mortal", "Mortal"), PackedStringArray(["A quiet year of cultivation."]))
+
+
+func test_year_summary_lists_differences() -> void:
+	var lines := LifeStats.year_summary({"fights_won": 1}, {"fights_won": 4, "fights_lost": 1, "items_crafted": 2, "deeds_done": 1}, "Mortal", "Qi Refining 1st Layer")
+	assert_eq(lines.size(), 4, "capped at 4")
+	assert_eq(lines[0], "You rose from Mortal to Qi Refining 1st Layer.")
+	assert_eq(lines[1], "You won 3 fights and lost 1.")
+	assert_eq(lines[2], "You crafted 2 items.")
+
+
+func test_year_summary_floors_and_singulars() -> void:
+	var lines := LifeStats.year_summary({}, {"realm_floors_cleared": 1, "deeds_done": 1}, "A", "A")
+	assert_eq(lines, PackedStringArray(["You did 1 deed.", "You cleared 1 secret realm floor."]))
+
+
+func test_year_snapshot_round_trip() -> void:
+	var c := new_character()
+	c.year_start_stats = {"fights_won": 2}
+	c.year_start_realm = "Mortal"
+	var back := CharacterData.from_dict(JSON.parse_string(JSON.stringify(c.to_dict())))
+	assert_eq(back.year_start_stats, {"fights_won": 2})
+	assert_eq(back.year_start_realm, "Mortal")
+	var d := c.to_dict()
+	d.erase("year_start_realm")
+	assert_eq(CharacterData.from_dict(d).year_start_realm, "")

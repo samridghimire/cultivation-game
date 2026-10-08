@@ -58,6 +58,8 @@ signal dialogue_ended(npc_id: String)
 ## A long action skipped time (UI-010). summary = TimeSkip.summarize():
 ## {title, days, lines}. The HUD shows it as a short skippable overlay.
 signal time_skipped(days: int, summary: Dictionary)
+## A new year began and the year just ended was summed up (YEAR-001).
+signal year_reviewed(year: int, lines: PackedStringArray)
 ## A milestone was just earned (GOAL-001).
 signal milestone_reached(id: String, name: String)
 

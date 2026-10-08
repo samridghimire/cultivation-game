@@ -88,3 +88,33 @@ static func backfill(c: CharacterData, data: GameData, flags: Dictionary) -> voi
 		c.life_stats["realm_floors_cleared"] = floors
 	if claimed > get_stat(c, "inheritances_claimed"):
 		c.life_stats["inheritances_claimed"] = claimed
+
+
+## The year in review (YEAR-001): up to 4 short lines from what changed between
+## two life_stats snapshots, a realm change first. A quiet year gets one line.
+static func year_summary(before: Dictionary, after: Dictionary, realm_before: String, realm_after: String) -> PackedStringArray:
+	var out := PackedStringArray()
+	if realm_before != "" and realm_after != "" and realm_before != realm_after:
+		out.append("You rose from %s to %s." % [realm_before, realm_after])
+	var won := _delta(before, after, "fights_won")
+	var lost := _delta(before, after, "fights_lost")
+	if won > 0 or lost > 0:
+		out.append("You won %d fight%s and lost %d." % [won, "" if won == 1 else "s", lost])
+	var crafted := _delta(before, after, "items_crafted")
+	if crafted > 0:
+		out.append("You crafted %d item%s." % [crafted, "" if crafted == 1 else "s"])
+	var deeds := _delta(before, after, "deeds_done")
+	if deeds > 0:
+		out.append("You did %d deed%s." % [deeds, "" if deeds == 1 else "s"])
+	var floors := _delta(before, after, "realm_floors_cleared")
+	if floors > 0:
+		out.append("You cleared %d secret realm floor%s." % [floors, "" if floors == 1 else "s"])
+	if out.is_empty():
+		out.append("A quiet year of cultivation.")
+	while out.size() > 4:
+		out.remove_at(out.size() - 1)
+	return out
+
+
+static func _delta(before: Dictionary, after: Dictionary, key: String) -> int:
+	return int(after.get(key, 0)) - int(before.get(key, 0))
