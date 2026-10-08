@@ -100,6 +100,7 @@ var artifact_storage: Dictionary = {}
 var garden: Array = []
 ## Sect mission id -> age_days when it may be taken again (Sects missions).
 var mission_cooldowns: Dictionary = {}
+var deed_days: Dictionary = {}  # deed id -> GameClock day it was last done
 ## Inheritance id -> trial stages passed (W-006, Inheritances).
 var trial_progress: Dictionary = {}
 ## Sect id -> reputation with that sect (Reputation system; missing = start value).
@@ -194,6 +195,7 @@ func to_dict() -> Dictionary:
 		"artifact_storage": artifact_storage.duplicate(),
 		"garden": garden.duplicate(true),
 		"mission_cooldowns": mission_cooldowns.duplicate(),
+		"deed_days": deed_days.duplicate(),
 		"trial_progress": trial_progress.duplicate(),
 		"reputation": reputation.duplicate(),
 		"bound_artifacts": bound_artifacts.duplicate(),
@@ -282,6 +284,7 @@ static func from_dict(d: Dictionary) -> CharacterData:
 		if plot is Dictionary:
 			c.garden.append({"item": String(plot.get("item", "")), "days_left": int(plot.get("days_left", 0))})
 	c.mission_cooldowns = _int_values(d.get("mission_cooldowns", {}))
+	c.deed_days = _int_values(d.get("deed_days", {}))
 	c.trial_progress = _int_values(d.get("trial_progress", {}))
 	c.reputation = _int_values(d.get("reputation", {}))
 	for item_id in d.get("bound_artifacts", []):

@@ -12,7 +12,7 @@ func is_available() -> bool:
 
 func get_options() -> Array[Dictionary]:
 	var options: Array[Dictionary] = []
-	for entry in Deeds.options(GameState.player, GameState.data, deed_context, GameState.world_flags):
+	for entry in Deeds.options(GameState.player, GameState.data, deed_context, GameState.world_flags, GameClock.total_days):
 		var deed: Dictionary = entry["deed"]
 		var label := String(deed["name"])
 		if entry["danger"] != "":

@@ -337,7 +337,7 @@ func perform_deed(deed_id: String) -> void:
 	if not _can_act():
 		return
 	var deed: Dictionary = data.deeds.get(deed_id, {})
-	var reason := Deeds.check(player, data, deed, world_flags) if not deed.is_empty() else "Unknown deed."
+	var reason := Deeds.check(player, data, deed, world_flags, GameClock.total_days) if not deed.is_empty() else "Unknown deed."
 	if reason != "":
 		EventBus.post(reason, "warning")
 		return
@@ -349,7 +349,7 @@ func perform_deed(deed_id: String) -> void:
 				EventBus.post("Beaten, you abandon the attempt.", "warning")
 				_pass_time(int(deed.get("days", 0)))
 			return
-	var result := Deeds.perform(player, data, deed_id, world_flags)
+	var result := Deeds.perform(player, data, deed_id, world_flags, GameClock.total_days)
 	if not result["ok"]:
 		EventBus.post(result["reason"], "warning")
 		return

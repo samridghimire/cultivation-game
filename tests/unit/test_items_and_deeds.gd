@@ -246,3 +246,39 @@ func test_forged_gear_sells_back_for_at_least_its_materials() -> void:
 		var item_id: String = recipe["output"]["item"]
 		var material := Items.material_value(data(), item_id)
 		assert_true(Items.sell_price(data(), item_id) >= floori(material), "%s sells for %d, materials cost %.0f" % [item_id, Items.sell_price(data(), item_id), material])
+
+
+func test_deed_cooldown_blocks_then_allows() -> void:
+	var c := new_character()
+	assert_true(Deeds.perform(c, data(), "rob_villager", {}, 100)["ok"])
+	var deed: Dictionary = data().deeds["rob_villager"]
+	assert_eq(Deeds.check(c, data(), deed, {}, 110), "You did this recently. Try again in 80 days.")
+	assert_false(Deeds.perform(c, data(), "rob_villager", {}, 110)["ok"])
+	assert_eq(Deeds.check(c, data(), deed, {}, 190), "")
+	assert_true(Deeds.perform(c, data(), "rob_villager", {}, 190)["ok"])
+
+
+func test_once_deed_is_blocked_forever() -> void:
+	var c := new_character()
+	var deed: Dictionary = data().deeds["con_the_poisoner"]
+	assert_true(Deeds.perform(c, data(), "con_the_poisoner", {}, 5)["ok"])
+	assert_eq(Deeds.check(c, data(), deed, {}, 99999), "You have already done this.")
+
+
+func test_deed_days_survive_save_and_load() -> void:
+	var c := new_character()
+	Deeds.perform(c, data(), "help_villager", {}, 42)
+	var loaded := CharacterData.from_dict(c.to_dict())
+	assert_eq(int(loaded.deed_days["help_villager"]), 42)
+	assert_eq(CharacterData.from_dict({}).deed_days.size(), 0)
+
+
+func test_game_state_deed_cooldown() -> void:
+	var gs: Node = Engine.get_main_loop().root.get_node("GameState")
+	var c := new_character()
+	c.spiritual_roots = {"fire": 80}
+	gs.start_session(c)
+	gs.perform_deed("donate_stones")
+	var after_first: int = c.inventory.get("spirit_stone", 0)
+	gs.perform_deed("donate_stones")
+	assert_eq(c.inventory.get("spirit_stone", 0), after_first, "second donation is refused within 30 days")
