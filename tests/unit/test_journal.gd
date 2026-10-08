@@ -251,7 +251,7 @@ func test_household_garden_beast_and_pregnancy_lines() -> void:
 	assert_eq(_household(c)[0]["text"], "Your Fields Boar can be fed.")
 	c.inventory = {}
 	c.realm_index = 6
-	assert_true(String(_household(c)[0]["text"]).contains("outgrown you"))
+	assert_true(String(_household(c)[0]["text"]).begins_with("You have outgrown your Fields Boar"))
 	assert_eq(_household(c)[0]["tone"], "dim")
 	c.pregnancy = {"partner": "", "days_left": 30}
 	assert_true(_household(c).any(func(e: Dictionary) -> bool: return String(e["text"]).contains("with child")))

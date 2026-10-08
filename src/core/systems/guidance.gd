@@ -411,7 +411,7 @@ static func _household_entries(out: Array[Dictionary], c: CharacterData, data: G
 	for beast_id in c.companions:
 		var beast := Beasts.beast_name(data, beast_id)
 		if Beasts.outgrown_by(c, data, beast_id) >= 1.0:
-			_add(out, "Household", "Your %s has outgrown you; its help is fading." % beast, "dim")
+			_add(out, "Household", "You have outgrown your %s; its help is fading." % beast, "dim")
 		if food != "" and Beasts.check_feed(c, data, beast_id, food) == "":
 			_add(out, "Household", "Your %s can be fed." % beast, "normal")
 	for line in Children.describe_pregnancies(c, people):
