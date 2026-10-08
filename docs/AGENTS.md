@@ -15,8 +15,9 @@ How the 24/7 cloud agents (claude.ai routines) build this game. Manage them at h
 
 ## Flow
 1. The planner writes or updates a task in BACKLOG.md with status `todo`, plus `spec` when it has a detailed implementation spec.
-2. A worker claims it by pushing a branch `claude/<task-id>-<slug>`, builds it, runs `tools/test.sh`, rebases on main, re-tests
-   and pushes straight to `main`. Then it deletes the claim branch. There are no PRs.
+2. A worker claims it by pushing a branch `claude/<task-id>-<slug>` with an empty "claim" commit, builds it, runs
+   `tools/test.sh`, rebases on main, re-tests and pushes straight to `main`. There are no PRs. The cloud can't delete branches,
+   so the hourly `cleanup-claims` GitHub Action removes claims whose task landed or that are 4h+ old.
 3. The reviewer reviews what landed and fixes or reverts anything bad.
 4. The planner sees `[<task-id>]` on main, marks it done, and adds the CHANGELOG line and any `Follow-ups:` from the commit message.
 
@@ -24,6 +25,11 @@ How the 24/7 cloud agents (claude.ai routines) build this game. Manage them at h
 The first design had 6 agents open PRs and one integrator merge them. Every PR edited BACKLOG.md and CHANGELOG.md, so nearly all
 of them conflicted. The integrator couldn't keep up, ~200 PRs piled up, and the owner had to merge them by hand. Now workers never
 touch the shared docs and land their own work after testing against the latest main.
+
+## Cloud git quirks (learned 2026-10-08)
+- `git push origin HEAD:main` often prints `HTTP 403` / "remote end hung up" **even though the push landed**. Verify with
+  `git fetch origin main && git log origin/main -3` before retrying or falling back.
+- Deleting remote branches really is refused (403), hence the cleanup Action.
 
 ## Rules for every agent
 - Never create scheduled tasks, reminders or check-ins (earlier runs created dozens of useless "safety-net check-in" routines).

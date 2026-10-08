@@ -57,21 +57,26 @@ directly on `main`, and an **Opus reviewer** reviews what landed. There are **no
 
 ### Worker loop (Sonnet)
 1. `git checkout main && git pull`.
-2. Pick the top `todo` task for your role in `docs/BACKLOG.md` (tables are in priority order) that is **not claimed**: no remote
-   branch named `claude/<task-id>-*` exists (`git fetch --prune && git branch -r`). Prefer tasks marked `spec` (the planner wrote
-   a detailed spec for them).
-3. **Claim it**: `git checkout -b claude/<task-id>-<slug>` and `git push -u origin HEAD` before writing code.
+2. Pick the top `todo` task for your role in `docs/BACKLOG.md` (tables are in priority order) that is **not done and not claimed**:
+   - not done: `git log origin/main --oneline | grep -F "[<task-id>]"` finds nothing (the planner may lag behind main);
+   - not claimed: no remote branch `claude/<task-id>-*` exists (`git fetch --prune && git branch -r`).
+   Prefer tasks marked `spec` (the planner wrote a detailed spec for them, sometimes in `docs/specs/<task-id>.md`).
+3. **Claim it** with a timestamped claim commit: `git checkout -b claude/<task-id>-<slug>`,
+   `git commit --allow-empty -m "claim <task-id>"`, `git push -u origin HEAD`. Do this before writing code.
 4. Implement it, small and complete, with tests. **Do not edit `docs/BACKLOG.md` or `docs/CHANGELOG.md`**. The planner keeps
    them, which avoids the merge conflicts that used to block everything. Put follow-up ideas in your commit message under
    `Follow-ups:`.
 5. Run `tools/test.sh` until it prints `ALL CHECKS PASSED`. (A brand-new `class_name` is only visible after an import; test.sh imports first.)
 6. Commit with the subject `[<task-id>] <title>` (the planner marks tasks done by finding that id on main).
-7. **Land it on main yourself:** `git pull --rebase origin main`, run `tools/test.sh` again, then `git push origin HEAD:main`.
-   If the push is rejected because main moved, repeat this step (up to 5 times). If direct pushes to main are refused by
-   permissions, open a PR and squash-merge it yourself immediately (never leave a PR open).
-8. Delete your claim branch: `git push origin --delete <branch>`.
-9. If you can't get the task green in this run, don't land it. Delete your claim branch so someone can retry, and say why in your
-   final summary.
+7. **Land it on main yourself:** `git fetch origin main && git rebase --no-keep-empty origin/main` (this also drops the empty
+   claim commit), run `tools/test.sh` again, then `git push origin HEAD:main`.
+   - **The cloud git proxy often prints `HTTP 403` / "remote end hung up" even when the push succeeded.** Always verify with
+     `git fetch origin main && git log origin/main --oneline -3` before retrying.
+   - If main moved and the push was really rejected, repeat this step (up to 5 times).
+   - If a rebase conflict is in code you didn't touch, resolve it keeping both sides' intent, then re-test.
+8. Don't delete your claim branch. The cloud can't delete branches (403); `.github/workflows/cleanup-claims.yml` removes claims
+   hourly once their task is on main or the claim is 4h old. Move on to your next task.
+9. If you can't get the task green in this run, don't land it. Say why in your final summary; the claim expires after 4h.
 
 Never force-push main, never rewrite main's history, never delete another agent's branch, and never create scheduled tasks,
 reminders or "check-ins".
