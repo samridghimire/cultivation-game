@@ -54,7 +54,12 @@ func _init() -> void:
 	box.add_child(columns)
 	_list = VBoxContainer.new()
 	_list.custom_minimum_size = Vector2(260, 0)
-	columns.add_child(_list)
+	# Many pages: the list scrolls (it follows focus) instead of growing past a Steam Deck screen.
+	var list_scroll := ScrollContainer.new()
+	list_scroll.custom_minimum_size = Vector2(280, 540)
+	list_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	list_scroll.add_child(_list)
+	columns.add_child(list_scroll)
 	var details := VBoxContainer.new()
 	details.add_theme_constant_override("separation", 8)
 	details.size_flags_horizontal = Control.SIZE_EXPAND_FILL

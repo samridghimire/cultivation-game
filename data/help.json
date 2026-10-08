@@ -168,6 +168,55 @@
         "The world keeps score. Those you spare, save or help may repay you; those you wrong may hunt you.",
         "Open the Character sheet to see grudges and debts. Settle them with force, stones or a kindness, or run: grudges outlive the years."
       ]
+    },
+    {
+      "id": "commissions",
+      "title": "Commissions",
+      "body": [
+        "Once you practise a crafting profession, buyers post a monthly order for a few units of something you already know how to make. Each profession has at most one open order at a time, and an order pays about double the materials' worth plus profession experience.",
+        "An order stays open for 60 days. Letting it lapse costs you nothing: no penalty, no lost reputation. Your journal (J) lists your open orders and how many days are left."
+      ]
+    },
+    {
+      "id": "favors",
+      "title": "Favors and Errands",
+      "body": [
+        "Named people in the world sometimes need a hand: pills for a buyer, herbs for a patient, word carried to someone. Ask them in conversation whether they need help, and when you come back with what they asked for they thank you with a reward, often a recipe or a rare item, and remember you kindly.",
+        "Favor is what each person thinks of you. The more they trust you, the more they will share, so help those who may teach you later."
+      ]
+    },
+    {
+      "id": "world_events",
+      "title": "World Events",
+      "body": [
+        "Every month the world may stir. A tournament, a beast tide, a demonic incursion or an auction season can start in a region and lasts for weeks. While it lasts the region sees new encounters and different prices, and the map and the region line show that something is going on.",
+        "In a tournament you fight a row of cultivators of your own realm, each a stage higher than the last. You are not healed between bouts, and losing a bout ends your run. Only cultivators can enter. Beating them all wins the prize.",
+        "When a beast tide or an incursion threatens a region you can stand with its defenders against the raiders. Each such event can be joined once. Both carry real risk, so heal first."
+      ]
+    },
+    {
+      "id": "sect_call",
+      "title": "The Sect's Call",
+      "body": [
+        "When your sect clashes with a rival at the border, it calls on its disciples. A special mission appears on the mission board; answering it means beating the rival's raiders.",
+        "The call stays open for 30 days. Only disciples who have reached the ninth layer of Qi Refining are summoned, and answering earns a good amount of contribution and reputation. If you ignore it, it simply lapses."
+      ]
+    },
+    {
+      "id": "journal",
+      "title": "The Journal",
+      "body": [
+        "Press J to open your journal. It keeps track of what you have been doing and what is still waiting for you, so you do not have to remember every promise and every open order.",
+        "Look there whenever you come back to the game after a break and wonder what to do next."
+      ]
+    },
+    {
+      "id": "appraisal",
+      "title": "Appraisal",
+      "body": [
+        "The Creation Artifact can hold an Appraising Eye. While it is sealed you see only what anyone would see. Once you have unsealed it, the artifact reads hidden detail for you.",
+        "In people it shows spiritual roots, talent, attributes, remaining lifespan and the colour of the heart. In items it shows the true grade, power and worth. Use it before you trust a stranger or pay for a treasure."
+      ]
     }
   ]
 }
