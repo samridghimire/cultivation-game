@@ -259,6 +259,20 @@ func test_lost_fight_posts_advice() -> void:
 	gs.end_session()
 
 
+func test_fight_spoils_show_sell_price() -> void:
+	var c := _start()
+	c.realm_index = 2
+	var gs := _game_state()
+	var weak := {"id": "w", "name": "Weak Foe", "realm": "mortal", "stage": 0, "hp": -50, "attack": -50, "defense": -50, "speed": 0, "techniques": [], "rewards": {"items": {"mist_wolf_pelt": 1, "spirit_stone": 3}}}
+	assert_true(gs.fight_enemy(weak))
+	var price := Items.sell_price(gs.data, "mist_wolf_pelt")
+	assert_true(price > 0)
+	var joined := "|".join(gs.last_fight_spoils)
+	assert_true(joined.contains("(sells for %d)" % price), joined)
+	assert_false(joined.contains("Spirit Stone (sells"), "stones carry no price note")
+	gs.end_session()
+
+
 func test_fight_spoils_in_report() -> void:
 	var c := _start()
 	c.realm_index = 2

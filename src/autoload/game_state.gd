@@ -2056,9 +2056,14 @@ func fight_enemy(enemy: Dictionary, start_hp: int = -1) -> bool:
 		summary += "; " + ", ".join(outcome["notes"])
 	EventBus.post("%s (%s)" % [lines[-1], summary], "progress" if result["victory"] else "danger")
 	if result["victory"]:
+		var worth := {}
+		for item_id in enemy.get("rewards", {}).get("items", {}):
+			var price := Items.sell_price(data, String(item_id))
+			if price > 0 and int(enemy["rewards"]["items"][item_id]) > 0:
+				worth["+%d %s" % [int(enemy["rewards"]["items"][item_id]), data.items.get(item_id, {}).get("name", item_id)]] = price
 		for note in outcome["notes"]:
 			if not String(note).begins_with("Burned:"):
-				last_fight_spoils.append(note)
+				last_fight_spoils.append("%s (sells for %d)" % [note, worth[note]] if worth.has(String(note)) else note)
 	var advice := Combat.loss_advice(player, data, enemy, result)
 	last_loss_advice = advice
 	if advice != "" and not outcome["died"]:
