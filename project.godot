@@ -15,6 +15,7 @@ config/icon="res://icon.svg"
 [autoload]
 
 EventBus="*res://src/autoload/event_bus.gd"
+Platform="*res://src/autoload/platform.gd"
 InputConfig="*res://src/autoload/input_config.gd"
 GameClock="*res://src/autoload/game_clock.gd"
 GameState="*res://src/autoload/game_state.gd"

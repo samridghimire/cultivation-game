@@ -65,6 +65,8 @@ func _ready() -> void:
 		push_error("Data error: " + err)
 	GameClock.days_advanced.connect(_on_days_advanced)
 	EventBus.player_changed.connect(check_milestones)
+	EventBus.player_changed.connect(Platform.refresh_presence)
+	EventBus.region_changed.connect(func(_id: String) -> void: Platform.refresh_presence())
 
 
 func has_session() -> bool:
@@ -2212,6 +2214,7 @@ func check_milestones() -> void:
 		return
 	for def in Milestones.award(player, data, world_flags, clan):
 		EventBus.post("Milestone: %s. %s" % [def["name"], def.get("description", "")], "progress")
+		Platform.unlock_achievement(String(def["id"]))
 
 
 func _on_days_advanced(days: int) -> void:
