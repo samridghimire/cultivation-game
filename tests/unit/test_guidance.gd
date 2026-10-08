@@ -76,7 +76,7 @@ func test_realm_tied_pills_are_only_recommended_when_usable() -> void:
 	c.breakthrough_pill = "foundation_establishment"
 	assert_eq(Guidance.breakthrough_items(c, data()), PackedStringArray())
 	var rows := Guidance.journal(c, data(), {}, 0, c.home_region)
-	assert_false(rows.any(func(r: Dictionary) -> bool: return String(r["text"]).contains(core_name) or String(r["text"]).contains(fe_name)))
+	assert_false(rows.any(func(r: Dictionary) -> bool: return not String(r["text"]).begins_with("Odds now: ") and (String(r["text"]).contains(core_name) or String(r["text"]).contains(fe_name))))
 
 
 func test_urgent_hints_come_first() -> void:
@@ -528,3 +528,54 @@ func test_unlock_notices_rival() -> void:
 	var notices := Guidance.unlock_notices(c, d, {}, people)
 	assert_true(_notice_ids(notices).has("rival"))
 	assert_true(String(notices.filter(func(n: Dictionary) -> bool: return n["id"] == "rival")[0]["text"]).contains(rival.name))
+
+
+func _breakthrough_lines(c: CharacterData) -> Array[Dictionary]:
+	var lines: Array[Dictionary] = []
+	for e in Guidance.journal(c, data(), {}, 0, "qingshi_village"):
+		if String(e.get("section", "")) == "Breakthrough":
+			lines.append(e)
+	return lines
+
+
+func _line_starting(lines: Array[Dictionary], prefix: String) -> Dictionary:
+	for e in lines:
+		if String(e["text"]).begins_with(prefix):
+			return e
+	return {}
+
+
+func test_journal_breakthrough_shows_odds_and_pill_source() -> void:
+	var c := _fresh()
+	c.realm_index = 1
+	var realm: RealmDef = data().realms[1]
+	c.stage = realm.stage_count() - 1
+	c.qi = realm.qi_required(c.stage)
+	var lines := _breakthrough_lines(c)
+	var odds := _line_starting(lines, "Odds now: ")
+	assert_false(odds.is_empty())
+	assert_true(String(odds["text"]).ends_with("%."), String(odds["text"]))
+	assert_false(_line_starting(lines, "To raise them: ").is_empty())
+	for e in lines:
+		assert_false(String(e["text"]).contains("{"))
+	for item: Dictionary in data().items.values():
+		if String(item.get("effects", {}).get("breakthrough_realm", "")) == "foundation_establishment":
+			c.add_item(item["id"], 1)
+	assert_true(_line_starting(_breakthrough_lines(c), "To raise them: ").is_empty())
+
+
+func test_journal_prepare_line_only_close_to_the_bottleneck() -> void:
+	var c := _fresh()
+	c.realm_index = 1
+	var realm: RealmDef = data().realms[1]
+	c.stage = realm.stage_count() - 1
+	c.qi = realm.qi_required(c.stage) - Cultivation.qi_per_day(c, data(), 1.0) * 10.0
+	var days := Cultivation.days_to_bottleneck(c, data(), 1.0)
+	assert_true(days >= 1 and days <= 30, str(days))
+	var prepare := _line_starting(_breakthrough_lines(c), "Prepare: ")
+	assert_false(prepare.is_empty())
+	assert_eq(String(prepare["tone"]), "dim")
+	c.stage = 0
+	c.qi = 0.0
+	assert_true(Cultivation.days_to_bottleneck(c, data(), 1.0) > 30)
+	assert_true(_line_starting(_breakthrough_lines(c), "Prepare: ").is_empty())

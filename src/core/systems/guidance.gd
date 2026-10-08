@@ -629,12 +629,22 @@ static func _breakthrough_entries(out: Array[Dictionary], c: CharacterData, data
 		_add(out, "Breakthrough", "Qi: %s / %s for %s" % [_commas(int(c.qi)), _commas(int(Cultivation.qi_required(c, data))), next_label], "normal")
 	if Cultivation.can_attempt_breakthrough(c, data):
 		_add(out, "Breakthrough", "You are at a bottleneck: break through to go further.", "warning")
+		var odds := chance_text(c, data)
+		if odds != "":
+			_add(out, "Breakthrough", "Odds now: " + odds, "normal")
+		var raise := pill_source_hint(c, data)
+		if raise != "":
+			_add(out, "Breakthrough", "To raise them: " + raise, "normal")
 	elif Cultivation.is_at_bottleneck(c, data):
 		_add(out, "Breakthrough", "You stand at the peak of the highest realm known.", "normal")
 	else:
 		var days := Cultivation.days_to_bottleneck(c, data, density)
 		if days > 0:
 			_add(out, "Breakthrough", "About %d days of meditation here." % days, "normal")
+		if days >= 1 and days <= 30:
+			var prepare := pill_source_hint(c, data)
+			if prepare != "":
+				_add(out, "Breakthrough", "Prepare: " + prepare, "dim")
 	var pills: PackedStringArray = []
 	for item_id in c.inventory:
 		if _usable_breakthrough_item(c, data, item_id):
