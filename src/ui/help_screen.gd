@@ -28,6 +28,8 @@ const JOY_AXIS_NAMES := {
 	JOY_AXIS_LEFT_Y: ["Left stick Up", "Left stick Down"],
 	JOY_AXIS_RIGHT_X: ["Right stick Left", "Right stick Right"],
 	JOY_AXIS_RIGHT_Y: ["Right stick Up", "Right stick Down"],
+	JOY_AXIS_TRIGGER_LEFT: ["LT", "LT"],
+	JOY_AXIS_TRIGGER_RIGHT: ["RT", "RT"],
 }
 const MENU_HINT := "In menus: arrow keys / d-pad move, Enter / A chooses, Esc / B goes back.\nRebind keys and buttons in Settings > Controls."
 

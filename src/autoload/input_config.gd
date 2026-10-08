@@ -93,13 +93,17 @@ func _input(event: InputEvent) -> void:
 		controls_changed.emit()
 
 
-## Short name of the first binding of `action` ("E", "A"), "" when unbound.
+## Short name of the first binding of `action` ("E", "A", "RT"), "" when unbound.
 func binding_label(action: String, joypad: bool) -> String:
 	if joypad:
 		var buttons: Array = joy_buttons.get(action, [])
-		if buttons.is_empty():
-			return ""
-		return HelpScreen.JOY_BUTTON_NAMES.get(buttons[0], "Button %d" % buttons[0])
+		if not buttons.is_empty():
+			return HelpScreen.JOY_BUTTON_NAMES.get(buttons[0], "Button %d" % buttons[0])
+		if JOY_AXES.has(action):  # e.g. toggle_family on the right trigger
+			var axis: int = JOY_AXES[action][0]
+			var side := 0 if float(JOY_AXES[action][1]) < 0.0 else 1
+			return HelpScreen.JOY_AXIS_NAMES[axis][side] if HelpScreen.JOY_AXIS_NAMES.has(axis) else "Axis %d" % axis
+		return ""
 	var codes: Array = keys.get(action, [])
 	return "" if codes.is_empty() else OS.get_keycode_string(codes[0])
 

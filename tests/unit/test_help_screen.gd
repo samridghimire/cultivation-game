@@ -102,6 +102,7 @@ func test_binding_label_and_key_bar_follow_device_and_rebinds() -> void:
 	var pad_bar: String = ic.key_bar_text(hints)
 	assert_true(pad_bar.contains("[A] interact"), pad_bar)
 	assert_false(pad_bar.contains("save"))
+	assert_true(pad_bar.contains("[RT] family"), "trigger-bound actions show in the gamepad key bar: " + pad_bar)
 	ic.last_input_joypad = false
 	ic.rebind_key("interact", KEY_F)
 	assert_true(ic.key_bar_text(hints).contains("[F] interact"))
