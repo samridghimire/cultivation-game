@@ -86,7 +86,7 @@ func test_open_entrance_offers_delve_with_guardian_and_cost() -> void:
 	c.realm_index = 0
 	delve = entrance.get_options()[1]
 	assert_true(delve["disabled"])
-	assert_true(String(delve["label"]).contains("repels"), delve["label"])
+	assert_true(String(delve["reason"]).contains("repels"), delve["reason"])
 	entrance.free()
 	_gs().end_session()
 

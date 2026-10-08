@@ -48,7 +48,7 @@ func test_orphanage_foundling_needs_donation() -> void:
 	var options: Array[Dictionary] = orphanage.get_options()
 	assert_eq(options.size(), 1)
 	assert_true(options[0]["disabled"], options[0]["label"])
-	assert_true(String(options[0]["label"]).contains("donation"), options[0]["label"])
+	assert_true(String(options[0]["reason"]).contains("donation"), options[0]["reason"])
 	c.add_item("spirit_stone", Adoption.foundling_donation(gs.data))
 	options = orphanage.get_options()
 	assert_false(options[0]["disabled"], options[0]["label"])

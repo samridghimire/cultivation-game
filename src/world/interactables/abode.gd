@@ -103,9 +103,7 @@ func _set_chest_mode(on: bool) -> void:
 
 
 func _entry(label: String, reason: String, action: Callable) -> Dictionary:
-	if reason != "":
-		label += " (%s)" % reason
-	return {"label": label, "action": action, "disabled": reason != "", "keep_open": true}
+	return {"label": label, "action": action, "disabled": reason != "", "reason": reason, "keep_open": true}
 
 
 static func _sorted(items: Dictionary, data: GameData) -> Array:

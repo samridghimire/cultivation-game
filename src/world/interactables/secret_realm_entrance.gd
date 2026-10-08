@@ -43,6 +43,4 @@ static func delve_option(c: CharacterData, data: GameData, realm_id: String, tod
 		notes.append("entry %d spirit stones" % cost)
 	var label := "Delve into floor %d/%d, %s (%s)" % [SecretRealms.floors_cleared(c, def, today) + 1, floor_count, floor_def.get("name", ""), ", ".join(notes)]
 	var reason := SecretRealms.check_enter(c, data, realm_id, GameState.current_region, today)
-	if reason != "":
-		label += " [%s]" % reason
 	return {"label": label, "action": GameState.enter_secret_realm.bind(realm_id), "disabled": reason != "", "reason": reason, "keep_open": true}

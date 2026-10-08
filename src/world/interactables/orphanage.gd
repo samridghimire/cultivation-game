@@ -10,7 +10,5 @@ func get_options() -> Array[Dictionary]:
 	var options: Array[Dictionary] = []
 	var label := "Adopt a foundling (%d spirit stones)" % Adoption.foundling_donation(data)
 	var reason := Adoption.check_foundling(c, GameState.npcs, data)
-	if reason != "":
-		label += " (%s)" % reason
-	options.append({"label": label, "action": GameState.adopt_foundling, "disabled": reason != "", "keep_open": true})
+	options.append({"label": label, "action": GameState.adopt_foundling, "disabled": reason != "", "reason": reason, "keep_open": true})
 	return options

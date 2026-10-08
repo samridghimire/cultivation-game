@@ -20,9 +20,7 @@ func get_options() -> Array[Dictionary]:
 		else:
 			var check := Sects.check_join(player, GameState.data, sect.id)
 			var label := "Join the %s (%s)" % [sect.name, sect.alignment_tag]
-			if not check["ok"]:
-				label += " (%s)" % check["reason"]
-			options.append({"label": label, "action": GameState.join_sect.bind(sect.id), "disabled": not check["ok"], "keep_open": true})
+			options.append({"label": label, "action": GameState.join_sect.bind(sect.id), "disabled": not check["ok"], "reason": "" if check["ok"] else check["reason"], "keep_open": true})
 	options.append({"label": "Balance of power", "action": EventBus.sect_balance_requested.emit})
 	options.append_array(shop_options())
 	options.append_array(preload("res://src/world/interactables/explore_site.gd").event_options())
@@ -42,9 +40,7 @@ func trial_option() -> Dictionary:
 	var enemy: Dictionary = data.enemies[enemy_id]
 	var label := "Attempt the trial for %s (vs %s, %s)" % [sect.rank_name(Sects.next_rank(player, data)), enemy["name"], UIStyle.fight_label(player, data, enemy)]
 	var reason := Sects.check_promotion(player, data)
-	if reason != "":
-		label += " (%s)" % reason
-	return {"label": label, "action": GameState.attempt_promotion_trial, "disabled": reason != ""}
+	return {"label": label, "action": GameState.attempt_promotion_trial, "disabled": reason != "", "reason": reason}
 
 
 ## One "Claim <item>" entry per item in the player's sect shop; unavailable
@@ -57,7 +53,5 @@ func shop_options() -> Array[Dictionary]:
 		var item_id := String(entry["item_id"])
 		var label := "Claim %s (%d of %d contribution)" % [data.items[item_id].get("name", item_id), int(entry["contribution"]), Sects.contribution_balance(player)]
 		var reason := Sects.check_purchase(player, data, item_id)
-		if reason != "":
-			label += " (%s)" % reason
-		options.append({"label": label, "action": GameState.buy_with_contribution.bind(item_id), "disabled": reason != "", "keep_open": true})
+		options.append({"label": label, "action": GameState.buy_with_contribution.bind(item_id), "disabled": reason != "", "reason": reason, "keep_open": true})
 	return options

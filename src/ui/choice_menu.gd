@@ -61,20 +61,23 @@ func _rebuild() -> void:
 		b.disabled = option.get("disabled", false)
 		var reason: String = String(option.get("reason", ""))
 		b.tooltip_text = reason
+		var warn := b.disabled and reason != ""
+		var line: String = reason if warn else String(option.get("description", ""))
 		if b.disabled:
 			b.focus_mode = Control.FOCUS_ALL
-		b.focus_entered.connect(_show_reason.bind(reason))
-		b.mouse_entered.connect(_show_reason.bind(reason))
+		b.focus_entered.connect(_show_line.bind(line, warn))
+		b.mouse_entered.connect(_show_line.bind(line, warn))
 		_buttons.add_child(b)
 	var leave := UIStyle.button("Leave", close)
-	leave.focus_entered.connect(_show_reason.bind(""))
+	leave.focus_entered.connect(_show_line.bind("", false))
 	_buttons.add_child(leave)
 	_description.text = ""
 	_focus_first.call_deferred()
 
 
-func _show_reason(reason: String) -> void:
-	_description.text = reason
+func _show_line(text: String, warn: bool) -> void:
+	_description.text = text
+	_description.add_theme_color_override("font_color", UIStyle.CATEGORY_COLORS["warning"] if warn else Color(0.7, 0.7, 0.75))
 
 
 func _choose(option: Dictionary) -> void:

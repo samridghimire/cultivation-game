@@ -42,9 +42,7 @@ func _contemplation_options() -> Array[Dictionary]:
 	for insight_id in Dao.known_ids(p, data):
 		var label := "Contemplate the %s (1 month) [%s]" % [Dao.def_of(data, insight_id)["name"], Dao.progress_text(p, data, insight_id)]
 		var reason := Dao.check_contemplate(p, data, insight_id)
-		if reason != "":
-			label += " (%s)" % reason
-		options.append({"label": label, "action": GameState.contemplate_dao.bind(insight_id, Calendar.DAYS_PER_MONTH), "disabled": reason != "", "keep_open": true})
+		options.append({"label": label, "action": GameState.contemplate_dao.bind(insight_id, Calendar.DAYS_PER_MONTH), "disabled": reason != "", "reason": reason, "keep_open": true})
 	return options
 
 
@@ -58,9 +56,7 @@ static func _temper_option() -> Dictionary:
 		return {}
 	var label := "Temper your body: %s (%s)" % [stage["name"], BodyTempering.describe_next(p, data)]
 	var reason := BodyTempering.check_temper(p, data)
-	if reason != "":
-		label += " (%s)" % reason
-	return {"label": label, "action": GameState.temper_body, "disabled": reason != "", "keep_open": true}
+	return {"label": label, "action": GameState.temper_body, "disabled": reason != "", "reason": reason, "keep_open": true}
 
 
 func _dual_cultivation_options() -> Array[Dictionary]:
@@ -71,13 +67,9 @@ func _dual_cultivation_options() -> Array[Dictionary]:
 		var bonus := roundi((Family.dual_multiplier(p, spouse, data) - 1.0) * 100.0)
 		var label := "Dual cultivate with %s (1 month, +%d%% qi)" % [spouse.name, bonus]
 		var reason := Family.check_dual_cultivation(p, spouse, data)
-		if reason != "":
-			label += " (%s)" % reason
-		options.append({"label": label, "action": GameState.dual_cultivate.bind(spouse.id, Calendar.DAYS_PER_MONTH, qi_density), "disabled": reason != "", "keep_open": true})
+		options.append({"label": label, "action": GameState.dual_cultivate.bind(spouse.id, Calendar.DAYS_PER_MONTH, qi_density), "disabled": reason != "", "reason": reason, "keep_open": true})
 		var child_days := int(Children.rules(data).get("conception_days", 30))
 		label = "Try for a child with %s (%s)" % [spouse.name, Calendar.format_duration(child_days)]
 		reason = Children.check_conception(p, spouse, data)
-		if reason != "":
-			label += " (%s)" % reason
-		options.append({"label": label, "action": GameState.try_for_child.bind(spouse.id), "disabled": reason != "", "keep_open": true})
+		options.append({"label": label, "action": GameState.try_for_child.bind(spouse.id), "disabled": reason != "", "reason": reason, "keep_open": true})
 	return options

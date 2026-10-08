@@ -292,9 +292,7 @@ func _courtship_options() -> Array[Dictionary]:
 
 
 func _entry(label: String, reason: String, action: Callable) -> Dictionary:
-	if reason != "":
-		label += " (%s)" % reason
-	return {"label": label, "action": action, "disabled": reason != "", "keep_open": true}
+	return {"label": label, "action": action, "disabled": reason != "", "reason": reason, "keep_open": true}
 
 
 func _look() -> void:
@@ -336,9 +334,7 @@ func _inline_dialogue_options() -> Array[Dictionary]:
 	var view := GameState.dialogue_view()
 	for choice: Dictionary in view.get("choices", []):
 		var label: String = choice["label"]
-		if choice["disabled"]:
-			label += " (%s)" % choice["reason"]
-		options.append({"label": label, "action": _choose.bind(choice["index"]), "disabled": choice["disabled"], "keep_open": true})
+		options.append({"label": label, "action": _choose.bind(choice["index"]), "disabled": choice["disabled"], "reason": choice["reason"] if choice["disabled"] else "", "keep_open": true})
 	return options
 
 

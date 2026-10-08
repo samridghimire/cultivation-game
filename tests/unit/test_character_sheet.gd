@@ -42,7 +42,7 @@ func test_sheet_shows_spouse_pregnancy_and_meditation_offers_try_for_child() -> 
 	wife.pregnancy = {"partner": c.id, "days_left": 60}
 	tries = spot.get_options().filter(func(o: Dictionary) -> bool: return String(o["label"]).begins_with("Try for a child"))
 	assert_true(tries[0]["disabled"], "already with child")
-	assert_true(String(tries[0]["label"]).contains("already with child"), tries[0]["label"])
+	assert_true(String(tries[0]["reason"]).contains("already with child"), tries[0]["reason"])
 	spot.free()
 	var sheet := CharacterSheet.new()
 	(Engine.get_main_loop() as SceneTree).root.add_child(sheet)

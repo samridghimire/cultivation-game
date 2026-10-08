@@ -21,7 +21,7 @@ func test_disabled_join_entry_shows_reason() -> void:
 	for o: Dictionary in hall.get_options():
 		if String(o["label"]).begins_with("Join") and o["disabled"]:
 			found = true
-			assert_true(String(o["label"]).ends_with(")") and String(o["label"]).count("(") >= 2, o["label"])
+			assert_true(String(o["reason"]) != "" and not String(o["label"]).contains(String(o["reason"])), o["label"])
 	assert_true(found, "a mortal is refused by at least one sect")
 	hall.free()
 	gs.end_session()

@@ -4,6 +4,8 @@ extends Area2D
 ##
 ## Subclasses override get_options() to return menu entries:
 ##   {"label": String, "action": Callable, "disabled": bool (optional),
+##    "reason": String (optional, why it is disabled; shown in the warning color when focused),
+##    "description": String (optional, shown under the menu when an enabled option is focused),
 ##    "keep_open": bool (optional, re-show the menu after the action)}
 ## Actions should call GameState methods, not change data directly.
 ## Menus call menu_options(), which adds shared entries (e.g. artifact anchors).

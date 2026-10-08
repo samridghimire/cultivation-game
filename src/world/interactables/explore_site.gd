@@ -24,11 +24,9 @@ static func event_options() -> Array[Dictionary]:
 				continue
 			var reason := WorldEvents.check_join(data, GameState.world_events, GameState.player, event_id, kind, GameState.current_region)
 			var label := ("Enter the %s" if kind == "tournament" else "Defend against the %s") % String(def["name"]).to_lower()
-			if reason != "":
-				label += " (%s)" % reason
-			else:
+			if reason == "":
 				var foe := WorldEvents.opponent(data, event_id, kind, GameState.player, 0, RandomNumberGenerator.new())
 				label += " (%s)" % Appraisal.danger_text(GameState.player, data, foe)
 			var action: Callable = GameState.enter_tournament.bind(event_id) if kind == "tournament" else GameState.defend_against_incursion.bind(event_id)
-			options.append({"label": label, "action": action, "disabled": reason != "", "keep_open": true})
+			options.append({"label": label, "action": action, "disabled": reason != "", "reason": reason, "keep_open": true})
 	return options

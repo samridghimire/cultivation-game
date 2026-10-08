@@ -67,7 +67,7 @@ func test_humiliate_disabled_against_equal_and_works_against_weaker() -> void:
 	(_find(menu.get_options(), "Turn hostile")["action"] as Callable).call()
 	var humiliate := _find(menu.get_options(), "Humiliate")
 	assert_true(humiliate["disabled"], "not weaker: %s" % humiliate["label"])
-	assert_true(String(humiliate["label"]).contains("not weaker"), humiliate["label"])
+	assert_true(String(humiliate["reason"]).contains("not weaker"), humiliate["reason"])
 	p.realm_index = npc.realm_index + 1
 	humiliate = _find(menu.get_options(), "Humiliate")
 	assert_false(humiliate["disabled"], humiliate["label"])
