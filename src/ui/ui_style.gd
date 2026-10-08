@@ -3,7 +3,7 @@ extends RefCounted
 ## Shared colors and small widget helpers so UI built in code looks consistent.
 
 const BG := Color("1b1d2b")
-const PANEL := Color(0.08, 0.09, 0.13, 0.88)
+const PANEL := Color(0.08, 0.09, 0.13, 0.97)
 const ACCENT := Color("e8c76a")
 const CATEGORY_COLORS := {
 	"info": Color("dddddd"),

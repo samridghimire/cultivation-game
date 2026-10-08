@@ -143,3 +143,8 @@ func _check_all_screens(scale: float) -> void:
 	Settings.set_value("ui_scale", 1.0)
 	_scale = 1.0
 	root.size = old_size
+
+
+## WU-021: the screen screenshot tool (run by hand under xvfb) must at least parse.
+func test_screen_screenshot_tool_parses() -> void:
+	assert_true(load("res://tests/sim/screenshot_screens.gd") != null, "screenshot_screens.gd loads")
