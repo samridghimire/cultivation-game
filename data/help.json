@@ -19,7 +19,8 @@
     "scroll_down": "Scroll down",
     "quick_save": "Quick save",
     "quick_load": "Quick load",
-    "pause_menu": "Pause menu"
+    "pause_menu": "Pause menu",
+    "toggle_help": "Help"
   },
   "pages": [
     {

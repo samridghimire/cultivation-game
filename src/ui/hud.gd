@@ -25,7 +25,7 @@ var _target_name := ""
 const KEY_HINTS := [
 	["interact", "interact"], ["toggle_character_sheet", "character"], ["toggle_inventory", "inventory"],
 	["toggle_techniques", "techniques"], ["toggle_map", "map"], ["toggle_message_log", "log"],
-	["toggle_artifact", "artifact"], ["toggle_clan", "clan"], ["toggle_family", "family"], ["toggle_journal", "journal"], ["quick_save", "save"], ["quick_load", "load"], ["pause_menu", "pause"],
+	["toggle_artifact", "artifact"], ["toggle_clan", "clan"], ["toggle_family", "family"], ["toggle_journal", "journal"], ["quick_save", "save"], ["quick_load", "load"], ["pause_menu", "pause"], ["toggle_help", "help"],
 ]
 var _choice_menu: ChoiceMenu
 var _threat_prompt: ThreatPrompt
@@ -39,6 +39,7 @@ var _pause_menu: PauseMenu
 var _settings: SettingsScreen
 var _load_screen: LoadScreen
 var _help: HelpScreen
+var _help_from_key := false
 var _crafting: CraftingScreen
 var _shop: ShopScreen
 var _mission_board: MissionBoard
@@ -121,7 +122,7 @@ func _ready() -> void:
 	add_child(UIStyle.centered(_load_screen))
 	_pause_menu.load_requested.connect(_open_load)
 	_help = HelpScreen.new()
-	_help.closed.connect(_on_settings_closed)
+	_help.closed.connect(_on_help_closed)
 	add_child(UIStyle.centered(_help))
 	_pause_menu.help_requested.connect(_open_help)
 	_pause_menu.journal_requested.connect(_open_journal)
@@ -190,6 +191,13 @@ func _unhandled_input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 		_close_screens()
 		_pause_menu.open()
+		_update_modal()
+		return
+	if event.is_action_pressed("toggle_help"):
+		get_viewport().set_input_as_handled()
+		_close_screens()
+		_help_from_key = true
+		_help.open()
 		_update_modal()
 		return
 	for action in _screens:
@@ -612,6 +620,7 @@ func _open_settings() -> void:
 
 ## Help replaces the pause menu while open, then returns to it.
 func _open_help() -> void:
+	_help_from_key = false
 	_pause_menu.visible = false
 	_help.open()
 
@@ -641,6 +650,15 @@ func _on_slot_chosen(slot: String) -> void:
 		get_tree().reload_current_scene()
 	else:
 		_load_screen.open()
+
+
+## Help opened with its key returns to the world; from the pause menu, back to it.
+func _on_help_closed() -> void:
+	if _help_from_key:
+		_help_from_key = false
+		_update_modal()
+	else:
+		_on_settings_closed()
 
 
 func _on_settings_closed() -> void:

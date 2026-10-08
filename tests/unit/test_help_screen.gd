@@ -109,3 +109,30 @@ func test_binding_label_and_key_bar_follow_device_and_rebinds() -> void:
 	ic.reset_controls()
 	ic.path = saved_path
 	DirAccess.remove_absolute("user://test_controls_fh012.cfg")
+
+
+func test_help_key_has_keyboard_binding_and_hint() -> void:
+	var input_config := _root().get_node("InputConfig")
+	assert_true(input_config.KEYS.has("toggle_help"))
+	assert_true(input_config.KEYS["toggle_help"].has(KEY_F1))
+	assert_true(data().help_action_names.has("toggle_help"))
+	var hinted := false
+	for pair in load("res://src/ui/hud.gd").KEY_HINTS:
+		hinted = hinted or pair[0] == "toggle_help"
+	assert_true(hinted, "KEY_HINTS lists toggle_help")
+
+
+func test_help_key_opens_help_and_close_returns_to_world() -> void:
+	var gs := _root().get_node("GameState")
+	gs.start_session(CharacterFactory.create("Helper", gs.data, seeded_rng()))
+	var hud: CanvasLayer = load("res://src/ui/hud.tscn").instantiate()
+	_root().add_child(hud)
+	var ev := InputEventAction.new()
+	ev.action = "toggle_help"
+	ev.pressed = true
+	hud._unhandled_input(ev)
+	assert_true(hud._help.visible)
+	hud._help.close()
+	assert_false(hud._help.visible)
+	assert_false(hud._pause_menu.visible, "help from its key does not open the pause menu")
+	hud.free()

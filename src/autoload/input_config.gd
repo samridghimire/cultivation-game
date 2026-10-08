@@ -25,6 +25,7 @@ const KEYS := {
 	"quick_save": [KEY_F5],
 	"quick_load": [KEY_F9],
 	"pause_menu": [KEY_ESCAPE],
+	"toggle_help": [KEY_F1, KEY_H],
 }
 
 const JOY_BUTTONS := {
