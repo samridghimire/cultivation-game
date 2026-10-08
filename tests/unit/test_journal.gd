@@ -105,7 +105,7 @@ func test_tournament_in_region_can_be_entered_by_cultivators_only() -> void:
 	assert_true(_find(_entries(c, 5, events), "Sect Tournament here (15 days left)").size() > 0)
 	c.realm_index = 0
 	assert_true(_find(_entries(c, 5, events), "Only cultivators").size() > 0)
-	assert_true(_find(_entries(c, 5, events, "misty_forest"), "Sect Tournament").is_empty())
+	assert_true(_find(_entries(c, 5, events, "misty_forest"), "Sect Tournament here").is_empty())
 
 
 func test_breakthrough_and_milestone_lines() -> void:
@@ -212,3 +212,61 @@ func test_errand_with_unknown_npc_is_a_load_error() -> void:
 	d.load_errors.clear()
 	d._validate()
 	assert_true(", ".join(d.load_errors).contains("unknown npc 'nobody'"))
+
+
+func _household(c: CharacterData, people: Dictionary = {}) -> Array[Dictionary]:
+	return Guidance.journal(c, data(), {}, 0, "qingshi_village", 1.0, people, []).filter(func(e: Dictionary) -> bool: return e["section"] == "Household")
+
+
+func test_household_is_empty_for_a_loner() -> void:
+	assert_true(_household(_fresh()).is_empty())
+
+
+func test_household_lists_untrained_children_only() -> void:
+	var c := _fresh()
+	var child := new_character(99)
+	child.id = "gen_child"
+	child.name = "Lin Bao"
+	child.age_days = 12 * Calendar.DAYS_PER_YEAR
+	c.children.append(child.id)
+	child.parents = [c.id]
+	var people := {child.id: child}
+	assert_true(String(_household(c, people)[0]["text"]).contains("Lin Bao (age 12) can be trained"))
+	child.training = {"assignment": "cultivate"}
+	assert_true(_household(c, people).is_empty())
+	child.training = {}
+	child.age_days = 2 * Calendar.DAYS_PER_YEAR
+	assert_true(_household(c, people).is_empty(), "too young")
+
+
+func test_household_garden_beast_and_pregnancy_lines() -> void:
+	var c := _fresh()
+	c.garden = [{"item": "spirit_herb", "days_left": 0}, {"item": "spirit_herb", "days_left": 9}]
+	assert_eq(_household(c)[0]["text"], "1 spirit garden plot ready to harvest.")
+	c.garden = [{"item": "spirit_herb", "days_left": 9}]
+	assert_true(_household(c).is_empty())
+	c.companions = ["boar"] as Array[String]
+	assert_true(_household(c).is_empty(), "no food, not outgrown")
+	c.inventory = {"spirit_beast_pellet": 1}
+	assert_eq(_household(c)[0]["text"], "Your Fields Boar can be fed.")
+	c.inventory = {}
+	c.realm_index = 6
+	assert_true(String(_household(c)[0]["text"]).contains("outgrown you"))
+	assert_eq(_household(c)[0]["tone"], "dim")
+	c.pregnancy = {"partner": "", "days_left": 30}
+	assert_true(_household(c).any(func(e: Dictionary) -> bool: return String(e["text"]).contains("with child")))
+
+
+func test_events_in_other_regions_are_listed() -> void:
+	if not data().world_events.has("sect_tournament"):
+		return
+	var events: Array = [{"id": "sect_tournament", "region": "azure_peak", "start_day": 0, "end_day": 20}]
+	var c := _fresh()
+	c.realm_index = 1
+	var line := _find(_entries(c, 5, events), "Sect Tournament in Azure Peak")
+	assert_eq(line["text"], "Sect Tournament in Azure Peak: you can enter, 15 days left")
+	assert_eq(line["tone"], "normal")
+	c.realm_index = 0
+	line = _find(_entries(c, 5, events), "Sect Tournament in Azure Peak")
+	assert_eq(line["tone"], "dim")
+	assert_true(_find(_entries(c, 5, events, "azure_peak"), "Sect Tournament in").is_empty(), "current region keeps the old lines")

@@ -305,8 +305,10 @@ static func journal(c: CharacterData, data: GameData, flags: Dictionary, today: 
 			if def.has(kind):
 				var reason := WorldEvents.check_join(data, events, c, event_id, kind, region_id)
 				_add(out, "World events", "%s: %s" % [kind.capitalize(), "you can enter" if reason == "" else reason], "normal" if reason == "" else "dim")
+	_other_region_event_entries(out, c, data, today, region_id, events)
 	_opportunity_entries(out, c, data, flags, today)
 	_errand_entries(out, data, flags)
+	_household_entries(out, c, data, people)
 	for order in c.commissions:
 		_add(out, "Commissions", Commissions.describe(c, data, order, today), "warning" if Commissions.days_left(order, today) <= 7 else "normal")
 	_milestone_entries(out, c, data, flags, clan)
@@ -319,6 +321,48 @@ static func _add(out: Array[Dictionary], section: String, text: String, tone: St
 
 static func _region_name(data: GameData, region_id: String) -> String:
 	return String(data.regions.get(region_id, {}).get("name", region_id))
+
+
+## Joinable events in regions other than the current one (dim when the check fails).
+static func _other_region_event_entries(out: Array[Dictionary], c: CharacterData, data: GameData, today: int, region_id: String, events: Array) -> void:
+	for instance: Dictionary in events:
+		var where := String(instance.get("region", ""))
+		if where == region_id:
+			continue
+		var event_id := String(instance["id"])
+		var def := WorldEvents.def_of(data, event_id)
+		var days_left := maxi(0, int(instance["end_day"]) - today)
+		var label := "%s in %s" % [WorldEvents.event_name(data, event_id), _region_name(data, where)]
+		for kind in ["tournament", "defence"]:
+			if not def.has(kind):
+				continue
+			var reason := WorldEvents.check_join(data, events, c, event_id, kind, where)
+			_add(out, "World events", "%s: you can enter, %d days left" % [label, days_left] if reason == "" else "%s: %s" % [label, reason], "normal" if reason == "" else "dim")
+
+
+## Children to teach, garden plots, companion beasts and pregnancies.
+static func _household_entries(out: Array[Dictionary], c: CharacterData, data: GameData, people: Dictionary) -> void:
+	for child_id in c.children:
+		var child: CharacterData = people.get(child_id)
+		if child == null or Training.check_child(c, child) != "":
+			continue
+		if Children.can_cultivate_yet(child, data) and Training.current(child) == "":
+			_add(out, "Household", "%s (age %d) can be trained or taught now." % [child.name, child.age_years()], "normal")
+	var ready := 0
+	for plot: Dictionary in c.garden:
+		if int(plot.get("days_left", 1)) <= 0:
+			ready += 1
+	if ready > 0:
+		_add(out, "Household", "%d spirit garden plot%s ready to harvest." % [ready, "" if ready == 1 else "s"], "normal")
+	var food := Beasts.best_food(c, data)
+	for beast_id in c.companions:
+		var beast := Beasts.beast_name(data, beast_id)
+		if Beasts.outgrown_by(c, data, beast_id) >= 1.0:
+			_add(out, "Household", "Your %s has outgrown you; its help is fading." % beast, "dim")
+		if food != "" and Beasts.check_feed(c, data, beast_id, food) == "":
+			_add(out, "Household", "Your %s can be fed." % beast, "normal")
+	for line in Children.describe_pregnancies(c, people):
+		_add(out, "Household", line, "dim")
 
 
 static func _opportunity_entries(out: Array[Dictionary], c: CharacterData, data: GameData, flags: Dictionary, today: int) -> void:

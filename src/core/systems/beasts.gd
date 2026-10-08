@@ -75,11 +75,16 @@ static func try_tame(c: CharacterData, data: GameData, enemy_id: String, rng: Ra
 ## raises it, outgrowing the beast's realm lowers it.
 static func strength_of(c: CharacterData, data: GameData, beast_id: String) -> float:
 	var rank_mult := 1.0 + float(data.beast_rules.get("rank_scale", 0.0)) * Professions.rank_of(c, PROFESSION)
+	return rank_mult * pow(float(data.beast_rules.get("outgrown_scale", 1.0)), outgrown_by(c, data, beast_id))
+
+
+## How many realms (after the beast's growth levels) `c` has outgrown the
+## companion; 0 while it still keeps up.
+static func outgrown_by(c: CharacterData, data: GameData, beast_id: String) -> float:
 	var enemy: Dictionary = data.enemies.get(String(def(data, beast_id).get("enemy", "")), {})
 	var beast_realm := data.realm_index_of(String(enemy.get("realm", "mortal")))
 	var offset := float(level(c, data, beast_id) - 1) * float(data.beast_rules.get("growth", {}).get("realms_per_level", 0.0))
-	var outgrown := maxf(0.0, c.realm_index - beast_realm - offset)
-	return rank_mult * pow(float(data.beast_rules.get("outgrown_scale", 1.0)), outgrown)
+	return maxf(0.0, c.realm_index - beast_realm - offset)
 
 
 ## A companion's level from its growth xp (1 .. growth.max_level).
