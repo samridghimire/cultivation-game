@@ -227,7 +227,7 @@ func _show_details() -> void:
 	_name.text = String(item.get("name", item_id))
 	_name.add_theme_color_override("font_color", rarity_color(String(lot.get("rarity", "common"))))
 	_description.text = String(item.get("description", ""))
-	var lines := InventoryScreen.describe_effects(item.get("effects", {}), data)
+	var lines := Items.describe_effects(item.get("effects", {}), data)
 	if Equipment.is_equipment(data, item_id):
 		lines.append_array(InventoryScreen.describe_equipment(GameState.player, data, item_id))
 	if CombatTalismans.is_combat_talisman(data, item_id):

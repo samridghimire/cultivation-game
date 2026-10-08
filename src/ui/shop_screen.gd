@@ -257,7 +257,7 @@ func _show_details() -> void:
 		return
 	_name.text = item["name"]
 	_description.text = String(item.get("description", ""))
-	var lines := InventoryScreen.describe_effects(item.get("effects", {}), data)
+	var lines := Items.describe_effects(item.get("effects", {}), data)
 	if Equipment.is_equipment(data, _selected):
 		lines.insert(0, Equipment.describe_stats(data, _selected))
 	_effects.text = "\n".join(lines)

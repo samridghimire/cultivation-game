@@ -218,7 +218,7 @@ static func shop_info_text(c: CharacterData, data: GameData, entry: Dictionary) 
 static func shop_item_lines(c: CharacterData, data: GameData, item_id: String) -> PackedStringArray:
 	if Equipment.is_equipment(data, item_id):
 		return InventoryScreen.describe_equipment(c, data, item_id)
-	return InventoryScreen.describe_effects(data.items.get(item_id, {}).get("effects", {}), data)
+	return Items.describe_effects(data.items.get(item_id, {}).get("effects", {}), data)
 
 
 func _set_tab(tab: String) -> void:
@@ -426,7 +426,7 @@ func _show_details() -> void:
 	var reqs := requirement_lines(p, data, mission)
 	_requirements.visible = not reqs.is_empty()
 	_requirements.text = "Requires:\n  " + "\n  ".join(reqs)
-	var rewards := InventoryScreen.describe_effects(mission.get("rewards", {}), data)
+	var rewards := Items.describe_effects(mission.get("rewards", {}), data)
 	_rewards.visible = not rewards.is_empty()
 	_rewards.text = "Rewards:\n  " + "\n  ".join(rewards)
 	var reason := Sects.check_mission(p, data, _selected, GameState.world_flags)

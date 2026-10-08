@@ -6,6 +6,56 @@ extends RefCounted
 const SELL_RATE := 0.5
 
 
+## Human-readable summary of an effects dictionary (see Effects for the keys).
+## Never prints raw ids.
+static func describe_effects(effects: Dictionary, data: GameData) -> PackedStringArray:
+	var lines: PackedStringArray = []
+	if effects.has("qi"):
+		lines.append("+%d qi" % int(effects["qi"]))
+	if effects.has("breakthrough_bonus"):
+		lines.append("+%d%% to your next breakthrough" % int(float(effects["breakthrough_bonus"]) * 100))
+	if effects.has("burn_lifespan"):
+		lines.append("WARNING: burns %d years of your lifespan!" % int(effects["burn_lifespan"]))
+	if effects.has("extend_lifespan"):
+		lines.append("+%d years of lifespan" % int(effects["extend_lifespan"]))
+	if effects.has("alignment"):
+		lines.append("Alignment %+d" % int(effects["alignment"]))
+	for sect_id in effects.get("reputation", {}):
+		var sect: SectDef = data.sects.get(String(sect_id))
+		lines.append("%+d standing with %s" % [int(effects["reputation"][sect_id]), sect.name if sect != null else "a sect"])
+	for item_id in effects.get("items", {}):
+		lines.append("%+d %s" % [int(effects["items"][item_id]), String(data.items.get(item_id, {}).get("name", "item"))])
+	if effects.has("learn_technique"):
+		var tech: TechniqueDef = data.techniques.get(String(effects["learn_technique"]))
+		lines.append("Teaches the technique: %s" % (tech.name if tech != null else "a technique"))
+	if effects.has("learn_recipe"):
+		var recipe: Dictionary = data.recipes.get(String(effects["learn_recipe"]), {})
+		lines.append("Teaches the recipe: %s" % String(recipe.get("name", "a recipe")))
+	if effects.has("heal_injury"):
+		var injury_id := String(effects["heal_injury"])
+		lines.append("Heals every injury" if injury_id == "all" else "Heals: %s" % Injuries.injury_name(data, injury_id))
+	if effects.has("dao_insight"):
+		lines.append("A glimpse of the %s" % String(Dao.def_of(data, String(effects["dao_insight"])).get("name", "Dao")))
+	var attributes: Dictionary = effects.get("attributes", {})
+	for attr_id in attributes:
+		var attr_name := String(attr_id).capitalize()
+		for a: Dictionary in data.attributes:
+			if a.get("id", "") == attr_id:
+				attr_name = String(a.get("name", attr_name))
+		lines.append("%+d %s" % [int(attributes[attr_id]), attr_name])
+	if effects.has("buff"):
+		var buff: Dictionary = effects["buff"]
+		var mults: Dictionary = buff.get("mults", {})
+		var parts: PackedStringArray = []
+		for stat in mults:
+			parts.append("%+d%% %s" % [roundi(float(mults[stat]) * 100.0), String(stat).replace("_", " ")])
+		var days := int(buff.get("days", 0))
+		lines.append("%s for %d %s" % [", ".join(parts) if not parts.is_empty() else "A blessing", days, "day" if days == 1 else "days"])
+	if effects.has("bloodline"):
+		lines.append("Awakens the %s in your blood" % Bloodlines.bloodline_name(data, String(effects["bloodline"])))
+	return lines
+
+
 ## What using `item_id` costs that cannot be undone ("" = nothing worth a
 ## confirmation): burned lifespan or a darkened heart (WU-032).
 static func use_warning(data: GameData, item_id: String) -> String:

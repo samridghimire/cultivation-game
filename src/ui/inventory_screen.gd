@@ -93,28 +93,9 @@ static func sorted_item_ids(c: CharacterData, data: GameData) -> Array:
 	return ids
 
 
-## Human-readable summary of an effects dictionary (see Effects for the keys).
+## Human-readable summary of an effects dictionary; see Items.describe_effects.
 static func describe_effects(effects: Dictionary, data: GameData) -> PackedStringArray:
-	var lines: PackedStringArray = []
-	if effects.has("qi"):
-		lines.append("+%d qi" % int(effects["qi"]))
-	if effects.has("breakthrough_bonus"):
-		lines.append("+%d%% to your next breakthrough" % int(float(effects["breakthrough_bonus"]) * 100))
-	if effects.has("burn_lifespan"):
-		lines.append("WARNING: burns %d years of your lifespan!" % int(effects["burn_lifespan"]))
-	if effects.has("extend_lifespan"):
-		lines.append("+%d years of lifespan" % int(effects["extend_lifespan"]))
-	if effects.has("alignment"):
-		lines.append("Alignment %+d" % int(effects["alignment"]))
-	for item_id in effects.get("items", {}):
-		lines.append("%+d %s" % [int(effects["items"][item_id]), _item_name(data, item_id)])
-	if effects.has("learn_technique"):
-		var tech: TechniqueDef = data.techniques.get(String(effects["learn_technique"]))
-		lines.append("Teaches the technique: %s" % (tech.name if tech != null else effects["learn_technique"]))
-	if effects.has("heal_injury"):
-		var injury_id := String(effects["heal_injury"])
-		lines.append("Heals every injury" if injury_id == "all" else "Heals: %s" % Injuries.injury_name(data, injury_id))
-	return lines
+	return Items.describe_effects(effects, data)
 
 
 ## Detail lines for an equipment item: slot + stats, and what it would replace.
