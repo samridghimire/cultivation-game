@@ -95,6 +95,31 @@ static func opening_news(c: CharacterData, data: GameData, region_id: String, fr
 	return lines
 
 
+## Default `notice_days`: how long before an opening word of it spreads.
+const DEFAULT_NOTICE_DAYS := 30
+
+
+## Lines for realms that admit `c` and whose opening came within their
+## `notice_days` while time passed from `from_day` to `to_day`. A span that
+## jumps past the whole opening gets no notice (opening_news covers it).
+static func notice_news(c: CharacterData, data: GameData, from_day: int, to_day: int) -> PackedStringArray:
+	var lines: PackedStringArray = []
+	var ids: Array = data.secret_realms.keys()
+	ids.sort()
+	for realm_id in ids:
+		var def: Dictionary = data.secret_realms[realm_id]
+		var n := int(def.get("notice_days", DEFAULT_NOTICE_DAYS))
+		if n <= 0 or is_open(def, to_day) or not admits(c, data, def):
+			continue
+		if days_until_open(def, from_day) > n and days_until_open(def, to_day) <= n:
+			var cost := "%d spirit stones" % int(def.get("entry_stones", 0))
+			var item_id := String(def.get("entry_item", ""))
+			if item_id != "":
+				cost += ", needs %s" % String(data.items.get(item_id, {}).get("name", item_id))
+			lines.append("Word spreads that the %s in %s will open in about %s. (Entry: %s)" % [def["name"], Exploration.region_name(data, String(def.get("region", ""))), Calendar.format_duration(days_until_open(def, to_day)), cost])
+	return lines
+
+
 ## `c`'s progress record for the current opening ({} = not entered yet).
 static func _progress(c: CharacterData, def: Dictionary, total_days: int) -> Dictionary:
 	var progress: Dictionary = c.secret_realms.get(String(def.get("id", "")), {})
@@ -356,6 +381,8 @@ static func validate(data: GameData) -> PackedStringArray:
 				for item_id in treasure.get("effects", {}).get("items", {}):
 					if not data.items.has(item_id):
 						errors.append("Secret realm '%s' treasure has unknown item '%s'" % [id, item_id])
+		if def.has("notice_days") and (not (def["notice_days"] is int or def["notice_days"] is float) or int(def["notice_days"]) < 0):
+			errors.append("Secret realm '%s' notice_days must be a number >= 0" % id)
 		var entry_item := String(def.get("entry_item", ""))
 		if entry_item != "" and not data.items.has(entry_item):
 			errors.append("Secret realm '%s' has unknown entry_item '%s'" % [id, entry_item])

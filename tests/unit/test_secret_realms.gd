@@ -340,3 +340,45 @@ func test_yin_palace_needs_its_token() -> void:
 	assert_eq(need, "You need %s to find the way in." % d.items["yin_king_gate_token"]["name"])
 	c.add_item("yin_king_gate_token", 1)
 	assert_eq(SecretRealms.check_enter(c, d, "drowned_yin_palace", "withered_bone_marsh", day), "")
+
+
+func test_notice_news_crosses_the_notice_mark_once() -> void:
+	var d := data()
+	var def := _def()
+	var saved := d.secret_realms
+	d.secret_realms = {"test_realm": def}
+	var c := _cultivator()
+	var start := Y
+	var lines := SecretRealms.notice_news(c, d, start - 40, start - 25)
+	assert_eq(lines.size(), 1, str(lines))
+	assert_true(lines[0].contains("Test Realm") and lines[0].contains("10 spirit stones"), lines[0])
+	assert_eq(SecretRealms.notice_news(c, d, start - 20, start - 10).size(), 0, "already inside the notice window")
+	assert_eq(SecretRealms.notice_news(c, d, start - 60, start + 5).size(), 0, "jumped past; opening_news covers it")
+	c.realm_index = 0
+	assert_eq(SecretRealms.notice_news(c, d, start - 40, start - 25).size(), 0, "barrier repels a mortal")
+	c.realm_index = 1
+	def["notice_days"] = 0
+	assert_eq(SecretRealms.notice_news(c, d, start - 40, start - 25).size(), 0, "notice_days 0 disables it")
+	def["notice_days"] = 10
+	assert_eq(SecretRealms.notice_news(c, d, start - 40, start - 25).size(), 0, "30-day mark is outside a 10-day notice")
+	assert_eq(SecretRealms.notice_news(c, d, start - 15, start - 5).size(), 1)
+	d.secret_realms = saved
+
+
+func test_game_state_posts_the_notice() -> void:
+	var gs := _root().get_node("GameState")
+	var clock := _root().get_node("GameClock")
+	var bus := _root().get_node("EventBus")
+	var c := new_character(31)
+	c.spiritual_roots = {"wood": 80}
+	gs.start_session(c)
+	c.realm_index = gs.data.realm_index_of("qi_refining")
+	var def := SecretRealms.realm(gs.data, "verdant_remnant")
+	clock.total_days = int(def.get("offset_years", 0)) * Y - 40
+	var before: int = bus.history.size()
+	gs.cultivate(20)
+	var found := false
+	for entry: Dictionary in bus.history.slice(before):
+		found = found or String(entry["text"]).contains("Word spreads that the Verdant Remnant")
+	assert_true(found, "notice posted")
+	gs.end_session()
