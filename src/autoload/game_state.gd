@@ -590,6 +590,9 @@ func _explore_once(tags: Array, quiet: bool) -> Dictionary:
 		encounter = Exploration.deep_path_for(player, data, current_region, world_flags)
 		last_explore_deep_path = not encounter.is_empty()
 	if encounter.is_empty():
+		var hunted := Bounties.hunt_roll(player, data, current_region, GameClock.total_days, rng)
+		if hunted != "":
+			return _hunt_bounty_foe(hunted)
 		encounter = Exploration.roll_encounter(player, data, tags, world_flags, rng, Rivals.rival_of(player, npcs), 1.0 - ClanEstate.ward(clan, data, current_region), Calendar.season_of(GameClock.total_days), current_region)
 	else:
 		world_flags["discovered_" + current_region] = true
@@ -626,6 +629,48 @@ func _explore_once(tags: Array, quiet: bool) -> Dictionary:
 		return {"event": "story"}
 	_resolve_explore_enemy(result["enemy"])
 	return {"event": "threat" if pending_threat != "" else "fight"}
+
+
+## The trail of the bounty's foe turns up while exploring (BOUNTY-001): a chosen fight, so a Dangerous foe is
+## fought directly; a Deadly one is out of reach and the bounty stays open.
+func _hunt_bounty_foe(enemy_id: String) -> Dictionary:
+	var enemy_name := String(data.enemies[enemy_id].get("name", enemy_id))
+	EventBus.post("You pick up the trail of the %s from your bounty." % enemy_name, "danger")
+	_pass_time(1)
+	if not _can_act():
+		return {"event": "story"}
+	if Exploration.should_evade(player, data, enemy_id):
+		EventBus.post("The %s is far beyond you. You lose the trail." % enemy_name, "warning")
+		return {"event": "nothing"}
+	if fight(enemy_id) and _can_act():
+		var stones := Bounties.complete(player, data, GameClock.total_days)
+		EventBus.post("Bounty claimed: %d spirit stones." % stones, "progress")
+		EventBus.player_changed.emit()
+	return {"event": "fight"}
+
+
+## Take a bounty from a board. Takes no time.
+func take_bounty(bounty_id: String) -> void:
+	EventBus.topic = "world"
+	if not _can_act():
+		return
+	var reason := Bounties.check_take(player, data, bounty_id, GameClock.total_days)
+	if reason != "":
+		EventBus.post(reason, "warning")
+	else:
+		Bounties.take(player, data, bounty_id, GameClock.total_days)
+		var b := Bounties.def_of(data, bounty_id)
+		EventBus.post("You take the bounty: %s (%d days)" % [b["text"], int(b["days"])], "info")
+	EventBus.player_changed.emit()
+
+
+func abandon_bounty() -> void:
+	EventBus.topic = "world"
+	if not _can_act() or player.bounty.is_empty():
+		return
+	Bounties.abandon(player, data, GameClock.total_days)
+	EventBus.post("You give up the hunt.", "info")
+	EventBus.player_changed.emit()
 
 
 ## A foe met while exploring: Deadly lethal foes are evaded, Dangerous lethal
@@ -2594,6 +2639,10 @@ func _on_days_advanced(days: int) -> void:
 		EventBus.post("The %s in your veins stirs; your heart shifts (alignment %+d)." % [Bloodlines.bloodline_name(data, player.bloodline), drift], "karma")
 	for injury_id in Injuries.pass_days(player, days):
 		EventBus.post("Your %s has healed." % Injuries.injury_name(data, injury_id), "progress")
+	var lapsed_bounty := Bounties.expire(player, data, GameClock.total_days)
+	if lapsed_bounty != "":
+		var lapsed_enemy: String = Bounties.def_of(data, lapsed_bounty).get("enemy", "")
+		EventBus.post("Your bounty on the %s has lapsed." % data.enemies.get(lapsed_enemy, {}).get("name", lapsed_enemy), "info")
 	for buff_name in Buffs.pass_days(player, days):
 		EventBus.post("The power of your %s fades." % buff_name)
 	for item_id in SpiritGarden.advance(player, data, days):

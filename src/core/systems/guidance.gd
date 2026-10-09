@@ -847,6 +847,10 @@ static func _opportunity_entries(out: Array[Dictionary], c: CharacterData, data:
 		if deeper >= 0:
 			_add(out, "Opportunities", "%s: explored %d days. Something deeper waits after %d." % [_region_name(data, region_id), Exploration.familiarity(c, region_id), deeper], "normal")
 	if today >= 0:
+		var hunt := Bounties.active(c, data, today)
+		if not hunt.is_empty():
+			var prey: String = data.enemies.get(String(hunt["enemy"]), {}).get("name", hunt["enemy"])
+			_add(out, "Opportunities", "Bounty: %s in %s (%d days left, %d stones)." % [prey, _region_name(data, String(hunt["region"])), int(hunt["until_day"]) - today, int(hunt["reward_stones"])], "normal")
 		var shown_herbs := 0
 		for h in Exploration.seasonal_highlights(data, Calendar.season_of(today)):
 			if shown_herbs >= SEASONAL_JOURNAL_MAX:

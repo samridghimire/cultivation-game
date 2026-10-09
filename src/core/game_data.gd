@@ -34,6 +34,9 @@ var deeds: Dictionary = {}  # id -> Dictionary
 var regions: Dictionary = {}  # id -> Dictionary
 var start_region := ""
 var encounters: Dictionary = {}  # id -> Dictionary
+## Bounties by id and the file's top-level numbers (data/bounties.json, Bounties).
+var bounties: Dictionary = {}
+var bounty_config: Dictionary = {"hunt_chance": 0.3, "max_active": 1, "offers": 3}
 var errands: Array = []  # data/npcs.json "errands" (journal reminders, GUIDE-003)
 var npcs: Dictionary = {}  # id -> Dictionary (definitions; live NPCs are in GameState.npcs)
 var names: Dictionary = {}  # data/names.json: {"surnames": [...], "given_names": {gender: [...]}}
@@ -212,6 +215,13 @@ func _load(dir: String) -> void:
 	for encounter in _read(dir, "encounters.json").get("encounters", []):
 		encounters[encounter["id"]] = encounter
 
+	var bounty_file := _read(dir, "bounties.json")
+	for key: String in bounty_config:
+		if bounty_file.has(key):
+			bounty_config[key] = bounty_file[key]
+	for bounty in bounty_file.get("bounties", []):
+		bounties[String(bounty.get("id", ""))] = bounty
+
 	var npc_file := _read(dir, "npcs.json")
 	for npc in npc_file.get("npcs", []):
 		npcs[npc["id"]] = npc
@@ -341,6 +351,7 @@ func _validate() -> void:
 	_validate_recipes()
 	_validate_help()
 	_validate_milestones()
+	_validate_bounties()
 	load_errors.append_array(Equipment.validate(self))
 	load_errors.append_array(CombatTalismans.validate(self))
 	load_errors.append_array(Family.validate(self))
@@ -581,6 +592,33 @@ func _validate_combat() -> void:
 		for item_id in enemy.get("rewards", {}).get("items", {}):
 			if not items.has(item_id):
 				load_errors.append("Enemy '%s' rewards unknown item '%s'" % [enemy["id"], item_id])
+
+
+func _validate_bounties() -> void:
+	for key in ["hunt_chance", "max_active", "offers"]:
+		if typeof(bounty_config[key]) != TYPE_INT and typeof(bounty_config[key]) != TYPE_FLOAT:
+			load_errors.append("bounties.json %s must be a number" % key)
+	for b: Dictionary in bounties.values():
+		var label := "Bounty '%s'" % b.get("id", "")
+		if String(b.get("id", "")) == "":
+			load_errors.append("A bounty has no id")
+		if not enemies.has(String(b.get("enemy", ""))):
+			load_errors.append("%s has unknown enemy '%s'" % [label, b.get("enemy", "")])
+		if not regions.has(String(b.get("region", ""))):
+			load_errors.append("%s has unknown region '%s'" % [label, b.get("region", "")])
+		for key in ["min_realm", "max_realm"]:
+			if b.has(key) and realm_index_of(String(b[key])) < 0:
+				load_errors.append("%s has unknown %s '%s'" % [label, key, b[key]])
+		if b.has("min_stage") and (not b.has("min_realm") or typeof(b["min_stage"]) not in [TYPE_INT, TYPE_FLOAT] or int(b["min_stage"]) < 0):
+			load_errors.append("%s min_stage must be an int >= 0 and needs min_realm" % label)
+		if typeof(b.get("reward_stones")) not in [TYPE_INT, TYPE_FLOAT] or int(b["reward_stones"]) <= 0:
+			load_errors.append("%s reward_stones must be > 0" % label)
+		if typeof(b.get("days")) not in [TYPE_INT, TYPE_FLOAT] or int(b["days"]) < 7:
+			load_errors.append("%s days must be >= 7" % label)
+		if typeof(b.get("cooldown_days")) not in [TYPE_INT, TYPE_FLOAT] or int(b["cooldown_days"]) < 0:
+			load_errors.append("%s cooldown_days must be >= 0" % label)
+		if String(b.get("text", "")) == "":
+			load_errors.append("%s needs text" % label)
 
 
 func milestone_def(id: String) -> Dictionary:

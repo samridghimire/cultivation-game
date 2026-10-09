@@ -102,6 +102,9 @@ var abode_array := ""
 var encounter_counts: Dictionary = {}
 ## Days spent exploring each region: region id -> days (EXPL-001, unlocks `min_explores` encounters).
 var explore_days: Dictionary = {}
+## The active bounty hunt {id, until_day} ({} = none) and the day each bounty can be taken again (BOUNTY-001).
+var bounty: Dictionary = {}
+var bounty_cooldowns: Dictionary = {}
 ## Creation Artifact energy fed from spirit stones and treasures (ArtifactFunctions).
 var artifact_energy := 0
 ## Unlocked artifact function ids (data/artifact.json "functions").
@@ -240,6 +243,8 @@ func to_dict() -> Dictionary:
 		"abode_array": abode_array,
 		"encounter_counts": encounter_counts.duplicate(),
 		"explore_days": explore_days.duplicate(),
+		"bounty": bounty.duplicate(),
+		"bounty_cooldowns": bounty_cooldowns.duplicate(),
 	}
 
 
@@ -357,6 +362,11 @@ static func from_dict(d: Dictionary) -> CharacterData:
 		c.encounter_counts[String(enc_id)] = int(d["encounter_counts"][enc_id])
 	for region_id in d.get("explore_days", {}):
 		c.explore_days[String(region_id)] = int(d["explore_days"][region_id])
+	var saved_bounty: Variant = d.get("bounty", {})
+	if saved_bounty is Dictionary and not (saved_bounty as Dictionary).is_empty():
+		c.bounty = {"id": String(saved_bounty.get("id", "")), "until_day": int(saved_bounty.get("until_day", 0))}
+	for bounty_id in d.get("bounty_cooldowns", {}):
+		c.bounty_cooldowns[String(bounty_id)] = int(d["bounty_cooldowns"][bounty_id])
 	for anchor_id in d.get("anchors", []):
 		c.anchors.append(String(anchor_id))
 	for recipe_id in d.get("known_recipes", []):

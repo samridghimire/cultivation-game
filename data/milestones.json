@@ -1,6 +1,7 @@
 {
 	"_doc": "Milestones (GOAL-001): first steps the player is congratulated for (later mirrored as Steam achievements, REL-009). Each entry {id, name, description, check}. check.type is one of: realm {realm: realm id, stage: int = 0} (reached that realm and stage), life_stat {stat: LifeStats key, min: int = 1}, flag {flag: world flag}, sect_joined {}, married {}, clan_founded {}, item_crafted {min: int = 1} (LifeStats items_crafted), flag_count {prefix, suffix, min: int = 1} (world flags with that prefix and suffix that are set, e.g. errand_*_done). No rewards, recognition only. Checked by Milestones.newly_reached; earned ids live in CharacterData.milestones.",
 	"milestones": [
+		{"id": "bounty_hunter", "name": "Bounty Hunter", "description": "Claim five bounties.", "check": {"type": "life_stat", "stat": "bounties_done", "min": 5}},
 		{"id": "attentive_disciple", "name": "Attentive Disciple", "description": "Attend 12 sect lectures.", "check": {"type": "life_stat", "stat": "lectures_attended", "min": 12}},
 		{"id": "far_traveller", "name": "Far Traveller", "description": "Set foot in five regions.", "check": {"type": "life_stat", "stat": "regions_visited", "min": 5}},
 		{"id": "four_seasons_herbalist", "name": "Herbalist of Four Seasons", "description": "Gather a herb that grows in only one season, in each of the four seasons.", "check": {"type": "life_stat", "stat": "seasons_gathered", "min": 4}},

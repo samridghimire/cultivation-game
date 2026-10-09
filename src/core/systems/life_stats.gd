@@ -5,7 +5,7 @@ extends RefCounted
 ## the end-of-life summary.
 
 const KEYS: Array[String] = ["fights_won", "fights_lost", "threats_fled", "breakthroughs", "breakthroughs_failed",
-	"tribulations_survived", "respawns", "items_crafted", "missions_done", "deeds_done", "encounters", "days_in_seclusion", "commissions_done", "tournaments_won", "incursions_repelled", "realm_floors_cleared", "inheritances_claimed", "stones_earned", "qi_gathered", "regions_visited", "lectures_attended", "seasons_gathered", "happenings_seen", "discoveries"]
+	"tribulations_survived", "respawns", "items_crafted", "missions_done", "deeds_done", "encounters", "days_in_seclusion", "commissions_done", "tournaments_won", "incursions_repelled", "realm_floors_cleared", "inheritances_claimed", "stones_earned", "qi_gathered", "regions_visited", "lectures_attended", "seasons_gathered", "happenings_seen", "discoveries", "bounties_done"]
 
 const LABELS := {
 	"fights_won": "Fights won",
@@ -29,6 +29,7 @@ const LABELS := {
 	"seasons_gathered": "Seasons herb-gathered",
 	"happenings_seen": "Happenings seen",
 	"discoveries": "Hidden places found",
+	"bounties_done": "Bounties claimed",
 	"deeds_done": "Deeds done",
 	"encounters": "Encounters",
 	"days_in_seclusion": "Days in seclusion",

@@ -89,6 +89,8 @@ func test_every_character_field_survives_a_save() -> void:
 	c.companion_xp = {"x_companions": 30}
 	c.encounter_counts = {"forest_lost": 3}
 	c.explore_days = {"misty_forest": 7}
+	c.bounty = {"id": "iron_back_boar_bounty", "until_day": 90}
+	c.bounty_cooldowns = {"blood_eyed_wolf_bounty": 400}
 	var restored := CharacterData.from_dict(JSON.parse_string(JSON.stringify(c.to_dict())))
 	var before := c.to_dict()
 	var after := restored.to_dict()
