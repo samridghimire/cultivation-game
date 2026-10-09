@@ -416,6 +416,37 @@ func _entry(label: String, reason: String, action: Callable) -> Dictionary:
 	return {"label": label, "action": action, "disabled": reason != "", "reason": reason, "keep_open": true}
 
 
+## WU-101: the gift tastes the player has learned (world flags taste_<npc>_<item>: 1 liked, -1 disliked).
+static func known_tastes_text(flags: Dictionary, data: GameData, npc_id: String) -> String:
+	var prefix := "taste_%s_" % npc_id
+	var likes: Array[String] = []
+	var dislikes: Array[String] = []
+	for key: String in flags:
+		if not key.begins_with(prefix) or key.begins_with("taste_told_"):
+			continue
+		var item_id := key.substr(prefix.length())
+		if not data.items.has(item_id):
+			continue
+		var name := String(data.items[item_id].get("name", item_id))
+		var taste := int(flags[key])
+		if taste > 0:
+			likes.append(name)
+		elif taste < 0:
+			dislikes.append(name)
+	likes.sort()
+	dislikes.sort()
+	var parts: Array[String] = []
+	if not likes.is_empty():
+		parts.append("Likes: %s." % ", ".join(likes))
+	if not dislikes.is_empty():
+		parts.append("Dislikes: %s." % ", ".join(dislikes))
+	if likes.is_empty() and flags.has("taste_told_" + npc_id):
+		var hint := Family.taste_hint(data, npc_id)
+		if hint != "":
+			parts.append(hint)
+	return " ".join(parts)
+
+
 func _look() -> void:
 	var npc: CharacterData = GameState.npcs.get(npc_id)
 	if npc == null:
@@ -430,6 +461,9 @@ func _look() -> void:
 	var injuries := Injuries.describe(npc, GameState.data)
 	if not injuries.is_empty():
 		text += " Injuries: %s." % ", ".join(injuries)
+	var tastes := known_tastes_text(GameState.world_flags, GameState.data, npc_id)
+	if tastes != "":
+		text += " " + tastes
 	var lines: Array[String] = [text]
 	if GameState.player != null:
 		lines.append_array(Karma.attitude(GameState.player, npc, GameState.data))
