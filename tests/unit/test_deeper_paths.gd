@@ -33,6 +33,9 @@ func test_next_deep_path() -> void:
 	c.realm_index = 1
 	assert_eq(Exploration.next_deep_path(c, data(), "misty_forest"), 20)
 	c.explore_days["misty_forest"] = 20
+	c.stage = 6
+	assert_eq(Exploration.next_deep_path(c, data(), "misty_forest"), 60, "the valley guardian waits at 60")
+	c.explore_days["misty_forest"] = 60
 	assert_eq(Exploration.next_deep_path(c, data(), "misty_forest"), -1)
 
 
@@ -42,7 +45,7 @@ func test_journal_line_until_the_path_opens() -> void:
 	c.explore_days["misty_forest"] = 5
 	var rows := Guidance.journal(c, data(), {}, 0, "misty_forest")
 	assert_true(rows.any(func(r: Dictionary) -> bool: return String(r.get("text", "")).contains("explored 5 days. Something deeper waits after 20")), str(rows))
-	c.explore_days["misty_forest"] = 20
+	c.explore_days["misty_forest"] = 60
 	rows = Guidance.journal(c, data(), {}, 0, "misty_forest")
 	assert_false(rows.any(func(r: Dictionary) -> bool: return String(r.get("text", "")).contains("Something deeper")))
 
@@ -149,3 +152,26 @@ func test_every_region_has_a_deeper_path_sharing_its_tags() -> void:
 				if tags.has(t):
 					found = true
 		assert_true(found, "%s has no deeper path" % rid)
+
+
+## C-060: the valley guardian only appears after the hidden valley, once, from Qi Refining's late layers.
+func test_valley_guardian_needs_the_first_path() -> void:
+	var c := new_character()
+	c.realm_index = 1
+	c.stage = 6
+	c.explore_days["misty_forest"] = 60
+	var ids := func(flags: Dictionary) -> Array:
+		return Exploration.eligible_encounters(c, data(), ["forest"], flags, null, 1.0, "", "misty_forest").map(func(e: Dictionary) -> String: return e["encounter"]["id"])
+	assert_false(ids.call({}).has("misty_forest_valley_guardian"), "needs found_hidden_valley")
+	assert_true(ids.call({"found_hidden_valley": true}).has("misty_forest_valley_guardian"))
+	assert_false(ids.call({"found_hidden_valley": true, "met_valley_guardian": true}).has("misty_forest_valley_guardian"), "once only")
+	c.explore_days["misty_forest"] = 59
+	assert_false(ids.call({"found_hidden_valley": true}).has("misty_forest_valley_guardian"))
+	c.explore_days["misty_forest"] = 60
+	c.stage = 2
+	assert_false(ids.call({"found_hidden_valley": true}).has("misty_forest_valley_guardian"), "late Qi Refining only")
+
+
+func test_valley_guardian_choices_set_the_flag() -> void:
+	for choice: Dictionary in data().encounters["misty_forest_valley_guardian"]["choices"]:
+		assert_eq(choice["effects"]["set_flag"], "met_valley_guardian")
