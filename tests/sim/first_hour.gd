@@ -30,7 +30,8 @@ static func play(gs: Node, clock: Node, seed_value: int, months: int, curious: b
 	for month in months:
 		if not c.alive:
 			break
-		var mark: int = bus.history.size()
+		bus.clear_history()  # the log is capped, which would hide a month's lines from the count
+		var mark := 0
 		gs.cultivate(Calendar.DAYS_PER_MONTH, SPRING_DENSITY)
 		if not c.alive:
 			break

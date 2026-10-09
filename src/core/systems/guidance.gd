@@ -742,6 +742,7 @@ static func journal(c: CharacterData, data: GameData, flags: Dictionary, today: 
 				var reason := WorldEvents.check_join(data, events, c, event_id, kind, region_id)
 				_add(out, "World events", "%s: %s" % [kind.capitalize(), "you can enter" if reason == "" else reason], "normal" if reason == "" else "dim")
 	_other_region_event_entries(out, c, data, today, region_id, events)
+	_festival_entries(out, data, today, region_id, events)
 	_opportunity_entries(out, c, data, flags, today, region_id)
 	for npc in _region_people(c, data, people, favor, region_id, today, "pointers").slice(0, POINTER_JOURNAL_MAX):
 		_add(out, "Opportunities", "Ask %s for pointers (%s)" % [npc.name, _region_name(data, region_id)], "normal")
@@ -776,6 +777,15 @@ static func _other_region_event_entries(out: Array[Dictionary], c: CharacterData
 				continue
 			var reason := WorldEvents.check_join(data, events, c, event_id, kind, where)
 			_add(out, "World events", "%s: you can enter, %d days left" % [label, days_left] if reason == "" else "%s: %s" % [label, reason], "normal" if reason == "" else "dim")
+
+
+## Festivals in this region or a neighbouring one.
+static func _festival_entries(out: Array[Dictionary], data: GameData, today: int, region_id: String, events: Array) -> void:
+	for instance: Dictionary in events:
+		var event_id := String(instance["id"])
+		var where := String(instance.get("region", ""))
+		if WorldEvents.is_festival(data, event_id) and Exploration.is_nearby(data, region_id, where):
+			_add(out, "Opportunities", "%s in %s: %d days left" % [WorldEvents.event_name(data, event_id), _region_name(data, where), maxi(0, int(instance["end_day"]) - today)], "normal")
 
 
 ## Children to teach, garden plots, companion beasts and pregnancies.

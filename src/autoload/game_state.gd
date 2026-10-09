@@ -1050,10 +1050,11 @@ func chat(npc_id: String) -> void:
 		EventBus.player_changed.emit()
 		return
 	var cap := int(data.family.get("acquaintance", {}).get("chat_max_favor", 0))
-	var base := NpcClans.scaled_favor(npc_clans, data, npc_id, int(result["favor"]), cap - favor)
+	var festival := WorldEvents.favor_multiplier(data, world_events, current_region) > 1.0
+	var base := NpcClans.scaled_favor(npc_clans, data, npc_id, WorldEvents.scaled_favor(data, world_events, current_region, int(result["favor"])), cap - favor)
 	var gain: int = base + Karma.favor_bonus(player, data, npc_id, base, cap - favor - base)
 	npc_favor[npc_id] = favor + gain
-	EventBus.post("You pass some time talking with %s. (%s)" % [npcs[npc_id].name, Family.favor_progress(int(npc_favor[npc_id]), data)])
+	EventBus.post("You pass some time talking with %s. (%s)" % [npcs[npc_id].name, Family.favor_progress(int(npc_favor[npc_id]), data)] + (" The festival warms the mood." if festival else ""))
 	_pass_time(result["days"])
 
 
@@ -1126,11 +1127,12 @@ func give_gift(npc_id: String, item_id: String) -> void:
 		EventBus.player_changed.emit()
 		return
 	var cap := int(data.family.get("acquaintance", {}).get("gift_max_favor", 0))
-	var base := NpcClans.scaled_favor(npc_clans, data, npc_id, int(result["favor"]), cap - favor)
+	var festival := WorldEvents.favor_multiplier(data, world_events, current_region) > 1.0
+	var base := NpcClans.scaled_favor(npc_clans, data, npc_id, WorldEvents.scaled_favor(data, world_events, current_region, int(result["favor"])), cap - favor)
 	var gain: int = base + Karma.favor_bonus(player, data, npc_id, base, cap - favor - base)
 	npc_favor[npc_id] = favor + gain
 	Karma.on_kindness(player, data, npc_id, "gift")
-	EventBus.post("%s accepts your %s. (%s)" % [npcs[npc_id].name, data.items[item_id].get("name", item_id), Family.favor_progress(int(npc_favor[npc_id]), data)])
+	EventBus.post("%s accepts your %s. (%s)" % [npcs[npc_id].name, data.items[item_id].get("name", item_id), Family.favor_progress(int(npc_favor[npc_id]), data)] + (" The festival warms the mood." if festival else ""))
 	_clan_deed(npc_id, "gift")
 	_pass_time(result["days"])
 

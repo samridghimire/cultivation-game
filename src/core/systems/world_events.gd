@@ -48,10 +48,18 @@ static func roll(data: GameData, active: Array, total_days: int, rng: RandomNumb
 		var regions: Array = def.get("regions", [])
 		if is_active(active, event_id) or regions.is_empty():
 			continue
-		if rng.randf() >= float(def.get("monthly_chance", 0.0)):
+		var months: Array = def.get("months", [])
+		if not months.is_empty() and not months.any(func(m: Variant) -> bool: return int(m) == Calendar.month_of(total_days)):
 			continue
-		var region := String(regions[rng.randi_range(0, regions.size() - 1)])
-		var days := rng.randi_range(int(def.get("min_days", 1)), maxi(int(def.get("min_days", 1)), int(def.get("max_days", 1))))
+		# Fixed-date events roll from their own seeded stream so they never shift the shared rng.
+		var roller := rng
+		if not months.is_empty():
+			roller = RandomNumberGenerator.new()
+			roller.seed = hash(event_id) + total_days
+		if roller.randf() >= float(def.get("monthly_chance", 0.0)):
+			continue
+		var region := String(regions[roller.randi_range(0, regions.size() - 1)])
+		var days := roller.randi_range(int(def.get("min_days", 1)), maxi(int(def.get("min_days", 1)), int(def.get("max_days", 1))))
 		var instance := {"id": event_id, "region": region, "start_day": total_days, "end_day": total_days + days, "done": false}
 		active.append(instance)
 		started.append(instance)
@@ -76,6 +84,20 @@ static func price_multiplier(data: GameData, active: Array, region_id: String) -
 ## Product of the active events' qi density multipliers in `region_id`.
 static func qi_multiplier(data: GameData, active: Array, region_id: String) -> float:
 	return _product(data, active, region_id, "qi_density")
+
+
+## Product of the active events' favor multipliers (festivals) in `region_id`.
+static func favor_multiplier(data: GameData, active: Array, region_id: String) -> float:
+	return _product(data, active, region_id, "favor_mult")
+
+
+static func is_festival(data: GameData, event_id: String) -> bool:
+	return bool(def_of(data, event_id).get("festival", false))
+
+
+## `favor` scaled by the festival multiplier in `region_id` (rounded).
+static func scaled_favor(data: GameData, active: Array, region_id: String, favor: int) -> int:
+	return roundi(favor * favor_multiplier(data, active, region_id))
 
 
 static func _product(data: GameData, active: Array, region_id: String, key: String) -> float:
@@ -192,11 +214,20 @@ static func validate(data: GameData) -> PackedStringArray:
 				errors.append("World event '%s' has unknown region '%s'" % [id, region])
 		var mods: Dictionary = def.get("modifiers", {})
 		for key in mods:
-			if not key in ["encounter_tags", "price_mult", "qi_density"]:
+			if not key in ["encounter_tags", "price_mult", "qi_density", "favor_mult"]:
 				errors.append("World event '%s' has unknown modifier '%s'" % [id, key])
 		for key in ["price_mult", "qi_density"]:
 			if float(mods.get(key, 1.0)) <= 0.0:
 				errors.append("World event '%s' %s must be > 0" % [id, key])
+		if float(mods.get("favor_mult", 1.0)) < 1.0:
+			errors.append("World event '%s' favor_mult must be >= 1.0" % id)
+		if def.has("months"):
+			var months: Array = def["months"]
+			if months.is_empty():
+				errors.append("World event '%s' months must not be empty" % id)
+			for month in months:
+				if typeof(month) not in [TYPE_INT, TYPE_FLOAT] or int(month) < 1 or int(month) > 12:
+					errors.append("World event '%s' has invalid month '%s'" % [id, str(month)])
 		var tournament: Dictionary = def.get("tournament", {})
 		if def.has("tournament"):
 			if int(tournament.get("rounds", 0)) < 1:

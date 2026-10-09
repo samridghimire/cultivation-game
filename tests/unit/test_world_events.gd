@@ -379,3 +379,65 @@ func test_rolled_instances_carry_done_flag_so_save_round_trips_are_stable() -> v
 	assert_false(rolled.is_empty(), "some event rolled")
 	for inst: Dictionary in rolled:
 		assert_true(inst.has("done") and inst["done"] == false, "fresh instance has done=false")
+
+
+func _lantern_instance(day: int) -> Dictionary:
+	return {"id": "lantern_festival", "region": "qingshi_village", "start_day": day, "end_day": day + 8}
+
+
+func test_months_gate_when_events_start() -> void:
+	var d := data()
+	var rng := seeded_rng(5)
+	var starts_in: Dictionary = {}
+	for month in range(0, 24):
+		var day := month * Calendar.DAYS_PER_MONTH
+		var active: Array = []
+		for inst in WorldEvents.roll(d, active, day, rng):
+			if inst["id"] == "lantern_festival":
+				starts_in[Calendar.month_of(day)] = int(starts_in.get(Calendar.month_of(day), 0)) + 1
+	assert_eq(starts_in.keys(), [10], "only in month 10")
+	assert_eq(int(starts_in[10]), 2, "once a year, both years")
+
+
+func test_festival_favor_multiplier() -> void:
+	var d := data()
+	assert_true(WorldEvents.is_festival(d, "lantern_festival"))
+	assert_false(WorldEvents.is_festival(d, "beast_tide"))
+	var active: Array = [_lantern_instance(0)]
+	assert_almost_eq(WorldEvents.favor_multiplier(d, active, "qingshi_village"), 2.0)
+	assert_almost_eq(WorldEvents.favor_multiplier(d, active, "misty_forest"), 1.0)
+	assert_eq(WorldEvents.scaled_favor(d, active, "qingshi_village", 3), 6)
+	WorldEvents.expire(active, 100)
+	assert_almost_eq(WorldEvents.favor_multiplier(d, active, "qingshi_village"), 1.0)
+
+
+func test_validator_rejects_bad_months_and_favor_mult() -> void:
+	var d := GameData.load_from_dir()
+	d.world_events["bad_month"] = {"id": "bad_month", "monthly_chance": 1.0, "min_days": 1, "max_days": 2, "regions": ["qingshi_village"], "months": [13], "modifiers": {}}
+	d.world_events["bad_mult"] = {"id": "bad_mult", "monthly_chance": 1.0, "min_days": 1, "max_days": 2, "regions": ["qingshi_village"], "modifiers": {"favor_mult": 0.5}}
+	var errors := WorldEvents.validate(d)
+	assert_eq(errors.size(), 2, ", ".join(errors))
+
+
+func test_festival_doubles_chat_favor_and_saves() -> void:
+	var gs := _root().get_node("GameState")
+	var c := new_character()
+	gs.start_session(c)
+	var npc := Npcs.spawn({}, gs.data, seeded_rng(3), {"gender": "female", "age_years": 20, "realm": "qi_refining"})
+	npc.id = "villager_a"
+	gs.npcs["villager_a"] = npc
+	gs.npcs["villager_b"] = npc
+	gs.current_region = "qingshi_village"
+	var cap := int(gs.data.family["acquaintance"]["chat_max_favor"])
+	gs.chat("villager_a")
+	var normal: int = gs.npc_favor["villager_a"]
+	gs.world_events = [_lantern_instance(_root().get_node("GameClock").total_days)]
+	gs.chat("villager_b")
+	var festive: int = gs.npc_favor["villager_b"]
+	assert_eq(festive, mini(normal * 2, cap), "twice the favor, capped")
+	var saved: Dictionary = JSON.parse_string(JSON.stringify(gs.to_save_dict()))
+	gs.world_events = []
+	gs.load_save_dict(saved)
+	assert_eq(gs.world_events.size(), 1)
+	assert_eq(gs.world_events[0]["id"], "lantern_festival")
+	gs.end_session()
