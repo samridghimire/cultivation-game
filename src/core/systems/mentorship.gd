@@ -12,6 +12,12 @@ static func is_senior(c: CharacterData, npc: CharacterData) -> bool:
 	return npc.realm_index > c.realm_index or (npc.realm_index == c.realm_index and npc.stage > c.stage)
 
 
+## True when `npc` knows the technique at a higher level than `c` (RV-014): only
+## then does their pointer count as shared.
+static func knows_better(c: CharacterData, npc: CharacterData, tech_id: String) -> bool:
+	return Techniques.knows(npc, tech_id) and Techniques.level(npc, tech_id) > Techniques.level(c, tech_id)
+
+
 ## The technique `npc` would correct: one you both know (the NPC's highest
 ## level first), else your lowest-level unmastered one. "" when none.
 static func pointer_technique(c: CharacterData, npc: CharacterData, data: GameData) -> String:
@@ -23,7 +29,7 @@ static func pointer_technique(c: CharacterData, npc: CharacterData, data: GameDa
 	for tech_id: String in ids:
 		if Techniques.is_mastered(c, data, tech_id):
 			continue
-		var shared := Techniques.knows(npc, tech_id)
+		var shared := knows_better(c, npc, tech_id)
 		var lvl := Techniques.level(npc, tech_id) if shared else Techniques.level(c, tech_id)
 		var better := best == ""
 		if not better:
@@ -76,7 +82,7 @@ static func give_pointers(c: CharacterData, npc: CharacterData, favor: int, data
 		return result
 	var rules := _rules(data, "pointers")
 	var tech_id := pointer_technique(c, npc, data)
-	var shared := Techniques.knows(npc, tech_id)
+	var shared := knows_better(c, npc, tech_id)
 	var practice_days := int(float(rules.get("practice_days", 0)) * (float(rules.get("shared_multiplier", 1.0)) if shared else 1.0))
 	var practiced := Techniques.practice(c, data, tech_id, practice_days)
 	c.npc_action_days["pointers:" + npc.id] = today

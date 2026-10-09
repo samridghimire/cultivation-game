@@ -2160,7 +2160,7 @@ func fight_enemy(enemy: Dictionary, start_hp: int = -1) -> bool:
 	if not enemy.get("spar", false):
 		LifeStats.add(player, "fights_won" if result["victory"] else "fights_lost")
 	EventBus.combat_finished.emit(enemy.get("name", "enemy"), result["victory"], result["log"])
-	var drained := 0 if outcome["died"] else Equipment.drain_after_fight(player, data)
+	var drained := 0 if outcome["died"] or bool(enemy.get("friendly", false)) else Equipment.drain_after_fight(player, data)
 	if drained > 0:
 		EventBus.post("Your weapon drinks %d %s of your life. %d years remain." % [drained, "year" if drained == 1 else "years", Cultivation.years_left(player, data)], "danger")
 		if player.age_years() >= Cultivation.lifespan_years(player, data):

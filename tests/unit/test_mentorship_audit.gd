@@ -143,3 +143,17 @@ func test_pointers_cannot_level_a_mastered_technique() -> void:
 	assert_eq(c.techniques, before)
 	assert_false(c.npc_action_days.has("pointers:friend"))
 	gs.end_session()
+
+
+## RV-014: an evil weapon does not drink lifespan in a friendly spar, but does in a real fight.
+func test_spar_does_not_drain_lifespan() -> void:
+	var c := _setup(4, 50)
+	var gs := _gs()
+	c.inventory["blood_drinker_saber"] = 1
+	Equipment.equip(c, gs.data, "blood_drinker_saber")
+	var years := Cultivation.years_left(c, gs.data)
+	gs.spar_with("friend")
+	assert_eq(Cultivation.years_left(c, gs.data), years)
+	gs.fight_enemy({"name": "Wolf", "hp": 5, "attack": 1, "defense": 0, "speed": 1})
+	assert_true(Cultivation.years_left(c, gs.data) < years)
+	gs.end_session()

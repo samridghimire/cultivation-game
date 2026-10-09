@@ -157,13 +157,16 @@ static func resolve(c: CharacterData, data: GameData, enemy: Dictionary, rng: Ra
 		lines.append("Your qi feels sluggish, and %s fights with fury." % foe)
 	var used: Array[String] = []
 	var shield := 0
-	for item_id in CombatTalismans.available(c, data, "shield"):
+	# A friendly spar is free (RV-014): no readied talisman is burnt in it.
+	var friendly := bool(enemy.get("friendly", false))
+	var no_talismans: Array[String] = []
+	for item_id in (no_talismans if friendly else CombatTalismans.available(c, data, "shield")):
 		used.append(item_id)
 		shield += CombatTalismans.amount(data, item_id)
 		lines.append("You burn %s: a barrier of qi surrounds you. (%d shield)" % [Text.a(_item_name(data, item_id)), CombatTalismans.amount(data, item_id)])
 		while trace.size() < lines.size():
 			trace.append([player_hp, maxi(enemy_hp, 0)])
-	for item_id in CombatTalismans.available(c, data, "strike"):
+	for item_id in (no_talismans if friendly else CombatTalismans.available(c, data, "strike")):
 		if enemy_hp <= 0:
 			break
 		used.append(item_id)
@@ -213,7 +216,7 @@ static func resolve(c: CharacterData, data: GameData, enemy: Dictionary, rng: Ra
 			trace.append([maxi(player_hp, 0), maxi(enemy_hp, 0)])
 	var victory := enemy_hp <= 0
 	var draw := not victory and player_hp > 0
-	var escapes := CombatTalismans.available(c, data, "escape")
+	var escapes: Array[String] = no_talismans if friendly else CombatTalismans.available(c, data, "escape")
 	var escaped := not victory and not draw and not escapes.is_empty()
 	if victory:
 		if bool(enemy.get("spar", false)) or (bool(enemy.get("proper_name", false)) and not bool(enemy.get("lethal", false))):

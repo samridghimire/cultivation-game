@@ -42,7 +42,7 @@ func test_pointer_technique_choice() -> void:
 			break
 	p[0].techniques = {"iron_fist": {"level": 1, "xp": 0.0}, other: {"level": 2, "xp": 0.0}}
 	assert_eq(Mentorship.pointer_technique(p[0], p[1], d), "iron_fist", "lowest level first")
-	p[1].techniques = {other: {"level": 1, "xp": 0.0}}
+	p[1].techniques = {other: {"level": 3, "xp": 0.0}}
 	assert_eq(Mentorship.pointer_technique(p[0], p[1], d), other, "a shared one wins")
 
 
@@ -83,7 +83,7 @@ func test_give_pointers_xp_cooldown_and_shared() -> void:
 	assert_eq(Mentorship.check_pointers(p[0], p[1], 25, d, 130), "")
 	# a shared technique doubles it
 	var q := _pair()
-	q[1].techniques = {"iron_fist": {"level": 1, "xp": 0.0}}
+	q[1].techniques = {"iron_fist": {"level": 2, "xp": 0.0}}
 	var s := Mentorship.give_pointers(q[0], q[1], 25, d, 0)
 	assert_true(s["shared"])
 	var shared_total: float = float(q[0].techniques["iron_fist"]["xp"])
@@ -209,3 +209,46 @@ func test_never_sparred_hint() -> void:
 	assert_true(_any_contains(_hints_of(s), "would spar with you"))
 	(s["c"] as CharacterData).npc_action_days["spar:someone"] = 1
 	assert_false(_any_contains(_hints_of(s), "would spar with you"), "already sparred")
+
+
+## RV-014: a friendly spar is free; pointers are only shared with a better teacher.
+func _talisman_fighter() -> CharacterData:
+	var p := _pair()
+	var c := p[0]
+	c.realm_index = 2
+	c.inventory = {"fire_strike_talisman": 1, "earth_wall_talisman": 1}
+	c.readied_talismans = ["fire_strike_talisman", "earth_wall_talisman"]
+	return c
+
+
+func test_friendly_spar_keeps_readied_talismans() -> void:
+	var c := _talisman_fighter()
+	var npc := _pair()[1]
+	var result := Combat.resolve(c, data(), Mentorship.spar_enemy(npc, data()), seeded_rng(5))
+	assert_true((result["talismans_used"] as Array).is_empty())
+	for line: String in result["log"]:
+		assert_false(line.contains("You burn") or line.contains("You hurl"), line)
+	assert_eq(c.item_count("fire_strike_talisman"), 1)
+	assert_eq(c.readied_talismans.size(), 2)
+
+
+func test_trial_spar_still_burns_talismans() -> void:
+	var c := _talisman_fighter()
+	var npc := _pair()[1]
+	var enemy := Mentorship.spar_enemy(npc, data())
+	enemy.erase("friendly")
+	var result := Combat.resolve(c, data(), enemy, seeded_rng(5))
+	assert_false((result["talismans_used"] as Array).is_empty())
+
+
+func test_pointers_shared_only_when_senior_knows_better() -> void:
+	var p := _pair()
+	var d := data()
+	p[1].techniques = {"iron_fist": {"level": 1, "xp": 0.0}}
+	assert_false(Mentorship.knows_better(p[0], p[1], "iron_fist"), "equal level")
+	var r := Mentorship.give_pointers(p[0], p[1], 50, d, 0)
+	assert_true(r["ok"])
+	assert_false(r["shared"])
+	p[1].techniques["iron_fist"]["level"] = 3
+	assert_true(Mentorship.knows_better(p[0], p[1], "iron_fist"))
+	assert_true(Mentorship.give_pointers(p[0], p[1], 50, d, 100)["shared"])
