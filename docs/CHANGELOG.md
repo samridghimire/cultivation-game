@@ -2,6 +2,19 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-09 [C-020] Help pages for spirit beasts, body tempering, Dao insights, artifact powers, clans and adoption.
+- 2026-10-09 [C-035] New choice encounters for newcomers in the sect regions.
+- 2026-10-08 [KARMA-001] Robbing, humiliating or killing someone is described with sentences from data.
+- 2026-10-08 [WU-058] People in the world breathe and wander a little.
+- 2026-10-08 [WU-057] Falling petals, leaves, snow, mist, embers or fireflies by region and season (can be turned off).
+- 2026-10-08 [GUIDE-011] A notice tells you what a breakthrough or new rank opens: roads, secret realms, a clan, a promotion trial.
+- 2026-10-08 [RV-012] The sect-rank goal no longer depends on the wording of a message.
+- 2026-10-08 [QA-038] Every shop, tab, category and "Sell all" is fuzz-tested.
+- 2026-10-08 [C-031] Fights met while exploring just after reaching Foundation or Core Formation wait until you have settled into the realm.
+- 2026-10-08 [WU-056] The world's colors follow the seasons.
+- 2026-10-08 [SECT-005] Your sect's elder lectures once a month at the sect hall (qi, and a chance at a Dao insight).
+- 2026-10-08 [SECT-004] Sect ranks can require a stage within a realm, not only the realm.
+- 2026-10-08 [QA-029] A "curious player" sim measures how varied the first year of play is.
 - 2026-10-08 [GUIDE-010] A notice tells you when you are strong enough to travel a new road.
 - 2026-10-08 [WU-047] The combat report colors your blows, the foe's blows and the finishing line.
 - 2026-10-08 [YEAR-002] A seclusion that spans two new years reviews both years together.

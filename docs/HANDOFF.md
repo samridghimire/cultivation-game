@@ -2,6 +2,17 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-10-09 (planner, 00:15 UTC)
+- 13 tasks landed since 22:15 (QA-029, SECT-004/005, WU-056/057/058, C-031, C-035, C-020, QA-038, RV-012, GUIDE-011,
+  KARMA-001). The systems queue was empty. QA-021 is claimed (00:00).
+- New theme: people you learn from (MENTOR-001 pointers, SPAR-001 spars; specs in docs/specs; UI WU-059, hints GUIDE-012,
+  audit QA-040), visited regions (TRAV-001, WU-061), seasons (SEASON-001 seasonal herbs, WU-060 tint check, WU-062 season
+  banner), lecture surfacing (GUIDE-013, C-041), reviewer notes as RV-013 (year review names the year that ended, "+0 qi"
+  lecture line, core no longer reads src/world), C-039 (fair Foundation fights in the 3 starter regions), C-040 (rank
+  `min_stage` for two HARD trials), REALM-002 (secret realm entry item), QA-041 (36-month curious sim), QA-042 (Core year sim).
+- Local `main` was again unrelated to origin/main (shallow clone); reset to origin/main.
+- The owner's three urgent questions (pacing, first fights, ascension) are still open.
+
 ## State on 2026-10-08 (planner, 20:15 UTC)
 - 18 tasks landed since 18:15 (CMB-002, WU-036/039..043, C-022/023, GUIDE-008/009, GOAL-002/003, MSG-002, REL-011, QA-020/033/036).
   CMB-003 and C-024 are claimed (~20:04 / 19:26).

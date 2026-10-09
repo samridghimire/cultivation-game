@@ -66,7 +66,7 @@ Every great cultivation protagonist has something that sets them apart. Ours is 
 | Breakthroughs with risk, pills that boost odds | ✅ | `Cultivation.attempt_breakthrough` |
 | Lifespan, death by old age, burning/extending lifespan | ✅ | `Cultivation`, `GameState._on_days_advanced` |
 | Alignment (Demonic … Righteous) and deeds (with cooldowns) | ✅ | `data/alignment.json`, `data/deeds.json` |
-| Sects (join/leave, requirements, ranks, contribution, missions, trials/stipends/duties) | ✅ (shop: G-008c; rank UI: G-011b) | `data/sects.json`, `Sects` |
+| Sects (join/leave, requirements, ranks with realm/stage gates, contribution, missions, trials/stipends/duties, monthly elder lecture) | ✅ (shop: G-008c; rank UI: G-011b; lecture at the sect hall) | `data/sects.json`, `Sects` |
 | Sect reputation (witnessed deeds, join gating, faction prices) | ✅ (sheet + faction shop prices) | `data/sects.json`, `Reputation` |
 | Professions (ranks, XP, income, monthly crafting commissions delivered at workshops) | ✅ basic + commissions (PROF-001) | `data/professions.json`, `Professions` |
 | Alchemy (recipes, scrolls, pill quality) + crafting screen | ✅ | `data/recipes.json`, `Alchemy`, `src/ui/crafting_screen.gd` |
@@ -103,7 +103,7 @@ Every great cultivation protagonist has something that sets them apart. Ours is 
 | Life record and milestones | ✅ sheet life record (STAT-001), 22 milestones with progress on the sheet and a banner (GOAL-001, WU-006, MS-002, MS-003), journal screen (J / LT) with opportunities, errands and commissions, epilogue on final death, a yearly review banner (YEAR-001, WU-031) | `LifeStats`, `Milestones`, `data/milestones.json` |
 | Ending (ascension) | 🚧 none, waiting on the owner (END-001) | |
 | Inventory, techniques, character sheet, settings, pause, load screens | ✅ | `src/ui/` |
-| Top-down world with interactables | ✅ placeholder art | `src/world/` |
+| Top-down world with interactables | ✅ placeholder art, seasonal tints, ambient particles, idle NPCs | `src/world/` |
 
 ## Lifespan as a resource (owner decision)
 - Breaking through to a higher realm adds lifespan, so a cultivator who keeps progressing should **rarely die of old age**. The Creation Artifact does **not** save the player from old age.
