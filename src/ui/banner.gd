@@ -49,7 +49,10 @@ func subtitle_text() -> String:
 	return _subtitle.text
 
 
-func announce(title: String, subtitle: String, color: Color, hold: float = HOLD_SECONDS) -> void:
+## `low` banners (the turn of the seasons) never wait in the queue: if something is showing they are dropped.
+func announce(title: String, subtitle: String, color: Color, hold: float = HOLD_SECONDS, low: bool = false) -> void:
+	if low and visible:
+		return
 	if visible and _tween != null:
 		_queue.append([title, subtitle, color, hold])
 		while _queue.size() > MAX_QUEUE:

@@ -50,6 +50,8 @@ var _sect_balance: SectBalanceWindow
 var _family: FamilyScreen
 var _child_training: ChildTrainingScreen
 var _banner: Banner
+var _season := ""
+var _season_flush_queued := false
 var _time_skip: TimeSkipOverlay
 var _pending_year: Array = []  # [year, lines, start_year] waiting for a free screen (WU-031)
 ## The time-skip summary on screen, kept across the scene reload that travel
@@ -177,6 +179,9 @@ func _ready() -> void:
 	EventBus.year_reviewed.connect(_on_year_reviewed)
 	EventBus.milestone_reached.connect(_on_milestone)
 	EventBus.feature_unlocked.connect(_on_feature_unlocked)
+	_season = Calendar.season_of(GameClock.total_days)
+	GameClock.days_advanced.connect(_on_days_advanced)
+	EventBus.session_started.connect(func(): _season = Calendar.season_of(GameClock.total_days))
 	_refresh()
 	# A respawn that moved the player reloads the world; ask where to awaken now.
 	_open_pending_respawn.call_deferred()
@@ -584,6 +589,26 @@ func _on_feature_unlocked(text: String) -> void:
 	if int(Settings.get_value("hud_hints")) <= 0:
 		return
 	_banner.announce("New", text, UIStyle.ACCENT, 2.5)
+
+
+## The turn of the seasons (WU-062): one low-priority banner for the season you end up in.
+func _on_days_advanced(_days: int) -> void:
+	var season := Calendar.season_of(GameClock.total_days)
+	if season == _season:
+		return
+	_season = season
+	if not _season_flush_queued:
+		_season_flush_queued = true
+		_flush_season.call_deferred()
+
+
+func _flush_season() -> void:
+	_season_flush_queued = false
+	if _time_skip.visible or GameState.player == null or not GameState.player.alive or not GameState.pending_respawn.is_empty():
+		return
+	var region := Exploration.region_name(GameState.data, GameState.current_region)
+	_banner.announce("%s arrives" % _season, "in %s." % region, UIStyle.ACCENT, 1.4, true)
+	Audio.play("chime_info")
 
 
 func _on_time_skipped(days: int, summary: Dictionary) -> void:
