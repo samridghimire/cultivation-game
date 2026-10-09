@@ -813,13 +813,15 @@ func test_journal_in_season_line_needs_visited_region_and_season() -> void:
 
 func test_discovery_rumor_in_journal_until_discovered() -> void:
 	var c := _fresh()
-	var rows := Guidance.journal(c, data(), {}, 0, "qingshi_village")
+	var rows := Guidance.journal(c, data(), {"discovered_qingshi_village": true}, 0, "qingshi_village")
 	var found := false
 	for r in rows:
 		if String(r["text"]).begins_with("Rumor: ") and String(r["text"]).contains("Misty Forest"):
 			found = true
 	assert_true(found)
-	var flags := {"discovered_misty_forest": true}
+	var flags := {}
+	for id: String in data().regions:
+		flags["discovered_" + id] = true
 	assert_eq(Guidance.discovery_rumors(c, data(), flags, "qingshi_village").size(), 0)
 
 
@@ -832,17 +834,19 @@ func test_discovery_rumor_hidden_when_region_gated() -> void:
 		if route["to"] == "misty_forest":
 			route["min_realm"] = d.realms[d.realms.size() - 1]["id"]
 	d.regions["qingshi_village"]["routes"] = routes
-	assert_eq(Guidance.discovery_rumors(c, d, {}, "qingshi_village").size(), 0)
+	for rumor in Guidance.discovery_rumors(c, d, {}, "qingshi_village"):
+		assert_false(rumor.contains("Misty Forest"), rumor)
 	d.regions["qingshi_village"]["routes"] = saved
 
 
 func test_discovery_rumor_validator() -> void:
 	var d := data()
-	d.regions["qingshi_village"]["discovery_rumor"] = "Nothing here."
+	var saved: Variant = d.regions["qingshi_village"]["discovery"]
+	d.regions["qingshi_village"].erase("discovery")
 	d.load_errors.clear()
 	d._validate()
 	assert_true(d.load_errors.size() > 0)
-	d.regions["qingshi_village"].erase("discovery_rumor")
+	d.regions["qingshi_village"]["discovery"] = saved
 
 
 # --- GUIDE-017: craft-now hints ----------------------------------------------

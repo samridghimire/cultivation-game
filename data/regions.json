@@ -16,6 +16,7 @@
   "regions": [
     {
       "id": "qingshi_village", "map_pos": [0.08, 0.72], "name": "Qingshi Village",
+      "discovery": "qingshi_village_well_offering", "discovery_rumor": "Old folk say the founders left something at the village well, if you know to look past the last house.",
       "description": "A sleepy mortal village where your journey begins.",
       "first_visit": "Smoke curls from a few thatched roofs and a dog barks once, then loses interest. The old elder watches from his doorstep, and the green slope behind the houses is thick with common herbs.",
       "qi_density": 1.0, "danger": 0,
@@ -80,6 +81,7 @@
     },
     {
       "id": "fallen_star_market", "map_pos": [0.5, 0.92], "name": "Fallen Star Market",
+      "discovery": "fallen_star_market_buried_stall", "discovery_rumor": "Stallkeepers whisper that one stall in the crater lip was never cleared away.",
       "description": "A bustling free city where rogue cultivators trade treasures and rumours.",
       "first_visit": "Lanterns, haggling and a dozen dialects crash over you at once. Stall after stall of unlabelled treasures line the lanes, and a gong somewhere announces that the auction is about to begin.",
       "qi_density": 1.1, "danger": 0,
@@ -120,6 +122,7 @@
     },
     {
       "id": "azure_peak", "map_pos": [0.88, 0.1], "name": "Azure Peak",
+      "discovery": "azure_peak_sword_scar", "discovery_rumor": "Herb-pickers speak of a clean cut in the cliffs above the cloud line, and orchids that grow beside it.",
       "description": "Cloud-wreathed mountains thick with qi. Fierce beasts guard the heights.",
       "first_visit": "The path climbs until the clouds are below you, and a sect hall floats on the white sea like a ship at anchor. Along the cliffs, terraced beds of spirit herbs steam in the thin bright air.",
       "qi_density": 2.5, "danger": 3,
@@ -153,6 +156,7 @@
     },
     {
       "id": "withered_bone_marsh", "name": "Withered Bone Marsh",
+      "discovery": "withered_bone_marsh_lantern_cairn", "discovery_rumor": "Boatmen say a green lantern burns on a cairn somewhere in the marsh, and the mist parts around it.",
       "description": "A drowned battlefield from an ancient sect war. Yin qi pools in the black water, and demonic cultivators come to refine it.",
       "first_visit": "The black water does not ripple, and every bone in the mud is older than any grave you know. Somewhere in the reeds a lamp burns where no one should be, and corpse-refiners are said to keep such lamps.",
       "qi_density": 1.8, "danger": 2,
@@ -182,6 +186,7 @@
     }
     ,{
       "id": "myriad_peaks_ridge", "map_pos": [0.66, 0.2], "name": "Myriad Peaks Ridge",
+      "discovery": "myriad_peaks_ridge_fallen_beast_bones", "discovery_rumor": "Travellers claim a beast king's ribs still arch over a hollow in the lee of the ridge.",
       "description": "A knife-edge ridge above the cloud sea where the ten thousand peaks meet. Ancient cultivators fought and died here, and the qi runs thick and hungry.",
       "first_visit": "The ridge narrows to a blade above the cloud sea, and the wind carries the roar of beasts as old as the peaks themselves. Along the stone, a few flat ledges hum with qi, waiting for someone bold enough to sit.",
       "qi_density": 4.0, "danger": 3,

@@ -40,6 +40,7 @@ static func play(gs: Node, seed_value: int, realm_index: int, region_id: String,
 			gs.join_sect(sect_id)
 			break
 	gs.current_region = region_id
+	gs.world_flags["discovered_" + region_id] = true  # measure the random encounter pool, not the one-off discovery
 	var lives_start: int = c.artifact_lives
 	var stones_start: int = c.item_count("spirit_stone")
 	var density := Exploration.qi_density(gs.data, region_id)

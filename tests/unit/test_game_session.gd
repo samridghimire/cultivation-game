@@ -534,6 +534,7 @@ func test_explore_many_quiet_days_post_one_summary() -> void:
 	var gs := _game_state()
 	_zero_round_posts.clear()
 	EventBus.message_posted.connect(_collect_post)
+	gs.world_flags["discovered_" + gs.current_region] = true
 	var start_day: int = _root().get_node("GameClock").total_days
 	var days: int = gs.explore_many(7, ["t_no_such_tag"])
 	EventBus.message_posted.disconnect(_collect_post)
@@ -1175,6 +1176,7 @@ func test_first_exploration_finds_region_discovery_once() -> void:
 func test_explore_days_are_counted() -> void:
 	_start()
 	var gs := _game_state()
+	gs.world_flags["discovered_" + gs.current_region] = true
 	gs.explore_many(5, ["t_no_such_tag"])
 	assert_eq(Exploration.familiarity(gs.player, gs.current_region), 5)
 	gs.end_session()

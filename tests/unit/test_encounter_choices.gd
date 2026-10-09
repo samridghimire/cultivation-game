@@ -88,6 +88,7 @@ func test_game_state_explore_and_choose() -> void:
 	gs.start_session(c)
 	gs.data.encounters["test_traveller"] = TRAVELLER.duplicate(true)
 	gs.data.encounters["test_grateful"] = FOLLOW_UP.duplicate(true)
+	gs.world_flags["discovered_" + gs.current_region] = true
 	var requested := []
 	var on_request := func(id: String) -> void: requested.append(id)
 	_root().get_node("EventBus").encounter_choice_requested.connect(on_request)

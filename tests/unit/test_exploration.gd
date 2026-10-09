@@ -399,7 +399,7 @@ func test_discovery_only_encounters_never_roll_and_validate() -> void:
 		assert_true(Exploration.roll_encounter(c, d, ["forest"], {}, rng).get("id", "") != "misty_forest_hollow_shrine")
 	assert_eq(Exploration.discovery_for(c, d, "misty_forest", {}).get("id", ""), "misty_forest_hollow_shrine")
 	assert_true(Exploration.discovery_for(c, d, "misty_forest", {"discovered_misty_forest": true}).is_empty())
-	assert_true(Exploration.discovery_for(c, d, "qingshi_village", {}).is_empty())
+	assert_eq(Exploration.discovery_for(c, d, "qingshi_village", {}).get("id", ""), "qingshi_village_well_offering")
 	var before := d.load_errors.size()
 	d.regions["qingshi_village"]["discovery"] = "no_such_encounter"
 	d.encounters["orphan_find"] = {"id": "orphan_find", "tags": ["x"], "discovery_only": true}
@@ -407,7 +407,18 @@ func test_discovery_only_encounters_never_roll_and_validate() -> void:
 	var text := ", ".join(d.load_errors)
 	assert_true(text.contains("discovery 'no_such_encounter' must be a discovery_only encounter"), text)
 	assert_true(text.contains("'orphan_find' is discovery_only but is no region's discovery"), text)
-	assert_eq(d.load_errors.size(), before + 2, text)
+	assert_true(text.contains("'qingshi_village_well_offering' is discovery_only but is no region's discovery"), text)
+	assert_eq(d.load_errors.size(), before + 3, text)
+
+
+func test_every_region_has_a_discovery_and_rumor() -> void:
+	var d := GameData.load_from_dir()
+	for id: String in d.regions:
+		var reg: Dictionary = d.regions[id]
+		assert_true(str(reg.get("discovery", "")) != "", "%s has a discovery" % id)
+		assert_true(str(reg.get("discovery_rumor", "")) != "", "%s has a discovery rumor" % id)
+		var enc: Dictionary = d.encounters.get(str(reg.get("discovery", "")), {})
+		assert_false(enc.has("enemy"), "%s discovery starts no fight" % id)
 
 
 # --- SEASON-003: Herbalist of Four Seasons --------------------------------------

@@ -107,7 +107,8 @@ func test_discovery_mark_until_found() -> void:
 	enc.erase("min_realm")
 	assert_false(gated, "realm-gated discovery not hinted")
 	Exploration.visit(c, "qingshi_village")
-	assert_false(marks.call("qingshi_village", {}).has("discovery"), "no discovery defined")
+	assert_true(marks.call("qingshi_village", {}).has("discovery"), "every region has a discovery")
+	assert_false(marks.call("qingshi_village", {"discovered_qingshi_village": true}).has("discovery"))
 	assert_true(WorldMapScreen.MARK_COLORS.has("discovery"))
 
 
