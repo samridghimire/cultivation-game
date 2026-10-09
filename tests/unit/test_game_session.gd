@@ -909,6 +909,30 @@ func test_ask_pointers() -> void:
 	gs.end_session()
 
 
+func test_monthly_letter_and_visit_bonus() -> void:
+	var c := _start()
+	var gs := _game_state()
+	var npc := CharacterFactory.create("Pen Friend", gs.data, seeded_rng(9))
+	npc.id = "pen_friend"
+	gs.npcs["pen_friend"] = npc
+	gs.npc_favor["pen_friend"] = 26
+	var rules: Dictionary = gs.data.family["letters"]
+	var saved: Dictionary = rules.duplicate(true)
+	rules["monthly_chance"] = 1.0
+	rules["kinds"] = [saved["kinds"][2]]
+	c.realm_index = 1
+	gs.cultivate(Calendar.DAYS_PER_MONTH)
+	assert_gt(c.letters.size(), 0, "a letter arrived")
+	assert_true(gs.world_flags.has("letter_visit_pen_friend"))
+	rules["monthly_chance"] = 0.0
+	var before: int = gs.npc_favor["pen_friend"]
+	gs.chat("pen_friend")
+	assert_gt(int(gs.npc_favor["pen_friend"]) - before, int(saved["visit_favor"]) - 1, "the invitation pays off")
+	assert_false(gs.world_flags.has("letter_visit_pen_friend"))
+	gs.data.family["letters"] = saved
+	gs.end_session()
+
+
 func test_spar_with_npc() -> void:
 	var c := _start()
 	var gs := _game_state()

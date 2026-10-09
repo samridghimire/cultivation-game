@@ -328,6 +328,7 @@ static func validate(data: GameData) -> PackedStringArray:
 			if int(rules["ranks"][rank].get("max", 0)) < 1:
 				errors.append("family.json rank '%s' needs max >= 1" % rank)
 	errors.append_array(Mentorship.validate(data))
+	errors.append_array(Letters.validate(data))
 	var dual: Dictionary = data.family.get("dual_cultivation", {})
 	if dual.is_empty():
 		errors.append("family.json needs a dual_cultivation block")

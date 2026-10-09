@@ -130,6 +130,8 @@ var reputation: Dictionary = {}
 ## Karma (RIV-001): NPC id -> how much that NPC hates / owes this character (0-100, see Karma).
 var grudges: Dictionary = {}
 var gratitude: Dictionary = {}
+## Recent letters from friends (LETTER-001): "Name: text" lines, newest last.
+var letters: Array[String] = []
 ## Secret realm id -> {"opening": int, "floor": int}: floors cleared in that opening (see SecretRealms).
 var secret_realms: Dictionary = {}
 ## Secret realm ids whose inheritance this character received (once per life, W-005d).
@@ -237,6 +239,7 @@ func to_dict() -> Dictionary:
 		"abode_storage": abode_storage.duplicate(),
 		"grudges": grudges.duplicate(),
 		"gratitude": gratitude.duplicate(),
+		"letters": letters.duplicate(),
 		"secret_realms": secret_realms.duplicate(true),
 		"inheritances": inheritances.duplicate(),
 		"body_stage": body_stage,
@@ -351,6 +354,8 @@ static func from_dict(d: Dictionary) -> CharacterData:
 	c.abode_storage = _int_values(d.get("abode_storage", {}))
 	c.grudges = _int_values(d.get("grudges", {}))
 	c.gratitude = _int_values(d.get("gratitude", {}))
+	for letter in d.get("letters", []):
+		c.letters.append(String(letter))
 	c.body_stage = int(d.get("body_stage", 0))
 	var delves: Dictionary = d.get("secret_realms", {})
 	for realm_id in delves:

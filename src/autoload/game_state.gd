@@ -1118,6 +1118,10 @@ func chat(npc_id: String) -> void:
 	var gain: int = base + Karma.favor_bonus(player, data, npc_id, base, cap - favor - base)
 	npc_favor[npc_id] = favor + gain
 	EventBus.post("You pass some time talking with %s. (%s)" % [npcs[npc_id].name, Family.favor_progress(int(npc_favor[npc_id]), data)] + (" The festival warms the mood." if festival else ""))
+	var visit := Letters.take_visit_bonus(npc_id, data, world_flags)
+	if visit > 0:
+		npc_favor[npc_id] = mini(100, int(npc_favor[npc_id]) + visit)
+		EventBus.post("%s is glad you came when invited. (%s)" % [npcs[npc_id].name, Family.favor_progress(int(npc_favor[npc_id]), data)], "progress")
 	_pass_time(result["days"])
 
 
@@ -2713,6 +2717,12 @@ func _on_days_advanced(days: int) -> void:
 		EventBus.post(event["text"], event["category"])
 	for repaid in Karma.repay_debts(player, npcs, data, months, rng, world_flags):
 		EventBus.post("%s repays a debt of gratitude. (%s)" % [npcs[repaid["npc_id"]].name, ", ".join(repaid["notes"])], "progress")
+	for i in months:
+		var letter := Letters.monthly(player, npcs, npc_favor, data, rng, world_flags)
+		if not letter.is_empty():
+			var line := "A letter from %s: %s" % [npcs[letter["npc_id"]].name, letter["text"]]
+			Letters.remember(player, data, line)
+			EventBus.post(line + (" (%s)" % ", ".join(letter["notes"]) if not letter["notes"].is_empty() else ""), "progress")
 	if clan != null:
 		_advance_estate(days, months)
 		for joined in Clans.sync_family(player, clan, npcs, data):
