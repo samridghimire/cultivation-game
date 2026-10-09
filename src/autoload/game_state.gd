@@ -586,12 +586,31 @@ func explore_outlook(tags: Array = []) -> String:
 	if tags.is_empty():
 		tags = data.regions.get(current_region, {}).get("encounter_tags", [])
 	tags = tags + WorldEvents.encounter_tags(data, world_events, current_region)
-	return Guidance.outlook_text(Exploration.outlook(player, data, tags, world_flags, Calendar.season_of(GameClock.total_days), current_region))
+	var line := Guidance.outlook_text(Exploration.outlook(player, data, tags, world_flags, Calendar.season_of(GameClock.total_days), current_region))
+	if Exploration.mastered(player, data, current_region, world_flags):
+		line = (line + " You know every path here.").strip_edges()
+	return line
+
+
+## Once per region (world flag mastered_<region>): notes that the current region is now mastered.
+func _check_mastery() -> void:
+	var flag := "mastered_" + current_region
+	if current_region == "" or world_flags.get(flag, false) or not Exploration.mastered(player, data, current_region, world_flags):
+		return
+	world_flags[flag] = true
+	LifeStats.add(player, "regions_mastered")
+	EventBus.post("You know %s like the lines of your own palm." % Exploration.region_name(data, current_region), "progress")
 
 
 ## One day of exploring. Returns {event: "nothing"|"fight"|"choice"|"threat"|"story"}.
 ## `quiet` skips the per-day "find nothing" line (explore_many sums it up).
 func _explore_once(tags: Array, quiet: bool) -> Dictionary:
+	var result := _explore_day(tags, quiet)
+	_check_mastery()
+	return result
+
+
+func _explore_day(tags: Array, quiet: bool) -> Dictionary:
 	EventBus.topic = "world"
 	if not _can_act():
 		return {"event": "nothing"}
@@ -867,6 +886,7 @@ func choose_encounter(index: int) -> void:
 	if text != "":
 		EventBus.post(text, "danger" if result["enemy"] != "" else "karma" if result["karma"] else "info")
 	EventBus.encounter_choice_resolved.emit()
+	_check_mastery()
 	_pass_time(result["days"])
 	var choice: Dictionary = encounter["choices"][index]
 	if _can_act():

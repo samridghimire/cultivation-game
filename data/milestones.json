@@ -33,6 +33,7 @@
 		{"id": "merchants_eye", "name": "Merchant's Eye", "description": "Earn 20,000 spirit stones.", "check": {"type": "life_stat", "stat": "stones_earned", "min": 20000}},
 		{"id": "qi_stream", "name": "Stream of Qi", "description": "Gather 5,000 points of qi.", "check": {"type": "life_stat", "stat": "qi_gathered", "min": 5000}},
 		{"id": "sea_of_qi", "name": "Sea of Qi", "description": "Gather 100,000 points of qi.", "check": {"type": "life_stat", "stat": "qi_gathered", "min": 100000}},
-		{"id": "wanderer", "name": "Tireless Wanderer", "description": "Meet 50 chance encounters on the road.", "check": {"type": "life_stat", "stat": "encounters", "min": 50}}
+		{"id": "wanderer", "name": "Tireless Wanderer", "description": "Meet 50 chance encounters on the road.", "check": {"type": "life_stat", "stat": "encounters", "min": 50}},
+		{"id": "master_of_many_lands", "name": "Master of Many Lands", "description": "Master three regions.", "check": {"type": "life_stat", "stat": "regions_mastered", "min": 3}}
 	]
 }

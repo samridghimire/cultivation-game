@@ -5,7 +5,7 @@ extends RefCounted
 ## the end-of-life summary.
 
 const KEYS: Array[String] = ["fights_won", "fights_lost", "threats_fled", "breakthroughs", "breakthroughs_failed",
-	"tribulations_survived", "respawns", "items_crafted", "missions_done", "deeds_done", "encounters", "days_in_seclusion", "commissions_done", "tournaments_won", "incursions_repelled", "realm_floors_cleared", "inheritances_claimed", "stones_earned", "qi_gathered", "regions_visited", "lectures_attended", "seasons_gathered", "happenings_seen", "discoveries", "bounties_done", "best_renown"]
+	"tribulations_survived", "respawns", "items_crafted", "missions_done", "deeds_done", "encounters", "days_in_seclusion", "commissions_done", "tournaments_won", "incursions_repelled", "realm_floors_cleared", "inheritances_claimed", "stones_earned", "qi_gathered", "regions_visited", "lectures_attended", "seasons_gathered", "happenings_seen", "discoveries", "bounties_done", "best_renown", "regions_mastered"]
 
 const LABELS := {
 	"fights_won": "Fights won",
@@ -31,6 +31,7 @@ const LABELS := {
 	"discoveries": "Hidden places found",
 	"bounties_done": "Bounties claimed",
 	"best_renown": "Best local renown",
+	"regions_mastered": "Regions mastered",
 	"deeds_done": "Deeds done",
 	"encounters": "Encounters",
 	"days_in_seclusion": "Days in seclusion",
@@ -104,6 +105,12 @@ static func backfill(c: CharacterData, data: GameData, flags: Dictionary) -> voi
 	if c.seasonal_gathers.size() > get_stat(c, "seasons_gathered"):
 		c.life_stats["seasons_gathered"] = c.seasonal_gathers.size()
 	sync_discoveries(c, flags)
+	var mastered := 0
+	for key: Variant in flags:
+		if String(key).begins_with("mastered_") and flags[key]:
+			mastered += 1
+	if mastered > get_stat(c, "regions_mastered"):
+		c.life_stats["regions_mastered"] = mastered
 	if c.encounter_counts.size() > get_stat(c, "happenings_seen"):
 		c.life_stats["happenings_seen"] = c.encounter_counts.size()
 	if floors > get_stat(c, "realm_floors_cleared"):

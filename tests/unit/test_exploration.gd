@@ -615,6 +615,8 @@ func test_travel_speed_validation() -> void:
 	assert_true(text.contains("strictly rising"), text)
 	assert_true(text.contains("mult"), text)
 	assert_true(text.contains("non-empty"), text)
+
+
 ## WU-080: travel options say how busy the road is.
 func test_road_note_by_days() -> void:
 	var d := GameData.load_from_dir()
@@ -623,3 +625,42 @@ func test_road_note_by_days() -> void:
 	assert_true(Exploration.road_note(d, 6).begins_with("Roads see traffic"))
 	d.road = {}
 	assert_eq(Exploration.road_note(d, 6), "Roads are quiet.")
+
+
+## EXPL-003: mastering a region.
+func _master(c: CharacterData, region_id: String, flags: Dictionary) -> void:
+	for e: Dictionary in data().encounters.values():
+		Exploration.note_met(c, e)
+		if String(e.get("blocked_by_flag", "")) != "":
+			flags[e["blocked_by_flag"]] = true
+	if String(data().regions[region_id].get("discovery", "")) != "":
+		flags["discovered_" + region_id] = true
+	c.explore_days[region_id] = 100000
+
+
+func test_mastered_needs_everything() -> void:
+	var c := new_character()
+	var flags := {}
+	assert_false(Exploration.mastered(c, data(), "qingshi_village", flags))
+	_master(c, "qingshi_village", flags)
+	assert_true(Exploration.mastered(c, data(), "qingshi_village", flags))
+	if String(data().regions["qingshi_village"].get("discovery", "")) != "":
+		flags.erase("discovered_qingshi_village")
+		assert_false(Exploration.mastered(c, data(), "qingshi_village", flags), "discovery not found")
+	assert_false(Exploration.mastered(c, data(), "no_such_region", {}))
+
+
+func test_mastery_lost_with_new_realm_gated_happenings() -> void:
+	var c := new_character()
+	var flags := {}
+	_master(c, "qingshi_village", flags)
+	assert_true(Exploration.mastered(c, data(), "qingshi_village", flags))
+	# Mark one met happening as never seen: it counts again while it is in range.
+	var id := ""
+	for e: Dictionary in data().encounters.values():
+		var tags: Array = data().regions["qingshi_village"].get("encounter_tags", [])
+		if e.get("tags", []).any(func(t: Variant) -> bool: return tags.has(t)) and not e.has("requires_flag") and not e.has("rival") and not e.get("discovery_only", false) and not e.has("blocked_by_flag"):
+			id = e["id"]
+			break
+	c.encounter_counts.erase(id)
+	assert_false(Exploration.mastered(c, data(), "qingshi_village", flags))

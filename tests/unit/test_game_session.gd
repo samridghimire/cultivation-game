@@ -1196,3 +1196,28 @@ func test_travel_by_flying_sword() -> void:
 	assert_eq(gs.current_region, String(route["to"]))
 	assert_eq(GameClock.total_days - start_day, maxi(1, ceili(int(route["days"]) * 0.67)))
 	assert_true(heard.any(func(t: String) -> bool: return t.contains("on your flying sword you arrive")), str(heard))
+
+
+## EXPL-003: the first time a region is mastered it is announced once and counted once.
+func test_region_mastery_announced_once() -> void:
+	var gs := _game_state()
+	var c := _start()
+	var region: String = gs.current_region
+	for e: Dictionary in gs.data.encounters.values():
+		Exploration.note_met(c, e)
+		if String(e.get("blocked_by_flag", "")) != "":
+			gs.world_flags[e["blocked_by_flag"]] = true
+	gs.world_flags["discovered_" + region] = true
+	c.explore_days[region] = 100000
+	assert_true(gs.explore_outlook().contains("You know every path here."))
+	var heard: Array[String] = []
+	var cb := func(text: String, _cat: String) -> void: heard.append(text)
+	EventBus.message_posted.connect(cb)
+	gs._check_mastery()
+	gs._check_mastery()
+	EventBus.message_posted.disconnect(cb)
+	assert_eq(heard.filter(func(t: String) -> bool: return t.contains("lines of your own palm")).size(), 1)
+	assert_eq(LifeStats.get_stat(c, "regions_mastered"), 1)
+	assert_true(gs.world_flags["mastered_" + region])
+	LifeStats.backfill(c, gs.data, {"mastered_a": true, "mastered_b": true, "mastered_c": true})
+	assert_eq(LifeStats.get_stat(c, "regions_mastered"), 3)

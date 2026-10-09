@@ -355,6 +355,23 @@ static func region_progress(c: CharacterData, data: GameData, region_id: String,
 	return {"met": met, "total": total}
 
 
+## True when the character knows a region completely (EXPL-003): every happening they can
+## meet is met (`region_progress`), its discovery (if any) is found, and no deep path that
+## retires itself is still waiting. Realm-gated encounters can make this false again.
+static func mastered(c: CharacterData, data: GameData, region_id: String, flags: Dictionary) -> bool:
+	var progress := region_progress(c, data, region_id, flags)
+	if int(progress["total"]) <= 0 or int(progress["met"]) < int(progress["total"]):
+		return false
+	if String(data.regions.get(region_id, {}).get("discovery", "")) != "" and not flags.get("discovered_" + region_id, false):
+		return false
+	if next_deep_path(c, data, region_id) != -1:
+		return false
+	for id in open_deep_paths(c, data, region_id, flags):
+		if String(data.encounters[id].get("blocked_by_flag", "")) != "":
+			return false
+	return true
+
+
 ## Rescales the non-fight entries so their total weight is `before` (what it was without fading):
 ## fresh encounters take the share familiar ones gave up; the fight share is unchanged.
 static func _keep_non_fight_share(pool: Array[Dictionary], before: float) -> void:
