@@ -41,6 +41,36 @@ static func next_deep_path(c: CharacterData, data: GameData, region_id: String) 
 	return best
 
 
+## Encounter ids (data order) of deeper paths the character's days in the region have
+## opened: `min_explores` reached, realm and alignment fit, `requires_flag` set and
+## `blocked_by_flag` unset (GUIDE-016).
+static func open_deep_paths(c: CharacterData, data: GameData, region_id: String, flags: Dictionary) -> Array[String]:
+	var out: Array[String] = []
+	var tags: Array = data.regions.get(region_id, {}).get("encounter_tags", [])
+	var have := familiarity(c, region_id)
+	for e: Dictionary in data.encounters.values():
+		if not e.has("min_explores") or not _shares_tag(e.get("tags", []), tags):
+			continue
+		if int(e["min_explores"]) > have or not realm_allows(c, data, e) or not alignment_allows(c, e):
+			continue
+		var needed: String = e.get("requires_flag", "")
+		if needed != "" and not flags.get(needed, false):
+			continue
+		var blocker: String = e.get("blocked_by_flag", "")
+		if blocker != "" and flags.get(blocker, false):
+			continue
+		out.append(String(e["id"]))
+	return out
+
+
+## The first open deep path that retires itself with a `blocked_by_flag` (met once), or {}.
+static func deep_path_for(c: CharacterData, data: GameData, region_id: String, flags: Dictionary) -> Dictionary:
+	for id: String in open_deep_paths(c, data, region_id, flags):
+		if String(data.encounters[id].get("blocked_by_flag", "")) != "":
+			return data.encounters[id]
+	return {}
+
+
 ## Whether the character has set foot in the region (TRAV-001).
 static func visited(c: CharacterData, region_id: String) -> bool:
 	return c.visited_regions.has(region_id)

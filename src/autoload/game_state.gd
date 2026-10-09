@@ -52,6 +52,7 @@ var pending_event := ""
 var pending_encounter := ""
 ## True when the last explore day used a region discovery (TRAV-005).
 var last_explore_discovery := false
+var last_explore_deep_path := false
 ## A lethal foe sensed while exploring, awaiting face_threat() (transient, not saved).
 var pending_threat := ""
 ## Set when the Creation Artifact just respawned the player (ART-005) until
@@ -584,6 +585,10 @@ func _explore_once(tags: Array, quiet: bool) -> Dictionary:
 	var encounter := Exploration.discovery_for(player, data, current_region, world_flags)
 	Exploration.add_explore_day(player, current_region)
 	last_explore_discovery = not encounter.is_empty()
+	last_explore_deep_path = false
+	if encounter.is_empty():
+		encounter = Exploration.deep_path_for(player, data, current_region, world_flags)
+		last_explore_deep_path = not encounter.is_empty()
 	if encounter.is_empty():
 		encounter = Exploration.roll_encounter(player, data, tags, world_flags, rng, Rivals.rival_of(player, npcs), 1.0 - ClanEstate.ward(clan, data, current_region), Calendar.season_of(GameClock.total_days), current_region)
 	else:
@@ -602,6 +607,8 @@ func _explore_once(tags: Array, quiet: bool) -> Dictionary:
 		text += " (%s)" % ", ".join(result["notes"])
 	if last_explore_discovery:
 		text = "A discovery: " + text
+	elif last_explore_deep_path:
+		text = "A hidden path: " + text
 	EventBus.post(text, "danger" if result["enemy"] != "" else "info")
 	pending_encounter = ""
 	pending_threat = ""

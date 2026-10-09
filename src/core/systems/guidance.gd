@@ -486,6 +486,12 @@ static func unlock_notices(c: CharacterData, data: GameData, flags: Dictionary, 
 			_add_notice(out, flags, "promotion_%s_%d" % [sect.id, promo_rank], "You may challenge the %s trial at the %s hall." % [sect.rank_name(promo_rank), sect.name])
 	if clan == null and Clans.check_found(c, null, data) == "":
 		_add_notice(out, flags, "clan", "You can found a clan of your own at your cave abode.")
+	for region_id: String in data.regions:
+		if not Exploration.visited(c, region_id):
+			continue
+		for path_id: String in Exploration.open_deep_paths(c, data, region_id, flags):
+			if String(data.encounters[path_id].get("blocked_by_flag", "")) != "":
+				_add_notice(out, flags, "deep_path_" + path_id, "Your days in %s have shown you a path you had missed. Explore there again." % Exploration.region_name(data, region_id))
 	for realm_id: String in data.secret_realms:
 		var def: Dictionary = data.secret_realms[realm_id]
 		var low := data.realm_index_of(String(def.get("min_realm", "")))
