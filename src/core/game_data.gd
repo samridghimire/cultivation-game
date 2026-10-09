@@ -33,11 +33,8 @@ var restricted_item_tags: PackedStringArray = []
 var deeds: Dictionary = {}  # id -> Dictionary
 var regions: Dictionary = {}  # id -> Dictionary
 var start_region := ""
-<<<<<<< HEAD
 var renown: Dictionary = {}  # regions.json "renown" block (Renown); {} = none
-=======
 var road: Dictionary = {}  # TRAV-006: regions.json "road" (empty = no road encounters)
->>>>>>> 53466a8 ([TRAV-006] Things happen on the road)
 var encounters: Dictionary = {}  # id -> Dictionary
 ## Bounties by id and the file's top-level numbers (data/bounties.json, Bounties).
 var bounties: Dictionary = {}
@@ -195,11 +192,8 @@ func _load(dir: String) -> void:
 
 	var world := _read(dir, "regions.json")
 	start_region = world.get("start_region", "")
-<<<<<<< HEAD
 	renown = world.get("renown", {})
-=======
 	road = world.get("road", {})
->>>>>>> 53466a8 ([TRAV-006] Things happen on the road)
 	for region in world.get("regions", []):
 		regions[region["id"]] = region
 		for place: Dictionary in region.get("places", []):
