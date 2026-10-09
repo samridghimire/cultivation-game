@@ -1178,6 +1178,7 @@ func chat(npc_id: String) -> void:
 	var gain: int = base + Karma.favor_bonus(player, data, npc_id, base, cap - favor - base)
 	npc_favor[npc_id] = favor + gain
 	EventBus.post("You pass some time talking with %s. (%s)" % [npcs[npc_id].name, Family.favor_progress(int(npc_favor[npc_id]), data)] + (" The festival warms the mood." if festival else ""))
+	_greet_renowned(npc_id)
 	var hint := Family.taste_hint(data, npc_id)
 	if hint != "" and int(npc_favor[npc_id]) >= 20 and not world_flags.has("taste_told_" + npc_id):
 		world_flags["taste_told_" + npc_id] = true
@@ -1187,6 +1188,20 @@ func chat(npc_id: String) -> void:
 		npc_favor[npc_id] = mini(100, int(npc_favor[npc_id]) + visit)
 		EventBus.post("%s is glad you came when invited. (%s)" % [npcs[npc_id].name, Family.favor_progress(int(npc_favor[npc_id]), data)], "progress")
 	_pass_time(result["days"])
+
+
+## NEWS-002: a renowned player is greeted by name, at most once per NPC per 30 days. Family never.
+func _greet_renowned(npc_id: String) -> void:
+	if player.parents.has(npc_id) or player.children.has(npc_id) or player.spouses.has(npc_id):
+		return
+	var key := "greeted_" + npc_id
+	if world_flags.has(key) and GameClock.total_days - int(world_flags[key]) < 30:
+		return
+	var line := Renown.greeting(player, data, current_region, String(npcs[npc_id].name), GameClock.total_days)
+	if line == "":
+		return
+	world_flags[key] = GameClock.total_days
+	EventBus.post(line, "progress")
 
 
 ## Ask a stronger NPC for pointers on one of your techniques (MENTOR-001).

@@ -2,6 +2,10 @@
 extends TestCase
 
 
+func _root() -> Node:
+	return (Engine.get_main_loop() as SceneTree).root
+
+
 func _errors_after(mutate: Callable) -> Array:
 	var d := GameData.load_from_dir()
 	mutate.call(d)
@@ -116,3 +120,56 @@ func test_bounty_multiplier_per_tier() -> void:
 	assert_eq(Renown.bounty_multiplier(c, d, "nowhere"), 1.0, "absent = 1.0")
 	c.renown["misty_forest"] = 20
 	assert_eq(Renown.bounty_multiplier(c, d, "misty_forest"), 1.0)
+
+
+func test_greeting_by_tier() -> void:
+	var c := new_character()
+	assert_eq(Renown.greeting(c, data(), "misty_forest", "Old Wen", 3), "", "unknown")
+	c.renown["misty_forest"] = 20
+	var line := Renown.greeting(c, data(), "misty_forest", "Old Wen", 0)
+	assert_true(line.contains("Old Wen") and line.contains("Known"), line)
+	assert_false(line.contains("{"), "placeholders filled")
+	assert_eq(Renown.greeting(c, data(), "misty_forest", "Old Wen", 0), Renown.greeting(c, data(), "misty_forest", "Old Wen", 2), "two lines at Known")
+	assert_true(Renown.greeting(c, data(), "misty_forest", "Old Wen", 0) != Renown.greeting(c, data(), "misty_forest", "Old Wen", 1), "lines rotate")
+	c.renown["misty_forest"] = 100
+	assert_true(Renown.greeting(c, data(), "misty_forest", "Old Wen", 3).contains("Renowned"))
+
+
+func test_greeting_validator() -> void:
+	assert_false(_errors_after(func(d: GameData) -> void: d.renown["greetings"][0]["min_tier"] = 0).is_empty())
+	assert_false(_errors_after(func(d: GameData) -> void: d.renown["greetings"][0]["min_tier"] = 4).is_empty())
+	assert_false(_errors_after(func(d: GameData) -> void: d.renown["greetings"][0]["text"] = " ").is_empty())
+
+
+func test_chat_greets_once_per_30_days_and_never_family() -> void:
+	var gs: Node = _root().get_node("GameState")
+	var c := CharacterFactory.create("Famed", gs.data, seeded_rng())
+	gs.start_session(c)
+	var npc := Npcs.spawn(gs.npcs, gs.data, seeded_rng(3), {"age_years": 30, "realm": "mortal"})
+	c.renown[gs.current_region] = 50
+	var bus: Node = _root().get_node("EventBus")
+	var before: int = bus.history.size()
+	gs.chat(npc.id)
+	var greetings := 0
+	for i in range(before, bus.history.size()):
+		if String(bus.history[i]["text"]).contains(npc.name) and String(bus.history[i]["text"]).contains("Respected"):
+			greetings += 1
+	assert_eq(greetings, 1, "greeted")
+	before = bus.history.size()
+	gs.chat(npc.id)
+	for i in range(before, bus.history.size()):
+		assert_false(String(bus.history[i]["text"]).contains("Respected"), "not again within 30 days")
+	gs.world_flags["greeted_" + npc.id] = int(gs.world_flags["greeted_" + npc.id]) - 31
+	before = bus.history.size()
+	gs.chat(npc.id)
+	var again := false
+	for i in range(before, bus.history.size()):
+		again = again or String(bus.history[i]["text"]).contains("Respected")
+	assert_true(again, "greeted again after 30 days")
+	var kin := Npcs.spawn(gs.npcs, gs.data, seeded_rng(4), {"age_years": 30, "realm": "mortal"})
+	c.parents.append(kin.id)
+	before = bus.history.size()
+	gs.chat(kin.id)
+	for i in range(before, bus.history.size()):
+		assert_false(String(bus.history[i]["text"]).contains("Respected"), "family never")
+	gs.end_session()

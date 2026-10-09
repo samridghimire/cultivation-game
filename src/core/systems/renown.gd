@@ -68,6 +68,19 @@ static func bounty_multiplier(c: CharacterData, data: GameData, region_id: Strin
 	return float(tier(data, value(c, region_id)).get("bounty_mult", 1.0))
 
 
+## A greeting from `npc_name` for your fame in `region_id` ("" below the lowest greeting tier).
+## Picks among the lines whose min_tier <= your tier by the day number (no rng).
+static func greeting(c: CharacterData, data: GameData, region_id: String, npc_name: String, day: int) -> String:
+	var idx := tier_index(data, value(c, region_id))
+	var lines: Array[String] = []
+	for g: Dictionary in data.renown.get("greetings", []):
+		if int(g["min_tier"]) <= idx:
+			lines.append(String(g["text"]))
+	if lines.is_empty():
+		return ""
+	return lines[posmod(day, lines.size())].replace("{name}", npc_name).replace("{title}", title(c, data, region_id))
+
+
 ## "Misty Forest: Respected (54)" for every region with a title, in data order.
 static func describe(c: CharacterData, data: GameData) -> PackedStringArray:
 	var lines := PackedStringArray()
@@ -101,6 +114,20 @@ static func validate(config: Dictionary, errors: PackedStringArray) -> void:
 	if not (tiers is Array) or (tiers as Array).is_empty():
 		errors.append("renown tiers must be a non-empty list")
 		return
+	var greetings: Variant = config.get("greetings", [])
+	if not (greetings is Array):
+		errors.append("renown greetings must be a list")
+	else:
+		for i in (greetings as Array).size():
+			var g: Variant = greetings[i]
+			if not (g is Dictionary):
+				errors.append("renown greeting %d must be an object" % i)
+				continue
+			var mt: Variant = (g as Dictionary).get("min_tier", 0)
+			if (typeof(mt) != TYPE_INT and typeof(mt) != TYPE_FLOAT) or float(mt) != int(mt) or int(mt) < 1 or int(mt) >= (tiers as Array).size():
+				errors.append("renown greeting %d min_tier must be an int from 1 to %d" % [i, (tiers as Array).size() - 1])
+			if typeof((g as Dictionary).get("text", "")) != TYPE_STRING or String((g as Dictionary).get("text", "")).strip_edges() == "":
+				errors.append("renown greeting %d needs text" % i)
 	var last := -1
 	for i in (tiers as Array).size():
 		var t: Variant = tiers[i]
