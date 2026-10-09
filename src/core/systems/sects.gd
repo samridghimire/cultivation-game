@@ -581,7 +581,7 @@ static func last_loss_days_ago(c: CharacterData, mission_id: String) -> int:
 	return c.age_days - int(c.mission_losses[mission_id])
 
 
-## Danger label (Combat.danger_label: Weak/Even/Dangerous/Deadly) of the
+## Danger label (Combat.danger_label: Weak/Even/Risky/Dangerous/Deadly) of the
 ## mission's fight for `c`, or "" if the mission has no enemy. Missions are
 ## always fought (a Deadly foe is not evaded), so the board should show this.
 static func mission_danger(c: CharacterData, data: GameData, mission_id: String) -> String:

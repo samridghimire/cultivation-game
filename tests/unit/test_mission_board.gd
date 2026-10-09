@@ -274,3 +274,8 @@ func test_call_days_left_helper() -> void:
 	assert_eq(SectFactions.call_days_left(flags, "y", 110), -1)
 	assert_eq(SectFactions.call_days_left({}, "x", 110), -1)
 	assert_eq(SectFactions.call_mission_id(data(), "azure_cloud_sect"), "answer_azure_call")
+
+
+func test_danger_text_risky_warns_to_prepare() -> void:
+	assert_true(MissionBoard.danger_text("Risky").contains("probably win, but a loss is likely enough to prepare for."))
+	assert_false(MissionBoard.danger_text("Risky").contains("no slipping away"))

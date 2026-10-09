@@ -428,8 +428,8 @@ static func outlook(c: CharacterData, data: GameData, tags: Array, flags: Dictio
 	var out := {"foes": []}
 	for key: String in sums:
 		out[key] = sums[key] / total if total > 0.0 else (1.0 if key == "other" else 0.0)
-	var rank := {"Deadly": 0, "Dangerous": 1, "Even": 2, "Weak": 3}
-	foes.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return rank.get(a["danger"], 4) < rank.get(b["danger"], 4))
+	var rank := {"Deadly": 0, "Dangerous": 1, "Risky": 2, "Even": 3, "Weak": 4}
+	foes.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return rank.get(a["danger"], 5) < rank.get(b["danger"], 5))
 	out["foes"] = foes.slice(0, 4)
 	return out
 

@@ -357,13 +357,20 @@ static func win_chance(c: CharacterData, data: GameData, enemy: Dictionary, samp
 	return float(wins) / samples
 
 
-## Danger rating for menus and encounter evasion, from win_chance().
+## Danger rating for menus and encounter evasion, from win_chance()
+## (Weak/Even/Risky/Dangerous/Deadly).
 static func danger_label(c: CharacterData, data: GameData, enemy: Dictionary) -> String:
-	var chance := win_chance(c, data, enemy)
+	return label_for_chance(win_chance(c, data, enemy))
+
+
+## The rating for a win chance: Weak >= 90%, Even >= 70%, Risky >= 50%, Dangerous >= 15%, else Deadly.
+static func label_for_chance(chance: float) -> String:
 	if chance >= 0.9:
 		return "Weak"
-	if chance >= 0.5:
+	if chance >= 0.7:
 		return "Even"
+	if chance >= 0.5:
+		return "Risky"
 	if chance >= 0.15:
 		return "Dangerous"
 	return "Deadly"

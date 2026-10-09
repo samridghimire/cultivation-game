@@ -20,7 +20,7 @@ func test_early_encounters_are_survivable() -> void:
 			var enemy: Dictionary = d.enemies[e["enemy"]]
 			if enemy.get("lethal", false):
 				var danger := Combat.danger_label(c, d, enemy)
-				assert_true(danger in ["Deadly", "Weak", "Even"], "%s: a lethal %s fight a newcomer may not evade" % [e["id"], danger])
+				assert_true(danger in ["Deadly", "Weak", "Even", "Risky"], "%s: a lethal %s fight a newcomer may not evade" % [e["id"], danger])
 		for choice: Dictionary in e.get("choices", []):
 			if choice.has("enemy"):
 				assert_false(d.enemies[choice["enemy"]].get("lethal", false), "%s: a forced choice fight that can kill a newcomer" % e["id"])

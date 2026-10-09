@@ -16,6 +16,7 @@ const CATEGORY_COLORS := {
 const DANGER_COLORS := {
 	"Weak": Color("8fd18a"),
 	"Even": Color("dddddd"),
+	"Risky": Color("e8b04a"),
 	"Dangerous": Color("e8a04a"),
 	"Deadly": Color("e85a4a"),
 }

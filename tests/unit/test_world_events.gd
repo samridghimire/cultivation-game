@@ -352,7 +352,7 @@ func test_event_options_show_danger() -> void:
 	assert_eq(labels.size(), 1)
 	assert_true(String(labels[0]).begins_with("Enter the"), labels[0])
 	var danger := false
-	for word in ["Weak", "Even", "Dangerous", "Deadly"]:
+	for word in ["Weak", "Even", "Risky", "Dangerous", "Deadly"]:
 		danger = danger or String(labels[0]).contains("(%s)" % word)
 	assert_true(danger, "label shows a danger word: %s" % labels[0])
 	gs.end_session()

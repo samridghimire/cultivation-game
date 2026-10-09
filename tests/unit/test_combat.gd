@@ -297,3 +297,9 @@ func test_wording_does_not_change_the_fight() -> void:
 	assert_eq(a["victory"], b["victory"])
 	assert_eq(a["rounds"], b["rounds"])
 	assert_eq(a["player_hp"], b["player_hp"])
+
+
+func test_label_for_chance_bands() -> void:
+	var cases := [[0.95, "Weak"], [0.9, "Weak"], [0.8, "Even"], [0.7, "Even"], [0.6, "Risky"], [0.5, "Risky"], [0.3, "Dangerous"], [0.15, "Dangerous"], [0.1, "Deadly"]]
+	for pair: Array in cases:
+		assert_eq(Combat.label_for_chance(pair[0]), pair[1], "chance %s" % pair[0])

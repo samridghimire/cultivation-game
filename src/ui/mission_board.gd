@@ -155,6 +155,8 @@ static func danger_text(danger: String) -> String:
 	var text := "Danger: %s." % danger
 	if danger == "Deadly" or danger == "Dangerous":
 		text += " A mission's foe is always fought; there is no slipping away."
+	elif danger == "Risky":
+		text += " You will probably win, but a loss is likely enough to prepare for."
 	return text
 
 
