@@ -96,3 +96,41 @@ func test_gift_picker_shows_learned_tastes() -> void:
 	assert_true(String(picker[2]["label"]).contains("-3 favor"), picker[2]["label"])
 	menu.free()
 	gs.end_session()
+
+
+## WU-108: a taste told in chat hints the first like in the gift picker.
+func test_gift_picker_shows_told_hint() -> void:
+	var gs: Node = _root().get_node("GameState")
+	var c := _start(gs)
+	var menu := _npc_menu("xiao_ling")
+	c.inventory.clear()
+	c.add_item("golden_bell_talisman", 1)
+	c.add_item("moon_cake", 1)
+	(_find(menu.get_options(), "Give ")["action"] as Callable).call()
+	for opt: Dictionary in menu.get_options():
+		assert_false(String(opt["label"]).contains("fond of"), "no hint before being told")
+	gs.world_flags["taste_told_xiao_ling"] = true
+	var picker: Array = menu.get_options()
+	assert_true(String(picker[0]["label"]).contains("Moon Cake") and String(picker[0]["label"]).contains("(they are fond of these)"), picker[0]["label"])
+	assert_eq(picker[0]["color"], UIStyle.HINT)
+	assert_false(String(picker[1]["label"]).contains("fond of"), picker[1]["label"])
+	gs.world_flags["taste_xiao_ling_moon_cake"] = -1
+	picker = menu.get_options()
+	for opt: Dictionary in picker:
+		assert_false(String(opt["label"]).contains("fond of"), "a learned dislike beats the hint")
+	menu.free()
+	gs.end_session()
+
+
+func test_matches_first_like() -> void:
+	var d: GameData = data()
+	assert_true(Family.matches_first_like(d, "xiao_ling", "moon_cake"), "item id")
+	assert_false(Family.matches_first_like(d, "xiao_ling", "paper_lantern"), "second like only")
+	var herb_id := ""
+	for id: String in d.items:
+		if (d.items[id].get("tags", []) as Array).has("herb"):
+			herb_id = id
+			break
+	assert_true(Family.matches_first_like(d, "herbalist_lan", herb_id), "tag like")
+	assert_false(Family.matches_first_like(d, "herbalist_lan", "moon_cake"))
+	assert_false(Family.matches_first_like(d, "nobody", "moon_cake"))

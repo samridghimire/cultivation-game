@@ -5,6 +5,8 @@ extends RefCounted
 const BG := Color("1b1d2b")
 const PANEL := Color(0.08, 0.09, 0.13, 0.97)
 const ACCENT := Color("e8c76a")
+## A dimmer gold for hints that are not yet confirmed.
+const HINT := Color("b5a46a")
 const CATEGORY_COLORS := {
 	"info": Color("dddddd"),
 	"progress": Color("e8c76a"),

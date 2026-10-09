@@ -199,16 +199,21 @@ func _gift_options() -> Array[Dictionary]:
 	var ids: Array = p.inventory.keys()
 	# Tastes the player has learned from earlier gifts (world flag taste_<npc>_<item>); liked items first.
 	var tastes := {}
+	var told: bool = GameState.world_flags.has("taste_told_" + npc_id)
 	for item_id: String in ids:
 		tastes[item_id] = clampi(int(GameState.world_flags.get("taste_%s_%s" % [npc_id, item_id], 0)), -1, 1)
+		# WU-108: a taste told in chat is a hint (between learned likes and neutral).
+		if tastes[item_id] == 0 and told and Family.matches_first_like(data, npc_id, item_id):
+			tastes[item_id] = 0.5
 	ids.sort_custom(func(a: String, b: String) -> bool:
 		if tastes[a] != tastes[b]:
 			return tastes[a] > tastes[b]
 		return String(data.items.get(a, {}).get("name", a)) < String(data.items.get(b, {}).get("name", b)))
 	for item_id: String in ids:
-		var taste: int = tastes[item_id]
+		var hinted: bool = tastes[item_id] == 0.5
+		var taste: int = 0 if hinted else int(tastes[item_id])
 		var item_name: String = data.items.get(item_id, {}).get("name", item_id)
-		var suffix := " (liked)" if taste > 0 else (" (disliked)" if taste < 0 else "")
+		var suffix := " (liked)" if taste > 0 else (" (disliked)" if taste < 0 else (" (they are fond of these)" if hinted else ""))
 		var favor_gain := Family.gift_favor_preview(data, item_id, taste)
 		var label := "%s x%d%s (%+d favor)" % [item_name, p.item_count(item_id), suffix, favor_gain]
 		var reason := Family.check_gift(p, npc, favor, item_id, data)
@@ -216,6 +221,8 @@ func _gift_options() -> Array[Dictionary]:
 		if taste != 0:
 			entry["color"] = UIStyle.ACCENT if taste > 0 else UIStyle.CATEGORY_COLORS["danger"]
 			entry["description"] = "%s %s: %+d favor." % [npc.name, "treasures this" if taste > 0 else "dislikes this", favor_gain]
+		elif hinted:
+			entry["color"] = UIStyle.HINT
 		options.append(entry)
 	options.append({"label": "Back (favor %d)" % favor, "action": _set_gift_mode.bind(false), "keep_open": true})
 	return options

@@ -192,6 +192,16 @@ static func gift_taste(data: GameData, npc_id: String, item_id: String) -> int:
 	return 0
 
 
+## WU-108: true when `item_id` matches the NPC's first `likes` entry (an item id or one of its tags),
+## the one a chat hint ("<Name> is fond of herbs.") names.
+static func matches_first_like(data: GameData, npc_id: String, item_id: String) -> bool:
+	var likes: Array = data.npcs.get(npc_id, {}).get("likes", [])
+	if likes.is_empty():
+		return false
+	var tags: Array = data.items.get(item_id, {}).get("tags", [])
+	return likes[0] == item_id or tags.has(likes[0])
+
+
 ## The favor a gift of `item_id` is worth to `npc_id` before the favor cap, given what the
 ## player has learned of their `taste` (1, -1 or 0 = unknown/neutral; WU-089).
 static func gift_favor_preview(data: GameData, item_id: String, taste: int) -> int:
