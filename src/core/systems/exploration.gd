@@ -462,7 +462,7 @@ static func _gather_entry_locked(c: CharacterData, data: GameData, entry: Dictio
 ## Rolls GATHER_ROLLS times, plus one more per 5 Fortune above 10.
 ## Returns {item_id: count}.
 @warning_ignore("integer_division")
-static func gather(c: CharacterData, table: Array, rng: RandomNumberGenerator) -> Dictionary:
+static func gather(c: CharacterData, table: Array, rng: RandomNumberGenerator, rolled: Array = []) -> Dictionary:
 	var found := {}
 	var total := 0.0
 	for entry: Dictionary in table:
@@ -477,10 +477,25 @@ static func gather(c: CharacterData, table: Array, rng: RandomNumberGenerator) -
 			if roll < 0.0:
 				var item_id: String = entry.get("item", "")
 				if item_id != "":
+					rolled.append(entry)
 					var count := rng.randi_range(int(entry.get("min", 1)), int(entry.get("max", 1)))
 					found[item_id] = int(found.get(item_id, 0)) + count
 				break
 	return found
+
+
+## Records `season` in c.seasonal_gathers (SEASON-003) when any entry in `rolled`
+## (the entries Exploration.gather rolled) is season-only. True if newly recorded.
+static func note_seasonal_gather(c: CharacterData, rolled: Array, season: String) -> bool:
+	season = season.to_lower()
+	if season == "" or c.seasonal_gathers.has(season):
+		return false
+	for entry: Dictionary in rolled:
+		if not (entry.get("seasons", []) as Array).is_empty():
+			c.seasonal_gathers.append(season)
+			c.life_stats["seasons_gathered"] = c.seasonal_gathers.size()
+			return true
+	return false
 
 
 ## True if the player should sense `enemy_id` coming and avoid the fight:

@@ -408,3 +408,45 @@ func test_discovery_only_encounters_never_roll_and_validate() -> void:
 	assert_true(text.contains("discovery 'no_such_encounter' must be a discovery_only encounter"), text)
 	assert_true(text.contains("'orphan_find' is discovery_only but is no region's discovery"), text)
 	assert_eq(d.load_errors.size(), before + 2, text)
+
+
+# --- SEASON-003: Herbalist of Four Seasons --------------------------------------
+
+func _gather_noting(c: CharacterData, table: Array, season: String) -> void:
+	var rolled: Array = []
+	Exploration.gather(c, table, seeded_rng(1), rolled)
+	Exploration.note_seasonal_gather(c, rolled, season)
+
+
+func test_seasonal_gather_records_season_once() -> void:
+	var c := new_character()
+	var table := [{"item": "spirit_herb", "weight": 1, "min": 1, "max": 1, "seasons": ["spring"]}]
+	_gather_noting(c, table, "Spring")
+	_gather_noting(c, table, "Spring")
+	assert_eq(c.seasonal_gathers, ["spring"] as Array[String])
+	assert_eq(LifeStats.get_stat(c, "seasons_gathered"), 1)
+
+
+func test_normal_gather_records_nothing() -> void:
+	var c := new_character()
+	_gather_noting(c, [{"item": "dew_grass", "weight": 1, "min": 1, "max": 1}], "Spring")
+	assert_true(c.seasonal_gathers.is_empty())
+
+
+func test_seasonal_gathers_save_and_old_saves_default() -> void:
+	var c := new_character()
+	c.seasonal_gathers.append("winter")
+	assert_eq(CharacterData.from_dict(c.to_dict()).seasonal_gathers, ["winter"] as Array[String])
+	var d := c.to_dict()
+	d.erase("seasonal_gathers")
+	assert_true(CharacterData.from_dict(d).seasonal_gathers.is_empty())
+
+
+func test_four_seasons_herbalist_milestone_at_four() -> void:
+	var c := new_character()
+	var table := [{"item": "spirit_herb", "weight": 1, "min": 1, "max": 1, "seasons": ["spring", "summer", "autumn", "winter"]}]
+	for season in ["Spring", "Summer", "Autumn"]:
+		_gather_noting(c, table, season)
+	assert_false(Milestones.newly_reached(c, data(), {}).has("four_seasons_herbalist"))
+	_gather_noting(c, table, "Winter")
+	assert_true(Milestones.newly_reached(c, data(), {}).has("four_seasons_herbalist"))

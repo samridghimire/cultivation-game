@@ -86,6 +86,8 @@ var anchors: Array[String] = []
 var bound_artifacts: Array[String] = []
 ## Region ids the character has set foot in (TRAV-001), in order of arrival.
 var visited_regions: Array[String] = []
+## Seasons in which the player gathered a season-only herb (SEASON-003).
+var seasonal_gathers: Array[String] = []
 ## Cultivators whose cultivation this character has devoured (Devouring, DEM-001).
 var devoured := 0
 ## Id of the player's named rival NPC (Rivals, RIV-002), "" if none.
@@ -221,6 +223,7 @@ func to_dict() -> Dictionary:
 		"reputation": reputation.duplicate(),
 		"bound_artifacts": bound_artifacts.duplicate(),
 		"visited_regions": visited_regions.duplicate(),
+		"seasonal_gathers": seasonal_gathers.duplicate(),
 		"devoured": devoured,
 		"rival": rival,
 		"abode": abode,
@@ -329,6 +332,8 @@ static func from_dict(d: Dictionary) -> CharacterData:
 		c.bound_artifacts.append(String(item_id))
 	for region_id in d.get("visited_regions", []):
 		c.visited_regions.append(String(region_id))
+	for season in d.get("seasonal_gathers", []):
+		c.seasonal_gathers.append(String(season))
 	c.devoured = int(d.get("devoured", 0))
 	c.rival = String(d.get("rival", ""))
 	c.abode = String(d.get("abode", ""))

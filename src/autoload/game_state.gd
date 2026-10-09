@@ -840,7 +840,10 @@ func gather(table: Array, days: int) -> void:
 	EventBus.topic = "trade"
 	if not _can_act():
 		return
-	var found := Exploration.gather(player, Exploration.gather_table_for(player, data, table, Calendar.season_of(GameClock.total_days)), rng)
+	var season := Calendar.season_of(GameClock.total_days)
+	var rolled: Array = []
+	var found := Exploration.gather(player, Exploration.gather_table_for(player, data, table, season), rng, rolled)
+	Exploration.note_seasonal_gather(player, rolled, season)
 	var notes: PackedStringArray = []
 	for item_id in found:
 		player.add_item(item_id, found[item_id])
