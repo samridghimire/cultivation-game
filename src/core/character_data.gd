@@ -21,6 +21,8 @@ var pregnancy: Dictionary = {}
 var birth_rank := ""
 ## Training assigned by a parent (FAM-004): {} or {"assignment": id, "profession": id}. See Training.
 var training: Dictionary = {}
+## "pointers:<npc_id>" / "spar:<npc_id>" -> GameClock day last done (MENTOR-001).
+var npc_action_days: Dictionary = {}
 ## Bloodline id (data/bloodlines.json, "" = none) and whether it has awakened (FAM-007).
 var bloodline := ""
 var bloodline_awakened := false
@@ -164,6 +166,7 @@ func to_dict() -> Dictionary:
 		"pregnancy": pregnancy.duplicate(),
 		"birth_rank": birth_rank,
 		"training": training.duplicate(),
+		"npc_action_days": npc_action_days.duplicate(),
 		"bloodline": bloodline,
 		"bloodline_awakened": bloodline_awakened,
 		"home_region": home_region,
@@ -248,6 +251,9 @@ static func from_dict(d: Dictionary) -> CharacterData:
 	var saved_training: Dictionary = d.get("training", {})
 	for key in saved_training:
 		c.training[String(key)] = String(saved_training[key])
+	var saved_actions: Dictionary = d.get("npc_action_days", {})
+	for key in saved_actions:
+		c.npc_action_days[String(key)] = int(saved_actions[key])
 	c.bloodline = String(d.get("bloodline", ""))
 	c.bloodline_awakened = bool(d.get("bloodline_awakened", false))
 	c.home_region = String(d.get("home_region", ""))

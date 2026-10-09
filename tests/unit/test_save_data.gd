@@ -76,6 +76,7 @@ func test_every_character_field_survives_a_save() -> void:
 	c.year_start_stats = {"fights_won": 1}
 	c.trial_progress = {"fist_saint_grave": 2}
 	c.training = {"assignment": "profession", "profession": "alchemist"}
+	c.npc_action_days = {"pointers:elder": 12}
 	c.artifact_storage = {"spirit_stone": 12}
 	c.reputation = {"azure_cloud_sect": 150}
 	c.abode_storage = {"iron_ore": 4}

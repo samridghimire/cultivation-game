@@ -1032,6 +1032,29 @@ func chat(npc_id: String) -> void:
 	_pass_time(result["days"])
 
 
+## Ask a stronger NPC for pointers on one of your techniques (MENTOR-001).
+func check_pointers(npc_id: String) -> String:
+	return Mentorship.check_pointers(player, npcs.get(npc_id), int(npc_favor.get(npc_id, 0)), data, GameClock.total_days)
+
+
+func ask_pointers(npc_id: String) -> void:
+	EventBus.topic = "family"
+	if not _can_act():
+		return
+	var result := Mentorship.give_pointers(player, npcs.get(npc_id), int(npc_favor.get(npc_id, 0)), data, GameClock.total_days)
+	if not result["ok"]:
+		EventBus.post(result["reason"], "warning")
+		EventBus.player_changed.emit()
+		return
+	var text := "%s watches your %s and points out a flaw." % [npcs[npc_id].name, result["tech_name"]]
+	if result["shared"]:
+		text += " You both know this art; the advice cuts deep."
+	if int(result["levels_gained"]) > 0:
+		text += " %s reaches level %d." % [result["tech_name"], Techniques.level(player, result["tech_id"])]
+	EventBus.post(text, "progress")
+	_pass_time(result["days"])
+
+
 ## Give one item to an NPC; favor scales with its price, up to
 ## data/family.json acquaintance.gift_max_favor.
 func give_gift(npc_id: String, item_id: String) -> void:

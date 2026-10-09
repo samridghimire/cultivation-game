@@ -880,3 +880,29 @@ func test_long_seclusion_reviews_both_years() -> void:
 	assert_eq(LifeStats.review_title(3, 6), "Years 3-5", "a seclusion across years")
 	assert_eq(CharacterData.from_dict(c.to_dict()).year_start_year, c.year_start_year)
 	assert_eq(CharacterData.from_dict({}).year_start_year, 0)
+
+
+func test_ask_pointers() -> void:
+	var c := _start()
+	var gs := _game_state()
+	c.realm_index = 1
+	c.techniques = {"iron_fist": {"level": 1, "xp": 0.0}}
+	var npc := CharacterFactory.create("Elder Lu", gs.data, seeded_rng(9))
+	npc.id = "elder_lu"
+	npc.age_days = 40 * Calendar.DAYS_PER_YEAR
+	npc.realm_index = 2
+	gs.npcs["elder_lu"] = npc
+	gs.npc_favor["elder_lu"] = 25
+	var clock := _root().get_node("GameClock")
+	var eb := _root().get_node("EventBus")
+	var day: int = clock.total_days
+	eb.clear_history()
+	gs.ask_pointers("elder_lu")
+	assert_eq(clock.total_days, day + 1)
+	assert_true(c.techniques["iron_fist"]["xp"] > 0.0 or c.techniques["iron_fist"]["level"] > 1)
+	assert_true(_last_text().contains("points out a flaw") or eb.history.any(func(m): return String(m["text"]).contains("points out a flaw")))
+	eb.clear_history()
+	gs.ask_pointers("elder_lu")
+	assert_eq(clock.total_days, day + 1, "no time passes when refused")
+	assert_true(_last_text().contains("recently"), _last_text())
+	gs.end_session()
