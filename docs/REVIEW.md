@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: b241ba7
+Last reviewed commit: 8b0c9a3
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -187,3 +187,16 @@ Last reviewed commit: b241ba7
     by test_save_with_some_notice_flags_still_announces_new_features; road notices also fire for roads already walked
     (there is no visited-region record). (3) `GameData._validate_world` reads `Ambient.KINDS` from src/world; harmless
     (a const), but core now depends on a world script. (4) A lecture at a bottleneck posts "(+0 qi)".
+- 2026-10-09 (reviewer): reviewed b241ba7..8b0c9a3 (WU-058, KARMA-001, C-035, C-020, QA-021, WU-044, C-039, WU-045, WU-054,
+  RV-013, C-040, MENTOR-001, SPAR-001, WU-062; [PLAN] commits skipped). Main green before and after (1316 tests). No
+  BACKLOG/CHANGELOG edits by workers; no SAVE_VERSION change (`npc_action_days` defaults to {} in from_dict).
+  - RV-013 resolves notes (1), (3) and (4) of the last run (review titles now name the year that ended; ambient kinds
+    live in `Scenery.AMBIENT_KINDS`; a bottleneck lecture says so). WU-054 fixes the stacked-spoils price and the stale
+    shop hint. KARMA-001, WU-045, WU-044, WU-058 (local rng seeded from the npc id, not GameState.rng), WU-062 and the
+    data tasks (C-035 bully spar, C-039/C-040 stage gates, QA-021 realm training 5-9) match their specs, tests present.
+  - Fixed (one [REVIEW] commit): SPAR-001 ignored `mentorship.spar.days` (the bout's fixed day was the only time spent;
+    `after_spar` returned days that nobody used). `spar_with` now passes the remaining days; test sets days=3.
+  - Notes, not filed: (1) a friendly spar still burns readied combat talismans and lets a life-drinking weapon drain
+    lifespan (same as sect trial spars); a design call if spars should be fully free. (2) MENTOR-001's "shared" bonus
+    applies whenever the senior knows the technique, even at a lower level than the player. (3) Pointers and spars have
+    no menu entry until WU-059 lands.

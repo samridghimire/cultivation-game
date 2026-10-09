@@ -1086,6 +1086,8 @@ func spar_with(npc_id: String) -> void:
 	for line in result["levels"]:
 		text += " %s." % line
 	EventBus.post(text, "progress")
+	# The bout itself took a day; the spar rule's `days` is the whole visit.
+	_pass_time(maxi(0, int(result["days"]) - 1))
 	EventBus.player_changed.emit()
 
 

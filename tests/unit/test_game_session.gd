@@ -924,8 +924,12 @@ func test_spar_with_npc() -> void:
 	var day: int = clock.total_days
 	var won_before := LifeStats.get_stat(c, "fights_won")
 	var lost_before := LifeStats.get_stat(c, "fights_lost")
+	var spar_rules: Dictionary = gs.data.family["mentorship"]["spar"]
+	var spar_days := int(spar_rules["days"])
+	spar_rules["days"] = 3
 	gs.spar_with("friend")
-	assert_gt(clock.total_days, day)
+	spar_rules["days"] = spar_days
+	assert_eq(clock.total_days, day + 3, "a spar takes the spar rule's days")
 	assert_eq(c.item_count("spirit_stone"), 50, "a spar takes no stones")
 	assert_true(c.injuries.is_empty())
 	assert_eq(LifeStats.get_stat(c, "fights_won"), won_before)
