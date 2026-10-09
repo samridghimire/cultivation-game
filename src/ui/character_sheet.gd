@@ -249,7 +249,7 @@ func _rebuild() -> void:
 		t += "  Nothing of note yet.\n"
 	for line in record:
 		t += "  %s\n" % line
-	var people_lines := people_lines(p, data, GameState.npcs, GameState.npc_favor)
+	var people_lines := people_lines(p, data, GameState.npcs, GameState.npc_favor, 6, GameState.world_flags)
 	if not people_lines.is_empty():
 		t += "\n[color=#%s]People you know[/color]\n" % accent
 		for line in people_lines:
@@ -289,7 +289,7 @@ static func rival_line(c: CharacterData, data: GameData, people: Dictionary, fav
 
 ## WU-105: up to `limit` living non-family NPCs with the highest favor, as
 ## "Name, Realm, in Region: friendly". Strangers (favor 0) are left out.
-static func people_lines(c: CharacterData, data: GameData, people: Dictionary, favor: Dictionary, limit: int = 6) -> PackedStringArray:
+static func people_lines(c: CharacterData, data: GameData, people: Dictionary, favor: Dictionary, limit: int = 6, flags: Dictionary = {}) -> PackedStringArray:
 	var ranked: Array = []
 	for id: String in favor:
 		var other: CharacterData = people.get(id)
@@ -298,14 +298,22 @@ static func people_lines(c: CharacterData, data: GameData, people: Dictionary, f
 			continue
 		if c.parents.has(id) or c.children.has(id) or c.spouses.has(id):
 			continue
-		ranked.append([f, other])
+		ranked.append([f, other, id])
 	ranked.sort_custom(func(a: Array, b: Array) -> bool: return a[0] > b[0] or (a[0] == b[0] and String(a[1].name) < String(b[1].name)))
 	var out := PackedStringArray()
 	for entry: Array in ranked.slice(0, limit):
 		var other: CharacterData = entry[1]
 		var region_id := Npcs.region_of(other, data)
 		var where := String(data.regions.get(region_id, {}).get("name", region_id))
-		out.append("%s, %s%s: %s" % [other.name, Cultivation.realm_label(other, data), ", in %s" % where if where != "" else "", favor_word(int(entry[0]), data)])
+		var line := "%s, %s%s: %s" % [other.name, Cultivation.realm_label(other, data), ", in %s" % where if where != "" else "", favor_word(int(entry[0]), data)]
+		var tastes := Family.known_tastes(flags, data, String(entry[2]))
+		var liked := 0
+		for item_id: String in tastes:
+			if int(tastes[item_id]) > 0:
+				liked += 1
+		if liked >= 1:
+			line += " (likes %d known)" % liked
+		out.append(line)
 	return out
 
 

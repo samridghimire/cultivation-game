@@ -81,3 +81,18 @@ func test_people_lines_rank_by_favor_and_skip_family_and_dead() -> void:
 	assert_eq(CharacterSheet.people_lines(gs.player, gs.data, gs.npcs, favor).size(), 1, "dead left out")
 	assert_eq(CharacterSheet.people_lines(gs.player, gs.data, gs.npcs, favor, 0).size(), 0)
 	gs.end_session()
+
+
+## WU-106: "(likes N known)" on the People list.
+func test_people_lines_known_likes() -> void:
+	var gs: Node = _root().get_node("GameState")
+	gs.start_session(CharacterFactory.create("Foe", gs.data, seeded_rng()))
+	var id: String = gs.npcs.keys()[0]
+	var items: Array = gs.data.items.keys()
+	items.sort()
+	var favor := {id: 50}
+	var flags := {"taste_%s_%s" % [id, items[0]]: 1, "taste_%s_%s" % [id, items[1]]: 1}
+	assert_true(CharacterSheet.people_lines(gs.player, gs.data, gs.npcs, favor, 6, flags)[0].ends_with("(likes 2 known)"))
+	flags = {"taste_%s_%s" % [id, items[0]]: -1}
+	assert_false(CharacterSheet.people_lines(gs.player, gs.data, gs.npcs, favor, 6, flags)[0].contains("likes"))
+	gs.end_session()

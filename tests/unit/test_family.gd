@@ -370,3 +370,15 @@ func test_favor_progress_names_the_next_threshold() -> void:
 	assert_eq(Family.favor_progress(5, data()), "favor 5; 15 to court")
 	assert_eq(Family.favor_progress(25, data()), "favor 25; 35 to propose")
 	assert_eq(Family.favor_progress(80, data()), "favor 80")
+
+
+## WU-106: learned gift tastes from world flags.
+func test_known_tastes() -> void:
+	var ids: Array = data().items.keys()
+	ids.sort()
+	var flags := {"taste_li_%s" % ids[0]: 1, "taste_li_%s" % ids[1]: -1, "taste_told_li": true, "taste_li_wei_%s" % ids[0]: 1}
+	var t := Family.known_tastes(flags, data(), "li")
+	assert_eq(t.size(), 2, "told flag and li_wei skipped")
+	assert_eq(t[ids[0]], 1)
+	assert_eq(t[ids[1]], -1)
+	assert_eq(Family.known_tastes(flags, data(), "li_wei").size(), 1)

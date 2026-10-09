@@ -434,20 +434,14 @@ func _entry(label: String, reason: String, action: Callable) -> Dictionary:
 
 ## WU-101: the gift tastes the player has learned (world flags taste_<npc>_<item>: 1 liked, -1 disliked).
 static func known_tastes_text(flags: Dictionary, data: GameData, npc_id: String) -> String:
-	var prefix := "taste_%s_" % npc_id
 	var likes: Array[String] = []
 	var dislikes: Array[String] = []
-	for key: String in flags:
-		if not key.begins_with(prefix) or key.begins_with("taste_told_"):
-			continue
-		var item_id := key.substr(prefix.length())
-		if not data.items.has(item_id):
-			continue
+	var tastes := Family.known_tastes(flags, data, npc_id)
+	for item_id: String in tastes:
 		var name := String(data.items[item_id].get("name", item_id))
-		var taste := int(flags[key])
-		if taste > 0:
+		if int(tastes[item_id]) > 0:
 			likes.append(name)
-		elif taste < 0:
+		else:
 			dislikes.append(name)
 	likes.sort()
 	dislikes.sort()

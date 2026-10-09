@@ -212,6 +212,24 @@ static func _taste_word(data: GameData, entry: String) -> String:
 	return word if word.ends_with("s") else word + "s"
 
 
+## WU-106: the gift tastes learned for `npc_id` from world flags taste_<npc>_<item>:
+## item_id -> 1 (liked) or -1 (disliked). Only keys whose remainder is a real item id count,
+## so "li" never matches "li_wei"'s flags, and taste_told_* is skipped.
+static func known_tastes(flags: Dictionary, data: GameData, npc_id: String) -> Dictionary:
+	var prefix := "taste_%s_" % npc_id
+	var out := {}
+	for key: String in flags:
+		if not key.begins_with(prefix) or key.begins_with("taste_told_"):
+			continue
+		var item_id := key.substr(prefix.length())
+		if not data.items.has(item_id):
+			continue
+		var taste := int(flags[key])
+		if taste != 0:
+			out[item_id] = 1 if taste > 0 else -1
+	return out
+
+
 ## "<Name> is fond of herbs." for the NPC's first like, or "" if they have none.
 static func taste_hint(data: GameData, npc_id: String) -> String:
 	var def: Dictionary = data.npcs.get(npc_id, {})
