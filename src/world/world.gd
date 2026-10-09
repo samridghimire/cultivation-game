@@ -18,6 +18,7 @@ const PLACE_SCRIPTS := {
 	"gather": preload("res://src/world/interactables/gather_site.gd"),
 	"secret_realm": preload("res://src/world/interactables/secret_realm_entrance.gd"),
 	"auction": preload("res://src/world/interactables/auction_house.gd"),
+	"bounty_board": preload("res://src/world/interactables/bounty_board.gd"),
 	"inheritance": preload("res://src/world/interactables/inheritance_grounds.gd"),
 }
 ## Place keys that are layout, not script properties.

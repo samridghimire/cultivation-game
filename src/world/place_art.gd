@@ -9,7 +9,7 @@ extends RefCounted
 
 ## Kinds with their own look; anything else is a plain box.
 const KINDS := ["meditation", "merchant", "workshop", "sect_hall", "travel", "gather", "explore", "deed_giver", "npc",
-	"clinic", "orphanage", "secret_realm", "auction", "inheritance", "abode", "family_home"]
+	"clinic", "orphanage", "secret_realm", "auction", "inheritance", "bounty_board", "abode", "family_home"]
 const OUTLINE := Color("2a2018")
 const WOOD := Color("6b4a2e")
 const STONE := Color("8d8a82")
@@ -42,6 +42,8 @@ static func draw(ci: CanvasItem, kind: String, size: Vector2, color: Color, acti
 			_rift(ci, h, color, active)
 		"auction":
 			_auction_hall(ci, h, color)
+		"bounty_board":
+			_notice_board(ci, h, color)
 		"inheritance":
 			_stele(ci, h, color)
 		"abode":
@@ -245,6 +247,18 @@ static func _auction_hall(ci: CanvasItem, h: Vector2, c: Color) -> void:
 		var x := -h.x * 0.6 + i * h.x * 0.6
 		ci.draw_rect(Rect2(Vector2(x - h.x * 0.12, -h.y * 0.15), Vector2(h.x * 0.24, h.y * 0.6)), Color("c9a24a") if i == 1 else Color("a33a2a"))
 	ci.draw_rect(Rect2(Vector2(-h.x * 0.15, h.y * 0.55), Vector2(h.x * 0.3, h.y * 0.45)), c.darkened(0.6))
+
+
+## A wooden notice board on two posts with pinned papers.
+static func _notice_board(ci: CanvasItem, h: Vector2, c: Color) -> void:
+	ci.draw_rect(Rect2(Vector2(-h.x * 0.7, h.y * 0.2), Vector2(h.x * 0.15, h.y * 0.8)), WOOD)
+	ci.draw_rect(Rect2(Vector2(h.x * 0.55, h.y * 0.2), Vector2(h.x * 0.15, h.y * 0.8)), WOOD)
+	var board := Rect2(Vector2(-h.x, -h.y), Vector2(h.x * 2.0, h.y * 1.3))
+	ci.draw_rect(board, WOOD.lerp(c, 0.3))
+	ci.draw_rect(board, OUTLINE, false, 2.0)
+	for i in 3:
+		var x := -h.x * 0.75 + i * h.x * 0.55
+		ci.draw_rect(Rect2(Vector2(x, -h.y * 0.8 + (i % 2) * h.y * 0.25), Vector2(h.x * 0.4, h.y * 0.6)), Color("e8dcc0"))
 
 
 ## A weathered stone stele carved with runes in the place color.
