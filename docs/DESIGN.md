@@ -82,6 +82,7 @@ Every great cultivation protagonist has something that sets them apart. Ours is 
 | Combat (auto-resolved) and techniques | ✅ techniques named in the log, playback with hp bars, spoils and loss advice in the report | `Combat`, `Techniques`, `data/enemies.json`, `data/techniques.json` |
 | NPCs (named + generated), aging, monthly sim | ✅ | `data/npcs.json`, `Npcs`, `Names` |
 | Dialogue (incl. favor errands for five named NPCs, C-011) | ✅ (dialogue window) | `Dialogue`, `data/dialogue/` |
+| Mentorship: pointers from senior NPCs, friendly spars | ✅ (NPC menu) | `data/family.json` mentorship, `Mentorship` |
 | Family: identity, courtship, marriage, dual cultivation, children, adoption, training | ✅ (NPC menu: chat, gifts, court, propose, adopt; meditation spots; child training screen) | `data/family.json`, `Family`, `Children` |
 | Clans, estates, bloodlines | ✅ clan core (FAM-005), heirs (FAM-008), NPC clans core (FAM-009), bloodlines core (FAM-007), clan screen UI (FAM-005b), estates core (FAM-006) | `data/family.json`, `data/bloodlines.json`, `Clans`, `ClanData`, `Bloodlines` |
 | Spirit beast companions (Beast Tamer taming, combat bonus, growth) | ✅ (character sheet, feeding, release) | `data/beasts.json`, `Beasts` |
@@ -103,7 +104,7 @@ Every great cultivation protagonist has something that sets them apart. Ours is 
 | Life record and milestones | ✅ sheet life record (STAT-001), 22 milestones with progress on the sheet and a banner (GOAL-001, WU-006, MS-002, MS-003), journal screen (J / LT) with opportunities, errands and commissions, epilogue on final death, a yearly review banner (YEAR-001, WU-031) | `LifeStats`, `Milestones`, `data/milestones.json` |
 | Ending (ascension) | 🚧 none, waiting on the owner (END-001) | |
 | Inventory, techniques, character sheet, settings, pause, load screens | ✅ | `src/ui/` |
-| Top-down world with interactables | ✅ placeholder art, seasonal tints, ambient particles, idle NPCs | `src/world/` |
+| Top-down world with interactables | ✅ placeholder art, seasonal tints and season banner, ambient particles, idle NPCs, visited regions (TRAV-001) | `src/world/` |
 
 ## Lifespan as a resource (owner decision)
 - Breaking through to a higher realm adds lifespan, so a cultivator who keeps progressing should **rarely die of old age**. The Creation Artifact does **not** save the player from old age.

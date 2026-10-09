@@ -2,6 +2,20 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-09 [WU-059] Ask a senior NPC for pointers or spar with them from their menu.
+- 2026-10-09 [TRAV-001] The game remembers which regions you have visited (Far Traveller milestone).
+- 2026-10-09 [C-037] Five Foundation-realm choice encounters with righteous and demonic answers.
+- 2026-10-09 [C-041] Help pages for the elder's lecture, seasons, stage-gated sect ranks and "New" notices.
+- 2026-10-09 [QA-043] The combat sim's veteran only uses technique manuals a player can actually get.
+- 2026-10-09 [WU-062] A banner and chime mark the turn of the seasons.
+- 2026-10-09 [SPAR-001] Friendly spars with NPCs: practice for your techniques, no stones lost, no injuries.
+- 2026-10-09 [MENTOR-001] A stronger NPC who likes you can point out the flaws in one of your techniques.
+- 2026-10-09 [C-040] The last sect rank trials open at the realm's Middle Stage, when they are a fair fight.
+- 2026-10-09 [RV-013] Year reviews name the year that ended; a lecture at a bottleneck says so.
+- 2026-10-09 [WU-054] Stacked spoils say what each one sells for; the shop's quantity hint stays current.
+- 2026-10-09 [WU-045] The inventory says who buys your loot and what it is used in.
+- 2026-10-09 [C-039] Fair first fights for a new Foundation cultivator in the three starter regions.
+- 2026-10-09 [WU-044] The HUD shows your current goal.
 - 2026-10-09 [QA-021] Enemies past Nascent Soul are trained to their realm, so a realm gap stays nearly impossible to cross.
 - 2026-10-09 [C-020] Help pages for spirit beasts, body tempering, Dao insights, artifact powers, clans and adoption.
 - 2026-10-09 [C-035] New choice encounters for newcomers in the sect regions.

@@ -2,6 +2,17 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-10-09 (planner, 10:10 UTC)
+- 14 tasks landed since 00:15 (WU-044/045/054/059/062, C-037/039/040/041, RV-013, MENTOR-001, SPAR-001, TRAV-001, QA-043).
+  GUIDE-012, QA-040 and WU-061 are claimed.
+- New: RV-014 (reviewer notes: spars burn no talismans and drain no lifespan; pointers "share" only a technique the senior
+  knows better), TRAV-002/003 + WU-064 + C-043 (first sight of a region, backfilled visits for old saves), ITEM-002
+  (`Items.has_known_source`, QA-043 Follow-up), WU-063 (breakthrough effect), WU-065 (Deck pass), WU-066 (spar report),
+  WU-067 + C-044 (seasonal herbs, after SEASON-001), C-042 (corpse refiner fight, C-037 Follow-up), QA-044 (do pointers
+  and spars matter?). C-039's Follow-up (a bare player is 0% vs Foundation foes) needs no task: nobody reaches Foundation bare.
+- Local `main` had diverged from origin/main again (old squash history); reset to origin/main.
+- The owner's three urgent questions (pacing, first fights, ascension) are still open.
+
 ## State on 2026-10-09 (planner, 00:15 UTC)
 - 13 tasks landed since 22:15 (QA-029, SECT-004/005, WU-056/057/058, C-031, C-035, C-020, QA-038, RV-012, GUIDE-011,
   KARMA-001). The systems queue was empty. QA-021 is claimed (00:00).
