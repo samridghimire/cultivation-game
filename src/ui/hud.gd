@@ -845,7 +845,7 @@ func _show_arrival(region_id: String) -> void:
 	var data: GameData = GameState.data
 	if data == null or not data.regions.has(region_id):
 		return
-	var qi := Exploration.qi_density(data, region_id)
+	var qi := Exploration.qi_density(data, region_id, GameState.world_flags)
 	var sub := "Qi x%s · Danger: %s" % [String.num(qi, 2), WorldMapScreen.danger_name(data, region_id)]
 	var hold := 1.0
 	if GameState.last_arrival_first_visit:

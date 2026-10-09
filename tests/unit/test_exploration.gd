@@ -720,3 +720,31 @@ func test_renown_tier_index() -> void:
 	assert_eq(Renown.tier_index(data(), 0), 0)
 	assert_eq(Renown.tier_index(data(), 20), 1)
 	assert_eq(Renown.tier_index(data(), 120), 3)
+
+
+func test_qi_flags_raise_density_only_while_flag_is_set() -> void:
+	var d := data()
+	var base := Exploration.qi_density(d, "azure_peak")
+	assert_eq(Exploration.qi_density(d, "azure_peak", {}), base)
+	assert_eq(Exploration.qi_density(d, "azure_peak", {"planted_guardian_seed": false}), base)
+	assert_eq(Exploration.qi_density(d, "azure_peak", {"planted_guardian_seed": 0}), base)
+	assert_true(absf(Exploration.qi_density(d, "azure_peak", {"planted_guardian_seed": true}) - base * 1.1) < 0.0001)
+	assert_eq(Exploration.qi_flag_reasons(d, "azure_peak", {"planted_guardian_seed": true}).size(), 1)
+	assert_eq(Exploration.qi_flag_reasons(d, "azure_peak", {}).size(), 0)
+
+
+func test_qi_flags_add_up_and_validate() -> void:
+	var d := data()
+	var region: Dictionary = d.regions["azure_peak"]
+	var saved: Array = region["qi_flags"]
+	region["qi_flags"] = [{"flag": "a", "bonus": 0.1}, {"flag": "b", "bonus": 0.2, "text": "why"}]
+	assert_true(absf(Exploration.qi_flag_bonus(d, "azure_peak", {"a": true, "b": true}) - 0.3) < 0.0001)
+	assert_eq(Exploration.qi_flag_reasons(d, "azure_peak", {"a": true, "b": true}).size(), 1)
+	region["qi_flags"] = saved
+	for bad: float in [0.0, 0.6]:
+		var bad_data := GameData.load_from_dir()
+		bad_data.regions["azure_peak"]["qi_flags"] = [{"flag": "a", "bonus": bad}]
+		bad_data.load_errors.clear()
+		bad_data._validate()
+		assert_true(bad_data.load_errors.size() > 0, "bonus %s should be rejected" % bad)
+

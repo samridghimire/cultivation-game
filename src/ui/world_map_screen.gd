@@ -352,7 +352,7 @@ func _show_details() -> void:
 	if region.is_empty():
 		return
 	_name.text = String(region.get("name", _selected))
-	_info.text = "Qi density x%s   |   Danger: %s" % [String.num(Exploration.qi_density(data, _selected) * WorldEvents.qi_multiplier(data, GameState.world_events, _selected), 2), danger_name(data, _selected)]
+	_info.text = "Qi density x%s   |   Danger: %s" % [String.num(Exploration.qi_density(data, _selected, GameState.world_flags) * WorldEvents.qi_multiplier(data, GameState.world_events, _selected), 2), danger_name(data, _selected)]
 	_description.text = String(region.get("description", ""))
 	var name_here := renown_note(GameState.player, data, _selected)
 	if name_here != "":

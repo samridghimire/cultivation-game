@@ -1336,3 +1336,13 @@ func test_friends_price_lowers_buy_multiplier() -> void:
 	assert_true(is_equal_approx(gs.buy_multiplier(), base * 0.9))
 	gs.player.shop_deals[gs.current_region]["until"] = GameClock.total_days - 1
 	assert_true(is_equal_approx(gs.buy_multiplier(), base))
+
+
+func test_region_qi_density_rises_with_deed_flag() -> void:
+	_start()
+	var gs := _game_state()
+	gs.current_region = "azure_peak"
+	var before: float = gs.region_qi_density()
+	gs.world_flags["planted_guardian_seed"] = true
+	assert_true(gs.region_qi_density() > before)
+	gs.world_flags.erase("planted_guardian_seed")

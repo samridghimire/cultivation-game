@@ -473,6 +473,14 @@ func _validate_world() -> void:
 				load_errors.append("Region '%s' has a route to unknown region '%s'" % [region["id"], route.get("to", "")])
 			if route.has("min_realm") and realm_index_of(route["min_realm"]) < 0:
 				load_errors.append("Region '%s' route has unknown min_realm '%s'" % [region["id"], route["min_realm"]])
+		if region.has("qi_flags"):
+			var qf: Variant = region["qi_flags"]
+			if not qf is Array:
+				load_errors.append("Region '%s' qi_flags must be an array" % region["id"])
+			else:
+				for entry: Variant in qf:
+					if not (entry is Dictionary and String(entry.get("flag", "")).strip_edges() != "" and (entry.get("bonus", 0) is float or entry.get("bonus", 0) is int) and float(entry["bonus"]) > 0.0 and float(entry["bonus"]) <= 0.5):
+						load_errors.append("Region '%s' qi_flags entries need a flag and a bonus in (0, 0.5]" % region["id"])
 		if region.has("quiet_lines"):
 			var quiet: Variant = region["quiet_lines"]
 			if not (quiet is Array and (quiet as Array).all(func(v): return v is String and (v as String).strip_edges() != "")):

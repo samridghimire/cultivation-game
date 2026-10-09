@@ -2107,7 +2107,7 @@ func journal_entries() -> Array[Dictionary]:
 
 ## Qi density of the current region, including active world events (LW-001).
 func region_qi_density() -> float:
-	return Exploration.qi_density(data, current_region) * WorldEvents.qi_multiplier(data, world_events, current_region)
+	return Exploration.qi_density(data, current_region, world_flags) * WorldEvents.qi_multiplier(data, world_events, current_region)
 
 
 ## Merchant price multiplier of the current region's active world events.

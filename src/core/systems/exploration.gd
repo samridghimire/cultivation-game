@@ -140,8 +140,27 @@ static func quiet_line(data: GameData, region_id: String, day: int) -> String:
 	return String(lines[posmod(day, lines.size())])
 
 
-static func qi_density(data: GameData, region_id: String) -> float:
-	return float(data.regions.get(region_id, {}).get("qi_density", 1.0))
+## The region's qi density. `flags` (the world flags) applies the region's `qi_flags` deed bonuses (QI-001).
+static func qi_density(data: GameData, region_id: String, flags: Dictionary = {}) -> float:
+	return float(data.regions.get(region_id, {}).get("qi_density", 1.0)) * (1.0 + qi_flag_bonus(data, region_id, flags))
+
+
+## Summed bonus of the region's `qi_flags` entries whose world flag is truthy.
+static func qi_flag_bonus(data: GameData, region_id: String, flags: Dictionary) -> float:
+	var total := 0.0
+	for entry: Dictionary in data.regions.get(region_id, {}).get("qi_flags", []):
+		if flags.get(String(entry.get("flag", "")), false):
+			total += float(entry.get("bonus", 0.0))
+	return total
+
+
+## The `text` of each active qi_flags entry (empty texts skipped), e.g. "the valley guardian's seed".
+static func qi_flag_reasons(data: GameData, region_id: String, flags: Dictionary) -> PackedStringArray:
+	var out := PackedStringArray()
+	for entry: Dictionary in data.regions.get(region_id, {}).get("qi_flags", []):
+		if flags.get(String(entry.get("flag", "")), false) and String(entry.get("text", "")) != "":
+			out.append(String(entry["text"]))
+	return out
 
 
 ## True if region_id is the region you are in or a direct route target of it.
