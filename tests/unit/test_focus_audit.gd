@@ -309,3 +309,116 @@ func test_newer_windows_have_focus_and_close_on_cancel() -> void:
 	hud.free()
 	gs.end_session()
 	await _frames()
+
+
+## Asserts a visible control inside `screen` has focus after the frames settle.
+func _expect_focus(screen: Control, label: String) -> void:
+	await _frames(3)
+	var owner := _tree().root.gui_get_focus_owner()
+	assert_true(owner != null and screen.is_ancestor_of(owner) and owner.is_visible_in_tree(), "%s: focus is on a visible control inside it (got %s)" % [label, owner.name if owner != null else "nothing"])
+
+
+## WU-103: the menus added since WU-079: the bounty board, the NPC gift list,
+## the mission board's lost-fight line, the respawn odds line, the journal's
+## letters and a shop during a festival. Each has focus on open and after a
+## sub-list is closed or an entry re-shows the menu.
+func test_newest_menus_keep_focus() -> void:
+	var root := _tree().root
+	var gs: Node = root.get_node("GameState")
+	var c := new_character()
+	c.add_item("spirit_stone", 5000)
+	c.add_item("qi_gathering_pill", 2)
+	c.add_item("core_forming_pill", 1)
+	gs.start_session(c)
+	gs.pending_event = ""
+	gs.current_region = "qingshi_village"
+	var hud: CanvasLayer = load("res://src/ui/hud.tscn").instantiate()
+	root.add_child(hud)
+	await _frames()
+	var menu: ChoiceMenu = hud.get("_choice_menu")
+
+	# The bounty board: with offers, then with an active hunt (taking one re-shows the menu).
+	var board: Node = load("res://src/world/interactables/bounty_board.gd").new()
+	root.add_child(board)
+	menu.open_for(board)
+	await _expect_focus(menu, "bounty board offers")
+	var offered: Array = Bounties.offers(c, gs.data, GameClock.total_days, gs.current_region)
+	if not offered.is_empty():
+		var first: Dictionary = offered[0]
+		if Bounties.check_take(c, gs.data, String(first["id"]), GameClock.total_days) == "":
+			gs.take_bounty(String(first["id"]))
+			menu.open_for(board)
+			await _expect_focus(menu, "bounty board with an active hunt")
+	_press("ui_cancel")
+	await _frames()
+	assert_false(menu.visible, "bounty board: ui_cancel closes it")
+	board.free()
+
+	# The NPC gift list with a liked and a disliked item, and back out of it.
+	var npc := Npcs.spawn(gs.npcs, gs.data, seeded_rng(4), {"age_years": 30, "region": "qingshi_village"})
+	gs.npc_favor[npc.id] = 20
+	gs.world_flags["taste_%s_qi_gathering_pill" % npc.id] = 1
+	gs.world_flags["taste_%s_core_forming_pill" % npc.id] = -1
+	var giver: Node = load("res://src/world/interactables/npc.gd").new()
+	giver.npc_id = npc.id
+	root.add_child(giver)
+	giver._set_gift_mode(true)
+	menu.open_for(giver)
+	await _expect_focus(menu, "gift list")
+	giver._set_gift_mode(false)
+	menu.open_for(giver)  # "Back" re-shows the main entries
+	await _expect_focus(menu, "npc menu after the gift list")
+	_press("ui_cancel")
+	await _frames()
+	assert_false(menu.visible, "npc menu: ui_cancel closes it")
+	giver.free()
+
+	# The mission board with a lost-fight line.
+	c.realm_index = 1
+	c.stage = 1
+	gs.join_sect("azure_cloud_sect")
+	for mission_id: String in gs.data.sect_missions:
+		c.mission_losses[mission_id] = c.age_days - 3
+	var missions: Control = hud.get("_mission_board")
+	missions.open()
+	await _expect_focus(missions, "mission board with a lost fight")
+	_press("ui_cancel")
+	await _frames()
+
+	# The respawn screen with the odds line.
+	var choices: Array = CreationArtifact.respawn_choices(c, gs.data)
+	if not choices.is_empty():
+		gs.pending_respawn = {"cause": "Test", "anchor_id": String(choices[0]["anchor_id"]), "lives_left": 2, "qi_lost": 5.0, "enemy_name": "Stone Ape", "win_chance": 0.12}
+		var respawn: Control = hud.get("_respawn")
+		respawn.open()
+		await _expect_focus(respawn, "respawn with the odds line")
+		respawn.close()
+		gs.pending_respawn = {}
+
+	# The journal with three letters.
+	for i in 3:
+		Letters.remember(c, gs.data, "A letter from Friend %d: the harvest was good." % i, GameClock.total_days)
+	var journal: Control = hud.get("_screens")["toggle_journal"]
+	journal.open()
+	await _expect_focus(journal, "journal with letters")
+	_press("ui_cancel")
+	await _frames()
+	assert_false(journal.visible, "journal: ui_cancel closes it")
+
+	# A shop during a festival.
+	for def: Dictionary in gs.data.world_events.values():
+		if def.get("festival", false) and not (def.get("shop_items", []) as Array).is_empty():
+			gs.world_events = [{"id": def["id"], "region": gs.current_region, "start_day": 0, "end_day": 99999, "done": false}]
+			break
+	var shop: Control = hud.get("_shop")
+	shop.open("Festival Stall", 0, ["herb"])
+	await _expect_focus(shop, "shop during a festival")
+	_press("ui_cancel")
+	await _frames()
+	assert_false(shop.visible, "shop: ui_cancel closes it")
+	gs.world_events = []
+
+	root.remove_child(hud)
+	hud.free()
+	gs.end_session()
+	await _frames()
