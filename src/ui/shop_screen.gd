@@ -53,6 +53,8 @@ func _init() -> void:
 	box.add_child(header)
 	_title = UIStyle.label("", 24, UIStyle.ACCENT)
 	_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_title.custom_minimum_size.x = 200
 	header.add_child(_title)
 	_stones = UIStyle.label("", 18)
 	header.add_child(_stones)

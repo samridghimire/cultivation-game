@@ -71,7 +71,7 @@ func _add_week_data(gs: Node, c: CharacterData) -> void:
 	if not offers.is_empty():
 		Bounties.take(c, gs.data, String(offers[0]["id"]), root.get_node("GameClock").total_days)
 	for event_id: String in gs.data.world_events:
-		if WorldEvents.is_festival(gs.data, event_id):
+		if event_id == "lantern_festival":
 			gs.world_events.append({"id": event_id, "region": gs.current_region, "start_day": root.get_node("GameClock").total_days, "end_day": root.get_node("GameClock").total_days + 6, "done": false})
 			break
 	for mission_id: String in Sects.available_missions(c, gs.data):
@@ -120,6 +120,7 @@ func _build_shots(gs: Node) -> void:
 	shots.append({"name": "bounty_board_menu", "open": func() -> void: board_menu.open_for(board), "close": board_menu.close})
 	_build_deck_shots(gs)
 	_build_effect_shots(gs)
+	_build_letter_shots(gs)
 	var menu_source := _find_menu_source()
 	if menu_source != null:
 		var menu: Control = hud.get("_choice_menu")
@@ -174,6 +175,34 @@ func _build_deck_shots(gs: Node) -> void:
 		report.show_fight(senior.name, true, lines, "", PackedStringArray(), [], 0, 0, true), "close": func() -> void:
 		report.close()
 		scale_back.call()})
+
+
+## WU-112: the shop with a friend's price, the merchant menu at a festival, the
+## People list with a request and the gossip window.
+func _build_letter_shots(gs: Node) -> void:
+	var c: CharacterData = gs.player
+	var today: int = root.get_node("GameClock").total_days
+	c.shop_deals[gs.current_region] = {"mult": 0.8, "until": today + 12}
+	var shop: Control = hud.get("_shop")
+	shots.append({"name": "shop_friend_price", "open": Callable(shop, "open").bindv(["Everything Stall", 0, ["herb", "ore", "equipment", "talisman", "scripture"]]), "close": shop.close})
+	var merchant: Node = load("res://src/world/interactables/merchant.gd").new()
+	merchant.display_name = "Lantern Festival Stall"
+	var menu: Control = hud.get("_choice_menu")
+	shots.append({"name": "merchant_festival_menu", "open": func() -> void: menu.open_for(merchant), "close": menu.close})
+	var friend_id := ""
+	for npc_id: String in gs.npcs:
+		friend_id = npc_id
+		if gs.npcs[npc_id].name.begins_with("Elder Murong"):
+			break
+	if friend_id != "":
+		c.letter_requests.append({"npc_id": friend_id, "item": "spirit_stone", "count": 5, "until": today + 9, "favor": 10, "effects": []})
+	var sheet: Control = hud.get("_screens")["toggle_character_sheet"]
+	shots.append({"name": "people_list_request", "open": func() -> void:
+		sheet.open()
+		sheet.get("_scroll").set_deferred("scroll_vertical", 100000), "close": sheet.close})
+	var gossip: Control = hud.get("_gossip")
+	var lines := PackedStringArray(["A merchant whispers that the Lantern Festival draws near.", "They say a secret realm stirs beyond the Misty Forest, and the sect elders are uneasy about it."])
+	shots.append({"name": "gossip_window", "open": Callable(gossip, "open").bindv([lines]), "close": gossip.close})
 
 
 ## WU-069: the breakthrough effects half a second in and the first-visit arrival card.
