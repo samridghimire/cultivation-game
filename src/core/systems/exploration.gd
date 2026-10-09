@@ -34,7 +34,7 @@ static func next_deep_path(c: CharacterData, data: GameData, region_id: String) 
 		if not e.has("min_explores") or not _shares_tag(e.get("tags", []), tags):
 			continue
 		var need := int(e["min_explores"])
-		if need <= have or not realm_allows(c, data, e) or not alignment_allows(c, e):
+		if need <= have or not realm_allows(c, data, e) or not alignment_allows(c, e) or not renown_allows(c, data, e, region_id):
 			continue
 		if best < 0 or need < best:
 			best = need
@@ -51,7 +51,7 @@ static func open_deep_paths(c: CharacterData, data: GameData, region_id: String,
 	for e: Dictionary in data.encounters.values():
 		if not e.has("min_explores") or not _shares_tag(e.get("tags", []), tags):
 			continue
-		if int(e["min_explores"]) > have or not realm_allows(c, data, e) or not alignment_allows(c, e):
+		if int(e["min_explores"]) > have or not realm_allows(c, data, e) or not alignment_allows(c, e) or not renown_allows(c, data, e, region_id):
 			continue
 		var needed: String = e.get("requires_flag", "")
 		if needed != "" and not flags.get(needed, false):
@@ -215,6 +215,14 @@ static func realm_allows(c: CharacterData, data: GameData, e: Dictionary) -> boo
 	return true
 
 
+## True when the character's renown tier in `region_id` reaches the encounter's
+## `min_renown` (RENOWN-002; 0 = the first titled tier, Known). Encounters without it always pass; with it, no known region fails.
+static func renown_allows(c: CharacterData, data: GameData, e: Dictionary, region_id: String) -> bool:
+	if not e.has("min_renown"):
+		return true
+	return region_id != "" and Renown.tier_index(data, Renown.value(c, region_id)) - 1 >= int(e["min_renown"])
+
+
 ## Something happens on the road (TRAV-006): after a journey of `days`, with
 ## probability min(max_chance, chance_per_day * days) a road encounter rolls.
 ## Draws nothing from rng when regions.json has no `road` block.
@@ -248,7 +256,7 @@ static func discovery_for(c: CharacterData, data: GameData, region_id: String, f
 	if id == "" or flags.get("discovered_" + region_id, false) or not data.encounters.has(id):
 		return {}
 	var e: Dictionary = data.encounters[id]
-	if not realm_allows(c, data, e) or not alignment_allows(c, e):
+	if not realm_allows(c, data, e) or not alignment_allows(c, e) or not renown_allows(c, data, e, region_id):
 		return {}
 	return e
 
@@ -273,6 +281,8 @@ static func eligible_encounters(c: CharacterData, data: GameData, tags: Array, f
 		if not realm_allows(c, data, e):
 			continue
 		if not alignment_allows(c, e):
+			continue
+		if not renown_allows(c, data, e, region_id):
 			continue
 		if not Rivals.allows(c, rival, String(e.get("rival", ""))):
 			continue
@@ -347,7 +357,7 @@ static func region_progress(c: CharacterData, data: GameData, region_id: String,
 		var blocker := String(e.get("blocked_by_flag", ""))
 		var seen: bool = int(c.encounter_counts.get(String(e.get("id", "")), 0)) > 0 or (blocker != "" and flags.get(blocker, false))
 		# Unseen happenings the character can no longer (or cannot yet) meet are left out.
-		if not seen and (not realm_allows(c, data, e) or not alignment_allows(c, e)):
+		if not seen and (not realm_allows(c, data, e) or not alignment_allows(c, e) or not renown_allows(c, data, e, region_id)):
 			continue
 		total += 1
 		if seen:

@@ -516,6 +516,11 @@ func _validate_world() -> void:
 			load_errors.append("Encounter '%s' repeatable must be a bool" % e["id"])
 		if e.has("min_explores") and (typeof(e["min_explores"]) != TYPE_INT and typeof(e["min_explores"]) != TYPE_FLOAT or int(e["min_explores"]) < 1 or float(e["min_explores"]) != int(e["min_explores"])):
 			load_errors.append("Encounter '%s' min_explores must be an int >= 1" % e["id"])
+		if e.has("min_renown"):
+			var tier_count: int = (renown.get("tiers", []) as Array).size()
+			var need = e["min_renown"]
+			if (typeof(need) != TYPE_INT and typeof(need) != TYPE_FLOAT) or float(need) != int(need) or int(need) < 0 or int(need) >= tier_count - 1:
+				load_errors.append("Encounter '%s' min_renown must be an int titled-tier index 0..%d" % [e["id"], tier_count - 2])
 		for key in ["min_realm", "max_realm"]:
 			if e.has(key) and realm_index_of(e[key]) < 0:
 				load_errors.append("Encounter '%s' has unknown %s '%s'" % [e["id"], key, e[key]])

@@ -675,3 +675,48 @@ func test_mastery_lost_with_new_realm_gated_happenings() -> void:
 			break
 	c.encounter_counts.erase(id)
 	assert_false(Exploration.mastered(c, data(), "qingshi_village", flags))
+
+
+func _village_tiers_c() -> CharacterData:
+	var c := new_character()
+	c.realm_index = data().realm_index_of("qi_refining")
+	return c
+
+
+func test_min_renown_gates_encounters_by_region_tier() -> void:
+	var c := _village_tiers_c()
+	var tags: Array = data().regions["qingshi_village"]["encounter_tags"]
+	var ids := func(cc: CharacterData) -> Array:
+		return Exploration.eligible_encounters(cc, data(), tags, {}, null, 1.0, "", "qingshi_village").map(func(r: Dictionary) -> String: return String(r["encounter"]["id"]))
+	c.renown["qingshi_village"] = 25
+	assert_false(ids.call(c).has("village_elders_dispute"), "Known is not enough")
+	c.renown["qingshi_village"] = 60
+	assert_true(ids.call(c).has("village_elders_dispute"), "Respected can meet it")
+	c.renown["misty_forest"] = 60
+	c.renown["qingshi_village"] = 0
+	assert_false(ids.call(c).has("village_elders_dispute"), "renown is per region")
+	c.renown["qingshi_village"] = 60
+	assert_false(Exploration.eligible_encounters(c, data(), tags, {}).any(func(r: Dictionary) -> bool: return r["encounter"].has("min_renown")), "no region known: closed")
+
+
+func test_region_progress_skips_renown_requests_for_the_unrenowned() -> void:
+	var c := _village_tiers_c()
+	var before := int(Exploration.region_progress(c, data(), "qingshi_village")["total"])
+	c.renown["qingshi_village"] = 60
+	assert_eq(int(Exploration.region_progress(c, data(), "qingshi_village")["total"]), before + 1)
+	assert_eq(int(Exploration.region_progress(c, data(), "misty_forest")["total"]), int(Exploration.region_progress(_village_tiers_c(), data(), "misty_forest")["total"]))
+
+
+func test_forest_wolf_den_request_needs_respect() -> void:
+	var c := _village_tiers_c()
+	var e: Dictionary = data().encounters["forest_hunters_wolf_den"]
+	assert_false(Exploration.renown_allows(c, data(), e, "misty_forest"))
+	c.renown["misty_forest"] = 50
+	assert_true(Exploration.renown_allows(c, data(), e, "misty_forest"))
+	assert_false(Exploration.renown_allows(c, data(), e, ""))
+
+
+func test_renown_tier_index() -> void:
+	assert_eq(Renown.tier_index(data(), 0), 0)
+	assert_eq(Renown.tier_index(data(), 20), 1)
+	assert_eq(Renown.tier_index(data(), 120), 3)

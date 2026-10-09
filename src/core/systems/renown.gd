@@ -43,6 +43,16 @@ static func tier(data: GameData, amount: int) -> Dictionary:
 	return best
 
 
+## Index of the tier for `amount` in the regions.json tier order (0 = the untitled lowest tier, also without config).
+static func tier_index(data: GameData, amount: int) -> int:
+	var best := 0
+	var tiers: Array = data.renown.get("tiers", [])
+	for i in tiers.size():
+		if int((tiers[i] as Dictionary)["min"]) <= amount:
+			best = i
+	return best
+
+
 ## Tier title in a region ("" at the lowest tier).
 static func title(c: CharacterData, data: GameData, region_id: String) -> String:
 	return String(tier(data, value(c, region_id)).get("title", ""))
