@@ -296,3 +296,23 @@ Beast Tamer (rank 6.4 at the end): avg final realm 2.00 (~Foundation Establishme
     spent: gear 0, clinic 460; savings alone covered the Core Forming Pill at the Foundation peak for 11/50; pills bought with contribution 65; avg sect rank 2.0, contribution 31116
 Net stones per sect mission over all lives (top 12): procure_azure_crystal 754740, gather_spirit_herbs 515440, carry_goods_to_market 103374, alchemist_rare_order 17560, fill_herb_order 16290, auction_consignment 11520
 
+## first Foundation Establishment year (seeds 1-10)
+
+First Foundation Establishment year: 10 seeds
+  region / variant               won  lost  fled  injur  lives  stones  stage
+  qingshi_village rogue            11     0     0      0      0     325      0
+  qingshi_village sect             23     2     0      0      0     238      0
+  misty_forest rogue               13     0     0      0      0     228      0
+  misty_forest sect                22     0     0      0      0     423      1
+  fallen_star_market rogue          5     0     0      0      0      99      0
+  fallen_star_market sect          18     0     0      0      0     142      0
+  azure_peak rogue                  8     0     0      0      0     462      1
+  azure_peak sect                  21     0     0      0      0     438      2
+  withered_bone_marsh rogue        10     0     0      0      0     648      1
+  withered_bone_marsh sect         21     0     0      0      0     760      1
+  myriad_peaks_ridge rogue          7     0     0      0      0     371      2
+  myriad_peaks_ridge sect          19     0     0      0      0    1007      2
+  median of all runs: won 15 lost 0 fled 0 injuries 0 lives 0 stones 365 stage 1
+  runs with no artifact life spent: 107 of 120
+  median win share of fought fights: 100%
+

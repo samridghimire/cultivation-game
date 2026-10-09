@@ -17,6 +17,7 @@ fresh() {
 	run "first hour, curious player (seeds 1-10)" res://tests/sim/simulate_first_hour.gd -- 10 --curious
 	run "combat (200 fights per cell)" res://tests/sim/simulate_combat.gd -- 200
 	run "economy (seed defaults)" res://tests/sim/simulate_economy.gd
+	run "first Foundation Establishment year (seeds 1-10)" res://tests/sim/simulate_foundation_year.gd -- 10 2
 }
 if [[ "${1:-}" == "--check" ]]; then
 	tmp=$(mktemp)
