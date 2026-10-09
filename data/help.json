@@ -286,6 +286,38 @@
         "Take in a child of twelve or younger and they become your own: seven days to settle, a small shift of your alignment toward kindness, and the child starts out fond of you. You may adopt up to three, and they take your surname. Couples who cannot conceive can adopt too.",
         "The Temple of Mercy orphanage will find you a foundling, a child of six or younger, for a donation of 20 spirit stones. Adopted children grow up and can be trained in cultivation, a profession or techniques, and may become your heir."
       ]
+    },
+    {
+      "id": "lecture",
+      "title": "The Elder's Lecture",
+      "body": [
+        "Sect disciples may attend their elder's lecture once each calendar month, at the sect hall. It takes about two days, and you gather a few days' worth of qi at the hall's density, unless you are already at a bottleneck.",
+        "Each lecture also carries a small chance of a Dao insight (about 5%, plus a little for every point of Comprehension above 10): the Azure Cloud elder teaches the sword, the Blood Elder slaughter, and the Pavilion's Chief Steward the Dao of Breath. Rogues have no lecture to attend."
+      ]
+    },
+    {
+      "id": "seasons",
+      "title": "Seasons and Ambient Effects",
+      "body": [
+        "A year has twelve months, three to a season: Spring (months 1-3), Summer (4-6), Autumn (7-9) and Winter (10-12). The world is tinted a little warmer in summer and autumn and cooler in winter, and the date on the HUD names the season.",
+        "Some places add ambient effects that follow the season, such as drifting petals in spring, falling leaves in autumn, snow in winter or mist at any time. They are only decoration. If they bother you or slow your machine, turn off \"Ambient effects\" in Settings."
+      ]
+    },
+    {
+      "id": "sect_stage_ranks",
+      "title": "Sect Ranks That Need a Stage",
+      "body": [
+        "Climbing a sect's ranks needs lifetime contribution, a minimum realm and, for the highest ranks, a minimum stage within that realm. Early, Middle and Late stages of a realm count separately: a Foundation Establishment disciple at the first layer may meet the realm requirement and still be turned away from a stage-gated rank.",
+        "The character sheet and the sect hall tell you what is missing. Cultivate to the stage named, then face the rank trial, a sparring match that never kills or robs you."
+      ]
+    },
+    {
+      "id": "new_notices",
+      "title": "\"New\" Notices and Hints",
+      "body": [
+        "When the game opens a feature for you for the first time, such as your first sect mission or your first abode, a \"New\" banner appears briefly and a line is added to the message log. Reopen the log (Message log key) to read old notices again.",
+        "The HUD hints panel suggests next steps. Choose how many it shows (0-3) under \"HUD hints\" in Settings; at 0 both the panel and the \"New\" banners are hidden, though the log still records them."
+      ]
     }
   ]
 }
