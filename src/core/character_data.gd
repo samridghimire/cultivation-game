@@ -140,6 +140,8 @@ var letters: Array[String] = []
 var letter_day: int = -1
 ## Open requests made in letters (LETTER-003): {npc_id, item, count, until, favor, effects}.
 var letter_requests: Array[Dictionary] = []
+## Friend's prices from letters (SHOP-001): region id -> {"mult": float, "until": int world day}.
+var shop_deals: Dictionary = {}
 ## Secret realm id -> {"opening": int, "floor": int}: floors cleared in that opening (see SecretRealms).
 var secret_realms: Dictionary = {}
 ## Secret realm ids whose inheritance this character received (once per life, W-005d).
@@ -251,6 +253,7 @@ func to_dict() -> Dictionary:
 		"letters": letters.duplicate(),
 		"letter_day": letter_day,
 		"letter_requests": letter_requests.duplicate(true),
+		"shop_deals": shop_deals.duplicate(true),
 		"secret_realms": secret_realms.duplicate(true),
 		"inheritances": inheritances.duplicate(),
 		"body_stage": body_stage,
@@ -372,6 +375,9 @@ static func from_dict(d: Dictionary) -> CharacterData:
 	c.letter_day = int(d.get("letter_day", -1))
 	for req in d.get("letter_requests", []):
 		c.letter_requests.append((req as Dictionary).duplicate(true))
+	for region_id: String in d.get("shop_deals", {}):
+		var deal: Dictionary = d["shop_deals"][region_id]
+		c.shop_deals[region_id] = {"mult": float(deal["mult"]), "until": int(deal["until"])}
 	c.body_stage = int(d.get("body_stage", 0))
 	var delves: Dictionary = d.get("secret_realms", {})
 	for realm_id in delves:

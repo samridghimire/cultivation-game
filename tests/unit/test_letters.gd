@@ -197,3 +197,37 @@ func test_request_validation_and_save() -> void:
 	var old := c.to_dict()
 	old.erase("letter_requests")
 	assert_eq(CharacterData.from_dict(old).letter_requests.size(), 0)
+
+
+func test_friends_price_deal() -> void:
+	var d := GameData.load_from_dir()
+	var kinds: Array = []
+	for kind: Dictionary in d.family["letters"]["kinds"]:
+		if kind["id"] == "merchant_offer":
+			kinds.append(kind)
+	d.family["letters"]["kinds"] = kinds
+	d.family["letters"]["monthly_chance"] = 1.0
+	var c := new_character()
+	var friends := _friend()
+	var region := Npcs.region_of(friends["friend"], d)
+	var letter := Letters.monthly(c, friends, {"friend": 50}, d, seeded_rng(), {}, 100)
+	assert_true(String(letter["notes"][0]).contains("friend's price"))
+	assert_true(is_equal_approx(Letters.deal_multiplier(c, region, 100), 0.9))
+	assert_true(is_equal_approx(Letters.deal_multiplier(c, region, 130), 0.9))
+	assert_eq(Letters.deal_multiplier(c, region, 131), 1.0)
+	assert_eq(Letters.deal_multiplier(c, "elsewhere_region", 100), 1.0)
+	var back := CharacterData.from_dict(c.to_dict())
+	assert_true(is_equal_approx(Letters.deal_multiplier(back, region, 100), 0.9))
+	Letters.expire_deals(c, 200)
+	assert_true(c.shop_deals.is_empty())
+	var old := back.to_dict()
+	old.erase("shop_deals")
+	assert_true(CharacterData.from_dict(old).shop_deals.is_empty())
+
+
+func test_deal_validation() -> void:
+	var d := GameData.load_from_dir()
+	for kind: Dictionary in d.family["letters"]["kinds"]:
+		if kind["id"] == "merchant_offer":
+			kind["deal"]["mult"] = 0.2
+	assert_eq(Letters.validate(d).size(), 1)

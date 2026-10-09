@@ -1287,3 +1287,13 @@ func test_festival_activity_action() -> void:
 	assert_eq(gs.player.qi, qi2, "a second try is refused")
 	assert_true(gs.check_festival_activity("lantern_festival") != "")
 	gs.end_session()
+
+
+func test_friends_price_lowers_buy_multiplier() -> void:
+	var gs := _game_state()
+	_start()
+	var base: float = gs.buy_multiplier()
+	gs.player.shop_deals[gs.current_region] = {"mult": 0.9, "until": GameClock.total_days + 10}
+	assert_true(is_equal_approx(gs.buy_multiplier(), base * 0.9))
+	gs.player.shop_deals[gs.current_region]["until"] = GameClock.total_days - 1
+	assert_true(is_equal_approx(gs.buy_multiplier(), base))

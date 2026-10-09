@@ -2115,9 +2115,9 @@ func market_multiplier() -> float:
 	return WorldEvents.price_multiplier(data, world_events, current_region)
 
 
-## Buy-side multiplier: world events and local renown. Sell prices use market_multiplier() only.
+## Buy-side multiplier: world events, local renown and a friend's price. Sell prices use market_multiplier() only.
 func buy_multiplier() -> float:
-	return market_multiplier() * Renown.buy_multiplier(player, data, current_region)
+	return market_multiplier() * Renown.buy_multiplier(player, data, current_region) * Letters.deal_multiplier(player, current_region, GameClock.total_days)
 
 
 ## Local renown for a source (RENOWN-001); announces a new title.
@@ -2906,6 +2906,7 @@ func _on_days_advanced(days: int) -> void:
 		var asker: CharacterData = npcs.get(req["npc_id"])
 		if asker == null or not asker.alive:
 			player.letter_requests.erase(req)
+	Letters.expire_deals(player, GameClock.total_days)
 	for gone_id in Letters.expire_requests(player, GameClock.total_days):
 		EventBus.post("%s no longer waits for your answer." % npcs[gone_id].name, "normal")
 	if clan != null:

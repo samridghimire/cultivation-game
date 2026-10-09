@@ -63,6 +63,11 @@ static func monthly(c: CharacterData, npcs: Dictionary, favor: Dictionary, data:
 		var notes := Effects.apply(c, data, kind.get("effects", {}), flags)
 		if kind.get("visit", false):
 			flags[visit_flag(id)] = true
+		var deal: Dictionary = kind.get("deal", {})
+		if not deal.is_empty():
+			var deal_region := Npcs.region_of(npc, data)
+			c.shop_deals[deal_region] = {"mult": float(deal["mult"]), "until": _today(c, today) + int(deal["days"])}
+			notes.append("a friend's price in %s for %d days" % [String(region.get("name", "their home")), int(deal["days"])])
 		var asked := false
 		var request: Dictionary = kind.get("request", {})
 		if not request.is_empty() and open_request(c, id, _today(c, today)).is_empty():
@@ -74,6 +79,21 @@ static func monthly(c: CharacterData, npcs: Dictionary, favor: Dictionary, data:
 
 static func _today(c: CharacterData, today: int) -> int:
 	return today if today >= 0 else c.age_days
+
+
+## Buy-price multiplier of a friend's price in `region_id` (1.0 when none or expired).
+static func deal_multiplier(c: CharacterData, region_id: String, today: int) -> float:
+	var deal: Dictionary = c.shop_deals.get(region_id, {})
+	if deal.is_empty() or int(deal["until"]) < today:
+		return 1.0
+	return float(deal["mult"])
+
+
+## Forgets expired friend's prices.
+static func expire_deals(c: CharacterData, today: int) -> void:
+	for region_id: String in c.shop_deals.keys():
+		if int(c.shop_deals[region_id]["until"]) < today:
+			c.shop_deals.erase(region_id)
 
 
 ## The open, unexpired request from `npc_id`, or {}.
@@ -206,6 +226,9 @@ static func validate(data: GameData) -> PackedStringArray:
 		if not request.is_empty():
 			if (not data.items.is_empty() and not data.items.has(String(request.get("item", "")))) or int(request.get("count", 0)) < 1 or int(request.get("days", 0)) < 1 or int(request.get("favor", -1)) < 0:
 				errors.append("family.json letters kind %s has an invalid request (item, count >= 1, days >= 1, favor >= 0)" % kind.get("id", "?"))
+		var deal: Dictionary = kind.get("deal", {})
+		if not deal.is_empty() and (float(deal.get("mult", 0.0)) < 0.5 or float(deal.get("mult", 0.0)) > 1.0 or int(deal.get("days", 0)) < 1):
+			errors.append("family.json letters kind %s has an invalid deal (mult 0.5..1, days >= 1)" % kind.get("id", "?"))
 		var effects: Dictionary = kind.get("effects", {})
 		for item_id in effects.get("items", {}):
 			if not data.items.is_empty() and not data.items.has(item_id):
