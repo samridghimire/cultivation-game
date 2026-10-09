@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 8961cbd
+Last reviewed commit: 3108c18
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -311,3 +311,22 @@ Last reviewed commit: 8961cbd
     WU-089's gift menu only marks tastes learned by gifting, so a chat-hinted taste still shows as neutral.
     (4) Taste world flags are ints (-1/1); fine with `flags.get(x, false)` callers that only test truthiness of +1,
     but -1 is truthy. (5) A region discovery with `min_renown` would lock itself out; nothing does that yet.
+- 2026-10-09 (reviewer, 9th run): reviewed 8961cbd..3108c18 (FEST-002, C-053, YEAR-003, NEWS-002, WU-092, QA-053b, WU-095,
+  C-058, DANGER-001, C-060, WU-104, WU-105, LETTER-003, NEWS-003, WU-101, QA-056; [PLAN]/[REVIEW] skipped).
+  Main green before and after (1580 -> 1581 tests). No BACKLOG/CHANGELOG edits by workers; no SAVE_VERSION change
+  (LETTER-003's `letter_requests` defaults to []). DANGER-001 kept threat sensing on "Deadly"/"Dangerous" as specced;
+  no other "Even" comparison changed meaning. Note: this checkout was a shallow clone; `git fetch --unshallow` first.
+  - Fixed ([REVIEW] commit): (1) C-060: "Swallow the seed" had breakthrough_realm foundation_establishment, so an
+    early-Foundation player (the encounter's stated reward band; min_realm has no cap) or a Qi Refining player with a
+    pill waiting saw the choice disabled as "This pill is meant for..."; now a plain +5% next breakthrough (test).
+    (2) FEST-002 and WU-104 each wedged a new function between an existing doc comment and its function
+    (GameState._world_events_month, CombatReport.log_height); moved back.
+  - Notes for the planner, not filed: (1) FEST-002's festival goods appear at every merchant in the region (Blood Lotus
+    Apothecary, smithies, talisman stalls included) and ignore the merchant's max_price; fine for a festival, but a
+    `stock_tags` gate would read better. (2) WU-105 left out " (likes N known)" (WU-101 has landed since; small
+    follow-up using NPC.known_tastes_text's flag scan). (3) LETTER-003 posts "no longer waits" as "normal", not the
+    family topic the spec asked for; answer_letter_request does not check you are in the asker's region (WU-099's NPC
+    entry will imply it). QA-056 predates LETTER-003, so `letter_requests` has only test_letters' round-trip.
+    (4) C-060 follow-up stands: the planted seed should give the lasting Azure Peak qi-density bonus the task asked
+    for (needs a flag-driven density mechanic). (5) WU-104 caches the rating per combat_started; a multi-round
+    tournament shows the last round's rating, which is the fight the report shows.
