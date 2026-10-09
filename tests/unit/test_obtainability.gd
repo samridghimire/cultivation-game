@@ -129,3 +129,52 @@ func _walk(value: Variant, label: String, parent: String, granted: Dictionary) -
 	elif value is Array:
 		for entry: Variant in value:
 			_walk(entry, label, parent, granted)
+
+
+# --- ITEM-002: has_known_source -------------------------------------------------
+
+## Items nothing in the data hands out today. Keep this list honest: a new
+## entry is a content hole (the item is unobtainable), a removed one a fix.
+const KNOWN_UNOBTAINABLE: Array[String] = []
+
+
+func test_has_known_source_kinds() -> void:
+	var d := data()
+	assert_true(Items.has_known_source(d, "spirit_herb"), "gathered")
+	var crafted := ""
+	for recipe: Dictionary in d.recipes.values():
+		crafted = String(recipe["output"]["item"])
+		break
+	assert_true(Items.has_known_source(d, crafted), "crafted")
+	assert_true(Items.sources(d, crafted).has("Crafted"))
+	assert_false(Items.has_known_source(d, "no_such_item"))
+	assert_eq(Items.sources(d, "no_such_item"), ["Found exploring"] as Array[String])
+
+
+func test_has_known_source_for_a_sold_item() -> void:
+	var d := data()
+	var sold := ""
+	for item: Dictionary in d.items.values():
+		if _sold_by_a_merchant(item):
+			sold = String(item["id"])
+			break
+	assert_true(sold != "")
+	assert_true(Items.has_known_source(d, sold))
+
+
+func test_unsourced_test_item_is_unobtainable() -> void:
+	var d := data()
+	d.items["orphan_item"] = {"id": "orphan_item", "name": "Orphan", "tags": [], "price": 0, "effects": {}}
+	assert_false(Items.has_known_source(d, "orphan_item"))
+	d.items.erase("orphan_item")
+
+
+func test_every_manual_and_breakthrough_pill_has_a_source() -> void:
+	var d := data()
+	var missing: Array[String] = []
+	for item: Dictionary in d.items.values():
+		var id := String(item["id"])
+		var effects: Dictionary = item.get("effects", {})
+		if (effects.has("learn_technique") or effects.has("breakthrough_realm") or effects.has("breakthrough_bonus")) and not Items.has_known_source(d, id) and not KNOWN_UNOBTAINABLE.has(id):
+			missing.append(id)
+	assert_eq(missing, [] as Array[String], "no known source: " + str(missing))

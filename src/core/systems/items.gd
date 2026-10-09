@@ -143,9 +143,25 @@ static func has_tag(data: GameData, item_id: String, tags: Array) -> bool:
 
 
 ## Where `item_id` can be had, as "Sold at <merchant> (<region>)" /
-## "Gathered at <place> (<region>)" lines; "Found exploring" when no merchant
-## or gather site has it (loot, rewards).
+## "Gathered at <place> (<region>)" lines, then one line per other kind of
+## source ("Crafted", "Dropped by creatures", ...); "Found exploring" when
+## nothing known gives it.
 static func sources(data: GameData, item_id: String) -> Array[String]:
+	var lines := _scan_sources(data, item_id)
+	if lines.is_empty():
+		lines.append("Found exploring")
+	return lines
+
+
+## True when something in the data really gives `item_id` (ITEM-002): a
+## merchant, gather table, recipe, enemy drop, encounter or choice, mission,
+## inheritance, secret realm, sect shop or stipend, auction lot, deed, world
+## event or dialogue reward.
+static func has_known_source(data: GameData, item_id: String) -> bool:
+	return not _scan_sources(data, item_id).is_empty()
+
+
+static func _scan_sources(data: GameData, item_id: String) -> Array[String]:
 	var lines: Array[String] = []
 	var item: Dictionary = data.items.get(item_id, {})
 	for region: Dictionary in data.regions.values():
@@ -170,9 +186,59 @@ static func sources(data: GameData, item_id: String) -> Array[String]:
 						year_round = true
 				if found:
 					lines.append("Gathered at %s%s" % [where, "" if year_round else " (%s)" % ", ".join(seasons)])
-	if lines.is_empty():
-		lines.append("Found exploring")
+	if not _recipe_makers(data, item_id).is_empty():
+		lines.append("Crafted")
+	var other := {
+		"Dropped by creatures": data.enemies, "Reward from encounters": data.encounters, "Reward from sect missions": data.sect_missions,
+		"Reward from inheritances": data.inheritances, "Found in secret realms": data.secret_realms, "Offered at auction": data.auction_houses,
+		"Reward for deeds": data.deeds, "Reward from world events": data.world_events, "Reward from conversations": data.dialogues,
+		"Given as a gratitude gift": data.karma,
+	}
+	for label: String in other:
+		if _gives(other[label], item_id):
+			lines.append(label)
+	for sect: SectDef in data.sects.values():
+		if _gives(sect.shop, item_id) or _gives(sect.ranks, item_id):
+			lines.append("Sect reward (%s)" % sect.name)
 	return lines
+
+
+## Recipe ids whose output (or great_output) is `item_id`.
+static func _recipe_makers(data: GameData, item_id: String) -> Array[String]:
+	var out: Array[String] = []
+	for recipe: Dictionary in data.recipes.values():
+		if recipe.get("output", {}).get("item", "") == item_id or recipe.get("great_output", {}).get("item", "") == item_id:
+			out.append(String(recipe["id"]))
+	return out
+
+
+## True when a reward-shaped value in `node` hands out `item_id`: an `items` /
+## `herbs` map keyed by it, a `manuals` list, or an `item` / `item_id` field.
+## Requirements and costs (`requires`, `if`, `ingredients`, ...) do not count.
+static func _gives(node: Variant, item_id: String) -> bool:
+	if node is Dictionary:
+		var dict: Dictionary = node
+		for key: Variant in dict:
+			var value: Variant = dict[key]
+			match String(key):
+				"requires", "if", "has_items", "ingredients", "cost", "consume":
+					continue
+				"items", "herbs":
+					if value is Dictionary and int((value as Dictionary).get(item_id, 0)) > 0:
+						return true
+				"manuals":
+					if value is Array and (value as Array).has(item_id):
+						return true
+				"item", "item_id":
+					if value is String and value == item_id:
+						return true
+			if _gives(value, item_id):
+				return true
+	elif node is Array:
+		for entry: Variant in node:
+			if _gives(entry, item_id):
+				return true
+	return false
 
 
 ## Item ids a merchant stocking `stock_tags` up to `max_price` sells
