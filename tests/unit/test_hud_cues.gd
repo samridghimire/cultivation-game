@@ -108,3 +108,14 @@ func test_hud_next_layer_label() -> void:
 	assert_eq(HUD.next_layer_text(5, c, gs.data), "", "hidden at the bottleneck")
 	hud.queue_free()
 	gs.end_session()
+
+
+## WU-044: the goal line on the HUD.
+func test_goal_text() -> void:
+	var d := data()
+	var c := new_character()
+	var first: Array[Dictionary] = Guidance.first_goals(c, d, {})
+	assert_eq(HUD.goal_text(c, d, {}, null, 1.0), "Goal: " + str(first[0]["text"]))
+	c.realm_index = 2
+	var lines := Guidance.goals(c, d, {}, null, 1.0)
+	assert_eq(HUD.goal_text(c, d, {}, null, 1.0), "Goal: " + lines[0])

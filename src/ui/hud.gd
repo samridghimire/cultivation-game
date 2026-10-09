@@ -15,6 +15,7 @@ var _bottleneck: Label
 var _next_layer: Label
 var _injuries: Label
 var _hint: Label
+var _goal: Label
 var _log: RichTextLabel
 var _status_panel: Control
 var _log_panel: Control
@@ -295,6 +296,10 @@ func _build_status_panel() -> void:
 	_injuries = UIStyle.label("", 14, UIStyle.CATEGORY_COLORS["danger"])
 	_injuries.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	box.add_child(_injuries)
+	_goal = UIStyle.label("", 14, Color(0.62, 0.64, 0.7))
+	_goal.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	_goal.custom_minimum_size = Vector2(316, 0)
+	box.add_child(_goal)
 	_hint = UIStyle.label("", 14, Color("9fd3c7"))
 	_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_hint.custom_minimum_size = Vector2(316, 0)
@@ -411,8 +416,23 @@ func _refresh() -> void:
 	var hints: PackedStringArray = []
 	if hint_count > 0:
 		hints = Guidance.hints(p, data, GameState.hint_density(), hint_count, GameState.npcs, GameState.world_flags, GameState.current_region, GameClock.total_days)
+	var goal := goal_text(p, data, GameState.world_flags, GameState.clan, density) if hint_count > 0 else ""
+	_goal.text = goal
+	_goal.tooltip_text = goal
+	_goal.visible = goal != ""
 	_hint.visible = not hints.is_empty()
 	_hint.text = "\n".join(Array(hints).map(func(h: String) -> String: return "> " + h))
+
+
+## "Goal: ..." line: the first unfinished first goal, then the realm goal ("" = none).
+static func goal_text(c: CharacterData, data: GameData, flags: Dictionary, clan: ClanData, density: float) -> String:
+	if Guidance.first_goals_done(c, data, flags) or c.realm_index >= 2:
+		var lines := Guidance.goals(c, data, flags, clan, density)
+		return "Goal: " + lines[0] if not lines.is_empty() else ""
+	for goal in Guidance.first_goals(c, data, flags):
+		if not goal["done"]:
+			return "Goal: " + str(goal["text"])
+	return ""
 
 
 ## "~N days to the next layer here" ("" at a bottleneck, with no qi rate, or beyond ten years).
