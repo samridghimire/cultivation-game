@@ -70,3 +70,42 @@ func test_validation() -> void:
 	lecture["insight_chance"] = 2.0
 	lecture["insights"] = ["no_such_dao"]
 	assert_eq(Sects.validate_lectures(d).size(), 3)
+
+
+# --- GUIDE-013: surfacing the lecture ----------------------------------------
+
+func _lecture_rows(c: CharacterData, today: int) -> Array:
+	var rows: Array = []
+	for row: Dictionary in Guidance.journal(c, data(), {}, today, c.home_region):
+		if String(row["text"]).begins_with("Attend "):
+			rows.append(row)
+	return rows
+
+
+func test_lecture_hint_and_journal_only_when_attendable() -> void:
+	var c := _disciple()
+	var hint := "Your sect's elder lectures this month; attend at the sect hall."
+	assert_true(Array(Guidance.hints(c, data(), 1.0, 40, {}, {}, c.home_region, 5)).has(hint))
+	assert_eq(_lecture_rows(c, 5).size(), 1)
+	Sects.attend_lecture(c, data(), seeded_rng(), 5)
+	assert_false(Array(Guidance.hints(c, data(), 1.0, 40, {}, {}, c.home_region, 6)).has(hint))
+	assert_eq(_lecture_rows(c, 6).size(), 0)
+	assert_eq(_lecture_rows(c, Calendar.DAYS_PER_MONTH + 1).size(), 1, "next month")
+
+
+func test_rogue_gets_no_lecture_hint() -> void:
+	var c := new_character()
+	assert_eq(_lecture_rows(c, 5).size(), 0)
+	assert_false(Array(Guidance.hints(c, data(), 1.0, 40, {}, {}, c.home_region, 5)).has("Your sect's elder lectures this month; attend at the sect hall."))
+
+
+func test_lectures_attended_counts_and_milestone_at_twelve() -> void:
+	var c := _disciple()
+	for i in 12:
+		assert_eq(LifeStats.get_stat(c, "lectures_attended"), i)
+		assert_true(Sects.attend_lecture(c, data(), seeded_rng(), i * Calendar.DAYS_PER_MONTH)["ok"])
+		var reached := Milestones.newly_reached(c, data(), {})
+		assert_eq(reached.has("attentive_disciple"), i == 11)
+		if i == 11:
+			break
+	assert_eq(LifeStats.get_stat(c, "lectures_attended"), 12)

@@ -1,6 +1,7 @@
 {
 	"_doc": "Milestones (GOAL-001): first steps the player is congratulated for (later mirrored as Steam achievements, REL-009). Each entry {id, name, description, check}. check.type is one of: realm {realm: realm id, stage: int = 0} (reached that realm and stage), life_stat {stat: LifeStats key, min: int = 1}, flag {flag: world flag}, sect_joined {}, married {}, clan_founded {}, item_crafted {min: int = 1} (LifeStats items_crafted), flag_count {prefix, suffix, min: int = 1} (world flags with that prefix and suffix that are set, e.g. errand_*_done). No rewards, recognition only. Checked by Milestones.newly_reached; earned ids live in CharacterData.milestones.",
 	"milestones": [
+		{"id": "attentive_disciple", "name": "Attentive Disciple", "description": "Attend 12 sect lectures.", "check": {"type": "life_stat", "stat": "lectures_attended", "min": 12}},
 		{"id": "far_traveller", "name": "Far Traveller", "description": "Set foot in five regions.", "check": {"type": "life_stat", "stat": "regions_visited", "min": 5}},
 		{"id": "first_fight", "name": "First Blood", "description": "Win your first fight.", "check": {"type": "life_stat", "stat": "fights_won", "min": 1}},
 		{"id": "veteran", "name": "Battle-Hardened", "description": "Win 25 fights.", "check": {"type": "life_stat", "stat": "fights_won", "min": 25}},

@@ -62,6 +62,9 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 	if missions != "":
 		out.append(missions)
 	if today >= 0:
+		var lecture := _lecture_hint(c, data, today)
+		if lecture != "":
+			out.append(lecture)
 		var delivery := Commissions.delivery_hint(c, data, today)
 		if delivery != "":
 			out.append(delivery)
@@ -770,7 +773,17 @@ static func _household_entries(out: Array[Dictionary], c: CharacterData, data: G
 		_add(out, "Household", line, "dim")
 
 
+## "Your sect's elder lectures this month": only while the lecture can be attended.
+static func _lecture_hint(c: CharacterData, data: GameData, today: int) -> String:
+	if Sects.check_lecture(c, data, today) != "":
+		return ""
+	return "Your sect's elder lectures this month; attend at the sect hall."
+
+
 static func _opportunity_entries(out: Array[Dictionary], c: CharacterData, data: GameData, flags: Dictionary, today: int) -> void:
+	if Sects.check_lecture(c, data, today) == "":
+		var sect: SectDef = data.sects[c.sect["id"]]
+		_add(out, "Opportunities", "Attend %s at the %s hall (once a month)" % [Sects.lecture_def(c, data).get("name", "the lecture"), sect.name], "normal")
 	var realm_ids: Array = data.secret_realms.keys()
 	realm_ids.sort()
 	for realm_id: String in realm_ids:

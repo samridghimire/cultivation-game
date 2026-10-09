@@ -435,6 +435,7 @@ static func attend_lecture(c: CharacterData, data: GameData, rng: RandomNumberGe
 		return {"ok": false, "reason": reason}
 	var lecture := lecture_def(c, data)
 	c.sect["lecture_month"] = _month_index(total_days)
+	LifeStats.add(c, "lectures_attended")
 	var qi := 0
 	var qi_days := int(lecture.get("qi_days", 0))
 	if qi_days > 0 and not Cultivation.is_at_bottleneck(c, data):
