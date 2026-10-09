@@ -66,6 +66,8 @@ signal milestone_reached(id: String, name: String)
 signal festival_started(event_name: String, text: String)
 ## A bounty was paid out (WU-082); the HUD shows a banner.
 signal bounty_claimed(enemy_name: String, stones: int)
+## A friend's letter arrived (WU-081); the HUD shows a banner.
+signal letter_arrived(npc_name: String)
 ## A newly available feature was announced (GUIDE-008, WU-042); the HUD shows a banner.
 signal feature_unlocked(text: String)
 

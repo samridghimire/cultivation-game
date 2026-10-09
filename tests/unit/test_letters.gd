@@ -104,3 +104,23 @@ func test_save_round_trip_and_old_saves() -> void:
 	var old := c.to_dict()
 	old.erase("letters")
 	assert_eq(CharacterData.from_dict(old).letters.size(), 0)
+
+
+func test_journal_lists_letters_newest_first() -> void:
+	var c := new_character()
+	assert_eq(Letters.journal_lines(c).size(), 0)
+	var d := data()
+	var none := Guidance.journal(c, d, {}, 0, "qingshi_village").filter(func(e: Dictionary) -> bool: return e["section"] == "Letters")
+	assert_eq(none.size(), 0, "hidden when empty")
+	for i in 7:
+		Letters.remember(c, d, "A letter from Pen %d: hello" % i)
+	var lines := Letters.journal_lines(c)
+	assert_eq(lines.size(), 5)
+	assert_eq(lines[0], "Pen 6: hello")
+	var entries := Guidance.journal(c, d, {}, 0, "qingshi_village").filter(func(e: Dictionary) -> bool: return e["section"] == "Letters")
+	assert_eq(entries.size(), 5)
+	assert_eq(entries[0]["text"], "Pen 6: hello")
+
+
+func test_letter_banner_text() -> void:
+	assert_eq(load("res://src/ui/hud.gd").letter_banner("Lu"), PackedStringArray(["A letter", "from Lu"]))

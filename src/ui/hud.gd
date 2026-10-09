@@ -184,6 +184,7 @@ func _ready() -> void:
 	EventBus.feature_unlocked.connect(_on_feature_unlocked)
 	EventBus.festival_started.connect(_on_festival_started)
 	EventBus.bounty_claimed.connect(_on_bounty_claimed)
+	EventBus.letter_arrived.connect(_on_letter_arrived)
 	_season = Calendar.season_of(GameClock.total_days)
 	GameClock.days_advanced.connect(_on_days_advanced)
 	EventBus.session_started.connect(func(): _season = Calendar.season_of(GameClock.total_days))
@@ -641,6 +642,18 @@ func _on_bounty_claimed(enemy_name: String, stones: int) -> void:
 	var lines := bounty_banner(enemy_name, stones)
 	_banner.announce(lines[0], lines[1], UIStyle.CATEGORY_COLORS.get("good", UIStyle.ACCENT), 2.5)
 	Audio.play("chime_progress")
+
+
+## A friend's letter arrived (WU-081): a banner and a chime.
+func _on_letter_arrived(npc_name: String) -> void:
+	var lines := letter_banner(npc_name)
+	_banner.announce(lines[0], lines[1], UIStyle.ACCENT, 2.5)
+	Audio.play("chime_progress")
+
+
+## [title, subtitle] of the letter banner.
+static func letter_banner(npc_name: String) -> PackedStringArray:
+	return PackedStringArray(["A letter", "from %s" % npc_name])
 
 
 ## [title, subtitle] of the bounty-claimed banner.

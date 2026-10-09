@@ -114,6 +114,8 @@ static func _sell_hint(c: CharacterData, data: GameData, region_id: String) -> S
 	return "The %s here would pay about %d spirit stones for your %s." % [best_name, best_total, best_goods]
 
 
+## Most letters listed in the journal (WU-081).
+const LETTERS_JOURNAL_MAX := 5
 ## Most "Ask <Name> for pointers" journal lines (GUIDE-012).
 const POINTER_JOURNAL_MAX := 3
 ## Game days that must pass (GameClock) before "try something new" is suggested (GUIDE-007).
@@ -787,6 +789,8 @@ static func journal(c: CharacterData, data: GameData, flags: Dictionary, today: 
 		_add(out, "Opportunities", "Ask %s for pointers (%s)" % [npc.name, _region_name(data, region_id)], "normal")
 	_errand_entries(out, data, flags)
 	_household_entries(out, c, data, people)
+	for line in Letters.journal_lines(c, LETTERS_JOURNAL_MAX):
+		_add(out, "Letters", line, "normal")
 	for order in c.commissions:
 		_add(out, "Commissions", Commissions.describe(c, data, order, today), "warning" if Commissions.days_left(order, today) <= 7 else "normal")
 	_milestone_entries(out, c, data, flags, clan)

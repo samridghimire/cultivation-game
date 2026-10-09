@@ -922,8 +922,13 @@ func test_monthly_letter_and_visit_bonus() -> void:
 	rules["monthly_chance"] = 1.0
 	rules["kinds"] = [saved["kinds"][2]]
 	c.realm_index = 1
+	var seen: Array[String] = []
+	var on_letter := func(n: String) -> void: seen.append(n)
+	EventBus.letter_arrived.connect(on_letter)
 	gs.cultivate(Calendar.DAYS_PER_MONTH)
+	EventBus.letter_arrived.disconnect(on_letter)
 	assert_gt(c.letters.size(), 0, "a letter arrived")
+	assert_eq(seen, ["Pen Friend"], "the banner signal fired")
 	assert_true(gs.world_flags.has("letter_visit_pen_friend"))
 	rules["monthly_chance"] = 0.0
 	var before: int = gs.npc_favor["pen_friend"]

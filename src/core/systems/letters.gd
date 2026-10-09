@@ -83,6 +83,16 @@ static func remember(c: CharacterData, data: GameData, line: String) -> void:
 		c.letters.pop_front()
 
 
+## Journal lines for the last `limit` letters, newest first, without the "A letter from " prefix (WU-081).
+static func journal_lines(c: CharacterData, limit: int = 5) -> Array[String]:
+	var out: Array[String] = []
+	for i in range(c.letters.size() - 1, -1, -1):
+		if out.size() >= limit:
+			break
+		out.append(c.letters[i].trim_prefix("A letter from "))
+	return out
+
+
 static func validate(data: GameData) -> PackedStringArray:
 	var errors: PackedStringArray = []
 	var r := rules(data)
