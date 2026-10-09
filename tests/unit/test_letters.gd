@@ -303,3 +303,36 @@ func test_family_letter_validation() -> void:
 	d.family["letters"]["kinds"].append({"id": "x", "weight": 1, "text": "t", "from": "stranger"})
 	d.family["letters"]["kinds"].append({"id": "y", "weight": 1, "text": "t", "relation": "spouse"})
 	assert_eq(Letters.validate(d).size(), 3, ", ".join(Letters.validate(d)))
+
+func test_requested_items_are_sold_or_dropped_before_foundation() -> void:
+	var d := GameData.load_from_dir()
+	var sold: Dictionary = {}
+	for rid: String in d.regions:
+		for place: Dictionary in d.regions[rid].get("places", []):
+			if place.get("type", "") != "merchant":
+				continue
+			var cap := int(place.get("max_price", 0))
+			for item_id: String in d.items:
+				var item: Dictionary = d.items[item_id]
+				var price := int(item.get("price", 0))
+				if price <= 0 or (cap > 0 and price > cap):
+					continue
+				for t: String in place.get("stock_tags", []):
+					if (item.get("tags", []) as Array).has(t):
+						sold[item_id] = true
+	var dropped: Dictionary = {}
+	for enemy_id: String in d.enemies:
+		var e: Dictionary = d.enemies[enemy_id]
+		if d.realm_index_of(String(e["realm"])) > 1:
+			continue
+		for item_id: String in (e.get("rewards", {}) as Dictionary).get("items", {}):
+			dropped[item_id] = true
+	var requests := 0
+	for kind: Dictionary in d.family["letters"]["kinds"]:
+		if not kind.has("request"):
+			continue
+		requests += 1
+		var item_id := String(kind["request"]["item"])
+		assert_true(d.items.has(item_id), "request item %s exists" % item_id)
+		assert_true(sold.has(item_id) or dropped.has(item_id), "request item %s is sold or dropped by a Qi Refining beast" % item_id)
+	assert_true(requests >= 5)
