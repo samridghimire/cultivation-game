@@ -130,6 +130,8 @@ func test_every_letter_kind_formats_and_applies() -> void:
 	var d := GameData.load_from_dir()
 	var friend := _friend()
 	for kind: Dictionary in d.family["letters"]["kinds"]:
+		if kind.get("from", "friend") == "family":
+			continue
 		var all: Dictionary = d.family["letters"]
 		var keep: Array = all["kinds"]
 		all["monthly_chance"] = 1.0
@@ -231,3 +233,73 @@ func test_deal_validation() -> void:
 		if kind["id"] == "merchant_offer":
 			kind["deal"]["mult"] = 0.2
 	assert_eq(Letters.validate(d).size(), 1)
+## LETTER-002: family who live away write home.
+func _kin(id: String, in_sect: bool, age_years: int = 20) -> CharacterData:
+	var npc := new_character(78)
+	npc.id = id
+	npc.name = "Kin " + id
+	npc.age_days = age_years * 365
+	if in_sect:
+		npc.sect = {"id": "azure_peak_sect", "rank": 0}
+	return npc
+
+
+func test_family_writer_needs_someone_away() -> void:
+	var d := data()
+	var c := new_character()
+	var people := {"w": _kin("w", true), "kid": _kin("kid", false), "far": _kin("far", true, 8), "z": _kin("z", true)}
+	c.spouses.append("z")
+	c.spouses.append("w")
+	c.children.append("kid")
+	c.children.append("far")
+	assert_eq(Letters.family_writer(c, people, d), "w", "lowest id of the spouse or child in a sect")
+	people["w"].alive = false
+	assert_eq(Letters.family_writer(c, people, d), "z")
+	c.spouses.clear()
+	assert_eq(Letters.family_writer(c, people, d), "", "a child at home or under 12 never writes")
+	c.parents.append("w")
+	assert_eq(Letters.family_writer(c, people, d), "", "dead parents do not write")
+
+
+func test_family_kinds_never_come_from_friends_and_back() -> void:
+	var d := GameData.load_from_dir()
+	var rules: Dictionary = d.family["letters"]
+	rules["monthly_chance"] = 1.0
+	rules["family_chance"] = 1.0
+	for seed_value in 30:
+		var c := new_character()
+		c.spouses.append("w")
+		var people := {"w": _kin("w", true), "friend": _kin("friend", false)}
+		var letter := Letters.monthly(c, people, {"friend": 100}, d, seeded_rng(seed_value), {})
+		assert_eq(letter["npc_id"], "w")
+		assert_true(String(letter["text"]).begins_with("Kin w writes from") , String(letter["text"]))
+	rules["family_chance"] = 0.0
+	for seed_value in 30:
+		var c := new_character()
+		c.spouses.append("w")
+		var people := {"w": _kin("w", true), "friend": _kin("friend", false)}
+		assert_eq(Letters.monthly(c, people, {"friend": 100}, d, seeded_rng(seed_value), {})["npc_id"], "friend")
+
+
+func test_family_letter_matches_relation_and_applies_effects() -> void:
+	var d := GameData.load_from_dir()
+	d.family["letters"]["family_chance"] = 1.0
+	var c := new_character()
+	c.spouses.append("w")
+	var qi := c.qi
+	var letter := Letters.monthly(c, {"w": _kin("w", true)}, {}, d, seeded_rng(), {})
+	assert_true(String(letter["text"]).contains("lamp-lighting"), "a spouse writes the spouse letter")
+	assert_true(c.qi > qi)
+	var parent := new_character()
+	parent.parents.append("p")
+	var herbs := parent.item_count("spirit_herb")
+	Letters.monthly(parent, {"p": _kin("p", false, 60)}, {}, d, seeded_rng(), {})
+	assert_eq(parent.item_count("spirit_herb"), herbs + 2, "a parent sends herbs")
+
+
+func test_family_letter_validation() -> void:
+	var d := GameData.load_from_dir()
+	d.family["letters"]["family_chance"] = 1.5
+	d.family["letters"]["kinds"].append({"id": "x", "weight": 1, "text": "t", "from": "stranger"})
+	d.family["letters"]["kinds"].append({"id": "y", "weight": 1, "text": "t", "relation": "spouse"})
+	assert_eq(Letters.validate(d).size(), 3, ", ".join(Letters.validate(d)))

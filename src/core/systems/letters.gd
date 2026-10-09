@@ -34,19 +34,64 @@ static func writer(c: CharacterData, npcs: Dictionary, favor: Dictionary, data: 
 	return best
 
 
-## Rolls this month's letter. Applies its effects and returns
+## A living spouse or child (12+) who is in a sect and so lives away, lowest id first; failing that a living parent. "" when none.
+static func family_writer(c: CharacterData, npcs: Dictionary, data: GameData) -> String:
+	var away: Array[String] = []
+	for id: String in c.spouses + c.children:
+		var npc: CharacterData = npcs.get(id)
+		if npc != null and npc.alive and not npc.is_rogue() and (c.spouses.has(id) or npc.age_years() >= 12):
+			away.append(id)
+	if not away.is_empty():
+		away.sort()
+		return away[0]
+	var parents: Array[String] = []
+	for id: String in c.parents:
+		var npc: CharacterData = npcs.get(id)
+		if npc != null and npc.alive:
+			parents.append(id)
+	parents.sort()
+	return "" if parents.is_empty() else parents[0]
+
+
+## "spouse", "child" or "parent": how `npc_id` is related to `c`.
+static func relation(c: CharacterData, npc_id: String) -> String:
+	if c.spouses.has(npc_id):
+		return "spouse"
+	if c.children.has(npc_id):
+		return "child"
+	return "parent"
+
+
+## Rolls this month's letter: family first (`family_chance`), else a friend's. Applies its effects and returns
 ## {npc_id, text, notes}, or {} when nobody writes.
 static func monthly(c: CharacterData, npcs: Dictionary, favor: Dictionary, data: GameData, rng: RandomNumberGenerator, flags: Dictionary, today: int = -1) -> Dictionary:
 	var r := rules(data)
 	if r.is_empty():
 		return {}
+	var family_chance := float(r.get("family_chance", 0.0))
+	var family_id := family_writer(c, npcs, data) if family_chance > 0.0 else ""
+	# Only roll when someone could write, so players with no kin away keep the shared rng stream.
+	if family_id != "" and rng.randf() < family_chance:
+		var sent := _write(c, npcs, favor, data, rng, flags, today, family_id, "family")
+		if not sent.is_empty():
+			return sent
 	var id := writer(c, npcs, favor, data)
 	if id == "" or rng.randf() >= float(r.get("monthly_chance", 0.0)):
 		return {}
-	var npc_favor := int(favor[id])
+	return _write(c, npcs, favor, data, rng, flags, today, id, "friend")
+
+
+static func _write(c: CharacterData, npcs: Dictionary, favor: Dictionary, data: GameData, rng: RandomNumberGenerator, flags: Dictionary, today: int, id: String, from: String) -> Dictionary:
+	var r := rules(data)
+	var npc_favor := int(favor.get(id, 0))
+	var how := relation(c, id) if from == "family" else ""
 	var kinds: Array = []
 	var total := 0
 	for kind: Dictionary in r.get("kinds", []):
+		if String(kind.get("from", "friend")) != from:
+			continue
+		if from == "family" and String(kind.get("relation", how)) != how:
+			continue
 		if npc_favor >= int(kind.get("min_favor", 0)):
 			kinds.append(kind)
 			total += int(kind.get("weight", 1))
@@ -214,6 +259,9 @@ static func validate(data: GameData) -> PackedStringArray:
 		errors.append("family.json letters.monthly_chance must be 0..1")
 	if int(r.get("min_favor", 0)) > 100:
 		errors.append("family.json letters.min_favor must be <= 100")
+	var family_chance := float(r.get("family_chance", 0.0))
+	if family_chance < 0.0 or family_chance > 1.0:
+		errors.append("family.json letters.family_chance must be 0..1")
 	if int(r.get("visit_favor", 0)) < 0 or int(r.get("max_kept", 1)) < 1:
 		errors.append("family.json letters.visit_favor must be >= 0 and max_kept >= 1")
 	if not (r.get("kinds") is Array) or r["kinds"].is_empty():
@@ -222,6 +270,10 @@ static func validate(data: GameData) -> PackedStringArray:
 	for kind: Dictionary in r["kinds"]:
 		if not kind.has("id") or String(kind.get("text", "")) == "" or int(kind.get("weight", 0)) <= 0:
 			errors.append("family.json letters kind %s needs id, text and weight > 0" % kind.get("id", "?"))
+		if not String(kind.get("from", "friend")) in ["friend", "family"]:
+			errors.append("family.json letters kind %s has an unknown from (friend or family)" % kind.get("id", "?"))
+		if kind.has("relation") and (String(kind.get("from", "friend")) != "family" or not String(kind["relation"]) in ["spouse", "child", "parent"]):
+			errors.append("family.json letters kind %s relation must be spouse, child or parent on a family letter" % kind.get("id", "?"))
 		var request: Dictionary = kind.get("request", {})
 		if not request.is_empty():
 			if (not data.items.is_empty() and not data.items.has(String(request.get("item", "")))) or int(request.get("count", 0)) < 1 or int(request.get("days", 0)) < 1 or int(request.get("favor", -1)) < 0:
