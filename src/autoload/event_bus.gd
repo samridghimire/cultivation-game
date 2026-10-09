@@ -70,6 +70,8 @@ signal bounty_claimed(enemy_name: String, stones: int)
 signal letter_arrived(npc_name: String)
 ## A renown tier was crossed in a region (WU-084); the HUD shows a banner.
 signal renown_tier_reached(region_id: String, title: String)
+## A region became fully known (EXPL-003, WU-090).
+signal region_mastered(region_id: String)
 ## A newly available feature was announced (GUIDE-008, WU-042); the HUD shows a banner.
 signal feature_unlocked(text: String)
 

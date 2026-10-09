@@ -205,3 +205,33 @@ func test_familiarity_lines() -> void:
 	for i in 2:
 		Exploration.add_explore_day(c, "misty_forest")
 	assert_eq(WorldMapScreen.familiarity_lines(c, d, "misty_forest", "qingshi_village")[0], "Explored 3 days")
+
+
+## WU-090: a mastered region says so instead of counting happenings; the banner and signal follow.
+func test_mastered_region_line_banner_and_signal() -> void:
+	var gs: Node = Engine.get_main_loop().root.get_node("GameState")
+	var c := CharacterFactory.create("Master", gs.data, seeded_rng(7))
+	gs.start_session(c)
+	var region: String = gs.current_region
+	Exploration.add_explore_day(c, region)
+	var before := WorldMapScreen.familiarity_lines(c, gs.data, region, "", gs.world_flags)
+	assert_false(Array(before).has("Mastered: you know every path here."))
+	for e: Dictionary in gs.data.encounters.values():
+		Exploration.note_met(c, e)
+		if String(e.get("blocked_by_flag", "")) != "":
+			gs.world_flags[e["blocked_by_flag"]] = true
+	gs.world_flags["discovered_" + region] = true
+	c.explore_days[region] = 100000
+	var after := WorldMapScreen.familiarity_lines(c, gs.data, region, "", gs.world_flags)
+	assert_true(Array(after).has("Mastered: you know every path here."))
+	assert_false(after.size() > 0 and String(after[1]).begins_with("Seen"))
+	var seen: Array[String] = []
+	var cb := func(r: String) -> void: seen.append(r)
+	EventBus.region_mastered.connect(cb)
+	gs._check_mastery()
+	gs._check_mastery()
+	EventBus.region_mastered.disconnect(cb)
+	assert_eq(seen, [region])
+	var lines: PackedStringArray = load("res://src/ui/hud.gd").mastery_banner(gs.data, region)
+	assert_eq(lines[0], Exploration.region_name(gs.data, region) + " mastered")
+	gs.end_session()

@@ -171,7 +171,9 @@ static func familiarity_lines(c: CharacterData, data: GameData, region_id: Strin
 	var days := Exploration.familiarity(c, region_id)
 	out.append("Explored %d day%s" % [days, "" if days == 1 else "s"])
 	var progress := Exploration.region_progress(c, data, region_id, flags)
-	if int(progress["total"]) > 0:
+	if Exploration.mastered(c, data, region_id, flags):
+		out.append("Mastered: you know every path here.")
+	elif int(progress["total"]) > 0:
 		out.append("Seen %d of %d happenings" % [progress["met"], progress["total"]])
 	var deep := Exploration.next_deep_path(c, data, region_id)
 	if deep >= 0:

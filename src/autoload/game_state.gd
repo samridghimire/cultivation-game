@@ -603,6 +603,7 @@ func _check_mastery() -> void:
 	world_flags[flag] = true
 	LifeStats.add(player, "regions_mastered")
 	EventBus.post("You know %s like the lines of your own palm." % Exploration.region_name(data, current_region), "progress")
+	EventBus.region_mastered.emit(current_region)
 
 
 ## One day of exploring. Returns {event: "nothing"|"fight"|"choice"|"threat"|"story"}.
