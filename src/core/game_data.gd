@@ -39,6 +39,9 @@ var road: Dictionary = {}  # TRAV-006: regions.json "road" (empty = no road enco
 var encounters: Dictionary = {}  # id -> Dictionary
 ## Bounties by id and the file's top-level numbers (data/bounties.json, Bounties).
 var bounties: Dictionary = {}
+## data/rumors.json (RUMOR-001): merchant gossip by id, and the file's `max_per_visit`.
+var rumors: Dictionary = {}
+var rumor_rules: Dictionary = {"max_per_visit": 2}
 var bounty_config: Dictionary = {"hunt_chance": 0.3, "max_active": 1, "offers": 3}
 var errands: Array = []  # data/npcs.json "errands" (journal reminders, GUIDE-003)
 var npcs: Dictionary = {}  # id -> Dictionary (definitions; live NPCs are in GameState.npcs)
@@ -232,6 +235,11 @@ func _load(dir: String) -> void:
 	for bounty in bounty_file.get("bounties", []):
 		bounties[String(bounty.get("id", ""))] = bounty
 
+	var rumor_file := _read(dir, "rumors.json")
+	rumor_rules["max_per_visit"] = rumor_file.get("max_per_visit", rumor_rules["max_per_visit"])
+	for rumor in rumor_file.get("rumors", []):
+		rumors[String(rumor.get("id", ""))] = rumor
+
 	var npc_file := _read(dir, "npcs.json")
 	for npc in npc_file.get("npcs", []):
 		npcs[npc["id"]] = npc
@@ -362,6 +370,7 @@ func _validate() -> void:
 	_validate_help()
 	_validate_milestones()
 	_validate_bounties()
+	_validate_rumors()
 	load_errors.append_array(Equipment.validate(self))
 	load_errors.append_array(CombatTalismans.validate(self))
 	load_errors.append_array(Family.validate(self))
@@ -661,6 +670,21 @@ func _validate_bounties() -> void:
 			load_errors.append("%s cooldown_days must be >= 0" % label)
 		if String(b.get("text", "")) == "":
 			load_errors.append("%s needs text" % label)
+
+
+func _validate_rumors() -> void:
+	if typeof(rumor_rules["max_per_visit"]) not in [TYPE_INT, TYPE_FLOAT] or int(rumor_rules["max_per_visit"]) < 1:
+		load_errors.append("rumors.json max_per_visit must be >= 1")
+	for r: Dictionary in rumors.values():
+		var label := "rumors.json rumor '%s'" % r.get("id", "")
+		if String(r.get("id", "")) == "":
+			load_errors.append("rumors.json has a rumor with no id")
+		if String(r.get("text", "")) == "":
+			load_errors.append("%s needs text" % label)
+		if r.has("region") and not regions.has(String(r["region"])):
+			load_errors.append("%s has unknown region '%s'" % [label, r["region"]])
+		if r.has("min_realm") and realm_index_of(String(r["min_realm"])) < 0:
+			load_errors.append("%s has unknown min_realm '%s'" % [label, r["min_realm"]])
 
 
 func milestone_def(id: String) -> Dictionary:

@@ -2143,6 +2143,7 @@ func hear_rumors() -> void:
 		if not (data.regions[current_region].get("discovery_rumor", "") == text):
 			extra.append(text)
 			break
+	extra.append_array(Rumors.lines(player, data, world_flags, current_region, GameClock.total_days))
 	for line in WorldEvents.rumors(data, world_events, extra, GameClock.total_days):
 		EventBus.post(line)
 

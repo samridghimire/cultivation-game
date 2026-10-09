@@ -1,0 +1,9 @@
+{
+  "_doc": "Merchant gossip heard with 'Hear rumors' (RUMOR-001, Rumors). rumors: [{id (unique), text (non-empty), region (optional region id: only heard there; absent = everywhere), min_realm (optional realm id: only heard once the player has reached it), requires_flag (optional world flag that must be set), blocked_by_flag (optional world flag that hides it)}]. max_per_visit (int >= 1): at most this many data rumors are told per 'Hear rumors', rotating by day.",
+  "max_per_visit": 2,
+  "rumors": [
+    {"id": "drowned_sword_explorer", "region": "fallen_star_market", "min_realm": "qi_refining", "blocked_by_flag": "got_sword_tomb_map", "text": "A wounded treasure hunter came down from the cliffs last month, muttering about a drowned sword and a map torn in two."},
+    {"id": "village_old_well", "region": "qingshi_village", "text": "The well-keeper swears the old well hums at night, as if something below were breathing."},
+    {"id": "late_tribulation_talk", "min_realm": "foundation_establishment", "text": "Travellers say a Core Formation cultivator was struck down by his tribulation on the Azure Peak. Prepare well before you try."}
+  ]
+}
