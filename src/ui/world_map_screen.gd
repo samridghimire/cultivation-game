@@ -24,6 +24,7 @@ const MARK_COLORS := {
 	"anchor": Color("7fe0d0"),
 	"secret_realm": Color("b58ae8"),
 	"event": Color("e85a4a"),
+	"discovery": Color("f2f0a0"),
 }
 
 var _canvas: Control
@@ -170,8 +171,9 @@ static func place_names(data: GameData, region_id: String) -> PackedStringArray:
 
 
 ## What `c` has or what is going on in `region_id`: [{kind, text}] with kind
-## a MARK_COLORS key. `people` are the NPCs, `events` the active world events.
-static func region_marks(c: CharacterData, data: GameData, people: Dictionary, events: Array, total_days: int, region_id: String, current_region: String = "") -> Array[Dictionary]:
+## a MARK_COLORS key. `people` are the NPCs, `events` the active world events,
+## `flags` the world flags (an unexplored discovery hint needs them).
+static func region_marks(c: CharacterData, data: GameData, people: Dictionary, events: Array, total_days: int, region_id: String, current_region: String = "", flags: Dictionary = {}) -> Array[Dictionary]:
 	var marks: Array[Dictionary] = []
 	var region: Dictionary = data.regions.get(region_id, {})
 	if not c.is_rogue() and (region.get("places", []) as Array).any(func(p: Dictionary) -> bool: return p.get("type", "") == "sect_hall"):
@@ -194,6 +196,8 @@ static func region_marks(c: CharacterData, data: GameData, people: Dictionary, e
 			continue
 		var when := "open, closes in %s" % Calendar.format_duration(SecretRealms.days_until_close(def, total_days)) if SecretRealms.is_open(def, total_days) else "opens in %s" % Calendar.format_duration(SecretRealms.days_until_open(def, total_days))
 		marks.append({"kind": "secret_realm", "text": "Secret realm: %s (%s)" % [def.get("name", def["id"]), when]})
+	if String(region.get("discovery", "")) != "" and Exploration.visited(c, region_id) and not flags.get("discovered_" + region_id, false):
+		marks.append({"kind": "discovery", "text": "Something here waits to be found. Explore."})
 	for instance in WorldEvents.active_in(events, region_id):
 		var enter := ""
 		if region_id == current_region and HudScript.region_event_suffix(data, [instance], region_id, c).contains("(you can enter)"):
@@ -270,7 +274,7 @@ func _draw_map() -> void:
 			_canvas.draw_string(font, (a + b) / 2.0 + Vector2(4, -4), days, HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color(0.9, 0.9, 0.85))
 	for region_id in _positions:
 		var kinds: Array = []
-		for mark in region_marks(GameState.player, data, GameState.npcs, GameState.world_events, GameClock.total_days, region_id, GameState.current_region):
+		for mark in region_marks(GameState.player, data, GameState.npcs, GameState.world_events, GameClock.total_days, region_id, GameState.current_region, GameState.world_flags):
 			if not kinds.has(mark["kind"]):
 				kinds.append(mark["kind"])
 		var start: Vector2 = Vector2(_positions[region_id]) + Vector2(-(kinds.size() - 1) * 7.0, NODE_SIZE.y / 2.0 + 8.0)
@@ -314,7 +318,7 @@ func _show_details() -> void:
 		foes_text = foes_bbcode(Exploration.outlook(GameState.player, data, tags, GameState.world_flags, Calendar.season_of(GameClock.total_days))["foes"])
 	_foes.text = foes_text
 	_foes.visible = foes_text != ""
-	var marks := region_marks(GameState.player, data, GameState.npcs, GameState.world_events, GameClock.total_days, _selected, GameState.current_region)
+	var marks := region_marks(GameState.player, data, GameState.npcs, GameState.world_events, GameClock.total_days, _selected, GameState.current_region, GameState.world_flags)
 	_marks.visible = not marks.is_empty()
 	_marks.text = "\n".join(marks.map(func(m: Dictionary) -> String: return "• " + String(m["text"])))
 	_routes.text = "\n".join(route_lines(GameState.player, data, GameState.current_region, _selected))

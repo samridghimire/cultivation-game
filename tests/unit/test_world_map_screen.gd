@@ -89,6 +89,20 @@ func test_region_marks() -> void:
 		assert_true(WorldMapScreen.MARK_COLORS.has(kind), kind)
 
 
+func test_discovery_mark_until_found() -> void:
+	var d := data()
+	var c := new_character()
+	var marks := func(region_id: String, flags: Dictionary) -> Array:
+		return WorldMapScreen.region_marks(c, d, {}, [], 0, region_id, "", flags).map(func(m: Dictionary) -> String: return m["kind"])
+	assert_false(marks.call("misty_forest", {}).has("discovery"), "unvisited: nothing")
+	Exploration.visit(c, "misty_forest")
+	assert_true(marks.call("misty_forest", {}).has("discovery"))
+	assert_false(marks.call("misty_forest", {"discovered_misty_forest": true}).has("discovery"))
+	Exploration.visit(c, "qingshi_village")
+	assert_false(marks.call("qingshi_village", {}).has("discovery"), "no discovery defined")
+	assert_true(WorldMapScreen.MARK_COLORS.has("discovery"))
+
+
 ## WU-011: the current region's joinable events say so on the map.
 func test_region_marks_joinable_event() -> void:
 	var d := data()
