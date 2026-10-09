@@ -2,36 +2,36 @@
 
 First-hour sim: 10 seeds, 12 months
   seed  QR1  QR3  QR9  sect  injuries  won  lost  fled  lines/month
-     1   14  142    -    14         0    3     0     0  5.0
-     2   14   76    -    14         0    3     0     0  4.4
-     3   14  141    -    14         0    2     0     0  4.2
-     4   14  199    -    14         0    2     1     0  4.1
-     5   14   45  301    14         0    4     0     0  5.4
-     6   14  172    -    14         0    4     0     0  5.2
-     7   14  137    -    14         0    1     0     0  4.4
-     8   14   79    -    14         0    1     0     0  4.2
-     9   14  201    -    14         0    2     0     0  4.0
-    10   14  106    -    14         0    2     0     0  3.9
-Medians (day): QR1 14, QR3 141, QR9 301, sect 14; injuries 0; fights won 2, lost 0, fled 0; 4.4 log lines/month
-Lines by category: { "warning": 39, "progress": 190, "danger": 39, "info": 271 }
+     1   14  142    -    14         0    3     0     0  5.3
+     2   14   76    -    14         0    3     0     0  4.7
+     3   14  141    -    14         0    2     0     0  4.4
+     4   14  199    -    14         0    2     1     0  4.3
+     5   14   45  301    14         0    4     0     0  5.8
+     6   14  172    -    14         0    4     0     0  5.6
+     7   14  137    -    14         0    1     0     0  4.7
+     8   14   79    -    14         0    1     0     0  4.6
+     9   14  201    -    14         0    2     0     0  4.2
+    10   14  106    -    14         0    2     0     0  4.2
+Medians (day): QR1 14, QR3 141, QR9 301, sect 14; injuries 0; fights won 2, lost 0, fled 0; 4.7 log lines/month
+Lines by category: { "warning": 39, "progress": 190, "danger": 39, "info": 305 }
 
 ## first hour, curious player (seeds 1-10)
 
 First-hour sim (curious player): 10 seeds, 12 months
   seed  QR1  QR3  QR9  sect  injuries  won  lost  fled  lines/month
-     1   14  199    -    14         0   18     1     0  14.1
-     2   14  112    -    14         0   18     2     0  15.0
-     3   14  208    -    14         0   20     2     0  15.5
-     4   14  245    -    14         0   14     3     0  14.1
-     5   14   58  382    14         1   15     3     0  14.9
+     1   14  199    -    14         0   18     1     0  14.5
+     2   14  112    -    14         0   18     2     0  15.4
+     3   14  208    -    14         0   20     2     0  15.8
+     4   14  245    -    14         0   14     3     0  14.5
+     5   14   58  382    14         1   15     3     0  15.3
      6   14  302    -    14         1   20     6     0  15.8
-     7   14  148    -    14         0   17     1     0  14.3
-     8   14  117    -    14         0   12     4     0  15.2
+     7   14  148    -    14         0   17     1     0  14.8
+     8   14  117    -    14         0   12     4     0  15.7
      9   14  302    -    14         0   17     5     0  15.8
-    10   14  159    -    14         0   19     1     0  14.8
-Medians (day): QR1 14, QR3 199, QR9 382, sect 14; injuries 0; fights won 18, lost 3, fled 0; 15.0 log lines/month
+    10   14  159    -    14         0   19     1     0  15.2
+Medians (day): QR1 14, QR3 199, QR9 382, sect 14; injuries 0; fights won 18, lost 3, fled 0; 15.4 log lines/month
 Distinct action kinds per month: 2.3; months after the first with no log lines: 0
-Lines by category: { "warning": 59, "progress": 535, "danger": 310, "info": 748, "karma": 141 }
+Lines by category: { "warning": 59, "progress": 531, "danger": 309, "info": 793, "karma": 140 }
 
 ## three curious years (seeds 1-10, 36 months)
 
@@ -397,17 +397,17 @@ First Foundation Establishment year: 10 seeds
   region / variant               won  lost  fled  injur  lives  stones  stage
   qingshi_village rogue            11     0     0      0      0     325      0
   qingshi_village sect             23     2     0      0      0     238      0
-  misty_forest rogue               13     0     0      0      0     228      0
-  misty_forest sect                22     0     0      0      0     423      1
+  misty_forest rogue               14     0     0      0      0     257      0
+  misty_forest sect                24     0     0      0      0     374      1
   fallen_star_market rogue          5     0     0      0      0      99      0
   fallen_star_market sect          18     0     0      0      0     142      0
   azure_peak rogue                  8     0     0      0      0     462      1
-  azure_peak sect                  21     0     0      0      0     438      2
+  azure_peak sect                  20     0     0      0      0     535      2
   withered_bone_marsh rogue        10     0     0      0      0     648      1
   withered_bone_marsh sect         21     0     0      0      0     760      1
   myriad_peaks_ridge rogue          7     0     0      0      0     371      2
-  myriad_peaks_ridge sect          19     0     0      0      0    1007      2
-  median of all runs: won 15 lost 0 fled 0 injuries 0 lives 0 stones 365 stage 1
-  runs with no artifact life spent: 107 of 120
+  myriad_peaks_ridge sect          19     0     0      0      0     931      2
+  median of all runs: won 15 lost 0 fled 0 injuries 0 lives 0 stones 358 stage 1
+  runs with no artifact life spent: 108 of 120
   median win share of fought fights: 100%
 
