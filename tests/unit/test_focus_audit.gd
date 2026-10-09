@@ -238,3 +238,74 @@ func test_late_screens_have_focus_and_close_on_cancel() -> void:
 	hud.free()
 	gs.end_session()
 	await _frames()
+
+
+## WU-079: windows and pages added since QA-020: the encounter and discovery
+## window, the settings Controls page, the message log topic filters and the
+## character sheet's companion buttons.
+func test_newer_windows_have_focus_and_close_on_cancel() -> void:
+	var root := _tree().root
+	var gs: Node = root.get_node("GameState")
+	var c := new_character()
+	gs.start_session(c)
+	gs.pending_event = ""
+	var hud: CanvasLayer = load("res://src/ui/hud.tscn").instantiate()
+	root.add_child(hud)
+	await _frames()
+
+	# The encounter window: a plain encounter, then a region discovery.
+	gs.data.encounters["audit_encounter"] = {
+		"id": "audit_encounter", "tags": ["audit_tag"], "weight": 1, "kind": "neutral", "days": 1,
+		"text": "A wounded traveller lies by the road.",
+		"choices": [{"label": "Bind his wounds", "effects": {"alignment": 5}}, {"label": "Walk on"}],
+	}
+	gs.pending_encounter = "audit_encounter"
+	var encounter: Control = hud.get("_encounter")
+	encounter.open()
+	await _frames()
+	assert_true(encounter.visible, "encounter opens")
+	var owner := root.gui_get_focus_owner()
+	assert_true(owner != null and encounter.is_ancestor_of(owner), "encounter: focus is inside the window")
+	gs.last_explore_discovery = true
+	encounter.open()
+	await _frames()
+	owner = root.gui_get_focus_owner()
+	assert_true(owner != null and encounter.is_ancestor_of(owner), "discovery: focus is inside the window")
+	encounter.close()
+	gs.pending_encounter = ""
+	gs.last_explore_discovery = false
+	gs.data.encounters.erase("audit_encounter")
+
+	# The Controls page of the settings screen.
+	var settings: SettingsScreen = hud.get("_settings")
+	settings.open()
+	settings._show_controls(true)
+	await _frames()
+	owner = root.gui_get_focus_owner()
+	assert_true(owner != null and settings.is_ancestor_of(owner) and owner.is_visible_in_tree(), "controls page: focus is on a visible control")
+	settings.close()
+
+	# The message log with a topic filter picked.
+	var log: MessageLogScreen = hud.get("_screens")["toggle_message_log"]
+	log.open()
+	log._set_topic("combat")
+	await _frames()
+	owner = root.gui_get_focus_owner()
+	assert_true(owner != null and log.is_ancestor_of(owner), "message log with a topic: focus is inside the screen")
+	log.close()
+
+	# The character sheet with a spirit beast companion.
+	var beast_id: String = String(gs.data.beasts.keys()[0]) if gs.data.get("beasts") is Dictionary and not gs.data.beasts.is_empty() else ""
+	if beast_id != "":
+		c.companions.append(beast_id)
+	var sheet: Control = hud.get("_screens")["toggle_character_sheet"]
+	sheet.open()
+	await _frames()
+	owner = root.gui_get_focus_owner()
+	assert_true(owner != null and sheet.is_ancestor_of(owner), "character sheet with a companion: focus is inside the screen")
+	sheet.close()
+
+	root.remove_child(hud)
+	hud.free()
+	gs.end_session()
+	await _frames()
