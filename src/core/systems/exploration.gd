@@ -282,8 +282,10 @@ static func note_met(c: CharacterData, e: Dictionary) -> void:
 
 
 ## How much of a region's happenings the character has seen (EXPL-002): {met, total} over
-## encounters sharing a tag with the region that are not flag-gated, rival, discovery-only
-## or above the character's realm. Met = ever met, or retired by its `blocked_by_flag`.
+## encounters sharing a tag with the region that are not flag-gated, rival or discovery-only;
+## unmet ones outside the character's realm or alignment range are left out (a Foundation
+## cultivator can no longer meet a Qi Refining-only happening). Met = ever met, or retired
+## by its `blocked_by_flag`.
 static func region_progress(c: CharacterData, data: GameData, region_id: String, flags: Dictionary = {}) -> Dictionary:
 	var tags: Array = data.regions.get(region_id, {}).get("encounter_tags", [])
 	var met := 0
@@ -293,11 +295,13 @@ static func region_progress(c: CharacterData, data: GameData, region_id: String,
 			continue
 		if String(e.get("requires_flag", "")) != "" or String(e.get("rival", "")) != "" or e.get("discovery_only", false):
 			continue
-		if e.has("min_realm") and c.realm_index < data.realm_index_of(e["min_realm"]):
+		var blocker := String(e.get("blocked_by_flag", ""))
+		var seen: bool = int(c.encounter_counts.get(String(e.get("id", "")), 0)) > 0 or (blocker != "" and flags.get(blocker, false))
+		# Unseen happenings the character can no longer (or cannot yet) meet are left out.
+		if not seen and (not realm_allows(c, data, e) or not alignment_allows(c, e)):
 			continue
 		total += 1
-		var blocker := String(e.get("blocked_by_flag", ""))
-		if int(c.encounter_counts.get(String(e.get("id", "")), 0)) > 0 or (blocker != "" and flags.get(blocker, false)):
+		if seen:
 			met += 1
 	return {"met": met, "total": total}
 

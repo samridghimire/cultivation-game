@@ -243,11 +243,11 @@ func _rebuild() -> void:
 		var b := Button.new()
 		b.name = region_id
 		b.text = Exploration.region_name(data, region_id)
+		b.add_theme_font_size_override("font_size", 14)
 		if is_unexplored(GameState.player, region_id, GameState.current_region):
 			b.text += "\nUnexplored"
 			b.modulate.a = 0.45
 			b.add_theme_font_size_override("font_size", 12)
-		b.add_theme_font_size_override("font_size", 14)
 		b.clip_text = true
 		b.position = top_left
 		b.size = NODE_SIZE

@@ -71,13 +71,15 @@ static func hunt_roll(c: CharacterData, data: GameData, region_id: String, today
 	return ""
 
 
-## Pays the active bounty and clears it (cooldown starts). Returns the stones paid.
-static func complete(c: CharacterData, data: GameData, today: int) -> int:
-	var b := def_of(data, String(c.bounty.get("id", "")))
+## Pays the active bounty (or `bounty_id`, the hunt a fight began on, even if it lapsed
+## during that fight) and clears it (cooldown starts). Returns the stones paid.
+static func complete(c: CharacterData, data: GameData, today: int, bounty_id: String = "") -> int:
+	var b := def_of(data, bounty_id if bounty_id != "" else String(c.bounty.get("id", "")))
 	if b.is_empty():
 		return 0
 	var stones := int(b["reward_stones"])
 	c.add_item("spirit_stone", stones)
+	LifeStats.record_stones(c, stones)
 	LifeStats.add(c, "bounties_done")
 	_clear(c, data, String(b["id"]), today)
 	return stones

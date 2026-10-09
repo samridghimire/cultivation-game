@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 4319bc4
+Last reviewed commit: c1080aa
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -242,3 +242,21 @@ Last reviewed commit: 4319bc4
   - Notes, not filed: (1) SEASON-003 counts an autumn-only bonus entry (e.g. purple_cloud_mushroom, also gathered all year)
     as a "season-only herb" for Herbalist of Four Seasons; lenient, fine. (2) Local `main` was a shallow clone that git saw
     as diverged; unshallowed and fast-forwarded, nothing pushed from the old state.
+- 2026-10-09 (reviewer, 5th run): reviewed 4319bc4..c1080aa (EXPL-001, C-018, WU-061, WE-002, GUIDE-015, EXPL-002, QA-049,
+  C-045, MS-005, WU-079, GUIDE-016, QA-051, BOUNTY-001, WU-072; [PLAN]/[REVIEW] commits skipped). No BACKLOG/CHANGELOG
+  edits by workers; main green after (1441 tests); no SAVE_VERSION change (`explore_days`, `bounty`, `bounty_cooldowns` default to empty).
+  - WE-002 checked: `months` filter runs before the shared rng is touched and fixed-date events use their own seeded
+    stream, so other events' rolls do not shift. WU-061 hides events/secret realms on unvisited regions, by spec.
+  - Fixed (one [REVIEW] commit): (1) BOUNTY-001: a trail found near the bounty's last day passed the day (and the fight's
+    own days) first, so the bounty lapsed mid-hunt and the win posted "Bounty claimed: 0 spirit stones"; the hunted
+    bounty is now held through the fight, paid by id, and the explore day passes afterwards (test added). The hunt path also left a stale `pending_threat`/`pending_encounter`; now cleared like a normal
+    explore. Bounty pay now counts toward `stones_earned`. (2) EXPL-002's "seen X of Y happenings" counted unmet
+    encounters the player can never meet again (5 Qi Refining-only village encounters after Foundation, alignment-gated
+    ones), so the journal line never cleared; unmet out-of-range encounters are left out (test replaced; the old one
+    asserted the opposite). (3) WU-061 set the 12px "Unexplored" font and then overwrote it with 14px. (4) C-018: Lord
+    Xuan is `male` in npcs.json but two dialogue labels said "her".
+  - Notes, not filed: (1) GUIDE-015 sorts region ids with a non-stable sort_custom, so "then data order" is not
+    guaranteed for the merchant rumor; cosmetic. (2) Month-end work (incl. festival rolls) runs per month of the
+    player's age and only once per skipped month with the end day, so a long seclusion over October skips the Lantern
+    Festival; acceptable. (3) Local `main` was again the old PR-era history; kept as `local-main-backup`, worked from
+    origin/main, nothing pushed from it.

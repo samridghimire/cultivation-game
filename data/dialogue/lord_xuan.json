@@ -7,8 +7,8 @@
     "greet": {"text": "A tall figure in black sits on a throne built of skulls, each one carved with a name. The Lord does not rise. 'Another small thing climbs my ridge. Speak before I decide what you are useful for.'",
       "choices": [
         {"label": "Ask about the skulls.", "next": "skulls"},
-        {"label": "Polish the throne and keep her cup full. (3 days)", "next": "serve", "days": 3, "favor": 5, "effects": {"qi": 3000}},
-        {"label": "Ask what Soul Formation took from her.", "next": "price", "if": {"min_favor": 30}, "show_locked": true},
+        {"label": "Polish the throne and keep his cup full. (3 days)", "next": "serve", "days": 3, "favor": 5, "effects": {"qi": 3000}},
+        {"label": "Ask what Soul Formation took from him.", "next": "price", "if": {"min_favor": 30}, "show_locked": true},
         {"label": "Ask what the Lord wants from the living.", "next": "errand_ask", "if": {"not_flag": "errand_xuan_asked"}},
         {"label": "Bring the Soul Severing Lotus Xuan asked for.", "next": "errand_thanks", "if": {"has_items": {"soul_severing_lotus": 1}, "flag": "errand_xuan_asked", "not_flag": "errand_xuan_done"}, "effects": {"items": {"soul_severing_lotus": -1, "longevity_pill": 1}, "alignment": -20, "set_flag": "errand_xuan_done"}, "favor": 20},
         {"label": "Back away slowly.", "next": "end"}

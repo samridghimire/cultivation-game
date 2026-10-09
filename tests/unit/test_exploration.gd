@@ -478,8 +478,19 @@ func test_region_progress_counts_met_and_realm_gated() -> void:
 	assert_eq(int(after["met"]), 1)
 	assert_eq(int(after["total"]), int(before["total"]))
 	assert_eq(LifeStats.get_stat(c, "happenings_seen"), 1)
-	c.realm_index = data().realms.size() - 1
-	assert_true(int(Exploration.region_progress(c, data(), region_id)["total"]) >= int(before["total"]))
+
+
+
+func test_region_progress_leaves_out_happenings_past_your_realm() -> void:
+	var c := new_character()
+	c.realm_index = data().realm_index_of("qi_refining")
+	var at_qi := Exploration.region_progress(c, data(), "qingshi_village")
+	Exploration.note_met(c, data().encounters["village_runaway_mule"])
+	c.realm_index = data().realm_index_of("foundation_establishment")
+	var at_foundation := Exploration.region_progress(c, data(), "qingshi_village")
+	assert_true(int(at_foundation["total"]) < int(at_qi["total"]), "unmet Qi Refining-only happenings drop out")
+	assert_eq(int(at_foundation["met"]), 1, "a met one still counts")
+	assert_true(int(at_foundation["met"]) <= int(at_foundation["total"]))
 
 
 func test_happenings_seen_milestone_at_fifty() -> void:
@@ -494,6 +505,8 @@ func test_happenings_seen_milestone_at_fifty() -> void:
 		if entry["id"] == "wanderer_many_roads":
 			m = entry
 	assert_eq(int(m["check"]["min"]), 50)
+
+
 func test_discoveries_follow_flags_and_backfill() -> void:
 	var c := new_character()
 	var flags := {"discovered_a": true, "discovered_b": false, "other": true}

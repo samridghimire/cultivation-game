@@ -85,6 +85,7 @@ func test_complete_pays_and_counts() -> void:
 	assert_eq(Bounties.complete(c, data(), 30), 40)
 	assert_eq(c.item_count("spirit_stone"), before + 40)
 	assert_eq(LifeStats.get_stat(c, "bounties_done"), 1)
+	assert_eq(LifeStats.get_stat(c, "stones_earned"), 40, "bounty pay is income")
 	assert_true(c.bounty.is_empty())
 	assert_eq(c.bounty_cooldowns["iron_back_boar_bounty"], 150)
 	Bounties.take(c, data(), "iron_back_boar_bounty", 200)
@@ -135,6 +136,20 @@ func test_gamestate_win_claims_the_bounty() -> void:
 	gs.explore()
 	assert_true(c.bounty.is_empty(), "claimed")
 	assert_eq(c.item_count("spirit_stone"), stones + 25)
+	assert_eq(LifeStats.get_stat(c, "bounties_done"), 1)
+	_finish(gs)
+
+
+func test_gamestate_trail_on_the_last_day_still_pays() -> void:
+	var gs := _gs()
+	var c := _start_hunt(gs, "wild_boar")
+	gs.take_bounty("t_bounty")
+	var clock := (Engine.get_main_loop() as SceneTree).root.get_node("GameClock")
+	clock.advance(int(c.bounty["until_day"]) - int(clock.total_days))
+	assert_eq(String(c.bounty.get("id", "")), "t_bounty", "still open on its last day")
+	var stones := c.item_count("spirit_stone")
+	gs.explore()
+	assert_eq(c.item_count("spirit_stone"), stones + 25, "claimed before the day ran out")
 	assert_eq(LifeStats.get_stat(c, "bounties_done"), 1)
 	_finish(gs)
 

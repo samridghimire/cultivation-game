@@ -53,6 +53,8 @@ var pending_encounter := ""
 ## True when the last explore day used a region discovery (TRAV-005).
 var last_explore_discovery := false
 var last_explore_deep_path := false
+## True while a bounty's foe is fought, so the hunt does not lapse mid-fight (BOUNTY-001).
+var _bounty_fight := false
 ## A lethal foe sensed while exploring, awaiting face_threat() (transient, not saved).
 var pending_threat := ""
 ## Set when the Creation Artifact just respawned the player (ART-005) until
@@ -636,16 +638,24 @@ func _explore_once(tags: Array, quiet: bool) -> Dictionary:
 func _hunt_bounty_foe(enemy_id: String) -> Dictionary:
 	var enemy_name := String(data.enemies[enemy_id].get("name", enemy_id))
 	EventBus.post("You pick up the trail of the %s from your bounty." % enemy_name, "danger")
-	_pass_time(1)
-	if not _can_act():
-		return {"event": "story"}
+	pending_encounter = ""
+	pending_threat = ""
+	# The day passes after the hunt and the hunted bounty is paid even if it lapsed during the
+	# fight, so a trail found on the bounty's last day can still be claimed.
 	if Exploration.should_evade(player, data, enemy_id):
 		EventBus.post("The %s is far beyond you. You lose the trail." % enemy_name, "warning")
+		_pass_time(1)
 		return {"event": "nothing"}
-	if fight(enemy_id) and _can_act():
-		var stones := Bounties.complete(player, data, GameClock.total_days)
+	var bounty_id := String(player.bounty.get("id", ""))
+	_bounty_fight = true
+	var won := fight(enemy_id)
+	_bounty_fight = false
+	if won and _can_act():
+		var stones := Bounties.complete(player, data, GameClock.total_days, bounty_id)
 		EventBus.post("Bounty claimed: %d spirit stones." % stones, "progress")
 		EventBus.player_changed.emit()
+	if _can_act():
+		_pass_time(1)
 	return {"event": "fight"}
 
 
@@ -2641,7 +2651,7 @@ func _on_days_advanced(days: int) -> void:
 		EventBus.post("The %s in your veins stirs; your heart shifts (alignment %+d)." % [Bloodlines.bloodline_name(data, player.bloodline), drift], "karma")
 	for injury_id in Injuries.pass_days(player, days):
 		EventBus.post("Your %s has healed." % Injuries.injury_name(data, injury_id), "progress")
-	var lapsed_bounty := Bounties.expire(player, data, GameClock.total_days)
+	var lapsed_bounty := "" if _bounty_fight else Bounties.expire(player, data, GameClock.total_days)
 	if lapsed_bounty != "":
 		var lapsed_enemy: String = Bounties.def_of(data, lapsed_bounty).get("enemy", "")
 		EventBus.post("Your bounty on the %s has lapsed." % data.enemies.get(lapsed_enemy, {}).get("name", lapsed_enemy), "info")
