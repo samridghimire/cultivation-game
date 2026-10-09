@@ -107,6 +107,19 @@ static func scaled_favor(data: GameData, active: Array, region_id: String, favor
 	return roundi(favor * favor_multiplier(data, active, region_id))
 
 
+## Festival goods (FEST-002): the `shop_items` of the events active in `region_id`,
+## in data order, without duplicates.
+static func shop_items(data: GameData, active: Array, region_id: String) -> Array:
+	var ids: Array = []
+	for def: Dictionary in data.world_events.values():
+		if instance_in(active, String(def["id"]), region_id).is_empty():
+			continue
+		for item_id: Variant in def.get("shop_items", []):
+			if not ids.has(item_id):
+				ids.append(item_id)
+	return ids
+
+
 static func _product(data: GameData, active: Array, region_id: String, key: String) -> float:
 	var mult := 1.0
 	for instance in active_in(active, region_id):
@@ -235,6 +248,9 @@ static func validate(data: GameData) -> PackedStringArray:
 			for month in months:
 				if typeof(month) not in [TYPE_INT, TYPE_FLOAT] or int(month) < 1 or int(month) > 12:
 					errors.append("World event '%s' has invalid month '%s'" % [id, str(month)])
+		for item_id in def.get("shop_items", []):
+			if not data.items.has(item_id) or int(data.items[item_id].get("price", 0)) <= 0:
+				errors.append("World event '%s' shop_items needs a known item with a price: '%s'" % [id, item_id])
 		var tournament: Dictionary = def.get("tournament", {})
 		if def.has("tournament"):
 			if int(tournament.get("rounds", 0)) < 1:

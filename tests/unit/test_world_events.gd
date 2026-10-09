@@ -441,3 +441,31 @@ func test_festival_doubles_chat_favor_and_saves() -> void:
 	assert_eq(gs.world_events.size(), 1)
 	assert_eq(gs.world_events[0]["id"], "lantern_festival")
 	gs.end_session()
+
+
+func test_festival_shop_items() -> void:
+	var d := data()
+	var active: Array = [_lantern_instance(0)]
+	assert_eq(WorldEvents.shop_items(d, active, "qingshi_village"), ["paper_lantern"])
+	assert_eq(WorldEvents.shop_items(d, active, "misty_forest"), [])
+	WorldEvents.expire(active, 100)
+	assert_eq(WorldEvents.shop_items(d, active, "qingshi_village"), [])
+	assert_true(Items.sources(d, "paper_lantern").has("Festival stall: Lantern Festival"))
+	assert_true(Items.sources(d, "moon_cake").has("Festival stall: Mid-Autumn Moon Festival"))
+
+
+func test_validator_rejects_bad_shop_items() -> void:
+	var d := GameData.load_from_dir()
+	d.world_events["lantern_festival"]["shop_items"] = ["no_such_item"]
+	assert_eq(WorldEvents.validate(d).size(), 1, ", ".join(WorldEvents.validate(d)))
+
+
+func test_game_state_festival_stock() -> void:
+	var gs := _root().get_node("GameState")
+	gs.start_session(new_character())
+	gs.current_region = "qingshi_village"
+	gs.world_events = []
+	assert_eq(gs.festival_stock(), [])
+	gs.world_events = [_lantern_instance(0)]
+	assert_eq(gs.festival_stock(), ["paper_lantern"])
+	gs.world_events = []

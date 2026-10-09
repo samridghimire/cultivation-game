@@ -182,7 +182,11 @@ func close() -> void:
 func item_ids() -> Array:
 	if _selling:
 		return Items.buyback_ids(GameState.player, GameState.data, _stock_tags, _buy_tags)
-	return Items.shop_stock(GameState.data, _max_price, _stock_tags)
+	var ids := Items.shop_stock(GameState.data, _max_price, _stock_tags)
+	for item_id: Variant in GameState.festival_stock():
+		if not ids.has(item_id):
+			ids.append(item_id)
+	return ids
 
 
 ## Item ids on the current Buy/Sell tab that fall in the selected category.
@@ -303,6 +307,8 @@ func _rebuild() -> void:
 		var label := "%s  %d" % [data.items[item_id]["name"], price]
 		if _selling:
 			label += "  (have %d)" % p.item_count(item_id)
+		elif GameState.festival_stock().has(item_id) and not Items.shop_stock(data, _max_price, _stock_tags).has(item_id):
+			label += " (festival)"
 		var b := UIStyle.button(label, _select.bind(item_id))
 		b.name = item_id
 		b.alignment = HORIZONTAL_ALIGNMENT_LEFT

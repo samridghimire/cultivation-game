@@ -197,6 +197,9 @@ static func _scan_sources(data: GameData, item_id: String) -> Array[String]:
 	for label: String in other:
 		if _gives(other[label], item_id):
 			lines.append(label)
+	for event: Dictionary in data.world_events.values():
+		if (event.get("shop_items", []) as Array).has(item_id):
+			lines.append("Festival stall: " + String(event.get("name", event["id"])))
 	for sect: SectDef in data.sects.values():
 		if _gives(sect.shop, item_id) or _gives(sect.ranks, item_id):
 			lines.append("Sect reward (%s)" % sect.name)
