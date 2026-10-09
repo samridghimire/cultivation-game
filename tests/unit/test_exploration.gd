@@ -458,3 +458,39 @@ func test_seasonal_sources_lists_restricted_entries() -> void:
 	assert_eq(src[0]["place"], "Frost Ledge")
 	assert_eq(src[0]["seasons"], ["winter"])
 	assert_eq(Exploration.seasonal_sources(data(), "cold_iron").size(), 0)
+
+
+func test_region_progress_counts_met_and_realm_gated() -> void:
+	var c := new_character()
+	var region_id: String = data().start_region
+	var before := Exploration.region_progress(c, data(), region_id)
+	assert_true(int(before["total"]) > 0)
+	assert_eq(int(before["met"]), 0)
+	var tags: Array = data().regions[region_id].get("encounter_tags", [])
+	var pick: Dictionary = {}
+	for e: Dictionary in data().encounters.values():
+		if e.get("tags", []).any(func(t: Variant) -> bool: return tags.has(t)) and not e.has("requires_flag") and not e.has("rival") and not e.get("discovery_only", false) and not e.has("min_realm") and not e.has("blocked_by_flag"):
+			pick = e
+			break
+	assert_false(pick.is_empty())
+	Exploration.note_met(c, pick)
+	var after := Exploration.region_progress(c, data(), region_id)
+	assert_eq(int(after["met"]), 1)
+	assert_eq(int(after["total"]), int(before["total"]))
+	assert_eq(LifeStats.get_stat(c, "happenings_seen"), 1)
+	c.realm_index = data().realms.size() - 1
+	assert_true(int(Exploration.region_progress(c, data(), region_id)["total"]) >= int(before["total"]))
+
+
+func test_happenings_seen_milestone_at_fifty() -> void:
+	var c := new_character()
+	for i in 49:
+		Exploration.note_met(c, {"id": "fake_%d" % i})
+	assert_eq(LifeStats.get_stat(c, "happenings_seen"), 49)
+	Exploration.note_met(c, {"id": "fake_49"})
+	assert_eq(LifeStats.get_stat(c, "happenings_seen"), 50)
+	var m: Dictionary = {}
+	for entry: Dictionary in data().milestones:
+		if entry["id"] == "wanderer_many_roads":
+			m = entry
+	assert_eq(int(m["check"]["min"]), 50)

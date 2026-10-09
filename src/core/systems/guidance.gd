@@ -833,6 +833,10 @@ static func _opportunity_entries(out: Array[Dictionary], c: CharacterData, data:
 		for i in mini(roads.size(), UNEXPLORED_JOURNAL_MAX):
 			_add(out, "Opportunities", "Unexplored: %s (%d days' road)" % [roads[i]["name"], roads[i]["days"]], "normal")
 	if region_id != "":
+		var progress := Exploration.region_progress(c, data, region_id, flags)
+		if int(progress["met"]) < int(progress["total"]):
+			_add(out, "Opportunities", "%s: you have seen %d of %d happenings here." % [_region_name(data, region_id), progress["met"], progress["total"]], "dim")
+	if region_id != "":
 		var deeper := Exploration.next_deep_path(c, data, region_id)
 		if deeper >= 0:
 			_add(out, "Opportunities", "%s: explored %d days. Something deeper waits after %d." % [_region_name(data, region_id), Exploration.familiarity(c, region_id), deeper], "normal")

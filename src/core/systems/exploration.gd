@@ -248,6 +248,28 @@ static func note_met(c: CharacterData, e: Dictionary) -> void:
 	var id := String(e.get("id", ""))
 	if id != "":
 		c.encounter_counts[id] = int(c.encounter_counts.get(id, 0)) + 1
+		c.life_stats["happenings_seen"] = c.encounter_counts.size()
+
+
+## How much of a region's happenings the character has seen (EXPL-002): {met, total} over
+## encounters sharing a tag with the region that are not flag-gated, rival, discovery-only
+## or above the character's realm. Met = ever met, or retired by its `blocked_by_flag`.
+static func region_progress(c: CharacterData, data: GameData, region_id: String, flags: Dictionary = {}) -> Dictionary:
+	var tags: Array = data.regions.get(region_id, {}).get("encounter_tags", [])
+	var met := 0
+	var total := 0
+	for e: Dictionary in data.encounters.values():
+		if not _shares_tag(e.get("tags", []), tags):
+			continue
+		if String(e.get("requires_flag", "")) != "" or String(e.get("rival", "")) != "" or e.get("discovery_only", false):
+			continue
+		if e.has("min_realm") and c.realm_index < data.realm_index_of(e["min_realm"]):
+			continue
+		total += 1
+		var blocker := String(e.get("blocked_by_flag", ""))
+		if int(c.encounter_counts.get(String(e.get("id", "")), 0)) > 0 or (blocker != "" and flags.get(blocker, false)):
+			met += 1
+	return {"met": met, "total": total}
 
 
 ## Rescales the non-fight entries so their total weight is `before` (what it was without fading):
