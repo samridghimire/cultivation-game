@@ -11,6 +11,8 @@ const RADIUS := 14.0
 const BOB_PIXELS := 2.0
 const BOB_SPEED := 14.0
 const AURA_SPEED := 2.5
+const CELEBRATE_SECONDS := 1.6
+const SHAKE_SECONDS := 0.3
 
 var input_enabled := true
 var _nearby: Array[Interactable] = []
@@ -18,11 +20,14 @@ var _target: Interactable
 var _look: Dictionary = {}
 var _facing := Vector2.DOWN
 var _time := 0.0
+var _celebrate_left := 0.0
+var _celebrate_ok := true
 
 
 func _ready() -> void:
 	EventBus.player_changed.connect(refresh_look)
 	EventBus.session_started.connect(refresh_look)
+	EventBus.breakthrough_attempted.connect(func(success: bool, _realm: String) -> void: celebrate(success))
 	refresh_look.call_deferred()
 
 
@@ -35,8 +40,44 @@ func refresh_look() -> void:
 
 func _process(delta: float) -> void:
 	_time += delta
+	if _celebrate_left > 0.0:
+		_celebrate_left = maxf(0.0, _celebrate_left - delta)
+		queue_redraw()
 	if velocity != Vector2.ZERO or int(_look.get("aura_rings", 0)) > 0:
 		queue_redraw()
+
+
+## Breakthrough effect (WU-063): a gold ring and rays on success, a dull
+## contracting ring and a sideways shake on failure. Drawn only; never moves `position`.
+func celebrate(success: bool) -> void:
+	_celebrate_ok = success
+	_celebrate_left = CELEBRATE_SECONDS
+	queue_redraw()
+
+
+func is_celebrating() -> bool:
+	return _celebrate_left > 0.0
+
+
+func _celebrate_t() -> float:
+	return 1.0 - _celebrate_left / CELEBRATE_SECONDS
+
+
+func _draw_celebration() -> void:
+	if _celebrate_left <= 0.0:
+		return
+	var t := _celebrate_t()
+	var fade := 1.0 - t
+	if _celebrate_ok:
+		var gold := UIStyle.ACCENT
+		draw_arc(Vector2.ZERO, lerpf(8.0, 90.0, t), 0, TAU, 48, Color(gold, fade), 3.0)
+		for i in 16:
+			var a := TAU * i / 16.0 + t * 1.5
+			var dir := Vector2.from_angle(a)
+			var r0 := lerpf(10.0, 70.0, t)
+			draw_line(dir * r0, dir * (r0 + 14.0), Color(gold, fade), 2.0)
+	else:
+		draw_arc(Vector2.ZERO, lerpf(70.0, 8.0, t), 0, TAU, 48, Color(0.55, 0.15, 0.12, fade), 3.0)
 
 
 func _physics_process(_delta: float) -> void:
@@ -85,6 +126,10 @@ func _update_target() -> void:
 
 
 func _draw() -> void:
+	_draw_celebration()
+	var shake := 0.0
+	if _celebrate_left > 0.0 and not _celebrate_ok and _celebrate_t() * CELEBRATE_SECONDS < SHAKE_SECONDS:
+		shake = sin(_celebrate_t() * CELEBRATE_SECONDS * 80.0) * 4.0
 	_draw_companion()
 	var robe: Color = _look.get("robe", PlayerLook.ROGUE_ROBE)
 	var sash: Color = _look.get("sash", PlayerLook.SASH_COLORS["neutral"])
@@ -95,7 +140,7 @@ func _draw() -> void:
 	draw_circle(Vector2.ZERO, RADIUS, Color(0, 0, 0, 0.3))
 	draw_set_transform(Vector2.ZERO)
 	var bob := -absf(sin(_time * BOB_SPEED)) * BOB_PIXELS if velocity != Vector2.ZERO else 0.0
-	var o := Vector2(0, bob)
+	var o := Vector2(shake, bob)
 	# Robe: a flared trapezoid with a sash across the waist.
 	var robe_shape := PackedVector2Array([o + Vector2(-7, -6), o + Vector2(7, -6), o + Vector2(12, 12), o + Vector2(-12, 12)])
 	draw_colored_polygon(robe_shape, robe)
@@ -137,8 +182,9 @@ func _draw_aura() -> void:
 		return
 	var aura: Color = _look["aura"]
 	var pulse := 0.5 + 0.5 * sin(_time * AURA_SPEED)
+	var glow := 0.35 if _celebrate_left > 0.0 and _celebrate_ok else 0.0
 	draw_set_transform(Vector2(0, RADIUS - 2), 0.0, Vector2(1.0, 0.45))
 	for i in rings:
 		var r := RADIUS + 4.0 + i * 5.0 + pulse * 2.0
-		draw_arc(Vector2.ZERO, r, 0, TAU, 32, Color(aura, 0.55 - 0.1 * i), 2.0)
+		draw_arc(Vector2.ZERO, r, 0, TAU, 32, Color(aura, minf(1.0, 0.55 - 0.1 * i + glow)), 2.0)
 	draw_set_transform(Vector2.ZERO)
