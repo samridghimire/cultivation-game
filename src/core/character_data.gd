@@ -98,6 +98,8 @@ var abode := ""
 var abode_storage: Dictionary = {}
 ## Item id of the array set up at the abode (items.json `array`), "" if none (G-006).
 var abode_array := ""
+## Times each random encounter was met: encounter id -> count (ENC-003, fades familiar sights).
+var encounter_counts: Dictionary = {}
 ## Creation Artifact energy fed from spirit stones and treasures (ArtifactFunctions).
 var artifact_energy := 0
 ## Unlocked artifact function ids (data/artifact.json "functions").
@@ -234,6 +236,7 @@ func to_dict() -> Dictionary:
 		"inheritances": inheritances.duplicate(),
 		"body_stage": body_stage,
 		"abode_array": abode_array,
+		"encounter_counts": encounter_counts.duplicate(),
 	}
 
 
@@ -347,6 +350,8 @@ static func from_dict(d: Dictionary) -> CharacterData:
 	for realm_id in d.get("inheritances", []):
 		c.inheritances.append(String(realm_id))
 	c.abode_array = String(d.get("abode_array", ""))
+	for enc_id in d.get("encounter_counts", {}):
+		c.encounter_counts[String(enc_id)] = int(d["encounter_counts"][enc_id])
 	for anchor_id in d.get("anchors", []):
 		c.anchors.append(String(anchor_id))
 	for recipe_id in d.get("known_recipes", []):

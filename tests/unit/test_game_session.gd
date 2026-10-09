@@ -1025,6 +1025,22 @@ func test_first_visit_text_posts_once() -> void:
 	gs.end_session()
 
 
+## ENC-003: exploring counts the encounter that happened.
+func test_explore_counts_met_encounter() -> void:
+	var gs := _game_state()
+	var c := _start()
+	c.realm_index = 1
+	gs.travel("misty_forest")
+	gs.explore()
+	var total := 0
+	for n in c.encounter_counts.values():
+		total += int(n)
+	assert_true(total <= 1)
+	if total == 1:
+		assert_eq(c.encounter_counts.size(), 1)
+	gs.end_session()
+
+
 ## C-043: every region has a first_visit line.
 func test_every_region_has_first_visit() -> void:
 	var d := GameData.load_from_dir()

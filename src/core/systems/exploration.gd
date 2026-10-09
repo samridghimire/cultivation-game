@@ -9,6 +9,9 @@ extends RefCounted
 const FORTUNE_WEIGHT_PER_POINT := 0.05
 ## Draws per gathering trip before the Fortune bonus.
 const GATHER_ROLLS := 3
+## Each past meeting divides a fading encounter's weight by 1 + count * DECAY, never below FLOOR (ENC-003).
+const FRESHNESS_DECAY := 0.5
+const FRESHNESS_FLOOR := 0.2
 
 
 ## Whether the character has set foot in the region (TRAV-001).
@@ -136,6 +139,7 @@ static func discovery_for(c: CharacterData, data: GameData, region_id: String, f
 static func eligible_encounters(c: CharacterData, data: GameData, tags: Array, flags: Dictionary, rival: CharacterData = null, misfortune_scale: float = 1.0, season: String = "") -> Array[Dictionary]:
 	var result: Array[Dictionary] = []
 	var fortune_shift := (c.attribute("fortune") - 10) * FORTUNE_WEIGHT_PER_POINT
+	var unfaded_total := 0.0
 	for e: Dictionary in data.encounters.values():
 		if not _shares_tag(e.get("tags", []), tags):
 			continue
@@ -163,8 +167,60 @@ static func eligible_encounters(c: CharacterData, data: GameData, tags: Array, f
 				weight *= maxf(0.1, 1.0 + fortune_shift)
 			"misfortune":
 				weight *= maxf(0.1, 1.0 - fortune_shift) * misfortune_scale
-		result.append({"encounter": e, "weight": weight})
+		if not _may_fight(e):
+			unfaded_total += weight
+		result.append({"encounter": e, "weight": weight * freshness(c, e)})
+	_keep_non_fight_share(result, unfaded_total)
 	return result
+
+
+## Whether familiar sights of this encounter fade: a plain, repeatable-by-chance event
+## (no enemy, not a one-shot, not conditional, not marked `repeatable`).
+static func fades(e: Dictionary) -> bool:
+	return not _may_fight(e) and String(e.get("blocked_by_flag", "")) == "" \
+		and not e.get("only_if_applicable", false) and not e.get("discovery_only", false) \
+		and not e.get("repeatable", false)
+
+
+## True when the encounter starts a fight itself or offers one as a choice.
+static func _may_fight(e: Dictionary) -> bool:
+	if String(e.get("enemy", "")) != "":
+		return true
+	for choice: Dictionary in e.get("choices", []):
+		if String(choice.get("enemy", "")) != "":
+			return true
+	return false
+
+
+## 1.0 for encounters that do not fade, else 1 / (1 + DECAY * times met), at least FLOOR.
+static func freshness(c: CharacterData, e: Dictionary) -> float:
+	if not fades(e):
+		return 1.0
+	return maxf(FRESHNESS_FLOOR, 1.0 / (1.0 + FRESHNESS_DECAY * int(c.encounter_counts.get(String(e.get("id", "")), 0))))
+
+
+## Counts one meeting of `e` (called when an encounter happens).
+static func note_met(c: CharacterData, e: Dictionary) -> void:
+	var id := String(e.get("id", ""))
+	if id != "":
+		c.encounter_counts[id] = int(c.encounter_counts.get(id, 0)) + 1
+
+
+## Rescales the non-fight entries so their total weight is `before` (what it was without fading):
+## fresh encounters take the share familiar ones gave up; the fight share is unchanged.
+static func _keep_non_fight_share(pool: Array[Dictionary], before: float) -> void:
+	var after := 0.0
+	for entry in pool:
+		var e: Dictionary = entry["encounter"]
+		if _may_fight(e):
+			continue
+		after += entry["weight"]
+	if after <= 0.0:
+		return
+	var k := before / after
+	for entry in pool:
+		if not _may_fight(entry["encounter"]):
+			entry["weight"] = float(entry["weight"]) * k
 
 
 ## What exploring a place with `tags` might bring, from the eligible encounters (no rival):

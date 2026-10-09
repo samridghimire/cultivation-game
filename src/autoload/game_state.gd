@@ -593,6 +593,7 @@ func _explore_once(tags: Array, quiet: bool) -> Dictionary:
 		_pass_time(1)
 		return {"event": "nothing"}
 	LifeStats.add(player, "encounters")
+	Exploration.note_met(player, encounter)
 	var result := Exploration.resolve(player, data, encounter, world_flags)
 	var text := rival_text(String(encounter.get("text", "")))
 	if not result["notes"].is_empty():

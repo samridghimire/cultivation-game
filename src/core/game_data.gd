@@ -462,6 +462,8 @@ func _validate_world() -> void:
 			load_errors.append("Encounter '%s' is discovery_only but is no region's discovery" % e["id"])
 	for e: Dictionary in encounters.values():
 		_validate_seasons(e, "Encounter '%s'" % e["id"])
+		if e.has("repeatable") and typeof(e["repeatable"]) != TYPE_BOOL:
+			load_errors.append("Encounter '%s' repeatable must be a bool" % e["id"])
 		for key in ["min_realm", "max_realm"]:
 			if e.has(key) and realm_index_of(e[key]) < 0:
 				load_errors.append("Encounter '%s' has unknown %s '%s'" % [e["id"], key, e[key]])
