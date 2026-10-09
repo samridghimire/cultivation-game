@@ -71,3 +71,28 @@ func test_named_npc_with_dialogue_has_no_chat_but_takes_gifts() -> void:
 	assert_false(_find(menu.get_options(), "Give ").is_empty(), "Back returns to the main entries")
 	menu.free()
 	gs.end_session()
+
+
+## WU-089: learned tastes label, color and sort the gift picker.
+func test_gift_picker_shows_learned_tastes() -> void:
+	var gs: Node = _root().get_node("GameState")
+	var c := _start(gs)
+	var menu := _npc_menu("xiao_ling")
+	c.inventory.clear()
+	c.add_item("golden_bell_talisman", 1)
+	c.add_item("qi_gathering_pill", 1)
+	c.add_item("bone_setting_salve", 1)
+	gs.world_flags["taste_xiao_ling_bone_setting_salve"] = -1
+	gs.world_flags["taste_xiao_ling_qi_gathering_pill"] = 1
+	(_find(menu.get_options(), "Give ")["action"] as Callable).call()
+	var picker: Array = menu.get_options()
+	assert_true(String(picker[0]["label"]).contains("(liked)"), picker[0]["label"])
+	assert_eq(picker[0]["color"], UIStyle.ACCENT)
+	assert_true(String(picker[0]["description"]).contains("favor"), "favor line")
+	assert_false(picker[1].has("color"), "unknown taste shows nothing")
+	assert_false(String(picker[1]["label"]).contains("liked"), picker[1]["label"])
+	assert_true(String(picker[2]["label"]).contains("(disliked)"), picker[2]["label"])
+	assert_eq(picker[2]["color"], UIStyle.CATEGORY_COLORS["danger"])
+	assert_true(String(picker[2]["label"]).contains("-3 favor"), picker[2]["label"])
+	menu.free()
+	gs.end_session()

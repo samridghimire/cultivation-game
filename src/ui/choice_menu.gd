@@ -78,6 +78,8 @@ func _rebuild() -> void:
 		b.disabled = option.get("disabled", false)
 		var reason: String = String(option.get("reason", ""))
 		b.tooltip_text = reason
+		if option.has("color"):
+			UIStyle.tint_button_text(b, option["color"])
 		var warn := b.disabled and reason != ""
 		var line: String = reason if warn else String(option.get("description", ""))
 		if b.disabled:

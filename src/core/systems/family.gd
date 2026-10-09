@@ -192,6 +192,18 @@ static func gift_taste(data: GameData, npc_id: String, item_id: String) -> int:
 	return 0
 
 
+## The favor a gift of `item_id` is worth to `npc_id` before the favor cap, given what the
+## player has learned of their `taste` (1, -1 or 0 = unknown/neutral; WU-089).
+static func gift_favor_preview(data: GameData, item_id: String, taste: int) -> int:
+	var rules: Dictionary = data.family.get("acquaintance", {})
+	if taste < 0:
+		return int(rules.get("gift_dislike_favor", 0))
+	var gain := gift_value(data, item_id)
+	if taste > 0:
+		gain = ceili(gain * float(rules.get("gift_like_mult", 1.0)))
+	return gain
+
+
 ## A readable word for a likes entry: the item's name, or the plural of a tag.
 static func _taste_word(data: GameData, entry: String) -> String:
 	if data.items.has(entry):
