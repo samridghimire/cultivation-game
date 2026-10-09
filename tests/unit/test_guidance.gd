@@ -849,6 +849,16 @@ func test_discovery_rumor_validator() -> void:
 	d.regions["qingshi_village"]["discovery"] = saved
 
 
+func test_every_discovery_has_a_rumor() -> void:
+	for id: String in data().regions:
+		var r: Dictionary = data().regions[id]
+		if String(r.get("discovery", "")) == "":
+			continue
+		var rumor := String(r.get("discovery_rumor", ""))
+		assert_true(rumor.length() > 20, id + " has a discovery but no discovery_rumor")
+		assert_false(rumor.contains(String(r["discovery"])), id + ": the rumor must not name the discovery id")
+
+
 # --- GUIDE-017: craft-now hints ----------------------------------------------
 
 func _crafter() -> CharacterData:
