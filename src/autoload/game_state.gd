@@ -1181,7 +1181,7 @@ func chat(npc_id: String) -> void:
 	EventBus.post("You pass some time talking with %s. (%s)" % [npcs[npc_id].name, Family.favor_progress(int(npc_favor[npc_id]), data)] + (" The festival warms the mood." if festival else ""))
 	_greet_renowned(npc_id)
 	var hint := Family.taste_hint(data, npc_id)
-	if hint != "" and int(npc_favor[npc_id]) >= 20 and not world_flags.has("taste_told_" + npc_id):
+	if hint != "" and int(npc_favor[npc_id]) >= Family.taste_hint_favor(data) and not world_flags.has("taste_told_" + npc_id):
 		world_flags["taste_told_" + npc_id] = true
 		EventBus.post(hint, "info")
 	var visit := Letters.take_visit_bonus(npc_id, data, world_flags)

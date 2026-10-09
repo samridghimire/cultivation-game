@@ -222,6 +222,11 @@ static func _taste_word(data: GameData, entry: String) -> String:
 	return word if word.ends_with("s") else word + "s"
 
 
+## GIFT-002: favor at which chatting with someone reveals one thing they like.
+static func taste_hint_favor(data: GameData) -> int:
+	return int(data.family.get("acquaintance", {}).get("taste_hint_favor", 20))
+
+
 ## WU-106: the gift tastes learned for `npc_id` from world flags taste_<npc>_<item>:
 ## item_id -> 1 (liked) or -1 (disliked). Only keys whose remainder is a real item id count,
 ## so "li" never matches "li_wei"'s flags, and taste_told_* is skipped.
@@ -455,6 +460,8 @@ static func validate(data: GameData) -> PackedStringArray:
 			errors.append("family.json acquaintance gift_like_mult must be >= 1")
 		if int(acq.get("gift_dislike_favor", 0)) > 0:
 			errors.append("family.json acquaintance gift_dislike_favor must be <= 0")
+		if int(acq.get("taste_hint_favor", 20)) < 0 or int(acq.get("taste_hint_favor", 20)) > 100:
+			errors.append("family.json acquaintance taste_hint_favor must be 0..100")
 	var tags_used: Dictionary = {}
 	for item: Dictionary in data.items.values():
 		for tag in item.get("tags", []):

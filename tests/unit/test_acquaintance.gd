@@ -169,3 +169,42 @@ func test_game_state_gift_taste_flags() -> void:
 	assert_eq(int(gs.world_flags.get("taste_elder_mo_dew_grass", 0)), 1)
 	assert_gt(int(gs.npc_favor.get("elder_mo", 0)), 0)
 	gs.end_session()
+
+
+## GIFT-002: the chat hint appears once, at the configured favor.
+func test_game_state_chat_taste_hint() -> void:
+	var gs: Node = _root().get_node("GameState")
+	var c := CharacterFactory.create("Talker", gs.data, seeded_rng())
+	gs.start_session(c)
+	var threshold := Family.taste_hint_favor(gs.data)
+	# Named NPCs with likes all have dialogue (small talk is refused), so blank it for this test.
+	var dialogue: String = gs.data.npcs["elder_mo"]["dialogue"]
+	gs.data.npcs["elder_mo"]["dialogue"] = ""
+	assert_eq(threshold, 20)
+	gs.npc_favor["elder_mo"] = 0
+	gs.chat("elder_mo")
+	assert_false(gs.world_flags.has("taste_told_elder_mo"), "below the threshold: nothing")
+	gs.npc_favor["elder_mo"] = threshold
+	var hints := [0]
+	var cb := func(text: String, _category: String) -> void:
+		if text == Family.taste_hint(gs.data, "elder_mo"):
+			hints[0] += 1
+	EventBus.message_posted.connect(cb)
+	gs.chat("elder_mo")
+	gs.chat("elder_mo")
+	EventBus.message_posted.disconnect(cb)
+	assert_true(gs.world_flags.has("taste_told_elder_mo"))
+	assert_eq(hints[0], 1, "told once")
+	gs.data.npcs["elder_mo"]["dialogue"] = dialogue
+	gs.end_session()
+
+
+func test_taste_hint_favor_validation() -> void:
+	var d := GameData.new()
+	d.names = data().names
+	d.family = data().family.duplicate(true)
+	d.family["acquaintance"]["taste_hint_favor"] = 101
+	var found := false
+	for e: String in Family.validate(d):
+		found = found or e.contains("taste_hint_favor")
+	assert_true(found, "out of range is rejected")
