@@ -2200,12 +2200,12 @@ func sect_standings() -> Array[Dictionary]:
 	return SectFactions.standings(data, npcs)
 
 
-## Expire and roll world events at a month boundary, posting the news.
 ## Festival goods the merchants of the current region sell right now (FEST-002).
 func festival_stock() -> Array:
 	return WorldEvents.shop_items(data, world_events, current_region)
 
 
+## Expire and roll world events at a month boundary, posting the news.
 func _world_events_month() -> void:
 	_expire_world_events()
 	for started in WorldEvents.roll(data, world_events, GameClock.total_days, rng):

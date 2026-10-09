@@ -68,7 +68,6 @@ func _init() -> void:
 	add_child(_timer)
 
 
-## Height of the fight log for `rows` lines: short fights get a short panel (WU-087).
 ## "Rated: Even (55%) before the fight." from the enemy as the fight began
 ## (WU-104), or "" for a friendly spar.
 static func rating_line(c: CharacterData, data: GameData, enemy: Dictionary) -> String:
@@ -77,6 +76,7 @@ static func rating_line(c: CharacterData, data: GameData, enemy: Dictionary) -> 
 	return "Rated: %s before the fight." % UIStyle.fight_label(c, data, enemy)
 
 
+## Height of the fight log for `rows` lines: short fights get a short panel (WU-087).
 static func log_height(rows: int) -> float:
 	return clampf(rows * 26.0 + 20.0, 120.0, 360.0)
 

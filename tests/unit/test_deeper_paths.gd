@@ -175,3 +175,17 @@ func test_valley_guardian_needs_the_first_path() -> void:
 func test_valley_guardian_choices_set_the_flag() -> void:
 	for choice: Dictionary in data().encounters["misty_forest_valley_guardian"]["choices"]:
 		assert_eq(choice["effects"]["set_flag"], "met_valley_guardian")
+
+
+func test_valley_guardian_seed_can_be_swallowed_at_foundation() -> void:
+	# [REVIEW] the seed is no realm-bound pill: an early-Foundation player (the encounter's own reward band)
+	# and one with a breakthrough pill waiting can both still choose it.
+	var c := new_character()
+	c.realm_index = 2
+	var flags := {"found_hidden_valley": true}
+	for choice: Dictionary in data().encounters["misty_forest_valley_guardian"]["choices"]:
+		assert_eq(Exploration.check_choice(c, data(), choice, flags), "", String(choice["label"]))
+	c.realm_index = 1
+	c.breakthrough_pill = "foundation_establishment"
+	for choice: Dictionary in data().encounters["misty_forest_valley_guardian"]["choices"]:
+		assert_eq(Exploration.check_choice(c, data(), choice, flags), "", String(choice["label"]))
