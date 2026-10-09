@@ -669,7 +669,12 @@ func _on_arrival(region_id: String) -> void:
 	if data == null or not data.regions.has(region_id):
 		return
 	var qi := Exploration.qi_density(data, region_id)
-	_banner.announce(Exploration.region_name(data, region_id), "Qi x%s · Danger: %s" % [String.num(qi, 2), WorldMapScreen.danger_name(data, region_id)], UIStyle.ACCENT, 1.0)
+	var sub := "Qi x%s · Danger: %s" % [String.num(qi, 2), WorldMapScreen.danger_name(data, region_id)]
+	var hold := 1.0
+	if GameState.last_arrival_first_visit:
+		sub = "First visit · " + sub
+		hold = Banner.HOLD_SECONDS * 1.5
+	_banner.announce(Exploration.region_name(data, region_id), sub, UIStyle.ACCENT, hold)
 
 
 func _on_breakthrough(success: bool, realm_name: String) -> void:

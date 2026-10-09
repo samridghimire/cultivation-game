@@ -91,3 +91,25 @@ func test_year_review_banner_and_setting() -> void:
 	settings.set_value("yearly_recap", old)
 	hud.free()
 	gs.end_session()
+
+
+## WU-064: the arrival card marks a first visit and holds longer.
+func test_first_visit_card_marked_once() -> void:
+	var root := (Engine.get_main_loop() as SceneTree).root
+	var gs := root.get_node("GameState")
+	var bus := root.get_node("EventBus")
+	gs.start_session(CharacterFactory.create("Wanderer", gs.data, seeded_rng(3)))
+	var hud: CanvasLayer = load("res://src/ui/hud.tscn").instantiate()
+	root.add_child(hud)
+	var banner: Banner = hud.get("_banner")
+	var dest: String = String(gs.data.regions[gs.current_region]["routes"][0]["to"])
+	gs.last_arrival_first_visit = true
+	bus.region_changed.emit(dest)
+	assert_true(banner.subtitle_text().begins_with("First visit · Qi x"))
+	banner.visible = false
+	gs.last_arrival_first_visit = false
+	bus.region_changed.emit(dest)
+	assert_true(banner.subtitle_text().begins_with("Qi x"))
+	assert_false(banner.subtitle_text().contains("First visit"))
+	hud.free()
+	gs.end_session()
