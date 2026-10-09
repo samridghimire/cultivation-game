@@ -37,6 +37,12 @@ func _init() -> void:
 	box.add_child(_description)
 
 
+func _ready() -> void:
+	# Refit when the window or the UI scale changes while a menu is open (WU-068).
+	get_viewport().size_changed.connect(_fit_scroll.call_deferred)
+	Settings.changed.connect(_on_setting_changed)
+
+
 func _unhandled_input(event: InputEvent) -> void:
 	if visible and event.is_action_pressed("ui_cancel"):
 		get_viewport().set_input_as_handled()
@@ -92,6 +98,11 @@ func _fit_scroll() -> void:
 		return
 	var room := get_viewport_rect().size.y - MENU_MARGIN
 	_scroll.custom_minimum_size.y = minf(_buttons.get_combined_minimum_size().y, maxf(room, 160.0))
+
+
+func _on_setting_changed(key: String, _value: Variant) -> void:
+	if key == "ui_scale":
+		_fit_scroll.call_deferred()
 
 
 func _show_line(text: String, warn: bool) -> void:
