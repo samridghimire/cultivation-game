@@ -798,3 +798,14 @@ func test_unexplored_journal_lines_capped_at_two() -> void:
 	for row in Guidance.journal(c, d, {}, 0, "qingshi_village"):
 		assert_false(String(row["text"]).begins_with("Unexplored: Misty Forest"))
 	assert_eq(Guidance.journal(c, d, {}, 0, "").filter(func(r: Dictionary) -> bool: return String(r["text"]).begins_with("Unexplored")).size(), 0)
+
+
+func test_journal_in_season_line_needs_visited_region_and_season() -> void:
+	var d := data()
+	var c := _fresh()
+	Exploration.visit(c, "qingshi_village")
+	var spring := Guidance.journal(c, d, {}, 10, "qingshi_village").filter(func(r: Dictionary) -> bool: return String(r["text"]).begins_with("In season: "))
+	assert_true(spring.size() >= 1 and spring.size() <= 2)
+	var autumn := Guidance.journal(c, d, {}, 200, "qingshi_village").filter(func(r: Dictionary) -> bool: return String(r["text"]).begins_with("In season: Spirit Herb"))
+	assert_eq(autumn.size(), 0)
+	assert_eq(Guidance.journal(c, d, {}, -1, "qingshi_village").filter(func(r: Dictionary) -> bool: return String(r["text"]).begins_with("In season: ")).size(), 0)

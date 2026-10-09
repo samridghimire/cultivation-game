@@ -1061,3 +1061,18 @@ func test_old_save_backfills_known_places() -> void:
 	gs.load_save_dict(saved)
 	assert_eq(gs.player.visited_regions, [gs.data.start_region] as Array[String])
 	gs.end_session()
+
+
+func test_season_change_posts_one_in_season_line() -> void:
+	var c := _start()
+	c.realm_index = 1
+	var clock := _root().get_node("GameClock")
+	var bus := _root().get_node("EventBus")
+	clock.total_days = 359
+	var before: int = bus.history.size()
+	_game_state().cultivate(2)  # crosses winter -> spring
+	var lines := 0
+	for i in range(maxi(0, before - 1), bus.history.size()):
+		if String(bus.history[i]["text"]).begins_with("Spring has come. In season now:"):
+			lines += 1
+	assert_eq(lines, 1)

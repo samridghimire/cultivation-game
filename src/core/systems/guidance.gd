@@ -810,11 +810,22 @@ static func _lecture_hint(c: CharacterData, data: GameData, today: int) -> Strin
 	return "Your sect's elder lectures this month; attend at the sect hall."
 
 
+const SEASONAL_JOURNAL_MAX := 2
+
+
 static func _opportunity_entries(out: Array[Dictionary], c: CharacterData, data: GameData, flags: Dictionary, today: int, region_id: String = "") -> void:
 	if region_id != "":
 		var roads := unexplored_routes(c, data, region_id)
 		for i in mini(roads.size(), UNEXPLORED_JOURNAL_MAX):
 			_add(out, "Opportunities", "Unexplored: %s (%d days' road)" % [roads[i]["name"], roads[i]["days"]], "normal")
+	if today >= 0:
+		var shown_herbs := 0
+		for h in Exploration.seasonal_highlights(data, Calendar.season_of(today)):
+			if shown_herbs >= SEASONAL_JOURNAL_MAX:
+				break
+			if Exploration.visited(c, h["region"]):
+				_add(out, "Opportunities", "In season: %s at %s (%s)" % [h["item_name"], h["place"], h["region_name"]], "normal")
+				shown_herbs += 1
 	if Sects.check_lecture(c, data, today) == "":
 		var sect: SectDef = data.sects[c.sect["id"]]
 		_add(out, "Opportunities", "Attend %s at the %s hall (once a month)" % [Sects.lecture_def(c, data).get("name", "the lecture"), sect.name], "normal")

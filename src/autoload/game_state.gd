@@ -2570,6 +2570,9 @@ func _on_days_advanced(days: int) -> void:
 		EventBus.post("The power of your %s fades." % buff_name)
 	for item_id in SpiritGarden.advance(player, data, days):
 		EventBus.post("The %s in your spirit garden is ready to harvest." % data.items.get(item_id, {}).get("name", item_id), "progress")
+	var season_line := Exploration.season_news(player, data, GameClock.total_days - days, GameClock.total_days)
+	if season_line != "":
+		EventBus.post(season_line, "info")
 	EventBus.topic = "family"
 	# NPCs the player knows (favor) or married never marry off-screen.
 	var reserved := npc_favor.duplicate()

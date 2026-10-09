@@ -365,3 +365,25 @@ func test_qingshi_herb_slope_has_a_spring_only_entry_and_sources_say_so() -> voi
 	assert_eq(spring_entries.size(), 1)
 	assert_eq(spring_entries[0]["seasons"], ["spring"])
 	assert_true(Items.sources(data(), "spirit_herb").has("Gathered at Village Herb Slope (Qingshi Village)"), "year-round entry too: no note")
+
+
+# --- SEASON-002: in season now ---------------------------------------------------
+
+func test_seasonal_highlights_by_season() -> void:
+	var spring := Exploration.seasonal_highlights(data(), "spring")
+	assert_true(spring.any(func(h: Dictionary) -> bool: return h["item"] == "spirit_herb" and h["region"] == "qingshi_village"))
+	var autumn := Exploration.seasonal_highlights(data(), "autumn")
+	assert_false(autumn.any(func(h: Dictionary) -> bool: return h["item"] == "spirit_herb" and h["region"] == "qingshi_village"))
+	assert_eq(Exploration.seasonal_highlights(data(), "").size(), 0)
+
+
+func test_season_news_only_when_season_changes() -> void:
+	var c := new_character()
+	var line := Exploration.season_news(c, data(), 89, 90)
+	assert_eq(Exploration.season_news(c, data(), 10, 11), "", "same season")
+	assert_eq(Exploration.season_news(c, data(), -1, 5), "", "no negative days")
+	assert_eq(line == "", Exploration.seasonal_highlights(data(), "summer").is_empty())
+	var spring := Exploration.season_news(c, data(), 359, 360)
+	assert_true(spring.begins_with("Spring has come. In season now: "), spring)
+	assert_true(spring.ends_with("."))
+	assert_true(spring.count(";") <= 2)

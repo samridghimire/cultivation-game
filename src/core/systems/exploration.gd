@@ -339,6 +339,55 @@ static func seasonal_entries(table: Array, season: String) -> Dictionary:
 	return result
 
 
+## Season-only herbs a gather place offers in `season` (SEASON-002), in data
+## order: [{item, item_name, place, region, region_name}], one per item+place.
+static func seasonal_highlights(data: GameData, season: String) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	if season == "":
+		return out
+	for region: Dictionary in data.regions.values():
+		var seen := {}
+		for place: Dictionary in region.get("places", []):
+			if place.get("type", "") != "gather":
+				continue
+			for entry: Dictionary in place.get("gather_table", []):
+				var item_id := String(entry.get("item", ""))
+				if item_id == "" or not entry.has("seasons") or not in_season(entry, season):
+					continue
+				var key := item_id + "|" + String(place.get("display_name", ""))
+				if seen.has(key):
+					continue
+				seen[key] = true
+				out.append({
+					"item": item_id,
+					"item_name": String(data.items.get(item_id, {}).get("name", item_id)),
+					"place": String(place.get("display_name", "")),
+					"region": String(region["id"]),
+					"region_name": String(region.get("name", region["id"])),
+				})
+	return out
+
+
+## The "season has come" line for a time jump from day `from_day` to `to_day`
+## (SEASON-002): "" unless the season changed and has highlights. Up to 3,
+## visited regions first, then data order. Only the final season is reported.
+static func season_news(c: CharacterData, data: GameData, from_day: int, to_day: int) -> String:
+	if from_day < 0 or Calendar.season_of(from_day) == Calendar.season_of(to_day):
+		return ""
+	var season := Calendar.season_of(to_day)
+	var all := seasonal_highlights(data, season)
+	var picked: Array[Dictionary] = all.filter(func(h: Dictionary) -> bool: return visited(c, h["region"]))
+	for h in all:
+		if not picked.has(h):
+			picked.append(h)
+	var parts: Array[String] = []
+	for h in picked.slice(0, 3):
+		parts.append("%s at %s (%s)" % [h["item_name"], h["place"], h["region_name"]])
+	if parts.is_empty():
+		return ""
+	return "%s has come. In season now: %s." % [season, "; ".join(parts)]
+
+
 ## One-line note for a gather place's menu: "In season: Spirit Herb. Out of
 ## season: Frost Lotus (winter)." Empty when the table has no seasonal entries.
 static func seasonal_note(table: Array, season: String, data: GameData) -> String:
