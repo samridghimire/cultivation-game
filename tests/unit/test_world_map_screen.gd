@@ -67,6 +67,8 @@ func test_region_marks() -> void:
 	var d := data()
 	var c := new_character()
 	var people := {}
+	for region_id in d.regions:
+		Exploration.visit(c, region_id)  # unexplored regions show no marks (WU-061)
 	var kinds := func(region_id: String, events: Array = []) -> Array:
 		return WorldMapScreen.region_marks(c, d, people, events, 0, region_id).map(func(m: Dictionary) -> String: return m["kind"])
 	c.anchors = []
@@ -153,3 +155,37 @@ func test_foes_bbcode_colors_each_danger() -> void:
 	assert_true(text.contains("Wolf (Weak)") and text.contains("Tiger (Deadly)"))
 	assert_true(text.contains("[color=#%s]" % UIStyle.danger_color("Deadly").to_html(false)))
 	assert_eq(WorldMapScreen.foes_bbcode([]), "")
+
+
+## WU-061: regions never visited are dim and show no marks.
+func test_unexplored_regions_are_dimmed() -> void:
+	var root := (Engine.get_main_loop() as SceneTree).root
+	var gs := root.get_node("GameState")
+	gs.start_session(new_character())
+	var screen := WorldMapScreen.new()
+	root.add_child(screen)
+	screen.open()
+	var forest := screen._canvas.get_node("misty_forest") as Button
+	assert_true(forest.text.contains("Unexplored"))
+	assert_true(forest.modulate.a < 0.6)
+	var here := screen._canvas.get_node(NodePath(gs.current_region)) as Button
+	assert_false(here.text.contains("Unexplored"))
+	assert_true(WorldMapScreen.region_marks(gs.player, data(), gs.npcs, gs.world_events, 0, "misty_forest", gs.current_region).is_empty())
+	screen.close()
+	screen.free()
+	gs.current_region = "qingshi_village"
+	Exploration.visit(gs.player, "qingshi_village")
+	var point = load("res://src/world/interactables/travel_point.gd").new()
+	var found := false
+	for o: Dictionary in point.get_options():
+		if String(o["label"]).contains(Exploration.region_name(data(), "misty_forest")):
+			found = true
+			assert_eq(o.get("description", ""), "(never visited)")
+	assert_true(found)
+	gs.travel("misty_forest")
+	gs.travel("qingshi_village")
+	for o: Dictionary in point.get_options():
+		if String(o["label"]).contains(Exploration.region_name(data(), "misty_forest")):
+			assert_false(o.has("description"))
+	point.free()
+	gs.end_session()

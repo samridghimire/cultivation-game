@@ -170,11 +170,18 @@ static func place_names(data: GameData, region_id: String) -> PackedStringArray:
 	return names
 
 
+## Regions never visited (WU-061); the region you stand in always counts as visited.
+static func is_unexplored(c: CharacterData, region_id: String, current_region: String) -> bool:
+	return region_id != current_region and not Exploration.visited(c, region_id)
+
+
 ## What `c` has or what is going on in `region_id`: [{kind, text}] with kind
 ## a MARK_COLORS key. `people` are the NPCs, `events` the active world events,
 ## `flags` the world flags (an unexplored discovery hint needs them).
 static func region_marks(c: CharacterData, data: GameData, people: Dictionary, events: Array, total_days: int, region_id: String, current_region: String = "", flags: Dictionary = {}) -> Array[Dictionary]:
 	var marks: Array[Dictionary] = []
+	if is_unexplored(c, region_id, current_region):
+		return marks
 	var region: Dictionary = data.regions.get(region_id, {})
 	if not c.is_rogue() and (region.get("places", []) as Array).any(func(p: Dictionary) -> bool: return p.get("type", "") == "sect_hall"):
 		marks.append({"kind": "sect", "text": "A hall of the %s (missions, rank)" % (data.sects[c.sect["id"]] as SectDef).name})
@@ -236,6 +243,10 @@ func _rebuild() -> void:
 		var b := Button.new()
 		b.name = region_id
 		b.text = Exploration.region_name(data, region_id)
+		if is_unexplored(GameState.player, region_id, GameState.current_region):
+			b.text += "\nUnexplored"
+			b.modulate.a = 0.45
+			b.add_theme_font_size_override("font_size", 12)
 		b.add_theme_font_size_override("font_size", 14)
 		b.clip_text = true
 		b.position = top_left
@@ -313,7 +324,7 @@ func _show_details() -> void:
 	var places := place_names(data, _selected)
 	_places.text = "Places: " + (", ".join(places) if not places.is_empty() else "none known")
 	var foes_text := ""
-	if _selected == GameState.current_region:
+	if _selected == GameState.current_region:  # always explored
 		var tags: Array = region.get("encounter_tags", []) + WorldEvents.encounter_tags(data, GameState.world_events, _selected)
 		foes_text = foes_bbcode(Exploration.outlook(GameState.player, data, tags, GameState.world_flags, Calendar.season_of(GameClock.total_days), _selected)["foes"])
 	_foes.text = foes_text
