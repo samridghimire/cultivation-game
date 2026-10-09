@@ -37,6 +37,9 @@ var _decor: Array[Dictionary] = []
 var _season_tint: CanvasModulate
 var _season := ""
 var _ambient: CPUParticles2D
+## Festival stalls beside merchants (WU-097), rebuilt when the day or region changes.
+var _stalls: Array[Node2D] = []
+var _merchant_spots: Array[Vector2] = []
 
 @onready var player: Player = $Player
 
@@ -54,6 +57,7 @@ func _ready() -> void:
 	_refresh_ambient()
 	Settings.changed.connect(_on_setting_changed)
 	_build_places()
+	_refresh_stalls()
 	_place_at_spawn_anchor()
 	_build_npcs()
 	_build_bounds()
@@ -72,6 +76,7 @@ func _build_season_tint() -> void:
 
 
 func _on_days_advanced(_days: int) -> void:
+	_refresh_stalls()
 	var season := Calendar.season_of(GameClock.total_days)
 	if season == _season:
 		return
@@ -93,6 +98,27 @@ func _refresh_ambient() -> void:
 		return
 	_ambient = Ambient.make_emitter(kind, map_size)
 	add_child(_ambient)
+
+
+## Decoration only: a stall beside each merchant while a festival runs in this region.
+func _refresh_stalls() -> void:
+	for stall in _stalls:
+		stall.queue_free()
+	_stalls.clear()
+	var festival := ""
+	for instance: Dictionary in WorldEvents.active_in(GameState.world_events, GameState.current_region):
+		if WorldEvents.is_festival(GameState.data, String(instance["id"])):
+			festival = String(instance["id"])
+			break
+	if festival == "":
+		return
+	for spot in _merchant_spots:
+		var stall := FestivalStall.new()
+		stall.event_id = festival
+		stall.position = spot
+		add_child(stall)
+		move_child(stall, player.get_index())
+		_stalls.append(stall)
 
 
 func _on_setting_changed(key: String, _value: Variant) -> void:
@@ -173,6 +199,8 @@ func _build_places() -> void:
 		# Add before the player so the player draws on top.
 		add_child(node)
 		move_child(node, player.get_index())
+		if place["type"] == "merchant":
+			_merchant_spots.append(node.position + Vector2(node.size.x / 2.0 + 34.0, 12.0))
 	_build_abodes()
 	_build_family_home()
 
