@@ -97,7 +97,7 @@ Every great cultivation protagonist has something that sets them apart. Ours is 
 | Auctions (seasonal lots, sealed bids vs hidden NPC maximums) | ✅ (auction house in Fallen Star Market) | `data/auctions.json`, `Auctions` |
 | Creation Artifact inner world and spirit garden | ✅ (artifact screen) | `InnerWorld`, `SpiritGarden` |
 | World events (beast tides, tournaments, auctions, incursions) | ✅ passive effects + HUD/map/rumors; tournaments and incursion defence can be joined (LW-003) | `data/world_events.json`, `WorldEvents` |
-| Bounties (hunt a region's foe for stones) and festivals (fixed-month events, warmer chats and gifts) | ✅ (bounty boards in Qingshi and Fallen Star Market; festival banner) | `data/bounties.json`, `Bounties`, `data/world_events.json` |
+| Bounties (hunt a region's foe for stones, local hunts first, renown raises pay) and festivals (fixed-month events, warmer chats and gifts, festival stalls) | ✅ (bounty boards in Qingshi and Fallen Star Market; festival banner and awnings) | `data/bounties.json`, `Bounties`, `data/world_events.json` |
 | NPC clans and NPC sect membership, family tree, Family Home | ✅ | `NpcClans`, `FamilyHome`, `src/ui/family_screen.gd` |
 | NPC sects as factions (strength, recruitment) | ✅ core (LW-002), sect hall standings (WU-002), monthly clashes and the sect's call (LW-002b) | `SectFactions` |
 | Audio, autosave, export presets, credits | ✅ procedural SFX and music, autosave with toast (also on suspend), crash-safe saves, credits, title art, Steam platform stub (REL-009), Windows/Linux export presets + tools/export.sh (REL-005), Steam upload scripts and docs/RELEASE.md (REL-011, needs the owner's app/depot ids) | `Audio`, `SaveManager`, `src/ui/credits_screen.gd` |

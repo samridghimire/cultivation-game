@@ -2,6 +2,23 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-09 [WU-092] Each hunt on a bounty board says whether it is here or how many days away.
+- 2026-10-09 [NEWS-002] People greet you by your title once your name is known in their region.
+- 2026-10-09 [YEAR-003] The year review counts the hidden places you found, bounties claimed and regions mastered.
+- 2026-10-09 [C-053] Letters with more voices: a rival's grudging respect, a wedding invitation, a Dao hint and more.
+- 2026-10-09 [FEST-002] Festival stalls: merchants sell moon cakes and paper lanterns while a festival runs.
+- 2026-10-09 [C-051] Eight more things that can happen on the road, from a highwayman's toll to a sword-flying senior.
+- 2026-10-09 [QA-055] Checked: the odds shown before a fight match real fights.
+- 2026-10-09 [WU-089] The gift list shows which gifts someone likes or dislikes, once you have learned it.
+- 2026-10-09 [WU-097] Festival awnings and lanterns appear beside the merchants while a festival runs.
+- 2026-10-09 [WU-096] The respawn screen names the odds of the fight that killed you and what a new life costs.
+- 2026-10-09 [RENOWN-003] A known name earns better bounty pay.
+- 2026-10-09 [WU-094] Requests that only come to the renowned look special.
+- 2026-10-09 [WU-093] Screenshot pass over the week's new screens; nothing needed fixing.
+- 2026-10-09 [GIFT-001] People like and dislike certain gifts.
+- 2026-10-09 [BOUNTY-002] Bounty boards list local and nearby hunts first.
+- 2026-10-09 [WU-088] The mission board remembers a fight you lost.
+- 2026-10-09 [WU-091] The HUD drops its least important lines instead of running into the message log.
 - 2026-10-09 [QA-054] The curious-player sim plays like a careful human: no seed dies for good in three years.
 - 2026-10-09 [C-050] Every region's discovery has a merchant rumor that points at it without naming it.
 - 2026-10-09 [RENOWN-002] Requests that only come to the renowned: a village land dispute, the hunters' wolf den.

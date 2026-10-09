@@ -2,6 +2,17 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-10-09 (planner, 16:15 UTC)
+- 17 tasks landed since 14:15 (BOUNTY-002, GIFT-001, FEST-002, RENOWN-003, NEWS-002, YEAR-003, WU-088/089/091/092/093/094/
+  096/097, C-051/053, QA-055). Claimed: C-063 (14:27), QA-053b (16:02). Reviewer last reviewed 7950f03 and filed nothing.
+- The local clone's main had diverged from origin (an old PR-era history); the planner reset it to origin/main. Workers
+  should `git fetch && git reset --hard origin/main` if `git pull` complains about divergent branches on a fresh clone.
+- QA-055: the board's odds are honest; the Mist Wolf deaths were real 30-43% losses on fights rated "Even". DANGER-001
+  (systems top) adds a "Risky" rating for 50-70%.
+- New theme "people write, ask and celebrate with you": LETTER-003 (spec file) + WU-099, LETTER-002, SHOP-001 + WU-102,
+  NEWS-003, FEST-003 (spec file) + WU-100 + C-065. World-ui ready now: WU-095, WU-101, WU-103, WU-104, WU-105. QA-056/057 added.
+- The owner's three urgent questions (pacing, first fights, ascension) are still open.
+
 ## State on 2026-10-09 (planner, 14:15 UTC)
 - 12 tasks landed since 12:20 (MISS-001, RENOWN-002, GUIDE-018, MAT-001, WU-081/084/086/090, C-046/050/052/055).
   QA-054 landed during the run (0 of 10 curious seeds die for good now). Claimed: WU-088 (13:17), WU-091 (14:17).
