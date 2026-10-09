@@ -124,19 +124,37 @@ static func output_text(data: GameData, output: Dictionary) -> String:
 	return "%dx %s" % [int(output.get("count", 1)), data.items[output["item"]].get("name", output["item"])]
 
 
+const READY_SUFFIX := " (ready)"
+
+
+## Recipes you can make now come first, each group keeping its given order (WU-083).
+static func order_recipes(c: CharacterData, data: GameData, ids: PackedStringArray) -> PackedStringArray:
+	var ready := PackedStringArray()
+	var rest := PackedStringArray()
+	for id in ids:
+		if Alchemy.check(c, data, id) == "":
+			ready.append(id)
+		else:
+			rest.append(id)
+	ready.append_array(rest)
+	return ready
+
+
 func _rebuild() -> void:
 	var data := GameState.data
 	_title.text = TITLES.get(_prof_id, "Crafting")
 	for child in _list.get_children():
 		_list.remove_child(child)
 		child.queue_free()
-	var ids := Alchemy.known_recipes(GameState.player, data, _prof_id)
+	var ids := order_recipes(GameState.player, data, Alchemy.known_recipes(GameState.player, data, _prof_id))
 	var scrolls := Alchemy.scroll_recipes(GameState.player, data, _prof_id)
 	var all_ids := ids.duplicate()
 	for recipe_id in scrolls:
 		all_ids.append(recipe_id)
 	if not all_ids.has(_selected):
 		_selected = all_ids[0] if not all_ids.is_empty() else ""
+		if not ids.is_empty() and Alchemy.check(GameState.player, data, ids[0]) == "":
+			_selected = ids[0]
 	if all_ids.is_empty():
 		var hint := _wrapped(UIStyle.label("You know no recipes. Recipe scrolls can be bought or found while exploring.", 16, Color(0.7, 0.7, 0.7)))
 		hint.custom_minimum_size = Vector2(300, 0)
@@ -145,8 +163,13 @@ func _rebuild() -> void:
 		var label: String = data.recipes[recipe_id]["name"]
 		if scrolls.has(recipe_id):
 			label += " (scroll)"
+		var ready := not scrolls.has(recipe_id) and Alchemy.check(GameState.player, data, recipe_id) == ""
+		if ready:
+			label += READY_SUFFIX
 		var b := UIStyle.button(label, _select.bind(recipe_id))
 		b.name = recipe_id
+		if ready:
+			b.add_theme_color_override("font_color", UIStyle.CATEGORY_COLORS.get("good", UIStyle.ACCENT))
 		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		b.toggle_mode = true
 		b.button_pressed = recipe_id == _selected

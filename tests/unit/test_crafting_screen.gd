@@ -91,3 +91,37 @@ func test_workshop_deliver_commission_entries() -> void:
 	shop.free()
 	assert_eq(gs.player.item_count("spirit_stone"), stones + int(order["reward"]))
 	assert_eq(gs.player.commissions.size(), 0)
+
+
+## WU-083: recipes you can make come first, in a stable order.
+func test_order_recipes_puts_ready_first() -> void:
+	var c := new_character()
+	c.inventory = {}
+	var ids := PackedStringArray(["qi_gathering_pill", "bone_setting_salve"])
+	assert_eq(CraftingScreen.order_recipes(c, data(), ids), ids, "none ready keeps the order")
+	for item_id in data().recipes["bone_setting_salve"]["ingredients"]:
+		c.add_item(item_id, 2)
+	assert_eq(CraftingScreen.order_recipes(c, data(), ids), PackedStringArray(["bone_setting_salve", "qi_gathering_pill"]))
+	for item_id in data().recipes["qi_gathering_pill"]["ingredients"]:
+		c.add_item(item_id, 2)
+	assert_eq(CraftingScreen.order_recipes(c, data(), ids), ids, "both ready keeps the order")
+
+
+func test_screen_labels_ready_recipes_and_selects_first() -> void:
+	var root := (Engine.get_main_loop() as SceneTree).root
+	var gs := root.get_node("GameState")
+	var c := new_character()
+	c.inventory = {}
+	for item_id in data().recipes["bone_setting_salve"]["ingredients"]:
+		c.add_item(item_id, 2)
+	gs.start_session(c)
+	var screen := CraftingScreen.new()
+	root.add_child(screen)
+	screen.open("alchemist")
+	var salve := screen.find_child("bone_setting_salve", true, false) as Button
+	var pill := screen.find_child("qi_gathering_pill", true, false) as Button
+	assert_true(salve.text.ends_with("(ready)"), salve.text)
+	assert_false(pill.text.contains("(ready)"))
+	assert_true(salve.button_pressed, "the first ready recipe is selected")
+	assert_eq(salve.get_index(), 0)
+	screen.free()
