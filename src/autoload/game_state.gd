@@ -1287,7 +1287,8 @@ func give_gift(npc_id: String, item_id: String) -> void:
 	if taste != 0:
 		world_flags["taste_%s_%s" % [npc_id, item_id]] = taste
 		EventBus.post("%s is delighted." % npcs[npc_id].name if taste > 0 else "%s frowns at the %s." % [npcs[npc_id].name, item_name.to_lower()], "progress" if taste > 0 else "warning")
-	_clan_deed(npc_id, "gift")
+	if taste >= 0:
+		_clan_deed(npc_id, "gift")  # a disliked gift (taken even at the favor cap) earns no clan kindness
 	_pass_time(result["days"])
 
 

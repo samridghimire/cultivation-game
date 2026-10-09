@@ -107,10 +107,11 @@ static func _curious_month(gs: Node, c: CharacterData, done: Dictionary, today: 
 			if Sects.check_mission(c, gs.data, mission_id, gs.world_flags) != "" or not _mission_is_sane(gs, c, mission_id, done, today):
 				continue
 			var lost_before := LifeStats.get_stat(c, "fights_lost")
+			var odds_before := _mission_odds(gs, c, mission_id)
 			gs.take_mission(mission_id)
 			kinds["mission"] = true
 			if LifeStats.get_stat(c, "fights_lost") > lost_before:
-				done["lost_missions"][mission_id] = {"day": today, "odds": _mission_odds(gs, c, mission_id)}
+				done["lost_missions"][mission_id] = {"day": today, "odds": odds_before}
 			break
 	_recharge_with_spare_stones(gs, c)
 	if not done.has("talk") and c.alive:
@@ -153,9 +154,9 @@ static func _mission_is_sane(gs: Node, c: CharacterData, mission_id: String, don
 	var lost: Dictionary = done["lost_missions"].get(mission_id, {})
 	if not lost.is_empty() and today - int(lost["day"]) < 60 and odds < float(lost["odds"]) + 0.15:
 		return false
-	if c.artifact_lives <= 1 and odds < 0.85:
+	if c.artifact_lives >= 0 and c.artifact_lives <= 1 and odds < 0.85:
 		return false  # the last life: only near-certain fights
-	return not (danger == "Dangerous" and odds < 0.5 and c.artifact_lives <= 2)
+	return not (danger == "Dangerous" and odds < 0.5 and c.artifact_lives >= 0 and c.artifact_lives <= 2)
 
 
 ## QA-054: buys an artifact life once stones exceed twice its price.

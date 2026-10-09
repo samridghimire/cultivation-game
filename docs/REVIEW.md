@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 7950f03
+Last reviewed commit: 8961cbd
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -291,3 +291,23 @@ Last reviewed commit: 7950f03
     recipes/prices after a material_value call could see stale values. (4) QA-052: every curious-sim death is the Mist
     Wolf of "Cull the Mist Wolves"; MISS-001 now cools it down after a loss, the min_stage/enemy tuning follow-up is
     still open for the planner.
+- 2026-10-09 (reviewer, 8th run): reviewed 7950f03..8961cbd (GUIDE-018, WU-090, C-052, RENOWN-002, C-050, QA-054, WU-091,
+  WU-088, BOUNTY-002, GIFT-001, WU-093, WU-094, RENOWN-003, WU-096, WU-097, WU-089, QA-055, C-051; [PLAN]/[REVIEW] skipped).
+  Main green before and after (1546 -> 1547 tests). No BACKLOG/CHANGELOG edits by workers; no SAVE_VERSION change
+  (GUIDE-018's `letter_day` defaults to -1; gift tastes live in world_flags).
+  - Fixed ([REVIEW] commits): (1) WU-096: the respawn lesson quoted Combat.win_chance (full HP, no allies) after a
+    wounded tournament bout or a Karma ally strike; those deaths now carry no odds (test). "face it again" -> "this foe".
+    (2) RENOWN-002 prefix made "Because your name is known here, Two farming families..." -> "Your name is known here: ".
+    (3) RENOWN-003: bounty board % came from the rounded payout (5 stones at +10% read +20%); now the tier multiplier.
+    (4) WU-091: test_hud_crowding saved ui_scale/hud_hints into the real settings file and never restored them or
+    ended the session; fixed, and the prompt check re-measures the panel. (5) QA-055 left combat_finished's doc on
+    combat_started. (6) C-051: walking away from the lost child cost a day; the day is on "Walk her home" now.
+    (7) GIFT-001: a disliked gift (accepted even at the favor cap) still earned clan kindness, so cheap disliked gifts
+    could farm clan standing; gated on taste >= 0. (8) QA-054 sim: lost-mission odds were read after the fight (the
+    QA-055 bug, second copy), and artifact_lives -1 (uninitialised) counted as the last life.
+  - Notes for the planner, not filed: (1) C-051's well_bandit rates ~83% at entry, above the spec's 40-75% band.
+    (2) WU-088's "You lost this fight N ago" never expires and uses the rating colour, not the danger colour.
+    (3) GIFT-001's taste hint threshold (favor 20) is hard-coded in GameState and the chat hint has no GameState test;
+    WU-089's gift menu only marks tastes learned by gifting, so a chat-hinted taste still shows as neutral.
+    (4) Taste world flags are ints (-1/1); fine with `flags.get(x, false)` callers that only test truthiness of +1,
+    but -1 is truthy. (5) A region discovery with `min_renown` would lock itself out; nothing does that yet.
