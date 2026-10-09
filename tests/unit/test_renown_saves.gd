@@ -82,3 +82,72 @@ func test_fixtures_answer_fame_queries() -> void:
 		Bounties.active(p, gs.data, today)
 		assert_true(Renown.describe(p, gs.data) is PackedStringArray, f + " describe")
 		gs.end_session()
+
+
+func _npc_in(gs: Node, id: String, region_id: String) -> CharacterData:
+	var npc := CharacterData.new()
+	npc.id = id
+	npc.name = "Asker " + id
+	npc.home_region = region_id
+	npc.alive = true
+	gs.npcs[id] = npc
+	return npc
+
+
+func test_letter_requests_and_deals_survive_round_trip() -> void:
+	var gs := _gs()
+	gs.rng.seed = 21
+	gs.start_session(CharacterFactory.create("Req", gs.data, gs.rng))
+	gs.pending_event = ""
+	var p: CharacterData = gs.player
+	var today: int = GameClock.total_days
+	var region_id: String = gs.current_region
+	_npc_in(gs, "asker_a", region_id)
+	_npc_in(gs, "asker_b", region_id)
+	p.letter_requests.append({"npc_id": "asker_a", "item": "qi_gathering_pill", "count": 2, "until": today + 5, "favor": 7, "effects": {"alignment": 3}})
+	p.letter_requests.append({"npc_id": "asker_b", "item": "qi_gathering_pill", "count": 1, "until": today + 60, "favor": 4, "effects": {}})
+	p.shop_deals[region_id] = {"mult": 0.9, "until": today + 30}
+	var base_mult: float = gs.buy_multiplier()
+	assert_true(is_equal_approx(base_mult, gs.market_multiplier() * Renown.buy_multiplier(p, gs.data, region_id) * 0.9), "deal prices the shop")
+
+	_round_trip(gs)
+	p = gs.player
+	assert_eq(p.letter_requests.size(), 2, "both requests")
+	var a: Dictionary = Letters.open_request(p, "asker_a", today)
+	assert_eq(String(a["item"]), "qi_gathering_pill")
+	assert_eq(int(a["count"]), 2)
+	assert_eq(int(a["until"]), today + 5)
+	assert_eq(int(a["favor"]), 7)
+	assert_eq(int(a["effects"]["alignment"]), 3)
+	assert_true(is_equal_approx(gs.buy_multiplier(), base_mult), "deal survives")
+	assert_eq(Letters.deal_multiplier(p, "no_such_region", today), 1.0, "deal is local")
+	assert_eq(Letters.request_lines(p, gs.data, gs.npcs, today).size(), 2, "two lines")
+
+	var gone := Letters.expire_requests(p, today + 6)
+	assert_eq(gone, ["asker_a"] as Array[String], "only the first expires")
+	assert_eq(p.letter_requests.size(), 1)
+	_round_trip(gs)
+	p = gs.player
+	p.add_item("qi_gathering_pill", 1)
+	var favor_before := int(gs.npc_favor.get("asker_b", 0))
+	gs.answer_letter_request("asker_b")
+	assert_eq(p.letter_requests.size(), 0, "answered after load")
+	assert_eq(p.item_count("qi_gathering_pill"), 0, "item handed over")
+	assert_gt(int(gs.npc_favor.get("asker_b", 0)), favor_before, "favor granted")
+	gs.end_session()
+
+
+func test_fixtures_have_no_letter_requests() -> void:
+	var gs := _gs()
+	var dir := DirAccess.open(FIXTURE_DIR)
+	for f in dir.get_files():
+		if not f.ends_with(".json"):
+			continue
+		var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(FIXTURE_DIR.path_join(f)))
+		gs.rng.seed = 3
+		gs.start_session(CharacterFactory.create("Fx", gs.data, gs.rng))
+		gs.load_save_dict(parsed["game"])
+		assert_eq(gs.player.letter_requests.size(), 0, f + " no requests")
+		assert_true(gs.player.shop_deals.is_empty(), f + " no deals")
+		assert_eq(Letters.request_lines(gs.player, gs.data, gs.npcs, GameClock.total_days).size(), 0, f + " no lines")
+		gs.end_session()
