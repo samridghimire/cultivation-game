@@ -998,3 +998,37 @@ func test_friendly_spar_report_reads_like_a_spar() -> void:
 	assert_true(report._title.text.begins_with("Defeat"))
 	report.queue_free()
 	gs.end_session()
+
+
+func _count_messages(text: String) -> int:
+	var n := 0
+	for m: Dictionary in _root().get_node("EventBus").history:
+		if m["text"] == text:
+			n += 1
+	return n
+
+
+## TRAV-002: the first arrival in a region posts its first_visit text once.
+func test_first_visit_text_posts_once() -> void:
+	var gs := _game_state()
+	var c := _start()
+	c.realm_index = 1
+	var line := String(gs.data.regions["misty_forest"]["first_visit"])
+	gs.travel("misty_forest")
+	assert_true(gs.last_arrival_first_visit)
+	assert_eq(_count_messages(line), 1)
+	gs.travel(gs.data.start_region)  # qingshi has no first_visit text
+	assert_false(gs.last_arrival_first_visit)
+	gs.travel("misty_forest")
+	assert_false(gs.last_arrival_first_visit)
+	assert_eq(_count_messages(line), 1)
+	gs.end_session()
+
+
+func test_first_visit_validator_rejects_empty() -> void:
+	var d := GameData.load_from_dir()
+	assert_eq(d.load_errors.size(), 0)
+	d.regions["misty_forest"]["first_visit"] = ""
+	d.load_errors.clear()
+	d._validate_world()
+	assert_true(d.load_errors.size() > 0)

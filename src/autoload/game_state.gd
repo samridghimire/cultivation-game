@@ -33,6 +33,8 @@ var last_fight_playback: Dictionary = {}
 var world_events: Array = []
 ## Id of the region (data/regions.json) the player is in.
 var current_region := ""
+## True when the last travel reached a region for the first time (TRAV-002).
+var last_arrival_first_visit: bool = false
 ## Live NPCs: id -> CharacterData (definitions in data/npcs.json).
 var npcs: Dictionary = {}
 ## How much each NPC likes the player: id -> int.
@@ -97,6 +99,7 @@ func start_session(character: CharacterData) -> void:
 	devour_target = {}
 	world_events = []
 	current_region = data.start_region
+	last_arrival_first_visit = false
 	Exploration.visit(player, current_region)
 	npcs = {}
 	npc_favor = {}
@@ -503,9 +506,12 @@ func travel(region_id: String) -> void:
 		return
 	_start_time_skip()
 	current_region = region_id
-	Exploration.visit(player, region_id)
+	last_arrival_first_visit = Exploration.visit(player, region_id)
 	world_flags["notice_road_" + region_id] = true  # you are already here (TRAV-001)
 	EventBus.post("After %s on the road you arrive at %s." % [Calendar.format_duration(check["days"]), Exploration.region_name(data, region_id)], "progress")
+	var first_sight: String = String(data.regions.get(region_id, {}).get("first_visit", ""))
+	if last_arrival_first_visit and first_sight != "":
+		EventBus.post(first_sight, "info")
 	_pass_time(check["days"], "Travelling to %s" % Exploration.region_name(data, region_id))
 	_road_ambush()
 	EventBus.region_changed.emit(region_id)
@@ -2421,6 +2427,7 @@ func load_save_dict(d: Dictionary) -> void:
 		if instance is Dictionary and data.world_events.has(String(instance.get("id", ""))):
 			world_events.append({"id": String(instance["id"]), "region": String(instance.get("region", "")), "start_day": int(instance.get("start_day", 0)), "end_day": int(instance.get("end_day", 0)), "done": bool(instance.get("done", false))})
 	current_region = d.get("region", data.start_region)
+	last_arrival_first_visit = false
 	npcs = Npcs.from_dict(d.get("npcs", {}))
 	Npcs.ensure_all(npcs, data, rng)
 	Npcs.ensure_eligible(npcs, data, rng, Children.descendants(player, npcs))
@@ -2714,6 +2721,7 @@ func _die_violently(cause: String) -> void:
 	EventBus.post("The Creation Artifact pulls your soul back. You awaken at %s, %d qi lost. (%d lives left)" % [place, int(result["qi_lost"]), result["lives_left"]], "warning")
 	var moved: bool = result["region"] != current_region
 	current_region = result["region"]
+	last_arrival_first_visit = false
 	pending_respawn = {"cause": cause, "anchor_id": result["anchor_id"], "lives_left": result["lives_left"], "qi_lost": result["qi_lost"]}
 	if moved:
 		spawn_anchor = result["anchor_id"]
@@ -2740,6 +2748,7 @@ func choose_respawn_anchor(anchor_id: String) -> void:
 		EventBus.post("You let the artifact carry your soul to %s instead." % place, "warning")
 	pending_respawn = {}
 	current_region = CreationArtifact.anchor_region(data, anchor_id)
+	last_arrival_first_visit = false
 	spawn_anchor = anchor_id
 	EventBus.player_changed.emit()
 	EventBus.region_changed.emit(current_region)
