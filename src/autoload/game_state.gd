@@ -2441,6 +2441,7 @@ func load_save_dict(d: Dictionary) -> void:
 	npc_clans = NpcClans.from_dict(d.get("npc_clans", {}))
 	if player.visited_regions.is_empty():
 		Exploration.visit(player, current_region)  # older saves (TRAV-001)
+		Exploration.backfill_visited(player, data, npcs)  # and their other haunts (TRAV-003)
 	# A save from before GUIDE-008 has no notice flags: mark what it already
 	# qualifies for as seen, quietly, so loading never floods the log (RV-010).
 	if not world_flags.keys().any(func(k: Variant) -> bool: return String(k).begins_with("notice_")):

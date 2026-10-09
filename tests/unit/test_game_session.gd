@@ -1032,3 +1032,25 @@ func test_first_visit_validator_rejects_empty() -> void:
 	d.load_errors.clear()
 	d._validate_world()
 	assert_true(d.load_errors.size() > 0)
+
+
+## TRAV-003: an older save without visited_regions remembers its abode, sect and anchors.
+func test_old_save_backfills_known_places() -> void:
+	var gs := _game_state()
+	var c := _start()
+	c.abode = "waterfall_cave"
+	c.sect = {"id": String(gs.data.sects.keys()[0]), "rank": 0}
+	var saved: Dictionary = JSON.parse_string(JSON.stringify(gs.to_save_dict()))
+	saved["player"].erase("visited_regions")
+	saved["player"]["life_stats"] = {}
+	gs.load_save_dict(saved)
+	var v: Array[String] = gs.player.visited_regions
+	assert_true(v.has(gs.data.start_region))
+	assert_true(v.has("misty_forest"), "abode region")
+	assert_true(v.has("fallen_star_market"), "sect hall region")
+	assert_eq(LifeStats.get_stat(gs.player, "regions_visited"), v.size())
+	# A save that already has a list is left alone.
+	saved["player"]["visited_regions"] = [gs.data.start_region]
+	gs.load_save_dict(saved)
+	assert_eq(gs.player.visited_regions, [gs.data.start_region] as Array[String])
+	gs.end_session()
