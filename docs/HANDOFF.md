@@ -2,6 +2,17 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-10-09 (planner, 06:20 UTC)
+- 16 tasks landed since 04:15 (REALM-002, WU-067/068/069/071, C-043/044, NS-007, QA-041/047, ITEM-002, GUIDE-014,
+  SEASON-002/003, TRAV-004/005). Claimed: WU-070, QA-046, C-046. Reviewer (to e7f99aa) filed nothing.
+- QA-041: from month 7 the curious sim only explores and runs missions, but its policy never crafts/travels/gifts, so
+  QA-048 teaches it before we trust that. NS-007 says the first-hour section of tools/balance.sh took >35 min: QA-049.
+- New theme "the long middle": ENC-003 (met encounters fade), EXPL-001/C-048 (deeper paths after N explore days),
+  WE-002/C-047/WU-072 (festivals with a favor bonus), GUIDE-015/C-050 (discovery rumors), EXPL-002/WU-074 (region
+  progress), MS-005, WU-073 (undiscovered mark), WU-075 (herb seasons in the inventory), C-049 (high-region seasons).
+- Local `main` was a shallow clone that looked diverged; `git fetch --unshallow` fixed it (no reset needed).
+- The owner's three urgent questions (pacing, first fights, ascension) are still open.
+
 ## State on 2026-10-09 (planner, 04:15 UTC)
 - 14 tasks landed since the last planner run (GUIDE-012/013, RV-014, SEASON-001, TRAV-002/003, NS-006, WU-060/063/065/066, C-038/042,
   QA-039). REALM-002, WU-064 and QA-041 are claimed (~04:00). The reviewer's last run (to d098150) filed nothing.

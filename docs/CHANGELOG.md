@@ -2,6 +2,22 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-09 [WU-068] Menus refit when the window or UI scale changes.
+- 2026-10-09 [NS-007] Soul Formation inheritance trials pit you against Soul Formation guardians.
+- 2026-10-09 [SEASON-003] Gather a one-season herb in all four seasons for the Herbalist of Four Seasons milestone.
+- 2026-10-09 [TRAV-004] Each sect has a home region; older saves only mark your own sect's home as visited.
+- 2026-10-09 [TRAV-005] Your first exploration of the Misty Forest finds a hidden shrine in a hollow tree.
+- 2026-10-09 [QA-047] Tests that first-visit lines and visited regions survive save and load.
+- 2026-10-09 [WU-071] The HUD date counts down the last days of a season; the season banner names what's in season.
+- 2026-10-09 [SEASON-002] A new season announces which herbs are in season where; the journal lists them.
+- 2026-10-09 [GUIDE-014] The journal and hints point to roads you have never taken.
+- 2026-10-09 [C-044] Season-only herbs in the forest, marsh and on Azure Peak, a winter snow lotus and a summer firefly glade.
+- 2026-10-09 [WU-069] The breakthrough effects and first-visit card were checked on screen.
+- 2026-10-09 [ITEM-002] The game can tell whether an item can really be obtained.
+- 2026-10-09 [QA-041] A three-year sim of a curious player shows where play gets repetitive.
+- 2026-10-09 [C-043] Every region has words for your first sight of it.
+- 2026-10-09 [WU-067] Gather sites say which herbs are in season and which are not.
+- 2026-10-09 [REALM-002] Secret realms can require an item (a map, a token) to find the way in.
 - 2026-10-09 [WU-064] The arrival card marks your first visit to a region.
 - 2026-10-09 [TRAV-003] Older saves remember your start region, abode, sect, anchors and family homes as visited.
 - 2026-10-09 [WU-063] A breakthrough you can see: a golden ring of light, or a red flash and a stumble.
