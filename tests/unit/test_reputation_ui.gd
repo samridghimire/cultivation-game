@@ -96,3 +96,19 @@ func test_people_lines_known_likes() -> void:
 	flags = {"taste_%s_%s" % [id, items[0]]: -1}
 	assert_false(CharacterSheet.people_lines(gs.player, gs.data, gs.npcs, favor, 6, flags)[0].contains("likes"))
 	gs.end_session()
+
+
+## WU-115: who is waiting on you shows on the People list until the request runs out.
+func test_people_lines_open_request() -> void:
+	var gs: Node = _root().get_node("GameState")
+	gs.start_session(CharacterFactory.create("Foe", gs.data, seeded_rng()))
+	var id: String = gs.npcs.keys()[0]
+	var item: String = gs.data.items.keys()[0]
+	var item_name: String = gs.data.items[item].get("name", item)
+	gs.player.letter_requests.append({"npc_id": id, "item": item, "count": 1, "until": 40, "favor": 5, "effects": {}})
+	var favor := {id: 50}
+	var line: String = CharacterSheet.people_lines(gs.player, gs.data, gs.npcs, favor, 6, {}, 30)[0]
+	assert_true(line.ends_with("(asked for %s, 10 days left)" % item_name), line)
+	assert_false(CharacterSheet.people_lines(gs.player, gs.data, gs.npcs, favor, 6, {}, 41)[0].contains("asked for"), "expired")
+	assert_false(CharacterSheet.people_lines(gs.player, gs.data, gs.npcs, favor)[0].contains("asked for"), "no date given")
+	gs.end_session()

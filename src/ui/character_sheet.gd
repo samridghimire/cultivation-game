@@ -249,7 +249,7 @@ func _rebuild() -> void:
 		t += "  Nothing of note yet.\n"
 	for line in record:
 		t += "  %s\n" % line
-	var people_lines := people_lines(p, data, GameState.npcs, GameState.npc_favor, 6, GameState.world_flags)
+	var people_lines := people_lines(p, data, GameState.npcs, GameState.npc_favor, 6, GameState.world_flags, GameClock.total_days)
 	if not people_lines.is_empty():
 		t += "\n[color=#%s]People you know[/color]\n" % accent
 		for line in people_lines:
@@ -288,8 +288,9 @@ static func rival_line(c: CharacterData, data: GameData, people: Dictionary, fav
 
 
 ## WU-105: up to `limit` living non-family NPCs with the highest favor, as
-## "Name, Realm, in Region: friendly". Strangers (favor 0) are left out.
-static func people_lines(c: CharacterData, data: GameData, people: Dictionary, favor: Dictionary, limit: int = 6, flags: Dictionary = {}) -> PackedStringArray:
+## "Name, Realm, in Region: friendly". Strangers (favor 0) are left out. With `today` >= 0, a
+## person waiting on a letter request gets "(asked for <item>, N days left)" (WU-115).
+static func people_lines(c: CharacterData, data: GameData, people: Dictionary, favor: Dictionary, limit: int = 6, flags: Dictionary = {}, today: int = -1) -> PackedStringArray:
 	var ranked: Array = []
 	for id: String in favor:
 		var other: CharacterData = people.get(id)
@@ -313,6 +314,10 @@ static func people_lines(c: CharacterData, data: GameData, people: Dictionary, f
 				liked += 1
 		if liked >= 1:
 			line += " (likes %d known)" % liked
+		var request := Letters.open_request(c, String(entry[2]), today) if today >= 0 else {}
+		if not request.is_empty():
+			var item_id := String(request["item"])
+			line += " (asked for %s, %d days left)" % [String(data.items.get(item_id, {}).get("name", item_id)), int(request["until"]) - today]
 		out.append(line)
 	return out
 
