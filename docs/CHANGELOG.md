@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-09 [WU-064] The arrival card marks your first visit to a region.
 - 2026-10-09 [TRAV-003] Older saves remember your start region, abode, sect, anchors and family homes as visited.
 - 2026-10-09 [WU-063] A breakthrough you can see: a golden ring of light, or a red flash and a stumble.
 - 2026-10-09 [TRAV-002] Your first arrival in Misty Forest is described.
