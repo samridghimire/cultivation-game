@@ -238,6 +238,54 @@
         "The Creation Artifact can hold an Appraising Eye. While it is sealed you see only what anyone would see. Once you have unsealed it, the artifact reads hidden detail for you.",
         "In people it shows spiritual roots, talent, attributes, remaining lifespan and the colour of the heart. In items it shows the true grade, power and worth. Use it before you trust a stranger or pay for a treasure."
       ]
+    },
+    {
+      "id": "beasts",
+      "title": "Spirit Beasts",
+      "body": [
+        "Learn the Beast Tamer profession (any rank) and a beast you defeat may submit to you. Your chance is 15% plus 8% per Beast Tamer rank, to a cap of 75%, and every attempt teaches you something. Some beasts demand a minimum rank.",
+        "You keep one companion at a time. It adds a share of your combat stats, which grows with your rank, but shrinks by half for each realm you outgrow it. Feed it herbs, spirit beast pellets or beast marrow pills: every 100 growth is a level (up to level 6), and each level offsets half a realm of outgrowing."
+      ]
+    },
+    {
+      "id": "tempering",
+      "title": "Body Tempering",
+      "body": [
+        "Open to everyone and separate from qi cultivation: harden your flesh in five stages, from Copper Skin to the Indestructible Vajra Body. Each stage takes days to months, consumes ores, salves or pills, and needs a realm from Qi Refining at Iron Bone up to Nascent Soul at the last stage.",
+        "Every stage adds permanent bonuses to health and defense (and some attack) and makes injuries less likely. Tempering can go wrong: a failed session still reaches the stage but injures you, and high Constitution lowers the risk. You cannot temper while injured."
+      ]
+    },
+    {
+      "id": "dao",
+      "title": "Dao Insights",
+      "body": [
+        "A Dao insight is a rare understanding of a path such as the Sword, Fire, Water or Life. Each level (up to five) strengthens every technique of that path by about a tenth and adds a little to your breakthrough chances.",
+        "Insights come from strange encounters, from practicing matching techniques day after day, and from contemplating a path you already hold in seclusion, which doubles the progress. When progress is full a Comprehension check decides whether you grasp the next level; failing it keeps half your progress."
+      ]
+    },
+    {
+      "id": "artifact_powers",
+      "title": "Artifact Powers",
+      "body": [
+        "Feed spirit stones and other items to the Creation Artifact to fill its energy, then spend that energy to break its seals. Each seal also needs a realm: Storage Space and the Appraising Eye open at Qi Refining, the Inner World and Spirit Garden at Foundation Establishment.",
+        "Storage keeps your items safe even through death. Appraisal names your talent and the true grade of treasures. The Inner World is a pocket of dense qi where time runs twice as fast, for training in seclusion (the body ages with it). The Spirit Garden, in the inner world, grows carried herbs in four plots: sow one, wait for the inner days to pass, and harvest several copies."
+      ]
+    },
+    {
+      "id": "clans",
+      "title": "Clans and Estates",
+      "body": [
+        "A Foundation Establishment cultivator with an abode can found a clan: 500 spirit stones and 30 days. Recruit family and acquaintances (favor 40 and 50 stones each); the clan ranks run from Patriarch and up to three Elders to Core and Outer members.",
+        "Build estate projects from the clan treasury, one at a time: income, reputation, a qi-dense seat, wards against misfortune and training grounds. When the patriarch dies, the heir takes over: by default the eldest child of the best-ranked spouse, or whoever you named. Other clans have their own heads and feuds, and your deeds toward their members change how they treat you."
+      ]
+    },
+    {
+      "id": "adoption",
+      "title": "Adoption and the Orphanage",
+      "body": [
+        "Take in a child of twelve or younger and they become your own: seven days to settle, a small shift of your alignment toward kindness, and the child starts out fond of you. You may adopt up to three, and they take your surname. Couples who cannot conceive can adopt too.",
+        "The Temple of Mercy orphanage will find you a foundling, a child of six or younger, for a donation of 20 spirit stones. Adopted children grow up and can be trained in cultivation, a profession or techniques, and may become your heir."
+      ]
     }
   ]
 }
