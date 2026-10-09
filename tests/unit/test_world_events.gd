@@ -446,7 +446,7 @@ func test_festival_doubles_chat_favor_and_saves() -> void:
 func test_festival_shop_items() -> void:
 	var d := data()
 	var active: Array = [_lantern_instance(0)]
-	assert_eq(WorldEvents.shop_items(d, active, "qingshi_village"), ["paper_lantern"])
+	assert_eq(WorldEvents.shop_items(d, active, "qingshi_village"), ["paper_lantern", "sweet_rice_ball"])
 	assert_eq(WorldEvents.shop_items(d, active, "misty_forest"), [])
 	WorldEvents.expire(active, 100)
 	assert_eq(WorldEvents.shop_items(d, active, "qingshi_village"), [])
@@ -467,7 +467,7 @@ func test_game_state_festival_stock() -> void:
 	gs.world_events = []
 	assert_eq(gs.festival_stock(), [])
 	gs.world_events = [_lantern_instance(0)]
-	assert_eq(gs.festival_stock(), ["paper_lantern"])
+	assert_eq(gs.festival_stock(), ["paper_lantern", "sweet_rice_ball"])
 	gs.world_events = []
 
 

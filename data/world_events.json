@@ -47,6 +47,7 @@
       "regions": ["azure_peak"],
       "start_text": "Incense smoke curls over the graves of {region}. The Qingming Ancestor Festival has begun.",
       "end_text": "The paper offerings have burned to ash at {region}; the Qingming Ancestor Festival is over.",
+      "shop_items": ["willow_branch", "ancestor_incense"],
       "modifiers": {"encounter_tags": ["festival_spring"], "price_mult": 1.0, "favor_mult": 1.5}
     },
     {
@@ -56,7 +57,7 @@
       "regions": ["fallen_star_market"],
       "start_text": "Round lanterns glow above every stall at {region}. The Mid-Autumn Moon Festival has begun.",
       "end_text": "The moon wanes over {region}; the Mid-Autumn Moon Festival is over.",
-      "shop_items": ["moon_cake"],
+      "shop_items": ["moon_cake", "osmanthus_wine"],
       "modifiers": {"encounter_tags": ["festival_autumn"], "price_mult": 0.9, "favor_mult": 2.0}
     },
     {
@@ -66,7 +67,7 @@
       "regions": ["qingshi_village"],
       "start_text": "Paper lanterns drift down the river at {region}, and villagers burn incense for the ancestors. The Lantern Festival has begun.",
       "end_text": "The last lanterns burn out on the river at {region}; the Lantern Festival is over.",
-      "shop_items": ["paper_lantern"],
+      "shop_items": ["paper_lantern", "sweet_rice_ball"],
       "activity": {"name": "Float a lantern", "text": "You write a name on a paper lantern and set it on the river with the villagers. It drifts away among a hundred others.", "days": 0, "effects": {"qi": 15, "alignment": 2}, "bonus": {"attribute": "comprehension", "min": 12, "text": "Watching the lights follow the current, something about how qi finds its way settles in you.", "effects": {"breakthrough_bonus": 0.01}}},
       "modifiers": {"encounter_tags": ["festival_winter"], "price_mult": 0.9, "favor_mult": 2.0}
     },

@@ -61,3 +61,17 @@ func test_each_festival_tag_has_two_encounters() -> void:
 			if (enc.get("tags", []) as Array).has(tag):
 				n += 1
 		assert_true(n >= 2, "festival tag %s has %d encounters" % [tag, n])
+
+
+## C-061: every festival sells at least 2 festival goods, which no ordinary merchant stocks.
+func test_every_festival_has_two_untagged_shop_items() -> void:
+	var d := GameData.load_from_dir()
+	for ev: Dictionary in d.world_events.values():
+		if not bool(ev.get("festival", false)):
+			continue
+		var goods: Array = ev.get("shop_items", [])
+		assert_true(goods.size() >= 2, "festival %s needs 2+ shop items" % ev["id"])
+		for item_id: String in goods:
+			var item: Dictionary = d.items[item_id]
+			assert_true((item.get("tags", []) as Array).is_empty(), "%s must be untagged" % item_id)
+			assert_true(int(item["price"]) <= 15, "%s is cheap" % item_id)
