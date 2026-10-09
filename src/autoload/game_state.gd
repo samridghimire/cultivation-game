@@ -2084,6 +2084,8 @@ func _world_events_month() -> void:
 	for started in WorldEvents.roll(data, world_events, GameClock.total_days, rng):
 		if Exploration.is_nearby(data, current_region, String(started.get("region", ""))):
 			EventBus.post(WorldEvents.news(data, started, true), "warning")
+		if String(started.get("region", "")) == current_region and WorldEvents.is_festival(data, String(started["id"])):
+			EventBus.festival_started.emit(WorldEvents.event_name(data, String(started["id"])), WorldEvents.news(data, started, true))
 
 
 ## Expire world events whose end_day has passed (checked every day, so an ended event

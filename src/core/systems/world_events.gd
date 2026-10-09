@@ -86,6 +86,13 @@ static func qi_multiplier(data: GameData, active: Array, region_id: String) -> f
 	return _product(data, active, region_id, "qi_density")
 
 
+## How an event under way is named in the HUD and map: "Festival: <name>" for festivals, "<name>!" otherwise.
+static func active_label(data: GameData, event_id: String) -> String:
+	if is_festival(data, event_id):
+		return "Festival: %s" % event_name(data, event_id)
+	return "%s!" % event_name(data, event_id)
+
+
 ## Product of the active events' favor multipliers (festivals) in `region_id`.
 static func favor_multiplier(data: GameData, active: Array, region_id: String) -> float:
 	return _product(data, active, region_id, "favor_mult")

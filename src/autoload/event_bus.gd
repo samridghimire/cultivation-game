@@ -62,6 +62,8 @@ signal time_skipped(days: int, summary: Dictionary)
 signal year_reviewed(year: int, lines: PackedStringArray, start_year: int)
 ## A milestone was just earned (GOAL-001).
 signal milestone_reached(id: String, name: String)
+## A festival began in the current region (WU-072); the HUD shows a banner.
+signal festival_started(event_name: String, text: String)
 ## A newly available feature was announced (GUIDE-008, WU-042); the HUD shows a banner.
 signal feature_unlocked(text: String)
 

@@ -179,6 +179,7 @@ func _ready() -> void:
 	EventBus.year_reviewed.connect(_on_year_reviewed)
 	EventBus.milestone_reached.connect(_on_milestone)
 	EventBus.feature_unlocked.connect(_on_feature_unlocked)
+	EventBus.festival_started.connect(_on_festival_started)
 	_season = Calendar.season_of(GameClock.total_days)
 	GameClock.days_advanced.connect(_on_days_advanced)
 	EventBus.session_started.connect(func(): _season = Calendar.season_of(GameClock.total_days))
@@ -393,7 +394,7 @@ static func season_banner_subtitle(region: String, highlights: Array[Dictionary]
 static func region_event_suffix(data: GameData, events: Array, region_id: String, c: CharacterData = null) -> String:
 	var text := ""
 	for instance in WorldEvents.active_in(events, region_id):
-		text += "   %s!" % WorldEvents.event_name(data, instance["id"])
+		text += "   " + WorldEvents.active_label(data, instance["id"])
 		if c != null:
 			for kind in ["tournament", "defence"]:
 				if WorldEvents.def_of(data, instance["id"]).has(kind) and WorldEvents.check_join(data, events, c, instance["id"], kind, region_id) == "":
@@ -606,6 +607,12 @@ func _on_encounter_choice_requested(_encounter_id: String) -> void:
 ## Several milestones in one step: each call replaces the banner, so the last one shows (the log lists all).
 func _on_milestone(_id: String, milestone_name: String) -> void:
 	_banner.announce("Milestone", milestone_name, UIStyle.ACCENT, 1.2)
+
+
+## A festival started where you stand (WU-072): a festive banner and a chime.
+func _on_festival_started(event_name: String, text: String) -> void:
+	_banner.announce(event_name, text, UIStyle.CATEGORY_COLORS.get("good", UIStyle.ACCENT), 2.5)
+	Audio.play("chime_progress")
 
 
 ## New-feature notices (WU-042): a banner besides the log line; hidden when hints are off.

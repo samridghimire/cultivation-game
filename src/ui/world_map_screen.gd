@@ -209,7 +209,7 @@ static func region_marks(c: CharacterData, data: GameData, people: Dictionary, e
 		var enter := ""
 		if region_id == current_region and HudScript.region_event_suffix(data, [instance], region_id, c).contains("(you can enter)"):
 			enter = " (you can enter)"
-		marks.append({"kind": "event", "text": "%s! (%s left)%s" % [WorldEvents.event_name(data, instance["id"]), Calendar.format_duration(maxi(0, int(instance["end_day"]) - total_days)), enter]})
+		marks.append({"kind": "event", "text": "%s (%s left)%s" % [WorldEvents.active_label(data, instance["id"]), Calendar.format_duration(maxi(0, int(instance["end_day"]) - total_days)), enter]})
 	return marks
 
 

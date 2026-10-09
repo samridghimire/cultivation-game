@@ -122,6 +122,14 @@ func on_menu_closed() -> void:
 	_child_mode = ""
 
 
+## " (festival: favor x2)" while a festival boosts favor in `region_id` (WU-072).
+static func festival_note(data: GameData, events: Array, region_id: String) -> String:
+	var mult := WorldEvents.favor_multiplier(data, events, region_id)
+	if mult <= 1.0:
+		return ""
+	return " (festival: favor x%s)" % String.num(mult, 1).trim_suffix(".0")
+
+
 ## "Chat with <name>" (only for NPCs without a dialogue file) and "Give a gift".
 func _acquaintance_options() -> Array[Dictionary]:
 	var options: Array[Dictionary] = []
@@ -133,10 +141,10 @@ func _acquaintance_options() -> Array[Dictionary]:
 	var favor := int(GameState.npc_favor.get(npc_id, 0))
 	if String(data.npcs.get(npc_id, {}).get("dialogue", "")) == "":
 		var days := int(data.family.get("acquaintance", {}).get("chat_days", 1))
-		var label := "Chat with %s (%s, favor %d)" % [npc.name, Calendar.format_duration(days), favor]
+		var label := "Chat with %s (%s, favor %d)%s" % [npc.name, Calendar.format_duration(days), favor, festival_note(data, GameState.world_events, GameState.current_region)]
 		options.append(_entry(label, Family.check_chat(p, npc, favor, data), GameState.chat.bind(npc_id)))
 	var reason := "" if not p.inventory.is_empty() else "you carry nothing"
-	options.append(_entry("Give %s a gift" % npc.name, reason, _set_gift_mode.bind(true)))
+	options.append(_entry("Give %s a gift%s" % [npc.name, festival_note(data, GameState.world_events, GameState.current_region)], reason, _set_gift_mode.bind(true)))
 	return options
 
 
