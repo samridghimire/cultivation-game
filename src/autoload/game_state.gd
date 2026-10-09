@@ -531,6 +531,9 @@ func travel(region_id: String) -> void:
 		var road := Exploration.road_encounter(player, data, int(check["days"]), world_flags, rng, Calendar.season_of(GameClock.total_days))
 		if not road.is_empty():
 			last_travel_road_encounter = String(road.get("id", ""))
+			# Not an exploration find: the encounter window must not title it a discovery.
+			last_explore_discovery = false
+			last_explore_deep_path = false
 			_meet_encounter(road, "On the road: ")
 	EventBus.region_changed.emit(region_id)
 	SaveManager.autosave()
@@ -630,8 +633,11 @@ func _explore_day(tags: Array, quiet: bool) -> Dictionary:
 			return _hunt_bounty_foe(hunted)
 		encounter = Exploration.roll_encounter(player, data, tags, world_flags, rng, Rivals.rival_of(player, npcs), 1.0 - ClanEstate.ward(clan, data, current_region), Calendar.season_of(GameClock.total_days), current_region)
 	else:
-		world_flags["discovered_" + current_region] = true
-		LifeStats.sync_discoveries(player, world_flags)
+		# Only the discovery itself marks the region discovered; a deeper path must not
+		# use up a discovery the player has not met yet.
+		if last_explore_discovery:
+			world_flags["discovered_" + current_region] = true
+			LifeStats.sync_discoveries(player, world_flags)
 		_gain_renown("discovery" if last_explore_discovery else "deep_path")
 	if encounter.is_empty():
 		if not quiet:

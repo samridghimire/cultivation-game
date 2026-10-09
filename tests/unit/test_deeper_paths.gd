@@ -115,6 +115,24 @@ func test_explore_meets_the_hidden_path_once() -> void:
 	gs.end_session()
 
 
+## A deeper path is not the region's discovery: it must not set discovered_<region>
+## (that would use up a discovery the player never met).
+func test_deep_path_does_not_mark_the_region_discovered() -> void:
+	var gs: Node = (Engine.get_main_loop() as SceneTree).root.get_node("GameState")
+	var c := new_character(32)
+	c.realm_index = 1
+	gs.start_session(c)
+	var region := String(gs.current_region)
+	var at := Exploration.next_deep_path(gs.player, gs.data, region)
+	assert_true(at >= 0, "%s has a deeper path" % region)
+	gs.player.explore_days[region] = at - 1
+	gs.explore()
+	assert_true(gs.last_explore_deep_path)
+	assert_false(gs.last_explore_discovery)
+	assert_false(gs.world_flags.get("discovered_" + region, false))
+	gs.end_session()
+
+
 func test_every_region_has_a_deeper_path_sharing_its_tags() -> void:
 	for rid: String in data().regions:
 		var tags: Array = data().regions[rid].get("encounter_tags", [])

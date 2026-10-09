@@ -997,6 +997,8 @@ func test_travel_meets_road_encounter() -> void:
 	var old_encounters: Dictionary = gs.data.encounters
 	gs.data.road = {"chance_per_day": 1.0, "max_chance": 1.0, "encounter_tags": ["road"]}
 	gs.data.encounters = {"road_overturned_cart": old_encounters["road_overturned_cart"]}
+	gs.last_explore_discovery = true  # left over from an earlier exploration
+	gs.last_explore_deep_path = true
 	var target := String(gs.data.regions[gs.data.start_region]["routes"][0]["to"])
 	var before := LifeStats.get_stat(c, "encounters")
 	var heard: Array[String] = []
@@ -1009,6 +1011,8 @@ func test_travel_meets_road_encounter() -> void:
 	assert_true(heard.any(func(t: String) -> bool: return t.begins_with("On the road: ")), str(heard))
 	assert_eq(gs.pending_encounter, "road_overturned_cart")
 	assert_eq(gs.last_travel_road_encounter, "road_overturned_cart")  # WU-080: the arrival card waits for it
+	assert_false(gs.last_explore_discovery, "a road encounter is not a discovery")
+	assert_false(gs.last_explore_deep_path)
 	var good := c.alignment
 	gs.choose_encounter(0)
 	assert_true(c.alignment > good)
