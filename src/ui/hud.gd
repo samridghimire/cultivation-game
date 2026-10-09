@@ -12,6 +12,7 @@ const LIFESPAN_DANGER := 0.05
 
 var _age: Label
 var _status: Label
+var _lives: Label
 var _qi_bar: ProgressBar
 var _bottleneck: Label
 var _next_layer: Label
@@ -170,7 +171,7 @@ func _ready() -> void:
 	EventBus.family_requested.connect(_on_family_requested)
 	EventBus.child_training_requested.connect(_on_child_training_requested)
 	EventBus.player_died.connect(_on_player_died)
-	EventBus.player_respawned.connect(func(_anchor_id: String, _lives: int): _open_pending_respawn())
+	EventBus.player_respawned.connect(func(_anchor_id: String, _lives: int): _refresh(); _open_pending_respawn())
 	EventBus.combat_finished.connect(_on_combat_finished)
 	EventBus.tribulation_prepare_requested.connect(_on_tribulation_prepare)
 	EventBus.tribulation_endured.connect(_on_tribulation_endured)
@@ -297,6 +298,8 @@ func _build_status_panel() -> void:
 	panel.add_child(box)
 	_age = UIStyle.label("", 15)
 	box.add_child(_age)
+	_lives = UIStyle.label("", 15)
+	box.add_child(_lives)
 	_status = UIStyle.label("", 15)
 	box.add_child(_status)
 	_qi_bar = ProgressBar.new()
@@ -428,6 +431,7 @@ func _refresh() -> void:
 	if age_cue != "":
 		_age.text += "   (%d %s left)" % [years_left, "year" if years_left == 1 else "years"]
 	_age.add_theme_color_override("font_color", UIStyle.CATEGORY_COLORS.get(age_cue, Color.WHITE))
+	_refresh_lives(p)
 	var lines: PackedStringArray = [
 		Cultivation.realm_label(p, data),
 		"Qi: %d / %d" % [int(p.qi), int(Cultivation.qi_required(p, data))],
@@ -468,6 +472,25 @@ func _refresh() -> void:
 	_hint.visible = not hints.is_empty()
 	_hint.text = "\n".join(Array(hints).map(func(h: String) -> String: return "> " + h))
 	_fit_status_panel.call_deferred()
+
+
+## "Lives N" from the Creation Artifact (WU-095): warning at 1 life, danger with "Final life" at 0.
+func _refresh_lives(p: CharacterData) -> void:
+	_lives.text = lives_text(p.artifact_lives)
+	_lives.visible = _lives.text != ""
+	_lives.add_theme_color_override("font_color", lives_color(p.artifact_lives))
+
+
+static func lives_text(lives: int) -> String:
+	if lives < 0:
+		return ""
+	return "Lives %d" % lives if lives > 0 else "Lives 0 - Final life"
+
+
+static func lives_color(lives: int) -> Color:
+	if lives == 0:
+		return UIStyle.CATEGORY_COLORS["danger"]
+	return UIStyle.CATEGORY_COLORS["warning"] if lives == 1 else Color.WHITE
 
 
 ## Drops the lowest-priority status lines (key bar, hints, goal, next layer) until the panel clears the log (WU-091).

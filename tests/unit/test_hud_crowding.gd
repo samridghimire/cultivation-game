@@ -3,6 +3,7 @@ extends TestCase
 ## key bar) the status panel must stay inside the window and clear of the log and prompt.
 
 const DECK := Vector2(1280, 800)
+const HudScript := preload("res://src/ui/hud.gd")
 
 
 func _tree() -> SceneTree:
@@ -61,8 +62,19 @@ func _check(scale: float) -> void:
 	await _frames()
 	rect = status.get_global_rect()
 	assert_false(rect.intersects(prompt.get_global_rect()), "status panel %s overlaps the prompt %s" % [rect, prompt.get_global_rect()])
+	assert_true(hud.get("_lives").visible, "lives line shown")
+	assert_false(rect.intersects(prompt.get_global_rect()) or rect.intersects(log_panel.get_global_rect()), "lives line keeps the panel clear")
 	hud.queue_free()
 	Settings.set_value("ui_scale", old_scale)
 	Settings.set_value("hud_hints", old_hints)
 	root.size = old_size
 	gs.end_session()
+
+
+func test_lives_text_and_color() -> void:
+	assert_eq(HudScript.lives_text(3), "Lives 3")
+	assert_eq(HudScript.lives_text(0), "Lives 0 - Final life")
+	assert_eq(HudScript.lives_text(-1), "")
+	assert_eq(HudScript.lives_color(1), UIStyle.CATEGORY_COLORS["warning"])
+	assert_eq(HudScript.lives_color(0), UIStyle.CATEGORY_COLORS["danger"])
+	assert_eq(HudScript.lives_color(4), Color.WHITE)
