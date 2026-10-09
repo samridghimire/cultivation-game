@@ -1,0 +1,27 @@
+{
+  "id": "sage_wen",
+  "entries": [
+    {"node": "greet"}
+  ],
+  "nodes": {
+    "greet": {"text": "An old man in earth-brown robes kneels at a crack in the ridge, pressing the stone shut with two fingers as if closing a wound. 'Mind your step. The mountain is older than my patience, and it has been bleeding since the last war.'",
+      "choices": [
+        {"label": "Ask what he is mending.", "next": "mending"},
+        {"label": "Hold the rubble steady while he works. (3 days)", "next": "hold", "days": 3, "favor": 5, "effects": {"qi": 3000}},
+        {"label": "Ask how a cultivator crosses from Nascent Soul to Soul Formation.", "next": "severing", "if": {"min_favor": 30}, "show_locked": true},
+        {"label": "Ask if he needs anything.", "next": "errand_ask", "if": {"not_flag": "errand_wen_asked"}},
+        {"label": "Bring the two Soul Infant Fruit Wen asked for.", "next": "errand_thanks", "if": {"has_items": {"soul_infant_fruit": 2}, "flag": "errand_wen_asked", "not_flag": "errand_wen_done"}, "effects": {"items": {"soul_infant_fruit": -2, "longevity_pill": 1}, "alignment": 20, "set_flag": "errand_wen_done"}, "favor": 20},
+        {"label": "Leave him to his work.", "next": "end"}
+      ]},
+    "mending": {"text": "'Where the old cultivators fought, the veins of the world were cut. Qi leaks out and beasts grow mad on it. I close what I can. It is slow work. Heaven does not grade it, so I grade it myself, and I am a harsh teacher.'",
+      "choices": [{"label": "...", "next": "greet"}]},
+    "hold": {"text": "The stone is colder than any stone should be and heavier than it looks. When the crack finally seals he sits back and breathes out for what sounds like a century. 'Good hands. Most would have asked what they would be paid.' Mountain-qi settles gently into your bones.",
+      "choices": [{"label": "...", "next": "greet"}]},
+    "severing": {"text": "'You cut away the part of yourself that wants to be remembered. A soul that no longer needs a body can no longer be held by one. It is not a victory; it is a sort of generosity. The Spirit Severing Pill only helps those who already know what they are willing to lose. Know that first.'",
+      "choices": [{"label": "I will think on it.", "next": "greet", "favor": 5}]},
+    "errand_ask": {"text": "'The ridge's old wounds drink fruit-spirit the way the dry earth drinks rain. Two Soul Infant Fruit from the Terraces, left to ripen on the stem, if you can find that much luck. I will not pay you in stones. I have a pill a friend once pressed on me, and no more years to need it.'",
+      "choices": [{"label": "I will search the Terraces.", "next": "greet", "effects": {"set_flag": "errand_wen_asked"}}]},
+    "errand_thanks": {"text": "He turns each fruit over in the light as though it were a sleeping child, then lays them in the crack and the stone closes around them with a sigh. 'Take this. Live a little longer than you planned. The mountain will need more hands.'",
+      "choices": [{"label": "...", "next": "greet"}]}
+  }
+}

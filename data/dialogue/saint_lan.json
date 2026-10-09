@@ -1,0 +1,21 @@
+{
+  "id": "saint_lan",
+  "entries": [
+    {"node": "greet"}
+  ],
+  "nodes": {
+    "greet": {"text": "A lean man in a threadbare grey coat sits on a boulder at the ridge's edge, an unsheathed sword laid across his knees. He is watching the clouds break against the cliff as if they might say something. 'Sit if you like. I have not decided yet whether I am going to die today.'",
+      "choices": [
+        {"label": "Ask about the sword.", "next": "sword"},
+        {"label": "Sit with him and watch the clouds. (3 days)", "next": "sit", "days": 3, "favor": 5, "effects": {"qi": 3000}},
+        {"label": "Ask what he learned after a thousand years.", "next": "years", "if": {"min_favor": 30}, "show_locked": true},
+        {"label": "Leave him to the clouds.", "next": "end"}
+      ]},
+    "sword": {"text": "'It has no name. I gave the name away to a man who needed it more, and the sword has been quieter since. A blade that does not know what it is called cuts only what it must.'",
+      "choices": [{"label": "...", "next": "greet"}]},
+    "sit": {"text": "Neither of you speaks. On the third evening, the clouds part for the length of a breath, and in that breath you understand something about stillness you cannot put into words. He nods, as though you had said it aloud.",
+      "choices": [{"label": "...", "next": "greet"}]},
+    "years": {"text": "'That the road does not end at the top of a mountain. It ends where you stop being curious about it. Soul Formation is a door, not a throne, and most of the people who reach it sit down in the doorway and call it home.'",
+      "choices": [{"label": "I will remember that.", "next": "greet", "favor": 5}]}
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "id": "lord_xuan",
+  "entries": [
+    {"node": "greet"}
+  ],
+  "nodes": {
+    "greet": {"text": "A tall figure in black sits on a throne built of skulls, each one carved with a name. The Lord does not rise. 'Another small thing climbs my ridge. Speak before I decide what you are useful for.'",
+      "choices": [
+        {"label": "Ask about the skulls.", "next": "skulls"},
+        {"label": "Polish the throne and keep her cup full. (3 days)", "next": "serve", "days": 3, "favor": 5, "effects": {"qi": 3000}},
+        {"label": "Ask what Soul Formation took from her.", "next": "price", "if": {"min_favor": 30}, "show_locked": true},
+        {"label": "Ask what the Lord wants from the living.", "next": "errand_ask", "if": {"not_flag": "errand_xuan_asked"}},
+        {"label": "Bring the Soul Severing Lotus Xuan asked for.", "next": "errand_thanks", "if": {"has_items": {"soul_severing_lotus": 1}, "flag": "errand_xuan_asked", "not_flag": "errand_xuan_done"}, "effects": {"items": {"soul_severing_lotus": -1, "longevity_pill": 1}, "alignment": -20, "set_flag": "errand_xuan_done"}, "favor": 20},
+        {"label": "Back away slowly.", "next": "end"}
+      ]},
+    "skulls": {"text": "'Every rival I outlived. I remember each name; that is why I carve them. The living forget and the dead are too polite to complain, but bone is honest.' The Lord taps the nearest. 'This one begged very well.'",
+      "choices": [{"label": "...", "next": "greet"}]},
+    "serve": {"text": "Half-lidded eyes watch you and say nothing for three days. On the last, a hand tips the cup toward you without looking, and the blood-dark wine burns pleasantly all the way down. Killing intent seeps into your meridians and, strangely, steadies them.",
+      "choices": [{"label": "...", "next": "greet"}]},
+    "price": {"text": "'My name. The one my mother gave me. I cut it away to pass the threshold, and now I only answer to the one I took. Do not look so grave, little one. I would do it again. Anyone who says otherwise has never been afraid of dying.'",
+      "choices": [{"label": "I understand.", "next": "greet", "favor": 5}]},
+    "errand_ask": {"text": "'There is a black lotus that blooms where a death is still deciding to happen. I used to pick them myself. Now I am too well known; they wilt when I approach. Bring me one and I will give you what I took from a man who thought he could live forever.'",
+      "choices": [{"label": "I will find it.", "next": "greet", "effects": {"set_flag": "errand_xuan_asked"}}]},
+    "errand_thanks": {"text": "The Lord cradles the lotus like a newborn, then crushes a single petal against a tongue. The smile is the most frightening thing you have seen all year. 'Good. Take this, and remember who gave it.' A Longevity Pill rolls across the floor of skulls toward you.",
+      "choices": [{"label": "...", "next": "greet"}]}
+  }
+}

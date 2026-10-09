@@ -10,6 +10,7 @@
         {"label": "Fetch water and tend the fire for her. (3 days)", "next": "tend", "days": 3, "favor": 5, "effects": {"qi": 2000}},
         {"label": "Ask about the sealed hall on the ridge.", "next": "pavilion", "if": {"min_favor": 30}, "show_locked": true},
         {"label": "Ask if she would teach the Soul Infant Pill.", "next": "recipe", "if": {"min_favor": 45, "min_realm": "core_formation", "not_flag": "ye_recipe"}, "show_locked": true},
+        {"label": "Ask about the flawless Soul Infant Pill.", "next": "flawless", "if": {"min_favor": 20}, "show_locked": true},
         {"label": "Ask if she needs anything.", "next": "errand_ask", "if": {"not_flag": "errand_ye_asked"}},
         {"label": "Bring the three Cloud Mist Orchids Ye asked for.", "next": "errand_thanks", "if": {"has_items": {"cloud_mist_orchid": 3}, "flag": "errand_ye_asked", "not_flag": "errand_ye_done"}, "effects": {"items": {"cloud_mist_orchid": -3, "nine_leaf_soul_grass": 2}, "set_flag": "errand_ye_done"}, "favor": 15},
         {"label": "Leave her to her soup.", "next": "end"}
@@ -20,6 +21,8 @@
       "choices": [{"label": "...", "next": "greet"}]},
     "pavilion": {"text": "'The Skyfall Thunder Pavilion up the ridge? It opens when the storm turns on itself, about every thirty years. A thunder-sage's old hall, full of tempered iron and bad advice. Go in with a full pouch of ward talismans, and eat before you do.'",
       "choices": [{"label": "I will remember.", "next": "greet", "favor": 5}]},
+    "flawless": {"text": "'If you want the flawless Soul Infant Pill, the one with the nine-ringed halo, you will need an alchemist far better than me, a cauldron far better than mine, and patience that has outlived three sects. I made one, once. I still dream of the smell.'",
+      "choices": [{"label": "...", "next": "greet"}]},
     "recipe": {"text": "She wipes her hands, studies you for a long moment, and scrawls a recipe on a jade slip with her thumbnail. 'Soul Infant Pill. Two parts patience, one part luck, and a prayer to whichever heaven you prefer. It does not work for everyone; it works for those who finish the brew. Do not waste the lotus seeds.'",
       "choices": [{"label": "Accept the formula with thanks. (7 days)", "next": "greet", "days": 7, "favor": 10, "effects": {"items": {"recipe_nascent_soul_pill": 1}, "set_flag": "ye_recipe"}}]},
     "errand_ask": {"text": "'My cloud mist orchids ran out in the last storm, and the Terraces are a day's climb in lightning that doesn't care about my knees. Three of them, fresh. I'll repay you in leaf-grass that I've been saving. It only grows where lightning has struck twice.'",

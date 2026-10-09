@@ -50,7 +50,10 @@
     {"id": "alchemist_ye", "name": "Ye Zhuoran", "title": "Cloud-Walking Alchemist", "region": "myriad_peaks_ridge", "pos": [520, 520], "color": "9ac4b0",
      "gender": "female", "surname": "Ye", "given_name": "Zhuoran",
      "realm": "nascent_soul", "stage": 0, "age_years": 560, "alignment": 20, "roots": {"wood": 70, "fire": 48, "earth": 35},
-     "attributes": {"comprehension": 18, "fortune": 15, "charisma": 13}, "cultivates": true, "diligence": 0.1, "dialogue": "alchemist_ye"}
+     "attributes": {"comprehension": 18, "fortune": 15, "charisma": 13}, "cultivates": true, "diligence": 0.1, "dialogue": "alchemist_ye"},
+    {"id": "lord_xuan", "name": "Xuan Moying", "title": "Hundred-Skull Lord", "region": "myriad_peaks_ridge", "pos": [1400, 520], "color": "3a2a4a", "gender": "male", "surname": "Xuan", "given_name": "Moying", "realm": "soul_formation", "stage": 0, "age_years": 1210, "alignment": -700, "roots": {"fire": 72, "water": 55}, "attributes": {"spirit": 20, "charisma": 14, "fortune": 11}, "cultivates": true, "diligence": 0.1, "dialogue": "lord_xuan"},
+    {"id": "saint_lan", "name": "Lan Zhiyuan", "title": "Wandering Sword-Saint", "region": "myriad_peaks_ridge", "pos": [300, 300], "color": "b8c4d8", "gender": "male", "surname": "Lan", "given_name": "Zhiyuan", "realm": "soul_formation", "stage": 0, "age_years": 980, "alignment": 30, "roots": {"metal": 80, "water": 40}, "attributes": {"comprehension": 19, "spirit": 17, "constitution": 15}, "cultivates": true, "diligence": 0.1, "dialogue": "saint_lan"},
+    {"id": "sage_wen", "name": "Wen Qingxu", "title": "Mountain-Mending Sage", "region": "myriad_peaks_ridge", "pos": [880, 540], "color": "c8d8e8", "gender": "male", "surname": "Wen", "given_name": "Qingxu", "realm": "soul_formation", "stage": 1, "age_years": 1450, "alignment": 480, "roots": {"earth": 78, "metal": 60}, "attributes": {"comprehension": 20, "spirit": 19, "constitution": 14}, "cultivates": true, "diligence": 0.1, "dialogue": "sage_wen"}
   ],
   "errands": [
     {"npc": "elder_mo", "asked_flag": "errand_mo_asked", "done_flag": "errand_mo_done", "text": "Elder Mo asked for 6 Spirit Herbs (the slope above Qingshi Village)."},
@@ -62,6 +65,8 @@
     {"npc": "old_monster_gui", "asked_flag": "errand_gui_asked", "done_flag": "errand_gui_done", "text": "Old Monster Gui asked for 3 Blood Ginseng (Corpse-Lily Bog, Withered Bone Marsh)."},
     {"npc": "alchemist_ye", "asked_flag": "errand_ye_asked", "done_flag": "errand_ye_done", "text": "Ye Zhuoran asked for 3 Cloud Mist Orchids (Thunder-Struck Terraces, Myriad Peaks Ridge)."},
     {"npc": "disciple_bai", "asked_flag": "errand_bai_asked", "done_flag": "errand_bai_done", "text": "Bai Qingwu asked for 3 Nine-Leaf Soul Grass (Cloud-Sea Orchid Terraces, Azure Peak)."},
-    {"npc": "broker_shen", "asked_flag": "errand_shen_asked", "done_flag": "errand_shen_done", "text": "Shen Wuya asked for 2 Star Silver (Meteor Crater Field, Fallen Star Market)."}
+    {"npc": "broker_shen", "asked_flag": "errand_shen_asked", "done_flag": "errand_shen_done", "text": "Shen Wuya asked for 2 Star Silver (Meteor Crater Field, Fallen Star Market)."},
+    {"npc": "sage_wen", "asked_flag": "errand_wen_asked", "done_flag": "errand_wen_done", "text": "Wen Qingxu asked for 2 Soul Infant Fruit (Thunder-Struck Terraces, Myriad Peaks Ridge)."},
+    {"npc": "lord_xuan", "asked_flag": "errand_xuan_asked", "done_flag": "errand_xuan_done", "text": "Xuan Moying asked for a Soul Severing Lotus (it grows only where Nascent Soul cultivators can pick it)."}
   ]
 }
