@@ -279,3 +279,25 @@ func test_call_days_left_helper() -> void:
 func test_danger_text_risky_warns_to_prepare() -> void:
 	assert_true(MissionBoard.danger_text("Risky").contains("probably win, but a loss is likely enough to prepare for."))
 	assert_false(MissionBoard.danger_text("Risky").contains("no slipping away"))
+
+
+## WU-107: the "you lost this fight" line fades after LOSS_MEMORY_DAYS and a win clears it.
+func test_loss_text_fades_and_a_win_clears_it() -> void:
+	var c := _disciple()
+	var id := "cull_mist_wolves"
+	assert_eq(MissionBoard.loss_text(c, id), "", "never lost")
+	c.mission_losses[id] = c.age_days - 10
+	assert_true(MissionBoard.loss_text(c, id).contains("You lost this fight"), "10 days ago")
+	c.mission_losses[id] = c.age_days - MissionBoard.LOSS_MEMORY_DAYS
+	assert_true(MissionBoard.loss_text(c, id) != "", "still remembered on the last day")
+	c.mission_losses[id] = c.age_days - (MissionBoard.LOSS_MEMORY_DAYS + 1)
+	assert_eq(MissionBoard.loss_text(c, id), "", "61 days ago")
+	c.mission_losses[id] = c.age_days - 40
+	assert_true(MissionBoard.loss_text(c, id) != "", "40 days ago")
+	c.stage = 5
+	var d := data()
+	for item_id: String in d.sect_missions[id].get("requires", {}).get("items", {}):
+		c.add_item(item_id, 99)
+	var result := Sects.complete_mission(c, d, id, {})
+	assert_true(result["ok"], str(result["reason"]))
+	assert_eq(MissionBoard.loss_text(c, id), "", "a won retry clears it")

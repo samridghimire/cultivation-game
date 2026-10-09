@@ -14,6 +14,8 @@ extends PanelContainer
 
 signal closed
 
+## A lost fight is remembered on the board for this many days (WU-107).
+const LOSS_MEMORY_DAYS := 60
 const KIND_NAMES := {"gather": "Gathering", "hunt": "Hunt", "deliver": "Delivery", "guard": "Escort"}
 
 var _title: Label
@@ -404,10 +406,10 @@ func _select(mission_id: String) -> void:
 
 
 ## "You lost this fight 12 days ago." once a lost mission fight is offered again
-## (Sects.last_loss_days_ago), "" when it was never lost.
+## (Sects.last_loss_days_ago), "" when it was never lost or more than LOSS_MEMORY_DAYS ago.
 static func loss_text(c: CharacterData, mission_id: String) -> String:
 	var days := Sects.last_loss_days_ago(c, mission_id)
-	if days < 0:
+	if days < 0 or days > LOSS_MEMORY_DAYS:
 		return ""
 	if days == 0:
 		return "You lost this fight today."
