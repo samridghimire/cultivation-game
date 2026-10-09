@@ -321,6 +321,38 @@
         "When the game opens a feature for you for the first time, such as your first sect mission or your first abode, a \"New\" banner appears briefly and a line is added to the message log. Reopen the log (Message log key) to read old notices again.",
         "The HUD hints panel suggests next steps. Choose how many it shows (0-3) under \"HUD hints\" in Settings; at 0 both the panel and the \"New\" banners are hidden, though the log still records them."
       ]
+    },
+    {
+      "id": "region_familiarity",
+      "title": "Knowing a Region",
+      "body": [
+        "Every day you spend exploring a region makes you more familiar with it. The world map and the explore menu show the days explored, how many of its happenings you have seen (\"seen N of M\") and when a deeper path will open.",
+        "Sights you have already met grow rarer, so fresh happenings surface in their place. Regions you have never visited are dimmed and marked Unexplored on the map.",
+        "A deeper path is a hidden place that opens after enough days in one region. You are told when it opens and it turns up on a later trip. Some regions also hide a discovery, a one-time find; a gleam on the map says one still waits, and merchants and the journal may pass on a rumor of it."
+      ]
+    },
+    {
+      "id": "herb_seasons",
+      "title": "Herbs and the Seasons",
+      "body": [
+        "Some herbs grow only in one season. The inventory notes when and where a herb is richest, so you know where to go when the season turns."
+      ]
+    },
+    {
+      "id": "bounties",
+      "title": "Bounties",
+      "body": [
+        "Bounty boards in towns post a few hunts for dangerous beasts, each with a region, a deadline and a reward in spirit stones. Take one and abandon it at the board if you change your mind; only one hunt can be open at a time.",
+        "Explore the named region and the quarry's trail may turn up as a fight. Win before the deadline and you are paid. The board shows how dangerous each foe is for you, and a bounty you finish or drop cannot be taken again for a while."
+      ]
+    },
+    {
+      "id": "festivals",
+      "title": "Festivals",
+      "body": [
+        "Some places hold a festival in a fixed month each year: the Lantern Festival in Qingshi, a spring ancestor festival at Azure Peak, a Mid-Autumn moon festival at Fallen Star Market. The journal lists the ones nearby.",
+        "During a festival people are warmer: chats and gifts earn more favor, some markets lower their prices, and special encounters appear in the streets."
+      ]
     }
   ]
 }
