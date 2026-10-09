@@ -178,11 +178,12 @@ func _has_section(entries: Array[Dictionary], section: String) -> bool:
 func test_open_admitting_secret_realm_is_an_opportunity() -> void:
 	var c := _fresh()
 	c.realm_index = data().realm_index_of("qi_refining")
-	var entry := _find(_flags_journal(c, {}, 10), "Peach Blossom")
+	var open_day: int = int(data().secret_realms["peach_blossom_grotto"]["offset_years"]) * Calendar.DAYS_PER_YEAR + 10
+	var entry := _find(_flags_journal(c, {}, open_day), "Peach Blossom")
 	assert_eq(entry.get("section", ""), "Opportunities")
 	assert_true(String(entry.get("text", "")).contains("is open"))
 	var mortal := _fresh()
-	assert_true(_find(_flags_journal(mortal, {}, 10), "Peach Blossom").is_empty())
+	assert_true(_find(_flags_journal(mortal, {}, open_day), "Peach Blossom").is_empty())
 
 
 func test_claimed_inheritance_is_not_listed() -> void:
