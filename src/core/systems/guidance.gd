@@ -852,7 +852,7 @@ static func _festival_entries(out: Array[Dictionary], data: GameData, today: int
 			_add(out, "Opportunities", "%s in %s: %d days left" % [WorldEvents.event_name(data, event_id), _region_name(data, where), maxi(0, int(instance["end_day"]) - today)], "normal")
 		var activity := WorldEvents.activity_of(data, event_id)
 		if where == region_id and not activity.is_empty() and not bool(instance.get("activity_done", false)):
-			_add(out, "Opportunities", "Festival: %s at %s (once this festival)." % [activity["name"], _region_name(data, where)], "normal")
+			_add(out, "Opportunities", "Festival: %s at %s (ask a merchant; once this festival)." % [activity["name"], _region_name(data, where)], "normal")
 
 
 ## Children to teach, garden plots, companion beasts and pregnancies.

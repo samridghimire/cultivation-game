@@ -237,8 +237,7 @@ func _load(dir: String) -> void:
 
 	var rumor_file := _read(dir, "rumors.json")
 	rumor_rules["max_per_visit"] = rumor_file.get("max_per_visit", rumor_rules["max_per_visit"])
-	for rumor in rumor_file.get("rumors", []):
-		rumors[String(rumor.get("id", ""))] = rumor
+	_load_rumors(rumor_file)
 
 	var npc_file := _read(dir, "npcs.json")
 	for npc in npc_file.get("npcs", []):
@@ -678,6 +677,15 @@ func _validate_bounties() -> void:
 			load_errors.append("%s cooldown_days must be >= 0" % label)
 		if String(b.get("text", "")) == "":
 			load_errors.append("%s needs text" % label)
+
+
+## Reads rumors.json's rumors into `rumors`, reporting duplicate ids.
+func _load_rumors(rumor_file: Dictionary) -> void:
+	for rumor in rumor_file.get("rumors", []):
+		var id := String(rumor.get("id", ""))
+		if rumors.has(id):
+			load_errors.append("rumors.json has a duplicate rumor id '%s'" % id)
+		rumors[id] = rumor
 
 
 func _validate_rumors() -> void:

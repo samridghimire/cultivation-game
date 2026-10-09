@@ -164,13 +164,14 @@ static func describe(data: GameData, active: Array, total_days: int) -> PackedSt
 
 
 ## Gossip lines for a merchant's "Ask about rumors": every event under way
-## (with where and how long), then `extra` lines (e.g. auction dates).
+## (with where and how long), then `extra` lines (e.g. auction dates). The
+## merchant only shrugs when there is neither an event nor an extra line.
 static func rumors(data: GameData, active: Array, extra: PackedStringArray, total_days: int) -> PackedStringArray:
 	var lines: PackedStringArray = []
 	for instance: Dictionary in active:
 		var def := def_of(data, instance["id"])
 		lines.append("Rumor has it the %s in %s will last another %s. %s" % [def.get("name", instance["id"]), Exploration.region_name(data, String(instance["region"])), Calendar.format_duration(maxi(0, int(instance["end_day"]) - total_days)), def.get("description", "")])
-	if lines.is_empty():
+	if lines.is_empty() and extra.is_empty():
 		lines.append("The merchant shrugs: no beast tides, no wars, nothing worth gossiping about.")
 	lines.append_array(extra)
 	return lines

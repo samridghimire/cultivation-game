@@ -86,3 +86,19 @@ func test_every_region_has_a_data_rumor() -> void:
 		covered[String(r.get("region", ""))] = true
 	for region_id: String in d.regions:
 		assert_true(covered.has(region_id), "%s has no rumor" % region_id)
+
+
+func test_shrug_only_when_nothing_else() -> void:
+	var d := _rd([])
+	var none := PackedStringArray()
+	assert_eq(WorldEvents.rumors(d, [], none, 0).size(), 1)
+	assert_true(WorldEvents.rumors(d, [], none, 0)[0].contains("shrugs"))
+	var one := WorldEvents.rumors(d, [], PackedStringArray(["Auction soon."]), 0)
+	assert_eq(one as Array, ["Auction soon."])
+
+
+func test_duplicate_rumor_id_reported() -> void:
+	var d := _rd([])
+	d.load_errors.clear()
+	d._load_rumors({"rumors": [{"id": "x", "text": "A"}, {"id": "x", "text": "B"}]})
+	assert_true(d.load_errors.has("rumors.json has a duplicate rumor id 'x'"), str(d.load_errors))
