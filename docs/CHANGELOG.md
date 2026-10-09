@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-09 [QA-040] Pointers and spars are audited against exploits (cooldowns, favor caps, save/load).
 - 2026-10-09 [WU-059] Ask a senior NPC for pointers or spar with them from their menu.
 - 2026-10-09 [TRAV-001] The game remembers which regions you have visited (Far Traveller milestone).
 - 2026-10-09 [C-037] Five Foundation-realm choice encounters with righteous and demonic answers.
