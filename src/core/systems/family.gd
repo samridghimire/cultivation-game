@@ -177,6 +177,38 @@ static func gift_value(data: GameData, item_id: String) -> int:
 	return clampi(price / maxi(1, int(rules.get("gift_price_per_favor", 10))), 1, int(rules.get("gift_max_per_item", 10)))
 
 
+## How the named NPC `npc_id` feels about `item_id` (GIFT-001): 1 liked, -1 disliked,
+## 0 neutral. npcs.json `likes`/`dislikes` entries match an item id or one of its
+## tags; a dislike wins over a like. Generated NPCs have no tastes.
+static func gift_taste(data: GameData, npc_id: String, item_id: String) -> int:
+	var def: Dictionary = data.npcs.get(npc_id, {})
+	var tags: Array = data.items.get(item_id, {}).get("tags", [])
+	for entry in def.get("dislikes", []):
+		if entry == item_id or tags.has(entry):
+			return -1
+	for entry in def.get("likes", []):
+		if entry == item_id or tags.has(entry):
+			return 1
+	return 0
+
+
+## A readable word for a likes entry: the item's name, or the plural of a tag.
+static func _taste_word(data: GameData, entry: String) -> String:
+	if data.items.has(entry):
+		return String(data.items[entry].get("name", entry)).to_lower()
+	var word := entry.replace("_", " ")
+	return word if word.ends_with("s") else word + "s"
+
+
+## "<Name> is fond of herbs." for the NPC's first like, or "" if they have none.
+static func taste_hint(data: GameData, npc_id: String) -> String:
+	var def: Dictionary = data.npcs.get(npc_id, {})
+	var likes: Array = def.get("likes", [])
+	if likes.is_empty():
+		return ""
+	return "%s is fond of %s." % [def.get("name", npc_id), _taste_word(data, String(likes[0]))]
+
+
 ## Why `c` cannot give `item_id` to `other`, or "" if they can.
 static func check_gift(c: CharacterData, other: CharacterData, favor: int, item_id: String, data: GameData) -> String:
 	if other == null or not other.alive or other.id == c.id:
@@ -185,21 +217,28 @@ static func check_gift(c: CharacterData, other: CharacterData, favor: int, item_
 		return "You do not have that."
 	if gift_value(data, item_id) <= 0:
 		return "%s has no use for that." % other.name
-	if favor >= int(data.family.get("acquaintance", {}).get("gift_max_favor", 0)):
+	if favor >= int(data.family.get("acquaintance", {}).get("gift_max_favor", 0)) and gift_taste(data, other.id, item_id) >= 0:
 		return "%s politely declines. Gifts alone will not win more of their heart." % other.name
 	return ""
 
 
 ## Gives one `item_id` to `other` (removed from `c`'s inventory).
-## Returns {ok, reason, favor (gain, never past gift_max_favor), days}.
+## Returns {ok, reason, favor (gain, never past gift_max_favor; negative for a
+## disliked gift), days, taste (1 liked, -1 disliked, 0)}. `other.id` picks the tastes.
 static func give_gift(c: CharacterData, other: CharacterData, favor: int, item_id: String, data: GameData) -> Dictionary:
 	var reason := check_gift(c, other, favor, item_id, data)
 	if reason != "":
-		return {"ok": false, "reason": reason, "favor": 0, "days": 0}
+		return {"ok": false, "reason": reason, "favor": 0, "days": 0, "taste": 0}
 	var rules: Dictionary = data.family.get("acquaintance", {})
 	c.add_item(item_id, -1)
-	var gain := mini(gift_value(data, item_id), int(rules.get("gift_max_favor", 0)) - favor)
-	return {"ok": true, "reason": "", "favor": gain, "days": int(rules.get("gift_days", 0))}
+	var taste := gift_taste(data, other.id, item_id)
+	var gain := gift_value(data, item_id)
+	if taste > 0:
+		gain = ceili(gain * float(rules.get("gift_like_mult", 1.0)))
+	gain = mini(gain, int(rules.get("gift_max_favor", 0)) - favor)
+	if taste < 0:
+		gain = int(rules.get("gift_dislike_favor", 0))
+	return {"ok": true, "reason": "", "favor": gain, "days": int(rules.get("gift_days", 0)), "taste": taste}
 
 
 ## Why `other` would refuse `c`'s proposal for `rank`, or "" if they accept.
@@ -372,6 +411,19 @@ static func validate(data: GameData) -> PackedStringArray:
 				errors.append("family.json acquaintance needs %s >= 0" % key)
 		if int(acq.get("gift_price_per_favor", 0)) < 1 or int(acq.get("gift_max_per_item", 0)) < 1:
 			errors.append("family.json acquaintance needs gift_price_per_favor and gift_max_per_item >= 1")
+		if float(acq.get("gift_like_mult", 1.0)) < 1.0:
+			errors.append("family.json acquaintance gift_like_mult must be >= 1")
+		if int(acq.get("gift_dislike_favor", 0)) > 0:
+			errors.append("family.json acquaintance gift_dislike_favor must be <= 0")
+	var tags_used: Dictionary = {}
+	for item: Dictionary in data.items.values():
+		for tag in item.get("tags", []):
+			tags_used[tag] = true
+	for npc_id in data.npcs:
+		for key in ["likes", "dislikes"]:
+			for entry in data.npcs[npc_id].get(key, []):
+				if not data.items.has(entry) and not tags_used.has(entry):
+					errors.append("NPC '%s' %s unknown item or tag '%s'" % [npc_id, key, entry])
 	var eligible: Dictionary = data.family.get("eligible_npcs", {})
 	if eligible.is_empty():
 		return errors  # optional: no generated courtship candidates

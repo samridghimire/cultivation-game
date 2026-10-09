@@ -107,3 +107,64 @@ func test_game_state_chat_and_gift_unlock_courtship() -> void:
 	gs.court(she.id)
 	assert_gt(int(gs.npc_favor[she.id]), before, "courtship is now possible")
 	gs.end_session()
+
+
+## GIFT-001: likes and dislikes.
+func test_gift_taste_matches_ids_and_tags() -> void:
+	assert_eq(Family.gift_taste(data(), "elder_mo", "dew_grass"), 1, "tag match")
+	assert_eq(Family.gift_taste(data(), "elder_mo", "core_forming_pill"), 0, "neutral")
+	assert_eq(Family.gift_taste(data(), "nobody", "dew_grass"), 0, "generated NPCs have none")
+	var d := GameData.new()
+	d.items = {"a": {"tags": ["herb"]}}
+	d.npcs = {"n": {"likes": ["a"], "dislikes": ["herb"]}}
+	assert_eq(Family.gift_taste(d, "n", "a"), -1, "dislike beats like")
+	d.npcs = {"n": {"likes": ["a"]}}
+	assert_eq(Family.gift_taste(d, "n", "a"), 1, "id match")
+
+
+func test_liked_and_disliked_gifts() -> void:
+	var c := new_character()
+	var mo := Npcs.create(data().npcs["elder_mo"], data(), seeded_rng())
+	c.add_item("dew_grass", 3)
+	var base := Family.gift_value(data(), "dew_grass")
+	var liked := Family.give_gift(c, mo, 0, "dew_grass", data())
+	assert_eq(liked["taste"], 1)
+	assert_eq(liked["favor"], ceili(base * float(_rules()["gift_like_mult"])))
+	assert_eq(Family.give_gift(c, mo, int(_rules()["gift_max_favor"]) - 1, "dew_grass", data())["favor"], 1, "cap applies")
+	# A disliked gift is taken, costs favor, and works even at the cap.
+	var lan := Npcs.create(data().npcs["herbalist_lan"], data(), seeded_rng())
+	var bad: String = ""
+	for id: String in data().items:
+		if (data().items[id].get("tags", []) as Array).has("demonic") and Family.gift_value(data(), id) > 0:
+			bad = id
+			break
+	assert_true(bad != "", "a demonic gift exists")
+	c.add_item(bad, 1)
+	var cap := int(_rules()["gift_max_favor"])
+	var result := Family.give_gift(c, lan, cap, bad, data())
+	assert_true(result["ok"])
+	assert_eq(result["favor"], int(_rules()["gift_dislike_favor"]))
+	assert_eq(result["taste"], -1)
+	assert_eq(c.item_count(bad), 0, "the item is still taken")
+
+
+func test_taste_hint_and_validation() -> void:
+	assert_eq(Family.taste_hint(data(), "elder_mo"), "Elder Mo is fond of herbs.")
+	assert_eq(Family.taste_hint(data(), "xiao_ling"), "")
+	var d := GameData.new()
+	d.names = data().names
+	d.family = data().family
+	d.items = data().items
+	d.npcs = {"x": {"likes": ["no_such_thing"]}}
+	assert_gt(Family.validate(d).size(), 0, "unknown id or tag is rejected")
+
+
+func test_game_state_gift_taste_flags() -> void:
+	var gs: Node = _root().get_node("GameState")
+	var c := CharacterFactory.create("Giver", gs.data, seeded_rng())
+	gs.start_session(c)
+	c.add_item("dew_grass", 1)
+	gs.give_gift("elder_mo", "dew_grass")
+	assert_eq(int(gs.world_flags.get("taste_elder_mo_dew_grass", 0)), 1)
+	assert_gt(int(gs.npc_favor.get("elder_mo", 0)), 0)
+	gs.end_session()

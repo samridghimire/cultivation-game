@@ -1170,6 +1170,10 @@ func chat(npc_id: String) -> void:
 	var gain: int = base + Karma.favor_bonus(player, data, npc_id, base, cap - favor - base)
 	npc_favor[npc_id] = favor + gain
 	EventBus.post("You pass some time talking with %s. (%s)" % [npcs[npc_id].name, Family.favor_progress(int(npc_favor[npc_id]), data)] + (" The festival warms the mood." if festival else ""))
+	var hint := Family.taste_hint(data, npc_id)
+	if hint != "" and int(npc_favor[npc_id]) >= 20 and not world_flags.has("taste_told_" + npc_id):
+		world_flags["taste_told_" + npc_id] = true
+		EventBus.post(hint, "info")
 	var visit := Letters.take_visit_bonus(npc_id, data, world_flags)
 	if visit > 0:
 		npc_favor[npc_id] = mini(100, int(npc_favor[npc_id]) + visit)
@@ -1247,11 +1251,19 @@ func give_gift(npc_id: String, item_id: String) -> void:
 		return
 	var cap := int(data.family.get("acquaintance", {}).get("gift_max_favor", 0))
 	var festival := WorldEvents.favor_multiplier(data, world_events, current_region) > 1.0
-	var base := NpcClans.scaled_favor(npc_clans, data, npc_id, WorldEvents.scaled_favor(data, world_events, current_region, int(result["favor"])), cap - favor)
-	var gain: int = base + Karma.favor_bonus(player, data, npc_id, base, cap - favor - base)
-	npc_favor[npc_id] = favor + gain
-	Karma.on_kindness(player, data, npc_id, "gift")
-	EventBus.post("%s accepts your %s. (%s)" % [npcs[npc_id].name, data.items[item_id].get("name", item_id), Family.favor_progress(int(npc_favor[npc_id]), data)] + (" The festival warms the mood." if festival else ""))
+	var taste := int(result["taste"])
+	var gain := int(result["favor"])
+	if taste >= 0:
+		var base := NpcClans.scaled_favor(npc_clans, data, npc_id, WorldEvents.scaled_favor(data, world_events, current_region, gain), cap - favor)
+		gain = base + Karma.favor_bonus(player, data, npc_id, base, cap - favor - base)
+	npc_favor[npc_id] = clampi(favor + gain, 0, 100)
+	if taste >= 0:
+		Karma.on_kindness(player, data, npc_id, "gift")
+	var item_name: String = data.items[item_id].get("name", item_id)
+	EventBus.post("%s accepts your %s. (%s)" % [npcs[npc_id].name, item_name, Family.favor_progress(int(npc_favor[npc_id]), data)] + (" The festival warms the mood." if festival and taste >= 0 else ""))
+	if taste != 0:
+		world_flags["taste_%s_%s" % [npc_id, item_id]] = taste
+		EventBus.post("%s is delighted." % npcs[npc_id].name if taste > 0 else "%s frowns at the %s." % [npcs[npc_id].name, item_name.to_lower()], "progress" if taste > 0 else "warning")
 	_clan_deed(npc_id, "gift")
 	_pass_time(result["days"])
 
