@@ -297,6 +297,21 @@ func test_lost_fight_posts_advice() -> void:
 	gs.end_session()
 
 
+## QA-055: combat_started fires before the fight, with the enemy and the
+## player still unchanged (so tools can rate the odds the fight started from).
+func test_combat_started_fires_before_the_fight() -> void:
+	var c := _start()
+	var gs := _game_state()
+	var seen := []
+	var on_started := func(enemy: Dictionary) -> void: seen.append([String(enemy["id"]), gs.player.item_count("spirit_stone")])
+	EventBus.combat_started.connect(on_started)
+	var foe := {"id": "w", "name": "Weak Foe", "realm": "mortal", "stage": 0, "hp": -50, "attack": -50, "defense": -50, "speed": 0, "techniques": [], "rewards": {"items": {"spirit_stone": 3}}}
+	var before := c.item_count("spirit_stone")
+	gs.fight_enemy(foe)
+	EventBus.combat_started.disconnect(on_started)
+	assert_eq(seen, [["w", before]], "emitted once, before the reward was paid")
+
+
 func test_fight_spoils_show_sell_price() -> void:
 	var c := _start()
 	c.realm_index = 2

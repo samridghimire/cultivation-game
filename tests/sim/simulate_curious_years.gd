@@ -20,6 +20,12 @@ func _initialize() -> void:
 ## lives left, stones held and the log lines just before it. Printed after the run.
 var _deaths: Array[Dictionary] = []
 var _last_fight := {}
+var _prefight_odds := -1.0
+
+
+func _on_combat_started(enemy: Dictionary) -> void:
+	var gs: Node = root.get_node("GameState")
+	_prefight_odds = Combat.win_chance(gs.player, gs.data, enemy)
 
 
 func _on_combat_finished(enemy_name: String, victory: bool, _log: PackedStringArray) -> void:
@@ -29,10 +35,8 @@ func _on_combat_finished(enemy_name: String, victory: bool, _log: PackedStringAr
 		if String(e.get("name", "")) == enemy_name:
 			foe = e
 			break
-	var odds := -1.0
-	if not foe.is_empty() and gs.player != null:
-		odds = Combat.win_chance(gs.player, gs.data, foe)
-	_last_fight = {"id": String(foe.get("id", enemy_name)), "odds": odds, "won": victory}
+	# QA-055: the odds were rated before the fight (the outcome already changed the player).
+	_last_fight = {"id": String(foe.get("id", enemy_name)), "odds": _prefight_odds, "won": victory}
 
 
 func _record_death(cause: String, final: bool) -> void:
@@ -78,6 +82,7 @@ func _run() -> void:
 		first_month[f] = []
 	var bus: Node = root.get_node("EventBus")
 	bus.combat_finished.connect(_on_combat_finished)
+	bus.combat_started.connect(_on_combat_started)
 	bus.player_respawned.connect(func(_a: String, _l: int) -> void: _record_death(String(gs.pending_respawn.get("cause", "?")), false))
 	bus.player_died.connect(func(cause: String) -> void: _record_death(cause, true))
 	print("Curious player, %d seeds, %d months" % [seeds, months])

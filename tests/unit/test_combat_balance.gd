@@ -186,3 +186,20 @@ func test_veteran_loadout_manuals_are_obtainable() -> void:
 			var manual := String(data().techniques[tech_id].manual_item)
 			assert_true(Balance.manual_obtainable(data(), manual), "%s (realm %d) uses %s, which nobody sells or gives" % [tech_id, realm, manual])
 	assert_false(Balance.manual_obtainable(data(), "no_such_manual"))
+
+
+## QA-055: the odds the board and the sensing prompt show (Combat.win_chance, 40
+## fixed-seed fights) match what the fights really do. Pure sample noise is
+## allowed, hence the 10-point band; a mist wolf at Qi Refining 1st/3rd layer.
+func test_rated_odds_match_real_fights() -> void:
+	var enemy: Dictionary = data().enemies["mist_wolf"]
+	for stage in [1, 3]:
+		for kind in ["typical", "bare"]:
+			var c: CharacterData = Balance.typical_player(data(), 1, stage) if kind == "typical" else Balance.bare_player(data(), 1, stage)
+			var rated := Combat.win_chance(c, data(), enemy)
+			var rng := seeded_rng(55)
+			var wins := 0
+			for i in 500:
+				if Combat.resolve(c, data(), enemy, rng)["victory"]:
+					wins += 1
+			assert_true(absf(rated - wins / 500.0) <= 0.10, "%s stage %d: rated %.2f vs real %.2f" % [kind, stage, rated, wins / 500.0])

@@ -2311,6 +2311,7 @@ func fight_enemy(enemy: Dictionary, start_hp: int = -1) -> bool:
 		if ally_id != "":
 			allies.append(Karma.ally_strike(player, npcs, data, ally_id))
 	var pre_odds := Combat.win_chance(player, data, enemy)
+	EventBus.combat_started.emit(enemy)
 	var result := Combat.resolve(player, data, enemy, rng, allies, start_hp)
 	last_fight_hp = int(result["player_hp"])
 	last_fight_playback = {"trace": result["trace"], "player_max": result["player_max_hp"], "enemy_max": result["enemy_max_hp"]}
