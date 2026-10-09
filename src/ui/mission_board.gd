@@ -416,7 +416,7 @@ func _show_details() -> void:
 		c.visible = not mission.is_empty()
 	var danger := Sects.mission_danger(p, data, _selected) if not mission.is_empty() else ""
 	_danger.visible = danger != ""
-	_danger.text = danger_text(danger)
+	_danger.text = Warnings.append_to(p, danger_text(danger)) if danger != "" else ""
 	_danger.add_theme_color_override("font_color", UIStyle.danger_color(danger))
 	if mission.is_empty():
 		return

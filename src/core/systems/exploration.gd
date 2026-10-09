@@ -487,7 +487,7 @@ static func choices(c: CharacterData, data: GameData, encounter: Dictionary, fla
 	var list: Array = encounter.get("choices", [])
 	for i in list.size():
 		var reason := check_choice(c, data, list[i], flags)
-		out.append({"index": i, "label": String(list[i].get("label", "")), "disabled": reason != "", "reason": reason})
+		out.append({"index": i, "label": String(list[i].get("label", "")), "disabled": reason != "", "reason": reason, "fight": list[i].has("enemy") or bool(list[i].get("fight_rival", false))})
 	return out
 
 

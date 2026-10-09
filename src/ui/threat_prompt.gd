@@ -21,6 +21,7 @@ func menu_options() -> Array[Dictionary]:
 	options.append({
 		"label": "Fight it (%s, %d%% to win)" % [UIStyle.fight_label(GameState.player, GameState.data, enemy, false), pct],
 		"action": GameState.face_threat.bind(true),
+		"description": Warnings.final_death_warning(GameState.player),
 	})
 	return options
 

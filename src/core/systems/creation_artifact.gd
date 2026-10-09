@@ -130,7 +130,7 @@ static func respawn_choices(c: CharacterData, data: GameData) -> Array[Dictionar
 static func describe(c: CharacterData, data: GameData) -> Array[String]:
 	var lines: Array[String] = []
 	var max_lives := int(data.artifact.get("max_lives", 9))
-	lines.append("Lives: %d / %d   |   Next recharge: %d spirit stones" % [c.artifact_lives, max_lives, recharge_cost(c, data)])
+	lines.append("Lives: %d / %d%s   |   Next recharge: %d spirit stones" % [c.artifact_lives, max_lives, " (death is final)" if c.artifact_lives == 0 else "", recharge_cost(c, data)])
 	lines.append("Anchors: %d / %d bound" % [c.anchors.size(), anchor_slots(c, data)])
 	for i in c.anchors.size():
 		var tag := "  (respawn point)" if i == c.anchors.size() - 1 else ""

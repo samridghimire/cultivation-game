@@ -154,7 +154,7 @@ func _rebuild() -> void:
 	if not family.is_empty():
 		t += "[color=#%s]Family[/color]\n" % accent
 		for line in family:
-			t += "  %s\n" % line
+			t += "  %s\n" % (line if p.artifact_lives != 0 or not line.begins_with("Lives:") else "[color=#%s]%s[/color]" % [UIStyle.danger_color("Deadly").to_html(false), line])
 		t += "\n"
 	var karma := Karma.describe(p, GameState.npcs, GameState.data)
 	if not karma.is_empty():

@@ -61,7 +61,10 @@ func open() -> void:
 		child.queue_free()
 	var any_enabled := false
 	for choice in choices:
-		var b := UIStyle.button(GameState.rival_text(choice_label(choice)), GameState.choose_encounter.bind(choice["index"]))
+		var label := choice_label(choice)
+		if choice.get("fight", false):
+			label = Warnings.append_to(GameState.player, label)
+		var b := UIStyle.button(GameState.rival_text(label), GameState.choose_encounter.bind(choice["index"]))
 		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		b.disabled = choice["disabled"]
 		any_enabled = any_enabled or not b.disabled
