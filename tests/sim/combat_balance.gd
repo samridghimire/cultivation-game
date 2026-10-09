@@ -47,7 +47,7 @@ static func best_technique(data: GameData, realm_index: int, kind: String) -> St
 		if def.kind != kind or not def.activation.is_empty() or data.realm_index_of(def.min_realm) > realm_index:
 			continue
 		var manual: Dictionary = data.items.get(def.manual_item, {})
-		if manual.is_empty() or manual.get("tags", []).has("demonic") or int(manual.get("effects", {}).get("alignment", 0)) < 0 or String(manual.get("description", "")).to_lower().contains("demonic"):
+		if manual.is_empty() or not manual_obtainable(data, String(def.manual_item)) or manual.get("tags", []).has("demonic") or int(manual.get("effects", {}).get("alignment", 0)) < 0 or String(manual.get("description", "")).to_lower().contains("demonic"):
 			continue
 		var score := 0.0
 		for key: String in def.bonuses:
@@ -66,6 +66,22 @@ static func loadout(data: GameData, realm_index: int) -> Array[String]:
 		if tech_id != "":
 			out.append(tech_id)
 	return out
+
+
+## QA-043: a manual the player can actually get: a merchant sells it, or some
+## encounter, mission, realm, deed, commission or auction hands it out.
+static func manual_obtainable(data: GameData, manual_id: String) -> bool:
+	var item: Dictionary = data.items.get(manual_id, {})
+	if item.is_empty():
+		return false
+	for region: Dictionary in data.regions.values():
+		for place: Dictionary in region.get("places", []):
+			if String(place.get("type", "")) == "merchant" and Items.merchant_sells(data, item, place.get("stock_tags", []), int(place.get("max_price", 0))):
+				return true
+	for source: Dictionary in [data.encounters, data.sect_missions, data.secret_realms, data.deeds, data.commissions, data.auction_houses]:
+		if JSON.stringify(source).contains('"%s"' % manual_id):
+			return true
+	return false
 
 
 ## The best item for `slot` that a player at `realm_index` can normally buy.

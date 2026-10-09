@@ -176,3 +176,13 @@ func test_veteran_peak_does_not_beat_next_realm_through_soul_formation() -> void
 		var peak := data().realms[realm].stage_count() - 1
 		var up := Balance.win_rate(Balance.veteran_player(data(), realm, peak), data(), Balance.plain_enemy(data(), realm + 1, 0), 100)
 		assert_true(up < 0.1, "%s veteran peak beats the next realm %d%% of the time" % [data().realms[realm].name, roundi(up * 100)])
+
+
+## QA-043: every art in a veteran's loadout comes from a manual the player can
+## really obtain (sold, or handed out by content).
+func test_veteran_loadout_manuals_are_obtainable() -> void:
+	for realm in range(0, Balance.LATE_REALMS + 1):
+		for tech_id in Balance.loadout(data(), realm):
+			var manual := String(data().techniques[tech_id].manual_item)
+			assert_true(Balance.manual_obtainable(data(), manual), "%s (realm %d) uses %s, which nobody sells or gives" % [tech_id, realm, manual])
+	assert_false(Balance.manual_obtainable(data(), "no_such_manual"))

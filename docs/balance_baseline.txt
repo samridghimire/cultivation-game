@@ -43,41 +43,41 @@ Where each enemy first appears (typical player entering the realm / at its peak 
   Mortal    mountain_bandit        mission press_gang_bandits   forced                   entry 100%  peak 100%  talisman 100%  bare  30%  veteran on appearance 100%  TRIVIAL
   Mortal    wild_boar              encounter village_boar       forced                   entry 100%  peak 100%  talisman 100%  bare  96%  veteran on appearance 100%  TRIVIAL
   Qi Refini azure_cloud_raider     mission answer_blood_lotus_c forced                   entry 100%  peak 100%  talisman 100%  bare  72%  veteran on appearance 100%  TRIVIAL
-  Qi Refini azure_crane            encounter mountain_azure_cra evadable                 entry  53%  peak  90%  talisman  89%  bare   0%  veteran on appearance  88%  OK
-  Qi Refini azure_sword_examiner   trial azure_cloud_sect rank  forced                   entry  58%  peak 100%  talisman  99%  bare   0%  veteran on appearance  97%  OK
-  Qi Refini bandit_lord            choice city_red_door/Kick th forced                   entry  48%  peak 100%  talisman  98%  bare   0%  veteran on appearance  86%  HARD
+  Qi Refini azure_crane            encounter mountain_azure_cra evadable                 entry  53%  peak  90%  talisman  89%  bare   0%  veteran on appearance  68%  OK
+  Qi Refini azure_sword_examiner   trial azure_cloud_sect rank  forced                   entry  58%  peak 100%  talisman  99%  bare   0%  veteran on appearance  93%  OK
+  Qi Refini bandit_lord            choice city_red_door/Kick th forced                   entry  48%  peak 100%  talisman  98%  bare   0%  veteran on appearance  75%  HARD
   Qi Refini blood_lotus_raider     mission answer_azure_call    forced                   entry 100%  peak 100%  talisman 100%  bare  72%  veteran on appearance 100%  TRIVIAL
-  Qi Refini blood_lotus_scout      encounter marsh_blood_lotus_ evadable                 entry  59%  peak  95%  talisman  96%  bare   0%  veteran on appearance  98%  OK
-  Qi Refini blood_pit_gladiator    trial blood_lotus_sect rank  forced                   entry  49%  peak 100%  talisman 100%  bare   0%  veteran on appearance  87%  HARD
-  Qi Refini garden_poacher         realm verdant_remnant floor  forced                   entry  81%  peak 100%  talisman 100%  bare   0%  veteran on appearance  97%  OK
-  Qi Refini grave_guardian_ape     trial fist_saint_grave stage forced                   entry  48%  peak 100%  talisman  96%  bare   0%  veteran on appearance  90%  HARD
-  Qi Refini grotto_hermit_guest    realm peach_blossom_grotto f forced                   entry  56%  peak 100%  talisman  98%  bare   0%  veteran on appearance  84%  OK
-  Qi Refini incursion_raider       defence demonic_incursion    forced                   entry  95%  peak  84%  talisman 100%  bare   0%  veteran on appearance 100%  OK
-  Qi Refini iron_back_boar         defence beast_tide           forced                   entry  90%  peak  76%  talisman 100%  bare   0%  veteran on appearance  99%  OK
-  Qi Refini iron_back_boar         encounter village_iron_back_ forced                   entry  69%  peak 100%  talisman 100%  bare   0%  veteran on appearance  97%  OK
-  Qi Refini marsh_corpse_puppet    encounter marsh_corpse_puppe evadable                 entry  48%  peak  98%  talisman  93%  bare   0%  veteran on appearance  89%  HARD
-  Qi Refini mist_fox               encounter forest_mist_fox    forced                   entry  64%  peak 100%  talisman  98%  bare   0%  veteran on appearance  99%  OK
-  Qi Refini mist_fox               realm peach_blossom_grotto f forced                   entry  64%  peak 100%  talisman  98%  bare   0%  veteran on appearance  99%  OK
-  Qi Refini mist_wolf              encounter forest_wolf        evadable                 entry  80%  peak 100%  talisman 100%  bare   0%  veteran on appearance 100%  OK
-  Qi Refini mist_wolf              encounter tide_wolf_pack     evadable                 entry  80%  peak 100%  talisman 100%  bare   0%  veteran on appearance 100%  OK
+  Qi Refini blood_lotus_scout      encounter marsh_blood_lotus_ evadable                 entry  59%  peak  95%  talisman  96%  bare   0%  veteran on appearance  93%  OK
+  Qi Refini blood_pit_gladiator    trial blood_lotus_sect rank  forced                   entry  49%  peak 100%  talisman 100%  bare   0%  veteran on appearance  76%  HARD
+  Qi Refini garden_poacher         realm verdant_remnant floor  forced                   entry  81%  peak 100%  talisman 100%  bare   0%  veteran on appearance  92%  OK
+  Qi Refini grave_guardian_ape     trial fist_saint_grave stage forced                   entry  48%  peak 100%  talisman  96%  bare   0%  veteran on appearance  77%  HARD
+  Qi Refini grotto_hermit_guest    realm peach_blossom_grotto f forced                   entry  56%  peak 100%  talisman  98%  bare   0%  veteran on appearance  76%  OK
+  Qi Refini incursion_raider       defence demonic_incursion    forced                   entry  95%  peak  84%  talisman 100%  bare   0%  veteran on appearance  98%  OK
+  Qi Refini iron_back_boar         defence beast_tide           forced                   entry  90%  peak  76%  talisman 100%  bare   0%  veteran on appearance  96%  OK
+  Qi Refini iron_back_boar         encounter village_iron_back_ forced                   entry  69%  peak 100%  talisman 100%  bare   0%  veteran on appearance  88%  OK
+  Qi Refini marsh_corpse_puppet    encounter marsh_corpse_puppe evadable                 entry  48%  peak  98%  talisman  93%  bare   0%  veteran on appearance  72%  HARD
+  Qi Refini mist_fox               encounter forest_mist_fox    forced                   entry  64%  peak 100%  talisman  98%  bare   0%  veteran on appearance  93%  OK
+  Qi Refini mist_fox               realm peach_blossom_grotto f forced                   entry  64%  peak 100%  talisman  98%  bare   0%  veteran on appearance  93%  OK
+  Qi Refini mist_wolf              encounter forest_wolf        evadable                 entry  80%  peak 100%  talisman 100%  bare   0%  veteran on appearance  99%  OK
+  Qi Refini mist_wolf              encounter tide_wolf_pack     evadable                 entry  80%  peak 100%  talisman 100%  bare   0%  veteran on appearance  99%  OK
   Qi Refini mist_wolf              mission cull_mist_wolves     forced                   entry 100%  peak 100%  talisman 100%  bare  62%  veteran on appearance 100%  TRIVIAL
   Qi Refini mist_wolf              mission patrol_misty_peaks   forced                   entry 100%  peak 100%  talisman 100%  bare  62%  veteran on appearance 100%  TRIVIAL
-  Qi Refini mist_wolf              realm verdant_remnant floor  forced                   entry  80%  peak 100%  talisman 100%  bare   0%  veteran on appearance 100%  OK
-  Qi Refini moss_back_ape          realm verdant_remnant floor  forced                   entry  48%  peak 100%  talisman  96%  bare   0%  veteran on appearance  90%  HARD
+  Qi Refini mist_wolf              realm verdant_remnant floor  forced                   entry  80%  peak 100%  talisman 100%  bare   0%  veteran on appearance  99%  OK
+  Qi Refini moss_back_ape          realm verdant_remnant floor  forced                   entry  48%  peak 100%  talisman  96%  bare   0%  veteran on appearance  77%  HARD
   Qi Refini mountain_bandit        choice wild_wounded_disciple forced                   entry 100%  peak 100%  talisman 100%  bare 100%  veteran on appearance 100%  TRIVIAL
   Qi Refini mountain_bandit        encounter city_alley_thugs   forced                   entry 100%  peak 100%  talisman 100%  bare 100%  veteran on appearance 100%  TRIVIAL
   Qi Refini mountain_bandit        encounter village_bandit     forced                   entry 100%  peak 100%  talisman 100%  bare 100%  veteran on appearance 100%  TRIVIAL
   Qi Refini mountain_bandit        mission escort_mortal_villag forced                   entry 100%  peak 100%  talisman 100%  bare 100%  veteran on appearance 100%  TRIVIAL
   Qi Refini mountain_bandit        mission guard_pavilion_carav forced                   entry 100%  peak 100%  talisman 100%  bare 100%  veteran on appearance 100%  TRIVIAL
-  Qi Refini outer_disciple_bully   choice mountain_bullied_juni forced                   entry  78%  peak 100%  talisman 100%  bare   0%  veteran on appearance 100%  OK
-  Qi Refini pavilion_vault_guard   trial myriad_treasure_pavili forced                   entry  53%  peak 100%  talisman  98%  bare   0%  veteran on appearance  93%  OK
-  Qi Refini rogue_cultivator       encounter incursion_blood_sc evadable                 entry  56%  peak  92%  talisman  90%  bare   0%  veteran on appearance 100%  OK
-  Qi Refini rogue_cultivator       encounter marsh_corpse_refin evadable                 entry  56%  peak  92%  talisman  90%  bare   0%  veteran on appearance 100%  OK
-  Qi Refini rogue_cultivator       encounter wild_rogue         evadable                 entry  56%  peak  92%  talisman  90%  bare   0%  veteran on appearance 100%  OK
-  Qi Refini stone_ape              encounter mountain_ape       evadable                 entry  72%  peak  77%  talisman  92%  bare   0%  veteran on appearance  92%  OK
-  Qi Refini tournament_contender   choice tournament_bout/Enter forced                   entry  63%  peak 100%  talisman  97%  bare   0%  veteran on appearance  98%  OK
+  Qi Refini outer_disciple_bully   choice mountain_bullied_juni forced                   entry  78%  peak 100%  talisman 100%  bare   0%  veteran on appearance  99%  OK
+  Qi Refini pavilion_vault_guard   trial myriad_treasure_pavili forced                   entry  53%  peak 100%  talisman  98%  bare   0%  veteran on appearance  76%  OK
+  Qi Refini rogue_cultivator       encounter incursion_blood_sc evadable                 entry  56%  peak  92%  talisman  90%  bare   0%  veteran on appearance  95%  OK
+  Qi Refini rogue_cultivator       encounter marsh_corpse_refin evadable                 entry  56%  peak  92%  talisman  90%  bare   0%  veteran on appearance  95%  OK
+  Qi Refini rogue_cultivator       encounter wild_rogue         evadable                 entry  56%  peak  92%  talisman  90%  bare   0%  veteran on appearance  95%  OK
+  Qi Refini stone_ape              encounter mountain_ape       evadable                 entry  72%  peak  77%  talisman  92%  bare   0%  veteran on appearance  84%  OK
+  Qi Refini tournament_contender   choice tournament_bout/Enter forced                   entry  63%  peak 100%  talisman  97%  bare   0%  veteran on appearance  97%  OK
   Qi Refini vengeful_brother       encounter wounded_traveller_ evadable                 entry  93%  peak 100%  talisman 100%  bare   0%  veteran on appearance 100%  OK
-  Qi Refini well_bandit            trial village_founder_well s forced                   entry  81%  peak 100%  talisman 100%  bare   0%  veteran on appearance  97%  OK
+  Qi Refini well_bandit            trial village_founder_well s forced                   entry  81%  peak 100%  talisman 100%  bare   0%  veteran on appearance  92%  OK
   Foundatio azure_cloud_enforcer   encounter city_righteous_enf forced                   entry  59%  peak  78%  talisman  98%  bare   0%  veteran on appearance 100%  OK
   Foundatio azure_cloud_enforcer   mission ambush_azure_patrol  forced                   entry  59%  peak  78%  talisman  98%  bare   0%  veteran on appearance 100%  OK
   Foundatio azure_pavilion_warden  trial azure_cloud_sect rank  forced                   entry  65%  peak 100%  talisman 100%  bare   0%  veteran on appearance 100%  OK
@@ -231,8 +231,8 @@ Typical player vs a plain enemy of the same realm and stage (QA-007d target ~60-
   Nascent Soul            stage 0:  88%  stage 1:  89%  stage 3:  89%   next realm:   0%
 
 Veteran player (best art of each kind per realm, QA-018) vs a plain same-stage enemy, and at the peak vs a plain enemy one realm up:
-  Qi Refining                 stage 0: 100%  stage 8:  99%   next realm:   0%   arts: metal_edge_sword, stone_skin
-  Foundation Establishment    stage 0: 100%  stage 3: 100%   next realm:   0%   arts: metal_edge_sword, earth_dragon_body
+  Qi Refining                 stage 0:  98%  stage 8:  95%   next realm:   0%   arts: rippling_moon_sword, stone_skin
+  Foundation Establishment    stage 0: 100%  stage 3: 100%   next realm:   0%   arts: nine_frost_sword_intent, earth_dragon_body
   Core Formation              stage 0: 100%  stage 3: 100%   next realm:   3%   arts: azure_heaven_sword_canon, earth_dragon_body
   Nascent Soul                stage 0: 100%  stage 3: 100%   next realm:   8%   arts: azure_heaven_sword_canon, earth_dragon_body
   Soul Formation              stage 0: 100%  stage 3: 100%   next realm:   5%   arts: azure_heaven_sword_canon, earth_dragon_body
