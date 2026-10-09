@@ -1055,6 +1055,37 @@ func ask_pointers(npc_id: String) -> void:
 	_pass_time(result["days"])
 
 
+## A friendly spar with an NPC within a realm of you (SPAR-001): no stones lost,
+## no injury, practice for your combat techniques; a win earns a little favor.
+func check_spar(npc_id: String) -> String:
+	return Mentorship.check_spar(player, npcs.get(npc_id), int(npc_favor.get(npc_id, 0)), data, GameClock.total_days)
+
+
+func spar_with(npc_id: String) -> void:
+	EventBus.topic = "family"
+	if not _can_act():
+		return
+	var reason := check_spar(npc_id)
+	if reason != "":
+		EventBus.post(reason, "warning")
+		EventBus.player_changed.emit()
+		return
+	var npc: CharacterData = npcs[npc_id]
+	var won := fight_enemy(Mentorship.spar_enemy(npc, data))
+	if not _can_act():
+		return
+	var result := Mentorship.after_spar(player, npc, data, won, GameClock.total_days)
+	if int(result["favor"]) > 0:
+		npc_favor[npc_id] = mini(100, int(npc_favor.get(npc_id, 0)) + int(result["favor"]))
+	var text := "You spar with %s. %s" % [npc.name, "You win the bout." if won else "They win the bout."]
+	if not (result["practiced"] as PackedStringArray).is_empty():
+		text += " Your %s grow sharper." % " and ".join(result["practiced"])
+	for line in result["levels"]:
+		text += " %s." % line
+	EventBus.post(text, "progress")
+	EventBus.player_changed.emit()
+
+
 ## Give one item to an NPC; favor scales with its price, up to
 ## data/family.json acquaintance.gift_max_favor.
 func give_gift(npc_id: String, item_id: String) -> void:

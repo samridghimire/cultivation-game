@@ -307,7 +307,8 @@ static func _outcome(c: CharacterData, data: GameData, enemy: Dictionary, enemy_
 	if lost > 0:
 		c.add_item("spirit_stone", -lost)
 		notes.append("-%d Spirit Stone" % lost)
-	var injury := Injuries.roll(c, data, "combat_defeat", rng)
+	# A friendly spar (SPAR-001) never injures.
+	var injury := "" if enemy.get("friendly", false) else Injuries.roll(c, data, "combat_defeat", rng)
 	if injury != "":
 		notes.append("Injured: %s" % Injuries.injury_name(data, injury))
 	return {"notes": notes, "died": false, "cause": "", "days": 1, "injury": injury}

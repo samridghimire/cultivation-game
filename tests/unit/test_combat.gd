@@ -75,6 +75,19 @@ func test_nonlethal_defeat_costs_stones_and_injures() -> void:
 	assert_true(c.injuries.has(outcome["injury"]), "a non-lethal defeat at average fortune always injures")
 
 
+func test_friendly_defeat_never_injures() -> void:
+	var enemy: Dictionary = data().enemies["mountain_bandit"].duplicate()
+	enemy["spar"] = true
+	enemy["friendly"] = true
+	for i in 50:
+		var c := new_character()
+		c.inventory = {"spirit_stone": 100}
+		var outcome := Combat.apply_outcome(c, data(), enemy, {"victory": false, "draw": false}, {}, seeded_rng(i))
+		assert_eq(outcome["injury"], "")
+		assert_eq(c.item_count("spirit_stone"), 100)
+		assert_true(c.injuries.is_empty())
+
+
 func test_lethal_defeat_kills() -> void:
 	var c := new_character()
 	var outcome := Combat.apply_outcome(c, data(), data().enemies["mist_wolf"], {"victory": false, "draw": false}, {}, seeded_rng())

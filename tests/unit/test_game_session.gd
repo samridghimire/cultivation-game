@@ -906,3 +906,33 @@ func test_ask_pointers() -> void:
 	assert_eq(clock.total_days, day + 1, "no time passes when refused")
 	assert_true(_last_text().contains("recently"), _last_text())
 	gs.end_session()
+
+
+func test_spar_with_npc() -> void:
+	var c := _start()
+	var gs := _game_state()
+	c.realm_index = 3
+	c.techniques = {"iron_fist": {"level": 1, "xp": 0.0}}
+	c.inventory = {"spirit_stone": 50}
+	var npc := CharacterFactory.create("Sparring Friend", gs.data, seeded_rng(9))
+	npc.id = "friend"
+	npc.age_days = 30 * Calendar.DAYS_PER_YEAR
+	npc.realm_index = 4
+	gs.npcs["friend"] = npc
+	gs.npc_favor["friend"] = 15
+	var clock := _root().get_node("GameClock")
+	var day: int = clock.total_days
+	var won_before := LifeStats.get_stat(c, "fights_won")
+	var lost_before := LifeStats.get_stat(c, "fights_lost")
+	gs.spar_with("friend")
+	assert_gt(clock.total_days, day)
+	assert_eq(c.item_count("spirit_stone"), 50, "a spar takes no stones")
+	assert_true(c.injuries.is_empty())
+	assert_eq(LifeStats.get_stat(c, "fights_won"), won_before)
+	assert_eq(LifeStats.get_stat(c, "fights_lost"), lost_before)
+	assert_true(c.techniques["iron_fist"]["xp"] > 0.0 or c.techniques["iron_fist"]["level"] > 1)
+	var eb := _root().get_node("EventBus")
+	eb.clear_history()
+	gs.spar_with("friend")
+	assert_true(_last_text().contains("recently"), _last_text())
+	gs.end_session()

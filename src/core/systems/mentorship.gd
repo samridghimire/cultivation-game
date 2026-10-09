@@ -89,6 +89,59 @@ static func give_pointers(c: CharacterData, npc: CharacterData, favor: int, data
 	return result
 
 
+static func check_spar(c: CharacterData, npc: CharacterData, favor: int, data: GameData, today: int) -> String:
+	if npc == null or not npc.alive:
+		return "They are not here."
+	var rules := _rules(data, "spar")
+	if rules.is_empty():
+		return "Nobody is offering to spar."
+	if npc.age_years() < int(data.family.get("adult_age", 16)):
+		return "%s is too young." % npc.name
+	if c.realm_index < 1:
+		return "You need to cultivate before you can spar."
+	if npc.realm_index < 1:
+		return "%s does not cultivate." % npc.name
+	if absi(npc.realm_index - c.realm_index) > int(rules.get("max_realm_gap", 1)):
+		return "%s would not cross hands with someone so far from their own realm." % npc.name
+	var min_favor := int(rules.get("min_favor", 0))
+	if favor < min_favor:
+		return "%s does not know you well enough (favor %d/%d)." % [npc.name, favor, min_favor]
+	var left := cooldown_left(c, "spar:" + npc.id, int(rules.get("cooldown_days", 0)), today)
+	if left > 0:
+		return "You sparred with %s recently (%d days)." % [npc.name, left]
+	return ""
+
+
+## The opponent for a friendly bout: no stones taken, no injury, never lethal.
+static func spar_enemy(npc: CharacterData, data: GameData) -> Dictionary:
+	var enemy := Karma.npc_enemy(npc, data)
+	enemy["spar"] = true
+	enemy["friendly"] = true
+	return enemy
+
+
+## After the bout: practice xp for every unmastered non-method technique, the
+## cooldown, and favor on a win. Returns {favor, practiced, levels, days}.
+static func after_spar(c: CharacterData, npc: CharacterData, data: GameData, won: bool, today: int) -> Dictionary:
+	var rules := _rules(data, "spar")
+	var practiced: PackedStringArray = []
+	var levels: PackedStringArray = []
+	var ids: Array = c.techniques.keys()
+	ids.sort()
+	for tech_id: String in ids:
+		var def: TechniqueDef = data.techniques.get(tech_id)
+		if def == null or def.is_method() or Techniques.is_mastered(c, data, tech_id):
+			continue
+		var r := Techniques.practice(c, data, tech_id, int(rules.get("practice_days", 0)))
+		if not r["ok"]:
+			continue
+		practiced.append(def.name)
+		if int(r["levels_gained"]) > 0:
+			levels.append("%s reaches level %d" % [def.name, Techniques.level(c, tech_id)])
+	c.npc_action_days["spar:" + npc.id] = today
+	return {"favor": int(rules.get("win_favor", 0)) if won else 0, "practiced": practiced, "levels": levels, "days": int(rules.get("days", 1))}
+
+
 ## Load errors for data/family.json `mentorship`.
 static func validate(data: GameData) -> PackedStringArray:
 	var errors: PackedStringArray = []

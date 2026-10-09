@@ -104,3 +104,36 @@ func test_validator_and_save() -> void:
 	c.npc_action_days["pointers:x"] = 42
 	assert_eq(CharacterData.from_dict(c.to_dict()).npc_action_days["pointers:x"], 42)
 	assert_eq(CharacterData.from_dict({}).npc_action_days.size(), 0)
+
+
+func test_spar_checks_and_aftermath() -> void:
+	var p := _pair()
+	var d := data()
+	var c: CharacterData = p[0]
+	var npc: CharacterData = p[1]
+	assert_eq(Mentorship.check_spar(c, null, 50, d, 0), "They are not here.")
+	npc.age_days = 10 * Calendar.DAYS_PER_YEAR
+	assert_true(Mentorship.check_spar(c, npc, 50, d, 0).contains("too young"))
+	npc.age_days = 40 * Calendar.DAYS_PER_YEAR
+	c.realm_index = 0
+	assert_true(Mentorship.check_spar(c, npc, 50, d, 0).contains("need to cultivate"))
+	c.realm_index = 1
+	npc.realm_index = 0
+	assert_true(Mentorship.check_spar(c, npc, 50, d, 0).contains("does not cultivate"))
+	npc.realm_index = 3
+	assert_true(Mentorship.check_spar(c, npc, 50, d, 0).contains("so far"))
+	npc.realm_index = 2
+	assert_true(Mentorship.check_spar(c, npc, 5, d, 0).contains("favor 5/10"))
+	assert_eq(Mentorship.check_spar(c, npc, 10, d, 0), "")
+	var enemy := Mentorship.spar_enemy(npc, d)
+	assert_true(enemy["spar"] and enemy["friendly"])
+	assert_false(enemy["lethal"])
+	c.techniques["common_qi_gathering"] = {"level": 1, "xp": 0.0}
+	var r := Mentorship.after_spar(c, npc, d, false, 50)
+	assert_eq(r["favor"], 0)
+	assert_eq(r["practiced"].size(), 1, "only the unmastered non-method technique")
+	assert_eq(c.techniques["common_qi_gathering"]["xp"], 0.0)
+	assert_eq(c.npc_action_days["spar:elder"], 50)
+	assert_true(Mentorship.check_spar(c, npc, 10, d, 52).contains("recently"))
+	assert_eq(Mentorship.check_spar(c, npc, 10, d, 57), "")
+	assert_eq(Mentorship.after_spar(c, npc, d, true, 60)["favor"], 2)
