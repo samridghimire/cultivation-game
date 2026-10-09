@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-09 [WU-077] The first hour was checked on screen at the Steam Deck resolution.
 - 2026-10-09 [WU-078] The explore spot says how many days you have explored and when a deeper path may open; a found path is titled "Hidden path".
 - 2026-10-09 [WU-076] Bounty boards in Qingshi Village and Fallen Star Market.
 - 2026-10-09 [WU-072] Festivals get a banner, a chime and a "favor x2" note on chats and gifts.
