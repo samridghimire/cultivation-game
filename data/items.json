@@ -228,6 +228,7 @@
     {"id": "recipe_thunder_tempering_pill", "name": "Recipe Scroll: Thunder-Tempering Body Pill", "description": "A lightning-scarred bamboo scroll from a body-cultivation lineage. Teaches the recipe.", "price": 700, "usable": true, "effects": {"learn_recipe": "thunder_tempering_pill"}},
     {"id": "recipe_heart_guarding_pill", "name": "Recipe Scroll: Buddha's Light Heart-Guarding Pill", "description": "Copied from a monastery's sutra library by a monk who never asked for payment. Teaches the recipe.", "price": 800, "usable": true, "effects": {"learn_recipe": "heart_guarding_pill"}},
     {"id": "recipe_blood_shroud_pill", "name": "Recipe Scroll: Blood Shroud Pill", "description": "Written in a cramped hand on tanned skin. Teaches the recipe.", "price": 500, "usable": true, "tags": ["demonic"], "effects": {"learn_recipe": "blood_shroud_pill"}},
+    {"id": "yin_king_gate_token", "name": "Yin King Gate Token", "description": "A black jade token cold as a drowned hand, carved with the Yin King's seal. When the marsh draws back, it hums toward the sunken gates of his palace.", "price": 0, "usable": false, "tags": ["quest"]},
     {"id": "sword_tomb_map_fragment", "name": "Sword Tomb Map Fragment", "description": "A scrap of sword-scarred silk marked with the hidden way into the Sunken Sword Tomb on Azure Peak, copied by a disciple who never came back out.", "price": 0, "usable": false, "tags": ["quest"]}
 ]
 }

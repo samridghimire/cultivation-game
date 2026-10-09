@@ -324,3 +324,19 @@ func test_sword_tomb_needs_its_map() -> void:
 	assert_eq(need, "You need %s to find the way in." % d.items["sword_tomb_map_fragment"]["name"])
 	c.add_item("sword_tomb_map_fragment", 1)
 	assert_eq(SecretRealms.check_enter(c, d, "sunken_sword_tomb", "azure_peak", day), "")
+
+
+## C-059: the Drowned Yin Palace needs the Yin King Gate Token, which can be found.
+func test_yin_palace_needs_its_token() -> void:
+	var d := GameData.load_from_dir()
+	var def := SecretRealms.realm(d, "drowned_yin_palace")
+	assert_eq(String(def.get("entry_item", "")), "yin_king_gate_token")
+	assert_true(Items.has_known_source(d, "yin_king_gate_token"))
+	var day := int(def["offset_years"]) * Y + 5
+	var c := new_character()
+	c.realm_index = d.realm_index_of("core_formation")
+	c.inventory = {"spirit_stone": 5000}
+	var need := SecretRealms.check_enter(c, d, "drowned_yin_palace", "withered_bone_marsh", day)
+	assert_eq(need, "You need %s to find the way in." % d.items["yin_king_gate_token"]["name"])
+	c.add_item("yin_king_gate_token", 1)
+	assert_eq(SecretRealms.check_enter(c, d, "drowned_yin_palace", "withered_bone_marsh", day), "")

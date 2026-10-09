@@ -18,7 +18,7 @@
         {"item": "jade_marrow_pill", "count": 1, "base_price": 450, "weight": 2, "rarity": "rare"},
         {"item": "thousand_year_lingzhi", "count": 1, "base_price": 320, "weight": 3, "rarity": "rare"},
         {"item": "golden_core_lotus_seed", "count": 1, "base_price": 500, "weight": 1.5, "rarity": "epic"},
-        {"item": "star_silver", "count": 2, "base_price": 300, "weight": 3, "rarity": "uncommon"}, {"item": "sword_tomb_map_fragment", "count": 1, "base_price": 350, "weight": 1.5, "rarity": "rare"},
+        {"item": "star_silver", "count": 2, "base_price": 300, "weight": 3, "rarity": "uncommon"}, {"item": "sword_tomb_map_fragment", "count": 1, "base_price": 350, "weight": 1.5, "rarity": "rare"}, {"item": "yin_king_gate_token", "count": 1, "base_price": 1200, "weight": 0.8, "rarity": "epic"},
         {"item": "dragonblood_gold", "count": 1, "base_price": 320, "weight": 2, "rarity": "rare"},
         {"item": "manual_five_thunders_palm", "count": 1, "base_price": 700, "weight": 1, "rarity": "epic"},
         {"item": "manual_thousand_leaves_step", "count": 1, "base_price": 600, "weight": 1, "rarity": "epic"},
