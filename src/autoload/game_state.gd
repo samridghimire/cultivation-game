@@ -1925,8 +1925,11 @@ func take_mission(mission_id: String) -> void:
 	if enemy_id != "":
 		EventBus.post("Sect mission: %s." % mission["name"])
 		if not fight_enemy(data.enemies[enemy_id]):
+			Sects.fail_mission(player, data, mission_id)
+			var days := data.sect_mission_loss_cooldown_days
+			var tail := " The sect will not send you again for %d days." % days if days > 0 else ""
 			if _can_act():
-				EventBus.post("You fail the mission: %s." % mission["name"], "warning")
+				EventBus.post("You fail the mission: %s.%s" % [mission["name"], tail], "warning")
 			return
 	_start_time_skip()
 	var result := Sects.complete_mission(player, data, mission_id, world_flags)

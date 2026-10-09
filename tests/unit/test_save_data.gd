@@ -71,6 +71,7 @@ func test_every_character_field_survives_a_save() -> void:
 	c.injuries = {"x_injury": 9}
 	Buffs.add(c, "x_buff", "X Buff", 5, {"attack": 1.5})
 	c.mission_cooldowns = {"x_mission": 400}
+	c.mission_losses = {"x_mission": 390}
 	c.deed_days = {"help_villager": 12}
 	c.life_stats = {"fights_won": 3}
 	c.year_start_stats = {"fights_won": 1}

@@ -99,6 +99,7 @@ var material_value_cache: Dictionary = {}  # item id -> float, filled lazily by 
 var alchemy: Dictionary = {}
 ## recipes.json commissions block (PROF-001, Commissions); empty = none.
 var commissions: Dictionary = {}
+var sect_mission_loss_cooldown_days: int = 0  # data/sect_missions.json loss_cooldown_days (MISS-001)
 var sect_missions: Dictionary = {}  # id -> Dictionary (data/sect_missions.json)
 ## Help screen pages, in order: [{id, title, body: [paragraph]}] (data/help.json).
 var help_pages: Array = []
@@ -186,7 +187,9 @@ func _load(dir: String) -> void:
 	for item in item_file.get("items", []):
 		items[item["id"]] = item
 
-	for mission in _read(dir, "sect_missions.json").get("missions", []):
+	var mission_file := _read(dir, "sect_missions.json")
+	sect_mission_loss_cooldown_days = int(mission_file.get("loss_cooldown_days", 0))
+	for mission in mission_file.get("missions", []):
 		sect_missions[mission["id"]] = mission
 
 	for deed in _read(dir, "deeds.json").get("deeds", []):

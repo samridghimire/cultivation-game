@@ -117,6 +117,8 @@ var artifact_storage: Dictionary = {}
 var garden: Array = []
 ## Sect mission id -> age_days when it may be taken again (Sects missions).
 var mission_cooldowns: Dictionary = {}
+## Sect mission id -> age_days of the last lost fight, cleared when it is completed (MISS-001).
+var mission_losses: Dictionary = {}
 ## Open crafting orders (PROF-001, Commissions): [{profession, recipe, item, count, reward, xp, due_day}].
 var commissions: Array = []
 var life_stats: Dictionary = {}  # LifeStats key -> count
@@ -223,6 +225,7 @@ func to_dict() -> Dictionary:
 		"artifact_storage": artifact_storage.duplicate(),
 		"garden": garden.duplicate(true),
 		"mission_cooldowns": mission_cooldowns.duplicate(),
+		"mission_losses": mission_losses.duplicate(),
 		"deed_days": deed_days.duplicate(),
 		"life_stats": life_stats.duplicate(),
 		"year_start_stats": year_start_stats.duplicate(),
@@ -332,6 +335,7 @@ static func from_dict(d: Dictionary) -> CharacterData:
 		if plot is Dictionary:
 			c.garden.append({"item": String(plot.get("item", "")), "days_left": int(plot.get("days_left", 0))})
 	c.mission_cooldowns = _int_values(d.get("mission_cooldowns", {}))
+	c.mission_losses = _int_values(d.get("mission_losses", {}))
 	c.deed_days = _int_values(d.get("deed_days", {}))
 	c.life_stats = _int_values(d.get("life_stats", {}))
 	c.year_start_stats = _int_values(d.get("year_start_stats", {}))

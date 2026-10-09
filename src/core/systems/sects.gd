@@ -555,6 +555,8 @@ static func check_mission(c: CharacterData, data: GameData, mission_id: String, 
 	if rank_realm != "":
 		return rank_realm
 	var wait := mission_cooldown_left(c, mission_id)
+	if wait > 0 and c.mission_losses.has(mission_id):
+		return "You fell to this mission recently: it is not offered again for %s." % Calendar.format_duration(wait)
 	if wait > 0:
 		return "This mission is not offered again for %s." % Calendar.format_duration(wait)
 	var needed: Dictionary = mission.get("requires", {}).get("items", {})
@@ -562,6 +564,21 @@ static func check_mission(c: CharacterData, data: GameData, mission_id: String, 
 		if c.item_count(item_id) < int(needed[item_id]):
 			return "You need %d %s." % [int(needed[item_id]), data.items.get(item_id, {}).get("name", item_id)]
 	return ""
+
+
+## Records a lost mission fight: the mission cools down for
+## sect_missions.json `loss_cooldown_days` (never shortening a longer cooldown).
+static func fail_mission(c: CharacterData, data: GameData, mission_id: String) -> void:
+	var until := c.age_days + data.sect_mission_loss_cooldown_days
+	c.mission_cooldowns[mission_id] = maxi(int(c.mission_cooldowns.get(mission_id, 0)), until)
+	c.mission_losses[mission_id] = c.age_days
+
+
+## Days since `mission_id`'s fight was last lost (-1 when never lost).
+static func last_loss_days_ago(c: CharacterData, mission_id: String) -> int:
+	if not c.mission_losses.has(mission_id):
+		return -1
+	return c.age_days - int(c.mission_losses[mission_id])
 
 
 ## Danger label (Combat.danger_label: Weak/Even/Dangerous/Deadly) of the
@@ -601,6 +618,7 @@ static func complete_mission(c: CharacterData, data: GameData, mission_id: Strin
 		notes.append("%s reputation %+d" % [data.sects[c.sect["id"]].name, rep])
 	var promoted := add_contribution(c, data, contribution)
 	c.mission_cooldowns[mission_id] = c.age_days + int(mission.get("cooldown_days", 0))
+	c.mission_losses.erase(mission_id)
 	return {"ok": true, "reason": "", "contribution": contribution, "promoted": promoted, "notes": notes, "days": int(mission.get("days", 1))}
 
 

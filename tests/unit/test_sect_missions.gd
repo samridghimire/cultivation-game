@@ -172,3 +172,61 @@ func test_item_missions_pay_at_least_the_items_cost() -> void:
 			continue
 		var pay := int(m.get("rewards", {}).get("items", {}).get("spirit_stone", 0))
 		assert_true(pay >= int(ceil(cost * 1.2)), "%s pays %d for items costing %d" % [id, pay, cost])
+
+
+## MISS-001: a lost mission fight cools the mission down.
+func test_fail_mission_sets_cooldown_and_loss_day() -> void:
+	var c := _disciple()
+	c.age_days = 1000
+	Sects.fail_mission(c, data(), "cull_mist_wolves")
+	assert_eq(Sects.mission_cooldown_left(c, "cull_mist_wolves"), 7)
+	assert_eq(Sects.last_loss_days_ago(c, "cull_mist_wolves"), 0)
+	assert_eq(Sects.last_loss_days_ago(c, "gather_spirit_herbs"), -1)
+	c.age_days += 2
+	assert_eq(Sects.last_loss_days_ago(c, "cull_mist_wolves"), 2)
+	c.mission_cooldowns["cull_mist_wolves"] = c.age_days + 30
+	Sects.fail_mission(c, data(), "cull_mist_wolves")
+	assert_eq(Sects.mission_cooldown_left(c, "cull_mist_wolves"), 30, "a longer cooldown is kept")
+
+
+func test_loss_cooldown_reason_and_completion_clears_it() -> void:
+	var c := _disciple()
+	c.stage = 1
+	Sects.fail_mission(c, data(), "cull_mist_wolves")
+	assert_true(Sects.check_mission(c, data(), "cull_mist_wolves").begins_with("You fell to this mission recently"))
+	c.mission_cooldowns["cull_mist_wolves"] = 0
+	Sects.complete_mission(c, data(), "cull_mist_wolves", {})
+	assert_false(c.mission_losses.has("cull_mist_wolves"))
+	assert_true(Sects.check_mission(c, data(), "cull_mist_wolves").begins_with("This mission is not offered again"))
+
+
+func test_zero_loss_cooldown_keeps_old_behaviour() -> void:
+	var d := GameData.load_from_dir()
+	d.sect_mission_loss_cooldown_days = 0
+	var c := _disciple()
+	Sects.fail_mission(c, d, "cull_mist_wolves")
+	assert_eq(Sects.mission_cooldown_left(c, "cull_mist_wolves"), 0)
+
+
+func test_mission_losses_round_trip_in_saves() -> void:
+	var c := _disciple()
+	c.mission_losses["cull_mist_wolves"] = 55
+	var back := CharacterData.from_dict(JSON.parse_string(JSON.stringify(c.to_dict())))
+	assert_eq(back.mission_losses, {"cull_mist_wolves": 55})
+	assert_true(CharacterData.from_dict({}).mission_losses.is_empty(), "old saves load")
+
+
+func test_game_state_lost_mission_cools_down() -> void:
+	var gs: Node = _root().get_node("GameState")
+	var c := CharacterFactory.create("Disciple", gs.data, seeded_rng())
+	gs.start_session(c)
+	c.realm_index = 1
+	c.stage = 1
+	gs.join_sect("azure_cloud_sect")
+	var wolf: Dictionary = gs.data.enemies["mist_wolf"]
+	wolf["hp"] = 1000000
+	wolf["attack"] = 1000000
+	gs.take_mission("cull_mist_wolves")
+	assert_true(gs.player.mission_losses.has("cull_mist_wolves"), "recorded even after a respawn")
+	assert_gt(Sects.mission_cooldown_left(gs.player, "cull_mist_wolves"), 0)
+	gs.end_session()
