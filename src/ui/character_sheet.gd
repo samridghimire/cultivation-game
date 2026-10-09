@@ -249,6 +249,11 @@ func _rebuild() -> void:
 		t += "  Nothing of note yet.\n"
 	for line in record:
 		t += "  %s\n" % line
+	var people_lines := people_lines(p, data, GameState.npcs, GameState.npc_favor)
+	if not people_lines.is_empty():
+		t += "\n[color=#%s]People you know[/color]\n" % accent
+		for line in people_lines:
+			t += "  %s\n" % line
 	t += "\n[color=#%s]Milestones (%d of %d)[/color]\n" % [accent, p.milestones.size(), data.milestones.size()]
 	var upcoming := 0
 	for def in data.milestones:
@@ -280,6 +285,39 @@ static func rival_line(c: CharacterData, data: GameData, people: Dictionary, fav
 	if fav != 0:
 		line += ", favor %d" % fav
 	return line
+
+
+## WU-105: up to `limit` living non-family NPCs with the highest favor, as
+## "Name, Realm, in Region: friendly". Strangers (favor 0) are left out.
+static func people_lines(c: CharacterData, data: GameData, people: Dictionary, favor: Dictionary, limit: int = 6) -> PackedStringArray:
+	var ranked: Array = []
+	for id: String in favor:
+		var other: CharacterData = people.get(id)
+		var f := int(favor[id])
+		if other == null or not other.alive or f == 0:
+			continue
+		if c.parents.has(id) or c.children.has(id) or c.spouses.has(id):
+			continue
+		ranked.append([f, other])
+	ranked.sort_custom(func(a: Array, b: Array) -> bool: return a[0] > b[0] or (a[0] == b[0] and String(a[1].name) < String(b[1].name)))
+	var out := PackedStringArray()
+	for entry: Array in ranked.slice(0, limit):
+		var other: CharacterData = entry[1]
+		var region_id := Npcs.region_of(other, data)
+		var where := String(data.regions.get(region_id, {}).get("name", region_id))
+		out.append("%s, %s%s: %s" % [other.name, Cultivation.realm_label(other, data), ", in %s" % where if where != "" else "", favor_word(int(entry[0]), data)])
+	return out
+
+
+## A word for how much `favor` an NPC has for you, from the courtship thresholds.
+static func favor_word(favor: int, data: GameData) -> String:
+	if favor < 0:
+		return "cold"
+	if favor >= int(data.family.get("proposal", {}).get("min_favor", 1000000)):
+		return "devoted"
+	if favor >= int(data.family.get("courtship", {}).get("min_favor", 1000000)):
+		return "fond"
+	return "friendly" if favor >= 10 else "acquainted"
 
 
 ## One Unequip button per filled equipment slot.

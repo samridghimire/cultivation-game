@@ -63,3 +63,21 @@ func test_character_sheet_shows_rival() -> void:
 	assert_eq(CharacterSheet.rival_line(gs.player, gs.data, gs.npcs, {}), "%s has died." % rival.name)
 	sheet.free()
 	gs.end_session()
+
+
+## WU-105: the highest-favor living non-family NPCs, in order.
+func test_people_lines_rank_by_favor_and_skip_family_and_dead() -> void:
+	var gs: Node = _root().get_node("GameState")
+	gs.start_session(CharacterFactory.create("Foe", gs.data, seeded_rng()))
+	var ids: Array = gs.npcs.keys().slice(0, 4)
+	var favor := {ids[0]: 5, ids[1]: 50, ids[2]: 90, ids[3]: 0}
+	gs.player.spouses.append(ids[2])
+	var lines := CharacterSheet.people_lines(gs.player, gs.data, gs.npcs, favor)
+	assert_eq(lines.size(), 2, "family and strangers left out")
+	assert_true(lines[0].begins_with(gs.npcs[ids[1]].name), lines[0])
+	assert_true(lines[1].begins_with(gs.npcs[ids[0]].name), lines[1])
+	assert_true(lines[1].ends_with("acquainted"), lines[1])
+	gs.npcs[ids[1]].alive = false
+	assert_eq(CharacterSheet.people_lines(gs.player, gs.data, gs.npcs, favor).size(), 1, "dead left out")
+	assert_eq(CharacterSheet.people_lines(gs.player, gs.data, gs.npcs, favor, 0).size(), 0)
+	gs.end_session()
