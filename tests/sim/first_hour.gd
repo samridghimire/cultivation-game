@@ -11,8 +11,9 @@ const SPRING_DENSITY := 2.0  # Spirit Spring, see data/regions.json
 ## Keys: layer_day (layer number -> first day), sect_day, month_lines (Array of
 ## {category: count} per month), injuries, fights_won, fights_lost, fights_fled.
 ## `curious` adds the QA-029 policy each month (see _curious_month); the default
-## newcomer only meditates and explores once.
-static func play(gs: Node, clock: Node, seed_value: int, months: int, curious: bool = false) -> Dictionary:
+## newcomer only meditates and explores once. `month_hook(month)` (optional) runs
+## after each month's actions.
+static func play(gs: Node, clock: Node, seed_value: int, months: int, curious: bool = false, month_hook: Callable = Callable()) -> Dictionary:
 	gs.rng.seed = seed_value
 	var rng := RandomNumberGenerator.new()
 	rng.seed = seed_value
@@ -66,6 +67,8 @@ static func play(gs: Node, clock: Node, seed_value: int, months: int, curious: b
 		out["kind_sets"].append(with_break)
 		out["stones"].append(c.item_count("spirit_stone"))
 		out["realms"].append(Cultivation.realm_label(c, gs.data))
+		if month_hook.is_valid():
+			month_hook.call(month)
 	out["injuries"] = c.injuries.size()
 	out["fights_won"] = LifeStats.get_stat(c, "fights_won")
 	out["fights_lost"] = LifeStats.get_stat(c, "fights_lost")
@@ -152,9 +155,18 @@ static func _everything_month(gs: Node, c: CharacterData, kinds: Dictionary, tod
 			break
 	if c.alive:
 		var best_id := ""
+		# QA-060: befriend a teacher first. Gifts to "the highest-favor NPC" went to a stranger-turned-friend
+		# and Elder Mo never reached the favor pointers need.
 		for npc_id: String in gs.npcs:
-			if gs.npcs[npc_id].alive and (best_id == "" or int(gs.npc_favor.get(npc_id, 0)) > int(gs.npc_favor.get(best_id, 0))):
+			var npc: CharacterData = gs.npcs[npc_id]
+			if not npc.alive or Npcs.region_of(npc, gs.data) != gs.current_region or not Mentorship.is_senior(c, npc):
+				continue
+			if best_id == "" or int(gs.npc_favor.get(npc_id, 0)) > int(gs.npc_favor.get(best_id, 0)):
 				best_id = npc_id
+		if best_id == "":
+			for npc_id: String in gs.npcs:
+				if gs.npcs[npc_id].alive and (best_id == "" or int(gs.npc_favor.get(npc_id, 0)) > int(gs.npc_favor.get(best_id, 0))):
+					best_id = npc_id
 		var cheapest := ""
 		for item_id: String in c.inventory:
 			if Family.gift_value(gs.data, item_id) > 0 and Family.check_gift(c, gs.npcs.get(best_id), int(gs.npc_favor.get(best_id, 0)), item_id, gs.data) == "":
