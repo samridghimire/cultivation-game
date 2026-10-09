@@ -132,6 +132,25 @@ func test_attend_lecture_once_a_month() -> void:
 	gs.end_session()
 
 
+## RV-013: a lecture at a bottleneck says so instead of "(+0 qi)".
+func test_attend_lecture_at_bottleneck_message() -> void:
+	var c := _start()
+	var gs := _game_state()
+	c.alignment = 0
+	gs.join_sect("blood_lotus_sect")
+	var realm: RealmDef = gs.data.realms[c.realm_index]
+	c.stage = realm.stage_count() - 1
+	c.qi = realm.qi_required(c.stage)
+	_zero_round_posts.clear()
+	EventBus.message_posted.connect(_collect_post)
+	gs.attend_lecture()
+	EventBus.message_posted.disconnect(_collect_post)
+	var text := "\n".join(_zero_round_posts)
+	assert_false(text.contains("+0 qi"), text)
+	assert_true(text.contains("bottleneck"), text)
+	gs.end_session()
+
+
 func test_join_sect_rejects_wrong_alignment() -> void:
 	var c := _start()
 	var gs := _game_state()
@@ -853,9 +872,11 @@ func test_long_seclusion_reviews_both_years() -> void:
 	clock.advance(Calendar.DAYS_PER_YEAR * 3 / 2 + 40) # crosses two new years
 	bus.year_reviewed.disconnect(cb)
 	assert_eq(seen.size(), 1, "one review for the whole stretch")
-	assert_eq(LifeStats.review_title(seen[0][1], seen[0][0]), "Years %d-%d" % [start_year + 1, seen[0][0]])
+	assert_eq(LifeStats.review_title(seen[0][1], seen[0][0]), "Years %d-%d" % [start_year, seen[0][0] - 1])
 	assert_eq(c.year_start_year, seen[0][0], "the new snapshot is for the current year")
-	assert_eq(LifeStats.review_title(seen[0][0], seen[0][0] + 1), "Year %d" % (seen[0][0] + 1), "a normal year")
-	assert_eq(LifeStats.review_title(0, 5), "Year 5", "old saves have no start year")
+	assert_eq(LifeStats.review_title(seen[0][0], seen[0][0] + 1), "Year %d" % seen[0][0], "a normal year")
+	assert_eq(LifeStats.review_title(0, 5), "Year 4", "old saves have no start year")
+	assert_eq(LifeStats.review_title(1, 2), "Year 1", "the first year")
+	assert_eq(LifeStats.review_title(3, 6), "Years 3-5", "a seclusion across years")
 	assert_eq(CharacterData.from_dict(c.to_dict()).year_start_year, c.year_start_year)
 	assert_eq(CharacterData.from_dict({}).year_start_year, 0)

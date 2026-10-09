@@ -4,7 +4,7 @@ extends RefCounted
 ## squares tinted via `color`; low alpha and few of them keep places readable.
 
 ## Kinds a region's map.ambient may name.
-const KINDS: PackedStringArray = ["petals", "leaves", "snow", "mist", "embers", "fireflies"]
+const KINDS: PackedStringArray = Scenery.AMBIENT_KINDS
 const MAX_AMOUNT := 40
 
 const PRESETS := {

@@ -416,8 +416,8 @@ func _validate_world() -> void:
 			for key: String in ambient:
 				if not ["spring", "summer", "autumn", "winter", "any"].has(key):
 					load_errors.append("Region '%s' map.ambient has unknown season '%s'" % [region["id"], key])
-				elif not Ambient.KINDS.has(String(ambient[key])):
-					load_errors.append("Region '%s' map.ambient kind '%s' is not one of %s" % [region["id"], ambient[key], ", ".join(Ambient.KINDS)])
+				elif not Scenery.AMBIENT_KINDS.has(String(ambient[key])):
+					load_errors.append("Region '%s' map.ambient kind '%s' is not one of %s" % [region["id"], ambient[key], ", ".join(Scenery.AMBIENT_KINDS)])
 		for spot in region.get("npc_spots", []):
 			if not (spot is Array and (spot as Array).size() == 2):
 				load_errors.append("Region '%s' has an npc_spot that is not [x, y]: %s" % [region["id"], spot])

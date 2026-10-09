@@ -5,6 +5,8 @@ extends RefCounted
 ## Pure placement: the world scene draws the result. Counts and colors come
 ## from regions.json `map.decor`, falling back to DEFAULTS.
 
+## Kinds of drifting ambient particles a region map may name (world/ambient.gd draws them).
+const AMBIENT_KINDS: PackedStringArray = ["petals", "leaves", "snow", "mist", "embers", "fireflies"]
 const KINDS := ["tree", "rock", "grass", "flower"]
 ## map.decor keys: "<kind>s" counts, "<kind>_color" colors.
 const DEFAULTS := {
