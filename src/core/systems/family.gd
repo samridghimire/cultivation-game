@@ -308,6 +308,33 @@ static func add_spouse_favor(data: GameData, favor: int, gain: int) -> int:
 	return maxi(favor, mini(cap, favor + gain))
 
 
+## NEWS-001: word of a major-realm breakthrough spreads. Every living NPC the
+## player knows (favor >= min_favor) gains `favor` (capped at 100), and a sect
+## member gains `sect_reputation` with their own sect. `favor_map` is
+## GameState.npc_favor and is changed in place. Returns the ids raised; nothing
+## happens without data/family.json `breakthrough_news`.
+static func breakthrough_news(c: CharacterData, data: GameData, npcs: Dictionary, favor_map: Dictionary) -> Array[String]:
+	var raised: Array[String] = []
+	var rules: Dictionary = data.family.get("breakthrough_news", {})
+	if rules.is_empty():
+		return raised
+	var min_favor := int(rules.get("min_favor", 10))
+	var gain := int(rules.get("favor", 0))
+	if gain > 0:
+		for id: String in favor_map:
+			var other: CharacterData = npcs.get(id)
+			if other == null or not other.alive or int(favor_map[id]) < min_favor:
+				continue
+			var after := mini(100, int(favor_map[id]) + gain)
+			if after > int(favor_map[id]):
+				favor_map[id] = after
+				raised.append(id)
+	var sect_id := String(c.sect.get("id", ""))
+	if sect_id != "":
+		Reputation.change(c, data, sect_id, int(rules.get("sect_reputation", 0)))
+	return raised
+
+
 ## Load errors for data/family.json.
 static func validate(data: GameData) -> PackedStringArray:
 	var errors: PackedStringArray = []
@@ -329,6 +356,10 @@ static func validate(data: GameData) -> PackedStringArray:
 				errors.append("family.json rank '%s' needs max >= 1" % rank)
 	errors.append_array(Mentorship.validate(data))
 	errors.append_array(Letters.validate(data))
+	for key: String in data.family.get("breakthrough_news", {}):
+		var v: Variant = data.family["breakthrough_news"][key]
+		if (typeof(v) != TYPE_INT and typeof(v) != TYPE_FLOAT) or int(v) < 0 or float(v) != int(v):
+			errors.append("family.json breakthrough_news.%s must be an int >= 0" % key)
 	var dual: Dictionary = data.family.get("dual_cultivation", {})
 	if dual.is_empty():
 		errors.append("family.json needs a dual_cultivation block")

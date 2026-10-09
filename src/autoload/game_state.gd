@@ -295,6 +295,9 @@ func attempt_breakthrough() -> void:
 	LifeStats.add(player, "breakthroughs" if result["success"] else "breakthroughs_failed")
 	if result["success"]:
 		EventBus.post("Breakthrough! You have entered the %s realm." % result["realm_name"], "progress")
+		var told := Family.breakthrough_news(player, data, npcs, npc_favor)
+		if not told.is_empty():
+			EventBus.post("Word of your %s breakthrough spreads: %d %s who know you think better of you." % [result["realm_name"], told.size(), "person" if told.size() == 1 else "people"], "progress")
 		if Bloodlines.update(player, data):
 			EventBus.post("Your blood boils and sings: your %s awakens!" % Bloodlines.bloodline_name(data, player.bloodline), "progress")
 	else:
