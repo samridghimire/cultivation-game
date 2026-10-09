@@ -936,3 +936,34 @@ func test_spar_with_npc() -> void:
 	gs.spar_with("friend")
 	assert_true(_last_text().contains("recently"), _last_text())
 	gs.end_session()
+
+
+## TRAV-001: travel records each region once; old saves gain their current region.
+func test_travel_records_visited_regions() -> void:
+	var gs := _game_state()
+	var c := _start()
+	c.realm_index = 1
+	assert_eq(c.visited_regions, [gs.data.start_region] as Array[String])
+	assert_eq(LifeStats.get_stat(c, "regions_visited"), 1)
+	var target := String(gs.data.regions[gs.data.start_region]["routes"][0]["to"])
+	gs.travel(target)
+	assert_true(Exploration.visited(c, target))
+	assert_eq(c.visited_regions.size(), 2)
+	gs.travel(gs.data.start_region)
+	gs.travel(target)
+	assert_eq(c.visited_regions.size(), 2)
+	assert_eq(LifeStats.get_stat(c, "regions_visited"), 2)
+	var saved: Dictionary = JSON.parse_string(JSON.stringify(gs.to_save_dict()))
+	gs.load_save_dict(saved)
+	assert_eq(gs.player.visited_regions.size(), 2)
+
+
+func test_old_save_without_visited_regions_gets_current_region() -> void:
+	var gs := _game_state()
+	_start()
+	var saved: Dictionary = JSON.parse_string(JSON.stringify(gs.to_save_dict()))
+	saved["player"].erase("visited_regions")
+	saved["player"]["life_stats"] = {}
+	gs.load_save_dict(saved)
+	assert_eq(gs.player.visited_regions, [gs.current_region] as Array[String])
+	assert_eq(LifeStats.get_stat(gs.player, "regions_visited"), 1)

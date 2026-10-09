@@ -11,6 +11,20 @@ const FORTUNE_WEIGHT_PER_POINT := 0.05
 const GATHER_ROLLS := 3
 
 
+## Whether the character has set foot in the region (TRAV-001).
+static func visited(c: CharacterData, region_id: String) -> bool:
+	return c.visited_regions.has(region_id)
+
+
+## Records a region as visited. Returns true when it was new.
+static func visit(c: CharacterData, region_id: String) -> bool:
+	if region_id == "" or c.visited_regions.has(region_id):
+		return false
+	c.visited_regions.append(region_id)
+	c.life_stats["regions_visited"] = c.visited_regions.size()
+	return true
+
+
 static func region_name(data: GameData, region_id: String) -> String:
 	return data.regions.get(region_id, {}).get("name", region_id)
 

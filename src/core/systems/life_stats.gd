@@ -5,7 +5,7 @@ extends RefCounted
 ## the end-of-life summary.
 
 const KEYS: Array[String] = ["fights_won", "fights_lost", "threats_fled", "breakthroughs", "breakthroughs_failed",
-	"tribulations_survived", "respawns", "items_crafted", "missions_done", "deeds_done", "encounters", "days_in_seclusion", "commissions_done", "tournaments_won", "incursions_repelled", "realm_floors_cleared", "inheritances_claimed", "stones_earned", "qi_gathered"]
+	"tribulations_survived", "respawns", "items_crafted", "missions_done", "deeds_done", "encounters", "days_in_seclusion", "commissions_done", "tournaments_won", "incursions_repelled", "realm_floors_cleared", "inheritances_claimed", "stones_earned", "qi_gathered", "regions_visited"]
 
 const LABELS := {
 	"fights_won": "Fights won",
@@ -24,6 +24,7 @@ const LABELS := {
 	"inheritances_claimed": "Inheritances claimed",
 	"stones_earned": "Spirit stones earned",
 	"qi_gathered": "Qi gathered",
+	"regions_visited": "Regions visited",
 	"deeds_done": "Deeds done",
 	"encounters": "Encounters",
 	"days_in_seclusion": "Days in seclusion",
@@ -92,6 +93,8 @@ static func backfill(c: CharacterData, data: GameData, flags: Dictionary) -> voi
 	for id in data.inheritances:
 		if Inheritances.is_claimed(String(id), flags):
 			claimed += 1
+	if c.visited_regions.size() > get_stat(c, "regions_visited"):
+		c.life_stats["regions_visited"] = c.visited_regions.size()
 	if floors > get_stat(c, "realm_floors_cleared"):
 		c.life_stats["realm_floors_cleared"] = floors
 	if claimed > get_stat(c, "inheritances_claimed"):

@@ -741,3 +741,14 @@ func test_unlock_notices_clan() -> void:
 	c.abode = "waterfall_cave"
 	assert_true(_notice_ids(Guidance.unlock_notices(c, d, {})).has("clan"))
 	assert_false(_notice_ids(Guidance.unlock_notices(c, d, {}, {}, ClanData.new())).has("clan"))
+
+
+## TRAV-001: no road notice for a region you have already visited.
+func test_unlock_notices_skip_visited_regions() -> void:
+	var d := data()
+	var c := _fresh()
+	c.realm_index = 1
+	assert_true(_notice_ids(Guidance.unlock_notices(c, d, {})).has("road_azure_peak"))
+	Exploration.visit(c, "azure_peak")
+	assert_false(_notice_ids(Guidance.unlock_notices(c, d, {})).has("road_azure_peak"))
+	assert_true(_notice_ids(Guidance.unlock_notices(c, d, {})).has("road_withered_bone_marsh"))

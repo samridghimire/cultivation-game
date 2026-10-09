@@ -395,6 +395,8 @@ static func unlock_notices(c: CharacterData, data: GameData, flags: Dictionary, 
 	if rival != null:
 		_add_notice(out, flags, "rival", "%s has named you a rival." % rival.name)
 	for region_id: String in data.regions:
+		if Exploration.visited(c, region_id):
+			continue
 		var route := _shortest_gated_route(data, region_id)
 		if route.is_empty() or c.realm_index < data.realm_index_of(String(route["min_realm"])):
 			continue

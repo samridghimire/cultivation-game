@@ -127,3 +127,17 @@ func test_flag_count_needs_prefix_or_suffix() -> void:
 	d.milestones.append(_milestone("bad_fc", {"type": "flag_count"}))
 	d._validate_milestones()
 	assert_true(", ".join(d.load_errors).contains("flag_count check needs"))
+
+
+func test_far_traveller_milestone_fires_at_five_regions() -> void:
+	var c := CharacterData.new()
+	var ids: Array = data().regions.keys()
+	for i in 4:
+		Exploration.visit(c, String(ids[i]))
+	var before: Array = Milestones.newly_reached(c, data(), {})
+	assert_false(before.has("far_traveller"))
+	Exploration.visit(c, String(ids[4]))
+	var after: Array = Milestones.newly_reached(c, data(), {})
+	assert_true(after.has("far_traveller"))
+	var loaded := CharacterData.from_dict(c.to_dict())
+	assert_eq(loaded.visited_regions, c.visited_regions)

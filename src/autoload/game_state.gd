@@ -95,6 +95,7 @@ func start_session(character: CharacterData) -> void:
 	devour_target = {}
 	world_events = []
 	current_region = data.start_region
+	Exploration.visit(player, current_region)
 	npcs = {}
 	npc_favor = {}
 	clan = null
@@ -500,6 +501,8 @@ func travel(region_id: String) -> void:
 		return
 	_start_time_skip()
 	current_region = region_id
+	Exploration.visit(player, region_id)
+	world_flags["notice_road_" + region_id] = true  # you are already here (TRAV-001)
 	EventBus.post("After %s on the road you arrive at %s." % [Calendar.format_duration(check["days"]), Exploration.region_name(data, region_id)], "progress")
 	_pass_time(check["days"], "Travelling to %s" % Exploration.region_name(data, region_id))
 	_road_ambush()
@@ -2420,6 +2423,8 @@ func load_save_dict(d: Dictionary) -> void:
 	if clan != null and clan.seat == "":
 		Clans.move_seat(clan, player.abode, data)
 	npc_clans = NpcClans.from_dict(d.get("npc_clans", {}))
+	if player.visited_regions.is_empty():
+		Exploration.visit(player, current_region)  # older saves (TRAV-001)
 	# A save from before GUIDE-008 has no notice flags: mark what it already
 	# qualifies for as seen, quietly, so loading never floods the log (RV-010).
 	if not world_flags.keys().any(func(k: Variant) -> bool: return String(k).begins_with("notice_")):
