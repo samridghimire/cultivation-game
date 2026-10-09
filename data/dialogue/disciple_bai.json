@@ -1,0 +1,27 @@
+{
+  "id": "disciple_bai",
+  "entries": [
+    {"node": "demonic", "if": {"max_alignment": -300}},
+    {"node": "greet"}
+  ],
+  "nodes": {
+    "greet": {"text": "Peace, fellow cultivator. I am Bai Qingwu of the Azure Cloud Sect, walking the peak to settle my Dao-heart. The orchid terraces are kind to those who tread softly.",
+      "choices": [
+        {"label": "Ask how she steadied her Foundation.", "next": "foundation"},
+        {"label": "Walk the terraces with her in silence. (3 days)", "next": "walk", "days": 3, "favor": 5, "effects": {"qi": 1500}},
+        {"label": "Ask if the sect lacks anything.", "next": "errand_ask", "if": {"not_flag": "errand_bai_asked"}},
+        {"label": "Bring the three Nine-Leaf Soul Grass Bai asked for.", "next": "errand_thanks", "if": {"has_items": {"nine_leaf_soul_grass": 3}, "flag": "errand_bai_asked", "not_flag": "errand_bai_done"}, "effects": {"items": {"nine_leaf_soul_grass": -3, "jade_marrow_pill": 1}, "qi": 2500, "alignment": 10, "set_flag": "errand_bai_done"}, "favor": 15},
+        {"label": "Farewell, senior sister.", "next": "end"}
+      ]},
+    "foundation": {"text": "I did not chase the pill. I chased a clear mind, and the Foundation came as the cold comes down the mountain. Do not hurry the layers; they remember every shortcut.",
+      "choices": [{"label": "...", "next": "greet"}]},
+    "walk": {"text": "You walk until the mist closes behind you. She says nothing, and the quiet does more for your qi than any lecture.",
+      "choices": [{"label": "...", "next": "greet"}]},
+    "errand_ask": {"text": "An elder is mending his soul, and the sect's stores of Nine-Leaf Soul Grass ran dry in the last frost. It grows on these terraces for those who know where to look. Three stalks, and I will see you repaid.",
+      "choices": [{"label": "I will gather them.", "next": "greet", "effects": {"set_flag": "errand_bai_asked"}}]},
+    "errand_thanks": {"text": "Nine leaves, all whole. The elder will sleep easier, and so will I. Take this pill from my own allotment, and the sect will hear your name kindly.",
+      "choices": [{"label": "...", "next": "greet"}]},
+    "demonic": {"text": "Her hand rests on her sword hilt, though her voice stays level. 'Blood clings to you like mist. Walk on, and I will pretend I did not see where you came from.'",
+      "choices": [{"label": "Leave.", "next": "end"}]}
+  }
+}

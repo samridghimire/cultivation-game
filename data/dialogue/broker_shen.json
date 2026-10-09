@@ -1,0 +1,22 @@
+{
+  "id": "broker_shen",
+  "entries": [{"node": "greet"}],
+  "nodes": {
+    "greet": {"text": "Sit, sit. I trade in what people would rather not say aloud, and I never ask what you plan to do with it. Names, routes, debts. Everything has a price.",
+      "choices": [
+        {"label": "Ask what moves through the market.", "next": "rumours"},
+        {"label": "Buy him a cup of rice wine and let him talk. (2 days)", "next": "wine", "days": 2, "favor": 5, "effects": {"qi": 1500, "items": {"spirit_stone": -10}}},
+        {"label": "Ask if he needs anything found.", "next": "errand_ask", "if": {"not_flag": "errand_shen_asked"}},
+        {"label": "Bring the two Star Silver Shen asked for.", "next": "errand_thanks", "if": {"has_items": {"star_silver": 2}, "flag": "errand_shen_asked", "not_flag": "errand_shen_done"}, "effects": {"items": {"star_silver": -2, "spirit_stone": 650}, "qi": 3000, "set_flag": "errand_shen_done"}, "favor": 15},
+        {"label": "Not today.", "next": "end"}
+      ]},
+    "rumours": {"text": "Sect envoys buy herbs by the cartload before a breakthrough season, and prices follow them. The crater keeps spitting out star metal, and the foolish keep dying in it. Both are opportunities.",
+      "choices": [{"label": "...", "next": "greet"}]},
+    "wine": {"text": "His hollow eyes brighten for an hour. By the second cup he has told you three secrets, two of them true.",
+      "choices": [{"label": "...", "next": "greet"}]},
+    "errand_ask": {"text": "A client of mine wants star silver, quietly, and the crater has made my usual diggers cautious. Two lumps from the Meteor Crater Field. I will pay well, and not ask who you are.",
+      "choices": [{"label": "I will bring it.", "next": "greet", "effects": {"set_flag": "errand_shen_asked"}}]},
+    "errand_thanks": {"text": "Clean silver, no star-fire left in it. You have good hands, friend. My client pays, I pay you, and no one ever learns your name.",
+      "choices": [{"label": "...", "next": "greet"}]}
+  }
+}

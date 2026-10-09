@@ -221,6 +221,8 @@ func test_npc_errand_turn_ins_need_items_and_asked_flag() -> void:
 		"patriarch_lin": ["Bring the three Ice Soul Flowers", {"ice_soul_flower": 3}, "errand_lin"],
 		"old_monster_gui": ["Bring the three Blood Ginseng", {"blood_ginseng": 3}, "errand_gui"],
 		"alchemist_ye": ["Bring the three Cloud Mist Orchids", {"cloud_mist_orchid": 3}, "errand_ye"],
+		"disciple_bai": ["Bring the three Nine-Leaf Soul Grass", {"nine_leaf_soul_grass": 3}, "errand_bai"],
+		"broker_shen": ["Bring the two Star Silver", {"star_silver": 2}, "errand_shen"],
 	}
 	var npcs := _npcs()
 	for npc_id: String in errands:
