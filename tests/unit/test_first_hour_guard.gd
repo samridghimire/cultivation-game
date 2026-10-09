@@ -125,3 +125,16 @@ func test_curious_player_first_year() -> void:
 			reached += 1
 		gs.end_session()
 	assert_true(reached >= 4, "only %d of %d curious players reached QR3 within a year" % [reached, SEEDS])
+
+
+## QA-048: the curious policy tries more than explore + mission once the player has a sect,
+## stones and techniques (seed 1, month 7 onward records at least 3 kinds in some month).
+func test_curious_month_records_more_than_two_kinds() -> void:
+	var gs := _root().get_node("GameState")
+	var clock := _root().get_node("GameClock")
+	var r: Dictionary = FirstHour.play(gs, clock, 1, 12, true)
+	var most := 0
+	for m in range(6, r["kinds"].size()):
+		most = maxi(most, int(r["kinds"][m]))
+	gs.end_session()
+	assert_true(most > 2, "no curious month after month 6 recorded more than 2 kinds (best %d)" % most)

@@ -131,7 +131,76 @@ static func _curious_month(gs: Node, c: CharacterData, done: Dictionary, today: 
 		if c.alive and Commissions.check_deliver(c, gs.data, i) == "":
 			gs.deliver_commission(i)
 			kinds["commission"] = true
+	if c.alive:
+		_everything_month(gs, c, kinds, today)
 	return kinds
+
+
+## QA-048: the rest of what the menus offer, each tried once a month and only when the core
+## check allows it: craft, profession work, gift, pointers/spar, lecture, secret realm, and
+## (every 6th month) a trip to the nearest unvisited region and back.
+static func _everything_month(gs: Node, c: CharacterData, kinds: Dictionary, today: int) -> void:
+	for recipe_id: String in gs.data.recipes:
+		if c.alive and Alchemy.check(c, gs.data, recipe_id) == "":
+			gs.refine(recipe_id)
+			kinds["craft"] = true
+			break
+	if c.alive:
+		for prof_id: String in c.professions:
+			gs.work_profession(prof_id, 7)
+			kinds["work"] = true
+			break
+	if c.alive:
+		var best_id := ""
+		for npc_id: String in gs.npcs:
+			if gs.npcs[npc_id].alive and (best_id == "" or int(gs.npc_favor.get(npc_id, 0)) > int(gs.npc_favor.get(best_id, 0))):
+				best_id = npc_id
+		var cheapest := ""
+		for item_id: String in c.inventory:
+			if Family.gift_value(gs.data, item_id) > 0 and Family.check_gift(c, gs.npcs.get(best_id), int(gs.npc_favor.get(best_id, 0)), item_id, gs.data) == "":
+				if cheapest == "" or int(gs.data.items[item_id].get("price", 0)) < int(gs.data.items[cheapest].get("price", 0)):
+					cheapest = item_id
+		if best_id != "" and cheapest != "":
+			gs.give_gift(best_id, cheapest)
+			kinds["gift"] = true
+	if c.alive:
+		for npc_id: String in gs.npcs:
+			if gs.check_pointers(npc_id) == "":
+				gs.ask_pointers(npc_id)
+				kinds["pointer"] = true
+				break
+			if gs.check_spar(npc_id) == "":
+				gs.spar_with(npc_id)
+				kinds["spar"] = true
+				break
+	if c.alive and not c.is_rogue() and Sects.check_lecture(c, gs.data, today) == "":
+		gs.attend_lecture()
+		kinds["lecture"] = true
+	if c.alive:
+		for realm_id: String in gs.data.secret_realms:
+			if SecretRealms.check_enter(c, gs.data, realm_id, gs.current_region, today) != "":
+				continue
+			var floor_def := SecretRealms.next_floor(c, gs.data.secret_realms[realm_id], today)
+			var guardian := String(floor_def.get("guardian", ""))
+			if guardian != "" and Combat.win_chance(c, gs.data, gs.data.enemies[guardian]) < 0.6:
+				continue  # retreat from a floor that is too dangerous
+			gs.enter_secret_realm(realm_id)
+			kinds["secret_realm"] = true
+			break
+	if c.alive and today / Calendar.DAYS_PER_MONTH % 6 == 5:
+		var routes := Guidance.unexplored_routes(c, gs.data, gs.current_region)
+		if not routes.is_empty():
+			var home: String = gs.current_region
+			gs.travel(String(routes[0]["to"]))
+			if gs.current_region != home:
+				gs.explore_many(7)
+				if gs.pending_encounter != "":
+					gs.choose_encounter(0)
+				if gs.pending_threat != "":
+					gs.face_threat(false)
+				kinds["travel"] = true
+				if c.alive:
+					gs.travel(home)
 
 
 ## Rated win chance against the mission's foe (1.0 when it has none).
