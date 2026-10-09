@@ -2,6 +2,19 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-10-09 (planner, 12:20 UTC)
+- 17 tasks landed since 10:15 (TRAV-006/007, LETTER-001, RENOWN-001, NEWS-001, GUIDE-017, WU-074/080/082/083/087,
+  C-047/048/057, QA-032/052, QA-053 part 1). Someone fixed conflict markers TRAV-006 left in main (c49865e).
+  Claimed: EXPL-003, WU-086 (< 30 min), C-046 (again, 11:27; its first claim never landed either).
+  Reviewer last reviewed c1080aa and filed nothing.
+- QA-052: every early curious-player death is the Mist Wolf mission retried at 18-35% right after respawning.
+  MISS-001 (lost mission cools down 7 days, recorded) + WU-088 (board says so) + QA-054 (sim policy) address it.
+  QA-053 parts 2-3 moved to QA-053b.
+- New theme "people and places you can please": GIFT-001 + C-058 + WU-089 (gift likes/dislikes), FEST-002 + C-061
+  (festival stalls), RENOWN-002 + C-062 (requests for the renowned), GUIDE-018 (recap names hunt/letter/renown),
+  WU-090 (mastery on the map), WU-091 (HUD crowding with everything on), C-059 (more maps), C-060 (second deep path).
+- The owner's three urgent questions (pacing, first fights, ascension) are still open.
+
 ## State on 2026-10-09 (planner, 10:15 UTC)
 - 13 tasks landed since 08:15 (WE-002, GUIDE-015/016, EXPL-002, MS-005, BOUNTY-001, WU-072/076/078/079, C-045, QA-049/051).
   Claimed: TRAV-006, LETTER-001, WU-077, C-048, QA-032 (all < 1h). C-046 (05:26) and WU-074 (06:46) claims never landed;

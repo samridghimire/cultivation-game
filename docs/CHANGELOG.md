@@ -2,6 +2,23 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-09 [QA-052] The curious-player sim logs every death: all early deaths were one Mist Wolf sect mission, retried after each respawn.
+- 2026-10-09 [WU-083] The crafting screen lists what you can make right now first.
+- 2026-10-09 [WU-080] Road encounters show before the arrival card; travel options say whether the roads are quiet.
+- 2026-10-09 [TRAV-007] From Foundation Establishment a flying sword shortens journeys.
+- 2026-10-09 [GUIDE-017] The journal and hints name a recipe you have everything for, and where to craft it.
+- 2026-10-09 [WU-074] The world map shows how well you know a region.
+- 2026-10-09 [WU-082] The bounty you are hunting shows on the HUD, with a banner when you claim it.
+- 2026-10-09 [C-057] The Sunken Sword Tomb opens only to someone carrying its map fragment.
+- 2026-10-09 [NEWS-001] Word of a major breakthrough spreads: people who know you and your sect think better of you.
+- 2026-10-09 [QA-053] Balance sims no longer write autosaves, so tests and sims can run together.
+- 2026-10-09 [WU-087] First-hour labels no longer overlap; the realm suffix shows only up close.
+- 2026-10-09 [TRAV-006] Things happen on the road: a caravan's fire, an overturned cart.
+- 2026-10-09 [RENOWN-001] Local renown: good deeds, bounties and discoveries make your name known in a region and lower its prices.
+- 2026-10-09 [C-047] Qingming and Mid-Autumn festivals with their own encounters.
+- 2026-10-09 [LETTER-001] People who like you write letters, sometimes with a small gift or an invitation.
+- 2026-10-09 [C-048] Every region has a deeper path for those who keep exploring it.
+- 2026-10-09 [QA-032] Early sect hunts and sect calls are a fair fight for a typical player.
 - 2026-10-09 [WU-077] The first hour was checked on screen at the Steam Deck resolution.
 - 2026-10-09 [WU-078] The explore spot says how many days you have explored and when a deeper path may open; a found path is titled "Hidden path".
 - 2026-10-09 [WU-076] Bounty boards in Qingshi Village and Fallen Star Market.
