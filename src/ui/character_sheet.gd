@@ -143,7 +143,7 @@ func _rebuild() -> void:
 		t += "[color=#%s]Rival[/color]\n  %s\n\n" % [accent, rival_line]
 	_gender_row.visible = p.gender == ""
 	var density := GameState.hint_density()
-	var hints := Guidance.hints(p, data, density, 6, GameState.npcs, GameState.world_flags, GameState.current_region, GameClock.total_days)
+	var hints := Guidance.hints(p, data, density, 6, GameState.npcs, GameState.world_flags, GameState.current_region, GameClock.total_days, GameState.npc_favor)
 	if not hints.is_empty():
 		t += "[color=#%s]Next steps[/color]\n" % accent
 		for line in hints:

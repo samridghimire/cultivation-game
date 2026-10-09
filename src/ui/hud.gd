@@ -420,7 +420,7 @@ func _refresh() -> void:
 	var hint_count := int(Settings.get_value("hud_hints"))
 	var hints: PackedStringArray = []
 	if hint_count > 0:
-		hints = Guidance.hints(p, data, GameState.hint_density(), hint_count, GameState.npcs, GameState.world_flags, GameState.current_region, GameClock.total_days)
+		hints = Guidance.hints(p, data, GameState.hint_density(), hint_count, GameState.npcs, GameState.world_flags, GameState.current_region, GameClock.total_days, GameState.npc_favor)
 	var goal := goal_text(p, data, GameState.world_flags, GameState.clan, density) if hint_count > 0 else ""
 	_goal.text = goal
 	_goal.tooltip_text = goal

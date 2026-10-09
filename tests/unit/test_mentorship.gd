@@ -137,3 +137,75 @@ func test_spar_checks_and_aftermath() -> void:
 	assert_true(Mentorship.check_spar(c, npc, 10, d, 52).contains("recently"))
 	assert_eq(Mentorship.check_spar(c, npc, 10, d, 57), "")
 	assert_eq(Mentorship.after_spar(c, npc, d, true, 60)["favor"], 2)
+
+
+## GUIDE-012: hints and journal lines for pointers and sparring.
+func _hint_setup() -> Dictionary:
+	var p := _pair()
+	p[1].home_region = "qingshi_village"
+	return {"c": p[0], "npc": p[1], "people": {"elder": p[1]}, "favor": {"elder": 30}}
+
+
+func _hints_of(s: Dictionary, today: int = 400, region: String = "qingshi_village") -> PackedStringArray:
+	return Guidance.hints(s["c"], data(), 1.0, 99, s["people"], {}, region, today, s["favor"])
+
+
+func _any_contains(lines: PackedStringArray, text: String) -> bool:
+	for l in lines:
+		if l.contains(text):
+			return true
+	return false
+
+
+func test_pointer_hint_only_when_action_succeeds() -> void:
+	var s := _hint_setup()
+	assert_true(_any_contains(_hints_of(s), "Elder Lu"))
+	assert_true(_any_contains(_hints_of(s), "could point out flaws in your"))
+	assert_false(_any_contains(_hints_of(s, 400, "azure_peak"), "could point out flaws"), "other region")
+	s["favor"] = {"elder": 1}
+	assert_false(_any_contains(_hints_of(s), "could point out flaws"), "favor too low")
+	s["favor"] = {"elder": 30}
+	(s["c"] as CharacterData).npc_action_days["pointers:elder"] = 399
+	assert_false(_any_contains(_hints_of(s), "could point out flaws"), "cooldown")
+
+
+func test_pointer_hint_prefers_highest_favor() -> void:
+	var s := _hint_setup()
+	var other := new_character(78)
+	other.id = "other"
+	other.name = "Elder Wen"
+	other.age_days = 40 * Calendar.DAYS_PER_YEAR
+	other.realm_index = 2
+	other.home_region = "qingshi_village"
+	s["people"]["other"] = other
+	s["favor"]["other"] = 60
+	var hint := ""
+	for l in _hints_of(s):
+		if l.contains("could point out"):
+			hint = l
+	assert_true(hint.begins_with("Elder Wen"))
+
+
+func test_pointer_journal_lines_capped() -> void:
+	var s := _hint_setup()
+	for i in 4:
+		var n := new_character(90 + i)
+		n.id = "n%d" % i
+		n.name = "Mentor %d" % i
+		n.age_days = 40 * Calendar.DAYS_PER_YEAR
+		n.realm_index = 2
+		n.home_region = "qingshi_village"
+		s["people"][n.id] = n
+		s["favor"][n.id] = 25
+	var rows := Guidance.journal(s["c"], data(), {}, 400, "qingshi_village", 1.0, s["people"], [], null, s["favor"])
+	var asks := rows.filter(func(e: Dictionary) -> bool: return e["section"] == "Opportunities" and String(e["text"]).begins_with("Ask "))
+	assert_eq(asks.size(), 3)
+
+
+func test_never_sparred_hint() -> void:
+	var s := _hint_setup()
+	LifeStats.add(s["c"], "encounters")
+	LifeStats.add(s["c"], "realm_floors_cleared")
+	assert_true(_any_contains(_hints_of(s), "would spar with you"))
+	(s["c"] as CharacterData).npc_action_days["spar:someone"] = 1
+	assert_false(_any_contains(_hints_of(s), "would spar with you"), "already sparred")

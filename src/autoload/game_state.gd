@@ -1919,7 +1919,7 @@ func hint_density() -> float:
 
 ## Journal entries for the current session (Guidance.journal); no side effects.
 func journal_entries() -> Array[Dictionary]:
-	return Guidance.journal(player, data, world_flags, GameClock.total_days, current_region, hint_density(), npcs, world_events, clan)
+	return Guidance.journal(player, data, world_flags, GameClock.total_days, current_region, hint_density(), npcs, world_events, clan, npc_favor)
 
 
 ## Qi density of the current region, including active world events (LW-001).

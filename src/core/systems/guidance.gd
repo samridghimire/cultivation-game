@@ -20,7 +20,7 @@ const CHORE_REGION := "qingshi_village"
 ## stands (region x sect bonus), used for the days-to-next-stage estimate.
 ## `people` (the NPCs, optional) enables the family hints. `flags` (world flags)
 ## and `region_id` drive the newcomer hints shown while Mortal or Qi Refining.
-static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit: int = 5, people: Dictionary = {}, flags: Dictionary = {}, region_id: String = "", today: int = -1) -> PackedStringArray:
+static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit: int = 5, people: Dictionary = {}, flags: Dictionary = {}, region_id: String = "", today: int = -1, favor: Dictionary = {}) -> PackedStringArray:
 	var out: PackedStringArray = []
 	var years := Cultivation.years_left(c, data)
 	if years <= LIFESPAN_WARNING_YEARS:
@@ -39,7 +39,10 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 	var sell := _sell_hint(c, data, region_id)
 	if sell != "":
 		out.append(sell)
-	var untried := _untried_hint(c, data, today)
+	var pointers := _pointers_hint(c, data, people, favor, region_id, today)
+	if pointers != "":
+		out.append(pointers)
+	var untried := _untried_hint(c, data, today, people, favor, region_id)
 	if untried != "":
 		out.append(untried)
 	out.append(_cultivation_hint(c, data, density))
@@ -108,6 +111,8 @@ static func _sell_hint(c: CharacterData, data: GameData, region_id: String) -> S
 	return "The %s here would pay about %d spirit stones for your %s." % [best_name, best_total, best_goods]
 
 
+## Most "Ask <Name> for pointers" journal lines (GUIDE-012).
+const POINTER_JOURNAL_MAX := 3
 ## Game days that must pass (GameClock) before "try something new" is suggested (GUIDE-007).
 const UNTRIED_MIN_DAYS := 180
 
@@ -116,7 +121,7 @@ const UNTRIED_MIN_DAYS := 180
 ## used, judged from the life record. Not for Mortals or the first six months.
 ## The profession and sect nudges already exist as their own hints, so they are
 ## not repeated here.
-static func _untried_hint(c: CharacterData, data: GameData, today: int) -> String:
+static func _untried_hint(c: CharacterData, data: GameData, today: int, people: Dictionary = {}, favor: Dictionary = {}, region_id: String = "") -> String:
 	if c.realm_index < 1 or today < UNTRIED_MIN_DAYS:
 		return ""
 	if LifeStats.get_stat(c, "encounters") == 0:
@@ -130,7 +135,47 @@ static func _untried_hint(c: CharacterData, data: GameData, today: int) -> Strin
 			var def: Dictionary = data.secret_realms[realm_id]
 			if SecretRealms.admits(c, data, def) and SecretRealms.is_open(def, today):
 				return "%s is open: delve for treasure." % String(def.get("name", realm_id))
+	if not _has_sparred(c):
+		var partner := _region_people(c, data, people, favor, region_id, today, "spar")
+		if not partner.is_empty():
+			var npc: CharacterData = partner[0]
+			return "%s (%s) here would spar with you: a friendly bout trains your techniques." % [npc.name, data.realms[npc.realm_index].name]
 	return ""
+
+
+static func _has_sparred(c: CharacterData) -> bool:
+	for key: String in c.npc_action_days:
+		if key.begins_with("spar:"):
+			return true
+	return false
+
+
+## NPCs in `region_id` who pass Mentorship.check_pointers ("pointers") or
+## check_spar ("spar") right now, highest favor first (then id).
+static func _region_people(c: CharacterData, data: GameData, people: Dictionary, favor: Dictionary, region_id: String, today: int, kind: String) -> Array[CharacterData]:
+	var out: Array[CharacterData] = []
+	if region_id == "" or today < 0 or people.is_empty():
+		return out
+	for npc in Npcs.in_region(people, data, region_id):
+		var f := int(favor.get(npc.id, 0))
+		var reason := Mentorship.check_pointers(c, npc, f, data, today) if kind == "pointers" else Mentorship.check_spar(c, npc, f, data, today)
+		if reason == "":
+			out.append(npc)
+	out.sort_custom(func(a: CharacterData, b: CharacterData) -> bool:
+		var fa := int(favor.get(a.id, 0))
+		var fb := int(favor.get(b.id, 0))
+		return fa > fb if fa != fb else a.id < b.id)
+	return out
+
+
+## "<Name> (<realm>) here could point out flaws in your <Tech>." (GUIDE-012).
+static func _pointers_hint(c: CharacterData, data: GameData, people: Dictionary, favor: Dictionary, region_id: String, today: int) -> String:
+	var mentors := _region_people(c, data, people, favor, region_id, today, "pointers")
+	if mentors.is_empty():
+		return ""
+	var npc: CharacterData = mentors[0]
+	var tech: TechniqueDef = data.techniques[Mentorship.pointer_technique(c, npc, data)]
+	return "%s (%s) here could point out flaws in your %s." % [npc.name, data.realms[npc.realm_index].name, tech.name]
 
 
 ## Breakthrough odds (and pills that help) at a bottleneck, else qi and days to the next stage.
@@ -616,9 +661,9 @@ static func recap(c: CharacterData, data: GameData, flags: Dictionary, today: in
 ## display order (WU-007 renders them). tone is "normal", "warning" (urgent) or
 ## "dim" (waiting / on cooldown). `today` is the GameClock day, `events` the live
 ## world events. Pure: nothing is mutated.
-static func journal(c: CharacterData, data: GameData, flags: Dictionary, today: int, region_id: String, density: float = 1.0, people: Dictionary = {}, events: Array = [], clan: ClanData = null) -> Array[Dictionary]:
+static func journal(c: CharacterData, data: GameData, flags: Dictionary, today: int, region_id: String, density: float = 1.0, people: Dictionary = {}, events: Array = [], clan: ClanData = null, favor: Dictionary = {}) -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
-	var hint_lines := hints(c, data, density, 99, people, flags, region_id, today)
+	var hint_lines := hints(c, data, density, 99, people, flags, region_id, today, favor)
 	var urgent := 0
 	if Cultivation.years_left(c, data) <= LIFESPAN_WARNING_YEARS:
 		urgent += 1
@@ -665,6 +710,8 @@ static func journal(c: CharacterData, data: GameData, flags: Dictionary, today: 
 				_add(out, "World events", "%s: %s" % [kind.capitalize(), "you can enter" if reason == "" else reason], "normal" if reason == "" else "dim")
 	_other_region_event_entries(out, c, data, today, region_id, events)
 	_opportunity_entries(out, c, data, flags, today)
+	for npc in _region_people(c, data, people, favor, region_id, today, "pointers").slice(0, POINTER_JOURNAL_MAX):
+		_add(out, "Opportunities", "Ask %s for pointers (%s)" % [npc.name, _region_name(data, region_id)], "normal")
 	_errand_entries(out, data, flags)
 	_household_entries(out, c, data, people)
 	for order in c.commissions:
