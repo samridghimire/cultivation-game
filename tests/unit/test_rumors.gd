@@ -77,3 +77,12 @@ func test_hear_rumors_posts_region_rumor() -> void:
 	assert_true(posted.has("Gossip here."), str(posted))
 	assert_false(posted.has("Gossip there."))
 	gs.end_session()
+
+
+func test_every_region_has_a_data_rumor() -> void:
+	var d := GameData.load_from_dir()
+	var covered := {}
+	for r: Dictionary in d.rumors.values():
+		covered[String(r.get("region", ""))] = true
+	for region_id: String in d.regions:
+		assert_true(covered.has(region_id), "%s has no rumor" % region_id)

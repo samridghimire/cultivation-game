@@ -4,6 +4,18 @@
   "rumors": [
     {"id": "drowned_sword_explorer", "region": "fallen_star_market", "min_realm": "qi_refining", "blocked_by_flag": "got_sword_tomb_map", "text": "A wounded treasure hunter came down from the cliffs last month, muttering about a drowned sword and a map torn in two."},
     {"id": "village_old_well", "region": "qingshi_village", "text": "The well-keeper swears the old well hums at night, as if something below were breathing."},
-    {"id": "late_tribulation_talk", "min_realm": "foundation_establishment", "text": "Travellers say a Core Formation cultivator was struck down by his tribulation on the Azure Peak. Prepare well before you try."}
+    {"id": "late_tribulation_talk", "min_realm": "foundation_establishment", "text": "Travellers say a Core Formation cultivator was struck down by his tribulation on the Azure Peak. Prepare well before you try."},
+    {"id": "forest_hidden_valley", "region": "misty_forest", "blocked_by_flag": "found_hidden_valley", "text": "Herb pickers say that if you wander the Misty Forest long enough, the mist parts on a valley no map shows."},
+    {"id": "forest_valley_keeper", "region": "misty_forest", "requires_flag": "found_hidden_valley", "blocked_by_flag": "met_valley_guardian", "text": "They say something old and green keeps that hidden valley, and it only speaks to those who have walked the forest a long while."},
+    {"id": "forest_wolf_packs", "region": "misty_forest", "min_realm": "qi_refining", "text": "Mist wolves hunt in packs this season; the foresters never go in alone."},
+    {"id": "azure_peak_sword_voices", "region": "azure_peak", "min_realm": "foundation_establishment", "text": "Disciples of the peak whisper that on windless nights the cliffs ring with sword-song from a tomb no one has entered."},
+    {"id": "marsh_lantern_lights", "region": "withered_bone_marsh", "text": "Do not follow the green lanterns in the marsh, friend, unless you wish to meet whoever lit them."},
+    {"id": "marsh_yin_palace_tide", "region": "withered_bone_marsh", "min_realm": "core_formation", "text": "The old ferrymen say the Drowned Yin Palace rises with the cold tide, once in a great while, and those who enter rarely agree on what they saw."},
+    {"id": "ridge_beast_clans", "region": "myriad_peaks_ridge", "text": "The beast clans of the ridge keep their own laws; hunters who ignore them do not come home."},
+    {"id": "ridge_thunder_seat", "region": "myriad_peaks_ridge", "min_realm": "foundation_establishment", "text": "A patriarch is said to have died upright on a ridge crag, the lightning still circling his seat for any who dare to sit."},
+    {"id": "market_bidding_hall", "region": "fallen_star_market", "text": "The back rooms of the market trade in things the guild would rather not price; ask quietly, and bring stones."},
+    {"id": "village_founder_legend", "region": "qingshi_village", "text": "The grandmothers say the founder of Qingshi was no farmer, and that his kindness is still remembered by whoever kneels at the well."},
+    {"id": "late_inheritance_whispers", "min_realm": "core_formation", "text": "An immortal's legacy waits in every great mountain, they say, but it tests the heart before it tests the blade."},
+    {"id": "late_secret_realm_omens", "min_realm": "foundation_establishment", "text": "Old hands say the secret realms open by the calendar of heaven, not of men; the ones who keep count are the ones who get in."}
   ]
 }
