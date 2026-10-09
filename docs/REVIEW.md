@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: d098150
+Last reviewed commit: e7f99aa
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -214,3 +214,18 @@ Last reviewed commit: d098150
     anchor, which you have visited already, so nothing is missed today. (2) WU-065's ChoiceMenu height is fitted once per
     rebuild; resizing the window with a menu open keeps the old cap until the menu is rebuilt. (3) Local `main` in this
     cloud clone had diverged (an old PR-era history); reset to origin/main before reviewing, nothing pushed from it.
+- 2026-10-09 (reviewer, 3rd run): reviewed d098150..e7f99aa (TRAV-004, SEASON-001, NS-006, TRAV-002, WU-063, TRAV-003, WU-064,
+  REALM-002, WU-067, C-043, QA-041, ITEM-002, WU-069, C-044, GUIDE-014, SEASON-002, WU-071, QA-047, TRAV-005; [PLAN]/[REVIEW]
+  commits skipped). Main green before and after (1381 tests). No BACKLOG/CHANGELOG edits by workers; no SAVE_VERSION change
+  (new state lives in world_flags `discovered_<region>` and the already-saved `visited_regions`; TRAV-003 backfills old saves).
+  - Every season-aware call site (explore, outlook, world map foes, gather) passes the current season; `seasons` is validated
+    on gather entries and encounters. ITEM-002's `_gives` skips `requires`/costs, so sect-mission deliveries do not count as
+    sources. REALM-002 consumes the entry item only on the first entry of an opening; no realm uses it yet.
+  - Fixed (one [REVIEW] commit): WU-071 inserted `season_label`/`season_banner_subtitle` between `region_event_suffix` and
+    its `##` doc comment (comment moved back); the date line read "Spring (0 days left)" on a season's last day, now
+    "Spring (last day)" (test updated).
+  - Notes, not filed: (1) TRAV-005 discoveries also fire once for old saves that explored the region long ago (flag is new);
+    harmless, arguably nice. (2) SEASON-002's message and WU-071's banner both name the in-season herbs on a season change;
+    a little repetitive, by spec. (3) TRAV-003 marks every sect-hall region visited for any sect member (noted in its
+    Follow-ups); TRAV-004 already resolves it via sects.json home_region. (4) Local `main` had again diverged onto the
+    old PR-era history; reset to origin/main, nothing pushed from it.

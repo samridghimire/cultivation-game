@@ -71,7 +71,7 @@ func test_date_line_near_season_end_only() -> void:
 	assert_eq(hud_script.season_label(40), "Spring")
 	assert_eq(hud_script.season_label(79), "Spring (10 days left)")
 	assert_eq(hud_script.season_label(88), "Spring (1 day left)")
-	assert_eq(hud_script.season_label(89), "Spring (0 days left)")
+	assert_eq(hud_script.season_label(89), "Spring (last day)")
 
 
 func test_banner_subtitle_with_and_without_highlights() -> void:

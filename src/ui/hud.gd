@@ -366,13 +366,13 @@ func _build_death_screen() -> void:
 	add_child(_death_screen)
 
 
-## "   Beast Tide!" for each world event under way in `region_id` (LW-001b), plus
-## " (you can enter)" when `c` can take part in one (WU-005).
-## "Spring (4 days left)" within 10 days of the season's end, else just the season (WU-071).
+## "Spring (4 days left)" within 10 days of the season's end ("Spring (last day)" on it), else just the season (WU-071).
 static func season_label(total_days: int) -> String:
 	var label := Calendar.season_of(total_days)
 	var left := Calendar.days_left_in_season(total_days)
-	if left <= 10:
+	if left == 0:
+		label += " (last day)"
+	elif left <= 10:
 		label += " (%d day%s left)" % [left, "" if left == 1 else "s"]
 	return label
 
@@ -388,6 +388,8 @@ static func season_banner_subtitle(region: String, highlights: Array[Dictionary]
 	return sub + " In season: " + "; ".join(parts) + "."
 
 
+## "   Beast Tide!" for each world event under way in `region_id` (LW-001b), plus
+## " (you can enter)" when `c` can take part in one (WU-005).
 static func region_event_suffix(data: GameData, events: Array, region_id: String, c: CharacterData = null) -> String:
 	var text := ""
 	for instance in WorldEvents.active_in(events, region_id):
