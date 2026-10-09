@@ -357,6 +357,9 @@ func _show_details() -> void:
 	var name_here := renown_note(GameState.player, data, _selected)
 	if name_here != "":
 		_description.text += "\n" + name_here
+	var deal := ShopScreen.deal_note(GameState.player, _selected, GameClock.total_days).strip_edges()
+	if deal != "":
+		_description.text += "\n" + deal
 	var places := place_names(data, _selected)
 	_places.text = "Places: " + (", ".join(places) if not places.is_empty() else "none known")
 	var familiar := familiarity_lines(GameState.player, data, _selected, GameState.current_region, GameState.world_flags)

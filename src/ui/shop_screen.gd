@@ -156,7 +156,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 ## Opens the merchant's wares (see merchant.gd for max_price / stock_tags / faction).
 func open(merchant_name: String = "Merchant", max_price: int = 0, stock_tags: Array = [], faction: String = "", buy_tags: Array = []) -> void:
-	_title.text = merchant_name + price_note(GameState.player, GameState.data, faction) + renown_note(GameState.player, GameState.data, GameState.current_region)
+	_title.text = merchant_name + price_note(GameState.player, GameState.data, faction) + renown_note(GameState.player, GameState.data, GameState.current_region) + deal_note(GameState.player, GameState.current_region, GameClock.total_days)
 	_max_price = max_price
 	_stock_tags = stock_tags
 	_buy_tags = buy_tags
@@ -230,6 +230,15 @@ static func renown_note(c: CharacterData, data: GameData, region_id: String) -> 
 	if mult >= 1.0:
 		return ""
 	return "  Renown: %s (-%d%%)" % [Renown.title(c, data, region_id), roundi((1.0 - mult) * 100.0)]
+
+
+## "  A friend's price: -20% (12 days left)" while a friend's price holds in `region_id`, else "".
+static func deal_note(c: CharacterData, region_id: String, today: int) -> String:
+	var mult := Letters.deal_multiplier(c, region_id, today)
+	if mult >= 1.0:
+		return ""
+	var left: int = int(c.shop_deals[region_id]["until"]) - today
+	return "  A friend's price: -%d%% (%d days left)" % [roundi((1.0 - mult) * 100.0), left]
 
 
 ## Price of one `item_id` on the current tab.

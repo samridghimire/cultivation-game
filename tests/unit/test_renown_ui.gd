@@ -36,3 +36,12 @@ func test_signal_fires_once_when_a_tier_is_crossed() -> void:
 	EventBus.renown_tier_reached.disconnect(on_tier)
 	assert_eq(seen, [gs.current_region + ":Known"])
 	gs.end_session()
+
+
+func test_shop_deal_note_with_and_without_a_deal() -> void:
+	var c := new_character()
+	assert_eq(ShopScreen.deal_note(c, "misty_forest", 100), "")
+	c.shop_deals["misty_forest"] = {"mult": 0.8, "until": 112}
+	assert_eq(ShopScreen.deal_note(c, "misty_forest", 100), "  A friend's price: -20% (12 days left)")
+	assert_eq(ShopScreen.deal_note(c, "qingshi_village", 100), "")
+	assert_eq(ShopScreen.deal_note(c, "misty_forest", 113), "")
