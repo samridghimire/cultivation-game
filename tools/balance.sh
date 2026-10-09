@@ -31,6 +31,7 @@ run() {
 fresh() {
 	run "first hour (seeds 1-10)" res://tests/sim/simulate_first_hour.gd -- 10
 	run "first hour, curious player (seeds 1-10)" res://tests/sim/simulate_first_hour.gd -- 10 --curious
+	run "log noise (seeds 1-5, 12 months)" res://tests/sim/log_noise.gd -- 5 12
 	run "three curious years (seeds 1-10, 36 months)" res://tests/sim/simulate_curious_years.gd -- 10 36
 	run "combat (200 fights per cell)" res://tests/sim/simulate_combat.gd -- 200
 	run "economy (seed defaults)" res://tests/sim/simulate_economy.gd
