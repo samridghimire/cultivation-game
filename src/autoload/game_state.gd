@@ -1039,6 +1039,7 @@ func start_dialogue(npc_id: String) -> void:
 	dialogue_npc = npc_id
 	dialogue_event = ""
 	dialogue_node = node
+	_greet_renowned(npc_id)
 	EventBus.dialogue_requested.emit(npc_id)
 
 

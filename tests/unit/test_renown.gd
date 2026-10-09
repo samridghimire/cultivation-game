@@ -173,3 +173,37 @@ func test_chat_greets_once_per_30_days_and_never_family() -> void:
 	for i in range(before, bus.history.size()):
 		assert_false(String(bus.history[i]["text"]).contains("Respected"), "family never")
 	gs.end_session()
+
+
+func _greeting_count(bus: Node, from: int) -> int:
+	var n := 0
+	for i in range(from, bus.history.size()):
+		if String(bus.history[i]["text"]).contains("Respected"):
+			n += 1
+	return n
+
+
+func test_dialogue_greets_once_and_never_family() -> void:
+	var gs: Node = _root().get_node("GameState")
+	var c := CharacterFactory.create("Famed", gs.data, seeded_rng())
+	gs.start_session(c)
+	var npc := Npcs.spawn(gs.npcs, gs.data, seeded_rng(3), {"age_years": 30, "realm": "mortal"})
+	c.renown[gs.current_region] = 50
+	var bus: Node = _root().get_node("EventBus")
+	var before: int = bus.history.size()
+	gs.start_dialogue(npc.id)
+	assert_eq(_greeting_count(bus, before), 1, "greeted on talking")
+	gs.end_dialogue()
+	before = bus.history.size()
+	gs.start_dialogue(npc.id)
+	assert_eq(_greeting_count(bus, before), 0, "not again the same day")
+	gs.end_dialogue()
+	before = bus.history.size()
+	gs.chat(npc.id)
+	assert_eq(_greeting_count(bus, before), 0, "chatting does not double-greet")
+	var kin := Npcs.spawn(gs.npcs, gs.data, seeded_rng(4), {"age_years": 30, "realm": "mortal"})
+	c.parents.append(kin.id)
+	before = bus.history.size()
+	gs.start_dialogue(kin.id)
+	assert_eq(_greeting_count(bus, before), 0, "family never greets")
+	gs.end_session()
