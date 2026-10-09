@@ -14,6 +14,33 @@ const FRESHNESS_DECAY := 0.5
 const FRESHNESS_FLOOR := 0.2
 
 
+## Days the character has spent exploring a region (EXPL-001).
+static func familiarity(c: CharacterData, region_id: String) -> int:
+	return int(c.explore_days.get(region_id, 0))
+
+
+static func add_explore_day(c: CharacterData, region_id: String) -> void:
+	if region_id != "":
+		c.explore_days[region_id] = familiarity(c, region_id) + 1
+
+
+## The smallest `min_explores` above the current familiarity among encounters the region
+## could hold for this character (realm and alignment only), or -1 (EXPL-001).
+static func next_deep_path(c: CharacterData, data: GameData, region_id: String) -> int:
+	var tags: Array = data.regions.get(region_id, {}).get("encounter_tags", [])
+	var have := familiarity(c, region_id)
+	var best := -1
+	for e: Dictionary in data.encounters.values():
+		if not e.has("min_explores") or not _shares_tag(e.get("tags", []), tags):
+			continue
+		var need := int(e["min_explores"])
+		if need <= have or not realm_allows(c, data, e) or not alignment_allows(c, e):
+			continue
+		if best < 0 or need < best:
+			best = need
+	return best
+
+
 ## Whether the character has set foot in the region (TRAV-001).
 static func visited(c: CharacterData, region_id: String) -> bool:
 	return c.visited_regions.has(region_id)
@@ -151,7 +178,7 @@ static func discovery_for(c: CharacterData, data: GameData, region_id: String, f
 ## Fortune-adjusted weight: [{encounter, weight}]. `rival` is `c`'s living
 ## rival (Rivals) or null; encounters with a `rival` condition need one.
 ## `misfortune_scale` multiplies misfortune weights (a clan estate's ward).
-static func eligible_encounters(c: CharacterData, data: GameData, tags: Array, flags: Dictionary, rival: CharacterData = null, misfortune_scale: float = 1.0, season: String = "") -> Array[Dictionary]:
+static func eligible_encounters(c: CharacterData, data: GameData, tags: Array, flags: Dictionary, rival: CharacterData = null, misfortune_scale: float = 1.0, season: String = "", region_id: String = "") -> Array[Dictionary]:
 	var result: Array[Dictionary] = []
 	var fortune_shift := (c.attribute("fortune") - 10) * FORTUNE_WEIGHT_PER_POINT
 	var unfaded_total := 0.0
@@ -161,6 +188,8 @@ static func eligible_encounters(c: CharacterData, data: GameData, tags: Array, f
 		if e.get("discovery_only", false):
 			continue
 		if not in_season(e, season):
+			continue
+		if e.has("min_explores") and (region_id == "" or familiarity(c, region_id) < int(e["min_explores"])):
 			continue
 		if not realm_allows(c, data, e):
 			continue
@@ -242,12 +271,12 @@ static func _keep_non_fight_share(pool: Array[Dictionary], before: float) -> voi
 ## {fight, choice, fortune, misfortune, other: shares 0..1 summing to 1,
 ## foes: [{name, danger, lethal}] most dangerous first, at most 4}. Encounters with an
 ## enemy count as `fight`, those with choices as `choice`, the rest by their kind.
-static func outlook(c: CharacterData, data: GameData, tags: Array, flags: Dictionary, season: String = "") -> Dictionary:
+static func outlook(c: CharacterData, data: GameData, tags: Array, flags: Dictionary, season: String = "", region_id: String = "") -> Dictionary:
 	var sums := {"fight": 0.0, "choice": 0.0, "fortune": 0.0, "misfortune": 0.0, "other": 0.0}
 	var foes: Array[Dictionary] = []
 	var seen := {}
 	var total := 0.0
-	for entry in eligible_encounters(c, data, tags, flags, null, 1.0, season):
+	for entry in eligible_encounters(c, data, tags, flags, null, 1.0, season, region_id):
 		var e: Dictionary = entry["encounter"]
 		var weight: float = entry["weight"]
 		var bucket := "other"
@@ -274,8 +303,8 @@ static func outlook(c: CharacterData, data: GameData, tags: Array, flags: Dictio
 
 
 ## Picks a weighted random encounter, or {} if none are eligible.
-static func roll_encounter(c: CharacterData, data: GameData, tags: Array, flags: Dictionary, rng: RandomNumberGenerator, rival: CharacterData = null, misfortune_scale: float = 1.0, season: String = "") -> Dictionary:
-	var pool := eligible_encounters(c, data, tags, flags, rival, misfortune_scale, season)
+static func roll_encounter(c: CharacterData, data: GameData, tags: Array, flags: Dictionary, rng: RandomNumberGenerator, rival: CharacterData = null, misfortune_scale: float = 1.0, season: String = "", region_id: String = "") -> Dictionary:
+	var pool := eligible_encounters(c, data, tags, flags, rival, misfortune_scale, season, region_id)
 	var total := 0.0
 	for entry in pool:
 		total += entry["weight"]

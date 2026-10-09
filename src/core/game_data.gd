@@ -464,6 +464,8 @@ func _validate_world() -> void:
 		_validate_seasons(e, "Encounter '%s'" % e["id"])
 		if e.has("repeatable") and typeof(e["repeatable"]) != TYPE_BOOL:
 			load_errors.append("Encounter '%s' repeatable must be a bool" % e["id"])
+		if e.has("min_explores") and (typeof(e["min_explores"]) != TYPE_INT and typeof(e["min_explores"]) != TYPE_FLOAT or int(e["min_explores"]) < 1 or float(e["min_explores"]) != int(e["min_explores"])):
+			load_errors.append("Encounter '%s' min_explores must be an int >= 1" % e["id"])
 		for key in ["min_realm", "max_realm"]:
 			if e.has(key) and realm_index_of(e[key]) < 0:
 				load_errors.append("Encounter '%s' has unknown %s '%s'" % [e["id"], key, e[key]])

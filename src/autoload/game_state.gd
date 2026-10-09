@@ -569,7 +569,7 @@ func explore_outlook(tags: Array = []) -> String:
 	if tags.is_empty():
 		tags = data.regions.get(current_region, {}).get("encounter_tags", [])
 	tags = tags + WorldEvents.encounter_tags(data, world_events, current_region)
-	return Guidance.outlook_text(Exploration.outlook(player, data, tags, world_flags, Calendar.season_of(GameClock.total_days)))
+	return Guidance.outlook_text(Exploration.outlook(player, data, tags, world_flags, Calendar.season_of(GameClock.total_days), current_region))
 
 
 ## One day of exploring. Returns {event: "nothing"|"fight"|"choice"|"threat"|"story"}.
@@ -582,9 +582,10 @@ func _explore_once(tags: Array, quiet: bool) -> Dictionary:
 		tags = data.regions.get(current_region, {}).get("encounter_tags", [])
 	tags = tags + WorldEvents.encounter_tags(data, world_events, current_region)
 	var encounter := Exploration.discovery_for(player, data, current_region, world_flags)
+	Exploration.add_explore_day(player, current_region)
 	last_explore_discovery = not encounter.is_empty()
 	if encounter.is_empty():
-		encounter = Exploration.roll_encounter(player, data, tags, world_flags, rng, Rivals.rival_of(player, npcs), 1.0 - ClanEstate.ward(clan, data, current_region), Calendar.season_of(GameClock.total_days))
+		encounter = Exploration.roll_encounter(player, data, tags, world_flags, rng, Rivals.rival_of(player, npcs), 1.0 - ClanEstate.ward(clan, data, current_region), Calendar.season_of(GameClock.total_days), current_region)
 	else:
 		world_flags["discovered_" + current_region] = true
 	if encounter.is_empty():

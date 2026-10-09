@@ -818,6 +818,10 @@ static func _opportunity_entries(out: Array[Dictionary], c: CharacterData, data:
 		var roads := unexplored_routes(c, data, region_id)
 		for i in mini(roads.size(), UNEXPLORED_JOURNAL_MAX):
 			_add(out, "Opportunities", "Unexplored: %s (%d days' road)" % [roads[i]["name"], roads[i]["days"]], "normal")
+	if region_id != "":
+		var deeper := Exploration.next_deep_path(c, data, region_id)
+		if deeper >= 0:
+			_add(out, "Opportunities", "%s: explored %d days. Something deeper waits after %d." % [_region_name(data, region_id), Exploration.familiarity(c, region_id), deeper], "normal")
 	if today >= 0:
 		var shown_herbs := 0
 		for h in Exploration.seasonal_highlights(data, Calendar.season_of(today)):

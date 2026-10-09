@@ -1115,3 +1115,12 @@ func test_first_exploration_finds_region_discovery_once() -> void:
 			gs.pending_encounter = ""
 	assert_true(Exploration.discovery_for(gs.player, gs.data, "misty_forest", gs.world_flags).is_empty())
 	gs.end_session()
+
+
+## EXPL-001: every explore day counts toward the region's familiarity, found or not.
+func test_explore_days_are_counted() -> void:
+	_start()
+	var gs := _game_state()
+	gs.explore_many(5, ["t_no_such_tag"])
+	assert_eq(Exploration.familiarity(gs.player, gs.current_region), 5)
+	gs.end_session()

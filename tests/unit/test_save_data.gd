@@ -88,6 +88,7 @@ func test_every_character_field_survives_a_save() -> void:
 	c.commissions = [{"profession": "alchemist", "recipe": "qi_gathering_pill", "item": "qi_gathering_pill", "count": 2, "reward": 9, "xp": 10.0, "due_day": 77}]
 	c.companion_xp = {"x_companions": 30}
 	c.encounter_counts = {"forest_lost": 3}
+	c.explore_days = {"misty_forest": 7}
 	var restored := CharacterData.from_dict(JSON.parse_string(JSON.stringify(c.to_dict())))
 	var before := c.to_dict()
 	var after := restored.to_dict()

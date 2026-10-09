@@ -315,7 +315,7 @@ func _show_details() -> void:
 	var foes_text := ""
 	if _selected == GameState.current_region:
 		var tags: Array = region.get("encounter_tags", []) + WorldEvents.encounter_tags(data, GameState.world_events, _selected)
-		foes_text = foes_bbcode(Exploration.outlook(GameState.player, data, tags, GameState.world_flags, Calendar.season_of(GameClock.total_days))["foes"])
+		foes_text = foes_bbcode(Exploration.outlook(GameState.player, data, tags, GameState.world_flags, Calendar.season_of(GameClock.total_days), _selected)["foes"])
 	_foes.text = foes_text
 	_foes.visible = foes_text != ""
 	var marks := region_marks(GameState.player, data, GameState.npcs, GameState.world_events, GameClock.total_days, _selected, GameState.current_region, GameState.world_flags)

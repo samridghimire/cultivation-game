@@ -100,6 +100,8 @@ var abode_storage: Dictionary = {}
 var abode_array := ""
 ## Times each random encounter was met: encounter id -> count (ENC-003, fades familiar sights).
 var encounter_counts: Dictionary = {}
+## Days spent exploring each region: region id -> days (EXPL-001, unlocks `min_explores` encounters).
+var explore_days: Dictionary = {}
 ## Creation Artifact energy fed from spirit stones and treasures (ArtifactFunctions).
 var artifact_energy := 0
 ## Unlocked artifact function ids (data/artifact.json "functions").
@@ -237,6 +239,7 @@ func to_dict() -> Dictionary:
 		"body_stage": body_stage,
 		"abode_array": abode_array,
 		"encounter_counts": encounter_counts.duplicate(),
+		"explore_days": explore_days.duplicate(),
 	}
 
 
@@ -352,6 +355,8 @@ static func from_dict(d: Dictionary) -> CharacterData:
 	c.abode_array = String(d.get("abode_array", ""))
 	for enc_id in d.get("encounter_counts", {}):
 		c.encounter_counts[String(enc_id)] = int(d["encounter_counts"][enc_id])
+	for region_id in d.get("explore_days", {}):
+		c.explore_days[String(region_id)] = int(d["explore_days"][region_id])
 	for anchor_id in d.get("anchors", []):
 		c.anchors.append(String(anchor_id))
 	for recipe_id in d.get("known_recipes", []):
