@@ -175,6 +175,26 @@ func test_every_manual_and_breakthrough_pill_has_a_source() -> void:
 	for item: Dictionary in d.items.values():
 		var id := String(item["id"])
 		var effects: Dictionary = item.get("effects", {})
-		if (effects.has("learn_technique") or effects.has("breakthrough_realm") or effects.has("breakthrough_bonus")) and not Items.has_known_source(d, id) and not KNOWN_UNOBTAINABLE.has(id):
+		if (effects.has("learn_technique") or effects.has("learn_recipe") or effects.has("breakthrough_realm") or effects.has("breakthrough_bonus")) and not Items.has_known_source(d, id) and not KNOWN_UNOBTAINABLE.has(id):
 			missing.append(id)
 	assert_eq(missing, [] as Array[String], "no known source: " + str(missing))
+
+
+func test_every_recipe_has_a_scroll_with_a_source() -> void:
+	var d := data()
+	var taught := {}
+	for item: Dictionary in d.items.values():
+		var recipe_id: String = item.get("effects", {}).get("learn_recipe", "")
+		if recipe_id != "":
+			taught[recipe_id] = taught.get(recipe_id, []) + [String(item["id"])]
+	var missing: Array[String] = []
+	for recipe_id: String in d.recipes:
+		if bool(d.recipes[recipe_id].get("starter", false)) or KNOWN_UNOBTAINABLE.has(recipe_id):
+			continue
+		var found := false
+		for scroll_id: String in taught.get(recipe_id, []):
+			found = found or Items.has_known_source(d, scroll_id)
+		if not found:
+			missing.append(recipe_id)
+	assert_eq(missing, [] as Array[String], "recipes with no scroll source: " + str(missing))
+
