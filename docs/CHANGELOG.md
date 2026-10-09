@@ -2,6 +2,19 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-09 [WU-099] Answer a letter in person: the asker's menu offers to hand over what they asked for.
+- 2026-10-09 [C-059] The Drowned Yin Palace opens only to someone carrying the Yin King's gate token.
+- 2026-10-09 [QA-056] Checked: renown, bounties, gift tastes, letters and festivals survive saving and loading.
+- 2026-10-09 [WU-101] "Look" names the gifts you know someone likes or dislikes.
+- 2026-10-09 [NEWS-003] Named people greet you by your title in conversation too.
+- 2026-10-09 [LETTER-003] Letters can ask for something, which you hand over in person before the deadline.
+- 2026-10-09 [WU-105] The character sheet lists the people you know best.
+- 2026-10-09 [WU-104] The combat report says how the fight was rated before it began.
+- 2026-10-09 [C-060] Deep in the Misty Forest's hidden valley, an old guardian spirit asks a favor.
+- 2026-10-09 [DANGER-001] A "Risky" rating warns of fights you will probably win but could lose.
+- 2026-10-09 [C-058] Every named person has gifts they like and dislike.
+- 2026-10-09 [WU-095] The HUD shows the Creation Artifact's lives left.
+- 2026-10-09 [QA-053b] Checked: bounty pay is sized right against gathering; balance baselines refreshed.
 - 2026-10-09 [WU-092] Each hunt on a bounty board says whether it is here or how many days away.
 - 2026-10-09 [NEWS-002] People greet you by your title once your name is known in their region.
 - 2026-10-09 [YEAR-003] The year review counts the hidden places you found, bounties claimed and regions mastered.
