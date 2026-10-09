@@ -108,6 +108,7 @@ func get_options() -> Array[Dictionary]:
 			options.append({"label": deed["name"], "action": GameState.perform_deed.bind(deed["id"])})
 	options.append_array(_child_options())
 	options.append_array(_acquaintance_options())
+	options.append_array(_mentor_options())
 	options.append_array(_treatment_options())
 	options.append_array(_adoption_options())
 	options.append_array(_courtship_options())
@@ -194,6 +195,31 @@ func _teach_options() -> Array[Dictionary]:
 		var label := "Teach the %s (%s)" % [(data.techniques[tech_id] as TechniqueDef).name, days]
 		options.append(_entry(label, Training.check_teach(p, npc, tech_id, data), GameState.teach_technique.bind(npc_id, tech_id)))
 	options.append({"label": "Back", "action": _set_child_mode.bind(""), "keep_open": true})
+	return options
+
+
+## WU-059: "Ask for pointers" (senior NPCs) and "Spar with <name>" (within a realm
+## of you). Hidden for the dead, the young and NPCs it can never apply to.
+func _mentor_options() -> Array[Dictionary]:
+	var options: Array[Dictionary] = []
+	var p := GameState.player
+	var data := GameState.data
+	var npc: CharacterData = GameState.npcs.get(npc_id)
+	if p == null or npc == null or not npc.alive:
+		return options
+	if npc.age_years() < int(data.family.get("adult_age", 16)):
+		return options
+	if Mentorship.is_senior(p, npc):
+		var label := "Ask %s for pointers" % npc.name
+		var reason := GameState.check_pointers(npc_id)
+		if reason == "":
+			var tech_id := Mentorship.pointer_technique(p, npc, data)
+			if tech_id != "":
+				label += " (%s)" % (data.techniques[tech_id] as TechniqueDef).name
+		options.append(_entry(label, reason, GameState.ask_pointers.bind(npc_id)))
+	var max_gap := int(data.family.get("mentorship", {}).get("spar", {}).get("max_realm_gap", 1))
+	if p.realm_index >= 1 and npc.realm_index >= 1 and absi(npc.realm_index - p.realm_index) <= max_gap:
+		options.append(_entry("Spar with %s" % npc.name, GameState.check_spar(npc_id), GameState.spar_with.bind(npc_id)))
 	return options
 
 
