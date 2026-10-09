@@ -301,7 +301,8 @@
       "title": "Seasons and Ambient Effects",
       "body": [
         "A year has twelve months, three to a season: Spring (months 1-3), Summer (4-6), Autumn (7-9) and Winter (10-12). The world is tinted a little warmer in summer and autumn and cooler in winter, and the date on the HUD names the season.",
-        "Some places add ambient effects that follow the season, such as drifting petals in spring, falling leaves in autumn, snow in winter or mist at any time. They are only decoration. If they bother you or slow your machine, turn off \"Ambient effects\" in Settings."
+        "Some places add ambient effects that follow the season, such as drifting petals in spring, falling leaves in autumn, snow in winter or mist at any time. They are only decoration. If they bother you or slow your machine, turn off \"Ambient effects\" in Settings.",
+        "Seasons also change what the land gives. Some herbs and fortunes come only in one season: fireflies over the forest herbs in summer, mushrooms in the marsh in autumn, a snow lotus on the high ledges in winter."
       ]
     },
     {
