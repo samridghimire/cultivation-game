@@ -102,6 +102,8 @@ var abode_array := ""
 var encounter_counts: Dictionary = {}
 ## Days spent exploring each region: region id -> days (EXPL-001, unlocks `min_explores` encounters).
 var explore_days: Dictionary = {}
+## Local renown: region id -> int (RENOWN-001).
+var renown: Dictionary = {}
 ## The active bounty hunt {id, until_day} ({} = none) and the day each bounty can be taken again (BOUNTY-001).
 var bounty: Dictionary = {}
 var bounty_cooldowns: Dictionary = {}
@@ -246,6 +248,7 @@ func to_dict() -> Dictionary:
 		"abode_array": abode_array,
 		"encounter_counts": encounter_counts.duplicate(),
 		"explore_days": explore_days.duplicate(),
+		"renown": renown.duplicate(),
 		"bounty": bounty.duplicate(),
 		"bounty_cooldowns": bounty_cooldowns.duplicate(),
 	}
@@ -365,6 +368,8 @@ static func from_dict(d: Dictionary) -> CharacterData:
 	c.abode_array = String(d.get("abode_array", ""))
 	for enc_id in d.get("encounter_counts", {}):
 		c.encounter_counts[String(enc_id)] = int(d["encounter_counts"][enc_id])
+	for region_id in d.get("renown", {}):
+		c.renown[String(region_id)] = int(d["renown"][region_id])
 	for region_id in d.get("explore_days", {}):
 		c.explore_days[String(region_id)] = int(d["explore_days"][region_id])
 	var saved_bounty: Variant = d.get("bounty", {})

@@ -843,6 +843,10 @@ static func _opportunity_entries(out: Array[Dictionary], c: CharacterData, data:
 		if int(progress["met"]) < int(progress["total"]):
 			_add(out, "Opportunities", "%s: you have seen %d of %d happenings here." % [_region_name(data, region_id), progress["met"], progress["total"]], "dim")
 	if region_id != "":
+		var fame := Renown.title(c, data, region_id)
+		if fame != "":
+			var off := roundi((1.0 - Renown.buy_multiplier(c, data, region_id)) * 100.0)
+			_add(out, "Opportunities", "Your name in %s: %s (merchants give you %d%% off)." % [_region_name(data, region_id), fame, off], "normal")
 		var deeper := Exploration.next_deep_path(c, data, region_id)
 		if deeper >= 0:
 			_add(out, "Opportunities", "%s: explored %d days. Something deeper waits after %d." % [_region_name(data, region_id), Exploration.familiarity(c, region_id), deeper], "normal")

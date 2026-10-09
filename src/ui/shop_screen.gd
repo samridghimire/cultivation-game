@@ -221,7 +221,7 @@ static func price_note(c: CharacterData, data: GameData, faction: String) -> Str
 
 
 ## Price of one `item_id` on the current tab.
-## `market_mult`: the region's world-event price multiplier (GameState.market_multiplier).
+## `market_mult`: the region's world-event price multiplier (GameState.buy_multiplier: world events and local renown; buying only).
 static func unit_price(c: CharacterData, data: GameData, item_id: String, selling: bool, faction: String = "", market_mult: float = 1.0) -> int:
 	return Items.sell_price(data, item_id) if selling else Reputation.buy_price(c, data, item_id, faction, market_mult)
 
@@ -291,7 +291,7 @@ func _rebuild() -> void:
 			empty = "You have nothing this merchant wants." if _selling else "Nothing for sale."
 		_list.add_child(UIStyle.label(empty, 16, Color(0.7, 0.7, 0.7)))
 	for item_id in ids:
-		var price := unit_price(p, data, item_id, _selling, _faction, GameState.market_multiplier())
+		var price := unit_price(p, data, item_id, _selling, _faction, GameState.buy_multiplier())
 		var label := "%s  %d" % [data.items[item_id]["name"], price]
 		if _selling:
 			label += "  (have %d)" % p.item_count(item_id)
@@ -397,7 +397,7 @@ func _is_ten_step(event: InputEvent, up: bool) -> bool:
 func _step(delta: int) -> void:
 	if _selected == "":
 		return
-	var most := max_quantity(GameState.player, GameState.data, _selected, _selling, _faction, GameState.market_multiplier())
+	var most := max_quantity(GameState.player, GameState.data, _selected, _selling, _faction, GameState.buy_multiplier())
 	_quantity = clampi(_quantity + delta, 1, maxi(most, 1))
 	_show_details()
 
@@ -421,9 +421,9 @@ func _show_details() -> void:
 	_effects.text = "\n".join(lines)
 	_compare.text = compare_text(p, data, _selected)
 	_compare.visible = _compare.text != ""
-	var most := max_quantity(p, data, _selected, _selling, _faction, GameState.market_multiplier())
+	var most := max_quantity(p, data, _selected, _selling, _faction, GameState.buy_multiplier())
 	_quantity = clampi(_quantity, 1, maxi(most, 1))
-	var unit := unit_price(p, data, _selected, _selling, _faction, GameState.market_multiplier())
+	var unit := unit_price(p, data, _selected, _selling, _faction, GameState.buy_multiplier())
 	_quantity_label.text = "x%d  (you have %d)" % [_quantity, p.item_count(_selected)]
 	_trade_button.text = "%s %d for %d spirit stones" % ["Sell" if _selling else "Buy", _quantity, unit * _quantity]
 	_trade_button.disabled = most < 1

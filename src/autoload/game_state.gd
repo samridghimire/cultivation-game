@@ -431,6 +431,8 @@ func perform_deed(deed_id: String) -> void:
 		EventBus.post(result["reason"], "warning")
 		return
 	LifeStats.add(player, "deeds_done")
+	if float((deed.get("effects", {}) as Dictionary).get("alignment", 0)) > 0.0:
+		_gain_renown("righteous_deed")
 	EventBus.post("%s. (%s)" % [deed["name"], ", ".join(result["notes"])], "karma")
 	_pass_time(result["days"])
 
@@ -440,7 +442,7 @@ func buy_item(item_id: String, faction: String = "", quantity: int = 1) -> void:
 	EventBus.topic = "trade"
 	if not _can_act():
 		return
-	var result := Items.buy(player, data, item_id, quantity, faction, market_multiplier())
+	var result := Items.buy(player, data, item_id, quantity, faction, buy_multiplier())
 	if result["ok"]:
 		var item_name: String = data.items[item_id]["name"]
 		var what := Text.a(item_name) if quantity == 1 else "%d %s" % [quantity, item_name]
@@ -599,6 +601,7 @@ func _explore_once(tags: Array, quiet: bool) -> Dictionary:
 	else:
 		world_flags["discovered_" + current_region] = true
 		LifeStats.sync_discoveries(player, world_flags)
+		_gain_renown("discovery" if last_explore_discovery else "deep_path")
 	if encounter.is_empty():
 		if not quiet:
 			EventBus.post(("You search the area but find nothing. %s" % Exploration.quiet_line(data, current_region, GameClock.total_days)).strip_edges())
@@ -653,6 +656,7 @@ func _hunt_bounty_foe(enemy_id: String) -> Dictionary:
 	if won and _can_act():
 		var stones := Bounties.complete(player, data, GameClock.total_days, bounty_id)
 		EventBus.post("Bounty claimed: %d spirit stones." % stones, "progress")
+		_gain_renown("bounty")
 		EventBus.player_changed.emit()
 	if _can_act():
 		_pass_time(1)
@@ -2021,6 +2025,21 @@ func region_qi_density() -> float:
 ## Merchant price multiplier of the current region's active world events.
 func market_multiplier() -> float:
 	return WorldEvents.price_multiplier(data, world_events, current_region)
+
+
+## Buy-side multiplier: world events and local renown. Sell prices use market_multiplier() only.
+func buy_multiplier() -> float:
+	return market_multiplier() * Renown.buy_multiplier(player, data, current_region)
+
+
+## Local renown for a source (RENOWN-001); announces a new title.
+func _gain_renown(source: String) -> void:
+	var result := Renown.gain(player, data, current_region, source)
+	if int(result["gained"]) <= 0:
+		return
+	player.life_stats["best_renown"] = maxi(LifeStats.get_stat(player, "best_renown"), Renown.best(player))
+	if String(result["new_tier"]) != "":
+		EventBus.post("Your name is %s in %s now." % [String(result["new_tier"]).to_lower(), data.regions[current_region].get("name", current_region)], "progress")
 
 
 ## Hear the market gossip: world events under way and when the next auction

@@ -33,6 +33,7 @@ var restricted_item_tags: PackedStringArray = []
 var deeds: Dictionary = {}  # id -> Dictionary
 var regions: Dictionary = {}  # id -> Dictionary
 var start_region := ""
+var renown: Dictionary = {}  # regions.json "renown" block (Renown); {} = none
 var encounters: Dictionary = {}  # id -> Dictionary
 ## Bounties by id and the file's top-level numbers (data/bounties.json, Bounties).
 var bounties: Dictionary = {}
@@ -190,6 +191,7 @@ func _load(dir: String) -> void:
 
 	var world := _read(dir, "regions.json")
 	start_region = world.get("start_region", "")
+	renown = world.get("renown", {})
 	for region in world.get("regions", []):
 		regions[region["id"]] = region
 		for place: Dictionary in region.get("places", []):
@@ -418,6 +420,7 @@ func _validate_seasons(entry: Dictionary, label: String) -> void:
 
 
 func _validate_world() -> void:
+	Renown.validate(renown, load_errors)
 	if not regions.has(start_region):
 		load_errors.append("start_region '%s' is not a region" % start_region)
 	var place_types := ["meditation", "merchant", "sect_hall", "workshop", "clinic", "orphanage", "deed_giver", "explore", "travel", "gather", "secret_realm", "auction", "inheritance", "bounty_board"]
