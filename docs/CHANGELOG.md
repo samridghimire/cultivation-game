@@ -2,6 +2,20 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-09 [TRAV-003] Older saves remember your start region, abode, sect, anchors and family homes as visited.
+- 2026-10-09 [WU-063] A breakthrough you can see: a golden ring of light, or a red flash and a stumble.
+- 2026-10-09 [TRAV-002] Your first arrival in Misty Forest is described.
+- 2026-10-09 [NS-006] Soul Formation foes and encounters on the high ridges.
+- 2026-10-09 [SEASON-001] Some herbs and encounters only come in one season (a spring herb on the Qingshi slope).
+- 2026-10-09 [QA-039] A sim of the first Foundation year guards against losing artifact lives early.
+- 2026-10-09 [WU-065] Long menus scroll on the Steam Deck instead of running off the screen.
+- 2026-10-09 [GUIDE-013] The journal and hints point you to the sect elder's monthly lecture (Attentive Disciple milestone).
+- 2026-10-09 [WU-066] A friendly spar's report reads like a spar: no harm done, no spoils.
+- 2026-10-09 [C-038] Bai Qingwu at Azure Peak and Shen Wuya at Fallen Star Market, each with an errand.
+- 2026-10-09 [C-042] Smash the corpse refiner's puppets to free his captive in the marsh.
+- 2026-10-09 [RV-014] Friendly spars cost no talismans or lifespan; pointers only count as shared from a better teacher.
+- 2026-10-09 [WU-060] Every region checked in all four seasons; the seasonal colors stay readable.
+- 2026-10-09 [GUIDE-012] Hints and the journal suggest asking seniors for pointers and sparring.
 - 2026-10-09 [QA-040] Pointers and spars are audited against exploits (cooldowns, favor caps, save/load).
 - 2026-10-09 [WU-059] Ask a senior NPC for pointers or spar with them from their menu.
 - 2026-10-09 [TRAV-001] The game remembers which regions you have visited (Far Traveller milestone).

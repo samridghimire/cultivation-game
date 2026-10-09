@@ -100,11 +100,11 @@ Every great cultivation protagonist has something that sets them apart. Ours is 
 | NPC clans and NPC sect membership, family tree, Family Home | ✅ | `NpcClans`, `FamilyHome`, `src/ui/family_screen.gd` |
 | NPC sects as factions (strength, recruitment) | ✅ core (LW-002), sect hall standings (WU-002), monthly clashes and the sect's call (LW-002b) | `SectFactions` |
 | Audio, autosave, export presets, credits | ✅ procedural SFX and music, autosave with toast (also on suspend), crash-safe saves, credits, title art, Steam platform stub (REL-009), Windows/Linux export presets + tools/export.sh (REL-005), Steam upload scripts and docs/RELEASE.md (REL-011, needs the owner's app/depot ids) | `Audio`, `SaveManager`, `src/ui/credits_screen.gd` |
-| Content past Core Formation | ✅ Nascent Soul foes/encounters (NS-001), pills (NS-002), Myriad Peaks Ridge region (NS-003); late methods to Mahayana+ (NS-005), late people with errands (NS-004), flawless late pills (NS-002b); 🚧 Soul Formation content (NS-006) | |
+| Content past Core Formation | ✅ Nascent Soul foes/encounters (NS-001), pills (NS-002), Myriad Peaks Ridge region (NS-003); late methods to Mahayana+ (NS-005), late people with errands (NS-004), flawless late pills (NS-002b), Soul Formation foes/encounters (NS-006); 🚧 gear past Core Formation (C-045) | |
 | Life record and milestones | ✅ sheet life record (STAT-001), 22 milestones with progress on the sheet and a banner (GOAL-001, WU-006, MS-002, MS-003), journal screen (J / LT) with opportunities, errands and commissions, epilogue on final death, a yearly review banner (YEAR-001, WU-031) | `LifeStats`, `Milestones`, `data/milestones.json` |
 | Ending (ascension) | 🚧 none, waiting on the owner (END-001) | |
 | Inventory, techniques, character sheet, settings, pause, load screens | ✅ | `src/ui/` |
-| Top-down world with interactables | ✅ placeholder art, seasonal tints and season banner, ambient particles, idle NPCs, visited regions (TRAV-001) | `src/world/` |
+| Top-down world with interactables | ✅ placeholder art, seasonal tints and season banner, seasonal herbs and encounters (SEASON-001), ambient particles, idle NPCs, visited regions and first-visit text (TRAV-001/002), breakthrough effect | `src/world/` |
 
 ## Lifespan as a resource (owner decision)
 - Breaking through to a higher realm adds lifespan, so a cultivator who keeps progressing should **rarely die of old age**. The Creation Artifact does **not** save the player from old age.

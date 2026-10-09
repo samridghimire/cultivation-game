@@ -2,6 +2,17 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-10-09 (planner, 04:15 UTC)
+- 14 tasks landed since the last planner run (GUIDE-012/013, RV-014, SEASON-001, TRAV-002/003, NS-006, WU-060/063/065/066, C-038/042,
+  QA-039). REALM-002, WU-064 and QA-041 are claimed (~04:00). The reviewer's last run (to d098150) filed nothing.
+- New theme: reward curiosity about places (GUIDE-014 unexplored roads, TRAV-005 + C-046 + WU-070 a discovery on the first
+  exploration of each region, TRAV-004 sect home regions, WU-061 spec'd, QA-047 save/load check) and seasons worth noticing
+  (SEASON-002 "in season now", SEASON-003 milestone, WU-067 spec'd, WU-071, C-044 spec'd). WU-068 (ChoiceMenu refit on
+  resize, reviewer note), WU-069 (look at the breakthrough effect), C-045 (gear past Core Formation, NS-006 Follow-up),
+  QA-045 (why the first Foundation year is so gentle, QA-039 Follow-up), QA-046 (refresh the drifted baseline).
+- Local `main` had diverged from origin/main again (old PR-era history); reset to origin/main (backup branch kept locally).
+- The owner's three urgent questions (pacing, first fights, ascension) are still open.
+
 ## State on 2026-10-09 (planner, 10:10 UTC)
 - 14 tasks landed since 00:15 (WU-044/045/054/059/062, C-037/039/040/041, RV-013, MENTOR-001, SPAR-001, TRAV-001, QA-043).
   GUIDE-012, QA-040 and WU-061 are claimed.
