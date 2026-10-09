@@ -7,4 +7,5 @@ extends Interactable
 
 
 func get_options() -> Array[Dictionary]:
-	return [{"label": "Gather (%s)" % Calendar.format_duration(gather_days), "action": GameState.gather.bind(gather_table, gather_days), "keep_open": true}]
+	var note := Exploration.seasonal_note(gather_table, Calendar.season_of(GameClock.total_days), GameState.data)
+	return [{"label": "Gather (%s)" % Calendar.format_duration(gather_days), "description": note, "action": GameState.gather.bind(gather_table, gather_days), "keep_open": true}]

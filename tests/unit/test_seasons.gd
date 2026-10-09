@@ -33,3 +33,14 @@ func test_world_tint_follows_season() -> void:
 	assert_eq(world._season_tint.color, Calendar.season_tint("Summer"))
 	world.free()
 	gs.end_session()
+
+
+func test_gather_seasonal_note() -> void:
+	var gs := (Engine.get_main_loop() as SceneTree).root.get_node("GameState")
+	var table: Array = [{"item": "spirit_herb", "weight": 4}, {"item": "spirit_herb", "weight": 3, "seasons": ["spring"]}, {"item": "", "weight": 2}]
+	var spring := Exploration.seasonal_note(table, "Spring", gs.data)
+	assert_true(spring.begins_with("In season: "), spring)
+	assert_true(not spring.contains("Out of season"), spring)
+	var autumn := Exploration.seasonal_note(table, "Autumn", gs.data)
+	assert_true(autumn.begins_with("Out of season: ") and autumn.contains("(spring)"), autumn)
+	assert_eq(Exploration.seasonal_note([table[0], table[2]], "Spring", gs.data), "")

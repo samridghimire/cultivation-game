@@ -328,6 +328,38 @@ static func in_season(entry: Dictionary, season: String) -> bool:
 	return (entry["seasons"] as Array).has(season.to_lower())
 
 
+## Splits a gather table's seasonal entries by `season` (SEASON-001):
+## {"in": [entry...], "out": [entry...]}. Entries without `seasons` are in neither.
+static func seasonal_entries(table: Array, season: String) -> Dictionary:
+	var result := {"in": [], "out": []}
+	for entry: Dictionary in table:
+		if not entry.has("seasons"):
+			continue
+		result["in" if in_season(entry, season) else "out"].append(entry)
+	return result
+
+
+## One-line note for a gather place's menu: "In season: Spirit Herb. Out of
+## season: Frost Lotus (winter)." Empty when the table has no seasonal entries.
+static func seasonal_note(table: Array, season: String, data: GameData) -> String:
+	var split := seasonal_entries(table, season)
+	var parts: Array[String] = []
+	for key in ["in", "out"]:
+		var names: Array[String] = []
+		for entry: Dictionary in split[key]:
+			var item_id := String(entry.get("item", ""))
+			if item_id == "":
+				continue
+			var label := String(data.items[item_id].get("name", item_id)) if data.items.has(item_id) else item_id
+			if key == "out":
+				label += " (%s)" % ", ".join(entry["seasons"])
+			if not names.has(label):
+				names.append(label)
+		if not names.is_empty():
+			parts.append("%s: %s" % ["In season" if key == "in" else "Out of season", ", ".join(names)])
+	return ". ".join(parts)
+
+
 ## The gathering table `c` can actually draw from: entries whose optional
 ## `min_realm` is above the character's realm become "nothing found" (same
 ## weight), so the odds of the common finds stay the same. Entries outside
