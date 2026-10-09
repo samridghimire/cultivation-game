@@ -111,7 +111,7 @@ Where each enemy first appears (typical player entering the realm / at its peak 
   Foundatio iron_horn_rhino        mission subdue_stone_ape     forced                   entry  66%  peak  66%  talisman  97%  bare   0%  veteran on appearance  99%  OK
   Foundatio jade_python            encounter marsh_sunken_serpe evadable                 entry   0%  peak   0%  talisman   0%  bare   0%  veteran on appearance   0%  UNBEATABLE (lethal: a Deadly foe is sensed and evaded)
   Foundatio jade_python            realm sunken_sword_tomb floo forced                   entry   0%  peak   0%  talisman   0%  bare   0%  veteran on appearance   0%  UNBEATABLE
-  Foundatio pavilion_treasure_guardian trial myriad_treasure_pavili forced                   entry  32%  peak  97%  talisman  95%  bare   0%  veteran on appearance  96%  HARD
+  Foundatio pavilion_treasure_guardian trial myriad_treasure_pavili forced                   entry  68%  peak  97%  talisman  99%  bare   0%  veteran on appearance  98%  OK
   Foundatio roadside_rogue_cultivator encounter village_roadside_r forced                   entry  72%  peak 100%  talisman 100%  bare   0%  veteran on appearance 100%  OK
   Foundatio star_vault_warden      realm fallen_star_vault floo forced                   entry   0%  peak   0%  talisman   0%  bare   0%  veteran on appearance   0%  UNBEATABLE
   Foundatio stone_hide_boar_king   encounter forest_boar_king   evadable                 entry  70%  peak 100%  talisman 100%  bare   0%  veteran on appearance  98%  OK
@@ -119,7 +119,7 @@ Where each enemy first appears (typical player entering the realm / at its peak 
   Foundatio sword_madman           realm fallen_star_vault floo forced                   entry   3%  peak  46%  talisman  49%  bare   0%  veteran on appearance  70%  HARD
   Foundatio tournament_champion    choice tournament_final/Chal forced                   entry  13%  peak  74%  talisman  74%  bare   0%  veteran on appearance  78%  HARD
   Foundatio vengeful_sect_elder    encounter wounded_traveller_ evadable                 entry   1%  peak  50%  talisman  42%  bare   0%  veteran on appearance  55%  HARD
-  Core Form azure_grand_elder_shadow trial azure_cloud_sect rank  forced                   entry  38%  peak  96%  talisman  90%  bare   0%  veteran on appearance 100%  HARD
+  Core Form azure_grand_elder_shadow trial azure_cloud_sect rank  forced                   entry  65%  peak  96%  talisman  99%  bare   0%  veteran on appearance 100%  OK
   Core Form black_iron_bear_king   encounter mountain_bear_king evadable                 entry  41%  peak  90%  talisman  90%  bare   0%  veteran on appearance 100%  HARD
   Core Form black_iron_bear_king   mission tear_bear_kings_hear forced                   entry  71%  peak  90%  talisman  96%  bare   0%  veteran on appearance 100%  OK
   Core Form black_iron_bear_king   realm drowned_yin_palace flo forced                   entry  24%  peak  90%  talisman  73%  bare   0%  veteran on appearance 100%  HARD
@@ -260,14 +260,14 @@ Blacksmith (rank 5.9 at the end): avg final realm 2.02 (~Foundation Establishmen
     pills 386, attempts without a pill 3391; lives bought 176 (dearest 12800); ended for good 7 (avg age 166), old age 43
     income (all lives): work 8829 mo / 286986 stones, craft 0 mo / 0 stones, gather 8812 mo / 397183 stones, sect 8796 mo / 429851 stones (stipends 209604)
     spent: gear 0, clinic 880; savings alone covered the Core Forming Pill at the Foundation peak for 18/50; pills bought with contribution 79; avg sect rank 2.0, contribution 32326
-Talisman Master (rank 8.6 at the end): avg final realm 2.00 (~Foundation Establishment); earned 25204, left 1710 stones
-    Foundation Establishment: 50/50 lives reached the bottleneck, 34 could afford the pill on the first attempt
-    Core Formation: 50/50 lives reached the bottleneck, 13 could afford the pill on the first attempt
+Talisman Master (rank 8.9 at the end): avg final realm 2.00 (~Foundation Establishment); earned 25634, left 1631 stones
+    Foundation Establishment: 50/50 lives reached the bottleneck, 39 could afford the pill on the first attempt
+    Core Formation: 50/50 lives reached the bottleneck, 17 could afford the pill on the first attempt
     Nascent Soul: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
     Soul Formation: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
-    pills 500, attempts without a pill 4146; lives bought 180 (dearest 3200); ended for good 4 (avg age 167), old age 46
-    income (all lives): work 3324 mo / 63970 stones, craft 5229 mo / 595747 stones, gather 8537 mo / 367255 stones, sect 8518 mo / 429584 stones (stipends 212448)
-    spent: gear 0, clinic 1380; savings alone covered the Core Forming Pill at the Foundation peak for 13/50; pills bought with contribution 69; avg sect rank 2.0, contribution 31399
+    pills 524, attempts without a pill 3340; lives bought 180 (dearest 3200); ended for good 6 (avg age 156), old age 44
+    income (all lives): work 2961 mo / 55840 stones, craft 5533 mo / 631173 stones, gather 8476 mo / 365038 stones, sect 8457 mo / 421047 stones (stipends 209828)
+    spent: gear 0, clinic 2630; savings alone covered the Core Forming Pill at the Foundation peak for 17/50; pills bought with contribution 88; avg sect rank 2.0, contribution 31031
 Array Master (rank 5.4 at the end): avg final realm 2.02 (~Foundation Establishment); earned 17883, left 1764 stones
     Foundation Establishment: 50/50 lives reached the bottleneck, 36 could afford the pill on the first attempt
     Core Formation: 50/50 lives reached the bottleneck, 14 could afford the pill on the first attempt
@@ -292,5 +292,5 @@ Beast Tamer (rank 6.4 at the end): avg final realm 2.00 (~Foundation Establishme
     pills 356, attempts without a pill 3911; lives bought 178 (dearest 1600); ended for good 7 (avg age 164), old age 43
     income (all lives): work 7855 mo / 220690 stones, craft 621 mo / 24015 stones, gather 8463 mo / 363888 stones, sect 8443 mo / 426718 stones (stipends 210012)
     spent: gear 0, clinic 460; savings alone covered the Core Forming Pill at the Foundation peak for 11/50; pills bought with contribution 65; avg sect rank 2.0, contribution 31116
-Net stones per sect mission over all lives (top 12): procure_azure_crystal 756285, gather_spirit_herbs 516090, carry_goods_to_market 103496, alchemist_rare_order 18040, fill_herb_order 17010, auction_consignment 11520
+Net stones per sect mission over all lives (top 12): procure_azure_crystal 754740, gather_spirit_herbs 515440, carry_goods_to_market 103374, alchemist_rare_order 17560, fill_herb_order 16290, auction_consignment 11520
 

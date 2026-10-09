@@ -25,7 +25,7 @@
         {"name": "Outer Disciple", "contribution": 0},
         {"name": "Inner Disciple", "contribution": 500, "trial": "azure_sword_examiner", "monthly_duty": 30, "stipend": {"spirit_stones": 6}},
         {"name": "Core Disciple", "contribution": 3000, "min_realm": "foundation_establishment", "trial": "azure_pavilion_warden", "monthly_duty": 80, "stipend": {"spirit_stones": 20, "items": {"qi_gathering_pill": 1}}},
-        {"name": "Elder", "contribution": 20000, "min_realm": "core_formation", "trial": "azure_grand_elder_shadow", "monthly_duty": 200, "stipend": {"spirit_stones": 80, "items": {"spirit_gathering_pill": 1}}}
+        {"name": "Elder", "contribution": 20000, "min_realm": "core_formation", "min_stage": 1, "trial": "azure_grand_elder_shadow", "monthly_duty": 200, "stipend": {"spirit_stones": 80, "items": {"spirit_gathering_pill": 1}}}
       ]
     },
     {
@@ -54,7 +54,7 @@
       "ranks": [
         {"name": "Junior Steward", "contribution": 0},
         {"name": "Steward", "contribution": 600, "trial": "pavilion_vault_guard", "monthly_duty": 30, "stipend": {"spirit_stones": 8}},
-        {"name": "Senior Steward", "contribution": 3500, "min_realm": "foundation_establishment", "trial": "pavilion_treasure_guardian", "monthly_duty": 80, "stipend": {"spirit_stones": 28}},
+        {"name": "Senior Steward", "contribution": 3500, "min_realm": "foundation_establishment", "min_stage": 1, "trial": "pavilion_treasure_guardian", "monthly_duty": 80, "stipend": {"spirit_stones": 28}},
         {"name": "Pavilion Elder", "contribution": 22000, "min_realm": "core_formation", "trial": "golden_abacus_guardian", "monthly_duty": 200, "stipend": {"spirit_stones": 100}}
       ]
     }
