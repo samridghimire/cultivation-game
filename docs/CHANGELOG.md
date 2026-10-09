@@ -2,6 +2,18 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-09 [C-050] Every region's discovery has a merchant rumor that points at it without naming it.
+- 2026-10-09 [RENOWN-002] Requests that only come to the renowned: a village land dispute, the hunters' wolf den.
+- 2026-10-09 [C-052] Bounties for every region: 11 hunts from roadside rogues to a thunderwing roc.
+- 2026-10-09 [WU-090] The world map says when you have mastered a region, with a banner.
+- 2026-10-09 [GUIDE-018] The load recap names your hunt, your newest letter and your best renown title.
+- 2026-10-09 [WU-084] Renown shows on the character sheet, the world map and shop headers.
+- 2026-10-09 [WU-081] Letters you can reread in the journal, with a banner when one arrives.
+- 2026-10-09 [MISS-001] A lost mission fight cools that mission down for 7 days and says so.
+- 2026-10-09 [WU-086] A warning before any fight that could end your life for good.
+- 2026-10-09 [C-055] Help pages for region familiarity, herb seasons, bounties and festivals.
+- 2026-10-09 [MAT-001] Material values are cached, so shops and crafting screens open faster.
+- 2026-10-09 [C-046] Every region now hides a discovery for your first exploration.
 - 2026-10-09 [EXPL-003] Know every path of a region to master it (Master of Many Lands milestone).
 - 2026-10-09 [QA-052] The curious-player sim logs every death: all early deaths were one Mist Wolf sect mission, retried after each respawn.
 - 2026-10-09 [WU-083] The crafting screen lists what you can make right now first.

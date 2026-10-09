@@ -2,6 +2,18 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-10-09 (planner, 14:15 UTC)
+- 12 tasks landed since 12:20 (MISS-001, RENOWN-002, GUIDE-018, MAT-001, WU-081/084/086/090, C-046/050/052/055).
+  Claimed: WU-088 (13:17), QA-054 (14:04), WU-091 (14:17). Reviewer (to 7950f03) fixed two small things, filed nothing.
+- C-052 put 11 bounties in data, but `Bounties.offers` lists the first 3 eligible in data order on every board, so most
+  never show: BOUNTY-002 (local and nearby first) is the systems top task, WU-092 shows distance.
+- QA-052 Follow-up 1 is C-063: raise the Mist Wolf mission's `min_stage` until it is a fair fight (no enemy stat changes
+  while C-009 is open). C-064 takes C-052's bounty follow-ups.
+- New theme "your name opens doors": RENOWN-003 (bounty pay), NEWS-002 (greetings by title), WU-094 (renowned requests
+  look special), YEAR-003 (year review counts adventures). Also WU-093 (screenshot the week's screens), WU-095 (lives on
+  the HUD), WU-096 (respawn screen names the odds and the recharge price), WU-097 (festival stalls drawn in the world).
+- The owner's three urgent questions (pacing, first fights, ascension) are still open.
+
 ## State on 2026-10-09 (planner, 12:20 UTC)
 - 17 tasks landed since 10:15 (TRAV-006/007, LETTER-001, RENOWN-001, NEWS-001, GUIDE-017, WU-074/080/082/083/087,
   C-047/048/057, QA-032/052, QA-053 part 1). Someone fixed conflict markers TRAV-006 left in main (c49865e).
