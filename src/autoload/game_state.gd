@@ -1964,6 +1964,10 @@ func hear_rumors() -> void:
 		return
 	var extra := auction_rumors()
 	extra.append_array(SectFactions.rumors(data, npcs))
+	for text in Guidance.discovery_rumors(player, data, world_flags, current_region):
+		if not (data.regions[current_region].get("discovery_rumor", "") == text):
+			extra.append(text)
+			break
 	for line in WorldEvents.rumors(data, world_events, extra, GameClock.total_days):
 		EventBus.post(line)
 

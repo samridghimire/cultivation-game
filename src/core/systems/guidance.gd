@@ -825,6 +825,10 @@ const SEASONAL_JOURNAL_MAX := 2
 
 static func _opportunity_entries(out: Array[Dictionary], c: CharacterData, data: GameData, flags: Dictionary, today: int, region_id: String = "") -> void:
 	if region_id != "":
+		var rumors := discovery_rumors(c, data, flags, region_id)
+		if not rumors.is_empty():
+			_add(out, "Opportunities", "Rumor: %s" % rumors[0], "normal")
+	if region_id != "":
 		var roads := unexplored_routes(c, data, region_id)
 		for i in mini(roads.size(), UNEXPLORED_JOURNAL_MAX):
 			_add(out, "Opportunities", "Unexplored: %s (%d days' road)" % [roads[i]["name"], roads[i]["days"]], "normal")
@@ -1005,3 +1009,20 @@ static func _commas(n: int) -> String:
 		out = "," + s.substr(s.length() - 3) + out
 		s = s.substr(0, s.length() - 3)
 	return ("-" if n < 0 else "") + s + out
+
+
+## GUIDE-015: rumor texts of undiscovered regions that can be reached now (the
+## current region, or one with a travel route that passes check_travel), the
+## current region first, then data order.
+static func discovery_rumors(c: CharacterData, data: GameData, flags: Dictionary, region_id: String) -> PackedStringArray:
+	var out := PackedStringArray()
+	var ids: Array = data.regions.keys()
+	ids.sort_custom(func(a, b): return a == region_id and b != region_id)
+	for id in ids:
+		var region: Dictionary = data.regions[id]
+		if not region.has("discovery_rumor") or flags.get("discovered_" + String(id), false):
+			continue
+		if id != region_id and not Exploration.check_travel(c, data, region_id, id).get("ok", false):
+			continue
+		out.append(String(region["discovery_rumor"]))
+	return out

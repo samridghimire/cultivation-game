@@ -809,3 +809,37 @@ func test_journal_in_season_line_needs_visited_region_and_season() -> void:
 	var autumn := Guidance.journal(c, d, {}, 200, "qingshi_village").filter(func(r: Dictionary) -> bool: return String(r["text"]).begins_with("In season: Spirit Herb"))
 	assert_eq(autumn.size(), 0)
 	assert_eq(Guidance.journal(c, d, {}, -1, "qingshi_village").filter(func(r: Dictionary) -> bool: return String(r["text"]).begins_with("In season: ")).size(), 0)
+
+
+func test_discovery_rumor_in_journal_until_discovered() -> void:
+	var c := _fresh()
+	var rows := Guidance.journal(c, data(), {}, 0, "qingshi_village")
+	var found := false
+	for r in rows:
+		if String(r["text"]).begins_with("Rumor: ") and String(r["text"]).contains("Misty Forest"):
+			found = true
+	assert_true(found)
+	var flags := {"discovered_misty_forest": true}
+	assert_eq(Guidance.discovery_rumors(c, data(), flags, "qingshi_village").size(), 0)
+
+
+func test_discovery_rumor_hidden_when_region_gated() -> void:
+	var c := _fresh()
+	var d := data()
+	var routes: Array = d.regions["qingshi_village"]["routes"]
+	var saved: Variant = routes.duplicate(true)
+	for route in routes:
+		if route["to"] == "misty_forest":
+			route["min_realm"] = d.realms[d.realms.size() - 1]["id"]
+	d.regions["qingshi_village"]["routes"] = routes
+	assert_eq(Guidance.discovery_rumors(c, d, {}, "qingshi_village").size(), 0)
+	d.regions["qingshi_village"]["routes"] = saved
+
+
+func test_discovery_rumor_validator() -> void:
+	var d := data()
+	d.regions["qingshi_village"]["discovery_rumor"] = "Nothing here."
+	d.load_errors.clear()
+	d._validate()
+	assert_true(d.load_errors.size() > 0)
+	d.regions["qingshi_village"].erase("discovery_rumor")
