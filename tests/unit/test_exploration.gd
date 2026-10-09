@@ -512,3 +512,22 @@ func test_discoveries_follow_flags_and_backfill() -> void:
 		if entry["id"] == "seeker_of_hidden_places":
 			m = entry
 	assert_eq(int(m["check"]["min"]), 4)
+
+
+func test_familiarity_line() -> void:
+	var site: GDScript = load("res://src/world/interactables/explore_site.gd")
+	var c := new_character()
+	c.realm_index = data().realm_index_of("qi_refining")
+	assert_eq(site.familiarity_line(c, data(), "no_such_region"), "")
+	assert_eq(site.familiarity_line(c, data(), "misty_forest").contains("You know"), false)
+	for i in 3:
+		Exploration.add_explore_day(c, "misty_forest")
+	var line: String = site.familiarity_line(c, data(), "misty_forest")
+	assert_true(line.contains("3 days explored"), line)
+	var deeper := Exploration.next_deep_path(c, data(), "misty_forest")
+	assert_true(deeper > 3)
+	assert_true(line.contains("after %d days" % deeper), line)
+	c.explore_days["misty_forest"] = 100000
+	line = site.familiarity_line(c, data(), "misty_forest")
+	assert_true(line.contains("days explored"))
+	assert_false(line.contains("deeper"), line)

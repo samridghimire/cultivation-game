@@ -40,11 +40,11 @@ static func choice_label(choice: Dictionary) -> String:
 
 
 ## Window title: "Encounter", or "Discovery: <name>" for a region discovery.
-static func title_for(encounter: Dictionary, discovery: bool) -> String:
-	if not discovery:
+static func title_for(encounter: Dictionary, discovery: bool, deep_path: bool = false) -> String:
+	if not discovery and not deep_path:
 		return "Encounter"
 	var name := String(encounter.get("name", String(encounter.get("id", "")).capitalize()))
-	return "Discovery: " + name
+	return ("Discovery: " if discovery else "Hidden path: ") + name
 
 
 ## Shows the pending encounter (or closes if there is none).
@@ -54,7 +54,7 @@ func open() -> void:
 		close()
 		return
 	var enc: Dictionary = GameState.data.encounters.get(GameState.pending_encounter, {})
-	_title.text = title_for(enc, GameState.last_explore_discovery)
+	_title.text = title_for(enc, GameState.last_explore_discovery, GameState.last_explore_deep_path)
 	_text.text = GameState.rival_text(String(GameState.data.encounters.get(GameState.pending_encounter, {}).get("text", "")))
 	for child in _choices.get_children():
 		_choices.remove_child(child)

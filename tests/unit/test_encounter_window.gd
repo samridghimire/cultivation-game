@@ -71,6 +71,7 @@ func test_discovery_title_and_log_line() -> void:
 	window.free()
 	assert_eq(EncounterWindow.title_for({"id": "x_y"}, true), "Discovery: X Y")
 	assert_eq(EncounterWindow.title_for({"id": "x_y"}, false), "Encounter")
+	assert_eq(EncounterWindow.title_for({"id": "x_y", "name": "Deep Pine"}, false, true), "Hidden path: Deep Pine")
 	gs.pending_encounter = ""
 	gs.explore(["test_tag"])
 	assert_false(gs.last_explore_discovery, "a normal encounter is not a discovery")

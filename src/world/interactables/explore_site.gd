@@ -8,10 +8,25 @@ extends Interactable
 
 func get_options() -> Array[Dictionary]:
 	var outlook := GameState.explore_outlook(explore_tags)
+	var known := familiarity_line(GameState.player, GameState.data, GameState.current_region)
+	if known != "":
+		outlook += "\n" + known
 	var options: Array[Dictionary] = [{"label": "Explore", "description": outlook, "action": GameState.explore.bind(explore_tags), "keep_open": true}]
 	options.append({"label": "Explore for a week (stops when something happens)", "description": outlook, "action": GameState.explore_many.bind(7, explore_tags), "keep_open": true})
 	options.append_array(event_options())
 	return options
+
+
+## How well you know this region's paths, and when a deeper one may open (WU-078).
+static func familiarity_line(c: CharacterData, data: GameData, region_id: String) -> String:
+	var days := Exploration.familiarity(c, region_id)
+	var deeper := Exploration.next_deep_path(c, data, region_id)
+	var line := ""
+	if days >= 1:
+		line = "You know these paths well (%d day%s explored)." % [days, "" if days == 1 else "s"]
+	if deeper >= 0:
+		line += " Something deeper may open after %d days." % deeper
+	return line.strip_edges()
 
 
 ## Entries to join the world events under way in this region (LW-003).
