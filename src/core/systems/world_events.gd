@@ -216,6 +216,43 @@ static func pay_prize(data: GameData, c: CharacterData, event_id: String, flags:
 	return notes
 
 
+## The `activity` block of an event ({} when none): anyone may take part once per instance (FEST-003).
+static func activity_of(data: GameData, event_id: String) -> Dictionary:
+	return def_of(data, event_id).get("activity", {})
+
+
+## "" if `c` can take part in the event's activity in `region_id`, otherwise the reason they cannot. No realm needed.
+static func check_activity(data: GameData, active: Array, _c: CharacterData, event_id: String, region_id: String) -> String:
+	var activity := activity_of(data, event_id)
+	if activity.is_empty():
+		return "Nothing like that is going on."
+	var instance := instance_in(active, event_id, region_id)
+	if instance.is_empty():
+		return "The %s is not happening here." % String(activity.get("name", event_id))
+	if bool(instance.get("activity_done", false)):
+		return "You have already taken part this festival."
+	return ""
+
+
+## Takes part: marks the instance, applies `effects` and, when the bonus attribute reaches its `min`, the bonus text and effects.
+## Returns {ok, reason, text, notes, days, bonus}.
+static func do_activity(data: GameData, active: Array, c: CharacterData, event_id: String, region_id: String, flags: Dictionary) -> Dictionary:
+	var reason := check_activity(data, active, c, event_id, region_id)
+	if reason != "":
+		return {"ok": false, "reason": reason, "text": "", "notes": PackedStringArray(), "days": 0, "bonus": false}
+	var activity := activity_of(data, event_id)
+	instance_in(active, event_id, region_id)["activity_done"] = true
+	var text := String(activity["text"])
+	var notes := Effects.apply(c, data, activity.get("effects", {}), flags)
+	var got_bonus := false
+	var bonus: Dictionary = activity.get("bonus", {})
+	if not bonus.is_empty() and int(c.attributes.get(String(bonus["attribute"]), 0)) >= int(bonus["min"]):
+		got_bonus = true
+		text += " " + String(bonus["text"])
+		notes.append_array(Effects.apply(c, data, bonus.get("effects", {}), flags))
+	return {"ok": true, "reason": "", "text": text, "notes": notes, "days": int(activity.get("days", 0)), "bonus": got_bonus}
+
+
 ## Load errors for data/world_events.json.
 static func validate(data: GameData) -> PackedStringArray:
 	var errors: PackedStringArray = []
@@ -262,6 +299,22 @@ static func validate(data: GameData) -> PackedStringArray:
 			for item_id in prize.get("manuals", []):
 				if not data.items.has(item_id):
 					errors.append("World event '%s' prize has unknown manual '%s'" % [id, item_id])
+		if def.has("activity"):
+			var activity: Dictionary = def["activity"]
+			if String(activity.get("name", "")) == "" or String(activity.get("text", "")) == "":
+				errors.append("World event '%s' activity needs a name and text" % id)
+			if int(activity.get("days", -1)) < 0:
+				errors.append("World event '%s' activity needs days >= 0" % id)
+			if not activity.get("effects", null) is Dictionary:
+				errors.append("World event '%s' activity needs effects" % id)
+			if activity.has("bonus"):
+				var bonus: Dictionary = activity["bonus"]
+				if not data.attributes.any(func(a: Dictionary) -> bool: return String(a["id"]) == String(bonus.get("attribute", ""))):
+					errors.append("World event '%s' activity bonus has unknown attribute '%s'" % [id, bonus.get("attribute", "")])
+				if typeof(bonus.get("min")) not in [TYPE_INT, TYPE_FLOAT]:
+					errors.append("World event '%s' activity bonus needs an int min" % id)
+				if String(bonus.get("text", "")) == "" or not bonus.get("effects", null) is Dictionary:
+					errors.append("World event '%s' activity bonus needs text and effects" % id)
 		if def.has("defence"):
 			if not data.enemies.has(String(def["defence"].get("enemy", ""))):
 				errors.append("World event '%s' defence has unknown enemy" % id)

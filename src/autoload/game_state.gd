@@ -2288,6 +2288,37 @@ func defend_against_incursion(event_id: String) -> void:
 		EventBus.post("The raider drives you off.", "warning")
 
 
+## The active event in this region that has an activity, or "" (first in data order).
+func festival_activity_here() -> String:
+	for def: Dictionary in data.world_events.values():
+		var event_id := String(def["id"])
+		if def.has("activity") and not WorldEvents.instance_in(world_events, event_id, current_region).is_empty():
+			return event_id
+	return ""
+
+
+func check_festival_activity(event_id: String) -> String:
+	return WorldEvents.check_activity(data, world_events, player, event_id, current_region)
+
+
+## Take part in a festival's activity (FEST-003): open to anyone, once per festival.
+func festival_activity(event_id: String) -> void:
+	EventBus.topic = "world"
+	if not _can_act():
+		return
+	var result := WorldEvents.do_activity(data, world_events, player, event_id, current_region, world_flags)
+	if not bool(result["ok"]):
+		EventBus.post(String(result["reason"]), "warning")
+		EventBus.player_changed.emit()
+		return
+	var notes := PackedStringArray(result["notes"])
+	EventBus.post(String(result["text"]) + ((" (%s)" % ", ".join(notes)) if not notes.is_empty() else ""), "progress")
+	if int(result["days"]) > 0:
+		_pass_time(int(result["days"]))
+	LifeStats.add(player, "festival_activities")
+	EventBus.player_changed.emit()
+
+
 ## Fight an enemy from data/enemies.json.
 func fight(enemy_id: String) -> bool:
 	EventBus.topic = "combat"
@@ -2634,7 +2665,7 @@ func load_save_dict(d: Dictionary) -> void:
 	world_events = []
 	for instance in d.get("world_events", []):
 		if instance is Dictionary and data.world_events.has(String(instance.get("id", ""))):
-			world_events.append({"id": String(instance["id"]), "region": String(instance.get("region", "")), "start_day": int(instance.get("start_day", 0)), "end_day": int(instance.get("end_day", 0)), "done": bool(instance.get("done", false))})
+			world_events.append({"id": String(instance["id"]), "region": String(instance.get("region", "")), "start_day": int(instance.get("start_day", 0)), "end_day": int(instance.get("end_day", 0)), "done": bool(instance.get("done", false)), "activity_done": bool(instance.get("activity_done", false))})
 	current_region = d.get("region", data.start_region)
 	last_arrival_first_visit = false
 	npcs = Npcs.from_dict(d.get("npcs", {}))

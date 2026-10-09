@@ -1267,3 +1267,23 @@ func test_region_mastery_announced_once() -> void:
 	assert_true(gs.world_flags["mastered_" + region])
 	LifeStats.backfill(c, gs.data, {"mastered_a": true, "mastered_b": true, "mastered_c": true})
 	assert_eq(LifeStats.get_stat(c, "regions_mastered"), 3)
+
+
+## FEST-003: festival activity as a player action.
+func test_festival_activity_action() -> void:
+	var gs := _root().get_node("GameState")
+	gs.start_session(new_character())
+	gs.current_region = "qingshi_village"
+	var day: int = _root().get_node("GameClock").total_days
+	gs.world_events = [{"id": "lantern_festival", "region": "qingshi_village", "start_day": day, "end_day": day + 8}]
+	assert_eq(gs.festival_activity_here(), "lantern_festival")
+	var qi: int = gs.player.qi
+	var joined: int = LifeStats.get_stat(gs.player, "festival_activities")
+	gs.festival_activity("lantern_festival")
+	assert_true(gs.player.qi > qi)
+	assert_eq(LifeStats.get_stat(gs.player, "festival_activities"), joined + 1)
+	var qi2: int = gs.player.qi
+	gs.festival_activity("lantern_festival")
+	assert_eq(gs.player.qi, qi2, "a second try is refused")
+	assert_true(gs.check_festival_activity("lantern_festival") != "")
+	gs.end_session()

@@ -469,3 +469,37 @@ func test_game_state_festival_stock() -> void:
 	gs.world_events = [_lantern_instance(0)]
 	assert_eq(gs.festival_stock(), ["paper_lantern"])
 	gs.world_events = []
+
+
+## FEST-003: a festival activity anyone can join, once per festival.
+func test_festival_activity_reasons_and_effects() -> void:
+	var gs := _session_with("lantern_festival", "qingshi_village", 0)
+	var d: GameData = gs.data
+	assert_eq(WorldEvents.check_activity(d, gs.world_events, gs.player, "lantern_festival", "qingshi_village"), "", "mortals can join")
+	assert_true(WorldEvents.check_activity(d, gs.world_events, gs.player, "lantern_festival", "azure_peak") != "", "wrong region")
+	assert_true(WorldEvents.check_activity(d, gs.world_events, gs.player, "sect_tournament", "azure_peak") != "", "no activity")
+	gs.player.attributes["comprehension"] = 11
+	var qi_before: int = gs.player.qi
+	var result := WorldEvents.do_activity(d, gs.world_events, gs.player, "lantern_festival", "qingshi_village", gs.world_flags)
+	assert_true(bool(result["ok"]) and not bool(result["bonus"]), "no bonus at 11")
+	assert_true(gs.player.qi > qi_before)
+	assert_true(bool(gs.world_events[0]["activity_done"]))
+	assert_true(WorldEvents.check_activity(d, gs.world_events, gs.player, "lantern_festival", "qingshi_village") != "", "once only")
+	assert_false(bool(WorldEvents.do_activity(d, gs.world_events, gs.player, "lantern_festival", "qingshi_village", gs.world_flags)["ok"]))
+	gs.world_events[0].erase("activity_done")
+	gs.player.attributes["comprehension"] = 12
+	assert_true(bool(WorldEvents.do_activity(d, gs.world_events, gs.player, "lantern_festival", "qingshi_village", gs.world_flags)["bonus"]), "bonus at 12")
+	gs.end_session()
+
+
+func test_festival_activity_survives_save_and_validates() -> void:
+	var gs := _session_with("lantern_festival", "qingshi_village", 0)
+	gs.world_events[0]["activity_done"] = true
+	var saved: Dictionary = gs.to_save_dict()
+	gs.world_events = []
+	gs.load_save_dict(JSON.parse_string(JSON.stringify(saved)))
+	assert_true(bool(gs.world_events[0]["activity_done"]), "activity_done saved")
+	gs.end_session()
+	var d := GameData.load_from_dir()
+	d.world_events["bad"] = {"id": "bad", "monthly_chance": 0.1, "min_days": 1, "max_days": 1, "regions": ["qingshi_village"], "activity": {"text": "x", "days": 0, "effects": {}, "bonus": {"attribute": "nope", "min": 3, "text": "t", "effects": {}}}}
+	assert_eq(WorldEvents.validate(d).size(), 2, ", ".join(WorldEvents.validate(d)))
