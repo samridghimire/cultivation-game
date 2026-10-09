@@ -368,6 +368,26 @@ func _build_death_screen() -> void:
 
 ## "   Beast Tide!" for each world event under way in `region_id` (LW-001b), plus
 ## " (you can enter)" when `c` can take part in one (WU-005).
+## "Spring (4 days left)" within 10 days of the season's end, else just the season (WU-071).
+static func season_label(total_days: int) -> String:
+	var label := Calendar.season_of(total_days)
+	var left := Calendar.days_left_in_season(total_days)
+	if left <= 10:
+		label += " (%d day%s left)" % [left, "" if left == 1 else "s"]
+	return label
+
+
+## Banner subtitle: "in <region>." plus up to 2 in-season herbs when there are any.
+static func season_banner_subtitle(region: String, highlights: Array[Dictionary]) -> String:
+	var sub := "in %s." % region
+	if highlights.is_empty():
+		return sub
+	var parts: Array[String] = []
+	for h in highlights.slice(0, 2):
+		parts.append("%s at %s" % [h["item_name"], h["place"]])
+	return sub + " In season: " + "; ".join(parts) + "."
+
+
 static func region_event_suffix(data: GameData, events: Array, region_id: String, c: CharacterData = null) -> String:
 	var text := ""
 	for instance in WorldEvents.active_in(events, region_id):
@@ -401,7 +421,7 @@ func _refresh() -> void:
 		"Alignment: %s (%d)" % [Alignment.tier_name(p.alignment, data), p.alignment],
 		Sects.describe(p, data),
 		"Spirit Stones: %d" % p.item_count("spirit_stone"),
-		"%s · %s" % [GameClock.date_string(), Calendar.season_of(GameClock.total_days)],
+		"%s · %s" % [GameClock.date_string(), season_label(GameClock.total_days)],
 	]))
 	var density := GameState.region_qi_density()
 	_status.text += "\n%s   (Qi x%s)" % [Exploration.region_name(data, GameState.current_region), String.num(density, 2)]
@@ -607,7 +627,8 @@ func _flush_season() -> void:
 	if _time_skip.visible or GameState.player == null or not GameState.player.alive or not GameState.pending_respawn.is_empty():
 		return
 	var region := Exploration.region_name(GameState.data, GameState.current_region)
-	_banner.announce("%s arrives" % _season, "in %s." % region, UIStyle.ACCENT, 1.4, true)
+	var sub := season_banner_subtitle(region, Exploration.seasonal_highlights(GameState.data, _season))
+	_banner.announce("%s arrives" % _season, sub, UIStyle.ACCENT, 1.4, true)
 	Audio.play("chime_info")
 
 

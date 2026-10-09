@@ -33,6 +33,12 @@ static func season_of(total_days: int) -> String:
 	return "Winter"
 
 
+## Days remaining after today before the season changes (0 on its last day).
+static func days_left_in_season(total_days: int) -> int:
+	var month_in_season := (month_of(total_days) - 1) % 3
+	return (2 - month_in_season) * DAYS_PER_MONTH + (DAYS_PER_MONTH - day_of(total_days))
+
+
 ## Subtle world tint multiplier for a season (close to white).
 static func season_tint(season: String) -> Color:
 	match season:

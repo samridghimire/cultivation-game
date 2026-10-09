@@ -57,3 +57,31 @@ func test_low_banner_never_waits_behind_another() -> void:
 	assert_eq(b.queued_count(), 0)
 	assert_eq(b.title_text(), "Breakthrough!")
 	b.free()
+
+
+func test_days_left_in_season() -> void:
+	assert_eq(Calendar.days_left_in_season(0), 89)
+	assert_eq(Calendar.days_left_in_season(89), 0)
+	assert_eq(Calendar.days_left_in_season(90), 89)
+	assert_eq(Calendar.days_left_in_season(Calendar.DAYS_PER_YEAR - 1), 0)
+
+
+func test_date_line_near_season_end_only() -> void:
+	var hud_script: GDScript = load("res://src/ui/hud.gd")
+	assert_eq(hud_script.season_label(40), "Spring")
+	assert_eq(hud_script.season_label(79), "Spring (10 days left)")
+	assert_eq(hud_script.season_label(88), "Spring (1 day left)")
+	assert_eq(hud_script.season_label(89), "Spring (0 days left)")
+
+
+func test_banner_subtitle_with_and_without_highlights() -> void:
+	var hud_script: GDScript = load("res://src/ui/hud.gd")
+	var none: Array[Dictionary] = []
+	assert_eq(hud_script.season_banner_subtitle("Qingshi Village", none), "in Qingshi Village.")
+	var hl: Array[Dictionary] = [
+		{"item_name": "Spirit Herb", "place": "Village Herb Slope"},
+		{"item_name": "Frost Lotus", "place": "Ice Pond"},
+		{"item_name": "Third", "place": "Nowhere"},
+	]
+	assert_eq(hud_script.season_banner_subtitle("Qingshi Village", hl),
+		"in Qingshi Village. In season: Spirit Herb at Village Herb Slope; Frost Lotus at Ice Pond.")
