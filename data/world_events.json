@@ -41,13 +41,31 @@
       "modifiers": {"encounter_tags": ["incursion"], "price_mult": 1.15, "qi_density": 0.85}
     },
     {
+      "id": "qingming_festival", "name": "Qingming Ancestor Festival",
+      "description": "In the clear, bright days of spring the mountain's disciples sweep the graves of the departed, burn paper offerings and share cold dumplings, remembering those who walked the Dao before them.",
+      "monthly_chance": 1.0, "min_days": 5, "max_days": 8, "months": [4], "festival": true,
+      "regions": ["azure_peak"],
+      "start_text": "Incense smoke curls over the graves of {region}. The Qingming Ancestor Festival has begun.",
+      "end_text": "The paper offerings have burned to ash at {region}; the Qingming Ancestor Festival is over.",
+      "modifiers": {"encounter_tags": ["festival_spring"], "price_mult": 1.0, "favor_mult": 1.5}
+    },
+    {
+      "id": "mid_autumn_festival", "name": "Mid-Autumn Moon Festival",
+      "description": "When the harvest moon is fullest, the market's traders hang lanterns from every stall, cut moon cakes for strangers and haggle with a lighter heart.",
+      "monthly_chance": 1.0, "min_days": 6, "max_days": 9, "months": [8], "festival": true,
+      "regions": ["fallen_star_market"],
+      "start_text": "Round lanterns glow above every stall at {region}. The Mid-Autumn Moon Festival has begun.",
+      "end_text": "The moon wanes over {region}; the Mid-Autumn Moon Festival is over.",
+      "modifiers": {"encounter_tags": ["festival_autumn"], "price_mult": 0.9, "favor_mult": 2.0}
+    },
+    {
       "id": "lantern_festival", "name": "Lantern Festival",
       "description": "On the first nights of winter the village floats paper lanterns down the river and burns incense for the ancestors. Strangers are fed and old grudges are set aside.",
       "monthly_chance": 1.0, "min_days": 7, "max_days": 10, "months": [10], "festival": true,
       "regions": ["qingshi_village"],
       "start_text": "Paper lanterns drift down the river at {region}, and villagers burn incense for the ancestors. The Lantern Festival has begun.",
       "end_text": "The last lanterns burn out on the river at {region}; the Lantern Festival is over.",
-      "modifiers": {"encounter_tags": [], "price_mult": 0.9, "favor_mult": 2.0}
+      "modifiers": {"encounter_tags": ["festival_winter"], "price_mult": 0.9, "favor_mult": 2.0}
     },
     {
       "id": "spirit_qi_tide", "name": "Spirit Qi Tide",

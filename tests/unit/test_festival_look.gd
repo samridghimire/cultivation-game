@@ -43,3 +43,21 @@ func test_chat_note_with_and_without_festival() -> void:
 	var npc_script: GDScript = load("res://src/world/interactables/npc.gd")
 	assert_eq(npc_script.festival_note(gs.data, [], "qingshi_village"), "")
 	assert_eq(npc_script.festival_note(gs.data, [_lantern()], "qingshi_village"), " (festival: favor x2)")
+
+
+## C-047: every festival tag has at least 2 encounters, and each festival uses one.
+func test_each_festival_tag_has_two_encounters() -> void:
+	var d: GameData = _root().get_node("GameState").data
+	var tags: Array = []
+	for ev in d.world_events.values():
+		if bool(ev.get("festival", false)):
+			var t: Array = ev.get("modifiers", {}).get("encounter_tags", [])
+			assert_true(not t.is_empty(), "festival %s has no encounter tag" % ev["id"])
+			tags.append_array(t)
+	assert_true(tags.size() >= 3)
+	for tag in tags:
+		var n := 0
+		for enc in d.encounters.values():
+			if (enc.get("tags", []) as Array).has(tag):
+				n += 1
+		assert_true(n >= 2, "festival tag %s has %d encounters" % [tag, n])
