@@ -258,7 +258,27 @@ func _craft_month(c: CharacterData, data: GameData, recipe_id: String, rng: Rand
 
 ## The gather place (any region the cultivator may travel to) with the best
 ## expected resale per day: {table, days, per_day}.
+## The best gathering place per realm index (the table only depends on the realm).
+var _gather_cache := {}
+
+
+var _sell_prices := {}
+
+
+## Items.sell_price memoised: it scans all recipes and the data never changes here.
+func _sell_price(data: GameData, item_id: String) -> int:
+	if not _sell_prices.has(item_id):
+		_sell_prices[item_id] = Items.sell_price(data, item_id)
+	return _sell_prices[item_id]
+
+
 func _best_gather(c: CharacterData, data: GameData) -> Dictionary:
+	if not _gather_cache.has(c.realm_index):
+		_gather_cache[c.realm_index] = _find_best_gather(c, data)
+	return _gather_cache[c.realm_index]
+
+
+func _find_best_gather(c: CharacterData, data: GameData) -> Dictionary:
 	var best := {}
 	for region: Dictionary in data.regions.values():
 		if not _can_reach(c, data, String(region["id"])):
@@ -294,8 +314,12 @@ func _gather_month(c: CharacterData, data: GameData, table: Array, days: int, rn
 	for i in STEP_DAYS / days:
 		var found := Exploration.gather(c, table, rng)
 		for item_id in found:
-			c.add_item(item_id, found[item_id])
-			Items.sell(c, data, item_id, found[item_id])
+			var price := _sell_price(data, item_id) * int(found[item_id])
+			if price > 0:  # what Items.sell does, minus the per-sale recipe scan
+				c.add_item("spirit_stone", price)
+				LifeStats.record_stones(c, price)
+			else:
+				c.add_item(item_id, found[item_id])
 
 
 ## A month of fight-free sect missions (items bought at shop price when the
