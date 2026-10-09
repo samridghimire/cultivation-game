@@ -93,3 +93,74 @@ func test_old_fixture_backfills_and_unvisited_region_still_greets() -> void:
 		assert_true(gs.last_arrival_first_visit)
 		assert_eq(_count_messages(line), 1)
 	gs.end_session()
+
+
+## QA-050: the region discovery (TRAV-005) is found once, across save/load.
+func test_discovery_survives_save_and_load() -> void:
+	var gs := _game_state()
+	_start().realm_index = 1
+	gs.travel("misty_forest")
+	_round_trip(gs)
+	assert_false(gs.world_flags.get("discovered_misty_forest", false))
+	gs.explore()
+	assert_true(gs.last_explore_discovery)
+	assert_true(gs.world_flags.get("discovered_misty_forest", false))
+	assert_eq(gs.pending_encounter, "misty_forest_hollow_shrine")
+	gs.choose_encounter(0)
+	_round_trip(gs)
+	assert_true(gs.world_flags.get("discovered_misty_forest", false), "flag survives the round trip")
+	var found := 0
+	for i in 30:
+		gs.player.alive = true
+		gs.explore()
+		if gs.last_explore_discovery:
+			found += 1
+		if gs.pending_encounter != "":
+			gs.choose_encounter(0)
+	assert_eq(found, 0, "never again after a reload")
+	gs.end_session()
+
+
+func test_discovery_waits_for_realm_without_setting_flag() -> void:
+	var gs := _game_state()
+	_start()
+	gs.data.encounters["misty_forest_hollow_shrine"]["min_realm"] = "foundation_establishment"
+	gs.travel("misty_forest")
+	for i in 5:
+		gs.explore()
+		assert_false(gs.last_explore_discovery)
+		if gs.pending_encounter != "":
+			gs.choose_encounter(0)
+	assert_false(gs.world_flags.get("discovered_misty_forest", false), "no early flag")
+	gs.player.realm_index = 2
+	_round_trip(gs)
+	gs.explore()
+	assert_true(gs.last_explore_discovery)
+	assert_true(gs.world_flags.get("discovered_misty_forest", false))
+	gs.end_session()
+	gs.data.encounters["misty_forest_hollow_shrine"].erase("min_realm")
+
+
+func test_old_fixture_still_gets_shrine_once() -> void:
+	var gs := _game_state()
+	var sm := _root().get_node("SaveManager")
+	DirAccess.make_dir_recursive_absolute(sm.SAVE_DIR)
+	var file := FileAccess.open(sm.save_path(SLOT), FileAccess.WRITE)
+	file.store_string(FileAccess.get_file_as_string(FIXTURE_DIR.path_join("v1_oldest.json")))
+	file.close()
+	var ok: bool = sm.load_game(SLOT)
+	sm.delete_save(SLOT)
+	assert_true(ok)
+	assert_false(gs.world_flags.get("discovered_misty_forest", false))
+	gs.current_region = "misty_forest"
+	gs.player.realm_index = maxi(gs.player.realm_index, 1)
+	var found := 0
+	for i in 20:
+		gs.player.alive = true
+		gs.explore()
+		if gs.last_explore_discovery:
+			found += 1
+		if gs.pending_encounter != "":
+			gs.choose_encounter(0)
+	assert_eq(found, 1, "an old save gets the shrine exactly once")
+	gs.end_session()
