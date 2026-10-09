@@ -289,6 +289,10 @@ func test_fight_spoils_show_sell_price() -> void:
 	var joined := "|".join(gs.last_fight_spoils)
 	assert_true(joined.contains("(sells for %d)" % price), joined)
 	assert_false(joined.contains("Spirit Stone (sells"), "stones carry no price note")
+	assert_false(joined.contains("each"), "a single item has no 'each'")
+	weak["rewards"] = {"items": {"mist_wolf_pelt": 3}}
+	assert_true(gs.fight_enemy(weak))
+	assert_true("|".join(gs.last_fight_spoils).contains("(sells for %d each)" % price), "|".join(gs.last_fight_spoils))
 	gs.end_session()
 
 

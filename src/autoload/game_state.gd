@@ -2081,10 +2081,14 @@ func fight_enemy(enemy: Dictionary, start_hp: int = -1) -> bool:
 		for item_id in enemy.get("rewards", {}).get("items", {}):
 			var price := Items.sell_price(data, String(item_id))
 			if price > 0 and int(enemy["rewards"]["items"][item_id]) > 0:
-				worth["+%d %s" % [int(enemy["rewards"]["items"][item_id]), data.items.get(item_id, {}).get("name", item_id)]] = price
+				var count := int(enemy["rewards"]["items"][item_id])
+				worth["+%d %s" % [count, data.items.get(item_id, {}).get("name", item_id)]] = {"price": price, "count": count}
 		for note in outcome["notes"]:
 			if not String(note).begins_with("Burned:"):
-				last_fight_spoils.append("%s (sells for %d)" % [note, worth[note]] if worth.has(String(note)) else note)
+				if worth.has(String(note)):
+					last_fight_spoils.append("%s (sells for %d%s)" % [note, worth[note]["price"], " each" if int(worth[note]["count"]) > 1 else ""])
+				else:
+					last_fight_spoils.append(note)
 	var advice := Combat.loss_advice(player, data, enemy, result)
 	last_loss_advice = advice
 	if advice != "" and not outcome["died"]:

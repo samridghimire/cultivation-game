@@ -230,3 +230,28 @@ func test_sell_all_note_names_top_stacks() -> void:
 	assert_true(text.begins_with("Sells: 9 Mist Wolf Pelt"), text)
 	assert_true(text.ends_with("and 1 more kind"), text)
 	assert_false(ShopScreen.sell_all_summary(c, data(), ids.slice(0, 2)).contains("more"))
+
+
+func test_shop_hint_follows_rebinds() -> void:
+	var root := (Engine.get_main_loop() as SceneTree).root
+	var gs: Node = root.get_node("GameState")
+	var ic: Node = root.get_node("InputConfig")
+	var old_path: String = ic.path
+	ic.path = "user://test_controls.cfg"
+	ic.reset_controls()
+	gs.start_session(CharacterFactory.create("Trader", gs.data, seeded_rng()))
+	var screen := ShopScreen.new()
+	root.add_child(screen)
+	screen.open("Shop")
+	ic.rebind_joy("toggle_techniques", JOY_BUTTON_X)
+	assert_true(screen._hint_label.text.contains("X/"), "live rebind: " + screen._hint_label.text)
+	ic.rebind_joy("toggle_techniques", JOY_BUTTON_Y)
+	screen.open("Shop")
+	assert_true(screen._hint_label.text.contains("Y/"), "reopen: " + screen._hint_label.text)
+	ic.reset_controls()
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(ic.path))
+	ic.path = old_path
+	ic.load_controls()
+	ic.apply()
+	screen.queue_free()
+	gs.end_session()

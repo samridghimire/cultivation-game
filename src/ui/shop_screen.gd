@@ -22,6 +22,7 @@ var _effects: Label
 var _compare: Label
 var _quantity_label: Label
 var _trade_button: Button
+var _hint_label: Label
 var _close_button: Button
 var _max_price := 0
 var _stock_tags: Array = []
@@ -128,11 +129,18 @@ func _init() -> void:
 	_trade_button.name = "Trade"
 	_trade_button.gui_input.connect(_on_item_input)
 	details.add_child(_trade_button)
-	details.add_child(UIStyle.label("Left/Right: change quantity. %s/%s or PgUp/PgDn: by 10" % [InputConfig.binding_label("toggle_techniques", true), InputConfig.binding_label("toggle_artifact", true)], 14, Color(0.6, 0.6, 0.6)))
+	_hint_label = UIStyle.label("", 14, Color(0.6, 0.6, 0.6))
+	details.add_child(_hint_label)
+	_refresh_hint()
+	InputConfig.controls_changed.connect(_refresh_hint)
 
 	_close_button = UIStyle.button("Close", close)
 	box.add_child(_close_button)
 	EventBus.player_changed.connect(func(): if visible: _rebuild())
+
+
+func _refresh_hint() -> void:
+	_hint_label.text = "Left/Right: change quantity. %s/%s or PgUp/PgDn: by 10" % [InputConfig.binding_label("toggle_techniques", true), InputConfig.binding_label("toggle_artifact", true)]
 
 
 func _wrapped(l: Label) -> Label:
@@ -153,6 +161,7 @@ func open(merchant_name: String = "Merchant", max_price: int = 0, stock_tags: Ar
 	_stock_tags = stock_tags
 	_buy_tags = buy_tags
 	_faction = faction
+	_refresh_hint()
 	_selling = false
 	_category = "All"
 	_selected = ""
