@@ -25,6 +25,7 @@ const MARK_COLORS := {
 	"secret_realm": Color("b58ae8"),
 	"event": Color("e85a4a"),
 	"discovery": Color("f2f0a0"),
+	"letter": Color("f0b27a"),
 }
 
 var _canvas: Control
@@ -229,6 +230,8 @@ static func region_marks(c: CharacterData, data: GameData, people: Dictionary, e
 		if region_id == current_region and HudScript.region_event_suffix(data, [instance], region_id, c).contains("(you can enter)"):
 			enter = " (you can enter)"
 		marks.append({"kind": "event", "text": "%s (%s left)%s" % [WorldEvents.active_label(data, instance["id"]), Calendar.format_duration(maxi(0, int(instance["end_day"]) - total_days)), enter]})
+	for req in Letters.requests_in_region(c, data, people, region_id, total_days):
+		marks.append({"kind": "letter", "text": "Letter: %s asked for %d %s (%d days left)" % [req["name"], req["count"], req["item"], req["days_left"]]})
 	return marks
 
 

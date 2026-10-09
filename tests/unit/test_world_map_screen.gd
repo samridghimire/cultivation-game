@@ -243,3 +243,25 @@ func test_mastered_region_line_banner_and_signal() -> void:
 	var lines: PackedStringArray = load("res://src/ui/hud.gd").mastery_banner(gs.data, region)
 	assert_eq(lines[0], Exploration.region_name(gs.data, region) + " mastered")
 	gs.end_session()
+
+
+func test_region_marks_letter_requests() -> void:
+	var d := data()
+	var c := new_character()
+	for region_id in d.regions:
+		Exploration.visit(c, region_id)
+	var people := {}
+	var npc := new_character(78)
+	npc.id = "asker"
+	npc.name = "Old Asker"
+	npc.home_region = "qingshi_village"
+	people["asker"] = npc
+	c.letter_requests.append({"npc_id": "asker", "item": "qi_gathering_pill", "count": 2, "until": 150, "favor": 1, "effects": {}})
+	var letters := func(region_id: String, today: int) -> Array:
+		return WorldMapScreen.region_marks(c, d, people, [], today, region_id).filter(func(m: Dictionary) -> bool: return m["kind"] == "letter")
+	var here: Array = letters.call("qingshi_village", 100)
+	assert_eq(here.size(), 1)
+	assert_true(String(here[0]["text"]).begins_with("Letter: Old Asker asked for 2 "))
+	assert_true(String(here[0]["text"]).ends_with("(50 days left)"))
+	assert_eq(letters.call("misty_forest", 100).size(), 0)
+	assert_eq(letters.call("qingshi_village", 151).size(), 0, "expired shows nowhere")

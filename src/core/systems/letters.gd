@@ -133,6 +133,17 @@ static func request_lines(c: CharacterData, data: GameData, npcs: Dictionary, to
 	return out
 
 
+## Open requests whose asker lives in `region_id`: [{name, count, item, days_left}] (WU-110).
+static func requests_in_region(c: CharacterData, data: GameData, npcs: Dictionary, region_id: String, today: int) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	for req in c.letter_requests:
+		var npc: CharacterData = npcs.get(req["npc_id"])
+		if npc == null or not npc.alive or int(req["until"]) < today or Npcs.region_of(npc, data) != region_id:
+			continue
+		out.append({"name": npc.name, "count": int(req["count"]), "item": _item_name(data, String(req["item"])), "days_left": int(req["until"]) - today})
+	return out
+
+
 ## Extra favor for a chat with `npc_id` after an invitation; consumes it.
 static func take_visit_bonus(npc_id: String, data: GameData, flags: Dictionary) -> int:
 	if not flags.has(visit_flag(npc_id)):
