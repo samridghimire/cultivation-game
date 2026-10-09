@@ -119,3 +119,27 @@ func test_goal_text() -> void:
 	c.realm_index = 2
 	var lines := Guidance.goals(c, d, {}, null, 1.0)
 	assert_eq(HUD.goal_text(c, d, {}, null, 1.0), "Goal: " + lines[0])
+
+
+## WU-082: the hunt line, the quarry note and the bounty banner.
+func test_hunt_line_and_banner() -> void:
+	var d := data()
+	var c := new_character()
+	assert_eq(HUD.hunt_line(c, d, 100), "")
+	Bounties.take(c, d, "iron_back_boar_bounty", 100)
+	var line: String = HUD.hunt_line(c, d, 100)
+	assert_true(line.begins_with("Hunting: "), line)
+	assert_true(line.contains("(60 days left)"), line)
+	assert_true(HUD.hunt_line(c, d, 159).ends_with("(1 day left)"))
+	assert_eq(HUD.hunt_line(c, d, 161), "")
+	assert_eq(HUD.bounty_banner("Boar", 40), PackedStringArray(["Bounty claimed", "Boar: 40 spirit stones"]))
+
+
+func test_quarry_note_only_in_the_bounty_region() -> void:
+	var d := data()
+	var c := new_character()
+	var Site := preload("res://src/world/interactables/explore_site.gd")
+	assert_eq(Site.quarry_note(c, d, "misty_forest", 100), "")
+	Bounties.take(c, d, "iron_back_boar_bounty", 100)
+	assert_true(Site.quarry_note(c, d, "misty_forest", 100).ends_with("trail may be found here."))
+	assert_eq(Site.quarry_note(c, d, "qingshi_village", 100), "")

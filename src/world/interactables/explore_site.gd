@@ -11,10 +11,19 @@ func get_options() -> Array[Dictionary]:
 	var known := familiarity_line(GameState.player, GameState.data, GameState.current_region)
 	if known != "":
 		outlook += "\n" + known
+	outlook += quarry_note(GameState.player, GameState.data, GameState.current_region, GameClock.total_days)
 	var options: Array[Dictionary] = [{"label": "Explore", "description": outlook, "action": GameState.explore.bind(explore_tags), "keep_open": true}]
 	options.append({"label": "Explore for a week (stops when something happens)", "description": outlook, "action": GameState.explore_many.bind(7, explore_tags), "keep_open": true})
 	options.append_array(event_options())
 	return options
+
+
+## Ends the Explore descriptions when the active bounty's quarry roams this region (WU-082).
+static func quarry_note(c: CharacterData, data: GameData, region_id: String, today: int) -> String:
+	var b := Bounties.active(c, data, today)
+	if b.is_empty() or String(b["region"]) != region_id:
+		return ""
+	return "\nYour quarry's trail may be found here."
 
 
 ## How well you know this region's paths, and when a deeper one may open (WU-078).

@@ -64,6 +64,8 @@ signal year_reviewed(year: int, lines: PackedStringArray, start_year: int)
 signal milestone_reached(id: String, name: String)
 ## A festival began in the current region (WU-072); the HUD shows a banner.
 signal festival_started(event_name: String, text: String)
+## A bounty was paid out (WU-082); the HUD shows a banner.
+signal bounty_claimed(enemy_name: String, stones: int)
 ## A newly available feature was announced (GUIDE-008, WU-042); the HUD shows a banner.
 signal feature_unlocked(text: String)
 

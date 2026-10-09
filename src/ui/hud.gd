@@ -16,6 +16,7 @@ var _next_layer: Label
 var _injuries: Label
 var _hint: Label
 var _goal: Label
+var _hunt: Label
 var _log: RichTextLabel
 var _status_panel: Control
 var _log_panel: Control
@@ -180,6 +181,7 @@ func _ready() -> void:
 	EventBus.milestone_reached.connect(_on_milestone)
 	EventBus.feature_unlocked.connect(_on_feature_unlocked)
 	EventBus.festival_started.connect(_on_festival_started)
+	EventBus.bounty_claimed.connect(_on_bounty_claimed)
 	_season = Calendar.season_of(GameClock.total_days)
 	GameClock.days_advanced.connect(_on_days_advanced)
 	EventBus.session_started.connect(func(): _season = Calendar.season_of(GameClock.total_days))
@@ -306,6 +308,10 @@ func _build_status_panel() -> void:
 	_goal.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	_goal.custom_minimum_size = Vector2(316, 0)
 	box.add_child(_goal)
+	_hunt = UIStyle.label("", 14, UIStyle.ACCENT)
+	_hunt.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	_hunt.custom_minimum_size = Vector2(316, 0)
+	box.add_child(_hunt)
 	_hint = UIStyle.label("", 14, Color("9fd3c7"))
 	_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_hint.custom_minimum_size = Vector2(316, 0)
@@ -448,6 +454,10 @@ func _refresh() -> void:
 	_goal.text = goal
 	_goal.tooltip_text = goal
 	_goal.visible = goal != ""
+	var hunt := hunt_line(p, data, GameClock.total_days)
+	_hunt.text = hunt
+	_hunt.tooltip_text = hunt
+	_hunt.visible = hunt != ""
 	_hint.visible = not hints.is_empty()
 	_hint.text = "\n".join(Array(hints).map(func(h: String) -> String: return "> " + h))
 
@@ -622,6 +632,28 @@ func _on_milestone(_id: String, milestone_name: String) -> void:
 func _on_festival_started(event_name: String, text: String) -> void:
 	_banner.announce(event_name, text, UIStyle.CATEGORY_COLORS.get("good", UIStyle.ACCENT), 2.5)
 	Audio.play("chime_progress")
+
+
+## A bounty was paid (WU-082): a banner and a chime.
+func _on_bounty_claimed(enemy_name: String, stones: int) -> void:
+	var lines := bounty_banner(enemy_name, stones)
+	_banner.announce(lines[0], lines[1], UIStyle.CATEGORY_COLORS.get("good", UIStyle.ACCENT), 2.5)
+	Audio.play("chime_progress")
+
+
+## [title, subtitle] of the bounty-claimed banner.
+static func bounty_banner(enemy_name: String, stones: int) -> PackedStringArray:
+	return PackedStringArray(["Bounty claimed", "%s: %d spirit stones" % [enemy_name, stones]])
+
+
+## "Hunting: <enemy> in <region> (N days left)" for the active bounty, "" when none (WU-082).
+static func hunt_line(c: CharacterData, data: GameData, today: int) -> String:
+	var b := Bounties.active(c, data, today)
+	if b.is_empty():
+		return ""
+	var left := int(b["until_day"]) - today
+	var enemy: String = data.enemies.get(String(b["enemy"]), {}).get("name", String(b["enemy"]))
+	return "Hunting: %s in %s (%d day%s left)" % [enemy, Exploration.region_name(data, String(b["region"])), left, "" if left == 1 else "s"]
 
 
 ## New-feature notices (WU-042): a banner besides the log line; hidden when hints are off.

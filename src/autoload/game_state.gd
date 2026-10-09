@@ -671,6 +671,7 @@ func _hunt_bounty_foe(enemy_id: String) -> Dictionary:
 	if won and _can_act():
 		var stones := Bounties.complete(player, data, GameClock.total_days, bounty_id)
 		EventBus.post("Bounty claimed: %d spirit stones." % stones, "progress")
+		EventBus.bounty_claimed.emit(enemy_name, stones)
 		_gain_renown("bounty")
 		EventBus.player_changed.emit()
 	if _can_act():
