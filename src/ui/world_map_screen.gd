@@ -162,6 +162,23 @@ static func route_lines(c: CharacterData, data: GameData, from_id: String, regio
 
 
 ## Names of the places in a region (travel points left out).
+## Explored days, happenings seen and the next deeper path of a visited region (WU-074);
+## empty for regions never visited.
+static func familiarity_lines(c: CharacterData, data: GameData, region_id: String, current_region: String, flags: Dictionary = {}) -> PackedStringArray:
+	var out := PackedStringArray()
+	if is_unexplored(c, region_id, current_region):
+		return out
+	var days := Exploration.familiarity(c, region_id)
+	out.append("Explored %d day%s" % [days, "" if days == 1 else "s"])
+	var progress := Exploration.region_progress(c, data, region_id, flags)
+	if int(progress["total"]) > 0:
+		out.append("Seen %d of %d happenings" % [progress["met"], progress["total"]])
+	var deep := Exploration.next_deep_path(c, data, region_id)
+	if deep >= 0:
+		out.append("Deeper paths after %d days" % deep)
+	return out
+
+
 static func place_names(data: GameData, region_id: String) -> PackedStringArray:
 	var names: PackedStringArray = []
 	for place: Dictionary in data.regions.get(region_id, {}).get("places", []):
@@ -323,6 +340,9 @@ func _show_details() -> void:
 	_description.text = String(region.get("description", ""))
 	var places := place_names(data, _selected)
 	_places.text = "Places: " + (", ".join(places) if not places.is_empty() else "none known")
+	var familiar := familiarity_lines(GameState.player, data, _selected, GameState.current_region, GameState.world_flags)
+	if not familiar.is_empty():
+		_places.text += "\n" + "   |   ".join(familiar)
 	var foes_text := ""
 	if _selected == GameState.current_region:  # always explored
 		var tags: Array = region.get("encounter_tags", []) + WorldEvents.encounter_tags(data, GameState.world_events, _selected)

@@ -189,3 +189,18 @@ func test_unexplored_regions_are_dimmed() -> void:
 			assert_false(o.has("description"))
 	point.free()
 	gs.end_session()
+
+
+## WU-074: familiarity lines on visited regions only.
+func test_familiarity_lines() -> void:
+	var d := data()
+	var c := new_character()
+	var fresh := WorldMapScreen.familiarity_lines(c, d, "qingshi_village", "qingshi_village")
+	assert_eq(fresh[0], "Explored 0 days")
+	assert_true(WorldMapScreen.familiarity_lines(c, d, "misty_forest", "qingshi_village").is_empty())
+	Exploration.visit(c, "misty_forest")
+	Exploration.add_explore_day(c, "misty_forest")
+	assert_eq(WorldMapScreen.familiarity_lines(c, d, "misty_forest", "qingshi_village")[0], "Explored 1 day")
+	for i in 2:
+		Exploration.add_explore_day(c, "misty_forest")
+	assert_eq(WorldMapScreen.familiarity_lines(c, d, "misty_forest", "qingshi_village")[0], "Explored 3 days")
