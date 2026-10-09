@@ -401,6 +401,17 @@ func _select(mission_id: String) -> void:
 	_show_details()
 
 
+## "You lost this fight 12 days ago." once a lost mission fight is offered again
+## (Sects.last_loss_days_ago), "" when it was never lost.
+static func loss_text(c: CharacterData, mission_id: String) -> String:
+	var days := Sects.last_loss_days_ago(c, mission_id)
+	if days < 0:
+		return ""
+	if days == 0:
+		return "You lost this fight today."
+	return "You lost this fight %s ago." % Calendar.format_duration(days)
+
+
 func _show_details() -> void:
 	if _tab == "shop":
 		_show_shop_details()
@@ -417,6 +428,9 @@ func _show_details() -> void:
 	var danger := Sects.mission_danger(p, data, _selected) if not mission.is_empty() else ""
 	_danger.visible = danger != ""
 	_danger.text = Warnings.append_to(p, danger_text(danger)) if danger != "" else ""
+	var lost := loss_text(p, _selected) if danger != "" else ""
+	if lost != "" and Sects.check_mission(p, data, _selected, GameState.world_flags) == "":
+		_danger.text += "\n" + lost
 	_danger.add_theme_color_override("font_color", UIStyle.danger_color(danger))
 	if mission.is_empty():
 		return

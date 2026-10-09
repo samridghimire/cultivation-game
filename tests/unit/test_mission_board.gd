@@ -174,6 +174,28 @@ func test_board_shows_colored_danger_for_fight_missions() -> void:
 	gs.end_session()
 
 
+## WU-088: a lost fight shows its cooldown reason, then a "you lost" line once offered again.
+func test_board_remembers_a_lost_fight() -> void:
+	var gs := _root().get_node("GameState")
+	var c := _disciple()
+	c.stage = 5
+	gs.start_session(c)
+	var id := "cull_mist_wolves"
+	assert_eq(MissionBoard.loss_text(gs.player, id), "")
+	Sects.fail_mission(gs.player, data(), id)
+	var board := MissionBoard.new()
+	board._rebuild()
+	board._select(id)
+	assert_true(board._status.text != "", "cooldown reason shown")
+	assert_false(board._danger.text.contains("You lost"), "only once offered again")
+	gs.player.age_days += maxi(data().sect_mission_loss_cooldown_days, int(data().sect_missions[id].get("cooldown_days", 0))) + 1
+	board._show_details()
+	assert_true(board._danger.text.contains("You lost this fight"), "%s | %s | %d" % [board._danger.text, Sects.check_mission(gs.player, data(), id, gs.world_flags), Sects.last_loss_days_ago(gs.player, id)])
+	assert_true(board._danger.text.begins_with("Danger:"), "the danger rating stays")
+	board.free()
+	gs.end_session()
+
+
 ## G-011b: the Rank tab shows requirements, stipend and duty, and the trial.
 func test_rank_tab_shows_requirements_and_trial() -> void:
 	var gs := _root().get_node("GameState")
