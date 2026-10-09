@@ -149,6 +149,9 @@ static func year_summary(before: Dictionary, after: Dictionary, realm_before: St
 	var lost := _delta(before, after, "fights_lost")
 	if won > 0 or lost > 0:
 		out.append("You won %d fight%s and lost %d." % [won, "" if won == 1 else "s", lost])
+	var adventures := _adventures_line(before, after)
+	if adventures != "":
+		out.append(adventures)
 	var crafted := _delta(before, after, "items_crafted")
 	if crafted > 0:
 		out.append("You crafted %d item%s." % [crafted, "" if crafted == 1 else "s"])
@@ -166,6 +169,28 @@ static func year_summary(before: Dictionary, after: Dictionary, realm_before: St
 	while out.size() > 4:
 		out.remove_at(out.size() - 1)
 	return out
+
+
+## "You found 2 hidden places, claimed 1 bounty and mastered 1 region.", naming only the non-zero parts ("" when none).
+static func _adventures_line(before: Dictionary, after: Dictionary) -> String:
+	var parts: Array[String] = []
+	var found := _delta(before, after, "discoveries")
+	if found > 0:
+		parts.append("found %d hidden place%s" % [found, "" if found == 1 else "s"])
+	var bounties := _delta(before, after, "bounties_done")
+	if bounties > 0:
+		parts.append("claimed %d bount%s" % [bounties, "y" if bounties == 1 else "ies"])
+	var mastered := _delta(before, after, "regions_mastered")
+	if mastered > 0:
+		parts.append("mastered %d region%s" % [mastered, "" if mastered == 1 else "s"])
+	if parts.is_empty():
+		return ""
+	var text := parts[0]
+	if parts.size() == 2:
+		text = "%s and %s" % [parts[0], parts[1]]
+	elif parts.size() == 3:
+		text = "%s, %s and %s" % parts
+	return "You %s." % text
 
 
 static func _delta(before: Dictionary, after: Dictionary, key: String) -> int:

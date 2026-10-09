@@ -109,3 +109,28 @@ func test_year_snapshot_round_trip() -> void:
 	var d := c.to_dict()
 	d.erase("year_start_realm")
 	assert_eq(CharacterData.from_dict(d).year_start_realm, "")
+
+
+func test_year_summary_adventures_each_part_alone() -> void:
+	assert_eq(LifeStats.year_summary({}, {"discoveries": 2}, "A", "A"), PackedStringArray(["You found 2 hidden places."]))
+	assert_eq(LifeStats.year_summary({}, {"discoveries": 1}, "A", "A"), PackedStringArray(["You found 1 hidden place."]))
+	assert_eq(LifeStats.year_summary({}, {"bounties_done": 1}, "A", "A"), PackedStringArray(["You claimed 1 bounty."]))
+	assert_eq(LifeStats.year_summary({}, {"bounties_done": 3}, "A", "A"), PackedStringArray(["You claimed 3 bounties."]))
+	assert_eq(LifeStats.year_summary({}, {"regions_mastered": 1}, "A", "A"), PackedStringArray(["You mastered 1 region."]))
+
+
+func test_year_summary_adventures_combined_and_after_fights() -> void:
+	var after := {"fights_won": 1, "discoveries": 2, "bounties_done": 1, "regions_mastered": 1}
+	var lines := LifeStats.year_summary({}, after, "A", "A")
+	assert_eq(lines[0], "You won 1 fight and lost 0.")
+	assert_eq(lines[1], "You found 2 hidden places, claimed 1 bounty and mastered 1 region.")
+	assert_eq(LifeStats.year_summary({"discoveries": 1}, {"discoveries": 1, "bounties_done": 2, "regions_mastered": 1}, "A", "A"), PackedStringArray(["You claimed 2 bounties and mastered 1 region."]))
+
+
+func test_year_summary_adventures_none_and_cap() -> void:
+	assert_eq(LifeStats.year_summary({"discoveries": 2}, {"discoveries": 2}, "A", "A"), PackedStringArray(["A quiet year of cultivation."]))
+	var after := {"fights_won": 1, "discoveries": 1, "items_crafted": 1, "stones_earned": 5, "deeds_done": 1, "realm_floors_cleared": 1}
+	var lines := LifeStats.year_summary({}, after, "A", "B")
+	assert_eq(lines.size(), 4)
+	assert_eq(lines[2], "You found 1 hidden place.")
+	assert_eq(lines[3], "You crafted 1 item.")
