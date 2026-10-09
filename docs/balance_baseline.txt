@@ -93,6 +93,7 @@ Where each enemy first appears (typical player entering the realm / at its peak 
   Foundatio cloud_eagle            encounter mountain_eagle     evadable                 entry  63%  peak  96%  talisman  99%  bare   0%  veteran on appearance  98%  OK
   Foundatio cloud_eagle            mission bleed_cloud_eagle    forced                   entry  63%  peak  96%  talisman  99%  bare   0%  veteran on appearance  98%  OK
   Foundatio cloud_eagle            mission escort_star_silver   forced                   entry  63%  peak  96%  talisman  99%  bare   0%  veteran on appearance  98%  OK
+  Foundatio corpse_refiner_puppets choice marsh_corpse_refiner_ forced                   entry  69%  peak 100%  talisman 100%  bare   0%  veteran on appearance  98%  OK
   Foundatio demonic_cultivator     encounter forest_demonic_amb evadable                 entry  69%  peak  95%  talisman  98%  bare   0%  veteran on appearance  98%  OK
   Foundatio demonic_cultivator     encounter marsh_demonic_hunt evadable                 entry  69%  peak  95%  talisman  98%  bare   0%  veteran on appearance  98%  OK
   Foundatio demonic_cultivator     mission harvest_rogue_cultiv forced                   entry  69%  peak  95%  talisman  98%  bare   0%  veteran on appearance  98%  OK
@@ -193,6 +194,7 @@ Win rate at stage 0 of each realm (no talismans):
   grave_guardian_ape             0%        48%       100%       100%       100%
   stone_hide_boar_king           0%         0%        70%       100%       100%
   drowned_venom_husk             0%         0%        69%       100%       100%
+  corpse_refiner_puppets         0%         0%        69%       100%       100%
   roadside_rogue_cultivator         0%         0%        72%       100%       100%
   cloud_eagle                    0%         0%        63%       100%       100%
   cave_guardian                  0%         0%        26%       100%       100%
