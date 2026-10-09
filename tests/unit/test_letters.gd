@@ -124,3 +124,21 @@ func test_journal_lists_letters_newest_first() -> void:
 
 func test_letter_banner_text() -> void:
 	assert_eq(load("res://src/ui/hud.gd").letter_banner("Lu"), PackedStringArray(["A letter", "from Lu"]))
+
+
+func test_every_letter_kind_formats_and_applies() -> void:
+	var d := GameData.load_from_dir()
+	var friend := _friend()
+	for kind: Dictionary in d.family["letters"]["kinds"]:
+		var all: Dictionary = d.family["letters"]
+		var keep: Array = all["kinds"]
+		all["monthly_chance"] = 1.0
+		all["kinds"] = [kind]
+		var c := new_character()
+		var letter := Letters.monthly(c, friend, {"friend": 100}, d, seeded_rng(), {})
+		all["kinds"] = keep
+		assert_false(letter.is_empty(), "kind %s sends" % kind["id"])
+		var text := String(letter["text"])
+		if String(kind["text"]).contains("{name}"):
+			assert_true(text.contains("Friend friend"), "kind %s names the writer" % kind["id"])
+		assert_false(text.contains("{"), "kind %s leaves no placeholder" % kind["id"])
