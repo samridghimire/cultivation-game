@@ -272,8 +272,8 @@ Last reviewed commit: af043ad
     discovery chime; both are cleared before it. (2) GUIDE-016 (missed last run): a deeper path set
     `discovered_<region>`, using up a not-yet-met discovery and counting toward "Hidden places found". Only the
     discovery sets it now. Tests for both (they fail on the old code).
-  - Note: only misty_forest has a `discovery`, so Seeker of Hidden Places (4 discoveries) is unreachable until C-046
-    (discoveries for every region, in the backlog) lands; before this fix it was only reachable through the bug.
+  - Note: before C-046 (landed during this review) only misty_forest had a `discovery`, so Seeker of Hidden Places
+    was only reachable through the deeper-path bug; with C-046 every region has its own discovery.
   - Notes, not filed: (1) NEWS-001 raises spouses' and children's favor past `dual_cultivation.max_favor`/`max_child_favor`
     (+3 per major breakthrough); harmless. (2) LETTER-001's invitation bonus can lift favor above chat's 30 cap, by
     design. (3) WU-087: every on-screen NPC looks up the player group each physics frame; cheap enough for now.

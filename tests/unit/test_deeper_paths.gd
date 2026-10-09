@@ -123,10 +123,14 @@ func test_deep_path_does_not_mark_the_region_discovered() -> void:
 	c.realm_index = 1
 	gs.start_session(c)
 	var region := String(gs.current_region)
+	# The region's discovery is out of reach for now (as when it is realm- or alignment-gated).
+	var old_discovery: Variant = gs.data.regions[region].get("discovery", "")
+	gs.data.regions[region]["discovery"] = ""
 	var at := Exploration.next_deep_path(gs.player, gs.data, region)
 	assert_true(at >= 0, "%s has a deeper path" % region)
 	gs.player.explore_days[region] = at - 1
 	gs.explore()
+	gs.data.regions[region]["discovery"] = old_discovery
 	assert_true(gs.last_explore_deep_path)
 	assert_false(gs.last_explore_discovery)
 	assert_false(gs.world_flags.get("discovered_" + region, false))
