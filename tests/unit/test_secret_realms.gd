@@ -308,3 +308,19 @@ func test_entry_item_required_and_consumed() -> void:
 	def["entry_item"] = "nope"
 	assert_eq(SecretRealms.validate(data).size(), 1)
 	data.secret_realms.erase("test_realm")
+
+
+## C-057: the Sunken Sword Tomb needs its map fragment, which can be found.
+func test_sword_tomb_needs_its_map() -> void:
+	var d := GameData.load_from_dir()
+	var def := SecretRealms.realm(d, "sunken_sword_tomb")
+	assert_eq(String(def.get("entry_item", "")), "sword_tomb_map_fragment")
+	assert_true(Items.has_known_source(d, "sword_tomb_map_fragment"))
+	var day := int(def["offset_years"]) * Y + 5
+	var c := new_character()
+	c.realm_index = d.realm_index_of("foundation_establishment")
+	c.inventory = {"spirit_stone": 1000}
+	var need := SecretRealms.check_enter(c, d, "sunken_sword_tomb", "azure_peak", day)
+	assert_eq(need, "You need %s to find the way in." % d.items["sword_tomb_map_fragment"]["name"])
+	c.add_item("sword_tomb_map_fragment", 1)
+	assert_eq(SecretRealms.check_enter(c, d, "sunken_sword_tomb", "azure_peak", day), "")
