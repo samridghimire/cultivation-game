@@ -1017,12 +1017,19 @@ func test_first_visit_text_posts_once() -> void:
 	gs.travel("misty_forest")
 	assert_true(gs.last_arrival_first_visit)
 	assert_eq(_count_messages(line), 1)
-	gs.travel(gs.data.start_region)  # qingshi has no first_visit text
+	gs.travel(gs.data.start_region)  # the start region counts as already visited
 	assert_false(gs.last_arrival_first_visit)
 	gs.travel("misty_forest")
 	assert_false(gs.last_arrival_first_visit)
 	assert_eq(_count_messages(line), 1)
 	gs.end_session()
+
+
+## C-043: every region has a first_visit line.
+func test_every_region_has_first_visit() -> void:
+	var d := GameData.load_from_dir()
+	for id in d.regions:
+		assert_true(String(d.regions[id].get("first_visit", "")).strip_edges() != "", "%s needs a first_visit" % id)
 
 
 func test_first_visit_validator_rejects_empty() -> void:
