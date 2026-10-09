@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 3108c18
+Last reviewed commit: 51025b4
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -330,3 +330,23 @@ Last reviewed commit: 3108c18
     (4) C-060 follow-up stands: the planted seed should give the lasting Azure Peak qi-density bonus the task asked
     for (needs a flag-driven density mechanic). (5) WU-104 caches the rating per combat_started; a multi-round
     tournament shows the last round's rating, which is the fight the report shows.
+- 2026-10-09 (reviewer, 10th run): reviewed 3108c18..51025b4 (C-059, WU-099, FEST-003, C-064, WU-110, QA-048, SHOP-001,
+  LETTER-002, LETTER-003b, C-066, WU-103, QA-058, RUMOR-001, WU-107, WU-106, C-067, C-061, QI-001, WU-108, WU-100; [PLAN]/[REVIEW] skipped).
+  Main green before and after (1611 -> 1618 tests, new commits included). No BACKLOG/CHANGELOG edits by workers; no SAVE_VERSION change
+  (SHOP-001's `shop_deals` defaults to {}, FEST-003's `activity_done` defaults to false; QA-058 covers both new fields).
+  Note: the local main of this checkout had diverged from origin; `git reset --hard origin/main` first.
+  - Fixed ([REVIEW] commit): (1) C-064 moved the sword madman bounty to Core Formation at 220 stones but its text still
+    said "posts 130 stones". (2) C-061: Ancestor Incense gave +3 alignment for 8 stones, buyable without limit while
+    Qingming lasts: 2.7 stones per point against Clear Heart Pill's 20, so a demonic cultivator could wash their path
+    clean for a few hundred stones. Now +1 for 12 (still under the festival goods' 15-stone cap).
+  - Notes for the planner, not filed: (1) FEST-003's activity has no menu entry yet (WU-100), so "Float a lantern" is
+    (WU-100 has since added it to the merchant menu); activity `effects` are not run through any Effects key validation.
+    (2) With data rumors always present, "The merchant shrugs: ... nothing worth gossiping about" is now followed by
+    gossip every visit (WorldEvents.rumors adds it whenever no event is active); reword or drop when extras exist.
+    (3) LETTER-002's family_writer counts a spouse in a sect even when that sect is the player's own and they share a
+    region ("writes from {region}" to someone next door); fine for now. (4) C-059 locks Drowned Yin Palace behind the
+    token for existing saves too, and the token is never consumed (consume_entry_item unset), as specced.
+    (5) C-064 follow-up: re-run the bounty income sim for the Core Formation sword madman. (6) QI-001: the region
+    qi_flags bonus is applied to the player's meditation, HUD and map, but not to Guidance.best_qi_in_region (journal's
+    "best place to meditate") or to NPC/child cultivation (Npcs, Training call qi_density without flags); harmless at
+    +10%, but pass flags through if more qi_flags land.
