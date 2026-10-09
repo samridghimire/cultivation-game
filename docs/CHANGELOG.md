@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-09 [EXPL-003] Know every path of a region to master it (Master of Many Lands milestone).
 - 2026-10-09 [QA-052] The curious-player sim logs every death: all early deaths were one Mist Wolf sect mission, retried after each respawn.
 - 2026-10-09 [WU-083] The crafting screen lists what you can make right now first.
 - 2026-10-09 [WU-080] Road encounters show before the arrival card; travel options say whether the roads are quiet.
