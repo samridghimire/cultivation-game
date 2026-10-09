@@ -2,6 +2,16 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-09 [WU-061] The world map dims regions you have never visited; travel options say "(never visited)".
+- 2026-10-09 [C-018] Three Soul Formation masters on Myriad Peaks Ridge, two with errands.
+- 2026-10-09 [EXPL-001] Regions open deeper paths to those who explore them for many days (a hidden valley in the Misty Forest).
+- 2026-10-09 [C-049] Spring and winter herbs on Myriad Peaks Ridge, an autumn bog lily with its own qi pill, an autumn ridge fortune.
+- 2026-10-09 [WU-075] The inventory says when and where a herb grows richest.
+- 2026-10-09 [QA-050] Tests that discoveries survive save and load and wait for your realm.
+- 2026-10-09 [ENC-003] Sights you have met before grow rarer, so fresh encounters surface.
+- 2026-10-09 [WU-073] The world map hints that a region you visited still hides something.
+- 2026-10-09 [WU-070] Discoveries get their own window title, chime and log line.
+- 2026-10-09 [QA-046] The balance baseline is refreshed and every drift explained.
 - 2026-10-09 [WU-068] Menus refit when the window or UI scale changes.
 - 2026-10-09 [NS-007] Soul Formation inheritance trials pit you against Soul Formation guardians.
 - 2026-10-09 [SEASON-003] Gather a one-season herb in all four seasons for the Herbalist of Four Seasons milestone.

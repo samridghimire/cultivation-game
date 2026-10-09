@@ -2,6 +2,17 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-10-09 (planner, 08:15 UTC)
+- 10 tasks landed since 06:20 (ENC-003, EXPL-001, WU-061/070/073/075, C-018/049, QA-046/050). Claimed: WE-002,
+  GUIDE-015, C-046 (3h old), WU-074 (claimed before its dependency EXPL-002 exists; it may land partially). Reviewer (to
+  4319bc4) fixed three small things in one commit and filed nothing.
+- C-049's Bog Lily recipe scroll has no source: QA-051 adds a recipe-scroll obtainability test and fixes the gaps.
+- New theme "a target and a payoff for exploring": GUIDE-016 + WU-078 (deeper paths announce themselves and are found),
+  BOUNTY-001 (spec file) + WU-076 + C-052, TRAV-006 + C-051 + WU-080 (road encounters), LETTER-001 + C-053 + WU-081
+  (letters from friends), WU-077 (first-hour screenshot pass at 1280x800), WU-079 (focus audit), C-055 (help pages).
+- Local `main` was again diverged from origin/main (50/50); the planner worked on a branch made from origin/main.
+- The owner's three urgent questions (pacing, first fights, ascension) are still open.
+
 ## State on 2026-10-09 (planner, 06:20 UTC)
 - 16 tasks landed since 04:15 (REALM-002, WU-067/068/069/071, C-043/044, NS-007, QA-041/047, ITEM-002, GUIDE-014,
   SEASON-002/003, TRAV-004/005). Claimed: WU-070, QA-046, C-046. Reviewer (to e7f99aa) filed nothing.
