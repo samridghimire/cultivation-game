@@ -113,6 +113,15 @@ static func entry_cost(c: CharacterData, def: Dictionary, total_days: int) -> in
 	return int(def.get("entry_stones", 0)) if _progress(c, def, total_days).is_empty() else 0
 
 
+## The name of the entry_item (REALM-002) `c` still lacks, "" when none is
+## needed. Only the first entry of an opening asks for it.
+static func entry_item_needed(c: CharacterData, data: GameData, def: Dictionary, total_days: int) -> String:
+	var item_id := String(def.get("entry_item", ""))
+	if item_id == "" or not _progress(c, def, total_days).is_empty() or c.item_count(item_id) > 0:
+		return ""
+	return String(data.items.get(item_id, {}).get("name", item_id))
+
+
 ## The floor `c` would face next ({} when every floor is cleared).
 static func next_floor(c: CharacterData, def: Dictionary, total_days: int) -> Dictionary:
 	var floors: Array = def.get("floors", [])
@@ -137,6 +146,9 @@ static func check_enter(c: CharacterData, data: GameData, realm_id: String, regi
 		return "The barrier of the %s rejects cultivators above %s." % [def["name"], data.realms[max_index].name]
 	if next_floor(c, def, total_days).is_empty():
 		return "You have plundered every floor of the %s. It must close and reopen first." % def["name"]
+	var need := entry_item_needed(c, data, def, total_days)
+	if need != "":
+		return "You need %s to find the way in." % need
 	var cost := entry_cost(c, def, total_days)
 	if c.item_count("spirit_stone") < cost:
 		return "Opening a way into the %s takes %d spirit stones." % [def["name"], cost]
@@ -147,6 +159,9 @@ static func check_enter(c: CharacterData, data: GameData, realm_id: String, regi
 static func pay_entry(c: CharacterData, def: Dictionary, total_days: int) -> int:
 	var cost := entry_cost(c, def, total_days)
 	c.add_item("spirit_stone", -cost)
+	var item_id := String(def.get("entry_item", ""))
+	if item_id != "" and bool(def.get("consume_entry_item", false)) and _progress(c, def, total_days).is_empty():
+		c.add_item(item_id, -1)
 	if _progress(c, def, total_days).is_empty():
 		# Record the opening so a lost guardian fight does not charge again.
 		c.secret_realms[String(def["id"])] = {"opening": opening_index(def, total_days), "floor": 0}
@@ -341,6 +356,11 @@ static func validate(data: GameData) -> PackedStringArray:
 				for item_id in treasure.get("effects", {}).get("items", {}):
 					if not data.items.has(item_id):
 						errors.append("Secret realm '%s' treasure has unknown item '%s'" % [id, item_id])
+		var entry_item := String(def.get("entry_item", ""))
+		if entry_item != "" and not data.items.has(entry_item):
+			errors.append("Secret realm '%s' has unknown entry_item '%s'" % [id, entry_item])
+		if def.has("consume_entry_item") and not def["consume_entry_item"] is bool:
+			errors.append("Secret realm '%s' consume_entry_item must be true or false" % id)
 		var expulsion := String(def.get("expulsion_injury", ""))
 		if expulsion != "" and not data.injuries.has(expulsion):
 			errors.append("Secret realm '%s' has unknown expulsion_injury '%s'" % [id, expulsion])

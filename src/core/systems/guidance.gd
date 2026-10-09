@@ -791,6 +791,8 @@ static func _opportunity_entries(out: Array[Dictionary], c: CharacterData, data:
 		if not SecretRealms.admits(c, data, def) or SecretRealms.has_inherited(c, realm_id):
 			continue
 		var label := "%s (%s)" % [String(def.get("name", realm_id)), _region_name(data, String(def.get("region", "")))]
+		if String(def.get("entry_item", "")) != "" and SecretRealms.entry_item_needed(c, data, def, today) != "":
+			label += " (needs %s)" % SecretRealms.entry_item_needed(c, data, def, today)
 		if SecretRealms.is_open(def, today):
 			var left := SecretRealms.days_until_close(def, today)
 			_add(out, "Opportunities", "%s is open: %d days left, %d/%d floors cleared" % [label, left, SecretRealms.floors_cleared(c, def, today), (def.get("floors", []) as Array).size()], "warning" if left <= 7 else "normal")

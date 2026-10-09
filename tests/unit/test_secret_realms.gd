@@ -282,3 +282,29 @@ func test_progress_lines() -> void:
 	assert_eq(SecretRealms.progress_lines(c, data, day), ["Test Realm: 1/2 floors (this opening)"] as Array[String])
 	c.inheritances.append("test_realm")
 	assert_eq(SecretRealms.progress_lines(c, data, day), ["Test Realm: inheritance claimed"] as Array[String])
+
+
+# --- REALM-002: entry items -------------------------------------------------------
+
+func test_entry_item_required_and_consumed() -> void:
+	var data := data()
+	var def := _def()
+	def["entry_item"] = "spirit_herb"
+	def["consume_entry_item"] = true
+	data.secret_realms["test_realm"] = def
+	var c := _cultivator()
+	assert_eq(SecretRealms.check_enter(c, data, "test_realm", "misty_forest", Y), "You need %s to find the way in." % data.items["spirit_herb"]["name"])
+	c.add_item("spirit_herb", 1)
+	assert_eq(SecretRealms.check_enter(c, data, "test_realm", "misty_forest", Y), "")
+	SecretRealms.pay_entry(c, def, Y)
+	assert_eq(c.item_count("spirit_herb"), 0, "consumed on entry")
+	assert_eq(SecretRealms.check_enter(c, data, "test_realm", "misty_forest", Y), "", "later floors of the same opening need no item")
+	assert_true(SecretRealms.validate(data).is_empty(), str(SecretRealms.validate(data)))
+	def["consume_entry_item"] = false
+	var d2 := _cultivator()
+	d2.add_item("spirit_herb", 1)
+	SecretRealms.pay_entry(d2, def, Y)
+	assert_eq(d2.item_count("spirit_herb"), 1, "kept when not flagged")
+	def["entry_item"] = "nope"
+	assert_eq(SecretRealms.validate(data).size(), 1)
+	data.secret_realms.erase("test_realm")
