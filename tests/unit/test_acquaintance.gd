@@ -150,7 +150,8 @@ func test_liked_and_disliked_gifts() -> void:
 
 func test_taste_hint_and_validation() -> void:
 	assert_eq(Family.taste_hint(data(), "elder_mo"), "Elder Mo is fond of herbs.")
-	assert_eq(Family.taste_hint(data(), "xiao_ling"), "")
+	assert_eq(Family.taste_hint(data(), "xiao_ling"), "Xiao Ling is fond of moon cake.")
+	assert_eq(Family.taste_hint(data(), "nobody"), "")
 	var d := GameData.new()
 	d.names = data().names
 	d.family = data().family
