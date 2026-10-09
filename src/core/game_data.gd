@@ -418,6 +418,8 @@ func _validate_world() -> void:
 			var quiet: Variant = region["quiet_lines"]
 			if not (quiet is Array and (quiet as Array).all(func(v): return v is String and (v as String).strip_edges() != "")):
 				load_errors.append("Region '%s' quiet_lines must be an array of non-empty strings" % region["id"])
+		if region.has("discovery") and not (encounters.has(String(region["discovery"])) and encounters[String(region["discovery"])].get("discovery_only", false)):
+			load_errors.append("Region '%s' discovery '%s' must be a discovery_only encounter" % [region["id"], region["discovery"]])
 		if region.has("first_visit") and not (region["first_visit"] is String and (region["first_visit"] as String).strip_edges() != ""):
 			load_errors.append("Region '%s' first_visit must be a non-empty string" % region["id"])
 		if region.has("map_pos"):
@@ -449,6 +451,13 @@ func _validate_world() -> void:
 				load_errors.append("Region '%s' auction place has unknown house_id '%s'" % [region["id"], place.get("house_id", "")])
 			if place.has("faction") and not sects.has(place["faction"]):
 				load_errors.append("Region '%s' place has unknown faction '%s'" % [region["id"], place["faction"]])
+	var discoveries := {}
+	for region: Dictionary in regions.values():
+		if region.has("discovery"):
+			discoveries[String(region["discovery"])] = true
+	for e: Dictionary in encounters.values():
+		if e.get("discovery_only", false) and not discoveries.has(String(e["id"])):
+			load_errors.append("Encounter '%s' is discovery_only but is no region's discovery" % e["id"])
 	for e: Dictionary in encounters.values():
 		_validate_seasons(e, "Encounter '%s'" % e["id"])
 		for key in ["min_realm", "max_realm"]:

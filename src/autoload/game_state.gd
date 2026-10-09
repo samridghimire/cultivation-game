@@ -579,7 +579,11 @@ func _explore_once(tags: Array, quiet: bool) -> Dictionary:
 	if tags.is_empty():
 		tags = data.regions.get(current_region, {}).get("encounter_tags", [])
 	tags = tags + WorldEvents.encounter_tags(data, world_events, current_region)
-	var encounter := Exploration.roll_encounter(player, data, tags, world_flags, rng, Rivals.rival_of(player, npcs), 1.0 - ClanEstate.ward(clan, data, current_region), Calendar.season_of(GameClock.total_days))
+	var encounter := Exploration.discovery_for(player, data, current_region, world_flags)
+	if encounter.is_empty():
+		encounter = Exploration.roll_encounter(player, data, tags, world_flags, rng, Rivals.rival_of(player, npcs), 1.0 - ClanEstate.ward(clan, data, current_region), Calendar.season_of(GameClock.total_days))
+	else:
+		world_flags["discovered_" + current_region] = true
 	if encounter.is_empty():
 		if not quiet:
 			EventBus.post(("You search the area but find nothing. %s" % Exploration.quiet_line(data, current_region, GameClock.total_days)).strip_edges())

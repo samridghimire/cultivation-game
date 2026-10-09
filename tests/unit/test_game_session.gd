@@ -1076,3 +1076,25 @@ func test_season_change_posts_one_in_season_line() -> void:
 		if String(bus.history[i]["text"]).begins_with("Spring has come. In season now:"):
 			lines += 1
 	assert_eq(lines, 1)
+
+
+func test_first_exploration_finds_region_discovery_once() -> void:
+	var c := _start()
+	var gs := _game_state()
+	gs.current_region = "misty_forest"
+	var herbs_before: int = c.inventory.get("spirit_herb", 0)
+	gs.explore()
+	assert_true(gs.world_flags.get("discovered_misty_forest", false))
+	assert_eq(int(c.inventory.get("spirit_herb", 0)), herbs_before + 2)
+	var saves := _root().get_node("SaveManager")
+	assert_true(saves.save_game(TEST_SLOT))
+	assert_true(saves.load_game(TEST_SLOT))
+	DirAccess.remove_absolute(saves.save_path(TEST_SLOT))
+	assert_true(gs.world_flags.get("discovered_misty_forest", false), "flag survives save/load")
+	for i in 50:
+		gs.player.alive = true
+		gs.explore()
+		if gs.pending_encounter != "":
+			gs.pending_encounter = ""
+	assert_true(Exploration.discovery_for(gs.player, gs.data, "misty_forest", gs.world_flags).is_empty())
+	gs.end_session()

@@ -113,6 +113,19 @@ static func realm_allows(c: CharacterData, data: GameData, e: Dictionary) -> boo
 	return true
 
 
+## The region's first-exploration discovery (TRAV-005): its `discovery`
+## encounter when not yet found (flag "discovered_<region>") and the character
+## qualifies, else {}.
+static func discovery_for(c: CharacterData, data: GameData, region_id: String, flags: Dictionary) -> Dictionary:
+	var id := String(data.regions.get(region_id, {}).get("discovery", ""))
+	if id == "" or flags.get("discovered_" + region_id, false) or not data.encounters.has(id):
+		return {}
+	var e: Dictionary = data.encounters[id]
+	if not realm_allows(c, data, e) or not alignment_allows(c, e):
+		return {}
+	return e
+
+
 ## Encounters that can happen for a place with `tags`, each paired with its
 ## Fortune-adjusted weight: [{encounter, weight}]. `rival` is `c`'s living
 ## rival (Rivals) or null; encounters with a `rival` condition need one.
@@ -122,6 +135,8 @@ static func eligible_encounters(c: CharacterData, data: GameData, tags: Array, f
 	var fortune_shift := (c.attribute("fortune") - 10) * FORTUNE_WEIGHT_PER_POINT
 	for e: Dictionary in data.encounters.values():
 		if not _shares_tag(e.get("tags", []), tags):
+			continue
+		if e.get("discovery_only", false):
 			continue
 		if not in_season(e, season):
 			continue

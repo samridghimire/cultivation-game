@@ -387,3 +387,24 @@ func test_season_news_only_when_season_changes() -> void:
 	assert_true(spring.begins_with("Spring has come. In season now: "), spring)
 	assert_true(spring.ends_with("."))
 	assert_true(spring.count(";") <= 2)
+
+
+# --- TRAV-005: first-exploration discovery ---------------------------------------
+
+func test_discovery_only_encounters_never_roll_and_validate() -> void:
+	var d := GameData.load_from_dir()
+	var c := new_character()
+	var rng := seeded_rng(5)
+	for i in 100:
+		assert_true(Exploration.roll_encounter(c, d, ["forest"], {}, rng).get("id", "") != "misty_forest_hollow_shrine")
+	assert_eq(Exploration.discovery_for(c, d, "misty_forest", {}).get("id", ""), "misty_forest_hollow_shrine")
+	assert_true(Exploration.discovery_for(c, d, "misty_forest", {"discovered_misty_forest": true}).is_empty())
+	assert_true(Exploration.discovery_for(c, d, "qingshi_village", {}).is_empty())
+	var before := d.load_errors.size()
+	d.regions["qingshi_village"]["discovery"] = "no_such_encounter"
+	d.encounters["orphan_find"] = {"id": "orphan_find", "tags": ["x"], "discovery_only": true}
+	d._validate_world()
+	var text := ", ".join(d.load_errors)
+	assert_true(text.contains("discovery 'no_such_encounter' must be a discovery_only encounter"), text)
+	assert_true(text.contains("'orphan_find' is discovery_only but is no region's discovery"), text)
+	assert_eq(d.load_errors.size(), before + 2, text)
