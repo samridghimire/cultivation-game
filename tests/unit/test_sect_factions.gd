@@ -299,7 +299,7 @@ func test_expire_calls_starts_counting_and_tidies_cleared_calls() -> void:
 func test_mission_rank_realm_reason_ignores_cooldowns() -> void:
 	var c := new_character()
 	c.realm_index = 1
-	c.stage = 8
+	c.stage = 1
 	Sects.join(c, data(), "azure_cloud_sect")
 	var mission: Dictionary = data().sect_missions["answer_azure_call"]
 	assert_eq(Sects.mission_rank_realm_reason(c, data(), mission), "")
