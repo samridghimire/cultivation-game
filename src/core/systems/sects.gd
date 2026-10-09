@@ -6,6 +6,12 @@ extends RefCounted
 const MISSION_KINDS: Array[String] = ["gather", "hunt", "deliver", "guard"]
 
 
+## The region a sect calls home (TRAV-004); "" for a rogue, an unknown sect or one with none.
+static func home_region(data: GameData, sect_id: String) -> String:
+	var def: SectDef = data.sects.get(sect_id)
+	return def.home_region if def != null else ""
+
+
 ## Returns {ok: bool, reason: String}.
 static func check_join(c: CharacterData, data: GameData, sect_id: String) -> Dictionary:
 	if not data.sects.has(sect_id):

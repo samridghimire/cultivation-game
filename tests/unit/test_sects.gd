@@ -161,3 +161,30 @@ func test_needs_trial_and_rank_requirement_reason() -> void:
 	c.sect["rank"] = sect.ranks.size() - 1
 	assert_false(Sects.needs_trial(c, d), "top rank")
 	assert_eq(Sects.rank_requirement_reason(c, d), "")
+
+
+## TRAV-004: sects name a home region.
+func test_sect_home_regions() -> void:
+	var d := data()
+	assert_eq(Sects.home_region(d, "azure_cloud_sect"), "azure_peak")
+	assert_eq(Sects.home_region(d, "blood_lotus_sect"), "withered_bone_marsh")
+	assert_eq(Sects.home_region(d, "myriad_treasure_pavilion"), "fallen_star_market")
+	assert_eq(Sects.home_region(d, ""), "")
+	assert_eq(Sects.home_region(d, "nope"), "")
+
+
+func test_backfill_visits_home_region_only() -> void:
+	var d := data()
+	var c := new_character()
+	c.sect = {"id": "blood_lotus_sect", "rank": 0}
+	Exploration.backfill_visited(c, d, {})
+	assert_true(c.visited_regions.has("withered_bone_marsh"))
+	assert_false(c.visited_regions.has("azure_peak"))
+
+
+func test_unknown_home_region_is_rejected() -> void:
+	var d := GameData.load_from_dir()
+	d.sects["azure_cloud_sect"].home_region = "nowhere"
+	d.load_errors.clear()
+	d._validate()
+	assert_true(d.load_errors.size() > 0)

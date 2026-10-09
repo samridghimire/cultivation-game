@@ -1046,7 +1046,7 @@ func test_old_save_backfills_known_places() -> void:
 	var gs := _game_state()
 	var c := _start()
 	c.abode = "waterfall_cave"
-	c.sect = {"id": String(gs.data.sects.keys()[0]), "rank": 0}
+	c.sect = {"id": "azure_cloud_sect", "rank": 0}
 	var saved: Dictionary = JSON.parse_string(JSON.stringify(gs.to_save_dict()))
 	saved["player"].erase("visited_regions")
 	saved["player"]["life_stats"] = {}
@@ -1054,7 +1054,8 @@ func test_old_save_backfills_known_places() -> void:
 	var v: Array[String] = gs.player.visited_regions
 	assert_true(v.has(gs.data.start_region))
 	assert_true(v.has("misty_forest"), "abode region")
-	assert_true(v.has("fallen_star_market"), "sect hall region")
+	assert_true(v.has("azure_peak"), "sect home region")
+	assert_false(v.has("fallen_star_market"), "other halls are not credited")
 	assert_eq(LifeStats.get_stat(gs.player, "regions_visited"), v.size())
 	# A save that already has a list is left alone.
 	saved["player"]["visited_regions"] = [gs.data.start_region]

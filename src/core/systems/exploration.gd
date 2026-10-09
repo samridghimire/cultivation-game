@@ -26,14 +26,17 @@ static func visit(c: CharacterData, region_id: String) -> bool:
 
 
 ## Fills in the places a veteran of an older save has surely been (TRAV-003):
-## the start region, the region of their abode, every region with a sect hall
-## once they belong to a sect (any hall serves any sect), regions holding their
+## the start region, the region of their abode, their sect's home region (every
+## region with a sect hall when the sect names none), regions holding their
 ## bound anchors, and where their living spouses and children live.
 static func backfill_visited(c: CharacterData, data: GameData, npcs: Dictionary) -> void:
 	visit(c, data.start_region)
 	if c.abode != "":
 		visit(c, String(Abodes.get_def(data, c.abode).get("region", "")))
-	if not c.is_rogue():
+	var sect_home := Sects.home_region(data, String(c.sect.get("id", "")))
+	if not c.is_rogue() and sect_home != "":
+		visit(c, sect_home)
+	elif not c.is_rogue():
 		for region_id: String in data.regions:
 			for place: Dictionary in data.regions[region_id].get("places", []):
 				if place.get("type", "") == "sect_hall":

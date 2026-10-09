@@ -21,6 +21,8 @@ var reputation_deed_scale := 0.0
 var shop: Array[Dictionary] = []
 ## The elder's monthly lecture (SECT-005): {name, days, qi_days, insight_chance, insights}; {} = none.
 var lecture: Dictionary = {}
+## Region the sect calls home (TRAV-004); "" = none (any hall serves).
+var home_region := ""
 
 
 static func from_dict(d: Dictionary) -> SectDef:
@@ -41,6 +43,7 @@ static func from_dict(d: Dictionary) -> SectDef:
 	s.reputation_deed_scale = float(rep.get("deed_scale", 0))
 	s.shop.assign(d.get("shop", []))
 	s.lecture = d.get("lecture", {})
+	s.home_region = String(d.get("home_region", ""))
 	return s
 
 
