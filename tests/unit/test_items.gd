@@ -62,3 +62,15 @@ func test_bulk_sell_keeps_readied_talismans() -> void:
 	assert_true(ids.has("swift_wind_talisman"))
 	assert_false(ids.has("fire_strike_talisman"), "readied")
 	assert_eq(Items.bulk_sell_total(c, data(), ids), 2 * Items.sell_price(data(), "swift_wind_talisman"))
+
+
+## WU-045: who buys an item and which recipes use it.
+func test_buyers_and_recipes_using() -> void:
+	var d := data()
+	var places: Array[String] = []
+	for b in Items.buyers(d, "boar_hide"):
+		places.append(b["place_name"])
+	assert_true(places.has("Wandering Merchant"), str(places))
+	assert_true(Items.recipes_using(d, "boar_hide").has("Boar Hide Jerkin"))
+	assert_eq(Items.buyers(d, "no_such_item"), [])
+	assert_eq(Items.recipes_using(d, "no_such_item").size(), 0)

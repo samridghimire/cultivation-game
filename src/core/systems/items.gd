@@ -175,16 +175,42 @@ static func shop_stock(data: GameData, max_price: int, stock_tags: Array) -> Arr
 	return ids
 
 
+## True when a merchant with these tags would buy `item_id` back (tagged
+## merchants only, and the item must have a sell price).
+static func merchant_buys(data: GameData, item_id: String, stock_tags: Array, buy_tags: Array = []) -> bool:
+	var tags: Array = stock_tags + buy_tags
+	return not tags.is_empty() and has_tag(data, item_id, tags) and sell_price(data, item_id) > 0
+
+
+## Merchant places that buy `item_id`, sorted by region name:
+## {region_id, region_name, place_name}.
+static func buyers(data: GameData, item_id: String) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	for region: Dictionary in data.regions.values():
+		for place: Dictionary in region.get("places", []):
+			if place.get("type", "") == "merchant" and merchant_buys(data, item_id, place.get("stock_tags", []), place.get("buy_tags", [])):
+				out.append({"region_id": region["id"], "region_name": region.get("name", region["id"]), "place_name": place.get("display_name", "Merchant")})
+	out.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return String(a["region_name"]).naturalnocasecmp_to(String(b["region_name"])) < 0)
+	return out
+
+
+## Names of the recipes that use `item_id` as an ingredient, sorted.
+static func recipes_using(data: GameData, item_id: String) -> PackedStringArray:
+	var out: PackedStringArray = []
+	for recipe: Dictionary in data.recipes.values():
+		if recipe.get("ingredients", {}).has(item_id):
+			out.append(String(recipe.get("name", recipe["id"])))
+	out.sort()
+	return out
+
+
 ## Item ids `c` holds that a merchant with `stock_tags` buys back. Only
 ## specialist (tagged) merchants buy, and only goods matching their tags
 ## (plus `buy_tags`, which a merchant buys without selling).
 static func buyback_ids(c: CharacterData, data: GameData, stock_tags: Array, buy_tags: Array = []) -> Array:
 	var ids: Array = []
-	var tags: Array = stock_tags + buy_tags
-	if tags.is_empty():
-		return ids
 	for item_id in c.inventory:
-		if c.item_count(item_id) > 0 and has_tag(data, item_id, tags) and sell_price(data, item_id) > 0:
+		if c.item_count(item_id) > 0 and merchant_buys(data, item_id, stock_tags, buy_tags):
 			ids.append(item_id)
 	ids.sort_custom(func(a, b): return _price_then_name(data, a, b))
 	return ids

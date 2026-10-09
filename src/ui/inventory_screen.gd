@@ -217,6 +217,8 @@ func _show_details() -> void:
 	if int(item.get("price", 0)) > 0:
 		lines.append("Market price: %d spirit stones" % int(item["price"]))
 	var equippable := _selected != "" and Equipment.is_equipment(data, _selected)
+	if _selected != "" and not GameState.player.equipment.values().has(_selected):
+		lines.append_array(use_lines(data, _selected, GameState.current_region))
 	if equippable:
 		lines.append_array(describe_equipment(GameState.player, data, _selected))
 	var array := Abodes.array_def(data, _selected) if _selected != "" else {}
@@ -246,6 +248,29 @@ func _show_details() -> void:
 	_use_button.tooltip_text = reason
 	if reason != "":
 		_effects.text += "\n" + reason
+
+
+## WU-045: who buys the item and which recipes use it.
+static func use_lines(data: GameData, item_id: String, region_id: String) -> Array[String]:
+	var lines: Array[String] = []
+	var buyers := Items.buyers(data, item_id)
+	if buyers.is_empty():
+		if int(data.items.get(item_id, {}).get("price", 0)) > 0:
+			lines.append("No merchant buys this.")
+	else:
+		buyers.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return a["region_id"] == region_id and b["region_id"] != region_id)
+		var shown: Array[String] = []
+		for b in buyers.slice(0, 2):
+			shown.append("%s (%s)" % [b["place_name"], b["region_name"]])
+		var text := "Sells for %d each at %s" % [Items.sell_price(data, item_id), " and ".join(shown)]
+		if buyers.size() > 2:
+			text += " and %d more" % (buyers.size() - 2)
+		lines.append(text)
+	var recipes := Items.recipes_using(data, item_id)
+	if not recipes.is_empty():
+		var names := Array(recipes.slice(0, 3))
+		lines.append("Used in: " + ", ".join(names) + (", ..." if recipes.size() > 3 else ""))
+	return lines
 
 
 func _show_ready_button(talisman: bool) -> void:

@@ -163,3 +163,11 @@ func test_category_tabs_filter_list_and_focus_first() -> void:
 	assert_eq((inv._list.get_child(0) as Label).text, "Nothing here.")
 	inv._set_category("All")
 	inv.queue_free()
+
+
+func test_use_lines_show_buyers_and_recipes() -> void:
+	var lines := InventoryScreen.use_lines(data(), "boar_hide", "qingshi_village")
+	var text := "\n".join(lines)
+	assert_true(text.contains("Sells for"), text)
+	assert_true(text.contains("Wandering Merchant (Qingshi Village)"), text)
+	assert_true(text.contains("Used in: Boar Hide Jerkin"), text)
