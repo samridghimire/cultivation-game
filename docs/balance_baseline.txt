@@ -294,13 +294,14 @@ Where each enemy first appears (typical player entering the realm / at its peak 
   Mortal    mountain_bandit        mission collect_a_debt       forced                   entry 100%  peak 100%  talisman 100%  bare  30%  veteran on appearance 100%  TRIVIAL
   Mortal    mountain_bandit        mission press_gang_bandits   forced                   entry 100%  peak 100%  talisman 100%  bare  30%  veteran on appearance 100%  TRIVIAL
   Mortal    wild_boar              encounter village_boar       forced                   entry 100%  peak 100%  talisman 100%  bare  96%  veteran on appearance 100%  TRIVIAL
-  Qi Refini azure_cloud_raider     mission answer_blood_lotus_c forced                   entry 100%  peak 100%  talisman 100%  bare  72%  veteran on appearance 100%  TRIVIAL
+  Qi Refini azure_cloud_raider     mission answer_blood_lotus_c forced                   entry  93%  peak 100%  talisman 100%  bare   0%  veteran on appearance  99%  OK
   Qi Refini azure_crane            encounter mountain_azure_cra evadable                 entry  53%  peak  90%  talisman  89%  bare   0%  veteran on appearance  68%  OK
   Qi Refini azure_sword_examiner   trial azure_cloud_sect rank  forced                   entry  58%  peak 100%  talisman  99%  bare   0%  veteran on appearance  93%  OK
   Qi Refini bandit_lord            choice city_red_door/Kick th forced                   entry  48%  peak 100%  talisman  98%  bare   0%  veteran on appearance  75%  HARD
-  Qi Refini blood_lotus_raider     mission answer_azure_call    forced                   entry 100%  peak 100%  talisman 100%  bare  72%  veteran on appearance 100%  TRIVIAL
+  Qi Refini blood_lotus_raider     mission answer_azure_call    forced                   entry  93%  peak 100%  talisman 100%  bare   0%  veteran on appearance  99%  OK
   Qi Refini blood_lotus_scout      encounter marsh_blood_lotus_ evadable                 entry  59%  peak  95%  talisman  96%  bare   0%  veteran on appearance  93%  OK
   Qi Refini blood_pit_gladiator    trial blood_lotus_sect rank  forced                   entry  49%  peak 100%  talisman 100%  bare   0%  veteran on appearance  76%  HARD
+  Qi Refini den_wolf               choice forest_hunters_wolf_d forced                   entry  84%  peak 100%  talisman 100%  bare   0%  veteran on appearance  99%  OK
   Qi Refini garden_poacher         realm verdant_remnant floor  forced                   entry  81%  peak 100%  talisman 100%  bare   0%  veteran on appearance  92%  OK
   Qi Refini grave_guardian_ape     trial fist_saint_grave stage forced                   entry  48%  peak 100%  talisman  96%  bare   0%  veteran on appearance  77%  HARD
   Qi Refini grotto_hermit_guest    realm peach_blossom_grotto f forced                   entry  56%  peak 100%  talisman  98%  bare   0%  veteran on appearance  76%  OK
@@ -312,8 +313,8 @@ Where each enemy first appears (typical player entering the realm / at its peak 
   Qi Refini mist_fox               realm peach_blossom_grotto f forced                   entry  64%  peak 100%  talisman  98%  bare   0%  veteran on appearance  93%  OK
   Qi Refini mist_wolf              encounter forest_wolf        evadable                 entry  80%  peak 100%  talisman 100%  bare   0%  veteran on appearance  99%  OK
   Qi Refini mist_wolf              encounter tide_wolf_pack     evadable                 entry  80%  peak 100%  talisman 100%  bare   0%  veteran on appearance  99%  OK
-  Qi Refini mist_wolf              mission cull_mist_wolves     forced                   entry 100%  peak 100%  talisman 100%  bare  62%  veteran on appearance 100%  TRIVIAL
-  Qi Refini mist_wolf              mission patrol_misty_peaks   forced                   entry 100%  peak 100%  talisman 100%  bare  62%  veteran on appearance 100%  TRIVIAL
+  Qi Refini mist_wolf              mission cull_mist_wolves     forced                   entry  94%  peak 100%  talisman 100%  bare   0%  veteran on appearance 100%  OK
+  Qi Refini mist_wolf              mission patrol_misty_peaks   forced                   entry  94%  peak 100%  talisman 100%  bare   0%  veteran on appearance 100%  OK
   Qi Refini mist_wolf              realm verdant_remnant floor  forced                   entry  80%  peak 100%  talisman 100%  bare   0%  veteran on appearance  99%  OK
   Qi Refini moss_back_ape          realm verdant_remnant floor  forced                   entry  48%  peak 100%  talisman  96%  bare   0%  veteran on appearance  77%  HARD
   Qi Refini mountain_bandit        choice wild_wounded_disciple forced                   entry 100%  peak 100%  talisman 100%  bare 100%  veteran on appearance 100%  TRIVIAL
@@ -329,7 +330,9 @@ Where each enemy first appears (typical player entering the realm / at its peak 
   Qi Refini stone_ape              encounter mountain_ape       evadable                 entry  72%  peak  77%  talisman  92%  bare   0%  veteran on appearance  84%  OK
   Qi Refini tournament_contender   choice tournament_bout/Enter forced                   entry  63%  peak 100%  talisman  97%  bare   0%  veteran on appearance  97%  OK
   Qi Refini vengeful_brother       encounter wounded_traveller_ evadable                 entry  93%  peak 100%  talisman 100%  bare   0%  veteran on appearance 100%  OK
+  Qi Refini well_bandit            choice road_highwayman/Refus forced                   entry  81%  peak 100%  talisman 100%  bare   0%  veteran on appearance  92%  OK
   Qi Refini well_bandit            trial village_founder_well s forced                   entry  81%  peak 100%  talisman 100%  bare   0%  veteran on appearance  92%  OK
+  Foundatio azure_cloud_enforcer   choice road_token_patrol/Bru forced                   entry  59%  peak  78%  talisman  98%  bare   0%  veteran on appearance 100%  OK
   Foundatio azure_cloud_enforcer   encounter city_righteous_enf forced                   entry  59%  peak  78%  talisman  98%  bare   0%  veteran on appearance 100%  OK
   Foundatio azure_cloud_enforcer   mission ambush_azure_patrol  forced                   entry  59%  peak  78%  talisman  98%  bare   0%  veteran on appearance 100%  OK
   Foundatio azure_pavilion_warden  trial azure_cloud_sect rank  forced                   entry  65%  peak 100%  talisman 100%  bare   0%  veteran on appearance 100%  OK
@@ -378,6 +381,7 @@ Where each enemy first appears (typical player entering the realm / at its peak 
   Core Form black_iron_bear_king   realm drowned_yin_palace flo forced                   entry  24%  peak  90%  talisman  73%  bare   0%  veteran on appearance 100%  HARD
   Core Form black_iron_bear_king   realm skyfall_thunder_pavili forced                   entry  24%  peak  90%  talisman  73%  bare   0%  veteran on appearance 100%  HARD
   Core Form blood_lotus_ancestor_puppet trial blood_lotus_sect rank  forced                   entry  49%  peak  97%  talisman  91%  bare   0%  veteran on appearance 100%  HARD
+  Core Form blood_lotus_elder      encounter road_demonic_ambus evadable                 entry  71%  peak  89%  talisman  97%  bare   0%  veteran on appearance 100%  OK
   Core Form blood_lotus_elder      encounter wild_blood_lotus_e evadable                 entry  46%  peak  89%  talisman  90%  bare   0%  veteran on appearance 100%  HARD
   Core Form blood_lotus_elder      mission purge_blood_lotus_el forced                   entry  71%  peak  89%  talisman  97%  bare   0%  veteran on appearance 100%  OK
   Core Form cloud_devouring_condor realm skyfall_thunder_pavili forced                   entry   0%  peak   0%  talisman   0%  bare   0%  veteran on appearance   0%  UNBEATABLE
@@ -385,6 +389,7 @@ Where each enemy first appears (typical player entering the realm / at its peak 
   Core Form jade_python            encounter wild_python_lair   evadable                 entry  87%  peak 100%  talisman 100%  bare   0%  veteran on appearance 100%  OK
   Core Form jade_python            mission slay_jade_python     forced                   entry  87%  peak 100%  talisman 100%  bare   0%  veteran on appearance 100%  OK
   Core Form myriad_poison_toad     encounter herbs_poison_toad  evadable                 entry  69%  peak 100%  talisman  98%  bare   0%  veteran on appearance 100%  OK
+  Core Form myriad_poison_toad     encounter road_beast_tide_st evadable                 entry  69%  peak 100%  talisman  98%  bare   0%  veteran on appearance 100%  OK
   Core Form myriad_poison_toad     mission milk_poison_toad     forced                   entry  69%  peak 100%  talisman  98%  bare   0%  veteran on appearance 100%  OK
   Core Form myriad_poison_toad     realm drowned_yin_palace flo forced                   entry  69%  peak 100%  talisman  98%  bare   0%  veteran on appearance 100%  OK
   Core Form nether_ghost_king      encounter ruins_ghost_king   evadable                 entry  52%  peak  52%  talisman  95%  bare   0%  veteran on appearance 100%  OK
@@ -397,29 +402,30 @@ Where each enemy first appears (typical player entering the realm / at its peak 
   Core Form thunderwing_roc        realm skyfall_thunder_pavili forced                   entry  30%  peak  92%  talisman  90%  bare   0%  veteran on appearance 100%  HARD
   Core Form thunderwing_roc        trial cloud_sword_immortal_c forced                   entry  30%  peak  92%  talisman  90%  bare   0%  veteran on appearance 100%  HARD
   Core Form vault_blood_warden     trial blood_merchant_vault s forced                   entry  87%  peak 100%  talisman 100%  bare   0%  veteran on appearance 100%  OK
-  Nascent S ancient_puppet_guardian encounter ruins_puppet_guard evadable                 entry  35%  peak  97%  talisman  53%  bare   0%  veteran on appearance 100%  HARD
-  Nascent S ancient_tortoise_sage  encounter wild_tortoise_sage evadable                 entry  40%  peak  94%  talisman  53%  bare   0%  veteran on appearance 100%  HARD
-  Nascent S azure_law_enforcer     encounter wild_azure_law_enf forced                   entry  40%  peak  97%  talisman  62%  bare   0%  veteran on appearance 100%  HARD
-  Nascent S blood_sea_deacon       encounter marsh_blood_sea_de evadable                 entry  28%  peak  97%  talisman  55%  bare   0%  veteran on appearance 100%  HARD
-  Nascent S cloud_devouring_condor encounter mountain_cloud_con evadable                 entry  63%  peak 100%  talisman  80%  bare   0%  veteran on appearance 100%  OK
-  Nascent S hermit_sword_sage      encounter wild_hermit_sword_ evadable                 entry  10%  peak  83%  talisman  27%  bare   0%  veteran on appearance  99%  HARD
-  Nascent S magma_scale_basilisk   encounter mountain_magma_bas evadable                 entry  48%  peak 100%  talisman  66%  bare   0%  veteran on appearance 100%  HARD
-  Nascent S soul_reaping_old_monster encounter marsh_old_monster  evadable                 entry   8%  peak  68%  talisman  10%  bare   0%  veteran on appearance  97%  HARD
-  Soul Form blood_moon_sovereign   encounter wild_blood_moon_so evadable                 entry  22%  peak  88%  talisman  25%  bare   0%  veteran on appearance 100%  HARD
-  Soul Form ghost_banner_lord      encounter ruins_ghost_banner evadable                 entry  10%  peak  76%  talisman  14%  bare   0%  veteran on appearance  98%  HARD
-  Soul Form ghost_banner_lord      trial ghost_sovereign_hollow forced                   entry  10%  peak  76%  talisman  14%  bare   0%  veteran on appearance  98%  HARD
-  Soul Form heavenly_mandate_elder encounter wild_heavenly_mand forced                   entry  21%  peak  92%  talisman  30%  bare   0%  veteran on appearance 100%  HARD
-  Soul Form heavenly_mandate_elder trial eternal_sky_patriarch_ forced                   entry  21%  peak  92%  talisman  30%  bare   0%  veteran on appearance 100%  HARD
-  Soul Form star_devouring_colossus encounter ruins_star_devouri evadable                 entry  13%  peak  77%  talisman  16%  bare   0%  veteran on appearance 100%  HARD
-  Soul Form star_devouring_colossus trial chaos_alchemist_furnac forced                   entry  13%  peak  77%  talisman  16%  bare   0%  veteran on appearance 100%  HARD
-  Soul Form ten_thousand_peaks_roc encounter mountain_ten_thous evadable                 entry   7%  peak  79%  talisman  16%  bare   0%  veteran on appearance  99%  HARD
-  Soul Form void_rift_dragonling   encounter mountain_void_drag evadable                 entry  72%  peak 100%  talisman  84%  bare   0%  veteran on appearance 100%  OK
+  Nascent S ancient_puppet_guardian encounter ruins_puppet_guard evadable                 entry  37%  peak  99%  talisman  58%  bare   0%  veteran on appearance 100%  HARD
+  Nascent S ancient_tortoise_sage  encounter wild_tortoise_sage evadable                 entry  41%  peak  95%  talisman  51%  bare   0%  veteran on appearance 100%  HARD
+  Nascent S azure_law_enforcer     encounter wild_azure_law_enf forced                   entry  43%  peak  95%  talisman  60%  bare   0%  veteran on appearance 100%  HARD
+  Nascent S blood_sea_deacon       encounter marsh_blood_sea_de evadable                 entry  31%  peak  99%  talisman  56%  bare   0%  veteran on appearance 100%  HARD
+  Nascent S cloud_devouring_condor encounter mountain_cloud_con evadable                 entry  76%  peak 100%  talisman  83%  bare   0%  veteran on appearance 100%  OK
+  Nascent S hermit_sword_sage      encounter wild_hermit_sword_ evadable                 entry  17%  peak  84%  talisman  23%  bare   0%  veteran on appearance 100%  HARD
+  Nascent S magma_scale_basilisk   encounter mountain_magma_bas evadable                 entry  54%  peak  99%  talisman  74%  bare   0%  veteran on appearance 100%  OK
+  Nascent S soul_reaping_old_monster encounter marsh_old_monster  evadable                 entry   6%  peak  71%  talisman  18%  bare   0%  veteran on appearance  98%  HARD
+  Soul Form blood_moon_sovereign   encounter wild_blood_moon_so evadable                 entry  32%  peak  95%  talisman  34%  bare   0%  veteran on appearance 100%  HARD
+  Soul Form ghost_banner_lord      encounter ruins_ghost_banner evadable                 entry  10%  peak  79%  talisman  18%  bare   0%  veteran on appearance  98%  HARD
+  Soul Form ghost_banner_lord      trial ghost_sovereign_hollow forced                   entry  10%  peak  79%  talisman  18%  bare   0%  veteran on appearance  98%  HARD
+  Soul Form heavenly_mandate_elder encounter wild_heavenly_mand forced                   entry  31%  peak  91%  talisman  38%  bare   0%  veteran on appearance 100%  HARD
+  Soul Form heavenly_mandate_elder trial eternal_sky_patriarch_ forced                   entry  31%  peak  91%  talisman  38%  bare   0%  veteran on appearance 100%  HARD
+  Soul Form star_devouring_colossus encounter ruins_star_devouri evadable                 entry  11%  peak  80%  talisman  21%  bare   0%  veteran on appearance 100%  HARD
+  Soul Form star_devouring_colossus trial chaos_alchemist_furnac forced                   entry  11%  peak  80%  talisman  21%  bare   0%  veteran on appearance 100%  HARD
+  Soul Form ten_thousand_peaks_roc encounter mountain_ten_thous evadable                 entry  11%  peak  79%  talisman  22%  bare   0%  veteran on appearance  99%  HARD
+  Soul Form void_rift_dragonling   encounter mountain_void_drag evadable                 entry  77%  peak 100%  talisman  81%  bare   0%  veteran on appearance 100%  OK
 
 Win rate at stage 0 of each realm (no talismans):
   enemy \ player             Mortal Qi Refinin Foundation Core Forma Nascent So
   wild_boar                    100%       100%       100%       100%       100%
   mountain_bandit              100%       100%       100%       100%       100%
   mist_wolf                      0%        80%       100%       100%       100%
+  den_wolf                       0%        84%       100%       100%       100%
   rogue_cultivator               0%         0%       100%       100%       100%
   vengeful_brother               0%         8%       100%       100%       100%
   vengeful_sect_elder            0%         0%         1%       100%       100%
@@ -474,14 +480,14 @@ Win rate at stage 0 of each realm (no talismans):
   marsh_corpse_puppet            0%         2%       100%       100%       100%
   drowned_yin_ghost              0%         0%        18%       100%       100%
   blood_lotus_scout              0%         1%       100%       100%       100%
-  cloud_devouring_condor         0%         0%         0%         0%        63%
-  magma_scale_basilisk           0%         0%         0%         0%        48%
-  ancient_tortoise_sage          0%         0%         0%         0%        40%
-  azure_law_enforcer             0%         0%         0%         0%        40%
-  hermit_sword_sage              0%         0%         0%         0%        10%
-  blood_sea_deacon               0%         0%         0%         0%        28%
-  soul_reaping_old_monster         0%         0%         0%         0%         8%
-  ancient_puppet_guardian         0%         0%         0%         0%        35%
+  cloud_devouring_condor         0%         0%         0%         0%        76%
+  magma_scale_basilisk           0%         0%         0%         0%        54%
+  ancient_tortoise_sage          0%         0%         0%         0%        41%
+  azure_law_enforcer             0%         0%         0%         0%        43%
+  hermit_sword_sage              0%         0%         0%         0%        17%
+  blood_sea_deacon               0%         0%         0%         0%        31%
+  soul_reaping_old_monster         0%         0%         0%         0%         6%
+  ancient_puppet_guardian         0%         0%         0%         0%        37%
   outer_disciple_bully           0%        60%       100%       100%       100%
   void_rift_dragonling           0%         0%         0%         0%         0%
   heavenly_mandate_elder         0%         0%         0%         0%         0%
@@ -494,14 +500,14 @@ Typical player vs a plain enemy of the same realm and stage (QA-007d target ~60-
   Qi Refining             stage 0:  95%  stage 4:  91%  stage 8:  84%   next realm:   0%
   Foundation Establishment  stage 0:  90%  stage 1:  85%  stage 3:  84%   next realm:   0%
   Core Formation          stage 0:  87%  stage 1:  87%  stage 3:  87%   next realm:   0%
-  Nascent Soul            stage 0:  88%  stage 1:  89%  stage 3:  89%   next realm:   0%
+  Nascent Soul            stage 0:  92%  stage 1:  93%  stage 3:  91%   next realm:   0%
 
 Veteran player (best art of each kind per realm, QA-018) vs a plain same-stage enemy, and at the peak vs a plain enemy one realm up:
   Qi Refining                 stage 0:  98%  stage 8:  95%   next realm:   0%   arts: rippling_moon_sword, stone_skin
   Foundation Establishment    stage 0: 100%  stage 3: 100%   next realm:   0%   arts: nine_frost_sword_intent, earth_dragon_body
   Core Formation              stage 0: 100%  stage 3: 100%   next realm:   3%   arts: azure_heaven_sword_canon, earth_dragon_body
   Nascent Soul                stage 0: 100%  stage 3: 100%   next realm:   8%   arts: azure_heaven_sword_canon, earth_dragon_body
-  Soul Formation              stage 0: 100%  stage 3: 100%   next realm:   5%   arts: azure_heaven_sword_canon, earth_dragon_body
+  Soul Formation              stage 0: 100%  stage 3: 100%   next realm:   6%   arts: azure_heaven_sword_canon, earth_dragon_body
 
 ## economy (seed defaults)
 
@@ -579,4 +585,21 @@ First Foundation Establishment year: 10 seeds
   median of all runs: won 14 lost 0 fled 0 injuries 0 lives 0 stones 375 stage 1
   runs with no artifact life spent: 110 of 120
   median win share of fought fights: 100%
+
+## economy, bounty hunter (seeds 1-10, 12 months)
+
+Bounty-hunter sim: 10 seeds, 12 months, Qi Refining layer 4, iron_back_boar_bounty in misty_forest (reward 40 stones)
+  seed  bounties  hunt weeks  stones  stones/month  injuries  lives spent
+     1         3          12     120          10.0         0            0
+     2         3           6     120          10.0         0            0
+     3         3           4     120          10.0         0            0
+     4         3          12     120          10.0         0            0
+     5         3          13     120          10.0         0            0
+     6         2          34      80           6.7         0            0
+     7         3           9     120          10.0         0            0
+     8         3           5     120          10.0         0            0
+     9         3           6     120          10.0         0            0
+    10         3          18     120          10.0         0            0
+Hunt weeks per bounty claimed: 4.1; fights won 48, lost 8 (86% won)
+Gathering in misty_forest: 4.0 stones/week (best place). One bounty = 10.12 weeks of gather income; a week hunting earns 9.7 stones.
 

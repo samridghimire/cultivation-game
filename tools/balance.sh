@@ -34,6 +34,7 @@ fresh() {
 	run "three curious years (seeds 1-10, 36 months)" res://tests/sim/simulate_curious_years.gd -- 10 36
 	run "combat (200 fights per cell)" res://tests/sim/simulate_combat.gd -- 200
 	run "economy (seed defaults)" res://tests/sim/simulate_economy.gd
+	run "economy, bounty hunter (seeds 1-10, 12 months)" res://tests/sim/simulate_bounty.gd -- 10 12
 	run "first Foundation Establishment year (seeds 1-10)" res://tests/sim/simulate_foundation_year.gd -- 10 2
 }
 CHECK=0
