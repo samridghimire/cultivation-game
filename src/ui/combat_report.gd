@@ -95,14 +95,14 @@ func _unhandled_input(event: InputEvent) -> void:
 ## `trace`: Combat.resolve's per-line [your hp, foe hp]; with it (and the
 ## "Animate fights" setting) the lines are revealed one at a time. Without
 ## it, or with the setting off, the report is complete at once.
-func show_fight(enemy_name: String, victory: bool, lines: PackedStringArray, advice: String = "", spoils: PackedStringArray = PackedStringArray(), trace: Array = [], player_max: int = 0, enemy_max: int = 0) -> void:
+func show_fight(enemy_name: String, victory: bool, lines: PackedStringArray, advice: String = "", spoils: PackedStringArray = PackedStringArray(), trace: Array = [], player_max: int = 0, enemy_max: int = 0, friendly: bool = false) -> void:
 	_color = UIStyle.ACCENT if victory else UIStyle.CATEGORY_COLORS["danger"]
 	_victory = victory
 	_advice = advice
 	_spoils = spoils
 	_lines = lines
 	_trace = trace
-	_title.text = "%s: %s" % ["Victory" if victory else "Defeat", enemy_name]
+	_title.text = "Friendly spar: %s" % enemy_name if friendly else "%s: %s" % ["Victory" if victory else "Defeat", enemy_name]
 	_title.add_theme_color_override("font_color", _color)
 	_log.clear()
 	_shown = 0

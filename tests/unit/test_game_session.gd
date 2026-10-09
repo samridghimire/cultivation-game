@@ -971,3 +971,30 @@ func test_old_save_without_visited_regions_gets_current_region() -> void:
 	gs.load_save_dict(saved)
 	assert_eq(gs.player.visited_regions, [gs.current_region] as Array[String])
 	assert_eq(LifeStats.get_stat(gs.player, "regions_visited"), 1)
+
+
+func test_friendly_spar_report_reads_like_a_spar() -> void:
+	var c := _start()
+	var gs := _game_state()
+	var foe := {"id": "t", "name": "Test Foe", "realm": "foundation_establishment", "stage": 5, "hp": 500, "attack": 500, "defense": 500, "speed": 50, "techniques": [], "rewards": {}, "spar": true, "friendly": true}
+	gs.fight_enemy(foe)
+	assert_true(c.alive)
+	assert_true(gs.last_fight_friendly)
+	var days := int(gs.data.family["mentorship"]["spar"]["cooldown_days"])
+	assert_true(gs.last_loss_advice.begins_with("No harm done. You can spar again in %d" % days), gs.last_loss_advice)
+	assert_false(gs.last_loss_advice.contains("far above you"))
+	var report := CombatReport.new()
+	(Engine.get_main_loop() as SceneTree).root.add_child(report)
+	report.show_fight("Test Foe", false, PackedStringArray(["start", "end"]), gs.last_loss_advice, gs.last_fight_spoils, [], 0, 0, gs.last_fight_friendly)
+	assert_true(report._title.text.begins_with("Friendly spar"), report._title.text)
+	assert_true(report._log.get_parsed_text().contains("No harm done"))
+	# A real loss is unchanged.
+	foe.erase("friendly")
+	foe.erase("spar")
+	gs.fight_enemy(foe)
+	assert_false(gs.last_fight_friendly)
+	assert_true(gs.last_loss_advice.contains("far above you"), gs.last_loss_advice)
+	report.show_fight("Test Foe", false, PackedStringArray(["start", "end"]), gs.last_loss_advice, gs.last_fight_spoils, [], 0, 0, gs.last_fight_friendly)
+	assert_true(report._title.text.begins_with("Defeat"))
+	report.queue_free()
+	gs.end_session()

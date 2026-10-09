@@ -23,6 +23,8 @@ var auctions: Dictionary = {}
 var devour_target: Dictionary = {}
 ## Why the last fight was lost (Combat.loss_advice), "" after a win; shown in the combat report.
 var last_loss_advice: String = ""
+## True when the last fight was a friendly spar (SPAR-001): the report reads like one.
+var last_fight_friendly: bool = false
 ## Reward notes of the last won fight ("+8 Spirit Stone"...), shown in the combat report.
 var last_fight_spoils: PackedStringArray = PackedStringArray()
 ## Last fight's playback data from Combat.resolve: trace, player_max_hp, enemy_max_hp (WU-036).
@@ -2152,6 +2154,11 @@ func fight_enemy(enemy: Dictionary, start_hp: int = -1) -> bool:
 				else:
 					last_fight_spoils.append(note)
 	var advice := Combat.loss_advice(player, data, enemy, result)
+	last_fight_friendly = bool(enemy.get("friendly", false))
+	if last_fight_friendly:
+		var days := int(data.family.get("mentorship", {}).get("spar", {}).get("cooldown_days", 0))
+		advice = "" if result["victory"] else "No harm done. You can spar again in %d %s." % [days, "day" if days == 1 else "days"]
+		last_fight_spoils = PackedStringArray()
 	last_loss_advice = advice
 	if advice != "" and not outcome["died"]:
 		EventBus.post(advice, "danger")
