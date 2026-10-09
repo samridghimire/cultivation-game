@@ -4,9 +4,13 @@ extends PanelContainer
 
 signal closed
 
+## Screen height kept free for the title, description line and panel padding.
+const MENU_MARGIN := 190.0
+
 var _source: Node
 var _title: Label
 var _buttons: VBoxContainer
+var _scroll: ScrollContainer
 var _description: Label
 
 
@@ -19,8 +23,14 @@ func _init() -> void:
 	add_child(box)
 	_title = UIStyle.label("", 22, UIStyle.ACCENT)
 	box.add_child(_title)
+	# Long menus (a sect's whole shop) scroll instead of running off the screen (WU-065).
+	_scroll = ScrollContainer.new()
+	_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_scroll.follow_focus = true
+	box.add_child(_scroll)
 	_buttons = VBoxContainer.new()
-	box.add_child(_buttons)
+	_buttons.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_scroll.add_child(_buttons)
 	_description = UIStyle.label("", 14, Color(0.7, 0.7, 0.75))
 	_description.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_description.custom_minimum_size = Vector2(0, 40)
@@ -72,7 +82,16 @@ func _rebuild() -> void:
 	leave.focus_entered.connect(_show_line.bind("", false))
 	_buttons.add_child(leave)
 	_description.text = ""
+	_fit_scroll.call_deferred()
 	_focus_first.call_deferred()
+
+
+## Caps the button list's height so the title, description and a margin stay on screen.
+func _fit_scroll() -> void:
+	if not is_inside_tree():
+		return
+	var room := get_viewport_rect().size.y - MENU_MARGIN
+	_scroll.custom_minimum_size.y = minf(_buttons.get_combined_minimum_size().y, maxf(room, 160.0))
 
 
 func _show_line(text: String, warn: bool) -> void:

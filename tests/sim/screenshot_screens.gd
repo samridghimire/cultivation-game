@@ -91,10 +91,61 @@ func _build_shots(gs: Node) -> void:
 	for i in 30:
 		lines.append("Round %d: you strike the Stone Ape for 123. (Stone Ape: 4567 hp)" % i)
 	shots.append({"name": "combat_report", "open": func() -> void: report.show_fight("Stone Ape", false, lines), "close": report.close})
+	_build_deck_shots(gs)
 	var menu_source := _find_menu_source()
 	if menu_source != null:
 		var menu: Control = hud.get("_choice_menu")
 		shots.append({"name": "choice_menu", "open": func() -> void: menu.open_for(menu_source), "close": menu.close})
+
+
+## WU-065: the newest menus at UI scale 115% (long names on purpose): a senior
+## NPC with pointer and spar entries, the sect hall with the lecture entry, the
+## journal's Opportunities and the report after a spar.
+func _build_deck_shots(gs: Node) -> void:
+	var menu: Control = hud.get("_choice_menu")
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 11
+	var player: CharacterData = gs.player
+	var long_id := ""
+	for tech_id: String in player.techniques:
+		long_id = tech_id
+		break
+	if long_id != "":
+		(gs.data.techniques[long_id] as TechniqueDef).name = "Nine Heavens Thunder-Swallowing Celestial Dragon Palm"
+	var senior := Npcs.spawn(gs.npcs, gs.data, rng, {"age_years": 60, "region": gs.current_region})
+	senior.name = "Elder Murong Zhongshan-Baiyun"
+	senior.realm_index = player.realm_index + 1
+	senior.stage = 1
+	if long_id != "":
+		senior.techniques[long_id] = {"level": 5}
+	gs.npc_favor[senior.id] = 90
+	var npc: Node = load("res://src/world/interactables/npc.gd").new()
+	npc.npc_id = senior.id
+	npc.display_name = senior.name
+	var hall: Node = load("res://src/world/interactables/sect_hall.gd").new()
+	hall.display_name = "Azure Cloud Sect Hall"
+	var scale_up := func() -> void: root.content_scale_factor = 1.15
+	var scale_back := func() -> void: root.content_scale_factor = 1.0
+	for source: Node in [npc, hall]:
+		var name_ := "deck_npc_menu" if source == npc else "deck_sect_hall_menu"
+		shots.append({"name": name_, "open": func() -> void:
+			scale_up.call()
+			menu.open_for(source), "close": func() -> void:
+			menu.close()
+			scale_back.call()})
+	var journal: Control = hud.get("_screens")["toggle_journal"]
+	shots.append({"name": "deck_journal", "open": func() -> void:
+		scale_up.call()
+		journal.open(), "close": func() -> void:
+		journal.close()
+		scale_back.call()})
+	var report: Control = hud.get("_combat_report")
+	var lines := PackedStringArray(["Round 1: you trade palm strikes with Elder Murong Zhongshan-Baiyun.", "Round 2: the elder holds back and nods."])
+	shots.append({"name": "deck_spar_report", "open": func() -> void:
+		scale_up.call()
+		report.show_fight(senior.name, true, lines, "", PackedStringArray(), [], 0, 0, true), "close": func() -> void:
+		report.close()
+		scale_back.call()})
 
 
 func _find_menu_source() -> Node:
