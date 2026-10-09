@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-09 [QA-021] Enemies past Nascent Soul are trained to their realm, so a realm gap stays nearly impossible to cross.
 - 2026-10-09 [C-020] Help pages for spirit beasts, body tempering, Dao insights, artifact powers, clans and adoption.
 - 2026-10-09 [C-035] New choice encounters for newcomers in the sect regions.
 - 2026-10-08 [KARMA-001] Robbing, humiliating or killing someone is described with sentences from data.
