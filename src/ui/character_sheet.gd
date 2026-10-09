@@ -169,6 +169,12 @@ func _rebuild() -> void:
 		for line in adventures:
 			t += "  %s\n" % line
 		t += "\n"
+	var renown := Renown.describe(p, data)
+	if not renown.is_empty():
+		t += "[color=#%s]Renown[/color]\n" % accent
+		for line in renown:
+			t += "  %s\n" % line
+		t += "\n"
 	t += "[color=#%s]Sect Reputation[/color]\n" % accent
 	for line in Reputation.describe(p, data):
 		t += "  %s\n" % line

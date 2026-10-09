@@ -156,7 +156,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 ## Opens the merchant's wares (see merchant.gd for max_price / stock_tags / faction).
 func open(merchant_name: String = "Merchant", max_price: int = 0, stock_tags: Array = [], faction: String = "", buy_tags: Array = []) -> void:
-	_title.text = merchant_name + price_note(GameState.player, GameState.data, faction)
+	_title.text = merchant_name + price_note(GameState.player, GameState.data, faction) + renown_note(GameState.player, GameState.data, GameState.current_region)
 	_max_price = max_price
 	_stock_tags = stock_tags
 	_buy_tags = buy_tags
@@ -218,6 +218,14 @@ static func price_note(c: CharacterData, data: GameData, faction: String) -> Str
 	if is_equal_approx(Reputation.price_multiplier(c, data, faction), 1.0):
 		return ""
 	return " (%s price)" % Reputation.tier_name(c, data, faction)
+
+
+## "  Renown: Respected (-5%)" when local renown discounts buying in `region_id`, else "".
+static func renown_note(c: CharacterData, data: GameData, region_id: String) -> String:
+	var mult := Renown.buy_multiplier(c, data, region_id)
+	if mult >= 1.0:
+		return ""
+	return "  Renown: %s (-%d%%)" % [Renown.title(c, data, region_id), roundi((1.0 - mult) * 100.0)]
 
 
 ## Price of one `item_id` on the current tab.

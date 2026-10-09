@@ -185,6 +185,7 @@ func _ready() -> void:
 	EventBus.festival_started.connect(_on_festival_started)
 	EventBus.bounty_claimed.connect(_on_bounty_claimed)
 	EventBus.letter_arrived.connect(_on_letter_arrived)
+	EventBus.renown_tier_reached.connect(_on_renown_tier_reached)
 	_season = Calendar.season_of(GameClock.total_days)
 	GameClock.days_advanced.connect(_on_days_advanced)
 	EventBus.session_started.connect(func(): _season = Calendar.season_of(GameClock.total_days))
@@ -642,6 +643,18 @@ func _on_bounty_claimed(enemy_name: String, stones: int) -> void:
 	var lines := bounty_banner(enemy_name, stones)
 	_banner.announce(lines[0], lines[1], UIStyle.CATEGORY_COLORS.get("good", UIStyle.ACCENT), 2.5)
 	Audio.play("chime_progress")
+
+
+## A renown title was earned (WU-084): a banner and a chime.
+func _on_renown_tier_reached(region_id: String, title: String) -> void:
+	var lines := renown_banner(GameState.data, region_id, title)
+	_banner.announce(lines[0], lines[1], UIStyle.ACCENT, 2.5)
+	Audio.play("chime_progress")
+
+
+## [title, subtitle] of the renown banner.
+static func renown_banner(data: GameData, region_id: String, title: String) -> PackedStringArray:
+	return PackedStringArray([title, "Your name is known in %s" % Exploration.region_name(data, region_id)])
 
 
 ## A friend's letter arrived (WU-081): a banner and a chime.

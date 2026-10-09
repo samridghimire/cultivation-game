@@ -239,6 +239,12 @@ static func foes_bbcode(foes: Array) -> String:
 	return "" if parts.is_empty() else "You may meet: " + ", ".join(parts)
 
 
+## "Your name here: Respected" when the player holds a renown title in the region, else "".
+static func renown_note(c: CharacterData, data: GameData, region_id: String) -> String:
+	var t := Renown.title(c, data, region_id)
+	return "" if t == "" else "Your name here: " + t
+
+
 static func danger_name(data: GameData, region_id: String) -> String:
 	var danger := int(data.regions.get(region_id, {}).get("danger", 0))
 	return DANGER_NAMES[clampi(danger, 0, DANGER_NAMES.size() - 1)]
@@ -338,6 +344,9 @@ func _show_details() -> void:
 	_name.text = String(region.get("name", _selected))
 	_info.text = "Qi density x%s   |   Danger: %s" % [String.num(Exploration.qi_density(data, _selected) * WorldEvents.qi_multiplier(data, GameState.world_events, _selected), 2), danger_name(data, _selected)]
 	_description.text = String(region.get("description", ""))
+	var name_here := renown_note(GameState.player, data, _selected)
+	if name_here != "":
+		_description.text += "\n" + name_here
 	var places := place_names(data, _selected)
 	_places.text = "Places: " + (", ".join(places) if not places.is_empty() else "none known")
 	var familiar := familiarity_lines(GameState.player, data, _selected, GameState.current_region, GameState.world_flags)
