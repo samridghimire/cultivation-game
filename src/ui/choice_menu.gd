@@ -39,7 +39,8 @@ func _init() -> void:
 
 func _ready() -> void:
 	# Refit when the window or the UI scale changes while a menu is open (WU-068).
-	get_viewport().size_changed.connect(_fit_scroll.call_deferred)
+	# A method callable, so the connection goes away when the menu is freed (the viewport outlives it).
+	get_viewport().size_changed.connect(_on_viewport_resized)
 	Settings.changed.connect(_on_setting_changed)
 
 
@@ -98,6 +99,10 @@ func _fit_scroll() -> void:
 		return
 	var room := get_viewport_rect().size.y - MENU_MARGIN
 	_scroll.custom_minimum_size.y = minf(_buttons.get_combined_minimum_size().y, maxf(room, 160.0))
+
+
+func _on_viewport_resized() -> void:
+	_fit_scroll.call_deferred()
 
 
 func _on_setting_changed(key: String, _value: Variant) -> void:

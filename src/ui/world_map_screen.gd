@@ -196,7 +196,7 @@ static func region_marks(c: CharacterData, data: GameData, people: Dictionary, e
 			continue
 		var when := "open, closes in %s" % Calendar.format_duration(SecretRealms.days_until_close(def, total_days)) if SecretRealms.is_open(def, total_days) else "opens in %s" % Calendar.format_duration(SecretRealms.days_until_open(def, total_days))
 		marks.append({"kind": "secret_realm", "text": "Secret realm: %s (%s)" % [def.get("name", def["id"]), when]})
-	if String(region.get("discovery", "")) != "" and Exploration.visited(c, region_id) and not flags.get("discovered_" + region_id, false):
+	if Exploration.visited(c, region_id) and not Exploration.discovery_for(c, data, region_id, flags).is_empty():
 		marks.append({"kind": "discovery", "text": "Something here waits to be found. Explore."})
 	for instance in WorldEvents.active_in(events, region_id):
 		var enter := ""

@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: e7f99aa
+Last reviewed commit: 4319bc4
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -229,3 +229,16 @@ Last reviewed commit: e7f99aa
     a little repetitive, by spec. (3) TRAV-003 marks every sect-hall region visited for any sect member (noted in its
     Follow-ups); TRAV-004 already resolves it via sects.json home_region. (4) Local `main` had again diverged onto the
     old PR-era history; reset to origin/main, nothing pushed from it.
+- 2026-10-09 (reviewer, 4th run): reviewed e7f99aa..4319bc4 (SEASON-003, NS-007, WU-068, QA-046, WU-070, WU-073, ENC-003,
+  QA-050, WU-075, C-049; [PLAN]/[REVIEW] commits skipped). Main green before and after (1401 -> 1402 tests). No
+  BACKLOG/CHANGELOG edits by workers; no SAVE_VERSION change (`seasonal_gathers` and `encounter_counts` default to empty).
+  - ENC-003 checked: only plain non-fight encounters fade, the non-fight share is renormalised so fights keep their odds,
+    herb finds are marked `repeatable`. WU-068 resolves the last run's note (2) on ChoiceMenu refits.
+  - Fixed (one [REVIEW] commit): (1) WU-073's "waits to be found" map mark ignored the discovery's realm/alignment gate and
+    could send a player to explore for something they cannot find; it now uses Exploration.discovery_for (test added).
+    (2) WU-068 connected the root viewport's `size_changed` to `_fit_scroll.call_deferred`, a non-object callable that is not
+    dropped when the menu is freed (the viewport outlives the HUD); now a method callable. (3) WU-075 put `season_lines`
+    between `use_lines` and its `##` doc comment again (same slip as WU-071); moved back.
+  - Notes, not filed: (1) SEASON-003 counts an autumn-only bonus entry (e.g. purple_cloud_mushroom, also gathered all year)
+    as a "season-only herb" for Herbalist of Four Seasons; lenient, fine. (2) Local `main` was a shallow clone that git saw
+    as diverged; unshallowed and fast-forwarded, nothing pushed from the old state.

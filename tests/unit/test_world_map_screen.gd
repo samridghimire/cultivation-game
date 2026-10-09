@@ -98,6 +98,12 @@ func test_discovery_mark_until_found() -> void:
 	Exploration.visit(c, "misty_forest")
 	assert_true(marks.call("misty_forest", {}).has("discovery"))
 	assert_false(marks.call("misty_forest", {"discovered_misty_forest": true}).has("discovery"))
+	# A discovery the character does not qualify for yet is not hinted (exploring would not find it).
+	var enc: Dictionary = d.encounters[String(d.regions["misty_forest"]["discovery"])]
+	enc["min_realm"] = "nascent_soul"
+	var gated: bool = marks.call("misty_forest", {}).has("discovery")
+	enc.erase("min_realm")
+	assert_false(gated, "realm-gated discovery not hinted")
 	Exploration.visit(c, "qingshi_village")
 	assert_false(marks.call("qingshi_village", {}).has("discovery"), "no discovery defined")
 	assert_true(WorldMapScreen.MARK_COLORS.has("discovery"))
