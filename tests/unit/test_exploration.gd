@@ -575,3 +575,43 @@ func test_road_data_is_valid() -> void:
 	assert_true(d.load_errors.is_empty(), str(d.load_errors))
 	assert_false(d.road.is_empty())
 	assert_true(Exploration.eligible_encounters(new_character(), d, d.road["encounter_tags"], {}).size() >= 2)
+
+
+## TRAV-007: faster travel for higher realms.
+func test_travel_days_by_realm() -> void:
+	var d := GameData.load_from_dir()
+	assert_true(d.load_errors.is_empty(), str(d.load_errors))
+	var c := new_character()
+	var expected := {0: 10, 1: 7, 2: 5, 3: 4}
+	for realm in expected:
+		c.realm_index = d.realm_index_of(["qi_refining", "foundation_establishment", "core_formation", "nascent_soul"][realm])
+		assert_eq(Exploration.travel_days(c, d, 10), expected[realm], "realm %d" % realm)
+		assert_eq(Exploration.travel_days(c, d, 1), 1, "never below 1")
+	c.realm_index = 0
+	assert_eq(Exploration.travel_how(c, d), "")
+	c.realm_index = d.realm_index_of("foundation_establishment")
+	assert_eq(Exploration.travel_how(c, d), "on your flying sword")
+
+
+func test_check_travel_and_routes_use_shortened_days() -> void:
+	var d := GameData.load_from_dir()
+	var c := new_character()
+	var from: String = d.start_region
+	var route: Dictionary = d.regions[from]["routes"][0]
+	c.realm_index = d.realm_index_of("nascent_soul")
+	var check := Exploration.check_travel(c, d, from, route["to"])
+	assert_true(check["ok"])
+	assert_eq(check["base_days"], int(route["days"]))
+	assert_eq(check["days"], Exploration.travel_days(c, d, int(route["days"])))
+	assert_eq(Exploration.routes(c, d, from)[0]["days"], check["days"])
+
+
+func test_travel_speed_validation() -> void:
+	var d := GameData.load_from_dir()
+	d.travel_speed = [{"min_realm": "core_formation", "mult": 0.5, "how": "x"}, {"min_realm": "foundation_establishment", "mult": 1.5, "how": ""}]
+	d.load_errors.clear()
+	d._validate_world()
+	var text := str(d.load_errors)
+	assert_true(text.contains("strictly rising"), text)
+	assert_true(text.contains("mult"), text)
+	assert_true(text.contains("non-empty"), text)

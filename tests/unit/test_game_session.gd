@@ -1177,3 +1177,21 @@ func test_explore_days_are_counted() -> void:
 	gs.explore_many(5, ["t_no_such_tag"])
 	assert_eq(Exploration.familiarity(gs.player, gs.current_region), 5)
 	gs.end_session()
+
+
+## TRAV-007: the arrival message names the flying sword and the trip is shorter.
+func test_travel_by_flying_sword() -> void:
+	var gs := _game_state()
+	var c := _start()
+	c.realm_index = gs.data.realm_index_of("foundation_establishment")
+	gs.data.road = {}
+	var route: Dictionary = gs.data.regions[gs.data.start_region]["routes"][0]
+	var start_day := GameClock.total_days
+	var heard: Array[String] = []
+	var cb := func(text: String, _cat: String) -> void: heard.append(text)
+	EventBus.message_posted.connect(cb)
+	gs.travel(String(route["to"]))
+	EventBus.message_posted.disconnect(cb)
+	assert_eq(gs.current_region, String(route["to"]))
+	assert_eq(GameClock.total_days - start_day, maxi(1, ceili(int(route["days"]) * 0.67)))
+	assert_true(heard.any(func(t: String) -> bool: return t.contains("on your flying sword you arrive")), str(heard))

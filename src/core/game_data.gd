@@ -34,6 +34,7 @@ var deeds: Dictionary = {}  # id -> Dictionary
 var regions: Dictionary = {}  # id -> Dictionary
 var start_region := ""
 var renown: Dictionary = {}  # regions.json "renown" block (Renown); {} = none
+var travel_speed: Array = []  # TRAV-007: regions.json "travel_speed" (empty = everyone walks)
 var road: Dictionary = {}  # TRAV-006: regions.json "road" (empty = no road encounters)
 var encounters: Dictionary = {}  # id -> Dictionary
 ## Bounties by id and the file's top-level numbers (data/bounties.json, Bounties).
@@ -194,6 +195,7 @@ func _load(dir: String) -> void:
 	start_region = world.get("start_region", "")
 	renown = world.get("renown", {})
 	road = world.get("road", {})
+	travel_speed = world.get("travel_speed", [])
 	for region in world.get("regions", []):
 		regions[region["id"]] = region
 		for place: Dictionary in region.get("places", []):
@@ -433,6 +435,24 @@ func _validate_world() -> void:
 		var road_tags: Variant = road.get("encounter_tags")
 		if not (road_tags is Array) or (road_tags as Array).is_empty():
 			load_errors.append("road.encounter_tags must be a non-empty array")
+	var last_speed_realm := -1
+	for entry: Variant in travel_speed:
+		if not (entry is Dictionary):
+			load_errors.append("travel_speed entries must be objects")
+			continue
+		var speed: Dictionary = entry
+		var speed_realm := realm_index_of(String(speed.get("min_realm", "")))
+		if speed_realm < 0:
+			load_errors.append("travel_speed has unknown min_realm '%s'" % speed.get("min_realm", ""))
+		elif speed_realm <= last_speed_realm:
+			load_errors.append("travel_speed min_realm must be strictly rising (at '%s')" % speed["min_realm"])
+		else:
+			last_speed_realm = speed_realm
+		var mult: Variant = speed.get("mult")
+		if not (mult is float or mult is int) or float(mult) <= 0.0 or float(mult) > 1.0:
+			load_errors.append("travel_speed mult must be a number in (0, 1]")
+		if String(speed.get("how", "")).strip_edges() == "":
+			load_errors.append("travel_speed entries need a non-empty 'how'")
 	var place_types := ["meditation", "merchant", "sect_hall", "workshop", "clinic", "orphanage", "deed_giver", "explore", "travel", "gather", "secret_realm", "auction", "inheritance", "bounty_board"]
 	for region: Dictionary in regions.values():
 		for route: Dictionary in region.get("routes", []):

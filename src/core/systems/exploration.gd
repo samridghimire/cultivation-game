@@ -155,12 +155,35 @@ static func is_nearby(data: GameData, from_region: String, region_id: String) ->
 	return false
 
 
-## Routes out of a region, each {to, name, days, ok, reason}.
+## The highest regions.json `travel_speed` entry the character's realm has
+## reached, or {} (on foot).
+static func _speed_entry(c: CharacterData, data: GameData) -> Dictionary:
+	var best := {}
+	for entry: Dictionary in data.travel_speed:
+		if c.realm_index >= data.realm_index_of(entry["min_realm"]):
+			best = entry
+	return best
+
+
+## Days a journey of `base_days` takes this character (TRAV-007), at least 1.
+static func travel_days(c: CharacterData, data: GameData, base_days: int) -> int:
+	var entry := _speed_entry(c, data)
+	if entry.is_empty():
+		return base_days
+	return maxi(1, ceili(base_days * float(entry["mult"])))
+
+
+## How the character travels ("on your flying sword"), "" on foot.
+static func travel_how(c: CharacterData, data: GameData) -> String:
+	return String(_speed_entry(c, data).get("how", ""))
+
+
+## Routes out of a region, each {to, name, days, base_days, ok, reason}.
 static func routes(c: CharacterData, data: GameData, region_id: String) -> Array[Dictionary]:
 	var result: Array[Dictionary] = []
 	for route: Dictionary in data.regions.get(region_id, {}).get("routes", []):
 		var check := check_travel(c, data, region_id, route["to"])
-		result.append({"to": route["to"], "name": region_name(data, route["to"]), "days": int(route.get("days", 1)), "ok": check["ok"], "reason": check["reason"]})
+		result.append({"to": route["to"], "name": region_name(data, route["to"]), "days": check["days"] if check["ok"] else travel_days(c, data, int(route.get("days", 1))), "base_days": int(route.get("days", 1)), "ok": check["ok"], "reason": check["reason"]})
 	return result
 
 
@@ -173,7 +196,8 @@ static func check_travel(c: CharacterData, data: GameData, from_id: String, to_i
 		if min_realm != "" and c.realm_index < data.realm_index_of(min_realm):
 			var realm_name := data.realms[data.realm_index_of(min_realm)].name
 			return {"ok": false, "reason": "The way to %s is too perilous before %s." % [region_name(data, to_id), realm_name], "days": 0}
-		return {"ok": true, "reason": "", "days": int(route.get("days", 1))}
+		var base_days := int(route.get("days", 1))
+		return {"ok": true, "reason": "", "days": travel_days(c, data, base_days), "base_days": base_days}
 	return {"ok": false, "reason": "There is no road from here to %s." % region_name(data, to_id), "days": 0}
 
 

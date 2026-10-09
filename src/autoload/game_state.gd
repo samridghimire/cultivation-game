@@ -518,7 +518,8 @@ func travel(region_id: String) -> void:
 	current_region = region_id
 	last_arrival_first_visit = Exploration.visit(player, region_id)
 	world_flags["notice_road_" + region_id] = true  # you are already here (TRAV-001)
-	EventBus.post("After %s on the road you arrive at %s." % [Calendar.format_duration(check["days"]), Exploration.region_name(data, region_id)], "progress")
+	var how := Exploration.travel_how(player, data)
+	EventBus.post("After %s %s you arrive at %s." % [Calendar.format_duration(check["days"]), how if how != "" else "on the road", Exploration.region_name(data, region_id)], "progress")
 	var first_sight: String = String(data.regions.get(region_id, {}).get("first_visit", ""))
 	if last_arrival_first_visit and first_sight != "":
 		EventBus.post(first_sight, "info")
