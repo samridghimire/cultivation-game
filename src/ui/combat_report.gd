@@ -63,6 +63,11 @@ func _init() -> void:
 	add_child(_timer)
 
 
+## Height of the fight log for `rows` lines: short fights get a short panel (WU-087).
+static func log_height(rows: int) -> float:
+	return clampf(rows * 26.0 + 20.0, 120.0, 360.0)
+
+
 func _make_bar(parent: Control, caption: String, color: Color) -> ProgressBar:
 	var bar := ProgressBar.new()
 	bar.custom_minimum_size = Vector2(290, 24)
@@ -105,6 +110,7 @@ func show_fight(enemy_name: String, victory: bool, lines: PackedStringArray, adv
 	_title.text = "Friendly spar: %s" % enemy_name if friendly else "%s: %s" % ["Victory" if victory else "Defeat", enemy_name]
 	_title.add_theme_color_override("font_color", _color)
 	_log.clear()
+	_log.custom_minimum_size.y = log_height(lines.size() + spoils.size() + (2 if advice != "" else 0))
 	_shown = 0
 	var has_bars := trace.size() >= lines.size() and not trace.is_empty() and player_max > 0 and enemy_max > 0
 	_player_bar.get_parent().visible = has_bars

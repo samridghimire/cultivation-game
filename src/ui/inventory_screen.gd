@@ -8,6 +8,12 @@ extends PanelContainer
 signal closed
 
 var _list: VBoxContainer
+var _scroll: ScrollContainer
+
+## The item list shrinks to its rows between these heights (WU-087).
+const LIST_MIN_HEIGHT := 220.0
+const LIST_MAX_HEIGHT := 360.0
+const LIST_ROW_HEIGHT := 42.0
 var _name: Label
 var _description: Label
 var _effects: Label
@@ -48,7 +54,8 @@ func _init() -> void:
 	columns.add_theme_constant_override("separation", 16)
 	box.add_child(columns)
 	var scroll := ScrollContainer.new()
-	scroll.custom_minimum_size = Vector2(300, 360)
+	_scroll = scroll
+	scroll.custom_minimum_size = Vector2(300, LIST_MAX_HEIGHT)
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	columns.add_child(scroll)
 	_list = VBoxContainer.new()
@@ -195,7 +202,13 @@ func _rebuild() -> void:
 		b.button_pressed = item_id == _selected
 		b.focus_entered.connect(_select.bind(item_id))
 		_list.add_child(b)
+	_scroll.custom_minimum_size.y = list_height(ids.size())
 	_show_details()
+
+
+## Height of the item list for `rows` stacks.
+static func list_height(rows: int) -> float:
+	return clampf(rows * LIST_ROW_HEIGHT, LIST_MIN_HEIGHT, LIST_MAX_HEIGHT)
 
 
 func _select(item_id: String) -> void:

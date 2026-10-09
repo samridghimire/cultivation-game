@@ -66,7 +66,7 @@ func _ready() -> void:
 	_build_status_panel()
 	_build_log()
 	_prompt = UIStyle.label("", 18, UIStyle.ACCENT)
-	_set_anchored_rect(_prompt, Vector4(0, 1, 1, 1), Vector4(0, -100, 0, -70))
+	_set_anchored_rect(_prompt, Vector4(0.5, 1, 0.5, 1), Vector4(-300, -110, 300, -72))
 	_prompt.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	add_child(_prompt)
 	_refresh_key_hints()
@@ -509,6 +509,15 @@ func _refresh_key_hints() -> void:
 		return
 	_key_bar.text = InputConfig.key_bar_text(KEY_HINTS)
 	_prompt.text = "[%s] %s" % [InputConfig.current_label("interact"), _target_name] if _target_name != "" else ""
+	# A dark backdrop keeps the prompt readable over place labels (WU-087).
+	if _target_name != "":
+		var bg := StyleBoxFlat.new()
+		bg.bg_color = Color(0.05, 0.05, 0.08, 0.8)
+		bg.set_content_margin_all(6)
+		bg.set_corner_radius_all(4)
+		_prompt.add_theme_stylebox_override("normal", bg)
+	else:
+		_prompt.remove_theme_stylebox_override("normal")
 
 
 func _on_menu_requested(source: Node) -> void:

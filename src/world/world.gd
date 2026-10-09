@@ -234,6 +234,8 @@ func _build_npcs() -> void:
 		add_child(node)
 		move_child(node, player.get_index())
 	_build_generated_npcs()
+	var npcs: Array = get_children().filter(func(n: Node) -> bool: return n is Interactable and "npc_id" in n)
+	Interactable.spread_labels(npcs)
 
 
 ## Generated NPCs (Npcs.spawn, no def) stand at the region's npc_spots (the

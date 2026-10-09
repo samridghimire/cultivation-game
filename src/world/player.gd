@@ -25,6 +25,7 @@ var _celebrate_ok := true
 
 
 func _ready() -> void:
+	add_to_group("player")
 	EventBus.player_changed.connect(refresh_look)
 	EventBus.session_started.connect(refresh_look)
 	EventBus.breakthrough_attempted.connect(func(success: bool, _realm: String) -> void: celebrate(success))

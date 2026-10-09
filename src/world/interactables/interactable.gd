@@ -27,6 +27,9 @@ var highlighted := false:
 		queue_redraw()
 
 var _pulse_time := 0.0
+## Added to the name label's position; World.spread_labels lifts labels that would overlap (WU-087).
+var label_offset := Vector2.ZERO
+const LABEL_FONT_SIZE := 14
 
 
 func _ready() -> void:
@@ -92,6 +95,40 @@ func _on_body_exited(body: Node2D) -> void:
 		body.remove_interactable(self)
 
 
+## The text of the name label.
+func label_text() -> String:
+	return display_name
+
+
+## The rect the name label covers, in the parent's coordinates (for overlap checks).
+func label_rect(text: String = "") -> Rect2:
+	if text == "":
+		text = label_text()
+	var font := ThemeDB.fallback_font
+	var w := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, LABEL_FONT_SIZE).x
+	var h := font.get_height(LABEL_FONT_SIZE)
+	return Rect2(position + Vector2(-w / 2.0, -size.y / 2.0 - 8.0 - h * 0.8) + label_offset, Vector2(w, h))
+
+
+## Lifts the labels of `nodes` (in order) until none overlaps an earlier one.
+static func spread_labels(nodes: Array) -> void:
+	var placed: Array[Rect2] = []
+	for node: Interactable in nodes:
+		var text := node.label_text()
+		var rect := node.label_rect(text)
+		for _i in 6:
+			var hit := false
+			for other in placed:
+				if rect.intersects(other):
+					hit = true
+					break
+			if not hit:
+				break
+			node.label_offset.y -= rect.size.y + 2.0
+			rect = node.label_rect(text)
+		placed.append(rect)
+
+
 ## Whether the place's art shows its live state (e.g. an open secret realm).
 func art_active() -> bool:
 	return false
@@ -107,8 +144,9 @@ func _draw() -> void:
 		var glow := 0.5 + 0.5 * sin(_pulse_time * 5.0)
 		draw_rect(Rect2(-size / 2.0, size).grow(6.0 + 2.0 * glow), Color(1.0, 0.9, 0.5, 0.45 + 0.4 * glow), false, 2.0)
 	var font := ThemeDB.fallback_font
-	var text_width := font.get_string_size(display_name, HORIZONTAL_ALIGNMENT_LEFT, -1, 14).x
-	draw_string(font, Vector2(-text_width / 2.0, -size.y / 2.0 - 8.0), display_name, HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color.WHITE)
+	var text := label_text()
+	var text_width := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, LABEL_FONT_SIZE).x
+	draw_string(font, Vector2(-text_width / 2.0, -size.y / 2.0 - 8.0) + label_offset, text, HORIZONTAL_ALIGNMENT_LEFT, -1, LABEL_FONT_SIZE, Color.WHITE)
 	if anchor_id != "":
 		_draw_anchor_marker()
 

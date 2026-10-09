@@ -67,6 +67,7 @@ func _ready() -> void:
 func _physics_process(delta: float) -> void:
 	if _modal_open or not _on_screen:
 		return
+	_update_near()
 	breathe(delta)
 
 
@@ -79,6 +80,27 @@ func breathe(delta: float) -> void:
 		_wander_target = Vector2.ZERO if _wander_target != Vector2.ZERO and _rng.randf() < 0.5 else Vector2.from_angle(_rng.randf() * TAU) * _rng.randf_range(3.0, WANDER_RADIUS)
 	_wander = _wander.move_toward(_wander_target, WALK_SPEED * delta)
 	position = home + _wander + Vector2(0, sin(_time * 2.0 + _phase) * BOB_AMPLITUDE)
+
+
+## Within this distance of the player the label shows the full "(realm)" suffix (WU-087).
+const FULL_LABEL_RANGE := 120.0
+var _near := false
+
+
+## Just the name until the player is close, then "Name (Qi Refining, 1st Layer)".
+func label_text() -> String:
+	if _near:
+		return display_name
+	var i := display_name.find(" (")
+	return display_name.substr(0, i) if i > 0 else display_name
+
+
+func _update_near() -> void:
+	var player := get_tree().get_first_node_in_group("player") as Node2D
+	var near := player != null and player.global_position.distance_to(global_position) <= FULL_LABEL_RANGE
+	if near != _near:
+		_near = near
+		queue_redraw()
 
 
 func is_available() -> bool:
