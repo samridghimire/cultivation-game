@@ -544,3 +544,34 @@ func test_familiarity_line() -> void:
 	line = site.familiarity_line(c, data(), "misty_forest")
 	assert_true(line.contains("days explored"))
 	assert_false(line.contains("deeper"), line)
+
+
+## TRAV-006: road encounters.
+func test_road_encounter_no_draw_without_road_block() -> void:
+	var d := GameData.load_from_dir()
+	d.road = {}
+	var rng := seeded_rng(5)
+	var before := rng.state
+	assert_true(Exploration.road_encounter(new_character(), d, 10, {}, rng, "Spring").is_empty())
+	assert_eq(rng.state, before, "no rng draw")
+
+
+func test_road_encounter_chance_scales_with_days_and_caps() -> void:
+	var d := GameData.load_from_dir()
+	d.encounters = {"r": {"id": "r", "tags": ["road"], "weight": 1, "kind": "neutral", "text": "Road."}}
+	d.road = {"chance_per_day": 0.1, "max_chance": 0.3, "encounter_tags": ["road"]}
+	var c := new_character()
+	var hits := {1: 0, 2: 0, 9: 0}
+	for seed_value in range(400):
+		for days: int in hits:
+			if not Exploration.road_encounter(c, d, days, {}, seeded_rng(seed_value), "Spring").is_empty():
+				hits[days] += 1
+	assert_true(hits[1] < hits[2], "more days, more chances")
+	assert_true(hits[9] < 400 * 0.3 + 50 and hits[9] > 400 * 0.3 - 50, "capped near max_chance: %d" % hits[9])
+
+
+func test_road_data_is_valid() -> void:
+	var d := GameData.load_from_dir()
+	assert_true(d.load_errors.is_empty(), str(d.load_errors))
+	assert_false(d.road.is_empty())
+	assert_true(Exploration.eligible_encounters(new_character(), d, d.road["encounter_tags"], {}).size() >= 2)

@@ -33,7 +33,11 @@ var restricted_item_tags: PackedStringArray = []
 var deeds: Dictionary = {}  # id -> Dictionary
 var regions: Dictionary = {}  # id -> Dictionary
 var start_region := ""
+<<<<<<< HEAD
 var renown: Dictionary = {}  # regions.json "renown" block (Renown); {} = none
+=======
+var road: Dictionary = {}  # TRAV-006: regions.json "road" (empty = no road encounters)
+>>>>>>> 53466a8 ([TRAV-006] Things happen on the road)
 var encounters: Dictionary = {}  # id -> Dictionary
 ## Bounties by id and the file's top-level numbers (data/bounties.json, Bounties).
 var bounties: Dictionary = {}
@@ -191,7 +195,11 @@ func _load(dir: String) -> void:
 
 	var world := _read(dir, "regions.json")
 	start_region = world.get("start_region", "")
+<<<<<<< HEAD
 	renown = world.get("renown", {})
+=======
+	road = world.get("road", {})
+>>>>>>> 53466a8 ([TRAV-006] Things happen on the road)
 	for region in world.get("regions", []):
 		regions[region["id"]] = region
 		for place: Dictionary in region.get("places", []):
@@ -423,6 +431,14 @@ func _validate_world() -> void:
 	Renown.validate(renown, load_errors)
 	if not regions.has(start_region):
 		load_errors.append("start_region '%s' is not a region" % start_region)
+	if not road.is_empty():
+		for key: String in ["chance_per_day", "max_chance"]:
+			var v: Variant = road.get(key)
+			if not (v is float or v is int) or float(v) < 0.0 or float(v) > 1.0:
+				load_errors.append("road.%s must be a number in 0..1" % key)
+		var road_tags: Variant = road.get("encounter_tags")
+		if not (road_tags is Array) or (road_tags as Array).is_empty():
+			load_errors.append("road.encounter_tags must be a non-empty array")
 	var place_types := ["meditation", "merchant", "sect_hall", "workshop", "clinic", "orphanage", "deed_giver", "explore", "travel", "gather", "secret_realm", "auction", "inheritance", "bounty_board"]
 	for region: Dictionary in regions.values():
 		for route: Dictionary in region.get("routes", []):

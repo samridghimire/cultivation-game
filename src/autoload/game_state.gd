@@ -520,19 +520,22 @@ func travel(region_id: String) -> void:
 	if last_arrival_first_visit and first_sight != "":
 		EventBus.post(first_sight, "info")
 	_pass_time(check["days"], "Travelling to %s" % Exploration.region_name(data, region_id))
-	_road_ambush()
+	if not _road_ambush() and _can_act():
+		var road := Exploration.road_encounter(player, data, int(check["days"]), world_flags, rng, Calendar.season_of(GameClock.total_days))
+		if not road.is_empty():
+			_meet_encounter(road, "On the road: ")
 	EventBus.region_changed.emit(region_id)
 	SaveManager.autosave()
 
 
 ## After a journey, an NPC with a strong grudge may ambush the player, and a
 ## grateful one may come to help (Karma, RIV-003).
-func _road_ambush() -> void:
+func _road_ambush() -> bool:
 	if not _can_act():
-		return
+		return false
 	var hunter_id := Karma.roll_hunter(player, npcs, data, rng, 1.0 - ClanEstate.ward(clan, data, current_region))
 	if hunter_id == "":
-		return
+		return false
 	var hunter: CharacterData = npcs[hunter_id]
 	EventBus.post("%s has hunted you down on the road. Your old grudge (%s) will be settled with blood!" % [hunter.name, Karma.grudge_word(Karma.grudge(player, hunter_id), data)], "danger")
 	var ally_id := Karma.roll_ally(player, npcs, data, rng, hunter_id)
@@ -542,6 +545,7 @@ func _road_ambush() -> void:
 	Karma.after_hunt(player, data, hunter_id, won)
 	if ally_id != "":
 		player.buffs.erase("ally_aid")
+	return true
 
 
 ## Explore a place tagged with `tags` (defaults to the region's encounter tags).
@@ -607,16 +611,24 @@ func _explore_once(tags: Array, quiet: bool) -> Dictionary:
 			EventBus.post(("You search the area but find nothing. %s" % Exploration.quiet_line(data, current_region, GameClock.total_days)).strip_edges())
 		_pass_time(1)
 		return {"event": "nothing"}
+	var prefix := ""
+	if last_explore_discovery:
+		prefix = "A discovery: "
+	elif last_explore_deep_path:
+		prefix = "A hidden path: "
+	return _meet_encounter(encounter, prefix)
+
+
+## Play out an encounter that happened (exploring or on the road): effects,
+## time, rival consequences, then a choice or a fight. `prefix` heads the text.
+func _meet_encounter(encounter: Dictionary, prefix: String = "") -> Dictionary:
 	LifeStats.add(player, "encounters")
 	Exploration.note_met(player, encounter)
 	var result := Exploration.resolve(player, data, encounter, world_flags)
 	var text := rival_text(String(encounter.get("text", "")))
 	if not result["notes"].is_empty():
 		text += " (%s)" % ", ".join(result["notes"])
-	if last_explore_discovery:
-		text = "A discovery: " + text
-	elif last_explore_deep_path:
-		text = "A hidden path: " + text
+	text = prefix + text
 	EventBus.post(text, "danger" if result["enemy"] != "" else "info")
 	pending_encounter = ""
 	pending_threat = ""

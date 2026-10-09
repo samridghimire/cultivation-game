@@ -54,7 +54,10 @@ func test_travel_autosaves_and_loads() -> void:
 			target = String(route["to"])
 			break
 	if target != "":
+		var old_road: Dictionary = gs.data.road
+		gs.data.road = {}  # a road choice would hold the autosave back until answered (TRAV-006)
 		gs.travel(target)
+		gs.data.road = old_road
 		assert_true(saves.has_save("autosave"), "travel autosaved")
 		gs.player.qi = 0.0
 		gs.current_region = "elsewhere"

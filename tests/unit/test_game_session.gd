@@ -987,6 +987,34 @@ func test_travel_records_visited_regions() -> void:
 	assert_eq(gs.player.visited_regions.size(), 2)
 
 
+## TRAV-006: with the road chance forced to 1, a journey meets a road encounter.
+func test_travel_meets_road_encounter() -> void:
+	var gs := _game_state()
+	var c := _start()
+	c.realm_index = 1
+	var old_road: Dictionary = gs.data.road
+	var old_encounters: Dictionary = gs.data.encounters
+	gs.data.road = {"chance_per_day": 1.0, "max_chance": 1.0, "encounter_tags": ["road"]}
+	gs.data.encounters = {"road_overturned_cart": old_encounters["road_overturned_cart"]}
+	var target := String(gs.data.regions[gs.data.start_region]["routes"][0]["to"])
+	var before := LifeStats.get_stat(c, "encounters")
+	var heard: Array[String] = []
+	var cb := func(text: String, _cat: String) -> void: heard.append(text)
+	EventBus.message_posted.connect(cb)
+	gs.travel(target)
+	EventBus.message_posted.disconnect(cb)
+	assert_eq(gs.current_region, target)
+	assert_eq(LifeStats.get_stat(c, "encounters"), before + 1)
+	assert_true(heard.any(func(t: String) -> bool: return t.begins_with("On the road: ")), str(heard))
+	assert_eq(gs.pending_encounter, "road_overturned_cart")
+	var good := c.alignment
+	gs.choose_encounter(0)
+	assert_true(c.alignment > good)
+	assert_eq(gs.pending_encounter, "")
+	gs.data.road = old_road
+	gs.data.encounters = old_encounters
+
+
 func test_old_save_without_visited_regions_gets_current_region() -> void:
 	var gs := _game_state()
 	_start()
