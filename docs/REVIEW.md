@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: c1080aa
+Last reviewed commit: af043ad
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -260,3 +260,20 @@ Last reviewed commit: c1080aa
     player's age and only once per skipped month with the end day, so a long seclusion over October skips the Lantern
     Festival; acceptable. (3) Local `main` was again the old PR-era history; kept as `local-main-backup`, worked from
     origin/main, nothing pushed from it.
+- 2026-10-09 (reviewer, 6th run): reviewed c1080aa..af043ad (WU-076, WU-078, WU-077, QA-032, C-048, LETTER-001, C-047,
+  RENOWN-001, TRAV-006, WU-087, QA-053 part 1, c49865e conflict-marker fix, NEWS-001, C-057; [PLAN]/[REVIEW] skipped).
+  No BACKLOG/CHANGELOG edits by workers; no SAVE_VERSION change (`renown`, `letters` default to empty; letter invitations
+  are world flags). Main green before and after (1483 tests).
+  - Main was briefly uncompilable: TRAV-006 landed `<<<<<<<` markers in game_data.gd and regions.json from its rebase
+    onto RENOWN-001 (fixed by c49865e, keeping both sides; checked: no markers left anywhere). Workers must run
+    tools/test.sh after the rebase in step 7, not only before it.
+  - Fixed (one [REVIEW] commit): (1) TRAV-006: a road encounter kept `last_explore_discovery`/`last_explore_deep_path`
+    from the last exploration, so a road choice encounter could open titled "Discovery: ..."/"Hidden path: ..." with the
+    discovery chime; both are cleared before it. (2) GUIDE-016 (missed last run): a deeper path set
+    `discovered_<region>`, using up a not-yet-met discovery and counting toward "Hidden places found". Only the
+    discovery sets it now. Tests for both (they fail on the old code).
+  - Note: only misty_forest has a `discovery`, so Seeker of Hidden Places (4 discoveries) is unreachable until C-046
+    (discoveries for every region, in the backlog) lands; before this fix it was only reachable through the bug.
+  - Notes, not filed: (1) NEWS-001 raises spouses' and children's favor past `dual_cultivation.max_favor`/`max_child_favor`
+    (+3 per major breakthrough); harmless. (2) LETTER-001's invitation bonus can lift favor above chat's 30 cap, by
+    design. (3) WU-087: every on-screen NPC looks up the player group each physics frame; cheap enough for now.
