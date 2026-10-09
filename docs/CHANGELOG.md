@@ -2,6 +2,23 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-09 [WU-100] Join the festival from the merchant menu.
+- 2026-10-09 [WU-108] The gift list remembers a taste hint someone let slip.
+- 2026-10-09 [QI-001] Some deeds leave a region richer in qi, starting with the valley guardian's seed on Azure Peak.
+- 2026-10-09 [C-061] Festival stalls sell Qingming and Mid-Autumn goods.
+- 2026-10-09 [C-067] Merchants have gossip worth hearing in every region.
+- 2026-10-09 [WU-106] The People list says how many of someone's favorite gifts you know.
+- 2026-10-09 [WU-107] The mission board stops reminding you of a lost fight once it has cooled down.
+- 2026-10-09 [RUMOR-001] Merchant gossip now comes from data, so new rumors are easy to add.
+- 2026-10-09 [QA-058] Checked: letter requests and a friend's price survive saving and loading.
+- 2026-10-09 [WU-103] Every new menu works with keyboard and gamepad focus.
+- 2026-10-09 [C-066] More letters that ask for something.
+- 2026-10-09 [LETTER-003b] A letter's request is answered in person, and an expired one is noted under family news.
+- 2026-10-09 [SHOP-001] A merchant friend may write to offer you a friend's price for a while.
+- 2026-10-09 [LETTER-002] Your spouse, children and parents write home when they are away.
+- 2026-10-09 [QA-048] Checked: a curious player now tries crafting, gifts, spars, lectures and secret realms in the long sims.
+- 2026-10-09 [WU-110] The world map marks where someone waits for your answer to their letter.
+- 2026-10-09 [C-064] Qingshi posts a second bounty; the sword madman and the rhino wait for stronger hunters.
 - 2026-10-09 [FEST-003] Festivals have something anyone can join, starting with the Lantern Festival.
 - 2026-10-09 [WU-099] Answer a letter in person: the asker's menu offers to hand over what they asked for.
 - 2026-10-09 [C-059] The Drowned Yin Palace opens only to someone carrying the Yin King's gate token.

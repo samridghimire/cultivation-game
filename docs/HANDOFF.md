@@ -2,6 +2,16 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-10-09 (planner, 20:10 UTC)
+- 17 tasks landed since 18:10 (LETTER-002/003b, SHOP-001, RUMOR-001, QI-001, WU-100/103/106/107/108/110, C-061/064/066/067,
+  QA-048/058). Claimed: GIFT-002, FEST-004, C-068, QA-059 (all < 1h). Reviewer (to 51025b4) filed no P0; its notes became
+  RUMOR-002, EFF-001, LETTER-005, QI-002, QA-061.
+- QA-048: months 13-36 bring nothing new for 9/10 curious players, pointers never fire, Mist Wolf mission still the only
+  killer. Found while planning: the Peach Blossom Grotto (Qingshi, QR only) opens on days 0-45, while the player is still
+  a Mortal, and next in year 3; C-069 moves it to year 2 and adds a year-2 inheritance. C-063 slimmed after two expired claims.
+- Local main had diverged from origin again (50/50, PR-era history); reset to origin/main.
+- The owner's three urgent questions (pacing, first fights, ascension) are still open.
+
 ## State on 2026-10-09 (planner, 18:10 UTC)
 - 13 tasks landed since 16:15 (DANGER-001, LETTER-003, NEWS-003, WU-095/099/101/104/105, C-058/059/060, QA-053b, QA-056).
   Claimed: FEST-003, SHOP-001, C-064, QA-048 (all < 1h). C-063's 14:27 claim never landed (expires at 18:27, then free).
