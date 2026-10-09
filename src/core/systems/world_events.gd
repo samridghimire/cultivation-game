@@ -109,15 +109,34 @@ static func scaled_favor(data: GameData, active: Array, region_id: String, favor
 
 ## Festival goods (FEST-002): the `shop_items` of the events active in `region_id`,
 ## in data order, without duplicates.
-static func shop_items(data: GameData, active: Array, region_id: String) -> Array:
+## With `stock_tags` (a merchant's stock_tags, FEST-004) only events whose stalls
+## reach that merchant (`sold_by`) contribute; null = no filtering.
+static func shop_items(data: GameData, active: Array, region_id: String, stock_tags: Variant = null) -> Array:
 	var ids: Array = []
 	for def: Dictionary in data.world_events.values():
 		if instance_in(active, String(def["id"]), region_id).is_empty():
+			continue
+		if stock_tags != null and not sold_by(data, String(def["id"]), stock_tags as Array):
 			continue
 		for item_id: Variant in def.get("shop_items", []):
 			if not ids.has(item_id):
 				ids.append(item_id)
 	return ids
+
+
+## Item tags of the stalls that carry an event's festival goods (FEST-004).
+const DEFAULT_STALL_TAGS: Array = ["herb"]
+
+
+## Whether a merchant stocking `stock_tags` sells the event's festival goods: it has no
+## stock_tags (sells everything) or one of them is in the event's `stall_tags`.
+static func sold_by(data: GameData, event_id: String, stock_tags: Array) -> bool:
+	if stock_tags.is_empty():
+		return true
+	for tag: Variant in def_of(data, event_id).get("stall_tags", DEFAULT_STALL_TAGS):
+		if stock_tags.has(tag):
+			return true
+	return false
 
 
 static func _product(data: GameData, active: Array, region_id: String, key: String) -> float:
@@ -285,6 +304,14 @@ static func validate(data: GameData) -> PackedStringArray:
 			for month in months:
 				if typeof(month) not in [TYPE_INT, TYPE_FLOAT] or int(month) < 1 or int(month) > 12:
 					errors.append("World event '%s' has invalid month '%s'" % [id, str(month)])
+		var stall_tags: Variant = def.get("stall_tags", [])
+		if not (stall_tags is Array) or ((stall_tags as Array).is_empty() and def.has("stall_tags")):
+			errors.append("World event '%s' stall_tags must be a non-empty list of strings" % id)
+		else:
+			for tag: Variant in stall_tags:
+				if not (tag is String) or String(tag).is_empty():
+					errors.append("World event '%s' stall_tags must be a non-empty list of strings" % id)
+					break
 		for item_id in def.get("shop_items", []):
 			if not data.items.has(item_id) or int(data.items[item_id].get("price", 0)) <= 0:
 				errors.append("World event '%s' shop_items needs a known item with a price: '%s'" % [id, item_id])

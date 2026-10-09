@@ -2202,8 +2202,9 @@ func sect_standings() -> Array[Dictionary]:
 
 
 ## Festival goods the merchants of the current region sell right now (FEST-002).
-func festival_stock() -> Array:
-	return WorldEvents.shop_items(data, world_events, current_region)
+## `stock_tags` is the merchant's (null = every festival good in the region, FEST-004).
+func festival_stock(stock_tags: Variant = null) -> Array:
+	return WorldEvents.shop_items(data, world_events, current_region, stock_tags)
 
 
 ## Expire and roll world events at a month boundary, posting the news.

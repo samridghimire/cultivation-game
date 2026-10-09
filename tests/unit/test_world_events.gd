@@ -503,3 +503,36 @@ func test_festival_activity_survives_save_and_validates() -> void:
 	var d := GameData.load_from_dir()
 	d.world_events["bad"] = {"id": "bad", "monthly_chance": 0.1, "min_days": 1, "max_days": 1, "regions": ["qingshi_village"], "activity": {"text": "x", "days": 0, "effects": {}, "bonus": {"attribute": "nope", "min": 3, "text": "t", "effects": {}}}}
 	assert_eq(WorldEvents.validate(d).size(), 2, ", ".join(WorldEvents.validate(d)))
+
+
+func test_festival_goods_only_at_matching_stalls() -> void:
+	var d := data()
+	var active: Array = [_lantern_instance(0)]
+	var goods: Array = ["paper_lantern", "sweet_rice_ball"]
+	assert_eq(WorldEvents.shop_items(d, active, "qingshi_village", ["herb", "ore"]), goods, "herb stall")
+	assert_eq(WorldEvents.shop_items(d, active, "qingshi_village", ["equipment", "ore", "smithing"]), [], "smithy")
+	assert_eq(WorldEvents.shop_items(d, active, "qingshi_village", ["blood_art"]), [], "apothecary")
+	assert_eq(WorldEvents.shop_items(d, active, "qingshi_village", []), goods, "no stock_tags sells everything")
+	assert_true(WorldEvents.sold_by(d, "lantern_festival", ["herb"]))
+	assert_false(WorldEvents.sold_by(d, "lantern_festival", ["talisman"]))
+	d.world_events["lantern_festival"]["stall_tags"] = ["talisman"]
+	assert_true(WorldEvents.sold_by(d, "lantern_festival", ["talisman", "formation"]))
+	assert_false(WorldEvents.sold_by(d, "lantern_festival", ["herb"]))
+
+
+func test_validator_rejects_bad_stall_tags() -> void:
+	var d := GameData.load_from_dir()
+	d.world_events["lantern_festival"]["stall_tags"] = []
+	assert_eq(WorldEvents.validate(d).size(), 1, ", ".join(WorldEvents.validate(d)))
+	d.world_events["lantern_festival"]["stall_tags"] = ["herb"]
+	assert_eq(WorldEvents.validate(d).size(), 0)
+
+
+func test_game_state_festival_stock_by_stall() -> void:
+	var gs := _root().get_node("GameState")
+	gs.start_session(new_character())
+	gs.current_region = "qingshi_village"
+	gs.world_events = [_lantern_instance(0)]
+	assert_eq(gs.festival_stock(["weapon"]), [])
+	assert_eq(gs.festival_stock(["herb"]), ["paper_lantern", "sweet_rice_ball"])
+	gs.end_session()
