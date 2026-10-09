@@ -22,7 +22,8 @@ func _errors_after(mutate: Callable) -> Array:
 
 
 func test_shipped_bounties_validate() -> void:
-	assert_eq(data().bounties.size(), 11)
+	assert_eq(data().bounties.size(), 12)
+	assert_eq(int(_count_in("qingshi_village")), 2, "C-064: Qingshi posts two bounties")
 	var regions := {}
 	for b: Dictionary in data().bounties.values():
 		regions[b["region"]] = int(regions.get(b["region"], 0)) + 1
@@ -245,3 +246,11 @@ func test_board_label_shows_the_renown_pay() -> void:
 	var labels: Array = board.get_options().map(func(o: Dictionary) -> String: return o["label"])
 	assert_true(labels.any(func(l: String) -> bool: return l.contains("48 stones (+20% for your name)")), str(labels))
 	gs.end_session()
+
+
+func _count_in(region_id: String) -> int:
+	var n := 0
+	for b: Dictionary in data().bounties.values():
+		if b["region"] == region_id:
+			n += 1
+	return n
