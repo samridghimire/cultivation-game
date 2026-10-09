@@ -9,20 +9,32 @@ static func def_of(data: GameData, bounty_id: String) -> Dictionary:
 	return data.bounties.get(bounty_id, {})
 
 
-## Bounties (data order) the character meets the gates of, off cooldown and not already taken.
-static func offers(c: CharacterData, data: GameData, today: int) -> Array[Dictionary]:
-	var out: Array[Dictionary] = []
-	var limit := int(data.bounty_config.get("offers", 3))
+## Bounties the character meets the gates of, off cooldown and not already taken. With a
+## `region_id`, hunts in that region come first, then those in neighbouring regions, then the
+## rest (data order inside each group); the board's limit is applied after that ordering.
+static func offers(c: CharacterData, data: GameData, today: int, region_id: String = "") -> Array[Dictionary]:
+	var local: Array[Dictionary] = []
+	var near: Array[Dictionary] = []
+	var rest: Array[Dictionary] = []
 	for b: Dictionary in data.bounties.values():
-		if out.size() >= limit:
-			break
 		var id := String(b["id"])
-		if not data.regions.has(String(b["region"])) or String(c.bounty.get("id", "")) == id:
+		var where := String(b["region"])
+		if not data.regions.has(where) or String(c.bounty.get("id", "")) == id:
 			continue
 		if today < int(c.bounty_cooldowns.get(id, 0)) or not Exploration.realm_allows(c, data, b):
 			continue
-		out.append(b)
-	return out
+		if region_id != "" and where == region_id:
+			local.append(b)
+		elif region_id != "" and Exploration.is_nearby(data, region_id, where):
+			near.append(b)
+		else:
+			rest.append(b)
+	var out: Array[Dictionary] = []
+	out.append_array(local)
+	out.append_array(near)
+	out.append_array(rest)
+	var limit := int(data.bounty_config.get("offers", 3))
+	return out.slice(0, limit)
 
 
 ## "" when `bounty_id` can be taken, else the reason.

@@ -8,7 +8,7 @@ func get_options() -> Array[Dictionary]:
 	var data: GameData = GameState.data
 	var today := GameClock.total_days
 	var options: Array[Dictionary] = []
-	for b: Dictionary in Bounties.offers(c, data, today):
+	for b: Dictionary in Bounties.offers(c, data, today, GameState.current_region):
 		var enemy: Dictionary = data.enemies.get(String(b["enemy"]), {})
 		var label := "Hunt: %s in %s, %d stones (%s)" % [enemy.get("name", b["enemy"]), Exploration.region_name(data, String(b["region"])), int(b["reward_stones"]), Appraisal.danger_text(c, data, enemy)]
 		var reason := Bounties.check_take(c, data, String(b["id"]), today)

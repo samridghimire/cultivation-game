@@ -190,3 +190,38 @@ func test_gamestate_bounty_lapses_and_abandons() -> void:
 	(Engine.get_main_loop() as SceneTree).root.get_node("GameClock").advance(31)
 	assert_true(c.bounty.is_empty(), "lapsed")
 	_finish(gs)
+
+
+func _fixture(d: GameData) -> void:
+	d.bounties.clear()
+	d.bounty_config["offers"] = 3
+	var rows := [["b_far1", "azure_peak"], ["b_far2", "azure_peak"], ["b_near", "misty_forest"], ["b_local1", "qingshi_village"], ["b_local2", "qingshi_village"]]
+	for row: Array in rows:
+		d.bounties[row[0]] = {"id": row[0], "enemy": "wild_boar", "region": row[1], "reward_stones": 10, "days": 30, "cooldown_days": 10, "text": "x"}
+
+
+func _ids(list: Array[Dictionary]) -> Array:
+	return list.map(func(b: Dictionary) -> String: return b["id"])
+
+
+func test_offers_list_local_then_nearby_first() -> void:
+	var d := GameData.load_from_dir()
+	_fixture(d)
+	var c := _qi()
+	assert_eq(_ids(Bounties.offers(c, d, 0, "qingshi_village")), ["b_local1", "b_local2", "b_near"])
+	assert_eq(_ids(Bounties.offers(c, d, 0)), ["b_far1", "b_far2", "b_near"], "no region keeps data order")
+	c.bounty_cooldowns["b_local1"] = 50
+	assert_eq(_ids(Bounties.offers(c, d, 10, "qingshi_village")), ["b_local2", "b_near", "b_far1"])
+	d.bounties["b_local2"]["min_realm"] = "core_formation"
+	assert_eq(_ids(Bounties.offers(c, d, 10, "qingshi_village")), ["b_near", "b_far1", "b_far2"], "realm gate hides it")
+
+
+func test_board_lists_nearby_hunts_first() -> void:
+	var gs := _gs()
+	var c := _qi(3)
+	gs.start_session(c)
+	var board: Node = load("res://src/world/interactables/bounty_board.gd").new()
+	var first: Dictionary = board.get_options()[0]
+	var near := Bounties.offers(c, gs.data, GameClock.total_days, gs.current_region)
+	assert_eq(String(first["label"]).contains(Exploration.region_name(gs.data, String(near[0]["region"]))), true, first["label"])
+	gs.end_session()
