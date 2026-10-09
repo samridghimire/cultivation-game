@@ -494,3 +494,21 @@ func test_happenings_seen_milestone_at_fifty() -> void:
 		if entry["id"] == "wanderer_many_roads":
 			m = entry
 	assert_eq(int(m["check"]["min"]), 50)
+func test_discoveries_follow_flags_and_backfill() -> void:
+	var c := new_character()
+	var flags := {"discovered_a": true, "discovered_b": false, "other": true}
+	LifeStats.sync_discoveries(c, flags)
+	assert_eq(LifeStats.get_stat(c, "discoveries"), 1)
+	flags["discovered_b"] = true
+	flags["discovered_c"] = true
+	flags["discovered_d"] = true
+	LifeStats.sync_discoveries(c, flags)
+	assert_eq(LifeStats.get_stat(c, "discoveries"), 4)
+	var old := new_character()
+	LifeStats.backfill(old, data(), flags)
+	assert_eq(LifeStats.get_stat(old, "discoveries"), 4)
+	var m: Dictionary = {}
+	for entry: Dictionary in data().milestones:
+		if entry["id"] == "seeker_of_hidden_places":
+			m = entry
+	assert_eq(int(m["check"]["min"]), 4)

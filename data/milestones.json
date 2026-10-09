@@ -5,6 +5,7 @@
 		{"id": "far_traveller", "name": "Far Traveller", "description": "Set foot in five regions.", "check": {"type": "life_stat", "stat": "regions_visited", "min": 5}},
 		{"id": "four_seasons_herbalist", "name": "Herbalist of Four Seasons", "description": "Gather a herb that grows in only one season, in each of the four seasons.", "check": {"type": "life_stat", "stat": "seasons_gathered", "min": 4}},
 		{"id": "wanderer_many_roads", "name": "Wanderer of Many Roads", "description": "Meet 50 different happenings on the road.", "check": {"type": "life_stat", "stat": "happenings_seen", "min": 50}},
+		{"id": "seeker_of_hidden_places", "name": "Seeker of Hidden Places", "description": "Find the hidden places of four regions.", "check": {"type": "life_stat", "stat": "discoveries", "min": 4}},
 		{"id": "first_fight", "name": "First Blood", "description": "Win your first fight.", "check": {"type": "life_stat", "stat": "fights_won", "min": 1}},
 		{"id": "veteran", "name": "Battle-Hardened", "description": "Win 25 fights.", "check": {"type": "life_stat", "stat": "fights_won", "min": 25}},
 		{"id": "first_craft", "name": "Steady Hands", "description": "Craft your first item.", "check": {"type": "item_crafted", "min": 1}},

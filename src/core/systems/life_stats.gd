@@ -5,7 +5,7 @@ extends RefCounted
 ## the end-of-life summary.
 
 const KEYS: Array[String] = ["fights_won", "fights_lost", "threats_fled", "breakthroughs", "breakthroughs_failed",
-	"tribulations_survived", "respawns", "items_crafted", "missions_done", "deeds_done", "encounters", "days_in_seclusion", "commissions_done", "tournaments_won", "incursions_repelled", "realm_floors_cleared", "inheritances_claimed", "stones_earned", "qi_gathered", "regions_visited", "lectures_attended", "seasons_gathered", "happenings_seen"]
+	"tribulations_survived", "respawns", "items_crafted", "missions_done", "deeds_done", "encounters", "days_in_seclusion", "commissions_done", "tournaments_won", "incursions_repelled", "realm_floors_cleared", "inheritances_claimed", "stones_earned", "qi_gathered", "regions_visited", "lectures_attended", "seasons_gathered", "happenings_seen", "discoveries"]
 
 const LABELS := {
 	"fights_won": "Fights won",
@@ -28,6 +28,7 @@ const LABELS := {
 	"lectures_attended": "Sect lectures attended",
 	"seasons_gathered": "Seasons herb-gathered",
 	"happenings_seen": "Happenings seen",
+	"discoveries": "Hidden places found",
 	"deeds_done": "Deeds done",
 	"encounters": "Encounters",
 	"days_in_seclusion": "Days in seclusion",
@@ -100,12 +101,23 @@ static func backfill(c: CharacterData, data: GameData, flags: Dictionary) -> voi
 		c.life_stats["regions_visited"] = c.visited_regions.size()
 	if c.seasonal_gathers.size() > get_stat(c, "seasons_gathered"):
 		c.life_stats["seasons_gathered"] = c.seasonal_gathers.size()
+	sync_discoveries(c, flags)
 	if c.encounter_counts.size() > get_stat(c, "happenings_seen"):
 		c.life_stats["happenings_seen"] = c.encounter_counts.size()
 	if floors > get_stat(c, "realm_floors_cleared"):
 		c.life_stats["realm_floors_cleared"] = floors
 	if claimed > get_stat(c, "inheritances_claimed"):
 		c.life_stats["inheritances_claimed"] = claimed
+
+
+## Sets `discoveries` to the number of true `discovered_<region>` world flags (never lowers it).
+static func sync_discoveries(c: CharacterData, flags: Dictionary) -> void:
+	var n := 0
+	for key: Variant in flags:
+		if String(key).begins_with("discovered_") and flags[key]:
+			n += 1
+	if n > get_stat(c, "discoveries"):
+		c.life_stats["discoveries"] = n
 
 
 ## Title of a year review (YEAR-002). `year` is the year just begun, so the
