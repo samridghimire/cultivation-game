@@ -2,6 +2,19 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-09 [WU-078] The explore spot says how many days you have explored and when a deeper path may open; a found path is titled "Hidden path".
+- 2026-10-09 [WU-076] Bounty boards in Qingshi Village and Fallen Star Market.
+- 2026-10-09 [WU-072] Festivals get a banner, a chime and a "favor x2" note on chats and gifts.
+- 2026-10-09 [BOUNTY-001] Bounties: take a hunt, pick up the quarry's trail while exploring its region, win for spirit stones.
+- 2026-10-09 [QA-051] A test that every recipe scroll can be found somewhere.
+- 2026-10-09 [GUIDE-016] A deeper path that opens is announced, and your next exploration there finds it.
+- 2026-10-09 [WU-079] The newest screens and windows work with keyboard and gamepad focus.
+- 2026-10-09 [MS-005] Find the hidden places of four regions for the Seeker of Hidden Places milestone.
+- 2026-10-09 [C-045] Grade 5 and 6 weapons and armor for Nascent Soul and Soul Formation cultivators.
+- 2026-10-09 [QA-049] tools/balance.sh runs in under 5 minutes and can refresh one section.
+- 2026-10-09 [EXPL-002] The journal says how many of a region's happenings you have seen (Wanderer of Many Roads milestone).
+- 2026-10-09 [GUIDE-015] Merchants and the journal pass on rumors of hidden places you have not found.
+- 2026-10-09 [WE-002] Festivals: a winter Lantern Festival in Qingshi makes people warmer to chats and gifts.
 - 2026-10-09 [WU-061] The world map dims regions you have never visited; travel options say "(never visited)".
 - 2026-10-09 [C-018] Three Soul Formation masters on Myriad Peaks Ridge, two with errands.
 - 2026-10-09 [EXPL-001] Regions open deeper paths to those who explore them for many days (a hidden valley in the Misty Forest).

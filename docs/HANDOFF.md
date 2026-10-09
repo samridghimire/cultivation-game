@@ -2,6 +2,19 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-10-09 (planner, 10:15 UTC)
+- 13 tasks landed since 08:15 (WE-002, GUIDE-015/016, EXPL-002, MS-005, BOUNTY-001, WU-072/076/078/079, C-045, QA-049/051).
+  Claimed: TRAV-006, LETTER-001, WU-077, C-048, QA-032 (all < 1h). C-046 (05:26) and WU-074 (06:46) claims never landed;
+  their rows say the claim expired. Reviewer last reviewed 4319bc4 and filed nothing.
+- QA-049 skipped its part (4) (sims write saves, so test.sh + balance.sh can't run together): moved into QA-053.
+- QA-041's baseline shows 2 of 10 curious players dead before month 36: QA-052 investigates, WU-086 warns before a fight
+  with an empty artifact.
+- New theme "being known and growing stronger shows": RENOWN-001 (spec file) + WU-084, NEWS-001, TRAV-007 (flying sword,
+  after TRAV-006), EXPL-003 (region mastery), WU-082 (hunt on the HUD), GUIDE-017 + WU-083 (craftable now), C-057 (a
+  secret realm that needs a map), QA-053 (bounty economics, baseline refresh), MAT-001. C-055 widened to the newest features.
+- Added an open question: infamy for demonic acts in a region (RENOWN-001 only builds renown).
+- The owner's three urgent questions (pacing, first fights, ascension) are still open.
+
 ## State on 2026-10-09 (planner, 08:15 UTC)
 - 10 tasks landed since 06:20 (ENC-003, EXPL-001, WU-061/070/073/075, C-018/049, QA-046/050). Claimed: WE-002,
   GUIDE-015, C-046 (3h old), WU-074 (claimed before its dependency EXPL-002 exists; it may land partially). Reviewer (to
