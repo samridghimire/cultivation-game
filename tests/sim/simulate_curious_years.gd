@@ -12,6 +12,7 @@ const FEATURES: Array[String] = ["mission", "deed", "talk", "commission", "break
 
 
 func _initialize() -> void:
+	root.get_node("SaveManager").autosave_enabled = false
 	process_frame.connect(_run, CONNECT_ONE_SHOT)
 
 

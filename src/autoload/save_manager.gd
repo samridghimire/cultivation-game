@@ -22,6 +22,8 @@ const SUSPEND_SAVE_INTERVAL_MSEC := 60000
 var current_slot := ""
 ## Whether this session wrote the autosave slot (so a final death may overwrite it).
 var _autosaved_this_session := false
+## Simulations turn this off so balance runs never touch the player's saves.
+var autosave_enabled := true
 
 
 func _ready() -> void:
@@ -240,7 +242,7 @@ func _write_atomic(path: String, text: String) -> bool:
 ## is dead, an encounter is pending, or it already ran today (unless `force`,
 ## used when the window closes). Returns whether it saved.
 func autosave(force: bool = false) -> bool:
-	if not GameState.has_session() or not GameState.player.alive:
+	if not autosave_enabled or not GameState.has_session() or not GameState.player.alive:
 		return false
 	if not bool(Settings.get_value("autosave")) or GameState.pending_encounter != "":
 		return false

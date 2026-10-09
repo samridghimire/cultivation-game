@@ -6,6 +6,7 @@ const FoundationYear := preload("res://tests/sim/foundation_year.gd")
 
 
 func _initialize() -> void:
+	root.get_node("SaveManager").autosave_enabled = false
 	process_frame.connect(_run, CONNECT_ONE_SHOT)
 
 

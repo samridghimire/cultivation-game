@@ -118,3 +118,16 @@ func test_suspend_save_refuses_without_session() -> void:
 	saves._last_suspend_save_msec = -1
 	assert_false(saves.autosave_on_suspend(), "no session")
 	assert_eq(saves._last_suspend_save_msec, -1)
+
+
+func test_disabled_flag_writes_nothing() -> void:
+	var s := _setup()
+	var gs: Node = s[0]
+	var saves: Node = s[1]
+	saves.autosave_enabled = false
+	assert_false(saves.autosave(true), "sim sessions never autosave")
+	gs.get_node("/root/GameClock").advance(40)
+	assert_false(saves.autosave(), "a month later still nothing")
+	assert_false(saves.has_save("autosave"))
+	saves.autosave_enabled = true
+	_cleanup(gs, saves)
