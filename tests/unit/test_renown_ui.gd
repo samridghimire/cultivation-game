@@ -45,3 +45,21 @@ func test_shop_deal_note_with_and_without_a_deal() -> void:
 	assert_eq(ShopScreen.deal_note(c, "misty_forest", 100), "  A friend's price: -20% (12 days left)")
 	assert_eq(ShopScreen.deal_note(c, "qingshi_village", 100), "")
 	assert_eq(ShopScreen.deal_note(c, "misty_forest", 113), "")
+
+
+func test_map_qi_line_names_the_flag_reason() -> void:
+	var d := data()
+	var region_id := ""
+	var entry: Dictionary = {}
+	for id: String in d.regions:
+		var flags_def: Array = d.regions[id].get("qi_flags", [])
+		if not flags_def.is_empty():
+			region_id = id
+			entry = flags_def[0]
+			break
+	assert_true(region_id != "")
+	var off := WorldMapScreen.qi_line(d, region_id, {}, [])
+	assert_true(off.begins_with("Qi density x"))
+	assert_false(off.contains("("))
+	var on := WorldMapScreen.qi_line(d, region_id, {String(entry["flag"]): true}, [])
+	assert_true(on.ends_with("(%s)" % String(entry["text"])))

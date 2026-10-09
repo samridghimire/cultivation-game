@@ -446,7 +446,8 @@ func _refresh() -> void:
 		"%s · %s" % [GameClock.date_string(), season_label(GameClock.total_days)],
 	]))
 	var density := GameState.region_qi_density()
-	_status.text += "\n%s   (Qi x%s)" % [Exploration.region_name(data, GameState.current_region), String.num(density, 2)]
+	var qi_why := ", ".join(Exploration.qi_flag_reasons(data, GameState.current_region, GameState.world_flags))
+	_status.text += "\n%s   (Qi x%s%s)" % [Exploration.region_name(data, GameState.current_region), String.num(density, 2), ", " + qi_why if qi_why != "" else ""]
 	_status.text += region_event_suffix(data, GameState.world_events, GameState.current_region, p)
 	if SecretRealms.open_in_region(data, GameState.current_region, GameClock.total_days):
 		_status.text += "   (Secret realm open)"

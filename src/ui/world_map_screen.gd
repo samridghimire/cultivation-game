@@ -244,6 +244,16 @@ static func foes_bbcode(foes: Array) -> String:
 	return "" if parts.is_empty() else "You may meet: " + ", ".join(parts)
 
 
+## "Qi density x2.75 (the valley guardian's seed)": the region's qi with the reasons its flags enrich it.
+static func qi_line(data: GameData, region_id: String, flags: Dictionary, events: Array) -> String:
+	var qi := Exploration.qi_density(data, region_id, flags) * WorldEvents.qi_multiplier(data, events, region_id)
+	var text := "Qi density x%s" % String.num(qi, 2)
+	var reasons := Exploration.qi_flag_reasons(data, region_id, flags)
+	if not reasons.is_empty():
+		text += " (%s)" % ", ".join(reasons)
+	return text
+
+
 ## "Your name here: Respected" when the player holds a renown title in the region, else "".
 static func renown_note(c: CharacterData, data: GameData, region_id: String) -> String:
 	var t := Renown.title(c, data, region_id)
@@ -352,7 +362,7 @@ func _show_details() -> void:
 	if region.is_empty():
 		return
 	_name.text = String(region.get("name", _selected))
-	_info.text = "Qi density x%s   |   Danger: %s" % [String.num(Exploration.qi_density(data, _selected, GameState.world_flags) * WorldEvents.qi_multiplier(data, GameState.world_events, _selected), 2), danger_name(data, _selected)]
+	_info.text = "%s   |   Danger: %s" % [qi_line(data, _selected, GameState.world_flags, GameState.world_events), danger_name(data, _selected)]
 	_description.text = String(region.get("description", ""))
 	var name_here := renown_note(GameState.player, data, _selected)
 	if name_here != "":
