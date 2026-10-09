@@ -39,6 +39,7 @@ var _threat_prompt: ThreatPrompt
 ## must have open(), close() and a `closed` signal.
 var _screens: Dictionary = {}
 var _combat_report: CombatReport
+var _fight_rating: String = ""
 var _dialogue: DialogueWindow
 var _encounter: EncounterWindow
 var _arrival_waiting: String = ""  # arrival card held back while a road encounter window is open (WU-080)
@@ -172,6 +173,7 @@ func _ready() -> void:
 	EventBus.child_training_requested.connect(_on_child_training_requested)
 	EventBus.player_died.connect(_on_player_died)
 	EventBus.player_respawned.connect(func(_anchor_id: String, _lives: int): _refresh(); _open_pending_respawn())
+	EventBus.combat_started.connect(_on_combat_started)
 	EventBus.combat_finished.connect(_on_combat_finished)
 	EventBus.tribulation_prepare_requested.connect(_on_tribulation_prepare)
 	EventBus.tribulation_endured.connect(_on_tribulation_endured)
@@ -603,13 +605,19 @@ func _on_player_died(cause: String) -> void:
 	_update_modal()
 
 
+## The rating is read before the fight, while hp and qi are still whole (WU-104).
+func _on_combat_started(enemy: Dictionary) -> void:
+	_fight_rating = CombatReport.rating_line(GameState.player, GameState.data, enemy)
+
+
 ## Fights can start from an interaction menu or a random encounter; either
 ## way, take over the screen with the full report.
 func _on_combat_finished(enemy_name: String, victory: bool, lines: PackedStringArray) -> void:
 	_choice_menu.close()
 	_close_screens()
 	_combat_report.show_fight(enemy_name, victory, lines, GameState.last_loss_advice, GameState.last_fight_spoils,
-			GameState.last_fight_playback.get("trace", []), int(GameState.last_fight_playback.get("player_max", 0)), int(GameState.last_fight_playback.get("enemy_max", 0)), GameState.last_fight_friendly)
+			GameState.last_fight_playback.get("trace", []), int(GameState.last_fight_playback.get("player_max", 0)), int(GameState.last_fight_playback.get("enemy_max", 0)), GameState.last_fight_friendly, _fight_rating)
+	_fight_rating = ""
 	_update_modal()
 
 

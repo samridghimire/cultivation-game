@@ -7,6 +7,7 @@ extends PanelContainer
 signal closed
 
 var _title: Label
+var _rated: Label
 var _log: RichTextLabel
 var _devour_button: Button
 var _close_button: Button
@@ -37,6 +38,10 @@ func _init() -> void:
 	add_child(box)
 	_title = UIStyle.label("", 24)
 	box.add_child(_title)
+	_rated = UIStyle.label("", 15)
+	_rated.name = "Rated"
+	_rated.visible = false
+	box.add_child(_rated)
 	var bars := HBoxContainer.new()
 	bars.add_theme_constant_override("separation", 12)
 	box.add_child(bars)
@@ -64,6 +69,14 @@ func _init() -> void:
 
 
 ## Height of the fight log for `rows` lines: short fights get a short panel (WU-087).
+## "Rated: Even (55%) before the fight." from the enemy as the fight began
+## (WU-104), or "" for a friendly spar.
+static func rating_line(c: CharacterData, data: GameData, enemy: Dictionary) -> String:
+	if bool(enemy.get("friendly", false)):
+		return ""
+	return "Rated: %s before the fight." % UIStyle.fight_label(c, data, enemy)
+
+
 static func log_height(rows: int) -> float:
 	return clampf(rows * 26.0 + 20.0, 120.0, 360.0)
 
@@ -100,7 +113,7 @@ func _unhandled_input(event: InputEvent) -> void:
 ## `trace`: Combat.resolve's per-line [your hp, foe hp]; with it (and the
 ## "Animate fights" setting) the lines are revealed one at a time. Without
 ## it, or with the setting off, the report is complete at once.
-func show_fight(enemy_name: String, victory: bool, lines: PackedStringArray, advice: String = "", spoils: PackedStringArray = PackedStringArray(), trace: Array = [], player_max: int = 0, enemy_max: int = 0, friendly: bool = false) -> void:
+func show_fight(enemy_name: String, victory: bool, lines: PackedStringArray, advice: String = "", spoils: PackedStringArray = PackedStringArray(), trace: Array = [], player_max: int = 0, enemy_max: int = 0, friendly: bool = false, rated: String = "") -> void:
 	_color = UIStyle.ACCENT if victory else UIStyle.CATEGORY_COLORS["danger"]
 	_victory = victory
 	_advice = advice
@@ -109,6 +122,8 @@ func show_fight(enemy_name: String, victory: bool, lines: PackedStringArray, adv
 	_trace = trace
 	_title.text = "Friendly spar: %s" % enemy_name if friendly else "%s: %s" % ["Victory" if victory else "Defeat", enemy_name]
 	_title.add_theme_color_override("font_color", _color)
+	_rated.text = rated
+	_rated.visible = rated != "" and not friendly
 	_log.clear()
 	_log.custom_minimum_size.y = log_height(lines.size() + spoils.size() + (2 if advice != "" else 0))
 	_shown = 0
