@@ -283,3 +283,11 @@ func test_game_state_deed_cooldown() -> void:
 	var after_first: int = c.inventory.get("spirit_stone", 0)
 	gs.perform_deed("donate_stones")
 	assert_eq(c.inventory.get("spirit_stone", 0), after_first, "second donation is refused within 30 days")
+
+
+func test_material_value_cache_matches_uncached() -> void:
+	var d := data()
+	for item_id: String in d.items:
+		var cached := Items.material_value(d, item_id)
+		assert_almost_eq(cached, Items.compute_material_value(d, item_id))
+		assert_almost_eq(Items.material_value(d, item_id), cached)

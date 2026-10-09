@@ -94,6 +94,7 @@ var anchors: Dictionary = {}
 ## Claimable cave abodes: abode id -> regions.json abode def plus "region" (Abodes).
 var abodes: Dictionary = {}
 var recipes: Dictionary = {}  # id -> Dictionary (data/recipes.json)
+var material_value_cache: Dictionary = {}  # item id -> float, filled lazily by Items.material_value
 ## Alchemy tunables (see Alchemy).
 var alchemy: Dictionary = {}
 ## recipes.json commissions block (PROF-001, Commissions); empty = none.

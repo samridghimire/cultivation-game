@@ -338,7 +338,16 @@ static func sell_price(data: GameData, item_id: String) -> int:
 ## Spirit-stone value of the ingredients behind one unit of a crafted item
 ## (cheapest recipe that outputs it), or -1.0 if no
 ## recipe makes it. Ingredients use their shop price.
+## Memoised per item on GameData (the recipe scan is costly for shop and
+## commission lists); content is immutable after load.
 static func material_value(data: GameData, item_id: String) -> float:
+	if not data.material_value_cache.has(item_id):
+		data.material_value_cache[item_id] = compute_material_value(data, item_id)
+	return data.material_value_cache[item_id]
+
+
+## Uncached scan behind material_value.
+static func compute_material_value(data: GameData, item_id: String) -> float:
 	var best := -1.0
 	for recipe: Dictionary in data.recipes.values():
 		# The normal output sets the yield; great_output only counts for an item
