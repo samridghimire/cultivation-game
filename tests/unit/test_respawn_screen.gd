@@ -58,6 +58,24 @@ func test_fight_death_stores_odds_in_pending_respawn() -> void:
 	assert_eq(RespawnScreen.lesson_text(gs.pending_respawn).contains("20%"), true)
 
 
+## [REVIEW] win_chance rates a full-HP fight with no allies, so a death in a
+## wounded bout (start_hp given) must not show those odds as the lesson.
+func test_wounded_bout_death_has_no_odds_lesson() -> void:
+	var gs := _gs()
+	var c := CharacterFactory.create("Wounded", gs.data, seeded_rng())
+	gs.start_session(c)
+	gs.pending_event = ""
+	c.realm_index = 1
+	gs.fight_enemy(DEMON)
+	assert_true(gs.pending_respawn.has("win_chance"), "a full-HP fight records its odds")
+	gs.pending_respawn = {}
+	gs.fight_enemy(DEMON, 1)
+	assert_false(gs.pending_respawn.is_empty(), "the wounded bout ended in a respawn")
+	assert_false(gs.pending_respawn.has("win_chance"))
+	assert_eq(RespawnScreen.lesson_text(gs.pending_respawn), "")
+	gs.end_session()
+
+
 func test_choose_other_anchor_after_respawn() -> void:
 	var gs := _gs()
 	var c := CharacterFactory.create("Reborn", gs.data, seeded_rng())

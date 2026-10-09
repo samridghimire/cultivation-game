@@ -655,7 +655,7 @@ static func explore_prefix(encounter: Dictionary, discovery: bool, deep_path: bo
 	if deep_path:
 		return "A hidden path: "
 	if encounter.has("min_renown"):
-		return "Because your name is known here, "
+		return "Your name is known here: "
 	return ""
 
 
@@ -2330,7 +2330,9 @@ func fight_enemy(enemy: Dictionary, start_hp: int = -1) -> bool:
 		var ally_id := Karma.strike_ally(player, npcs, data, current_region, String(enemy.get("id", "")))
 		if ally_id != "":
 			allies.append(Karma.ally_strike(player, npcs, data, ally_id))
-	var pre_odds := Combat.win_chance(player, data, enemy)
+	# win_chance rates a full-HP fight without allies; a wounded bout or an ally
+	# strike makes that figure wrong, so the respawn lesson leaves it out then.
+	var pre_odds := Combat.win_chance(player, data, enemy) if start_hp < 0 and allies.is_empty() else -1.0
 	EventBus.combat_started.emit(enemy)
 	var result := Combat.resolve(player, data, enemy, rng, allies, start_hp)
 	last_fight_hp = int(result["player_hp"])
@@ -2383,7 +2385,10 @@ func fight_enemy(enemy: Dictionary, start_hp: int = -1) -> bool:
 			EventBus.player_changed.emit()
 			return false
 	if outcome["died"]:
-		_die_violently(outcome["cause"], {"enemy_id": String(enemy.get("id", "")), "enemy_name": String(enemy.get("name", "enemy")), "win_chance": pre_odds})
+		var fight_info := {"enemy_id": String(enemy.get("id", "")), "enemy_name": String(enemy.get("name", "enemy"))}
+		if pre_odds >= 0.0:
+			fight_info["win_chance"] = pre_odds
+		_die_violently(outcome["cause"], fight_info)
 		return false
 	if result["victory"]:
 		_try_tame(String(enemy.get("id", "")))

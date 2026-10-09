@@ -108,6 +108,6 @@ func test_renowned_request_title_and_prefix() -> void:
 	assert_eq(EncounterWindow.title_for(renowned, true), "Discovery: Old Debt", "a discovery title wins")
 	assert_eq(EncounterWindow.title_for(renowned, false, true), "Hidden path: Old Debt", "a deep path title wins")
 	assert_eq(EncounterWindow.title_for({"id": "x_y", "name": "Plain"}, false), "Encounter")
-	assert_eq(GameState.explore_prefix(renowned, false, false), "Because your name is known here, ")
+	assert_eq(GameState.explore_prefix(renowned, false, false), "Your name is known here: ")
 	assert_eq(GameState.explore_prefix(renowned, true, false), "A discovery: ")
 	assert_eq(GameState.explore_prefix({"id": "p"}, false, false), "")

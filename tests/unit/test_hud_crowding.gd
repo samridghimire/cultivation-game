@@ -26,6 +26,8 @@ func _check(scale: float) -> void:
 	var root := _tree().root
 	var old_size := root.size
 	root.size = Vector2i(DECK)
+	var old_scale: Variant = Settings.get_value("ui_scale")
+	var old_hints: Variant = Settings.get_value("hud_hints")
 	Settings.set_value("ui_scale", scale)
 	Settings.set_value("hud_hints", 3)
 	var gs: Node = root.get_node("GameState")
@@ -57,7 +59,10 @@ func _check(scale: float) -> void:
 	hud.set("_target_name", "Elder Mo")
 	hud.call("_refresh_key_hints")
 	await _frames()
+	rect = status.get_global_rect()
 	assert_false(rect.intersects(prompt.get_global_rect()), "status panel %s overlaps the prompt %s" % [rect, prompt.get_global_rect()])
 	hud.queue_free()
-	Settings.set_value("ui_scale", 1.0)
+	Settings.set_value("ui_scale", old_scale)
+	Settings.set_value("hud_hints", old_hints)
 	root.size = old_size
+	gs.end_session()
