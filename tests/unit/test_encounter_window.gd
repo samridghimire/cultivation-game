@@ -58,6 +58,29 @@ func test_window_lists_choices_and_resolves_one() -> void:
 	_cleanup(gs)
 
 
+func test_discovery_title_and_log_line() -> void:
+	var gs := _start(ENCOUNTER)
+	gs.current_region = "misty_forest"
+	gs.explore()
+	assert_true(gs.last_explore_discovery)
+	assert_eq(gs.pending_encounter, "misty_forest_hollow_shrine")
+	var window := EncounterWindow.new()
+	window.open()
+	assert_true(window.visible)
+	assert_eq(window._title.text, "Discovery: Hollow Shrine")
+	window.free()
+	assert_eq(EncounterWindow.title_for({"id": "x_y"}, true), "Discovery: X Y")
+	assert_eq(EncounterWindow.title_for({"id": "x_y"}, false), "Encounter")
+	gs.pending_encounter = ""
+	gs.explore(["test_tag"])
+	assert_false(gs.last_explore_discovery, "a normal encounter is not a discovery")
+	var normal := EncounterWindow.new()
+	normal.open()
+	assert_eq(normal._title.text, "Encounter")
+	normal.free()
+	_cleanup(gs)
+
+
 func test_walk_away_when_every_choice_is_locked() -> void:
 	var gs := _start(LOCKED)
 	var window := EncounterWindow.new()

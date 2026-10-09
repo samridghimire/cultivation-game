@@ -596,6 +596,8 @@ func _on_encounter_choice_requested(_encounter_id: String) -> void:
 	_choice_menu.close()
 	_close_screens()
 	_encounter.open()
+	if GameState.last_explore_discovery:
+		Audio.play("chime_progress")
 	_update_modal()
 
 

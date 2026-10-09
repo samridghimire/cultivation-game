@@ -7,6 +7,7 @@ extends PanelContainer
 
 signal closed
 
+var _title: Label
 var _text: Label
 var _choices: VBoxContainer
 
@@ -18,7 +19,8 @@ func _init() -> void:
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 12)
 	add_child(box)
-	box.add_child(UIStyle.label("Encounter", 22, UIStyle.ACCENT))
+	_title = UIStyle.label("Encounter", 22, UIStyle.ACCENT)
+	box.add_child(_title)
 	_text = UIStyle.label("", 17)
 	_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_text.custom_minimum_size = Vector2(656, 0)
@@ -37,12 +39,22 @@ static func choice_label(choice: Dictionary) -> String:
 	return text
 
 
+## Window title: "Encounter", or "Discovery: <name>" for a region discovery.
+static func title_for(encounter: Dictionary, discovery: bool) -> String:
+	if not discovery:
+		return "Encounter"
+	var name := String(encounter.get("name", String(encounter.get("id", "")).capitalize()))
+	return "Discovery: " + name
+
+
 ## Shows the pending encounter (or closes if there is none).
 func open() -> void:
 	var choices := GameState.encounter_choices()
 	if choices.is_empty():
 		close()
 		return
+	var enc: Dictionary = GameState.data.encounters.get(GameState.pending_encounter, {})
+	_title.text = title_for(enc, GameState.last_explore_discovery)
 	_text.text = GameState.rival_text(String(GameState.data.encounters.get(GameState.pending_encounter, {}).get("text", "")))
 	for child in _choices.get_children():
 		_choices.remove_child(child)
