@@ -354,6 +354,13 @@
         "Some places hold a festival in a fixed month each year: the Lantern Festival in Qingshi, a spring ancestor festival at Azure Peak, a Mid-Autumn moon festival at Fallen Star Market. The journal lists the ones nearby.",
         "During a festival people are warmer: chats and gifts earn more favor, some markets lower their prices, and special encounters appear in the streets."
       ]
+    },
+    {
+      "id": "letters",
+      "title": "Letters",
+      "body": [
+        "Friends you have made sometimes write to you. Some letters ask for something, such as a pill. Bring it to them in person within the time given: their menu offers \"Give <item> (they asked in a letter)\", which earns favor. A request you let lapse costs nothing."
+      ]
     }
   ]
 }

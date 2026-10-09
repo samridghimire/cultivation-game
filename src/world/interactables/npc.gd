@@ -129,6 +129,7 @@ func get_options() -> Array[Dictionary]:
 		for deed in Deeds.available(GameState.data, def["deed_context"], GameState.world_flags):
 			options.append({"label": deed["name"], "action": GameState.perform_deed.bind(deed["id"])})
 	options.append_array(_child_options())
+	options.append_array(_letter_options())
 	options.append_array(_acquaintance_options())
 	options.append_array(_mentor_options())
 	options.append_array(_treatment_options())
@@ -150,6 +151,21 @@ static func festival_note(data: GameData, events: Array, region_id: String) -> S
 	if mult <= 1.0:
 		return ""
 	return " (festival: favor x%s)" % String.num(mult, 1).trim_suffix(".0")
+
+
+## WU-099: "Give <item> (they asked in a letter)" while this NPC's letter request is open.
+func _letter_options() -> Array[Dictionary]:
+	var options: Array[Dictionary] = []
+	if GameState.player == null or not GameState.npcs.has(npc_id):
+		return options
+	var req := GameState.letter_request(npc_id)
+	if req.is_empty():
+		return options
+	var item_name := String(GameState.data.items.get(String(req["item"]), {}).get("name", req["item"]))
+	var count := int(req.get("count", 1))
+	var label := "Give %s%s (they asked in a letter)" % [item_name, "" if count == 1 else " x%d" % count]
+	options.append(_entry(label, GameState.check_letter_request(npc_id), GameState.answer_letter_request.bind(npc_id)))
+	return options
 
 
 ## "Chat with <name>" (only for NPCs without a dialogue file) and "Give a gift".
