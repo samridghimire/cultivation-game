@@ -625,6 +625,8 @@ static func complete_mission(c: CharacterData, data: GameData, mission_id: Strin
 ## Load errors for data/sect_missions.json.
 static func validate_missions(data: GameData) -> PackedStringArray:
 	var errors: PackedStringArray = []
+	if data.sect_mission_loss_cooldown_days < 0:
+		errors.append("sect_missions.json loss_cooldown_days must be >= 0")
 	for mission: Dictionary in data.sect_missions.values():
 		var id := String(mission["id"])
 		var kind := String(mission.get("kind", ""))

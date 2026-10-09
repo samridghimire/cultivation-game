@@ -27,6 +27,14 @@ func test_route_lines_show_here_and_realm_gates() -> void:
 	assert_true(near[0].begins_with("Direct road from here"))
 
 
+
+func test_route_days_label_uses_travel_speed() -> void:
+	var c := new_character()
+	c.realm_index = 0
+	assert_eq(WorldMapScreen.route_days_label(c, data(), {"days": 10}), "10d")
+	c.realm_index = data().realm_index_of("core_formation")
+	assert_eq(WorldMapScreen.route_days_label(c, data(), {"days": 10}), "5d", "a flying sword halves the road (TRAV-007)")
+
 func test_place_names_skip_travel_points() -> void:
 	var names := WorldMapScreen.place_names(data(), "qingshi_village")
 	assert_true(names.has("Wandering Merchant"))

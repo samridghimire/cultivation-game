@@ -247,6 +247,11 @@ static func renown_note(c: CharacterData, data: GameData, region_id: String) -> 
 	return "" if t == "" else "Your name here: " + t
 
 
+## "3d": the days a route takes this character, shortened by a flying sword (TRAV-007).
+static func route_days_label(c: CharacterData, data: GameData, route: Dictionary) -> String:
+	return "%dd" % Exploration.travel_days(c, data, int(route.get("days", 1)))
+
+
 static func danger_name(data: GameData, region_id: String) -> String:
 	var danger := int(data.regions.get(region_id, {}).get("danger", 0))
 	return DANGER_NAMES[clampi(danger, 0, DANGER_NAMES.size() - 1)]
@@ -306,7 +311,7 @@ func _draw_map() -> void:
 			var a: Vector2 = _positions[region_id]
 			var b: Vector2 = _positions[to]
 			_canvas.draw_line(a, b, LOCKED_COLOR if _route_gated(data, region_id, to) else ROUTE_COLOR, 4.0)
-			var days := "%dd" % int(route.get("days", 1))
+			var days := route_days_label(GameState.player, data, route)
 			_canvas.draw_string(font, (a + b) / 2.0 + Vector2(4, -4), days, HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color(0.9, 0.9, 0.85))
 	for region_id in _positions:
 		var kinds: Array = []

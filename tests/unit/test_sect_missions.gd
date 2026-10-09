@@ -26,6 +26,8 @@ func test_mission_data_is_valid() -> void:
 	assert_eq(Sects.validate_missions(d).size(), 1, "mortals have a single stage")
 	d.sect_missions["deep"]["min_realm"] = "qi_refining"
 	assert_eq(Sects.validate_missions(d).size(), 0)
+	d.sect_mission_loss_cooldown_days = -1
+	assert_eq(Sects.validate_missions(d).size(), 1, "loss_cooldown_days must be >= 0")
 
 
 func test_missions_offered_per_sect() -> void:
