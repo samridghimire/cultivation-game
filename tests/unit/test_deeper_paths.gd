@@ -113,3 +113,17 @@ func test_explore_meets_the_hidden_path_once() -> void:
 		if gs.pending_encounter != "":
 			gs.choose_encounter(0)
 	gs.end_session()
+
+
+func test_every_region_has_a_deeper_path_sharing_its_tags() -> void:
+	for rid: String in data().regions:
+		var tags: Array = data().regions[rid].get("encounter_tags", [])
+		var found := false
+		for eid: String in data().encounters:
+			var e: Dictionary = data().encounters[eid]
+			if not e.has("min_explores") or not e.has("blocked_by_flag"):
+				continue
+			for t: Variant in e.get("tags", []):
+				if tags.has(t):
+					found = true
+		assert_true(found, "%s has no deeper path" % rid)

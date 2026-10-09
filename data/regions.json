@@ -121,7 +121,7 @@
         {"to": "fallen_star_market", "days": 12},
         {"to": "myriad_peaks_ridge", "days": 10, "min_realm": "core_formation"}
       ],
-      "quiet_lines": ["Wind scours the ridge; far below, clouds roll like a slow white sea.", "You climb a switchback of wet stone and find only more switchback.", "A hawk hangs on the updraft, watching you, then slides away.", "Frost glitters on the rocks where the qi runs thin and sharp.", "Your breath smokes. The peak keeps its own counsel.", "Rockfall rattles in the distance, and then nothing.", "You rest in the lee of a boulder and watch the sun set the clouds on fire."], "encounter_tags": ["mountain", "wild"],
+      "quiet_lines": ["Wind scours the ridge; far below, clouds roll like a slow white sea.", "You climb a switchback of wet stone and find only more switchback.", "A hawk hangs on the updraft, watching you, then slides away.", "Frost glitters on the rocks where the qi runs thin and sharp.", "Your breath smokes. The peak keeps its own counsel.", "Rockfall rattles in the distance, and then nothing.", "You rest in the lee of a boulder and watch the sun set the clouds on fire."], "encounter_tags": ["mountain", "wild", "azure_cliffs"],
       "places": [
         {"type": "meditation", "anchor_id": "azure_cliff", "display_name": "Cloud-Sea Cliff (2x qi)", "pos": [1300, 180], "size": [120, 70], "color": "c9dceb", "qi_density": 2.0},
         {"type": "gather", "display_name": "Crystal Vein", "pos": [600, 350], "size": [120, 80], "color": "7fa8c9", "gather_days": 10,

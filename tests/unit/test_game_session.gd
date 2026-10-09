@@ -556,6 +556,7 @@ func test_explore_many_stops_when_something_happens() -> void:
 	var days: int = gs.explore_many(7, ["t_ex"])
 	assert_eq(days, 1)
 	assert_eq(_root().get_node("GameClock").total_days, start_day + 1)
+	gs.world_flags["found_hermit_garden"] = true  # C-048: Qingshi's deeper path would stop the run
 	assert_eq(gs.explore_many(99, ["t_no_such_tag"]), 30, "clamped to 30 days")
 	gs.data.encounters.erase("t_ex_find")
 	gs.end_session()
