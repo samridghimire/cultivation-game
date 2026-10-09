@@ -93,11 +93,13 @@ static func realm_allows(c: CharacterData, data: GameData, e: Dictionary) -> boo
 ## Fortune-adjusted weight: [{encounter, weight}]. `rival` is `c`'s living
 ## rival (Rivals) or null; encounters with a `rival` condition need one.
 ## `misfortune_scale` multiplies misfortune weights (a clan estate's ward).
-static func eligible_encounters(c: CharacterData, data: GameData, tags: Array, flags: Dictionary, rival: CharacterData = null, misfortune_scale: float = 1.0) -> Array[Dictionary]:
+static func eligible_encounters(c: CharacterData, data: GameData, tags: Array, flags: Dictionary, rival: CharacterData = null, misfortune_scale: float = 1.0, season: String = "") -> Array[Dictionary]:
 	var result: Array[Dictionary] = []
 	var fortune_shift := (c.attribute("fortune") - 10) * FORTUNE_WEIGHT_PER_POINT
 	for e: Dictionary in data.encounters.values():
 		if not _shares_tag(e.get("tags", []), tags):
+			continue
+		if not in_season(e, season):
 			continue
 		if not realm_allows(c, data, e):
 			continue
@@ -127,12 +129,12 @@ static func eligible_encounters(c: CharacterData, data: GameData, tags: Array, f
 ## {fight, choice, fortune, misfortune, other: shares 0..1 summing to 1,
 ## foes: [{name, danger, lethal}] most dangerous first, at most 4}. Encounters with an
 ## enemy count as `fight`, those with choices as `choice`, the rest by their kind.
-static func outlook(c: CharacterData, data: GameData, tags: Array, flags: Dictionary) -> Dictionary:
+static func outlook(c: CharacterData, data: GameData, tags: Array, flags: Dictionary, season: String = "") -> Dictionary:
 	var sums := {"fight": 0.0, "choice": 0.0, "fortune": 0.0, "misfortune": 0.0, "other": 0.0}
 	var foes: Array[Dictionary] = []
 	var seen := {}
 	var total := 0.0
-	for entry in eligible_encounters(c, data, tags, flags):
+	for entry in eligible_encounters(c, data, tags, flags, null, 1.0, season):
 		var e: Dictionary = entry["encounter"]
 		var weight: float = entry["weight"]
 		var bucket := "other"
@@ -159,8 +161,8 @@ static func outlook(c: CharacterData, data: GameData, tags: Array, flags: Dictio
 
 
 ## Picks a weighted random encounter, or {} if none are eligible.
-static func roll_encounter(c: CharacterData, data: GameData, tags: Array, flags: Dictionary, rng: RandomNumberGenerator, rival: CharacterData = null, misfortune_scale: float = 1.0) -> Dictionary:
-	var pool := eligible_encounters(c, data, tags, flags, rival, misfortune_scale)
+static func roll_encounter(c: CharacterData, data: GameData, tags: Array, flags: Dictionary, rng: RandomNumberGenerator, rival: CharacterData = null, misfortune_scale: float = 1.0, season: String = "") -> Dictionary:
+	var pool := eligible_encounters(c, data, tags, flags, rival, misfortune_scale, season)
 	var total := 0.0
 	for entry in pool:
 		total += entry["weight"]
@@ -290,12 +292,27 @@ static func _validate_grateful(data: GameData, def: Dictionary, where: String) -
 	return errors
 
 
+## Seasons an entry's optional `seasons` list may name (lowercase; Calendar.season_of gives them capitalized).
+const SEASON_NAMES: Array[String] = ["spring", "summer", "autumn", "winter"]
+
+
+## Whether a gather entry or encounter with an optional `seasons` list is
+## available in `season` (any Calendar.season_of name, any case). "" = ignore seasons.
+static func in_season(entry: Dictionary, season: String) -> bool:
+	if season == "" or not entry.has("seasons"):
+		return true
+	return (entry["seasons"] as Array).has(season.to_lower())
+
+
 ## The gathering table `c` can actually draw from: entries whose optional
 ## `min_realm` is above the character's realm become "nothing found" (same
-## weight), so the odds of the common finds stay the same.
-static func gather_table_for(c: CharacterData, data: GameData, table: Array) -> Array:
+## weight), so the odds of the common finds stay the same. Entries outside
+## their `seasons` (when `season` is given) are left out.
+static func gather_table_for(c: CharacterData, data: GameData, table: Array, season: String = "") -> Array:
 	var result: Array = []
 	for entry: Dictionary in table:
+		if not in_season(entry, season):
+			continue
 		if _gather_entry_locked(c, data, entry):
 			result.append({"item": "", "weight": entry.get("weight", 1)})
 		else:

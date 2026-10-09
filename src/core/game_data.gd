@@ -391,6 +391,19 @@ func _validate() -> void:
 			load_errors.append("No spiritual root grade for element_count %d" % n)
 
 
+## Load errors for an optional `seasons` list (SEASON-001) on a gather entry or encounter.
+func _validate_seasons(entry: Dictionary, label: String) -> void:
+	if not entry.has("seasons"):
+		return
+	var seasons: Variant = entry["seasons"]
+	if not (seasons is Array) or (seasons as Array).is_empty():
+		load_errors.append("%s has `seasons` that is not a non-empty list" % label)
+		return
+	for season: Variant in seasons:
+		if not (season is String) or not Exploration.SEASON_NAMES.has(season):
+			load_errors.append("%s has unknown season '%s'" % [label, season])
+
+
 func _validate_world() -> void:
 	if not regions.has(start_region):
 		load_errors.append("start_region '%s' is not a region" % start_region)
@@ -423,6 +436,7 @@ func _validate_world() -> void:
 				load_errors.append("Region '%s' has an npc_spot that is not [x, y]: %s" % [region["id"], spot])
 		for place: Dictionary in region.get("places", []):
 			for entry: Dictionary in place.get("gather_table", []):
+				_validate_seasons(entry, "Region '%s' gather entry '%s'" % [region["id"], entry.get("item", "")])
 				if entry.get("item", "") != "" and not items.has(entry["item"]):
 					load_errors.append("Region '%s' gathers unknown item '%s'" % [region["id"], entry["item"]])
 				if entry.has("min_realm") and realm_index_of(String(entry["min_realm"])) < 0:
@@ -434,6 +448,7 @@ func _validate_world() -> void:
 			if place.has("faction") and not sects.has(place["faction"]):
 				load_errors.append("Region '%s' place has unknown faction '%s'" % [region["id"], place["faction"]])
 	for e: Dictionary in encounters.values():
+		_validate_seasons(e, "Encounter '%s'" % e["id"])
 		for key in ["min_realm", "max_realm"]:
 			if e.has(key) and realm_index_of(e[key]) < 0:
 				load_errors.append("Encounter '%s' has unknown %s '%s'" % [e["id"], key, e[key]])

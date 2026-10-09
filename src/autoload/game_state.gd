@@ -561,7 +561,7 @@ func explore_outlook(tags: Array = []) -> String:
 	if tags.is_empty():
 		tags = data.regions.get(current_region, {}).get("encounter_tags", [])
 	tags = tags + WorldEvents.encounter_tags(data, world_events, current_region)
-	return Guidance.outlook_text(Exploration.outlook(player, data, tags, world_flags))
+	return Guidance.outlook_text(Exploration.outlook(player, data, tags, world_flags, Calendar.season_of(GameClock.total_days)))
 
 
 ## One day of exploring. Returns {event: "nothing"|"fight"|"choice"|"threat"|"story"}.
@@ -573,7 +573,7 @@ func _explore_once(tags: Array, quiet: bool) -> Dictionary:
 	if tags.is_empty():
 		tags = data.regions.get(current_region, {}).get("encounter_tags", [])
 	tags = tags + WorldEvents.encounter_tags(data, world_events, current_region)
-	var encounter := Exploration.roll_encounter(player, data, tags, world_flags, rng, Rivals.rival_of(player, npcs), 1.0 - ClanEstate.ward(clan, data, current_region))
+	var encounter := Exploration.roll_encounter(player, data, tags, world_flags, rng, Rivals.rival_of(player, npcs), 1.0 - ClanEstate.ward(clan, data, current_region), Calendar.season_of(GameClock.total_days))
 	if encounter.is_empty():
 		if not quiet:
 			EventBus.post(("You search the area but find nothing. %s" % Exploration.quiet_line(data, current_region, GameClock.total_days)).strip_edges())
@@ -830,7 +830,7 @@ func gather(table: Array, days: int) -> void:
 	EventBus.topic = "trade"
 	if not _can_act():
 		return
-	var found := Exploration.gather(player, Exploration.gather_table_for(player, data, table), rng)
+	var found := Exploration.gather(player, Exploration.gather_table_for(player, data, table, Calendar.season_of(GameClock.total_days)), rng)
 	var notes: PackedStringArray = []
 	for item_id in found:
 		player.add_item(item_id, found[item_id])

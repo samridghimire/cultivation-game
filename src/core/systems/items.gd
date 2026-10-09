@@ -155,10 +155,21 @@ static func sources(data: GameData, item_id: String) -> Array[String]:
 			if kind == "merchant" and merchant_sells(data, item, place.get("stock_tags", []), int(place.get("max_price", 0))):
 				lines.append("Sold at " + where)
 			elif kind == "gather":
+				var found := false
+				var year_round := false
+				var seasons: Array = []
 				for entry: Dictionary in place.get("gather_table", []):
-					if entry.get("item", "") == item_id:
-						lines.append("Gathered at " + where)
-						break
+					if entry.get("item", "") != item_id:
+						continue
+					found = true
+					if entry.has("seasons"):
+						for season: String in entry["seasons"]:
+							if not seasons.has(season):
+								seasons.append(season)
+					else:
+						year_round = true
+				if found:
+					lines.append("Gathered at %s%s" % [where, "" if year_round else " (%s)" % ", ".join(seasons)])
 	if lines.is_empty():
 		lines.append("Found exploring")
 	return lines

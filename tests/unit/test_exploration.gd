@@ -311,3 +311,57 @@ func test_quiet_line_is_stable_per_day_and_varies() -> void:
 	assert_eq(Exploration.quiet_line(d, "no_such_region", 5), "")
 	for region: Dictionary in d.regions.values():
 		assert_true((region.get("quiet_lines", []) as Array).size() >= 6, "%s needs quiet lines" % region["id"])
+
+
+# --- SEASON-001: seasonal herbs and encounters ---------------------------------
+
+func test_out_of_season_gather_entry_never_rolls() -> void:
+	var c := new_character()
+	var table := [
+		{"item": "dew_grass", "weight": 1, "min": 1, "max": 1},
+		{"item": "spirit_herb", "weight": 5, "min": 1, "max": 1, "seasons": ["spring"]},
+	]
+	var winter := Exploration.gather_table_for(c, data(), table, "Winter")
+	assert_eq(winter.size(), 1)
+	for seed_value in 200:
+		assert_false(Exploration.gather(c, winter, seeded_rng(seed_value)).has("spirit_herb"))
+	var spring := Exploration.gather_table_for(c, data(), table, "Spring")
+	assert_eq(spring.size(), 2)
+	var seen := false
+	for seed_value in 200:
+		seen = seen or Exploration.gather(c, spring, seeded_rng(seed_value)).has("spirit_herb")
+	assert_true(seen)
+	assert_eq(Exploration.gather_table_for(c, data(), table).size(), 2, "'' ignores seasons")
+
+
+func test_out_of_season_encounter_is_never_eligible() -> void:
+	var d := GameData.load_from_dir()
+	d.encounters = {"snow": {"id": "snow", "tags": ["st"], "weight": 1, "kind": "neutral", "text": "Snow.", "seasons": ["winter"]}}
+	var c := new_character()
+	assert_eq(Exploration.eligible_encounters(c, d, ["st"], {}, null, 1.0, "Summer").size(), 0)
+	assert_true(Exploration.roll_encounter(c, d, ["st"], {}, seeded_rng(), null, 1.0, "Summer").is_empty())
+	assert_eq(Exploration.eligible_encounters(c, d, ["st"], {}, null, 1.0, "Winter").size(), 1)
+	assert_eq(Exploration.eligible_encounters(c, d, ["st"], {}).size(), 1, "'' ignores seasons")
+	assert_eq(Exploration.outlook(c, d, ["st"], {}, "Summer")["other"], 1.0)
+
+
+func test_season_validator_rejects_unknown_season() -> void:
+	var d := GameData.load_from_dir()
+	assert_true(d.load_errors.is_empty())
+	d._validate_seasons({"seasons": ["monsoon"]}, "Test")
+	assert_eq(d.load_errors.size(), 1)
+	d._validate_seasons({"seasons": []}, "Test")
+	assert_eq(d.load_errors.size(), 2)
+	d._validate_seasons({"seasons": ["spring", "winter"]}, "Test")
+	assert_eq(d.load_errors.size(), 2)
+
+
+func test_qingshi_herb_slope_has_a_spring_only_entry_and_sources_say_so() -> void:
+	var slope: Array = []
+	for place: Dictionary in data().regions["qingshi_village"]["places"]:
+		if place.get("display_name", "") == "Village Herb Slope":
+			slope = place["gather_table"]
+	var spring_entries := slope.filter(func(e: Dictionary) -> bool: return e.has("seasons"))
+	assert_eq(spring_entries.size(), 1)
+	assert_eq(spring_entries[0]["seasons"], ["spring"])
+	assert_true(Items.sources(data(), "spirit_herb").has("Gathered at Village Herb Slope (Qingshi Village)"), "year-round entry too: no note")
