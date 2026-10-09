@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: af043ad
+Last reviewed commit: 7950f03
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -277,3 +277,17 @@ Last reviewed commit: af043ad
   - Notes, not filed: (1) NEWS-001 raises spouses' and children's favor past `dual_cultivation.max_favor`/`max_child_favor`
     (+3 per major breakthrough); harmless. (2) LETTER-001's invitation bonus can lift favor above chat's 30 cap, by
     design. (3) WU-087: every on-screen NPC looks up the player group each physics frame; cheap enough for now.
+- 2026-10-09 (reviewer, 7th run): reviewed af043ad..7950f03 (WU-082, WU-074, GUIDE-017, TRAV-007, WU-080, WU-083,
+  QA-052, EXPL-003, C-046, MAT-001, C-055, WU-086, MISS-001, WU-081, WU-084; [PLAN]/[REVIEW] skipped).
+  Main green before and after (1516 -> 1518 tests). No BACKLOG/CHANGELOG edits by workers; no SAVE_VERSION change
+  (`mission_losses` defaults to empty; `mastered_<region>` is a world flag, backfilled into `regions_mastered`).
+  - Fixed (one [REVIEW] commit): (1) TRAV-007: the world map still drew each route's walking days after a flying sword
+    shortened them (travel menu and arrival used the short days); the label now uses Exploration.travel_days, with a test.
+    (2) MISS-001: top-level `loss_cooldown_days` was documented but not validated; negative is now a load error (tested).
+  - Notes, not filed: (1) C-046 gives Qingshi Village a discovery, so a new character's very first exploration always
+    finds the Founder's Well (a gentle fortune, no fight); fine for onboarding, but the first-hour sims now start from
+    it. (2) TRAV-007 also lowers road-encounter odds, since road_chance uses the shortened days; reads as intended.
+    (3) MAT-001's material_value cache is never invalidated; content is immutable after load, so only tests that edit
+    recipes/prices after a material_value call could see stale values. (4) QA-052: every curious-sim death is the Mist
+    Wolf of "Cull the Mist Wolves"; MISS-001 now cools it down after a loss, the min_stage/enemy tuning follow-up is
+    still open for the planner.
