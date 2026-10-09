@@ -4,6 +4,8 @@ extends CanvasLayer
 
 const MAIN_MENU := "res://src/ui/main_menu.tscn"
 const MAX_LOG_LINES := 60
+const LOG_HEIGHT := 196.0  ## Space the log panel takes at the bottom (offset 196 in _build_log).
+const STATUS_MARGIN := 8.0  ## Gap kept between the status panel and the log.
 ## Lifespan cue thresholds (fraction of the lifespan left).
 const LIFESPAN_WARNING := 0.15
 const LIFESPAN_DANGER := 0.05
@@ -465,6 +467,22 @@ func _refresh() -> void:
 	_hunt.visible = hunt != ""
 	_hint.visible = not hints.is_empty()
 	_hint.text = "\n".join(Array(hints).map(func(h: String) -> String: return "> " + h))
+	_fit_status_panel.call_deferred()
+
+
+## Drops the lowest-priority status lines (key bar, hints, goal, next layer) until the panel clears the log (WU-091).
+func _fit_status_panel() -> void:
+	if _status_panel == null or not is_inside_tree():
+		return
+	_key_bar.visible = true
+	var limit := get_viewport().get_visible_rect().size.y - LOG_HEIGHT - 2.0 * STATUS_MARGIN - _status_panel.position.y
+	for label: Label in [_key_bar, _hint, _goal, _next_layer]:
+		_status_panel.reset_size()
+		if _status_panel.size.y <= limit:
+			return
+		if label == _key_bar or label.visible:
+			label.visible = false
+	_status_panel.reset_size()
 
 
 ## "Goal: ..." line: the first unfinished first goal, then the realm goal ("" = none).
