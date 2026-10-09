@@ -8,8 +8,8 @@ extends RefCounted
 ##   breakthrough_bonus: float  bonus to next breakthrough attempt
 ##   breakthrough_realm: String realm id this breakthrough_bonus is meant for; refused
 ##                              for any other next realm, and while a bonus is already waiting
-##   set_flag: String           set a world flag
-##   clear_flag: String         clear a world flag
+##   set_flag: String | [String]    set a world flag (or each flag of a list)
+##   clear_flag: String | [String]  clear a world flag (or each flag of a list)
 ##   learn_technique: String    learn a technique (see techniques.gd)
 ##   heal_injury: String        heal one injury id, or "all" (see injuries.gd)
 ##   burn_lifespan: int         spend years of lifespan (refused if it would kill outright)
@@ -119,11 +119,76 @@ static func apply(c: CharacterData, data: GameData, effects: Dictionary, flags: 
 		var delta := int(attribute_changes[attr_id])
 		c.attributes[attr_id] = c.attribute(attr_id) + delta
 		notes.append("%s %+d" % [String(attr_id).capitalize(), delta])
-	if effects.has("set_flag"):
-		flags[effects["set_flag"]] = true
-	if effects.has("clear_flag"):
-		flags.erase(effects["clear_flag"])
+	for flag in flag_list(effects.get("set_flag", "")):
+		flags[flag] = true
+	for flag in flag_list(effects.get("clear_flag", "")):
+		flags.erase(flag)
 	return notes
+
+
+## A set_flag/clear_flag value (a String or an Array of Strings) as a list.
+static func flag_list(value: Variant) -> PackedStringArray:
+	var out: PackedStringArray = []
+	if value is Array:
+		for flag: Variant in value:
+			out.append(String(flag))
+	elif String(value) != "":
+		out.append(String(value))
+	return out
+
+
+const KEYS: Array[String] = [
+	"qi", "alignment", "items", "breakthrough_bonus", "breakthrough_realm", "set_flag", "clear_flag",
+	"learn_technique", "heal_injury", "burn_lifespan", "extend_lifespan", "learn_recipe", "dao_insight",
+	"buff", "reputation", "witnessed", "attributes", "bloodline",
+]
+
+
+## Problems with an effects block from data: unknown keys and unknown ids.
+## `where` names the block in each message.
+static func validate(data: GameData, effects: Dictionary, where: String) -> PackedStringArray:
+	var errors: PackedStringArray = []
+	for key: Variant in effects:
+		if not KEYS.has(String(key)):
+			errors.append("%s: unknown effect key '%s'" % [where, key])
+	for item_id: Variant in effects.get("items", {}):
+		if not data.items.has(String(item_id)):
+			errors.append("%s: unknown item '%s'" % [where, item_id])
+	if effects.has("learn_technique") and not data.techniques.has(String(effects["learn_technique"])):
+		errors.append("%s: unknown technique '%s'" % [where, effects["learn_technique"]])
+	if effects.has("learn_recipe") and not data.recipes.has(String(effects["learn_recipe"])):
+		errors.append("%s: unknown recipe '%s'" % [where, effects["learn_recipe"]])
+	if effects.has("heal_injury"):
+		var injury := String(effects["heal_injury"])
+		if injury != "all" and not data.injuries.has(injury):
+			errors.append("%s: unknown injury '%s'" % [where, injury])
+	if effects.has("dao_insight") and not data.dao_insights.has(String(effects["dao_insight"])):
+		errors.append("%s: unknown dao insight '%s'" % [where, effects["dao_insight"]])
+	if effects.has("bloodline") and not data.bloodlines.has(String(effects["bloodline"])):
+		errors.append("%s: unknown bloodline '%s'" % [where, effects["bloodline"]])
+	if effects.has("breakthrough_realm") and data.realm_index_of(String(effects["breakthrough_realm"])) < 0:
+		errors.append("%s: unknown realm '%s'" % [where, effects["breakthrough_realm"]])
+	for sect_id: Variant in effects.get("reputation", {}):
+		if not data.sects.has(String(sect_id)):
+			errors.append("%s: unknown sect '%s' in reputation" % [where, sect_id])
+	var attribute_ids: Array[String] = []
+	for attr: Dictionary in data.attributes:
+		attribute_ids.append(String(attr.get("id", "")))
+	for attr_id: Variant in effects.get("attributes", {}):
+		if not attribute_ids.has(String(attr_id)):
+			errors.append("%s: unknown attribute '%s'" % [where, attr_id])
+	for key in ["set_flag", "clear_flag"]:
+		if not effects.has(key):
+			continue
+		var value: Variant = effects[key]
+		var names: Array = value if value is Array else [value]
+		var ok := not names.is_empty()
+		for flag: Variant in names:
+			if not (flag is String) or String(flag) == "":
+				ok = false
+		if not ok:
+			errors.append("%s: %s must be a non-empty String or an Array of non-empty Strings" % [where, key])
+	return errors
 
 
 static func _has_healable(c: CharacterData, injury_id: String) -> bool:
