@@ -954,6 +954,26 @@ func test_monthly_letter_and_visit_bonus() -> void:
 	gs.end_session()
 
 
+func test_answer_letter_request() -> void:
+	var c := _start()
+	var gs := _game_state()
+	var npc := CharacterFactory.create("Pen Friend", gs.data, seeded_rng(9))
+	npc.id = "pen_friend"
+	gs.npcs["pen_friend"] = npc
+	gs.npc_favor["pen_friend"] = 30
+	c.letter_requests.append({"npc_id": "pen_friend", "item": "qi_gathering_pill", "count": 1, "until": GameClock.total_days + 30, "favor": 10, "effects": {}})
+	var rows := Guidance.journal(c, gs.data, {}, GameClock.total_days, c.home_region, 1.0, gs.npcs)
+	assert_true(str(rows).contains("asked for 1 Qi Gathering Pill"), "the journal lists the request")
+	assert_true(gs.check_letter_request("pen_friend") != "")
+	c.add_item("qi_gathering_pill", 1)
+	gs.answer_letter_request("pen_friend")
+	assert_eq(int(gs.npc_favor["pen_friend"]), 40)
+	assert_eq(c.item_count("qi_gathering_pill"), 0)
+	rows = Guidance.journal(c, gs.data, {}, GameClock.total_days, c.home_region, 1.0, gs.npcs)
+	assert_false(str(rows).contains("asked for 1 Qi Gathering Pill"))
+	gs.end_session()
+
+
 func test_spar_with_npc() -> void:
 	var c := _start()
 	var gs := _game_state()

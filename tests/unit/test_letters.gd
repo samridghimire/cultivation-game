@@ -142,3 +142,58 @@ func test_every_letter_kind_formats_and_applies() -> void:
 		if String(kind["text"]).contains("{name}"):
 			assert_true(text.contains("Friend friend"), "kind %s names the writer" % kind["id"])
 		assert_false(text.contains("{"), "kind %s leaves no placeholder" % kind["id"])
+
+
+func test_pill_request_creates_one_request() -> void:
+	_only("pill_request")
+	var c := new_character()
+	var letter := Letters.monthly(c, _friend(), {"friend": 50}, data(), seeded_rng(), {}, 100)
+	assert_true(letter["request"])
+	assert_eq(c.letter_requests.size(), 1)
+	assert_eq(int(c.letter_requests[0]["until"]), 190)
+	var again := Letters.monthly(c, _friend(), {"friend": 50}, data(), seeded_rng(), {}, 110)
+	assert_false(again["request"], "no duplicate")
+	assert_eq(c.letter_requests.size(), 1)
+
+
+func test_answer_request() -> void:
+	_only("pill_request")
+	var c := new_character()
+	Letters.monthly(c, _friend(), {"friend": 50}, data(), seeded_rng(), {}, 100)
+	assert_eq(Letters.check_answer(c, data(), "nobody", 100), "No letter from them is waiting for an answer.")
+	assert_true(Letters.check_answer(c, data(), "friend", 100).begins_with("They asked for 1 Qi Gathering Pill; you have 0."))
+	assert_eq(Letters.request_lines(c, data(), _friend(), 100).size(), 1)
+	c.add_item("qi_gathering_pill", 2)
+	var align := c.alignment
+	var res := Letters.answer(c, data(), "friend", 100, {})
+	assert_true(res["ok"])
+	assert_eq(res["favor"], 10)
+	assert_eq(c.item_count("qi_gathering_pill"), 1)
+	assert_eq(c.letter_requests.size(), 0)
+	assert_gt(c.alignment, align)
+
+
+func test_expire_requests() -> void:
+	var c := new_character()
+	c.letter_requests.append({"npc_id": "a", "item": "qi_gathering_pill", "count": 1, "until": 50, "favor": 1, "effects": {}})
+	c.letter_requests.append({"npc_id": "b", "item": "qi_gathering_pill", "count": 1, "until": 150, "favor": 1, "effects": {}})
+	assert_eq(Letters.expire_requests(c, 100), ["a"] as Array[String])
+	assert_eq(c.letter_requests.size(), 1)
+
+
+func test_request_validation_and_save() -> void:
+	var d := GameData.load_from_dir()
+	for kind: Dictionary in d.family["letters"]["kinds"]:
+		if kind["id"] == "pill_request":
+			kind["request"]["item"] = "nope"
+	assert_eq(Letters.validate(d).size(), 1)
+	for kind: Dictionary in d.family["letters"]["kinds"]:
+		if kind["id"] == "pill_request":
+			kind["request"] = {"item": "qi_gathering_pill", "count": 0, "days": 1, "favor": 0}
+	assert_eq(Letters.validate(d).size(), 1)
+	var c := new_character()
+	c.letter_requests.append({"npc_id": "a", "item": "qi_gathering_pill", "count": 1, "until": 50, "favor": 1, "effects": {}})
+	assert_eq(CharacterData.from_dict(c.to_dict()).letter_requests.size(), 1)
+	var old := c.to_dict()
+	old.erase("letter_requests")
+	assert_eq(CharacterData.from_dict(old).letter_requests.size(), 0)

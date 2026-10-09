@@ -806,6 +806,8 @@ static func journal(c: CharacterData, data: GameData, flags: Dictionary, today: 
 	_opportunity_entries(out, c, data, flags, today, region_id)
 	for npc in _region_people(c, data, people, favor, region_id, today, "pointers").slice(0, POINTER_JOURNAL_MAX):
 		_add(out, "Opportunities", "Ask %s for pointers (%s)" % [npc.name, _region_name(data, region_id)], "normal")
+	for line in Letters.request_lines(c, data, people, today):
+		_add(out, "Errands", line, "normal")
 	_errand_entries(out, data, flags)
 	_household_entries(out, c, data, people)
 	for line in Letters.journal_lines(c, LETTERS_JOURNAL_MAX):

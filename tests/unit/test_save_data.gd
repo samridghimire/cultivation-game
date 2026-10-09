@@ -58,7 +58,10 @@ func test_every_character_field_survives_a_save() -> void:
 			TYPE_STRING:
 				c.set(field, "x_" + field)
 			TYPE_ARRAY:
-				(c.get(field) as Array).append("x_" + field)
+				if (c.get(field) as Array).get_typed_builtin() == TYPE_DICTIONARY:
+					(c.get(field) as Array).append({"x": field})
+				else:
+					(c.get(field) as Array).append("x_" + field)
 	c.spouse_ranks = {"x_spouses": "wife"}
 	c.pregnancy = {"partner": "x_spouses", "days_left": 30}
 	c.attributes["charisma"] = 13

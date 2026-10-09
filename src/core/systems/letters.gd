@@ -36,7 +36,7 @@ static func writer(c: CharacterData, npcs: Dictionary, favor: Dictionary, data: 
 
 ## Rolls this month's letter. Applies its effects and returns
 ## {npc_id, text, notes}, or {} when nobody writes.
-static func monthly(c: CharacterData, npcs: Dictionary, favor: Dictionary, data: GameData, rng: RandomNumberGenerator, flags: Dictionary) -> Dictionary:
+static func monthly(c: CharacterData, npcs: Dictionary, favor: Dictionary, data: GameData, rng: RandomNumberGenerator, flags: Dictionary, today: int = -1) -> Dictionary:
 	var r := rules(data)
 	if r.is_empty():
 		return {}
@@ -63,8 +63,74 @@ static func monthly(c: CharacterData, npcs: Dictionary, favor: Dictionary, data:
 		var notes := Effects.apply(c, data, kind.get("effects", {}), flags)
 		if kind.get("visit", false):
 			flags[visit_flag(id)] = true
-		return {"npc_id": id, "text": text, "notes": notes}
+		var asked := false
+		var request: Dictionary = kind.get("request", {})
+		if not request.is_empty() and open_request(c, id, _today(c, today)).is_empty():
+			c.letter_requests.append({"npc_id": id, "item": String(request["item"]), "count": int(request.get("count", 1)), "until": _today(c, today) + int(request.get("days", 1)), "favor": int(request.get("favor", 0)), "effects": (request.get("effects", {}) as Dictionary).duplicate(true)})
+			asked = true
+		return {"npc_id": id, "text": text, "notes": notes, "request": asked}
 	return {}
+
+
+static func _today(c: CharacterData, today: int) -> int:
+	return today if today >= 0 else c.age_days
+
+
+## The open, unexpired request from `npc_id`, or {}.
+static func open_request(c: CharacterData, npc_id: String, today: int) -> Dictionary:
+	for req in c.letter_requests:
+		if req["npc_id"] == npc_id and int(req["until"]) >= today:
+			return req
+	return {}
+
+
+static func _item_name(data: GameData, item_id: String) -> String:
+	return String(data.items.get(item_id, {}).get("name", item_id))
+
+
+## "" or why the request cannot be answered.
+static func check_answer(c: CharacterData, data: GameData, npc_id: String, today: int) -> String:
+	var req := open_request(c, npc_id, today)
+	if req.is_empty():
+		return "No letter from them is waiting for an answer."
+	var have := c.item_count(String(req["item"]))
+	if have < int(req["count"]):
+		return "They asked for %d %s; you have %d." % [int(req["count"]), _item_name(data, String(req["item"])), have]
+	return ""
+
+
+## Hands over the items: {ok, reason, favor, notes}. GameState applies the favor.
+static func answer(c: CharacterData, data: GameData, npc_id: String, today: int, flags: Dictionary) -> Dictionary:
+	var reason := check_answer(c, data, npc_id, today)
+	if reason != "":
+		return {"ok": false, "reason": reason, "favor": 0, "notes": PackedStringArray()}
+	var req := open_request(c, npc_id, today)
+	c.add_item(String(req["item"]), -int(req["count"]))
+	c.letter_requests.erase(req)
+	var notes := Effects.apply(c, data, req.get("effects", {}), flags)
+	return {"ok": true, "reason": "", "favor": int(req["favor"]), "notes": notes}
+
+
+## Drops requests past their deadline (no penalty); returns the npc ids.
+static func expire_requests(c: CharacterData, today: int) -> Array[String]:
+	var gone: Array[String] = []
+	for req in c.letter_requests.duplicate():
+		if int(req["until"]) < today:
+			c.letter_requests.erase(req)
+			gone.append(String(req["npc_id"]))
+	return gone
+
+
+## "<Name> asked for 1 Qi Gathering Pill in a letter (N days left; give it in person in <Region>)." per open request.
+static func request_lines(c: CharacterData, data: GameData, npcs: Dictionary, today: int) -> Array[String]:
+	var out: Array[String] = []
+	for req in c.letter_requests:
+		var npc: CharacterData = npcs.get(req["npc_id"])
+		if npc == null or not npc.alive or int(req["until"]) < today:
+			continue
+		var region: Dictionary = data.regions.get(Npcs.region_of(npc, data), {})
+		out.append("%s asked for %d %s in a letter (%d days left; give it in person in %s)." % [npc.name, int(req["count"]), _item_name(data, String(req["item"])), int(req["until"]) - today, String(region.get("name", "their home"))])
+	return out
 
 
 ## Extra favor for a chat with `npc_id` after an invitation; consumes it.
@@ -125,6 +191,10 @@ static func validate(data: GameData) -> PackedStringArray:
 	for kind: Dictionary in r["kinds"]:
 		if not kind.has("id") or String(kind.get("text", "")) == "" or int(kind.get("weight", 0)) <= 0:
 			errors.append("family.json letters kind %s needs id, text and weight > 0" % kind.get("id", "?"))
+		var request: Dictionary = kind.get("request", {})
+		if not request.is_empty():
+			if (not data.items.is_empty() and not data.items.has(String(request.get("item", "")))) or int(request.get("count", 0)) < 1 or int(request.get("days", 0)) < 1 or int(request.get("favor", -1)) < 0:
+				errors.append("family.json letters kind %s has an invalid request (item, count >= 1, days >= 1, favor >= 0)" % kind.get("id", "?"))
 		var effects: Dictionary = kind.get("effects", {})
 		for item_id in effects.get("items", {}):
 			if not data.items.is_empty() and not data.items.has(item_id):

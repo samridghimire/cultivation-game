@@ -2685,6 +2685,33 @@ func load_save_dict(d: Dictionary) -> void:
 
 # --- Internals ---------------------------------------------------------------
 
+func letter_request(npc_id: String) -> Dictionary:
+	return Letters.open_request(player, npc_id, GameClock.total_days)
+
+
+func check_letter_request(npc_id: String) -> String:
+	var npc: CharacterData = npcs.get(npc_id)
+	if npc == null or not npc.alive:
+		return "They are gone."
+	return Letters.check_answer(player, data, npc_id, GameClock.total_days)
+
+
+## Gives a letter's asked-for items to the NPC in person (LETTER-003). Takes no time.
+func answer_letter_request(npc_id: String) -> void:
+	if not _can_act() or check_letter_request(npc_id) != "":
+		return
+	var req := letter_request(npc_id)
+	var item_name := Letters._item_name(data, String(req["item"]))
+	var result := Letters.answer(player, data, npc_id, GameClock.total_days, world_flags)
+	if not result["ok"]:
+		return
+	npc_favor[npc_id] = clampi(int(npc_favor.get(npc_id, 0)) + int(result["favor"]), 0, 100)
+	var notes: PackedStringArray = [Family.favor_progress(int(npc_favor[npc_id]), data)]
+	notes.append_array(result["notes"])
+	EventBus.post("You give %s the %s they asked for. (%s)" % [npcs[npc_id].name, item_name, ", ".join(notes)], "progress")
+	EventBus.player_changed.emit()
+
+
 func _can_act() -> bool:
 	return player != null and player.alive
 
@@ -2837,12 +2864,18 @@ func _on_days_advanced(days: int) -> void:
 	for repaid in Karma.repay_debts(player, npcs, data, months, rng, world_flags):
 		EventBus.post("%s repays a debt of gratitude. (%s)" % [npcs[repaid["npc_id"]].name, ", ".join(repaid["notes"])], "progress")
 	for i in months:
-		var letter := Letters.monthly(player, npcs, npc_favor, data, rng, world_flags)
+		var letter := Letters.monthly(player, npcs, npc_favor, data, rng, world_flags, GameClock.total_days)
 		if not letter.is_empty():
 			var line := "A letter from %s: %s" % [npcs[letter["npc_id"]].name, letter["text"]]
 			Letters.remember(player, data, line, GameClock.total_days)
 			EventBus.letter_arrived.emit(npcs[letter["npc_id"]].name)
-			EventBus.post(line + (" (%s)" % ", ".join(letter["notes"]) if not letter["notes"].is_empty() else ""), "progress")
+			EventBus.post(line + (" (%s)" % ", ".join(letter["notes"]) if not letter["notes"].is_empty() else "") + (" They hope you will bring it when you pass." if letter["request"] else ""), "progress")
+	for req in player.letter_requests.duplicate():
+		var asker: CharacterData = npcs.get(req["npc_id"])
+		if asker == null or not asker.alive:
+			player.letter_requests.erase(req)
+	for gone_id in Letters.expire_requests(player, GameClock.total_days):
+		EventBus.post("%s no longer waits for your answer." % npcs[gone_id].name, "normal")
 	if clan != null:
 		_advance_estate(days, months)
 		for joined in Clans.sync_family(player, clan, npcs, data):
