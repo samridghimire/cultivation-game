@@ -74,6 +74,10 @@ func test_every_hud_screen_has_focus_and_closes_on_cancel() -> void:
 	balance.open()
 	await _check(balance, "sect balance")
 
+	var gossip: Control = hud.get("_gossip")
+	gossip.open(PackedStringArray(["A rumor.", "Another rumor."]))
+	await _check(gossip, "gossip")
+
 	var report: Control = hud.get("_combat_report")
 	report.show_fight("Wild Boar", true, PackedStringArray(["You face the boar.", "You win."]))
 	await _check(report, "combat report")

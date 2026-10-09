@@ -53,6 +53,7 @@ var _shop: ShopScreen
 var _mission_board: MissionBoard
 var _auction: AuctionScreen
 var _sect_balance: SectBalanceWindow
+var _gossip: GossipWindow
 var _family: FamilyScreen
 var _child_training: ChildTrainingScreen
 var _banner: Banner
@@ -105,6 +106,9 @@ func _ready() -> void:
 	_sect_balance = SectBalanceWindow.new()
 	_sect_balance.closed.connect(_update_modal)
 	add_child(UIStyle.centered(_sect_balance))
+	_gossip = GossipWindow.new()
+	_gossip.closed.connect(_update_modal)
+	add_child(UIStyle.centered(_gossip))
 	_family = FamilyScreen.new()
 	_add_screen("toggle_family", _family)
 	_child_training = ChildTrainingScreen.new()
@@ -169,6 +173,7 @@ func _ready() -> void:
 	EventBus.mission_board_requested.connect(_on_mission_board_requested)
 	EventBus.auction_requested.connect(_on_auction_requested)
 	EventBus.sect_balance_requested.connect(_on_sect_balance_requested)
+	EventBus.gossip_requested.connect(_on_gossip_requested)
 	EventBus.family_requested.connect(_on_family_requested)
 	EventBus.child_training_requested.connect(_on_child_training_requested)
 	EventBus.player_died.connect(_on_player_died)
@@ -248,6 +253,7 @@ func _close_screens() -> void:
 	_mission_board.close()
 	_auction.close()
 	_sect_balance.close()
+	_gossip.close()
 	_child_training.close()
 
 
@@ -271,6 +277,11 @@ func _on_sect_balance_requested() -> void:
 	_update_modal()
 
 
+func _on_gossip_requested(lines: PackedStringArray) -> void:
+	_gossip.open(lines)
+	_update_modal()
+
+
 func _on_auction_requested(house_id: String) -> void:
 	_auction.open(house_id)
 	_update_modal()
@@ -289,7 +300,7 @@ func _on_child_training_requested() -> void:
 
 
 func _any_screen_open() -> bool:
-	return _crafting.visible or _shop.visible or _mission_board.visible or _auction.visible or _sect_balance.visible or _child_training.visible or _screens.values().any(func(s): return s.visible)
+	return _crafting.visible or _shop.visible or _mission_board.visible or _auction.visible or _sect_balance.visible or _gossip.visible or _child_training.visible or _screens.values().any(func(s): return s.visible)
 
 
 func _build_status_panel() -> void:

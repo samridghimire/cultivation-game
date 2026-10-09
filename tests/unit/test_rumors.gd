@@ -72,9 +72,11 @@ func test_hear_rumors_posts_region_rumor() -> void:
 	var posted: Array = []
 	var cb := func(text: String, _category: String) -> void: posted.append(text)
 	bus.message_posted.connect(cb)
-	gs.hear_rumors()
+	var heard: PackedStringArray = gs.hear_rumors()
 	bus.message_posted.disconnect(cb)
 	assert_true(posted.has("Gossip here."), str(posted))
+	assert_true(heard.has("Gossip here."), str(heard))
+	assert_eq(heard.size(), posted.size())
 	assert_false(posted.has("Gossip there."))
 	gs.end_session()
 

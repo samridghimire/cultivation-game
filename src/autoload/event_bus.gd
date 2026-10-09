@@ -24,6 +24,8 @@ signal shop_requested(merchant_name: String, max_price: int, stock_tags: Array, 
 signal mission_board_requested
 ## The sect hall wants the read-only sect balance-of-power window (WU-002).
 signal sect_balance_requested
+## Show gossip lines in a read-only window (WU-111).
+signal gossip_requested(lines: PackedStringArray)
 ## An auction house place wants the AuctionScreen for `house_id` (AUC-001b).
 signal auction_requested(house_id: String)
 ## The player wants to direct their children's training; show the ChildTrainingScreen.

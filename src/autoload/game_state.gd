@@ -2132,11 +2132,11 @@ func _gain_renown(source: String) -> void:
 
 
 ## Hear the market gossip: world events under way and when the next auction
-## opens (LW-001b). Takes no time.
-func hear_rumors() -> void:
+## opens (LW-001b). Takes no time. Posts the lines and returns them (WU-111).
+func hear_rumors() -> PackedStringArray:
 	EventBus.topic = "world"
 	if not _can_act():
-		return
+		return PackedStringArray()
 	var extra := auction_rumors()
 	extra.append_array(SectFactions.rumors(data, npcs))
 	for text in Guidance.discovery_rumors(player, data, world_flags, current_region):
@@ -2144,8 +2144,11 @@ func hear_rumors() -> void:
 			extra.append(text)
 			break
 	extra.append_array(Rumors.lines(player, data, world_flags, current_region, GameClock.total_days))
+	var lines: PackedStringArray = []
 	for line in WorldEvents.rumors(data, world_events, extra, GameClock.total_days):
 		EventBus.post(line)
+		lines.append(line)
+	return lines
 
 
 ## "The Fallen Star Auction House holds its next auction in 3 weeks." per house.

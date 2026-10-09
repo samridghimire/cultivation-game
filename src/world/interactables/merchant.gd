@@ -23,12 +23,17 @@ func get_options() -> Array[Dictionary]:
 		return [{"label": refusal, "action": Callable(), "disabled": true}]
 	var options: Array[Dictionary] = [
 		{"label": "Browse wares", "action": EventBus.shop_requested.emit.bind(display_name, max_price, stock_tags, faction, buy_tags)},
-		{"label": "Ask about rumors", "action": GameState.hear_rumors, "keep_open": true},
+		{"label": "Ask about rumors", "action": _ask_rumors},
 	]
 	var festival := GameState.festival_activity_here()
 	if festival != "":
 		options.append(festival_entry(festival))
 	return options
+
+
+## Posts the gossip and shows it in a window you can read (WU-111).
+func _ask_rumors() -> void:
+	EventBus.gossip_requested.emit(GameState.hear_rumors())
 
 
 ## "<activity> (festival)" for the festival activity under way here (WU-100); disabled with the
