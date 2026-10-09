@@ -122,6 +122,8 @@ const UNTRIED_MIN_DAYS := 180
 const UNEXPLORED_MIN_DAYS := 10
 ## Most "Unexplored:" journal lines (GUIDE-014).
 const UNEXPLORED_JOURNAL_MAX := 2
+## The craft-now hint fades after this many crafted items (GUIDE-017).
+const CRAFT_HINT_MAX_CRAFTS := 5
 
 
 ## "Try something new" for a cultivator stuck in one loop: the first feature never
@@ -159,6 +161,14 @@ static func _untried_feature_hint(c: CharacterData, data: GameData, today: int, 
 		return ""
 	if LifeStats.get_stat(c, "encounters") == 0:
 		return "Explore the wilds (an explore site): fortunes, foes and strangers wait there."
+	if LifeStats.get_stat(c, "items_crafted") < CRAFT_HINT_MAX_CRAFTS:
+		var ready := craftable_now(c, data)
+		if not ready.is_empty():
+			var place := workshop_place(data, region_id)
+			var recipe_name := String(data.recipes[ready[0]].get("name", ready[0]))
+			if place != "":
+				return "You have what %s needs: craft it at %s." % [recipe_name, place]
+			return "You have what %s needs: craft it at a workshop." % recipe_name
 	if LifeStats.get_stat(c, "items_crafted") == 0 and not c.known_recipes.is_empty():
 		return "You know a recipe: craft it at a workshop."
 	if LifeStats.get_stat(c, "realm_floors_cleared") == 0:
@@ -173,6 +183,29 @@ static func _untried_feature_hint(c: CharacterData, data: GameData, today: int, 
 		if not partner.is_empty():
 			var npc: CharacterData = partner[0]
 			return "%s (%s) here would spar with you: a friendly bout trains your techniques." % [npc.name, data.realms[npc.realm_index].name]
+	return ""
+
+
+## Recipe ids (data order) the character could refine this moment (GUIDE-017).
+static func craftable_now(c: CharacterData, data: GameData) -> PackedStringArray:
+	var out: PackedStringArray = []
+	for recipe_id: String in data.recipes:
+		if Alchemy.check(c, data, recipe_id) == "":
+			out.append(recipe_id)
+	return out
+
+
+## "<Workshop> in <Region>": the current region's first workshop, else the first
+## region (data order) with one; "" if none (GUIDE-017).
+static func workshop_place(data: GameData, region_id: String) -> String:
+	var order: Array = []
+	if region_id != "":
+		order.append(region_id)
+	order.append_array(data.regions.keys())
+	for rid: String in order:
+		for place: Dictionary in data.regions.get(rid, {}).get("places", []):
+			if String(place.get("type", "")) == "workshop":
+				return "%s in %s" % [place.get("display_name", "the workshop"), _region_name(data, rid)]
 	return ""
 
 
@@ -830,6 +863,11 @@ const SEASONAL_JOURNAL_MAX := 2
 
 
 static func _opportunity_entries(out: Array[Dictionary], c: CharacterData, data: GameData, flags: Dictionary, today: int, region_id: String = "") -> void:
+	var ready := craftable_now(c, data)
+	if not ready.is_empty():
+		var more := "" if ready.size() == 1 else " (and %d more)" % (ready.size() - 1)
+		var place := workshop_place(data, region_id)
+		_add(out, "Opportunities", "You have everything to make %s%s: craft it at %s." % [data.recipes[ready[0]].get("name", ready[0]), more, place if place != "" else "a workshop"], "normal")
 	if region_id != "":
 		var rumors := discovery_rumors(c, data, flags, region_id)
 		if not rumors.is_empty():

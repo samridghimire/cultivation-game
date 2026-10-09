@@ -843,3 +843,50 @@ func test_discovery_rumor_validator() -> void:
 	d._validate()
 	assert_true(d.load_errors.size() > 0)
 	d.regions["qingshi_village"].erase("discovery_rumor")
+
+
+# --- GUIDE-017: craft-now hints ----------------------------------------------
+
+func _crafter() -> CharacterData:
+	var c := _veteran()
+	c.inventory = {"spirit_herb": 2, "dew_grass": 1}
+	return c
+
+
+func _journal_has(rows: Array[Dictionary], fragment: String) -> bool:
+	for r in rows:
+		if String(r["text"]).contains(fragment):
+			return true
+	return false
+
+
+func test_craftable_now_lists_only_makeable_recipes() -> void:
+	var c := _crafter()
+	var d := data()
+	assert_true(Guidance.craftable_now(c, d).has("qi_gathering_pill"))
+	assert_false(Guidance.craftable_now(c, d).has("meridian_mending_pill"), "above rank / no ingredients")
+	c.inventory = {"spirit_herb": 2}
+	assert_false(Guidance.craftable_now(c, d).has("qi_gathering_pill"), "missing dew grass")
+
+
+func test_workshop_place_prefers_current_region() -> void:
+	var d := data()
+	assert_eq(Guidance.workshop_place(d, "qingshi_village"), "Village Workshop in Qingshi Village")
+	assert_true(Guidance.workshop_place(d, "").contains(" in "))
+
+
+func test_journal_names_craftable_recipe_and_workshop() -> void:
+	var c := _crafter()
+	var rows := Guidance.journal(c, data(), {}, 5, "qingshi_village")
+	assert_true(_journal_has(rows, "You have everything to make Qi Gathering Pill"))
+	assert_true(_journal_has(rows, "Village Workshop in Qingshi Village"))
+	c.inventory = {}
+	assert_false(_journal_has(Guidance.journal(c, data(), {}, 5, "qingshi_village"), "You have everything to make"))
+
+
+func test_craft_hint_names_recipe_until_five_crafts() -> void:
+	var c := _crafter()
+	c.life_stats["items_crafted"] = 2
+	assert_true(_has(Guidance.hints(c, data(), 1.0, 99, {}, {}, "qingshi_village", 400), "You have what Qi Gathering Pill needs: craft it at Village Workshop in Qingshi Village."))
+	c.life_stats["items_crafted"] = 5
+	assert_false(_has(Guidance.hints(c, data(), 1.0, 99, {}, {}, "qingshi_village", 400), "You have what"))
