@@ -145,3 +145,19 @@ func test_household_lines_name_real_people_and_possible_actions() -> void:
 				if line.contains("try for a child with"):
 					assert_true(line.contains((h["spouse"] as CharacterData).name), label + ": " + line)
 					assert_eq(Children.check_conception(c, h["spouse"], d), "", label + ": conception blocked: " + line)
+
+
+## GUIDE-014: the unexplored-road hint only names a road Exploration lets you walk.
+func test_unexplored_hint_names_an_open_road() -> void:
+	var d := data()
+	for p: Dictionary in _profiles():
+		var c: CharacterData = p["c"]
+		for h: String in Guidance.hints(c, d, 1.0, 99, {}, p["flags"], p["region"], 400):
+			if not h.begins_with("You have never been to "):
+				continue
+			var found := false
+			for r: Dictionary in Exploration.routes(c, d, p["region"]):
+				if h.contains(String(r["name"])):
+					found = true
+					assert_true(Exploration.check_travel(c, d, p["region"], r["to"])["ok"], "%s: %s" % [p["label"], h])
+			assert_true(found, "%s: %s" % [p["label"], h])

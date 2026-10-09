@@ -752,3 +752,49 @@ func test_unlock_notices_skip_visited_regions() -> void:
 	Exploration.visit(c, "azure_peak")
 	assert_false(_notice_ids(Guidance.unlock_notices(c, d, {})).has("road_azure_peak"))
 	assert_true(_notice_ids(Guidance.unlock_notices(c, d, {})).has("road_withered_bone_marsh"))
+
+
+## GUIDE-014: roads you haven't taken.
+func test_unexplored_routes_nearest_first_and_visit_clears() -> void:
+	var d := data()
+	var c := _fresh()
+	var roads := Guidance.unexplored_routes(c, d, "qingshi_village")
+	assert_eq(roads[0]["to"], "misty_forest")
+	for r in roads:
+		assert_true(Exploration.check_travel(c, d, "qingshi_village", r["to"])["ok"])
+	Exploration.visit(c, "misty_forest")
+	for r in Guidance.unexplored_routes(c, d, "qingshi_village"):
+		assert_true(r["to"] != "misty_forest")
+
+
+func test_unexplored_routes_skip_realm_gated() -> void:
+	var d := data()
+	var c := _fresh()
+	for r in d.regions["qingshi_village"]["routes"]:
+		if String(r.get("min_realm", "")) != "":
+			for u in Guidance.unexplored_routes(c, d, "qingshi_village"):
+				assert_true(u["to"] != r["to"])
+
+
+func test_unexplored_hint_waits_for_day_ten() -> void:
+	var d := data()
+	var c := _fresh()
+	assert_false(_has(Guidance.hints(c, d, 1.0, 99, {}, {}, "qingshi_village", 5), "have never been to"))
+	assert_false(_has(Guidance.hints(c, d, 1.0, 99, {}, {}, "qingshi_village", -1), "have never been to"))
+	var hints := Guidance.hints(c, d, 1.0, 99, {}, {}, "qingshi_village", 10)
+	assert_true(_has(hints, "You have never been to Misty Forest; the road from here is open."))
+
+
+func test_unexplored_journal_lines_capped_at_two() -> void:
+	var d := data()
+	var c := _fresh()
+	c.realm_index = d.realms.size() - 1
+	var n := 0
+	for row in Guidance.journal(c, d, {}, 0, "qingshi_village"):
+		if String(row["text"]).begins_with("Unexplored: "):
+			n += 1
+	assert_true(n >= 1 and n <= 2)
+	Exploration.visit(c, "misty_forest")
+	for row in Guidance.journal(c, d, {}, 0, "qingshi_village"):
+		assert_false(String(row["text"]).begins_with("Unexplored: Misty Forest"))
+	assert_eq(Guidance.journal(c, d, {}, 0, "").filter(func(r: Dictionary) -> bool: return String(r["text"]).begins_with("Unexplored")).size(), 0)

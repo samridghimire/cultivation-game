@@ -118,6 +118,10 @@ static func _sell_hint(c: CharacterData, data: GameData, region_id: String) -> S
 const POINTER_JOURNAL_MAX := 3
 ## Game days that must pass (GameClock) before "try something new" is suggested (GUIDE-007).
 const UNTRIED_MIN_DAYS := 180
+## Game days before an unvisited neighbouring region is suggested (GUIDE-014).
+const UNEXPLORED_MIN_DAYS := 10
+## Most "Unexplored:" journal lines (GUIDE-014).
+const UNEXPLORED_JOURNAL_MAX := 2
 
 
 ## "Try something new" for a cultivator stuck in one loop: the first feature never
@@ -125,6 +129,32 @@ const UNTRIED_MIN_DAYS := 180
 ## The profession and sect nudges already exist as their own hints, so they are
 ## not repeated here.
 static func _untried_hint(c: CharacterData, data: GameData, today: int, people: Dictionary = {}, favor: Dictionary = {}, region_id: String = "") -> String:
+	var feature := _untried_feature_hint(c, data, today, people, favor, region_id)
+	if feature != "":
+		return feature
+	if today < UNEXPLORED_MIN_DAYS or region_id == "":
+		return ""
+	var roads := unexplored_routes(c, data, region_id)
+	if roads.is_empty():
+		return ""
+	return "You have never been to %s; the road from here is open." % String(roads[0]["name"])
+
+
+## Open roads from `region_id` to regions the character has never visited,
+## nearest first (GUIDE-014). Realm-gated routes never appear.
+static func unexplored_routes(c: CharacterData, data: GameData, region_id: String) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	for route: Dictionary in Exploration.routes(c, data, region_id):
+		if bool(route["ok"]) and not Exploration.visited(c, String(route["to"])):
+			out.append(route)
+	out.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		if a["days"] != b["days"]:
+			return int(a["days"]) < int(b["days"])
+		return String(a["name"]) < String(b["name"]))
+	return out
+
+
+static func _untried_feature_hint(c: CharacterData, data: GameData, today: int, people: Dictionary = {}, favor: Dictionary = {}, region_id: String = "") -> String:
 	if c.realm_index < 1 or today < UNTRIED_MIN_DAYS:
 		return ""
 	if LifeStats.get_stat(c, "encounters") == 0:
@@ -712,7 +742,7 @@ static func journal(c: CharacterData, data: GameData, flags: Dictionary, today: 
 				var reason := WorldEvents.check_join(data, events, c, event_id, kind, region_id)
 				_add(out, "World events", "%s: %s" % [kind.capitalize(), "you can enter" if reason == "" else reason], "normal" if reason == "" else "dim")
 	_other_region_event_entries(out, c, data, today, region_id, events)
-	_opportunity_entries(out, c, data, flags, today)
+	_opportunity_entries(out, c, data, flags, today, region_id)
 	for npc in _region_people(c, data, people, favor, region_id, today, "pointers").slice(0, POINTER_JOURNAL_MAX):
 		_add(out, "Opportunities", "Ask %s for pointers (%s)" % [npc.name, _region_name(data, region_id)], "normal")
 	_errand_entries(out, data, flags)
@@ -780,7 +810,11 @@ static func _lecture_hint(c: CharacterData, data: GameData, today: int) -> Strin
 	return "Your sect's elder lectures this month; attend at the sect hall."
 
 
-static func _opportunity_entries(out: Array[Dictionary], c: CharacterData, data: GameData, flags: Dictionary, today: int) -> void:
+static func _opportunity_entries(out: Array[Dictionary], c: CharacterData, data: GameData, flags: Dictionary, today: int, region_id: String = "") -> void:
+	if region_id != "":
+		var roads := unexplored_routes(c, data, region_id)
+		for i in mini(roads.size(), UNEXPLORED_JOURNAL_MAX):
+			_add(out, "Opportunities", "Unexplored: %s (%d days' road)" % [roads[i]["name"], roads[i]["days"]], "normal")
 	if Sects.check_lecture(c, data, today) == "":
 		var sect: SectDef = data.sects[c.sect["id"]]
 		_add(out, "Opportunities", "Attend %s at the %s hall (once a month)" % [Sects.lecture_def(c, data).get("name", "the lecture"), sect.name], "normal")
