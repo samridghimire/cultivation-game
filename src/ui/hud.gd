@@ -38,6 +38,7 @@ var _screens: Dictionary = {}
 var _combat_report: CombatReport
 var _dialogue: DialogueWindow
 var _encounter: EncounterWindow
+var _arrival_waiting: String = ""  # arrival card held back while a road encounter window is open (WU-080)
 var _pause_menu: PauseMenu
 var _settings: SettingsScreen
 var _load_screen: LoadScreen
@@ -113,6 +114,7 @@ func _ready() -> void:
 	add_child(UIStyle.centered(_dialogue))
 	_encounter = EncounterWindow.new()
 	_encounter.closed.connect(_update_modal)
+	_encounter.closed.connect(_show_waiting_arrival)
 	add_child(UIStyle.centered(_encounter))
 	_pause_menu = PauseMenu.new()
 	_pause_menu.closed.connect(_update_modal)
@@ -738,6 +740,20 @@ func _on_arrival(region_id: String) -> void:
 		return # killed on the road with no lives left: the death screen is up
 	if not GameState.pending_respawn.is_empty():
 		return # the respawn screen is up; the card shows once the player picks where to wake
+	if _encounter.visible and GameState.last_travel_road_encounter != "":
+		_arrival_waiting = region_id
+		return
+	_show_arrival(region_id)
+
+
+func _show_waiting_arrival() -> void:
+	var region_id := _arrival_waiting
+	_arrival_waiting = ""
+	if region_id != "" and GameState.player != null and GameState.player.alive and GameState.pending_respawn.is_empty():
+		_show_arrival(region_id)
+
+
+func _show_arrival(region_id: String) -> void:
 	var data: GameData = GameState.data
 	if data == null or not data.regions.has(region_id):
 		return

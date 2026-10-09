@@ -9,7 +9,10 @@ func get_options() -> Array[Dictionary]:
 		if not route["ok"]:
 			label += " - too dangerous"
 		var option := {"label": label, "action": GameState.travel.bind(route["to"]), "disabled": not route["ok"]}
+		var note := Exploration.road_note(GameState.data, int(route["days"]))
 		if not Exploration.visited(GameState.player, route["to"]):
-			option["description"] = "(never visited)"
+			option["description"] = "(never visited) " + note
+		else:
+			option["description"] = note
 		options.append(option)
 	return options

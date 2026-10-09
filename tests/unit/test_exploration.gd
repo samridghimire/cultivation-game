@@ -615,3 +615,11 @@ func test_travel_speed_validation() -> void:
 	assert_true(text.contains("strictly rising"), text)
 	assert_true(text.contains("mult"), text)
 	assert_true(text.contains("non-empty"), text)
+## WU-080: travel options say how busy the road is.
+func test_road_note_by_days() -> void:
+	var d := GameData.load_from_dir()
+	d.road = {"chance_per_day": 0.08, "max_chance": 0.4, "encounter_tags": ["road"]}
+	assert_eq(Exploration.road_note(d, 1), "Roads are quiet.")
+	assert_true(Exploration.road_note(d, 6).begins_with("Roads see traffic"))
+	d.road = {}
+	assert_eq(Exploration.road_note(d, 6), "Roads are quiet.")

@@ -218,10 +218,23 @@ static func realm_allows(c: CharacterData, data: GameData, e: Dictionary) -> boo
 ## Something happens on the road (TRAV-006): after a journey of `days`, with
 ## probability min(max_chance, chance_per_day * days) a road encounter rolls.
 ## Draws nothing from rng when regions.json has no `road` block.
+static func road_chance(data: GameData, days: int) -> float:
+	if data.road.is_empty():
+		return 0.0
+	return minf(float(data.road["max_chance"]), float(data.road["chance_per_day"]) * days)
+
+
+## "Roads are quiet" / "Roads see traffic" for a trip of `days` (WU-080).
+static func road_note(data: GameData, days: int) -> String:
+	if road_chance(data, days) >= 0.3:
+		return "Roads see traffic: the road is long; things may happen on the way."
+	return "Roads are quiet."
+
+
 static func road_encounter(c: CharacterData, data: GameData, days: int, flags: Dictionary, rng: RandomNumberGenerator, season: String) -> Dictionary:
 	if data.road.is_empty():
 		return {}
-	var chance := minf(float(data.road["max_chance"]), float(data.road["chance_per_day"]) * days)
+	var chance := road_chance(data, days)
 	if rng.randf() >= chance:
 		return {}
 	return roll_encounter(c, data, data.road["encounter_tags"], flags, rng, null, 1.0, season, "")

@@ -180,13 +180,13 @@ func test_unexplored_regions_are_dimmed() -> void:
 	for o: Dictionary in point.get_options():
 		if String(o["label"]).contains(Exploration.region_name(data(), "misty_forest")):
 			found = true
-			assert_eq(o.get("description", ""), "(never visited)")
+			assert_true(String(o.get("description", "")).begins_with("(never visited)"))
 	assert_true(found)
 	gs.travel("misty_forest")
 	gs.travel("qingshi_village")
 	for o: Dictionary in point.get_options():
 		if String(o["label"]).contains(Exploration.region_name(data(), "misty_forest")):
-			assert_false(o.has("description"))
+			assert_false(String(o.get("description", "")).contains("never visited"))
 	point.free()
 	gs.end_session()
 

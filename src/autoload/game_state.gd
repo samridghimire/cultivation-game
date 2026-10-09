@@ -35,6 +35,8 @@ var world_events: Array = []
 var current_region := ""
 ## True when the last travel reached a region for the first time (TRAV-002).
 var last_arrival_first_visit: bool = false
+## Id of the road encounter the last travel produced, "" if none (WU-080).
+var last_travel_road_encounter: String = ""
 ## Live NPCs: id -> CharacterData (definitions in data/npcs.json).
 var npcs: Dictionary = {}
 ## How much each NPC likes the player: id -> int.
@@ -515,6 +517,7 @@ func travel(region_id: String) -> void:
 		EventBus.post(check["reason"], "warning")
 		return
 	_start_time_skip()
+	last_travel_road_encounter = ""
 	current_region = region_id
 	last_arrival_first_visit = Exploration.visit(player, region_id)
 	world_flags["notice_road_" + region_id] = true  # you are already here (TRAV-001)
@@ -527,6 +530,7 @@ func travel(region_id: String) -> void:
 	if not _road_ambush() and _can_act():
 		var road := Exploration.road_encounter(player, data, int(check["days"]), world_flags, rng, Calendar.season_of(GameClock.total_days))
 		if not road.is_empty():
+			last_travel_road_encounter = String(road.get("id", ""))
 			_meet_encounter(road, "On the road: ")
 	EventBus.region_changed.emit(region_id)
 	SaveManager.autosave()

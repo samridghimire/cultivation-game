@@ -1007,6 +1007,7 @@ func test_travel_meets_road_encounter() -> void:
 	assert_eq(LifeStats.get_stat(c, "encounters"), before + 1)
 	assert_true(heard.any(func(t: String) -> bool: return t.begins_with("On the road: ")), str(heard))
 	assert_eq(gs.pending_encounter, "road_overturned_cart")
+	assert_eq(gs.last_travel_road_encounter, "road_overturned_cart")  # WU-080: the arrival card waits for it
 	var good := c.alignment
 	gs.choose_encounter(0)
 	assert_true(c.alignment > good)
