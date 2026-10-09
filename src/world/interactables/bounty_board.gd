@@ -3,6 +3,16 @@ extends Interactable
 ## lets them take one or abandon the active hunt.
 
 
+## " (here)", " (N days away)" for a direct road, "" for regions further off (WU-092).
+static func distance_note(c: CharacterData, data: GameData, from_id: String, to_id: String) -> String:
+	if from_id == to_id:
+		return " (here)"
+	for route: Dictionary in Exploration.routes(c, data, from_id):
+		if route["to"] == to_id and route["ok"]:
+			return " (%s away)" % Calendar.format_duration(int(route["days"]))
+	return ""
+
+
 func get_options() -> Array[Dictionary]:
 	var c: CharacterData = GameState.player
 	var data: GameData = GameState.data
@@ -14,7 +24,7 @@ func get_options() -> Array[Dictionary]:
 		var pay := "%d stones" % paid
 		if paid > int(b["reward_stones"]):
 			pay += " (+%d%% for your name)" % int(round((float(paid) / float(b["reward_stones"]) - 1.0) * 100.0))
-		var label := "Hunt: %s in %s, %s (%s)" % [enemy.get("name", b["enemy"]), Exploration.region_name(data, String(b["region"])), pay, Appraisal.danger_text(c, data, enemy)]
+		var label := "Hunt: %s in %s%s, %s (%s)" % [enemy.get("name", b["enemy"]), Exploration.region_name(data, String(b["region"])), distance_note(c, data, GameState.current_region, String(b["region"])), pay, Appraisal.danger_text(c, data, enemy)]
 		var reason := Bounties.check_take(c, data, String(b["id"]), today)
 		options.append({"label": label, "description": Warnings.append_to(c, "%s (%s to finish)" % [b["text"], Calendar.format_duration(int(b["days"]))]), "action": GameState.take_bounty.bind(String(b["id"])), "disabled": reason != "", "reason": reason, "keep_open": true})
 	var hunt := Bounties.active(c, data, today)

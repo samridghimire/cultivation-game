@@ -53,3 +53,25 @@ func test_take_disables_others_and_abandon_reenables() -> void:
 	(abandon["action"] as Callable).call()
 	assert_true(gs.player.bounty.is_empty())
 	gs.end_session()
+
+
+func test_distance_note_here_near_and_far() -> void:
+	var c := new_character(42)
+	c.realm_index = 5
+	var d := data()
+	var board: GDScript = load("res://src/world/interactables/bounty_board.gd")
+	assert_eq(board.distance_note(c, d, "qingshi_village", "qingshi_village"), " (here)")
+	var near := ""
+	var far := ""
+	for r: Dictionary in d.regions["qingshi_village"]["routes"]:
+		near = String(r["to"])
+		break
+	for id: String in d.regions:
+		var direct := false
+		for r: Dictionary in d.regions["qingshi_village"]["routes"]:
+			direct = direct or r["to"] == id
+		if id != "qingshi_village" and not direct:
+			far = id
+			break
+	assert_true(board.distance_note(c, d, "qingshi_village", near).ends_with(" away)"))
+	assert_eq(board.distance_note(c, d, "qingshi_village", far), "")
