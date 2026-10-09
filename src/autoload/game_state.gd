@@ -2725,6 +2725,9 @@ func check_letter_request(npc_id: String) -> String:
 	var npc: CharacterData = npcs.get(npc_id)
 	if npc == null or not npc.alive:
 		return "They are gone."
+	var npc_region := Npcs.region_of(npc, data)
+	if npc_region != current_region:
+		return "They are in %s; give it to them in person." % String(data.regions.get(npc_region, {}).get("name", npc_region))
 	return Letters.check_answer(player, data, npc_id, GameClock.total_days)
 
 
@@ -2907,6 +2910,7 @@ func _on_days_advanced(days: int) -> void:
 		if asker == null or not asker.alive:
 			player.letter_requests.erase(req)
 	Letters.expire_deals(player, GameClock.total_days)
+	EventBus.topic = "family"
 	for gone_id in Letters.expire_requests(player, GameClock.total_days):
 		EventBus.post("%s no longer waits for your answer." % npcs[gone_id].name, "normal")
 	if clan != null:

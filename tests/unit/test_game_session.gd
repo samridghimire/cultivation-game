@@ -961,6 +961,7 @@ func test_answer_letter_request() -> void:
 	npc.id = "pen_friend"
 	gs.npcs["pen_friend"] = npc
 	gs.npc_favor["pen_friend"] = 30
+	npc.home_region = gs.current_region
 	c.letter_requests.append({"npc_id": "pen_friend", "item": "qi_gathering_pill", "count": 1, "until": GameClock.total_days + 30, "favor": 10, "effects": {}})
 	var rows := Guidance.journal(c, gs.data, {}, GameClock.total_days, c.home_region, 1.0, gs.npcs)
 	assert_true(str(rows).contains("asked for 1 Qi Gathering Pill"), "the journal lists the request")
@@ -971,6 +972,44 @@ func test_answer_letter_request() -> void:
 	assert_eq(c.item_count("qi_gathering_pill"), 0)
 	rows = Guidance.journal(c, gs.data, {}, GameClock.total_days, c.home_region, 1.0, gs.npcs)
 	assert_false(str(rows).contains("asked for 1 Qi Gathering Pill"))
+	gs.end_session()
+
+
+func test_answer_letter_request_needs_the_asker_present() -> void:
+	var c := _start()
+	var gs := _game_state()
+	var npc := CharacterFactory.create("Far Friend", gs.data, seeded_rng(9))
+	npc.id = "far_friend"
+	var other := "qingshi_village" if gs.current_region != "qingshi_village" else "misty_forest"
+	npc.home_region = other
+	gs.npcs["far_friend"] = npc
+	gs.npc_favor["far_friend"] = 30
+	c.letter_requests.append({"npc_id": "far_friend", "item": "qi_gathering_pill", "count": 1, "until": GameClock.total_days + 30, "favor": 10, "effects": {}})
+	c.add_item("qi_gathering_pill", 1)
+	var reason: String = gs.check_letter_request("far_friend")
+	assert_true(reason.contains("in person"), reason)
+	assert_true(reason.contains(String(gs.data.regions[other]["name"])))
+	gs.answer_letter_request("far_friend")
+	assert_eq(c.item_count("qi_gathering_pill"), 1, "nothing is handed over from afar")
+	npc.home_region = gs.current_region
+	assert_eq(gs.check_letter_request("far_friend"), "")
+	gs.end_session()
+
+
+func test_expired_request_line_is_family_topic() -> void:
+	var c := _start()
+	var gs := _game_state()
+	var npc := CharacterFactory.create("Late Friend", gs.data, seeded_rng(9))
+	npc.id = "late_friend"
+	gs.npcs["late_friend"] = npc
+	c.letter_requests.append({"npc_id": "late_friend", "item": "qi_gathering_pill", "count": 1, "until": GameClock.total_days + 1, "favor": 10, "effects": {}})
+	GameClock.advance(60)
+	var found := false
+	for entry in EventBus.history:
+		if String(entry["text"]).contains("no longer waits"):
+			found = true
+			assert_eq(entry["topic"], "family")
+	assert_true(found, "the expiry is posted")
 	gs.end_session()
 
 
