@@ -92,6 +92,7 @@ func _build_shots(gs: Node) -> void:
 		lines.append("Round %d: you strike the Stone Ape for 123. (Stone Ape: 4567 hp)" % i)
 	shots.append({"name": "combat_report", "open": func() -> void: report.show_fight("Stone Ape", false, lines), "close": report.close})
 	_build_deck_shots(gs)
+	_build_effect_shots(gs)
 	var menu_source := _find_menu_source()
 	if menu_source != null:
 		var menu: Control = hud.get("_choice_menu")
@@ -146,6 +147,22 @@ func _build_deck_shots(gs: Node) -> void:
 		report.show_fight(senior.name, true, lines, "", PackedStringArray(), [], 0, 0, true), "close": func() -> void:
 		report.close()
 		scale_back.call()})
+
+
+## WU-069: the breakthrough effects half a second in and the first-visit arrival card.
+func _build_effect_shots(gs: Node) -> void:
+	var player_node: Node = world.get_node_or_null("Player")
+	if player_node != null and player_node.has_method("celebrate"):
+		for ok: bool in [true, false]:
+			shots.append({"name": "effect_celebrate_%s" % ("success" if ok else "failure"), "open": func() -> void:
+				player_node.celebrate(ok)
+				player_node.set("_celebrate_left", player_node.CELEBRATE_SECONDS - 0.5), "close": func() -> void:
+				player_node.set("_celebrate_left", 0.0)})
+	if hud.has_method("_on_arrival"):
+		shots.append({"name": "effect_arrival_card", "open": func() -> void:
+			gs.last_arrival_first_visit = true
+			hud._on_arrival(gs.current_region), "close": func() -> void:
+			gs.last_arrival_first_visit = false})
 
 
 func _find_menu_source() -> Node:
