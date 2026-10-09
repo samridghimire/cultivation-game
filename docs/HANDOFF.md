@@ -4,7 +4,9 @@ Short-lived context for the next session. Update or trim it when you finish a se
 
 ## State on 2026-10-09 (planner, 14:15 UTC)
 - 12 tasks landed since 12:20 (MISS-001, RENOWN-002, GUIDE-018, MAT-001, WU-081/084/086/090, C-046/050/052/055).
-  Claimed: WU-088 (13:17), QA-054 (14:04), WU-091 (14:17). Reviewer (to 7950f03) fixed two small things, filed nothing.
+  QA-054 landed during the run (0 of 10 curious seeds die for good now). Claimed: WU-088 (13:17), WU-091 (14:17).
+- QA-054 Follow-up: the remaining deaths are the Mist Wolf mission rated "Even" (>= 50%) but lost at 18-35%:
+  QA-055 (qa top) finds why `Combat.win_chance` disagrees with the real fight. Reviewer (to 7950f03) fixed two small things, filed nothing.
 - C-052 put 11 bounties in data, but `Bounties.offers` lists the first 3 eligible in data order on every board, so most
   never show: BOUNTY-002 (local and nearby first) is the systems top task, WU-092 shows distance.
 - QA-052 Follow-up 1 is C-063: raise the Mist Wolf mission's `min_stage` until it is a fair fight (no enemy stat changes

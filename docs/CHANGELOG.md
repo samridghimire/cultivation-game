@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-09 [QA-054] The curious-player sim plays like a careful human: no seed dies for good in three years.
 - 2026-10-09 [C-050] Every region's discovery has a merchant rumor that points at it without naming it.
 - 2026-10-09 [RENOWN-002] Requests that only come to the renowned: a village land dispute, the hunters' wolf den.
 - 2026-10-09 [C-052] Bounties for every region: 11 hunts from roadside rogues to a thunderwing roc.
