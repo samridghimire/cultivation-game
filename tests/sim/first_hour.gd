@@ -104,10 +104,15 @@ static func _curious_month(gs: Node, c: CharacterData, done: Dictionary, today: 
 			break
 	if not c.is_rogue() and c.alive:
 		for mission_id in Sects.available_missions(c, gs.data, gs.world_flags):
-			if Sects.check_mission(c, gs.data, mission_id, gs.world_flags) == "" and Sects.mission_danger(c, gs.data, mission_id) != "Deadly":
-				gs.take_mission(mission_id)
-				kinds["mission"] = true
-				break
+			if Sects.check_mission(c, gs.data, mission_id, gs.world_flags) != "" or not _mission_is_sane(gs, c, mission_id, done, today):
+				continue
+			var lost_before := LifeStats.get_stat(c, "fights_lost")
+			gs.take_mission(mission_id)
+			kinds["mission"] = true
+			if LifeStats.get_stat(c, "fights_lost") > lost_before:
+				done["lost_missions"][mission_id] = {"day": today, "odds": _mission_odds(gs, c, mission_id)}
+			break
+	_recharge_with_spare_stones(gs, c)
 	if not done.has("talk") and c.alive:
 		for npc_id: String in gs.npcs:
 			gs.start_dialogue(npc_id)
@@ -126,6 +131,39 @@ static func _curious_month(gs: Node, c: CharacterData, done: Dictionary, today: 
 			gs.deliver_commission(i)
 			kinds["commission"] = true
 	return kinds
+
+
+## Rated win chance against the mission's foe (1.0 when it has none).
+static func _mission_odds(gs: Node, c: CharacterData, mission_id: String) -> float:
+	var enemy_id := String(gs.data.sect_missions.get(mission_id, {}).get("enemy", ""))
+	if enemy_id == "" or not gs.data.enemies.has(enemy_id):
+		return 1.0
+	return Combat.win_chance(c, gs.data, gs.data.enemies[enemy_id])
+
+
+## QA-054: a sensible player skips Deadly foes, a mission just lost until the odds rise
+## 15 points (or 60 days pass), and Dangerous foes under 50% when the artifact has 2 lives or fewer.
+static func _mission_is_sane(gs: Node, c: CharacterData, mission_id: String, done: Dictionary, today: int) -> bool:
+	if not done.has("lost_missions"):
+		done["lost_missions"] = {}
+	var danger := Sects.mission_danger(c, gs.data, mission_id)
+	if danger == "Deadly":
+		return false
+	var odds := _mission_odds(gs, c, mission_id)
+	var lost: Dictionary = done["lost_missions"].get(mission_id, {})
+	if not lost.is_empty() and today - int(lost["day"]) < 60 and odds < float(lost["odds"]) + 0.15:
+		return false
+	if c.artifact_lives <= 1 and odds < 0.85:
+		return false  # the last life: only near-certain fights
+	return not (danger == "Dangerous" and odds < 0.5 and c.artifact_lives <= 2)
+
+
+## QA-054: buys an artifact life once stones exceed twice its price.
+static func _recharge_with_spare_stones(gs: Node, c: CharacterData) -> void:
+	if not c.alive or c.artifact_lives < 0:
+		return
+	if CreationArtifact.check_recharge(c, gs.data) == "" and c.item_count("spirit_stone") > 2 * CreationArtifact.recharge_cost(c, gs.data):
+		gs.recharge_artifact()
 
 
 static func _talk_to_elder_mo(gs: Node) -> void:

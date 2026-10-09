@@ -135,6 +135,8 @@ func _run() -> void:
 			flag += " [nothing new]"
 		print("  months %2d-%2d: %.1f kinds, %d of %d seeds new feature, %.0f stones%s" % [b * BLOCK + 1, (b + 1) * BLOCK, _median(kinds_by_block[b].duplicate()), with_new, kinds_by_block[b].size(), _median(stones_by_block[b].duplicate()), flag])
 	print("Seeds whose life ended before month %d: %s" % [months, str(died) if not died.is_empty() else "none"])
+	var early := died.size()
+	print("Guard (QA-054): at most 1 of 10 seeds may end early: %s" % ("ok" if early * 10 <= maxi(seeds, 10) else "FAILED (%d of %d)" % [early, seeds]))
 	print("First month each feature was used (median over seeds that used it):")
 	for f in FEATURES:
 		var v: Array = first_month[f]
@@ -151,4 +153,4 @@ func _run() -> void:
 		print("      cause: %s" % d["cause"])
 		for line: String in d["recent"]:
 			print("      | %s" % line)
-	quit()
+	quit(1 if early * 10 > maxi(seeds, 10) else 0)
