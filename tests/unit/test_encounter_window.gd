@@ -99,3 +99,15 @@ func test_walk_away_when_every_choice_is_locked() -> void:
 	assert_eq(gs.pending_encounter, "")
 	window.free()
 	_cleanup(gs)
+
+
+## WU-094: renown-gated requests have their own title and message prefix.
+func test_renowned_request_title_and_prefix() -> void:
+	var renowned := {"id": "x_y", "name": "Old Debt", "min_renown": 0}
+	assert_eq(EncounterWindow.title_for(renowned, false), "A request for the renowned: Old Debt")
+	assert_eq(EncounterWindow.title_for(renowned, true), "Discovery: Old Debt", "a discovery title wins")
+	assert_eq(EncounterWindow.title_for(renowned, false, true), "Hidden path: Old Debt", "a deep path title wins")
+	assert_eq(EncounterWindow.title_for({"id": "x_y", "name": "Plain"}, false), "Encounter")
+	assert_eq(GameState.explore_prefix(renowned, false, false), "Because your name is known here, ")
+	assert_eq(GameState.explore_prefix(renowned, true, false), "A discovery: ")
+	assert_eq(GameState.explore_prefix({"id": "p"}, false, false), "")

@@ -328,7 +328,8 @@
       "body": [
         "Every day you spend exploring a region makes you more familiar with it. The world map and the explore menu show the days explored, how many of its happenings you have seen (\"seen N of M\") and when a deeper path will open.",
         "Sights you have already met grow rarer, so fresh happenings surface in their place. Regions you have never visited are dimmed and marked Unexplored on the map.",
-        "A deeper path is a hidden place that opens after enough days in one region. You are told when it opens and it turns up on a later trip. Some regions also hide a discovery, a one-time find; a gleam on the map says one still waits, and merchants and the journal may pass on a rumor of it."
+        "A deeper path is a hidden place that opens after enough days in one region. You are told when it opens and it turns up on a later trip. Some regions also hide a discovery, a one-time find; a gleam on the map says one still waits, and merchants and the journal may pass on a rumor of it.",
+        "Once you are known in a region, its people bring you requests they would not trust to a stranger."
       ]
     },
     {

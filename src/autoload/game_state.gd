@@ -645,12 +645,18 @@ func _explore_day(tags: Array, quiet: bool) -> Dictionary:
 			EventBus.post(("You search the area but find nothing. %s" % Exploration.quiet_line(data, current_region, GameClock.total_days)).strip_edges())
 		_pass_time(1)
 		return {"event": "nothing"}
-	var prefix := ""
-	if last_explore_discovery:
-		prefix = "A discovery: "
-	elif last_explore_deep_path:
-		prefix = "A hidden path: "
-	return _meet_encounter(encounter, prefix)
+	return _meet_encounter(encounter, explore_prefix(encounter, last_explore_discovery, last_explore_deep_path))
+
+
+## Message prefix for an encounter met while exploring.
+static func explore_prefix(encounter: Dictionary, discovery: bool, deep_path: bool) -> String:
+	if discovery:
+		return "A discovery: "
+	if deep_path:
+		return "A hidden path: "
+	if encounter.has("min_renown"):
+		return "Because your name is known here, "
+	return ""
 
 
 ## Play out an encounter that happened (exploring or on the road): effects,

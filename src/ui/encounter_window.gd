@@ -39,12 +39,18 @@ static func choice_label(choice: Dictionary) -> String:
 	return text
 
 
-## Window title: "Encounter", or "Discovery: <name>" for a region discovery.
+## Window title: "Encounter", "Discovery: <name>" for a region discovery, "Hidden path: <name>"
+## for a deeper path, or "A request for the renowned: <name>" for an encounter gated by renown.
 static func title_for(encounter: Dictionary, discovery: bool, deep_path: bool = false) -> String:
-	if not discovery and not deep_path:
+	var renowned := encounter.has("min_renown")
+	if not discovery and not deep_path and not renowned:
 		return "Encounter"
 	var name := String(encounter.get("name", String(encounter.get("id", "")).capitalize()))
-	return ("Discovery: " if discovery else "Hidden path: ") + name
+	if discovery:
+		return "Discovery: " + name
+	if deep_path:
+		return "Hidden path: " + name
+	return "A request for the renowned: " + name
 
 
 ## Shows the pending encounter (or closes if there is none).
