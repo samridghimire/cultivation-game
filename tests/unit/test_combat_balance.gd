@@ -167,3 +167,12 @@ func test_forced_nascent_soul_fights_are_fair_on_appearance_for_veteran() -> voi
 		var rate := Balance.win_rate(Balance.veteran_player(data(), ns, 0), data(), data().enemies[a["enemy"]], 40)
 		assert_true(rate >= 0.15, "%s (%s): veteran on appearance wins only %d%%" % [a["enemy"], a["source"], roundi(rate * 100)])
 	assert_gt(checked, 0)
+
+
+## QA-021: a veteran at the peak of any realm through Soul Formation stays far
+## from beating a plain foe one realm up (realm_training covers every realm).
+func test_veteran_peak_does_not_beat_next_realm_through_soul_formation() -> void:
+	for realm in range(1, Balance.LATE_REALMS + 1):
+		var peak := data().realms[realm].stage_count() - 1
+		var up := Balance.win_rate(Balance.veteran_player(data(), realm, peak), data(), Balance.plain_enemy(data(), realm + 1, 0), 100)
+		assert_true(up < 0.1, "%s veteran peak beats the next realm %d%% of the time" % [data().realms[realm].name, roundi(up * 100)])
