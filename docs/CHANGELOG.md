@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-09 [FEST-003] Festivals have something anyone can join, starting with the Lantern Festival.
 - 2026-10-09 [WU-099] Answer a letter in person: the asker's menu offers to hand over what they asked for.
 - 2026-10-09 [C-059] The Drowned Yin Palace opens only to someone carrying the Yin King's gate token.
 - 2026-10-09 [QA-056] Checked: renown, bounties, gift tastes, letters and festivals survive saving and loading.
