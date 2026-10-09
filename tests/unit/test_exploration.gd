@@ -450,3 +450,11 @@ func test_four_seasons_herbalist_milestone_at_four() -> void:
 	assert_false(Milestones.newly_reached(c, data(), {}).has("four_seasons_herbalist"))
 	_gather_noting(c, table, "Winter")
 	assert_true(Milestones.newly_reached(c, data(), {}).has("four_seasons_herbalist"))
+
+
+func test_seasonal_sources_lists_restricted_entries() -> void:
+	var src := Exploration.seasonal_sources(data(), "ice_soul_flower")
+	assert_true(src.size() >= 1)
+	assert_eq(src[0]["place"], "Frost Ledge")
+	assert_eq(src[0]["seasons"], ["winter"])
+	assert_eq(Exploration.seasonal_sources(data(), "cold_iron").size(), 0)

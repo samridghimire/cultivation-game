@@ -219,6 +219,8 @@ func _show_details() -> void:
 	var equippable := _selected != "" and Equipment.is_equipment(data, _selected)
 	if _selected != "" and not GameState.player.equipment.values().has(_selected):
 		lines.append_array(use_lines(data, _selected, GameState.current_region))
+	if _selected != "":
+		lines.append_array(season_lines(data, _selected, Calendar.season_of(GameClock.total_days)))
 	if equippable:
 		lines.append_array(describe_equipment(GameState.player, data, _selected))
 	var array := Abodes.array_def(data, _selected) if _selected != "" else {}
@@ -251,6 +253,22 @@ func _show_details() -> void:
 
 
 ## WU-045: who buys the item and which recipes use it.
+## "Richest in Winter at Frost Ledge (Azure Peak)" lines (max 2), " (now)" when
+## `season` (any case) is one of the listed seasons (WU-075).
+static func season_lines(data: GameData, item_id: String, season: String) -> Array[String]:
+	var out: Array[String] = []
+	for src: Dictionary in Exploration.seasonal_sources(data, item_id):
+		if out.size() >= 2:
+			break
+		var names: Array[String] = []
+		var now := false
+		for s: String in src["seasons"]:
+			names.append(s.capitalize())
+			now = now or s.to_lower() == season.to_lower()
+		out.append("Richest in %s at %s (%s)%s" % [" / ".join(names), src["place"], src["region_name"], " (now)" if now else ""])
+	return out
+
+
 static func use_lines(data: GameData, item_id: String, region_id: String) -> Array[String]:
 	var lines: Array[String] = []
 	var buyers := Items.buyers(data, item_id)

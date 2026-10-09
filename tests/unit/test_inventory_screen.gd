@@ -171,3 +171,12 @@ func test_use_lines_show_buyers_and_recipes() -> void:
 	assert_true(text.contains("Sells for"), text)
 	assert_true(text.contains("Wandering Merchant (Qingshi Village)"), text)
 	assert_true(text.contains("Used in: Boar Hide Jerkin"), text)
+
+
+func test_season_lines_mark_current_season() -> void:
+	var winter := InventoryScreen.season_lines(data(), "ice_soul_flower", "Winter")
+	assert_eq(winter.size(), 1)
+	assert_eq(winter[0], "Richest in Winter at Frost Ledge (Azure Peak) (now)")
+	var summer := InventoryScreen.season_lines(data(), "ice_soul_flower", "Summer")
+	assert_eq(summer[0], "Richest in Winter at Frost Ledge (Azure Peak)")
+	assert_eq(InventoryScreen.season_lines(data(), "cold_iron", "Winter").size(), 0)

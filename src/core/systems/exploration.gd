@@ -55,6 +55,21 @@ static func backfill_visited(c: CharacterData, data: GameData, npcs: Dictionary)
 				visit(c, home)
 
 
+## Gather places whose table lists `item_id` with a `seasons` restriction (WU-075):
+## [{place, region_name, seasons}] in data order.
+static func seasonal_sources(data: GameData, item_id: String) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	for region: Dictionary in data.regions.values():
+		for place: Dictionary in region.get("places", []):
+			if place.get("type", "") != "gather":
+				continue
+			for entry: Dictionary in place.get("gather_table", []):
+				if String(entry.get("item", "")) != item_id or entry.get("seasons", []).is_empty():
+					continue
+				out.append({"place": String(place.get("display_name", "")), "region_name": String(region.get("name", "")), "seasons": entry["seasons"].duplicate()})
+	return out
+
+
 static func region_name(data: GameData, region_id: String) -> String:
 	return data.regions.get(region_id, {}).get("name", region_id)
 
