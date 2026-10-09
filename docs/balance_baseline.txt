@@ -2,36 +2,119 @@
 
 First-hour sim: 10 seeds, 12 months
   seed  QR1  QR3  QR9  sect  injuries  won  lost  fled  lines/month
-     1   14  141    -    14         0    1     0     0  4.4
-     2   14  108    -    14         0    0     1     0  4.5
-     3   14  137    -    14         0    1     0     0  4.1
-     4   14  170    -    14         0    2     0     0  4.1
-     5   14   48  295    14         0    2     0     0  4.1
-     6   62  280    -    62         0    2     0     0  4.5
-     7   14  137    -    14         0    2     0     0  3.9
-     8   14  106    -    14         0    1     1     0  4.6
-     9   14  171    -    14         0    2     0     0  3.8
-    10   14  107    -    14         0    1     1     0  4.1
-Medians (day): QR1 14, QR3 137, QR9 295, sect 14; injuries 0; fights won 2, lost 0, fled 0; 4.1 log lines/month
-Lines by category: { "warning": 34, "progress": 180, "info": 268, "danger": 23 }
+     1   14  142    -    14         0    3     0     0  5.0
+     2   14   76    -    14         0    3     0     0  4.4
+     3   14  141    -    14         0    2     0     0  4.2
+     4   14  199    -    14         0    2     1     0  4.1
+     5   14   45  301    14         0    4     0     0  5.4
+     6   14  172    -    14         0    4     0     0  5.2
+     7   14  137    -    14         0    1     0     0  4.4
+     8   14   79    -    14         0    1     0     0  4.2
+     9   14  201    -    14         0    2     0     0  4.0
+    10   14  106    -    14         0    2     0     0  3.9
+Medians (day): QR1 14, QR3 141, QR9 301, sect 14; injuries 0; fights won 2, lost 0, fled 0; 4.4 log lines/month
+Lines by category: { "warning": 39, "progress": 190, "danger": 39, "info": 271 }
 
 ## first hour, curious player (seeds 1-10)
 
 First-hour sim (curious player): 10 seeds, 12 months
   seed  QR1  QR3  QR9  sect  injuries  won  lost  fled  lines/month
-     1   14  198    -    14         0   17     4     0  15.1
-     2   14  164    -    14         0   18     4     0  15.2
-     3   14  204    -    14         1   16     4     0  14.4
-     4   14  198    -    14         0   11     3     0  13.9
-     5   14   62  436    14         0   13     3     0  14.6
-     6   26  348    -    26         0   19     3     0  15.4
-     7   14  196    -    14         0   18     3     0  15.4
-     8   14  158    -    14         0   16     2     0  14.2
-     9   14  288    -    14         0   16     3     0  14.8
-    10   14  156    -    14         0   17     4     0  15.8
-Medians (day): QR1 14, QR3 198, QR9 436, sect 14; injuries 0; fights won 17, lost 3, fled 0; 15.1 log lines/month
+     1   14  199    -    14         0   18     1     0  14.1
+     2   14  112    -    14         0   18     2     0  15.0
+     3   14  208    -    14         0   20     2     0  15.5
+     4   14  245    -    14         0   14     3     0  14.1
+     5   14   58  382    14         1   15     3     0  14.9
+     6   14  302    -    14         1   20     6     0  15.8
+     7   14  148    -    14         0   17     1     0  14.3
+     8   14  117    -    14         0   12     4     0  15.2
+     9   14  302    -    14         0   17     5     0  15.8
+    10   14  159    -    14         0   19     1     0  14.8
+Medians (day): QR1 14, QR3 199, QR9 382, sect 14; injuries 0; fights won 18, lost 3, fled 0; 15.0 log lines/month
 Distinct action kinds per month: 2.3; months after the first with no log lines: 0
-Lines by category: { "warning": 58, "progress": 524, "info": 750, "karma": 143, "danger": 311 }
+Lines by category: { "warning": 59, "progress": 535, "danger": 310, "info": 748, "karma": 141 }
+
+## three curious years (seeds 1-10, 36 months)
+
+Curious player, 10 seeds, 36 months
+  seed  block  kinds  new  stones  realm
+     1      1    2.8    4      98  Qi Refining, 3rd Layer
+     1      2    2.0    0     145  Qi Refining, 5th Layer
+     1      3    2.0    0      60  Qi Refining, 7th Layer
+     1      4    2.0    0     127  Qi Refining, 8th Layer
+     1      5    2.0    0     191  Qi Refining, 8th Layer
+     1      6    2.0    0     255  Qi Refining, 9th Layer
+     2      1    2.8    4      99  Qi Refining, 4th Layer
+     2      2    2.0    0      49  Qi Refining, 7th Layer
+     2      3    2.0    0      91  Qi Refining, 9th Layer
+     2      4    2.0    0     115  Qi Refining, 9th Layer
+     3      1    2.8    4      91  Qi Refining, 3rd Layer
+     3      2    2.0    0      14  Qi Refining, 5th Layer
+     3      3    2.0    0      43  Qi Refining, 7th Layer
+     3      4    2.0    0     103  Qi Refining, 8th Layer
+     3      5    2.0    0     157  Qi Refining, 9th Layer
+     3      6    2.0    0     219  Qi Refining, 9th Layer
+     4      1    2.8    4      86  Qi Refining, 3rd Layer
+     4      2    2.0    0      20  Qi Refining, 4th Layer
+     4      3    2.0    0      78  Qi Refining, 6th Layer
+     4      4    2.0    0     138  Qi Refining, 7th Layer
+     4      5    2.0    0     210  Qi Refining, 8th Layer
+     4      6    2.0    0     292  Qi Refining, 8th Layer
+     5      1    2.8    4     102  Qi Refining, 7th Layer
+     5      2    2.2    0      58  Foundation Establishment, Early
+     5      3    2.0    0      53  Foundation Establishment, Middle
+     6      1    2.8    4      64  Qi Refining, 3rd Layer
+     6      2    2.0    0      96  Qi Refining, 4th Layer
+     6      3    2.0    0      83  Qi Refining, 5th Layer
+     6      4    2.0    0      71  Qi Refining, 7th Layer
+     6      5    2.0    0     135  Qi Refining, 8th Layer
+     6      6    2.0    0     193  Qi Refining, 8th Layer
+     7      1    2.8    4     107  Qi Refining, 4th Layer
+     7      2    2.0    0      62  Qi Refining, 7th Layer
+     7      3    2.0    0     150  Qi Refining, 8th Layer
+     7      4    2.0    0     202  Qi Refining, 9th Layer
+     7      5    2.0    0     255  Qi Refining, 9th Layer
+     8      1    2.8    4      79  Qi Refining, 5th Layer
+     8      2    2.0    0     127  Qi Refining, 7th Layer
+     8      3    2.0    0      76  Qi Refining, 9th Layer
+     8      4    2.2    0      73  Foundation Establishment, Early
+     8      5    2.0    0      64  Foundation Establishment, Middle
+     8      6    2.0    0      59  Foundation Establishment, Late
+     9      1    2.8    4      50  Qi Refining, 2nd Layer
+     9      2    2.0    0      36  Qi Refining, 4th Layer
+     9      3    2.0    0     107  Qi Refining, 6th Layer
+     9      4    2.0    0     194  Qi Refining, 7th Layer
+     9      5    2.0    0     252  Qi Refining, 8th Layer
+     9      6    2.0    0     316  Qi Refining, 8th Layer
+    10      1    2.8    4      83  Qi Refining, 4th Layer
+    10      2    2.0    0      53  Qi Refining, 6th Layer
+    10      3    2.0    0      72  Qi Refining, 8th Layer
+    10      4    2.0    0     102  Qi Refining, 9th Layer
+    10      5    2.0    0     117  Qi Refining, 9th Layer
+Medians per 6-month block: distinct kinds / seeds with a new feature / stones
+  months  1- 6: 2.8 kinds, 10 of 10 seeds new feature, 91 stones
+  months  7-12: 2.0 kinds, 0 of 10 seeds new feature, 58 stones [kinds<=2] [nothing new]
+  months 13-18: 2.0 kinds, 0 of 10 seeds new feature, 78 stones [kinds<=2] [nothing new]
+  months 19-24: 2.0 kinds, 0 of 9 seeds new feature, 115 stones [kinds<=2] [nothing new]
+  months 25-30: 2.0 kinds, 0 of 8 seeds new feature, 191 stones [kinds<=2] [nothing new]
+  months 31-36: 2.0 kinds, 0 of 6 seeds new feature, 255 stones [kinds<=2] [nothing new]
+Seeds whose life ended before month 36: [2, 5, 7, 10]
+First month each feature was used (median over seeds that used it):
+  mission       month 1 (10 of 10 seeds)
+  deed          month 1 (10 of 10 seeds)
+  talk          month 1 (10 of 10 seeds)
+  commission    never (policy does not use it)
+  breakthrough  month 1 (10 of 10 seeds)
+  craft         never (policy does not use it)
+  work          never (policy does not use it)
+  secret_realm  never (policy does not use it)
+  gift          never (policy does not use it)
+  pointer       never (policy does not use it)
+  spar          never (policy does not use it)
+  lecture       never (policy does not use it)
+Longest 'nothing new' stretches:
+  seed 1: 35 months from month 2 (Qi Refining, 1st Layer, 64 stones)
+  seed 3: 35 months from month 2 (Qi Refining, 1st Layer, 50 stones)
+  seed 4: 35 months from month 2 (Qi Refining, 1st Layer, 45 stones)
 
 ## combat (200 fights per cell)
 
@@ -155,7 +238,13 @@ Where each enemy first appears (typical player entering the realm / at its peak 
   Nascent S soul_reaping_old_monster encounter marsh_old_monster  evadable                 entry   8%  peak  68%  talisman  10%  bare   0%  veteran on appearance  97%  HARD
   Soul Form ancient_puppet_guardian trial chaos_alchemist_furnac forced                   entry 100%  peak 100%  talisman 100%  bare  61%  veteran on appearance 100%  TRIVIAL
   Soul Form azure_law_enforcer     trial eternal_sky_patriarch_ forced                   entry 100%  peak 100%  talisman 100%  bare  62%  veteran on appearance 100%  TRIVIAL
+  Soul Form blood_moon_sovereign   encounter wild_blood_moon_so evadable                 entry  22%  peak  88%  talisman  25%  bare   0%  veteran on appearance 100%  HARD
+  Soul Form ghost_banner_lord      encounter ruins_ghost_banner evadable                 entry  10%  peak  76%  talisman  14%  bare   0%  veteran on appearance  98%  HARD
+  Soul Form heavenly_mandate_elder encounter wild_heavenly_mand forced                   entry  21%  peak  92%  talisman  30%  bare   0%  veteran on appearance 100%  HARD
   Soul Form soul_reaping_old_monster trial ghost_sovereign_hollow forced                   entry 100%  peak 100%  talisman 100%  bare  14%  veteran on appearance 100%  TRIVIAL
+  Soul Form star_devouring_colossus encounter ruins_star_devouri evadable                 entry  13%  peak  77%  talisman  16%  bare   0%  veteran on appearance 100%  HARD
+  Soul Form ten_thousand_peaks_roc encounter mountain_ten_thous evadable                 entry   7%  peak  79%  talisman  16%  bare   0%  veteran on appearance  99%  HARD
+  Soul Form void_rift_dragonling   encounter mountain_void_drag evadable                 entry  72%  peak 100%  talisman  84%  bare   0%  veteran on appearance 100%  OK
 
 Win rate at stage 0 of each realm (no talismans):
   enemy \ player             Mortal Qi Refinin Foundation Core Forma Nascent So
@@ -225,6 +314,12 @@ Win rate at stage 0 of each realm (no talismans):
   soul_reaping_old_monster         0%         0%         0%         0%         8%
   ancient_puppet_guardian         0%         0%         0%         0%        35%
   outer_disciple_bully           0%        60%       100%       100%       100%
+  void_rift_dragonling           0%         0%         0%         0%         0%
+  heavenly_mandate_elder         0%         0%         0%         0%         0%
+  blood_moon_sovereign           0%         0%         0%         0%         0%
+  ten_thousand_peaks_roc         0%         0%         0%         0%         0%
+  ghost_banner_lord              0%         0%         0%         0%         0%
+  star_devouring_colossus         0%         0%         0%         0%         0%
 
 Typical player vs a plain enemy of the same realm and stage (QA-007d target ~60-90%), and at the realm's peak vs a plain enemy one realm up:
   Qi Refining             stage 0:  95%  stage 4:  91%  stage 8:  84%   next realm:   0%
@@ -246,55 +341,55 @@ Economy sim: 50 lives per profession, income 1 month in 4, 3.0 violent deaths pe
   Core Forming Pill costs 3000 spirit stones
   Soul Infant Pill costs 30000 spirit stones
   Spirit Severing Pill costs 300000 spirit stones
-Alchemist (rank 6.0 at the end): avg final realm 2.00 (~Foundation Establishment); earned 17371, left 1527 stones
-    Foundation Establishment: 50/50 lives reached the bottleneck, 36 could afford the pill on the first attempt
-    Core Formation: 50/50 lives reached the bottleneck, 11 could afford the pill on the first attempt
-    Nascent Soul: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
-    Soul Formation: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
-    pills 363, attempts without a pill 3853; lives bought 168 (dearest 3200); ended for good 7 (avg age 158), old age 43
-    income (all lives): work 8211 mo / 265236 stones, craft 194 mo / 8552 stones, gather 8385 mo / 369539 stones, sect 8361 mo / 415604 stones (stipends 207752)
-    spent: gear 0, clinic 570; savings alone covered the Core Forming Pill at the Foundation peak for 11/50; pills bought with contribution 57; avg sect rank 2.0, contribution 30709
-Blacksmith (rank 5.9 at the end): avg final realm 2.02 (~Foundation Establishment); earned 18476, left 1543 stones
-    Foundation Establishment: 50/50 lives reached the bottleneck, 41 could afford the pill on the first attempt
-    Core Formation: 50/50 lives reached the bottleneck, 18 could afford the pill on the first attempt
+Alchemist (rank 6.0 at the end): avg final realm 2.02 (~Foundation Establishment); earned 22481, left 1650 stones
+    Foundation Establishment: 50/50 lives reached the bottleneck, 43 could afford the pill on the first attempt
+    Core Formation: 50/50 lives reached the bottleneck, 16 could afford the pill on the first attempt
     Nascent Soul: 1/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
     Soul Formation: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
-    pills 386, attempts without a pill 3391; lives bought 176 (dearest 12800); ended for good 7 (avg age 166), old age 43
-    income (all lives): work 8829 mo / 286986 stones, craft 0 mo / 0 stones, gather 8812 mo / 397183 stones, sect 8796 mo / 429851 stones (stipends 209604)
-    spent: gear 0, clinic 880; savings alone covered the Core Forming Pill at the Foundation peak for 18/50; pills bought with contribution 79; avg sect rank 2.0, contribution 32326
-Talisman Master (rank 8.9 at the end): avg final realm 2.00 (~Foundation Establishment); earned 25634, left 1631 stones
-    Foundation Establishment: 50/50 lives reached the bottleneck, 39 could afford the pill on the first attempt
+    pills 449, attempts without a pill 3948; lives bought 166 (dearest 6400); ended for good 3 (avg age 220), old age 47
+    income (all lives): work 8644 mo / 282570 stones, craft 150 mo / 6088 stones, gather 8778 mo / 596466 stones, sect 8763 mo / 428586 stones (stipends 211340)
+    spent: gear 0, clinic 890; savings alone covered the Core Forming Pill at the Foundation peak for 16/50; pills bought with contribution 67; avg sect rank 2.0, contribution 32343
+Blacksmith (rank 5.9 at the end): avg final realm 2.02 (~Foundation Establishment); earned 22841, left 2059 stones
+    Foundation Establishment: 50/50 lives reached the bottleneck, 44 could afford the pill on the first attempt
+    Core Formation: 50/50 lives reached the bottleneck, 21 could afford the pill on the first attempt
+    Nascent Soul: 1/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
+    Soul Formation: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
+    pills 448, attempts without a pill 3842; lives bought 172 (dearest 12800); ended for good 3 (avg age 245), old age 47
+    income (all lives): work 8840 mo / 283314 stones, craft 0 mo / 0 stones, gather 8823 mo / 616268 stones, sect 8803 mo / 432416 stones (stipends 212640)
+    spent: gear 0, clinic 1540; savings alone covered the Core Forming Pill at the Foundation peak for 21/50; pills bought with contribution 62; avg sect rank 2.0, contribution 32450
+Talisman Master (rank 8.5 at the end): avg final realm 2.00 (~Foundation Establishment); earned 30294, left 1789 stones
+    Foundation Establishment: 50/50 lives reached the bottleneck, 44 could afford the pill on the first attempt
+    Core Formation: 50/50 lives reached the bottleneck, 13 could afford the pill on the first attempt
+    Nascent Soul: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
+    Soul Formation: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
+    pills 587, attempts without a pill 4056; lives bought 173 (dearest 3200); ended for good 4 (avg age 163), old age 46
+    income (all lives): work 3073 mo / 58545 stones, craft 5427 mo / 619125 stones, gather 8485 mo / 603726 stones, sect 8465 mo / 423850 stones (stipends 211320)
+    spent: gear 0, clinic 700; savings alone covered the Core Forming Pill at the Foundation peak for 13/50; pills bought with contribution 59; avg sect rank 2.0, contribution 31306
+Array Master (rank 5.2 at the end): avg final realm 2.04 (~Foundation Establishment); earned 21987, left 1777 stones
+    Foundation Establishment: 50/50 lives reached the bottleneck, 43 could afford the pill on the first attempt
     Core Formation: 50/50 lives reached the bottleneck, 17 could afford the pill on the first attempt
-    Nascent Soul: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
-    Soul Formation: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
-    pills 524, attempts without a pill 3340; lives bought 180 (dearest 3200); ended for good 6 (avg age 156), old age 44
-    income (all lives): work 2961 mo / 55840 stones, craft 5533 mo / 631173 stones, gather 8476 mo / 365038 stones, sect 8457 mo / 421047 stones (stipends 209828)
-    spent: gear 0, clinic 2630; savings alone covered the Core Forming Pill at the Foundation peak for 17/50; pills bought with contribution 88; avg sect rank 2.0, contribution 31031
-Array Master (rank 5.4 at the end): avg final realm 2.02 (~Foundation Establishment); earned 17883, left 1764 stones
-    Foundation Establishment: 50/50 lives reached the bottleneck, 36 could afford the pill on the first attempt
-    Core Formation: 50/50 lives reached the bottleneck, 14 could afford the pill on the first attempt
-    Nascent Soul: 1/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
-    Soul Formation: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
-    pills 375, attempts without a pill 3935; lives bought 182 (dearest 6400); ended for good 10 (avg age 188), old age 40
-    income (all lives): work 8634 mo / 295547 stones, craft 0 mo / 0 stones, gather 8608 mo / 367038 stones, sect 8591 mo / 424957 stones (stipends 211180)
-    spent: gear 0, clinic 1060; savings alone covered the Core Forming Pill at the Foundation peak for 14/50; pills bought with contribution 70; avg sect rank 2.0, contribution 31556
-Doctor (rank 6.2 at the end): avg final realm 2.04 (~Foundation Establishment); earned 18114, left 2218 stones
-    Foundation Establishment: 50/50 lives reached the bottleneck, 34 could afford the pill on the first attempt
-    Core Formation: 50/50 lives reached the bottleneck, 12 could afford the pill on the first attempt
     Nascent Soul: 2/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
     Soul Formation: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
-    pills 361, attempts without a pill 3977; lives bought 169 (dearest 12800); ended for good 4 (avg age 214), old age 46
-    income (all lives): work 9080 mo / 257365 stones, craft 0 mo / 0 stones, gather 9060 mo / 402124 stones, sect 9039 mo / 441497 stones (stipends 212844)
-    spent: gear 0, clinic 400; savings alone covered the Core Forming Pill at the Foundation peak for 12/50; pills bought with contribution 63; avg sect rank 2.0, contribution 33298
-Beast Tamer (rank 6.4 at the end): avg final realm 2.00 (~Foundation Establishment); earned 16824, left 1645 stones
-    Foundation Establishment: 50/50 lives reached the bottleneck, 35 could afford the pill on the first attempt
-    Core Formation: 50/50 lives reached the bottleneck, 11 could afford the pill on the first attempt
-    Nascent Soul: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
+    pills 437, attempts without a pill 3923; lives bought 167 (dearest 3200); ended for good 7 (avg age 183), old age 43
+    income (all lives): work 8553 mo / 283514 stones, craft 0 mo / 0 stones, gather 8530 mo / 584067 stones, sect 8515 mo / 416740 stones (stipends 207580)
+    spent: gear 0, clinic 960; savings alone covered the Core Forming Pill at the Foundation peak for 17/50; pills bought with contribution 62; avg sect rank 2.0, contribution 31355
+Doctor (rank 6.2 at the end): avg final realm 2.08 (~Foundation Establishment); earned 24043, left 2344 stones
+    Foundation Establishment: 50/50 lives reached the bottleneck, 47 could afford the pill on the first attempt
+    Core Formation: 50/50 lives reached the bottleneck, 20 could afford the pill on the first attempt
+    Nascent Soul: 4/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
     Soul Formation: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
-    pills 356, attempts without a pill 3911; lives bought 178 (dearest 1600); ended for good 7 (avg age 164), old age 43
-    income (all lives): work 7855 mo / 220690 stones, craft 621 mo / 24015 stones, gather 8463 mo / 363888 stones, sect 8443 mo / 426718 stones (stipends 210012)
-    spent: gear 0, clinic 460; savings alone covered the Core Forming Pill at the Foundation peak for 11/50; pills bought with contribution 65; avg sect rank 2.0, contribution 31116
-Net stones per sect mission over all lives (top 12): procure_azure_crystal 754740, gather_spirit_herbs 515440, carry_goods_to_market 103374, alchemist_rare_order 17560, fill_herb_order 16290, auction_consignment 11520
+    pills 428, attempts without a pill 3469; lives bought 175 (dearest 12800); ended for good 7 (avg age 223), old age 43
+    income (all lives): work 9535 mo / 271940 stones, craft 0 mo / 0 stones, gather 9517 mo / 670026 stones, sect 9503 mo / 444408 stones (stipends 209812)
+    spent: gear 0, clinic 1390; savings alone covered the Core Forming Pill at the Foundation peak for 20/50; pills bought with contribution 64; avg sect rank 2.1, contribution 35099
+Beast Tamer (rank 6.5 at the end): avg final realm 2.02 (~Foundation Establishment); earned 22288, left 1653 stones
+    Foundation Establishment: 50/50 lives reached the bottleneck, 42 could afford the pill on the first attempt
+    Core Formation: 50/50 lives reached the bottleneck, 19 could afford the pill on the first attempt
+    Nascent Soul: 1/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
+    Soul Formation: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
+    pills 452, attempts without a pill 3835; lives bought 166 (dearest 12800); ended for good 3 (avg age 247), old age 47
+    income (all lives): work 8173 mo / 240085 stones, craft 673 mo / 25880 stones, gather 8827 mo / 604275 stones, sect 8805 mo / 435725 stones (stipends 214580)
+    spent: gear 0, clinic 1620; savings alone covered the Core Forming Pill at the Foundation peak for 19/50; pills bought with contribution 74; avg sect rank 2.0, contribution 32530
+Net stones per sect mission over all lives (top 12): procure_azure_crystal 774015, gather_spirit_herbs 527110, carry_goods_to_market 105708, alchemist_rare_order 23720, auction_consignment 20160, fill_herb_order 14850
 
 ## first Foundation Establishment year (seeds 1-10)
 

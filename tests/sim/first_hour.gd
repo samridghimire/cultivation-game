@@ -21,7 +21,7 @@ static func play(gs: Node, clock: Node, seed_value: int, months: int, curious: b
 	gs.pending_event = ""
 	var bus: Node = gs.get_node("/root/EventBus")
 	bus.clear_history()
-	var out := {"layer_day": {}, "sect_day": -1, "month_lines": [], "injuries": 0, "player": c, "kinds": []}
+	var out := {"layer_day": {}, "sect_day": -1, "month_lines": [], "injuries": 0, "player": c, "kinds": [], "kind_sets": [], "stones": [], "realms": []}
 	var done := {}
 	_talk_to_elder_mo(gs)
 	for chore in CHORES:
@@ -34,8 +34,10 @@ static func play(gs: Node, clock: Node, seed_value: int, months: int, curious: b
 		gs.cultivate(Calendar.DAYS_PER_MONTH, SPRING_DENSITY)
 		if not c.alive:
 			break
+		var broke := false
 		if Cultivation.can_attempt_breakthrough(c, gs.data):
 			gs.attempt_breakthrough()
+			broke = true
 		_use_qi_items(gs, c)
 		if c.is_rogue() and out["sect_day"] < 0:
 			for sect_id: String in Sects.accepting_sects(c, gs.data):
@@ -57,6 +59,12 @@ static func play(gs: Node, clock: Node, seed_value: int, months: int, curious: b
 			counts[cat] = int(counts.get(cat, 0)) + 1
 		out["month_lines"].append(counts)
 		out["kinds"].append(kinds.size())
+		var with_break := kinds.duplicate()
+		if broke:
+			with_break["breakthrough"] = true
+		out["kind_sets"].append(with_break)
+		out["stones"].append(c.item_count("spirit_stone"))
+		out["realms"].append(Cultivation.realm_label(c, gs.data))
 	out["injuries"] = c.injuries.size()
 	out["fights_won"] = LifeStats.get_stat(c, "fights_won")
 	out["fights_lost"] = LifeStats.get_stat(c, "fights_lost")
