@@ -22,7 +22,11 @@ func _errors_after(mutate: Callable) -> Array:
 
 
 func test_shipped_bounties_validate() -> void:
-	assert_eq(data().bounties.size(), 3)
+	assert_eq(data().bounties.size(), 11)
+	var regions := {}
+	for b: Dictionary in data().bounties.values():
+		regions[b["region"]] = int(regions.get(b["region"], 0)) + 1
+	assert_eq(regions.size(), data().regions.size(), "every region posts a bounty")
 	assert_eq(_errors_after(func(_d: GameData) -> void: pass), [])
 
 
@@ -41,13 +45,16 @@ func test_validator_rejects_bad_bounties() -> void:
 func test_offers_follow_realm_and_cooldown() -> void:
 	var c := _qi()
 	var ids := Bounties.offers(c, data(), 0).map(func(b: Dictionary) -> String: return b["id"])
-	assert_eq(ids, ["iron_back_boar_bounty"])
+	assert_true(ids.has("iron_back_boar_bounty"), str(ids))
 	c.bounty_cooldowns["iron_back_boar_bounty"] = 50
-	assert_eq(Bounties.offers(c, data(), 10), [])
-	assert_eq(Bounties.offers(c, data(), 50).size(), 1)
+	var cooling := Bounties.offers(c, data(), 10).map(func(b: Dictionary) -> String: return b["id"])
+	assert_false(cooling.has("iron_back_boar_bounty"), str(cooling))
+	var again := Bounties.offers(c, data(), 50).map(func(b: Dictionary) -> String: return b["id"])
+	assert_true(again.has("iron_back_boar_bounty"), str(again))
 	c.realm_index = data().realm_index_of("core_formation")
 	ids = Bounties.offers(c, data(), 500).map(func(b: Dictionary) -> String: return b["id"])
-	assert_eq(ids, ["black_iron_bear_king_bounty"], "max_realm hides the Qi Refining and Foundation postings")
+	assert_true(ids.has("black_iron_bear_king_bounty") and ids.has("thunderwing_roc_bounty"), str(ids))
+	assert_false(ids.has("iron_back_boar_bounty"), "max_realm hides the Qi Refining and Foundation postings")
 
 
 func test_take_active_and_expire() -> void:
@@ -56,7 +63,8 @@ func test_take_active_and_expire() -> void:
 	Bounties.take(c, data(), "iron_back_boar_bounty", 10)
 	assert_eq(Bounties.check_take(c, data(), "iron_back_boar_bounty", 10), "You are already on a hunt.")
 	assert_eq(Bounties.active(c, data(), 20)["until_day"], 70)
-	assert_eq(Bounties.offers(c, data(), 20), [])
+	var held := Bounties.offers(c, data(), 20).map(func(b: Dictionary) -> String: return b["id"])
+	assert_false(held.has("iron_back_boar_bounty"), "the taken posting leaves the board")
 	assert_eq(Bounties.expire(c, data(), 70), "")
 	assert_eq(Bounties.expire(c, data(), 71), "iron_back_boar_bounty")
 	assert_true(c.bounty.is_empty())
