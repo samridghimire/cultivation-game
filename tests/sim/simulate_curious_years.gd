@@ -16,6 +16,40 @@ func _initialize() -> void:
 	process_frame.connect(_run, CONNECT_ONE_SHOT)
 
 
+## QA-052: every death (artifact respawn or final) with month, cause, last foe, its rated odds,
+## lives left, stones held and the log lines just before it. Printed after the run.
+var _deaths: Array[Dictionary] = []
+var _last_fight := {}
+
+
+func _on_combat_finished(enemy_name: String, victory: bool, _log: PackedStringArray) -> void:
+	var gs: Node = root.get_node("GameState")
+	var foe := {}
+	for e: Dictionary in gs.data.enemies.values():
+		if String(e.get("name", "")) == enemy_name:
+			foe = e
+			break
+	var odds := -1.0
+	if not foe.is_empty() and gs.player != null:
+		odds = Combat.win_chance(gs.player, gs.data, foe)
+	_last_fight = {"id": String(foe.get("id", enemy_name)), "odds": odds, "won": victory}
+
+
+func _record_death(cause: String, final: bool) -> void:
+	var gs: Node = root.get_node("GameState")
+	var bus: Node = root.get_node("EventBus")
+	var recent: Array[String] = []
+	for i in range(maxi(0, bus.history.size() - 6), bus.history.size()):
+		recent.append(String(bus.history[i]["text"]).left(90))
+	_deaths.append({"seed": _seed, "month": root.get_node("GameClock").total_days / 30, "cause": cause.left(110), "final": final,
+		"fight": _last_fight.duplicate(), "lives": gs.player.artifact_lives, "stones": gs.player.item_count("spirit_stone"),
+		"region": gs.current_region, "recent": recent})
+	_last_fight = {}
+
+
+var _seed := 0
+
+
 func _median(values: Array) -> float:
 	if values.is_empty():
 		return -1.0
@@ -42,9 +76,14 @@ func _run() -> void:
 		stones_by_block.append([])
 	for f in FEATURES:
 		first_month[f] = []
+	var bus: Node = root.get_node("EventBus")
+	bus.combat_finished.connect(_on_combat_finished)
+	bus.player_respawned.connect(func(_a: String, _l: int) -> void: _record_death(String(gs.pending_respawn.get("cause", "?")), false))
+	bus.player_died.connect(func(cause: String) -> void: _record_death(cause, true))
 	print("Curious player, %d seeds, %d months" % [seeds, months])
 	print("  seed  block  kinds  new  stones  realm")
 	for s in range(1, seeds + 1):
+		_seed = s
 		var r: Dictionary = FirstHour.play(gs, clock, s, months, true)
 		var sets: Array = r["kind_sets"]
 		if sets.size() < months:
@@ -105,4 +144,11 @@ func _run() -> void:
 	for i in mini(3, stretches.size()):
 		var st: Dictionary = stretches[i]
 		print("  seed %d: %d months from month %d (%s, %d stones)" % [st["seed"], st["length"], st["from"], st["realm"], st["stones"]])
+	print("Deaths (%d): seed, game month, final?, foe (rated odds), lives left, stones, region" % _deaths.size())
+	for d in _deaths:
+		var f: Dictionary = d["fight"]
+		print("  seed %2d m%-3d %s %s (%s) lives=%d stones=%d %s" % [d["seed"], d["month"], "FINAL" if d["final"] else "respawn", f.get("id", "no fight (non-combat cause)"), "%.0f%%" % (100.0 * float(f["odds"])) if f.has("odds") and float(f["odds"]) >= 0 else "?", d["lives"], d["stones"], d["region"]])
+		print("      cause: %s" % d["cause"])
+		for line: String in d["recent"]:
+			print("      | %s" % line)
 	quit()
