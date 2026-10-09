@@ -90,7 +90,7 @@ func test_complete_pays_and_counts() -> void:
 	var c := _qi()
 	Bounties.take(c, data(), "iron_back_boar_bounty", 0)
 	var before := c.item_count("spirit_stone")
-	assert_eq(Bounties.complete(c, data(), 30), 40)
+	assert_eq(Bounties.complete(c, data(), 30), {"stones": 40, "bonus": 0})
 	assert_eq(c.item_count("spirit_stone"), before + 40)
 	assert_eq(LifeStats.get_stat(c, "bounties_done"), 1)
 	assert_eq(LifeStats.get_stat(c, "stones_earned"), 40, "bounty pay is income")
@@ -224,4 +224,24 @@ func test_board_lists_nearby_hunts_first() -> void:
 	var first: Dictionary = board.get_options()[0]
 	var near := Bounties.offers(c, gs.data, GameClock.total_days, gs.current_region)
 	assert_eq(String(first["label"]).contains(Exploration.region_name(gs.data, String(near[0]["region"]))), true, first["label"])
+	gs.end_session()
+
+
+func test_complete_pays_the_renown_bonus() -> void:
+	var c := _qi()
+	c.renown["misty_forest"] = 50
+	Bounties.take(c, data(), "iron_back_boar_bounty", 0)
+	var before := c.item_count("spirit_stone")
+	assert_eq(Bounties.complete(c, data(), 30), {"stones": 48, "bonus": 8})
+	assert_eq(c.item_count("spirit_stone"), before + 48)
+
+
+func test_board_label_shows_the_renown_pay() -> void:
+	var gs := _gs()
+	var c := _qi(3)
+	gs.start_session(c)
+	c.renown["misty_forest"] = 50
+	var board: Node = load("res://src/world/interactables/bounty_board.gd").new()
+	var labels: Array = board.get_options().map(func(o: Dictionary) -> String: return o["label"])
+	assert_true(labels.any(func(l: String) -> bool: return l.contains("48 stones (+20% for your name)")), str(labels))
 	gs.end_session()

@@ -63,6 +63,11 @@ static func buy_multiplier(c: CharacterData, data: GameData, region_id: String) 
 	return float(tier(data, value(c, region_id)).get("buy_mult", 1.0))
 
 
+## Multiplier on a bounty's pay in the region (1.0 without config or a `bounty_mult`).
+static func bounty_multiplier(c: CharacterData, data: GameData, region_id: String) -> float:
+	return float(tier(data, value(c, region_id)).get("bounty_mult", 1.0))
+
+
 ## "Misty Forest: Respected (54)" for every region with a title, in data order.
 static func describe(c: CharacterData, data: GameData) -> PackedStringArray:
 	var lines := PackedStringArray()
@@ -114,5 +119,7 @@ static func validate(config: Dictionary, errors: PackedStringArray) -> void:
 		var bm: Variant = t["buy_mult"]
 		if (typeof(bm) != TYPE_INT and typeof(bm) != TYPE_FLOAT) or float(bm) <= 0.0 or float(bm) > 1.0:
 			errors.append("renown tier %d buy_mult must be in (0, 1]" % i)
+		if t.has("bounty_mult") and ((typeof(t["bounty_mult"]) != TYPE_INT and typeof(t["bounty_mult"]) != TYPE_FLOAT) or float(t["bounty_mult"]) < 1.0):
+			errors.append("renown tier %d bounty_mult must be a number >= 1.0" % i)
 		if typeof(t["title"]) != TYPE_STRING:
 			errors.append("renown tier %d title must be a String" % i)

@@ -706,8 +706,10 @@ func _hunt_bounty_foe(enemy_id: String) -> Dictionary:
 	var won := fight(enemy_id)
 	_bounty_fight = false
 	if won and _can_act():
-		var stones := Bounties.complete(player, data, GameClock.total_days, bounty_id)
-		EventBus.post("Bounty claimed: %d spirit stones." % stones, "progress")
+		var paid := Bounties.complete(player, data, GameClock.total_days, bounty_id)
+		var stones := int(paid["stones"])
+		var bonus_line := " Your name earned you %d more." % int(paid["bonus"]) if int(paid["bonus"]) > 0 else ""
+		EventBus.post("Bounty claimed: %d spirit stones.%s" % [stones, bonus_line], "progress")
 		EventBus.bounty_claimed.emit(enemy_name, stones)
 		_gain_renown("bounty")
 		EventBus.player_changed.emit()

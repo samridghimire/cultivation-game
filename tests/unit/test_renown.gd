@@ -57,6 +57,7 @@ func test_validator() -> void:
 		"zero": func(d: GameData) -> void: d.renown["tiers"][1]["buy_mult"] = 0.0,
 		"over": func(d: GameData) -> void: d.renown["tiers"][1]["buy_mult"] = 1.2,
 		"source": func(d: GameData) -> void: d.renown["sources"]["bounty"] = -1,
+		"bounty_low": func(d: GameData) -> void: d.renown["tiers"][1]["bounty_mult"] = 0.9,
 		"max": func(d: GameData) -> void: d.renown["max"] = 0,
 	}
 	for key: String in bad:
@@ -102,3 +103,16 @@ func test_gamestate_bounty_raises_renown_and_discount_applies_to_buying_only() -
 	gs.data.bounties.erase("t_bounty")
 	gs.data.bounty_config["hunt_chance"] = 0.3
 	gs.end_session()
+
+
+func test_bounty_multiplier_per_tier() -> void:
+	var c := new_character()
+	assert_eq(Renown.bounty_multiplier(c, data(), "misty_forest"), 1.0, "untitled")
+	for row: Array in [[20, 1.1], [50, 1.2], [100, 1.3]]:
+		c.renown["misty_forest"] = row[0]
+		assert_eq(Renown.bounty_multiplier(c, data(), "misty_forest"), row[1])
+	var d := GameData.load_from_dir()
+	d.renown["tiers"][1].erase("bounty_mult")
+	assert_eq(Renown.bounty_multiplier(c, d, "nowhere"), 1.0, "absent = 1.0")
+	c.renown["misty_forest"] = 20
+	assert_eq(Renown.bounty_multiplier(c, d, "misty_forest"), 1.0)

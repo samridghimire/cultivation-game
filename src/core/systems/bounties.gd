@@ -84,17 +84,23 @@ static func hunt_roll(c: CharacterData, data: GameData, region_id: String, today
 
 
 ## Pays the active bounty (or `bounty_id`, the hunt a fight began on, even if it lapsed
-## during that fight) and clears it (cooldown starts). Returns the stones paid.
-static func complete(c: CharacterData, data: GameData, today: int, bounty_id: String = "") -> int:
+## during that fight) and clears it (cooldown starts). The pay is scaled by the renown tier held
+## in the bounty's region. Returns {"stones": int paid, "bonus": int of that earned by renown}.
+static func complete(c: CharacterData, data: GameData, today: int, bounty_id: String = "") -> Dictionary:
 	var b := def_of(data, bounty_id if bounty_id != "" else String(c.bounty.get("id", "")))
 	if b.is_empty():
-		return 0
-	var stones := int(b["reward_stones"])
+		return {"stones": 0, "bonus": 0}
+	var stones := paid_stones(c, data, b)
 	c.add_item("spirit_stone", stones)
 	LifeStats.record_stones(c, stones)
 	LifeStats.add(c, "bounties_done")
 	_clear(c, data, String(b["id"]), today)
-	return stones
+	return {"stones": stones, "bonus": stones - int(b["reward_stones"])}
+
+
+## What `b` pays this character: its reward times the renown multiplier of its region.
+static func paid_stones(c: CharacterData, data: GameData, b: Dictionary) -> int:
+	return int(round(float(b["reward_stones"]) * Renown.bounty_multiplier(c, data, String(b["region"]))))
 
 
 static func abandon(c: CharacterData, data: GameData, today: int) -> void:

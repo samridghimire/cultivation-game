@@ -10,7 +10,11 @@ func get_options() -> Array[Dictionary]:
 	var options: Array[Dictionary] = []
 	for b: Dictionary in Bounties.offers(c, data, today, GameState.current_region):
 		var enemy: Dictionary = data.enemies.get(String(b["enemy"]), {})
-		var label := "Hunt: %s in %s, %d stones (%s)" % [enemy.get("name", b["enemy"]), Exploration.region_name(data, String(b["region"])), int(b["reward_stones"]), Appraisal.danger_text(c, data, enemy)]
+		var paid := Bounties.paid_stones(c, data, b)
+		var pay := "%d stones" % paid
+		if paid > int(b["reward_stones"]):
+			pay += " (+%d%% for your name)" % int(round((float(paid) / float(b["reward_stones"]) - 1.0) * 100.0))
+		var label := "Hunt: %s in %s, %s (%s)" % [enemy.get("name", b["enemy"]), Exploration.region_name(data, String(b["region"])), pay, Appraisal.danger_text(c, data, enemy)]
 		var reason := Bounties.check_take(c, data, String(b["id"]), today)
 		options.append({"label": label, "description": Warnings.append_to(c, "%s (%s to finish)" % [b["text"], Calendar.format_duration(int(b["days"]))]), "action": GameState.take_bounty.bind(String(b["id"])), "disabled": reason != "", "reason": reason, "keep_open": true})
 	var hunt := Bounties.active(c, data, today)
