@@ -69,6 +69,7 @@ Where each enemy first appears (typical player entering the realm / at its peak 
   Qi Refini mountain_bandit        encounter village_bandit     forced                   entry 100%  peak 100%  talisman 100%  bare 100%  veteran on appearance 100%  TRIVIAL
   Qi Refini mountain_bandit        mission escort_mortal_villag forced                   entry 100%  peak 100%  talisman 100%  bare 100%  veteran on appearance 100%  TRIVIAL
   Qi Refini mountain_bandit        mission guard_pavilion_carav forced                   entry 100%  peak 100%  talisman 100%  bare 100%  veteran on appearance 100%  TRIVIAL
+  Qi Refini outer_disciple_bully   choice mountain_bullied_juni forced                   entry  78%  peak 100%  talisman 100%  bare   0%  veteran on appearance 100%  OK
   Qi Refini pavilion_vault_guard   trial myriad_treasure_pavili forced                   entry  53%  peak 100%  talisman  98%  bare   0%  veteran on appearance  93%  OK
   Qi Refini rogue_cultivator       encounter incursion_blood_sc evadable                 entry  56%  peak  92%  talisman  90%  bare   0%  veteran on appearance 100%  OK
   Qi Refini rogue_cultivator       encounter marsh_corpse_refin evadable                 entry  56%  peak  92%  talisman  90%  bare   0%  veteran on appearance 100%  OK
@@ -99,6 +100,7 @@ Where each enemy first appears (typical player entering the realm / at its peak 
   Foundatio demonic_cultivator     mission recover_stolen_consi forced                   entry  69%  peak  95%  talisman  98%  bare   0%  veteran on appearance  98%  OK
   Foundatio demonic_cultivator     mission silence_a_talebearer forced                   entry  69%  peak  95%  talisman  98%  bare   0%  veteran on appearance  98%  OK
   Foundatio demonic_cultivator     realm sunken_sword_tomb floo forced                   entry  32%  peak  95%  talisman  93%  bare   0%  veteran on appearance  92%  HARD
+  Foundatio drowned_venom_husk     encounter drowned_venom_husk evadable                 entry  69%  peak 100%  talisman 100%  bare   0%  veteran on appearance  98%  OK
   Foundatio drowned_yin_ghost      encounter marsh_drowned_yin_ evadable                 entry  70%  peak  83%  talisman  99%  bare   0%  veteran on appearance 100%  OK
   Foundatio flame_tailed_fox       encounter wild_flame_fox     evadable                 entry  48%  peak  89%  talisman  96%  bare   0%  veteran on appearance 100%  HARD
   Foundatio ice_soul_spider        encounter forest_ice_spider  evadable                 entry  41%  peak  67%  talisman  93%  bare   0%  veteran on appearance  98%  HARD
@@ -110,7 +112,9 @@ Where each enemy first appears (typical player entering the realm / at its peak 
   Foundatio jade_python            encounter marsh_sunken_serpe evadable                 entry   0%  peak   0%  talisman   0%  bare   0%  veteran on appearance   0%  UNBEATABLE (lethal: a Deadly foe is sensed and evaded)
   Foundatio jade_python            realm sunken_sword_tomb floo forced                   entry   0%  peak   0%  talisman   0%  bare   0%  veteran on appearance   0%  UNBEATABLE
   Foundatio pavilion_treasure_guardian trial myriad_treasure_pavili forced                   entry  32%  peak  97%  talisman  95%  bare   0%  veteran on appearance  96%  HARD
+  Foundatio roadside_rogue_cultivator encounter village_roadside_r forced                   entry  72%  peak 100%  talisman 100%  bare   0%  veteran on appearance 100%  OK
   Foundatio star_vault_warden      realm fallen_star_vault floo forced                   entry   0%  peak   0%  talisman   0%  bare   0%  veteran on appearance   0%  UNBEATABLE
+  Foundatio stone_hide_boar_king   encounter forest_boar_king   evadable                 entry  70%  peak 100%  talisman 100%  bare   0%  veteran on appearance  98%  OK
   Foundatio sword_madman           encounter wild_sword_madman  evadable                 entry  46%  peak  46%  talisman  93%  bare   0%  veteran on appearance  99%  HARD
   Foundatio sword_madman           realm fallen_star_vault floo forced                   entry   3%  peak  46%  talisman  49%  bare   0%  veteran on appearance  70%  HARD
   Foundatio tournament_champion    choice tournament_final/Chal forced                   entry  13%  peak  74%  talisman  74%  bare   0%  veteran on appearance  78%  HARD
@@ -187,6 +191,9 @@ Win rate at stage 0 of each realm (no talismans):
   garden_poacher                 0%        81%       100%       100%       100%
   moss_back_ape                  0%        48%       100%       100%       100%
   grave_guardian_ape             0%        48%       100%       100%       100%
+  stone_hide_boar_king           0%         0%        70%       100%       100%
+  drowned_venom_husk             0%         0%        69%       100%       100%
+  roadside_rogue_cultivator         0%         0%        72%       100%       100%
   cloud_eagle                    0%         0%        63%       100%       100%
   cave_guardian                  0%         0%        26%       100%       100%
   demonic_cultivator             0%         0%        32%       100%       100%
@@ -215,6 +222,7 @@ Win rate at stage 0 of each realm (no talismans):
   blood_sea_deacon               0%         0%         0%         0%        28%
   soul_reaping_old_monster         0%         0%         0%         0%         8%
   ancient_puppet_guardian         0%         0%         0%         0%        35%
+  outer_disciple_bully           0%        60%       100%       100%       100%
 
 Typical player vs a plain enemy of the same realm and stage (QA-007d target ~60-90%), and at the realm's peak vs a plain enemy one realm up:
   Qi Refining             stage 0:  95%  stage 4:  91%  stage 8:  84%   next realm:   0%
