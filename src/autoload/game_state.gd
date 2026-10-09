@@ -2310,6 +2310,7 @@ func fight_enemy(enemy: Dictionary, start_hp: int = -1) -> bool:
 		var ally_id := Karma.strike_ally(player, npcs, data, current_region, String(enemy.get("id", "")))
 		if ally_id != "":
 			allies.append(Karma.ally_strike(player, npcs, data, ally_id))
+	var pre_odds := Combat.win_chance(player, data, enemy)
 	var result := Combat.resolve(player, data, enemy, rng, allies, start_hp)
 	last_fight_hp = int(result["player_hp"])
 	last_fight_playback = {"trace": result["trace"], "player_max": result["player_max_hp"], "enemy_max": result["enemy_max_hp"]}
@@ -2361,7 +2362,7 @@ func fight_enemy(enemy: Dictionary, start_hp: int = -1) -> bool:
 			EventBus.player_changed.emit()
 			return false
 	if outcome["died"]:
-		_die_violently(outcome["cause"])
+		_die_violently(outcome["cause"], {"enemy_id": String(enemy.get("id", "")), "enemy_name": String(enemy.get("name", "enemy")), "win_chance": pre_odds})
 		return false
 	if result["victory"]:
 		_try_tame(String(enemy.get("id", "")))
@@ -2905,7 +2906,7 @@ func _child_is_here(child: CharacterData) -> bool:
 
 ## A death by violence: the Creation Artifact respawns the player if it has a
 ## life left; otherwise death is final. (Old age always goes straight to _kill.)
-func _die_violently(cause: String) -> void:
+func _die_violently(cause: String, fight: Dictionary = {}) -> void:
 	if not CreationArtifact.can_respawn(player):
 		_kill(cause + " The Creation Artifact has no lives left to pull your soul back.")
 		EventBus.player_changed.emit()
@@ -2918,6 +2919,7 @@ func _die_violently(cause: String) -> void:
 	current_region = result["region"]
 	last_arrival_first_visit = false
 	pending_respawn = {"cause": cause, "anchor_id": result["anchor_id"], "lives_left": result["lives_left"], "qi_lost": result["qi_lost"]}
+	pending_respawn.merge(fight)
 	if moved:
 		spawn_anchor = result["anchor_id"]
 	LifeStats.add(player, "respawns")

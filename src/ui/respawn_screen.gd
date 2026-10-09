@@ -9,6 +9,8 @@ signal closed
 
 var _cause: Label
 var _summary: Label
+var _lesson: Label
+var _cost: Label
 var _choices: VBoxContainer
 
 
@@ -26,6 +28,10 @@ func _init() -> void:
 	box.add_child(_cause)
 	_summary = _wrapped(UIStyle.label("", 16))
 	box.add_child(_summary)
+	_lesson = _wrapped(UIStyle.label("", 16, UIStyle.CATEGORY_COLORS["warning"]))
+	box.add_child(_lesson)
+	_cost = _wrapped(UIStyle.label("", 16))
+	box.add_child(_cost)
 	box.add_child(UIStyle.label("Where will you awaken?", 18, UIStyle.ACCENT))
 	_choices = VBoxContainer.new()
 	_choices.add_theme_constant_override("separation", 6)
@@ -52,6 +58,19 @@ static func summary_text(pending: Dictionary) -> String:
 	return text + " %d qi scattered as your soul was torn loose." % int(pending.get("qi_lost", 0.0))
 
 
+## "You had about 12% odds against the Stone Ape. ..." when the death was a fight (pending has `enemy_name`
+## and `win_chance`; older pendings have neither), else "".
+static func lesson_text(pending: Dictionary) -> String:
+	if not pending.has("enemy_name") or not pending.has("win_chance"):
+		return ""
+	return "You had about %d%% odds against %s. Grow stronger before you face it again." % [roundi(float(pending["win_chance"]) * 100.0), pending["enemy_name"]]
+
+
+## "Recharging the artifact costs N spirit stones (you have M)."
+static func cost_text(c: CharacterData, data: GameData) -> String:
+	return "Recharging the artifact costs %d spirit stones (you have %d)." % [CreationArtifact.recharge_cost(c, data), c.item_count("spirit_stone")]
+
+
 ## Opens if a respawn is waiting for the player's choice.
 func open() -> void:
 	var pending := GameState.pending_respawn
@@ -59,6 +78,13 @@ func open() -> void:
 		return
 	_cause.text = String(pending.get("cause", ""))
 	_summary.text = summary_text(pending)
+	_lesson.text = lesson_text(pending)
+	_lesson.visible = _lesson.text != ""
+	_cost.text = cost_text(GameState.player, GameState.data)
+	if int(pending.get("lives_left", 0)) <= 1:
+		_cost.add_theme_color_override("font_color", UIStyle.CATEGORY_COLORS["warning"])
+	else:
+		_cost.remove_theme_color_override("font_color")
 	for child in _choices.get_children():
 		_choices.remove_child(child)
 		child.queue_free()

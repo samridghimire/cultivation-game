@@ -33,6 +33,31 @@ func test_summary_text_counts_lives() -> void:
 	assert_true(RespawnScreen.summary_text({"lives_left": 2, "qi_lost": 12.6}).contains("12 qi"))
 
 
+func test_lesson_text_needs_a_fight() -> void:
+	assert_eq(RespawnScreen.lesson_text({"lives_left": 2}), "")
+	var text := RespawnScreen.lesson_text({"enemy_name": "Stone Ape", "win_chance": 0.123})
+	assert_true(text.contains("12% odds against Stone Ape"))
+	assert_true(text.contains("Grow stronger"))
+
+
+func test_cost_text_shows_cost_and_stones() -> void:
+	var c := CharacterData.new()
+	c.add_item("spirit_stone", 7)
+	var text := RespawnScreen.cost_text(c, data())
+	assert_true(text.contains("%d spirit stones" % CreationArtifact.recharge_cost(c, data())))
+	assert_true(text.contains("you have 7"))
+
+
+func test_fight_death_stores_odds_in_pending_respawn() -> void:
+	var gs := _gs()
+	var c := CharacterFactory.create("Fallen", gs.data, seeded_rng())
+	gs.start_session(c)
+	gs.pending_event = ""
+	gs._die_violently("Slain.", {"enemy_id": "x", "enemy_name": "Ape", "win_chance": 0.2})
+	assert_eq(gs.pending_respawn["enemy_name"], "Ape")
+	assert_eq(RespawnScreen.lesson_text(gs.pending_respawn).contains("20%"), true)
+
+
 func test_choose_other_anchor_after_respawn() -> void:
 	var gs := _gs()
 	var c := CharacterFactory.create("Reborn", gs.data, seeded_rng())
