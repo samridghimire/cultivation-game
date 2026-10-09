@@ -136,6 +136,8 @@ var grudges: Dictionary = {}
 var gratitude: Dictionary = {}
 ## Recent letters from friends (LETTER-001): "Name: text" lines, newest last.
 var letters: Array[String] = []
+## World day the newest letter arrived (GUIDE-018); -1 when unknown (older saves).
+var letter_day: int = -1
 ## Secret realm id -> {"opening": int, "floor": int}: floors cleared in that opening (see SecretRealms).
 var secret_realms: Dictionary = {}
 ## Secret realm ids whose inheritance this character received (once per life, W-005d).
@@ -245,6 +247,7 @@ func to_dict() -> Dictionary:
 		"grudges": grudges.duplicate(),
 		"gratitude": gratitude.duplicate(),
 		"letters": letters.duplicate(),
+		"letter_day": letter_day,
 		"secret_realms": secret_realms.duplicate(true),
 		"inheritances": inheritances.duplicate(),
 		"body_stage": body_stage,
@@ -363,6 +366,7 @@ static func from_dict(d: Dictionary) -> CharacterData:
 	c.gratitude = _int_values(d.get("gratitude", {}))
 	for letter in d.get("letters", []):
 		c.letters.append(String(letter))
+	c.letter_day = int(d.get("letter_day", -1))
 	c.body_stage = int(d.get("body_stage", 0))
 	var delves: Dictionary = d.get("secret_realms", {})
 	for realm_id in delves:

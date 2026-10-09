@@ -728,6 +728,25 @@ static func recap(c: CharacterData, data: GameData, flags: Dictionary, today: in
 		out.append(next_step)
 	if warning != "" and warning != next_step:
 		out.append(warning)
+	# What is waiting (GUIDE-018): at most two of hunt, letter, renown.
+	var waiting: PackedStringArray = []
+	var hunt := Bounties.active(c, data, today)
+	if not hunt.is_empty():
+		var enemy: Dictionary = data.enemies.get(String(hunt.get("enemy", "")), {})
+		waiting.append("You are hunting %s in %s (%d days left)." % [
+			String(enemy.get("name", hunt.get("name", "your quarry"))),
+			Exploration.region_name(data, String(hunt.get("region", region_id))),
+			maxi(0, int(hunt["until_day"]) - today)])
+	var letter := Letters.recent_line(c, today)
+	if letter != "":
+		waiting.append(letter)
+	var best_region := ""
+	for id: String in c.renown:
+		if Renown.title(c, data, id) != "" and (best_region == "" or Renown.value(c, id) > Renown.value(c, best_region)):
+			best_region = id
+	if best_region != "":
+		waiting.append("Your name is %s in %s." % [Renown.title(c, data, best_region), Exploration.region_name(data, best_region)])
+	out.append_array(waiting.slice(0, 2))
 	return out
 
 

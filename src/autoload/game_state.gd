@@ -2791,7 +2791,7 @@ func _on_days_advanced(days: int) -> void:
 		var letter := Letters.monthly(player, npcs, npc_favor, data, rng, world_flags)
 		if not letter.is_empty():
 			var line := "A letter from %s: %s" % [npcs[letter["npc_id"]].name, letter["text"]]
-			Letters.remember(player, data, line)
+			Letters.remember(player, data, line, GameClock.total_days)
 			EventBus.letter_arrived.emit(npcs[letter["npc_id"]].name)
 			EventBus.post(line + (" (%s)" % ", ".join(letter["notes"]) if not letter["notes"].is_empty() else ""), "progress")
 	if clan != null:

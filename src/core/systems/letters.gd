@@ -76,11 +76,25 @@ static func take_visit_bonus(npc_id: String, data: GameData, flags: Dictionary) 
 
 
 ## Remembers a letter (newest last), keeping data's `max_kept`.
-static func remember(c: CharacterData, data: GameData, line: String) -> void:
+static func remember(c: CharacterData, data: GameData, line: String, today: int = -1) -> void:
 	c.letters.append(line)
+	c.letter_day = today
 	var keep := maxi(1, int(rules(data).get("max_kept", 10)))
 	while c.letters.size() > keep:
 		c.letters.pop_front()
+
+
+## "<Name>'s letter waits: <first 60 chars>..." for a letter that arrived within `within_days` of `today`, else "" (GUIDE-018).
+static func recent_line(c: CharacterData, today: int, within_days: int = 30) -> String:
+	if c.letters.is_empty() or c.letter_day < 0 or today - c.letter_day > within_days:
+		return ""
+	var body := c.letters[c.letters.size() - 1].trim_prefix("A letter from ")
+	var colon := body.find(":")
+	var who := body.substr(0, colon) if colon > 0 else "A friend"
+	var text := body.substr(colon + 1).strip_edges() if colon > 0 else body
+	if text.length() > 60:
+		text = text.substr(0, 60) + "..."
+	return "%s's letter waits: %s" % [who, text]
 
 
 ## Journal lines for the last `limit` letters, newest first, without the "A letter from " prefix (WU-081).

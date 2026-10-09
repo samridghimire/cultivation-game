@@ -894,3 +894,25 @@ func test_craft_hint_names_recipe_until_five_crafts() -> void:
 	assert_true(_has(Guidance.hints(c, data(), 1.0, 99, {}, {}, "qingshi_village", 400), "You have what Qi Gathering Pill needs: craft it at Village Workshop in Qingshi Village."))
 	c.life_stats["items_crafted"] = 5
 	assert_false(_has(Guidance.hints(c, data(), 1.0, 99, {}, {}, "qingshi_village", 400), "You have what"))
+
+
+func test_recap_names_waiting_hunt_letter_and_renown_capped_at_two() -> void:
+	var c := _fresh()
+	var base := Guidance.recap(c, data(), {}, 100, "qingshi_village")
+	assert_false(_has(base, "hunting"))
+	assert_false(_has(base, "letter waits"))
+	assert_false(_has(base, "Your name is"))
+	Bounties.take(c, data(), "iron_back_boar_bounty", 100)
+	var hunt := Guidance.recap(c, data(), {}, 100, "qingshi_village")
+	assert_true(_has(hunt, "You are hunting"))
+	assert_true(_has(hunt, "60 days left"))
+	Letters.remember(c, data(), "A letter from Mei: " + "x".repeat(80), 90)
+	var both := Guidance.recap(c, data(), {}, 100, "qingshi_village")
+	assert_true(_has(both, "Mei's letter waits: " + "x".repeat(60) + "..."))
+	assert_false(_has(Guidance.recap(c, data(), {}, 200, "qingshi_village"), "letter waits"), "old letters are not news")
+	c.renown["qingshi_village"] = 100000
+	var capped := Guidance.recap(c, data(), {}, 100, "qingshi_village")
+	assert_true(_has(capped, "hunting") and _has(capped, "letter waits"))
+	assert_false(_has(capped, "Your name is"), "at most two waiting lines")
+	c.bounty = {}
+	assert_true(_has(Guidance.recap(c, data(), {}, 100, "qingshi_village"), "Your name is"))
