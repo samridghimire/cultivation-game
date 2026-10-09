@@ -48,12 +48,35 @@ func _start() -> void:
 		var kid := Npcs.spawn(gs.npcs, gs.data, rng, {"age_years": 4 + k * 3, "region": gs.current_region})
 		kid.parents = [c.id, spouse.id] as Array[String]
 		c.children.append(kid.id)
+	_add_week_data(gs, c)
 	for i in 30:
 		root.get_node("EventBus").post("Message %d: a line of news that is long enough to wrap across the log panel." % i)
 	world = load("res://src/world/world.tscn").instantiate()
 	root.add_child(world)
 	hud = world.get_node("HUD")
 	_build_shots(gs)
+
+
+## WU-093: data for the blocks added this week: letters, renown, a mastered region,
+## an active bounty and festival, and a lost mission.
+func _add_week_data(gs: Node, c: CharacterData) -> void:
+	for line: String in ["Wei Lan writes: the harvest was good and the village asks after you.",
+			"Elder Murong writes: come to the sect hall when the moon is full; there is a matter to discuss at length.",
+			"Old friend Zhao writes from the Misty Forest about a wolf pack that has grown bold."]:
+		Letters.remember(c, gs.data, line, root.get_node("GameClock").total_days)
+	c.renown["qingshi_village"] = 60
+	c.renown["misty_forest"] = 110
+	gs.world_flags["mastered_" + gs.current_region] = true
+	var offers := Bounties.offers(c, gs.data, root.get_node("GameClock").total_days)
+	if not offers.is_empty():
+		Bounties.take(c, gs.data, String(offers[0]["id"]), root.get_node("GameClock").total_days)
+	for event_id: String in gs.data.world_events:
+		if WorldEvents.is_festival(gs.data, event_id):
+			gs.world_events.append({"id": event_id, "region": gs.current_region, "start_day": root.get_node("GameClock").total_days, "end_day": root.get_node("GameClock").total_days + 6, "done": false})
+			break
+	for mission_id: String in Sects.available_missions(c, gs.data):
+		c.mission_losses[mission_id] = c.age_days - 3
+		break
 
 
 func _screen(label: String, action: String) -> void:
@@ -91,6 +114,10 @@ func _build_shots(gs: Node) -> void:
 	for i in 30:
 		lines.append("Round %d: you strike the Stone Ape for 123. (Stone Ape: 4567 hp)" % i)
 	shots.append({"name": "combat_report", "open": func() -> void: report.show_fight("Stone Ape", false, lines), "close": report.close})
+	var board: Node = load("res://src/world/interactables/bounty_board.gd").new()
+	board.display_name = "Qingshi Bounty Board"
+	var board_menu: Control = hud.get("_choice_menu")
+	shots.append({"name": "bounty_board_menu", "open": func() -> void: board_menu.open_for(board), "close": board_menu.close})
 	_build_deck_shots(gs)
 	_build_effect_shots(gs)
 	var menu_source := _find_menu_source()
