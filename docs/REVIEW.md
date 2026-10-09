@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 8b0c9a3
+Last reviewed commit: d098150
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -200,3 +200,17 @@ Last reviewed commit: 8b0c9a3
     lifespan (same as sect trial spars); a design call if spars should be fully free. (2) MENTOR-001's "shared" bonus
     applies whenever the senior knows the technique, even at a lower level than the player. (3) Pointers and spars have
     no menu entry until WU-059 lands.
+- 2026-10-09 (reviewer, 2nd run): reviewed 8b0c9a3..d098150 (QA-043, C-041, C-037, TRAV-001, WU-059, QA-040, GUIDE-012,
+  WU-060, RV-014, C-042, C-038, WU-066, GUIDE-013, WU-065, QA-039, and the owner's 660201c class-cache hooks; [PLAN]/[REVIEW]
+  commits skipped). Main green before and after (1345 tests). No BACKLOG/CHANGELOG edits by workers; no SAVE_VERSION change
+  (`visited_regions` defaults to [] and older saves get the current region on load; new life stats default to 0).
+  - RV-014 resolves notes (1) and (2) of the last run (friendly spars burn no talismans, no escape, no lifespan drain; the
+    pointer bonus needs a teacher who knows the technique better). WU-059 resolves note (3). TRAV-001 also stops road
+    notices for regions already walked (last-but-one run's note (2)).
+  - Fixed (one [REVIEW] commit): C-038's Shen Wuya wine choice costs 10 stones but its label only said "(2 days)" and it
+    vanished silently when you were broke; label now names the cost and the choice shows locked, like every other paid
+    dialogue choice.
+  - Notes, not filed: (1) TRAV-001 records visits on travel/start/load only; a respawn or anchor choice lands at a bound
+    anchor, which you have visited already, so nothing is missed today. (2) WU-065's ChoiceMenu height is fitted once per
+    rebuild; resizing the window with a menu open keeps the old cap until the menu is rebuilt. (3) Local `main` in this
+    cloud clone had diverged (an old PR-era history); reset to origin/main before reviewing, nothing pushed from it.
