@@ -2857,7 +2857,7 @@ func _on_days_advanced(days: int) -> void:
 	var reserved := npc_favor.duplicate()
 	for spouse_id in player.spouses:
 		reserved[spouse_id] = true
-	for event in Npcs.simulate(npcs, data, days, rng, reserved):
+	for event in Npcs.simulate(npcs, data, days, rng, reserved, world_flags):
 		# News about generated strangers is noise; only report people the player knows.
 		if not Npcs.is_newsworthy(String(event["npc_id"]), player, npc_favor):
 			continue
@@ -2899,7 +2899,7 @@ func _on_days_advanced(days: int) -> void:
 			if reminder != "":
 				EventBus.post(reminder, "warning", "sect")
 	EventBus.topic = "family"
-	for event in Training.advance(player, npcs, data, months, ClanEstate.training_multiplier(clan, data)):
+	for event in Training.advance(player, npcs, data, months, ClanEstate.training_multiplier(clan, data), world_flags):
 		EventBus.post(event["text"], event["category"])
 	for repaid in Karma.repay_debts(player, npcs, data, months, rng, world_flags):
 		EventBus.post("%s repays a debt of gratitude. (%s)" % [npcs[repaid["npc_id"]].name, ", ".join(repaid["notes"])], "progress")

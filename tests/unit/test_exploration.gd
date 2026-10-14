@@ -748,3 +748,54 @@ func test_qi_flags_add_up_and_validate() -> void:
 		bad_data._validate()
 		assert_true(bad_data.load_errors.size() > 0, "bonus %s should be rejected" % bad)
 
+
+
+## QI-002: qi flags count for the journal's best spot, NPC cultivation and child training too.
+func _total_qi(c: CharacterData) -> float:
+	return c.qi + c.stage * 100000.0
+
+
+func _azure_cultivator(id: String) -> CharacterData:
+	var c := new_character(7)
+	c.id = id
+	c.cultivates = true
+	c.age_days = 30 * Calendar.DAYS_PER_YEAR
+	c.realm_index = 1
+	c.spiritual_roots = {"fire": 60}
+	c.home_region = "azure_peak"
+	return c
+
+
+func test_best_qi_in_region_counts_qi_flags() -> void:
+	var d := data()
+	var c := new_character()
+	var plain := float(Guidance.best_qi_in_region(c, d, "azure_peak")["density"])
+	var flagged := float(Guidance.best_qi_in_region(c, d, "azure_peak", {"planted_guardian_seed": true})["density"])
+	assert_true(absf(flagged - plain * 1.1) < 0.0001, "%s vs %s" % [flagged, plain])
+	var reachable := float(Guidance.best_qi_reachable(c, d, "azure_peak", {"planted_guardian_seed": true})["density"])
+	assert_true(reachable >= flagged)
+
+
+func test_npc_in_qi_rich_region_cultivates_faster_with_flag() -> void:
+	var d := data()
+	var a := _azure_cultivator("npc_a")
+	var b := _azure_cultivator("npc_b")
+	Npcs.simulate({"npc_a": a}, d, Calendar.DAYS_PER_MONTH, seeded_rng(3))
+	Npcs.simulate({"npc_b": b}, d, Calendar.DAYS_PER_MONTH, seeded_rng(3), {}, {"planted_guardian_seed": true})
+	assert_gt(_total_qi(b), _total_qi(a), "the flag raises an NPC's monthly qi")
+
+
+func test_child_training_uses_qi_flags() -> void:
+	var d := data()
+	var plain := _azure_cultivator("kid_a")
+	var flagged := _azure_cultivator("kid_b")
+	plain.age_days = 12 * Calendar.DAYS_PER_YEAR
+	flagged.age_days = 12 * Calendar.DAYS_PER_YEAR
+	for kid: CharacterData in [plain, flagged]:
+		var parent := new_character()
+		parent.inventory = {"spirit_stone": 100}
+		parent.children.append(kid.id)
+		kid.parents = [parent.id]
+		assert_true(Training.assign(parent, kid, "cultivate", "", d)["ok"])
+		Training.advance(parent, {kid.id: kid}, d, 1, 1.0, {"planted_guardian_seed": true} if kid == flagged else {})
+	assert_gt(_total_qi(flagged), _total_qi(plain))

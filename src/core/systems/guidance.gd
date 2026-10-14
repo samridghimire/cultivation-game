@@ -49,7 +49,7 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 	var method := _method_hint(c, data)
 	if method != "":
 		out.append(method)
-	var better_qi := _better_qi_hint(c, data, region_id)
+	var better_qi := _better_qi_hint(c, data, region_id, flags)
 	if better_qi != "":
 		out.append(better_qi)
 	if c.artifact_lives >= 0 and c.artifact_lives <= LOW_ARTIFACT_LIVES:
@@ -271,9 +271,9 @@ static func _cultivation_hint(c: CharacterData, data: GameData, density: float) 
 
 ## Qi density multiplier of the best place to meditate in `region_id`: the region's
 ## own density times its best meditation spot, or the player's abode there (seclusion).
-static func best_qi_in_region(c: CharacterData, data: GameData, region_id: String) -> Dictionary:
+static func best_qi_in_region(c: CharacterData, data: GameData, region_id: String, flags: Dictionary = {}) -> Dictionary:
 	var region: Dictionary = data.regions.get(region_id, {})
-	var base := Exploration.qi_density(data, region_id)
+	var base := Exploration.qi_density(data, region_id, flags)
 	var best := {"region": region_id, "name": "", "density": base}
 	for place: Dictionary in region.get("places", []):
 		if place.get("type", "") != "meditation":
@@ -289,13 +289,13 @@ static func best_qi_in_region(c: CharacterData, data: GameData, region_id: Strin
 
 ## The best meditation place in any region the player can travel to now (following
 ## routes whose realm requirement they meet), as {region, name, density}.
-static func best_qi_reachable(c: CharacterData, data: GameData, region_id: String) -> Dictionary:
+static func best_qi_reachable(c: CharacterData, data: GameData, region_id: String, flags: Dictionary = {}) -> Dictionary:
 	var seen := {region_id: true}
 	var queue: Array[String] = [region_id]
 	var best := {}
 	while not queue.is_empty():
 		var here: String = queue.pop_front()
-		var candidate := best_qi_in_region(c, data, here)
+		var candidate := best_qi_in_region(c, data, here, flags)
 		if best.is_empty() or float(candidate["density"]) > float(best["density"]):
 			best = candidate
 		for route: Dictionary in Exploration.routes(c, data, here):
@@ -356,13 +356,13 @@ static func _better_manual(c: CharacterData, data: GameData) -> String:
 
 
 ## A pointer to much better qi elsewhere (>= BETTER_QI_RATIO x the best spot here).
-static func _better_qi_hint(c: CharacterData, data: GameData, region_id: String) -> String:
+static func _better_qi_hint(c: CharacterData, data: GameData, region_id: String, flags: Dictionary = {}) -> String:
 	if region_id == "" or not data.regions.has(region_id):
 		return ""
 	if Cultivation.is_at_bottleneck(c, data) or Cultivation.can_attempt_breakthrough(c, data):
 		return ""
-	var here := float(best_qi_in_region(c, data, region_id)["density"])
-	var best := best_qi_reachable(c, data, region_id)
+	var here := float(best_qi_in_region(c, data, region_id, flags)["density"])
+	var best := best_qi_reachable(c, data, region_id, flags)
 	if here <= 0.0 or float(best["density"]) < here * BETTER_QI_RATIO:
 		return ""
 	var place := String(best["name"])

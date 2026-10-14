@@ -224,7 +224,7 @@ static func ensure_all(npcs: Dictionary, data: GameData, rng: RandomNumberGenera
 ## Lives `days` for every NPC, then their family life (NpcFamilies: marriages,
 ## children; NPCs in `reserved` never marry off-screen). Returns notable events
 ## as [{npc_id, text, category}] (family events also carry a "kind").
-static func simulate(npcs: Dictionary, data: GameData, days: int, rng: RandomNumberGenerator, reserved: Dictionary = {}) -> Array[Dictionary]:
+static func simulate(npcs: Dictionary, data: GameData, days: int, rng: RandomNumberGenerator, reserved: Dictionary = {}, flags: Dictionary = {}) -> Array[Dictionary]:
 	var events: Array[Dictionary] = []
 	for npc_id in npcs:
 		var c: CharacterData = npcs[npc_id]
@@ -235,7 +235,7 @@ static func simulate(npcs: Dictionary, data: GameData, days: int, rng: RandomNum
 		while remaining > 0 and c.alive:
 			var step := mini(remaining, STEP_DAYS)
 			remaining -= step
-			_live(c, data, step, rng, events)
+			_live(c, data, step, rng, events, flags)
 	events.append_array(NpcFamilies.simulate(npcs, data, days, rng, reserved))
 	return events
 
@@ -252,7 +252,7 @@ static func die(c: CharacterData, cause: String) -> bool:
 	return true
 
 
-static func _live(c: CharacterData, data: GameData, days: int, rng: RandomNumberGenerator, events: Array[Dictionary]) -> void:
+static func _live(c: CharacterData, data: GameData, days: int, rng: RandomNumberGenerator, events: Array[Dictionary], flags: Dictionary = {}) -> void:
 	c.age_days += days
 	if c.age_years() >= Cultivation.lifespan_years(c, data):
 		var text := "News arrives: %s has died of old age at %d." % [c.name, c.age_years()]
@@ -268,7 +268,7 @@ static func _live(c: CharacterData, data: GameData, days: int, rng: RandomNumber
 		return
 	if SpiritualRoots.cultivation_multiplier(c.spiritual_roots, data) <= 0.0:
 		return
-	Cultivation.cultivate(c, data, days, Exploration.qi_density(data, region_of(c, data)) * diligence_of(c, data) * Sects.cultivation_bonus(c, data))
+	Cultivation.cultivate(c, data, days, Exploration.qi_density(data, region_of(c, data), flags) * diligence_of(c, data) * Sects.cultivation_bonus(c, data))
 	if Cultivation.can_attempt_breakthrough(c, data):
 		var result := Cultivation.attempt_breakthrough(c, data, rng, true)
 		if result["died"]:
