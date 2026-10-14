@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 51025b4
+Last reviewed commit: 597d486
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -350,3 +350,17 @@ Last reviewed commit: 51025b4
     qi_flags bonus is applied to the player's meditation, HUD and map, but not to Guidance.best_qi_in_region (journal's
     "best place to meditate") or to NPC/child cultivation (Npcs, Training call qi_density without flags); harmless at
     +10%, but pass flags through if more qi_flags land.
+- 2026-10-14 (reviewer, 11th run): reviewed 51025b4..597d486 (GIFT-002, FEST-004, QA-059, WU-102, WU-109, RUMOR-002, EFF-001,
+  WU-111, WU-115, QA-060, WU-112, SECRET-003, C-069, LETTER-005, QI-002, WU-114, C-068; [PLAN]/[REVIEW] skipped).
+  Main green (tools/test.sh ALL CHECKS PASSED). No BACKLOG/CHANGELOG edits by workers; no SAVE_VERSION change and no new
+  persistent state. No [REVIEW] fixes needed this run; nothing filed.
+  - Checked: EFF-001's list-valued set_flag/clear_flag has no other reader of those keys outside Effects; QI-002 leaves no
+    qi_density caller without flags in src; FEST-004's sold_by defaults every current event to herb stalls (no event sets
+    stall_tags yet); SECRET-003/WU-114 notice fires only when a span crosses into the notice window, never while open.
+  - Notes for the planner, not filed: (1) WU-111: when hear_rumors is refused by _can_act it returns [] and the Gossip
+    window says "Nobody has anything to tell you." over the refusal message; harmless today. (2) C-069 moved Peach
+    Blossom Grotto's offset_years 0 -> 2: an old save mid-opening sees the grotto close early (progress is per opening);
+    acceptable. (3) FEST-004: the festival activity entry ("Float a lantern") still shows at every merchant, including
+    stalls that do not sell the festival goods. (4) QA-060 follow-up stands (MENTOR-002/C-071): pointers never fire
+    because a newcomer knows no technique; C-068 notes the same root cause behind C-063. C-068 closes the C-060
+    follow-up (planted seed sets planted_guardian_seed, a qi_flags entry).
