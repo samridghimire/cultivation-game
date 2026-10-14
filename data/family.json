@@ -45,7 +45,7 @@
     }
   },
   "mentorship": {
-    "pointers": {"min_favor": 20, "cooldown_days": 30, "days": 1, "practice_days": 15, "shared_multiplier": 2.0},
+    "pointers": {"min_favor": 10, "cooldown_days": 30, "days": 1, "practice_days": 15, "shared_multiplier": 2.0},
     "spar": {"min_favor": 10, "cooldown_days": 7, "days": 1, "practice_days": 3, "win_favor": 2, "max_realm_gap": 1}
   }
 }

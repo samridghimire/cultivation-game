@@ -70,7 +70,7 @@ static func check_pointers(c: CharacterData, npc: CharacterData, favor: int, dat
 	if left > 0:
 		return "%s already pointed out your flaws recently (%d days)." % [npc.name, left]
 	if pointer_technique(c, npc, data) == "":
-		return "You have no technique they could correct."
+		return "You have no technique they could correct yet; find a technique manual first."
 	return ""
 
 

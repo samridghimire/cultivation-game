@@ -60,10 +60,10 @@ func test_check_reasons() -> void:
 	p[1].stage = 0
 	assert_true(Mentorship.check_pointers(p[0], p[1], 50, d, 0).contains("no stronger"))
 	p[1].realm_index = 2
-	assert_true(Mentorship.check_pointers(p[0], p[1], 5, d, 0).contains("favor 5/20"))
-	assert_eq(Mentorship.check_pointers(p[0], p[1], 20, d, 0), "")
+	assert_true(Mentorship.check_pointers(p[0], p[1], 5, d, 0).contains("favor 5/10"))
+	assert_eq(Mentorship.check_pointers(p[0], p[1], 10, d, 0), "")
 	p[0].techniques = {}
-	assert_true(Mentorship.check_pointers(p[0], p[1], 20, d, 0).contains("no technique"))
+	assert_true(Mentorship.check_pointers(p[0], p[1], 10, d, 0).contains("no technique"))
 
 
 func test_give_pointers_xp_cooldown_and_shared() -> void:
