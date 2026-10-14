@@ -200,7 +200,8 @@ func test_choice_encounters_set_their_flags() -> void:
 	for e: Dictionary in d.encounters.values():
 		for effects: Dictionary in encounter_outcomes(e):
 			if effects.has("set_flag"):
-				set_flags[effects["set_flag"]] = true
+				for f in Effects.flag_list(effects["set_flag"]):
+					set_flags[f] = true
 	for enemy: Dictionary in d.enemies.values():
 		if enemy.get("rewards", {}).has("set_flag"):
 			set_flags[enemy["rewards"]["set_flag"]] = true
@@ -213,7 +214,7 @@ func test_choice_encounters_set_their_flags() -> void:
 		for choice: Dictionary in e["choices"]:
 			var effects: Dictionary = choice.get("effects", {})
 			if not effects.is_empty():
-				assert_eq(String(effects.get("set_flag", "")), flag, "%s: %s" % [e["id"], choice["label"]])
+				assert_true(Effects.flag_list(effects.get("set_flag", "")).has(flag), "%s: %s" % [e["id"], choice["label"]])
 
 
 func test_qilin_choice_grants_bloodline_and_is_locked_for_bloodline_bearers() -> void:

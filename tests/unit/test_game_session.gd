@@ -1346,3 +1346,18 @@ func test_region_qi_density_rises_with_deed_flag() -> void:
 	gs.world_flags["planted_guardian_seed"] = true
 	assert_true(gs.region_qi_density() > before)
 	gs.world_flags.erase("planted_guardian_seed")
+
+
+func test_planting_the_guardian_seed_enriches_azure_peak() -> void:
+	for choice_index in [0, 1]:
+		_start()
+		var gs := _game_state()
+		gs.current_region = "azure_peak"
+		var before: float = gs.region_qi_density()
+		gs.pending_encounter = "misty_forest_valley_guardian"
+		gs.choose_encounter(choice_index)
+		assert_true(gs.world_flags.get("met_valley_guardian", false), "met either way")
+		if choice_index == 0:
+			assert_true(absf(gs.region_qi_density() - before * 1.1) < 0.0001, "planting raises Azure Peak qi by 10%")
+		else:
+			assert_eq(gs.region_qi_density(), before, "swallowing leaves it alone")

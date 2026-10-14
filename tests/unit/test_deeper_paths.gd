@@ -173,8 +173,9 @@ func test_valley_guardian_needs_the_first_path() -> void:
 
 
 func test_valley_guardian_choices_set_the_flag() -> void:
-	for choice: Dictionary in data().encounters["misty_forest_valley_guardian"]["choices"]:
-		assert_eq(choice["effects"]["set_flag"], "met_valley_guardian")
+	var choices: Array = data().encounters["misty_forest_valley_guardian"]["choices"]
+	assert_eq(choices[0]["effects"]["set_flag"], ["met_valley_guardian", "planted_guardian_seed"])
+	assert_eq(choices[1]["effects"]["set_flag"], "met_valley_guardian")
 
 
 func test_valley_guardian_seed_can_be_swallowed_at_foundation() -> void:
