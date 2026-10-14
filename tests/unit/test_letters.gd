@@ -261,6 +261,18 @@ func test_family_writer_needs_someone_away() -> void:
 	assert_eq(Letters.family_writer(c, people, d), "", "dead parents do not write")
 
 
+func test_family_next_door_does_not_write() -> void:
+	var d := data()
+	var c := new_character()
+	c.spouses.append("w")
+	var w := _kin("w", true)
+	w.home_region = "azure_peak"
+	var people := {"w": w}
+	assert_eq(Letters.family_writer(c, people, d, "azure_peak"), "", "a spouse in the player's region is skipped")
+	assert_eq(Letters.family_writer(c, people, d, "misty_forest"), "w", "one in another region writes")
+	assert_eq(Letters.family_writer(c, people, d), "w", "no region given: unchanged")
+
+
 func test_family_kinds_never_come_from_friends_and_back() -> void:
 	var d := GameData.load_from_dir()
 	var rules: Dictionary = d.family["letters"]

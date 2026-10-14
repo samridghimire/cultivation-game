@@ -2904,7 +2904,7 @@ func _on_days_advanced(days: int) -> void:
 	for repaid in Karma.repay_debts(player, npcs, data, months, rng, world_flags):
 		EventBus.post("%s repays a debt of gratitude. (%s)" % [npcs[repaid["npc_id"]].name, ", ".join(repaid["notes"])], "progress")
 	for i in months:
-		var letter := Letters.monthly(player, npcs, npc_favor, data, rng, world_flags, GameClock.total_days)
+		var letter := Letters.monthly(player, npcs, npc_favor, data, rng, world_flags, GameClock.total_days, current_region)
 		if not letter.is_empty():
 			var line := "A letter from %s: %s" % [npcs[letter["npc_id"]].name, letter["text"]]
 			Letters.remember(player, data, line, GameClock.total_days)

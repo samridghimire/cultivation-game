@@ -35,11 +35,12 @@ static func writer(c: CharacterData, npcs: Dictionary, favor: Dictionary, data: 
 
 
 ## A living spouse or child (12+) who is in a sect and so lives away, lowest id first; failing that a living parent. "" when none.
-static func family_writer(c: CharacterData, npcs: Dictionary, data: GameData) -> String:
+## Family living in `region_id` (the player's current region) are next door and do not write.
+static func family_writer(c: CharacterData, npcs: Dictionary, data: GameData, region_id: String = "") -> String:
 	var away: Array[String] = []
 	for id: String in c.spouses + c.children:
 		var npc: CharacterData = npcs.get(id)
-		if npc != null and npc.alive and not npc.is_rogue() and (c.spouses.has(id) or npc.age_years() >= 12):
+		if npc != null and npc.alive and not npc.is_rogue() and (c.spouses.has(id) or npc.age_years() >= 12) and not _next_door(npc, data, region_id):
 			away.append(id)
 	if not away.is_empty():
 		away.sort()
@@ -47,10 +48,14 @@ static func family_writer(c: CharacterData, npcs: Dictionary, data: GameData) ->
 	var parents: Array[String] = []
 	for id: String in c.parents:
 		var npc: CharacterData = npcs.get(id)
-		if npc != null and npc.alive:
+		if npc != null and npc.alive and not _next_door(npc, data, region_id):
 			parents.append(id)
 	parents.sort()
 	return "" if parents.is_empty() else parents[0]
+
+
+static func _next_door(npc: CharacterData, data: GameData, region_id: String) -> bool:
+	return region_id != "" and Npcs.region_of(npc, data) == region_id
 
 
 ## "spouse", "child" or "parent": how `npc_id` is related to `c`.
@@ -64,12 +69,12 @@ static func relation(c: CharacterData, npc_id: String) -> String:
 
 ## Rolls this month's letter: family first (`family_chance`), else a friend's. Applies its effects and returns
 ## {npc_id, text, notes}, or {} when nobody writes.
-static func monthly(c: CharacterData, npcs: Dictionary, favor: Dictionary, data: GameData, rng: RandomNumberGenerator, flags: Dictionary, today: int = -1) -> Dictionary:
+static func monthly(c: CharacterData, npcs: Dictionary, favor: Dictionary, data: GameData, rng: RandomNumberGenerator, flags: Dictionary, today: int = -1, region_id: String = "") -> Dictionary:
 	var r := rules(data)
 	if r.is_empty():
 		return {}
 	var family_chance := float(r.get("family_chance", 0.0))
-	var family_id := family_writer(c, npcs, data) if family_chance > 0.0 else ""
+	var family_id := family_writer(c, npcs, data, region_id) if family_chance > 0.0 else ""
 	# Only roll when someone could write, so players with no kin away keep the shared rng stream.
 	if family_id != "" and rng.randf() < family_chance:
 		var sent := _write(c, npcs, favor, data, rng, flags, today, family_id, "family")
