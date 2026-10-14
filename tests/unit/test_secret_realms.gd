@@ -342,6 +342,15 @@ func test_yin_palace_needs_its_token() -> void:
 	assert_eq(SecretRealms.check_enter(c, d, "drowned_yin_palace", "withered_bone_marsh", day), "")
 
 
+func test_notice_realms_names_the_realm_once() -> void:
+	var d := data()
+	var def := _def()
+	d.secret_realms = {"test_realm": def}
+	var c := _cultivator()
+	assert_eq(SecretRealms.notice_realms(c, d, Y - 40, Y - 25), PackedStringArray([String(def["id"])]))
+	assert_eq(SecretRealms.notice_realms(c, d, Y - 20, Y - 10).size(), 0)
+
+
 func test_notice_news_crosses_the_notice_mark_once() -> void:
 	var d := data()
 	var def := _def()

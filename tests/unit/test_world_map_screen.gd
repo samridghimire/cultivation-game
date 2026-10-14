@@ -265,3 +265,18 @@ func test_region_marks_letter_requests() -> void:
 	assert_true(String(here[0]["text"]).ends_with("(50 days left)"))
 	assert_eq(letters.call("misty_forest", 100).size(), 0)
 	assert_eq(letters.call("qingshi_village", 151).size(), 0, "expired shows nowhere")
+
+
+## WU-114: the realm mark says when it opens or closes.
+func test_realm_when_text() -> void:
+	var def := {"id": "t", "period_years": 1, "open_days": 30, "offset_years": 0}
+	assert_eq(WorldMapScreen.realm_when(def, 0), "open, closes in %s" % Calendar.format_duration(30))
+	assert_eq(WorldMapScreen.realm_when(def, 30), "opens in %s" % Calendar.format_duration(Calendar.DAYS_PER_YEAR - 30))
+
+
+## WU-114: the notice banner names the realm and the wait.
+func test_realm_notice_banner() -> void:
+	var d := data()
+	var id: String = d.secret_realms.keys()[0]
+	var lines: PackedStringArray = load("res://src/ui/hud.gd").realm_notice_banner(d, id, 0)
+	assert_true(lines[0].ends_with("opens soon") and lines[1].begins_with("In about "), str(lines))

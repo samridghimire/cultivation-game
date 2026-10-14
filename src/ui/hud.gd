@@ -195,6 +195,7 @@ func _ready() -> void:
 	EventBus.festival_started.connect(_on_festival_started)
 	EventBus.bounty_claimed.connect(_on_bounty_claimed)
 	EventBus.letter_arrived.connect(_on_letter_arrived)
+	EventBus.secret_realm_notice.connect(_on_secret_realm_notice)
 	EventBus.renown_tier_reached.connect(_on_renown_tier_reached)
 	EventBus.region_mastered.connect(_on_region_mastered)
 	_season = Calendar.season_of(GameClock.total_days)
@@ -736,6 +737,19 @@ func _on_letter_arrived(npc_name: String) -> void:
 	var lines := letter_banner(npc_name)
 	_banner.announce(lines[0], lines[1], UIStyle.ACCENT, 2.5)
 	Audio.play("chime_progress")
+
+
+## A secret realm will open soon (WU-114): a banner and a chime.
+func _on_secret_realm_notice(realm_id: String) -> void:
+	var lines := realm_notice_banner(GameState.data, realm_id, GameClock.total_days)
+	_banner.announce(lines[0], lines[1], UIStyle.ACCENT, 2.5)
+	Audio.play("chime_progress")
+
+
+## [title, subtitle] of the secret-realm notice banner.
+static func realm_notice_banner(data: GameData, realm_id: String, total_days: int) -> PackedStringArray:
+	var def: Dictionary = data.secret_realms.get(realm_id, {})
+	return PackedStringArray(["%s opens soon" % def.get("name", realm_id), "In about %s" % Calendar.format_duration(SecretRealms.days_until_open(def, total_days))])
 
 
 ## [title, subtitle] of the letter banner.

@@ -195,6 +195,13 @@ static func is_unexplored(c: CharacterData, region_id: String, current_region: S
 	return region_id != current_region and not Exploration.visited(c, region_id)
 
 
+## Secret-realm timing on a map mark (WU-114): "open, closes in ..." or "opens in ...".
+static func realm_when(def: Dictionary, total_days: int) -> String:
+	if SecretRealms.is_open(def, total_days):
+		return "open, closes in %s" % Calendar.format_duration(SecretRealms.days_until_close(def, total_days))
+	return "opens in %s" % Calendar.format_duration(SecretRealms.days_until_open(def, total_days))
+
+
 ## What `c` has or what is going on in `region_id`: [{kind, text}] with kind
 ## a MARK_COLORS key. `people` are the NPCs, `events` the active world events,
 ## `flags` the world flags (an unexplored discovery hint needs them).
@@ -221,8 +228,7 @@ static func region_marks(c: CharacterData, data: GameData, people: Dictionary, e
 	for def: Dictionary in data.secret_realms.values():
 		if String(def.get("region", "")) != region_id:
 			continue
-		var when := "open, closes in %s" % Calendar.format_duration(SecretRealms.days_until_close(def, total_days)) if SecretRealms.is_open(def, total_days) else "opens in %s" % Calendar.format_duration(SecretRealms.days_until_open(def, total_days))
-		marks.append({"kind": "secret_realm", "text": "Secret realm: %s (%s)" % [def.get("name", def["id"]), when]})
+		marks.append({"kind": "secret_realm", "text": "Secret realm: %s (%s)" % [def.get("name", def["id"]), realm_when(def, total_days)]})
 	if Exploration.visited(c, region_id) and not Exploration.discovery_for(c, data, region_id, flags).is_empty():
 		marks.append({"kind": "discovery", "text": "Something here waits to be found. Explore."})
 	for instance in WorldEvents.active_in(events, region_id):

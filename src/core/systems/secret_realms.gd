@@ -104,20 +104,29 @@ const DEFAULT_NOTICE_DAYS := 30
 ## jumps past the whole opening gets no notice (opening_news covers it).
 static func notice_news(c: CharacterData, data: GameData, from_day: int, to_day: int) -> PackedStringArray:
 	var lines: PackedStringArray = []
+	for realm_id in notice_realms(c, data, from_day, to_day):
+		var def: Dictionary = data.secret_realms[realm_id]
+		var cost := "%d spirit stones" % int(def.get("entry_stones", 0))
+		var item_id := String(def.get("entry_item", ""))
+		if item_id != "":
+			cost += ", needs %s" % String(data.items.get(item_id, {}).get("name", item_id))
+		lines.append("Word spreads that the %s in %s will open in about %s. (Entry: %s)" % [def["name"], Exploration.region_name(data, String(def.get("region", ""))), Calendar.format_duration(days_until_open(def, to_day)), cost])
+	return lines
+
+
+## Ids (sorted) of the realms notice_news would announce over the same span.
+static func notice_realms(c: CharacterData, data: GameData, from_day: int, to_day: int) -> PackedStringArray:
 	var ids: Array = data.secret_realms.keys()
 	ids.sort()
+	var out: PackedStringArray = []
 	for realm_id in ids:
 		var def: Dictionary = data.secret_realms[realm_id]
 		var n := int(def.get("notice_days", DEFAULT_NOTICE_DAYS))
 		if n <= 0 or is_open(def, to_day) or not admits(c, data, def):
 			continue
 		if days_until_open(def, from_day) > n and days_until_open(def, to_day) <= n:
-			var cost := "%d spirit stones" % int(def.get("entry_stones", 0))
-			var item_id := String(def.get("entry_item", ""))
-			if item_id != "":
-				cost += ", needs %s" % String(data.items.get(item_id, {}).get("name", item_id))
-			lines.append("Word spreads that the %s in %s will open in about %s. (Entry: %s)" % [def["name"], Exploration.region_name(data, String(def.get("region", ""))), Calendar.format_duration(days_until_open(def, to_day)), cost])
-	return lines
+			out.append(String(realm_id))
+	return out
 
 
 ## `c`'s progress record for the current opening ({} = not entered yet).

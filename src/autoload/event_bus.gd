@@ -73,6 +73,8 @@ signal festival_started(event_name: String, text: String)
 signal bounty_claimed(enemy_name: String, stones: int)
 ## A friend's letter arrived (WU-081); the HUD shows a banner.
 signal letter_arrived(npc_name: String)
+## A secret realm is within its notice window (WU-114); the HUD shows a banner.
+signal secret_realm_notice(realm_id: String)
 ## A renown tier was crossed in a region (WU-084); the HUD shows a banner.
 signal renown_tier_reached(region_id: String, title: String)
 ## A region became fully known (EXPL-003, WU-090).

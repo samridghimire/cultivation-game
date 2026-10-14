@@ -2927,6 +2927,8 @@ func _on_days_advanced(days: int) -> void:
 		EventBus.post(line, "progress")
 	for line in SecretRealms.notice_news(player, data, GameClock.total_days - days, GameClock.total_days):
 		EventBus.post(line, "progress")
+	for notice_id in SecretRealms.notice_realms(player, data, GameClock.total_days - days, GameClock.total_days):
+		EventBus.secret_realm_notice.emit(notice_id)
 	for def: Dictionary in data.secret_realms.values():
 		if SecretRealms.closed_between(def, GameClock.total_days - days, GameClock.total_days):
 			var cleared := SecretRealms.cleared_last_opening(player, def, GameClock.total_days)
