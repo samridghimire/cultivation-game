@@ -67,9 +67,10 @@ static func news(c: CharacterData, rival: CharacterData, last_seen_realm: int, d
 
 
 ## True when `c` has reached a higher major realm than a living `rival`
-## (RIVAL-006). The same realm never counts, whatever the stage.
+## (RIVAL-006). The same realm never counts, whatever the stage, and neither does a rival who is
+## still a mortal: they spawn mortal, so the player's own awakening would "surpass" them on day 15 (QA-078).
 static func surpassed(c: CharacterData, rival: CharacterData) -> bool:
-	return rival != null and rival.alive and c.realm_index > rival.realm_index
+	return rival != null and rival.alive and rival.realm_index > 0 and c.realm_index > rival.realm_index
 
 
 ## RIVAL-008: being surpassed spurs the rival: their diligence rises by

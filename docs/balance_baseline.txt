@@ -996,3 +996,30 @@ First Foundation breakthrough (QA-066): seed, bottleneck day, attempts [day chan
   seed 10 bottleneck d1217 attempts 1 [d1326 79% pill ok] success d1326 stones 83  waited 120d
   medians: days stuck at the bottleneck 0 (9 seeds that succeeded), attempts 1, share of attempts with a pill 77% (7 of 9), attempts under 50%: 1 of 9
 
+## rival story (seeds 1-10, 36 months)
+
+Rival story, default policy, 10 seeds, 36 months (cells: player/rival realm+stage; "-" = no rival or dead)
+  seed  1  met day 15  surpassed day never  news 2  rival encounters 4  qi1/qi2 qi3/qi5 qi4/qi7 qi6/qi8 qi6/fo1 qi7/fo2
+  seed  2  met day 15  surpassed day never  news 2  rival encounters 3  qi4/qi3 qi6/qi7 qi7/fo0 qi8/fo1 qi8/fo2 qi8/fo3
+  seed  3  met day 15  surpassed day never  news 2  rival encounters 2  qi2/qi2 qi4/qi5 qi5/qi6 qi6/qi8 qi7/qi8 qi8/fo0
+  seed  4  met day 15  surpassed day never  news 2  rival encounters 5  qi2/qi2 qi3/qi6 qi4/qi8 qi5/fo0 qi6/fo0 qi7/fo1
+  seed  5  met day 15  surpassed day 416  news 2  rival encounters 0  qi6/qi2 qi8/qi5 fo1/qi6 fo2/qi8 fo3/fo0 fo3/fo1
+  seed  6  met day 15  surpassed day never  news 2  rival encounters 6  qi2/qi3 qi3/qi6 qi5/qi8 qi6/fo0 qi6/fo2 qi7/-
+  seed  7  met day 15  surpassed day never  news 2  rival encounters 5  qi2/qi3 qi4/qi6 qi6/qi8 qi7/fo0 qi8/fo1 fo0/fo2
+  seed  8  met day 15  surpassed day 648  news 2  rival encounters 2  qi4/qi3 qi6/qi6 qi8/qi8 fo0/qi8 fo1/fo0 fo2/fo2
+  seed  9  met day 15  surpassed day never  news 2  rival encounters 4  qi1/qi3 qi3/qi6 qi4/qi8 qi5/qi8 qi6/fo0 qi7/fo2
+  seed 10  met day 15  surpassed day 946  news 1  rival encounters 3  qi2/qi3 qi5/qi5 qi6/qi7 qi8/qi7 qi8/qi8 fo0/qi8
+  summary: met 10/10 (median day 15), surpassed 3/10 (median day 648, under a year 0), news lines 19, rival encounters 34
+Rival story, curious policy, 10 seeds, 36 months (cells: player/rival realm+stage; "-" = no rival or dead)
+  seed  1  met day 28  surpassed day never  news 2  rival encounters 22  qi2/qi5 qi4/qi8 qi6/fo1 qi8/fo2 fo0/fo3 fo0/fo3
+  seed  2  met day 43  surpassed day never  news 2  rival encounters 23  qi4/qi6 qi7/fo1 qi8/fo2 fo0/fo3 fo1/fo3 fo2/fo3
+  seed  3  met day 42  surpassed day never  news 3  rival encounters 14  qi3/qi5 qi5/qi8 qi7/fo0 qi8/fo2 fo0/fo3 fo1/co0
+  seed  4  met day 49  surpassed day never  news 3  rival encounters 25  qi2/qi6 qi4/qi8 qi5/fo1 qi7/fo3 qi8/fo3 qi8/co1
+  seed  5  met day 38  surpassed day 678  news 2  rival encounters 11  qi6/qi5 fo0/qi8 fo2/fo0 fo3/fo2 fo3/fo3 fo3/fo3
+  seed  6  met day 42  surpassed day never  news 2  rival encounters 19  qi2/qi6 qi4/qi8 qi6/fo1 qi8/fo3 fo0/- fo0/-
+  seed  7  met day 44  surpassed day never  news 3  rival encounters 21  qi3/qi7 qi5/fo2 qi6/fo3 qi8/co0 fo0/co1 fo1/co2
+  seed  8  met day 39  surpassed day never  news 3  rival encounters 14  qi5/qi6 qi7/qi8 fo0/fo1 fo1/fo3 fo2/co0 fo3/co1
+  seed  9  met day 41  surpassed day never  news 3  rival encounters 20  qi2/qi6 qi3/qi8 qi6/fo0 qi7/fo2 qi8/fo3 fo0/co0
+  seed 10  met day 36  surpassed day never  news 2  rival encounters 18  qi3/qi5 qi5/qi8 qi7/fo0 fo0/fo2 fo1/fo3 fo1/fo3
+  summary: met 10/10 (median day 42), surpassed 1/10 (median day 678, under a year 0), news lines 25, rival encounters 187
+

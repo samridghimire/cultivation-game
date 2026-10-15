@@ -206,6 +206,9 @@ func test_surpassed_needs_a_higher_realm() -> void:
 	r.alive = false
 	assert_false(Rivals.surpassed(c, r), "dead rival")
 	assert_false(Rivals.surpassed(c, null))
+	r.alive = true
+	r.realm_index = 0
+	assert_false(Rivals.surpassed(c, r), "a mortal rival has not started climbing yet (QA-078)")
 
 
 ## C-088: the sect lecture rewards a sharper mind.
