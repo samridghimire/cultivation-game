@@ -531,3 +531,84 @@ func test_breakthrough_pill_row_and_mission_board_are_reachable() -> void:
 	hud.free()
 	gs.end_session()
 	await _frames()
+
+
+## WU-152: the newest windows: encounter choices with checks and locks, the world map with bounty marks,
+## the breakthrough window with the lessons line.
+func test_wu152_encounter_map_and_breakthrough_focus() -> void:
+	var root := _tree().root
+	var gs: Node = root.get_node("GameState")
+	var c := new_character()
+	gs.start_session(c)
+	gs.pending_event = ""
+	var hud: CanvasLayer = load("res://src/ui/hud.tscn").instantiate()
+	root.add_child(hud)
+	await _frames()
+
+	# (1) a mix of an enabled check choice, a locked one and plain ones.
+	gs.data.encounters["audit_checks"] = {
+		"id": "audit_checks", "tags": ["audit_tag"], "weight": 1, "kind": "neutral", "days": 1,
+		"text": "A riddle is carved into the gate.",
+		"choices": [
+			{"label": "Locked first", "requires": {"min_attributes": {"comprehension": 99}}},
+			{"label": "Think it through", "requires": {"min_attributes": {"comprehension": 1}}},
+			{"label": "Walk on"},
+		],
+	}
+	gs.pending_encounter = "audit_checks"
+	var encounter: EncounterWindow = hud.get("_encounter")
+	encounter.open()
+	await _frames()
+	var buttons := encounter.choice_buttons()
+	assert_eq(buttons.size(), 3)
+	assert_true(buttons[0].disabled, "the locked choice is disabled")
+	var owner := root.gui_get_focus_owner()
+	assert_true(owner == buttons[1], "focus lands on the first enabled choice (got %s)" % [owner.name if owner != null else "none"])
+	_press("ui_up")
+	await _frames()
+	# Locked choices stay focusable on purpose (their reason is in the label); focus must stay in the window.
+	owner = root.gui_get_focus_owner()
+	assert_true(owner != null and encounter.is_ancestor_of(owner), "ui_up keeps focus inside the window")
+	assert_eq(buttons[0].focus_mode, Control.FOCUS_ALL)
+	encounter.close()
+
+	# (2) every choice locked: focus on Walk away.
+	gs.data.encounters["audit_checks"]["choices"] = [
+		{"label": "Locked a", "requires": {"min_attributes": {"comprehension": 99}}},
+		{"label": "Locked b", "requires": {"min_attributes": {"comprehension": 98}}},
+	]
+	encounter.open()
+	await _frames()
+	owner = root.gui_get_focus_owner()
+	assert_true(owner is Button and encounter.is_ancestor_of(owner) and (owner as Button).text == "Walk away", "all locked: focus on Walk away")
+	encounter.close()
+	gs.pending_encounter = ""
+	gs.data.encounters.erase("audit_checks")
+
+	# (3) the world map with an active bounty hunt.
+	Bounties.take(gs.player, gs.data, "iron_back_boar_bounty", GameClock.total_days)
+	var map: Control = hud.get("_screens")["toggle_map"]
+	map.open()
+	await _frames()
+	owner = root.gui_get_focus_owner()
+	assert_true(owner != null and map.is_ancestor_of(owner), "world map with a bounty: focus inside")
+	_press("ui_cancel")
+	await _frames()
+	assert_false(map.visible, "world map: ui_cancel closes it")
+	gs.player.bounty = {}
+
+	# (4) the breakthrough window with the lessons line.
+	gs.player.breakthrough_failures = 3
+	var bt: BreakthroughScreen = hud.get("_breakthrough")
+	bt.open()
+	await _frames()
+	owner = root.gui_get_focus_owner()
+	assert_true(owner != null and bt.is_ancestor_of(owner), "breakthrough with lessons: focus inside")
+	_press("ui_cancel")
+	await _frames()
+	assert_false(bt.visible, "breakthrough: ui_cancel closes it")
+
+	root.remove_child(hud)
+	hud.free()
+	gs.end_session()
+	await _frames()
