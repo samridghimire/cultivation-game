@@ -2,6 +2,17 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-15 [WU-119] The techniques screen tells you where to find your first fighting style.
+- 2026-10-15 [C-074] The Hut of the Reed Hermit, a Qi Refining inheritance in the Withered Bone Marsh, appears in the third year.
+- 2026-10-15 [LOG-001] A sect mission fight now posts one line instead of two.
+- 2026-10-15 [WU-116] Screenshot check of the first hour's screens; nothing needed fixing.
+- 2026-10-15 [QA-062] The curious-player sim now learns a fighting style; elders' pointers finally work for it.
+- 2026-10-15 [FEST-005] The festival activity is offered only at stalls that fit the festival.
+- 2026-10-15 [GUIDE-019] Hints and loss advice name the cheapest fighting-style manual and where to buy it.
+- 2026-10-15 [WU-118] Manuals in the shop say what kind of technique they teach and whether you know it.
+- 2026-10-15 [WU-117] Asking a merchant for gossip when you can't no longer opens an empty window.
+- 2026-10-15 [C-076] The drunk bully and sword madman bounties pay less.
+- 2026-10-15 [C-072] Elder Mo tells you breathing won't win a fight and where to buy a boxing manual.
 - 2026-10-15 [QA-061] Checked bounty pay: the drunk bully and the sword madman pay far more than gathering.
 - 2026-10-14 [MENTOR-002] Elders give pointers sooner, and say when you first need a technique manual.
 - 2026-10-14 [C-068] Planting the valley guardian's seed makes Azure Peak's qi richer.
