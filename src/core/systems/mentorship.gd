@@ -130,9 +130,14 @@ static func check_spar(c: CharacterData, npc: CharacterData, favor: int, data: G
 		return "%s does not cultivate." % npc.name
 	if absi(npc.realm_index - c.realm_index) > int(rules.get("max_realm_gap", 1)):
 		return "%s would not cross hands with someone so far from their own realm." % npc.name
-	var min_favor := _min_favor(c, npc, rules)
-	if favor < min_favor:
-		return "%s does not know you well enough (favor %d/%d)." % [npc.name, favor, min_favor]
+	if npc.id == c.rival:
+		# RIVAL-012: a rival answers any challenge, unless they are too bitter for a bout.
+		if Rivals.attitude(c, npc, favor, data) == "bitter":
+			return "%s will not spar with you. They want a real fight." % npc.name
+	else:
+		var min_favor := _min_favor(c, npc, rules)
+		if favor < min_favor:
+			return "%s does not know you well enough (favor %d/%d)." % [npc.name, favor, min_favor]
 	var left := cooldown_left(c, "spar:" + npc.id, int(rules.get("cooldown_days", 0)), today)
 	if left > 0:
 		return "You sparred with %s recently (%d days)." % [npc.name, left]

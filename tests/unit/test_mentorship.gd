@@ -106,6 +106,24 @@ func test_validator_and_save() -> void:
 	assert_eq(CharacterData.from_dict({}).npc_action_days.size(), 0)
 
 
+func test_rival_always_answers_a_spar() -> void:
+	var p := _pair()
+	var d := data()
+	var c: CharacterData = p[0]
+	var npc: CharacterData = p[1]
+	npc.age_days = 40 * Calendar.DAYS_PER_YEAR
+	c.realm_index = 1
+	npc.realm_index = 2
+	assert_true(Mentorship.check_spar(c, npc, 0, d, 0).contains("favor 0/"))
+	c.rival = npc.id
+	assert_eq(Mentorship.check_spar(c, npc, 0, d, 0), "")
+	Karma.add_grudge(c, d, npc.id, 50)
+	assert_true(Mentorship.check_spar(c, npc, 0, d, 0).contains("real fight"))
+	c.grudges.erase(npc.id)
+	c.npc_action_days["spar:" + npc.id] = 0
+	assert_true(Mentorship.check_spar(c, npc, 0, d, 1).contains("recently"))
+
+
 func test_spar_checks_and_aftermath() -> void:
 	var p := _pair()
 	var d := data()

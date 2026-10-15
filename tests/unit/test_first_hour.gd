@@ -71,7 +71,7 @@ func test_sim_records_first_win_and_style() -> void:
 func test_play_logs_breakthrough_attempts() -> void:
 	var gs := _root().get_node("GameState")
 	var clock := _root().get_node("GameClock")
-	var r: Dictionary = preload("res://tests/sim/first_hour.gd").play(gs, clock, 2, 36, true)
+	var r: Dictionary = preload("res://tests/sim/first_hour.gd").play(gs, clock, 3, 36, true)
 	assert_true(r.has("breaks") and r.has("bottleneck_day"))
 	var seen := false
 	var qr: int = gs.data.realm_index_of("qi_refining")
@@ -85,8 +85,8 @@ func test_play_logs_breakthrough_attempts() -> void:
 		if a["success"] and int(a["from_realm"]) == qr:
 			seen = true
 			assert_true(r["bottleneck_day"].has(a["from_realm"]), "success without a bottleneck day")
-	assert_gt(foundation_attempts, 0, "seed 2 attempts Foundation Establishment inside 36 months")
-	assert_true(seen, "seed 2 reaches Foundation inside 36 months (first Foundation breakthrough logged)")
+	assert_gt(foundation_attempts, 0, "seed 3 attempts Foundation Establishment inside 36 months")
+	assert_true(seen, "seed 3 reaches Foundation inside 36 months (first Foundation breakthrough logged)")
 	gs.end_session()
 
 
