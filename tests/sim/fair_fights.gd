@@ -22,11 +22,18 @@ func _run() -> void:
 	var taken := 0
 	var wins := 0
 	var rated_sum := 0.0
+	var kinds := {}  # kind -> {listed, taken, won, rated}
 	print("Fair-fights sim: %d seeds, %d months (curious player)" % [seeds, months])
 	for s in range(1, seeds + 1):
 		var r: Dictionary = FirstHour.play(gs, clock, s, months, true)
 		listed.append_array(r["fair_log"]["listed"])
+		for k: String in r["fair_log"]["by_kind"]:
+			_kind_row(kinds, k)["listed"] += int(r["fair_log"]["by_kind"][k])
 		for t: Dictionary in r["fair_log"]["taken"]:
+			var row := _kind_row(kinds, String(t.get("kind", "mission")))
+			row["taken"] += 1
+			row["won"] += 1 if t["won"] else 0
+			row["rated"] += float(t["chance"])
 			taken += 1
 			wins += 1 if t["won"] else 0
 			rated_sum += float(t["chance"])
@@ -40,4 +47,16 @@ func _run() -> void:
 		print("Listed fights taken: 0")
 	else:
 		print("Listed fights taken: %d, won %d (%.0f%%), mean rated chance %.0f%%" % [taken, wins, 100.0 * wins / taken, 100.0 * rated_sum / taken])
+	for k: String in ["mission", "deed", "bounty"]:
+		var row := _kind_row(kinds, k)
+		if int(row["taken"]) == 0:
+			print("  %-8s listed %3d, taken 0" % [k, row["listed"]])
+		else:
+			print("  %-8s listed %3d, taken %3d, won %3.0f%%, mean rated %3.0f%%" % [k, row["listed"], row["taken"], 100.0 * row["won"] / row["taken"], 100.0 * row["rated"] / row["taken"]])
 	quit()
+
+
+func _kind_row(kinds: Dictionary, k: String) -> Dictionary:
+	if not kinds.has(k):
+		kinds[k] = {"listed": 0, "taken": 0, "won": 0, "rated": 0.0}
+	return kinds[k]

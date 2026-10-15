@@ -97,7 +97,7 @@ static func play(gs: Node, clock: Node, seed_value: int, months: int, curious: b
 	bus.combat_started.disconnect(on_start)
 	bus.combat_finished.disconnect(on_end)
 	out["style_month"] = int(done.get("style_month", -1))
-	out["fair_log"] = done.get("fair_log", {"listed": [], "taken": []})
+	out["fair_log"] = done.get("fair_log", {"listed": [], "taken": [], "by_kind": {}})
 	out["injuries"] = c.injuries.size()
 	out["fights_won"] = LifeStats.get_stat(c, "fights_won")
 	out["fights_lost"] = LifeStats.get_stat(c, "fights_lost")
@@ -157,8 +157,11 @@ static func _curious_month(gs: Node, c: CharacterData, done: Dictionary, today: 
 	# QA-067: what "Fights you can win" would list this month (empty list = a month of no suggestion).
 	var fair := Guidance.fair_fights(c, gs.data, gs.world_flags, today, gs.current_region) if c.alive else ([] as Array[Dictionary])
 	if not done.has("fair_log"):
-		done["fair_log"] = {"listed": [], "taken": []}
+		done["fair_log"] = {"listed": [], "taken": [], "by_kind": {}}
 	done["fair_log"]["listed"].append(fair.size())
+	for f: Dictionary in fair:
+		var k := String(f.get("kind", ""))
+		done["fair_log"]["by_kind"][k] = int(done["fair_log"]["by_kind"].get(k, 0)) + 1
 	if not c.is_rogue() and c.alive:
 		for mission_id in Sects.available_missions(c, gs.data, gs.world_flags):
 			if Sects.check_mission(c, gs.data, mission_id, gs.world_flags) != "" or not _mission_is_sane(gs, c, mission_id, done, today):
@@ -173,11 +176,12 @@ static func _curious_month(gs: Node, c: CharacterData, done: Dictionary, today: 
 					listed_chance = float(f["chance"])
 			gs.take_mission(mission_id)
 			if listed_chance >= 0.0:
-				done["fair_log"]["taken"].append({"chance": listed_chance, "won": LifeStats.get_stat(c, "fights_won") > won_before})
+				done["fair_log"]["taken"].append({"kind": "mission", "chance": listed_chance, "won": LifeStats.get_stat(c, "fights_won") > won_before})
 			kinds["mission"] = true
 			if LifeStats.get_stat(c, "fights_lost") > lost_before:
 				done["lost_missions"][mission_id] = {"day": today, "odds": odds_before}
 			break
+	_take_listed_bounty(gs, c, done, fair, kinds)
 	_recharge_with_spare_stones(gs, c)
 	_learn_fighting_style(gs, c, done, today)
 	if not done.has("talk") and c.alive:
@@ -200,6 +204,54 @@ static func _curious_month(gs: Node, c: CharacterData, done: Dictionary, today: 
 	if c.alive:
 		_everything_month(gs, c, kinds, today, bool(done.get("no_help", false)))
 	return kinds
+
+
+## QA-070: once a month, takes the listed bounty when "Fights you can win" rates it >= 0.7 and no hunt is
+## active: travels to its region if needed, explores until it is claimed (or 30 days), then goes home.
+static func _take_listed_bounty(gs: Node, c: CharacterData, done: Dictionary, fair: Array[Dictionary], kinds: Dictionary) -> void:
+	if not c.alive or not c.bounty.is_empty():
+		return
+	var entry := {}
+	for f: Dictionary in fair:
+		if String(f["kind"]) == "bounty" and float(f["chance"]) >= 0.7:
+			entry = f
+			break
+	if entry.is_empty():
+		return
+	var today: int = gs.get_node("/root/GameClock").total_days
+	var picked := {}
+	for b: Dictionary in Bounties.offers(c, gs.data, today, gs.current_region):
+		if String(gs.data.enemies.get(String(b.get("enemy", "")), {}).get("name", "")) == String(entry["enemy"]) and Bounties.check_take(c, gs.data, String(b["id"]), today) == "":
+			picked = b
+			break
+	if picked.is_empty():
+		return
+	var home: String = gs.current_region
+	var where := String(picked["region"])
+	if where != home:
+		gs.travel(where)
+		if gs.current_region != where:
+			return
+	var claimed := [0]
+	var on_claim := func(_n: String, _s: int) -> void: claimed[0] += 1
+	var bus: Node = gs.get_node("/root/EventBus")
+	bus.bounty_claimed.connect(on_claim)
+	gs.take_bounty(String(picked["id"]))
+	if c.bounty.is_empty():
+		bus.bounty_claimed.disconnect(on_claim)
+		return
+	var start: int = today
+	while c.alive and not c.bounty.is_empty() and gs.get_node("/root/GameClock").total_days - start < 30:
+		gs.explore_many(7)
+		if gs.pending_encounter != "":
+			gs.choose_encounter(0)
+		if gs.pending_threat != "":
+			gs.face_threat(false)
+	bus.bounty_claimed.disconnect(on_claim)
+	done["fair_log"]["taken"].append({"kind": "bounty", "chance": float(entry["chance"]), "won": claimed[0] > 0})
+	kinds["bounty"] = true
+	if c.alive and gs.current_region != home:
+		gs.travel(home)
 
 
 ## QA-062: once per life, buys and reads the cheapest combat-technique manual a merchant in the
