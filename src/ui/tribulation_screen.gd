@@ -84,7 +84,7 @@ static func preview_lines(preview: Dictionary) -> PackedStringArray:
 	var expected := int(preview.get("expected_damage", 0))
 	if expected >= guard:
 		lines.append("[color=#%s]You are unlikely to survive. Falling to the final bolt means death.[/color]" % UIStyle.CATEGORY_COLORS["danger"].to_html(false))
-	elif expected * 4 >= guard * 3:
+	elif float(expected) >= Guidance.CLOSE_CALL_SHARE * float(guard):
 		lines.append("[color=#%s]It will be close. Ready shield talismans or raise your defense first.[/color]" % UIStyle.CATEGORY_COLORS["warning"].to_html(false))
 	else:
 		lines.append("[color=#%s]You should endure it.[/color]" % UIStyle.CATEGORY_COLORS["progress"].to_html(false))

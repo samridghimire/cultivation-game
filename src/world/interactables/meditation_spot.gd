@@ -26,12 +26,14 @@ func get_options() -> Array[Dictionary]:
 		var risk := Guidance.breakthrough_risk_text(GameState.player, GameState.data)
 		if risk != "":
 			odds += "\n" + risk
+		var tone := ""
 		if GameState.tribulation_preview()["has_tribulation"]:
 			var trib := Guidance.tribulation_note(GameState.player, GameState.data)
 			if not trib.is_empty():
 				odds += "\n" + String(trib["text"])
+				tone = String(trib["tone"])
 			# A tribulation can kill: show the preparation screen before attempting.
-			options.append({"label": "Attempt breakthrough (%d%% chance, Heavenly Tribulation!)" % int(chance * 100), "description": odds, "action": EventBus.tribulation_prepare_requested.emit})
+			options.append({"label": "Attempt breakthrough (%d%% chance, Heavenly Tribulation!)" % int(chance * 100), "description": odds, "tone": tone, "action": EventBus.tribulation_prepare_requested.emit})
 		elif GameState.player.realm_index + 1 >= 2:
 			# Foundation Establishment and up: the breakthrough window shows the terms first (WU-134).
 			options.append({"label": "Attempt breakthrough (%d%% chance)" % int(chance * 100), "description": odds, "action": EventBus.breakthrough_prepare_requested.emit})

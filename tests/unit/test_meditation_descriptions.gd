@@ -74,3 +74,43 @@ func test_meditate_until_bottleneck_on_last_stage() -> void:
 	assert_true(_find(options, "Meditate until the next layer").is_empty())
 	assert_false(_find(options, "Meditate until your bottleneck").is_empty())
 	spot.free()
+
+
+func _tribulation_char(constitution: int) -> CharacterData:
+	var gs := _gs()
+	var c := new_character()
+	c.realm_index = 2
+	var realm: RealmDef = gs.data.realms[2]
+	c.stage = realm.stage_count() - 1
+	c.qi = realm.qi_required(c.stage)
+	c.attributes["constitution"] = constitution
+	return c
+
+
+## WU-164: a close-call or deadly tribulation tints the attempt option's description; a safe one does not.
+func test_tribulation_option_carries_warning_tone() -> void:
+	var gs := _gs()
+	var c := _tribulation_char(10)
+	gs.start_session(c)
+	gs.current_region = "qingshi_village"
+	var spot: Node = load("res://src/world/interactables/meditation_spot.gd").new()
+	var deadly := _find(spot.get_options(), "Attempt breakthrough")
+	assert_eq(deadly.get("tone", ""), "warning", "would not survive")
+	# Find a constitution where the share lands in the close-call band.
+	var con := 10
+	while con < 100000:
+		c.attributes["constitution"] = con
+		var p := Tribulation.preview(c, gs.data, c.realm_index + 1)
+		var share := float(p["expected_damage"]) / float(int(p["max_hp"]) + int(p["shield"]))
+		if share < 1.0:
+			break
+		con += 2
+	var near := _find(spot.get_options(), "Attempt breakthrough")
+	assert_true(String(near["description"]).contains("close") or near.get("tone", "") == "", "close or safe: %s" % near["description"])
+	if String(near["description"]).contains("close"):
+		assert_eq(near.get("tone", ""), "warning", "close call")
+	c.attributes["constitution"] = 100000
+	var safe := _find(spot.get_options(), "Attempt breakthrough")
+	assert_eq(safe.get("tone", ""), "normal", "safe tribulation is not tinted")
+	spot.free()
+	gs.end_session()
