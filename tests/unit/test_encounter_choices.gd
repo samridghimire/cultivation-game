@@ -289,3 +289,23 @@ func test_attribute_growth_encounters() -> void:
 		var dflags := {}
 		Exploration.resolve_choice(declined, d, e, 1, dflags)
 		assert_eq(declined.attribute(attr), new_character().attribute(attr), id + " decline changes nothing")
+
+
+func test_min_attributes_requirement() -> void:
+	var d := GameData.load_from_dir()
+	var c := new_character()
+	var choice := {"label": "Answer", "requires": {"min_attributes": {"comprehension": 12}}}
+	c.attributes["comprehension"] = 12
+	assert_eq(Exploration.check_choice(c, d, choice, {}), "")
+	c.attributes["comprehension"] = 11
+	assert_eq(Exploration.check_choice(c, d, choice, {}), "You need Comprehension 12 for that.")
+
+
+func test_min_attributes_validation() -> void:
+	var d := GameData.load_from_dir()
+	d.encounters["t_attr"] = {"id": "t_attr", "tags": ["x"], "weight": 1, "kind": "neutral", "days": 0, "text": "t", "choices": [
+		{"label": "A", "requires": {"min_attributes": {"comprehension": 12}}},
+		{"label": "B", "requires": {"min_attributes": {"wisdomness": 5, "comprehension": 0}}}]}
+	var errors := Exploration.validate_choices(d)
+	assert_eq(errors.size(), 2, str(errors))
+	assert_true(errors[0].contains("wisdomness") and errors[1].contains("comprehension"), str(errors))

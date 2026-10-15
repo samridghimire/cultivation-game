@@ -507,7 +507,18 @@ static func check_choice(c: CharacterData, data: GameData, choice: Dictionary, f
 		return "You are too soft-hearted for that."
 	if req.has("flag") and not flags.get(req["flag"], false):
 		return "You lack the knowledge for that."
+	var min_attrs: Dictionary = req.get("min_attributes", {})
+	for attr_id: String in min_attrs:
+		if c.attribute(attr_id) < int(min_attrs[attr_id]):
+			return "You need %s %d for that." % [_attribute_name(data, attr_id), int(min_attrs[attr_id])]
 	return Effects.check(c, data, choice.get("effects", {}))
+
+
+static func _attribute_name(data: GameData, attr_id: String) -> String:
+	for a: Dictionary in data.attributes:
+		if String(a.get("id", "")) == attr_id:
+			return String(a.get("name", attr_id))
+	return attr_id
 
 
 ## The choices of `encounter` for `c`: [{index, label, disabled, reason}].
@@ -563,6 +574,12 @@ static func validate_choices(data: GameData) -> PackedStringArray:
 			if req.has("min_realm") and data.realm_index_of(String(req["min_realm"])) < 0:
 				errors.append("Encounter '%s' choice '%s' has unknown min_realm '%s'" % [e["id"], label, req["min_realm"]])
 			errors.append_array(_validate_alignment_bounds(data, req, "Encounter '%s' choice '%s'" % [e["id"], label]))
+			var min_attrs: Dictionary = req.get("min_attributes", {})
+			for attr_id: String in min_attrs:
+				if not data.attribute_ids().has(attr_id):
+					errors.append("Encounter '%s' choice '%s' min_attributes has unknown attribute '%s'" % [e["id"], label, attr_id])
+				if not (min_attrs[attr_id] is int or min_attrs[attr_id] is float) or int(min_attrs[attr_id]) < 1:
+					errors.append("Encounter '%s' choice '%s' min_attributes '%s' needs a whole number >= 1" % [e["id"], label, attr_id])
 			if int(choice.get("days", 0)) < 0:
 				errors.append("Encounter '%s' choice '%s' needs days >= 0" % [e["id"], label])
 			if choice.has("grateful_npc"):
