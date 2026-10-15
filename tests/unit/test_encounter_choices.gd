@@ -430,3 +430,17 @@ func test_profession_answers_at_foundation() -> void:
 			c.professions[prof] = {"rank": 2, "xp": 0.0}
 			assert_eq(Exploration.check_choice(c, d, choice, {}), "", "%s allowed at rank 2" % enc_id)
 		assert_true(found, "%s has a rank 2 %s choice" % [enc_id, prof])
+
+
+func test_profession_choices_train_the_craft() -> void:
+	var d := GameData.load_from_dir()
+	var n := 0
+	for enc_id: String in d.encounters:
+		var choices: Array = d.encounters[enc_id].get("choices", [])
+		for choice: Dictionary in choices:
+			var need: Dictionary = choice.get("requires", {}).get("min_profession", {})
+			for prof: String in need:
+				n += 1
+				var xp: Dictionary = choice.get("effects", {}).get("profession_xp", {})
+				assert_true(xp.has(prof), "%s: %s choice trains %s" % [enc_id, choice["label"], prof])
+	assert_true(n >= 7, "at least seven profession choices")
