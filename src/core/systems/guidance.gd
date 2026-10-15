@@ -972,9 +972,13 @@ static func journal(c: CharacterData, data: GameData, flags: Dictionary, today: 
 				found_tone = "normal" if found_flagged else "warning"
 				found_flagged = true
 			_add(out, "Foundation goals", ("[x] " if goal["done"] else "[ ] ") + String(goal["text"]), found_tone)
+	var fights := fair_fights(c, data, flags, today, region_id)
 	if c.realm_index >= 2 or first_goals_done(c, data, flags):
 		for line in goals(c, data, flags, clan, density):
 			_add(out, "Goals", line, "normal")
+		var gap := pill_gap_note(c, data, fights)
+		if gap != "":
+			_add(out, "Goals", gap, "normal")
 	var shown := 0
 	for line in hint_lines:
 		if duty_line != "" and line == duty_line:
@@ -1001,7 +1005,7 @@ static func journal(c: CharacterData, data: GameData, flags: Dictionary, today: 
 	_other_region_event_entries(out, c, data, today, region_id, events)
 	_festival_entries(out, data, today, region_id, events)
 	_opportunity_entries(out, c, data, flags, today, region_id)
-	_fair_fight_entries(out, c, data, flags, today, region_id)
+	_fair_fight_entries(out, fights, c, data, region_id)
 	for npc in _region_people(c, data, people, favor, region_id, today, "pointers").slice(0, POINTER_JOURNAL_MAX):
 		_add(out, "Opportunities", "Ask %s for pointers (%s)" % [npc.name, _region_name(data, region_id)], "normal")
 	for line in Letters.request_lines(c, data, people, today):
@@ -1019,8 +1023,7 @@ static func journal(c: CharacterData, data: GameData, flags: Dictionary, today: 
 
 ## Journal section "Fights you can win" (GUIDE-021): fair fights, or the first-fighting-style hint when
 ## there are none and no combat technique is known.
-static func _fair_fight_entries(out: Array[Dictionary], c: CharacterData, data: GameData, flags: Dictionary, today: int, region_id: String) -> void:
-	var fights := fair_fights(c, data, flags, today, region_id)
+static func _fair_fight_entries(out: Array[Dictionary], fights: Array[Dictionary], c: CharacterData, data: GameData, region_id: String) -> void:
 	for fight in fights:
 		_add(out, "Fights you can win", String(fight["text"]), "normal")
 	if fights.is_empty() and not Techniques.knows_kind(c, data, "combat"):
@@ -1046,7 +1049,7 @@ static func fair_fights(c: CharacterData, data: GameData, flags: Dictionary, tod
 		if enemy.is_empty() or Sects.mission_cooldown_left(c, id) > 0 or Sects.check_mission(c, data, id, flags) != "":
 			continue
 		rated += 1
-		_rate_fight(found, c, data, enemy, "mission", "Sect mission: %s" % mission["name"])
+		_rate_fight(found, c, data, enemy, "mission", "Sect mission: %s" % mission["name"], _item_stones(mission.get("rewards", {})))
 	for place: Dictionary in data.regions.get(region_id, {}).get("places", []):
 		if String(place.get("type", "")) != "deed_giver" or String(place.get("deed_context", "")) == "":
 			continue
@@ -1060,7 +1063,7 @@ static func fair_fights(c: CharacterData, data: GameData, flags: Dictionary, tod
 			if deed_enemy.is_empty() or Deeds.check(c, data, deed, flags, today) != "":
 				continue
 			rated += 1
-			_rate_fight(found, c, data, deed_enemy, "deed", "%s: %s" % [place.get("display_name", "Chore"), deed["name"]])
+			_rate_fight(found, c, data, deed_enemy, "deed", "%s: %s" % [place.get("display_name", "Chore"), deed["name"]], _item_stones(deed.get("effects", {})))
 	var candidates: Array[Dictionary] = []
 	var hunt := Bounties.active(c, data, today)
 	if not hunt.is_empty():
@@ -1078,7 +1081,7 @@ static func fair_fights(c: CharacterData, data: GameData, flags: Dictionary, tod
 		if enemy.is_empty():
 			continue
 		rated += 1
-		_rate_fight(found, c, data, enemy, "bounty", "%s: %s in %s" % [cand["label"], enemy.get("name", b["enemy"]), _region_name(data, String(b["region"]))])
+		_rate_fight(found, c, data, enemy, "bounty", "%s: %s in %s" % [cand["label"], enemy.get("name", b["enemy"]), _region_name(data, String(b["region"]))], Bounties.paid_stones(c, data, b))
 	if found.size() < FAIR_FIGHTS_MAX and region_id != "":
 		var explore_rated := 0
 		var tags: Array = data.regions.get(region_id, {}).get("encounter_tags", [])
@@ -1096,11 +1099,32 @@ static func fair_fights(c: CharacterData, data: GameData, flags: Dictionary, tod
 	return found.slice(0, FAIR_FIGHTS_MAX)
 
 
-static func _rate_fight(found: Array[Dictionary], c: CharacterData, data: GameData, enemy: Dictionary, kind: String, label: String) -> void:
+static func _rate_fight(found: Array[Dictionary], c: CharacterData, data: GameData, enemy: Dictionary, kind: String, label: String, stones: int = 0) -> void:
 	var chance := Combat.win_chance(c, data, enemy)
 	if chance < FAIR_FIGHT_MIN_CHANCE:
 		return
-	found.append({"text": "%s (%s, %d in 100)" % [label, Combat.label_for_chance(chance), roundi(chance * 100.0)], "chance": chance, "kind": kind, "enemy": String(enemy.get("name", ""))})
+	found.append({"text": "%s (%s, %d in 100)" % [label, Combat.label_for_chance(chance), roundi(chance * 100.0)], "chance": chance, "kind": kind, "enemy": String(enemy.get("name", "")), "stones": stones})
+
+
+## Spirit stones in a reward/effects dict's `items`, 0 when none.
+static func _item_stones(block: Dictionary) -> int:
+	return int(block.get("items", {}).get("spirit_stone", 0))
+
+
+## GUIDE-029: how to close the stone gap to the next realm's pill, "" unless the "Save for" goal is
+## showing and the stones fall short. Names the fair fight (`fights`, from fair_fights) that pays most.
+static func pill_gap_note(c: CharacterData, data: GameData, fights: Array) -> String:
+	var price := next_realm_pill_price(c, data)
+	var short := price - c.item_count("spirit_stone")
+	if pill_saving_goal(c, data) == "" or short <= 0:
+		return ""
+	var best: Dictionary = {}
+	for f: Dictionary in fights:
+		if int(f.get("stones", 0)) > int(best.get("stones", 0)):
+			best = f
+	if best.is_empty():
+		return "%d stones short. Bounties, sect missions and selling herbs and ore pay best." % short
+	return "%d stones short. %s pays %d." % [short, String(best["text"]).get_slice(" (", 0), int(best["stones"])]
 
 
 ## " A fairer fight: <text>." for the best fair fight, "" when there is none or it is the foe just lost to.

@@ -1306,3 +1306,21 @@ func test_deadly_exploration_foes_are_never_listed() -> void:
 	c.sect = {}
 	for f in Guidance.fair_fights(c, data(), {}, c.age_days, "misty_forest"):
 		assert_true(float(f["chance"]) >= 0.7)
+
+## GUIDE-029: the pill gap names the best-paying fair fight.
+func test_pill_gap_note_names_a_paying_fight() -> void:
+	var c := _qr(6, 20)
+	var fights: Array = [{"text": "Bounty: Wolf in Marsh (Even, 50 in 100)", "stones": 40}, {"text": "Sect mission: X (Easy, 90 in 100)", "stones": 0}]
+	var short := Guidance.next_realm_pill_price(c, data()) - 20
+	assert_eq(Guidance.pill_gap_note(c, data(), fights), "%d stones short. Bounty: Wolf in Marsh pays 40." % short)
+
+
+func test_pill_gap_note_generic_when_nothing_pays() -> void:
+	var c := _qr(6, 20)
+	var short := Guidance.next_realm_pill_price(c, data()) - 20
+	assert_eq(Guidance.pill_gap_note(c, data(), []), "%d stones short. Bounties, sect missions and selling herbs and ore pay best." % short)
+
+
+func test_pill_gap_note_quiet_when_affordable_or_early() -> void:
+	assert_eq(Guidance.pill_gap_note(_qr(6, 4000), data(), []), "")
+	assert_eq(Guidance.pill_gap_note(_qr(5, 20), data(), []), "")
