@@ -4,7 +4,8 @@ Short-lived context for the next session. Update or trim it when you finish a se
 
 ## State on 2026-10-15 (planner, 02:10 UTC)
 - 11 tasks landed (GUIDE-019, FEST-005, LOG-001, WU-116/117/118/119, C-072/074/076, QA-062). Claimed (all < 3h): MENTOR-003,
-  LETTER-006, REF-001, WU-123, C-063 (23:25, its third claim), C-070. Reviewer still at 597d486, nothing new filed.
+  LETTER-006, REF-001, WU-123, C-063 (23:25, its third claim), C-070. Reviewer (to e922009) fixed Elder Mo's line and added
+  `Techniques.knows_kind`; its notes became GUIDE-019b and WU-124.
 - New theme "from a style to a win": GUIDE-020 (practise hint, first goal), GUIDE-021 (spec file, journal "Fights you can
   win") + WU-125, EFF-002 (`practice_days` effect) + C-077, INH-001 (inheritance `min_stage`) + C-079 + WU-129, WU-124
   (banners wait for the combat report), WU-126/127, C-078, MENTOR-004 (after QA-044), QA-063/064.
