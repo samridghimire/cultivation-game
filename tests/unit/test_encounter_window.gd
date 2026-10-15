@@ -121,3 +121,23 @@ func test_choice_label_shows_check() -> void:
 	assert_eq(EncounterWindow.choice_label(plain), "Leave")
 	var locked := {"index": 2, "label": "Answer better", "disabled": true, "reason": "Needs Comprehension 12", "check": "Comprehension 12"}
 	assert_eq(EncounterWindow.choice_label(locked), "Answer better  (Needs Comprehension 12)")
+
+
+func test_tag_footer_only_when_a_choice_is_tagged() -> void:
+	var tagged := ENCOUNTER.duplicate(true)
+	tagged["id"] = "test_window_tagged"
+	tagged["choices"] = [{"label": "Study the runes", "requires": {"min_attributes": {"comprehension": 1}}}, {"label": "Leave"}]
+	var gs := _start(tagged)
+	var window := EncounterWindow.new()
+	window.open()
+	assert_true(window.footer_text().begins_with("Tags in [brackets]"), "tagged: footer shown")
+	assert_true(window.footer_text().contains("Choices and Checks"))
+	window.free()
+	gs.data.encounters.erase("test_window_tagged")
+	_cleanup(gs)
+	gs = _start(ENCOUNTER)
+	window = EncounterWindow.new()
+	window.open()
+	assert_eq(window.footer_text(), "", "untagged: no footer")
+	window.free()
+	_cleanup(gs)

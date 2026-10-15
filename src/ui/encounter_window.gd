@@ -10,6 +10,7 @@ signal closed
 var _title: Label
 var _text: Label
 var _choices: VBoxContainer
+var _footer: Label
 
 
 func _init() -> void:
@@ -29,6 +30,11 @@ func _init() -> void:
 	_choices = VBoxContainer.new()
 	_choices.add_theme_constant_override("separation", 6)
 	box.add_child(_choices)
+	_footer = UIStyle.label("", 14, UIStyle.HINT)
+	_footer.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_footer.custom_minimum_size = Vector2(656, 0)
+	_footer.visible = false
+	box.add_child(_footer)
 
 
 ## Button text for an encounter_choices() entry; locked ones carry their reason.
@@ -40,6 +46,20 @@ static func choice_label(choice: Dictionary) -> String:
 	elif String(choice.get("check", "")) != "":
 		text = "[%s] %s" % [choice["check"], text]
 	return text
+
+
+## True when at least one choice label carries a [bracketed] tag (see choice_label).
+static func has_tags(choices: Array) -> bool:
+	for choice: Dictionary in choices:
+		if choice_label(choice).begins_with("["):
+			return true
+	return false
+
+
+## Footer explaining the bracketed tags; `help_key` is the Help key's name.
+static func tags_footer(help_key: String) -> String:
+	var tail := "Help (%s): Choices and Checks." % help_key if help_key != "" else "Help: Choices and Checks."
+	return "Tags in [brackets] show what a choice checks or costs. " + tail
 
 
 ## Window title: "Encounter", "Discovery: <name>" for a region discovery, "Hidden path: <name>"
@@ -68,6 +88,8 @@ func open() -> void:
 	for child in _choices.get_children():
 		_choices.remove_child(child)
 		child.queue_free()
+	_footer.visible = has_tags(choices)
+	_footer.text = tags_footer(InputConfig.current_label("toggle_help"))
 	var any_enabled := false
 	for choice in choices:
 		var label := choice_label(choice)
@@ -113,3 +135,7 @@ func _focus_first() -> void:
 		if not b.disabled:
 			b.grab_focus()
 			return
+
+
+func footer_text() -> String:
+	return _footer.text if _footer.visible else ""
