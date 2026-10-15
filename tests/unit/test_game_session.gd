@@ -66,6 +66,46 @@ func test_failed_breakthrough_posts_a_hint() -> void:
 	gs.end_session()
 
 
+func _fail_breakthrough(gs: Node, c: CharacterData) -> bool:
+	for i in 20:
+		c.realm_index = 1
+		c.stage = gs.data.realms[1].stage_count() - 1
+		Cultivation.add_qi(c, gs.data, 1e12)
+		c.breakthrough_bonus = -5.0
+		EventBus.clear_history()
+		gs.attempt_breakthrough()
+		if c.realm_index == 1:
+			return true
+	return false
+
+
+func _lesson_text() -> String:
+	for e in EventBus.history:
+		if String(e["text"]).begins_with("The lessons stay with you"):
+			return String(e["text"])
+	return ""
+
+
+func test_failed_breakthrough_names_the_lesson() -> void:
+	var c := _start()
+	var gs := _game_state()
+	c.breakthrough_failures = 0
+	assert_true(_fail_breakthrough(gs, c))
+	assert_true(_lesson_text().contains("+%d percent on your next attempt" % roundi(gs.data.failure_bonus * c.breakthrough_failures * 100.0)), _lesson_text())
+	gs.end_session()
+
+
+func test_failed_breakthrough_lesson_at_the_cap() -> void:
+	var c := _start()
+	var gs := _game_state()
+	c.breakthrough_failures = 10
+	assert_true(_fail_breakthrough(gs, c))
+	var text := _lesson_text()
+	assert_true(text.contains("already worth all they can teach"), text)
+	assert_true(text.contains("+%d percent" % roundi(gs.data.failure_bonus_max * 100.0)), text)
+	gs.end_session()
+
+
 func test_player_dies_of_old_age() -> void:
 	var c := _start()
 	var gs := _game_state()

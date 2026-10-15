@@ -319,12 +319,26 @@ func attempt_breakthrough() -> void:
 			EventBus.post("Your breakthrough to %s fails in the tribulation. Your qi scatters." % result["realm_name"], "danger")
 		if result["injury"] != "":
 			EventBus.post("You suffer %s." % Injuries.injury_name(data, result["injury"]), "danger")
+		var lesson := _failure_lesson_line()
+		if lesson != "":
+			EventBus.post(lesson, "info")
 		var tip := Guidance.pill_source_hint(player, data)
 		EventBus.post(tip if tip != "" else "Fortune, Dao insights and pills raise your odds.", "info")
 	EventBus.breakthrough_attempted.emit(result["success"], result["realm_name"])
 	_pass_time(BREAKTHROUGH_DAYS)
 	if result["success"]:
 		SaveManager.autosave()
+
+
+## What a failed attempt taught, from the same terms as Cultivation.chance_breakdown.
+func _failure_lesson_line() -> String:
+	if data.failure_bonus <= 0.0:
+		return ""
+	var earned := data.failure_bonus * player.breakthrough_failures
+	var shown := minf(earned, data.failure_bonus_max)
+	if earned - data.failure_bonus >= data.failure_bonus_max:
+		return "The lessons stay with you: your lessons are already worth all they can teach (+%d percent)." % roundi(shown * 100.0)
+	return "The lessons stay with you: +%d percent on your next attempt." % roundi(shown * 100.0)
 
 
 ## Marks the rival as surpassed (once) after a breakthrough past their realm.
