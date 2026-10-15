@@ -69,6 +69,7 @@ static func play(gs: Node, clock: Node, seed_value: int, months: int, curious: b
 		out["realms"].append(Cultivation.realm_label(c, gs.data))
 		if month_hook.is_valid():
 			month_hook.call(month)
+	out["style_month"] = int(done.get("style_month", -1))
 	out["injuries"] = c.injuries.size()
 	out["fights_won"] = LifeStats.get_stat(c, "fights_won")
 	out["fights_lost"] = LifeStats.get_stat(c, "fights_lost")
@@ -117,6 +118,7 @@ static func _curious_month(gs: Node, c: CharacterData, done: Dictionary, today: 
 				done["lost_missions"][mission_id] = {"day": today, "odds": odds_before}
 			break
 	_recharge_with_spare_stones(gs, c)
+	_learn_fighting_style(gs, c, done, today)
 	if not done.has("talk") and c.alive:
 		for npc_id: String in gs.npcs:
 			gs.start_dialogue(npc_id)
@@ -137,6 +139,45 @@ static func _curious_month(gs: Node, c: CharacterData, done: Dictionary, today: 
 	if c.alive:
 		_everything_month(gs, c, kinds, today)
 	return kinds
+
+
+## QA-062: once per life, buys and reads the cheapest combat-technique manual a merchant in the
+## current region sells (as soon as the stones allow), then practices an unmastered technique
+## for a block each month. `done["style_month"]` records the month it was learned.
+static func _learn_fighting_style(gs: Node, c: CharacterData, done: Dictionary, today: int) -> void:
+	if not c.alive:
+		return
+	if not done.has("style_month"):
+		var manual := cheapest_combat_manual(gs, c)
+		if manual != "" and c.item_count("spirit_stone") >= int(gs.data.items[manual].get("price", 0)):
+			gs.buy_item(manual)
+			gs.use_item(manual)
+			if c.item_count(manual) == 0:
+				done["style_month"] = today / Calendar.DAYS_PER_MONTH
+	for tech_id: String in c.techniques:
+		var def: TechniqueDef = gs.data.techniques[tech_id]
+		if def.kind == "combat" and not Techniques.is_mastered(c, gs.data, tech_id) and c.alive:
+			gs.practice_technique(tech_id, 7)
+			break
+
+
+## The cheapest manual of a plain combat technique (no lifespan cost) that a merchant in the
+## player's region sells, or "" when there is none or the player already knows it.
+static func cheapest_combat_manual(gs: Node, c: CharacterData) -> String:
+	var region: Dictionary = gs.data.regions.get(gs.current_region, {})
+	var best := ""
+	for place: Dictionary in region.get("places", []):
+		if String(place.get("type", "")) != "merchant":
+			continue
+		for tech: TechniqueDef in gs.data.techniques.values():
+			if tech.kind != "combat" or tech.manual_item == "" or not tech.activation.is_empty() or Techniques.knows(c, tech.id):
+				continue
+			var item: Dictionary = gs.data.items.get(tech.manual_item, {})
+			if item.is_empty() or not Items.merchant_sells(gs.data, item, place.get("stock_tags", []), int(place.get("max_price", 0))):
+				continue
+			if best == "" or int(item["price"]) < int(gs.data.items[best]["price"]):
+				best = tech.manual_item
+	return best
 
 
 ## QA-048: the rest of what the menus offer, each tried once a month and only when the core

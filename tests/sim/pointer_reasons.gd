@@ -11,6 +11,7 @@ var _mo_favor: Dictionary = {6: [], 12: [], 24: []}
 var _pointers_used := 0
 var _best_is_mo: Dictionary = {}  # month -> seeds where Elder Mo is the highest-favor NPC (the gift policy's target)
 var _gift_months := 0
+var _style_months: Array = []  # QA-062: month each life learned a fighting style (-1 = never)
 var _unmastered: Dictionary = {}  # month -> [techniques known, unmastered] summed over seeds
 
 
@@ -70,6 +71,7 @@ func _run() -> void:
 			_mo_favor[month + 1].append(int(gs.npc_favor.get("elder_mo", 0)))
 	for s in range(1, seeds + 1):
 		var out := FirstHour.play(gs, clock, s, months, true, hook)
+		_style_months.append(int(out["style_month"]))
 		_gift_months += out["kind_sets"].filter(func(k: Dictionary) -> bool: return k.has("gift")).size()
 		_pointers_used += int(out["kind_sets"].filter(func(k: Dictionary) -> bool: return k.has("pointer")).size())
 	print("senior NPC-months in the player's region, by check_pointers reason (%d seeds x %d months):" % [seeds, months])
@@ -83,5 +85,7 @@ func _run() -> void:
 	for m: int in _unmastered:
 		print("month %d: techniques known / unmastered, summed over seeds: %d / %d" % [m, _unmastered[m][0], _unmastered[m][1]])
 	print("seeds where Elder Mo is the gift target at month 12: %d/%d; gift months: %d" % [int(_best_is_mo.get(11, 0)), seeds, _gift_months])
+	var learned := _style_months.filter(func(m: int) -> bool: return m >= 0)
+	print("fighting style learned in %d/%d lives, median month %.0f" % [learned.size(), seeds, _median(learned)])
 	print("months with a successful pointer: %d" % _pointers_used)
 	quit()
