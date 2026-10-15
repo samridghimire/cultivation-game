@@ -148,3 +148,14 @@ func test_relation_text_cases() -> void:
 	r.realm_index = 0
 	r.stage = 9
 	assert_eq(Rivals.relation_text(c, r), "behind you")
+
+
+## C-086: three first-year rival encounters, gated on the first meeting.
+func test_first_year_rival_encounters() -> void:
+	var d := data()
+	for id in ["rival_herb_seller_pill", "rival_wounded_hunt", "rival_sect_lecture"]:
+		assert_true(d.encounters.has(id), id + " exists")
+		var e: Dictionary = d.encounters[id]
+		assert_true(e.has("rival"), id + " needs a rival")
+		assert_eq(e.get("requires_flag", ""), "rival_met", id + " waits for the first meeting")
+		assert_true(e.has("blocked_by_flag"), id + " is once-only")

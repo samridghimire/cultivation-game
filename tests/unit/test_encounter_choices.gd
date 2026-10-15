@@ -205,6 +205,7 @@ func test_choice_encounters_set_their_flags() -> void:
 	for enemy: Dictionary in d.enemies.values():
 		if enemy.get("rewards", {}).has("set_flag"):
 			set_flags[enemy["rewards"]["set_flag"]] = true
+	set_flags[Rivals.FIRST_MEETING_FLAG] = true  # set by GameState at the first meeting (RIVAL-003)
 	for e: Dictionary in d.encounters.values():
 		if e.has("requires_flag"):
 			assert_true(set_flags.has(e["requires_flag"]), "%s waits on a flag nothing sets" % e["id"])
