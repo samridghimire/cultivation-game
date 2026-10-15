@@ -15,6 +15,10 @@ const SKIP_PREFIXES := ["Travel to ", "Closed-door cultivation"]
 var _last_day := 0
 var _calls := 0
 var _window_realm := ""
+## The HUD recomputes its hint list on every action (about 1 s each once the
+## character has lived for years), which made this file ~60% of the suite.
+## Only test_fuzz_with_hud keeps the hints on; Guidance has its own tests.
+var _hints_on := false
 
 
 func _tree() -> SceneTree:
@@ -233,6 +237,8 @@ func _fuzz_region(region_id: String) -> void:
 func _fuzz_all_regions(kind: String) -> void:
 	if OS.get_environment("FUZZ_LOG") != "" and not _tree().root.get_node("EventBus").message_posted.is_connected(_log_message):
 		_tree().root.get_node("EventBus").message_posted.connect(_log_message)
+	var old_hints: Variant = Settings.get_value("hud_hints")
+	Settings.set_value("hud_hints", old_hints if _hints_on else 0)
 	_start(kind)
 	var bus := _tree().root.get_node("EventBus")
 	bus.message_posted.connect(_check_message)
@@ -256,6 +262,7 @@ func _fuzz_all_regions(kind: String) -> void:
 	if OS.get_environment("FUZZ_LOG") != "":
 		print("FUZZ %s calls=%d day=%d" % [kind, _calls, _clock().total_days])
 	bus.message_posted.disconnect(_check_message)
+	Settings.set_value("hud_hints", old_hints)
 	_gs().end_session()
 
 
@@ -272,6 +279,7 @@ func test_fuzz_righteous_disciple() -> void:
 ## Same walk with the HUD loaded, so the screens that react to actions (shop,
 ## combat report, time-skip overlay, dialogue and encounter windows) run too.
 func test_fuzz_with_hud() -> void:
+	_hints_on = true
 	var hud: CanvasLayer = load("res://src/ui/hud.tscn").instantiate()
 	_tree().root.add_child(hud)
 	await _fuzz_all_regions("disciple")

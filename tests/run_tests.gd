@@ -5,6 +5,7 @@ extends SceneTree
 ## Runs every test_* method in tests/unit/test_*.gd. Exit code 1 on failure.
 ## Test methods may `await` (e.g. process frames so deferred UI focus lands).
 ## TEST_ONLY=<substring> runs only the test files whose name contains it;
+## TEST_METHOD=<substring> further narrows to matching test methods.
 ## TEST_SEED_SALT=<text> changes every test's GameState.rng seed (hunting flaky tests).
 
 const TEST_DIR := "res://tests/unit"
@@ -35,6 +36,7 @@ func _run() -> void:
 	OS.add_logger(errors)
 	var passed := 0
 	var failed: PackedStringArray = []
+	var timings: Array = []  # [ms, "file::method"]
 
 	for file_name in DirAccess.get_files_at(TEST_DIR):
 		if not (file_name.begins_with("test_") and file_name.ends_with(".gd")):
@@ -51,12 +53,16 @@ func _run() -> void:
 			var method_name: String = method["name"]
 			if not method_name.begins_with("test_"):
 				continue
+			if OS.get_environment("TEST_METHOD") != "" and not method_name.contains(OS.get_environment("TEST_METHOD")):
+				continue
 			instance.failures = PackedStringArray()
 			# Each test starts from its own seed, so no test depends on how much
 			# randomness the tests before it happened to use.
 			root.get_node("GameState").rng.seed = hash(file_name + "::" + method_name + OS.get_environment("TEST_SEED_SALT"))
 			var errors_before := errors.count
+			var started := Time.get_ticks_msec()
 			await instance.call(method_name)
+			timings.append([Time.get_ticks_msec() - started, file_name + "::" + method_name])
 			if errors.count > errors_before:
 				instance.failures.append("engine logged %d error(s) (see output above)" % (errors.count - errors_before))
 			if instance.failures.is_empty():
@@ -68,5 +74,12 @@ func _run() -> void:
 	print("")
 	for f in failed:
 		print("FAIL  " + f)
+	timings.sort_custom(func(a: Array, b: Array) -> bool: return a[0] > b[0])
+	var total_ms := 0
+	for t in timings:
+		total_ms += t[0]
+	print("Slowest tests (total %.1f s):" % (total_ms / 1000.0))
+	for i in mini(15, timings.size()):
+		print("  %6d ms  %s" % [timings[i][0], timings[i][1]])
 	print("%d passed, %d failed" % [passed, failed.size()])
 	quit(1 if failed.size() > 0 else 0)
