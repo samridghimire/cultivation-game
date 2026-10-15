@@ -13,7 +13,9 @@ const SPRING_DENSITY := 2.0  # Spirit Spring, see data/regions.json
 ## `curious` adds the QA-029 policy each month (see _curious_month); the default
 ## newcomer only meditates and explores once. `month_hook(month)` (optional) runs
 ## after each month's actions. QA-044: `no_help` makes the curious player never ask for pointers or spar.
-static func play(gs: Node, clock: Node, seed_value: int, months: int, curious: bool = false, month_hook: Callable = Callable(), no_help: bool = false) -> Dictionary:
+## QA-076: `wait_for_pill` > 0 makes a player at the Foundation bottleneck without a pill keep earning for up to that
+## many days (out["waited_days"]) before attempting, as long as a merchant-sold pill exists to save for.
+static func play(gs: Node, clock: Node, seed_value: int, months: int, curious: bool = false, month_hook: Callable = Callable(), no_help: bool = false, wait_for_pill: int = 0) -> Dictionary:
 	gs.rng.seed = seed_value
 	var rng := RandomNumberGenerator.new()
 	rng.seed = seed_value
@@ -22,7 +24,7 @@ static func play(gs: Node, clock: Node, seed_value: int, months: int, curious: b
 	gs.pending_event = ""
 	var bus: Node = gs.get_node("/root/EventBus")
 	bus.clear_history()
-	var out := {"layer_day": {}, "sect_day": -1, "month_lines": [], "injuries": 0, "player": c, "kinds": [], "kind_sets": [], "stones": [], "realms": [], "first_win_day": -1, "first_style_day": -1, "first_win_enemy": "", "breaks": [], "bottleneck_day": {}}
+	var out := {"layer_day": {}, "sect_day": -1, "month_lines": [], "injuries": 0, "player": c, "kinds": [], "kind_sets": [], "stones": [], "realms": [], "first_win_day": -1, "first_style_day": -1, "first_win_enemy": "", "breaks": [], "bottleneck_day": {}, "waited_days": 0}
 	var done := {"no_help": no_help}
 	# QA-063: remember the foe of the first real (non-spar) win; the day comes from the fights_won stat.
 	var fight := {"enemy": "", "first_enemy": ""}
@@ -48,7 +50,9 @@ static func play(gs: Node, clock: Node, seed_value: int, months: int, curious: b
 		# QA-066: log every breakthrough attempt (and the first day each realm's bottleneck was seen, month-granular).
 		if Cultivation.is_at_bottleneck(c, gs.data) and not out["bottleneck_day"].has(c.realm_index):
 			out["bottleneck_day"][c.realm_index] = clock.total_days
-		if Cultivation.can_attempt_breakthrough(c, gs.data):
+		if Cultivation.can_attempt_breakthrough(c, gs.data) and _keeps_saving_for_pill(gs, c, out, wait_for_pill):
+			out["waited_days"] += Calendar.DAYS_PER_MONTH
+		elif Cultivation.can_attempt_breakthrough(c, gs.data):
 			var stones_now := c.item_count("spirit_stone")
 			# QA-072: take a held breakthrough pill right before the attempt, as the breakthrough window's "Take" button does.
 			for pill_id in Guidance.breakthrough_item_ids(c, gs.data):
@@ -107,6 +111,15 @@ static func play(gs: Node, clock: Node, seed_value: int, months: int, curious: b
 	out["fights_lost"] = LifeStats.get_stat(c, "fights_lost")
 	out["fights_fled"] = LifeStats.get_stat(c, "threats_fled")
 	return out
+
+
+## QA-076: true while the player is at the Qi Refining -> Foundation bottleneck with no pill and still has waiting days.
+static func _keeps_saving_for_pill(gs: Node, c: CharacterData, out: Dictionary, wait_for_pill: int) -> bool:
+	if wait_for_pill <= 0 or c.realm_index != 1 or int(out["waited_days"]) >= wait_for_pill:
+		return false
+	if c.breakthrough_pill != "" or not Guidance.breakthrough_item_ids(c, gs.data).is_empty():
+		return false
+	return not Guidance.next_realm_pill(c, gs.data).is_empty()
 
 
 ## QA-069: once a month in the village, an uninjured newcomer tries again any chore

@@ -2,7 +2,8 @@ extends SceneTree
 ## QA-041: three curious years. Runs the curious first-hour policy (tests/sim/first_hour.gd)
 ## for many months and prints, per 6-month block, distinct action kinds, new features first
 ## used, stones and realm, then flags dull blocks.
-## Usage: tools/godot.sh --headless --path . -s res://tests/sim/simulate_curious_years.gd -- [seeds] [months]
+## QA-076: `--wait-for-pill=N` makes the player wait up to N days at the Foundation bottleneck, earning, to afford the pill.
+## Usage: tools/godot.sh --headless --path . -s res://tests/sim/simulate_curious_years.gd -- [seeds] [months] [--wait-for-pill=N]
 
 const FirstHour := preload("res://tests/sim/first_hour.gd")
 const BLOCK := 6
@@ -52,6 +53,7 @@ func _record_death(cause: String, final: bool) -> void:
 
 
 var _seed := 0
+var _wait_for_pill := 0
 
 
 func _median(values: Array) -> float:
@@ -62,7 +64,12 @@ func _median(values: Array) -> float:
 
 
 func _run() -> void:
-	var args := OS.get_cmdline_user_args()
+	var args: Array[String] = []
+	for a: String in OS.get_cmdline_user_args():
+		if a.begins_with("--wait-for-pill="):
+			_wait_for_pill = int(a.get_slice("=", 1))
+		else:
+			args.append(a)
 	var seeds := int(args[0]) if args.size() > 0 else 10
 	var months := int(args[1]) if args.size() > 1 else 36
 	var gs: Node = root.get_node("GameState")
@@ -90,7 +97,7 @@ func _run() -> void:
 	print("  seed  block  kinds  new  stones  realm")
 	for s in range(1, seeds + 1):
 		_seed = s
-		var r: Dictionary = FirstHour.play(gs, clock, s, months, true)
+		var r: Dictionary = FirstHour.play(gs, clock, s, months, true, Callable(), false, _wait_for_pill)
 		runs.append(r.duplicate())
 		runs[-1].erase("player")
 		var sets: Array = r["kind_sets"]
@@ -194,7 +201,7 @@ func _print_foundation_breakthrough(runs: Array[Dictionary]) -> void:
 			if a["success"] and success_day < 0:
 				success_day = int(a["day"])
 		var bday: int = int(r["bottleneck_day"].get(1, -1))
-		print("  seed %2d bottleneck d%-4d attempts %d [%s] success d%d stones %d" % [i + 1, bday, seed_attempts.size(), ", ".join(seed_attempts), success_day, stones_at])
+		print("  seed %2d bottleneck d%-4d attempts %d [%s] success d%d stones %d%s" % [i + 1, bday, seed_attempts.size(), ", ".join(seed_attempts), success_day, stones_at, ("  waited %dd" % int(r["waited_days"])) if _wait_for_pill > 0 else ""])
 		if bday >= 0:
 			attempt_counts.append(seed_attempts.size())
 			if success_day >= 0:

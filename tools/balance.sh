@@ -33,6 +33,7 @@ fresh() {
 	run "first hour, curious player (seeds 1-10)" res://tests/sim/simulate_first_hour.gd -- 10 --curious
 	run "log noise (seeds 1-5, 12 months)" res://tests/sim/log_noise.gd -- 5 12
 	run "three curious years (seeds 1-10, 36 months)" res://tests/sim/simulate_curious_years.gd -- 10 36
+	run "pill wait (curious, seeds 1-10, 36 months, wait up to 120 days)" res://tests/sim/simulate_curious_years.gd -- 10 36 --wait-for-pill=120
 	run "early inheritances (curious, seeds 1-10, 36 months)" res://tests/sim/early_inheritances.gd -- 10 36
 	run "fair fights (curious, seeds 1-10, 12 months)" res://tests/sim/fair_fights.gd -- 10 12
 	run "combat (200 fights per cell)" res://tests/sim/simulate_combat.gd -- 200

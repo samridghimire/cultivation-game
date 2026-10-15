@@ -90,6 +90,19 @@ func test_play_logs_breakthrough_attempts() -> void:
 	gs.end_session()
 
 
+## QA-076: wait_for_pill delays the attempt by whole months, never past the limit, and 0 changes nothing.
+func test_wait_for_pill_delays_the_attempt() -> void:
+	var gs := _root().get_node("GameState")
+	var clock := _root().get_node("GameClock")
+	var first = preload("res://tests/sim/first_hour.gd")
+	var base: Dictionary = first.play(gs, clock, 5, 36, true)
+	gs.end_session()
+	assert_eq(int(base["waited_days"]), 0, "no waiting by default")
+	var waited: Dictionary = first.play(gs, clock, 5, 36, true, Callable(), false, 60)
+	gs.end_session()
+	assert_true(int(waited["waited_days"]) <= 60 and int(waited["waited_days"]) % 30 == 0, "waits whole months up to the limit")
+
+
 ## QA-072: the curious sim saves for the Foundation pill, buys it and takes it right before the attempt.
 func test_curious_sim_takes_the_foundation_pill() -> void:
 	var gs := _root().get_node("GameState")
