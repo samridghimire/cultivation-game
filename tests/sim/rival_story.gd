@@ -3,10 +3,14 @@ extends SceneTree
 ## curious first-hour policy and reports, per policy: the day of the first meeting, the rival's
 ## realm/stage next to the player's every 6 months, the day the player surpasses the rival (or
 ## never), rival breakthrough news lines, and rival encounters met (encounters with a `rival` field).
+## QA-083: also the rival's attitude (Rivals.attitude: p roud / f riendly / b itter) at every 6-month
+## checkpoint, with the share of checkpoints per attitude, and C-093's three attitude encounters met
+## (checked monthly; the attitude is the one at the end of the month they were met).
 ## Usage: tools/godot.sh --headless --path . -s res://tests/sim/rival_story.gd -- [seeds] [months]
 
 const FirstHour := preload("res://tests/sim/first_hour.gd")
 const NEWS_PREFIX := "Word reaches you: your rival"
+const C093 := ["rival_shares_insight", "rival_spoils_gathering", "rival_public_challenge"]
 
 
 func _initialize() -> void:
@@ -38,6 +42,10 @@ func _policy(seeds: int, months: int, curious: bool) -> void:
 	var news_total := 0
 	var enc_total := 0
 	var sampled := 0
+	var att_total := {"proud": 0, "friendly": 0, "bitter": 0}
+	var c093_met := {}
+	for id: String in C093:
+		c093_met[id] = []
 	for s in range(1, seeds + 1):
 		var news := [0]
 		var on_msg := func(text: String, _cat: String) -> void:
@@ -47,13 +55,27 @@ func _policy(seeds: int, months: int, curious: bool) -> void:
 		var cells: Array[String] = []
 		var meet := [-1]
 		var surpass := [-1]
+		var atts: Array[String] = []
+		var seen := {}
 		var hook := func(month: int) -> void:
 			if meet[0] < 0 and gs.world_flags.get(Rivals.FIRST_MEETING_FLAG, false):
 				meet[0] = clock.total_days
 			if surpass[0] < 0 and gs.world_flags.get(Rivals.SURPASSED_FLAG, false):
 				surpass[0] = clock.total_days
+			var rv0 := Rivals.rival_of(gs.player, gs.npcs)
+			var att0 := ""
+			if rv0 != null:
+				att0 = Rivals.attitude(gs.player, rv0, int(gs.npc_favor.get(rv0.id, 0)), gs.data)
+			for id: String in C093:
+				var n: int = int(gs.player.encounter_counts.get(id, 0))
+				if n > int(seen.get(id, 0)):
+					seen[id] = n
+					c093_met[id].append(att0 if att0 != "" else "-")
 			if (month + 1) % 6 == 0:
-				var rv := Rivals.rival_of(gs.player, gs.npcs)
+				var rv := rv0
+				if att0 != "":
+					att_total[att0] += 1
+				atts.append(att0.substr(0, 1) if att0 != "" else "-")
 				cells.append("%s/%s" % [_short(gs.player, gs.data), _short(rv, gs.data) if rv != null else "-"])
 		var r: Dictionary = FirstHour.play(gs, clock, s, months, curious, hook)
 		bus.message_posted.disconnect(on_msg)
@@ -73,10 +95,26 @@ func _policy(seeds: int, months: int, curious: bool) -> void:
 			if surpass[0] < 365:
 				under_year += 1
 		print("  seed %2d  met day %s  surpassed day %s  news %d  rival encounters %d  %s" % [s, str(meet[0]) if meet[0] >= 0 else "-", str(surpass[0]) if surpass[0] >= 0 else "never", news[0], enc, " ".join(cells)])
+		print("           attitude  %s" % " ".join(atts))
 		gs.end_session()
 	meet_days.sort()
 	surpass_days.sort()
 	print("  summary: met %d/%d (median day %s), surpassed %d/%d (median day %s, under a year %d), news lines %d, rival encounters %d" % [meet_days.size(), sampled, _med(meet_days), surpass_days.size(), sampled, _med(surpass_days), under_year, news_total, enc_total])
+	var cps: int = att_total["proud"] + att_total["friendly"] + att_total["bitter"]
+	var parts: Array[String] = []
+	var worst := 0.0
+	for a: String in att_total:
+		var share := 100.0 * float(att_total[a]) / float(maxi(1, cps))
+		worst = maxf(worst, share)
+		parts.append("%s %d (%d%%)" % [a, att_total[a], roundi(share)])
+	print("  attitude at checkpoints (%d with a living rival): %s" % [cps, ", ".join(parts)])
+	for id: String in C093:
+		var tally := {}
+		for a: String in c093_met[id]:
+			tally[a] = int(tally.get(a, 0)) + 1
+		print("  %s: met %d (%s)" % [id, c093_met[id].size(), ", ".join(tally.keys().map(func(k: String) -> String: return "%s %d" % [k, tally[k]])) if not tally.is_empty() else "never"])
+	if worst > 80.0:
+		print("  FLAG: one attitude covers over 80% of checkpoints; C-093's encounters would barely show")
 	if sampled > 0 and under_year * 2 > sampled:
 		print("  FLAG: the rival is surpassed in under a year in most seeds; they never feel like a threat")
 
