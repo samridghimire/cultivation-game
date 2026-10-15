@@ -488,3 +488,46 @@ func test_newest_windows_keep_focus_wu123() -> void:
 	hud.free()
 	gs.end_session()
 	await _frames()
+
+
+## WU-136: the breakthrough window with a pill in the bag (focus lands on the pill,
+## the pill / Attempt / Not yet row is reachable by d-pad) and the mission board's rows.
+func test_breakthrough_pill_row_and_mission_board_are_reachable() -> void:
+	var root := _tree().root
+	var gs: Node = root.get_node("GameState")
+	var c := new_character()
+	c.add_item("foundation_establishment_pill", 1)
+	gs.start_session(c)
+	gs.pending_event = ""
+	var hud: CanvasLayer = load("res://src/ui/hud.tscn").instantiate()
+	root.add_child(hud)
+	await _frames()
+
+	var bt: BreakthroughScreen = hud.get("_breakthrough")
+	bt.open()
+	await _frames()
+	var owner := root.gui_get_focus_owner()
+	assert_true(owner != null and bt.is_ancestor_of(owner), "breakthrough with a pill: focus is inside the window")
+	for b in bt.find_children("*", "Button", true, false):
+		var btn := b as Button
+		if btn.is_visible_in_tree():
+			assert_true(btn.focus_mode == Control.FOCUS_ALL, "breakthrough: %s is focusable" % btn.name)
+	_press("ui_cancel")
+	await _frames()
+	assert_false(bt.visible, "breakthrough: ui_cancel closes it")
+
+	var board: Control = hud.get("_mission_board")
+	board.open()
+	await _frames()
+	for b in board.find_children("*", "Button", true, false):
+		var btn := b as Button
+		if btn.is_visible_in_tree():
+			assert_true(btn.focus_mode == Control.FOCUS_ALL, "mission board: %s is focusable" % btn.name)
+	_press("ui_cancel")
+	await _frames()
+	assert_false(board.visible, "mission board: ui_cancel closes it")
+
+	root.remove_child(hud)
+	hud.free()
+	gs.end_session()
+	await _frames()
