@@ -8,6 +8,7 @@ extends PanelContainer
 signal closed
 
 var _title: Label
+var _blurb: Label
 var _chance: Label
 var _terms: Label
 var _risk: Label
@@ -26,6 +27,10 @@ func _init() -> void:
 	add_child(box)
 	_title = UIStyle.label("", 26, UIStyle.ACCENT)
 	box.add_child(_title)
+	_blurb = UIStyle.label("", 15, UIStyle.HINT)
+	_blurb.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_blurb.custom_minimum_size = Vector2(520, 0)
+	box.add_child(_blurb)
 	_chance = UIStyle.label("", 22)
 	box.add_child(_chance)
 	_terms = UIStyle.label("", 16)
@@ -62,6 +67,13 @@ static func term_line(term: Dictionary) -> String:
 	return "%s  %s%d%%" % [term["label"], "+" if pct >= 0 else "-", absi(pct)]
 
 
+## The description of the realm being reached; "" past the final realm.
+static func realm_blurb(data: GameData, realm_index: int) -> String:
+	if realm_index + 1 >= data.realms.size():
+		return ""
+	return data.realms[realm_index + 1].description
+
+
 func open() -> void:
 	_refresh()
 	visible = true
@@ -73,6 +85,8 @@ func _refresh() -> void:
 	var data := GameState.data
 	var next: RealmDef = data.realms[mini(p.realm_index + 1, data.realms.size() - 1)]
 	_title.text = "Breakthrough: %s" % next.name
+	_blurb.text = realm_blurb(data, p.realm_index)
+	_blurb.visible = _blurb.text != ""
 	_chance.text = "%d%% chance" % roundi(Cultivation.breakthrough_chance(p, data) * 100)
 	var lines: PackedStringArray = []
 	for term in Cultivation.chance_breakdown(p, data):

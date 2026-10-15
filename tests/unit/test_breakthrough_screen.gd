@@ -104,3 +104,9 @@ func test_meditation_spot_routes_foundation_to_the_window() -> void:
 			entry = o
 	assert_eq(entry["action"], _gs().attempt_breakthrough)
 	spot.free()
+
+
+func test_realm_blurb_names_the_next_realm_and_is_empty_past_the_end() -> void:
+	var data: GameData = _gs().data
+	assert_eq(BreakthroughScreen.realm_blurb(data, 0), data.realms[1].description)
+	assert_eq(BreakthroughScreen.realm_blurb(data, data.realms.size() - 1), "")
