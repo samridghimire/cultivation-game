@@ -701,6 +701,10 @@ func _validate_rumors() -> void:
 			load_errors.append("%s has unknown region '%s'" % [label, r["region"]])
 		if r.has("min_realm") and realm_index_of(String(r["min_realm"])) < 0:
 			load_errors.append("%s has unknown min_realm '%s'" % [label, r["min_realm"]])
+		if r.has("about_inheritance") and not inheritances.has(String(r["about_inheritance"])):
+			load_errors.append("%s has unknown about_inheritance '%s'" % [label, r["about_inheritance"]])
+		if r.has("about_secret_realm") and not secret_realms.has(String(r["about_secret_realm"])):
+			load_errors.append("%s has unknown about_secret_realm '%s'" % [label, r["about_secret_realm"]])
 
 
 func milestone_def(id: String) -> Dictionary:

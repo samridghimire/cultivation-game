@@ -104,3 +104,35 @@ func test_duplicate_rumor_id_reported() -> void:
 	d.load_errors.clear()
 	d._load_rumors({"rumors": [{"id": "x", "text": "A"}, {"id": "x", "text": "B"}]})
 	assert_true(d.load_errors.has("rumors.json has a duplicate rumor id 'x'"), str(d.load_errors))
+
+
+func test_rumor_about_inheritance_goes_quiet() -> void:
+	var d := GameData.load_from_dir()
+	var c := _qi()
+	var deadline := int(d.inheritances["reed_hermit_hut"]["deadline_years"]) * Calendar.DAYS_PER_YEAR
+	assert_true(Rumors.eligible(c, d, {}, "withered_bone_marsh", 0).has("coming_reed_hermit"))
+	var claimed := {Inheritances.claimed_flag("reed_hermit_hut"): true}
+	assert_false(Rumors.eligible(c, d, claimed, "withered_bone_marsh", 0).has("coming_reed_hermit"))
+	assert_false(Rumors.eligible(c, d, {}, "withered_bone_marsh", deadline).has("coming_reed_hermit"))
+	assert_true(Rumors.eligible(c, d, {}, "withered_bone_marsh", deadline - 1).has("coming_reed_hermit"))
+
+
+func test_rumor_about_secret_realm_goes_quiet() -> void:
+	var d := GameData.load_from_dir()
+	var c := _qi()
+	assert_true(Rumors.eligible(c, d, {}, "qingshi_village").has("coming_peach_grotto"))
+	c.secret_realms["peach_blossom_grotto"] = {"opening": 0, "floor": 0}
+	assert_false(Rumors.eligible(c, d, {}, "qingshi_village").has("coming_peach_grotto"))
+	var c2 := _qi()
+	var lost := {SecretRealms.lost_flag("peach_blossom_grotto"): true}
+	assert_false(Rumors.eligible(c2, d, lost, "qingshi_village").has("coming_peach_grotto"))
+
+
+func test_rumor_about_unknown_place_is_reported() -> void:
+	var d := _rd([
+		{"id": "a", "text": "A", "about_inheritance": "nope"},
+		{"id": "b", "text": "B", "about_secret_realm": "nope"},
+	])
+	d.load_errors.clear()
+	d._validate_rumors()
+	assert_eq(d.load_errors.size(), 2, str(d.load_errors))
