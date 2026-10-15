@@ -189,3 +189,24 @@ func test_help_validation_catches_bad_groups() -> void:
 	d.help_groups.append({"id": "start", "title": "Again"})
 	d._validate_help()
 	assert_gt(d.load_errors.size(), 1)
+
+
+func test_list_shows_group_headers_and_focus_stays_on_buttons() -> void:
+	var screen := HelpScreen.new()
+	_root().add_child(screen)
+	screen.open()
+	await (Engine.get_main_loop() as SceneTree).process_frame
+	var list: VBoxContainer = screen._list
+	var headers := 0
+	var buttons := 0
+	for child in list.get_children():
+		if child is Button:
+			buttons += 1
+		elif child is Label:
+			headers += 1
+	assert_eq(headers, data().help_groups.size(), "one header per group")
+	assert_eq(buttons, data().help_pages.size() + 1, "Controls + every page")
+	assert_true(list.get_child(0) is Button, "Controls stays first")
+	assert_true(screen.get_viewport().gui_get_focus_owner() is Button, "focus on a button")
+	assert_eq(HelpScreen.group_title([{"id": "a", "title": "Alpha"}], "a"), "Alpha")
+	screen.queue_free()

@@ -147,8 +147,22 @@ func _build_list() -> void:
 		child.queue_free()
 	_page_buttons.clear()
 	_add_page_button(CONTROLS_ID, "Controls")
+	var groups: Array = GameState.data.help_groups
+	var last_group := ""
 	for page: Dictionary in GameState.data.help_pages:
+		var group: String = page.get("group", "")
+		if not groups.is_empty() and group != last_group:
+			last_group = group
+			_list.add_child(UIStyle.label(group_title(groups, group), 15, UIStyle.ACCENT))
 		_add_page_button(page["id"], page["title"])
+
+
+## Display title of help group `id` (the id itself when unknown).
+static func group_title(groups: Array, id: String) -> String:
+	for g: Dictionary in groups:
+		if g.get("id", "") == id:
+			return String(g.get("title", id))
+	return id
 
 
 func _add_page_button(id: String, title: String) -> void:
