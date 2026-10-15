@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 911fc1e
+Last reviewed commit: b54040f
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -468,3 +468,14 @@ Last reviewed commit: 911fc1e
   - Notes for the planner, not filed: (1) RIVAL-006 only checks after the player's own breakthrough, so a rival who
     is already a realm behind at the first meeting is not "surpassed" until the next one (spec'd that way; the optional
     monthly check in `_rival_news` would catch it). (2) C-088 still needs CHOICE-001's min_attributes in data.
+- 2026-10-15 (reviewer, 19th run): reviewed 911fc1e..b54040f (WU-142, WU-132, GUIDE-028, C-085, C-089, QA-075, WU-144,
+  WU-145, C-088, RIVAL-007, C-087, CHOICE-002, QA-076, WU-147; [PLAN]/[REVIEW] skipped). Main green before and after
+  (1760 tests). No BACKLOG/CHANGELOG edits by workers; no SAVE_VERSION change, no new persistent state. Nothing filed.
+  - Fixed ([REVIEW] commit): C-087's herb-bid rival said "Mine is higher than whatever he offers" of the player, whose
+    gender the game never sets; now "whatever this one offers".
+  - Checked: CHOICE-002 validates unknown profession ids and ranks outside 1..max_rank, and the `check` tag is not yet
+    shown anywhere (WU-146 does that). RIVAL-007's monthly `_check_rival_surpassed` is gated on the first meeting and
+    the once-only flag, and now also runs `check_milestones`. C-087's `city` tag only matches Fallen Star Market,
+    `marsh` both marsh regions, `azure_cliffs` Azure Peak. WU-144 matches its spec (tooltip lists every entry).
+    WU-147's marks hide offers while a hunt runs elsewhere (by design); C-089's 3%/9% matches realms.json.
+  - Notes for the planner, not filed: WU-144's commit says the `--win-shots` ellipsis check was not re-run.
