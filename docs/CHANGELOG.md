@@ -2,6 +2,14 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-15 [C-081] Withered Bone Marsh posts a Qi Refining bounty: a corpse refiner's puppet (from the 6th Layer).
+- 2026-10-15 [FOUND-001] Late in Qi Refining the journal says how much the Foundation pill costs and where to buy it.
+- 2026-10-15 [WU-133] The shop's item list is wider, so long manual names show in full.
+- 2026-10-15 [GUIDE-024] The sect-mission hint no longer sends newcomers into fights they are likely to lose.
+- 2026-10-15 [GUIDE-023] After a lost fight, the advice names a fairer fight you can win.
+- 2026-10-15 [QA-067] Checked: fights the journal says you can win are won about 94% of the time.
+- 2026-10-15 [WU-135] A breakthrough says how many years of life it adds and how much faster your qi gathers.
+- 2026-10-15 [WU-126] The mission board lists the fights you can win first.
 - 2026-10-15 [WU-127] Long manual names in the shop no longer hide their price; hover a row for the full name.
 - 2026-10-15 [QA-065] Checked why one simulated newcomer never won a fight in a year: they lost the boar chore once and never tried again.
 - 2026-10-15 [GUIDE-021] The journal lists "Fights you can win": sect missions and bounties you are likely to win.

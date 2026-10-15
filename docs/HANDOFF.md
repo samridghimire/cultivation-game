@@ -2,6 +2,17 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-10-15 (planner, 08:10 UTC)
+- 8 tasks landed (GUIDE-023/024, FOUND-001, WU-126/133/135, C-081, QA-067); C-079 closed as not needed (C-081's run measured
+  both first-inheritance fights fair at layer 1). Claimed (< 5h): GUIDE-026, FOUND-002, WU-125, WU-129 (2nd claim 07:46),
+  C-063, C-065, C-077, QA-068. Reviewer last reviewed 111cd0a and filed nothing; its notes became DLG-001 and QA-071.
+- Local clone was shallow and looked diverged; `git fetch --unshallow` showed it was simply behind; fast-forwarded.
+- New: RIVAL-003 (spec file: the named rival is never introduced, so a first meeting around day 10), RIVAL-004 (journal),
+  WU-138 (rival label in the world), C-086 (first-year rival encounters); C-084 realm descriptions + WU-137 realm card;
+  DLG-001 (Elder Mo practise line for any style); FOUND-003 (conditional on QA-066); C-085 (bounty guard test); QA-070
+  (curious sim takes bounties), QA-071 (inheritance baseline refresh). WU-133's missing screenshot check folded into WU-132.
+- The owner's three urgent questions (pacing, first fights, ascension) are still open.
+
 ## State on 2026-10-15 (planner, 06:10 UTC)
 - 13 tasks landed (GUIDE-020/021, INH-001, EFF-002, MENTOR-004, RUMOR-003, WU-127/130/131, C-078/080, QA-064/065).
   Claimed (all < 4h): GUIDE-023, GUIDE-024, WU-125, WU-126, WU-129, C-063 (4th claim), C-065. Reviewer last reviewed 5329c38.
