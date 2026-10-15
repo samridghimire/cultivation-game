@@ -48,6 +48,7 @@
       "start_text": "Incense smoke curls over the graves of {region}. The Qingming Ancestor Festival has begun.",
       "end_text": "The paper offerings have burned to ash at {region}; the Qingming Ancestor Festival is over.",
       "shop_items": ["willow_branch", "ancestor_incense"],
+      "activity": {"name": "Sweep the ancestors' graves", "text": "You take a bamboo broom up the hillside and sweep the old graves clean, lay down a few dumplings and bow to names no one remembers. The mountain feels quieter afterwards.", "days": 0, "effects": {"qi": 20, "alignment": 3}, "bonus": {"attribute": "spirit", "min": 12, "text": "Between the incense and the wind you hear a faint whisper from the departed, a half-remembered breath-counting rhyme that steadies your dantian.", "effects": {"breakthrough_bonus": 0.01}}},
       "modifiers": {"encounter_tags": ["festival_spring"], "price_mult": 1.0, "favor_mult": 1.5}
     },
     {
@@ -58,6 +59,7 @@
       "start_text": "Round lanterns glow above every stall at {region}. The Mid-Autumn Moon Festival has begun.",
       "end_text": "The moon wanes over {region}; the Mid-Autumn Moon Festival is over.",
       "shop_items": ["moon_cake", "osmanthus_wine"],
+      "activity": {"name": "Moon-viewing on the market roof", "text": "You climb a ladder to the roof of the tallest stall, where traders pass wine and watch the harvest moon rise over the lanterns. The pale light pools in your dantian.", "days": 0, "effects": {"qi": 20}, "bonus": {"attribute": "charisma", "min": 12, "text": "Your easy talk draws a stranger from the next roof, who presses a moon cake into your hands and drinks to your health.", "effects": {"items": {"moon_cake": 1}}}},
       "modifiers": {"encounter_tags": ["festival_autumn"], "price_mult": 0.9, "favor_mult": 2.0}
     },
     {

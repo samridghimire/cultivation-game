@@ -536,3 +536,12 @@ func test_game_state_festival_stock_by_stall() -> void:
 	assert_eq(gs.festival_stock(["weapon"]), [])
 	assert_eq(gs.festival_stock(["herb"]), ["paper_lantern", "sweet_rice_ball"])
 	gs.end_session()
+
+
+## C-065: every festival has an activity, with a bonus that names a real attribute.
+func test_every_festival_has_an_activity() -> void:
+	var d := data()
+	for ev: Dictionary in d.world_events.values():
+		if bool(ev.get("festival", false)):
+			assert_true(ev.has("activity"), "%s has an activity" % ev["id"])
+	assert_true(WorldEvents.validate(d).is_empty(), ", ".join(WorldEvents.validate(d)))
