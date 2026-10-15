@@ -145,3 +145,23 @@ func test_progress_lines() -> void:
 	c.trial_progress["test_legacy"] = 4
 	flags[Inheritances.claimed_flag("test_legacy")] = true
 	assert_eq(Inheritances.progress_lines(c, data, flags), ["Test Legacy: claimed"] as Array[String])
+
+
+func test_realm_trial_min_stage() -> void:
+	var data := data()
+	var stage := {"name": "Pier", "test": "realm", "min_realm": "qi_refining", "min_stage": 4}
+	var c := new_character()
+	c.realm_index = 1
+	c.stage = 3
+	var reason := Inheritances.check_test(c, data, stage)
+	assert_true(reason.contains("5th Layer"), reason)
+	c.stage = 4
+	assert_eq(Inheritances.check_test(c, data, stage), "")
+	c.realm_index = 2
+	c.stage = 0
+	assert_eq(Inheritances.check_test(c, data, stage), "")
+	assert_eq(Inheritances.realm_requirement(data, {"min_realm": "qi_refining"}), "Qi Refining")
+	var def := _with_def(data)
+	def["stages"] = [{"name": "x", "test": "realm", "min_realm": "qi_refining", "min_stage": 99}]
+	var errors := Inheritances.validate(data)
+	assert_true(str(errors).contains("min_stage"), str(errors))

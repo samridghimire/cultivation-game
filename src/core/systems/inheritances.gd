@@ -73,8 +73,8 @@ static func check_test(c: CharacterData, data: GameData, stage: Dictionary) -> S
 	match String(stage.get("test", "")):
 		"realm":
 			var min_index := data.realm_index_of(String(stage.get("min_realm", "mortal")))
-			if c.realm_index < min_index:
-				return "Only a cultivator of %s or above may pass." % data.realms[min_index].name
+			if c.realm_index < min_index or (c.realm_index == min_index and c.stage < int(stage.get("min_stage", 0))):
+				return "Only a cultivator of %s or above may pass." % realm_requirement(data, stage)
 		"attribute":
 			var attr := String(stage.get("attribute", ""))
 			if c.attribute(attr) < int(stage.get("min", 0)):
@@ -83,6 +83,16 @@ static func check_test(c: CharacterData, data: GameData, stage: Dictionary) -> S
 			if c.alignment < int(stage.get("min_alignment", -1000000)) or c.alignment > int(stage.get("max_alignment", 1000000)):
 				return "The trial rejects your heart."
 	return ""
+
+
+## The realm (and layer, when `min_stage` is set) a "realm" trial asks for, e.g. "Qi Refining, 5th Layer".
+static func realm_requirement(data: GameData, stage: Dictionary) -> String:
+	var min_index := data.realm_index_of(String(stage.get("min_realm", "mortal")))
+	if min_index < 0:
+		return "?"
+	if stage.has("min_stage"):
+		return data.realms[min_index].stage_label(int(stage["min_stage"]))
+	return data.realms[min_index].name
 
 
 static func _attribute_name(data: GameData, attr_id: String) -> String:
@@ -178,6 +188,10 @@ static func validate(data: GameData) -> PackedStringArray:
 				errors.append("Inheritance '%s' stage '%s' has unknown test '%s'" % [id, stage.get("name", "?"), test])
 			if test == "realm" and data.realm_index_of(String(stage.get("min_realm", ""))) < 0:
 				errors.append("Inheritance '%s' stage '%s' has unknown min_realm" % [id, stage.get("name", "?")])
+			if test == "realm" and stage.has("min_stage"):
+				var realm_i := data.realm_index_of(String(stage.get("min_realm", "")))
+				if not (stage["min_stage"] is int or stage["min_stage"] is float) or (realm_i >= 0 and (int(stage["min_stage"]) < 0 or int(stage["min_stage"]) >= data.realms[realm_i].stage_count())):
+					errors.append("Inheritance '%s' stage '%s' has invalid min_stage" % [id, stage.get("name", "?")])
 			if test == "attribute" and _attribute_name(data, String(stage.get("attribute", ""))) == String(stage.get("attribute", "")):
 				errors.append("Inheritance '%s' stage '%s' has unknown attribute '%s'" % [id, stage.get("name", "?"), stage.get("attribute", "")])
 			if test == "fight" and not data.enemies.has(String(stage.get("enemy", ""))):
