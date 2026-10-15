@@ -34,8 +34,11 @@ func _init() -> void:
 ## Button text for an encounter_choices() entry; locked ones carry their reason.
 static func choice_label(choice: Dictionary) -> String:
 	var text: String = choice["label"]
-	if choice["disabled"] and choice["reason"] != "":
-		text += "  (%s)" % choice["reason"]
+	if choice["disabled"]:
+		if choice["reason"] != "":
+			text += "  (%s)" % choice["reason"]
+	elif String(choice.get("check", "")) != "":
+		text = "[%s] %s" % [choice["check"], text]
 	return text
 
 

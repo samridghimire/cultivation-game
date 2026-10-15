@@ -111,3 +111,13 @@ func test_renowned_request_title_and_prefix() -> void:
 	assert_eq(GameState.explore_prefix(renowned, false, false), "Your name is known here: ")
 	assert_eq(GameState.explore_prefix(renowned, true, false), "A discovery: ")
 	assert_eq(GameState.explore_prefix({"id": "p"}, false, false), "")
+
+
+## WU-146: an enabled choice with a check is prefixed by it; a locked one keeps its reason.
+func test_choice_label_shows_check() -> void:
+	var open := {"index": 0, "label": "Answer better", "disabled": false, "reason": "", "check": "Comprehension 12"}
+	assert_eq(EncounterWindow.choice_label(open), "[Comprehension 12] Answer better")
+	var plain := {"index": 1, "label": "Leave", "disabled": false, "reason": "", "check": ""}
+	assert_eq(EncounterWindow.choice_label(plain), "Leave")
+	var locked := {"index": 2, "label": "Answer better", "disabled": true, "reason": "Needs Comprehension 12", "check": "Comprehension 12"}
+	assert_eq(EncounterWindow.choice_label(locked), "Answer better  (Needs Comprehension 12)")
