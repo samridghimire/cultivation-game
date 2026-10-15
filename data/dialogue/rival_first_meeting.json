@@ -1,6 +1,7 @@
 {
   "id": "rival_first_meeting",
   "entries": [
+    {"node": "successor", "if": {"flag": "rival_meeting_from"}},
     {"node": "meet"}
   ],
   "nodes": {
@@ -9,6 +10,24 @@
         {"label": "Bow and say nothing.", "next": "swallow"},
         {"label": "Then I will climb past you.", "next": "vow", "effects": {"set_flag": "rival_vow"}},
         {"label": "Why not climb together?", "next": "scorn"}
+      ]},
+    "successor": {"speaker": "{rival}", "text": "{rival} waits at a bend in the path, alone, arms folded, as if the spot had been chosen. \"You are {player}. The one who called you rival is gone, and the name of an enemy should not be left lying in the road. I have heard how you climbed. I mean to take that place, and I mean to deserve it.\"",
+      "choices": [
+        {"label": "Then keep up. I will not slow down for you.", "next": "successor_vow", "effects": {"set_flag": "rival_vow"}},
+        {"label": "No one takes a place. It has to be earned.", "next": "successor_nod"},
+        {"label": "Bow and say nothing.", "next": "successor_quiet"}
+      ]},
+    "successor_vow": {"speaker": "{rival}", "text": "{rival} grins, sharp and unashamed. \"Good. I would think less of you if you slowed down. We shall see whose road is longer.\"",
+      "choices": [
+        {"label": "...", "next": "end"}
+      ]},
+    "successor_nod": {"speaker": "{rival}", "text": "\"Earned, then.\" {rival} inclines their head, only a finger's width. \"I will remember you said it, when I stand beside you or over you.\"",
+      "choices": [
+        {"label": "...", "next": "end"}
+      ]},
+    "successor_quiet": {"speaker": "", "text": "You bow and walk on. Behind you {rival} does not call out. The stranger has made a promise, and it weighs more than your silence. That night you sit a little longer on the cold stone.",
+      "choices": [
+        {"label": "...", "next": "end", "effects": {"qi": 20}}
       ]},
     "swallow": {"speaker": "", "text": "You swallow the insult and step aside. The laughter fades behind you, but not the sting. That night you sit a little longer on the cold stone.",
       "choices": [

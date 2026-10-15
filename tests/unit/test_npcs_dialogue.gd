@@ -300,3 +300,13 @@ func test_practice_pending_condition_any_style() -> void:
 	c.techniques["cloud_parting_palm"]["level"] = Techniques.PRACTICE_LEVEL
 	assert_true(Dialogue.unmet_reason(pending, ctx) != "", "practised: fails")
 	assert_eq(Dialogue.unmet_reason(not_pending, ctx), "", "practised: inverse passes")
+
+
+func test_rival_first_meeting_successor_branch_needs_flag() -> void:
+	var dlg: Dictionary = data().dialogues["rival_first_meeting"]
+	var c := new_character()
+	var ctx := {"player": c, "npc": null, "data": data(), "flags": {}, "favor": 0}
+	assert_eq(Dialogue.entry_node(dlg, ctx), "meet")
+	ctx["flags"] = {"rival_meeting_from": 400}
+	assert_eq(Dialogue.entry_node(dlg, ctx), "successor")
+	assert_true(Dialogue.validate(dlg, data()).is_empty())
