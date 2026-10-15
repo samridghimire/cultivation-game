@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 17d6a3b
+Last reviewed commit: 911fc1e
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -451,3 +451,20 @@ Last reviewed commit: 17d6a3b
     first meeting plays shows " (rival)" only at its next redraw (approach or region reload); harmless. (2) QA-070's
     Follow-up stands: bounties are listed 3 times in 120 sim-months, so the HUD fair-fight line will almost always name a
     sect mission or nothing for rogues. (3) WU-139 (claimed) should reuse `Rivals.relation_text` as its spec says.
+- 2026-10-15 (reviewer, 18th run): reviewed 17d6a3b..911fc1e (C-082, WU-139, PERF-001, C-086, QA-074, WU-137, WU-141,
+  GUIDE-027, WU-143, FOUND-003, C-065, WU-140, RIVAL-005, C-083, RIVAL-006, CHOICE-001, QA-072, WU-136; [PLAN]/[REVIEW]
+  skipped). Main green before and after (1745 tests after). No BACKLOG/CHANGELOG edits by workers; no SAVE_VERSION change;
+  FOUND-003's `breakthrough_failures` is saved with default 0. Nothing filed.
+  - Fixed ([REVIEW] commit): WU-137's realm card opened (deferred) on a successful breakthrough even when a tribulation
+    came with it, so it covered the tribulation screen while its waves were still playing (both modals up, the card's
+    8s timer running underneath). The card now waits in `_pending_realm_card` and opens when the tribulation screen
+    closes; test_realm_card pins both paths. Also C-082's marsh vigil said "hear his own spirit" of anyone; now "their".
+  - Checked: PERF-001's `fight_fingerprint` covers every CharacterData field `Combat.stats` and its helpers read
+    (techniques with level, talismans with counts, buffs, injuries, companions, bloodline, body stage...), and
+    win_chance never passes start_hp, so the cache is sound. RIVAL-005/006 match their specs (seen-realm seeded at the
+    meeting and silently for old saves). CHOICE-001 validates unknown ids and values < 1. FOUND-003's bonus resets on
+    success and shows in chance_breakdown; the world-event `activity_done` default fixes a real save round-trip diff.
+    C-065's moon_cake exists; C-083's rating thresholds match `Combat.label_for_chance`.
+  - Notes for the planner, not filed: (1) RIVAL-006 only checks after the player's own breakthrough, so a rival who
+    is already a realm behind at the first meeting is not "surpassed" until the next one (spec'd that way; the optional
+    monthly check in `_rival_news` would catch it). (2) C-088 still needs CHOICE-001's min_attributes in data.

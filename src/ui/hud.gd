@@ -73,6 +73,8 @@ var _respawn: RespawnScreen
 var _realm_card: RealmCard
 ## [frame, text] of recent feature notices, so a realm card can list the ones its breakthrough caused.
 var _recent_notices: Array = []
+## [realm name, description, details, notices] of a realm card waiting for the tribulation screen to close ([] = none).
+var _pending_realm_card: Array = []
 var _tribulation: TribulationScreen
 var _breakthrough: BreakthroughScreen
 var _death_screen: Control
@@ -158,6 +160,7 @@ func _ready() -> void:
 	_tribulation = TribulationScreen.new()
 	_tribulation.closed.connect(_update_modal)
 	_tribulation.closed.connect(_open_pending_respawn)
+	_tribulation.closed.connect(_open_pending_realm_card)
 	add_child(UIStyle.centered(_tribulation))
 	_breakthrough = BreakthroughScreen.new()
 	_breakthrough.closed.connect(_update_modal)
@@ -1053,9 +1056,20 @@ func _show_realm_card(realm_name: String, details: String) -> void:
 		for entry in _recent_notices:
 			if int(entry[0]) >= Engine.get_process_frames() - 1:
 				notices.append(String(entry[1]))
+	_pending_realm_card = [realm_name, data.realms[p.realm_index].description, details, notices]
+	# After a tribulation, the card waits until its waves have been watched and closed.
+	if not _tribulation.visible:
+		_open_pending_realm_card()
+
+
+func _open_pending_realm_card() -> void:
+	if _pending_realm_card.is_empty() or _tribulation.visible:
+		return
+	var card := _pending_realm_card
+	_pending_realm_card = []
 	_choice_menu.close()
 	_close_screens()
-	_realm_card.open(realm_name, data.realms[p.realm_index].description, details, notices)
+	_realm_card.open(card[0], card[1], card[2], card[3])
 	_update_modal()
 
 
