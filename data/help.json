@@ -298,7 +298,9 @@
       "body": [
         "Your rival is proud, friendly or bitter toward you, and the journal's rival line says which. Gifts and bouts you win warm them. Humiliating or robbing them, and some answers in encounters, embitter them; a bitter rivalry shows once their grudge grows deep enough.",
         "A rival always accepts a bout, unless they are bitter: then they will not fight you on friendly terms, and the challenge is greyed out.",
-        "Make amends from their menu (for spirit stones) to clear a grudge. When their mood changes, a line in the message log tells you."
+        "Make amends from their menu (for spirit stones) to clear a grudge. When their mood changes, a line in the message log tells you.",
+        "Your rival answers any challenge unless they are bitter. The journal and the Character sheet keep your bout record, wins and losses.",
+        "If your rival dies by another's hand, someone new names you about half a year later and takes their place. If you killed your rival, no successor comes."
       ]
     },
     {

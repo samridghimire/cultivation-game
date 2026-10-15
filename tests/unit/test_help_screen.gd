@@ -27,6 +27,8 @@ func test_rival_moods_and_goals_pages() -> void:
 	var rival := " ".join(by_id["rival_attitudes"]["body"])
 	for word: String in ["friendly", "bitter", "bout", "amends"]:
 		assert_true(rival.contains(word), "rival page mentions " + word)
+	for word: String in ["answers any challenge", "bout record", "someone new names you", "no successor"]:
+		assert_true(rival.contains(word), "rival page mentions " + word)
 	var goals := " ".join(by_id["goals"]["body"])
 	for word: String in ["Foundation", "Core Formation", "Goal done", "suggestions"]:
 		assert_true(goals.contains(word), "goals page mentions " + word)
