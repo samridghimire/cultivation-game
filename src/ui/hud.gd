@@ -26,6 +26,8 @@ var _fair_queued := false
 var _log: RichTextLabel
 var _status_panel: Control
 var _log_panel: Control
+var _fade_timer := 0.0
+var _fade_targets := Vector2.ONE
 var _prompt: Label
 var _key_bar: Label
 var _target_name := ""
@@ -1153,6 +1155,47 @@ func _on_settings_closed() -> void:
 	if GameState.has_session() and GameState.player.alive:
 		_pause_menu.open()
 	_update_modal()
+
+
+## WU-165: 0.35 when any covered screen rect (player, nearby place labels) touches the panel, else 1.0.
+static func panel_alpha(panel_rect: Rect2, covered: Array[Rect2]) -> float:
+	for r in covered:
+		if panel_rect.intersects(r):
+			return 0.35
+	return 1.0
+
+
+func _process(delta: float) -> void:
+	_fade_timer -= delta
+	if _fade_timer <= 0.0:
+		_fade_timer = 0.1
+		_fade_targets = _compute_fade_targets()
+	if _status_panel == null or _log_panel == null:
+		return
+	var k := minf(1.0, 8.0 * delta)
+	_status_panel.modulate.a = lerpf(_status_panel.modulate.a, _fade_targets.x, k)
+	_log_panel.modulate.a = lerpf(_log_panel.modulate.a, _fade_targets.y, k)
+
+
+## Target alphas (status, log). Always 1 while a modal is open or no player is in the world.
+func _compute_fade_targets() -> Vector2:
+	if _status_panel == null or _log_panel == null or not is_inside_tree() or not _status_panel.visible:
+		return Vector2.ONE
+	var player := get_tree().get_first_node_in_group("player") as Node2D
+	if player == null:
+		return Vector2.ONE
+	var xf := get_viewport().get_canvas_transform()
+	var covered: Array[Rect2] = []
+	var pp := xf * player.global_position
+	covered.append(Rect2(pp - Vector2(20, 25), Vector2(40, 50)))
+	var parent := player.get_parent()
+	if parent != null:
+		for n in parent.get_children():
+			var it := n as Interactable
+			if it != null and it.global_position.distance_to(player.global_position) < 250.0:
+				var lr := it.label_rect()
+				covered.append(Rect2(xf * (it.get_parent() as Node2D).to_global(lr.position) if it.get_parent() is Node2D else xf * lr.position, lr.size * xf.get_scale()))
+	return Vector2(panel_alpha(_status_panel.get_global_rect(), covered), panel_alpha(_log_panel.get_global_rect(), covered))
 
 
 func _update_modal() -> void:
