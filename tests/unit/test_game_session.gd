@@ -478,6 +478,30 @@ func test_story_event_without_npc() -> void:
 	gs.end_session()
 
 
+func test_rival_first_meeting_plays_once_around_day_ten() -> void:
+	var c := _start()
+	var gs := _game_state()
+	gs.start_pending_event()
+	var steps := 0
+	while gs.in_dialogue() and steps < 10:
+		gs.choose_dialogue(int(gs.dialogue_view()["choices"][-1]["index"]))
+		steps += 1
+	assert_true(Rivals.rival_of(c, gs.npcs) != null)
+	gs._pass_time(5)
+	assert_false(gs.world_flags.get(Rivals.FIRST_MEETING_FLAG, false), "too early")
+	gs._pass_time(10)
+	assert_eq(gs.dialogue_event, Rivals.FIRST_MEETING_EVENT)
+	assert_true(gs.world_flags.get(Rivals.FIRST_MEETING_FLAG, false))
+	steps = 0
+	while gs.in_dialogue() and steps < 10:
+		gs.choose_dialogue(int(gs.dialogue_view()["choices"][-1]["index"]))
+		steps += 1
+	assert_false(gs.in_dialogue())
+	gs._pass_time(30)
+	assert_false(gs.in_dialogue(), "the meeting never repeats")
+	gs.end_session()
+
+
 func test_loaded_save_skips_the_intro_event() -> void:
 	_start()
 	var gs := _game_state()

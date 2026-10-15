@@ -1151,7 +1151,7 @@ func _current_dialogue() -> Dictionary:
 
 
 func _dialogue_ctx(npc_id: String) -> Dictionary:
-	return {"player": player, "npc": npcs.get(npc_id), "data": data, "flags": world_flags, "favor": int(npc_favor.get(npc_id, 0))}
+	return {"player": player, "npc": npcs.get(npc_id), "data": data, "flags": world_flags, "favor": int(npc_favor.get(npc_id, 0)), "rival": Rivals.rival_of(player, npcs)}
 
 
 ## Spend time courting an NPC (needs some favor first); raises their favor.
@@ -2938,8 +2938,20 @@ func _on_days_advanced(days: int) -> void:
 			if SecretRealms.rival_claims_inheritance(player, data, String(def["id"]), cleared, world_flags, rng):
 				EventBus.post("Word spreads that a rival emerged from the %s carrying the %s. That legacy is gone for good." % [def["name"], def["inheritance"].get("name", "inheritance")], "warning")
 	EventBus.topic = action_topic
+	_maybe_rival_meeting()
 	if player.age_years() >= Cultivation.lifespan_years(player, data):
 		_kill("Your lifespan is exhausted. You die of old age at %d." % player.age_years())
+
+
+## RIVAL-003: the rival's first meeting plays once around day 10, never over
+## another dialogue, a fight, a pending choice or a respawn (the check simply runs
+## again at the next day advance). A time-skip summary being prepared (_skip_before)
+## also waits: the dialogue would close that overlay.
+func _maybe_rival_meeting() -> void:
+	if not _can_act() or in_dialogue() or not _skip_before.is_empty() or pending_encounter != "" or pending_threat != "" or not pending_respawn.is_empty():
+		return
+	if Rivals.first_meeting_due(player, npcs, data, world_flags, GameClock.total_days):
+		start_event(Rivals.FIRST_MEETING_EVENT, Rivals.FIRST_MEETING_FLAG)
 
 
 ## Forgets generated NPCs long dead whom the player has no tie to, so saves

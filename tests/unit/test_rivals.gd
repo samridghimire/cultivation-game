@@ -91,3 +91,40 @@ func test_game_state_spawns_and_resolves_rival_encounters() -> void:
 	window.free()
 	gs.pending_encounter = ""
 	gs.end_session()
+
+
+func test_first_meeting_due_window() -> void:
+	var d := data()
+	var c := new_character()
+	var people := {}
+	Rivals.spawn(c, people, d, seeded_rng(), "qingshi_village")
+	var flags := {}
+	assert_false(Rivals.first_meeting_due(c, people, d, flags, 9), "not before day 10")
+	assert_true(Rivals.first_meeting_due(c, people, d, flags, 10))
+	assert_false(Rivals.first_meeting_due(c, people, d, flags, 376), "never after the first year")
+	flags[Rivals.FIRST_MEETING_FLAG] = true
+	assert_false(Rivals.first_meeting_due(c, people, d, flags, 10), "only once")
+	flags.clear()
+	people[c.rival].alive = false
+	assert_false(Rivals.first_meeting_due(c, people, d, flags, 10), "a dead rival does not meet you")
+
+
+func test_first_meeting_validation() -> void:
+	var d := data()
+	d.karma["rival"]["first_meeting_day"] = -1
+	assert_gt(Rivals.validate(d).size(), 0)
+
+
+func test_first_meeting_dialogue_is_valid_and_formats_the_rival() -> void:
+	var d := data()
+	assert_true(d.dialogues.has(Rivals.FIRST_MEETING_EVENT))
+	assert_eq(Dialogue.validate(d.dialogues[Rivals.FIRST_MEETING_EVENT], d).size(), 0)
+	var c := new_character()
+	var people := {}
+	var rival := Rivals.spawn(c, people, d, seeded_rng(), "qingshi_village")
+	var ctx := {"player": c, "npc": null, "data": d, "flags": {}, "favor": 0, "rival": rival}
+	assert_eq(Dialogue.format("{rival} is {rival_realm}", ctx), "%s is %s" % [rival.name, Cultivation.realm_label(rival, d)])
+	var view := Dialogue.view(d.dialogues[Rivals.FIRST_MEETING_EVENT], "meet", ctx)
+	assert_eq(String(view["speaker"]), rival.name)
+	ctx["rival"] = null
+	assert_eq(Dialogue.format("{rival}{rival_realm}", ctx), "")

@@ -1,0 +1,26 @@
+{
+  "id": "rival_first_meeting",
+  "entries": [
+    {"node": "meet"}
+  ],
+  "nodes": {
+    "meet": {"speaker": "{rival}", "text": "{rival}, a youth of your own age, blocks the path with a pack of hangers-on. \"So you are the one who woke on Meditation Rock the same morning I did. The elders say the heavens like a matching pair. I say only one of us climbs.\"",
+      "choices": [
+        {"label": "Bow and say nothing.", "next": "swallow"},
+        {"label": "Then I will climb past you.", "next": "vow", "effects": {"set_flag": "rival_vow"}},
+        {"label": "Why not climb together?", "next": "scorn"}
+      ]},
+    "swallow": {"speaker": "", "text": "You swallow the insult and step aside. The laughter fades behind you, but not the sting. That night you sit a little longer on the cold stone.",
+      "choices": [
+        {"label": "...", "next": "end", "effects": {"qi": 20}}
+      ]},
+    "vow": {"speaker": "", "text": "{rival}'s smile thins. \"Words are cheap, {player}. We shall see whose bones the heavens keep.\" The crowd parts, and neither of you looks away first.",
+      "choices": [
+        {"label": "...", "next": "end"}
+      ]},
+    "scorn": {"speaker": "{rival}", "text": "\"Together?\" A scornful laugh. \"A path that narrow has room for one. Remember that when you see my back.\"",
+      "choices": [
+        {"label": "...", "next": "end"}
+      ]}
+  }
+}

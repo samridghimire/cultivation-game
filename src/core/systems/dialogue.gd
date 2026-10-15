@@ -9,7 +9,8 @@ extends RefCounted
 ## choice: {"label", "next" (node id; "" or "end" ends), "if", "effects",
 ##          "favor" (int, change in this NPC's favor), "days",
 ##          "show_locked" (bool: show disabled with a reason instead of hiding)}
-## Text may use {player}, {npc}, {npc_realm} and {player_realm}.
+## Text may use {player}, {npc}, {npc_realm}, {player_realm}, {rival} and {rival_realm}
+## (the player's rival, RIVAL-003; empty when there is none).
 ##
 ## Conditions ("if") are all optional and all must pass:
 ##   min_realm / max_realm: realm id      min_alignment / max_alignment: int
@@ -52,7 +53,7 @@ static func view(dialogue: Dictionary, node_id: String, ctx: Dictionary) -> Dict
 		choices.append({"index": -1, "label": "Farewell.", "disabled": false, "reason": ""})
 	return {
 		"id": "%s:%s" % [dialogue.get("id", ""), node_id],
-		"speaker": node.get("speaker", npc.name if npc else ""),
+		"speaker": format(String(node.get("speaker", npc.name if npc else "")), ctx),
 		"text": format(node.get("text", ""), ctx),
 		"choices": choices,
 	}
@@ -133,11 +134,14 @@ static func format(text: String, ctx: Dictionary) -> String:
 	var c: CharacterData = ctx["player"]
 	var npc: CharacterData = ctx["npc"]
 	var data: GameData = ctx["data"]
+	var rival: CharacterData = ctx.get("rival")
 	return text.format({
 		"player": c.name,
 		"player_realm": Cultivation.realm_label(c, data),
 		"npc": npc.name if npc else "",
 		"npc_realm": Cultivation.realm_label(npc, data) if npc else "",
+		"rival": rival.name if rival else "",
+		"rival_realm": Cultivation.realm_label(rival, data) if rival else "",
 	})
 
 

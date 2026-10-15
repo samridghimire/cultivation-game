@@ -8,6 +8,8 @@ extends RefCounted
 ## {rival} and {rival_realm}. Rules live in data/karma.json "rival".
 
 const RELATIONS: Array[String] = ["any", "stronger", "equal", "weaker"]
+const FIRST_MEETING_EVENT := "rival_first_meeting"
+const FIRST_MEETING_FLAG := "rival_met"
 
 
 static func rules(data: GameData) -> Dictionary:
@@ -39,6 +41,17 @@ static func rival_of(c: CharacterData, people: Dictionary) -> CharacterData:
 		return null
 	var rival: CharacterData = people.get(c.rival)
 	return rival if rival != null and rival.alive else null
+
+
+## True when the rival's first meeting should play now (RIVAL-003): the rival
+## lives, the meeting has not played (world flag FIRST_MEETING_FLAG), and
+## `today` is inside [first_meeting_day, first_meeting_day + first_meeting_window].
+static func first_meeting_due(c: CharacterData, people: Dictionary, data: GameData, flags: Dictionary, today: int) -> bool:
+	if rival_of(c, people) == null or flags.get(FIRST_MEETING_FLAG, false):
+		return false
+	var r := rules(data)
+	var start := int(r.get("first_meeting_day", 10))
+	return today >= start and today <= start + int(r.get("first_meeting_window", 365))
 
 
 ## "stronger", "equal" or "weaker": the rival's major realm against `c`'s.
@@ -76,6 +89,9 @@ static func validate(data: GameData) -> PackedStringArray:
 			errors.append("karma.json rival root_purity must be [min, max] with 1 <= min <= max")
 		if float(r.get("diligence", 0.0)) <= 0.0 or float(r.get("diligence", 0.0)) > 1.0:
 			errors.append("karma.json rival diligence must be in (0, 1]")
+	for key: String in ["first_meeting_day", "first_meeting_window"]:
+		if r.has(key) and (not (r[key] is int or r[key] is float) or int(r[key]) < 0):
+			errors.append("karma.json rival %s must be a whole number >= 0" % key)
 	for e: Dictionary in data.encounters.values():
 		if e.has("rival") and not RELATIONS.has(String(e["rival"])):
 			errors.append("Encounter '%s' has unknown rival condition '%s'" % [e["id"], e["rival"]])
