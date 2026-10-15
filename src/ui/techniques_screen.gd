@@ -140,13 +140,26 @@ func _rebuild() -> void:
 			_add_entry(tech_id)
 		_list.add_child(UIStyle.label("Techniques", 16, Color(0.75, 0.75, 0.75)))
 	if ids.is_empty():
-		var hint := UIStyle.label("You know no techniques. Manuals can be bought or found while exploring.", 16, Color(0.7, 0.7, 0.7))
-		hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		hint.custom_minimum_size = Vector2(280, 0)
-		_list.add_child(hint)
+		_add_hint("You know no techniques. Manuals can be bought or found while exploring.")
+	var fighting := combat_hint(p, data, GameState.current_region)
+	if fighting != "":
+		_add_hint(fighting)
 	for tech_id in ids:
 		_add_entry(tech_id)
 	_show_details()
+
+
+## WU-119: the guidance line shown while the character knows no combat technique ("" otherwise).
+static func combat_hint(c: CharacterData, data: GameData, region_id: String) -> String:
+	return Guidance.first_combat_hint(c, data, region_id)
+
+
+func _add_hint(text: String) -> void:
+	var hint := UIStyle.label(text, 16, Color(0.7, 0.7, 0.7))
+	hint.name = "Hint%d" % _list.get_child_count()
+	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	hint.custom_minimum_size = Vector2(280, 0)
+	_list.add_child(hint)
 
 
 func _add_entry(tech_id: String) -> void:

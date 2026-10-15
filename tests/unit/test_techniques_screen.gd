@@ -70,3 +70,31 @@ func test_screen_marks_main_method_and_switches() -> void:
 	assert_eq(Techniques.main_method(gs.player, data()), data().starter_method)
 	assert_eq(_root().get_node("GameClock").total_days - day, data().method_switch_days)
 	screen.free()
+
+
+## WU-119: a character with no fighting style sees the guidance line in the list; a fighter does not,
+## and the list still offers focusable entries.
+func test_combat_hint_line_for_a_bare_character_only() -> void:
+	var gs := _root().get_node("GameState")
+	var c := new_character()
+	c.techniques = {}
+	c.inventory = {}
+	gs.start_session(c)
+	gs.current_region = "qingshi_village"
+	var hint := TechniquesScreen.combat_hint(c, data(), "qingshi_village")
+	assert_true(hint.begins_with("You know no fighting style"), hint)
+	var screen := TechniquesScreen.new()
+	screen._rebuild()
+	var found := false
+	for child in screen._list.get_children():
+		if child is Label and (child as Label).text == hint:
+			found = true
+	assert_true(found, "the hint is in the list")
+	var has_entry := false
+	for child in screen._list.get_children():
+		if child is Button and (child as Button).focus_mode == Control.FOCUS_ALL:
+			has_entry = true
+	assert_true(has_entry, "a focusable entry remains (the starter method)")
+	screen.free()
+	Techniques.learn(c, data(), "iron_fist")
+	assert_eq(TechniquesScreen.combat_hint(c, data(), "qingshi_village"), "")
