@@ -455,17 +455,20 @@ func test_one_elder_mo_line_mentions_breathing() -> void:
 func test_first_goals_ladder_and_journal_section() -> void:
 	var c := _fresh()
 	var goals := Guidance.first_goals(c, data(), {})
-	assert_eq(goals.size(), 6)
+	assert_eq(goals.size(), 7)
 	for g in goals:
 		assert_false(g["done"])
 		for bad in ["%", "{", "<null>"]:
 			assert_false(String(g["text"]).contains(bad))
 	var section := Guidance.journal(c, data(), {}, 0, "qingshi_village").filter(func(e: Dictionary) -> bool: return e["section"] == "First goals")
-	assert_eq(section.size(), 6)
+	assert_eq(section.size(), 7)
 	assert_eq(section.filter(func(e: Dictionary) -> bool: return e["tone"] == "warning").size(), 1)
 	assert_eq(section[0]["tone"], "warning")
 	assert_true(String(section[0]["text"]).begins_with("[ ] "))
 	c.techniques = {"basic_breathing": {"level": 1}}
+	assert_false(Guidance.first_goals(c, data(), {})[2]["done"])
+	c.techniques["iron_fist"] = {"level": 1, "xp": 0.0}
+	assert_true(Guidance.first_goals(c, data(), {})[2]["done"])
 	c.realm_index = 1
 	c.stage = 2
 	c.sect = {"id": data().sects.keys()[0], "rank": 0, "contribution": 0, "spent": 0}
@@ -977,3 +980,18 @@ func test_first_combat_hint_acknowledges_a_body_art() -> void:
 	c.techniques = {"stone_skin": {"level": 1, "xp": 0.0}}
 	var hint := Guidance.first_combat_hint(c, data(), "qingshi_village")
 	assert_true(hint.begins_with("Your body art guards you, but you know no fighting style."), hint)
+
+
+func test_practice_hint_for_a_low_level_fighting_style() -> void:
+	var c := _fresh()
+	c.techniques = {"iron_fist": {"level": 1, "xp": 0.0}}
+	var hint := Guidance.practice_hint(c, data())
+	assert_true(hint.contains("Practise Iron Fist") and hint.contains("level 1 now"), hint)
+	var hints := Guidance._newcomer_hints(c, data(), {Guidance.ELDER_MO_FLAG: true}, "qingshi_village")
+	assert_true(_has(hints, "Practise Iron Fist"))
+	assert_false(_has(hints, "no fighting style"))
+	c.techniques["iron_fist"]["level"] = 3
+	assert_eq(Guidance.practice_hint(c, data()), "")
+	assert_false(_has(Guidance._newcomer_hints(c, data(), {Guidance.ELDER_MO_FLAG: true}, "qingshi_village"), "no fighting style"))
+	c.techniques = {}
+	assert_eq(Guidance.practice_hint(c, data()), "")

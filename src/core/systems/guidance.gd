@@ -640,6 +640,14 @@ static func first_combat_hint(c: CharacterData, data: GameData, region_id: Strin
 	return "%s Look for the %s (%s)." % [lead, manual, found["source"]]
 
 
+## "Practise <style> (Techniques, K)..." for a newcomer with a low-level fighting style, or "" (GUIDE-020).
+static func practice_hint(c: CharacterData, data: GameData) -> String:
+	var id := Techniques.practice_target(c, data)
+	if id == "":
+		return ""
+	return "Practise %s (Techniques, K): each level raises your odds in a fight (level %d now)." % [data.techniques[id].name, Techniques.level(c, id)]
+
+
 ## First-steps pointers for Mortal and Qi Refining players, most useful first.
 static func _newcomer_hints(c: CharacterData, data: GameData, flags: Dictionary, region_id: String) -> PackedStringArray:
 	var out: PackedStringArray = []
@@ -663,6 +671,9 @@ static func _newcomer_hints(c: CharacterData, data: GameData, flags: Dictionary,
 	var fighting := first_combat_hint(c, data, region_id)
 	if fighting != "":
 		out.append(fighting)
+	var practise := practice_hint(c, data)
+	if practise != "":
+		out.append(practise)
 	if region_id == CHORE_REGION:
 		for deed: Dictionary in data.deeds.values():
 			if String(deed["id"]).begins_with("chore_") and not flags.get(String(deed.get("blocked_by_flag", "")), false):
@@ -682,6 +693,7 @@ static func first_goals(c: CharacterData, data: GameData, flags: Dictionary) -> 
 	var rows: Array = [
 		["Talk to Elder Mo", bool(flags.get(ELDER_MO_FLAG, false))],
 		["Learn your first technique", not c.techniques.is_empty()],
+		["Learn a fighting style", Techniques.knows_kind(c, data, "combat")],
 		["Reach Qi Refining", c.realm_index >= 1],
 		["Join a sect, or explore the wilds as a rogue", not c.is_rogue() or LifeStats.get_stat(c, "encounters") >= 5],
 		["Win your first fight", LifeStats.get_stat(c, "fights_won") >= 1],

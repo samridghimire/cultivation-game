@@ -321,3 +321,14 @@ func test_loss_advice_body_art_wording() -> void:
 	c.techniques = {"stone_skin": {"level": 1, "xp": 0.0}}
 	var advice := Combat.loss_advice(c, data(), _foe("mortal", 0, 0, 0, 0), lost)
 	assert_true(advice.contains("no striking technique yet"), advice)
+
+
+func test_loss_advice_suggests_practising_a_low_level_style() -> void:
+	var c := new_character()
+	var d := data()
+	c.techniques = {"iron_fist": {"level": 1, "xp": 0.0}}
+	var lost := {"victory": false, "draw": false, "escaped": false}
+	var even := _foe("mortal", 0, 0, 0, 0)
+	assert_true(Combat.loss_advice(c, d, even, lost).contains("Practising Iron Fist would raise your odds."))
+	c.techniques["iron_fist"]["level"] = 3
+	assert_false(Combat.loss_advice(c, d, even, lost).contains("Practising"))

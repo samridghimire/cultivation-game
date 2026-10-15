@@ -343,6 +343,10 @@ static func loss_advice(c: CharacterData, data: GameData, enemy: Dictionary, res
 			advice += " You know no striking technique yet; a fighting-style manual would help."
 		else:
 			advice += " You know no fighting style yet; a technique manual would help."
+	else:
+		var practise := Techniques.practice_target(c, data)
+		if practise != "":
+			advice += " Practising %s would raise your odds." % data.techniques[practise].name
 	for item_id in c.inventory:
 		if c.item_count(item_id) > 0 and CombatTalismans.is_combat_talisman(data, item_id) and not c.readied_talismans.has(item_id):
 			advice += " Readied talismans can turn a fight."

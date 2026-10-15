@@ -26,6 +26,26 @@ static func knows_kind(c: CharacterData, data: GameData, kind: String) -> bool:
 	return false
 
 
+## Level below which a known fighting style still raises fight odds noticeably (GUIDE-020).
+const PRACTICE_LEVEL := 3
+
+
+## The combat technique worth practising (GUIDE-020): the highest-level known one
+## (ties: id ascending) when every known combat technique is below PRACTICE_LEVEL
+## and unmastered, else "".
+static func practice_target(c: CharacterData, data: GameData) -> String:
+	var best := ""
+	for tech_id: String in c.techniques:
+		var def: TechniqueDef = data.techniques.get(tech_id)
+		if def == null or def.kind != "combat":
+			continue
+		if level(c, tech_id) >= PRACTICE_LEVEL or is_mastered(c, data, tech_id):
+			return ""
+		if best == "" or level(c, tech_id) > level(c, best) or (level(c, tech_id) == level(c, best) and tech_id < best):
+			best = tech_id
+	return best
+
+
 static func can_learn(c: CharacterData, data: GameData, tech_id: String) -> String:
 	var def: TechniqueDef = data.techniques.get(tech_id)
 	if def == null:
