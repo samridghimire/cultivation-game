@@ -10,6 +10,7 @@ extends RefCounted
 const RELATIONS: Array[String] = ["any", "stronger", "equal", "weaker"]
 const FIRST_MEETING_EVENT := "rival_first_meeting"
 const FIRST_MEETING_FLAG := "rival_met"
+const SEEN_REALM_FLAG := "rival_seen_realm"
 
 
 static func rules(data: GameData) -> Dictionary:
@@ -52,6 +53,14 @@ static func first_meeting_due(c: CharacterData, people: Dictionary, data: GameDa
 	var r := rules(data)
 	var start := int(r.get("first_meeting_day", 10))
 	return today >= start and today <= start + int(r.get("first_meeting_window", 365))
+
+
+## RIVAL-005: one line of news when the living `rival` reached a higher realm
+## than `last_seen_realm`, else "".
+static func news(c: CharacterData, rival: CharacterData, last_seen_realm: int, data: GameData) -> String:
+	if rival == null or not rival.alive or rival.realm_index <= last_seen_realm:
+		return ""
+	return "Word reaches you: your rival %s has broken through to %s." % [rival.name, data.realms[rival.realm_index].name]
 
 
 ## "stronger", "equal" or "weaker": the rival's major realm against `c`'s.

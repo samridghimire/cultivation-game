@@ -2865,6 +2865,7 @@ func _on_days_advanced(days: int) -> void:
 		if not Npcs.is_newsworthy(String(event["npc_id"]), player, npc_favor):
 			continue
 		EventBus.post(event["text"], event["category"])
+	_rival_news()
 	# Marriages, deaths and moves all thin the pool, so top it up every pass (a load tops it up too).
 	Npcs.ensure_eligible(npcs, data, rng, Children.descendants(player, npcs))
 	for event in NpcClans.simulate(npc_clans, npcs, data):
@@ -2943,6 +2944,22 @@ func _on_days_advanced(days: int) -> void:
 		_kill("Your lifespan is exhausted. You die of old age at %d." % player.age_years())
 
 
+## RIVAL-005: word of the rival's breakthroughs once you have met them.
+func _rival_news() -> void:
+	if not world_flags.get(Rivals.FIRST_MEETING_FLAG, false):
+		return
+	var rival := Rivals.rival_of(player, npcs)
+	if rival == null:
+		return
+	if not world_flags.has(Rivals.SEEN_REALM_FLAG):
+		world_flags[Rivals.SEEN_REALM_FLAG] = rival.realm_index
+		return
+	var line := Rivals.news(player, rival, int(world_flags[Rivals.SEEN_REALM_FLAG]), data)
+	if line != "":
+		EventBus.post(line, "info")
+		world_flags[Rivals.SEEN_REALM_FLAG] = rival.realm_index
+
+
 ## RIVAL-003: the rival's first meeting plays once around day 10, never over
 ## another dialogue, a fight, a pending choice or a respawn (the check simply runs
 ## again at the next day advance). A time-skip summary being prepared (_skip_before)
@@ -2951,6 +2968,9 @@ func _maybe_rival_meeting() -> void:
 	if not _can_act() or in_dialogue() or not _skip_before.is_empty() or pending_encounter != "" or pending_threat != "" or not pending_respawn.is_empty():
 		return
 	if Rivals.first_meeting_due(player, npcs, data, world_flags, GameClock.total_days):
+		var rival := Rivals.rival_of(player, npcs)
+		if rival != null:
+			world_flags[Rivals.SEEN_REALM_FLAG] = rival.realm_index
 		start_event(Rivals.FIRST_MEETING_EVENT, Rivals.FIRST_MEETING_FLAG)
 
 

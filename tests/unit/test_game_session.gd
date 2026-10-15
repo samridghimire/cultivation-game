@@ -502,6 +502,33 @@ func test_rival_first_meeting_plays_once_around_day_ten() -> void:
 	gs.end_session()
 
 
+## RIVAL-005: a rival's breakthrough is reported once after the meeting.
+func test_rival_breakthrough_news_posts_once() -> void:
+	var c := _start()
+	var gs := _game_state()
+	var rival := Rivals.rival_of(c, gs.npcs)
+	gs.world_flags[Rivals.FIRST_MEETING_FLAG] = true
+	gs.world_flags[Rivals.SEEN_REALM_FLAG] = rival.realm_index
+	rival.realm_index += 1
+	_zero_round_posts.clear()
+	EventBus.message_posted.connect(_collect_post)
+	gs._rival_news()
+	var first := _zero_round_posts.size()
+	gs._rival_news()
+	EventBus.message_posted.disconnect(_collect_post)
+	assert_eq(first, 1)
+	assert_eq(_zero_round_posts.size(), 1, "no second line")
+	gs.world_flags.erase(Rivals.SEEN_REALM_FLAG)
+	rival.realm_index += 1
+	_zero_round_posts.clear()
+	EventBus.message_posted.connect(_collect_post)
+	gs._rival_news()
+	EventBus.message_posted.disconnect(_collect_post)
+	assert_eq(_zero_round_posts.size(), 0, "a missing key posts nothing")
+	assert_eq(int(gs.world_flags[Rivals.SEEN_REALM_FLAG]), rival.realm_index)
+	gs.end_session()
+
+
 func test_loaded_save_skips_the_intro_event() -> void:
 	_start()
 	var gs := _game_state()

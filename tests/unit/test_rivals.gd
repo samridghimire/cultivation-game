@@ -159,3 +159,20 @@ func test_first_year_rival_encounters() -> void:
 		assert_true(e.has("rival"), id + " needs a rival")
 		assert_eq(e.get("requires_flag", ""), "rival_met", id + " waits for the first meeting")
 		assert_true(e.has("blocked_by_flag"), id + " is once-only")
+
+
+## RIVAL-005: news of a rival's breakthrough.
+func test_news_only_for_a_higher_realm() -> void:
+	var d := data()
+	var c := CharacterData.new()
+	var r := CharacterData.new()
+	r.name = "Lin Wei"
+	r.realm_index = 1
+	assert_eq(Rivals.news(c, r, 1, d), "")
+	assert_true(Rivals.news(c, r, 0, d).contains("Lin Wei"))
+	assert_true(Rivals.news(c, r, 0, d).contains(d.realms[1].name))
+	r.realm_index = 2
+	assert_eq(Rivals.news(c, r, 0, d).count("\n"), 0, "one line for a double jump")
+	r.alive = false
+	assert_eq(Rivals.news(c, r, 0, d), "")
+	assert_eq(Rivals.news(c, null, 0, d), "")
