@@ -49,6 +49,9 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 	var untried := _untried_hint(c, data, today, people, favor, region_id)
 	if untried != "":
 		out.append(untried)
+	var bitter := _bitter_rival_hint(c, data, people, flags, favor)
+	if bitter != "":
+		out.append(bitter)
 	out.append(_cultivation_hint(c, data, density))
 	var method := _method_hint(c, data)
 	if method != "":
@@ -86,6 +89,21 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 	if out.size() > limit:
 		out.resize(limit)
 	return out
+
+
+## RIVAL-015: a met, living, bitter rival refuses bouts; point at the amends in the NPC menu.
+static func _bitter_rival_hint(c: CharacterData, data: GameData, people: Dictionary, flags: Dictionary, favor: Dictionary) -> String:
+	if c.rival == "" or not flags.get(Rivals.FIRST_MEETING_FLAG, false):
+		return ""
+	var rival: CharacterData = people.get(c.rival)
+	if rival == null or not rival.alive:
+		return ""
+	if Rivals.attitude(c, rival, int(favor.get(rival.id, 0)), data) != "bitter":
+		return ""
+	var cost := Karma.amends_cost(c, rival.id, data)
+	if c.item_count("spirit_stone") >= cost:
+		return "%s holds a grudge and will not cross hands with you. Make amends (%d stones) to spar again." % [rival.name, cost]
+	return "%s holds a grudge and will not cross hands with you. Amends would cost %d stones." % [rival.name, cost]
 
 
 ## Spirit stones a merchant's buyback must reach before the "your loot is worth money" hint.

@@ -1434,3 +1434,50 @@ func test_drop_goal_echoes() -> void:
 	var qi := PackedStringArray(["Your Qi Refining is stalled.", "Qi is thin here."])
 	assert_eq(Array(Guidance.drop_goal_echoes("Goal: Reach Qi Refining", qi)), ["Qi is thin here."])
 	assert_eq(Array(Guidance.drop_goal_echoes("", hints)), Array(hints))
+
+
+
+func _bitter_setup() -> Array:
+	var d := data()
+	var c := _fresh()
+	var people := {}
+	var rival := Rivals.spawn(c, people, d, seeded_rng(), "qingshi_village")
+	return [d, c, people, rival]
+
+
+func _bitter_hint(hs: PackedStringArray) -> String:
+	for h in hs:
+		if h.contains("holds a grudge"):
+			return h
+	return ""
+
+
+func test_bitter_rival_hint_with_cost() -> void:
+	var s := _bitter_setup()
+	var d: GameData = s[0]
+	var c: CharacterData = s[1]
+	var people: Dictionary = s[2]
+	var rival: CharacterData = s[3]
+	var flags := {Rivals.FIRST_MEETING_FLAG: true}
+	assert_eq(_bitter_hint(Guidance.hints(c, d, 1.0, 20, people, flags)), "", "proud: none")
+	Karma.add_grudge(c, d, rival.id, 20)
+	var cost := Karma.amends_cost(c, rival.id, d)
+	c.add_item("spirit_stone", cost)
+	var h := _bitter_hint(Guidance.hints(c, d, 1.0, 20, people, flags))
+	assert_true(h.contains("Make amends (%d stones)" % cost), h)
+	assert_true(h.contains(rival.name))
+
+
+func test_bitter_rival_hint_unaffordable_unmet_and_dead() -> void:
+	var s := _bitter_setup()
+	var d: GameData = s[0]
+	var c: CharacterData = s[1]
+	var people: Dictionary = s[2]
+	var rival: CharacterData = s[3]
+	Karma.add_grudge(c, d, rival.id, 20)
+	var cost := Karma.amends_cost(c, rival.id, d)
+	assert_eq(_bitter_hint(Guidance.hints(c, d, 1.0, 20, people, {})), "", "not met")
+	var flags := {Rivals.FIRST_MEETING_FLAG: true}
+	assert_true(_bitter_hint(Guidance.hints(c, d, 1.0, 20, people, flags)).contains("Amends would cost %d stones" % cost))
+	rival.alive = false
+	assert_eq(_bitter_hint(Guidance.hints(c, d, 1.0, 20, people, flags)), "", "dead")
