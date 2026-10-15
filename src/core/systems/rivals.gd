@@ -8,6 +8,7 @@ extends RefCounted
 ## {rival} and {rival_realm}. Rules live in data/karma.json "rival".
 
 const RELATIONS: Array[String] = ["any", "stronger", "equal", "weaker"]
+const ATTITUDES: Array[String] = ["friendly", "bitter", "proud"]
 const FIRST_MEETING_EVENT := "rival_first_meeting"
 const FIRST_MEETING_FLAG := "rival_met"
 const SEEN_REALM_FLAG := "rival_seen_realm"
@@ -183,6 +184,11 @@ static func validate(data: GameData) -> PackedStringArray:
 	for e: Dictionary in data.encounters.values():
 		if e.has("rival") and not RELATIONS.has(String(e["rival"])):
 			errors.append("Encounter '%s' has unknown rival condition '%s'" % [e["id"], e["rival"]])
+		if e.has("rival_attitude"):
+			if not ATTITUDES.has(String(e["rival_attitude"])):
+				errors.append("Encounter '%s' has unknown rival_attitude '%s'" % [e["id"], e["rival_attitude"]])
+			if not e.has("rival"):
+				errors.append("Encounter '%s' has a rival_attitude but no rival condition" % e["id"])
 		var uses_rival := e.has("fight_rival") or e.has("rival_grudge") or e.has("rival_favor") or String(e.get("text", "")).contains("{rival")
 		for choice: Dictionary in e.get("choices", []):
 			uses_rival = uses_rival or choice.has("fight_rival") or choice.has("rival_grudge") or choice.has("rival_favor") or String(choice.get("text", "")).contains("{rival") or String(choice.get("label", "")).contains("{rival")

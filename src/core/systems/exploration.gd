@@ -284,7 +284,8 @@ static func discovery_for(c: CharacterData, data: GameData, region_id: String, f
 ## Fortune-adjusted weight: [{encounter, weight}]. `rival` is `c`'s living
 ## rival (Rivals) or null; encounters with a `rival` condition need one.
 ## `misfortune_scale` multiplies misfortune weights (a clan estate's ward).
-static func eligible_encounters(c: CharacterData, data: GameData, tags: Array, flags: Dictionary, rival: CharacterData = null, misfortune_scale: float = 1.0, season: String = "", region_id: String = "") -> Array[Dictionary]:
+## `rival_favor` is the rival's favor toward `c`, for `rival_attitude` encounters (RIVAL-010).
+static func eligible_encounters(c: CharacterData, data: GameData, tags: Array, flags: Dictionary, rival: CharacterData = null, misfortune_scale: float = 1.0, season: String = "", region_id: String = "", rival_favor: int = 0) -> Array[Dictionary]:
 	var result: Array[Dictionary] = []
 	var fortune_shift := (c.attribute("fortune") - 10) * FORTUNE_WEIGHT_PER_POINT
 	var unfaded_total := 0.0
@@ -304,6 +305,8 @@ static func eligible_encounters(c: CharacterData, data: GameData, tags: Array, f
 		if not renown_allows(c, data, e, region_id):
 			continue
 		if not Rivals.allows(c, rival, String(e.get("rival", ""))):
+			continue
+		if e.has("rival_attitude") and (rival == null or Rivals.attitude(c, rival, rival_favor, data) != String(e["rival_attitude"])):
 			continue
 		var blocker: String = e.get("blocked_by_flag", "")
 		if blocker != "" and flags.get(blocker, false):
@@ -385,7 +388,7 @@ static func region_progress(c: CharacterData, data: GameData, region_id: String,
 	for e: Dictionary in data.encounters.values():
 		if not _shares_tag(e.get("tags", []), tags):
 			continue
-		if String(e.get("requires_flag", "")) != "" or String(e.get("rival", "")) != "" or e.get("discovery_only", false):
+		if String(e.get("requires_flag", "")) != "" or String(e.get("rival", "")) != "" or e.has("rival_attitude") or e.get("discovery_only", false):
 			continue
 		var blocker := String(e.get("blocked_by_flag", ""))
 		var seen: bool = int(c.encounter_counts.get(String(e.get("id", "")), 0)) > 0 or (blocker != "" and flags.get(blocker, false))
@@ -468,8 +471,8 @@ static func outlook(c: CharacterData, data: GameData, tags: Array, flags: Dictio
 
 
 ## Picks a weighted random encounter, or {} if none are eligible.
-static func roll_encounter(c: CharacterData, data: GameData, tags: Array, flags: Dictionary, rng: RandomNumberGenerator, rival: CharacterData = null, misfortune_scale: float = 1.0, season: String = "", region_id: String = "") -> Dictionary:
-	var pool := eligible_encounters(c, data, tags, flags, rival, misfortune_scale, season, region_id)
+static func roll_encounter(c: CharacterData, data: GameData, tags: Array, flags: Dictionary, rng: RandomNumberGenerator, rival: CharacterData = null, misfortune_scale: float = 1.0, season: String = "", region_id: String = "", rival_favor: int = 0) -> Dictionary:
+	var pool := eligible_encounters(c, data, tags, flags, rival, misfortune_scale, season, region_id, rival_favor)
 	var total := 0.0
 	for entry in pool:
 		total += entry["weight"]

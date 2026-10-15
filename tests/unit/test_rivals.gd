@@ -314,3 +314,26 @@ func test_attitude_validation() -> void:
 	d.karma["rival"]["friendly_favor"] = 0
 	d.karma["rival"]["bitter_grudge"] = "x"
 	assert_eq(Rivals.validate(d).size(), 2, ", ".join(Rivals.validate(d)))
+
+
+func test_attitude_gates_encounters() -> void:
+	var d := GameData.load_from_dir()
+	d.encounters["att_test"] = {"id": "att_test", "tags": ["att_tag"], "weight": 1, "kind": "neutral", "days": 0, "rival": "any", "rival_attitude": "friendly", "text": "{rival} nods."}
+	var c := new_character()
+	var rival := new_character(77)
+	rival.id = "gen_rival"
+	var ids := func(favor: int) -> Array:
+		return Exploration.eligible_encounters(c, d, ["att_tag"], {}, rival, 1.0, "", "", favor).map(func(e: Dictionary) -> String: return e["encounter"]["id"])
+	assert_false(ids.call(0).has("att_test"))
+	assert_true(ids.call(20).has("att_test"))
+	assert_false(Exploration.eligible_encounters(c, d, ["att_tag"], {}, null, 1.0, "", "", 20).any(func(e: Dictionary) -> bool: return e["encounter"]["id"] == "att_test"), "no rival")
+	c.grudges["gen_rival"] = 10
+	assert_false(ids.call(20).has("att_test"), "bitter wins")
+	assert_eq(Rivals.validate(d).size(), 0, ", ".join(Rivals.validate(d)))
+
+
+func test_attitude_encounter_validation() -> void:
+	var d := GameData.load_from_dir()
+	d.encounters["bad_att"] = {"id": "bad_att", "tags": ["city"], "rival": "any", "rival_attitude": "angry", "text": "Hi."}
+	d.encounters["bad_att2"] = {"id": "bad_att2", "tags": ["city"], "rival_attitude": "bitter", "text": "Hi."}
+	assert_eq(Rivals.validate(d).size(), 2, ", ".join(Rivals.validate(d)))

@@ -673,7 +673,7 @@ func _explore_day(tags: Array, quiet: bool) -> Dictionary:
 		var hunted := Bounties.hunt_roll(player, data, current_region, GameClock.total_days, rng)
 		if hunted != "":
 			return _hunt_bounty_foe(hunted)
-		encounter = Exploration.roll_encounter(player, data, tags, world_flags, rng, Rivals.rival_of(player, npcs), 1.0 - ClanEstate.ward(clan, data, current_region), Calendar.season_of(GameClock.total_days), current_region)
+		encounter = Exploration.roll_encounter(player, data, tags, world_flags, rng, Rivals.rival_of(player, npcs), 1.0 - ClanEstate.ward(clan, data, current_region), Calendar.season_of(GameClock.total_days), current_region, int(npc_favor.get(player.rival, 0)))
 	else:
 		# Only the discovery itself marks the region discovered; a deeper path must not
 		# use up a discovery the player has not met yet.
