@@ -34,6 +34,7 @@
 		{"id": "qi_stream", "name": "Stream of Qi", "description": "Gather 5,000 points of qi.", "check": {"type": "life_stat", "stat": "qi_gathered", "min": 5000}},
 		{"id": "sea_of_qi", "name": "Sea of Qi", "description": "Gather 100,000 points of qi.", "check": {"type": "life_stat", "stat": "qi_gathered", "min": 100000}},
 		{"id": "wanderer", "name": "Tireless Wanderer", "description": "Meet 50 chance encounters on the road.", "check": {"type": "life_stat", "stat": "encounters", "min": 50}},
+		{"id": "surpass_the_rival", "name": "Surpassing the Rival", "description": "Reach a higher realm than your rival.", "check": {"type": "flag", "flag": "rival_surpassed"}},
 		{"id": "master_of_many_lands", "name": "Master of Many Lands", "description": "Master three regions.", "check": {"type": "life_stat", "stat": "regions_mastered", "min": 3}}
 	]
 }

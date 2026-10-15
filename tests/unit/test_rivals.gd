@@ -176,3 +176,19 @@ func test_news_only_for_a_higher_realm() -> void:
 	r.alive = false
 	assert_eq(Rivals.news(c, r, 0, d), "")
 	assert_eq(Rivals.news(c, null, 0, d), "")
+
+
+func test_surpassed_needs_a_higher_realm() -> void:
+	var c := CharacterFactory.create("Me", data(), seeded_rng(1))
+	var r := CharacterFactory.create("Rival", data(), seeded_rng(2))
+	c.realm_index = 2
+	r.realm_index = 1
+	assert_true(Rivals.surpassed(c, r))
+	r.realm_index = 2
+	c.stage = 5
+	r.stage = 0
+	assert_false(Rivals.surpassed(c, r), "same realm, higher stage")
+	r.realm_index = 1
+	r.alive = false
+	assert_false(Rivals.surpassed(c, r), "dead rival")
+	assert_false(Rivals.surpassed(c, null))

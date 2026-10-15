@@ -1467,3 +1467,40 @@ func test_failed_breakthrough_posts_no_growth_lines() -> void:
 	assert_eq(c.realm_index, 1)
 	assert_false(EventBus.history.any(func(e: Dictionary) -> bool: return String(e["text"]).begins_with("Your lifespan grows") or String(e["text"]).begins_with("Your qi gathers")))
 	gs.end_session()
+
+
+func _break_through_once(gs: Node, c: CharacterData) -> void:
+	var realm := c.realm_index
+	for i in 30:
+		if c.realm_index > realm:
+			return
+		c.stage = gs.data.realms[c.realm_index].stage_names.size() - 1
+		c.qi = 1.0e9
+		gs.attempt_breakthrough()
+
+
+func test_surpassing_the_rival_posts_once() -> void:
+	var c := _start()
+	var gs := _game_state()
+	var rival: CharacterData = Rivals.rival_of(c, gs.npcs)
+	rival.realm_index = 0
+	gs.world_flags[Rivals.FIRST_MEETING_FLAG] = true
+	EventBus.clear_history()
+	_break_through_once(gs, c)
+	assert_true(c.realm_index > 0)
+	assert_true(gs.world_flags.get(Rivals.SURPASSED_FLAG, false))
+	var lines := EventBus.history.filter(func(m): return String(m["text"]).begins_with("You have surpassed "))
+	assert_eq(lines.size(), 1)
+	_break_through_once(gs, c)
+	lines = EventBus.history.filter(func(m): return String(m["text"]).begins_with("You have surpassed "))
+	assert_eq(lines.size(), 1)
+	gs.end_session()
+
+
+func test_surpassing_needs_the_first_meeting() -> void:
+	var c := _start()
+	var gs := _game_state()
+	Rivals.rival_of(c, gs.npcs).realm_index = 0
+	_break_through_once(gs, c)
+	assert_false(gs.world_flags.get(Rivals.SURPASSED_FLAG, false))
+	gs.end_session()

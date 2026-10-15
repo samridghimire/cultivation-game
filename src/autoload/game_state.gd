@@ -311,6 +311,7 @@ func attempt_breakthrough() -> void:
 			EventBus.post("Word of your %s breakthrough spreads: %d %s who know you think better of you." % [result["realm_name"], told.size(), "person" if told.size() == 1 else "people"], "progress")
 		if Bloodlines.update(player, data):
 			EventBus.post("Your blood boils and sings: your %s awakens!" % Bloodlines.bloodline_name(data, player.bloodline), "progress")
+		_check_rival_surpassed()
 	else:
 		if result["tribulation"].is_empty():
 			EventBus.post("Your breakthrough to %s failed (%d%% chance). Your qi scatters." % [result["realm_name"], int(result["chance"] * 100)], "danger")
@@ -324,6 +325,16 @@ func attempt_breakthrough() -> void:
 	_pass_time(BREAKTHROUGH_DAYS)
 	if result["success"]:
 		SaveManager.autosave()
+
+
+## Marks the rival as surpassed (once) after a breakthrough past their realm.
+func _check_rival_surpassed() -> void:
+	if not world_flags.get(Rivals.FIRST_MEETING_FLAG, false) or world_flags.get(Rivals.SURPASSED_FLAG, false):
+		return
+	var rival := Rivals.rival_of(player, npcs)
+	if Rivals.surpassed(player, rival):
+		world_flags[Rivals.SURPASSED_FLAG] = true
+		EventBus.post("You have surpassed %s. Whatever they once said of you, no one repeats it now." % rival.name, "progress")
 
 
 ## Expected tribulation for breaking into the next realm (Tribulation.preview),

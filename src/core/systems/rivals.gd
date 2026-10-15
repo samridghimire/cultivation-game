@@ -11,6 +11,7 @@ const RELATIONS: Array[String] = ["any", "stronger", "equal", "weaker"]
 const FIRST_MEETING_EVENT := "rival_first_meeting"
 const FIRST_MEETING_FLAG := "rival_met"
 const SEEN_REALM_FLAG := "rival_seen_realm"
+const SURPASSED_FLAG := "rival_surpassed"
 
 
 static func rules(data: GameData) -> Dictionary:
@@ -55,12 +56,19 @@ static func first_meeting_due(c: CharacterData, people: Dictionary, data: GameDa
 	return today >= start and today <= start + int(r.get("first_meeting_window", 365))
 
 
+
 ## RIVAL-005: one line of news when the living `rival` reached a higher realm
 ## than `last_seen_realm`, else "".
 static func news(c: CharacterData, rival: CharacterData, last_seen_realm: int, data: GameData) -> String:
 	if rival == null or not rival.alive or rival.realm_index <= last_seen_realm:
 		return ""
 	return "Word reaches you: your rival %s has broken through to %s." % [rival.name, data.realms[rival.realm_index].name]
+
+
+## True when `c` has reached a higher major realm than a living `rival`
+## (RIVAL-006). The same realm never counts, whatever the stage.
+static func surpassed(c: CharacterData, rival: CharacterData) -> bool:
+	return rival != null and rival.alive and c.realm_index > rival.realm_index
 
 
 ## "stronger", "equal" or "weaker": the rival's major realm against `c`'s.
