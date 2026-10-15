@@ -351,3 +351,11 @@ Short-lived context for the next session. Update or trim it when you finish a se
 ## Lessons from merging many agent PRs at once
 - Nearly every PR conflicts on `docs/BACKLOG.md` and `docs/CHANGELOG.md`. Merge main into the PR branch, never rebase. Keep both sides' rows and lines, and check for **duplicate task ids** (agents often reuse an id; rename the newer one).
 - After merging, rerun the full checks. Typical breakages were tests made stale by a newer rule (clans need an abode seat, tougher enemies since QA-007d, the intro story event at session start, choice encounters must set their `blocked_by_flag` on every choice) and two places placed at the same map position.
+
+## First-hour screenshot look (WU-157, 1280x800)
+Looked at all 8 PNGs from `screenshot_first_hour.gd`. No layout bug in any window (everything fits, focus ring visible). Observations, none fixed (each needs a design or world-layout call):
+- `hud_arrival` (and every shot): world labels "Founder's Old..." and "Sect Recruitmen..." are cut by the right viewport edge; "Hunters' Bo..." hides behind the HUD panel.
+- `hud_arrival`: the HUD "Goal: Talk to Elder Mo" and the first hint ">Ask Elder Mo ... where to begin" say the same thing twice; "Wandering Merchant" label sits under the player sprite and the interact prompt.
+- `combat_report`: HUD says "Fair fight: Wild Boar (Weak 98)" yet the shot shows a 2-round defeat (probably the script's staged fight; check a real first boar fight).
+- `explore_menu`: the "Explore" header is styled like the buttons below it, so it reads as an option.
+- `character_sheet` / `journal`: "Next steps" repeats the HUD hints verbatim; fine, but the sheet's first screen is mostly that list.
