@@ -67,7 +67,8 @@ func test_board_lists_missions_and_takes_one() -> void:
 	var ids := Sects.available_missions(gs.player, data())
 	var buttons := board.find_children("*", "Button", true, false).filter(func(b: Button) -> bool: return ids.has(String(b.name)))
 	assert_eq(buttons.size(), ids.size())
-	assert_eq(board._selected, "gather_spirit_herbs", "first takeable mission is preselected")
+	assert_eq(board._selected, MissionBoard.ordered(gs.player, data(), gs.world_flags, ids)[0], "first takeable mission is preselected")
+	board._select("gather_spirit_herbs")
 	assert_false(board._take_button.disabled)
 	board._take()
 	assert_eq(gs.player.item_count("spirit_herb"), 0)
@@ -301,3 +302,33 @@ func test_loss_text_fades_and_a_win_clears_it() -> void:
 	var result := Sects.complete_mission(c, d, id, {})
 	assert_true(result["ok"], str(result["reason"]))
 	assert_eq(MissionBoard.loss_text(c, id), "", "a won retry clears it")
+
+
+## WU-126: takeable fights come first by rating, then other takeable missions, then unavailable ones.
+func test_ordered_puts_fair_fights_first_and_unavailable_last() -> void:
+	var c := _disciple()
+	c.stage = 5
+	var d := data()
+	var ids := Sects.available_missions(c, d, {})
+	# Make one mission unavailable (on cooldown after a loss).
+	var lost := "cull_mist_wolves"
+	assert_true(ids.has(lost))
+	Sects.fail_mission(c, d, lost)
+	var out := MissionBoard.ordered(c, d, {}, ids)
+	assert_eq(out.size(), ids.size(), "nothing dropped")
+	assert_true(Sects.check_mission(c, d, lost, {}) != "", "the lost fight is on cooldown")
+	var ratings := ["Weak", "Even", "Risky", "Dangerous", "Deadly"]
+	var phase := 0 # 0 = takeable fights, 1 = takeable others, 2 = unavailable
+	var last_rating := 0
+	for id in out:
+		var takeable := Sects.check_mission(c, d, id, {}) == ""
+		var rating := ratings.find(Sects.mission_danger(c, d, id))
+		var group := 2 if not takeable else (0 if rating >= 0 else 1)
+		assert_true(group >= phase, "group order at %s" % id)
+		if group > phase:
+			phase = group
+			last_rating = 0
+		if group == 0:
+			assert_true(rating >= last_rating, "rating order at %s" % id)
+			last_rating = rating
+	assert_eq(MissionBoard.ordered(c, d, {}, [] as Array[String]).size(), 0)

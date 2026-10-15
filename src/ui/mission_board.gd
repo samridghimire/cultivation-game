@@ -225,6 +225,26 @@ static func shop_item_lines(c: CharacterData, data: GameData, item_id: String) -
 	return Items.describe_effects(data.items.get(item_id, {}).get("effects", {}), data)
 
 
+## Mission ids ordered for the list: takeable fights by rating (Weak first,
+## Deadly last), then takeable non-fight missions, then the ones you can't take
+## now. Data order is kept inside each group.
+static func ordered(c: CharacterData, data: GameData, flags: Dictionary, ids: Array[String]) -> Array[String]:
+	var ratings := ["Weak", "Even", "Risky", "Dangerous", "Deadly"]
+	var groups: Array = []
+	for i in ratings.size() + 2:
+		groups.append([] as Array[String])
+	for mission_id in ids:
+		var group := ratings.size() + 1
+		if Sects.check_mission(c, data, mission_id, flags) == "":
+			var rating := ratings.find(Sects.mission_danger(c, data, mission_id))
+			group = rating if rating >= 0 else ratings.size()
+		groups[group].append(mission_id)
+	var result: Array[String] = []
+	for g in groups:
+		result.append_array(g)
+	return result
+
+
 func _set_tab(tab: String) -> void:
 	_missions_tab.set_pressed_no_signal(tab == "missions")
 	_shop_tab.set_pressed_no_signal(tab == "shop")
@@ -305,7 +325,7 @@ func _rebuild_shop() -> void:
 func _rebuild_missions() -> void:
 	var p := GameState.player
 	var data := GameState.data
-	var ids := Sects.available_missions(p, data, GameState.world_flags)
+	var ids := ordered(p, data, GameState.world_flags, Sects.available_missions(p, data, GameState.world_flags))
 	var sect_id := String(p.sect.get("id", ""))
 	var call_left := SectFactions.call_days_left(GameState.world_flags, sect_id, GameClock.total_days)
 	var call_id := SectFactions.call_mission_id(data, sect_id)
