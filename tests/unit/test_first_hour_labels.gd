@@ -61,6 +61,16 @@ func test_is_rival_needs_the_first_meeting_and_a_living_rival() -> void:
 	assert_false(NPC_SCRIPT.is_rival(c, people, flags, rival.id), "dead rival")
 
 
+func test_rival_look_prefix_says_where_they_stand() -> void:
+	var c := new_character()
+	var rival := new_character()
+	rival.realm_index = c.realm_index + 1
+	assert_eq(NPC_SCRIPT.rival_look_prefix(c, rival), "Your rival, far ahead of you. ")
+	rival.realm_index = c.realm_index
+	rival.stage = c.stage - 1
+	assert_eq(NPC_SCRIPT.rival_look_prefix(c, rival), "Your rival, behind you. ")
+
+
 func test_rival_label_stays_liftable() -> void:
 	var a := _npc("Ren Longyuan (Qi Refining, 2nd Layer)", Vector2(300, 300))
 	var b := _npc("Hooded Stranger (Qi Refining, 1st Layer)", Vector2(320, 304))

@@ -106,6 +106,11 @@ static func is_rival(c: CharacterData, people: Dictionary, flags: Dictionary, np
 	return rival != null and rival.id == npc_id
 
 
+## "Your rival, <where they stand>. " for the Look text (WU-141).
+static func rival_look_prefix(c: CharacterData, rival: CharacterData) -> String:
+	return "Your rival, %s. " % Rivals.relation_text(c, rival)
+
+
 func _is_my_rival() -> bool:
 	return GameState.player != null and is_rival(GameState.player, GameState.npcs, GameState.world_flags, npc_id)
 
@@ -494,7 +499,7 @@ func _look() -> void:
 		return
 	var text := Npcs.describe(npc, GameState.data)
 	if _is_my_rival():
-		text = "Your rival. " + text
+		text = rival_look_prefix(GameState.player, npc) + text
 	var membership := NpcClans.membership_text(GameState.npc_clans, GameState.npcs, GameState.data, npc_id)
 	if membership != "":
 		text += " %s." % membership
