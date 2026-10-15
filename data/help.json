@@ -113,6 +113,15 @@
       ]
     },
     {
+      "id": "choices_checks",
+      "title": "Choices and Checks",
+      "body": [
+        "Some encounter choices need something from you: an attribute (\"[Comprehension 12]\"), a profession rank (\"[Doctor, Apprentice]\"), a moral standing, or an item they cost. A locked choice stays on the list and says why in brackets.",
+        "When every choice is locked, you can always walk away.",
+        "Attributes can still grow a little from rare encounters. Profession ranks come from working and crafting."
+      ]
+    },
+    {
       "id": "money",
       "title": "Making Money",
       "body": [
