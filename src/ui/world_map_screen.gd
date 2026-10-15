@@ -26,6 +26,7 @@ const MARK_COLORS := {
 	"event": Color("e85a4a"),
 	"discovery": Color("f2f0a0"),
 	"letter": Color("f0b27a"),
+	"rival": Color("d9694f"),
 }
 
 var _canvas: Control
@@ -221,6 +222,9 @@ static func region_marks(c: CharacterData, data: GameData, people: Dictionary, e
 			family.append(person.name)
 	if not family.is_empty():
 		marks.append({"kind": "family", "text": "Family: %s" % ", ".join(family)})
+	var rival := Rivals.rival_of(c, people)
+	if rival != null and flags.get(Rivals.FIRST_MEETING_FLAG, false) and Npcs.region_of(rival, data) == region_id:
+		marks.append({"kind": "rival", "text": "Your rival: %s (%s)" % [rival.name, Rivals.relation_text(c, rival)]})
 	for i in c.anchors.size():
 		if String(data.anchors.get(c.anchors[i], {}).get("region", "")) == region_id:
 			var tag := " (respawn point)" if i == c.anchors.size() - 1 else ""

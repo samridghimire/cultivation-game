@@ -121,6 +121,26 @@ func test_discovery_mark_until_found() -> void:
 
 
 ## WU-011: the current region's joinable events say so on the map.
+func test_region_marks_rival_after_first_meeting() -> void:
+	var d := data()
+	var c := new_character()
+	for region_id in d.regions:
+		Exploration.visit(c, region_id)
+	var people := {}
+	var rival := Rivals.spawn(c, people, d, seeded_rng(), "qingshi_village")
+	var home := Npcs.region_of(rival, d)
+	var kinds := func(flags: Dictionary, region_id: String) -> Array:
+		return WorldMapScreen.region_marks(c, d, people, [], 0, region_id, "", flags).map(func(m: Dictionary) -> String: return m["kind"])
+	var met := {Rivals.FIRST_MEETING_FLAG: true}
+	assert_false(kinds.call({}, home).has("rival"), "no mark before the meeting")
+	assert_true(kinds.call(met, home).has("rival"))
+	for region_id in d.regions:
+		if region_id != home:
+			assert_false(kinds.call(met, region_id).has("rival"), region_id)
+	rival.alive = false
+	assert_false(kinds.call(met, home).has("rival"), "dead rival")
+
+
 func test_region_marks_joinable_event() -> void:
 	var d := data()
 	var events: Array = [{"id": "sect_tournament", "region": "fallen_star_market", "start_day": 0, "end_day": 40}]
