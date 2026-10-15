@@ -309,7 +309,7 @@ func test_mission_rank_realm_reason_ignores_cooldowns() -> void:
 	assert_true(Sects.mission_rank_realm_reason(c, data(), mission) != "")
 
 
-func test_sect_call_on_cooldown_says_again() -> void:
+func test_sect_call_on_cooldown_says_nothing_new() -> void:
 	var gs := _root().get_node("GameState")
 	var c := new_character()
 	c.realm_index = 1
@@ -328,7 +328,7 @@ func test_sect_call_on_cooldown_says_again() -> void:
 	EventBus.message_posted.disconnect(_collect_call_post)
 	gs.data.sect_factions["clash"] = old_rule
 	var text := "\n".join(_call_posts)
-	assert_true(text.contains("calls on its disciples again"), text)
+	assert_false(text.contains("Your sect calls"), text)
 	assert_false(text.contains("senior disciples"), text)
 	gs.end_session()
 
@@ -338,3 +338,19 @@ var _call_posts: PackedStringArray = []
 
 func _collect_call_post(text: String, _category: String) -> void:
 	_call_posts.append(text)
+
+
+func test_start_call_sets_flags_and_words_the_line() -> void:
+	var gs := _root().get_node("GameState")
+	var c := new_character()
+	c.realm_index = 1
+	c.stage = 8
+	gs.start_session(c)
+	Sects.join(c, gs.data, "azure_cloud_sect")
+	var flags := {}
+	var line := SectFactions.start_call(gs.data, c, flags, "azure_cloud_sect", 40)
+	assert_true(flags["sect_call_azure_cloud_sect"])
+	assert_eq(int(flags["sect_call_day_azure_cloud_sect"]), 40)
+	assert_true(line != "", "a call is announced")
+	assert_eq(SectFactions.start_call(gs.data, c, {}, "no_such_sect", 1), "Your sect calls on its senior disciples.")
+	gs.end_session()

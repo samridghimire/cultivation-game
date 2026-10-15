@@ -238,3 +238,19 @@ static func expire_calls(flags: Dictionary, today: int) -> Array[String]:
 			flags.erase(day_key)
 			lapsed.append(sect_id)
 	return lapsed
+
+
+## A clash puts `c`'s sect (`sect_id`) on a war footing: sets the call flag and its start day in
+## `flags` and returns the line to post ("" when the call mission is merely on cooldown for a
+## disciple who qualifies, so nothing new is announced).
+static func start_call(data: GameData, c: CharacterData, flags: Dictionary, sect_id: String, today: int) -> String:
+	flags["sect_call_" + sect_id] = true
+	flags["sect_call_day_" + sect_id] = today
+	var mission_id := call_mission_id(data, sect_id)
+	if mission_id == "":
+		return "Your sect calls on its senior disciples."
+	if Sects.check_mission(c, data, mission_id, flags) == "":
+		return "Your sect calls on its disciples. A new mission waits on the mission board."
+	if Sects.mission_rank_realm_reason(c, data, data.sect_missions[mission_id]) == "":
+		return ""  # held back by something else, e.g. cooldown
+	return "Your sect calls on its senior disciples."

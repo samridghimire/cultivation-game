@@ -2177,19 +2177,9 @@ func _sect_factions_month() -> void:
 		var own_sect := "" if player.is_rogue() else String(player.sect["id"])
 		if own_sect != "" and (own_sect == event["winner"] or own_sect == event["loser"]):
 			EventBus.post(event["text"], event["category"])
-			var call_flag := "sect_call_" + own_sect
-			world_flags[call_flag] = true
-			world_flags["sect_call_day_" + own_sect] = GameClock.total_days
-			var call_mission := ""
-			for mission_id: String in data.sect_missions:
-				if String(data.sect_missions[mission_id].get("requires_flag", "")) == call_flag:
-					call_mission = mission_id
-			if call_mission != "" and Sects.check_mission(player, data, call_mission, world_flags) == "":
-				EventBus.post("Your sect calls on its disciples. A new mission waits on the mission board.", "warning")
-			elif call_mission != "" and Sects.mission_rank_realm_reason(player, data, data.sect_missions[call_mission]) == "":
-				EventBus.post("Your sect calls on its disciples again.", "warning")  # held back by something else, e.g. cooldown
-			else:
-				EventBus.post("Your sect calls on its senior disciples.", "warning")
+			var call_line := SectFactions.start_call(data, player, world_flags, own_sect, GameClock.total_days)
+			if call_line != "":
+				EventBus.post(call_line, "warning")
 			continue
 		for npc_id: String in event["dead_ids"]:
 			if Npcs.is_newsworthy(npc_id, player, npc_favor):
