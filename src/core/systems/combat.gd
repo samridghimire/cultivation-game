@@ -354,16 +354,50 @@ static func loss_advice(c: CharacterData, data: GameData, enemy: Dictionary, res
 	return advice
 
 
+## Cache of win_chance results (PERF-001), keyed by fight_fingerprint + enemy + samples.
+static var _chance_cache: Dictionary = {}
+## How many fight simulations win_chance has actually run (tests watch this).
+static var _sim_count: int = 0
+const CHANCE_CACHE_MAX := 256
+
+
+## Everything about `c` that changes a fight's stats or outcome, as a string key.
+static func fight_fingerprint(c: CharacterData) -> String:
+	var tech_ids: Array = c.techniques.keys()
+	tech_ids.sort()
+	var techs: Array = []
+	for id in tech_ids:
+		techs.append("%s:%d" % [id, int(c.techniques[id].get("level", 0))])
+	var talismans: Array = []
+	for id in c.readied_talismans:
+		talismans.append("%s:%d" % [id, c.item_count(id)])
+	return "|".join([
+		str(c.realm_index), str(c.stage), str(c.attributes), ",".join(techs), c.main_method, str(c.dao),
+		str(c.spiritual_roots), str(c.equipment), str(c.bound_artifacts), str(c.alignment),
+		str(c.buffs), str(c.injuries), ",".join(talismans), str(c.companions), str(c.companion_xp),
+		c.bloodline, str(c.bloodline_awakened), str(c.body_stage),
+	])
+
+
 ## Estimated chance (0..1) that `c` beats `enemy`, by simulating fights with
 ## a private fixed-seed rng (so it is stable and never touches game rng).
+## Results are memoised per fight_fingerprint, so repeated ratings are free.
 static func win_chance(c: CharacterData, data: GameData, enemy: Dictionary, samples: int = 40) -> float:
+	var key := "%d|%d|%s|%s" % [data.get_instance_id(), samples, str(enemy), fight_fingerprint(c)]
+	if _chance_cache.has(key):
+		return _chance_cache[key]
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 1
 	var wins := 0
 	for i in samples:
 		if resolve(c, data, enemy, rng)["victory"]:
 			wins += 1
-	return float(wins) / samples
+	_sim_count += 1
+	var chance := float(wins) / samples
+	if _chance_cache.size() >= CHANCE_CACHE_MAX:
+		_chance_cache.clear()
+	_chance_cache[key] = chance
+	return chance
 
 
 ## Danger rating for menus and encounter evasion, from win_chance()

@@ -332,3 +332,29 @@ func test_loss_advice_suggests_practising_a_low_level_style() -> void:
 	assert_true(Combat.loss_advice(c, d, even, lost).contains("Practising Iron Fist would raise your odds."))
 	c.techniques["iron_fist"]["level"] = 3
 	assert_false(Combat.loss_advice(c, d, even, lost).contains("Practising"))
+
+
+func test_win_chance_is_cached_per_fingerprint() -> void:
+	var c := new_character()
+	var enemy: Dictionary = data().enemies["mountain_bandit"]
+	var first := Combat.win_chance(c, data(), enemy)
+	var sims := Combat._sim_count
+	assert_eq(Combat.win_chance(c, data(), enemy), first)
+	assert_eq(Combat._sim_count, sims, "second call must not simulate")
+
+
+func test_fight_fingerprint_changes_with_technique_level() -> void:
+	var c := new_character()
+	c.techniques["common_qi_gathering"] = {"level": 1, "xp": 0.0}
+	var before := Combat.fight_fingerprint(c)
+	c.techniques["common_qi_gathering"]["level"] = 2
+	assert_true(Combat.fight_fingerprint(c) != before)
+
+
+func test_win_chance_cache_clears_past_limit() -> void:
+	var c := new_character()
+	var enemy: Dictionary = data().enemies["mountain_bandit"]
+	for i in Combat.CHANCE_CACHE_MAX + 5:
+		c.attributes["fortune"] = 10 + i
+		Combat.win_chance(c, data(), enemy, 1)
+	assert_gt(Combat.CHANCE_CACHE_MAX + 1, Combat._chance_cache.size())
