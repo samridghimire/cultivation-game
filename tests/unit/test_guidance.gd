@@ -1073,6 +1073,26 @@ func test_active_hunt_shows_as_your_hunt() -> void:
 	assert_true(texts.any(func(t: String) -> bool: return t.begins_with("Your hunt:")), str(texts))
 
 
+## GUIDE-028: an unfair first bounty offer does not hide a fair one behind it.
+func test_fair_fights_look_past_an_unfair_first_bounty() -> void:
+	var d := GameData.load_from_dir()
+	var c := _fighter()
+	c.sect = {}
+	var base := {"region": "qingshi_village", "reward_stones": 10, "days": 30, "cooldown_days": 30, "text": "x"}
+	var hard := base.duplicate()
+	hard["id"] = "test_hard_bounty"
+	hard["enemy"] = "stone_hide_boar_king"
+	var easy := base.duplicate()
+	easy["id"] = "test_easy_bounty"
+	easy["enemy"] = "wild_boar"
+	d.bounties = {"test_hard_bounty": hard, "test_easy_bounty": easy}
+	assert_true(Combat.win_chance(c, d, d.enemies["stone_hide_boar_king"]) < Guidance.FAIR_FIGHT_MIN_CHANCE)
+	assert_true(Combat.win_chance(c, d, d.enemies["wild_boar"]) >= Guidance.FAIR_FIGHT_MIN_CHANCE)
+	var fights := Guidance.fair_fights(c, d, {}, c.age_days, "qingshi_village")
+	var bounty_enemies: Array = fights.filter(func(f: Dictionary) -> bool: return f["kind"] == "bounty").map(func(f: Dictionary) -> String: return f["enemy"])
+	assert_eq(bounty_enemies, [String(d.enemies["wild_boar"]["name"])])
+
+
 func test_fairer_fight_note() -> void:
 	assert_eq(Guidance.fairer_fight_note([], "Wolf"), "")
 	var entries: Array = [{"text": "Bounty: Wolf in Marsh (Even, 50 in 100)", "enemy": "Wolf"}]

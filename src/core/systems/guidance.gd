@@ -1025,7 +1025,6 @@ static func fair_fights(c: CharacterData, data: GameData, flags: Dictionary, tod
 			var where := String(b["region"])
 			if (where == region_id or Exploration.is_nearby(data, region_id, where)) and Bounties.check_take(c, data, String(b["id"]), today) == "":
 				candidates.append({"bounty": b, "label": "Bounty"})
-				break
 	for cand in candidates:
 		if rated >= FAIR_FIGHT_MAX_RATED:
 			break
