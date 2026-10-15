@@ -175,6 +175,19 @@ func test_foundation_rival_encounters() -> void:
 		assert_eq(e.get("max_realm", ""), "foundation_establishment", id + " max realm")
 
 
+## C-100: three Core Formation rival encounters, once-only and gated on the first meeting.
+func test_core_formation_rival_encounters() -> void:
+	var d := data()
+	var want := {"rival_core_boast": "stronger", "rival_secret_realm_gate": "equal", "rival_tribulation_question": "weaker"}
+	for id in want:
+		assert_true(d.encounters.has(id), id + " exists")
+		var e: Dictionary = d.encounters[id]
+		assert_eq(e.get("rival", ""), want[id], id + " rival kind")
+		assert_eq(e.get("requires_flag", ""), "rival_met", id + " waits for the first meeting")
+		assert_true(e.has("blocked_by_flag"), id + " is once-only")
+		assert_eq(e.get("min_realm", ""), "core_formation", id + " min realm")
+
+
 ## RIVAL-005: news of a rival's breakthrough.
 func test_news_only_for_a_higher_realm() -> void:
 	var d := data()
