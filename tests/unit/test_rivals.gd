@@ -256,6 +256,14 @@ func test_first_year_attribute_checks() -> void:
 	assert_eq(covered.size(), 4, "four attributes covered")
 
 
+## C-092: accepting the terrace challenge is worth it.
+func test_terrace_challenge_accept_rewards() -> void:
+	var accept: Dictionary = data().encounters["rival_sect_challenge"]["choices"][0]
+	assert_true(accept.get("fight_rival", false), "accept fights the rival")
+	assert_eq(int(accept.get("rival_favor", 0)), 5, "accept gives favor")
+	assert_eq(int(accept["effects"].get("qi", 0)), 40, "accept gives qi")
+
+
 func test_spur_raises_diligence_and_caps() -> void:
 	var data := data()
 	var rival := CharacterData.new()
