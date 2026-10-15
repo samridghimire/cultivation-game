@@ -1563,3 +1563,33 @@ func test_fair_fights_skip_the_rival_when_away_bitter_unmet_or_on_cooldown() -> 
 	Karma.add_grudge(c, d, rival.id, 20)
 	assert_false(_rival_kinds(Guidance.fair_fights(c, d, flags, c.age_days, "qingshi_village", people, favor)).has("rival"), "bitter")
 	assert_true(base.size() <= Guidance.FAIR_FIGHTS_MAX)
+
+
+# --- GUIDE-034: the journal says each goal once ------------------------------
+
+func _reach_mentions(c: CharacterData, target: String) -> int:
+	var n := 0
+	for e in Guidance.journal(c, data(), {}, 0, "qingshi_village"):
+		var section := String(e.get("section", ""))
+		if (section == "Goals" or section == "Next steps") and String(e["text"]).contains(target):
+			n += 1
+	return n
+
+
+func test_journal_foundation_peak_breakthrough_is_said_once() -> void:
+	var c := _veteran()
+	c.realm_index = 2
+	c.stage = data().realms[2].stage_count() - 1
+	c.qi = Cultivation.qi_required(c, data())
+	assert_true(Cultivation.can_attempt_breakthrough(c, data()))
+	assert_eq(_reach_mentions(c, "Core Formation"), 1)
+
+
+func test_journal_newcomer_next_steps_keep_their_hints() -> void:
+	var c := _fresh()
+	var hint_lines := Guidance.hints(c, data(), 1.0, 99, {}, {}, "qingshi_village", 0, {})
+	var next: Array[String] = []
+	for e in Guidance.journal(c, data(), {}, 0, "qingshi_village"):
+		if String(e.get("section", "")) == "Next steps":
+			next.append(String(e["text"]))
+	assert_eq(next.size(), hint_lines.size())

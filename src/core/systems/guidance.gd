@@ -823,6 +823,19 @@ static func drop_goal_echoes(goal: String, hints: PackedStringArray) -> PackedSt
 	return kept
 
 
+## GUIDE-034: true when `line` repeats one of the journal's Goals lines, or is the breakthrough
+## hint for the realm a "Reach <realm>" goal already names.
+static func _echoes_goal(line: String, goal_lines: PackedStringArray) -> bool:
+	for goal in goal_lines:
+		if line == goal:
+			return true
+		if goal.begins_with("Reach ") and line.begins_with("You are ready to break through"):
+			var subject := goal.get_slice(":", 0)
+			if drop_goal_echoes(subject, PackedStringArray([line])).is_empty():
+				return true
+	return false
+
+
 ## The newcomer ladder: {text, done} in order.
 static func first_goals(c: CharacterData, data: GameData, flags: Dictionary) -> Array[Dictionary]:
 	var stage_3 := c.realm_index > 1 or (c.realm_index == 1 and c.stage >= 2)
@@ -1091,15 +1104,20 @@ static func journal(c: CharacterData, data: GameData, flags: Dictionary, today: 
 				core_flagged = true
 			_add(out, "Core Formation goals", ("[x] " if goal["done"] else "[ ] ") + String(goal["text"]), core_tone)
 	var fights := fair_fights(c, data, flags, today, region_id, people, favor)
+	var goal_lines: PackedStringArray = []
 	if c.realm_index >= 2 or first_goals_done(c, data, flags):
 		for line in goals(c, data, flags, clan, density):
 			_add(out, "Goals", line, "normal")
+			goal_lines.append(line)
 		var gap := pill_gap_note(c, data, fights)
 		if gap != "":
 			_add(out, "Goals", gap, "normal")
+			goal_lines.append(gap)
 	var shown := 0
 	for line in hint_lines:
 		if duty_line != "" and line == duty_line:
+			continue
+		if _echoes_goal(line, goal_lines):
 			continue
 		_add(out, "Next steps", line, "warning" if shown < urgent or (method_line != "" and line == method_line) else "normal")
 		shown += 1
