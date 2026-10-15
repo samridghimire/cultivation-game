@@ -22,7 +22,7 @@ static func play(gs: Node, clock: Node, seed_value: int, months: int, curious: b
 	gs.pending_event = ""
 	var bus: Node = gs.get_node("/root/EventBus")
 	bus.clear_history()
-	var out := {"layer_day": {}, "sect_day": -1, "month_lines": [], "injuries": 0, "player": c, "kinds": [], "kind_sets": [], "stones": [], "realms": [], "first_win_day": -1, "first_style_day": -1, "first_win_enemy": ""}
+	var out := {"layer_day": {}, "sect_day": -1, "month_lines": [], "injuries": 0, "player": c, "kinds": [], "kind_sets": [], "stones": [], "realms": [], "first_win_day": -1, "first_style_day": -1, "first_win_enemy": "", "breaks": [], "bottleneck_day": {}}
 	var done := {"no_help": no_help}
 	# QA-063: remember the foe of the first real (non-spar) win; the day comes from the fights_won stat.
 	var fight := {"enemy": "", "first_enemy": ""}
@@ -45,8 +45,17 @@ static func play(gs: Node, clock: Node, seed_value: int, months: int, curious: b
 		if not c.alive:
 			break
 		var broke := false
+		# QA-066: log every breakthrough attempt (and the first day each realm's bottleneck was seen, month-granular).
+		if Cultivation.is_at_bottleneck(c, gs.data) and not out["bottleneck_day"].has(c.realm_index):
+			out["bottleneck_day"][c.realm_index] = clock.total_days
 		if Cultivation.can_attempt_breakthrough(c, gs.data):
+			var attempt := {"day": clock.total_days, "from_realm": c.realm_index, "chance": Cultivation.breakthrough_chance(c, gs.data), "pill": c.breakthrough_pill != "", "stones": c.item_count("spirit_stone")}
+			var injuries_before := c.injuries.size()
+			var realm_before := c.realm_index
 			gs.attempt_breakthrough()
+			attempt["success"] = c.alive and c.realm_index > realm_before
+			attempt["injury"] = c.injuries.size() > injuries_before
+			out["breaks"].append(attempt)
 			broke = true
 		_use_qi_items(gs, c)
 		if c.is_rogue() and out["sect_day"] < 0:

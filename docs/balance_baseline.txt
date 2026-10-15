@@ -148,17 +148,17 @@ Longest 'nothing new' stretches:
 Deaths (22): seed, game month, final?, foe (rated odds), lives left, stones, region
   seed  1 m18  respawn mist_wolf (38%) lives=2 stones=88 qingshi_village
       cause: You were slain by a Mist Wolf at age 17.
+      | A hooded peddler sidles up and whispers of 'blood pills' that need no herbs, only lives. H
       | You need 100 Spirit Stone.
-      | Sect mission: Cull the Mist Wolves.
-      | You face the Mist Wolf. (You: 195 hp, 64 atk. Foe: 228 hp, 53 atk.)
+      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 195 hp, 64 atk. Foe: 228
       | You fall. (6 rounds, 0/195 hp left)
       | You were slain by a Mist Wolf at age 17.
       | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
   seed  1 m22  respawn mist_wolf (65%) lives=1 stones=92 qingshi_village
       cause: You were slain by a Mist Wolf at age 17.
+      | You face the Drunk Bully Disciple. (You: 210 hp, 93 atk. Foe: 269 hp, 58 atk.)
       | The Drunk Bully Disciple collapses. (5 rounds, 44/210 hp left; +10 Spirit Stone)
-      | Sect mission: Cull the Mist Wolves.
-      | You face the Mist Wolf. (You: 210 hp, 68 atk. Foe: 228 hp, 46 atk.)
+      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 210 hp, 68 atk. Foe: 228
       | You fall. (7 rounds, 0/210 hp left)
       | You were slain by a Mist Wolf at age 17.
       | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
@@ -172,33 +172,33 @@ Deaths (22): seed, game month, final?, foe (rated odds), lives left, stones, reg
       | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
   seed  2 m15  respawn mist_wolf (42%) lives=2 stones=74 qingshi_village
       cause: You were slain by a Mist Wolf at age 17.
+      | The Wild Boar collapses. (1 round, 207/207 hp left; +1 Boar Hide)
       | Auction season in Fallen Star Market is over, and prices settle back down.
-      | Sect mission: Cull the Mist Wolves.
-      | You face the Mist Wolf. (You: 207 hp, 66 atk. Foe: 228 hp, 53 atk.)
+      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 207 hp, 66 atk. Foe: 228
       | You fall. (5 rounds, 0/207 hp left)
       | You were slain by a Mist Wolf at age 17.
       | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
   seed  2 m21  respawn mist_wolf (82%) lives=1 stones=97 qingshi_village
       cause: You were slain by a Mist Wolf at age 17.
+      | You face the Drunk Bully Disciple. (You: 221 hp, 90 atk. Foe: 269 hp, 80 atk.)
       | The Drunk Bully Disciple collapses. (4 rounds, 80/221 hp left; +10 Spirit Stone)
-      | Sect mission: Cull the Mist Wolves.
-      | You face the Mist Wolf. (You: 221 hp, 115 atk. Foe: 228 hp, 60 atk.)
+      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 221 hp, 115 atk. Foe: 22
       | You fall. (5 rounds, 0/221 hp left)
       | You were slain by a Mist Wolf at age 17.
       | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
   seed  3 m11  respawn mist_wolf (25%) lives=2 stones=79 qingshi_village
       cause: You were slain by a Mist Wolf at age 16.
+      | An old woodcutter who has never cultivated a day in his life swings his axe without ever t
       | Contemplate your glimpsed insight at a meditation spot.
-      | Sect mission: Cull the Mist Wolves.
-      | You face the Mist Wolf. (You: 218 hp, 48 atk. Foe: 228 hp, 49 atk.)
+      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 218 hp, 48 atk. Foe: 228
       | You fall. (7 rounds, 0/218 hp left)
       | You were slain by a Mist Wolf at age 16.
       | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
   seed  3 m20  respawn mist_wolf (90%) lives=1 stones=96 qingshi_village
       cause: You were slain by a Mist Wolf at age 17.
+      | A hooded peddler sidles up and whispers of 'blood pills' that need no herbs, only lives. H
       | You need 100 Spirit Stone.
-      | Sect mission: Cull the Mist Wolves.
-      | You face the Mist Wolf. (You: 252 hp, 72 atk. Foe: 228 hp, 71 atk.)
+      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 252 hp, 72 atk. Foe: 228
       | You fall. (6 rounds, 0/252 hp left)
       | You were slain by a Mist Wolf at age 17.
       | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
@@ -212,9 +212,9 @@ Deaths (22): seed, game month, final?, foe (rated odds), lives left, stones, reg
       | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
   seed  4 m26  respawn mist_wolf (80%) lives=2 stones=22 qingshi_village
       cause: You were slain by a Mist Wolf at age 18.
+      | Hei Tianhe strolls past with a crowd of admirers and stops to look you over. 'Still crawli
       | You bow your head and let Hei Tianhe laugh. One day the heavens will turn.
-      | Sect mission: Cull the Mist Wolves.
-      | You face the Mist Wolf. (You: 211 hp, 92 atk. Foe: 228 hp, 54 atk.)
+      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 211 hp, 92 atk. Foe: 228
       | You fall. (6 rounds, 0/211 hp left)
       | You were slain by a Mist Wolf at age 18.
       | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
@@ -228,100 +228,112 @@ Deaths (22): seed, game month, final?, foe (rated odds), lives left, stones, reg
       | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
   seed  5 m6   respawn mist_wolf (18%) lives=2 stones=49 qingshi_village
       cause: You were slain by a Mist Wolf at age 16.
+      | You need 100 Spirit Stone.
       | A hidden path: Following a goat track above the herb slope, you push through a bramble hed
-      | Sect mission: Cull the Mist Wolves.
-      | You face the Mist Wolf. (You: 210 hp, 53 atk. Foe: 228 hp, 55 atk.)
+      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 210 hp, 53 atk. Foe: 228
       | You fall. (5 rounds, 0/210 hp left)
       | You were slain by a Mist Wolf at age 16.
       | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
   seed  5 m11  respawn mist_wolf (85%) lives=1 stones=65 qingshi_village
       cause: You were slain by a Mist Wolf at age 16.
+      | You need 100 Spirit Stone.
       | You wander for a day. Nothing of note happens.
-      | Sect mission: Cull the Mist Wolves.
-      | You face the Mist Wolf. (You: 255 hp, 64 atk. Foe: 228 hp, 49 atk.)
+      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 255 hp, 64 atk. Foe: 228
       | You fall. (8 rounds, 0/255 hp left)
       | You were slain by a Mist Wolf at age 16.
       | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
   seed  6 m12  respawn mist_wolf (20%) lives=2 stones=68 qingshi_village
       cause: You were slain by a Mist Wolf at age 17.
+      | The villagers hold a harvest festival and press rice wine and dew grass on you as an honou
       | You share your meal with a starving child. Their grandmother presses a few stones into you
-      | Sect mission: Cull the Mist Wolves.
-      | You face the Mist Wolf. (You: 209 hp, 51 atk. Foe: 228 hp, 62 atk.)
+      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 209 hp, 51 atk. Foe: 228
       | You fall. (5 rounds, 0/209 hp left)
       | You were slain by a Mist Wolf at age 17.
       | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
   seed  6 m17  respawn mist_wolf (68%) lives=1 stones=52 qingshi_village
       cause: You were slain by a Mist Wolf at age 17.
+      | A hooded peddler sidles up and whispers of 'blood pills' that need no herbs, only lives. H
       | You need 100 Spirit Stone.
-      | Sect mission: Cull the Mist Wolves.
-      | You face the Mist Wolf. (You: 226 hp, 61 atk. Foe: 228 hp, 57 atk.)
+      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 226 hp, 61 atk. Foe: 228
       | You fall. (6 rounds, 0/226 hp left)
       | You were slain by a Mist Wolf at age 17.
       | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
   seed  7 m24  respawn mist_wolf (68%) lives=2 stones=1 qingshi_village
       cause: You were slain by a Mist Wolf at age 18.
+      | Sun Mochou strolls past with a crowd of admirers and stops to look you over. 'Still crawli
       | You bow your head and let Sun Mochou laugh. One day the heavens will turn.
-      | Sect mission: Cull the Mist Wolves.
-      | You face the Mist Wolf. (You: 207 hp, 97 atk. Foe: 228 hp, 61 atk.)
+      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 207 hp, 97 atk. Foe: 228
       | You fall. (4 rounds, 0/207 hp left)
       | You were slain by a Mist Wolf at age 18.
       | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
   seed  8 m8   respawn mist_wolf (30%) lives=2 stones=50 qingshi_village
       cause: You were slain by a Mist Wolf at age 16.
+      | You slip away before it finds you.
       | A ragged old man shares a breathing method before vanishing. Was he an immortal? (+200 qi)
-      | Sect mission: Cull the Mist Wolves.
-      | You face the Mist Wolf. (You: 244 hp, 43 atk. Foe: 228 hp, 55 atk.)
+      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 244 hp, 43 atk. Foe: 228
       | You fall. (7 rounds, 0/244 hp left)
       | You were slain by a Mist Wolf at age 16.
       | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
   seed  8 m12  respawn mist_wolf (65%) lives=1 stones=76 qingshi_village
       cause: You were slain by a Mist Wolf at age 17.
+      | Two farmers shout across a boundary stone, each swearing the damp corner of the field, whe
       | You walk the old boundary and divide the corner evenly. Both grumble, and both thank you. 
-      | Sect mission: Cull the Mist Wolves.
-      | You face the Mist Wolf. (You: 261 hp, 74 atk. Foe: 228 hp, 64 atk.)
+      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 261 hp, 74 atk. Foe: 228
       | You fall. (5 rounds, 0/261 hp left)
       | You were slain by a Mist Wolf at age 17.
       | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
   seed  9 m16  respawn mist_wolf (38%) lives=2 stones=125 qingshi_village
       cause: You were slain by a Mist Wolf at age 17.
+      | Fingers brush your sleeve. You catch the wrist before it slips away: a skinny youth with q
       | You march him to the guardhouse. The stallholders he has robbed for months cheer you all t
-      | Sect mission: Cull the Mist Wolves.
-      | You face the Mist Wolf. (You: 218 hp, 56 atk. Foe: 228 hp, 60 atk.)
+      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 218 hp, 56 atk. Foe: 228
       | You fall. (5 rounds, 0/218 hp left)
       | You were slain by a Mist Wolf at age 17.
       | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
   seed  9 m22  respawn mist_wolf (75%) lives=1 stones=153 qingshi_village
       cause: You were slain by a Mist Wolf at age 17.
+      | You spot a spirit stone glinting in a ditch. (+1 Spirit Stone)
       | You wander for a day. Nothing of note happens.
-      | Sect mission: Cull the Mist Wolves.
-      | You face the Mist Wolf. (You: 235 hp, 70 atk. Foe: 228 hp, 68 atk.)
+      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 235 hp, 70 atk. Foe: 228
       | You fall. (5 rounds, 0/235 hp left)
       | You were slain by a Mist Wolf at age 17.
       | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
   seed 10 m14  respawn mist_wolf (18%) lives=2 stones=53 qingshi_village
       cause: You were slain by a Mist Wolf at age 17.
+      | You face the Wild Boar. (You: 210 hp, 51 atk. Foe: 40 hp, 11 atk.)
       | The Wild Boar collapses. (1 round, 210/210 hp left; +1 Boar Hide)
-      | Sect mission: Cull the Mist Wolves.
-      | You face the Mist Wolf. (You: 210 hp, 52 atk. Foe: 228 hp, 73 atk.)
+      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 210 hp, 52 atk. Foe: 228
       | You fall. (4 rounds, 0/210 hp left)
       | You were slain by a Mist Wolf at age 17.
       | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
   seed 10 m20  respawn mist_wolf (72%) lives=1 stones=52 qingshi_village
       cause: You were slain by a Mist Wolf at age 17.
+      | A hooded peddler sidles up and whispers of 'blood pills' that need no herbs, only lives. H
       | You need 100 Spirit Stone.
-      | Sect mission: Cull the Mist Wolves.
-      | You face the Mist Wolf. (You: 225 hp, 71 atk. Foe: 228 hp, 61 atk.)
+      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 225 hp, 71 atk. Foe: 228
       | You fall. (5 rounds, 0/225 hp left)
       | You were slain by a Mist Wolf at age 17.
       | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
   seed 10 m61  respawn mist_wolf (85%) lives=0 stones=134 qingshi_village
       cause: You were slain by a Mist Wolf at age 21.
+      | You are beaten down. (3 rounds, 0/450 hp left; -33 Spirit Stone, Injured: Broken Bones)
       | The Roadside Rogue Cultivator hits too hard for your defense: armor or a defense technique
-      | Sect mission: Cull the Mist Wolves.
-      | You face the Mist Wolf. (You: 225 hp, 109 atk. Foe: 228 hp, 69 atk.)
+      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 225 hp, 109 atk. Foe: 22
       | You fall. (5 rounds, 0/225 hp left)
       | You were slain by a Mist Wolf at age 21.
       | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
+First Foundation breakthrough (QA-066): seed, bottleneck day, attempts [day chance pill? ok?/injury], success day, stones at bottleneck
+  seed  1 bottleneck d1841 attempts 2 [d1841 48% fail, d1990 38% fail] success d-1 stones 118
+  seed  2 bottleneck d1027 attempts 1 [d1027 46% ok] success d1027 stones 37
+  seed  3 bottleneck d1436 attempts 1 [d1436 49% ok] success d1436 stones 175
+  seed  4 bottleneck d1772 attempts 1 [d1772 53% fail+injury] success d-1 stones 174
+  seed  5 bottleneck d555  attempts 2 [d555 50% fail+injury, d600 40% ok] success d600 stones 114
+  seed  6 bottleneck d1904 attempts 2 [d1904 49% fail+injury, d2058 39% ok] success d2058 stones 188
+  seed  7 bottleneck d1534 attempts 2 [d1534 55% fail, d1633 45% ok] success d1633 stones 169
+  seed  8 bottleneck d880  attempts 1 [d880 55% ok] success d880 stones 70
+  seed  9 bottleneck d2023 attempts 1 [d2023 49% fail+injury] success d-1 stones 247
+  seed 10 bottleneck d1356 attempts 3 [d1356 54% fail, d1446 44% fail, d1543 44% ok] success d1543 stones 177
+  medians: days stuck at the bottleneck 45 (7 seeds that succeeded), attempts 2, share of attempts with a pill 0% (0 of 16), attempts under 50%: 11 of 16
 
 ## combat (200 fights per cell)
 

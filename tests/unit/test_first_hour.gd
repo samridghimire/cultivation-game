@@ -65,3 +65,21 @@ func test_sim_records_first_win_and_style() -> void:
 	assert_true(int(r["first_win_day"]) >= 0, "a curious newcomer wins a fight in 3 months")
 	assert_true(String(r["first_win_enemy"]) != "", "the first win names its foe")
 	assert_true(int(r["first_style_day"]) >= int(r["first_win_day"]) - 14 or int(r["first_style_day"]) == -1, "style day is a clock day or -1")
+
+
+## QA-066: the sim policy keeps an attempt log and the first bottleneck day per realm.
+func test_play_logs_breakthrough_attempts() -> void:
+	var gs := _root().get_node("GameState")
+	var clock := _root().get_node("GameClock")
+	var r: Dictionary = preload("res://tests/sim/first_hour.gd").play(gs, clock, 2, 36, true)
+	assert_true(r.has("breaks") and r.has("bottleneck_day"))
+	var seen := false
+	for a: Dictionary in r["breaks"]:
+		for key in ["day", "from_realm", "chance", "pill", "stones", "success", "injury"]:
+			assert_true(a.has(key), "attempt logged without %s" % key)
+		assert_true(float(a["chance"]) > 0.0 and float(a["chance"]) < 1.0)
+		if a["success"]:
+			seen = true
+			assert_true(r["bottleneck_day"].has(a["from_realm"]), "success without a bottleneck day")
+	assert_true(seen, "seed 2 reaches Foundation inside 36 months (first Foundation breakthrough logged)")
+	gs.end_session()

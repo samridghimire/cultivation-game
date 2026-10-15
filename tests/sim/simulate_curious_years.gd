@@ -74,6 +74,7 @@ func _run() -> void:
 	var first_month := {}
 	var stretches: Array = []
 	var died: Array[int] = []
+	var runs: Array[Dictionary] = []
 	for b in blocks:
 		kinds_by_block.append([])
 		new_by_block.append([])
@@ -90,6 +91,8 @@ func _run() -> void:
 	for s in range(1, seeds + 1):
 		_seed = s
 		var r: Dictionary = FirstHour.play(gs, clock, s, months, true)
+		runs.append(r.duplicate())
+		runs[-1].erase("player")
 		var sets: Array = r["kind_sets"]
 		if sets.size() < months:
 			died.append(s)
@@ -158,4 +161,42 @@ func _run() -> void:
 		print("      cause: %s" % d["cause"])
 		for line: String in d["recent"]:
 			print("      | %s" % line)
+	_print_foundation_breakthrough(runs)
 	quit(1 if early * 10 > maxi(seeds, 10) else 0)
+
+
+## QA-066: the first Foundation Establishment breakthrough (realm 1 -> 2), per seed, from the
+## attempt log FirstHour.play keeps. "Stuck" is the days from the first monthly check that found
+## the player at the bottleneck to the successful attempt (month-granular), -1 if never.
+func _print_foundation_breakthrough(runs: Array[Dictionary]) -> void:
+	print("First Foundation breakthrough (QA-066): seed, bottleneck day, attempts [day chance pill? ok?/injury], success day, stones at bottleneck")
+	var stuck: Array = []
+	var attempt_counts: Array = []
+	var with_pill := 0
+	var below_half := 0
+	var total := 0
+	for i in runs.size():
+		var r: Dictionary = runs[i]
+		var seed_attempts: Array = []
+		var success_day := -1
+		var stones_at := -1
+		for a: Dictionary in r["breaks"]:
+			if int(a["from_realm"]) != 1:
+				continue
+			if stones_at < 0:
+				stones_at = int(a["stones"])
+			seed_attempts.append("d%d %.0f%%%s %s" % [a["day"], 100.0 * float(a["chance"]), " pill" if a["pill"] else "", ("ok" if a["success"] else ("fail+injury" if a["injury"] else "fail"))])
+			total += 1
+			if float(a["chance"]) < 0.5:
+				below_half += 1
+			if a["pill"]:
+				with_pill += 1
+			if a["success"] and success_day < 0:
+				success_day = int(a["day"])
+		var bday: int = int(r["bottleneck_day"].get(1, -1))
+		print("  seed %2d bottleneck d%-4d attempts %d [%s] success d%d stones %d" % [i + 1, bday, seed_attempts.size(), ", ".join(seed_attempts), success_day, stones_at])
+		if bday >= 0:
+			attempt_counts.append(seed_attempts.size())
+			if success_day >= 0:
+				stuck.append(success_day - bday)
+	print("  medians: days stuck at the bottleneck %.0f (%d seeds that succeeded), attempts %.0f, share of attempts with a pill %d%% (%d of %d), attempts under 50%%: %d of %d" % [_median(stuck.duplicate()), stuck.size(), _median(attempt_counts.duplicate()), 100 * with_pill / maxi(1, total), with_pill, total, below_half, total])
