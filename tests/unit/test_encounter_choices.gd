@@ -260,3 +260,31 @@ func test_alignment_gated_encounters() -> void:
 	assert_true(Exploration.resolve_choice(c, d, d.encounters["wild_blood_lotus_recruiter"], 0, flags)["ok"])
 	assert_gt(Reputation.value(c, d, "blood_lotus_sect"), before)
 	assert_true(flags.get("met_blood_lotus_recruiter", false))
+
+
+## C-082: three once-only encounters that raise an attribute by exactly 1.
+func test_attribute_growth_encounters() -> void:
+	var d := data()
+	var cases := {
+		"misty_forest_waterfall_weight": ["forest", "constitution"],
+		"marsh_night_among_reeds": ["marsh", "spirit"],
+		"fallen_star_market_weiqi_elder": ["city", "comprehension"],
+	}
+	for id: String in cases:
+		var tag: String = cases[id][0]
+		var attr: String = cases[id][1]
+		var c := new_character()
+		c.realm_index = d.realm_index_of("qi_refining")
+		var flags := {}
+		var e: Dictionary = d.encounters[id]
+		var ids := func() -> Array:
+			return Exploration.eligible_encounters(c, d, [tag], flags).map(func(x): return x["encounter"]["id"])
+		assert_true(ids.call().has(id), id + " is eligible at Qi Refining")
+		var before := c.attribute(attr)
+		assert_true(Exploration.resolve_choice(c, d, e, 0, flags)["ok"])
+		assert_eq(c.attribute(attr), before + 1, id + " raises " + attr + " by 1")
+		assert_false(ids.call().has(id), id + " cannot repeat")
+		var declined := new_character()
+		var dflags := {}
+		Exploration.resolve_choice(declined, d, e, 1, dflags)
+		assert_eq(declined.attribute(attr), new_character().attribute(attr), id + " decline changes nothing")
