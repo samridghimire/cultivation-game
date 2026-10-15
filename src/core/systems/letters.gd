@@ -111,6 +111,10 @@ static func _write(c: CharacterData, npcs: Dictionary, favor: Dictionary, data: 
 		var region: Dictionary = data.regions.get(Npcs.region_of(npc, data), {})
 		var text := String(kind.get("text", "")).replace("{name}", npc.name).replace("{region}", String(region.get("name", "their home")))
 		var notes := Effects.apply(c, data, kind.get("effects", {}), flags)
+		var gain := _family_favor_gain(kind, how, int(favor.get(id, 0)), data) if from == "family" else 0
+		if gain > 0:
+			favor[id] = int(favor.get(id, 0)) + gain
+			notes.append("%s warms to you" % npc.name)
 		if kind.get("visit", false):
 			flags[visit_flag(id)] = true
 		var deal: Dictionary = kind.get("deal", {})
@@ -125,6 +129,17 @@ static func _write(c: CharacterData, npcs: Dictionary, favor: Dictionary, data: 
 			asked = true
 		return {"npc_id": id, "text": text, "notes": notes, "request": asked}
 	return {}
+
+
+## Favor a family letter kind's `favor` adds for a `how` (spouse/child) writer, capped like FamilyHome visits
+## (spouse: dual_cultivation.max_favor, child: home.max_child_favor). Parents gain nothing.
+static func _family_favor_gain(kind: Dictionary, how: String, current: int, data: GameData) -> int:
+	var cap := 0
+	if how == "spouse":
+		cap = int(data.family.get("dual_cultivation", {}).get("max_favor", 100))
+	elif how == "child":
+		cap = int(data.family.get("home", {}).get("max_child_favor", 100))
+	return clampi(int(kind.get("favor", 0)), 0, maxi(0, cap - current))
 
 
 static func _today(c: CharacterData, today: int) -> int:
@@ -277,6 +292,8 @@ static func validate(data: GameData) -> PackedStringArray:
 			errors.append("family.json letters kind %s needs id, text and weight > 0" % kind.get("id", "?"))
 		if not String(kind.get("from", "friend")) in ["friend", "family"]:
 			errors.append("family.json letters kind %s has an unknown from (friend or family)" % kind.get("id", "?"))
+		if int(kind.get("favor", 0)) < 0 or (kind.has("favor") and String(kind.get("from", "friend")) != "family"):
+			errors.append("family.json letters kind %s favor must be >= 0 and only on a family letter" % kind.get("id", "?"))
 		if kind.has("relation") and (String(kind.get("from", "friend")) != "family" or not String(kind["relation"]) in ["spouse", "child", "parent"]):
 			errors.append("family.json letters kind %s relation must be spouse, child or parent on a family letter" % kind.get("id", "?"))
 		var request: Dictionary = kind.get("request", {})

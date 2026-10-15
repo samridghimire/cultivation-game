@@ -309,6 +309,32 @@ func test_family_letter_matches_relation_and_applies_effects() -> void:
 	assert_eq(parent.item_count("spirit_herb"), herbs + 2, "a parent sends herbs")
 
 
+func test_child_and_spouse_letters_warm_them_up_to_the_cap() -> void:
+	var d := GameData.load_from_dir()
+	d.family["letters"]["family_chance"] = 1.0
+	var child := new_character()
+	child.children.append("k")
+	var favor := {"k": 10}
+	Letters.monthly(child, {"k": _kin("k", true)}, favor, d, seeded_rng(), {})
+	assert_eq(int(favor["k"]), 12, "a child's letter warms the child")
+	favor["k"] = int(d.family["home"]["max_child_favor"]) - 1
+	Letters.monthly(child, {"k": _kin("k", true)}, favor, d, seeded_rng(), {})
+	assert_eq(int(favor["k"]), int(d.family["home"]["max_child_favor"]), "capped at max_child_favor")
+	var spouse := new_character()
+	spouse.spouses.append("w")
+	var sfavor := {"w": 50}
+	Letters.monthly(spouse, {"w": _kin("w", true)}, sfavor, d, seeded_rng(), {})
+	assert_eq(int(sfavor["w"]), 52, "a spouse's letter warms them")
+	sfavor["w"] = int(d.family["dual_cultivation"]["max_favor"])
+	Letters.monthly(spouse, {"w": _kin("w", true)}, sfavor, d, seeded_rng(), {})
+	assert_eq(int(sfavor["w"]), int(d.family["dual_cultivation"]["max_favor"]), "capped at dual_cultivation.max_favor")
+	var parent := new_character()
+	parent.parents.append("p")
+	var pfavor := {"p": 60}
+	Letters.monthly(parent, {"p": _kin("p", false, 60)}, pfavor, d, seeded_rng(), {})
+	assert_eq(int(pfavor["p"]), 60, "parents gain nothing")
+
+
 func test_family_letter_validation() -> void:
 	var d := GameData.load_from_dir()
 	d.family["letters"]["family_chance"] = 1.5
