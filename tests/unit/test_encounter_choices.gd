@@ -309,3 +309,36 @@ func test_min_attributes_validation() -> void:
 	var errors := Exploration.validate_choices(d)
 	assert_eq(errors.size(), 2, str(errors))
 	assert_true(errors[0].contains("wisdomness") and errors[1].contains("comprehension"), str(errors))
+
+
+func test_min_profession_requirement() -> void:
+	var d := GameData.load_from_dir()
+	var c := new_character()
+	var choice := {"label": "Treat", "requires": {"min_profession": {"doctor": 1}}}
+	assert_true(Exploration.check_choice(c, d, choice, {}).begins_with("You need to be "), "rank 0 blocked")
+	assert_true(Exploration.check_choice(c, d, choice, {}).contains("Doctor"))
+	c.professions["doctor"] = {"rank": 1, "xp": 0.0}
+	assert_eq(Exploration.check_choice(c, d, choice, {}), "")
+
+
+func test_min_profession_validation() -> void:
+	var d := GameData.load_from_dir()
+	d.encounters["t_prof"] = {"id": "t_prof", "tags": ["x"], "weight": 1, "kind": "neutral", "days": 0, "text": "t", "choices": [
+		{"label": "A", "requires": {"min_profession": {"nonesuch": 1}}},
+		{"label": "B", "requires": {"min_profession": {"doctor": 0}}}]}
+	var errors := Exploration.validate_choices(d)
+	assert_eq(errors.size(), 2, str(errors))
+	assert_true(errors[0].contains("nonesuch") and errors[1].contains("doctor"), str(errors))
+
+
+func test_choice_check_tag() -> void:
+	var d := GameData.load_from_dir()
+	var c := new_character()
+	var e := {"choices": [
+		{"label": "Plain"},
+		{"label": "Wise", "requires": {"min_attributes": {"comprehension": 12}}},
+		{"label": "Heal", "requires": {"min_profession": {"doctor": 1}}}]}
+	var list := Exploration.choices(c, d, e, {})
+	assert_eq(list[0]["check"], "")
+	assert_eq(list[1]["check"], "Comprehension 12")
+	assert_eq(list[2]["check"], "Doctor, 1st Grade")

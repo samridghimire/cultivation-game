@@ -511,7 +511,27 @@ static func check_choice(c: CharacterData, data: GameData, choice: Dictionary, f
 	for attr_id: String in min_attrs:
 		if c.attribute(attr_id) < int(min_attrs[attr_id]):
 			return "You need %s %d for that." % [_attribute_name(data, attr_id), int(min_attrs[attr_id])]
+	var min_profs: Dictionary = req.get("min_profession", {})
+	for prof_id: String in min_profs:
+		var rank := int(min_profs[prof_id])
+		if data.professions.has(prof_id) and Professions.rank_of(c, prof_id) < rank:
+			return "You need to be %s %s for that." % [Text.a(data.profession_rank_names[clampi(rank, 0, Professions.max_rank(data))]), data.professions[prof_id].name]
 	return Effects.check(c, data, choice.get("effects", {}))
+
+
+## Short tag naming what a choice checks ("Comprehension 12", "Doctor, Apprentice"), or "".
+static func check_tag(data: GameData, choice: Dictionary) -> String:
+	var req: Dictionary = choice.get("requires", {})
+	var parts: PackedStringArray = []
+	var min_attrs: Dictionary = req.get("min_attributes", {})
+	for attr_id: String in min_attrs:
+		parts.append("%s %d" % [_attribute_name(data, attr_id), int(min_attrs[attr_id])])
+	var min_profs: Dictionary = req.get("min_profession", {})
+	for prof_id: String in min_profs:
+		var rank := clampi(int(min_profs[prof_id]), 0, Professions.max_rank(data))
+		var prof_name: String = data.professions[prof_id].name if data.professions.has(prof_id) else prof_id
+		parts.append("%s, %s" % [prof_name, data.profession_rank_names[rank]])
+	return ", ".join(parts)
 
 
 static func _attribute_name(data: GameData, attr_id: String) -> String:
@@ -521,13 +541,13 @@ static func _attribute_name(data: GameData, attr_id: String) -> String:
 	return attr_id
 
 
-## The choices of `encounter` for `c`: [{index, label, disabled, reason}].
+## The choices of `encounter` for `c`: [{index, label, disabled, reason, fight, check}].
 static func choices(c: CharacterData, data: GameData, encounter: Dictionary, flags: Dictionary) -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
 	var list: Array = encounter.get("choices", [])
 	for i in list.size():
 		var reason := check_choice(c, data, list[i], flags)
-		out.append({"index": i, "label": String(list[i].get("label", "")), "disabled": reason != "", "reason": reason, "fight": list[i].has("enemy") or bool(list[i].get("fight_rival", false))})
+		out.append({"index": i, "label": String(list[i].get("label", "")), "disabled": reason != "", "reason": reason, "fight": list[i].has("enemy") or bool(list[i].get("fight_rival", false)), "check": check_tag(data, list[i])})
 	return out
 
 
@@ -580,6 +600,12 @@ static func validate_choices(data: GameData) -> PackedStringArray:
 					errors.append("Encounter '%s' choice '%s' min_attributes has unknown attribute '%s'" % [e["id"], label, attr_id])
 				if not (min_attrs[attr_id] is int or min_attrs[attr_id] is float) or int(min_attrs[attr_id]) < 1:
 					errors.append("Encounter '%s' choice '%s' min_attributes '%s' needs a whole number >= 1" % [e["id"], label, attr_id])
+			var min_profs: Dictionary = req.get("min_profession", {})
+			for prof_id: String in min_profs:
+				if not data.professions.has(prof_id):
+					errors.append("Encounter '%s' choice '%s' min_profession has unknown profession '%s'" % [e["id"], label, prof_id])
+				if not (min_profs[prof_id] is int or min_profs[prof_id] is float) or int(min_profs[prof_id]) < 1 or int(min_profs[prof_id]) > Professions.max_rank(data):
+					errors.append("Encounter '%s' choice '%s' min_profession '%s' needs a rank from 1 to %d" % [e["id"], label, prof_id, Professions.max_rank(data)])
 			if int(choice.get("days", 0)) < 0:
 				errors.append("Encounter '%s' choice '%s' needs days >= 0" % [e["id"], label])
 			if choice.has("grateful_npc"):
