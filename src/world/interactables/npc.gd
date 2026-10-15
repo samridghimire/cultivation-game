@@ -89,10 +89,34 @@ var _near := false
 
 ## Just the name until the player is close, then "Name (Qi Refining, 1st Layer)".
 func label_text() -> String:
-	if _near:
-		return display_name
-	var i := display_name.find(" (")
-	return display_name.substr(0, i) if i > 0 else display_name
+	var text := display_name
+	if not _near:
+		var i := display_name.find(" (")
+		text = display_name.substr(0, i) if i > 0 else display_name
+	if _is_my_rival():
+		text += " (rival)"
+	return text
+
+
+## True when `npc_id` is the player's rival and the first meeting has happened (WU-138).
+static func is_rival(c: CharacterData, people: Dictionary, flags: Dictionary, npc_id: String) -> bool:
+	if not flags.get(Rivals.FIRST_MEETING_FLAG, false):
+		return false
+	var rival := Rivals.rival_of(c, people)
+	return rival != null and rival.id == npc_id
+
+
+func _is_my_rival() -> bool:
+	return GameState.player != null and is_rival(GameState.player, GameState.npcs, GameState.world_flags, npc_id)
+
+
+## Danger color while the rival is a higher major realm than the player.
+func label_color() -> Color:
+	if _is_my_rival():
+		var rival := Rivals.rival_of(GameState.player, GameState.npcs)
+		if Rivals.relation(GameState.player, rival) == "stronger":
+			return UIStyle.CATEGORY_COLORS["danger"]
+	return Color.WHITE
 
 
 func _update_near() -> void:
@@ -469,6 +493,8 @@ func _look() -> void:
 	if npc == null:
 		return
 	var text := Npcs.describe(npc, GameState.data)
+	if _is_my_rival():
+		text = "Your rival. " + text
 	var membership := NpcClans.membership_text(GameState.npc_clans, GameState.npcs, GameState.data, npc_id)
 	if membership != "":
 		text += " %s." % membership

@@ -100,6 +100,11 @@ func label_text() -> String:
 	return display_name
 
 
+## The color of the name label (NPCs override it, WU-138).
+func label_color() -> Color:
+	return Color.WHITE
+
+
 ## The rect the name label covers, in the parent's coordinates (for overlap checks).
 func label_rect(text: String = "") -> Rect2:
 	if text == "":
@@ -146,7 +151,7 @@ func _draw() -> void:
 	var font := ThemeDB.fallback_font
 	var text := label_text()
 	var text_width := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, LABEL_FONT_SIZE).x
-	draw_string(font, Vector2(-text_width / 2.0, -size.y / 2.0 - 8.0) + label_offset, text, HORIZONTAL_ALIGNMENT_LEFT, -1, LABEL_FONT_SIZE, Color.WHITE)
+	draw_string(font, Vector2(-text_width / 2.0, -size.y / 2.0 - 8.0) + label_offset, text, HORIZONTAL_ALIGNMENT_LEFT, -1, LABEL_FONT_SIZE, label_color())
 	if anchor_id != "":
 		_draw_anchor_marker()
 

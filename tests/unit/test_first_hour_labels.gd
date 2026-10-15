@@ -43,3 +43,27 @@ func test_inventory_list_shrinks_for_few_stacks() -> void:
 func test_fight_log_shrinks_for_short_fights() -> void:
 	assert_true(CombatReport.log_height(3) < 360.0)
 	assert_eq(CombatReport.log_height(60), 360.0)
+
+
+func test_is_rival_needs_the_first_meeting_and_a_living_rival() -> void:
+	var d := data()
+	var c := new_character()
+	var people := {}
+	var rival := Rivals.spawn(c, people, d, seeded_rng(), "qingshi_village")
+	var other := new_character()
+	other.id = "someone_else"
+	people[other.id] = other
+	assert_false(NPC_SCRIPT.is_rival(c, people, {}, rival.id), "before the first meeting")
+	var flags := {Rivals.FIRST_MEETING_FLAG: true}
+	assert_true(NPC_SCRIPT.is_rival(c, people, flags, rival.id))
+	assert_false(NPC_SCRIPT.is_rival(c, people, flags, other.id), "another NPC")
+	rival.alive = false
+	assert_false(NPC_SCRIPT.is_rival(c, people, flags, rival.id), "dead rival")
+
+
+func test_rival_label_stays_liftable() -> void:
+	var a := _npc("Ren Longyuan (Qi Refining, 2nd Layer)", Vector2(300, 300))
+	var b := _npc("Hooded Stranger (Qi Refining, 1st Layer)", Vector2(320, 304))
+	a._near = true
+	Interactable.spread_labels([a, b])
+	assert_false(a.label_rect().intersects(b.label_rect()), "labels overlap")
