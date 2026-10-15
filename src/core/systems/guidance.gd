@@ -486,10 +486,31 @@ static func _mortal_sect_hint(c: CharacterData, data: GameData, open: PackedStri
 static func _mission_hint(c: CharacterData, data: GameData, flags: Dictionary = {}) -> String:
 	if c.is_rogue():
 		return ""
-	var ready := Sects.available_missions(c, data, flags).filter(func(id: String) -> bool: return Sects.check_mission(c, data, id, flags) == "").size()
-	if ready == 0:
-		return ""
-	return "%d sect %s ready on the mission board at a sect hall." % [ready, "mission is" if ready == 1 else "missions are"]
+	var ready := 0
+	var too_dangerous := 0
+	for id: String in Sects.available_missions(c, data, flags):
+		if Sects.check_mission(c, data, id, flags) != "":
+			continue
+		if _mission_too_dangerous(c, data, id):
+			too_dangerous += 1
+		else:
+			ready += 1
+	var text := ""
+	if ready > 0:
+		text = "%d sect %s ready on the mission board at a sect hall." % [ready, "mission is" if ready == 1 else "missions are"]
+		if too_dangerous > 0:
+			text = text.trim_suffix(".") + " (%d more %s too dangerous for you yet)." % [too_dangerous, "mission is" if too_dangerous == 1 else "missions are"]
+	elif too_dangerous > 0:
+		text = "The sect's missions are too dangerous for you yet; practise your techniques first."
+	return text
+
+
+## A mission with an enemy you would more likely lose to than beat (below Risky).
+static func _mission_too_dangerous(c: CharacterData, data: GameData, mission_id: String) -> bool:
+	var enemy_id := String(data.sect_missions.get(mission_id, {}).get("enemy", ""))
+	if enemy_id == "" or not data.enemies.has(enemy_id):
+		return false
+	return Combat.win_chance(c, data, data.enemies[enemy_id], 20) < 0.5
 
 
 ## Announcements for features that just became available and whose flag

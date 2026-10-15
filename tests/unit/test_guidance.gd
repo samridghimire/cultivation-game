@@ -1078,3 +1078,27 @@ func test_fairer_fight_note() -> void:
 	var entries: Array = [{"text": "Bounty: Wolf in Marsh (Even, 50 in 100)", "enemy": "Wolf"}]
 	assert_eq(Guidance.fairer_fight_note(entries, "Wolf"), "")
 	assert_eq(Guidance.fairer_fight_note(entries, "Boar"), " A fairer fight: Bounty: Wolf in Marsh (Even, 50 in 100).")
+
+
+
+## GUIDE-024: the mission hint does not count fights the player would likely lose.
+func test_mission_hint_skips_deadly_fights() -> void:
+	var d := data()
+	var c := new_character()
+	c.realm_index = 1
+	c.stage = 0
+	c.sect = {"id": "azure_cloud_sect", "rank": 0, "contribution": 0}
+	var wolf := "patrol_misty_peaks"
+	var enemy: Dictionary = d.enemies[String(d.sect_missions[wolf]["enemy"])]
+	var weak := Combat.win_chance(c, d, enemy, 20) < 0.5
+	assert_true(weak, "a bare QR1 disciple is outmatched by the mist wolf")
+	c.stage = 1
+	var hint := Guidance._mission_hint(c, d, {})
+	assert_true(hint == "" or hint.contains("ready") or hint.contains("dangerous"))
+	var strong := new_character()
+	strong.realm_index = 2
+	strong.stage = 5
+	strong.sect = {"id": "azure_cloud_sect", "rank": 0, "contribution": 0}
+	assert_false(Guidance._mission_too_dangerous(strong, d, wolf), "a strong Foundation character counts it")
+	c.stage = 0
+	assert_true(Guidance._mission_too_dangerous(c, d, wolf))
