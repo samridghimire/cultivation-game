@@ -27,6 +27,9 @@ func get_options() -> Array[Dictionary]:
 		if risk != "":
 			odds += "\n" + risk
 		if GameState.tribulation_preview()["has_tribulation"]:
+			var trib := Guidance.tribulation_note(GameState.player, GameState.data)
+			if not trib.is_empty():
+				odds += "\n" + String(trib["text"])
 			# A tribulation can kill: show the preparation screen before attempting.
 			options.append({"label": "Attempt breakthrough (%d%% chance, Heavenly Tribulation!)" % int(chance * 100), "description": odds, "action": EventBus.tribulation_prepare_requested.emit})
 		elif GameState.player.realm_index + 1 >= 2:

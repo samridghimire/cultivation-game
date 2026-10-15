@@ -66,6 +66,21 @@ func test_prepare_lists_preview_and_cancel_closes() -> void:
 	gs.end_session()
 
 
+func test_attempt_option_carries_the_tribulation_note() -> void:
+	var gs := _root().get_node("GameState")
+	var c := CharacterFactory.create("Tribulant", gs.data, seeded_rng())
+	gs.start_session(_at_peak(c, gs.data))
+	var spot: Node = load("res://src/world/interactables/meditation_spot.gd").new()
+	var note := String(Guidance.tribulation_note(c, gs.data)["text"])
+	var found := false
+	for option: Dictionary in spot.get_options():
+		if String(option["label"]).begins_with("Attempt breakthrough"):
+			found = true
+			assert_true(String(option["description"]).contains(note), option["description"])
+	spot.free()
+	assert_true(found)
+
+
 func test_meditation_spot_warns_before_tribulation_and_game_state_reports_it() -> void:
 	var gs := _root().get_node("GameState")
 	var bus := _root().get_node("EventBus")
