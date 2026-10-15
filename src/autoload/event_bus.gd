@@ -7,6 +7,8 @@ signal message_posted(text: String, category: String)
 ## Any player state changed; UI should refresh.
 signal player_changed
 signal session_started
+## Extra line for the breakthrough banner (e.g. "Lifespan +80 years"), emitted just before breakthrough_attempted.
+signal breakthrough_details(text: String)
 signal breakthrough_attempted(success: bool, realm_name: String)
 signal player_died(cause: String)
 ## The Creation Artifact saved the player from a violent death (respawned at anchor_id, "" = start region).

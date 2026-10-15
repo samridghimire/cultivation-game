@@ -11,6 +11,7 @@ const LIFESPAN_WARNING := 0.15
 const LIFESPAN_DANGER := 0.05
 
 var _age: Label
+var _breakthrough_details: String = ""
 var _status: Label
 var _lives: Label
 var _qi_bar: ProgressBar
@@ -184,6 +185,7 @@ func _ready() -> void:
 	EventBus.combat_finished.connect(_on_combat_finished)
 	EventBus.tribulation_prepare_requested.connect(_on_tribulation_prepare)
 	EventBus.tribulation_endured.connect(_on_tribulation_endured)
+	EventBus.breakthrough_details.connect(func(text: String) -> void: _breakthrough_details = text)
 	EventBus.breakthrough_attempted.connect(_on_breakthrough)
 	EventBus.dialogue_requested.connect(_on_dialogue_requested)
 	EventBus.dialogue_ended.connect(func(_id): _dialogue.close())
@@ -965,8 +967,11 @@ func _show_arrival(region_id: String) -> void:
 
 
 func _on_breakthrough(success: bool, realm_name: String) -> void:
+	var details := _breakthrough_details
+	_breakthrough_details = ""
 	if success:
-		_banner.announce("Breakthrough!", "You have entered the %s realm." % realm_name, UIStyle.ACCENT)
+		var sub := details if details != "" else "You have entered the %s realm." % realm_name
+		_banner.announce("Breakthrough!", sub, UIStyle.ACCENT)
 	else:
 		_banner.announce("Breakthrough Failed", "Your qi scatters before the gate of %s." % realm_name, UIStyle.CATEGORY_COLORS["danger"])
 

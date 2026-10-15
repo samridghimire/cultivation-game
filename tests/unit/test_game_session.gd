@@ -1363,3 +1363,40 @@ func test_planting_the_guardian_seed_enriches_azure_peak() -> void:
 			assert_true(absf(gs.region_qi_density() - before * 1.1) < 0.0001, "planting raises Azure Peak qi by 10%")
 		else:
 			assert_eq(gs.region_qi_density(), before, "swallowing leaves it alone")
+
+
+func test_breakthrough_reports_lifespan_and_qi_gain() -> void:
+	var c := _start()
+	var gs := _game_state()
+	c.realm_index = 1
+	c.stage = gs.data.realms[1].stage_count() - 1
+	Cultivation.add_qi(c, gs.data, 1e12)
+	c.breakthrough_bonus = 5.0
+	var before := Cultivation.lifespan_years(c, gs.data)
+	var rate_before := Cultivation.qi_per_day(c, gs.data)
+	var details: Array[String] = []
+	EventBus.breakthrough_details.connect(func(t: String) -> void: details.append(t))
+	EventBus.clear_history()
+	gs.attempt_breakthrough()
+	assert_eq(c.realm_index, 2)
+	var gain := Cultivation.lifespan_years(c, gs.data) - before
+	assert_gt(gain, 0)
+	assert_true(EventBus.history.any(func(e: Dictionary) -> bool: return e["text"] == "Your lifespan grows to %d years (+%d)." % [before + gain, gain]))
+	assert_eq(details, ["Lifespan +%d years" % gain])
+	var ratio := Cultivation.qi_per_day(c, gs.data) / rate_before
+	assert_eq(EventBus.history.any(func(e: Dictionary) -> bool: return String(e["text"]).begins_with("Your qi gathers")), ratio >= 1.5)
+	gs.end_session()
+
+
+func test_failed_breakthrough_posts_no_growth_lines() -> void:
+	var c := _start()
+	var gs := _game_state()
+	c.realm_index = 1
+	c.stage = gs.data.realms[1].stage_count() - 1
+	Cultivation.add_qi(c, gs.data, 1e12)
+	c.breakthrough_bonus = -5.0
+	EventBus.clear_history()
+	gs.attempt_breakthrough()
+	assert_eq(c.realm_index, 1)
+	assert_false(EventBus.history.any(func(e: Dictionary) -> bool: return String(e["text"]).begins_with("Your lifespan grows") or String(e["text"]).begins_with("Your qi gathers")))
+	gs.end_session()

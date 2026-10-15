@@ -288,6 +288,8 @@ func attempt_breakthrough() -> void:
 	if not Cultivation.can_attempt_breakthrough(player, data):
 		EventBus.post("You are not ready to break through.", "warning")
 		return
+	var lifespan_before := Cultivation.lifespan_years(player, data)
+	var qi_rate_before := Cultivation.qi_per_day(player, data)
 	var result := Cultivation.attempt_breakthrough(player, data, rng)
 	_report_tribulation(result)
 	if result["died"]:
@@ -297,6 +299,13 @@ func attempt_breakthrough() -> void:
 	LifeStats.add(player, "breakthroughs" if result["success"] else "breakthroughs_failed")
 	if result["success"]:
 		EventBus.post("Breakthrough! You have entered the %s realm." % result["realm_name"], "progress")
+		var lifespan_gain := Cultivation.lifespan_years(player, data) - lifespan_before
+		if lifespan_gain > 0:
+			EventBus.post("Your lifespan grows to %d years (+%d)." % [Cultivation.lifespan_years(player, data), lifespan_gain], "progress")
+			EventBus.breakthrough_details.emit("Lifespan +%d years" % lifespan_gain)
+		var qi_ratio := Cultivation.qi_per_day(player, data) / maxf(qi_rate_before, 0.0001)
+		if qi_ratio >= 1.5:
+			EventBus.post("Your qi gathers %s times faster." % String.num(qi_ratio, 1), "progress")
 		var told := Family.breakthrough_news(player, data, npcs, npc_favor)
 		if not told.is_empty():
 			EventBus.post("Word of your %s breakthrough spreads: %d %s who know you think better of you." % [result["realm_name"], told.size(), "person" if told.size() == 1 else "people"], "progress")
