@@ -20,6 +20,31 @@ func test_every_region_with_an_inheritance_has_grounds() -> void:
 	assert_true(core.size() >= 2, "Core Formation legacies exist")
 
 
+func test_trial_note_for_each_test_kind() -> void:
+	var d := data()
+	var c := new_character()
+	var hut: Dictionary = d.inheritances["reed_hermit_hut"]
+	var script: GDScript = load("res://src/world/interactables/inheritance_grounds.gd")
+	var stages: Array = hut["stages"]
+	var kinds := {}
+	for stage: Dictionary in stages:
+		kinds[String(stage["test"])] = true
+		var note: String = script.test_text(c, d, stage)
+		match String(stage["test"]):
+			"realm":
+				assert_eq(note, "needs %s" % Inheritances.realm_requirement(d, stage))
+			"attribute":
+				assert_true(note.begins_with("needs ") and note.contains(", yours %d" % c.attribute(String(stage["attribute"]))), note)
+			"fight":
+				assert_true(note.contains(": "), note)
+	assert_true(not kinds.is_empty())
+	assert_eq(script.trial_note(c, d, "reed_hermit_hut"), script.test_text(c, d, stages[0]))
+	c.attributes["spirit"] = 3
+	var attr_stage := {"test": "attribute", "attribute": "spirit", "min": 12}
+	assert_eq(script.test_text(c, d, attr_stage), "needs Spirit 12, yours 3")
+	assert_eq(script.trial_note(c, d, "nope"), "")
+
+
 func test_grounds_list_trials_and_attempt_them() -> void:
 	var gs := _root().get_node("GameState")
 	var c := new_character()
@@ -34,9 +59,9 @@ func test_grounds_list_trials_and_attempt_them() -> void:
 	(place.get_options()[1]["action"] as Callable).call()
 	assert_eq(Inheritances.stages_cleared(c, "fist_saint_grave"), 1)
 	c.attributes["constitution"] = 15
-	assert_true(String(_labels(place.get_options())[1]).contains("needs Constitution 11"), str(_labels(place.get_options())))
+	assert_true(String(_labels(place.get_options())[1]).contains("needs Constitution 11, yours 15"), str(_labels(place.get_options())))
 	(place.get_options()[1]["action"] as Callable).call()
-	assert_true(String(_labels(place.get_options())[1]).contains("fight: Grave Guardian Ape, "), "fight trials show their danger")
+	assert_true(String(_labels(place.get_options())[1]).contains("(Grave Guardian Ape: "), "fight trials show their danger")
 	gs.world_flags[Inheritances.claimed_flag("fist_saint_grave")] = true
 	labels = _labels(place.get_options())
 	assert_eq(labels.size(), 1, "claimed: no attempt entry")
