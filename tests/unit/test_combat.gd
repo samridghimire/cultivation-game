@@ -303,3 +303,13 @@ func test_label_for_chance_bands() -> void:
 	var cases := [[0.95, "Weak"], [0.9, "Weak"], [0.8, "Even"], [0.7, "Even"], [0.6, "Risky"], [0.5, "Risky"], [0.3, "Dangerous"], [0.15, "Dangerous"], [0.1, "Deadly"]]
 	for pair: Array in cases:
 		assert_eq(Combat.label_for_chance(pair[0]), pair[1], "chance %s" % pair[0])
+
+
+func test_loss_advice_mentions_missing_fighting_style() -> void:
+	var c := new_character()
+	var lost := {"victory": false, "draw": false, "escaped": false}
+	var foe := _foe("mortal", 0, 0, 0, 0)
+	c.techniques = {}
+	assert_true(Combat.loss_advice(c, data(), foe, lost).contains("no fighting style"))
+	c.techniques = {"iron_fist": {"level": 1, "xp": 0.0}}
+	assert_false(Combat.loss_advice(c, data(), foe, lost).contains("no fighting style"))

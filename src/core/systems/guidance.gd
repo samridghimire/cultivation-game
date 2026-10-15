@@ -70,8 +70,12 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 			out.append(delivery)
 	if c.professions.is_empty():
 		out.append("Work at a workshop to learn a profession and earn spirit stones.")
-	if c.techniques.is_empty() and c.realm_index > NEWCOMER_MAX_REALM:
-		out.append(TECHNIQUE_HINT)
+	if c.realm_index > NEWCOMER_MAX_REALM:
+		var fighting := first_combat_hint(c, data, region_id)
+		if fighting != "":
+			out.append(fighting)
+		elif c.techniques.is_empty():
+			out.append(TECHNIQUE_HINT)
 	for hint in [_dao_hint(c, data), _abode_hint(c, data), _family_hint(c, data, people)]:
 		if hint != "":
 			out.append(hint)
@@ -590,6 +594,51 @@ static func _family_hint(c: CharacterData, data: GameData, people: Dictionary) -
 	return ""
 
 
+## The cheapest combat-technique manual `c` could learn (GUIDE-019), or {} when
+## they already know a combat technique. Prefers a merchant in `region_id`
+## ({item, technique, merchant, price}); else the cheapest manual with any known
+## source ({item, technique, merchant: "", price, source}).
+static func first_combat_manual(c: CharacterData, data: GameData, region_id: String) -> Dictionary:
+	for tech_id in c.techniques:
+		var known: TechniqueDef = data.techniques.get(tech_id)
+		if known != null and known.kind == "combat":
+			return {}
+	var best: Dictionary = {}
+	var places: Array = data.regions.get(region_id, {}).get("places", [])
+	var anywhere: Dictionary = {}
+	for tech: TechniqueDef in data.techniques.values():
+		if tech.kind != "combat" or tech.manual_item == "" or not data.items.has(tech.manual_item):
+			continue
+		if data.realm_index_of(tech.min_realm) > c.realm_index:
+			continue
+		var item: Dictionary = data.items[tech.manual_item]
+		var price := int(item.get("price", 0))
+		for place: Dictionary in places:
+			if place.get("type", "") != "merchant":
+				continue
+			if c.alignment < int(place.get("min_alignment", -1000000)) or c.alignment > int(place.get("max_alignment", 1000000)):
+				continue
+			if not Items.merchant_sells(data, item, place.get("stock_tags", []), int(place.get("max_price", 0))):
+				continue
+			if best.is_empty() or price < int(best["price"]) or (price == int(best["price"]) and tech.manual_item < String(best["item"])):
+				best = {"item": tech.manual_item, "technique": tech.id, "merchant": String(place.get("display_name", "a merchant")), "price": price}
+		if Items.has_known_source(data, tech.manual_item):
+			if anywhere.is_empty() or price < int(anywhere["price"]) or (price == int(anywhere["price"]) and tech.manual_item < String(anywhere["item"])):
+				anywhere = {"item": tech.manual_item, "technique": tech.id, "merchant": "", "price": price, "source": Items.sources(data, tech.manual_item)[0]}
+	return best if not best.is_empty() else anywhere
+
+
+## "You know no fighting style..." naming where to get one, or "" (GUIDE-019).
+static func first_combat_hint(c: CharacterData, data: GameData, region_id: String) -> String:
+	var found := first_combat_manual(c, data, region_id)
+	if found.is_empty():
+		return ""
+	var manual: String = data.items[found["item"]]["name"]
+	if String(found["merchant"]) != "":
+		return "You know no fighting style. %s at the %s teaches %s for %d spirit stones." % [manual, found["merchant"], data.techniques[found["technique"]].name, int(found["price"])]
+	return "You know no fighting style. Look for the %s (%s)." % [manual, found["source"]]
+
+
 ## First-steps pointers for Mortal and Qi Refining players, most useful first.
 static func _newcomer_hints(c: CharacterData, data: GameData, flags: Dictionary, region_id: String) -> PackedStringArray:
 	var out: PackedStringArray = []
@@ -610,6 +659,9 @@ static func _newcomer_hints(c: CharacterData, data: GameData, flags: Dictionary,
 			if c.item_count(item_id) > 0 and float(fx.get("qi", 0.0)) > 0.0 and not harmful:
 				out.append("Use your %s (Inventory, I) to gather qi at once." % item["name"])
 				break
+	var fighting := first_combat_hint(c, data, region_id)
+	if fighting != "":
+		out.append(fighting)
 	if region_id == CHORE_REGION:
 		for deed: Dictionary in data.deeds.values():
 			if String(deed["id"]).begins_with("chore_") and not flags.get(String(deed.get("blocked_by_flag", "")), false):

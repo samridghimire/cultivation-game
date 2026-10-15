@@ -289,7 +289,8 @@ func test_outgrown_method_hint_names_a_known_better_method() -> void:
 	c.techniques["azure_cloud_heart_sutra"] = {"level": 1, "xp": 0.0}
 	var hints := Guidance.hints(c, data(), 1.0, 20)
 	assert_true(_has(hints, "you know the Azure Cloud Heart Sutra"))
-	assert_false(_has(hints, "Look for the"))
+	for h in hints:
+		assert_false(h.contains("Look for the") and not h.contains("no fighting style"), h)
 
 
 func test_method_hint_warns_before_outgrowing_and_is_absent_when_fine() -> void:
@@ -926,3 +927,36 @@ func test_recap_names_waiting_hunt_letter_and_renown_capped_at_two() -> void:
 	assert_false(_has(capped, "Your name is"), "at most two waiting lines")
 	c.bounty = {}
 	assert_true(_has(Guidance.recap(c, data(), {}, 100, "qingshi_village"), "Your name is"))
+
+
+func test_first_combat_manual_names_the_merchant_and_survives_breathing() -> void:
+	var c := _fresh()
+	c.techniques = {}
+	var d := data()
+	var found := Guidance.first_combat_manual(c, d, "qingshi_village")
+	assert_eq(found.get("item", ""), "manual_iron_fist")
+	assert_eq(found.get("merchant", ""), "Wandering Merchant")
+	assert_eq(found.get("price", 0), 15)
+	var hint := Guidance.first_combat_hint(c, d, "qingshi_village")
+	assert_true(hint.contains("Wandering Merchant") and hint.contains("15 spirit stones"), hint)
+	c.techniques = {"basic_breathing": {"level": 1, "xp": 0.0}}
+	assert_true(Guidance.first_combat_hint(c, d, "qingshi_village") != "")
+	assert_true(_has(Guidance.hints(c, d, 1.0, 5, {}, {Guidance.ELDER_MO_FLAG: true}, "qingshi_village"), "no fighting style"))
+	c.techniques["iron_fist"] = {"level": 1, "xp": 0.0}
+	assert_true(Guidance.first_combat_manual(c, d, "qingshi_village").is_empty())
+	assert_eq(Guidance.first_combat_hint(c, d, "qingshi_village"), "")
+
+
+func test_first_combat_hint_default_limit_for_fresh_player() -> void:
+	var c := _fresh()
+	c.techniques = {}
+	assert_true(_has(Guidance.hints(c, data(), 1.0, 5, {}, {}, "qingshi_village"), "no fighting style"))
+
+
+func test_first_combat_hint_falls_back_to_a_source() -> void:
+	var c := _fresh()
+	c.techniques = {}
+	var found := Guidance.first_combat_manual(c, data(), "")
+	assert_false(found.is_empty())
+	assert_eq(found["merchant"], "")
+	assert_true(Guidance.first_combat_hint(c, data(), "").contains("Look for the"))
