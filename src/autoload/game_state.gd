@@ -1207,7 +1207,7 @@ func _greet_renowned(npc_id: String) -> void:
 
 ## Ask a stronger NPC for pointers on one of your techniques (MENTOR-001).
 func check_pointers(npc_id: String) -> String:
-	return Mentorship.check_pointers(player, npcs.get(npc_id), int(npc_favor.get(npc_id, 0)), data, GameClock.total_days)
+	return Mentorship.check_pointers(player, npcs.get(npc_id), int(npc_favor.get(npc_id, 0)), data, GameClock.total_days, current_region, world_flags)
 
 
 func ask_pointers(npc_id: String) -> void:

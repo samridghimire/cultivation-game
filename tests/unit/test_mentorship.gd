@@ -252,3 +252,21 @@ func test_pointers_shared_only_when_senior_knows_better() -> void:
 	p[1].techniques["iron_fist"]["level"] = 3
 	assert_true(Mentorship.knows_better(p[0], p[1], "iron_fist"))
 	assert_true(Mentorship.give_pointers(p[0], p[1], 50, d, 100)["shared"])
+
+
+func test_pointer_refusals_say_what_to_do() -> void:
+	var p := _pair()
+	var d := data()
+	p[1].age_days = 40 * Calendar.DAYS_PER_YEAR
+	p[1].realm_index = 2
+	p[1].stage = 0
+	p[0].techniques = {}
+	var reason := Mentorship.check_pointers(p[0], p[1], 10, d, 0, "qingshi_village")
+	assert_true(reason.contains("Iron Fist"), reason)
+	assert_true(Mentorship.check_pointers(p[0], p[1], 10, d, 0).contains("Look for the"))
+	var low := Mentorship.check_pointers(p[0], p[1], 5, d, 0)
+	assert_true(low.ends_with("Chats and gifts raise it."), low)
+	assert_false(low.contains("fond of"), low)
+	var flags := {"taste_%s_dew_grass" % p[1].id: 1}
+	var liked := Mentorship.check_pointers(p[0], p[1], 5, d, 0, "", flags)
+	assert_true(liked.contains("Chats and gifts raise it.") and liked.contains("They are fond of"), liked)

@@ -53,7 +53,9 @@ static func cooldown_left(c: CharacterData, key: String, cooldown: int, today: i
 	return maxi(0, int(c.npc_action_days[key]) + cooldown - today)
 
 
-static func check_pointers(c: CharacterData, npc: CharacterData, favor: int, data: GameData, today: int) -> String:
+## `region_id` and `flags` (world flags) only enrich the refusal texts with where to find a
+## fighting manual and what the NPC likes.
+static func check_pointers(c: CharacterData, npc: CharacterData, favor: int, data: GameData, today: int, region_id: String = "", flags: Dictionary = {}) -> String:
 	if npc == null or not npc.alive:
 		return "They are not here."
 	var rules := _rules(data, "pointers")
@@ -65,12 +67,31 @@ static func check_pointers(c: CharacterData, npc: CharacterData, favor: int, dat
 		return "%s is no stronger than you; there is nothing to learn from them yet." % npc.name
 	var min_favor := int(rules.get("min_favor", 0))
 	if favor < min_favor:
-		return "%s does not know you well enough (favor %d/%d)." % [npc.name, favor, min_favor]
+		return "%s does not know you well enough (favor %d/%d). Chats and gifts raise it.%s" % [npc.name, favor, min_favor, _taste_note(data, flags, npc)]
 	var left := cooldown_left(c, "pointers:" + npc.id, int(rules.get("cooldown_days", 0)), today)
 	if left > 0:
 		return "%s already pointed out your flaws recently (%d days)." % [npc.name, left]
 	if pointer_technique(c, npc, data) == "":
-		return "You have no technique they could correct yet; find a technique manual first."
+		var hint := Guidance.first_combat_hint(c, data, region_id)
+		return "You have no technique they could correct yet. " + hint if hint != "" else "You have no technique they could correct yet; find a technique manual first."
+	return ""
+
+
+## " They are fond of <item>." for the first liked item the player has learned, else
+## the told hint sentence, else "".
+static func _taste_note(data: GameData, flags: Dictionary, npc: CharacterData) -> String:
+	var likes: Array[String] = []
+	var tastes := Family.known_tastes(flags, data, npc.id)
+	for item_id: String in tastes:
+		if int(tastes[item_id]) > 0:
+			likes.append(String(data.items[item_id].get("name", item_id)))
+	if not likes.is_empty():
+		likes.sort()
+		return " They are fond of %s." % likes[0]
+	if flags.has("taste_told_" + npc.id):
+		var hint := Family.taste_hint(data, npc.id)
+		if hint != "":
+			return " " + hint
 	return ""
 
 
