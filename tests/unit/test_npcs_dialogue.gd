@@ -256,3 +256,12 @@ func test_elder_mo_points_to_iron_fist() -> void:
 	var mo: Dictionary = data().dialogues["elder_mo"]
 	assert_true(String(mo["nodes"]["fighting"]["text"]).contains("Iron Fist"))
 	assert_eq(Dialogue.validate(mo, data()).size(), 0)
+
+
+## [REVIEW] The fighting pointer goes away once you know Iron Fist.
+func test_elder_mo_fighting_choice_hides_after_iron_fist() -> void:
+	var cond: Dictionary = {}
+	for ch: Dictionary in data().dialogues["elder_mo"]["nodes"]["greet"]["choices"]:
+		if String(ch.get("next", "")) == "fighting":
+			cond = ch["if"]
+	assert_eq(String(cond.get("not_knows_technique", "")), "iron_fist")

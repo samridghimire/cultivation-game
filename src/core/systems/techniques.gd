@@ -17,6 +17,15 @@ static func knows(c: CharacterData, tech_id: String) -> bool:
 
 
 ## Returns "" if `c` can learn the technique, otherwise the reason not.
+## True when `c` knows any technique of `kind` ("combat", "method", ...).
+static func knows_kind(c: CharacterData, data: GameData, kind: String) -> bool:
+	for tech_id in c.techniques:
+		var def: TechniqueDef = data.techniques.get(tech_id)
+		if def != null and def.kind == kind:
+			return true
+	return false
+
+
 static func can_learn(c: CharacterData, data: GameData, tech_id: String) -> String:
 	var def: TechniqueDef = data.techniques.get(tech_id)
 	if def == null:

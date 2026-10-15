@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 597d486
+Last reviewed commit: e922009
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -364,3 +364,16 @@ Last reviewed commit: 597d486
     stalls that do not sell the festival goods. (4) QA-060 follow-up stands (MENTOR-002/C-071): pointers never fire
     because a newcomer knows no technique; C-068 notes the same root cause behind C-063. C-068 closes the C-060
     follow-up (planted seed sets planted_guardian_seed, a qi_flags entry).
+- 2026-10-15 (reviewer, 12th run): reviewed 597d486..e922009 (MENTOR-002, QA-061, C-072, C-076, WU-117, WU-118, GUIDE-019,
+  FEST-005, QA-062, WU-116; [PLAN]/[REVIEW] skipped). Main green before and after. No BACKLOG/CHANGELOG edits by workers;
+  no SAVE_VERSION change and no new persistent state.
+  - Fixed ([REVIEW] commit): (1) C-072: Elder Mo's "Breathing alone will not win a fight" line kept showing after the
+    player learned Iron Fist; it now also needs not_knows_technique iron_fist. (2) The "knows any combat technique" loop
+    was written three times (Combat.loss_advice, Guidance.first_combat_manual, ShopScreen.is_first_combat_manual); now
+    one Techniques.knows_kind(c, data, kind), with a unit test.
+  - Notes for the planner, not filed: (1) GUIDE-019's first_combat_manual does not skip techniques with an activation
+    (lifespan) cost, while QA-062's sim policy does; Iron Fist is cheapest today, so no player-facing effect yet.
+    (2) C-072 recommends Stone Skin, a "body" technique, but the "no fighting style" hint/loss advice only count kind
+    "combat", so learning Stone Skin alone does not quiet them; wording choice for the planner. (3) WU-116 follow-up
+    stands: the milestone banner draws over an open combat report after the first death. (4) QA-062 follow-up: Mist Wolf
+    still the top early killer even with a style (QA-057/C-063).

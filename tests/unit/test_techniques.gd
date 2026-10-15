@@ -76,3 +76,11 @@ func test_techniques_survive_save_round_trip() -> void:
 	var restored := CharacterData.from_dict(JSON.parse_string(JSON.stringify(c.to_dict())))
 	assert_eq(Techniques.level(restored, "iron_fist"), Techniques.level(c, "iron_fist"))
 	assert_almost_eq(float(restored.techniques["iron_fist"]["xp"]), float(c.techniques["iron_fist"]["xp"]))
+
+
+func test_knows_kind() -> void:
+	var c := new_character()
+	c.techniques = {"basic_breathing": {"level": 1, "xp": 0.0}}
+	assert_false(Techniques.knows_kind(c, data(), "combat"))
+	c.techniques["iron_fist"] = {"level": 1, "xp": 0.0}
+	assert_true(Techniques.knows_kind(c, data(), "combat"))

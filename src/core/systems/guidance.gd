@@ -599,10 +599,8 @@ static func _family_hint(c: CharacterData, data: GameData, people: Dictionary) -
 ## ({item, technique, merchant, price}); else the cheapest manual with any known
 ## source ({item, technique, merchant: "", price, source}).
 static func first_combat_manual(c: CharacterData, data: GameData, region_id: String) -> Dictionary:
-	for tech_id in c.techniques:
-		var known: TechniqueDef = data.techniques.get(tech_id)
-		if known != null and known.kind == "combat":
-			return {}
+	if Techniques.knows_kind(c, data, "combat"):
+		return {}
 	var best: Dictionary = {}
 	var places: Array = data.regions.get(region_id, {}).get("places", [])
 	var anywhere: Dictionary = {}

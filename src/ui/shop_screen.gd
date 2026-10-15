@@ -292,10 +292,7 @@ static func is_first_combat_manual(c: CharacterData, data: GameData, item_id: St
 	var tech_id := manual_technique(data, item_id)
 	if tech_id == "" or data.techniques[tech_id].kind != "combat":
 		return false
-	for id in c.techniques:
-		if data.techniques.has(id) and data.techniques[id].kind == "combat":
-			return false
-	return true
+	return not Techniques.knows_kind(c, data, "combat")
 
 
 ## "Equipped: Iron Sword (+5 attack)" for whatever `c` wears in the item's slot.
