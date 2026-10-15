@@ -17,6 +17,8 @@ extends RefCounted
 ##   learn_recipe: String       learn a crafting recipe (see alchemy.gd)
 ##   practice_days: int         train your least-practised fighting style (else any technique) for
 ##                              that many days (1..30), no time passes (see techniques.gd)
+##   profession_xp: {profession_id: int}  experience (1..500) in professions already taken up;
+##                              others are skipped (see professions.gd)
 ##   dao_insight: String        gain one level of a Dao insight (see dao.gd), e.g. a sudden enlightenment
 ##   buff: {id, name, days, mults: {stat: fraction}}  temporary combat buff (see buffs.gd),
 ##                              e.g. from a talisman; re-using it refreshes the duration
@@ -115,6 +117,16 @@ static func apply(c: CharacterData, data: GameData, effects: Dictionary, flags: 
 			if Techniques.level(c, trained_id) > int(levels_before[trained_id]):
 				note += " (level %d)" % Techniques.level(c, trained_id)
 			notes.append(note)
+	if effects.has("profession_xp"):
+		for prof_id: Variant in effects["profession_xp"]:
+			if not c.professions.has(String(prof_id)):
+				continue
+			var amount := int(effects["profession_xp"][prof_id])
+			var gained := Professions.add_xp(c, data, String(prof_id), float(amount))
+			var note := "+%d %s experience" % [amount, data.professions[String(prof_id)].name]
+			if gained > 0:
+				note += " (now %s)" % Professions.rank_title(c, data, String(prof_id))
+			notes.append(note)
 	if effects.has("heal_injury"):
 		for injury_id in Injuries.heal(c, effects["heal_injury"]):
 			notes.append("%s healed" % Injuries.injury_name(data, injury_id))
@@ -153,6 +165,7 @@ const KEYS: Array[String] = [
 	"qi", "alignment", "items", "breakthrough_bonus", "breakthrough_realm", "set_flag", "clear_flag",
 	"learn_technique", "heal_injury", "burn_lifespan", "extend_lifespan", "learn_recipe", "dao_insight",
 	"buff", "reputation", "witnessed", "attributes", "bloodline", "practice_days",
+	"profession_xp",
 ]
 
 
@@ -193,6 +206,17 @@ static func validate(data: GameData, effects: Dictionary, where: String) -> Pack
 		var days: Variant = effects["practice_days"]
 		if not (days is int or (days is float and days == floorf(days))) or int(days) < 1 or int(days) > 30:
 			errors.append("%s: practice_days must be an int 1..30" % where)
+	if effects.has("profession_xp"):
+		var xp_block: Variant = effects["profession_xp"]
+		if not xp_block is Dictionary:
+			errors.append("%s: profession_xp must be an int 1..500" % where)
+		else:
+			for prof_id: Variant in xp_block:
+				if not data.professions.has(String(prof_id)):
+					errors.append("%s: unknown profession '%s' in profession_xp" % [where, prof_id])
+				var amount: Variant = xp_block[prof_id]
+				if not (amount is int or (amount is float and amount == floorf(amount))) or int(amount) < 1 or int(amount) > 500:
+					errors.append("%s: profession_xp must be an int 1..500" % where)
 	for key in ["set_flag", "clear_flag"]:
 		if not effects.has(key):
 			continue

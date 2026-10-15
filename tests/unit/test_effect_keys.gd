@@ -132,3 +132,31 @@ func test_wandering_boxer_trains_only_on_a_win() -> void:
 	var rewards: Dictionary = d.enemies["wandering_boxer"]["rewards"]
 	assert_eq(int(rewards.get("practice_days", 0)), 7)
 	assert_eq(String(rewards.get("set_flag", "")), "beat_wandering_boxer")
+
+
+func test_profession_xp_adds_experience_and_promotes() -> void:
+	var d := data()
+	var c := new_character()
+	c.professions["alchemist"] = {"rank": 0, "xp": 0.0}
+	var notes := Effects.apply(c, d, {"profession_xp": {"alchemist": 3}}, {})
+	assert_eq(Array(notes), ["+3 %s experience" % d.professions["alchemist"].name])
+	assert_eq(Professions.xp_of(c, "alchemist"), 3.0)
+	notes = Effects.apply(c, d, {"profession_xp": {"alchemist": 500}}, {})
+	assert_true(String(notes[0]).contains("(now %s)" % Professions.rank_title(c, d, "alchemist")), notes[0])
+	assert_gt(Professions.rank_of(c, "alchemist"), 0)
+
+
+func test_profession_xp_skips_professions_not_taken() -> void:
+	var d := data()
+	var c := new_character()
+	assert_eq(Effects.apply(c, d, {"profession_xp": {"alchemist": 50}}, {}).size(), 0)
+	assert_false(c.professions.has("alchemist"))
+
+
+func test_profession_xp_validation() -> void:
+	var d := data()
+	assert_eq(Effects.validate(d, {"profession_xp": {"alchemist": 5}}, "t").size(), 0)
+	assert_eq(Effects.validate(d, {"profession_xp": {"nope": 5}}, "t").size(), 1)
+	assert_eq(Effects.validate(d, {"profession_xp": {"alchemist": 0}}, "t").size(), 1)
+	assert_eq(Effects.validate(d, {"profession_xp": {"alchemist": 501}}, "t").size(), 1)
+	assert_eq(Effects.validate(d, {"profession_xp": "x"}, "t").size(), 1)
