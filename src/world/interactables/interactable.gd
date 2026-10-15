@@ -134,6 +134,18 @@ static func spread_labels(nodes: Array) -> void:
 		placed.append(rect)
 
 
+## Shifts labels sideways so none sticks out past `bounds` (WU-160).
+static func clamp_labels(nodes: Array, bounds: Rect2, margin: float = 6.0) -> void:
+	for node: Interactable in nodes:
+		var rect := node.label_rect()
+		var over := rect.end.x - (bounds.end.x - margin)
+		if over > 0.0:
+			node.label_offset.x -= over
+		var under := (bounds.position.x + margin) - rect.position.x
+		if under > 0.0:
+			node.label_offset.x += under
+
+
 ## Whether the place's art shows its live state (e.g. an open secret realm).
 func art_active() -> bool:
 	return false

@@ -86,3 +86,34 @@ func test_rival_look_prefix_adds_the_attitude() -> void:
 	assert_eq(NPC_SCRIPT.rival_look_prefix(c, rival, "bitter"), "Your rival, far ahead of you; they hold a grudge. ")
 	assert_eq(NPC_SCRIPT.rival_look_prefix(c, rival, "friendly"), "Your rival, far ahead of you; a friendly rivalry. ")
 	assert_eq(NPC_SCRIPT.rival_look_prefix(c, rival, "proud"), "Your rival, far ahead of you. ")
+
+
+func test_clamp_labels_pulls_edge_labels_inside() -> void:
+	var bounds := Rect2(0, 0, 1000, 800)
+	var right := _npc("Founder's Old Pavilion Keeper", Vector2(980, 300))
+	var left := _npc("Far Left Person Here", Vector2(10, 300))
+	var mid := _npc("Mid", Vector2(500, 300))
+	Interactable.clamp_labels([right, left, mid], bounds)
+	assert_true(right.label_rect().end.x <= bounds.end.x, "right label inside")
+	assert_true(left.label_rect().position.x >= bounds.position.x, "left label inside")
+	assert_eq(mid.label_offset, Vector2.ZERO)
+
+
+func test_first_hour_region_labels_lie_inside_the_map() -> void:
+	var d := data()
+	for region_id: String in d.regions:
+		var region: Dictionary = d.regions[region_id]
+		var sz: Array = region.get("map", {}).get("size", [1600, 1000])
+		var bounds := Rect2(0, 0, float(sz[0]), float(sz[1]))
+		var nodes: Array = []
+		for place: Dictionary in region.get("places", []):
+			var n: Interactable = Interactable.new()
+			n.display_name = String(place.get("display_name", place.get("id", "")))
+			var p: Array = place.get("pos", [0, 0])
+			n.position = Vector2(float(p[0]), float(p[1]))
+			var s: Array = place.get("size", [60, 60])
+			n.size = Vector2(float(s[0]), float(s[1]))
+			nodes.append(n)
+		Interactable.clamp_labels(nodes, bounds)
+		for n: Interactable in nodes:
+			assert_true(bounds.encloses(n.label_rect()), "%s: %s inside" % [region_id, n.display_name])
