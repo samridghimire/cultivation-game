@@ -14,6 +14,8 @@ func test_help_pages_load_and_validate() -> void:
 	var ids: Array = d.help_pages.map(func(p): return p["id"])
 	assert_true(ids.has("cultivate"), str(ids))
 	assert_true(d.help_action_names.has("interact"))
+	for id: String in ["merchant_gossip", "friends_price", "festival_activities", "qi_rich_regions", "first_fighting_style", "secret_realm_word"]:
+		assert_true(ids.has(id), "help page " + id)
 
 
 func test_control_rows_list_keyboard_and_gamepad() -> void:

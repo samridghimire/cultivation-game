@@ -359,7 +359,51 @@
       "id": "letters",
       "title": "Letters",
       "body": [
-        "Friends you have made sometimes write to you. Some letters ask for something, such as a pill. Bring it to them in person within the time given: their menu offers \"Give <item> (they asked in a letter)\", which earns favor. A request you let lapse costs nothing."
+        "Friends you have made sometimes write to you. Some letters ask for something, such as a pill. Bring it to them in person within the time given: their menu offers \"Give <item> (they asked in a letter)\", which earns favor. A request you let lapse costs nothing.",
+        "A letter that asks for something names its deadline, and the world map marks the region of the one who asked. Your spouse, children and parents may write too, with news from home and sometimes a small gift."
+      ]
+    },
+    {
+      "id": "merchant_gossip",
+      "title": "Merchant Gossip",
+      "body": [
+        "Ask any merchant what they have heard. Their rumors hint at hidden finds, trouble on the roads and who is looking for help, and the better you know a region, the more specific they get. A rumor never promises; it only tells you where to look."
+      ]
+    },
+    {
+      "id": "friends_price",
+      "title": "A Friend's Price",
+      "body": [
+        "A merchant who thinks well of you may write to say they have put in a word for you. For a while afterwards, prices in their region are lower. The letter says how long it lasts, so spend your stones while it does."
+      ]
+    },
+    {
+      "id": "festival_activities",
+      "title": "Festival Activities",
+      "body": [
+        "Ask a merchant during a festival and they may suggest something to do for it. Each festival's activity can be done once, and some give more to those with a keen spirit, a warm manner or a steady hand."
+      ]
+    },
+    {
+      "id": "qi_rich_regions",
+      "title": "Regions That Grow Richer",
+      "body": [
+        "Deeds can leave a mark on the land. A region you have helped, or a seed you have planted there, may come to hold more qi, so every day spent cultivating there is worth more. The explore menu and the world map tell you when a region has been changed this way."
+      ]
+    },
+    {
+      "id": "first_fighting_style",
+      "title": "Your First Fighting Style",
+      "body": [
+        "Breathing keeps you alive, but a combat technique is what wins early fights. Manuals teach techniques: read one from your inventory to learn it, then use the technique in a fight to raise its level.",
+        "Merchants sell cheap manuals for a handful of stones, and a sect's shop or missions may offer better ones. Learn something before you take a beast hunt or a dangerous mission."
+      ]
+    },
+    {
+      "id": "secret_realm_word",
+      "title": "Word of a Secret Realm",
+      "body": [
+        "A secret realm is opened by heaven's timing, not by your choice. Before one opens, word of it spreads: you hear that it is coming and where. Be ready in the right realm when the day arrives, because the doors do not stay open."
       ]
     }
   ]
