@@ -22,7 +22,7 @@ func _errors_after(mutate: Callable) -> Array:
 
 
 func test_shipped_bounties_validate() -> void:
-	assert_eq(data().bounties.size(), 13)
+	assert_eq(data().bounties.size(), 14)
 	var puppet: Dictionary = data().bounties["marsh_corpse_puppet_bounty"]
 	assert_eq(puppet["min_realm"], "qi_refining", "C-081: the marsh posts a Qi Refining bounty")
 	assert_eq(int(_count_in("qingshi_village")), 2, "C-064: Qingshi posts two bounties")
@@ -248,6 +248,29 @@ func test_board_label_shows_the_renown_pay() -> void:
 	var labels: Array = board.get_options().map(func(o: Dictionary) -> String: return o["label"])
 	assert_true(labels.any(func(l: String) -> bool: return l.contains("48 stones (+20% for your name)")), str(labels))
 	gs.end_session()
+
+
+func test_every_qi_refining_fight_region_posts_a_qi_refining_bounty() -> void:
+	# C-085: a region where a newcomer can be pulled into a fight also posts a newcomer hunt.
+	for region_id: String in data().regions:
+		var tags: Array = data().regions[region_id].get("encounter_tags", [])
+		var fights := false
+		for e: Dictionary in data().encounters.values():
+			if not Exploration._shares_tag(e.get("tags", []), tags) or not Exploration._may_fight(e):
+				continue
+			if e.get("discovery_only", false):
+				continue
+			var gate: String = e.get("min_realm", "")
+			if gate == "" or gate == "qi_refining":
+				fights = true
+				break
+		if not fights:
+			continue
+		var has_bounty := false
+		for b: Dictionary in data().bounties.values():
+			if b["region"] == region_id and b.get("min_realm", "") == "qi_refining":
+				has_bounty = true
+		assert_true(has_bounty, "%s has a Qi Refining fight but no Qi Refining bounty" % region_id)
 
 
 func _count_in(region_id: String) -> int:
