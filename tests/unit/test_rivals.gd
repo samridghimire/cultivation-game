@@ -128,3 +128,23 @@ func test_first_meeting_dialogue_is_valid_and_formats_the_rival() -> void:
 	assert_eq(String(view["speaker"]), rival.name)
 	ctx["rival"] = null
 	assert_eq(Dialogue.format("{rival}{rival_realm}", ctx), "")
+
+
+func test_relation_text_cases() -> void:
+	var c := new_character()
+	var r := new_character(7)
+	c.realm_index = 1
+	c.stage = 3
+	r.realm_index = 2
+	r.stage = 0
+	assert_eq(Rivals.relation_text(c, r), "far ahead of you")
+	r.realm_index = 1
+	r.stage = 5
+	assert_eq(Rivals.relation_text(c, r), "a few steps ahead")
+	r.stage = 3
+	assert_eq(Rivals.relation_text(c, r), "level with you")
+	r.stage = 1
+	assert_eq(Rivals.relation_text(c, r), "behind you")
+	r.realm_index = 0
+	r.stage = 9
+	assert_eq(Rivals.relation_text(c, r), "behind you")

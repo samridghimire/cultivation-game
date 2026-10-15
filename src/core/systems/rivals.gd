@@ -63,6 +63,21 @@ static func relation(c: CharacterData, rival: CharacterData) -> String:
 	return "equal"
 
 
+## How `rival` stands against `c` in words: "far ahead of you" (higher major
+## realm), "a few steps ahead" (same realm, higher stage), "level with you",
+## "behind you" (lower realm, or same realm and lower stage).
+static func relation_text(c: CharacterData, rival: CharacterData) -> String:
+	if rival.realm_index > c.realm_index:
+		return "far ahead of you"
+	if rival.realm_index < c.realm_index:
+		return "behind you"
+	if rival.stage > c.stage:
+		return "a few steps ahead"
+	if rival.stage < c.stage:
+		return "behind you"
+	return "level with you"
+
+
 ## Whether an encounter's `rival` condition holds (no condition = always).
 static func allows(c: CharacterData, rival: CharacterData, condition: String) -> bool:
 	if condition == "":

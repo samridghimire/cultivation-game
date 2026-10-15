@@ -293,3 +293,34 @@ func test_busy_disciple_journal_is_complete_clean_and_unrepeated() -> void:
 			assert_false(text.contains(bad), "'%s' in: %s" % [bad, text])
 		assert_false(seen.has(text), "repeated line: %s" % text)
 		seen[text] = true
+
+
+func _rival_rows(c: CharacterData, flags: Dictionary, people: Dictionary) -> Array[Dictionary]:
+	return Guidance.journal(c, data(), flags, 0, "qingshi_village", 1.0, people, []).filter(func(e: Dictionary) -> bool: return String(e["text"]).begins_with("Rival: "))
+
+
+func test_journal_rival_line_needs_the_first_meeting() -> void:
+	var c := _fresh()
+	var rival := new_character(77)
+	rival.id = "gen_rival"
+	rival.name = "Han Wei"
+	c.rival = rival.id
+	var people := {rival.id: rival}
+	assert_true(_rival_rows(c, {}, people).is_empty())
+	var rows := _rival_rows(c, {Rivals.FIRST_MEETING_FLAG: true}, people)
+	assert_eq(rows.size(), 1)
+	assert_true(String(rows[0]["text"]).begins_with("Rival: Han Wei, "))
+	assert_true(String(rows[0]["text"]).contains("level with you"))
+	rival.realm_index = c.realm_index + 1
+	assert_eq(_rival_rows(c, {Rivals.FIRST_MEETING_FLAG: true}, people)[0]["tone"], "warning")
+
+
+func test_journal_rival_line_when_fallen() -> void:
+	var c := _fresh()
+	var rival := new_character(77)
+	rival.id = "gen_rival"
+	rival.name = "Han Wei"
+	rival.alive = false
+	c.rival = rival.id
+	var rows := _rival_rows(c, {Rivals.FIRST_MEETING_FLAG: true}, {rival.id: rival})
+	assert_eq(rows[0]["text"], "Rival: Han Wei (fallen)")

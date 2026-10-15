@@ -951,6 +951,7 @@ static func journal(c: CharacterData, data: GameData, flags: Dictionary, today: 
 		_add(out, "Errands", line, "normal")
 	_errand_entries(out, data, flags)
 	_household_entries(out, c, data, people)
+	_rival_entry(out, c, data, flags, people)
 	for line in Letters.journal_lines(c, LETTERS_JOURNAL_MAX):
 		_add(out, "Letters", line, "normal")
 	for order in c.commissions:
@@ -1106,6 +1107,24 @@ static func _household_entries(out: Array[Dictionary], c: CharacterData, data: G
 			_add(out, "Household", "Your %s can be fed." % beast, "normal")
 	for line in Children.describe_pregnancies(c, people):
 		_add(out, "Household", line, "dim")
+
+
+## "Rival: <name>, <realm> (<relation>)" once the rival has been met (RIVAL-004).
+static func _rival_entry(out: Array[Dictionary], c: CharacterData, data: GameData, flags: Dictionary, people: Dictionary) -> void:
+	if c.rival == "" or not flags.get(Rivals.FIRST_MEETING_FLAG, false):
+		return
+	var rival: CharacterData = people.get(c.rival)
+	if rival == null:
+		return
+	if not rival.alive:
+		_add(out, "Household", "Rival: %s (fallen)" % rival.name, "dim")
+		return
+	var tone := "dim"
+	if rival.realm_index > c.realm_index or (rival.realm_index == c.realm_index and rival.stage > c.stage):
+		tone = "warning"
+	elif rival.realm_index < c.realm_index or rival.stage < c.stage:
+		tone = "normal"
+	_add(out, "Household", "Rival: %s, %s (%s)" % [rival.name, Cultivation.realm_label(rival, data), Rivals.relation_text(c, rival)], tone)
 
 
 ## "Your sect's elder lectures this month": only while the lecture can be attended.
