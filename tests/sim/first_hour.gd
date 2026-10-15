@@ -70,6 +70,9 @@ static func play(gs: Node, clock: Node, seed_value: int, months: int, curious: b
 					out["layer_day"][layer] = clock.total_days
 		var kinds := {}
 		_note_first_win(out, c, clock, fight)
+		if not curious:
+			_retry_chores(gs, c)
+			_note_first_win(out, c, clock, fight)
 		if curious:
 			kinds = _curious_month(gs, c, done, clock.total_days)
 			if done.has("style_month") and out["first_style_day"] < 0:
@@ -100,6 +103,20 @@ static func play(gs: Node, clock: Node, seed_value: int, months: int, curious: b
 	out["fights_lost"] = LifeStats.get_stat(c, "fights_lost")
 	out["fights_fled"] = LifeStats.get_stat(c, "threats_fled")
 	return out
+
+
+## QA-069: once a month in the village, an uninjured newcomer tries again any chore
+## fight they lost at day 0 once the odds are at least "Even" (0.7).
+static func _retry_chores(gs: Node, c: CharacterData) -> void:
+	if not c.alive or gs.current_region != "qingshi_village" or not c.injuries.is_empty():
+		return
+	for chore in CHORES:
+		var deed: Dictionary = gs.data.deeds.get(chore, {})
+		var enemy_id := String(deed.get("enemy", ""))
+		if enemy_id == "" or gs.world_flags.has(String(deed.get("blocked_by_flag", ""))):
+			continue
+		if Combat.win_chance(c, gs.data, gs.data.enemies[enemy_id]) >= 0.7:
+			gs.perform_deed(chore)
 
 
 static func _note_first_win(out: Dictionary, c: CharacterData, clock: Node, fight: Dictionary) -> void:

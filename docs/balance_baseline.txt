@@ -2,29 +2,29 @@
 
 First-hour sim: 10 seeds, 12 months
   seed  QR1  QR3  QR9  sect  injuries  won  lost  fled  lines/month
-     1   93  310    -    93         0    3     0     0  5.3
+     1   93  311    -    93         0    3     0     0  5.5
         first win day 14 (wild_boar), style bought day -
-     2   14   76    -    14         0    2     0     0  5.3
+     2   14   76    -    14         0    1     0     0  4.7
         first win day 14 (wild_boar), style bought day -
-     3   14  139    -    14         0    4     0     0  5.7
+     3   14  142    -    14         0    3     0     0  5.7
         first win day 14 (wild_boar), style bought day -
-     4   14  171    -    14         0    1     0     0  5.0
+     4   14  171    -    14         0    1     0     0  5.2
         first win day 14 (wild_boar), style bought day -
-     5   14   45  294    14         0    1     0     0  4.5
+     5   14   45  294    14         1    1     0     0  5.8
         first win day 14 (wild_boar), style bought day -
-     6   14  169    -    14         0    1     0     0  4.9
+     6   14  168    -    14         0    3     0     0  5.0
         first win day 14 (wild_boar), style bought day -
-     7   14  137    -    14         0    2     0     0  4.5
+     7   14  141    -    14         0    1     0     0  5.0
         first win day 14 (wild_boar), style bought day -
-     8   14   76    -    14         0    1     0     0  4.9
+     8   14   76    -    14         0    1     0     0  5.2
         first win day 14 (wild_boar), style bought day -
-     9   14  202    -    14         0    1     0     0  4.4
+     9   14  202    -    14         0    1     0     0  5.1
         first win day 14 (wild_boar), style bought day -
-    10   14  136    -    14         0    0     1     0  4.9
-        first win day - (-), style bought day -
-Medians (day): QR1 14, QR3 139, QR9 294, sect 14; injuries 0; fights won 1, lost 0, fled 0; 4.9 log lines/month
-First win: median day 14, seeds with no win in 12 months: 1; first-win foes: { "wild_boar": 9 }; median style day -1 (0 seeds)
-Lines by category: { "warning": 59, "danger": 33, "info": 321, "progress": 181 }
+    10   14  139    -    14         0    1     1     0  6.0
+        first win day 141 (wild_boar), style bought day -
+Medians (day): QR1 14, QR3 142, QR9 294, sect 14; injuries 0; fights won 1, lost 0, fled 0; 5.2 log lines/month
+First win: median day 14, seeds with no win in 12 months: 0; first-win foes: { "wild_boar": 10 }; median style day -1 (0 seeds)
+Lines by category: { "warning": 56, "danger": 31, "info": 326, "progress": 223, "karma": 1 }
 
 ## first hour, curious player (seeds 1-10)
 
