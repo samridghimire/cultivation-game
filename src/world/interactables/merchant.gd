@@ -31,6 +31,32 @@ func get_options() -> Array[Dictionary]:
 	return options
 
 
+## True while this merchant (by display_name) is the one teaching the player's first
+## fighting style in `region_id` (WU-120): drives the scroll mark above it.
+static func shows_manual_mark(c: CharacterData, data: GameData, region_id: String, merchant_name: String) -> bool:
+	if c == null or data == null:
+		return false
+	var found := Guidance.first_combat_manual(c, data, region_id)
+	return not found.is_empty() and String(found["merchant"]) == merchant_name
+
+
+func _draw() -> void:
+	super._draw()
+	if GameState.player != null and shows_manual_mark(GameState.player, GameState.data, GameState.current_region, display_name):
+		_draw_manual_mark()
+
+
+## A small scroll above the merchant (placeholder art).
+func _draw_manual_mark() -> void:
+	var top := Vector2(0, -size.y / 2.0 - 34.0) + label_offset
+	var paper := Color(0.93, 0.87, 0.68)
+	draw_rect(Rect2(top + Vector2(-8, -6), Vector2(16, 12)), paper)
+	draw_rect(Rect2(top + Vector2(-10, -7), Vector2(3, 14)), UIStyle.ACCENT)
+	draw_rect(Rect2(top + Vector2(7, -7), Vector2(3, 14)), UIStyle.ACCENT)
+	draw_line(top + Vector2(-4, -2), top + Vector2(4, -2), UIStyle.ACCENT.darkened(0.4), 1.0)
+	draw_line(top + Vector2(-4, 2), top + Vector2(4, 2), UIStyle.ACCENT.darkened(0.4), 1.0)
+
+
 ## Posts the gossip and shows it in a window you can read (WU-111).
 func _ask_rumors() -> void:
 	var lines := GameState.hear_rumors()

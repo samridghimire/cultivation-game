@@ -53,3 +53,13 @@ func test_rumors_refusal_opens_no_gossip_window() -> void:
 	assert_eq(opened.size(), 1, "no window when the player cannot act")
 	merchant.free()
 	gs.end_session()
+
+
+## WU-120: the scroll mark shows over the merchant that teaches the first fighting style.
+func test_manual_mark_follows_first_combat_manual() -> void:
+	var gd := data()
+	var c := new_character()
+	assert_true(MerchantScript.shows_manual_mark(c, gd, "qingshi_village", "Wandering Merchant"), "Wandering Merchant")
+	assert_false(MerchantScript.shows_manual_mark(c, gd, "qingshi_village", "Village Herb Seller"), "herb seller")
+	Techniques.learn(c, gd, "iron_fist")
+	assert_false(MerchantScript.shows_manual_mark(c, gd, "qingshi_village", "Wandering Merchant"), "gone once a style is known")
