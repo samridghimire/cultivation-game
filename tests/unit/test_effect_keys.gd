@@ -118,4 +118,17 @@ func test_technique_training_encounters_exist() -> void:
 		for ch: Dictionary in e.get("choices", []):
 			if ch.get("effects", {}).has("practice_days"):
 				trains = true
+			# A fight choice trains only on a win: the practice sits in the foe's rewards.
+			if d.enemies.get(String(ch.get("enemy", "")), {}).get("rewards", {}).has("practice_days"):
+				trains = true
 		assert_true(trains, id + " trains a technique")
+
+
+## C-077 review: the wandering boxer's bout trains (and is marked beaten) only on a win.
+func test_wandering_boxer_trains_only_on_a_win() -> void:
+	var d := GameData.load_from_dir()
+	var choice: Dictionary = d.encounters["road_wandering_boxer"]["choices"][0]
+	assert_eq(choice.get("effects", {}), {}, "accepting the bout grants nothing before the fight")
+	var rewards: Dictionary = d.enemies["wandering_boxer"]["rewards"]
+	assert_eq(int(rewards.get("practice_days", 0)), 7)
+	assert_eq(String(rewards.get("set_flag", "")), "beat_wandering_boxer")

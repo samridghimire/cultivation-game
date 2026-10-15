@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: f36edce
+Last reviewed commit: 039470a
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -419,3 +419,21 @@ Last reviewed commit: f36edce
     (2) WU-126 computes win_chance twice per mission per open (ordered() then the label loop); the spec asked for once;
     worth folding into PERF-001. (3) WU-133 skipped its screenshot check (Follow-up); WU-136/WU-132 should cover the
     shop at 1280x720. (4) QA-067 follow-up stands: listed bounties are never exercised by the curious policy.
+- 2026-10-15 (reviewer, 16th run): reviewed f36edce..039470a (FOUND-001, C-081, C-077, GUIDE-026, WU-129, FOUND-002,
+  DLG-001, C-084, QA-066, QA-068; [PLAN]/[REVIEW] skipped). Main green before and after. No BACKLOG/CHANGELOG edits by
+  workers; no SAVE_VERSION change and no new persistent state. Nothing filed.
+  - Fixed ([REVIEW] commit): C-077's wandering boxer put `practice_days: 7` and `set_flag: beat_wandering_boxer` on the
+    "Accept the bout" choice, and choice effects apply before the fight, so a loss still trained for 7 days and blocked the
+    encounter forever ("beat" flag set). The spec says "on a win": both now sit in the spar enemy's rewards (applied on
+    victory only), so a loss gives nothing and the boxer can be met again. Test updated + a new one pins it. Also: the old soldier
+    called the player "boy" whatever their gender; now "youngster".
+  - Checked: FOUND-002's Injuries.chance is the exact formula roll used (the breakthrough_failure table is never empty,
+    so the preview is honest) and the qi loss uses the next realm's failure_qi_loss as Cultivation does; tribulation
+    realms are left to the tribulation screen. FOUND-001's next_realm_pill keeps pill_source_hint's old behaviour.
+    GUIDE-026 respects each deed_giver's hidden_by_flag and all three enemy deeds are righteous, so no demonic
+    "fight you can win" is suggested. DLG-001's practice_pending matches GUIDE-020's practice_target. C-084 descriptions
+    are validated in GameData. QA-068 restores hud_hints after each fuzz run.
+  - Notes for the planner, not filed: (1) QA-066's test_play_logs_breakthrough_attempts says "seed 2 reaches
+    Foundation", but `seen` is also satisfied by the Mortal -> Qi Refining breakthrough; it does not check Foundation.
+    (2) QA-066's finding stands: median stones at the QR bottleneck (~170) are below the 300-stone Foundation pill, so
+    FOUND-001's saving goal often shows a target out of reach; a balance decision (cheaper pill or base chance).
