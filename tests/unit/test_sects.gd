@@ -188,3 +188,22 @@ func test_unknown_home_region_is_rejected() -> void:
 	d.load_errors.clear()
 	d._validate()
 	assert_true(d.load_errors.size() > 0)
+
+
+## C-063: a typical player (Iron Fist + Stone Skin, best buyable gear) at the gate of
+## every rank-0 fight mission is not rated Dangerous or Deadly.
+func test_rank_zero_fight_missions_are_fair_at_their_gate() -> void:
+	var Balance := preload("res://tests/sim/combat_balance.gd")
+	var d := data()
+	var checked := 0
+	for id: String in d.sect_missions:
+		var m: Dictionary = d.sect_missions[id]
+		var enemy_id := String(m.get("enemy", ""))
+		if int(m.get("min_rank", 0)) != 0 or enemy_id == "":
+			continue
+		var realm_index := d.realm_index_of(String(m.get("min_realm", "")))
+		var c: CharacterData = Balance.typical_player(d, realm_index, int(m.get("min_stage", 0)))
+		var danger := Sects.mission_danger(c, d, id)
+		assert_false(danger in ["Dangerous", "Deadly"], "%s is rated %s for a typical player at its gate" % [id, danger])
+		checked += 1
+	assert_true(checked > 0, "some rank-0 fight mission was checked")
