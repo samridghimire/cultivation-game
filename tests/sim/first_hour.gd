@@ -142,6 +142,35 @@ static func _note_first_win(out: Dictionary, c: CharacterData, clock: Node, figh
 		out["first_win_enemy"] = fight["first_enemy"]
 
 
+## QA-082: the "explore" entries Fights you can win lists now, keyed by foe name -> rated chance, plus a
+## sink that collects the fights the next explore_many meets ({name, won}). A listed foe met while
+## exploring counts as "taken" (the player did not choose it, but it is the fight the list promised).
+static func _explore_watched(gs: Node, c: CharacterData, today: int) -> Dictionary:
+	var listed := {}
+	for f: Dictionary in Guidance.fair_fights(c, gs.data, gs.world_flags, today, gs.current_region):
+		if String(f["kind"]) == "explore":
+			listed[String(f["enemy"])] = float(f["chance"])
+	var seen := {"listed": listed, "met": [], "name": ""}
+	var bus: Node = gs.get_node("/root/EventBus")
+	var on_start := func(enemy: Dictionary) -> void: seen["name"] = String(enemy.get("name", ""))
+	var on_end := func(_n: String, victory: bool, _log: PackedStringArray) -> void: seen["met"].append({"name": seen["name"], "won": victory})
+	bus.combat_started.connect(on_start)
+	bus.combat_finished.connect(on_end)
+	seen["off"] = func() -> void:
+		bus.combat_started.disconnect(on_start)
+		bus.combat_finished.disconnect(on_end)
+	return seen
+
+
+static func _log_explore_fights(done: Dictionary, seen: Dictionary) -> void:
+	seen["off"].call()
+	if not done.has("fair_log"):
+		done["fair_log"] = {"listed": [], "taken": [], "by_kind": {}}
+	for m: Dictionary in seen["met"]:
+		if seen["listed"].has(m["name"]):
+			done["fair_log"]["taken"].append({"kind": "explore", "chance": float(seen["listed"][m["name"]]), "won": m["won"]})
+
+
 ## The extra things a curious player does in one month: explore weekly, one
 ## harmless deed, one sect mission, one chat (once), deliver orders. Returns the
 ## set of action kinds done.
@@ -150,7 +179,9 @@ static func _curious_month(gs: Node, c: CharacterData, done: Dictionary, today: 
 	for week in 3:
 		if not c.alive:
 			return kinds
+		var seen := _explore_watched(gs, c, today)
 		gs.explore_many(7)
+		_log_explore_fights(done, seen)
 		kinds["explore"] = true
 		if gs.pending_encounter != "":
 			gs.choose_encounter(0)

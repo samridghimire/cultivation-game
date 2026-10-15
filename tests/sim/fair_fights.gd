@@ -47,7 +47,7 @@ func _run() -> void:
 		print("Listed fights taken: 0")
 	else:
 		print("Listed fights taken: %d, won %d (%.0f%%), mean rated chance %.0f%%" % [taken, wins, 100.0 * wins / taken, 100.0 * rated_sum / taken])
-	for k: String in ["mission", "deed", "bounty"]:
+	for k: String in ["mission", "deed", "bounty", "explore"]:
 		var row := _kind_row(kinds, k)
 		if int(row["taken"]) == 0:
 			print("  %-8s listed %3d, taken 0" % [k, row["listed"]])
