@@ -1536,6 +1536,9 @@ func test_surpassing_the_rival_posts_once() -> void:
 	_break_through_once(gs, c)
 	lines = EventBus.history.filter(func(m): return String(m["text"]).begins_with("You have surpassed "))
 	assert_eq(lines.size(), 1)
+	gs.last_surpassed_rival = rival.name  # as if the monthly check had surpassed them
+	_break_through_once(gs, c)
+	assert_eq(gs.last_surpassed_rival, "", "a later breakthrough's realm card does not name a rival it did not pass")
 	gs.end_session()
 
 

@@ -823,6 +823,27 @@ static func foundation_goals_active(c: CharacterData, data: GameData, flags: Dic
 	return false
 
 
+## The goal ladder the HUD announces from: "first" up to Qi Refining, "foundation" in Foundation
+## Establishment, else "". Unlike active_goal_ladder it stays put once every goal is done, so the
+## last goal ticked off is still announced.
+static func goal_ladder_id(c: CharacterData) -> String:
+	if c.realm_index <= 1:
+		return "first"
+	if c.realm_index == 2:
+		return "foundation"
+	return ""
+
+
+## The goals of ladder `id` (goal_ladder_id), done or not; [] for "".
+static func goal_ladder(id: String, c: CharacterData, data: GameData, flags: Dictionary, clan: ClanData = null) -> Array[Dictionary]:
+	if id == "first":
+		return first_goals(c, data, flags)
+	if id == "foundation":
+		return foundation_goals(c, data, flags, clan)
+	var none: Array[Dictionary] = []
+	return none
+
+
 ## The goal ladder currently shown (first goals, then Foundation goals), [] when none.
 static func active_goal_ladder(c: CharacterData, data: GameData, flags: Dictionary, clan: ClanData = null) -> Array[Dictionary]:
 	if c.realm_index <= 1 and not first_goals_done(c, data, flags):

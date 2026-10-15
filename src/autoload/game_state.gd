@@ -288,6 +288,8 @@ func attempt_breakthrough() -> void:
 	if not Cultivation.can_attempt_breakthrough(player, data):
 		EventBus.post("You are not ready to break through.", "warning")
 		return
+	# Only a surpassing this attempt causes reaches the realm card, not one the monthly check made.
+	last_surpassed_rival = ""
 	var lifespan_before := Cultivation.lifespan_years(player, data)
 	var qi_rate_before := Cultivation.qi_per_day(player, data)
 	var result := Cultivation.attempt_breakthrough(player, data, rng)

@@ -195,3 +195,13 @@ func test_newly_done_goals() -> void:
 	assert_eq(HUD.newly_done_goals(before, goals), ["B"] as Array[String])
 	goals[2]["done"] = true
 	assert_eq(HUD.newly_done_goals([] as Array[String], goals), ["A", "B", "C"] as Array[String])
+
+
+## The last goal of a ladder is still announced, and names the ladder it completes.
+func test_goals_done_banner() -> void:
+	var goals: Array[Dictionary] = [{"text": "A", "done": true}, {"text": "B", "done": false}]
+	assert_eq(HUD.goals_done_banner(["A"] as Array[String], goals, "first", "J"), "")
+	assert_eq(HUD.goals_done_banner([] as Array[String], goals, "first", "J"), "A  Next: B")
+	goals[1]["done"] = true
+	assert_eq(HUD.goals_done_banner(["A"] as Array[String], goals, "first", "J"), "B  Your first goals are done; the journal (J) has more.")
+	assert_eq(HUD.goals_done_banner(["A"] as Array[String], goals, "foundation", "J"), "B  Your Foundation goals are done; the journal (J) has more.")

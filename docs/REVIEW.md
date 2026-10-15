@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: b54040f
+Last reviewed commit: ea1a53f
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -479,3 +479,19 @@ Last reviewed commit: b54040f
     `marsh` both marsh regions, `azure_cliffs` Azure Peak. WU-144 matches its spec (tooltip lists every entry).
     WU-147's marks hide offers while a hunt runs elsewhere (by design); C-089's 3%/9% matches realms.json.
   - Notes for the planner, not filed: WU-144's commit says the `--win-shots` ellipsis check was not re-run.
+- 2026-10-15 (reviewer, 20th run): reviewed b54040f..ea1a53f (WU-146, C-062, RIVAL-008, C-090, FOUND-004, FOUND-005,
+  QA-078, WU-149, C-091, GUIDE-030, WU-148, WU-153, CHOICE-003, C-092, WU-150, GUIDE-029, RIVAL-009, QA-079, RIVAL-011,
+  WU-152, C-094; [PLAN]/[REVIEW] skipped). Main green before and after. No BACKLOG/CHANGELOG edits by workers; no
+  SAVE_VERSION change; new karma.json rival keys are validated. Nothing filed.
+  - Fixed ([REVIEW] commit): (1) FOUND-004 switched the HUD's goal banner to `Guidance.active_goal_ladder`, which is
+    empty once a ladder is complete, so the last goal of either ladder was never announced and "Your first goals are
+    done" became unreachable; and on the Foundation breakthrough the new ladder was diffed against the old snapshot, so
+    an abode or body stage claimed long before popped a "Goal done" banner. The HUD now follows
+    `Guidance.goal_ladder_id` (first up to Qi Refining, foundation in Foundation, kept when finished), re-snapshots
+    silently when the ladder changes, and names the finished ladder ("Your Foundation goals are done"). (2) WU-148's
+    `last_surpassed_rival` was also set by RIVAL-007's monthly check, so the next successful breakthrough's realm card
+    could say "You have surpassed X" months later; it is now cleared at the start of each attempt.
+  - Checked: RIVAL-011's death line skips the player's own kill ("slain by") and posts once; RIVAL-008's overtake
+    re-arms the surpassed flag and the spur caps at 0.95; CHOICE-003 only tags negative item deltas; GUIDE-030's
+    explore fights reuse eligible_encounters and stay under FAIR_FIGHT_MAX_RATED; WU-149's lesson line matches
+    chance_breakdown (failures counted before it posts).

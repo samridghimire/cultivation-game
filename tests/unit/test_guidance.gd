@@ -1239,6 +1239,23 @@ func test_foundation_goals_clan_and_realm_limits() -> void:
 	assert_eq(Guidance.active_goal_ladder(c, data(), {}).size(), 7)
 
 
+## The HUD's ladder stays put once all its goals are done, so the last one is still announced.
+func test_goal_ladder_keeps_a_finished_ladder() -> void:
+	var c := _fresh()
+	c.realm_index = 2
+	c.stage = 1
+	c.abode = "x"
+	c.body_stage = 1
+	assert_false(Guidance.foundation_goals_active(c, data(), {}, ClanData.new()))
+	assert_eq(Guidance.goal_ladder_id(c), "foundation")
+	assert_eq(Guidance.goal_ladder("foundation", c, data(), {}, ClanData.new()).size(), 4)
+	c.realm_index = 1
+	assert_eq(Guidance.goal_ladder_id(c), "first")
+	c.realm_index = 3
+	assert_eq(Guidance.goal_ladder_id(c), "")
+	assert_true(Guidance.goal_ladder("", c, data(), {}).is_empty())
+
+
 func _peak_foundation() -> CharacterData:
 	var c := _fresh()
 	c.realm_index = 2

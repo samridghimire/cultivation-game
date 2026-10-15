@@ -62,6 +62,7 @@ var _child_training: ChildTrainingScreen
 var _banner: Banner
 var _tech_levels: Dictionary = {}  # technique id -> last seen level (WU-130)
 var _goals_done: Array[String] = []  # texts of first goals already done (WU-131)
+var _goals_ladder: String = ""  # Guidance.goal_ladder_id when _goals_done was taken
 var _season := ""
 var _season_flush_queued := false
 var _time_skip: TimeSkipOverlay
@@ -824,32 +825,43 @@ func _done_goal_texts() -> Array[String]:
 	var out: Array[String] = []
 	if GameState.player == null:
 		return out
-	for goal in Guidance.active_goal_ladder(GameState.player, GameState.data, GameState.world_flags, GameState.clan):
+	for goal in Guidance.goal_ladder(_goals_ladder, GameState.player, GameState.data, GameState.world_flags, GameState.clan):
 		if goal["done"]:
 			out.append(str(goal["text"]))
 	return out
 
 
 func _sync_goals_done() -> void:
+	_goals_ladder = Guidance.goal_ladder_id(GameState.player) if GameState.player != null else ""
 	_goals_done = _done_goal_texts()
 
 
-## A first goal ticked off (WU-131): one banner per refresh, naming the next goal.
+## A goal of the current ladder ticked off (WU-131, FOUND-004): one banner per refresh, naming the next goal.
+## Moving to another ladder (the Foundation breakthrough) only takes a fresh snapshot.
 func _announce_goals_done() -> void:
 	var c: CharacterData = GameState.player
 	if c == null:
 		return
-	var goals := Guidance.active_goal_ladder(c, GameState.data, GameState.world_flags, GameState.clan)
-	if not goals.is_empty():
-		var fresh := newly_done_goals(_goals_done, goals)
-		if not fresh.is_empty():
-			var next := "  Your first goals are done; the journal (%s) has more." % InputConfig.current_label("toggle_journal")
-			for goal in goals:
-				if not goal["done"]:
-					next = "  Next: " + str(goal["text"])
-					break
-			_banner.announce("Goal done", fresh[-1] + next, UIStyle.ACCENT, 1.5)
+	if Guidance.goal_ladder_id(c) == _goals_ladder:
+		var goals := Guidance.goal_ladder(_goals_ladder, c, GameState.data, GameState.world_flags, GameState.clan)
+		var text := goals_done_banner(_goals_done, goals, _goals_ladder, InputConfig.current_label("toggle_journal"))
+		if text != "":
+			_banner.announce("Goal done", text, UIStyle.ACCENT, 1.5)
 	_sync_goals_done()
+
+
+## Banner text for the newest goal of `goals` done since `before`, "" when none: the goal, then the next
+## one, or once the ladder is complete, a pointer to the journal (`journal_key`).
+static func goals_done_banner(before: Array[String], goals: Array[Dictionary], ladder: String, journal_key: String) -> String:
+	var fresh := newly_done_goals(before, goals)
+	if fresh.is_empty():
+		return ""
+	var next := "  Your %s goals are done; the journal (%s) has more." % ["Foundation" if ladder == "foundation" else "first", journal_key]
+	for goal in goals:
+		if not goal["done"]:
+			next = "  Next: " + str(goal["text"])
+			break
+	return fresh[-1] + next
 
 
 ## Texts of goals in `goals` that are done but not in `before`, in list order.
