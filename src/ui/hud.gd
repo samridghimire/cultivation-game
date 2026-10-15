@@ -21,6 +21,7 @@ var _injuries: Label
 var _hint: Label
 var _goal: Label
 var _hunt: Label
+var _fair: Label
 var _log: RichTextLabel
 var _status_panel: Control
 var _log_panel: Control
@@ -168,10 +169,14 @@ func _ready() -> void:
 
 	EventBus.player_changed.connect(_refresh)
 	EventBus.session_started.connect(_refresh)
+	EventBus.player_changed.connect(_refresh_fair_fight)
+	EventBus.session_started.connect(_refresh_fair_fight)
+	EventBus.region_changed.connect(func(_id): _refresh_fair_fight())
+	GameClock.days_advanced.connect(func(_d): _refresh_fair_fight())
 	EventBus.region_changed.connect(func(_id): _refresh())
 	EventBus.region_changed.connect(_on_arrival)
 	EventBus.message_posted.connect(_on_message)
-	Settings.changed.connect(func(key: String, _v): if key == "hud_hints": _refresh())
+	Settings.changed.connect(func(key: String, _v): if key == "hud_hints": _refresh(); _refresh_fair_fight())
 	EventBus.interaction_target_changed.connect(_on_target_changed)
 	InputConfig.controls_changed.connect(_refresh_key_hints)
 	EventBus.interaction_menu_requested.connect(_on_menu_requested)
@@ -217,6 +222,7 @@ func _ready() -> void:
 	GameClock.days_advanced.connect(_on_days_advanced)
 	EventBus.session_started.connect(func(): _season = Calendar.season_of(GameClock.total_days))
 	_refresh()
+	_refresh_fair_fight()
 	# A respawn that moved the player reloads the world; ask where to awaken now.
 	_open_pending_respawn.call_deferred()
 	# A fresh character opens with the artifact's intro event (ART-006b).
@@ -352,6 +358,10 @@ func _build_status_panel() -> void:
 	_hunt.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	_hunt.custom_minimum_size = Vector2(316, 0)
 	box.add_child(_hunt)
+	_fair = UIStyle.label("", 14, Color("c9b27a"))
+	_fair.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	_fair.custom_minimum_size = Vector2(316, 0)
+	box.add_child(_fair)
 	_hint = UIStyle.label("", 14, Color("9fd3c7"))
 	_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_hint.custom_minimum_size = Vector2(316, 0)
@@ -505,6 +515,28 @@ func _refresh() -> void:
 	_fit_status_panel.call_deferred()
 
 
+## "Fair fight: ..." (WU-125). Guidance.fair_fights runs combat sims, so it is recomputed only on these
+## refresh signals, never per frame. Hidden when hints are off or nothing is fair.
+func _refresh_fair_fight() -> void:
+	if _fair == null:
+		return
+	var entries: Array = []
+	if int(Settings.get_value("hud_hints")) > 0 and GameState.player != null:
+		entries = Guidance.fair_fights(GameState.player, GameState.data, GameState.world_flags, GameClock.total_days, GameState.current_region)
+	var line := fair_fight_line(entries)
+	_fair.text = line
+	_fair.tooltip_text = line
+	_fair.visible = line != ""
+	_fit_status_panel.call_deferred()
+
+
+## "Fair fight: <best entry's text>" ("" for an empty list).
+static func fair_fight_line(entries: Array) -> String:
+	if entries.is_empty():
+		return ""
+	return "Fair fight: %s" % String(entries[0].get("text", ""))
+
+
 ## "Lives N" from the Creation Artifact (WU-095): warning at 1 life, danger with "Final life" at 0.
 func _refresh_lives(p: CharacterData) -> void:
 	_lives.text = lives_text(p.artifact_lives)
@@ -530,7 +562,7 @@ func _fit_status_panel() -> void:
 		return
 	_key_bar.visible = true
 	var limit := get_viewport().get_visible_rect().size.y - LOG_HEIGHT - 2.0 * STATUS_MARGIN - _status_panel.position.y
-	for label: Label in [_key_bar, _hint, _goal, _next_layer]:
+	for label: Label in [_key_bar, _fair, _hint, _goal, _next_layer]:
 		_status_panel.reset_size()
 		if _status_panel.size.y <= limit:
 			return

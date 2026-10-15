@@ -135,6 +135,13 @@ func test_hunt_line_and_banner() -> void:
 	assert_eq(HUD.bounty_banner("Boar", 40), PackedStringArray(["Bounty claimed", "Boar: 40 spirit stones"]))
 
 
+## WU-125: the fair-fight status line.
+func test_fair_fight_line() -> void:
+	assert_eq(HUD.fair_fight_line([]), "")
+	var one: Array[Dictionary] = [{"text": "Sect mission: Boar (80%)", "chance": 0.8, "kind": "mission"}, {"text": "Other", "chance": 0.6, "kind": "deed"}]
+	assert_eq(HUD.fair_fight_line(one), "Fair fight: Sect mission: Boar (80%)")
+
+
 func test_quarry_note_only_in_the_bounty_region() -> void:
 	var d := data()
 	var c := new_character()
