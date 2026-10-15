@@ -22,6 +22,7 @@ var _hint: Label
 var _goal: Label
 var _hunt: Label
 var _fair: Label
+var _fair_queued := false
 var _log: RichTextLabel
 var _status_panel: Control
 var _log_panel: Control
@@ -175,14 +176,14 @@ func _ready() -> void:
 
 	EventBus.player_changed.connect(_refresh)
 	EventBus.session_started.connect(_refresh)
-	EventBus.player_changed.connect(_refresh_fair_fight)
-	EventBus.session_started.connect(_refresh_fair_fight)
-	EventBus.region_changed.connect(func(_id): _refresh_fair_fight())
-	GameClock.days_advanced.connect(func(_d): _refresh_fair_fight())
+	EventBus.player_changed.connect(_queue_fair_fight)
+	EventBus.session_started.connect(_queue_fair_fight)
+	EventBus.region_changed.connect(func(_id): _queue_fair_fight())
+	GameClock.days_advanced.connect(func(_d): _queue_fair_fight())
 	EventBus.region_changed.connect(func(_id): _refresh())
 	EventBus.region_changed.connect(_on_arrival)
 	EventBus.message_posted.connect(_on_message)
-	Settings.changed.connect(func(key: String, _v): if key == "hud_hints": _refresh(); _refresh_fair_fight())
+	Settings.changed.connect(func(key: String, _v): if key == "hud_hints": _refresh(); _queue_fair_fight())
 	EventBus.interaction_target_changed.connect(_on_target_changed)
 	InputConfig.controls_changed.connect(_refresh_key_hints)
 	EventBus.interaction_menu_requested.connect(_on_menu_requested)
@@ -521,9 +522,18 @@ func _refresh() -> void:
 	_fit_status_panel.call_deferred()
 
 
+## Coalesces the signals one action emits (player_changed, days_advanced...) into one recompute per frame.
+func _queue_fair_fight() -> void:
+	if _fair_queued:
+		return
+	_fair_queued = true
+	_refresh_fair_fight.call_deferred()
+
+
 ## "Fair fight: ..." (WU-125). Guidance.fair_fights runs combat sims, so it is recomputed only on these
 ## refresh signals, never per frame. Hidden when hints are off or nothing is fair.
 func _refresh_fair_fight() -> void:
+	_fair_queued = false
 	if _fair == null:
 		return
 	var entries: Array = []

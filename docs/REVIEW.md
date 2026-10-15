@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 039470a
+Last reviewed commit: 17d6a3b
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -437,3 +437,17 @@ Last reviewed commit: 039470a
     Foundation", but `seen` is also satisfied by the Mortal -> Qi Refining breakthrough; it does not check Foundation.
     (2) QA-066's finding stands: median stones at the QR bottleneck (~170) are below the 300-stone Foundation pill, so
     FOUND-001's saving goal often shows a target out of reach; a balance decision (cheaper pill or base chance).
+- 2026-10-15 (reviewer, 17th run): reviewed 039470a..17d6a3b (WU-125, QA-070, RIVAL-004, WU-138; [PLAN]/[REVIEW] skipped).
+  Main green (1719 tests after). No BACKLOG/CHANGELOG edits by workers; no SAVE_VERSION change, no new persistent state. Nothing filed.
+  - Fixed ([REVIEW] commit): WU-125 recomputed `Guidance.fair_fights` (combat sims) once per signal, and one time-taking
+    action emits `days_advanced` and `player_changed` (often several), so it ran 2+ times per action; the signals now
+    queue one deferred recompute per frame. (WU-138's Look Follow-up was fixed here too, but WU-141 landed the same change
+    first; mine was dropped in the rebase.)
+  - Checked: RIVAL-004's tones (warning ahead / normal behind / dim level; the journal has no "good" tone, so "normal" is
+    the right stand-in), the line waits for `rival_met` and the fallen line too; WU-138's `is_rival` uses
+    `Rivals.rival_of` (living only) and the danger color follows `relation() == "stronger"` as specced; QA-070 is sim-only
+    and disconnects its bounty_claimed handler on every path.
+  - Notes for the planner, not filed: (1) WU-138's label reads GameState in `_draw`, so an NPC already drawn when the
+    first meeting plays shows " (rival)" only at its next redraw (approach or region reload); harmless. (2) QA-070's
+    Follow-up stands: bounties are listed 3 times in 120 sim-months, so the HUD fair-fight line will almost always name a
+    sect mission or nothing for rogues. (3) WU-139 (claimed) should reuse `Rivals.relation_text` as its spec says.
