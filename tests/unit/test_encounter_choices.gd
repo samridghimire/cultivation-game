@@ -444,3 +444,32 @@ func test_profession_choices_train_the_craft() -> void:
 				var xp: Dictionary = choice.get("effects", {}).get("profession_xp", {})
 				assert_true(xp.has(prof), "%s: %s choice trains %s" % [enc_id, choice["label"], prof])
 	assert_true(n >= 7, "at least seven profession choices")
+
+
+## C-101: three Foundation Establishment encounters in different regions where a choice gives something up.
+func test_giving_up_an_item_in_foundation_encounters() -> void:
+	var d := GameData.load_from_dir()
+	var gives := {
+		"azure_poisoned_junior": "meridian_mending_pill",
+		"city_penniless_formation_master": "spirit_stone",
+		"marsh_hungry_ghost_offering": "azure_crystal"}
+	var tags := {}
+	for enc_id: String in gives:
+		var item: String = gives[enc_id]
+		var enc: Dictionary = d.encounters[enc_id]
+		assert_eq(enc.get("min_realm", ""), "foundation_establishment", enc_id + " realm")
+		assert_true(enc.has("blocked_by_flag"), enc_id + " is once-only")
+		tags[(enc["tags"] as Array)[0]] = true
+		var found := false
+		for choice: Dictionary in enc["choices"]:
+			var cost: int = int(choice.get("effects", {}).get("items", {}).get(item, 0))
+			if cost >= 0:
+				continue
+			found = true
+			var c := new_character()
+			assert_true(Exploration.check_choice(c, d, choice, {}) != "", "%s blocked without %s" % [enc_id, item])
+			c.add_item(item, 200)
+			assert_eq(Exploration.check_choice(c, d, choice, {}), "", "%s allowed with %s" % [enc_id, item])
+		assert_true(found, "%s has a choice that gives up %s" % [enc_id, item])
+		assert_true(enc["choices"].size() >= 2, "%s keeps a plain choice" % enc_id)
+	assert_eq(tags.size(), 3, "three different regions")
