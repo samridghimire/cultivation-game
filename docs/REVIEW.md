@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 9740f37
+Last reviewed commit: b2343fc
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -512,3 +512,21 @@ Last reviewed commit: 9740f37
   - Notes for the planner, not filed: QA-081 found the readiness line says "ok" at 56% survival for a bare demonic
     (-500) player with Stone Skin (the heart-demon wave), and its guard test only covers alignment 0. QA-080 found
     renowned requests pay 2.5x-25x a week of gathering; the content retune needs an intended ratio first.
+- 2026-10-15 (reviewer): reviewed 9740f37..b2343fc (C-095, RIVAL-013, WU-155, QA-082, C-098, CORE-001, C-100, RIVAL-012,
+  FOUND-007, WU-160, C-101, GUIDE-031, RIVAL-014, WU-161, QA-085, RIVAL-015; [PLAN] commits skipped). Main green before
+  and after (1836 -> 1837 tests). No BACKLOG/CHANGELOG edits by workers; no SAVE_VERSION change (RIVAL-014's successor
+  state lives in world_flags). The previous run's entry covered ea1a53f..55f04a0 but left the pointer at 9740f37.
+  - Fixed ([REVIEW] commit): (1) C-100's rival_secret_realm_gate "Fight for the right to enter first" paid 250 spirit
+    stones in `effects`, which choose_encounter applies before the duel, so a lost duel still paid more than sharing;
+    the prize is gone (the duel costs you the realm), and a data test now forbids items on fight_rival choices. Its text
+    also assumed the player belongs to a sect; reworded for rogues. (2) FOUND-007 put CLOSE_CALL_SHARE between
+    tribulation_note and its `##` doc comment; moved.
+  - Checked: RIVAL-013's line fires only when the rival's attitude changes (other NPCs' favor changes are no-ops).
+    RIVAL-014 gives no successor after the player's own kill or before the first meeting, clears the per-rival flags,
+    and Milestones.flag_count now skips the text flag `rival_predecessor` (the other world_flags loops already
+    tolerate non-bool values). CORE-001's Golden Body = body_stage 4 matches body_tempering.json. GUIDE-031's echo
+    filter is word-based and tested. WU-155/RIVAL-012: a bitter rival's challenge stays listed with check_spar's reason.
+  - Process: RIVAL-015's code landed as "fixup spacing" (911d1e3) with a follow-up marker commit; the marker is enough
+    for the planner, but workers should amend before landing, not after.
+  - Notes, not filed: C-100's duel choices add rival_grudge 10, which equals bitter_grudge, so any one duel makes the
+    rival bitter (refuses spars until amends). Intended? A design call for the planner.

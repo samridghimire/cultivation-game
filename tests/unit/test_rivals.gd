@@ -188,6 +188,17 @@ func test_core_formation_rival_encounters() -> void:
 		assert_eq(e.get("min_realm", ""), "core_formation", id + " min realm")
 
 
+## A rival duel's effects apply before the fight, so they must not pay a prize a loss would also get.
+func test_rival_duel_choices_pay_no_items() -> void:
+	for e: Dictionary in data().encounters.values():
+		for choice: Dictionary in e.get("choices", []):
+			if not bool(choice.get("fight_rival", false)):
+				continue
+			var items: Dictionary = choice.get("effects", {}).get("items", {})
+			for item_id: String in items:
+				assert_true(int(items[item_id]) <= 0, "%s: '%s' pays %s before the duel" % [e["id"], choice["label"], item_id])
+
+
 ## RIVAL-005: news of a rival's breakthrough.
 func test_news_only_for_a_higher_realm() -> void:
 	var d := data()

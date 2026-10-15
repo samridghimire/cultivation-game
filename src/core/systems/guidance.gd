@@ -1423,12 +1423,12 @@ static func _errand_entries(out: Array[Dictionary], data: GameData, flags: Dicti
 			_add(out, "Errands", String(errand["text"]), "normal")
 
 
-## What the next breakthrough's Heavenly Tribulation would do to you (FOUND-005):
-## {text, tone}, or {} when you are not on the last stage or the next realm has none.
 ## Expected tribulation damage at or above this share of hp + shield reads "close" (FOUND-007).
 const CLOSE_CALL_SHARE := 0.9
 
 
+## What the next breakthrough's Heavenly Tribulation would do to you (FOUND-005):
+## {text, tone}, or {} when you are not on the last stage or the next realm has none.
 static func tribulation_note(c: CharacterData, data: GameData) -> Dictionary:
 	if c.realm_index + 1 >= data.realms.size() or not Tribulation.has_tribulation(data, c.realm_index + 1):
 		return {}
