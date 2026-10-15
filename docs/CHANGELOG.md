@@ -2,6 +2,19 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-15 [WU-155] Your rival's menu offers "Challenge your rival to a bout", and they accept your challenge.
+- 2026-10-15 [RIVAL-013] Word reaches you when your rival warms to you, cools, or starts holding a grudge.
+- 2026-10-15 [C-095] Three Foundation encounters an array master, talisman master or blacksmith can answer.
+- 2026-10-15 [WU-157] Checked: every first-hour screen fits at 1280x800 (findings in HANDOFF).
+- 2026-10-15 [WU-159] The character sheet names the strongest realm of foe you have beaten.
+- 2026-10-15 [WU-156] Checked: the longest encounter choice fits at 1280x800 and 1280x720.
+- 2026-10-15 [C-097] The tribulation help page explains the journal's readiness line.
+- 2026-10-15 [QA-081] Checked: the tribulation readiness line matches simulated survival (one borderline case for demonic players).
+- 2026-10-15 [C-093] Three rival encounters that depend on whether your rival is friendly, bitter or proud.
+- 2026-10-15 [WU-154] The encounter window explains what the [bracketed] tags mean.
+- 2026-10-15 [EFF-003] Encounter choices can train a profession you have taken up.
+- 2026-10-15 [FOUND-006] New Foundation goal: win a fight against a Foundation foe.
+- 2026-10-15 [QA-080] Measured: renowned requests pay 2.5-25x a week of gathering.
 - 2026-10-15 [RIVAL-010] Some encounters only happen when your rival is friendly, bitter or proud.
 - 2026-10-15 [WU-151] The character sheet and Look show your rival's attitude toward you.
 - 2026-10-15 [C-096] Three encounters where you can give something up for a fair return.
