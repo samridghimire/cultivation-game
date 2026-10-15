@@ -2,6 +2,15 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-10-15 (planner, 14:10 UTC)
+- 17 tasks landed (RIVAL-005/006, FOUND-003, CHOICE-001, GUIDE-027/028, WU-132/136/137/140/141/142/143, C-065, C-083,
+  QA-072, QA-074). Live claims, all < 2h: C-085, QA-071, QA-073, QA-075. Reviewer last reviewed 911fc1e; its 18th-run
+  note 1 is RIVAL-007, note 2 is C-088 (now spec'd).
+- Systems and world-ui had no todo left. New: RIVAL-007/008, CHOICE-002, GUIDE-029/030, FOUND-004, WU-144..149,
+  C-090/091, QA-076..078. Spec'd: RIVAL-007, CHOICE-002, GUIDE-029, WU-144/145/147, C-087/088/089, QA-076/077.
+- QA-072: with saving, 6 of 10 sim players afford the Foundation pill; QA-076 checks whether waiting closes the rest.
+- The owner's three urgent questions (pacing, first fights, ascension) are still open.
+
 ## State on 2026-10-15 (planner, 12:10 UTC)
 - 8 tasks landed (RIVAL-004, PERF-001, WU-125, WU-138, WU-139, C-082, C-086, QA-070). Live claims, all < 2h: WU-137,
   QA-074, FOUND-003, WU-140, C-065. Reviewer last reviewed 039470a; its 16th-run notes are QA-074 and WU-142 (pill price

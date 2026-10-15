@@ -2,6 +2,23 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-15 [GUIDE-028] Fights you can win now consider every bounty nearby, not just the first one posted.
+- 2026-10-15 [WU-132] Checked: the "from a style to a win" screens fit at 1280x800 and 1280x720.
+- 2026-10-15 [WU-142] The breakthrough window shows your spirit stones against the pill's price.
+- 2026-10-15 [WU-136] Checked: the newest windows work with keyboard and gamepad focus.
+- 2026-10-15 [QA-072] Checked: a simulated player who saves for the Foundation pill now affords it in 6 of 10 lives.
+- 2026-10-15 [CHOICE-001] Some encounter choices need a high enough attribute.
+- 2026-10-15 [RIVAL-006] Breaking through past your rival's realm is marked with a line and a milestone.
+- 2026-10-15 [C-083] Help pages for practising a fighting style, fights you can win and inheritance trials.
+- 2026-10-15 [RIVAL-005] Word reaches you when your rival breaks through to a new realm.
+- 2026-10-15 [WU-140] The breakthrough window describes the realm you are reaching.
+- 2026-10-15 [C-065] Qingming and Mid-Autumn festivals have their own activities: sweeping graves and moon viewing.
+- 2026-10-15 [FOUND-003] Each failed major breakthrough makes the next attempt a little likelier, up to a cap.
+- 2026-10-15 [WU-143] The world map marks where your rival is.
+- 2026-10-15 [GUIDE-027] Fight ratings use one sample count, so hints and the mission board agree.
+- 2026-10-15 [WU-141] Looking at your rival tells you where you stand against them.
+- 2026-10-15 [WU-137] A realm card celebrates each major breakthrough.
+- 2026-10-15 [QA-074] The Foundation breakthrough test now really checks Foundation.
 - 2026-10-15 [C-086] Your rival crosses your path in the first year: at the herb seller, wounded in the forest, at the sect lecture.
 - 2026-10-15 [PERF-001] Fight ratings are remembered, so the HUD and mission board stay quick.
 - 2026-10-15 [WU-139] The character sheet no longer names your rival before you have met.
