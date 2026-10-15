@@ -384,3 +384,28 @@ func test_profession_answers_in_the_wilds() -> void:
 			c.professions[prof] = {"rank": 1, "xp": 0.0}
 			assert_eq(Exploration.check_choice(c, d, choice, {}), "", "%s allowed at rank 1" % enc_id)
 		assert_true(found, "%s has a %s choice" % [enc_id, prof])
+
+
+func test_giving_up_an_item_in_qi_refining_encounters() -> void:
+	var d := GameData.load_from_dir()
+	var gives := {
+		"forest_dying_rogue_begs_pill": "bone_setting_salve",
+		"village_fevered_child": "spirit_herb",
+		"marsh_wandering_alchemist_trade": "spirit_herb"}
+	var tags := {}
+	for enc_id: String in gives:
+		var item: String = gives[enc_id]
+		var enc: Dictionary = d.encounters[enc_id]
+		tags[(enc["tags"] as Array)[0]] = true
+		var found := false
+		for choice: Dictionary in enc["choices"]:
+			if not choice.get("effects", {}).get("items", {}).has(item):
+				continue
+			found = true
+			var c := new_character()
+			assert_true(Exploration.check_choice(c, d, choice, {}) != "", "%s blocked without %s" % [enc_id, item])
+			c.add_item(item, 2)
+			assert_eq(Exploration.check_choice(c, d, choice, {}), "", "%s allowed with %s" % [enc_id, item])
+		assert_true(found, "%s has a choice that gives up %s" % [enc_id, item])
+		assert_true(enc["choices"].size() >= 2, "%s keeps a plain choice" % enc_id)
+	assert_eq(tags.size(), 3, "three different regions")
