@@ -199,6 +199,15 @@ func test_rival_duel_choices_pay_no_items() -> void:
 				assert_true(int(items[item_id]) <= 0, "%s: '%s' pays %s before the duel" % [e["id"], choice["label"], item_id])
 
 
+## C-109: one duel must not turn the rival bitter; two hard duels do. (Cruel non-duel choices may.)
+func test_one_duel_does_not_make_the_rival_bitter() -> void:
+	var bitter := int(data().karma["rival"]["bitter_grudge"])
+	for e: Dictionary in data().encounters.values():
+		for choice: Dictionary in e.get("choices", []):
+			if bool(choice.get("fight_rival", false)):
+				assert_true(int(choice.get("rival_grudge", 0)) < bitter, "%s: '%s' makes the rival bitter in one duel" % [e["id"], choice["label"]])
+
+
 ## RIVAL-005: news of a rival's breakthrough.
 func test_news_only_for_a_higher_realm() -> void:
 	var d := data()
