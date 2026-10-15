@@ -27,6 +27,7 @@ const MARK_COLORS := {
 	"discovery": Color("f2f0a0"),
 	"letter": Color("f0b27a"),
 	"rival": Color("d9694f"),
+	"bounty": UIStyle.DANGER_COLORS["Risky"],
 }
 
 var _canvas: Control
@@ -242,7 +243,28 @@ static func region_marks(c: CharacterData, data: GameData, people: Dictionary, e
 		marks.append({"kind": "event", "text": "%s (%s left)%s" % [WorldEvents.active_label(data, instance["id"]), Calendar.format_duration(maxi(0, int(instance["end_day"]) - total_days)), enter]})
 	for req in Letters.requests_in_region(c, data, people, region_id, total_days):
 		marks.append({"kind": "letter", "text": "Letter: %s asked for %d %s (%d days left)" % [req["name"], req["count"], req["item"], req["days_left"]]})
+	marks.append_array(bounty_marks(c, data, total_days, region_id))
 	return marks
+
+
+## Bounty marks (WU-147): your hunt in its region, else up to 2 hunts you could take here.
+static func bounty_marks(c: CharacterData, data: GameData, total_days: int, region_id: String) -> Array[Dictionary]:
+	var marks: Array[Dictionary] = []
+	var hunt := Bounties.active(c, data, total_days)
+	if not hunt.is_empty():
+		if String(hunt["region"]) == region_id:
+			marks.append({"kind": "bounty", "text": "Your hunt: %s (%s left)" % [_enemy_name(data, String(hunt["enemy"])), Calendar.format_duration(maxi(0, int(hunt["until_day"]) - total_days))]})
+		return marks
+	for b: Dictionary in Bounties.offers(c, data, total_days, region_id):
+		if marks.size() >= 2:
+			break
+		if String(b["region"]) == region_id and Bounties.check_take(c, data, String(b["id"]), total_days) == "":
+			marks.append({"kind": "bounty", "text": "Bounty: %s, %d stones" % [_enemy_name(data, String(b["enemy"])), Bounties.paid_stones(c, data, b)]})
+	return marks
+
+
+static func _enemy_name(data: GameData, enemy_id: String) -> String:
+	return String(data.enemies.get(enemy_id, {}).get("name", enemy_id))
 
 
 ## Foes met while exploring the current region, as BBCode with each danger colored (WU-030).

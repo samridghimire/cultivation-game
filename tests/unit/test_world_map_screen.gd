@@ -141,6 +141,36 @@ func test_region_marks_rival_after_first_meeting() -> void:
 	assert_false(kinds.call(met, home).has("rival"), "dead rival")
 
 
+## WU-147: an active hunt marks its region only; offers you cannot take are not marked, at most 2 per region.
+func test_region_marks_bounties() -> void:
+	var d := data()
+	var c := new_character()
+	c.realm_index = 1
+	for region_id in d.regions:
+		Exploration.visit(c, region_id)
+	var texts := func(region_id: String) -> Array:
+		return WorldMapScreen.region_marks(c, d, {}, [], 0, region_id).filter(func(m: Dictionary) -> bool: return m["kind"] == "bounty").map(func(m: Dictionary) -> String: return m["text"])
+	var offered: Array = texts.call("misty_forest")
+	assert_true(offered.size() <= 2, "capped at 2")
+	for t: String in offered:
+		assert_true(t.begins_with("Bounty: "), t)
+	assert_true(WorldMapScreen.MARK_COLORS.has("bounty"))
+	Bounties.take(c, d, "iron_back_boar_bounty", 0)
+	var mine: Array = texts.call("misty_forest")
+	assert_eq(mine.size(), 1)
+	assert_true(String(mine[0]).begins_with("Your hunt: "), mine[0])
+	assert_true(String(mine[0]).contains("left"))
+	assert_eq(texts.call("withered_bone_marsh").size(), 0, "other regions show nothing during a hunt")
+	Bounties.abandon(c, d, 0)
+	# Realm-gated offers are not marked.
+	c.realm_index = 0
+	for b: Dictionary in d.bounties.values():
+		if String(b["region"]) == "myriad_peaks_ridge" and b.has("min_realm") and String(b["min_realm"]) == "core_formation":
+			assert_false(Bounties.check_take(c, d, String(b["id"]), 0) == "", "gated")
+	for t: String in texts.call("myriad_peaks_ridge"):
+		assert_false(t.contains("bear"), t)
+
+
 func test_region_marks_joinable_event() -> void:
 	var d := data()
 	var events: Array = [{"id": "sect_tournament", "region": "fallen_star_market", "start_day": 0, "end_day": 40}]
