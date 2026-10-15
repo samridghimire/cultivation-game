@@ -1389,9 +1389,11 @@ func test_breakthrough_reports_lifespan_and_qi_gain() -> void:
 	var before := Cultivation.lifespan_years(c, gs.data)
 	var rate_before := Cultivation.qi_per_day(c, gs.data)
 	var details: Array[String] = []
-	EventBus.breakthrough_details.connect(func(t: String) -> void: details.append(t))
+	var on_details := func(t: String) -> void: details.append(t)
+	EventBus.breakthrough_details.connect(on_details)
 	EventBus.clear_history()
 	gs.attempt_breakthrough()
+	EventBus.breakthrough_details.disconnect(on_details)
 	assert_eq(c.realm_index, 2)
 	var gain := Cultivation.lifespan_years(c, gs.data) - before
 	assert_gt(gain, 0)

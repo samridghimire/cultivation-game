@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 111cd0a
+Last reviewed commit: f36edce
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -405,3 +405,17 @@ Last reviewed commit: 111cd0a
     (3) GUIDE-020 added a "Learn a fighting style" first goal; with WU-131 each tick now banners, so learning Iron Fist
     shows two goal ticks at once only as one banner (the last); fine, but the earlier tick is never named. (4) WU-127's screenshot note quotes the old "(Techniques, K)" hint text;
     the hint now reads "on the Techniques screen".
+- 2026-10-15 (reviewer, 15th run): reviewed 111cd0a..f36edce (WU-126, WU-135, QA-067, GUIDE-023, GUIDE-024, WU-133;
+  [PLAN]/[REVIEW] skipped). Main green before and after. No BACKLOG/CHANGELOG edits by workers; no SAVE_VERSION change
+  and no new persistent state. Nothing filed.
+  - Fixed ([REVIEW] commit): WU-135's test connected a lambda to the EventBus autoload's breakthrough_details signal and
+    never disconnected it, leaving a dangling handler for every later test; it now disconnects after the breakthrough.
+  - Checked: WU-126's rating order matches Combat.label_for_chance and the sect's call is still pinned first after
+    ordering; WU-133's row_fits measures with the button's own font size (18) and the detail pane rebuilds the same
+    "name  price" base, so the suffix moves exactly when the row drops it; GUIDE-023 skips friendly spars and names no
+    fairer fight against the foe just lost to; WU-135's banner details are cleared on every breakthrough_attempted.
+  - Notes for the planner, not filed: (1) GUIDE-024's hint rates missions with 20 samples while the board (WU-126) and
+    fair_fights use 40, so near 50% the hint can call a mission "too dangerous" that the board shows as Risky.
+    (2) WU-126 computes win_chance twice per mission per open (ordered() then the label loop); the spec asked for once;
+    worth folding into PERF-001. (3) WU-133 skipped its screenshot check (Follow-up); WU-136/WU-132 should cover the
+    shop at 1280x720. (4) QA-067 follow-up stands: listed bounties are never exercised by the curious policy.
