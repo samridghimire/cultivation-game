@@ -16,6 +16,7 @@ extends RefCounted
 ##   flag / not_flag: world flag          min_favor / max_favor: int
 ##   has_items: {item_id: count}          knows_technique / not_knows_technique: id
 ##   npc_alive: bool                      above_npc: bool (player realm > NPC realm)
+##   max_technique_level: {id: n}         knows the technique, at a level below n
 ##
 ## `ctx` everywhere is {player: CharacterData, npc: CharacterData, data: GameData,
 ## flags: Dictionary, favor: int}. `npc` is null for a story event (a dialogue
@@ -114,6 +115,9 @@ static func unmet_reason(cond: Dictionary, ctx: Dictionary) -> String:
 		return "Requires a technique you do not know."
 	if cond.has("not_knows_technique") and c.techniques.has(cond["not_knows_technique"]):
 		return "You already know it."
+	for tech_id in cond.get("max_technique_level", {}):
+		if not c.techniques.has(tech_id) or Techniques.level(c, tech_id) >= int(cond["max_technique_level"][tech_id]):
+			return "Your technique is already well practised."
 	if cond.has("npc_alive") and npc != null and npc.alive != bool(cond["npc_alive"]):
 		return "Not possible."
 	if cond.has("above_npc") and npc != null and (c.realm_index > npc.realm_index) != bool(cond["above_npc"]):

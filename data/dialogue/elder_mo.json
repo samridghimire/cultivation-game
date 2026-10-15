@@ -11,6 +11,7 @@
         {"label": "Senior, please teach me how to cultivate.", "next": "breathing", "if": {"not_knows_technique": "basic_breathing"}},
         {"label": "I am new to all this. Where should I begin?", "next": "first_steps", "if": {"max_realm": "qi_refining"}, "effects": {"set_flag": "talked_elder_mo"}},
         {"label": "Breathing alone will not win a fight, will it?", "next": "fighting", "if": {"knows_technique": "basic_breathing", "not_knows_technique": "iron_fist", "max_realm": "qi_refining"}},
+        {"label": "I learned Iron Fist. Is that enough to fight with?", "next": "practise", "if": {"max_technique_level": {"iron_fist": 3}, "max_realm": "qi_refining"}},
         {"label": "What lies beyond the village?", "next": "world"},
         {"label": "How do I break through a bottleneck?", "next": "bottleneck", "if": {"min_realm": "qi_refining"}},
         {"label": "Offer 10 spirit stones as a token of respect.", "next": "gift", "effects": {"items": {"spirit_stone": -10}}, "favor": 10, "show_locked": true},
@@ -23,6 +24,8 @@
       "choices": [{"label": "Thank you, senior. (Learn Basic Breathing Method)", "next": "greet", "days": 3, "favor": 5, "effects": {"learn_technique": "basic_breathing"}}]},
     "fighting": {"text": "Breathing keeps you alive; it will not win you a fight. For that you need a style. The Wandering Merchant by the village square sells a crude boxing manual, Iron Fist, for a handful of stones. Ugly, honest, enough for wolves. And if you join the Azure Cloud Sect, save up for Stone Skin; its shop sells it.",
       "choices": [{"label": "I will visit the merchant.", "next": "greet"}]},
+    "practise": {"text": "A fist learned is not a fist known. Open the Techniques screen and practise it; every level sharpens your odds. Then test it honestly: the headman's boar, or the easiest mission the sect will give you. Bruises are the cheapest teachers.",
+      "choices": [{"label": "I will practise, senior.", "next": "greet"}]},
     "first_steps": {"text": "Ha, an honest question. Listen well. First, cultivate: sit at the Meditation Rock, or the Spirit Spring if you want qi twice as fast, and let the days pass. When your qi fills, break through. Second, stones: a cultivator without spirit stones starves. Learn a trade at the workshop. Third, protection: the sects recruit at the hall by the east road. And if you get hurt, the clinic north of the square will patch you up.",
       "choices": [
         {"label": "Tell me about the sects.", "next": "sects_info"},

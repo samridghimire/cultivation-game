@@ -265,3 +265,21 @@ func test_elder_mo_fighting_choice_hides_after_iron_fist() -> void:
 		if String(ch.get("next", "")) == "fighting":
 			cond = ch["if"]
 	assert_eq(String(cond.get("not_knows_technique", "")), "iron_fist")
+
+
+## [C-080] Elder Mo urges practice while Iron Fist is below level 3.
+func test_elder_mo_practise_choice_follows_iron_fist_level() -> void:
+	var d := data()
+	var cond: Dictionary = {}
+	for ch: Dictionary in d.dialogues["elder_mo"]["nodes"]["greet"]["choices"]:
+		if String(ch.get("next", "")) == "practise":
+			cond = ch["if"]
+	assert_false(cond.is_empty())
+	assert_eq(Dialogue.validate(d.dialogues["elder_mo"], d).size(), 0)
+	var c := new_character()
+	var ctx := {"player": c, "npc": null, "data": d, "flags": {}, "favor": 0}
+	assert_true(Dialogue.unmet_reason(cond, ctx) != "", "no style: not offered")
+	c.techniques["iron_fist"] = {"level": 1, "xp": 0.0}
+	assert_eq(Dialogue.unmet_reason(cond, ctx), "", "Iron Fist level 1: offered")
+	c.techniques["iron_fist"]["level"] = 3
+	assert_true(Dialogue.unmet_reason(cond, ctx) != "", "practised: not offered")
