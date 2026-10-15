@@ -12,8 +12,8 @@ const SPRING_DENSITY := 2.0  # Spirit Spring, see data/regions.json
 ## {category: count} per month), injuries, fights_won, fights_lost, fights_fled.
 ## `curious` adds the QA-029 policy each month (see _curious_month); the default
 ## newcomer only meditates and explores once. `month_hook(month)` (optional) runs
-## after each month's actions.
-static func play(gs: Node, clock: Node, seed_value: int, months: int, curious: bool = false, month_hook: Callable = Callable()) -> Dictionary:
+## after each month's actions. QA-044: `no_help` makes the curious player never ask for pointers or spar.
+static func play(gs: Node, clock: Node, seed_value: int, months: int, curious: bool = false, month_hook: Callable = Callable(), no_help: bool = false) -> Dictionary:
 	gs.rng.seed = seed_value
 	var rng := RandomNumberGenerator.new()
 	rng.seed = seed_value
@@ -23,7 +23,7 @@ static func play(gs: Node, clock: Node, seed_value: int, months: int, curious: b
 	var bus: Node = gs.get_node("/root/EventBus")
 	bus.clear_history()
 	var out := {"layer_day": {}, "sect_day": -1, "month_lines": [], "injuries": 0, "player": c, "kinds": [], "kind_sets": [], "stones": [], "realms": []}
-	var done := {}
+	var done := {"no_help": no_help}
 	_talk_to_elder_mo(gs)
 	for chore in CHORES:
 		gs.perform_deed(chore)
@@ -137,7 +137,7 @@ static func _curious_month(gs: Node, c: CharacterData, done: Dictionary, today: 
 			gs.deliver_commission(i)
 			kinds["commission"] = true
 	if c.alive:
-		_everything_month(gs, c, kinds, today)
+		_everything_month(gs, c, kinds, today, bool(done.get("no_help", false)))
 	return kinds
 
 
@@ -183,7 +183,7 @@ static func cheapest_combat_manual(gs: Node, c: CharacterData) -> String:
 ## QA-048: the rest of what the menus offer, each tried once a month and only when the core
 ## check allows it: craft, profession work, gift, pointers/spar, lecture, secret realm, and
 ## (every 6th month) a trip to the nearest unvisited region and back.
-static func _everything_month(gs: Node, c: CharacterData, kinds: Dictionary, today: int) -> void:
+static func _everything_month(gs: Node, c: CharacterData, kinds: Dictionary, today: int, no_help: bool = false) -> void:
 	for recipe_id: String in gs.data.recipes:
 		if c.alive and Alchemy.check(c, gs.data, recipe_id) == "":
 			gs.refine(recipe_id)
@@ -216,7 +216,7 @@ static func _everything_month(gs: Node, c: CharacterData, kinds: Dictionary, tod
 		if best_id != "" and cheapest != "":
 			gs.give_gift(best_id, cheapest)
 			kinds["gift"] = true
-	if c.alive:
+	if c.alive and not no_help:
 		for npc_id: String in gs.npcs:
 			if gs.check_pointers(npc_id) == "":
 				gs.ask_pointers(npc_id)
