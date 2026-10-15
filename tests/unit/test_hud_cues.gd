@@ -205,3 +205,4 @@ func test_goals_done_banner() -> void:
 	goals[1]["done"] = true
 	assert_eq(HUD.goals_done_banner(["A"] as Array[String], goals, "first", "J"), "B  Your first goals are done; the journal (J) has more.")
 	assert_eq(HUD.goals_done_banner(["A"] as Array[String], goals, "foundation", "J"), "B  Your Foundation goals are done; the journal (J) has more.")
+	assert_eq(HUD.goals_done_banner(["A"] as Array[String], goals, "core", "J"), "B  Your Core Formation goals are done; the journal (J) has more.")

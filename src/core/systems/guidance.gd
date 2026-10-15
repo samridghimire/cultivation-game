@@ -830,14 +830,41 @@ static func foundation_goals_active(c: CharacterData, data: GameData, flags: Dic
 	return false
 
 
+## The Core Formation ladder (CORE-001): {text, done} in order.
+static func core_goals(c: CharacterData, data: GameData, flags: Dictionary, clan: ClanData = null) -> Array[Dictionary]:
+	var core := data.realm_index_of("core_formation")
+	var rows: Array = [
+		["Reach Core Formation Middle", c.realm_index > core or (c.realm_index == core and c.stage >= 1)],
+		["Win a fight against a Core Formation foe", bool(flags.get(beat_realm_flag("core_formation"), false))],
+		["Clear a secret realm floor", LifeStats.get_stat(c, "realm_floors_cleared") >= 1],
+		["Temper your body to Golden Body", c.body_stage >= 4],
+	]
+	var out: Array[Dictionary] = []
+	for row: Array in rows:
+		out.append({"text": row[0], "done": row[1]})
+	return out
+
+
+## True while the player is in Core Formation with goals left.
+static func core_goals_active(c: CharacterData, data: GameData, flags: Dictionary, clan: ClanData = null) -> bool:
+	if c.realm_index != data.realm_index_of("core_formation"):
+		return false
+	for goal in core_goals(c, data, flags, clan):
+		if not goal["done"]:
+			return true
+	return false
+
+
 ## The goal ladder the HUD announces from: "first" up to Qi Refining, "foundation" in Foundation
-## Establishment, else "". Unlike active_goal_ladder it stays put once every goal is done, so the
+## Establishment, "core" in Core Formation, else "". Unlike active_goal_ladder it stays put once every goal is done, so the
 ## last goal ticked off is still announced.
 static func goal_ladder_id(c: CharacterData) -> String:
 	if c.realm_index <= 1:
 		return "first"
 	if c.realm_index == 2:
 		return "foundation"
+	if c.realm_index == 3:
+		return "core"
 	return ""
 
 
@@ -847,16 +874,20 @@ static func goal_ladder(id: String, c: CharacterData, data: GameData, flags: Dic
 		return first_goals(c, data, flags)
 	if id == "foundation":
 		return foundation_goals(c, data, flags, clan)
+	if id == "core":
+		return core_goals(c, data, flags, clan)
 	var none: Array[Dictionary] = []
 	return none
 
 
-## The goal ladder currently shown (first goals, then Foundation goals), [] when none.
+## The goal ladder currently shown (first, Foundation, then Core Formation goals), [] when none.
 static func active_goal_ladder(c: CharacterData, data: GameData, flags: Dictionary, clan: ClanData = null) -> Array[Dictionary]:
 	if c.realm_index <= 1 and not first_goals_done(c, data, flags):
 		return first_goals(c, data, flags)
 	if foundation_goals_active(c, data, flags, clan):
 		return foundation_goals(c, data, flags, clan)
+	if core_goals_active(c, data, flags, clan):
+		return core_goals(c, data, flags, clan)
 	var none: Array[Dictionary] = []
 	return none
 
@@ -1000,6 +1031,14 @@ static func journal(c: CharacterData, data: GameData, flags: Dictionary, today: 
 				found_tone = "normal" if found_flagged else "warning"
 				found_flagged = true
 			_add(out, "Foundation goals", ("[x] " if goal["done"] else "[ ] ") + String(goal["text"]), found_tone)
+	if core_goals_active(c, data, flags, clan):
+		var core_flagged := false
+		for goal in core_goals(c, data, flags, clan):
+			var core_tone := "dim"
+			if not goal["done"]:
+				core_tone = "normal" if core_flagged else "warning"
+				core_flagged = true
+			_add(out, "Core Formation goals", ("[x] " if goal["done"] else "[ ] ") + String(goal["text"]), core_tone)
 	var fights := fair_fights(c, data, flags, today, region_id)
 	if c.realm_index >= 2 or first_goals_done(c, data, flags):
 		for line in goals(c, data, flags, clan, density):

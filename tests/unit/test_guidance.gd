@@ -1234,7 +1234,7 @@ func test_foundation_goals_clan_and_realm_limits() -> void:
 	c.realm_index = 2
 	assert_true(Guidance.foundation_goals(c, data(), {}, ClanData.new())[4]["done"])
 	assert_eq(Guidance.active_goal_ladder(c, data(), {}).size(), 5)
-	c.realm_index = 3
+	c.realm_index = 4
 	assert_false(Guidance.foundation_goals_active(c, data(), {}))
 	assert_true(Guidance.active_goal_ladder(c, data(), {}).is_empty())
 	c.realm_index = 1
@@ -1253,7 +1253,7 @@ func test_goal_ladder_keeps_a_finished_ladder() -> void:
 	assert_eq(Guidance.goal_ladder("foundation", c, data(), {}, ClanData.new()).size(), 5)
 	c.realm_index = 1
 	assert_eq(Guidance.goal_ladder_id(c), "first")
-	c.realm_index = 3
+	c.realm_index = 4
 	assert_eq(Guidance.goal_ladder_id(c), "")
 	assert_true(Guidance.goal_ladder("", c, data(), {}).is_empty())
 
@@ -1354,3 +1354,38 @@ func test_foundation_goal_beat_foundation_foe() -> void:
 	assert_eq(row["text"], "Win a fight against a Foundation foe")
 	assert_false(row["done"])
 	assert_true(Guidance.foundation_goals(c, data(), {flag: true})[1]["done"])
+
+
+func test_core_goals_rows_and_ladder() -> void:
+	var c := _fresh()
+	c.realm_index = 3
+	var goals := Guidance.core_goals(c, data(), {})
+	assert_eq(goals.size(), 4)
+	for g in goals:
+		assert_false(g["done"])
+	assert_true(Guidance.core_goals_active(c, data(), {}))
+	c.stage = 1
+	c.body_stage = 4
+	LifeStats.add(c, "realm_floors_cleared", 1)
+	goals = Guidance.core_goals(c, data(), {Guidance.beat_realm_flag("core_formation"): true})
+	for g in goals:
+		assert_true(g["done"])
+	assert_false(Guidance.core_goals_active(c, data(), {Guidance.beat_realm_flag("core_formation"): true}))
+	assert_eq(Guidance.core_goals(c, data(), {})[1]["text"], "Win a fight against a Core Formation foe")
+
+
+func test_core_goal_ladder_ids_and_journal() -> void:
+	var c := _fresh()
+	c.realm_index = 2
+	assert_eq(Guidance.goal_ladder_id(c), "foundation")
+	var section_of := func() -> Array:
+		return Guidance.journal(c, data(), {}, 0, "qingshi_village").filter(func(e: Dictionary) -> bool: return e["section"] == "Core Formation goals")
+	assert_true(section_of.call().is_empty())
+	c.realm_index = 3
+	assert_eq(Guidance.goal_ladder_id(c), "core")
+	assert_eq(Guidance.goal_ladder("core", c, data(), {}).size(), 4)
+	assert_eq(Guidance.active_goal_ladder(c, data(), {}).size(), 4)
+	assert_eq(section_of.call().size(), 4)
+	c.realm_index = 4
+	assert_eq(Guidance.goal_ladder_id(c), "")
+	assert_true(section_of.call().is_empty())
