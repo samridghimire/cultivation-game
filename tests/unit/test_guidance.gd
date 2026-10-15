@@ -1233,3 +1233,42 @@ func test_foundation_goals_clan_and_realm_limits() -> void:
 	assert_true(Guidance.active_goal_ladder(c, data(), {}).is_empty())
 	c.realm_index = 1
 	assert_eq(Guidance.active_goal_ladder(c, data(), {}).size(), 7)
+
+
+func _peak_foundation() -> CharacterData:
+	var c := _fresh()
+	c.realm_index = 2
+	c.stage = data().realms[2].stage_count() - 1
+	return c
+
+
+func test_tribulation_note_warns_when_unprepared() -> void:
+	var c := _peak_foundation()
+	var note := Guidance.tribulation_note(c, data())
+	assert_true(String(note["text"]).contains("Heavenly Tribulation ahead"))
+	assert_true(String(note["text"]).contains("would not survive"))
+	assert_eq(note["tone"], "warning")
+	var entries := Guidance.journal(c, data(), {}, 0, "qingshi_village").filter(func(e: Dictionary) -> bool: return String(e["text"]).begins_with("Heavenly Tribulation"))
+	assert_eq(entries.size(), 1)
+	assert_eq(entries[0]["section"], "Breakthrough")
+
+
+func test_tribulation_note_normal_when_sturdy_and_hidden_elsewhere() -> void:
+	var c := _peak_foundation()
+	c.attributes["constitution"] = 100000
+	var note := Guidance.tribulation_note(c, data())
+	assert_eq(note["tone"], "normal")
+	assert_false(String(note["text"]).contains("would not survive"))
+	c.stage = 1
+	assert_true(Guidance.tribulation_note(c, data()).is_empty())
+	var q := _fresh()
+	q.realm_index = 1
+	q.stage = 8
+	assert_true(Guidance.tribulation_note(q, data()).is_empty())
+
+
+func test_tribulation_note_names_heart_demon() -> void:
+	var c := _peak_foundation()
+	assert_false(String(Guidance.tribulation_note(c, data())["text"]).contains("heart demon"))
+	c.alignment = -1000
+	assert_true(String(Guidance.tribulation_note(c, data())["text"]).contains("heart demon"))

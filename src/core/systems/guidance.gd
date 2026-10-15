@@ -1268,6 +1268,29 @@ static func _errand_entries(out: Array[Dictionary], data: GameData, flags: Dicti
 			_add(out, "Errands", String(errand["text"]), "normal")
 
 
+## What the next breakthrough's Heavenly Tribulation would do to you (FOUND-005):
+## {text, tone}, or {} when you are not on the last stage or the next realm has none.
+static func tribulation_note(c: CharacterData, data: GameData) -> Dictionary:
+	if c.realm_index + 1 >= data.realms.size() or not Tribulation.has_tribulation(data, c.realm_index + 1):
+		return {}
+	if c.stage + 1 < data.realms[c.realm_index].stage_count():
+		return {}
+	var p := Tribulation.preview(c, data, c.realm_index + 1)
+	var shield := int(p["shield"])
+	var text := "Heavenly Tribulation ahead: %d waves%s, likely %d damage against your %d hp%s." % [
+		int(p["waves"]),
+		" and a heart demon" if p["heart_demon"] else "",
+		int(p["expected_damage"]),
+		int(p["max_hp"]),
+		" and a %d-point shield" % shield if shield > 0 else "",
+	]
+	var tone := "normal"
+	if int(p["expected_damage"]) >= int(p["max_hp"]) + shield:
+		text += " You would not survive it yet: ready a shield talisman, train a defense technique or wear better armor."
+		tone = "warning"
+	return {"text": text, "tone": tone}
+
+
 static func _breakthrough_entries(out: Array[Dictionary], c: CharacterData, data: GameData, density: float) -> void:
 	var realm: RealmDef = data.realms[c.realm_index]
 	var next_label := ""
@@ -1277,6 +1300,9 @@ static func _breakthrough_entries(out: Array[Dictionary], c: CharacterData, data
 		next_label = data.realms[c.realm_index + 1].name
 	if next_label != "":
 		_add(out, "Breakthrough", "Qi: %s / %s for %s" % [_commas(int(c.qi)), _commas(int(Cultivation.qi_required(c, data))), next_label], "normal")
+	var trib := tribulation_note(c, data)
+	if not trib.is_empty():
+		_add(out, "Breakthrough", String(trib["text"]), String(trib["tone"]))
 	if Cultivation.can_attempt_breakthrough(c, data):
 		_add(out, "Breakthrough", "You are at a bottleneck: break through to go further.", "warning")
 		var odds := chance_text(c, data)
