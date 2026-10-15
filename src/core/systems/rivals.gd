@@ -175,6 +175,15 @@ static func relation_text(c: CharacterData, rival: CharacterData) -> String:
 	return "level with you"
 
 
+## "bouts 2 won, 1 lost" from the life stats (RIVAL-016), "" before any bout.
+static func bout_record_text(c: CharacterData) -> String:
+	var won := LifeStats.get_stat(c, "rival_bouts_won")
+	var lost := LifeStats.get_stat(c, "rival_bouts_lost")
+	if won == 0 and lost == 0:
+		return ""
+	return "bouts %d won, %d lost" % [won, lost]
+
+
 ## Whether an encounter's `rival` condition holds (no condition = always).
 static func allows(c: CharacterData, rival: CharacterData, condition: String) -> bool:
 	if condition == "":

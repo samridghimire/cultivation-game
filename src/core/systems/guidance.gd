@@ -1362,6 +1362,9 @@ static func _rival_entry(out: Array[Dictionary], c: CharacterData, data: GameDat
 	var relation := Rivals.relation_text(c, rival)
 	if feeling != "":
 		relation += "; " + feeling
+	var record := Rivals.bout_record_text(c)
+	if record != "":
+		relation += "; " + record
 	_add(out, "Household", "Rival: %s, %s (%s)" % [rival.name, Cultivation.realm_label(rival, data), relation], tone)
 
 

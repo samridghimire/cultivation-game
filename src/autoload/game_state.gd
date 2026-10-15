@@ -1327,6 +1327,11 @@ func spar_with(npc_id: String) -> void:
 	for line in result["levels"]:
 		text += " %s." % line
 	EventBus.post(text, "progress")
+	if npc_id == player.rival:
+		var key := "rival_bouts_won" if won else "rival_bouts_lost"
+		LifeStats.add(player, key)
+		if won and LifeStats.get_stat(player, key) == 1:
+			EventBus.post("You best %s in a bout for the first time." % npc.name, "progress")
 	_post_attitude_change(before)
 	# The bout itself took a day; the spar rule's `days` is the whole visit.
 	_pass_time(maxi(0, int(result["days"]) - 1))

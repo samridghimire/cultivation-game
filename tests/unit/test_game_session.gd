@@ -1152,6 +1152,42 @@ func test_spar_with_npc() -> void:
 	gs.end_session()
 
 
+## RIVAL-016: bouts with the rival are scored; other spars are not.
+func test_spar_rival_keeps_score() -> void:
+	var c := _start()
+	var gs := _game_state()
+	c.realm_index = 5
+	c.techniques = {"iron_fist": {"level": 1, "xp": 0.0}}
+	var rival := CharacterFactory.create("Old Rival", gs.data, seeded_rng(9))
+	rival.id = "old_rival"
+	rival.age_days = 30 * Calendar.DAYS_PER_YEAR
+	rival.realm_index = 4
+	gs.npcs["old_rival"] = rival
+	var other := CharacterFactory.create("Bystander", gs.data, seeded_rng(10))
+	other.id = "bystander"
+	other.age_days = 30 * Calendar.DAYS_PER_YEAR
+	other.realm_index = 4
+	gs.npcs["bystander"] = other
+	gs.npc_favor["bystander"] = 15
+	c.rival = "old_rival"
+	var clock := _root().get_node("GameClock")
+	clock.advance(60)
+	gs.spar_with("old_rival")
+	var won := LifeStats.get_stat(c, "rival_bouts_won")
+	var lost := LifeStats.get_stat(c, "rival_bouts_lost")
+	assert_eq(won + lost, 1, "one bout scored")
+	var firsts := 0
+	for entry in EventBus.history:
+		if String(entry["text"]).contains("for the first time"):
+			firsts += 1
+	assert_eq(firsts, won, "the first win is announced once")
+	clock.advance(60)
+	var total := won + lost
+	gs.spar_with("bystander")
+	assert_eq(LifeStats.get_stat(c, "rival_bouts_won") + LifeStats.get_stat(c, "rival_bouts_lost"), total, "other spars do not count")
+	gs.end_session()
+
+
 ## TRAV-001: travel records each region once; old saves gain their current region.
 func test_travel_records_visited_regions() -> void:
 	var gs := _game_state()
