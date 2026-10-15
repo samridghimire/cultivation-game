@@ -283,3 +283,20 @@ func test_elder_mo_practise_choice_follows_iron_fist_level() -> void:
 	assert_eq(Dialogue.unmet_reason(cond, ctx), "", "Iron Fist level 1: offered")
 	c.techniques["iron_fist"]["level"] = 3
 	assert_true(Dialogue.unmet_reason(cond, ctx) != "", "practised: not offered")
+
+
+## [DLG-001] practice_pending follows Techniques.practice_target for any combat style.
+func test_practice_pending_condition_any_style() -> void:
+	var d := data()
+	var c := new_character()
+	var ctx := {"player": c, "npc": null, "data": d, "flags": {}, "favor": 0}
+	var pending := {"practice_pending": true}
+	var not_pending := {"practice_pending": false}
+	assert_true(Dialogue.unmet_reason(pending, ctx) != "", "no combat technique: fails")
+	assert_eq(Dialogue.unmet_reason(not_pending, ctx), "", "no combat technique: inverse passes")
+	c.techniques["cloud_parting_palm"] = {"level": 1, "xp": 0.0}
+	assert_eq(Dialogue.unmet_reason(pending, ctx), "", "palm level 1 passes")
+	assert_true(Dialogue.unmet_reason(not_pending, ctx) != "", "palm level 1: inverse fails")
+	c.techniques["cloud_parting_palm"]["level"] = Techniques.PRACTICE_LEVEL
+	assert_true(Dialogue.unmet_reason(pending, ctx) != "", "practised: fails")
+	assert_eq(Dialogue.unmet_reason(not_pending, ctx), "", "practised: inverse passes")

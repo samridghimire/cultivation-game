@@ -11,7 +11,7 @@
         {"label": "Senior, please teach me how to cultivate.", "next": "breathing", "if": {"not_knows_technique": "basic_breathing"}},
         {"label": "I am new to all this. Where should I begin?", "next": "first_steps", "if": {"max_realm": "qi_refining"}, "effects": {"set_flag": "talked_elder_mo"}},
         {"label": "Breathing alone will not win a fight, will it?", "next": "fighting", "if": {"knows_technique": "basic_breathing", "not_knows_technique": "iron_fist", "max_realm": "qi_refining"}},
-        {"label": "I learned Iron Fist. Is that enough to fight with?", "next": "practise", "if": {"max_technique_level": {"iron_fist": 3}, "max_realm": "qi_refining"}},
+        {"label": "I learned a fighting style. Is that enough to fight with?", "next": "practise", "if": {"practice_pending": true, "max_realm": "qi_refining"}},
         {"label": "What lies beyond the village?", "next": "world"},
         {"label": "How do I break through a bottleneck?", "next": "bottleneck", "if": {"min_realm": "qi_refining"}},
         {"label": "Offer 10 spirit stones as a token of respect.", "next": "gift", "effects": {"items": {"spirit_stone": -10}}, "favor": 10, "show_locked": true},
