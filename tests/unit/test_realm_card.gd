@@ -8,6 +8,14 @@ func test_card_lines_skips_empty() -> void:
 	assert_eq(lines[0], "New: Alchemy")
 
 
+func test_card_lines_names_surpassed_rival_first() -> void:
+	var lines := RealmCard.card_lines("desc", "Lifespan +50 years", ["a", "b"], "Lin Wei")
+	assert_eq(lines.size(), RealmCard.MAX_EXTRA_LINES)
+	assert_eq(lines[0], "You have surpassed Lin Wei.")
+	assert_eq(lines[1], "Lifespan +50 years")
+	assert_eq(RealmCard.card_lines("desc", "", [], "").size(), 0)
+
+
 func test_card_lines_caps_at_three() -> void:
 	var lines := RealmCard.card_lines("desc", "Lifespan +50 years", ["a", "b", "c", "d"])
 	assert_eq(lines.size(), 3)

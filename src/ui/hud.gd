@@ -1043,15 +1043,17 @@ func _show_arrival(region_id: String) -> void:
 func _on_breakthrough(success: bool, realm_name: String) -> void:
 	var details := _breakthrough_details
 	_breakthrough_details = ""
+	var surpassed := GameState.last_surpassed_rival
+	GameState.last_surpassed_rival = ""
 	if success:
-		_show_realm_card.call_deferred(realm_name, details)
+		_show_realm_card.call_deferred(realm_name, details, surpassed)
 	else:
 		_banner.announce("Breakthrough Failed", "Your qi scatters before the gate of %s." % realm_name, UIStyle.CATEGORY_COLORS["danger"])
 
 
 ## The realm card (WU-137), deferred to the end of the frame so the "New" notices the breakthrough
 ## caused (same frame) are in. Falls back to the banner when the realm has no data.
-func _show_realm_card(realm_name: String, details: String) -> void:
+func _show_realm_card(realm_name: String, details: String, surpassed: String = "") -> void:
 	var p := GameState.player
 	var data := GameState.data
 	if p == null or data == null or p.realm_index >= data.realms.size():
@@ -1062,7 +1064,7 @@ func _show_realm_card(realm_name: String, details: String) -> void:
 		for entry in _recent_notices:
 			if int(entry[0]) >= Engine.get_process_frames() - 1:
 				notices.append(String(entry[1]))
-	_pending_realm_card = [realm_name, data.realms[p.realm_index].description, details, notices]
+	_pending_realm_card = [realm_name, data.realms[p.realm_index].description, details, notices, surpassed]
 	# After a tribulation, the card waits until its waves have been watched and closed.
 	if not _tribulation.visible:
 		_open_pending_realm_card()
@@ -1075,7 +1077,7 @@ func _open_pending_realm_card() -> void:
 	_pending_realm_card = []
 	_choice_menu.close()
 	_close_screens()
-	_realm_card.open(card[0], card[1], card[2], card[3])
+	_realm_card.open(card[0], card[1], card[2], card[3], card[4])
 	_update_modal()
 
 

@@ -44,9 +44,11 @@ func _init() -> void:
 	add_child(_timer)
 
 
-## Up to MAX_EXTRA_LINES lines: the lifespan details first, then the notices; empty ones are skipped.
-static func card_lines(_realm_desc: String, details: String, notices: Array) -> Array[String]:
+## Up to MAX_EXTRA_LINES lines: the surpassed rival first, then the lifespan details, then the notices; empty ones are skipped.
+static func card_lines(_realm_desc: String, details: String, notices: Array, surpassed: String = "") -> Array[String]:
 	var lines: Array[String] = []
+	if surpassed != "":
+		lines.append("You have surpassed %s." % surpassed)
 	if details != "":
 		lines.append(details)
 	for n in notices:
@@ -57,14 +59,14 @@ static func card_lines(_realm_desc: String, details: String, notices: Array) -> 
 	return lines
 
 
-func open(realm_name: String, realm_desc: String, details: String, notices: Array) -> void:
+func open(realm_name: String, realm_desc: String, details: String, notices: Array, surpassed: String = "") -> void:
 	_title.text = realm_name
 	_desc.text = realm_desc
 	_desc.visible = realm_desc != ""
 	for child in _extra.get_children():
 		_extra.remove_child(child)
 		child.queue_free()
-	for line in card_lines(realm_desc, details, notices):
+	for line in card_lines(realm_desc, details, notices, surpassed):
 		var l := UIStyle.label(line, 16, UIStyle.CATEGORY_COLORS["progress"])
 		l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		_extra.add_child(l)

@@ -1530,6 +1530,7 @@ func test_surpassing_the_rival_posts_once() -> void:
 	_break_through_once(gs, c)
 	assert_true(c.realm_index > 1)
 	assert_true(gs.world_flags.get(Rivals.SURPASSED_FLAG, false))
+	assert_eq(gs.last_surpassed_rival, rival.name, "the realm card can name the rival")
 	var lines := EventBus.history.filter(func(m): return String(m["text"]).begins_with("You have surpassed "))
 	assert_eq(lines.size(), 1)
 	_break_through_once(gs, c)

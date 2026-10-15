@@ -341,6 +341,10 @@ func _failure_lesson_line() -> String:
 	return "The lessons stay with you: +%d percent on your next attempt." % roundi(shown * 100.0)
 
 
+## Name of the rival surpassed by the latest breakthrough; the HUD's realm card takes it (WU-148).
+var last_surpassed_rival: String = ""
+
+
 ## Marks the rival as surpassed (once) after a breakthrough past their realm.
 func _check_rival_surpassed() -> void:
 	if not world_flags.get(Rivals.FIRST_MEETING_FLAG, false) or world_flags.get(Rivals.SURPASSED_FLAG, false):
@@ -349,6 +353,7 @@ func _check_rival_surpassed() -> void:
 	if Rivals.surpassed(player, rival):
 		world_flags[Rivals.SURPASSED_FLAG] = true
 		Rivals.spur(rival, data)
+		last_surpassed_rival = rival.name
 		EventBus.post("You have surpassed %s. Whatever they once said of you, no one repeats it now." % rival.name, "progress")
 		check_milestones()
 
