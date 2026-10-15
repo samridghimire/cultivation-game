@@ -144,6 +144,24 @@ func test_fair_fight_line() -> void:
 	assert_eq(HUD.fair_fight_line(named), "Fair fight: Boar (Even 80)")
 
 
+## WU-150: the longest enemy name still fits the 316px label (percent dropped first).
+func test_fair_fight_line_fits_longest_enemy() -> void:
+	var font: Font = ThemeDB.fallback_font
+	var longest := ""
+	for id: String in data().enemies:
+		var n: String = data().enemies[id].name
+		if n.length() > longest.length():
+			longest = n
+	var e: Array[Dictionary] = [{"text": "x", "chance": 0.55, "kind": "mission", "enemy": longest}]
+	var line: String = HUD.fair_fight_line(e, font, 14, 316.0)
+	assert_true(line.begins_with("Fair fight: " + longest), line)
+	var full := "Fair fight: %s (Even 55)" % longest
+	if font.get_string_size(full, HORIZONTAL_ALIGNMENT_LEFT, -1, 14).x > 316.0:
+		assert_true(not line.ends_with("55)"), "percent dropped: " + line)
+	var short: Array[Dictionary] = [{"text": "x", "chance": 0.8, "kind": "mission", "enemy": "Boar"}]
+	assert_eq(HUD.fair_fight_line(short, font, 14, 316.0), "Fair fight: Boar (Even 80)")
+
+
 func test_quarry_note_only_in_the_bounty_region() -> void:
 	var d := data()
 	var c := new_character()

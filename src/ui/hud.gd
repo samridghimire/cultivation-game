@@ -542,7 +542,7 @@ func _refresh_fair_fight() -> void:
 	var entries: Array = []
 	if int(Settings.get_value("hud_hints")) > 0 and GameState.player != null:
 		entries = Guidance.fair_fights(GameState.player, GameState.data, GameState.world_flags, GameClock.total_days, GameState.current_region)
-	var line := fair_fight_line(entries)
+	var line := fair_fight_line(entries, _fair.get_theme_font("font"), 14, _fair.custom_minimum_size.x)
 	_fair.text = line
 	_fair.tooltip_text = "\n".join(entries.map(func(e: Dictionary) -> String: return String(e.get("text", ""))))
 	_fair.visible = line != ""
@@ -551,7 +551,8 @@ func _refresh_fair_fight() -> void:
 
 ## "Fair fight: <enemy> (<rating> <percent>)" for the best entry ("" for an empty list). Falls back to the entry's
 ## full text when it names no enemy.
-static func fair_fight_line(entries: Array) -> String:
+## WU-150: when a font and width are given and the full line would not fit, the percent is dropped first.
+static func fair_fight_line(entries: Array, font: Font = null, font_size: int = 14, max_width: float = 0.0) -> String:
 	if entries.is_empty():
 		return ""
 	var best: Dictionary = entries[0]
@@ -559,7 +560,11 @@ static func fair_fight_line(entries: Array) -> String:
 	if enemy == "" or not best.has("chance"):
 		return "Fair fight: %s" % String(best.get("text", ""))
 	var chance := float(best["chance"])
-	return "Fair fight: %s (%s %d)" % [enemy, Combat.label_for_chance(chance), roundi(chance * 100.0)]
+	var label := Combat.label_for_chance(chance)
+	var full := "Fair fight: %s (%s %d)" % [enemy, label, roundi(chance * 100.0)]
+	if font != null and max_width > 0.0 and font.get_string_size(full, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x > max_width:
+		return "Fair fight: %s (%s)" % [enemy, label]
+	return full
 
 
 ## "Lives N" from the Creation Artifact (WU-095): warning at 1 life, danger with "Final life" at 0.
