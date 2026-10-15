@@ -342,3 +342,23 @@ func test_journal_rival_line_when_fallen() -> void:
 	c.rival = rival.id
 	var rows := _rival_rows(c, {Rivals.FIRST_MEETING_FLAG: true}, {rival.id: rival})
 	assert_eq(rows[0]["text"], "Rival: Han Wei (fallen)")
+
+
+## GUIDE-035: the rival line says where they are when it is not here.
+func test_journal_rival_line_names_other_region() -> void:
+	var c := _fresh()
+	var rival := new_character(77)
+	rival.id = "gen_rival"
+	rival.name = "Han Wei"
+	rival.home_region = "misty_forest"
+	c.rival = rival.id
+	var people := {rival.id: rival}
+	var flags := {Rivals.FIRST_MEETING_FLAG: true}
+	var there := String(_rival_rows(c, flags, people)[0]["text"])
+	assert_true(there.contains(", in %s" % Exploration.region_name(data(), "misty_forest")), there)
+	rival.home_region = "qingshi_village"
+	assert_false(String(_rival_rows(c, flags, people)[0]["text"]).contains(", in "))
+	rival.home_region = "misty_forest"
+	assert_true(_rival_rows(c, {}, people).is_empty())
+	rival.alive = false
+	assert_eq(_rival_rows(c, flags, people)[0]["text"], "Rival: Han Wei (fallen)")

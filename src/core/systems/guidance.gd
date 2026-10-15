@@ -1148,7 +1148,7 @@ static func journal(c: CharacterData, data: GameData, flags: Dictionary, today: 
 		_add(out, "Errands", line, "normal")
 	_errand_entries(out, data, flags)
 	_household_entries(out, c, data, people)
-	_rival_entry(out, c, data, flags, people, favor)
+	_rival_entry(out, c, data, flags, people, favor, region_id)
 	for line in Letters.journal_lines(c, LETTERS_JOURNAL_MAX):
 		_add(out, "Letters", line, "normal")
 	for order in c.commissions:
@@ -1344,7 +1344,7 @@ static func _household_entries(out: Array[Dictionary], c: CharacterData, data: G
 
 
 ## "Rival: <name>, <realm> (<relation>)" once the rival has been met (RIVAL-004).
-static func _rival_entry(out: Array[Dictionary], c: CharacterData, data: GameData, flags: Dictionary, people: Dictionary, favor: Dictionary = {}) -> void:
+static func _rival_entry(out: Array[Dictionary], c: CharacterData, data: GameData, flags: Dictionary, people: Dictionary, favor: Dictionary = {}, region_id: String = "") -> void:
 	if c.rival == "" or not flags.get(Rivals.FIRST_MEETING_FLAG, false):
 		return
 	var rival: CharacterData = people.get(c.rival)
@@ -1365,7 +1365,12 @@ static func _rival_entry(out: Array[Dictionary], c: CharacterData, data: GameDat
 	var record := Rivals.bout_record_text(c)
 	if record != "":
 		relation += "; " + record
-	_add(out, "Household", "Rival: %s, %s (%s)" % [rival.name, Cultivation.realm_label(rival, data), relation], tone)
+	# GUIDE-035: say where they are when it is not here.
+	var rival_region := Npcs.region_of(rival, data)
+	var where := ""
+	if rival_region != "" and region_id != "" and rival_region != region_id:
+		where = ", in " + Exploration.region_name(data, rival_region)
+	_add(out, "Household", "Rival: %s, %s%s (%s)" % [rival.name, Cultivation.realm_label(rival, data), where, relation], tone)
 
 
 ## "Your sect's elder lectures this month": only while the lecture can be attended.
