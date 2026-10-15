@@ -1039,7 +1039,11 @@ func test_bare_rogue_gets_first_combat_hint_instead() -> void:
 	var c := _fresh()
 	c.sect = {}
 	c.techniques = {}
-	assert_true(Guidance.fair_fights(c, data(), {"chore_boar_done": true}, c.age_days, "qingshi_village").is_empty())
+	var fights := Guidance.fair_fights(c, data(), {"chore_boar_done": true}, c.age_days, "qingshi_village")
+	for f in fights:
+		assert_eq(f["kind"], "explore", "only wilds foes are left for a bare rogue")
+	if not fights.is_empty():
+		return  # GUIDE-030: a fair wilds foe replaces the hint
 	var hint := Guidance.first_combat_hint(c, data(), "qingshi_village")
 	var lines: Array[String] = []
 	for e in Guidance.journal(c, data(), {"chore_boar_done": true}, c.age_days, "qingshi_village"):
@@ -1272,3 +1276,33 @@ func test_tribulation_note_names_heart_demon() -> void:
 	assert_false(String(Guidance.tribulation_note(c, data())["text"]).contains("heart demon"))
 	c.alignment = -1000
 	assert_true(String(Guidance.tribulation_note(c, data())["text"]).contains("heart demon"))
+
+
+func test_fair_fights_list_exploration_foes_when_little_else() -> void:
+	var c := _fighter()
+	c.sect = {}
+	var wild: Array = Guidance.fair_fights(c, data(), {"chore_boar_done": true}, c.age_days, "misty_forest")
+	var explore := wild.filter(func(f: Dictionary) -> bool: return f["kind"] == "explore")
+	assert_true(explore.size() <= Guidance.FAIR_FIGHT_EXPLORE_MAX)
+	var foes := Exploration.eligible_fights(c, data(), data().regions["misty_forest"]["encounter_tags"], {}, Calendar.season_of(c.age_days), "misty_forest")
+	assert_false(foes.is_empty(), "the forest has fight encounters")
+	for f in explore:
+		assert_true(String(f["text"]).begins_with("Explore here: "))
+		assert_true(float(f["chance"]) >= Guidance.FAIR_FIGHT_MIN_CHANCE)
+
+
+func test_eligible_fights_have_no_repeats_and_only_known_enemies() -> void:
+	var c := _fighter()
+	var foes := Exploration.eligible_fights(c, data(), ["forest", "wild"], {}, "spring", "misty_forest")
+	var seen := {}
+	for id in foes:
+		assert_true(data().enemies.has(id))
+		assert_false(seen.has(id))
+		seen[id] = true
+
+
+func test_deadly_exploration_foes_are_never_listed() -> void:
+	var c := _fresh()
+	c.sect = {}
+	for f in Guidance.fair_fights(c, data(), {}, c.age_days, "misty_forest"):
+		assert_true(float(f["chance"]) >= 0.7)

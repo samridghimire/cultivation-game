@@ -15,6 +15,7 @@ const ELDER_MO_FLAG := "talked_elder_mo"
 const BETTER_QI_RATIO := 1.5
 const FAIR_FIGHTS_MAX := 3
 const FAIR_FIGHT_MAX_RATED := 8
+const FAIR_FIGHT_EXPLORE_MAX := 2
 const FAIR_FIGHT_MIN_CHANCE := 0.7  # "Even" or better (Combat.label_for_chance)
 const CHORE_REGION := "qingshi_village"
 
@@ -1078,6 +1079,16 @@ static func fair_fights(c: CharacterData, data: GameData, flags: Dictionary, tod
 			continue
 		rated += 1
 		_rate_fight(found, c, data, enemy, "bounty", "%s: %s in %s" % [cand["label"], enemy.get("name", b["enemy"]), _region_name(data, String(b["region"]))])
+	if found.size() < FAIR_FIGHTS_MAX and region_id != "":
+		var explore_rated := 0
+		var tags: Array = data.regions.get(region_id, {}).get("encounter_tags", [])
+		for enemy_id in Exploration.eligible_fights(c, data, tags, flags, Calendar.season_of(today), region_id):
+			if rated >= FAIR_FIGHT_MAX_RATED or explore_rated >= FAIR_FIGHT_EXPLORE_MAX:
+				break
+			var foe: Dictionary = data.enemies[enemy_id]
+			rated += 1
+			explore_rated += 1
+			_rate_fight(found, c, data, foe, "explore", "Explore here: %s" % foe.get("name", enemy_id))
 	found.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
 		if not is_equal_approx(float(a["chance"]), float(b["chance"])):
 			return float(a["chance"]) > float(b["chance"])

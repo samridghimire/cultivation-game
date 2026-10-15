@@ -326,6 +326,20 @@ static func eligible_encounters(c: CharacterData, data: GameData, tags: Array, f
 	return result
 
 
+## GUIDE-030: ids of the enemies of fight encounters exploring `region_id` can
+## roll for `c` now (same filtering as roll_encounter, no rival), most likely
+## first, without repeats.
+static func eligible_fights(c: CharacterData, data: GameData, tags: Array, flags: Dictionary, season: String, region_id: String) -> Array[String]:
+	var pool := eligible_encounters(c, data, tags, flags, null, 1.0, season, region_id)
+	pool.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return float(a["weight"]) > float(b["weight"]))
+	var ids: Array[String] = []
+	for entry in pool:
+		var enemy_id := String(entry["encounter"].get("enemy", ""))
+		if enemy_id != "" and data.enemies.has(enemy_id) and not ids.has(enemy_id):
+			ids.append(enemy_id)
+	return ids
+
+
 ## Whether familiar sights of this encounter fade: a plain, repeatable-by-chance event
 ## (no enemy, not a one-shot, not conditional, not marked `repeatable`).
 static func fades(e: Dictionary) -> bool:
