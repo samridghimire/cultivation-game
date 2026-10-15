@@ -1102,3 +1102,32 @@ func test_mission_hint_skips_deadly_fights() -> void:
 	assert_false(Guidance._mission_too_dangerous(strong, d, wolf), "a strong Foundation character counts it")
 	c.stage = 0
 	assert_true(Guidance._mission_too_dangerous(c, d, wolf))
+
+func _qr(stage: int, stones: int) -> CharacterData:
+	var c := new_character()
+	c.realm_index = 1
+	c.stage = stage
+	c.inventory = {}
+	c.breakthrough_pill = ""
+	if stones > 0:
+		c.add_item("spirit_stone", stones)
+	return c
+
+
+func test_pill_saving_goal_late_qi_refining() -> void:
+	assert_false(_has(Guidance.goals(_qr(5, 20), data(), {}), "Save for"))
+	var goals := Guidance.goals(_qr(6, 20), data(), {})
+	assert_true(_has(goals, "Save for a Foundation Establishment Pill (+25 percent)"))
+	assert_true(_has(goals, "you have 20"))
+	assert_false(_has(goals, "%"))
+	assert_true(_has(Guidance.goals(_qr(6, 400), data(), {}), "you can afford it now"))
+
+
+func test_pill_saving_goal_skipped_when_held_or_other_realm() -> void:
+	var c := _qr(6, 20)
+	c.add_item("foundation_establishment_pill", 1)
+	assert_false(_has(Guidance.goals(c, data(), {}), "Save for"))
+	var fe := _qr(6, 20)
+	fe.realm_index = 2
+	assert_false(_has(Guidance.goals(fe, data(), {}), "Save for"))
+	assert_eq(Guidance.next_realm_pill(_qr(6, 0), data()).get("id", ""), "foundation_establishment_pill")

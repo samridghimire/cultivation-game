@@ -405,8 +405,21 @@ static func chance_text(c: CharacterData, data: GameData) -> String:
 ## "A Core Forming Pill (+25%): Sold at Pill Pavilion (Fallen Star Market)." "" when
 ## one is held or already taken, or none has a known source.
 static func pill_source_hint(c: CharacterData, data: GameData) -> String:
-	if Cultivation.is_final_realm(c, data) or c.breakthrough_pill != "" or not breakthrough_items(c, data).is_empty():
+	if c.breakthrough_pill != "" or not breakthrough_items(c, data).is_empty():
 		return ""
+	var best := next_realm_pill(c, data)
+	if best.is_empty():
+		return ""
+	var source := Items.sources(data, String(best["id"]))[0]
+	var article := Text.a(String(best["name"]))  # capitalize() turns "Nine-Turn" into "Nine Turn"
+	return "%s (+%d%%): %s." % [article.left(1).to_upper() + article.substr(1), roundi(float(best["effects"]["breakthrough_bonus"]) * 100), source]
+
+
+## The cheapest breakthrough item (with a known buyable source) for the next
+## realm, or {} in the final realm or when there is none.
+static func next_realm_pill(c: CharacterData, data: GameData) -> Dictionary:
+	if Cultivation.is_final_realm(c, data):
+		return {}
 	var next_id: String = data.realms[c.realm_index + 1].id
 	var best: Dictionary = {}
 	for item: Dictionary in data.items.values():
@@ -417,11 +430,21 @@ static func pill_source_hint(c: CharacterData, data: GameData) -> String:
 			continue
 		if best.is_empty() or int(item.get("price", 0)) < int(best.get("price", 0)):
 			best = item
-	if best.is_empty():
+	return best
+
+
+## "Save for a Foundation Establishment Pill (+25 percent): ..." late in Qi
+## Refining while no pill is held or taken; "" otherwise.
+static func pill_saving_goal(c: CharacterData, data: GameData) -> String:
+	if c.realm_index != 1 or c.stage < 6 or c.breakthrough_pill != "" or not breakthrough_items(c, data).is_empty():
 		return ""
-	var source := Items.sources(data, String(best["id"]))[0]
-	var article := Text.a(String(best["name"]))  # capitalize() turns "Nine-Turn" into "Nine Turn"
-	return "%s (+%d%%): %s." % [article.left(1).to_upper() + article.substr(1), roundi(float(best["effects"]["breakthrough_bonus"]) * 100), source]
+	var pill := next_realm_pill(c, data)
+	if pill.is_empty():
+		return ""
+	var price := int(pill.get("price", 0))
+	var stones := c.item_count("spirit_stone")
+	var have := "you can afford it now" if stones >= price else "you have %d" % stones
+	return "Save for %s (+%d percent): %d stones, %s. %s." % [Text.a(String(pill["name"])), roundi(float(pill["effects"]["breakthrough_bonus"]) * 100), price, have, Items.sources(data, String(pill["id"]))[0]]
 
 
 ## Names of held items whose effects add a breakthrough bonus and can be used
@@ -750,6 +773,9 @@ static func goals(c: CharacterData, data: GameData, flags: Dictionary, clan: Cla
 			out.append("Reach %s: about %d days of meditation, then a breakthrough (%s)." % [next_name, days, odds])
 		else:
 			out.append("Reach %s: gather qi, then attempt a breakthrough (%s)." % [next_name, odds])
+		var saving := pill_saving_goal(c, data)
+		if saving != "":
+			out.append(saving)
 	if not c.is_rogue():
 		var rank := Sects.next_rank(c, data)
 		if rank >= 0:
