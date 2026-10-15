@@ -796,6 +796,42 @@ static func first_goals_done(c: CharacterData, data: GameData, flags: Dictionary
 	return true
 
 
+## The Foundation Establishment ladder (FOUND-004): {text, done} in order. Only
+## goals whose state is already tracked; "win a fight against a Foundation foe"
+## would need new persistent state and is left out.
+static func foundation_goals(c: CharacterData, data: GameData, flags: Dictionary, clan: ClanData = null) -> Array[Dictionary]:
+	var rows: Array = [
+		["Reach Foundation Establishment Middle", c.realm_index > 2 or (c.realm_index == 2 and c.stage >= 1)],
+		["Claim a cave abode", c.abode != ""],
+		["Temper your body to its first stage", c.body_stage >= 1],
+		["Found a clan or rise to Inner Disciple", clan != null or (not c.is_rogue() and int(c.sect["rank"]) >= 2)],
+	]
+	var out: Array[Dictionary] = []
+	for row: Array in rows:
+		out.append({"text": row[0], "done": row[1]})
+	return out
+
+
+## True while the player is in Foundation Establishment with goals left.
+static func foundation_goals_active(c: CharacterData, data: GameData, flags: Dictionary, clan: ClanData = null) -> bool:
+	if c.realm_index != 2:
+		return false
+	for goal in foundation_goals(c, data, flags, clan):
+		if not goal["done"]:
+			return true
+	return false
+
+
+## The goal ladder currently shown (first goals, then Foundation goals), [] when none.
+static func active_goal_ladder(c: CharacterData, data: GameData, flags: Dictionary, clan: ClanData = null) -> Array[Dictionary]:
+	if c.realm_index <= 1 and not first_goals_done(c, data, flags):
+		return first_goals(c, data, flags)
+	if foundation_goals_active(c, data, flags, clan):
+		return foundation_goals(c, data, flags, clan)
+	var none: Array[Dictionary] = []
+	return none
+
+
 ## Mid-game goals (GOAL-003), up to 3 plain lines: the next realm, the next sect
 ## rank (or founding a clan for a rogue) and the nearest unearned milestone.
 static func goals(c: CharacterData, data: GameData, flags: Dictionary, clan: ClanData = null, density: float = 1.0) -> PackedStringArray:
@@ -927,6 +963,14 @@ static func journal(c: CharacterData, data: GameData, flags: Dictionary, today: 
 				tone = "normal" if flagged else "warning"
 				flagged = true
 			_add(out, "First goals", ("[x] " if goal["done"] else "[ ] ") + String(goal["text"]), tone)
+	if foundation_goals_active(c, data, flags, clan):
+		var found_flagged := false
+		for goal in foundation_goals(c, data, flags, clan):
+			var found_tone := "dim"
+			if not goal["done"]:
+				found_tone = "normal" if found_flagged else "warning"
+				found_flagged = true
+			_add(out, "Foundation goals", ("[x] " if goal["done"] else "[ ] ") + String(goal["text"]), found_tone)
 	if c.realm_index >= 2 or first_goals_done(c, data, flags):
 		for line in goals(c, data, flags, clan, density):
 			_add(out, "Goals", line, "normal")

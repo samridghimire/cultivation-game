@@ -819,7 +819,7 @@ func _done_goal_texts() -> Array[String]:
 	var out: Array[String] = []
 	if GameState.player == null:
 		return out
-	for goal in Guidance.first_goals(GameState.player, GameState.data, GameState.world_flags):
+	for goal in Guidance.active_goal_ladder(GameState.player, GameState.data, GameState.world_flags, GameState.clan):
 		if goal["done"]:
 			out.append(str(goal["text"]))
 	return out
@@ -834,8 +834,8 @@ func _announce_goals_done() -> void:
 	var c: CharacterData = GameState.player
 	if c == null:
 		return
-	if c.realm_index <= 1:
-		var goals := Guidance.first_goals(c, GameState.data, GameState.world_flags)
+	var goals := Guidance.active_goal_ladder(c, GameState.data, GameState.world_flags, GameState.clan)
+	if not goals.is_empty():
 		var fresh := newly_done_goals(_goals_done, goals)
 		if not fresh.is_empty():
 			var next := "  Your first goals are done; the journal (%s) has more." % InputConfig.current_label("toggle_journal")

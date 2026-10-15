@@ -1197,3 +1197,39 @@ func test_breakthrough_risk_text() -> void:
 	c.stage = d.realms[c.realm_index].stage_count() - 1
 	c.qi = d.realms[c.realm_index].qi_required(c.stage)
 	assert_eq(Guidance.breakthrough_risk_text(c, d), "")
+
+
+func test_foundation_goals_ladder_and_journal_section() -> void:
+	var c := _fresh()
+	c.realm_index = 2
+	var goals := Guidance.foundation_goals(c, data(), {})
+	assert_eq(goals.size(), 4)
+	for g in goals:
+		assert_false(g["done"])
+	assert_true(Guidance.foundation_goals_active(c, data(), {}))
+	var section := Guidance.journal(c, data(), {}, 0, "qingshi_village").filter(func(e: Dictionary) -> bool: return e["section"] == "Foundation goals")
+	assert_eq(section.size(), 4)
+	assert_eq(section[0]["tone"], "warning")
+	assert_eq(section[1]["tone"], "normal")
+	c.stage = 1
+	c.abode = "any_abode"
+	c.body_stage = 1
+	goals = Guidance.foundation_goals(c, data(), {})
+	assert_true(goals[0]["done"] and goals[1]["done"] and goals[2]["done"])
+	assert_false(goals[3]["done"])
+	c.sect = {"id": data().sects.keys()[0], "rank": 2, "contribution": 0, "spent": 0}
+	assert_false(Guidance.foundation_goals_active(c, data(), {}))
+	var after := Guidance.journal(c, data(), {}, 0, "qingshi_village").filter(func(e: Dictionary) -> bool: return e["section"] == "Foundation goals")
+	assert_true(after.is_empty())
+
+
+func test_foundation_goals_clan_and_realm_limits() -> void:
+	var c := _fresh()
+	c.realm_index = 2
+	assert_true(Guidance.foundation_goals(c, data(), {}, ClanData.new())[3]["done"])
+	assert_eq(Guidance.active_goal_ladder(c, data(), {}).size(), 4)
+	c.realm_index = 3
+	assert_false(Guidance.foundation_goals_active(c, data(), {}))
+	assert_true(Guidance.active_goal_ladder(c, data(), {}).is_empty())
+	c.realm_index = 1
+	assert_eq(Guidance.active_goal_ladder(c, data(), {}).size(), 7)
