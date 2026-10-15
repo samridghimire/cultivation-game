@@ -188,6 +188,7 @@ static func _curious_month(gs: Node, c: CharacterData, done: Dictionary, today: 
 			if LifeStats.get_stat(c, "fights_lost") > lost_before:
 				done["lost_missions"][mission_id] = {"day": today, "odds": odds_before}
 			break
+	_take_listed_deed(gs, c, done, fair, kinds, today)
 	_take_listed_bounty(gs, c, done, fair, kinds)
 	if not done.get("saving", false):
 		_recharge_with_spare_stones(gs, c)
@@ -249,6 +250,27 @@ static func _buy_breakthrough_pill(gs: Node, c: CharacterData, done: Dictionary)
 		gs.buy_item(pill_id)
 	if home != region_id and c.alive:
 		gs.travel(home)
+
+
+## QA-075: once a month, does the open chore fight "Fights you can win" lists at >= 0.7 (the list only covers the
+## current region's deed givers, so no travel is needed) and logs whether it was won.
+static func _take_listed_deed(gs: Node, c: CharacterData, done: Dictionary, fair: Array[Dictionary], kinds: Dictionary, today: int) -> void:
+	if not c.alive:
+		return
+	for f: Dictionary in fair:
+		if String(f["kind"]) != "deed" or float(f["chance"]) < 0.7:
+			continue
+		for place: Dictionary in gs.data.regions.get(gs.current_region, {}).get("places", []):
+			if String(place.get("type", "")) != "deed_giver" or String(place.get("deed_context", "")) == "":
+				continue
+			for deed in Deeds.available(gs.data, String(place["deed_context"]), gs.world_flags):
+				if not String(f["text"]).begins_with("%s: %s" % [place.get("display_name", "Chore"), deed["name"]]) or Deeds.check(c, gs.data, deed, gs.world_flags, today) != "":
+					continue
+				var won_before := LifeStats.get_stat(c, "fights_won")
+				gs.perform_deed(String(deed["id"]))
+				done["fair_log"]["taken"].append({"kind": "deed", "chance": float(f["chance"]), "won": LifeStats.get_stat(c, "fights_won") > won_before})
+				kinds["deed_fight"] = true
+				return
 
 
 ## QA-070: once a month, takes the listed bounty when "Fights you can win" rates it >= 0.7 and no hunt is

@@ -137,19 +137,19 @@ Curious player, 10 seeds, 36 months
      9      4    6.7    0     378  Qi Refining, 8th Layer
      9      5    6.3    0     194  Qi Refining, 9th Layer
      9      6    7.0    0     243  Foundation Establishment, Early
-    10      1    4.7    7      67  Qi Refining, 4th Layer
-    10      2    4.8    1      96  Qi Refining, 7th Layer
-    10      3    5.2    1     132  Qi Refining, 8th Layer
-    10      4    5.0    2     207  Qi Refining, 9th Layer
-    10      5    4.2    0     122  Foundation Establishment, Early
-    10      6    4.0    0     104  Foundation Establishment, Middle
+    10      1    4.8    8      89  Qi Refining, 4th Layer
+    10      2    4.8    1     167  Qi Refining, 6th Layer
+    10      3    5.0    0      80  Qi Refining, 8th Layer
+    10      4    5.5    2     165  Foundation Establishment, Early
+    10      5    4.5    0     143  Foundation Establishment, Middle
+    10      6    4.0    0     200  Foundation Establishment, Middle
 Medians per 6-month block: distinct kinds / seeds with a new feature / stones
-  months  1- 6: 5.7 kinds, 10 of 10 seeds new feature, 68 stones
-  months  7-12: 6.0 kinds, 7 of 10 seeds new feature, 98 stones
-  months 13-18: 6.3 kinds, 7 of 10 seeds new feature, 134 stones
+  months  1- 6: 5.7 kinds, 10 of 10 seeds new feature, 71 stones
+  months  7-12: 6.0 kinds, 7 of 10 seeds new feature, 106 stones
+  months 13-18: 6.3 kinds, 6 of 10 seeds new feature, 134 stones
   months 19-24: 6.5 kinds, 4 of 10 seeds new feature, 125 stones [nothing new]
-  months 25-30: 6.3 kinds, 3 of 10 seeds new feature, 122 stones [nothing new]
-  months 31-36: 6.0 kinds, 1 of 10 seeds new feature, 113 stones [nothing new]
+  months 25-30: 6.3 kinds, 3 of 10 seeds new feature, 143 stones [nothing new]
+  months 31-36: 6.0 kinds, 1 of 10 seeds new feature, 146 stones [nothing new]
 Seeds whose life ended before month 36: none
 Guard (QA-054): at most 1 of 10 seeds may end early: ok
 First month each feature was used (median over seeds that used it):
@@ -160,16 +160,16 @@ First month each feature was used (median over seeds that used it):
   breakthrough  month 1 (10 of 10 seeds)
   craft         month 5 (9 of 10 seeds)
   work          month 5 (9 of 10 seeds)
-  secret_realm  month 13 (3 of 10 seeds)
+  secret_realm  month 13 (2 of 10 seeds)
   gift          month 1 (10 of 10 seeds)
   pointer       month 7 (10 of 10 seeds)
-  spar          month 22 (6 of 10 seeds)
+  spar          month 24 (6 of 10 seeds)
   lecture       month 1 (10 of 10 seeds)
 Longest 'nothing new' stretches:
   seed 5: 28 months from month 9 (Qi Refining, 9th Layer, 132 stones)
   seed 2: 22 months from month 14 (Qi Refining, 8th Layer, 152 stones)
   seed 1: 21 months from month 16 (Qi Refining, 7th Layer, 165 stones)
-Deaths (19): seed, game month, final?, foe (rated odds), lives left, stones, region
+Deaths (20): seed, game month, final?, foe (rated odds), lives left, stones, region
   seed  1 m29  respawn drunk_bully_disciple (98%) lives=2 stones=160 qingshi_village
       cause: You were slain by a Drunk Bully Disciple at age 18.
       | You spot a spirit stone glinting in a ditch. (+1 Spirit Stone)
@@ -306,21 +306,29 @@ Deaths (19): seed, game month, final?, foe (rated odds), lives left, stones, reg
       | You fall. (6 rounds, 0/218 hp left)
       | You were slain by a Mist Wolf at age 17.
       | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
-  seed 10 m11  respawn mist_wolf (18%) lives=2 stones=67 qingshi_village
+  seed 10 m11  respawn mist_wolf (18%) lives=2 stones=97 qingshi_village
       cause: You were slain by a Mist Wolf at age 16.
-      | The water is cold enough to stop your heart, but you reach her before the weir. Her father
-      | Luqiu Kai will not forget what you did. (They owe you a debt.)
-      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 210 hp, 62 atk. Foe: 228
+      | You face the Wild Boar. (You: 210 hp, 68 atk. Foe: 40 hp, 8 atk.)
+      | The Wild Boar collapses. (1 round, 210/210 hp left; +1 Boar Hide)
+      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 210 hp, 73 atk. Foe: 228
       | You fall. (4 rounds, 0/210 hp left)
       | You were slain by a Mist Wolf at age 16.
       | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
-  seed 10 m16  respawn mist_wolf (57%) lives=1 stones=85 qingshi_village
+  seed 10 m19  respawn mist_wolf (57%) lives=1 stones=142 qingshi_village
       cause: You were slain by a Mist Wolf at age 17.
-      | A merchant's mule bolts through the lane, scattering chickens, with its owner wheezing far
-      | You grab the rope and walk the sullen beast back. The merchant presses a few stones into y
-      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 225 hp, 79 atk. Foe: 228
+      | Three days of bells and silence. When you rise, your body feels like a temple that no stor
+      | You spot a spirit stone glinting in a ditch. (+1 Spirit Stone)
+      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 225 hp, 57 atk. Foe: 228
       | You fall. (6 rounds, 0/225 hp left)
       | You were slain by a Mist Wolf at age 17.
+      | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
+  seed 10 m26  respawn mist_wolf (85%) lives=0 stones=162 qingshi_village
+      cause: You were slain by a Mist Wolf at age 18.
+      | The villagers hold a harvest festival and press rice wine and dew grass on you as an honou
+      | You spot a spirit stone glinting in a ditch. (+1 Spirit Stone)
+      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 240 hp, 81 atk. Foe: 228
+      | You fall. (7 rounds, 0/240 hp left)
+      | You were slain by a Mist Wolf at age 18.
       | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
 First Foundation breakthrough (QA-066): seed, bottleneck day, attempts [day chance pill? ok?/injury], success day, stones at bottleneck
   seed  1 bottleneck d1717 attempts 1 [d1717 72% pill ok] success d1717 stones 244
@@ -332,8 +340,8 @@ First Foundation breakthrough (QA-066): seed, bottleneck day, attempts [day chan
   seed  7 bottleneck d1492 attempts 1 [d1492 79% pill ok] success d1492 stones 16
   seed  8 bottleneck d936  attempts 1 [d936 55% ok] success d936 stones 169
   seed  9 bottleneck d2102 attempts 1 [d2102 76% pill ok] success d2102 stones 380
-  seed 10 bottleneck d1124 attempts 3 [d1124 51% fail, d1220 44% fail, d1322 47% ok] success d1322 stones 118
-  medians: days stuck at the bottleneck 0 (9 seeds that succeeded), attempts 1, share of attempts with a pill 42% (6 of 14), attempts under 50%: 5 of 14
+  seed 10 bottleneck d1217 attempts 1 [d1217 53% ok] success d1217 stones 242
+  medians: days stuck at the bottleneck 0 (9 seeds that succeeded), attempts 1, share of attempts with a pill 50% (6 of 12), attempts under 50%: 3 of 12
 
 ## early inheritances (curious, seeds 1-10, 36 months)
 
@@ -351,9 +359,9 @@ Per inheritance (10 seeds): seeds that could pass every non-fight trial, median 
 
 Fair-fights sim: 10 seeds, 12 months (curious player)
 Entries listed per month: median 1, max 3; empty months 1 of 120
-Listed fights taken: 95, won 93 (98%), mean rated chance 98%
-  mission  listed 155, taken  92, won  98%, mean rated  98%
-  deed     listed  12, taken 0
+Listed fights taken: 94, won 92 (98%), mean rated chance 98%
+  mission  listed 157, taken  90, won  98%, mean rated  98%
+  deed     listed   1, taken   1, won 100%, mean rated 100%
   bounty   listed   3, taken   3, won 100%, mean rated  93%
 
 ## combat (200 fights per cell)
