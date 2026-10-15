@@ -1525,6 +1525,32 @@ func test_rival_already_behind_is_surpassed_at_month_end() -> void:
 	gs.end_session()
 
 
+func test_surpassed_rival_is_spurred_and_overtakes_again() -> void:
+	var c := _start()
+	var gs := _game_state()
+	c.realm_index = 1
+	var rival := Rivals.rival_of(c, gs.npcs)
+	rival.realm_index = 0
+	rival.diligence = 0.5
+	gs.world_flags[Rivals.FIRST_MEETING_FLAG] = true
+	EventBus.clear_history()
+	gs._rival_news()
+	assert_almost_eq(rival.diligence, 0.6, 0.001)
+	assert_eq(_surpass_lines().size(), 1)
+	rival.realm_index = 2
+	gs._rival_news()
+	assert_false(gs.world_flags.get(Rivals.SURPASSED_FLAG, false))
+	var again := EventBus.history.filter(func(m): return String(m["text"]).ends_with("has overtaken you again."))
+	assert_eq(again.size(), 1)
+	gs._rival_news()
+	again = EventBus.history.filter(func(m): return String(m["text"]).ends_with("has overtaken you again."))
+	assert_eq(again.size(), 1, "posts once")
+	rival.realm_index = 0
+	gs._rival_news()
+	assert_eq(_surpass_lines().size(), 2, "can be surpassed again")
+	gs.end_session()
+
+
 func test_equal_rival_is_not_surpassed_at_month_end() -> void:
 	var c := _start()
 	var gs := _game_state()

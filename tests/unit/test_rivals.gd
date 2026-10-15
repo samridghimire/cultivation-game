@@ -223,3 +223,13 @@ func test_lecture_sharper_answer_needs_comprehension() -> void:
 	assert_true(Exploration.check_choice(c, d, choice, {}) != "", "blocked at 10")
 	c.attributes["comprehension"] = 12
 	assert_eq(Exploration.check_choice(c, d, choice, {}), "", "allowed at 12")
+
+
+func test_spur_raises_diligence_and_caps() -> void:
+	var data := data()
+	var rival := CharacterData.new()
+	rival.diligence = 0.5
+	assert_almost_eq(Rivals.spur(rival, data), 0.6, 0.001)
+	rival.diligence = 0.9
+	assert_almost_eq(Rivals.spur(rival, data), Rivals.SPUR_CAP, 0.001)
+	assert_almost_eq(Rivals.spur(rival, data), Rivals.SPUR_CAP, 0.001)

@@ -12,6 +12,7 @@ const FIRST_MEETING_EVENT := "rival_first_meeting"
 const FIRST_MEETING_FLAG := "rival_met"
 const SEEN_REALM_FLAG := "rival_seen_realm"
 const SURPASSED_FLAG := "rival_surpassed"
+const SPUR_CAP := 0.95
 
 
 static func rules(data: GameData) -> Dictionary:
@@ -71,6 +72,18 @@ static func surpassed(c: CharacterData, rival: CharacterData) -> bool:
 	return rival != null and rival.alive and c.realm_index > rival.realm_index
 
 
+## RIVAL-008: being surpassed spurs the rival: their diligence rises by
+## karma.json rival `spurred_diligence`, capped at SPUR_CAP. Returns the new value.
+static func spur(rival: CharacterData, data: GameData) -> float:
+	rival.diligence = minf(maxf(rival.diligence, 0.0) + float(rules(data).get("spurred_diligence", 0.1)), SPUR_CAP)
+	return rival.diligence
+
+
+## True when a rival already marked surpassed has climbed past `c` again.
+static func overtook(c: CharacterData, rival: CharacterData) -> bool:
+	return rival != null and rival.alive and relation(c, rival) == "stronger"
+
+
 ## "stronger", "equal" or "weaker": the rival's major realm against `c`'s.
 static func relation(c: CharacterData, rival: CharacterData) -> String:
 	if rival.realm_index > c.realm_index:
@@ -121,6 +134,8 @@ static func validate(data: GameData) -> PackedStringArray:
 			errors.append("karma.json rival root_purity must be [min, max] with 1 <= min <= max")
 		if float(r.get("diligence", 0.0)) <= 0.0 or float(r.get("diligence", 0.0)) > 1.0:
 			errors.append("karma.json rival diligence must be in (0, 1]")
+	if r.has("spurred_diligence") and (not (r["spurred_diligence"] is int or r["spurred_diligence"] is float) or float(r["spurred_diligence"]) < 0.0 or float(r["spurred_diligence"]) > 1.0):
+		errors.append("karma.json rival spurred_diligence must be in 0-1")
 	for key: String in ["first_meeting_day", "first_meeting_window"]:
 		if r.has(key) and (not (r[key] is int or r[key] is float) or int(r[key]) < 0):
 			errors.append("karma.json rival %s must be a whole number >= 0" % key)

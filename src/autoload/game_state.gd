@@ -334,6 +334,7 @@ func _check_rival_surpassed() -> void:
 	var rival := Rivals.rival_of(player, npcs)
 	if Rivals.surpassed(player, rival):
 		world_flags[Rivals.SURPASSED_FLAG] = true
+		Rivals.spur(rival, data)
 		EventBus.post("You have surpassed %s. Whatever they once said of you, no one repeats it now." % rival.name, "progress")
 		check_milestones()
 
@@ -2970,6 +2971,9 @@ func _rival_news() -> void:
 		if line != "":
 			EventBus.post(line, "info")
 			world_flags[Rivals.SEEN_REALM_FLAG] = rival.realm_index
+	if world_flags.get(Rivals.SURPASSED_FLAG, false) and Rivals.overtook(player, rival):
+		world_flags.erase(Rivals.SURPASSED_FLAG)
+		EventBus.post("%s has overtaken you again." % rival.name, "warning")
 	_check_rival_surpassed()
 
 
