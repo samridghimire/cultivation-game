@@ -1148,3 +1148,22 @@ func test_fair_fights_include_open_chore_fights() -> void:
 	assert_true(String(texts[0]).begins_with("Headman Zhou: Drive off the wild boar"))
 	assert_true(_deed_texts(c, {"chore_boar_done": true}).is_empty(), "done chore is gone")
 
+
+
+func test_breakthrough_risk_text() -> void:
+	var d := data()
+	var c := new_character()
+	assert_eq(Guidance.breakthrough_risk_text(c, d), "")
+	c.stage = d.realms[c.realm_index].stage_count() - 1
+	c.qi = d.realms[c.realm_index].qi_required(c.stage)
+	var text := Guidance.breakthrough_risk_text(c, d)
+	assert_true(text.contains("%d percent" % roundi(d.realms[1].failure_qi_loss * 100)), text)
+	assert_true(text.contains("in 100 chance of an injury"), text)
+	# A realm with a tribulation is covered by the tribulation screen.
+	for i in d.realms.size() - 1:
+		if Tribulation.has_tribulation(d, i + 1):
+			c.realm_index = i
+			break
+	c.stage = d.realms[c.realm_index].stage_count() - 1
+	c.qi = d.realms[c.realm_index].qi_required(c.stage)
+	assert_eq(Guidance.breakthrough_risk_text(c, d), "")

@@ -23,6 +23,9 @@ func get_options() -> Array[Dictionary]:
 		var pill_hint := Guidance.pill_source_hint(GameState.player, GameState.data)
 		if pill_hint != "":
 			odds += "\n" + pill_hint
+		var risk := Guidance.breakthrough_risk_text(GameState.player, GameState.data)
+		if risk != "":
+			odds += "\n" + risk
 		if GameState.tribulation_preview()["has_tribulation"]:
 			# A tribulation can kill: show the preparation screen before attempting.
 			options.append({"label": "Attempt breakthrough (%d%% chance, Heavenly Tribulation!)" % int(chance * 100), "description": odds, "action": EventBus.tribulation_prepare_requested.emit})

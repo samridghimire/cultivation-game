@@ -142,3 +142,18 @@ func test_game_time_heals_injuries() -> void:
 	gs._pass_time(Calendar.DAYS_PER_YEAR)
 	assert_false(Injuries.has_any(c), "a year of rest heals broken bones")
 	gs.end_session()
+
+
+func test_chance_matches_the_roll_formula() -> void:
+	var d := data()
+	var base := float(d.injury_sources["breakthrough_failure"]["chance"])
+	for fortune in [10, 15]:
+		var c := new_character()
+		c.attributes["fortune"] = fortune
+		assert_gt(c.attribute("fortune"), 9)
+		var expected := clampf((base - (c.attribute("fortune") - 10) * d.injury_fortune_step) * (1.0 - BodyTempering.injury_resistance(c, d)), 0.0, 1.0)
+		assert_almost_eq(Injuries.chance(c, d, "breakthrough_failure"), expected)
+	var tempered := new_character()
+	tempered.body_stage = 1
+	assert_almost_eq(Injuries.chance(tempered, d, "breakthrough_failure"), clampf((base - (tempered.attribute("fortune") - 10) * d.injury_fortune_step) * (1.0 - BodyTempering.injury_resistance(tempered, d)), 0.0, 1.0))
+	assert_eq(Injuries.chance(new_character(), d, "no_such_source"), 0.0)

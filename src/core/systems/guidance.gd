@@ -401,6 +401,21 @@ static func chance_text(c: CharacterData, data: GameData) -> String:
 	return text
 
 
+## What a failed breakthrough costs, e.g. "If it fails, you lose 30 percent of
+## your qi (about 1,200) and have a 12 in 100 chance of an injury." "" when not
+## at the bottleneck, in the final realm, or when the next realm has a
+## tribulation (the tribulation screen covers that).
+static func breakthrough_risk_text(c: CharacterData, data: GameData) -> String:
+	if not Cultivation.can_attempt_breakthrough(c, data) or Tribulation.has_tribulation(data, c.realm_index + 1):
+		return ""
+	var loss: float = data.realms[c.realm_index + 1].failure_qi_loss
+	var text := "If it fails, you lose %d percent of your qi (about %s)" % [roundi(loss * 100), _commas(roundi(c.qi * loss))]
+	var injury := roundi(Injuries.chance(c, data, "breakthrough_failure") * 100)
+	if injury > 0:
+		text += " and have a %d in 100 chance of an injury" % injury
+	return text + "."
+
+
 ## Where to get a pill for the NEXT realm that the player is not holding, e.g.
 ## "A Core Forming Pill (+25%): Sold at Pill Pavilion (Fallen Star Market)." "" when
 ## one is held or already taken, or none has a known source.

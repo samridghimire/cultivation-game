@@ -18,6 +18,17 @@ static func inflict(c: CharacterData, data: GameData, injury_id: String) -> bool
 	return true
 
 
+## Chance (0..1) that `source` injures `c`: the base chance less the fortune
+## bonus, scaled, and reduced by a tempered body. Used by `roll` and by previews.
+static func chance(c: CharacterData, data: GameData, source: String, scale: float = 1.0) -> float:
+	var src: Dictionary = data.injury_sources.get(source, {})
+	if src.is_empty():
+		return 0.0
+	var value := (float(src.get("chance", 0.0)) - (c.attribute("fortune") - 10) * data.injury_fortune_step) * scale
+	value *= 1.0 - BodyTempering.injury_resistance(c, data)
+	return clampf(value, 0.0, 1.0)
+
+
 ## Maybe inflicts an injury from a source in injuries.json (e.g.
 ## "breakthrough_failure"). `scale` multiplies the base chance (e.g. the
 ## fraction of a month for per-month sources); a tempered body resists
@@ -30,8 +41,7 @@ static func roll(c: CharacterData, data: GameData, source: String, rng: RandomNu
 		return not entry.has("min_realm") or c.realm_index >= data.realm_index_of(String(entry["min_realm"])))
 	if table.is_empty():
 		return ""
-	var chance := (float(src.get("chance", 0.0)) - (c.attribute("fortune") - 10) * data.injury_fortune_step) * scale
-	chance *= 1.0 - BodyTempering.injury_resistance(c, data)
+	var chance := chance(c, data, source, scale)
 	if rng.randf() >= chance:
 		return ""
 	var weights := PackedFloat32Array()
