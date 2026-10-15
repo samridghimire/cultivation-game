@@ -344,6 +344,27 @@ func test_choice_check_tag() -> void:
 	assert_eq(list[2]["check"], "Doctor, 1st Grade")
 
 
+func test_choice_check_tag_alignment_and_cost() -> void:
+	var d := GameData.load_from_dir()
+	var c := new_character()
+	var item_id: String = "qi_condensing_grass"
+	var item_name: String = d.items[item_id].name
+	var e := {"choices": [
+		{"label": "Righteous", "requires": {"min_alignment": 300}},
+		{"label": "Wicked", "requires": {"max_alignment": -300}},
+		{"label": "Pay item", "effects": {"items": {item_id: -2}}},
+		{"label": "Pay stones", "effects": {"items": {"spirit_stone": -30}}},
+		{"label": "Both", "requires": {"min_attributes": {"comprehension": 12}}, "effects": {"items": {"spirit_stone": -30}}},
+		{"label": "Gain", "effects": {"items": {item_id: 2}}}]}
+	var list := Exploration.choices(c, d, e, {})
+	assert_eq(list[0]["check"], Alignment.tier_name(300, d))
+	assert_eq(list[1]["check"], Alignment.tier_name(-300, d))
+	assert_eq(list[2]["check"], "2 " + item_name)
+	assert_eq(list[3]["check"], "30 stones")
+	assert_eq(list[4]["check"], "Comprehension 12, 30 stones")
+	assert_eq(list[5]["check"], "")
+
+
 func test_profession_answers_in_the_wilds() -> void:
 	var d := GameData.load_from_dir()
 	var answers := {

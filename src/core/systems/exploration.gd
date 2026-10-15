@@ -533,7 +533,8 @@ static func check_choice(c: CharacterData, data: GameData, choice: Dictionary, f
 	return Effects.check(c, data, choice.get("effects", {}))
 
 
-## Short tag naming what a choice checks ("Comprehension 12", "Doctor, Apprentice"), or "".
+## Short tag naming what a choice checks or costs ("Comprehension 12", "Doctor, Apprentice",
+## "Virtuous", "30 stones", "2 Healing Pill"), or "".
 static func check_tag(data: GameData, choice: Dictionary) -> String:
 	var req: Dictionary = choice.get("requires", {})
 	var parts: PackedStringArray = []
@@ -545,6 +546,19 @@ static func check_tag(data: GameData, choice: Dictionary) -> String:
 		var rank := clampi(int(min_profs[prof_id]), 0, Professions.max_rank(data))
 		var prof_name: String = data.professions[prof_id].name if data.professions.has(prof_id) else prof_id
 		parts.append("%s, %s" % [prof_name, data.profession_rank_names[rank]])
+	if req.has("min_alignment"):
+		parts.append(Alignment.tier_name(int(req["min_alignment"]), data))
+	if req.has("max_alignment"):
+		parts.append(Alignment.tier_name(int(req["max_alignment"]), data))
+	var items: Dictionary = choice.get("effects", {}).get("items", {})
+	for item_id: String in items:
+		var delta := int(items[item_id])
+		if delta >= 0:
+			continue
+		if item_id == "spirit_stone":
+			parts.append("%d stones" % -delta)
+		else:
+			parts.append("%d %s" % [-delta, data.items.get(item_id, {}).get("name", item_id)])
 	return ", ".join(parts)
 
 
