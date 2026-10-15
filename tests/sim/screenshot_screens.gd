@@ -9,6 +9,9 @@ extends SceneTree
 ## at 1280x800 and 1280x720 (--resolution 1280x720).
 ## WU-127: append `-- --style-shots` for the fighting-style surfaces (techniques hint, Buy tab rows,
 ## Elder Mo's fighting node, a lost fight with Iron Fist 1, the journal's practice hint).
+## WU-132: append `-- --win-shots` for "from a style to a win" (HUD fair-fight and goal lines with the
+## Wandering Merchant's scroll mark, the journal's fights section, the mission board, an inheritance
+## ground menu, the shop with a long manual row).
 
 const OUT_DIR := "user://screenshots/screens"
 const SETTLE_FRAMES := 6
@@ -30,6 +33,9 @@ func _start() -> void:
 		return
 	if OS.get_cmdline_user_args().has("--style-shots"):
 		_start_style_shots(gs)
+		return
+	if OS.get_cmdline_user_args().has("--win-shots"):
+		_start_win_shots(gs)
 		return
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 7
@@ -108,6 +114,55 @@ func _start_first_hour(gs: Node) -> void:
 		hud.get("_combat_report").close()
 		hud.get("_respawn").close()})
 	shots.append({"name": "fh_journal", "open": func() -> void: hud.get("_screens")["toggle_journal"].open(), "close": func() -> void: hud.get("_screens")["toggle_journal"].close()})
+
+
+## WU-132: a character who knows one fighting style, in the village, then the screens around a win.
+func _start_win_shots(gs: Node) -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 5
+	var c := CharacterFactory.create("Lin Feng", gs.data, rng, "male")
+	gs.start_session(c)
+	gs.pending_event = ""
+	c.add_item("spirit_stone", 300)
+	c.age_days = 30 * Calendar.DAYS_PER_YEAR
+	c.realm_index = 1
+	c.stage = 1
+	world = load("res://src/world/world.tscn").instantiate()
+	root.add_child(world)
+	hud = world.get_node("HUD")
+	var end_talk := func() -> void:
+		var guard := 0
+		while gs.in_dialogue() and guard < 40:
+			gs.choose_dialogue(0)
+			guard += 1
+		hud.get("_dialogue").close()
+		hud.get("_banner").visible = false
+	end_talk.call()
+	var hide_banner := func() -> void: hud.get("_banner").visible = false
+	shots.append({"name": "ws_hud_merchant_mark", "open": hide_banner, "close": func() -> void: pass})
+	var journal: Control = hud.get("_screens")["toggle_journal"]
+	var open_journal_end := func() -> void:
+		journal.open()
+		journal.get("_scroll").set_deferred("scroll_vertical", 100000)
+	shots.append({"name": "ws_journal_no_style", "open": open_journal_end, "close": journal.close})
+	shots.append({"name": "ws_hud_fair_fight", "open": func() -> void:
+		Techniques.learn(c, gs.data, "iron_fist")
+		root.get_node("EventBus").player_changed.emit()
+		hide_banner.call(), "close": func() -> void: pass})
+	shots.append({"name": "ws_journal_fair_fights", "open": open_journal_end, "close": journal.close})
+	var board: Control = hud.get("_mission_board")
+	shots.append({"name": "ws_mission_board", "open": func() -> void:
+		gs.join_sect("azure_cloud_sect")
+		hide_banner.call()
+		board.open(), "close": board.close})
+	var ground: Node = load("res://src/world/interactables/inheritance_grounds.gd").new()
+	ground.display_name = "Founder's Old Well"
+	var menu: Control = hud.get("_choice_menu")
+	shots.append({"name": "ws_inheritance_menu", "open": func() -> void: menu.open_for(ground), "close": menu.close})
+	var shop: Control = hud.get("_shop")
+	shots.append({"name": "ws_shop_manual", "open": func() -> void:
+		shop.open("Wandering Merchant", 0, ["herb", "ore", "beast_material", "scripture", "manual"])
+		shop._set_category("Manuals & Scrolls"), "close": shop.close})
 
 
 ## WU-127: the fighting-style surfaces for a fresh character, then for one who has just learned Iron Fist.
