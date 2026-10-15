@@ -1026,3 +1026,26 @@ First Foundation Establishment year: 10 seeds
   runs with no artifact life spent: 107 of 120
   median win share of fought fights: 100%
 
+## first fights, rated vs real (starter character, Qi Refining layers 1-3)
+
+First-fights truth: 200 fights per row, seed 1. Techniques: iron_fist; weapon iron_sword, armor -.
+Qi Refining layer 1:
+  wild_boar              rated 100% (Weak     ) real 100%
+  mist_wolf              rated   0% (Deadly   ) real   1%
+  mist_fox               rated   0% (Deadly   ) real   0%
+  mountain_bandit        rated 100% (Weak     ) real 100%
+  iron_back_boar         rated   0% (Deadly   ) real   0%
+Qi Refining layer 2:
+  wild_boar              rated 100% (Weak     ) real 100%
+  mist_wolf              rated   0% (Deadly   ) real   1%
+  mist_fox               rated   0% (Deadly   ) real   1%
+  mountain_bandit        rated 100% (Weak     ) real 100%
+  iron_back_boar         rated   0% (Deadly   ) real   0%
+Qi Refining layer 3:
+  wild_boar              rated 100% (Weak     ) real 100%
+  mist_wolf              rated   0% (Deadly   ) real   6%
+  mist_fox               rated   0% (Deadly   ) real   1%
+  mountain_bandit        rated 100% (Weak     ) real 100%
+  iron_back_boar         rated   0% (Deadly   ) real   0%
+Rows off by more than 15 points: 0
+
