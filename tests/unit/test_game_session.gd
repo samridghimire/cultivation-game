@@ -279,6 +279,20 @@ func test_violent_death_does_not_also_drain_lifespan() -> void:
 	gs.end_session()
 
 
+func test_lost_fight_names_a_fairer_fight() -> void:
+	var c := _start()
+	var gs := _game_state()
+	c.realm_index = 1
+	c.stage = 3
+	c.sect = {"id": "azure_cloud_sect", "rank": 0, "contribution": 0, "spent": 0}
+	c.techniques = {"iron_fist": {"level": 3, "xp": 0.0}, "stone_skin": {"level": 2, "xp": 0.0}}
+	assert_false(Guidance.fair_fights(c, gs.data, gs.world_flags, GameClock.total_days, gs.current_region).is_empty(), "a fair fight exists")
+	var foe := {"id": "t", "name": "Test Foe", "realm": "tribulation", "stage": 5, "hp": 90000, "attack": 90000, "defense": 90000, "speed": 50, "techniques": [], "rewards": {}}
+	gs.fight_enemy(foe)
+	assert_true(gs.last_loss_advice.contains("A fairer fight"), gs.last_loss_advice)
+	gs.end_session()
+
+
 func test_lost_fight_posts_advice() -> void:
 	var c := _start()
 	var gs := _game_state()

@@ -947,7 +947,17 @@ static func _rate_fight(found: Array[Dictionary], c: CharacterData, data: GameDa
 	var chance := Combat.win_chance(c, data, enemy)
 	if chance < FAIR_FIGHT_MIN_CHANCE:
 		return
-	found.append({"text": "%s (%s, %d in 100)" % [label, Combat.label_for_chance(chance), roundi(chance * 100.0)], "chance": chance, "kind": kind})
+	found.append({"text": "%s (%s, %d in 100)" % [label, Combat.label_for_chance(chance), roundi(chance * 100.0)], "chance": chance, "kind": kind, "enemy": String(enemy.get("name", ""))})
+
+
+## " A fairer fight: <text>." for the best fair fight, "" when there is none or it is the foe just lost to.
+static func fairer_fight_note(entries: Array, lost_enemy_name: String) -> String:
+	if entries.is_empty():
+		return ""
+	var best: Dictionary = entries[0]
+	if String(best.get("enemy", "")) == lost_enemy_name:
+		return ""
+	return " A fairer fight: %s." % best["text"]
 
 
 static func _add(out: Array[Dictionary], section: String, text: String, tone: String) -> void:

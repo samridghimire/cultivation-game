@@ -1071,3 +1071,10 @@ func test_active_hunt_shows_as_your_hunt() -> void:
 	Bounties.take(c, data(), id, c.age_days)
 	var texts: Array = Guidance.fair_fights(c, data(), {}, c.age_days, String(data().bounties[id]["region"])).map(func(f: Dictionary) -> String: return f["text"])
 	assert_true(texts.any(func(t: String) -> bool: return t.begins_with("Your hunt:")), str(texts))
+
+
+func test_fairer_fight_note() -> void:
+	assert_eq(Guidance.fairer_fight_note([], "Wolf"), "")
+	var entries: Array = [{"text": "Bounty: Wolf in Marsh (Even, 50 in 100)", "enemy": "Wolf"}]
+	assert_eq(Guidance.fairer_fight_note(entries, "Wolf"), "")
+	assert_eq(Guidance.fairer_fight_note(entries, "Boar"), " A fairer fight: Bounty: Wolf in Marsh (Even, 50 in 100).")
