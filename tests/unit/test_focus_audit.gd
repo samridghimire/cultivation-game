@@ -198,6 +198,13 @@ func test_late_screens_have_focus_and_close_on_cancel() -> void:
 	await _check(breakthrough, "breakthrough window")
 	breakthrough.close()
 
+	var realm_card: Control = hud.get("_realm_card")
+	realm_card.open("Foundation Establishment", "A solid base.", "Lifespan +50 years", ["Alchemy is open to you."])
+	await _check(realm_card, "realm card")
+	_press("ui_cancel")
+	await _frames()
+	assert_false(realm_card.visible, "cancel closes the realm card")
+
 	var tribulation: Control = hud.get("_tribulation")
 	tribulation.open_prepare()
 	await _check(tribulation, "tribulation prepare")
