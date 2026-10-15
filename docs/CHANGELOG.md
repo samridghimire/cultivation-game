@@ -2,6 +2,17 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-15 [QA-063] The first-hour sim records the day of the first won fight: a newcomer wins on about day 14.
+- 2026-10-15 [WU-124] Banners wait until the combat report (and the respawn, tribulation and death screens) close.
+- 2026-10-15 [WU-120] A scroll mark floats over the merchant who sells your first fighting style.
+- 2026-10-15 [REF-001] Sect calls tidied; a call mission on cooldown no longer posts an odd line.
+- 2026-10-15 [GUIDE-019b] The fighting-style hint never points at a lifespan-burning art and notices a body art.
+- 2026-10-15 [MENTOR-003] An elder who refuses pointers says what to do: find a fighting style, or chat and bring a gift they like.
+- 2026-10-15 [C-075] Merchants whisper about secret realms and inheritances that are coming.
+- 2026-10-15 [QA-044] Checked: elders' pointers and spars add about one technique level in the first year.
+- 2026-10-15 [WU-123] Focus check of the newest windows; nothing needed fixing.
+- 2026-10-15 [C-070] Help pages for gossip, a friend's price, festival activities, qi-rich regions, your first fighting style and secret-realm word.
+- 2026-10-15 [LETTER-006] A letter from your child or spouse warms them toward you.
 - 2026-10-15 [WU-119] The techniques screen tells you where to find your first fighting style.
 - 2026-10-15 [C-074] The Hut of the Reed Hermit, a Qi Refining inheritance in the Withered Bone Marsh, appears in the third year.
 - 2026-10-15 [LOG-001] A sect mission fight now posts one line instead of two.
