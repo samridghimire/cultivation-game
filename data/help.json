@@ -1,5 +1,31 @@
 {
-  "_doc": "Help screen content (pause menu > Help). action_names: display name for each InputConfig action on the Controls page (actions without a name are listed by id). pages: [{id, title, body: [paragraph, ...]}] shown in order after the Controls page; keep each page short enough to fit on a 1280x800 screen.",
+  "_doc": "Help screen content (pause menu > Help). action_names: display name for each InputConfig action on the Controls page (actions without a name are listed by id). pages: [{id, title, body: [paragraph, ...]}] shown in order after the Controls page; keep each page short enough to fit on a 1280x800 screen. groups: [{id, title}] in display order (the help list shows each group's title above its pages); every page names one by `group`, and pages are listed with each group's pages together, most basic first.",
+  "groups": [
+    {
+      "id": "start",
+      "title": "Getting Started"
+    },
+    {
+      "id": "cultivation",
+      "title": "Cultivation"
+    },
+    {
+      "id": "fighting",
+      "title": "Fighting and Danger"
+    },
+    {
+      "id": "people",
+      "title": "People, Rivals and Family"
+    },
+    {
+      "id": "crafts",
+      "title": "Crafts and Money"
+    },
+    {
+      "id": "world",
+      "title": "The World"
+    }
+  ],
   "action_names": {
     "move_up": "Move up",
     "move_down": "Move down",
@@ -26,6 +52,7 @@
     {
       "id": "cultivate",
       "title": "How to Cultivate",
+      "group": "start",
       "body": [
         "You begin as a mortal with a spiritual root. Walk to a meditation spot and interact with it to cultivate: time passes and qi flows into your dantian. Denser spots and regions gather qi faster, and roots that match a technique's element help too.",
         "Your status panel shows your qi. When it is full you have reached a bottleneck and must break through to the next stage or realm.",
@@ -33,8 +60,76 @@
       ]
     },
     {
+      "id": "journal",
+      "title": "The Journal",
+      "group": "start",
+      "body": [
+        "Press J (left trigger on a gamepad) to open your journal. It keeps track of what you have been doing and what is still waiting for you, so you do not have to remember every promise and every open order.",
+        "Look there whenever you come back to the game after a break and wonder what to do next.",
+        "A newcomer sees \"First goals\", a short ladder with the next step marked, which goes away once it is done. After that the \"Goals\" section lists the longer reaches still ahead: the next realm and roughly how many days of meditation it needs, the next sect rank, a profession to advance, or a clan to found."
+      ]
+    },
+    {
+      "id": "goals",
+      "title": "Goals",
+      "group": "start",
+      "body": [
+        "The journal (J) keeps goal ladders for each stage of your life: First goals as a newcomer, Foundation goals in Foundation Establishment, and Core Formation goals in Core Formation. The next unfinished step is marked.",
+        "The HUD's Goal line shows the next step, and a \"Goal done\" banner appears when you finish one, naming what comes after.",
+        "Goals are only suggestions, never requirements. Skip any of them and play your own way."
+      ]
+    },
+    {
+      "id": "new_notices",
+      "title": "\"New\" Notices and Hints",
+      "group": "start",
+      "body": [
+        "When the game opens a feature for you for the first time, such as your first sect mission or your first abode, a \"New\" banner appears briefly and a line is added to the message log. Reopen the log (Message log key) to read old notices again.",
+        "The HUD hints panel suggests next steps. Choose how many it shows (0-3) under \"HUD hints\" in Settings; at 0 both the panel and the \"New\" banners are hidden, though the log still records them."
+      ]
+    },
+    {
+      "id": "exploring",
+      "title": "Exploring and Encounters",
+      "group": "start",
+      "body": [
+        "Interact with an Explore spot to wander the region for a few days. Each trip rolls an encounter chosen from what the place offers: herbs, windfalls, travellers, strangers, beasts or bandits.",
+        "Some encounters ask you to choose. Kindness and cruelty move you along the righteous and demonic paths, and people remember.",
+        "Stronger realms unlock stranger events, and many one-time stories will not repeat once you have lived them."
+      ]
+    },
+    {
+      "id": "choices_checks",
+      "title": "Choices and Checks",
+      "group": "start",
+      "body": [
+        "Some encounter choices need something from you: an attribute (\"[Comprehension 12]\"), a profession rank (\"[Doctor, Apprentice]\"), a moral standing, or an item they cost. A locked choice stays on the list and says why in brackets.",
+        "When every choice is locked, you can always walk away.",
+        "Attributes can still grow a little from rare encounters. Profession ranks come from working and crafting."
+      ]
+    },
+    {
+      "id": "first_fighting_style",
+      "title": "Your First Fighting Style",
+      "group": "start",
+      "body": [
+        "Breathing keeps you alive, but a combat technique is what wins early fights. Manuals teach techniques: read one from your inventory to learn it, then use the technique in a fight to raise its level.",
+        "Merchants sell cheap manuals for a handful of stones, and a sect's shop or missions may offer better ones. Learn something before you take a beast hunt or a dangerous mission."
+      ]
+    },
+    {
+      "id": "fights_you_can_win",
+      "title": "Fights You Can Win",
+      "group": "start",
+      "body": [
+        "Every foe is rated against you before the fight: Weak, Even, Risky, Dangerous or Deadly. Even means you should win most of the time (about 70% or better), Risky is nearer a coin flip, and anything lower is a gamble with your health.",
+        "When hints are on, the status panel shows a \"Fair fight\" line with the best fight you could take now, and your journal lists \"Fights you can win\": sect missions, the headman's open chores and bounties rated Even or better. Pick those first, then practise and return for the harder ones."
+      ]
+    },
+    {
       "id": "breakthrough",
       "title": "Breakthroughs",
+      "group": "cultivation",
       "body": [
         "Attempting a breakthrough at a meditation spot is risky. Failure scatters your qi and may leave you with an injury such as Qi Deviation.",
         "Pills, a calm body and the right preparation raise your odds. Heal injuries first: they slow cultivation and weaken you in combat.",
@@ -42,25 +137,94 @@
       ]
     },
     {
-      "id": "sects",
-      "title": "Sects and the Rogue Path",
+      "id": "techniques",
+      "title": "Techniques and Methods",
+      "group": "cultivation",
       "body": [
-        "Sect halls accept disciples who meet their realm and alignment requirements. A sect offers missions for contribution, pays a monthly stipend to disciples who meet their monthly duty, and promotes those who win the trial for the next rank (see the Rank tab of the mission board).",
-        "You may also stay a rogue cultivator, free to go anywhere and do anything, with nobody to protect you."
+        "Open the Techniques screen to see what you know. A technique is used in combat and grows with levels; learn more from manuals, sect halls and teachers.",
+        "A cultivation method is different: it shapes how fast you gather qi and how far you can go. You follow one method at a time, and some require a particular alignment or sect.",
+        "Keep both in step with your realm; a strong method with a weak technique still loses fights."
       ]
     },
     {
-      "id": "professions",
-      "title": "Professions",
+      "id": "tribulation",
+      "title": "Heavenly Tribulations",
+      "group": "cultivation",
       "body": [
-        "Alchemists refine pills, Blacksmiths forge weapons and armor, Talisman Masters inscribe talismans and Doctors heal injuries. Learn recipes from scrolls and manuals, gather herbs and ores, then craft at a workshop.",
-        "Crafting raises your profession rank, and higher ranks unlock stronger recipes and better results.",
-        "Combat talismans work only when readied: pick up to three kinds in your inventory, and one of each burns in every fight while you carry it."
+        "Some great breakthroughs draw heavenly lightning. You must survive it or your cultivation is shaken, and failure may leave a grave injury.",
+        "Prepare first: protective talismans, defensive gear and pills improve your odds, and a strong body helps. You get a screen to prepare before the first bolt falls.",
+        "Your journal tells you what is coming: \"Heavenly Tribulation ahead: N waves, likely D damage against your H hp\". If D is close to or above H, the lightning will probably break you.",
+        "When it says you would not survive yet, prepare: carry shield talismans (a Talisman Master can make them, and markets sell some), learn a defense technique, wear better armor, and raise your Constitution for more hp.",
+        "Beware the heart demon: the deeply demonic face it as well as the lightning, a wave that ignores armor and strikes harder the more demonic you are."
+      ]
+    },
+    {
+      "id": "tempering",
+      "title": "Body Tempering",
+      "group": "cultivation",
+      "body": [
+        "Open to everyone and separate from qi cultivation: harden your flesh in five stages, from Copper Skin to the Indestructible Vajra Body. Each stage takes days to months, consumes ores, salves or pills, and needs a realm from Qi Refining at Iron Bone up to Nascent Soul at the last stage.",
+        "Every stage adds permanent bonuses to health and defense (and some attack) and makes injuries less likely. Tempering can go wrong: a failed session still reaches the stage but injures you, and high Constitution lowers the risk. You cannot temper while injured."
+      ]
+    },
+    {
+      "id": "dao",
+      "title": "Dao Insights",
+      "group": "cultivation",
+      "body": [
+        "A Dao insight is a rare understanding of a path such as the Sword, Fire, Water or Life. Each level (up to five) strengthens every technique of that path by about a tenth and adds a little to your breakthrough chances.",
+        "Insights come from strange encounters, from practicing matching techniques day after day, and from contemplating a path you already hold in seclusion, which doubles the progress. When progress is full a Comprehension check decides whether you grasp the next level; failing it keeps half your progress."
+      ]
+    },
+    {
+      "id": "injuries",
+      "title": "Injuries and Healing",
+      "group": "cultivation",
+      "body": [
+        "Defeat and failed breakthroughs can leave an injury. The character sheet lists each one with its penalty and how long it takes to heal.",
+        "You can rest and let the days pass, pay a doctor at a clinic, or find a healer who treats you for free. Cultivating with an injury is slow, so heal before big efforts."
+      ]
+    },
+    {
+      "id": "abodes",
+      "title": "Abodes and Arrays",
+      "group": "cultivation",
+      "body": [
+        "Buy a cave abode in a region to claim a private place to cultivate. Its qi density is higher than the open road, and its chest stores your goods.",
+        "You may hold one abode at a time. Arrays, set up by an Array Master, gather qi, guard or conceal a place."
+      ]
+    },
+    {
+      "id": "artifact",
+      "title": "The Creation Artifact",
+      "group": "cultivation",
+      "body": [
+        "A mysterious artifact is bound to your soul. When you are killed, it pulls your soul back and you awaken at one of your anchors, at the cost of one of its stored lives.",
+        "Recharge it with spirit stones to store more lives, and bind anchors at places you trust. More anchor slots open as your realm rises. With no lives left, death is final."
+      ]
+    },
+    {
+      "id": "artifact_powers",
+      "title": "Artifact Powers",
+      "group": "cultivation",
+      "body": [
+        "Feed spirit stones and other items to the Creation Artifact to fill its energy, then spend that energy to break its seals. Each seal also needs a realm: Storage Space and the Appraising Eye open at Qi Refining, the Inner World and Spirit Garden at Foundation Establishment.",
+        "Storage keeps your items safe even through death. Appraisal names your talent and the true grade of treasures. The Inner World is a pocket of dense qi where time runs twice as fast, for training in seclusion (the body ages with it). The Spirit Garden, in the inner world, grows carried herbs in four plots: sow one, wait for the inner days to pass, and harvest several copies."
+      ]
+    },
+    {
+      "id": "appraisal",
+      "title": "Appraisal",
+      "group": "cultivation",
+      "body": [
+        "The Creation Artifact can hold an Appraising Eye. While it is sealed you see only what anyone would see. Once you have unsealed it, the artifact reads hidden detail for you.",
+        "In people it shows spiritual roots, talent, attributes, remaining lifespan and the colour of the heart. In items it shows the true grade, power and worth. Use it before you trust a stranger or pay for a treasure."
       ]
     },
     {
       "id": "alignment",
       "title": "Righteous and Demonic Paths",
+      "group": "cultivation",
       "body": [
         "Your deeds move your alignment between righteous and demonic. Both paths are real: righteous sects shun the wicked, and some forbidden arts and treasures only answer to a dark heart.",
         "Many forbidden arts burn your lifespan. Power always has a price.",
@@ -68,24 +232,9 @@
       ]
     },
     {
-      "id": "artifact",
-      "title": "The Creation Artifact",
-      "body": [
-        "A mysterious artifact is bound to your soul. When you are killed, it pulls your soul back and you awaken at one of your anchors, at the cost of one of its stored lives.",
-        "Recharge it with spirit stones to store more lives, and bind anchors at places you trust. More anchor slots open as your realm rises. With no lives left, death is final."
-      ]
-    },
-    {
-      "id": "family",
-      "title": "Family",
-      "body": [
-        "Win the favor of other cultivators, court them and propose marriage. Spouses cultivate beside you, dual cultivation speeds both of you, and children inherit roots from both parents.",
-        "A family can grow into a clan that outlives you. Its future is yours to shape."
-      ]
-    },
-    {
       "id": "combat",
       "title": "Combat and Danger",
+      "group": "fighting",
       "body": [
         "Before a fight the game rates the foe against you: Weak (you win nearly always), Even (you win most fights), Risky (you win more often than not), Dangerous (you will probably lose) and Deadly (you almost surely die). Deadly foes are sensed and avoided while you explore.",
         "A fight is either lethal (to the death) or non-lethal (you are beaten, robbed or driven off). Read the prompt before you accept: slipping away costs a day, not your life.",
@@ -97,6 +246,7 @@
     {
       "id": "fights",
       "title": "Fights",
+      "group": "fighting",
       "body": [
         "A fight resolves itself: you do not steer the blows. Each exchange is written to the log, naming the technique used, and a hit is called a glancing, solid or crushing blow by how much of the target's health it took.",
         "Two bars show the fight, yours and the foe's health. Press Skip to see the result at once. If you would rather watch the blows appear one by one, turn on \"Animate fights\" in Settings; with it off the whole report shows immediately.",
@@ -104,348 +254,36 @@
       ]
     },
     {
-      "id": "exploring",
-      "title": "Exploring and Encounters",
-      "body": [
-        "Interact with an Explore spot to wander the region for a few days. Each trip rolls an encounter chosen from what the place offers: herbs, windfalls, travellers, strangers, beasts or bandits.",
-        "Some encounters ask you to choose. Kindness and cruelty move you along the righteous and demonic paths, and people remember.",
-        "Stronger realms unlock stranger events, and many one-time stories will not repeat once you have lived them."
-      ]
-    },
-    {
-      "id": "choices_checks",
-      "title": "Choices and Checks",
-      "body": [
-        "Some encounter choices need something from you: an attribute (\"[Comprehension 12]\"), a profession rank (\"[Doctor, Apprentice]\"), a moral standing, or an item they cost. A locked choice stays on the list and says why in brackets.",
-        "When every choice is locked, you can always walk away.",
-        "Attributes can still grow a little from rare encounters. Profession ranks come from working and crafting."
-      ]
-    },
-    {
-      "id": "money",
-      "title": "Making Money",
-      "body": [
-        "Early on, take chores and odd jobs from the villagers for a few spirit stones. Gather herbs at gather spots and sell them to a merchant.",
-        "A profession pays far better: brew pills, forge gear, draw talismans or treat the sick, and sell the results.",
-        "Sect members take missions from the mission board for stones and contribution points. Stones buy pills, gear and manuals; spend them on what speeds your cultivation first."
-      ]
-    },
-    {
-      "id": "selling",
-      "title": "Selling Loot",
-      "body": [
-        "Only specialist merchants buy goods back, and only what matches their trade: a herb seller takes herbs and ore. Some general traders also take a few extra kinds (herbs, ore, beast materials) without selling them. If one will not take an item, try another stall.",
-        "Open a shop and choose the Sell tab to sell a stack at a time, or press \"Sell all loot\" to sell every full stack that merchant buys. The button shows the total and what it will sell; press it again to confirm.",
-        "Sell all loot never sells what you wear, manuals and scrolls, breakthrough pills, readied talismans, or anything that carries a warning. Sell those by hand if you mean to."
-      ]
-    },
-    {
-      "id": "techniques",
-      "title": "Techniques and Methods",
-      "body": [
-        "Open the Techniques screen to see what you know. A technique is used in combat and grows with levels; learn more from manuals, sect halls and teachers.",
-        "A cultivation method is different: it shapes how fast you gather qi and how far you can go. You follow one method at a time, and some require a particular alignment or sect.",
-        "Keep both in step with your realm; a strong method with a weak technique still loses fights."
-      ]
-    },
-    {
-      "id": "crafting",
-      "title": "Crafting and Ingredients",
-      "body": [
-        "Visit a workshop to craft once you have the profession and the recipe. The crafting screen shows each recipe and what you are missing.",
-        "Ingredients come from three places: a merchant's shelves, gather spots in the wild, and rare finds while exploring. Higher herbs need a higher realm to gather.",
-        "Learn new recipes from scrolls and teachers, and rank up your profession to unlock more.",
-        "Each month buyers may post commissions for things you can craft. Deliver them at a workshop before the deadline for spirit stones and profession xp; open orders are listed in the journal (J)."
-      ]
-    },
-    {
-      "id": "injuries",
-      "title": "Injuries and Healing",
-      "body": [
-        "Defeat and failed breakthroughs can leave an injury. The character sheet lists each one with its penalty and how long it takes to heal.",
-        "You can rest and let the days pass, pay a doctor at a clinic, or find a healer who treats you for free. Cultivating with an injury is slow, so heal before big efforts."
-      ]
-    },
-    {
-      "id": "tribulation",
-      "title": "Heavenly Tribulations",
-      "body": [
-        "Some great breakthroughs draw heavenly lightning. You must survive it or your cultivation is shaken, and failure may leave a grave injury.",
-        "Prepare first: protective talismans, defensive gear and pills improve your odds, and a strong body helps. You get a screen to prepare before the first bolt falls.",
-        "Your journal tells you what is coming: \"Heavenly Tribulation ahead: N waves, likely D damage against your H hp\". If D is close to or above H, the lightning will probably break you.",
-        "When it says you would not survive yet, prepare: carry shield talismans (a Talisman Master can make them, and markets sell some), learn a defense technique, wear better armor, and raise your Constitution for more hp.",
-        "Beware the heart demon: the deeply demonic face it as well as the lightning, a wave that ignores armor and strikes harder the more demonic you are."
-      ]
-    },
-    {
-      "id": "secret_realms",
-      "title": "Secret Realms and Inheritances",
-      "body": [
-        "Secret realms open only at certain times. Walk to a realm entrance while it is open, and descend floor by floor for treasure and danger.",
-        "Inheritance grounds hold the legacy of dead cultivators. Passing their trials can reward you with techniques, methods and gear.",
-        "Both are risky: go in healed, supplied, and at a realm that matches the depth you plan to reach."
-      ]
-    },
-    {
-      "id": "abodes",
-      "title": "Abodes and Arrays",
-      "body": [
-        "Buy a cave abode in a region to claim a private place to cultivate. Its qi density is higher than the open road, and its chest stores your goods.",
-        "You may hold one abode at a time. Arrays, set up by an Array Master, gather qi, guard or conceal a place."
-      ]
-    },
-    {
-      "id": "karma",
-      "title": "Karma, Grudges and Debts",
-      "body": [
-        "The world keeps score. Those you spare, save or help may repay you; those you wrong may hunt you.",
-        "Open the Character sheet to see grudges and debts. Settle them with force, stones or a kindness, or run: grudges outlive the years."
-      ]
-    },
-    {
-      "id": "commissions",
-      "title": "Commissions",
-      "body": [
-        "Once you practise a crafting profession, buyers post a monthly order for a few units of something you already know how to make. Each profession has at most one open order at a time, and an order pays about double the materials' worth plus profession experience.",
-        "An order stays open for 60 days. Letting it lapse costs you nothing: no penalty, no lost reputation. Your journal (J) lists your open orders and how many days are left."
-      ]
-    },
-    {
-      "id": "favors",
-      "title": "Favors and Errands",
-      "body": [
-        "Named people in the world sometimes need a hand: pills for a buyer, herbs for a patient, word carried to someone. Ask them in conversation whether they need help, and when you come back with what they asked for they thank you with a reward, often a recipe or a rare item, and remember you kindly.",
-        "Favor is what each person thinks of you. The more they trust you, the more they will share, so help those who may teach you later.",
-        "Once someone stronger than you likes you well enough, ask them for pointers: they correct one of your techniques. Anyone within a realm of you will also spar with you; a friendly bout costs no stones and leaves no injury."
-      ]
-    },
-    {
-      "id": "world_events",
-      "title": "World Events",
-      "body": [
-        "Every month the world may stir. A tournament, a beast tide, a demonic incursion or an auction season can start in a region and lasts for weeks. While it lasts the region sees new encounters and different prices, and the map and the region line show that something is going on.",
-        "In a tournament you fight a row of cultivators of your own realm, each a stage higher than the last. You are not healed between bouts, and losing a bout ends your run. Only cultivators can enter. Beating them all wins the prize.",
-        "When a beast tide or an incursion threatens a region you can stand with its defenders against the raiders. Each such event can be joined once. Both carry real risk, so heal first.",
-        "Some events are yearly festivals: the Lantern Festival in Qingshi Village, the Qingming Ancestor Festival at Azure Peak and the Mid-Autumn Moon Festival at Fallen Star Market. People grow fond of you faster while one lasts, and the festival brings gentle encounters of its own: riddles, offerings, poetry, and the odd temptation to steal from a crowd."
-      ]
-    },
-    {
-      "id": "sect_call",
-      "title": "The Sect's Call",
-      "body": [
-        "When your sect clashes with a rival at the border, it calls on its disciples. A special mission appears on the mission board; answering it means beating the rival's raiders.",
-        "The call stays open for 30 days. Only disciples who have reached the ninth layer of Qi Refining are summoned, and answering earns a good amount of contribution and reputation. If you ignore it, it simply lapses."
-      ]
-    },
-    {
-      "id": "journal",
-      "title": "The Journal",
-      "body": [
-        "Press J (left trigger on a gamepad) to open your journal. It keeps track of what you have been doing and what is still waiting for you, so you do not have to remember every promise and every open order.",
-        "Look there whenever you come back to the game after a break and wonder what to do next.",
-        "A newcomer sees \"First goals\", a short ladder with the next step marked, which goes away once it is done. After that the \"Goals\" section lists the longer reaches still ahead: the next realm and roughly how many days of meditation it needs, the next sect rank, a profession to advance, or a clan to found."
-      ]
-    },
-    {
-      "id": "appraisal",
-      "title": "Appraisal",
-      "body": [
-        "The Creation Artifact can hold an Appraising Eye. While it is sealed you see only what anyone would see. Once you have unsealed it, the artifact reads hidden detail for you.",
-        "In people it shows spiritual roots, talent, attributes, remaining lifespan and the colour of the heart. In items it shows the true grade, power and worth. Use it before you trust a stranger or pay for a treasure."
-      ]
-    },
-    {
-      "id": "beasts",
-      "title": "Spirit Beasts",
-      "body": [
-        "Learn the Beast Tamer profession (any rank) and a beast you defeat may submit to you. Your chance is 15% plus 8% per Beast Tamer rank, to a cap of 75%, and every attempt teaches you something. Some beasts demand a minimum rank.",
-        "You keep one companion at a time. It adds a share of your combat stats, which grows with your rank, but shrinks by half for each realm you outgrow it. Feed it herbs, spirit beast pellets or beast marrow pills: every 100 growth is a level (up to level 6), and each level offsets half a realm of outgrowing."
-      ]
-    },
-    {
-      "id": "tempering",
-      "title": "Body Tempering",
-      "body": [
-        "Open to everyone and separate from qi cultivation: harden your flesh in five stages, from Copper Skin to the Indestructible Vajra Body. Each stage takes days to months, consumes ores, salves or pills, and needs a realm from Qi Refining at Iron Bone up to Nascent Soul at the last stage.",
-        "Every stage adds permanent bonuses to health and defense (and some attack) and makes injuries less likely. Tempering can go wrong: a failed session still reaches the stage but injures you, and high Constitution lowers the risk. You cannot temper while injured."
-      ]
-    },
-    {
-      "id": "dao",
-      "title": "Dao Insights",
-      "body": [
-        "A Dao insight is a rare understanding of a path such as the Sword, Fire, Water or Life. Each level (up to five) strengthens every technique of that path by about a tenth and adds a little to your breakthrough chances.",
-        "Insights come from strange encounters, from practicing matching techniques day after day, and from contemplating a path you already hold in seclusion, which doubles the progress. When progress is full a Comprehension check decides whether you grasp the next level; failing it keeps half your progress."
-      ]
-    },
-    {
-      "id": "artifact_powers",
-      "title": "Artifact Powers",
-      "body": [
-        "Feed spirit stones and other items to the Creation Artifact to fill its energy, then spend that energy to break its seals. Each seal also needs a realm: Storage Space and the Appraising Eye open at Qi Refining, the Inner World and Spirit Garden at Foundation Establishment.",
-        "Storage keeps your items safe even through death. Appraisal names your talent and the true grade of treasures. The Inner World is a pocket of dense qi where time runs twice as fast, for training in seclusion (the body ages with it). The Spirit Garden, in the inner world, grows carried herbs in four plots: sow one, wait for the inner days to pass, and harvest several copies."
-      ]
-    },
-    {
-      "id": "clans",
-      "title": "Clans and Estates",
-      "body": [
-        "A Foundation Establishment cultivator with an abode can found a clan: 500 spirit stones and 30 days. Recruit family and acquaintances (favor 40 and 50 stones each); the clan ranks run from Patriarch and up to three Elders to Core and Outer members.",
-        "Build estate projects from the clan treasury, one at a time: income, reputation, a qi-dense seat, wards against misfortune and training grounds. When the patriarch dies, the heir takes over: by default the eldest child of the best-ranked spouse, or whoever you named. Other clans have their own heads and feuds, and your deeds toward their members change how they treat you."
-      ]
-    },
-    {
-      "id": "adoption",
-      "title": "Adoption and the Orphanage",
-      "body": [
-        "Take in a child of twelve or younger and they become your own: seven days to settle, a small shift of your alignment toward kindness, and the child starts out fond of you. You may adopt up to three, and they take your surname. Couples who cannot conceive can adopt too.",
-        "The Temple of Mercy orphanage will find you a foundling, a child of six or younger, for a donation of 20 spirit stones. Adopted children grow up and can be trained in cultivation, a profession or techniques, and may become your heir."
-      ]
-    },
-    {
-      "id": "lecture",
-      "title": "The Elder's Lecture",
-      "body": [
-        "Sect disciples may attend their elder's lecture once each calendar month, at the sect hall. It takes about two days, and you gather a few days' worth of qi at the hall's density, unless you are already at a bottleneck.",
-        "Each lecture also carries a small chance of a Dao insight (about 5%, plus a little for every point of Comprehension above 10): the Azure Cloud elder teaches the sword, the Blood Elder slaughter, and the Pavilion's Chief Steward the Dao of Breath. Rogues have no lecture to attend."
-      ]
-    },
-    {
-      "id": "seasons",
-      "title": "Seasons and Ambient Effects",
-      "body": [
-        "A year has twelve months, three to a season: Spring (months 1-3), Summer (4-6), Autumn (7-9) and Winter (10-12). The world is tinted a little warmer in summer and autumn and cooler in winter, and the date on the HUD names the season.",
-        "Some places add ambient effects that follow the season, such as drifting petals in spring, falling leaves in autumn, snow in winter or mist at any time. They are only decoration. If they bother you or slow your machine, turn off \"Ambient effects\" in Settings.",
-        "Seasons also change what the land gives. Some herbs and fortunes come only in one season: fireflies over the forest herbs in summer, mushrooms in the marsh in autumn, a snow lotus on the high ledges in winter."
-      ]
-    },
-    {
-      "id": "sect_stage_ranks",
-      "title": "Sect Ranks That Need a Stage",
-      "body": [
-        "Climbing a sect's ranks needs lifetime contribution, a minimum realm and, for the highest ranks, a minimum stage within that realm. Early, Middle and Late stages of a realm count separately: a Foundation Establishment disciple at the first layer may meet the realm requirement and still be turned away from a stage-gated rank.",
-        "The character sheet and the sect hall tell you what is missing. Cultivate to the stage named, then face the rank trial, a sparring match that never kills or robs you."
-      ]
-    },
-    {
-      "id": "new_notices",
-      "title": "\"New\" Notices and Hints",
-      "body": [
-        "When the game opens a feature for you for the first time, such as your first sect mission or your first abode, a \"New\" banner appears briefly and a line is added to the message log. Reopen the log (Message log key) to read old notices again.",
-        "The HUD hints panel suggests next steps. Choose how many it shows (0-3) under \"HUD hints\" in Settings; at 0 both the panel and the \"New\" banners are hidden, though the log still records them."
-      ]
-    },
-    {
-      "id": "region_familiarity",
-      "title": "Knowing a Region",
-      "body": [
-        "Every day you spend exploring a region makes you more familiar with it. The world map and the explore menu show the days explored, how many of its happenings you have seen (\"seen N of M\") and when a deeper path will open.",
-        "Sights you have already met grow rarer, so fresh happenings surface in their place. Regions you have never visited are dimmed and marked Unexplored on the map.",
-        "A deeper path is a hidden place that opens after enough days in one region. You are told when it opens and it turns up on a later trip. Some regions also hide a discovery, a one-time find; a gleam on the map says one still waits, and merchants and the journal may pass on a rumor of it.",
-        "Once you are known in a region, its people bring you requests they would not trust to a stranger."
-      ]
-    },
-    {
-      "id": "herb_seasons",
-      "title": "Herbs and the Seasons",
-      "body": [
-        "Some herbs grow only in one season. The inventory notes when and where a herb is richest, so you know where to go when the season turns."
-      ]
-    },
-    {
-      "id": "bounties",
-      "title": "Bounties",
-      "body": [
-        "Bounty boards in towns post a few hunts for dangerous beasts, each with a region, a deadline and a reward in spirit stones. Take one and abandon it at the board if you change your mind; only one hunt can be open at a time.",
-        "Explore the named region and the quarry's trail may turn up as a fight. Win before the deadline and you are paid. The board shows how dangerous each foe is for you, and a bounty you finish or drop cannot be taken again for a while."
-      ]
-    },
-    {
-      "id": "festivals",
-      "title": "Festivals",
-      "body": [
-        "Some places hold a festival in a fixed month each year: the Lantern Festival in Qingshi, a spring ancestor festival at Azure Peak, a Mid-Autumn moon festival at Fallen Star Market. The journal lists the ones nearby.",
-        "During a festival people are warmer: chats and gifts earn more favor, some markets lower their prices, and special encounters appear in the streets."
-      ]
-    },
-    {
-      "id": "letters",
-      "title": "Letters",
-      "body": [
-        "Friends you have made sometimes write to you. Some letters ask for something, such as a pill. Bring it to them in person within the time given: their menu offers \"Give <item> (they asked in a letter)\", which earns favor. A request you let lapse costs nothing.",
-        "A letter that asks for something names its deadline, and the world map marks the region of the one who asked. Your spouse, children and parents may write too, with news from home and sometimes a small gift."
-      ]
-    },
-    {
-      "id": "merchant_gossip",
-      "title": "Merchant Gossip",
-      "body": [
-        "Ask any merchant what they have heard. Their rumors hint at hidden finds, trouble on the roads and who is looking for help, and the better you know a region, the more specific they get. A rumor never promises; it only tells you where to look."
-      ]
-    },
-    {
-      "id": "friends_price",
-      "title": "A Friend's Price",
-      "body": [
-        "A merchant who thinks well of you may write to say they have put in a word for you. For a while afterwards, prices in their region are lower. The letter says how long it lasts, so spend your stones while it does."
-      ]
-    },
-    {
-      "id": "festival_activities",
-      "title": "Festival Activities",
-      "body": [
-        "Ask a merchant during a festival and they may suggest something to do for it. Each festival's activity can be done once, and some give more to those with a keen spirit, a warm manner or a steady hand."
-      ]
-    },
-    {
-      "id": "qi_rich_regions",
-      "title": "Regions That Grow Richer",
-      "body": [
-        "Deeds can leave a mark on the land. A region you have helped, or a seed you have planted there, may come to hold more qi, so every day spent cultivating there is worth more. The explore menu and the world map tell you when a region has been changed this way."
-      ]
-    },
-    {
-      "id": "first_fighting_style",
-      "title": "Your First Fighting Style",
-      "body": [
-        "Breathing keeps you alive, but a combat technique is what wins early fights. Manuals teach techniques: read one from your inventory to learn it, then use the technique in a fight to raise its level.",
-        "Merchants sell cheap manuals for a handful of stones, and a sect's shop or missions may offer better ones. Learn something before you take a beast hunt or a dangerous mission."
-      ]
-    },
-    {
-      "id": "secret_realm_word",
-      "title": "Word of a Secret Realm",
-      "body": [
-        "A secret realm is opened by heaven's timing, not by your choice. Before one opens, word of it spreads: you hear that it is coming and where. Be ready in the right realm when the day arrives, because the doors do not stay open."
-      ]
-    },
-    {
       "id": "practising_a_style",
       "title": "Practising a Fighting Style",
+      "group": "fighting",
       "body": [
         "A fighting style you have learned is only as sharp as its level. Open the Techniques screen, pick the style and practise it: days pass, and when it gains a level a banner tells you so and the journal and message log record it. Every level raises your odds in a fight.",
         "While your style is still low, a hint in your journal reminds you to practise. Some encounters train a technique too: an old soldier's lessons, a hunt watched in the snow, a bout with a wandering boxer, sparring below a waterfall. They teach the style you know least."
       ]
     },
     {
-      "id": "fights_you_can_win",
-      "title": "Fights You Can Win",
+      "id": "beasts",
+      "title": "Spirit Beasts",
+      "group": "fighting",
       "body": [
-        "Every foe is rated against you before the fight: Weak, Even, Risky, Dangerous or Deadly. Even means you should win most of the time (about 70% or better), Risky is nearer a coin flip, and anything lower is a gamble with your health.",
-        "When hints are on, the status panel shows a \"Fair fight\" line with the best fight you could take now, and your journal lists \"Fights you can win\": sect missions, the headman's open chores and bounties rated Even or better. Pick those first, then practise and return for the harder ones."
+        "Learn the Beast Tamer profession (any rank) and a beast you defeat may submit to you. Your chance is 15% plus 8% per Beast Tamer rank, to a cap of 75%, and every attempt teaches you something. Some beasts demand a minimum rank.",
+        "You keep one companion at a time. It adds a share of your combat stats, which grows with your rank, but shrinks by half for each realm you outgrow it. Feed it herbs, spirit beast pellets or beast marrow pills: every 100 growth is a level (up to level 6), and each level offsets half a realm of outgrowing."
       ]
     },
     {
-      "id": "inheritance_trials",
-      "title": "Inheritance Trials",
+      "id": "bounties",
+      "title": "Bounties",
+      "group": "fighting",
       "body": [
-        "An inheritance ground tests you in stages, and its prompt names what the next trial needs before you try: a realm and stage, an attribute with your current value beside it (for example \"needs Spirit 12, yours 9\"), or a fight with the foe and how dangerous it is for you.",
-        "If you fall short, leave and grow: cultivate, temper your body or practise a technique, then come back. Do not walk into a fight trial you would lose."
+        "Bounty boards in towns post a few hunts for dangerous beasts, each with a region, a deadline and a reward in spirit stones. Take one and abandon it at the board if you change your mind; only one hunt can be open at a time.",
+        "Explore the named region and the quarry's trail may turn up as a fight. Win before the deadline and you are paid. The board shows how dangerous each foe is for you, and a bounty you finish or drop cannot be taken again for a while."
       ]
     },
     {
       "id": "your_rival",
       "title": "Your Rival",
+      "group": "people",
       "body": [
         "Someone your own age is climbing the realms beside you, and sooner or later you meet them. After that first meeting they are your rival: their name carries a \"(rival)\" mark, looking at them says where they stand against you (far ahead, a few steps ahead, level, or behind), and the world map marks the region they are in.",
         "You hear of their progress: when they break through to a new realm, a line in the message log tells you. Some encounters change with your rival's realm, so a stronger rival and a weaker one bring different scenes.",
@@ -456,6 +294,7 @@
     {
       "id": "rival_attitudes",
       "title": "Rival Moods",
+      "group": "people",
       "body": [
         "Your rival is proud, friendly or bitter toward you, and the journal's rival line says which. Gifts and bouts you win warm them. Humiliating or robbing them, and some answers in encounters, embitter them; a bitter rivalry shows once their grudge grows deep enough.",
         "A rival always accepts a bout, unless they are bitter: then they will not fight you on friendly terms, and the challenge is greyed out.",
@@ -463,12 +302,252 @@
       ]
     },
     {
-      "id": "goals",
-      "title": "Goals",
+      "id": "karma",
+      "title": "Karma, Grudges and Debts",
+      "group": "people",
       "body": [
-        "The journal (J) keeps goal ladders for each stage of your life: First goals as a newcomer, Foundation goals in Foundation Establishment, and Core Formation goals in Core Formation. The next unfinished step is marked.",
-        "The HUD's Goal line shows the next step, and a \"Goal done\" banner appears when you finish one, naming what comes after.",
-        "Goals are only suggestions, never requirements. Skip any of them and play your own way."
+        "The world keeps score. Those you spare, save or help may repay you; those you wrong may hunt you.",
+        "Open the Character sheet to see grudges and debts. Settle them with force, stones or a kindness, or run: grudges outlive the years."
+      ]
+    },
+    {
+      "id": "favors",
+      "title": "Favors and Errands",
+      "group": "people",
+      "body": [
+        "Named people in the world sometimes need a hand: pills for a buyer, herbs for a patient, word carried to someone. Ask them in conversation whether they need help, and when you come back with what they asked for they thank you with a reward, often a recipe or a rare item, and remember you kindly.",
+        "Favor is what each person thinks of you. The more they trust you, the more they will share, so help those who may teach you later.",
+        "Once someone stronger than you likes you well enough, ask them for pointers: they correct one of your techniques. Anyone within a realm of you will also spar with you; a friendly bout costs no stones and leaves no injury."
+      ]
+    },
+    {
+      "id": "family",
+      "title": "Family",
+      "group": "people",
+      "body": [
+        "Win the favor of other cultivators, court them and propose marriage. Spouses cultivate beside you, dual cultivation speeds both of you, and children inherit roots from both parents.",
+        "A family can grow into a clan that outlives you. Its future is yours to shape."
+      ]
+    },
+    {
+      "id": "adoption",
+      "title": "Adoption and the Orphanage",
+      "group": "people",
+      "body": [
+        "Take in a child of twelve or younger and they become your own: seven days to settle, a small shift of your alignment toward kindness, and the child starts out fond of you. You may adopt up to three, and they take your surname. Couples who cannot conceive can adopt too.",
+        "The Temple of Mercy orphanage will find you a foundling, a child of six or younger, for a donation of 20 spirit stones. Adopted children grow up and can be trained in cultivation, a profession or techniques, and may become your heir."
+      ]
+    },
+    {
+      "id": "clans",
+      "title": "Clans and Estates",
+      "group": "people",
+      "body": [
+        "A Foundation Establishment cultivator with an abode can found a clan: 500 spirit stones and 30 days. Recruit family and acquaintances (favor 40 and 50 stones each); the clan ranks run from Patriarch and up to three Elders to Core and Outer members.",
+        "Build estate projects from the clan treasury, one at a time: income, reputation, a qi-dense seat, wards against misfortune and training grounds. When the patriarch dies, the heir takes over: by default the eldest child of the best-ranked spouse, or whoever you named. Other clans have their own heads and feuds, and your deeds toward their members change how they treat you."
+      ]
+    },
+    {
+      "id": "sects",
+      "title": "Sects and the Rogue Path",
+      "group": "people",
+      "body": [
+        "Sect halls accept disciples who meet their realm and alignment requirements. A sect offers missions for contribution, pays a monthly stipend to disciples who meet their monthly duty, and promotes those who win the trial for the next rank (see the Rank tab of the mission board).",
+        "You may also stay a rogue cultivator, free to go anywhere and do anything, with nobody to protect you."
+      ]
+    },
+    {
+      "id": "lecture",
+      "title": "The Elder's Lecture",
+      "group": "people",
+      "body": [
+        "Sect disciples may attend their elder's lecture once each calendar month, at the sect hall. It takes about two days, and you gather a few days' worth of qi at the hall's density, unless you are already at a bottleneck.",
+        "Each lecture also carries a small chance of a Dao insight (about 5%, plus a little for every point of Comprehension above 10): the Azure Cloud elder teaches the sword, the Blood Elder slaughter, and the Pavilion's Chief Steward the Dao of Breath. Rogues have no lecture to attend."
+      ]
+    },
+    {
+      "id": "sect_stage_ranks",
+      "title": "Sect Ranks That Need a Stage",
+      "group": "people",
+      "body": [
+        "Climbing a sect's ranks needs lifetime contribution, a minimum realm and, for the highest ranks, a minimum stage within that realm. Early, Middle and Late stages of a realm count separately: a Foundation Establishment disciple at the first layer may meet the realm requirement and still be turned away from a stage-gated rank.",
+        "The character sheet and the sect hall tell you what is missing. Cultivate to the stage named, then face the rank trial, a sparring match that never kills or robs you."
+      ]
+    },
+    {
+      "id": "sect_call",
+      "title": "The Sect's Call",
+      "group": "people",
+      "body": [
+        "When your sect clashes with a rival at the border, it calls on its disciples. A special mission appears on the mission board; answering it means beating the rival's raiders.",
+        "The call stays open for 30 days. Only disciples who have reached the ninth layer of Qi Refining are summoned, and answering earns a good amount of contribution and reputation. If you ignore it, it simply lapses."
+      ]
+    },
+    {
+      "id": "letters",
+      "title": "Letters",
+      "group": "people",
+      "body": [
+        "Friends you have made sometimes write to you. Some letters ask for something, such as a pill. Bring it to them in person within the time given: their menu offers \"Give <item> (they asked in a letter)\", which earns favor. A request you let lapse costs nothing.",
+        "A letter that asks for something names its deadline, and the world map marks the region of the one who asked. Your spouse, children and parents may write too, with news from home and sometimes a small gift."
+      ]
+    },
+    {
+      "id": "professions",
+      "title": "Professions",
+      "group": "crafts",
+      "body": [
+        "Alchemists refine pills, Blacksmiths forge weapons and armor, Talisman Masters inscribe talismans and Doctors heal injuries. Learn recipes from scrolls and manuals, gather herbs and ores, then craft at a workshop.",
+        "Crafting raises your profession rank, and higher ranks unlock stronger recipes and better results.",
+        "Combat talismans work only when readied: pick up to three kinds in your inventory, and one of each burns in every fight while you carry it."
+      ]
+    },
+    {
+      "id": "crafting",
+      "title": "Crafting and Ingredients",
+      "group": "crafts",
+      "body": [
+        "Visit a workshop to craft once you have the profession and the recipe. The crafting screen shows each recipe and what you are missing.",
+        "Ingredients come from three places: a merchant's shelves, gather spots in the wild, and rare finds while exploring. Higher herbs need a higher realm to gather.",
+        "Learn new recipes from scrolls and teachers, and rank up your profession to unlock more.",
+        "Each month buyers may post commissions for things you can craft. Deliver them at a workshop before the deadline for spirit stones and profession xp; open orders are listed in the journal (J)."
+      ]
+    },
+    {
+      "id": "commissions",
+      "title": "Commissions",
+      "group": "crafts",
+      "body": [
+        "Once you practise a crafting profession, buyers post a monthly order for a few units of something you already know how to make. Each profession has at most one open order at a time, and an order pays about double the materials' worth plus profession experience.",
+        "An order stays open for 60 days. Letting it lapse costs you nothing: no penalty, no lost reputation. Your journal (J) lists your open orders and how many days are left."
+      ]
+    },
+    {
+      "id": "money",
+      "title": "Making Money",
+      "group": "crafts",
+      "body": [
+        "Early on, take chores and odd jobs from the villagers for a few spirit stones. Gather herbs at gather spots and sell them to a merchant.",
+        "A profession pays far better: brew pills, forge gear, draw talismans or treat the sick, and sell the results.",
+        "Sect members take missions from the mission board for stones and contribution points. Stones buy pills, gear and manuals; spend them on what speeds your cultivation first."
+      ]
+    },
+    {
+      "id": "selling",
+      "title": "Selling Loot",
+      "group": "crafts",
+      "body": [
+        "Only specialist merchants buy goods back, and only what matches their trade: a herb seller takes herbs and ore. Some general traders also take a few extra kinds (herbs, ore, beast materials) without selling them. If one will not take an item, try another stall.",
+        "Open a shop and choose the Sell tab to sell a stack at a time, or press \"Sell all loot\" to sell every full stack that merchant buys. The button shows the total and what it will sell; press it again to confirm.",
+        "Sell all loot never sells what you wear, manuals and scrolls, breakthrough pills, readied talismans, or anything that carries a warning. Sell those by hand if you mean to."
+      ]
+    },
+    {
+      "id": "friends_price",
+      "title": "A Friend's Price",
+      "group": "crafts",
+      "body": [
+        "A merchant who thinks well of you may write to say they have put in a word for you. For a while afterwards, prices in their region are lower. The letter says how long it lasts, so spend your stones while it does."
+      ]
+    },
+    {
+      "id": "merchant_gossip",
+      "title": "Merchant Gossip",
+      "group": "crafts",
+      "body": [
+        "Ask any merchant what they have heard. Their rumors hint at hidden finds, trouble on the roads and who is looking for help, and the better you know a region, the more specific they get. A rumor never promises; it only tells you where to look."
+      ]
+    },
+    {
+      "id": "secret_realms",
+      "title": "Secret Realms and Inheritances",
+      "group": "world",
+      "body": [
+        "Secret realms open only at certain times. Walk to a realm entrance while it is open, and descend floor by floor for treasure and danger.",
+        "Inheritance grounds hold the legacy of dead cultivators. Passing their trials can reward you with techniques, methods and gear.",
+        "Both are risky: go in healed, supplied, and at a realm that matches the depth you plan to reach."
+      ]
+    },
+    {
+      "id": "secret_realm_word",
+      "title": "Word of a Secret Realm",
+      "group": "world",
+      "body": [
+        "A secret realm is opened by heaven's timing, not by your choice. Before one opens, word of it spreads: you hear that it is coming and where. Be ready in the right realm when the day arrives, because the doors do not stay open."
+      ]
+    },
+    {
+      "id": "inheritance_trials",
+      "title": "Inheritance Trials",
+      "group": "world",
+      "body": [
+        "An inheritance ground tests you in stages, and its prompt names what the next trial needs before you try: a realm and stage, an attribute with your current value beside it (for example \"needs Spirit 12, yours 9\"), or a fight with the foe and how dangerous it is for you.",
+        "If you fall short, leave and grow: cultivate, temper your body or practise a technique, then come back. Do not walk into a fight trial you would lose."
+      ]
+    },
+    {
+      "id": "world_events",
+      "title": "World Events",
+      "group": "world",
+      "body": [
+        "Every month the world may stir. A tournament, a beast tide, a demonic incursion or an auction season can start in a region and lasts for weeks. While it lasts the region sees new encounters and different prices, and the map and the region line show that something is going on.",
+        "In a tournament you fight a row of cultivators of your own realm, each a stage higher than the last. You are not healed between bouts, and losing a bout ends your run. Only cultivators can enter. Beating them all wins the prize.",
+        "When a beast tide or an incursion threatens a region you can stand with its defenders against the raiders. Each such event can be joined once. Both carry real risk, so heal first.",
+        "Some events are yearly festivals: the Lantern Festival in Qingshi Village, the Qingming Ancestor Festival at Azure Peak and the Mid-Autumn Moon Festival at Fallen Star Market. People grow fond of you faster while one lasts, and the festival brings gentle encounters of its own: riddles, offerings, poetry, and the odd temptation to steal from a crowd."
+      ]
+    },
+    {
+      "id": "seasons",
+      "title": "Seasons and Ambient Effects",
+      "group": "world",
+      "body": [
+        "A year has twelve months, three to a season: Spring (months 1-3), Summer (4-6), Autumn (7-9) and Winter (10-12). The world is tinted a little warmer in summer and autumn and cooler in winter, and the date on the HUD names the season.",
+        "Some places add ambient effects that follow the season, such as drifting petals in spring, falling leaves in autumn, snow in winter or mist at any time. They are only decoration. If they bother you or slow your machine, turn off \"Ambient effects\" in Settings.",
+        "Seasons also change what the land gives. Some herbs and fortunes come only in one season: fireflies over the forest herbs in summer, mushrooms in the marsh in autumn, a snow lotus on the high ledges in winter."
+      ]
+    },
+    {
+      "id": "herb_seasons",
+      "title": "Herbs and the Seasons",
+      "group": "world",
+      "body": [
+        "Some herbs grow only in one season. The inventory notes when and where a herb is richest, so you know where to go when the season turns."
+      ]
+    },
+    {
+      "id": "festivals",
+      "title": "Festivals",
+      "group": "world",
+      "body": [
+        "Some places hold a festival in a fixed month each year: the Lantern Festival in Qingshi, a spring ancestor festival at Azure Peak, a Mid-Autumn moon festival at Fallen Star Market. The journal lists the ones nearby.",
+        "During a festival people are warmer: chats and gifts earn more favor, some markets lower their prices, and special encounters appear in the streets."
+      ]
+    },
+    {
+      "id": "festival_activities",
+      "title": "Festival Activities",
+      "group": "world",
+      "body": [
+        "Ask a merchant during a festival and they may suggest something to do for it. Each festival's activity can be done once, and some give more to those with a keen spirit, a warm manner or a steady hand."
+      ]
+    },
+    {
+      "id": "region_familiarity",
+      "title": "Knowing a Region",
+      "group": "world",
+      "body": [
+        "Every day you spend exploring a region makes you more familiar with it. The world map and the explore menu show the days explored, how many of its happenings you have seen (\"seen N of M\") and when a deeper path will open.",
+        "Sights you have already met grow rarer, so fresh happenings surface in their place. Regions you have never visited are dimmed and marked Unexplored on the map.",
+        "A deeper path is a hidden place that opens after enough days in one region. You are told when it opens and it turns up on a later trip. Some regions also hide a discovery, a one-time find; a gleam on the map says one still waits, and merchants and the journal may pass on a rumor of it.",
+        "Once you are known in a region, its people bring you requests they would not trust to a stranger."
+      ]
+    },
+    {
+      "id": "qi_rich_regions",
+      "title": "Regions That Grow Richer",
+      "group": "world",
+      "body": [
+        "Deeds can leave a mark on the land. A region you have helped, or a seed you have planted there, may come to hold more qi, so every day spent cultivating there is worth more. The explore menu and the world map tell you when a region has been changed this way."
       ]
     }
   ]

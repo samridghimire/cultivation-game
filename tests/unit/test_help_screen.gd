@@ -162,3 +162,30 @@ func test_c097_tribulation_page_explains_the_readiness_line() -> void:
 	var text := " ".join(PackedStringArray(page["body"]))
 	for needle: String in ["Heavenly Tribulation ahead", "would not survive", "shield talismans", "defense technique", "armor", "Constitution", "heart demon"]:
 		assert_true(text.contains(needle), needle)
+
+
+## C-105: help pages sit in groups; every page has a known group and every group has pages.
+func test_help_pages_are_grouped() -> void:
+	var d := data()
+	assert_eq(d.help_groups.size(), 6)
+	var known := {}
+	for g in d.help_groups:
+		known[g["id"]] = 0
+	var last_index := -1
+	var ids: Array = d.help_groups.map(func(g): return g["id"])
+	for page in d.help_pages:
+		assert_true(known.has(page.get("group", "")), "page %s has a known group" % page["id"])
+		known[page["group"]] += 1
+		var idx := ids.find(page["group"])
+		assert_true(idx >= last_index, "page %s is listed with its group, in group order" % page["id"])
+		last_index = idx
+	for gid: String in known:
+		assert_gt(int(known[gid]), 0, "group %s has a page" % gid)
+
+
+func test_help_validation_catches_bad_groups() -> void:
+	var d := GameData.load_from_dir()
+	d.help_pages[0]["group"] = "nope"
+	d.help_groups.append({"id": "start", "title": "Again"})
+	d._validate_help()
+	assert_gt(d.load_errors.size(), 1)

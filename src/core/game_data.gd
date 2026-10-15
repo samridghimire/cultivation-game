@@ -110,6 +110,8 @@ var sect_mission_loss_cooldown_days: int = 0  # data/sect_missions.json loss_coo
 var sect_missions: Dictionary = {}  # id -> Dictionary (data/sect_missions.json)
 ## Help screen pages, in order: [{id, title, body: [paragraph]}] (data/help.json).
 var help_pages: Array = []
+## Help page groups in display order: [{id, title}] (data/help.json); empty when the file has none.
+var help_groups: Array = []
 ## Input action id -> display name for the help screen's Controls page.
 var help_action_names: Dictionary = {}
 ## Milestones in file order (data/milestones.json, Milestones).
@@ -314,6 +316,7 @@ func _load(dir: String) -> void:
 
 	var help := _read(dir, "help.json")
 	help_pages = help.get("pages", [])
+	help_groups = help.get("groups", [])
 	help_action_names = help.get("action_names", {})
 
 	milestones = _read(dir, "milestones.json").get("milestones", [])
@@ -755,6 +758,14 @@ func _validate_milestones() -> void:
 
 func _validate_help() -> void:
 	var ids := {}
+	var group_ids := {}
+	for group in help_groups:
+		if not group is Dictionary or String(group.get("id", "")) == "" or String(group.get("title", "")) == "":
+			load_errors.append("help.json group needs an id and a title: %s" % [group])
+			continue
+		if group_ids.has(group["id"]):
+			load_errors.append("help.json has a duplicate group id '%s'" % group["id"])
+		group_ids[group["id"]] = true
 	for page in help_pages:
 		if not page is Dictionary or String(page.get("id", "")) == "" or String(page.get("title", "")) == "":
 			load_errors.append("help.json page needs an id and a title: %s" % [page])
@@ -762,6 +773,8 @@ func _validate_help() -> void:
 		if ids.has(page["id"]):
 			load_errors.append("help.json has a duplicate page id '%s'" % page["id"])
 		ids[page["id"]] = true
+		if not help_groups.is_empty() and not group_ids.has(page.get("group", "")):
+			load_errors.append("help.json page '%s' needs a group naming a listed group id" % page["id"])
 		var body: Variant = page.get("body", [])
 		if not body is Array or (body as Array).is_empty() or (body as Array).any(func(p): return not p is String):
 			load_errors.append("help.json page '%s' needs a non-empty body of strings" % page["id"])
