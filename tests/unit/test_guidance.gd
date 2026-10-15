@@ -1039,14 +1039,14 @@ func test_bare_rogue_gets_first_combat_hint_instead() -> void:
 	var c := _fresh()
 	c.sect = {}
 	c.techniques = {}
-	assert_true(Guidance.fair_fights(c, data(), {}, c.age_days, "qingshi_village").is_empty())
+	assert_true(Guidance.fair_fights(c, data(), {"chore_boar_done": true}, c.age_days, "qingshi_village").is_empty())
 	var hint := Guidance.first_combat_hint(c, data(), "qingshi_village")
 	var lines: Array[String] = []
-	for e in Guidance.journal(c, data(), {}, c.age_days, "qingshi_village"):
+	for e in Guidance.journal(c, data(), {"chore_boar_done": true}, c.age_days, "qingshi_village"):
 		if e["section"] == "Fights you can win":
 			lines.append(String(e["text"]))
 	var elsewhere := false
-	for e in Guidance.journal(c, data(), {}, c.age_days, "qingshi_village"):
+	for e in Guidance.journal(c, data(), {"chore_boar_done": true}, c.age_days, "qingshi_village"):
 		elsewhere = elsewhere or (e["section"] != "Fights you can win" and e["text"] == hint)
 	assert_eq(lines, [hint] if hint != "" and not elsewhere else [])
 	assert_true(hint == "" or elsewhere or lines.size() == 1)
@@ -1131,3 +1131,20 @@ func test_pill_saving_goal_skipped_when_held_or_other_realm() -> void:
 	fe.realm_index = 2
 	assert_false(_has(Guidance.goals(fe, data(), {}), "Save for"))
 	assert_eq(Guidance.next_realm_pill(_qr(6, 0), data()).get("id", ""), "foundation_establishment_pill")
+
+func _deed_texts(c: CharacterData, flags: Dictionary) -> Array:
+	var out: Array = []
+	for f in Guidance.fair_fights(c, data(), flags, c.age_days, "qingshi_village"):
+		if f["kind"] == "deed":
+			out.append(String(f["text"]))
+	return out
+
+
+func test_fair_fights_include_open_chore_fights() -> void:
+	var c := _fighter()
+	c.sect = {}
+	var texts := _deed_texts(c, {})
+	assert_eq(texts.size(), 1)
+	assert_true(String(texts[0]).begins_with("Headman Zhou: Drive off the wild boar"))
+	assert_true(_deed_texts(c, {"chore_boar_done": true}).is_empty(), "done chore is gone")
+

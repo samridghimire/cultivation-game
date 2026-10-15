@@ -950,8 +950,8 @@ static func _fair_fight_entries(out: Array[Dictionary], c: CharacterData, data: 
 
 
 ## Up to FAIR_FIGHTS_MAX fights `c` can take now with a win chance >= FAIR_FIGHT_MIN_CHANCE, best
-## chance first: [{text, chance, kind}] with kind "mission" | "bounty". Rates at most
-## FAIR_FIGHT_MAX_RATED candidates (each rating is 40 simulated fights): missions first, then bounties.
+## chance first: [{text, chance, kind}] with kind "mission" | "deed" | "bounty". Rates at most
+## FAIR_FIGHT_MAX_RATED candidates (each rating is 40 simulated fights): missions, open chores, then bounties.
 static func fair_fights(c: CharacterData, data: GameData, flags: Dictionary, today: int, region_id: String) -> Array[Dictionary]:
 	var found: Array[Dictionary] = []
 	var rated := 0
@@ -964,6 +964,20 @@ static func fair_fights(c: CharacterData, data: GameData, flags: Dictionary, tod
 			continue
 		rated += 1
 		_rate_fight(found, c, data, enemy, "mission", "Sect mission: %s" % mission["name"])
+	for place: Dictionary in data.regions.get(region_id, {}).get("places", []):
+		if String(place.get("type", "")) != "deed_giver" or String(place.get("deed_context", "")) == "":
+			continue
+		var hidden := String(place.get("hidden_by_flag", ""))
+		if hidden != "" and flags.get(hidden, false):
+			continue
+		for deed in Deeds.available(data, String(place["deed_context"]), flags):
+			if rated >= FAIR_FIGHT_MAX_RATED:
+				break
+			var deed_enemy: Dictionary = data.enemies.get(String(deed.get("enemy", "")), {})
+			if deed_enemy.is_empty() or Deeds.check(c, data, deed, flags, today) != "":
+				continue
+			rated += 1
+			_rate_fight(found, c, data, deed_enemy, "deed", "%s: %s" % [place.get("display_name", "Chore"), deed["name"]])
 	var candidates: Array[Dictionary] = []
 	var hunt := Bounties.active(c, data, today)
 	if not hunt.is_empty():
