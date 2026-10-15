@@ -1011,3 +1011,63 @@ func test_every_region_with_a_merchant_sells_a_fighting_style() -> void:
 			continue
 		var found := Guidance.first_combat_manual(c, d, region_id)
 		assert_true(String(found.get("merchant", "")) != "", "%s: no merchant sells a combat manual (%s)" % [region_id, found])
+
+
+# --- Fights you can win (GUIDE-021) ---------------------------------------------
+
+func _fighter() -> CharacterData:
+	var c := new_character()
+	c.realm_index = 1
+	c.stage = 3
+	c.sect = {"id": "azure_cloud_sect", "rank": 0, "contribution": 0, "spent": 0}
+	c.techniques = {"iron_fist": {"level": 3, "xp": 0.0}, "stone_skin": {"level": 2, "xp": 0.0}}
+	return c
+
+
+func test_fair_fights_are_even_or_better_sorted_and_capped() -> void:
+	var c := _fighter()
+	var fights := Guidance.fair_fights(c, data(), {}, c.age_days, "qingshi_village")
+	assert_true(fights.size() <= Guidance.FAIR_FIGHTS_MAX)
+	for i in fights.size():
+		assert_true(float(fights[i]["chance"]) >= Guidance.FAIR_FIGHT_MIN_CHANCE)
+		if i > 0:
+			assert_true(float(fights[i - 1]["chance"]) >= float(fights[i]["chance"]))
+	assert_eq(fights, Guidance.fair_fights(c, data(), {}, c.age_days, "qingshi_village"))
+
+
+func test_bare_rogue_gets_first_combat_hint_instead() -> void:
+	var c := _fresh()
+	c.sect = {}
+	c.techniques = {}
+	assert_true(Guidance.fair_fights(c, data(), {}, c.age_days, "qingshi_village").is_empty())
+	var hint := Guidance.first_combat_hint(c, data(), "qingshi_village")
+	var lines: Array[String] = []
+	for e in Guidance.journal(c, data(), {}, c.age_days, "qingshi_village"):
+		if e["section"] == "Fights you can win":
+			lines.append(String(e["text"]))
+	var elsewhere := false
+	for e in Guidance.journal(c, data(), {}, c.age_days, "qingshi_village"):
+		elsewhere = elsewhere or (e["section"] != "Fights you can win" and e["text"] == hint)
+	assert_eq(lines, [hint] if hint != "" and not elsewhere else [])
+	assert_true(hint == "" or elsewhere or lines.size() == 1)
+
+
+func test_fair_fights_skip_missions_on_cooldown() -> void:
+	var c := _fighter()
+	var kinds: Array = Guidance.fair_fights(c, data(), {}, c.age_days, "qingshi_village").map(func(f: Dictionary) -> String: return f["kind"])
+	assert_true(kinds.has("mission"), "baseline lists a mission")
+	for id in data().sect_missions:
+		c.mission_cooldowns[id] = c.age_days + 5
+	for f in Guidance.fair_fights(c, data(), {}, c.age_days, "qingshi_village"):
+		assert_true(f["kind"] != "mission")
+
+
+func test_active_hunt_shows_as_your_hunt() -> void:
+	var c := _fighter()
+	c.sect = {}
+	c.realm_index = 3
+	c.stage = 5
+	var id: String = data().bounties.keys()[0]
+	Bounties.take(c, data(), id, c.age_days)
+	var texts: Array = Guidance.fair_fights(c, data(), {}, c.age_days, String(data().bounties[id]["region"])).map(func(f: Dictionary) -> String: return f["text"])
+	assert_true(texts.any(func(t: String) -> bool: return t.begins_with("Your hunt:")), str(texts))

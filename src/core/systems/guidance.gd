@@ -13,6 +13,9 @@ const NEWCOMER_MAX_REALM := 1
 const TECHNIQUE_HINT := "Learn a technique from a manual. Merchants sell them."
 const ELDER_MO_FLAG := "talked_elder_mo"
 const BETTER_QI_RATIO := 1.5
+const FAIR_FIGHTS_MAX := 3
+const FAIR_FIGHT_MAX_RATED := 8
+const FAIR_FIGHT_MIN_CHANCE := 0.7  # "Even" or better (Combat.label_for_chance)
 const CHORE_REGION := "qingshi_village"
 
 
@@ -869,6 +872,7 @@ static func journal(c: CharacterData, data: GameData, flags: Dictionary, today: 
 	_other_region_event_entries(out, c, data, today, region_id, events)
 	_festival_entries(out, data, today, region_id, events)
 	_opportunity_entries(out, c, data, flags, today, region_id)
+	_fair_fight_entries(out, c, data, flags, today, region_id)
 	for npc in _region_people(c, data, people, favor, region_id, today, "pointers").slice(0, POINTER_JOURNAL_MAX):
 		_add(out, "Opportunities", "Ask %s for pointers (%s)" % [npc.name, _region_name(data, region_id)], "normal")
 	for line in Letters.request_lines(c, data, people, today):
@@ -881,6 +885,69 @@ static func journal(c: CharacterData, data: GameData, flags: Dictionary, today: 
 		_add(out, "Commissions", Commissions.describe(c, data, order, today), "warning" if Commissions.days_left(order, today) <= 7 else "normal")
 	_milestone_entries(out, c, data, flags, clan)
 	return out
+
+
+## Journal section "Fights you can win" (GUIDE-021): fair fights, or the first-fighting-style hint when
+## there are none and no combat technique is known.
+static func _fair_fight_entries(out: Array[Dictionary], c: CharacterData, data: GameData, flags: Dictionary, today: int, region_id: String) -> void:
+	var fights := fair_fights(c, data, flags, today, region_id)
+	for fight in fights:
+		_add(out, "Fights you can win", String(fight["text"]), "normal")
+	if fights.is_empty() and not Techniques.knows_kind(c, data, "combat"):
+		var hint := first_combat_hint(c, data, region_id)
+		var shown := false
+		for e in out:
+			shown = shown or e["text"] == hint
+		if hint != "" and not shown:
+			_add(out, "Fights you can win", hint, "dim")
+
+
+## Up to FAIR_FIGHTS_MAX fights `c` can take now with a win chance >= FAIR_FIGHT_MIN_CHANCE, best
+## chance first: [{text, chance, kind}] with kind "mission" | "bounty". Rates at most
+## FAIR_FIGHT_MAX_RATED candidates (each rating is 40 simulated fights): missions first, then bounties.
+static func fair_fights(c: CharacterData, data: GameData, flags: Dictionary, today: int, region_id: String) -> Array[Dictionary]:
+	var found: Array[Dictionary] = []
+	var rated := 0
+	for id in Sects.available_missions(c, data, flags):
+		if rated >= FAIR_FIGHT_MAX_RATED:
+			break
+		var mission: Dictionary = data.sect_missions[id]
+		var enemy: Dictionary = data.enemies.get(String(mission.get("enemy", "")), {})
+		if enemy.is_empty() or Sects.mission_cooldown_left(c, id) > 0 or Sects.check_mission(c, data, id, flags) != "":
+			continue
+		rated += 1
+		_rate_fight(found, c, data, enemy, "mission", "Sect mission: %s" % mission["name"])
+	var candidates: Array[Dictionary] = []
+	var hunt := Bounties.active(c, data, today)
+	if not hunt.is_empty():
+		candidates.append({"bounty": hunt, "label": "Your hunt"})
+	else:
+		for b in Bounties.offers(c, data, today, region_id):
+			var where := String(b["region"])
+			if (where == region_id or Exploration.is_nearby(data, region_id, where)) and Bounties.check_take(c, data, String(b["id"]), today) == "":
+				candidates.append({"bounty": b, "label": "Bounty"})
+				break
+	for cand in candidates:
+		if rated >= FAIR_FIGHT_MAX_RATED:
+			break
+		var b: Dictionary = cand["bounty"]
+		var enemy: Dictionary = data.enemies.get(String(b.get("enemy", "")), {})
+		if enemy.is_empty():
+			continue
+		rated += 1
+		_rate_fight(found, c, data, enemy, "bounty", "%s: %s in %s" % [cand["label"], enemy.get("name", b["enemy"]), _region_name(data, String(b["region"]))])
+	found.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		if not is_equal_approx(float(a["chance"]), float(b["chance"])):
+			return float(a["chance"]) > float(b["chance"])
+		return String(a["text"]) < String(b["text"]))
+	return found.slice(0, FAIR_FIGHTS_MAX)
+
+
+static func _rate_fight(found: Array[Dictionary], c: CharacterData, data: GameData, enemy: Dictionary, kind: String, label: String) -> void:
+	var chance := Combat.win_chance(c, data, enemy)
+	if chance < FAIR_FIGHT_MIN_CHANCE:
+		return
+	found.append({"text": "%s (%s, %d in 100)" % [label, Combat.label_for_chance(chance), roundi(chance * 100.0)], "chance": chance, "kind": kind})
 
 
 static func _add(out: Array[Dictionary], section: String, text: String, tone: String) -> void:
