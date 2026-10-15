@@ -1422,3 +1422,15 @@ func test_core_goal_ladder_ids_and_journal() -> void:
 	c.realm_index = 4
 	assert_eq(Guidance.goal_ladder_id(c), "")
 	assert_true(section_of.call().is_empty())
+
+
+## GUIDE-031: a hint that only repeats the goal is dropped.
+func test_drop_goal_echoes() -> void:
+	var hints := PackedStringArray(["Ask Elder Mo in Qingshi Village where to begin", "Visit the market"])
+	var kept := Guidance.drop_goal_echoes("Goal: Talk to Elder Mo in Qingshi Village", hints)
+	assert_eq(Array(kept), ["Visit the market"])
+	# the first word is ignored, so a goal without other capitalized words drops nothing
+	assert_eq(Array(Guidance.drop_goal_echoes("Goal: Win your first fight", hints)), Array(hints))
+	var qi := PackedStringArray(["Your Qi Refining is stalled.", "Qi is thin here."])
+	assert_eq(Array(Guidance.drop_goal_echoes("Goal: Reach Qi Refining", qi)), ["Qi is thin here."])
+	assert_eq(Array(Guidance.drop_goal_echoes("", hints)), Array(hints))

@@ -772,11 +772,42 @@ static func _newcomer_hints(c: CharacterData, data: GameData, flags: Dictionary,
 	return out
 
 
+## GUIDE-031: `hints` without the ones that only repeat the goal. The goal's capitalized words after
+## its first word ("Talk to Elder Mo" -> Elder, Mo) name its subject; a hint containing all of them
+## as whole words is dropped. A goal without such words drops nothing.
+static func drop_goal_echoes(goal: String, hints: PackedStringArray) -> PackedStringArray:
+	var text := goal.trim_prefix("Goal: ")
+	var key_words: PackedStringArray = []
+	var words := text.split(" ", false)
+	for i in range(1, words.size()):
+		var w := words[i].strip_edges()
+		if w != "" and w[0] == w[0].to_upper() and w[0] != w[0].to_lower():
+			key_words.append(w)
+	if key_words.is_empty():
+		return hints
+	var kept: PackedStringArray = []
+	for h in hints:
+		var hint_words := h.split(" ", false)
+		var echo := true
+		for k in key_words:
+			var found := false
+			for hw in hint_words:
+				if hw.trim_suffix(".").trim_suffix(",") == k:
+					found = true
+					break
+			if not found:
+				echo = false
+				break
+		if not echo:
+			kept.append(h)
+	return kept
+
+
 ## The newcomer ladder: {text, done} in order.
 static func first_goals(c: CharacterData, data: GameData, flags: Dictionary) -> Array[Dictionary]:
 	var stage_3 := c.realm_index > 1 or (c.realm_index == 1 and c.stage >= 2)
 	var rows: Array = [
-		["Talk to Elder Mo", bool(flags.get(ELDER_MO_FLAG, false))],
+		["Talk to Elder Mo in Qingshi Village", bool(flags.get(ELDER_MO_FLAG, false))],
 		["Learn your first technique", not c.techniques.is_empty()],
 		["Learn a fighting style", Techniques.knows_kind(c, data, "combat")],
 		["Reach Qi Refining", c.realm_index >= 1],
