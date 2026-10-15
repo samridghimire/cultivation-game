@@ -12,6 +12,10 @@ var heart_demon: Dictionary = {}
 ## realms.json tribulation_shield_scale (TRIB-001d): fraction of a shield talisman's
 ## combat value that holds against tribulation lightning.
 var tribulation_shield_scale := 1.0
+## realms.json failure_bonus / failure_bonus_max (FOUND-003): each failed breakthrough
+## adds failure_bonus to the next attempt, up to failure_bonus_max.
+var failure_bonus := 0.03
+var failure_bonus_max := 0.09
 var attributes: Array[Dictionary] = []
 var root_elements: Array[Dictionary] = []
 var root_grades: Array[Dictionary] = []
@@ -157,6 +161,8 @@ func _load(dir: String) -> void:
 		realms.append(RealmDef.from_dict(r))
 	heart_demon = realm_file.get("heart_demon", {})
 	tribulation_shield_scale = float(realm_file.get("tribulation_shield_scale", 1.0))
+	failure_bonus = float(realm_file.get("failure_bonus", 0.03))
+	failure_bonus_max = float(realm_file.get("failure_bonus_max", 0.09))
 
 	attributes.assign(_read(dir, "attributes.json").get("attributes", []))
 
@@ -343,6 +349,8 @@ func _read(dir: String, file_name: String) -> Dictionary:
 func _validate() -> void:
 	if realms.is_empty():
 		load_errors.append("No realms defined")
+	if failure_bonus < 0.0 or failure_bonus > failure_bonus_max or failure_bonus_max > 0.5:
+		load_errors.append("realms.json needs 0 <= failure_bonus <= failure_bonus_max <= 0.5")
 	for realm in realms:
 		if realm.description.strip_edges() == "":
 			load_errors.append("Realm '%s' has no description" % realm.id)

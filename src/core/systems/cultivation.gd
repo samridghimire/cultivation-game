@@ -140,6 +140,10 @@ static func chance_breakdown(c: CharacterData, data: GameData) -> Array[Dictiona
 		{"label": "Fortune %d" % c.attribute("fortune"), "value": (c.attribute("fortune") - 10) * 0.01},
 		{"label": "Dao insights", "value": Dao.breakthrough_bonus(c, data)},
 		{"label": "Bloodline", "value": Bloodlines.bonus(c, data, "breakthrough")},
+		{
+			"label": "Lessons of %d failed %s" % [c.breakthrough_failures, "attempt" if c.breakthrough_failures == 1 else "attempts"],
+			"value": minf(data.failure_bonus * c.breakthrough_failures, data.failure_bonus_max),
+		},
 	]
 	for term in terms:
 		if not is_zero_approx(float(term["value"])):
@@ -187,7 +191,9 @@ static func attempt_breakthrough(c: CharacterData, data: GameData, rng: RandomNu
 		c.realm_index += 1
 		c.stage = 0
 		c.qi = 0.0
+		c.breakthrough_failures = 0
 	else:
+		c.breakthrough_failures += 1
 		c.qi *= 1.0 - next.failure_qi_loss
 		if trib.is_empty():
 			injury = Injuries.roll(c, data, "breakthrough_failure", rng)

@@ -60,7 +60,7 @@ static func roll(data: GameData, active: Array, total_days: int, rng: RandomNumb
 			continue
 		var region := String(regions[roller.randi_range(0, regions.size() - 1)])
 		var days := roller.randi_range(int(def.get("min_days", 1)), maxi(int(def.get("min_days", 1)), int(def.get("max_days", 1))))
-		var instance := {"id": event_id, "region": region, "start_day": total_days, "end_day": total_days + days, "done": false}
+		var instance := {"id": event_id, "region": region, "start_day": total_days, "end_day": total_days + days, "done": false, "activity_done": false}
 		active.append(instance)
 		started.append(instance)
 	return started

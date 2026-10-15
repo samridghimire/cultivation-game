@@ -257,3 +257,55 @@ func test_progress_text_names_the_next_stage() -> void:
 	c.stage = data().realms[1].stage_count() - 1
 	c.qi = 1.0
 	assert_true(Cultivation.progress_text(c, data()).ends_with("qi to the bottleneck"))
+
+
+func _bottleneck_character() -> CharacterData:
+	var c := new_character()
+	c.realm_index = 1
+	c.stage = data().realms[1].stage_count() - 1
+	c.qi = data().realms[1].qi_required(c.stage)
+	return c
+
+
+func test_failure_lessons_add_no_term_at_zero_failures() -> void:
+	var c := _bottleneck_character()
+	for term in Cultivation.chance_breakdown(c, data()):
+		assert_false(String(term["label"]).begins_with("Lessons"))
+
+
+func test_each_failure_adds_the_bonus_and_it_caps() -> void:
+	var c := _bottleneck_character()
+	var base := Cultivation.breakthrough_chance(c, data())
+	c.breakthrough_failures = 1
+	assert_almost_eq(Cultivation.breakthrough_chance(c, data()), base + 0.03, 0.0001)
+	var labels: Array[String] = []
+	for term in Cultivation.chance_breakdown(c, data()):
+		labels.append(String(term["label"]))
+	assert_true(labels.has("Lessons of 1 failed attempt"))
+	c.breakthrough_failures = 4
+	assert_almost_eq(Cultivation.breakthrough_chance(c, data()), base + 0.09, 0.0001)
+
+
+func test_failed_attempt_counts_and_success_resets() -> void:
+	var c := _bottleneck_character()
+	var rng := seeded_rng()
+	var tries := 0
+	while tries < 200:
+		c.qi = data().realms[1].qi_required(c.stage)
+		var before := c.breakthrough_failures
+		var result := Cultivation.attempt_breakthrough(c, data(), rng)
+		tries += 1
+		if result["success"]:
+			assert_eq(c.breakthrough_failures, 0)
+			return
+		assert_eq(c.breakthrough_failures, before + 1)
+	assert_true(false, "never succeeded")
+
+
+func test_breakthrough_failures_round_trip() -> void:
+	var c := new_character()
+	c.breakthrough_failures = 3
+	assert_eq(CharacterData.from_dict(c.to_dict()).breakthrough_failures, 3)
+	var d := c.to_dict()
+	d.erase("breakthrough_failures")
+	assert_eq(CharacterData.from_dict(d).breakthrough_failures, 0)
