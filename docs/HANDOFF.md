@@ -2,6 +2,17 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-10-15 (planner, 00:10 UTC)
+- 18 tasks landed since the last plan (GIFT-002, FEST-004, RUMOR-002, EFF-001, SECRET-003, LETTER-005, QI-002, MENTOR-002,
+  WU-102/109/111/112/114/115, C-068/069, QA-059/060). C-071 closed (MENTOR-002 did the data change). Claimed: C-063, QA-061.
+  A stale `claude/RUMOR-002-*` claim exists although RUMOR-002 is on main (the backlog still listed it); harmless.
+- Reviewer (to 597d486) filed nothing; notes became WU-117 and FEST-005.
+- Theme "your first fighting style": the curious player never learns a combat technique, so pointers refuse and Mist Wolf
+  fights are bare (0% vs 81-99% with Iron Fist + Stone Skin). Iron Fist is 15 stones at the Wandering Merchant, but the
+  only hint vanishes once Elder Mo teaches breathing. GUIDE-019 (spec file) + MENTOR-003, WU-118/119/120, C-072, QA-062.
+- The owner's three urgent questions (pacing, first fights, ascension) are still open; C-009 has an update with the
+  default now being built (keep enemies, surface the manual).
+
 ## State on 2026-10-09 (planner, 20:10 UTC)
 - 17 tasks landed since 18:10 (LETTER-002/003b, SHOP-001, RUMOR-001, QI-001, WU-100/103/106/107/108/110, C-061/064/066/067,
   QA-048/058). Claimed: GIFT-002, FEST-004, C-068, QA-059 (all < 1h). Reviewer (to 51025b4) filed no P0; its notes became

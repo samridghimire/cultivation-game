@@ -2,6 +2,24 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-14 [MENTOR-002] Elders give pointers sooner, and say when you first need a technique manual.
+- 2026-10-14 [C-068] Planting the valley guardian's seed makes Azure Peak's qi richer.
+- 2026-10-14 [WU-114] A banner and a map note when a secret realm is about to open.
+- 2026-10-14 [QI-002] Qi-rich regions count for the journal's best spot and for NPC and child cultivation too.
+- 2026-10-14 [LETTER-005] Family living in your own region no longer write you letters.
+- 2026-10-09 [C-069] The Peach Blossom Grotto opens in the second year, and a new sword inheritance appears in Fallen Star Market.
+- 2026-10-09 [SECRET-003] Word spreads about a month before a secret realm opens.
+- 2026-10-09 [WU-112] Screenshot pass; the shop title no longer overflows with renown and a friend's price.
+- 2026-10-09 [QA-060] Found why pointers never fired: favor took a year and newcomers knew no technique.
+- 2026-10-09 [WU-115] The People list says who asked you for something and how long is left.
+- 2026-10-09 [WU-111] Merchant gossip opens in a window you can read.
+- 2026-10-09 [EFF-001] Every effect block in the data is checked; one effect can set several flags.
+- 2026-10-09 [RUMOR-002] Gossip tidy-up; the journal says to ask a merchant to join a festival.
+- 2026-10-09 [WU-109] The map and HUD say why a region's qi is richer.
+- 2026-10-09 [WU-102] The shop and map show a friend's price and how long it lasts.
+- 2026-10-09 [QA-059] Checked: the message log carries about 25 lines a month in the first year, no topic floods.
+- 2026-10-09 [FEST-004] Festival goods are sold only at fitting stalls.
+- 2026-10-09 [GIFT-002] Gift-taste tidy-up: the taste hint threshold lives in data.
 - 2026-10-09 [WU-100] Join the festival from the merchant menu.
 - 2026-10-09 [WU-108] The gift list remembers a taste hint someone let slip.
 - 2026-10-09 [QI-001] Some deeds leave a region richer in qi, starting with the valley guardian's seed on Azure Peak.
