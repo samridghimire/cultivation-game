@@ -20,9 +20,13 @@ func _median(values: Array) -> float:
 func _run() -> void:
 	var args := OS.get_cmdline_user_args()
 	var curious := args.has("--curious")
+	var trace := args.has("--trace")  # QA-065: print each month's state and every fight
+	var only_seed := 0  # --seed=N runs just that seed
 	var nums: Array[int] = []
 	for a in args:
-		if a != "--curious":
+		if a.begins_with("--seed="):
+			only_seed = int(a.substr(7))
+		elif a != "--curious" and a != "--trace":
 			nums.append(int(a))
 	var seeds := nums[0] if nums.size() > 0 else 30
 	var months := nums[1] if nums.size() > 1 else 12
@@ -44,8 +48,29 @@ func _run() -> void:
 	var zero_months := 0
 	print("First-hour sim%s: %d seeds, %d months" % [" (curious player)" if curious else "", seeds, months])
 	print("  seed  QR1  QR3  QR9  sect  injuries  won  lost  fled  lines/month")
-	for s in range(1, seeds + 1):
-		var r: Dictionary = FirstHour.play(gs, clock, s, months, curious)
+	for s in range(maxi(1, only_seed), (only_seed if only_seed > 0 else seeds) + 1):
+		var hook := Callable()
+		var fight_notes: Array = []
+		var on_start := func(enemy: Dictionary) -> void:
+			fight_notes.append("%s%s (odds %.0f%%)" % [enemy.get("id", enemy.get("name", "?")), " [spar]" if enemy.get("spar", false) else "", 100.0 * Combat.win_chance(gs.player, gs.data, enemy)])
+		var on_end := func(_n: String, victory: bool, _l: PackedStringArray) -> void:
+			fight_notes[fight_notes.size() - 1] += " -> " + ("won" if victory else "lost")
+		if trace:
+			var bus: Node = root.get_node("EventBus")
+			bus.combat_started.connect(on_start)
+			bus.combat_finished.connect(on_end)
+			hook = func(month: int) -> void:
+				var p: CharacterData = gs.player
+				var techs: Array = []
+				for t: String in p.techniques:
+					techs.append("%s:%s" % [t, str(p.techniques[t])])
+				print("    m%02d day %d %s %s stones %d techs %s hint: %s | fights: %s" % [month + 1, clock.total_days, gs.current_region, Cultivation.realm_label(p, gs.data), p.item_count("spirit_stone"), str(techs), str(Guidance.hints(p, gs.data, 1.0, 5, gs.npcs, gs.world_flags, gs.current_region, clock.total_days, gs.npc_favor)), str(fight_notes)])
+				fight_notes.clear()
+		var r: Dictionary = FirstHour.play(gs, clock, s, months, curious, hook)
+		if trace:
+			var bus2: Node = root.get_node("EventBus")
+			bus2.combat_started.disconnect(on_start)
+			bus2.combat_finished.disconnect(on_end)
 		var total := 0
 		for k: int in r["kinds"]:
 			kinds_all.append(k)
