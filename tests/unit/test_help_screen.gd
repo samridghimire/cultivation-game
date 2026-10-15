@@ -18,6 +18,20 @@ func test_help_pages_load_and_validate() -> void:
 		assert_true(ids.has(id), "help page " + id)
 
 
+func test_rival_moods_and_goals_pages() -> void:
+	var by_id := {}
+	for page in data().help_pages:
+		by_id[page["id"]] = page
+	assert_true(by_id.has("rival_attitudes"), "C-099 rival moods page")
+	assert_true(by_id.has("goals"), "C-104 goals page")
+	var rival := " ".join(by_id["rival_attitudes"]["body"])
+	for word: String in ["friendly", "bitter", "bout", "amends"]:
+		assert_true(rival.contains(word), "rival page mentions " + word)
+	var goals := " ".join(by_id["goals"]["body"])
+	for word: String in ["Foundation", "Core Formation", "Goal done", "suggestions"]:
+		assert_true(goals.contains(word), "goals page mentions " + word)
+
+
 func test_control_rows_list_keyboard_and_gamepad() -> void:
 	var rows := HelpScreen.control_rows(
 		{"interact": [KEY_E], "pause_menu": [KEY_ESCAPE]},

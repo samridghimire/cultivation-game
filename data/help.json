@@ -452,6 +452,24 @@
         "Once you have met them, the journal's Household section lists \"Rival: <name>, <realm> (<where you stand>)\". Word of their major breakthroughs reaches you.",
         "Break through to a higher realm than theirs and you have surpassed them: a line in the message log marks the day and your milestones record it. The same realm never counts, whatever the stage. A rival you surpass works harder, and can overtake you again."
       ]
+    },
+    {
+      "id": "rival_attitudes",
+      "title": "Rival Moods",
+      "body": [
+        "Your rival is proud, friendly or bitter toward you, and the journal's rival line says which. Gifts and bouts you win warm them. Humiliating or robbing them, and some answers in encounters, embitter them; a bitter rivalry shows once their grudge grows deep enough.",
+        "A rival always accepts a bout, unless they are bitter: then they will not fight you on friendly terms, and the challenge is greyed out.",
+        "Make amends from their menu (for spirit stones) to clear a grudge. When their mood changes, a line in the message log tells you."
+      ]
+    },
+    {
+      "id": "goals",
+      "title": "Goals",
+      "body": [
+        "The journal (J) keeps goal ladders for each stage of your life: First goals as a newcomer, Foundation goals in Foundation Establishment, and Core Formation goals in Core Formation. The next unfinished step is marked.",
+        "The HUD's Goal line shows the next step, and a \"Goal done\" banner appears when you finish one, naming what comes after.",
+        "Goals are only suggestions, never requirements. Skip any of them and play your own way."
+      ]
     }
   ]
 }
