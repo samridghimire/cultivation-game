@@ -610,4 +610,38 @@ Bounty-hunter sim: 10 seeds, 12 months, Qi Refining layer 4, iron_back_boar_boun
     10         3          18     120          10.0         0            0
 Hunt weeks per bounty claimed: 4.1; fights won 48, lost 8 (86% won)
 Gathering in misty_forest: 4.0 stones/week (best place). One bounty = 10.12 weeks of gather income; a week hunting earns 9.7 stones.
+Best gathering anywhere for this realm: qingshi_village at 5.3 stones/week (a bounty week earns 1.9x that).
+
+Bounty-hunter sim: 10 seeds, 12 months, Qi Refining layer 4, drunk_bully_bounty in qingshi_village (reward 30 stones)
+  seed  bounties  hunt weeks  stones  stones/month  injuries  lives spent
+     1         4          12     120          10.0         0            0
+     2         4           9     120          10.0         0            0
+     3         4           9     120          10.0         0            0
+     4         4           4     120          10.0         0            0
+     5         4          18     120          10.0         0            0
+     6         4          14     120          10.0         0            0
+     7         4           6     120          10.0         0            0
+     8         4           5     120          10.0         0            0
+     9         4           7     120          10.0         0            0
+    10         4          11     120          10.0         0            0
+Hunt weeks per bounty claimed: 2.4; fights won 51, lost 0 (100% won)
+Gathering in qingshi_village: 5.3 stones/week (best place). One bounty = 5.70 weeks of gather income; a week hunting earns 12.6 stones.
+Best gathering anywhere for this realm: qingshi_village at 5.3 stones/week (a bounty week earns 2.4x that).
+
+Bounty-hunter sim: 10 seeds, 12 months, Core Formation layer 1, sword_madman_bounty in fallen_star_market (reward 220 stones)
+  seed  bounties  hunt weeks  stones  stones/month  injuries  lives spent
+     1         3          12     660          55.0         0            0
+     2         3          11     660          55.0         0            0
+     3         3          10     660          55.0         0            0
+     4         3           4     660          55.0         0            0
+     5         3           7     660          55.0         0            0
+     6         3          13     660          55.0         0            0
+     7         3           9     660          55.0         0            0
+     8         3           7     660          55.0         0            0
+     9         3           6     660          55.0         0            0
+    10         3          10     660          55.0         0            0
+Hunt weeks per bounty claimed: 3.0; fights won 43, lost 0 (100% won)
+Gathering in fallen_star_market: 1.8 stones/week (best place). One bounty = 123.59 weeks of gather income; a week hunting earns 74.2 stones.
+Best gathering anywhere for this realm: myriad_peaks_ridge at 5.6 stones/week (a bounty week earns 13.2x that).
+
 
