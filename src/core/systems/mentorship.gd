@@ -65,7 +65,7 @@ static func check_pointers(c: CharacterData, npc: CharacterData, favor: int, dat
 		return "%s is too young to teach anyone." % npc.name
 	if not is_senior(c, npc):
 		return "%s is no stronger than you; there is nothing to learn from them yet." % npc.name
-	var min_favor := int(rules.get("min_favor", 0))
+	var min_favor := _min_favor(c, npc, rules)
 	if favor < min_favor:
 		return "%s does not know you well enough (favor %d/%d). Chats and gifts raise it.%s" % [npc.name, favor, min_favor, _taste_note(data, flags, npc)]
 	var left := cooldown_left(c, "pointers:" + npc.id, int(rules.get("cooldown_days", 0)), today)
@@ -130,7 +130,7 @@ static func check_spar(c: CharacterData, npc: CharacterData, favor: int, data: G
 		return "%s does not cultivate." % npc.name
 	if absi(npc.realm_index - c.realm_index) > int(rules.get("max_realm_gap", 1)):
 		return "%s would not cross hands with someone so far from their own realm." % npc.name
-	var min_favor := int(rules.get("min_favor", 0))
+	var min_favor := _min_favor(c, npc, rules)
 	if favor < min_favor:
 		return "%s does not know you well enough (favor %d/%d)." % [npc.name, favor, min_favor]
 	var left := cooldown_left(c, "spar:" + npc.id, int(rules.get("cooldown_days", 0)), today)
@@ -169,6 +169,14 @@ static func after_spar(c: CharacterData, npc: CharacterData, data: GameData, won
 	return {"favor": int(rules.get("win_favor", 0)) if won else 0, "practiced": practiced, "levels": levels, "days": int(rules.get("days", 1))}
 
 
+## Favor `npc` needs to teach or spar with `c`: `same_sect_min_favor` for a fellow sect member.
+static func _min_favor(c: CharacterData, npc: CharacterData, rules: Dictionary) -> int:
+	var base := int(rules.get("min_favor", 0))
+	if c.is_rogue() or npc.is_rogue() or npc.sect.get("id") != c.sect.get("id"):
+		return base
+	return int(rules.get("same_sect_min_favor", base))
+
+
 ## Load errors for data/family.json `mentorship`.
 static func validate(data: GameData) -> PackedStringArray:
 	var errors: PackedStringArray = []
@@ -180,6 +188,8 @@ static func validate(data: GameData) -> PackedStringArray:
 				errors.append("family.json mentorship.%s.%s must be >= 0" % [kind, key])
 		if int(rules.get("min_favor", 0)) > 100:
 			errors.append("family.json mentorship.%s.min_favor must be <= 100" % kind)
+		if int(rules.get("same_sect_min_favor", 0)) > int(rules.get("min_favor", 0)):
+			errors.append("family.json mentorship.%s.same_sect_min_favor must be <= min_favor" % kind)
 	if block.has("pointers") and float(block["pointers"].get("shared_multiplier", 1.0)) < 1.0:
 		errors.append("family.json mentorship.pointers.shared_multiplier must be >= 1")
 	return errors

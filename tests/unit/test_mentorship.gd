@@ -270,3 +270,25 @@ func test_pointer_refusals_say_what_to_do() -> void:
 	var flags := {"taste_%s_dew_grass" % p[1].id: 1}
 	var liked := Mentorship.check_pointers(p[0], p[1], 5, d, 0, "", flags)
 	assert_true(liked.contains("Chats and gifts raise it.") and liked.contains("They are fond of"), liked)
+
+
+func test_same_sect_seniors_need_less_favor() -> void:
+	var p := _pair()
+	var d := data()
+	var c: CharacterData = p[0]
+	var npc: CharacterData = p[1]
+	c.sect = {"id": "azure_cloud", "rank": 0, "contribution": 0}
+	npc.sect = {"id": "azure_cloud", "rank": 3, "contribution": 0}
+	assert_eq(Mentorship.check_pointers(c, npc, 5, d, 0), "")
+	assert_eq(Mentorship.check_spar(c, npc, 5, d, 0), "")
+	assert_true(Mentorship.check_pointers(c, npc, 2, d, 0).contains("favor 2/5"))
+	assert_true(Mentorship.check_spar(c, npc, 2, d, 0).contains("favor 2/5"))
+	npc.sect = {"id": "blood_lotus", "rank": 3, "contribution": 0}
+	assert_true(Mentorship.check_pointers(c, npc, 5, d, 0).contains("favor 5/10"))
+	assert_true(Mentorship.check_spar(c, npc, 5, d, 0).contains("favor 5/10"))
+	npc.sect = {"id": "azure_cloud", "rank": 3, "contribution": 0}
+	c.sect = {}
+	assert_true(Mentorship.check_pointers(c, npc, 5, d, 0).contains("favor 5/10"))
+	d.family["mentorship"]["pointers"]["same_sect_min_favor"] = 50
+	assert_true(str(Mentorship.validate(d)).contains("same_sect_min_favor"))
+	d.family["mentorship"]["pointers"]["same_sect_min_favor"] = 5
