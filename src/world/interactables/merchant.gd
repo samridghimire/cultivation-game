@@ -33,7 +33,9 @@ func get_options() -> Array[Dictionary]:
 
 ## Posts the gossip and shows it in a window you can read (WU-111).
 func _ask_rumors() -> void:
-	EventBus.gossip_requested.emit(GameState.hear_rumors())
+	var lines := GameState.hear_rumors()
+	if not lines.is_empty():  # empty means _can_act refused and already posted why
+		EventBus.gossip_requested.emit(lines)
 
 
 ## "<activity> (festival)" for the festival activity under way here (WU-100); disabled with the

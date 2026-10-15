@@ -31,7 +31,7 @@ func _init() -> void:
 
 
 static func window_text(lines: PackedStringArray) -> String:
-	if lines.is_empty():
+	if lines.is_empty():  # defensive: the merchant no longer opens the window for a refusal (WU-117)
 		return "Nobody has anything to tell you."
 	return "\n\n".join(lines)
 

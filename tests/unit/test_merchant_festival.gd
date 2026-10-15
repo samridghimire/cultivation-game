@@ -33,3 +33,23 @@ func test_festival_entry_follows_festival() -> void:
 	assert_false(String(entry["reason"]).is_empty())
 	merchant.free()
 	gs.end_session()
+
+
+func test_rumors_refusal_opens_no_gossip_window() -> void:
+	var root := (Engine.get_main_loop() as SceneTree).root
+	var gs := root.get_node("GameState")
+	var bus := root.get_node("EventBus")
+	gs.start_session(CharacterFactory.create("Lin Feng", gs.data, seeded_rng(), "male"))
+	var merchant := MerchantScript.new()
+	var opened: Array = []
+	var cb := func(_lines: PackedStringArray) -> void: opened.append(true)
+	bus.gossip_requested.connect(cb)
+	(_find(merchant.get_options(), "rumors")["action"] as Callable).call()
+	assert_eq(opened.size(), 1, "window opens normally")
+	gs.player.alive = false
+	assert_true(gs.hear_rumors().is_empty())
+	(_find(merchant.get_options(), "rumors")["action"] as Callable).call()
+	bus.gossip_requested.disconnect(cb)
+	assert_eq(opened.size(), 1, "no window when the player cannot act")
+	merchant.free()
+	gs.end_session()
