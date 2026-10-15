@@ -3019,6 +3019,13 @@ func _on_days_advanced(days: int) -> void:
 
 ## RIVAL-005: word of the rival's breakthroughs once you have met them.
 func _rival_news() -> void:
+	if player.alive and Rivals.successor_due(world_flags, GameClock.total_days):
+		var heir := Rivals.spawn(player, npcs, data, rng, current_region if current_region != "" else data.start_region)
+		for flag in [Rivals.SUCCESSOR_DAY_FLAG, Rivals.FIRST_MEETING_FLAG, Rivals.SEEN_REALM_FLAG, Rivals.SURPASSED_FLAG, "rival_death_news"]:
+			world_flags.erase(flag)
+		world_flags[Rivals.MEETING_FROM_FLAG] = GameClock.total_days
+		EventBus.post(Rivals.successor_line(heir, String(world_flags.get("rival_predecessor", "your old rival"))), "world")
+		world_flags.erase("rival_predecessor")
 	if not world_flags.get(Rivals.FIRST_MEETING_FLAG, false):
 		return
 	if not world_flags.get("rival_death_news", false):
@@ -3027,6 +3034,9 @@ func _rival_news() -> void:
 			var death_line := Rivals.death_news(player, dead)
 			if death_line != "":
 				EventBus.post(death_line, "info")
+				if Rivals.successor_delay(data) > 0:
+					world_flags[Rivals.SUCCESSOR_DAY_FLAG] = GameClock.total_days + Rivals.successor_delay(data)
+					world_flags["rival_predecessor"] = dead.name
 			world_flags["rival_death_news"] = true
 	var rival := Rivals.rival_of(player, npcs)
 	if rival == null:

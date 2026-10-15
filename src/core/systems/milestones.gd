@@ -46,7 +46,8 @@ static func flag_count(flags: Dictionary, check: Dictionary) -> int:
 	var suffix := String(check.get("suffix", ""))
 	var n := 0
 	for key: String in flags:
-		if bool(flags[key]) and key.begins_with(prefix) and key.ends_with(suffix):
+		var value: Variant = flags[key]
+		if not (value is String) and bool(value) and key.begins_with(prefix) and key.ends_with(suffix):
 			n += 1
 	return n
 

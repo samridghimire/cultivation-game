@@ -141,3 +141,8 @@ func test_far_traveller_milestone_fires_at_five_regions() -> void:
 	assert_true(after.has("far_traveller"))
 	var loaded := CharacterData.from_dict(c.to_dict())
 	assert_eq(loaded.visited_regions, c.visited_regions)
+
+
+func test_flag_count_ignores_text_flags() -> void:
+	var flags := {"errand_a_done": true, "errand_b_done": "Old Wu", "errand_c_done": 0}
+	assert_eq(Milestones.flag_count(flags, {"prefix": "errand_", "suffix": "_done"}), 1)

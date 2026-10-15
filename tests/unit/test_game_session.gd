@@ -1600,6 +1600,48 @@ func test_player_kill_of_rival_posts_no_death_news() -> void:
 	gs.end_session()
 
 
+## RIVAL-014: a rival lost not by your hand is replaced after a delay.
+func test_successor_rival_appears_after_old_rival_dies() -> void:
+	var c := _start()
+	var gs := _game_state()
+	var old_id := c.rival
+	Npcs.die(gs.npcs[old_id], "old age")
+	gs.world_flags[Rivals.FIRST_MEETING_FLAG] = true
+	var today := GameClock.total_days
+	gs._rival_news()
+	assert_eq(int(gs.world_flags[Rivals.SUCCESSOR_DAY_FLAG]), today + 180)
+	var restored: Dictionary = gs.to_save_dict()
+	assert_eq(int(restored["world_flags"][Rivals.SUCCESSOR_DAY_FLAG]), today + 180)
+	EventBus.clear_history()
+	GameClock.total_days = today + 180
+	gs._rival_news()
+	gs._rival_news()
+	assert_true(c.rival != old_id)
+	assert_true(gs.npcs[c.rival].alive)
+	assert_eq(EventBus.history.filter(func(m): return String(m["text"]).begins_with("Word spreads of")).size(), 1)
+	assert_true(Rivals.first_meeting_due(c, gs.npcs, gs.data, gs.world_flags, GameClock.total_days))
+	assert_false(gs.world_flags.has(Rivals.SUCCESSOR_DAY_FLAG))
+	gs.end_session()
+
+
+func test_no_successor_after_player_kill_or_when_disabled() -> void:
+	var c := _start()
+	var gs := _game_state()
+	Npcs.die(gs.npcs[c.rival], "slain by " + c.name)
+	gs.world_flags[Rivals.FIRST_MEETING_FLAG] = true
+	gs._rival_news()
+	assert_false(gs.world_flags.has(Rivals.SUCCESSOR_DAY_FLAG))
+	gs.end_session()
+	var c2 := _start()
+	var gs2 := _game_state()
+	gs2.data.karma["rival"]["successor_delay_days"] = 0
+	Npcs.die(gs2.npcs[c2.rival], "old age")
+	gs2.world_flags[Rivals.FIRST_MEETING_FLAG] = true
+	gs2._rival_news()
+	assert_false(gs2.world_flags.has(Rivals.SUCCESSOR_DAY_FLAG))
+	gs2.end_session()
+
+
 func _surpass_lines() -> Array:
 	return EventBus.history.filter(func(m): return String(m["text"]).begins_with("You have surpassed "))
 

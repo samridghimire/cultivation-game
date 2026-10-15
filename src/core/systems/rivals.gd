@@ -13,6 +13,8 @@ const FIRST_MEETING_EVENT := "rival_first_meeting"
 const FIRST_MEETING_FLAG := "rival_met"
 const SEEN_REALM_FLAG := "rival_seen_realm"
 const SURPASSED_FLAG := "rival_surpassed"
+const SUCCESSOR_DAY_FLAG := "rival_successor_day"  # RIVAL-014: day a new rival names the player
+const MEETING_FROM_FLAG := "rival_meeting_from"  # RIVAL-014: first meeting window starts here
 const SPUR_CAP := 0.95
 
 
@@ -54,9 +56,23 @@ static func first_meeting_due(c: CharacterData, people: Dictionary, data: GameDa
 	if rival_of(c, people) == null or flags.get(FIRST_MEETING_FLAG, false):
 		return false
 	var r := rules(data)
-	var start := int(r.get("first_meeting_day", 10))
+	var start := int(flags.get(MEETING_FROM_FLAG, r.get("first_meeting_day", 10)))
 	return today >= start and today <= start + int(r.get("first_meeting_window", 365))
 
+
+
+## RIVAL-014: days from word of the rival's death (not by the player's hand) until a successor appears; 0 = never.
+static func successor_delay(data: GameData) -> int:
+	return int(rules(data).get("successor_delay_days", 180))
+
+
+## RIVAL-014: true once the successor's day (world flag SUCCESSOR_DAY_FLAG) has come.
+static func successor_due(flags: Dictionary, today: int) -> bool:
+	return flags.has(SUCCESSOR_DAY_FLAG) and today >= int(flags[SUCCESSOR_DAY_FLAG])
+
+
+static func successor_line(rival: CharacterData, old_name: String) -> String:
+	return "Word spreads of %s, a young cultivator who means to take %s's place as your rival." % [rival.name, old_name]
 
 
 ## RIVAL-005: one line of news when the living `rival` reached a higher realm
@@ -192,6 +208,8 @@ static func validate(data: GameData) -> PackedStringArray:
 			errors.append("karma.json rival %s must be a whole number >= 0" % key)
 	if r.has("friendly_favor") and (not (r["friendly_favor"] is int or r["friendly_favor"] is float) or int(r["friendly_favor"]) < 1 or int(r["friendly_favor"]) > 100):
 		errors.append("karma.json rival friendly_favor must be a whole number 1-100")
+	if r.has("successor_delay_days") and (not (r["successor_delay_days"] is int or r["successor_delay_days"] is float) or int(r["successor_delay_days"]) < 0):
+		errors.append("karma.json rival successor_delay_days must be a whole number >= 0")
 	if r.has("bitter_grudge") and (not (r["bitter_grudge"] is int or r["bitter_grudge"] is float) or int(r["bitter_grudge"]) < 1):
 		errors.append("karma.json rival bitter_grudge must be a whole number >= 1")
 	for e: Dictionary in data.encounters.values():

@@ -374,3 +374,33 @@ func test_attitude_change_line() -> void:
 	assert_eq(Rivals.attitude_change_line("Lan", "proud", "proud"), "")
 	assert_eq(Rivals.attitude_change_line("Lan", "", "bitter"), "")
 	assert_eq(Rivals.attitude_change_line("Lan", "proud", ""), "")
+
+
+func test_successor_due_and_line() -> void:
+	assert_false(Rivals.successor_due({}, 1000))
+	var flags := {Rivals.SUCCESSOR_DAY_FLAG: 500}
+	assert_false(Rivals.successor_due(flags, 499))
+	assert_true(Rivals.successor_due(flags, 500))
+	assert_true(Rivals.successor_due(flags, 900))
+	assert_eq(Rivals.successor_delay(data()), 180)
+	var heir := new_character()
+	heir.name = "Lin"
+	assert_eq(Rivals.successor_line(heir, "Wu"), "Word spreads of Lin, a young cultivator who means to take Wu's place as your rival.")
+
+
+func test_first_meeting_honours_meeting_from_flag() -> void:
+	var c := new_character()
+	var people := {}
+	Rivals.spawn(c, people, data(), seeded_rng(), data().start_region)
+	assert_true(Rivals.first_meeting_due(c, people, data(), {}, 10))
+	var flags := {Rivals.MEETING_FROM_FLAG: 2000}
+	assert_false(Rivals.first_meeting_due(c, people, data(), flags, 10))
+	assert_false(Rivals.first_meeting_due(c, people, data(), flags, 1999))
+	assert_true(Rivals.first_meeting_due(c, people, data(), flags, 2000))
+
+
+func test_validation_rejects_bad_successor_delay() -> void:
+	for bad in [-1, "x"]:
+		var d := GameData.load_from_dir()
+		d.karma["rival"]["successor_delay_days"] = bad
+		assert_eq(Rivals.validate(d).size(), 1, str(bad))
