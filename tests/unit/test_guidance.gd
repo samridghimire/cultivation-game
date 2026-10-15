@@ -995,3 +995,19 @@ func test_practice_hint_for_a_low_level_fighting_style() -> void:
 	assert_false(_has(Guidance._newcomer_hints(c, data(), {Guidance.ELDER_MO_FLAG: true}, "qingshi_village"), "no fighting style"))
 	c.techniques = {}
 	assert_eq(Guidance.practice_hint(c, data()), "")
+
+
+func test_every_region_with_a_merchant_sells_a_fighting_style() -> void:
+	var d := data()
+	var c := _fresh()
+	c.realm_index = 1
+	c.techniques = {}
+	for region_id: String in d.regions.keys():
+		var has_merchant := false
+		for place: Dictionary in d.regions[region_id].get("places", []):
+			if place.get("type", "") == "merchant":
+				has_merchant = true
+		if not has_merchant:
+			continue
+		var found := Guidance.first_combat_manual(c, d, region_id)
+		assert_true(String(found.get("merchant", "")) != "", "%s: no merchant sells a combat manual (%s)" % [region_id, found])
