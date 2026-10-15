@@ -4,6 +4,9 @@ extends SceneTree
 ## xvfb-run -a -s "-screen 0 1280x800x24" tools/godot.sh --path . --rendering-driver opengl3 \
 ##     --resolution 1280x800 -s res://tests/sim/screenshot_screens.gd
 ## PNGs go to user://screenshots/screens/<name>.png (OUT_DIR). Never writes saves.
+## WU-116: append `-- --first-hour` for a fresh character in Qingshi Village instead (creation,
+## intro, Elder Mo, the merchant's shop, exploring, a lost fight, the day-1 journal). Check each PNG
+## at 1280x800 and 1280x720 (--resolution 1280x720).
 
 const OUT_DIR := "user://screenshots/screens"
 const SETTLE_FRAMES := 6
@@ -20,6 +23,9 @@ var opened := false
 func _start() -> void:
 	started = true
 	var gs: Node = root.get_node("GameState")
+	if OS.get_cmdline_user_args().has("--first-hour"):
+		_start_first_hour(gs)
+		return
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 7
 	var c := CharacterFactory.create("Lin Feng", gs.data, rng, "male")
@@ -55,6 +61,48 @@ func _start() -> void:
 	root.add_child(world)
 	hud = world.get_node("HUD")
 	_build_shots(gs)
+
+
+## WU-116: the first hour of a fresh character, in the order a new player meets it.
+func _start_first_hour(gs: Node) -> void:
+	var creation: Control = load("res://src/ui/character_creation.tscn").instantiate()
+	root.add_child(creation)
+	shots.append({"name": "fh_creation", "open": func() -> void: pass, "close": func() -> void: pass})
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 5
+	gs.start_session(CharacterFactory.create("Lin Feng", gs.data, rng, "male"))
+	var end_talk := func() -> void:
+		var guard := 0
+		while gs.in_dialogue() and guard < 40:
+			var view: Dictionary = gs.dialogue_view()
+			var pick := 0
+			for ch: Dictionary in view.get("choices", []):
+				if not bool(ch.get("disabled", false)):
+					pick = int(ch["index"])
+					break
+			gs.choose_dialogue(pick)
+			guard += 1
+		if hud != null:
+			hud.get("_dialogue").close()
+			hud.get("_banner").visible = false
+	shots.append({"name": "fh_intro_dialogue", "open": func() -> void:
+		creation.queue_free()
+		world = load("res://src/world/world.tscn").instantiate()
+		root.add_child(world)
+		hud = world.get_node("HUD"), "close": end_talk})
+	shots.append({"name": "fh_hud_after_intro", "open": end_talk, "close": func() -> void: pass})
+	shots.append({"name": "fh_elder_mo", "open": func() -> void: gs.start_dialogue("elder_mo"), "close": end_talk})
+	shots.append({"name": "fh_merchant_buy", "open": func() -> void: hud.get("_shop").open("Wandering Merchant", 0, ["herb", "ore", "beast_material"]), "close": func() -> void: hud.get("_shop").close()})
+	shots.append({"name": "fh_explore", "open": func() -> void: gs.explore(), "close": func() -> void:
+		hud.get("_encounter").close()
+		hud.get("_choice_menu").close()})
+	shots.append({"name": "fh_lost_fight", "open": func() -> void:
+		gs.fight("mist_wolf")
+		hud.get("_combat_report").skip()
+		hud.get("_banner").visible = false, "close": func() -> void:
+		hud.get("_combat_report").close()
+		hud.get("_respawn").close()})
+	shots.append({"name": "fh_journal", "open": func() -> void: hud.get("_screens")["toggle_journal"].open(), "close": func() -> void: hud.get("_screens")["toggle_journal"].close()})
 
 
 ## WU-093: data for the blocks added this week: letters, renown, a mastered region,
