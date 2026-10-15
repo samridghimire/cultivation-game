@@ -1320,7 +1320,8 @@ func spar_with(npc_id: String) -> void:
 	var before := _rival_attitude()
 	if int(result["favor"]) > 0:
 		npc_favor[npc_id] = mini(100, int(npc_favor.get(npc_id, 0)) + int(result["favor"]))
-	var text := "You spar with %s. %s" % [npc.name, "You win the bout." if won else "They win the bout."]
+	var opening := "%s accepts your challenge." if npc_id == player.rival else "You spar with %s."
+	var text := "%s %s" % [opening % npc.name, "You win the bout." if won else "They win the bout."]
 	if not (result["practiced"] as PackedStringArray).is_empty():
 		text += " Your %s grow sharper." % " and ".join(result["practiced"])
 	for line in result["levels"]:

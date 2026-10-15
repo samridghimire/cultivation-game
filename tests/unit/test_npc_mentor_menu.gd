@@ -51,3 +51,37 @@ func test_stranger_spar_disabled_and_far_realm_hidden() -> void:
 	assert_true(_find(opts, "Spar with ").is_empty(), "realm gap too big")
 	r[0].free()
 	gs.end_session()
+
+
+func test_rival_spar_reads_as_challenge() -> void:
+	var gs: Node = _root().get_node("GameState")
+	var r := _setup(gs, 1, 100)
+	var npc: CharacterData = r[1]
+	gs.player.rival = npc.id
+	var opts: Array = r[0].get_options()
+	assert_true(_find(opts, "Spar with ").is_empty(), "no plain spar label for the rival")
+	var ch := _find(opts, "Challenge your rival %s" % npc.name)
+	assert_false(ch.is_empty(), "challenge listed")
+	assert_false(ch["disabled"], ch["reason"])
+	gs.player.rival = ""
+	r[0].free()
+	gs.end_session()
+
+
+func test_rival_challenge_opening_line() -> void:
+	var gs: Node = _root().get_node("GameState")
+	var r := _setup(gs, 1, 100)
+	var npc: CharacterData = r[1]
+	gs.player.rival = npc.id
+	var log_lines: Array = []
+	var cb := func(text: String, _cat: String) -> void: log_lines.append(text)
+	gs.get_node("/root/EventBus").message_posted.connect(cb)
+	gs.spar_with(npc.id)
+	gs.get_node("/root/EventBus").message_posted.disconnect(cb)
+	var found := false
+	for l: String in log_lines:
+		if l.begins_with("%s accepts your challenge." % npc.name):
+			found = true
+	assert_true(found, "challenge line: %s" % str(log_lines))
+	r[0].free()
+	gs.end_session()

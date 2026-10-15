@@ -325,7 +325,8 @@ func _mentor_options() -> Array[Dictionary]:
 		options.append(_entry(label, reason, GameState.ask_pointers.bind(npc_id)))
 	var max_gap := int(data.family.get("mentorship", {}).get("spar", {}).get("max_realm_gap", 1))
 	if p.realm_index >= 1 and npc.realm_index >= 1 and absi(npc.realm_index - p.realm_index) <= max_gap:
-		options.append(_entry("Spar with %s" % npc.name, GameState.check_spar(npc_id), GameState.spar_with.bind(npc_id)))
+		var spar_label := ("Challenge your rival %s to a bout" if npc_id == p.rival else "Spar with %s") % npc.name
+		options.append(_entry(spar_label, GameState.check_spar(npc_id), GameState.spar_with.bind(npc_id)))
 	return options
 
 
