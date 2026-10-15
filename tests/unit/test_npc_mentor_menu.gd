@@ -68,6 +68,24 @@ func test_rival_spar_reads_as_challenge() -> void:
 	gs.end_session()
 
 
+func test_bitter_rival_challenge_disabled_proud_enabled() -> void:
+	var gs: Node = _root().get_node("GameState")
+	var r := _setup(gs, 1, 0)
+	var npc: CharacterData = r[1]
+	gs.player.rival = npc.id
+	var label := "Challenge your rival %s" % npc.name
+	var proud := _find(r[0].get_options(), label)
+	assert_false(proud.is_empty(), "challenge listed for a proud rival")
+	assert_false(proud["disabled"], "a proud rival at favor 0 accepts: %s" % proud["reason"])
+	Karma.add_grudge(gs.player, gs.data, npc.id, int(gs.data.karma["rival"]["bitter_grudge"]))
+	var bitter := _find(r[0].get_options(), label)
+	assert_true(bitter["disabled"], "a bitter rival refuses")
+	assert_true(String(bitter["reason"]).contains("will not spar with you"), str(bitter["reason"]))
+	gs.player.rival = ""
+	r[0].free()
+	gs.end_session()
+
+
 func test_rival_challenge_opening_line() -> void:
 	var gs: Node = _root().get_node("GameState")
 	var r := _setup(gs, 1, 100)
