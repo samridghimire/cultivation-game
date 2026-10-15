@@ -138,7 +138,7 @@ func _rebuild() -> void:
 	var rank_line := SectFactions.rank_line(p, GameState.sect_standings())
 	if rank_line != "":
 		t += rank_line + "\n\n"
-	var rival_line := rival_line(p, data, GameState.npcs, GameState.npc_favor)
+	var rival_line := rival_line(p, data, GameState.npcs, GameState.npc_favor, GameState.world_flags)
 	if rival_line != "":
 		t += "[color=#%s]Rival[/color]\n  %s\n\n" % [accent, rival_line]
 	_gender_row.visible = p.gender == ""
@@ -268,16 +268,15 @@ func _rebuild() -> void:
 	_text.text = t
 
 
-## "Han Li, Qi Refining (ahead of you), grudge 3" for the player's named rival,
-## "<name> has died" if they are dead, "" when there is no rival.
-static func rival_line(c: CharacterData, data: GameData, people: Dictionary, favor: Dictionary) -> String:
-	if c.rival == "" or not people.has(c.rival):
+## "Han Li, Qi Refining (far ahead of you), grudge 3" for the player's named rival,
+## "<name> has died" if they are dead, "" when there is no rival or you have not met yet.
+static func rival_line(c: CharacterData, data: GameData, people: Dictionary, favor: Dictionary, flags: Dictionary = {}) -> String:
+	if not flags.get(Rivals.FIRST_MEETING_FLAG, false) or c.rival == "" or not people.has(c.rival):
 		return ""
 	var r: CharacterData = people[c.rival]
 	if not r.alive:
 		return "%s has died." % r.name
-	var relation := {"stronger": "ahead of you", "weaker": "behind you"}.get(Rivals.relation(c, r), "your equal") as String
-	var line := "%s, %s (%s)" % [r.name, Cultivation.realm_label(r, data), relation]
+	var line := "%s, %s (%s)" % [r.name, Cultivation.realm_label(r, data), Rivals.relation_text(c, r)]
 	var grudge := Karma.grudge(c, r.id)
 	if grudge != 0:
 		line += ", grudge %d" % grudge

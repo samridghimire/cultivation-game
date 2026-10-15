@@ -46,10 +46,12 @@ func test_character_sheet_shows_rival() -> void:
 	var gs: Node = _root().get_node("GameState")
 	gs.start_session(CharacterFactory.create("Foe", gs.data, seeded_rng()))
 	var sheet := CharacterSheet.new()
-	sheet._rebuild()
 	var rival: CharacterData = gs.npcs[gs.player.rival]
+	assert_eq(CharacterSheet.rival_line(gs.player, gs.data, gs.npcs, {}, {}), "", "unmet rival is not named")
+	gs.world_flags[Rivals.FIRST_MEETING_FLAG] = true
+	sheet._rebuild()
 	assert_true(String(sheet._text.text).contains("Rival[/color]"))
-	assert_eq(CharacterSheet.rival_line(CharacterData.new(), gs.data, gs.npcs, {}), "", "no rival, no line")
+	assert_eq(CharacterSheet.rival_line(CharacterData.new(), gs.data, gs.npcs, {}, {Rivals.FIRST_MEETING_FLAG: true}), "", "no rival, no line")
 	rival.realm_index = gs.player.realm_index + 1
 	gs.player.grudges[rival.id] = 3
 	sheet._rebuild()
@@ -58,9 +60,9 @@ func test_character_sheet_shows_rival() -> void:
 	assert_true(text.contains("ahead of you"), text)
 	assert_true(text.contains("grudge 3"), text)
 	rival.realm_index = gs.player.realm_index
-	assert_true(CharacterSheet.rival_line(gs.player, gs.data, gs.npcs, {}).contains("your equal"))
+	assert_true(CharacterSheet.rival_line(gs.player, gs.data, gs.npcs, {}, {Rivals.FIRST_MEETING_FLAG: true}).contains("level with you"))
 	rival.alive = false
-	assert_eq(CharacterSheet.rival_line(gs.player, gs.data, gs.npcs, {}), "%s has died." % rival.name)
+	assert_eq(CharacterSheet.rival_line(gs.player, gs.data, gs.npcs, {}, {Rivals.FIRST_MEETING_FLAG: true}), "%s has died." % rival.name)
 	sheet.free()
 	gs.end_session()
 
