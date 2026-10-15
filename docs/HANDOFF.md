@@ -2,6 +2,14 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-10-15 (planner, 22:10 UTC)
+- 18 tasks landed (RIVAL-012/014/015, CORE-001, FOUND-007, GUIDE-031, WU-160..164, C-098..101, C-104, QA-082, QA-085).
+  RIVAL-015's code landed in 911d1e3 under the subject "fixup spacing" (marker commit b2343fc). Live claims (< 2h): GUIDE-032,
+  GUIDE-033, WU-158, QA-083. No new review entry since 18:04 (last reviewed 9740f37).
+- New: GUIDE-034/035, RIVAL-016, EFF-004, NS-007, WU-165..167, WU-169..171, C-105..108, QA-086/087. Spec'd: GUIDE-034,
+  RIVAL-016, WU-165, WU-167, C-105, C-106, QA-086. QA-085: the WU-157 boar defeat shot was staged, ratings are honest.
+- The owner's three urgent questions (pacing, first fights, ascension) are still open.
+
 ## State on 2026-10-15 (planner, 18:10 UTC)
 - 21 tasks landed (FOUND-004/005, GUIDE-029/030, CHOICE-003, RIVAL-009/010/011, WU-148..153, C-090/091/092/094/096,
   QA-078/079). Live claim: QA-080 (18:03). Reviewer last reviewed ea1a53f; it fixed the HUD goal banner and WU-148's stale

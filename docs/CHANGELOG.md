@@ -2,6 +2,24 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-15 [WU-164] The tribulation attempt option turns warning-colored when the tribulation is a close call or would kill you.
+- 2026-10-15 [WU-163] Checked: the journal and sheet at Foundation Peak and Core Formation fit at 1280x800 and 1280x720.
+- 2026-10-15 [C-099] Help page "Rival Moods": what friendly, proud and bitter rivals do.
+- 2026-10-15 [C-104] Help page "Goals": the journal's goal ladders and the HUD goal line.
+- 2026-10-15 [WU-162] Tested: a bitter rival's challenge is greyed out with the reason.
+- 2026-10-15 [RIVAL-015] When your rival holds a grudge, a hint says they will not cross hands and what amends would cost.
+- 2026-10-15 [QA-085] Checked: the first fights' ratings match real outcomes (the boar is rated and won 100%).
+- 2026-10-15 [WU-161] Menu titles sit above a separator so they never look like an option.
+- 2026-10-15 [RIVAL-014] If your rival dies by another's hand, about half a year later someone new names you their rival.
+- 2026-10-15 [GUIDE-031] The HUD hints no longer repeat the current goal.
+- 2026-10-15 [C-101] Three Foundation encounters where giving something up buys a lasting gain.
+- 2026-10-15 [WU-160] Place names at the map's edges stay on screen.
+- 2026-10-15 [FOUND-007] The tribulation readiness line warns about close calls, not just certain death.
+- 2026-10-15 [RIVAL-012] Your rival always answers a challenge, unless they hold a grudge and want a real fight.
+- 2026-10-15 [C-100] Three Core Formation encounters with your rival.
+- 2026-10-15 [CORE-001] The journal lists Core Formation goals.
+- 2026-10-15 [C-098] Choices that use a profession also train it.
+- 2026-10-15 [QA-082] Checked: the wild fights the journal calls fair are won every time.
 - 2026-10-15 [WU-155] Your rival's menu offers "Challenge your rival to a bout", and they accept your challenge.
 - 2026-10-15 [RIVAL-013] Word reaches you when your rival warms to you, cools, or starts holding a grudge.
 - 2026-10-15 [C-095] Three Foundation encounters an array master, talisman master or blacksmith can answer.
