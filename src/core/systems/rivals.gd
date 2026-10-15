@@ -88,6 +88,19 @@ static func attitude_text(attitude: String) -> String:
 	return ""
 
 
+## RIVAL-013: the line announcing a move from attitude `before` to `after`; "" when nothing changed.
+static func attitude_change_line(name: String, before: String, after: String) -> String:
+	if before == "" or after == "" or before == after:
+		return ""
+	if after == "bitter":
+		return "%s now holds a grudge against you." % name
+	if after == "friendly":
+		return "%s warms to you. Your rivalry turns friendly." % name
+	if before == "bitter":
+		return "%s lets the old grudge go, but still means to beat you." % name
+	return "%s cools toward you and is your proud rival again." % name
+
+
 ## RIVAL-011: one line of news for a rival who has died, else "". The player's
 ## own kill ("slain by ...") already posts its line, so it gives "".
 static func death_news(_c: CharacterData, rival: CharacterData) -> String:

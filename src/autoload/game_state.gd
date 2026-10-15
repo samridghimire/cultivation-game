@@ -978,6 +978,24 @@ func rival_text(text: String) -> String:
 	return Rivals.fill(text, Rivals.rival_of(player, npcs), data)
 
 
+## RIVAL-013: the living, met rival's attitude toward the player; "" without one.
+func _rival_attitude() -> String:
+	var rival := Rivals.rival_of(player, npcs)
+	if rival == null or not world_flags.get(Rivals.FIRST_MEETING_FLAG, false):
+		return ""
+	return Rivals.attitude(player, rival, int(npc_favor.get(rival.id, 0)), data)
+
+
+## RIVAL-013: posts the line for an attitude move since `before` (see _rival_attitude).
+func _post_attitude_change(before: String) -> void:
+	var rival := Rivals.rival_of(player, npcs)
+	if rival == null:
+		return
+	var line := Rivals.attitude_change_line(rival.name, before, _rival_attitude())
+	if line != "":
+		EventBus.post(line, "world")
+
+
 ## Applies an encounter's (or choice's) rival fields: rival_grudge and
 ## rival_favor change the rival's ledger and favor, fight_rival starts a
 ## non-lethal fight with the rival (RIV-002).
@@ -985,12 +1003,14 @@ func _rival_consequences(entry: Dictionary) -> void:
 	var rival := Rivals.rival_of(player, npcs)
 	if rival == null:
 		return
+	var before := _rival_attitude()
 	var grudge := int(entry.get("rival_grudge", 0))
 	if grudge > 0:
 		Karma.add_grudge(player, data, rival.id, grudge)
 	var favor := int(entry.get("rival_favor", 0))
 	if favor != 0:
 		npc_favor[rival.id] = clampi(int(npc_favor.get(rival.id, 0)) + favor, -100, 100)
+	_post_attitude_change(before)
 	if bool(entry.get("fight_rival", false)):
 		fight_enemy(Karma.npc_enemy(rival, data))
 
@@ -1141,7 +1161,9 @@ func choose_dialogue(index: int) -> void:
 		EventBus.post(result["reason"], "warning")
 		return
 	if result["favor"] != 0 and npc_id != "":
+		var before := _rival_attitude()
 		npc_favor[npc_id] = int(npc_favor.get(npc_id, 0)) + result["favor"]
+		_post_attitude_change(before)
 	if not result["notes"].is_empty():
 		EventBus.post("(%s)" % ", ".join(result["notes"]), "karma")
 	dialogue_node = result["next"]
@@ -1199,8 +1221,10 @@ func court(npc_id: String) -> void:
 		EventBus.player_changed.emit()
 		return
 	var courted := NpcClans.scaled_favor(npc_clans, data, npc_id, int(result["favor"]), int(result["favor"]))
+	var before := _rival_attitude()
 	npc_favor[npc_id] = int(npc_favor.get(npc_id, 0)) + courted
 	EventBus.post("You spend days in %s's company. They warm to you. (%s)" % [npcs[npc_id].name, Family.favor_progress(int(npc_favor[npc_id]), data)], "progress")
+	_post_attitude_change(before)
 	_pass_time(result["days"])
 
 
@@ -1220,8 +1244,10 @@ func chat(npc_id: String) -> void:
 	var festival := WorldEvents.favor_multiplier(data, world_events, current_region) > 1.0
 	var base := NpcClans.scaled_favor(npc_clans, data, npc_id, WorldEvents.scaled_favor(data, world_events, current_region, int(result["favor"])), cap - favor)
 	var gain: int = base + Karma.favor_bonus(player, data, npc_id, base, cap - favor - base)
+	var before := _rival_attitude()
 	npc_favor[npc_id] = favor + gain
 	EventBus.post("You pass some time talking with %s. (%s)" % [npcs[npc_id].name, Family.favor_progress(int(npc_favor[npc_id]), data)] + (" The festival warms the mood." if festival else ""))
+	_post_attitude_change(before)
 	_greet_renowned(npc_id)
 	var hint := Family.taste_hint(data, npc_id)
 	if hint != "" and int(npc_favor[npc_id]) >= Family.taste_hint_favor(data) and not world_flags.has("taste_told_" + npc_id):
@@ -1291,6 +1317,7 @@ func spar_with(npc_id: String) -> void:
 	if not _can_act():
 		return
 	var result := Mentorship.after_spar(player, npc, data, won, GameClock.total_days)
+	var before := _rival_attitude()
 	if int(result["favor"]) > 0:
 		npc_favor[npc_id] = mini(100, int(npc_favor.get(npc_id, 0)) + int(result["favor"]))
 	var text := "You spar with %s. %s" % [npc.name, "You win the bout." if won else "They win the bout."]
@@ -1299,6 +1326,7 @@ func spar_with(npc_id: String) -> void:
 	for line in result["levels"]:
 		text += " %s." % line
 	EventBus.post(text, "progress")
+	_post_attitude_change(before)
 	# The bout itself took a day; the spar rule's `days` is the whole visit.
 	_pass_time(maxi(0, int(result["days"]) - 1))
 	EventBus.player_changed.emit()
@@ -1323,6 +1351,7 @@ func give_gift(npc_id: String, item_id: String) -> void:
 	if taste >= 0:
 		var base := NpcClans.scaled_favor(npc_clans, data, npc_id, WorldEvents.scaled_favor(data, world_events, current_region, gain), cap - favor)
 		gain = base + Karma.favor_bonus(player, data, npc_id, base, cap - favor - base)
+	var before := _rival_attitude()
 	npc_favor[npc_id] = clampi(favor + gain, 0, 100)
 	if taste >= 0:
 		Karma.on_kindness(player, data, npc_id, "gift")
@@ -1331,6 +1360,7 @@ func give_gift(npc_id: String, item_id: String) -> void:
 	if taste != 0:
 		world_flags["taste_%s_%s" % [npc_id, item_id]] = taste
 		EventBus.post("%s is delighted." % npcs[npc_id].name if taste > 0 else "%s frowns at the %s." % [npcs[npc_id].name, item_name.to_lower()], "progress" if taste > 0 else "warning")
+	_post_attitude_change(before)
 	if taste >= 0:
 		_clan_deed(npc_id, "gift")  # a disliked gift (taken even at the favor cap) earns no clan kindness
 	_pass_time(result["days"])
@@ -1383,6 +1413,7 @@ func hostile_act(npc_id: String, act_id: String) -> void:
 		won = fight_enemy(Karma.npc_enemy(npc, data))
 		if not _can_act():
 			return
+	var before := _rival_attitude()
 	var result := Karma.commit(player, npc, act_id, won, npcs, data, rng)
 	npc_favor[npc_id] = int(npc_favor.get(npc_id, 0)) + int(result["favor"])
 	var notes: PackedStringArray = result["notes"]
@@ -1391,6 +1422,7 @@ func hostile_act(npc_id: String, act_id: String) -> void:
 		EventBus.post("%s drives you off.%s" % [npc.name, suffix], "warning")
 	else:
 		EventBus.post(Karma.act_sentence(npc, act_id, result, data) + suffix, "danger" if not npc.alive else "warning")
+	_post_attitude_change(before)
 	_clan_deed(npc_id, act_id)
 	_pass_time(result["days"])
 
@@ -1920,7 +1952,9 @@ func treat_npc(npc_id: String) -> void:
 		EventBus.player_changed.emit()
 		return
 	var treated := NpcClans.scaled_favor(npc_clans, data, npc_id, int(result["favor"]), int(result["favor"]))
+	var before := _rival_attitude()
 	npc_favor[npc_id] = int(npc_favor.get(npc_id, 0)) + treated
+	_post_attitude_change(before)
 	var injury_name := Injuries.injury_name(data, result["injury"])
 	var outcome := "it is fully healed" if result["healed"] else "%s left" % Calendar.format_duration(patient.injuries[result["injury"]])
 	var owed := Karma.on_kindness(player, data, npc_id, "treat_npc")
@@ -2784,7 +2818,9 @@ func answer_letter_request(npc_id: String) -> void:
 	var result := Letters.answer(player, data, npc_id, GameClock.total_days, world_flags)
 	if not result["ok"]:
 		return
+	var before := _rival_attitude()
 	npc_favor[npc_id] = clampi(int(npc_favor.get(npc_id, 0)) + int(result["favor"]), 0, 100)
+	_post_attitude_change(before)
 	var notes: PackedStringArray = [Family.favor_progress(int(npc_favor[npc_id]), data)]
 	notes.append_array(result["notes"])
 	EventBus.post("You give %s the %s they asked for. (%s)" % [npcs[npc_id].name, item_name, ", ".join(notes)], "progress")

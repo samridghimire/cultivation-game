@@ -1703,3 +1703,20 @@ func test_spar_and_lost_fight_do_not_set_the_beat_flag() -> void:
 	gs.fight("t_strong_foe")
 	assert_false(gs.world_flags.has(flag))
 	gs.end_session()
+
+
+## RIVAL-013: a rival's attitude moving is announced; a change that keeps it is silent.
+func test_rival_attitude_change_is_announced() -> void:
+	var c := _start()
+	var gs := _game_state()
+	var rival: CharacterData = Rivals.rival_of(c, gs.npcs)
+	gs.world_flags[Rivals.FIRST_MEETING_FLAG] = true
+	gs.npc_favor[rival.id] = 0
+	EventBus.clear_history()
+	gs._rival_consequences({"rival_favor": 5})
+	assert_eq(EventBus.history.filter(func(m): return String(m["text"]).contains("warms to you")).size(), 0)
+	gs._rival_consequences({"rival_favor": 30})
+	assert_eq(EventBus.history.filter(func(m): return String(m["text"]).contains("%s warms to you" % rival.name)).size(), 1)
+	gs._rival_consequences({"rival_grudge": 50})
+	assert_eq(EventBus.history.filter(func(m): return String(m["text"]).contains("%s now holds a grudge" % rival.name)).size(), 1)
+	gs.end_session()

@@ -349,3 +349,15 @@ func test_c093_attitude_encounters_data() -> void:
 		assert_eq(String(e["min_realm"]), "qi_refining", id)
 		assert_true(String(e["blocked_by_flag"]) != "", id + " is once-only")
 	assert_eq(Rivals.validate(d).size(), 0, ", ".join(Rivals.validate(d)))
+
+
+## RIVAL-013: every attitude move has a line; no move, or an unknown side, has none.
+func test_attitude_change_line() -> void:
+	assert_eq(Rivals.attitude_change_line("Lan", "proud", "bitter"), "Lan now holds a grudge against you.")
+	assert_eq(Rivals.attitude_change_line("Lan", "friendly", "bitter"), "Lan now holds a grudge against you.")
+	assert_eq(Rivals.attitude_change_line("Lan", "proud", "friendly"), "Lan warms to you. Your rivalry turns friendly.")
+	assert_eq(Rivals.attitude_change_line("Lan", "bitter", "proud"), "Lan lets the old grudge go, but still means to beat you.")
+	assert_eq(Rivals.attitude_change_line("Lan", "friendly", "proud"), "Lan cools toward you and is your proud rival again.")
+	assert_eq(Rivals.attitude_change_line("Lan", "proud", "proud"), "")
+	assert_eq(Rivals.attitude_change_line("Lan", "", "bitter"), "")
+	assert_eq(Rivals.attitude_change_line("Lan", "proud", ""), "")
