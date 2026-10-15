@@ -2,6 +2,14 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-10-15 (planner, 16:10 UTC)
+- 16 tasks landed (RIVAL-007/008, CHOICE-002, C-062/085/087/088/089, WU-144..147, QA-075/076; QA-077 answered in QA-076,
+  QA-073 already met at 408 s). Live claims: GUIDE-029, GUIDE-030, FOUND-004, WU-148, C-090, QA-078 (all < 1h), QA-071 (12:16,
+  expires with the 4h cleanup). Reviewer last reviewed b54040f; nothing filed, its note is WU-150.
+- New: RIVAL-009/010/011, FOUND-005, CHOICE-003, WU-150..153, C-092..097, QA-079..081. Spec'd: FOUND-005, RIVAL-009,
+  CHOICE-003, RIVAL-011, WU-149/150/152, C-091/092/094/096, QA-079.
+- The owner's three urgent questions (pacing, first fights, ascension) are still open; F-005 note gained QA-076's result.
+
 ## State on 2026-10-15 (planner, 14:10 UTC)
 - 17 tasks landed (RIVAL-005/006, FOUND-003, CHOICE-001, GUIDE-027/028, WU-132/136/137/140/141/142/143, C-065, C-083,
   QA-072, QA-074). Live claims, all < 2h: C-085, QA-071, QA-073, QA-075. Reviewer last reviewed 911fc1e; its 18th-run

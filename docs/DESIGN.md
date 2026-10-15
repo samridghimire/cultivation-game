@@ -77,7 +77,7 @@ Every great cultivation protagonist has something that sets them apart. Ours is 
 | Items, merchants (shop screen with Buy/Sell tabs), using pills | ✅ | `data/items.json`, `Items`, `src/ui/shop_screen.gd` |
 | Save/load, multiple slots | ✅ | `SaveManager` |
 | Creation Artifact: lives, anchors, respawn, recharge, functions (storage) | ✅ (artifact screen: O) | `data/artifact.json`, `CreationArtifact` |
-| Data-driven regions (6), travel, exploration encounters | ✅ (choice window: W-004d; Dangerous lethal foes are sensed first and prompted: slip away or fight) | `data/regions.json`, `data/encounters.json`, `Exploration` |
+| Data-driven regions (6), travel, exploration encounters | ✅ (choice window: W-004d; choices that check an attribute or profession, tagged "[Comprehension 12]": CHOICE-001/002, WU-146; Dangerous lethal foes are sensed first and prompted: slip away or fight) | `data/regions.json`, `data/encounters.json`, `Exploration` |
 | Injuries (from breakthroughs and combat) | ✅ | `data/injuries.json`, `Injuries` |
 | Combat (auto-resolved) and techniques | ✅ techniques named in the log, playback with hp bars, spoils and loss advice in the report | `Combat`, `Techniques`, `data/enemies.json`, `data/techniques.json` |
 | NPCs (named + generated), aging, monthly sim | ✅ | `data/npcs.json`, `Npcs`, `Names` |
@@ -89,7 +89,7 @@ Every great cultivation protagonist has something that sets them apart. Ours is 
 | Cultivation methods (one main method, qi rate, realm cap) | ✅ (techniques screen) | `Techniques`, `data/techniques.json` |
 | Dao insights (encounters, practice, seclusion; technique + breakthrough bonuses) | ✅ (sheet + contemplation at meditation spots) | `data/dao.json`, `Dao` |
 | Heavenly Tribulations (Core Formation+, heart demon for demonic) | ✅ (prepare warning + wave screen) | `Tribulation`, `data/realms.json` |
-| Named rival (rolled at creation, met around day 10) | ✅ first meeting (RIVAL-003), journal line, world label, sheet, map mark, Look, first-year encounters (RIVAL-004, WU-138/139/141/143, C-086), word of their breakthroughs and surpassing them (RIVAL-005/006) | `Rivals`, `data/karma.json` |
+| Named rival (rolled at creation, met around day 10) | ✅ first meeting (RIVAL-003), journal line, world label, sheet, map mark, Look, first-year encounters (RIVAL-004, WU-138/139/141/143, C-086), word of their breakthroughs and surpassing them (RIVAL-005/006/007), a surpassed rival pushes back (RIVAL-008), Foundation encounters (C-087) | `Rivals`, `data/karma.json` |
 | Grudges and gratitude (rob/kill/humiliate NPCs, kin vengeance, amends) | ✅ (NPC menu, sheet, NPC Look text, grateful NPCs repay debts and join fights, grudge holders ambush travellers) | `data/karma.json`, `Karma` |
 | Secret realms (periodic openings, realm caps, guarded floors, inheritances) | ✅ (six realms with entrances across the regions; journal Opportunities, sheet Adventures) | `data/secret_realms.json`, `SecretRealms` |
 | Inheritance grounds (one-claimant trials) | ✅ (inheritance ground places; journal Opportunities, sheet Adventures) | `data/inheritances.json`, `Inheritances` |
@@ -119,7 +119,7 @@ Void Refinement → Body Integration → Mahayana → Tribulation Transcendence.
 
 ## Open design questions (for the human)
 **Most urgent (2026-10-07 planner):** these three decide what the agents build next.
-1. **(F-005d) Pacing**: a sensible player reaches Core Formation at ~20 and Nascent Soul at ~36; content currently stops at Core. How long should each realm take? *QA-066 (2026-10-15): the curious sim waits ~45 days at the Qi Refining bottleneck and makes ~2 Foundation attempts at 38-55% with no pill (it costs 300 stones; players hold ~170). Agents added a small "lessons from failure" bonus (FOUND-003, +3% per failure, cap 9%) and taught the sim to save: 6 of 10 sim players now afford the pill (QA-072). The pill price stays as is until you set the pacing.*
+1. **(F-005d) Pacing**: a sensible player reaches Core Formation at ~20 and Nascent Soul at ~36; content currently stops at Core. How long should each realm take? *QA-066 (2026-10-15): the curious sim waits ~45 days at the Qi Refining bottleneck and makes ~2 Foundation attempts at 38-55% with no pill (it costs 300 stones; players hold ~170). Agents added a small "lessons from failure" bonus (FOUND-003, +3% per failure, cap 9%) and taught the sim to save: 6 of 10 sim players now afford the pill (QA-072). QA-076: a player who keeps earning for up to 120 days at the bottleneck affords the pill in every seed that was short, so today the pill costs about 2-4 extra months. The pill price stays as is until you set the pacing.*
 2. **(C-009) The first fights**: a newcomer can't win any Qi Refining fight for ~3 in-game years. Soften the first realm, or keep it hard?
 3. **(END-001) Ascension**: there is no ending at all yet. See the question below.
 

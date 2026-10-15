@@ -2,6 +2,20 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-15 [RIVAL-008] A rival you surpass works harder, and can overtake you again.
+- 2026-10-15 [C-062] Four requests that come only to the renowned: a caravan escort, a duel to judge, a corpse refiner, a beast clan's truce.
+- 2026-10-15 [WU-146] Encounter choices that test you say what they check, like "[Comprehension 12]".
+- 2026-10-15 [WU-147] The world map marks your bounty hunt, or the hunts you could take.
+- 2026-10-15 [QA-076] Checked: waiting up to 120 days at the bottleneck lets every short simulated player afford the Foundation pill.
+- 2026-10-15 [CHOICE-002] Some encounter choices need a profession rank.
+- 2026-10-15 [C-087] Three encounters with your rival at Foundation Establishment.
+- 2026-10-15 [RIVAL-007] A rival who is already behind you is marked as surpassed without waiting for your next breakthrough.
+- 2026-10-15 [C-088] At the sect lecture, a sharp mind can answer better than your rival.
+- 2026-10-15 [WU-145] Checked: the breakthrough window fits at 1280x720 with every line in.
+- 2026-10-15 [WU-144] A shorter "Fair fight" line on the HUD.
+- 2026-10-15 [QA-075] Checked: the simulated curious player takes and wins open chore fights.
+- 2026-10-15 [C-089] Help pages for your rival and for what failed breakthroughs teach you.
+- 2026-10-15 [C-085] Every region with Qi Refining fights has a Qi Refining bounty (new stone ape hunt on Myriad Peaks Ridge).
 - 2026-10-15 [GUIDE-028] Fights you can win now consider every bounty nearby, not just the first one posted.
 - 2026-10-15 [WU-132] Checked: the "from a style to a win" screens fit at 1280x800 and 1280x720.
 - 2026-10-15 [WU-142] The breakthrough window shows your spirit stones against the pill's price.
