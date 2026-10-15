@@ -85,6 +85,7 @@ static func play(gs: Node, clock: Node, seed_value: int, months: int, curious: b
 	bus.combat_started.disconnect(on_start)
 	bus.combat_finished.disconnect(on_end)
 	out["style_month"] = int(done.get("style_month", -1))
+	out["fair_log"] = done.get("fair_log", {"listed": [], "taken": []})
 	out["injuries"] = c.injuries.size()
 	out["fights_won"] = LifeStats.get_stat(c, "fights_won")
 	out["fights_lost"] = LifeStats.get_stat(c, "fights_lost")
@@ -127,13 +128,26 @@ static func _curious_month(gs: Node, c: CharacterData, done: Dictionary, today: 
 			gs.perform_deed(deed["id"])
 			kinds["deed"] = true
 			break
+	# QA-067: what "Fights you can win" would list this month (empty list = a month of no suggestion).
+	var fair := Guidance.fair_fights(c, gs.data, gs.world_flags, today, gs.current_region) if c.alive else ([] as Array[Dictionary])
+	if not done.has("fair_log"):
+		done["fair_log"] = {"listed": [], "taken": []}
+	done["fair_log"]["listed"].append(fair.size())
 	if not c.is_rogue() and c.alive:
 		for mission_id in Sects.available_missions(c, gs.data, gs.world_flags):
 			if Sects.check_mission(c, gs.data, mission_id, gs.world_flags) != "" or not _mission_is_sane(gs, c, mission_id, done, today):
 				continue
 			var lost_before := LifeStats.get_stat(c, "fights_lost")
 			var odds_before := _mission_odds(gs, c, mission_id)
+			var won_before := LifeStats.get_stat(c, "fights_won")
+			var label := "Sect mission: %s" % gs.data.sect_missions[mission_id]["name"]
+			var listed_chance := -1.0
+			for f: Dictionary in fair:
+				if String(f["text"]).begins_with(label):
+					listed_chance = float(f["chance"])
 			gs.take_mission(mission_id)
+			if listed_chance >= 0.0:
+				done["fair_log"]["taken"].append({"chance": listed_chance, "won": LifeStats.get_stat(c, "fights_won") > won_before})
 			kinds["mission"] = true
 			if LifeStats.get_stat(c, "fights_lost") > lost_before:
 				done["lost_missions"][mission_id] = {"day": today, "odds": odds_before}

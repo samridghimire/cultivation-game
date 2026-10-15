@@ -34,6 +34,7 @@ fresh() {
 	run "log noise (seeds 1-5, 12 months)" res://tests/sim/log_noise.gd -- 5 12
 	run "three curious years (seeds 1-10, 36 months)" res://tests/sim/simulate_curious_years.gd -- 10 36
 	run "early inheritances (curious, seeds 1-10, 36 months)" res://tests/sim/early_inheritances.gd -- 10 36
+	run "fair fights (curious, seeds 1-10, 12 months)" res://tests/sim/fair_fights.gd -- 10 12
 	run "combat (200 fights per cell)" res://tests/sim/simulate_combat.gd -- 200
 	run "economy (seed defaults)" res://tests/sim/simulate_economy.gd
 	run "economy, bounty hunter (seeds 1-10, 12 months)" res://tests/sim/simulate_bounty.gd -- 10 12

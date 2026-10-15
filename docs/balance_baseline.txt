@@ -687,3 +687,9 @@ Per inheritance (10 seeds): seeds that could pass every non-fight trial, median 
   sword_mound_traveller  fallen_star_market       deadline y12 passable  6/10  month 13  odds 18%  claimed 6 (median month 18)  lost 0
       never passable; blocking trial at the end: { "Reading the Scratches": 4 }
 
+## fair fights (curious, seeds 1-10, 12 months)
+
+Fair-fights sim: 10 seeds, 12 months (curious player)
+Entries listed per month: median 1, max 3; empty months 1 of 120
+Listed fights taken: 88, won 83 (94%), mean rated chance 98%
+
