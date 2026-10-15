@@ -558,7 +558,14 @@ static func _mission_too_dangerous(c: CharacterData, data: GameData, mission_id:
 	var enemy_id := String(data.sect_missions.get(mission_id, {}).get("enemy", ""))
 	if enemy_id == "" or not data.enemies.has(enemy_id):
 		return false
-	return Combat.win_chance(c, data, data.enemies[enemy_id], 20) < 0.5
+	return mission_too_dangerous(c, data, enemy_id)
+
+
+## True when the fight is below Risky at the shared rating sample count.
+static func mission_too_dangerous(c: CharacterData, data: GameData, enemy_id: String) -> bool:
+	if not data.enemies.has(enemy_id):
+		return false
+	return Combat.win_chance(c, data, data.enemies[enemy_id]) < 0.5
 
 
 ## Announcements for features that just became available and whose flag

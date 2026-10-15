@@ -1103,6 +1103,16 @@ func test_mission_hint_skips_deadly_fights() -> void:
 	c.stage = 0
 	assert_true(Guidance._mission_too_dangerous(c, d, wolf))
 
+func test_mission_too_dangerous_matches_rating() -> void:
+	var d := data()
+	var c := new_character()
+	c.realm_index = 1
+	c.stage = 0
+	var enemy_id := String(d.sect_missions["patrol_misty_peaks"]["enemy"])
+	var expected := Combat.win_chance(c, d, d.enemies[enemy_id]) < 0.5
+	assert_eq(Guidance.mission_too_dangerous(c, d, enemy_id), expected)
+	assert_false(Guidance.mission_too_dangerous(c, d, "no_such_enemy"))
+
 func _qr(stage: int, stones: int) -> CharacterData:
 	var c := new_character()
 	c.realm_index = 1

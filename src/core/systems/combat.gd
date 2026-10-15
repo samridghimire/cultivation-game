@@ -379,10 +379,13 @@ static func fight_fingerprint(c: CharacterData) -> String:
 	])
 
 
+## Sample count behind every player-facing fight rating.
+const RATING_SAMPLES := 40
+
 ## Estimated chance (0..1) that `c` beats `enemy`, by simulating fights with
 ## a private fixed-seed rng (so it is stable and never touches game rng).
 ## Results are memoised per fight_fingerprint, so repeated ratings are free.
-static func win_chance(c: CharacterData, data: GameData, enemy: Dictionary, samples: int = 40) -> float:
+static func win_chance(c: CharacterData, data: GameData, enemy: Dictionary, samples: int = RATING_SAMPLES) -> float:
 	var key := "%d|%d|%s|%s" % [data.get_instance_id(), samples, str(enemy), fight_fingerprint(c)]
 	if _chance_cache.has(key):
 		return _chance_cache[key]
