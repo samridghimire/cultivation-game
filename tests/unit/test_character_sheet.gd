@@ -107,3 +107,13 @@ func test_strongest_foe_line() -> void:
 	assert_eq(CharacterSheet.strongest_foe_line(gs.data, flags), "Strongest foe beaten: %s" % low.name)
 	flags[Guidance.beat_realm_flag(high.id)] = true
 	assert_eq(CharacterSheet.strongest_foe_line(gs.data, flags), "Strongest foe beaten: %s" % high.name)
+
+
+func test_next_steps_text_caps_at_three() -> void:
+	var two := CharacterSheet.next_steps_text(PackedStringArray(["a", "b"]), "J")
+	assert_eq(two.count("\n"), 2)
+	assert_false(two.contains("More"))
+	var four := CharacterSheet.next_steps_text(PackedStringArray(["a", "b", "c", "d"]), "J")
+	assert_eq(four.count("\n"), 4)
+	assert_true(four.contains("More in the Journal (J)"))
+	assert_false(four.contains("- d"))

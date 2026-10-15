@@ -143,12 +143,10 @@ func _rebuild() -> void:
 		t += "[color=#%s]Rival[/color]\n  %s\n\n" % [accent, rival_line]
 	_gender_row.visible = p.gender == ""
 	var density := GameState.hint_density()
-	var hints := Guidance.hints(p, data, density, 6, GameState.npcs, GameState.world_flags, GameState.current_region, GameClock.total_days, GameState.npc_favor)
+	var hints := Guidance.hints(p, data, density, 4, GameState.npcs, GameState.world_flags, GameState.current_region, GameClock.total_days, GameState.npc_favor)
 	if not hints.is_empty():
 		t += "[color=#%s]Next steps[/color]\n" % accent
-		for line in hints:
-			t += "  - %s\n" % line
-		t += "\n"
+		t += next_steps_text(hints, InputConfig.current_label("toggle_journal")) + "\n"
 	var family := Family.describe_links(p, GameState.npcs, data)
 	family.append_array(Children.describe_pregnancies(p, GameState.npcs))
 	if not family.is_empty():
@@ -281,6 +279,16 @@ static func strongest_foe_line(data: GameData, flags: Dictionary) -> String:
 
 ## "Han Li, Qi Refining (far ahead of you), grudge 3" for the player's named rival,
 ## "<name> has died" if they are dead, "" when there is no rival or you have not met yet.
+## WU-167: at most 3 hint lines; when more were found, a dim pointer to the journal.
+static func next_steps_text(hints: PackedStringArray, journal_key: String) -> String:
+	var t := ""
+	for i in mini(hints.size(), 3):
+		t += "  - %s\n" % hints[i]
+	if hints.size() > 3:
+		t += "[color=#%s]  More in the Journal (%s)[/color]\n" % [UIStyle.HINT.to_html(false), journal_key]
+	return t
+
+
 static func rival_line(c: CharacterData, data: GameData, people: Dictionary, favor: Dictionary, flags: Dictionary = {}) -> String:
 	if not flags.get(Rivals.FIRST_MEETING_FLAG, false) or c.rival == "" or not people.has(c.rival):
 		return ""
