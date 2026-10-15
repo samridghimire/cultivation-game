@@ -306,6 +306,9 @@ static func rival_line(c: CharacterData, data: GameData, people: Dictionary, fav
 	var fav := int(favor.get(r.id, 0))
 	if fav != 0:
 		line += ", favor %d" % fav
+	var record := Rivals.bout_record_text(c)
+	if record != "":
+		line += " (%s)" % record
 	return line
 
 
