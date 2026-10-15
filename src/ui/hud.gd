@@ -948,6 +948,12 @@ func _update_modal() -> void:
 	_status_panel.visible = not blocking
 	_log_panel.visible = not blocking
 	EventBus.ui_modal_changed.emit(blocking or _time_skip.visible)
+	_hold_banners()
+
+
+## Banners wait while a report that must be read (fight, respawn, tribulation, death) is up.
+func _hold_banners() -> void:
+	_banner.set_held(_combat_report.visible or _respawn.visible or _tribulation.visible or _death_screen.visible)
 
 
 func _return_to_menu() -> void:
