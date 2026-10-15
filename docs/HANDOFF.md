@@ -2,6 +2,14 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-10-15 (planner, 18:10 UTC)
+- 21 tasks landed (FOUND-004/005, GUIDE-029/030, CHOICE-003, RIVAL-009/010/011, WU-148..153, C-090/091/092/094/096,
+  QA-078/079). Live claim: QA-080 (18:03). Reviewer last reviewed ea1a53f; it fixed the HUD goal banner and WU-148's stale
+  line, nothing filed.
+- New: FOUND-006, EFF-003, RIVAL-012/013/014, CORE-001, WU-154..159, C-098..101, QA-082/083. Spec'd: FOUND-006, EFF-003,
+  RIVAL-012/013, CORE-001, WU-154/155/157, C-093/097, QA-081/082. New DESIGN question RIVAL-014 (successor rival, default built).
+- The owner's three urgent questions (pacing, first fights, ascension) are still open.
+
 ## State on 2026-10-15 (planner, 16:10 UTC)
 - 16 tasks landed (RIVAL-007/008, CHOICE-002, C-062/085/087/088/089, WU-144..147, QA-075/076; QA-077 answered in QA-076,
   QA-073 already met at 408 s). Live claims: GUIDE-029, GUIDE-030, FOUND-004, WU-148, C-090, QA-078 (all < 1h), QA-071 (12:16,

@@ -2,6 +2,27 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-15 [RIVAL-010] Some encounters only happen when your rival is friendly, bitter or proud.
+- 2026-10-15 [WU-151] The character sheet and Look show your rival's attitude toward you.
+- 2026-10-15 [C-096] Three encounters where you can give something up for a fair return.
+- 2026-10-15 [C-094] Help page: Choices and Checks.
+- 2026-10-15 [WU-152] Checked: the newest windows work with keyboard and gamepad focus.
+- 2026-10-15 [RIVAL-011] Word reaches you when your rival dies.
+- 2026-10-15 [QA-079] Refreshed the balance baselines.
+- 2026-10-15 [RIVAL-009] Your rival can be friendly, bitter or proud toward you.
+- 2026-10-15 [GUIDE-029] The journal says which fights pay toward the Foundation pill you are short of.
+- 2026-10-15 [WU-150] The HUD's fair-fight line drops its percent when it would not fit.
+- 2026-10-15 [C-092] Sparring with your rival pays off, and the rival help page is filled in.
+- 2026-10-15 [CHOICE-003] Encounter choices also say when they need an alignment or cost an item.
+- 2026-10-15 [WU-153] The breakthrough option says whether you are ready for the tribulation.
+- 2026-10-15 [WU-148] The realm card names the rival you just passed.
+- 2026-10-15 [GUIDE-030] "Fights you can win" also rates the region's wild foes.
+- 2026-10-15 [C-091] Four more first-year choices that test an attribute.
+- 2026-10-15 [WU-149] A failed breakthrough says what you learned from it.
+- 2026-10-15 [QA-078] A rival still a mortal no longer counts as surpassed the moment you awaken.
+- 2026-10-15 [FOUND-005] The journal says whether you would survive your next Heavenly Tribulation.
+- 2026-10-15 [FOUND-004] New goals once you reach Foundation Establishment.
+- 2026-10-15 [C-090] Four encounters a doctor, smith, alchemist or beast tamer can answer.
 - 2026-10-15 [RIVAL-008] A rival you surpass works harder, and can overtake you again.
 - 2026-10-15 [C-062] Four requests that come only to the renowned: a caravan escort, a duel to judge, a corpse refiner, a beast clan's truce.
 - 2026-10-15 [WU-146] Encounter choices that test you say what they check, like "[Comprehension 12]".
