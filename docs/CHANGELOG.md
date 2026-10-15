@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-15 [QA-061] Checked bounty pay: the drunk bully and the sword madman pay far more than gathering.
 - 2026-10-14 [MENTOR-002] Elders give pointers sooner, and say when you first need a technique manual.
 - 2026-10-14 [C-068] Planting the valley guardian's seed makes Azure Peak's qi richer.
 - 2026-10-14 [WU-114] A banner and a map note when a secret realm is about to open.
