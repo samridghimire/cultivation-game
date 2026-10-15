@@ -337,3 +337,15 @@ func test_attitude_encounter_validation() -> void:
 	d.encounters["bad_att"] = {"id": "bad_att", "tags": ["city"], "rival": "any", "rival_attitude": "angry", "text": "Hi."}
 	d.encounters["bad_att2"] = {"id": "bad_att2", "tags": ["city"], "rival_attitude": "bitter", "text": "Hi."}
 	assert_eq(Rivals.validate(d).size(), 2, ", ".join(Rivals.validate(d)))
+
+
+func test_c093_attitude_encounters_data() -> void:
+	var d := GameData.load_from_dir()
+	var want := {"rival_shares_insight": "friendly", "rival_spoils_gathering": "bitter", "rival_public_challenge": "proud"}
+	for id: String in want:
+		assert_true(d.encounters.has(id), id)
+		var e: Dictionary = d.encounters[id]
+		assert_eq(String(e["rival_attitude"]), want[id], id)
+		assert_eq(String(e["min_realm"]), "qi_refining", id)
+		assert_true(String(e["blocked_by_flag"]) != "", id + " is once-only")
+	assert_eq(Rivals.validate(d).size(), 0, ", ".join(Rivals.validate(d)))
