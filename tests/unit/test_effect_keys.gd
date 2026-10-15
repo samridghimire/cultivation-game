@@ -56,3 +56,43 @@ func test_apply_flag_arrays() -> void:
 	assert_true(flags.has("keep"))
 	Effects.apply(c, d, {"set_flag": "solo"}, flags)
 	assert_true(flags.has("solo"))
+
+
+func test_practice_days_trains_weakest_combat_technique() -> void:
+	var d := data()
+	var c := new_character()
+	Techniques.learn(c, d, "iron_fist")
+	Techniques.learn(c, d, "stone_skin")
+	c.techniques["stone_skin"]["level"] = 2
+	var before := Techniques.level(c, "stone_skin")
+	var notes := Effects.apply(c, d, {"practice_days": 30}, {})
+	assert_eq(notes.size(), 1)
+	assert_true(String(notes[0]).begins_with("Your Iron Fist improves"), notes[0])
+	assert_eq(Techniques.level(c, "stone_skin"), before)
+	assert_gt(float(c.techniques["iron_fist"]["xp"]) + Techniques.level(c, "iron_fist") * 1000.0, 0.0)
+
+
+func test_practice_days_falls_back_to_any_technique() -> void:
+	var d := data()
+	var c := new_character()
+	Techniques.learn(c, d, "basic_breathing")
+	var notes := Effects.apply(c, d, {"practice_days": 5}, {})
+	assert_eq(notes.size(), 1)
+	assert_true(String(notes[0]).begins_with("Your "), notes[0])
+
+
+func test_practice_days_nothing_to_train() -> void:
+	var d := data()
+	var c := new_character()
+	assert_eq(Effects.apply(c, d, {"practice_days": 5}, {}).size(), 0)
+	Techniques.learn(c, d, "iron_fist")
+	c.techniques["iron_fist"]["level"] = d.techniques["iron_fist"].max_level
+	assert_eq(Effects.apply(c, d, {"practice_days": 5}, {}).size(), 0)
+
+
+func test_practice_days_validation() -> void:
+	var d := data()
+	assert_eq(Effects.validate(d, {"practice_days": 7}, "t").size(), 0)
+	assert_eq(Effects.validate(d, {"practice_days": 0}, "t").size(), 1)
+	assert_eq(Effects.validate(d, {"practice_days": 31}, "t").size(), 1)
+	assert_eq(Effects.validate(d, {"practice_days": "x"}, "t").size(), 1)

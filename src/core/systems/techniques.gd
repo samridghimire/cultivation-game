@@ -107,6 +107,41 @@ static func practice(c: CharacterData, data: GameData, tech_id: String, days: in
 	return {"ok": true, "reason": "", "xp": gained, "levels_gained": levels}
 
 
+## Train the least-practised known unmastered combat technique for `days`
+## (EFF-002); failing that, any known unmastered technique the same way.
+## Ties go to the lowest id. Returns the technique's name, "" if none.
+static func train_best_combat(c: CharacterData, data: GameData, days: int) -> String:
+	var id := train_best_combat_id(c, data, days)
+	return data.techniques[id].name if id != "" else ""
+
+
+## As train_best_combat, but returns the technique id ("" if none).
+static func train_best_combat_id(c: CharacterData, data: GameData, days: int) -> String:
+	var pick := _least_trained(c, data, true)
+	if pick == "":
+		pick = _least_trained(c, data, false)
+	if pick == "":
+		return ""
+	if not practice(c, data, pick, days)["ok"]:
+		return ""
+	return pick
+
+
+static func _least_trained(c: CharacterData, data: GameData, combat_only: bool) -> String:
+	var ids: Array = c.techniques.keys()
+	ids.sort()
+	var best := ""
+	for tech_id: String in ids:
+		var def: TechniqueDef = data.techniques.get(tech_id)
+		if def == null or is_mastered(c, data, tech_id):
+			continue
+		if combat_only and def.kind != "combat":
+			continue
+		if best == "" or level(c, tech_id) < level(c, best):
+			best = tech_id
+	return best
+
+
 ## How strongly a technique works for someone with these roots. Techniques
 ## without an element, and characters without roots data (enemies), get 1.0.
 static func element_factor(def: TechniqueDef, roots: Dictionary, data: GameData) -> float:

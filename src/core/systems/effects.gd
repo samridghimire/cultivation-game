@@ -15,6 +15,8 @@ extends RefCounted
 ##   burn_lifespan: int         spend years of lifespan (refused if it would kill outright)
 ##   extend_lifespan: int       gain years of lifespan
 ##   learn_recipe: String       learn a crafting recipe (see alchemy.gd)
+##   practice_days: int         train your least-practised fighting style (else any technique) for
+##                              that many days (1..30), no time passes (see techniques.gd)
 ##   dao_insight: String        gain one level of a Dao insight (see dao.gd), e.g. a sudden enlightenment
 ##   buff: {id, name, days, mults: {stat: fraction}}  temporary combat buff (see buffs.gd),
 ##                              e.g. from a talisman; re-using it refreshes the duration
@@ -103,6 +105,10 @@ static func apply(c: CharacterData, data: GameData, effects: Dictionary, flags: 
 		notes.append("Learned %s" % data.techniques[effects["learn_technique"]].name)
 	if effects.has("learn_recipe") and Alchemy.learn(c, data, effects["learn_recipe"]):
 		notes.append("Learned the %s recipe" % data.recipes[effects["learn_recipe"]].get("name", effects["learn_recipe"]))
+	if effects.has("practice_days"):
+		var trained_id := Techniques.train_best_combat_id(c, data, int(effects["practice_days"]))
+		if trained_id != "":
+			notes.append("Your %s improves (level %d)" % [data.techniques[trained_id].name, Techniques.level(c, trained_id)])
 	if effects.has("heal_injury"):
 		for injury_id in Injuries.heal(c, effects["heal_injury"]):
 			notes.append("%s healed" % Injuries.injury_name(data, injury_id))
@@ -140,7 +146,7 @@ static func flag_list(value: Variant) -> PackedStringArray:
 const KEYS: Array[String] = [
 	"qi", "alignment", "items", "breakthrough_bonus", "breakthrough_realm", "set_flag", "clear_flag",
 	"learn_technique", "heal_injury", "burn_lifespan", "extend_lifespan", "learn_recipe", "dao_insight",
-	"buff", "reputation", "witnessed", "attributes", "bloodline",
+	"buff", "reputation", "witnessed", "attributes", "bloodline", "practice_days",
 ]
 
 
@@ -177,6 +183,10 @@ static func validate(data: GameData, effects: Dictionary, where: String) -> Pack
 	for attr_id: Variant in effects.get("attributes", {}):
 		if not attribute_ids.has(String(attr_id)):
 			errors.append("%s: unknown attribute '%s'" % [where, attr_id])
+	if effects.has("practice_days"):
+		var days: Variant = effects["practice_days"]
+		if not (days is int or (days is float and days == floorf(days))) or int(days) < 1 or int(days) > 30:
+			errors.append("%s: practice_days must be an int 1..30" % where)
 	for key in ["set_flag", "clear_flag"]:
 		if not effects.has(key):
 			continue
