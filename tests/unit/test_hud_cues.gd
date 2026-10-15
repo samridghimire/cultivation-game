@@ -140,6 +140,8 @@ func test_fair_fight_line() -> void:
 	assert_eq(HUD.fair_fight_line([]), "")
 	var one: Array[Dictionary] = [{"text": "Sect mission: Boar (80%)", "chance": 0.8, "kind": "mission"}, {"text": "Other", "chance": 0.6, "kind": "deed"}]
 	assert_eq(HUD.fair_fight_line(one), "Fair fight: Sect mission: Boar (80%)")
+	var named: Array[Dictionary] = [{"text": "Sect mission: Boar Hunt (Even, 80 in 100)", "chance": 0.8, "kind": "mission", "enemy": "Boar"}]
+	assert_eq(HUD.fair_fight_line(named), "Fair fight: Boar (Even 80)")
 
 
 func test_quarry_note_only_in_the_bounty_region() -> void:

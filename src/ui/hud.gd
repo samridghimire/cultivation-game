@@ -544,16 +544,22 @@ func _refresh_fair_fight() -> void:
 		entries = Guidance.fair_fights(GameState.player, GameState.data, GameState.world_flags, GameClock.total_days, GameState.current_region)
 	var line := fair_fight_line(entries)
 	_fair.text = line
-	_fair.tooltip_text = line
+	_fair.tooltip_text = "\n".join(entries.map(func(e: Dictionary) -> String: return String(e.get("text", ""))))
 	_fair.visible = line != ""
 	_fit_status_panel.call_deferred()
 
 
-## "Fair fight: <best entry's text>" ("" for an empty list).
+## "Fair fight: <enemy> (<rating> <percent>)" for the best entry ("" for an empty list). Falls back to the entry's
+## full text when it names no enemy.
 static func fair_fight_line(entries: Array) -> String:
 	if entries.is_empty():
 		return ""
-	return "Fair fight: %s" % String(entries[0].get("text", ""))
+	var best: Dictionary = entries[0]
+	var enemy := String(best.get("enemy", ""))
+	if enemy == "" or not best.has("chance"):
+		return "Fair fight: %s" % String(best.get("text", ""))
+	var chance := float(best["chance"])
+	return "Fair fight: %s (%s %d)" % [enemy, Combat.label_for_chance(chance), roundi(chance * 100.0)]
 
 
 ## "Lives N" from the Creation Artifact (WU-095): warning at 1 life, danger with "Final life" at 0.
