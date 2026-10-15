@@ -426,3 +426,53 @@ func test_newest_menus_keep_focus() -> void:
 	hud.free()
 	gs.end_session()
 	await _frames()
+
+
+## WU-123: the shop with a friend's price and a very long title, the secret realm
+## notice banner arriving over an open menu, and the character sheet's People list
+## with a letter request. The gossip window is covered in the HUD screen audit above.
+func test_newest_windows_keep_focus_wu123() -> void:
+	var root := _tree().root
+	var gs: Node = root.get_node("GameState")
+	var c := new_character()
+	c.add_item("spirit_stone", 5000)
+	gs.start_session(c)
+	gs.pending_event = ""
+	gs.current_region = "qingshi_village"
+	var hud: CanvasLayer = load("res://src/ui/hud.tscn").instantiate()
+	root.add_child(hud)
+	await _frames()
+
+	# A shop with a friend's price and a wrapped title.
+	c.shop_deals["qingshi_village"] = {"mult": 0.8, "until": GameClock.total_days + 12}
+	var shop: Control = hud.get("_shop")
+	shop.open("The Extraordinarily Well Travelled Wandering Merchant of the Nine Provinces", 0, ["herb"])
+	await _expect_focus(shop, "shop with a friend's price and a long title")
+	var shop_owner := root.gui_get_focus_owner()
+
+	# A secret realm notice banner must not steal focus from the open shop.
+	if not gs.data.secret_realms.is_empty():
+		EventBus.secret_realm_notice.emit(String(gs.data.secret_realms.keys()[0]))
+		await _frames(3)
+		assert_true(root.gui_get_focus_owner() == shop_owner, "realm notice banner leaves the shop's focus alone")
+		assert_true(shop.visible, "shop stays open under the notice banner")
+	_press("ui_cancel")
+	await _frames()
+	assert_false(shop.visible, "shop: ui_cancel closes it")
+	c.shop_deals.clear()
+
+	# The character sheet's People list with a letter request.
+	var npc := Npcs.spawn(gs.npcs, gs.data, seeded_rng(5), {"age_years": 30, "region": "qingshi_village"})
+	gs.npc_favor[npc.id] = 30
+	c.letter_requests.append({"npc_id": npc.id, "item": "qi_gathering_pill", "count": 1, "until": GameClock.total_days + 20, "favor": 10, "effects": {}})
+	var sheet: Control = hud.get("_screens")["toggle_character_sheet"]
+	sheet.open()
+	await _expect_focus(sheet, "character sheet with a request in the People list")
+	_press("ui_cancel")
+	await _frames()
+	assert_false(sheet.visible, "character sheet: ui_cancel closes it")
+
+	root.remove_child(hud)
+	hud.free()
+	gs.end_session()
+	await _frames()
