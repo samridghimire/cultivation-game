@@ -2,6 +2,18 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-15 [QA-069] Checked: a simulated newcomer who loses the boar chore now tries it again later and wins.
+- 2026-10-15 [C-063] Checked: every first-rank sect fight mission is fair at its gate.
+- 2026-10-15 [RIVAL-003] You meet your named rival in the first weeks.
+- 2026-10-15 [WU-134] Before a Foundation+ breakthrough a window shows your odds, the risk and the pills you can take.
+- 2026-10-15 [QA-068] The unit tests run nearly twice as fast and print the slowest tests.
+- 2026-10-15 [QA-066] Checked the first Foundation breakthrough: most attempts are under 50% and nobody affords the pill yet.
+- 2026-10-15 [C-084] Every realm has a line about what it means to reach it.
+- 2026-10-15 [DLG-001] Elder Mo tells you to practise whatever fighting style you learned, not just Iron Fist.
+- 2026-10-15 [FOUND-002] The breakthrough option says how much qi a failure costs and the chance of an injury.
+- 2026-10-15 [WU-129] Inheritance grounds say what the next trial needs before you attempt it.
+- 2026-10-15 [GUIDE-026] Open village chores with a fight count as fights you can win.
+- 2026-10-15 [C-077] Four early encounters train your fighting technique (an old soldier, a wandering boxer and more).
 - 2026-10-15 [C-081] Withered Bone Marsh posts a Qi Refining bounty: a corpse refiner's puppet (from the 6th Layer).
 - 2026-10-15 [FOUND-001] Late in Qi Refining the journal says how much the Foundation pill costs and where to buy it.
 - 2026-10-15 [WU-133] The shop's item list is wider, so long manual names show in full.

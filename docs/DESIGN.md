@@ -63,7 +63,7 @@ Every great cultivation protagonist has something that sets them apart. Ours is 
 | Realms & stages (Mortal → Tribulation Transcendence) | ✅ | `data/realms.json`, `Cultivation` |
 | Spiritual roots (5 elements, grades, purity) | ✅ | `data/spiritual_roots.json`, `SpiritualRoots` |
 | Attributes (Constitution, Comprehension, Spirit, Fortune, Charisma) | ✅ | `data/attributes.json` |
-| Breakthroughs with risk, pills that boost odds | ✅ | `Cultivation.attempt_breakthrough` |
+| Breakthroughs with risk, pills that boost odds | ✅ (risk line on the attempt, breakthrough window with pills: FOUND-002, WU-134; realm descriptions: C-084) | `Cultivation.attempt_breakthrough` |
 | Lifespan, death by old age, burning/extending lifespan | ✅ | `Cultivation`, `GameState._on_days_advanced` |
 | Alignment (Demonic … Righteous) and deeds (with cooldowns) | ✅ | `data/alignment.json`, `data/deeds.json` |
 | Sects (join/leave, requirements, ranks with realm/stage gates, contribution, missions, trials/stipends/duties, monthly elder lecture) | ✅ (shop: G-008c; rank UI: G-011b; lecture at the sect hall) | `data/sects.json`, `Sects` |
@@ -89,6 +89,7 @@ Every great cultivation protagonist has something that sets them apart. Ours is 
 | Cultivation methods (one main method, qi rate, realm cap) | ✅ (techniques screen) | `Techniques`, `data/techniques.json` |
 | Dao insights (encounters, practice, seclusion; technique + breakthrough bonuses) | ✅ (sheet + contemplation at meditation spots) | `data/dao.json`, `Dao` |
 | Heavenly Tribulations (Core Formation+, heart demon for demonic) | ✅ (prepare warning + wave screen) | `Tribulation`, `data/realms.json` |
+| Named rival (rolled at creation, met around day 10) | ✅ first meeting (RIVAL-003); journal, label, news next (RIVAL-004..006, WU-138/139) | `Rivals`, `data/karma.json` |
 | Grudges and gratitude (rob/kill/humiliate NPCs, kin vengeance, amends) | ✅ (NPC menu, sheet, NPC Look text, grateful NPCs repay debts and join fights, grudge holders ambush travellers) | `data/karma.json`, `Karma` |
 | Secret realms (periodic openings, realm caps, guarded floors, inheritances) | ✅ (six realms with entrances across the regions; journal Opportunities, sheet Adventures) | `data/secret_realms.json`, `SecretRealms` |
 | Inheritance grounds (one-claimant trials) | ✅ (inheritance ground places; journal Opportunities, sheet Adventures) | `data/inheritances.json`, `Inheritances` |
@@ -118,7 +119,7 @@ Void Refinement → Body Integration → Mahayana → Tribulation Transcendence.
 
 ## Open design questions (for the human)
 **Most urgent (2026-10-07 planner):** these three decide what the agents build next.
-1. **(F-005d) Pacing**: a sensible player reaches Core Formation at ~20 and Nascent Soul at ~36; content currently stops at Core. How long should each realm take?
+1. **(F-005d) Pacing**: a sensible player reaches Core Formation at ~20 and Nascent Soul at ~36; content currently stops at Core. How long should each realm take? *QA-066 (2026-10-15): the curious sim waits ~45 days at the Qi Refining bottleneck and makes ~2 Foundation attempts at 38-55% with no pill (it costs 300 stones; players hold ~170). Agents are adding a small "lessons from failure" bonus (FOUND-003) and leaving the pill price alone until you set the pacing.*
 2. **(C-009) The first fights**: a newcomer can't win any Qi Refining fight for ~3 in-game years. Soften the first realm, or keep it hard?
 3. **(END-001) Ascension**: there is no ending at all yet. See the question below.
 

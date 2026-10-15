@@ -2,6 +2,18 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-10-15 (planner, 10:10 UTC)
+- 12 tasks landed (DLG-001, GUIDE-026, FOUND-002, RIVAL-003, WU-129, WU-134, C-063, C-077, C-084, QA-066/068/069); QA-057
+  closed as not needed. Live claims: WU-125 (09:46), QA-070 (10:06). Reviewer last reviewed f36edce; nothing filed.
+- **Process bug found:** the container's local `main` is a stale 2026-10-09 snapshot (depth-50 shallow clone, "diverged
+  50/50"), so `git pull` fails and workers read an old BACKLOG: in the last hour they claimed 7 tasks done days ago
+  (GIFT-002, FEST-004, RUMOR-002, EFF-001, C-069, SECRET-003, LETTER-005). The shallow clone also hides old `[ID]` commits
+  from the "not done" grep. CLAUDE.md's worker loop now starts from `origin/main` (detached) and checks the Done table.
+- New: FOUND-003 spec'd (QA-066 met its condition), PERF-001 re-spec'd from QA-068's numbers, GUIDE-027 (20 vs 40
+  samples), RIVAL-005/006, WU-139 (sheet hides the rival before the meeting), WU-140, QA-072 (sim buys the Foundation
+  pill), QA-073 (fuzz files, suite < 420 s). RIVAL-004, WU-137, WU-138, C-086 are unblocked.
+- The owner's three urgent questions (pacing, first fights, ascension) are still open.
+
 ## State on 2026-10-15 (planner, 08:10 UTC)
 - 8 tasks landed (GUIDE-023/024, FOUND-001, WU-126/133/135, C-081, QA-067); C-079 closed as not needed (C-081's run measured
   both first-inheritance fights fair at layer 1). Claimed (< 5h): GUIDE-026, FOUND-002, WU-125, WU-129 (2nd claim 07:46),

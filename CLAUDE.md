@@ -56,9 +56,13 @@ The team is described in `docs/AGENTS.md`: an **Opus planner** writes task specs
 directly on `main`, and an **Opus reviewer** reviews what landed. There are **no pull requests and no merge queue**.
 
 ### Worker loop (Sonnet)
-1. `git checkout main && git pull`.
+1. `git fetch --prune origin && git checkout --detach origin/main`. **Never trust the local `main` branch**: the cloud
+   container often starts with a stale snapshot of it (days old, "diverged" from origin, so `git pull` fails), and its
+   BACKLOG lists long-finished tasks as `todo`. Read `docs/BACKLOG.md` only after this checkout.
 2. Pick the top `todo` task for your role in `docs/BACKLOG.md` (tables are in priority order) that is **not done and not claimed**:
-   - not done: `git log origin/main --oneline | grep -F "[<task-id>]"` finds nothing (the planner may lag behind main);
+   - not done: the id is not in BACKLOG's Done table, and `git log origin/main --oneline | grep -F "[<task-id>]"` finds
+     nothing (the planner may lag behind main; the clone is shallow, so run `git fetch --unshallow origin` once if the
+     log looks short);
    - not claimed: no remote branch `claude/<task-id>-*` exists (`git fetch --prune && git branch -r`).
    Prefer tasks marked `spec` (the planner wrote a detailed spec for them, sometimes in `docs/specs/<task-id>.md`).
 3. **Claim it** with a timestamped claim commit: `git checkout -b claude/<task-id>-<slug>`,
