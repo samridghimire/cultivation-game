@@ -58,6 +58,7 @@ var _family: FamilyScreen
 var _child_training: ChildTrainingScreen
 var _banner: Banner
 var _tech_levels: Dictionary = {}  # technique id -> last seen level (WU-130)
+var _goals_done: Array[String] = []  # texts of first goals already done (WU-131)
 var _season := ""
 var _season_flush_queued := false
 var _time_skip: TimeSkipOverlay
@@ -202,6 +203,9 @@ func _ready() -> void:
 	EventBus.session_started.connect(_sync_tech_levels)
 	EventBus.player_changed.connect(_announce_tech_levels)
 	_sync_tech_levels()
+	EventBus.session_started.connect(_sync_goals_done)
+	EventBus.player_changed.connect(_announce_goals_done)
+	_sync_goals_done()
 	_season = Calendar.season_of(GameClock.total_days)
 	GameClock.days_advanced.connect(_on_days_advanced)
 	EventBus.session_started.connect(func(): _season = Calendar.season_of(GameClock.total_days))
@@ -736,6 +740,48 @@ func _announce_tech_levels() -> void:
 		var sub := "Mastered" if entry["mastered"] else ""
 		_banner.announce("%s reaches level %d" % [entry["name"], entry["level"]], sub, UIStyle.ACCENT, 1.2, true)
 	_sync_tech_levels()
+
+
+func _done_goal_texts() -> Array[String]:
+	var out: Array[String] = []
+	if GameState.player == null:
+		return out
+	for goal in Guidance.first_goals(GameState.player, GameState.data, GameState.world_flags):
+		if goal["done"]:
+			out.append(str(goal["text"]))
+	return out
+
+
+func _sync_goals_done() -> void:
+	_goals_done = _done_goal_texts()
+
+
+## A first goal ticked off (WU-131): one banner per refresh, naming the next goal.
+func _announce_goals_done() -> void:
+	var c: CharacterData = GameState.player
+	if c == null:
+		return
+	if c.realm_index <= 1:
+		var goals := Guidance.first_goals(c, GameState.data, GameState.world_flags)
+		var fresh := newly_done_goals(_goals_done, goals)
+		if not fresh.is_empty():
+			var next := "  Your first goals are done; the journal (%s) has more." % InputConfig.current_label("toggle_journal")
+			for goal in goals:
+				if not goal["done"]:
+					next = "  Next: " + str(goal["text"])
+					break
+			_banner.announce("Goal done", fresh[-1] + next, UIStyle.ACCENT, 1.5)
+	_sync_goals_done()
+
+
+## Texts of goals in `goals` that are done but not in `before`, in list order.
+static func newly_done_goals(before: Array[String], goals: Array[Dictionary]) -> Array[String]:
+	var out: Array[String] = []
+	for goal in goals:
+		var text := str(goal["text"])
+		if goal["done"] and not before.has(text):
+			out.append(text)
+	return out
 
 
 ## Known techniques whose level is above the one in `before`, sorted by name.

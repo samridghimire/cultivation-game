@@ -157,3 +157,14 @@ func test_leveled_techniques() -> void:
 	assert_eq(out.size(), 1)
 	assert_eq(int(out[0]["level"]), 2)
 	assert_eq(HUD.leveled_techniques({}, c, d).size(), 0, "a newly learned technique is not announced")
+
+
+## WU-131: newly done first goals are reported in list order.
+func test_newly_done_goals() -> void:
+	var goals: Array[Dictionary] = [{"text": "A", "done": true}, {"text": "B", "done": false}, {"text": "C", "done": false}]
+	var before: Array[String] = ["A"]
+	assert_eq(HUD.newly_done_goals(before, goals).size(), 0)
+	goals[1]["done"] = true
+	assert_eq(HUD.newly_done_goals(before, goals), ["B"] as Array[String])
+	goals[2]["done"] = true
+	assert_eq(HUD.newly_done_goals([] as Array[String], goals), ["A", "B", "C"] as Array[String])
