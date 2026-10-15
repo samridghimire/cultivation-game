@@ -74,12 +74,12 @@ func queued_count() -> int:
 	return _queue.size()
 
 
-## Test hook and tween end: show the next queued banner, or hide.
+## Test hook and tween end: show the next queued banner, or hide (queued banners keep waiting while held).
 func finish_current() -> void:
 	if _tween != null:
 		_tween.kill()
 		_tween = null
-	if _queue.is_empty():
+	if _queue.is_empty() or held:
 		hide()
 		return
 	var next: Array = _queue.pop_front()

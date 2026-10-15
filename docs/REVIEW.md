@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: e922009
+Last reviewed commit: 5329c38
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -377,3 +377,14 @@ Last reviewed commit: e922009
     "combat", so learning Stone Skin alone does not quiet them; wording choice for the planner. (3) WU-116 follow-up
     stands: the milestone banner draws over an open combat report after the first death. (4) QA-062 follow-up: Mist Wolf
     still the top early killer even with a style (QA-057/C-063).
+- 2026-10-15 (reviewer, 13th run): reviewed e922009..5329c38 (LOG-001, C-074, WU-119, LETTER-006, C-070, WU-123, QA-044,
+  C-075, MENTOR-003, GUIDE-019b, REF-001, WU-120, WU-124; [PLAN]/[REVIEW] skipped). Main green before and after. No
+  BACKLOG/CHANGELOG edits by workers; no SAVE_VERSION change and no new persistent state. Nothing filed.
+  - Fixed ([REVIEW] commit): WU-124: a banner already showing when the hold began still ended through finish_current(),
+    which popped and played the next queued banner over the open combat report (e.g. a milestone queued during the
+    fight). finish_current now hides and keeps the queue while held; unit test added.
+  - Notes for the planner, not filed: (1) REF-001 changes behavior: a sect call whose mission is merely on cooldown now
+    posts nothing (was "Your sect calls on its disciples again."); the commit says this is intended. (2) C-075 follow-up
+    stands: the "coming" rumors keep playing after the realm/inheritance is found (no found flag to block on).
+    (3) GUIDE-019b closes last run's notes (1) and (2). (4) tools/test.sh's unit suite now takes ~15 minutes on the cloud
+    box; the sims are the likely cost, worth a look before it gets slower.

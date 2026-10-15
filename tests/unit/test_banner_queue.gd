@@ -41,6 +41,20 @@ func test_held_banner_queues_until_released() -> void:
 	b.free()
 
 
+## A banner already showing when the hold starts finishes without starting the queued one.
+func test_banner_ending_while_held_keeps_queue() -> void:
+	var b := Banner.new()
+	b.announce("Breakthrough!", "x", Color.WHITE)
+	b.set_held(true)
+	b.announce("Milestone", "a", Color.WHITE)
+	b.finish_current()
+	assert_false(b.visible, "the queued banner waits for the report to close")
+	assert_eq(b.queued_count(), 1)
+	b.set_held(false)
+	assert_eq(b.subtitle_text(), "a")
+	b.free()
+
+
 func test_hud_holds_banner_while_combat_report_open() -> void:
 	var tree := Engine.get_main_loop() as SceneTree
 	var gs: Node = tree.root.get_node("GameState")
