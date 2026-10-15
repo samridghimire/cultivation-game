@@ -960,3 +960,20 @@ func test_first_combat_hint_falls_back_to_a_source() -> void:
 	assert_false(found.is_empty())
 	assert_eq(found["merchant"], "")
 	assert_true(Guidance.first_combat_hint(c, data(), "").contains("Look for the"))
+
+
+func test_first_combat_manual_skips_lifespan_burning_arts() -> void:
+	var c := _fresh()
+	c.techniques = {}
+	var d := GameData.load_from_dir()
+	var iron: TechniqueDef = d.techniques["iron_fist"]
+	iron.activation = {"lifespan_cost": 5}
+	var found := Guidance.first_combat_manual(c, d, "qingshi_village")
+	assert_true(found.is_empty() or found.get("technique", "") != "iron_fist", "burning art skipped")
+
+
+func test_first_combat_hint_acknowledges_a_body_art() -> void:
+	var c := _fresh()
+	c.techniques = {"stone_skin": {"level": 1, "xp": 0.0}}
+	var hint := Guidance.first_combat_hint(c, data(), "qingshi_village")
+	assert_true(hint.begins_with("Your body art guards you, but you know no fighting style."), hint)

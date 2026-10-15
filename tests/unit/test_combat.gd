@@ -313,3 +313,11 @@ func test_loss_advice_mentions_missing_fighting_style() -> void:
 	assert_true(Combat.loss_advice(c, data(), foe, lost).contains("no fighting style"))
 	c.techniques = {"iron_fist": {"level": 1, "xp": 0.0}}
 	assert_false(Combat.loss_advice(c, data(), foe, lost).contains("no fighting style"))
+
+
+func test_loss_advice_body_art_wording() -> void:
+	var c := new_character()
+	var lost := {"victory": false, "draw": false, "escaped": false}
+	c.techniques = {"stone_skin": {"level": 1, "xp": 0.0}}
+	var advice := Combat.loss_advice(c, data(), _foe("mortal", 0, 0, 0, 0), lost)
+	assert_true(advice.contains("no striking technique yet"), advice)

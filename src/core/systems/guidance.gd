@@ -607,6 +607,8 @@ static func first_combat_manual(c: CharacterData, data: GameData, region_id: Str
 	for tech: TechniqueDef in data.techniques.values():
 		if tech.kind != "combat" or tech.manual_item == "" or not data.items.has(tech.manual_item):
 			continue
+		if not tech.activation.is_empty():
+			continue
 		if data.realm_index_of(tech.min_realm) > c.realm_index:
 			continue
 		var item: Dictionary = data.items[tech.manual_item]
@@ -632,9 +634,10 @@ static func first_combat_hint(c: CharacterData, data: GameData, region_id: Strin
 	if found.is_empty():
 		return ""
 	var manual: String = data.items[found["item"]]["name"]
+	var lead := "Your body art guards you, but you know no fighting style." if Techniques.knows_kind(c, data, "body") else "You know no fighting style."
 	if String(found["merchant"]) != "":
-		return "You know no fighting style. %s at the %s teaches %s for %d spirit stones." % [manual, found["merchant"], data.techniques[found["technique"]].name, int(found["price"])]
-	return "You know no fighting style. Look for the %s (%s)." % [manual, found["source"]]
+		return "%s %s at the %s teaches %s for %d spirit stones." % [lead, manual, found["merchant"], data.techniques[found["technique"]].name, int(found["price"])]
+	return "%s Look for the %s (%s)." % [lead, manual, found["source"]]
 
 
 ## First-steps pointers for Mortal and Qi Refining players, most useful first.
