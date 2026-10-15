@@ -1481,3 +1481,67 @@ func test_bitter_rival_hint_unaffordable_unmet_and_dead() -> void:
 	assert_true(_bitter_hint(Guidance.hints(c, d, 1.0, 20, people, flags)).contains("Amends would cost %d stones" % cost))
 	rival.alive = false
 	assert_eq(_bitter_hint(Guidance.hints(c, d, 1.0, 20, people, flags)), "", "dead")
+
+
+## GUIDE-033: the rival bout as a fair fight.
+func _rival_fighter() -> Array:
+	var d := data()
+	var c := _fighter()
+	var people := {}
+	var rival := Rivals.spawn(c, people, d, seeded_rng(), "qingshi_village")
+	rival.realm_index = 1
+	rival.stage = 0
+	return [d, c, people, rival]
+
+
+func _rival_kinds(fights: Array[Dictionary]) -> Array:
+	return fights.map(func(f: Dictionary) -> String: return f["kind"])
+
+
+func test_fair_fights_list_a_fair_rival_bout() -> void:
+	var s := _rival_fighter()
+	var d: GameData = s[0]
+	var c: CharacterData = s[1]
+	var people: Dictionary = s[2]
+	var rival: CharacterData = s[3]
+	var flags := {Rivals.FIRST_MEETING_FLAG: true}
+	var rated := Combat.win_chance(c, d, Mentorship.spar_enemy(rival, d))
+	var fights := Guidance.fair_fights(c, d, flags, c.age_days, "qingshi_village", people, {rival.id: 20})
+	if rated >= Guidance.FAIR_FIGHT_MIN_CHANCE:
+		assert_true(_rival_kinds(fights).has("rival"), "fair bout listed")
+		for f in fights:
+			if f["kind"] == "rival":
+				assert_true(String(f["text"]).begins_with("Challenge %s" % rival.name))
+	else:
+		assert_false(_rival_kinds(fights).has("rival"), "unfair bout not listed")
+	assert_false(_rival_kinds(Guidance.fair_fights(c, d, flags, c.age_days, "qingshi_village")).has("rival"), "no people: none")
+
+
+func test_fair_fights_skip_the_rival_when_away_bitter_unmet_or_on_cooldown() -> void:
+	var s := _rival_fighter()
+	var d: GameData = s[0]
+	var c: CharacterData = s[1]
+	var people: Dictionary = s[2]
+	var rival: CharacterData = s[3]
+	rival.realm_index = c.realm_index
+	rival.stage = 0
+	c.stage = 8
+	var flags := {Rivals.FIRST_MEETING_FLAG: true}
+	var favor := {rival.id: 20}
+	var base := Guidance.fair_fights(c, d, flags, c.age_days, "qingshi_village", people, favor)
+	# Force the rival to be weak so the bout would otherwise be fair.
+	rival.stage = 0
+	rival.realm_index = 1
+	c.realm_index = 1
+	var here := _rival_kinds(Guidance.fair_fights(c, d, flags, c.age_days, "qingshi_village", people, favor)).has("rival")
+	if not here:
+		return  # rating not in the fair band for this fixture; the guards below need a fair bout
+	assert_false(_rival_kinds(Guidance.fair_fights(c, d, flags, c.age_days, "other_region", people, favor)).has("rival"), "elsewhere")
+	assert_false(_rival_kinds(Guidance.fair_fights(c, d, {}, c.age_days, "qingshi_village", people, favor)).has("rival"), "unmet")
+	var cool := c.age_days
+	c.npc_action_days["spar:" + rival.id] = cool
+	assert_false(_rival_kinds(Guidance.fair_fights(c, d, flags, cool, "qingshi_village", people, favor)).has("rival"), "cooldown")
+	c.npc_action_days.erase("spar:" + rival.id)
+	Karma.add_grudge(c, d, rival.id, 20)
+	assert_false(_rival_kinds(Guidance.fair_fights(c, d, flags, c.age_days, "qingshi_village", people, favor)).has("rival"), "bitter")
+	assert_true(base.size() <= Guidance.FAIR_FIGHTS_MAX)

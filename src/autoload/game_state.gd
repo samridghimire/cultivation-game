@@ -2473,7 +2473,7 @@ func fight_enemy(enemy: Dictionary, start_hp: int = -1, prefix: String = "") -> 
 					last_fight_spoils.append(note)
 	var advice := Combat.loss_advice(player, data, enemy, result)
 	if advice != "" and not result["victory"] and not bool(enemy.get("friendly", false)):
-		advice += Guidance.fairer_fight_note(Guidance.fair_fights(player, data, world_flags, GameClock.total_days, current_region), String(enemy.get("name", "")))
+		advice += Guidance.fairer_fight_note(Guidance.fair_fights(player, data, world_flags, GameClock.total_days, current_region, npcs, npc_favor), String(enemy.get("name", "")))
 	last_fight_friendly = bool(enemy.get("friendly", false))
 	if last_fight_friendly:
 		var days := int(data.family.get("mentorship", {}).get("spar", {}).get("cooldown_days", 0))

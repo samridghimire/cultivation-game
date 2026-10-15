@@ -1088,7 +1088,7 @@ static func journal(c: CharacterData, data: GameData, flags: Dictionary, today: 
 				core_tone = "normal" if core_flagged else "warning"
 				core_flagged = true
 			_add(out, "Core Formation goals", ("[x] " if goal["done"] else "[ ] ") + String(goal["text"]), core_tone)
-	var fights := fair_fights(c, data, flags, today, region_id)
+	var fights := fair_fights(c, data, flags, today, region_id, people, favor)
 	if c.realm_index >= 2 or first_goals_done(c, data, flags):
 		for line in goals(c, data, flags, clan, density):
 			_add(out, "Goals", line, "normal")
@@ -1154,7 +1154,8 @@ static func _fair_fight_entries(out: Array[Dictionary], fights: Array[Dictionary
 ## Up to FAIR_FIGHTS_MAX fights `c` can take now with a win chance >= FAIR_FIGHT_MIN_CHANCE, best
 ## chance first: [{text, chance, kind}] with kind "mission" | "deed" | "bounty". Rates at most
 ## FAIR_FIGHT_MAX_RATED candidates (each rating is 40 simulated fights): missions, open chores, then bounties.
-static func fair_fights(c: CharacterData, data: GameData, flags: Dictionary, today: int, region_id: String) -> Array[Dictionary]:
+## GUIDE-033: with `people` (and `favor`) the living, met rival of this region is rated too (kind "rival").
+static func fair_fights(c: CharacterData, data: GameData, flags: Dictionary, today: int, region_id: String, people: Dictionary = {}, favor: Dictionary = {}) -> Array[Dictionary]:
 	var found: Array[Dictionary] = []
 	var rated := 0
 	for id in Sects.available_missions(c, data, flags):
@@ -1198,6 +1199,13 @@ static func fair_fights(c: CharacterData, data: GameData, flags: Dictionary, tod
 			continue
 		rated += 1
 		_rate_fight(found, c, data, enemy, "bounty", "%s: %s in %s" % [cand["label"], enemy.get("name", b["enemy"]), _region_name(data, String(b["region"]))], Bounties.paid_stones(c, data, b))
+	if rated < FAIR_FIGHT_MAX_RATED and c.rival != "" and flags.get(Rivals.FIRST_MEETING_FLAG, false):
+		var rival: CharacterData = people.get(c.rival)
+		if rival != null and rival.alive and region_id != "" and Npcs.region_of(rival, data) == region_id \
+				and Rivals.attitude(c, rival, int(favor.get(rival.id, 0)), data) != "bitter" \
+				and Mentorship.check_spar(c, rival, int(favor.get(rival.id, 0)), data, today) == "":
+			rated += 1
+			_rate_fight(found, c, data, Mentorship.spar_enemy(rival, data), "rival", "Challenge %s" % rival.name)
 	if found.size() < FAIR_FIGHTS_MAX and region_id != "":
 		var explore_rated := 0
 		var tags: Array = data.regions.get(region_id, {}).get("encounter_tags", [])
