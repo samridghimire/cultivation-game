@@ -77,3 +77,12 @@ func test_rival_label_stays_liftable() -> void:
 	a._near = true
 	Interactable.spread_labels([a, b])
 	assert_false(a.label_rect().intersects(b.label_rect()), "labels overlap")
+
+
+func test_rival_look_prefix_adds_the_attitude() -> void:
+	var c := new_character()
+	var rival := new_character()
+	rival.realm_index = c.realm_index + 1
+	assert_eq(NPC_SCRIPT.rival_look_prefix(c, rival, "bitter"), "Your rival, far ahead of you; they hold a grudge. ")
+	assert_eq(NPC_SCRIPT.rival_look_prefix(c, rival, "friendly"), "Your rival, far ahead of you; a friendly rivalry. ")
+	assert_eq(NPC_SCRIPT.rival_look_prefix(c, rival, "proud"), "Your rival, far ahead of you. ")

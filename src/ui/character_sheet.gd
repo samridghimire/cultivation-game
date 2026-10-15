@@ -276,7 +276,11 @@ static func rival_line(c: CharacterData, data: GameData, people: Dictionary, fav
 	var r: CharacterData = people[c.rival]
 	if not r.alive:
 		return "%s has died." % r.name
-	var line := "%s, %s (%s)" % [r.name, Cultivation.realm_label(r, data), Rivals.relation_text(c, r)]
+	var relation := Rivals.relation_text(c, r)
+	var feeling := Rivals.attitude_text(Rivals.attitude(c, r, int(favor.get(r.id, 0)), data))
+	if feeling != "":
+		relation += "; " + feeling
+	var line := "%s, %s (%s)" % [r.name, Cultivation.realm_label(r, data), relation]
 	var grudge := Karma.grudge(c, r.id)
 	if grudge != 0:
 		line += ", grudge %d" % grudge

@@ -107,8 +107,16 @@ static func is_rival(c: CharacterData, people: Dictionary, flags: Dictionary, np
 
 
 ## "Your rival, <where they stand>. " for the Look text (WU-141).
-static func rival_look_prefix(c: CharacterData, rival: CharacterData) -> String:
-	return "Your rival, %s. " % Rivals.relation_text(c, rival)
+## WU-151: `attitude` (Rivals.attitude) adds "; they hold a grudge" etc. when it has words.
+static func rival_look_prefix(c: CharacterData, rival: CharacterData, attitude: String = "") -> String:
+	var feeling := Rivals.attitude_text(attitude)
+	return "Your rival, %s%s. " % [Rivals.relation_text(c, rival), "" if feeling == "" else "; " + feeling]
+
+
+## The rival's attitude toward the player right now (WU-151).
+func _rival_attitude() -> String:
+	var rival := Rivals.rival_of(GameState.player, GameState.npcs)
+	return Rivals.attitude(GameState.player, rival, int(GameState.npc_favor.get(rival.id, 0)), GameState.data)
 
 
 func _is_my_rival() -> bool:
@@ -121,6 +129,8 @@ func label_color() -> Color:
 		var rival := Rivals.rival_of(GameState.player, GameState.npcs)
 		if Rivals.relation(GameState.player, rival) == "stronger":
 			return UIStyle.CATEGORY_COLORS["danger"]
+		if _rival_attitude() == "bitter":
+			return UIStyle.CATEGORY_COLORS["warning"]
 	return Color.WHITE
 
 
@@ -499,7 +509,7 @@ func _look() -> void:
 		return
 	var text := Npcs.describe(npc, GameState.data)
 	if _is_my_rival():
-		text = rival_look_prefix(GameState.player, npc) + text
+		text = rival_look_prefix(GameState.player, npc, _rival_attitude()) + text
 	var membership := NpcClans.membership_text(GameState.npc_clans, GameState.npcs, GameState.data, npc_id)
 	if membership != "":
 		text += " %s." % membership

@@ -61,6 +61,12 @@ func test_character_sheet_shows_rival() -> void:
 	assert_true(text.contains("grudge 3"), text)
 	rival.realm_index = gs.player.realm_index
 	assert_true(CharacterSheet.rival_line(gs.player, gs.data, gs.npcs, {}, {Rivals.FIRST_MEETING_FLAG: true}).contains("level with you"))
+	gs.player.grudges[rival.id] = 50
+	var bitter := CharacterSheet.rival_line(gs.player, gs.data, gs.npcs, {}, {Rivals.FIRST_MEETING_FLAG: true})
+	assert_true(bitter.contains("; they hold a grudge"), bitter)
+	gs.player.grudges[rival.id] = 0
+	var friendly := CharacterSheet.rival_line(gs.player, gs.data, gs.npcs, {rival.id: 50}, {Rivals.FIRST_MEETING_FLAG: true})
+	assert_true(friendly.contains("; a friendly rivalry"), friendly)
 	rival.alive = false
 	assert_eq(CharacterSheet.rival_line(gs.player, gs.data, gs.npcs, {}, {Rivals.FIRST_MEETING_FLAG: true}), "%s has died." % rival.name)
 	sheet.free()
