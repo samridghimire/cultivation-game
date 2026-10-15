@@ -409,3 +409,24 @@ func test_giving_up_an_item_in_qi_refining_encounters() -> void:
 		assert_true(found, "%s has a choice that gives up %s" % [enc_id, item])
 		assert_true(enc["choices"].size() >= 2, "%s keeps a plain choice" % enc_id)
 	assert_eq(tags.size(), 3, "three different regions")
+
+
+func test_profession_answers_at_foundation() -> void:
+	var d := GameData.load_from_dir()
+	var answers := {
+		"marsh_drowned_shrine": "array_master",
+		"city_smugglers_cut": "talisman_master",
+		"ruins_burial_armor": "blacksmith"}
+	for enc_id: String in answers:
+		var prof: String = answers[enc_id]
+		var found := false
+		for choice: Dictionary in d.encounters[enc_id]["choices"]:
+			if not choice.get("requires", {}).get("min_profession", {}).has(prof):
+				continue
+			found = true
+			var c := new_character()
+			c.professions[prof] = {"rank": 1, "xp": 0.0}
+			assert_true(Exploration.check_choice(c, d, choice, {}).begins_with("You need to be "), "%s blocked at rank 1" % enc_id)
+			c.professions[prof] = {"rank": 2, "xp": 0.0}
+			assert_eq(Exploration.check_choice(c, d, choice, {}), "", "%s allowed at rank 2" % enc_id)
+		assert_true(found, "%s has a rank 2 %s choice" % [enc_id, prof])
