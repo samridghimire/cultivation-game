@@ -128,3 +128,24 @@ func test_pill_hint_stones_against_price() -> void:
 func test_pill_hint_empty_when_pill_held() -> void:
 	_bottleneck(true)
 	assert_eq(BreakthroughScreen.pill_hint(_gs().player, data()), "")
+
+
+## WU-145: with the pill and the lessons line shown, Attempt and Not yet stay on screen at 1280x720.
+func test_buttons_fit_at_720p() -> void:
+	_bottleneck(true)
+	_gs().player.breakthrough_failures = 3
+	var tree := Engine.get_main_loop() as SceneTree
+	var vp := SubViewport.new()
+	vp.size = Vector2i(1280, 720)
+	tree.root.add_child(vp)
+	var screen := BreakthroughScreen.new()
+	var holder := UIStyle.centered(screen)
+	vp.add_child(holder)
+	screen.open()
+	await tree.process_frame
+	await tree.process_frame
+	var view := Rect2(Vector2.ZERO, Vector2(vp.size))
+	for button: Button in [screen._attempt_button, screen._later_button]:
+		var r := button.get_global_rect()
+		assert_true(r.size.y > 0.0 and view.encloses(r), "%s at %s inside %s" % [button.name, r, view])
+	vp.free()

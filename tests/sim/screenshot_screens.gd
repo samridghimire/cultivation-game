@@ -12,6 +12,9 @@ extends SceneTree
 ## WU-132: append `-- --win-shots` for "from a style to a win" (HUD fair-fight and goal lines with the
 ## Wandering Merchant's scroll mark, the journal's fights section, the mission board, an inheritance
 ## ground menu, the shop with a long manual row).
+## WU-145: append `-- --breakthrough-shots` for the breakthrough window of a Qi Refining 9th Layer player at
+## full qi: (a) no pill, 120 stones, (b) holding a Foundation Establishment Pill, (c) pill and 3 failed
+## attempts (lessons line). Check each PNG at 1280x800 and 1280x720.
 
 const OUT_DIR := "user://screenshots/screens"
 const SETTLE_FRAMES := 6
@@ -36,6 +39,9 @@ func _start() -> void:
 		return
 	if OS.get_cmdline_user_args().has("--win-shots"):
 		_start_win_shots(gs)
+		return
+	if OS.get_cmdline_user_args().has("--breakthrough-shots"):
+		_start_breakthrough_shots(gs)
 		return
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 7
@@ -163,6 +169,37 @@ func _start_win_shots(gs: Node) -> void:
 	shots.append({"name": "ws_shop_manual", "open": func() -> void:
 		shop.open("Wandering Merchant", 0, ["herb", "ore", "beast_material", "scripture", "manual"])
 		shop._set_category("Manuals & Scrolls"), "close": shop.close})
+
+
+## WU-145: the breakthrough window in three states.
+func _start_breakthrough_shots(gs: Node) -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 5
+	var c := CharacterFactory.create("Lin Feng", gs.data, rng, "male")
+	gs.start_session(c)
+	gs.pending_event = ""
+	c.age_days = 30 * Calendar.DAYS_PER_YEAR
+	c.realm_index = 1
+	var realm: RealmDef = gs.data.realms[1]
+	c.stage = realm.stage_count() - 1
+	c.qi = realm.qi_required(c.stage)
+	c.add_item("spirit_stone", 120)
+	world = load("res://src/world/world.tscn").instantiate()
+	root.add_child(world)
+	hud = world.get_node("HUD")
+	var win: Control = hud.get("_breakthrough")
+	var hide_banner := func() -> void: hud.get("_banner").visible = false
+	shots.append({"name": "bs_a_no_pill", "open": func() -> void:
+		hide_banner.call()
+		win.open(), "close": win.close})
+	shots.append({"name": "bs_b_pill", "open": func() -> void:
+		c.add_item("foundation_establishment_pill", 1)
+		hide_banner.call()
+		win.open(), "close": win.close})
+	shots.append({"name": "bs_c_pill_lessons", "open": func() -> void:
+		c.breakthrough_failures = 3
+		hide_banner.call()
+		win.open(), "close": win.close})
 
 
 ## WU-127: the fighting-style surfaces for a fresh character, then for one who has just learned Iron Fist.
