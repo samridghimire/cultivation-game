@@ -193,6 +193,11 @@ func test_late_screens_have_focus_and_close_on_cancel() -> void:
 	await _check(credits, "credits")
 	credits.queue_free()
 
+	var breakthrough: Control = hud.get("_breakthrough")
+	breakthrough.open()
+	await _check(breakthrough, "breakthrough window")
+	breakthrough.close()
+
 	var tribulation: Control = hud.get("_tribulation")
 	tribulation.open_prepare()
 	await _check(tribulation, "tribulation prepare")

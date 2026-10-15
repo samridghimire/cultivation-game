@@ -473,6 +473,16 @@ static func breakthrough_items(c: CharacterData, data: GameData) -> PackedString
 	return names
 
 
+## Ids of the same items as `breakthrough_items`, sorted by name.
+static func breakthrough_item_ids(c: CharacterData, data: GameData) -> PackedStringArray:
+	var ids: Array = []
+	for item_id in c.inventory:
+		if _usable_breakthrough_item(c, data, item_id):
+			ids.append(String(item_id))
+	ids.sort_custom(func(a: String, b: String) -> bool: return String(data.items[a]["name"]) < String(data.items[b]["name"]))
+	return PackedStringArray(ids)
+
+
 static func _usable_breakthrough_item(c: CharacterData, data: GameData, item_id: String) -> bool:
 	var effects: Dictionary = data.items.get(item_id, {}).get("effects", {})
 	return c.item_count(item_id) > 0 and float(effects.get("breakthrough_bonus", 0.0)) > 0.0 and Effects.check(c, data, effects) == ""

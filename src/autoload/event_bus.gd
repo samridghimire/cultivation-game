@@ -46,6 +46,8 @@ signal combat_finished(enemy_name: String, victory: bool, log: PackedStringArray
 ## The player wants to attempt a breakthrough that brings a Heavenly
 ## Tribulation: show GameState.tribulation_preview() and let them confirm.
 signal tribulation_prepare_requested
+## A major breakthrough without a tribulation: show the breakthrough window (WU-134).
+signal breakthrough_prepare_requested
 ## A tribulation was endured during a breakthrough (Tribulation.endure result).
 signal tribulation_endured(realm_name: String, result: Dictionary)
 

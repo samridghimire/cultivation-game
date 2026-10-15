@@ -69,6 +69,7 @@ var _pending_year: Array = []  # [year, lines, start_year] waiting for a free sc
 static var _showing_skip: Dictionary = {}
 var _respawn: RespawnScreen
 var _tribulation: TribulationScreen
+var _breakthrough: BreakthroughScreen
 var _death_screen: Control
 
 
@@ -153,6 +154,9 @@ func _ready() -> void:
 	_tribulation.closed.connect(_update_modal)
 	_tribulation.closed.connect(_open_pending_respawn)
 	add_child(UIStyle.centered(_tribulation))
+	_breakthrough = BreakthroughScreen.new()
+	_breakthrough.closed.connect(_update_modal)
+	add_child(UIStyle.centered(_breakthrough))
 	_banner = Banner.new()
 	add_child(_banner)
 	add_child(SaveToast.new())
@@ -184,6 +188,7 @@ func _ready() -> void:
 	EventBus.combat_started.connect(_on_combat_started)
 	EventBus.combat_finished.connect(_on_combat_finished)
 	EventBus.tribulation_prepare_requested.connect(_on_tribulation_prepare)
+	EventBus.breakthrough_prepare_requested.connect(_on_breakthrough_prepare)
 	EventBus.tribulation_endured.connect(_on_tribulation_endured)
 	EventBus.breakthrough_details.connect(func(text: String) -> void: _breakthrough_details = text)
 	EventBus.breakthrough_attempted.connect(_on_breakthrough)
@@ -259,6 +264,7 @@ func _add_screen(action: String, screen: Control) -> void:
 func _close_screens() -> void:
 	for screen in _screens.values():
 		screen.close()
+	_breakthrough.close()
 	_crafting.close()
 	_shop.close()
 	_mission_board.close()
@@ -311,7 +317,7 @@ func _on_child_training_requested() -> void:
 
 
 func _any_screen_open() -> bool:
-	return _crafting.visible or _shop.visible or _mission_board.visible or _auction.visible or _sect_balance.visible or _gossip.visible or _child_training.visible or _screens.values().any(func(s): return s.visible)
+	return _breakthrough.visible or _crafting.visible or _shop.visible or _mission_board.visible or _auction.visible or _sect_balance.visible or _gossip.visible or _child_training.visible or _screens.values().any(func(s): return s.visible)
 
 
 func _build_status_panel() -> void:
@@ -649,6 +655,14 @@ func _on_tribulation_prepare() -> void:
 	_choice_menu.close()
 	_close_screens()
 	_tribulation.open_prepare()
+	_update_modal()
+
+
+## A major breakthrough without a tribulation: show its chance and terms first.
+func _on_breakthrough_prepare() -> void:
+	_choice_menu.close()
+	_close_screens()
+	_breakthrough.open()
 	_update_modal()
 
 
