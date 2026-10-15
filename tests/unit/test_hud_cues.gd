@@ -143,3 +143,17 @@ func test_quarry_note_only_in_the_bounty_region() -> void:
 	Bounties.take(c, d, "iron_back_boar_bounty", 100)
 	assert_true(Site.quarry_note(c, d, "misty_forest", 100).ends_with("trail may be found here."))
 	assert_eq(Site.quarry_note(c, d, "qingshi_village", 100), "")
+
+
+## WU-130: technique level-ups are reported as a diff of levels.
+func test_leveled_techniques() -> void:
+	var d := data()
+	var c := new_character()
+	c.techniques["iron_fist"] = {"level": 1, "xp": 0.0}
+	var before := {"iron_fist": 1}
+	assert_eq(HUD.leveled_techniques(before, c, d).size(), 0)
+	c.techniques["iron_fist"]["level"] = 2
+	var out: Array[Dictionary] = HUD.leveled_techniques(before, c, d)
+	assert_eq(out.size(), 1)
+	assert_eq(int(out[0]["level"]), 2)
+	assert_eq(HUD.leveled_techniques({}, c, d).size(), 0, "a newly learned technique is not announced")

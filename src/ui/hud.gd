@@ -57,6 +57,7 @@ var _gossip: GossipWindow
 var _family: FamilyScreen
 var _child_training: ChildTrainingScreen
 var _banner: Banner
+var _tech_levels: Dictionary = {}  # technique id -> last seen level (WU-130)
 var _season := ""
 var _season_flush_queued := false
 var _time_skip: TimeSkipOverlay
@@ -198,6 +199,9 @@ func _ready() -> void:
 	EventBus.secret_realm_notice.connect(_on_secret_realm_notice)
 	EventBus.renown_tier_reached.connect(_on_renown_tier_reached)
 	EventBus.region_mastered.connect(_on_region_mastered)
+	EventBus.session_started.connect(_sync_tech_levels)
+	EventBus.player_changed.connect(_announce_tech_levels)
+	_sync_tech_levels()
 	_season = Calendar.season_of(GameClock.total_days)
 	GameClock.days_advanced.connect(_on_days_advanced)
 	EventBus.session_started.connect(func(): _season = Calendar.season_of(GameClock.total_days))
@@ -716,6 +720,40 @@ func _on_renown_tier_reached(region_id: String, title: String) -> void:
 
 
 ## [title, subtitle] of the renown banner.
+func _sync_tech_levels() -> void:
+	_tech_levels.clear()
+	if GameState.player == null:
+		return
+	for tech_id in GameState.player.techniques:
+		_tech_levels[tech_id] = Techniques.level(GameState.player, tech_id)
+
+
+func _announce_tech_levels() -> void:
+	var c: CharacterData = GameState.player
+	if c == null:
+		return
+	for entry in leveled_techniques(_tech_levels, c, GameState.data):
+		var sub := "Mastered" if entry["mastered"] else ""
+		_banner.announce("%s reaches level %d" % [entry["name"], entry["level"]], sub, UIStyle.ACCENT, 1.2, true)
+	_sync_tech_levels()
+
+
+## Known techniques whose level is above the one in `before`, sorted by name.
+## Techniques absent from `before` (just learned) are not reported.
+static func leveled_techniques(before: Dictionary, c: CharacterData, data: GameData) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	for tech_id in c.techniques:
+		if not before.has(tech_id):
+			continue
+		var lvl := Techniques.level(c, tech_id)
+		if lvl <= int(before[tech_id]):
+			continue
+		var def: TechniqueDef = data.techniques.get(tech_id)
+		out.append({"name": def.name if def != null else tech_id, "level": lvl, "mastered": Techniques.is_mastered(c, data, tech_id)})
+	out.sort_custom(func(a, b): return String(a["name"]) < String(b["name"]))
+	return out
+
+
 static func renown_banner(data: GameData, region_id: String, title: String) -> PackedStringArray:
 	return PackedStringArray([title, "Your name is known in %s" % Exploration.region_name(data, region_id)])
 
