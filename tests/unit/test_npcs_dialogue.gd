@@ -249,3 +249,10 @@ func test_npc_errand_turn_ins_need_items_and_asked_flag() -> void:
 		assert_true(shown.call(), npc_id + ": shown with items and the asked flag")
 		flags[prefix + "_done"] = true
 		assert_false(shown.call(), npc_id + ": hidden once done")
+
+
+## C-072: Elder Mo points newcomers to the Wandering Merchant's Iron Fist manual.
+func test_elder_mo_points_to_iron_fist() -> void:
+	var mo: Dictionary = data().dialogues["elder_mo"]
+	assert_true(String(mo["nodes"]["fighting"]["text"]).contains("Iron Fist"))
+	assert_eq(Dialogue.validate(mo, data()).size(), 0)
