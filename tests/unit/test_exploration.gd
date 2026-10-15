@@ -707,6 +707,16 @@ func test_region_progress_skips_renown_requests_for_the_unrenowned() -> void:
 	assert_eq(int(Exploration.region_progress(c, data(), "misty_forest")["total"]), int(Exploration.region_progress(_village_tiers_c(), data(), "misty_forest")["total"]))
 
 
+func test_every_region_has_a_request_for_the_renowned() -> void:
+	for region_id: String in data().regions:
+		var tags: Array = data().regions[region_id]["encounter_tags"]
+		var found := false
+		for e: Dictionary in data().encounters.values():
+			if e.has("min_renown") and e.get("tags", []).any(func(t: Variant) -> bool: return tags.has(t)):
+				found = true
+		assert_true(found, "%s has a min_renown encounter" % region_id)
+
+
 func test_forest_wolf_den_request_needs_respect() -> void:
 	var c := _village_tiers_c()
 	var e: Dictionary = data().encounters["forest_hunters_wolf_den"]
