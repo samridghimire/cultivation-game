@@ -7,6 +7,8 @@ extends SceneTree
 ## WU-116: append `-- --first-hour` for a fresh character in Qingshi Village instead (creation,
 ## intro, Elder Mo, the merchant's shop, exploring, a lost fight, the day-1 journal). Check each PNG
 ## at 1280x800 and 1280x720 (--resolution 1280x720).
+## WU-127: append `-- --style-shots` for the fighting-style surfaces (techniques hint, Buy tab rows,
+## Elder Mo's fighting node, a lost fight with Iron Fist 1, the journal's practice hint).
 
 const OUT_DIR := "user://screenshots/screens"
 const SETTLE_FRAMES := 6
@@ -25,6 +27,9 @@ func _start() -> void:
 	var gs: Node = root.get_node("GameState")
 	if OS.get_cmdline_user_args().has("--first-hour"):
 		_start_first_hour(gs)
+		return
+	if OS.get_cmdline_user_args().has("--style-shots"):
+		_start_style_shots(gs)
 		return
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 7
@@ -103,6 +108,55 @@ func _start_first_hour(gs: Node) -> void:
 		hud.get("_combat_report").close()
 		hud.get("_respawn").close()})
 	shots.append({"name": "fh_journal", "open": func() -> void: hud.get("_screens")["toggle_journal"].open(), "close": func() -> void: hud.get("_screens")["toggle_journal"].close()})
+
+
+## WU-127: the fighting-style surfaces for a fresh character, then for one who has just learned Iron Fist.
+func _start_style_shots(gs: Node) -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 5
+	var c := CharacterFactory.create("Lin Feng", gs.data, rng, "male")
+	gs.start_session(c)
+	gs.pending_event = ""
+	c.add_item("spirit_stone", 200)
+	world = load("res://src/world/world.tscn").instantiate()
+	root.add_child(world)
+	hud = world.get_node("HUD")
+	var end_talk := func() -> void:
+		var guard := 0
+		while gs.in_dialogue() and guard < 40:
+			gs.choose_dialogue(0)
+			guard += 1
+		hud.get("_dialogue").close()
+		hud.get("_banner").visible = false
+	end_talk.call()
+	var techs: Control = hud.get("_screens")["toggle_techniques"]
+	var open_manual_shop := func() -> void:
+		var shop: Control = hud.get("_shop")
+		shop.open("Wandering Merchant", 0, ["herb", "ore", "beast_material", "scripture", "manual"])
+		shop._set_category("Manuals & Scrolls")
+	shots.append({"name": "ss_techniques_hint", "open": techs.open, "close": techs.close})
+	shots.append({"name": "ss_shop_buy", "open": open_manual_shop, "close": func() -> void: hud.get("_shop").close()})
+	shots.append({"name": "ss_elder_mo_fighting", "open": func() -> void:
+		Techniques.learn(c, gs.data, "basic_breathing")
+		gs.start_dialogue("elder_mo")
+		# One frame later, so the dialogue window is open before the choice is made.
+		root.get_tree().process_frame.connect(func() -> void:
+			for ch: Dictionary in gs.dialogue_view().get("choices", []):
+				if String(ch.get("label", "")).begins_with("Breathing alone"):
+					gs.choose_dialogue(int(ch["index"]))
+					hud.get("_dialogue").open()
+					break, CONNECT_ONE_SHOT), "close": end_talk})
+	shots.append({"name": "ss_lost_fight_iron_fist_1", "open": func() -> void:
+		Techniques.learn(c, gs.data, "iron_fist")
+		gs.fight("mist_wolf")
+		hud.get("_combat_report").skip()
+		hud.get("_banner").visible = false, "close": func() -> void:
+		hud.get("_combat_report").close()
+		hud.get("_respawn").close()})
+	var journal: Control = hud.get("_screens")["toggle_journal"]
+	shots.append({"name": "ss_journal_practice_hint", "open": func() -> void:
+		hud.get("_banner").visible = false
+		journal.open(), "close": journal.close})
 
 
 ## WU-093: data for the blocks added this week: letters, renown, a mastered region,

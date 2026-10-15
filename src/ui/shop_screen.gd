@@ -371,6 +371,8 @@ func _rebuild() -> void:
 			b.add_theme_color_override("font_color", UIStyle.ACCENT)
 		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		b.clip_text = true
+		b.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+		b.tooltip_text = label
 		b.toggle_mode = true
 		b.button_pressed = item_id == _selected
 		b.focus_entered.connect(_select.bind(item_id))
