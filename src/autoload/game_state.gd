@@ -2294,9 +2294,12 @@ func defend_against_incursion(event_id: String) -> void:
 
 
 ## The active event in this region that has an activity, or "" (first in data order).
-func festival_activity_here() -> String:
+## `stock_tags` of the asking merchant limit it to festivals whose stalls it fits (FEST-005); [] = any.
+func festival_activity_here(stock_tags: Array = []) -> String:
 	for def: Dictionary in data.world_events.values():
 		var event_id := String(def["id"])
+		if not WorldEvents.sold_by(data, event_id, stock_tags):
+			continue
 		if def.has("activity") and not WorldEvents.instance_in(world_events, event_id, current_region).is_empty():
 			return event_id
 	return ""

@@ -1316,6 +1316,8 @@ func test_festival_activity_action() -> void:
 	var day: int = _root().get_node("GameClock").total_days
 	gs.world_events = [{"id": "lantern_festival", "region": "qingshi_village", "start_day": day, "end_day": day + 8}]
 	assert_eq(gs.festival_activity_here(), "lantern_festival")
+	assert_eq(gs.festival_activity_here(["equipment", "ore", "smithing"]), "", "smithies host no stall")
+	assert_eq(gs.festival_activity_here(["herb", "ore"]), "lantern_festival")
 	var qi: int = gs.player.qi
 	var joined: int = LifeStats.get_stat(gs.player, "festival_activities")
 	gs.festival_activity("lantern_festival")

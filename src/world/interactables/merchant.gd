@@ -25,7 +25,7 @@ func get_options() -> Array[Dictionary]:
 		{"label": "Browse wares", "action": EventBus.shop_requested.emit.bind(display_name, max_price, stock_tags, faction, buy_tags)},
 		{"label": "Ask about rumors", "action": _ask_rumors},
 	]
-	var festival := GameState.festival_activity_here()
+	var festival := GameState.festival_activity_here(stock_tags)
 	if festival != "":
 		options.append(festival_entry(festival))
 	return options
