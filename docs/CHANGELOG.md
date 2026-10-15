@@ -2,6 +2,14 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-15 [C-086] Your rival crosses your path in the first year: at the herb seller, wounded in the forest, at the sect lecture.
+- 2026-10-15 [PERF-001] Fight ratings are remembered, so the HUD and mission board stay quick.
+- 2026-10-15 [WU-139] The character sheet no longer names your rival before you have met.
+- 2026-10-15 [C-082] Three rare encounters can raise Constitution, Spirit or Comprehension by one.
+- 2026-10-15 [WU-138] Your rival's name tag says "(rival)" once you have met them.
+- 2026-10-15 [RIVAL-004] The journal tracks your rival's realm and how far ahead or behind they are.
+- 2026-10-15 [QA-070] Checked: bounties the journal calls winnable are won, but they are rarely listed.
+- 2026-10-15 [WU-125] The HUD names the best fight you can win right now.
 - 2026-10-15 [QA-069] Checked: a simulated newcomer who loses the boar chore now tries it again later and wins.
 - 2026-10-15 [C-063] Checked: every first-rank sect fight mission is fair at its gate.
 - 2026-10-15 [RIVAL-003] You meet your named rival in the first weeks.

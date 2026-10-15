@@ -62,7 +62,7 @@ Every great cultivation protagonist has something that sets them apart. Ours is 
 |---|---|---|
 | Realms & stages (Mortal → Tribulation Transcendence) | ✅ | `data/realms.json`, `Cultivation` |
 | Spiritual roots (5 elements, grades, purity) | ✅ | `data/spiritual_roots.json`, `SpiritualRoots` |
-| Attributes (Constitution, Comprehension, Spirit, Fortune, Charisma) | ✅ | `data/attributes.json` |
+| Attributes (Constitution, Comprehension, Spirit, Fortune, Charisma) | ✅ (rare +1 encounters: C-082) | `data/attributes.json` |
 | Breakthroughs with risk, pills that boost odds | ✅ (risk line on the attempt, breakthrough window with pills: FOUND-002, WU-134; realm descriptions: C-084) | `Cultivation.attempt_breakthrough` |
 | Lifespan, death by old age, burning/extending lifespan | ✅ | `Cultivation`, `GameState._on_days_advanced` |
 | Alignment (Demonic … Righteous) and deeds (with cooldowns) | ✅ | `data/alignment.json`, `data/deeds.json` |
@@ -89,7 +89,7 @@ Every great cultivation protagonist has something that sets them apart. Ours is 
 | Cultivation methods (one main method, qi rate, realm cap) | ✅ (techniques screen) | `Techniques`, `data/techniques.json` |
 | Dao insights (encounters, practice, seclusion; technique + breakthrough bonuses) | ✅ (sheet + contemplation at meditation spots) | `data/dao.json`, `Dao` |
 | Heavenly Tribulations (Core Formation+, heart demon for demonic) | ✅ (prepare warning + wave screen) | `Tribulation`, `data/realms.json` |
-| Named rival (rolled at creation, met around day 10) | ✅ first meeting (RIVAL-003); journal, label, news next (RIVAL-004..006, WU-138/139) | `Rivals`, `data/karma.json` |
+| Named rival (rolled at creation, met around day 10) | ✅ first meeting (RIVAL-003), journal line, world label, sheet, first-year encounters (RIVAL-004, WU-138/139, C-086); news and surpassing next (RIVAL-005/006) | `Rivals`, `data/karma.json` |
 | Grudges and gratitude (rob/kill/humiliate NPCs, kin vengeance, amends) | ✅ (NPC menu, sheet, NPC Look text, grateful NPCs repay debts and join fights, grudge holders ambush travellers) | `data/karma.json`, `Karma` |
 | Secret realms (periodic openings, realm caps, guarded floors, inheritances) | ✅ (six realms with entrances across the regions; journal Opportunities, sheet Adventures) | `data/secret_realms.json`, `SecretRealms` |
 | Inheritance grounds (one-claimant trials) | ✅ (inheritance ground places; journal Opportunities, sheet Adventures) | `data/inheritances.json`, `Inheritances` |

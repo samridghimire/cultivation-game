@@ -2,6 +2,15 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-10-15 (planner, 12:10 UTC)
+- 8 tasks landed (RIVAL-004, PERF-001, WU-125, WU-138, WU-139, C-082, C-086, QA-070). Live claims, all < 2h: WU-137,
+  QA-074, FOUND-003, WU-140, C-065. Reviewer last reviewed 039470a; its 16th-run notes are QA-074 and WU-142 (pill price
+  vs stones held; the price itself stays with the owner's pacing question).
+- New: CHOICE-001 (choice needs an attribute) + C-088, GUIDE-028 (fair_fights rated only the first nearby bounty), WU-141
+  (rival Look), WU-142 (stones vs pill price), WU-143 (rival map mark), C-087 (rival at Foundation), C-089 (help pages),
+  QA-075 (sim takes chore fights). Spec'd: RIVAL-005/006, GUIDE-027, WU-132/136, C-083/085, QA-071.
+- The owner's three urgent questions (pacing, first fights, ascension) are still open.
+
 ## State on 2026-10-15 (planner, 10:10 UTC)
 - 12 tasks landed (DLG-001, GUIDE-026, FOUND-002, RIVAL-003, WU-129, WU-134, C-063, C-077, C-084, QA-066/068/069); QA-057
   closed as not needed. Live claims: WU-125 (09:46), QA-070 (10:06). Reviewer last reviewed f36edce; nothing filed.
