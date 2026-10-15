@@ -106,9 +106,15 @@ static func apply(c: CharacterData, data: GameData, effects: Dictionary, flags: 
 	if effects.has("learn_recipe") and Alchemy.learn(c, data, effects["learn_recipe"]):
 		notes.append("Learned the %s recipe" % data.recipes[effects["learn_recipe"]].get("name", effects["learn_recipe"]))
 	if effects.has("practice_days"):
+		var levels_before: Dictionary = {}
+		for tech_id: String in c.techniques:
+			levels_before[tech_id] = Techniques.level(c, tech_id)
 		var trained_id := Techniques.train_best_combat_id(c, data, int(effects["practice_days"]))
 		if trained_id != "":
-			notes.append("Your %s improves (level %d)" % [data.techniques[trained_id].name, Techniques.level(c, trained_id)])
+			var note := "Your %s improves" % data.techniques[trained_id].name
+			if Techniques.level(c, trained_id) > int(levels_before[trained_id]):
+				note += " (level %d)" % Techniques.level(c, trained_id)
+			notes.append(note)
 	if effects.has("heal_injury"):
 		for injury_id in Injuries.heal(c, effects["heal_injury"]):
 			notes.append("%s healed" % Injuries.injury_name(data, injury_id))

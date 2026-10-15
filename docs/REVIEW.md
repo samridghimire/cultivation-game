@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 5329c38
+Last reviewed commit: 111cd0a
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -388,3 +388,20 @@ Last reviewed commit: 5329c38
     stands: the "coming" rumors keep playing after the realm/inheritance is found (no found flag to block on).
     (3) GUIDE-019b closes last run's notes (1) and (2). (4) tools/test.sh's unit suite now takes ~15 minutes on the cloud
     box; the sims are the likely cost, worth a look before it gets slower.
+- 2026-10-15 (reviewer, 14th run): reviewed 5329c38..111cd0a (QA-063, GUIDE-020, WU-130, C-078, INH-001, MENTOR-004,
+  QA-064, WU-131, C-080, EFF-002, RUMOR-003, GUIDE-021, QA-065, WU-127; [PLAN]/[REVIEW] skipped). Main green before and after. No BACKLOG/CHANGELOG edits by
+  workers; no SAVE_VERSION change and no new persistent state. Nothing filed.
+  - Fixed ([REVIEW] commit): (1) GUIDE-020's practice hint hard-coded the key "(Techniques, K)", wrong on a gamepad
+    (LB); it now says "on the Techniques screen" (core can't read InputConfig). (2) EFF-002: the note always said
+    "(level N)"; per the spec it now names the level only when one was gained (unit test added). (3) EFF-002 dead
+    code: Techniques.train_best_combat (name-returning wrapper) had no caller; removed, train_best_combat_id kept.
+  - Checked: WU-130/WU-131 sync on session_started before the first player_changed (new game and load), so loading
+    never re-announces level-ups or goals; MENTOR-004's same-sect rule ignores rogues on either side; INH-001's
+    min_stage is validated against the realm's stage count; GUIDE-021's fair_fights uses Combat.win_chance's own
+    seeded rng and only runs when the journal is built (on demand, <= 8 ratings); RUMOR-003 closes last run's note (2).
+  - Notes for the planner, not filed: (1) QA-064's baseline was taken before INH-001 raised the Rotting Pier trial to
+    QR 5th Layer; re-run the sim to refresh it. (2) C-080's Elder Mo "practise" line only checks Iron Fist; a player
+    whose first style is another manual (C-078's marsh/ridge stalls) gets GUIDE-020's hint but not Mo's line.
+    (3) GUIDE-020 added a "Learn a fighting style" first goal; with WU-131 each tick now banners, so learning Iron Fist
+    shows two goal ticks at once only as one banner (the last); fine, but the earlier tick is never named. (4) WU-127's screenshot note quotes the old "(Techniques, K)" hint text;
+    the hint now reads "on the Techniques screen".

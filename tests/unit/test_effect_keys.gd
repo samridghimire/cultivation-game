@@ -96,3 +96,14 @@ func test_practice_days_validation() -> void:
 	assert_eq(Effects.validate(d, {"practice_days": 0}, "t").size(), 1)
 	assert_eq(Effects.validate(d, {"practice_days": 31}, "t").size(), 1)
 	assert_eq(Effects.validate(d, {"practice_days": "x"}, "t").size(), 1)
+
+
+func test_practice_days_names_the_level_only_when_gained() -> void:
+	var d := data()
+	var c := new_character()
+	Techniques.learn(c, d, "iron_fist")
+	var notes := Effects.apply(c, d, {"practice_days": 1}, {})
+	assert_eq(Array(notes), ["Your Iron Fist improves"])
+	c.techniques["iron_fist"]["xp"] = Techniques.xp_to_next(c, d, "iron_fist") + float(c.techniques["iron_fist"]["xp"]) - 0.01
+	notes = Effects.apply(c, d, {"practice_days": 1}, {})
+	assert_true(String(notes[0]).ends_with("(level 2)"), notes[0])

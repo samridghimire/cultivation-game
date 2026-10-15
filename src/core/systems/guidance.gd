@@ -643,12 +643,12 @@ static func first_combat_hint(c: CharacterData, data: GameData, region_id: Strin
 	return "%s Look for the %s (%s)." % [lead, manual, found["source"]]
 
 
-## "Practise <style> (Techniques, K)..." for a newcomer with a low-level fighting style, or "" (GUIDE-020).
+## "Practise <style> on the Techniques screen..." for a newcomer with a low-level fighting style, or "" (GUIDE-020).
 static func practice_hint(c: CharacterData, data: GameData) -> String:
 	var id := Techniques.practice_target(c, data)
 	if id == "":
 		return ""
-	return "Practise %s (Techniques, K): each level raises your odds in a fight (level %d now)." % [data.techniques[id].name, Techniques.level(c, id)]
+	return "Practise %s on the Techniques screen: each level raises your odds in a fight (level %d now)." % [data.techniques[id].name, Techniques.level(c, id)]
 
 
 ## First-steps pointers for Mortal and Qi Refining players, most useful first.
