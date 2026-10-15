@@ -228,6 +228,34 @@ func test_lecture_sharper_answer_needs_comprehension() -> void:
 	assert_eq(Exploration.check_choice(c, d, choice, {}), "", "allowed at 12")
 
 
+## C-091: first-year attribute checks, one per attribute.
+func test_first_year_attribute_checks() -> void:
+	var d := data()
+	var picks := {
+		"forest_dying_gatherer": "spirit",
+		"village_runaway_mule": "fortune",
+		"village_field_quarrel": "charisma",
+		"road_lost_child": "constitution",
+	}
+	var covered: Dictionary = {}
+	for id in picks:
+		var attr: String = picks[id]
+		var found := false
+		for ch in d.encounters[id]["choices"]:
+			var need: Dictionary = ch.get("requires", {}).get("min_attributes", {})
+			if not need.has(attr):
+				continue
+			found = true
+			covered[attr] = true
+			var c := CharacterData.new()
+			c.attributes[attr] = 11
+			assert_true(Exploration.check_choice(c, d, ch, {}) != "", "%s blocked at 11" % id)
+			c.attributes[attr] = 12
+			assert_eq(Exploration.check_choice(c, d, ch, {}), "", "%s allowed at 12" % id)
+		assert_true(found, "%s has a %s choice" % [id, attr])
+	assert_eq(covered.size(), 4, "four attributes covered")
+
+
 func test_spur_raises_diligence_and_caps() -> void:
 	var data := data()
 	var rival := CharacterData.new()
