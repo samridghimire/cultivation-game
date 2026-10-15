@@ -1967,8 +1967,7 @@ func take_mission(mission_id: String) -> void:
 	var mission: Dictionary = data.sect_missions[mission_id]
 	var enemy_id := String(mission.get("enemy", ""))
 	if enemy_id != "":
-		EventBus.post("Sect mission: %s." % mission["name"])
-		if not fight_enemy(data.enemies[enemy_id]):
+		if not fight_enemy(data.enemies[enemy_id], -1, "Sect mission: %s. " % mission["name"]):
 			Sects.fail_mission(player, data, mission_id)
 			var days := data.sect_mission_loss_cooldown_days
 			var tail := " The sect will not send you again for %d days." % days if days > 0 else ""
@@ -2360,7 +2359,7 @@ func unready_talisman(item_id: String) -> void:
 
 ## Fight any enemy dictionary in the enemies.json format. Returns true if the
 ## player won and is still alive.
-func fight_enemy(enemy: Dictionary, start_hp: int = -1) -> bool:
+func fight_enemy(enemy: Dictionary, start_hp: int = -1, prefix: String = "") -> bool:
 	EventBus.topic = "combat"
 	if not _can_act():
 		return false
@@ -2380,7 +2379,7 @@ func fight_enemy(enemy: Dictionary, start_hp: int = -1) -> bool:
 	last_fight_playback = {"trace": result["trace"], "player_max": result["player_max_hp"], "enemy_max": result["enemy_max_hp"]}
 	# The full blow-by-blow goes out with combat_finished; the log gets a summary.
 	var lines: PackedStringArray = result["log"]
-	EventBus.post(lines[0], "danger")
+	EventBus.post(prefix + lines[0], "danger")
 	var outcome := Combat.apply_outcome(player, data, enemy, result, world_flags, rng)
 	var rounds := int(result["rounds"])
 	var summary := "%d/%d hp left" % [result["player_hp"], result["player_max_hp"]]

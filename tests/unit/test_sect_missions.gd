@@ -232,3 +232,25 @@ func test_game_state_lost_mission_cools_down() -> void:
 	assert_true(gs.player.mission_losses.has("cull_mist_wolves"), "recorded even after a respawn")
 	assert_gt(Sects.mission_cooldown_left(gs.player, "cull_mist_wolves"), 0)
 	gs.end_session()
+
+
+## LOG-001: a fight mission opens with one line carrying both the mission and the foe.
+func test_fight_mission_posts_one_opening_line() -> void:
+	var gs: Node = _root().get_node("GameState")
+	var c := CharacterFactory.create("Disciple", gs.data, seeded_rng())
+	gs.start_session(c)
+	c.realm_index = 1
+	c.stage = 1
+	gs.join_sect("azure_cloud_sect")
+	var wolf: Dictionary = gs.data.enemies["mist_wolf"]
+	wolf["hp"] = 1
+	wolf["attack"] = 0
+	var heard: Array[String] = []
+	var cb := func(text: String, _cat: String) -> void: heard.append(text)
+	EventBus.message_posted.connect(cb)
+	gs.take_mission("cull_mist_wolves")
+	EventBus.message_posted.disconnect(cb)
+	var opening := heard.filter(func(t: String) -> bool: return t.contains("Sect mission:"))
+	assert_eq(opening.size(), 1)
+	assert_true(String(opening[0]).contains("You face"))
+	gs.end_session()
