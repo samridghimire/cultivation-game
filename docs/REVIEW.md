@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: ea1a53f
+Last reviewed commit: 9740f37
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -495,3 +495,20 @@ Last reviewed commit: ea1a53f
     re-arms the surpassed flag and the spur caps at 0.95; CHOICE-003 only tags negative item deltas; GUIDE-030's
     explore fights reuse eligible_encounters and stay under FAIR_FIGHT_MAX_RATED; WU-149's lesson line matches
     chance_breakdown (failures counted before it posts).
+- 2026-10-15 (reviewer, 21st run): reviewed ea1a53f..9740f37 (C-096, WU-151, RIVAL-010, QA-080, FOUND-006, EFF-003, WU-159, WU-157,
+  WU-154, C-093, QA-081, C-097, WU-156; [PLAN]/[REVIEW] skipped). Main green before and after. No BACKLOG/CHANGELOG
+  edits by workers; no SAVE_VERSION change (FOUND-006 stores its record in world_flags). Nothing filed.
+  - Fixed ([REVIEW] commit): (1) C-097's help page said the tribulation heart demon comes for those "with many devoured
+    victims on their conscience"; Tribulation.faces_heart_demon only checks alignment (realms.json heart_demon), so the
+    line now says it comes for the deeply demonic, ignores armor and grows with how demonic you are. (2) C-096's
+    forest_dying_rogue_begs_pill calls the rogue "he/his" but its grateful_npc had no gender, so the spawned NPC could be
+    a woman; now `"gender": "male"`.
+  - Checked: RIVAL-010's rival_attitude is validated (needs `rival`), skipped by region_progress, and only the explore
+    roll passes the favor (outlook/road calls pass no rival, so they never offer them, as before). FOUND-006 skips spars
+    and friendly fights and uses realm ids for NPC foes (Karma.npc_enemy). EFF-003 matches its spec; note
+    Effects.check does not refuse a profession_xp-only effect for a profession not taken up (no data uses it yet;
+    C-098 adds it to profession-gated choices only). WU-154's footer is not focusable. C-093's test now tries seeds 1..8
+    for the curious-sim pill (acceptable: it still asserts the pill's odds).
+  - Notes for the planner, not filed: QA-081 found the readiness line says "ok" at 56% survival for a bare demonic
+    (-500) player with Stone Skin (the heart-demon wave), and its guard test only covers alignment 0. QA-080 found
+    renowned requests pay 2.5x-25x a week of gathering; the content retune needs an intended ratio first.
