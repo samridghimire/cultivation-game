@@ -405,6 +405,30 @@
       "body": [
         "A secret realm is opened by heaven's timing, not by your choice. Before one opens, word of it spreads: you hear that it is coming and where. Be ready in the right realm when the day arrives, because the doors do not stay open."
       ]
+    },
+    {
+      "id": "practising_a_style",
+      "title": "Practising a Fighting Style",
+      "body": [
+        "A fighting style you have learned is only as sharp as its level. Open the Techniques screen, pick the style and practise it: days pass, and when it gains a level a banner tells you so and the journal and message log record it. Every level raises your odds in a fight.",
+        "While your style is still low, a hint in your journal reminds you to practise. Some encounters train a technique too: an old soldier's lessons, a hunt watched in the snow, a bout with a wandering boxer, sparring below a waterfall. They teach the style you know least."
+      ]
+    },
+    {
+      "id": "fights_you_can_win",
+      "title": "Fights You Can Win",
+      "body": [
+        "Every foe is rated against you before the fight: Weak, Even, Risky, Dangerous or Deadly. Even means you should win most of the time (about 70% or better), Risky is nearer a coin flip, and anything lower is a gamble with your health.",
+        "When hints are on, the status panel shows a \"Fair fight\" line with the best fight you could take now, and your journal lists \"Fights you can win\": sect missions, the headman's open chores and bounties rated Even or better. Pick those first, then practise and return for the harder ones."
+      ]
+    },
+    {
+      "id": "inheritance_trials",
+      "title": "Inheritance Trials",
+      "body": [
+        "An inheritance ground tests you in stages, and its prompt names what the next trial needs before you try: a realm and stage, an attribute with your current value beside it (for example \"needs Spirit 12, yours 9\"), or a fight with the foe and how dangerous it is for you.",
+        "If you fall short, leave and grow: cultivate, temper your body or practise a technique, then come back. Do not walk into a fight trial you would lose."
+      ]
     }
   ]
 }
