@@ -1665,3 +1665,41 @@ func test_unmet_rival_is_not_surpassed_at_month_end() -> void:
 	gs._rival_news()
 	assert_false(gs.world_flags.get(Rivals.SURPASSED_FLAG, false))
 	gs.end_session()
+
+
+func _beat_realm_setup() -> Array:
+	var c := _start()
+	var gs := _game_state()
+	c.realm_index = gs.data.realm_index_of("core_formation")
+	c.stage = 0
+	gs.data.enemies["t_found_foe"] = {"id": "t_found_foe", "name": "Test Foe", "realm": "foundation_establishment", "stage": 0, "hp": -50, "attack": -50, "defense": -50, "speed": -50, "lethal": false, "techniques": [], "rewards": {}}
+	return [c, gs]
+
+
+func test_beating_a_foundation_foe_sets_the_goal_flag() -> void:
+	var gs: Node = _beat_realm_setup()[1]
+	var flag := Guidance.beat_realm_flag("foundation_establishment")
+	assert_false(gs.world_flags.has(flag))
+	gs.fight("t_found_foe")
+	assert_true(gs.world_flags.get(flag, false))
+	gs.end_session()
+
+
+func test_spar_and_lost_fight_do_not_set_the_beat_flag() -> void:
+	var setup := _beat_realm_setup()
+	var c: CharacterData = setup[0]
+	var gs: Node = setup[1]
+	var flag := Guidance.beat_realm_flag("foundation_establishment")
+	var spar: Dictionary = gs.data.enemies["t_found_foe"].duplicate()
+	spar["spar"] = true
+	gs.data.enemies["t_spar_foe"] = spar
+	gs.fight("t_spar_foe")
+	assert_false(gs.world_flags.has(flag))
+	c.realm_index = 0
+	c.stage = 0
+	var strong: Dictionary = gs.data.enemies["t_found_foe"].duplicate()
+	strong.merge({"hp": 5000, "attack": 5000, "defense": 5000, "speed": 5000, "lethal": false}, true)
+	gs.data.enemies["t_strong_foe"] = strong
+	gs.fight("t_strong_foe")
+	assert_false(gs.world_flags.has(flag))
+	gs.end_session()

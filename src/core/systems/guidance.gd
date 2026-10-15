@@ -797,12 +797,19 @@ static func first_goals_done(c: CharacterData, data: GameData, flags: Dictionary
 	return true
 
 
-## The Foundation Establishment ladder (FOUND-004): {text, done} in order. Only
-## goals whose state is already tracked; "win a fight against a Foundation foe"
-## would need new persistent state and is left out.
+const BEAT_REALM_FLAG := "beat_realm_"
+
+
+## World flag set when the player wins a real fight against a foe of this realm.
+static func beat_realm_flag(realm_id: String) -> String:
+	return BEAT_REALM_FLAG + realm_id
+
+
+## The Foundation Establishment ladder (FOUND-004): {text, done} in order.
 static func foundation_goals(c: CharacterData, data: GameData, flags: Dictionary, clan: ClanData = null) -> Array[Dictionary]:
 	var rows: Array = [
 		["Reach Foundation Establishment Middle", c.realm_index > 2 or (c.realm_index == 2 and c.stage >= 1)],
+		["Win a fight against a Foundation foe", bool(flags.get(beat_realm_flag("foundation_establishment"), false))],
 		["Claim a cave abode", c.abode != ""],
 		["Temper your body to its first stage", c.body_stage >= 1],
 		["Found a clan or rise to Inner Disciple", clan != null or (not c.is_rogue() and int(c.sect["rank"]) >= 2)],
