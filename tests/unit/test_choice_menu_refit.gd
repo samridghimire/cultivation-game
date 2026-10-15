@@ -38,3 +38,10 @@ func test_scroll_refits_when_viewport_resizes() -> void:
 	await _tree().process_frame
 	assert_eq(menu._scroll.custom_minimum_size.y, before, "growing back restores it")
 	vp.free()
+
+
+func test_title_is_followed_by_a_separator() -> void:
+	var menu := ChoiceMenu.new()
+	var box := menu._title.get_parent()
+	assert_true(box.get_child(menu._title.get_index() + 1) is HSeparator, "rule under the title")
+	menu.free()

@@ -23,6 +23,8 @@ func _init() -> void:
 	add_child(box)
 	_title = UIStyle.label("", 22, UIStyle.ACCENT)
 	box.add_child(_title)
+	# A rule under the title so it does not read as one of the options (WU-161).
+	box.add_child(HSeparator.new())
 	# Long menus (a sect's whole shop) scroll instead of running off the screen (WU-065).
 	_scroll = ScrollContainer.new()
 	_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
@@ -31,6 +33,7 @@ func _init() -> void:
 	_buttons = VBoxContainer.new()
 	_buttons.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_scroll.add_child(_buttons)
+	box.add_child(HSeparator.new())
 	_description = UIStyle.label("", 14, Color(0.7, 0.7, 0.75))
 	_description.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_description.custom_minimum_size = Vector2(0, 40)
