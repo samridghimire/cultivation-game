@@ -448,6 +448,11 @@ static func next_realm_pill(c: CharacterData, data: GameData) -> Dictionary:
 	return best
 
 
+## Shop price of the next realm's breakthrough pill, 0 when there is none.
+static func next_realm_pill_price(c: CharacterData, data: GameData) -> int:
+	return int(next_realm_pill(c, data).get("price", 0))
+
+
 ## "Save for a Foundation Establishment Pill (+25 percent): ..." late in Qi
 ## Refining while no pill is held or taken; "" otherwise.
 static func pill_saving_goal(c: CharacterData, data: GameData) -> String:

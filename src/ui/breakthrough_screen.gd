@@ -74,6 +74,18 @@ static func realm_blurb(data: GameData, realm_index: int) -> String:
 	return data.realms[realm_index + 1].description
 
 
+## The pill source plus how many stones you have against its price.
+static func pill_hint(p: CharacterData, data: GameData) -> String:
+	var text := Guidance.pill_source_hint(p, data)
+	var price := Guidance.next_realm_pill_price(p, data)
+	if text == "" or price <= 0:
+		return text
+	var stones := p.item_count("spirit_stone")
+	if stones >= price:
+		return text + " You can afford it."
+	return text + " You have %d of %d stones." % [stones, price]
+
+
 func open() -> void:
 	_refresh()
 	visible = true
@@ -102,7 +114,7 @@ func _refresh() -> void:
 		var b := UIStyle.button("Take %s (+%d%%)" % [data.items[item_id]["name"], bonus], _take.bind(item_id))
 		b.name = "Take_" + item_id
 		_pills.add_child(b)
-	_hint.text = Guidance.pill_source_hint(p, data) if _pills.get_child_count() == 0 else ""
+	_hint.text = pill_hint(p, data) if _pills.get_child_count() == 0 else ""
 	_hint.visible = _hint.text != ""
 
 

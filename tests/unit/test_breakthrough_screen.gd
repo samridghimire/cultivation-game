@@ -110,3 +110,21 @@ func test_realm_blurb_names_the_next_realm_and_is_empty_past_the_end() -> void:
 	var data: GameData = _gs().data
 	assert_eq(BreakthroughScreen.realm_blurb(data, 0), data.realms[1].description)
 	assert_eq(BreakthroughScreen.realm_blurb(data, data.realms.size() - 1), "")
+
+
+func test_pill_hint_stones_against_price() -> void:
+	_bottleneck(false)
+	var p: CharacterData = _gs().player
+	var price := Guidance.next_realm_pill_price(p, data())
+	assert_true(price > 0, "the pill has a shop price")
+	p.add_item("spirit_stone", -p.item_count("spirit_stone"))
+	p.add_item("spirit_stone", price - 1)
+	var short := BreakthroughScreen.pill_hint(p, data())
+	assert_true(short.ends_with(" You have %d of %d stones." % [price - 1, price]), short)
+	p.add_item("spirit_stone", 1)
+	assert_true(BreakthroughScreen.pill_hint(p, data()).ends_with(" You can afford it."))
+
+
+func test_pill_hint_empty_when_pill_held() -> void:
+	_bottleneck(true)
+	assert_eq(BreakthroughScreen.pill_hint(_gs().player, data()), "")
