@@ -37,6 +37,8 @@ var _sell_all_note: Label
 var _sell_all_armed := false
 ## Selected category tab ("All" = everything); reset when switching Buy/Sell.
 var _category := "All"
+const LIST_WIDTH := 540  ## about 60% of the panel (WU-133)
+const ROW_PADDING := 40  ## button margins + scrollbar
 const MAX_STEP := 1000000  ## a step too big to be anything but "Max"
 
 var _quantity := 1
@@ -44,7 +46,7 @@ var _quantity := 1
 
 func _init() -> void:
 	add_theme_stylebox_override("panel", UIStyle.panel_style())
-	custom_minimum_size = Vector2(800, 0)
+	custom_minimum_size = Vector2(920, 0)
 	visible = false
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 10)
@@ -88,7 +90,7 @@ func _init() -> void:
 	columns.add_theme_constant_override("separation", 16)
 	box.add_child(columns)
 	var scroll := ScrollContainer.new()
-	scroll.custom_minimum_size = Vector2(340, 380)
+	scroll.custom_minimum_size = Vector2(LIST_WIDTH, 380)
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	columns.add_child(scroll)
 	_list = VBoxContainer.new()
@@ -96,7 +98,7 @@ func _init() -> void:
 	scroll.add_child(_list)
 
 	var details := VBoxContainer.new()
-	details.custom_minimum_size = Vector2(420, 0)
+	details.custom_minimum_size = Vector2(340, 0)
 	details.add_theme_constant_override("separation", 8)
 	columns.add_child(details)
 	_name = UIStyle.label("", 20, UIStyle.ACCENT)
@@ -287,6 +289,12 @@ static func manual_note(c: CharacterData, data: GameData, item_id: String) -> St
 	return " (%s)" % kind_word(data.techniques[tech_id].kind)
 
 
+## True when `text` fits a shop row at the button font size (WU-133).
+static func row_fits(text: String) -> bool:
+	var w := ThemeDB.fallback_font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, 18).x
+	return w <= LIST_WIDTH - ROW_PADDING
+
+
 ## True when `item_id` is a combat manual and `c` knows no combat technique yet.
 static func is_first_combat_manual(c: CharacterData, data: GameData, item_id: String) -> bool:
 	var tech_id := manual_technique(data, item_id)
@@ -362,7 +370,9 @@ func _rebuild() -> void:
 		if _selling:
 			label += "  (have %d)" % p.item_count(item_id)
 		else:
-			label += manual_note(p, data, item_id)
+			var note := manual_note(p, data, item_id)
+			if row_fits(label + note):
+				label += note
 		if not _selling and GameState.festival_stock(_stock_tags).has(item_id) and not Items.shop_stock(data, _max_price, _stock_tags).has(item_id):
 			label += " (festival)"
 		var b := UIStyle.button(label, _select.bind(item_id))
@@ -485,6 +495,11 @@ func _show_details() -> void:
 	if item.is_empty():
 		return
 	_name.text = item["name"]
+	if not _selling:
+		var note := manual_note(p, data, _selected)
+		var base := "%s  %d" % [item["name"], unit_price(p, data, _selected, false, _faction, GameState.buy_multiplier())]
+		if note != "" and not row_fits(base + note):
+			_name.text += note
 	_description.text = String(item.get("description", ""))
 	var lines := Items.describe_effects(item.get("effects", {}), data)
 	if Equipment.is_equipment(data, _selected):

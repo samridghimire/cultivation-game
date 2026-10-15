@@ -268,3 +268,23 @@ func test_manual_note_and_compare_text() -> void:
 	assert_eq(ShopScreen.manual_note(c, d, "manual_iron_fist"), " (known)")
 	assert_false(ShopScreen.is_first_combat_manual(c, d, "manual_iron_fist"))
 	assert_eq(ShopScreen.compare_text(c, d, "manual_iron_fist"), "Teaches Iron Fist. You already know it.")
+
+
+func test_manual_row_shows_full_name_and_price() -> void:
+	var root := (Engine.get_main_loop() as SceneTree).root
+	var gs := root.get_node("GameState")
+	var c := new_character()
+	c.inventory = {"spirit_stone": 100}
+	gs.start_session(c)
+	var screen := ShopScreen.new()
+	root.add_child(screen)
+	screen.open("Wandering Merchant", 0, ["herb", "ore", "beast_material"])
+	var b: Button = screen._list.get_node_or_null("manual_iron_fist")
+	if b != null:
+		var price := ShopScreen.unit_price(gs.player, data(), "manual_iron_fist", false, "", gs.buy_multiplier())
+		assert_true(b.text.begins_with("Manual: Iron Fist  %d" % price), b.text)
+		assert_true(ShopScreen.row_fits(b.text), b.text)
+	assert_false(ShopScreen.row_fits("Manual: " + "Very ".repeat(30) + "Long Name  300 (fighting style)"))
+	screen.close()
+	screen.free()
+	gs.end_session()
