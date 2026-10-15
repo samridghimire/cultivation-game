@@ -171,7 +171,10 @@
       "title": "Heavenly Tribulations",
       "body": [
         "Some great breakthroughs draw heavenly lightning. You must survive it or your cultivation is shaken, and failure may leave a grave injury.",
-        "Prepare first: protective talismans, defensive gear and pills improve your odds, and a strong body helps. You get a screen to prepare before the first bolt falls."
+        "Prepare first: protective talismans, defensive gear and pills improve your odds, and a strong body helps. You get a screen to prepare before the first bolt falls.",
+        "Your journal tells you what is coming: \"Heavenly Tribulation ahead: N waves, likely D damage against your H hp\". If D is close to or above H, the lightning will probably break you.",
+        "When it says you would not survive yet, prepare: carry shield talismans (a Talisman Master can make them, and markets sell some), learn a defense technique, wear better armor, and raise your Constitution for more hp.",
+        "Beware the heart demon: the deeply demonic, with many devoured victims on their conscience, face it as well as the lightning."
       ]
     },
     {

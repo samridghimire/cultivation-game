@@ -138,3 +138,13 @@ func test_help_key_opens_help_and_close_returns_to_world() -> void:
 	assert_false(hud._help.visible)
 	assert_false(hud._pause_menu.visible, "help from its key does not open the pause menu")
 	hud.free()
+
+
+func test_c097_tribulation_page_explains_the_readiness_line() -> void:
+	var page: Dictionary = {}
+	for p: Dictionary in data().help_pages:
+		if p["id"] == "tribulation":
+			page = p
+	var text := " ".join(PackedStringArray(page["body"]))
+	for needle: String in ["Heavenly Tribulation ahead", "would not survive", "shield talismans", "defense technique", "armor", "Constitution", "heart demon"]:
+		assert_true(text.contains(needle), needle)
