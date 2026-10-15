@@ -6,6 +6,12 @@ func test_data_loads_without_errors() -> void:
 	assert_eq(data().load_errors.size(), 0, ", ".join(data().load_errors))
 
 
+func test_every_realm_has_a_short_description() -> void:
+	for realm in data().realms:
+		assert_true(realm.description != "", "%s needs a description" % realm.id)
+		assert_true(realm.description.length() < 220, "%s description too long" % realm.id)
+
+
 func test_realms_start_at_mortal_then_qi_refining() -> void:
 	assert_eq(data().realms[0].id, "mortal")
 	assert_eq(data().realms[1].id, "qi_refining")

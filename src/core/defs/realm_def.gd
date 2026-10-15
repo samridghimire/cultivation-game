@@ -4,6 +4,8 @@ extends RefCounted
 
 var id := ""
 var name := ""
+## One or two sentences about what the realm means to a cultivator (realm card).
+var description := ""
 var stage_names: PackedStringArray = [""]
 var qi_base := 0.0
 var qi_growth := 1.0
@@ -22,6 +24,7 @@ static func from_dict(d: Dictionary) -> RealmDef:
 	var r := RealmDef.new()
 	r.id = d.get("id", "")
 	r.name = d.get("name", r.id)
+	r.description = d.get("description", "")
 	r.stage_names = PackedStringArray(d.get("stage_names", [""]))
 	r.qi_base = float(d.get("qi_base", 0))
 	r.qi_growth = float(d.get("qi_growth", 1))
