@@ -49,7 +49,11 @@ static func play(gs: Node, clock: Node, seed_value: int, months: int, curious: b
 		if Cultivation.is_at_bottleneck(c, gs.data) and not out["bottleneck_day"].has(c.realm_index):
 			out["bottleneck_day"][c.realm_index] = clock.total_days
 		if Cultivation.can_attempt_breakthrough(c, gs.data):
-			var attempt := {"day": clock.total_days, "from_realm": c.realm_index, "chance": Cultivation.breakthrough_chance(c, gs.data), "pill": c.breakthrough_pill != "", "stones": c.item_count("spirit_stone")}
+			var stones_now := c.item_count("spirit_stone")
+			# QA-072: take a held breakthrough pill right before the attempt, as the breakthrough window's "Take" button does.
+			for pill_id in Guidance.breakthrough_item_ids(c, gs.data):
+				gs.use_item(pill_id)
+			var attempt := {"day": clock.total_days, "from_realm": c.realm_index, "chance": Cultivation.breakthrough_chance(c, gs.data), "pill": c.breakthrough_pill != "", "stones": stones_now}
 			var injuries_before := c.injuries.size()
 			var realm_before := c.realm_index
 			gs.attempt_breakthrough()
@@ -141,6 +145,9 @@ static func _curious_month(gs: Node, c: CharacterData, done: Dictionary, today: 
 			gs.face_threat(false)
 	if not c.alive:
 		return kinds
+	_buy_breakthrough_pill(gs, c, done)
+	if not c.alive:
+		return kinds
 	var region: Dictionary = gs.data.regions.get(gs.current_region, {})
 	for place: Dictionary in region.get("places", []):
 		var ctx := String(place.get("deed_context", ""))
@@ -182,7 +189,8 @@ static func _curious_month(gs: Node, c: CharacterData, done: Dictionary, today: 
 				done["lost_missions"][mission_id] = {"day": today, "odds": odds_before}
 			break
 	_take_listed_bounty(gs, c, done, fair, kinds)
-	_recharge_with_spare_stones(gs, c)
+	if not done.get("saving", false):
+		_recharge_with_spare_stones(gs, c)
 	_learn_fighting_style(gs, c, done, today)
 	if not done.has("talk") and c.alive:
 		for npc_id: String in gs.npcs:
@@ -204,6 +212,43 @@ static func _curious_month(gs: Node, c: CharacterData, done: Dictionary, today: 
 	if c.alive:
 		_everything_month(gs, c, kinds, today, bool(done.get("no_help", false)))
 	return kinds
+
+
+## QA-072: from Qi Refining 7th Layer, when Guidance.next_realm_pill names a pill a merchant sells, stop optional
+## spending (done["saving"]) once stones reach 60% of its price and buy it as soon as they cover it (travelling to
+## the merchant's region and back). The pill is taken right before the attempt (see play).
+static func _buy_breakthrough_pill(gs: Node, c: CharacterData, done: Dictionary) -> void:
+	done["saving"] = false
+	if c.realm_index != 1 or c.stage < 6 or c.breakthrough_pill != "" or not Guidance.breakthrough_items(c, gs.data).is_empty():
+		return
+	var pill := Guidance.next_realm_pill(c, gs.data)
+	if pill.is_empty():
+		return
+	var pill_id := String(pill["id"])
+	var region_id := ""
+	for rid: String in gs.data.regions:
+		for place: Dictionary in gs.data.regions[rid].get("places", []):
+			if String(place.get("type", "")) == "merchant" and Items.merchant_sells(gs.data, pill, place.get("stock_tags", []), int(place.get("max_price", 0))):
+				region_id = rid
+				break
+		if region_id != "":
+			break
+	if region_id == "":
+		return
+	var price := Reputation.buy_price(c, gs.data, pill_id, "", gs.buy_multiplier())
+	var stones := c.item_count("spirit_stone")
+	done["saving"] = stones * 10 >= price * 6
+	if stones < price:
+		return
+	var home: String = gs.current_region
+	if home != region_id:
+		gs.travel(region_id)
+		if gs.current_region != region_id:
+			return
+	if c.alive:
+		gs.buy_item(pill_id)
+	if home != region_id and c.alive:
+		gs.travel(home)
 
 
 ## QA-070: once a month, takes the listed bounty when "Fights you can win" rates it >= 0.7 and no hunt is
@@ -262,7 +307,7 @@ static func _learn_fighting_style(gs: Node, c: CharacterData, done: Dictionary, 
 		return
 	if not done.has("style_month"):
 		var manual := cheapest_combat_manual(gs, c)
-		if manual != "" and c.item_count("spirit_stone") >= int(gs.data.items[manual].get("price", 0)):
+		if manual != "" and not done.get("saving", false) and c.item_count("spirit_stone") >= int(gs.data.items[manual].get("price", 0)):
 			gs.buy_item(manual)
 			gs.use_item(manual)
 			if c.item_count(manual) == 0:

@@ -88,3 +88,18 @@ func test_play_logs_breakthrough_attempts() -> void:
 	assert_gt(foundation_attempts, 0, "seed 2 attempts Foundation Establishment inside 36 months")
 	assert_true(seen, "seed 2 reaches Foundation inside 36 months (first Foundation breakthrough logged)")
 	gs.end_session()
+
+
+## QA-072: the curious sim saves for the Foundation pill, buys it and takes it right before the attempt.
+func test_curious_sim_takes_the_foundation_pill() -> void:
+	var gs := _root().get_node("GameState")
+	var clock := _root().get_node("GameClock")
+	var r: Dictionary = preload("res://tests/sim/first_hour.gd").play(gs, clock, 1, 36, true)
+	var qr: int = gs.data.realm_index_of("qi_refining")
+	var with_pill := 0
+	for a: Dictionary in r["breaks"]:
+		if int(a["from_realm"]) == qr and a["pill"]:
+			with_pill += 1
+			assert_gt(float(a["chance"]), 0.6, "a pill (+25%) lifts the Foundation odds")
+	assert_gt(with_pill, 0, "seed 1 buys and takes the Foundation Establishment Pill")
+	gs.end_session()
