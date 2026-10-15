@@ -107,3 +107,15 @@ func test_practice_days_names_the_level_only_when_gained() -> void:
 	c.techniques["iron_fist"]["xp"] = Techniques.xp_to_next(c, d, "iron_fist") + float(c.techniques["iron_fist"]["xp"]) - 0.01
 	notes = Effects.apply(c, d, {"practice_days": 1}, {})
 	assert_true(String(notes[0]).ends_with("(level 2)"), notes[0])
+
+
+func test_technique_training_encounters_exist() -> void:
+	var d := GameData.load_from_dir()
+	for id: String in ["village_old_soldier_stance", "forest_wolf_tracks_snow", "road_wandering_boxer", "azure_peak_stream_sparring"]:
+		assert_true(d.encounters.has(id), id)
+		var e: Dictionary = d.encounters[id]
+		var trains: bool = e.get("effects", {}).has("practice_days")
+		for ch: Dictionary in e.get("choices", []):
+			if ch.get("effects", {}).has("practice_days"):
+				trains = true
+		assert_true(trains, id + " trains a technique")
