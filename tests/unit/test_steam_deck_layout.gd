@@ -177,3 +177,41 @@ func _check_all_screens(scale: float) -> void:
 ## WU-021: the screen screenshot tool (run by hand under xvfb) must at least parse.
 func test_screen_screenshot_tool_parses() -> void:
 	assert_true(load("res://tests/sim/screenshot_screens.gd") != null, "screenshot_screens.gd loads")
+
+
+## WU-156: the longest encounter choice label in the data keeps the window and every button inside the viewport.
+func test_longest_encounter_choice_fits() -> void:
+	var gs: Node = _tree().root.get_node("GameState")
+	gs.start_session(CharacterData.new())
+	var longest := {}
+	var longest_text := ""
+	for id: String in gs.data.encounters:
+		for choice in Exploration.choices(gs.player, gs.data, gs.data.encounters[id], {}):
+			var label := EncounterWindow.choice_label(choice)
+			if choice["fight"]:
+				label = Warnings.append_to(gs.player, label)
+			if label.length() > longest_text.length():
+				longest_text = label
+				longest = choice
+	assert_true(longest_text != "", "data has encounter choices")
+	var enc := {"id": "test_longest_choice", "text": "A long road.", "choices": [{"label": String(longest["label"])}]}
+	gs.data.encounters["test_longest_choice"] = enc
+	for size: Vector2i in [Vector2i(1280, 800), Vector2i(1280, 720)]:
+		gs.pending_encounter = "test_longest_choice"
+		var vp := SubViewport.new()
+		vp.size = size
+		_tree().root.add_child(vp)
+		var window := EncounterWindow.new()
+		vp.add_child(UIStyle.centered(window))
+		window.open()
+		# swap in the real longest button text (disabled and tagged form both fit if this does)
+		var buttons := window.choice_buttons()
+		buttons[0].text = longest_text
+		await _frames(2)
+		var view := Rect2(Vector2.ZERO, Vector2(size))
+		assert_true(view.encloses(window.get_global_rect()), "window at %s: %s" % [size, window.get_global_rect()])
+		for b in window.choice_buttons():
+			assert_true(view.encloses(b.get_global_rect()), "button at %s: %s" % [size, b.get_global_rect()])
+		vp.free()
+	gs.data.encounters.erase("test_longest_choice")
+	gs.end_session()
