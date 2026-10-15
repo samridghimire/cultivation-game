@@ -37,7 +37,8 @@
       "title": "Breakthroughs",
       "body": [
         "Attempting a breakthrough at a meditation spot is risky. Failure scatters your qi and may leave you with an injury such as Qi Deviation.",
-        "Pills, a calm body and the right preparation raise your odds. Heal injuries first: they slow cultivation and weaken you in combat."
+        "Pills, a calm body and the right preparation raise your odds. Heal injuries first: they slow cultivation and weaken you in combat.",
+        "A failed major breakthrough, or a tribulation you do not survive, still teaches you something: each failure adds 3% to your next attempt, up to 9% in all. The breakdown in the breakthrough window lists it as the lessons of your failed attempts. A success resets it, so use your lessons before you rest."
       ]
     },
     {
@@ -428,6 +429,15 @@
       "body": [
         "An inheritance ground tests you in stages, and its prompt names what the next trial needs before you try: a realm and stage, an attribute with your current value beside it (for example \"needs Spirit 12, yours 9\"), or a fight with the foe and how dangerous it is for you.",
         "If you fall short, leave and grow: cultivate, temper your body or practise a technique, then come back. Do not walk into a fight trial you would lose."
+      ]
+    },
+    {
+      "id": "your_rival",
+      "title": "Your Rival",
+      "body": [
+        "Someone your own age is climbing the realms beside you, and sooner or later you meet them. After that first meeting they are your rival: their name carries a \"(rival)\" mark, looking at them says where they stand against you (far ahead, a few steps ahead, level, or behind), and the world map marks the region they are in.",
+        "You hear of their progress: when they break through to a new realm, a line in the message log tells you. Some encounters change with your rival's realm, so a stronger rival and a weaker one bring different scenes.",
+        "Break through to a higher realm than theirs and you have surpassed them: a line in the message log marks the day and your milestones record it. The same realm never counts, whatever the stage."
       ]
     }
   ]
