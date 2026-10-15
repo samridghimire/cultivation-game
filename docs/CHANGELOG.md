@@ -2,6 +2,19 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-15 [WU-127] Long manual names in the shop no longer hide their price; hover a row for the full name.
+- 2026-10-15 [QA-065] Checked why one simulated newcomer never won a fight in a year: they lost the boar chore once and never tried again.
+- 2026-10-15 [GUIDE-021] The journal lists "Fights you can win": sect missions and bounties you are likely to win.
+- 2026-10-15 [RUMOR-003] Rumors about a secret realm or inheritance go quiet once it is found or gone.
+- 2026-10-15 [EFF-002] Encounters can now train your fighting technique.
+- 2026-10-15 [C-080] Elder Mo tells a new fighter to keep practising.
+- 2026-10-15 [WU-131] Ticking off a first goal shows a "Goal done" banner.
+- 2026-10-15 [QA-064] Checked which early inheritances a typical player can reach.
+- 2026-10-15 [MENTOR-004] Seniors of your own sect give pointers and spars at lower favor.
+- 2026-10-15 [INH-001] The Hut of the Reed Hermit now needs Qi Refining 5th Layer to enter.
+- 2026-10-15 [C-078] Every region with a merchant now sells a first fighting style.
+- 2026-10-15 [WU-130] A banner celebrates when a technique levels up.
+- 2026-10-15 [GUIDE-020] A hint and a first goal to practise your fighting style; a lost fight suggests practising.
 - 2026-10-15 [QA-063] The first-hour sim records the day of the first won fight: a newcomer wins on about day 14.
 - 2026-10-15 [WU-124] Banners wait until the combat report (and the respawn, tribulation and death screens) close.
 - 2026-10-15 [WU-120] A scroll mark floats over the merchant who sells your first fighting style.

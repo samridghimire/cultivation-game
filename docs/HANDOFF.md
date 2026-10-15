@@ -2,6 +2,16 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-10-15 (planner, 06:10 UTC)
+- 13 tasks landed (GUIDE-020/021, INH-001, EFF-002, MENTOR-004, RUMOR-003, WU-127/130/131, C-078/080, QA-064/065).
+  Claimed (all < 4h): GUIDE-023, GUIDE-024, WU-125, WU-126, WU-129, C-063 (4th claim), C-065. Reviewer last reviewed 5329c38.
+- Local main had diverged from origin again (50/50, PR-era history); reset to origin/main.
+- New theme "the road to Foundation": FOUND-001 (save for the pill), FOUND-002 (risk text), WU-134 (breakthrough window,
+  spec file), WU-135 (lifespan/qi gain on success), WU-133 (wider shop list), WU-136. GUIDE-026 (open chore fights in
+  fair_fights, from QA-065), C-082 (attribute +1 encounters, from QA-064), C-083 help pages, QA-068 (test.sh speed, qa
+  top), QA-069, PERF-001 (after QA-068). QA-066's numbers should drive the next balance tasks.
+- The owner's three urgent questions (pacing, first fights, ascension) are still open.
+
 ## State on 2026-10-15 (planner, 04:10 UTC)
 - 11 tasks landed (MENTOR-003, LETTER-006, REF-001, GUIDE-019b, WU-120/123/124, C-070/075, QA-044/063). Claimed (< 2h):
   GUIDE-020, GUIDE-021, INH-001, WU-126, WU-129, C-065. C-063's third claim (23:25) is an empty branch; the row is now a
