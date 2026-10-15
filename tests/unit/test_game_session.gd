@@ -1565,6 +1565,38 @@ func test_leaving_mortality_does_not_surpass_a_mortal_rival() -> void:
 	gs.end_session()
 
 
+func _death_news_lines() -> Array:
+	return EventBus.history.filter(func(m): return String(m["text"]).begins_with("Word reaches you: your rival") and String(m["text"]).contains("old age"))
+
+
+## RIVAL-011: a rival lost to old age is reported once, after the first meeting.
+func test_rival_death_news_posts_once_after_meeting() -> void:
+	var c := _start()
+	var gs := _game_state()
+	var rival: CharacterData = gs.npcs[c.rival]
+	Npcs.die(rival, "old age")
+	EventBus.clear_history()
+	gs._rival_news()
+	assert_eq(_death_news_lines().size(), 0, "nothing before the first meeting")
+	gs.world_flags[Rivals.FIRST_MEETING_FLAG] = true
+	gs._rival_news()
+	gs._rival_news()
+	assert_eq(_death_news_lines().size(), 1, "posted once")
+	gs.end_session()
+
+
+func test_player_kill_of_rival_posts_no_death_news() -> void:
+	var c := _start()
+	var gs := _game_state()
+	Npcs.die(gs.npcs[c.rival], "slain by " + c.name)
+	gs.world_flags[Rivals.FIRST_MEETING_FLAG] = true
+	EventBus.clear_history()
+	gs._rival_news()
+	assert_eq(EventBus.history.filter(func(m): return String(m["text"]).begins_with("Word reaches you")).size(), 0)
+	assert_true(gs.world_flags.get("rival_death_news", false))
+	gs.end_session()
+
+
 func _surpass_lines() -> Array:
 	return EventBus.history.filter(func(m): return String(m["text"]).begins_with("You have surpassed "))
 

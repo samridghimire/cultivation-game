@@ -192,6 +192,26 @@ func test_news_only_for_a_higher_realm() -> void:
 	assert_eq(Rivals.news(c, null, 0, d), "")
 
 
+## RIVAL-011: word of the rival's death by cause.
+func test_death_news_by_cause() -> void:
+	var c := CharacterData.new()
+	var r := CharacterData.new()
+	r.name = "Lin Wei"
+	assert_eq(Rivals.death_news(c, r), "", "alive")
+	assert_eq(Rivals.death_news(c, null), "")
+	r.alive = false
+	r.cause_of_death = "slain by Wu"
+	assert_eq(Rivals.death_news(c, r), "", "the player's own kill")
+	r.cause_of_death = "old age"
+	assert_eq(Rivals.death_news(c, r), "Word reaches you: your rival Lin Wei has died of old age.")
+	r.cause_of_death = "heavenly tribulation"
+	assert_eq(Rivals.death_news(c, r), "Word reaches you: your rival Lin Wei perished under the Heavenly Tribulation.")
+	r.cause_of_death = "fell in battle at Red Gate"
+	assert_eq(Rivals.death_news(c, r), "Word reaches you: your rival Lin Wei fell in battle at Red Gate.")
+	r.cause_of_death = "a fall"
+	assert_eq(Rivals.death_news(c, r), "Word reaches you: your rival Lin Wei is dead.")
+
+
 func test_surpassed_needs_a_higher_realm() -> void:
 	var c := CharacterFactory.create("Me", data(), seeded_rng(1))
 	var r := CharacterFactory.create("Rival", data(), seeded_rng(2))

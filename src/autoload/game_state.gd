@@ -2980,6 +2980,13 @@ func _on_days_advanced(days: int) -> void:
 func _rival_news() -> void:
 	if not world_flags.get(Rivals.FIRST_MEETING_FLAG, false):
 		return
+	if not world_flags.get("rival_death_news", false):
+		var dead: CharacterData = npcs.get(player.rival)
+		if dead != null and not dead.alive:
+			var death_line := Rivals.death_news(player, dead)
+			if death_line != "":
+				EventBus.post(death_line, "info")
+			world_flags["rival_death_news"] = true
 	var rival := Rivals.rival_of(player, npcs)
 	if rival == null:
 		return

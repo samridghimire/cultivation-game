@@ -87,6 +87,21 @@ static func attitude_text(attitude: String) -> String:
 	return ""
 
 
+## RIVAL-011: one line of news for a rival who has died, else "". The player's
+## own kill ("slain by ...") already posts its line, so it gives "".
+static func death_news(_c: CharacterData, rival: CharacterData) -> String:
+	if rival == null or rival.alive or rival.cause_of_death.begins_with("slain by "):
+		return ""
+	var cause := rival.cause_of_death
+	if cause == "old age":
+		return "Word reaches you: your rival %s has died of old age." % rival.name
+	if cause == "heavenly tribulation":
+		return "Word reaches you: your rival %s perished under the Heavenly Tribulation." % rival.name
+	if cause.begins_with("fell in battle"):
+		return "Word reaches you: your rival %s %s." % [rival.name, cause]
+	return "Word reaches you: your rival %s is dead." % rival.name
+
+
 ## True when `c` has reached a higher major realm than a living `rival`
 ## (RIVAL-006). The same realm never counts, whatever the stage, and neither does a rival who is
 ## still a mortal: they spawn mortal, so the player's own awakening would "surpass" them on day 15 (QA-078).
