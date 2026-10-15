@@ -223,12 +223,17 @@ func _start_late_realms(gs: Node) -> void:
 	var journal: Control = hud.get("_screens")["toggle_journal"]
 	var sheet: Control = hud.get("_screens")["toggle_character_sheet"]
 	var hide_banner := func() -> void: hud.get("_banner").visible = false
+	LifeStats.add(c, "rival_bouts_won", 2)
+	LifeStats.add(c, "rival_bouts_lost", 1)
 	for spec: Array in [["fe_peak", "foundation_establishment", -1], ["cf_early", "core_formation", 0]]:
 		var realm_index: int = gs.data.realm_index_of(spec[1])
 		var stage: int = int(spec[2])
 		if stage < 0:
 			stage = gs.data.realms[realm_index].stage_count() - 1
 		var setup := func() -> void:
+			gs.world_flags[Guidance.beat_realm_flag("foundation_establishment")] = true
+			if spec[0] == "cf_early":
+				gs.world_flags[Guidance.beat_realm_flag("core_formation")] = true
 			c.realm_index = realm_index
 			c.stage = stage
 			c.qi = gs.data.realms[realm_index].qi_required(stage)
@@ -239,6 +244,10 @@ func _start_late_realms(gs: Node) -> void:
 		shots.append({"name": "lr_%s_sheet" % spec[0], "open": func() -> void:
 			setup.call()
 			sheet.open(), "close": sheet.close})
+		shots.append({"name": "lr_%s_sheet_end" % spec[0], "open": func() -> void:
+			setup.call()
+			sheet.open()
+			sheet.get("_scroll").set_deferred("scroll_vertical", 100000), "close": sheet.close})
 
 
 ## WU-127: the fighting-style surfaces for a fresh character, then for one who has just learned Iron Fist.
