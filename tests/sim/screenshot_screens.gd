@@ -16,6 +16,9 @@ extends SceneTree
 ## full qi: (a) no pill, 120 stones, (b) holding a Foundation Establishment Pill, (c) pill and 3 failed
 ## attempts (lessons line). Check each PNG at 1280x800 and 1280x720.
 
+## WU-163: append `-- --late-realms` for the journal and character sheet of a Foundation Establishment Peak
+## and a Core Formation Early character (Foundation / Core Formation goals, tribulation line, strongest foe).
+
 const OUT_DIR := "user://screenshots/screens"
 const SETTLE_FRAMES := 6
 
@@ -39,6 +42,9 @@ func _start() -> void:
 		return
 	if OS.get_cmdline_user_args().has("--win-shots"):
 		_start_win_shots(gs)
+		return
+	if OS.get_cmdline_user_args().has("--late-realms"):
+		_start_late_realms(gs)
 		return
 	if OS.get_cmdline_user_args().has("--breakthrough-shots"):
 		_start_breakthrough_shots(gs)
@@ -200,6 +206,39 @@ func _start_breakthrough_shots(gs: Node) -> void:
 		c.breakthrough_failures = 3
 		hide_banner.call()
 		win.open(), "close": win.close})
+
+
+## WU-163: journal and character sheet for a Foundation Establishment Peak and a Core Formation Early character.
+func _start_late_realms(gs: Node) -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 5
+	var c := CharacterFactory.create("Lin Feng", gs.data, rng, "male")
+	gs.start_session(c)
+	gs.pending_event = ""
+	c.age_days = 45 * Calendar.DAYS_PER_YEAR
+	c.add_item("spirit_stone", 900)
+	world = load("res://src/world/world.tscn").instantiate()
+	root.add_child(world)
+	hud = world.get_node("HUD")
+	var journal: Control = hud.get("_screens")["toggle_journal"]
+	var sheet: Control = hud.get("_screens")["toggle_character_sheet"]
+	var hide_banner := func() -> void: hud.get("_banner").visible = false
+	for spec: Array in [["fe_peak", "foundation_establishment", -1], ["cf_early", "core_formation", 0]]:
+		var realm_index: int = gs.data.realm_index_of(spec[1])
+		var stage: int = int(spec[2])
+		if stage < 0:
+			stage = gs.data.realms[realm_index].stage_count() - 1
+		var setup := func() -> void:
+			c.realm_index = realm_index
+			c.stage = stage
+			c.qi = gs.data.realms[realm_index].qi_required(stage)
+			hide_banner.call()
+		shots.append({"name": "lr_%s_journal" % spec[0], "open": func() -> void:
+			setup.call()
+			journal.open(), "close": journal.close})
+		shots.append({"name": "lr_%s_sheet" % spec[0], "open": func() -> void:
+			setup.call()
+			sheet.open(), "close": sheet.close})
 
 
 ## WU-127: the fighting-style surfaces for a fresh character, then for one who has just learned Iron Fist.
