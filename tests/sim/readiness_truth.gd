@@ -37,14 +37,16 @@ func _run() -> void:
 		if data.realms[i].id == "foundation_establishment":
 			from = i
 	print("Readiness truth, %s Peak -> %s, %d tribulations per row." % [data.realms[from].name, data.realms[from + 1].name, samples])
-	print("%-34s %-4s %-14s %s" % ["profile", "note", "survive", "mismatch"])
+	print("%-34s %-5s %-14s %s" % ["profile", "note", "survive", "mismatch"])
 	for gear in [false, true]:
 		for stone_skin in [false, true]:
 			for shield in [false, true]:
 				for alignment in [0, -500]:
 					var c := build(data, from, gear, stone_skin, shield, alignment)
 					var note := Guidance.tribulation_note(c, data)
-					var says_no := String(note.get("tone", "")) == "warning"
+					var text := String(note.get("text", ""))
+					var verdict := "NO" if text.contains("would not survive") else ("close" if text.contains("be close") else "ok")
+					var says_no := verdict == "NO"
 					var rng := RandomNumberGenerator.new()
 					rng.seed = 1
 					var ok := 0
@@ -55,7 +57,9 @@ func _run() -> void:
 					var mismatch := ""
 					if says_no and rate > 0.6:
 						mismatch = "SAYS NO, survives >60%"
-					elif not says_no and rate < 0.6:
+					elif verdict == "ok" and rate < 0.6:
 						mismatch = "SAYS OK, survives <60%"
-					print("%-34s %-4s %5d%%         %s" % ["%s skin=%s shield=%s al=%d" % ["gear" if gear else "bare", stone_skin, shield, alignment], "NO" if says_no else "ok", roundi(rate * 100), mismatch])
+					elif verdict == "close" and (rate < 0.4 or rate > 0.8):
+						mismatch = "SAYS CLOSE, survives %d%%" % roundi(rate * 100)
+					print("%-34s %-5s %5d%%         %s" % ["%s skin=%s shield=%s al=%d" % ["gear" if gear else "bare", stone_skin, shield, alignment], verdict, roundi(rate * 100), mismatch])
 	quit()

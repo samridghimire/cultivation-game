@@ -1290,6 +1290,39 @@ func test_tribulation_note_normal_when_sturdy_and_hidden_elsewhere() -> void:
 	assert_true(Guidance.tribulation_note(q, data()).is_empty())
 
 
+func _share_at_constitution(c: CharacterData, constitution: int) -> float:
+	c.attributes["constitution"] = constitution
+	var p := Tribulation.preview(c, data(), c.realm_index + 1)
+	return float(p["expected_damage"]) / float(int(p["max_hp"]) + int(p["shield"]))
+
+
+func _peak_with_share(low: float, high: float) -> CharacterData:
+	var c := _peak_foundation()
+	var con := 10
+	while con < 100000 and _share_at_constitution(c, con) >= high:
+		con += 2
+	assert_true(_share_at_constitution(c, con) >= low, "found a constitution with share in [%.2f, %.2f)" % [low, high])
+	return c
+
+
+func test_tribulation_note_close_call() -> void:
+	var c := _peak_with_share(Guidance.CLOSE_CALL_SHARE, 1.0)
+	var note := Guidance.tribulation_note(c, data())
+	assert_true(String(note["text"]).contains("It will be close"))
+	assert_false(String(note["text"]).contains("would not survive"))
+	assert_eq(note["tone"], "warning")
+
+
+func test_tribulation_note_plain_when_well_under_and_no_when_over() -> void:
+	var sturdy := _peak_foundation()
+	sturdy.attributes["constitution"] = 100000
+	var note := Guidance.tribulation_note(sturdy, data())
+	assert_eq(note["tone"], "normal")
+	assert_false(String(note["text"]).contains("close"))
+	var weak := _peak_foundation()
+	assert_true(String(Guidance.tribulation_note(weak, data())["text"]).contains("would not survive"))
+
+
 func test_tribulation_note_names_heart_demon() -> void:
 	var c := _peak_foundation()
 	assert_false(String(Guidance.tribulation_note(c, data())["text"]).contains("heart demon"))

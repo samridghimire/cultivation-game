@@ -22,10 +22,13 @@ func test_warning_and_survival_agree() -> void:
 		for skin: bool in [false, true]:
 			for shield: bool in [false, true]:
 				var c := Sim.build(data(), from, gear, skin, shield, 0)
-				var says_no := String(Guidance.tribulation_note(c, data()).get("tone", "")) == "warning"
+				var says_no := String(Guidance.tribulation_note(c, data()).get("text", "")).contains("would not survive")
 				var rate := _survival(from, gear, skin, shield, 0)
 				var label := "gear=%s skin=%s shield=%s" % [gear, skin, shield]
-				if says_no:
+				var close := String(Guidance.tribulation_note(c, data()).get("text", "")).contains("be close")
+				if close:
+					assert_true(rate >= 0.4 and rate <= 0.8, "%s: note says close but %d%% survive" % [label, roundi(rate * 100)])
+				elif says_no:
 					assert_true(rate <= 0.6, "%s: note says you would not survive but %d%% do" % [label, roundi(rate * 100)])
 				else:
 					assert_true(rate >= 0.6, "%s: note says nothing but only %d%% survive" % [label, roundi(rate * 100)])
