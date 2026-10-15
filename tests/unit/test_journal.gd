@@ -315,6 +315,24 @@ func test_journal_rival_line_needs_the_first_meeting() -> void:
 	assert_eq(_rival_rows(c, {Rivals.FIRST_MEETING_FLAG: true}, people)[0]["tone"], "warning")
 
 
+func test_journal_rival_line_shows_attitude() -> void:
+	var c := _fresh()
+	var rival := new_character(77)
+	rival.id = "gen_rival"
+	rival.name = "Han Wei"
+	c.rival = rival.id
+	var people := {rival.id: rival}
+	var flags := {Rivals.FIRST_MEETING_FLAG: true}
+	var plain := String(Guidance.journal(c, data(), flags, 0, "qingshi_village", 1.0, people, [])[0]["text"])
+	var rows := Guidance.journal(c, data(), flags, 0, "qingshi_village", 1.0, people, [], null, {"gen_rival": 20}).filter(func(e: Dictionary) -> bool: return String(e["text"]).begins_with("Rival: "))
+	assert_true(String(rows[0]["text"]).ends_with("; a friendly rivalry)"), rows[0]["text"])
+	assert_false(_rival_rows(c, flags, people)[0]["text"].contains(";"))
+	c.grudges["gen_rival"] = 10
+	rows = Guidance.journal(c, data(), flags, 0, "qingshi_village", 1.0, people, [], null, {"gen_rival": 50}).filter(func(e: Dictionary) -> bool: return String(e["text"]).begins_with("Rival: "))
+	assert_true(String(rows[0]["text"]).ends_with("; they hold a grudge)"), rows[0]["text"])
+	assert_true(plain != "")
+
+
 func test_journal_rival_line_when_fallen() -> void:
 	var c := _fresh()
 	var rival := new_character(77)

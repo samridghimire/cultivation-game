@@ -66,6 +66,27 @@ static func news(c: CharacterData, rival: CharacterData, last_seen_realm: int, d
 	return "Word reaches you: your rival %s has broken through to %s." % [rival.name, data.realms[rival.realm_index].name]
 
 
+## RIVAL-009: how the rival feels about `c`: "bitter" when `c`'s grudge against them reaches
+## karma.json rival `bitter_grudge`, else "friendly" when `favor` reaches `friendly_favor`, else "proud".
+static func attitude(c: CharacterData, rival: CharacterData, favor: int, data: GameData) -> String:
+	var r := rules(data)
+	if Karma.grudge(c, rival.id) >= int(r.get("bitter_grudge", 10)):
+		return "bitter"
+	if favor >= int(r.get("friendly_favor", 20)):
+		return "friendly"
+	return "proud"
+
+
+## The journal wording of an `attitude`; "" for the default "proud".
+static func attitude_text(attitude: String) -> String:
+	match attitude:
+		"bitter":
+			return "they hold a grudge"
+		"friendly":
+			return "a friendly rivalry"
+	return ""
+
+
 ## True when `c` has reached a higher major realm than a living `rival`
 ## (RIVAL-006). The same realm never counts, whatever the stage, and neither does a rival who is
 ## still a mortal: they spawn mortal, so the player's own awakening would "surpass" them on day 15 (QA-078).
@@ -140,6 +161,10 @@ static func validate(data: GameData) -> PackedStringArray:
 	for key: String in ["first_meeting_day", "first_meeting_window"]:
 		if r.has(key) and (not (r[key] is int or r[key] is float) or int(r[key]) < 0):
 			errors.append("karma.json rival %s must be a whole number >= 0" % key)
+	if r.has("friendly_favor") and (not (r["friendly_favor"] is int or r["friendly_favor"] is float) or int(r["friendly_favor"]) < 1 or int(r["friendly_favor"]) > 100):
+		errors.append("karma.json rival friendly_favor must be a whole number 1-100")
+	if r.has("bitter_grudge") and (not (r["bitter_grudge"] is int or r["bitter_grudge"] is float) or int(r["bitter_grudge"]) < 1):
+		errors.append("karma.json rival bitter_grudge must be a whole number >= 1")
 	for e: Dictionary in data.encounters.values():
 		if e.has("rival") and not RELATIONS.has(String(e["rival"])):
 			errors.append("Encounter '%s' has unknown rival condition '%s'" % [e["id"], e["rival"]])

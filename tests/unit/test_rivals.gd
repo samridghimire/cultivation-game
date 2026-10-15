@@ -272,3 +272,25 @@ func test_spur_raises_diligence_and_caps() -> void:
 	rival.diligence = 0.9
 	assert_almost_eq(Rivals.spur(rival, data), Rivals.SPUR_CAP, 0.001)
 	assert_almost_eq(Rivals.spur(rival, data), Rivals.SPUR_CAP, 0.001)
+
+
+func test_attitude() -> void:
+	var d := data()
+	var c := new_character()
+	var rival := new_character(77)
+	rival.id = "gen_rival"
+	assert_eq(Rivals.attitude(c, rival, 0, d), "proud")
+	assert_eq(Rivals.attitude(c, rival, 19, d), "proud")
+	assert_eq(Rivals.attitude(c, rival, 20, d), "friendly")
+	c.grudges["gen_rival"] = 10
+	assert_eq(Rivals.attitude(c, rival, 50, d), "bitter")
+	assert_eq(Rivals.attitude_text("proud"), "")
+	assert_eq(Rivals.attitude_text("friendly"), "a friendly rivalry")
+	assert_eq(Rivals.attitude_text("bitter"), "they hold a grudge")
+
+
+func test_attitude_validation() -> void:
+	var d := GameData.load_from_dir()
+	d.karma["rival"]["friendly_favor"] = 0
+	d.karma["rival"]["bitter_grudge"] = "x"
+	assert_eq(Rivals.validate(d).size(), 2, ", ".join(Rivals.validate(d)))
