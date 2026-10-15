@@ -472,10 +472,12 @@ static func next_realm_pill_price(c: CharacterData, data: GameData) -> int:
 	return int(next_realm_pill(c, data).get("price", 0))
 
 
-## "Save for a Foundation Establishment Pill (+25 percent): ..." late in Qi
-## Refining while no pill is held or taken; "" otherwise.
+## "Save for a Foundation Establishment Pill (+25 percent): ..." in the last three stages of
+## any cultivation realm while no pill is held or taken; "" otherwise.
 static func pill_saving_goal(c: CharacterData, data: GameData) -> String:
-	if c.realm_index != 1 or c.stage < 6 or c.breakthrough_pill != "" or not breakthrough_items(c, data).is_empty():
+	if c.realm_index < 1 or Cultivation.is_final_realm(c, data):
+		return ""
+	if c.stage < data.realms[c.realm_index].stage_count() - 3 or c.breakthrough_pill != "" or not breakthrough_items(c, data).is_empty():
 		return ""
 	var pill := next_realm_pill(c, data)
 	if pill.is_empty():

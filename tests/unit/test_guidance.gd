@@ -643,9 +643,9 @@ func test_disciple_goals_have_realm_and_rank_lines() -> void:
 	c.stage = 1
 	c.sect = {"id": data().sects.keys()[0], "rank": 0, "contribution": 0, "spent": 0}
 	var lines := _goal_lines(c)
-	assert_true(lines.size() >= 2 and lines.size() <= 3)
+	assert_true(lines.size() >= 2)
 	assert_true(lines[0].begins_with("Reach "))
-	assert_true(lines[1].begins_with("Become "))
+	assert_true(_has(lines, "Become "))
 	for l in lines:
 		for bad in ["%d", "{", "<null>", "null"]:
 			assert_false(l.contains(bad))
@@ -1161,10 +1161,28 @@ func test_pill_saving_goal_skipped_when_held_or_other_realm() -> void:
 	var c := _qr(6, 20)
 	c.add_item("foundation_establishment_pill", 1)
 	assert_false(_has(Guidance.goals(c, data(), {}), "Save for"))
-	var fe := _qr(6, 20)
+	var fe := _qr(0, 20)
 	fe.realm_index = 2
 	assert_false(_has(Guidance.goals(fe, data(), {}), "Save for"))
 	assert_eq(Guidance.next_realm_pill(_qr(6, 0), data()).get("id", ""), "foundation_establishment_pill")
+
+func test_pill_saving_goal_at_foundation() -> void:
+	var d := data()
+	var late := _qr(0, 20)
+	late.realm_index = 2
+	late.stage = d.realms[2].stage_count() - 3
+	var goals := Guidance.goals(late, d, {})
+	assert_true(_has(goals, "Save for a Core Forming Pill (+25 percent)"))
+	assert_true(_has(goals, "you have 20"))
+	assert_true(Guidance.pill_gap_note(late, d, []).begins_with("%d stones short" % (3000 - 20)))
+	var early := _qr(0, 20)
+	early.realm_index = 2
+	early.stage = d.realms[2].stage_count() - 4
+	assert_false(_has(Guidance.goals(early, d, {}), "Save for"))
+	assert_eq(Guidance.pill_gap_note(early, d, []), "")
+	late.add_item("core_forming_pill", 1)
+	assert_false(_has(Guidance.goals(late, d, {}), "Save for"))
+
 
 func _deed_texts(c: CharacterData, flags: Dictionary) -> Array:
 	var out: Array = []
