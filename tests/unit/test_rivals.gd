@@ -192,3 +192,20 @@ func test_surpassed_needs_a_higher_realm() -> void:
 	r.alive = false
 	assert_false(Rivals.surpassed(c, r), "dead rival")
 	assert_false(Rivals.surpassed(c, null))
+
+
+## C-088: the sect lecture rewards a sharper mind.
+func test_lecture_sharper_answer_needs_comprehension() -> void:
+	var d := data()
+	var e: Dictionary = d.encounters["rival_sect_lecture"]
+	var choice: Dictionary = {}
+	for ch in e["choices"]:
+		if String(ch["label"]).begins_with("Answer better"):
+			choice = ch
+	assert_false(choice.is_empty(), "sharper answer exists")
+	assert_true(e["choices"].size() >= 3, "plain choices remain")
+	var c := CharacterData.new()
+	c.attributes["comprehension"] = 10
+	assert_true(Exploration.check_choice(c, d, choice, {}) != "", "blocked at 10")
+	c.attributes["comprehension"] = 12
+	assert_eq(Exploration.check_choice(c, d, choice, {}), "", "allowed at 12")
