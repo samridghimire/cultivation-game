@@ -342,3 +342,24 @@ func test_choice_check_tag() -> void:
 	assert_eq(list[0]["check"], "")
 	assert_eq(list[1]["check"], "Comprehension 12")
 	assert_eq(list[2]["check"], "Doctor, 1st Grade")
+
+
+func test_profession_answers_in_the_wilds() -> void:
+	var d := GameData.load_from_dir()
+	var answers := {
+		"forest_wounded_traveller": "doctor",
+		"marsh_slaughter_field": "blacksmith",
+		"ruins_soul_nourishing_alchemist": "alchemist",
+		"wild_caged_spirit_beast": "beast_tamer"}
+	for enc_id: String in answers:
+		var prof: String = answers[enc_id]
+		var found := false
+		for choice: Dictionary in d.encounters[enc_id]["choices"]:
+			if not choice.get("requires", {}).get("min_profession", {}).has(prof):
+				continue
+			found = true
+			var c := new_character()
+			assert_true(Exploration.check_choice(c, d, choice, {}).begins_with("You need to be "), "%s blocked at rank 0" % enc_id)
+			c.professions[prof] = {"rank": 1, "xp": 0.0}
+			assert_eq(Exploration.check_choice(c, d, choice, {}), "", "%s allowed at rank 1" % enc_id)
+		assert_true(found, "%s has a %s choice" % [enc_id, prof])
