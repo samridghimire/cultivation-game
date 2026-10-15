@@ -2,82 +2,82 @@
 
 First-hour sim: 10 seeds, 12 months
   seed  QR1  QR3  QR9  sect  injuries  won  lost  fled  lines/month
-     1   93  311    -    93         0    3     0     0  5.5
+     1   51  270    -    51         0    1     0     0  5.5
         first win day 14 (wild_boar), style bought day -
-     2   14   76    -    14         0    1     0     0  4.7
+     2   14   76    -    14         0    1     0     0  4.8
         first win day 14 (wild_boar), style bought day -
-     3   14  142    -    14         0    3     0     0  5.7
+     3   14  142    -    14         0    3     0     0  5.8
         first win day 14 (wild_boar), style bought day -
-     4   14  171    -    14         0    1     0     0  5.2
+     4   14  171    -    14         0    1     0     0  5.3
         first win day 14 (wild_boar), style bought day -
-     5   14   45  294    14         1    1     0     0  5.8
+     5   14   45  294    14         1    1     0     0  5.9
         first win day 14 (wild_boar), style bought day -
-     6   14  168    -    14         0    3     0     0  5.0
+     6   14  168    -    14         0    3     0     0  5.1
         first win day 14 (wild_boar), style bought day -
-     7   14  141    -    14         0    1     0     0  5.0
+     7   14  141    -    14         0    1     0     0  5.1
         first win day 14 (wild_boar), style bought day -
      8   14   76    -    14         0    1     0     0  5.2
         first win day 14 (wild_boar), style bought day -
-     9   14  202    -    14         0    1     0     0  5.1
+     9   14  202    -    14         0    1     0     0  5.2
         first win day 14 (wild_boar), style bought day -
-    10   14  139    -    14         0    1     1     0  6.0
+    10   14  139    -    14         0    1     1     0  6.1
         first win day 141 (wild_boar), style bought day -
-Medians (day): QR1 14, QR3 142, QR9 294, sect 14; injuries 0; fights won 1, lost 0, fled 0; 5.2 log lines/month
+Medians (day): QR1 14, QR3 142, QR9 294, sect 14; injuries 0; fights won 1, lost 0, fled 0; 5.3 log lines/month
 First win: median day 14, seeds with no win in 12 months: 0; first-win foes: { "wild_boar": 10 }; median style day -1 (0 seeds)
-Lines by category: { "warning": 56, "danger": 31, "info": 326, "progress": 223, "karma": 1 }
+Lines by category: { "warning": 55, "danger": 25, "info": 340, "progress": 226, "karma": 1 }
 
 ## first hour, curious player (seeds 1-10)
 
 First-hour sim (curious player): 10 seeds, 12 months
   seed  QR1  QR3  QR9  sect  injuries  won  lost  fled  lines/month
-     1   55  333    -    55         0   16     1     1  22.6
+     1   55  333    -    55         0   16     1     1  22.8
         first win day 14 (wild_boar), style bought day 27
-     2   14  130    -    14         0   13     4     0  24.1
+     2   14  130    -    14         0   13     4     0  24.2
         first win day 14 (wild_boar), style bought day 41
-     3   14  191    -    14         0   19     3     0  23.8
+     3   14  191    -    14         0   19     3     0  23.9
         first win day 14 (wild_boar), style bought day 38
-     4   14  325    -    14         0   13     4     0  24.2
+     4   14  325    -    14         0   13     4     0  24.3
         first win day 14 (wild_boar), style bought day 48
-     5   14   68  537    14         0   18     3     1  24.2
+     5   14   68  537    14         0   18     3     1  24.5
         first win day 14 (wild_boar), style bought day 37
-     6   14  244    -    14         0   14     5     0  23.1
+     6   14  244    -    14         0   14     5     0  23.2
         first win day 14 (wild_boar), style bought day 41
-     7   14  194    -    14         0   14     4     0  23.3
+     7   14  194    -    14         0   14     4     0  23.5
         first win day 14 (wild_boar), style bought day 39
-     8   14  132    -    14         0   20     2     1  24.5
+     8   14  132    -    14         0   20     2     1  24.6
         first win day 14 (wild_boar), style bought day 39
      9   14  256    -    14         0   15     3     0  23.8
         first win day 14 (wild_boar), style bought day 40
-    10   14  178    -    14         1   12     5     0  21.3
-        first win day 92 (wild_boar), style bought day 32
-Medians (day): QR1 14, QR3 194, QR9 537, sect 14; injuries 0; fights won 15, lost 4, fled 0; 23.8 log lines/month
+    10   14  170    -    14         0   12     3     0  20.2
+        first win day 34 (wild_boar), style bought day 34
+Medians (day): QR1 14, QR3 194, QR9 537, sect 14; injuries 0; fights won 15, lost 3, fled 0; 23.9 log lines/month
 First win: median day 14, seeds with no win in 12 months: 0; first-win foes: { "wild_boar": 10 }; median style day 39 (10 seeds)
 Distinct action kinds per month: 5.6; months after the first with no log lines: 0
-Lines by category: { "warning": 150, "danger": 341, "info": 1201, "progress": 988, "karma": 140 }
+Lines by category: { "warning": 151, "danger": 337, "info": 1209, "progress": 982, "karma": 142 }
 
 ## log noise (seeds 1-5, 12 months)
 
 Log noise: 5 seeds, 12 months, curious player
 Posts per month by topic:
-  world           9.4/month (busiest month in any seed: 82)
-  combat          5.0/month (busiest month in any seed: 32)
-  cultivation     4.6/month (busiest month in any seed: 44)
-  family          2.2/month (busiest month in any seed: 11)
+  world           9.3/month (busiest month in any seed: 82)
+  combat          4.9/month (busiest month in any seed: 32)
+  cultivation     4.6/month (busiest month in any seed: 45)
+  family          2.3/month (busiest month in any seed: 15)
   trade           1.9/month (busiest month in any seed: 10)
   sect            1.4/month (busiest month in any seed: 10)
-  life            0.5/month (busiest month in any seed: 20)
+  life            0.4/month (busiest month in any seed: 20)
   (none)          0.1/month (busiest month in any seed: 5)
 Most repeated line templates (per month, averaged):
    1.00  You practice the Iron Fist for N days.
    0.95  You attend Elder Feng's sword lecture. (+N qi)
    0.65  You cultivate for N month and gather N qi (N/N qi to the Nth Layer).
    0.62  You work as an Alchemist for N days: +N xp, +N spirit stones.
-   0.60  Sect mission: Escort Mortal Villagers. You face the Mountain Bandit. (You: N hp, N atk. Foe: N hp, N atk.)
    0.60  You spot a spirit stone glinting in a ditch. (+N Spirit Stone)
-   0.47  <name> is delighted.
-   0.45  Mission complete: Escort Mortal Villagers. (+N contribution, Alignment +N, now Virtuous, Blood Lotus Sect repu
+   0.57  Sect mission: Escort Mortal Villagers. You face the Mountain Bandit. (You: N hp, N atk. Foe: N hp, N atk.)
+   0.43  <name> is delighted.
    0.43  <name> watches your Iron Fist and points out a flaw.
-   0.37  You face the Wild Boar. (You: N hp, N atk. Foe: N hp, N atk.)
+   0.42  Mission complete: Escort Mortal Villagers. (+N contribution, Alignment +N, now Virtuous, Blood Lotus Sect repu
+   0.38  Fingers brush your sleeve. You catch the wrist before it slips away: a skinny youth with quick hands and terri
 
 ## three curious years (seeds 1-10, 36 months)
 
@@ -109,10 +109,10 @@ Curious player, 10 seeds, 36 months
      4      6    5.5    0     146  Qi Refining, 9th Layer
      5      1    5.2    9      59  Qi Refining, 7th Layer
      5      2    6.5    3      23  Foundation Establishment, Early
-     5      3    6.0    0      73  Foundation Establishment, Late
-     5      4    6.0    0      82  Foundation Establishment, Peak
-     5      5    6.2    0     100  Foundation Establishment, Peak
-     5      6    6.3    0     113  Foundation Establishment, Peak
+     5      3    5.8    0      48  Foundation Establishment, Late
+     5      4    5.0    0      75  Foundation Establishment, Peak
+     5      5    5.2    0     141  Foundation Establishment, Peak
+     5      6    5.3    0      89  Foundation Establishment, Peak
      6      1    5.7    9      63  Qi Refining, 3rd Layer
      6      2    6.0    0      93  Qi Refining, 5th Layer
      6      3    6.3    2     122  Qi Refining, 7th Layer
@@ -149,7 +149,7 @@ Medians per 6-month block: distinct kinds / seeds with a new feature / stones
   months 13-18: 6.3 kinds, 6 of 10 seeds new feature, 134 stones
   months 19-24: 6.5 kinds, 4 of 10 seeds new feature, 125 stones [nothing new]
   months 25-30: 6.3 kinds, 3 of 10 seeds new feature, 143 stones [nothing new]
-  months 31-36: 6.0 kinds, 1 of 10 seeds new feature, 146 stones [nothing new]
+  months 31-36: 5.8 kinds, 1 of 10 seeds new feature, 146 stones [nothing new]
 Seeds whose life ended before month 36: none
 Guard (QA-054): at most 1 of 10 seeds may end early: ok
 First month each feature was used (median over seeds that used it):
@@ -342,387 +342,6 @@ First Foundation breakthrough (QA-066): seed, bottleneck day, attempts [day chan
   seed  9 bottleneck d2102 attempts 1 [d2102 76% pill ok] success d2102 stones 380
   seed 10 bottleneck d1217 attempts 1 [d1217 53% ok] success d1217 stones 242
   medians: days stuck at the bottleneck 0 (9 seeds that succeeded), attempts 1, share of attempts with a pill 50% (6 of 12), attempts under 50%: 3 of 12
-
-## early inheritances (curious, seeds 1-10, 36 months)
-
-Early inheritances, curious player, 10 seeds, 36 months
-Per inheritance (10 seeds): seeds that could pass every non-fight trial, median month, median rated odds of the final fight then (claiming retries the non-lethal fight until won, so the odds only decide the month the policy tries), seeds that claimed it, seeds lost to the deadline
-  fist_saint_grave       misty_forest             deadline y15 passable  4/10  month 1  odds 0%  claimed 4 (median month 12)  lost 0
-      never passable; blocking trial at the end: { "Stone of Endurance": 6 }
-  village_founder_well   qingshi_village          deadline y12 passable 10/10  month 1  odds 0%  claimed 10 (median month 13)  lost 0
-  reed_hermit_hut        withered_bone_marsh      deadline y10 passable  2/10  month 19  odds 92%  claimed 0 (median month -)  lost 0
-      never passable; blocking trial at the end: { "Silence of the Reeds": 8 }
-  sword_mound_traveller  fallen_star_market       deadline y12 passable  6/10  month 13  odds 48%  claimed 6 (median month 18)  lost 0
-      never passable; blocking trial at the end: { "Reading the Scratches": 4 }
-
-## fair fights (curious, seeds 1-10, 12 months)
-
-Fair-fights sim: 10 seeds, 12 months (curious player)
-Entries listed per month: median 1, max 3; empty months 1 of 120
-Listed fights taken: 94, won 92 (98%), mean rated chance 98%
-  mission  listed 157, taken  90, won  98%, mean rated  98%
-  deed     listed   1, taken   1, won 100%, mean rated 100%
-  bounty   listed   3, taken   3, won 100%, mean rated  93%
-
-## combat (200 fights per cell)
-
-Combat balance, 200 fights per cell. Typical player: attributes 10, Iron Fist + Stone Skin, best buyable gear.
-
-Where each enemy first appears (typical player entering the realm / at its peak / entering with talismans; bare player entering):
-  Mortal    mountain_bandit        choice city_cornered_merchan forced                   entry 100%  peak 100%  talisman 100%  bare  30%  veteran on appearance 100%  TRIVIAL
-  Mortal    mountain_bandit        mission collect_a_debt       forced                   entry 100%  peak 100%  talisman 100%  bare  30%  veteran on appearance 100%  TRIVIAL
-  Mortal    mountain_bandit        mission press_gang_bandits   forced                   entry 100%  peak 100%  talisman 100%  bare  30%  veteran on appearance 100%  TRIVIAL
-  Mortal    wild_boar              encounter village_boar       forced                   entry 100%  peak 100%  talisman 100%  bare  96%  veteran on appearance 100%  TRIVIAL
-  Qi Refini azure_cloud_raider     mission answer_blood_lotus_c forced                   entry  93%  peak 100%  talisman 100%  bare   0%  veteran on appearance  99%  OK
-  Qi Refini azure_crane            encounter mountain_azure_cra evadable                 entry  53%  peak  90%  talisman  89%  bare   0%  veteran on appearance  68%  OK
-  Qi Refini azure_sword_examiner   trial azure_cloud_sect rank  forced                   entry  58%  peak 100%  talisman  99%  bare   0%  veteran on appearance  93%  OK
-  Qi Refini bandit_lord            choice city_red_door/Kick th forced                   entry  48%  peak 100%  talisman  98%  bare   0%  veteran on appearance  75%  HARD
-  Qi Refini blood_lotus_raider     mission answer_azure_call    forced                   entry  93%  peak 100%  talisman 100%  bare   0%  veteran on appearance  99%  OK
-  Qi Refini blood_lotus_scout      encounter marsh_blood_lotus_ evadable                 entry  59%  peak  95%  talisman  96%  bare   0%  veteran on appearance  93%  OK
-  Qi Refini blood_pit_gladiator    trial blood_lotus_sect rank  forced                   entry  49%  peak 100%  talisman 100%  bare   0%  veteran on appearance  76%  HARD
-  Qi Refini den_wolf               choice forest_hunters_wolf_d forced                   entry  84%  peak 100%  talisman 100%  bare   0%  veteran on appearance  99%  OK
-  Qi Refini drunk_bully_disciple   encounter village_drunk_bull evadable                 entry 100%  peak 100%  talisman 100%  bare   0%  veteran on appearance 100%  TRIVIAL
-  Qi Refini garden_poacher         realm verdant_remnant floor  forced                   entry  81%  peak 100%  talisman 100%  bare   0%  veteran on appearance  92%  OK
-  Qi Refini grave_guardian_ape     trial fist_saint_grave stage forced                   entry  48%  peak 100%  talisman  96%  bare   0%  veteran on appearance  77%  HARD
-  Qi Refini grotto_hermit_guest    realm peach_blossom_grotto f forced                   entry  56%  peak 100%  talisman  98%  bare   0%  veteran on appearance  76%  OK
-  Qi Refini incursion_raider       defence demonic_incursion    forced                   entry  95%  peak  84%  talisman 100%  bare   0%  veteran on appearance  98%  OK
-  Qi Refini iron_back_boar         defence beast_tide           forced                   entry  90%  peak  76%  talisman 100%  bare   0%  veteran on appearance  96%  OK
-  Qi Refini iron_back_boar         encounter village_iron_back_ forced                   entry  69%  peak 100%  talisman 100%  bare   0%  veteran on appearance  88%  OK
-  Qi Refini marsh_corpse_puppet    encounter marsh_corpse_puppe evadable                 entry  48%  peak  98%  talisman  93%  bare   0%  veteran on appearance  72%  HARD
-  Qi Refini mist_fox               encounter forest_mist_fox    forced                   entry  64%  peak 100%  talisman  98%  bare   0%  veteran on appearance  93%  OK
-  Qi Refini mist_fox               realm peach_blossom_grotto f forced                   entry  64%  peak 100%  talisman  98%  bare   0%  veteran on appearance  93%  OK
-  Qi Refini mist_wolf              encounter forest_wolf        evadable                 entry  80%  peak 100%  talisman 100%  bare   0%  veteran on appearance  99%  OK
-  Qi Refini mist_wolf              encounter tide_wolf_pack     evadable                 entry  80%  peak 100%  talisman 100%  bare   0%  veteran on appearance  99%  OK
-  Qi Refini mist_wolf              mission cull_mist_wolves     forced                   entry  94%  peak 100%  talisman 100%  bare   0%  veteran on appearance 100%  OK
-  Qi Refini mist_wolf              mission patrol_misty_peaks   forced                   entry  94%  peak 100%  talisman 100%  bare   0%  veteran on appearance 100%  OK
-  Qi Refini mist_wolf              realm verdant_remnant floor  forced                   entry  80%  peak 100%  talisman 100%  bare   0%  veteran on appearance  99%  OK
-  Qi Refini moss_back_ape          realm verdant_remnant floor  forced                   entry  48%  peak 100%  talisman  96%  bare   0%  veteran on appearance  77%  HARD
-  Qi Refini mountain_bandit        choice wild_wounded_disciple forced                   entry 100%  peak 100%  talisman 100%  bare 100%  veteran on appearance 100%  TRIVIAL
-  Qi Refini mountain_bandit        encounter city_alley_thugs   forced                   entry 100%  peak 100%  talisman 100%  bare 100%  veteran on appearance 100%  TRIVIAL
-  Qi Refini mountain_bandit        encounter village_bandit     forced                   entry 100%  peak 100%  talisman 100%  bare 100%  veteran on appearance 100%  TRIVIAL
-  Qi Refini mountain_bandit        mission escort_mortal_villag forced                   entry 100%  peak 100%  talisman 100%  bare 100%  veteran on appearance 100%  TRIVIAL
-  Qi Refini mountain_bandit        mission guard_pavilion_carav forced                   entry 100%  peak 100%  talisman 100%  bare 100%  veteran on appearance 100%  TRIVIAL
-  Qi Refini outer_disciple_bully   choice mountain_bullied_juni forced                   entry  78%  peak 100%  talisman 100%  bare   0%  veteran on appearance  99%  OK
-  Qi Refini pavilion_vault_guard   trial myriad_treasure_pavili forced                   entry  53%  peak 100%  talisman  98%  bare   0%  veteran on appearance  76%  OK
-  Qi Refini reed_hermit_shade      trial reed_hermit_hut stage  forced                   entry   1%  peak  91%  talisman  12%  bare   0%  veteran on appearance   1%  HARD
-  Qi Refini rogue_cultivator       encounter incursion_blood_sc evadable                 entry  56%  peak  92%  talisman  90%  bare   0%  veteran on appearance  95%  OK
-  Qi Refini rogue_cultivator       encounter marsh_corpse_refin evadable                 entry  56%  peak  92%  talisman  90%  bare   0%  veteran on appearance  95%  OK
-  Qi Refini rogue_cultivator       encounter wild_rogue         evadable                 entry  56%  peak  92%  talisman  90%  bare   0%  veteran on appearance  95%  OK
-  Qi Refini stone_ape              encounter mountain_ape       evadable                 entry  72%  peak  77%  talisman  92%  bare   0%  veteran on appearance  84%  OK
-  Qi Refini sword_mound_shade      trial sword_mound_traveller  forced                   entry   1%  peak  93%  talisman  22%  bare   0%  veteran on appearance   5%  HARD
-  Qi Refini tournament_contender   choice tournament_bout/Enter forced                   entry  63%  peak 100%  talisman  97%  bare   0%  veteran on appearance  97%  OK
-  Qi Refini vengeful_brother       encounter wounded_traveller_ evadable                 entry  93%  peak 100%  talisman 100%  bare   0%  veteran on appearance 100%  OK
-  Qi Refini wandering_boxer        choice road_wandering_boxer/ forced                   entry  70%  peak 100%  talisman  99%  bare   0%  veteran on appearance  86%  OK
-  Qi Refini well_bandit            choice road_highwayman/Refus forced                   entry  81%  peak 100%  talisman 100%  bare   0%  veteran on appearance  92%  OK
-  Qi Refini well_bandit            trial village_founder_well s forced                   entry  81%  peak 100%  talisman 100%  bare   0%  veteran on appearance  92%  OK
-  Foundatio azure_cloud_enforcer   choice road_token_patrol/Bru forced                   entry  59%  peak  78%  talisman  98%  bare   0%  veteran on appearance 100%  OK
-  Foundatio azure_cloud_enforcer   encounter city_righteous_enf forced                   entry  59%  peak  78%  talisman  98%  bare   0%  veteran on appearance 100%  OK
-  Foundatio azure_cloud_enforcer   mission ambush_azure_patrol  forced                   entry  59%  peak  78%  talisman  98%  bare   0%  veteran on appearance 100%  OK
-  Foundatio azure_pavilion_warden  trial azure_cloud_sect rank  forced                   entry  65%  peak 100%  talisman 100%  bare   0%  veteran on appearance 100%  OK
-  Foundatio blood_eyed_wolf        encounter marsh_blood_eyed_w evadable                 entry  64%  peak  94%  talisman 100%  bare   0%  veteran on appearance 100%  OK
-  Foundatio blood_lotus_executioner encounter incursion_raiders  evadable                 entry  48%  peak  48%  talisman  95%  bare   0%  veteran on appearance  96%  HARD
-  Foundatio blood_lotus_executioner encounter wild_blood_lotus_e evadable                 entry  48%  peak  48%  talisman  95%  bare   0%  veteran on appearance  96%  HARD
-  Foundatio blood_pit_champion     trial blood_lotus_sect rank  forced                   entry  55%  peak  99%  talisman  97%  bare   0%  veteran on appearance  98%  OK
-  Foundatio bronze_corpse_puppet   encounter ruins_bronze_puppe evadable                 entry  53%  peak  75%  talisman  92%  bare   0%  veteran on appearance  98%  OK
-  Foundatio bronze_corpse_puppet   realm fallen_star_vault floo forced                   entry   7%  peak  75%  talisman  51%  bare   0%  veteran on appearance  73%  HARD
-  Foundatio bronze_corpse_puppet   trial corpse_lord_altar stag forced                   entry   7%  peak  75%  talisman  51%  bare   0%  veteran on appearance  73%  HARD
-  Foundatio cave_guardian          encounter ruins_guardian     evadable                 entry  57%  peak  95%  talisman  93%  bare   0%  veteran on appearance  99%  OK
-  Foundatio cave_guardian          realm sunken_sword_tomb floo forced                   entry  26%  peak  95%  talisman  85%  bare   0%  veteran on appearance  88%  HARD
-  Foundatio cloud_eagle            encounter mountain_eagle     evadable                 entry  63%  peak  96%  talisman  99%  bare   0%  veteran on appearance  98%  OK
-  Foundatio cloud_eagle            mission bleed_cloud_eagle    forced                   entry  63%  peak  96%  talisman  99%  bare   0%  veteran on appearance  98%  OK
-  Foundatio cloud_eagle            mission escort_star_silver   forced                   entry  63%  peak  96%  talisman  99%  bare   0%  veteran on appearance  98%  OK
-  Foundatio corpse_refiner_puppets choice marsh_corpse_refiner_ forced                   entry  69%  peak 100%  talisman 100%  bare   0%  veteran on appearance  98%  OK
-  Foundatio demonic_cultivator     encounter forest_demonic_amb evadable                 entry  69%  peak  95%  talisman  98%  bare   0%  veteran on appearance  98%  OK
-  Foundatio demonic_cultivator     encounter marsh_demonic_hunt evadable                 entry  69%  peak  95%  talisman  98%  bare   0%  veteran on appearance  98%  OK
-  Foundatio demonic_cultivator     mission harvest_rogue_cultiv forced                   entry  69%  peak  95%  talisman  98%  bare   0%  veteran on appearance  98%  OK
-  Foundatio demonic_cultivator     mission purge_demonic_cultiv forced                   entry  69%  peak  95%  talisman  98%  bare   0%  veteran on appearance  98%  OK
-  Foundatio demonic_cultivator     mission recover_stolen_consi forced                   entry  69%  peak  95%  talisman  98%  bare   0%  veteran on appearance  98%  OK
-  Foundatio demonic_cultivator     mission silence_a_talebearer forced                   entry  69%  peak  95%  talisman  98%  bare   0%  veteran on appearance  98%  OK
-  Foundatio demonic_cultivator     realm sunken_sword_tomb floo forced                   entry  32%  peak  95%  talisman  93%  bare   0%  veteran on appearance  92%  HARD
-  Foundatio drowned_venom_husk     encounter drowned_venom_husk evadable                 entry  69%  peak 100%  talisman 100%  bare   0%  veteran on appearance  98%  OK
-  Foundatio drowned_yin_ghost      encounter marsh_drowned_yin_ evadable                 entry  70%  peak  83%  talisman  99%  bare   0%  veteran on appearance 100%  OK
-  Foundatio flame_tailed_fox       encounter wild_flame_fox     evadable                 entry  48%  peak  89%  talisman  96%  bare   0%  veteran on appearance 100%  HARD
-  Foundatio ice_soul_spider        encounter forest_ice_spider  evadable                 entry  41%  peak  67%  talisman  93%  bare   0%  veteran on appearance  98%  HARD
-  Foundatio iron_horn_rhino        encounter mountain_iron_rhin evadable                 entry  42%  peak  66%  talisman  84%  bare   0%  veteran on appearance  97%  HARD
-  Foundatio iron_horn_rhino        encounter tide_rhino_stamped evadable                 entry  42%  peak  66%  talisman  84%  bare   0%  veteran on appearance  97%  HARD
-  Foundatio iron_horn_rhino        mission drain_stone_ape_marr forced                   entry  66%  peak  66%  talisman  97%  bare   0%  veteran on appearance  99%  OK
-  Foundatio iron_horn_rhino        mission escort_beast_cages   forced                   entry  66%  peak  66%  talisman  97%  bare   0%  veteran on appearance  99%  OK
-  Foundatio iron_horn_rhino        mission subdue_stone_ape     forced                   entry  66%  peak  66%  talisman  97%  bare   0%  veteran on appearance  99%  OK
-  Foundatio jade_python            encounter marsh_sunken_serpe evadable                 entry   0%  peak   0%  talisman   0%  bare   0%  veteran on appearance   0%  UNBEATABLE (lethal: a Deadly foe is sensed and evaded)
-  Foundatio jade_python            realm sunken_sword_tomb floo forced                   entry   0%  peak   0%  talisman   0%  bare   0%  veteran on appearance   0%  UNBEATABLE
-  Foundatio pavilion_treasure_guardian trial myriad_treasure_pavili forced                   entry  68%  peak  97%  talisman  99%  bare   0%  veteran on appearance  98%  OK
-  Foundatio roadside_rogue_cultivator encounter village_roadside_r forced                   entry  72%  peak 100%  talisman 100%  bare   0%  veteran on appearance 100%  OK
-  Foundatio star_vault_warden      realm fallen_star_vault floo forced                   entry   0%  peak   0%  talisman   0%  bare   0%  veteran on appearance   0%  UNBEATABLE
-  Foundatio stone_hide_boar_king   encounter forest_boar_king   evadable                 entry  70%  peak 100%  talisman 100%  bare   0%  veteran on appearance  98%  OK
-  Foundatio sword_madman           encounter wild_sword_madman  evadable                 entry  46%  peak  46%  talisman  93%  bare   0%  veteran on appearance  99%  HARD
-  Foundatio sword_madman           realm fallen_star_vault floo forced                   entry   3%  peak  46%  talisman  49%  bare   0%  veteran on appearance  70%  HARD
-  Foundatio tournament_champion    choice tournament_final/Chal forced                   entry  13%  peak  74%  talisman  74%  bare   0%  veteran on appearance  78%  HARD
-  Foundatio vengeful_sect_elder    encounter wounded_traveller_ evadable                 entry   1%  peak  50%  talisman  42%  bare   0%  veteran on appearance  55%  HARD
-  Core Form azure_grand_elder_shadow trial azure_cloud_sect rank  forced                   entry  65%  peak  96%  talisman  99%  bare   0%  veteran on appearance 100%  OK
-  Core Form black_iron_bear_king   encounter mountain_bear_king evadable                 entry  41%  peak  90%  talisman  90%  bare   0%  veteran on appearance 100%  HARD
-  Core Form black_iron_bear_king   mission tear_bear_kings_hear forced                   entry  71%  peak  90%  talisman  96%  bare   0%  veteran on appearance 100%  OK
-  Core Form black_iron_bear_king   realm drowned_yin_palace flo forced                   entry  24%  peak  90%  talisman  73%  bare   0%  veteran on appearance 100%  HARD
-  Core Form black_iron_bear_king   realm skyfall_thunder_pavili forced                   entry  24%  peak  90%  talisman  73%  bare   0%  veteran on appearance 100%  HARD
-  Core Form blood_lotus_ancestor_puppet trial blood_lotus_sect rank  forced                   entry  49%  peak  97%  talisman  91%  bare   0%  veteran on appearance 100%  HARD
-  Core Form blood_lotus_elder      encounter road_demonic_ambus evadable                 entry  71%  peak  89%  talisman  97%  bare   0%  veteran on appearance 100%  OK
-  Core Form blood_lotus_elder      encounter wild_blood_lotus_e evadable                 entry  46%  peak  89%  talisman  90%  bare   0%  veteran on appearance 100%  HARD
-  Core Form blood_lotus_elder      mission purge_blood_lotus_el forced                   entry  71%  peak  89%  talisman  97%  bare   0%  veteran on appearance 100%  OK
-  Core Form cloud_devouring_condor realm skyfall_thunder_pavili forced                   entry   0%  peak   0%  talisman   0%  bare   0%  veteran on appearance   0%  UNBEATABLE
-  Core Form golden_abacus_guardian trial myriad_treasure_pavili forced                   entry  52%  peak  99%  talisman  95%  bare   0%  veteran on appearance 100%  OK
-  Core Form jade_python            encounter wild_python_lair   evadable                 entry  87%  peak 100%  talisman 100%  bare   0%  veteran on appearance 100%  OK
-  Core Form jade_python            mission slay_jade_python     forced                   entry  87%  peak 100%  talisman 100%  bare   0%  veteran on appearance 100%  OK
-  Core Form myriad_poison_toad     encounter herbs_poison_toad  evadable                 entry  69%  peak 100%  talisman  98%  bare   0%  veteran on appearance 100%  OK
-  Core Form myriad_poison_toad     encounter road_beast_tide_st evadable                 entry  69%  peak 100%  talisman  98%  bare   0%  veteran on appearance 100%  OK
-  Core Form myriad_poison_toad     mission milk_poison_toad     forced                   entry  69%  peak 100%  talisman  98%  bare   0%  veteran on appearance 100%  OK
-  Core Form myriad_poison_toad     realm drowned_yin_palace flo forced                   entry  69%  peak 100%  talisman  98%  bare   0%  veteran on appearance 100%  OK
-  Core Form nether_ghost_king      encounter ruins_ghost_king   evadable                 entry  52%  peak  52%  talisman  95%  bare   0%  veteran on appearance 100%  OK
-  Core Form nether_ghost_king      mission seal_ghost_king      forced                   entry  52%  peak  52%  talisman  95%  bare   0%  veteran on appearance 100%  OK
-  Core Form nether_ghost_king      realm drowned_yin_palace flo forced                   entry   5%  peak  52%  talisman  38%  bare   0%  veteran on appearance 100%  HARD
-  Core Form thunder_patriarch_puppet trial thunder_patriarch_seat forced                   entry  52%  peak  99%  talisman  95%  bare   0%  veteran on appearance 100%  OK
-  Core Form thunderwing_roc        encounter mountain_thunderwi evadable                 entry  60%  peak  92%  talisman  97%  bare   0%  veteran on appearance 100%  OK
-  Core Form thunderwing_roc        mission escort_roc_feather   forced                   entry  60%  peak  92%  talisman  97%  bare   0%  veteran on appearance 100%  OK
-  Core Form thunderwing_roc        realm drowned_yin_palace flo forced                   entry  30%  peak  92%  talisman  90%  bare   0%  veteran on appearance 100%  HARD
-  Core Form thunderwing_roc        realm skyfall_thunder_pavili forced                   entry  30%  peak  92%  talisman  90%  bare   0%  veteran on appearance 100%  HARD
-  Core Form thunderwing_roc        trial cloud_sword_immortal_c forced                   entry  30%  peak  92%  talisman  90%  bare   0%  veteran on appearance 100%  HARD
-  Core Form vault_blood_warden     trial blood_merchant_vault s forced                   entry  87%  peak 100%  talisman 100%  bare   0%  veteran on appearance 100%  OK
-  Nascent S ancient_puppet_guardian encounter ruins_puppet_guard evadable                 entry  37%  peak  99%  talisman  58%  bare   0%  veteran on appearance 100%  HARD
-  Nascent S ancient_tortoise_sage  encounter wild_tortoise_sage evadable                 entry  41%  peak  95%  talisman  51%  bare   0%  veteran on appearance 100%  HARD
-  Nascent S azure_law_enforcer     encounter wild_azure_law_enf forced                   entry  43%  peak  95%  talisman  60%  bare   0%  veteran on appearance 100%  HARD
-  Nascent S blood_sea_deacon       encounter marsh_blood_sea_de evadable                 entry  31%  peak  99%  talisman  56%  bare   0%  veteran on appearance 100%  HARD
-  Nascent S cloud_devouring_condor encounter mountain_cloud_con evadable                 entry  76%  peak 100%  talisman  83%  bare   0%  veteran on appearance 100%  OK
-  Nascent S hermit_sword_sage      encounter wild_hermit_sword_ evadable                 entry  17%  peak  84%  talisman  23%  bare   0%  veteran on appearance 100%  HARD
-  Nascent S magma_scale_basilisk   encounter mountain_magma_bas evadable                 entry  54%  peak  99%  talisman  74%  bare   0%  veteran on appearance 100%  OK
-  Nascent S soul_reaping_old_monster encounter marsh_old_monster  evadable                 entry   6%  peak  71%  talisman  18%  bare   0%  veteran on appearance  98%  HARD
-  Soul Form blood_moon_sovereign   encounter wild_blood_moon_so evadable                 entry  32%  peak  95%  talisman  34%  bare   0%  veteran on appearance 100%  HARD
-  Soul Form ghost_banner_lord      encounter ruins_ghost_banner evadable                 entry  10%  peak  79%  talisman  18%  bare   0%  veteran on appearance  98%  HARD
-  Soul Form ghost_banner_lord      trial ghost_sovereign_hollow forced                   entry  10%  peak  79%  talisman  18%  bare   0%  veteran on appearance  98%  HARD
-  Soul Form heavenly_mandate_elder encounter wild_heavenly_mand forced                   entry  31%  peak  91%  talisman  38%  bare   0%  veteran on appearance 100%  HARD
-  Soul Form heavenly_mandate_elder trial eternal_sky_patriarch_ forced                   entry  31%  peak  91%  talisman  38%  bare   0%  veteran on appearance 100%  HARD
-  Soul Form star_devouring_colossus encounter ruins_star_devouri evadable                 entry  11%  peak  80%  talisman  21%  bare   0%  veteran on appearance 100%  HARD
-  Soul Form star_devouring_colossus trial chaos_alchemist_furnac forced                   entry  11%  peak  80%  talisman  21%  bare   0%  veteran on appearance 100%  HARD
-  Soul Form ten_thousand_peaks_roc encounter mountain_ten_thous evadable                 entry  11%  peak  79%  talisman  22%  bare   0%  veteran on appearance  99%  HARD
-  Soul Form void_rift_dragonling   encounter mountain_void_drag evadable                 entry  77%  peak 100%  talisman  81%  bare   0%  veteran on appearance 100%  OK
-
-Win rate at stage 0 of each realm (no talismans):
-  enemy \ player             Mortal Qi Refinin Foundation Core Forma Nascent So
-  wild_boar                    100%       100%       100%       100%       100%
-  mountain_bandit              100%       100%       100%       100%       100%
-  mist_wolf                      0%        80%       100%       100%       100%
-  den_wolf                       0%        84%       100%       100%       100%
-  rogue_cultivator               0%         0%       100%       100%       100%
-  vengeful_brother               0%         8%       100%       100%       100%
-  vengeful_sect_elder            0%         0%         1%       100%       100%
-  azure_sword_examiner           0%        58%       100%       100%       100%
-  azure_pavilion_warden          0%         0%        65%       100%       100%
-  azure_grand_elder_shadow         0%         0%         0%        38%       100%
-  blood_pit_gladiator            0%        49%       100%       100%       100%
-  blood_pit_champion             0%         0%        55%       100%       100%
-  vault_blood_warden             0%         0%         0%        87%       100%
-  blood_lotus_ancestor_puppet         0%         0%         0%        49%       100%
-  pavilion_vault_guard           0%        53%       100%       100%       100%
-  pavilion_treasure_guardian         0%         0%        32%       100%       100%
-  golden_abacus_guardian         0%         0%         0%        52%       100%
-  thunder_patriarch_puppet         0%         0%         0%        52%       100%
-  blood_lotus_raider             0%        84%       100%       100%       100%
-  azure_cloud_raider             0%        84%       100%       100%       100%
-  incursion_raider               0%        33%       100%       100%       100%
-  tournament_contender           0%         8%       100%       100%       100%
-  tournament_champion            0%         0%        13%       100%       100%
-  mist_fox                       0%        64%       100%       100%       100%
-  iron_back_boar                 0%        22%       100%       100%       100%
-  wandering_boxer                0%        70%       100%       100%       100%
-  drunk_bully_disciple           0%        60%       100%       100%       100%
-  azure_crane                    0%         1%       100%       100%       100%
-  blood_eyed_wolf                0%         0%        29%       100%       100%
-  bandit_lord                    0%        48%       100%       100%       100%
-  stone_ape                      0%         0%       100%       100%       100%
-  grotto_hermit_guest            0%        56%       100%       100%       100%
-  well_bandit                    0%        81%       100%       100%       100%
-  garden_poacher                 0%        81%       100%       100%       100%
-  moss_back_ape                  0%        48%       100%       100%       100%
-  sword_mound_shade              0%         1%       100%       100%       100%
-  grave_guardian_ape             0%        48%       100%       100%       100%
-  reed_hermit_shade              0%         1%       100%       100%       100%
-  stone_hide_boar_king           0%         0%        70%       100%       100%
-  drowned_venom_husk             0%         0%        69%       100%       100%
-  corpse_refiner_puppets         0%         0%        69%       100%       100%
-  roadside_rogue_cultivator         0%         0%        72%       100%       100%
-  cloud_eagle                    0%         0%        63%       100%       100%
-  cave_guardian                  0%         0%        26%       100%       100%
-  demonic_cultivator             0%         0%        32%       100%       100%
-  jade_python                    0%         0%         0%        87%       100%
-  flame_tailed_fox               0%         0%        24%       100%       100%
-  iron_horn_rhino                0%         0%         6%       100%       100%
-  ice_soul_spider                0%         0%         5%       100%       100%
-  sword_madman                   0%         0%         3%       100%       100%
-  azure_cloud_enforcer           0%         0%        12%       100%       100%
-  blood_lotus_executioner         0%         0%         2%       100%       100%
-  bronze_corpse_puppet           0%         0%         7%       100%       100%
-  thunderwing_roc                0%         0%         0%        30%       100%
-  myriad_poison_toad             0%         0%         0%        69%       100%
-  black_iron_bear_king           0%         0%         0%        24%       100%
-  blood_lotus_elder              0%         0%         0%        16%       100%
-  star_vault_warden              0%         0%         0%        45%       100%
-  nether_ghost_king              0%         0%         0%         5%       100%
-  marsh_corpse_puppet            0%         2%       100%       100%       100%
-  drowned_yin_ghost              0%         0%        18%       100%       100%
-  blood_lotus_scout              0%         1%       100%       100%       100%
-  cloud_devouring_condor         0%         0%         0%         0%        76%
-  magma_scale_basilisk           0%         0%         0%         0%        54%
-  ancient_tortoise_sage          0%         0%         0%         0%        41%
-  azure_law_enforcer             0%         0%         0%         0%        43%
-  hermit_sword_sage              0%         0%         0%         0%        17%
-  blood_sea_deacon               0%         0%         0%         0%        31%
-  soul_reaping_old_monster         0%         0%         0%         0%         6%
-  ancient_puppet_guardian         0%         0%         0%         0%        37%
-  outer_disciple_bully           0%        60%       100%       100%       100%
-  void_rift_dragonling           0%         0%         0%         0%         0%
-  heavenly_mandate_elder         0%         0%         0%         0%         0%
-  blood_moon_sovereign           0%         0%         0%         0%         0%
-  ten_thousand_peaks_roc         0%         0%         0%         0%         0%
-  ghost_banner_lord              0%         0%         0%         0%         0%
-  star_devouring_colossus         0%         0%         0%         0%         0%
-
-Typical player vs a plain enemy of the same realm and stage (QA-007d target ~60-90%), and at the realm's peak vs a plain enemy one realm up:
-  Qi Refining             stage 0:  95%  stage 4:  91%  stage 8:  84%   next realm:   0%
-  Foundation Establishment  stage 0:  90%  stage 1:  85%  stage 3:  84%   next realm:   0%
-  Core Formation          stage 0:  87%  stage 1:  87%  stage 3:  87%   next realm:   0%
-  Nascent Soul            stage 0:  92%  stage 1:  93%  stage 3:  91%   next realm:   0%
-
-Veteran player (best art of each kind per realm, QA-018) vs a plain same-stage enemy, and at the peak vs a plain enemy one realm up:
-  Qi Refining                 stage 0:  98%  stage 8:  95%   next realm:   0%   arts: rippling_moon_sword, stone_skin
-  Foundation Establishment    stage 0: 100%  stage 3: 100%   next realm:   0%   arts: nine_frost_sword_intent, earth_dragon_body
-  Core Formation              stage 0: 100%  stage 3: 100%   next realm:   3%   arts: azure_heaven_sword_canon, earth_dragon_body
-  Nascent Soul                stage 0: 100%  stage 3: 100%   next realm:   8%   arts: azure_heaven_sword_canon, earth_dragon_body
-  Soul Formation              stage 0: 100%  stage 3: 100%   next realm:   6%   arts: azure_heaven_sword_canon, earth_dragon_body
-
-## economy (seed defaults)
-
-Economy sim: 50 lives per profession, income 1 month in 4, 3.0 violent deaths per century, seed 1, sources all, sect myriad_treasure_pavilion
-  Foundation Establishment Pill costs 300 spirit stones
-  Core Forming Pill costs 3000 spirit stones
-  Soul Infant Pill costs 30000 spirit stones
-  Spirit Severing Pill costs 300000 spirit stones
-Alchemist (rank 6.0 at the end): avg final realm 2.04 (~Foundation Establishment); earned 22792, left 1852 stones
-    Foundation Establishment: 50/50 lives reached the bottleneck, 45 could afford the pill on the first attempt
-    Core Formation: 50/50 lives reached the bottleneck, 25 could afford the pill on the first attempt
-    Nascent Soul: 2/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
-    Soul Formation: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
-    pills 441, attempts without a pill 3324; lives bought 189 (dearest 12800); ended for good 6 (avg age 203), old age 44
-    income (all lives): work 8633 mo / 282030 stones, craft 165 mo / 6588 stones, gather 8775 mo / 609347 stones, sect 8759 mo / 427253 stones (stipends 211560)
-    spent: gear 0, clinic 1440; savings alone covered the Core Forming Pill at the Foundation peak for 25/50; pills bought with contribution 64; avg sect rank 2.0, contribution 32276
-Blacksmith (rank 5.9 at the end): avg final realm 2.02 (~Foundation Establishment); earned 23386, left 2283 stones
-    Foundation Establishment: 50/50 lives reached the bottleneck, 42 could afford the pill on the first attempt
-    Core Formation: 50/50 lives reached the bottleneck, 16 could afford the pill on the first attempt
-    Nascent Soul: 1/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
-    Soul Formation: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
-    pills 459, attempts without a pill 3984; lives bought 171 (dearest 3200); ended for good 1 (avg age 167), old age 49
-    income (all lives): work 8979 mo / 287604 stones, craft 0 mo / 0 stones, gather 8956 mo / 637736 stones, sect 8944 mo / 434983 stones (stipends 214680)
-    spent: gear 0, clinic 1960; savings alone covered the Core Forming Pill at the Foundation peak for 16/50; pills bought with contribution 72; avg sect rank 2.0, contribution 33016
-Talisman Master (rank 8.5 at the end): avg final realm 2.00 (~Foundation Establishment); earned 30294, left 1789 stones
-    Foundation Establishment: 50/50 lives reached the bottleneck, 44 could afford the pill on the first attempt
-    Core Formation: 50/50 lives reached the bottleneck, 13 could afford the pill on the first attempt
-    Nascent Soul: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
-    Soul Formation: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
-    pills 587, attempts without a pill 4056; lives bought 173 (dearest 3200); ended for good 4 (avg age 163), old age 46
-    income (all lives): work 3073 mo / 58545 stones, craft 5427 mo / 619125 stones, gather 8485 mo / 603726 stones, sect 8465 mo / 423850 stones (stipends 211320)
-    spent: gear 0, clinic 700; savings alone covered the Core Forming Pill at the Foundation peak for 13/50; pills bought with contribution 59; avg sect rank 2.0, contribution 31306
-Array Master (rank 5.4 at the end): avg final realm 2.04 (~Foundation Establishment); earned 23391, left 2143 stones
-    Foundation Establishment: 50/50 lives reached the bottleneck, 46 could afford the pill on the first attempt
-    Core Formation: 50/50 lives reached the bottleneck, 24 could afford the pill on the first attempt
-    Nascent Soul: 2/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
-    Soul Formation: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
-    pills 451, attempts without a pill 3210; lives bought 174 (dearest 12800); ended for good 5 (avg age 167), old age 45
-    income (all lives): work 8949 mo / 312662 stones, craft 0 mo / 0 stones, gather 8930 mo / 611184 stones, sect 8912 mo / 431696 stones (stipends 211912)
-    spent: gear 0, clinic 1700; savings alone covered the Core Forming Pill at the Foundation peak for 24/50; pills bought with contribution 74; avg sect rank 2.0, contribution 32820
-Doctor (rank 6.2 at the end): avg final realm 2.02 (~Foundation Establishment); earned 22489, left 2046 stones
-    Foundation Establishment: 50/50 lives reached the bottleneck, 47 could afford the pill on the first attempt
-    Core Formation: 50/50 lives reached the bottleneck, 17 could afford the pill on the first attempt
-    Nascent Soul: 1/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
-    Soul Formation: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
-    pills 438, attempts without a pill 3474; lives bought 175 (dearest 6400); ended for good 2 (avg age 180), old age 48
-    income (all lives): work 9035 mo / 253860 stones, craft 0 mo / 0 stones, gather 9018 mo / 624603 stones, sect 9001 mo / 436780 stones (stipends 215748)
-    spent: gear 0, clinic 1540; savings alone covered the Core Forming Pill at the Foundation peak for 17/50; pills bought with contribution 69; avg sect rank 2.0, contribution 33208
-Beast Tamer (rank 6.1 at the end): avg final realm 2.06 (~Foundation Establishment); earned 23289, left 2224 stones
-    Foundation Establishment: 50/50 lives reached the bottleneck, 42 could afford the pill on the first attempt
-    Core Formation: 50/50 lives reached the bottleneck, 19 could afford the pill on the first attempt
-    Nascent Soul: 3/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
-    Soul Formation: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
-    pills 436, attempts without a pill 3990; lives bought 169 (dearest 12800); ended for good 7 (avg age 220), old age 43
-    income (all lives): work 8677 mo / 242355 stones, craft 463 mo / 17942 stones, gather 9121 mo / 652044 stones, sect 9107 mo / 438294 stones (stipends 208900)
-    spent: gear 0, clinic 940; savings alone covered the Core Forming Pill at the Foundation peak for 19/50; pills bought with contribution 62; avg sect rank 2.1, contribution 33655
-Net stones per sect mission over all lives (top 12): procure_azure_crystal 778050, gather_spirit_herbs 530510, carry_goods_to_market 106376, alchemist_rare_order 25440, auction_consignment 22560, fill_herb_order 14580
-
-## economy, bounty hunter (seeds 1-10, 12 months)
-
-Bounty-hunter sim: 10 seeds, 12 months, Qi Refining layer 4, iron_back_boar_bounty in misty_forest (reward 40 stones)
-  seed  bounties  hunt weeks  stones  stones/month  injuries  lives spent
-     1         3          12     120          10.0         0            0
-     2         3           6     120          10.0         0            0
-     3         3           4     120          10.0         0            0
-     4         3          12     120          10.0         0            0
-     5         3          13     120          10.0         0            0
-     6         2          35      80           6.7         0            0
-     7         3           9     120          10.0         0            0
-     8         3           5     120          10.0         0            0
-     9         3           6     120          10.0         0            0
-    10         3          18     120          10.0         0            0
-Hunt weeks per bounty claimed: 4.1; fights won 48, lost 8 (86% won)
-Gathering in misty_forest: 4.0 stones/week (best place). One bounty = 10.12 weeks of gather income; a week hunting earns 9.7 stones.
-Best gathering anywhere for this realm: qingshi_village at 5.3 stones/week (a bounty week earns 1.8x that).
-
-Bounty-hunter sim: 10 seeds, 12 months, Qi Refining layer 4, drunk_bully_bounty in qingshi_village (reward 20 stones)
-  seed  bounties  hunt weeks  stones  stones/month  injuries  lives spent
-     1         4          13      80           6.7         0            0
-     2         4          12      80           6.7         0            1
-     3         4          12      80           6.7         0            0
-     4         4           4      80           6.7         0            0
-     5         4          13      80           6.7         0            0
-     6         4          21      80           6.7         0            0
-     7         4           6      80           6.7         0            0
-     8         4          31      80           6.7         0            0
-     9         4           7      80           6.7         0            0
-    10         4          26      80           6.7         0            0
-Hunt weeks per bounty claimed: 3.6; fights won 61, lost 4 (94% won)
-Gathering in qingshi_village: 5.3 stones/week (best place). One bounty = 3.80 weeks of gather income; a week hunting earns 5.5 stones.
-Best gathering anywhere for this realm: qingshi_village at 5.3 stones/week (a bounty week earns 1.0x that).
-
-Bounty-hunter sim: 10 seeds, 12 months, Core Formation layer 1, sword_madman_bounty in fallen_star_market (reward 100 stones)
-  seed  bounties  hunt weeks  stones  stones/month  injuries  lives spent
-     1         3          12     300          25.0         0            0
-     2         3          11     300          25.0         0            0
-     3         3          10     300          25.0         0            0
-     4         3           4     300          25.0         0            0
-     5         3           7     300          25.0         0            0
-     6         3          13     300          25.0         0            0
-     7         3           9     300          25.0         0            0
-     8         3           7     300          25.0         0            0
-     9         3           6     300          25.0         0            0
-    10         3          10     300          25.0         0            0
-Hunt weeks per bounty claimed: 3.0; fights won 43, lost 0 (100% won)
-Gathering in fallen_star_market: 1.8 stones/week (best place). One bounty = 56.18 weeks of gather income; a week hunting earns 33.7 stones.
-Best gathering anywhere for this realm: myriad_peaks_ridge at 5.6 stones/week (a bounty week earns 6.0x that).
-
-
-## first Foundation Establishment year (seeds 1-10)
-
-First Foundation Establishment year: 10 seeds
-  region / variant               won  lost  fled  injur  lives  stones  stage
-  qingshi_village rogue            12     0     0      0      0     174      0
-  qingshi_village sect             24     1     0      0      0     310      0
-  misty_forest rogue               14     0     0      0      0     250      0
-  misty_forest sect                23     0     0      0      0     520      1
-  fallen_star_market rogue          4     0     0      0      0      89      0
-  fallen_star_market sect          16     0     0      0      0     207      0
-  azure_peak rogue                  7     0     0      0      0     312      1
-  azure_peak sect                  21     0     0      0      0     667      2
-  withered_bone_marsh rogue        11     0     0      0      0     410      1
-  withered_bone_marsh sect         21     0     0      0      0     600      1
-  myriad_peaks_ridge rogue          6     0     0      0      0     636      2
-  myriad_peaks_ridge sect          18     0     0      0      0     853      3
-  median of all runs: won 14 lost 0 fled 0 injuries 0 lives 0 stones 350 stage 1
-  runs with no artifact life spent: 109 of 120
-  median win share of fought fights: 100%
 
 ## pill wait (curious, seeds 1-10, 36 months, wait up to 120 days)
 
@@ -996,6 +615,27 @@ First Foundation breakthrough (QA-066): seed, bottleneck day, attempts [day chan
   seed 10 bottleneck d1217 attempts 1 [d1326 79% pill ok] success d1326 stones 83  waited 120d
   medians: days stuck at the bottleneck 0 (9 seeds that succeeded), attempts 1, share of attempts with a pill 77% (7 of 9), attempts under 50%: 1 of 9
 
+## early inheritances (curious, seeds 1-10, 36 months)
+
+Early inheritances, curious player, 10 seeds, 36 months
+Per inheritance (10 seeds): seeds that could pass every non-fight trial, median month, median rated odds of the final fight then (claiming retries the non-lethal fight until won, so the odds only decide the month the policy tries), seeds that claimed it, seeds lost to the deadline
+  fist_saint_grave       misty_forest             deadline y15 passable  4/10  month 1  odds 0%  claimed 4 (median month 12)  lost 0
+      never passable; blocking trial at the end: { "Stone of Endurance": 6 }
+  village_founder_well   qingshi_village          deadline y12 passable 10/10  month 1  odds 0%  claimed 10 (median month 13)  lost 0
+  reed_hermit_hut        withered_bone_marsh      deadline y10 passable  2/10  month 19  odds 92%  claimed 0 (median month -)  lost 0
+      never passable; blocking trial at the end: { "Silence of the Reeds": 8 }
+  sword_mound_traveller  fallen_star_market       deadline y12 passable  6/10  month 13  odds 48%  claimed 6 (median month 22)  lost 0
+      never passable; blocking trial at the end: { "Reading the Scratches": 4 }
+
+## fair fights (curious, seeds 1-10, 12 months)
+
+Fair-fights sim: 10 seeds, 12 months (curious player)
+Entries listed per month: median 2, max 3; empty months 0 of 120
+Listed fights taken: 94, won 92 (98%), mean rated chance 98%
+  mission  listed 157, taken  90, won  98%, mean rated  98%
+  deed     listed   1, taken   1, won 100%, mean rated 100%
+  bounty   listed   3, taken   3, won 100%, mean rated  93%
+
 ## rival story (seeds 1-10, 36 months)
 
 Rival story, default policy, 10 seeds, 36 months (cells: player/rival realm+stage; "-" = no rival or dead)
@@ -1022,4 +662,366 @@ Rival story, curious policy, 10 seeds, 36 months (cells: player/rival realm+stag
   seed  9  met day 41  surpassed day never  news 3  rival encounters 20  qi2/qi6 qi3/qi8 qi6/fo0 qi7/fo2 qi8/fo3 fo0/co0
   seed 10  met day 36  surpassed day never  news 2  rival encounters 18  qi3/qi5 qi5/qi8 qi7/fo0 fo0/fo2 fo1/fo3 fo1/fo3
   summary: met 10/10 (median day 42), surpassed 1/10 (median day 678, under a year 0), news lines 25, rival encounters 187
+
+## combat (200 fights per cell)
+
+Combat balance, 200 fights per cell. Typical player: attributes 10, Iron Fist + Stone Skin, best buyable gear.
+
+Where each enemy first appears (typical player entering the realm / at its peak / entering with talismans; bare player entering):
+  Mortal    mountain_bandit        choice city_cornered_merchan forced                   entry 100%  peak 100%  talisman 100%  bare  30%  veteran on appearance 100%  TRIVIAL
+  Mortal    mountain_bandit        mission collect_a_debt       forced                   entry 100%  peak 100%  talisman 100%  bare  30%  veteran on appearance 100%  TRIVIAL
+  Mortal    mountain_bandit        mission press_gang_bandits   forced                   entry 100%  peak 100%  talisman 100%  bare  30%  veteran on appearance 100%  TRIVIAL
+  Mortal    wild_boar              encounter village_boar       forced                   entry 100%  peak 100%  talisman 100%  bare  96%  veteran on appearance 100%  TRIVIAL
+  Qi Refini azure_cloud_raider     mission answer_blood_lotus_c forced                   entry  93%  peak 100%  talisman 100%  bare   0%  veteran on appearance  99%  OK
+  Qi Refini azure_crane            encounter mountain_azure_cra evadable                 entry  53%  peak  90%  talisman  89%  bare   0%  veteran on appearance  68%  OK
+  Qi Refini azure_sword_examiner   trial azure_cloud_sect rank  forced                   entry  58%  peak 100%  talisman  99%  bare   0%  veteran on appearance  93%  OK
+  Qi Refini bandit_lord            choice city_red_door/Kick th forced                   entry  48%  peak 100%  talisman  98%  bare   0%  veteran on appearance  75%  HARD
+  Qi Refini blood_lotus_raider     mission answer_azure_call    forced                   entry  93%  peak 100%  talisman 100%  bare   0%  veteran on appearance  99%  OK
+  Qi Refini blood_lotus_scout      encounter marsh_blood_lotus_ evadable                 entry  59%  peak  95%  talisman  96%  bare   0%  veteran on appearance  93%  OK
+  Qi Refini blood_pit_gladiator    trial blood_lotus_sect rank  forced                   entry  49%  peak 100%  talisman 100%  bare   0%  veteran on appearance  76%  HARD
+  Qi Refini den_wolf               choice forest_hunters_wolf_d forced                   entry  84%  peak 100%  talisman 100%  bare   0%  veteran on appearance  99%  OK
+  Qi Refini drunk_bully_disciple   encounter village_drunk_bull evadable                 entry 100%  peak 100%  talisman 100%  bare   0%  veteran on appearance 100%  TRIVIAL
+  Qi Refini garden_poacher         realm verdant_remnant floor  forced                   entry  81%  peak 100%  talisman 100%  bare   0%  veteran on appearance  92%  OK
+  Qi Refini grave_guardian_ape     trial fist_saint_grave stage forced                   entry  48%  peak 100%  talisman  96%  bare   0%  veteran on appearance  77%  HARD
+  Qi Refini grotto_hermit_guest    realm peach_blossom_grotto f forced                   entry  56%  peak 100%  talisman  98%  bare   0%  veteran on appearance  76%  OK
+  Qi Refini incursion_raider       defence demonic_incursion    forced                   entry  95%  peak  84%  talisman 100%  bare   0%  veteran on appearance  98%  OK
+  Qi Refini iron_back_boar         defence beast_tide           forced                   entry  90%  peak  76%  talisman 100%  bare   0%  veteran on appearance  96%  OK
+  Qi Refini iron_back_boar         encounter village_iron_back_ forced                   entry  69%  peak 100%  talisman 100%  bare   0%  veteran on appearance  88%  OK
+  Qi Refini marsh_corpse_puppet    encounter marsh_corpse_puppe evadable                 entry  48%  peak  98%  talisman  93%  bare   0%  veteran on appearance  72%  HARD
+  Qi Refini mist_fox               encounter forest_mist_fox    forced                   entry  64%  peak 100%  talisman  98%  bare   0%  veteran on appearance  93%  OK
+  Qi Refini mist_fox               realm peach_blossom_grotto f forced                   entry  64%  peak 100%  talisman  98%  bare   0%  veteran on appearance  93%  OK
+  Qi Refini mist_wolf              encounter forest_wolf        evadable                 entry  80%  peak 100%  talisman 100%  bare   0%  veteran on appearance  99%  OK
+  Qi Refini mist_wolf              encounter tide_wolf_pack     evadable                 entry  80%  peak 100%  talisman 100%  bare   0%  veteran on appearance  99%  OK
+  Qi Refini mist_wolf              mission cull_mist_wolves     forced                   entry  94%  peak 100%  talisman 100%  bare   0%  veteran on appearance 100%  OK
+  Qi Refini mist_wolf              mission patrol_misty_peaks   forced                   entry  94%  peak 100%  talisman 100%  bare   0%  veteran on appearance 100%  OK
+  Qi Refini mist_wolf              realm verdant_remnant floor  forced                   entry  80%  peak 100%  talisman 100%  bare   0%  veteran on appearance  99%  OK
+  Qi Refini moss_back_ape          realm verdant_remnant floor  forced                   entry  48%  peak 100%  talisman  96%  bare   0%  veteran on appearance  77%  HARD
+  Qi Refini mountain_bandit        choice wild_wounded_disciple forced                   entry 100%  peak 100%  talisman 100%  bare 100%  veteran on appearance 100%  TRIVIAL
+  Qi Refini mountain_bandit        encounter city_alley_thugs   forced                   entry 100%  peak 100%  talisman 100%  bare 100%  veteran on appearance 100%  TRIVIAL
+  Qi Refini mountain_bandit        encounter village_bandit     forced                   entry 100%  peak 100%  talisman 100%  bare 100%  veteran on appearance 100%  TRIVIAL
+  Qi Refini mountain_bandit        mission escort_mortal_villag forced                   entry 100%  peak 100%  talisman 100%  bare 100%  veteran on appearance 100%  TRIVIAL
+  Qi Refini mountain_bandit        mission guard_pavilion_carav forced                   entry 100%  peak 100%  talisman 100%  bare 100%  veteran on appearance 100%  TRIVIAL
+  Qi Refini outer_disciple_bully   choice mountain_bullied_juni forced                   entry  78%  peak 100%  talisman 100%  bare   0%  veteran on appearance  99%  OK
+  Qi Refini pavilion_vault_guard   trial myriad_treasure_pavili forced                   entry  53%  peak 100%  talisman  98%  bare   0%  veteran on appearance  76%  OK
+  Qi Refini reed_hermit_shade      trial reed_hermit_hut stage  forced                   entry   1%  peak  91%  talisman  12%  bare   0%  veteran on appearance   1%  HARD
+  Qi Refini rogue_cultivator       encounter incursion_blood_sc evadable                 entry  56%  peak  92%  talisman  90%  bare   0%  veteran on appearance  95%  OK
+  Qi Refini rogue_cultivator       encounter marsh_corpse_refin evadable                 entry  56%  peak  92%  talisman  90%  bare   0%  veteran on appearance  95%  OK
+  Qi Refini rogue_cultivator       encounter wild_rogue         evadable                 entry  56%  peak  92%  talisman  90%  bare   0%  veteran on appearance  95%  OK
+  Qi Refini stone_ape              encounter mountain_ape       evadable                 entry  72%  peak  77%  talisman  92%  bare   0%  veteran on appearance  84%  OK
+  Qi Refini sword_mound_shade      trial sword_mound_traveller  forced                   entry   1%  peak  93%  talisman  22%  bare   0%  veteran on appearance   5%  HARD
+  Qi Refini tournament_contender   choice tournament_bout/Enter forced                   entry  63%  peak 100%  talisman  97%  bare   0%  veteran on appearance  97%  OK
+  Qi Refini vengeful_brother       encounter wounded_traveller_ evadable                 entry  93%  peak 100%  talisman 100%  bare   0%  veteran on appearance 100%  OK
+  Qi Refini wandering_boxer        choice road_wandering_boxer/ forced                   entry  70%  peak 100%  talisman  99%  bare   0%  veteran on appearance  86%  OK
+  Qi Refini well_bandit            choice road_highwayman/Refus forced                   entry  81%  peak 100%  talisman 100%  bare   0%  veteran on appearance  92%  OK
+  Qi Refini well_bandit            trial village_founder_well s forced                   entry  81%  peak 100%  talisman 100%  bare   0%  veteran on appearance  92%  OK
+  Foundatio azure_cloud_enforcer   choice road_token_patrol/Bru forced                   entry  59%  peak  78%  talisman  98%  bare   0%  veteran on appearance 100%  OK
+  Foundatio azure_cloud_enforcer   encounter city_righteous_enf forced                   entry  59%  peak  78%  talisman  98%  bare   0%  veteran on appearance 100%  OK
+  Foundatio azure_cloud_enforcer   mission ambush_azure_patrol  forced                   entry  59%  peak  78%  talisman  98%  bare   0%  veteran on appearance 100%  OK
+  Foundatio azure_pavilion_warden  trial azure_cloud_sect rank  forced                   entry  65%  peak 100%  talisman 100%  bare   0%  veteran on appearance 100%  OK
+  Foundatio blood_eyed_wolf        choice rival_cornered_by_bea forced                   entry  29%  peak  94%  talisman  95%  bare   0%  veteran on appearance  97%  HARD
+  Foundatio blood_eyed_wolf        encounter marsh_blood_eyed_w evadable                 entry  64%  peak  94%  talisman 100%  bare   0%  veteran on appearance 100%  OK
+  Foundatio blood_lotus_executioner encounter incursion_raiders  evadable                 entry  48%  peak  48%  talisman  95%  bare   0%  veteran on appearance  96%  HARD
+  Foundatio blood_lotus_executioner encounter wild_blood_lotus_e evadable                 entry  48%  peak  48%  talisman  95%  bare   0%  veteran on appearance  96%  HARD
+  Foundatio blood_pit_champion     trial blood_lotus_sect rank  forced                   entry  55%  peak  99%  talisman  97%  bare   0%  veteran on appearance  98%  OK
+  Foundatio bronze_corpse_puppet   encounter ruins_bronze_puppe evadable                 entry  53%  peak  75%  talisman  92%  bare   0%  veteran on appearance  98%  OK
+  Foundatio bronze_corpse_puppet   realm fallen_star_vault floo forced                   entry   7%  peak  75%  talisman  51%  bare   0%  veteran on appearance  73%  HARD
+  Foundatio bronze_corpse_puppet   trial corpse_lord_altar stag forced                   entry   7%  peak  75%  talisman  51%  bare   0%  veteran on appearance  73%  HARD
+  Foundatio cave_guardian          encounter ruins_guardian     evadable                 entry  57%  peak  95%  talisman  93%  bare   0%  veteran on appearance  99%  OK
+  Foundatio cave_guardian          realm sunken_sword_tomb floo forced                   entry  26%  peak  95%  talisman  85%  bare   0%  veteran on appearance  88%  HARD
+  Foundatio cloud_eagle            encounter mountain_eagle     evadable                 entry  63%  peak  96%  talisman  99%  bare   0%  veteran on appearance  98%  OK
+  Foundatio cloud_eagle            mission bleed_cloud_eagle    forced                   entry  63%  peak  96%  talisman  99%  bare   0%  veteran on appearance  98%  OK
+  Foundatio cloud_eagle            mission escort_star_silver   forced                   entry  63%  peak  96%  talisman  99%  bare   0%  veteran on appearance  98%  OK
+  Foundatio corpse_refiner_puppets choice marsh_corpse_refiner_ forced                   entry  69%  peak 100%  talisman 100%  bare   0%  veteran on appearance  98%  OK
+  Foundatio corpse_refiner_puppets choice marsh_villagers_plea/ forced                   entry  69%  peak 100%  talisman 100%  bare   0%  veteran on appearance  98%  OK
+  Foundatio demonic_cultivator     encounter forest_demonic_amb evadable                 entry  69%  peak  95%  talisman  98%  bare   0%  veteran on appearance  98%  OK
+  Foundatio demonic_cultivator     encounter marsh_demonic_hunt evadable                 entry  69%  peak  95%  talisman  98%  bare   0%  veteran on appearance  98%  OK
+  Foundatio demonic_cultivator     mission harvest_rogue_cultiv forced                   entry  69%  peak  95%  talisman  98%  bare   0%  veteran on appearance  98%  OK
+  Foundatio demonic_cultivator     mission purge_demonic_cultiv forced                   entry  69%  peak  95%  talisman  98%  bare   0%  veteran on appearance  98%  OK
+  Foundatio demonic_cultivator     mission recover_stolen_consi forced                   entry  69%  peak  95%  talisman  98%  bare   0%  veteran on appearance  98%  OK
+  Foundatio demonic_cultivator     mission silence_a_talebearer forced                   entry  69%  peak  95%  talisman  98%  bare   0%  veteran on appearance  98%  OK
+  Foundatio demonic_cultivator     realm sunken_sword_tomb floo forced                   entry  32%  peak  95%  talisman  93%  bare   0%  veteran on appearance  92%  HARD
+  Foundatio drowned_venom_husk     encounter drowned_venom_husk evadable                 entry  69%  peak 100%  talisman 100%  bare   0%  veteran on appearance  98%  OK
+  Foundatio drowned_yin_ghost      encounter marsh_drowned_yin_ evadable                 entry  70%  peak  83%  talisman  99%  bare   0%  veteran on appearance 100%  OK
+  Foundatio flame_tailed_fox       encounter wild_flame_fox     evadable                 entry  48%  peak  89%  talisman  96%  bare   0%  veteran on appearance 100%  HARD
+  Foundatio ice_soul_spider        encounter forest_ice_spider  evadable                 entry  41%  peak  67%  talisman  93%  bare   0%  veteran on appearance  98%  HARD
+  Foundatio iron_horn_rhino        encounter mountain_iron_rhin evadable                 entry  42%  peak  66%  talisman  84%  bare   0%  veteran on appearance  97%  HARD
+  Foundatio iron_horn_rhino        encounter tide_rhino_stamped evadable                 entry  42%  peak  66%  talisman  84%  bare   0%  veteran on appearance  97%  HARD
+  Foundatio iron_horn_rhino        mission drain_stone_ape_marr forced                   entry  66%  peak  66%  talisman  97%  bare   0%  veteran on appearance  99%  OK
+  Foundatio iron_horn_rhino        mission escort_beast_cages   forced                   entry  66%  peak  66%  talisman  97%  bare   0%  veteran on appearance  99%  OK
+  Foundatio iron_horn_rhino        mission subdue_stone_ape     forced                   entry  66%  peak  66%  talisman  97%  bare   0%  veteran on appearance  99%  OK
+  Foundatio jade_python            encounter marsh_sunken_serpe evadable                 entry   0%  peak   0%  talisman   0%  bare   0%  veteran on appearance   0%  UNBEATABLE (lethal: a Deadly foe is sensed and evaded)
+  Foundatio jade_python            realm sunken_sword_tomb floo forced                   entry   0%  peak   0%  talisman   0%  bare   0%  veteran on appearance   0%  UNBEATABLE
+  Foundatio pavilion_treasure_guardian trial myriad_treasure_pavili forced                   entry  68%  peak  97%  talisman  99%  bare   0%  veteran on appearance  98%  OK
+  Foundatio roadside_rogue_cultivator encounter village_roadside_r forced                   entry  72%  peak 100%  talisman 100%  bare   0%  veteran on appearance 100%  OK
+  Foundatio star_vault_warden      realm fallen_star_vault floo forced                   entry   0%  peak   0%  talisman   0%  bare   0%  veteran on appearance   0%  UNBEATABLE
+  Foundatio stone_hide_boar_king   encounter forest_boar_king   evadable                 entry  70%  peak 100%  talisman 100%  bare   0%  veteran on appearance  98%  OK
+  Foundatio sword_madman           encounter wild_sword_madman  evadable                 entry  46%  peak  46%  talisman  93%  bare   0%  veteran on appearance  99%  HARD
+  Foundatio sword_madman           realm fallen_star_vault floo forced                   entry   3%  peak  46%  talisman  49%  bare   0%  veteran on appearance  70%  HARD
+  Foundatio tournament_champion    choice tournament_final/Chal forced                   entry  13%  peak  74%  talisman  74%  bare   0%  veteran on appearance  78%  HARD
+  Foundatio vengeful_sect_elder    encounter wounded_traveller_ evadable                 entry   1%  peak  50%  talisman  42%  bare   0%  veteran on appearance  55%  HARD
+  Core Form azure_grand_elder_shadow trial azure_cloud_sect rank  forced                   entry  65%  peak  96%  talisman  99%  bare   0%  veteran on appearance 100%  OK
+  Core Form black_iron_bear_king   encounter mountain_bear_king evadable                 entry  41%  peak  90%  talisman  90%  bare   0%  veteran on appearance 100%  HARD
+  Core Form black_iron_bear_king   mission tear_bear_kings_hear forced                   entry  71%  peak  90%  talisman  96%  bare   0%  veteran on appearance 100%  OK
+  Core Form black_iron_bear_king   realm drowned_yin_palace flo forced                   entry  24%  peak  90%  talisman  73%  bare   0%  veteran on appearance 100%  HARD
+  Core Form black_iron_bear_king   realm skyfall_thunder_pavili forced                   entry  24%  peak  90%  talisman  73%  bare   0%  veteran on appearance 100%  HARD
+  Core Form blood_lotus_ancestor_puppet trial blood_lotus_sect rank  forced                   entry  49%  peak  97%  talisman  91%  bare   0%  veteran on appearance 100%  HARD
+  Core Form blood_lotus_elder      encounter road_demonic_ambus evadable                 entry  71%  peak  89%  talisman  97%  bare   0%  veteran on appearance 100%  OK
+  Core Form blood_lotus_elder      encounter wild_blood_lotus_e evadable                 entry  46%  peak  89%  talisman  90%  bare   0%  veteran on appearance 100%  HARD
+  Core Form blood_lotus_elder      mission purge_blood_lotus_el forced                   entry  71%  peak  89%  talisman  97%  bare   0%  veteran on appearance 100%  OK
+  Core Form cloud_devouring_condor realm skyfall_thunder_pavili forced                   entry   0%  peak   0%  talisman   0%  bare   0%  veteran on appearance   0%  UNBEATABLE
+  Core Form golden_abacus_guardian trial myriad_treasure_pavili forced                   entry  52%  peak  99%  talisman  95%  bare   0%  veteran on appearance 100%  OK
+  Core Form jade_python            encounter wild_python_lair   evadable                 entry  87%  peak 100%  talisman 100%  bare   0%  veteran on appearance 100%  OK
+  Core Form jade_python            mission slay_jade_python     forced                   entry  87%  peak 100%  talisman 100%  bare   0%  veteran on appearance 100%  OK
+  Core Form myriad_poison_toad     encounter herbs_poison_toad  evadable                 entry  69%  peak 100%  talisman  98%  bare   0%  veteran on appearance 100%  OK
+  Core Form myriad_poison_toad     encounter road_beast_tide_st evadable                 entry  69%  peak 100%  talisman  98%  bare   0%  veteran on appearance 100%  OK
+  Core Form myriad_poison_toad     mission milk_poison_toad     forced                   entry  69%  peak 100%  talisman  98%  bare   0%  veteran on appearance 100%  OK
+  Core Form myriad_poison_toad     realm drowned_yin_palace flo forced                   entry  69%  peak 100%  talisman  98%  bare   0%  veteran on appearance 100%  OK
+  Core Form nether_ghost_king      encounter ruins_ghost_king   evadable                 entry  52%  peak  52%  talisman  95%  bare   0%  veteran on appearance 100%  OK
+  Core Form nether_ghost_king      mission seal_ghost_king      forced                   entry  52%  peak  52%  talisman  95%  bare   0%  veteran on appearance 100%  OK
+  Core Form nether_ghost_king      realm drowned_yin_palace flo forced                   entry   5%  peak  52%  talisman  38%  bare   0%  veteran on appearance 100%  HARD
+  Core Form thunder_patriarch_puppet trial thunder_patriarch_seat forced                   entry  52%  peak  99%  talisman  95%  bare   0%  veteran on appearance 100%  OK
+  Core Form thunderwing_roc        encounter mountain_thunderwi evadable                 entry  60%  peak  92%  talisman  97%  bare   0%  veteran on appearance 100%  OK
+  Core Form thunderwing_roc        mission escort_roc_feather   forced                   entry  60%  peak  92%  talisman  97%  bare   0%  veteran on appearance 100%  OK
+  Core Form thunderwing_roc        realm drowned_yin_palace flo forced                   entry  30%  peak  92%  talisman  90%  bare   0%  veteran on appearance 100%  HARD
+  Core Form thunderwing_roc        realm skyfall_thunder_pavili forced                   entry  30%  peak  92%  talisman  90%  bare   0%  veteran on appearance 100%  HARD
+  Core Form thunderwing_roc        trial cloud_sword_immortal_c forced                   entry  30%  peak  92%  talisman  90%  bare   0%  veteran on appearance 100%  HARD
+  Core Form vault_blood_warden     trial blood_merchant_vault s forced                   entry  87%  peak 100%  talisman 100%  bare   0%  veteran on appearance 100%  OK
+  Nascent S ancient_puppet_guardian encounter ruins_puppet_guard evadable                 entry  37%  peak  99%  talisman  58%  bare   0%  veteran on appearance 100%  HARD
+  Nascent S ancient_tortoise_sage  encounter wild_tortoise_sage evadable                 entry  41%  peak  95%  talisman  51%  bare   0%  veteran on appearance 100%  HARD
+  Nascent S azure_law_enforcer     encounter wild_azure_law_enf forced                   entry  43%  peak  95%  talisman  60%  bare   0%  veteran on appearance 100%  HARD
+  Nascent S blood_sea_deacon       encounter marsh_blood_sea_de evadable                 entry  31%  peak  99%  talisman  56%  bare   0%  veteran on appearance 100%  HARD
+  Nascent S cloud_devouring_condor encounter mountain_cloud_con evadable                 entry  76%  peak 100%  talisman  83%  bare   0%  veteran on appearance 100%  OK
+  Nascent S hermit_sword_sage      encounter wild_hermit_sword_ evadable                 entry  17%  peak  84%  talisman  23%  bare   0%  veteran on appearance 100%  HARD
+  Nascent S magma_scale_basilisk   encounter mountain_magma_bas evadable                 entry  54%  peak  99%  talisman  74%  bare   0%  veteran on appearance 100%  OK
+  Nascent S soul_reaping_old_monster encounter marsh_old_monster  evadable                 entry   6%  peak  71%  talisman  18%  bare   0%  veteran on appearance  98%  HARD
+  Soul Form blood_moon_sovereign   encounter wild_blood_moon_so evadable                 entry  32%  peak  95%  talisman  34%  bare   0%  veteran on appearance 100%  HARD
+  Soul Form ghost_banner_lord      encounter ruins_ghost_banner evadable                 entry  10%  peak  79%  talisman  18%  bare   0%  veteran on appearance  98%  HARD
+  Soul Form ghost_banner_lord      trial ghost_sovereign_hollow forced                   entry  10%  peak  79%  talisman  18%  bare   0%  veteran on appearance  98%  HARD
+  Soul Form heavenly_mandate_elder encounter wild_heavenly_mand forced                   entry  31%  peak  91%  talisman  38%  bare   0%  veteran on appearance 100%  HARD
+  Soul Form heavenly_mandate_elder trial eternal_sky_patriarch_ forced                   entry  31%  peak  91%  talisman  38%  bare   0%  veteran on appearance 100%  HARD
+  Soul Form star_devouring_colossus encounter ruins_star_devouri evadable                 entry  11%  peak  80%  talisman  21%  bare   0%  veteran on appearance 100%  HARD
+  Soul Form star_devouring_colossus trial chaos_alchemist_furnac forced                   entry  11%  peak  80%  talisman  21%  bare   0%  veteran on appearance 100%  HARD
+  Soul Form ten_thousand_peaks_roc encounter mountain_ten_thous evadable                 entry  11%  peak  79%  talisman  22%  bare   0%  veteran on appearance  99%  HARD
+  Soul Form void_rift_dragonling   encounter mountain_void_drag evadable                 entry  77%  peak 100%  talisman  81%  bare   0%  veteran on appearance 100%  OK
+
+Win rate at stage 0 of each realm (no talismans):
+  enemy \ player             Mortal Qi Refinin Foundation Core Forma Nascent So
+  wild_boar                    100%       100%       100%       100%       100%
+  mountain_bandit              100%       100%       100%       100%       100%
+  mist_wolf                      0%        80%       100%       100%       100%
+  den_wolf                       0%        84%       100%       100%       100%
+  rogue_cultivator               0%         0%       100%       100%       100%
+  vengeful_brother               0%         8%       100%       100%       100%
+  vengeful_sect_elder            0%         0%         1%       100%       100%
+  azure_sword_examiner           0%        58%       100%       100%       100%
+  azure_pavilion_warden          0%         0%        65%       100%       100%
+  azure_grand_elder_shadow         0%         0%         0%        38%       100%
+  blood_pit_gladiator            0%        49%       100%       100%       100%
+  blood_pit_champion             0%         0%        55%       100%       100%
+  vault_blood_warden             0%         0%         0%        87%       100%
+  blood_lotus_ancestor_puppet         0%         0%         0%        49%       100%
+  pavilion_vault_guard           0%        53%       100%       100%       100%
+  pavilion_treasure_guardian         0%         0%        32%       100%       100%
+  golden_abacus_guardian         0%         0%         0%        52%       100%
+  thunder_patriarch_puppet         0%         0%         0%        52%       100%
+  blood_lotus_raider             0%        84%       100%       100%       100%
+  azure_cloud_raider             0%        84%       100%       100%       100%
+  incursion_raider               0%        33%       100%       100%       100%
+  tournament_contender           0%         8%       100%       100%       100%
+  tournament_champion            0%         0%        13%       100%       100%
+  mist_fox                       0%        64%       100%       100%       100%
+  iron_back_boar                 0%        22%       100%       100%       100%
+  wandering_boxer                0%        70%       100%       100%       100%
+  drunk_bully_disciple           0%        60%       100%       100%       100%
+  azure_crane                    0%         1%       100%       100%       100%
+  blood_eyed_wolf                0%         0%        29%       100%       100%
+  bandit_lord                    0%        48%       100%       100%       100%
+  stone_ape                      0%         0%       100%       100%       100%
+  grotto_hermit_guest            0%        56%       100%       100%       100%
+  well_bandit                    0%        81%       100%       100%       100%
+  garden_poacher                 0%        81%       100%       100%       100%
+  moss_back_ape                  0%        48%       100%       100%       100%
+  sword_mound_shade              0%         1%       100%       100%       100%
+  grave_guardian_ape             0%        48%       100%       100%       100%
+  reed_hermit_shade              0%         1%       100%       100%       100%
+  stone_hide_boar_king           0%         0%        70%       100%       100%
+  drowned_venom_husk             0%         0%        69%       100%       100%
+  corpse_refiner_puppets         0%         0%        69%       100%       100%
+  roadside_rogue_cultivator         0%         0%        72%       100%       100%
+  cloud_eagle                    0%         0%        63%       100%       100%
+  cave_guardian                  0%         0%        26%       100%       100%
+  demonic_cultivator             0%         0%        32%       100%       100%
+  jade_python                    0%         0%         0%        87%       100%
+  flame_tailed_fox               0%         0%        24%       100%       100%
+  iron_horn_rhino                0%         0%         6%       100%       100%
+  ice_soul_spider                0%         0%         5%       100%       100%
+  sword_madman                   0%         0%         3%       100%       100%
+  azure_cloud_enforcer           0%         0%        12%       100%       100%
+  blood_lotus_executioner         0%         0%         2%       100%       100%
+  bronze_corpse_puppet           0%         0%         7%       100%       100%
+  thunderwing_roc                0%         0%         0%        30%       100%
+  myriad_poison_toad             0%         0%         0%        69%       100%
+  black_iron_bear_king           0%         0%         0%        24%       100%
+  blood_lotus_elder              0%         0%         0%        16%       100%
+  star_vault_warden              0%         0%         0%        45%       100%
+  nether_ghost_king              0%         0%         0%         5%       100%
+  marsh_corpse_puppet            0%         2%       100%       100%       100%
+  drowned_yin_ghost              0%         0%        18%       100%       100%
+  blood_lotus_scout              0%         1%       100%       100%       100%
+  cloud_devouring_condor         0%         0%         0%         0%        76%
+  magma_scale_basilisk           0%         0%         0%         0%        54%
+  ancient_tortoise_sage          0%         0%         0%         0%        41%
+  azure_law_enforcer             0%         0%         0%         0%        43%
+  hermit_sword_sage              0%         0%         0%         0%        17%
+  blood_sea_deacon               0%         0%         0%         0%        31%
+  soul_reaping_old_monster         0%         0%         0%         0%         6%
+  ancient_puppet_guardian         0%         0%         0%         0%        37%
+  outer_disciple_bully           0%        60%       100%       100%       100%
+  void_rift_dragonling           0%         0%         0%         0%         0%
+  heavenly_mandate_elder         0%         0%         0%         0%         0%
+  blood_moon_sovereign           0%         0%         0%         0%         0%
+  ten_thousand_peaks_roc         0%         0%         0%         0%         0%
+  ghost_banner_lord              0%         0%         0%         0%         0%
+  star_devouring_colossus         0%         0%         0%         0%         0%
+
+Typical player vs a plain enemy of the same realm and stage (QA-007d target ~60-90%), and at the realm's peak vs a plain enemy one realm up:
+  Qi Refining             stage 0:  95%  stage 4:  91%  stage 8:  84%   next realm:   0%
+  Foundation Establishment  stage 0:  90%  stage 1:  85%  stage 3:  84%   next realm:   0%
+  Core Formation          stage 0:  87%  stage 1:  87%  stage 3:  87%   next realm:   0%
+  Nascent Soul            stage 0:  92%  stage 1:  93%  stage 3:  91%   next realm:   0%
+
+Veteran player (best art of each kind per realm, QA-018) vs a plain same-stage enemy, and at the peak vs a plain enemy one realm up:
+  Qi Refining                 stage 0:  98%  stage 8:  95%   next realm:   0%   arts: rippling_moon_sword, stone_skin
+  Foundation Establishment    stage 0: 100%  stage 3: 100%   next realm:   0%   arts: nine_frost_sword_intent, earth_dragon_body
+  Core Formation              stage 0: 100%  stage 3: 100%   next realm:   3%   arts: azure_heaven_sword_canon, earth_dragon_body
+  Nascent Soul                stage 0: 100%  stage 3: 100%   next realm:   8%   arts: azure_heaven_sword_canon, earth_dragon_body
+  Soul Formation              stage 0: 100%  stage 3: 100%   next realm:   6%   arts: azure_heaven_sword_canon, earth_dragon_body
+
+## economy (seed defaults)
+
+Economy sim: 50 lives per profession, income 1 month in 4, 3.0 violent deaths per century, seed 1, sources all, sect myriad_treasure_pavilion
+  Foundation Establishment Pill costs 300 spirit stones
+  Core Forming Pill costs 3000 spirit stones
+  Soul Infant Pill costs 30000 spirit stones
+  Spirit Severing Pill costs 300000 spirit stones
+Alchemist (rank 6.0 at the end): avg final realm 2.08 (~Foundation Establishment); earned 23818, left 2000 stones
+    Foundation Establishment: 50/50 lives reached the bottleneck, 39 could afford the pill on the first attempt
+    Core Formation: 50/50 lives reached the bottleneck, 19 could afford the pill on the first attempt
+    Nascent Soul: 4/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
+    Soul Formation: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
+    pills 437, attempts without a pill 3989; lives bought 184 (dearest 25600); ended for good 6 (avg age 238), old age 44
+    income (all lives): work 9062 mo / 292944 stones, craft 150 mo / 6088 stones, gather 9196 mo / 639656 stones, sect 9179 mo / 438435 stones (stipends 209512)
+    spent: gear 0, clinic 1540; savings alone covered the Core Forming Pill at the Foundation peak for 19/50; pills bought with contribution 63; avg sect rank 2.1, contribution 33952
+Blacksmith (rank 5.7 at the end): avg final realm 2.02 (~Foundation Establishment); earned 23314, left 2278 stones
+    Foundation Establishment: 50/50 lives reached the bottleneck, 45 could afford the pill on the first attempt
+    Core Formation: 50/50 lives reached the bottleneck, 20 could afford the pill on the first attempt
+    Nascent Soul: 1/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
+    Soul Formation: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
+    pills 445, attempts without a pill 3593; lives bought 171 (dearest 3200); ended for good 4 (avg age 169), old age 46
+    income (all lives): work 8901 mo / 283254 stones, craft 0 mo / 0 stones, gather 8887 mo / 638581 stones, sect 8863 mo / 430012 stones (stipends 211796)
+    spent: gear 0, clinic 1230; savings alone covered the Core Forming Pill at the Foundation peak for 20/50; pills bought with contribution 61; avg sect rank 2.0, contribution 32689
+Talisman Master (rank 9.0 at the end): avg final realm 2.02 (~Foundation Establishment); earned 32913, left 1972 stones
+    Foundation Establishment: 50/50 lives reached the bottleneck, 44 could afford the pill on the first attempt
+    Core Formation: 50/50 lives reached the bottleneck, 22 could afford the pill on the first attempt
+    Nascent Soul: 1/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
+    Soul Formation: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
+    pills 594, attempts without a pill 3408; lives bought 183 (dearest 3200); ended for good 3 (avg age 177), old age 47
+    income (all lives): work 2501 mo / 45965 stones, craft 6463 mo / 737965 stones, gather 8947 mo / 616885 stones, sect 8927 mo / 436054 stones (stipends 214680)
+    spent: gear 0, clinic 2080; savings alone covered the Core Forming Pill at the Foundation peak for 22/50; pills bought with contribution 60; avg sect rank 2.0, contribution 32911
+Array Master (rank 5.4 at the end): avg final realm 2.00 (~Foundation Establishment); earned 22369, left 1771 stones
+    Foundation Establishment: 50/50 lives reached the bottleneck, 40 could afford the pill on the first attempt
+    Core Formation: 50/50 lives reached the bottleneck, 17 could afford the pill on the first attempt
+    Nascent Soul: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
+    Soul Formation: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
+    pills 450, attempts without a pill 4000; lives bought 171 (dearest 3200); ended for good 4 (avg age 168), old age 46
+    income (all lives): work 8543 mo / 294791 stones, craft 0 mo / 0 stones, gather 8530 mo / 587049 stones, sect 8509 mo / 426108 stones (stipends 211900)
+    spent: gear 0, clinic 1380; savings alone covered the Core Forming Pill at the Foundation peak for 17/50; pills bought with contribution 66; avg sect rank 2.0, contribution 31410
+Doctor (rank 6.3 at the end): avg final realm 2.00 (~Foundation Establishment); earned 21195, left 1469 stones
+    Foundation Establishment: 50/50 lives reached the bottleneck, 37 could afford the pill on the first attempt
+    Core Formation: 50/50 lives reached the bottleneck, 14 could afford the pill on the first attempt
+    Nascent Soul: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
+    Soul Formation: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
+    pills 438, attempts without a pill 4261; lives bought 163 (dearest 3200); ended for good 6 (avg age 162), old age 44
+    income (all lives): work 8418 mo / 237330 stones, craft 0 mo / 0 stones, gather 8403 mo / 591038 stones, sect 8382 mo / 420965 stones (stipends 209176)
+    spent: gear 0, clinic 400; savings alone covered the Core Forming Pill at the Foundation peak for 14/50; pills bought with contribution 64; avg sect rank 2.0, contribution 31002
+Beast Tamer (rank 6.4 at the end): avg final realm 2.00 (~Foundation Establishment); earned 21432, left 1583 stones
+    Foundation Establishment: 50/50 lives reached the bottleneck, 42 could afford the pill on the first attempt
+    Core Formation: 50/50 lives reached the bottleneck, 18 could afford the pill on the first attempt
+    Nascent Soul: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
+    Soul Formation: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
+    pills 439, attempts without a pill 3849; lives bought 163 (dearest 3200); ended for good 4 (avg age 166), old age 46
+    income (all lives): work 7944 mo / 225955 stones, craft 625 mo / 24259 stones, gather 8553 mo / 586016 stones, sect 8536 mo / 425227 stones (stipends 212620)
+    spent: gear 0, clinic 1320; savings alone covered the Core Forming Pill at the Foundation peak for 18/50; pills bought with contribution 65; avg sect rank 2.0, contribution 31454
+Net stones per sect mission over all lives (top 12): procure_azure_crystal 766875, gather_spirit_herbs 522360, carry_goods_to_market 104792, alchemist_rare_order 25600, auction_consignment 24000, fill_herb_order 15750
+
+## economy, bounty hunter (seeds 1-10, 12 months)
+
+Bounty-hunter sim: 10 seeds, 12 months, Qi Refining layer 4, iron_back_boar_bounty in misty_forest (reward 40 stones)
+  seed  bounties  hunt weeks  stones  stones/month  injuries  lives spent
+     1         3          11     120          10.0         0            0
+     2         2          25      80           6.7         0            0
+     3         3          13     120          10.0         0            0
+     4         3          12     120          10.0         0            0
+     5         3           7     120          10.0         0            0
+     6         3          13     120          10.0         0            0
+     7         3          13     120          10.0         0            0
+     8         3           5     120          10.0         0            0
+     9         3           9     120          10.0         0            0
+    10         3          14     120          10.0         0            0
+Hunt weeks per bounty claimed: 4.2; fights won 54, lost 9 (86% won)
+Gathering in misty_forest: 4.0 stones/week (best place). One bounty = 10.12 weeks of gather income; a week hunting earns 9.5 stones.
+Best gathering anywhere for this realm: qingshi_village at 5.3 stones/week (a bounty week earns 1.8x that).
+
+Bounty-hunter sim: 10 seeds, 12 months, Qi Refining layer 4, drunk_bully_bounty in qingshi_village (reward 20 stones)
+  seed  bounties  hunt weeks  stones  stones/month  injuries  lives spent
+     1         4          13      80           6.7         0            0
+     2         4          12      80           6.7         0            1
+     3         4          12      80           6.7         0            0
+     4         4           4      80           6.7         0            0
+     5         4          13      80           6.7         0            0
+     6         4          21      80           6.7         0            0
+     7         4           6      80           6.7         0            0
+     8         4          31      80           6.7         0            0
+     9         4           7      80           6.7         0            0
+    10         4          26      80           6.7         0            0
+Hunt weeks per bounty claimed: 3.6; fights won 61, lost 4 (94% won)
+Gathering in qingshi_village: 5.3 stones/week (best place). One bounty = 3.80 weeks of gather income; a week hunting earns 5.5 stones.
+Best gathering anywhere for this realm: qingshi_village at 5.3 stones/week (a bounty week earns 1.0x that).
+
+Bounty-hunter sim: 10 seeds, 12 months, Core Formation layer 1, sword_madman_bounty in fallen_star_market (reward 100 stones)
+  seed  bounties  hunt weeks  stones  stones/month  injuries  lives spent
+     1         3          14     300          25.0         0            0
+     2         3          21     300          25.0         0            0
+     3         3          19     300          25.0         0            0
+     4         3           4     300          25.0         0            0
+     5         3           7     300          25.0         0            0
+     6         3          16     300          25.0         0            0
+     7         3          27     300          25.0         0            0
+     8         3           7     300          25.0         0            0
+     9         3           6     300          25.0         0            0
+    10         3          11     300          25.0         0            0
+Hunt weeks per bounty claimed: 4.4; fights won 43, lost 1 (98% won)
+Gathering in fallen_star_market: 1.8 stones/week (best place). One bounty = 56.18 weeks of gather income; a week hunting earns 22.7 stones.
+Best gathering anywhere for this realm: myriad_peaks_ridge at 5.6 stones/week (a bounty week earns 4.0x that).
+
+
+## first Foundation Establishment year (seeds 1-10)
+
+First Foundation Establishment year: 10 seeds
+  region / variant               won  lost  fled  injur  lives  stones  stage
+  qingshi_village rogue            12     0     0      0      0     174      0
+  qingshi_village sect             24     1     0      0      0     310      0
+  misty_forest rogue               11     0     0      0      0     242      0
+  misty_forest sect                22     0     0      0      0     371      1
+  fallen_star_market rogue          5     0     0      0      0      85      0
+  fallen_star_market sect          15     0     0      0      0     262      0
+  azure_peak rogue                 10     0     0      0      0     535      1
+  azure_peak sect                  21     0     0      0      0     549      2
+  withered_bone_marsh rogue        11     0     0      0      0     564      0
+  withered_bone_marsh sect         22     0     0      0      0     807      1
+  myriad_peaks_ridge rogue          6     0     0      0      0     636      2
+  myriad_peaks_ridge sect          18     0     0      0      0     853      3
+  median of all runs: won 13 lost 0 fled 0 injuries 0 lives 0 stones 371 stage 1
+  runs with no artifact life spent: 107 of 120
+  median win share of fought fights: 100%
 
