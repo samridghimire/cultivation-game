@@ -335,6 +335,7 @@ func _check_rival_surpassed() -> void:
 	if Rivals.surpassed(player, rival):
 		world_flags[Rivals.SURPASSED_FLAG] = true
 		EventBus.post("You have surpassed %s. Whatever they once said of you, no one repeats it now." % rival.name, "progress")
+		check_milestones()
 
 
 ## Expected tribulation for breaking into the next realm (Tribulation.preview),
@@ -2964,11 +2965,12 @@ func _rival_news() -> void:
 		return
 	if not world_flags.has(Rivals.SEEN_REALM_FLAG):
 		world_flags[Rivals.SEEN_REALM_FLAG] = rival.realm_index
-		return
-	var line := Rivals.news(player, rival, int(world_flags[Rivals.SEEN_REALM_FLAG]), data)
-	if line != "":
-		EventBus.post(line, "info")
-		world_flags[Rivals.SEEN_REALM_FLAG] = rival.realm_index
+	else:
+		var line := Rivals.news(player, rival, int(world_flags[Rivals.SEEN_REALM_FLAG]), data)
+		if line != "":
+			EventBus.post(line, "info")
+			world_flags[Rivals.SEEN_REALM_FLAG] = rival.realm_index
+	_check_rival_surpassed()
 
 
 ## RIVAL-003: the rival's first meeting plays once around day 10, never over

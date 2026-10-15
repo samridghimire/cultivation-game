@@ -1504,3 +1504,44 @@ func test_surpassing_needs_the_first_meeting() -> void:
 	_break_through_once(gs, c)
 	assert_false(gs.world_flags.get(Rivals.SURPASSED_FLAG, false))
 	gs.end_session()
+
+
+func _surpass_lines() -> Array:
+	return EventBus.history.filter(func(m): return String(m["text"]).begins_with("You have surpassed "))
+
+
+func test_rival_already_behind_is_surpassed_at_month_end() -> void:
+	var c := _start()
+	var gs := _game_state()
+	c.realm_index = 1
+	Rivals.rival_of(c, gs.npcs).realm_index = 0
+	gs.world_flags[Rivals.FIRST_MEETING_FLAG] = true
+	EventBus.clear_history()
+	gs._rival_news()
+	assert_true(gs.world_flags.get(Rivals.SURPASSED_FLAG, false))
+	assert_eq(_surpass_lines().size(), 1)
+	gs._rival_news()
+	assert_eq(_surpass_lines().size(), 1)
+	gs.end_session()
+
+
+func test_equal_rival_is_not_surpassed_at_month_end() -> void:
+	var c := _start()
+	var gs := _game_state()
+	Rivals.rival_of(c, gs.npcs).realm_index = c.realm_index
+	gs.world_flags[Rivals.FIRST_MEETING_FLAG] = true
+	EventBus.clear_history()
+	gs._rival_news()
+	assert_false(gs.world_flags.get(Rivals.SURPASSED_FLAG, false))
+	assert_eq(_surpass_lines().size(), 0)
+	gs.end_session()
+
+
+func test_unmet_rival_is_not_surpassed_at_month_end() -> void:
+	var c := _start()
+	var gs := _game_state()
+	c.realm_index = 1
+	Rivals.rival_of(c, gs.npcs).realm_index = 0
+	gs._rival_news()
+	assert_false(gs.world_flags.get(Rivals.SURPASSED_FLAG, false))
+	gs.end_session()
