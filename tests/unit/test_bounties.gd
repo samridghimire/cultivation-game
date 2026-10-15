@@ -22,7 +22,9 @@ func _errors_after(mutate: Callable) -> Array:
 
 
 func test_shipped_bounties_validate() -> void:
-	assert_eq(data().bounties.size(), 12)
+	assert_eq(data().bounties.size(), 13)
+	var puppet: Dictionary = data().bounties["marsh_corpse_puppet_bounty"]
+	assert_eq(puppet["min_realm"], "qi_refining", "C-081: the marsh posts a Qi Refining bounty")
 	assert_eq(int(_count_in("qingshi_village")), 2, "C-064: Qingshi posts two bounties")
 	var regions := {}
 	for b: Dictionary in data().bounties.values():
