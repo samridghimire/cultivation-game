@@ -55,3 +55,13 @@ func test_headman_chores_pay_once() -> void:
 	assert_eq(Deeds.available(gs.data, "headman", gs.world_flags).map(func(dd: Dictionary) -> String: return dd["id"]), ["extort_headman"], "each chore once")
 	assert_gt(c.alignment, 0)
 	gs.end_session()
+
+
+## QA-063: the sim records the first real win, its foe, and the day the first style was bought.
+func test_sim_records_first_win_and_style() -> void:
+	var root := _root()
+	var r: Dictionary = preload("res://tests/sim/first_hour.gd").play(root.get_node("GameState"), root.get_node("GameClock"), 2, 3, true)
+	root.get_node("GameState").end_session()
+	assert_true(int(r["first_win_day"]) >= 0, "a curious newcomer wins a fight in 3 months")
+	assert_true(String(r["first_win_enemy"]) != "", "the first win names its foe")
+	assert_true(int(r["first_style_day"]) >= int(r["first_win_day"]) - 14 or int(r["first_style_day"]) == -1, "style day is a clock day or -1")

@@ -35,6 +35,10 @@ func _run() -> void:
 	var won: Array = []
 	var lost: Array = []
 	var fled: Array = []
+	var first_wins: Array = []
+	var first_styles: Array = []
+	var no_win := 0
+	var win_enemies := {}
 	var by_cat := {}
 	var kinds_all: Array = []
 	var zero_months := 0
@@ -64,8 +68,17 @@ func _run() -> void:
 		lost.append(r["fights_lost"])
 		fled.append(r["fights_fled"])
 		print("  %4d  %3s  %3s  %3s  %4s  %8d  %3d  %4d  %4d  %.1f" % [s, r["layer_day"].get(1, "-"), r["layer_day"].get(3, "-"), r["layer_day"].get(9, "-"), r["sect_day"] if r["sect_day"] >= 0 else "-", r["injuries"], r["fights_won"], r["fights_lost"], r["fights_fled"], per_month])
+		print("        first win day %s (%s), style bought day %s" % [r["first_win_day"] if r["first_win_day"] >= 0 else "-", r["first_win_enemy"] if r["first_win_enemy"] != "" else "-", r["first_style_day"] if r["first_style_day"] >= 0 else "-"])
+		if r["first_win_day"] >= 0:
+			first_wins.append(r["first_win_day"])
+			win_enemies[r["first_win_enemy"]] = int(win_enemies.get(r["first_win_enemy"], 0)) + 1
+		else:
+			no_win += 1
+		if r["first_style_day"] >= 0:
+			first_styles.append(r["first_style_day"])
 		gs.end_session()
 	print("Medians (day): QR1 %.0f, QR3 %.0f, QR9 %.0f, sect %.0f; injuries %.0f; fights won %.0f, lost %.0f, fled %.0f; %.1f log lines/month" % [_median(layers[1]), _median(layers[3]), _median(layers[9]), _median(sects), _median(injuries), _median(won), _median(lost), _median(fled), _median(lines)])
+	print("First win: median day %.0f, seeds with no win in %d months: %d; first-win foes: %s; median style day %.0f (%d seeds)" % [_median(first_wins), months, no_win, str(win_enemies), _median(first_styles), first_styles.size()])
 	if curious:
 		var sum := 0
 		for k: int in kinds_all:

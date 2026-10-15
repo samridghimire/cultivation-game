@@ -22,8 +22,16 @@ static func play(gs: Node, clock: Node, seed_value: int, months: int, curious: b
 	gs.pending_event = ""
 	var bus: Node = gs.get_node("/root/EventBus")
 	bus.clear_history()
-	var out := {"layer_day": {}, "sect_day": -1, "month_lines": [], "injuries": 0, "player": c, "kinds": [], "kind_sets": [], "stones": [], "realms": []}
+	var out := {"layer_day": {}, "sect_day": -1, "month_lines": [], "injuries": 0, "player": c, "kinds": [], "kind_sets": [], "stones": [], "realms": [], "first_win_day": -1, "first_style_day": -1, "first_win_enemy": ""}
 	var done := {"no_help": no_help}
+	# QA-063: remember the foe of the first real (non-spar) win; the day comes from the fights_won stat.
+	var fight := {"enemy": "", "first_enemy": ""}
+	var on_start := func(enemy: Dictionary) -> void: fight["enemy"] = "" if enemy.get("spar", false) else String(enemy.get("id", enemy.get("name", "?")))
+	var on_end := func(_name: String, victory: bool, _log: PackedStringArray) -> void:
+		if victory and fight["enemy"] != "" and fight["first_enemy"] == "":
+			fight["first_enemy"] = fight["enemy"]
+	bus.combat_started.connect(on_start)
+	bus.combat_finished.connect(on_end)
 	_talk_to_elder_mo(gs)
 	for chore in CHORES:
 		gs.perform_deed(chore)
@@ -52,9 +60,14 @@ static func play(gs: Node, clock: Node, seed_value: int, months: int, curious: b
 				if not out["layer_day"].has(layer):
 					out["layer_day"][layer] = clock.total_days
 		var kinds := {}
+		_note_first_win(out, c, clock, fight)
 		if curious:
 			kinds = _curious_month(gs, c, done, clock.total_days)
+			if done.has("style_month") and out["first_style_day"] < 0:
+				out["first_style_day"] = clock.total_days
+			_note_first_win(out, c, clock, fight)
 		gs.explore()
+		_note_first_win(out, c, clock, fight)
 		var counts := {}
 		for i in range(mark, bus.history.size()):
 			var cat: String = bus.history[i]["category"]
@@ -69,12 +82,20 @@ static func play(gs: Node, clock: Node, seed_value: int, months: int, curious: b
 		out["realms"].append(Cultivation.realm_label(c, gs.data))
 		if month_hook.is_valid():
 			month_hook.call(month)
+	bus.combat_started.disconnect(on_start)
+	bus.combat_finished.disconnect(on_end)
 	out["style_month"] = int(done.get("style_month", -1))
 	out["injuries"] = c.injuries.size()
 	out["fights_won"] = LifeStats.get_stat(c, "fights_won")
 	out["fights_lost"] = LifeStats.get_stat(c, "fights_lost")
 	out["fights_fled"] = LifeStats.get_stat(c, "threats_fled")
 	return out
+
+
+static func _note_first_win(out: Dictionary, c: CharacterData, clock: Node, fight: Dictionary) -> void:
+	if out["first_win_day"] < 0 and LifeStats.get_stat(c, "fights_won") >= 1:
+		out["first_win_day"] = clock.total_days
+		out["first_win_enemy"] = fight["first_enemy"]
 
 
 ## The extra things a curious player does in one month: explore weekly, one
