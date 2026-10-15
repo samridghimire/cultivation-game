@@ -258,8 +258,54 @@ static func max_quantity(c: CharacterData, data: GameData, item_id: String, sell
 	return 0 if price <= 0 else mini(c.item_count("spirit_stone") / price, MAX_QUANTITY)
 
 
+## The technique id an item's `learn_technique` effect names, or "" (WU-118).
+static func manual_technique(data: GameData, item_id: String) -> String:
+	var id := String(data.items.get(item_id, {}).get("effects", {}).get("learn_technique", ""))
+	return id if data.techniques.has(id) else ""
+
+
+static func kind_word(kind: String) -> String:
+	match kind:
+		"combat":
+			return "fighting style"
+		"method":
+			return "cultivation method"
+		"body":
+			return "body art"
+		"cultivation":
+			return "breathing art"
+	return kind
+
+
+## " (known)" / " (fighting style)" suffix for a manual's shop row; "" for other items.
+static func manual_note(c: CharacterData, data: GameData, item_id: String) -> String:
+	var tech_id := manual_technique(data, item_id)
+	if tech_id == "":
+		return ""
+	if Techniques.knows(c, tech_id):
+		return " (known)"
+	return " (%s)" % kind_word(data.techniques[tech_id].kind)
+
+
+## True when `item_id` is a combat manual and `c` knows no combat technique yet.
+static func is_first_combat_manual(c: CharacterData, data: GameData, item_id: String) -> bool:
+	var tech_id := manual_technique(data, item_id)
+	if tech_id == "" or data.techniques[tech_id].kind != "combat":
+		return false
+	for id in c.techniques:
+		if data.techniques.has(id) and data.techniques[id].kind == "combat":
+			return false
+	return true
+
+
 ## "Equipped: Iron Sword (+5 attack)" for whatever `c` wears in the item's slot.
 static func compare_text(c: CharacterData, data: GameData, item_id: String) -> String:
+	var tech_id := manual_technique(data, item_id)
+	if tech_id != "":
+		var tech_name: String = data.techniques[tech_id].name
+		if Techniques.knows(c, tech_id):
+			return "Teaches %s. You already know it." % tech_name
+		return "Teaches %s, a %s you do not know yet." % [tech_name, kind_word(data.techniques[tech_id].kind)]
 	if not Equipment.is_equipment(data, item_id):
 		return ""
 	var worn := String(c.equipment.get(Equipment.slot_of(data, item_id), ""))
@@ -318,10 +364,14 @@ func _rebuild() -> void:
 		var label := "%s  %d" % [data.items[item_id]["name"], price]
 		if _selling:
 			label += "  (have %d)" % p.item_count(item_id)
-		elif GameState.festival_stock(_stock_tags).has(item_id) and not Items.shop_stock(data, _max_price, _stock_tags).has(item_id):
+		else:
+			label += manual_note(p, data, item_id)
+		if not _selling and GameState.festival_stock(_stock_tags).has(item_id) and not Items.shop_stock(data, _max_price, _stock_tags).has(item_id):
 			label += " (festival)"
 		var b := UIStyle.button(label, _select.bind(item_id))
 		b.name = item_id
+		if not _selling and is_first_combat_manual(p, data, item_id):
+			b.add_theme_color_override("font_color", UIStyle.ACCENT)
 		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		b.clip_text = true
 		b.toggle_mode = true

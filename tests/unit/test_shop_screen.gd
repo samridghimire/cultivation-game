@@ -255,3 +255,16 @@ func test_shop_hint_follows_rebinds() -> void:
 	ic.apply()
 	screen.queue_free()
 	gs.end_session()
+
+
+func test_manual_note_and_compare_text() -> void:
+	var c := new_character()
+	var d := data()
+	assert_eq(ShopScreen.manual_note(c, d, "manual_iron_fist"), " (fighting style)")
+	assert_eq(ShopScreen.manual_note(c, d, "qi_gathering_pill"), "")
+	assert_true(ShopScreen.is_first_combat_manual(c, d, "manual_iron_fist"))
+	assert_eq(ShopScreen.compare_text(c, d, "manual_iron_fist"), "Teaches Iron Fist, a fighting style you do not know yet.")
+	c.techniques["iron_fist"] = {"level": 1, "xp": 0.0}
+	assert_eq(ShopScreen.manual_note(c, d, "manual_iron_fist"), " (known)")
+	assert_false(ShopScreen.is_first_combat_manual(c, d, "manual_iron_fist"))
+	assert_eq(ShopScreen.compare_text(c, d, "manual_iron_fist"), "Teaches Iron Fist. You already know it.")
