@@ -74,12 +74,17 @@ func test_play_logs_breakthrough_attempts() -> void:
 	var r: Dictionary = preload("res://tests/sim/first_hour.gd").play(gs, clock, 2, 36, true)
 	assert_true(r.has("breaks") and r.has("bottleneck_day"))
 	var seen := false
+	var qr: int = gs.data.realm_index_of("qi_refining")
+	var foundation_attempts := 0
 	for a: Dictionary in r["breaks"]:
 		for key in ["day", "from_realm", "chance", "pill", "stones", "success", "injury"]:
 			assert_true(a.has(key), "attempt logged without %s" % key)
 		assert_true(float(a["chance"]) > 0.0 and float(a["chance"]) < 1.0)
-		if a["success"]:
+		if int(a["from_realm"]) == qr:
+			foundation_attempts += 1
+		if a["success"] and int(a["from_realm"]) == qr:
 			seen = true
 			assert_true(r["bottleneck_day"].has(a["from_realm"]), "success without a bottleneck day")
+	assert_gt(foundation_attempts, 0, "seed 2 attempts Foundation Establishment inside 36 months")
 	assert_true(seen, "seed 2 reaches Foundation inside 36 months (first Foundation breakthrough logged)")
 	gs.end_session()
