@@ -249,6 +249,9 @@ func _rebuild() -> void:
 		t += "  Nothing of note yet.\n"
 	for line in record:
 		t += "  %s\n" % line
+	var strongest := strongest_foe_line(data, GameState.world_flags)
+	if strongest != "":
+		t += "  %s\n" % strongest
 	var people_lines := people_lines(p, data, GameState.npcs, GameState.npc_favor, 6, GameState.world_flags, GameClock.total_days)
 	if not people_lines.is_empty():
 		t += "\n[color=#%s]People you know[/color]\n" % accent
@@ -266,6 +269,14 @@ func _rebuild() -> void:
 			t += "  [color=#888888]%s%s[/color]\n" % [def["name"], "" if count == "" else " (%s)" % count]
 	t += "\n[color=#888888]Press [I] for your inventory and [K] for techniques.[/color]"
 	_text.text = t
+
+
+## WU-159: "Strongest foe beaten: <realm>" from the highest beat_realm flag set, "" when none.
+static func strongest_foe_line(data: GameData, flags: Dictionary) -> String:
+	for i in range(data.realms.size() - 1, -1, -1):
+		if flags.get(Guidance.beat_realm_flag(data.realms[i].id), false):
+			return "Strongest foe beaten: %s" % data.realms[i].name
+	return ""
 
 
 ## "Han Li, Qi Refining (far ahead of you), grudge 3" for the player's named rival,

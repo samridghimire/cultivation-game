@@ -96,3 +96,14 @@ func test_adventures_section() -> void:
 	var text := sheet._text.get_parsed_text()
 	assert_true(text.contains("Adventures") and text.contains("%s: 1/" % gs.data.inheritances[id]["name"]), text)
 	sheet.free()
+
+
+func test_strongest_foe_line() -> void:
+	var gs := _game_state()
+	assert_eq(CharacterSheet.strongest_foe_line(gs.data, {}), "")
+	var low: RealmDef = gs.data.realms[0]
+	var high: RealmDef = gs.data.realms[1]
+	var flags := {Guidance.beat_realm_flag(low.id): true}
+	assert_eq(CharacterSheet.strongest_foe_line(gs.data, flags), "Strongest foe beaten: %s" % low.name)
+	flags[Guidance.beat_realm_flag(high.id)] = true
+	assert_eq(CharacterSheet.strongest_foe_line(gs.data, flags), "Strongest foe beaten: %s" % high.name)
