@@ -3,7 +3,9 @@ extends SceneTree
 ## for many months and prints, per 6-month block, distinct action kinds, new features first
 ## used, stones and realm, then flags dull blocks.
 ## QA-076: `--wait-for-pill=N` makes the player wait up to N days at the Foundation bottleneck, earning, to afford the pill.
-## Usage: tools/godot.sh --headless --path . -s res://tests/sim/simulate_curious_years.gd -- [seeds] [months] [--wait-for-pill=N]
+## QA-096: `--trace=<seed>` runs only that seed and prints one line per month (realm, qi, breakthrough chance, stones, lives, injuries,
+## log lines) plus the HUD hints and goals at the end; the default output is unchanged.
+## Usage: tools/godot.sh --headless --path . -s res://tests/sim/simulate_curious_years.gd -- [seeds] [months] [--wait-for-pill=N] [--trace=<seed>]
 
 const FirstHour := preload("res://tests/sim/first_hour.gd")
 const BLOCK := 6
@@ -79,6 +81,7 @@ func _record_death(cause: String, final: bool) -> void:
 
 var _seed := 0
 var _wait_for_pill := 0
+var _trace_seed := 0
 
 
 func _median(values: Array) -> float:
@@ -93,8 +96,13 @@ func _run() -> void:
 	for a: String in OS.get_cmdline_user_args():
 		if a.begins_with("--wait-for-pill="):
 			_wait_for_pill = int(a.get_slice("=", 1))
+		elif a.begins_with("--trace="):
+			_trace_seed = int(a.get_slice("=", 1))
 		else:
 			args.append(a)
+	if _trace_seed > 0:
+		_trace(args)
+		return
 	var seeds := int(args[0]) if args.size() > 0 else 10
 	var months := int(args[1]) if args.size() > 1 else 36
 	var gs: Node = root.get_node("GameState")
@@ -252,3 +260,31 @@ func _print_lives(runs: Array[Dictionary]) -> void:
 	print("Artifact lives (QA-091): seed, recharges bought, lives at the end")
 	for i in runs.size():
 		print("  seed %2d bought %d lives at end %s" % [i + 1, int(runs[i].get("recharges", 0)), str(runs[i].get("lives", "?"))])
+
+
+## QA-096: one seed, one line per month; ends with what the HUD would tell the player.
+func _trace(args: Array[String]) -> void:
+	var months := int(args[1]) if args.size() > 1 else 36
+	var gs: Node = root.get_node("GameState")
+	var clock: Node = root.get_node("GameClock")
+	var bus: Node = root.get_node("EventBus")
+	print("Trace seed %d, %d months: month realm qi/needed chance stones lives injuries region | log" % [_trace_seed, months])
+	var hook := func(month: int) -> void:
+		var c: CharacterData = gs.player
+		var lines: Array[String] = []
+		for i in range(maxi(0, bus.history.size() - 4), bus.history.size()):
+			lines.append(String(bus.history[i]["text"]).left(60))
+		print("  m%-3d %-28s %6.0f/%-6.0f %3.0f%% stones=%-4d lives=%d inj=%d %s | %s" % [month + 1, Cultivation.realm_label(c, gs.data), c.qi, Cultivation.qi_required(c, gs.data), 100.0 * Cultivation.breakthrough_chance(c, gs.data), c.item_count("spirit_stone"), c.artifact_lives, c.injuries.size(), gs.current_region, " / ".join(lines)])
+	var r: Dictionary = FirstHour.play(gs, clock, _trace_seed, months, true, hook, false, _wait_for_pill)
+	print("Breakthrough attempts: ", r["breaks"].size())
+	for a: Dictionary in r["breaks"]:
+		print("  d%d realm %d %.0f%% pill=%s stones=%d success=%s injury=%s" % [a["day"], a["from_realm"], 100.0 * float(a["chance"]), str(a["pill"]), a["stones"], str(a["success"]), str(a["injury"])])
+	var c: CharacterData = gs.player
+	print("Hints now:")
+	for h: String in Guidance.hints(c, gs.data, 1.0, 8, {}, gs.world_flags, gs.current_region, clock.total_days):
+		print("  - ", h)
+	print("Goals now:")
+	for g: String in Guidance.goals(c, gs.data, gs.world_flags):
+		print("  - ", g)
+	gs.end_session()
+	quit(0)
