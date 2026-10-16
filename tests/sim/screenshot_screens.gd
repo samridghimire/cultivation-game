@@ -22,6 +22,9 @@ extends SceneTree
 ## WU-177: append `-- --death-shot` for the final-death screen of a veteran with a clan, children, a met
 ## rival with a bout record and a long life record (the epilogue at its longest).
 
+## WU-182: append `-- --year-shot` for the year-in-review banner with four long lines (realm change,
+## tribulation, inheritance, rival bouts).
+
 const OUT_DIR := "user://screenshots/screens"
 const SETTLE_FRAMES := 6
 
@@ -48,6 +51,9 @@ func _start() -> void:
 		return
 	if OS.get_cmdline_user_args().has("--death-shot"):
 		_start_death_shot(gs)
+		return
+	if OS.get_cmdline_user_args().has("--year-shot"):
+		_start_year_shot(gs)
 		return
 	if OS.get_cmdline_user_args().has("--late-realms"):
 		_start_late_realms(gs)
@@ -270,6 +276,26 @@ func _start_late_realms(gs: Node) -> void:
 
 
 ## WU-177: the final-death screen with every epilogue line present.
+func _start_year_shot(gs: Node) -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 5
+	var c := CharacterFactory.create("Lin Feng", gs.data, rng, "male")
+	gs.start_session(c)
+	gs.pending_event = ""
+	world = load("res://src/world/world.tscn").instantiate()
+	root.add_child(world)
+	hud = world.get_node("HUD")
+	var banner: Control = hud.get("_banner")
+	var lines := LifeStats.year_summary({}, {"tribulations_survived": 1, "inheritances_claimed": 1, "rival_bouts_won": 2,
+			"rival_bouts_lost": 1}, "Foundation Establishment Peak", "Core Formation Early")
+	shots.append({"name": "year_banner", "open": func() -> void:
+		banner.set_held(false)
+		banner._queue.clear()
+		banner.finish_current()
+		banner.announce("%s of your journey" % LifeStats.review_title(10, 14), "\n".join(lines), Color(0.9, 0.78, 0.4), 60.0),
+		"close": func() -> void: pass})
+
+
 func _start_death_shot(gs: Node) -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 5
