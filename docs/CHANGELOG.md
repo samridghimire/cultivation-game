@@ -2,6 +2,22 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-16 [C-112] Your rival can meet you at Nascent Soul in three encounters, one per mood, each with a duel or a peaceful way out.
+- 2026-10-16 [WU-177] Checked: the final-death screen with a clan, children and the rival line fits at 1280x800 and 1280x720.
+- 2026-10-16 [INH-002] A failed inheritance trial says how far off you are ("needs 11, you have 9").
+- 2026-10-16 [WU-172] Checked: the character sheet's rival line (region, mood, record) fits at later realms.
+- 2026-10-16 [QA-088] Tested: the bitter, friendly and proud rival encounters can all happen where they should.
+- 2026-10-16 [C-111] The Reed Hermit's inheritance asks for Spirit 10 instead of 11, so it can be claimed.
+- 2026-10-16 [WU-174] The character sheet says which region your rival is in.
+- 2026-10-16 [EPI-002] The epilogue remembers your rival: their realm, whether they fell, and your bout record.
+- 2026-10-16 [WU-176] A place's name no longer shows twice when you stand at it (the interact prompt names it).
+- 2026-10-16 [WU-175] Checked: the first hour's screens again after this week's HUD changes.
+- 2026-10-16 [WU-173] Challenging your rival or sparring shows your odds before you choose.
+- 2026-10-16 [C-110] New milestones: Crossed Hands (win a bout against your rival) and A Worthy Rival (win ten).
+- 2026-10-16 [YEAR-004] The year in review counts your bouts with your rival.
+- 2026-10-16 [NS-007] Nascent Soul has its own goal ladder in the journal and on the HUD.
+- 2026-10-16 [WU-171] Tested: the newest menus open with focus and every option is reachable with a gamepad.
+- 2026-10-16 [RIVAL-017] A new rival starts with a clean bout record (fixed by the reviewer).
 - 2026-10-16 [C-107] Help explains rival bouts, the bout record and successor rivals.
 - 2026-10-16 [EFF-004] A choice that trains a profession you have not taken up is refused with a reason.
 - 2026-10-15 [WU-170] Checked: the late-realm character sheet's life record and strongest-foe lines fit at 1280x800 and 1280x720.

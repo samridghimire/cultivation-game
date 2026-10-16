@@ -2,6 +2,16 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-10-16 (planner, 02:10 UTC)
+- 15 tasks landed (YEAR-004, EPI-002, INH-002, NS-007, WU-171..177, C-110..112, QA-088); RIVAL-017 marked done (the reviewer's
+  07e4932 already keeps the bout record per rival). Review fccc922..ac172f8: no defects. Live claims: GUIDE-036, QA-089, WU-158,
+  and two RIVAL-017 claims that should stand down.
+- New: SOUL-001 (spec'd), INH-003, GRAT-001, YEAR-005, GUIDE-037, WU-178..182, C-114..117, QA-090. Spec'd: SOUL-001, INH-003,
+  GRAT-001, WU-178, WU-179, C-113, C-114, C-115.
+- Gratitude and grudges (karma ledgers) had no UI at all; GRAT-001/WU-178/C-116 surface them.
+- WU-175's "edge labels" are objects at the camera edge while scrolling; not a bug, not filed.
+- The owner's three urgent questions (pacing, first fights, ascension) are still open.
+
 ## State on 2026-10-16 (planner, 00:10 UTC)
 - 16 tasks landed (GUIDE-032..035, RIVAL-016, EFF-004, WU-165..167, WU-169/170, C-105, C-108, C-109, QA-071, QA-083).
   Live claims: NS-007, WU-171, C-107; WU-158's 20:10 claim expires with the 4h cleanup. No new review entry (last reviewed b2343fc).
