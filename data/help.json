@@ -402,6 +402,7 @@
       "body": [
         "Alchemists refine pills, Blacksmiths forge weapons and armor, Talisman Masters inscribe talismans and Doctors heal injuries. Learn recipes from scrolls and manuals, gather herbs and ores, then craft at a workshop.",
         "Crafting raises your profession rank, and higher ranks unlock stronger recipes and better results.",
+        "A Doctor can also work odd jobs at the workshop (Work as Doctor, one month) for stones and rank. The crafting professions earn by crafting and selling instead.",
         "Combat talismans work only when readied: pick up to three kinds in your inventory, and one of each burns in every fight while you carry it."
       ]
     },
@@ -413,7 +414,8 @@
         "Visit a workshop to craft once you have the profession and the recipe. The crafting screen shows each recipe and what you are missing.",
         "Ingredients come from three places: a merchant's shelves, gather spots in the wild, and rare finds while exploring. Higher herbs need a higher realm to gather.",
         "Learn new recipes from scrolls and teachers, and rank up your profession to unlock more.",
-        "Each month buyers may post commissions for things you can craft. Deliver them at a workshop before the deadline for spirit stones and profession xp; open orders are listed in the journal (J)."
+        "Each month buyers may post commissions for things you can craft. Deliver them at a workshop before the deadline for spirit stones and profession xp; open orders are listed in the journal (J).",
+        "Herbs you gather yourself make a craft pay; the same herbs bought from a shop leave little or no profit. A gather spot lists which of your recipes its herbs feed (\"Used in\"), and the inventory shows the same on an ingredient. Finished commissions and treated patients also spread your name, which counts toward renown."
       ]
     },
     {
