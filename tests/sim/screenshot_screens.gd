@@ -722,6 +722,27 @@ func _start_year_shot(gs: Node) -> void:
 		banner.finish_current()
 		banner.announce("%s of your journey" % LifeStats.review_title(3, 21), "\n".join(newest), Color(0.9, 0.78, 0.4), 60.0),
 		"close": func() -> void: pass})
+	# WU-213: YEAR-010's rival line appended last (as GameState._on_year_changed does) to the longest real lines.
+	var rival := CharacterData.new()
+	rival.id = "shot_rival"
+	rival.name = "Murong Xuanming of the Iron Hall"
+	rival.home_region = gs.current_region
+	rival.realm_index = c.realm_index + 3
+	rival.alive = true
+	gs.npcs[rival.id] = rival
+	c.rival = rival.id
+	var flags := {Rivals.FIRST_MEETING_FLAG: true, Rivals.BOUTS_WON_FLAG: 12, Rivals.BOUTS_LOST_FLAG: 17}
+	var with_rival := LifeStats.year_summary({}, {"tribulations_survived": 1, "respawns": 1, "rival_bouts_won": 2,
+			"rival_bouts_lost": 1, "inheritances_lost": 2, "renown_titles": 3, "items_crafted": 5, "stones_earned": 120},
+			"Foundation Establishment Peak", "Core Formation Early")
+	with_rival.append(Rivals.year_line(c, rival, flags))
+	print("year lines with rival: ", with_rival)
+	shots.append({"name": "year_banner_rival", "open": func() -> void:
+		banner.set_held(false)
+		banner._queue.clear()
+		banner.finish_current()
+		banner.announce("%s of your journey" % LifeStats.review_title(10, 14), "\n".join(with_rival), Color(0.9, 0.78, 0.4), 60.0),
+		"close": func() -> void: pass})
 
 
 ## WU-187: the respawn screen with the longest lesson (98% odds) and the longest enemy name.
