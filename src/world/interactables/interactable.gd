@@ -134,6 +134,13 @@ static func spread_labels(nodes: Array) -> void:
 		placed.append(rect)
 
 
+## The interact prompt already names the current target, so its own label is not drawn
+## (it sat under the player sprite and the prompt, WU-176). The HUD shows the prompt
+## whenever a target exists, so `highlighted` stands for both arguments.
+static func label_visible(is_target: bool, prompt_shown: bool) -> bool:
+	return not (is_target and prompt_shown)
+
+
 ## Shifts labels sideways so none sticks out past `bounds` (WU-160).
 static func clamp_labels(nodes: Array, bounds: Rect2, margin: float = 6.0) -> void:
 	for node: Interactable in nodes:
@@ -160,10 +167,11 @@ func _draw() -> void:
 	if highlighted:
 		var glow := 0.5 + 0.5 * sin(_pulse_time * 5.0)
 		draw_rect(Rect2(-size / 2.0, size).grow(6.0 + 2.0 * glow), Color(1.0, 0.9, 0.5, 0.45 + 0.4 * glow), false, 2.0)
-	var font := ThemeDB.fallback_font
-	var text := label_text()
-	var text_width := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, LABEL_FONT_SIZE).x
-	draw_string(font, Vector2(-text_width / 2.0, -size.y / 2.0 - 8.0) + label_offset, text, HORIZONTAL_ALIGNMENT_LEFT, -1, LABEL_FONT_SIZE, label_color())
+	if label_visible(highlighted, highlighted):
+		var font := ThemeDB.fallback_font
+		var text := label_text()
+		var text_width := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, LABEL_FONT_SIZE).x
+		draw_string(font, Vector2(-text_width / 2.0, -size.y / 2.0 - 8.0) + label_offset, text, HORIZONTAL_ALIGNMENT_LEFT, -1, LABEL_FONT_SIZE, label_color())
 	if anchor_id != "":
 		_draw_anchor_marker()
 

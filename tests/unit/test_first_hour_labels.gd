@@ -117,3 +117,13 @@ func test_first_hour_region_labels_lie_inside_the_map() -> void:
 		Interactable.clamp_labels(nodes, bounds)
 		for n: Interactable in nodes:
 			assert_true(bounds.encloses(n.label_rect()), "%s: %s inside" % [region_id, n.display_name])
+
+
+func test_target_label_hidden_while_prompt_names_it() -> void:
+	assert_false(Interactable.label_visible(true, true))
+	assert_true(Interactable.label_visible(true, false))
+	assert_true(Interactable.label_visible(false, true))
+	assert_true(Interactable.label_visible(false, false))
+	var n := _npc("Lin", Vector2.ZERO)
+	n.highlighted = true
+	assert_false(Interactable.label_visible(n.highlighted, n.highlighted))
