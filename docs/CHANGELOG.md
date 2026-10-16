@@ -2,6 +2,20 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-16 [GUIDE-036] A "Save for" goal names a source (a recipe or an auction) for a breakthrough pill no shop sells.
+- 2026-10-16 [VOID-001] Void Refinement goal ladder in the journal and HUD.
+- 2026-10-16 [RENOWN-005] Renown from an encounter choice posts "Word of it spreads through X (renown +N)".
+- 2026-10-16 [GRAT-002] The journal's grudge line names the amends cost and where to make them.
+- 2026-10-16 [YEAR-007] The year in review says in how many places your name became known.
+- 2026-10-16 [WU-158] Newest windows checked at 1280x720; the notice banner moved to the top fifth so it no longer covers window titles.
+- 2026-10-16 [WU-187] Shots of the respawn screen (98% odds, long foe name) and a four-line year review; both fit at 1280x800 and 1280x720.
+- 2026-10-16 [WU-189] The mission board warns when a risky lethal fight meets a nearly empty Creation Artifact.
+- 2026-10-16 [WU-184] Soul Formation shot: HUD and journal goal ladder fit at 1280x720 and 800.
+- 2026-10-16 [WU-186] Focus audit: journal debts/inheritance/Soul Formation lines, sheet People list, inheritance grounds menu.
+- 2026-10-16 [C-102] Renowned requests retuned to about a week of the best ordinary income (1.5-2.2x a sect mission).
+- 2026-10-16 [C-120] Renown on four honourable encounter choices.
+- 2026-10-16 [C-121] One help page, "Debts and Grudges", replaces two overlapping ones.
+- 2026-10-16 [QA-091] Curious-years sim prints a per-foe table, fight origins and artifact lives; deaths are volume, not rating mismatches.
 - 2026-10-16 [YEAR-006] The year in review says when the Creation Artifact pulled you back from death.
 - 2026-10-16 [C-117] Three Nascent Soul encounters where you can give up a fruit or spirit stones for a Dao insight, practice or renown.
 - 2026-10-16 [SOUL-002] The Soul Formation goal asks you to claim a Soul Formation inheritance, instead of a goal already done on arrival.
