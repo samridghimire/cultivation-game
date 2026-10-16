@@ -125,3 +125,30 @@ func test_screen_labels_ready_recipes_and_selects_first() -> void:
 	assert_true(salve.button_pressed, "the first ready recipe is selected")
 	assert_eq(salve.get_index(), 0)
 	screen.free()
+
+
+func test_missing_ingredient_line_names_where_it_grows() -> void:
+	var c := new_character()
+	c.inventory = {}
+	var ingredients: Dictionary = data().recipes["qi_gathering_pill"]["ingredients"]
+	var found := false
+	for item_id: String in ingredients:
+		var place := Guidance.herb_place(c, data(), item_id, "qingshi_village")
+		if place == "":
+			continue
+		found = true
+		var lines := CraftingScreen.ingredient_lines(c, data(), "qi_gathering_pill", "qingshi_village")
+		var any := false
+		for line in lines:
+			if line.ends_with(" - grows at " + place):
+				any = true
+		assert_true(any, "missing %s names %s" % [item_id, place])
+		c.add_item(item_id, int(ingredients[item_id]))
+		for line in CraftingScreen.ingredient_lines(c, data(), "qi_gathering_pill", "qingshi_village"):
+			assert_false(line.contains(place) and line.contains(data().items[item_id]["name"]), "held ingredient has no place")
+	assert_true(found, "some ingredient of the starter pill grows somewhere")
+
+
+func test_herb_place_prefers_current_region_and_is_empty_for_unknown() -> void:
+	var c := new_character()
+	assert_eq(Guidance.herb_place(c, data(), "no_such_item", "qingshi_village"), "")

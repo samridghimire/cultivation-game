@@ -279,6 +279,21 @@ static func _gatherable_items(c: CharacterData, data: GameData, region_id: Strin
 	return out
 
 
+## Where `item_id` can be gathered (WU-206): the display name of the first gather
+## place offering it, the current region first, then the rest in data order.
+## "" if no gather place yields it for `c`.
+static func herb_place(c: CharacterData, data: GameData, item_id: String, region_id: String) -> String:
+	var order: Array = []
+	if region_id != "":
+		order.append(region_id)
+	order.append_array(data.regions.keys())
+	for rid: String in order:
+		var here := _gatherable_items(c, data, rid)
+		if here.has(item_id):
+			return String(here[item_id])
+	return ""
+
+
 ## "<Workshop> in <Region>": the current region's first workshop, else the first
 ## region (data order) with one; "" if none (GUIDE-017).
 static func workshop_place(data: GameData, region_id: String) -> String:
