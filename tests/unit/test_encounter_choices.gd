@@ -586,3 +586,26 @@ func test_no_selfish_choice_carries_renown() -> void:
 		for choice: Dictionary in d.encounters[enc_id].get("choices", []):
 			if int(choice.get("effects", {}).get("alignment", 0)) < 0:
 				assert_false(choice.has("renown"), "%s '%s' is selfish and has no renown" % [enc_id, choice["label"]])
+
+
+func test_profession_answers_at_nascent_soul() -> void:
+	var d := GameData.load_from_dir()
+	var answers := {
+		"ruins_sealed_demon_soul": "array_master",
+		"wild_two_sects_clash": "talisman_master",
+		"city_old_friends_grave": "blacksmith"}
+	for enc_id: String in answers:
+		var prof: String = answers[enc_id]
+		assert_eq(d.encounters[enc_id]["min_realm"], "nascent_soul", enc_id)
+		var found := false
+		for choice: Dictionary in d.encounters[enc_id]["choices"]:
+			if not choice.get("requires", {}).get("min_profession", {}).has(prof):
+				continue
+			found = true
+			assert_true(choice["effects"]["profession_xp"][prof] >= 60, "%s gives profession xp" % enc_id)
+			var c := new_character()
+			c.professions[prof] = {"rank": 3, "xp": 0.0}
+			assert_true(Exploration.check_choice(c, d, choice, {}).begins_with("You need to be "), "%s blocked at rank 3" % enc_id)
+			c.professions[prof] = {"rank": 4, "xp": 0.0}
+			assert_eq(Exploration.check_choice(c, d, choice, {}), "", "%s allowed at rank 4" % enc_id)
+		assert_true(found, "%s has a rank 4 %s choice" % [enc_id, prof])
