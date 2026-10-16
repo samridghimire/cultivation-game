@@ -776,24 +776,34 @@ Rows off by more than 15 points: 0
 ## rival story (seeds 1-10, 36 months)
 
 Rival story, default policy, 10 seeds, 36 months (cells: player/rival realm+stage; "-" = no rival or dead)
+           bouts won 0, lost 0, first win month -
   seed  1  met day 15  surpassed day never  news 2  rival encounters 4  qi1/qi2 qi3/qi5 qi4/qi7 qi6/qi8 qi6/qi8 qi7/fo0
            attitude  p p p p p p
+           bouts won 0, lost 0, first win month -
   seed  2  met day 15  surpassed day never  news 2  rival encounters 5  qi3/qi3 qi6/qi6 qi7/qi7 qi8/qi8 fo0/fo1 fo1/fo2
            attitude  p p p p p p
+           bouts won 0, lost 0, first win month -
   seed  3  met day 15  surpassed day never  news 2  rival encounters 5  qi2/qi2 qi4/qi5 qi5/qi6 qi6/qi8 qi7/fo0 qi8/fo1
            attitude  p p p p p p
+           bouts won 0, lost 0, first win month -
   seed  4  met day 15  surpassed day never  news 2  rival encounters 8  qi2/qi2 qi3/qi6 qi4/qi8 qi5/fo1 qi6/fo2 qi7/fo3
            attitude  p p p p p p
+           bouts won 0, lost 0, first win month -
   seed  5  met day 15  surpassed day 460  news 2  rival encounters 3  qi6/qi2 qi8/qi5 fo0/qi7 fo1/fo0 fo3/fo1 fo3/fo2
            attitude  p p p p p p
+           bouts won 0, lost 0, first win month -
   seed  6  met day 15  surpassed day never  news 2  rival encounters 6  qi2/qi3 qi3/qi6 qi5/qi7 qi6/fo0 qi6/fo1 qi7/fo2
            attitude  p p p p p p
+           bouts won 0, lost 0, first win month -
   seed  7  met day 15  surpassed day never  news 2  rival encounters 5  qi2/qi3 qi4/qi6 qi6/qi8 qi7/qi8 qi8/fo0 qi8/fo1
            attitude  p p p p p p
+           bouts won 0, lost 0, first win month -
   seed  8  met day 15  surpassed day 617  news 2  rival encounters 2  qi4/qi3 qi6/qi6 qi8/qi8 fo0/fo0 fo1/fo1 fo2/fo2
            attitude  p p p p p p
+           bouts won 0, lost 0, first win month -
   seed  9  met day 15  surpassed day never  news 2  rival encounters 8  qi1/qi3 qi3/qi6 qi4/qi8 qi5/fo1 qi6/fo2 qi7/fo3
            attitude  p p p p p p
+           bouts won 0, lost 0, first win month -
   seed 10  met day 15  surpassed day never  news 2  rival encounters 5  qi2/qi3 qi5/qi5 qi6/qi7 qi8/qi8 qi8/fo0 fo0/fo1
            attitude  p p p p p p
   summary: met 10/10 (median day 15), surpassed 2/10 (median day 617, under a year 0), news lines 20, rival encounters 51
@@ -801,35 +811,47 @@ Rival story, default policy, 10 seeds, 36 months (cells: player/rival realm+stag
   rival_shares_insight: met 0 (never)
   rival_spoils_gathering: met 0 (never)
   rival_public_challenge: met 25 (proud 25)
+  bouts with the rival: won 0, lost 0; first win in 0/10 seeds (median month -)
   bitter explore days in spoils regions per seed: median 0, max 0; before the encounter was met: median 0 (under 5: the sim policy rarely meets the condition)
   FLAG: one attitude covers over 80% of checkpoints; C-093's encounters would barely show
 Rival story, curious policy, 10 seeds, 36 months (cells: player/rival realm+stage; "-" = no rival or dead)
-  seed  1  met day 28  surpassed day never  news 2  rival encounters 15  qi2/qi5 qi4/qi8 qi7/fo2 qi8/fo3 fo0/fo3 fo0/fo3
-           attitude  p p f f f b
-  seed  2  met day 41  surpassed day never  news 3  rival encounters 14  qi4/qi6 qi6/fo1 fo0/fo3 fo1/- fo2/fo2 fo2/fo3
-           attitude  p b b - p p
-  seed  3  met day 39  surpassed day never  news 3  rival encounters 13  qi2/qi4 qi4/qi7 qi7/qi8 fo0/fo1 fo0/fo2 fo1/fo1
-           attitude  p b b f f p
-  seed  4  met day 50  surpassed day never  news 2  rival encounters 24  qi2/qi6 qi4/qi8 qi5/fo1 qi6/fo3 qi7/fo3 qi8/fo3
+           bouts won 0, lost 0, first win month -
+  seed  1  met day 28  surpassed day never  news 2  rival encounters 16  qi2/qi4 qi3/qi7 qi6/qi8 qi7/fo1 qi8/fo2 fo0/fo3
            attitude  p p p p p p
-  seed  5  met day 37  surpassed day 891  news 3  rival encounters 9  qi6/qi5 qi8/qi8 fo0/fo0 fo2/fo2 fo3/fo3 fo3/co0
-           attitude  p p p p b p
-  seed  6  met day 44  surpassed day never  news 2  rival encounters 18  qi2/qi6 qi4/qi8 qi6/fo1 qi8/fo3 fo0/fo3 fo0/fo3
-           attitude  p p p p p p
-  seed  7  met day 41  surpassed day never  news 3  rival encounters 20  qi3/qi6 qi5/fo0 qi7/fo2 qi8/fo3 fo0/fo0 fo1/fo2
-           attitude  p p f f p p
-  seed  8  met day 41  surpassed day never  news 3  rival encounters 20  qi4/qi6 qi7/fo1 fo0/fo3 fo1/co0 fo2/co1 fo3/co2
-           attitude  p p p p p p
-  seed  9  met day 41  surpassed day never  news 3  rival encounters 21  qi2/qi6 qi4/qi8 qi6/fo0 qi7/fo2 qi8/fo3 fo0/co0
+           bouts won 0, lost 0, first win month -
+  seed  2  met day 39  surpassed day never  news 3  rival encounters 21  qi4/qi6 qi6/fo1 qi8/fo3 qi8/co0 fo0/co1 fo1/co2
+           attitude  p b p p p p
+           bouts won 0, lost 0, first win month -
+  seed  3  met day 38  surpassed day never  news 2  rival encounters 23  qi2/qi5 qi5/qi8 qi6/fo0 qi8/fo2 fo0/fo3 fo1/fo3
+           attitude  p b p p p p
+           bouts won 0, lost 0, first win month -
+  seed  4  met day 49  surpassed day never  news 2  rival encounters 23  qi2/qi5 qi4/fo0 qi6/fo2 qi7/fo3 qi8/fo3 qi8/fo3
            attitude  p p f f f f
-  seed 10  met day 44  surpassed day never  news 3  rival encounters 16  qi4/qi6 qi5/qi8 qi7/fo0 qi8/fo2 fo1/fo3 fo1/-
-           attitude  p p f f f -
-  summary: met 10/10 (median day 41), surpassed 1/10 (median day 891, under a year 0), news lines 27, rival encounters 170
-  attitude at checkpoints (58 with a living rival): proud 38 (66%), friendly 14 (24%), bitter 6 (10%)
-  rival_shares_insight: met 5 (friendly 5)
-  rival_spoils_gathering: met 4 (bitter 4)
-  rival_public_challenge: met 10 (proud 10)
-  bitter explore days in spoils regions per seed: median 12, max 42; before the encounter was met: median 3
+           bouts won 7, lost 0, first win month 12
+  seed  5  met day 36  surpassed day 697  news 2  rival encounters 15  qi6/qi5 fo0/qi8 fo2/qi8 fo3/fo1 fo3/fo2 fo3/fo3
+           attitude  p p f f f b
+           bouts won 0, lost 0, first win month -
+  seed  6  met day 43  surpassed day never  news 2  rival encounters 15  qi2/qi5 qi4/qi8 qi7/qi8 qi8/fo0 fo0/fo2 fo0/fo3
+           attitude  p p p f f f
+           bouts won 0, lost 0, first win month -
+  seed  7  met day 44  surpassed day never  news 3  rival encounters 18  qi3/qi6 qi6/qi8 qi7/fo1 fo0/fo3 fo1/co0 fo1/co1
+           attitude  b f f f f f
+           bouts won 0, lost 0, first win month -
+  seed  8  met day 40  surpassed day never  news 3  rival encounters 15  qi5/qi6 qi8/fo0 fo0/fo3 fo2/fo3 fo3/co0 fo3/co2
+           attitude  p b b b p p
+           bouts won 0, lost 0, first win month -
+  seed  9  met day 40  surpassed day never  news 3  rival encounters 16  qi2/qi6 qi4/fo0 qi5/fo2 qi6/fo3 qi8/- fo0/fo0
+           attitude  p p p p - p
+           bouts won 0, lost 0, first win month -
+  seed 10  met day 44  surpassed day never  news 3  rival encounters 16  qi3/qi6 qi6/qi8 qi8/fo0 qi8/fo2 fo0/fo3 fo1/-
+           attitude  b p p p p -
+  summary: met 10/10 (median day 40), surpassed 1/10 (median day 697, under a year 0), news lines 25, rival encounters 178
+  attitude at checkpoints (58 with a living rival): proud 35 (60%), friendly 15 (26%), bitter 8 (14%)
+  rival_shares_insight: met 6 (friendly 6)
+  rival_spoils_gathering: met 5 (bitter 5)
+  rival_public_challenge: met 13 (proud 13)
+  bouts with the rival: won 7, lost 0; first win in 1/10 seeds (median month 12)
+  bitter explore days in spoils regions per seed: median 16, max 53; before the encounter was met: median 8
 ERROR: 1 resources still in use at exit (run with --verbose for details).
 
 ## combat (200 fights per cell)

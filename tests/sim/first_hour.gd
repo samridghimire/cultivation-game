@@ -497,13 +497,20 @@ static func _everything_month(gs: Node, c: CharacterData, kinds: Dictionary, tod
 		if best_id != "" and cheapest != "":
 			gs.give_gift(best_id, cheapest)
 			kinds["gift"] = true
+	# QA-087: cross hands with the rival when GUIDE-033 lists the bout as a fair fight.
+	if c.alive and c.rival != "":
+		for f: Dictionary in Guidance.fair_fights(c, gs.data, gs.world_flags, today, gs.current_region, gs.npcs, gs.npc_favor):
+			if f["kind"] == "rival" and gs.check_spar(c.rival) == "":
+				gs.spar_with(c.rival)
+				kinds["spar"] = true
+				break
 	if c.alive and not no_help:
 		for npc_id: String in gs.npcs:
 			if gs.check_pointers(npc_id) == "":
 				gs.ask_pointers(npc_id)
 				kinds["pointer"] = true
 				break
-			if gs.check_spar(npc_id) == "":
+			if npc_id != c.rival and gs.check_spar(npc_id) == "":
 				gs.spar_with(npc_id)
 				kinds["spar"] = true
 				break

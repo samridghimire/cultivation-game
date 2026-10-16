@@ -8,6 +8,8 @@ extends SceneTree
 ## (checked monthly; the attitude is the one at the end of the month they were met).
 ## QA-090: also the explore days spent in regions the bitter spoiled-herbs encounter can fire in
 ## (its tags) while the rival is bitter, and how many were before it was first met.
+## QA-087: also the bouts won/lost against the rival (world flags rival_bouts_won/lost; the curious policy
+## challenges the rival when GUIDE-033 lists the bout) and the month of the first win.
 ## Usage: tools/godot.sh --headless --path . -s res://tests/sim/rival_story.gd -- [seeds] [months]
 
 const FirstHour := preload("res://tests/sim/first_hour.gd")
@@ -48,6 +50,9 @@ func _policy(seeds: int, months: int, curious: bool) -> void:
 	var c093_met := {}
 	for id: String in C093:
 		c093_met[id] = []
+	var bouts_won_total := 0
+	var bouts_lost_total := 0
+	var first_wins: Array = []
 	var bitter_days: Array = []
 	var bitter_before: Array = []
 	for s in range(1, seeds + 1):
@@ -73,11 +78,14 @@ func _policy(seeds: int, months: int, curious: bool) -> void:
 		var surpass := [-1]
 		var atts: Array[String] = []
 		var seen := {}
+		var first_win := [-1]
 		var hook := func(month: int) -> void:
 			if meet[0] < 0 and gs.world_flags.get(Rivals.FIRST_MEETING_FLAG, false):
 				meet[0] = clock.total_days
 			if surpass[0] < 0 and gs.world_flags.get(Rivals.SURPASSED_FLAG, false):
 				surpass[0] = clock.total_days
+			if first_win[0] < 0 and int(gs.world_flags.get(Rivals.BOUTS_WON_FLAG, 0)) > 0:
+				first_win[0] = month + 1
 			var rv0 := Rivals.rival_of(gs.player, gs.npcs)
 			var att0 := ""
 			if rv0 != null:
@@ -96,6 +104,13 @@ func _policy(seeds: int, months: int, curious: bool) -> void:
 		var r: Dictionary = FirstHour.play(gs, clock, s, months, curious, hook)
 		bus.message_posted.disconnect(on_msg)
 		FirstHour.explore_observer = Callable()
+		var won_n := int(gs.world_flags.get(Rivals.BOUTS_WON_FLAG, 0))
+		var lost_n := int(gs.world_flags.get(Rivals.BOUTS_LOST_FLAG, 0))
+		bouts_won_total += won_n
+		bouts_lost_total += lost_n
+		if first_win[0] >= 0:
+			first_wins.append(first_win[0])
+		print("           bouts won %d, lost %d, first win month %s" % [won_n, lost_n, str(first_win[0]) if first_win[0] >= 0 else "-"])
 		bitter_days.append(bit[0])
 		bitter_before.append(bit[1])
 		var c: CharacterData = r["player"]
@@ -132,6 +147,8 @@ func _policy(seeds: int, months: int, curious: bool) -> void:
 		for a: String in c093_met[id]:
 			tally[a] = int(tally.get(a, 0)) + 1
 		print("  %s: met %d (%s)" % [id, c093_met[id].size(), ", ".join(tally.keys().map(func(k: String) -> String: return "%s %d" % [k, tally[k]])) if not tally.is_empty() else "never"])
+	first_wins.sort()
+	print("  bouts with the rival: won %d, lost %d; first win in %d/%d seeds (median month %s)" % [bouts_won_total, bouts_lost_total, first_wins.size(), sampled, _med(first_wins)])
 	bitter_days.sort()
 	bitter_before.sort()
 	print("  bitter explore days in spoils regions per seed: median %s, max %s; before the encounter was met: median %s%s" % [_med(bitter_days), str(bitter_days.back()) if not bitter_days.is_empty() else "-", _med(bitter_before), " (under 5: the sim policy rarely meets the condition)" if int(_med(bitter_days)) < 5 else ""])
