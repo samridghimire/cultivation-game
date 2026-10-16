@@ -186,11 +186,40 @@ static func _explore(gs: Node) -> void:
 		explore_observer.call(region, days)
 
 
+## QA-092: a bitter rival spoils gathering in forest/marsh/mountain regions, so the curious player
+## walks to the nearest such region (direct route) for the month's exploring. Returns the region to
+## come back to ("" = no detour).
+static func _bitter_detour(gs: Node, c: CharacterData) -> String:
+	var rv := Rivals.rival_of(c, gs.npcs)
+	if rv == null or Rivals.attitude(c, rv, int(gs.npc_favor.get(rv.id, 0)), gs.data) != "bitter":
+		return ""
+	var spoils_tags: Array = gs.data.encounters["rival_spoils_gathering"]["tags"]
+	var tagged := func(region_id: String) -> bool:
+		for t: String in gs.data.regions.get(region_id, {}).get("encounter_tags", []):
+			if t in spoils_tags:
+				return true
+		return false
+	if tagged.call(gs.current_region):
+		return ""
+	var home: String = gs.current_region
+	var best := ""
+	var best_days := 1 << 30
+	for r: Dictionary in Exploration.routes(c, gs.data, home):
+		if r["ok"] and tagged.call(r["to"]) and int(r["days"]) < best_days:
+			best = String(r["to"])
+			best_days = int(r["days"])
+	if best == "":
+		return ""
+	gs.travel(best)
+	return home if gs.current_region == best else ""
+
+
 ## The extra things a curious player does in one month: explore weekly, one
 ## harmless deed, one sect mission, one chat (once), deliver orders. Returns the
 ## set of action kinds done.
 static func _curious_month(gs: Node, c: CharacterData, done: Dictionary, today: int) -> Dictionary:
 	var kinds := {}
+	var detour_home := _bitter_detour(gs, c)
 	for week in 3:
 		if not c.alive:
 			return kinds
@@ -202,6 +231,8 @@ static func _curious_month(gs: Node, c: CharacterData, done: Dictionary, today: 
 			gs.choose_encounter(0)
 		if gs.pending_threat != "":
 			gs.face_threat(false)
+	if detour_home != "" and c.alive:
+		gs.travel(detour_home)
 	if not c.alive:
 		return kinds
 	_buy_breakthrough_pill(gs, c, done)
