@@ -427,8 +427,6 @@ func _select(mission_id: String) -> void:
 	_show_details()
 
 
-## "You lost this fight 12 days ago." once a lost mission fight is offered again
-## (Sects.last_loss_days_ago), "" when it was never lost or more than LOSS_MEMORY_DAYS ago.
 ## WU-189: a lethal Risky/Dangerous/Deadly fight while the Creation Artifact is nearly
 ## empty warns that losing could end the run; "" otherwise.
 static func low_artifact_warning(c: CharacterData, data: GameData, mission_id: String) -> String:
@@ -443,6 +441,8 @@ static func low_artifact_warning(c: CharacterData, data: GameData, mission_id: S
 	return "Your Creation Artifact %s. Losing this fight could be the end." % holds
 
 
+## "You lost this fight 12 days ago." once a lost mission fight is offered again
+## (Sects.last_loss_days_ago), "" when it was never lost or more than LOSS_MEMORY_DAYS ago.
 static func loss_text(c: CharacterData, mission_id: String) -> String:
 	var days := Sects.last_loss_days_ago(c, mission_id)
 	if days < 0 or days > LOSS_MEMORY_DAYS:

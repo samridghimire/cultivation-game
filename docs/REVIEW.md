@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 26efd67
+Last reviewed commit: 9206be9
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -586,3 +586,15 @@ Last reviewed commit: 26efd67
     fade, amends) match karma.gd. QA-084/QA-092/WU-182 are sim/screenshot only.
   - Notes, not filed: WU-185 bands on the raw chance, so 89.6% reads "about 90% odds" with the middle-band lesson.
     A fight_rival choice with renown would grant it whatever the bout's outcome (no content does this).
+- 2026-10-16 (reviewer): reviewed 26efd67..9206be9 (WU-183, C-103, SOUL-002, C-117, YEAR-006, WU-184, GRAT-002, QA-091,
+  C-102, WU-186, C-120, WU-189, WU-158, VOID-001, RENOWN-005; [PLAN] commits skipped). Main green. No BACKLOG/CHANGELOG
+  edits by workers; no SAVE_VERSION change. Nothing filed.
+  - Fixed ([REVIEW] commit): WU-189 put low_artifact_warning between loss_text and its doc comment, so the old comment
+    described the wrong function; loss_text has its comment back. C-117's sunken bell monk "eyed the soul infant fruit
+    at your belt" even when you carry none (the give choice is correctly refused then); he now asks if you carry one.
+  - Checked: SOUL-002's goal uses inheritances whose first stage needs soul_formation (three exist), so it can't be done
+    on arrival. VOID-001's inheritance row is hidden (no void_refinement inheritance) and its body row too (6 body
+    stages); Void Refinement foes exist for the beat-a-foe goal. RENOWN-005 only speaks for encounter-choice renown and
+    defers to the tier line. C-120's corpse-refiner hunt is an enemy choice, so its renown waits on a won fight
+    (RENOWN-004). C-117 costs go through check_choice (tested). GRAT-002 uses Karma.amends_cost and the NPC's region.
+  - Notes, not filed: WU-158's banner now sits in the top 3-20% of the screen, over the HUD's top area while it shows.
