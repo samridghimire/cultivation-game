@@ -2,6 +2,19 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-16 [GUIDE-037] The sheet and the journal follow one rule for naming the region your rival is in.
+- 2026-10-16 [C-106] Three Core Formation encounters where you can give something up (a salve, stones, a lotus seed) for a lasting gain.
+- 2026-10-16 [YEAR-005] The year in review leads with a survived Heavenly Tribulation or a claimed inheritance.
+- 2026-10-16 [C-115] Your rival can meet you at Soul Formation in three encounters, one per mood, each with a duel or a peaceful way out.
+- 2026-10-16 [GRAT-001] The journal lists who owes you a debt (and may send gifts or join your fights) and who holds a grudge (and may ambush you).
+- 2026-10-16 [QA-090] Checked: the bitter rival's encounter is fine; the curious sim simply never explores there while the rival is bitter.
+- 2026-10-16 [INH-003] The journal says how long an inheritance waits, and warns when one is under a year from being lost.
+- 2026-10-16 [WU-179] The character sheet's rival line reads in words instead of favor and grudge numbers.
+- 2026-10-16 [WU-178] The character sheet's People list shows who owes you and who holds a grudge.
+- 2026-10-16 [C-114] A sixth body tempering stage, the Starfire Body, for Soul Formation.
+- 2026-10-16 [SOUL-001] Soul Formation has its own goal ladder in the journal and on the HUD.
+- 2026-10-16 [C-113] Help explains inheritance trials, their deadlines and what stops you.
+- 2026-10-16 [QA-089] Tested: the rival bout guidance tests always run a fair bout and can no longer skip.
 - 2026-10-16 [C-112] Your rival can meet you at Nascent Soul in three encounters, one per mood, each with a duel or a peaceful way out.
 - 2026-10-16 [WU-177] Checked: the final-death screen with a clan, children and the rival line fits at 1280x800 and 1280x720.
 - 2026-10-16 [INH-002] A failed inheritance trial says how far off you are ("needs 11, you have 9").

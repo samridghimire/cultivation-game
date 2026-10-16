@@ -90,11 +90,11 @@ Every great cultivation protagonist has something that sets them apart. Ours is 
 | Dao insights (encounters, practice, seclusion; technique + breakthrough bonuses) | ✅ (sheet + contemplation at meditation spots) | `data/dao.json`, `Dao` |
 | Heavenly Tribulations (Core Formation+, heart demon for demonic) | ✅ (prepare warning + wave screen) | `Tribulation`, `data/realms.json` |
 | Named rival (rolled at creation, met around day 10) | ✅ first meeting (RIVAL-003), journal line, world label, sheet, map mark, Look, first-year encounters (RIVAL-004, WU-138/139/141/143, C-086), word of their breakthroughs and surpassing them (RIVAL-005/006/007), a surpassed rival pushes back (RIVAL-008), Foundation encounters (C-087), attitude (friendly/bitter/proud) with encounters and sheet/Look (RIVAL-009/010, WU-151), word of their death (RIVAL-011) | `Rivals`, `data/karma.json` |
-| Grudges and gratitude (rob/kill/humiliate NPCs, kin vengeance, amends) | ✅ (NPC menu, sheet, NPC Look text, grateful NPCs repay debts and join fights, grudge holders ambush travellers) | `data/karma.json`, `Karma` |
+| Grudges and gratitude (rob/kill/humiliate NPCs, kin vengeance, amends) | ✅ (NPC menu, sheet People list, journal "Debts and grudges", NPC Look text, grateful NPCs repay debts and join fights, grudge holders ambush travellers) | `data/karma.json`, `Karma` |
 | Secret realms (periodic openings, realm caps, guarded floors, inheritances) | ✅ (six realms with entrances across the regions; journal Opportunities, sheet Adventures) | `data/secret_realms.json`, `SecretRealms` |
 | Inheritance grounds (one-claimant trials) | ✅ (inheritance ground places; journal Opportunities, sheet Adventures) | `data/inheritances.json`, `Inheritances` |
 | Cave abodes (seclusion, storage chest) and arrays | ✅ (abode places; arrays from the Array Master) | `data/regions.json`, `Abodes` |
-| Body tempering (Copper Skin … Vajra Body) | ✅ (meditation spots, abodes, sheet) | `data/body_tempering.json`, `BodyTempering` |
+| Body tempering (Copper Skin … Starfire Body) | ✅ (meditation spots, abodes, sheet) | `data/body_tempering.json`, `BodyTempering` |
 | Auctions (seasonal lots, sealed bids vs hidden NPC maximums) | ✅ (auction house in Fallen Star Market) | `data/auctions.json`, `Auctions` |
 | Creation Artifact inner world and spirit garden | ✅ (artifact screen) | `InnerWorld`, `SpiritGarden` |
 | World events (beast tides, tournaments, auctions, incursions) | ✅ passive effects + HUD/map/rumors; tournaments and incursion defence can be joined (LW-003) | `data/world_events.json`, `WorldEvents` |
@@ -102,7 +102,7 @@ Every great cultivation protagonist has something that sets them apart. Ours is 
 | NPC clans and NPC sect membership, family tree, Family Home | ✅ | `NpcClans`, `FamilyHome`, `src/ui/family_screen.gd` |
 | NPC sects as factions (strength, recruitment) | ✅ core (LW-002), sect hall standings (WU-002), monthly clashes and the sect's call (LW-002b) | `SectFactions` |
 | Audio, autosave, export presets, credits | ✅ procedural SFX and music, autosave with toast (also on suspend), crash-safe saves, credits, title art, Steam platform stub (REL-009), Windows/Linux export presets + tools/export.sh (REL-005), Steam upload scripts and docs/RELEASE.md (REL-011, needs the owner's app/depot ids) | `Audio`, `SaveManager`, `src/ui/credits_screen.gd` |
-| Content past Core Formation | ✅ Nascent Soul foes/encounters (NS-001), pills (NS-002), Myriad Peaks Ridge region (NS-003); late methods to Mahayana+ (NS-005), late people with errands (NS-004), flawless late pills (NS-002b), Soul Formation foes/encounters (NS-006), grade 5-6 gear (C-045) | |
+| Content past Core Formation | ✅ Nascent Soul foes/encounters (NS-001), pills (NS-002), Myriad Peaks Ridge region (NS-003); late methods to Mahayana+ (NS-005), late people with errands (NS-004), flawless late pills (NS-002b), Soul Formation foes/encounters (NS-006), grade 5-6 gear (C-045), goal ladders to Soul Formation (NS-007, SOUL-001); Void Refinement has no content yet (C-118/C-119) | |
 | Life record and milestones | ✅ sheet life record (STAT-001), 22 milestones with progress on the sheet and a banner (GOAL-001, WU-006, MS-002, MS-003), journal screen (J / LT) with opportunities, errands and commissions, epilogue on final death, a yearly review banner (YEAR-001, WU-031) | `LifeStats`, `Milestones`, `data/milestones.json` |
 | Ending (ascension) | 🚧 none, waiting on the owner (END-001) | |
 | Inventory, techniques, character sheet, settings, pause, load screens | ✅ | `src/ui/` |

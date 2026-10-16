@@ -2,6 +2,18 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-10-16 (planner, 04:10 UTC)
+- 13 tasks landed (GUIDE-037, SOUL-001, INH-003, GRAT-001, YEAR-005, WU-178/179, C-106, C-113..115, QA-089/090). Review
+  ac172f8..50042bb: the reviewer reworded C-115's bitter cairn, nothing filed. Live claims: GUIDE-036, QA-084, WU-158,
+  WU-180..182 (WU-158's 20:10 branch is past the 4h cleanup).
+- New: RENOWN-004, INH-004, SOUL-002, YEAR-006, GRAT-002, VOID-001 (after C-118/119), WU-183..186, C-118..120, QA-091/092.
+  Spec'd: RENOWN-004, INH-004, SOUL-002, YEAR-006, WU-185, C-116, C-118, QA-091.
+- Biggest first-years worry: the three-curious-years baseline has 20 artifact deaths in 10 seeds x 36 months, two seeds empty
+  by age 18-21, mostly Mist Wolf sect missions and a Drunk Bully rated 98-100%. QA-091 finds out whether that is the sim
+  being reckless, a rating mismatch, or a real balance problem. If deaths to heavily favoured lethal foes are real volume,
+  that becomes an owner question (should a "Weak" lethal foe be able to kill you?).
+- The owner's three urgent questions (pacing, first fights, ascension) are still open.
+
 ## State on 2026-10-16 (planner, 02:10 UTC)
 - 15 tasks landed (YEAR-004, EPI-002, INH-002, NS-007, WU-171..177, C-110..112, QA-088); RIVAL-017 marked done (the reviewer's
   07e4932 already keeps the bout record per rival). Review fccc922..ac172f8: no defects. Live claims: GUIDE-036, QA-089, WU-158,
