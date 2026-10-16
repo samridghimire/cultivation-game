@@ -117,6 +117,9 @@ func _start() -> void:
 	if OS.get_cmdline_user_args().has("--banner-shot"):
 		_start_banner_shot(gs)
 		return
+	if OS.get_cmdline_user_args().has("--hint-shot"):
+		_start_hint_shot(gs)
+		return
 	if OS.get_cmdline_user_args().has("--soul-shot"):
 		_start_soul_shot(gs)
 		return
@@ -603,6 +606,66 @@ func _start_banner_shot(gs: Node) -> void:
 		banner._queue.clear()
 		banner.finish_current()
 		banner.announce("Milestone", long_milestone, Color(0.9, 0.78, 0.4), 60.0), "close": func() -> void: pass})
+
+
+## WU-211: the HUD hint panel at its maximum setting with the longest crafter hints: the away-region
+## herb hint (GUIDE-046/048) and the broke-crafter odd-jobs line (GUIDE-047).
+func _start_hint_shot(gs: Node) -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 5
+	var c := CharacterFactory.create("Lin Feng", gs.data, rng, "male")
+	gs.start_session(c)
+	gs.pending_event = ""
+	c.professions["alchemist"] = {"rank": 0, "xp": 0.0}
+	c.inventory = {}
+	root.get_node("Settings").call("set_value", "hud_hints", 3)
+	var clock: Node = root.get_node("GameClock")
+	# Find the longest away-region herb hint over every region and season.
+	var best := ""
+	var best_region := ""
+	var best_day := 0
+	for region_id: String in gs.data.regions:
+		for day in range(0, 4 * Calendar.DAYS_PER_MONTH * 3, Calendar.DAYS_PER_MONTH):
+			var text := Guidance.herb_here_hint(c, gs.data, region_id, day)
+			if text.contains("a short walk away") and text.length() > best.length():
+				best = text
+				best_region = region_id
+				best_day = day
+	assert(best != "", "no away-region herb hint found in data")
+	print("hint-shot: ", best_region, " day ", best_day, ": ", best)
+	clock.total_days = best_day
+	gs.current_region = best_region
+	world = load("res://src/world/world.tscn").instantiate()
+	root.add_child(world)
+	hud = world.get_node("HUD")
+	var hint_text := func() -> String:
+		return (hud.get("_hint") as Label).text
+	shots.append({"name": "hint_herb_away", "open": func() -> void:
+		hud.get("_banner").visible = false
+		root.get_node("EventBus").player_changed.emit()
+		assert(String(hint_text.call()).contains("a short walk away"), "away hint not on screen"), "close": func() -> void: pass})
+	# Broke crafter: no stones, nothing craftable, so the odd-jobs line fires (longest region name wins).
+	# The herb hint fades after CRAFT_HINT_MAX_CRAFTS crafts, which is when this line shows.
+	var broke_region := ""
+	c.life_stats["items_crafted"] = Guidance.CRAFT_HINT_MAX_CRAFTS
+	for region_id: String in gs.data.regions:
+		var listed: PackedStringArray = Guidance.hints(c, gs.data, gs.hint_density(), 5, gs.npcs, gs.world_flags, region_id, best_day, gs.npc_favor)
+		var line := ""
+		for h: String in listed:
+			if h.begins_with("Short of stones?"):
+				line = h
+		if line != "" and (broke_region == "" or Guidance.workshop_place(gs.data, region_id).length() > Guidance.workshop_place(gs.data, broke_region).length()):
+			broke_region = region_id
+	c.life_stats.erase("items_crafted")
+	assert(broke_region != "", "no odd-jobs hint found in data")
+	shots.append({"name": "hint_broke_crafter", "open": func() -> void:
+		hud.get("_banner").visible = false
+		c.inventory = {}
+		c.life_stats["items_crafted"] = Guidance.CRAFT_HINT_MAX_CRAFTS
+		gs.current_region = broke_region
+		root.get_node("EventBus").player_changed.emit()
+		assert(String(hint_text.call()).contains("Short of stones?"), "odd-jobs hint not on screen: " + String(hint_text.call()))
+		print("hint-shot broke: ", hint_text.call()), "close": func() -> void: pass})
 
 
 ## WU-190: the encounter window on real encounters with attribute, profession and enemy choices.
