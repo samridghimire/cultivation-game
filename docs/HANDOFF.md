@@ -2,6 +2,16 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-10-16 (planner, 18:10 UTC)
+- 14 tasks landed (GUIDE-048, PROF-007, RIVAL-020, GUIDE-047, WU-195, PROF-004, WU-201, WU-207, WU-208, C-137, C-141, QA-094,
+  QA-100, plus C-140 done by the reviewer's help fix). Review e0dd610..5709257: nothing filed; notes -> GUIDE-050/051, WU-209.
+  Live claims: C-128, YEAR-010, QA-101.
+- Biggest first-hours finding: QA-100's new Alchemist stops earning at ~day 60 because the herb hint fades after 5 crafts.
+  GUIDE-049 (fade by rank), GUIDE-052 (orders name the missing ingredient), C-144 (a rank-1 next recipe per craft), QA-102.
+- Planner call: bought-ingredient first recipes losing a little is intended (gathering + commissions are the loop).
+- QA-103 bisects the curious QR9 slowdown (476 -> 577 days) found by QA-094.
+- The owner's three urgent questions (pacing, first fights, ascension) and RIVAL-019 are still open.
+
 ## State on 2026-10-16 (planner, 14:10 UTC)
 - 13 tasks landed (YEAR-009, C-134, QA-097, GUIDE-044, C-133, WU-202, RENOWN-007, GUIDE-042, INH-006, QA-087, WU-203, C-125,
   WU-199). No new review entry (last reviewed e673015). Live claims: WU-195 (3h old), WU-200, C-135, QA-098.

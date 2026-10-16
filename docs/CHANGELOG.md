@@ -2,6 +2,20 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-16 [WU-208] The workshop menu shot: a practised Alchemist with an open order and odd jobs fits.
+- 2026-10-16 [WU-207] The journal's rival reach lines fit at 1280x800 and 1280x720.
+- 2026-10-16 [WU-201] Crafting screen shots for every craft; a missing ingredient's place is named once.
+- 2026-10-16 [QA-094] The balance baseline is refreshed after the craft and pay changes.
+- 2026-10-16 [GUIDE-047] A crafter short of stones hears about odd jobs in their craft.
+- 2026-10-16 [RIVAL-020] Catching up with your rival is news.
+- 2026-10-16 [PROF-007] A new crafter's first order comes the day they start.
+- 2026-10-16 [C-141] A guard test keeps every first recipe's ingredients within reach of Qingshi Village.
+- 2026-10-16 [GUIDE-048] The herb hint and the crafting screen respect seasons and name the region.
+- 2026-10-16 [PROF-004] Crafters can take odd jobs in their own craft at the workshop.
+- 2026-10-16 [QA-100] Crafter-start sim: a new Alchemist's first six months.
+- 2026-10-16 [WU-195] The workshop says what work pays, and the crafting screen what a recipe costs and sells for.
+- 2026-10-16 [C-137] The Array Master's first array pays when you gather its materials.
+- 2026-10-16 [C-140] The professions help page names a crafter's odd jobs.
 - 2026-10-16 [GUIDE-046] The herb hint also looks in the regions a short walk away.
 - 2026-10-16 [C-139] Help pages catch up with odd jobs, gathered herbs, the gather site's "Used in" line and craft renown.
 - 2026-10-16 [RIVAL-018] The journal says which realm to reach before you can challenge a rival who is far ahead.
