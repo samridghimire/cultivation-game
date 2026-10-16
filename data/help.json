@@ -313,6 +313,16 @@
       ]
     },
     {
+      "id": "debts_grudges",
+      "title": "Debts and Grudges",
+      "group": "people",
+      "body": [
+        "Healing someone's injury or giving them a gift earns their gratitude. A grateful person sends gifts now and then, stones and sometimes a pill or herbs. Someone deeply in your debt will also join your fights when they live in the region where you fight, and strike first on your side. Each favour paid back spends some of what they owe.",
+        "Robbing, humiliating or killing someone builds a grudge, and their kin hold it too. A strong grudge means the wronged may ambush you on the road after a journey, less often if they are far weaker than you. Beat them and the grudge eases; lose and they take stones and ease it too.",
+        "Grudges fade a little each year, but gratitude does not. Making amends costs stones, more for a deeper grudge. The journal's \"Debts and grudges\" section lists who owes you and who holds a grudge against you."
+      ]
+    },
+    {
       "id": "favors",
       "title": "Favors and Errands",
       "group": "people",
