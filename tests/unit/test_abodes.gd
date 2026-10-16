@@ -185,7 +185,7 @@ func test_game_state_craft_and_place_array() -> void:
 	c.realm_index = gs.data.realm_index_of("qi_refining")
 	c.add_item("spirit_stone", 1000)
 	c.add_item("talisman_paper", 20)
-	c.add_item("iron_essence", 20)
+	c.add_item("spirit_herb", 20)
 	for i in 10:
 		if c.item_count("minor_spirit_gathering_array") > 0:
 			break

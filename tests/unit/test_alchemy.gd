@@ -298,7 +298,7 @@ func test_recipe_margin() -> void:
 	assert_eq(m["cost"], cost)
 	assert_eq(m["value"], int(d.recipes["qi_gathering_pill"]["output"]["count"]) * Items.sell_price(d, "qi_gathering_pill"))
 	var sword := Alchemy.recipe_margin(d, "iron_sword")
-	assert_eq(sword["cost"], 24)
+	assert_eq(sword["cost"], 26)
 	assert_eq(sword["value"], 30)
 	var none := Alchemy.recipe_margin(d, "no_such_recipe")
 	assert_eq(none["cost"], 0)
