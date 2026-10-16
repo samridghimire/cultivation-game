@@ -238,14 +238,30 @@ static func craftable_now(c: CharacterData, data: GameData) -> PackedStringArray
 ## A crafter hears an ingredient grows in this region (GUIDE-042): the first
 ## recipe (data order) of a profession taken up, known and within rank but not
 ## craftable now, with an ingredient short in the pack that a gather place here
-## offers. Any realm and day (a crafter can start as a Mortal). "" otherwise, and
-## once the craft-now hint has faded (CRAFT_HINT_MAX_CRAFTS).
+## offers. When nothing here does, the same look at the regions a short walk away
+## (GUIDE-046, data order). Any realm and day (a crafter can start as a Mortal).
+## "" otherwise, and once the craft-now hint has faded (CRAFT_HINT_MAX_CRAFTS).
 static func herb_here_hint(c: CharacterData, data: GameData, region_id: String) -> String:
 	if region_id == "" or LifeStats.get_stat(c, "items_crafted") >= CRAFT_HINT_MAX_CRAFTS:
 		return ""
 	if not craftable_now(c, data).is_empty():
 		return ""
-	var here := _gatherable_items(c, data, region_id)
+	var text := _herb_hint_in(c, data, region_id, false)
+	if text != "":
+		return text
+	for other: String in data.regions:
+		if other != region_id and Exploration.is_nearby(data, region_id, other):
+			text = _herb_hint_in(c, data, other, true)
+			if text != "":
+				return text
+	return ""
+
+
+## The herb hint for the gather places of `grow_region`; `away` adds where it is.
+static func _herb_hint_in(c: CharacterData, data: GameData, grow_region: String, away: bool) -> String:
+	var here := _gatherable_items(c, data, grow_region)
+	if here.is_empty():
+		return ""
 	for recipe_id: String in data.recipes:
 		var recipe: Dictionary = data.recipes[recipe_id]
 		var prof_id := String(recipe["profession"])
@@ -257,7 +273,11 @@ static func herb_here_hint(c: CharacterData, data: GameData, region_id: String) 
 			if not here.has(item_id) or c.item_count(item_id) >= int(recipe["ingredients"][item_id]):
 				continue
 			var item_name := String(data.items[item_id].get("name", item_id))
-			var text := "%s grows at %s: gather it to refine %s" % [item_name, here[item_id], String(recipe.get("name", recipe_id))]
+			var text := ""
+			if away:
+				text = "%s grows at %s in %s, a short walk away: gather it to refine %s" % [item_name, here[item_id], _region_name(data, grow_region), String(recipe.get("name", recipe_id))]
+			else:
+				text = "%s grows at %s: gather it to refine %s" % [item_name, here[item_id], String(recipe.get("name", recipe_id))]
 			var margin := Alchemy.recipe_margin(data, recipe_id)
 			if int(margin["value"]) > int(margin["cost"]):
 				return text + " (it sells for more than the ingredients cost)."

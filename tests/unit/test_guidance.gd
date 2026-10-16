@@ -982,6 +982,22 @@ func test_herb_here_hint_for_a_crafter_short_of_herbs() -> void:
 	assert_eq(Guidance.herb_here_hint(c, data(), "qingshi_village"), "", "faded")
 
 
+func test_herb_hint_looks_one_region_further() -> void:
+	var c := _crafter()
+	c.professions["alchemist"] = {"rank": 0, "xp": 0.0}
+	c.inventory = {}
+	# The market has no herb patch; its first neighbour in data order that does grow one is named.
+	var hint := Guidance.herb_here_hint(c, data(), "fallen_star_market")
+	var herb_name := String(data().items["spirit_herb"]["name"])
+	var region_name := String(data().regions["qingshi_village"]["name"])
+	assert_true(hint.begins_with("%s grows at Village Herb Slope in %s, a short walk away: gather it to refine " % [herb_name, region_name]), hint)
+	assert_true(_has(Guidance.hints(c, data(), 1.0, 99, {}, {}, "fallen_star_market", 400), "a short walk away"))
+	# One that grows here wins over the neighbour.
+	assert_true(not Guidance.herb_here_hint(c, data(), "qingshi_village").contains("a short walk away"))
+	# A region with no route gets nothing further.
+	assert_eq(Guidance.herb_here_hint(c, data(), "nowhere"), "")
+
+
 func test_recap_names_waiting_hunt_letter_and_renown_capped_at_two() -> void:
 	var c := _fresh()
 	var base := Guidance.recap(c, data(), {}, 100, "qingshi_village")
