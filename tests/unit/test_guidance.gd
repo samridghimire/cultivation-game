@@ -1735,8 +1735,12 @@ func test_karma_entries_grudges() -> void:
 	assert_eq(out[0]["tone"], "warning")
 	assert_true(String(out[0]["text"]).begins_with("Hao holds"))
 	assert_true(String(out[0]["text"]).contains("ambush"))
+	# GRAT-002: a hunting grudge names the amends cost and where to pay it.
+	assert_true(String(out[0]["text"]).contains("amends cost %d stones" % Karma.amends_cost(c, "h", d)))
+	assert_true(String(out[0]["text"]).ends_with("(in %s)" % Exploration.region_name(d, "qingshi_village")))
 	assert_eq(out[1]["tone"], "dim")
 	assert_false(String(out[1]["text"]).contains("ambush"))
+	assert_false(String(out[1]["text"]).contains("amends"))
 
 
 func test_karma_entries_cap_and_empty() -> void:

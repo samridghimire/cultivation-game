@@ -1504,7 +1504,11 @@ static func _karma_entries(out: Array[Dictionary], c: CharacterData, data: GameD
 		var value := Karma.grudge(c, npc.id)
 		var text := "%s holds %s against you" % [npc.name, Karma.grudge_word(value, data)]
 		if value >= hunt_min:
-			_add(out, "Debts and grudges", text + ". They may ambush you on the road", "warning")
+			text += ". They may ambush you on the road; amends cost %d stones" % Karma.amends_cost(c, npc.id, data)
+			var where := Npcs.region_of(npc, data)
+			if where != "":
+				text += " (in %s)" % Exploration.region_name(data, where)
+			_add(out, "Debts and grudges", text, "warning")
 		else:
 			_add(out, "Debts and grudges", text, "dim")
 
