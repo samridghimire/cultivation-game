@@ -52,6 +52,10 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 	var herb := herb_here_hint(c, data, region_id, today)
 	if herb != "" and not out.has(herb):
 		out.append(herb)
+	elif herb == "":
+		var odd_jobs := _odd_jobs_hint(c, data, region_id)
+		if odd_jobs != "":
+			out.append(odd_jobs)
 	var bitter := _bitter_rival_hint(c, data, people, flags, favor)
 	if bitter != "":
 		out.append(bitter)
@@ -93,6 +97,30 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 	if out.size() > limit:
 		out.resize(limit)
 	return out
+
+
+## GUIDE-047: a broke crafter (nothing craftable, too few stones for any recipe in rank) hears
+## what odd jobs in their craft pay a month. "" when they hold enough stones or practise no craft.
+static func _odd_jobs_hint(c: CharacterData, data: GameData, region_id: String) -> String:
+	if not craftable_now(c, data).is_empty():
+		return ""
+	for prof_id: String in data.professions:
+		if not c.professions.has(prof_id):
+			continue
+		var cheapest := -1
+		for recipe_id: String in Alchemy.known_recipes(c, data, prof_id):
+			if int(data.recipes[recipe_id].get("min_rank", 0)) > Professions.rank_of(c, prof_id):
+				continue
+			var cost := int(Alchemy.recipe_margin(data, recipe_id)["cost"])
+			if cheapest < 0 or cost < cheapest:
+				cheapest = cost
+		if cheapest < 0:
+			continue
+		if c.item_count("spirit_stone") >= cheapest:
+			return ""
+		var income: int = Professions.work_preview(c, data, prof_id, Calendar.DAYS_PER_MONTH)["income"]
+		return "Short of stones? Odd jobs as %s at the %s pay about %d a month." % [data.professions[prof_id].name, workshop_place(data, region_id), income]
+	return ""
 
 
 ## GUIDE-044: the newcomer's workshop hint names a month's pay when a Doctor profession exists.

@@ -2018,3 +2018,28 @@ func test_herb_place_names_region_and_season() -> void:
 	assert_eq(Guidance.herb_place(c, data(), "autumn_bog_lily", "qingshi_village"), autumn, "no day = any season")
 	var here := Guidance.herb_place(c, data(), "dew_grass", "qingshi_village", 280)
 	assert_false(here.contains(" in "), "own region has no suffix: " + here)
+
+
+## GUIDE-047: a broke crafter hears what odd jobs pay.
+func test_odd_jobs_hint_for_a_broke_crafter() -> void:
+	var c := _crafter()
+	c.professions["alchemist"] = {"rank": 0, "xp": 0.0}
+	c.inventory = {}
+	var income: int = Professions.work_preview(c, data(), "alchemist", Calendar.DAYS_PER_MONTH)["income"]
+	var hint := Guidance._odd_jobs_hint(c, data(), "qingshi_village")
+	var expected := "Short of stones? Odd jobs as %s at the %s pay about %d a month." % [data().professions["alchemist"].name, Guidance.workshop_place(data(), "qingshi_village"), income]
+	assert_eq(hint, expected)
+	c.inventory = {"spirit_stone": 1000}
+	assert_eq(Guidance._odd_jobs_hint(c, data(), "qingshi_village"), "", "enough stones")
+	c.inventory = {}
+	c.professions.clear()
+	assert_eq(Guidance._odd_jobs_hint(c, data(), "qingshi_village"), "", "no craft")
+
+
+func test_odd_jobs_hint_yields_to_the_herb_hint() -> void:
+	var c := _crafter()
+	c.professions["alchemist"] = {"rank": 0, "xp": 0.0}
+	c.inventory = {}
+	assert_true(Guidance.herb_here_hint(c, data(), "qingshi_village", 0) != "", "setup: herb hint fires")
+	var lines := Guidance.hints(c, data(), 1.0, 99, {}, {}, "qingshi_village", 0)
+	assert_false(_has(lines, "Short of stones?"))
