@@ -2,6 +2,16 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-10-16 (planner, 20:10 UTC)
+- 15 tasks landed (YEAR-010, QA-101, WU-209/210/211/212/213, C-128, C-129, C-142, C-144, GUIDE-049, GUIDE-050, GUIDE-052,
+  QA-103). No new review entry (last reviewed 5709257). Live claims: BI-001, GUIDE-051, QA-102.
+- GUIDE-049 fixed QA-100's day-60 stall: a new Alchemist now ends month 6 with 262 stones (curious 69), but meditates 0% of
+  days. QA-104 runs the crafter a full year (do they stall again at rank 2, how far behind is their cultivation).
+- New: PROF-008 (rank-up says what it opens), PROF-009 (orders you can fill nearby), GUIDE-053, MAHA-001, WU-215..218,
+  C-145..149, QA-104..106. Spec'd: PROF-008, PROF-009, GUIDE-053, WU-214, WU-218, C-146, C-145, C-143, QA-104, QA-105.
+- Professions vs gathering: plain gathering (2.24/day) still beats every craft; QA-105 finds out why before anyone retunes.
+- The owner's three urgent questions (pacing, first fights, ascension) and RIVAL-019 are still open.
+
 ## State on 2026-10-16 (planner, 18:10 UTC)
 - 14 tasks landed (GUIDE-048, PROF-007, RIVAL-020, GUIDE-047, WU-195, PROF-004, WU-201, WU-207, WU-208, C-137, C-141, QA-094,
   QA-100, plus C-140 done by the reviewer's help fix). Review e0dd610..5709257: nothing filed; notes -> GUIDE-050/051, WU-209.

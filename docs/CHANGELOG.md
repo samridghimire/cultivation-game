@@ -2,6 +2,21 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-16 [QA-103] The curious player's QR9 slowdown came from a sim-policy change, not the game.
+- 2026-10-16 [GUIDE-050] The odd-jobs hint counts only the stones you still lack.
+- 2026-10-16 [WU-213] The year review with the rival line fits on screen.
+- 2026-10-16 [C-129] Three Body Integration choice encounters: the drowned god, the one-body arbiter and the bone court petition.
+- 2026-10-16 [WU-212] Focus audit for the workshop with odd jobs and orders, the crafting screen and the herb gather site.
+- 2026-10-16 [C-142] The crafting help says gathering or filling orders is what makes an early craft pay.
+- 2026-10-16 [GUIDE-052] An open order says what you are missing and where it grows.
+- 2026-10-16 [C-144] Every craft has a rank-1 recipe within reach of Qingshi Village.
+- 2026-10-16 [GUIDE-049] The crafter hints stay until rank 2 instead of fading after five crafts.
+- 2026-10-16 [WU-211] The HUD hint panel fits the longest crafter hints.
+- 2026-10-16 [C-128] Six Body Integration foes.
+- 2026-10-16 [WU-210] The "caught up with your rival" notice fits on screen.
+- 2026-10-16 [WU-209] Workshop wording: "1 recipe", and an honest "Gathered materials" margin hint.
+- 2026-10-16 [QA-101] The profession income sim compares odd jobs with crafting for every craft.
+- 2026-10-16 [YEAR-010] The year in review says where your rival stands.
 - 2026-10-16 [WU-208] The workshop menu shot: a practised Alchemist with an open order and odd jobs fits.
 - 2026-10-16 [WU-207] The journal's rival reach lines fit at 1280x800 and 1280x720.
 - 2026-10-16 [WU-201] Crafting screen shots for every craft; a missing ingredient's place is named once.
