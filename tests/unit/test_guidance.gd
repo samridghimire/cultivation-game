@@ -700,7 +700,7 @@ func test_profession_goal_line() -> void:
 	var def: ProfessionDef = data().professions["alchemist"]
 	var want := "Become %s Alchemist: %d more xp" % [data().profession_rank_names[1], ceili(def.xp_to_next(0) - 10.0)]
 	assert_true(_has(Guidance.goals(c, data(), {}), want), str(Guidance.goals(c, data(), {})))
-	assert_true(Guidance.goals(c, data(), {}).size() <= 4)
+	assert_true(Guidance.goals(c, data(), {}).size() <= 5)
 	for l in Guidance.goals(c, data(), {}):
 		assert_false(l.contains("_") or l.contains("%"), l)
 	c.professions["alchemist"] = {"rank": Professions.max_rank(data()), "xp": 0.0}
@@ -2144,3 +2144,50 @@ func test_craft_now_hint_names_only_the_low_rank_craft() -> void:
 	c.professions[String(data().recipes[low]["profession"])]["rank"] = 0
 	var hint := Guidance._untried_feature_hint(c, data(), 400, {}, {}, "qingshi_village")
 	assert_true(hint.begins_with("You have what %s needs" % data().recipes[low]["name"]), hint)
+
+
+func _unknown_recipe_line(prof_id: String, recipe_id: String) -> String:
+	var c := CharacterData.new()
+	c.professions[prof_id] = {"rank": int(data().recipes[recipe_id].get("min_rank", 0)), "xp": 0.0}
+	for rid: String in data().recipes:
+		if rid != recipe_id and String(data().recipes[rid].get("profession", "")) == prof_id:
+			c.known_recipes.append(rid)
+	return Guidance.next_recipe_line(c, data(), prof_id, "", 0)
+
+
+func test_next_recipe_line_sources_and_length() -> void:
+	var seen_sold := false
+	var seen_other := false
+	for rid: String in data().recipes:
+		var prof_id := String(data().recipes[rid].get("profession", ""))
+		var line := _unknown_recipe_line(prof_id, rid)
+		if line == "":
+			continue
+		assert_true(line.begins_with("Next recipe: %s (rank " % data().recipes[rid]["name"]), line)
+		assert_true(line.length() <= 100, "%d: %s" % [line.length(), line])
+		assert_false(line.contains("_"), line)
+		if line.contains("sold by merchants"):
+			seen_sold = true
+		elif not line.contains("grows at") and not line.contains("found at"):
+			seen_other = true
+	assert_true(seen_sold, "some scroll is sold by merchants")
+	assert_true(seen_other, "some scroll is only found elsewhere")
+
+
+func test_next_recipe_line_empty_when_all_known_or_doctor() -> void:
+	var c := CharacterData.new()
+	c.professions["alchemist"] = {"rank": Professions.max_rank(data()), "xp": 0.0}
+	for rid: String in data().recipes:
+		c.known_recipes.append(rid)
+	assert_eq(Guidance.next_recipe_line(c, data(), "alchemist", "", 0), "")
+	c.professions["doctor"] = {"rank": 1, "xp": 0.0}
+	assert_eq(Guidance.next_recipe_line(c, data(), Medicine.DOCTOR, "", 0), "")
+
+
+func test_goals_include_next_recipe_line() -> void:
+	var c := CharacterData.new()
+	c.realm_index = 1
+	c.professions["alchemist"] = {"rank": 1, "xp": 0.0}
+	var line := Guidance.next_recipe_line(c, data(), "alchemist", "", 0)
+	if line != "":
+		assert_true(_has(Guidance.goals(c, data(), {}), line))

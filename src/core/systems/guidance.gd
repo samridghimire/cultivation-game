@@ -1357,7 +1357,7 @@ static func active_goal_ladder(c: CharacterData, data: GameData, flags: Dictiona
 
 ## Mid-game goals (GOAL-003), up to 3 plain lines: the next realm, the next sect
 ## rank (or founding a clan for a rogue) and the nearest unearned milestone.
-static func goals(c: CharacterData, data: GameData, flags: Dictionary, clan: ClanData = null, density: float = 1.0) -> PackedStringArray:
+static func goals(c: CharacterData, data: GameData, flags: Dictionary, clan: ClanData = null, density: float = 1.0, region_id: String = "", today: int = -1) -> PackedStringArray:
 	var out: PackedStringArray = []
 	if not Cultivation.is_final_realm(c, data):
 		var next_name: String = data.realms[c.realm_index + 1].name
@@ -1390,6 +1390,11 @@ static func goals(c: CharacterData, data: GameData, flags: Dictionary, clan: Cla
 	var craft := _profession_goal(c, data)
 	if craft != "":
 		out.append(craft)
+	for prof_id: String in c.professions:
+		if data.professions.has(prof_id):
+			var recipe_line := next_recipe_line(c, data, prof_id, region_id, today)
+			if recipe_line != "":
+				out.append(recipe_line)
 	var best := ""
 	var best_frac := -1.0
 	for def: Dictionary in data.milestones:
@@ -1405,6 +1410,29 @@ static func goals(c: CharacterData, data: GameData, flags: Dictionary, clan: Cla
 	if best != "":
 		out.append(best)
 	return out
+
+
+## "Next recipe: <name> (rank N). Its scroll: <source>." for the craft's next
+## recipe the player does not know (GUIDE-053); "" when none, or for the Doctor.
+static func next_recipe_line(c: CharacterData, data: GameData, prof_id: String, region_id: String, today: int) -> String:
+	var recipe_id := Professions.next_unknown_recipe(c, data, prof_id)
+	if recipe_id == "":
+		return ""
+	var recipe: Dictionary = data.recipes[recipe_id]
+	var scroll_id := ""
+	for item_id: String in data.items:
+		if String(data.items[item_id].get("effects", {}).get("learn_recipe", "")) == recipe_id:
+			scroll_id = item_id
+			break
+	var source := ""
+	if scroll_id != "":
+		source = source_phrase(c, data, scroll_id, region_id, today)
+		if source == "":
+			var found := Items.sources(data, scroll_id)
+			source = String(found[0]).to_lower() if not found.is_empty() else ""
+	if source == "":
+		source = "found in the wider world"
+	return "Next recipe: %s (rank %d). Its scroll: %s." % [recipe.get("name", recipe_id), int(recipe.get("min_rank", 0)), source]
 
 
 ## The next rank of the player's highest-ranked unmaxed profession (GOAL-004), or "".
@@ -1539,7 +1567,7 @@ static func journal(c: CharacterData, data: GameData, flags: Dictionary, today: 
 	var fights := fair_fights(c, data, flags, today, region_id, people, favor)
 	var goal_lines: PackedStringArray = []
 	if c.realm_index >= 2 or first_goals_done(c, data, flags):
-		for line in goals(c, data, flags, clan, density):
+		for line in goals(c, data, flags, clan, density, region_id, today):
 			_add(out, "Goals", line, "normal")
 			goal_lines.append(line)
 		var gap := pill_gap_note(c, data, fights)
