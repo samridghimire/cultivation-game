@@ -946,8 +946,32 @@ func test_herb_here_hint_for_a_crafter_short_of_herbs() -> void:
 	c.professions["alchemist"] = {"rank": 0, "xp": 0.0}
 	c.inventory = {}
 	var hint := Guidance.herb_here_hint(c, data(), "qingshi_village")
-	assert_true(hint.begins_with("Spirit Herb grows here: gather it to refine Qi Gathering Pill"), hint)
-	assert_true(_has(Guidance.hints(c, data(), 1.0, 99, {}, {}, "qingshi_village", 400), "grows here"))
+	var herb_name := String(data().items["spirit_herb"]["name"])
+	var place := ""
+	for p: Dictionary in data().regions["qingshi_village"]["places"]:
+		if String(p.get("type", "")) == "gather":
+			place = String(p["display_name"])
+			break
+	assert_true(hint.begins_with("%s grows at %s: gather it to refine %s" % [herb_name, place, data().recipes["qi_gathering_pill"]["name"]]), hint)
+	assert_true(_has(Guidance.hints(c, data(), 1.0, 99, {}, {}, "qingshi_village", 400), "grows at"))
+	# Reviewer: a Mortal newcomer on day 0 who has never crafted hears it too.
+	c.realm_index = 0
+	c.life_stats["items_crafted"] = 0
+	c.life_stats["encounters"] = 0
+	assert_true(_has(Guidance.hints(c, data(), 1.0, 99, {}, {}, "qingshi_village", 0), "grows at"), "no realm or day gate")
+	var no_gather := ""
+	for region_id: String in data().regions:
+		var has_gather := false
+		for p: Dictionary in data().regions[region_id].get("places", []):
+			has_gather = has_gather or String(p.get("type", "")) == "gather"
+		if not has_gather:
+			no_gather = region_id
+			break
+	if no_gather != "":
+		assert_eq(Guidance.herb_here_hint(c, data(), no_gather), "", "no gather place")
+	c.realm_index = 1
+	c.life_stats["items_crafted"] = 1
+	c.life_stats["encounters"] = 1
 	c.inventory = {"spirit_herb": 2, "dew_grass": 1}
 	assert_eq(Guidance.herb_here_hint(c, data(), "qingshi_village"), "", "craft-now takes over")
 	c.inventory = {}

@@ -49,6 +49,9 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 	var untried := _untried_hint(c, data, today, people, favor, region_id)
 	if untried != "":
 		out.append(untried)
+	var herb := herb_here_hint(c, data, region_id)
+	if herb != "" and not out.has(herb):
+		out.append(herb)
 	var bitter := _bitter_rival_hint(c, data, people, flags, favor)
 	if bitter != "":
 		out.append(bitter)
@@ -208,9 +211,6 @@ static func _untried_feature_hint(c: CharacterData, data: GameData, today: int, 
 			return "You have what %s needs: craft it at a workshop." % recipe_name
 	if LifeStats.get_stat(c, "items_crafted") == 0 and not c.known_recipes.is_empty():
 		return "You know a recipe: craft it at a workshop."
-	var herb := herb_here_hint(c, data, region_id)
-	if herb != "":
-		return herb
 	if LifeStats.get_stat(c, "realm_floors_cleared") == 0:
 		var realm_ids: Array = data.secret_realms.keys()
 		realm_ids.sort()
@@ -236,9 +236,10 @@ static func craftable_now(c: CharacterData, data: GameData) -> PackedStringArray
 
 
 ## A crafter hears an ingredient grows in this region (GUIDE-042): the first
-## recipe (data order) of a profession taken up that is known but not craftable
-## now, with an ingredient short in the pack that a gather place here offers.
-## "" otherwise, and once the craft-now hint has faded (CRAFT_HINT_MAX_CRAFTS).
+## recipe (data order) of a profession taken up, known and within rank but not
+## craftable now, with an ingredient short in the pack that a gather place here
+## offers. Any realm and day (a crafter can start as a Mortal). "" otherwise, and
+## once the craft-now hint has faded (CRAFT_HINT_MAX_CRAFTS).
 static func herb_here_hint(c: CharacterData, data: GameData, region_id: String) -> String:
 	if region_id == "" or LifeStats.get_stat(c, "items_crafted") >= CRAFT_HINT_MAX_CRAFTS:
 		return ""
@@ -247,29 +248,34 @@ static func herb_here_hint(c: CharacterData, data: GameData, region_id: String) 
 	var here := _gatherable_items(c, data, region_id)
 	for recipe_id: String in data.recipes:
 		var recipe: Dictionary = data.recipes[recipe_id]
-		if not c.professions.has(String(recipe["profession"])) or not Alchemy.knows(c, data, recipe_id):
+		var prof_id := String(recipe["profession"])
+		if not c.professions.has(prof_id) or not Alchemy.knows(c, data, recipe_id):
+			continue
+		if int(recipe.get("min_rank", 0)) > Professions.rank_of(c, prof_id):
 			continue
 		for item_id: String in recipe["ingredients"]:
 			if not here.has(item_id) or c.item_count(item_id) >= int(recipe["ingredients"][item_id]):
 				continue
 			var item_name := String(data.items[item_id].get("name", item_id))
-			var text := "%s grows here: gather it to refine %s" % [item_name, String(recipe.get("name", recipe_id))]
+			var text := "%s grows at %s: gather it to refine %s" % [item_name, here[item_id], String(recipe.get("name", recipe_id))]
 			var margin := Alchemy.recipe_margin(data, recipe_id)
 			if int(margin["value"]) > int(margin["cost"]):
-				return text + " (it sells for more than the herbs cost)."
+				return text + " (it sells for more than the ingredients cost)."
 			return text + "."
 	return ""
 
 
-## Item ids the gather places of `region_id` can yield for `c` (any season).
+## {item_id: place display_name} for what the gather places of `region_id` can yield
+## for `c` (any season; the first place in data order wins).
 static func _gatherable_items(c: CharacterData, data: GameData, region_id: String) -> Dictionary:
 	var out := {}
 	for place: Dictionary in data.regions.get(region_id, {}).get("places", []):
 		if String(place.get("type", "")) != "gather":
 			continue
 		for entry: Dictionary in Exploration.gather_table_for(c, data, place.get("gather_table", [])):
-			if String(entry.get("item", "")) != "":
-				out[String(entry["item"])] = true
+			var item_id := String(entry.get("item", ""))
+			if item_id != "" and not out.has(item_id):
+				out[item_id] = String(place.get("display_name", "a gather site"))
 	return out
 
 
