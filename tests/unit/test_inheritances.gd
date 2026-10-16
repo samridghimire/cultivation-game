@@ -129,6 +129,10 @@ func test_game_state_rival_news_at_the_deadline() -> void:
 	EventBus.message_posted.disconnect(listen)
 	var def := Inheritances.inheritance(gs.data, "fist_saint_grave")
 	assert_true(news.has(String(def["rival_news"])), "the world reports the rival's claim")
+	var lost := LifeStats.get_stat(c, "inheritances_lost")
+	assert_true(lost >= 1, "INH-005: the loss is remembered")
+	gs.work_profession("doctor", 30)
+	assert_eq(LifeStats.get_stat(c, "inheritances_lost"), lost, "counted once, not again next month")
 	gs.current_region = "misty_forest"
 	c.realm_index = 2
 	gs.attempt_inheritance("fist_saint_grave")

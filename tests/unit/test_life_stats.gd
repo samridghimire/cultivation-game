@@ -144,6 +144,15 @@ func test_year_summary_renown_titles() -> void:
 	assert_eq(lines[1], "Your name became known in 1 place.")
 
 
+func test_year_summary_inheritances_lost() -> void:
+	assert_eq(LifeStats.year_summary({}, {"inheritances_lost": 1}, "A", "A"), PackedStringArray(["An inheritance was lost to rivals before you claimed it."]))
+	assert_eq(LifeStats.year_summary({"inheritances_lost": 1}, {"inheritances_lost": 3}, "A", "A"), PackedStringArray(["2 inheritances were lost to rivals before you claimed them."]))
+	assert_eq(LifeStats.year_summary({"inheritances_lost": 2}, {"inheritances_lost": 2}, "A", "A"), PackedStringArray(["A quiet year of cultivation."]))
+	var lines := LifeStats.year_summary({}, {"inheritances_claimed": 1, "inheritances_lost": 1}, "A", "A")
+	assert_eq(lines[0], "You claimed an inheritance.")
+	assert_eq(lines[1], "An inheritance was lost to rivals before you claimed it.")
+
+
 func test_year_summary_rival_bouts() -> void:
 	assert_eq(LifeStats.year_summary({}, {"rival_bouts_won": 2, "rival_bouts_lost": 1}, "A", "A"), PackedStringArray(["You crossed hands with your rival 3 times and won 2."]))
 	assert_eq(LifeStats.year_summary({}, {"rival_bouts_lost": 1}, "A", "A"), PackedStringArray(["You crossed hands with your rival 1 time and won 0."]))

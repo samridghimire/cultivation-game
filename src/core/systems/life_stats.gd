@@ -5,7 +5,7 @@ extends RefCounted
 ## the end-of-life summary.
 
 const KEYS: Array[String] = ["fights_won", "fights_lost", "threats_fled", "breakthroughs", "breakthroughs_failed",
-	"tribulations_survived", "respawns", "items_crafted", "missions_done", "deeds_done", "encounters", "days_in_seclusion", "commissions_done", "tournaments_won", "incursions_repelled", "festival_activities", "realm_floors_cleared", "inheritances_claimed", "stones_earned", "qi_gathered", "regions_visited", "lectures_attended", "seasons_gathered", "happenings_seen", "discoveries", "bounties_done", "best_renown", "regions_mastered", "rival_bouts_won", "rival_bouts_lost", "renown_titles"]
+	"tribulations_survived", "respawns", "items_crafted", "missions_done", "deeds_done", "encounters", "days_in_seclusion", "commissions_done", "tournaments_won", "incursions_repelled", "festival_activities", "realm_floors_cleared", "inheritances_claimed", "stones_earned", "qi_gathered", "regions_visited", "lectures_attended", "seasons_gathered", "happenings_seen", "discoveries", "bounties_done", "best_renown", "regions_mastered", "rival_bouts_won", "rival_bouts_lost", "renown_titles", "inheritances_lost"]
 
 const LABELS := {
 	"fights_won": "Fights won",
@@ -36,6 +36,7 @@ const LABELS := {
 	"rival_bouts_won": "Bouts won against your rival",
 	"rival_bouts_lost": "Bouts lost to your rival",
 	"renown_titles": "Places that know your name",
+	"inheritances_lost": "Inheritances lost to rivals",
 	"deeds_done": "Deeds done",
 	"encounters": "Encounters",
 	"days_in_seclusion": "Days in seclusion",
@@ -164,6 +165,9 @@ static func year_summary(before: Dictionary, after: Dictionary, realm_before: St
 	var claimed := _delta(before, after, "inheritances_claimed")
 	if claimed > 0:
 		out.append("You claimed an inheritance." if claimed == 1 else "You claimed %d inheritances." % claimed)
+	var gone := _delta(before, after, "inheritances_lost")
+	if gone > 0:
+		out.append("An inheritance was lost to rivals before you claimed it." if gone == 1 else "%d inheritances were lost to rivals before you claimed them." % gone)
 	var respawns := _delta(before, after, "respawns")
 	if respawns > 0:
 		out.append("The Creation Artifact pulled you back from death." if respawns == 1 else "The Creation Artifact pulled you back from death %d times." % respawns)
