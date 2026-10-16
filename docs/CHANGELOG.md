@@ -2,6 +2,21 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-16 [GUIDE-053] The journal's profession goal names the next recipe to learn.
+- 2026-10-16 [WU-193] The Body Integration goal ladder fits on screen.
+- 2026-10-16 [C-145] The redundant Spirit Gathering Pill scroll is no longer handed out.
+- 2026-10-16 [WU-217] The Body Integration choice encounters fit on screen.
+- 2026-10-16 [C-143] Three first-year encounters that feed a crafter: an abandoned herb cache, an old alchemist's notes and a broken forge.
+- 2026-10-16 [QA-105] The profession income sim explains why gathering still beats crafting.
+- 2026-10-16 [C-146] Blacksmith and Array Master crafting from gathered materials beats odd jobs.
+- 2026-10-16 [WU-218] A new crafter's first hour checked on screen, with two wording fixes.
+- 2026-10-16 [PROF-008] A craft's rank-up says what it opens.
+- 2026-10-16 [PROF-009] Crafting orders prefer something you can gather or buy nearby.
+- 2026-10-16 [BI-001] Goals at Body Integration.
+- 2026-10-16 [QA-104] A crafter's first year: still earning, but never starts cultivating.
+- 2026-10-16 [WU-214] The journal's order line with what is missing fits on screen.
+- 2026-10-16 [QA-102] The crafter sim follows the order line; a hint-following Alchemist ends month 6 well ahead.
+- 2026-10-16 [GUIDE-051] A herb's out-of-season note names the next season it grows in.
 - 2026-10-16 [QA-103] The curious player's QR9 slowdown came from a sim-policy change, not the game.
 - 2026-10-16 [GUIDE-050] The odd-jobs hint counts only the stones you still lack.
 - 2026-10-16 [WU-213] The year review with the rival line fits on screen.
