@@ -194,12 +194,14 @@ static func missing_line(c: CharacterData, data: GameData, entry: Dictionary, re
 ## <time>: <missing line>"; "" otherwise.
 static func due_soon_hint(c: CharacterData, data: GameData, region_id: String, today: int) -> String:
 	var best: Dictionary = {}
+	var line := ""
 	for order in c.commissions:
-		if days_left(order, today) <= DUE_SOON_DAYS and (best.is_empty() or int(order["due_day"]) < int(best["due_day"])):
+		if days_left(order, today) > DUE_SOON_DAYS or (not best.is_empty() and int(order["due_day"]) >= int(best["due_day"])):
+			continue
+		var missing := missing_line(c, data, order, region_id, today)
+		if missing != "":
 			best = order
+			line = missing
 	if best.is_empty():
-		return ""
-	var line := missing_line(c, data, best, region_id, today)
-	if line == "":
 		return ""
 	return "Order due in %s: %s" % [Calendar.format_duration(days_left(best, today)), line]

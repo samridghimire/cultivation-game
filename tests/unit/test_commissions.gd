@@ -188,6 +188,17 @@ func test_missing_line_ingredients_in_pack_and_fulfilled() -> void:
 	assert_eq(Commissions.missing_line(d, data(), _pill_order(2, 100), "qingshi_village", 10), "")
 
 
+func test_due_soon_hint_skips_an_order_the_pack_already_fills() -> void:
+	var c := _alchemist()
+	c.add_item("qi_gathering_pill", 2)
+	var filled := _pill_order(2, 15)
+	var short := {"profession": "alchemist", "recipe": "bone_setting_salve", "item": "bone_setting_salve", "count": 2, "reward": 10, "xp": 5.0, "due_day": 25}
+	c.commissions = [filled, short]
+	var hint := Commissions.due_soon_hint(c, data(), "qingshi_village", 12)
+	assert_true(hint.begins_with("Order due in "), hint)
+	assert_true(hint.contains("Needs Morning Dew Grass"), hint)
+
+
 func test_due_soon_hint_only_within_two_weeks() -> void:
 	var c := _alchemist()
 	c.commissions = [_pill_order(2, 30)]

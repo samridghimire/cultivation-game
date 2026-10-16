@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 5709257
+Last reviewed commit: aa35b48
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -675,3 +675,17 @@ Last reviewed commit: 5709257
   - Notes, not filed: herb_place's out-of-season fallback names only the first listed season. GUIDE-047's "short of
     stones" compares stones with the full shop cost of the cheapest recipe, so it can fire for a crafter holding the
     herbs but not the stones for the rest. WU-195's "Gathered herbs make it pay" also shows on ore/array recipes.
+- 2026-10-16 (reviewer): reviewed 5709257..aa35b48 (WU-207, WU-208, YEAR-010, QA-101, WU-209, WU-210, C-128, WU-211,
+  GUIDE-049 (+ its --hint-shot fix), C-144, GUIDE-052, C-142, WU-212; [PLAN]/claim commits skipped). Main green. No
+  BACKLOG/CHANGELOG edits by workers; no SAVE_VERSION change (GUIDE-052 falls back for orders without "recipe").
+  Nothing filed.
+  - Fixed ([REVIEW] commit): GUIDE-052's due_soon_hint took the soonest order within 14 days and then went silent if
+    the pack already filled it, hiding a later short order that is also due soon. It now picks the soonest order that
+    is still short; test added.
+  - Checked: YEAR-010 appends the rival line last and needs the first meeting and a living rival. GUIDE-049's rank
+    gate applies to both the craft-now and herb hints per recipe's craft. C-128's six foes/encounters mirror the Void
+    set (alignment gates -300 / -599 match their counterparts). C-144's new rank-1 starters (Paired-Flag array,
+    Mist-Bone Cake, Wolfhide Brigandine) use reachable ingredients and the guard test covers all five crafts.
+  - Notes, not filed: missing_line skips spirit stones, so an order short only of stones says "You have the
+    ingredients". C-144 left recipe_spirit_gathering_pill's scroll redundant (the pill is now a starter). WU-209's
+    margin wording logic lives in crafting_screen.gd (UI) rather than a system.
