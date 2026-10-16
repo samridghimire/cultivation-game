@@ -248,6 +248,18 @@ func _start_late_realms(gs: Node) -> void:
 	gs.world_flags[Rivals.BOUTS_WON_FLAG] = 2
 	gs.world_flags[Rivals.BOUTS_LOST_FLAG] = 1
 	gs.npc_favor[rival.id] = -3
+	Karma.add_grudge(c, gs.data, rival.id, 5)  # below grudge_words[1]: the Rival line reads "a slight"
+	# WU-183: one grateful NPC (gratitude 50, favor 0) and one grudge holder (grudge 20) for the People list.
+	var extras: Array = []
+	for nid: String in gs.npcs.keys():
+		var other: CharacterData = gs.npcs[nid]
+		if nid != rival.id and other.alive and not c.parents.has(nid) and not c.spouses.has(nid):
+			extras.append(nid)
+		if extras.size() == 2:
+			break
+	if extras.size() == 2:
+		Karma.add_gratitude(c, gs.data, extras[0], 50)
+		Karma.add_grudge(c, gs.data, extras[1], 20)
 	for spec: Array in [["fe_peak", "foundation_establishment", -1], ["cf_early", "core_formation", 0]]:
 		var realm_index: int = gs.data.realm_index_of(spec[1])
 		var stage: int = int(spec[2])
