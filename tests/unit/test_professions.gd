@@ -26,3 +26,17 @@ func test_work_pays_spirit_stones() -> void:
 	var result := Professions.work(c, data(), "blacksmith", Calendar.DAYS_PER_MONTH)
 	assert_gt(result["income"], 0)
 	assert_eq(c.item_count("spirit_stone"), before + result["income"])
+
+
+func test_work_preview_matches_work() -> void:
+	var a := new_character()
+	var b := new_character()
+	var days := Calendar.DAYS_PER_MONTH
+	var preview := Professions.work_preview(a, data(), "blacksmith", days)
+	var stones := b.item_count("spirit_stone")
+	var xp := Professions.xp_of(b, "blacksmith")
+	var result := Professions.work(b, data(), "blacksmith", days)
+	assert_eq(result["income"], preview["income"])
+	assert_almost_eq(result["xp"], preview["xp"])
+	assert_eq(b.item_count("spirit_stone"), stones + preview["income"])
+	assert_almost_eq(Professions.xp_of(b, "blacksmith"), xp + preview["xp"])

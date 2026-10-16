@@ -289,3 +289,17 @@ func test_scroll_recipes_lists_carried_unknown_scrolls() -> void:
 	assert_true(Alchemy.scroll_recipes(c, data(), "blacksmith").is_empty())
 	Alchemy.learn(c, data(), "meridian_mending_pill")
 	assert_true(Alchemy.scroll_recipes(c, data(), "alchemist").is_empty())
+
+
+func test_recipe_margin() -> void:
+	var d := data()
+	var m := Alchemy.recipe_margin(d, "qi_gathering_pill")
+	var cost := 2 * int(d.items["spirit_herb"]["price"]) + int(d.items["dew_grass"]["price"])
+	assert_eq(m["cost"], cost)
+	assert_eq(m["value"], 2 * Items.sell_price(d, "qi_gathering_pill"))
+	var sword := Alchemy.recipe_margin(d, "iron_sword")
+	assert_eq(sword["cost"], 24)
+	assert_eq(sword["value"], 30)
+	var none := Alchemy.recipe_margin(d, "no_such_recipe")
+	assert_eq(none["cost"], 0)
+	assert_eq(none["value"], 0)

@@ -63,6 +63,22 @@ static func check(c: CharacterData, data: GameData, recipe_id: String) -> String
 	return ""
 
 
+## What a refining costs and yields in spirit stones: {cost, value}. Cost is the
+## ingredients at shop price (a spirit stone counts 1); value is the output sold
+## (Items.sell_price). Unknown recipe: both 0.
+static func recipe_margin(data: GameData, recipe_id: String) -> Dictionary:
+	var recipe: Dictionary = data.recipes.get(recipe_id, {})
+	if recipe.is_empty():
+		return {"cost": 0, "value": 0}
+	var cost := 0
+	for item_id in recipe["ingredients"]:
+		var unit := 1 if item_id == "spirit_stone" else int(data.items.get(item_id, {}).get("price", 0))
+		cost += int(recipe["ingredients"][item_id]) * unit
+	var output: Dictionary = recipe["output"]
+	var value := int(output.get("count", 1)) * Items.sell_price(data, output["item"])
+	return {"cost": cost, "value": value}
+
+
 ## True if `c` knows `recipe_id`: a starter recipe, or one learned from a scroll.
 static func knows(c: CharacterData, data: GameData, recipe_id: String) -> bool:
 	var recipe: Dictionary = data.recipes.get(recipe_id, {})

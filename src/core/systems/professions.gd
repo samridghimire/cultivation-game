@@ -36,12 +36,20 @@ static func add_xp(c: CharacterData, data: GameData, prof_id: String, amount: fl
 	return gained
 
 
-## Works the profession for `days`: earns XP and spirit stones.
-## Returns {xp, ranks_gained, income}.
-static func work(c: CharacterData, data: GameData, prof_id: String, days: int) -> Dictionary:
+## What `days` of work would pay: {xp, income}. `work` applies exactly this.
+static func work_preview(c: CharacterData, data: GameData, prof_id: String, days: int) -> Dictionary:
 	var def: ProfessionDef = data.professions[prof_id]
 	var xp := days * c.attribute(def.primary_attribute) / 10.0
 	var income := int(def.work_income * (rank_of(c, prof_id) + 1) * days / float(Calendar.DAYS_PER_MONTH))
+	return {"xp": xp, "income": income}
+
+
+## Works the profession for `days`: earns XP and spirit stones.
+## Returns {xp, ranks_gained, income}.
+static func work(c: CharacterData, data: GameData, prof_id: String, days: int) -> Dictionary:
+	var preview := work_preview(c, data, prof_id, days)
+	var xp: float = preview["xp"]
+	var income: int = preview["income"]
 	var ranks_gained := add_xp(c, data, prof_id, xp)
 	c.add_item("spirit_stone", income)
 	LifeStats.record_stones(c, income)
