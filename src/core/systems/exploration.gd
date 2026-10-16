@@ -639,6 +639,10 @@ static func validate_choices(data: GameData) -> PackedStringArray:
 					errors.append("Encounter '%s' choice '%s' min_profession '%s' needs a rank from 1 to %d" % [e["id"], label, prof_id, Professions.max_rank(data)])
 			if int(choice.get("days", 0)) < 0:
 				errors.append("Encounter '%s' choice '%s' needs days >= 0" % [e["id"], label])
+			if choice.has("renown"):
+				var rn: Variant = choice["renown"]
+				if (typeof(rn) != TYPE_INT and typeof(rn) != TYPE_FLOAT) or float(rn) != int(rn) or int(rn) < 1 or int(rn) > 50:
+					errors.append("Encounter '%s' choice '%s' renown must be 1..50" % [e["id"], label])
 			if choice.has("grateful_npc"):
 				errors.append_array(_validate_grateful(data, choice["grateful_npc"], "Encounter '%s' choice '%s'" % [e["id"], label]))
 	return errors

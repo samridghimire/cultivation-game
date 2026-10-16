@@ -207,3 +207,53 @@ func test_dialogue_greets_once_and_never_family() -> void:
 	gs.start_dialogue(kin.id)
 	assert_eq(_greeting_count(bus, before), 0, "family never greets")
 	gs.end_session()
+
+
+func test_add_respects_cap_and_reports_tier() -> void:
+	var c := new_character()
+	var r := Renown.add(c, data(), "misty_forest", 20)
+	assert_eq(r["gained"], 20)
+	assert_true(r["new_tier"] != "", "20 crosses the first titled tier")
+	assert_eq(Renown.add(c, data(), "misty_forest", 0)["gained"], 0)
+	assert_eq(Renown.add(c, data(), "misty_forest", -5)["gained"], 0)
+	c.renown["misty_forest"] = 145
+	assert_eq(Renown.add(c, data(), "misty_forest", 50)["gained"], 5)
+	assert_eq(Renown.gain(new_character(), data(), "misty_forest", "bounty")["gained"], 15, "gain unchanged")
+
+
+func test_choice_renown_validation() -> void:
+	for bad: int in [0, 51]:
+		var d := GameData.load_from_dir()
+		d.encounters["village_drowning_child"]["choices"][0]["renown"] = bad
+		assert_true(Array(Exploration.validate_choices(d)).any(func(m: String) -> bool: return m.contains("renown must be 1..50")), str(bad))
+	var ok := GameData.load_from_dir()
+	ok.encounters["village_drowning_child"]["choices"][0]["renown"] = 50
+	assert_true(Exploration.validate_choices(ok).is_empty())
+
+
+func test_encounter_choice_grants_renown() -> void:
+	var gs: Node = _root().get_node("GameState")
+	var c := CharacterFactory.create("Lin Feng", gs.data, seeded_rng(), "male")
+	gs.start_session(c)
+	gs.data.encounters["t_fame"] = {"id": "t_fame", "tags": [], "weight": 1, "days": 1, "text": "A crowd gathers.", "choices": [
+		{"label": "Take a bow", "text": "They cheer.", "renown": 20},
+		{"label": "Fight for it", "text": "You duel.", "enemy": "mountain_bandit", "renown": 20},
+		{"label": "Leave", "text": "You go."}]}
+	gs.pending_encounter = "t_fame"
+	gs.choose_encounter(0)
+	assert_eq(Renown.value(c, gs.current_region), 20)
+	assert_true(EventBus.history.any(func(e: Dictionary) -> bool: return String(e["text"]).begins_with("Your name is")))
+	# a lost fight earns nothing
+	c.renown.clear()
+	c.attributes["constitution"] = 1
+	for slot in c.equipment.keys():
+		c.equipment.erase(slot)
+	var thug: Dictionary = gs.data.enemies["mountain_bandit"].duplicate(true)
+	gs.data.enemies["mountain_bandit"]["stage"] = 0
+	gs.data.enemies["mountain_bandit"]["realm"] = "core_formation"
+	gs.pending_encounter = "t_fame"
+	gs.choose_encounter(1)
+	gs.data.enemies["mountain_bandit"] = thug
+	assert_eq(Renown.value(c, gs.current_region), 0)
+	gs.data.encounters.erase("t_fame")
+	gs.end_session()

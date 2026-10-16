@@ -952,8 +952,10 @@ func choose_encounter(index: int) -> void:
 	if result["enemy"] != "" and _can_act():
 		if fight(result["enemy"]):
 			_grateful_npc(choice)
+			_add_renown(int(choice.get("renown", 0)))
 	elif _can_act():
 		_grateful_npc(choice)
+		_add_renown(int(choice.get("renown", 0)))
 
 
 ## RIV-001f: a choice with grateful_npc spawns the person it helped in the
@@ -2205,7 +2207,15 @@ func buy_multiplier() -> float:
 
 ## Local renown for a source (RENOWN-001); announces a new title.
 func _gain_renown(source: String) -> void:
-	var result := Renown.gain(player, data, current_region, source)
+	_announce_renown(Renown.gain(player, data, current_region, source))
+
+
+## Local renown by amount (RENOWN-004, encounter choices).
+func _add_renown(amount: int) -> void:
+	_announce_renown(Renown.add(player, data, current_region, amount))
+
+
+func _announce_renown(result: Dictionary) -> void:
 	if int(result["gained"]) <= 0:
 		return
 	player.life_stats["best_renown"] = maxi(LifeStats.get_stat(player, "best_renown"), Renown.best(player))

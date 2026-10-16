@@ -14,12 +14,15 @@ static func value(c: CharacterData, region_id: String) -> int:
 ## Returns {"gained": int, "new_tier": String}; new_tier is the title of the
 ## tier this gain crossed into ("" if none or untitled).
 static func gain(c: CharacterData, data: GameData, region_id: String, source: String) -> Dictionary:
+	return add(c, data, region_id, int((data.renown.get("sources", {}) as Dictionary).get(source, 0)))
+
+
+## Adds `amount` renown in `region_id` (RENOWN-004), capped at the config `max`.
+## Same result as `gain`; an amount <= 0 gains nothing.
+static func add(c: CharacterData, data: GameData, region_id: String, amount: int) -> Dictionary:
 	var result := {"gained": 0, "new_tier": ""}
 	var config: Dictionary = data.renown
-	if config.is_empty() or region_id == "":
-		return result
-	var amount := int((config.get("sources", {}) as Dictionary).get(source, 0))
-	if amount <= 0:
+	if config.is_empty() or region_id == "" or amount <= 0:
 		return result
 	var before := value(c, region_id)
 	var after := mini(before + amount, int(config.get("max", before + amount)))
