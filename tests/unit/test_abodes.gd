@@ -191,6 +191,7 @@ func test_game_state_craft_and_place_array() -> void:
 			break
 		gs.refine("minor_spirit_gathering_array")
 	assert_true(c.item_count("minor_spirit_gathering_array") > 0, "refined an array disc")
+	var crafted: int = c.item_count("minor_spirit_gathering_array")
 	assert_true(c.professions.has("array_master"), "array master xp")
 	gs.current_region = "misty_forest"
 	gs.place_abode_array("minor_spirit_gathering_array")
@@ -206,7 +207,7 @@ func test_game_state_craft_and_place_array() -> void:
 	assert_eq(gs.player.abode_array, "minor_spirit_gathering_array")
 	gs.remove_abode_array()
 	assert_eq(gs.player.abode_array, "")
-	assert_eq(gs.player.item_count("minor_spirit_gathering_array"), 1)
+	assert_eq(gs.player.item_count("minor_spirit_gathering_array"), crafted, "the placed disc came back")
 	gs.end_session()
 
 
