@@ -299,10 +299,7 @@ static func rival_line(c: CharacterData, data: GameData, people: Dictionary, fav
 	var feeling := Rivals.attitude_text(Rivals.attitude(c, r, int(favor.get(r.id, 0)), data))
 	if feeling != "":
 		relation += "; " + feeling
-	var where := ""  # WU-174: name the region only when the rival is elsewhere
-	var rival_region := Npcs.region_of(r, data)
-	if rival_region != "" and rival_region != region_id:
-		where = ", in " + Exploration.region_name(data, rival_region)
+	var where := Rivals.where_text(r, data, region_id)  # WU-174: only when the rival is elsewhere
 	var line := "%s, %s%s (%s)" % [r.name, Cultivation.realm_label(r, data), where, relation]
 	var grudge := Karma.grudge(c, r.id)
 	if grudge != 0:

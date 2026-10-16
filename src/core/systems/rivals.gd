@@ -242,3 +242,12 @@ static func validate(data: GameData) -> PackedStringArray:
 		if e.has("fight_rival") and e.has("enemy"):
 			errors.append("Encounter '%s' cannot fight both an enemy and the rival" % e["id"])
 	return errors
+
+
+## GUIDE-037: ", in <region>" when the rival is somewhere other than `region_id`; an empty `region_id` means
+## "unknown", so the region is named. "" when the rival's region is unknown or is the player's.
+static func where_text(npc: CharacterData, data: GameData, region_id: String) -> String:
+	var rival_region := Npcs.region_of(npc, data)
+	if rival_region == "" or rival_region == region_id:
+		return ""
+	return ", in " + Exploration.region_name(data, rival_region)

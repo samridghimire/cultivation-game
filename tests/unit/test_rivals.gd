@@ -501,3 +501,14 @@ func test_soul_formation_rival_encounters() -> void:
 				assert_true(int(choice.get("rival_grudge", 0)) <= 5, id + " duel grudge at most 5")
 		assert_true(duel, id + " has a fight_rival choice")
 		assert_true(e["choices"].size() >= 2, id + " has a peaceful choice")
+
+
+## GUIDE-037: one rule for "where is your rival".
+func test_where_text_cases() -> void:
+	var d := data()
+	var r := new_character(77)
+	r.home_region = "misty_forest"
+	var named := ", in %s" % Exploration.region_name(d, "misty_forest")
+	assert_eq(Rivals.where_text(r, d, "qingshi_village"), named, "elsewhere is named")
+	assert_eq(Rivals.where_text(r, d, "misty_forest"), "", "same region is silent")
+	assert_eq(Rivals.where_text(r, d, ""), named, "unknown current region names it")

@@ -1450,10 +1450,7 @@ static func _rival_entry(out: Array[Dictionary], c: CharacterData, data: GameDat
 	if record != "":
 		relation += "; " + record
 	# GUIDE-035: say where they are when it is not here.
-	var rival_region := Npcs.region_of(rival, data)
-	var where := ""
-	if rival_region != "" and region_id != "" and rival_region != region_id:
-		where = ", in " + Exploration.region_name(data, rival_region)
+	var where := Rivals.where_text(rival, data, region_id)
 	_add(out, "Household", "Rival: %s, %s%s (%s)" % [rival.name, Cultivation.realm_label(rival, data), where, relation], tone)
 
 
