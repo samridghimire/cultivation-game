@@ -1629,6 +1629,13 @@ static func _rival_entry(out: Array[Dictionary], c: CharacterData, data: GameDat
 	# GUIDE-035: say where they are when it is not here.
 	var where := Rivals.where_text(rival, data, region_id)
 	_add(out, "Household", "Rival: %s, %s%s (%s)" % [rival.name, Cultivation.realm_label(rival, data), where, relation], tone)
+	# RIVAL-018: say what it takes to stand against a rival a realm ahead.
+	if Rivals.relation(c, rival) == "stronger":
+		var realm_name := data.realms[rival.realm_index].name
+		if Rivals.attitude(c, rival, int(favor.get(rival.id, 0)), data) == "bitter":
+			_add(out, "Household", "Reach %s before %s comes looking for you." % [realm_name, rival.name], "dim")
+		else:
+			_add(out, "Household", "Reach %s to stand a chance against %s." % [realm_name, rival.name], "dim")
 
 
 const KARMA_JOURNAL_MAX := 3

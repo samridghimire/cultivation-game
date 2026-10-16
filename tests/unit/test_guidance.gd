@@ -1795,6 +1795,31 @@ func test_fallen_rival_journal_line_carries_record() -> void:
 	assert_eq(out[0]["text"], "Rival: %s (fallen)" % rival.name)
 
 
+func _rival_reach_lines(s: Array) -> Array[String]:
+	var out: Array[Dictionary] = []
+	Guidance._rival_entry(out, s[1], s[0], {Rivals.FIRST_MEETING_FLAG: true}, s[2])
+	var lines: Array[String] = []
+	for e in out:
+		if String(e["text"]).begins_with("Reach "):
+			lines.append(String(e["text"]))
+	return lines
+
+
+## RIVAL-018: what it takes to challenge a rival who is far ahead.
+func test_rival_reach_line() -> void:
+	var s := _bitter_setup()
+	var d: GameData = s[0]
+	var rival: CharacterData = s[3]
+	assert_eq(_rival_reach_lines(s).size(), 0, "equal or weaker: no line")
+	rival.realm_index = s[1].realm_index + 1
+	var realm_name: String = d.realms[rival.realm_index].name
+	assert_eq(_rival_reach_lines(s), ["Reach %s to stand a chance against %s." % [realm_name, rival.name]])
+	Karma.add_grudge(s[1], d, rival.id, 20)
+	assert_eq(_rival_reach_lines(s), ["Reach %s before %s comes looking for you." % [realm_name, rival.name]])
+	rival.alive = false
+	assert_eq(_rival_reach_lines(s).size(), 0, "dead rival: no line")
+
+
 ## GRAT-001: the "Debts and grudges" journal section.
 func _karma_npc(people: Dictionary, id: String, npc_name: String) -> CharacterData:
 	var npc := CharacterData.new()
