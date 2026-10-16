@@ -54,7 +54,6 @@ Medians (day): QR1 14, QR3 243, QR9 476, sect 14; injuries 0; fights won 17, los
 First win: median day 14, seeds with no win in 12 months: 0; first-win foes: { "wild_boar": 9, "mountain_bandit": 1 }; median style day 40 (10 seeds)
 Distinct action kinds per month: 6.0; months after the first with no log lines: 0
 Lines by category: { "warning": 163, "danger": 586, "info": 1223, "progress": 1058, "karma": 144, "world": 6 }
-ERROR: 1 resources still in use at exit (run with --verbose for details).
 
 ## log noise (seeds 1-5, 12 months)
 
@@ -79,7 +78,6 @@ Most repeated line templates (per month, averaged):
    0.48  Mission complete: Escort Mortal Villagers. (+N contribution, Alignment +N, now Virtuous, Blood Lotus Sect repu
    0.48  You face the Wild Boar. (You: N hp, N atk. Foe: N hp, N atk.)
    0.47  <name> accepts your Boar Hide. (favor N; N to court)
-ERROR: 1 resources still in use at exit (run with --verbose for details).
 
 ## three curious years (seeds 1-10, 36 months)
 
@@ -399,7 +397,6 @@ First Foundation breakthrough (QA-066): seed, bottleneck day, attempts [day chan
   seed  9 bottleneck d1951 attempts 1 [d1951 78% pill ok] success d1951 stones 109
   seed 10 bottleneck d1462 attempts 1 [d1462 55% ok] success d1462 stones 154
   medians: days stuck at the bottleneck 0 (9 seeds that succeeded), attempts 1, share of attempts with a pill 36% (4 of 11), attempts under 50%: 4 of 11
-ERROR: 1 resources still in use at exit (run with --verbose for details).
 
 ## pill wait (curious, seeds 1-10, 36 months, wait up to 120 days)
 
@@ -724,7 +721,6 @@ First Foundation breakthrough (QA-066): seed, bottleneck day, attempts [day chan
   seed  9 bottleneck d1951 attempts 1 [d1951 78% pill ok] success d1951 stones 109  waited 0d
   seed 10 bottleneck d1462 attempts 4 [d1615 55% fail+injury, d1777 48% fail+injury, d1886 51% fail+injury, d1999 54% ok] success d1999 stones 132  waited 120d
   medians: days stuck at the bottleneck 60 (9 seeds that succeeded), attempts 1, share of attempts with a pill 37% (6 of 16), attempts under 50%: 5 of 16
-ERROR: 1 resources still in use at exit (run with --verbose for details).
 
 ## early inheritances (curious, seeds 1-10, 36 months)
 
@@ -737,7 +733,6 @@ Per inheritance (10 seeds): seeds that could pass every non-fight trial, median 
       never passable; blocking trial at the end: { "Silence of the Reeds": 6 }
   sword_mound_traveller  fallen_star_market       deadline y12 passable  7/10  month 13  odds 38%  claimed 7 (median month 18)  lost 0
       never passable; blocking trial at the end: { "Reading the Scratches": 3 }
-ERROR: 1 resources still in use at exit (run with --verbose for details).
 
 ## fair fights (curious, seeds 1-10, 12 months)
 
@@ -748,7 +743,6 @@ Listed fights taken: 116, won 115 (99%), mean rated chance 99%
   deed     listed   1, taken   1, won 100%, mean rated 100%
   bounty   listed   2, taken   2, won  50%, mean rated  86%
   explore  listed 107, taken  24, won 100%, mean rated  99%
-ERROR: 1 resources still in use at exit (run with --verbose for details).
 
 ## first fights, rated vs real (starter character, Qi Refining layers 1-3)
 
@@ -852,7 +846,6 @@ Rival story, curious policy, 10 seeds, 36 months (cells: player/rival realm+stag
   rival_public_challenge: met 13 (proud 13)
   bouts with the rival: won 7, lost 0; first win in 1/10 seeds (median month 12)
   bitter explore days in spoils regions per seed: median 16, max 53; before the encounter was met: median 8
-ERROR: 1 resources still in use at exit (run with --verbose for details).
 
 ## combat (200 fights per cell)
 
@@ -1278,7 +1271,6 @@ New days per month (median over seeds): 9 4 6 2 6 2 6 2 5 3 5 4 1
   longest 2: seed 1, days 129-161 (32 days), months 5-6, actions: meditate,explore,mission,work,gift,spar,lecture
   longest 3: seed 4, days 289-321 (32 days), months 10-11, actions: meditate,explore,mission,work,gift,pointer,lecture
 
-ERROR: 1 resources still in use at exit (run with --verbose for details).
 
 ## first Foundation Establishment year (seeds 1-10)
 

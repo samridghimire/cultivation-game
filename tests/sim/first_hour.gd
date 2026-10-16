@@ -173,6 +173,7 @@ static func _explore_watched(gs: Node, c: CharacterData, today: int) -> Dictiona
 
 static func _log_explore_fights(done: Dictionary, seen: Dictionary) -> void:
 	seen["off"].call()
+	seen.erase("off")  # QA-099: on_start captures `seen`, which held the lambda that captures on_start
 	if not done.has("fair_log"):
 		done["fair_log"] = {"listed": [], "taken": [], "by_kind": {}}
 	for m: Dictionary in seen["met"]:
