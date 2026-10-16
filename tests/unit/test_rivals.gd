@@ -432,3 +432,30 @@ func test_validation_rejects_bad_successor_delay() -> void:
 		var d := GameData.load_from_dir()
 		d.karma["rival"]["successor_delay_days"] = bad
 		assert_eq(Rivals.validate(d).size(), 1, str(bad))
+
+
+## QA-088: each attitude encounter can roll for a Qi Refining player whose met rival has that attitude.
+func test_attitude_encounters_are_eligible_in_their_regions() -> void:
+	var d := data()
+	var c := new_character()
+	c.realm_index = d.realm_index_of("qi_refining")
+	var rival := new_character(77)
+	rival.id = "gen_rival"
+	rival.realm_index = c.realm_index
+	var flags := {Rivals.FIRST_MEETING_FLAG: true}
+	var cases := [
+		["rival_spoils_gathering", "bitter", ["forest", "wild"]],
+		["rival_spoils_gathering", "bitter", ["marsh", "wild"]],
+		["rival_spoils_gathering", "bitter", ["mountain", "wild", "azure_cliffs"]],
+		["rival_shares_insight", "friendly", ["village"]],
+		["rival_public_challenge", "proud", ["city"]],
+	]
+	for case: Array in cases:
+		c.grudges.clear()
+		var favor := 0
+		if case[1] == "bitter":
+			c.grudges["gen_rival"] = int(Rivals.rules(d).get("bitter_grudge", 10))
+		elif case[1] == "friendly":
+			favor = int(Rivals.rules(d).get("friendly_favor", 20))
+		var ids: Array = Exploration.eligible_encounters(c, d, case[2], flags, rival, 1.0, "", "", favor).map(func(e: Dictionary) -> String: return e["encounter"]["id"])
+		assert_true(ids.has(case[0]), "%s eligible with tags %s" % [case[0], case[2]])
