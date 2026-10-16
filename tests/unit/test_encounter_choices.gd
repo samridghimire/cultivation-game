@@ -473,3 +473,36 @@ func test_giving_up_an_item_in_foundation_encounters() -> void:
 		assert_true(found, "%s has a choice that gives up %s" % [enc_id, item])
 		assert_true(enc["choices"].size() >= 2, "%s keeps a plain choice" % enc_id)
 	assert_eq(tags.size(), 3, "three different regions")
+
+
+## C-106: three Core Formation encounters in different regions where a choice gives something up.
+func test_giving_up_an_item_in_core_encounters() -> void:
+	var d := GameData.load_from_dir()
+	var gives := {
+		"marsh_drowned_scholar_cairn": "frost_jade_salve",
+		"mountain_hermit_smith_forge": "spirit_stone",
+		"wild_dying_beast_mother": "golden_core_lotus_seed"}
+	var tags := {}
+	var attribute_gains := 0
+	for enc_id: String in gives:
+		var item: String = gives[enc_id]
+		var enc: Dictionary = d.encounters[enc_id]
+		assert_eq(enc.get("min_realm", ""), "core_formation", enc_id + " realm")
+		assert_true(enc.has("blocked_by_flag"), enc_id + " is once-only")
+		tags[(enc["tags"] as Array)[0]] = true
+		var found := false
+		for choice: Dictionary in enc["choices"]:
+			if choice.get("effects", {}).has("attributes"):
+				attribute_gains += 1
+			var cost: int = int(choice.get("effects", {}).get("items", {}).get(item, 0))
+			if cost >= 0:
+				continue
+			found = true
+			var c := new_character()
+			assert_true(Exploration.check_choice(c, d, choice, {}) != "", "%s blocked without %s" % [enc_id, item])
+			c.add_item(item, 500)
+			assert_eq(Exploration.check_choice(c, d, choice, {}), "", "%s allowed with %s" % [enc_id, item])
+		assert_true(found, "%s has a choice that gives up %s" % [enc_id, item])
+		assert_true(enc["choices"].size() >= 3, "%s keeps a plain choice and a walk-away" % enc_id)
+	assert_eq(tags.size(), 3, "three different regions")
+	assert_true(attribute_gains <= 1, "at most one attribute gain across the three")
