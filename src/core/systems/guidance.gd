@@ -18,6 +18,8 @@ const FAIR_FIGHT_MAX_RATED := 8
 const FAIR_FIGHT_EXPLORE_MAX := 2
 const FAIR_FIGHT_MIN_CHANCE := 0.7  # "Even" or better (Combat.label_for_chance)
 const CHORE_REGION := "qingshi_village"
+## GUIDE-054: game days a Mortal crafter plays before hearing where to begin cultivating.
+const MORTAL_CRAFTER_NUDGE_DAY := 30
 
 
 ## Up to `limit` hints for `c`. `density` is the qi density where the player
@@ -38,6 +40,9 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 	if Children.is_pregnant(c):
 		var days := int(c.pregnancy.get("days_left", 0))
 		out.append("A child is due in %s." % Calendar.format_duration(days))
+	var mortal_nudge := mortal_crafter_hint(c, data, region_id, today, flags)
+	if mortal_nudge != "":
+		out.append(mortal_nudge)
 	var newcomer := _newcomer_hints(c, data, flags, region_id) if c.realm_index <= NEWCOMER_MAX_REALM else PackedStringArray()
 	out.append_array(newcomer)
 	var sell := _sell_hint(c, data, region_id)
@@ -101,6 +106,24 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 	if out.size() > limit:
 		out.resize(limit)
 	return out
+
+
+## GUIDE-054: a Mortal who practises a craft and has played MORTAL_CRAFTER_NUDGE_DAY days hears where to begin
+## cultivating. "" otherwise (not Mortal, no profession, too early, or `today` unknown).
+static func mortal_crafter_hint(c: CharacterData, data: GameData, region_id: String, today: int, flags: Dictionary = {}) -> String:
+	if c.realm_index != 0 or c.professions.is_empty() or today < MORTAL_CRAFTER_NUDGE_DAY:
+		return ""
+	var spot := "a meditation spot"
+	var eta := ""
+	if region_id != "":
+		var best := best_qi_in_region(c, data, region_id, flags)
+		if String(best["name"]) != "":
+			spot = String(best["name"])
+		var needed := maxf(Cultivation.qi_required(c, data) - c.qi, 0.0)
+		var rate := Cultivation.qi_per_day(c, data, float(best["density"]))
+		if rate > 0.0:
+			eta = " (about %s)" % Calendar.format_duration(ceili(needed / rate))
+	return "You are still a mortal. Meditate at %s to begin cultivating%s; your craft will keep." % [spot, eta]
 
 
 ## GUIDE-047: a broke crafter (nothing craftable, too few stones for any recipe in rank) hears

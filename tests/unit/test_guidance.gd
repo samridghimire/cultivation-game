@@ -2191,3 +2191,26 @@ func test_goals_include_next_recipe_line() -> void:
 	var line := Guidance.next_recipe_line(c, data(), "alchemist", "", 0)
 	if line != "":
 		assert_true(_has(Guidance.goals(c, data(), {}), line))
+
+
+func test_mortal_crafter_nudge() -> void:
+	var c := _fresh()
+	c.professions["alchemist"] = {"rank": 0, "xp": 0.0}
+	var spot := String(Guidance.best_qi_in_region(c, data(), "qingshi_village")["name"])
+	var hints := Guidance.hints(c, data(), 1.0, 10, {}, {}, "qingshi_village", 30)
+	assert_true(_has(hints, "You are still a mortal"))
+	if spot != "":
+		assert_true(_has(hints, "Meditate at %s" % spot))
+	assert_false(_has(Guidance.hints(c, data(), 1.0, 10, {}, {}, "qingshi_village", 10), "You are still a mortal"))
+	var none := _fresh()
+	none.professions = {}
+	assert_eq(Guidance.mortal_crafter_hint(none, data(), "qingshi_village", 60), "")
+	var higher := _fresh()
+	higher.professions["alchemist"] = {"rank": 0, "xp": 0.0}
+	higher.realm_index = 1
+	assert_eq(Guidance.mortal_crafter_hint(higher, data(), "qingshi_village", 60), "")
+	assert_true(Guidance.mortal_crafter_hint(c, data(), "", 60).contains("a meditation spot"))
+	c.techniques = {}
+	var one := Guidance.hints(c, data(), 1.0, 1, {}, {}, "qingshi_village", 30)
+	assert_eq(one.size(), 1)
+	assert_true(one[0].contains("You are still a mortal"))
