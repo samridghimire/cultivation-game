@@ -528,3 +528,34 @@ func test_profession_answers_at_core_formation() -> void:
 			c.professions[prof] = {"rank": 3, "xp": 0.0}
 			assert_eq(Exploration.check_choice(c, d, choice, {}), "", "%s allowed at rank 3" % enc_id)
 		assert_true(found, "%s has a rank 3 %s choice" % [enc_id, prof])
+
+
+## C-117: three once-only Nascent Soul encounters in different regions where a choice gives something up.
+func test_giving_up_an_item_in_nascent_encounters() -> void:
+	var d := GameData.load_from_dir()
+	var gives := {
+		"marsh_sunken_bell_monk": "soul_infant_fruit",
+		"ruins_stele_warden": "spirit_stone",
+		"city_refugee_hall": "spirit_stone"}
+	var tags := {}
+	for enc_id: String in gives:
+		var item: String = gives[enc_id]
+		var enc: Dictionary = d.encounters[enc_id]
+		assert_eq(enc.get("min_realm", ""), "nascent_soul", enc_id + " realm")
+		assert_true(enc.has("blocked_by_flag"), enc_id + " is once-only")
+		tags[(enc["tags"] as Array)[0]] = true
+		var found := false
+		for choice: Dictionary in enc["choices"]:
+			assert_false(choice.get("effects", {}).has("attributes"), enc_id + " has no attribute gain")
+			var cost: int = int(choice.get("effects", {}).get("items", {}).get(item, 0))
+			if cost >= 0:
+				continue
+			found = true
+			var c := new_character()
+			assert_true(Exploration.check_choice(c, d, choice, {}) != "", "%s blocked without %s" % [enc_id, item])
+			c.add_item(item, 99999)
+			assert_eq(Exploration.check_choice(c, d, choice, {}), "", "%s allowed with %s" % [enc_id, item])
+			assert_true(Exploration.check_tag(d, choice) != "", "%s shows its cost in the tag" % enc_id)
+		assert_true(found, "%s has a choice that gives up %s" % [enc_id, item])
+		assert_true(enc["choices"].size() >= 3, "%s keeps a plain choice and a walk-away" % enc_id)
+	assert_eq(tags.size(), 3, "three different regions")
