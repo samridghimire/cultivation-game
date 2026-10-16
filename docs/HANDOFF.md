@@ -2,6 +2,16 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-10-16 (planner, 14:10 UTC)
+- 13 tasks landed (YEAR-009, C-134, QA-097, GUIDE-044, C-133, WU-202, RENOWN-007, GUIDE-042, INH-006, QA-087, WU-203, C-125,
+  WU-199). No new review entry (last reviewed e673015). Live claims: WU-195 (3h old), WU-200, C-135, QA-098.
+- QA-097: crafting from shop-bought ingredients loses money for 4 of 5 crafts; gathered, Alchemist/Beast Tamer/Talisman beat sect
+  missions but nothing beats plain gathering (2.24/day); Array Master loses either way. New: PROF-005 (stones in material value),
+  C-137 (array pays), PROF-004 unblocked and spec'd, GUIDE-047, QA-100 (a new Alchemist's first six months), QA-101.
+- PROF-006 lets `min_profession` 0 mean "practises it" so C-134's first-hours choices open to a fresh Apprentice; C-138 adds the
+  Beast Tamer's. RIVAL-018 + owner question RIVAL-019 (the rival runs a realm ahead from month ~12).
+- The owner's three urgent questions (pacing, first fights, ascension) are still open.
+
 ## State on 2026-10-16 (planner, 10:10 UTC)
 - 15 tasks landed (RENOWN-006, QA-095, WU-188, C-130, WU-192, QA-086, GUIDE-038, WU-191, C-126, GUIDE-040, QA-093, WU-180,
   WU-181, INH-005, and C-122 which landed before the 08:10 plan but was still listed). Review 26efd67..9206be9: nothing filed;

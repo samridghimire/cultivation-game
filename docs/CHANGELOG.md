@@ -2,6 +2,19 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-16 [YEAR-009] The year in review says what your craft earned.
+- 2026-10-16 [C-134] Three first-hours encounters where a craft, an attribute or a fight opens a choice.
+- 2026-10-16 [QA-097] Profession income sim: crafters craft instead of working (bought herbs lose money, gathered ones pay).
+- 2026-10-16 [GUIDE-044] The newcomer's workshop hint names the pay.
+- 2026-10-16 [C-133] Every profession's first recipes sell above their material cost.
+- 2026-10-16 [WU-202] The notice banner's subtitle stays one line.
+- 2026-10-16 [RENOWN-007] Delivering a commission or treating patients spreads your name.
+- 2026-10-16 [GUIDE-042] A crafter hears where their herbs grow.
+- 2026-10-16 [INH-006] The year in review only mourns inheritances you knew about.
+- 2026-10-16 [QA-087] Rival sim: bouts won/lost and the month of the first win.
+- 2026-10-16 [WU-203] A gather site says which of your recipes its herbs feed.
+- 2026-10-16 [C-125] Rank-4 blacksmith, talisman and array master choices at Nascent Soul.
+- 2026-10-16 [WU-199] Place labels stay inside the map (already true; closed).
 - 2026-10-16 [C-132] Odd jobs pay three times as much (Doctor 15 stones a month at rank 0).
 - 2026-10-16 [C-124] Your rival at Void Refinement: three once-only encounters, each with a duel and a peaceful way out.
 - 2026-10-16 [WU-198] The epilogue's fame line fits on screen at 1280x800 and 1280x720.
