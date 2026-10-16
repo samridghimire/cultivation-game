@@ -157,6 +157,12 @@ static func year_summary(before: Dictionary, after: Dictionary, realm_before: St
 	var out := PackedStringArray()
 	if realm_before != "" and realm_after != "" and realm_before != realm_after:
 		out.append("You rose from %s to %s." % [realm_before, realm_after])
+	var tribs := _delta(before, after, "tribulations_survived")
+	if tribs > 0:
+		out.append("You survived a Heavenly Tribulation." if tribs == 1 else "You survived %d Heavenly Tribulations." % tribs)
+	var claimed := _delta(before, after, "inheritances_claimed")
+	if claimed > 0:
+		out.append("You claimed an inheritance." if claimed == 1 else "You claimed %d inheritances." % claimed)
 	var won := _delta(before, after, "fights_won")
 	var lost := _delta(before, after, "fights_lost")
 	if won > 0 or lost > 0:

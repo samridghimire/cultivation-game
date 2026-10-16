@@ -145,3 +145,14 @@ func test_year_summary_rival_bouts() -> void:
 	assert_eq(lines.size(), 4)
 	assert_eq(lines[0], "You rose from A to B.")
 	assert_eq(lines[2], "You crossed hands with your rival 1 time and won 1.")
+
+
+func test_year_summary_big_moments_lead() -> void:
+	var after := {"tribulations_survived": 1, "inheritances_claimed": 1, "fights_won": 2, "items_crafted": 3}
+	var lines := LifeStats.year_summary({}, after, "A", "B")
+	assert_eq(lines, PackedStringArray(["You rose from A to B.", "You survived a Heavenly Tribulation.", "You claimed an inheritance.", "You won 2 fights and lost 0."]))
+
+
+func test_year_summary_big_moments_plural() -> void:
+	var lines := LifeStats.year_summary({}, {"tribulations_survived": 2, "inheritances_claimed": 3}, "A", "A")
+	assert_eq(lines, PackedStringArray(["You survived 2 Heavenly Tribulations.", "You claimed 3 inheritances."]))
