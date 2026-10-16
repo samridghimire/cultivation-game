@@ -54,6 +54,8 @@ func test_qingshi_forced_fights_are_winnable_for_newcomers() -> void:
 				if realm < min_realm or realm > max_realm:
 					continue
 				for stage in ([0] if realm == 0 else [0, 1, 2]):
+					if realm == min_realm and stage < int(enc.get("min_stage", 0)):
+						continue
 					var c := new_character(31)
 					c.realm_index = realm
 					c.stage = stage
