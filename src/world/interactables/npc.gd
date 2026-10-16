@@ -325,9 +325,20 @@ func _mentor_options() -> Array[Dictionary]:
 		options.append(_entry(label, reason, GameState.ask_pointers.bind(npc_id)))
 	var max_gap := int(data.family.get("mentorship", {}).get("spar", {}).get("max_realm_gap", 1))
 	if p.realm_index >= 1 and npc.realm_index >= 1 and absi(npc.realm_index - p.realm_index) <= max_gap:
-		var spar_label := ("Challenge your rival %s to a bout" if npc_id == p.rival else "Spar with %s") % npc.name
-		options.append(_entry(spar_label, GameState.check_spar(npc_id), GameState.spar_with.bind(npc_id)))
+		var spar_reason := GameState.check_spar(npc_id)
+		var chance := -1.0
+		if spar_reason == "":
+			chance = Combat.win_chance(p, data, Mentorship.spar_enemy(npc, data))
+		options.append(_entry(spar_label(npc.name, npc_id == p.rival, chance), spar_reason, GameState.spar_with.bind(npc_id)))
 	return options
+
+
+## WU-173: the spar menu line; a chance >= 0 appends the odds (same rating as the journal).
+static func spar_label(npc_name: String, is_rival: bool, chance: float) -> String:
+	var label := ("Challenge your rival %s to a bout" if is_rival else "Spar with %s") % npc_name
+	if chance >= 0.0:
+		label += " (%s, %d in 100)" % [Combat.label_for_chance(chance), roundi(chance * 100.0)]
+	return label
 
 
 ## One "Give <item>" per usable carried item (pills, salves), then Back.

@@ -63,6 +63,7 @@ func test_rival_spar_reads_as_challenge() -> void:
 	var ch := _find(opts, "Challenge your rival %s" % npc.name)
 	assert_false(ch.is_empty(), "challenge listed")
 	assert_false(ch["disabled"], ch["reason"])
+	assert_true(String(ch["label"]).contains(" in 100)"), "WU-173: odds shown: %s" % ch["label"])
 	gs.player.rival = ""
 	r[0].free()
 	gs.end_session()
@@ -103,3 +104,9 @@ func test_rival_challenge_opening_line() -> void:
 	assert_true(found, "challenge line: %s" % str(log_lines))
 	r[0].free()
 	gs.end_session()
+
+
+func test_spar_label_odds() -> void:
+	var want := "Challenge your rival Lin to a bout (%s, 52 in 100)" % Combat.label_for_chance(0.52)
+	assert_eq(load("res://src/world/interactables/npc.gd").spar_label("Lin", true, 0.52), want)
+	assert_eq(load("res://src/world/interactables/npc.gd").spar_label("Lin", false, -1.0), "Spar with Lin")
