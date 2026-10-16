@@ -136,9 +136,9 @@ static func spread_labels(nodes: Array) -> void:
 
 ## The interact prompt already names the current target, so its own label is not drawn
 ## (it sat under the player sprite and the prompt, WU-176). The HUD shows the prompt
-## whenever a target exists, so `highlighted` stands for both arguments.
-static func label_visible(is_target: bool, prompt_shown: bool) -> bool:
-	return not (is_target and prompt_shown)
+## whenever a target exists, so the target's own label is always hidden.
+static func label_visible(is_target: bool) -> bool:
+	return not is_target
 
 
 ## Shifts labels sideways so none sticks out past `bounds` (WU-160).
@@ -167,7 +167,7 @@ func _draw() -> void:
 	if highlighted:
 		var glow := 0.5 + 0.5 * sin(_pulse_time * 5.0)
 		draw_rect(Rect2(-size / 2.0, size).grow(6.0 + 2.0 * glow), Color(1.0, 0.9, 0.5, 0.45 + 0.4 * glow), false, 2.0)
-	if label_visible(highlighted, highlighted):
+	if label_visible(highlighted):
 		var font := ThemeDB.fallback_font
 		var text := label_text()
 		var text_width := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, LABEL_FONT_SIZE).x

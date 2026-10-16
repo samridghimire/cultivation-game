@@ -42,8 +42,11 @@ func _start() -> void:
 				hud.get("_encounter").open(), "close": hud.get("_encounter").close})
 			break
 	var report: Control = hud.get("_combat_report")
-	var lines := PackedStringArray(["Round 1: you strike the Wild Boar for 3. (Wild Boar: 12 hp)", "Round 2: the Wild Boar gores you for 2."])
-	shots.append({"name": "combat_report", "open": func() -> void: report.show_fight("Wild Boar", false, lines), "close": report.close})
+	# A real fight through GameState.fight (WU-181): the boar is rated and resolved
+	# like in play; seed 11 is a newcomer win. The HUD opens the report itself.
+	shots.append({"name": "combat_report", "open": func() -> void:
+		gs.rng.seed = 11
+		gs.fight("wild_boar"), "close": report.close})
 	for action: String in ["toggle_journal", "toggle_inventory", "toggle_character_sheet"]:
 		if hud.get("_screens").has(action):
 			var s: Control = hud.get("_screens")[action]
