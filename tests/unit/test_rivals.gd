@@ -512,3 +512,25 @@ func test_where_text_cases() -> void:
 	assert_eq(Rivals.where_text(r, d, "qingshi_village"), named, "elsewhere is named")
 	assert_eq(Rivals.where_text(r, d, "misty_forest"), "", "same region is silent")
 	assert_eq(Rivals.where_text(r, d, ""), named, "unknown current region names it")
+
+
+## C-124: three Void Refinement rival encounters, one per attitude, once-only, with a duel and a peaceful choice.
+func test_void_refinement_rival_encounters() -> void:
+	var d := data()
+	var want := {"rival_void_open_door": "friendly", "rival_void_proud_challenge": "proud", "rival_void_bitter_vault": "bitter"}
+	for id in want:
+		assert_true(d.encounters.has(id), id + " exists")
+		var e: Dictionary = d.encounters[id]
+		assert_eq(e.get("rival_attitude", ""), want[id], id + " attitude")
+		assert_eq(e.get("rival", ""), "any", id + " rival kind")
+		assert_eq(e.get("requires_flag", ""), "rival_met", id + " waits for the first meeting")
+		assert_true(e.has("blocked_by_flag"), id + " is once-only")
+		assert_eq(e.get("min_realm", ""), "void_refinement", id + " min realm")
+		assert_true(str(e["text"]).contains("{rival}"), id + " names the rival")
+		var duel := false
+		for choice: Dictionary in e["choices"]:
+			if bool(choice.get("fight_rival", false)):
+				duel = true
+				assert_true(int(choice.get("rival_grudge", 0)) <= 5, id + " duel grudge at most 5")
+		assert_true(duel, id + " has a fight_rival choice")
+		assert_true(e["choices"].size() >= 2, id + " has a peaceful choice")
