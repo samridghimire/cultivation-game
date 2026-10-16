@@ -197,6 +197,18 @@ static func bout_record_text(flags: Dictionary) -> String:
 	return "bouts %d won, %d lost" % [won, lost]
 
 
+## YEAR-010: the year-in-review line on where the rival stands, "" before the first meeting
+## (`flags` has no FIRST_MEETING_FLAG) or when there is no living rival.
+static func year_line(c: CharacterData, rival: CharacterData, flags: Dictionary) -> String:
+	if rival == null or not rival.alive or not flags.get(FIRST_MEETING_FLAG, false):
+		return ""
+	var line := "%s is %s." % [rival.name, relation_text(c, rival)]
+	var record := bout_record_text(flags)
+	if record != "":
+		line += " Bouts: %s." % record.trim_prefix("bouts ")
+	return line
+
+
 ## Whether an encounter's `rival` condition holds (no condition = always).
 static func allows(c: CharacterData, rival: CharacterData, condition: String) -> bool:
 	if condition == "":

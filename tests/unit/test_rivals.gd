@@ -551,3 +551,26 @@ func test_void_refinement_rival_encounters() -> void:
 				assert_true(int(choice.get("rival_grudge", 0)) <= 5, id + " duel grudge at most 5")
 		assert_true(duel, id + " has a fight_rival choice")
 		assert_true(e["choices"].size() >= 2, id + " has a peaceful choice")
+
+
+func test_year_line_says_where_the_rival_stands() -> void:
+	var c := CharacterFactory.create("Me", data(), seeded_rng(1))
+	var r := CharacterFactory.create("Rival", data(), seeded_rng(2))
+	var flags := {}
+	assert_eq(Rivals.year_line(c, r, flags), "", "before the first meeting")
+	flags[Rivals.FIRST_MEETING_FLAG] = true
+	assert_eq(Rivals.year_line(c, r, flags), "Rival is level with you.")
+	r.stage = c.stage + 1
+	assert_eq(Rivals.year_line(c, r, flags), "Rival is a few steps ahead.")
+	r.realm_index = c.realm_index + 1
+	assert_eq(Rivals.year_line(c, r, flags), "Rival is far ahead of you.")
+	r.realm_index = c.realm_index
+	r.stage = c.stage
+	c.stage += 1
+	assert_eq(Rivals.year_line(c, r, flags), "Rival is behind you.")
+	flags[Rivals.BOUTS_WON_FLAG] = 2
+	flags[Rivals.BOUTS_LOST_FLAG] = 1
+	assert_eq(Rivals.year_line(c, r, flags), "Rival is behind you. Bouts: 2 won, 1 lost.")
+	r.alive = false
+	assert_eq(Rivals.year_line(c, r, flags), "", "dead rival")
+	assert_eq(Rivals.year_line(c, null, flags), "")

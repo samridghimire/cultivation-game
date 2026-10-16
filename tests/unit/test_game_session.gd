@@ -876,6 +876,23 @@ func test_new_year_posts_a_review_once_and_restores_snapshot() -> void:
 	assert_eq(gs.player, c)
 
 
+func test_year_review_names_the_rival_last() -> void:
+	var c := _start()
+	var gs := _game_state()
+	var clock := _root().get_node("GameClock")
+	var bus := _root().get_node("EventBus")
+	var rival: CharacterData = Rivals.rival_of(c, gs.npcs)
+	var seen: Array = []
+	var cb := func(_year: int, lines: PackedStringArray, _start: int) -> void: seen.append(lines)
+	bus.year_reviewed.connect(cb)
+	gs.world_flags[Rivals.FIRST_MEETING_FLAG] = true
+	clock.advance(Calendar.DAYS_PER_YEAR)
+	bus.year_reviewed.disconnect(cb)
+	var lines: PackedStringArray = seen[0]
+	assert_eq(lines[lines.size() - 1], Rivals.year_line(c, rival, gs.world_flags))
+	assert_true(lines[lines.size() - 1].begins_with(rival.name + " is "))
+
+
 func test_meditation_line_shows_progress() -> void:
 	var c := _start()
 	c.realm_index = 1

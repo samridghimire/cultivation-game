@@ -2934,6 +2934,9 @@ func _on_year_changed(year: int) -> void:
 		return
 	if player.year_start_realm != "":
 		var lines := LifeStats.year_summary(player.year_start_stats, player.life_stats, player.year_start_realm, Cultivation.realm_label(player, data))
+		var rival_line := Rivals.year_line(player, Rivals.rival_of(player, npcs), world_flags)
+		if rival_line != "":
+			lines.append(rival_line)  # last, so it never pushes out the realm line
 		for line in lines:
 			EventBus.post(line, "progress", "life")
 		EventBus.year_reviewed.emit(year, lines, player.year_start_year)
