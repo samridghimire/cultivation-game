@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: ac172f8
+Last reviewed commit: 50042bb
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -560,3 +560,18 @@ Last reviewed commit: ac172f8
   - Notes, not filed: the sheet's rival line (WU-174) names the region when no current region is passed, but the
     journal's (GUIDE-035) doesn't; harmless, since both callers pass the region. WU-176's label_visible(highlighted,
     highlighted) takes a parameter it never really uses.
+- 2026-10-16 (reviewer): reviewed ac172f8..50042bb (WU-172, INH-002, WU-177, C-112, QA-089, C-113, SOUL-001, C-114,
+  WU-178, WU-179, INH-003, QA-090, GRAT-001, C-115; [PLAN] commits skipped). Main green (1878 tests). No
+  BACKLOG/CHANGELOG edits by workers; no SAVE_VERSION change. Nothing filed.
+  - Fixed ([REVIEW] commit): C-115's rival_soul_bitter_cairn said the cairn was for "those who fell in your sect's
+    worst year", which reads wrong for a rogue cultivator; reworded to a sect-neutral war memorial.
+  - Checked: SOUL-001 mirrors the Nascent ladder; its body row appears now that C-114 added a sixth stage (body_stage 6
+    = stages[5], min_realm soul_formation) and Soul Formation enemies exist for the beat-a-foe goal. C-114 keeps total
+    injury_resist under the cap and every item has a source (tested). C-112/C-115 duel choices pay no items and their
+    stone costs go through Effects.check. INH-002's alignment messages only index min/max_alignment when present.
+    INH-003's warning tone is only for an attemptable inheritance under a year from its deadline. GRAT-001's tiers
+    read data/karma.json thresholds and skip the rival's grudge (left to the rival entry), like WU-178's People list.
+    QA-089 removed the early return the last review flagged as a weak test.
+  - Notes, not filed: QA-090 found the curious sim policy never explores the bitter spoils encounter's regions while
+    the rival is bitter (a sim-policy gap, not a game bug). The Soul Formation goal "Claim two inheritances" counts
+    lifetime claims, so it can be done on arrival.
