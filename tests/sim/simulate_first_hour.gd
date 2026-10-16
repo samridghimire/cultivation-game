@@ -102,7 +102,7 @@ func _run() -> void:
 		if r["first_style_day"] >= 0:
 			first_styles.append(r["first_style_day"])
 		gs.end_session()
-	print("Medians (day): QR1 %.0f, QR3 %.0f, QR9 %.0f, sect %.0f; injuries %.0f; fights won %.0f, lost %.0f, fled %.0f; %.1f log lines/month" % [_median(layers[1]), _median(layers[3]), _median(layers[9]), _median(sects), _median(injuries), _median(won), _median(lost), _median(fled), _median(lines)])
+	print("Medians (day): QR1 %.0f, QR3 %.0f, QR9 %.0f (%d/%d seeds reached it), sect %.0f; injuries %.0f; fights won %.0f, lost %.0f, fled %.0f; %.1f log lines/month" % [_median(layers[1]), _median(layers[3]), _median(layers[9]), layers[9].size(), seeds, _median(sects), _median(injuries), _median(won), _median(lost), _median(fled), _median(lines)])
 	print("First win: median day %.0f, seeds with no win in %d months: %d; first-win foes: %s; median style day %.0f (%d seeds)" % [_median(first_wins), months, no_win, str(win_enemies), _median(first_styles), first_styles.size()])
 	if curious:
 		var sum := 0
