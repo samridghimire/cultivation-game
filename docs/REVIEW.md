@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 9206be9
+Last reviewed commit: 569a744
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -598,3 +598,18 @@ Last reviewed commit: 9206be9
     defers to the tier line. C-120's corpse-refiner hunt is an enemy choice, so its renown waits on a won fight
     (RENOWN-004). C-117 costs go through check_choice (tested). GRAT-002 uses Karma.amends_cost and the NPC's region.
   - Notes, not filed: WU-158's banner now sits in the top 3-20% of the screen, over the HUD's top area while it shows.
+- 2026-10-16 (reviewer): reviewed 9206be9..569a744 (C-121, GUIDE-036, WU-187, YEAR-007, C-122, INH-005, WU-181, WU-180,
+  QA-093, GUIDE-040, C-126, WU-191, GUIDE-038, QA-086, WU-192, C-130, WU-188; [PLAN] commits skipped). Main green. No
+  BACKLOG/CHANGELOG edits by workers; no SAVE_VERSION change. Nothing filed.
+  - Found: YEAR-007's renown_titles counted every tier crossed, so Known -> Respected -> Renowned in one region read
+    "Your name became known in 3 places" and could meet C-130's four-places milestone in two regions. QA-20261016-1
+    landed the same fix (Renown.add's first_title) while this review ran, so mine was dropped.
+  - Fixed ([REVIEW] commit): GUIDE-036's test injected a pill, an auction lot and a recipe into the shared data() of
+    test_guidance.gd; it now loads its own GameData.
+  - Checked: INH-005 counts a loss once (lost_between keys on the deadline crossing, skips claimed ones). C-122's
+    stages, foe and reward items validate; a 300-year deadline fits Void Refinement lifespans. GUIDE-036 only speaks
+    when no shop sells the pill (Items.sources never returns empty). GUIDE-040, GUIDE-038 (format_rough) and C-126
+    (drunk bully non-lethal; the guard now honours min_stage) are sound. WU-191's HUD line falls back to goals().
+    WU-192's subtitle is a pure static with a null-safe player. QA-086/QA-093/WU-180/WU-181/WU-187/WU-188 are
+    sims and shots only.
+  - Notes, not filed: INH-005 also counts inheritances whose grounds the player never found or could not yet enter.

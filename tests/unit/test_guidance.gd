@@ -1833,7 +1833,7 @@ func _void_pill_player(d: GameData) -> CharacterData:
 
 
 func test_pill_source_goal_recipe_and_auction() -> void:
-	var d := data()
+	var d := GameData.load_from_dir()  # injects a pill, lot and recipe; keep the shared data() clean
 	var c := _void_pill_player(d)
 	assert_eq(Guidance.pill_source_goal(c, d), "")  # no source at all
 	d.auction_houses["fallen_star_auction"]["lot_table"].append({"item": "void_pill", "base_price": 1, "weight": 1, "rarity": "epic"})
