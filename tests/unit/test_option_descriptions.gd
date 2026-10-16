@@ -52,6 +52,20 @@ func test_description_line_follows_focus() -> void:
 	src.free()
 
 
+## WU-164: an enabled warning-toned option keeps its description, tinted with the warning color.
+func test_warning_tone_keeps_description() -> void:
+	var src := FakeSource.new()
+	src.options = [{"label": "Risky", "action": func() -> void: pass, "description": "It will be close.", "tone": "warning"}]
+	var menu := ChoiceMenu.new()
+	_tree().root.add_child(menu)
+	menu.open_for(src)
+	_button(menu, "Risky").focus_entered.emit()
+	assert_eq(menu._description.text, "It will be close.")
+	assert_eq(menu._description.get_theme_color("font_color"), UIStyle.CATEGORY_COLORS["warning"])
+	menu.queue_free()
+	src.free()
+
+
 func _check_options(node: Interactable, who: String) -> void:
 	for o: Dictionary in node.menu_options():
 		var label := String(o.get("label", ""))

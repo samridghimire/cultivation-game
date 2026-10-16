@@ -15,6 +15,8 @@ const SEEN_REALM_FLAG := "rival_seen_realm"
 const SURPASSED_FLAG := "rival_surpassed"
 const SUCCESSOR_DAY_FLAG := "rival_successor_day"  # RIVAL-014: day a new rival names the player
 const MEETING_FROM_FLAG := "rival_meeting_from"  # RIVAL-014: first meeting window starts here
+const BOUTS_WON_FLAG := "rival_bouts_won"  # RIVAL-016: bouts against the current rival (a successor starts at 0)
+const BOUTS_LOST_FLAG := "rival_bouts_lost"
 const SPUR_CAP := 0.95
 
 
@@ -175,10 +177,11 @@ static func relation_text(c: CharacterData, rival: CharacterData) -> String:
 	return "level with you"
 
 
-## "bouts 2 won, 1 lost" from the life stats (RIVAL-016), "" before any bout.
-static func bout_record_text(c: CharacterData) -> String:
-	var won := LifeStats.get_stat(c, "rival_bouts_won")
-	var lost := LifeStats.get_stat(c, "rival_bouts_lost")
+## "bouts 2 won, 1 lost" against the current rival (RIVAL-016), "" before any bout. The lifetime
+## totals are life stats; these world flags restart when a successor rival appears.
+static func bout_record_text(flags: Dictionary) -> String:
+	var won := int(flags.get(BOUTS_WON_FLAG, 0))
+	var lost := int(flags.get(BOUTS_LOST_FLAG, 0))
 	if won == 0 and lost == 0:
 		return ""
 	return "bouts %d won, %d lost" % [won, lost]

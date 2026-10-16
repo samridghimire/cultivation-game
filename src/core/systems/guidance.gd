@@ -1362,7 +1362,7 @@ static func _rival_entry(out: Array[Dictionary], c: CharacterData, data: GameDat
 	var relation := Rivals.relation_text(c, rival)
 	if feeling != "":
 		relation += "; " + feeling
-	var record := Rivals.bout_record_text(c)
+	var record := Rivals.bout_record_text(flags)
 	if record != "":
 		relation += "; " + record
 	# GUIDE-035: say where they are when it is not here.

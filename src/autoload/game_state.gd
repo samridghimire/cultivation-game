@@ -1330,7 +1330,8 @@ func spar_with(npc_id: String) -> void:
 	if npc_id == player.rival:
 		var key := "rival_bouts_won" if won else "rival_bouts_lost"
 		LifeStats.add(player, key)
-		if won and LifeStats.get_stat(player, key) == 1:
+		world_flags[key] = int(world_flags.get(key, 0)) + 1
+		if won and int(world_flags[key]) == 1:
 			EventBus.post("You best %s in a bout for the first time." % npc.name, "progress")
 	_post_attitude_change(before)
 	# The bout itself took a day; the spar rule's `days` is the whole visit.
@@ -3026,7 +3027,7 @@ func _on_days_advanced(days: int) -> void:
 func _rival_news() -> void:
 	if player.alive and Rivals.successor_due(world_flags, GameClock.total_days):
 		var heir := Rivals.spawn(player, npcs, data, rng, current_region if current_region != "" else data.start_region)
-		for flag in [Rivals.SUCCESSOR_DAY_FLAG, Rivals.FIRST_MEETING_FLAG, Rivals.SEEN_REALM_FLAG, Rivals.SURPASSED_FLAG, "rival_death_news"]:
+		for flag in [Rivals.SUCCESSOR_DAY_FLAG, Rivals.FIRST_MEETING_FLAG, Rivals.SEEN_REALM_FLAG, Rivals.SURPASSED_FLAG, "rival_death_news", Rivals.BOUTS_WON_FLAG, Rivals.BOUTS_LOST_FLAG]:
 			world_flags.erase(flag)
 		world_flags[Rivals.MEETING_FROM_FLAG] = GameClock.total_days
 		EventBus.post(Rivals.successor_line(heir, String(world_flags.get("rival_predecessor", "your old rival"))), "world")

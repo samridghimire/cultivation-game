@@ -1176,6 +1176,7 @@ func test_spar_rival_keeps_score() -> void:
 	var won := LifeStats.get_stat(c, "rival_bouts_won")
 	var lost := LifeStats.get_stat(c, "rival_bouts_lost")
 	assert_eq(won + lost, 1, "one bout scored")
+	assert_eq(int(gs.world_flags.get(Rivals.BOUTS_WON_FLAG, 0)) + int(gs.world_flags.get(Rivals.BOUTS_LOST_FLAG, 0)), 1, "this rival's record too")
 	var firsts := 0
 	for entry in EventBus.history:
 		if String(entry["text"]).contains("for the first time"):
@@ -1643,6 +1644,7 @@ func test_successor_rival_appears_after_old_rival_dies() -> void:
 	var old_id := c.rival
 	Npcs.die(gs.npcs[old_id], "old age")
 	gs.world_flags[Rivals.FIRST_MEETING_FLAG] = true
+	gs.world_flags[Rivals.BOUTS_WON_FLAG] = 3
 	var today := GameClock.total_days
 	gs._rival_news()
 	assert_eq(int(gs.world_flags[Rivals.SUCCESSOR_DAY_FLAG]), today + 180)
@@ -1657,6 +1659,7 @@ func test_successor_rival_appears_after_old_rival_dies() -> void:
 	assert_eq(EventBus.history.filter(func(m): return String(m["text"]).begins_with("Word spreads of")).size(), 1)
 	assert_true(Rivals.first_meeting_due(c, gs.npcs, gs.data, gs.world_flags, GameClock.total_days))
 	assert_false(gs.world_flags.has(Rivals.SUCCESSOR_DAY_FLAG))
+	assert_eq(Rivals.bout_record_text(gs.world_flags), "", "the successor starts with no bout record")
 	gs.end_session()
 
 

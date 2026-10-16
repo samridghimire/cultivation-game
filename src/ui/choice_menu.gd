@@ -83,8 +83,10 @@ func _rebuild() -> void:
 		b.tooltip_text = reason
 		if option.has("color"):
 			UIStyle.tint_button_text(b, option["color"])
-		var warn := (b.disabled and reason != "") or String(option.get("tone", "")) == "warning"
-		var line: String = reason if warn else String(option.get("description", ""))
+		var refused := b.disabled and reason != ""
+		var warn := refused or String(option.get("tone", "")) == "warning"
+		# A warning-toned option keeps its own description, only tinted.
+		var line: String = reason if refused else String(option.get("description", ""))
 		if b.disabled:
 			b.focus_mode = Control.FOCUS_ALL
 		b.focus_entered.connect(_show_line.bind(line, warn))

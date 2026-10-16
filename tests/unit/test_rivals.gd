@@ -398,10 +398,10 @@ func test_attitude_change_line() -> void:
 
 func test_bout_record_text() -> void:
 	var c := new_character()
-	assert_eq(Rivals.bout_record_text(c), "")
+	assert_eq(Rivals.bout_record_text({}), "")
 	LifeStats.add(c, "rival_bouts_won", 2)
-	LifeStats.add(c, "rival_bouts_lost")
-	assert_eq(Rivals.bout_record_text(c), "bouts 2 won, 1 lost")
+	assert_eq(Rivals.bout_record_text({}), "", "lifetime totals are not this rival's record")
+	assert_eq(Rivals.bout_record_text({Rivals.BOUTS_WON_FLAG: 2, Rivals.BOUTS_LOST_FLAG: 1}), "bouts 2 won, 1 lost")
 
 
 func test_successor_due_and_line() -> void:

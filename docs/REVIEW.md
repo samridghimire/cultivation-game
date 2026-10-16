@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: b2343fc
+Last reviewed commit: fccc922
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -530,3 +530,20 @@ Last reviewed commit: b2343fc
     for the planner, but workers should amend before landing, not after.
   - Notes, not filed: C-100's duel choices add rival_grudge 10, which equals bitter_grudge, so any one duel makes the
     rival bitter (refuses spars until amends). Intended? A design call for the planner.
+- 2026-10-16 (reviewer): reviewed b2343fc..fccc922 (WU-162, C-099/C-104, WU-163, WU-164, GUIDE-033, QA-083, C-109,
+  GUIDE-032, GUIDE-034, C-105, WU-165, QA-071, WU-167, RIVAL-016, WU-169, WU-166; [PLAN] commits skipped). The last
+  run's range stopped at b2343fc although WU-162..164 and C-099/C-104 had landed before it, so they are covered here.
+  Main green (1851 -> 1854 tests). No BACKLOG/CHANGELOG edits by workers; no SAVE_VERSION change.
+  - Fixed ([REVIEW] commit): (1) WU-164 made ChoiceMenu treat a `tone: "warning"` option like a refused one and show
+    its `reason`, which enabled options don't have: the tribulation attempt's description (odds, risk, the close-call
+    warning itself) went blank exactly when it was meant to be highlighted. Now only disabled options show the reason;
+    the warning tone only tints the description. Test added. (2) RIVAL-016 kept the bout record in life stats only, so a
+    RIVAL-014 successor rival inherited the dead rival's "bouts N won" and never got a "first time" line. The current
+    rival's record now lives in world_flags (rival_bouts_won/lost), cleared on succession; the life stats stay lifetime
+    totals. Saves from the last few hours show no record until the next bout.
+  - Checked: GUIDE-033's rival bout respects attitude, check_spar and region, and is display-only. C-109's guard test
+    covers every fight_rival choice. GUIDE-032 needs a shop pill for the next realm (returns "" otherwise). GUIDE-034's
+    echo filter only drops exact repeats and the breakthrough hint. C-105 validates groups; WU-169 handles empty groups.
+  - Notes for the planner, not filed: QA-083 found rival_spoils_gathering (bitter) never rolled in 20 sims although the
+    rival is bitter in 24% of curious checkpoints; worth a check of its eligibility. QA-071: reed_hermit_hut claimed by
+    0/10 seeds. GUIDE-033's away/bitter/cooldown test returns early when the fixture bout is not fair (weak test).

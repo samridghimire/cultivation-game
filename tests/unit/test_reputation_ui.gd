@@ -68,8 +68,7 @@ func test_character_sheet_shows_rival() -> void:
 	var friendly := CharacterSheet.rival_line(gs.player, gs.data, gs.npcs, {rival.id: 50}, {Rivals.FIRST_MEETING_FLAG: true})
 	assert_true(friendly.contains("; a friendly rivalry"), friendly)
 	assert_false(friendly.contains("bouts"), "no bouts, no record")
-	LifeStats.add(gs.player, "rival_bouts_won", 1)
-	var scored := CharacterSheet.rival_line(gs.player, gs.data, gs.npcs, {}, {Rivals.FIRST_MEETING_FLAG: true})
+	var scored := CharacterSheet.rival_line(gs.player, gs.data, gs.npcs, {}, {Rivals.FIRST_MEETING_FLAG: true, Rivals.BOUTS_WON_FLAG: 1})
 	assert_true(scored.ends_with("(bouts 1 won, 0 lost)"), scored)
 	rival.alive = false
 	assert_eq(CharacterSheet.rival_line(gs.player, gs.data, gs.npcs, {}, {Rivals.FIRST_MEETING_FLAG: true}), "%s has died." % rival.name)
