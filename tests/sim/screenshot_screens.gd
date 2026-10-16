@@ -26,6 +26,7 @@ extends SceneTree
 ## tribulation, inheritance, rival bouts).
 
 ## WU-197: append `-- --banner-shot` for the HUD with a notice banner up, and the journal open under one.
+## WU-204: `--banner-shot` also shoots the longest real arrival subtitle and the longest milestone name.
 
 ## WU-187: append `-- --respawn-shot` for the respawn screen after a 98%-odds loss to a long-named foe
 ## (the longest "still fell" lesson). `--year-shot` now has a four-line year with a respawn line.
@@ -456,6 +457,35 @@ func _start_banner_shot(gs: Node) -> void:
 	shots.append({"name": "banner_journal", "open": func() -> void:
 		show_banner.call()
 		journal.open(), "close": journal.close})
+	# WU-204: the longest real arrival subtitle (top renown title everywhere) and the longest milestone name.
+	var top_tiers: Array = gs.data.renown.get("tiers", [])
+	var top_amount: int = int((top_tiers[top_tiers.size() - 1] as Dictionary)["min"]) if not top_tiers.is_empty() else 0
+	var long_title := ""
+	var long_sub := ""
+	for region_id: String in gs.data.regions:
+		Renown.add(c, gs.data, region_id, top_amount)
+		var qi := Exploration.qi_density(gs.data, region_id, gs.world_flags)
+		var danger: String = load("res://src/ui/world_map_screen.gd").danger_name(gs.data, region_id)
+		var sub: String = hud.get_script().arrival_subtitle(c, gs.data, region_id, qi, danger, true)
+		var name := Exploration.region_name(gs.data, region_id)
+		if name.length() + sub.length() > long_title.length() + long_sub.length():
+			long_title = name
+			long_sub = sub
+	var long_milestone := ""
+	for m: Dictionary in gs.data.milestones:
+		if String(m.get("name", "")).length() > long_milestone.length():
+			long_milestone = String(m["name"])
+	print("banner-shot arrival: ", long_title, " | ", long_sub, " | milestone: ", long_milestone)
+	shots.append({"name": "banner_arrival_long", "open": func() -> void:
+		banner.set_held(false)
+		banner._queue.clear()
+		banner.finish_current()
+		banner.announce(long_title, long_sub, Color(0.9, 0.78, 0.4), 60.0), "close": func() -> void: pass})
+	shots.append({"name": "banner_milestone_long", "open": func() -> void:
+		banner.set_held(false)
+		banner._queue.clear()
+		banner.finish_current()
+		banner.announce("Milestone", long_milestone, Color(0.9, 0.78, 0.4), 60.0), "close": func() -> void: pass})
 
 
 ## WU-190: the encounter window on real encounters with attribute, profession and enemy choices.
