@@ -1487,10 +1487,10 @@ func test_soul_goals_rows_and_ladder() -> void:
 	assert_eq(section.call()[0]["tone"], "warning")
 	c.stage = 1
 	assert_true(Guidance.soul_goals(c, data(), {})[0]["done"])
-	LifeStats.add(c, "inheritances_claimed", 1)
+	LifeStats.add(c, "inheritances_claimed", 2)
+	assert_eq(goals[2]["text"], "Claim a Soul Formation inheritance")
 	assert_false(Guidance.soul_goals(c, data(), {})[2]["done"])
-	LifeStats.add(c, "inheritances_claimed", 1)
-	assert_true(Guidance.soul_goals(c, data(), {})[2]["done"])
+	assert_true(Guidance.soul_goals(c, data(), {Inheritances.claimed_flag("ghost_sovereign_hollow"): true})[2]["done"])
 	assert_true(Guidance.soul_goals(c, data(), {Guidance.beat_realm_flag("soul_formation"): true})[1]["done"])
 	c.realm_index = 6
 	assert_eq(Guidance.goal_ladder_id(c), "")

@@ -952,8 +952,9 @@ static func soul_goals(c: CharacterData, data: GameData, flags: Dictionary, clan
 	var rows: Array = [
 		["Reach Soul Formation Middle", c.realm_index > soul or (c.realm_index == soul and c.stage >= 1)],
 		["Win a fight against a Soul Formation foe", bool(flags.get(beat_realm_flag("soul_formation"), false))],
-		["Claim two inheritances", LifeStats.get_stat(c, "inheritances_claimed") >= 2],
 	]
+	if _has_realm_inheritance(data, "soul_formation"):
+		rows.append(["Claim a Soul Formation inheritance", _claimed_realm_inheritance(data, flags, "soul_formation")])
 	var body_stages := BodyTempering.stages(data)
 	if body_stages.size() > 5:
 		rows.append(["Temper your body to %s" % String(body_stages[5].get("name", "its next stage")), c.body_stage >= 6])
@@ -961,6 +962,31 @@ static func soul_goals(c: CharacterData, data: GameData, flags: Dictionary, clan
 	for row: Array in rows:
 		out.append({"text": row[0], "done": row[1]})
 	return out
+
+
+## True when some inheritance has a stage that needs `realm_id` (SOUL-002).
+static func _has_realm_inheritance(data: GameData, realm_id: String) -> bool:
+	return not _realm_inheritance_ids(data, realm_id).is_empty()
+
+
+static func _realm_inheritance_ids(data: GameData, realm_id: String) -> Array[String]:
+	var out: Array[String] = []
+	var ids: Array = data.inheritances.keys()
+	ids.sort()
+	for id: String in ids:
+		for stage: Dictionary in data.inheritances[id].get("stages", []):
+			if String(stage.get("min_realm", "")) == realm_id:
+				out.append(id)
+				break
+	return out
+
+
+## True when the player has claimed any inheritance with a stage needing `realm_id`.
+static func _claimed_realm_inheritance(data: GameData, flags: Dictionary, realm_id: String) -> bool:
+	for id in _realm_inheritance_ids(data, realm_id):
+		if Inheritances.is_claimed(id, flags):
+			return true
+	return false
 
 
 ## True while the player is in Soul Formation with goals left.
