@@ -1231,6 +1231,7 @@ static func journal(c: CharacterData, data: GameData, flags: Dictionary, today: 
 	_errand_entries(out, data, flags)
 	_household_entries(out, c, data, people)
 	_rival_entry(out, c, data, flags, people, favor, region_id)
+	_karma_entries(out, c, data, people)
 	for line in Letters.journal_lines(c, LETTERS_JOURNAL_MAX):
 		_add(out, "Letters", line, "normal")
 	for order in c.commissions:
@@ -1454,6 +1455,50 @@ static func _rival_entry(out: Array[Dictionary], c: CharacterData, data: GameDat
 	if rival_region != "" and region_id != "" and rival_region != region_id:
 		where = ", in " + Exploration.region_name(data, rival_region)
 	_add(out, "Household", "Rival: %s, %s%s (%s)" % [rival.name, Cultivation.realm_label(rival, data), where, relation], tone)
+
+
+const KARMA_JOURNAL_MAX := 3
+
+
+## GRAT-001: who owes you and who holds a grudge (section "Debts and grudges").
+## The named rival's grudge is left to the rival entry.
+static func _karma_entries(out: Array[Dictionary], c: CharacterData, data: GameData, people: Dictionary) -> void:
+	if people.is_empty():
+		return
+	var ally_min := int(data.karma.get("gratitude", {}).get("ally_strike", {}).get("min_gratitude", 60))
+	var repay_min := int(data.karma.get("gratitude", {}).get("repay", {}).get("min_gratitude", 40))
+	var hunt_min := int(data.karma.get("hunt", {}).get("min_grudge", 40))
+	for npc in _ledger_top(c.gratitude, c, people, ""):
+		var value := Karma.gratitude(c, npc.id)
+		var text := "%s owes you a debt of gratitude" % npc.name
+		if value >= ally_min:
+			var where := Npcs.region_of(npc, data)
+			text += " and would join a fight at your side" + (" in " + Exploration.region_name(data, where) if where != "" else "")
+		elif value >= repay_min:
+			text += " and may send you gifts"
+		_add(out, "Debts and grudges", text, "normal")
+	for npc in _ledger_top(c.grudges, c, people, c.rival):
+		var value := Karma.grudge(c, npc.id)
+		var text := "%s holds %s against you" % [npc.name, Karma.grudge_word(value, data)]
+		if value >= hunt_min:
+			_add(out, "Debts and grudges", text + ". They may ambush you on the road", "warning")
+		else:
+			_add(out, "Debts and grudges", text, "dim")
+
+
+## Up to KARMA_JOURNAL_MAX living NPCs with a positive `ledger` value, highest first (ties by name).
+static func _ledger_top(ledger: Dictionary, c: CharacterData, people: Dictionary, skip_id: String) -> Array[CharacterData]:
+	var found: Array[CharacterData] = []
+	for id: String in ledger:
+		var npc: CharacterData = people.get(id)
+		if npc == null or not npc.alive or id == skip_id or int(ledger[id]) <= 0:
+			continue
+		found.append(npc)
+	found.sort_custom(func(a: CharacterData, b: CharacterData) -> bool:
+		var va := int(ledger[a.id])
+		var vb := int(ledger[b.id])
+		return a.name < b.name if va == vb else va > vb)
+	return found.slice(0, KARMA_JOURNAL_MAX)
 
 
 ## "Your sect's elder lectures this month": only while the lecture can be attended.

@@ -1685,3 +1685,68 @@ func test_fallen_rival_journal_line_carries_record() -> void:
 	out.clear()
 	Guidance._rival_entry(out, c, d, {Rivals.FIRST_MEETING_FLAG: true}, s[2])
 	assert_eq(out[0]["text"], "Rival: %s (fallen)" % rival.name)
+
+
+## GRAT-001: the "Debts and grudges" journal section.
+func _karma_npc(people: Dictionary, id: String, npc_name: String) -> CharacterData:
+	var npc := CharacterData.new()
+	npc.id = id
+	npc.name = npc_name
+	npc.home_region = "qingshi_village"
+	people[id] = npc
+	return npc
+
+
+func _karma_lines(c: CharacterData, people: Dictionary) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	Guidance._karma_entries(out, c, data(), people)
+	return out
+
+
+func test_karma_entries_gratitude_tiers() -> void:
+	var d := data()
+	var c := _fresh()
+	var people := {}
+	_karma_npc(people, "a", "Ayla")
+	_karma_npc(people, "b", "Bo")
+	_karma_npc(people, "e", "Eve")
+	c.gratitude = {"a": 70, "b": 45, "e": 10}
+	var out := _karma_lines(c, people)
+	assert_eq(out.size(), 3)
+	assert_eq(out[0]["section"], "Debts and grudges")
+	assert_eq(out[0]["text"], "Ayla owes you a debt of gratitude and would join a fight at your side in %s" % Exploration.region_name(d, "qingshi_village"))
+	assert_eq(out[1]["text"], "Bo owes you a debt of gratitude and may send you gifts")
+	assert_eq(out[2]["text"], "Eve owes you a debt of gratitude")
+
+
+func test_karma_entries_grudges() -> void:
+	var d := data()
+	var c := _fresh()
+	var people := {}
+	_karma_npc(people, "h", "Hao")
+	_karma_npc(people, "m", "Mei")
+	_karma_npc(people, "r", "Rival")
+	_karma_npc(people, "x", "Dead")
+	people["x"].alive = false
+	c.rival = "r"
+	c.grudges = {"h": int(d.karma["hunt"]["min_grudge"]), "m": 5, "r": 90, "x": 80}
+	var out := _karma_lines(c, people)
+	assert_eq(out.size(), 2)
+	assert_eq(out[0]["tone"], "warning")
+	assert_true(String(out[0]["text"]).begins_with("Hao holds"))
+	assert_true(String(out[0]["text"]).contains("ambush"))
+	assert_eq(out[1]["tone"], "dim")
+	assert_false(String(out[1]["text"]).contains("ambush"))
+
+
+func test_karma_entries_cap_and_empty() -> void:
+	var c := _fresh()
+	assert_eq(_karma_lines(c, {}).size(), 0)
+	var people := {}
+	for i in 4:
+		_karma_npc(people, "n%d" % i, "N%d" % i)
+		c.gratitude["n%d" % i] = 10 + i
+	var out := _karma_lines(c, people)
+	assert_eq(out.size(), 3)
+	assert_true(String(out[0]["text"]).begins_with("N3"))
+	assert_eq(_karma_lines(_fresh(), people).size(), 0)
