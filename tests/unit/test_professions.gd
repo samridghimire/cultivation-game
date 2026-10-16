@@ -68,3 +68,77 @@ func test_work_and_crafted_sales_count_as_craft_stones() -> void:
 	Professions.add_xp(c, data(), "alchemist", 0.0)
 	var sold := Items.sell(c, data(), "qi_gathering_pill", 1)
 	assert_eq(LifeStats.get_stat(c, "profession_stones"), before + int(sold["stones"]))
+
+
+func _set_rank(c: CharacterData, prof_id: String, rank: int) -> void:
+	c.professions[prof_id] = {"rank": rank, "xp": 0.0}
+
+
+func test_rank_up_line_names_known_recipes() -> void:
+	var c := new_character()
+	_set_rank(c, "alchemist", 1)
+	var names: PackedStringArray = []
+	for id: String in Alchemy.known_recipes(c, data(), "alchemist"):
+		if int(data().recipes[id].get("min_rank", 0)) == 1:
+			names.append(String(data().recipes[id]["name"]))
+	assert_eq(names.size(), 2)
+	assert_eq(Professions.rank_up_line(c, data(), "alchemist"), "You can now refine %s and %s." % [names[0], names[1]])
+
+
+func test_rank_up_line_counts_extras() -> void:
+	var c := new_character()
+	_set_rank(c, "blacksmith", 1)
+	var line := Professions.rank_up_line(c, data(), "blacksmith")
+	assert_true(line.begins_with("You can now refine "), line)
+	assert_true(line.ends_with(" and 1 more."), line)
+
+
+func test_rank_up_line_many_known_recipes() -> void:
+	var c := new_character()
+	_set_rank(c, "talisman_master", 1)
+	var d := data()
+	var known := 0
+	for id: String in Alchemy.known_recipes(c, d, "talisman_master"):
+		if int(d.recipes[id].get("min_rank", 0)) == 1:
+			known += 1
+	assert_gt(known, 2)
+	assert_true(Professions.rank_up_line(c, d, "talisman_master").ends_with("more."))
+
+
+func test_rank_up_line_points_to_scroll() -> void:
+	var c := new_character()
+	_set_rank(c, "alchemist", 1)
+	# Forget every rank-1 recipe so only the scroll hint can apply.
+	var d := data()
+	var saved: Dictionary = d.recipes.duplicate(true)
+	for id: String in d.recipes:
+		if d.recipes[id]["profession"] == "alchemist" and int(d.recipes[id].get("min_rank", 0)) == 1:
+			d.recipes[id]["starter"] = false
+	var next_id := Professions.next_unknown_recipe(c, d, "alchemist")
+	assert_true(next_id != "")
+	var line := Professions.rank_up_line(c, d, "alchemist")
+	d.recipes = saved
+	assert_true(line.contains("is now within your skill; find its recipe scroll."), line)
+
+
+func test_rank_up_line_doctor_empty() -> void:
+	var c := new_character()
+	_set_rank(c, "doctor", 2)
+	assert_eq(Professions.rank_up_line(c, data(), "doctor"), "")
+
+
+func test_next_unknown_recipe_skips_known_and_too_high() -> void:
+	var c := new_character()
+	var d := data()
+	_set_rank(c, "alchemist", 0)
+	var first := Professions.next_unknown_recipe(c, d, "alchemist")
+	assert_true(first != "")
+	assert_true(int(d.recipes[first].get("min_rank", 0)) <= 1)
+	assert_false(Alchemy.knows(c, d, first))
+	c.known_recipes.append(first)
+	var second := Professions.next_unknown_recipe(c, d, "alchemist")
+	assert_true(second != first)
+	for id: String in d.recipes:
+		if d.recipes[id]["profession"] == "alchemist":
+			c.known_recipes.append(id)
+	assert_eq(Professions.next_unknown_recipe(c, d, "alchemist"), "")

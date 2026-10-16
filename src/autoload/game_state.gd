@@ -408,7 +408,7 @@ func work_profession(prof_id: String, days: int) -> void:
 	var def: ProfessionDef = data.professions[prof_id]
 	EventBus.post("You work as %s for %s: +%d xp, +%d spirit stones." % [Text.a(def.name), Calendar.format_duration(days), int(result["xp"]), result["income"]])
 	if result["ranks_gained"] > 0:
-		EventBus.post("You are now %s!" % Text.a(Professions.rank_title(player, data, prof_id)), "progress")
+		_post_rank_up(prof_id)
 	if not player.is_rogue():
 		var contribution := int(result["xp"] / (1.0 if Sects.is_favored_profession(player, data, prof_id) else 2.0))
 		if Sects.add_contribution(player, data, contribution):
@@ -442,7 +442,7 @@ func deliver_commission(index: int) -> void:
 	EventBus.post("You deliver %d %s: +%d spirit stones, +%d xp." % [int(result["count"]), item_name, int(result["stones"]), int(result["xp"])], "progress")
 	var prof_id: String = result["profession"]
 	if result["ranks_gained"] > 0:
-		EventBus.post("You are now %s!" % Text.a(Professions.rank_title(player, data, prof_id)), "progress")
+		_post_rank_up(prof_id)
 	if not player.is_rogue():
 		var contribution := int(result["xp"] / (1.0 if Sects.is_favored_profession(player, data, prof_id) else 2.0))
 		if Sects.add_contribution(player, data, contribution):
@@ -1949,7 +1949,7 @@ func treat_own_injury(injury_id: String) -> void:
 	else:
 		EventBus.post("You treat your %s: %d days of healing. (%s left)" % [injury_name, result["days_healed"], Calendar.format_duration(player.injuries[injury_id])])
 	if result["ranks_gained"] > 0:
-		EventBus.post("You are now %s!" % Text.a(Professions.rank_title(player, data, Medicine.DOCTOR)), "progress")
+		_post_rank_up(Medicine.DOCTOR)
 	_pass_time(result["days"])
 
 
@@ -1989,7 +1989,7 @@ func treat_npc(npc_id: String) -> void:
 	EventBus.post("You treat %s's %s: %s. (+%d favor, alignment %+d, now %s%s)" % [patient.name, injury_name, outcome, treated, result["alignment"], Alignment.tier_name(player.alignment, data), debt], "karma")
 	_clan_deed(npc_id, "treat_npc")
 	if result["ranks_gained"] > 0:
-		EventBus.post("You are now %s!" % Text.a(Professions.rank_title(player, data, Medicine.DOCTOR)), "progress")
+		_post_rank_up(Medicine.DOCTOR)
 	_pass_time(result["days"])
 
 
@@ -2002,7 +2002,7 @@ func treat_patients(days: int) -> void:
 	var result := Medicine.treat_patients(player, data, days)
 	EventBus.post("You treat patients for %s: +%d xp, +%d spirit stones, alignment %+d, now %s." % [Calendar.format_duration(days), int(result["xp"]), result["income"], result["alignment"], Alignment.tier_name(player.alignment, data)], "karma")
 	if result["ranks_gained"] > 0:
-		EventBus.post("You are now %s!" % Text.a(Professions.rank_title(player, data, Medicine.DOCTOR)), "progress")
+		_post_rank_up(Medicine.DOCTOR)
 	_gain_renown("patients")
 	_pass_time(days, "Treating patients")
 
@@ -2040,7 +2040,7 @@ func refine(recipe_id: String) -> void:
 	else:
 		EventBus.post("%s %s failed (+%d xp)." % [flavor["fail"], recipe_name, int(result["xp"])], "warning")
 	if result["ranks_gained"] > 0:
-		EventBus.post("You are now %s!" % Text.a(Professions.rank_title(player, data, prof_id)), "progress")
+		_post_rank_up(prof_id)
 	if not player.is_rogue():
 		var contribution := int(result["xp"] / (1.0 if Sects.is_favored_profession(player, data, prof_id) else 2.0))
 		if Sects.add_contribution(player, data, contribution):
@@ -2583,7 +2583,7 @@ func _try_tame(enemy_id: String) -> void:
 	else:
 		EventBus.post("You try to tame the %s, but it tears free and flees." % beast_name)
 	if tame["ranks_gained"] > 0:
-		EventBus.post("You are now %s!" % Text.a(Professions.rank_title(player, data, Beasts.PROFESSION)), "progress")
+		_post_rank_up(Beasts.PROFESSION)
 	EventBus.player_changed.emit()
 
 
@@ -2897,6 +2897,14 @@ static func _month_of(age_days: int) -> int:
 
 
 ## Remember the player's numbers before a long action (see _pass_time).
+## Posts the rank-up line, then what the new rank opens (PROF-008).
+func _post_rank_up(prof_id: String) -> void:
+	EventBus.post("You are now %s!" % Text.a(Professions.rank_title(player, data, prof_id)), "progress")
+	var extra := Professions.rank_up_line(player, data, prof_id)
+	if extra != "":
+		EventBus.post(extra, "progress")
+
+
 func _start_time_skip() -> void:
 	_skip_before = TimeSkip.snapshot(player)
 

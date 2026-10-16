@@ -1894,6 +1894,27 @@ func test_first_craft_order_is_only_for_the_new_craft() -> void:
 	gs.end_session()
 
 
+## PROF-008: reaching a rank also says what it opens.
+func test_rank_up_while_crafting_posts_what_it_opens() -> void:
+	var c := _start()
+	var gs := _game_state()
+	var def: ProfessionDef = gs.data.professions["alchemist"]
+	c.professions["alchemist"] = {"rank": 0, "xp": def.xp_to_next(0) - 0.01}
+	c.add_item("spirit_herb", 2)
+	c.add_item("dew_grass", 1)
+	EventBus.history.clear()
+	gs.refine("qi_gathering_pill")
+	assert_eq(Professions.rank_of(c, "alchemist"), 1)
+	var texts: Array = EventBus.history.map(func(m): return String(m["text"]))
+	var i := -1
+	for k in texts.size():
+		if String(texts[k]).begins_with("You are now "):
+			i = k
+	assert_gt(i, -1, "rank-up line posted")
+	assert_true(String(texts[i + 1]).begins_with("You can now refine "), String(texts[i + 1]))
+	gs.end_session()
+
+
 func test_practised_crafter_gets_no_order_from_refining() -> void:
 	var c := _start()
 	var gs := _game_state()
