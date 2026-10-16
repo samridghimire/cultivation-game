@@ -1870,7 +1870,7 @@ func test_journal_renown_line_shows_gap_to_next_title() -> void:
 	var text := String(rows[0]["text"])
 	assert_true(text.contains("0 (unknown)"))
 	assert_true(text.contains("%d more for %s." % [int(next["min"]), String(next["title"])]))
-	assert_true(text.contains("Merchants there take %d percent off." % roundi((1.0 - float(next["buy_mult"])) * 100)))
+	assert_true(text.contains("As %s, merchants there take %d percent off." % [String(next["title"]), roundi((1.0 - float(next["buy_mult"])) * 100)]))
 
 
 func test_journal_renown_line_at_top_tier_and_without_config() -> void:

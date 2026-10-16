@@ -1809,7 +1809,7 @@ static func _renown_entry(out: Array[Dictionary], c: CharacterData, data: GameDa
 	var line := "Renown in %s: %d (%s). %d more for %s." % [where, amount, "unknown" if current == "" else current, int(next["min"]) - amount, String(next["title"])]
 	var buy := float(next.get("buy_mult", 1.0))
 	if buy < 1.0:
-		line += " Merchants there take %d percent off." % roundi((1.0 - buy) * 100)
+		line += " As %s, merchants there take %d percent off." % [String(next["title"]), roundi((1.0 - buy) * 100)]
 	_add(out, "Milestones", line, "dim")
 
 

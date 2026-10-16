@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 569a744
+Last reviewed commit: e673015
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -613,3 +613,17 @@ Last reviewed commit: 569a744
     WU-192's subtitle is a pure static with a null-safe player. QA-086/QA-093/WU-180/WU-181/WU-187/WU-188 are
     sims and shots only.
   - Notes, not filed: INH-005 also counts inheritances whose grounds the player never found or could not yet enter.
+- 2026-10-16 (reviewer): reviewed 569a744..e673015 (QA-095, RENOWN-006, C-123, QA-20261016-1, EPI-003, WU-190, C-127,
+  WU-194, GUIDE-041, WU-196, PROF-003, YEAR-008, C-131; [PLAN] commits skipped). Main green. No BACKLOG/CHANGELOG edits
+  by workers; no SAVE_VERSION change (`profession_ranks` is a life stat, defaults to 0). Nothing filed.
+  - Fixed ([REVIEW] commit): RENOWN-006's journal line put the next title's discount after the current one
+    ("35 (Known). 15 more for Respected. Merchants there take 6 percent off."), reading as today's discount (Known is
+    3%, and an unknown player has none). It now says "As Respected, merchants there take 6 percent off."
+  - Checked: C-131's bigger output counts work with Items.sell_price (per-unit material value drops, so revenue is
+    ~1.3x cost, not a windfall); Clear Heart now yields 4 pills (+3 alignment each) for 88 stones vs 60 each in shops,
+    which is what crafting should feel like. PROF-003's work() applies exactly work_preview. YEAR-008 counts ranks in
+    Professions.add_xp, so every source (work, crafting, commissions) is covered. QA-20261016-1 counts only a region's
+    first title. EPI-003 picks the highest titled region. C-123's help text and stage test updated; WU-194 bands on the
+    printed percent. C-127's guidance test helper strips the real void pill only from its own GameData.
+  - Notes, not filed: C-127's recipe scroll comes from an inheritance that needs Void Refinement to enter, so its
+    claimant can only brew the pill for sale. C-131's follow-up (array_master rank-0 array sells below cost) is open.
