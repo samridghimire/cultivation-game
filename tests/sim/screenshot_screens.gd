@@ -51,7 +51,8 @@ extends SceneTree
 ## WU-201: append `-- --craft-shots` for the crafting screen of each workshop craft (rank 0, first starter recipe
 ## selected, one ingredient short): craft_<profession>.png.
 ## WU-208: append `-- --workshop-shot` for the Village Workshop menu of a practised Alchemist with an open
-## commission: workshop_menu.png and workshop_menu_odd_jobs.png (pay line).
+## commission: workshop_menu.png and workshop_menu_odd_jobs.png (pay line), then workshop_journal_commissions.png
+## (WU-214: the journal's Commissions section with its "Needs <item>: <where>." line).
 
 ## WU-207: append `-- --rival-shot` for the journal's Household section with a met rival one realm ahead (the
 ## "Reach <realm> to stand a chance against <name>." line), then the bitter variant. Shoot at 1280x800 and 1280x720.
@@ -317,6 +318,11 @@ func _start_workshop_shot(gs: Node) -> void:
 		for b: Node in menu.find_children("*", "Button", true, false):
 			if (b as Button).text.begins_with("Odd jobs as"):
 				(b as Button).grab_focus(), "close": menu.close})
+	# WU-214: the journal's Commissions entries with GUIDE-052's "Needs <item>: <where>." (nothing in the pack).
+	var journal: Control = hud.get("_screens")["toggle_journal"]
+	shots.append({"name": "workshop_journal_commissions", "open": func() -> void:
+		journal.open()
+		journal.get("_scroll").set_deferred("scroll_vertical", 100000), "close": journal.close})
 
 
 func _start_craft_shots(gs: Node) -> void:
