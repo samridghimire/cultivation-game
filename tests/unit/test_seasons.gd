@@ -44,3 +44,27 @@ func test_gather_seasonal_note() -> void:
 	var autumn := Exploration.seasonal_note(table, "Autumn", gs.data)
 	assert_true(autumn.begins_with("Out of season: ") and autumn.contains("(spring)"), autumn)
 	assert_eq(Exploration.seasonal_note([table[0], table[2]], "Spring", gs.data), "")
+
+
+func test_gather_note_names_year_round_finds() -> void:
+	var gs := (Engine.get_main_loop() as SceneTree).root.get_node("GameState")
+	var table: Array = [{"item": "dew_grass", "weight": 5}, {"item": "spirit_herb", "weight": 3, "seasons": ["spring"]}, {"item": "", "weight": 2}]
+	var dew_name := String(gs.data.items["dew_grass"]["name"])
+	var spring := Exploration.seasonal_note(table, "Spring", gs.data)
+	assert_true(spring.begins_with("Grows here: %s. In season: " % dew_name), spring)
+	var autumn := Exploration.seasonal_note(table, "Autumn", gs.data)
+	assert_true(autumn.begins_with("Grows here: %s. Out of season: " % dew_name), autumn)
+	# Only seasonal entries: no "Grows here" part.
+	var only: Array = [{"item": "spirit_herb", "weight": 3, "seasons": ["spring"]}]
+	assert_true(not Exploration.seasonal_note(only, "Spring", gs.data).contains("Grows here"))
+
+
+func test_village_herb_slope_note_names_dew_grass_all_year() -> void:
+	var gs := (Engine.get_main_loop() as SceneTree).root.get_node("GameState")
+	var table: Array = []
+	for place: Dictionary in gs.data.regions["qingshi_village"]["places"]:
+		if place.get("display_name", "") == "Village Herb Slope":
+			table = place["gather_table"]
+	var dew_name := String(gs.data.items["dew_grass"]["name"])
+	for season in ["Spring", "Summer", "Autumn", "Winter"]:
+		assert_true(Exploration.seasonal_note(table, season, gs.data).contains("Grows here: " + dew_name), season)

@@ -739,11 +739,14 @@ static func season_news(c: CharacterData, data: GameData, from_day: int, to_day:
 	return "%s has come. In season now: %s." % [season, "; ".join(parts)]
 
 
-## One-line note for a gather place's menu: "In season: Spirit Herb. Out of
-## season: Frost Lotus (winter)." Empty when the table has no seasonal entries.
+## One-line note for a gather place's menu: "Grows here: Morning Dew Grass. In season:
+## Spirit Herb. Out of season: Frost Lotus (winter)." "Grows here" lists the year-round
+## finds (GUIDE-055; an item that is also seasonal is named in the seasonal part only).
+## Empty when the table has no seasonal entries.
 static func seasonal_note(table: Array, season: String, data: GameData) -> String:
 	var split := seasonal_entries(table, season)
 	var parts: Array[String] = []
+	var seasonal_names: Array[String] = []
 	for key in ["in", "out"]:
 		var names: Array[String] = []
 		for entry: Dictionary in split[key]:
@@ -751,12 +754,25 @@ static func seasonal_note(table: Array, season: String, data: GameData) -> Strin
 			if item_id == "":
 				continue
 			var label := String(data.items[item_id].get("name", item_id)) if data.items.has(item_id) else item_id
+			seasonal_names.append(label)
 			if key == "out":
 				label += " (%s)" % ", ".join(entry["seasons"])
 			if not names.has(label):
 				names.append(label)
 		if not names.is_empty():
 			parts.append("%s: %s" % ["In season" if key == "in" else "Out of season", ", ".join(names)])
+	if parts.is_empty():
+		return ""
+	var always: Array[String] = []
+	for entry: Dictionary in table:
+		var item_id := String(entry.get("item", ""))
+		if item_id == "" or entry.has("seasons"):
+			continue
+		var label := String(data.items[item_id].get("name", item_id)) if data.items.has(item_id) else item_id
+		if not always.has(label) and not seasonal_names.has(label):
+			always.append(label)
+	if not always.is_empty():
+		parts.push_front("Grows here: %s" % ", ".join(always))
 	return ". ".join(parts)
 
 
