@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: fccc922
+Last reviewed commit: ac172f8
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -547,3 +547,16 @@ Last reviewed commit: fccc922
   - Notes for the planner, not filed: QA-083 found rival_spoils_gathering (bitter) never rolled in 20 sims although the
     rival is bitter in 24% of curious checkpoints; worth a check of its eligibility. QA-071: reed_hermit_hut claimed by
     0/10 seeds. GUIDE-033's away/bitter/cooldown test returns early when the fixture bout is not fair (weak test).
+- 2026-10-16 (reviewer): reviewed fccc922..ac172f8 (C-108, GUIDE-035, WU-170, EFF-004, C-107, WU-171, NS-007, YEAR-004,
+  C-110, WU-173, WU-175, WU-176, EPI-002, WU-174, C-111, QA-088; [PLAN] commits skipped). Main green (1867 tests before).
+  No BACKLOG/CHANGELOG edits by workers; no SAVE_VERSION change. Nothing to fix, nothing filed.
+  - Checked: EFF-004's new refusal can't block existing content: every profession_xp choice in encounters.json already
+    requires min_profession, and no item grants profession_xp. NS-007's body goal is right (body_stage 5 = stages[4],
+    Indestructible Vajra Body, min_realm nascent_soul) and Nascent Soul enemies exist for the beat-a-foe goal; the
+    older tests that used realm_index 4 as "past every ladder" moved to 5. C-108's successor branch keys on
+    rival_meeting_from, which only succession sets. WU-173's odds use the same spar_enemy as spar_with, and the cached
+    Combat.win_chance. EPI-002 and GUIDE-035 read the per-rival bout record from world_flags (as of the last review).
+    C-111 (reed hermit Spirit 11 -> 10, the sim walks multi-hop routes) and QA-088 (test only) are sound.
+  - Notes, not filed: the sheet's rival line (WU-174) names the region when no current region is passed, but the
+    journal's (GUIDE-035) doesn't; harmless, since both callers pass the region. WU-176's label_visible(highlighted,
+    highlighted) takes a parameter it never really uses.
