@@ -646,7 +646,8 @@ func test_early_profession_answers() -> void:
 	var answers := {
 		"village_snapped_axle": ["blacksmith"],
 		"forest_haunted_field": ["talisman_master", "array_master"],
-		"forest_charcoal_burners_fever": ["alchemist"]}
+		"forest_charcoal_burners_fever": ["alchemist"],
+		"forest_snared_fox_kit": ["beast_tamer"]}
 	for enc_id: String in answers:
 		var enc: Dictionary = d.encounters[enc_id]
 		assert_eq(enc.get("min_realm", ""), "qi_refining", enc_id + " realm")
