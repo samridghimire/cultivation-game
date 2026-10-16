@@ -257,3 +257,29 @@ func test_encounter_choice_grants_renown() -> void:
 	assert_eq(Renown.value(c, gs.current_region), 0)
 	gs.data.encounters.erase("t_fame")
 	gs.end_session()
+
+
+## RENOWN-005: a choice's renown says so unless it crosses a tier.
+func test_renown_gain_line_for_choices_only() -> void:
+	var gs := _root().get_node("GameState")
+	var c := CharacterFactory.create("Voice", gs.data, seeded_rng(4))
+	gs.start_session(c)
+	gs.current_region = "misty_forest"
+	var lines: Array = []
+	var cb := func(text: String, _cat: String) -> void: lines.append(text)
+	EventBus.message_posted.connect(cb)
+	c.renown["misty_forest"] = 0
+	gs._add_renown(5)
+	assert_true("\n".join(lines).contains("renown +5"), "\n".join(lines))
+	lines.clear()
+	var next_min := int(gs.data.renown["tiers"][1]["min"])
+	c.renown["misty_forest"] = next_min - 1
+	gs._add_renown(5)
+	var text := "\n".join(lines)
+	assert_true(text.contains("Your name is"), text)
+	assert_false(text.contains("renown +"), text)
+	lines.clear()
+	gs._gain_renown("righteous_deed")
+	assert_false("\n".join(lines).contains("renown +"), "\n".join(lines))
+	EventBus.message_posted.disconnect(cb)
+	gs.end_session()

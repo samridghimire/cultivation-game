@@ -2212,16 +2212,19 @@ func _gain_renown(source: String) -> void:
 
 ## Local renown by amount (RENOWN-004, encounter choices).
 func _add_renown(amount: int) -> void:
-	_announce_renown(Renown.add(player, data, current_region, amount))
+	_announce_renown(Renown.add(player, data, current_region, amount), false)
 
 
-func _announce_renown(result: Dictionary) -> void:
+## `quiet_gain` false also says so when a gain crosses no tier (RENOWN-005).
+func _announce_renown(result: Dictionary, quiet_gain: bool = true) -> void:
 	if int(result["gained"]) <= 0:
 		return
 	player.life_stats["best_renown"] = maxi(LifeStats.get_stat(player, "best_renown"), Renown.best(player))
 	if String(result["new_tier"]) != "":
 		EventBus.post("Your name is %s in %s now." % [String(result["new_tier"]).to_lower(), data.regions[current_region].get("name", current_region)], "progress")
 		EventBus.renown_tier_reached.emit(current_region, String(result["new_tier"]))
+	elif not quiet_gain:
+		EventBus.post("Word of it spreads through %s (renown +%d)." % [data.regions[current_region].get("name", current_region), int(result["gained"])], "progress")
 
 
 ## Hear the market gossip: world events under way and when the next auction
