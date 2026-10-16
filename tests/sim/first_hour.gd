@@ -567,7 +567,7 @@ static func _mission_is_sane(gs: Node, c: CharacterData, mission_id: String, don
 static func _recharge_with_spare_stones(gs: Node, c: CharacterData) -> bool:
 	if not c.alive or c.artifact_lives < 0:
 		return false
-	if CreationArtifact.check_recharge(c, gs.data) == "" and c.item_count("spirit_stone") > 2 * CreationArtifact.recharge_cost(c, gs.data):
+	if CreationArtifact.check_recharge(c, gs.data) == "" and c.item_count("spirit_stone") > (1 if c.artifact_lives <= 1 else 2) * CreationArtifact.recharge_cost(c, gs.data):
 		gs.recharge_artifact()
 		return true
 	return false
