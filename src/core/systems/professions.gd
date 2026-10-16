@@ -75,12 +75,14 @@ static func next_unknown_recipe(c: CharacterData, data: GameData, prof_id: Strin
 	return best
 
 
-## What the rank just reached opens, for the rank-up message; "" if nothing to say.
-static func rank_up_line(c: CharacterData, data: GameData, prof_id: String) -> String:
+## What the rank just reached opens, for the rank-up message; "" if nothing to say. `from_rank` is
+## the rank before the jump: recipes with from_rank < min_rank <= rank are named (-1: only the new rank's).
+static func rank_up_line(c: CharacterData, data: GameData, prof_id: String, from_rank: int = -1) -> String:
 	var r := rank_of(c, prof_id)
 	var names: PackedStringArray = []
 	for id: String in Alchemy.known_recipes(c, data, prof_id):
-		if int(data.recipes[id].get("min_rank", 0)) == r:
+		var mr := int(data.recipes[id].get("min_rank", 0))
+		if (mr == r) if from_rank < 0 else (mr > from_rank and mr <= r):
 			names.append(String(data.recipes[id].get("name", id)))
 	if not names.is_empty():
 		if names.size() == 1:

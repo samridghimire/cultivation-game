@@ -142,3 +142,23 @@ func test_next_unknown_recipe_skips_known_and_too_high() -> void:
 		if d.recipes[id]["profession"] == "alchemist":
 			c.known_recipes.append(id)
 	assert_eq(Professions.next_unknown_recipe(c, d, "alchemist"), "")
+
+
+func test_rank_up_line_after_a_two_rank_jump_names_both_ranks() -> void:
+	var c := new_character()
+	_set_rank(c, "alchemist", 2)
+	var d := data()
+	var one: String = ""
+	var two: String = ""
+	for id: String in Alchemy.known_recipes(c, d, "alchemist"):
+		var mr := int(d.recipes[id].get("min_rank", 0))
+		if mr == 1 and one == "":
+			one = String(d.recipes[id]["name"])
+		elif mr == 2 and two == "":
+			two = String(d.recipes[id]["name"])
+	assert_true(one != "" and two != "", "a known rank-1 and rank-2 alchemist recipe")
+	var jump := Professions.rank_up_line(c, d, "alchemist", 0)
+	assert_true(jump.contains(one) and jump.contains(two), "a jump from 0 to 2 names both: " + jump)
+	var step := Professions.rank_up_line(c, d, "alchemist", 1)
+	assert_true(step.contains(two) and not step.contains(one), "a one-rank step names only rank 2: " + step)
+	assert_eq(Professions.rank_up_line(c, d, "alchemist"), step)
