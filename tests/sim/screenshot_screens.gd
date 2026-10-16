@@ -50,6 +50,8 @@ extends SceneTree
 
 ## WU-201: append `-- --craft-shots` for the crafting screen of each workshop craft (rank 0, first starter recipe
 ## selected, one ingredient short): craft_<profession>.png.
+## WU-208: append `-- --workshop-shot` for the Village Workshop menu of a practised Alchemist with an open
+## commission: workshop_menu.png and workshop_menu_odd_jobs.png (pay line).
 
 const OUT_DIR := "user://screenshots/screens"
 const SETTLE_FRAMES := 6
@@ -66,6 +68,9 @@ var opened := false
 func _start() -> void:
 	started = true
 	var gs: Node = root.get_node("GameState")
+	if OS.get_cmdline_user_args().has("--workshop-shot"):
+		_start_workshop_shot(gs)
+		return
 	if OS.get_cmdline_user_args().has("--craft-shots"):
 		_start_craft_shots(gs)
 		return
@@ -271,6 +276,39 @@ func _start_breakthrough_shots(gs: Node) -> void:
 
 
 ## WU-201: the crafting screen for every workshop craft, a rank-0 player one ingredient short.
+func _start_workshop_shot(gs: Node) -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 5
+	var c := CharacterFactory.create("Lin Feng", gs.data, rng, "male")
+	gs.start_session(c)
+	gs.pending_event = ""
+	c.professions["alchemist"] = {"rank": 0, "xp": 0.0}
+	Commissions.roll(c, gs.data, rng, int(root.get_node("GameClock").total_days))
+	world = load("res://src/world/world.tscn").instantiate()
+	root.add_child(world)
+	hud = world.get_node("HUD")
+	var workshop: Node = null
+	var stack: Array[Node] = [world]
+	while not stack.is_empty():
+		var node: Node = stack.pop_back()
+		stack.append_array(node.get_children())
+		if node.get_script() != null and String(node.get_script().resource_path).ends_with("workshop.gd"):
+			workshop = node
+	var menu: Control = hud.get("_choice_menu")
+	shots.append({"name": "workshop_menu", "open": func() -> void:
+		hud.get("_banner").visible = false
+		menu.open_for(workshop), "close": menu.close})
+	# Focus on "Odd jobs as Alchemist" so its pay description line shows.
+	shots.append({"name": "workshop_menu_odd_jobs", "open": func() -> void:
+		hud.get("_banner").visible = false
+		menu.open_for(workshop)
+		await root.get_tree().process_frame
+		await root.get_tree().process_frame
+		for b: Node in menu.find_children("*", "Button", true, false):
+			if (b as Button).text.begins_with("Odd jobs as"):
+				(b as Button).grab_focus(), "close": menu.close})
+
+
 func _start_craft_shots(gs: Node) -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 5
