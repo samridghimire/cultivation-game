@@ -94,6 +94,29 @@ func test_people_lines_rank_by_favor_and_skip_family_and_dead() -> void:
 	gs.end_session()
 
 
+## WU-178: debts and grudges list someone at favor 0; the rival is left to the Rival line.
+func test_people_lines_debts_and_grudges() -> void:
+	var gs: Node = _root().get_node("GameState")
+	gs.start_session(CharacterFactory.create("Foe", gs.data, seeded_rng()))
+	var ids: Array = []
+	for id: String in gs.npcs.keys():
+		if id != gs.player.rival and not gs.player.parents.has(id) and not gs.player.children.has(id) and not gs.player.spouses.has(id):
+			ids.append(id)
+		if ids.size() == 4:
+			break
+	gs.player.gratitude[ids[0]] = 500
+	gs.player.grudges[ids[1]] = 20
+	gs.player.gratitude[ids[3]] = 0
+	var lines := CharacterSheet.people_lines(gs.player, gs.data, gs.npcs, {})
+	assert_eq(lines.size(), 2, str(lines))
+	assert_true(lines[0].contains("(owes you)"), lines[0])
+	assert_true(lines[1].contains("(holds a grudge)"), lines[1])
+	if gs.player.rival != "":
+		gs.player.grudges[gs.player.rival] = 5
+		assert_eq(CharacterSheet.people_lines(gs.player, gs.data, gs.npcs, {}).size(), 2, "rival skipped")
+	gs.end_session()
+
+
 ## WU-106: "(likes N known)" on the People list.
 func test_people_lines_known_likes() -> void:
 	var gs: Node = _root().get_node("GameState")

@@ -321,15 +321,31 @@ static func rival_line(c: CharacterData, data: GameData, people: Dictionary, fav
 ## person waiting on a letter request gets "(asked for <item>, N days left)" (WU-115).
 static func people_lines(c: CharacterData, data: GameData, people: Dictionary, favor: Dictionary, limit: int = 6, flags: Dictionary = {}, today: int = -1) -> PackedStringArray:
 	var ranked: Array = []
+	var ids: Dictionary = {}  # WU-178: debts and grudges list someone even at favor 0
 	for id: String in favor:
+		ids[id] = true
+	for id: String in c.gratitude:
+		ids[id] = true
+	for id: String in c.grudges:
+		ids[id] = true
+	for id: String in ids:
 		var other: CharacterData = people.get(id)
-		var f := int(favor[id])
-		if other == null or not other.alive or f == 0:
+		var f := int(favor.get(id, 0))
+		var owed := Karma.gratitude(c, id)
+		var held := Karma.grudge(c, id)
+		if other == null or not other.alive or id == c.rival:
+			continue
+		if f == 0 and owed <= 0 and held <= 0:
 			continue
 		if c.parents.has(id) or c.children.has(id) or c.spouses.has(id):
 			continue
-		ranked.append([f, other, id])
-	ranked.sort_custom(func(a: Array, b: Array) -> bool: return a[0] > b[0] or (a[0] == b[0] and String(a[1].name) < String(b[1].name)))
+		ranked.append([f, other, id, owed, held])
+	ranked.sort_custom(func(a: Array, b: Array) -> bool:
+		if a[0] != b[0]:
+			return a[0] > b[0]
+		if a[3] != b[3]:
+			return a[3] > b[3]
+		return String(a[1].name) < String(b[1].name))
 	var out := PackedStringArray()
 	for entry: Array in ranked.slice(0, limit):
 		var other: CharacterData = entry[1]
@@ -347,6 +363,10 @@ static func people_lines(c: CharacterData, data: GameData, people: Dictionary, f
 		if not request.is_empty():
 			var item_id := String(request["item"])
 			line += " (asked for %s, %d days left)" % [String(data.items.get(item_id, {}).get("name", item_id)), int(request["until"]) - today]
+		if int(entry[3]) >= int(data.karma.get("gratitude", {}).get("repay", {}).get("min_gratitude", 1)) and int(entry[3]) > 0:
+			line += " (owes you)"
+		if int(entry[4]) > 0:
+			line += " (holds a grudge)"
 		out.append(line)
 	return out
 
