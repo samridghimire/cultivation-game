@@ -40,6 +40,9 @@ extends SceneTree
 ## WU-193: append `-- --body-shot` for a Body Integration Early player: HUD goal ladder and the journal's
 ## Body Integration goals.
 
+## WU-216: append `-- --rankup-shot` for the message log after the crafts' rank-ups (the longest "You are now ..."
+## plus rank_up_line pair across every craft and rank): the HUD log panel and the full log screen.
+
 ## WU-180: append `-- --debts-shot` for the journal with two grateful NPCs, a grudge holder at hunt
 ## strength and an inheritance three months from its deadline (Debts and grudges, Opportunities).
 
@@ -78,6 +81,9 @@ func _start() -> void:
 	var gs: Node = root.get_node("GameState")
 	if OS.get_cmdline_user_args().has("--workshop-shot"):
 		_start_workshop_shot(gs)
+		return
+	if OS.get_cmdline_user_args().has("--rankup-shot"):
+		_start_rankup_shot(gs)
 		return
 	if OS.get_cmdline_user_args().has("--craft-shots"):
 		_start_craft_shots(gs)
@@ -329,6 +335,36 @@ func _start_workshop_shot(gs: Node) -> void:
 	shots.append({"name": "workshop_journal_commissions", "open": func() -> void:
 		journal.open()
 		journal.get("_scroll").set_deferred("scroll_vertical", 100000), "close": journal.close})
+
+
+## WU-216: the rank-up lines in the message log, longest title + line pair of any craft and rank.
+func _start_rankup_shot(gs: Node) -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 5
+	var c := CharacterFactory.create("Lin Feng", gs.data, rng, "male")
+	gs.start_session(c)
+	gs.pending_event = ""
+	var best_prof := ""
+	var best_rank := 1
+	var best_len := 0
+	for prof_id: String in gs.data.professions:
+		for r in range(1, Professions.max_rank(gs.data) + 1):
+			c.professions[prof_id] = {"rank": r, "xp": 0.0}
+			var text: String = "You are now %s! %s" % [Text.a(Professions.rank_title(c, gs.data, prof_id)), Professions.rank_up_line(c, gs.data, prof_id)]
+			if text.length() > best_len:
+				best_len = text.length()
+				best_prof = prof_id
+				best_rank = r
+	c.professions.clear()
+	print("longest rank-up: %s rank %d (%d chars)" % [best_prof, best_rank, best_len])
+	c.professions[best_prof] = {"rank": best_rank, "xp": 0.0}
+	world = load("res://src/world/world.tscn").instantiate()
+	root.add_child(world)
+	hud = world.get_node("HUD")
+	gs.call("_post_rank_up", best_prof)
+	var log_screen: Control = hud.get("_screens")["toggle_message_log"]
+	shots.append({"name": "rankup_hud", "open": func() -> void: hud.get("_banner").visible = false, "close": func() -> void: pass})
+	shots.append({"name": "rankup_log", "open": func() -> void: log_screen.open(), "close": log_screen.close})
 
 
 func _start_craft_shots(gs: Node) -> void:
