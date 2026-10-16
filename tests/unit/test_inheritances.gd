@@ -178,3 +178,15 @@ func test_time_left_text() -> void:
 	assert_eq(Inheritances.time_left_text(def, 5 * Y - 40), "1 month left")
 	assert_eq(Inheritances.time_left_text(def, 5 * Y - 10), "10 days left")
 	assert_eq(Inheritances.time_left_text(def, 5 * Y - 1), "1 day left")
+
+
+func test_status_text_uses_the_shared_deadline_wording() -> void:
+	var data := data()
+	_with_def(data)
+	var c := new_character()
+	var dl := 5 * Y
+	var near := Inheritances.status_text(c, data, "test_legacy", dl - 100, {})
+	assert_true(near.contains("3 months left before rivals arrive"), near)
+	var far := Inheritances.status_text(c, data, "test_legacy", dl - 400, {})
+	assert_true(far.contains("1 year left before rivals arrive"), far)
+	data.inheritances.erase("test_legacy")

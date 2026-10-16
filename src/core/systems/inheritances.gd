@@ -172,7 +172,7 @@ static func status_text(c: CharacterData, data: GameData, id: String, total_days
 		return "Undiscovered"
 	var stages: Array = def.get("stages", [])
 	var stage := next_stage(c, def)
-	return "Trial %d/%d: %s (%s left before rivals arrive)" % [stages_cleared(c, id) + 1, stages.size(), stage.get("name", ""), Calendar.format_duration(deadline_day(def) - total_days)]
+	return "Trial %d/%d: %s (%s before rivals arrive)" % [stages_cleared(c, id) + 1, stages.size(), stage.get("name", ""), time_left_text(def, total_days)]
 
 
 ## Inheritance ids whose grounds are in `region_id`, sorted.
