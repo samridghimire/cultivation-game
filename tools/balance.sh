@@ -42,6 +42,7 @@ fresh() {
 	run "economy (seed defaults)" res://tests/sim/simulate_economy.gd
 	run "economy, bounty hunter (seeds 1-10, 12 months)" res://tests/sim/simulate_bounty.gd -- 10 12
 	run "profession income (Qi Refining, seeds 1-5, 24 months)" res://tests/sim/profession_income.gd -- 5 24
+	run "quiet stretches (seeds 1-10, 365 days)" res://tests/sim/quiet_stretches.gd -- 10 365
 	run "first Foundation Establishment year (seeds 1-10)" res://tests/sim/simulate_foundation_year.gd -- 10 2
 }
 CHECK=0

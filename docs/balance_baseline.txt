@@ -1222,3 +1222,41 @@ Beast Tamer        0.4   0.4   0.4   1.2   0.8   0.8   1.5 |  2.0  100%    0%   
 (sect missions)   -4.1   0.6   0.6   0.6   1.8   1.8  -4.9 |  0.0   -    -     - |  0.38
 (stones a week by quarter, then the rank reached and the share of profession stones from work / crafting / commissions; per day = stones per day spent)
 
+## quiet stretches (seeds 1-10, 365 days)
+
+Quiet stretches, default policy, 10 seeds, 365 days
+  seed  1:  19 new days, longest stretch  60 days
+  seed  2:  19 new days, longest stretch  60 days
+  seed  3:  22 new days, longest stretch  33 days
+  seed  4:  21 new days, longest stretch  33 days
+  seed  5:  24 new days, longest stretch  60 days
+  seed  6:  18 new days, longest stretch  60 days
+  seed  7:  20 new days, longest stretch  35 days
+  seed  8:  20 new days, longest stretch  34 days
+  seed  9:  19 new days, longest stretch  35 days
+  seed 10:  21 new days, longest stretch  60 days
+Stretch (days between new things): median 7, max 60; median of per-seed medians 30, of per-seed maxes 60
+New days per month (median over seeds): 5 1 2 2 2 2 1 1 2 2 1 1 0
+  longest 1: seed 1, days 55-115 (60 days), months 2-4, actions: meditate,explore,breakthrough
+  longest 2: seed 1, days 303-363 (60 days), months 11-13, actions: meditate,explore
+  longest 3: seed 2, days 262-322 (60 days), months 9-11, actions: meditate,explore
+
+Quiet stretches, curious policy, 10 seeds, 365 days
+  seed  1:  61 new days, longest stretch  32 days
+  seed  2:  61 new days, longest stretch  34 days
+  seed  3:  54 new days, longest stretch  31 days
+  seed  4:  55 new days, longest stretch  32 days
+  seed  5:  61 new days, longest stretch  31 days
+  seed  6:  60 new days, longest stretch  31 days
+  seed  7:  60 new days, longest stretch  31 days
+  seed  8:  63 new days, longest stretch  31 days
+  seed  9:  46 new days, longest stretch  32 days
+  seed 10:  59 new days, longest stretch  32 days
+Stretch (days between new things): median 2, max 34; median of per-seed medians 2, of per-seed maxes 32
+New days per month (median over seeds): 9 4 6 2 6 2 6 2 5 3 5 4 1
+  longest 1: seed 2, days 211-245 (34 days), months 8-9, actions: meditate,explore,mission,gift,pointer,lecture
+  longest 2: seed 1, days 129-161 (32 days), months 5-6, actions: meditate,explore,mission,work,gift,spar,lecture
+  longest 3: seed 4, days 289-321 (32 days), months 10-11, actions: meditate,explore,mission,work,gift,pointer,lecture
+
+ERROR: 1 resources still in use at exit (run with --verbose for details).
+
