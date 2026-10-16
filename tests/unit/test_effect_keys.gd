@@ -153,6 +153,20 @@ func test_profession_xp_skips_professions_not_taken() -> void:
 	assert_false(c.professions.has("alchemist"))
 
 
+func test_profession_xp_check_refuses_untaken_profession() -> void:
+	var d := data()
+	var c := new_character()
+	var fx := {"profession_xp": {"alchemist": 5}}
+	assert_eq(Effects.check(c, d, fx), "You have not taken up %s." % d.professions["alchemist"].name)
+	c.professions["alchemist"] = {"rank": 0, "xp": 0.0}
+	assert_eq(Effects.check(c, d, fx), "")
+	# Some known: allowed, and only the known one is trained.
+	var mixed := {"profession_xp": {"blacksmith": 5, "alchemist": 5}}
+	assert_eq(Effects.check(c, d, mixed), "")
+	Effects.apply(c, d, mixed, {})
+	assert_false(c.professions.has("blacksmith"))
+
+
 func test_profession_xp_validation() -> void:
 	var d := data()
 	assert_eq(Effects.validate(d, {"profession_xp": {"alchemist": 5}}, "t").size(), 0)

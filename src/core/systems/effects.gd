@@ -47,6 +47,15 @@ static func check(c: CharacterData, data: GameData, effects: Dictionary) -> Stri
 		return "You have no injury that this would heal."
 	if effects.has("bloodline") and c.bloodline != "":
 		return "Your blood already carries the %s." % Bloodlines.bloodline_name(data, c.bloodline)
+	if effects.has("profession_xp"):
+		var xp_block: Dictionary = effects["profession_xp"]
+		var taken := false
+		for prof_id: Variant in xp_block:
+			if c.professions.has(String(prof_id)):
+				taken = true
+		if not taken and not xp_block.is_empty():
+			var first_id := String(xp_block.keys()[0])
+			return "You have not taken up %s." % String(data.professions[first_id].name if data.professions.has(first_id) else first_id)
 	if effects.has("learn_technique"):
 		var reason := Techniques.can_learn(c, data, effects["learn_technique"])
 		if reason != "":
