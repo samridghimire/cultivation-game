@@ -83,3 +83,12 @@ func test_banner_text_stays_above_centred_windows() -> void:
 	assert_true(box != null, "banner has a text box")
 	assert_true(box.anchor_bottom < 0.21, "banner text ends in the top fifth of the screen")
 	b.free()
+
+
+## WU-202: a long subtitle stays on one line (trimmed) instead of wrapping downward.
+func test_long_subtitle_stays_one_line() -> void:
+	var b := Banner.new()
+	b.announce("Arrived", "x".repeat(200), Color.WHITE)
+	var sub: Label = b.get("_subtitle")
+	assert_eq(sub.get_line_count(), 1)
+	b.free()

@@ -27,7 +27,8 @@ func _init() -> void:
 	var box := VBoxContainer.new()
 	box.alignment = BoxContainer.ALIGNMENT_CENTER
 	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	box.anchor_right = 1.0
+	box.anchor_left = 0.125  # WU-202: a 960 px column, so a long subtitle trims instead of wrapping into a window title
+	box.anchor_right = 0.875
 	box.anchor_top = 0.03  # WU-158: above the centred windows (menus, shop) so a notice never covers their title
 	box.anchor_bottom = 0.2
 	add_child(box)
@@ -38,7 +39,9 @@ func _init() -> void:
 	box.add_child(_title)
 	_subtitle = UIStyle.label("", 20)
 	_subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_subtitle.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_subtitle.autowrap_mode = TextServer.AUTOWRAP_OFF  # WU-202: one line per "\n"; never grows downward over a window
+	_subtitle.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	_subtitle.clip_text = true
 	_subtitle.add_theme_constant_override("outline_size", 6)
 	_subtitle.add_theme_color_override("font_outline_color", Color.BLACK)
 	box.add_child(_subtitle)
