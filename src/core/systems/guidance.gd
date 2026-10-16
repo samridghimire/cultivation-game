@@ -388,8 +388,8 @@ static func _seasons_until(from: String, to: String) -> int:
 	return (b - a + 4) % 4
 
 
-## True when `item_id` can be had without leaving `region_id` (PROF-009): a gather place there yields it
-## in season (`today >= 0`; any season otherwise), or some merchant stocks it.
+## True when `item_id` can be had near `region_id` (PROF-009): a gather place there yields it
+## in season (`today >= 0`; any season otherwise), or a merchant in any region stocks it.
 static func available_nearby(c: CharacterData, data: GameData, item_id: String, region_id: String, today: int = -1) -> bool:
 	var season := Calendar.season_of(today) if today >= 0 else ""
 	if _gatherable_items(c, data, region_id, season).has(item_id):

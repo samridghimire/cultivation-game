@@ -2896,7 +2896,6 @@ static func _month_of(age_days: int) -> int:
 	return age_days / Calendar.DAYS_PER_MONTH
 
 
-## Remember the player's numbers before a long action (see _pass_time).
 ## Posts the rank-up line, then what the new rank opens (PROF-008).
 func _post_rank_up(prof_id: String) -> void:
 	EventBus.post("You are now %s!" % Text.a(Professions.rank_title(player, data, prof_id)), "progress")
@@ -2905,6 +2904,7 @@ func _post_rank_up(prof_id: String) -> void:
 		EventBus.post(extra, "progress")
 
 
+## Remember the player's numbers before a long action (see _pass_time).
 func _start_time_skip() -> void:
 	_skip_before = TimeSkip.snapshot(player)
 

@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: aa35b48
+Last reviewed commit: 1e438fc
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -689,3 +689,17 @@ Last reviewed commit: aa35b48
   - Notes, not filed: missing_line skips spirit stones, so an order short only of stones says "You have the
     ingredients". C-144 left recipe_spirit_gathering_pill's scroll redundant (the pill is now a starter). WU-209's
     margin wording logic lives in crafting_screen.gd (UI) rather than a system.
+- 2026-10-16 (reviewer): reviewed aa35b48..1e438fc (C-129, WU-213, GUIDE-050, QA-103, GUIDE-051, QA-102, WU-214, QA-104,
+  BI-001, PROF-009, PROF-008, WU-218, C-146, QA-105; [PLAN]/[REVIEW] commits skipped). Main green. No BACKLOG/CHANGELOG
+  edits by workers; no SAVE_VERSION change (no new persistent state). Nothing filed.
+  - Fixed ([REVIEW] commit): PROF-008 put _post_rank_up between _start_time_skip and its doc comment, so the "Remember
+    the player's numbers" line documented the wrong function; moved back. PROF-009's available_nearby doc said "without
+    leaving region_id" but a merchant in any region counts; doc now says so.
+  - Checked: BI-001's body row needs body_stage >= 8 for stages[7] (body_stage counts stages reached) and realm 7 is
+    body_integration. C-129's stone costs are gated by Effects.check; its enemy and dao ids load. GUIDE-050's shortfall
+    uses recipe_margin's unit prices. GUIDE-051 picks the place with the nearest coming season. WU-218's joins read
+    right with an empty seasonal note.
+  - Notes, not filed: C-146's Iron Sword and Iron Scale Armor now take mostly spirit herbs (1 iron essence + 3/4 herbs),
+    which reads oddly for a smith; a gatherable ore would fit better if one exists in the village. PROF-008's rank-up
+    line only names recipes of the exact rank reached, so a two-rank jump skips the lower one. PROF-009 counts any
+    merchant in the world as "nearby".
