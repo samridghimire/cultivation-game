@@ -308,15 +308,11 @@ func test_recipe_margin() -> void:
 func test_first_rank_recipes_pay_for_their_ingredients() -> void:
 	for recipe_id in data().recipes:
 		var r: Dictionary = data().recipes[recipe_id]
-		if r["profession"] != "alchemist" or int(r.get("min_rank", 0)) > 1:
+		if int(r.get("min_rank", 0)) > 1:
 			continue
-		var cost := 0
-		for item_id in r["ingredients"]:
-			var unit := 1 if item_id == "spirit_stone" else int(data().items[item_id].get("price", 0))
-			cost += unit * int(r["ingredients"][item_id])
+		var m := Alchemy.recipe_margin(data(), recipe_id)
 		var out: Dictionary = r["output"]
-		var revenue := int(out["count"]) * Items.sell_price(data(), str(out["item"]))
-		assert_true(revenue >= cost, "%s sells for %d but costs %d" % [recipe_id, revenue, cost])
+		assert_true(int(m["value"]) >= int(m["cost"]), "%s sells for %d but costs %d" % [recipe_id, m["value"], m["cost"]])
 		if r.has("great_output"):
 			assert_true(int(r["great_output"]["count"]) >= int(out["count"]), "%s great_output count below output" % recipe_id)
 
