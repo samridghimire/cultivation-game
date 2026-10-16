@@ -31,6 +31,9 @@ extends SceneTree
 ## WU-184: append `-- --soul-shot` for a Soul Formation Early player: the journal's Soul Formation goals
 ## (with the Starfire Body row) and the HUD goal ladder.
 
+## WU-180: append `-- --debts-shot` for the journal with two grateful NPCs, a grudge holder at hunt
+## strength and an inheritance three months from its deadline (Debts and grudges, Opportunities).
+
 const OUT_DIR := "user://screenshots/screens"
 const SETTLE_FRAMES := 6
 
@@ -66,6 +69,9 @@ func _start() -> void:
 		return
 	if OS.get_cmdline_user_args().has("--late-realms"):
 		_start_late_realms(gs)
+		return
+	if OS.get_cmdline_user_args().has("--debts-shot"):
+		_start_debts_shot(gs)
 		return
 	if OS.get_cmdline_user_args().has("--soul-shot"):
 		_start_soul_shot(gs)
@@ -297,6 +303,37 @@ func _start_late_realms(gs: Node) -> void:
 			setup.call()
 			sheet.open()
 			sheet.get("_scroll").set_deferred("scroll_vertical", 100000), "close": sheet.close})
+
+
+## WU-180: the journal's newest lines: Debts and grudges, and an inheritance close to its deadline.
+func _start_debts_shot(gs: Node) -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 5
+	var c := CharacterFactory.create("Lin Feng", gs.data, rng, "male")
+	gs.start_session(c)
+	gs.pending_event = ""
+	var clock: Node = root.get_node("GameClock")
+	# village_founder_well has deadline_years 12: three months before it.
+	clock.total_days = 12 * Calendar.DAYS_PER_YEAR - 3 * Calendar.DAYS_PER_MONTH
+	c.age_days = 16 * Calendar.DAYS_PER_YEAR
+	var names := ["Ayla the Herbalist", "Old Bo the Ferryman", "Gu Wen of the Iron Hall"]
+	for i in names.size():
+		var npc := CharacterData.new()
+		npc.id = "shot_npc_%d" % i
+		npc.name = names[i]
+		npc.home_region = gs.current_region
+		gs.npcs[npc.id] = npc
+	Karma.add_gratitude(c, gs.data, "shot_npc_0", 70)
+	Karma.add_gratitude(c, gs.data, "shot_npc_1", 45)
+	Karma.add_grudge(c, gs.data, "shot_npc_2", 60)
+	world = load("res://src/world/world.tscn").instantiate()
+	root.add_child(world)
+	hud = world.get_node("HUD")
+	var journal: Control = hud.get("_screens")["toggle_journal"]
+	shots.append({"name": "debts_journal", "open": func() -> void: journal.open(), "close": journal.close})
+	shots.append({"name": "debts_journal_end", "open": func() -> void:
+		journal.open()
+		journal.get("_scroll").set_deferred("scroll_vertical", 100000), "close": journal.close})
 
 
 ## WU-184: a Soul Formation Early player, journal and HUD.
