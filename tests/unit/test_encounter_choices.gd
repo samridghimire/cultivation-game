@@ -684,3 +684,27 @@ func test_charcoal_burners_mix_attribute_craft_and_fight() -> void:
 	assert_true(Exploration.check_choice(c, d, kinds["attribute"], {}).begins_with("You need "))
 	c.attributes["spirit"] = 12
 	assert_eq(Exploration.check_choice(c, d, kinds["attribute"], {}), "")
+
+
+func test_crafter_first_year_encounters() -> void:
+	var d := GameData.load_from_dir()
+	for enc_id: String in ["forest_abandoned_herb_cache", "forest_old_alchemists_notes", "village_broken_forge"]:
+		assert_true(d.encounters.has(enc_id), enc_id + " exists")
+		assert_eq(d.encounters[enc_id].get("min_realm", ""), "qi_refining", enc_id + " realm")
+		assert_true(d.encounters[enc_id].has("blocked_by_flag"), enc_id + " is once-only")
+	var notes: Dictionary = d.encounters["forest_old_alchemists_notes"]
+	var c := new_character()
+	var gated: Dictionary = notes["choices"][0]
+	assert_eq(gated["effects"]["learn_recipe"], "visceral_mending_pill")
+	c.attributes["comprehension"] = 5
+	assert_true(Exploration.check_choice(c, d, gated, {}) != "", "notes need Comprehension")
+	c.attributes["comprehension"] = 12
+	assert_eq(Exploration.check_choice(c, d, gated, {}), "", "notes open at Comprehension 12")
+	var forge: Dictionary = d.encounters["village_broken_forge"]
+	var smith_choice: Dictionary = forge["choices"][0]
+	assert_true(smith_choice["requires"]["min_profession"].has("blacksmith"))
+	var c2 := new_character()
+	assert_true(Exploration.check_choice(c2, d, smith_choice, {}) != "", "forge needs a blacksmith")
+	c2.professions["blacksmith"] = {"rank": 0, "xp": 0.0}
+	assert_eq(Exploration.check_choice(c2, d, smith_choice, {}), "", "forge open to a fresh blacksmith")
+	assert_true(int(d.encounters["forest_abandoned_herb_cache"]["choices"][1]["effects"]["alignment"]) < 0, "taking it all costs alignment")
