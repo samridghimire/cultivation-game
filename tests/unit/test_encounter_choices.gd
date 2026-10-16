@@ -506,3 +506,25 @@ func test_giving_up_an_item_in_core_encounters() -> void:
 		assert_true(enc["choices"].size() >= 3, "%s keeps a plain choice and a walk-away" % enc_id)
 	assert_eq(tags.size(), 3, "three different regions")
 	assert_true(attribute_gains <= 1, "at most one attribute gain across the three")
+
+
+func test_profession_answers_at_core_formation() -> void:
+	var d := GameData.load_from_dir()
+	var answers := {
+		"ridge_beast_clan_truce": "beast_tamer",
+		"ruins_tribulation_crater": "alchemist",
+		"marsh_yin_ferryman": "doctor"}
+	for enc_id: String in answers:
+		var prof: String = answers[enc_id]
+		var found := false
+		for choice: Dictionary in d.encounters[enc_id]["choices"]:
+			if not choice.get("requires", {}).get("min_profession", {}).has(prof):
+				continue
+			found = true
+			assert_true(choice["effects"]["profession_xp"][prof] >= 40, "%s gives profession xp" % enc_id)
+			var c := new_character()
+			c.professions[prof] = {"rank": 2, "xp": 0.0}
+			assert_true(Exploration.check_choice(c, d, choice, {}).begins_with("You need to be "), "%s blocked at rank 2" % enc_id)
+			c.professions[prof] = {"rank": 3, "xp": 0.0}
+			assert_eq(Exploration.check_choice(c, d, choice, {}), "", "%s allowed at rank 3" % enc_id)
+		assert_true(found, "%s has a rank 3 %s choice" % [enc_id, prof])
