@@ -25,6 +25,8 @@ extends SceneTree
 ## WU-182: append `-- --year-shot` for the year-in-review banner with four long lines (realm change,
 ## tribulation, inheritance, rival bouts).
 
+## WU-197: append `-- --banner-shot` for the HUD with a notice banner up, and the journal open under one.
+
 ## WU-187: append `-- --respawn-shot` for the respawn screen after a 98%-odds loss to a long-named foe
 ## (the longest "still fell" lesson). `--year-shot` now has a four-line year with a respawn line.
 
@@ -92,6 +94,9 @@ func _start() -> void:
 		return
 	if OS.get_cmdline_user_args().has("--renown-shot"):
 		_start_renown_shot(gs)
+		return
+	if OS.get_cmdline_user_args().has("--banner-shot"):
+		_start_banner_shot(gs)
 		return
 	if OS.get_cmdline_user_args().has("--soul-shot"):
 		_start_soul_shot(gs)
@@ -428,6 +433,29 @@ func _start_renown_shot(gs: Node) -> void:
 	shots.append({"name": "renown_journal_end", "open": func() -> void:
 		journal.open()
 		journal.get("_scroll").set_deferred("scroll_vertical", 100000), "close": journal.close})
+
+
+## WU-197: the HUD with a notice banner up (Goal line and hints visible), and a centred window under one.
+func _start_banner_shot(gs: Node) -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 5
+	var c := CharacterFactory.create("Lin Feng", gs.data, rng, "male")
+	gs.start_session(c)
+	gs.pending_event = ""
+	world = load("res://src/world/world.tscn").instantiate()
+	root.add_child(world)
+	hud = world.get_node("HUD")
+	var banner: Control = hud.get("_banner")
+	var journal: Control = hud.get("_screens")["toggle_journal"]
+	var show_banner := func() -> void:
+		banner.set_held(false)
+		banner._queue.clear()
+		banner.finish_current()
+		banner.announce("Realm: Qi Refining 2nd Layer", "Your qi runs deeper. New: the shop sells manuals.", Color(0.9, 0.78, 0.4), 60.0)
+	shots.append({"name": "banner_hud", "open": show_banner, "close": func() -> void: pass})
+	shots.append({"name": "banner_journal", "open": func() -> void:
+		show_banner.call()
+		journal.open(), "close": journal.close})
 
 
 ## WU-190: the encounter window on real encounters with attribute, profession and enemy choices.
