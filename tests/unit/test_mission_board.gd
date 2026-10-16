@@ -332,3 +332,53 @@ func test_ordered_puts_fair_fights_first_and_unavailable_last() -> void:
 			assert_true(rating >= last_rating, "rating order at %s" % id)
 			last_rating = rating
 	assert_eq(MissionBoard.ordered(c, d, {}, [] as Array[String]).size(), 0)
+
+
+## WU-189: a nearly empty artifact warns before a risky lethal mission fight.
+func test_low_artifact_warns_on_risky_lethal_missions() -> void:
+	var gs := _root().get_node("GameState")
+	var c := _disciple()
+	gs.start_session(c)
+	var d := data()
+	var lethal_id := ""
+	var weak_id := ""
+	for id in d.sect_missions:
+		var eid := String(d.sect_missions[id].get("enemy", ""))
+		if eid == "" or not d.enemies.has(eid):
+			continue
+		if bool(d.enemies[eid].get("lethal", false)) and lethal_id == "":
+			lethal_id = id
+		elif not bool(d.enemies[eid].get("lethal", false)) and weak_id == "":
+			weak_id = id
+	assert_true(lethal_id != "")
+	var board := MissionBoard.new()
+	var p: CharacterData = gs.player
+	p.artifact_lives = 1
+	var enemy: Dictionary = d.enemies[String(d.sect_missions[lethal_id]["enemy"])]
+	var saved := enemy.duplicate()
+	enemy["realm"] = "void_refinement"
+	enemy["stage"] = 3
+	assert_true(["Risky", "Dangerous", "Deadly"].has(Sects.mission_danger(p, d, lethal_id)))
+	assert_true(MissionBoard.low_artifact_warning(p, d, lethal_id).contains("holds 1 life"))
+	p.artifact_lives = 0
+	assert_true(MissionBoard.low_artifact_warning(p, d, lethal_id).contains("holds no lives"))
+	p.artifact_lives = 1
+	board._rebuild()
+	var row := board._list.get_node_or_null(NodePath(lethal_id)) as Button
+	if row != null:
+		assert_true(row.text.ends_with(" !"), row.text)
+		board._select(lethal_id)
+		assert_true(board._danger.text.contains("Creation Artifact"), board._danger.text)
+	p.artifact_lives = 3
+	assert_eq(MissionBoard.low_artifact_warning(p, d, lethal_id), "")
+	p.artifact_lives = 1
+	for k in saved:
+		enemy[k] = saved[k]
+	enemy["realm"] = "mortal"
+	enemy["stage"] = 0
+	enemy["hp"] = -1000
+	assert_eq(MissionBoard.low_artifact_warning(p, d, lethal_id), "", "a Weak fight does not warn")
+	for k in saved:
+		enemy[k] = saved[k]
+	board.free()
+	gs.end_session()

@@ -355,6 +355,8 @@ func _rebuild_missions() -> void:
 		var danger := Sects.mission_danger(p, data, mission_id)
 		if danger != "":
 			label += "  [%s]" % Sects.mission_danger_text(p, data, mission_id)
+			if low_artifact_warning(p, data, mission_id) != "":
+				label += " !"
 		_add_entry(mission_id, label, Sects.check_mission(p, data, mission_id, GameState.world_flags) == "")
 		if danger != "":
 			UIStyle.tint_button_text(_list.get_child(-1) as Button, UIStyle.danger_color(danger))
@@ -427,6 +429,20 @@ func _select(mission_id: String) -> void:
 
 ## "You lost this fight 12 days ago." once a lost mission fight is offered again
 ## (Sects.last_loss_days_ago), "" when it was never lost or more than LOSS_MEMORY_DAYS ago.
+## WU-189: a lethal Risky/Dangerous/Deadly fight while the Creation Artifact is nearly
+## empty warns that losing could end the run; "" otherwise.
+static func low_artifact_warning(c: CharacterData, data: GameData, mission_id: String) -> String:
+	if c.artifact_lives < 0 or c.artifact_lives > Guidance.LOW_ARTIFACT_LIVES:
+		return ""
+	if not ["Risky", "Dangerous", "Deadly"].has(Sects.mission_danger(c, data, mission_id)):
+		return ""
+	var enemy: Dictionary = data.enemies.get(String(data.sect_missions.get(mission_id, {}).get("enemy", "")), {})
+	if not bool(enemy.get("lethal", false)):
+		return ""
+	var holds := "holds no lives" if c.artifact_lives == 0 else "holds %d life" % c.artifact_lives
+	return "Your Creation Artifact %s. Losing this fight could be the end." % holds
+
+
 static func loss_text(c: CharacterData, mission_id: String) -> String:
 	var days := Sects.last_loss_days_ago(c, mission_id)
 	if days < 0 or days > LOSS_MEMORY_DAYS:
@@ -455,6 +471,9 @@ func _show_details() -> void:
 	var lost := loss_text(p, _selected) if danger != "" else ""
 	if lost != "" and Sects.check_mission(p, data, _selected, GameState.world_flags) == "":
 		_danger.text += "\n" + lost
+	var low := low_artifact_warning(p, data, _selected) if danger != "" else ""
+	if low != "":
+		_danger.text += "\n" + low
 	_danger.add_theme_color_override("font_color", UIStyle.danger_color(danger))
 	if mission.is_empty():
 		return
