@@ -1587,7 +1587,7 @@ static func journal(c: CharacterData, data: GameData, flags: Dictionary, today: 
 		_add(out, "Letters", line, "normal")
 	for order in c.commissions:
 		var missing := Commissions.missing_line(c, data, order, region_id, today)
-		_add(out, "Commissions", Commissions.describe(c, data, order, today) + (" " + missing if missing != "" else ""), "warning" if Commissions.days_left(order, today) <= 7 else "normal")
+		_add(out, "Commissions", Commissions.describe(c, data, order, today) + (". " + missing if missing != "" else ""), "warning" if Commissions.days_left(order, today) <= 7 else "normal")
 	_renown_entry(out, c, data, region_id)
 	_milestone_entries(out, c, data, flags, clan)
 	return out

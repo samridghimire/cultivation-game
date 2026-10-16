@@ -225,6 +225,14 @@ func test_due_soon_hint_skips_an_order_the_pack_already_fills() -> void:
 	assert_true(hint.contains("Needs Morning Dew Grass"), hint)
 
 
+## WU-218: the journal row ends the order's "(you have N)" with a full stop before the missing line.
+func test_journal_row_separates_the_missing_line() -> void:
+	var c := _alchemist()
+	c.commissions.append(_pill_order(2, 100))
+	var rows := Guidance.journal(c, data(), {}, 20, "qingshi_village").filter(func(r: Dictionary) -> bool: return r["section"] == "Commissions")
+	assert_true(String(rows[0]["text"]).contains("(you have 0). Needs "), rows[0]["text"])
+
+
 func test_due_soon_hint_only_within_two_weeks() -> void:
 	var c := _alchemist()
 	c.commissions = [_pill_order(2, 30)]
