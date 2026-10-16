@@ -762,3 +762,76 @@ func test_wu186_journal_scroll_sheet_people_and_grounds_focus() -> void:
 	hud.free()
 	gs.end_session()
 	await _frames()
+
+
+## WU-212: the workshop with odd jobs and an open order (a disabled Deliver entry must not take the
+## initial focus), the crafting screen after a craft and after the last ingredient is used up (focus
+## stays on the screen's controls), and the herb gather site menu with its "Used in" line.
+func test_wu212_workshop_crafting_and_gather_site_focus() -> void:
+	var root := _tree().root
+	var gs: Node = root.get_node("GameState")
+	var c := new_character()
+	c.professions["alchemist"] = {"rank": 0, "xp": 0.0}
+	c.add_item("spirit_stone", 500)
+	c.commissions.append({"profession": "alchemist", "recipe": "qi_gathering_pill", "item": "qi_gathering_pill", "count": 1, "reward": 5, "xp": 1.0, "due_day": 999})
+	gs.start_session(c)
+	gs.pending_event = ""
+	gs.current_region = "qingshi_village"
+	var hud: CanvasLayer = load("res://src/ui/hud.tscn").instantiate()
+	root.add_child(hud)
+	await _frames()
+	var menu: ChoiceMenu = hud.get("_choice_menu")
+
+	var shop: Node = load("res://src/world/interactables/workshop.gd").new()
+	root.add_child(shop)
+	menu.open_for(shop)
+	await _expect_focus(menu, "workshop with odd jobs and an open order")
+	var focused := root.gui_get_focus_owner() as Button
+	assert_true(focused != null and not focused.disabled, "the workshop's initial focus is an enabled entry (got %s)" % [focused.text if focused != null else "nothing"])
+	var seen := 0
+	for i in 10:
+		var owner := root.gui_get_focus_owner()
+		if owner is Button and menu.is_ancestor_of(owner):
+			seen += 1
+		_press("ui_down")
+		await _frames()
+	assert_eq(seen, 10, "d-pad down keeps focus on the workshop buttons, disabled Deliver included")
+	_press("ui_cancel")
+	await _frames()
+	assert_false(menu.visible, "workshop: ui_cancel closes it")
+	shop.free()
+
+	# Crafting: exactly one batch of ingredients, so the second craft is the last one.
+	c.add_item("spirit_herb", 2)
+	c.add_item("dew_grass", 1)
+	var crafting: CraftingScreen = hud.get("_crafting")
+	crafting.open("alchemist")
+	await _expect_focus(crafting, "crafting screen with ingredients")
+	var craft := crafting.find_child("Craft", true, false) as Button
+	assert_true(craft != null and not craft.disabled, "Craft is enabled with the ingredients")
+	craft.pressed.emit()
+	await _frames(3)
+	assert_eq(c.item_count("spirit_herb"), 0, "the herbs were used up")
+	await _expect_focus(crafting, "crafting screen after the last ingredient is used")
+	var list_focus := root.gui_get_focus_owner()
+	assert_true(list_focus is Button and list_focus.name == "qi_gathering_pill", "focus returns to the recipe list (got %s)" % list_focus.name)
+	_press("ui_cancel")
+	await _frames()
+	assert_false(crafting.visible, "crafting screen: ui_cancel closes it")
+
+	# A herb gather site whose herbs feed a known recipe says "Used in".
+	var site: Node = load("res://src/world/interactables/gather_site.gd").new()
+	site.gather_table = [{"item": "spirit_herb", "weight": 4, "min": 1, "max": 1}, {"item": "", "weight": 4}]
+	root.add_child(site)
+	assert_true(String(site.get_options()[0]["description"]).contains("Used in"), "the gather site names the recipes its herbs feed")
+	menu.open_for(site)
+	await _expect_focus(menu, "herb gather site with the Used in line")
+	_press("ui_cancel")
+	await _frames()
+	assert_false(menu.visible, "gather site: ui_cancel closes it")
+	site.free()
+
+	root.remove_child(hud)
+	hud.free()
+	gs.end_session()
+	await _frames()
