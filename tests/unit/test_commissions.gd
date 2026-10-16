@@ -253,3 +253,17 @@ func test_due_soon_hint_only_within_two_weeks() -> void:
 		if r["section"] == "Commissions" and String(r["text"]).contains("Needs Spirit Herb"):
 			found = true
 	assert_true(found)
+
+
+func test_available_nearby_counts_only_merchants_one_route_away() -> void:
+	var d := GameData.load_from_dir()
+	d.items["rare_curio"] = {"id": "rare_curio", "name": "Rare Curio", "tags": ["rare_curio"], "price": 1}
+	d.regions["home"] = {"routes": [{"to": "next", "days": 1}], "places": []}
+	d.regions["next"] = {"routes": [], "places": []}
+	d.regions["far"] = {"routes": [], "places": [{"type": "merchant", "stock_tags": ["rare_curio"], "max_price": 10}]}
+	var c := _alchemist()
+	assert_false(Guidance.available_nearby(c, d, "rare_curio", "home"), "sold only in a far region")
+	assert_true(Guidance.available_nearby(c, d, "rare_curio", "far"), "from the merchant's own region")
+	assert_true(Guidance.available_nearby(c, d, "rare_curio", ""), "no region: any region counts")
+	d.regions["next"]["places"] = d.regions["far"]["places"]
+	assert_true(Guidance.available_nearby(c, d, "rare_curio", "home"), "a merchant one route away counts")
