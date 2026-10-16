@@ -319,3 +319,16 @@ func test_first_rank_recipes_pay_for_their_ingredients() -> void:
 		assert_true(revenue >= cost, "%s sells for %d but costs %d" % [recipe_id, revenue, cost])
 		if r.has("great_output"):
 			assert_true(int(r["great_output"]["count"]) >= int(out["count"]), "%s great_output count below output" % recipe_id)
+
+
+func test_recipe_uses_names_recipes_a_gather_table_feeds() -> void:
+	var c := _alchemist(0, 10, false)
+	c.professions["alchemist"] = {"rank": 0, "xp": 0.0}
+	var table: Array = [{"item": "spirit_herb", "weight": 1}, {"item": "", "weight": 1}]
+	var uses := Alchemy.recipe_uses(c, data(), table)
+	assert_true(uses.has(String(data().recipes["qi_gathering_pill"]["name"])), "starter pill uses spirit herb")
+	assert_true(uses.size() <= 3, "capped at 3")
+	assert_true(Alchemy.recipe_uses(_alchemist(0, 10, false), data(), table).is_empty(), "no profession, no list")
+	assert_true(Alchemy.recipe_uses(c, data(), []).is_empty(), "empty table")
+	var all := Alchemy.recipe_uses(_alchemist(1), data(), [{"item": "spirit_herb", "weight": 1}, {"item": "dew_grass", "weight": 1}, {"item": "qi_condensing_grass", "weight": 1}])
+	assert_true(all.size() <= 3)

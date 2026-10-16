@@ -113,6 +113,27 @@ static func known_recipes(c: CharacterData, data: GameData, prof_id: String = "a
 	return ids
 
 
+## Names of up to 3 recipes `c` knows (for professions they practise, data order)
+## that take any item `table` can yield (a gather table, see Exploration.gather_table_for).
+static func recipe_uses(c: CharacterData, data: GameData, table: Array) -> PackedStringArray:
+	var names: PackedStringArray = []
+	var items := {}
+	for entry: Dictionary in table:
+		var item_id := String(entry.get("item", ""))
+		if item_id != "":
+			items[item_id] = true
+	for recipe: Dictionary in data.recipes.values():
+		if names.size() >= 3:
+			break
+		if not c.professions.has(recipe["profession"]) or not knows(c, data, recipe["id"]):
+			continue
+		for ing: String in recipe["ingredients"]:
+			if items.has(ing):
+				names.append(String(recipe["name"]))
+				break
+	return names
+
+
 ## Unknown recipes of `prof_id` whose scroll `c` carries: {recipe_id: item_id}.
 static func scroll_recipes(c: CharacterData, data: GameData, prof_id: String) -> Dictionary:
 	var found := {}
