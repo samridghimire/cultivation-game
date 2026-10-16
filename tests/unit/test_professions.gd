@@ -40,3 +40,14 @@ func test_work_preview_matches_work() -> void:
 	assert_almost_eq(result["xp"], preview["xp"])
 	assert_eq(b.item_count("spirit_stone"), stones + preview["income"])
 	assert_almost_eq(Professions.xp_of(b, "blacksmith"), xp + preview["xp"])
+
+
+func test_rank_ups_are_counted_in_life_stats() -> void:
+	var c := new_character()
+	var def: ProfessionDef = data().professions["alchemist"]
+	Professions.add_xp(c, data(), "alchemist", def.xp_to_next(0) + 1.0)
+	assert_eq(LifeStats.get_stat(c, "profession_ranks"), 1)
+	Professions.add_xp(c, data(), "alchemist", 0.5)
+	assert_eq(LifeStats.get_stat(c, "profession_ranks"), 1)
+	Professions.add_xp(c, data(), "alchemist", def.xp_to_next(1) + def.xp_to_next(2))
+	assert_eq(LifeStats.get_stat(c, "profession_ranks"), 3)

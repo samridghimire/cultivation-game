@@ -33,6 +33,8 @@ static func add_xp(c: CharacterData, data: GameData, prof_id: String, amount: fl
 	if rank >= max_rank(data):
 		xp = 0.0
 	c.professions[prof_id] = {"rank": rank, "xp": xp}
+	if gained > 0:
+		LifeStats.add(c, "profession_ranks", gained)
 	return gained
 
 

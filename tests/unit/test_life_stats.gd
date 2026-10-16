@@ -182,3 +182,12 @@ func test_year_summary_remembers_deaths() -> void:
 	assert_eq(lines, PackedStringArray(["You claimed an inheritance.", "The Creation Artifact pulled you back from death.", "You won 1 fight and lost 0."]))
 	var full := LifeStats.year_summary({}, {"tribulations_survived": 1, "inheritances_claimed": 1, "respawns": 1, "fights_won": 1}, "A", "B")
 	assert_eq(full, PackedStringArray(["You rose from A to B.", "You survived a Heavenly Tribulation.", "You claimed an inheritance.", "The Creation Artifact pulled you back from death."]))
+
+
+func test_year_summary_profession_ranks() -> void:
+	var one := LifeStats.year_summary({}, {"profession_ranks": 1}, "Mortal", "Mortal")
+	assert_eq(one, PackedStringArray(["You rose a rank in your profession."]))
+	var three := LifeStats.year_summary({"profession_ranks": 2}, {"profession_ranks": 5}, "Mortal", "Mortal")
+	assert_eq(three, PackedStringArray(["You rose 3 ranks in your professions."]))
+	var none := LifeStats.year_summary({"profession_ranks": 2}, {"profession_ranks": 2}, "Mortal", "Mortal")
+	assert_eq(none, PackedStringArray(["A quiet year of cultivation."]))

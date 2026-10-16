@@ -5,7 +5,7 @@ extends RefCounted
 ## the end-of-life summary.
 
 const KEYS: Array[String] = ["fights_won", "fights_lost", "threats_fled", "breakthroughs", "breakthroughs_failed",
-	"tribulations_survived", "respawns", "items_crafted", "missions_done", "deeds_done", "encounters", "days_in_seclusion", "commissions_done", "tournaments_won", "incursions_repelled", "festival_activities", "realm_floors_cleared", "inheritances_claimed", "stones_earned", "qi_gathered", "regions_visited", "lectures_attended", "seasons_gathered", "happenings_seen", "discoveries", "bounties_done", "best_renown", "regions_mastered", "rival_bouts_won", "rival_bouts_lost", "renown_titles", "inheritances_lost"]
+	"tribulations_survived", "respawns", "items_crafted", "missions_done", "deeds_done", "encounters", "days_in_seclusion", "commissions_done", "tournaments_won", "incursions_repelled", "festival_activities", "realm_floors_cleared", "inheritances_claimed", "stones_earned", "qi_gathered", "regions_visited", "lectures_attended", "seasons_gathered", "happenings_seen", "discoveries", "bounties_done", "best_renown", "regions_mastered", "rival_bouts_won", "rival_bouts_lost", "renown_titles", "inheritances_lost", "profession_ranks"]
 
 const LABELS := {
 	"fights_won": "Fights won",
@@ -16,6 +16,7 @@ const LABELS := {
 	"tribulations_survived": "Tribulations survived",
 	"respawns": "Times pulled back by the artifact",
 	"items_crafted": "Items crafted",
+	"profession_ranks": "Profession ranks gained",
 	"commissions_done": "Commissions filled",
 	"missions_done": "Sect missions done",
 	"tournaments_won": "Tournaments won",
@@ -208,6 +209,11 @@ static func year_summary(before: Dictionary, after: Dictionary, realm_before: St
 	var crafted := _delta(before, after, "items_crafted")
 	if crafted > 0:
 		out.append("You crafted %d item%s." % [crafted, "" if crafted == 1 else "s"])
+	var ranks := _delta(before, after, "profession_ranks")
+	if ranks == 1:
+		out.append("You rose a rank in your profession.")
+	elif ranks > 1:
+		out.append("You rose %d ranks in your professions." % ranks)
 	var earned := _delta(before, after, "stones_earned")
 	if earned > 0:
 		out.append("You earned %d spirit stone%s." % [earned, "" if earned == 1 else "s"])
