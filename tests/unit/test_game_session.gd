@@ -1604,6 +1604,25 @@ func test_surpassing_the_rival_posts_once() -> void:
 	gs.end_session()
 
 
+func test_catching_up_with_the_rival_posts_once() -> void:
+	var c := _start()
+	var gs := _game_state()
+	var rival: CharacterData = Rivals.rival_of(c, gs.npcs)
+	c.realm_index = 1
+	rival.realm_index = 2
+	gs.world_flags[Rivals.FIRST_MEETING_FLAG] = true
+	EventBus.clear_history()
+	_break_through_once(gs, c)
+	assert_eq(c.realm_index, 2)
+	var lines := EventBus.history.filter(func(m): return String(m["text"]).begins_with("You have caught up with "))
+	assert_eq(lines.size(), 1)
+	assert_eq(int(gs.world_flags.get("rival_caught_up_realm", -1)), 2)
+	gs._check_rival_caught_up(1)
+	lines = EventBus.history.filter(func(m): return String(m["text"]).begins_with("You have caught up with "))
+	assert_eq(lines.size(), 1, "once per realm")
+	gs.end_session()
+
+
 func test_surpassing_needs_the_first_meeting() -> void:
 	var c := _start()
 	var gs := _game_state()

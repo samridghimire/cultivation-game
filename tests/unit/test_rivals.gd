@@ -285,6 +285,23 @@ func test_surpassed_needs_a_higher_realm() -> void:
 	assert_false(Rivals.surpassed(c, r), "a mortal rival has not started climbing yet (QA-078)")
 
 
+func test_caught_up_when_a_stronger_rival_becomes_equal() -> void:
+	var c := CharacterFactory.create("Me", data(), seeded_rng(1))
+	var r := CharacterFactory.create("Rival", data(), seeded_rng(2))
+	r.realm_index = 2
+	c.realm_index = 2
+	assert_true(Rivals.caught_up(c, r, 1))
+	assert_false(Rivals.caught_up(c, r, 2), "they were already equal")
+	c.realm_index = 3
+	assert_false(Rivals.caught_up(c, r, 2), "now past them")
+	c.realm_index = 2
+	r.alive = false
+	assert_false(Rivals.caught_up(c, r, 1), "dead rival")
+	assert_false(Rivals.caught_up(c, null, 1))
+	r.alive = true
+	assert_true(Rivals.caught_up_line(r).begins_with("You have caught up with Rival."))
+
+
 ## C-088: the sect lecture rewards a sharper mind.
 func test_lecture_sharper_answer_needs_comprehension() -> void:
 	var d := data()

@@ -290,6 +290,7 @@ func attempt_breakthrough() -> void:
 		return
 	# Only a surpassing this attempt causes reaches the realm card, not one the monthly check made.
 	last_surpassed_rival = ""
+	var old_realm_index := player.realm_index
 	var lifespan_before := Cultivation.lifespan_years(player, data)
 	var qi_rate_before := Cultivation.qi_per_day(player, data)
 	var result := Cultivation.attempt_breakthrough(player, data, rng)
@@ -314,6 +315,7 @@ func attempt_breakthrough() -> void:
 		if Bloodlines.update(player, data):
 			EventBus.post("Your blood boils and sings: your %s awakens!" % Bloodlines.bloodline_name(data, player.bloodline), "progress")
 		_check_rival_surpassed()
+		_check_rival_caught_up(old_realm_index)
 	else:
 		if result["tribulation"].is_empty():
 			EventBus.post("Your breakthrough to %s failed (%d%% chance). Your qi scatters." % [result["realm_name"], int(result["chance"] * 100)], "danger")
@@ -358,6 +360,18 @@ func _check_rival_surpassed() -> void:
 		last_surpassed_rival = rival.name
 		EventBus.post("You have surpassed %s. Whatever they once said of you, no one repeats it now." % rival.name, "progress")
 		check_milestones()
+
+
+## RIVAL-020: news the day a breakthrough brings you level with a rival who was ahead; once per realm.
+func _check_rival_caught_up(old_realm_index: int) -> void:
+	if not world_flags.get(Rivals.FIRST_MEETING_FLAG, false):
+		return
+	if int(world_flags.get("rival_caught_up_realm", -1)) == player.realm_index:
+		return
+	var rival := Rivals.rival_of(player, npcs)
+	if Rivals.caught_up(player, rival, old_realm_index):
+		world_flags["rival_caught_up_realm"] = player.realm_index
+		EventBus.post(Rivals.caught_up_line(rival), "progress")
 
 
 ## Expected tribulation for breaking into the next realm (Tribulation.preview),

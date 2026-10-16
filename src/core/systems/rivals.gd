@@ -148,6 +148,16 @@ static func spur(rival: CharacterData, data: GameData) -> float:
 	return rival.diligence
 
 
+## RIVAL-020: true when `c`'s breakthrough from `old_realm_index` brought them level with a living
+## rival who stood ahead (the rival's realm is above the old one and now equals `c`'s).
+static func caught_up(c: CharacterData, rival: CharacterData, old_realm_index: int) -> bool:
+	return rival != null and rival.alive and rival.realm_index > old_realm_index and relation(c, rival) == "equal"
+
+
+static func caught_up_line(rival: CharacterData) -> String:
+	return "You have caught up with %s. A bout between you is a fair fight now." % rival.name
+
+
 ## True when a rival already marked surpassed has climbed past `c` again.
 static func overtook(c: CharacterData, rival: CharacterData) -> bool:
 	return rival != null and rival.alive and relation(c, rival) == "stronger"
