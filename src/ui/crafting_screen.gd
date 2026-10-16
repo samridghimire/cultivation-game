@@ -115,6 +115,16 @@ static func ingredient_lines(c: CharacterData, data: GameData, recipe_id: String
 	return lines
 
 
+## "Ingredients cost about N at shops; the output sells for about M." and, when
+## the output sells for less, a hint that gathered herbs make it pay (WU-195).
+static func margin_text(data: GameData, recipe_id: String) -> String:
+	var margin := Alchemy.recipe_margin(data, recipe_id)
+	var text := "Ingredients cost about %d at shops; the output sells for about %d." % [int(margin["cost"]), int(margin["value"])]
+	if int(margin["value"]) < int(margin["cost"]):
+		text += " Gathered herbs make it pay."
+	return text
+
+
 ## For each ingredient the player lacks, where to get it ("" when none is missing).
 static func missing_sources_text(c: CharacterData, data: GameData, recipe_id: String) -> String:
 	var lines: PackedStringArray = []
@@ -211,7 +221,7 @@ func _show_details() -> void:
 	var min_rank := int(recipe.get("min_rank", 0))
 	var prof: ProfessionDef = data.professions[recipe["profession"]]
 	_info.text = "Requires %s %s  |  takes %s" % [data.profession_rank_names[min_rank], prof.name, Calendar.format_duration(int(recipe["days"]))]
-	_ingredients.text = "Ingredients:\n  " + "\n  ".join(ingredient_lines(p, data, _selected, GameState.current_region))
+	_ingredients.text = "Ingredients:\n  " + "\n  ".join(ingredient_lines(p, data, _selected, GameState.current_region)) + "\n" + margin_text(data, _selected)
 	_where.text = missing_sources_text(p, data, _selected)
 	_where.visible = _where.text != ""
 	var out := "Yields: %s" % output_text(data, recipe["output"])

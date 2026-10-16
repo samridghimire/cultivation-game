@@ -22,5 +22,7 @@ func get_options() -> Array[Dictionary]:
 		if CRAFTS.has(def.id):
 			continue
 		var title := Professions.rank_title(c, data, def.id)
-		options.append({"label": "Work as %s (1 month) [%s]" % [def.name, title], "action": GameState.work_profession.bind(def.id, Calendar.DAYS_PER_MONTH), "keep_open": true})
+		var pay := Professions.work_preview(c, data, def.id, Calendar.DAYS_PER_MONTH)
+		var note := "About %d spirit stones and %d xp this month." % [int(pay["income"]), roundi(float(pay["xp"]))]
+		options.append({"label": "Work as %s (1 month) [%s]" % [def.name, title], "description": note, "action": GameState.work_profession.bind(def.id, Calendar.DAYS_PER_MONTH), "keep_open": true})
 	return options

@@ -152,3 +152,27 @@ func test_missing_ingredient_line_names_where_it_grows() -> void:
 func test_herb_place_prefers_current_region_and_is_empty_for_unknown() -> void:
 	var c := new_character()
 	assert_eq(Guidance.herb_place(c, data(), "no_such_item", "qingshi_village"), "")
+
+
+func test_margin_text_reads_recipe_margin() -> void:
+	var margin := Alchemy.recipe_margin(data(), "qi_gathering_pill")
+	var text := CraftingScreen.margin_text(data(), "qi_gathering_pill")
+	assert_true(text.contains("cost about %d " % margin["cost"]))
+	assert_true(text.contains("sells for about %d." % margin["value"]))
+	assert_eq(text.ends_with("Gathered herbs make it pay."), margin["value"] < margin["cost"])
+
+
+func test_workshop_work_option_describes_pay() -> void:
+	var gs := (Engine.get_main_loop() as SceneTree).root.get_node("GameState")
+	var c := new_character()
+	gs.start_session(c)
+	var shop: Node = load("res://src/world/interactables/workshop.gd").new()
+	var found := false
+	for option: Dictionary in shop.get_options():
+		if option["label"].begins_with("Work as Doctor"):
+			found = true
+			var pay := Professions.work_preview(c, data(), "doctor", Calendar.DAYS_PER_MONTH)
+			assert_true(option["description"].contains("About %d spirit stones" % pay["income"]))
+			assert_true(option["description"].contains("%d xp" % roundi(pay["xp"])))
+	shop.free()
+	assert_true(found)
