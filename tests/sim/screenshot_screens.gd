@@ -42,6 +42,9 @@ extends SceneTree
 ## each of the first two): village_field_quarrel (charisma), marsh_yin_ferryman (doctor, 5 choices, longest labels)
 ## and wild_wounded_disciple (enemy choice).
 
+## WU-196: append `-- --renown-shot` for a Qi Refining player with Respected-bound renown in Qingshi Village (first title,
+## halfway to the second): the arrival banner ("Known here: ...") and the journal page with the next-title line.
+
 const OUT_DIR := "user://screenshots/screens"
 const SETTLE_FRAMES := 6
 
@@ -86,6 +89,9 @@ func _start() -> void:
 		return
 	if OS.get_cmdline_user_args().has("--encounter-shot"):
 		_start_encounter_shot(gs)
+		return
+	if OS.get_cmdline_user_args().has("--renown-shot"):
+		_start_renown_shot(gs)
 		return
 	if OS.get_cmdline_user_args().has("--soul-shot"):
 		_start_soul_shot(gs)
@@ -394,6 +400,32 @@ func _start_void_shot(gs: Node) -> void:
 	shots.append({"name": "void_hud", "open": func() -> void: hud.get("_banner").visible = false, "close": func() -> void: pass})
 	shots.append({"name": "void_journal", "open": func() -> void: journal.open(), "close": journal.close})
 	shots.append({"name": "void_journal_end", "open": func() -> void:
+		journal.open()
+		journal.get("_scroll").set_deferred("scroll_vertical", 100000), "close": journal.close})
+
+
+## WU-196: renown at the first title and halfway to the second, arrival banner and journal.
+func _start_renown_shot(gs: Node) -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 5
+	var c := CharacterFactory.create("Lin Feng", gs.data, rng, "male")
+	gs.start_session(c)
+	gs.pending_event = ""
+	var tiers: Array = gs.data.renown["tiers"]
+	var first_min := int((tiers[1] as Dictionary)["min"])
+	var second_min := int((tiers[2] as Dictionary)["min"])
+	Renown.add(c, gs.data, gs.current_region, first_min + (second_min - first_min) / 2)
+	world = load("res://src/world/world.tscn").instantiate()
+	root.add_child(world)
+	hud = world.get_node("HUD")
+	var journal: Control = hud.get("_screens")["toggle_journal"]
+	shots.append({"name": "renown_arrival", "open": func() -> void:
+		hud.get("_banner").visible = true
+		hud.call("_show_arrival", gs.current_region), "close": func() -> void: pass})
+	shots.append({"name": "renown_journal", "open": func() -> void:
+		hud.get("_banner").visible = false
+		journal.open(), "close": journal.close})
+	shots.append({"name": "renown_journal_end", "open": func() -> void:
 		journal.open()
 		journal.get("_scroll").set_deferred("scroll_vertical", 100000), "close": journal.close})
 
