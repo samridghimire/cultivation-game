@@ -87,3 +87,26 @@ func test_void_piercing_pill_is_brewable_and_flawless_is_better() -> void:
 	assert_eq(int(r["min_rank"]), Professions.max_rank(data()))
 	assert_true(data().items["flawless_void_refinement_pill"]["effects"]["breakthrough_bonus"] > data().items["void_refinement_pill"]["effects"]["breakthrough_bonus"])
 	assert_true(data().inheritances["door_ajar_folder"]["reward"]["items"].has("recipe_void_refinement_pill"))
+
+
+func test_body_integration_pill_only_for_void_refinement() -> void:
+	var c := new_character()
+	c.add_item("body_integration_pill", 1)
+	c.realm_index = data().realm_index_of("soul_formation")
+	assert_false(_use(c, "body_integration_pill")["ok"])
+	c.realm_index = data().realm_index_of("void_refinement")
+	assert_true(_use(c, "body_integration_pill")["ok"])
+	assert_almost_eq(c.breakthrough_bonus, 0.25)
+
+
+func test_body_integration_pill_is_brewable_and_scroll_is_an_auction_lot() -> void:
+	var r: Dictionary = data().recipes["body_integration_pill"]
+	assert_eq(String(r["great_output"]["item"]), "flawless_body_integration_pill")
+	assert_eq(int(r["min_rank"]), Professions.max_rank(data()))
+	assert_true(data().items["flawless_body_integration_pill"]["effects"]["breakthrough_bonus"] > data().items["body_integration_pill"]["effects"]["breakthrough_bonus"])
+	assert_eq(String(data().items["recipe_body_integration_pill"]["effects"]["learn_recipe"]), "body_integration_pill")
+	var found := false
+	for lot: Dictionary in data().auction_houses["fallen_star_auction"]["lot_table"]:
+		if String(lot["item"]) == "recipe_body_integration_pill":
+			found = true
+	assert_true(found)

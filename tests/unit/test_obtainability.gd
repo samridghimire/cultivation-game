@@ -107,6 +107,9 @@ func _collect_grants(granted: Dictionary) -> void:
 	}
 	for label: String in sources:
 		_walk(sources[label], label, "", granted)
+	for house: Dictionary in gd.auction_houses.values():
+		for lot: Dictionary in house.get("lot_table", []):
+			granted[String(lot["item"])] = "auctions.json lot"
 	for region: Dictionary in gd.regions.values():
 		for place: Dictionary in region.get("places", []):
 			for entry: Dictionary in place.get("gather_table", []):

@@ -1933,3 +1933,11 @@ func test_pill_goal_names_void_piercing_pill() -> void:
 	c.realm_index = 5
 	c.stage = d.realms[5].stage_count() - 3
 	assert_true(Guidance.pill_saving_goal(c, d).begins_with("Save for a Void Piercing Pill"), Guidance.pill_saving_goal(c, d))
+
+
+func test_pill_source_goal_for_void_refinement_player() -> void:
+	var c := _qr(0, 0)
+	c.realm_index = 6
+	c.stage = data().realms[6].stage_count() - 3
+	assert_eq(data().realms[7].id, "body_integration")
+	assert_eq(Guidance.pill_source_goal(c, data()), "Find an alchemist to brew a Body-Void Union Pill for Body Integration.")
