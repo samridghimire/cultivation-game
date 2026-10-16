@@ -43,6 +43,9 @@ extends SceneTree
 ## WU-216: append `-- --rankup-shot` for the message log after the crafts' rank-ups (the longest "You are now ..."
 ## plus rank_up_line pair across every craft and rank): the HUD log panel and the full log screen.
 
+## WU-222: append `-- --goal-shot` for the journal's "Next steps" with a rank-1 crafter whose "Next recipe: ..." goal
+## line (GUIDE-053) is the longest of any craft: goal_journal.png and goal_journal_end.png (scrolled to the bottom).
+
 ## WU-180: append `-- --debts-shot` for the journal with two grateful NPCs, a grudge holder at hunt
 ## strength and an inheritance three months from its deadline (Debts and grudges, Opportunities).
 
@@ -82,6 +85,9 @@ func _start() -> void:
 	var gs: Node = root.get_node("GameState")
 	if OS.get_cmdline_user_args().has("--workshop-shot"):
 		_start_workshop_shot(gs)
+		return
+	if OS.get_cmdline_user_args().has("--goal-shot"):
+		_start_goal_shot(gs)
 		return
 	if OS.get_cmdline_user_args().has("--rankup-shot"):
 		_start_rankup_shot(gs)
@@ -366,6 +372,45 @@ func _start_rankup_shot(gs: Node) -> void:
 	var log_screen: Control = hud.get("_screens")["toggle_message_log"]
 	shots.append({"name": "rankup_hud", "open": func() -> void: hud.get("_banner").visible = false, "close": func() -> void: pass})
 	shots.append({"name": "rankup_log", "open": func() -> void: log_screen.open(), "close": log_screen.close})
+
+
+## WU-222: the journal's goals with the longest "Next recipe: ..." line of any craft at rank 1.
+func _start_goal_shot(gs: Node) -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 5
+	var c := CharacterFactory.create("Lin Feng", gs.data, rng, "male")
+	gs.start_session(c)
+	gs.pending_event = ""
+	var today := int(root.get_node("GameClock").total_days)
+	var best_prof := ""
+	var best_len := 0
+	for prof_id: String in gs.data.professions:
+		c.professions.clear()
+		c.professions[prof_id] = {"rank": 1, "xp": 0.0}
+		var line := Guidance.next_recipe_line(c, gs.data, prof_id, gs.current_region, today)
+		if line.length() > best_len:
+			best_len = line.length()
+			best_prof = prof_id
+	c.professions.clear()
+	c.professions[best_prof] = {"rank": 1, "xp": 0.0}
+	c.realm_index = 2  # past the first goals, so the "Goals" section shows
+	print("longest next-recipe line: %s (%d chars): %s" % [best_prof, best_len, Guidance.next_recipe_line(c, gs.data, best_prof, gs.current_region, today)])
+	world = load("res://src/world/world.tscn").instantiate()
+	root.add_child(world)
+	hud = world.get_node("HUD")
+	var journal: Control = hud.get("_screens")["toggle_journal"]
+	shots.append({"name": "goal_journal", "open": func() -> void:
+		hud.get("_banner").visible = false
+		journal.open(), "close": journal.close})
+	# Scroll to the "Goals" heading so its "Next recipe: ..." line shows.
+	shots.append({"name": "goal_journal_end", "open": func() -> void:
+		hud.get("_banner").visible = false
+		journal.open()
+		await root.get_tree().process_frame
+		await root.get_tree().process_frame
+		for l: Node in journal.find_children("*", "Label", true, false):
+			if (l as Label).text == "Goals":
+				journal.get("_scroll").set_deferred("scroll_vertical", int((l as Label).position.y)), "close": journal.close})
 
 
 func _start_craft_shots(gs: Node) -> void:
