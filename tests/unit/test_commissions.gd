@@ -159,3 +159,46 @@ func test_lapse_warning_posts_once_across_the_seventh_day() -> void:
 	assert_eq(Commissions.lapse_warnings(c, data(), due - 8, due - 7).size(), 1)
 	assert_eq(Commissions.lapse_warnings(c, data(), due - 7, due - 6).size(), 0)
 	assert_eq(Commissions.lapse_warnings(c, data(), due - 20, due + 5).size(), 0, "already lapsed")
+
+
+func _pill_order(count: int, due: int, with_recipe: bool = true) -> Dictionary:
+	var order := {"profession": "alchemist", "item": "qi_gathering_pill", "count": count, "reward": 10, "xp": 5.0, "due_day": due}
+	if with_recipe:
+		order["recipe"] = "qi_gathering_pill"
+	return order
+
+
+func test_missing_line_names_the_first_short_ingredient_and_where() -> void:
+	var c := _alchemist()
+	var order := _pill_order(2, 100)
+	var line := Commissions.missing_line(c, data(), order, "qingshi_village", 10)
+	assert_true(line.begins_with("Needs Spirit Herb: "), line)
+	assert_true(line.contains("grows at"), line)
+	var old := Commissions.missing_line(c, data(), _pill_order(2, 100, false), "qingshi_village", 10)
+	assert_eq(old, line, "an old entry without a recipe key still works")
+
+
+func test_missing_line_ingredients_in_pack_and_fulfilled() -> void:
+	var c := _alchemist()
+	c.add_item("spirit_herb", 2)
+	c.add_item("dew_grass", 1)
+	assert_eq(Commissions.missing_line(c, data(), _pill_order(2, 100), "qingshi_village", 10), "You have the ingredients: craft it at a workshop.")
+	var d := _alchemist()
+	d.add_item("qi_gathering_pill", 2)
+	assert_eq(Commissions.missing_line(d, data(), _pill_order(2, 100), "qingshi_village", 10), "")
+
+
+func test_due_soon_hint_only_within_two_weeks() -> void:
+	var c := _alchemist()
+	c.commissions = [_pill_order(2, 30)]
+	assert_eq(Commissions.due_soon_hint(c, data(), "qingshi_village", 10), "", "20 days left")
+	var hint := Commissions.due_soon_hint(c, data(), "qingshi_village", 20)
+	assert_true(hint.begins_with("Order due in "), hint)
+	assert_true(hint.contains("Needs Spirit Herb"), hint)
+	assert_true(Guidance.hints(c, data(), 1.0, 8, {}, {}, "qingshi_village", 20).has(hint))
+	var journal := Guidance.journal(c, data(), {}, 20, "qingshi_village")
+	var found := false
+	for r in journal:
+		if r["section"] == "Commissions" and String(r["text"]).contains("Needs Spirit Herb"):
+			found = true
+	assert_true(found)

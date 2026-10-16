@@ -56,6 +56,10 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 		var odd_jobs := _odd_jobs_hint(c, data, region_id)
 		if odd_jobs != "":
 			out.append(odd_jobs)
+	if today >= 0:
+		var due := Commissions.due_soon_hint(c, data, region_id, today)
+		if due != "":
+			out.append(due)
 	var bitter := _bitter_rival_hint(c, data, people, flags, favor)
 	if bitter != "":
 		out.append(bitter)
@@ -360,6 +364,21 @@ static func herb_place(c: CharacterData, data: GameData, item_id: String, region
 					var seasons: Array = entry.get("seasons", [])
 					var when := String(seasons[0]).capitalize() if not seasons.is_empty() else ""
 					return _place_in(data, String(place.get("display_name", "a gather site")), rid, region_id, when)
+	return ""
+
+
+## "grows at <place>" for herbs, "found at <place>" for other gatherables (WU-201, WU-206),
+## "sold by merchants" when nothing is gathered but some merchant stocks it (GUIDE-052); "" otherwise.
+static func source_phrase(c: CharacterData, data: GameData, item_id: String, region_id: String, today: int = -1) -> String:
+	var place := herb_place(c, data, item_id, region_id, today)
+	if place != "":
+		var verb := "grows at" if (data.items.get(item_id, {}).get("tags", []) as Array).has("herb") else "found at"
+		return "%s %s" % [verb, place]
+	var item: Dictionary = data.items.get(item_id, {})
+	for rid: String in data.regions:
+		for p: Dictionary in data.regions[rid].get("places", []):
+			if String(p.get("type", "")) == "merchant" and Items.merchant_sells(data, item, p.get("stock_tags", []), int(p.get("max_price", 0))):
+				return "sold by merchants"
 	return ""
 
 
@@ -1489,7 +1508,8 @@ static func journal(c: CharacterData, data: GameData, flags: Dictionary, today: 
 	for line in Letters.journal_lines(c, LETTERS_JOURNAL_MAX):
 		_add(out, "Letters", line, "normal")
 	for order in c.commissions:
-		_add(out, "Commissions", Commissions.describe(c, data, order, today), "warning" if Commissions.days_left(order, today) <= 7 else "normal")
+		var missing := Commissions.missing_line(c, data, order, region_id, today)
+		_add(out, "Commissions", Commissions.describe(c, data, order, today) + (" " + missing if missing != "" else ""), "warning" if Commissions.days_left(order, today) <= 7 else "normal")
 	_renown_entry(out, c, data, region_id)
 	_milestone_entries(out, c, data, flags, clan)
 	return out

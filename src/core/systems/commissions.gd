@@ -7,6 +7,7 @@ extends RefCounted
 
 
 const LAPSE_WARNING_DAYS := 7
+const DUE_SOON_DAYS := 14
 
 
 static func rules(data: GameData) -> Dictionary:
@@ -158,3 +159,47 @@ static func short_label(c: CharacterData, data: GameData, entry: Dictionary, tod
 	return "Deliver %d %s: %d stones, %d xp, %dd (have %d/%d)" % [
 		int(entry["count"]), name, int(entry["reward"]), int(entry["xp"]),
 		days_left(entry, today), mini(c.item_count(String(entry["item"])), int(entry["count"])), int(entry["count"])]
+
+
+## GUIDE-052: what an open order still lacks. "" when the pack already holds the order's items;
+## "Needs <ingredient>: <where>." for the first ingredient (data order, no spirit stones) the
+## remaining crafts need more of; "You have the ingredients: craft it at a workshop." when none is short.
+static func missing_line(c: CharacterData, data: GameData, entry: Dictionary, region_id: String, today: int) -> String:
+	var item_id := String(entry.get("item", ""))
+	var have := c.item_count(item_id)
+	var count := int(entry.get("count", 0))
+	if have >= count:
+		return ""
+	var recipe: Dictionary = data.recipes.get(String(entry.get("recipe", "")), {})
+	if recipe.is_empty():
+		for rid: String in data.recipes:
+			if String(data.recipes[rid].get("output", {}).get("item", "")) == item_id:
+				recipe = data.recipes[rid]
+				break
+	if recipe.is_empty():
+		return ""
+	var per_craft := maxi(1, int(recipe["output"].get("count", 1)))
+	var crafts := ceili(float(count - have) / per_craft)
+	var ingredients: Dictionary = recipe["ingredients"]
+	for id: String in ingredients:
+		if id == "spirit_stone":
+			continue
+		if c.item_count(id) < int(ingredients[id]) * crafts:
+			var where := Guidance.source_phrase(c, data, id, region_id, today)
+			return "Needs %s%s." % [_item_name(data, id), ": " + where if where != "" else ""]
+	return "You have the ingredients: craft it at a workshop."
+
+
+## GUIDE-052: for the order due soonest (14 days or less left) that is still short, "Order due in
+## <time>: <missing line>"; "" otherwise.
+static func due_soon_hint(c: CharacterData, data: GameData, region_id: String, today: int) -> String:
+	var best: Dictionary = {}
+	for order in c.commissions:
+		if days_left(order, today) <= DUE_SOON_DAYS and (best.is_empty() or int(order["due_day"]) < int(best["due_day"])):
+			best = order
+	if best.is_empty():
+		return ""
+	var line := missing_line(c, data, best, region_id, today)
+	if line == "":
+		return ""
+	return "Order due in %s: %s" % [Calendar.format_duration(days_left(best, today)), line]

@@ -109,10 +109,9 @@ static func ingredient_lines(c: CharacterData, data: GameData, recipe_id: String
 	for item_id in ingredients:
 		var line := "%d / %d %s" % [c.item_count(item_id), int(ingredients[item_id]), data.items[item_id].get("name", item_id)]
 		if c.item_count(item_id) < int(ingredients[item_id]):
-			var place := Guidance.herb_place(c, data, item_id, region_id, today)
-			if place != "":
-				var verb := "grows at" if (data.items[item_id].get("tags", []) as Array).has("herb") else "found at"
-				line += " - %s %s" % [verb, place]
+			var source := Guidance.source_phrase(c, data, item_id, region_id, today)
+			if source != "" and source != "sold by merchants":
+				line += " - " + source
 		lines.append(line)
 	return lines
 
