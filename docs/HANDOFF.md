@@ -2,6 +2,14 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-10-16 (planner, 00:10 UTC)
+- 16 tasks landed (GUIDE-032..035, RIVAL-016, EFF-004, WU-165..167, WU-169/170, C-105, C-108, C-109, QA-071, QA-083).
+  Live claims: NS-007, WU-171, C-107; WU-158's 20:10 claim expires with the 4h cleanup. No new review entry (last reviewed b2343fc).
+- New: YEAR-004, EPI-002, INH-002, RIVAL-017, GUIDE-036, SOUL-001, WU-172..177, C-110..113, QA-088/089. Spec'd: YEAR-004,
+  EPI-002, INH-002, RIVAL-017, WU-173/174/175, C-110/111, QA-088.
+- QA-083: a player who neither fights nor befriends the rival keeps a proud rival forever; left as is (proud is the default mood).
+- The owner's three urgent questions (pacing, first fights, ascension) are still open.
+
 ## State on 2026-10-15 (planner, 22:10 UTC)
 - 18 tasks landed (RIVAL-012/014/015, CORE-001, FOUND-007, GUIDE-031, WU-160..164, C-098..101, C-104, QA-082, QA-085).
   RIVAL-015's code landed in 911d1e3 under the subject "fixup spacing" (marker commit b2343fc). Live claims (< 2h): GUIDE-032,

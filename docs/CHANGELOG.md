@@ -2,6 +2,22 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-16 [EFF-004] A choice that trains a profession you have not taken up is refused with a reason.
+- 2026-10-15 [WU-170] Checked: the late-realm character sheet's life record and strongest-foe lines fit at 1280x800 and 1280x720.
+- 2026-10-15 [GUIDE-035] The journal says which region your rival is in when it is not yours.
+- 2026-10-15 [C-108] A successor rival's first meeting says they mean to take the fallen rival's place.
+- 2026-10-15 [WU-166] The character sheet shows your bout record against your rival.
+- 2026-10-15 [WU-169] The help list shows group headings.
+- 2026-10-15 [RIVAL-016] Bouts won and lost against your rival are recorded, with a line for your first win.
+- 2026-10-15 [WU-167] The character sheet shows the top three next steps and points to the journal for more.
+- 2026-10-15 [QA-071] Checked: early inheritances baseline refreshed; the Reed Hermit's hut is never claimed.
+- 2026-10-15 [WU-165] The HUD panels turn see-through when the player or a nearby place name is behind them.
+- 2026-10-15 [C-105] Help pages are sorted into six groups, basics first.
+- 2026-10-15 [GUIDE-034] The journal no longer repeats a goal in its next steps.
+- 2026-10-15 [GUIDE-032] The "Save for" breakthrough pill goal also shows at Foundation and later realms.
+- 2026-10-15 [C-109] One duel no longer turns your rival bitter; it takes two.
+- 2026-10-15 [QA-083] Checked: where rivalries end up (the default player's rival stays proud).
+- 2026-10-15 [GUIDE-033] A fair bout with your rival is listed among the fights you can win.
 - 2026-10-15 [WU-164] The tribulation attempt option turns warning-colored when the tribulation is a close call or would kill you.
 - 2026-10-15 [WU-163] Checked: the journal and sheet at Foundation Peak and Core Formation fit at 1280x800 and 1280x720.
 - 2026-10-15 [C-099] Help page "Rival Moods": what friendly, proud and bitter rivals do.
