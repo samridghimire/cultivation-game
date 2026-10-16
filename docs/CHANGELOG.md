@@ -2,6 +2,21 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-16 [RENOWN-006] The journal says how close your next renown title is.
+- 2026-10-16 [QA-095] Curious sim buys a life at 1x recharge cost at <= 1 life: no seed ends early in 36 months (final deaths 2 -> 0).
+- 2026-10-16 [WU-188] Void Refinement ladder shot (--void-shot): HUD goal line and journal fit at 1280x800 and 1280x720.
+- 2026-10-16 [C-130] Milestones "A Name Spoken" (1 renown title) and "Known Across the Land" (4).
+- 2026-10-16 [WU-192] The arrival banner says "Known here: <title>" where your name has a title.
+- 2026-10-16 [QA-086] Quiet-stretch sim: a meditate-and-explore newcomer goes up to 60 days with nothing new (median 7); curious median 2, max 34.
+- 2026-10-16 [GUIDE-038] Long waits read in months or years ("about 24 years"), not thousands of days.
+- 2026-10-16 [WU-191] The HUD Goal line follows the realm's goal ladder.
+- 2026-10-16 [C-126] The Drunk Bully is non-lethal: losing to him leaves you beaten, not dead.
+- 2026-10-16 [GUIDE-040] The low-lives hint is honest about the stones you hold and an empty artifact.
+- 2026-10-16 [QA-093] Profession income sim: professions pay 0.26-0.37 stones/day vs 2.24 for gathering; crafting from bought herbs loses money.
+- 2026-10-16 [WU-180] Journal shot with debts, a grudge and an inheritance deadline: fits at 1280x800 and 1280x720.
+- 2026-10-16 [WU-181] The first-hour combat shot uses a real seeded fight (Victory: Wild Boar, Rated: Weak).
+- 2026-10-16 [INH-005] The year in review remembers an inheritance lost to rivals.
+- 2026-10-16 [C-122] A Void Refinement inheritance: Door Ajar of the Space Folder.
 - 2026-10-16 [GUIDE-036] A "Save for" goal names a source (a recipe or an auction) for a breakthrough pill no shop sells.
 - 2026-10-16 [VOID-001] Void Refinement goal ladder in the journal and HUD.
 - 2026-10-16 [RENOWN-005] Renown from an encounter choice posts "Word of it spreads through X (renown +N)".

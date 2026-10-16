@@ -2,6 +2,18 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-10-16 (planner, 10:10 UTC)
+- 15 tasks landed (RENOWN-006, QA-095, WU-188, C-130, WU-192, QA-086, GUIDE-038, WU-191, C-126, GUIDE-040, QA-093, WU-180,
+  WU-181, INH-005, and C-122 which landed before the 08:10 plan but was still listed). Review 26efd67..9206be9: nothing filed;
+  its two notes became WU-194 and WU-197. Live claims: EPI-003, WU-190, C-123, C-127, QA-094 (07:05).
+- The deadly first years look fixed (QA-095: no curious seed ends early in 36 months). Seed 7 still stalls 23 months at QR7
+  (QA-096 traces it).
+- New theme "professions pay" from QA-093: in-game only the Doctor can "Work" (crafting professions craft instead), and four
+  alchemist recipes at rank 0-1 sell for less than their herbs cost. C-131 / C-132 (data), PROF-003 + WU-195 (show the
+  numbers), YEAR-008, GUIDE-042, QA-097. QA-093's integer-truncation note is unreachable in game (work is always a month).
+- QA-086: a meditate-only newcomer gets up to 60 quiet days; GUIDE-041 moves "try something new" from day 180 to 60.
+- The owner's three urgent questions (pacing, first fights, ascension) are still open.
+
 ## State on 2026-10-16 (planner, 06:10 UTC)
 - 14 tasks landed (QA-084, WU-182, C-118/119, WU-185, C-116, RENOWN-004, INH-004, QA-092, WU-183, C-103, SOUL-002, C-117,
   YEAR-006). No new review entry (last reviewed 50042bb). Live claims: GRAT-002, WU-186, QA-091; GUIDE-036 / WU-180 / WU-181
