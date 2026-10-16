@@ -2221,6 +2221,7 @@ func _announce_renown(result: Dictionary, quiet_gain: bool = true) -> void:
 		return
 	player.life_stats["best_renown"] = maxi(LifeStats.get_stat(player, "best_renown"), Renown.best(player))
 	if String(result["new_tier"]) != "":
+		LifeStats.add(player, "renown_titles")
 		EventBus.post("Your name is %s in %s now." % [String(result["new_tier"]).to_lower(), data.regions[current_region].get("name", current_region)], "progress")
 		EventBus.renown_tier_reached.emit(current_region, String(result["new_tier"]))
 	elif not quiet_gain:

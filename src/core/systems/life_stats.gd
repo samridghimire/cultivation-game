@@ -5,7 +5,7 @@ extends RefCounted
 ## the end-of-life summary.
 
 const KEYS: Array[String] = ["fights_won", "fights_lost", "threats_fled", "breakthroughs", "breakthroughs_failed",
-	"tribulations_survived", "respawns", "items_crafted", "missions_done", "deeds_done", "encounters", "days_in_seclusion", "commissions_done", "tournaments_won", "incursions_repelled", "festival_activities", "realm_floors_cleared", "inheritances_claimed", "stones_earned", "qi_gathered", "regions_visited", "lectures_attended", "seasons_gathered", "happenings_seen", "discoveries", "bounties_done", "best_renown", "regions_mastered", "rival_bouts_won", "rival_bouts_lost"]
+	"tribulations_survived", "respawns", "items_crafted", "missions_done", "deeds_done", "encounters", "days_in_seclusion", "commissions_done", "tournaments_won", "incursions_repelled", "festival_activities", "realm_floors_cleared", "inheritances_claimed", "stones_earned", "qi_gathered", "regions_visited", "lectures_attended", "seasons_gathered", "happenings_seen", "discoveries", "bounties_done", "best_renown", "regions_mastered", "rival_bouts_won", "rival_bouts_lost", "renown_titles"]
 
 const LABELS := {
 	"fights_won": "Fights won",
@@ -35,6 +35,7 @@ const LABELS := {
 	"regions_mastered": "Regions mastered",
 	"rival_bouts_won": "Bouts won against your rival",
 	"rival_bouts_lost": "Bouts lost to your rival",
+	"renown_titles": "Places that know your name",
 	"deeds_done": "Deeds done",
 	"encounters": "Encounters",
 	"days_in_seclusion": "Days in seclusion",
@@ -174,6 +175,9 @@ static func year_summary(before: Dictionary, after: Dictionary, realm_before: St
 	var bouts := bouts_won + _delta(before, after, "rival_bouts_lost")
 	if bouts > 0:
 		out.append("You crossed hands with your rival %d time%s and won %d." % [bouts, "" if bouts == 1 else "s", bouts_won])
+	var titles := _delta(before, after, "renown_titles")
+	if titles > 0:
+		out.append("Your name became known in %d place%s." % [titles, "" if titles == 1 else "s"])
 	var adventures := _adventures_line(before, after)
 	if adventures != "":
 		out.append(adventures)

@@ -283,3 +283,18 @@ func test_renown_gain_line_for_choices_only() -> void:
 	assert_false("\n".join(lines).contains("renown +"), "\n".join(lines))
 	EventBus.message_posted.disconnect(cb)
 	gs.end_session()
+
+
+## YEAR-007: crossing a renown tier is counted in the life record.
+func test_renown_tier_bumps_life_stat() -> void:
+	var gs := _root().get_node("GameState")
+	var c := CharacterFactory.create("Voice", gs.data, seeded_rng(4))
+	gs.start_session(c)
+	gs.current_region = "misty_forest"
+	c.renown["misty_forest"] = 0
+	gs._add_renown(1)
+	assert_eq(LifeStats.get_stat(c, "renown_titles"), 0)
+	c.renown["misty_forest"] = int(gs.data.renown["tiers"][1]["min"]) - 1
+	gs._add_renown(5)
+	assert_eq(LifeStats.get_stat(c, "renown_titles"), 1)
+	gs.end_session()
