@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: e673015
+Last reviewed commit: 37fd69d
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -627,3 +627,19 @@ Last reviewed commit: e673015
     printed percent. C-127's guidance test helper strips the real void pill only from its own GameData.
   - Notes, not filed: C-127's recipe scroll comes from an inheritance that needs Void Refinement to enter, so its
     claimant can only brew the pill for sale. C-131's follow-up (array_master rank-0 array sells below cost) is open.
+- 2026-10-16 (reviewer): reviewed e673015..37fd69d (WU-197, QA-096, WU-198, C-124, C-132, WU-199, C-125, WU-203, QA-087,
+  INH-006, GUIDE-042, RENOWN-007, WU-202, C-133, GUIDE-044, QA-097; [PLAN]/claim commits skipped). Main green. No
+  BACKLOG/CHANGELOG edits by workers; no SAVE_VERSION change. Nothing filed.
+  - Fixed ([REVIEW] commit): GUIDE-042's herb_here_hint was called from _untried_feature_hint, so it needed realm >= 1
+    and day >= 60 and lost to "You know a recipe" (its test passed only because _veteran() is realm 1 with every life
+    stat at 1). Per the spec it is now appended in hints() for any realm and day, skips recipes above the player's
+    rank and names the gather place ("Spirit Herb grows at Village Herb Slope: ..."). Tests: a Mortal on day 0 hears it;
+    a region with no gather place gives "".
+  - Checked: INH-006 still posts the rival news for every loss and counts only known grounds. RENOWN-007's sources are
+    read by Renown.gain (unknown keys give 0); patients is a fixed one-month session, so +2 a month is no farm. C-133's
+    margin test now covers every profession's rank-0/1 recipes. C-124/C-125 encounter data is well-formed (duels
+    grudge <= 5, rank-4 requires). WU-202's banner trims instead of wrapping. GUIDE-044 uses work_preview.
+  - Notes, not filed: QA-097 finds Array Master still loses money even with gathered ingredients and shop-bought
+    crafting is negative for Alchemist/Blacksmith/Beast Tamer (planner: PROF-004 / an array follow-up). C-133's
+    Minor Spirit Gathering Array margin is 29 vs 28. The herb hint ignores seasons (it can say a summer herb grows here
+    in winter).
