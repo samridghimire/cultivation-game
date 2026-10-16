@@ -1790,3 +1790,35 @@ func test_karma_entries_cap_and_empty() -> void:
 	assert_eq(out.size(), 3)
 	assert_true(String(out[0]["text"]).begins_with("N3"))
 	assert_eq(_karma_lines(_fresh(), people).size(), 0)
+
+
+## GUIDE-036: a Soul Formation player late in the realm; the Void Refinement pill is injected.
+func _void_pill_player(d: GameData) -> CharacterData:
+	var c := _qr(0, 0)
+	c.realm_index = 5
+	c.stage = d.realms[5].stage_count() - 3
+	d.items["void_pill"] = {"id": "void_pill", "name": "Void Pill", "price": 9000, "tags": ["no_shop"], "effects": {"breakthrough_realm": "void_refinement", "breakthrough_bonus": 0.2}}
+	return c
+
+
+func test_pill_source_goal_recipe_and_auction() -> void:
+	var d := data()
+	var c := _void_pill_player(d)
+	assert_eq(Guidance.pill_source_goal(c, d), "")  # no source at all
+	d.auction_houses["fallen_star_auction"]["lot_table"].append({"item": "void_pill", "base_price": 1, "weight": 1, "rarity": "epic"})
+	assert_eq(Guidance.pill_source_goal(c, d), "Bid for a Void Pill at the Fallen Star Market auction.")
+	d.recipes["void_pill"] = {"id": "void_pill", "profession": "alchemist", "output": {"item": "void_pill", "count": 1}}
+	assert_eq(Guidance.pill_source_goal(c, d), "Find an alchemist to brew a Void Pill for Void Refinement.")
+	c.professions["alchemist"] = {"rank": 0, "xp": 0.0}
+	assert_eq(Guidance.pill_source_goal(c, d), "Brew a Void Pill for Void Refinement (Alchemist).")
+	assert_true(_has(Guidance.goals(c, d, {}), "Brew a Void Pill"))
+	assert_false(_has(Guidance.goals(c, d, {}), "Save for"))
+	c.stage = 0
+	assert_eq(Guidance.pill_source_goal(c, d), "")
+
+
+func test_pill_source_goal_silent_when_a_shop_sells_it() -> void:
+	var d := data()
+	var c := _qr(6, 20)
+	assert_eq(Guidance.pill_source_goal(c, d), "")
+	assert_true(_has(Guidance.goals(c, d, {}), "Save for"))

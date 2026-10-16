@@ -475,17 +475,51 @@ static func next_realm_pill_price(c: CharacterData, data: GameData) -> int:
 ## "Save for a Foundation Establishment Pill (+25 percent): ..." in the last three stages of
 ## any cultivation realm while no pill is held or taken; "" otherwise.
 static func pill_saving_goal(c: CharacterData, data: GameData) -> String:
-	if c.realm_index < 1 or Cultivation.is_final_realm(c, data):
-		return ""
-	if c.stage < data.realms[c.realm_index].stage_count() - 3 or c.breakthrough_pill != "" or not breakthrough_items(c, data).is_empty():
+	if not _pill_goal_applies(c, data):
 		return ""
 	var pill := next_realm_pill(c, data)
-	if pill.is_empty():
+	if pill.is_empty() or not Items.sources(data, String(pill["id"]))[0].begins_with("Sold at"):
 		return ""
 	var price := int(pill.get("price", 0))
 	var stones := c.item_count("spirit_stone")
 	var have := "you can afford it now" if stones >= price else "you have %d" % stones
 	return "Save for %s (+%d percent): %d stones, %s. %s." % [Text.a(String(pill["name"])), roundi(float(pill["effects"]["breakthrough_bonus"]) * 100), price, have, Items.sources(data, String(pill["id"]))[0]]
+
+
+## True in the last three stages of a cultivation realm while no breakthrough pill is held or taken.
+static func _pill_goal_applies(c: CharacterData, data: GameData) -> bool:
+	if c.realm_index < 1 or Cultivation.is_final_realm(c, data):
+		return false
+	return c.stage >= data.realms[c.realm_index].stage_count() - 3 and c.breakthrough_pill == "" and breakthrough_items(c, data).is_empty()
+
+
+## GUIDE-036: where to get the next realm's pill when no shop sells one (so "Save for" is silent):
+## a recipe that makes it, else an auction lot, else "". One line.
+static func pill_source_goal(c: CharacterData, data: GameData) -> String:
+	if not _pill_goal_applies(c, data) or pill_saving_goal(c, data) != "":
+		return ""
+	var next_id: String = data.realms[c.realm_index + 1].id
+	var pills: Array = []
+	for item: Dictionary in data.items.values():
+		var effects: Dictionary = item.get("effects", {})
+		if String(effects.get("breakthrough_realm", "")) == next_id and float(effects.get("breakthrough_bonus", 0.0)) > 0.0:
+			pills.append(item)
+	pills.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return String(a["id"]) < String(b["id"]))
+	var realm_name: String = data.realms[c.realm_index + 1].name
+	for item: Dictionary in pills:
+		for recipe: Dictionary in data.recipes.values():
+			if String(recipe.get("output", {}).get("item", "")) != String(item["id"]):
+				continue
+			if c.professions.has(String(recipe.get("profession", ""))):
+				return "Brew %s for %s (Alchemist)." % [Text.a(String(item["name"])), realm_name]
+			return "Find an alchemist to brew %s for %s." % [Text.a(String(item["name"])), realm_name]
+	for item: Dictionary in pills:
+		for house: Dictionary in data.auction_houses.values():
+			for lot: Dictionary in house.get("lot_table", []):
+				if String(lot.get("item", "")) == String(item["id"]):
+					var region: Dictionary = data.regions.get(String(house.get("region", "")), {})
+					return "Bid for %s at the %s auction." % [Text.a(String(item["name"])), String(region.get("name", house.get("name", "")))]
+	return ""
 
 
 ## Names of held items whose effects add a breakthrough bonus and can be used
@@ -1098,6 +1132,8 @@ static func goals(c: CharacterData, data: GameData, flags: Dictionary, clan: Cla
 		else:
 			out.append("Reach %s: gather qi, then attempt a breakthrough (%s)." % [next_name, odds])
 		var saving := pill_saving_goal(c, data)
+		if saving == "":
+			saving = pill_source_goal(c, data)
 		if saving != "":
 			out.append(saving)
 	if not c.is_rogue():
