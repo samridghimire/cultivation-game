@@ -1,7 +1,8 @@
 extends Interactable
 ## Odd jobs that train a profession and pay spirit stones. Alchemists refine
 ## pills, Blacksmiths forge artifacts and Talisman Masters inscribe talismans and Array Masters refine array discs and Beast Tamers mix beast feed from recipes (data/recipes.json)
-## instead of doing odd jobs; each craft opens the CraftingScreen.
+## instead of doing odd jobs; each craft opens the CraftingScreen. A crafter the
+## player practises can also take "Odd jobs" in that craft for the same pay as other work (PROF-004).
 
 const CRAFTS := ["alchemist", "blacksmith", "talisman_master", "array_master", "beast_tamer"]
 
@@ -19,10 +20,15 @@ func get_options() -> Array[Dictionary]:
 		var label := Commissions.short_label(c, data, c.commissions[i], GameClock.total_days)
 		options.append({"label": label, "reason": reason, "action": GameState.deliver_commission.bind(i), "disabled": reason != "", "keep_open": true})
 	for def: ProfessionDef in data.professions.values():
-		if CRAFTS.has(def.id):
+		var is_craft := CRAFTS.has(def.id)
+		if is_craft and not c.professions.has(def.id):
 			continue
 		var title := Professions.rank_title(c, data, def.id)
-		var pay := Professions.work_preview(c, data, def.id, Calendar.DAYS_PER_MONTH)
-		var note := "About %d spirit stones and %d xp this month." % [int(pay["income"]), roundi(float(pay["xp"]))]
-		options.append({"label": "Work as %s (1 month) [%s]" % [def.name, title], "description": note, "action": GameState.work_profession.bind(def.id, Calendar.DAYS_PER_MONTH), "keep_open": true})
+		var verb := "Odd jobs as %s" % def.name if is_craft else "Work as %s" % def.name
+		options.append({"label": "%s (1 month) [%s]" % [verb, title], "description": _pay_note(c, data, def.id), "action": GameState.work_profession.bind(def.id, Calendar.DAYS_PER_MONTH), "keep_open": true})
 	return options
+
+
+static func _pay_note(c: CharacterData, data: GameData, prof_id: String) -> String:
+	var pay := Professions.work_preview(c, data, prof_id, Calendar.DAYS_PER_MONTH)
+	return "About %d spirit stones and %d xp this month." % [int(pay["income"]), roundi(float(pay["xp"]))]

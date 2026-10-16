@@ -176,3 +176,34 @@ func test_workshop_work_option_describes_pay() -> void:
 			assert_true(option["description"].contains("%d xp" % roundi(pay["xp"])))
 	shop.free()
 	assert_true(found)
+
+
+func test_workshop_odd_jobs_only_for_practised_crafts() -> void:
+	var gs := (Engine.get_main_loop() as SceneTree).root.get_node("GameState")
+	var c := new_character()
+	c.professions = {"alchemist": {"rank": 0, "xp": 0.0}}
+	gs.start_session(c)
+	var shop: Node = load("res://src/world/interactables/workshop.gd").new()
+	var labels: Array = []
+	for option: Dictionary in shop.get_options():
+		labels.append(option["label"])
+	shop.free()
+	var has := func(prefix: String) -> bool:
+		return labels.any(func(l: String) -> bool: return l.begins_with(prefix))
+	assert_true(has.call("Odd jobs as Alchemist"))
+	assert_false(has.call("Odd jobs as Blacksmith"))
+	assert_true(has.call("Work as Doctor"))
+
+
+func test_work_profession_pays_the_preview_for_a_craft() -> void:
+	var gs := (Engine.get_main_loop() as SceneTree).root.get_node("GameState")
+	var c := new_character()
+	c.professions = {"alchemist": {"rank": 0, "xp": 0.0}}
+	gs.start_session(c)
+	var p: CharacterData = gs.player
+	var pay := Professions.work_preview(p, data(), "alchemist", 30)
+	var stones := p.item_count("spirit_stone")
+	var xp := Professions.xp_of(p, "alchemist")
+	gs.work_profession("alchemist", 30)
+	assert_eq(p.item_count("spirit_stone") - stones, int(pay["income"]))
+	assert_true(absf(Professions.xp_of(p, "alchemist") - xp - float(pay["xp"])) < 0.01)
