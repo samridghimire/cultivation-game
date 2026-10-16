@@ -484,6 +484,8 @@
       "group": "world",
       "body": [
         "An inheritance ground tests you in stages, and its prompt names what the next trial needs before you try: a realm and stage, an attribute with your current value beside it (for example \"needs Spirit 12, yours 9\"), or a fight with the foe and how dangerous it is for you.",
+        "There are four kinds of trial. A realm trial asks for a realm and stage. An attribute trial is a talent check: attributes rise only from rare encounters, so training will not close the gap. An alignment trial asks for a righteous or a demonic heart. A fight trial sets you against a foe, never to the death, and you may try again after a defeat.",
+        "An inheritance does not wait for you. It appears only after some years, and it is lost at its deadline or the moment someone else claims it. The journal's Opportunities line names the trial that is stopping you.",
         "If you fall short, leave and grow: cultivate, temper your body or practise a technique, then come back. Do not walk into a fight trial you would lose."
       ]
     },
