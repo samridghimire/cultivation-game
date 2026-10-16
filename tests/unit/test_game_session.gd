@@ -808,6 +808,31 @@ func test_commission_ordered_and_delivered() -> void:
 	gs.end_session()
 
 
+func test_commission_delivery_earns_renown_and_failure_does_not() -> void:
+	var c := _start()
+	var gs := _game_state()
+	c.professions["alchemist"] = {"rank": 0, "xp": 0.0}
+	c.realm_index = 1
+	gs.cultivate(Calendar.DAYS_PER_MONTH + 1)
+	var before := Renown.value(c, gs.current_region)
+	gs.deliver_commission(0)
+	assert_eq(Renown.value(c, gs.current_region), before, "a failed delivery adds nothing")
+	var order: Dictionary = c.commissions[0]
+	c.add_item(order["item"], int(order["count"]))
+	gs.deliver_commission(0)
+	assert_eq(Renown.value(c, gs.current_region), before + int(gs.data.renown["sources"]["commission"]))
+	gs.end_session()
+
+
+func test_patients_session_earns_renown() -> void:
+	var c := _start()
+	var gs := _game_state()
+	var before := Renown.value(c, gs.current_region)
+	gs.treat_patients(Calendar.DAYS_PER_MONTH)
+	assert_eq(Renown.value(c, gs.current_region), before + int(gs.data.renown["sources"]["patients"]))
+	gs.end_session()
+
+
 func test_meditation_preview_describes_qi() -> void:
 	_start()
 	var text: String = _game_state().meditation_preview(30, 1.0)

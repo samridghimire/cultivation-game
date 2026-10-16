@@ -430,6 +430,7 @@ func deliver_commission(index: int) -> void:
 		var contribution := int(result["xp"] / (1.0 if Sects.is_favored_profession(player, data, prof_id) else 2.0))
 		if Sects.add_contribution(player, data, contribution):
 			EventBus.post("Your sect promotes you to %s." % Sects.describe(player, data), "progress")
+	_gain_renown("commission")
 	EventBus.player_changed.emit()
 
 
@@ -1985,6 +1986,7 @@ func treat_patients(days: int) -> void:
 	EventBus.post("You treat patients for %s: +%d xp, +%d spirit stones, alignment %+d, now %s." % [Calendar.format_duration(days), int(result["xp"]), result["income"], result["alignment"], Alignment.tier_name(player.alignment, data)], "karma")
 	if result["ranks_gained"] > 0:
 		EventBus.post("You are now %s!" % Text.a(Professions.rank_title(player, data, Medicine.DOCTOR)), "progress")
+	_gain_renown("patients")
 	_pass_time(days, "Treating patients")
 
 
