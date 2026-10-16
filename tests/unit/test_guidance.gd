@@ -97,6 +97,23 @@ func test_pregnancy_and_low_artifact_lives() -> void:
 	assert_true(_has(hints, "holds 1 life"))
 
 
+func test_artifact_lives_hint_is_honest_about_stones() -> void:
+	var c := _fresh()
+	c.artifact_lives = 1
+	c.add_item("spirit_stone", 40)
+	var text := Guidance.artifact_lives_hint(c, data())
+	assert_true(text.contains("holds 1 life"))
+	assert_true(text.ends_with("You hold 40."))
+	c.add_item("spirit_stone", 500)
+	assert_false(Guidance.artifact_lives_hint(c, data()).contains("You hold"))
+	c.artifact_lives = 0
+	assert_true(Guidance.artifact_lives_hint(c, data()).contains("next death is final"))
+	c.artifact_lives = 2
+	assert_eq(Guidance.artifact_lives_hint(c, data()), "")
+	c.artifact_lives = -1
+	assert_eq(Guidance.artifact_lives_hint(c, data()), "")
+
+
 func test_sect_hints_for_rogue_and_member() -> void:
 	var c := _fresh()
 	c.alignment = -500

@@ -59,8 +59,9 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 	var better_qi := _better_qi_hint(c, data, region_id, flags)
 	if better_qi != "":
 		out.append(better_qi)
-	if c.artifact_lives >= 0 and c.artifact_lives <= LOW_ARTIFACT_LIVES:
-		out.append("Your Creation Artifact holds %d %s. Recharge it for %d spirit stones before you take risks." % [c.artifact_lives, "life" if c.artifact_lives == 1 else "lives", CreationArtifact.recharge_cost(c, data)])
+	var lives_hint := artifact_lives_hint(c, data)
+	if lives_hint != "":
+		out.append(lives_hint)
 	if c.realm_index > NEWCOMER_MAX_REALM:
 		var sect := _sect_hint(c, data)
 		if sect != "":
@@ -1873,3 +1874,19 @@ static func discovery_rumors(c: CharacterData, data: GameData, flags: Dictionary
 			continue
 		out.append(String(region["discovery_rumor"]))
 	return out
+
+
+## Safety line for a Creation Artifact that is nearly empty ("" when it is not).
+static func artifact_lives_hint(c: CharacterData, data: GameData) -> String:
+	if c.artifact_lives < 0 or c.artifact_lives > LOW_ARTIFACT_LIVES:
+		return ""
+	var cost: int = CreationArtifact.recharge_cost(c, data)
+	var text: String
+	if c.artifact_lives == 0:
+		text = "Your Creation Artifact is empty: your next death is final. Recharge it for %d spirit stones." % cost
+	else:
+		text = "Your Creation Artifact holds %d %s. Recharge it for %d spirit stones before you take risks." % [c.artifact_lives, "life" if c.artifact_lives == 1 else "lives", cost]
+	var held: int = c.item_count("spirit_stone")
+	if held < cost:
+		text += " You hold %d." % held
+	return text
