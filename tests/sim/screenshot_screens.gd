@@ -225,6 +225,17 @@ func _start_late_realms(gs: Node) -> void:
 	var hide_banner := func() -> void: hud.get("_banner").visible = false
 	LifeStats.add(c, "rival_bouts_won", 2)
 	LifeStats.add(c, "rival_bouts_lost", 1)
+	# WU-172: a met rival elsewhere, with a bout record and a grudge, so the sheet's longest line shows.
+	var rival_region: String = "qingshi_village"
+	for rid: String in gs.data.regions.keys():
+		if rid != gs.current_region:
+			rival_region = rid
+			break
+	var rival: CharacterData = Rivals.spawn(c, gs.npcs, gs.data, rng, rival_region)
+	gs.world_flags[Rivals.FIRST_MEETING_FLAG] = true
+	gs.world_flags[Rivals.BOUTS_WON_FLAG] = 2
+	gs.world_flags[Rivals.BOUTS_LOST_FLAG] = 1
+	gs.npc_favor[rival.id] = -3
 	for spec: Array in [["fe_peak", "foundation_establishment", -1], ["cf_early", "core_formation", 0]]:
 		var realm_index: int = gs.data.realm_index_of(spec[1])
 		var stage: int = int(spec[2])
@@ -237,6 +248,8 @@ func _start_late_realms(gs: Node) -> void:
 			c.realm_index = realm_index
 			c.stage = stage
 			c.qi = gs.data.realms[realm_index].qi_required(stage)
+			rival.realm_index = realm_index
+			rival.stage = stage
 			hide_banner.call()
 		shots.append({"name": "lr_%s_journal" % spec[0], "open": func() -> void:
 			setup.call()
