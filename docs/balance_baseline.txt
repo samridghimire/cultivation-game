@@ -665,6 +665,7 @@ Rival story, default policy, 10 seeds, 36 months (cells: player/rival realm+stag
   rival_shares_insight: met 0 (never)
   rival_spoils_gathering: met 0 (never)
   rival_public_challenge: met 20 (proud 20)
+  bitter explore days in spoils regions per seed: median 0, max 0; before the encounter was met: median 0 (under 5: the sim policy rarely meets the condition)
   FLAG: one attitude covers over 80% of checkpoints; C-093's encounters would barely show
 Rival story, curious policy, 10 seeds, 36 months (cells: player/rival realm+stage; "-" = no rival or dead)
   seed  1  met day 28  surpassed day never  news 2  rival encounters 6  qi2/qi5 qi4/qi8
@@ -692,6 +693,7 @@ Rival story, curious policy, 10 seeds, 36 months (cells: player/rival realm+stag
   rival_shares_insight: met 7 (friendly 7)
   rival_spoils_gathering: met 0 (never)
   rival_public_challenge: met 10 (proud 10)
+  bitter explore days in spoils regions per seed: median 0, max 0; before the encounter was met: median 0 (under 5: the sim policy rarely meets the condition)
 
 ## combat (200 fights per cell)
 
