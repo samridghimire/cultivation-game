@@ -134,3 +134,14 @@ func test_year_summary_adventures_none_and_cap() -> void:
 	assert_eq(lines.size(), 4)
 	assert_eq(lines[2], "You found 1 hidden place.")
 	assert_eq(lines[3], "You crafted 1 item.")
+
+
+func test_year_summary_rival_bouts() -> void:
+	assert_eq(LifeStats.year_summary({}, {"rival_bouts_won": 2, "rival_bouts_lost": 1}, "A", "A"), PackedStringArray(["You crossed hands with your rival 3 times and won 2."]))
+	assert_eq(LifeStats.year_summary({}, {"rival_bouts_lost": 1}, "A", "A"), PackedStringArray(["You crossed hands with your rival 1 time and won 0."]))
+	assert_eq(LifeStats.year_summary({}, {}, "A", "A"), PackedStringArray(["A quiet year of cultivation."]))
+	var after := {"fights_won": 1, "rival_bouts_won": 1, "discoveries": 1, "items_crafted": 1}
+	var lines := LifeStats.year_summary({}, after, "A", "B")
+	assert_eq(lines.size(), 4)
+	assert_eq(lines[0], "You rose from A to B.")
+	assert_eq(lines[2], "You crossed hands with your rival 1 time and won 1.")

@@ -152,6 +152,10 @@ static func year_summary(before: Dictionary, after: Dictionary, realm_before: St
 	var lost := _delta(before, after, "fights_lost")
 	if won > 0 or lost > 0:
 		out.append("You won %d fight%s and lost %d." % [won, "" if won == 1 else "s", lost])
+	var bouts_won := _delta(before, after, "rival_bouts_won")
+	var bouts := bouts_won + _delta(before, after, "rival_bouts_lost")
+	if bouts > 0:
+		out.append("You crossed hands with your rival %d time%s and won %d." % [bouts, "" if bouts == 1 else "s", bouts_won])
 	var adventures := _adventures_line(before, after)
 	if adventures != "":
 		out.append(adventures)
