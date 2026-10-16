@@ -946,8 +946,35 @@ static func nascent_goals_active(c: CharacterData, data: GameData, flags: Dictio
 	return false
 
 
+## The Soul Formation ladder (SOUL-001): {text, done} in order.
+static func soul_goals(c: CharacterData, data: GameData, flags: Dictionary, clan: ClanData = null) -> Array[Dictionary]:
+	var soul := data.realm_index_of("soul_formation")
+	var rows: Array = [
+		["Reach Soul Formation Middle", c.realm_index > soul or (c.realm_index == soul and c.stage >= 1)],
+		["Win a fight against a Soul Formation foe", bool(flags.get(beat_realm_flag("soul_formation"), false))],
+		["Claim two inheritances", LifeStats.get_stat(c, "inheritances_claimed") >= 2],
+	]
+	var body_stages := BodyTempering.stages(data)
+	if body_stages.size() > 5:
+		rows.append(["Temper your body to %s" % String(body_stages[5].get("name", "its next stage")), c.body_stage >= 6])
+	var out: Array[Dictionary] = []
+	for row: Array in rows:
+		out.append({"text": row[0], "done": row[1]})
+	return out
+
+
+## True while the player is in Soul Formation with goals left.
+static func soul_goals_active(c: CharacterData, data: GameData, flags: Dictionary, clan: ClanData = null) -> bool:
+	if c.realm_index != data.realm_index_of("soul_formation"):
+		return false
+	for goal in soul_goals(c, data, flags, clan):
+		if not goal["done"]:
+			return true
+	return false
+
+
 ## The goal ladder the HUD announces from: "first" up to Qi Refining, "foundation" in Foundation
-## Establishment, "core" in Core Formation, "nascent" in Nascent Soul, else "". Unlike active_goal_ladder it stays put once every goal is done, so the
+## Establishment, "core" in Core Formation, "nascent" in Nascent Soul, "soul" in Soul Formation, else "". Unlike active_goal_ladder it stays put once every goal is done, so the
 ## last goal ticked off is still announced.
 static func goal_ladder_id(c: CharacterData) -> String:
 	if c.realm_index <= 1:
@@ -958,6 +985,8 @@ static func goal_ladder_id(c: CharacterData) -> String:
 		return "core"
 	if c.realm_index == 4:
 		return "nascent"
+	if c.realm_index == 5:
+		return "soul"
 	return ""
 
 
@@ -971,6 +1000,8 @@ static func goal_ladder(id: String, c: CharacterData, data: GameData, flags: Dic
 		return core_goals(c, data, flags, clan)
 	if id == "nascent":
 		return nascent_goals(c, data, flags, clan)
+	if id == "soul":
+		return soul_goals(c, data, flags, clan)
 	var none: Array[Dictionary] = []
 	return none
 
@@ -985,6 +1016,8 @@ static func active_goal_ladder(c: CharacterData, data: GameData, flags: Dictiona
 		return core_goals(c, data, flags, clan)
 	if nascent_goals_active(c, data, flags, clan):
 		return nascent_goals(c, data, flags, clan)
+	if soul_goals_active(c, data, flags, clan):
+		return soul_goals(c, data, flags, clan)
 	var none: Array[Dictionary] = []
 	return none
 
@@ -1144,6 +1177,14 @@ static func journal(c: CharacterData, data: GameData, flags: Dictionary, today: 
 				nascent_tone = "normal" if nascent_flagged else "warning"
 				nascent_flagged = true
 			_add(out, "Nascent Soul goals", ("[x] " if goal["done"] else "[ ] ") + String(goal["text"]), nascent_tone)
+	if soul_goals_active(c, data, flags, clan):
+		var soul_flagged := false
+		for goal in soul_goals(c, data, flags, clan):
+			var soul_tone := "dim"
+			if not goal["done"]:
+				soul_tone = "normal" if soul_flagged else "warning"
+				soul_flagged = true
+			_add(out, "Soul Formation goals", ("[x] " if goal["done"] else "[ ] ") + String(goal["text"]), soul_tone)
 	var fights := fair_fights(c, data, flags, today, region_id, people, favor)
 	var goal_lines: PackedStringArray = []
 	if c.realm_index >= 2 or first_goals_done(c, data, flags):

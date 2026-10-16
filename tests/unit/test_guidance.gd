@@ -1252,7 +1252,7 @@ func test_foundation_goals_clan_and_realm_limits() -> void:
 	c.realm_index = 2
 	assert_true(Guidance.foundation_goals(c, data(), {}, ClanData.new())[4]["done"])
 	assert_eq(Guidance.active_goal_ladder(c, data(), {}).size(), 5)
-	c.realm_index = 5
+	c.realm_index = 6
 	assert_false(Guidance.foundation_goals_active(c, data(), {}))
 	assert_true(Guidance.active_goal_ladder(c, data(), {}).is_empty())
 	c.realm_index = 1
@@ -1271,7 +1271,7 @@ func test_goal_ladder_keeps_a_finished_ladder() -> void:
 	assert_eq(Guidance.goal_ladder("foundation", c, data(), {}, ClanData.new()).size(), 5)
 	c.realm_index = 1
 	assert_eq(Guidance.goal_ladder_id(c), "first")
-	c.realm_index = 5
+	c.realm_index = 6
 	assert_eq(Guidance.goal_ladder_id(c), "")
 	assert_true(Guidance.goal_ladder("", c, data(), {}).is_empty())
 
@@ -1437,7 +1437,7 @@ func test_core_goal_ladder_ids_and_journal() -> void:
 	assert_eq(Guidance.goal_ladder("core", c, data(), {}).size(), 4)
 	assert_eq(Guidance.active_goal_ladder(c, data(), {}).size(), 4)
 	assert_eq(section_of.call().size(), 4)
-	c.realm_index = 5
+	c.realm_index = 6
 	assert_eq(Guidance.goal_ladder_id(c), "")
 	assert_true(section_of.call().is_empty())
 
@@ -1467,6 +1467,34 @@ func test_nascent_goals_rows_and_ladder() -> void:
 	c.realm_index = 3
 	assert_true(Guidance.nascent_goals(c, data(), {})[0]["done"] == false)
 	assert_false(Guidance.nascent_goals_active(c, data(), {}))
+
+
+func test_soul_goals_rows_and_ladder() -> void:
+	var c := _fresh()
+	c.realm_index = 5
+	var goals := Guidance.soul_goals(c, data(), {})
+	var has_body := BodyTempering.stages(data()).size() > 5
+	assert_eq(goals.size(), 4 if has_body else 3)
+	for g in goals:
+		assert_false(g["done"])
+	assert_eq(goals[0]["text"], "Reach Soul Formation Middle")
+	assert_true(Guidance.soul_goals_active(c, data(), {}))
+	assert_eq(Guidance.goal_ladder_id(c), "soul")
+	assert_eq(Guidance.active_goal_ladder(c, data(), {}).size(), goals.size())
+	var section := func() -> Array:
+		return Guidance.journal(c, data(), {}, 0, "qingshi_village").filter(func(e: Dictionary) -> bool: return e["section"] == "Soul Formation goals")
+	assert_eq(section.call().size(), goals.size())
+	assert_eq(section.call()[0]["tone"], "warning")
+	c.stage = 1
+	assert_true(Guidance.soul_goals(c, data(), {})[0]["done"])
+	LifeStats.add(c, "inheritances_claimed", 1)
+	assert_false(Guidance.soul_goals(c, data(), {})[2]["done"])
+	LifeStats.add(c, "inheritances_claimed", 1)
+	assert_true(Guidance.soul_goals(c, data(), {})[2]["done"])
+	assert_true(Guidance.soul_goals(c, data(), {Guidance.beat_realm_flag("soul_formation"): true})[1]["done"])
+	c.realm_index = 6
+	assert_eq(Guidance.goal_ladder_id(c), "")
+	assert_false(Guidance.soul_goals_active(c, data(), {}))
 
 
 ## GUIDE-031: a hint that only repeats the goal is dropped.
