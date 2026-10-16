@@ -50,6 +50,7 @@ extends SceneTree
 ## attribute gate, a profession gate and an enemy choice, so three real ones are shot (a gate met and a gate missed in
 ## each of the first two): village_field_quarrel (charisma), marsh_yin_ferryman (doctor, 5 choices, longest labels)
 ## and wild_wounded_disciple (enemy choice).
+## WU-221: also the three crafter encounters (herb cache, old alchemist's notes, broken forge): encounter_crafter_<id>.png.
 
 ## WU-196: append `-- --renown-shot` for a Qi Refining player with Respected-bound renown in Qingshi Village (first title,
 ## halfway to the second): the arrival banner ("Known here: ...") and the journal page with the next-title line.
@@ -752,6 +753,15 @@ func _start_encounter_shot(gs: Node) -> void:
 				c.alignment = 30 if gate_met else 0
 				gs.pending_encounter = enc_id
 				enc.open(), "close": enc.close})
+	# WU-221: C-143's crafter encounters. The player has no profession, so the broken forge's blacksmith choice
+	# shows its gate missed; the old alchemist's notes choice is gated on comprehension 12 (met via 60).
+	for enc_id: String in ["forest_abandoned_herb_cache", "forest_old_alchemists_notes", "village_broken_forge"]:
+		shots.append({"name": "encounter_crafter_" + enc_id, "open": func() -> void:
+			hud.get("_banner").visible = false
+			c.realm_index = gs.data.realm_index_of("qi_refining")
+			c.attributes["comprehension"] = 5
+			gs.pending_encounter = enc_id
+			enc.open(), "close": enc.close})
 
 
 ## WU-177: the final-death screen with every epilogue line present.
