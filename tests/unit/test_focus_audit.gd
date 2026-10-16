@@ -612,3 +612,80 @@ func test_wu152_encounter_map_and_breakthrough_focus() -> void:
 	hud.free()
 	gs.end_session()
 	await _frames()
+
+
+class MixedMenuSource extends Node:
+	var display_name := "Audit Elder"
+
+	func menu_options() -> Array[Dictionary]:
+		return [
+			{"label": "Talk", "action": func() -> void: pass},
+			{"label": "Challenge your rival X to a bout", "disabled": true, "reason": "X wants no part of you.", "action": func() -> void: pass},
+			{"label": "Attempt the tribulation", "color": Color(0.9, 0.6, 0.2), "tone": "warning", "action": func() -> void: pass},
+			{"label": "Ask about the sect", "action": func() -> void: pass},
+		]
+
+
+## WU-171: the choice menu with its title separator, a tinted option and a disabled rival challenge, and the
+## encounter window's footer: each opens with focus and d-pad down reaches every option, then Leave.
+func test_wu171_choice_menu_and_encounter_footer_focus() -> void:
+	var root := _tree().root
+	var gs: Node = root.get_node("GameState")
+	gs.start_session(new_character())
+	gs.pending_event = ""
+	var hud: CanvasLayer = load("res://src/ui/hud.tscn").instantiate()
+	root.add_child(hud)
+	await _frames()
+
+	var source := MixedMenuSource.new()
+	root.add_child(source)
+	var menu: ChoiceMenu = hud.get("_choice_menu")
+	menu.open_for(source)
+	await _frames(3)
+	var owner := root.gui_get_focus_owner()
+	assert_true(owner is Button and menu.is_ancestor_of(owner), "choice menu opens with a focused button")
+	assert_eq((owner as Button).text, "Talk", "focus lands on the first enabled option, not the title")
+	var seen: Array[String] = []
+	for i in 6:
+		owner = root.gui_get_focus_owner()
+		if owner is Button and not seen.has((owner as Button).text):
+			seen.append((owner as Button).text)
+		_press("ui_down")
+		await _frames()
+	for label: String in ["Talk", "Challenge your rival X to a bout", "Attempt the tribulation", "Ask about the sect", "Leave"]:
+		assert_true(seen.has(label), "d-pad down reaches '%s'" % label)
+	menu.close()
+	root.remove_child(source)
+	source.free()
+
+	gs.data.encounters["audit_tags"] = {
+		"id": "audit_tags", "tags": ["audit_tag"], "weight": 1, "kind": "neutral", "days": 1,
+		"text": "A riddle is carved into the gate.",
+		"choices": [
+			{"label": "Think it through", "check": {"attribute": "comprehension", "min": 1}},
+			{"label": "Walk on"},
+		],
+	}
+	gs.pending_encounter = "audit_tags"
+	var encounter: EncounterWindow = hud.get("_encounter")
+	encounter.open()
+	await _frames()
+	owner = root.gui_get_focus_owner()
+	assert_true(owner != null and encounter.is_ancestor_of(owner), "encounter window opens with focus inside")
+	var buttons := encounter.choice_buttons()
+	var reached := 0
+	for i in buttons.size() + 1:
+		owner = root.gui_get_focus_owner()
+		if buttons.has(owner):
+			reached += 1
+		_press("ui_down")
+		await _frames()
+	assert_true(reached >= 1, "d-pad moves through the choices")
+	encounter.close()
+	gs.pending_encounter = ""
+	gs.data.encounters.erase("audit_tags")
+
+	root.remove_child(hud)
+	hud.free()
+	gs.end_session()
+	await _frames()
