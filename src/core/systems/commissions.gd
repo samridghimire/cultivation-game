@@ -23,8 +23,10 @@ static func _open_count(c: CharacterData, prof_id: String) -> int:
 
 
 ## Posts at most per_profession open orders for each profession `c` practises
-## (only `only_prof` when given). Returns the new orders.
-static func roll(c: CharacterData, data: GameData, rng: RandomNumberGenerator, today: int, only_prof: String = "") -> Array[Dictionary]:
+## (only `only_prof` when given). Returns the new orders. With a `region_id` (PROF-009) the order
+## is picked among recipes whose ingredients are spirit stones, already in the pack or available
+## nearby (Guidance.available_nearby) when there are any; "" picks uniformly as before.
+static func roll(c: CharacterData, data: GameData, rng: RandomNumberGenerator, today: int, only_prof: String = "", region_id: String = "") -> Array[Dictionary]:
 	var added: Array[Dictionary] = []
 	var r := rules(data)
 	if r.is_empty():
@@ -46,6 +48,13 @@ static func roll(c: CharacterData, data: GameData, rng: RandomNumberGenerator, t
 			options.append(recipe)
 		if options.is_empty():
 			continue
+		if region_id != "":
+			var near: Array[Dictionary] = []
+			for opt: Dictionary in options:
+				if _ingredients_near(c, data, opt, region_id, today):
+					near.append(opt)
+			if not near.is_empty():
+				options = near
 		var recipe: Dictionary = options[rng.randi_range(0, options.size() - 1)]
 		var item_id := String(recipe["output"]["item"])
 		var count := rng.randi_range(int(r["count"][0]), int(r["count"][1]))
@@ -58,6 +67,15 @@ static func roll(c: CharacterData, data: GameData, rng: RandomNumberGenerator, t
 		c.commissions.append(order)
 		added.append(order)
 	return added
+
+
+static func _ingredients_near(c: CharacterData, data: GameData, recipe: Dictionary, region_id: String, today: int) -> bool:
+	for ing: String in recipe["ingredients"]:
+		if ing == "spirit_stone" or c.item_count(ing) >= int(recipe["ingredients"][ing]):
+			continue
+		if not Guidance.available_nearby(c, data, ing, region_id, today):
+			return false
+	return true
 
 
 ## Spirit stones paid per unit of `item_id`: material value x reward_mult, but

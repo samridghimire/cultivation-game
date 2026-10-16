@@ -388,6 +388,20 @@ static func _seasons_until(from: String, to: String) -> int:
 	return (b - a + 4) % 4
 
 
+## True when `item_id` can be had without leaving `region_id` (PROF-009): a gather place there yields it
+## in season (`today >= 0`; any season otherwise), or some merchant stocks it.
+static func available_nearby(c: CharacterData, data: GameData, item_id: String, region_id: String, today: int = -1) -> bool:
+	var season := Calendar.season_of(today) if today >= 0 else ""
+	if _gatherable_items(c, data, region_id, season).has(item_id):
+		return true
+	var item: Dictionary = data.items.get(item_id, {})
+	for rid: String in data.regions:
+		for p: Dictionary in data.regions[rid].get("places", []):
+			if String(p.get("type", "")) == "merchant" and Items.merchant_sells(data, item, p.get("stock_tags", []), int(p.get("max_price", 0))):
+				return true
+	return false
+
+
 ## "grows at <place>" for herbs, "found at <place>" for other gatherables (WU-201, WU-206),
 ## "sold by merchants" when nothing is gathered but some merchant stocks it (GUIDE-052); "" otherwise.
 static func source_phrase(c: CharacterData, data: GameData, item_id: String, region_id: String, today: int = -1) -> String:

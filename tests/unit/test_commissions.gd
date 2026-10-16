@@ -26,6 +26,32 @@ func test_roll_only_prof_skips_the_other_crafts() -> void:
 	assert_eq(String(added[0]["profession"]), "alchemist")
 
 
+## PROF-009: with a region, orders prefer recipes whose ingredients are at hand.
+func test_roll_prefers_recipes_with_nearby_ingredients() -> void:
+	var d := GameData.load_from_dir()  # fresh: the test edits recipes
+	d.items["far_herb"] = {"id": "far_herb", "name": "Far Herb", "tags": ["far_curio"], "price": 0}
+	for rid: String in d.recipes.keys():
+		if d.recipes[rid]["profession"] == "alchemist" and rid != "qi_gathering_pill":
+			d.recipes.erase(rid)
+	d.recipes["far_pill"] = {"id": "far_pill", "name": "Far Pill", "profession": "alchemist", "ingredients": {"far_herb": 2},
+		"output": {"item": "qi_gathering_pill", "count": 1}, "min_rank": 0, "days": 3, "difficulty": 0.0, "xp": 10, "starter": true}
+	var seen := {}
+	for i in 20:
+		var c := _alchemist()
+		for order in Commissions.roll(c, d, seeded_rng(i + 1), 0, "", "qingshi_village"):
+			assert_eq(String(order["recipe"]), "qi_gathering_pill")
+	for i in 20:
+		var c := _alchemist()
+		for order in Commissions.roll(c, d, seeded_rng(i + 1), 0):
+			seen[String(order["recipe"])] = true
+	assert_true(seen.has("far_pill") and seen.has("qi_gathering_pill"), "no region: both appear")
+	d.recipes.erase("qi_gathering_pill")
+	var c2 := _alchemist()
+	var added := Commissions.roll(c2, d, seeded_rng(), 0, "", "qingshi_village")
+	assert_eq(added.size(), 1, "no recipe is near: an order is still rolled")
+	assert_eq(String(added[0]["recipe"]), "far_pill")
+
+
 func test_reward_and_xp() -> void:
 	var c := _alchemist()
 	var order := Commissions.roll(c, data(), seeded_rng(7), 0)[0]
