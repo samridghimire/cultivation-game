@@ -40,6 +40,15 @@ func test_lesson_text_needs_a_fight() -> void:
 	assert_true(text.contains("Grow stronger"))
 
 
+func test_lesson_text_is_honest_about_bad_luck() -> void:
+	var high := RespawnScreen.lesson_text({"enemy_name": "Drunk Bully", "win_chance": 0.98})
+	assert_true(high.contains("still fell"))
+	assert_false(high.contains("Grow stronger"))
+	var mid := RespawnScreen.lesson_text({"enemy_name": "Drunk Bully", "win_chance": 0.6})
+	assert_true(mid.contains("either way"))
+	assert_false(mid.contains("Grow stronger"))
+
+
 func test_cost_text_shows_cost_and_stones() -> void:
 	var c := CharacterData.new()
 	c.add_item("spirit_stone", 7)

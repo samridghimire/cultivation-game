@@ -63,7 +63,14 @@ static func summary_text(pending: Dictionary) -> String:
 static func lesson_text(pending: Dictionary) -> String:
 	if not pending.has("enemy_name") or not pending.has("win_chance"):
 		return ""
-	return "You had about %d%% odds against %s. Grow stronger before you face this foe again." % [roundi(float(pending["win_chance"]) * 100.0), pending["enemy_name"]]
+	var chance := float(pending["win_chance"])
+	var pct := roundi(chance * 100.0)
+	var foe := String(pending["enemy_name"])
+	if chance >= 0.9:
+		return "You had about %d%% odds against %s and still fell. Even a weak foe can land a lucky blow; a readied shield talisman covers it." % [pct, foe]
+	if chance >= 0.5:
+		return "You had about %d%% odds against %s. A fight like this can go either way; ready a talisman or heal first next time." % [pct, foe]
+	return "You had about %d%% odds against %s. Grow stronger before you face this foe again." % [pct, foe]
 
 
 ## "Recharging the artifact costs N spirit stones (you have M)."
