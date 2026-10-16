@@ -68,7 +68,7 @@ Every great cultivation protagonist has something that sets them apart. Ours is 
 | Alignment (Demonic … Righteous) and deeds (with cooldowns) | ✅ | `data/alignment.json`, `data/deeds.json` |
 | Sects (join/leave, requirements, ranks with realm/stage gates, contribution, missions, trials/stipends/duties, monthly elder lecture) | ✅ (shop: G-008c; rank UI: G-011b; lecture at the sect hall) | `data/sects.json`, `Sects` |
 | Sect reputation (witnessed deeds, join gating, faction prices) | ✅ (sheet + faction shop prices) | `data/sects.json`, `Reputation` |
-| Professions (ranks, XP, income, monthly crafting commissions delivered at workshops) | ✅ basic + commissions (PROF-001) | `data/professions.json`, `Professions` |
+| Professions (ranks, XP, income, monthly crafting commissions delivered at workshops) | ✅ basic + commissions (PROF-001); work pays 15-21 stones a month at rank 0 (C-132), first recipes sell above their herb cost (C-131), rank-ups in the year review (YEAR-008) | `data/professions.json`, `Professions` |
 | Alchemy (recipes, scrolls, pill quality) + crafting screen | ✅ | `data/recipes.json`, `Alchemy`, `src/ui/crafting_screen.gd` |
 | Blacksmithing and equipment (weapon/armor) | ✅ (equip from inventory, unequip on the character sheet) | `Equipment`, `data/recipes.json` |
 | Talismans (buff talismans, combat strike/shield/escape) | ✅ (ready/unready in the inventory) | `Alchemy`, `Buffs`, `CombatTalismans` |

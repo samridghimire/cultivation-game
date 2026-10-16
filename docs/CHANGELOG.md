@@ -2,6 +2,22 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-16 [C-132] Odd jobs pay three times as much (Doctor 15 stones a month at rank 0).
+- 2026-10-16 [C-124] Your rival at Void Refinement: three once-only encounters, each with a duel and a peaceful way out.
+- 2026-10-16 [WU-198] The epilogue's fame line fits on screen at 1280x800 and 1280x720.
+- 2026-10-16 [QA-096] Curious sim --trace=<seed> month-by-month view; seed 7 no longer stalls (Foundation at month 28).
+- 2026-10-16 [WU-197] The notice banner sits clear of the HUD vitals, Goal line and hints.
+- 2026-10-16 [C-131] An Alchemist's first four pills sell for more than their herbs cost.
+- 2026-10-16 [YEAR-008] The year in review says your profession grew a rank.
+- 2026-10-16 [PROF-003] Work and craft payoff helpers (Professions.work_preview, Alchemy.recipe_margin).
+- 2026-10-16 [WU-196] Renown on screen: arrival banner and journal lines fit at 1280x800 and 1280x720.
+- 2026-10-16 [GUIDE-041] "Try something new" hints start in the third month instead of the sixth.
+- 2026-10-16 [WU-194] The death lesson matches the odds it prints.
+- 2026-10-16 [C-127] Void Piercing Pill: a Void Refinement breakthrough pill (recipe from the Space Folder inheritance).
+- 2026-10-16 [WU-190] Encounter window shots with attribute, profession and enemy choices: no clipping.
+- 2026-10-16 [EPI-003] The epilogue names your fame.
+- 2026-10-16 [QA-20261016-1] Renown titles count places, not tiers climbed.
+- 2026-10-16 [C-123] Voidwalker Body: a seventh body tempering stage for Void Refinement.
 - 2026-10-16 [RENOWN-006] The journal says how close your next renown title is.
 - 2026-10-16 [QA-095] Curious sim buys a life at 1x recharge cost at <= 1 life: no seed ends early in 36 months (final deaths 2 -> 0).
 - 2026-10-16 [WU-188] Void Refinement ladder shot (--void-shot): HUD goal line and journal fit at 1280x800 and 1280x720.
