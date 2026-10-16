@@ -645,9 +645,12 @@ func _start_hint_shot(gs: Node) -> void:
 		root.get_node("EventBus").player_changed.emit()
 		assert(String(hint_text.call()).contains("a short walk away"), "away hint not on screen"), "close": func() -> void: pass})
 	# Broke crafter: no stones, nothing craftable, so the odd-jobs line fires (longest region name wins).
-	# The herb hint fades after CRAFT_HINT_MAX_CRAFTS crafts, which is when this line shows.
+	# The herb hint fades at rank CRAFT_HINT_MAX_RANK (GUIDE-049), which is when this line shows.
 	var broke_region := ""
-	c.life_stats["items_crafted"] = Guidance.CRAFT_HINT_MAX_CRAFTS
+	var ranks_before: Dictionary = {}
+	for prof_id: String in c.professions:
+		ranks_before[prof_id] = int(c.professions[prof_id]["rank"])
+		c.professions[prof_id]["rank"] = Guidance.CRAFT_HINT_MAX_RANK
 	for region_id: String in gs.data.regions:
 		var listed: PackedStringArray = Guidance.hints(c, gs.data, gs.hint_density(), 5, gs.npcs, gs.world_flags, region_id, best_day, gs.npc_favor)
 		var line := ""
@@ -656,12 +659,14 @@ func _start_hint_shot(gs: Node) -> void:
 				line = h
 		if line != "" and (broke_region == "" or Guidance.workshop_place(gs.data, region_id).length() > Guidance.workshop_place(gs.data, broke_region).length()):
 			broke_region = region_id
-	c.life_stats.erase("items_crafted")
+	for prof_id: String in ranks_before:
+		c.professions[prof_id]["rank"] = ranks_before[prof_id]
 	assert(broke_region != "", "no odd-jobs hint found in data")
 	shots.append({"name": "hint_broke_crafter", "open": func() -> void:
 		hud.get("_banner").visible = false
 		c.inventory = {}
-		c.life_stats["items_crafted"] = Guidance.CRAFT_HINT_MAX_CRAFTS
+		for prof_id: String in c.professions:
+			c.professions[prof_id]["rank"] = Guidance.CRAFT_HINT_MAX_RANK
 		gs.current_region = broke_region
 		root.get_node("EventBus").player_changed.emit()
 		assert(String(hint_text.call()).contains("Short of stones?"), "odd-jobs hint not on screen: " + String(hint_text.call()))
