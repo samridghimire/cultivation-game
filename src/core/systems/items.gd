@@ -349,6 +349,10 @@ static func material_value(data: GameData, item_id: String) -> float:
 	return data.material_value_cache[item_id]
 
 
+## Spirit stones spent by a recipe count 1 each in material value (their item price is 0).
+const STONE_VALUE := 1
+
+
 ## Uncached scan behind material_value.
 static func compute_material_value(data: GameData, item_id: String) -> float:
 	var best := -1.0
@@ -365,7 +369,8 @@ static func compute_material_value(data: GameData, item_id: String) -> float:
 		var cost := 0
 		var ingredients: Dictionary = recipe.get("ingredients", {})
 		for ingredient in ingredients:
-			cost += int(data.items.get(ingredient, {}).get("price", 0)) * int(ingredients[ingredient])
+			var unit := STONE_VALUE if ingredient == "spirit_stone" else int(data.items.get(ingredient, {}).get("price", 0))
+			cost += unit * int(ingredients[ingredient])
 		var per_unit := float(cost) / count
 		if best < 0.0 or per_unit < best:
 			best = per_unit

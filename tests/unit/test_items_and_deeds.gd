@@ -168,6 +168,18 @@ func test_crafted_goods_sell_near_material_cost() -> void:
 	assert_gt(int(data().items["golden_bell_talisman"]["price"]) * Items.SELL_RATE, Items.sell_price(data(), "golden_bell_talisman"))
 
 
+func test_material_value_counts_spirit_stones() -> void:
+	var recipe: Dictionary = data().recipes["minor_spirit_gathering_array"]
+	var ing: Dictionary = recipe["ingredients"]
+	var expected := 0
+	for id: String in ing:
+		var unit: int = Items.STONE_VALUE if id == "spirit_stone" else int(data().items[id]["price"])
+		expected += unit * int(ing[id])
+	var count := int(recipe["output"]["count"])
+	assert_almost_eq(Items.material_value(data(), "minor_spirit_gathering_array"), float(expected) / count)
+	assert_gt(int(ing["spirit_stone"]), 0)
+
+
 func test_every_crafted_item_has_capped_buyback() -> void:
 	var markup := float(data().alchemy["crafted_sell_markup"])
 	for item_id: String in data().items:
