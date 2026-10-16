@@ -28,6 +28,7 @@ const PILLS := {
 	"soul_formation": ["soul_formation_pill"],
 	"void_refinement": ["void_refinement_pill"],
 	"body_integration": ["body_integration_pill"],
+	"mahayana": ["mahayana_pill"],
 }
 const HEAVENLY_ELEMENTS := 1
 
