@@ -112,10 +112,10 @@ func test_game_state_temper_body_and_meditation_entry() -> void:
 	gs.end_session()
 
 
-func test_last_stage_is_soul_formation_with_sourced_items() -> void:
+func test_last_stage_is_void_refinement_with_sourced_items() -> void:
 	var stages: Array = BodyTempering.stages(data())
 	var last: Dictionary = stages[stages.size() - 1]
-	assert_eq(str(last.get("min_realm", "")), "soul_formation")
+	assert_eq(str(last.get("min_realm", "")), "void_refinement")
 	var total := 0.0
 	for s in stages:
 		total += float(s.get("injury_resist", 0.0))
@@ -126,3 +126,12 @@ func test_last_stage_is_soul_formation_with_sourced_items() -> void:
 	for item_id in last.get("items", {}):
 		assert_true(data().items.has(item_id), "%s exists" % item_id)
 		assert_true(sources.contains("\"%s\"" % item_id), "%s has a source" % item_id)
+
+
+func test_c123_stage_seven_needs_void_refinement() -> void:
+	var stages: Array = BodyTempering.stages(data())
+	assert_eq(stages.size(), 7)
+	assert_eq(str(stages[6].get("id", "")), "void_body")
+	assert_eq(str(stages[5].get("min_realm", "")), "soul_formation")
+	assert_eq(str(stages[6].get("min_realm", "")), "void_refinement")
+	assert_true(int(stages[6]["days"]) > int(stages[5]["days"]))
