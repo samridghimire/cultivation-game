@@ -71,3 +71,22 @@ func test_grounds_list_trials_and_attempt_them() -> void:
 	assert_true(labels[0].begins_with("Weathered stones"), "the vault stays hidden until it is found: %s" % str(labels))
 	place.free()
 	gs.end_session()
+
+
+## C-136: a Body Integration legacy (C-122's pattern one realm up).
+func test_body_integration_legacy_is_gated_and_rewarded() -> void:
+	var d := data()
+	var inh: Dictionary = d.inheritances["marrow_throne_hollow"]
+	assert_true(Inheritances.in_region(d, String(inh["region"])).has("marrow_throne_hollow"))
+	var stages: Array = inh["stages"]
+	assert_eq(stages.size(), 3)
+	assert_eq(String(stages[0]["test"]), "realm")
+	assert_eq(String(stages[0]["min_realm"]), "body_integration")
+	assert_eq(String(stages[1]["test"]), "attribute")
+	assert_eq(String(stages[2]["test"]), "fight")
+	assert_eq(String(d.enemies[String(stages[2]["enemy"])]["realm"]), "body_integration")
+	assert_true(int(inh["deadline_years"]) > int(inh["appears_years"]))
+	var door: Dictionary = d.inheritances["door_ajar_folder"]
+	assert_true(int(inh["reward"]["items"]["spirit_stone"]) > int(door["reward"]["items"]["spirit_stone"]), "pays more than the Void Refinement legacy")
+	for item_id: String in inh["reward"]["items"]:
+		assert_true(d.items.has(item_id), item_id)
