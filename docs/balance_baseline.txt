@@ -4,723 +4,612 @@ First-hour sim: 10 seeds, 12 months
   seed  QR1  QR3  QR9  sect  injuries  won  lost  fled  lines/month
      1   51  271    -    51         0    1     0     0  5.5
         first win day 14 (wild_boar), style bought day -
-     2   14   75    -    14         0    1     0     0  5.2
+     2   14   76    -    14         0    1     1     0  5.5
         first win day 14 (wild_boar), style bought day -
-     3   14  139    -    14         0    4     0     0  6.0
+     3   14  139    -    14         0    4     0     0  5.9
         first win day 14 (wild_boar), style bought day -
-     4   14  171    -    14         0    3     0     0  5.8
+     4   14  171    -    14         0    1     0     0  4.8
         first win day 14 (wild_boar), style bought day -
-     5   14   45  292    14         0    1     0     0  5.1
+     5   14   45  294    14         0    1     0     0  5.4
         first win day 14 (wild_boar), style bought day -
-     6   14  169    -    14         0    1     0     0  4.7
+     6   14  169    -    14         0    1     0     0  5.7
         first win day 14 (wild_boar), style bought day -
      7   14  141    -    14         0    1     0     0  5.0
         first win day 14 (wild_boar), style bought day -
-     8   14   75    -    14         0    2     0     0  5.2
+     8   14   76    -    14         0    1     0     0  5.2
         first win day 14 (wild_boar), style bought day -
-     9   14  199    -    14         0    1     0     0  4.2
+     9   14  199    -    14         0    2     0     0  5.0
         first win day 14 (wild_boar), style bought day -
-    10   14  138    -    14         0    1     1     0  6.2
+    10   14  138    -    14         0    2     1     0  6.2
         first win day 140 (wild_boar), style bought day -
-Medians (day): QR1 14, QR3 141, QR9 292, sect 14; injuries 0; fights won 1, lost 0, fled 0; 5.2 log lines/month
+Medians (day): QR1 14, QR3 141, QR9 294, sect 14; injuries 0; fights won 1, lost 0, fled 0; 5.5 log lines/month
 First win: median day 14, seeds with no win in 12 months: 0; first-win foes: { "wild_boar": 10 }; median style day -1 (0 seeds)
-Lines by category: { "warning": 51, "danger": 25, "info": 336, "progress": 220, "karma": 1 }
+Lines by category: { "warning": 52, "danger": 27, "info": 338, "progress": 232, "karma": 1 }
 
 ## first hour, curious player (seeds 1-10)
 
 First-hour sim (curious player): 10 seeds, 12 months
   seed  QR1  QR3  QR9  sect  injuries  won  lost  fled  lines/month
-     1   55  285    -    55         0   17     3     0  25.8
+     1   55  246    -    55         0   17     7     0  26.8
         first win day 14 (wild_boar), style bought day 27
-     2   14  132    -    14         0   17     6     0  26.0
-        first win day 14 (wild_boar), style bought day 39
-     3   14  243    -    14         0   15     7     0  25.5
-        first win day 14 (wild_boar), style bought day 39
-     4   14  257    -    14         0   14     5     0  26.0
-        first win day 14 (wild_boar), style bought day 49
-     5   14   67  476    14         0   17     4     0  26.3
-        first win day 14 (wild_boar), style bought day 36
-     6   14  245    -    14         0   18     6     0  26.8
+     2   14  128    -    14         0   20     2     0  25.4
+        first win day 14 (wild_boar), style bought day 38
+     3   14  239    -    14         1   19     4     0  22.8
+        first win day 14 (wild_boar), style bought day 38
+     4   14  242    -    14         0   14     6     0  24.0
+        first win day 14 (wild_boar), style bought day 48
+     5   14   71  577    14         0   21     5     0  27.0
+        first win day 14 (wild_boar), style bought day 40
+     6   14  312    -    14         0   15     5     0  23.6
         first win day 14 (wild_boar), style bought day 43
-     7   14  183    -    14         1   15     4     0  24.8
+     7   14  181    -    14         1   15     5     0  23.0
+        first win day 14 (wild_boar), style bought day 39
+     8   14  128    -    14         0   19     5     0  25.2
+        first win day 14 (wild_boar), style bought day 39
+     9   14  245    -    14         0   15     4     0  23.1
         first win day 14 (wild_boar), style bought day 40
-     8   14  133    -    14         0   17     7     0  29.8
-        first win day 14 (wild_boar), style bought day 40
-     9   14  252    -    14         1   14     5     0  24.2
-        first win day 14 (wild_boar), style bought day 40
-    10   14  193    -    14         1   13    10     0  29.8
-        first win day 43 (mountain_bandit), style bought day 43
-Medians (day): QR1 14, QR3 243, QR9 476, sect 14; injuries 0; fights won 17, lost 6, fled 0; 26.0 log lines/month
+    10   14  193    -    14         0   14     4     0  23.4
+        first win day 41 (mountain_bandit), style bought day 41
+Medians (day): QR1 14, QR3 239, QR9 577, sect 14; injuries 0; fights won 17, lost 5, fled 0; 24.0 log lines/month
 First win: median day 14, seeds with no win in 12 months: 0; first-win foes: { "wild_boar": 9, "mountain_bandit": 1 }; median style day 40 (10 seeds)
-Distinct action kinds per month: 6.0; months after the first with no log lines: 0
-Lines by category: { "warning": 163, "danger": 586, "info": 1223, "progress": 1058, "karma": 144, "world": 6 }
+Distinct action kinds per month: 5.6; months after the first with no log lines: 0
+Lines by category: { "warning": 153, "danger": 411, "info": 1207, "progress": 1010, "karma": 144, "world": 5 }
 
 ## log noise (seeds 1-5, 12 months)
 
 Log noise: 5 seeds, 12 months, curious player
 Posts per month by topic:
-  world           9.8/month (busiest month in any seed: 82)
-  combat          7.3/month (busiest month in any seed: 33)
-  cultivation     4.6/month (busiest month in any seed: 47)
-  family          2.0/month (busiest month in any seed: 16)
-  sect            1.4/month (busiest month in any seed: 10)
-  trade           1.3/month (busiest month in any seed: 8)
-  life            0.4/month (busiest month in any seed: 20)
+  world           9.4/month (busiest month in any seed: 81)
+  combat          6.0/month (busiest month in any seed: 38)
+  cultivation     4.7/month (busiest month in any seed: 45)
+  family          2.1/month (busiest month in any seed: 13)
+  trade           1.9/month (busiest month in any seed: 11)
+  sect            1.5/month (busiest month in any seed: 8)
+  life            0.5/month (busiest month in any seed: 20)
   (none)          0.1/month (busiest month in any seed: 5)
 Most repeated line templates (per month, averaged):
    1.00  You practice the Iron Fist for N days.
-   0.98  You attend Elder Feng's sword lecture. (+N qi)
-   0.80  You face <name>. (You: N hp, N atk. Foe: N hp, N atk.)
-   0.65  You cultivate for N month and gather N qi (N/N qi to the Nth Layer).
-   0.63  Sect mission: Escort Mortal Villagers. You face the Mountain Bandit. (You: N hp, N atk. Foe: N hp, N atk.)
-   0.52  No harm done. You can spar again in N days.
-   0.50  You are beaten down. (N rounds, N/N hp left)
-   0.48  Mission complete: Escort Mortal Villagers. (+N contribution, Alignment +N, now Virtuous, Blood Lotus Sect repu
-   0.48  You face the Wild Boar. (You: N hp, N atk. Foe: N hp, N atk.)
-   0.47  <name> accepts your Boar Hide. (favor N; N to court)
+   0.97  You attend Elder Feng's sword lecture. (+N qi)
+   0.70  Sect mission: Escort Mortal Villagers. You face the Mountain Bandit. (You: N hp, N atk. Foe: N hp, N atk.)
+   0.68  You cultivate for N month and gather N qi (N/N qi to the Nth Layer).
+   0.62  You work as an Alchemist for N days: +N xp, +N spirit stones.
+   0.53  Mission complete: Escort Mortal Villagers. (+N contribution, Alignment +N, now Virtuous, Blood Lotus Sect repu
+   0.50  You face the Wild Boar. (You: N hp, N atk. Foe: N hp, N atk.)
+   0.43  <name> accepts your Boar Hide. (favor N; N to court)
+   0.43  The Mountain Bandit collapses. (N rounds, N/N hp left; Alignment +N, now Virtuous, +N Spirit Stone)
+   0.43  You use a Qi Gathering Pill. (+N qi)
 
 ## three curious years (seeds 1-10, 36 months)
 
 Curious player, 10 seeds, 36 months
   seed  block  kinds  new  stones  realm
-     1      1    6.0   10      51  Qi Refining, 3rd Layer
-     1      2    6.5    2      38  Qi Refining, 5th Layer
-     1      3    6.7    2     248  Qi Refining, 8th Layer
-     1      4    6.5    0     132  Qi Refining, 9th Layer
-     1      5    6.5    0     138  Foundation Establishment, Early
-     1      6    6.0    0     191  Foundation Establishment, Early
-     2      1    5.8    8      56  Qi Refining, 5th Layer
-     2      2    5.3    1     130  Qi Refining, 7th Layer
-     2      3    5.7    2     127  Foundation Establishment, Early
-     2      4    5.0    0      84  Foundation Establishment, Middle
-     2      5    5.0    0     101  Foundation Establishment, Late
-     2      6    5.0    0     115  Foundation Establishment, Late
-     3      1    5.8    7      62  Qi Refining, 3rd Layer
-     3      2    5.3    2      55  Qi Refining, 5th Layer
-     3      3    5.7    4      95  Qi Refining, 8th Layer
-     3      4    7.7    1     151  Foundation Establishment, Early
-     3      5    6.0    0     212  Foundation Establishment, Early
-     3      6    6.0    0     208  Foundation Establishment, Middle
-     4      1    6.5   10      84  Qi Refining, 3rd Layer
-     4      2    5.8    2     100  Qi Refining, 5th Layer
-     4      3    6.0    0     124  Qi Refining, 6th Layer
-     4      4    6.0    1      93  Qi Refining, 7th Layer
-     4      5    5.2    0      31  Qi Refining, 8th Layer
-     4      6    5.5    0     208  Qi Refining, 9th Layer
-     5      1    5.7    8      77  Qi Refining, 7th Layer
-     5      2    6.5    4     141  Qi Refining, 9th Layer
-     5      3    6.7    2     120  Foundation Establishment, Early
-     5      4    6.0    0      55  Foundation Establishment, Late
-     5      5    6.0    0      57  Foundation Establishment, Peak
-     5      6    6.3    0     153  Foundation Establishment, Peak
-     6      1    6.5    9      43  Qi Refining, 3rd Layer
-     6      2    6.5    2      41  Qi Refining, 5th Layer
-     6      3    6.2    1     109  Qi Refining, 7th Layer
-     6      4    7.2    1     291  Qi Refining, 9th Layer
-     6      5    7.0    0      81  Foundation Establishment, Early
-     6      6    6.2    0     137  Foundation Establishment, Early
-     7      1    5.5    7      84  Qi Refining, 4th Layer
-     7      2    6.5    5      25  Qi Refining, 6th Layer
-     7      3    6.8    2      62  Qi Refining, 8th Layer
-     7      4    6.5    0      19  Qi Refining, 9th Layer
-     7      5    6.7    0     177  Foundation Establishment, Early
-     7      6    6.0    0     110  Foundation Establishment, Middle
-     8      1    5.8    8      48  Qi Refining, 5th Layer
-     8      2    6.7    4     110  Qi Refining, 8th Layer
-     8      3    6.7    1     107  Foundation Establishment, Early
-     8      4    6.0    0     116  Foundation Establishment, Middle
-     8      5    6.0    0     168  Foundation Establishment, Late
-     8      6    6.0    0     115  Foundation Establishment, Peak
-     9      1    6.7   10      65  Qi Refining, 3rd Layer
-     9      2    5.8    0      67  Qi Refining, 5th Layer
-     9      3    6.5    2     145  Qi Refining, 7th Layer
-     9      4    6.3    0      38  Qi Refining, 8th Layer
-     9      5    6.3    1     125  Qi Refining, 9th Layer
-     9      6    6.3    0      74  Foundation Establishment, Early
-    10      1    6.8   10      50  Qi Refining, 5th Layer
-    10      2    6.0    2      44  Qi Refining, 6th Layer
-    10      3    6.0    0       5  Qi Refining, 8th Layer
-    10      4    6.5    1     154  Qi Refining, 9th Layer
-    10      5    6.0    0     123  Foundation Establishment, Middle
-    10      6    6.0    0      58  Foundation Establishment, Middle
+     1      1    5.5    9      85  Qi Refining, 3rd Layer
+     1      2    5.7    1      79  Qi Refining, 5th Layer
+     1      3    6.3    1      30  Qi Refining, 7th Layer
+     1      4    6.5    0     258  Qi Refining, 9th Layer
+     1      5    6.7    0     262  Foundation Establishment, Early
+     1      6    6.0    0     136  Foundation Establishment, Early
+     2      1    6.3   11     100  Qi Refining, 5th Layer
+     2      2    6.0    0      68  Qi Refining, 8th Layer
+     2      3    7.0    2      99  Foundation Establishment, Early
+     2      4    6.3    0     173  Foundation Establishment, Middle
+     2      5    6.3    0     344  Foundation Establishment, Late
+     2      6    6.0    0     243  Foundation Establishment, Late
+     3      1    5.8    9      68  Qi Refining, 4th Layer
+     3      2    6.0    0     120  Qi Refining, 6th Layer
+     3      3    6.7    3     258  Qi Refining, 7th Layer
+     3      4    7.0    0     127  Qi Refining, 9th Layer
+     3      5    6.8    1     120  Foundation Establishment, Early
+     3      6    6.2    0     164  Foundation Establishment, Middle
+     4      1    5.0    7      64  Qi Refining, 3rd Layer
+     4      2    6.2    4     115  Qi Refining, 5th Layer
+     4      3    5.8    0      24  Qi Refining, 6th Layer
+     4      4    6.2    1      79  Qi Refining, 7th Layer
+     4      5    6.2    1      49  Qi Refining, 8th Layer
+     4      6    5.5    0      46  Qi Refining, 9th Layer
+     5      1    4.8    7      67  Qi Refining, 7th Layer
+     5      2    6.0    3     213  Qi Refining, 9th Layer
+     5      3    6.8    1     151  Foundation Establishment, Middle
+     5      4    6.3    0     102  Foundation Establishment, Peak
+     5      5    5.5    1     164  Foundation Establishment, Peak
+     5      6    5.3    0     261  Foundation Establishment, Peak
+     6      1    5.7    9      72  Qi Refining, 3rd Layer
+     6      2    6.0    1     117  Qi Refining, 4th Layer
+     6      3    6.2    1     160  Qi Refining, 6th Layer
+     6      4    8.0    2     171  Qi Refining, 8th Layer
+     6      5    7.3    1     318  Qi Refining, 9th Layer
+     6      6    7.7    0     124  Qi Refining, 9th Layer
+     7      1    5.5    9     101  Qi Refining, 4th Layer
+     7      2    6.0    1      55  Qi Refining, 7th Layer
+     7      3    6.8    3     204  Qi Refining, 8th Layer
+     7      4    6.5    0     131  Foundation Establishment, Early
+     7      5    6.0    0     112  Foundation Establishment, Early
+     7      6    6.0    0     161  Foundation Establishment, Middle
+     8      1    5.7    9      57  Qi Refining, 6th Layer
+     8      2    6.5    1     160  Qi Refining, 8th Layer
+     8      3    6.7    1     119  Foundation Establishment, Early
+     8      4    6.7    1     178  Foundation Establishment, Middle
+     8      5    6.2    0     259  Foundation Establishment, Late
+     8      6    6.3    1     572  Foundation Establishment, Peak
+     9      1    5.2    8      84  Qi Refining, 3rd Layer
+     9      2    5.2    1     110  Qi Refining, 4th Layer
+     9      3    5.2    1     136  Qi Refining, 7th Layer
+     9      4    4.8    0     262  Qi Refining, 8th Layer
+     9      5    4.0    0      27  Qi Refining, 9th Layer
+     9      6    4.2    0      60  Foundation Establishment, Early
+    10      1    5.2    8      69  Qi Refining, 4th Layer
+    10      2    6.0    2     125  Qi Refining, 7th Layer
+    10      3    6.7    2     221  Qi Refining, 9th Layer
+    10      4    6.5    0      68  Foundation Establishment, Early
+    10      5    5.8    0     154  Foundation Establishment, Middle
+    10      6    5.7    2     219  Foundation Establishment, Late
 Medians per 6-month block: distinct kinds / seeds with a new feature / stones
-  months  1- 6: 6.0 kinds, 10 of 10 seeds new feature, 62 stones
-  months  7-12: 6.5 kinds, 9 of 10 seeds new feature, 67 stones
-  months 13-18: 6.5 kinds, 8 of 10 seeds new feature, 120 stones
-  months 19-24: 6.5 kinds, 4 of 10 seeds new feature, 116 stones [nothing new]
-  months 25-30: 6.0 kinds, 1 of 10 seeds new feature, 125 stones [nothing new]
-  months 31-36: 6.0 kinds, 0 of 10 seeds new feature, 137 stones [nothing new]
+  months  1- 6: 5.5 kinds, 10 of 10 seeds new feature, 72 stones
+  months  7-12: 6.0 kinds, 8 of 10 seeds new feature, 117 stones
+  months 13-18: 6.7 kinds, 9 of 10 seeds new feature, 151 stones
+  months 19-24: 6.5 kinds, 3 of 10 seeds new feature, 171 stones [nothing new]
+  months 25-30: 6.2 kinds, 4 of 10 seeds new feature, 164 stones [nothing new]
+  months 31-36: 6.0 kinds, 2 of 10 seeds new feature, 164 stones [nothing new]
 Seeds whose life ended before month 36: none
 Guard (QA-054): at most 1 of 10 seeds may end early: ok
 First month each feature was used (median over seeds that used it):
   mission       month 1 (10 of 10 seeds)
   deed          month 1 (10 of 10 seeds)
   talk          month 1 (10 of 10 seeds)
-  commission    month 11 (6 of 10 seeds)
+  commission    month 28 (8 of 10 seeds)
   breakthrough  month 1 (10 of 10 seeds)
   craft         month 5 (9 of 10 seeds)
   work          month 5 (9 of 10 seeds)
-  secret_realm  month 13 (8 of 10 seeds)
+  secret_realm  month 13 (5 of 10 seeds)
   gift          month 1 (10 of 10 seeds)
-  pointer       month 7 (10 of 10 seeds)
-  spar          month 1 (10 of 10 seeds)
+  pointer       month 6 (10 of 10 seeds)
+  spar          month 6 (5 of 10 seeds)
   lecture       month 1 (10 of 10 seeds)
 Longest 'nothing new' stretches:
-  seed 7: 23 months from month 14 (Qi Refining, 7th Layer, 40 stones)
-  seed 8: 23 months from month 14 (Qi Refining, 9th Layer, 54 stones)
-  seed 1: 22 months from month 15 (Qi Refining, 7th Layer, 81 stones)
-Deaths (22): seed, game month, final?, foe (rated odds), lives left, stones, region
-  seed  1 m26  respawn mist_wolf (92%) lives=2 stones=42 qingshi_village
-      cause: You were slain by a Mist Wolf at age 18.
-      | You face the Wild Boar. (You: 240 hp, 83 atk. Foe: 40 hp, 11 atk.)
-      | The Wild Boar collapses. (1 round, 240/240 hp left; +1 Boar Hide)
-      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 240 hp, 83 atk. Foe: 228
-      | You fall. (4 rounds, 0/240 hp left)
-      | You were slain by a Mist Wolf at age 18.
-      | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
-  seed  1 m61  respawn mist_wolf (22%) lives=2 stones=75 qingshi_village
-      cause: You were slain by a Mist Wolf at age 21.
-      | You are beaten down. (2 rounds, 0/315 hp left; -18 Spirit Stone, Injured: Broken Bones)
-      | Linghu Lie is far above you; grow stronger before facing it again. A fairer fight: Explore
-      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 158 hp, 100 atk. Foe: 22
-      | You fall. (3 rounds, 0/158 hp left)
-      | You were slain by a Mist Wolf at age 21.
-      | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
-  seed  2 m16  respawn mist_wolf (65%) lives=2 stones=76 qingshi_village
+  seed 1: 21 months from month 16 (Qi Refining, 7th Layer, 56 stones)
+  seed 9: 19 months from month 18 (Qi Refining, 7th Layer, 136 stones)
+  seed 2: 18 months from month 19 (Foundation Establishment, Early, 75 stones)
+Deaths (15): seed, game month, final?, foe (rated odds), lives left, stones, region
+  seed  1 m21  respawn mist_wolf (48%) lives=2 stones=79 qingshi_village
       cause: You were slain by a Mist Wolf at age 17.
-      | You face the Wild Boar. (You: 207 hp, 75 atk. Foe: 40 hp, 12 atk.)
-      | The Wild Boar collapses. (1 round, 207/207 hp left; +1 Boar Hide)
-      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 207 hp, 80 atk. Foe: 228
-      | You fall. (4 rounds, 0/207 hp left)
+      | You spot a spirit stone glinting in a ditch. (+1 Spirit Stone)
+      | The order for 3 Bone-Setting Salve lapses in 7 days.
+      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 210 hp, 66 atk. Foe: 228
+      | You fall. (6 rounds, 0/210 hp left)
       | You were slain by a Mist Wolf at age 17.
       | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
-  seed  2 m35  respawn mist_wolf (78%) lives=1 stones=110 qingshi_village
+  seed  1 m29  respawn mist_wolf (88%) lives=1 stones=79 qingshi_village
       cause: You were slain by a Mist Wolf at age 18.
-      | After 3 days on your flying sword you arrive at Qingshi Village.
-      | On the road: A merchant caravan has stopped for the night. The guards wave you to their fi
-      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 203 hp, 116 atk. Foe: 22
-      | You fall. (4 rounds, 0/203 hp left)
+      | A clear night, a falling star. You sit through the dawn and your breathing falls into a de
+      | Glowing eyes in the mist: a pack of mist wolves!
+      | You face the Mist Wolf. (You: 225 hp, 125 atk. Foe: 228 hp, 60 atk.)
+      | You fall. (6 rounds, 0/225 hp left)
       | You were slain by a Mist Wolf at age 18.
       | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
-  seed  3 m11  respawn mist_wolf (25%) lives=2 stones=64 qingshi_village
+  seed  2 m10  respawn mist_wolf (18%) lives=2 stones=74 qingshi_village
       cause: You were slain by a Mist Wolf at age 16.
-      | You march him to the guardhouse. The stallholders he has robbed for months cheer you all t
-      | You share your meal with a starving child. Their grandmother presses a few stones into you
-      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 218 hp, 65 atk. Foe: 228
-      | You fall. (4 rounds, 0/218 hp left)
+      | Contemplate your glimpsed insight at a meditation spot.
+      | You spend days helping wandering monks rehang the great bell of a ruined temple. Before th
+      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 193 hp, 51 atk. Foe: 228
+      | You fall. (7 rounds, 0/193 hp left)
       | You were slain by a Mist Wolf at age 16.
       | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
-  seed  4 m15  respawn mist_wolf (15%) lives=2 stones=85 qingshi_village
+  seed  2 m35  respawn mist_wolf (82%) lives=1 stones=161 qingshi_village
+      cause: You were slain by a Mist Wolf at age 18.
+      | You find a wounded traveller too weak to resist. You strip his pouch and leave him to the 
+      | Glowing eyes in the mist: a pack of mist wolves!
+      | You face the Mist Wolf. (You: 207 hp, 108 atk. Foe: 228 hp, 68 atk.)
+      | You fall. (4 rounds, 0/207 hp left)
+      | You were slain by a Mist Wolf at age 18.
+      | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
+  seed  3 m10  respawn mist_wolf (25%) lives=2 stones=64 qingshi_village
+      cause: You were slain by a Mist Wolf at age 16.
+      | The Wild Boar collapses. (1 round, 218/218 hp left; +1 Boar Hide)
+      | You spot a spirit stone glinting in a ditch. (+1 Spirit Stone)
+      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 218 hp, 47 atk. Foe: 228
+      | You fall. (6 rounds, 0/218 hp left)
+      | You were slain by a Mist Wolf at age 16.
+      | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
+  seed  4 m18  respawn mist_wolf (15%) lives=2 stones=81 qingshi_village
       cause: You were slain by a Mist Wolf at age 17.
-      | A buyer at the workshop orders 1 Qi Gathering Pill for 11 spirit stones (60 days).
+      | A mortal woman hurries after you through the lanes, sobbing. Her small child burns with fe
       | You need 2 Spirit Herb.
       | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 172 hp, 73 atk. Foe: 228
-      | You fall. (6 rounds, 0/172 hp left)
+      | You fall. (4 rounds, 0/172 hp left)
       | You were slain by a Mist Wolf at age 17.
       | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
-  seed  4 m40  respawn mist_wolf (90%) lives=1 stones=63 qingshi_village
-      cause: You were slain by a Mist Wolf at age 19.
-      | A buyer at the workshop orders 2 Bone-Setting Salve for 40 spirit stones (60 days).
+  seed  4 m31  respawn mist_wolf (75%) lives=1 stones=99 qingshi_village
+      cause: You were slain by a Mist Wolf at age 18.
+      | 'Take it,' Hei Tianhe says, pressing a small wax-sealed pill into your palm. 'I would rath
+      | You share your meal with a starving child. Their grandmother presses a few stones into you
+      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 198 hp, 103 atk. Foe: 22
+      | You fall. (4 rounds, 0/198 hp left)
+      | You were slain by a Mist Wolf at age 18.
+      | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
+  seed  4 m34  respawn mist_wolf (75%) lives=1 stones=19 qingshi_village
+      cause: You were slain by a Mist Wolf at age 18.
       | You spot a spirit stone glinting in a ditch. (+1 Spirit Stone)
-      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 211 hp, 99 atk. Foe: 228
-      | You fall. (4 rounds, 0/211 hp left)
-      | You were slain by a Mist Wolf at age 19.
+      | You spot a spirit stone glinting in a ditch. (+1 Spirit Stone)
+      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 198 hp, 84 atk. Foe: 228
+      | You fall. (5 rounds, 0/198 hp left)
+      | You were slain by a Mist Wolf at age 18.
       | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
-  seed  4 m43  respawn mist_wolf (80%) lives=1 stones=26 qingshi_village
-      cause: You were slain by a Mist Wolf at age 19.
-      | You need 2 Spirit Herb.
-      | You wander for a day. Nothing of note happens.
-      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 211 hp, 83 atk. Foe: 228
-      | You fall. (4 rounds, 0/211 hp left)
-      | You were slain by a Mist Wolf at age 19.
-      | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
-  seed  4 m57  respawn mist_wolf (98%) lives=0 stones=155 qingshi_village
-      cause: You were slain by a Mist Wolf at age 20.
-      | You march him to the guardhouse. The stallholders he has robbed for months cheer you all t
-      | You wander for a day. Nothing of note happens.
-      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 224 hp, 90 atk. Foe: 228
-      | You fall. (5 rounds, 0/224 hp left)
-      | You were slain by a Mist Wolf at age 20.
-      | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
-  seed  5 m8   respawn mist_wolf (57%) lives=2 stones=69 qingshi_village
+  seed  5 m4   respawn mist_wolf (18%) lives=2 stones=41 qingshi_village
       cause: You were slain by a Mist Wolf at age 16.
-      | The moon wanes over Fallen Star Market; the Mid-Autumn Moon Festival is over.
-      | Shangguan Ruyi has joined the Myriad Treasure Pavilion as a Junior Steward.
-      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 225 hp, 59 atk. Foe: 228
-      | You fall. (5 rounds, 0/225 hp left)
+      | Donate 5 spirit stones. (Alignment +40, now Virtuous, Azure Cloud Sect reputation +40 (now
+      | Your path has shifted: you are now Virtuous.
+      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 210 hp, 62 atk. Foe: 228
+      | You fall. (5 rounds, 0/210 hp left)
       | You were slain by a Mist Wolf at age 16.
       | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
-  seed  5 m23  respawn mist_wolf (95%) lives=1 stones=143 qingshi_village
+  seed  6 m14  respawn mist_wolf (20%) lives=2 stones=72 qingshi_village
+      cause: You were slain by a Mist Wolf at age 17.
+      | You need 2 Spirit Herb.
+      | You spot a spirit stone glinting in a ditch. (+1 Spirit Stone)
+      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 209 hp, 53 atk. Foe: 228
+      | You fall. (5 rounds, 0/209 hp left)
+      | You were slain by a Mist Wolf at age 17.
+      | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
+  seed  6 m54  respawn rogue_cultivator (62%) lives=2 stones=210 qingshi_village
+      cause: You were slain by a Rogue Cultivator at age 20.
+      | Autumn has come. In season now: Purple Cloud Mushroom at Corpse-Lily Bog (Withered Bone Ma
+      | A letter from Elder Mo: Elder Mo sends a few kind words and a small gift of herbs. (+1 Spi
+      | You face the Rogue Cultivator. (You: 313 hp, 136 atk. Foe: 319 hp, 114 atk.)
+      | You fall. (4 rounds, 0/313 hp left)
+      | You were slain by a Rogue Cultivator at age 20.
+      | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
+  seed  7 m14  respawn mist_wolf (40%) lives=2 stones=115 qingshi_village
       cause: You were slain by a Mist Wolf at age 17.
       | You march him to the guardhouse. The stallholders he has robbed for months cheer you all t
-      | You share your meal with a starving child. Their grandmother presses a few stones into you
-      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 243 hp, 83 atk. Foe: 228
-      | You fall. (5 rounds, 0/243 hp left)
-      | You were slain by a Mist Wolf at age 17.
-      | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
-  seed  6 m12  respawn mist_wolf (48%) lives=2 stones=43 qingshi_village
-      cause: You were slain by a Mist Wolf at age 17.
-      | You face the Wild Boar. (You: 226 hp, 63 atk. Foe: 40 hp, 12 atk.)
-      | The Wild Boar collapses. (1 round, 226/226 hp left; +1 Boar Hide)
-      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 226 hp, 61 atk. Foe: 228
-      | You fall. (5 rounds, 0/226 hp left)
-      | You were slain by a Mist Wolf at age 17.
-      | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
-  seed  6 m18  respawn mist_wolf (68%) lives=1 stones=127 qingshi_village
-      cause: You were slain by a Mist Wolf at age 17.
-      | You face the Drunk Bully Disciple. (You: 226 hp, 70 atk. Foe: 269 hp, 65 atk.)
-      | The Drunk Bully Disciple collapses. (5 rounds, 71/226 hp left; +10 Spirit Stone)
-      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 226 hp, 64 atk. Foe: 228
-      | You fall. (6 rounds, 0/226 hp left)
-      | You were slain by a Mist Wolf at age 17.
-      | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
-  seed  6 m20  respawn mist_wolf (68%) lives=1 stones=37 qingshi_village
-      cause: You were slain by a Mist Wolf at age 17.
-      | A travelling recruiter in grey robes sets a crystal on a stool and calls for volunteers. '
-      | The crystal glows and he nods, writing nothing down. Impressed by your honesty, he tips yo
-      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 226 hp, 65 atk. Foe: 228
-      | You fall. (6 rounds, 0/226 hp left)
-      | You were slain by a Mist Wolf at age 17.
-      | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
-  seed  7 m16  respawn mist_wolf (40%) lives=2 stones=116 qingshi_village
-      cause: You were slain by a Mist Wolf at age 17.
-      | Fingers brush your sleeve. You catch the wrist before it slips away: a skinny youth with q
-      | You march him to the guardhouse. The stallholders he has robbed for months cheer you all t
-      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 193 hp, 67 atk. Foe: 228
+      | A ragged old man shares a breathing method before vanishing. Was he an immortal? (+200 qi)
+      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 193 hp, 94 atk. Foe: 228
       | You fall. (4 rounds, 0/193 hp left)
       | You were slain by a Mist Wolf at age 17.
       | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
-  seed  7 m32  respawn mist_wolf (92%) lives=1 stones=102 qingshi_village
-      cause: You were slain by a Mist Wolf at age 18.
-      | The order for 3 Bone-Setting Salve lapsed.
-      | Milestone: Battle-Hardened. Win 25 fights.
-      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 235 hp, 96 atk. Foe: 228
-      | You fall. (5 rounds, 0/235 hp left)
-      | You were slain by a Mist Wolf at age 18.
-      | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
-  seed  7 m34  respawn mist_wolf (92%) lives=1 stones=40 qingshi_village
-      cause: You were slain by a Mist Wolf at age 18.
-      | 'Take it,' Sun Mochou says, pressing a small wax-sealed pill into your palm. 'I would rath
-      | You catch a thief fleeing a widow's house and return what he stole. She insists you take a
-      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 235 hp, 85 atk. Foe: 228
-      | You fall. (6 rounds, 0/235 hp left)
-      | You were slain by a Mist Wolf at age 18.
-      | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
-  seed  8 m8   respawn mist_wolf (45%) lives=2 stones=39 qingshi_village
+  seed  8 m10  respawn mist_wolf (65%) lives=2 stones=51 qingshi_village
       cause: You were slain by a Mist Wolf at age 16.
-      | A one-armed old soldier leans on the well-sweep and watches you shadow-box in the lane. "Y
-      | The moon wanes over Fallen Star Market; the Mid-Autumn Moon Festival is over.
-      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 244 hp, 61 atk. Foe: 228
-      | You fall. (6 rounds, 0/244 hp left)
+      | He watches you circulate your qi and taps three points on your back. Knots you never knew 
+      | The order for 1 Bone-Setting Salve lapsed.
+      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 261 hp, 53 atk. Foe: 228
+      | You fall. (6 rounds, 0/261 hp left)
       | You were slain by a Mist Wolf at age 16.
       | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
-  seed  9 m16  respawn mist_wolf (38%) lives=2 stones=65 qingshi_village
+  seed  9 m20  respawn mist_wolf (38%) lives=2 stones=101 qingshi_village
       cause: You were slain by a Mist Wolf at age 17.
-      | A hooded peddler sidles up and whispers of 'blood pills' that need no herbs, only lives. H
-      | You need 100 Spirit Stone.
-      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 218 hp, 82 atk. Foe: 228
-      | You fall. (4 rounds, 0/218 hp left)
+      | Fingers brush your sleeve. You catch the wrist before it slips away: a skinny youth with q
+      | You march him to the guardhouse. The stallholders he has robbed for months cheer you all t
+      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 218 hp, 56 atk. Foe: 228
+      | You fall. (7 rounds, 0/218 hp left)
       | You were slain by a Mist Wolf at age 17.
       | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
-  seed 10 m11  respawn mist_wolf (18%) lives=2 stones=48 qingshi_village
-      cause: You were slain by a Mist Wolf at age 16.
-      | A buyer at the workshop orders 3 Qi Gathering Pill for 32 spirit stones (60 days).
-      | Word spreads that the Verdant Remnant in Misty Forest will open in about 1 month. (Entry: 
-      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 210 hp, 70 atk. Foe: 228
-      | You fall. (4 rounds, 0/210 hp left)
-      | You were slain by a Mist Wolf at age 16.
-      | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
-  seed 10 m26  respawn mist_wolf (85%) lives=1 stones=47 qingshi_village
-      cause: You were slain by a Mist Wolf at age 18.
-      | You face the Wild Boar. (You: 240 hp, 65 atk. Foe: 40 hp, 12 atk.)
-      | The Wild Boar collapses. (1 round, 240/240 hp left; +1 Boar Hide)
-      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 240 hp, 81 atk. Foe: 228
-      | You fall. (6 rounds, 0/240 hp left)
-      | You were slain by a Mist Wolf at age 18.
-      | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
-  seed 10 m67  respawn mist_wolf (98%) lives=1 stones=53 qingshi_village
-      cause: You were slain by a Mist Wolf at age 21.
-      | After 3 days on your flying sword you arrive at Qingshi Village.
-      | The moon wanes over Fallen Star Market; the Mid-Autumn Moon Festival is over.
-      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 243 hp, 107 atk. Foe: 22
-      | You fall. (5 rounds, 0/243 hp left)
-      | You were slain by a Mist Wolf at age 21.
+  seed 10 m12  respawn mist_wolf (18%) lives=2 stones=80 qingshi_village
+      cause: You were slain by a Mist Wolf at age 17.
+      | Three days of bells and silence. When you rise, your body feels like a temple that no stor
+      | You catch a thief fleeing a widow's house and return what he stole. She insists you take a
+      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 210 hp, 58 atk. Foe: 228
+      | You fall. (6 rounds, 0/210 hp left)
+      | You were slain by a Mist Wolf at age 17.
       | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
 Per foe (QA-091): fights, wins, real win %, mean rated %, deaths, started by mission/deed/bounty/other
-  mist_wolf                  225 fights 203 wins  real  90%  rated  92%  deaths 22  223/0/0/2
-  wild_boar                  154 fights 153 wins  real  99%  rated  99%  deaths  0  0/1/5/148
-  mountain_bandit            116 fights 115 wins  real  99%  rated 100%  deaths  0  104/0/0/12
-  drunk_bully_disciple       100 fights  86 wins  real  86%  rated  85%  deaths  0  0/0/46/54
-  roadside_rogue_cultivator   49 fights   0 wins  real   0%  rated   1%  deaths  0  0/0/1/48
-  Elder Mo                    34 fights   5 wins  real  14%  rated   7%  deaths  0  0/0/0/34
-  blood_lotus_raider          18 fights  17 wins  real  94%  rated  87%  deaths  0  18/0/0/0
-  Luqiu Si                    14 fights   0 wins  real   0%  rated   1%  deaths  0  0/0/0/14
-  Shangguan Ruyi              13 fights   0 wins  real   0%  rated   3%  deaths  0  0/0/0/13
-  Su Wangchuan                13 fights   0 wins  real   0%  rated   0%  deaths  0  0/0/0/13
-  Linghu Lie                  11 fights   0 wins  real   0%  rated   0%  deaths  0  0/0/0/11
-  Meng Tianxin                11 fights   0 wins  real   0%  rated   0%  deaths  0  0/0/0/11
-  Qiu Zhu                     11 fights   0 wins  real   0%  rated   0%  deaths  0  0/0/0/11
-  Cui Yunhai                  11 fights   0 wins  real   0%  rated   0%  deaths  0  0/0/0/11
-  Hei Tianhe                  10 fights   0 wins  real   0%  rated   0%  deaths  0  0/0/0/10
-  mist_fox                    10 fights   7 wins  real  70%  rated  62%  deaths  0  0/0/0/10
-  Yuan Juan                    9 fights   0 wins  real   0%  rated   0%  deaths  0  0/0/0/9
-  Sun Mochou                   9 fights   0 wins  real   0%  rated   0%  deaths  0  0/0/0/9
-  Gong Chenxi                  7 fights   7 wins  real 100%  rated 100%  deaths  0  0/0/0/7
-  Wu Ce                        7 fights   5 wins  real  71%  rated  69%  deaths  0  0/0/0/7
-  iron_back_boar               5 fights   5 wins  real 100%  rated  99%  deaths  0  0/0/2/3
-  Zhou Muyang                  4 fights   4 wins  real 100%  rated 100%  deaths  0  0/0/0/4
-  Jin Feng                     2 fights   2 wins  real 100%  rated 100%  deaths  0  0/0/0/2
-  rogue_cultivator             2 fights   2 wins  real 100%  rated 100%  deaths  0  0/0/0/2
-  Pan Xiang                    1 fights   1 wins  real 100%  rated  98%  deaths  0  0/0/0/1
-  Kong Aotian                  1 fights   0 wins  real   0%  rated   0%  deaths  0  0/0/0/1
-  Zhang Shan                   1 fights   1 wins  real 100%  rated  28%  deaths  0  0/0/0/1
+  mist_wolf                  220 fights 206 wins  real  93%  rated  93%  deaths 14  213/0/0/7
+  rogue_cultivator             5 fights   4 wins  real  80%  rated  85%  deaths  1  0/0/0/5
+  wild_boar                  158 fights 157 wins  real  99%  rated  99%  deaths  0  0/1/5/152
+  drunk_bully_disciple       137 fights 114 wins  real  83%  rated  83%  deaths  0  0/0/60/77
+  mountain_bandit            116 fights 116 wins  real 100%  rated 100%  deaths  0  102/0/1/13
+  roadside_rogue_cultivator   35 fights   0 wins  real   0%  rated   2%  deaths  0  0/0/0/35
+  blood_lotus_raider          30 fights  29 wins  real  96%  rated  98%  deaths  0  30/0/0/0
+  Elder Mo                    27 fights   3 wins  real  11%  rated   8%  deaths  0  0/0/0/27
+  iron_back_boar              10 fights  10 wins  real 100%  rated  97%  deaths  0  0/0/8/2
+  Shangguan Ruyi              10 fights   3 wins  real  30%  rated  23%  deaths  0  0/0/0/10
+  mist_fox                     9 fights   9 wins  real 100%  rated  95%  deaths  0  0/0/0/9
+  Linghu Lie                   7 fights   0 wins  real   0%  rated   0%  deaths  0  0/0/0/7
+  Meng Tianxin                 7 fights   1 wins  real  14%  rated  18%  deaths  0  0/0/0/7
+  Cui Yunhai                   7 fights   0 wins  real   0%  rated   0%  deaths  0  0/0/0/7
+  Shao Yong                    6 fights   0 wins  real   0%  rated   1%  deaths  0  0/0/0/6
+  Yuan Juan                    6 fights   0 wins  real   0%  rated   0%  deaths  0  0/0/0/6
+  Luqiu Si                     6 fights   0 wins  real   0%  rated   0%  deaths  0  0/0/0/6
+  Hei Tianhe                   4 fights   0 wins  real   0%  rated   0%  deaths  0  0/0/0/4
+  Wu Ce                        4 fights   0 wins  real   0%  rated   0%  deaths  0  0/0/0/4
+  Qiu Zhu                      3 fights   0 wins  real   0%  rated   0%  deaths  0  0/0/0/3
+  Sun Mochou                   3 fights   0 wins  real   0%  rated   0%  deaths  0  0/0/0/3
+  Cao Ziyang                   2 fights   0 wins  real   0%  rated  38%  deaths  0  0/0/0/2
+  Wang Zhen                    1 fights   0 wins  real   0%  rated   0%  deaths  0  0/0/0/1
+  Ruan Mingyue                 1 fights   0 wins  real   0%  rated   0%  deaths  0  0/0/0/1
+  Su Wangchuan                 1 fights   0 wins  real   0%  rated   0%  deaths  0  0/0/0/1
 Artifact lives (QA-091): seed, recharges bought, lives at the end
   seed  1 bought 1 lives at end 2
-  seed  2 bought 1 lives at end 2
+  seed  2 bought 2 lives at end 3
   seed  3 bought 1 lives at end 3
-  seed  4 bought 2 lives at end 1
-  seed  5 bought 1 lives at end 2
-  seed  6 bought 2 lives at end 2
-  seed  7 bought 1 lives at end 1
+  seed  4 bought 2 lives at end 2
+  seed  5 bought 1 lives at end 3
+  seed  6 bought 2 lives at end 3
+  seed  7 bought 1 lives at end 3
   seed  8 bought 1 lives at end 3
   seed  9 bought 0 lives at end 2
-  seed 10 bought 1 lives at end 1
+  seed 10 bought 1 lives at end 3
 First Foundation breakthrough (QA-066): seed, bottleneck day, attempts [day chance pill? ok?/injury], success day, stones at bottleneck
-  seed  1 bottleneck d1645 attempts 1 [d1645 72% pill ok] success d1645 stones 153
-  seed  2 bottleneck d977  attempts 1 [d977 47% ok] success d977 stones 185
-  seed  3 bottleneck d1444 attempts 1 [d1444 50% ok] success d1444 stones 246
+  seed  1 bottleneck d1812 attempts 1 [d1812 73% pill ok] success d1812 stones 223
+  seed  2 bottleneck d1051 attempts 1 [d1051 43% ok] success d1051 stones 146
+  seed  3 bottleneck d1575 attempts 1 [d1575 74% pill ok] success d1575 stones 196
   seed  4 bottleneck d-1   attempts 0 [] success d-1 stones -1
-  seed  5 bottleneck d634  attempts 3 [d634 40% fail+injury, d691 45% fail+injury, d857 58% ok] success d857 stones 97
-  seed  6 bottleneck d1630 attempts 1 [d1630 74% pill ok] success d1630 stones 78
-  seed  7 bottleneck d1591 attempts 1 [d1591 77% pill ok] success d1591 stones 128
-  seed  8 bottleneck d891  attempts 1 [d891 55% ok] success d891 stones 95
-  seed  9 bottleneck d1951 attempts 1 [d1951 78% pill ok] success d1951 stones 109
-  seed 10 bottleneck d1462 attempts 1 [d1462 55% ok] success d1462 stones 154
-  medians: days stuck at the bottleneck 0 (9 seeds that succeeded), attempts 1, share of attempts with a pill 36% (4 of 11), attempts under 50%: 4 of 11
+  seed  5 bottleneck d743  attempts 1 [d743 43% ok] success d743 stones 213
+  seed  6 bottleneck d1961 attempts 2 [d1961 73% pill fail+injury, d2132 66% pill fail] success d-1 stones 382
+  seed  7 bottleneck d1430 attempts 1 [d1430 79% pill ok] success d1430 stones 109
+  seed  8 bottleneck d940  attempts 1 [d940 55% ok] success d940 stones 189
+  seed  9 bottleneck d1769 attempts 1 [d1769 76% pill ok] success d1769 stones 47
+  seed 10 bottleneck d1203 attempts 2 [d1203 54% fail, d1303 72% pill ok] success d1303 stones 297
+  medians: days stuck at the bottleneck 0 (8 seeds that succeeded), attempts 1, share of attempts with a pill 63% (7 of 11), attempts under 50%: 2 of 11
 
 ## pill wait (curious, seeds 1-10, 36 months, wait up to 120 days)
 
 Curious player, 10 seeds, 36 months
   seed  block  kinds  new  stones  realm
-     1      1    6.0   10      51  Qi Refining, 3rd Layer
-     1      2    6.5    2      38  Qi Refining, 5th Layer
-     1      3    6.7    2     248  Qi Refining, 8th Layer
-     1      4    6.5    0     132  Qi Refining, 9th Layer
-     1      5    6.5    0     138  Foundation Establishment, Early
-     1      6    6.0    0     191  Foundation Establishment, Early
-     2      1    5.8    8      56  Qi Refining, 5th Layer
-     2      2    5.3    1     130  Qi Refining, 7th Layer
-     2      3    5.5    2     209  Qi Refining, 9th Layer
-     2      4    5.2    0     124  Foundation Establishment, Early
-     2      5    4.0    0      71  Foundation Establishment, Middle
-     2      6    5.0    0      43  Foundation Establishment, Middle
-     3      1    5.8    7      62  Qi Refining, 3rd Layer
-     3      2    5.3    2      55  Qi Refining, 5th Layer
-     3      3    5.7    4      95  Qi Refining, 8th Layer
-     3      4    7.5    1      38  Qi Refining, 9th Layer
-     3      5    5.8    0     146  Foundation Establishment, Early
-     3      6    5.3    0     133  Foundation Establishment, Middle
-     4      1    6.5   10      84  Qi Refining, 3rd Layer
-     4      2    5.8    2     100  Qi Refining, 5th Layer
-     4      3    6.0    0     124  Qi Refining, 6th Layer
-     4      4    6.0    1      93  Qi Refining, 7th Layer
-     4      5    5.2    0      31  Qi Refining, 8th Layer
-     4      6    5.5    0     208  Qi Refining, 9th Layer
-     5      1    5.7    8      77  Qi Refining, 7th Layer
-     5      2    6.3    4     112  Qi Refining, 9th Layer
-     5      3    6.2    1      57  Foundation Establishment, Early
-     5      4    5.7    0      12  Foundation Establishment, Late
-     5      5    5.0    0      91  Foundation Establishment, Peak
-     5      6    5.2    0      51  Foundation Establishment, Peak
-     6      1    6.5    9      43  Qi Refining, 3rd Layer
-     6      2    6.5    2      41  Qi Refining, 5th Layer
-     6      3    6.2    1     109  Qi Refining, 7th Layer
-     6      4    7.2    1     291  Qi Refining, 9th Layer
-     6      5    7.0    0      81  Foundation Establishment, Early
-     6      6    6.2    0     137  Foundation Establishment, Early
-     7      1    5.5    7      84  Qi Refining, 4th Layer
-     7      2    6.5    5      25  Qi Refining, 6th Layer
-     7      3    6.8    2      62  Qi Refining, 8th Layer
-     7      4    6.5    0      19  Qi Refining, 9th Layer
-     7      5    6.7    0     177  Foundation Establishment, Early
-     7      6    6.0    0     110  Foundation Establishment, Middle
-     8      1    5.8    8      48  Qi Refining, 5th Layer
-     8      2    6.7    4     110  Qi Refining, 8th Layer
-     8      3    7.2    1     261  Qi Refining, 9th Layer
-     8      4    6.7    1      64  Foundation Establishment, Early
-     8      5    6.0    0     126  Foundation Establishment, Middle
-     8      6    5.3    0     106  Foundation Establishment, Late
-     9      1    6.7   10      65  Qi Refining, 3rd Layer
-     9      2    5.8    0      67  Qi Refining, 5th Layer
-     9      3    6.5    2     145  Qi Refining, 7th Layer
-     9      4    6.3    0      38  Qi Refining, 8th Layer
-     9      5    6.3    1     125  Qi Refining, 9th Layer
-     9      6    6.3    0      74  Foundation Establishment, Early
-    10      1    6.8   10      50  Qi Refining, 5th Layer
-    10      2    6.0    2      44  Qi Refining, 6th Layer
-    10      3    6.0    0       5  Qi Refining, 8th Layer
-    10      4    6.5    1     154  Qi Refining, 9th Layer
-    10      5    6.3    0      78  Qi Refining, 9th Layer
-    10      6    6.8    2      90  Foundation Establishment, Early
+     1      1    5.5    9      85  Qi Refining, 3rd Layer
+     1      2    5.7    1      79  Qi Refining, 5th Layer
+     1      3    6.3    1      30  Qi Refining, 7th Layer
+     1      4    6.5    0     258  Qi Refining, 9th Layer
+     1      5    6.7    0     262  Foundation Establishment, Early
+     1      6    6.0    0     136  Foundation Establishment, Early
+     2      1    6.3   11     100  Qi Refining, 5th Layer
+     2      2    6.0    0      68  Qi Refining, 8th Layer
+     2      3    6.7    2     171  Qi Refining, 9th Layer
+     2      4    6.3    0     133  Qi Refining, 9th Layer
+     2      5    6.2    0      84  Foundation Establishment, Early
+     2      6    5.2    0     125  Foundation Establishment, Middle
+     3      1    5.8    9      68  Qi Refining, 4th Layer
+     3      2    6.0    0     120  Qi Refining, 6th Layer
+     3      3    6.7    3     258  Qi Refining, 7th Layer
+     3      4    7.0    0     127  Qi Refining, 9th Layer
+     3      5    6.8    1     120  Foundation Establishment, Early
+     3      6    6.2    0     164  Foundation Establishment, Middle
+     4      1    5.0    7      64  Qi Refining, 3rd Layer
+     4      2    6.2    4     115  Qi Refining, 5th Layer
+     4      3    5.8    0      24  Qi Refining, 6th Layer
+     4      4    6.2    1      79  Qi Refining, 7th Layer
+     4      5    6.2    1      49  Qi Refining, 8th Layer
+     4      6    5.5    0      46  Qi Refining, 9th Layer
+     5      1    4.8    7      67  Qi Refining, 7th Layer
+     5      2    6.0    3     213  Qi Refining, 9th Layer
+     5      3    6.5    2      72  Qi Refining, 9th Layer
+     5      4    6.3    1     174  Foundation Establishment, Late
+     5      5    5.2    0     219  Foundation Establishment, Peak
+     5      6    5.5    0     325  Foundation Establishment, Peak
+     6      1    5.7    9      72  Qi Refining, 3rd Layer
+     6      2    6.0    1     117  Qi Refining, 4th Layer
+     6      3    6.2    1     160  Qi Refining, 6th Layer
+     6      4    8.0    2     171  Qi Refining, 8th Layer
+     6      5    7.3    1     318  Qi Refining, 9th Layer
+     6      6    7.7    0     124  Qi Refining, 9th Layer
+     7      1    5.5    9     101  Qi Refining, 4th Layer
+     7      2    6.0    1      55  Qi Refining, 7th Layer
+     7      3    6.8    3     204  Qi Refining, 8th Layer
+     7      4    6.5    0     131  Foundation Establishment, Early
+     7      5    6.0    0     112  Foundation Establishment, Early
+     7      6    6.0    0     161  Foundation Establishment, Middle
+     8      1    5.7    9      57  Qi Refining, 6th Layer
+     8      2    6.5    1     160  Qi Refining, 8th Layer
+     8      3    6.7    2     279  Qi Refining, 9th Layer
+     8      4    6.7    2     113  Foundation Establishment, Middle
+     8      5    6.0    0     168  Foundation Establishment, Late
+     8      6    6.0    0      99  Foundation Establishment, Late
+     9      1    5.2    8      84  Qi Refining, 3rd Layer
+     9      2    5.2    1     110  Qi Refining, 4th Layer
+     9      3    5.2    1     136  Qi Refining, 7th Layer
+     9      4    4.8    0     262  Qi Refining, 8th Layer
+     9      5    4.0    0      27  Qi Refining, 9th Layer
+     9      6    4.2    0      60  Foundation Establishment, Early
+    10      1    5.2    8      69  Qi Refining, 4th Layer
+    10      2    6.0    2     125  Qi Refining, 7th Layer
+    10      3    6.7    2     221  Qi Refining, 9th Layer
+    10      4    6.3    0      68  Foundation Establishment, Early
+    10      5    6.0    0     146  Foundation Establishment, Middle
+    10      6    5.3    1     130  Foundation Establishment, Late
 Medians per 6-month block: distinct kinds / seeds with a new feature / stones
-  months  1- 6: 6.0 kinds, 10 of 10 seeds new feature, 62 stones
-  months  7-12: 6.3 kinds, 9 of 10 seeds new feature, 67 stones
-  months 13-18: 6.2 kinds, 8 of 10 seeds new feature, 124 stones
-  months 19-24: 6.5 kinds, 5 of 10 seeds new feature, 93 stones
-  months 25-30: 6.3 kinds, 1 of 10 seeds new feature, 125 stones [nothing new]
-  months 31-36: 6.0 kinds, 1 of 10 seeds new feature, 110 stones [nothing new]
+  months  1- 6: 5.5 kinds, 10 of 10 seeds new feature, 72 stones
+  months  7-12: 6.0 kinds, 8 of 10 seeds new feature, 117 stones
+  months 13-18: 6.7 kinds, 9 of 10 seeds new feature, 171 stones
+  months 19-24: 6.5 kinds, 4 of 10 seeds new feature, 133 stones [nothing new]
+  months 25-30: 6.2 kinds, 3 of 10 seeds new feature, 146 stones [nothing new]
+  months 31-36: 6.0 kinds, 1 of 10 seeds new feature, 130 stones [nothing new]
 Seeds whose life ended before month 36: none
 Guard (QA-054): at most 1 of 10 seeds may end early: ok
 First month each feature was used (median over seeds that used it):
   mission       month 1 (10 of 10 seeds)
   deed          month 1 (10 of 10 seeds)
   talk          month 1 (10 of 10 seeds)
-  commission    month 11 (8 of 10 seeds)
+  commission    month 19 (6 of 10 seeds)
   breakthrough  month 1 (10 of 10 seeds)
   craft         month 5 (9 of 10 seeds)
   work          month 5 (9 of 10 seeds)
-  secret_realm  month 13 (8 of 10 seeds)
+  secret_realm  month 13 (6 of 10 seeds)
   gift          month 1 (10 of 10 seeds)
-  pointer       month 7 (10 of 10 seeds)
-  spar          month 1 (10 of 10 seeds)
+  pointer       month 6 (10 of 10 seeds)
+  spar          month 17 (6 of 10 seeds)
   lecture       month 1 (10 of 10 seeds)
 Longest 'nothing new' stretches:
-  seed 7: 23 months from month 14 (Qi Refining, 7th Layer, 40 stones)
-  seed 1: 22 months from month 15 (Qi Refining, 7th Layer, 81 stones)
-  seed 2: 22 months from month 15 (Qi Refining, 8th Layer, 66 stones)
-Deaths (23): seed, game month, final?, foe (rated odds), lives left, stones, region
-  seed  1 m26  respawn mist_wolf (92%) lives=2 stones=42 qingshi_village
+  seed 1: 21 months from month 16 (Qi Refining, 7th Layer, 56 stones)
+  seed 9: 19 months from month 18 (Qi Refining, 7th Layer, 136 stones)
+  seed 10: 19 months from month 17 (Qi Refining, 9th Layer, 167 stones)
+Deaths (16): seed, game month, final?, foe (rated odds), lives left, stones, region
+  seed  1 m21  respawn mist_wolf (48%) lives=2 stones=79 qingshi_village
+      cause: You were slain by a Mist Wolf at age 17.
+      | You spot a spirit stone glinting in a ditch. (+1 Spirit Stone)
+      | The order for 3 Bone-Setting Salve lapses in 7 days.
+      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 210 hp, 66 atk. Foe: 228
+      | You fall. (6 rounds, 0/210 hp left)
+      | You were slain by a Mist Wolf at age 17.
+      | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
+  seed  1 m29  respawn mist_wolf (88%) lives=1 stones=79 qingshi_village
       cause: You were slain by a Mist Wolf at age 18.
-      | You face the Wild Boar. (You: 240 hp, 83 atk. Foe: 40 hp, 11 atk.)
-      | The Wild Boar collapses. (1 round, 240/240 hp left; +1 Boar Hide)
-      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 240 hp, 83 atk. Foe: 228
-      | You fall. (4 rounds, 0/240 hp left)
+      | A clear night, a falling star. You sit through the dawn and your breathing falls into a de
+      | Glowing eyes in the mist: a pack of mist wolves!
+      | You face the Mist Wolf. (You: 225 hp, 125 atk. Foe: 228 hp, 60 atk.)
+      | You fall. (6 rounds, 0/225 hp left)
       | You were slain by a Mist Wolf at age 18.
       | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
-  seed  1 m61  respawn mist_wolf (22%) lives=2 stones=75 qingshi_village
-      cause: You were slain by a Mist Wolf at age 21.
-      | You are beaten down. (2 rounds, 0/315 hp left; -18 Spirit Stone, Injured: Broken Bones)
-      | Linghu Lie is far above you; grow stronger before facing it again. A fairer fight: Explore
-      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 158 hp, 100 atk. Foe: 22
-      | You fall. (3 rounds, 0/158 hp left)
-      | You were slain by a Mist Wolf at age 21.
-      | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
-  seed  2 m16  respawn mist_wolf (65%) lives=2 stones=76 qingshi_village
-      cause: You were slain by a Mist Wolf at age 17.
-      | You face the Wild Boar. (You: 207 hp, 75 atk. Foe: 40 hp, 12 atk.)
-      | The Wild Boar collapses. (1 round, 207/207 hp left; +1 Boar Hide)
-      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 207 hp, 80 atk. Foe: 228
-      | You fall. (4 rounds, 0/207 hp left)
-      | You were slain by a Mist Wolf at age 17.
-      | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
-  seed  2 m53  respawn mist_wolf (40%) lives=2 stones=41 qingshi_village
-      cause: You were slain by a Mist Wolf at age 20.
-      | You face the Wild Boar. (You: 166 hp, 70 atk. Foe: 40 hp, 11 atk.)
-      | The Wild Boar collapses. (1 round, 166/166 hp left; +1 Boar Hide)
-      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 166 hp, 71 atk. Foe: 228
-      | You fall. (5 rounds, 0/166 hp left)
-      | You were slain by a Mist Wolf at age 20.
-      | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
-  seed  3 m11  respawn mist_wolf (25%) lives=2 stones=64 qingshi_village
+  seed  2 m10  respawn mist_wolf (18%) lives=2 stones=74 qingshi_village
       cause: You were slain by a Mist Wolf at age 16.
-      | You march him to the guardhouse. The stallholders he has robbed for months cheer you all t
-      | You share your meal with a starving child. Their grandmother presses a few stones into you
-      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 218 hp, 65 atk. Foe: 228
-      | You fall. (4 rounds, 0/218 hp left)
+      | Contemplate your glimpsed insight at a meditation spot.
+      | You spend days helping wandering monks rehang the great bell of a ruined temple. Before th
+      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 193 hp, 51 atk. Foe: 228
+      | You fall. (7 rounds, 0/193 hp left)
       | You were slain by a Mist Wolf at age 16.
       | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
-  seed  4 m15  respawn mist_wolf (15%) lives=2 stones=85 qingshi_village
+  seed  2 m45  respawn mist_wolf (70%) lives=1 stones=113 qingshi_village
+      cause: You were slain by a Mist Wolf at age 19.
+      | You are beaten down. (2 rounds, 0/373 hp left; -28 Spirit Stone, Injured: Broken Bones)
+      | The Roadside Rogue Cultivator hits too hard for your defense: armor or a defense technique
+      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 186 hp, 83 atk. Foe: 228
+      | You fall. (4 rounds, 0/186 hp left)
+      | You were slain by a Mist Wolf at age 19.
+      | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
+  seed  3 m10  respawn mist_wolf (25%) lives=2 stones=64 qingshi_village
+      cause: You were slain by a Mist Wolf at age 16.
+      | The Wild Boar collapses. (1 round, 218/218 hp left; +1 Boar Hide)
+      | You spot a spirit stone glinting in a ditch. (+1 Spirit Stone)
+      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 218 hp, 47 atk. Foe: 228
+      | You fall. (6 rounds, 0/218 hp left)
+      | You were slain by a Mist Wolf at age 16.
+      | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
+  seed  4 m18  respawn mist_wolf (15%) lives=2 stones=81 qingshi_village
       cause: You were slain by a Mist Wolf at age 17.
-      | A buyer at the workshop orders 1 Qi Gathering Pill for 11 spirit stones (60 days).
+      | A mortal woman hurries after you through the lanes, sobbing. Her small child burns with fe
       | You need 2 Spirit Herb.
       | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 172 hp, 73 atk. Foe: 228
-      | You fall. (6 rounds, 0/172 hp left)
+      | You fall. (4 rounds, 0/172 hp left)
       | You were slain by a Mist Wolf at age 17.
       | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
-  seed  4 m40  respawn mist_wolf (90%) lives=1 stones=63 qingshi_village
-      cause: You were slain by a Mist Wolf at age 19.
-      | A buyer at the workshop orders 2 Bone-Setting Salve for 40 spirit stones (60 days).
-      | You spot a spirit stone glinting in a ditch. (+1 Spirit Stone)
-      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 211 hp, 99 atk. Foe: 228
-      | You fall. (4 rounds, 0/211 hp left)
-      | You were slain by a Mist Wolf at age 19.
+  seed  4 m31  respawn mist_wolf (75%) lives=1 stones=99 qingshi_village
+      cause: You were slain by a Mist Wolf at age 18.
+      | 'Take it,' Hei Tianhe says, pressing a small wax-sealed pill into your palm. 'I would rath
+      | You share your meal with a starving child. Their grandmother presses a few stones into you
+      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 198 hp, 103 atk. Foe: 22
+      | You fall. (4 rounds, 0/198 hp left)
+      | You were slain by a Mist Wolf at age 18.
       | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
-  seed  4 m43  respawn mist_wolf (80%) lives=1 stones=26 qingshi_village
-      cause: You were slain by a Mist Wolf at age 19.
-      | You need 2 Spirit Herb.
-      | You wander for a day. Nothing of note happens.
-      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 211 hp, 83 atk. Foe: 228
-      | You fall. (4 rounds, 0/211 hp left)
-      | You were slain by a Mist Wolf at age 19.
-      | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
-  seed  4 m57  respawn mist_wolf (98%) lives=0 stones=155 qingshi_village
-      cause: You were slain by a Mist Wolf at age 20.
-      | You march him to the guardhouse. The stallholders he has robbed for months cheer you all t
-      | You wander for a day. Nothing of note happens.
-      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 224 hp, 90 atk. Foe: 228
-      | You fall. (5 rounds, 0/224 hp left)
-      | You were slain by a Mist Wolf at age 20.
-      | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
-  seed  5 m8   respawn mist_wolf (57%) lives=2 stones=69 qingshi_village
-      cause: You were slain by a Mist Wolf at age 16.
-      | The moon wanes over Fallen Star Market; the Mid-Autumn Moon Festival is over.
-      | Shangguan Ruyi has joined the Myriad Treasure Pavilion as a Junior Steward.
-      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 225 hp, 59 atk. Foe: 228
-      | You fall. (5 rounds, 0/225 hp left)
-      | You were slain by a Mist Wolf at age 16.
-      | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
-  seed  5 m27  respawn mist_wolf (50%) lives=1 stones=39 qingshi_village
+  seed  4 m34  respawn mist_wolf (75%) lives=1 stones=19 qingshi_village
       cause: You were slain by a Mist Wolf at age 18.
       | You spot a spirit stone glinting in a ditch. (+1 Spirit Stone)
       | You spot a spirit stone glinting in a ditch. (+1 Spirit Stone)
-      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 198 hp, 92 atk. Foe: 228
+      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 198 hp, 84 atk. Foe: 228
       | You fall. (5 rounds, 0/198 hp left)
       | You were slain by a Mist Wolf at age 18.
       | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
-  seed  5 m47  respawn mist_wolf (65%) lives=1 stones=28 qingshi_village
-      cause: You were slain by a Mist Wolf at age 19.
-      | You are beaten down. (2 rounds, 0/378 hp left; -7 Spirit Stone, Injured: Broken Bones)
-      | The Roadside Rogue Cultivator hits too hard for your defense: armor or a defense technique
-      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 189 hp, 80 atk. Foe: 228
-      | You fall. (4 rounds, 0/189 hp left)
-      | You were slain by a Mist Wolf at age 19.
+  seed  5 m4   respawn mist_wolf (18%) lives=2 stones=41 qingshi_village
+      cause: You were slain by a Mist Wolf at age 16.
+      | Donate 5 spirit stones. (Alignment +40, now Virtuous, Azure Cloud Sect reputation +40 (now
+      | Your path has shifted: you are now Virtuous.
+      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 210 hp, 62 atk. Foe: 228
+      | You fall. (5 rounds, 0/210 hp left)
+      | You were slain by a Mist Wolf at age 16.
       | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
-  seed  6 m12  respawn mist_wolf (48%) lives=2 stones=43 qingshi_village
+  seed  5 m26  respawn mist_wolf (100%) lives=1 stones=135 qingshi_village
+      cause: You were slain by a Mist Wolf at age 18.
+      | After 3 days on the road you arrive at Misty Forest.
+      | Glowing eyes in the mist: a pack of mist wolves!
+      | You face the Mist Wolf. (You: 270 hp, 129 atk. Foe: 228 hp, 71 atk.)
+      | You fall. (5 rounds, 0/270 hp left)
+      | You were slain by a Mist Wolf at age 18.
+      | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
+  seed  6 m14  respawn mist_wolf (20%) lives=2 stones=72 qingshi_village
       cause: You were slain by a Mist Wolf at age 17.
-      | You face the Wild Boar. (You: 226 hp, 63 atk. Foe: 40 hp, 12 atk.)
-      | The Wild Boar collapses. (1 round, 226/226 hp left; +1 Boar Hide)
-      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 226 hp, 61 atk. Foe: 228
-      | You fall. (5 rounds, 0/226 hp left)
+      | You need 2 Spirit Herb.
+      | You spot a spirit stone glinting in a ditch. (+1 Spirit Stone)
+      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 209 hp, 53 atk. Foe: 228
+      | You fall. (5 rounds, 0/209 hp left)
       | You were slain by a Mist Wolf at age 17.
       | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
-  seed  6 m18  respawn mist_wolf (68%) lives=1 stones=127 qingshi_village
-      cause: You were slain by a Mist Wolf at age 17.
-      | You face the Drunk Bully Disciple. (You: 226 hp, 70 atk. Foe: 269 hp, 65 atk.)
-      | The Drunk Bully Disciple collapses. (5 rounds, 71/226 hp left; +10 Spirit Stone)
-      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 226 hp, 64 atk. Foe: 228
-      | You fall. (6 rounds, 0/226 hp left)
-      | You were slain by a Mist Wolf at age 17.
+  seed  6 m54  respawn rogue_cultivator (62%) lives=2 stones=210 qingshi_village
+      cause: You were slain by a Rogue Cultivator at age 20.
+      | Autumn has come. In season now: Purple Cloud Mushroom at Corpse-Lily Bog (Withered Bone Ma
+      | A letter from Elder Mo: Elder Mo sends a few kind words and a small gift of herbs. (+1 Spi
+      | You face the Rogue Cultivator. (You: 313 hp, 136 atk. Foe: 319 hp, 114 atk.)
+      | You fall. (4 rounds, 0/313 hp left)
+      | You were slain by a Rogue Cultivator at age 20.
       | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
-  seed  6 m20  respawn mist_wolf (68%) lives=1 stones=37 qingshi_village
+  seed  7 m14  respawn mist_wolf (40%) lives=2 stones=115 qingshi_village
       cause: You were slain by a Mist Wolf at age 17.
-      | A travelling recruiter in grey robes sets a crystal on a stool and calls for volunteers. '
-      | The crystal glows and he nods, writing nothing down. Impressed by your honesty, he tips yo
-      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 226 hp, 65 atk. Foe: 228
-      | You fall. (6 rounds, 0/226 hp left)
-      | You were slain by a Mist Wolf at age 17.
-      | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
-  seed  7 m16  respawn mist_wolf (40%) lives=2 stones=116 qingshi_village
-      cause: You were slain by a Mist Wolf at age 17.
-      | Fingers brush your sleeve. You catch the wrist before it slips away: a skinny youth with q
       | You march him to the guardhouse. The stallholders he has robbed for months cheer you all t
-      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 193 hp, 67 atk. Foe: 228
+      | A ragged old man shares a breathing method before vanishing. Was he an immortal? (+200 qi)
+      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 193 hp, 94 atk. Foe: 228
       | You fall. (4 rounds, 0/193 hp left)
       | You were slain by a Mist Wolf at age 17.
       | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
-  seed  7 m32  respawn mist_wolf (92%) lives=1 stones=102 qingshi_village
-      cause: You were slain by a Mist Wolf at age 18.
-      | The order for 3 Bone-Setting Salve lapsed.
-      | Milestone: Battle-Hardened. Win 25 fights.
-      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 235 hp, 96 atk. Foe: 228
-      | You fall. (5 rounds, 0/235 hp left)
-      | You were slain by a Mist Wolf at age 18.
-      | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
-  seed  7 m34  respawn mist_wolf (92%) lives=1 stones=40 qingshi_village
-      cause: You were slain by a Mist Wolf at age 18.
-      | 'Take it,' Sun Mochou says, pressing a small wax-sealed pill into your palm. 'I would rath
-      | You catch a thief fleeing a widow's house and return what he stole. She insists you take a
-      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 235 hp, 85 atk. Foe: 228
-      | You fall. (6 rounds, 0/235 hp left)
-      | You were slain by a Mist Wolf at age 18.
-      | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
-  seed  8 m8   respawn mist_wolf (45%) lives=2 stones=39 qingshi_village
+  seed  8 m10  respawn mist_wolf (65%) lives=2 stones=51 qingshi_village
       cause: You were slain by a Mist Wolf at age 16.
-      | A one-armed old soldier leans on the well-sweep and watches you shadow-box in the lane. "Y
-      | The moon wanes over Fallen Star Market; the Mid-Autumn Moon Festival is over.
-      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 244 hp, 61 atk. Foe: 228
-      | You fall. (6 rounds, 0/244 hp left)
+      | He watches you circulate your qi and taps three points on your back. Knots you never knew 
+      | The order for 1 Bone-Setting Salve lapsed.
+      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 261 hp, 53 atk. Foe: 228
+      | You fall. (6 rounds, 0/261 hp left)
       | You were slain by a Mist Wolf at age 16.
       | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
-  seed  9 m16  respawn mist_wolf (38%) lives=2 stones=65 qingshi_village
+  seed  9 m20  respawn mist_wolf (38%) lives=2 stones=101 qingshi_village
       cause: You were slain by a Mist Wolf at age 17.
-      | A hooded peddler sidles up and whispers of 'blood pills' that need no herbs, only lives. H
-      | You need 100 Spirit Stone.
-      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 218 hp, 82 atk. Foe: 228
-      | You fall. (4 rounds, 0/218 hp left)
+      | Fingers brush your sleeve. You catch the wrist before it slips away: a skinny youth with q
+      | You march him to the guardhouse. The stallholders he has robbed for months cheer you all t
+      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 218 hp, 56 atk. Foe: 228
+      | You fall. (7 rounds, 0/218 hp left)
       | You were slain by a Mist Wolf at age 17.
       | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
-  seed 10 m11  respawn mist_wolf (18%) lives=2 stones=48 qingshi_village
-      cause: You were slain by a Mist Wolf at age 16.
-      | A buyer at the workshop orders 3 Qi Gathering Pill for 32 spirit stones (60 days).
-      | Word spreads that the Verdant Remnant in Misty Forest will open in about 1 month. (Entry: 
-      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 210 hp, 70 atk. Foe: 228
-      | You fall. (4 rounds, 0/210 hp left)
-      | You were slain by a Mist Wolf at age 16.
-      | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
-  seed 10 m26  respawn mist_wolf (85%) lives=1 stones=47 qingshi_village
-      cause: You were slain by a Mist Wolf at age 18.
-      | You face the Wild Boar. (You: 240 hp, 65 atk. Foe: 40 hp, 12 atk.)
-      | The Wild Boar collapses. (1 round, 240/240 hp left; +1 Boar Hide)
-      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 240 hp, 81 atk. Foe: 228
-      | You fall. (6 rounds, 0/240 hp left)
-      | You were slain by a Mist Wolf at age 18.
-      | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
-  seed 10 m56  respawn mist_wolf (82%) lives=1 stones=139 qingshi_village
-      cause: You were slain by a Mist Wolf at age 20.
-      | You wander for a day. Nothing of note happens.
-      | The villagers hold a harvest festival and press rice wine and dew grass on you as an honou
-      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 225 hp, 78 atk. Foe: 228
-      | You fall. (7 rounds, 0/225 hp left)
-      | You were slain by a Mist Wolf at age 20.
+  seed 10 m12  respawn mist_wolf (18%) lives=2 stones=80 qingshi_village
+      cause: You were slain by a Mist Wolf at age 17.
+      | Three days of bells and silence. When you rise, your body feels like a temple that no stor
+      | You catch a thief fleeing a widow's house and return what he stole. She insists you take a
+      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 210 hp, 58 atk. Foe: 228
+      | You fall. (6 rounds, 0/210 hp left)
+      | You were slain by a Mist Wolf at age 17.
       | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
 Per foe (QA-091): fights, wins, real win %, mean rated %, deaths, started by mission/deed/bounty/other
-  mist_wolf                  218 fights 195 wins  real  89%  rated  91%  deaths 23  216/0/1/1
-  wild_boar                  171 fights 170 wins  real  99%  rated  99%  deaths  0  0/1/6/164
-  mountain_bandit            118 fights 117 wins  real  99%  rated 100%  deaths  0  107/0/0/11
-  drunk_bully_disciple       114 fights  98 wins  real  85%  rated  86%  deaths  0  0/0/55/59
-  roadside_rogue_cultivator   44 fights   1 wins  real   2%  rated   1%  deaths  0  0/0/2/42
-  blood_lotus_raider          21 fights  19 wins  real  90%  rated  89%  deaths  0  21/0/0/0
-  Elder Mo                    20 fights   2 wins  real  10%  rated   6%  deaths  0  0/0/0/20
-  Luqiu Si                    15 fights   0 wins  real   0%  rated   1%  deaths  0  0/0/0/15
-  Meng Tianxin                14 fights   0 wins  real   0%  rated   0%  deaths  0  0/0/2/12
-  iron_back_boar              13 fights   6 wins  real  46%  rated  59%  deaths  0  0/0/9/4
-  mist_fox                    13 fights   9 wins  real  69%  rated  63%  deaths  0  0/0/1/12
-  Su Wangchuan                12 fights   0 wins  real   0%  rated   0%  deaths  0  0/0/1/11
-  Shangguan Ruyi              11 fights   0 wins  real   0%  rated   3%  deaths  0  0/0/0/11
-  Linghu Lie                  11 fights   0 wins  real   0%  rated   0%  deaths  0  0/0/0/11
-  Qiu Zhu                     11 fights   0 wins  real   0%  rated   0%  deaths  0  0/0/0/11
-  Cui Yunhai                  11 fights   0 wins  real   0%  rated   0%  deaths  0  0/0/0/11
-  Hei Tianhe                  10 fights   0 wins  real   0%  rated   0%  deaths  0  0/0/0/10
-  Sun Mochou                   9 fights   0 wins  real   0%  rated   0%  deaths  0  0/0/0/9
-  Yuan Juan                    9 fights   0 wins  real   0%  rated   0%  deaths  0  0/0/0/9
-  Gong Chenxi                  7 fights   7 wins  real 100%  rated 100%  deaths  0  0/0/0/7
-  Wu Ce                        6 fights   4 wins  real  66%  rated  66%  deaths  0  0/0/0/6
-  Li Yunhai                    3 fights   0 wins  real   0%  rated   7%  deaths  0  0/0/0/3
-  Zhang Shan                   1 fights   1 wins  real 100%  rated  28%  deaths  0  0/0/0/1
-  Pan Xiang                    1 fights   1 wins  real 100%  rated  98%  deaths  0  0/0/0/1
+  mist_wolf                  214 fights 199 wins  real  92%  rated  93%  deaths 15  205/0/0/9
+  rogue_cultivator             3 fights   2 wins  real  66%  rated  75%  deaths  1  0/0/0/3
+  wild_boar                  164 fights 163 wins  real  99%  rated  99%  deaths  0  0/1/5/158
+  drunk_bully_disciple       137 fights 112 wins  real  81%  rated  83%  deaths  0  0/0/63/74
+  mountain_bandit            122 fights 122 wins  real 100%  rated 100%  deaths  0  112/0/1/9
+  roadside_rogue_cultivator   31 fights   0 wins  real   0%  rated   1%  deaths  0  0/0/0/31
+  blood_lotus_raider          26 fights  24 wins  real  92%  rated  98%  deaths  0  26/0/0/0
+  Elder Mo                    15 fights   1 wins  real   6%  rated   9%  deaths  0  0/0/0/15
+  iron_back_boar              12 fights  12 wins  real 100%  rated  97%  deaths  0  0/0/9/3
+  Shangguan Ruyi              10 fights   1 wins  real  10%  rated  10%  deaths  0  0/0/0/10
+  mist_fox                     8 fights   8 wins  real 100%  rated  95%  deaths  0  0/0/0/8
+  Linghu Lie                   7 fights   0 wins  real   0%  rated   0%  deaths  0  0/0/0/7
+  Cui Yunhai                   7 fights   0 wins  real   0%  rated   0%  deaths  0  0/0/0/7
+  Tie Zhen                     6 fights   6 wins  real 100%  rated 100%  deaths  0  0/0/0/6
+  Luqiu Si                     6 fights   0 wins  real   0%  rated   0%  deaths  0  0/0/0/6
+  Meng Tianxin                 6 fights   0 wins  real   0%  rated   4%  deaths  0  0/0/0/6
+  Shao Yong                    5 fights   0 wins  real   0%  rated   2%  deaths  0  0/0/0/5
+  Yuan Juan                    5 fights   0 wins  real   0%  rated   1%  deaths  0  0/0/0/5
+  Hei Tianhe                   4 fights   0 wins  real   0%  rated   0%  deaths  0  0/0/0/4
+  Wu Ce                        4 fights   0 wins  real   0%  rated   0%  deaths  0  0/0/0/4
+  Sun Mochou                   3 fights   0 wins  real   0%  rated   0%  deaths  0  0/0/0/3
+  Qiu Zhu                      3 fights   0 wins  real   0%  rated   0%  deaths  0  0/0/0/3
+  Cao Ziyang                   2 fights   0 wins  real   0%  rated  38%  deaths  0  0/0/0/2
+  Ruan Mingyue                 1 fights   0 wins  real   0%  rated   0%  deaths  0  0/0/0/1
+  Wang Zhen                    1 fights   0 wins  real   0%  rated   0%  deaths  0  0/0/0/1
+  Xiahou Feiyan                1 fights   0 wins  real   0%  rated   8%  deaths  0  0/0/0/1
+  Su Wangchuan                 1 fights   0 wins  real   0%  rated   0%  deaths  0  0/0/0/1
 Artifact lives (QA-091): seed, recharges bought, lives at the end
   seed  1 bought 1 lives at end 2
   seed  2 bought 1 lives at end 2
-  seed  3 bought 0 lives at end 2
-  seed  4 bought 2 lives at end 1
-  seed  5 bought 2 lives at end 2
-  seed  6 bought 2 lives at end 2
-  seed  7 bought 1 lives at end 1
+  seed  3 bought 1 lives at end 3
+  seed  4 bought 2 lives at end 2
+  seed  5 bought 1 lives at end 2
+  seed  6 bought 2 lives at end 3
+  seed  7 bought 1 lives at end 3
   seed  8 bought 1 lives at end 3
   seed  9 bought 0 lives at end 2
-  seed 10 bought 2 lives at end 2
+  seed 10 bought 0 lives at end 2
 First Foundation breakthrough (QA-066): seed, bottleneck day, attempts [day chance pill? ok?/injury], success day, stones at bottleneck
-  seed  1 bottleneck d1645 attempts 1 [d1645 72% pill ok] success d1645 stones 153  waited 0d
-  seed  2 bottleneck d977  attempts 2 [d1102 48% fail, d1185 40% ok] success d1185 stones 176  waited 120d
-  seed  3 bottleneck d1444 attempts 1 [d1504 74% pill ok] success d1504 stones 38  waited 60d
+  seed  1 bottleneck d1812 attempts 1 [d1812 73% pill ok] success d1812 stones 223  waited 0d
+  seed  2 bottleneck d1051 attempts 2 [d1193 71% pill fail+injury, d1347 39% ok] success d1347 stones 42  waited 120d
+  seed  3 bottleneck d1575 attempts 1 [d1575 74% pill ok] success d1575 stones 196  waited 0d
   seed  4 bottleneck d-1   attempts 0 [] success d-1 stones -1  waited 0d
-  seed  5 bottleneck d634  attempts 2 [d795 42% fail+injury, d826 55% ok] success d826 stones 50  waited 120d
-  seed  6 bottleneck d1630 attempts 1 [d1630 74% pill ok] success d1630 stones 78  waited 0d
-  seed  7 bottleneck d1591 attempts 1 [d1591 77% pill ok] success d1591 stones 128  waited 0d
-  seed  8 bottleneck d891  attempts 3 [d1052 55% fail, d1119 48% fail+injury, d1217 76% pill ok] success d1217 stones 274  waited 120d
-  seed  9 bottleneck d1951 attempts 1 [d1951 78% pill ok] success d1951 stones 109  waited 0d
-  seed 10 bottleneck d1462 attempts 4 [d1615 55% fail+injury, d1777 48% fail+injury, d1886 51% fail+injury, d1999 54% ok] success d1999 stones 132  waited 120d
-  medians: days stuck at the bottleneck 60 (9 seeds that succeeded), attempts 1, share of attempts with a pill 37% (6 of 16), attempts under 50%: 5 of 16
+  seed  5 bottleneck d743  attempts 2 [d915 43% fail+injury, d1053 46% ok] success d1053 stones 58  waited 120d
+  seed  6 bottleneck d1961 attempts 2 [d1961 73% pill fail+injury, d2132 66% pill fail] success d-1 stones 382  waited 0d
+  seed  7 bottleneck d1430 attempts 1 [d1430 79% pill ok] success d1430 stones 109  waited 0d
+  seed  8 bottleneck d940  attempts 1 [d1047 80% pill ok] success d1047 stones 143  waited 90d
+  seed  9 bottleneck d1769 attempts 1 [d1769 76% pill ok] success d1769 stones 47  waited 0d
+  seed 10 bottleneck d1203 attempts 1 [d1229 79% pill ok] success d1229 stones 29  waited 30d
+  medians: days stuck at the bottleneck 26 (8 seeds that succeeded), attempts 1, share of attempts with a pill 75% (9 of 12), attempts under 50%: 3 of 12
 
 ## early inheritances (curious, seeds 1-10, 36 months)
 
@@ -728,21 +617,21 @@ Early inheritances, curious player, 10 seeds, 36 months
 Per inheritance (10 seeds): seeds that could pass every non-fight trial, median month, median rated odds of the final fight then (claiming retries the non-lethal fight until won, so the odds only decide the month the policy tries), seeds that claimed it, seeds lost to the deadline
   fist_saint_grave       misty_forest             deadline y15 passable  4/10  month 1  odds 0%  claimed 4 (median month 13)  lost 0
       never passable; blocking trial at the end: { "Stone of Endurance": 6 }
-  village_founder_well   qingshi_village          deadline y12 passable 10/10  month 1  odds 0%  claimed 10 (median month 14)  lost 0
-  reed_hermit_hut        withered_bone_marsh      deadline y10 passable  4/10  month 19  odds 95%  claimed 4 (median month 21)  lost 0
+  village_founder_well   qingshi_village          deadline y12 passable 10/10  month 1  odds 0%  claimed 10 (median month 13)  lost 0
+  reed_hermit_hut        withered_bone_marsh      deadline y10 passable  4/10  month 17  odds 72%  claimed 4 (median month 20)  lost 0
       never passable; blocking trial at the end: { "Silence of the Reeds": 6 }
-  sword_mound_traveller  fallen_star_market       deadline y12 passable  7/10  month 13  odds 38%  claimed 7 (median month 18)  lost 0
-      never passable; blocking trial at the end: { "Reading the Scratches": 3 }
+  sword_mound_traveller  fallen_star_market       deadline y12 passable  6/10  month 13  odds 25%  claimed 6 (median month 18)  lost 0
+      never passable; blocking trial at the end: { "Reading the Scratches": 4 }
 
 ## fair fights (curious, seeds 1-10, 12 months)
 
 Fair-fights sim: 10 seeds, 12 months (curious player)
 Entries listed per month: median 2, max 3; empty months 0 of 120
-Listed fights taken: 116, won 115 (99%), mean rated chance 99%
-  mission  listed 141, taken  89, won 100%, mean rated  99%
+Listed fights taken: 127, won 127 (100%), mean rated chance 98%
+  mission  listed 152, taken  96, won 100%, mean rated  98%
   deed     listed   1, taken   1, won 100%, mean rated 100%
-  bounty   listed   2, taken   2, won  50%, mean rated  86%
-  explore  listed 107, taken  24, won 100%, mean rated  99%
+  bounty   listed   3, taken   3, won 100%, mean rated  97%
+  explore  listed 102, taken  27, won 100%, mean rated  99%
 
 ## first fights, rated vs real (starter character, Qi Refining layers 1-3)
 
@@ -771,81 +660,81 @@ Rows off by more than 15 points: 0
 
 Rival story, default policy, 10 seeds, 36 months (cells: player/rival realm+stage; "-" = no rival or dead)
            bouts won 0, lost 0, first win month -
-  seed  1  met day 15  surpassed day never  news 2  rival encounters 4  qi1/qi2 qi3/qi5 qi4/qi7 qi6/qi8 qi6/qi8 qi7/fo0
+  seed  1  met day 15  surpassed day never  news 2  rival encounters 5  qi1/qi2 qi3/qi5 qi4/qi7 qi6/qi8 qi6/qi8 qi7/fo0
            attitude  p p p p p p
            bouts won 0, lost 0, first win month -
-  seed  2  met day 15  surpassed day never  news 2  rival encounters 5  qi3/qi3 qi6/qi6 qi7/qi7 qi8/qi8 fo0/fo1 fo1/fo2
+  seed  2  met day 15  surpassed day never  news 2  rival encounters 3  qi4/qi3 qi6/qi6 qi7/qi8 qi8/fo0 qi8/fo1 fo0/fo2
            attitude  p p p p p p
            bouts won 0, lost 0, first win month -
-  seed  3  met day 15  surpassed day never  news 2  rival encounters 5  qi2/qi2 qi4/qi5 qi5/qi6 qi6/qi8 qi7/fo0 qi8/fo1
+  seed  3  met day 15  surpassed day never  news 1  rival encounters 4  qi2/qi2 qi4/qi5 qi5/qi6 qi6/qi8 qi7/qi8 qi8/qi8
            attitude  p p p p p p
            bouts won 0, lost 0, first win month -
-  seed  4  met day 15  surpassed day never  news 2  rival encounters 8  qi2/qi2 qi3/qi6 qi4/qi8 qi5/fo1 qi6/fo2 qi7/fo3
+  seed  4  met day 15  surpassed day never  news 2  rival encounters 5  qi2/qi2 qi3/qi6 qi4/qi8 qi5/fo0 qi6/fo1 qi7/fo2
            attitude  p p p p p p
            bouts won 0, lost 0, first win month -
-  seed  5  met day 15  surpassed day 460  news 2  rival encounters 3  qi6/qi2 qi8/qi5 fo0/qi7 fo1/fo0 fo3/fo1 fo3/fo2
+  seed  5  met day 15  surpassed day 376  news 2  rival encounters 8  qi6/qi2 qi8/qi5 fo1/qi7 fo3/fo0 fo3/fo1 fo3/fo2
            attitude  p p p p p p
            bouts won 0, lost 0, first win month -
-  seed  6  met day 15  surpassed day never  news 2  rival encounters 6  qi2/qi3 qi3/qi6 qi5/qi7 qi6/fo0 qi6/fo1 qi7/fo2
+  seed  6  met day 15  surpassed day never  news 2  rival encounters 5  qi2/qi3 qi3/qi6 qi5/qi7 qi5/fo0 qi6/fo1 qi7/fo2
            attitude  p p p p p p
            bouts won 0, lost 0, first win month -
-  seed  7  met day 15  surpassed day never  news 2  rival encounters 5  qi2/qi3 qi4/qi6 qi6/qi8 qi7/qi8 qi8/fo0 qi8/fo1
+  seed  7  met day 15  surpassed day never  news 2  rival encounters 5  qi2/qi3 qi4/qi6 qi6/qi8 qi7/qi8 qi8/fo1 qi8/fo2
            attitude  p p p p p p
            bouts won 0, lost 0, first win month -
-  seed  8  met day 15  surpassed day 617  news 2  rival encounters 2  qi4/qi3 qi6/qi6 qi8/qi8 fo0/fo0 fo1/fo1 fo2/fo2
+  seed  8  met day 15  surpassed day 651  news 2  rival encounters 5  qi4/qi3 qi6/qi6 qi8/qi8 fo0/fo0 fo1/fo1 fo2/fo2
            attitude  p p p p p p
            bouts won 0, lost 0, first win month -
   seed  9  met day 15  surpassed day never  news 2  rival encounters 8  qi1/qi3 qi3/qi6 qi4/qi8 qi5/fo1 qi6/fo2 qi7/fo3
            attitude  p p p p p p
            bouts won 0, lost 0, first win month -
-  seed 10  met day 15  surpassed day never  news 2  rival encounters 5  qi2/qi3 qi5/qi5 qi6/qi7 qi8/qi8 qi8/fo0 fo0/fo1
-           attitude  p p p p p p
-  summary: met 10/10 (median day 15), surpassed 2/10 (median day 617, under a year 0), news lines 20, rival encounters 51
-  attitude at checkpoints (60 with a living rival): proud 60 (100%), friendly 0 (0%), bitter 0 (0%)
+  seed 10  met day 15  surpassed day never  news 2  rival encounters 5  qi2/qi3 qi5/qi5 qi6/qi7 qi7/qi8 qi8/qi8 qi8/-
+           attitude  p p p p p -
+  summary: met 10/10 (median day 15), surpassed 2/10 (median day 651, under a year 0), news lines 19, rival encounters 53
+  attitude at checkpoints (59 with a living rival): proud 59 (100%), friendly 0 (0%), bitter 0 (0%)
   rival_shares_insight: met 0 (never)
   rival_spoils_gathering: met 0 (never)
-  rival_public_challenge: met 25 (proud 25)
+  rival_public_challenge: met 22 (proud 22)
   bouts with the rival: won 0, lost 0; first win in 0/10 seeds (median month -)
   bitter explore days in spoils regions per seed: median 0, max 0; before the encounter was met: median 0 (under 5: the sim policy rarely meets the condition)
   FLAG: one attitude covers over 80% of checkpoints; C-093's encounters would barely show
 Rival story, curious policy, 10 seeds, 36 months (cells: player/rival realm+stage; "-" = no rival or dead)
            bouts won 0, lost 0, first win month -
-  seed  1  met day 28  surpassed day never  news 2  rival encounters 16  qi2/qi4 qi3/qi7 qi6/qi8 qi7/fo1 qi8/fo2 fo0/fo3
+  seed  1  met day 28  surpassed day never  news 2  rival encounters 21  qi2/qi5 qi4/qi8 qi6/fo0 qi7/fo2 qi8/fo3 fo0/fo3
            attitude  p p p p p p
            bouts won 0, lost 0, first win month -
-  seed  2  met day 39  surpassed day never  news 3  rival encounters 21  qi4/qi6 qi6/fo1 qi8/fo3 qi8/co0 fo0/co1 fo1/co2
-           attitude  p b p p p p
+  seed  2  met day 39  surpassed day never  news 3  rival encounters 16  qi4/qi6 qi6/fo0 qi8/fo2 fo0/- fo1/fo2 fo2/fo3
+           attitude  p p p - p p
            bouts won 0, lost 0, first win month -
-  seed  3  met day 38  surpassed day never  news 2  rival encounters 23  qi2/qi5 qi5/qi8 qi6/fo0 qi8/fo2 fo0/fo3 fo1/fo3
-           attitude  p b p p p p
-           bouts won 0, lost 0, first win month -
-  seed  4  met day 49  surpassed day never  news 2  rival encounters 23  qi2/qi5 qi4/fo0 qi6/fo2 qi7/fo3 qi8/fo3 qi8/fo3
+  seed  3  met day 39  surpassed day never  news 2  rival encounters 18  qi3/qi5 qi5/qi8 qi7/fo1 qi8/fo2 qi8/fo3 fo0/fo3
            attitude  p p f f f f
-           bouts won 7, lost 0, first win month 12
-  seed  5  met day 36  surpassed day 697  news 2  rival encounters 15  qi6/qi5 fo0/qi8 fo2/qi8 fo3/fo1 fo3/fo2 fo3/fo3
-           attitude  p p f f f b
            bouts won 0, lost 0, first win month -
-  seed  6  met day 43  surpassed day never  news 2  rival encounters 15  qi2/qi5 qi4/qi8 qi7/qi8 qi8/fo0 fo0/fo2 fo0/fo3
-           attitude  p p p f f f
+  seed  4  met day 50  surpassed day never  news 3  rival encounters 18  qi2/qi5 qi4/qi8 qi6/fo2 qi7/fo3 qi8/fo3 fo0/co0
+           attitude  p b p f f f
+           bouts won 2, lost 0, first win month 12
+  seed  5  met day 41  surpassed day 746  news 3  rival encounters 11  qi6/qi5 fo0/qi8 fo2/fo1 fo3/fo2 fo3/fo3 fo3/-
+           attitude  p p f f f -
            bouts won 0, lost 0, first win month -
-  seed  7  met day 44  surpassed day never  news 3  rival encounters 18  qi3/qi6 qi6/qi8 qi7/fo1 fo0/fo3 fo1/co0 fo1/co1
-           attitude  b f f f f f
+  seed  6  met day 43  surpassed day never  news 2  rival encounters 20  qi2/qi6 qi5/qi8 qi8/fo1 fo0/fo2 fo0/fo3 fo1/fo3
+           attitude  p p p p p b
            bouts won 0, lost 0, first win month -
-  seed  8  met day 40  surpassed day never  news 3  rival encounters 15  qi5/qi6 qi8/fo0 fo0/fo3 fo2/fo3 fo3/co0 fo3/co2
-           attitude  p b b b p p
+  seed  7  met day 44  surpassed day never  news 2  rival encounters 22  qi3/qi6 qi6/fo0 qi7/fo2 qi8/fo3 fo0/fo3 fo1/fo3
+           attitude  p p p p p p
            bouts won 0, lost 0, first win month -
-  seed  9  met day 40  surpassed day never  news 3  rival encounters 16  qi2/qi6 qi4/fo0 qi5/fo2 qi6/fo3 qi8/- fo0/fo0
-           attitude  p p p p - p
+  seed  8  met day 39  surpassed day 1114  news 4  rival encounters 11  qi5/qi7 qi7/qi7 fo0/fo0 fo1/fo2 fo2/fo3 fo3/co0
+           attitude  p p p p p p
            bouts won 0, lost 0, first win month -
-  seed 10  met day 44  surpassed day never  news 3  rival encounters 16  qi3/qi6 qi6/qi8 qi8/fo0 qi8/fo2 fo0/fo3 fo1/-
-           attitude  b p p p p -
-  summary: met 10/10 (median day 40), surpassed 1/10 (median day 697, under a year 0), news lines 25, rival encounters 178
-  attitude at checkpoints (58 with a living rival): proud 35 (60%), friendly 15 (26%), bitter 8 (14%)
-  rival_shares_insight: met 6 (friendly 6)
-  rival_spoils_gathering: met 5 (bitter 5)
-  rival_public_challenge: met 13 (proud 13)
-  bouts with the rival: won 7, lost 0; first win in 1/10 seeds (median month 12)
-  bitter explore days in spoils regions per seed: median 16, max 53; before the encounter was met: median 8
+  seed  9  met day 41  surpassed day never  news 2  rival encounters 24  qi2/qi5 qi3/qi8 qi6/fo0 qi7/fo2 qi8/fo3 fo0/fo3
+           attitude  p p b f f f
+           bouts won 0, lost 0, first win month -
+  seed 10  met day 42  surpassed day never  news 2  rival encounters 18  qi3/- qi6/qi6 qi8/fo0 qi8/fo2 qi8/fo3 fo0/fo3
+           attitude  - p p p p p
+  summary: met 10/10 (median day 41), surpassed 2/10 (median day 1114, under a year 0), news lines 25, rival encounters 179
+  attitude at checkpoints (57 with a living rival): proud 41 (72%), friendly 13 (23%), bitter 3 (5%)
+  rival_shares_insight: met 4 (friendly 4)
+  rival_spoils_gathering: met 1 (proud 1)
+  rival_public_challenge: met 13 (proud 12, bitter 1)
+  bouts with the rival: won 2, lost 0; first win in 1/10 seeds (median month 12)
+  bitter explore days in spoils regions per seed: median 6, max 30; before the encounter was met: median 6
 
 ## combat (200 fights per cell)
 
@@ -872,6 +761,7 @@ Where each enemy first appears (typical player entering the realm / at its peak 
   Qi Refini iron_back_boar         defence beast_tide           forced                   entry  90%  peak  76%  talisman 100%  bare   0%  veteran on appearance  96%  OK
   Qi Refini iron_back_boar         encounter village_iron_back_ forced                   entry  69%  peak 100%  talisman 100%  bare   0%  veteran on appearance  88%  OK
   Qi Refini marsh_corpse_puppet    encounter marsh_corpse_puppe evadable                 entry  48%  peak  98%  talisman  93%  bare   0%  veteran on appearance  72%  HARD
+  Qi Refini mist_fox               choice forest_charcoal_burne forced                   entry  64%  peak 100%  talisman  98%  bare   0%  veteran on appearance  93%  OK
   Qi Refini mist_fox               encounter forest_mist_fox    forced                   entry  64%  peak 100%  talisman  98%  bare   0%  veteran on appearance  93%  OK
   Qi Refini mist_fox               realm peach_blossom_grotto f forced                   entry  64%  peak 100%  talisman  98%  bare   0%  veteran on appearance  93%  OK
   Qi Refini mist_wolf              encounter forest_wolf        evadable                 entry  80%  peak 100%  talisman 100%  bare   0%  veteran on appearance  99%  OK
@@ -1169,35 +1059,35 @@ Net stones per sect mission over all lives (top 12): procure_azure_crystal 77401
 
 Bounty-hunter sim: 10 seeds, 12 months, Qi Refining layer 4, iron_back_boar_bounty in misty_forest (reward 40 stones)
   seed  bounties  hunt weeks  stones  stones/month  injuries  lives spent
-     1         3          11     120          10.0         0            0
-     2         2          30      80           6.7         0            0
-     3         3          10     120          10.0         0            0
-     4         2          25      80           6.7         0            0
-     5         3           7     120          10.0         0            0
-     6         3          18     120          10.0         0            0
-     7         3           8     120          10.0         0            0
-     8         3           5     120          10.0         0            0
-     9         3           9     120          10.0         0            0
-    10         3          13     120          10.0         0            0
-Hunt weeks per bounty claimed: 4.9; fights won 49, lost 10 (83% won)
-Gathering in misty_forest: 4.0 stones/week (best place). One bounty = 10.12 weeks of gather income; a week hunting earns 8.2 stones.
-Best gathering anywhere for this realm: qingshi_village at 5.3 stones/week (a bounty week earns 1.6x that).
+     1         3           5     120          10.0         0            0
+     2         3           6     120          10.0         0            0
+     3         3          11     120          10.0         0            0
+     4         3           8     120          10.0         0            0
+     5         3          11     120          10.0         0            0
+     6         3           9     120          10.0         0            0
+     7         3          12     120          10.0         0            1
+     8         3           8     120          10.0         0            0
+     9         3          24     120          10.0         0            0
+    10         3          11     120          10.0         0            0
+Hunt weeks per bounty claimed: 3.5; fights won 50, lost 8 (86% won)
+Gathering in misty_forest: 4.0 stones/week (best place). One bounty = 10.12 weeks of gather income; a week hunting earns 11.4 stones.
+Best gathering anywhere for this realm: qingshi_village at 5.3 stones/week (a bounty week earns 2.2x that).
 
 Bounty-hunter sim: 10 seeds, 12 months, Qi Refining layer 4, drunk_bully_bounty in qingshi_village (reward 20 stones)
   seed  bounties  hunt weeks  stones  stones/month  injuries  lives spent
      1         4           8      80           6.7         0            0
-     2         4          36      80           6.7         0            0
+     2         4          22      80           6.7         1            0
      3         4          10      80           6.7         0            0
      4         4           4      80           6.7         0            0
-     5         4           8      80           6.7         0            0
+     5         4          13      80           6.7         0            0
      6         4          22      80           6.7         0            0
      7         4           6      80           6.7         0            0
      8         4           5      80           6.7         0            0
      9         4           7      80           6.7         0            0
-    10         4          13      80           6.7         0            0
-Hunt weeks per bounty claimed: 3.0; fights won 51, lost 7 (88% won)
-Gathering in qingshi_village: 5.3 stones/week (best place). One bounty = 3.80 weeks of gather income; a week hunting earns 6.7 stones.
-Best gathering anywhere for this realm: qingshi_village at 5.3 stones/week (a bounty week earns 1.3x that).
+    10         3          38      60           5.0         2            0
+Hunt weeks per bounty claimed: 3.5; fights won 53, lost 12 (82% won)
+Gathering in qingshi_village: 5.3 stones/week (best place). One bounty = 3.80 weeks of gather income; a week hunting earns 5.8 stones.
+Best gathering anywhere for this realm: qingshi_village at 5.3 stones/week (a bounty week earns 1.1x that).
 
 Bounty-hunter sim: 10 seeds, 12 months, Core Formation layer 1, sword_madman_bounty in fallen_star_market (reward 100 stones)
   seed  bounties  hunt weeks  stones  stones/month  injuries  lives spent
@@ -1235,63 +1125,6 @@ Beast Tamer (gathered)       3.8   3.7   1.8   5.4   3.7   5.0   4.7 |  3.2    0
 (sect missions)             -4.1   0.6   0.6   0.6   1.8   1.8  -4.9 |  0.0   -    -     - |  0.38
 (stones a week by quarter, then the rank reached and the share of positive profession stones from work / crafting / commissions, blank when a broke crafter netted under 1 stone; per day = stones per day spent)
 
-## quiet stretches (seeds 1-10, 365 days)
-
-Quiet stretches, default policy, 10 seeds, 365 days
-  seed  1:  19 new days, longest stretch  60 days
-  seed  2:  19 new days, longest stretch  60 days
-  seed  3:  22 new days, longest stretch  33 days
-  seed  4:  21 new days, longest stretch  33 days
-  seed  5:  24 new days, longest stretch  60 days
-  seed  6:  18 new days, longest stretch  60 days
-  seed  7:  20 new days, longest stretch  35 days
-  seed  8:  20 new days, longest stretch  34 days
-  seed  9:  19 new days, longest stretch  35 days
-  seed 10:  21 new days, longest stretch  60 days
-Stretch (days between new things): median 7, max 60; median of per-seed medians 30, of per-seed maxes 60
-New days per month (median over seeds): 5 1 2 2 2 2 1 1 2 2 1 1 0
-  longest 1: seed 1, days 55-115 (60 days), months 2-4, actions: meditate,explore,breakthrough
-  longest 2: seed 1, days 303-363 (60 days), months 11-13, actions: meditate,explore
-  longest 3: seed 2, days 262-322 (60 days), months 9-11, actions: meditate,explore
-
-Quiet stretches, curious policy, 10 seeds, 365 days
-  seed  1:  61 new days, longest stretch  32 days
-  seed  2:  61 new days, longest stretch  34 days
-  seed  3:  54 new days, longest stretch  31 days
-  seed  4:  55 new days, longest stretch  32 days
-  seed  5:  61 new days, longest stretch  31 days
-  seed  6:  60 new days, longest stretch  31 days
-  seed  7:  60 new days, longest stretch  31 days
-  seed  8:  63 new days, longest stretch  31 days
-  seed  9:  46 new days, longest stretch  32 days
-  seed 10:  58 new days, longest stretch  32 days
-Stretch (days between new things): median 2, max 34; median of per-seed medians 2, of per-seed maxes 32
-New days per month (median over seeds): 9 4 6 2 6 2 6 2 5 3 5 4 1
-  longest 1: seed 2, days 211-245 (34 days), months 8-9, actions: meditate,explore,mission,gift,pointer,lecture
-  longest 2: seed 1, days 129-161 (32 days), months 5-6, actions: meditate,explore,mission,work,gift,spar,lecture
-  longest 3: seed 4, days 289-321 (32 days), months 10-11, actions: meditate,explore,mission,work,gift,pointer,lecture
-
-
-## first Foundation Establishment year (seeds 1-10)
-
-First Foundation Establishment year: 10 seeds
-  region / variant               won  lost  fled  injur  lives  stones  stage
-  qingshi_village rogue            11     0     0      0      0     224      0
-  qingshi_village sect             23     0     0      0      0     401      0
-  misty_forest rogue               12     0     0      0      0     314      0
-  misty_forest sect                23     0     0      0      0     371      1
-  fallen_star_market rogue          5     0     0      0      0      30      0
-  fallen_star_market sect          15     0     0      0      0     198      0
-  azure_peak rogue                  9     0     0      0      0     384      1
-  azure_peak sect                  22     0     0      0      0     433      1
-  withered_bone_marsh rogue        11     0     0      0      0     610      1
-  withered_bone_marsh sect         22     0     0      0      0     676      1
-  myriad_peaks_ridge rogue          6     0     0      0      0     660      2
-  myriad_peaks_ridge sect          18     0     0      0      0     853      3
-  median of all runs: won 14 lost 0 fled 0 injuries 0 lives 0 stones 384 stage 1
-  runs with no artifact life spent: 106 of 120
-  median win share of fought fights: 100%
-
 ## crafter start (new Alchemist, seeds 1-10, 180 days)
 
 Crafter start: new Alchemist in Qingshi Village, 10 seeds, 180 days
@@ -1308,4 +1141,61 @@ Crafter start: new Alchemist in Qingshi Village, 10 seeds, 180 days
     10   31   52   52        6      0/0         0       0      14%     9%       75%        20 (   20)  21/30/69
   medians: stones d30/d90/d180 39/56/56 (curious 23/44/72), crafted 6, commissions got 2 delivered 1, rank 0, renown 5
   medians: days gathering 14% / crafting 6% / meditating 81%; weeks stuck (no hint, nothing to craft, nothing to deliver) median 22, max 24; of those the craft-now hint had faded (5 crafts) in 100%
+
+## quiet stretches (seeds 1-10, 365 days)
+
+Quiet stretches, default policy, 10 seeds, 365 days
+  seed  1:  19 new days, longest stretch  60 days
+  seed  2:  23 new days, longest stretch  33 days
+  seed  3:  22 new days, longest stretch  31 days
+  seed  4:  18 new days, longest stretch  38 days
+  seed  5:  22 new days, longest stretch  35 days
+  seed  6:  19 new days, longest stretch  60 days
+  seed  7:  20 new days, longest stretch  35 days
+  seed  8:  21 new days, longest stretch  34 days
+  seed  9:  20 new days, longest stretch  35 days
+  seed 10:  23 new days, longest stretch  34 days
+Stretch (days between new things): median 7, max 60; median of per-seed medians 30, of per-seed maxes 35
+New days per month (median over seeds): 5 1 2 2 2 2 1 1 1 2 1 1 1
+  longest 1: seed 1, days 55-115 (60 days), months 2-4, actions: meditate,explore,breakthrough
+  longest 2: seed 1, days 303-363 (60 days), months 11-13, actions: meditate,explore
+  longest 3: seed 6, days 78-138 (60 days), months 3-5, actions: meditate,explore
+
+Quiet stretches, curious policy, 10 seeds, 365 days
+  seed  1:  61 new days, longest stretch  34 days
+  seed  2:  58 new days, longest stretch  31 days
+  seed  3:  57 new days, longest stretch  32 days
+  seed  4:  57 new days, longest stretch  34 days
+  seed  5:  63 new days, longest stretch  31 days
+  seed  6:  59 new days, longest stretch  32 days
+  seed  7:  55 new days, longest stretch  31 days
+  seed  8:  59 new days, longest stretch  30 days
+  seed  9:  57 new days, longest stretch  33 days
+  seed 10:  59 new days, longest stretch  35 days
+Stretch (days between new things): median 2, max 35; median of per-seed medians 2, of per-seed maxes 32
+New days per month (median over seeds): 10 4 7 2 6 2 6 2 7 3 7 4 0
+  longest 1: seed 10, days 42-77 (35 days), months 2-3, actions: meditate,explore,deed,mission,gift,lecture
+  longest 2: seed 1, days 278-312 (34 days), months 10-11, actions: meditate,explore,mission,work,gift,pointer,lecture
+  longest 3: seed 4, days 154-188 (34 days), months 6-7, actions: meditate,explore,mission,gift,pointer,lecture,craft,work,travel
+
+
+## first Foundation Establishment year (seeds 1-10)
+
+First Foundation Establishment year: 10 seeds
+  region / variant               won  lost  fled  injur  lives  stones  stage
+  qingshi_village rogue            12     0     0      0      0     236      0
+  qingshi_village sect             22     0     0      0      0     363      0
+  misty_forest rogue               11     0     0      0      0     288      0
+  misty_forest sect                23     0     0      0      0     293      1
+  fallen_star_market rogue          5     0     0      0      0      30      0
+  fallen_star_market sect          15     0     0      0      0     198      0
+  azure_peak rogue                  8     0     0      0      0     245      1
+  azure_peak sect                  20     0     0      0      0     312      1
+  withered_bone_marsh rogue         9     0     0      0      0     473      1
+  withered_bone_marsh sect         23     0     0      0      0     719      1
+  myriad_peaks_ridge rogue          6     0     0      0      0     289      2
+  myriad_peaks_ridge sect          17     0     0      0      0     856      2
+  median of all runs: won 13 lost 0 fled 0 injuries 0 lives 0 stones 293 stage 1
+  runs with no artifact life spent: 109 of 120
+  median win share of fought fights: 100%
 
