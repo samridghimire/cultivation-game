@@ -190,8 +190,8 @@ const UNTRIED_MIN_DAYS := 60
 const UNEXPLORED_MIN_DAYS := 10
 ## Most "Unexplored:" journal lines (GUIDE-014).
 const UNEXPLORED_JOURNAL_MAX := 2
-## The craft-now hint fades after this many crafted items (GUIDE-017).
-const CRAFT_HINT_MAX_CRAFTS := 5
+## The herb and craft-now hints stay while the craft is below this rank (GUIDE-017, GUIDE-049).
+const CRAFT_HINT_MAX_RANK := 2
 
 
 ## "Try something new" for a cultivator stuck in one loop: the first feature never
@@ -229,14 +229,17 @@ static func _untried_feature_hint(c: CharacterData, data: GameData, today: int, 
 		return ""
 	if LifeStats.get_stat(c, "encounters") == 0:
 		return "Explore the wilds (an explore site): fortunes, foes and strangers wait there."
-	if LifeStats.get_stat(c, "items_crafted") < CRAFT_HINT_MAX_CRAFTS:
-		var ready := craftable_now(c, data)
-		if not ready.is_empty():
-			var place := workshop_place(data, region_id)
-			var recipe_name := String(data.recipes[ready[0]].get("name", ready[0]))
-			if place != "":
-				return "You have what %s needs: craft it at %s." % [recipe_name, place]
-			return "You have what %s needs: craft it at a workshop." % recipe_name
+	var hinted := ""
+	for recipe_id: String in craftable_now(c, data):
+		if Professions.rank_of(c, String(data.recipes[recipe_id]["profession"])) < CRAFT_HINT_MAX_RANK:
+			hinted = recipe_id
+			break
+	if hinted != "":
+		var place := workshop_place(data, region_id)
+		var recipe_name := String(data.recipes[hinted].get("name", hinted))
+		if place != "":
+			return "You have what %s needs: craft it at %s." % [recipe_name, place]
+		return "You have what %s needs: craft it at a workshop." % recipe_name
 	if LifeStats.get_stat(c, "items_crafted") == 0 and not c.known_recipes.is_empty():
 		return "You know a recipe: craft it at a workshop."
 	if LifeStats.get_stat(c, "realm_floors_cleared") == 0:
@@ -268,10 +271,11 @@ static func craftable_now(c: CharacterData, data: GameData) -> PackedStringArray
 ## craftable now, with an ingredient short in the pack that a gather place here
 ## offers. When nothing here does, the same look at the regions a short walk away
 ## (GUIDE-046, data order). Any realm and day (a crafter can start as a Mortal).
-## "" otherwise, and once the craft-now hint has faded (CRAFT_HINT_MAX_CRAFTS).
+## Recipes of a craft at CRAFT_HINT_MAX_RANK or above are skipped (GUIDE-049).
+## "" otherwise.
 ## `today >= 0` skips herbs that are out of season that day (GUIDE-048).
 static func herb_here_hint(c: CharacterData, data: GameData, region_id: String, today: int = -1) -> String:
-	if region_id == "" or LifeStats.get_stat(c, "items_crafted") >= CRAFT_HINT_MAX_CRAFTS:
+	if region_id == "":
 		return ""
 	if not craftable_now(c, data).is_empty():
 		return ""
@@ -297,7 +301,7 @@ static func _herb_hint_in(c: CharacterData, data: GameData, grow_region: String,
 		var prof_id := String(recipe["profession"])
 		if not c.professions.has(prof_id) or not Alchemy.knows(c, data, recipe_id):
 			continue
-		if int(recipe.get("min_rank", 0)) > Professions.rank_of(c, prof_id):
+		if int(recipe.get("min_rank", 0)) > Professions.rank_of(c, prof_id) or Professions.rank_of(c, prof_id) >= CRAFT_HINT_MAX_RANK:
 			continue
 		for item_id: String in recipe["ingredients"]:
 			if not here.has(item_id) or c.item_count(item_id) >= int(recipe["ingredients"][item_id]):

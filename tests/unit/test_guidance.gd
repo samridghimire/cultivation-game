@@ -933,11 +933,18 @@ func test_journal_names_craftable_recipe_and_workshop() -> void:
 	assert_false(_journal_has(Guidance.journal(c, data(), {}, 5, "qingshi_village"), "You have everything to make"))
 
 
-func test_craft_hint_names_recipe_until_five_crafts() -> void:
+func _set_all_ranks(c: CharacterData, rank: int) -> void:
+	for prof_id: String in data().professions:
+		c.professions[prof_id] = {"rank": rank, "xp": 0.0}
+
+
+func test_craft_hint_names_recipe_until_rank_two() -> void:
 	var c := _crafter()
 	c.life_stats["items_crafted"] = 2
 	assert_true(_has(Guidance.hints(c, data(), 1.0, 99, {}, {}, "qingshi_village", 400), "You have what Qi Gathering Pill needs: craft it at Village Workshop in Qingshi Village."))
-	c.life_stats["items_crafted"] = 5
+	c.life_stats["items_crafted"] = 20
+	assert_true(_has(Guidance.hints(c, data(), 1.0, 99, {}, {}, "qingshi_village", 400), "You have what Qi Gathering Pill"), "crafts alone do not fade it")
+	_set_all_ranks(c, Guidance.CRAFT_HINT_MAX_RANK)
 	assert_false(_has(Guidance.hints(c, data(), 1.0, 99, {}, {}, "qingshi_village", 400), "You have what"))
 
 
@@ -978,8 +985,28 @@ func test_herb_here_hint_for_a_crafter_short_of_herbs() -> void:
 	c.professions.clear()
 	assert_eq(Guidance.herb_here_hint(c, data(), "qingshi_village"), "", "no profession")
 	c.professions["alchemist"] = {"rank": 0, "xp": 0.0}
-	c.life_stats["items_crafted"] = Guidance.CRAFT_HINT_MAX_CRAFTS
+	c.professions["alchemist"]["rank"] = Guidance.CRAFT_HINT_MAX_RANK
 	assert_eq(Guidance.herb_here_hint(c, data(), "qingshi_village"), "", "faded")
+
+
+func test_crafter_hints_fade_by_rank_not_by_crafts() -> void:
+	var c := _crafter()
+	c.professions["alchemist"] = {"rank": 0, "xp": 0.0}
+	c.life_stats["items_crafted"] = 10
+	c.inventory = {}
+	assert_true(Guidance.herb_here_hint(c, data(), "qingshi_village") != "", "rank 0 with 10 crafts still hears the herb hint")
+	_set_all_ranks(c, Guidance.CRAFT_HINT_MAX_RANK)
+	assert_eq(Guidance.herb_here_hint(c, data(), "qingshi_village"), "", "rank 2: no herb hint")
+	# craft-now hint
+	c.realm_index = 1
+	c.life_stats["encounters"] = 1
+	c.inventory = {"spirit_herb": 2, "dew_grass": 1}
+	var ready := Guidance.craftable_now(c, data())
+	assert_false(ready.is_empty())
+	assert_eq(Guidance._untried_feature_hint(c, data(), 400, {}, {}, "qingshi_village"), "", "rank 2: no craft-now hint")
+	_set_all_ranks(c, 0)
+	var hint := Guidance._untried_feature_hint(c, data(), 400, {}, {}, "qingshi_village")
+	assert_true(hint.begins_with("You have what "), hint)
 
 
 func test_herb_hint_looks_one_region_further() -> void:
@@ -2043,3 +2070,18 @@ func test_odd_jobs_hint_yields_to_the_herb_hint() -> void:
 	assert_true(Guidance.herb_here_hint(c, data(), "qingshi_village", 0) != "", "setup: herb hint fires")
 	var lines := Guidance.hints(c, data(), 1.0, 99, {}, {}, "qingshi_village", 0)
 	assert_false(_has(lines, "Short of stones?"))
+
+
+func test_craft_now_hint_names_only_the_low_rank_craft() -> void:
+	var c := _crafter()
+	c.life_stats["encounters"] = 1
+	_set_all_ranks(c, Guidance.CRAFT_HINT_MAX_RANK)
+	assert_eq(Guidance._untried_feature_hint(c, data(), 400, {}, {}, "qingshi_village"), "")
+	var low := ""
+	for recipe_id: String in Guidance.craftable_now(c, data()):
+		if low == "" and String(data().recipes[recipe_id]["profession"]) != "alchemist":
+			low = recipe_id
+	assert_true(low != "", "a second craft is craftable with this pack")
+	c.professions[String(data().recipes[low]["profession"])]["rank"] = 0
+	var hint := Guidance._untried_feature_hint(c, data(), 400, {}, {}, "qingshi_village")
+	assert_true(hint.begins_with("You have what %s needs" % data().recipes[low]["name"]), hint)

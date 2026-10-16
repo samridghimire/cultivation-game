@@ -61,7 +61,7 @@ func _run() -> void:
 		cols["c180"].append(cur[5])
 	print("  medians: stones d30/d90/d180 %d/%d/%d (curious %d/%d/%d), crafted %d, commissions got %d delivered %d, rank %d, renown %d" % [_median(cols["d30"]), _median(cols["d90"]), _median(cols["d180"]),
 		_median(cols["c30"]), _median(cols["c90"]), _median(cols["c180"]), _median(cols["crafted"]), _median(cols["got"]), _median(cols["delivered"]), _median(cols["rank"]), _median(cols["renown"])])
-	print("  medians: days gathering %d%% / crafting %d%% / meditating %d%%; weeks stuck (no hint, nothing to craft, nothing to deliver) median %d, max %d; of those the craft-now hint had faded (%d crafts) in %d%%" % [_median(cols["gather"]), _median(cols["craft"]), _median(cols["meditate"]), _median(cols["stuck"]), cols["stuck"].max(), Guidance.CRAFT_HINT_MAX_CRAFTS, 100 * _sum(cols["faded"]) / maxi(1, _sum(cols["stuck"]))])
+	print("  medians: days gathering %d%% / crafting %d%% / meditating %d%%; weeks stuck (no hint, nothing to craft, nothing to deliver) median %d, max %d; of those the craft-now hint had faded (rank %d) in %d%%" % [_median(cols["gather"]), _median(cols["craft"]), _median(cols["meditate"]), _median(cols["stuck"]), cols["stuck"].max(), Guidance.CRAFT_HINT_MAX_RANK, 100 * _sum(cols["faded"]) / maxi(1, _sum(cols["stuck"]))])
 	quit()
 
 
@@ -84,7 +84,7 @@ func _crafter(seed_value: int, days: int) -> Dictionary:
 		var kind := _act(c)
 		if kind == "stuck":
 			out["stuck"] += 1
-			if LifeStats.get_stat(c, "items_crafted") >= Guidance.CRAFT_HINT_MAX_CRAFTS:
+			if Professions.rank_of(c, "alchemist") >= Guidance.CRAFT_HINT_MAX_RANK:
 				out["faded"] += 1
 			kind = "meditate"
 		if _clock.total_days == before:  # a free action (selling, delivering) used no time: meditate the week
