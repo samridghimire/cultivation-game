@@ -5,6 +5,7 @@ extends SceneTree
 ##     --resolution 1280x800 -s res://tests/sim/screenshot_first_hour.gd
 ## WU-218: append `-- --crafter` for a new Alchemist's first hour (workshop, hint, gather site, crafting,
 ## journal Commissions, Deliver) as crafter_*.png.
+## WU-223: append `-- --gather-note` for the Village Herb Slope menu in each season: gather_note_<season>.png.
 ## PNGs go to user://screenshots/first_hour/<name>.png. Never writes saves.
 ## (The mid-game sibling is screenshot_screens.gd.)
 
@@ -33,6 +34,9 @@ func _start() -> void:
 	hud = world.get_node("HUD")
 	if OS.get_cmdline_user_args().has("--crafter"):
 		_crafter_shots(gs, c)
+		return
+	if OS.get_cmdline_user_args().has("--gather-note"):
+		_gather_note_shots(gs)
 		return
 	shots.append({"name": "hud_arrival", "open": func() -> void: pass, "close": func() -> void: pass})
 	shots.append({"name": "elder_mo_dialogue", "open": func() -> void: gs.start_dialogue("elder_mo"), "close": func() -> void: gs.end_dialogue()})
@@ -122,6 +126,28 @@ func _crafter_shots(gs: Node, c: CharacterData) -> void:
 			c.add_item(String(c.commissions[0]["item"]), int(c.commissions[0]["count"]))
 		root.get_node("EventBus").player_changed.emit()
 		menu.open_for(workshop), "close": menu.close})
+
+
+## WU-223: the Village Herb Slope menu once per season, so the "Grows here / In season / Out of season" note wraps.
+func _gather_note_shots(gs: Node) -> void:
+	var menu: Control = hud.get("_choice_menu")
+	var site: Node = null
+	var stack: Array[Node] = [world]
+	while not stack.is_empty():
+		var node: Node = stack.pop_back()
+		stack.append_array(node.get_children())
+		if node.get_script() != null and String(node.get_script().resource_path).ends_with("gather_site.gd") \
+				and str(node.get("display_name")) == "Village Herb Slope":
+			site = node
+	assert(site != null, "no Village Herb Slope in the world")
+	for k in 4:
+		var day := k * 3 * Calendar.DAYS_PER_MONTH
+		var season := Calendar.season_of(day)
+		shots.append({"name": "gather_note_" + season.to_lower(), "open": func() -> void:
+			root.get_node("GameClock").total_days = day
+			hud.get("_banner").visible = false
+			menu.open_for(site)
+			print("%s: %s" % [season, site.get_options()[0].get("description", "")]), "close": menu.close})
 
 
 func _find_explore() -> Node:
