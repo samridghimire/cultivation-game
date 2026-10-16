@@ -25,6 +25,9 @@ extends SceneTree
 ## WU-182: append `-- --year-shot` for the year-in-review banner with four long lines (realm change,
 ## tribulation, inheritance, rival bouts).
 
+## WU-187: append `-- --respawn-shot` for the respawn screen after a 98%-odds loss to a long-named foe
+## (the longest "still fell" lesson). `--year-shot` now has a four-line year with a respawn line.
+
 ## WU-184: append `-- --soul-shot` for a Soul Formation Early player: the journal's Soul Formation goals
 ## (with the Starfire Body row) and the HUD goal ladder.
 
@@ -57,6 +60,9 @@ func _start() -> void:
 		return
 	if OS.get_cmdline_user_args().has("--year-shot"):
 		_start_year_shot(gs)
+		return
+	if OS.get_cmdline_user_args().has("--respawn-shot"):
+		_start_respawn_shot(gs)
 		return
 	if OS.get_cmdline_user_args().has("--late-realms"):
 		_start_late_realms(gs)
@@ -328,7 +334,7 @@ func _start_year_shot(gs: Node) -> void:
 	root.add_child(world)
 	hud = world.get_node("HUD")
 	var banner: Control = hud.get("_banner")
-	var lines := LifeStats.year_summary({}, {"tribulations_survived": 1, "inheritances_claimed": 1, "rival_bouts_won": 2,
+	var lines := LifeStats.year_summary({}, {"tribulations_survived": 1, "respawns": 1, "rival_bouts_won": 2,
 			"rival_bouts_lost": 1}, "Foundation Establishment Peak", "Core Formation Early")
 	shots.append({"name": "year_banner", "open": func() -> void:
 		banner.set_held(false)
@@ -336,6 +342,25 @@ func _start_year_shot(gs: Node) -> void:
 		banner.finish_current()
 		banner.announce("%s of your journey" % LifeStats.review_title(10, 14), "\n".join(lines), Color(0.9, 0.78, 0.4), 60.0),
 		"close": func() -> void: pass})
+
+
+## WU-187: the respawn screen with the longest lesson (98% odds) and the longest enemy name.
+func _start_respawn_shot(gs: Node) -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 5
+	var c := CharacterFactory.create("Lin Feng", gs.data, rng, "male")
+	gs.start_session(c)
+	gs.pending_event = ""
+	world = load("res://src/world/world.tscn").instantiate()
+	root.add_child(world)
+	hud = world.get_node("HUD")
+	shots.append({"name": "respawn_still_fell", "open": func() -> void:
+		hud.get("_banner").visible = false
+		gs.pending_respawn = {"cause": "Cut down by a Drunk Bully Disciple in a fight you were sure to win.",
+				"anchor_id": "qingshi_village", "lives_left": 1, "qi_lost": 340.0,
+				"enemy_name": "Drunk Bully Disciple", "win_chance": 0.98}
+		hud.get("_respawn").open(), "close": func() -> void:
+		hud.get("_respawn").visible = false})
 
 
 func _start_death_shot(gs: Node) -> void:
