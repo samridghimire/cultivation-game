@@ -940,6 +940,23 @@ func test_craft_hint_names_recipe_until_five_crafts() -> void:
 	assert_false(_has(Guidance.hints(c, data(), 1.0, 99, {}, {}, "qingshi_village", 400), "You have what"))
 
 
+func test_herb_here_hint_for_a_crafter_short_of_herbs() -> void:
+	var c := _crafter()
+	c.professions["alchemist"] = {"rank": 0, "xp": 0.0}
+	c.inventory = {}
+	var hint := Guidance.herb_here_hint(c, data(), "qingshi_village")
+	assert_true(hint.begins_with("Spirit Herb grows here: gather it to refine Qi Gathering Pill"), hint)
+	assert_true(_has(Guidance.hints(c, data(), 1.0, 99, {}, {}, "qingshi_village", 400), "grows here"))
+	c.inventory = {"spirit_herb": 2, "dew_grass": 1}
+	assert_eq(Guidance.herb_here_hint(c, data(), "qingshi_village"), "", "craft-now takes over")
+	c.inventory = {}
+	c.professions.clear()
+	assert_eq(Guidance.herb_here_hint(c, data(), "qingshi_village"), "", "no profession")
+	c.professions["alchemist"] = {"rank": 0, "xp": 0.0}
+	c.life_stats["items_crafted"] = Guidance.CRAFT_HINT_MAX_CRAFTS
+	assert_eq(Guidance.herb_here_hint(c, data(), "qingshi_village"), "", "faded")
+
+
 func test_recap_names_waiting_hunt_letter_and_renown_capped_at_two() -> void:
 	var c := _fresh()
 	var base := Guidance.recap(c, data(), {}, 100, "qingshi_village")
