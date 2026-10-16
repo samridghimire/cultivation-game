@@ -55,4 +55,5 @@ static func work(c: CharacterData, data: GameData, prof_id: String, days: int) -
 	var ranks_gained := add_xp(c, data, prof_id, xp)
 	c.add_item("spirit_stone", income)
 	LifeStats.record_stones(c, income)
+	LifeStats.add(c, "profession_stones", income)
 	return {"xp": xp, "ranks_gained": ranks_gained, "income": income}

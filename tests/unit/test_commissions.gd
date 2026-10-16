@@ -44,6 +44,7 @@ func test_deliver() -> void:
 	assert_eq(c.commissions.size(), 0)
 	assert_gt(Professions.xp_of(c, "alchemist") + Professions.rank_of(c, "alchemist"), 0.0)
 	assert_eq(LifeStats.get_stat(c, "commissions_done"), 1)
+	assert_eq(LifeStats.get_stat(c, "profession_stones"), int(order["reward"]))
 
 
 func test_expire_only_past_due() -> void:

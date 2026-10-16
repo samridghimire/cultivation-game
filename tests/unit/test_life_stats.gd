@@ -191,3 +191,10 @@ func test_year_summary_profession_ranks() -> void:
 	assert_eq(three, PackedStringArray(["You rose 3 ranks in your professions."]))
 	var none := LifeStats.year_summary({"profession_ranks": 2}, {"profession_ranks": 2}, "Mortal", "Mortal")
 	assert_eq(none, PackedStringArray(["A quiet year of cultivation."]))
+
+
+func test_year_summary_craft_stones() -> void:
+	var none := LifeStats.year_summary({"profession_stones": 5}, {"profession_stones": 5}, "Mortal", "Mortal")
+	assert_eq(none, PackedStringArray(["A quiet year of cultivation."]))
+	var some := LifeStats.year_summary({}, {"profession_stones": 25}, "Mortal", "Mortal")
+	assert_eq(some, PackedStringArray(["Your craft earned 25 spirit stones."]))

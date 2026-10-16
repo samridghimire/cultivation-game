@@ -51,3 +51,17 @@ func test_rank_ups_are_counted_in_life_stats() -> void:
 	assert_eq(LifeStats.get_stat(c, "profession_ranks"), 1)
 	Professions.add_xp(c, data(), "alchemist", def.xp_to_next(1) + def.xp_to_next(2))
 	assert_eq(LifeStats.get_stat(c, "profession_ranks"), 3)
+
+
+func test_work_and_crafted_sales_count_as_craft_stones() -> void:
+	var c := new_character()
+	var result := Professions.work(c, data(), "blacksmith", 30)
+	assert_eq(LifeStats.get_stat(c, "profession_stones"), int(result["income"]))
+	var before := LifeStats.get_stat(c, "profession_stones")
+	c.add_item("spirit_herb", 2)
+	assert_true(Items.material_value(data(), "spirit_herb") < 0.0)
+	Items.sell(c, data(), "spirit_herb", 2)
+	assert_eq(LifeStats.get_stat(c, "profession_stones"), before, "raw herbs are not craft income")
+	c.add_item("qi_gathering_pill", 2)
+	var sold := Items.sell(c, data(), "qi_gathering_pill", 2)
+	assert_eq(LifeStats.get_stat(c, "profession_stones"), before + int(sold["stones"]))
