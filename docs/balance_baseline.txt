@@ -1212,16 +1212,21 @@ Best gathering anywhere for this realm: myriad_peaks_ridge at 5.6 stones/week (a
 ## profession income (Qi Refining, seeds 1-5, 24 months)
 
 Profession income: Qi Refining, attribute 10, 3 days a week for 24 months, seeds 1-5
-                   Q1    Q2    Q3    Q4    Q5    Q6    Q7  | rank  work craft  comm | per day
-Alchemist          1.4   1.4   1.4   4.2   2.8   2.8   5.5 |  2.0  100%    0%    0% |  0.94
-Blacksmith         1.4   1.4   1.4   4.2   2.8   2.8   5.5 |  2.0  100%    0%    0% |  0.94
-Talisman Master    1.2   1.2   1.2   3.5   2.3   2.3   4.6 |  2.0  100%    0%    0% |  0.78
-Array Master       1.6   1.6   1.6   4.8   3.2   3.2   6.5 |  1.0  100%    0%    0% |  1.10
-Doctor             1.2   1.2   1.2   4.6   2.3   2.3   4.6 |  2.0  100%    0%    0% |  0.88
-Beast Tamer        1.2   1.2   1.2   3.5   2.3   2.3   4.6 |  2.0  100%    0%    0% |  0.78
-(gatherer)         6.7   6.8   7.3   7.5   5.8   6.4   6.5 |  0.0   -    -     - |  2.24
-(sect missions)   -4.1   0.6   0.6   0.6   1.8   1.8  -4.9 |  0.0   -    -     - |  0.38
-(stones a week by quarter, then the rank reached and the share of profession stones from work / crafting / commissions; per day = stones per day spent)
+                             Q1    Q2    Q3    Q4    Q5    Q6    Q7  | rank  work craft  comm | per day
+Alchemist (bought)          -3.2  -0.5   0.0   0.0   0.0   0.0   0.0 |  0.4   -    -     - | -0.16
+Alchemist (gathered)         3.6   4.5   3.9   4.2   4.2   4.8   5.4 |  3.0    0%   86%   13% |  1.52
+Blacksmith (bought)         -3.8   0.0   0.0   0.0   0.0   0.0   0.0 |  0.2    0%    0%  100% | -0.16
+Blacksmith (gathered)        1.2   1.2   1.7   1.4   0.5   0.9   3.4 |  1.4    0%   42%   57% |  0.51
+Talisman Master (bought)    -2.4   1.3   0.5   1.8   0.2   2.0   1.5 |  1.8    0%  100%    0% |  0.19
+Talisman Master (gathered)   1.4   1.4   2.6   2.0   3.7   1.9   3.2 |  3.2    0%   80%   19% |  0.82
+Array Master (bought)       -4.2   0.0   0.0   0.0   0.0   0.0   0.0 |  0.0   -    -     - | -0.10
+Array Master (gathered)     -2.2  -1.8  -0.1   0.0   0.0   0.0   0.0 |  0.2   -    -     - | -0.18
+Doctor                       1.2   1.2   1.2   4.6   2.3   2.3   4.6 |  2.0  100%    0%    0% |  0.88
+Beast Tamer (bought)        -2.8  -1.1   0.0   0.0   0.0   0.0   0.0 |  0.8   -    -     - | -0.16
+Beast Tamer (gathered)       3.8   3.7   1.8   5.4   3.7   5.0   4.7 |  3.2    0%   71%   28% |  1.33
+(gatherer)                   6.7   6.8   7.3   7.5   5.8   6.4   6.5 |  0.0   -    -     - |  2.24
+(sect missions)             -4.1   0.6   0.6   0.6   1.8   1.8  -4.9 |  0.0   -    -     - |  0.38
+(stones a week by quarter, then the rank reached and the share of positive profession stones from work / crafting / commissions, blank when a broke crafter netted under 1 stone; per day = stones per day spent)
 
 ## quiet stretches (seeds 1-10, 365 days)
 

@@ -3,8 +3,12 @@ extends SceneTree
 ## player with attribute 10 spends WORK_DAYS days a week for `months` months on one profession
 ## and each week picks the best of: Professions.work, crafting and selling its best known recipe
 ## (materials bought and output sold at shop prices), and filling the open commission
-## (Commissions). Next to each profession a gatherer and a sect-mission player (fight-free
-## missions) spend the same days. Stones are net of what the player buys.
+## (Commissions). In the game only professions outside Workshop.CRAFTS can Work (the Doctor);
+## the five crafting professions get two rows instead (QA-097): "bought" buys every ingredient at
+## the shop price, "gathered" gathers them at the best open gather place for each ingredient and
+## counts those days as spent (ingredients no place yields are bought). Next to each profession a
+## gatherer and a sect-mission player (fight-free missions) spend the same days. Stones are net of
+## what the player buys.
 ## Usage: tools/godot.sh --headless --path . -s res://tests/sim/profession_income.gd -- [seeds] [months]
 
 const WORK_DAYS := 3
@@ -14,11 +18,16 @@ const QUARTER_WEEKS := 13
 const START_STONES := 50
 const SECT_ID := "myriad_treasure_pavilion"
 const KINDS: Array[String] = ["work", "craft", "commission"]
+## Mirrors Workshop.CRAFTS: these professions cannot Work in the game.
+const CRAFTERS: Array[String] = ["alchemist", "blacksmith", "talisman_master", "array_master", "beast_tamer"]
 
 var _sell_prices := {}
 ## Days of Professions.work not yet paid out: work() truncates its income per call, so 3-day
 ## blocks pay 0 at work_income 5-7; the player works in whole months (see Follow-ups in the commit).
 var _banked_work := 0
+## "bought" or "gathered" while a crafter is simulated, "" otherwise.
+var _variant := ""
+var _rates := {}
 
 
 func _initialize() -> void:
@@ -34,18 +43,25 @@ func _run() -> void:
 	var weeks := months * Calendar.DAYS_PER_MONTH / WEEK
 	var rows: Array[Dictionary] = []
 	for prof_id: String in data.professions:
-		rows.append(_average(data, prof_id, seeds, weeks))
+		if CRAFTERS.has(prof_id):
+			rows.append(_average(data, prof_id, seeds, weeks, "bought"))
+			rows.append(_average(data, prof_id, seeds, weeks, "gathered"))
+		else:
+			rows.append(_average(data, prof_id, seeds, weeks))
 	rows.append(_average(data, "_gather", seeds, weeks))
 	rows.append(_average(data, "_sect", seeds, weeks))
-	print("%-16s %s | rank  work craft  comm | per day" % ["", " ".join(_quarter_heads(weeks))])
+	print("%-26s %s | rank  work craft  comm | per day" % ["", " ".join(_quarter_heads(weeks))])
 	for row: Dictionary in rows:
 		var quarters: PackedStringArray = []
 		for q: float in row["quarters"]:
 			quarters.append("%5.1f" % q)
-		var total := maxf(0.001, float(row["work"]) + float(row["craft"]) + float(row["commission"]))
-		var share := "  -    -     -" if row["id"].begins_with("_") else "%4d%% %4d%% %4d%%" % [100 * float(row["work"]) / total, 100 * float(row["craft"]) / total, 100 * float(row["commission"]) / total]
-		print("%-16s %s | %4.1f %s | %5.2f" % [row["name"], " ".join(quarters), row["rank"], share, float(row["total"]) / (weeks * WORK_DAYS)])
-	print("(stones a week by quarter, then the rank reached and the share of profession stones from work / crafting / commissions; per day = stones per day spent)")
+		# Shares of the positive profession stones (a broke crafter nets ~0 or less: no shares then).
+		var total := maxf(0.0, float(row["work"])) + maxf(0.0, float(row["craft"])) + maxf(0.0, float(row["commission"]))
+		var share := "  -    -     -"
+		if not row["id"].begins_with("_") and total >= 1.0:
+			share = "%4d%% %4d%% %4d%%" % [100 * maxf(0.0, float(row["work"])) / total, 100 * maxf(0.0, float(row["craft"])) / total, 100 * maxf(0.0, float(row["commission"])) / total]
+		print("%-26s %s | %4.1f %s | %5.2f" % [row["name"], " ".join(quarters), row["rank"], share, float(row["total"]) / (weeks * WORK_DAYS)])
+	print("(stones a week by quarter, then the rank reached and the share of positive profession stones from work / crafting / commissions, blank when a broke crafter netted under 1 stone; per day = stones per day spent)")
 	quit()
 
 
@@ -56,18 +72,18 @@ func _quarter_heads(weeks: int) -> PackedStringArray:
 	return heads
 
 
-func _average(data: GameData, who: String, seeds: int, weeks: int) -> Dictionary:
+func _average(data: GameData, who: String, seeds: int, weeks: int, variant: String = "") -> Dictionary:
 	var sum := {"id": who, "name": who, "quarters": [], "rank": 0.0, "work": 0.0, "craft": 0.0, "commission": 0.0, "total": 0.0}
 	for q in weeks / QUARTER_WEEKS:
 		sum["quarters"].append(0.0)
 	if data.professions.has(who):
-		sum["name"] = data.professions[who].name
+		sum["name"] = data.professions[who].name + ((" (%s)" % variant) if variant != "" else "")
 	elif who == "_gather":
 		sum["name"] = "(gatherer)"
 	else:
 		sum["name"] = "(sect missions)"
 	for s in range(1, seeds + 1):
-		var res := _life(data, who, s, weeks)
+		var res := _life(data, who, s, weeks, variant)
 		for q in res["quarters"].size():
 			sum["quarters"][q] += res["quarters"][q] / seeds
 		for k in ["rank", "work", "craft", "commission", "total"]:
@@ -86,10 +102,12 @@ func _new_player(data: GameData, rng: RandomNumberGenerator) -> CharacterData:
 
 
 ## One seeded run: {quarters: stones a week per quarter, rank, work, craft, commission, total}.
-func _life(data: GameData, who: String, seed_value: int, weeks: int) -> Dictionary:
+func _life(data: GameData, who: String, seed_value: int, weeks: int, variant: String = "") -> Dictionary:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = seed_value
 	var c := _new_player(data, rng)
+	_variant = variant
+	_rates.clear()
 	var res := {"quarters": [], "rank": 0, "work": 0, "craft": 0, "commission": 0, "total": 0}
 	if data.professions.has(who):
 		c.professions[who] = {"rank": 0, "xp": 0.0}
@@ -160,14 +178,21 @@ func _craftable(c: CharacterData, data: GameData, prof_id: String) -> Array[Stri
 ## The best option for the next `days` days: {kind, per_day, recipe, order}.
 func _pick(c: CharacterData, data: GameData, prof_id: String, days: int) -> Dictionary:
 	var def: ProfessionDef = data.professions[prof_id]
-	var best := {"kind": "work", "per_day": def.work_income * (Professions.rank_of(c, prof_id) + 1) / float(Calendar.DAYS_PER_MONTH), "recipe": "", "order": -1}
+	var best := {"kind": "", "per_day": -1.0e9, "recipe": "", "order": -1}
+	if not CRAFTERS.has(prof_id):
+		best = {"kind": "work", "per_day": def.work_income * (Professions.rank_of(c, prof_id) + 1) / float(Calendar.DAYS_PER_MONTH), "recipe": "", "order": -1}
 	var stones := c.item_count("spirit_stone")
 	for recipe_id in _craftable(c, data, prof_id):
 		var recipe: Dictionary = data.recipes[recipe_id]
 		var cost := _material_cost(data, recipe_id)
+		var extra_days := 0.0
+		if _variant == "gathered":
+			var plan := _gather_plan(c, data, recipe_id)
+			cost = int(plan["cost"])
+			extra_days = float(plan["days"])
 		var chance := Alchemy.success_chance(c, data, recipe_id)
 		var out_count := int(recipe["output"].get("count", 1))
-		var rdays := maxf(1.0, float(recipe.get("days", 1)))
+		var rdays := maxf(1.0, float(recipe.get("days", 1))) + extra_days
 		if cost > stones:
 			continue
 		var per_day := (chance * out_count * _sell_price(data, String(recipe["output"]["item"])) - cost) / rdays
@@ -188,6 +213,8 @@ func _pick(c: CharacterData, data: GameData, prof_id: String, days: int) -> Dict
 
 ## Does the chosen action; returns the days it used.
 func _do(c: CharacterData, data: GameData, prof_id: String, pick: Dictionary, days: int, rng: RandomNumberGenerator) -> float:
+	if pick["kind"] == "":
+		return 0.0
 	if pick["kind"] == "work":
 		_banked_work += days
 		if _banked_work >= Calendar.DAYS_PER_MONTH:
@@ -197,18 +224,21 @@ func _do(c: CharacterData, data: GameData, prof_id: String, pick: Dictionary, da
 	var recipe_id: String = pick["recipe"]
 	var recipe: Dictionary = data.recipes[recipe_id]
 	var ingredients: Dictionary = recipe["ingredients"]
+	var gather_days := 0.0
+	if _variant == "gathered":
+		gather_days = _gather_for(c, data, recipe_id, rng)
 	for item_id: String in ingredients:
 		Items.buy(c, data, item_id, maxi(0, int(ingredients[item_id]) - c.item_count(item_id)))
 	var result := Alchemy.refine(c, data, recipe_id, rng)
 	if not result["ok"]:
-		return 0.0
+		return gather_days
 	var item_id: String = result["item"]
 	if pick["kind"] == "craft":
 		if result["count"] > 0:
 			_sell(c, data, item_id, int(result["count"]))
 	elif pick["order"] >= 0 and pick["order"] < c.commissions.size() and Commissions.check_deliver(c, data, int(pick["order"])) == "":
 		Commissions.deliver(c, data, int(pick["order"]))
-	return maxf(1.0, float(result["days"]))
+	return gather_days + maxf(1.0, float(result["days"]))
 
 
 ## Items.sell minus the per-sale recipe scan.
@@ -222,8 +252,10 @@ func _sell(c: CharacterData, data: GameData, item_id: String, count: int) -> voi
 	LifeStats.record_stones(c, price)
 
 
-func _best_gather(c: CharacterData, data: GameData) -> Dictionary:
-	var best := {}
+## Gather places the player can walk to (a route into the region is open at their realm):
+## [{table, days}], tables already filtered by realm.
+func _open_places(c: CharacterData, data: GameData) -> Array[Dictionary]:
+	var places: Array[Dictionary] = []
 	for region: Dictionary in data.regions.values():
 		var open := false
 		for other: Dictionary in data.regions.values():
@@ -233,19 +265,79 @@ func _best_gather(c: CharacterData, data: GameData) -> Dictionary:
 		if not open:
 			continue
 		for place: Dictionary in region.get("places", []):
-			if place.get("type", "") != "gather":
-				continue
-			var table := Exploration.gather_table_for(c, data, place.get("gather_table", []))
-			var total := 0.0
-			var value := 0.0
-			for entry: Dictionary in table:
-				total += float(entry.get("weight", 0.0))
-				if String(entry.get("item", "")) != "":
-					value += float(entry["weight"]) * (int(entry.get("min", 1)) + int(entry.get("max", 1))) / 2.0 * _sell_price(data, String(entry["item"]))
-			var days := maxi(1, int(place.get("gather_days", 1)))
-			var per_day := value / maxf(total, 0.001) / days
-			if per_day > float(best.get("per_day", 0.0)):
-				best = {"table": table, "days": days, "per_day": per_day}
+			if place.get("type", "") == "gather":
+				places.append({"table": Exploration.gather_table_for(c, data, place.get("gather_table", [])), "days": maxi(1, int(place.get("gather_days", 1)))})
+	return places
+
+
+## Expected units of `item_id` per day at the best open gather place: {per_day, table, days}.
+func _item_rate(c: CharacterData, data: GameData, item_id: String) -> Dictionary:
+	if _rates.has(item_id):
+		return _rates[item_id]
+	var best := {"per_day": 0.0}
+	for place: Dictionary in _open_places(c, data):
+		var total := 0.0
+		var units := 0.0
+		for entry: Dictionary in place["table"]:
+			total += float(entry.get("weight", 0.0))
+			if String(entry.get("item", "")) == item_id:
+				units += float(entry["weight"]) * (int(entry.get("min", 1)) + int(entry.get("max", 1))) / 2.0
+		# Exploration.gather rolls GATHER_ROLLS times per visit.
+		var per_day := units / maxf(total, 0.001) * Exploration.GATHER_ROLLS / float(place["days"])
+		if per_day > float(best["per_day"]):
+			best = {"per_day": per_day, "table": place["table"], "days": place["days"]}
+	_rates[item_id] = best
+	return best
+
+
+## What a gathered batch of `recipe_id` costs: {cost: stones for ingredients no place yields,
+## days: expected gathering days for the rest}.
+func _gather_plan(c: CharacterData, data: GameData, recipe_id: String) -> Dictionary:
+	var cost := 0
+	var days := 0.0
+	var ingredients: Dictionary = data.recipes[recipe_id]["ingredients"]
+	for item_id: String in ingredients:
+		var need := maxi(0, int(ingredients[item_id]) - c.item_count(item_id))
+		var rate := _item_rate(c, data, item_id)
+		if float(rate["per_day"]) > 0.0:
+			days += need / float(rate["per_day"])
+		else:
+			cost += int(data.items[item_id].get("price", 0)) * need
+	return {"cost": cost, "days": days}
+
+
+## Gathers (at the best place for each ingredient) until the batch is in hand; returns the days spent.
+## Ingredients no place yields are left for the shop purchase in _do.
+func _gather_for(c: CharacterData, data: GameData, recipe_id: String, rng: RandomNumberGenerator) -> float:
+	var spent := 0.0
+	var ingredients: Dictionary = data.recipes[recipe_id]["ingredients"]
+	for item_id: String in ingredients:
+		var rate := _item_rate(c, data, item_id)
+		if float(rate["per_day"]) <= 0.0:
+			continue
+		var guard := 0
+		while c.item_count(item_id) < int(ingredients[item_id]) and guard < 200:
+			guard += 1
+			var found := Exploration.gather(c, rate["table"], rng)
+			for found_id: String in found:
+				c.add_item(found_id, int(found[found_id]))
+			spent += float(rate["days"])
+	return spent
+
+
+func _best_gather(c: CharacterData, data: GameData) -> Dictionary:
+	var best := {}
+	for place: Dictionary in _open_places(c, data):
+		var table: Array = place["table"]
+		var total := 0.0
+		var value := 0.0
+		for entry: Dictionary in table:
+			total += float(entry.get("weight", 0.0))
+			if String(entry.get("item", "")) != "":
+				value += float(entry["weight"]) * (int(entry.get("min", 1)) + int(entry.get("max", 1))) / 2.0 * _sell_price(data, String(entry["item"]))
+		var per_day := value / maxf(total, 0.001) / float(place["days"])
+		if per_day > float(best.get("per_day", 0.0)):
+			best = {"table": table, "days": place["days"], "per_day": per_day}
 	return best
 
 
