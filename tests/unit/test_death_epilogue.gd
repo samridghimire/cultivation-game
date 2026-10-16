@@ -92,3 +92,33 @@ func test_epilogue_skips_unmet_rival_and_defaults_unchanged() -> void:
 	var c: CharacterData = s[1]
 	assert_false("\n".join(LifeStats.epilogue(c, d, null, 8, s[2], {})).contains("Rival:"))
 	assert_eq(LifeStats.epilogue(c, d).size(), LifeStats.epilogue(c, d, null, 8, s[2], {}).size())
+
+
+func _tier_min(title: String) -> int:
+	for t: Dictionary in data().renown["tiers"]:
+		if String(t["title"]) == title:
+			return int(t["min"])
+	return 0
+
+
+func test_epilogue_names_fame_only_with_a_title() -> void:
+	var c := new_character()
+	c.renown = {"qingshi_village": 0}
+	assert_false("\n".join(LifeStats.epilogue(c, data())).contains("Known as"))
+
+
+func test_epilogue_names_the_most_famous_region() -> void:
+	var c := new_character()
+	var ids: Array = data().regions.keys()
+	c.renown = {ids[0]: _tier_min("Known"), ids[1]: _tier_min("Respected")}
+	var text := "\n".join(LifeStats.epilogue(c, data()))
+	assert_true(text.contains("Known as Respected in %s" % data().regions[ids[1]]["name"]), text)
+
+
+func test_epilogue_fame_tie_takes_first_region() -> void:
+	var c := new_character()
+	var ids: Array = data().regions.keys()
+	var v := _tier_min("Known")
+	c.renown = {ids[1]: v, ids[0]: v}
+	var text := "\n".join(LifeStats.epilogue(c, data()))
+	assert_true(text.contains("Known as Known in %s" % data().regions[ids[0]]["name"]), text)

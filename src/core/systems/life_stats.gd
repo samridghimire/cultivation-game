@@ -79,6 +79,9 @@ static func epilogue(c: CharacterData, data: GameData, clan: ClanData = null, ma
 	out.append("%s, fallen at age %d" % [c.name, c.age_years()])
 	out.append("Realm: %s" % Cultivation.realm_label(c, data))
 	out.append("Path: %s" % Alignment.tier_name(c.alignment, data))
+	var fame := _fame_line(c, data)
+	if fame != "":
+		out.append(fame)
 	out.append("A rogue cultivator" if c.is_rogue() else "Sect: %s" % Sects.describe(c, data))
 	var rival: CharacterData = people.get(c.rival) if c.rival != "" else null
 	if rival != null and flags.get(Rivals.FIRST_MEETING_FLAG, false):
@@ -97,6 +100,23 @@ static func epilogue(c: CharacterData, data: GameData, clan: ClanData = null, ma
 	for i in mini(stats.size(), max_stats):
 		out.append(stats[i])
 	return out
+
+
+## "Known as Respected in Qingshi Village" for the region with the highest renown
+## that has a title (ties: first in data order); "" when none has one.
+static func _fame_line(c: CharacterData, data: GameData) -> String:
+	var best_id := ""
+	var best_value := -1
+	for id: String in data.regions:
+		if Renown.title(c, data, id) == "":
+			continue
+		var v := Renown.value(c, id)
+		if v > best_value:
+			best_value = v
+			best_id = id
+	if best_id == "":
+		return ""
+	return "Known as %s in %s" % [Renown.title(c, data, best_id), String((data.regions[best_id] as Dictionary).get("name", best_id))]
 
 
 ## Credits a veteran's past (MS-004): saves from before the counters existed get
