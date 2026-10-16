@@ -2047,6 +2047,19 @@ func test_herb_place_names_region_and_season() -> void:
 	assert_false(here.contains(" in "), "own region has no suffix: " + here)
 
 
+## GUIDE-051: out of season, the fallback names the next season the herb grows in.
+func test_herb_place_names_the_next_season() -> void:
+	var c := _crafter()
+	var place := _village_gather_place()
+	var saved: Array = place["gather_table"]
+	place["gather_table"] = [{"item": "autumn_bog_lily", "weight": 3, "min": 1, "max": 1, "seasons": ["spring", "autumn"]}]
+	var summer := Guidance.herb_place(c, data(), "autumn_bog_lily", "qingshi_village", 100)
+	var winter := Guidance.herb_place(c, data(), "autumn_bog_lily", "qingshi_village", 280)
+	place["gather_table"] = saved
+	assert_true(summer.ends_with("(in Autumn)"), summer)
+	assert_true(winter.ends_with("(in Spring)"), winter)
+
+
 ## GUIDE-047: a broke crafter hears what odd jobs pay.
 func test_odd_jobs_hint_for_a_broke_crafter() -> void:
 	var c := _crafter()

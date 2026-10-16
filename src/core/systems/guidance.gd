@@ -355,16 +355,37 @@ static func herb_place(c: CharacterData, data: GameData, item_id: String, region
 			return _place_in(data, String(here[item_id]), rid, region_id, "")
 	if season == "":
 		return ""
+	var best_text := ""
+	var best_wait := 99
 	for rid: String in order:
 		for place: Dictionary in data.regions.get(rid, {}).get("places", []):
 			if String(place.get("type", "")) != "gather":
 				continue
 			for entry: Dictionary in Exploration.gather_table_for(c, data, place.get("gather_table", [])):
-				if String(entry.get("item", "")) == item_id:
-					var seasons: Array = entry.get("seasons", [])
-					var when := String(seasons[0]).capitalize() if not seasons.is_empty() else ""
-					return _place_in(data, String(place.get("display_name", "a gather site")), rid, region_id, when)
-	return ""
+				if String(entry.get("item", "")) != item_id:
+					continue
+				var wait := 98
+				var when := ""
+				for s: Variant in entry.get("seasons", []):
+					var w := _seasons_until(season, String(s))
+					if w < wait:
+						wait = w
+						when = String(s).capitalize()
+				if wait < best_wait:
+					best_wait = wait
+					best_text = _place_in(data, String(place.get("display_name", "a gather site")), rid, region_id, when)
+	return best_text
+
+
+## Seasons from `from` (Calendar.season_of's capitalised name) until `to` (data's lowercase name);
+## 0 when it is that season now, 99 for an unknown name (GUIDE-051).
+static func _seasons_until(from: String, to: String) -> int:
+	var names := ["spring", "summer", "autumn", "winter"]
+	var a := names.find(from.to_lower())
+	var b := names.find(to.to_lower())
+	if a < 0 or b < 0:
+		return 99
+	return (b - a + 4) % 4
 
 
 ## "grows at <place>" for herbs, "found at <place>" for other gatherables (WU-201, WU-206),
