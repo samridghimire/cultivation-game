@@ -36,7 +36,7 @@ static func check(c: CharacterData, data: GameData, effects: Dictionary) -> Stri
 	for item_id in item_changes:
 		var delta := int(item_changes[item_id])
 		if delta < 0 and c.item_count(item_id) < -delta:
-			return "You need %d %s." % [-delta, data.items.get(item_id, {}).get("name", item_id)]
+			return "You need %d %s." % [-delta, Items.item_plural(data, item_id, -delta)]
 	if effects.has("breakthrough_realm"):
 		var realm_reason := _check_breakthrough_realm(c, data, String(effects["breakthrough_realm"]))
 		if realm_reason != "":

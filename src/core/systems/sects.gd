@@ -562,7 +562,7 @@ static func check_mission(c: CharacterData, data: GameData, mission_id: String, 
 	var needed: Dictionary = mission.get("requires", {}).get("items", {})
 	for item_id in needed:
 		if c.item_count(item_id) < int(needed[item_id]):
-			return "You need %d %s." % [int(needed[item_id]), data.items.get(item_id, {}).get("name", item_id)]
+			return "You need %d %s." % [int(needed[item_id]), Items.item_plural(data, item_id, int(needed[item_id]))]
 	return ""
 
 

@@ -27,3 +27,22 @@ func test_join_and() -> void:
 	assert_eq(Text.join_and(PackedStringArray(["Mei"])), "Mei")
 	assert_eq(Text.join_and(PackedStringArray(["Mei", "Bao"])), "Mei and Bao")
 	assert_eq(Text.join_and(PackedStringArray(["Mei", "Bao", "Lan"])), "Mei, Bao and Lan")
+
+
+func test_plural() -> void:
+	assert_eq(Text.plural("Spirit Herb", 1), "Spirit Herb")
+	assert_eq(Text.plural("Spirit Herb", 2), "Spirit Herbs")
+	assert_eq(Text.plural("Glass", 2), "Glasses")
+	assert_eq(Text.plural("Peach", 3), "Peaches")
+	assert_eq(Text.plural("Fairy", 2), "Fairies")
+	assert_eq(Text.plural("Day", 2), "Days")
+	assert_eq(Text.plural("Box", 2), "Boxes")
+
+
+func test_effects_check_pluralises_items() -> void:
+	var d := data()
+	var c := new_character()
+	var reason := Effects.check(c, d, {"items": {"spirit_herb": -3}})
+	assert_eq(reason, "You need 3 Spirit Herbs.")
+	assert_eq(Effects.check(c, d, {"items": {"spirit_herb": -1}}), "You need 1 Spirit Herb.")
+	assert_eq(Items.item_plural(d, "spirit_herb", 2), "Spirit Herbs")

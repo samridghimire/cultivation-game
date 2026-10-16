@@ -637,6 +637,8 @@ func _validate_combat() -> void:
 	if method_switch_days < 0 or method_over_cap_rate <= 0.0:
 		load_errors.append("techniques.json method_switch_days must be >= 0 and method_over_cap_rate > 0")
 	for item: Dictionary in items.values():
+		if item.has("plural") and (not item["plural"] is String or String(item["plural"]) == ""):
+			load_errors.append("Item '%s' plural must be a non-empty string" % item["id"])
 		var tech_id: String = item.get("effects", {}).get("learn_technique", "")
 		if tech_id != "" and not techniques.has(tech_id):
 			load_errors.append("Item '%s' teaches unknown technique '%s'" % [item["id"], tech_id])

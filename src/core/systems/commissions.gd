@@ -102,7 +102,7 @@ static func check_deliver(c: CharacterData, data: GameData, index: int) -> Strin
 	var order: Dictionary = c.commissions[index]
 	var missing: int = int(order["count"]) - c.item_count(String(order["item"]))
 	if missing > 0:
-		return "You need %d more %s." % [missing, _item_name(data, String(order["item"]))]
+		return "You need %d more %s." % [missing, Items.item_plural(data, String(order["item"]), missing)]
 	return ""
 
 

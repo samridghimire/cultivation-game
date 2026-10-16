@@ -417,3 +417,12 @@ static func use(c: CharacterData, data: GameData, item_id: String, flags: Dictio
 		return {"ok": false, "reason": reason, "notes": PackedStringArray()}
 	c.add_item(item_id, -1)
 	return {"ok": true, "reason": "", "notes": Effects.apply(c, data, item.get("effects", {}), flags)}
+
+
+## The item's name for `count` of them ("3 Spirit Herbs"); items.json `plural` overrides the rule.
+static func item_plural(data: GameData, item_id: String, count: int) -> String:
+	var item: Dictionary = data.items.get(item_id, {})
+	var name := String(item.get("name", item_id))
+	if count != 1 and item.has("plural"):
+		return String(item["plural"])
+	return Text.plural(name, count)
