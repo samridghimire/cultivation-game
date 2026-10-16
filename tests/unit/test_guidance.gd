@@ -619,6 +619,18 @@ func test_journal_prepare_line_only_close_to_the_bottleneck() -> void:
 	assert_true(Cultivation.days_to_bottleneck(c, data(), 1.0) > 30)
 	assert_true(_line_starting(_breakthrough_lines(c), "Prepare: ").is_empty())
 
+func test_long_waits_read_in_years() -> void:
+	var c := _fresh()
+	c.realm_index = 5
+	c.stage = 0
+	c.qi = 0.0
+	var days := Cultivation.days_to_bottleneck(c, data(), 1.0)
+	assert_true(days > 720, str(days))
+	var line := _line_starting(_breakthrough_lines(c), "About ")
+	assert_true(String(line.get("text", "")).contains("years of meditation"), str(line))
+	var goals := Guidance.goals(c, data(), {})
+	assert_true(" ".join(goals).contains("years of meditation"), str(goals))
+
 func test_sell_hint() -> void:
 	var d := data()
 	var c := _fresh()

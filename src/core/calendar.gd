@@ -71,3 +71,12 @@ static func format_duration(days: int) -> String:
 	if rem_days > 0 or parts.is_empty():
 		parts.append("%d day%s" % [rem_days, "" if rem_days == 1 else "s"])
 	return ", ".join(parts)
+
+
+## Rough duration for long waits: days under 60, months under 2 years, else years.
+static func format_rough(days: int) -> String:
+	if days < 60:
+		return "%d day%s" % [days, "" if days == 1 else "s"]
+	if days < 2 * DAYS_PER_YEAR:
+		return "%d months" % roundi(days / float(DAYS_PER_MONTH))
+	return "%d years" % roundi(days / float(DAYS_PER_YEAR))

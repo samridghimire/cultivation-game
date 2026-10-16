@@ -1129,7 +1129,7 @@ static func goals(c: CharacterData, data: GameData, flags: Dictionary, clan: Cla
 		if days == 0:
 			out.append("Reach %s: attempt the breakthrough (%s)." % [next_name, odds])
 		elif days > 0:
-			out.append("Reach %s: about %d days of meditation, then a breakthrough (%s)." % [next_name, days, odds])
+			out.append("Reach %s: about %s of meditation, then a breakthrough (%s)." % [next_name, Calendar.format_rough(days), odds])
 		else:
 			out.append("Reach %s: gather qi, then attempt a breakthrough (%s)." % [next_name, odds])
 		var saving := pill_saving_goal(c, data)
@@ -1752,7 +1752,7 @@ static func _breakthrough_entries(out: Array[Dictionary], c: CharacterData, data
 	else:
 		var days := Cultivation.days_to_bottleneck(c, data, density)
 		if days > 0:
-			_add(out, "Breakthrough", "About %d days of meditation here." % days, "normal")
+			_add(out, "Breakthrough", "About %s of meditation here." % Calendar.format_rough(days), "normal")
 		if days >= 1 and days <= 30:
 			var prepare := pill_source_hint(c, data)
 			if prepare != "":
