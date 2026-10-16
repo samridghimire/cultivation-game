@@ -1531,9 +1531,12 @@ static func _opportunity_entries(out: Array[Dictionary], c: CharacterData, data:
 		var cleared := Inheritances.stages_cleared(c, id)
 		if cleared >= stage_count:
 			continue
-		var text := "%s (%s): %d/%d trials passed" % [String(def.get("name", id)), _region_name(data, String(def.get("region", ""))), cleared, stage_count]
+		var text := "%s (%s): %d/%d trials passed (%s)" % [String(def.get("name", id)), _region_name(data, String(def.get("region", ""))), cleared, stage_count, Inheritances.time_left_text(def, today)]
 		var reason := Inheritances.check_attempt(c, data, id, String(def.get("region", "")), today, flags)
-		_add(out, "Opportunities", text if reason == "" else "%s. %s" % [text, reason], "normal" if reason == "" else "dim")
+		var tone := "dim"
+		if reason == "":
+			tone = "warning" if Inheritances.deadline_day(def) - today < Calendar.DAYS_PER_YEAR else "normal"
+		_add(out, "Opportunities", text if reason == "" else "%s. %s" % [text, reason], tone)
 
 
 static func _errand_entries(out: Array[Dictionary], data: GameData, flags: Dictionary) -> void:

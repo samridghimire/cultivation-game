@@ -26,18 +26,30 @@ static func appears_day(def: Dictionary) -> int:
 	return int(def.get("appears_years", 0)) * Calendar.DAYS_PER_YEAR
 
 
-static func _deadline_day(def: Dictionary) -> int:
+static func deadline_day(def: Dictionary) -> int:
 	return int(def.get("deadline_years", 0)) * Calendar.DAYS_PER_YEAR
+
+
+## How long until rivals claim it: "2 years left", "6 months left", "10 days left".
+static func time_left_text(def: Dictionary, today: int) -> String:
+	var days := maxi(0, deadline_day(def) - today)
+	if days >= Calendar.DAYS_PER_YEAR:
+		var years := days / Calendar.DAYS_PER_YEAR
+		return "%d year%s left" % [years, "" if years == 1 else "s"]
+	if days >= Calendar.DAYS_PER_MONTH:
+		var months := days / Calendar.DAYS_PER_MONTH
+		return "%d month%s left" % [months, "" if months == 1 else "s"]
+	return "%d day%s left" % [days, "" if days == 1 else "s"]
 
 
 ## Whether a rival has claimed it: the deadline passed before the player did.
 static func is_lost(def: Dictionary, total_days: int, flags: Dictionary) -> bool:
-	return total_days >= _deadline_day(def) and not is_claimed(String(def.get("id", "")), flags)
+	return total_days >= deadline_day(def) and not is_claimed(String(def.get("id", "")), flags)
 
 
 ## Whether a rival claimed `def` between the two days (for a one-time news line).
 static func lost_between(def: Dictionary, before_days: int, after_days: int, flags: Dictionary) -> bool:
-	return before_days < _deadline_day(def) and is_lost(def, after_days, flags)
+	return before_days < deadline_day(def) and is_lost(def, after_days, flags)
 
 
 static func stages_cleared(c: CharacterData, id: String) -> int:
@@ -160,7 +172,7 @@ static func status_text(c: CharacterData, data: GameData, id: String, total_days
 		return "Undiscovered"
 	var stages: Array = def.get("stages", [])
 	var stage := next_stage(c, def)
-	return "Trial %d/%d: %s (%s left before rivals arrive)" % [stages_cleared(c, id) + 1, stages.size(), stage.get("name", ""), Calendar.format_duration(_deadline_day(def) - total_days)]
+	return "Trial %d/%d: %s (%s left before rivals arrive)" % [stages_cleared(c, id) + 1, stages.size(), stage.get("name", ""), Calendar.format_duration(deadline_day(def) - total_days)]
 
 
 ## Inheritance ids whose grounds are in `region_id`, sorted.

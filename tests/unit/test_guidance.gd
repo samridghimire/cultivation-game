@@ -1497,6 +1497,26 @@ func test_soul_goals_rows_and_ladder() -> void:
 	assert_false(Guidance.soul_goals_active(c, data(), {}))
 
 
+## INH-003: an open inheritance says how long it waits; under a year it is a warning.
+func test_inheritance_opportunity_shows_time_left() -> void:
+	var d := data()
+	d.inheritances["test_legacy"] = {"id": "test_legacy", "name": "Test Legacy", "region": "misty_forest", "appears_years": 1, "deadline_years": 5,
+		"stages": [{"name": "Gate", "days": 1, "test": "realm", "min_realm": "qi_refining"}], "reward": {}}
+	var c := _fresh()
+	c.realm_index = 1
+	var find := func(today: int) -> Dictionary:
+		for e in Guidance.journal(c, d, {}, today, "misty_forest"):
+			if e["section"] == "Opportunities" and String(e["text"]).begins_with("Test Legacy"):
+				return e
+		return {}
+	var near: Dictionary = find.call(5 * Calendar.DAYS_PER_YEAR - 100)
+	assert_true(String(near["text"]).contains("(3 months left)"))
+	assert_eq(near["tone"], "warning")
+	var far: Dictionary = find.call(2 * Calendar.DAYS_PER_YEAR)
+	assert_true(String(far["text"]).contains("(3 years left)"))
+	assert_eq(far["tone"], "normal")
+
+
 ## GUIDE-031: a hint that only repeats the goal is dropped.
 func test_drop_goal_echoes() -> void:
 	var hints := PackedStringArray(["Ask Elder Mo in Qingshi Village where to begin", "Visit the market"])

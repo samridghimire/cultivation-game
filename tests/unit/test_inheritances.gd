@@ -168,3 +168,13 @@ func test_realm_trial_min_stage() -> void:
 	def["stages"] = [{"name": "x", "test": "realm", "min_realm": "qi_refining", "min_stage": 99}]
 	var errors := Inheritances.validate(data)
 	assert_true(str(errors).contains("min_stage"), str(errors))
+
+
+func test_time_left_text() -> void:
+	var def := _def()
+	assert_eq(Inheritances.time_left_text(def, 0), "5 years left")
+	assert_eq(Inheritances.time_left_text(def, 5 * Y - 400), "1 year left")
+	assert_eq(Inheritances.time_left_text(def, 5 * Y - 200), "6 months left")
+	assert_eq(Inheritances.time_left_text(def, 5 * Y - 40), "1 month left")
+	assert_eq(Inheritances.time_left_text(def, 5 * Y - 10), "10 days left")
+	assert_eq(Inheritances.time_left_text(def, 5 * Y - 1), "1 day left")
