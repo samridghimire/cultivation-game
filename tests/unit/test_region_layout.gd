@@ -47,3 +47,20 @@ func test_npc_spots_are_90px_from_place_centers() -> void:
 			var p := Vector2(float(spot[0]), float(spot[1]))
 			for c in centers:
 				assert_true(p.distance_to(c) >= Npcs.SPOT_CLEARANCE, "%s: NPC spot %s is within 90px of %s" % [region["id"], p, c])
+
+
+## WU-205: at the spawn view (1280x720, camera on the spawn) the village's Workshop and Bounty Board
+## stay clear of the HUD status panel (16,16 .. 340 wide, ~480 tall) and the log (bottom left).
+func test_village_places_clear_of_hud_at_spawn() -> void:
+	var region: Dictionary = data().regions["qingshi_village"]
+	var spawn := Vector2(float(region["spawn"][0]), float(region["spawn"][1]))
+	var view := Vector2(1280, 720)
+	var cam := Vector2(clampf(spawn.x - view.x / 2.0, 0.0, 1600.0 - view.x), clampf(spawn.y - view.y / 2.0, 0.0, 1000.0 - view.y))
+	var hud_rects: Array[Rect2] = [Rect2(16, 16, 340, 500), Rect2(16, 545, 520, 160)]
+	for place: Dictionary in region["places"]:
+		if not ["workshop", "bounty_board"].has(String(place["type"])):
+			continue
+		var r := _rect(place, [30, 30])
+		r.position -= cam
+		for h: Rect2 in hud_rects:
+			assert_false(r.intersects(h), "%s sits under the HUD at %s" % [place["display_name"], r])
