@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 50042bb
+Last reviewed commit: 26efd67
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -575,3 +575,14 @@ Last reviewed commit: 50042bb
   - Notes, not filed: QA-090 found the curious sim policy never explores the bitter spoils encounter's regions while
     the rival is bitter (a sim-policy gap, not a game bug). The Soul Formation goal "Claim two inheritances" counts
     lifetime claims, so it can be done on arrival.
+- 2026-10-16 (reviewer): reviewed 50042bb..26efd67 (YEAR-005, C-106, GUIDE-037, WU-182, QA-084, C-118/C-119, WU-185,
+  C-116, RENOWN-004, INH-004, QA-092; [PLAN] commits skipped). Main green (1887 test methods). No BACKLOG/CHANGELOG
+  edits by workers; no SAVE_VERSION change. Nothing filed.
+  - Fixed ([REVIEW] commit): C-119's mountain_last_sect_of_the_ridge offered to "guard the gate for a year" but the
+    choice takes 30 days (a month; a year is 360); the label and texts now say a month.
+  - Checked: RENOWN-004 grants choice renown only after a won fight for enemy choices (and validates 1..50); no content
+    uses it yet. GUIDE-037's Rivals.where_text keeps both callers' behaviour (both pass the region). INH-004's
+    time_left_text clamps at 0. C-118 foes all appear in C-119 encounters; C-116's help claims (kin grudges, yearly
+    fade, amends) match karma.gd. QA-084/QA-092/WU-182 are sim/screenshot only.
+  - Notes, not filed: WU-185 bands on the raw chance, so 89.6% reads "about 90% odds" with the middle-band lesson.
+    A fight_rival choice with renown would grant it whatever the bout's outcome (no content does this).
