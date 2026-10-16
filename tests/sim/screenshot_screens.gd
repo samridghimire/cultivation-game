@@ -55,6 +55,7 @@ extends SceneTree
 
 ## WU-207: append `-- --rival-shot` for the journal's Household section with a met rival one realm ahead (the
 ## "Reach <realm> to stand a chance against <name>." line), then the bitter variant. Shoot at 1280x800 and 1280x720.
+## WU-210: it then breaks through level with the rival (rival_caught_up_log / rival_caught_up_journal).
 
 const OUT_DIR := "user://screenshots/screens"
 const SETTLE_FRAMES := 6
@@ -465,6 +466,15 @@ func _start_rival_shot(gs: Node) -> void:
 		journal.get("_scroll").set_deferred("scroll_vertical", 100000), "close": journal.close})
 	shots.append({"name": "rival_journal_bitter", "open": func() -> void:
 		Karma.add_grudge(c, gs.data, rival.id, 30)
+		journal.open()
+		journal.get("_scroll").set_deferred("scroll_vertical", 100000), "close": journal.close})
+	# WU-210: a breakthrough brings you level with the rival (RIVAL-020 news in the message log).
+	shots.append({"name": "rival_caught_up_log", "open": func() -> void:
+		var old_realm := c.realm_index
+		c.realm_index += 1
+		gs.call("_check_rival_caught_up", old_realm)
+		hud.get("_banner").visible = false, "close": func() -> void: pass})
+	shots.append({"name": "rival_caught_up_journal", "open": func() -> void:
 		journal.open()
 		journal.get("_scroll").set_deferred("scroll_vertical", 100000), "close": journal.close})
 
