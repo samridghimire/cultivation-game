@@ -53,6 +53,9 @@ extends SceneTree
 ## WU-208: append `-- --workshop-shot` for the Village Workshop menu of a practised Alchemist with an open
 ## commission: workshop_menu.png and workshop_menu_odd_jobs.png (pay line).
 
+## WU-207: append `-- --rival-shot` for the journal's Household section with a met rival one realm ahead (the
+## "Reach <realm> to stand a chance against <name>." line), then the bitter variant. Shoot at 1280x800 and 1280x720.
+
 const OUT_DIR := "user://screenshots/screens"
 const SETTLE_FRAMES := 6
 
@@ -103,6 +106,9 @@ func _start() -> void:
 		return
 	if OS.get_cmdline_user_args().has("--encounter-shot"):
 		_start_encounter_shot(gs)
+		return
+	if OS.get_cmdline_user_args().has("--rival-shot"):
+		_start_rival_shot(gs)
 		return
 	if OS.get_cmdline_user_args().has("--renown-shot"):
 		_start_renown_shot(gs)
@@ -430,6 +436,35 @@ func _start_debts_shot(gs: Node) -> void:
 	var journal: Control = hud.get("_screens")["toggle_journal"]
 	shots.append({"name": "debts_journal", "open": func() -> void: journal.open(), "close": journal.close})
 	shots.append({"name": "debts_journal_end", "open": func() -> void:
+		journal.open()
+		journal.get("_scroll").set_deferred("scroll_vertical", 100000), "close": journal.close})
+
+
+## WU-207: the journal with a met rival a realm ahead, calm and then bitter.
+func _start_rival_shot(gs: Node) -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 5
+	var c := CharacterFactory.create("Lin Feng", gs.data, rng, "male")
+	gs.start_session(c)
+	gs.pending_event = ""
+	var rival := CharacterData.new()
+	rival.id = "shot_rival"
+	rival.name = "Murong Xuanming of the Iron Hall"
+	rival.home_region = gs.current_region
+	rival.realm_index = c.realm_index + 1
+	rival.alive = true
+	gs.npcs[rival.id] = rival
+	c.rival = rival.id
+	gs.world_flags[Rivals.FIRST_MEETING_FLAG] = true
+	world = load("res://src/world/world.tscn").instantiate()
+	root.add_child(world)
+	hud = world.get_node("HUD")
+	var journal: Control = hud.get("_screens")["toggle_journal"]
+	shots.append({"name": "rival_journal", "open": func() -> void:
+		journal.open()
+		journal.get("_scroll").set_deferred("scroll_vertical", 100000), "close": journal.close})
+	shots.append({"name": "rival_journal_bitter", "open": func() -> void:
+		Karma.add_grudge(c, gs.data, rival.id, 30)
 		journal.open()
 		journal.get("_scroll").set_deferred("scroll_vertical", 100000), "close": journal.close})
 
