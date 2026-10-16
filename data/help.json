@@ -304,22 +304,13 @@
       ]
     },
     {
-      "id": "karma",
-      "title": "Karma, Grudges and Debts",
-      "group": "people",
-      "body": [
-        "The world keeps score. Those you spare, save or help may repay you; those you wrong may hunt you.",
-        "Open the Character sheet to see grudges and debts. Settle them with force, stones or a kindness, or run: grudges outlive the years."
-      ]
-    },
-    {
       "id": "debts_grudges",
       "title": "Debts and Grudges",
       "group": "people",
       "body": [
-        "Healing someone's injury or giving them a gift earns their gratitude. A grateful person sends gifts now and then, stones and sometimes a pill or herbs. Someone deeply in your debt will also join your fights when they live in the region where you fight, and strike first on your side. Each favour paid back spends some of what they owe.",
-        "Robbing, humiliating or killing someone builds a grudge, and their kin hold it too. A strong grudge means the wronged may ambush you on the road after a journey, less often if they are far weaker than you. Beat them and the grudge eases; lose and they take stones and ease it too.",
-        "Grudges fade a little each year, but gratitude does not. Making amends costs stones, more for a deeper grudge. The journal's \"Debts and grudges\" section lists who owes you and who holds a grudge against you."
+        "The world keeps score. Healing someone's injury or giving them a gift earns their gratitude; those you spare or save may repay you. A grateful person sends gifts now and then, stones and sometimes a pill or herbs. Someone deeply in your debt will also join your fights when they live in the region where you fight, and strike first on your side. Each favour paid back spends some of what they owe.",
+        "Robbing, humiliating or killing someone builds a grudge, and their kin hold it too. A strong grudge means the wronged may ambush you on the road after a journey, less often if they are far weaker than you. Beat them and the grudge eases; lose and they take stones and ease it too. You can also settle a grudge with stones or a kindness, or run and let the years wear it down.",
+        "Grudges fade a little each year, but gratitude does not. Making amends costs stones, more for a deeper grudge. The journal's \"Debts and grudges\" section and the Character sheet list who owes you and who holds a grudge against you."
       ]
     },
     {
