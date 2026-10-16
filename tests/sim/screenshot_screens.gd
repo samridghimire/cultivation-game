@@ -698,6 +698,18 @@ func _start_encounter_shot(gs: Node) -> void:
 			hud.get("_banner").visible = false
 			gs.pending_encounter = enc_id
 			enc.open(), "close": enc.close})
+	# WU-217: the Body Integration choice encounters (C-129), gates missed (low attributes, alignment 0 so the
+	# arbiter's min_alignment 20 and max_alignment 10 gates split) and then met.
+	for gate_met: bool in [false, true]:
+		for enc_id: String in ["wild_body_of_a_drowned_god", "mountain_arbiter_of_one_body", "ruins_bone_court_petition"]:
+			shots.append({"name": "encounter_bi_%s_%s" % [enc_id, "met" if gate_met else "missed"], "open": func() -> void:
+				hud.get("_banner").visible = false
+				c.realm_index = gs.data.realm_index_of("body_integration")
+				c.attributes["constitution"] = 60 if gate_met else 5
+				c.attributes["spirit"] = 60 if gate_met else 5
+				c.alignment = 30 if gate_met else 0
+				gs.pending_encounter = enc_id
+				enc.open(), "close": enc.close})
 
 
 ## WU-177: the final-death screen with every epilogue line present.
