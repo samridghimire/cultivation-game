@@ -79,6 +79,20 @@ static func recipe_margin(data: GameData, recipe_id: String) -> Dictionary:
 	return {"cost": cost, "value": value}
 
 
+## GUIDE-050: what `c` still has to buy for `recipe_id` in spirit stones: the
+## ingredients they lack, at the unit cost recipe_margin uses. A full pack is 0.
+static func shortfall_cost(c: CharacterData, data: GameData, recipe_id: String) -> int:
+	var recipe: Dictionary = data.recipes.get(recipe_id, {})
+	if recipe.is_empty():
+		return 0
+	var cost := 0
+	for item_id: String in recipe["ingredients"]:
+		var lacking := maxi(0, int(recipe["ingredients"][item_id]) - c.item_count(item_id))
+		var unit := 1 if item_id == "spirit_stone" else int(data.items.get(item_id, {}).get("price", 0))
+		cost += lacking * unit
+	return cost
+
+
 ## True if `c` knows `recipe_id`: a starter recipe, or one learned from a scroll.
 static func knows(c: CharacterData, data: GameData, recipe_id: String) -> bool:
 	var recipe: Dictionary = data.recipes.get(recipe_id, {})

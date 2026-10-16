@@ -2063,6 +2063,16 @@ func test_odd_jobs_hint_for_a_broke_crafter() -> void:
 	assert_eq(Guidance._odd_jobs_hint(c, data(), "qingshi_village"), "", "no craft")
 
 
+## GUIDE-050: holding the herbs (but no stones) is not "short of stones".
+func test_odd_jobs_hint_counts_only_the_shortfall() -> void:
+	var c := _crafter()
+	c.professions["alchemist"] = {"rank": 0, "xp": 0.0}
+	c.inventory = {"spirit_herb": 2, "dew_grass": 1}
+	assert_eq(Guidance._odd_jobs_hint(c, data(), "qingshi_village"), "", "has the herbs, 0 stones")
+	c.inventory = {}
+	assert_true(Guidance._odd_jobs_hint(c, data(), "qingshi_village") != "", "nothing at all")
+
+
 func test_odd_jobs_hint_yields_to_the_herb_hint() -> void:
 	var c := _crafter()
 	c.professions["alchemist"] = {"rank": 0, "xp": 0.0}

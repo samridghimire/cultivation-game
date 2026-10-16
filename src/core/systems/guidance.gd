@@ -115,7 +115,7 @@ static func _odd_jobs_hint(c: CharacterData, data: GameData, region_id: String) 
 		for recipe_id: String in Alchemy.known_recipes(c, data, prof_id):
 			if int(data.recipes[recipe_id].get("min_rank", 0)) > Professions.rank_of(c, prof_id):
 				continue
-			var cost := int(Alchemy.recipe_margin(data, recipe_id)["cost"])
+			var cost := Alchemy.shortfall_cost(c, data, recipe_id)
 			if cheapest < 0 or cost < cheapest:
 				cheapest = cost
 		if cheapest < 0:

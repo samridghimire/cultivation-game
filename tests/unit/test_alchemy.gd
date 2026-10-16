@@ -328,3 +328,16 @@ func test_recipe_uses_names_recipes_a_gather_table_feeds() -> void:
 	assert_true(Alchemy.recipe_uses(c, data(), []).is_empty(), "empty table")
 	var all := Alchemy.recipe_uses(_alchemist(1), data(), [{"item": "spirit_herb", "weight": 1}, {"item": "dew_grass", "weight": 1}, {"item": "qi_condensing_grass", "weight": 1}])
 	assert_true(all.size() <= 3)
+
+
+## GUIDE-050: shortfall_cost prices only what the pack lacks.
+func test_shortfall_cost() -> void:
+	var d := data()
+	var c := CharacterData.new()
+	var full := int(Alchemy.recipe_margin(d, "qi_gathering_pill")["cost"])
+	assert_eq(Alchemy.shortfall_cost(c, d, "qi_gathering_pill"), full, "empty pack = full cost")
+	c.inventory = {"spirit_herb": 2}
+	assert_eq(Alchemy.shortfall_cost(c, d, "qi_gathering_pill"), int(d.items["dew_grass"].get("price", 0)), "only the missing part")
+	c.inventory = {"spirit_herb": 2, "dew_grass": 1}
+	assert_eq(Alchemy.shortfall_cost(c, d, "qi_gathering_pill"), 0, "everything in the pack")
+	assert_eq(Alchemy.shortfall_cost(c, d, "no_such_recipe"), 0)
