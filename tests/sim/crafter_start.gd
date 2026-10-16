@@ -3,7 +3,9 @@ extends SceneTree
 ## Alchemist on day 1, then follows the top hint it can act on for 180 days: gather the herb the
 ## hint names, craft and sell what it can refine, fill an open commission, otherwise meditate.
 ## Compared with the curious first-hour newcomer (tests/sim/first_hour.gd) at the same days.
-## Usage: tools/godot.sh --headless --path . -s res://tests/sim/crafter_start.gd -- [seeds] [days]
+## Usage: tools/godot.sh --headless --path . -s res://tests/sim/crafter_start.gd -- [seeds] [days] [--orders]
+## QA-107: --orders prints every commission (roll day, item, count, reward, days allowed, whether each ingredient
+## was available nearby at roll time) with its fate and why the sim did not fill it.
 
 const FirstHour := preload("res://tests/sim/first_hour.gd")
 const CHECKPOINTS: Array[int] = [30, 90, 180, 365]
@@ -13,6 +15,10 @@ const STUCK_WEEK_DAYS := 7
 
 var _gs: Node
 var _clock: Node
+var _orders_mode := false
+var _tracked: Array[Dictionary] = []  ## QA-107: orders seen so far, with their fate
+var _sold := {}  ## QA-107: item id -> units the sim sold this life
+var _crafted_out := {}  ## QA-107: item id -> units crafted this life
 
 
 func _initialize() -> void:
@@ -37,8 +43,13 @@ func _sum(values: Array) -> int:
 
 func _run() -> void:
 	var args := OS.get_cmdline_user_args()
-	var seeds := int(args[0]) if args.size() > 0 else 10
-	var days := int(args[1]) if args.size() > 1 else 180
+	_orders_mode = args.has("--orders")
+	var nums: Array = []
+	for a in args:
+		if not String(a).begins_with("--"):
+			nums.append(a)
+	var seeds := int(nums[0]) if nums.size() > 0 else 10
+	var days := int(nums[1]) if nums.size() > 1 else 180
 	_gs = root.get_node("GameState")
 	_clock = root.get_node("GameClock")
 	print("Crafter start: new Alchemist in Qingshi Village, %d seeds, %d days" % [seeds, days])
@@ -92,6 +103,9 @@ func _crafter(seed_value: int, days: int) -> Dictionary:
 	var start: int = _clock.total_days
 	var out := {"d30": 0, "d90": 0, "d180": 0, "crafted": 0, "got": 0, "delivered": 0, "rank": 0, "renown": 0, "gather_days": 0, "craft_days": 0, "meditate_days": 0, "stuck": 0, "faded": 0, "d365": 0, "realm90": "-", "realm180": "-", "realm365": "-", "cult_hint": 0, "crafted_post": 0, "stuck_post": 0}
 	var checkpoints := CHECKPOINTS.duplicate()
+	_tracked.clear()
+	_sold.clear()
+	_crafted_out.clear()
 	while c.alive and _clock.total_days - start < days:
 		var before: int = _clock.total_days
 		_clear_pending()
@@ -99,6 +113,8 @@ func _crafter(seed_value: int, days: int) -> Dictionary:
 			out["cult_hint"] += 1
 		var crafted_before := LifeStats.get_stat(c, "items_crafted")
 		var kind := _act(c)
+		if _orders_mode:
+			_track_orders(c, seed_value, start)
 		if _clock.total_days - start >= 180:
 			out["crafted_post"] += LifeStats.get_stat(c, "items_crafted") - crafted_before
 		if kind == "stuck":
@@ -122,7 +138,87 @@ func _crafter(seed_value: int, days: int) -> Dictionary:
 	out["got"] = out["delivered"] + c.commissions.size()
 	out["rank"] = Professions.rank_of(c, PROF)
 	out["renown"] = Renown.value(c, REGION)
+	if _orders_mode:
+		_track_orders(c, seed_value, start)
+		for t in _tracked:
+			if t["fate"] == "":
+				t["fate"] = "open at end"
+				t["why"] = _why(c, t)
+			print(_order_line(t))
 	return out
+
+
+## QA-107: notes new orders in the pack and closes the ones that left it (delivered or lapsed).
+func _track_orders(c: CharacterData, seed_value: int, start: int) -> void:
+	var done := LifeStats.get_stat(c, "commissions_done")
+	for order in c.commissions:
+		var known := false
+		for t in _tracked:
+			if t["due"] == int(order["due_day"]) and t["recipe"] == String(order["recipe"]) and t["fate"] == "":
+				known = true
+		if known:
+			continue
+		var nearby := []
+		var recipe: Dictionary = _gs.data.recipes[String(order["recipe"])]
+		for ing: String in recipe["ingredients"]:
+			if ing != "spirit_stone":
+				nearby.append("%s:%s" % [ing, _where(c, ing)])
+		_tracked.append({"seed": seed_value, "day": _clock.total_days - start, "item": String(order["item"]), "recipe": String(order["recipe"]), "count": int(order["count"]),
+			"reward": int(order["reward"]), "allowed": int(order["due_day"]) - _clock.total_days, "due": int(order["due_day"]), "near": nearby,
+			"sold0": int(_sold.get(String(order["item"]), 0)), "made0": int(_crafted_out.get(String(order["item"]), 0)), "fate": "", "why": "", "done0": done})
+	for t in _tracked:
+		if t["fate"] != "":
+			continue
+		var still := false
+		for order in c.commissions:
+			if t["due"] == int(order["due_day"]) and t["recipe"] == String(order["recipe"]):
+				still = true
+		if still:
+			continue
+		if done > int(t["done0"]) and _clock.total_days - start <= t["day"] + t["allowed"]:
+			t["fate"] = "delivered d%d" % (_clock.total_days - start)
+			t["done0"] = done
+		else:
+			t["fate"] = "lapsed d%d" % (_clock.total_days - start)
+			t["why"] = _why(c, t)
+
+
+## QA-107: the reason the sim did not fill an order, from what happened between its roll and now.
+func _why(c: CharacterData, t: Dictionary) -> String:
+	var item := String(t["item"])
+	var made := int(_crafted_out.get(item, 0)) - int(t["made0"])
+	var sold := int(_sold.get(item, 0)) - int(t["sold0"])
+	var recipe: Dictionary = _gs.data.recipes[String(t["recipe"])]
+	var per := maxi(1, int(recipe["output"].get("count", 1)))
+	if made == 0:
+		return "never crafted (needs %d crafts; allowed %d days)" % [ceili(float(t["count"]) / per), t["allowed"]]
+	if sold > 0:
+		return "crafted %d, sold %d (sim sold order goods)" % [made, sold]
+	if made < int(t["count"]):
+		return "crafted %d of %d, ran out of days" % [made, t["count"]]
+	return "crafted %d, held %d but not delivered" % [made, c.item_count(item)]
+
+
+## QA-107: where the crafter can get an ingredient: "here" (a gather place in the sim's region, with its per-gather chance),
+## "nearby" (a neighbouring region or a merchant, which the sim never visits), or "nowhere".
+func _where(c: CharacterData, item_id: String) -> String:
+	for place: Dictionary in _gs.data.regions[REGION].get("places", []):
+		if String(place.get("type", "")) != "gather":
+			continue
+		var total := 0.0
+		var hit := 0.0
+		for entry: Dictionary in Exploration.gather_table_for(c, _gs.data, place.get("gather_table", [])):
+			total += float(entry.get("weight", 0))
+			if String(entry.get("item", "")) == item_id:
+				hit += float(entry.get("weight", 0))
+		if hit > 0.0:
+			return "here(%d%%/%dd)" % [roundi(100.0 * hit / total), int(place.get("gather_days", 1))]
+	return "elsewhere" if Guidance.available_nearby(c, _gs.data, item_id, REGION) else "nowhere"
+
+
+func _order_line(t: Dictionary) -> String:
+	var market: int = int(t["count"]) * Items.sell_price(_gs.data, String(t["item"]))
+	return "    order seed %d day %d: %dx %s reward %d (market %d), %d days, %s -> %s%s" % [t["seed"], t["day"], t["count"], t["item"], t["reward"], market, t["allowed"], " ".join(t["near"]), t["fate"], " (%s)" % t["why"] if t["why"] != "" else ""]
 
 
 ## QA-104: is the top hint here a meditation or breakthrough line?
@@ -159,7 +255,10 @@ func _act(c: CharacterData) -> String:
 	_deliver_open(c)
 	var recipe_id := _best_craftable(c)
 	if recipe_id != "":
+		var out_item := String(_gs.data.recipes[recipe_id]["output"]["item"])
+		var had := c.item_count(out_item)
 		_gs.refine(recipe_id)
+		_crafted_out[out_item] = int(_crafted_out.get(out_item, 0)) + maxi(0, c.item_count(out_item) - had)
 		_deliver_open(c)
 		_sell_surplus(c)
 		return "craft"
@@ -184,6 +283,7 @@ func _sell_surplus(c: CharacterData) -> void:
 		var great := String(_gs.data.recipes[recipe_id].get("great_output", {}).get("item", ""))
 		for id in [item_id, great]:
 			if id != "" and not wanted.has(id) and c.item_count(id) > 0:
+				_sold[id] = int(_sold.get(id, 0)) + c.item_count(id)
 				_gs.sell_item(id, c.item_count(id))
 
 
