@@ -559,3 +559,30 @@ func test_giving_up_an_item_in_nascent_encounters() -> void:
 		assert_true(found, "%s has a choice that gives up %s" % [enc_id, item])
 		assert_true(enc["choices"].size() >= 3, "%s keeps a plain choice and a walk-away" % enc_id)
 	assert_eq(tags.size(), 3, "three different regions")
+
+
+## C-120: honourable deeds earn fame; demonic or selfish choices never do.
+func test_good_deeds_carry_renown() -> void:
+	var d: GameData = data()
+	var deeds := {
+		"village_elders_dispute": "Walk the boundary and judge fairly",
+		"marsh_villagers_plea": "Hunt the corpse refiner",
+		"ridge_beast_clan_truce": "Carry the truce to the miners",
+		"azure_minor_sect_duel": "Judge the duel fairly",
+	}
+	for enc_id: String in deeds:
+		var found := false
+		for choice: Dictionary in d.encounters[enc_id]["choices"]:
+			if choice["label"] == deeds[enc_id]:
+				found = true
+				var renown: int = int(choice.get("renown", 0))
+				assert_true(renown >= 5 and renown <= 15, "%s renown %d is 5-15" % [enc_id, renown])
+		assert_true(found, "%s has its honourable choice" % enc_id)
+
+
+func test_no_selfish_choice_carries_renown() -> void:
+	var d: GameData = data()
+	for enc_id: String in d.encounters:
+		for choice: Dictionary in d.encounters[enc_id].get("choices", []):
+			if int(choice.get("effects", {}).get("alignment", 0)) < 0:
+				assert_false(choice.has("renown"), "%s '%s' is selfish and has no renown" % [enc_id, choice["label"]])
