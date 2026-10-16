@@ -37,6 +37,9 @@ extends SceneTree
 ## WU-188: append `-- --void-shot` for a Void Refinement Early player: HUD goal ladder and the
 ## journal's Void Refinement goals.
 
+## WU-193: append `-- --body-shot` for a Body Integration Early player: HUD goal ladder and the journal's
+## Body Integration goals.
+
 ## WU-180: append `-- --debts-shot` for the journal with two grateful NPCs, a grudge holder at hunt
 ## strength and an inheritance three months from its deadline (Debts and grudges, Opportunities).
 
@@ -105,6 +108,9 @@ func _start() -> void:
 		return
 	if OS.get_cmdline_user_args().has("--void-shot"):
 		_start_void_shot(gs)
+		return
+	if OS.get_cmdline_user_args().has("--body-shot"):
+		_start_void_shot(gs, "body_integration", "body")
 		return
 	if OS.get_cmdline_user_args().has("--encounter-shot"):
 		_start_encounter_shot(gs)
@@ -513,25 +519,25 @@ func _start_soul_shot(gs: Node) -> void:
 
 
 ## WU-188: a Void Refinement Early player, journal and HUD.
-func _start_void_shot(gs: Node) -> void:
+func _start_void_shot(gs: Node, realm_id: String = "void_refinement", prefix: String = "void") -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 5
 	var c := CharacterFactory.create("Lin Feng", gs.data, rng, "male")
 	gs.start_session(c)
 	gs.pending_event = ""
 	c.age_days = 300 * Calendar.DAYS_PER_YEAR
-	c.realm_index = gs.data.realm_index_of("void_refinement")
+	c.realm_index = gs.data.realm_index_of(realm_id)
 	c.stage = 0
-	c.qi = gs.data.realms[c.realm_index].qi_required(0)
-	for realm_id: String in ["foundation_establishment", "core_formation", "nascent_soul", "soul_formation"]:
+	c.qi = gs.data.realms[c.realm_index].qi_required(0) if prefix == "void" else gs.data.realms[c.realm_index].qi_required(0) / 2
+	for beat_id: String in ["foundation_establishment", "core_formation", "nascent_soul", "soul_formation", "void_refinement"]:
 		gs.world_flags[Guidance.beat_realm_flag(realm_id)] = true
 	world = load("res://src/world/world.tscn").instantiate()
 	root.add_child(world)
 	hud = world.get_node("HUD")
 	var journal: Control = hud.get("_screens")["toggle_journal"]
-	shots.append({"name": "void_hud", "open": func() -> void: hud.get("_banner").visible = false, "close": func() -> void: pass})
-	shots.append({"name": "void_journal", "open": func() -> void: journal.open(), "close": journal.close})
-	shots.append({"name": "void_journal_end", "open": func() -> void:
+	shots.append({"name": prefix + "_hud", "open": func() -> void: hud.get("_banner").visible = false, "close": func() -> void: pass})
+	shots.append({"name": prefix + "_journal", "open": func() -> void: journal.open(), "close": journal.close})
+	shots.append({"name": prefix + "_journal_end", "open": func() -> void:
 		journal.open()
 		journal.get("_scroll").set_deferred("scroll_vertical", 100000), "close": journal.close})
 
