@@ -298,3 +298,20 @@ func test_renown_tier_bumps_life_stat() -> void:
 	gs._add_renown(5)
 	assert_eq(LifeStats.get_stat(c, "renown_titles"), 1)
 	gs.end_session()
+
+
+## QA-20261016-1: "places that know your name" counts places, not tiers climbed in one place.
+func test_renown_titles_count_places_not_tiers() -> void:
+	var gs := _root().get_node("GameState")
+	var c := CharacterFactory.create("Voice", gs.data, seeded_rng(4))
+	gs.start_session(c)
+	gs.current_region = "misty_forest"
+	c.renown["misty_forest"] = 0
+	gs._add_renown(int(gs.data.renown["tiers"][1]["min"]))
+	gs._add_renown(int(gs.data.renown["tiers"][2]["min"]) - int(gs.data.renown["tiers"][1]["min"]))
+	assert_eq(Renown.tier_index(gs.data, Renown.value(c, "misty_forest")), 2)
+	assert_eq(LifeStats.get_stat(c, "renown_titles"), 1, "two tiers in one region is one place")
+	gs.current_region = "qingshi_village"
+	gs._add_renown(int(gs.data.renown["tiers"][1]["min"]))
+	assert_eq(LifeStats.get_stat(c, "renown_titles"), 2)
+	gs.end_session()

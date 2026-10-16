@@ -18,9 +18,9 @@ static func gain(c: CharacterData, data: GameData, region_id: String, source: St
 
 
 ## Adds `amount` renown in `region_id` (RENOWN-004), capped at the config `max`.
-## Same result as `gain`; an amount <= 0 gains nothing.
+## Same result as `gain` plus `first_title` (true when the region had no title before); an amount <= 0 gains nothing.
 static func add(c: CharacterData, data: GameData, region_id: String, amount: int) -> Dictionary:
-	var result := {"gained": 0, "new_tier": ""}
+	var result := {"gained": 0, "new_tier": "", "first_title": false}
 	var config: Dictionary = data.renown
 	if config.is_empty() or region_id == "" or amount <= 0:
 		return result
@@ -34,6 +34,7 @@ static func add(c: CharacterData, data: GameData, region_id: String, amount: int
 	var new_tier := tier(data, after)
 	if int(new_tier.get("min", 0)) > int(old_tier.get("min", 0)):
 		result["new_tier"] = String(new_tier.get("title", ""))
+		result["first_title"] = String(old_tier.get("title", "")) == "" and String(result["new_tier"]) != ""
 	return result
 
 
