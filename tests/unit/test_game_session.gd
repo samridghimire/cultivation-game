@@ -1826,3 +1826,29 @@ func test_rival_attitude_change_is_announced() -> void:
 	gs._rival_consequences({"rival_grudge": 50})
 	assert_eq(EventBus.history.filter(func(m): return String(m["text"]).contains("%s now holds a grudge" % rival.name)).size(), 1)
 	gs.end_session()
+
+
+func test_first_craft_brings_the_first_order() -> void:
+	var c := _start()
+	var gs := _game_state()
+	c.professions.erase("alchemist")
+	c.add_item("spirit_herb", 4)
+	c.add_item("dew_grass", 2)
+	gs.refine("qi_gathering_pill")
+	assert_true(c.professions.has("alchemist"), "the craft starts the profession")
+	assert_eq(c.commissions.size(), 1, "first craft: first order the same day")
+	assert_eq(String(c.commissions[0]["profession"]), "alchemist")
+	gs.refine("qi_gathering_pill")
+	assert_eq(c.commissions.size(), 1, "second craft adds none")
+	gs.end_session()
+
+
+func test_practised_crafter_gets_no_order_from_refining() -> void:
+	var c := _start()
+	var gs := _game_state()
+	c.professions["alchemist"] = {"rank": 0, "xp": 0.0}
+	c.add_item("spirit_herb", 2)
+	c.add_item("dew_grass", 1)
+	gs.refine("qi_gathering_pill")
+	assert_eq(c.commissions.size(), 0)
+	gs.end_session()

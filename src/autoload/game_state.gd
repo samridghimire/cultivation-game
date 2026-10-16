@@ -402,6 +402,8 @@ func work_profession(prof_id: String, days: int) -> void:
 	_pass_time(days, "Working as %s" % Text.a(def.name))
 
 
+## A newcomer's first craft also brings their first order (PROF-007), so they need
+## not wait for the month end; open orders are capped per profession.
 func _commissions_month() -> void:
 	EventBus.topic = "trade"
 	for order in Commissions.roll(player, data, rng, GameClock.total_days):
@@ -2005,13 +2007,14 @@ func refine(recipe_id: String) -> void:
 	EventBus.topic = "trade"
 	if not _can_act():
 		return
+	var prof_id: String = data.recipes[recipe_id]["profession"]
+	var had_profession := player.professions.has(prof_id)
 	var result := Alchemy.refine(player, data, recipe_id, rng)
 	if not result["ok"]:
 		EventBus.post(result["reason"], "warning")
 		EventBus.player_changed.emit()
 		return
 	var recipe_name: String = data.recipes[recipe_id].get("name", recipe_id)
-	var prof_id: String = data.recipes[recipe_id]["profession"]
 	if result["success"]:
 		LifeStats.add(player, "items_crafted", int(result["count"]))
 	var flavor: Dictionary = CRAFT_FLAVOR.get(prof_id, CRAFT_FLAVOR["alchemist"])
@@ -2027,6 +2030,8 @@ func refine(recipe_id: String) -> void:
 		var contribution := int(result["xp"] / (1.0 if Sects.is_favored_profession(player, data, prof_id) else 2.0))
 		if Sects.add_contribution(player, data, contribution):
 			EventBus.post("Your sect promotes you to %s." % Sects.describe(player, data), "progress")
+	if not had_profession and player.professions.has(prof_id):
+		_commissions_month()
 	_pass_time(result["days"])
 
 
