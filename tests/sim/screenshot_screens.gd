@@ -37,6 +37,11 @@ extends SceneTree
 ## WU-180: append `-- --debts-shot` for the journal with two grateful NPCs, a grudge holder at hunt
 ## strength and an inheritance three months from its deadline (Debts and grudges, Opportunities).
 
+## WU-190: append `-- --encounter-shot` for the encounter window with tagged choices. No single encounter has an
+## attribute gate, a profession gate and an enemy choice, so three real ones are shot (a gate met and a gate missed in
+## each of the first two): village_field_quarrel (charisma), marsh_yin_ferryman (doctor, 5 choices, longest labels)
+## and wild_wounded_disciple (enemy choice).
+
 const OUT_DIR := "user://screenshots/screens"
 const SETTLE_FRAMES := 6
 
@@ -78,6 +83,9 @@ func _start() -> void:
 		return
 	if OS.get_cmdline_user_args().has("--void-shot"):
 		_start_void_shot(gs)
+		return
+	if OS.get_cmdline_user_args().has("--encounter-shot"):
+		_start_encounter_shot(gs)
 		return
 	if OS.get_cmdline_user_args().has("--soul-shot"):
 		_start_soul_shot(gs)
@@ -388,6 +396,27 @@ func _start_void_shot(gs: Node) -> void:
 	shots.append({"name": "void_journal_end", "open": func() -> void:
 		journal.open()
 		journal.get("_scroll").set_deferred("scroll_vertical", 100000), "close": journal.close})
+
+
+## WU-190: the encounter window on real encounters with attribute, profession and enemy choices.
+func _start_encounter_shot(gs: Node) -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 5
+	var c := CharacterFactory.create("Lin Feng", gs.data, rng, "male")
+	gs.start_session(c)
+	gs.pending_event = ""
+	c.attributes["charisma"] = 5  # misses the charisma 12 gate
+	c.realm_index = gs.data.realm_index_of("core_formation")
+	c.stage = 0
+	world = load("res://src/world/world.tscn").instantiate()
+	root.add_child(world)
+	hud = world.get_node("HUD")
+	var enc: Control = hud.get("_encounter")
+	for enc_id: String in ["village_field_quarrel", "marsh_yin_ferryman", "wild_wounded_disciple"]:
+		shots.append({"name": "encounter_" + enc_id, "open": func() -> void:
+			hud.get("_banner").visible = false
+			gs.pending_encounter = enc_id
+			enc.open(), "close": enc.close})
 
 
 ## WU-177: the final-death screen with every epilogue line present.
