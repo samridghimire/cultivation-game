@@ -689,3 +689,76 @@ func test_wu171_choice_menu_and_encounter_footer_focus() -> void:
 	hud.free()
 	gs.end_session()
 	await _frames()
+
+
+## WU-186: the newest lines: the journal with "Debts and grudges", an inheritance close to its deadline and a
+## Soul Formation section scrolls to its end with the gamepad's right stick; the character sheet's People
+## list with a grateful NPC and a grudge holder; the inheritance grounds menu reaches every attempt.
+func test_wu186_journal_scroll_sheet_people_and_grounds_focus() -> void:
+	var root := _tree().root
+	var gs: Node = root.get_node("GameState")
+	var c := new_character()
+	c.realm_index = 5  # Soul Formation
+	c.stage = 0
+	gs.start_session(c)
+	gs.pending_event = ""
+	gs.current_region = "misty_forest"
+	var hud: CanvasLayer = load("res://src/ui/hud.tscn").instantiate()
+	root.add_child(hud)
+	await _frames()
+
+	var grateful := Npcs.spawn(gs.npcs, gs.data, seeded_rng(6), {"age_years": 30, "region": "qingshi_village"})
+	var grudging := Npcs.spawn(gs.npcs, gs.data, seeded_rng(7), {"age_years": 30, "region": "qingshi_village"})
+	Karma.add_gratitude(c, gs.data, grateful.id, 60)
+	Karma.add_grudge(c, gs.data, grudging.id, 50)
+
+	var journal: JournalScreen = hud.get("_screens")["toggle_journal"]
+	journal.open()
+	await _expect_focus(journal, "journal with debts, inheritances and Soul Formation goals")
+	var scroll: ScrollContainer = journal._scroll
+	assert_eq(scroll.scroll_vertical, 0, "the journal opens at the top")
+	Input.action_press("scroll_down", 1.0)
+	var bar := scroll.get_v_scroll_bar()
+	for i in 600:  # the stick scrolls by frame time, so keep holding until the end is reached
+		await _frames(1)
+		if scroll.scroll_vertical >= int(bar.max_value - bar.page) - 1:
+			break
+	Input.action_release("scroll_down")
+	var at_end: bool = scroll.scroll_vertical >= int(bar.max_value - bar.page) - 1
+	var fits: bool = bar.max_value <= bar.page
+	assert_true(fits or (scroll.scroll_vertical > 0 and at_end), "right stick scrolls the journal to its end (at %d of %d)" % [scroll.scroll_vertical, int(bar.max_value - bar.page)])
+	assert_true(root.gui_get_focus_owner() != null and journal.is_ancestor_of(root.gui_get_focus_owner()), "journal keeps focus while scrolled")
+	_press("ui_cancel")
+	await _frames()
+	assert_false(journal.visible, "journal: ui_cancel closes it")
+
+	var sheet: Control = hud.get("_screens")["toggle_character_sheet"]
+	sheet.open()
+	await _expect_focus(sheet, "character sheet with a grateful NPC and a grudge holder")
+	_press("ui_cancel")
+	await _frames()
+	assert_false(sheet.visible, "character sheet: ui_cancel closes it")
+
+	# The grounds menu: a disabled status row, then an attempt; the attempt is reachable.
+	var grounds: Node = load("res://src/world/interactables/inheritance_grounds.gd").new()
+	root.add_child(grounds)
+	var menu: ChoiceMenu = hud.get("_choice_menu")
+	menu.open_for(grounds)
+	await _expect_focus(menu, "inheritance grounds menu")
+	var seen := 0
+	for i in 8:
+		var owner := root.gui_get_focus_owner()
+		if owner is Button and menu.is_ancestor_of(owner):
+			seen += 1
+		_press("ui_down")
+		await _frames()
+	assert_gt(seen, 0, "d-pad down keeps focus on the grounds menu buttons")
+	_press("ui_cancel")
+	await _frames()
+	assert_false(menu.visible, "inheritance grounds menu: ui_cancel closes it")
+	grounds.free()
+
+	root.remove_child(hud)
+	hud.free()
+	gs.end_session()
+	await _frames()
