@@ -145,8 +145,8 @@ static func _sell_hint(c: CharacterData, data: GameData, region_id: String) -> S
 const LETTERS_JOURNAL_MAX := 5
 ## Most "Ask <Name> for pointers" journal lines (GUIDE-012).
 const POINTER_JOURNAL_MAX := 3
-## Game days that must pass (GameClock) before "try something new" is suggested (GUIDE-007).
-const UNTRIED_MIN_DAYS := 180
+## Game days that must pass (GameClock) before "try something new" is suggested (GUIDE-007; GUIDE-041 after QA-086).
+const UNTRIED_MIN_DAYS := 60
 ## Game days before an unvisited neighbouring region is suggested (GUIDE-014).
 const UNEXPLORED_MIN_DAYS := 10
 ## Most "Unexplored:" journal lines (GUIDE-014).

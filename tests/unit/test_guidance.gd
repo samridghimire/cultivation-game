@@ -391,10 +391,11 @@ func test_untried_explore_hint_and_age_gates() -> void:
 	var c := _veteran()
 	c.life_stats["encounters"] = 0
 	assert_true(_has(Guidance.hints(c, data(), 1.0, 99, {}, {}, "", 400), "Explore the wilds"))
-	assert_false(_has(Guidance.hints(c, data(), 1.0, 99, {}, {}, "", 100), "Explore the wilds"), "too early")
+	assert_false(_has(Guidance.hints(c, data(), 1.0, 99, {}, {}, "", Guidance.UNTRIED_MIN_DAYS - 1), "Explore the wilds"), "too early")
+	assert_true(_has(Guidance.hints(c, data(), 1.0, 99, {}, {}, "", Guidance.UNTRIED_MIN_DAYS), "Explore the wilds"), "from the third month")
 	assert_false(_has(Guidance.hints(c, data(), 1.0, 99, {}, {}, "", -1), "Explore the wilds"), "no clock")
 	c.realm_index = 0
-	assert_false(_has(Guidance.hints(c, data(), 1.0, 99, {}, {}, "", 400), "Explore the wilds"), "not for Mortals")
+	assert_false(_has(Guidance.hints(c, data(), 1.0, 99, {}, {}, "", 200), "Explore the wilds"), "not for Mortals")
 
 
 func test_untried_recipe_hint() -> void:
