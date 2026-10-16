@@ -146,3 +146,11 @@ func test_far_traveller_milestone_fires_at_five_regions() -> void:
 func test_flag_count_ignores_text_flags() -> void:
 	var flags := {"errand_a_done": true, "errand_b_done": "Old Wu", "errand_c_done": 0}
 	assert_eq(Milestones.flag_count(flags, {"prefix": "errand_", "suffix": "_done"}), 1)
+
+
+func test_c110_rival_bout_milestones() -> void:
+	var c := new_character()
+	LifeStats.add(c, "rival_bouts_won")
+	var got := Milestones.newly_reached(c, data(), {})
+	assert_true(got.has("crossed_hands"), str(got))
+	assert_false(got.has("worthy_rival"), str(got))
