@@ -136,6 +136,22 @@ func test_goal_text() -> void:
 		assert_eq(HUD.goal_text(top, d, {}, null, 1.0), "Goal: " + tl[0] if not tl.is_empty() else "")
 
 
+## WU-192: the arrival banner subtitle names the region's renown title.
+func test_arrival_subtitle() -> void:
+	var d := data()
+	var c := new_character()
+	var region: String = d.start_region
+	assert_eq(HUD.arrival_subtitle(c, d, region, 1.5, "Calm", false), "Qi x1.5 · Danger: Calm")
+	assert_eq(HUD.arrival_subtitle(null, d, region, 1.0, "Calm", true), "First visit · Qi x1.0 · Danger: Calm")
+	var tiers: Array = d.renown["tiers"]
+	var t: Dictionary = tiers[1]
+	c.renown[region] = int(t["min"])
+	var sub: String = HUD.arrival_subtitle(c, d, region, 1.5, "Calm", false)
+	assert_true(sub.ends_with("Known here: " + str(t["title"])), sub)
+	sub = HUD.arrival_subtitle(c, d, region, 1.5, "Calm", true)
+	assert_true(sub.begins_with("First visit · ") and sub.ends_with("Known here: " + str(t["title"])), sub)
+
+
 ## WU-082: the hunt line, the quarry note and the bounty banner.
 func test_hunt_line_and_banner() -> void:
 	var d := data()

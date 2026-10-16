@@ -38,6 +38,7 @@ func _init() -> void:
 	box.add_child(_title)
 	_subtitle = UIStyle.label("", 20)
 	_subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_subtitle.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_subtitle.add_theme_constant_override("outline_size", 6)
 	_subtitle.add_theme_color_override("font_outline_color", Color.BLACK)
 	box.add_child(_subtitle)

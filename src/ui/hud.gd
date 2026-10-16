@@ -1051,16 +1051,26 @@ func _show_waiting_arrival() -> void:
 		_show_arrival(region_id)
 
 
+## Arrival banner subtitle (WU-192): "First visit · Qi x1.5 · Danger: Calm · Known here: Respected".
+## `c` may be null (no title).
+static func arrival_subtitle(c: CharacterData, data: GameData, region_id: String, qi: float, danger: String, first_visit: bool) -> String:
+	var sub := "Qi x%s · Danger: %s" % [String.num(qi, 2), danger]
+	if first_visit:
+		sub = "First visit · " + sub
+	var title := Renown.title(c, data, region_id) if c != null else ""
+	if title != "":
+		sub += " · Known here: " + title
+	return sub
+
+
 func _show_arrival(region_id: String) -> void:
 	var data: GameData = GameState.data
 	if data == null or not data.regions.has(region_id):
 		return
 	var qi := Exploration.qi_density(data, region_id, GameState.world_flags)
-	var sub := "Qi x%s · Danger: %s" % [String.num(qi, 2), WorldMapScreen.danger_name(data, region_id)]
-	var hold := 1.0
-	if GameState.last_arrival_first_visit:
-		sub = "First visit · " + sub
-		hold = Banner.HOLD_SECONDS * 1.5
+	var first_visit := GameState.last_arrival_first_visit
+	var sub := arrival_subtitle(GameState.player, data, region_id, qi, WorldMapScreen.danger_name(data, region_id), first_visit)
+	var hold := Banner.HOLD_SECONDS * 1.5 if first_visit else 1.0
 	_banner.announce(Exploration.region_name(data, region_id), sub, UIStyle.ACCENT, hold)
 
 
