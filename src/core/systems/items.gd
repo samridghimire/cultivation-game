@@ -387,9 +387,22 @@ static func sell(c: CharacterData, data: GameData, item_id: String, quantity: in
 	c.add_item(item_id, -quantity)
 	c.add_item("spirit_stone", price)
 	LifeStats.record_stones(c, price)
-	if material_value(data, item_id) >= 0.0:
+	if crafted_by_own_profession(c, data, item_id):
 		LifeStats.add(c, "profession_stones", price)
 	return {"ok": true, "reason": "", "stones": price}
+
+
+## True if a recipe of a profession `c` practises outputs `item_id` (YEAR-009:
+## only those sales count as craft income, not a looted sword or a resold pill
+## sold by someone without the craft).
+static func crafted_by_own_profession(c: CharacterData, data: GameData, item_id: String) -> bool:
+	for recipe: Dictionary in data.recipes.values():
+		if not c.professions.has(String(recipe.get("profession", ""))):
+			continue
+		for key in ["output", "great_output"]:
+			if String(recipe.get(key, {}).get("item", "")) == item_id:
+				return true
+	return false
 
 
 ## Returns {ok, reason, notes}.

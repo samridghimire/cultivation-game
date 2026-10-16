@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 37fd69d
+Last reviewed commit: e0dd610
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -643,3 +643,18 @@ Last reviewed commit: 37fd69d
     crafting is negative for Alchemist/Blacksmith/Beast Tamer (planner: PROF-004 / an array follow-up). C-133's
     Minor Spirit Gathering Array margin is 29 vs 28. The herb hint ignores seasons (it can say a summer herb grows here
     in winter).
+- 2026-10-16 (reviewer): reviewed 37fd69d..e0dd610 (C-134, YEAR-009, WU-200, C-135, QA-098, QA-099, WU-205, WU-204,
+  PROF-006, C-138, PROF-005, WU-206; [PLAN]/claim commits skipped). Main green (1945 tests). No BACKLOG/CHANGELOG edits
+  by workers; no SAVE_VERSION change (`profession_stones` is a life stat, defaults to 0). Nothing filed.
+  - Fixed ([REVIEW] commit): YEAR-009 counted every sale of a craftable item as craft income, so a character with no
+    profession selling a looted sword or a bought pill heard "Your craft earned N spirit stones". Items.sell now counts
+    a sale only if a recipe of a profession the seller practises makes the item (Items.crafted_by_own_profession);
+    test extended. C-138's fox-kit tamer choice says you offer a pellet from your pouch but rewarded +1 pellet; the
+    pellet reward is removed.
+  - Checked: PROF-006's rank-0 requirement says "You need to practise X" for a non-practitioner and the validator
+    accepts 0. PROF-005's STONE_VALUE only affects recipes that spend stones. C-135's pill is no_shop, its recipe scroll
+    only at the legendary auction slot. WU-205's moved Workshop/Bounty Board don't overlap neighbours. WU-206 reuses
+    GUIDE-042's _gatherable_items with the current region first.
+  - Notes, not filed: C-138 (forest snared fox kit) is close to the older mountain_lost_fox_kit (snared silver kit).
+    WU-206's "grows at" also reads for ores. The crafting screen now names gather places twice for a missing herb
+    (ingredient line and the "where" block from Items.sources).
