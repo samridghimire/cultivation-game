@@ -188,6 +188,27 @@ func test_core_formation_rival_encounters() -> void:
 		assert_eq(e.get("min_realm", ""), "core_formation", id + " min realm")
 
 
+## C-112: three Nascent Soul rival encounters, one per attitude, once-only, with a duel and a peaceful choice.
+func test_nascent_soul_rival_encounters() -> void:
+	var d := data()
+	var want := {"rival_nascent_tea": "friendly", "rival_nascent_proud_summons": "proud", "rival_nascent_bitter_ruin": "bitter"}
+	for id in want:
+		assert_true(d.encounters.has(id), id + " exists")
+		var e: Dictionary = d.encounters[id]
+		assert_eq(e.get("rival_attitude", ""), want[id], id + " attitude")
+		assert_eq(e.get("rival", ""), "any", id + " rival kind")
+		assert_eq(e.get("requires_flag", ""), "rival_met", id + " waits for the first meeting")
+		assert_true(e.has("blocked_by_flag"), id + " is once-only")
+		assert_eq(e.get("min_realm", ""), "nascent_soul", id + " min realm")
+		var duel := false
+		for choice: Dictionary in e["choices"]:
+			if bool(choice.get("fight_rival", false)):
+				duel = true
+				assert_true(int(choice.get("rival_grudge", 0)) <= 5, id + " duel grudge at most 5")
+		assert_true(duel, id + " has a fight_rival choice")
+		assert_true(e["choices"].size() >= 2, id + " has a peaceful choice")
+
+
 ## A rival duel's effects apply before the fight, so they must not pay a prize a loss would also get.
 func test_rival_duel_choices_pay_no_items() -> void:
 	for e: Dictionary in data().encounters.values():
