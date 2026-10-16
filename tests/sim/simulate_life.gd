@@ -26,6 +26,8 @@ const PILLS := {
 	"core_formation": ["core_forming_pill"],
 	"nascent_soul": ["nascent_soul_pill"],
 	"soul_formation": ["soul_formation_pill"],
+	"void_refinement": ["void_refinement_pill"],
+	"body_integration": ["body_integration_pill"],
 }
 const HEAVENLY_ELEMENTS := 1
 
