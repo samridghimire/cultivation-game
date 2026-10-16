@@ -1851,3 +1851,32 @@ func test_pill_source_goal_silent_when_a_shop_sells_it() -> void:
 	var c := _qr(6, 20)
 	assert_eq(Guidance.pill_source_goal(c, d), "")
 	assert_true(_has(Guidance.goals(c, d, {}), "Save for"))
+
+
+func _renown_rows(c: CharacterData, d: GameData) -> Array:
+	return Guidance.journal(c, d, {}, 0, "qingshi_village").filter(func(e: Dictionary) -> bool: return String(e["text"]).begins_with("Renown in "))
+
+
+func test_journal_renown_line_shows_gap_to_next_title() -> void:
+	var c := _fresh()
+	var d := data()
+	var tiers: Array = d.renown["tiers"]
+	var next: Dictionary = tiers[1]
+	var rows := _renown_rows(c, d)
+	assert_eq(rows.size(), 1)
+	var text := String(rows[0]["text"])
+	assert_true(text.contains("0 (unknown)"))
+	assert_true(text.contains("%d more for %s." % [int(next["min"]), String(next["title"])]))
+	assert_true(text.contains("Merchants there take %d percent off." % roundi((1.0 - float(next["buy_mult"])) * 100)))
+
+
+func test_journal_renown_line_at_top_tier_and_without_config() -> void:
+	var c := _fresh()
+	var d := data()
+	var tiers: Array = d.renown["tiers"]
+	c.renown["qingshi_village"] = int((tiers[tiers.size() - 1] as Dictionary)["min"])
+	var rows := _renown_rows(c, d)
+	assert_eq(rows.size(), 1)
+	assert_true(String(rows[0]["text"]).contains("the highest name there is"))
+	d.renown = {}
+	assert_eq(_renown_rows(c, d).size(), 0)

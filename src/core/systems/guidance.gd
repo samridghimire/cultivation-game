@@ -1342,6 +1342,7 @@ static func journal(c: CharacterData, data: GameData, flags: Dictionary, today: 
 		_add(out, "Letters", line, "normal")
 	for order in c.commissions:
 		_add(out, "Commissions", Commissions.describe(c, data, order, today), "warning" if Commissions.days_left(order, today) <= 7 else "normal")
+	_renown_entry(out, c, data, region_id)
 	_milestone_entries(out, c, data, flags, clan)
 	return out
 
@@ -1790,6 +1791,26 @@ static func _sect_entries(out: Array[Dictionary], c: CharacterData, data: GameDa
 			_add(out, "Sect", "Ready: %s (%s)" % [name, tail], "normal")
 		elif Sects.mission_cooldown_left(c, id) > 0 and reason.begins_with("This mission is not offered again"):
 			_add(out, "Sect", "%s: again in %d days" % [name, Sects.mission_cooldown_left(c, id)], "dim")
+
+
+## Journal line (RENOWN-006): your renown in the current region and how far the next title is.
+static func _renown_entry(out: Array[Dictionary], c: CharacterData, data: GameData, region_id: String) -> void:
+	var tiers: Array = data.renown.get("tiers", [])
+	if tiers.is_empty() or region_id == "":
+		return
+	var amount := Renown.value(c, region_id)
+	var idx := Renown.tier_index(data, amount)
+	var where := _region_name(data, region_id)
+	if idx + 1 >= tiers.size():
+		_add(out, "Milestones", "Renown in %s: %s, the highest name there is." % [where, Renown.title(c, data, region_id)], "dim")
+		return
+	var next: Dictionary = tiers[idx + 1]
+	var current := Renown.title(c, data, region_id)
+	var line := "Renown in %s: %d (%s). %d more for %s." % [where, amount, "unknown" if current == "" else current, int(next["min"]) - amount, String(next["title"])]
+	var buy := float(next.get("buy_mult", 1.0))
+	if buy < 1.0:
+		line += " Merchants there take %d percent off." % roundi((1.0 - buy) * 100)
+	_add(out, "Milestones", line, "dim")
 
 
 static func _milestone_entries(out: Array[Dictionary], c: CharacterData, data: GameData, flags: Dictionary = {}, clan: ClanData = null) -> void:
