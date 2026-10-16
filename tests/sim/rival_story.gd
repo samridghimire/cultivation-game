@@ -6,6 +6,8 @@ extends SceneTree
 ## QA-083: also the rival's attitude (Rivals.attitude: p roud / f riendly / b itter) at every 6-month
 ## checkpoint, with the share of checkpoints per attitude, and C-093's three attitude encounters met
 ## (checked monthly; the attitude is the one at the end of the month they were met).
+## QA-090: also the explore days spent in regions the bitter spoiled-herbs encounter can fire in
+## (its tags) while the rival is bitter, and how many were before it was first met.
 ## Usage: tools/godot.sh --headless --path . -s res://tests/sim/rival_story.gd -- [seeds] [months]
 
 const FirstHour := preload("res://tests/sim/first_hour.gd")
@@ -46,7 +48,21 @@ func _policy(seeds: int, months: int, curious: bool) -> void:
 	var c093_met := {}
 	for id: String in C093:
 		c093_met[id] = []
+	var bitter_days: Array = []
+	var bitter_before: Array = []
 	for s in range(1, seeds + 1):
+		var spoils_tags: Array = gs.data.encounters["rival_spoils_gathering"]["tags"]
+		var bit := [0, 0]
+		FirstHour.explore_observer = func(region: String, days: int) -> void:
+			var rv1 := Rivals.rival_of(gs.player, gs.npcs)
+			if rv1 == null or Rivals.attitude(gs.player, rv1, int(gs.npc_favor.get(rv1.id, 0)), gs.data) != "bitter":
+				return
+			for t: String in gs.data.regions[region].get("encounter_tags", []):
+				if t in spoils_tags:
+					bit[0] += days
+					if int(gs.player.encounter_counts.get("rival_spoils_gathering", 0)) == 0:
+						bit[1] += days
+					return
 		var news := [0]
 		var on_msg := func(text: String, _cat: String) -> void:
 			if text.begins_with(NEWS_PREFIX):
@@ -79,6 +95,9 @@ func _policy(seeds: int, months: int, curious: bool) -> void:
 				cells.append("%s/%s" % [_short(gs.player, gs.data), _short(rv, gs.data) if rv != null else "-"])
 		var r: Dictionary = FirstHour.play(gs, clock, s, months, curious, hook)
 		bus.message_posted.disconnect(on_msg)
+		FirstHour.explore_observer = Callable()
+		bitter_days.append(bit[0])
+		bitter_before.append(bit[1])
 		var c: CharacterData = r["player"]
 		var enc := 0
 		for id: String in c.encounter_counts:
@@ -113,6 +132,9 @@ func _policy(seeds: int, months: int, curious: bool) -> void:
 		for a: String in c093_met[id]:
 			tally[a] = int(tally.get(a, 0)) + 1
 		print("  %s: met %d (%s)" % [id, c093_met[id].size(), ", ".join(tally.keys().map(func(k: String) -> String: return "%s %d" % [k, tally[k]])) if not tally.is_empty() else "never"])
+	bitter_days.sort()
+	bitter_before.sort()
+	print("  bitter explore days in spoils regions per seed: median %s, max %s; before the encounter was met: median %s%s" % [_med(bitter_days), str(bitter_days.back()) if not bitter_days.is_empty() else "-", _med(bitter_before), " (under 5: the sim policy rarely meets the condition)" if int(_med(bitter_days)) < 5 else ""])
 	if worst > 80.0:
 		print("  FLAG: one attitude covers over 80% of checkpoints; C-093's encounters would barely show")
 	if sampled > 0 and under_year * 2 > sampled:

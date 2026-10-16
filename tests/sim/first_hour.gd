@@ -86,7 +86,10 @@ static func play(gs: Node, clock: Node, seed_value: int, months: int, curious: b
 			if done.has("style_month") and out["first_style_day"] < 0:
 				out["first_style_day"] = clock.total_days
 			_note_first_win(out, c, clock, fight)
+		var home_region: String = gs.current_region
 		gs.explore()
+		if explore_observer.is_valid():
+			explore_observer.call(home_region, 1)
 		_note_first_win(out, c, clock, fight)
 		var counts := {}
 		for i in range(mark, bus.history.size()):
@@ -171,6 +174,18 @@ static func _log_explore_fights(done: Dictionary, seen: Dictionary) -> void:
 			done["fair_log"]["taken"].append({"kind": "explore", "chance": float(seen["listed"][m["name"]]), "won": m["won"]})
 
 
+## QA-090: every sim exploration goes through here so a caller can watch it. `explore_observer`
+## (optional, `func(region_id: String, days: int)`) runs after each explore_many.
+static var explore_observer: Callable = Callable()
+
+
+static func _explore(gs: Node) -> void:
+	var region: String = gs.current_region
+	var days: int = gs.explore_many(7)
+	if explore_observer.is_valid():
+		explore_observer.call(region, days)
+
+
 ## The extra things a curious player does in one month: explore weekly, one
 ## harmless deed, one sect mission, one chat (once), deliver orders. Returns the
 ## set of action kinds done.
@@ -180,7 +195,7 @@ static func _curious_month(gs: Node, c: CharacterData, done: Dictionary, today: 
 		if not c.alive:
 			return kinds
 		var seen := _explore_watched(gs, c, today)
-		gs.explore_many(7)
+		_explore(gs)
 		_log_explore_fights(done, seen)
 		kinds["explore"] = true
 		if gs.pending_encounter != "":
@@ -353,7 +368,7 @@ static func _take_listed_bounty(gs: Node, c: CharacterData, done: Dictionary, fa
 		return
 	var start: int = today
 	while c.alive and not c.bounty.is_empty() and gs.get_node("/root/GameClock").total_days - start < 30:
-		gs.explore_many(7)
+		_explore(gs)
 		if gs.pending_encounter != "":
 			gs.choose_encounter(0)
 		if gs.pending_threat != "":
@@ -470,7 +485,7 @@ static func _everything_month(gs: Node, c: CharacterData, kinds: Dictionary, tod
 			var home: String = gs.current_region
 			gs.travel(String(routes[0]["to"]))
 			if gs.current_region != home:
-				gs.explore_many(7)
+				_explore(gs)
 				if gs.pending_encounter != "":
 					gs.choose_encounter(0)
 				if gs.pending_threat != "":
