@@ -537,6 +537,9 @@ func _start_death_shot(gs: Node) -> void:
 	for key: String in ["rival_bouts_won", "rival_bouts_lost", "regions_visited", "breakthroughs", "beasts_slain",
 			"herbs_gathered", "pills_brewed", "gifts_given", "missions_done", "fights_won"]:
 		LifeStats.add(c, key, 12)
+	# WU-198: the epilogue's fame line ("Known as <top title> in <region>"), at the top renown tier.
+	var top_tier: Dictionary = (gs.data.renown["tiers"] as Array).back()
+	Renown.add(c, gs.data, "myriad_peaks_ridge", int(top_tier["min"]))
 	var rival: CharacterData = Rivals.spawn(c, gs.npcs, gs.data, rng, "qingshi_village")
 	rival.name = "Murong Xuanming Zhaoyang"
 	gs.world_flags[Rivals.FIRST_MEETING_FLAG] = true
