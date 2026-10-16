@@ -163,6 +163,9 @@ static func year_summary(before: Dictionary, after: Dictionary, realm_before: St
 	var claimed := _delta(before, after, "inheritances_claimed")
 	if claimed > 0:
 		out.append("You claimed an inheritance." if claimed == 1 else "You claimed %d inheritances." % claimed)
+	var respawns := _delta(before, after, "respawns")
+	if respawns > 0:
+		out.append("The Creation Artifact pulled you back from death." if respawns == 1 else "The Creation Artifact pulled you back from death %d times." % respawns)
 	var won := _delta(before, after, "fights_won")
 	var lost := _delta(before, after, "fights_lost")
 	if won > 0 or lost > 0:

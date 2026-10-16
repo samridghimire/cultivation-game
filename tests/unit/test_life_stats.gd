@@ -156,3 +156,12 @@ func test_year_summary_big_moments_lead() -> void:
 func test_year_summary_big_moments_plural() -> void:
 	var lines := LifeStats.year_summary({}, {"tribulations_survived": 2, "inheritances_claimed": 3}, "A", "A")
 	assert_eq(lines, PackedStringArray(["You survived 2 Heavenly Tribulations.", "You claimed 3 inheritances."]))
+
+
+func test_year_summary_remembers_deaths() -> void:
+	assert_eq(LifeStats.year_summary({}, {"respawns": 1}, "A", "A"), PackedStringArray(["The Creation Artifact pulled you back from death."]))
+	assert_eq(LifeStats.year_summary({"respawns": 1}, {"respawns": 3}, "A", "A"), PackedStringArray(["The Creation Artifact pulled you back from death 2 times."]))
+	var lines := LifeStats.year_summary({}, {"inheritances_claimed": 1, "respawns": 1, "fights_won": 1}, "A", "A")
+	assert_eq(lines, PackedStringArray(["You claimed an inheritance.", "The Creation Artifact pulled you back from death.", "You won 1 fight and lost 0."]))
+	var full := LifeStats.year_summary({}, {"tribulations_survived": 1, "inheritances_claimed": 1, "respawns": 1, "fights_won": 1}, "A", "B")
+	assert_eq(full, PackedStringArray(["You rose from A to B.", "You survived a Heavenly Tribulation.", "You claimed an inheritance.", "The Creation Artifact pulled you back from death."]))
