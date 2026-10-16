@@ -609,3 +609,48 @@ func test_profession_answers_at_nascent_soul() -> void:
 			c.professions[prof] = {"rank": 4, "xp": 0.0}
 			assert_eq(Exploration.check_choice(c, d, choice, {}), "", "%s allowed at rank 4" % enc_id)
 		assert_true(found, "%s has a rank 4 %s choice" % [enc_id, prof])
+
+
+## C-134: first-hours encounters where a craft, an attribute or a fight each opens a choice.
+func test_early_profession_answers() -> void:
+	var d := GameData.load_from_dir()
+	var answers := {
+		"village_snapped_axle": ["blacksmith"],
+		"forest_haunted_field": ["talisman_master", "array_master"],
+		"forest_charcoal_burners_fever": ["alchemist"]}
+	for enc_id: String in answers:
+		var enc: Dictionary = d.encounters[enc_id]
+		assert_eq(enc.get("min_realm", ""), "qi_refining", enc_id + " realm")
+		assert_true(enc.has("blocked_by_flag"), enc_id + " is once-only")
+		for prof: String in answers[enc_id]:
+			var found := false
+			for choice: Dictionary in enc["choices"]:
+				if not choice.get("requires", {}).get("min_profession", {}).has(prof):
+					continue
+				found = true
+				var c := new_character()
+				assert_true(Exploration.check_choice(c, d, choice, {}).begins_with("You need to be "), "%s blocked at no %s" % [enc_id, prof])
+				c.professions[prof] = {"rank": 1, "xp": 0.0}
+				assert_eq(Exploration.check_choice(c, d, choice, {}), "", "%s allowed at rank 1" % enc_id)
+				assert_true(int(choice["effects"]["profession_xp"][prof]) in range(15, 21), "%s xp" % enc_id)
+			assert_true(found, "%s has a %s choice" % [enc_id, prof])
+
+
+func test_charcoal_burners_mix_attribute_craft_and_fight() -> void:
+	var d := GameData.load_from_dir()
+	var kinds := {}
+	for choice: Dictionary in d.encounters["forest_charcoal_burners_fever"]["choices"]:
+		var req: Dictionary = choice.get("requires", {})
+		if req.has("min_attributes"):
+			kinds["attribute"] = choice
+		if req.has("min_profession"):
+			kinds["profession"] = true
+		if choice.has("enemy"):
+			kinds["enemy"] = true
+			assert_true(d.enemies[choice["enemy"]]["realm"] == "qi_refining" and int(d.enemies[choice["enemy"]]["stage"]) <= 3, "foe is a low Qi Refining one")
+	assert_eq(kinds.size(), 3, "attribute, profession and enemy choices")
+	var c := new_character()
+	c.attributes["spirit"] = 10
+	assert_true(Exploration.check_choice(c, d, kinds["attribute"], {}).begins_with("You need "))
+	c.attributes["spirit"] = 12
+	assert_eq(Exploration.check_choice(c, d, kinds["attribute"], {}), "")
