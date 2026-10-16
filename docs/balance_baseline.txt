@@ -619,11 +619,11 @@ First Foundation breakthrough (QA-066): seed, bottleneck day, attempts [day chan
 
 Early inheritances, curious player, 10 seeds, 36 months
 Per inheritance (10 seeds): seeds that could pass every non-fight trial, median month, median rated odds of the final fight then (claiming retries the non-lethal fight until won, so the odds only decide the month the policy tries), seeds that claimed it, seeds lost to the deadline
-  fist_saint_grave       misty_forest             deadline y15 passable  5/10  month 1  odds 0%  claimed 4 (median month 13)  lost 0
-      never passable; blocking trial at the end: { "Stone of Endurance": 5 }
+  fist_saint_grave       misty_forest             deadline y15 passable  4/10  month 1  odds 0%  claimed 3 (median month 11)  lost 0
+      never passable; blocking trial at the end: { "Stone of Endurance": 6 }
   village_founder_well   qingshi_village          deadline y12 passable 10/10  month 1  odds 0%  claimed 9 (median month 13)  lost 0
-  reed_hermit_hut        withered_bone_marsh      deadline y10 passable  2/10  month 19  odds 92%  claimed 0 (median month -)  lost 0
-      never passable; blocking trial at the end: { "Silence of the Reeds": 7 }
+  reed_hermit_hut        withered_bone_marsh      deadline y10 passable  4/10  month 19  odds 92%  claimed 4 (median month 21)  lost 0
+      never passable; blocking trial at the end: { "Silence of the Reeds": 5 }
   sword_mound_traveller  fallen_star_market       deadline y12 passable  6/10  month 13  odds 38%  claimed 6 (median month 18)  lost 0
       never passable; blocking trial at the end: { "Reading the Scratches": 3 }
 

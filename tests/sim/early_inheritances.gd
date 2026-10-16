@@ -117,12 +117,39 @@ func _attempt(gs: Node, id: String, def: Dictionary) -> void:
 	var home: String = gs.current_region
 	var region := String(def["region"])
 	if home != region:
-		gs.travel(region)
+		_walk(gs, region)
 		if gs.current_region != region:
+			_walk(gs, home)
 			return
 	for i in 6:
 		if not gs.player.alive or Inheritances.check_attempt(gs.player, gs.data, id, gs.current_region, root.get_node("GameClock").total_days, gs.world_flags) != "":
 			break
 		gs.attempt_inheritance(id)
 	if gs.player.alive and gs.current_region != home:
-		gs.travel(home)
+		_walk(gs, home)
+
+
+## Travels hop by hop along the shortest open route (the marsh is two hops from the village).
+func _walk(gs: Node, target: String) -> void:
+	var prev := {gs.current_region: ""}
+	var queue: Array = [gs.current_region]
+	while not queue.is_empty() and not prev.has(target):
+		var here: String = queue.pop_front()
+		for route: Dictionary in gs.data.regions.get(here, {}).get("routes", []):
+			var to := String(route.get("to", ""))
+			if not prev.has(to) and Exploration.check_travel(gs.player, gs.data, here, to)["ok"]:
+				prev[to] = here
+				queue.append(to)
+	if not prev.has(target):
+		return
+	var path: Array = []
+	var at := target
+	while at != gs.current_region:
+		path.push_front(at)
+		at = prev[at]
+	for hop: String in path:
+		if not gs.player.alive:
+			return
+		gs.travel(hop)
+		if gs.current_region != hop:
+			return
