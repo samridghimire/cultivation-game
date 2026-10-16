@@ -162,6 +162,40 @@ func test_margin_text_reads_recipe_margin() -> void:
 	assert_eq(text.ends_with("Gathered herbs make it pay."), margin["value"] < margin["cost"])
 
 
+func test_margin_text_names_gathered_materials_for_non_herbs() -> void:
+	var d := data()
+	var checked := false
+	for recipe_id: String in d.recipes:
+		var margin := Alchemy.recipe_margin(d, recipe_id)
+		if int(margin["value"]) >= int(margin["cost"]) or not d.recipes[recipe_id]["ingredients"].has("iron_essence"):
+			continue
+		var stones := int(d.recipes[recipe_id]["ingredients"].get("spirit_stone", 0))
+		if int(margin["value"]) <= stones:
+			continue
+		assert_true(CraftingScreen.margin_text(d, recipe_id).ends_with("Gathered materials make it pay."), recipe_id)
+		checked = true
+		break
+	if not checked:
+		return # no loss-making ore recipe in the data
+
+
+func test_workshop_label_singular_recipe() -> void:
+	var gs := (Engine.get_main_loop() as SceneTree).root.get_node("GameState")
+	var c := new_character()
+	c.professions = {"alchemist": {"rank": 0, "xp": 0.0}}
+	gs.start_session(c)
+	var known := Alchemy.known_recipes(c, data(), "alchemist").size()
+	var shop: Node = load("res://src/world/interactables/workshop.gd").new()
+	var label := ""
+	for option: Dictionary in shop.get_options():
+		if option["label"].begins_with("Alchemy") or option["label"].begins_with("Alchemist") or option["label"].contains("recipe"):
+			label = option["label"]
+			break
+	shop.free()
+	assert_true(label.ends_with(", %d %s)" % [known, "recipe" if known == 1 else "recipes"]), label)
+	assert_false(label.contains("1 recipes"), label)
+
+
 func test_workshop_work_option_describes_pay() -> void:
 	var gs := (Engine.get_main_loop() as SceneTree).root.get_node("GameState")
 	var c := new_character()

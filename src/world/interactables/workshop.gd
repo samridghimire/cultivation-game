@@ -14,7 +14,7 @@ func get_options() -> Array[Dictionary]:
 	for prof_id in CRAFTS:
 		if data.professions.has(prof_id):
 			var known := Alchemy.known_recipes(c, data, prof_id).size()
-			options.append({"label": "%s (%s, %d recipes)" % [CraftingScreen.TITLES[prof_id], Professions.rank_title(c, data, prof_id), known], "action": EventBus.crafting_requested.emit.bind(prof_id)})
+			options.append({"label": "%s (%s, %d %s)" % [CraftingScreen.TITLES[prof_id], Professions.rank_title(c, data, prof_id), known, "recipe" if known == 1 else "recipes"], "action": EventBus.crafting_requested.emit.bind(prof_id)})
 	for i in c.commissions.size():
 		var reason := Commissions.check_deliver(c, data, i)
 		var label := Commissions.short_label(c, data, c.commissions[i], GameClock.total_days)

@@ -123,7 +123,16 @@ static func margin_text(data: GameData, recipe_id: String) -> String:
 	var margin := Alchemy.recipe_margin(data, recipe_id)
 	var text := "Ingredients cost about %d at shops; the output sells for about %d." % [int(margin["cost"]), int(margin["value"])]
 	if int(margin["value"]) < int(margin["cost"]):
-		text += " Gathered herbs make it pay."
+		var stones := 0
+		var all_herbs := true
+		var ingredients: Dictionary = data.recipes[recipe_id]["ingredients"]
+		for item_id in ingredients:
+			if item_id == "spirit_stone":
+				stones += int(ingredients[item_id])
+			elif not (data.items.get(item_id, {}).get("tags", []) as Array).has("herb"):
+				all_herbs = false
+		if int(margin["value"]) > stones:
+			text += " Gathered herbs make it pay." if all_herbs else " Gathered materials make it pay."
 	return text
 
 
