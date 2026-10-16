@@ -4,7 +4,8 @@ extends SceneTree
 ## and each week picks the best of: Professions.work, crafting and selling its best known recipe
 ## (materials bought and output sold at shop prices), and filling the open commission
 ## (Commissions). In the game only professions outside Workshop.CRAFTS can Work (the Doctor);
-## the five crafting professions get two rows instead (QA-097): "bought" buys every ingredient at
+## the five crafting professions get three rows instead (QA-097, "odd jobs" from QA-101 is the PROF-004
+## workshop option: Professions.work a month at a time, no crafting): "bought" buys every ingredient at
 ## the shop price, "gathered" gathers them at the best open gather place for each ingredient and
 ## counts those days as spent (ingredients no place yields are bought). Next to each profession a
 ## gatherer and a sect-mission player (fight-free missions) spend the same days. Stones are net of
@@ -46,6 +47,7 @@ func _run() -> void:
 		if CRAFTERS.has(prof_id):
 			rows.append(_average(data, prof_id, seeds, weeks, "bought"))
 			rows.append(_average(data, prof_id, seeds, weeks, "gathered"))
+			rows.append(_average(data, prof_id, seeds, weeks, "odd jobs"))
 		else:
 			rows.append(_average(data, prof_id, seeds, weeks))
 	rows.append(_average(data, "_gather", seeds, weeks))
@@ -179,8 +181,10 @@ func _craftable(c: CharacterData, data: GameData, prof_id: String) -> Array[Stri
 func _pick(c: CharacterData, data: GameData, prof_id: String, days: int) -> Dictionary:
 	var def: ProfessionDef = data.professions[prof_id]
 	var best := {"kind": "", "per_day": -1.0e9, "recipe": "", "order": -1}
-	if not CRAFTERS.has(prof_id):
+	if not CRAFTERS.has(prof_id) or _variant == "odd jobs":
 		best = {"kind": "work", "per_day": def.work_income * (Professions.rank_of(c, prof_id) + 1) / float(Calendar.DAYS_PER_MONTH), "recipe": "", "order": -1}
+	if _variant == "odd jobs":
+		return best  # PROF-004: a month of Professions.work at the workshop, no crafting
 	var stones := c.item_count("spirit_stone")
 	for recipe_id in _craftable(c, data, prof_id):
 		var recipe: Dictionary = data.recipes[recipe_id]

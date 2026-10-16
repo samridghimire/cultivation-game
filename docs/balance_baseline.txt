@@ -1112,15 +1112,20 @@ Profession income: Qi Refining, attribute 10, 3 days a week for 24 months, seeds
                              Q1    Q2    Q3    Q4    Q5    Q6    Q7  | rank  work craft  comm | per day
 Alchemist (bought)          -3.2  -0.5   0.0   0.0   0.0   0.0   0.0 |  0.4   -    -     - | -0.16
 Alchemist (gathered)         3.6   4.5   3.9   4.2   4.2   4.8   5.4 |  3.0    0%   86%   13% |  1.52
+Alchemist (odd jobs)         1.4   1.4   1.4   4.2   2.8   2.8   5.5 |  2.0  100%    0%    0% |  0.94
 Blacksmith (bought)         -3.8   0.0   0.0   0.0   0.0   0.0   0.0 |  0.2    0%    0%  100% | -0.16
 Blacksmith (gathered)        1.2   1.2   1.7   1.4   0.5   0.9   3.4 |  1.4    0%   42%   57% |  0.51
+Blacksmith (odd jobs)        1.4   1.4   1.4   4.2   2.8   2.8   5.5 |  2.0  100%    0%    0% |  0.94
 Talisman Master (bought)    -2.4   1.3   0.5   1.8   0.2   2.0   1.5 |  1.8    0%  100%    0% |  0.19
 Talisman Master (gathered)   1.4   1.4   2.6   2.0   3.7   1.9   3.2 |  3.2    0%   80%   19% |  0.82
+Talisman Master (odd jobs)   1.2   1.2   1.2   3.5   2.3   2.3   4.6 |  2.0  100%    0%    0% |  0.78
 Array Master (bought)       -4.6   0.0   0.0   0.0   0.0   0.0   0.0 |  0.0   -    -     - | -0.20
 Array Master (gathered)     -0.5   1.9   5.0   0.9   1.3   1.1   1.9 |  2.8    0%    7%   92% |  0.60
+Array Master (odd jobs)      1.6   1.6   1.6   4.8   3.2   3.2   6.5 |  1.0  100%    0%    0% |  1.10
 Doctor                       1.2   1.2   1.2   4.6   2.3   2.3   4.6 |  2.0  100%    0%    0% |  0.88
 Beast Tamer (bought)        -2.8  -1.1   0.0   0.0   0.0   0.0   0.0 |  0.8   -    -     - | -0.16
 Beast Tamer (gathered)       3.8   3.7   1.8   5.4   3.7   5.0   4.7 |  3.2    0%   71%   28% |  1.33
+Beast Tamer (odd jobs)       1.2   1.2   1.2   3.5   2.3   2.3   4.6 |  2.0  100%    0%    0% |  0.78
 (gatherer)                   6.7   6.8   7.3   7.5   5.8   6.4   6.5 |  0.0   -    -     - |  2.24
 (sect missions)             -4.1   0.6   0.6   0.6   1.8   1.8  -4.9 |  0.0   -    -     - |  0.38
 (stones a week by quarter, then the rank reached and the share of positive profession stones from work / crafting / commissions, blank when a broke crafter netted under 1 stone; per day = stones per day spent)
