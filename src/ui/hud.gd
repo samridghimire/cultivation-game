@@ -606,9 +606,12 @@ func _fit_status_panel() -> void:
 	_status_panel.reset_size()
 
 
-## "Goal: ..." line: the first unfinished first goal, then the realm goal ("" = none).
+## "Goal: ..." line: the first unfinished first goal, then the realm goal ladder's next step, then the generic goal ("" = none).
 static func goal_text(c: CharacterData, data: GameData, flags: Dictionary, clan: ClanData, density: float) -> String:
 	if Guidance.first_goals_done(c, data, flags) or c.realm_index >= 2:
+		for row in Guidance.active_goal_ladder(c, data, flags, clan):
+			if not row["done"]:
+				return "Goal: " + str(row["text"])
 		var lines := Guidance.goals(c, data, flags, clan, density)
 		return "Goal: " + lines[0] if not lines.is_empty() else ""
 	for goal in Guidance.first_goals(c, data, flags):

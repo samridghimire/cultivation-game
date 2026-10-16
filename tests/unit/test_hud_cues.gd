@@ -117,8 +117,23 @@ func test_goal_text() -> void:
 	var first: Array[Dictionary] = Guidance.first_goals(c, d, {})
 	assert_eq(HUD.goal_text(c, d, {}, null, 1.0), "Goal: " + str(first[0]["text"]))
 	c.realm_index = 2
-	var lines := Guidance.goals(c, d, {}, null, 1.0)
-	assert_eq(HUD.goal_text(c, d, {}, null, 1.0), "Goal: " + lines[0])
+	# WU-191: with a realm ladder active, the Goal line is its first unfinished row.
+	var found := false
+	for ri in range(2, d.realms.size()):
+		var cc := new_character()
+		cc.realm_index = ri
+		var ladder: Array[Dictionary] = Guidance.active_goal_ladder(cc, d, {}, null)
+		for row in ladder:
+			if not row["done"]:
+				assert_eq(HUD.goal_text(cc, d, {}, null, 1.0), "Goal: " + str(row["text"]))
+				found = true
+				break
+	assert_true(found, "some realm has an unfinished ladder row")
+	var top := new_character()
+	top.realm_index = d.realms.size() - 1
+	if Guidance.active_goal_ladder(top, d, {}, null).is_empty():
+		var tl := Guidance.goals(top, d, {}, null, 1.0)
+		assert_eq(HUD.goal_text(top, d, {}, null, 1.0), "Goal: " + tl[0] if not tl.is_empty() else "")
 
 
 ## WU-082: the hunt line, the quarry note and the bounty banner.
