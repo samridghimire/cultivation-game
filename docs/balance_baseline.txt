@@ -1135,17 +1135,17 @@ Beast Tamer (odd jobs)       1.2   1.2   1.2   3.5   2.3   2.3   4.6 |  2.0  100
 Crafter start: new Alchemist in Qingshi Village, 10 seeds, 180 days
   seed  d30  d90 d180  crafted  comm(got/del)  rank  renown  gather% craft% meditate%  stuck-wk (faded)  curious(d30/d90/d180)
      1   52   94  262       36      2/0         2       0      61%    38%        0%         0 (    0)  19/27/62
-     2   39  165  228       30      2/1         2       5      54%    26%       18%         5 (    5)  26/45/80
-     3   31  115  210       29      3/1         2       5      67%    32%        0%         0 (    0)  34/40/55
-     4   31  144  270       36      3/2         2      10      57%    42%        0%         0 (    0)  23/45/64
+     2   39  173  236       30      3/2         2      10      45%    24%       29%         8 (    8)  26/45/80
+     3   31  115  199       29      2/0         1       0      67%    32%        0%         0 (    0)  34/40/55
+     4   31  140  232       31      4/2         2      10      56%    43%        0%         0 (    0)  23/45/64
      5   63  189  294       40      3/1         2       5      64%    35%        0%         0 (    0)  23/41/67
      6   31   98  337       46      4/2         2      10      60%    39%        0%         0 (    0)  23/56/93
-     7   31  172  204       24      3/3         2      15      24%    26%       49%        13 (   13)  25/46/84
+     7   31  168  231       30      2/1         2       5      40%    33%       26%         7 (    7)  25/46/84
      8   52  178  325       47      2/0         2       0      53%    46%        0%         0 (    0)  23/33/63
      9   73  157  241       34      2/0         2       0      60%    39%        0%         0 (    0)  23/44/84
     10   31   94  157       23      2/0         1       0      66%    33%        0%         0 (    0)  21/30/69
-  medians: stones d30/d90/d180 39/157/262 (curious 23/44/69), crafted 36, commissions got 3 delivered 1, rank 2, renown 5
-  medians: days gathering 60% / crafting 38% / meditating 0%; weeks stuck (no hint, nothing to craft, nothing to deliver) median 0, max 13; of those the craft-now hint had faded (rank 2) in 100%
+  medians: stones d30/d90/d180 39/157/241 (curious 23/44/69), crafted 34, commissions got 2 delivered 1, rank 2, renown 5
+  medians: days gathering 60% / crafting 38% / meditating 0%; weeks stuck (no hint, nothing to craft, nothing to deliver) median 0, max 8; of those the craft-now hint had faded (rank 2) in 100%
 
 ## quiet stretches (seeds 1-10, 365 days)
 

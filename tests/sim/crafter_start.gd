@@ -131,7 +131,7 @@ func _act(c: CharacterData) -> String:
 		_deliver_open(c)
 		_sell_surplus(c)
 		return "craft"
-	if _gather_hinted(c):
+	if _gather_for_order(c) or _gather_hinted(c):
 		return "gather"
 	return "stuck" if Guidance.herb_here_hint(c, _gs.data, REGION) == "" else "meditate"
 
@@ -171,6 +171,30 @@ func _best_craftable(c: CharacterData) -> String:
 			best_score = score
 			best = recipe_id
 	return best
+
+
+## Follows GUIDE-052's order line: gathers here the first ingredient an open order still lacks. False if none.
+func _gather_for_order(c: CharacterData) -> bool:
+	for order in c.commissions:
+		var line := Commissions.missing_line(c, _gs.data, order, REGION, _clock.total_days)
+		if not line.begins_with("Needs "):
+			continue
+		for id: String in _gs.data.items:
+			if line.begins_with("Needs %s" % String(_gs.data.items[id].get("name", ""))) and _gather_item(c, id):
+				return true
+	return false
+
+
+## Gathers at the place in this region that yields item_id. False if there is none.
+func _gather_item(_c: CharacterData, item_id: String) -> bool:
+	for place: Dictionary in _gs.data.regions[REGION].get("places", []):
+		if String(place.get("type", "")) != "gather":
+			continue
+		for entry: Dictionary in Exploration.gather_table_for(_c, _gs.data, place.get("gather_table", [])):
+			if String(entry.get("item", "")) == item_id:
+				_gs.gather(place["gather_table"], maxi(1, int(place.get("gather_days", 1))))
+				return true
+	return false
 
 
 ## Follows the GUIDE-042 hint: gathers at the place here that yields the first short ingredient. False if there is no hint.
