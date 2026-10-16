@@ -15,6 +15,10 @@ const SPRING_DENSITY := 2.0  # Spirit Spring, see data/regions.json
 ## after each month's actions. QA-044: `no_help` makes the curious player never ask for pointers or spar.
 ## QA-076: `wait_for_pill` > 0 makes a player at the Foundation bottleneck without a pill keep earning for up to that
 ## many days (out["waited_days"]) before attempting, as long as a merchant-sold pill exists to save for.
+## QA-091: what the policy is doing now ("mission", "deed", "bounty" or "other"); the sims read it when a fight starts.
+static var fight_origin := "other"
+
+
 static func play(gs: Node, clock: Node, seed_value: int, months: int, curious: bool = false, month_hook: Callable = Callable(), no_help: bool = false, wait_for_pill: int = 0) -> Dictionary:
 	gs.rng.seed = seed_value
 	var rng := RandomNumberGenerator.new()
@@ -110,6 +114,8 @@ static func play(gs: Node, clock: Node, seed_value: int, months: int, curious: b
 	out["style_month"] = int(done.get("style_month", -1))
 	out["fair_log"] = done.get("fair_log", {"listed": [], "taken": [], "by_kind": {}})
 	out["injuries"] = c.injuries.size()
+	out["recharges"] = int(done.get("recharges", 0))
+	out["lives"] = c.artifact_lives
 	out["fights_won"] = LifeStats.get_stat(c, "fights_won")
 	out["fights_lost"] = LifeStats.get_stat(c, "fights_lost")
 	out["fights_fled"] = LifeStats.get_stat(c, "threats_fled")
@@ -271,7 +277,9 @@ static func _curious_month(gs: Node, c: CharacterData, done: Dictionary, today: 
 			for f: Dictionary in fair:
 				if String(f["text"]).begins_with(label):
 					listed_chance = float(f["chance"])
+			fight_origin = "mission"
 			gs.take_mission(mission_id)
+			fight_origin = "other"
 			if listed_chance >= 0.0:
 				done["fair_log"]["taken"].append({"kind": "mission", "chance": listed_chance, "won": LifeStats.get_stat(c, "fights_won") > won_before})
 			kinds["mission"] = true
@@ -281,7 +289,8 @@ static func _curious_month(gs: Node, c: CharacterData, done: Dictionary, today: 
 	_take_listed_deed(gs, c, done, fair, kinds, today)
 	_take_listed_bounty(gs, c, done, fair, kinds)
 	if not done.get("saving", false):
-		_recharge_with_spare_stones(gs, c)
+		if _recharge_with_spare_stones(gs, c):
+			done["recharges"] = int(done.get("recharges", 0)) + 1
 	_learn_fighting_style(gs, c, done, today)
 	if not done.has("talk") and c.alive:
 		for npc_id: String in gs.npcs:
@@ -357,7 +366,9 @@ static func _take_listed_deed(gs: Node, c: CharacterData, done: Dictionary, fair
 				if not String(f["text"]).begins_with("%s: %s" % [place.get("display_name", "Chore"), deed["name"]]) or Deeds.check(c, gs.data, deed, gs.world_flags, today) != "":
 					continue
 				var won_before := LifeStats.get_stat(c, "fights_won")
+				fight_origin = "deed"
 				gs.perform_deed(String(deed["id"]))
+				fight_origin = "other"
 				done["fair_log"]["taken"].append({"kind": "deed", "chance": float(f["chance"]), "won": LifeStats.get_stat(c, "fights_won") > won_before})
 				kinds["deed_fight"] = true
 				return
@@ -548,15 +559,18 @@ static func _mission_is_sane(gs: Node, c: CharacterData, mission_id: String, don
 		return false
 	if c.artifact_lives >= 0 and c.artifact_lives <= 1 and odds < 0.85:
 		return false  # the last life: only near-certain fights
-	return not (danger == "Dangerous" and odds < 0.5 and c.artifact_lives >= 0 and c.artifact_lives <= 2)
+	# QA-091: under 50% only while the artifact still holds 3+ lives, whatever the danger label says.
+	return not (odds < 0.5 and c.artifact_lives >= 0 and c.artifact_lives <= 2)
 
 
 ## QA-054: buys an artifact life once stones exceed twice its price.
-static func _recharge_with_spare_stones(gs: Node, c: CharacterData) -> void:
+static func _recharge_with_spare_stones(gs: Node, c: CharacterData) -> bool:
 	if not c.alive or c.artifact_lives < 0:
-		return
+		return false
 	if CreationArtifact.check_recharge(c, gs.data) == "" and c.item_count("spirit_stone") > 2 * CreationArtifact.recharge_cost(c, gs.data):
 		gs.recharge_artifact()
+		return true
+	return false
 
 
 static func _talk_to_elder_mo(gs: Node) -> void:

@@ -22,10 +22,27 @@ func _initialize() -> void:
 var _deaths: Array[Dictionary] = []
 var _last_fight := {}
 var _prefight_odds := -1.0
+var _prefight_origin := "other"
+
+
+## QA-091: per-foe tally over all seeds, plus how each fight started (the log lines just before it).
+var _foes := {}
+var _lives_bought := {}
+
+
+func _fight_origin() -> String:
+	if FirstHour.fight_origin != "other":
+		return FirstHour.fight_origin
+	var bus: Node = root.get_node("EventBus")
+	for i in range(bus.history.size() - 1, maxi(-1, bus.history.size() - 4), -1):
+		if String(bus.history[i]["text"]).to_lower().contains("bounty"):
+			return "bounty"
+	return "other"
 
 
 func _on_combat_started(enemy: Dictionary) -> void:
 	var gs: Node = root.get_node("GameState")
+	_prefight_origin = _fight_origin()
 	_prefight_odds = Combat.win_chance(gs.player, gs.data, enemy)
 
 
@@ -38,6 +55,12 @@ func _on_combat_finished(enemy_name: String, victory: bool, _log: PackedStringAr
 			break
 	# QA-055: the odds were rated before the fight (the outcome already changed the player).
 	_last_fight = {"id": String(foe.get("id", enemy_name)), "odds": _prefight_odds, "won": victory}
+	var t: Dictionary = _foes.get(_last_fight["id"], {"fights": 0, "wins": 0, "odds": 0.0, "deaths": 0, "mission": 0, "deed": 0, "bounty": 0, "other": 0})
+	t["fights"] += 1
+	t["wins"] += 1 if victory else 0
+	t["odds"] += maxf(0.0, _prefight_odds)
+	t[_prefight_origin] += 1
+	_foes[_last_fight["id"]] = t
 
 
 func _record_death(cause: String, final: bool) -> void:
@@ -49,6 +72,8 @@ func _record_death(cause: String, final: bool) -> void:
 	_deaths.append({"seed": _seed, "month": root.get_node("GameClock").total_days / 30, "cause": cause.left(110), "final": final,
 		"fight": _last_fight.duplicate(), "lives": gs.player.artifact_lives, "stones": gs.player.item_count("spirit_stone"),
 		"region": gs.current_region, "recent": recent})
+	if _last_fight.has("id") and _foes.has(_last_fight["id"]):
+		_foes[_last_fight["id"]]["deaths"] += 1
 	_last_fight = {}
 
 
@@ -168,6 +193,8 @@ func _run() -> void:
 		print("      cause: %s" % d["cause"])
 		for line: String in d["recent"]:
 			print("      | %s" % line)
+	_print_foe_table()
+	_print_lives(runs)
 	_print_foundation_breakthrough(runs)
 	quit(1 if early * 10 > maxi(seeds, 10) else 0)
 
@@ -207,3 +234,21 @@ func _print_foundation_breakthrough(runs: Array[Dictionary]) -> void:
 			if success_day >= 0:
 				stuck.append(success_day - bday)
 	print("  medians: days stuck at the bottleneck %.0f (%d seeds that succeeded), attempts %.0f, share of attempts with a pill %d%% (%d of %d), attempts under 50%%: %d of %d" % [_median(stuck.duplicate()), stuck.size(), _median(attempt_counts.duplicate()), 100 * with_pill / maxi(1, total), with_pill, total, below_half, total])
+
+
+## QA-091: per foe over all seeds: fights, wins, real win %, mean rated %, deaths, how fights started.
+func _print_foe_table() -> void:
+	print("Per foe (QA-091): fights, wins, real win %, mean rated %, deaths, started by mission/deed/bounty/other")
+	var ids: Array = _foes.keys()
+	ids.sort_custom(func(a: String, b: String) -> bool: return int(_foes[a]["deaths"]) > int(_foes[b]["deaths"]) or (int(_foes[a]["deaths"]) == int(_foes[b]["deaths"]) and int(_foes[a]["fights"]) > int(_foes[b]["fights"])))
+	for id: String in ids:
+		var t: Dictionary = _foes[id]
+		var n := maxi(1, int(t["fights"]))
+		print("  %-26s %3d fights %3d wins  real %3d%%  rated %3d%%  deaths %2d  %d/%d/%d/%d" % [id, t["fights"], t["wins"], 100 * int(t["wins"]) / n, roundi(100.0 * float(t["odds"]) / n), t["deaths"], t["mission"], t["deed"], t["bounty"], t["other"]])
+
+
+## QA-091: per seed, artifact lives bought and lives left at the end of the run.
+func _print_lives(runs: Array[Dictionary]) -> void:
+	print("Artifact lives (QA-091): seed, recharges bought, lives at the end")
+	for i in runs.size():
+		print("  seed %2d bought %d lives at end %s" % [i + 1, int(runs[i].get("recharges", 0)), str(runs[i].get("lives", "?"))])
