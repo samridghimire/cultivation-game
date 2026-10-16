@@ -4,7 +4,7 @@
   "rank_scale": 0.1,
   "outgrown_scale": 0.5,
   "growth": {"max_level": 6, "xp_per_level": 100, "realms_per_level": 0.5},
-  "food": {"spirit_beast_pellet": 25, "beast_marrow_pill": 120, "spirit_stone": 2, "spirit_herb": 6, "dew_grass": 6, "purple_cloud_mushroom": 10, "qi_condensing_grass": 15, "blood_ginseng": 60, "thousand_year_lingzhi": 160},
+  "food": {"spirit_beast_pellet": 25, "mist_bone_cake": 50, "beast_marrow_pill": 120, "spirit_stone": 2, "spirit_herb": 6, "dew_grass": 6, "purple_cloud_mushroom": 10, "qi_condensing_grass": 15, "blood_ginseng": 60, "thousand_year_lingzhi": 160},
   "tame": {"base_chance": 0.15, "chance_per_rank": 0.08, "max_chance": 0.75, "xp": 40},
   "beasts": [
     {"id": "boar", "name": "Fields Boar", "enemy": "wild_boar", "min_rank": 0, "description": "A stubborn boar that now charges at your enemies instead of you.", "bonuses": {"max_hp": 0.1}},
