@@ -531,7 +531,11 @@ static func check_choice(c: CharacterData, data: GameData, choice: Dictionary, f
 	var min_profs: Dictionary = req.get("min_profession", {})
 	for prof_id: String in min_profs:
 		var rank := int(min_profs[prof_id])
-		if data.professions.has(prof_id) and Professions.rank_of(c, prof_id) < rank:
+		if not data.professions.has(prof_id):
+			continue
+		if not c.professions.has(prof_id):
+			return "You need to practise %s for that." % data.professions[prof_id].name
+		if Professions.rank_of(c, prof_id) < rank:
 			return "You need to be %s %s for that." % [Text.a(data.profession_rank_names[clampi(rank, 0, Professions.max_rank(data))]), data.professions[prof_id].name]
 	return Effects.check(c, data, choice.get("effects", {}))
 
@@ -635,8 +639,8 @@ static func validate_choices(data: GameData) -> PackedStringArray:
 			for prof_id: String in min_profs:
 				if not data.professions.has(prof_id):
 					errors.append("Encounter '%s' choice '%s' min_profession has unknown profession '%s'" % [e["id"], label, prof_id])
-				if not (min_profs[prof_id] is int or min_profs[prof_id] is float) or int(min_profs[prof_id]) < 1 or int(min_profs[prof_id]) > Professions.max_rank(data):
-					errors.append("Encounter '%s' choice '%s' min_profession '%s' needs a rank from 1 to %d" % [e["id"], label, prof_id, Professions.max_rank(data)])
+				if not (min_profs[prof_id] is int or min_profs[prof_id] is float) or int(min_profs[prof_id]) < 0 or int(min_profs[prof_id]) > Professions.max_rank(data):
+					errors.append("Encounter '%s' choice '%s' min_profession '%s' needs a rank from 0 to %d" % [e["id"], label, prof_id, Professions.max_rank(data)])
 			if int(choice.get("days", 0)) < 0:
 				errors.append("Encounter '%s' choice '%s' needs days >= 0" % [e["id"], label])
 			if choice.has("renown"):

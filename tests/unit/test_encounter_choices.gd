@@ -315,7 +315,7 @@ func test_min_profession_requirement() -> void:
 	var d := GameData.load_from_dir()
 	var c := new_character()
 	var choice := {"label": "Treat", "requires": {"min_profession": {"doctor": 1}}}
-	assert_true(Exploration.check_choice(c, d, choice, {}).begins_with("You need to be "), "rank 0 blocked")
+	assert_true(Exploration.check_choice(c, d, choice, {}).begins_with("You need to "), "rank 0 blocked")
 	assert_true(Exploration.check_choice(c, d, choice, {}).contains("Doctor"))
 	c.professions["doctor"] = {"rank": 1, "xp": 0.0}
 	assert_eq(Exploration.check_choice(c, d, choice, {}), "")
@@ -325,10 +325,39 @@ func test_min_profession_validation() -> void:
 	var d := GameData.load_from_dir()
 	d.encounters["t_prof"] = {"id": "t_prof", "tags": ["x"], "weight": 1, "kind": "neutral", "days": 0, "text": "t", "choices": [
 		{"label": "A", "requires": {"min_profession": {"nonesuch": 1}}},
-		{"label": "B", "requires": {"min_profession": {"doctor": 0}}}]}
+		{"label": "B", "requires": {"min_profession": {"doctor": -1}}},
+		{"label": "C", "requires": {"min_profession": {"doctor": 0}}},
+		{"label": "D", "requires": {"min_profession": {"doctor": Professions.max_rank(d) + 1}}}]}
 	var errors := Exploration.validate_choices(d)
-	assert_eq(errors.size(), 2, str(errors))
-	assert_true(errors[0].contains("nonesuch") and errors[1].contains("doctor"), str(errors))
+	assert_eq(errors.size(), 3, str(errors))
+	assert_true(errors[0].contains("nonesuch") and errors[1].contains("doctor") and errors[2].contains("doctor"), str(errors))
+
+
+## PROF-006: rank 0 asks only that you practise the craft.
+func test_min_profession_rank_zero() -> void:
+	var d := GameData.load_from_dir()
+	var c := new_character()
+	var zero := {"label": "Try", "requires": {"min_profession": {"doctor": 0}}}
+	assert_true(Exploration.check_choice(c, d, zero, {}).begins_with("You need to practise Doctor"), "blocked without the craft")
+	c.professions["doctor"] = {"rank": 0, "xp": 0.0}
+	assert_eq(Exploration.check_choice(c, d, zero, {}), "")
+	var two := {"label": "Try", "requires": {"min_profession": {"doctor": 2}}}
+	c.professions["doctor"] = {"rank": 1, "xp": 0.0}
+	assert_true(Exploration.check_choice(c, d, two, {}).begins_with("You need to be "), "rank 2 still blocked at 1")
+
+
+func test_first_hours_choices_open_to_apprentice() -> void:
+	var d := GameData.load_from_dir()
+	for pair: Array in [["village_snapped_axle", "blacksmith"], ["forest_haunted_field", "talisman_master"],
+			["forest_haunted_field", "array_master"], ["forest_charcoal_burners_fever", "alchemist"]]:
+		var c := new_character()
+		c.professions[pair[1]] = {"rank": 0, "xp": 0.0}
+		var found := false
+		for choice: Dictionary in d.encounters[pair[0]]["choices"]:
+			if choice.get("requires", {}).get("min_profession", {}).has(pair[1]):
+				found = true
+				assert_eq(Exploration.check_choice(c, d, choice, {}), "", "%s open to a fresh %s" % [pair[0], pair[1]])
+		assert_true(found, "%s has a %s choice" % [pair[0], pair[1]])
 
 
 func test_choice_check_tag() -> void:
@@ -380,7 +409,7 @@ func test_profession_answers_in_the_wilds() -> void:
 				continue
 			found = true
 			var c := new_character()
-			assert_true(Exploration.check_choice(c, d, choice, {}).begins_with("You need to be "), "%s blocked at rank 0" % enc_id)
+			assert_true(Exploration.check_choice(c, d, choice, {}).begins_with("You need to "), "%s blocked at rank 0" % enc_id)
 			c.professions[prof] = {"rank": 1, "xp": 0.0}
 			assert_eq(Exploration.check_choice(c, d, choice, {}), "", "%s allowed at rank 1" % enc_id)
 		assert_true(found, "%s has a %s choice" % [enc_id, prof])
@@ -629,7 +658,7 @@ func test_early_profession_answers() -> void:
 					continue
 				found = true
 				var c := new_character()
-				assert_true(Exploration.check_choice(c, d, choice, {}).begins_with("You need to be "), "%s blocked at no %s" % [enc_id, prof])
+				assert_true(Exploration.check_choice(c, d, choice, {}).begins_with("You need to "), "%s blocked at no %s" % [enc_id, prof])
 				c.professions[prof] = {"rank": 1, "xp": 0.0}
 				assert_eq(Exploration.check_choice(c, d, choice, {}), "", "%s allowed at rank 1" % enc_id)
 				assert_true(int(choice["effects"]["profession_xp"][prof]) in range(15, 21), "%s xp" % enc_id)
