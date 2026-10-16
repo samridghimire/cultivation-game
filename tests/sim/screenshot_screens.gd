@@ -19,6 +19,9 @@ extends SceneTree
 ## WU-163: append `-- --late-realms` for the journal and character sheet of a Foundation Establishment Peak
 ## and a Core Formation Early character (Foundation / Core Formation goals, tribulation line, strongest foe).
 
+## WU-177: append `-- --death-shot` for the final-death screen of a veteran with a clan, children, a met
+## rival with a bout record and a long life record (the epilogue at its longest).
+
 const OUT_DIR := "user://screenshots/screens"
 const SETTLE_FRAMES := 6
 
@@ -42,6 +45,9 @@ func _start() -> void:
 		return
 	if OS.get_cmdline_user_args().has("--win-shots"):
 		_start_win_shots(gs)
+		return
+	if OS.get_cmdline_user_args().has("--death-shot"):
+		_start_death_shot(gs)
 		return
 	if OS.get_cmdline_user_args().has("--late-realms"):
 		_start_late_realms(gs)
@@ -261,6 +267,39 @@ func _start_late_realms(gs: Node) -> void:
 			setup.call()
 			sheet.open()
 			sheet.get("_scroll").set_deferred("scroll_vertical", 100000), "close": sheet.close})
+
+
+## WU-177: the final-death screen with every epilogue line present.
+func _start_death_shot(gs: Node) -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 5
+	var c := CharacterFactory.create("Lin Feng", gs.data, rng, "male")
+	gs.start_session(c)
+	gs.pending_event = ""
+	c.realm_index = gs.data.realm_index_of("core_formation")
+	c.age_days = 300 * Calendar.DAYS_PER_YEAR
+	gs.join_sect("azure_cloud_sect")
+	for i in 3:
+		c.children.append("child_%d" % i)
+	gs.clan = ClanData.new()
+	gs.clan.name = "Lin Clan of the Azure Mountain"
+	for i in 6:
+		gs.clan.members["m%d" % i] = {}
+	for key: String in ["rival_bouts_won", "rival_bouts_lost", "regions_visited", "breakthroughs", "beasts_slain",
+			"herbs_gathered", "pills_brewed", "gifts_given", "missions_done", "fights_won"]:
+		LifeStats.add(c, key, 12)
+	var rival: CharacterData = Rivals.spawn(c, gs.npcs, gs.data, rng, "qingshi_village")
+	rival.name = "Murong Xuanming Zhaoyang"
+	gs.world_flags[Rivals.FIRST_MEETING_FLAG] = true
+	gs.world_flags[Rivals.BOUTS_WON_FLAG] = 7
+	gs.world_flags[Rivals.BOUTS_LOST_FLAG] = 11
+	world = load("res://src/world/world.tscn").instantiate()
+	root.add_child(world)
+	hud = world.get_node("HUD")
+	shots.append({"name": "death_final", "open": func() -> void:
+		hud.get("_banner").visible = false
+		hud._on_player_died("Struck down by a heavenly tribulation lightning bolt while attempting to break through."), "close": func() -> void:
+		hud.get("_death_screen").visible = false})
 
 
 ## WU-127: the fighting-style surfaces for a fresh character, then for one who has just learned Iron Fist.
