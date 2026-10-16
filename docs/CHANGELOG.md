@@ -2,6 +2,19 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-16 [YEAR-006] The year in review says when the Creation Artifact pulled you back from death.
+- 2026-10-16 [C-117] Three Nascent Soul encounters where you can give up a fruit or spirit stones for a Dao insight, practice or renown.
+- 2026-10-16 [SOUL-002] The Soul Formation goal asks you to claim a Soul Formation inheritance, instead of a goal already done on arrival.
+- 2026-10-16 [C-103] At Core Formation a rank-3 beast tamer, alchemist or doctor can answer three encounters in their own way.
+- 2026-10-16 [WU-183] Checked: the character sheet's debts, grudges and rival lines fit at 1280x800 and 1280x720.
+- 2026-10-16 [QA-092] The curious balance sim now travels while its rival is bitter, so the "spoiled herbs" rival encounter is measured.
+- 2026-10-16 [INH-004] Inheritances use one wording for their deadline everywhere ("3 months left before rivals arrive").
+- 2026-10-16 [RENOWN-004] Encounter choices can make your name known in a region.
+- 2026-10-16 [C-116] Help page "Debts and Grudges".
+- 2026-10-16 [WU-185] The death screen is honest about bad luck: losing a fight you were favoured to win no longer tells you to grow stronger.
+- 2026-10-16 [C-118] [C-119] Void Refinement has foes and encounters: six new enemies, six fights, three moral choices and a Dao fortune.
+- 2026-10-16 [WU-182] Checked: a year in review with four long lines fits on screen.
+- 2026-10-16 [QA-084] Measured what renowned requests pay against a week of gathering, profession work and sect missions.
 - 2026-10-16 [GUIDE-037] The sheet and the journal follow one rule for naming the region your rival is in.
 - 2026-10-16 [C-106] Three Core Formation encounters where you can give something up (a salve, stones, a lotus seed) for a lasting gain.
 - 2026-10-16 [YEAR-005] The year in review leads with a survived Heavenly Tribulation or a claimed inheritance.

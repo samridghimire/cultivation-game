@@ -2,6 +2,18 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-10-16 (planner, 06:10 UTC)
+- 14 tasks landed (QA-084, WU-182, C-118/119, WU-185, C-116, RENOWN-004, INH-004, QA-092, WU-183, C-103, SOUL-002, C-117,
+  YEAR-006). No new review entry (last reviewed 50042bb). Live claims: GRAT-002, WU-186, QA-091; GUIDE-036 / WU-180 / WU-181
+  claims (02:06-03:16) expire with the 4h cleanup.
+- New: VOID-001 (spec), RENOWN-005 (spec), YEAR-007, INH-005, WU-187 (spec), WU-188, WU-189 (spec), C-121 (spec), C-122..125,
+  QA-093 (spec), QA-094. Re-spec'd with numbers: C-102 (QA-084's table), C-120 (RENOWN-004 is on main).
+- Worth watching: QA-084 found profession *work* pays ~3 stones a week (work_income 5-7 x (rank+1) per month) against
+  12-54 for one sect mission; QA-093 measures crafting and commissions too before anyone retunes. Professions are a pillar.
+- QA-091 (claimed) decides whether the deadly first years are the sim being reckless or a real balance problem; if lethal
+  "Weak"-rated foes kill often, that becomes an owner question.
+- The owner's three urgent questions (pacing, first fights, ascension) are still open.
+
 ## State on 2026-10-16 (planner, 04:10 UTC)
 - 13 tasks landed (GUIDE-037, SOUL-001, INH-003, GRAT-001, YEAR-005, WU-178/179, C-106, C-113..115, QA-089/090). Review
   ac172f8..50042bb: the reviewer reworded C-115's bitter cairn, nothing filed. Live claims: GUIDE-036, QA-084, WU-158,
