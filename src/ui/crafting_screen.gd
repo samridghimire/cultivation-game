@@ -101,14 +101,14 @@ func close() -> void:
 
 ## "2 / 3 Spirit Grass" style lines, one per ingredient, plus whether all are held.
 ## A missing ingredient that grows somewhere gets " - grows at <place>" (WU-206);
-## `region_id` makes the current region's place win.
-static func ingredient_lines(c: CharacterData, data: GameData, recipe_id: String, region_id: String = "") -> PackedStringArray:
+## `region_id` makes the current region's place win; `today` (>= 0) respects seasons (GUIDE-048).
+static func ingredient_lines(c: CharacterData, data: GameData, recipe_id: String, region_id: String = "", today: int = -1) -> PackedStringArray:
 	var lines: PackedStringArray = []
 	var ingredients: Dictionary = data.recipes[recipe_id]["ingredients"]
 	for item_id in ingredients:
 		var line := "%d / %d %s" % [c.item_count(item_id), int(ingredients[item_id]), data.items[item_id].get("name", item_id)]
 		if c.item_count(item_id) < int(ingredients[item_id]):
-			var place := Guidance.herb_place(c, data, item_id, region_id)
+			var place := Guidance.herb_place(c, data, item_id, region_id, today)
 			if place != "":
 				line += " - grows at " + place
 		lines.append(line)
@@ -221,7 +221,7 @@ func _show_details() -> void:
 	var min_rank := int(recipe.get("min_rank", 0))
 	var prof: ProfessionDef = data.professions[recipe["profession"]]
 	_info.text = "Requires %s %s  |  takes %s" % [data.profession_rank_names[min_rank], prof.name, Calendar.format_duration(int(recipe["days"]))]
-	_ingredients.text = "Ingredients:\n  " + "\n  ".join(ingredient_lines(p, data, _selected, GameState.current_region)) + "\n" + margin_text(data, _selected)
+	_ingredients.text = "Ingredients:\n  " + "\n  ".join(ingredient_lines(p, data, _selected, GameState.current_region, GameClock.total_days)) + "\n" + margin_text(data, _selected)
 	_where.text = missing_sources_text(p, data, _selected)
 	_where.visible = _where.text != ""
 	var out := "Yields: %s" % output_text(data, recipe["output"])

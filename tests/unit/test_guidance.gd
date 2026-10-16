@@ -1982,3 +1982,39 @@ func test_pill_source_goal_for_void_refinement_player() -> void:
 	c.stage = data().realms[6].stage_count() - 3
 	assert_eq(data().realms[7].id, "body_integration")
 	assert_eq(Guidance.pill_source_goal(c, data()), "Find an alchemist to brew a Body-Void Union Pill for Body Integration.")
+
+
+func _village_gather_place() -> Dictionary:
+	for p: Dictionary in data().regions["qingshi_village"]["places"]:
+		if String(p.get("type", "")) == "gather":
+			return p
+	return {}
+
+
+func test_herb_hint_respects_the_season() -> void:
+	var c := _crafter()
+	c.professions["alchemist"] = {"rank": 0, "xp": 0.0}
+	c.inventory = {}
+	var place := _village_gather_place()
+	var saved: Array = place["gather_table"]
+	place["gather_table"] = [{"item": "spirit_herb", "weight": 3, "min": 2, "max": 3, "seasons": ["spring"]}]
+	var spring := Guidance.herb_here_hint(c, data(), "qingshi_village", 10)
+	var winter := Guidance.herb_here_hint(c, data(), "qingshi_village", 280)
+	var any := Guidance.herb_here_hint(c, data(), "qingshi_village")
+	place["gather_table"] = saved
+	assert_true(spring.contains(String(place["display_name"])), "spring: " + spring)
+	assert_false(winter.contains(String(place["display_name"])), "winter: " + winter)
+	assert_true(any.contains(String(place["display_name"])), "no day: today's behaviour")
+
+
+func test_herb_place_names_region_and_season() -> void:
+	var c := _crafter()
+	var marsh := String(data().regions["withered_bone_marsh"]["name"])
+	var autumn := Guidance.herb_place(c, data(), "autumn_bog_lily", "qingshi_village", 200)
+	assert_true(autumn.ends_with(" in " + marsh), autumn)
+	assert_false(autumn.contains("(in "), autumn)
+	var winter := Guidance.herb_place(c, data(), "autumn_bog_lily", "qingshi_village", 280)
+	assert_true(winter.ends_with(" in %s (in Autumn)" % marsh), winter)
+	assert_eq(Guidance.herb_place(c, data(), "autumn_bog_lily", "qingshi_village"), autumn, "no day = any season")
+	var here := Guidance.herb_place(c, data(), "dew_grass", "qingshi_village", 280)
+	assert_false(here.contains(" in "), "own region has no suffix: " + here)

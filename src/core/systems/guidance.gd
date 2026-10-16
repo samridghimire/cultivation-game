@@ -49,7 +49,7 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 	var untried := _untried_hint(c, data, today, people, favor, region_id)
 	if untried != "":
 		out.append(untried)
-	var herb := herb_here_hint(c, data, region_id)
+	var herb := herb_here_hint(c, data, region_id, today)
 	if herb != "" and not out.has(herb):
 		out.append(herb)
 	var bitter := _bitter_rival_hint(c, data, people, flags, favor)
@@ -241,25 +241,27 @@ static func craftable_now(c: CharacterData, data: GameData) -> PackedStringArray
 ## offers. When nothing here does, the same look at the regions a short walk away
 ## (GUIDE-046, data order). Any realm and day (a crafter can start as a Mortal).
 ## "" otherwise, and once the craft-now hint has faded (CRAFT_HINT_MAX_CRAFTS).
-static func herb_here_hint(c: CharacterData, data: GameData, region_id: String) -> String:
+## `today >= 0` skips herbs that are out of season that day (GUIDE-048).
+static func herb_here_hint(c: CharacterData, data: GameData, region_id: String, today: int = -1) -> String:
 	if region_id == "" or LifeStats.get_stat(c, "items_crafted") >= CRAFT_HINT_MAX_CRAFTS:
 		return ""
 	if not craftable_now(c, data).is_empty():
 		return ""
-	var text := _herb_hint_in(c, data, region_id, false)
+	var season := Calendar.season_of(today) if today >= 0 else ""
+	var text := _herb_hint_in(c, data, region_id, false, season)
 	if text != "":
 		return text
 	for other: String in data.regions:
 		if other != region_id and Exploration.is_nearby(data, region_id, other):
-			text = _herb_hint_in(c, data, other, true)
+			text = _herb_hint_in(c, data, other, true, season)
 			if text != "":
 				return text
 	return ""
 
 
 ## The herb hint for the gather places of `grow_region`; `away` adds where it is.
-static func _herb_hint_in(c: CharacterData, data: GameData, grow_region: String, away: bool) -> String:
-	var here := _gatherable_items(c, data, grow_region)
+static func _herb_hint_in(c: CharacterData, data: GameData, grow_region: String, away: bool, season: String = "") -> String:
+	var here := _gatherable_items(c, data, grow_region, season)
 	if here.is_empty():
 		return ""
 	for recipe_id: String in data.recipes:
@@ -286,32 +288,56 @@ static func _herb_hint_in(c: CharacterData, data: GameData, grow_region: String,
 
 
 ## {item_id: place display_name} for what the gather places of `region_id` can yield
-## for `c` (any season; the first place in data order wins).
-static func _gatherable_items(c: CharacterData, data: GameData, region_id: String) -> Dictionary:
+## for `c` (the first place in data order wins). `season` ("" = any) skips entries
+## that do not grow in it.
+static func _gatherable_items(c: CharacterData, data: GameData, region_id: String, season: String = "") -> Dictionary:
 	var out := {}
 	for place: Dictionary in data.regions.get(region_id, {}).get("places", []):
 		if String(place.get("type", "")) != "gather":
 			continue
 		for entry: Dictionary in Exploration.gather_table_for(c, data, place.get("gather_table", [])):
 			var item_id := String(entry.get("item", ""))
-			if item_id != "" and not out.has(item_id):
+			if item_id != "" and not out.has(item_id) and Exploration.in_season(entry, season):
 				out[item_id] = String(place.get("display_name", "a gather site"))
 	return out
 
 
 ## Where `item_id` can be gathered (WU-206): the display name of the first gather
-## place offering it, the current region first, then the rest in data order.
+## place offering it, the current region first, then the rest in data order; a place
+## in another region reads "<place> in <Region>". With `today >= 0` in-season places
+## win; one that only grows it out of season reads "<place> (in <Season>)" (GUIDE-048).
 ## "" if no gather place yields it for `c`.
-static func herb_place(c: CharacterData, data: GameData, item_id: String, region_id: String) -> String:
+static func herb_place(c: CharacterData, data: GameData, item_id: String, region_id: String, today: int = -1) -> String:
 	var order: Array = []
 	if region_id != "":
 		order.append(region_id)
 	order.append_array(data.regions.keys())
+	var season := Calendar.season_of(today) if today >= 0 else ""
 	for rid: String in order:
-		var here := _gatherable_items(c, data, rid)
+		var here := _gatherable_items(c, data, rid, season)
 		if here.has(item_id):
-			return String(here[item_id])
+			return _place_in(data, String(here[item_id]), rid, region_id, "")
+	if season == "":
+		return ""
+	for rid: String in order:
+		for place: Dictionary in data.regions.get(rid, {}).get("places", []):
+			if String(place.get("type", "")) != "gather":
+				continue
+			for entry: Dictionary in Exploration.gather_table_for(c, data, place.get("gather_table", [])):
+				if String(entry.get("item", "")) == item_id:
+					var seasons: Array = entry.get("seasons", [])
+					var when := String(seasons[0]).capitalize() if not seasons.is_empty() else ""
+					return _place_in(data, String(place.get("display_name", "a gather site")), rid, region_id, when)
 	return ""
+
+
+static func _place_in(data: GameData, place: String, rid: String, region_id: String, when: String) -> String:
+	var text := place
+	if rid != region_id:
+		text += " in " + _region_name(data, rid)
+	if when != "":
+		text += " (in %s)" % when
+	return text
 
 
 ## "<Workshop> in <Region>": the current region's first workshop, else the first

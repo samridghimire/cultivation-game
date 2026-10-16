@@ -207,3 +207,10 @@ func test_work_profession_pays_the_preview_for_a_craft() -> void:
 	gs.work_profession("alchemist", 30)
 	assert_eq(p.item_count("spirit_stone") - stones, int(pay["income"]))
 	assert_true(absf(Professions.xp_of(p, "alchemist") - xp - float(pay["xp"])) < 0.01)
+func test_ingredient_lines_respect_the_season() -> void:
+	var c := new_character()
+	c.inventory = {}
+	var winter := CraftingScreen.ingredient_lines(c, data(), "bog_lily_qi_pill", "qingshi_village", 280)
+	assert_true(winter[0].ends_with("(in Autumn)"), winter[0])
+	var autumn := CraftingScreen.ingredient_lines(c, data(), "bog_lily_qi_pill", "qingshi_village", 200)
+	assert_false(autumn[0].contains("(in Autumn)"), autumn[0])
