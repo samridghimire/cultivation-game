@@ -1208,3 +1208,17 @@ Qi Refining layer 3:
   iron_back_boar         rated   0% (Deadly   ) real   0%
 Rows off by more than 15 points: 0
 
+## profession income (Qi Refining, seeds 1-5, 24 months)
+
+Profession income: Qi Refining, attribute 10, 3 days a week for 24 months, seeds 1-5
+                   Q1    Q2    Q3    Q4    Q5    Q6    Q7  | rank  work craft  comm | per day
+Alchemist          0.5   0.5   0.5   1.4   0.9   0.9   1.8 |  2.0  100%    0%    0% |  0.31
+Blacksmith         0.5   0.5   0.5   1.4   0.9   0.9   1.8 |  2.0  100%    0%    0% |  0.31
+Talisman Master    0.4   0.4   0.4   1.2   0.8   0.8   1.5 |  2.0  100%    0%    0% |  0.26
+Array Master       0.5   0.5   0.5   1.6   1.1   1.1   2.2 |  1.0  100%    0%    0% |  0.37
+Doctor             0.4   0.4   0.4   1.5   0.8   0.8   1.5 |  2.0  100%    0%    0% |  0.29
+Beast Tamer        0.4   0.4   0.4   1.2   0.8   0.8   1.5 |  2.0  100%    0%    0% |  0.26
+(gatherer)         6.7   6.8   7.3   7.5   5.8   6.4   6.5 |  0.0   -    -     - |  2.24
+(sect missions)   -4.1   0.6   0.6   0.6   1.8   1.8  -4.9 |  0.0   -    -     - |  0.38
+(stones a week by quarter, then the rank reached and the share of profession stones from work / crafting / commissions; per day = stones per day spent)
+
