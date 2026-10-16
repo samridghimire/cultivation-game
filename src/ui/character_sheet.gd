@@ -138,7 +138,7 @@ func _rebuild() -> void:
 	var rank_line := SectFactions.rank_line(p, GameState.sect_standings())
 	if rank_line != "":
 		t += rank_line + "\n\n"
-	var rival_line := rival_line(p, data, GameState.npcs, GameState.npc_favor, GameState.world_flags)
+	var rival_line := rival_line(p, data, GameState.npcs, GameState.npc_favor, GameState.world_flags, GameState.current_region)
 	if rival_line != "":
 		t += "[color=#%s]Rival[/color]\n  %s\n\n" % [accent, rival_line]
 	_gender_row.visible = p.gender == ""
@@ -289,7 +289,7 @@ static func next_steps_text(hints: PackedStringArray, journal_key: String) -> St
 	return t
 
 
-static func rival_line(c: CharacterData, data: GameData, people: Dictionary, favor: Dictionary, flags: Dictionary = {}) -> String:
+static func rival_line(c: CharacterData, data: GameData, people: Dictionary, favor: Dictionary, flags: Dictionary = {}, region_id: String = "") -> String:
 	if not flags.get(Rivals.FIRST_MEETING_FLAG, false) or c.rival == "" or not people.has(c.rival):
 		return ""
 	var r: CharacterData = people[c.rival]
@@ -299,7 +299,11 @@ static func rival_line(c: CharacterData, data: GameData, people: Dictionary, fav
 	var feeling := Rivals.attitude_text(Rivals.attitude(c, r, int(favor.get(r.id, 0)), data))
 	if feeling != "":
 		relation += "; " + feeling
-	var line := "%s, %s (%s)" % [r.name, Cultivation.realm_label(r, data), relation]
+	var where := ""  # WU-174: name the region only when the rival is elsewhere
+	var rival_region := Npcs.region_of(r, data)
+	if rival_region != "" and rival_region != region_id:
+		where = ", in " + Exploration.region_name(data, rival_region)
+	var line := "%s, %s%s (%s)" % [r.name, Cultivation.realm_label(r, data), where, relation]
 	var grudge := Karma.grudge(c, r.id)
 	if grudge != 0:
 		line += ", grudge %d" % grudge

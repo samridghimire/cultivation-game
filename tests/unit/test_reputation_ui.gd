@@ -123,3 +123,16 @@ func test_people_lines_open_request() -> void:
 	assert_false(CharacterSheet.people_lines(gs.player, gs.data, gs.npcs, favor, 6, {}, 41)[0].contains("asked for"), "expired")
 	assert_false(CharacterSheet.people_lines(gs.player, gs.data, gs.npcs, favor)[0].contains("asked for"), "no date given")
 	gs.end_session()
+
+
+func test_sheet_rival_line_names_other_region() -> void:
+	var gs: Node = _root().get_node("GameState")
+	gs.start_session(CharacterFactory.create("Foe", gs.data, seeded_rng()))
+	var rival: CharacterData = gs.npcs[gs.player.rival]
+	rival.home_region = "misty_forest"
+	var flags := {Rivals.FIRST_MEETING_FLAG: true}
+	var there := CharacterSheet.rival_line(gs.player, gs.data, gs.npcs, {}, flags, "qingshi_village")
+	assert_true(there.contains(", in %s" % Exploration.region_name(gs.data, "misty_forest")), there)
+	assert_false(CharacterSheet.rival_line(gs.player, gs.data, gs.npcs, {}, flags, "misty_forest").contains(", in "), "same region")
+	assert_true(CharacterSheet.rival_line(gs.player, gs.data, gs.npcs, {}, flags).contains(", in "), "default param: region shown")
+	gs.end_session()
