@@ -25,6 +25,9 @@ extends SceneTree
 ## WU-182: append `-- --year-shot` for the year-in-review banner with four long lines (realm change,
 ## tribulation, inheritance, rival bouts).
 
+## WU-184: append `-- --soul-shot` for a Soul Formation Early player: the journal's Soul Formation goals
+## (with the Starfire Body row) and the HUD goal ladder.
+
 const OUT_DIR := "user://screenshots/screens"
 const SETTLE_FRAMES := 6
 
@@ -57,6 +60,9 @@ func _start() -> void:
 		return
 	if OS.get_cmdline_user_args().has("--late-realms"):
 		_start_late_realms(gs)
+		return
+	if OS.get_cmdline_user_args().has("--soul-shot"):
+		_start_soul_shot(gs)
 		return
 	if OS.get_cmdline_user_args().has("--breakthrough-shots"):
 		_start_breakthrough_shots(gs)
@@ -285,6 +291,30 @@ func _start_late_realms(gs: Node) -> void:
 			setup.call()
 			sheet.open()
 			sheet.get("_scroll").set_deferred("scroll_vertical", 100000), "close": sheet.close})
+
+
+## WU-184: a Soul Formation Early player, journal and HUD.
+func _start_soul_shot(gs: Node) -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 5
+	var c := CharacterFactory.create("Lin Feng", gs.data, rng, "male")
+	gs.start_session(c)
+	gs.pending_event = ""
+	c.age_days = 120 * Calendar.DAYS_PER_YEAR
+	c.realm_index = gs.data.realm_index_of("soul_formation")
+	c.stage = 0
+	c.qi = gs.data.realms[c.realm_index].qi_required(0)
+	for realm_id: String in ["foundation_establishment", "core_formation", "nascent_soul"]:
+		gs.world_flags[Guidance.beat_realm_flag(realm_id)] = true
+	world = load("res://src/world/world.tscn").instantiate()
+	root.add_child(world)
+	hud = world.get_node("HUD")
+	var journal: Control = hud.get("_screens")["toggle_journal"]
+	shots.append({"name": "soul_hud", "open": func() -> void: hud.get("_banner").visible = false, "close": func() -> void: pass})
+	shots.append({"name": "soul_journal", "open": func() -> void: journal.open(), "close": journal.close})
+	shots.append({"name": "soul_journal_end", "open": func() -> void:
+		journal.open()
+		journal.get("_scroll").set_deferred("scroll_vertical", 100000), "close": journal.close})
 
 
 ## WU-177: the final-death screen with every epilogue line present.
