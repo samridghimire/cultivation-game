@@ -69,3 +69,21 @@ func test_breakthrough_pill_round_trips() -> void:
 	var d := c.to_dict()
 	d.erase("breakthrough_pill")
 	assert_eq(CharacterData.from_dict(d).breakthrough_pill, "")
+
+
+func test_void_piercing_pill_only_for_soul_formation() -> void:
+	var c := new_character()
+	c.add_item("void_refinement_pill", 1)
+	c.realm_index = data().realm_index_of("nascent_soul")
+	assert_false(_use(c, "void_refinement_pill")["ok"])
+	c.realm_index = data().realm_index_of("soul_formation")
+	assert_true(_use(c, "void_refinement_pill")["ok"])
+	assert_almost_eq(c.breakthrough_bonus, 0.25)
+
+
+func test_void_piercing_pill_is_brewable_and_flawless_is_better() -> void:
+	var r: Dictionary = data().recipes["void_refinement_pill"]
+	assert_eq(String(r["great_output"]["item"]), "flawless_void_refinement_pill")
+	assert_eq(int(r["min_rank"]), Professions.max_rank(data()))
+	assert_true(data().items["flawless_void_refinement_pill"]["effects"]["breakthrough_bonus"] > data().items["void_refinement_pill"]["effects"]["breakthrough_bonus"])
+	assert_true(data().inheritances["door_ajar_folder"]["reward"]["items"].has("recipe_void_refinement_pill"))

@@ -1826,6 +1826,8 @@ func _void_pill_player(d: GameData) -> CharacterData:
 	var c := _qr(0, 0)
 	c.realm_index = 5
 	c.stage = d.realms[5].stage_count() - 3
+	d.recipes.erase("void_refinement_pill")  # C-127's real pill would be the source; these tests inject their own
+	d.items.erase("void_refinement_pill")
 	d.items["void_pill"] = {"id": "void_pill", "name": "Void Pill", "price": 9000, "tags": ["no_shop"], "effects": {"breakthrough_realm": "void_refinement", "breakthrough_bonus": 0.2}}
 	return c
 
@@ -1880,3 +1882,11 @@ func test_journal_renown_line_at_top_tier_and_without_config() -> void:
 	assert_true(String(rows[0]["text"]).contains("the highest name there is"))
 	d.renown = {}
 	assert_eq(_renown_rows(c, d).size(), 0)
+
+## C-127: a late Soul Formation player gets a goal for the real Void Piercing Pill (shops stock it like the other realm pills).
+func test_pill_goal_names_void_piercing_pill() -> void:
+	var d := GameData.load_from_dir()
+	var c := _qr(0, 0)
+	c.realm_index = 5
+	c.stage = d.realms[5].stage_count() - 3
+	assert_true(Guidance.pill_saving_goal(c, d).begins_with("Save for a Void Piercing Pill"), Guidance.pill_saving_goal(c, d))
