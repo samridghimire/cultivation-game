@@ -10,7 +10,11 @@ extends SceneTree
 ## counts those days as spent (ingredients no place yields are bought). Next to each profession a
 ## gatherer and a sect-mission player (fight-free missions) spend the same days. Stones are net of
 ## what the player buys.
-## Usage: tools/godot.sh --headless --path . -s res://tests/sim/profession_income.gd -- [seeds] [months]
+## Usage: tools/godot.sh --headless --path . -s res://tests/sim/profession_income.gd -- [seeds] [months] [--breakdown]
+## --breakdown (QA-105) adds, for each crafter's "gathered" run, per month: days spent gathering / crafting, units
+## gathered, units the crafts used, stones from selling crafted goods, what those gathered units would
+## have fetched sold raw (Items.sell_price, half price), and the crafted sale price against its uncapped
+## half-price value (the sell cap).
 
 const WORK_DAYS := 3
 const WEEK := 7
@@ -29,6 +33,8 @@ var _banked_work := 0
 ## "bought" or "gathered" while a crafter is simulated, "" otherwise.
 var _variant := ""
 var _rates := {}
+## QA-105 breakdown counters for the run in progress (see _print_breakdown).
+var _stats := {}
 
 
 func _initialize() -> void:
@@ -37,8 +43,13 @@ func _initialize() -> void:
 
 func _run() -> void:
 	var args := OS.get_cmdline_user_args()
-	var seeds := int(args[0]) if args.size() > 0 else 5
-	var months := int(args[1]) if args.size() > 1 else 24
+	var breakdown := args.has("--breakdown")
+	var nums: Array[String] = []
+	for a in args:
+		if not a.begins_with("--"):
+			nums.append(a)
+	var seeds := int(nums[0]) if nums.size() > 0 else 5
+	var months := int(nums[1]) if nums.size() > 1 else 24
 	var data := GameData.load_from_dir()
 	print("Profession income: Qi Refining, attribute 10, %d days a week for %d months, seeds 1-%d" % [WORK_DAYS, months, seeds])
 	var weeks := months * Calendar.DAYS_PER_MONTH / WEEK
@@ -64,7 +75,26 @@ func _run() -> void:
 			share = "%4d%% %4d%% %4d%%" % [100 * maxf(0.0, float(row["work"])) / total, 100 * maxf(0.0, float(row["craft"])) / total, 100 * maxf(0.0, float(row["commission"])) / total]
 		print("%-26s %s | %4.1f %s | %5.2f" % [row["name"], " ".join(quarters), row["rank"], share, float(row["total"]) / (weeks * WORK_DAYS)])
 	print("(stones a week by quarter, then the rank reached and the share of positive profession stones from work / crafting / commissions, blank when a broke crafter netted under 1 stone; per day = stones per day spent)")
+	if breakdown:
+		_print_breakdown(data, seeds, months, weeks)
 	quit()
+
+
+## QA-105: where the days and herbs of a gathered crafter go (means over seeds, per month).
+func _print_breakdown(data: GameData, seeds: int, months: int, weeks: int) -> void:
+	print("Gathered crafters, per month (mean of %d seeds): days gathering / crafting, units gathered / used by crafts, crafted-sale stones, same units sold raw, avg crafted price vs uncapped half price" % seeds)
+	for prof_id: String in CRAFTERS:
+		var sum := {}
+		for s in range(1, seeds + 1):
+			_life(data, prof_id, s, weeks, "gathered")
+			for k: String in _stats:
+				sum[k] = float(sum.get(k, 0.0)) + float(_stats[k]) / seeds / months
+		var sold := maxf(float(sum.get("sold_units", 0.0)), 0.001)
+		print("%-16s gather %5.1f d  craft %5.1f d | gathered %5.1f  used %5.1f | crafted sales %6.1f  raw %6.1f | price %5.2f vs uncapped %5.2f (capped %3d%% of units)" % [
+			data.professions[prof_id].name, sum.get("gather_days", 0.0), sum.get("craft_days", 0.0),
+			sum.get("gathered_units", 0.0), sum.get("used_units", 0.0), sum.get("sale_stones", 0.0),
+			sum.get("raw_value", 0.0), float(sum.get("sale_stones", 0.0)) / sold,
+			float(sum.get("uncapped", 0.0)) / sold, 100.0 * float(sum.get("capped_units", 0.0)) / sold])
 
 
 func _quarter_heads(weeks: int) -> PackedStringArray:
@@ -110,6 +140,7 @@ func _life(data: GameData, who: String, seed_value: int, weeks: int, variant: St
 	var c := _new_player(data, rng)
 	_variant = variant
 	_rates.clear()
+	_stats = {}
 	var res := {"quarters": [], "rank": 0, "work": 0, "craft": 0, "commission": 0, "total": 0}
 	if data.professions.has(who):
 		c.professions[who] = {"rank": 0, "xp": 0.0}
@@ -236,6 +267,9 @@ func _do(c: CharacterData, data: GameData, prof_id: String, pick: Dictionary, da
 	var result := Alchemy.refine(c, data, recipe_id, rng)
 	if not result["ok"]:
 		return gather_days
+	for item_id: String in ingredients:
+		_stat("used_units", int(ingredients[item_id]))
+	_stat("craft_days", maxf(1.0, float(result["days"])))
 	var item_id: String = result["item"]
 	if pick["kind"] == "craft":
 		if result["count"] > 0:
@@ -245,12 +279,22 @@ func _do(c: CharacterData, data: GameData, prof_id: String, pick: Dictionary, da
 	return gather_days + maxf(1.0, float(result["days"]))
 
 
+func _stat(key: String, amount: float) -> void:
+	_stats[key] = float(_stats.get(key, 0.0)) + amount
+
+
 ## Items.sell minus the per-sale recipe scan.
 func _sell(c: CharacterData, data: GameData, item_id: String, count: int) -> void:
 	for order in c.commissions:
 		if order["item"] == item_id:
 			return  # keep it for the order
 	var price := _sell_price(data, item_id) * count
+	_stat("sold_units", count)
+	_stat("sale_stones", price)
+	var uncapped := int(int(data.items[item_id].get("price", 0)) * Items.SELL_RATE)
+	_stat("uncapped", uncapped * count)
+	if uncapped > _sell_price(data, item_id):
+		_stat("capped_units", count)
 	c.add_item(item_id, -count)
 	c.add_item("spirit_stone", price)
 	LifeStats.record_stones(c, price)
@@ -325,7 +369,10 @@ func _gather_for(c: CharacterData, data: GameData, recipe_id: String, rng: Rando
 			var found := Exploration.gather(c, rate["table"], rng)
 			for found_id: String in found:
 				c.add_item(found_id, int(found[found_id]))
+				_stat("gathered_units", int(found[found_id]))
+				_stat("raw_value", int(found[found_id]) * _sell_price(data, found_id))
 			spent += float(rate["days"])
+			_stat("gather_days", float(rate["days"]))
 	return spent
 
 
