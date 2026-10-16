@@ -1252,7 +1252,7 @@ func test_foundation_goals_clan_and_realm_limits() -> void:
 	c.realm_index = 2
 	assert_true(Guidance.foundation_goals(c, data(), {}, ClanData.new())[4]["done"])
 	assert_eq(Guidance.active_goal_ladder(c, data(), {}).size(), 5)
-	c.realm_index = 6
+	c.realm_index = 7
 	assert_false(Guidance.foundation_goals_active(c, data(), {}))
 	assert_true(Guidance.active_goal_ladder(c, data(), {}).is_empty())
 	c.realm_index = 1
@@ -1271,7 +1271,7 @@ func test_goal_ladder_keeps_a_finished_ladder() -> void:
 	assert_eq(Guidance.goal_ladder("foundation", c, data(), {}, ClanData.new()).size(), 5)
 	c.realm_index = 1
 	assert_eq(Guidance.goal_ladder_id(c), "first")
-	c.realm_index = 6
+	c.realm_index = 7
 	assert_eq(Guidance.goal_ladder_id(c), "")
 	assert_true(Guidance.goal_ladder("", c, data(), {}).is_empty())
 
@@ -1437,7 +1437,7 @@ func test_core_goal_ladder_ids_and_journal() -> void:
 	assert_eq(Guidance.goal_ladder("core", c, data(), {}).size(), 4)
 	assert_eq(Guidance.active_goal_ladder(c, data(), {}).size(), 4)
 	assert_eq(section_of.call().size(), 4)
-	c.realm_index = 6
+	c.realm_index = 7
 	assert_eq(Guidance.goal_ladder_id(c), "")
 	assert_true(section_of.call().is_empty())
 
@@ -1492,9 +1492,45 @@ func test_soul_goals_rows_and_ladder() -> void:
 	assert_false(Guidance.soul_goals(c, data(), {})[2]["done"])
 	assert_true(Guidance.soul_goals(c, data(), {Inheritances.claimed_flag("ghost_sovereign_hollow"): true})[2]["done"])
 	assert_true(Guidance.soul_goals(c, data(), {Guidance.beat_realm_flag("soul_formation"): true})[1]["done"])
-	c.realm_index = 6
+	c.realm_index = 7
 	assert_eq(Guidance.goal_ladder_id(c), "")
 	assert_false(Guidance.soul_goals_active(c, data(), {}))
+
+
+## VOID-001: the Void Refinement ladder.
+func test_void_goals_rows_and_ladder() -> void:
+	var d := data()
+	var c := _fresh()
+	c.realm_index = d.realm_index_of("void_refinement")
+	assert_eq(c.realm_index, 6)
+	var has_inh := Guidance._has_realm_inheritance(d, "void_refinement")
+	var has_body := BodyTempering.stages(d).size() > 6
+	var goals := Guidance.void_goals(c, d, {})
+	assert_eq(goals.size(), 2 + (1 if has_inh else 0) + (1 if has_body else 0))
+	for g in goals:
+		assert_false(g["done"])
+	assert_eq(goals[0]["text"], "Reach Void Refinement Middle")
+	assert_true(Guidance.void_goals_active(c, d, {}))
+	assert_eq(Guidance.goal_ladder_id(c), "void")
+	assert_eq(Guidance.goal_ladder("void", c, d, {}).size(), goals.size())
+	assert_eq(Guidance.active_goal_ladder(c, d, {}).size(), goals.size())
+	var section := func() -> Array:
+		return Guidance.journal(c, d, {}, 0, "qingshi_village").filter(func(e: Dictionary) -> bool: return e["section"] == "Void Refinement goals")
+	assert_eq(section.call().size(), goals.size())
+	assert_eq(section.call()[0]["tone"], "warning")
+	c.stage = 1
+	assert_true(Guidance.void_goals(c, d, {})[0]["done"])
+	assert_true(Guidance.void_goals(c, d, {Guidance.beat_realm_flag("void_refinement"): true})[1]["done"])
+	c.realm_index = 5
+	assert_false(Guidance.void_goals_active(c, d, {}))
+	c.realm_index = 6
+	if not has_inh:
+		d.inheritances["test_void_legacy"] = {"id": "test_void_legacy", "name": "Void Legacy", "region": "misty_forest", "appears_years": 1, "deadline_years": 5,
+			"stages": [{"name": "Gate", "days": 1, "test": "realm", "min_realm": "void_refinement"}], "reward": {}}
+		var with_row := Guidance.void_goals(c, d, {})
+		assert_eq(with_row[2]["text"], "Claim a Void Refinement inheritance")
+		assert_false(with_row[2]["done"])
+		assert_true(Guidance.void_goals(c, d, {Inheritances.claimed_flag("test_void_legacy"): true})[2]["done"])
 
 
 ## INH-003: an open inheritance says how long it waits; under a year it is a warning.

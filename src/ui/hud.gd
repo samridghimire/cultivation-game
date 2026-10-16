@@ -860,7 +860,7 @@ static func goals_done_banner(before: Array[String], goals: Array[Dictionary], l
 	var fresh := newly_done_goals(before, goals)
 	if fresh.is_empty():
 		return ""
-	var next := "  Your %s goals are done; the journal (%s) has more." % [{"foundation": "Foundation", "core": "Core Formation", "nascent": "Nascent Soul", "soul": "Soul Formation"}.get(ladder, "first"), journal_key]
+	var next := "  Your %s goals are done; the journal (%s) has more." % [{"foundation": "Foundation", "core": "Core Formation", "nascent": "Nascent Soul", "soul": "Soul Formation", "void": "Void Refinement"}.get(ladder, "first"), journal_key]
 	for goal in goals:
 		if not goal["done"]:
 			next = "  Next: " + str(goal["text"])
