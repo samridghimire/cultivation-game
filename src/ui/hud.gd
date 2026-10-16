@@ -695,7 +695,7 @@ func _on_player_died(cause: String) -> void:
 	_load_screen.close()
 	_time_skip.close()
 	(_death_screen.find_child("Cause", true, false) as Label).text = cause
-	(_death_screen.find_child("Epilogue", true, false) as Label).text = "\n".join(LifeStats.epilogue(GameState.player, GameState.data, GameState.clan))
+	(_death_screen.find_child("Epilogue", true, false) as Label).text = "\n".join(LifeStats.epilogue(GameState.player, GameState.data, GameState.clan, 8, GameState.npcs, GameState.world_flags))
 	_death_screen.visible = true
 	_death_screen.find_children("*", "Button", true, false)[0].grab_focus()
 	_update_modal()

@@ -63,3 +63,32 @@ func test_death_screen_shows_epilogue_and_focuses_menu_button() -> void:
 	await root.get_tree().process_frame
 	assert_true(screen.find_children("*", "Button", true, false)[0].has_focus())
 	hud.queue_free()
+
+
+func _rival_setup() -> Array:
+	var d := data()
+	var c := new_character()
+	var people := {}
+	var rival := Rivals.spawn(c, people, d, seeded_rng(), "qingshi_village")
+	return [d, c, people, rival]
+
+
+func test_epilogue_names_met_rival_with_record() -> void:
+	var s := _rival_setup()
+	var d: GameData = s[0]
+	var c: CharacterData = s[1]
+	var rival: CharacterData = s[3]
+	var flags := {Rivals.FIRST_MEETING_FLAG: true, Rivals.BOUTS_WON_FLAG: 2, Rivals.BOUTS_LOST_FLAG: 1}
+	var text := "\n".join(LifeStats.epilogue(c, d, null, 8, s[2], flags))
+	assert_true(text.contains("Rival: %s, %s; bouts 2 won, 1 lost" % [rival.name, Cultivation.realm_label(rival, d)]), text)
+	rival.alive = false
+	text = "\n".join(LifeStats.epilogue(c, d, null, 8, s[2], flags))
+	assert_true(text.contains(", fallen; bouts 2 won"), text)
+
+
+func test_epilogue_skips_unmet_rival_and_defaults_unchanged() -> void:
+	var s := _rival_setup()
+	var d: GameData = s[0]
+	var c: CharacterData = s[1]
+	assert_false("\n".join(LifeStats.epilogue(c, d, null, 8, s[2], {})).contains("Rival:"))
+	assert_eq(LifeStats.epilogue(c, d).size(), LifeStats.epilogue(c, d, null, 8, s[2], {}).size())

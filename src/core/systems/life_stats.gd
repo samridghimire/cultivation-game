@@ -72,12 +72,21 @@ static func lines(c: CharacterData) -> PackedStringArray:
 
 ## Epilogue for the final-death screen (EPI-001): who they were, then up to
 ## `max_stats` of their life-record lines.
-static func epilogue(c: CharacterData, data: GameData, clan: ClanData = null, max_stats: int = 8) -> PackedStringArray:
+static func epilogue(c: CharacterData, data: GameData, clan: ClanData = null, max_stats: int = 8, people: Dictionary = {}, flags: Dictionary = {}) -> PackedStringArray:
 	var out := PackedStringArray()
 	out.append("%s, fallen at age %d" % [c.name, c.age_years()])
 	out.append("Realm: %s" % Cultivation.realm_label(c, data))
 	out.append("Path: %s" % Alignment.tier_name(c.alignment, data))
 	out.append("A rogue cultivator" if c.is_rogue() else "Sect: %s" % Sects.describe(c, data))
+	var rival: CharacterData = people.get(c.rival) if c.rival != "" else null
+	if rival != null and flags.get(Rivals.FIRST_MEETING_FLAG, false):
+		var line := "Rival: %s, %s" % [rival.name, Cultivation.realm_label(rival, data)]
+		if not rival.alive:
+			line += ", fallen"
+		var record := Rivals.bout_record_text(flags)
+		if record != "":
+			line += "; " + record
+		out.append(line)
 	if clan != null and clan.name != "":
 		out.append("Clan: %s, %d members" % [clan.name, clan.members.size()])
 	if not c.children.is_empty():

@@ -1392,7 +1392,8 @@ static func _rival_entry(out: Array[Dictionary], c: CharacterData, data: GameDat
 	if rival == null:
 		return
 	if not rival.alive:
-		_add(out, "Household", "Rival: %s (fallen)" % rival.name, "dim")
+		var fallen_record := Rivals.bout_record_text(flags)
+		_add(out, "Household", "Rival: %s (fallen%s)" % [rival.name, "; " + fallen_record if fallen_record != "" else ""], "dim")
 		return
 	var tone := "dim"
 	if rival.realm_index > c.realm_index or (rival.realm_index == c.realm_index and rival.stage > c.stage):

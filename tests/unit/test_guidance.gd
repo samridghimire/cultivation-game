@@ -1620,3 +1620,18 @@ func test_journal_newcomer_next_steps_keep_their_hints() -> void:
 		if String(e.get("section", "")) == "Next steps":
 			next.append(String(e["text"]))
 	assert_eq(next.size(), hint_lines.size())
+
+
+func test_fallen_rival_journal_line_carries_record() -> void:
+	var s := _bitter_setup()
+	var d: GameData = s[0]
+	var c: CharacterData = s[1]
+	var rival: CharacterData = s[3]
+	rival.alive = false
+	var flags := {Rivals.FIRST_MEETING_FLAG: true, Rivals.BOUTS_WON_FLAG: 3, Rivals.BOUTS_LOST_FLAG: 1}
+	var out: Array[Dictionary] = []
+	Guidance._rival_entry(out, c, d, flags, s[2])
+	assert_eq(out[0]["text"], "Rival: %s (fallen; bouts 3 won, 1 lost)" % rival.name)
+	out.clear()
+	Guidance._rival_entry(out, c, d, {Rivals.FIRST_MEETING_FLAG: true}, s[2])
+	assert_eq(out[0]["text"], "Rival: %s (fallen)" % rival.name)
