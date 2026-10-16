@@ -214,3 +214,37 @@ func test_ingredient_lines_respect_the_season() -> void:
 	assert_true(winter[0].ends_with("(in Autumn)"), winter[0])
 	var autumn := CraftingScreen.ingredient_lines(c, data(), "bog_lily_qi_pill", "qingshi_village", 200)
 	assert_false(autumn[0].contains("(in Autumn)"), autumn[0])
+
+
+## WU-201: the where block drops a gather place the ingredient line already names.
+func test_where_block_does_not_repeat_the_gather_place() -> void:
+	var c := new_character()
+	c.inventory = {}
+	var ingredients: Dictionary = data().recipes["qi_gathering_pill"]["ingredients"]
+	var checked := false
+	for item_id: String in ingredients:
+		var place := Guidance.herb_place(c, data(), item_id, "qingshi_village")
+		if place == "":
+			continue
+		checked = true
+		var where := CraftingScreen.missing_sources_text(c, data(), "qi_gathering_pill", "qingshi_village")
+		assert_false(where.contains("Gathered at " + place.split(" in ")[0].split(" (")[0] + " ("), where)
+	assert_true(checked)
+
+
+## WU-201: ores are "found at", herbs "grow at".
+func test_non_herb_ingredient_says_found_at() -> void:
+	var c := new_character()
+	c.inventory = {}
+	var checked := false
+	for recipe_id: String in data().recipes:
+		for item_id: String in data().recipes[recipe_id]["ingredients"]:
+			var tags: Array = data().items[item_id].get("tags", [])
+			var place := Guidance.herb_place(c, data(), item_id, "")
+			if place == "" or tags.has("herb"):
+				continue
+			checked = true
+			var lines := CraftingScreen.ingredient_lines(c, data(), recipe_id)
+			assert_true(Array(lines).any(func(l: String) -> bool: return l.ends_with(" - found at " + place)), str(lines))
+	if not checked:
+		print("  (no non-herb ingredient has a gather place; verb branch untested)")

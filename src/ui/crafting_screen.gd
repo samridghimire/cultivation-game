@@ -100,7 +100,8 @@ func close() -> void:
 
 
 ## "2 / 3 Spirit Grass" style lines, one per ingredient, plus whether all are held.
-## A missing ingredient that grows somewhere gets " - grows at <place>" (WU-206);
+## A missing ingredient that grows somewhere gets " - grows at <place>" (WU-206; "found at"
+## for non-herbs such as ores, WU-201);
 ## `region_id` makes the current region's place win; `today` (>= 0) respects seasons (GUIDE-048).
 static func ingredient_lines(c: CharacterData, data: GameData, recipe_id: String, region_id: String = "", today: int = -1) -> PackedStringArray:
 	var lines: PackedStringArray = []
@@ -110,7 +111,8 @@ static func ingredient_lines(c: CharacterData, data: GameData, recipe_id: String
 		if c.item_count(item_id) < int(ingredients[item_id]):
 			var place := Guidance.herb_place(c, data, item_id, region_id, today)
 			if place != "":
-				line += " - grows at " + place
+				var verb := "grows at" if (data.items[item_id].get("tags", []) as Array).has("herb") else "found at"
+				line += " - %s %s" % [verb, place]
 		lines.append(line)
 	return lines
 
@@ -125,14 +127,30 @@ static func margin_text(data: GameData, recipe_id: String) -> String:
 	return text
 
 
+## True when `source` ("Gathered at <place> (<region>)") is the place the ingredient line
+## already names (`place` may read "<place> in <Region>" or "<place> (in <Season>)").
+static func _names_gather_place(source: String, place: String) -> bool:
+	if not source.begins_with("Gathered at "):
+		return false
+	var name := source.trim_prefix("Gathered at ").split(" (")[0]
+	return place == name or place.begins_with(name + " in ") or place.begins_with(name + " (in ")
+
+
 ## For each ingredient the player lacks, where to get it ("" when none is missing).
-static func missing_sources_text(c: CharacterData, data: GameData, recipe_id: String) -> String:
+## Gather sources the ingredient line already names are left out (WU-201).
+static func missing_sources_text(c: CharacterData, data: GameData, recipe_id: String, region_id: String = "") -> String:
 	var lines: PackedStringArray = []
 	var ingredients: Dictionary = data.recipes[recipe_id]["ingredients"]
 	for item_id in ingredients:
 		if c.item_count(item_id) >= int(ingredients[item_id]):
 			continue
-		lines.append("%s: %s" % [data.items[item_id].get("name", item_id), "; ".join(Items.sources(data, item_id))])
+		var place := Guidance.herb_place(c, data, item_id, region_id)
+		var sources: Array[String] = []
+		for source in Items.sources(data, item_id):
+			if place == "" or not _names_gather_place(source, place):
+				sources.append(source)
+		if not sources.is_empty():
+			lines.append("%s: %s" % [data.items[item_id].get("name", item_id), "; ".join(sources)])
 	return "\n".join(lines)
 
 
@@ -222,7 +240,7 @@ func _show_details() -> void:
 	var prof: ProfessionDef = data.professions[recipe["profession"]]
 	_info.text = "Requires %s %s  |  takes %s" % [data.profession_rank_names[min_rank], prof.name, Calendar.format_duration(int(recipe["days"]))]
 	_ingredients.text = "Ingredients:\n  " + "\n  ".join(ingredient_lines(p, data, _selected, GameState.current_region, GameClock.total_days)) + "\n" + margin_text(data, _selected)
-	_where.text = missing_sources_text(p, data, _selected)
+	_where.text = missing_sources_text(p, data, _selected, GameState.current_region)
 	_where.visible = _where.text != ""
 	var out := "Yields: %s" % output_text(data, recipe["output"])
 	if recipe.has("great_output"):

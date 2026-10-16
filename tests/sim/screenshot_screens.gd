@@ -48,6 +48,9 @@ extends SceneTree
 ## WU-196: append `-- --renown-shot` for a Qi Refining player with Respected-bound renown in Qingshi Village (first title,
 ## halfway to the second): the arrival banner ("Known here: ...") and the journal page with the next-title line.
 
+## WU-201: append `-- --craft-shots` for the crafting screen of each workshop craft (rank 0, first starter recipe
+## selected, one ingredient short): craft_<profession>.png.
+
 const OUT_DIR := "user://screenshots/screens"
 const SETTLE_FRAMES := 6
 
@@ -63,6 +66,9 @@ var opened := false
 func _start() -> void:
 	started = true
 	var gs: Node = root.get_node("GameState")
+	if OS.get_cmdline_user_args().has("--craft-shots"):
+		_start_craft_shots(gs)
+		return
 	if OS.get_cmdline_user_args().has("--first-hour"):
 		_start_first_hour(gs)
 		return
@@ -262,6 +268,34 @@ func _start_breakthrough_shots(gs: Node) -> void:
 		c.breakthrough_failures = 3
 		hide_banner.call()
 		win.open(), "close": win.close})
+
+
+## WU-201: the crafting screen for every workshop craft, a rank-0 player one ingredient short.
+func _start_craft_shots(gs: Node) -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 5
+	var c := CharacterFactory.create("Lin Feng", gs.data, rng, "male")
+	gs.start_session(c)
+	gs.pending_event = ""
+	world = load("res://src/world/world.tscn").instantiate()
+	root.add_child(world)
+	hud = world.get_node("HUD")
+	var screen: Control = hud.get("_crafting")
+	for prof_id: String in ["alchemist", "blacksmith", "talisman_master", "array_master", "beast_tamer"]:
+		shots.append({"name": "craft_" + prof_id, "open": func() -> void:
+			hud.get("_banner").visible = false
+			c.professions[prof_id] = {"rank": 0, "xp": 0.0}
+			c.inventory = {}
+			var ids := Alchemy.known_recipes(c, gs.data, prof_id)
+			if not ids.is_empty():
+				# Hold every ingredient but one so the "grows at" line shows.
+				var ingredients: Dictionary = gs.data.recipes[ids[0]]["ingredients"]
+				var keys := ingredients.keys()
+				for k in keys.size() - 1:
+					c.add_item(keys[k], int(ingredients[keys[k]]))
+			screen.open(prof_id)
+			if not ids.is_empty():
+				screen.call("_select", ids[0]), "close": screen.close})
 
 
 ## WU-163: journal and character sheet for a Foundation Establishment Peak and a Core Formation Early character.
