@@ -28,7 +28,8 @@ func test_new_character_gets_qi_and_starter_hints() -> void:
 	c.techniques = {}
 	var hints := Guidance.hints(c, data(), 1.0, 10)
 	assert_true(_has(hints, "more qi to reach the next stage"))
-	assert_true(_has(hints, "learn a profession"))
+	var pay: int = Professions.work_preview(c, data(), "doctor", Calendar.DAYS_PER_MONTH)["income"]
+	assert_true(_has(hints, "about %d spirit stones a month" % pay))
 	assert_true(_has(hints, "breathing technique"))
 
 

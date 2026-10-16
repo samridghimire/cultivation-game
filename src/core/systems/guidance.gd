@@ -77,7 +77,7 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 		if delivery != "":
 			out.append(delivery)
 	if c.professions.is_empty():
-		out.append("Work at a workshop to learn a profession and earn spirit stones.")
+		out.append(_workshop_hint(c, data))
 	if c.realm_index > NEWCOMER_MAX_REALM:
 		var fighting := first_combat_hint(c, data, region_id)
 		if fighting != "":
@@ -90,6 +90,14 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 	if out.size() > limit:
 		out.resize(limit)
 	return out
+
+
+## GUIDE-044: the newcomer's workshop hint names a month's pay when a Doctor profession exists.
+static func _workshop_hint(c: CharacterData, data: GameData) -> String:
+	if not data.professions.has("doctor"):
+		return "Work at a workshop to learn a profession and earn spirit stones."
+	var income: int = Professions.work_preview(c, data, "doctor", Calendar.DAYS_PER_MONTH)["income"]
+	return "Work at a workshop: about %d spirit stones a month as a Doctor, or learn a craft there." % income
 
 
 ## RIVAL-015: a met, living, bitter rival refuses bouts; point at the amends in the NPC menu.
