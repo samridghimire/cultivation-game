@@ -78,10 +78,12 @@ static func check_test(c: CharacterData, data: GameData, stage: Dictionary) -> S
 		"attribute":
 			var attr := String(stage.get("attribute", ""))
 			if c.attribute(attr) < int(stage.get("min", 0)):
-				return "Your %s is not enough (needs %d)." % [_attribute_name(data, attr), int(stage.get("min", 0))]
+				return "Your %s is not enough (needs %d, you have %d)." % [_attribute_name(data, attr), int(stage.get("min", 0)), c.attribute(attr)]
 		"alignment":
-			if c.alignment < int(stage.get("min_alignment", -1000000)) or c.alignment > int(stage.get("max_alignment", 1000000)):
-				return "The trial rejects your heart."
+			if c.alignment < int(stage.get("min_alignment", -1000000)):
+				return "The trial rejects your heart (needs alignment %d, you have %d)." % [int(stage["min_alignment"]), c.alignment]
+			if c.alignment > int(stage.get("max_alignment", 1000000)):
+				return "The trial rejects your heart (needs alignment at most %d, you have %d)." % [int(stage["max_alignment"]), c.alignment]
 	return ""
 
 

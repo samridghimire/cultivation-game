@@ -56,11 +56,14 @@ func test_stage_tests_in_order_and_reward() -> void:
 	assert_eq(Inheritances.pass_stage(c, data, "test_legacy", flags)["stage_name"], "Gate")
 	c.attributes["comprehension"] = 11
 	assert_true(Inheritances.check_attempt(c, data, "test_legacy", "misty_forest", Y, flags).contains("Comprehension"))
+	c.attributes["comprehension"] = 9
+	assert_eq(Inheritances.check_attempt(c, data, "test_legacy", "misty_forest", Y, flags), "Your Comprehension is not enough (needs 12, you have 9).")
 	c.attributes["comprehension"] = 12
 	assert_eq(Inheritances.check_attempt(c, data, "test_legacy", "misty_forest", Y, flags), "")
 	Inheritances.pass_stage(c, data, "test_legacy", flags)
 	c.alignment = -10
 	assert_true(Inheritances.check_attempt(c, data, "test_legacy", "misty_forest", Y, flags) != "", "heart rejected")
+	assert_eq(Inheritances.check_attempt(c, data, "test_legacy", "misty_forest", Y, flags), "The trial rejects your heart (needs alignment 0, you have -10).")
 	c.alignment = 0
 	var stage := Inheritances.pass_stage(c, data, "test_legacy", flags)
 	assert_false(stage["last"])
