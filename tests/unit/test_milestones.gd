@@ -154,3 +154,13 @@ func test_c110_rival_bout_milestones() -> void:
 	var got := Milestones.newly_reached(c, data(), {})
 	assert_true(got.has("crossed_hands"), str(got))
 	assert_false(got.has("worthy_rival"), str(got))
+
+
+func test_c130_renown_title_milestones() -> void:
+	var c := new_character()
+	LifeStats.add(c, "renown_titles")
+	var got := Milestones.newly_reached(c, data(), {})
+	assert_true(got.has("name_spoken"), str(got))
+	assert_false(got.has("known_across_the_land"), str(got))
+	LifeStats.add(c, "renown_titles", 3)
+	assert_true(Milestones.newly_reached(c, data(), {}).has("known_across_the_land"))
