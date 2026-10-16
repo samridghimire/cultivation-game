@@ -52,6 +52,12 @@ static func lost_between(def: Dictionary, before_days: int, after_days: int, fla
 	return before_days < deadline_day(def) and is_lost(def, after_days, flags)
 
 
+## INH-006: whether `c` knew of the grounds (visited its region or cleared a stage), so losing
+## them is a loss worth mourning in the year in review.
+static func player_knew(c: CharacterData, def: Dictionary) -> bool:
+	return c.visited_regions.has(String(def.get("region", ""))) or stages_cleared(c, String(def.get("id", ""))) > 0
+
+
 static func stages_cleared(c: CharacterData, id: String) -> int:
 	return int(c.trial_progress.get(id, 0))
 

@@ -194,3 +194,37 @@ func test_status_text_uses_the_shared_deadline_wording() -> void:
 	var far := Inheritances.status_text(c, data, "test_legacy", dl - 400, {})
 	assert_true(far.contains("1 year left before rivals arrive"), far)
 	data.inheritances.erase("test_legacy")
+
+
+func test_player_knew() -> void:
+	var def := _def()
+	var c := CharacterData.new()
+	assert_false(Inheritances.player_knew(c, def), "unvisited")
+	c.visited_regions.append("misty_forest")
+	assert_true(Inheritances.player_knew(c, def), "visited")
+	var c2 := CharacterData.new()
+	c2.trial_progress["test_legacy"] = 1
+	assert_true(Inheritances.player_knew(c2, def), "a stage cleared")
+
+
+func test_game_state_loss_counts_only_known_grounds() -> void:
+	for visited in [false, true]:
+		var gs := _root().get_node("GameState")
+		var c := CharacterFactory.create("Late", gs.data, seeded_rng(4))
+		gs.start_session(c)
+		c.visited_regions.clear()
+		if visited:
+			for def: Dictionary in gs.data.inheritances.values():
+				c.visited_regions.append(String(def["region"]))
+		var news: Array[String] = []
+		var listen := func(text: String, _category: String) -> void: news.append(text)
+		EventBus.message_posted.connect(listen)
+		gs.work_profession("doctor", 16 * Y)
+		EventBus.message_posted.disconnect(listen)
+		var def := Inheritances.inheritance(gs.data, "fist_saint_grave")
+		assert_true(news.has(String(def["rival_news"])), "news posted either way")
+		var lost := LifeStats.get_stat(c, "inheritances_lost")
+		if visited:
+			assert_true(lost >= 1, "known grounds are mourned")
+		else:
+			assert_eq(lost, 0, "unknown grounds are not")

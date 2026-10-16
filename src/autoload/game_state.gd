@@ -2972,7 +2972,8 @@ func _on_days_advanced(days: int) -> void:
 	_advance_pregnancies(days)
 	for legacy: Dictionary in data.inheritances.values():
 		if Inheritances.lost_between(legacy, GameClock.total_days - days, GameClock.total_days, world_flags):
-			LifeStats.add(player, "inheritances_lost")
+			if Inheritances.player_knew(player, legacy):
+				LifeStats.add(player, "inheritances_lost")
 			EventBus.post(String(legacy.get("rival_news", "Word spreads that someone has claimed the %s." % legacy["name"])), "info")
 	@warning_ignore("integer_division")
 	var months := player.age_days / Calendar.DAYS_PER_MONTH - age_before / Calendar.DAYS_PER_MONTH
