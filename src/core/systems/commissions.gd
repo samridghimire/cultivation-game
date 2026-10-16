@@ -169,11 +169,28 @@ static func describe(c: CharacterData, data: GameData, entry: Dictionary, today:
 		prof_name, days_left(entry, today), c.item_count(String(entry["item"]))]
 
 
+const LABEL_NAME_MAX := 18
+
+
+## WU-219: keep whole words while the result stays within LABEL_NAME_MAX, then "…". A single
+## first word longer than that keeps the hard cut.
+static func _cut_at_word(name: String) -> String:
+	var kept := ""
+	for word: String in name.split(" "):
+		var next := word if kept == "" else kept + " " + word
+		if next.length() > LABEL_NAME_MAX:
+			break
+		kept = next
+	if kept == "":
+		return name.substr(0, 14) + "…"
+	return kept + "…"
+
+
 ## Menu label: "Deliver 3 Qi Gathering Pills: 54 stones, 30 xp, 41 days (have 1/3)".
 static func short_label(c: CharacterData, data: GameData, entry: Dictionary, today: int) -> String:
 	var name := _item_name(data, String(entry["item"]))
-	if name.length() > 15:
-		name = name.substr(0, 14) + "…"
+	if name.length() > LABEL_NAME_MAX:
+		name = _cut_at_word(name)
 	return "Deliver %d %s: %d stones, %d xp, %dd (have %d/%d)" % [
 		int(entry["count"]), name, int(entry["reward"]), int(entry["xp"]),
 		days_left(entry, today), mini(c.item_count(String(entry["item"])), int(entry["count"])), int(entry["count"])]

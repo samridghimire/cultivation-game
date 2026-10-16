@@ -158,7 +158,13 @@ func test_short_label_fits_and_has_no_doubled_count() -> void:
 			longest_id = item_id
 	var worst := {"item": longest_id, "count": 3, "reward": 99, "xp": 99, "due_day": 60}
 	var worst_label := Commissions.short_label(c, data(), worst, 0)
-	assert_true(worst_label.length() <= 60, "%d: %s" % [worst_label.length(), worst_label])
+	assert_true(worst_label.length() <= 64, "%d: %s" % [worst_label.length(), worst_label])
+	for item: Dictionary in data().items.values():
+		var item_name := String(item["name"])
+		var cut := Commissions.short_label(c, data(), {"item": item["id"], "count": 1, "reward": 1, "xp": 1, "due_day": 1}, 0)
+		if item_name.length() > Commissions.LABEL_NAME_MAX and cut.contains("…"):
+			var prefix := cut.get_slice("…", 0).trim_prefix("Deliver 1 ")
+			assert_true(item_name == prefix or item_name.begins_with(prefix + " "), "%s -> %s" % [item_name, cut])
 
 
 func test_delivery_hint_needs_the_items() -> void:
