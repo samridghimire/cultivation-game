@@ -110,3 +110,19 @@ func test_game_state_temper_body_and_meditation_entry() -> void:
 	assert_true(sheet._text.get_parsed_text().contains("Body: Copper Skin"))
 	sheet.free()
 	gs.end_session()
+
+
+func test_last_stage_is_soul_formation_with_sourced_items() -> void:
+	var stages: Array = BodyTempering.stages(data())
+	var last: Dictionary = stages[stages.size() - 1]
+	assert_eq(str(last.get("min_realm", "")), "soul_formation")
+	var total := 0.0
+	for s in stages:
+		total += float(s.get("injury_resist", 0.0))
+	assert_true(total < 0.6, "stage resistances stay under max_injury_resist")
+	var sources := ""
+	for f in ["enemies", "encounters", "auctions", "regions", "npcs"]:
+		sources += FileAccess.get_file_as_string("res://data/%s.json" % f)
+	for item_id in last.get("items", {}):
+		assert_true(data().items.has(item_id), "%s exists" % item_id)
+		assert_true(sources.contains("\"%s\"" % item_id), "%s has a source" % item_id)
