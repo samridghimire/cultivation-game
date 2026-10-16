@@ -659,6 +659,7 @@ func _start_banner_shot(gs: Node) -> void:
 
 ## WU-211: the HUD hint panel at its maximum setting with the longest crafter hints: the away-region
 ## herb hint (GUIDE-046/048) and the broke-crafter odd-jobs line (GUIDE-047).
+## WU-220: also hint_mortal_nudge (GUIDE-054 "You are still a mortal" line, day 40, open order).
 func _start_hint_shot(gs: Node) -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 5
@@ -720,6 +721,21 @@ func _start_hint_shot(gs: Node) -> void:
 		root.get_node("EventBus").player_changed.emit()
 		assert(String(hint_text.call()).contains("Short of stones?"), "odd-jobs hint not on screen: " + String(hint_text.call()))
 		print("hint-shot broke: ", hint_text.call()), "close": func() -> void: pass})
+	# WU-220: GUIDE-054's Mortal nudge on day 40 in Qingshi with an open order and herbs still to gather, so the
+	# panel holds the nudge plus the crafter hints (shows the rank-0 Alchemist; nothing in the pack).
+	shots.append({"name": "hint_mortal_nudge", "open": func() -> void:
+		hud.get("_banner").visible = false
+		c.realm_index = 0
+		c.inventory = {}
+		for prof_id: String in c.professions:
+			c.professions[prof_id]["rank"] = 0
+		clock.total_days = 40
+		gs.current_region = "qingshi_village"
+		gs.call("_commissions_month", "alchemist")
+		root.get_node("EventBus").player_changed.emit()
+		var text: String = hint_text.call()
+		assert(text.contains("You are still a mortal"), "mortal nudge not on screen: " + text)
+		print("hint-shot mortal (", c.commissions.size(), " orders): ", text), "close": func() -> void: pass})
 
 
 ## WU-190: the encounter window on real encounters with attribute, profession and enemy choices.
