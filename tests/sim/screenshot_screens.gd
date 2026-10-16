@@ -498,6 +498,15 @@ func _start_year_shot(gs: Node) -> void:
 		banner.finish_current()
 		banner.announce("%s of your journey" % LifeStats.review_title(10, 14), "\n".join(lines), Color(0.9, 0.78, 0.4), 60.0),
 		"close": func() -> void: pass})
+	# WU-200: the newest lines (realm change, lost inheritance, name spread, rank-up) in the four-line cap.
+	var newest := LifeStats.year_summary({}, {"inheritances_lost": 2, "renown_titles": 3, "profession_ranks": 2,
+			"items_crafted": 5, "stones_earned": 120}, "Qi Refining Peak", "Foundation Establishment Early")
+	shots.append({"name": "year_banner_newest", "open": func() -> void:
+		banner.set_held(false)
+		banner._queue.clear()
+		banner.finish_current()
+		banner.announce("%s of your journey" % LifeStats.review_title(3, 21), "\n".join(newest), Color(0.9, 0.78, 0.4), 60.0),
+		"close": func() -> void: pass})
 
 
 ## WU-187: the respawn screen with the longest lesson (98% odds) and the longest enemy name.
