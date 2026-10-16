@@ -124,3 +124,14 @@ func test_screen_offers_a_button_per_anchor() -> void:
 	assert_eq(gs.current_region, gs.data.anchors["qingshi_rock"]["region"])
 	screen.free()
 	gs.end_session()
+
+
+func test_lesson_text_bands_on_the_printed_percent() -> void:
+	var near := RespawnScreen.lesson_text({"enemy_name": "Drunk Bully", "win_chance": 0.896})
+	assert_true(near.contains("90%"))
+	assert_true(near.contains("Even a weak foe"))
+	var low := RespawnScreen.lesson_text({"enemy_name": "Drunk Bully", "win_chance": 0.494})
+	assert_true(low.contains("49%"))
+	assert_true(low.contains("Grow stronger"))
+	var mid := RespawnScreen.lesson_text({"enemy_name": "Drunk Bully", "win_chance": 0.5})
+	assert_true(mid.contains("either way"))

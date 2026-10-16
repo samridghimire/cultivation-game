@@ -66,9 +66,9 @@ static func lesson_text(pending: Dictionary) -> String:
 	var chance := float(pending["win_chance"])
 	var pct := roundi(chance * 100.0)
 	var foe := String(pending["enemy_name"])
-	if chance >= 0.9:
+	if pct >= 90:
 		return "You had about %d%% odds against %s and still fell. Even a weak foe can land a lucky blow; a readied shield talisman covers it." % [pct, foe]
-	if chance >= 0.5:
+	if pct >= 50:
 		return "You had about %d%% odds against %s. A fight like this can go either way; ready a talisman or heal first next time." % [pct, foe]
 	return "You had about %d%% odds against %s. Grow stronger before you face this foe again." % [pct, foe]
 
