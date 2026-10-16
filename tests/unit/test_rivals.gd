@@ -480,3 +480,24 @@ func test_attitude_encounters_are_eligible_in_their_regions() -> void:
 			favor = int(Rivals.rules(d).get("friendly_favor", 20))
 		var ids: Array = Exploration.eligible_encounters(c, d, case[2], flags, rival, 1.0, "", "", favor).map(func(e: Dictionary) -> String: return e["encounter"]["id"])
 		assert_true(ids.has(case[0]), "%s eligible with tags %s" % [case[0], case[2]])
+
+
+## C-115: three Soul Formation rival encounters, one per attitude, once-only, with a duel and a peaceful choice.
+func test_soul_formation_rival_encounters() -> void:
+	var d := data()
+	var want := {"rival_soul_stargazing": "friendly", "rival_soul_proud_decree": "proud", "rival_soul_bitter_cairn": "bitter"}
+	for id in want:
+		assert_true(d.encounters.has(id), id + " exists")
+		var e: Dictionary = d.encounters[id]
+		assert_eq(e.get("rival_attitude", ""), want[id], id + " attitude")
+		assert_eq(e.get("rival", ""), "any", id + " rival kind")
+		assert_eq(e.get("requires_flag", ""), "rival_met", id + " waits for the first meeting")
+		assert_true(e.has("blocked_by_flag"), id + " is once-only")
+		assert_eq(e.get("min_realm", ""), "soul_formation", id + " min realm")
+		var duel := false
+		for choice: Dictionary in e["choices"]:
+			if bool(choice.get("fight_rival", false)):
+				duel = true
+				assert_true(int(choice.get("rival_grudge", 0)) <= 5, id + " duel grudge at most 5")
+		assert_true(duel, id + " has a fight_rival choice")
+		assert_true(e["choices"].size() >= 2, id + " has a peaceful choice")
