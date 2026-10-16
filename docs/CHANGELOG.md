@@ -2,6 +2,19 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-16 [GUIDE-046] The herb hint also looks in the regions a short walk away.
+- 2026-10-16 [C-139] Help pages catch up with odd jobs, gathered herbs, the gather site's "Used in" line and craft renown.
+- 2026-10-16 [RIVAL-018] The journal says which realm to reach before you can challenge a rival who is far ahead.
+- 2026-10-16 [WU-206] The crafting screen names where a missing herb grows.
+- 2026-10-16 [PROF-005] Material value counts the spirit stones a recipe spends.
+- 2026-10-16 [C-138] A Beast Tamer choice in the first hours: The Snared Fox Kit.
+- 2026-10-16 [PROF-006] A choice can ask only that you practise a craft; the first-hours craft choices open to Apprentices.
+- 2026-10-16 [WU-204] Banner shots with the longest real arrival subtitle and milestone.
+- 2026-10-16 [WU-205] The Workshop and Bounty Board no longer hide under the HUD at the village spawn view.
+- 2026-10-16 [QA-099] The sims no longer leak a resource at exit.
+- 2026-10-16 [QA-098] The sims buy Void Refinement and Body Integration pills.
+- 2026-10-16 [C-135] Body-Void Union Pill: a Body Integration breakthrough pill.
+- 2026-10-16 [WU-200] Year-review shot with the newest lines (realm change, lost inheritance, name spread, crafts).
 - 2026-10-16 [YEAR-009] The year in review says what your craft earned.
 - 2026-10-16 [C-134] Three first-hours encounters where a craft, an attribute or a fight opens a choice.
 - 2026-10-16 [QA-097] Profession income sim: crafters craft instead of working (bought herbs lose money, gathered ones pay).
