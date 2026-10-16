@@ -28,8 +28,8 @@ func _init() -> void:
 	box.alignment = BoxContainer.ALIGNMENT_CENTER
 	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	box.anchor_right = 1.0
-	box.anchor_top = 0.25
-	box.anchor_bottom = 0.45
+	box.anchor_top = 0.03  # WU-158: above the centred windows (menus, shop) so a notice never covers their title
+	box.anchor_bottom = 0.2
 	add_child(box)
 	_title = UIStyle.label("", 44)
 	_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER

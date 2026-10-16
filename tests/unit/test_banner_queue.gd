@@ -70,3 +70,16 @@ func test_hud_holds_banner_while_combat_report_open() -> void:
 	hud._update_modal()
 	assert_true(hud._banner.visible)
 	hud.queue_free()
+
+
+## WU-158: the text sits in the top fifth, above the centred windows (a 720p shot showed a notice
+## covering an inheritance menu's title).
+func test_banner_text_stays_above_centred_windows() -> void:
+	var b := Banner.new()
+	var box: VBoxContainer = null
+	for child in b.get_children():
+		if child is VBoxContainer:
+			box = child
+	assert_true(box != null, "banner has a text box")
+	assert_true(box.anchor_bottom < 0.21, "banner text ends in the top fifth of the screen")
+	b.free()
