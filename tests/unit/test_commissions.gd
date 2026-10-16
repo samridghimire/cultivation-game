@@ -18,6 +18,14 @@ func test_roll_needs_a_profession_and_respects_the_cap() -> void:
 	assert_eq(int(c.commissions[0]["due_day"]), 100 + int(data().commissions["days"]))
 
 
+func test_roll_only_prof_skips_the_other_crafts() -> void:
+	var c := _alchemist()
+	c.professions["blacksmith"] = {"rank": 0, "xp": 0.0}
+	var added := Commissions.roll(c, data(), seeded_rng(), 0, "alchemist")
+	assert_eq(added.size(), 1)
+	assert_eq(String(added[0]["profession"]), "alchemist")
+
+
 func test_reward_and_xp() -> void:
 	var c := _alchemist()
 	var order := Commissions.roll(c, data(), seeded_rng(7), 0)[0]

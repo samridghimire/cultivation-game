@@ -138,13 +138,14 @@ static func _names_gather_place(source: String, place: String) -> bool:
 
 ## For each ingredient the player lacks, where to get it ("" when none is missing).
 ## Gather sources the ingredient line already names are left out (WU-201).
-static func missing_sources_text(c: CharacterData, data: GameData, recipe_id: String, region_id: String = "") -> String:
+## `today` must match the one given to ingredient_lines so both name the same place.
+static func missing_sources_text(c: CharacterData, data: GameData, recipe_id: String, region_id: String = "", today: int = -1) -> String:
 	var lines: PackedStringArray = []
 	var ingredients: Dictionary = data.recipes[recipe_id]["ingredients"]
 	for item_id in ingredients:
 		if c.item_count(item_id) >= int(ingredients[item_id]):
 			continue
-		var place := Guidance.herb_place(c, data, item_id, region_id)
+		var place := Guidance.herb_place(c, data, item_id, region_id, today)
 		var sources: Array[String] = []
 		for source in Items.sources(data, item_id):
 			if place == "" or not _names_gather_place(source, place):
@@ -240,7 +241,7 @@ func _show_details() -> void:
 	var prof: ProfessionDef = data.professions[recipe["profession"]]
 	_info.text = "Requires %s %s  |  takes %s" % [data.profession_rank_names[min_rank], prof.name, Calendar.format_duration(int(recipe["days"]))]
 	_ingredients.text = "Ingredients:\n  " + "\n  ".join(ingredient_lines(p, data, _selected, GameState.current_region, GameClock.total_days)) + "\n" + margin_text(data, _selected)
-	_where.text = missing_sources_text(p, data, _selected, GameState.current_region)
+	_where.text = missing_sources_text(p, data, _selected, GameState.current_region, GameClock.total_days)
 	_where.visible = _where.text != ""
 	var out := "Yields: %s" % output_text(data, recipe["output"])
 	if recipe.has("great_output"):

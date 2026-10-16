@@ -1862,6 +1862,21 @@ func test_first_craft_brings_the_first_order() -> void:
 	gs.end_session()
 
 
+## Review of PROF-007: the early order is for the new craft only, not an extra roll for the others.
+func test_first_craft_order_is_only_for_the_new_craft() -> void:
+	var c := _start()
+	var gs := _game_state()
+	c.professions.erase("alchemist")
+	c.professions["blacksmith"] = {"rank": 0, "xp": 0.0}
+	c.commissions.clear()
+	c.add_item("spirit_herb", 4)
+	c.add_item("dew_grass", 2)
+	gs.refine("qi_gathering_pill")
+	assert_eq(c.commissions.size(), 1)
+	assert_eq(String(c.commissions[0]["profession"]), "alchemist")
+	gs.end_session()
+
+
 func test_practised_crafter_gets_no_order_from_refining() -> void:
 	var c := _start()
 	var gs := _game_state()

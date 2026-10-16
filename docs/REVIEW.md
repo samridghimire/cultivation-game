@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: e0dd610
+Last reviewed commit: 5709257
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -658,3 +658,20 @@ Last reviewed commit: e0dd610
   - Notes, not filed: C-138 (forest snared fox kit) is close to the older mountain_lost_fox_kit (snared silver kit).
     WU-206's "grows at" also reads for ores. The crafting screen now names gather places twice for a missing herb
     (ingredient line and the "where" block from Items.sources).
+- 2026-10-16 (reviewer): reviewed e0dd610..5709257 (RIVAL-018, C-139, GUIDE-046, C-137, WU-195, QA-100, PROF-004, GUIDE-048,
+  C-141, PROF-007, RIVAL-020, WU-201, QA-094, GUIDE-047; [PLAN]/claim commits skipped). Main green (1963 tests). No
+  BACKLOG/CHANGELOG edits by workers; no SAVE_VERSION change (`rival_caught_up_realm` is a world flag, defaults to -1).
+  Nothing filed.
+  - Fixed ([REVIEW] commit): PROF-007 called the whole monthly roll on a first craft, so a Blacksmith with no open order
+    who started alchemy also got an early blacksmith order (each new craft = a free extra roll for the others).
+    Commissions.roll takes `only_prof` and the early roll passes the new craft; tests in test_commissions and
+    test_game_session (it failed with 2 orders before the fix). WU-201's where block called herb_place without the
+    day while the ingredient line used it, so out of season the two could name different places and the dedupe
+    missed; both now get GameClock.total_days. C-139's help line said only Doctors take odd jobs; PROF-004 made that
+    false, reworded.
+  - Checked: PROF-004's work_profession pays exactly work_preview for a craft. C-137's array now nets positive when
+    gathered. RIVAL-020 posts once per realm and needs the first meeting. GUIDE-047 only speaks when the herb hint is
+    silent and skips Doctors (no recipes). C-141's guard covers every rank-0 ingredient.
+  - Notes, not filed: herb_place's out-of-season fallback names only the first listed season. GUIDE-047's "short of
+    stones" compares stones with the full shop cost of the cheapest recipe, so it can fire for a crafter holding the
+    herbs but not the stones for the rest. WU-195's "Gathered herbs make it pay" also shows on ore/array recipes.

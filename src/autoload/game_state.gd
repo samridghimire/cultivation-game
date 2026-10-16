@@ -417,10 +417,11 @@ func work_profession(prof_id: String, days: int) -> void:
 
 
 ## A newcomer's first craft also brings their first order (PROF-007), so they need
-## not wait for the month end; open orders are capped per profession.
-func _commissions_month() -> void:
+## not wait for the month end; open orders are capped per profession. `only_prof`
+## limits that early roll to the new craft (no early orders for the others).
+func _commissions_month(only_prof: String = "") -> void:
 	EventBus.topic = "trade"
-	for order in Commissions.roll(player, data, rng, GameClock.total_days):
+	for order in Commissions.roll(player, data, rng, GameClock.total_days, only_prof):
 		var days := Commissions.days_left(order, GameClock.total_days)
 		EventBus.post("A buyer at the workshop orders %d %s for %d spirit stones (%d days)." % [
 			int(order["count"]), data.items.get(order["item"], {}).get("name", order["item"]), int(order["reward"]), days], "progress")
@@ -2045,7 +2046,7 @@ func refine(recipe_id: String) -> void:
 		if Sects.add_contribution(player, data, contribution):
 			EventBus.post("Your sect promotes you to %s." % Sects.describe(player, data), "progress")
 	if not had_profession and player.professions.has(prof_id):
-		_commissions_month()
+		_commissions_month(prof_id)
 	_pass_time(result["days"])
 
 

@@ -21,9 +21,9 @@ static func _open_count(c: CharacterData, prof_id: String) -> int:
 	return n
 
 
-## Posts at most per_profession open orders for each profession `c` practises.
-## Returns the new orders.
-static func roll(c: CharacterData, data: GameData, rng: RandomNumberGenerator, today: int) -> Array[Dictionary]:
+## Posts at most per_profession open orders for each profession `c` practises
+## (only `only_prof` when given). Returns the new orders.
+static func roll(c: CharacterData, data: GameData, rng: RandomNumberGenerator, today: int, only_prof: String = "") -> Array[Dictionary]:
 	var added: Array[Dictionary] = []
 	var r := rules(data)
 	if r.is_empty():
@@ -31,6 +31,8 @@ static func roll(c: CharacterData, data: GameData, rng: RandomNumberGenerator, t
 	var prof_ids: Array = c.professions.keys()
 	prof_ids.sort()
 	for prof_id: String in prof_ids:
+		if only_prof != "" and prof_id != only_prof:
+			continue
 		if not data.professions.has(prof_id) or _open_count(c, prof_id) >= int(r["per_profession"]):
 			continue
 		var options: Array[Dictionary] = []

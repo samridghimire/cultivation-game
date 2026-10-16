@@ -402,7 +402,7 @@
       "body": [
         "Alchemists refine pills, Blacksmiths forge weapons and armor, Talisman Masters inscribe talismans and Doctors heal injuries. Learn recipes from scrolls and manuals, gather herbs and ores, then craft at a workshop.",
         "Crafting raises your profession rank, and higher ranks unlock stronger recipes and better results.",
-        "A Doctor can also work odd jobs at the workshop (Work as Doctor, one month) for stones and rank. The crafting professions earn by crafting and selling instead.",
+        "A Doctor can work odd jobs at the workshop (Work as Doctor, one month) for stones and rank. A crafter can take odd jobs in a craft they practise the same way (Odd jobs as <craft>).",
         "Combat talismans work only when readied: pick up to three kinds in your inventory, and one of each burns in every fight while you carry it."
       ]
     },
