@@ -277,7 +277,7 @@ static func strongest_foe_line(data: GameData, flags: Dictionary) -> String:
 	return ""
 
 
-## "Han Li, Qi Refining (far ahead of you), grudge 3" for the player's named rival,
+## "Han Li, Qi Refining (far ahead of you), a slight" for the player's named rival,
 ## "<name> has died" if they are dead, "" when there is no rival or you have not met yet.
 ## WU-167: at most 3 hint lines; when more were found, a dim pointer to the journal.
 static func next_steps_text(hints: PackedStringArray, journal_key: String) -> String:
@@ -306,10 +306,10 @@ static func rival_line(c: CharacterData, data: GameData, people: Dictionary, fav
 	var line := "%s, %s%s (%s)" % [r.name, Cultivation.realm_label(r, data), where, relation]
 	var grudge := Karma.grudge(c, r.id)
 	if grudge != 0:
-		line += ", grudge %d" % grudge
+		line += ", " + Karma.grudge_word(grudge, data)
 	var fav := int(favor.get(r.id, 0))
-	if fav != 0:
-		line += ", favor %d" % fav
+	if fav != 0 and feeling == "":
+		line += ", " + favor_word(fav, data)
 	var record := Rivals.bout_record_text(flags)
 	if record != "":
 		line += " (%s)" % record

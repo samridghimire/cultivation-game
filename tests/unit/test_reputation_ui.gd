@@ -58,7 +58,8 @@ func test_character_sheet_shows_rival() -> void:
 	var text := String(sheet._text.text)
 	assert_true(text.contains(rival.name), text)
 	assert_true(text.contains("ahead of you"), text)
-	assert_true(text.contains("grudge 3"), text)
+	assert_true(text.contains("a slight"), text)
+	assert_false(text.contains("grudge 3"), text)
 	rival.realm_index = gs.player.realm_index
 	assert_true(CharacterSheet.rival_line(gs.player, gs.data, gs.npcs, {}, {Rivals.FIRST_MEETING_FLAG: true}).contains("level with you"))
 	gs.player.grudges[rival.id] = 50
