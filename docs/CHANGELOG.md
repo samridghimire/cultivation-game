@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-16 [C-107] Help explains rival bouts, the bout record and successor rivals.
 - 2026-10-16 [EFF-004] A choice that trains a profession you have not taken up is refused with a reason.
 - 2026-10-15 [WU-170] Checked: the late-realm character sheet's life record and strongest-foe lines fit at 1280x800 and 1280x720.
 - 2026-10-15 [GUIDE-035] The journal says which region your rival is in when it is not yours.
