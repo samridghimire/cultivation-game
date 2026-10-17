@@ -3,7 +3,8 @@ extends SceneTree
 ## Alchemist on day 1, then follows the top hint it can act on for 180 days: gather the herb the
 ## hint names, craft and sell what it can refine, fill an open commission, otherwise meditate.
 ## Compared with the curious first-hour newcomer (tests/sim/first_hour.gd) at the same days.
-## Usage: tools/godot.sh --headless --path . -s res://tests/sim/crafter_start.gd -- [seeds] [days] [--orders]
+## Usage: tools/godot.sh --headless --path . -s res://tests/sim/crafter_start.gd -- [seeds] [days] [--orders] [--prof=<id>]
+## QA-109: --prof=<id> follows another craft (blacksmith, talisman_master, array_master, beast_tamer; default alchemist).
 ## QA-108: while the top hint is GUIDE-054's "You are still a mortal" line the crafter meditates that step instead of gathering
 ## or crafting (--no-nudge restores the old policy for before/after runs); the medians report the realm at day 120.
 ## QA-107: --orders prints every commission (roll day, item, count, reward, days allowed, whether each ingredient
@@ -12,7 +13,7 @@ extends SceneTree
 const FirstHour := preload("res://tests/sim/first_hour.gd")
 const CHECKPOINTS: Array[int] = [30, 90, 120, 180, 365]
 const REGION := "qingshi_village"
-const PROF := "alchemist"
+var _prof := "alchemist"  ## QA-109: --prof=<id>
 const STUCK_WEEK_DAYS := 7
 
 var _gs: Node
@@ -48,6 +49,9 @@ func _run() -> void:
 	var args := OS.get_cmdline_user_args()
 	_orders_mode = args.has("--orders")
 	_follow_nudge = not args.has("--no-nudge")
+	for a in args:
+		if String(a).begins_with("--prof="):
+			_prof = String(a).substr(7)
 	var nums: Array = []
 	for a in args:
 		if not String(a).begins_with("--"):
@@ -56,7 +60,7 @@ func _run() -> void:
 	var days := int(nums[1]) if nums.size() > 1 else 180
 	_gs = root.get_node("GameState")
 	_clock = root.get_node("GameClock")
-	print("Crafter start: new Alchemist in Qingshi Village, %d seeds, %d days" % [seeds, days])
+	print("Crafter start: new %s in Qingshi Village, %d seeds, %d days" % [_prof, seeds, days])
 	print("  seed  d30  d90 d180  crafted  comm(got/del)  rank  renown  gather% craft% meditate%  stuck-wk (faded)  curious(d30/d90/d180)  realm d90 | d180 | d365 (curious)  cult-hint-steps")
 	var cols := {"d30": [], "d90": [], "r120": [], "d180": [], "crafted": [], "got": [], "delivered": [], "rank": [], "renown": [], "gather": [], "craft": [], "meditate": [], "stuck": [], "faded": [], "c30": [], "c90": [], "c180": [], "d365": [], "hint": [], "post": [], "stuck_post": [], "rank_gap": []}
 	for s in range(1, seeds + 1):
@@ -104,7 +108,7 @@ func _crafter(seed_value: int, days: int) -> Dictionary:
 	var c := CharacterFactory.create("Crafter", _gs.data, rng)
 	_gs.start_session(c)
 	_gs.pending_event = ""
-	c.professions[PROF] = {"rank": 0, "xp": 0.0}
+	c.professions[_prof] = {"rank": 0, "xp": 0.0}
 	Alchemy.grant_rank_recipes(c, _gs.data)
 	var start: int = _clock.total_days
 	var out := {"d30": 0, "d90": 0, "d120": 0, "d180": 0, "crafted": 0, "got": 0, "delivered": 0, "rank": 0, "renown": 0, "gather_days": 0, "craft_days": 0, "meditate_days": 0, "stuck": 0, "faded": 0, "d365": 0, "realm90": "-", "realm120": "-", "realm180": "-", "realm365": "-", "cult_hint": 0, "crafted_post": 0, "stuck_post": 0}
@@ -127,7 +131,7 @@ func _crafter(seed_value: int, days: int) -> Dictionary:
 			out["stuck"] += 1
 			if _clock.total_days - start >= 180:
 				out["stuck_post"] += 1
-			if Professions.rank_of(c, "alchemist") >= Guidance.CRAFT_HINT_MAX_RANK:
+			if Professions.rank_of(c, _prof) >= Guidance.CRAFT_HINT_MAX_RANK:
 				out["faded"] += 1
 			kind = "meditate"
 		if _clock.total_days == before:  # a free action (selling, delivering) used no time: meditate the week
@@ -142,7 +146,7 @@ func _crafter(seed_value: int, days: int) -> Dictionary:
 	out["crafted"] = LifeStats.get_stat(c, "items_crafted")
 	out["delivered"] = LifeStats.get_stat(c, "commissions_done")
 	out["got"] = out["delivered"] + c.commissions.size()
-	out["rank"] = Professions.rank_of(c, PROF)
+	out["rank"] = Professions.rank_of(c, _prof)
 	out["renown"] = Renown.value(c, REGION)
 	if _orders_mode:
 		_track_orders(c, seed_value, start)
@@ -296,7 +300,7 @@ func _sell_surplus(c: CharacterData) -> void:
 	var wanted := {}
 	for order in c.commissions:
 		wanted[String(order["item"])] = true
-	for recipe_id: String in Alchemy.known_recipes(c, _gs.data, PROF):
+	for recipe_id: String in Alchemy.known_recipes(c, _gs.data, _prof):
 		var item_id := String(_gs.data.recipes[recipe_id]["output"]["item"])
 		var great := String(_gs.data.recipes[recipe_id].get("great_output", {}).get("item", ""))
 		for id in [item_id, great]:
@@ -353,7 +357,7 @@ func _gather_hinted(c: CharacterData) -> bool:
 		return false
 	for recipe_id: String in _gs.data.recipes:
 		var recipe: Dictionary = _gs.data.recipes[recipe_id]
-		if String(recipe["profession"]) != PROF or not Alchemy.knows(c, _gs.data, recipe_id) or int(recipe.get("min_rank", 0)) > Professions.rank_of(c, PROF):
+		if String(recipe["profession"]) != _prof or not Alchemy.knows(c, _gs.data, recipe_id) or int(recipe.get("min_rank", 0)) > Professions.rank_of(c, _prof):
 			continue
 		for item_id: String in recipe["ingredients"]:
 			if c.item_count(item_id) >= int(recipe["ingredients"][item_id]):
