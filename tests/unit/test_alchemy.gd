@@ -341,3 +341,39 @@ func test_shortfall_cost() -> void:
 	c.inventory = {"spirit_herb": 2, "dew_grass": 1}
 	assert_eq(Alchemy.shortfall_cost(c, d, "qi_gathering_pill"), 0, "everything in the pack")
 	assert_eq(Alchemy.shortfall_cost(c, d, "no_such_recipe"), 0)
+
+
+func test_margin_line_reads_recipe_margin() -> void:
+	var margin := Alchemy.recipe_margin(data(), "qi_gathering_pill")
+	var text := Alchemy.margin_line(data(), "qi_gathering_pill")
+	assert_true(text.contains("cost about %d " % margin["cost"]))
+	assert_true(text.contains("sells for about %d." % margin["value"]))
+	assert_eq(text.ends_with("Gathered herbs make it pay."), margin["value"] < margin["cost"])
+
+
+func test_margin_line_names_gathered_materials_for_non_herbs() -> void:
+	var d := data()
+	var checked := false
+	for recipe_id: String in d.recipes:
+		var margin := Alchemy.recipe_margin(d, recipe_id)
+		if int(margin["value"]) >= int(margin["cost"]) or not d.recipes[recipe_id]["ingredients"].has("iron_essence"):
+			continue
+		var stones := int(d.recipes[recipe_id]["ingredients"].get("spirit_stone", 0))
+		if int(margin["value"]) <= stones:
+			continue
+		assert_true(Alchemy.margin_line(d, recipe_id).ends_with("Gathered materials make it pay."), recipe_id)
+		checked = true
+		break
+	if not checked:
+		return # no loss-making ore recipe in the data
+
+
+func test_margin_line_has_no_suffix_when_output_pays() -> void:
+	var d := data()
+	var checked := false
+	for recipe_id: String in d.recipes:
+		var margin := Alchemy.recipe_margin(d, recipe_id)
+		if int(margin["value"]) >= int(margin["cost"]):
+			assert_false(Alchemy.margin_line(d, recipe_id).contains("make it pay"), recipe_id)
+			checked = true
+	assert_true(checked)

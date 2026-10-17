@@ -116,25 +116,6 @@ static func ingredient_lines(c: CharacterData, data: GameData, recipe_id: String
 	return lines
 
 
-## "Ingredients cost about N at shops; the output sells for about M." and, when
-## the output sells for less, a hint that gathered herbs make it pay (WU-195).
-static func margin_text(data: GameData, recipe_id: String) -> String:
-	var margin := Alchemy.recipe_margin(data, recipe_id)
-	var text := "Ingredients cost about %d at shops; the output sells for about %d." % [int(margin["cost"]), int(margin["value"])]
-	if int(margin["value"]) < int(margin["cost"]):
-		var stones := 0
-		var all_herbs := true
-		var ingredients: Dictionary = data.recipes[recipe_id]["ingredients"]
-		for item_id in ingredients:
-			if item_id == "spirit_stone":
-				stones += int(ingredients[item_id])
-			elif not (data.items.get(item_id, {}).get("tags", []) as Array).has("herb"):
-				all_herbs = false
-		if int(margin["value"]) > stones:
-			text += " Gathered herbs make it pay." if all_herbs else " Gathered materials make it pay."
-	return text
-
-
 ## True when `source` ("Gathered at <place> (<region>)") is the place the ingredient line
 ## already names (`place` may read "<place> in <Region>" or "<place> (in <Season>)").
 static func _names_gather_place(source: String, place: String) -> bool:
@@ -248,7 +229,7 @@ func _show_details() -> void:
 	var min_rank := int(recipe.get("min_rank", 0))
 	var prof: ProfessionDef = data.professions[recipe["profession"]]
 	_info.text = "Requires %s %s  |  takes %s" % [data.profession_rank_names[min_rank], prof.name, Calendar.format_duration(int(recipe["days"]))]
-	_ingredients.text = "Ingredients:\n  " + "\n  ".join(ingredient_lines(p, data, _selected, GameState.current_region, GameClock.total_days)) + "\n" + margin_text(data, _selected)
+	_ingredients.text = "Ingredients:\n  " + "\n  ".join(ingredient_lines(p, data, _selected, GameState.current_region, GameClock.total_days)) + "\n" + Alchemy.margin_line(data, _selected)
 	_where.text = missing_sources_text(p, data, _selected, GameState.current_region, GameClock.total_days)
 	_where.visible = _where.text != ""
 	var out := "Yields: %s" % output_text(data, recipe["output"])

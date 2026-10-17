@@ -79,6 +79,25 @@ static func recipe_margin(data: GameData, recipe_id: String) -> Dictionary:
 	return {"cost": cost, "value": value}
 
 
+## "Ingredients cost about N at shops; the output sells for about M." and, when
+## the output sells for less, a hint that gathered herbs make it pay (WU-195).
+static func margin_line(data: GameData, recipe_id: String) -> String:
+	var margin := Alchemy.recipe_margin(data, recipe_id)
+	var text := "Ingredients cost about %d at shops; the output sells for about %d." % [int(margin["cost"]), int(margin["value"])]
+	if int(margin["value"]) < int(margin["cost"]):
+		var stones := 0
+		var all_herbs := true
+		var ingredients: Dictionary = data.recipes[recipe_id]["ingredients"]
+		for item_id in ingredients:
+			if item_id == "spirit_stone":
+				stones += int(ingredients[item_id])
+			elif not (data.items.get(item_id, {}).get("tags", []) as Array).has("herb"):
+				all_herbs = false
+		if int(margin["value"]) > stones:
+			text += " Gathered herbs make it pay." if all_herbs else " Gathered materials make it pay."
+	return text
+
+
 ## GUIDE-050: what `c` still has to buy for `recipe_id` in spirit stones: the
 ## ingredients they lack, at the unit cost recipe_margin uses. A full pack is 0.
 static func shortfall_cost(c: CharacterData, data: GameData, recipe_id: String) -> int:
