@@ -1325,8 +1325,34 @@ static func body_integration_goals_active(c: CharacterData, data: GameData, flag
 	return false
 
 
+## The Mahayana ladder (MAHA-001): {text, done} in order, BI-001's pattern one realm up. The
+## inheritance row appears once data has one.
+static func mahayana_goals(c: CharacterData, data: GameData, flags: Dictionary, clan: ClanData = null) -> Array[Dictionary]:
+	var maha_index := data.realm_index_of("mahayana")
+	var rows: Array = [
+		["Reach Mahayana Middle", c.realm_index > maha_index or (c.realm_index == maha_index and c.stage >= 1)],
+		["Win a fight against a Mahayana foe", bool(flags.get(beat_realm_flag("mahayana"), false))],
+	]
+	if _has_realm_inheritance(data, "mahayana"):
+		rows.append(["Claim a Mahayana inheritance", _claimed_realm_inheritance(data, flags, "mahayana")])
+	var out: Array[Dictionary] = []
+	for row: Array in rows:
+		out.append({"text": row[0], "done": row[1]})
+	return out
+
+
+## True while the player is in Mahayana with goals left.
+static func mahayana_goals_active(c: CharacterData, data: GameData, flags: Dictionary, clan: ClanData = null) -> bool:
+	if c.realm_index != data.realm_index_of("mahayana"):
+		return false
+	for goal in mahayana_goals(c, data, flags, clan):
+		if not goal["done"]:
+			return true
+	return false
+
+
 ## The goal ladder the HUD announces from: "first" up to Qi Refining, "foundation" in Foundation
-## Establishment, "core" in Core Formation, "nascent" in Nascent Soul, "soul" in Soul Formation, "void" in Void Refinement, "body" in Body Integration, else "". Unlike active_goal_ladder it stays put once every goal is done, so the
+## Establishment, "core" in Core Formation, "nascent" in Nascent Soul, "soul" in Soul Formation, "void" in Void Refinement, "body" in Body Integration, "mahayana" in Mahayana, else "". Unlike active_goal_ladder it stays put once every goal is done, so the
 ## last goal ticked off is still announced.
 static func goal_ladder_id(c: CharacterData) -> String:
 	if c.realm_index <= 1:
@@ -1343,6 +1369,8 @@ static func goal_ladder_id(c: CharacterData) -> String:
 		return "void"
 	if c.realm_index == 7:
 		return "body"
+	if c.realm_index == 8:
+		return "mahayana"
 	return ""
 
 
@@ -1362,6 +1390,10 @@ static func goal_ladder(id: String, c: CharacterData, data: GameData, flags: Dic
 		return void_goals(c, data, flags, clan)
 	if id == "body":
 		return body_integration_goals(c, data, flags, clan)
+	if id == "mahayana":
+		return mahayana_goals(c, data, flags, clan)
+	if mahayana_goals_active(c, data, flags, clan):
+		return mahayana_goals(c, data, flags, clan)
 	var none: Array[Dictionary] = []
 	return none
 
@@ -1382,6 +1414,8 @@ static func active_goal_ladder(c: CharacterData, data: GameData, flags: Dictiona
 		return void_goals(c, data, flags, clan)
 	if body_integration_goals_active(c, data, flags, clan):
 		return body_integration_goals(c, data, flags, clan)
+	if mahayana_goals_active(c, data, flags, clan):
+		return mahayana_goals(c, data, flags, clan)
 	var none: Array[Dictionary] = []
 	return none
 
@@ -1596,6 +1630,14 @@ static func journal(c: CharacterData, data: GameData, flags: Dictionary, today: 
 				bi_tone = "normal" if bi_flagged else "warning"
 				bi_flagged = true
 			_add(out, "Body Integration goals", ("[x] " if goal["done"] else "[ ] ") + String(goal["text"]), bi_tone)
+	if mahayana_goals_active(c, data, flags, clan):
+		var maha_flagged := false
+		for goal in mahayana_goals(c, data, flags, clan):
+			var maha_tone := "dim"
+			if not goal["done"]:
+				maha_tone = "normal" if maha_flagged else "warning"
+				maha_flagged = true
+			_add(out, "Mahayana goals", ("[x] " if goal["done"] else "[ ] ") + String(goal["text"]), maha_tone)
 	var fights := fair_fights(c, data, flags, today, region_id, people, favor)
 	var goal_lines: PackedStringArray = []
 	if c.realm_index >= 2 or first_goals_done(c, data, flags):

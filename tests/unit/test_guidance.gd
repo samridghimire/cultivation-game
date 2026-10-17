@@ -1367,7 +1367,7 @@ func test_foundation_goals_clan_and_realm_limits() -> void:
 	c.realm_index = 2
 	assert_true(Guidance.foundation_goals(c, data(), {}, ClanData.new())[4]["done"])
 	assert_eq(Guidance.active_goal_ladder(c, data(), {}).size(), 5)
-	c.realm_index = 8
+	c.realm_index = 9
 	assert_false(Guidance.foundation_goals_active(c, data(), {}))
 	assert_true(Guidance.active_goal_ladder(c, data(), {}).is_empty())
 	c.realm_index = 1
@@ -1386,7 +1386,7 @@ func test_goal_ladder_keeps_a_finished_ladder() -> void:
 	assert_eq(Guidance.goal_ladder("foundation", c, data(), {}, ClanData.new()).size(), 5)
 	c.realm_index = 1
 	assert_eq(Guidance.goal_ladder_id(c), "first")
-	c.realm_index = 8
+	c.realm_index = 9
 	assert_eq(Guidance.goal_ladder_id(c), "")
 	assert_true(Guidance.goal_ladder("", c, data(), {}).is_empty())
 
@@ -1552,7 +1552,7 @@ func test_core_goal_ladder_ids_and_journal() -> void:
 	assert_eq(Guidance.goal_ladder("core", c, data(), {}).size(), 4)
 	assert_eq(Guidance.active_goal_ladder(c, data(), {}).size(), 4)
 	assert_eq(section_of.call().size(), 4)
-	c.realm_index = 8
+	c.realm_index = 9
 	assert_eq(Guidance.goal_ladder_id(c), "")
 	assert_true(section_of.call().is_empty())
 
@@ -1607,7 +1607,7 @@ func test_soul_goals_rows_and_ladder() -> void:
 	assert_false(Guidance.soul_goals(c, data(), {})[2]["done"])
 	assert_true(Guidance.soul_goals(c, data(), {Inheritances.claimed_flag("ghost_sovereign_hollow"): true})[2]["done"])
 	assert_true(Guidance.soul_goals(c, data(), {Guidance.beat_realm_flag("soul_formation"): true})[1]["done"])
-	c.realm_index = 8
+	c.realm_index = 9
 	assert_eq(Guidance.goal_ladder_id(c), "")
 	assert_false(Guidance.soul_goals_active(c, data(), {}))
 
@@ -1682,6 +1682,41 @@ func test_body_integration_goals_rows_and_ladder() -> void:
 		assert_eq(with_row[2]["text"], "Claim a Body Integration inheritance")
 		assert_false(with_row[2]["done"])
 		assert_true(Guidance.body_integration_goals(c, d, {Inheritances.claimed_flag("test_bi_legacy"): true})[2]["done"])
+
+
+## MAHA-001: the Mahayana ladder.
+func test_mahayana_goals_rows_and_ladder() -> void:
+	var d := data()
+	var c := _fresh()
+	c.realm_index = d.realm_index_of("mahayana")
+	assert_eq(c.realm_index, 8)
+	var has_inh := Guidance._has_realm_inheritance(d, "mahayana")
+	var goals := Guidance.mahayana_goals(c, d, {})
+	assert_eq(goals.size(), 2 + (1 if has_inh else 0))
+	for g in goals:
+		assert_false(g["done"])
+	assert_eq(goals[0]["text"], "Reach Mahayana Middle")
+	assert_true(Guidance.mahayana_goals_active(c, d, {}))
+	assert_eq(Guidance.goal_ladder_id(c), "mahayana")
+	assert_eq(Guidance.goal_ladder("mahayana", c, d, {}).size(), goals.size())
+	assert_eq(Guidance.active_goal_ladder(c, d, {}).size(), goals.size())
+	var section := func() -> Array:
+		return Guidance.journal(c, d, {}, 0, "qingshi_village").filter(func(e: Dictionary) -> bool: return e["section"] == "Mahayana goals")
+	assert_eq(section.call().size(), goals.size())
+	assert_eq(section.call()[0]["tone"], "warning")
+	c.stage = 1
+	assert_true(Guidance.mahayana_goals(c, d, {})[0]["done"])
+	assert_true(Guidance.mahayana_goals(c, d, {Guidance.beat_realm_flag("mahayana"): true})[1]["done"])
+	c.realm_index = 7
+	assert_false(Guidance.mahayana_goals_active(c, d, {}))
+	c.realm_index = 8
+	if not has_inh:
+		d.inheritances["test_maha_legacy"] = {"id": "test_maha_legacy", "name": "Maha Legacy", "region": "misty_forest", "appears_years": 1, "deadline_years": 5,
+			"stages": [{"name": "Gate", "days": 1, "test": "realm", "min_realm": "mahayana"}], "reward": {}}
+		var with_row := Guidance.mahayana_goals(c, d, {})
+		assert_eq(with_row[2]["text"], "Claim a Mahayana inheritance")
+		assert_false(with_row[2]["done"])
+		assert_true(Guidance.mahayana_goals(c, d, {Inheritances.claimed_flag("test_maha_legacy"): true})[2]["done"])
 
 
 ## INH-003: an open inheritance says how long it waits; under a year it is a warning.
