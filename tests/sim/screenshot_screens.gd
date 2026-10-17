@@ -73,6 +73,7 @@ extends SceneTree
 ## WU-208: append `-- --workshop-shot` for the Village Workshop menu of a practised Alchemist with an open
 ## commission: workshop_menu.png and workshop_menu_odd_jobs.png (pay line), then workshop_journal_commissions.png
 ## (WU-214: the journal's Commissions section with its "Needs <item>: <where>." line).
+## WU-233: also workshop_hint_estimate_<within|over> and workshop_journal_estimate_<within|over> (PROF-014 gathering estimate).
 
 ## WU-207: append `-- --rival-shot` for the journal's Household section with a met rival one realm ahead (the
 ## "Reach <realm> to stand a chance against <name>." line), then the bitter variant. Shoot at 1280x800 and 1280x720.
@@ -413,6 +414,69 @@ func _start_workshop_shot(gs: Node) -> void:
 		print("WU-224 label: ", Commissions.short_label(p, gs.data, p.commissions[0], today))
 		hud.get("_banner").visible = false
 		menu.open_for(workshop), "close": menu.close})
+	# WU-233: PROF-014's gathering estimate, the longest real due-soon line with and without "longer than the order has".
+	var hint_label: Label = hud.get("_hint")
+	for variant: Array in [["estimate_within", 14], ["estimate_over", 3]]:
+		var order := _longest_estimate_order(gs, int(variant[1]))
+		if order.is_empty():
+			continue
+		var vname := String(variant[0])
+		shots.append({"name": "workshop_hint_" + vname, "open": func() -> void:
+			var p: CharacterData = gs.player
+			p.commissions.clear()
+			p.commissions.append(order.duplicate())
+			p.inventory.clear()
+			p.add_item("spirit_stone", 9999)  # rich enough that the odd-jobs hint stands down
+			p.realm_index = maxi(p.realm_index, 2)  # past the newcomer hints, which would outrank the order line
+			_set_all_ranks(gs, 2)  # the herb hint fades at CRAFT_HINT_MAX_RANK (2), leaving the order line first
+			root.get_node("Settings").call("set_value", "hud_hints", 3)
+			hud.get("_banner").visible = false
+			root.get_node("EventBus").player_changed.emit()
+			print("WU-233 hint (%s): %s" % [vname, hint_label.text])
+			assert(hint_label.text.contains("of gathering"), "estimate not in hint: " + hint_label.text), "close": func() -> void: pass})
+		shots.append({"name": "workshop_journal_" + vname, "open": func() -> void:
+			var p: CharacterData = gs.player
+			p.commissions.clear()
+			p.commissions.append(order.duplicate())
+			p.inventory.clear()
+			journal.open()
+			journal.get("_scroll").set_deferred("scroll_vertical", 100000), "close": journal.close})
+
+
+func _set_all_ranks(gs: Node, rank: int) -> void:
+	for prof_id: String in gs.data.professions:
+		gs.player.professions[prof_id] = {"rank": rank, "xp": 0.0}
+
+
+## WU-233: the commission with the longest "Needs ..." line that carries a gathering estimate, due in `due_in` days
+## (3 is shorter than any gathering time, so it reads "longer than the order has").
+func _longest_estimate_order(gs: Node, due_in: int) -> Dictionary:
+	var today := int(root.get_node("GameClock").total_days)
+	var c: CharacterData = gs.player
+	var saved: Array = c.commissions.duplicate(true)
+	var saved_inv: Dictionary = c.inventory.duplicate(true)
+	var saved_profs: Dictionary = c.professions.duplicate(true)
+	_set_all_ranks(gs, 2)
+	var best: Dictionary = {}
+	var best_len := 0
+	for rid: String in gs.data.recipes:
+		var rec: Dictionary = gs.data.recipes[rid]
+		var item_id := String(rec["output"]["item"])
+		for count in range(1, 13):
+			var entry := {"profession": String(rec.get("profession", "alchemist")), "recipe": rid, "item": item_id, "count": count,
+				"reward": 1234, "xp": 150.0, "due_day": today + due_in}
+			c.commissions.clear()
+			c.commissions.append(entry)
+			c.inventory.clear()
+			var line := Commissions.due_soon_hint(c, gs.data, gs.current_region, today)
+			if line.contains("of gathering") and line.contains("longer than the order has") == (due_in <= 3) and line.length() > best_len:
+				best_len = line.length()
+				best = entry
+	c.commissions = saved
+	c.inventory = saved_inv
+	c.professions = saved_profs
+	print("WU-233 longest (due in %d): %d chars %s" % [due_in, best_len, best.get("recipe", "none")])
+	return best
 
 
 ## WU-216: the rank-up lines in the message log, longest title + line pair of any craft and rank.
