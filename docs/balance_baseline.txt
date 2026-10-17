@@ -1229,7 +1229,7 @@ Late-realm fight gates, 200 fights per row. Typical player at the gate's lowest 
   body_integ ruins_dao_forged_colossus         dao_forged_colossus    body/0  ruins,mountain       yes       0%  yes    
   body_integ mountain_arbiter_of_one_body      one_body_arbiter       body/2  mountain,ruins       no       31%  no     choice
   mahayana   mountain_sky_bearing_tortoise     sky_bearing_tortoise   maha/0  mountain,wild        yes       5%  yes    
-  mahayana   wild_great_vehicle_magistrate     great_vehicle_magistra maha/0  wild,ruins           no        0%  no     FLAG, 20%+ from stage 3
+  mahayana   wild_great_vehicle_magistrate     great_vehicle_magistra maha/3  wild,ruins           no       35%  no     
   mahayana   marsh_myriad_throne_ancestor      myriad_throne_ancestor maha/0  marsh,wild           yes       0%  yes    
   mahayana   mountain_ten_thousand_li_peng     ten_thousand_li_peng   maha/0  mountain             yes       0%  yes    
   mahayana   ruins_charnel_heaven_sovereign    charnel_heaven_soverei maha/0  ruins,marsh          yes       0%  yes    
@@ -1241,6 +1241,6 @@ Late-realm fight gates, 200 fights per row. Typical player at the gate's lowest 
   soul_forma chaos_alchemist_furnace           star_devouring_colossu soul/0  inheritance          no       11%  no     inheritance (retry)
   void_refin door_ajar_folder                  void_tribunal_censor   void/0  inheritance          no        8%  no     inheritance (retry)
   body_integ marrow_throne_hollow              flesh_world_behemoth   body/0  inheritance          no       19%  no     inheritance (retry)
-  mahayana   great_vehicle_sutra_barge         great_vehicle_magistra maha/0  inheritance          no        0%  no     inheritance (retry)
-flagged: 1
+  mahayana   great_vehicle_sutra_barge         great_vehicle_magistra maha/3  inheritance          no       35%  no     inheritance (retry)
+flagged: 0
 

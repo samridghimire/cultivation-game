@@ -373,6 +373,16 @@ func test_choice_check_tag() -> void:
 	assert_eq(list[2]["check"], "Doctor, 1st Grade")
 
 
+## The encounter window prefixes "[<check tag>]", so a label must not repeat it ("... (Spirit 64)").
+func test_choice_labels_do_not_repeat_their_check_tag() -> void:
+	var d := GameData.load_from_dir()
+	for id: String in d.encounters:
+		for choice: Dictionary in d.encounters[id].get("choices", []):
+			var label := String(choice.get("label", ""))
+			for part: String in Exploration.check_tag(d, choice).split(", ", false):
+				assert_false(label.contains("(" + part), "%s: '%s' repeats '%s'" % [id, label, part])
+
+
 func test_choice_check_tag_alignment_and_cost() -> void:
 	var d := GameData.load_from_dir()
 	var c := new_character()

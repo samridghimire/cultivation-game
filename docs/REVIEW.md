@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 7144c97
+Last reviewed commit: f07c93b
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -728,3 +728,19 @@ Last reviewed commit: 7144c97
   - Notes, not filed: Guidance.goal_ladder's trailing `mahayana_goals_active` fallback is redundant (realm 8 already maps
     to "mahayana"). max_count lets each missing ingredient use the full FILL_SHARE of the window, so a two-gathered-
     ingredient order can still be tight.
+- 2026-10-17 (reviewer): reviewed 7144c97..f07c93b (C-152, C-149, WU-227, WU-229, WU-228, QA-108, PROF-013, C-154,
+  WU-231, WU-232, C-155, PROF-014, YEAR-011, QA-110; [PLAN]/[REVIEW] commits skipped). Main green before and after. No
+  BACKLOG/CHANGELOG edits by workers; no SAVE_VERSION change (commissions_lapsed is a LifeStats key, defaults to 0).
+  Nothing new filed (the planner's C-161 covers the rest).
+  - Fixed ([REVIEW] commit): forced (non-lethal, not a choice) fights that were walls, C-153's way.
+    wild_great_vehicle_magistrate (C-148) got min_stage 3: 0% -> 35% (QA-110's FLAG). C-154's Ascent-Warden Arbiter was
+    4% at its TT/2 gate and under 20% at every TT stage (late_gates only reaches Mahayana, so QA-110 missed it): foe
+    stage 1 -> 0 and min_stage 2 -> 3, now 39%. C-152's Sutra Barge realm stage got min_stage 3 (guardian 0% -> 35%).
+    C-155's bell label "(Spirit 64)" (and C-143's "(Comprehension 12)") repeated the "[Spirit 64]" tag the encounter
+    window already prefixes; labels trimmed, test added that no choice label repeats its check tag.
+  - C-161 (planner) covers the remaining inheritance guardians (8-11%); its row now says which parts are done.
+  - Checked: PROF-013's lapse_text reads the order after expire() removed it (fine, it only reads the entry).
+    PROF-014's estimate only runs when short_ingredient found a positive shortfall, so days >= 1. YEAR-011's line
+    pluralises both counts. C-155's stone costs are gated by Effects.check.
+  - Notes, not filed: every lethal Mahayana/TT foe is 0-5% at its realm's stage 0 (C-154's own follow-up); they are
+    evadable, but late_gates should grow to tribulation_transcendence when C-157/C-158 land.
