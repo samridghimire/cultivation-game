@@ -34,6 +34,10 @@ extends SceneTree
 ## WU-184: append `-- --soul-shot` for a Soul Formation Early player: the journal's Soul Formation goals
 ## (with the Starfire Body row) and the HUD goal ladder.
 
+## WU-225: append `-- --inherit-shot` for a Body Integration Early player in Withered Bone Marsh at the Hollow of the
+## Unbroken Body (C-136): the grounds menu and the journal's Opportunities with the realm trial next, then with the
+## Constitution trial next and missed (inherit_menu*.png, inherit_journal*.png).
+
 ## WU-188: append `-- --void-shot` for a Void Refinement Early player: HUD goal ladder and the
 ## journal's Void Refinement goals.
 
@@ -124,6 +128,9 @@ func _start() -> void:
 		return
 	if OS.get_cmdline_user_args().has("--body-shot"):
 		_start_void_shot(gs, "body_integration", "body")
+		return
+	if OS.get_cmdline_user_args().has("--inherit-shot"):
+		_start_inherit_shot(gs)
 		return
 	if OS.get_cmdline_user_args().has("--encounter-shot"):
 		_start_encounter_shot(gs)
@@ -553,6 +560,46 @@ func _start_debts_shot(gs: Node) -> void:
 	shots.append({"name": "debts_journal_end", "open": func() -> void:
 		journal.open()
 		journal.get("_scroll").set_deferred("scroll_vertical", 100000), "close": journal.close})
+
+
+## WU-225: the Hollow of the Unbroken Body (marrow_throne_hollow) at its first trial, then at the missed Constitution gate.
+func _start_inherit_shot(gs: Node) -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 5
+	var c := CharacterFactory.create("Lin Feng", gs.data, rng, "male")
+	gs.start_session(c)
+	gs.pending_event = ""
+	var id := "marrow_throne_hollow"
+	var def: Dictionary = gs.data.inheritances[id]
+	c.age_days = 300 * Calendar.DAYS_PER_YEAR
+	c.realm_index = gs.data.realm_index_of("body_integration")
+	c.stage = 0
+	c.attributes["constitution"] = 10
+	root.get_node("GameClock").total_days = Inheritances.appears_day(def) + 2 * Calendar.DAYS_PER_YEAR
+	gs.current_region = String(def["region"])
+	world = load("res://src/world/world.tscn").instantiate()
+	root.add_child(world)
+	hud = world.get_node("HUD")
+	var journal: Control = hud.get("_screens")["toggle_journal"]
+	var menu: Control = hud.get("_choice_menu")
+	var ground: Node = load("res://src/world/interactables/inheritance_grounds.gd").new()
+	ground.display_name = "Hollow of the Unbroken Body"
+	for step: Array in [["", 0], ["_gate", 1]]:
+		var suffix: String = step[0]
+		var cleared: int = step[1]
+		shots.append({"name": "inherit_menu" + suffix, "open": func() -> void:
+			c.trial_progress[id] = cleared
+			hud.get("_banner").visible = false
+			menu.open_for(ground), "close": menu.close})
+		shots.append({"name": "inherit_journal" + suffix, "open": func() -> void:
+			c.trial_progress[id] = cleared
+			journal.open()
+			journal.get("_scroll").set_deferred("scroll_vertical", 100000)
+			var opps: Array[Dictionary] = []
+			Guidance._opportunity_entries(opps, c, gs.data, gs.world_flags, root.get_node("GameClock").total_days, gs.current_region)
+			for o: Dictionary in opps:
+				if String(o.get("text", "")).contains("Unbroken Body"):
+					print("inherit-shot journal: ", o.get("text", "")), "close": journal.close})
 
 
 ## WU-207: the journal with a met rival a realm ahead, calm and then bitter.
