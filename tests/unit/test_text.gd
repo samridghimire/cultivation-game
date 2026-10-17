@@ -37,6 +37,9 @@ func test_plural() -> void:
 	assert_eq(Text.plural("Fairy", 2), "Fairies")
 	assert_eq(Text.plural("Day", 2), "Days")
 	assert_eq(Text.plural("Box", 2), "Boxes")
+	assert_eq(Text.plural("Manual: Iron Fist", 2), "Manuals: Iron Fist")
+	assert_eq(Text.plural("Recipe Scroll: Great Vehicle Pill", 3), "Recipe Scrolls: Great Vehicle Pill")
+	assert_eq(Text.plural("Manual: Iron Fist", 1), "Manual: Iron Fist")
 
 
 func test_effects_check_pluralises_items() -> void:
@@ -56,4 +59,6 @@ func test_mass_noun_items_keep_their_name_in_the_plural() -> void:
 	assert_eq(Items.item_plural(d, "formation_jade", 2), "Formation Jade")
 	assert_eq(Items.item_plural(d, "thousand_year_lingzhi", 2), "Thousand-Year Lingzhi")
 	assert_eq(Items.item_plural(d, "earth_marrow_fungus", 2), "Earth Marrow Fungi")
+	assert_eq(Items.item_plural(d, "thunder_scarred_jade", 2), "Thunder-Scarred Jade")
+	assert_eq(Items.item_plural(d, "fox_essence_blood", 2), "Celestial Fox Essence Blood")
 	assert_eq(Items.item_plural(d, "spirit_herb", 2), "Spirit Herbs")

@@ -19,10 +19,14 @@ static func join_and(items: PackedStringArray) -> String:
 	return "%s and %s" % [", ".join(items.slice(0, items.size() - 1)), items[items.size() - 1]]
 
 
-## `noun` for `count` of them: "Spirit Herb" x1 stays, x3 is "Spirit Herbs". Only the last word is inflected.
+## `noun` for `count` of them: "Spirit Herb" x1 stays, x3 is "Spirit Herbs". Only the last word is inflected,
+## except in a "Kind: Title" name, where the kind is ("Manuals: Iron Fist", not "Manual: Iron Fists").
 static func plural(noun: String, count: int) -> String:
 	if count == 1 or noun == "":
 		return noun
+	var colon := noun.find(": ")
+	if colon > 0:
+		return plural(noun.left(colon), count) + noun.substr(colon)
 	var lower := noun.to_lower()
 	for ending in ["s", "x", "z", "ch", "sh"]:
 		if lower.ends_with(ending):

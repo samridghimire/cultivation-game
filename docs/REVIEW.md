@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: f27406e
+Last reviewed commit: 7144c97
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -714,3 +714,17 @@ Last reviewed commit: f27406e
     saves. C-143's encounters are once-only (blocked_by_flag) and C-136's inheritance uses an existing region.
   - Notes, not filed: C-143's old alchemist's notes and C-145's Verdant Remnant treasure both teach Visceral Mending, so
     a player can get that scroll twice. GUIDE-053's next_recipe_line scans every item to find the scroll each call.
+- 2026-10-17 (reviewer): reviewed f27406e..7144c97 (GUIDE-056, C-147, WU-223, PROF-010, C-148, PROF-011, WU-224,
+  QA-20261017-1, MAHA-001, C-153, WU-230, WU-215, GUIDE-059, WU-225, C-151, PROF-012, WU-226; [PLAN]/[REVIEW] commits
+  skipped). Main green before and after (2011 tests). No BACKLOG/CHANGELOG edits by workers; no SAVE_VERSION change
+  (no new persistent state). Nothing filed.
+  - Fixed ([REVIEW] commit): Text.plural (GUIDE-056/059) inflected the last word of "Kind: Title" names, so selling or
+    storing two scrolls read "2 Manual: Iron Fists" / "Recipe Scroll: Great Vehicle Pills"; it now inflects the kind
+    ("Manuals: Iron Fist"). Thunder-Scarred Jade and Celestial Fox Essence Blood got `plural` overrides like the other
+    jades (QA-20261017-1 missed them). Tests added.
+  - Checked: PROF-010's rank_up_line range (from_rank, rank] matches every _post_rank_up caller passing ranks_gained.
+    PROF-012's max_count never drops below 1 and skips ingredients the pack covers or that are only bought. MAHA-001's
+    hardcoded realm index 8 matches realms.json. C-151's quarry does not overlap other Qingshi places.
+  - Notes, not filed: Guidance.goal_ladder's trailing `mahayana_goals_active` fallback is redundant (realm 8 already maps
+    to "mahayana"). max_count lets each missing ingredient use the full FILL_SHARE of the window, so a two-gathered-
+    ingredient order can still be tight.
