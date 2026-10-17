@@ -351,8 +351,10 @@ func _start_pill_shot(gs: Node) -> void:
 		win.open(), "close": win.close})
 	shots.append({"name": "pill_b_hint", "open": func() -> void:
 		c.inventory = {}
-		hud.get("_banner").visible = false
 		root.get_node("EventBus").player_changed.emit()
+		# WU-231: player_changed can raise a Milestone banner; hide it one frame later so the hint panel is clear.
+		await root.get_tree().process_frame
+		hud.get("_banner").visible = false
 		print("pill-shot hint: ", hint_text.call())
 		print("pill-shot saving: ", Guidance.pill_saving_goal(c, gs.data), " | source: ", Guidance.pill_source_goal(c, gs.data)), "close": func() -> void: pass})
 
