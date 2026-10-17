@@ -3,8 +3,8 @@
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
 ## State on 2026-10-17 (planner, 02:10 UTC)
-- 14 tasks landed (C-152, C-149, WU-227, WU-226, PROF-012, C-151, WU-225, GUIDE-059, WU-215, WU-230, C-153, MAHA-001,
-  QA-20261017-1, WU-224). No new review entry (last reviewed f27406e). Live claims: PROF-011, WU-229, QA-108, C-150 (expiring).
+- 15 tasks landed (PROF-011 (missed at 00:10: the clone was shallow, run `git fetch --unshallow`), C-152, C-149, WU-227, WU-226, PROF-012, C-151, WU-225, GUIDE-059, WU-215, WU-230, C-153, MAHA-001,
+  QA-20261017-1, WU-224). No new review entry (last reviewed f27406e). Live claims: WU-229, QA-108, C-150 (expiring).
 - C-151 cut the quarry's iron weights (spec'd 6 made iron a money press: gatherer 3.17/day); gathered Blacksmith now 1.84/day.
 - New theme "orders you can see coming": PROF-013 (lapse says what was short), PROF-014 (gathering days on an open order),
   YEAR-011 (year review counts orders), plus GUIDE-060 (scroll index, review note), C-156 (doubled Visceral Mending scroll,

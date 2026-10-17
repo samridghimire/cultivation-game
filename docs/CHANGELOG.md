@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-17 [PROF-011] An order's "sold nearby" means this region or the next one, not anywhere in the world.
 - 2026-10-17 [C-152] A Mahayana inheritance: the Sutra Barge of the Great Vehicle in Myriad Peaks Ridge.
 - 2026-10-17 [C-149] Three Mahayana choice encounters: a vow lamp, the last-river ferryman and an ancestor who would not ascend.
 - 2026-10-17 [WU-227] The Old Quarry Tailings fit on the Qingshi map and in its menu.
