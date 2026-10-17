@@ -1277,9 +1277,9 @@ Late-realm fight gates, 200 fights per row. Typical player at the gate's lowest 
   mahayana   mountain_ferryman_of_the_last_riv great_vehicle_magistra maha/0  mountain,marsh       no        0%  no     choice
   mahayana   ruins_ancestor_who_would_not_asce myriad_throne_ancestor maha/0  ruins,wild           yes       0%  no     choice
   soul_forma eternal_sky_patriarch_peak        heavenly_mandate_elder soul/0  inheritance          no       31%  no     inheritance (retry)
-  soul_forma ghost_sovereign_hollow            ghost_banner_lord      soul/0  inheritance          no       10%  no     inheritance (retry)
-  soul_forma chaos_alchemist_furnace           star_devouring_colossu soul/0  inheritance          no       11%  no     inheritance (retry)
-  void_refin door_ajar_folder                  void_tribunal_censor   void/0  inheritance          no        8%  no     inheritance (retry)
+  soul_forma ghost_sovereign_hollow            ghost_banner_lord      soul/1  inheritance          no       33%  no     inheritance (retry)
+  soul_forma chaos_alchemist_furnace           star_devouring_colossu soul/1  inheritance          no       42%  no     inheritance (retry)
+  void_refin door_ajar_folder                  void_tribunal_censor   void/1  inheritance          no       31%  no     inheritance (retry)
   body_integ marrow_throne_hollow              flesh_world_behemoth   body/0  inheritance          no       19%  no     inheritance (retry)
   mahayana   great_vehicle_sutra_barge         great_vehicle_magistra maha/3  inheritance          no       35%  no     inheritance (retry)
 flagged: 0
