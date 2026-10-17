@@ -342,6 +342,23 @@ func _start_workshop_shot(gs: Node) -> void:
 	shots.append({"name": "workshop_journal_commissions", "open": func() -> void:
 		journal.open()
 		journal.get("_scroll").set_deferred("scroll_vertical", 100000), "close": journal.close})
+	# WU-224: the order button for the longest-named recipe output (word-boundary cut from WU-219).
+	shots.append({"name": "workshop_menu_long_order", "open": func() -> void:
+		var best: Dictionary = {}
+		for rid: String in gs.data.recipes:
+			var rec: Dictionary = gs.data.recipes[rid]
+			var iname := String(gs.data.items[String(rec["output"]["item"])].name)
+			if best.is_empty() or iname.length() > String(best["name"]).length():
+				best = {"name": iname, "recipe": rec}
+		var item_id := String(best["recipe"]["output"]["item"])
+		var today := int(root.get_node("GameClock").total_days)
+		var p: CharacterData = gs.player
+		p.commissions.clear()
+		p.commissions.append({"profession": String(best["recipe"].get("profession", "alchemist")), "recipe": String(best["recipe"]["id"]),
+			"item": item_id, "count": 12, "reward": 1234, "xp": 150.0, "due_day": today + 40})
+		print("WU-224 label: ", Commissions.short_label(p, gs.data, p.commissions[0], today))
+		hud.get("_banner").visible = false
+		menu.open_for(workshop), "close": menu.close})
 
 
 ## WU-216: the rank-up lines in the message log, longest title + line pair of any craft and rank.
