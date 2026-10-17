@@ -313,6 +313,7 @@ func test_region_marks_letter_requests() -> void:
 	assert_eq(here.size(), 1)
 	assert_true(String(here[0]["text"]).begins_with("Letter: Old Asker asked for 2 "))
 	assert_true(String(here[0]["text"]).ends_with("(50 days left)"))
+	assert_true(String(here[0]["text"]).contains("asked for 2 %s (" % Items.item_plural(d, "qi_gathering_pill", 2)), "plural item name")
 	assert_eq(letters.call("misty_forest", 100).size(), 0)
 	assert_eq(letters.call("qingshi_village", 151).size(), 0, "expired shows nowhere")
 

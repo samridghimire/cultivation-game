@@ -242,7 +242,7 @@ static func region_marks(c: CharacterData, data: GameData, people: Dictionary, e
 			enter = " (you can enter)"
 		marks.append({"kind": "event", "text": "%s (%s left)%s" % [WorldEvents.active_label(data, instance["id"]), Calendar.format_duration(maxi(0, int(instance["end_day"]) - total_days)), enter]})
 	for req in Letters.requests_in_region(c, data, people, region_id, total_days):
-		marks.append({"kind": "letter", "text": "Letter: %s asked for %d %s (%d days left)" % [req["name"], req["count"], req["item"], req["days_left"]]})
+		marks.append({"kind": "letter", "text": "Letter: %s asked for %d %s (%d days left)" % [req["name"], req["count"], Items.item_plural(data, String(req["item_id"]), int(req["count"])), req["days_left"]]})
 	marks.append_array(bounty_marks(c, data, total_days, region_id))
 	return marks
 

@@ -227,7 +227,7 @@ func test_sell_all_note_names_top_stacks() -> void:
 			ids.append(id)
 	assert_true(ids.size() >= 4, "test items exist")
 	var text := ShopScreen.sell_all_summary(c, data(), ids)
-	assert_true(text.begins_with("Sells: 9 Mist Wolf Pelt"), text)
+	assert_true(text.begins_with("Sells: 9 %s" % Items.item_plural(data(), "mist_wolf_pelt", 9)), text)
 	assert_true(text.ends_with("and 1 more kind"), text)
 	assert_false(ShopScreen.sell_all_summary(c, data(), ids.slice(0, 2)).contains("more"))
 

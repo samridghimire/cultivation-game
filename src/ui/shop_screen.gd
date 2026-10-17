@@ -420,7 +420,7 @@ static func sell_all_summary(c: CharacterData, data: GameData, ids: Array) -> St
 		return Items.sell_price(data, a) * c.item_count(a) > Items.sell_price(data, b) * c.item_count(b))
 	var parts: Array[String] = []
 	for id: String in sorted.slice(0, 3):
-		parts.append("%d %s" % [c.item_count(id), data.items[id]["name"]])
+		parts.append("%d %s" % [c.item_count(id), Items.item_plural(data, id, c.item_count(id))])
 	var text := "Sells: " + ", ".join(parts)
 	var rest := sorted.size() - parts.size()
 	if rest > 0:

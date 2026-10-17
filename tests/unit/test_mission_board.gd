@@ -233,6 +233,10 @@ func test_rank_text_helpers() -> void:
 	assert_true(lines[1].begins_with("Realm: "), lines[1])
 	var benefits := MissionBoard.rank_benefit_lines(d, sect.id, 0)
 	assert_eq(benefits, PackedStringArray(["Stipend: none", "Monthly duty: none"]))
+	var core := MissionBoard.rank_benefit_lines(d, "azure_cloud_sect", 2)
+	assert_true(core[0].contains("1 Qi Gathering Pill a month"), core[0])
+	d.sects["azure_cloud_sect"].ranks[2]["stipend"]["items"]["qi_gathering_pill"] = 2
+	assert_true(MissionBoard.rank_benefit_lines(d, "azure_cloud_sect", 2)[0].contains("2 Qi Gathering Pills a month"))
 	assert_eq(MissionBoard.duty_text(c, d), "Your rank owes no monthly duty.")
 	c.sect["rank"] = 1
 	c.sect["month_earned"] = 10

@@ -225,7 +225,7 @@ static func requests_in_region(c: CharacterData, data: GameData, npcs: Dictionar
 		var npc: CharacterData = npcs.get(req["npc_id"])
 		if npc == null or not npc.alive or int(req["until"]) < today or Npcs.region_of(npc, data) != region_id:
 			continue
-		out.append({"name": npc.name, "count": int(req["count"]), "item": _item_name(data, String(req["item"])), "days_left": int(req["until"]) - today})
+		out.append({"name": npc.name, "count": int(req["count"]), "item": _item_name(data, String(req["item"])), "item_id": String(req["item"]), "days_left": int(req["until"]) - today})
 	return out
 
 

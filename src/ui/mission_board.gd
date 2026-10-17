@@ -189,7 +189,7 @@ static func rank_benefit_lines(data: GameData, sect_id: String, rank: int) -> Pa
 		parts.append("%d spirit stones" % int(stipend["spirit_stones"]))
 	var items: Dictionary = stipend.get("items", {})
 	for item_id in items:
-		parts.append("%d %s" % [int(items[item_id]), data.items.get(item_id, {}).get("name", item_id)])
+		parts.append("%d %s" % [int(items[item_id]), Items.item_plural(data, item_id, int(items[item_id]))])
 	lines.append("Stipend: %s" % (", ".join(parts) + " a month" if not parts.is_empty() else "none"))
 	var duty := int(def.get("monthly_duty", 0))
 	lines.append("Monthly duty: %s" % ("%d contribution (or the stipend is withheld)" % duty if duty > 0 else "none"))
