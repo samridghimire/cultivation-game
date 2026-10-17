@@ -8,6 +8,7 @@ extends RefCounted
 
 const LAPSE_WARNING_DAYS := 7
 const DUE_SOON_DAYS := 14
+const STONE_ID := "spirit_stone"
 
 
 static func rules(data: GameData) -> Dictionary:
@@ -243,6 +244,9 @@ static func missing_line(c: CharacterData, data: GameData, entry: Dictionary, re
 	var id := short_ingredient(c, data, entry)
 	if id == "":
 		return "You have the ingredients: craft it at a workshop."
+	if id == STONE_ID:
+		var shortfall := _stones_needed(c, data, entry) - c.item_count(STONE_ID)
+		return "Needs %d more %s for the crafts." % [shortfall, Items.item_plural(data, STONE_ID, shortfall)]
 	var where := Guidance.source_phrase(c, data, id, region_id, today)
 	return "Needs %s%s%s." % [_item_name(data, id), ": " + where if where != "" else "", _gather_estimate(c, data, entry, id, region_id, today)]
 
@@ -275,8 +279,9 @@ static func _recipe_for(data: GameData, entry: Dictionary) -> Dictionary:
 	return {}
 
 
-## PROF-013: the first ingredient (data order, no spirit stones) the crafts still needed for this
-## order require more of than the pack holds. "" when none is short, the pack holds the order, or no recipe.
+## PROF-013/016: the first non-stone ingredient (data order) the crafts still needed for this order require
+## more of than the pack holds; failing that "spirit_stone" when the crafts need more stones than the pack
+## holds. "" when none is short, the pack holds the order, or no recipe.
 static func short_ingredient(c: CharacterData, data: GameData, entry: Dictionary) -> String:
 	var have := c.item_count(String(entry.get("item", "")))
 	var count := int(entry.get("count", 0))
@@ -289,7 +294,19 @@ static func short_ingredient(c: CharacterData, data: GameData, entry: Dictionary
 	for id: String in ingredients:
 		if id != "spirit_stone" and c.item_count(id) < int(ingredients[id]) * crafts:
 			return id
+	if c.item_count(STONE_ID) < _stones_needed(c, data, entry):
+		return STONE_ID
 	return ""
+
+
+## PROF-016: the spirit stones the crafts still needed for this order consume (0 when none or no recipe).
+static func _stones_needed(c: CharacterData, data: GameData, entry: Dictionary) -> int:
+	var recipe := _recipe_for(data, entry)
+	if recipe.is_empty():
+		return 0
+	var per_craft := maxi(1, int(recipe["output"].get("count", 1)))
+	var crafts := ceili(float(int(entry.get("count", 0)) - c.item_count(String(entry.get("item", "")))) / per_craft)
+	return int(recipe["ingredients"].get(STONE_ID, 0)) * maxi(crafts, 0)
 
 
 ## PROF-013: the lapse message, with what you were short of (or that you never crafted it).

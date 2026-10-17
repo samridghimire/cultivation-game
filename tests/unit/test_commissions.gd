@@ -431,3 +431,39 @@ func test_max_count_two_places_sums_days() -> void:
 	var single := Commissions.max_count(c, d, one, "fake_region", 0, 100)
 	assert_eq(Exploration.best_gather_place(c, d, "herb_b", "fake_region"), "p2")
 	assert_true(absi(both * 2 - single) <= 1, "about half: %d vs %d" % [both, single])
+
+
+func _array_order(count: int) -> Dictionary:
+	return {"profession": "array_master", "recipe": "minor_spirit_gathering_array", "item": "minor_spirit_gathering_array", "count": count, "reward": 10, "xp": 5.0, "due_day": 100}
+
+
+## PROF-016: an order short only of spirit stones says so instead of "you have the ingredients".
+func test_missing_line_names_a_stone_shortfall() -> void:
+	var c := _alchemist()
+	c.inventory = {}
+	c.add_item("talisman_paper", 2)
+	c.add_item("spirit_herb", 2)
+	c.add_item("spirit_stone", 2)
+	assert_eq(Commissions.short_ingredient(c, data(), _array_order(2)), "spirit_stone")
+	assert_eq(Commissions.missing_line(c, data(), _array_order(2), "qingshi_village", 10), "Needs 4 more %s for the crafts." % Items.item_plural(data(), "spirit_stone", 4))
+	c.add_item("spirit_stone", 3)
+	assert_eq(Commissions.missing_line(c, data(), _array_order(2), "qingshi_village", 10), "Needs 1 more %s for the crafts." % Items.item_plural(data(), "spirit_stone", 1))
+	c.add_item("spirit_stone", 1)
+	assert_eq(Commissions.short_ingredient(c, data(), _array_order(2)), "")
+	assert_eq(Commissions.missing_line(c, data(), _array_order(2), "qingshi_village", 10), "You have the ingredients: craft it at a workshop.")
+
+
+func test_a_short_herb_still_outranks_stones() -> void:
+	var c := _alchemist()
+	c.inventory = {}
+	assert_eq(Commissions.short_ingredient(c, data(), _array_order(2)), "talisman_paper")
+	assert_true(Commissions.missing_line(c, data(), _array_order(2), "qingshi_village", 10).begins_with("Needs Blank Talisman Paper"))
+
+
+func test_lapse_text_names_spirit_stones() -> void:
+	var c := _alchemist()
+	c.inventory = {}
+	c.add_item("talisman_paper", 2)
+	c.add_item("spirit_herb", 2)
+	var text := Commissions.lapse_text(c, data(), _array_order(2))
+	assert_true(text.ends_with(" lapsed. You were short of %s." % Items.item_plural(data(), "spirit_stone", 2)), text)
