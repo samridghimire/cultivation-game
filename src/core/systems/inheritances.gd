@@ -10,6 +10,12 @@ extends RefCounted
 const TESTS := ["realm", "attribute", "alignment", "fight"]
 
 
+## A stage name without its leading "The ", for sentences that add their own
+## article ("Attempt the Hand's-Breadth Gap").
+static func stage_title(name: String) -> String:
+	return name.substr(4) if name.begins_with("The ") else name
+
+
 static func inheritance(data: GameData, id: String) -> Dictionary:
 	return data.inheritances.get(id, {})
 

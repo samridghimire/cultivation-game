@@ -931,7 +931,7 @@ func attempt_inheritance(inheritance_id: String) -> void:
 	if result["last"]:
 		EventBus.post("You claim the %s! (%s)" % [def["name"], ", ".join(result["notes"])], "progress")
 	else:
-		EventBus.post("You pass the %s." % result["stage_name"], "progress")
+		EventBus.post("You pass the %s." % Inheritances.stage_title(String(result["stage_name"])), "progress")
 	_pass_time(result["days"])
 
 

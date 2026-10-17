@@ -33,7 +33,7 @@ static func attempt_option(c: CharacterData, data: GameData, id: String, today: 
 	if stage.is_empty():
 		return {}
 	var notes: PackedStringArray = [trial_note(c, data, id), Calendar.format_duration(int(stage.get("days", 1)))]
-	var label := "Attempt the %s (%s)" % [stage.get("name", ""), ", ".join(notes)]
+	var label := "Attempt the %s (%s)" % [Inheritances.stage_title(String(stage.get("name", ""))), ", ".join(notes)]
 	var reason := Inheritances.check_attempt(c, data, id, GameState.current_region, today, GameState.world_flags)
 	return {"label": label, "action": GameState.attempt_inheritance.bind(id), "disabled": reason != "", "reason": reason, "keep_open": true}
 

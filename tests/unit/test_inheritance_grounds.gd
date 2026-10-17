@@ -109,3 +109,14 @@ func test_mahayana_legacy_is_gated_and_rewarded() -> void:
 	assert_true(int(inh["reward"]["items"]["spirit_stone"]) > int(hollow["reward"]["items"]["spirit_stone"]), "pays more than the Body Integration legacy")
 	for item_id: String in inh["reward"]["items"]:
 		assert_true(d.items.has(item_id), item_id)
+
+
+## WU-237: stage names that start with "The" do not double the article.
+func test_stage_title_drops_leading_the() -> void:
+	assert_eq(Inheritances.stage_title("The Hand's-Breadth Gap"), "Hand's-Breadth Gap")
+	assert_eq(Inheritances.stage_title("Cairn Gate"), "Cairn Gate")
+	var d := data()
+	var c := new_character()
+	var script: GDScript = load("res://src/world/interactables/inheritance_grounds.gd")
+	var folder: Dictionary = script.attempt_option(c, d, "door_ajar_folder", 0)
+	assert_true(String(folder["label"]).begins_with("Attempt the Hand's-Breadth Gap"), folder["label"])
