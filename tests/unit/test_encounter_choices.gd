@@ -708,3 +708,26 @@ func test_crafter_first_year_encounters() -> void:
 	c2.professions["blacksmith"] = {"rank": 0, "xp": 0.0}
 	assert_eq(Exploration.check_choice(c2, d, smith_choice, {}), "", "forge open to a fresh blacksmith")
 	assert_true(int(d.encounters["forest_abandoned_herb_cache"]["choices"][1]["effects"]["alignment"]) < 0, "taking it all costs alignment")
+
+
+func test_mahayana_choice_encounters() -> void:
+	var d := GameData.load_from_dir()
+	for enc_id: String in ["wild_lamp_of_ten_thousand_vows", "mountain_ferryman_of_the_last_river", "ruins_ancestor_who_would_not_ascend"]:
+		assert_true(d.encounters.has(enc_id), enc_id + " exists")
+		var enc: Dictionary = d.encounters[enc_id]
+		assert_eq(enc["min_realm"], "mahayana", enc_id + " realm")
+		assert_true(enc.has("blocked_by_flag"), enc_id + " is once-only")
+		assert_eq(enc["choices"].size(), 3, enc_id + " has three ways")
+	var lamp: Dictionary = d.encounters["wild_lamp_of_ten_thousand_vows"]
+	var c := new_character()
+	c.attributes["spirit"] = 10
+	assert_true(Exploration.check_choice(c, d, lamp["choices"][0], {}) != "", "the lamp needs Spirit 60")
+	c.attributes["spirit"] = 60
+	assert_eq(Exploration.check_choice(c, d, lamp["choices"][0], {}), "", "the lamp opens at Spirit 60")
+	assert_true(int(lamp["choices"][1]["effects"]["items"]["spirit_stone"]) < 0, "the offering costs stones")
+	var ferry: Dictionary = d.encounters["mountain_ferryman_of_the_last_river"]
+	assert_eq(ferry["choices"][2]["enemy"], "great_vehicle_magistrate")
+	assert_false(bool(d.enemies["great_vehicle_magistrate"]["lethal"]), "the ferryman's fight is not lethal")
+	assert_true(int(ferry["choices"][0]["effects"]["qi"]) < 0, "the fare costs qi")
+	var anc: Dictionary = d.encounters["ruins_ancestor_who_would_not_ascend"]
+	assert_eq(anc["choices"][2]["enemy"], "myriad_throne_ancestor")
