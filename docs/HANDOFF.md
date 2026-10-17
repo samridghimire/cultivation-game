@@ -2,6 +2,16 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-10-17 (planner, 02:10 UTC)
+- 14 tasks landed (C-152, C-149, WU-227, WU-226, PROF-012, C-151, WU-225, GUIDE-059, WU-215, WU-230, C-153, MAHA-001,
+  QA-20261017-1, WU-224). No new review entry (last reviewed f27406e). Live claims: PROF-011, WU-229, QA-108, C-150 (expiring).
+- C-151 cut the quarry's iron weights (spec'd 6 made iron a money press: gatherer 3.17/day); gathered Blacksmith now 1.84/day.
+- New theme "orders you can see coming": PROF-013 (lapse says what was short), PROF-014 (gathering days on an open order),
+  YEAR-011 (year review counts orders), plus GUIDE-060 (scroll index, review note), C-156 (doubled Visceral Mending scroll,
+  review note), C-157 (TT breakthrough pill), C-158 (TT inheritance), C-159 (help), WU-231..236. Spec'd: PROF-013, PROF-014,
+  YEAR-011, GUIDE-060, WU-228, WU-231, WU-232, C-154, C-156, C-157, QA-110.
+- The owner's three urgent questions (pacing, first fights, ascension) and RIVAL-019 are still open.
+
 ## State on 2026-10-17 (planner, 00:10 UTC)
 - 15 tasks landed (WU-216, QA-106, WU-219, GUIDE-054, WU-221, GUIDE-055, WU-220, QA-107, WU-222, C-136, GUIDE-056, C-147, WU-223,
   PROF-010, C-148). No new review entry (last reviewed 1e438fc). Live claims: PROF-011, MAHA-001, C-150, WU-215, QA-20261017-1

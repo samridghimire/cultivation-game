@@ -2,6 +2,20 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-17 [C-152] A Mahayana inheritance: the Sutra Barge of the Great Vehicle in Myriad Peaks Ridge.
+- 2026-10-17 [C-149] Three Mahayana choice encounters: a vow lamp, the last-river ferryman and an ancestor who would not ascend.
+- 2026-10-17 [WU-227] The Old Quarry Tailings fit on the Qingshi map and in its menu.
+- 2026-10-17 [WU-226] The Great Vehicle Pill fits the breakthrough window.
+- 2026-10-17 [PROF-012] A crafting order only asks for as many as you can gather in time.
+- 2026-10-17 [C-151] Qingshi's Old Quarry Tailings yield iron, and the smith's first recipes use it again.
+- 2026-10-17 [WU-225] The Body Integration inheritance fits its menu and the journal.
+- 2026-10-17 [GUIDE-059] "You deliver 2 Iron Swords": item counts are pluralised in the message log and order texts.
+- 2026-10-17 [WU-215] The broke-crafter odd-jobs hint fits the HUD.
+- 2026-10-17 [WU-230] Plural item names in the shop, the sect stipend line and the map's letter mark.
+- 2026-10-17 [C-153] Three late hunters you cannot slip away from now meet you a stage later.
+- 2026-10-17 [MAHA-001] Goals at Mahayana.
+- 2026-10-17 [QA-20261017-1] Ores, jade and herbs keep their name in the plural ("3 Cold Iron", not "Cold Irons").
+- 2026-10-17 [WU-224] The longest crafting order label ends on a whole word.
 - 2026-10-17 [C-148] Six Mahayana foes, each with a fight encounter.
 - 2026-10-16 [PROF-010] A craft that jumps two ranks names every recipe it opens.
 - 2026-10-16 [WU-223] The herb slope's gather note fits the menu in every season.
