@@ -757,7 +757,8 @@ func _start_hint_shot(gs: Node) -> void:
 		root.get_node("EventBus").player_changed.emit()
 		assert(String(hint_text.call()).contains("a short walk away"), "away hint not on screen"), "close": func() -> void: pass})
 	# Broke crafter: no stones, nothing craftable, so the odd-jobs line fires (longest region name wins).
-	# The herb hint fades at rank CRAFT_HINT_MAX_RANK (GUIDE-049), which is when this line shows.
+	# The herb hint fades at rank CRAFT_HINT_MAX_RANK (GUIDE-049), which is when this line shows. WU-215: checked on screen;
+	# the line reads "Short of stones? Odd jobs as X at the <workshop> pay about N a month." and fits at 1280x720 and 1280x800.
 	var broke_region := ""
 	var ranks_before: Dictionary = {}
 	for prof_id: String in c.professions:
