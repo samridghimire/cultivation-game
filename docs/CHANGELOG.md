@@ -2,6 +2,20 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-17 [WU-233] The gathering estimate on an order fits the HUD hint and the journal.
+- 2026-10-17 [GUIDE-060] Recipe scrolls are looked up once at load instead of on every hint.
+- 2026-10-17 [WU-235] The Old Quarry Tailings, Sutra Barge grounds and Mahayana encounters work with a gamepad.
+- 2026-10-17 [QA-110] The late-gates sim covers Mahayana fights and inheritance guardians.
+- 2026-10-17 [YEAR-011] The year in review counts the crafting orders you filled and let lapse.
+- 2026-10-17 [PROF-014] An open order says how long its missing ingredient takes to gather.
+- 2026-10-17 [C-155] Three Tribulation Transcendence choice encounters: a bell, a cairn and an elder waiting for the sky.
+- 2026-10-17 [WU-232] The Mahayana inheritance fits its menu and the journal.
+- 2026-10-17 [WU-231] The pill screenshot no longer hides the hint under a milestone banner.
+- 2026-10-17 [C-154] Six Tribulation Transcendence foes, each with a fight encounter.
+- 2026-10-17 [PROF-013] A lapsed order says what you were short of.
+- 2026-10-17 [QA-108] The crafter sim follows the Mortal nudge and reaches Qi Refining by day 120.
+- 2026-10-17 [WU-228] The three Mahayana choice encounters fit on screen.
+- 2026-10-17 [WU-229] The Mahayana goal ladder fits the HUD and the journal.
 - 2026-10-17 [PROF-011] An order's "sold nearby" means this region or the next one, not anywhere in the world.
 - 2026-10-17 [C-152] A Mahayana inheritance: the Sutra Barge of the Great Vehicle in Myriad Peaks Ridge.
 - 2026-10-17 [C-149] Three Mahayana choice encounters: a vow lamp, the last-river ferryman and an ancestor who would not ascend.

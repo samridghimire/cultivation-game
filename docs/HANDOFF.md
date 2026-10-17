@@ -2,6 +2,19 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-10-17 (planner, 04:10 UTC)
+- 14 tasks landed (WU-229, WU-228, QA-108, PROF-013, C-154, WU-231, WU-232, C-155, PROF-014, YEAR-011, QA-110, WU-235,
+  GUIDE-060, WU-233). No new review entry (last reviewed 7144c97). Live claims: GUIDE-057 (QA-108 confirmed its trigger),
+  TT-001, QA-109, C-150 (second try).
+- New problem from the baseline: the curious player is mugged 35 times at 0% by the forced Roadside Rogue right after
+  reaching Foundation (C-160 gates it a stage later; QA-114 diagnoses the weakness, GUIDE-065 waits on it).
+- QA-110 follow-ups -> C-161 (min_stage on the Mahayana magistrate and four inheritance realm stages). C-154 found TT/Mahayana
+  Peak win% far below QA-007's default -> QA-113 measures, CMB-010 applies. QA-112 = TT gates.
+- Also new: PROF-015/016/017 (review notes on orders and margin text), GUIDE-062 (generic late goal ladders, after TT-001),
+  WU-237 (double "the" in inheritance labels), WU-238/239/240/241/242.
+- Systems has only 3 ready unclaimed rows (PROF-015/016/017) plus 3 dependent; refill next run.
+- The owner's three urgent questions (pacing, first fights, ascension) and RIVAL-019 are still open.
+
 ## State on 2026-10-17 (planner, 02:10 UTC)
 - 15 tasks landed (PROF-011 (missed at 00:10: the clone was shallow, run `git fetch --unshallow`), C-152, C-149, WU-227, WU-226, PROF-012, C-151, WU-225, GUIDE-059, WU-215, WU-230, C-153, MAHA-001,
   QA-20261017-1, WU-224). No new review entry (last reviewed f27406e). Live claims: WU-229, QA-108, C-150 (expiring).
