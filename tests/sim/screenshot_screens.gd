@@ -25,6 +25,8 @@ extends SceneTree
 ## WU-182: append `-- --year-shot` for the year-in-review banner with four long lines (realm change,
 ## tribulation, inheritance, rival bouts).
 
+## WU-234: `--year-shot` also shoots year_banner_orders (filled-and-lapsed orders line) and lapse_log (longest PROF-013 lapse text).
+
 ## WU-197: append `-- --banner-shot` for the HUD with a notice banner up, and the journal open under one.
 ## WU-204: `--banner-shot` also shoots the longest real arrival subtitle and the longest milestone name.
 
@@ -1074,6 +1076,32 @@ func _start_year_shot(gs: Node) -> void:
 		banner.finish_current()
 		banner.announce("%s of your journey" % LifeStats.review_title(10, 14), "\n".join(with_rival), Color(0.9, 0.78, 0.4), 60.0),
 		"close": func() -> void: pass})
+	# WU-234: a filled-and-lapsed orders line (YEAR-011) as the fourth of four long lines.
+	var with_orders := LifeStats.year_summary({}, {"items_crafted": 14, "profession_ranks": 2, "profession_stones": 340,
+			"commissions_done": 12, "commissions_lapsed": 11, "stones_earned": 120}, "", "")
+	print("year lines with orders: ", with_orders)
+	shots.append({"name": "year_banner_orders", "open": func() -> void:
+		banner.set_held(false)
+		banner._queue.clear()
+		banner.finish_current()
+		banner.announce("%s of your journey" % LifeStats.review_title(10, 14), "\n".join(with_orders), Color(0.9, 0.78, 0.4), 60.0),
+		"close": func() -> void: pass})
+	# WU-234: PROF-013's longest lapse text (the order's item and the shortfall are the longest real ones), in the message log.
+	var best_text := ""
+	for rid: String in gs.data.recipes:
+		var out: Dictionary = gs.data.recipes[rid]["output"]
+		var order := {"item": String(out["item"]), "count": 12, "profession": String(gs.data.recipes[rid].get("profession", ""))}
+		c.inventory.clear()
+		var text: String = Commissions.lapse_text(c, gs.data, order)
+		if text.length() > best_text.length():
+			best_text = text
+	print("longest lapse text (%d chars): %s" % [best_text.length(), best_text])
+	for i in 3:
+		root.get_node("EventBus").post(best_text, "info")
+	var log_screen: Control = hud.get("_screens")["toggle_message_log"]
+	shots.append({"name": "lapse_log", "open": func() -> void:
+		banner.visible = false
+		log_screen.open(), "close": log_screen.close})
 
 
 ## WU-187: the respawn screen with the longest lesson (98% odds) and the longest enemy name.
