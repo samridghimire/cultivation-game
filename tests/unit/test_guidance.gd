@@ -2303,6 +2303,10 @@ func test_idle_crafter_hint() -> void:
 	assert_eq(Guidance.idle_crafter_hint(c, data(), "qingshi_village", Guidance.IDLE_CULTIVATION_DAYS - 1), "")
 	assert_eq(Guidance.idle_crafter_hint(c, data(), "qingshi_village", -1), "")
 	assert_true(Guidance.idle_crafter_hint(c, data(), "", 40).begins_with("You have not cultivated"))
+	var unknown := _fresh()
+	unknown.professions["alchemist"] = {"rank": 0, "xp": 0.0}
+	unknown.realm_index = 1
+	assert_true(Guidance.idle_crafter_hint(unknown, data(), "qingshi_village", 400).begins_with("You have not cultivated lately."), "an unstamped (old) save does not claim a duration")
 	var none := _fresh()
 	none.realm_index = 1
 	assert_eq(Guidance.idle_crafter_hint(none, data(), "qingshi_village", 90), "")

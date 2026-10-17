@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: f07c93b
+Last reviewed commit: f702631
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -744,3 +744,16 @@ Last reviewed commit: f07c93b
     pluralises both counts. C-155's stone costs are gated by Effects.check.
   - Notes, not filed: every lethal Mahayana/TT foe is 0-5% at its realm's stage 0 (C-154's own follow-up); they are
     evadable, but late_gates should grow to tribulation_transcendence when C-157/C-158 land.
+- 2026-10-17 (reviewer): reviewed f07c93b..f702631 (WU-235, GUIDE-060, WU-233, GUIDE-057, C-150, TT-001, WU-234,
+  WU-237, PROF-015, QA-109, C-160, WU-238, WU-236, PROF-017, PROF-016, WU-239; [PLAN]/[REVIEW] commits skipped). Main
+  green (2038 tests after the fix). No BACKLOG/CHANGELOG edits by workers; no SAVE_VERSION change (GUIDE-057's
+  last_meditated_day defaults to -1). Nothing filed.
+  - Fixed ([REVIEW] commit): GUIDE-057 stamped last_meditated_day with the day a meditation *began*, so right after a
+    month or a year in seclusion a Qi Refining crafter was told "You have not cultivated in 1 month". It is now the day
+    the cultivation ends (cultivate, dual cultivation, inner world), and only after dual/inner-world cultivation
+    succeeds. Old saves (-1) read "You have not cultivated lately." instead of claiming years since day 0. Tests updated.
+  - Checked: PROF-015's per-place max matches how one gather trip rolls every entry of a table. PROF-016's
+    _stones_needed uses the same crafts count as short_ingredient; both callers handle "spirit_stone". GUIDE-060's
+    recipe_scrolls keeps the first scroll in data order, as the old scans did. TT-001's ladder id 9 matches realms.json.
+  - Notes, not filed: QA-109's shop-only talisman_paper and C-160's still-unwinnable rogue are in the planner's
+    QA-114/GUIDE-065 queue.

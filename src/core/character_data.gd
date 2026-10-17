@@ -127,7 +127,7 @@ var commissions: Array = []
 var life_stats: Dictionary = {}  # LifeStats key -> count
 var year_start_stats: Dictionary = {}  # life_stats at the last new year (YEAR-001)
 var year_start_year: int = 0  # the year the snapshot was taken in (YEAR-002); 0 = unknown (old saves)
-var last_meditated_day: int = -1  # GameClock day of the last cultivation (GUIDE-057); -1 = never/unknown
+var last_meditated_day: int = -1  # GameClock day the last cultivation ended (GUIDE-057); -1 = never/unknown
 var year_start_realm: String = ""  # realm label then; "" = no snapshot yet
 var milestones: Array[String] = []  # earned Milestones ids
 var deed_days: Dictionary = {}  # deed id -> GameClock day it was last done

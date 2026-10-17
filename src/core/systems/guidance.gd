@@ -137,7 +137,8 @@ static func idle_crafter_hint(c: CharacterData, data: GameData, region_id: Strin
 	if idle < IDLE_CULTIVATION_DAYS or Cultivation.is_at_bottleneck(c, data):
 		return ""
 	var best := _meditation_spot(c, data, region_id, flags)
-	var line := "You have not cultivated in %s." % Calendar.format_duration(idle)
+	# -1: older saves never stamped the day, so don't claim how long it has been.
+	var line := "You have not cultivated lately." if c.last_meditated_day < 0 else "You have not cultivated in %s." % Calendar.format_duration(idle)
 	if float(best["rate"]) > 0.0:
 		var days := ceili(Cultivation.days_to_next_stage(c, data, float(best["density"])))
 		line += " %s would carry you to the next layer in about %s." % [String(best["spot"]), Calendar.format_duration(days)]

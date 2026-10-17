@@ -1963,11 +1963,15 @@ func test_practised_crafter_gets_no_order_from_refining() -> void:
 func test_meditating_resets_idle_cultivation_day() -> void:
 	var c := _start()
 	c.realm_index = 1
+	c.professions["alchemist"] = {"rank": 0, "xp": 0.0}
 	assert_eq(c.last_meditated_day, -1)
-	_game_state().cultivate(5)
-	assert_eq(c.last_meditated_day, 0, "stamped with the day the meditation began")
+	var clock := _root().get_node("GameClock")
+	_game_state().cultivate(40)
+	assert_true(int(clock.total_days) > Guidance.IDLE_CULTIVATION_DAYS)
+	assert_eq(c.last_meditated_day, int(clock.total_days), "stamped with the day the meditation ended")
+	assert_eq(Guidance.idle_crafter_hint(c, _game_state().data, "qingshi_village", int(clock.total_days)), "", "not idle right after a long meditation")
 	var back := CharacterData.from_dict(c.to_dict())
-	assert_eq(back.last_meditated_day, 0)
+	assert_eq(back.last_meditated_day, c.last_meditated_day)
 	var d := c.to_dict()
 	d.erase("last_meditated_day")
 	assert_eq(CharacterData.from_dict(d).last_meditated_day, -1)
