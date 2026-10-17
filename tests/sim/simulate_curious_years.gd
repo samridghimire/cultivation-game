@@ -8,6 +8,7 @@ extends SceneTree
 ## Usage: tools/godot.sh --headless --path . -s res://tests/sim/simulate_curious_years.gd -- [seeds] [months] [--wait-for-pill=N] [--trace=<seed>]
 
 const FirstHour := preload("res://tests/sim/first_hour.gd")
+const CombatBalance := preload("res://tests/sim/combat_balance.gd")
 const BLOCK := 6
 ## Features the sim reports; the curious policy cannot use the ones never seen in `kind_sets`
 ## (crafting, profession work, secret realms, gifts, pointers, spars, lectures).
@@ -80,6 +81,8 @@ func _record_death(cause: String, final: bool) -> void:
 
 
 var _seed := 0
+## QA-114: the curious player's state the first month after the Foundation breakthrough, per seed.
+var _fe_snaps := {}
 var _wait_for_pill := 0
 var _trace_seed := 0
 
@@ -130,7 +133,10 @@ func _run() -> void:
 	print("  seed  block  kinds  new  stones  realm")
 	for s in range(1, seeds + 1):
 		_seed = s
-		var r: Dictionary = FirstHour.play(gs, clock, s, months, true, Callable(), false, _wait_for_pill)
+		var snap_hook := func(_m: int) -> void:
+			if gs.player.realm_index >= 2 and not _fe_snaps.has(s):
+				_fe_snaps[s] = CharacterData.from_dict(gs.player.to_dict())
+		var r: Dictionary = FirstHour.play(gs, clock, s, months, true, snap_hook, false, _wait_for_pill)
 		runs.append(r.duplicate())
 		runs[-1].erase("player")
 		var sets: Array = r["kind_sets"]
@@ -204,6 +210,7 @@ func _run() -> void:
 	_print_foe_table()
 	_print_lives(runs)
 	_print_foundation_breakthrough(runs)
+	_print_fe_gap()
 	quit(1 if early * 10 > maxi(seeds, 10) else 0)
 
 
@@ -288,3 +295,77 @@ func _trace(args: Array[String]) -> void:
 		print("  - ", g)
 	gs.end_session()
 	quit(0)
+
+
+func _tech_line(c: CharacterData) -> String:
+	var parts: Array[String] = []
+	for id: String in c.techniques:
+		parts.append("%s L%d" % [id, int(c.techniques[id]["level"])])
+	return ", ".join(parts) if not parts.is_empty() else "none"
+
+
+func _gear_line(c: CharacterData, data: GameData) -> String:
+	var parts: Array[String] = []
+	for slot: String in c.equipment:
+		parts.append("%s=%s" % [slot, c.equipment[slot]])
+	return ", ".join(parts) if not parts.is_empty() else "none"
+
+
+func _stat_line(c: CharacterData, data: GameData) -> String:
+	var st := Combat.stats(c, data)
+	return "hp %d atk %d def %d spd %d" % [st["max_hp"], st["attack"], st["defense"], st["speed"]]
+
+
+## QA-114: why the curious player is weak at Foundation entry. Per seed the state after the breakthrough,
+## the same for combat_balance's typical player at Foundation stage 0, rated odds of both against the
+## roadside rogue and the three easiest Foundation foes, then the typical player with one thing swapped
+## in from the curious one at a time (which gap costs the most odds).
+func _print_fe_gap() -> void:
+	var gs: Node = root.get_node("GameState")
+	var data: GameData = gs.data
+	var typical := CombatBalance.typical_player(data, 2, 0)
+	var foes: Array[Dictionary] = []
+	for e: Dictionary in data.enemies.values():
+		if String(e.get("realm", "")) == "foundation_establishment":
+			foes.append(e)
+	var target: Dictionary = data.enemies["roadside_rogue_cultivator"]
+	foes.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return Combat.win_chance(typical, data, a) > Combat.win_chance(typical, data, b))
+	var easy: Array[Dictionary] = []
+	for e in foes:
+		if e["id"] != "roadside_rogue_cultivator" and easy.size() < 2:
+			easy.append(e)
+	var rated: Array[Dictionary] = [target]
+	rated.append_array(easy)
+	print("Foundation entry gap (QA-114): curious player right after the breakthrough vs the typical player (Foundation, stage 0)")
+	print("  typical: %s | techniques %s | gear %s" % [_stat_line(typical, data), _tech_line(typical), _gear_line(typical, data)])
+	var names: Array[String] = []
+	for e in rated:
+		names.append("%s %.0f%%" % [e["id"], 100.0 * Combat.win_chance(typical, data, e)])
+	print("  typical odds: %s" % ", ".join(names))
+	var sums := {"all": 0.0, "typical_techs": 0.0, "typical_gear": 0.0, "typical_attrs": 0.0, "typical_all": 0.0}
+	var n := 0
+	for s: int in _fe_snaps:
+		var c: CharacterData = _fe_snaps[s]
+		var odds: Array[String] = []
+		for e in rated:
+			odds.append("%.0f%%" % (100.0 * Combat.win_chance(c, data, e)))
+		print("  seed %2d stage %d: %s | techniques %s | gear %s | rated %s" % [s, c.stage, _stat_line(c, data), _tech_line(c), _gear_line(c, data), " / ".join(odds)])
+		var variants := {"typical_techs": ["techniques"], "typical_gear": ["equipment"], "typical_attrs": ["attributes"], "typical_all": ["techniques", "equipment", "attributes"]}
+		sums["all"] += Combat.win_chance(c, data, target)
+		for key: String in variants:
+			var v := CharacterData.from_dict(c.to_dict())
+			v.stage = 0
+			for field: String in variants[key]:
+				v.set(field, typical.get(field).duplicate(true))
+			if key == "typical_all":
+				v.injuries.clear()
+			sums[key] += Combat.win_chance(v, data, target)
+		n += 1
+		if n == 1:
+			print("    HUD hints for seed %d at that moment:" % s)
+			for h: String in Guidance.hints(c, data, 1.0, 8, {}, {}, "qingshi_village", 0):
+				print("      - ", h)
+	if n == 0:
+		print("  no seed reached Foundation")
+		return
+	print("  mean rated odds vs roadside_rogue_cultivator over %d seeds: curious %.0f%%; with the typical player's techniques %.0f%%, gear %.0f%%, attributes %.0f%%, all three (injuries cleared) %.0f%%" % [n, 100.0 * sums["all"] / n, 100.0 * sums["typical_techs"] / n, 100.0 * sums["typical_gear"] / n, 100.0 * sums["typical_attrs"] / n, 100.0 * sums["typical_all"] / n])
