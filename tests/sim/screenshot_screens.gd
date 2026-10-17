@@ -62,6 +62,7 @@ extends SceneTree
 ## attribute gate, a profession gate and an enemy choice, so three real ones are shot (a gate met and a gate missed in
 ## each of the first two): village_field_quarrel (charisma), marsh_yin_ferryman (doctor, 5 choices, longest labels)
 ## and wild_wounded_disciple (enemy choice).
+## WU-228: also the three Mahayana choice encounters, gates missed and met: encounter_maha_<id>_<missed|met>.png.
 ## WU-221: also the three crafter encounters (herb cache, old alchemist's notes, broken forge): encounter_crafter_<id>.png.
 
 ## WU-196: append `-- --renown-shot` for a Qi Refining player with Respected-bound renown in Qingshi Village (first title,
@@ -921,6 +922,18 @@ func _start_encounter_shot(gs: Node) -> void:
 				c.attributes["constitution"] = 60 if gate_met else 5
 				c.attributes["spirit"] = 60 if gate_met else 5
 				c.alignment = 30 if gate_met else 0
+				gs.pending_encounter = enc_id
+				enc.open(), "close": enc.close})
+	# WU-228: C-149's three Mahayana choice encounters, attribute and alignment gates missed (alignment 0 misses the
+	# ancestor's max_alignment -100 seat) and met (alignment -150). The vow lamp has the longest choice label.
+	for gate_met: bool in [false, true]:
+		for enc_id: String in ["wild_lamp_of_ten_thousand_vows", "mountain_ferryman_of_the_last_river", "ruins_ancestor_who_would_not_ascend"]:
+			shots.append({"name": "encounter_maha_%s_%s" % [enc_id, "met" if gate_met else "missed"], "open": func() -> void:
+				hud.get("_banner").visible = false
+				c.realm_index = gs.data.realm_index_of("mahayana")
+				c.attributes["spirit"] = 80 if gate_met else 5
+				c.attributes["comprehension"] = 80 if gate_met else 5
+				c.alignment = -150 if gate_met else 0
 				gs.pending_encounter = enc_id
 				enc.open(), "close": enc.close})
 	# WU-221: C-143's crafter encounters. The player has no profession, so the broken forge's blacksmith choice
