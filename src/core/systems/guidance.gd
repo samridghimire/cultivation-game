@@ -1485,11 +1485,7 @@ static func next_recipe_line(c: CharacterData, data: GameData, prof_id: String, 
 	if recipe_id == "":
 		return ""
 	var recipe: Dictionary = data.recipes[recipe_id]
-	var scroll_id := ""
-	for item_id: String in data.items:
-		if String(data.items[item_id].get("effects", {}).get("learn_recipe", "")) == recipe_id:
-			scroll_id = item_id
-			break
+	var scroll_id := data.scroll_for_recipe(recipe_id)
 	var source := ""
 	if scroll_id != "":
 		source = source_phrase(c, data, scroll_id, region_id, today)

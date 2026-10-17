@@ -52,3 +52,15 @@ func test_sects_cover_each_path() -> void:
 		tags[sect.alignment_tag] = true
 	for tag in ["righteous", "demonic", "neutral"]:
 		assert_true(tags.has(tag), "no %s sect" % tag)
+
+
+func test_scroll_for_recipe_matches_a_scan_of_the_items() -> void:
+	assert_true(data().recipes.size() > 0)
+	for recipe_id: String in data().recipes:
+		var expected := ""
+		for item_id: String in data().items:
+			if String(data().items[item_id].get("effects", {}).get("learn_recipe", "")) == recipe_id:
+				expected = item_id
+				break
+		assert_eq(data().scroll_for_recipe(recipe_id), expected, recipe_id)
+	assert_eq(data().scroll_for_recipe("no_such_recipe"), "")

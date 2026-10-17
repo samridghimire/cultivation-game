@@ -32,6 +32,7 @@ var sect_factions: Dictionary = {}
 ## sects.json top-level "reputation" rules (Reputation system).
 var sect_reputation: Dictionary = {}
 var items: Dictionary = {}  # id -> Dictionary
+var recipe_scrolls: Dictionary = {}  # recipe id -> first item id (data order) that teaches it
 ## items.json "restricted_tags": only merchants that stock these tags explicitly sell such items.
 var restricted_item_tags: PackedStringArray = []
 var deeds: Dictionary = {}  # id -> Dictionary
@@ -150,6 +151,11 @@ func realm_index_of(realm_id: String) -> int:
 	return -1
 
 
+## The first scroll (data order) that teaches `recipe_id`, "" if none.
+func scroll_for_recipe(recipe_id: String) -> String:
+	return String(recipe_scrolls.get(recipe_id, ""))
+
+
 func attribute_ids() -> PackedStringArray:
 	var ids: PackedStringArray = []
 	for a in attributes:
@@ -197,6 +203,9 @@ func _load(dir: String) -> void:
 	restricted_item_tags = PackedStringArray(item_file.get("restricted_tags", []))
 	for item in item_file.get("items", []):
 		items[item["id"]] = item
+		var taught: String = String(item.get("effects", {}).get("learn_recipe", ""))
+		if taught != "" and not recipe_scrolls.has(taught):
+			recipe_scrolls[taught] = item["id"]
 
 	var mission_file := _read(dir, "sect_missions.json")
 	sect_mission_loss_cooldown_days = int(mission_file.get("loss_cooldown_days", 0))

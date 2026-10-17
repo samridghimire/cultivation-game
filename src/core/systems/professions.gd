@@ -94,13 +94,11 @@ static func rank_up_line(c: CharacterData, data: GameData, prof_id: String, from
 	if next_id == "" or int(data.recipes[next_id].get("min_rank", 0)) > r:
 		return ""
 	var line := "%s is now within your skill; find its recipe scroll." % data.recipes[next_id].get("name", next_id)
-	for item_id: String in data.items:
-		var item: Dictionary = data.items[item_id]
-		if String(item.get("effects", {}).get("learn_recipe", "")) != next_id:
-			continue
+	var scroll_id := data.scroll_for_recipe(next_id)
+	if scroll_id != "":
+		var item: Dictionary = data.items[scroll_id]
 		for rid: String in data.regions:
 			for p: Dictionary in data.regions[rid].get("places", []):
 				if String(p.get("type", "")) == "merchant" and Items.merchant_sells(data, item, p.get("stock_tags", []), int(p.get("max_price", 0))):
 					return line + " Scrolls are sold by merchants."
-		break
 	return line
