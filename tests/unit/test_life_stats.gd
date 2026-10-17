@@ -198,3 +198,19 @@ func test_year_summary_craft_stones() -> void:
 	assert_eq(none, PackedStringArray(["A quiet year of cultivation."]))
 	var some := LifeStats.year_summary({}, {"profession_stones": 25}, "Mortal", "Mortal")
 	assert_eq(some, PackedStringArray(["Your craft earned 25 spirit stones."]))
+
+
+func test_year_summary_orders_line() -> void:
+	assert_eq(LifeStats.year_summary({}, {"commissions_done": 1}, "A", "A"), PackedStringArray(["You filled 1 crafting order."]))
+	assert_eq(LifeStats.year_summary({}, {"commissions_done": 3}, "A", "A"), PackedStringArray(["You filled 3 crafting orders."]))
+	assert_eq(LifeStats.year_summary({}, {"commissions_lapsed": 1}, "A", "A"), PackedStringArray(["You let 1 crafting order lapse."]))
+	assert_eq(LifeStats.year_summary({}, {"commissions_lapsed": 2}, "A", "A"), PackedStringArray(["You let 2 crafting orders lapse."]))
+	assert_eq(LifeStats.year_summary({}, {"commissions_done": 2, "commissions_lapsed": 1}, "A", "A"), PackedStringArray(["You filled 2 crafting orders and let 1 lapse."]))
+	assert_eq(LifeStats.year_summary({"commissions_done": 2}, {"commissions_done": 2}, "A", "A"), PackedStringArray(["A quiet year of cultivation."]))
+
+
+func test_year_summary_orders_rank_below_craft_earnings() -> void:
+	var after := {"fights_won": 1, "items_crafted": 2, "profession_ranks": 1, "profession_stones": 30, "commissions_done": 1}
+	var lines := LifeStats.year_summary({}, after, "A", "A")
+	assert_eq(lines.size(), 4)
+	assert_eq(lines[3], "Your craft earned 30 spirit stones.", "orders are the first line the cap drops")

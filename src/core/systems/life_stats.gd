@@ -219,6 +219,9 @@ static func year_summary(before: Dictionary, after: Dictionary, realm_before: St
 	var craft := _delta(before, after, "profession_stones")
 	if craft >= 1:
 		out.append("Your craft earned %d spirit stones." % craft)
+	var orders := _orders_line(before, after)
+	if orders != "":
+		out.append(orders)
 	var earned := _delta(before, after, "stones_earned")
 	if earned > 0:
 		out.append("You earned %d spirit stone%s." % [earned, "" if earned == 1 else "s"])
@@ -233,6 +236,20 @@ static func year_summary(before: Dictionary, after: Dictionary, realm_before: St
 	while out.size() > 4:
 		out.remove_at(out.size() - 1)
 	return out
+
+
+## "You filled 2 crafting orders and let 1 lapse." ("" when none were filled or lapsed).
+static func _orders_line(before: Dictionary, after: Dictionary) -> String:
+	var filled := _delta(before, after, "commissions_done")
+	var lapsed := _delta(before, after, "commissions_lapsed")
+	var noun := "crafting order" if filled == 1 else "crafting orders"
+	if filled > 0 and lapsed > 0:
+		return "You filled %d %s and let %d lapse." % [filled, noun, lapsed]
+	if filled > 0:
+		return "You filled %d %s." % [filled, noun]
+	if lapsed > 0:
+		return "You let %d crafting order%s lapse." % [lapsed, "" if lapsed == 1 else "s"]
+	return ""
 
 
 ## "You found 2 hidden places, claimed 1 bounty and mastered 1 region.", naming only the non-zero parts ("" when none).
