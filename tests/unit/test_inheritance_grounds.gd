@@ -90,3 +90,22 @@ func test_body_integration_legacy_is_gated_and_rewarded() -> void:
 	assert_true(int(inh["reward"]["items"]["spirit_stone"]) > int(door["reward"]["items"]["spirit_stone"]), "pays more than the Void Refinement legacy")
 	for item_id: String in inh["reward"]["items"]:
 		assert_true(d.items.has(item_id), item_id)
+
+
+## C-152: a Mahayana legacy (C-136's pattern one realm up).
+func test_mahayana_legacy_is_gated_and_rewarded() -> void:
+	var d := data()
+	var inh: Dictionary = d.inheritances["great_vehicle_sutra_barge"]
+	assert_true(Inheritances.in_region(d, String(inh["region"])).has("great_vehicle_sutra_barge"))
+	var stages: Array = inh["stages"]
+	assert_eq(stages.size(), 3)
+	assert_eq(String(stages[0]["test"]), "realm")
+	assert_eq(String(stages[0]["min_realm"]), "mahayana")
+	assert_eq(String(stages[1]["test"]), "attribute")
+	assert_eq(String(stages[2]["test"]), "fight")
+	assert_eq(String(d.enemies[String(stages[2]["enemy"])]["realm"]), "mahayana")
+	assert_true(int(inh["deadline_years"]) > int(inh["appears_years"]))
+	var hollow: Dictionary = d.inheritances["marrow_throne_hollow"]
+	assert_true(int(inh["reward"]["items"]["spirit_stone"]) > int(hollow["reward"]["items"]["spirit_stone"]), "pays more than the Body Integration legacy")
+	for item_id: String in inh["reward"]["items"]:
+		assert_true(d.items.has(item_id), item_id)
