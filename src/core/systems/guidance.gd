@@ -1381,8 +1381,34 @@ static func mahayana_goals_active(c: CharacterData, data: GameData, flags: Dicti
 	return false
 
 
+## The Tribulation Transcendence ladder (TT-001): MAHA-001's pattern one realm up. No ascension
+## goal yet (END-001 is blocked).
+static func tribulation_goals(c: CharacterData, data: GameData, flags: Dictionary, clan: ClanData = null) -> Array[Dictionary]:
+	var tt_index := data.realm_index_of("tribulation_transcendence")
+	var rows: Array = [
+		["Reach Tribulation Transcendence Middle", c.realm_index > tt_index or (c.realm_index == tt_index and c.stage >= 1)],
+		["Win a fight against a Tribulation Transcendence foe", bool(flags.get(beat_realm_flag("tribulation_transcendence"), false))],
+	]
+	if _has_realm_inheritance(data, "tribulation_transcendence"):
+		rows.append(["Claim a Tribulation Transcendence inheritance", _claimed_realm_inheritance(data, flags, "tribulation_transcendence")])
+	var out: Array[Dictionary] = []
+	for row: Array in rows:
+		out.append({"text": row[0], "done": row[1]})
+	return out
+
+
+## True while the player is in Tribulation Transcendence with goals left.
+static func tribulation_goals_active(c: CharacterData, data: GameData, flags: Dictionary, clan: ClanData = null) -> bool:
+	if c.realm_index != data.realm_index_of("tribulation_transcendence"):
+		return false
+	for goal in tribulation_goals(c, data, flags, clan):
+		if not goal["done"]:
+			return true
+	return false
+
+
 ## The goal ladder the HUD announces from: "first" up to Qi Refining, "foundation" in Foundation
-## Establishment, "core" in Core Formation, "nascent" in Nascent Soul, "soul" in Soul Formation, "void" in Void Refinement, "body" in Body Integration, "mahayana" in Mahayana, else "". Unlike active_goal_ladder it stays put once every goal is done, so the
+## Establishment, "core" in Core Formation, "nascent" in Nascent Soul, "soul" in Soul Formation, "void" in Void Refinement, "body" in Body Integration, "mahayana" in Mahayana, "tribulation" in Tribulation Transcendence, else "". Unlike active_goal_ladder it stays put once every goal is done, so the
 ## last goal ticked off is still announced.
 static func goal_ladder_id(c: CharacterData) -> String:
 	if c.realm_index <= 1:
@@ -1401,6 +1427,8 @@ static func goal_ladder_id(c: CharacterData) -> String:
 		return "body"
 	if c.realm_index == 8:
 		return "mahayana"
+	if c.realm_index == 9:
+		return "tribulation"
 	return ""
 
 
@@ -1422,8 +1450,12 @@ static func goal_ladder(id: String, c: CharacterData, data: GameData, flags: Dic
 		return body_integration_goals(c, data, flags, clan)
 	if id == "mahayana":
 		return mahayana_goals(c, data, flags, clan)
+	if id == "tribulation":
+		return tribulation_goals(c, data, flags, clan)
 	if mahayana_goals_active(c, data, flags, clan):
 		return mahayana_goals(c, data, flags, clan)
+	if tribulation_goals_active(c, data, flags, clan):
+		return tribulation_goals(c, data, flags, clan)
 	var none: Array[Dictionary] = []
 	return none
 
@@ -1446,6 +1478,8 @@ static func active_goal_ladder(c: CharacterData, data: GameData, flags: Dictiona
 		return body_integration_goals(c, data, flags, clan)
 	if mahayana_goals_active(c, data, flags, clan):
 		return mahayana_goals(c, data, flags, clan)
+	if tribulation_goals_active(c, data, flags, clan):
+		return tribulation_goals(c, data, flags, clan)
 	var none: Array[Dictionary] = []
 	return none
 
@@ -1664,6 +1698,14 @@ static func journal(c: CharacterData, data: GameData, flags: Dictionary, today: 
 				maha_tone = "normal" if maha_flagged else "warning"
 				maha_flagged = true
 			_add(out, "Mahayana goals", ("[x] " if goal["done"] else "[ ] ") + String(goal["text"]), maha_tone)
+	if tribulation_goals_active(c, data, flags, clan):
+		var tt_flagged := false
+		for goal in tribulation_goals(c, data, flags, clan):
+			var tt_tone := "dim"
+			if not goal["done"]:
+				tt_tone = "normal" if tt_flagged else "warning"
+				tt_flagged = true
+			_add(out, "Tribulation Transcendence goals", ("[x] " if goal["done"] else "[ ] ") + String(goal["text"]), tt_tone)
 	var fights := fair_fights(c, data, flags, today, region_id, people, favor)
 	var goal_lines: PackedStringArray = []
 	if c.realm_index >= 2 or first_goals_done(c, data, flags):
