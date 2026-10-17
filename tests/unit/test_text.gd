@@ -46,3 +46,14 @@ func test_effects_check_pluralises_items() -> void:
 	assert_eq(reason, "You need 3 Spirit Herbs.")
 	assert_eq(Effects.check(c, d, {"items": {"spirit_herb": -1}}), "You need 1 Spirit Herb.")
 	assert_eq(Items.item_plural(d, "spirit_herb", 2), "Spirit Herbs")
+
+
+func test_mass_noun_items_keep_their_name_in_the_plural() -> void:
+	var d := data()
+	assert_eq(Items.item_plural(d, "cold_iron", 3), "Cold Iron")
+	assert_eq(Items.item_plural(d, "star_silver", 10), "Star Silver")
+	assert_eq(Items.item_plural(d, "dragonblood_gold", 4), "Dragon-Blood Gold")
+	assert_eq(Items.item_plural(d, "formation_jade", 2), "Formation Jade")
+	assert_eq(Items.item_plural(d, "thousand_year_lingzhi", 2), "Thousand-Year Lingzhi")
+	assert_eq(Items.item_plural(d, "earth_marrow_fungus", 2), "Earth Marrow Fungi")
+	assert_eq(Items.item_plural(d, "spirit_herb", 2), "Spirit Herbs")
