@@ -731,3 +731,25 @@ func test_mahayana_choice_encounters() -> void:
 	assert_true(int(ferry["choices"][0]["effects"]["qi"]) < 0, "the fare costs qi")
 	var anc: Dictionary = d.encounters["ruins_ancestor_who_would_not_ascend"]
 	assert_eq(anc["choices"][2]["enemy"], "myriad_throne_ancestor")
+
+
+func test_tribulation_transcendence_choice_encounters() -> void:
+	var d := GameData.load_from_dir()
+	for enc_id: String in ["wild_bell_of_the_last_lightning", "mountain_cairn_of_the_failed_ascension", "ruins_elder_waiting_for_the_sky"]:
+		assert_true(d.encounters.has(enc_id), enc_id + " exists")
+		var enc: Dictionary = d.encounters[enc_id]
+		assert_eq(enc["min_realm"], "tribulation_transcendence", enc_id + " realm")
+		assert_true(enc.has("blocked_by_flag"), enc_id + " is once-only")
+		assert_eq(enc["choices"].size(), 3, enc_id + " has three ways")
+	var bell: Dictionary = d.encounters["wild_bell_of_the_last_lightning"]
+	var c := new_character()
+	c.attributes["spirit"] = 10
+	assert_true(Exploration.check_choice(c, d, bell["choices"][0], {}) != "", "the bell needs Spirit 64")
+	c.attributes["spirit"] = 64
+	assert_eq(Exploration.check_choice(c, d, bell["choices"][0], {}), "", "the bell opens at Spirit 64")
+	var cairn: Dictionary = d.encounters["mountain_cairn_of_the_failed_ascension"]
+	assert_true(int(cairn["choices"][0]["effects"]["qi"]) < 0, "the vigil costs qi")
+	assert_true(int(cairn["choices"][1]["effects"]["items"]["spirit_stone"]) < 0, "the cairn costs stones")
+	var elder: Dictionary = d.encounters["ruins_elder_waiting_for_the_sky"]
+	assert_eq(elder["choices"][2]["enemy"], "hidden_tribulation_elder")
+	assert_true(d.enemies.has("hidden_tribulation_elder"), "the foe exists")
