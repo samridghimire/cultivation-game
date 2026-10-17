@@ -236,7 +236,23 @@ static func missing_line(c: CharacterData, data: GameData, entry: Dictionary, re
 	if id == "":
 		return "You have the ingredients: craft it at a workshop."
 	var where := Guidance.source_phrase(c, data, id, region_id, today)
-	return "Needs %s%s." % [_item_name(data, id), ": " + where if where != "" else ""]
+	return "Needs %s%s%s." % [_item_name(data, id), ": " + where if where != "" else "", _gather_estimate(c, data, entry, id, region_id, today)]
+
+
+## PROF-014: " (about <time> of gathering)" for the short ingredient when it can be gathered in
+## `region_id`; " (about <time> of gathering, longer than the order has)" past the deadline; "" otherwise.
+static func _gather_estimate(c: CharacterData, data: GameData, entry: Dictionary, ingredient: String, region_id: String, today: int) -> String:
+	var rate := Exploration.gather_rate(c, data, ingredient, region_id, Calendar.season_of(today))
+	if rate <= 0.0:
+		return ""
+	var recipe := _recipe_for(data, entry)
+	var per_craft := maxi(1, int(recipe["output"].get("count", 1)))
+	var crafts := ceili(float(int(entry["count"]) - c.item_count(String(entry["item"]))) / per_craft)
+	var short_units := int(recipe["ingredients"][ingredient]) * crafts - c.item_count(ingredient)
+	var days := ceili(short_units / rate)
+	if days > days_left(entry, today):
+		return " (about %s of gathering, longer than the order has)" % Calendar.format_duration(days)
+	return " (about %s of gathering)" % Calendar.format_duration(days)
 
 
 ## The recipe that makes an order's item (the order's own recipe first); {} when none does.

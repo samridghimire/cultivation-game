@@ -356,3 +356,39 @@ func test_lapse_text_plain_when_output_held() -> void:
 	var c := _alchemist()
 	c.add_item("qi_gathering_pill", 2)
 	assert_true(Commissions.lapse_text(c, data(), _pill_order(2, 100)).ends_with(" lapsed."))
+
+
+## PROF-014: the missing line estimates the gathering time when the ingredient can be gathered here.
+func test_missing_line_estimates_gathering_time() -> void:
+	var c := _alchemist()
+	var line := Commissions.missing_line(c, data(), _pill_order(2, 100), "qingshi_village", 10)
+	assert_true(line.contains(" of gathering)."), line)
+	assert_true(line.contains("(about "), line)
+	assert_false(line.contains("longer than the order has"), line)
+
+
+func test_missing_line_flags_an_estimate_past_the_deadline() -> void:
+	var c := _alchemist()
+	var line := Commissions.missing_line(c, data(), _pill_order(2, 11), "qingshi_village", 10)
+	assert_true(line.ends_with(" of gathering, longer than the order has)."), line)
+
+
+func test_missing_line_has_no_estimate_for_bought_ingredients() -> void:
+	var c := _alchemist()
+	var line := Commissions.missing_line(c, data(), _pill_order(2, 100), "far_nowhere", 10)
+	assert_false(line.contains("of gathering"), line)
+
+
+func test_missing_line_stays_short_for_every_gatherable_ingredient() -> void:
+	var d := data()
+	var c := _alchemist()
+	var longest := 0
+	for rid: String in d.recipes:
+		var recipe: Dictionary = d.recipes[rid]
+		for id: String in recipe["ingredients"]:
+			var order := {"profession": "x", "recipe": rid, "item": String(recipe["output"]["item"]), "count": 1, "reward": 1, "xp": 1.0, "due_day": 500}
+			for region: String in d.regions:
+				var line := Commissions.missing_line(c, d, order, region, 10)
+				if line.contains("of gathering") and not line.contains("longer than"):
+					longest = maxi(longest, line.length())
+	assert_true(longest > 0 and longest <= 110, "longest gathering line is %d chars" % longest)
