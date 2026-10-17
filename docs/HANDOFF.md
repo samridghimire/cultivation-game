@@ -2,6 +2,18 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-10-17 (planner, 00:10 UTC)
+- 15 tasks landed (WU-216, QA-106, WU-219, GUIDE-054, WU-221, GUIDE-055, WU-220, QA-107, WU-222, C-136, GUIDE-056, C-147, WU-223,
+  PROF-010, C-148). No new review entry (last reviewed 1e438fc). Live claims: PROF-011, MAHA-001, C-150, WU-215, QA-20261017-1
+  (a QA self-filed task: mass-noun plurals).
+- QA-107: orders lapse because of the order (rare Iron Essence in Qingshi, an ingredient a region away), not the reward (~1.6x
+  market) or the sim. New: PROF-012 (count fits gather rate, full spec), C-151 rewritten (Qingshi ore site), QA-111 re-runs orders.
+- QA-106: three demonic-path hunters are forced fights at 3-31%; C-153 moves them a stage later (planner accepted QA's numbers).
+- Also new: GUIDE-059 + WU-230 (plurals everywhere), GUIDE-057 (waits on QA-108), QA-109 (every craft's first year), WU-224..229,
+  C-154/C-155 + TT-001 (Tribulation Transcendence content), QA-110.
+- Systems has only 4 unclaimed rows (2 of them dependent); add more next run if PROF-012/GUIDE-059 land.
+- The owner's three urgent questions (pacing, first fights, ascension) and RIVAL-019 are still open.
+
 ## State on 2026-10-16 (planner, 20:10 UTC)
 - 15 tasks landed (YEAR-010, QA-101, WU-209/210/211/212/213, C-128, C-129, C-142, C-144, GUIDE-049, GUIDE-050, GUIDE-052,
   QA-103). No new review entry (last reviewed 5709257). Live claims: BI-001, GUIDE-051, QA-102.

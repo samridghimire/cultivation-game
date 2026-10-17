@@ -2,6 +2,21 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-17 [C-148] Six Mahayana foes, each with a fight encounter.
+- 2026-10-16 [PROF-010] A craft that jumps two ranks names every recipe it opens.
+- 2026-10-16 [WU-223] The herb slope's gather note fits the menu in every season.
+- 2026-10-16 [C-147] The Great Vehicle Pill, a Mahayana breakthrough pill.
+- 2026-10-16 [GUIDE-056] "You need 3 Spirit Herbs": item names are pluralised in requirement messages.
+- 2026-10-16 [C-136] A Body Integration inheritance: the Hollow of the Unbroken Body in Withered Bone Marsh.
+- 2026-10-16 [WU-222] The journal's "next recipe" goal fits on screen.
+- 2026-10-16 [QA-107] The crafter sim explains why crafting orders lapse.
+- 2026-10-16 [WU-220] The Mortal crafter nudge fits the HUD hint panel.
+- 2026-10-16 [GUIDE-055] A gather site's note also lists what grows there all year.
+- 2026-10-16 [WU-221] The three first-year crafter encounters fit on screen.
+- 2026-10-16 [GUIDE-054] A crafter who has not begun cultivating hears about it, with the best meditation spot.
+- 2026-10-16 [WU-219] The workshop's order button no longer cuts a word in half.
+- 2026-10-16 [QA-106] A table of late-realm fight gates finds three hunters you cannot slip away from.
+- 2026-10-16 [WU-216] A craft's rank-up lines fit the message log.
 - 2026-10-16 [GUIDE-053] The journal's profession goal names the next recipe to learn.
 - 2026-10-16 [WU-193] The Body Integration goal ladder fits on screen.
 - 2026-10-16 [C-145] The redundant Spirit Gathering Pill scroll is no longer handed out.
