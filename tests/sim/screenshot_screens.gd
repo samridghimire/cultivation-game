@@ -49,6 +49,8 @@ extends SceneTree
 ## WU-193: append `-- --body-shot` for a Body Integration Early player: HUD goal ladder and the journal's
 ## Body Integration goals.
 
+## WU-236: append `-- --tt-shot` for a Tribulation Transcendence Early player (WU-229's pattern): tt_hud, tt_journal, tt_journal_end.
+
 ## WU-229: append `-- --maha-shot` for a Mahayana Early player: HUD goal ladder and the journal's Mahayana goals.
 
 ## WU-216: append `-- --rankup-shot` for the message log after the crafts' rank-ups (the longest "You are now ..."
@@ -141,6 +143,9 @@ func _start() -> void:
 		return
 	if OS.get_cmdline_user_args().has("--maha-shot"):
 		_start_void_shot(gs, "mahayana", "maha")
+		return
+	if OS.get_cmdline_user_args().has("--tt-shot"):
+		_start_void_shot(gs, "tribulation_transcendence", "tt")
 		return
 	if OS.get_cmdline_user_args().has("--inherit-shot"):
 		_start_inherit_shot(gs)

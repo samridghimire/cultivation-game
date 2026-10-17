@@ -364,8 +364,7 @@ func _build_status_panel() -> void:
 	_injuries.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	box.add_child(_injuries)
 	_goal = UIStyle.label("", 14, Color(0.62, 0.64, 0.7))
-	_goal.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	_goal.custom_minimum_size = Vector2(316, 0)
+	_goal.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART  # WU-236: "Goal: Reach Tribulation Transcendence Middle" wraps
 	box.add_child(_goal)
 	_hunt = UIStyle.label("", 14, UIStyle.ACCENT)
 	_hunt.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
