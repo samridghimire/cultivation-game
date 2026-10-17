@@ -1205,3 +1205,42 @@ First Foundation Establishment year: 10 seeds
   runs with no artifact life spent: 109 of 120
   median win share of fought fights: 100%
 
+## late gates (200 fights per row)
+
+Late-realm fight gates, 200 fights per row. Typical player at the gate's lowest stage.
+  realm      encounter                         foe                    gate  tags                 lethal  win%  escape  flag
+  soul_forma mountain_void_dragonling          void_rift_dragonling   soul/0  mountain             yes      77%  yes    
+  soul_forma wild_heavenly_mandate_elder       heavenly_mandate_elder soul/1  wild,mountain        no       56%  no     
+  soul_forma wild_blood_moon_sovereign         blood_moon_sovereign   soul/0  wild                 yes      32%  yes    
+  soul_forma mountain_ten_thousand_peaks_roc   ten_thousand_peaks_roc soul/0  mountain             yes      11%  yes    
+  soul_forma ruins_ghost_banner_lord           ghost_banner_lord      soul/0  ruins                yes      10%  yes    
+  soul_forma ruins_star_devouring_colossus     star_devouring_colossu soul/0  ruins                yes      11%  yes    
+  void_refin mountain_rent_sky_wyrm            rent_sky_wyrm          void/0  mountain,wild        yes      42%  yes    
+  void_refin wild_void_tribunal_censor         void_tribunal_censor   void/2  wild,ruins           no       56%  no     
+  void_refin marsh_folded_world_ancestor       folded_world_ancestor  void/0  marsh,wild           yes      10%  yes    
+  void_refin mountain_starfall_thunder_roc     starfall_thunder_roc   void/0  mountain             yes       3%  yes    
+  void_refin ruins_hollow_realm_lord           hollow_realm_lord      void/0  ruins,marsh          yes       2%  yes    
+  void_refin ruins_heaven_sundering_construct  heaven_sundering_const void/0  ruins,mountain       yes       4%  yes    
+  body_integ mountain_flesh_world_behemoth     flesh_world_behemoth   body/0  mountain,wild        yes      19%  yes    
+  body_integ wild_one_body_arbiter             one_body_arbiter       body/2  wild,ruins           no       31%  no     
+  body_integ marsh_marrow_throne_ancestor      marrow_throne_ancestor body/0  marsh,wild           yes       3%  yes    
+  body_integ mountain_nine_heavens_vermilion_r nine_heavens_vermilion body/0  mountain             yes       1%  yes    
+  body_integ ruins_bone_court_sovereign        bone_court_sovereign   body/0  ruins,marsh          yes       0%  yes    
+  body_integ ruins_dao_forged_colossus         dao_forged_colossus    body/0  ruins,mountain       yes       0%  yes    
+  body_integ mountain_arbiter_of_one_body      one_body_arbiter       body/2  mountain,ruins       no       31%  no     choice
+  mahayana   mountain_sky_bearing_tortoise     sky_bearing_tortoise   maha/0  mountain,wild        yes       5%  yes    
+  mahayana   wild_great_vehicle_magistrate     great_vehicle_magistra maha/0  wild,ruins           no        0%  no     FLAG, 20%+ from stage 3
+  mahayana   marsh_myriad_throne_ancestor      myriad_throne_ancestor maha/0  marsh,wild           yes       0%  yes    
+  mahayana   mountain_ten_thousand_li_peng     ten_thousand_li_peng   maha/0  mountain             yes       0%  yes    
+  mahayana   ruins_charnel_heaven_sovereign    charnel_heaven_soverei maha/0  ruins,marsh          yes       0%  yes    
+  mahayana   ruins_heaven_gate_vow_guardian    heaven_gate_vow_guardi maha/0  ruins,mountain       yes       0%  yes    
+  mahayana   mountain_ferryman_of_the_last_riv great_vehicle_magistra maha/0  mountain,marsh       no        0%  no     choice
+  mahayana   ruins_ancestor_who_would_not_asce myriad_throne_ancestor maha/0  ruins,wild           yes       0%  no     choice
+  soul_forma eternal_sky_patriarch_peak        heavenly_mandate_elder soul/0  inheritance          no       31%  no     inheritance (retry)
+  soul_forma ghost_sovereign_hollow            ghost_banner_lord      soul/0  inheritance          no       10%  no     inheritance (retry)
+  soul_forma chaos_alchemist_furnace           star_devouring_colossu soul/0  inheritance          no       11%  no     inheritance (retry)
+  void_refin door_ajar_folder                  void_tribunal_censor   void/0  inheritance          no        8%  no     inheritance (retry)
+  body_integ marrow_throne_hollow              flesh_world_behemoth   body/0  inheritance          no       19%  no     inheritance (retry)
+  mahayana   great_vehicle_sutra_barge         great_vehicle_magistra maha/0  inheritance          no        0%  no     inheritance (retry)
+flagged: 1
+
