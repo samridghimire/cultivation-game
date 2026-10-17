@@ -109,9 +109,12 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 
 
 ## GUIDE-054: a Mortal who practises a craft and has played MORTAL_CRAFTER_NUDGE_DAY days hears where to begin
-## cultivating. "" otherwise (not Mortal, no profession, too early, or `today` unknown).
+## cultivating. "" otherwise (not Mortal, no profession, too early, `today` unknown, or already able to
+## break through: the breakthrough hint covers that).
 static func mortal_crafter_hint(c: CharacterData, data: GameData, region_id: String, today: int, flags: Dictionary = {}) -> String:
 	if c.realm_index != 0 or c.professions.is_empty() or today < MORTAL_CRAFTER_NUDGE_DAY:
+		return ""
+	if Cultivation.can_attempt_breakthrough(c, data):
 		return ""
 	var spot := "a meditation spot"
 	var eta := ""
@@ -1383,8 +1386,9 @@ static func active_goal_ladder(c: CharacterData, data: GameData, flags: Dictiona
 	return none
 
 
-## Mid-game goals (GOAL-003), up to 3 plain lines: the next realm, the next sect
-## rank (or founding a clan for a rogue) and the nearest unearned milestone.
+## Mid-game goals (GOAL-003): the next realm, the next sect
+## rank (or founding a clan for a rogue), each craft's next rank and next recipe (GUIDE-053),
+## and the nearest unearned milestone.
 static func goals(c: CharacterData, data: GameData, flags: Dictionary, clan: ClanData = null, density: float = 1.0, region_id: String = "", today: int = -1) -> PackedStringArray:
 	var out: PackedStringArray = []
 	if not Cultivation.is_final_realm(c, data):

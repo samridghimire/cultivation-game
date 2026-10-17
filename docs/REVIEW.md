@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 1e438fc
+Last reviewed commit: f27406e
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -703,3 +703,14 @@ Last reviewed commit: 1e438fc
     which reads oddly for a smith; a gatherable ore would fit better if one exists in the village. PROF-008's rank-up
     line only names recipes of the exact rank reached, so a two-rank jump skips the lower one. PROF-009 counts any
     merchant in the world as "nearby".
+- 2026-10-16 (reviewer): reviewed 1e438fc..f27406e (C-143, WU-217, C-145, WU-193, GUIDE-053, WU-216, QA-106, WU-219,
+  GUIDE-054, WU-221, GUIDE-055, WU-220, QA-107, WU-222, C-136; [PLAN]/[REVIEW] commits skipped). Main green. No
+  BACKLOG/CHANGELOG edits by workers; no SAVE_VERSION change (no new persistent state). Nothing filed.
+  - Fixed ([REVIEW] commit): GUIDE-054's Mortal crafter nudge still said "Meditate ... to begin cultivating (about 0
+    days)" once the Mortal could already break through, next to the breakthrough hint; it is now silent then (test
+    added). GUIDE-053 made goals() return more than the "up to 3 plain lines" its doc promised; doc updated.
+  - Checked: WU-219's word cut keeps the hard cut for a single over-long word. GUIDE-055 lists year-round finds only
+    when the table also has seasonal entries and never names an item twice. C-145 keeps the old scroll item for older
+    saves. C-143's encounters are once-only (blocked_by_flag) and C-136's inheritance uses an existing region.
+  - Notes, not filed: C-143's old alchemist's notes and C-145's Verdant Remnant treasure both teach Visceral Mending, so
+    a player can get that scroll twice. GUIDE-053's next_recipe_line scans every item to find the scroll each call.

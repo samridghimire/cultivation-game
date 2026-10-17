@@ -2210,6 +2210,12 @@ func test_mortal_crafter_nudge() -> void:
 	higher.realm_index = 1
 	assert_eq(Guidance.mortal_crafter_hint(higher, data(), "qingshi_village", 60), "")
 	assert_true(Guidance.mortal_crafter_hint(c, data(), "", 60).contains("a meditation spot"))
+	var ready := _fresh()
+	ready.professions["alchemist"] = {"rank": 0, "xp": 0.0}
+	ready.stage = data().realms[0].stage_count() - 1
+	ready.qi = Cultivation.qi_required(ready, data())
+	assert_true(Cultivation.can_attempt_breakthrough(ready, data()))
+	assert_eq(Guidance.mortal_crafter_hint(ready, data(), "qingshi_village", 60), "", "no meditate nudge once a breakthrough is possible")
 	c.techniques = {}
 	var one := Guidance.hints(c, data(), 1.0, 1, {}, {}, "qingshi_village", 30)
 	assert_eq(one.size(), 1)
