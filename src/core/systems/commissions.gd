@@ -76,14 +76,16 @@ const FILL_SHARE := 0.5
 
 
 ## The most units of the recipe's output an order may ask for so its gathered ingredients fit
-## in `days` (PROF-012). Ingredients the pack covers for one craft, spirit stones and anything
-## only bought nearby set no cap; 999 without a region. Never below 1.
+## in `days` (PROF-012, PROF-015). Ingredients gathered at one place share its gather days (one
+## roll serves them all: the slowest sets the time); separate places add up. Ingredients the pack
+## covers for one craft, spirit stones and anything only bought nearby set no cap; 999 without a
+## region. Never below 1.
 static func max_count(c: CharacterData, data: GameData, recipe: Dictionary, region_id: String, today: int, days: int) -> int:
 	if region_id == "":
 		return 999
 	var season := Calendar.season_of(today)
 	var out_count := float(maxi(1, int(recipe["output"].get("count", 1))))
-	var cap := 999
+	var place_days := {}
 	for ing: String in recipe["ingredients"]:
 		var need := int(recipe["ingredients"][ing])
 		if ing == "spirit_stone" or c.item_count(ing) >= need:
@@ -91,9 +93,15 @@ static func max_count(c: CharacterData, data: GameData, recipe: Dictionary, regi
 		var rate := Exploration.gather_rate(c, data, ing, region_id, season)
 		if rate <= 0.0:
 			continue
-		var fit := floori(rate * float(days) * FILL_SHARE / (float(need) / out_count))
-		cap = mini(cap, fit)
-	return maxi(1, cap)
+		var place := Exploration.best_gather_place(c, data, ing, region_id, season)
+		var per_craft := (float(need) / out_count) / rate
+		place_days[place] = maxf(float(place_days.get(place, 0.0)), per_craft)
+	var total := 0.0
+	for place: String in place_days:
+		total += float(place_days[place])
+	if total <= 0.0:
+		return 999
+	return maxi(1, floori(float(days) * FILL_SHARE / total))
 
 
 static func _ingredients_near(c: CharacterData, data: GameData, recipe: Dictionary, region_id: String, today: int) -> bool:

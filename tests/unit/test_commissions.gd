@@ -392,3 +392,42 @@ func test_missing_line_stays_short_for_every_gatherable_ingredient() -> void:
 				if line.contains("of gathering") and not line.contains("longer than"):
 					longest = maxi(longest, line.length())
 	assert_true(longest > 0 and longest <= 110, "longest gathering line is %d chars" % longest)
+
+
+## PROF-015: gathered ingredients at one place share its days; at two places they add up.
+func _fake_gather_data(second_place_for_b: bool) -> GameData:
+	var d := GameData.load_from_dir()
+	var table_a: Array = [{"item": "herb_a", "weight": 1, "min": 1, "max": 1}]
+	var table_b: Array = [{"item": "herb_b", "weight": 1, "min": 1, "max": 1}]
+	var places: Array = []
+	if second_place_for_b:
+		places = [
+			{"id": "p1", "type": "gather", "gather_days": 1, "gather_table": table_a},
+			{"id": "p2", "type": "gather", "gather_days": 1, "gather_table": table_b},
+		]
+	else:
+		places = [{"id": "p1", "type": "gather", "gather_days": 1, "gather_table": table_a + table_b}]
+	d.regions["fake_region"] = {"places": places}
+	return d
+
+
+func test_max_count_two_ingredients_one_place_uses_max_rule() -> void:
+	var d := _fake_gather_data(false)
+	var recipe := {"ingredients": {"herb_a": 2, "herb_b": 2}, "output": {"item": "x", "count": 1}}
+	var c := new_character()
+	var rate := Exploration.gather_rate(c, d, "herb_a", "fake_region")
+	assert_true(rate > 0.0)
+	var one := {"ingredients": {"herb_a": 2}, "output": {"item": "x", "count": 1}}
+	assert_eq(Commissions.max_count(c, d, recipe, "fake_region", 0, 100), Commissions.max_count(c, d, one, "fake_region", 0, 100), "same place: max rule")
+	assert_eq(Commissions.max_count(c, d, one, "fake_region", 0, 100), floori(100.0 * Commissions.FILL_SHARE / (2.0 / rate)))
+
+
+func test_max_count_two_places_sums_days() -> void:
+	var d := _fake_gather_data(true)
+	var c := new_character()
+	var recipe := {"ingredients": {"herb_a": 2, "herb_b": 2}, "output": {"item": "x", "count": 1}}
+	var one := {"ingredients": {"herb_a": 2}, "output": {"item": "x", "count": 1}}
+	var both := Commissions.max_count(c, d, recipe, "fake_region", 0, 100)
+	var single := Commissions.max_count(c, d, one, "fake_region", 0, 100)
+	assert_eq(Exploration.best_gather_place(c, d, "herb_b", "fake_region"), "p2")
+	assert_true(absi(both * 2 - single) <= 1, "about half: %d vs %d" % [both, single])

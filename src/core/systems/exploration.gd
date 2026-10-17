@@ -797,7 +797,17 @@ static func gather_table_for(c: CharacterData, data: GameData, table: Array, sea
 ## divided by the place's gather_days. Seasonal entries count only in `season` ("" = all year).
 ## 0.0 when no gather place there yields it. Ignores Fortune's extra rolls (a conservative rate).
 static func gather_rate(c: CharacterData, data: GameData, item_id: String, region_id: String, season: String = "") -> float:
+	return _best_gather(c, data, item_id, region_id, season)["rate"]
+
+
+## The place id in `region_id` that `gather_rate` picks for `item_id` ("" when none yields it).
+static func best_gather_place(c: CharacterData, data: GameData, item_id: String, region_id: String, season: String = "") -> String:
+	return _best_gather(c, data, item_id, region_id, season)["place"]
+
+
+static func _best_gather(c: CharacterData, data: GameData, item_id: String, region_id: String, season: String) -> Dictionary:
 	var best := 0.0
+	var best_place := ""
 	for place: Dictionary in data.regions.get(region_id, {}).get("places", []):
 		if String(place.get("type", "")) != "gather":
 			continue
@@ -812,8 +822,10 @@ static func gather_rate(c: CharacterData, data: GameData, item_id: String, regio
 		if total <= 0.0 or units <= 0.0:
 			continue
 		var rate := float(GATHER_ROLLS) * units / total / float(maxi(1, int(place.get("gather_days", 1))))
-		best = maxf(best, rate)
-	return best
+		if rate > best:
+			best = rate
+			best_place = String(place.get("id", ""))
+	return {"rate": best, "place": best_place}
 
 
 ## Number of gathering entries at `table` hidden from `c` by their min_realm.
