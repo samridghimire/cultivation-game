@@ -4,11 +4,13 @@ extends SceneTree
 ## hint names, craft and sell what it can refine, fill an open commission, otherwise meditate.
 ## Compared with the curious first-hour newcomer (tests/sim/first_hour.gd) at the same days.
 ## Usage: tools/godot.sh --headless --path . -s res://tests/sim/crafter_start.gd -- [seeds] [days] [--orders]
+## QA-108: while the top hint is GUIDE-054's "You are still a mortal" line the crafter meditates that step instead of gathering
+## or crafting (--no-nudge restores the old policy for before/after runs); the medians report the realm at day 120.
 ## QA-107: --orders prints every commission (roll day, item, count, reward, days allowed, whether each ingredient
 ## was available nearby at roll time) with its fate and why the sim did not fill it.
 
 const FirstHour := preload("res://tests/sim/first_hour.gd")
-const CHECKPOINTS: Array[int] = [30, 90, 180, 365]
+const CHECKPOINTS: Array[int] = [30, 90, 120, 180, 365]
 const REGION := "qingshi_village"
 const PROF := "alchemist"
 const STUCK_WEEK_DAYS := 7
@@ -16,6 +18,7 @@ const STUCK_WEEK_DAYS := 7
 var _gs: Node
 var _clock: Node
 var _orders_mode := false
+var _follow_nudge := true  ## QA-108
 var _tracked: Array[Dictionary] = []  ## QA-107: orders seen so far, with their fate
 var _sold := {}  ## QA-107: item id -> units the sim sold this life
 var _crafted_out := {}  ## QA-107: item id -> units crafted this life
@@ -44,6 +47,7 @@ func _sum(values: Array) -> int:
 func _run() -> void:
 	var args := OS.get_cmdline_user_args()
 	_orders_mode = args.has("--orders")
+	_follow_nudge = not args.has("--no-nudge")
 	var nums: Array = []
 	for a in args:
 		if not String(a).begins_with("--"):
@@ -54,7 +58,7 @@ func _run() -> void:
 	_clock = root.get_node("GameClock")
 	print("Crafter start: new Alchemist in Qingshi Village, %d seeds, %d days" % [seeds, days])
 	print("  seed  d30  d90 d180  crafted  comm(got/del)  rank  renown  gather% craft% meditate%  stuck-wk (faded)  curious(d30/d90/d180)  realm d90 | d180 | d365 (curious)  cult-hint-steps")
-	var cols := {"d30": [], "d90": [], "d180": [], "crafted": [], "got": [], "delivered": [], "rank": [], "renown": [], "gather": [], "craft": [], "meditate": [], "stuck": [], "faded": [], "c30": [], "c90": [], "c180": [], "d365": [], "hint": [], "post": [], "stuck_post": [], "rank_gap": []}
+	var cols := {"d30": [], "d90": [], "r120": [], "d180": [], "crafted": [], "got": [], "delivered": [], "rank": [], "renown": [], "gather": [], "craft": [], "meditate": [], "stuck": [], "faded": [], "c30": [], "c90": [], "c180": [], "d365": [], "hint": [], "post": [], "stuck_post": [], "rank_gap": []}
 	for s in range(1, seeds + 1):
 		var base: Dictionary = FirstHour.play(_gs, _clock, s, maxi(6, days / 30), true)
 		var cur: Array = base["stones"]
@@ -69,6 +73,7 @@ func _run() -> void:
 		cols["gather"].append(100.0 * r["gather_days"] / total)
 		cols["craft"].append(100.0 * r["craft_days"] / total)
 		cols["meditate"].append(100.0 * r["meditate_days"] / total)
+		cols["r120"].append(0 if r["realm120"] == "Mortal" else 1)
 		cols["c30"].append(cur[0])
 		cols["c90"].append(cur[2])
 		cols["c180"].append(cur[5])
@@ -81,6 +86,7 @@ func _run() -> void:
 	print("  medians: days gathering %d%% / crafting %d%% / meditating %d%%; weeks stuck (no hint, nothing to craft, nothing to deliver) median %d, max %d; of those the craft-now hint had faded (rank %d) in %d%%" % [_median(cols["gather"]), _median(cols["craft"]), _median(cols["meditate"]), _median(cols["stuck"]), cols["stuck"].max(), Guidance.CRAFT_HINT_MAX_RANK, 100 * _sum(cols["faded"]) / maxi(1, _sum(cols["stuck"]))])
 	if days > 180:
 		print("  medians past day 180: stones d180 -> d365 %d -> %d, crafts in days 181-%d %d (%.1f a month), weeks stuck after d180 median %d max %d" % [_median(cols["d180"]), _median(cols["d365"]), days, _median(cols["post"]), _median(cols["post"]) / ((days - 180) / 30.0), _median(cols["stuck_post"]), cols["stuck_post"].max()])
+	print("  QA-108: seeds past Mortal by day 120: %d of %d (nudge %s)" % [_sum(cols["r120"]), seeds, "followed" if _follow_nudge else "ignored"])
 	print("  steps where the top hint is about cultivating or a breakthrough: median %d, max %d" % [_median(cols["hint"]), cols["hint"].max()])
 	quit()
 
@@ -101,7 +107,7 @@ func _crafter(seed_value: int, days: int) -> Dictionary:
 	c.professions[PROF] = {"rank": 0, "xp": 0.0}
 	Alchemy.grant_rank_recipes(c, _gs.data)
 	var start: int = _clock.total_days
-	var out := {"d30": 0, "d90": 0, "d180": 0, "crafted": 0, "got": 0, "delivered": 0, "rank": 0, "renown": 0, "gather_days": 0, "craft_days": 0, "meditate_days": 0, "stuck": 0, "faded": 0, "d365": 0, "realm90": "-", "realm180": "-", "realm365": "-", "cult_hint": 0, "crafted_post": 0, "stuck_post": 0}
+	var out := {"d30": 0, "d90": 0, "d120": 0, "d180": 0, "crafted": 0, "got": 0, "delivered": 0, "rank": 0, "renown": 0, "gather_days": 0, "craft_days": 0, "meditate_days": 0, "stuck": 0, "faded": 0, "d365": 0, "realm90": "-", "realm120": "-", "realm180": "-", "realm365": "-", "cult_hint": 0, "crafted_post": 0, "stuck_post": 0}
 	var checkpoints := CHECKPOINTS.duplicate()
 	_tracked.clear()
 	_sold.clear()
@@ -230,6 +236,12 @@ func _top_hint_is_cultivation(c: CharacterData) -> bool:
 	return text.contains("meditat") or text.contains("breakthrough") or text.contains("cultivat")
 
 
+## QA-108: is the top hint GUIDE-054's "You are still a mortal" line?
+func _top_hint_is_mortal_nudge(c: CharacterData) -> bool:
+	var hints: PackedStringArray = Guidance.hints(c, _gs.data, 1.0, 1, {}, _gs.world_flags, REGION, _clock.total_days)
+	return not hints.is_empty() and hints[0].begins_with("You are still a mortal")
+
+
 ## A week with nothing better to do: meditate, or at a bottleneck try the breakthrough and then walk about (exploring takes time).
 func _idle_week(c: CharacterData) -> void:
 	var before: int = _clock.total_days
@@ -253,6 +265,12 @@ func _clear_pending() -> void:
 ## One decision: returns "gather", "craft", "meditate" or "stuck" (nothing to act on).
 func _act(c: CharacterData) -> String:
 	_deliver_open(c)
+	if _follow_nudge and _top_hint_is_mortal_nudge(c):
+		_idle_week(c)
+		return "meditate"
+	if _follow_nudge and c.realm_index == 0 and Cultivation.can_attempt_breakthrough(c, _gs.data):  # the nudge's next line: step into Qi Refining
+		_gs.attempt_breakthrough()
+		return "meditate"
 	var recipe_id := _best_craftable(c)
 	if recipe_id != "":
 		var out_item := String(_gs.data.recipes[recipe_id]["output"]["item"])
