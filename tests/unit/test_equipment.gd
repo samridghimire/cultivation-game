@@ -84,8 +84,8 @@ func test_forging_uses_constitution() -> void:
 func test_forge_produces_equipment() -> void:
 	var c := new_character()
 	c.attributes["constitution"] = 15
-	c.add_item("iron_essence", 1)
-	c.add_item("spirit_herb", 3)
+	c.add_item("iron_essence", 2)
+	c.add_item("spirit_herb", 1)
 	var result := Alchemy.refine(c, data(), "iron_sword", seeded_rng())
 	assert_true(result["ok"])
 	assert_eq(c.item_count("iron_essence"), 0)
@@ -111,8 +111,8 @@ func test_game_state_equip_and_use_item() -> void:
 	gs.unequip("weapon")
 	assert_eq(c.item_count("iron_sword"), 1)
 	assert_false(c.equipment.has("weapon"))
-	c.add_item("iron_essence", 1)
-	c.add_item("spirit_herb", 3)
+	c.add_item("iron_essence", 2)
+	c.add_item("spirit_herb", 1)
 	gs.refine("iron_sword")
 	assert_eq(c.item_count("iron_essence"), 0)
 	assert_gt(clock.total_days, days, "forging takes time")
