@@ -47,6 +47,8 @@ extends SceneTree
 ## WU-193: append `-- --body-shot` for a Body Integration Early player: HUD goal ladder and the journal's
 ## Body Integration goals.
 
+## WU-229: append `-- --maha-shot` for a Mahayana Early player: HUD goal ladder and the journal's Mahayana goals.
+
 ## WU-216: append `-- --rankup-shot` for the message log after the crafts' rank-ups (the longest "You are now ..."
 ## plus rank_up_line pair across every craft and rank): the HUD log panel and the full log screen.
 
@@ -131,6 +133,9 @@ func _start() -> void:
 		return
 	if OS.get_cmdline_user_args().has("--body-shot"):
 		_start_void_shot(gs, "body_integration", "body")
+		return
+	if OS.get_cmdline_user_args().has("--maha-shot"):
+		_start_void_shot(gs, "mahayana", "maha")
 		return
 	if OS.get_cmdline_user_args().has("--inherit-shot"):
 		_start_inherit_shot(gs)
