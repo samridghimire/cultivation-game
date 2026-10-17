@@ -51,6 +51,9 @@ extends SceneTree
 
 ## WU-236: append `-- --tt-shot` for a Tribulation Transcendence Early player (WU-229's pattern): tt_hud, tt_journal, tt_journal_end.
 
+## WU-242: append `-- --tt-foes` for a Tribulation Transcendence Early player facing Lightning-Tithe Sovereign: the
+## sensed-threat prompt (tt_foe_prompt), the combat report after losing (tt_foe_report) and the message log (tt_foe_log).
+
 ## WU-229: append `-- --maha-shot` for a Mahayana Early player: HUD goal ladder and the journal's Mahayana goals.
 
 ## WU-216: append `-- --rankup-shot` for the message log after the crafts' rank-ups (the longest "You are now ..."
@@ -146,6 +149,9 @@ func _start() -> void:
 		return
 	if OS.get_cmdline_user_args().has("--tt-shot"):
 		_start_void_shot(gs, "tribulation_transcendence", "tt")
+		return
+	if OS.get_cmdline_user_args().has("--tt-foes"):
+		_start_tt_foes_shot(gs)
 		return
 	if OS.get_cmdline_user_args().has("--inherit-shot"):
 		_start_inherit_shot(gs)
@@ -817,6 +823,38 @@ func _start_void_shot(gs: Node, realm_id: String = "void_refinement", prefix: St
 	shots.append({"name": prefix + "_journal_end", "open": func() -> void:
 		journal.open()
 		journal.get("_scroll").set_deferred("scroll_vertical", 100000), "close": journal.close})
+
+
+## WU-242: C-154's longest-named lethal foe at Tribulation Transcendence Early: threat prompt, lost fight, message log.
+func _start_tt_foes_shot(gs: Node) -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 5
+	var c := CharacterFactory.create("Lin Feng", gs.data, rng, "male")
+	gs.start_session(c)
+	gs.pending_event = ""
+	c.age_days = 300 * Calendar.DAYS_PER_YEAR
+	c.realm_index = gs.data.realm_index_of("tribulation_transcendence")
+	c.stage = 0
+	var foe_id := "lightning_tithe_sovereign"
+	world = load("res://src/world/world.tscn").instantiate()
+	root.add_child(world)
+	hud = world.get_node("HUD")
+	var report: Control = hud.get("_combat_report")
+	var log_screen: Control = hud.get("_screens")["toggle_message_log"]
+	shots.append({"name": "tt_foe_prompt", "open": func() -> void:
+		hud.get("_banner").visible = false
+		hud.call("_on_threat_sensed", foe_id), "close": func() -> void:
+		hud.get("_choice_menu").close()
+		gs.pending_threat = ""})
+	shots.append({"name": "tt_foe_report", "open": func() -> void:
+		hud.get("_banner").visible = false
+		gs.fight(foe_id)
+		report.skip(), "close": func() -> void:
+		report.close()
+		hud.get("_respawn").close()})
+	shots.append({"name": "tt_foe_log", "open": func() -> void:
+		hud.get("_banner").visible = false
+		log_screen.open(), "close": log_screen.close})
 
 
 ## WU-196: renown at the first title and halfway to the second, arrival banner and journal.
