@@ -131,23 +131,33 @@ func _crafter_shots(gs: Node, c: CharacterData) -> void:
 ## WU-223: the Village Herb Slope menu once per season, so the "Grows here / In season / Out of season" note wraps.
 func _gather_note_shots(gs: Node) -> void:
 	var menu: Control = hud.get("_choice_menu")
-	var site: Node = null
-	var stack: Array[Node] = [world]
-	while not stack.is_empty():
-		var node: Node = stack.pop_back()
-		stack.append_array(node.get_children())
-		if node.get_script() != null and String(node.get_script().resource_path).ends_with("gather_site.gd") \
-				and str(node.get("display_name")) == "Village Herb Slope":
-			site = node
-	assert(site != null, "no Village Herb Slope in the world")
+	var slope: Node = _find_gather_site("Village Herb Slope")
 	for k in 4:
 		var day := k * 3 * Calendar.DAYS_PER_MONTH
 		var season := Calendar.season_of(day)
 		shots.append({"name": "gather_note_" + season.to_lower(), "open": func() -> void:
 			root.get_node("GameClock").total_days = day
 			hud.get("_banner").visible = false
-			menu.open_for(site)
-			print("%s: %s" % [season, site.get_options()[0].get("description", "")]), "close": menu.close})
+			menu.open_for(slope)
+			print("%s: %s" % [season, slope.get_options()[0].get("description", "")]), "close": menu.close})
+	# WU-227: C-151's Old Quarry Tailings menu with its gather note.
+	var quarry: Node = _find_gather_site("Old Quarry Tailings")
+	shots.append({"name": "gather_note_quarry", "open": func() -> void:
+		hud.get("_banner").visible = false
+		menu.open_for(quarry)
+		print("Quarry: %s" % quarry.get_options()[0].get("description", "")), "close": menu.close})
+
+
+func _find_gather_site(site_name: String) -> Node:
+	var stack: Array[Node] = [world]
+	while not stack.is_empty():
+		var node: Node = stack.pop_back()
+		stack.append_array(node.get_children())
+		if node.get_script() != null and String(node.get_script().resource_path).ends_with("gather_site.gd") \
+				and str(node.get("display_name")) == site_name:
+			return node
+	assert(false, "no %s in the world" % site_name)
+	return null
 
 
 func _find_explore() -> Node:
