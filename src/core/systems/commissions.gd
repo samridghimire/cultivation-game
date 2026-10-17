@@ -228,28 +228,57 @@ static func short_label(c: CharacterData, data: GameData, entry: Dictionary, tod
 ## remaining crafts need more of; "You have the ingredients: craft it at a workshop." when none is short.
 static func missing_line(c: CharacterData, data: GameData, entry: Dictionary, region_id: String, today: int) -> String:
 	var item_id := String(entry.get("item", ""))
-	var have := c.item_count(item_id)
-	var count := int(entry.get("count", 0))
-	if have >= count:
+	if c.item_count(item_id) >= int(entry.get("count", 0)):
 		return ""
+	if _recipe_for(data, entry).is_empty():
+		return ""
+	var id := short_ingredient(c, data, entry)
+	if id == "":
+		return "You have the ingredients: craft it at a workshop."
+	var where := Guidance.source_phrase(c, data, id, region_id, today)
+	return "Needs %s%s." % [_item_name(data, id), ": " + where if where != "" else ""]
+
+
+## The recipe that makes an order's item (the order's own recipe first); {} when none does.
+static func _recipe_for(data: GameData, entry: Dictionary) -> Dictionary:
 	var recipe: Dictionary = data.recipes.get(String(entry.get("recipe", "")), {})
-	if recipe.is_empty():
-		for rid: String in data.recipes:
-			if String(data.recipes[rid].get("output", {}).get("item", "")) == item_id:
-				recipe = data.recipes[rid]
-				break
-	if recipe.is_empty():
+	if not recipe.is_empty():
+		return recipe
+	var item_id := String(entry.get("item", ""))
+	for rid: String in data.recipes:
+		if String(data.recipes[rid].get("output", {}).get("item", "")) == item_id:
+			return data.recipes[rid]
+	return {}
+
+
+## PROF-013: the first ingredient (data order, no spirit stones) the crafts still needed for this
+## order require more of than the pack holds. "" when none is short, the pack holds the order, or no recipe.
+static func short_ingredient(c: CharacterData, data: GameData, entry: Dictionary) -> String:
+	var have := c.item_count(String(entry.get("item", "")))
+	var count := int(entry.get("count", 0))
+	var recipe := _recipe_for(data, entry)
+	if have >= count or recipe.is_empty():
 		return ""
 	var per_craft := maxi(1, int(recipe["output"].get("count", 1)))
 	var crafts := ceili(float(count - have) / per_craft)
 	var ingredients: Dictionary = recipe["ingredients"]
 	for id: String in ingredients:
-		if id == "spirit_stone":
-			continue
-		if c.item_count(id) < int(ingredients[id]) * crafts:
-			var where := Guidance.source_phrase(c, data, id, region_id, today)
-			return "Needs %s%s." % [_item_name(data, id), ": " + where if where != "" else ""]
-	return "You have the ingredients: craft it at a workshop."
+		if id != "spirit_stone" and c.item_count(id) < int(ingredients[id]) * crafts:
+			return id
+	return ""
+
+
+## PROF-013: the lapse message, with what you were short of (or that you never crafted it).
+static func lapse_text(c: CharacterData, data: GameData, order: Dictionary) -> String:
+	var item_id := String(order["item"])
+	var count := int(order["count"])
+	var text := "The order for %d %s lapsed." % [count, Items.item_plural(data, item_id, count)]
+	var short := short_ingredient(c, data, order)
+	if short != "":
+		return text + " You were short of %s." % Items.item_plural(data, short, 2)
+	if c.item_count(item_id) < count and not _recipe_for(data, order).is_empty():
+		return text + " You had the ingredients but never crafted them."
+	return text
 
 
 ## GUIDE-052: for the order due soonest (14 days or less left) that is still short, "Order due in

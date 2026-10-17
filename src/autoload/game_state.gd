@@ -3025,7 +3025,8 @@ func _on_days_advanced(days: int) -> void:
 		for warning in Commissions.lapse_warnings(player, data, GameClock.total_days - days, GameClock.total_days):
 			EventBus.post(warning, "info")
 		for lapsed in Commissions.expire(player, GameClock.total_days):
-			EventBus.post("The order for %d %s lapsed." % [int(lapsed["count"]), Items.item_plural(data, String(lapsed["item"]), int(lapsed["count"]))], "info")
+			EventBus.post(Commissions.lapse_text(player, data, lapsed), "info")
+			LifeStats.add(player, "commissions_lapsed")
 		EventBus.topic = "world"
 	if months > 0 or Calendar.DAYS_PER_MONTH - age_before % Calendar.DAYS_PER_MONTH > Sects.DUTY_REMINDER_DAYS:
 		if Sects.duty_days_left(player) <= Sects.DUTY_REMINDER_DAYS:

@@ -333,3 +333,26 @@ func test_pills_are_not_capped() -> void:
 	var c := _alchemist()
 	var recipe: Dictionary = data().recipes["qi_gathering_pill"]
 	assert_true(Commissions.max_count(c, data(), recipe, "qingshi_village", 0, int(data().commissions["days"])) >= 3)
+
+
+## PROF-013: a lapsed order says what you were short of.
+func test_lapse_text_names_the_short_ingredient() -> void:
+	var c := _alchemist()
+	var text := Commissions.lapse_text(c, data(), _pill_order(2, 100))
+	assert_true(text.begins_with("The order for 2 "), text)
+	assert_true(text.ends_with(" lapsed. You were short of %s." % Items.item_plural(data(), Commissions.short_ingredient(c, data(), _pill_order(2, 100)), 2)), text)
+	assert_eq(Commissions.short_ingredient(c, data(), _pill_order(2, 100)), "spirit_herb")
+
+
+func test_lapse_text_ingredients_held_but_not_crafted() -> void:
+	var c := _alchemist()
+	c.add_item("spirit_herb", 2)
+	c.add_item("dew_grass", 1)
+	assert_eq(Commissions.short_ingredient(c, data(), _pill_order(2, 100)), "")
+	assert_true(Commissions.lapse_text(c, data(), _pill_order(2, 100)).ends_with(" lapsed. You had the ingredients but never crafted them."))
+
+
+func test_lapse_text_plain_when_output_held() -> void:
+	var c := _alchemist()
+	c.add_item("qi_gathering_pill", 2)
+	assert_true(Commissions.lapse_text(c, data(), _pill_order(2, 100)).ends_with(" lapsed."))

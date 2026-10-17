@@ -808,6 +808,20 @@ func test_commission_ordered_and_delivered() -> void:
 	gs.end_session()
 
 
+## PROF-013: an order that lapses posts what you were short of and bumps commissions_lapsed.
+func test_commission_lapse_names_shortfall_and_counts() -> void:
+	var c := _start()
+	var gs := _game_state()
+	c.commissions = [{"profession": "alchemist", "recipe": "qi_gathering_pill", "item": "qi_gathering_pill", "count": 2, "reward": 10, "xp": 5.0, "due_day": GameClock.total_days + 1}]
+	_zero_round_posts.clear()
+	EventBus.message_posted.connect(_collect_post)
+	gs.cultivate(3)
+	EventBus.message_posted.disconnect(_collect_post)
+	assert_true("\n".join(_zero_round_posts).contains("lapsed. You were short of "), "\n".join(_zero_round_posts))
+	assert_eq(LifeStats.get_stat(c, "commissions_lapsed"), 1)
+	gs.end_session()
+
+
 ## GUIDE-059: delivering a 2-unit order posts the plural item name.
 func test_commission_delivery_message_is_plural() -> void:
 	var c := _start()
