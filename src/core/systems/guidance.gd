@@ -20,6 +20,7 @@ const FAIR_FIGHT_MIN_CHANCE := 0.7  # "Even" or better (Combat.label_for_chance)
 const CHORE_REGION := "qingshi_village"
 ## GUIDE-054: game days a Mortal crafter plays before hearing where to begin cultivating.
 const MORTAL_CRAFTER_NUDGE_DAY := 30
+const IDLE_CULTIVATION_DAYS := 30  # GUIDE-057: days without cultivating before a Qi Refining crafter is nudged
 
 
 ## Up to `limit` hints for `c`. `density` is the qi density where the player
@@ -43,6 +44,9 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 	var mortal_nudge := mortal_crafter_hint(c, data, region_id, today, flags)
 	if mortal_nudge != "":
 		out.append(mortal_nudge)
+	var idle_nudge := idle_crafter_hint(c, data, region_id, today, flags)
+	if idle_nudge != "":
+		out.append(idle_nudge)
 	var newcomer := _newcomer_hints(c, data, flags, region_id) if c.realm_index <= NEWCOMER_MAX_REALM else PackedStringArray()
 	out.append_array(newcomer)
 	var sell := _sell_hint(c, data, region_id)
@@ -116,17 +120,43 @@ static func mortal_crafter_hint(c: CharacterData, data: GameData, region_id: Str
 		return ""
 	if Cultivation.can_attempt_breakthrough(c, data):
 		return ""
-	var spot := "a meditation spot"
+	var best := _meditation_spot(c, data, region_id, flags)
 	var eta := ""
-	if region_id != "":
-		var best := best_qi_in_region(c, data, region_id, flags)
-		if String(best["name"]) != "":
-			spot = String(best["name"])
-		var needed := maxf(Cultivation.qi_required(c, data) - c.qi, 0.0)
-		var rate := Cultivation.qi_per_day(c, data, float(best["density"]))
-		if rate > 0.0:
-			eta = " (about %s)" % Calendar.format_duration(ceili(needed / rate))
+	if float(best["rate"]) > 0.0:
+		eta = " (about %s)" % Calendar.format_duration(ceili(float(best["needed"]) / float(best["rate"])))
+	var spot := String(best["spot"])
 	return "You are still a mortal. Meditate at %s to begin cultivating%s; your craft will keep." % [spot, eta]
+
+
+## GUIDE-057: a Qi Refining crafter who has not cultivated for IDLE_CULTIVATION_DAYS hears where to
+## carry on. "" otherwise (other realm, no profession, `today` unknown, recently meditated, or at a bottleneck).
+static func idle_crafter_hint(c: CharacterData, data: GameData, region_id: String, today: int, flags: Dictionary = {}) -> String:
+	if c.realm_index != 1 or c.professions.is_empty() or today < 0:
+		return ""
+	var idle := today - maxi(c.last_meditated_day, 0)
+	if idle < IDLE_CULTIVATION_DAYS or Cultivation.is_at_bottleneck(c, data):
+		return ""
+	var best := _meditation_spot(c, data, region_id, flags)
+	var line := "You have not cultivated in %s." % Calendar.format_duration(idle)
+	if float(best["rate"]) > 0.0:
+		var days := ceili(Cultivation.days_to_next_stage(c, data, float(best["density"])))
+		line += " %s would carry you to the next layer in about %s." % [String(best["spot"]), Calendar.format_duration(days)]
+	return line
+
+
+## Shared by the Mortal and idle-crafter hints: the region's best qi spot (or a generic one), the qi still
+## needed for the next stage, and the daily rate there.
+static func _meditation_spot(c: CharacterData, data: GameData, region_id: String, flags: Dictionary) -> Dictionary:
+	var out := {"spot": "a meditation spot", "density": 1.0, "rate": 0.0, "needed": 0.0}
+	if region_id == "":
+		return out
+	var best := best_qi_in_region(c, data, region_id, flags)
+	if String(best["name"]) != "":
+		out["spot"] = String(best["name"])
+	out["density"] = float(best["density"])
+	out["needed"] = maxf(Cultivation.qi_required(c, data) - c.qi, 0.0)
+	out["rate"] = Cultivation.qi_per_day(c, data, float(best["density"]))
+	return out
 
 
 ## GUIDE-047: a broke crafter (nothing craftable, too few stones for any recipe in rank) hears

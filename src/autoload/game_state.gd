@@ -177,6 +177,7 @@ func cultivate(days: int, location_density: float = 1.0, skip_title: String = "M
 	var ends_early := needed > 0 and needed < days
 	if ends_early:
 		days = needed
+	player.last_meditated_day = GameClock.total_days
 	_start_time_skip()
 	var result := Cultivation.cultivate(player, data, days, density)
 	EventBus.post("You cultivate for %s and gather %d qi (%s)." % [Calendar.format_duration(days), int(result["qi_gained"]), Cultivation.progress_text(player, data)])
@@ -1510,6 +1511,7 @@ func dual_cultivate(spouse_id: String, days: int, location_density: float = 1.0)
 		EventBus.player_changed.emit()
 		return
 	var density := _cultivation_density(location_density)
+	player.last_meditated_day = GameClock.total_days
 	_start_time_skip()
 	var result := Family.dual_cultivate(player, spouse, data, days, density)
 	if not result["ok"]:
@@ -2657,6 +2659,7 @@ func enter_inner_world(days: int) -> void:
 	EventBus.topic = "cultivation"
 	if not _can_act():
 		return
+	player.last_meditated_day = GameClock.total_days
 	_start_time_skip()
 	var result := InnerWorld.cultivate(player, data, days, Sects.cultivation_bonus(player, data))
 	if not result["ok"]:

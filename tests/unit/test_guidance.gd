@@ -2255,3 +2255,25 @@ func test_mortal_crafter_nudge() -> void:
 	var one := Guidance.hints(c, data(), 1.0, 1, {}, {}, "qingshi_village", 30)
 	assert_eq(one.size(), 1)
 	assert_true(one[0].contains("You are still a mortal"))
+
+
+func test_idle_crafter_hint() -> void:
+	var c := _fresh()
+	c.professions["alchemist"] = {"rank": 0, "xp": 0.0}
+	c.realm_index = 1
+	c.last_meditated_day = 0
+	var line := Guidance.idle_crafter_hint(c, data(), "qingshi_village", Guidance.IDLE_CULTIVATION_DAYS)
+	assert_true(line.begins_with("You have not cultivated in "), line)
+	assert_true(line.contains("would carry you to the next layer in about"), line)
+	assert_eq(Guidance.idle_crafter_hint(c, data(), "qingshi_village", Guidance.IDLE_CULTIVATION_DAYS - 1), "")
+	assert_eq(Guidance.idle_crafter_hint(c, data(), "qingshi_village", -1), "")
+	assert_true(Guidance.idle_crafter_hint(c, data(), "", 40).begins_with("You have not cultivated"))
+	var none := _fresh()
+	none.realm_index = 1
+	assert_eq(Guidance.idle_crafter_hint(none, data(), "qingshi_village", 90), "")
+	var foundation := _fresh()
+	foundation.professions["alchemist"] = {"rank": 0, "xp": 0.0}
+	foundation.realm_index = 2
+	assert_eq(Guidance.idle_crafter_hint(foundation, data(), "qingshi_village", 90), "")
+	var hints := Guidance.hints(c, data(), 1.0, 1, {}, {}, "qingshi_village", 60)
+	assert_true(_has(hints, "You have not cultivated in"))

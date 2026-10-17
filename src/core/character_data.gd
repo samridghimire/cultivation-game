@@ -127,6 +127,7 @@ var commissions: Array = []
 var life_stats: Dictionary = {}  # LifeStats key -> count
 var year_start_stats: Dictionary = {}  # life_stats at the last new year (YEAR-001)
 var year_start_year: int = 0  # the year the snapshot was taken in (YEAR-002); 0 = unknown (old saves)
+var last_meditated_day: int = -1  # GameClock day of the last cultivation (GUIDE-057); -1 = never/unknown
 var year_start_realm: String = ""  # realm label then; "" = no snapshot yet
 var milestones: Array[String] = []  # earned Milestones ids
 var deed_days: Dictionary = {}  # deed id -> GameClock day it was last done
@@ -240,6 +241,7 @@ func to_dict() -> Dictionary:
 		"life_stats": life_stats.duplicate(),
 		"year_start_stats": year_start_stats.duplicate(),
 		"year_start_year": year_start_year,
+		"last_meditated_day": last_meditated_day,
 		"year_start_realm": year_start_realm,
 		"commissions": commissions.duplicate(true),
 		"milestones": milestones.duplicate(),
@@ -354,6 +356,7 @@ static func from_dict(d: Dictionary) -> CharacterData:
 	c.life_stats = _int_values(d.get("life_stats", {}))
 	c.year_start_stats = _int_values(d.get("year_start_stats", {}))
 	c.year_start_year = int(d.get("year_start_year", 0))
+	c.last_meditated_day = int(d.get("last_meditated_day", -1))
 	c.year_start_realm = String(d.get("year_start_realm", ""))
 	for order in d.get("commissions", []):
 		if order is Dictionary:

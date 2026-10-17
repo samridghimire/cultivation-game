@@ -1958,3 +1958,16 @@ func test_practised_crafter_gets_no_order_from_refining() -> void:
 	gs.refine("qi_gathering_pill")
 	assert_eq(c.commissions.size(), 0)
 	gs.end_session()
+
+
+func test_meditating_resets_idle_cultivation_day() -> void:
+	var c := _start()
+	c.realm_index = 1
+	assert_eq(c.last_meditated_day, -1)
+	_game_state().cultivate(5)
+	assert_eq(c.last_meditated_day, 0, "stamped with the day the meditation began")
+	var back := CharacterData.from_dict(c.to_dict())
+	assert_eq(back.last_meditated_day, 0)
+	var d := c.to_dict()
+	d.erase("last_meditated_day")
+	assert_eq(CharacterData.from_dict(d).last_meditated_day, -1)
