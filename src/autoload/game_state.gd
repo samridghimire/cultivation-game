@@ -263,7 +263,7 @@ func store_in_abode(item_id: String, quantity: int = 1) -> void:
 		return
 	var result := Abodes.store(player, data, current_region, item_id, quantity)
 	if result["ok"]:
-		EventBus.post("You put %d %s in your abode's chest." % [quantity, data.items.get(item_id, {}).get("name", item_id)])
+		EventBus.post("You put %d %s in your abode's chest." % [quantity, Items.item_plural(data, item_id, quantity)])
 	else:
 		EventBus.post(result["reason"], "warning")
 	EventBus.player_changed.emit()
@@ -275,7 +275,7 @@ func retrieve_from_abode(item_id: String, quantity: int = 1) -> void:
 		return
 	var result := Abodes.retrieve(player, data, current_region, item_id, quantity)
 	if result["ok"]:
-		EventBus.post("You take %d %s from your abode's chest." % [quantity, data.items.get(item_id, {}).get("name", item_id)])
+		EventBus.post("You take %d %s from your abode's chest." % [quantity, Items.item_plural(data, item_id, quantity)])
 	else:
 		EventBus.post(result["reason"], "warning")
 	EventBus.player_changed.emit()
@@ -424,7 +424,7 @@ func _commissions_month(only_prof: String = "") -> void:
 	for order in Commissions.roll(player, data, rng, GameClock.total_days, only_prof, current_region):
 		var days := Commissions.days_left(order, GameClock.total_days)
 		EventBus.post("A buyer at the workshop orders %d %s for %d spirit stones (%d days)." % [
-			int(order["count"]), data.items.get(order["item"], {}).get("name", order["item"]), int(order["reward"]), days], "progress")
+			int(order["count"]), Items.item_plural(data, String(order["item"]), int(order["count"])), int(order["reward"]), days], "progress")
 	EventBus.topic = "world"
 
 
@@ -438,7 +438,7 @@ func deliver_commission(index: int) -> void:
 		EventBus.post(result["reason"], "warning")
 		EventBus.player_changed.emit()
 		return
-	var item_name: String = data.items.get(result["item"], {}).get("name", result["item"])
+	var item_name := Items.item_plural(data, String(result["item"]), int(result["count"]))
 	EventBus.post("You deliver %d %s: +%d spirit stones, +%d xp." % [int(result["count"]), item_name, int(result["stones"]), int(result["xp"])], "progress")
 	var prof_id: String = result["profession"]
 	if result["ranks_gained"] > 0:
@@ -1060,7 +1060,7 @@ func gather(table: Array, days: int) -> void:
 	var notes: PackedStringArray = []
 	for item_id in found:
 		player.add_item(item_id, found[item_id])
-		notes.append("+%d %s" % [found[item_id], data.items[item_id]["name"]])
+		notes.append("+%d %s" % [found[item_id], Items.item_plural(data, item_id, found[item_id])])
 	if notes.is_empty():
 		EventBus.post("You search for %s but find nothing worth taking." % Calendar.format_duration(days))
 	else:
@@ -1076,7 +1076,7 @@ func sell_item(item_id: String, quantity: int = 1) -> void:
 		return
 	var result := Items.sell(player, data, item_id, quantity)
 	if result["ok"]:
-		EventBus.post("You sell %d %s for %d spirit stones." % [quantity, data.items[item_id]["name"], result["stones"]])
+		EventBus.post("You sell %d %s for %d spirit stones." % [quantity, Items.item_plural(data, item_id, quantity), result["stones"]])
 	else:
 		EventBus.post(result["reason"], "warning")
 	EventBus.player_changed.emit()
@@ -1632,7 +1632,7 @@ func _advance_estate(days: int, months: int) -> void:
 	if not herbs.is_empty():
 		var parts: PackedStringArray = []
 		for item_id in herbs:
-			parts.append("%d %s" % [herbs[item_id], data.items[item_id].get("name", item_id)])
+			parts.append("%d %s" % [herbs[item_id], Items.item_plural(data, item_id, herbs[item_id])])
 		EventBus.post("Your clan's spirit fields send you %s." % ", ".join(parts))
 
 
@@ -2034,9 +2034,9 @@ func refine(recipe_id: String) -> void:
 		LifeStats.add(player, "items_crafted", int(result["count"]))
 	var flavor: Dictionary = CRAFT_FLAVOR.get(prof_id, CRAFT_FLAVOR["alchemist"])
 	if result["great"]:
-		EventBus.post("%s A great success: %s yields +%d %s, +%d xp." % [flavor["great"], recipe_name, result["count"], data.items[result["item"]].get("name", result["item"]), int(result["xp"])], "progress")
+		EventBus.post("%s A great success: %s yields +%d %s, +%d xp." % [flavor["great"], recipe_name, result["count"], Items.item_plural(data, String(result["item"]), int(result["count"])), int(result["xp"])], "progress")
 	elif result["success"]:
-		EventBus.post("You %s %s: +%d %s, +%d xp." % [flavor["verb"], recipe_name, result["count"], data.items[result["item"]].get("name", result["item"]), int(result["xp"])], "progress")
+		EventBus.post("You %s %s: +%d %s, +%d xp." % [flavor["verb"], recipe_name, result["count"], Items.item_plural(data, String(result["item"]), int(result["count"])), int(result["xp"])], "progress")
 	else:
 		EventBus.post("%s %s failed (+%d xp)." % [flavor["fail"], recipe_name, int(result["xp"])], "warning")
 	if result["ranks_gained"] > 0:
@@ -2696,7 +2696,7 @@ func harvest_garden() -> void:
 	else:
 		var parts: PackedStringArray = []
 		for item_id in gained:
-			parts.append("%d %s" % [gained[item_id], data.items.get(item_id, {}).get("name", item_id)])
+			parts.append("%d %s" % [gained[item_id], Items.item_plural(data, item_id, gained[item_id])])
 		EventBus.post("You harvest the spirit garden: %s." % ", ".join(parts), "progress")
 	EventBus.player_changed.emit()
 
@@ -2708,7 +2708,7 @@ func feed_artifact(item_id: String, quantity: int = 1) -> void:
 		return
 	var result := ArtifactFunctions.feed(player, data, item_id, quantity)
 	if result["ok"]:
-		EventBus.post("The artifact devours %d %s. (+%d energy, %d total)" % [quantity, data.items.get(item_id, {}).get("name", item_id), result["energy"], player.artifact_energy], "progress")
+		EventBus.post("The artifact devours %d %s. (+%d energy, %d total)" % [quantity, Items.item_plural(data, item_id, quantity), result["energy"], player.artifact_energy], "progress")
 	else:
 		EventBus.post(result["reason"], "warning")
 	EventBus.player_changed.emit()
@@ -2737,7 +2737,7 @@ func store_in_artifact(item_id: String, quantity: int = 1) -> void:
 		return
 	var result := ArtifactFunctions.store(player, data, item_id, quantity)
 	if result["ok"]:
-		EventBus.post("You tuck %d %s away inside the artifact." % [quantity, data.items.get(item_id, {}).get("name", item_id)])
+		EventBus.post("You tuck %d %s away inside the artifact." % [quantity, Items.item_plural(data, item_id, quantity)])
 	else:
 		EventBus.post(result["reason"], "warning")
 	EventBus.player_changed.emit()
@@ -2750,7 +2750,7 @@ func retrieve_from_artifact(item_id: String, quantity: int = 1) -> void:
 		return
 	var result := ArtifactFunctions.retrieve(player, item_id, quantity)
 	if result["ok"]:
-		EventBus.post("You draw %d %s out of the artifact." % [quantity, data.items.get(item_id, {}).get("name", item_id)])
+		EventBus.post("You draw %d %s out of the artifact." % [quantity, Items.item_plural(data, item_id, quantity)])
 	else:
 		EventBus.post(result["reason"], "warning")
 	EventBus.player_changed.emit()
@@ -3025,7 +3025,7 @@ func _on_days_advanced(days: int) -> void:
 		for warning in Commissions.lapse_warnings(player, data, GameClock.total_days - days, GameClock.total_days):
 			EventBus.post(warning, "info")
 		for lapsed in Commissions.expire(player, GameClock.total_days):
-			EventBus.post("The order for %d %s lapsed." % [int(lapsed["count"]), data.items.get(lapsed["item"], {}).get("name", lapsed["item"])], "info")
+			EventBus.post("The order for %d %s lapsed." % [int(lapsed["count"]), Items.item_plural(data, String(lapsed["item"]), int(lapsed["count"]))], "info")
 		EventBus.topic = "world"
 	if months > 0 or Calendar.DAYS_PER_MONTH - age_before % Calendar.DAYS_PER_MONTH > Sects.DUTY_REMINDER_DAYS:
 		if Sects.duty_days_left(player) <= Sects.DUTY_REMINDER_DAYS:
@@ -3156,7 +3156,7 @@ func _sect_month_end() -> void:
 		if result["stones"] > 0:
 			parts.append("%d spirit stones" % result["stones"])
 		for item_id in result["items"]:
-			parts.append("%d %s" % [result["items"][item_id], data.items[item_id].get("name", item_id)])
+			parts.append("%d %s" % [result["items"][item_id], Items.item_plural(data, item_id, result["items"][item_id])])
 		EventBus.post("Your sect pays your monthly stipend: %s." % ", ".join(parts), "progress")
 	elif result["skipped"]:
 		EventBus.post("You fell short of your sect duty (%d/%d contribution), so this month's stipend is withheld." % [earned, duty], "warning")

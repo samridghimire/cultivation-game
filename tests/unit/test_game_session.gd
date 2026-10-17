@@ -808,6 +808,26 @@ func test_commission_ordered_and_delivered() -> void:
 	gs.end_session()
 
 
+## GUIDE-059: delivering a 2-unit order posts the plural item name.
+func test_commission_delivery_message_is_plural() -> void:
+	var c := _start()
+	var gs := _game_state()
+	c.professions["alchemist"] = {"rank": 0, "xp": 0.0}
+	c.realm_index = 1
+	gs.cultivate(Calendar.DAYS_PER_MONTH + 1)
+	var order: Dictionary = c.commissions[0]
+	order["count"] = 2
+	c.add_item(order["item"], 2)
+	_zero_round_posts.clear()
+	EventBus.message_posted.connect(_collect_post)
+	gs.deliver_commission(0)
+	EventBus.message_posted.disconnect(_collect_post)
+	var expect := "You deliver 2 %s:" % Items.item_plural(gs.data, String(order["item"]), 2)
+	assert_true("\n".join(_zero_round_posts).contains(expect), expect)
+	assert_true(Items.item_plural(gs.data, String(order["item"]), 2) != String(gs.data.items[order["item"]]["name"]))
+	gs.end_session()
+
+
 func test_commission_delivery_earns_renown_and_failure_does_not() -> void:
 	var c := _start()
 	var gs := _game_state()

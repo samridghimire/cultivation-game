@@ -565,7 +565,7 @@ static func check_tag(data: GameData, choice: Dictionary) -> String:
 		if item_id == "spirit_stone":
 			parts.append("%d stones" % -delta)
 		else:
-			parts.append("%d %s" % [-delta, data.items.get(item_id, {}).get("name", item_id)])
+			parts.append("%d %s" % [-delta, Items.item_plural(data, item_id, -delta)])
 	return ", ".join(parts)
 
 

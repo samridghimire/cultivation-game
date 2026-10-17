@@ -167,6 +167,20 @@ func test_short_label_fits_and_has_no_doubled_count() -> void:
 			assert_true(item_name == prefix or item_name.begins_with(prefix + " "), "%s -> %s" % [item_name, cut])
 
 
+## GUIDE-059: a two-unit order's label is pluralised before the word cut, so it still ends on a word.
+func test_short_label_pluralises_before_the_cut() -> void:
+	var c := _alchemist()
+	var qgp := {"item": "qi_gathering_pill", "count": 2, "reward": 9, "xp": 9, "due_day": 9}
+	var label := Commissions.short_label(c, data(), qgp, 0)
+	assert_true(label.begins_with("Deliver 2 Qi Gathering…") or label.begins_with("Deliver 2 Qi Gathering Pills:"), label)
+	for item: Dictionary in data().items.values():
+		var cut := Commissions.short_label(c, data(), {"item": item["id"], "count": 2, "reward": 1, "xp": 1, "due_day": 1}, 0)
+		if cut.contains("…"):
+			var prefix := cut.get_slice("…", 0).trim_prefix("Deliver 2 ")
+			var full := Items.item_plural(data(), String(item["id"]), 2)
+			assert_true(full == prefix or full.begins_with(prefix + " "), "%s -> %s" % [full, cut])
+
+
 func test_delivery_hint_needs_the_items() -> void:
 	var c := _alchemist()
 	Commissions.roll(c, data(), seeded_rng(), 0)

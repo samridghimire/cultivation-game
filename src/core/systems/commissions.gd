@@ -142,7 +142,7 @@ static func delivery_hint(c: CharacterData, data: GameData, today: int) -> Strin
 	for i in c.commissions.size():
 		if check_deliver(c, data, i) == "":
 			var order: Dictionary = c.commissions[i]
-			return "Deliver your %d %s order at a workshop (%d days left)." % [int(order["count"]), _item_name(data, String(order["item"])), days_left(order, today)]
+			return "Deliver your %d %s order at a workshop (%d days left)." % [int(order["count"]), Items.item_plural(data, String(order["item"]), int(order["count"])), days_left(order, today)]
 	return ""
 
 
@@ -153,7 +153,7 @@ static func lapse_warnings(c: CharacterData, data: GameData, from_day: int, to_d
 	for order in c.commissions:
 		var warn_day := int(order["due_day"]) - LAPSE_WARNING_DAYS
 		if from_day < warn_day and warn_day <= to_day and int(order["due_day"]) >= to_day:
-			out.append("The order for %d %s lapses in %d days." % [int(order["count"]), _item_name(data, String(order["item"])), LAPSE_WARNING_DAYS])
+			out.append("The order for %d %s lapses in %d days." % [int(order["count"]), Items.item_plural(data, String(order["item"]), int(order["count"])), LAPSE_WARNING_DAYS])
 	return out
 
 
@@ -165,7 +165,7 @@ static func days_left(entry: Dictionary, today: int) -> int:
 static func describe(c: CharacterData, data: GameData, entry: Dictionary, today: int) -> String:
 	var prof_name: String = data.professions[entry["profession"]].name.to_lower() if data.professions.has(entry["profession"]) else String(entry["profession"])
 	return "%d %s for %d spirit stones and %d %s xp, %d days left (you have %d)" % [
-		int(entry["count"]), _item_name(data, String(entry["item"])), int(entry["reward"]), int(entry["xp"]),
+		int(entry["count"]), Items.item_plural(data, String(entry["item"]), int(entry["count"])), int(entry["reward"]), int(entry["xp"]),
 		prof_name, days_left(entry, today), c.item_count(String(entry["item"]))]
 
 
@@ -188,7 +188,7 @@ static func _cut_at_word(name: String) -> String:
 
 ## Menu label: "Deliver 3 Qi Gathering Pills: 54 stones, 30 xp, 41 days (have 1/3)".
 static func short_label(c: CharacterData, data: GameData, entry: Dictionary, today: int) -> String:
-	var name := _item_name(data, String(entry["item"]))
+	var name := Items.item_plural(data, String(entry["item"]), int(entry["count"]))
 	if name.length() > LABEL_NAME_MAX:
 		name = _cut_at_word(name)
 	return "Deliver %d %s: %d stones, %d xp, %dd (have %d/%d)" % [

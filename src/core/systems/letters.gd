@@ -180,7 +180,7 @@ static func check_answer(c: CharacterData, data: GameData, npc_id: String, today
 		return "No letter from them is waiting for an answer."
 	var have := c.item_count(String(req["item"]))
 	if have < int(req["count"]):
-		return "They asked for %d %s; you have %d." % [int(req["count"]), _item_name(data, String(req["item"])), have]
+		return "They asked for %d %s; you have %d." % [int(req["count"]), Items.item_plural(data, String(req["item"]), int(req["count"])), have]
 	return ""
 
 
