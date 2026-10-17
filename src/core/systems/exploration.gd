@@ -792,6 +792,30 @@ static func gather_table_for(c: CharacterData, data: GameData, table: Array, sea
 	return result
 
 
+## Expected units of `item_id` per gather day at the best gather place in `region_id` for `c`
+## (PROF-012): GATHER_ROLLS rolls per gather, each hitting an entry by weight, (min+max)/2 units,
+## divided by the place's gather_days. Seasonal entries count only in `season` ("" = all year).
+## 0.0 when no gather place there yields it. Ignores Fortune's extra rolls (a conservative rate).
+static func gather_rate(c: CharacterData, data: GameData, item_id: String, region_id: String, season: String = "") -> float:
+	var best := 0.0
+	for place: Dictionary in data.regions.get(region_id, {}).get("places", []):
+		if String(place.get("type", "")) != "gather":
+			continue
+		var table := gather_table_for(c, data, place.get("gather_table", []), season)
+		var total := 0.0
+		var units := 0.0
+		for entry: Dictionary in table:
+			var w := float(entry.get("weight", 1))
+			total += w
+			if String(entry.get("item", "")) == item_id:
+				units += w * (float(entry.get("min", 1)) + float(entry.get("max", 1))) / 2.0
+		if total <= 0.0 or units <= 0.0:
+			continue
+		var rate := float(GATHER_ROLLS) * units / total / float(maxi(1, int(place.get("gather_days", 1))))
+		best = maxf(best, rate)
+	return best
+
+
 ## Number of gathering entries at `table` hidden from `c` by their min_realm.
 static func locked_gather_count(c: CharacterData, data: GameData, table: Array) -> int:
 	var count := 0

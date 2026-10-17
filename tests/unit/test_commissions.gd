@@ -281,3 +281,49 @@ func test_available_nearby_counts_only_merchants_one_route_away() -> void:
 	assert_true(Guidance.available_nearby(c, d, "rare_curio", ""), "no region: any region counts")
 	d.regions["next"]["places"] = d.regions["far"]["places"]
 	assert_true(Guidance.available_nearby(c, d, "rare_curio", "home"), "a merchant one route away counts")
+
+
+## PROF-012: an order's count fits the time it takes to gather it.
+func test_gather_rate_follows_the_table_and_season() -> void:
+	var c := new_character()
+	var d := data()
+	assert_true(Exploration.gather_rate(c, d, "spirit_herb", "qingshi_village", "spring") > Exploration.gather_rate(c, d, "spirit_herb", "qingshi_village", "winter"))
+	var table: Array = []
+	var days := 1
+	for p: Dictionary in d.regions["qingshi_village"]["places"]:
+		if String(p.get("type", "")) == "gather" and String(p.get("display_name", "")) == "Village Herb Slope":
+			table = p["gather_table"]
+			days = int(p["gather_days"])
+	var total := 0.0
+	for e: Dictionary in table:
+		if not e.has("seasons"):
+			total += float(e["weight"])
+	var expected := float(Exploration.GATHER_ROLLS) * 1.0 / total / float(days)
+	assert_true(absf(Exploration.gather_rate(c, d, "iron_essence", "qingshi_village", "winter") - expected) < 0.0001)
+	assert_eq(Exploration.gather_rate(c, d, "iron_sword", "qingshi_village"), 0.0)
+
+
+func test_roll_caps_the_count_to_what_can_be_gathered() -> void:
+	var d := GameData.load_from_dir()
+	for rid: String in d.recipes.keys():
+		if d.recipes[rid]["profession"] == "blacksmith" and rid != "iron_sword":
+			d.recipes.erase(rid)
+	var recipe: Dictionary = d.recipes["iron_sword"]
+	var cap_c := new_character()
+	cap_c.professions["blacksmith"] = {"rank": 0, "xp": 0.0}
+	var cap := Commissions.max_count(cap_c, d, recipe, "qingshi_village", 0, int(d.commissions["days"]))
+	assert_true(cap >= 1 and cap < int(d.commissions["count"][1]), "iron essence is scarce: cap %d" % cap)
+	assert_eq(Commissions.max_count(cap_c, d, recipe, "", 0, 60), 999)
+	for i in 10:
+		var c := new_character()
+		c.professions["blacksmith"] = {"rank": 0, "xp": 0.0}
+		var added := Commissions.roll(c, d, seeded_rng(i), 0, "blacksmith", "qingshi_village")
+		var n := int(added[0]["count"])
+		assert_true(n >= 1 and n <= cap, "count %d within cap %d" % [n, cap])
+		assert_eq(int(added[0]["reward"]), maxi(1, ceili(Commissions.unit_reward(d, "iron_sword") * n)))
+
+
+func test_pills_are_not_capped() -> void:
+	var c := _alchemist()
+	var recipe: Dictionary = data().recipes["qi_gathering_pill"]
+	assert_true(Commissions.max_count(c, data(), recipe, "qingshi_village", 0, int(data().commissions["days"])) >= 3)

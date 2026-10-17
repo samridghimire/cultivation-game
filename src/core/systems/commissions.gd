@@ -26,6 +26,7 @@ static func _open_count(c: CharacterData, prof_id: String) -> int:
 ## (only `only_prof` when given). Returns the new orders. With a `region_id` (PROF-009) the order
 ## is picked among recipes whose ingredients are spirit stones, already in the pack or available
 ## nearby (Guidance.available_nearby) when there are any; "" picks uniformly as before.
+## The count is capped by max_count so it fits what can be gathered in the order's window (PROF-012).
 static func roll(c: CharacterData, data: GameData, rng: RandomNumberGenerator, today: int, only_prof: String = "", region_id: String = "") -> Array[Dictionary]:
 	var added: Array[Dictionary] = []
 	var r := rules(data)
@@ -58,6 +59,7 @@ static func roll(c: CharacterData, data: GameData, rng: RandomNumberGenerator, t
 		var recipe: Dictionary = options[rng.randi_range(0, options.size() - 1)]
 		var item_id := String(recipe["output"]["item"])
 		var count := rng.randi_range(int(r["count"][0]), int(r["count"][1]))
+		count = mini(count, max_count(c, data, recipe, region_id, today, int(r["days"])))
 		var order := {
 			"profession": prof_id, "recipe": String(recipe["id"]), "item": item_id, "count": count,
 			"reward": maxi(1, ceili(unit_reward(data, item_id) * count)),
@@ -67,6 +69,31 @@ static func roll(c: CharacterData, data: GameData, rng: RandomNumberGenerator, t
 		c.commissions.append(order)
 		added.append(order)
 	return added
+
+
+## Share of an order's window a crafter is assumed to spend gathering (PROF-012).
+const FILL_SHARE := 0.5
+
+
+## The most units of the recipe's output an order may ask for so its gathered ingredients fit
+## in `days` (PROF-012). Ingredients the pack covers for one craft, spirit stones and anything
+## only bought nearby set no cap; 999 without a region. Never below 1.
+static func max_count(c: CharacterData, data: GameData, recipe: Dictionary, region_id: String, today: int, days: int) -> int:
+	if region_id == "":
+		return 999
+	var season := Calendar.season_of(today)
+	var out_count := float(maxi(1, int(recipe["output"].get("count", 1))))
+	var cap := 999
+	for ing: String in recipe["ingredients"]:
+		var need := int(recipe["ingredients"][ing])
+		if ing == "spirit_stone" or c.item_count(ing) >= need:
+			continue
+		var rate := Exploration.gather_rate(c, data, ing, region_id, season)
+		if rate <= 0.0:
+			continue
+		var fit := floori(rate * float(days) * FILL_SHARE / (float(need) / out_count))
+		cap = mini(cap, fit)
+	return maxi(1, cap)
 
 
 static func _ingredients_near(c: CharacterData, data: GameData, recipe: Dictionary, region_id: String, today: int) -> bool:
