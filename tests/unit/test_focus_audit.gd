@@ -835,3 +835,83 @@ func test_wu212_workshop_crafting_and_gather_site_focus() -> void:
 	hud.free()
 	gs.end_session()
 	await _frames()
+
+
+## WU-235: the newest menus: the Old Quarry Tailings gather menu, the Sutra Barge of the Great Vehicle
+## grounds menu (stage 1 open, comprehension gate missed) and a C-149 Mahayana encounter with gated choices.
+func test_wu235_quarry_barge_and_mahayana_encounter_focus() -> void:
+	var root := _tree().root
+	var gs: Node = root.get_node("GameState")
+	var c := new_character()
+	c.realm_index = gs.data.realm_index_of("mahayana")
+	c.attributes["comprehension"] = 10
+	c.attributes["spirit"] = 5
+	gs.start_session(c)
+	gs.pending_event = ""
+	var hud: CanvasLayer = load("res://src/ui/hud.tscn").instantiate()
+	root.add_child(hud)
+	await _frames()
+	var menu: ChoiceMenu = hud.get("_choice_menu")
+
+	# Old Quarry Tailings: a gather site built from the region's own data.
+	var site: Node = load("res://src/world/interactables/gather_site.gd").new()
+	site.gather_table = [{"item": "iron_essence", "weight": 4, "min": 1, "max": 1}, {"item": "spirit_herb", "weight": 1, "min": 1, "max": 1}, {"item": "", "weight": 4}]
+	root.add_child(site)
+	menu.open_for(site)
+	await _expect_focus(menu, "Old Quarry Tailings gather menu")
+	_press("ui_accept")
+	await _frames(3)
+	_press("ui_cancel")
+	await _frames()
+	assert_false(menu.visible, "quarry gather menu: closed")
+	site.free()
+
+	# Sutra Barge grounds, stage 1 open, comprehension 28 missed.
+	var id := "great_vehicle_sutra_barge"
+	var def: Dictionary = gs.data.inheritances[id]
+	root.get_node("GameClock").total_days = Inheritances.appears_day(def) + 2 * Calendar.DAYS_PER_YEAR
+	gs.current_region = String(def["region"])
+	c.trial_progress[id] = 1
+	var grounds: Node = load("res://src/world/interactables/inheritance_grounds.gd").new()
+	root.add_child(grounds)
+	menu.open_for(grounds)
+	await _expect_focus(menu, "Sutra Barge grounds menu")
+	var seen := 0
+	for i in 8:
+		var owner := root.gui_get_focus_owner()
+		if owner is Button and menu.is_ancestor_of(owner):
+			seen += 1
+		_press("ui_down")
+		await _frames()
+	assert_eq(seen, 8, "d-pad down keeps focus on the Sutra Barge buttons")
+	_press("ui_cancel")
+	await _frames()
+	assert_false(menu.visible, "barge grounds menu: ui_cancel closes it")
+	grounds.free()
+
+	# C-149's vow lamp, Spirit 60 gate missed: focus lands on an enabled choice and d-pad reaches each enabled one.
+	gs.pending_encounter = "wild_lamp_of_ten_thousand_vows"
+	var encounter: EncounterWindow = hud.get("_encounter")
+	encounter.open()
+	await _expect_focus(encounter, "Mahayana vow lamp encounter")
+	var buttons := encounter.choice_buttons()
+	var reached: Array[Control] = []
+	for i in buttons.size() + 2:
+		var owner := root.gui_get_focus_owner()
+		if buttons.has(owner) and not reached.has(owner):
+			reached.append(owner)
+		_press("ui_down")
+		await _frames()
+	var enabled := 0
+	for b: Control in buttons:
+		if not (b as Button).disabled:
+			enabled += 1
+	assert_gt(enabled, 0, "the vow lamp always offers a choice the player can take")
+	assert_eq(reached.size(), enabled, "d-pad down reaches every enabled vow lamp choice (gated ones are skipped)")
+	encounter.close()
+	gs.pending_encounter = ""
+
+	root.remove_child(hud)
+	hud.free()
+	gs.end_session()
+	await _frames()
