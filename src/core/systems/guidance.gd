@@ -1244,24 +1244,6 @@ static func nascent_goals_active(c: CharacterData, data: GameData, flags: Dictio
 	return false
 
 
-## The Soul Formation ladder (SOUL-001): {text, done} in order.
-static func soul_goals(c: CharacterData, data: GameData, flags: Dictionary, clan: ClanData = null) -> Array[Dictionary]:
-	var soul := data.realm_index_of("soul_formation")
-	var rows: Array = [
-		["Reach Soul Formation Middle", c.realm_index > soul or (c.realm_index == soul and c.stage >= 1)],
-		["Win a fight against a Soul Formation foe", bool(flags.get(beat_realm_flag("soul_formation"), false))],
-	]
-	if _has_realm_inheritance(data, "soul_formation"):
-		rows.append(["Claim a Soul Formation inheritance", _claimed_realm_inheritance(data, flags, "soul_formation")])
-	var body_stages := BodyTempering.stages(data)
-	if body_stages.size() > 5:
-		rows.append(["Temper your body to %s" % String(body_stages[5].get("name", "its next stage")), c.body_stage >= 6])
-	var out: Array[Dictionary] = []
-	for row: Array in rows:
-		out.append({"text": row[0], "done": row[1]})
-	return out
-
-
 ## True when some inheritance has a stage that needs `realm_id` (SOUL-002).
 static func _has_realm_inheritance(data: GameData, realm_id: String) -> bool:
 	return not _realm_inheritance_ids(data, realm_id).is_empty()
@@ -1287,124 +1269,92 @@ static func _claimed_realm_inheritance(data: GameData, flags: Dictionary, realm_
 	return false
 
 
-## True while the player is in Soul Formation with goals left.
+## GUIDE-062: the late-realm goal ladders share one shape. realm id -> {ladder, body}: `ladder` is the
+## id goal_ladder_id gives, `body` is true when the ladder ends with a "Temper your body" row (the body
+## stage at index realm_index, done once body_stage passes it).
+const REALM_GOAL_TABLE := {
+	"soul_formation": {"ladder": "soul", "body": true},
+	"void_refinement": {"ladder": "void", "body": true},
+	"body_integration": {"ladder": "body", "body": true},
+	"mahayana": {"ladder": "mahayana", "body": false},
+	"tribulation_transcendence": {"ladder": "tribulation", "body": false},
+}
+
+
+## The goal ladder of `realm_id` (a REALM_GOAL_TABLE key): reach Middle, beat a foe of the realm, claim
+## its inheritance once data has one, and temper the body where the table says so. {text, done} in order.
+static func realm_goals(c: CharacterData, data: GameData, flags: Dictionary, realm_id: String) -> Array[Dictionary]:
+	var index := data.realm_index_of(realm_id)
+	var realm_name: String = data.realms[index].name
+	var rows: Array = [
+		["Reach %s Middle" % realm_name, c.realm_index > index or (c.realm_index == index and c.stage >= 1)],
+		["Win a fight against a %s foe" % realm_name, bool(flags.get(beat_realm_flag(realm_id), false))],
+	]
+	if _has_realm_inheritance(data, realm_id):
+		rows.append(["Claim a %s inheritance" % realm_name, _claimed_realm_inheritance(data, flags, realm_id)])
+	if REALM_GOAL_TABLE[realm_id]["body"]:
+		var body_stages := BodyTempering.stages(data)
+		if body_stages.size() > index:
+			rows.append(["Temper your body to %s" % String(body_stages[index].get("name", "its next stage")), c.body_stage >= index + 1])
+	var out: Array[Dictionary] = []
+	for row: Array in rows:
+		out.append({"text": row[0], "done": row[1]})
+	return out
+
+
+## True while the player is in `realm_id` with goals left.
+static func realm_goals_active(c: CharacterData, data: GameData, flags: Dictionary, realm_id: String) -> bool:
+	if c.realm_index != data.realm_index_of(realm_id):
+		return false
+	for goal in realm_goals(c, data, flags, realm_id):
+		if not goal["done"]:
+			return true
+	return false
+
+
+## The Soul Formation ladder (SOUL-001).
+static func soul_goals(c: CharacterData, data: GameData, flags: Dictionary, clan: ClanData = null) -> Array[Dictionary]:
+	return realm_goals(c, data, flags, "soul_formation")
+
+
 static func soul_goals_active(c: CharacterData, data: GameData, flags: Dictionary, clan: ClanData = null) -> bool:
-	if c.realm_index != data.realm_index_of("soul_formation"):
-		return false
-	for goal in soul_goals(c, data, flags, clan):
-		if not goal["done"]:
-			return true
-	return false
+	return realm_goals_active(c, data, flags, "soul_formation")
 
 
-## The Void Refinement ladder (VOID-001): {text, done} in order. The inheritance and body rows
-## appear once data has them.
+## The Void Refinement ladder (VOID-001).
 static func void_goals(c: CharacterData, data: GameData, flags: Dictionary, clan: ClanData = null) -> Array[Dictionary]:
-	var void_index := data.realm_index_of("void_refinement")
-	var rows: Array = [
-		["Reach Void Refinement Middle", c.realm_index > void_index or (c.realm_index == void_index and c.stage >= 1)],
-		["Win a fight against a Void Refinement foe", bool(flags.get(beat_realm_flag("void_refinement"), false))],
-	]
-	if _has_realm_inheritance(data, "void_refinement"):
-		rows.append(["Claim a Void Refinement inheritance", _claimed_realm_inheritance(data, flags, "void_refinement")])
-	var body_stages := BodyTempering.stages(data)
-	if body_stages.size() > 6:
-		rows.append(["Temper your body to %s" % String(body_stages[6].get("name", "its next stage")), c.body_stage >= 7])
-	var out: Array[Dictionary] = []
-	for row: Array in rows:
-		out.append({"text": row[0], "done": row[1]})
-	return out
+	return realm_goals(c, data, flags, "void_refinement")
 
 
-## True while the player is in Void Refinement with goals left.
 static func void_goals_active(c: CharacterData, data: GameData, flags: Dictionary, clan: ClanData = null) -> bool:
-	if c.realm_index != data.realm_index_of("void_refinement"):
-		return false
-	for goal in void_goals(c, data, flags, clan):
-		if not goal["done"]:
-			return true
-	return false
+	return realm_goals_active(c, data, flags, "void_refinement")
 
 
-## The Body Integration ladder (BI-001): {text, done} in order, VOID-001's pattern one realm up. The
-## inheritance and body rows appear once data has them.
+## The Body Integration ladder (BI-001).
 static func body_integration_goals(c: CharacterData, data: GameData, flags: Dictionary, clan: ClanData = null) -> Array[Dictionary]:
-	var bi_index := data.realm_index_of("body_integration")
-	var rows: Array = [
-		["Reach Body Integration Middle", c.realm_index > bi_index or (c.realm_index == bi_index and c.stage >= 1)],
-		["Win a fight against a Body Integration foe", bool(flags.get(beat_realm_flag("body_integration"), false))],
-	]
-	if _has_realm_inheritance(data, "body_integration"):
-		rows.append(["Claim a Body Integration inheritance", _claimed_realm_inheritance(data, flags, "body_integration")])
-	var body_stages := BodyTempering.stages(data)
-	if body_stages.size() > 7:
-		rows.append(["Temper your body to %s" % String(body_stages[7].get("name", "its next stage")), c.body_stage >= 8])
-	var out: Array[Dictionary] = []
-	for row: Array in rows:
-		out.append({"text": row[0], "done": row[1]})
-	return out
+	return realm_goals(c, data, flags, "body_integration")
 
 
-## True while the player is in Body Integration with goals left.
 static func body_integration_goals_active(c: CharacterData, data: GameData, flags: Dictionary, clan: ClanData = null) -> bool:
-	if c.realm_index != data.realm_index_of("body_integration"):
-		return false
-	for goal in body_integration_goals(c, data, flags, clan):
-		if not goal["done"]:
-			return true
-	return false
+	return realm_goals_active(c, data, flags, "body_integration")
 
 
-## The Mahayana ladder (MAHA-001): {text, done} in order, BI-001's pattern one realm up. The
-## inheritance row appears once data has one.
+## The Mahayana ladder (MAHA-001).
 static func mahayana_goals(c: CharacterData, data: GameData, flags: Dictionary, clan: ClanData = null) -> Array[Dictionary]:
-	var maha_index := data.realm_index_of("mahayana")
-	var rows: Array = [
-		["Reach Mahayana Middle", c.realm_index > maha_index or (c.realm_index == maha_index and c.stage >= 1)],
-		["Win a fight against a Mahayana foe", bool(flags.get(beat_realm_flag("mahayana"), false))],
-	]
-	if _has_realm_inheritance(data, "mahayana"):
-		rows.append(["Claim a Mahayana inheritance", _claimed_realm_inheritance(data, flags, "mahayana")])
-	var out: Array[Dictionary] = []
-	for row: Array in rows:
-		out.append({"text": row[0], "done": row[1]})
-	return out
+	return realm_goals(c, data, flags, "mahayana")
 
 
-## True while the player is in Mahayana with goals left.
 static func mahayana_goals_active(c: CharacterData, data: GameData, flags: Dictionary, clan: ClanData = null) -> bool:
-	if c.realm_index != data.realm_index_of("mahayana"):
-		return false
-	for goal in mahayana_goals(c, data, flags, clan):
-		if not goal["done"]:
-			return true
-	return false
+	return realm_goals_active(c, data, flags, "mahayana")
 
 
-## The Tribulation Transcendence ladder (TT-001): MAHA-001's pattern one realm up. No ascension
-## goal yet (END-001 is blocked).
+## The Tribulation Transcendence ladder (TT-001). No ascension goal yet (END-001 is blocked).
 static func tribulation_goals(c: CharacterData, data: GameData, flags: Dictionary, clan: ClanData = null) -> Array[Dictionary]:
-	var tt_index := data.realm_index_of("tribulation_transcendence")
-	var rows: Array = [
-		["Reach Tribulation Transcendence Middle", c.realm_index > tt_index or (c.realm_index == tt_index and c.stage >= 1)],
-		["Win a fight against a Tribulation Transcendence foe", bool(flags.get(beat_realm_flag("tribulation_transcendence"), false))],
-	]
-	if _has_realm_inheritance(data, "tribulation_transcendence"):
-		rows.append(["Claim a Tribulation Transcendence inheritance", _claimed_realm_inheritance(data, flags, "tribulation_transcendence")])
-	var out: Array[Dictionary] = []
-	for row: Array in rows:
-		out.append({"text": row[0], "done": row[1]})
-	return out
+	return realm_goals(c, data, flags, "tribulation_transcendence")
 
 
-## True while the player is in Tribulation Transcendence with goals left.
 static func tribulation_goals_active(c: CharacterData, data: GameData, flags: Dictionary, clan: ClanData = null) -> bool:
-	if c.realm_index != data.realm_index_of("tribulation_transcendence"):
-		return false
-	for goal in tribulation_goals(c, data, flags, clan):
-		if not goal["done"]:
-			return true
-	return false
+	return realm_goals_active(c, data, flags, "tribulation_transcendence")
 
 
 ## The goal ladder the HUD announces from: "first" up to Qi Refining, "foundation" in Foundation
@@ -1452,10 +1402,9 @@ static func goal_ladder(id: String, c: CharacterData, data: GameData, flags: Dic
 		return mahayana_goals(c, data, flags, clan)
 	if id == "tribulation":
 		return tribulation_goals(c, data, flags, clan)
-	if mahayana_goals_active(c, data, flags, clan):
-		return mahayana_goals(c, data, flags, clan)
-	if tribulation_goals_active(c, data, flags, clan):
-		return tribulation_goals(c, data, flags, clan)
+	for realm_id: String in REALM_GOAL_TABLE:
+		if realm_goals_active(c, data, flags, realm_id):
+			return realm_goals(c, data, flags, realm_id)
 	var none: Array[Dictionary] = []
 	return none
 
@@ -1666,46 +1615,16 @@ static func journal(c: CharacterData, data: GameData, flags: Dictionary, today: 
 				nascent_tone = "normal" if nascent_flagged else "warning"
 				nascent_flagged = true
 			_add(out, "Nascent Soul goals", ("[x] " if goal["done"] else "[ ] ") + String(goal["text"]), nascent_tone)
-	if soul_goals_active(c, data, flags, clan):
-		var soul_flagged := false
-		for goal in soul_goals(c, data, flags, clan):
-			var soul_tone := "dim"
+	for realm_id: String in REALM_GOAL_TABLE:
+		if not realm_goals_active(c, data, flags, realm_id):
+			continue
+		var flagged := false
+		for goal in realm_goals(c, data, flags, realm_id):
+			var tone := "dim"
 			if not goal["done"]:
-				soul_tone = "normal" if soul_flagged else "warning"
-				soul_flagged = true
-			_add(out, "Soul Formation goals", ("[x] " if goal["done"] else "[ ] ") + String(goal["text"]), soul_tone)
-	if void_goals_active(c, data, flags, clan):
-		var void_flagged := false
-		for goal in void_goals(c, data, flags, clan):
-			var void_tone := "dim"
-			if not goal["done"]:
-				void_tone = "normal" if void_flagged else "warning"
-				void_flagged = true
-			_add(out, "Void Refinement goals", ("[x] " if goal["done"] else "[ ] ") + String(goal["text"]), void_tone)
-	if body_integration_goals_active(c, data, flags, clan):
-		var bi_flagged := false
-		for goal in body_integration_goals(c, data, flags, clan):
-			var bi_tone := "dim"
-			if not goal["done"]:
-				bi_tone = "normal" if bi_flagged else "warning"
-				bi_flagged = true
-			_add(out, "Body Integration goals", ("[x] " if goal["done"] else "[ ] ") + String(goal["text"]), bi_tone)
-	if mahayana_goals_active(c, data, flags, clan):
-		var maha_flagged := false
-		for goal in mahayana_goals(c, data, flags, clan):
-			var maha_tone := "dim"
-			if not goal["done"]:
-				maha_tone = "normal" if maha_flagged else "warning"
-				maha_flagged = true
-			_add(out, "Mahayana goals", ("[x] " if goal["done"] else "[ ] ") + String(goal["text"]), maha_tone)
-	if tribulation_goals_active(c, data, flags, clan):
-		var tt_flagged := false
-		for goal in tribulation_goals(c, data, flags, clan):
-			var tt_tone := "dim"
-			if not goal["done"]:
-				tt_tone = "normal" if tt_flagged else "warning"
-				tt_flagged = true
-			_add(out, "Tribulation Transcendence goals", ("[x] " if goal["done"] else "[ ] ") + String(goal["text"]), tt_tone)
+				tone = "normal" if flagged else "warning"
+				flagged = true
+			_add(out, "%s goals" % data.realms[data.realm_index_of(realm_id)].name, ("[x] " if goal["done"] else "[ ] ") + String(goal["text"]), tone)
 	var fights := fair_fights(c, data, flags, today, region_id, people, favor)
 	var goal_lines: PackedStringArray = []
 	if c.realm_index >= 2 or first_goals_done(c, data, flags):

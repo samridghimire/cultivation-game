@@ -2312,3 +2312,15 @@ func test_idle_crafter_hint() -> void:
 	assert_eq(Guidance.idle_crafter_hint(foundation, data(), "qingshi_village", 90), "")
 	var hints := Guidance.hints(c, data(), 1.0, 1, {}, {}, "qingshi_village", 60)
 	assert_true(_has(hints, "You have not cultivated in"))
+
+
+func test_realm_goals_table_matches_named_ladders() -> void:
+	var c := new_character()
+	var d := data()
+	for realm_id: String in Guidance.REALM_GOAL_TABLE:
+		c.realm_index = d.realm_index_of(realm_id)
+		var rows := Guidance.realm_goals(c, d, {}, realm_id)
+		var name: String = d.realms[c.realm_index].name
+		assert_eq(rows[0]["text"], "Reach %s Middle" % name, realm_id)
+		assert_eq(rows[1]["text"], "Win a fight against a %s foe" % name, realm_id)
+		assert_eq(Guidance.goal_ladder(Guidance.goal_ladder_id(c), c, d, {}).size(), rows.size(), realm_id)
