@@ -34,6 +34,9 @@ extends SceneTree
 ## WU-184: append `-- --soul-shot` for a Soul Formation Early player: the journal's Soul Formation goals
 ## (with the Starfire Body row) and the HUD goal ladder.
 
+## WU-226: append `-- --pill-shot` for a Body Integration Peak player at full qi: the breakthrough window with a Great Vehicle
+## Pill plus a Flawless one (pill_a_window.png), and the HUD hint panel with no pill (pill_b_hint.png).
+
 ## WU-225: append `-- --inherit-shot` for a Body Integration Early player in Withered Bone Marsh at the Hollow of the
 ## Unbroken Body (C-136): the grounds menu and the journal's Opportunities with the realm trial next, then with the
 ## Constitution trial next and missed (inherit_menu*.png, inherit_journal*.png).
@@ -152,6 +155,9 @@ func _start() -> void:
 		return
 	if OS.get_cmdline_user_args().has("--breakthrough-shots"):
 		_start_breakthrough_shots(gs)
+		return
+	if OS.get_cmdline_user_args().has("--pill-shot"):
+		_start_pill_shot(gs)
 		return
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 7
@@ -310,6 +316,39 @@ func _start_breakthrough_shots(gs: Node) -> void:
 		c.breakthrough_failures = 3
 		hide_banner.call()
 		win.open(), "close": win.close})
+
+
+## WU-226: C-147's Great Vehicle Pills in the breakthrough window, and the HUD hint with no pill.
+func _start_pill_shot(gs: Node) -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 5
+	var c := CharacterFactory.create("Lin Feng", gs.data, rng, "male")
+	gs.start_session(c)
+	gs.pending_event = ""
+	c.age_days = 300 * Calendar.DAYS_PER_YEAR
+	c.realm_index = gs.data.realm_index_of("body_integration")
+	var realm: RealmDef = gs.data.realms[c.realm_index]
+	c.stage = realm.stage_count() - 1
+	c.qi = realm.qi_required(c.stage)
+	c.inventory = {}
+	root.get_node("Settings").call("set_value", "hud_hints", 3)
+	world = load("res://src/world/world.tscn").instantiate()
+	root.add_child(world)
+	hud = world.get_node("HUD")
+	var win: Control = hud.get("_breakthrough")
+	var hint_text := func() -> String:
+		return (hud.get("_hint") as Label).text
+	shots.append({"name": "pill_a_window", "open": func() -> void:
+		c.add_item("mahayana_pill", 1)
+		c.add_item("flawless_mahayana_pill", 1)
+		hud.get("_banner").visible = false
+		win.open(), "close": win.close})
+	shots.append({"name": "pill_b_hint", "open": func() -> void:
+		c.inventory = {}
+		hud.get("_banner").visible = false
+		root.get_node("EventBus").player_changed.emit()
+		print("pill-shot hint: ", hint_text.call())
+		print("pill-shot saving: ", Guidance.pill_saving_goal(c, gs.data), " | source: ", Guidance.pill_source_goal(c, gs.data)), "close": func() -> void: pass})
 
 
 ## WU-201: the crafting screen for every workshop craft, a rank-0 player one ingredient short.
