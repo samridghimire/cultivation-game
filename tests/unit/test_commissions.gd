@@ -288,17 +288,20 @@ func test_gather_rate_follows_the_table_and_season() -> void:
 	var c := new_character()
 	var d := data()
 	assert_true(Exploration.gather_rate(c, d, "spirit_herb", "qingshi_village", "spring") > Exploration.gather_rate(c, d, "spirit_herb", "qingshi_village", "winter"))
-	var table: Array = []
-	var days := 1
+	var expected := 0.0
 	for p: Dictionary in d.regions["qingshi_village"]["places"]:
-		if String(p.get("type", "")) == "gather" and String(p.get("display_name", "")) == "Village Herb Slope":
-			table = p["gather_table"]
-			days = int(p["gather_days"])
-	var total := 0.0
-	for e: Dictionary in table:
-		if not e.has("seasons"):
-			total += float(e["weight"])
-	var expected := float(Exploration.GATHER_ROLLS) * 1.0 / total / float(days)
+		if String(p.get("type", "")) != "gather":
+			continue
+		var total := 0.0
+		var iron := 0.0
+		for e: Dictionary in p["gather_table"]:
+			if not e.has("seasons"):
+				total += float(e["weight"])
+				if String(e["item"]) == "iron_essence":
+					iron += float(e["weight"]) * (float(e["min"]) + float(e["max"])) / 2.0
+		if iron > 0.0:
+			expected = maxf(expected, float(Exploration.GATHER_ROLLS) * iron / total / float(p["gather_days"]))
+	assert_true(expected > 0.0)
 	assert_true(absf(Exploration.gather_rate(c, d, "iron_essence", "qingshi_village", "winter") - expected) < 0.0001)
 	assert_eq(Exploration.gather_rate(c, d, "iron_sword", "qingshi_village"), 0.0)
 
@@ -312,7 +315,10 @@ func test_roll_caps_the_count_to_what_can_be_gathered() -> void:
 	var cap_c := new_character()
 	cap_c.professions["blacksmith"] = {"rank": 0, "xp": 0.0}
 	var cap := Commissions.max_count(cap_c, d, recipe, "qingshi_village", 0, int(d.commissions["days"]))
-	assert_true(cap >= 1 and cap < int(d.commissions["count"][1]), "iron essence is scarce: cap %d" % cap)
+	assert_true(cap >= 1, "cap %d" % cap)
+	var hungry: Dictionary = recipe.duplicate(true)
+	hungry["ingredients"] = {"iron_essence": 20}
+	assert_true(Commissions.max_count(cap_c, d, hungry, "qingshi_village", 0, 60) < 3, "20 iron essence per sword cannot be gathered 3 times")
 	assert_eq(Commissions.max_count(cap_c, d, recipe, "", 0, 60), 999)
 	for i in 10:
 		var c := new_character()
