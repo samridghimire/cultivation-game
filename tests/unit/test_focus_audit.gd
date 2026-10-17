@@ -915,3 +915,77 @@ func test_wu235_quarry_barge_and_mahayana_encounter_focus() -> void:
 	hud.free()
 	gs.end_session()
 	await _frames()
+
+
+## WU-239: the Tribulation bell with its Spirit 64 gate missed, and a grounds menu whose stage name starts with "The".
+func test_wu239_bell_gate_missed_and_the_stage_grounds_focus() -> void:
+	var root := _tree().root
+	var gs: Node = root.get_node("GameState")
+	var c := new_character()
+	c.realm_index = gs.data.realm_index_of("tribulation_transcendence")
+	c.attributes["spirit"] = 5
+	gs.start_session(c)
+	gs.pending_event = ""
+	var hud: CanvasLayer = load("res://src/ui/hud.tscn").instantiate()
+	root.add_child(hud)
+	await _frames()
+	var menu: ChoiceMenu = hud.get("_choice_menu")
+
+	# Door Ajar of the Space Folder, stage 1 open: the label must not read "the The".
+	var id := "door_ajar_folder"
+	var def: Dictionary = gs.data.inheritances[id]
+	root.get_node("GameClock").total_days = Inheritances.appears_day(def) + 2 * Calendar.DAYS_PER_YEAR
+	gs.current_region = String(def["region"])
+	var grounds: Node = load("res://src/world/interactables/inheritance_grounds.gd").new()
+	root.add_child(grounds)
+	menu.open_for(grounds)
+	await _expect_focus(menu, "Door Ajar grounds menu")
+	var seen := 0
+	var attempt_labels := 0
+	for i in 6:
+		var owner := root.gui_get_focus_owner()
+		if owner is Button and menu.is_ancestor_of(owner):
+			seen += 1
+			if (owner as Button).text.begins_with("Attempt the Hand's-Breadth Gap"):
+				attempt_labels += 1
+		_press("ui_down")
+		await _frames()
+	assert_eq(seen, 6, "d-pad down keeps focus on the Door Ajar buttons")
+	assert_gt(attempt_labels, 0, "the stage button drops the doubled article")
+	_press("ui_cancel")
+	await _frames()
+	assert_false(menu.visible, "Door Ajar grounds menu: ui_cancel closes it")
+	grounds.free()
+
+	# The bell, Spirit 64 missed: focus lands on an enabled choice, d-pad reaches each enabled one, and Leave closes.
+	gs.pending_encounter = "wild_bell_of_the_last_lightning"
+	var encounter: EncounterWindow = hud.get("_encounter")
+	encounter.open()
+	await _expect_focus(encounter, "Tribulation bell encounter")
+	var buttons := encounter.choice_buttons()
+	var reached: Array[Control] = []
+	for i in buttons.size() + 2:
+		var owner := root.gui_get_focus_owner()
+		if buttons.has(owner) and not reached.has(owner):
+			reached.append(owner)
+		_press("ui_down")
+		await _frames()
+	var enabled := 0
+	var gated_off := 0
+	for b: Control in buttons:
+		if (b as Button).disabled:
+			gated_off += 1
+		else:
+			enabled += 1
+	assert_gt(enabled, 0, "the bell always offers a choice the player can take")
+	assert_eq(reached.size(), enabled, "d-pad down reaches every enabled bell choice")
+	for b: Control in reached:
+		assert_false((b as Button).disabled, "focus never rests on a gated choice")
+	assert_true(gated_off <= buttons.size() - 1, "at least one choice stays open")
+	encounter.close()
+	gs.pending_encounter = ""
+
+	root.remove_child(hud)
+	hud.free()
+	gs.end_session()
+	await _frames()
