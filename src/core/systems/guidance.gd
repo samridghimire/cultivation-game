@@ -20,6 +20,7 @@ const FAIR_FIGHT_MIN_CHANCE := 0.7  # "Even" or better (Combat.label_for_chance)
 const CHORE_REGION := "qingshi_village"
 ## GUIDE-054: game days a Mortal crafter plays before hearing where to begin cultivating.
 const MORTAL_CRAFTER_NUDGE_DAY := 30
+const THIN_DEFENCE_REALM := 2  # GUIDE-065: Foundation Establishment, where foes first outclass a bare-handed fighter
 const IDLE_CULTIVATION_DAYS := 30  # GUIDE-057: days without cultivating before a Qi Refining crafter is nudged
 
 
@@ -41,6 +42,9 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 	if Children.is_pregnant(c):
 		var days := int(c.pregnancy.get("days_left", 0))
 		out.append("A child is due in %s." % Calendar.format_duration(days))
+	var thin := thin_defence_hint(c, data)
+	if thin != "":
+		out.append(thin)
 	var mortal_nudge := mortal_crafter_hint(c, data, region_id, today, flags)
 	if mortal_nudge != "":
 		out.append(mortal_nudge)
@@ -110,6 +114,19 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 	if out.size() > limit:
 		out.resize(limit)
 	return out
+
+
+## GUIDE-065: a Foundation cultivator with no body technique or no armor equipped hears that their defence is
+## thin (QA-114: the curious player reaches Foundation with neither and wins 0-2% against its foes). "" otherwise.
+static func thin_defence_hint(c: CharacterData, data: GameData) -> String:
+	if c.realm_index != THIN_DEFENCE_REALM:
+		return ""
+	if Techniques.knows_kind(c, data, "body") and c.equipment.get("armor", "") != "":
+		return ""
+	var line := "Your defence is thin for Foundation foes: learn a body technique such as Stone Skin Tempering and wear armor before fighting cultivators."
+	if Injuries.has_any(c):
+		line += " Heal your injuries before you fight."
+	return line
 
 
 ## GUIDE-054: a Mortal who practises a craft and has played MORTAL_CRAFTER_NUDGE_DAY days hears where to begin

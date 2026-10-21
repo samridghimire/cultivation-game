@@ -2328,3 +2328,26 @@ func test_realm_goals_table_matches_named_ladders() -> void:
 		assert_eq(rows[0]["text"], "Reach %s Middle" % name, realm_id)
 		assert_eq(rows[1]["text"], "Win a fight against a %s foe" % name, realm_id)
 		assert_eq(Guidance.goal_ladder(Guidance.goal_ladder_id(c), c, d, {}).size(), rows.size(), realm_id)
+
+
+func test_thin_defence_hint() -> void:
+	var c := _fresh()
+	c.realm_index = Guidance.THIN_DEFENCE_REALM
+	c.techniques = {}
+	c.equipment = {}
+	var line := Guidance.thin_defence_hint(c, data())
+	assert_true(line.contains("Your defence is thin for Foundation foes"), line)
+	assert_false(line.contains("Heal your injuries"))
+	assert_true(_has(Guidance.hints(c, data(), 1.0, 20), "Your defence is thin"))
+	c.techniques["stone_skin"] = {"level": 1, "xp": 0.0}
+	assert_true(Guidance.thin_defence_hint(c, data()) != "", "a body art without armor is still thin")
+	c.equipment["armor"] = "boar_hide_jerkin"
+	assert_eq(Guidance.thin_defence_hint(c, data()), "")
+	c.equipment = {}
+	c.techniques = {}
+	c.injuries = {"broken_ribs": 5}
+	assert_true(Guidance.thin_defence_hint(c, data()).ends_with("Heal your injuries before you fight."))
+	c.realm_index = 1
+	assert_eq(Guidance.thin_defence_hint(c, data()), "", "not at Qi Refining")
+	c.realm_index = 3
+	assert_eq(Guidance.thin_defence_hint(c, data()), "", "not past Foundation")
