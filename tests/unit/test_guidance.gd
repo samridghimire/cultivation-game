@@ -2340,9 +2340,14 @@ func test_thin_defence_hint() -> void:
 	assert_false(line.contains("Heal your injuries"))
 	assert_true(_has(Guidance.hints(c, data(), 1.0, 20), "Your defence is thin"))
 	c.techniques["stone_skin"] = {"level": 1, "xp": 0.0}
-	assert_true(Guidance.thin_defence_hint(c, data()) != "", "a body art without armor is still thin")
+	assert_true(line.contains("learn a body technique such as Stone Skin Tempering and wear armor"), line)
+	var body_only := Guidance.thin_defence_hint(c, data())
+	assert_true(body_only.contains("wear armor") and not body_only.contains("learn a body technique"), "a body art without armor is still thin: " + body_only)
 	c.equipment["armor"] = "boar_hide_jerkin"
 	assert_eq(Guidance.thin_defence_hint(c, data()), "")
+	c.techniques = {}
+	var armor_only := Guidance.thin_defence_hint(c, data())
+	assert_true(armor_only.contains("learn a body technique") and not armor_only.contains("wear armor"), "armor without a body art: " + armor_only)
 	c.equipment = {}
 	c.techniques = {}
 	c.injuries = {"broken_ribs": 5}

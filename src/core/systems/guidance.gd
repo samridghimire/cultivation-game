@@ -121,9 +121,15 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 static func thin_defence_hint(c: CharacterData, data: GameData) -> String:
 	if c.realm_index != THIN_DEFENCE_REALM:
 		return ""
-	if Techniques.knows_kind(c, data, "body") and c.equipment.get("armor", "") != "":
+	var has_body := Techniques.knows_kind(c, data, "body")
+	var has_armor: bool = c.equipment.get("armor", "") != ""
+	if has_body and has_armor:
 		return ""
-	var line := "Your defence is thin for Foundation foes: learn a body technique such as Stone Skin Tempering and wear armor before fighting cultivators."
+	# Name only what is missing: a cultivator who already knows a body art is told to wear armor, and vice versa.
+	var missing := "wear armor"
+	if not has_body:
+		missing = "learn a body technique such as Stone Skin Tempering" + ("" if has_armor else " and wear armor")
+	var line := "Your defence is thin for Foundation foes: %s before fighting cultivators." % missing
 	if Injuries.has_any(c):
 		line += " Heal your injuries before you fight."
 	return line
