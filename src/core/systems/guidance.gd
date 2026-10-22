@@ -1196,10 +1196,27 @@ static func _sect_hint(c: CharacterData, data: GameData) -> String:
 	var rank := int(c.sect["rank"])
 	if rank + 1 >= sect.ranks.size():
 		return ""
+	var pays := _stipend_clause(data, sect.ranks[rank + 1].get("stipend", {}))
 	if Sects.check_promotion(c, data) == "":
-		return "The trial for %s is open. Attempt it at a sect hall." % sect.rank_name(rank + 1)
+		return "The trial for %s is open. Attempt it at a sect hall.%s" % [sect.rank_name(rank + 1), pays]
 	var need := int(sect.ranks[rank + 1].get("contribution", 0)) - int(c.sect["contribution"])
-	return "Earn %d more sect contribution (missions, duties) to become %s." % [maxi(need, 0), sect.rank_name(rank + 1)]
+	return "Earn %d more sect contribution (missions, duties) to become %s%s." % [maxi(need, 0), sect.rank_name(rank + 1), pays]
+
+
+## GUIDE-084: " (it pays 6 stones and a Qi Gathering Pill a month)" for a rank's stipend, "" when it pays nothing.
+static func _stipend_clause(data: GameData, stipend: Dictionary) -> String:
+	var parts: PackedStringArray = []
+	var stones := int(stipend.get("spirit_stones", 0))
+	if stones > 0:
+		parts.append("%d stones" % stones)
+	var items: Dictionary = stipend.get("items", {})
+	for id: String in items:
+		var count := int(items[id])
+		var name: String = data.items[id]["name"] if data.items.has(id) else id
+		parts.append("a %s" % name if count == 1 else "%d %s" % [count, name])
+	if parts.is_empty():
+		return ""
+	return " (it pays %s a month)" % " and ".join(parts)
 
 
 ## Mortals: sects that wait for Qi Refining, and the ones that take mortals now.

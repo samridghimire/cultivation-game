@@ -132,6 +132,30 @@ func test_sect_hints_for_rogue_and_member() -> void:
 	assert_true(_has(Guidance.hints(c, data(), 1.0, 10), "Earn %d more sect contribution" % need))
 
 
+## GUIDE-084: the sect-rank hint says what the next rank pays.
+func test_sect_hint_names_stipend() -> void:
+	var d := data()
+	var c := new_character()
+	c.realm_index = 1
+	c.sect = {"id": "azure_cloud_sect", "rank": 0, "contribution": 0}
+	var ranks: Array[Dictionary] = (d.sects["azure_cloud_sect"] as SectDef).ranks
+	var stones := int(ranks[1]["stipend"]["spirit_stones"])
+	assert_true(_has(Guidance.hints(c, d, 1.0, 20), "Inner Disciple (it pays %d stones a month)" % stones))
+	c.sect["contribution"] = 600
+	assert_true(_has(Guidance.hints(c, d, 1.0, 20), "is open. Attempt it at a sect hall. (it pays %d stones a month)" % stones))
+	c.sect["rank"] = 1
+	c.realm_index = 3
+	var pill: String = d.items["qi_gathering_pill"]["name"]
+	assert_true(_has(Guidance.hints(c, d, 1.0, 20), "a %s a month" % pill))
+	var saved: Dictionary = ranks[2]["stipend"]
+	ranks[2].erase("stipend")
+	c.sect["contribution"] = 0
+	var plain := Guidance._sect_hint(c, d)
+	ranks[2]["stipend"] = saved
+	assert_false(plain.contains("it pays"), plain)
+	assert_true(plain.ends_with("to become Core Disciple."), plain)
+
+
 ## UI-009b: missions, promotion trials, tribulations, Dao, abodes and family.
 func test_system_hints() -> void:
 	var d := data()
