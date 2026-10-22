@@ -87,7 +87,8 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 	var bitter := _bitter_rival_hint(c, data, people, flags, favor)
 	if bitter != "":
 		out.append(bitter)
-	out.append(_cultivation_hint(c, data, density))
+	if idle_nudge == "":
+		out.append(_cultivation_hint(c, data, density))
 	var method := _method_hint(c, data)
 	if method != "":
 		out.append(method)

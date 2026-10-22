@@ -2492,6 +2492,26 @@ func test_mortal_crafter_nudge() -> void:
 	assert_true(one[0].contains("You are still a mortal"))
 
 
+func test_idle_hint_replaces_gather_line() -> void:
+	var c := _fresh()
+	c.professions["alchemist"] = {"rank": 0, "xp": 0.0}
+	c.realm_index = 1
+	c.last_meditated_day = 0
+	var idle := Guidance.hints(c, data(), 1.0, 30, {}, {}, "qingshi_village", Guidance.IDLE_CULTIVATION_DAYS)
+	var found := false
+	for line in idle:
+		assert_false(line.begins_with("Gather "), line)
+		found = found or line.begins_with("You have not cultivated")
+	assert_true(found, str(idle))
+	c.last_meditated_day = Guidance.IDLE_CULTIVATION_DAYS
+	var fresh := Guidance.hints(c, data(), 1.0, 30, {}, {}, "qingshi_village", Guidance.IDLE_CULTIVATION_DAYS)
+	var gather := false
+	for line in fresh:
+		assert_false(line.begins_with("You have not cultivated"), line)
+		gather = gather or line.begins_with("Gather ")
+	assert_true(gather, str(fresh))
+
+
 func test_idle_crafter_hint() -> void:
 	var c := _fresh()
 	c.professions["alchemist"] = {"rank": 0, "xp": 0.0}
