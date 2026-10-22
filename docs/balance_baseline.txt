@@ -1440,6 +1440,7 @@ Crafter start: new alchemist in Qingshi Village, 10 seeds, 180 days
   medians: stones d30/d90/d180 52/73/159 (curious 23/36/71), crafted 21, commissions got 4 delivered 2, rank 1, renown 10
   medians: days gathering 48% / crafting 26% / meditating 31%; weeks stuck (no hint, nothing to craft, nothing to deliver) median 0, max 0; of those the craft-now hint had faded (rank 2) in 0%
   QA-117: buy hint followed; seeds that never crafted: 0 of 10
+  QA-119: encounter road_talisman_peddler met 0 times in 0 of 10 seeds
   QA-108: seeds past Mortal by day 120: 10 of 10 (nudge followed)
   steps where the top hint is about cultivating or a breakthrough: median 30, max 37
 
@@ -1452,6 +1453,7 @@ Crafter start: new blacksmith in Qingshi Village, 1 seeds, 365 days
   medians: days gathering 55% / crafting 27% / meditating 16%; weeks stuck (no hint, nothing to craft, nothing to deliver) median 0, max 0; of those the craft-now hint had faded (rank 2) in 0%
   medians past day 180: stones d180 -> d365 138 -> 225, crafts in days 181-365 26 (4.2 a month), weeks stuck after d180 median 0 max 0
   QA-117: buy hint followed; seeds that never crafted: 0 of 1
+  QA-119: encounter road_talisman_peddler met 0 times in 0 of 1 seeds
   QA-108: seeds past Mortal by day 120: 1 of 1 (nudge followed)
   steps where the top hint is about cultivating or a breakthrough: median 89, max 89
 
@@ -1464,6 +1466,7 @@ Crafter start: new talisman_master in Qingshi Village, 1 seeds, 365 days
   medians: days gathering 44% / crafting 27% / meditating 28%; weeks stuck (no hint, nothing to craft, nothing to deliver) median 0, max 0; of those the craft-now hint had faded (rank 2) in 0%
   medians past day 180: stones d180 -> d365 1 -> 79, crafts in days 181-365 24 (3.9 a month), weeks stuck after d180 median 0 max 0
   QA-117: buy hint followed; seeds that never crafted: 0 of 1
+  QA-119: encounter road_talisman_peddler met 0 times in 0 of 1 seeds
   QA-108: seeds past Mortal by day 120: 1 of 1 (nudge followed)
   steps where the top hint is about cultivating or a breakthrough: median 57, max 57
 
@@ -1476,6 +1479,7 @@ Crafter start: new array_master in Qingshi Village, 1 seeds, 365 days
   medians: days gathering 58% / crafting 24% / meditating 16%; weeks stuck (no hint, nothing to craft, nothing to deliver) median 0, max 0; of those the craft-now hint had faded (rank 2) in 0%
   medians past day 180: stones d180 -> d365 119 -> 229, crafts in days 181-365 26 (4.2 a month), weeks stuck after d180 median 0 max 0
   QA-117: buy hint followed; seeds that never crafted: 0 of 1
+  QA-119: encounter road_talisman_peddler met 0 times in 0 of 1 seeds
   QA-108: seeds past Mortal by day 120: 1 of 1 (nudge followed)
   steps where the top hint is about cultivating or a breakthrough: median 89, max 89
 
@@ -1488,6 +1492,7 @@ Crafter start: new beast_tamer in Qingshi Village, 1 seeds, 365 days
   medians: days gathering 54% / crafting 22% / meditating 22%; weeks stuck (no hint, nothing to craft, nothing to deliver) median 0, max 0; of those the craft-now hint had faded (rank 2) in 0%
   medians past day 180: stones d180 -> d365 115 -> 293, crafts in days 181-365 33 (5.4 a month), weeks stuck after d180 median 0 max 0
   QA-117: buy hint followed; seeds that never crafted: 0 of 1
+  QA-119: encounter road_talisman_peddler met 0 times in 0 of 1 seeds
   QA-108: seeds past Mortal by day 120: 0 of 1 (nudge followed)
   steps where the top hint is about cultivating or a breakthrough: median 86, max 86
 

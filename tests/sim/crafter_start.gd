@@ -25,6 +25,9 @@ var _follow_buy := true  ## QA-117
 var _tracked: Array[Dictionary] = []  ## QA-107: orders seen so far, with their fate
 var _sold := {}  ## QA-107: item id -> units the sim sold this life
 var _crafted_out := {}  ## QA-107: item id -> units crafted this life
+var _met := {}  ## QA-119: encounter id -> times met across all seeds
+var _met_seeds := {}  ## QA-119: encounter id -> seeds that met it at least once
+var _seed_met := {}  ## QA-119: encounter ids met in the current seed
 
 
 func _initialize() -> void:
@@ -97,6 +100,12 @@ func _run() -> void:
 	for n: int in cols["crafted"]:
 		never += 1 if n == 0 else 0
 	print("  QA-117: buy hint %s; seeds that never crafted: %d of %d" % ["followed" if _follow_buy else "ignored", never, seeds])
+	var met_ids: Array = _met.keys()
+	met_ids.sort()
+	for id: String in met_ids:
+		print("  QA-119: encounter %s met %d times in %d of %d seeds" % [id, _met[id], _met_seeds.get(id, 0), seeds])
+	if not _met.has("road_talisman_peddler"):
+		print("  QA-119: encounter road_talisman_peddler met 0 times in 0 of %d seeds" % seeds)
 	print("  QA-108: seeds past Mortal by day 120: %d of %d (nudge %s)" % [_sum(cols["r120"]), seeds, "followed" if _follow_nudge else "ignored"])
 	print("  steps where the top hint is about cultivating or a breakthrough: median %d, max %d" % [_median(cols["hint"]), cols["hint"].max()])
 	quit()
@@ -123,6 +132,7 @@ func _crafter(seed_value: int, days: int) -> Dictionary:
 	_tracked.clear()
 	_sold.clear()
 	_crafted_out.clear()
+	_seed_met.clear()
 	while c.alive and _clock.total_days - start < days:
 		var before: int = _clock.total_days
 		_clear_pending()
@@ -150,6 +160,8 @@ func _crafter(seed_value: int, days: int) -> Dictionary:
 			if checkpoints[0] >= 90:
 				out["realm%d" % checkpoints[0]] = Cultivation.realm_label(c, _gs.data)
 			checkpoints.pop_front()
+	for id: String in _seed_met:
+		_met_seeds[id] = int(_met_seeds.get(id, 0)) + 1
 	out["crafted"] = LifeStats.get_stat(c, "items_crafted")
 	out["delivered"] = LifeStats.get_stat(c, "commissions_done")
 	out["got"] = out["delivered"] + c.commissions.size()
@@ -268,6 +280,9 @@ func _idle_week(c: CharacterData) -> void:
 ## Answers whatever blocks actions (an encounter, or a threat the crafter slips away from).
 func _clear_pending() -> void:
 	if _gs.pending_encounter != "":
+		var id: String = _gs.pending_encounter
+		_met[id] = int(_met.get(id, 0)) + 1
+		_seed_met[id] = true
 		_gs.choose_encounter(0)
 	if _gs.pending_threat != "":
 		_gs.face_threat(false)
