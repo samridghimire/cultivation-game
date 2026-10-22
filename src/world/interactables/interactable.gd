@@ -153,6 +153,35 @@ static func clamp_labels(nodes: Array, bounds: Rect2, margin: float = 6.0) -> vo
 			node.label_offset.x += under
 
 
+## Left edge for a label of `width` so it stays inside [view_left, view_right] (WU-269).
+static func clamp_label_left(left: float, width: float, view_left: float, view_right: float, margin: float = 4.0) -> float:
+	var lo := view_left + margin
+	var hi := view_right - margin - width
+	if hi < lo:
+		return lo
+	return clampf(left, lo, hi)
+
+
+## The visible area in this node's local coordinates.
+func _view_rect_local() -> Rect2:
+	var to_local := get_global_transform().affine_inverse() * get_canvas_transform().affine_inverse()
+	return to_local * get_viewport_rect()
+
+
+## Called by the world when the camera moved: redraws the label if it is near a screen edge (WU-269).
+func camera_moved() -> void:
+	if _label_near_edge():
+		queue_redraw()
+
+
+## True when the label is within one label width of a screen edge (cheap redraw test).
+func _label_near_edge() -> bool:
+	var font := ThemeDB.fallback_font
+	var w := font.get_string_size(label_text(), HORIZONTAL_ALIGNMENT_LEFT, -1, LABEL_FONT_SIZE).x
+	var view := _view_rect_local()
+	return label_offset.x - w / 2.0 < view.position.x + w or label_offset.x + w / 2.0 > view.end.x - w
+
+
 ## Whether the place's art shows its live state (e.g. an open secret realm).
 func art_active() -> bool:
 	return false
@@ -171,7 +200,11 @@ func _draw() -> void:
 		var font := ThemeDB.fallback_font
 		var text := label_text()
 		var text_width := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, LABEL_FONT_SIZE).x
-		draw_string(font, Vector2(-text_width / 2.0, -size.y / 2.0 - 8.0) + label_offset, text, HORIZONTAL_ALIGNMENT_LEFT, -1, LABEL_FONT_SIZE, label_color())
+		var left := -text_width / 2.0 + label_offset.x
+		if is_inside_tree():
+			var view := _view_rect_local()
+			left = clamp_label_left(left, text_width, view.position.x, view.end.x)
+		draw_string(font, Vector2(left, -size.y / 2.0 - 8.0 + label_offset.y), text, HORIZONTAL_ALIGNMENT_LEFT, -1, LABEL_FONT_SIZE, label_color())
 	if anchor_id != "":
 		_draw_anchor_marker()
 

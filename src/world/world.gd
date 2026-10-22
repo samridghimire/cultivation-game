@@ -30,6 +30,8 @@ const FAMILY_HOME_SCRIPT := preload("res://src/world/interactables/family_home.g
 const GENDER_COLORS := {"male": Color("8fb3e0"), "female": Color("e6a3c4")}
 
 var map_size := Vector2(1600, 1000)
+## Canvas origin last seen by _process (WU-269).
+var _last_canvas_origin := Vector2.INF
 var _region: Dictionary = {}
 ## Scenery.place() output, drawn under everything else.
 var _decor: Array[Dictionary] = []
@@ -306,6 +308,17 @@ func _build_generated_npcs() -> void:
 		node.color = GENDER_COLORS.get(c.gender, Color("e6bf99"))
 		add_child(node)
 		move_child(node, player.get_index())
+
+
+## Labels stay on screen as the camera moves (WU-269).
+func _process(_delta: float) -> void:
+	var origin := get_canvas_transform().origin
+	if origin == _last_canvas_origin:
+		return
+	_last_canvas_origin = origin
+	for node in get_children():
+		if node is Interactable:
+			(node as Interactable).camera_moved()
 
 
 func _limit_camera() -> void:

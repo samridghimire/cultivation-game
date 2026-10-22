@@ -536,6 +536,8 @@ Short-lived context for the next session. Update or trim it when you finish a se
 - After merging, rerun the full checks. Typical breakages were tests made stale by a newer rule (clans need an abode seat, tougher enemies since QA-007d, the intro story event at session start, choice encounters must set their `blocked_by_flag` on every choice) and two places placed at the same map position.
 
 ## First-hour screenshot look (WU-262, 2026-10-22, 1280x800 and 1280x720)
+
+WU-269: world labels are now clamped to the visible screen (`Interactable.clamp_label_left`, camera-tracked via `World._process`). The pngs were NOT re-run (no display in the cloud run); re-run screenshot_first_hour.gd to confirm "Founder's Old..." and "Sect Recruitment..." are whole.
 Re-ran `screenshot_first_hour.gd` on main and opened all 8 PNGs at both sizes. Nothing clipped inside any window.
 - Script bug fixed: `CombatReport.close()` refuses while playback runs, so the combat report stayed open and covered the journal, inventory and sheet shots; the shot now calls `skip()` first.
 - Edge labels: in hud_arrival at 1280x800 "Founder's Old..." and "Sect Recruitmen..." are still cut at the right edge (objects at the screen edge); at 1280x720 (and after the player moves) they are whole. "Hunters' Bounty Board" is whole at both sizes. No world change made.
