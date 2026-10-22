@@ -1441,3 +1441,17 @@ First Foundation Establishment year: 10 seeds
   runs with no artifact life spent: 113 of 120
   median win share of fought fights: 100%
 
+## peak curve (100 fights per foe)
+
+Peak curve, 100 fights per foe. Typical player vs the realm's own foes at their data stage.
+  realm                      foes  Early   Peak  | player hp/atk/def at Peak | plain foe hp/atk/def at Peak | training atk/def/hp
+  foundation_establishment     23   24%   87%  |  1133/ 283/ 202 |  1053/ 257/ 187 | 10/10/40
+  core_formation               12   49%   96%  |  3891/ 953/ 727 |  3580/ 878/ 667 | 13/13/52
+  nascent_soul                  8   41%   98%  | 13087/3219/2562 | 12004/2948/2317 | 16/16/64
+  soul_formation                6   31%   91%  | 41397/10194/8261 | 39803/9793/7898 | 19/19/76
+  void_refinement               6    8%   76%  | 123531/30411/24688 | 130783/32222/26536 | 22/22/88
+  body_integration              6    2%   49%  | 369933/91064/73969 | 426465/105195/88136 | 25/25/100
+  mahayana                      6    0%   34%  | 1109139/273023/221810 | 1381747/341172/289996 | 28/28/112
+  tribulation_transcendence     6    0%   20%  | 3326757/818898/665333 | 4452295/1100280/946752 | 31/31/124
+First realm whose median Peak win% is under 50%: body_integration
+
