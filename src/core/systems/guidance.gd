@@ -196,13 +196,20 @@ static func _thin_defence_missing(c: CharacterData, data: GameData) -> String:
 
 ## GUIDE-074: why "Fights you can win" is empty for a fighter: thin defence first, else the combat technique to
 ## practise (mastered ones skipped; only "grow a stage" when all are mastered). "" when no combat technique is known (first_combat_hint covers that) or nothing useful applies.
-static func empty_fair_fights_note(c: CharacterData, data: GameData) -> String:
+## GUIDE-099: with `region_id`, an injured fighter who would win something healed is told to heal first.
+static func empty_fair_fights_note(c: CharacterData, data: GameData, region_id: String = "", today: int = -1, flags: Dictionary = {}) -> String:
 	if not Techniques.knows_kind(c, data, "combat"):
 		return ""
 	var lead := "Nothing here is in your favour yet: "
 	var missing := _thin_defence_missing(c, data)
 	if missing != "":
 		return lead + missing + "."
+	if region_id != "" and not c.injuries.is_empty():
+		var healed := CharacterData.from_dict(c.to_dict())
+		healed.injuries = {}
+		var could := fair_fights(healed, data, flags, today, region_id)
+		if not could.is_empty():
+			return lead + "heal your injuries first (healed, you could win: %s)." % String(could[0]["text"])
 	var best := _best_unmastered_combat(c, data)
 	if best == "":
 		return lead + "grow a stage."
@@ -2222,7 +2229,7 @@ static func journal(c: CharacterData, data: GameData, flags: Dictionary, today: 
 	_other_region_event_entries(out, c, data, today, region_id, events)
 	_festival_entries(out, data, today, region_id, events)
 	_opportunity_entries(out, c, data, flags, today, region_id)
-	_fair_fight_entries(out, fights, c, data, region_id)
+	_fair_fight_entries(out, fights, c, data, region_id, today, flags)
 	for npc in _region_people(c, data, people, favor, region_id, today, "pointers").slice(0, POINTER_JOURNAL_MAX):
 		_add(out, "Opportunities", "Ask %s for pointers (%s)" % [npc.name, _region_name(data, region_id)], "normal")
 	for line in Letters.request_lines(c, data, people, today):
@@ -2243,11 +2250,11 @@ static func journal(c: CharacterData, data: GameData, flags: Dictionary, today: 
 
 ## Journal section "Fights you can win" (GUIDE-021): fair fights, or the first-fighting-style hint when
 ## there are none and no combat technique is known; GUIDE-074: a fighter with none is told why.
-static func _fair_fight_entries(out: Array[Dictionary], fights: Array[Dictionary], c: CharacterData, data: GameData, region_id: String) -> void:
+static func _fair_fight_entries(out: Array[Dictionary], fights: Array[Dictionary], c: CharacterData, data: GameData, region_id: String, today: int = -1, flags: Dictionary = {}) -> void:
 	for fight in fights:
 		_add(out, "Fights you can win", String(fight["text"]), "normal")
 	if fights.is_empty() and Techniques.knows_kind(c, data, "combat"):
-		_add(out, "Fights you can win", empty_fair_fights_note(c, data), "dim")
+		_add(out, "Fights you can win", empty_fair_fights_note(c, data, region_id, today, flags), "dim")
 	if fights.is_empty() and not Techniques.knows_kind(c, data, "combat"):
 		var hint := first_combat_hint(c, data, region_id)
 		var shown := false

@@ -2960,6 +2960,26 @@ func _gv74_fighter() -> CharacterData:
 	return c
 
 
+func _gv99_injured_fighter() -> CharacterData:
+	var c := _fighter()
+	c.sect = {}
+	c.injuries = {"broken_bones": 60, "internal_injury": 120, "damaged_meridians": 365}
+	return c
+
+
+func test_empty_fair_fights_note_says_heal_first_when_injury_is_the_reason() -> void:
+	var c := _gv99_injured_fighter()
+	var flags := {"chore_boar_done": true}
+	assert_true(Guidance.fair_fights(c, data(), flags, c.age_days, "misty_forest").is_empty(), "injuries drop every fight")
+	var note := Guidance.empty_fair_fights_note(c, data(), "misty_forest", c.age_days, flags)
+	assert_true(note.contains("heal your injuries first (healed, you could win: "), note)
+	assert_eq(c.injuries.size(), 3, "the caller's character is untouched")
+	c.injuries = {}
+	assert_false(Guidance.empty_fair_fights_note(c, data(), "misty_forest", c.age_days, flags).contains("heal"))
+	var hurt := _gv99_injured_fighter()
+	assert_false(Guidance.empty_fair_fights_note(hurt, data()).contains("heal"), "no region: today's text")
+
+
 func test_empty_fair_fights_note_asks_for_practice() -> void:
 	var c := _gv74_fighter()
 	var id: String = c.techniques.keys()[0]
