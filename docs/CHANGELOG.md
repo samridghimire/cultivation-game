@@ -2,6 +2,20 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-22 [ENC-007] Encounter choices that start a fight now know your odds and whether it is to the death.
+- 2026-10-22 [C-181] Help says injuries slow your cultivation and weaken you in fights (also C-183).
+- 2026-10-22 [WU-280] A gold "!" floats over the place your top hint is about.
+- 2026-10-22 [GUIDE-090] The thin-defence hint counts what your loot would sell for.
+- 2026-10-22 [WU-279] The Techniques screen's "At level 2 you would beat ..." line checked at Steam Deck sizes.
+- 2026-10-22 [WU-278] Place and NPC names draw above buildings and spread apart so they no longer overlap.
+- 2026-10-22 [QA-129] The first-hour curious baselines refreshed after the sim stopped taking hopeless duels.
+- 2026-10-22 [QA-111] The crafter sim can walk to a neighbouring region for order herbs; the trips don't pay.
+- 2026-10-22 [GUIDE-092] The sect-trial hint says when your injuries are what would lose it, and your odds healed.
+- 2026-10-22 [WU-276] Screenshots of the two fighting-style encounters at Steam Deck sizes.
+- 2026-10-22 [C-177] The Ascent-Warden Arbiter is a little easier (late gate 77% -> 87%).
+- 2026-10-22 [QA-127] The crafter sim takes odd jobs when broke; no Array Master start stays stuck.
+- 2026-10-22 [C-180] Help says a sect promotion trial is a spar that can injure but never kills.
+- 2026-10-22 [WU-271] Screenshots of the open sect-trial and "Sell your ..." armor hints at Steam Deck sizes.
 - 2026-10-22 [C-176] Help says a fighting style's first levels come quickly.
 - 2026-10-22 [C-179] Helping people in Fallen Star Market and Azure Peak raises your renown there.
 - 2026-10-22 [WU-274] The Techniques screen's new buttons checked for gamepad focus.
