@@ -90,6 +90,7 @@ extends SceneTree
 ## "Reach <realm> to stand a chance against <name>." line), then the bitter variant. Shoot at 1280x800 and 1280x720.
 ## WU-210: it then breaks through level with the rival (rival_caught_up_log / rival_caught_up_journal).
 ## WU-246: `-- --first-hour` also writes fh_<workshop|shop|journal_first_goals|journal_next_steps|journal_commissions|board>_<day1|month1>_<size>.png.
+## WU-258: `--hint-shot` also writes hint_armor_far_[journal_]<size>.png and hint_empty_fights_journal_<size>.png.
 ## WU-252: `--hint-shot` also writes hint_buy_ingredient_[poor_][journal_]<size>.png and hint_thin_defence_long_[journal_]<size>.png (longest thin-defence line); all fit at 1280x720 and 1280x800. With the injury the HUD panel drops the hint lines by design (_fit_status_panel), so the journal carries them.
 ## WU-243: `-- --hint-shot` also writes hint_thin_defence_<size>.png / hint_idle_crafter_<size>.png (HUD) and *_journal_<size>.png (Next steps); checked at 1280x720 and 1280x800, nothing clipped.
 
@@ -1230,6 +1231,65 @@ func _start_hint_shot(gs: Node) -> void:
 		shots.append({"name": case[0] + "journal_" + size_tag, "open": func() -> void:
 			setup.call()
 			show_journal.call("Next steps"), "close": journal.close})
+	# WU-258: GUIDE-074's empty "Fights you can win" note (journal) and GUIDE-075's far-armor line (HUD and Next steps)
+	# for a Qi Refining fighter in Qingshi with no armor, 200 stones and nothing fair to fight.
+	var setup_armor_far := func() -> void:
+		hud.get("_banner").visible = false
+		c.realm_index = 1
+		c.stage = 5
+		c.injuries.clear()
+		c.equipment.erase("armor")
+		c.techniques = {"iron_fist": {"level": Techniques.PRACTICE_LEVEL, "xp": 0.0}}
+		c.inventory = {"spirit_stone": 200}
+		c.last_meditated_day = 40
+		clock.total_days = 40
+		gs.current_region = "qingshi_village"
+		root.get_node("EventBus").player_changed.emit()
+	shots.append({"name": "hint_armor_far_" + size_tag, "open": func() -> void:
+		setup_armor_far.call()
+		print("hint-shot armor far: ", hint_text.call())
+		# Qingshi's chore line ranks above the armor line, so the HUD shows the chore; the journal lists both.
+		var listed: PackedStringArray = Guidance.hints(c, gs.data, 3, 12, gs.npcs, gs.world_flags, "qingshi_village", 40, gs.npc_favor)
+		assert("\n".join(listed).contains("Armor would keep you standing"), "armor hint missing: " + "\n".join(listed)), "close": func() -> void: pass})
+	shots.append({"name": "hint_armor_far_journal_" + size_tag, "open": func() -> void:
+		setup_armor_far.call()
+		show_journal.call("Next steps"), "close": journal.close})
+	# The first (realm, stage, region) where an armorless fighter has no fair fight; Qi Refining preferred.
+	var empty_realm := 2
+	var empty_stage := 0
+	var empty_region := "qingshi_village"
+	var found_empty := false
+	var probe: CharacterData = CharacterData.from_dict(c.to_dict())
+	probe.equipment.erase("armor")
+	probe.techniques = {"iron_fist": {"level": Techniques.PRACTICE_LEVEL, "xp": 0.0}}
+	for realm_try: int in [1, 2]:
+		for stage_try in range(0, 9):
+			for region_id: String in gs.data.regions:
+				if found_empty:
+					break
+				probe.realm_index = realm_try
+				probe.stage = stage_try
+				if Guidance.fair_fights(probe, gs.data, gs.world_flags, 40, region_id, gs.npcs, gs.npc_favor).is_empty():
+					empty_realm = realm_try
+					empty_stage = stage_try
+					empty_region = region_id
+					found_empty = true
+	print("hint-shot empty fights: realm ", empty_realm, " stage ", empty_stage, " ", empty_region, " found ", found_empty)
+	shots.append({"name": "hint_empty_fights_journal_" + size_tag, "open": func() -> void:
+		setup_armor_far.call()
+		c.realm_index = empty_realm
+		c.stage = empty_stage
+		gs.current_region = empty_region
+		await show_journal.call("Fights you can win")
+		for _i in 3:
+			await root.get_tree().process_frame
+		var rich: RichTextLabel = journal.get("_text")
+		var parsed := rich.get_parsed_text()
+		var at := parsed.find("Fights you can win")
+		assert(at >= 0, "journal has no Fights you can win section")
+		var scroll: ScrollContainer = journal.get("_scroll")
+		scroll.scroll_vertical = int(rich.get_paragraph_offset(parsed.substr(0, at).count("\n")))
+		print("hint-shot journal scrolled to ", scroll.scroll_vertical), "close": journal.close})
 	for case: Array in [["hint_thin_defence_", setup_thin, "Your defence is thin"], ["hint_idle_crafter_", setup_idle, "You have not cultivated"]]:
 		var setup: Callable = case[1]
 		var needle: String = case[2]
