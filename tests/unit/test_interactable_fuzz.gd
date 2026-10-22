@@ -15,6 +15,8 @@ const SKIP_PREFIXES := ["Travel to ", "Closed-door cultivation"]
 var _last_day := 0
 var _calls := 0
 var _window_realm := ""
+## (script, option label with numbers masked) pairs exercised, for the coverage count.
+var _pairs := {}
 ## The HUD recomputes its hint list on every action (about 1 s each once the
 ## character has lived for years), which made this file ~60% of the suite.
 ## Only test_fuzz_with_hud keeps the hints on; Guidance has its own tests.
@@ -171,6 +173,14 @@ func _check_state(context: String) -> void:
 		assert_true(gs.clan.treasury >= 0, "%s: clan treasury %d" % [context, gs.clan.treasury])
 
 
+## Labels such as "Chat with Ling (3 days, favor 12)" change after every call;
+## masking the numbers keeps each option to one call instead of MAX_CALLS_PER_NODE.
+func _label_key(label: String) -> String:
+	var digits := RegEx.new()
+	digits.compile("[0-9]+")
+	return digits.sub(label, "#", true)
+
+
 ## Calls every enabled option of `node`, re-reading the menu after each call
 ## since actions open sub-menus or change what is offered.
 func _fuzz_node(node: Interactable, region_id: String) -> void:
@@ -182,7 +192,7 @@ func _fuzz_node(node: Interactable, region_id: String) -> void:
 		var pick: Dictionary = {}
 		for option: Dictionary in node.menu_options():
 			var label := String(option.get("label", ""))
-			if option.get("disabled", false) or done.has(label) or SKIP_PREFIXES.any(func(p: String) -> bool: return label.begins_with(p)):
+			if option.get("disabled", false) or done.has(_label_key(label)) or SKIP_PREFIXES.any(func(p: String) -> bool: return label.begins_with(p)):
 				continue
 			var action: Callable = option.get("action", Callable())
 			if not action.is_valid():
@@ -192,7 +202,8 @@ func _fuzz_node(node: Interactable, region_id: String) -> void:
 		if pick.is_empty():
 			return
 		var label := String(pick["label"])
-		done[label] = true
+		done[_label_key(label)] = true
+		_pairs["%s|%s" % [node.get_script().resource_path, _label_key(label)]] = true
 		calls += 1
 		_calls += 1
 		(pick["action"] as Callable).call()
@@ -260,7 +271,7 @@ func _fuzz_all_regions(kind: String) -> void:
 	_gs().load_save_dict(saved)
 	_check_state("%s after save/load" % kind)
 	if OS.get_environment("FUZZ_LOG") != "":
-		print("FUZZ %s calls=%d day=%d" % [kind, _calls, _clock().total_days])
+		print("FUZZ %s calls=%d day=%d pairs=%d" % [kind, _calls, _clock().total_days, _pairs.size()])
 	bus.message_posted.disconnect(_check_message)
 	Settings.set_value("hud_hints", old_hints)
 	_gs().end_session()
