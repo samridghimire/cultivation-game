@@ -51,6 +51,9 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 	var idle_nudge := idle_crafter_hint(c, data, region_id, today, flags)
 	if idle_nudge != "":
 		out.append(idle_nudge)
+	var buy := buy_ingredient_hint(c, data, region_id)
+	if buy != "":
+		out.append(buy)
 	var newcomer := _newcomer_hints(c, data, flags, region_id) if c.realm_index <= NEWCOMER_MAX_REALM else PackedStringArray()
 	out.append_array(newcomer)
 	var sell := _sell_hint(c, data, region_id)
@@ -166,6 +169,47 @@ static func idle_crafter_hint(c: CharacterData, data: GameData, region_id: Strin
 		var days := ceili(Cultivation.days_to_next_stage(c, data, float(best["density"])))
 		line += " %s would carry you to the next layer in about %s." % [String(best["spot"]), Calendar.format_duration(days)]
 	return line
+
+
+## GUIDE-066: a crafter who can craft nothing right now, and whose first in-rank recipe is short only of
+## bought-only ingredients (no gather place yields them, a merchant in `region_id` sells them), hears
+## where to buy. "" for a non-crafter, one who can craft something, or when no merchant here sells it.
+static func buy_ingredient_hint(c: CharacterData, data: GameData, region_id: String) -> String:
+	if c.professions.is_empty() or region_id == "" or not craftable_now(c, data).is_empty():
+		return ""
+	for prof_id: String in data.professions:
+		if not c.professions.has(prof_id):
+			continue
+		for recipe_id: String in Alchemy.known_recipes(c, data, prof_id):
+			var recipe: Dictionary = data.recipes[recipe_id]
+			if int(recipe.get("min_rank", 0)) > Professions.rank_of(c, prof_id):
+				continue
+			var item_id := ""
+			var bought_only := true
+			for ing: String in recipe["ingredients"]:
+				if ing == "spirit_stone" or c.item_count(ing) >= int(recipe["ingredients"][ing]):
+					continue
+				if herb_place(c, data, ing, region_id) != "" or Exploration.best_gather_place(c, data, ing, region_id) != "" or merchant_selling(data, region_id, ing) == "":
+					bought_only = false
+					break
+				if item_id == "":
+					item_id = ing
+			if not bought_only or item_id == "":
+				continue
+			var line := "Your %s needs %s: the %s sells them for %d stones each." % [recipe["name"], Items.item_plural(data, item_id, 2), merchant_selling(data, region_id, item_id), int(data.items[item_id].get("price", 0))]
+			if c.item_count("spirit_stone") < Alchemy.shortfall_cost(c, data, recipe_id):
+				line += " Sell gathered herbs or take odd jobs first."
+			return line
+	return ""
+
+
+## GUIDE-066: display name of the first merchant place in `region_id` that stocks `item_id`; "" if none.
+static func merchant_selling(data: GameData, region_id: String, item_id: String) -> String:
+	var item: Dictionary = data.items.get(item_id, {})
+	for p: Dictionary in data.regions.get(region_id, {}).get("places", []):
+		if String(p.get("type", "")) == "merchant" and Items.merchant_sells(data, item, p.get("stock_tags", []), int(p.get("max_price", 0))):
+			return String(p.get("display_name", "merchant"))
+	return ""
 
 
 ## Shared by the Mortal and idle-crafter hints: the region's best qi spot (or a generic one), the qi still

@@ -2356,3 +2356,29 @@ func test_thin_defence_hint() -> void:
 	assert_eq(Guidance.thin_defence_hint(c, data()), "", "not at Qi Refining")
 	c.realm_index = 3
 	assert_eq(Guidance.thin_defence_hint(c, data()), "", "not past Foundation")
+
+
+func test_buy_ingredient_hint() -> void:
+	var c := _fresh()
+	c.realm_index = 1
+	c.professions["array_master"] = {"rank": 0, "xp": 0.0}
+	c.inventory = {"spirit_stone": 20, "spirit_herb": 2}
+	var line := Guidance.buy_ingredient_hint(c, data(), "qingshi_village")
+	assert_true(line.contains("Blank Talisman Paper"), line)
+	assert_true(line.contains("Wandering Merchant"), line)
+	assert_false(line.contains("odd jobs"), line)
+	assert_true(_has(Guidance.hints(c, data(), 1.0, 20, {}, {}, "qingshi_village", 10), "Wandering Merchant"))
+	c.inventory["talisman_paper"] = 2
+	assert_eq(Guidance.buy_ingredient_hint(c, data(), "qingshi_village"), "")
+	c.inventory = {"spirit_herb": 2}
+	assert_true(Guidance.buy_ingredient_hint(c, data(), "qingshi_village").contains("odd jobs"))
+	assert_eq(Guidance.buy_ingredient_hint(_fresh(), data(), "qingshi_village"), "")
+
+
+func test_buy_ingredient_hint_skips_gatherable_shortfalls() -> void:
+	var c := _fresh()
+	c.realm_index = 1
+	c.professions["alchemist"] = {"rank": 0, "xp": 0.0}
+	c.inventory = {"spirit_stone": 50}
+	assert_eq(Guidance.buy_ingredient_hint(c, data(), "qingshi_village"), "")
+	assert_eq(Guidance.merchant_selling(data(), "qingshi_village", "talisman_paper"), "Wandering Merchant")
