@@ -41,6 +41,7 @@ func test_take_disables_others_and_abandon_reenables() -> void:
 	var hunt := _find(options, "Hunt: ")
 	assert_false(hunt.is_empty(), "a fresh Qi Refining 4 character is offered a hunt")
 	assert_false(hunt["disabled"])
+	assert_true(String(hunt["label"]).contains(" in 100"), "hunt label shows the odds: %s" % hunt["label"])
 	(hunt["action"] as Callable).call()
 	assert_false(gs.player.bounty.is_empty())
 	options = board.get_options()

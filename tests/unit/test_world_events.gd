@@ -351,10 +351,7 @@ func test_event_options_show_danger() -> void:
 	var labels: Array = load("res://src/world/interactables/explore_site.gd").event_options().map(func(o: Dictionary) -> String: return o["label"])
 	assert_eq(labels.size(), 1)
 	assert_true(String(labels[0]).begins_with("Enter the"), labels[0])
-	var danger := false
-	for word in ["Weak", "Even", "Risky", "Dangerous", "Deadly"]:
-		danger = danger or String(labels[0]).contains("(%s)" % word)
-	assert_true(danger, "label shows a danger word: %s" % labels[0])
+	assert_true(String(labels[0]).contains(" in 100"), "label shows the odds: %s" % labels[0])
 	gs.end_session()
 
 

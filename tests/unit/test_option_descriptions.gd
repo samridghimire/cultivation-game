@@ -3,8 +3,8 @@ extends TestCase
 ## (enabled) under the buttons, and interactables keep reasons out of labels.
 
 ## Longest unavoidable labels: "Temper your body: Copper Skin (...)" (98) and secret realm delves
-## with a guardian (up to ~100); everything else fits well within it.
-const MAX_LABEL := 105
+## with a guardian (up to ~100), bounty hunts with odds (~106); everything else fits well within it.
+const MAX_LABEL := 110
 
 
 class FakeSource extends Node:
