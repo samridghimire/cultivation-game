@@ -1202,7 +1202,7 @@ func test_practice_payoff_names_the_fight_the_next_level_opens() -> void:
 	assert_true(float(payoff["now"]) < Guidance.FAIR_FIGHT_MIN_CHANCE and float(payoff["next"]) >= 0.5)
 	assert_eq(int(payoff["level"]), 2)
 	var hint := Guidance.practice_hint(c, data(), "misty_forest", 10)
-	assert_true(hint.contains("at level 2 you would beat a %s" % payoff["enemy"]), hint)
+	assert_true(hint.contains("at level 2 you would beat %s about" % Text.a(String(payoff["enemy"]))), hint)
 	assert_true(hint.contains("about %d times in 100, now %d" % [roundi(float(payoff["next"]) * 100.0), roundi(float(payoff["now"]) * 100.0)]), hint)
 	assert_false(Guidance.practice_hint(c, data()).contains("you would beat"), "no region: old text")
 

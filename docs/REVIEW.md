@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: be6f18b
+Last reviewed commit: bdadd91
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -853,3 +853,17 @@ Last reviewed commit: be6f18b
   - Notes, not filed: WU-267 and WU-269 skipped their screenshots (WU-268 / follow-ups cover them). QA-122: a 10-stone
     Array Master can never afford the cheapest in-rank recipe (21); for the planner. "a %s" in _stipend_clause would
     read "a Elixir..." for a vowel-initial item (none in sect stipends today).
+- 2026-10-22 (reviewer, 6th run): reviewed be6f18b..bdadd91 (6a2e214 WU-268, 0503b9b C-173, f4cc287 GUIDE-087, 8580848 WU-273,
+  24628cd GUIDE-086, 4f134c7 QA-126, 324c890 GUIDE-091, 885d2ec GUIDE-085, bdadd91 GUIDE-078; [PLAN]/[REVIEW] commits
+  skipped). Main green. No BACKLOG/CHANGELOG edits by workers; no save-format changes. Nothing filed.
+  - Fixed ([REVIEW] commit): GUIDE-086's practice hint hard-coded "you would beat a %s", so it read "beat a Iron-Back
+    Boar" / "a Ice-Soul Spider"; it now uses Text.a and the test asserts the article form.
+  - Checked: GUIDE-086 rates at most FAIR_FIGHT_EXPLORE_MAX foes on a copied character, and Combat.win_chance is cached,
+    so the HUD refresh cost stays bounded. GUIDE-087 rates the trial first (it counts toward FAIR_FIGHT_MAX_RATED) only
+    when check_promotion passes; GUIDE-085 reuses the same trial_opponent. GUIDE-091's qi_days_lost walks each day with
+    the still-active multipliers (tested in test_injuries). QA-126 is sim-only plus a guard test. WU-268/273 are
+    screenshot-only; C-173 is help text (clinic names match regions.json).
+  - Notes, not filed: GUIDE-078's "barely pays" spend counts only the first bought-only ingredient, and its full recipe
+    count even when some are owned (errs toward the warning). GUIDE-085's under-even clause says "practise or grow a
+    stage" even when every style is mastered. QA-126: docs/balance_baseline.txt first-hour curious sections are stale,
+    and the game itself still offers 0% rival duels with only the choice's fight label as warning; for the planner.

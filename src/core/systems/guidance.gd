@@ -1533,7 +1533,7 @@ static func practice_hint(c: CharacterData, data: GameData, region_id: String = 
 		next = ", about %s to level %d" % [Calendar.format_duration(days), Techniques.level(c, id) + 1]
 	var payoff := practice_payoff(c, data, id, region_id, today, flags)
 	if not payoff.is_empty():
-		next += "; at level %d you would beat a %s about %d times in 100, now %d" % [payoff["level"], payoff["enemy"], roundi(float(payoff["next"]) * 100.0), roundi(float(payoff["now"]) * 100.0)]
+		next += "; at level %d you would beat %s about %d times in 100, now %d" % [payoff["level"], Text.a(String(payoff["enemy"])), roundi(float(payoff["next"]) * 100.0), roundi(float(payoff["now"]) * 100.0)]
 	return "Practise %s on the Techniques screen: each level raises your odds in a fight (level %d now%s)." % [data.techniques[id].name, Techniques.level(c, id), next]
 
 
