@@ -13,6 +13,11 @@ func _find(options: Array, prefix: String) -> Dictionary:
 	return {}
 
 
+## The spar entry for `npc` (not the generic dialogue's "Spar with them." line).
+func _spar(options: Array, npc: CharacterData) -> Dictionary:
+	return _find(options, "Spar with %s" % npc.name)
+
+
 func _setup(gs: Node, realm: int, favor: int) -> Array:
 	var c := CharacterFactory.create("Hero", gs.data, seeded_rng())
 	gs.start_session(c)
@@ -33,8 +38,9 @@ func test_senior_friend_lists_both() -> void:
 	var r := _setup(gs, 1, 100)
 	var opts: Array = r[0].get_options()
 	assert_false(_find(opts, "Ask ").is_empty(), "pointers listed")
-	assert_false(_find(opts, "Spar with ").is_empty(), "spar listed")
-	assert_false(_find(opts, "Spar with ")["disabled"], _find(opts, "Spar with ")["reason"])
+	var spar := _spar(opts, r[1])
+	assert_false(spar.is_empty(), "spar listed")
+	assert_false(spar["disabled"], spar["reason"])
 	r[0].free()
 	gs.end_session()
 
@@ -42,13 +48,13 @@ func test_senior_friend_lists_both() -> void:
 func test_stranger_spar_disabled_and_far_realm_hidden() -> void:
 	var gs: Node = _root().get_node("GameState")
 	var r := _setup(gs, 1, 0)
-	var spar := _find(r[0].get_options(), "Spar with ")
+	var spar := _spar(r[0].get_options(), r[1])
 	assert_true(spar["disabled"], "needs favor")
 	assert_true(String(spar["reason"]).contains("favor"))
 	r[0].free()
 	r = _setup(gs, 1 + 3, 100)
 	var opts: Array = r[0].get_options()
-	assert_true(_find(opts, "Spar with ").is_empty(), "realm gap too big")
+	assert_true(_spar(opts, r[1]).is_empty(), "realm gap too big")
 	r[0].free()
 	gs.end_session()
 
@@ -59,7 +65,7 @@ func test_rival_spar_reads_as_challenge() -> void:
 	var npc: CharacterData = r[1]
 	gs.player.rival = npc.id
 	var opts: Array = r[0].get_options()
-	assert_true(_find(opts, "Spar with ").is_empty(), "no plain spar label for the rival")
+	assert_true(_spar(opts, npc).is_empty(), "no plain spar label for the rival")
 	var ch := _find(opts, "Challenge your rival %s" % npc.name)
 	assert_false(ch.is_empty(), "challenge listed")
 	assert_false(ch["disabled"], ch["reason"])
