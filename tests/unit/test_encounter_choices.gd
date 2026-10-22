@@ -871,3 +871,36 @@ func test_fighting_style_encounters() -> void:
 		var hi := 20
 		var gated := _style_xp_after(enc_id, 1, hi, hi)
 		assert_true(gated > _style_xp_after(enc_id, 0, hi, hi), enc_id + " gated " + attr + " choice trains more")
+
+
+func _region_choice_renown(region: String, enc_id: String, index: int) -> int:
+	var gs: Node = _root().get_node("GameState")
+	var c := CharacterFactory.create("Wanderer", gs.data, seeded_rng())
+	gs.start_session(c)
+	c.inventory["spirit_stone"] = 5000
+	c.inventory["meridian_mending_pill"] = 2
+	gs.current_region = region
+	gs.pending_encounter = enc_id
+	var before := Renown.value(c, region)
+	gs.choose_encounter(index)
+	var gained := Renown.value(c, region) - before
+	gs.end_session()
+	return gained
+
+
+## C-179: helping people in Fallen Star Market and Azure Peak raises renown there.
+func test_city_and_mountain_encounters_reward_helping_with_renown() -> void:
+	var m := "fallen_star_market"
+	assert_eq(_region_choice_renown(m, "city_cornered_merchant", 0), 3, "paying the merchant's debt")
+	assert_eq(_region_choice_renown(m, "city_cornered_merchant", 2), 0, "helping the thugs collect")
+	assert_eq(_region_choice_renown(m, "city_ruined_cultivator_debt", 0), 3, "paying his debt")
+	assert_eq(_region_choice_renown(m, "city_ruined_cultivator_debt", 1), 0, "buying the case cheap")
+	var a := "azure_peak"
+	assert_eq(_region_choice_renown(a, "azure_poisoned_junior", 0), 3, "mending the junior")
+	assert_eq(_region_choice_renown(a, "azure_poisoned_junior", 2), 0, "walking on")
+	assert_eq(_region_choice_renown(a, "mountain_bullied_junior", 0), 3, "sparring the bully down")
+	assert_eq(_region_choice_renown(a, "mountain_bullied_junior", 1), 0, "taking a cut")
+	assert_eq(_region_choice_renown(a, "mountain_dying_explorer", 0), 3, "tending the explorer")
+	assert_eq(_region_choice_renown(a, "mountain_dying_explorer", 2), 0, "taking the map")
+	assert_eq(_region_choice_renown(a, "mountain_dying_rogue_map", 0), 3, "burying the rogue")
+	assert_eq(_region_choice_renown(a, "mountain_dying_rogue_map", 1), 0, "taking the map and purse")
