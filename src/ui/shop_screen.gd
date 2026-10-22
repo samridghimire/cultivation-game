@@ -307,16 +307,23 @@ static func slot_stat(slot: String) -> String:
 	return "attack" if slot == "weapon" else "defense"
 
 
-## WU-244: "upgrade" for affordable gear that beats what `c` wears, "defence" for a body-art manual a
+## WU-244: "upgrade" for affordable gear that beats what `c` wears (no equip stat lower, one higher; WU-254), "defence" for a body-art manual a
 ## Foundation-or-higher cultivator lacks, else "". `faction` is the shop's, so its discount counts.
 static func upgrade_tag(c: CharacterData, data: GameData, item_id: String, faction: String = "") -> String:
 	if Equipment.is_equipment(data, item_id):
 		var slot := Equipment.slot_of(data, item_id)
-		var stat := slot_stat(slot)
 		var worn := String(c.equipment.get(slot, ""))
-		var worn_val := 0 if worn == "" else int(data.items[worn].get("equip", {}).get("stats", {}).get(stat, 0))
-		var val := int(data.items[item_id].get("equip", {}).get("stats", {}).get(stat, 0))
-		if val > worn_val and c.item_count("spirit_stone") >= unit_price(c, data, item_id, false, faction, GameState.buy_multiplier()):
+		var worn_stats: Dictionary = {} if worn == "" else data.items[worn].get("equip", {}).get("stats", {})
+		var stats: Dictionary = data.items[item_id].get("equip", {}).get("stats", {})
+		var higher := false
+		for stat in ["attack", "defense", "max_hp", "speed"]:
+			var val := int(stats.get(stat, 0))
+			var worn_val := int(worn_stats.get(stat, 0))
+			if val < worn_val:
+				return ""
+			if val > worn_val:
+				higher = true
+		if higher and c.item_count("spirit_stone") >= unit_price(c, data, item_id, false, faction, GameState.buy_multiplier()):
 			return "upgrade"
 		return ""
 	var tech_id := manual_technique(data, item_id)

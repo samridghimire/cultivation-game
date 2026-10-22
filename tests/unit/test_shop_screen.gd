@@ -312,6 +312,23 @@ func test_upgrade_tag_marks_better_affordable_armor() -> void:
 	assert_eq(ShopScreen.upgrade_tag(c, d, "wolfhide_brigandine", "azure_cloud_sect"), "upgrade", "the shop's faction discount counts")
 
 
+func test_upgrade_tag_weighs_every_stat() -> void:
+	var root := (Engine.get_main_loop() as SceneTree).root
+	var gs := root.get_node("GameState")
+	var c := new_character()
+	c.inventory = {"spirit_stone": 500}
+	gs.start_session(c)
+	var d := data()
+	c = gs.player
+	c.equipment = {"armor": "boar_hide_jerkin"}
+	assert_eq(ShopScreen.upgrade_tag(c, d, "iron_scale_armor"), "upgrade", "equal defense, more max_hp")
+	c.equipment = {"armor": "wolf_pelt_cloak"}
+	assert_eq(ShopScreen.upgrade_tag(c, d, "stone_ape_bracers"), "", "more defense but less speed")
+	assert_eq(ShopScreen.upgrade_tag(c, d, "boar_hide_jerkin"), "", "more max_hp but less speed")
+	c.equipment = {}
+	assert_eq(ShopScreen.upgrade_tag(c, d, "stone_ape_bracers"), "upgrade", "nothing worn")
+
+
 func test_upgrade_tag_marks_body_manual_at_foundation() -> void:
 	var root := (Engine.get_main_loop() as SceneTree).root
 	var gs := root.get_node("GameState")
