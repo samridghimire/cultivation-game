@@ -798,6 +798,7 @@ func _road_choice_renown(enc_id: String, index: int) -> int:
 	var gs: Node = _root().get_node("GameState")
 	var c := CharacterFactory.create("Wanderer", gs.data, seeded_rng())
 	gs.start_session(c)
+	c.inventory["spirit_herb"] = 5
 	gs.current_region = "qingshi_village"
 	gs.pending_encounter = enc_id
 	var before := Renown.value(c, gs.current_region)
@@ -814,3 +815,28 @@ func test_road_encounters_reward_helping_with_renown() -> void:
 	assert_eq(_road_choice_renown("road_overturned_cart", 1), 0, "robbing the farmer")
 	assert_eq(_road_choice_renown("road_lost_child", 0), 3, "walking the child home")
 	assert_eq(_road_choice_renown("road_lost_child", 2), 0, "pointing down the road")
+
+
+## C-175: helping the people of the first-hour regions raises renown too.
+func test_region_encounters_reward_helping_with_renown() -> void:
+	assert_eq(_road_choice_renown("village_drowning_child", 0), 3, "diving after the child")
+	assert_eq(_road_choice_renown("village_drowning_child", 1), 0, "shouting for the miller")
+	assert_eq(_road_choice_renown("village_fevered_child", 0), 3, "steeping a herb for the child")
+	assert_eq(_road_choice_renown("village_fevered_child", 1), 0, "saying you cannot help")
+	assert_eq(_road_choice_renown("forest_dying_gatherer", 0), 3, "carrying the gatherer home")
+	assert_eq(_road_choice_renown("forest_dying_gatherer", 2), 0, "taking the map and leaving him")
+	assert_eq(_road_choice_renown("forest_wounded_traveller", 0), 3, "binding the traveller's wounds")
+	assert_eq(_road_choice_renown("forest_wounded_traveller", 1), 0, "stripping his pouch")
+
+
+func test_road_lost_child_carry_her_raises_renown_by_five() -> void:
+	var gs: Node = _root().get_node("GameState")
+	var c := CharacterFactory.create("Wanderer", gs.data, seeded_rng())
+	c.attributes["constitution"] = 12
+	gs.start_session(c)
+	gs.current_region = "qingshi_village"
+	gs.pending_encounter = "road_lost_child"
+	var before := Renown.value(c, gs.current_region)
+	gs.choose_encounter(1)
+	assert_eq(Renown.value(c, gs.current_region) - before, 5, "carry her")
+	gs.end_session()
