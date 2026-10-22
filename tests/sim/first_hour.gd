@@ -589,17 +589,10 @@ static func _everything_month(gs: Node, c: CharacterData, kinds: Dictionary, tod
 ## QA-126: the first open choice that is not a fight rated below 50% (a player reads the
 ## odds on the choice before accepting a duel); 0 when every choice is a bad fight.
 static func encounter_choice(c: CharacterData, data: GameData, encounter: Dictionary, flags: Dictionary, people: Dictionary) -> int:
-	var list: Array = encounter.get("choices", [])
-	for choice: Dictionary in Exploration.choices(c, data, encounter, flags):
+	for choice: Dictionary in Exploration.choices(c, data, encounter, flags, people):
 		if choice["disabled"]:
 			continue
-		var def: Dictionary = list[choice["index"]]
-		var foe: Dictionary = {}
-		if bool(def.get("fight_rival", false)) and people.has(c.rival):
-			foe = Karma.npc_enemy(people[c.rival], data)
-		elif def.has("enemy"):
-			foe = data.enemies[def["enemy"]]
-		if foe.is_empty() or Combat.win_chance(c, data, foe) >= 0.5:
+		if not choice["fight"] or choice["chance"] < 0.0 or choice["chance"] >= 0.5:
 			return int(choice["index"])
 	return 0
 

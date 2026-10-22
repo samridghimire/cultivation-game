@@ -577,13 +577,28 @@ static func _attribute_name(data: GameData, attr_id: String) -> String:
 
 
 ## The choices of `encounter` for `c`: [{index, label, disabled, reason, fight, check}].
-static func choices(c: CharacterData, data: GameData, encounter: Dictionary, flags: Dictionary) -> Array[Dictionary]:
+static func choices(c: CharacterData, data: GameData, encounter: Dictionary, flags: Dictionary, people: Dictionary = {}) -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
 	var list: Array = encounter.get("choices", [])
 	for i in list.size():
 		var reason := check_choice(c, data, list[i], flags)
-		out.append({"index": i, "label": String(list[i].get("label", "")), "disabled": reason != "", "reason": reason, "fight": list[i].has("enemy") or bool(list[i].get("fight_rival", false)), "check": check_tag(data, list[i])})
+		var foe := choice_foe(c, data, list[i], people)
+		var chance := -1.0
+		if reason == "" and not foe.is_empty():
+			chance = Combat.win_chance(c, data, foe)
+		out.append({"index": i, "label": String(list[i].get("label", "")), "disabled": reason != "", "reason": reason, "fight": list[i].has("enemy") or bool(list[i].get("fight_rival", false)), "check": check_tag(data, list[i]), "chance": chance, "lethal": bool(foe.get("lethal", false))})
 	return out
+
+
+## The foe a choice fights ({} when none): the player's rival (needs `people`) or its enemy id.
+static func choice_foe(c: CharacterData, data: GameData, choice: Dictionary, people: Dictionary) -> Dictionary:
+	if bool(choice.get("fight_rival", false)):
+		var rival := Rivals.rival_of(c, people)
+		return Karma.npc_enemy(rival, data) if rival != null else {}
+	var id := String(choice.get("enemy", ""))
+	if data.enemies.has(id):
+		return data.enemies[id]
+	return {}
 
 
 ## Applies choice `index` of `encounter`. Returns {ok, reason, text, notes,

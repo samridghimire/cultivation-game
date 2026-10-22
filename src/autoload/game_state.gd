@@ -937,12 +937,12 @@ func attempt_inheritance(inheritance_id: String) -> void:
 	_pass_time(result["days"])
 
 
-## The pending encounter's choices for the UI: [{index, label, disabled, reason}]
+## The pending encounter's choices for the UI: [{index, label, disabled, reason, chance, lethal}]
 ## ([] when no encounter is waiting).
 func encounter_choices() -> Array[Dictionary]:
 	if pending_encounter == "" or not _can_act():
 		return []
-	return Exploration.choices(player, data, data.encounters.get(pending_encounter, {}), world_flags)
+	return Exploration.choices(player, data, data.encounters.get(pending_encounter, {}), world_flags, npcs)
 
 
 ## Pick choice `index` of the pending encounter: applies its outcome, passes

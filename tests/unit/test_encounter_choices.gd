@@ -904,3 +904,32 @@ func test_city_and_mountain_encounters_reward_helping_with_renown() -> void:
 	assert_eq(_region_choice_renown(a, "mountain_dying_explorer", 2), 0, "taking the map")
 	assert_eq(_region_choice_renown(a, "mountain_dying_rogue_map", 0), 3, "burying the rogue")
 	assert_eq(_region_choice_renown(a, "mountain_dying_rogue_map", 1), 0, "taking the map and purse")
+
+
+## ENC-007: fight choices carry the foe's odds and lethality.
+func test_choices_carry_fight_odds() -> void:
+	var d := _data_with_test_encounters()
+	var c := new_character()
+	c.realm_index = 1
+	var list := Exploration.choices(c, d, d.encounters["test_traveller"], {})
+	var foe: Dictionary = d.enemies["wild_boar"]
+	assert_eq(list[3]["chance"], Combat.win_chance(c, d, foe))
+	assert_eq(list[3]["lethal"], bool(foe.get("lethal", false)))
+	assert_eq(list[0]["chance"], -1.0, "a non-fight choice has no odds")
+	assert_false(list[0]["lethal"])
+	c.realm_index = 0
+	list = Exploration.choices(c, d, d.encounters["test_traveller"], {})
+	assert_true(list[3]["disabled"])
+	assert_eq(list[3]["chance"], -1.0, "a disabled fight is not rated")
+
+
+func test_rival_duel_choice_has_odds_only_with_people() -> void:
+	var d := _data_with_test_encounters()
+	var c := new_character()
+	d.encounters["test_duel"] = {"id": "test_duel", "tags": ["test_tag"], "text": "x", "choices": [
+		{"label": "Duel", "fight_rival": true}, {"label": "Walk away"}]}
+	var people: Dictionary = {}
+	Rivals.spawn(c, people, d, seeded_rng(), "qingshi_village")
+	var with_rival := Exploration.choices(c, d, d.encounters["test_duel"], {}, people)
+	assert_true(with_rival[0]["chance"] >= 0.0 and with_rival[0]["chance"] <= 1.0)
+	assert_eq(Exploration.choices(c, d, d.encounters["test_duel"], {})[0]["chance"], -1.0)
