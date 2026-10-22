@@ -549,7 +549,10 @@ Short-lived context for the next session. Update or trim it when you finish a se
 
 ## First-hour screenshot look (WU-262, 2026-10-22, 1280x800 and 1280x720)
 
-WU-269: world labels are now clamped to the visible screen (`Interactable.clamp_label_left`, camera-tracked via `World._process`). The pngs were NOT re-run (no display in the cloud run); re-run screenshot_first_hour.gd to confirm "Founder's Old..." and "Sect Recruitment..." are whole.
+WU-272 (2026-10-22): re-ran `screenshot_first_hour.gd` at 1280x800 and 1280x720 under xvfb-run and opened hud_arrival at both. WU-269's clamp works: "Founder's Old Well", "Spirit Spring (2x qi)", "Sect Recruitment Hall" and "Hunters' Bounty Board" are all inside the screen at both sizes (the clamp is not at fault; no code change). Two cosmetic leftovers at 1280x800 only, both from labels that sit on world objects at the screen edge:
+- "Founder's Old Well" and the NPC label "Xiong Muxue" overlap (the draw-time clamp moves a label after `spread_labels` separated them).
+- "Sect Recruitment Hall": its first word "Sect " is hidden behind the Village Workshop building, which is drawn after the hall; the label reads "Recruitment Hall".
+Fixing either needs a label pass in the world (draw labels on a top layer and spread them after clamping), not a change to `clamp_label_left`.
 Re-ran `screenshot_first_hour.gd` on main and opened all 8 PNGs at both sizes. Nothing clipped inside any window.
 - Script bug fixed: `CombatReport.close()` refuses while playback runs, so the combat report stayed open and covered the journal, inventory and sheet shots; the shot now calls `skip()` first.
 - Edge labels: in hud_arrival at 1280x800 "Founder's Old..." and "Sect Recruitmen..." are still cut at the right edge (objects at the screen edge); at 1280x720 (and after the player moves) they are whole. "Hunters' Bounty Board" is whole at both sizes. No world change made.
