@@ -1068,6 +1068,7 @@ func _start_shop_shot(gs: Node) -> void:
 
 ## WU-273: `--techniques-shot` writes techniques_practice.png and techniques_practice_scale115.png (UI scale 115%): a Qi Refining
 ## 1st-layer player in Qingshi Village with Iron Fist and Basic Breathing at level 1, the Techniques screen on Iron Fist's details.
+## WU-279: add `-- --payoff` for techniques_payoff[_scale115].png (misty_forest, the "At level 2 you would beat ..." line).
 ## Run once per --resolution (1280x720, 1280x800); the file name has no size suffix, so copy it between runs.
 func _start_techniques_shot(gs: Node) -> void:
 	var rng := RandomNumberGenerator.new()
@@ -1077,6 +1078,22 @@ func _start_techniques_shot(gs: Node) -> void:
 	gs.pending_event = ""
 	gs.current_region = "qingshi_village"
 	c.techniques = {"iron_fist": {"level": 1, "xp": 0.0}, "basic_breathing": {"level": 1, "xp": 0.0}}
+	var payoff := OS.get_cmdline_user_args().has("--payoff")
+	if payoff:
+		# WU-279: a Qi Refining fighter in misty_forest for whom Iron Fist level 2 flips a foe.
+		gs.current_region = "misty_forest"
+		c.realm_index = 1
+		c.techniques = {"iron_fist": {"level": 1, "xp": 0.0}}
+		var found := false
+		for stage in range(0, 9):
+			c.stage = stage
+			if not Guidance.practice_payoff(c, gs.data, "iron_fist", "misty_forest", int(root.get_node("GameClock").total_days)).is_empty():
+				found = true
+				break
+		if not found:
+			push_error("WU-279: no stage has a foe that Iron Fist level 2 turns around")
+			quit(1)
+			return
 	world = load("res://src/world/world.tscn").instantiate()
 	root.add_child(world)
 	hud = world.get_node("HUD")
@@ -1085,8 +1102,9 @@ func _start_techniques_shot(gs: Node) -> void:
 		techs.open()
 		techs._select("iron_fist")
 		techs._focus_first_action.call_deferred()
-	shots.append({"name": "techniques_practice", "open": open_iron_fist, "close": techs.close})
-	shots.append({"name": "techniques_practice_scale115", "open": func() -> void:
+	var prefix := "techniques_payoff" if payoff else "techniques_practice"
+	shots.append({"name": prefix, "open": open_iron_fist, "close": techs.close})
+	shots.append({"name": prefix + "_scale115", "open": func() -> void:
 		root.content_scale_factor = 1.15
 		open_iron_fist.call(), "close": func() -> void:
 		techs.close()
