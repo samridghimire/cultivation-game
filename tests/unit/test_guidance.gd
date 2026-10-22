@@ -27,7 +27,8 @@ func test_new_character_gets_qi_and_starter_hints() -> void:
 	c.professions = {}
 	c.techniques = {}
 	var hints := Guidance.hints(c, data(), 1.0, 10)
-	assert_true(_has(hints, "more qi to reach the next stage"))
+	# A mortal has a single stage, so the goal is the Qi Refining breakthrough (GUIDE-103).
+	assert_true(_has(hints, "more qi to reach the %s breakthrough" % data().realms[1].name))
 	var pay: int = Professions.work_preview(c, data(), "doctor", Calendar.DAYS_PER_MONTH)["income"]
 	assert_true(_has(hints, "about %d spirit stones a month" % pay))
 	assert_true(_has(hints, "breathing technique"))
@@ -3252,3 +3253,23 @@ func test_dangerous_missions_say_heal_when_injuries_are_the_cause() -> void:
 			assert_true(Guidance._mission_hint(c, d, {}).ends_with("too dangerous for you yet; heal your injuries first."))
 			break
 	assert_true(found, "some stage has injuries as the only obstacle")
+
+
+## GUIDE-103: at the last layer the qi lines speak of the breakthrough.
+func test_last_layer_qi_lines_name_the_breakthrough() -> void:
+	var d := data()
+	var c := _fresh()
+	c.realm_index = 1
+	c.professions["alchemist"] = {"rank": 0, "xp": 0.0}
+	c.last_meditated_day = 0
+	var name := String(d.realms[2].name)
+	c.stage = d.realms[1].stage_count() - 1
+	c.qi = 0.0
+	var gather := Guidance._cultivation_hint(c, d, 1.0)
+	assert_true(gather.contains("to reach the %s breakthrough" % name), gather)
+	var idle := Guidance.idle_crafter_hint(c, d, "qingshi_village", Guidance.IDLE_CULTIVATION_DAYS)
+	assert_true(idle.contains("the %s breakthrough" % name), idle)
+	assert_false(idle.contains("next layer"), idle)
+	c.stage = 3
+	assert_true(Guidance._cultivation_hint(c, d, 1.0).contains("to reach the next stage"))
+	assert_true(Guidance.idle_crafter_hint(c, d, "qingshi_village", Guidance.IDLE_CULTIVATION_DAYS).contains("the next layer"))

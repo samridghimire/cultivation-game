@@ -411,8 +411,16 @@ static func idle_crafter_hint(c: CharacterData, data: GameData, region_id: Strin
 	var line := "You have not cultivated lately." if c.last_meditated_day < 0 else "You have not cultivated in %s." % Calendar.format_duration(idle)
 	if float(best["rate"]) > 0.0:
 		var days := ceili(Cultivation.days_to_next_stage(c, data, float(best["density"])))
-		line += " %s would carry you to the next layer in about %s." % [String(best["spot"]), Calendar.format_duration(days)]
+		line += " %s would carry you to %s in about %s." % [String(best["spot"]), _next_step_name(c, data), Calendar.format_duration(days)]
 	return line
+
+
+## GUIDE-103: what the next qi goal is called: "the next layer" (or `plain`), or at a realm's last
+## stage "the <next realm> breakthrough".
+static func _next_step_name(c: CharacterData, data: GameData, plain: String = "the next layer") -> String:
+	if c.realm_index + 1 < data.realms.size() and c.stage == data.realms[c.realm_index].stage_count() - 1:
+		return "the %s breakthrough" % data.realms[c.realm_index + 1].name
+	return plain
 
 
 ## GUIDE-066: a crafter who can craft nothing right now, and whose first in-rank recipe is short only of
@@ -1017,7 +1025,7 @@ static func _cultivation_hint(c: CharacterData, data: GameData, density: float) 
 	var needed := maxf(Cultivation.qi_required(c, data) - c.qi, 0.0)
 	var rate := Cultivation.qi_per_day(c, data, density)
 	var eta := " (about %s of meditation here)" % Calendar.format_duration(ceili(needed / rate)) if rate > 0.0 else ""
-	return "Gather %d more qi to reach the next stage%s." % [ceili(needed), eta]
+	return "Gather %d more qi to reach %s%s." % [ceili(needed), _next_step_name(c, data, "the next stage"), eta]
 
 
 ## Qi density multiplier of the best place to meditate in `region_id`: the region's
