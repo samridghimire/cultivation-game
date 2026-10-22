@@ -2508,6 +2508,18 @@ func test_heal_source_far_clinic_needs_the_stones() -> void:
 	assert_eq(Guidance.heal_source(c, data(), "misty_forest"), "")
 
 
+
+func test_heal_source_names_the_injury_a_far_clinic_treats() -> void:
+	var c := _fresh()
+	Injuries.inflict(c, data(), "qi_deviation")
+	Injuries.inflict(c, data(), "broken_bones")
+	c.inventory = {"spirit_stone": 500}
+	var first := String(c.injuries.keys()[0])
+	var line := Guidance.heal_source(c, data(), "misty_forest")
+	assert_true(line.contains(" treats your %s for " % Injuries.injury_name(data(), first)), line)
+	assert_false(line.contains(" treats it "), line)
+	assert_false(line.ends_with("for your %s" % Injuries.injury_name(data(), first)), line)
+
 func test_thin_defence_hint_names_where_to_get_armor() -> void:
 	var c := _fresh()
 	c.realm_index = Guidance.THIN_DEFENCE_REALM

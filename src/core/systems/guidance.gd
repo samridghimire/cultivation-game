@@ -433,7 +433,8 @@ static func market_lines(data: GameData, region_id: String) -> PackedStringArray
 
 
 ## GUIDE-071/077: where one of c's injuries can be healed, as a clause ("use your X", "the Y treats it for N
-## stones"); the first source found for any injury (dictionary order), naming the injury when c has two or more.
+## stones"); the first source found for any injury (dictionary order), naming the injury when c has two or more
+## ("treats your <injury>" for a clinic, else a "for your <injury>" suffix).
 ## "" when no source is known or region_id is empty.
 static func heal_source(c: CharacterData, data: GameData, region_id: String) -> String:
 	if region_id == "" or not Injuries.has_any(c):
@@ -443,7 +444,11 @@ static func heal_source(c: CharacterData, data: GameData, region_id: String) -> 
 		if clause == "":
 			continue
 		if c.injuries.size() > 1:
-			clause += " for your %s" % Injuries.injury_name(data, injury_id)
+			var injury_name := Injuries.injury_name(data, injury_id)
+			if clause.contains(" treats it "):
+				clause = clause.replace(" treats it ", " treats your %s " % injury_name)
+			else:
+				clause += " for your %s" % injury_name
 		return clause
 	return ""
 

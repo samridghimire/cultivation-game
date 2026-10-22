@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: efde69a
+Last reviewed commit: 157a41d
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -823,3 +823,18 @@ Last reviewed commit: efde69a
   - Notes, not filed: C-171 moved the arbiter's stage (0 -> 1) instead of its attack because attack/hp barely move the
     rate; it lands at 77%, under the 85-95% target (the commit explains). WU-257 did not re-run --pill-shot/--hint-shot
     (WU-258 takes new hint shots). heal_source's neighbouring-clinic step still skips cost (GUIDE-077 is filed).
+- 2026-10-22 (reviewer, 4th run): reviewed efde69a..157a41d (b8e72fe WU-256, 3646d0d WU-263, 16bdd07 C-170, bd30d6c WU-260,
+  80f6bac GUIDE-077, 2487888 WU-264, c0eea16 GUIDE-082, 036e5dc WU-265, fc46022 QA-121, d1ec540 WU-266, 737b9f9 WU-258,
+  e15a897 WU-262, 157a41d C-163; [PLAN]/[REVIEW] commits skipped). Main green (2094 tests). No BACKLOG/CHANGELOG edits
+  by workers; no save-format changes. Nothing filed.
+  - Fixed ([REVIEW] commit): GUIDE-077 appended "for your <injury>" after a clinic clause, so with two injuries the hint
+    read "the Village Clinic in Qingshi Village (3 days) treats it for 80 stones for your Qi Deviation". A clinic clause
+    now says "treats your <injury> for N stones"; item/merchant clauses keep the suffix. Test added.
+  - Checked: GUIDE-077 matches spec (far-clinic pick skips it when the cost exceeds stones; local clinic handled first).
+    WU-260's gear_elsewhere_line lives in Guidance, the note is a non-focusable label, hidden on the Sell tab (tested).
+    WU-256 only reorders text; WU-264's audit covers it. GUIDE-082 test asserts the two-sentence form. C-163's test reads
+    the recipe cost instead of a literal. QA-121, WU-258/262/263/265/266 are sim/screenshot-only.
+  - Notes, not filed: heal_source picks the first injury with any source, so a far clinic for injury 1 wins over an
+    owned item for injury 2 (dictionary order, as spec'd). A merchant clause with two injuries still reads
+    "sells X for N stones for your <injury>". QA-121: the defence hint alone leaves 0/9 seeds at >=50% vs Foundation
+    foes 60 days in (healing and a body art missing); for the planner.
