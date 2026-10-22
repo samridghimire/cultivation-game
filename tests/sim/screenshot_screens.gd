@@ -39,6 +39,8 @@ extends SceneTree
 ## WU-226: append `-- --pill-shot` for a Body Integration Peak player at full qi: the breakthrough window with a Great Vehicle
 ## Pill plus a Flawless one (pill_a_window.png), and the HUD hint panel with no pill (pill_b_hint.png).
 
+## WU-240: `--pill-shot` also writes tt_pill_a_window.png / tt_pill_b_hint.png for a Mahayana Peak player (Heavenly Tribulation Pills). The window fits at 1280x720 and 1280x800; the long hint is hidden by _fit_status_panel (too tall for the panel at both sizes), so the HUD shows no hint line there.
+
 ## WU-225: append `-- --inherit-shot` for a Body Integration Early player in Withered Bone Marsh at the Hollow of the
 ## Unbroken Body (C-136): the grounds menu and the journal's Opportunities with the realm trial next, then with the
 ## Constitution trial next and missed (inherit_menu*.png, inherit_journal*.png).
@@ -437,6 +439,27 @@ func _start_pill_shot(gs: Node) -> void:
 		hud.get("_banner").visible = false
 		print("pill-shot hint: ", hint_text.call())
 		print("pill-shot saving: ", Guidance.pill_saving_goal(c, gs.data), " | source: ", Guidance.pill_source_goal(c, gs.data)), "close": func() -> void: pass})
+	# WU-240: C-157's Heavenly Tribulation Pills for a Mahayana Peak player at full qi: the window with both, then the no-pill hint.
+	var to_mahayana := func() -> void:
+		c.realm_index = gs.data.realm_index_of("mahayana")
+		var maha: RealmDef = gs.data.realms[c.realm_index]
+		c.stage = maha.stage_count() - 1
+		c.qi = maha.qi_required(c.stage)
+		c.inventory = {}
+	shots.append({"name": "tt_pill_a_window", "open": func() -> void:
+		to_mahayana.call()
+		c.add_item("tribulation_transcendence_pill", 1)
+		c.add_item("flawless_tribulation_transcendence_pill", 1)
+		hud.get("_banner").visible = false
+		win.open(), "close": win.close})
+	shots.append({"name": "tt_pill_b_hint", "open": func() -> void:
+		to_mahayana.call()
+		root.get_node("EventBus").player_changed.emit()
+		await root.get_tree().process_frame
+		await root.get_tree().process_frame
+		hud.get("_banner").visible = false
+		print("tt-pill-shot hint visible=", (hud.get("_hint") as Label).visible, ": ", hint_text.call())
+		print("tt-pill-shot saving: ", Guidance.pill_saving_goal(c, gs.data), " | source: ", Guidance.pill_source_goal(c, gs.data)), "close": func() -> void: pass})
 
 
 ## WU-201: the crafting screen for every workshop craft, a rank-0 player one ingredient short.
