@@ -28,7 +28,7 @@ static func play(gs: Node, clock: Node, seed_value: int, months: int, curious: b
 	gs.pending_event = ""
 	var bus: Node = gs.get_node("/root/EventBus")
 	bus.clear_history()
-	var out := {"layer_day": {}, "sect_day": -1, "month_lines": [], "injuries": 0, "player": c, "kinds": [], "kind_sets": [], "stones": [], "realms": [], "first_win_day": -1, "first_style_day": -1, "first_win_enemy": "", "breaks": [], "bottleneck_day": {}, "waited_days": 0}
+	var out := {"layer_day": {}, "sect_day": -1, "month_lines": [], "injuries": 0, "player": c, "kinds": [], "kind_sets": [], "stones": [], "realms": [], "first_win_day": -1, "first_style_day": -1, "first_win_enemy": "", "breaks": [], "bottleneck_day": {}, "waited_days": 0, "road": []}
 	var done := {"no_help": no_help}
 	# QA-063: remember the foe of the first real (non-spar) win; the day comes from the fights_won stat.
 	var fight := {"enemy": "", "first_enemy": ""}
@@ -98,6 +98,7 @@ static func play(gs: Node, clock: Node, seed_value: int, months: int, curious: b
 		var counts := {}
 		for i in range(mark, bus.history.size()):
 			var cat: String = bus.history[i]["category"]
+			_note_road(gs, out, String(bus.history[i]["text"]))
 			counts[cat] = int(counts.get(cat, 0)) + 1
 		out["month_lines"].append(counts)
 		out["kinds"].append(kinds.size())
@@ -120,6 +121,18 @@ static func play(gs: Node, clock: Node, seed_value: int, months: int, curious: b
 	out["fights_lost"] = LifeStats.get_stat(c, "fights_lost")
 	out["fights_fled"] = LifeStats.get_stat(c, "threats_fled")
 	return out
+
+
+## QA-118: remember the id of a road encounter ("On the road: <text>" in the log) so the sim can list them.
+static func _note_road(gs: Node, out: Dictionary, text: String) -> void:
+	if not text.begins_with("On the road: "):
+		return
+	var body := text.substr(13)
+	for id: String in gs.data.encounters:
+		var enc_text := String(gs.data.encounters[id].get("text", ""))
+		if "road" in gs.data.encounters[id].get("tags", []) and enc_text != "" and body.begins_with(enc_text.substr(0, 40)):
+			out["road"].append(id)
+			return
 
 
 ## QA-076: true while the player is at the Qi Refining -> Foundation bottleneck with no pill and still has waiting days.

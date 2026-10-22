@@ -24,6 +24,7 @@ First-hour sim: 10 seeds, 12 months
         first win day 140 (wild_boar), style bought day -
 Medians (day): QR1 14, QR3 139, QR9 295 (1/10 seeds reached it), sect 14; injuries 0; fights won 1, lost 0, fled 0; 5.4 log lines/month
 First win: median day 14, seeds with no win in 12 months: 0; first-win foes: { "wild_boar": 10 }; median style day -1 (0 seeds)
+Road encounters (QA-118): 0/10 seeds met one; {  }
 Lines by category: { "warning": 56, "danger": 36, "info": 336, "progress": 232, "karma": 1 }
 
 ## first hour, curious player (seeds 1-10)
@@ -53,6 +54,7 @@ First-hour sim (curious player): 10 seeds, 12 months
 Medians (day): QR1 14, QR3 239, QR9 451 (1/10 seeds reached it), sect 14; injuries 0; fights won 15, lost 4, fled 0; 24.7 log lines/month
 First win: median day 14, seeds with no win in 12 months: 0; first-win foes: { "wild_boar": 9, "mountain_bandit": 1 }; median style day 40 (10 seeds)
 Distinct action kinds per month: 5.7; months after the first with no log lines: 0
+Road encounters (QA-118): 6/10 seeds met one; { "road_highwayman": 2, "road_wandering_boxer": 1, "road_caravan_fire": 3, "road_overturned_cart": 2, "road_talisman_peddler": 2, "road_milestone_carver": 1, "road_rain_shelter": 2, "road_lost_child": 1 }
 Lines by category: { "warning": 181, "danger": 383, "info": 1291, "progress": 1075, "karma": 136, "world": 6 }
 
 ## log noise (seeds 1-5, 12 months)

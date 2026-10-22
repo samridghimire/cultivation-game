@@ -45,6 +45,8 @@ func _run() -> void:
 	var win_enemies := {}
 	var by_cat := {}
 	var kinds_all: Array = []
+	var road_seen := {}
+	var road_seeds := 0
 	var zero_months := 0
 	print("First-hour sim%s: %d seeds, %d months" % [" (curious player)" if curious else "", seeds, months])
 	print("  seed  QR1  QR3  QR9  sect  injuries  won  lost  fled  lines/month")
@@ -72,6 +74,10 @@ func _run() -> void:
 			bus2.combat_started.disconnect(on_start)
 			bus2.combat_finished.disconnect(on_end)
 		var total := 0
+		if not r["road"].is_empty():
+			road_seeds += 1
+		for rid: String in r["road"]:
+			road_seen[rid] = int(road_seen.get(rid, 0)) + 1
 		for k: int in r["kinds"]:
 			kinds_all.append(k)
 		for m in range(1, r["month_lines"].size()):
@@ -109,5 +115,6 @@ func _run() -> void:
 		for k: int in kinds_all:
 			sum += k
 		print("Distinct action kinds per month: %.1f; months after the first with no log lines: %d" % [float(sum) / maxi(1, kinds_all.size()), zero_months])
+	print("Road encounters (QA-118): %d/%d seeds met one; %s" % [road_seeds, seeds, str(road_seen)])
 	print("Lines by category: %s" % str(by_cat))
 	quit()
