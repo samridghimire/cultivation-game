@@ -10,6 +10,9 @@ const STATUS_MARGIN := 8.0  ## Gap kept between the status panel and the log.
 const LIFESPAN_WARNING := 0.15
 const LIFESPAN_DANGER := 0.05
 
+## The hint lines changed (WU-280: the world marks the place the first one names).
+signal hints_changed
+
 var _age: Label
 var _breakthrough_details: String = ""
 var _status: Label
@@ -530,6 +533,7 @@ func _refresh() -> void:
 	_hunt.tooltip_text = hunt
 	_hunt.visible = hunt != ""
 	_hint_lines = hints
+	hints_changed.emit()
 	_set_hint_text(hints)
 	_fit_status_panel.call_deferred()
 
@@ -610,6 +614,11 @@ func _fit_status_panel() -> void:
 		if label == _key_bar or label.visible:
 			label.visible = false
 	_status_panel.reset_size()
+
+
+## The first hint line the status panel is showing, "" when none (WU-280).
+func first_hint() -> String:
+	return _hint_lines[0] if not _hint_lines.is_empty() else ""
 
 
 func _set_hint_text(lines: PackedStringArray) -> void:

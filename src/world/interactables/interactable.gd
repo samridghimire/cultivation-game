@@ -33,6 +33,8 @@ var label_offset := Vector2.ZERO
 const LABEL_FONT_SIZE := 14
 ## Draws the name label above every sibling building (WU-278).
 var _label_node: Node2D
+## The top hint names this place: a gold "!" is drawn above its label (WU-280).
+var hinted := false
 
 
 func _ready() -> void:
@@ -121,6 +123,28 @@ func label_rect(text: String = "") -> Rect2:
 	var w := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, LABEL_FONT_SIZE).x
 	var h := font.get_height(LABEL_FONT_SIZE)
 	return Rect2(position + Vector2(-w / 2.0, -size.y / 2.0 - 8.0 - h * 0.8) + label_offset, Vector2(w, h))
+
+
+## The names in `names` that appear in `hint`, longest first; a name inside an already-counted longer one
+## (e.g. "Clinic" within "Village Clinic") is not counted again (WU-280).
+static func hinted_names(hint: String, names: Array) -> Array:
+	var sorted := names.duplicate()
+	sorted.sort_custom(func(a: String, b: String) -> bool: return a.length() > b.length())
+	var found: Array = []
+	var rest := hint
+	for n: String in sorted:
+		if n != "" and not found.has(n) and rest.contains(n):
+			found.append(n)
+			rest = rest.replace(n, "")
+	return found
+
+
+## Sets or clears `hinted`, redrawing only when it changed.
+func set_hinted(value: bool) -> void:
+	if hinted == value:
+		return
+	hinted = value
+	_redraw_label()
 
 
 ## Lifts the labels of `nodes` (in order) until none overlaps an earlier one.
@@ -216,8 +240,6 @@ func _redraw_label() -> void:
 
 ## Draws the name label on the label layer (WU-278).
 func _draw_label() -> void:
-	if not label_visible(highlighted):
-		return
 	var font := ThemeDB.fallback_font
 	var text := label_text()
 	var text_width := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, LABEL_FONT_SIZE).x
@@ -225,6 +247,15 @@ func _draw_label() -> void:
 	if is_inside_tree():
 		var view := _view_rect_local()
 		left = clamp_label_left(left, text_width, view.position.x, view.end.x)
+	if hinted:
+		# A gold badge with a dark "!" above the label.
+		var center := Vector2(left + text_width / 2.0, -size.y / 2.0 - 8.0 + label_offset.y - LABEL_FONT_SIZE - 10.0)
+		_label_node.draw_circle(center, 10.0, UIStyle.ACCENT)
+		_label_node.draw_arc(center, 10.0, 0.0, TAU, 24, Color(0.1, 0.08, 0.04), 1.5)
+		var mw := font.get_string_size("!", HORIZONTAL_ALIGNMENT_LEFT, -1, 16).x
+		_label_node.draw_string(font, center + Vector2(-mw / 2.0, 6.0), "!", HORIZONTAL_ALIGNMENT_LEFT, -1, 16, Color(0.1, 0.08, 0.04))
+	if not label_visible(highlighted):
+		return
 	_label_node.draw_string(font, Vector2(left, -size.y / 2.0 - 8.0 + label_offset.y), text, HORIZONTAL_ALIGNMENT_LEFT, -1, LABEL_FONT_SIZE, label_color())
 
 

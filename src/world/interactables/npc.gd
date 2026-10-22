@@ -250,10 +250,10 @@ func _gift_options() -> Array[Dictionary]:
 			return tastes[a] > tastes[b]
 		return String(data.items.get(a, {}).get("name", a)) < String(data.items.get(b, {}).get("name", b)))
 	for item_id: String in ids:
-		var hinted: bool = tastes[item_id] == 0.5
-		var taste: int = 0 if hinted else int(tastes[item_id])
+		var fond: bool = tastes[item_id] == 0.5
+		var taste: int = 0 if fond else int(tastes[item_id])
 		var item_name: String = data.items.get(item_id, {}).get("name", item_id)
-		var suffix := " (liked)" if taste > 0 else (" (disliked)" if taste < 0 else (" (they are fond of these)" if hinted else ""))
+		var suffix := " (liked)" if taste > 0 else (" (disliked)" if taste < 0 else (" (they are fond of these)" if fond else ""))
 		var favor_gain := Family.gift_favor_preview(data, item_id, taste)
 		var label := "%s x%d%s (%+d favor)" % [item_name, p.item_count(item_id), suffix, favor_gain]
 		var reason := Family.check_gift(p, npc, favor, item_id, data)
@@ -261,7 +261,7 @@ func _gift_options() -> Array[Dictionary]:
 		if taste != 0:
 			entry["color"] = UIStyle.ACCENT if taste > 0 else UIStyle.CATEGORY_COLORS["danger"]
 			entry["description"] = "%s %s: %+d favor." % [npc.name, "treasures this" if taste > 0 else "dislikes this", favor_gain]
-		elif hinted:
+		elif fond:
 			entry["color"] = UIStyle.HINT
 		options.append(entry)
 	options.append({"label": "Back (favor %d)" % favor, "action": _set_gift_mode.bind(false), "keep_open": true})

@@ -139,3 +139,24 @@ func test_label_layer_sits_above_buildings() -> void:
 	(Engine.get_main_loop() as SceneTree).root.add_child(n)
 	assert_true(n._label_node.z_index > 0, "label node must draw above siblings")
 	n.queue_free()
+
+
+func test_hinted_names_finds_names_in_the_hint() -> void:
+	var hint := "The Village Clinic treats it for 10 stones."
+	assert_eq(Interactable.hinted_names(hint, ["Village Clinic", "Village Herb Seller"]), ["Village Clinic"])
+	assert_eq(Interactable.hinted_names("", ["Village Clinic"]), [])
+
+
+func test_hinted_names_prefers_the_longer_name() -> void:
+	var hint := "The Village Clinic treats it."
+	assert_eq(Interactable.hinted_names(hint, ["Clinic", "Village Clinic"]), ["Village Clinic"])
+	assert_eq(Interactable.hinted_names("Try the Clinic.", ["Clinic", "Village Clinic"]), ["Clinic"])
+
+
+func test_set_hinted_only_changes_on_a_new_value() -> void:
+	var n := _npc("Aa", Vector2(10, 10))
+	n.set_hinted(true)
+	assert_true(n.hinted)
+	n.set_hinted(false)
+	assert_false(n.hinted)
+	n.free()

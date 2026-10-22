@@ -64,6 +64,10 @@ func _ready() -> void:
 	_build_npcs()
 	_build_bounds()
 	_limit_camera()
+	var hud := get_node_or_null("HUD")
+	if hud != null:
+		hud.hints_changed.connect(_mark_hinted.bind(hud))
+		_mark_hinted(hud)
 	EventBus.ui_modal_changed.connect(func(is_open: bool): player.input_enabled = not is_open)
 	EventBus.region_changed.connect(_on_region_changed)
 	get_tree().auto_accept_quit = false
@@ -267,6 +271,15 @@ func _build_npcs() -> void:
 	var all: Array = get_children().filter(func(n: Node) -> bool: return n is Interactable)
 	Interactable.spread_labels(all)
 	Interactable.clamp_labels(all, Rect2(Vector2.ZERO, map_size))
+
+
+## Puts the gold marker on the places the HUD's first hint names (WU-280).
+func _mark_hinted(hud: Node) -> void:
+	var nodes: Array = get_children().filter(func(n: Node) -> bool: return n is Interactable)
+	var names: Array = nodes.map(func(n: Interactable) -> String: return n.display_name)
+	var hit := Interactable.hinted_names(hud.first_hint(), names)
+	for node: Interactable in nodes:
+		node.set_hinted(hit.has(node.display_name))
 
 
 ## Generated NPCs (Npcs.spawn, no def) stand at the region's npc_spots (the
