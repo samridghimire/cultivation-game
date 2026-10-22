@@ -158,6 +158,22 @@ static func hinted_targets(hint: String, nodes: Array, data: GameData, region_id
 	return nodes.filter(func(n: Interactable) -> bool: return "hint_region" in n)
 
 
+## Display names of what the world marks in `region_id`: data places plus the NPCs it spawns there (WU-293).
+## Mirrors World._build_npcs / _build_generated_npcs so the HUD badge and the world marker agree.
+static func region_marker_names(data: GameData, npcs: Dictionary, region_id: String, player: CharacterData = null) -> Array:
+	var names: Array = []
+	var region: Dictionary = data.regions.get(region_id, {})
+	for place: Dictionary in region.get("places", []):
+		names.append(str(place.get("display_name", "")))
+	for c in Npcs.in_region(npcs, data, region_id):
+		if data.npcs.has(c.id):
+			var def: Dictionary = data.npcs[c.id]
+			names.append("%s (%s)" % [c.name, def["title"]] if def.has("title") else c.name)
+		else:
+			names.append("%s (%s)" % [c.name, Npcs.world_title(c, player, data)])
+	return names
+
+
 ## Sets or clears `hinted`, redrawing only when it changed.
 func set_hinted(value: bool) -> void:
 	if hinted == value:

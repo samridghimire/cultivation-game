@@ -134,3 +134,30 @@ func test_first_hint_badge_only_when_a_place_is_named() -> void:
 	assert_true(not hud.get("_hint_badge").visible, "no badge otherwise")
 	hud.queue_free()
 	gs.end_session()
+
+
+func test_first_hint_badge_for_a_hint_naming_only_an_npc() -> void:
+	var root := _tree().root
+	var gs: Node = root.get_node("GameState")
+	gs.start_session(CharacterFactory.create("Lin", gs.data, seeded_rng(5), "male"))
+	var here := ""
+	var elsewhere := ""
+	for c in gs.npcs.values():
+		if not c.alive or gs.data.npcs.has(c.id):
+			continue
+		var name := "%s (%s)" % [c.name, Npcs.world_title(c, gs.player, gs.data)]
+		if Npcs.region_of(c, gs.data) == gs.current_region:
+			here = name
+		elif elsewhere == "":
+			elsewhere = name
+	assert_true(here != "" and elsewhere != "", "world has generated NPCs here and elsewhere")
+	var names := Interactable.region_marker_names(gs.data, gs.npcs, gs.current_region, gs.player)
+	assert_true(HudScript.first_hint_names_place("%s here would spar with you." % here, names))
+	assert_true(not HudScript.first_hint_names_place("%s here would spar with you." % elsewhere, names))
+	var hud: CanvasLayer = load("res://src/ui/hud.tscn").instantiate()
+	root.add_child(hud)
+	await _frames()
+	hud.call("_set_hint_text", PackedStringArray(["%s here would spar with you." % here]))
+	assert_true(hud.get("_hint_badge").visible, "badge shown for an NPC-only hint")
+	hud.queue_free()
+	gs.end_session()

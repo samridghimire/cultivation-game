@@ -635,13 +635,9 @@ func _set_hint_text(lines: PackedStringArray) -> void:
 	_hint.text = "\n".join(out)
 
 
-## Names of the places in the current region (what the world marks with its "!" badge).
+## Names of the places and NPCs in the current region (what the world marks with its "!" badge).
 func _region_place_names() -> Array:
-	var names: Array = []
-	var region: Dictionary = GameState.data.regions.get(GameState.current_region, {})
-	for place: Dictionary in region.get("places", []):
-		names.append(str(place.get("display_name", "")))
-	return names
+	return Interactable.region_marker_names(GameState.data, GameState.npcs, GameState.current_region, GameState.player)
 
 
 ## True when `hint` names any of `names` (WU-284; the same check the world uses to mark places).
