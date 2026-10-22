@@ -1537,7 +1537,10 @@ static func _loot_armor_hint(c: CharacterData, data: GameData, region_id: String
 static func practice_payoff(c: CharacterData, data: GameData, tech_id: String, region_id: String, today: int, flags: Dictionary = {}) -> Dictionary:
 	if region_id == "" or today < 0 or not Techniques.knows(c, tech_id) or Techniques.is_mastered(c, data, tech_id):
 		return {}
-	var upgraded := CharacterData.from_dict(c.to_dict())
+	# GUIDE-095: rated unhurt, so an injury the clinic fixes is not credited to practice.
+	var unhurt := CharacterData.from_dict(c.to_dict())
+	unhurt.injuries.clear()
+	var upgraded := CharacterData.from_dict(unhurt.to_dict())
 	upgraded.techniques[tech_id] = {"level": Techniques.level(c, tech_id) + 1, "xp": 0.0}
 	var tags: Array = data.regions.get(region_id, {}).get("encounter_tags", [])
 	var best: Dictionary = {}
@@ -1547,7 +1550,7 @@ static func practice_payoff(c: CharacterData, data: GameData, tech_id: String, r
 			break
 		rated += 1
 		var foe: Dictionary = data.enemies[enemy_id]
-		var now := Combat.win_chance(c, data, foe)
+		var now := Combat.win_chance(unhurt, data, foe)
 		var next := Combat.win_chance(upgraded, data, foe)
 		if now < FAIR_FIGHT_MIN_CHANCE and next >= 0.5 and next - now >= 0.1 and next > float(best.get("next", 0.0)):
 			best = {"enemy": String(foe.get("name", enemy_id)), "now": now, "next": next, "level": Techniques.level(c, tech_id) + 1}

@@ -1226,6 +1226,24 @@ func test_practice_payoff_names_the_fight_the_next_level_opens() -> void:
 	assert_false(Guidance.practice_hint(c, data()).contains("you would beat"), "no region: old text")
 
 
+## GUIDE-095: the payoff is rated unhurt, so an injury never makes practice look like the cure.
+func test_practice_payoff_ignores_injuries() -> void:
+	var c := _payoff_fighter()
+	assert_true(c != null)
+	var healthy := Guidance.practice_payoff(c, data(), "iron_fist", "misty_forest", 10)
+	Injuries.inflict(c, data(), "broken_bones")
+	var hurt := Guidance.practice_payoff(c, data(), "iron_fist", "misty_forest", 10)
+	assert_eq(hurt, healthy, "same payoff injured or not")
+	# A fighter who already wins the foe once healed gets no payoff for it.
+	var strong := _fresh()
+	strong.realm_index = 1
+	strong.stage = 8
+	strong.techniques = {"iron_fist": {"level": 1, "xp": 0.0}}
+	var plain := Guidance.practice_hint(strong, data(), "misty_forest", 10)
+	Injuries.inflict(strong, data(), "broken_bones")
+	assert_eq(Guidance.practice_hint(strong, data(), "misty_forest", 10), plain, "injury changes nothing")
+
+
 func test_practice_payoff_is_empty_when_mastered_unknown_or_unplaced() -> void:
 	var c := _payoff_fighter()
 	assert_true(c != null)
