@@ -2,6 +2,19 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-22 [C-176] Help says a fighting style's first levels come quickly.
+- 2026-10-22 [C-179] Helping people in Fallen Star Market and Azure Peak raises your renown there.
+- 2026-10-22 [WU-274] The Techniques screen's new buttons checked for gamepad focus.
+- 2026-10-22 [WU-272] Place names at the screen edge confirmed whole at Steam Deck sizes.
+- 2026-10-22 [GUIDE-088] The armor hint counts what your loot would sell for.
+- 2026-10-22 [WU-270] The Techniques screen says which fight the next level would let you win.
+- 2026-10-22 [GUIDE-078] The buy-ingredient hint warns when buying supplies makes a craft barely pay.
+- 2026-10-22 [GUIDE-085] The open sect-trial hint gives your odds against the examiner.
+- 2026-10-22 [GUIDE-091] The injury hint says how much cultivation waiting it out would cost.
+- 2026-10-22 [QA-126] The first-year sim no longer accepts hopeless rival duels and bounty hunts blind.
+- 2026-10-22 [GUIDE-086] The practice hint names the fight the next technique level would open.
+- 2026-10-22 [WU-273] A screenshot case for the Techniques screen; the practice button fits at Steam Deck sizes.
+- 2026-10-22 [GUIDE-089] The open-trial hint puts the stipend inside the sentence (review fix).
 - 2026-10-22 [GUIDE-087] The journal's "Fights you can win" lists an open sect promotion trial.
 - 2026-10-22 [C-173] Help's Injuries and Healing page says where to heal.
 - 2026-10-22 [WU-268] The longer practice, qi-spot and sect-pay hints checked on screen at Steam Deck sizes.
