@@ -40,6 +40,7 @@ extends SceneTree
 ## Pill plus a Flawless one (pill_a_window.png), and the HUD hint panel with no pill (pill_b_hint.png).
 
 ## WU-240: `--pill-shot` also writes tt_pill_a_window.png / tt_pill_b_hint.png for a Mahayana Peak player (Heavenly Tribulation Pills). The window fits at 1280x720 and 1280x800; the long hint is hidden by _fit_status_panel (too tall for the panel at both sizes), so the HUD shows no hint line there.
+## WU-266: re-run after WU-257 at 1280x720 and 1280x800: tt_pill_b_hint now shows the hint in the HUD panel (wrapped, "> You are ready to break through ... ready shield talismans."), nothing clipped.
 
 ## WU-225: append `-- --inherit-shot` for a Body Integration Early player in Withered Bone Marsh at the Hollow of the
 ## Unbroken Body (C-136): the grounds menu and the journal's Opportunities with the realm trial next, then with the
