@@ -133,3 +133,26 @@ func test_mahayana_pill_is_brewable_and_scroll_is_an_auction_lot() -> void:
 		if String(lot["item"]) == "recipe_mahayana_pill":
 			found = true
 	assert_true(found)
+
+
+func test_tribulation_transcendence_pill_only_for_mahayana() -> void:
+	var c := new_character()
+	c.add_item("tribulation_transcendence_pill", 1)
+	c.realm_index = data().realm_index_of("body_integration")
+	assert_false(_use(c, "tribulation_transcendence_pill")["ok"])
+	c.realm_index = data().realm_index_of("mahayana")
+	assert_true(_use(c, "tribulation_transcendence_pill")["ok"])
+	assert_almost_eq(c.breakthrough_bonus, 0.25)
+
+
+func test_tribulation_transcendence_pill_is_brewable_and_scroll_is_an_auction_lot() -> void:
+	var r: Dictionary = data().recipes["tribulation_transcendence_pill"]
+	assert_eq(String(r["great_output"]["item"]), "flawless_tribulation_transcendence_pill")
+	assert_eq(int(r["min_rank"]), Professions.max_rank(data()))
+	assert_true(data().items["flawless_tribulation_transcendence_pill"]["effects"]["breakthrough_bonus"] > data().items["tribulation_transcendence_pill"]["effects"]["breakthrough_bonus"])
+	assert_eq(String(data().items["recipe_tribulation_transcendence_pill"]["effects"]["learn_recipe"]), "tribulation_transcendence_pill")
+	var found := false
+	for lot: Dictionary in data().auction_houses["fallen_star_auction"]["lot_table"]:
+		if String(lot["item"]) == "recipe_tribulation_transcendence_pill":
+			found = true
+	assert_true(found)

@@ -32,6 +32,7 @@ const BREAKTHROUGH_PILLS := {
 	"void_refinement": "void_refinement_pill",
 	"body_integration": "body_integration_pill",
 	"mahayana": "mahayana_pill",
+	"tribulation_transcendence": "tribulation_transcendence_pill",
 }
 ## Heal an injury at a clinic when more than this many days of it are left.
 const CLINIC_MIN_DAYS := 30

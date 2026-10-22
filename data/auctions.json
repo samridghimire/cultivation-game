@@ -27,7 +27,8 @@
         {"item": "star_river_sword", "count": 1, "base_price": 1800, "weight": 0.5, "rarity": "legendary"},
         {"item": "core_forming_pill", "count": 1, "base_price": 2500, "weight": 0.3, "rarity": "legendary"},
         {"item": "recipe_body_integration_pill", "count": 1, "base_price": 6000, "weight": 0.2, "rarity": "legendary"},
-        {"item": "recipe_mahayana_pill", "count": 1, "base_price": 14000, "weight": 0.15, "rarity": "legendary"}
+        {"item": "recipe_mahayana_pill", "count": 1, "base_price": 14000, "weight": 0.15, "rarity": "legendary"},
+        {"item": "recipe_tribulation_transcendence_pill", "count": 1, "base_price": 34000, "weight": 0.1, "rarity": "legendary"}
       ]
     }
   ]

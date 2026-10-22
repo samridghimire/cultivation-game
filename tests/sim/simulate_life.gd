@@ -29,6 +29,7 @@ const PILLS := {
 	"void_refinement": ["void_refinement_pill"],
 	"body_integration": ["body_integration_pill"],
 	"mahayana": ["mahayana_pill"],
+	"tribulation_transcendence": ["tribulation_transcendence_pill"],
 }
 const HEAVENLY_ELEMENTS := 1
 
