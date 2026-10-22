@@ -2642,10 +2642,7 @@ func test_armor_hint_points_to_the_nearest_market() -> void:
 func _gv74_fighter() -> CharacterData:
 	var c := _fresh()
 	c.techniques = {}
-	for id: String in data().techniques:
-		if data().techniques[id].kind == "combat":
-			c.techniques[id] = {"level": 2}
-			break
+	c.techniques = {"iron_fist": {"level": 2}}
 	return c
 
 
@@ -2654,6 +2651,15 @@ func test_empty_fair_fights_note_asks_for_practice() -> void:
 	var id: String = c.techniques.keys()[0]
 	var note := Guidance.empty_fair_fights_note(c, data())
 	assert_true(note.begins_with("Nothing here is in your favour yet: practise %s past level 3" % data().techniques[id].name), note)
+
+
+func test_empty_fair_fights_note_skips_mastered_technique() -> void:
+	var c := _gv74_fighter()
+	c.techniques["blood_demon_rage"] = {"level": data().techniques["blood_demon_rage"].max_level}
+	var note := Guidance.empty_fair_fights_note(c, data())
+	assert_true(note.contains("practise %s past level 3" % data().techniques["iron_fist"].name), note)
+	c.techniques["iron_fist"]["level"] = data().techniques["iron_fist"].max_level
+	assert_eq(Guidance.empty_fair_fights_note(c, data()), "Nothing here is in your favour yet: grow a stage.")
 
 
 func test_empty_fair_fights_note_prefers_thin_defence() -> void:

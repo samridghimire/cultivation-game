@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: fe1822e
+Last reviewed commit: efde69a
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -807,3 +807,19 @@ Last reviewed commit: fe1822e
     C-167's renown amounts are tested per choice; the ENC-006 banner fix covers them.
   - Notes, not filed: C-167's test skips road_lost_child's "carry her" choice (+5, needs CON 12). GUIDE-068/069 still
     quote the base item price, not the merchant's; GUIDE-072 (spec'd) covers Qingshi's empty "where".
+- 2026-10-22 (reviewer, 3rd run): reviewed fe1822e..efde69a (88c1487 WU-253, faea659 WU-255, 2e166a5 WU-254, af914f0 GUIDE-072,
+  7198e9b C-159, 9ebebd5 GUIDE-073, c8df013 GUIDE-075, cfdccdd C-171, 9073801 GUIDE-074, 8ece6ee GUIDE-080, 7cf29fe GUIDE-076,
+  41f0f05 QA-120, 6428f6e C-175, efde69a WU-257; [PLAN]/[REVIEW] commits skipped). Main green (2088 tests). No
+  BACKLOG/CHANGELOG edits by workers; no save-format changes. Nothing filed.
+  - Fixed ([REVIEW] commit): GUIDE-074's empty "Fights you can win" note told the player to "practise <X> past level N"
+    even when X was already at its max level (Blood Demon Rage has max_level 1; the GUIDE-074 test itself asserted
+    "past level 3" for it at level 2). It now skips mastered techniques and says only "grow a stage." when all are
+    mastered; the test fighter uses iron_fist and a new test covers both cases.
+  - Checked: GUIDE-073's merchant_price applies the place faction's reputation and the region's renown, like the shop
+    (minus world events, as documented); affordable_armor/heal_source/buy hint use it. GUIDE-072's nearest_selling is a
+    bounded Dijkstra over travellable routes; GUIDE-075/076 reuse it as spec'd. WU-254 rejects any lower stat. GUIDE-080's
+    row matches spec (thin-defence hint kept, reason in commit). WU-257 restores the full hint on every _refresh.
+    C-175 renown amounts tested per choice.
+  - Notes, not filed: C-171 moved the arbiter's stage (0 -> 1) instead of its attack because attack/hp barely move the
+    rate; it lands at 77%, under the 85-95% target (the commit explains). WU-257 did not re-run --pill-shot/--hint-shot
+    (WU-258 takes new hint shots). heal_source's neighbouring-clinic step still skips cost (GUIDE-077 is filed).

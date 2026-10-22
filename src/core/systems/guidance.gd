@@ -171,7 +171,7 @@ static func _thin_defence_missing(c: CharacterData, data: GameData) -> String:
 
 
 ## GUIDE-074: why "Fights you can win" is empty for a fighter: thin defence first, else the combat technique to
-## practise. "" when no combat technique is known (first_combat_hint covers that) or nothing useful applies.
+## practise (mastered ones skipped; only "grow a stage" when all are mastered). "" when no combat technique is known (first_combat_hint covers that) or nothing useful applies.
 static func empty_fair_fights_note(c: CharacterData, data: GameData) -> String:
 	if not Techniques.knows_kind(c, data, "combat"):
 		return ""
@@ -182,11 +182,13 @@ static func empty_fair_fights_note(c: CharacterData, data: GameData) -> String:
 	var best := ""
 	for tech_id: String in c.techniques:
 		var def: TechniqueDef = data.techniques.get(tech_id)
-		if def == null or def.kind != "combat":
+		if def == null or def.kind != "combat" or Techniques.is_mastered(c, data, tech_id):
 			continue
 		var lvl := Techniques.level(c, tech_id)
 		if best == "" or lvl > Techniques.level(c, best) or (lvl == Techniques.level(c, best) and tech_id < best):
 			best = tech_id
+	if best == "":
+		return lead + "grow a stage."
 	return lead + "practise %s past level %d or grow a stage." % [data.techniques[best].name, Techniques.level(c, best) + 1]
 
 
