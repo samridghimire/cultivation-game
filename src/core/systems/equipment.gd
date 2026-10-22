@@ -64,6 +64,11 @@ static func bonus(c: CharacterData, data: GameData, stat: String) -> int:
 	return total
 
 
+## The flat defense stat of one item (0 for an empty id or a non-equipment item).
+static func defense_of(data: GameData, item_id: String) -> int:
+	return int(data.items.get(item_id, {}).get("equip", {}).get("stats", {}).get("defense", 0))
+
+
 ## Years of lifespan the item drinks per fight (0 for ordinary equipment).
 static func item_drain(data: GameData, item_id: String) -> int:
 	return int(data.items.get(item_id, {}).get("equip", {}).get("lifespan_drain", 0))

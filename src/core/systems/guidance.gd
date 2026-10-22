@@ -44,7 +44,7 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 	if Children.is_pregnant(c):
 		var days := int(c.pregnancy.get("days_left", 0))
 		out.append("A child is due in %s." % Calendar.format_duration(days))
-	var thin := thin_defence_hint(c, data)
+	var thin := thin_defence_hint(c, data, region_id)
 	if thin != "":
 		out.append(thin)
 	var mortal_nudge := mortal_crafter_hint(c, data, region_id, today, flags)
@@ -123,7 +123,8 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 
 ## GUIDE-065: a Foundation cultivator with no body technique or no armor equipped hears that their defence is
 ## thin (QA-114: the curious player reaches Foundation with neither and wins 0-2% against its foes). "" otherwise.
-static func thin_defence_hint(c: CharacterData, data: GameData) -> String:
+## GUIDE-068: with a `region_id`, it also says where to get what is missing (affordable_armor, body_manual_source).
+static func thin_defence_hint(c: CharacterData, data: GameData, region_id: String = "") -> String:
 	if c.realm_index != THIN_DEFENCE_REALM:
 		return ""
 	var has_body := Techniques.knows_kind(c, data, "body")
@@ -135,9 +136,53 @@ static func thin_defence_hint(c: CharacterData, data: GameData) -> String:
 	if not has_body:
 		missing = "learn a body technique such as Stone Skin Tempering" + ("" if has_armor else " and wear armor")
 	var line := "Your defence is thin for Foundation foes: %s before fighting cultivators." % missing
+	if region_id != "":
+		if not has_armor:
+			var armor_id := affordable_armor(c, data, region_id)
+			if armor_id != "":
+				line += " The %s sells %s for %d stones." % [merchant_selling(data, region_id, armor_id), data.items[armor_id]["name"], int(data.items[armor_id].get("price", 0))]
+		if not has_body:
+			var source := body_manual_source(c, data, region_id)
+			if source != "":
+				line += " %s teaches one." % source
 	if Injuries.has_any(c):
 		line += " Heal your injuries before you fight."
 	return line
+
+
+## GUIDE-068: the armor item a merchant in `region_id` sells that beats what `c` wears (most defense, then
+## cheapest) and that `c` can pay for in spirit stones; "" when none.
+static func affordable_armor(c: CharacterData, data: GameData, region_id: String) -> String:
+	var worn := Equipment.defense_of(data, String(c.equipment.get("armor", "")))
+	var stones := c.item_count("spirit_stone")
+	var best := ""
+	for item_id: String in data.items:
+		if Equipment.slot_of(data, item_id) != "armor":
+			continue
+		var defense := Equipment.defense_of(data, item_id)
+		var price := int(data.items[item_id].get("price", 0))
+		if defense <= worn or price > stones or merchant_selling(data, region_id, item_id) == "":
+			continue
+		if best == "" or defense > Equipment.defense_of(data, best) or (defense == Equipment.defense_of(data, best) and price < int(data.items[best].get("price", 0))):
+			best = item_id
+	return best
+
+
+## GUIDE-068: "<Manual> (<Merchant>)" for a body-art manual `c` lacks that a merchant in `region_id` sells,
+## else "<Manual> (sect shop, N contribution)" from `c`'s sect shop; "" when neither exists.
+static func body_manual_source(c: CharacterData, data: GameData, region_id: String) -> String:
+	for item_id: String in data.items:
+		var tech_id := Items.manual_technique(data, item_id)
+		if tech_id == "" or data.techniques[tech_id].kind != "body" or Techniques.knows(c, tech_id):
+			continue
+		var merchant := merchant_selling(data, region_id, item_id)
+		if merchant != "":
+			return "%s (%s)" % [data.items[item_id]["name"], merchant]
+	for entry: Dictionary in Sects.shop_items(c, data):
+		var tech_id := Items.manual_technique(data, String(entry["item_id"]))
+		if tech_id != "" and data.techniques[tech_id].kind == "body" and not Techniques.knows(c, tech_id):
+			return "%s (sect shop, %d contribution)" % [data.items[entry["item_id"]]["name"], int(entry["contribution"])]
+	return ""
 
 
 ## GUIDE-054: a Mortal who practises a craft and has played MORTAL_CRAFTER_NUDGE_DAY days hears where to begin

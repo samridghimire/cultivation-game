@@ -426,3 +426,9 @@ static func item_plural(data: GameData, item_id: String, count: int) -> String:
 	if count != 1 and item.has("plural"):
 		return String(item["plural"])
 	return Text.plural(name, count)
+
+
+## The technique a manual item teaches ("" for any other item).
+static func manual_technique(data: GameData, item_id: String) -> String:
+	var id := String(data.items.get(item_id, {}).get("effects", {}).get("learn_technique", ""))
+	return id if data.techniques.has(id) else ""

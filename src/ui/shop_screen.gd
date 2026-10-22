@@ -262,8 +262,7 @@ static func max_quantity(c: CharacterData, data: GameData, item_id: String, sell
 
 ## The technique id an item's `learn_technique` effect names, or "" (WU-118).
 static func manual_technique(data: GameData, item_id: String) -> String:
-	var id := String(data.items.get(item_id, {}).get("effects", {}).get("learn_technique", ""))
-	return id if data.techniques.has(id) else ""
+	return Items.manual_technique(data, item_id)
 
 
 static func kind_word(kind: String) -> String:

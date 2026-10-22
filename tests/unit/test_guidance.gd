@@ -2414,3 +2414,41 @@ func test_heal_source_names_item_clinic_or_fallback() -> void:
 	# No region: old wording
 	assert_eq(Guidance.heal_source(c, data(), ""), "")
 	assert_true(_has(Guidance.hints(c, data(), 1.0, 20), "Use a healing item or see a doctor."))
+
+
+func test_thin_defence_hint_names_where_to_get_armor() -> void:
+	var c := _fresh()
+	c.realm_index = Guidance.THIN_DEFENCE_REALM
+	c.techniques = {}
+	c.equipment = {}
+	c.inventory = {"spirit_stone": 200}
+	var armor_id := Guidance.affordable_armor(c, data(), "myriad_peaks_ridge")
+	assert_true(armor_id != "", "200 stones buy armor at the Ridge stall")
+	assert_eq(Equipment.slot_of(data(), armor_id), "armor")
+	var line := Guidance.thin_defence_hint(c, data(), "myriad_peaks_ridge")
+	assert_true(line.contains("Ridge Hermit's Stall sells %s for %d stones" % [data().items[armor_id]["name"], int(data().items[armor_id]["price"])]), line)
+	assert_false(Guidance.thin_defence_hint(c, data()).contains("sells"), "region omitted keeps the old line")
+	assert_eq(Guidance.affordable_armor(c, data(), "qingshi_village"), "", "Qingshi's merchant stocks no armor")
+	c.inventory = {}
+	assert_eq(Guidance.affordable_armor(c, data(), "myriad_peaks_ridge"), "")
+	assert_false(Guidance.thin_defence_hint(c, data(), "myriad_peaks_ridge").contains(" stones."), "no stones, no armor sentence")
+
+
+func test_thin_defence_hint_names_a_body_manual_source() -> void:
+	var c := _fresh()
+	c.realm_index = Guidance.THIN_DEFENCE_REALM
+	c.techniques = {}
+	c.inventory = {"spirit_stone": 200}
+	c.equipment = {"armor": "jade_scale_armor"}
+	var source := Guidance.body_manual_source(c, data(), "myriad_peaks_ridge")
+	var line := Guidance.thin_defence_hint(c, data(), "myriad_peaks_ridge")
+	if source == "":
+		assert_false(line.contains("teaches one"), line)
+	else:
+		assert_true(line.ends_with(" %s teaches one." % source), line)
+		assert_false(line.contains("sells"), "armor is worn, so no armor sentence: " + line)
+	c.techniques["stone_skin"] = {"level": 1, "xp": 0.0}
+	assert_eq(Guidance.thin_defence_hint(c, data(), "myriad_peaks_ridge"), "", "armor and a body art")
+	c.sect = {"id": "azure_cloud_sect", "rank": 0, "contribution": 0, "spent": 0, "month_earned": 0}
+	c.techniques = {}
+	assert_eq(Guidance.body_manual_source(c, data(), "nowhere"), "Manual: Stone Skin Tempering (sect shop, 45 contribution)")
