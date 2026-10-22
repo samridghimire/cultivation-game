@@ -376,6 +376,16 @@
       {"label": "Ask him to show you how a wolf lunges", "text": "He plays the wolf with a stick and you the prey, over and over, until your feet know when to give ground and when to strike.", "days": 6, "effects": {"practice_days": 6}},
       {"label": "Read the sign yourself and answer his test", "text": "You study the marks, name the wolf's weak side, and the old hunter grunts, impressed. He spends ten days drilling you in turning a lunge aside.", "days": 10, "requires": {"min_attributes": {"comprehension": 12}}, "effects": {"practice_days": 10}},
       {"label": "Help him carry his pelts to the road", "text": "The bundle is heavy and smells of the forest. At the road he presses two stones into your hand and a word of thanks.", "effects": {"items": {"spirit_stone": 2}}}
+    ]},
+    {"id": "village_outer_chore_swap", "tags": ["village"], "weight": 1, "kind": "neutral", "days": 1, "min_realm": "qi_refining", "min_stage": 2, "text": "A tired young man in an outer disciple's grey robe is sitting on the well's rim with a bucket between his boots. \"Fourth day of latrine duty and the steward wants the herb beds weeded by dusk,\" he says. \"You look like you have an afternoon to spare. Sect rules say nobody checks who does it, as long as it is done.\"", "choices": [
+      {"label": "Weed the herb beds for him", "text": "You spend three days on your knees in the dirt. He is so grateful he tells the whole village, and the headman nods at you in the lane afterwards.", "days": 3, "renown": 3, "effects": {"alignment": 3}},
+      {"label": "Ask a few stones for the trouble", "text": "He grimaces, counts out his pay, and hands it over without meeting your eyes. The weeding is done by dusk, and the village hears who charged for it.", "days": 1, "effects": {"items": {"spirit_stone": 4}, "alignment": -5}},
+      {"label": "Wish him luck and move on", "text": "He sighs, picks up the bucket, and trudges off toward the beds."}
+    ]},
+    {"id": "village_old_boxer_spar", "tags": ["village"], "weight": 1, "kind": "neutral", "days": 1, "min_realm": "qi_refining", "min_stage": 2, "text": "An old man with knuckles like walnuts is working a post by the threshing floor, shirt off in the cold. He grins when he sees you. \"A cultivator. Humour an old caravan guard: three rounds, no killing. If you stay on your feet I will pay you in herbs from my garden.\"", "choices": [
+      {"label": "Spar with the old boxer", "text": "He hits like a mule and moves like a cat, and for three rounds you trade blows over the frozen dirt.", "days": 1, "enemy": "village_boxer", "renown": 3},
+      {"label": "Watch him work the post instead", "text": "You sit on a barrel and study how he turns his hip into each blow. It is a small thing, but you carry it away.", "days": 2, "effects": {"qi": 20}},
+      {"label": "Decline politely", "text": "He shrugs and goes back to his post. \"Everybody young is busy,\" he says to the post."}
     ]}
 ]
 }

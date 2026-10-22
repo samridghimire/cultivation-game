@@ -933,3 +933,27 @@ func test_rival_duel_choice_has_odds_only_with_people() -> void:
 	var with_rival := Exploration.choices(c, d, d.encounters["test_duel"], {}, people)
 	assert_true(with_rival[0]["chance"] >= 0.0 and with_rival[0]["chance"] <= 1.0)
 	assert_eq(Exploration.choices(c, d, d.encounters["test_duel"], {})[0]["chance"], -1.0)
+## C-184: two village encounters for the middle Qi Refining months.
+func _village_ids_at(stage: int) -> Array:
+	var d := data()
+	var c := CharacterFactory.create("Wanderer", d, seeded_rng())
+	c.realm_index = d.realm_index_of("qi_refining")
+	c.stage = stage
+	var ids: Array = []
+	for e: Dictionary in Exploration.eligible_encounters(c, d, ["village"], {}):
+		ids.append(e["encounter"]["id"])
+	return ids
+
+
+func test_village_middle_qi_refining_encounters() -> void:
+	var d := data()
+	for id in ["village_outer_chore_swap", "village_old_boxer_spar"]:
+		assert_true(d.encounters.has(id), id + " exists")
+		assert_true(_village_ids_at(2).has(id), id + " eligible at the 3rd Layer")
+		assert_false(_village_ids_at(1).has(id), id + " not eligible at the 2nd Layer")
+	var boxer: Dictionary = d.enemies["village_boxer"]
+	assert_false(bool(boxer["lethal"]), "the boxer never kills")
+	var chosen := false
+	for ch: Dictionary in d.encounters["village_old_boxer_spar"]["choices"]:
+		chosen = chosen or ch.get("enemy", "") == "village_boxer"
+	assert_true(chosen, "a choice spars the boxer")

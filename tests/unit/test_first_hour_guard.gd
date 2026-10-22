@@ -45,7 +45,8 @@ func test_qingshi_forced_fights_are_winnable_for_newcomers() -> void:
 		if enc.has("enemy") and not data().enemies.get(String(enc["enemy"]), {}).get("lethal", false):
 			foes.append(String(enc["enemy"]))
 		for choice: Dictionary in enc.get("choices", []):
-			if choice.has("enemy"):
+			# C-184: an optional sparring bout (a `spar` enemy, never lethal) may be tuned for trained fighters.
+			if choice.has("enemy") and not data().enemies.get(String(choice["enemy"]), {}).get("spar", false):
 				foes.append(String(choice["enemy"]))
 		var min_realm := maxi(0, data().realm_index_of(String(enc.get("min_realm", "mortal"))))
 		var max_realm := data().realm_index_of(String(enc["max_realm"])) if enc.has("max_realm") else 99
