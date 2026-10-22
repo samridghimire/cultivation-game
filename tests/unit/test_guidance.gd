@@ -2392,3 +2392,25 @@ func test_goal_ladder_reads_the_realm_goal_table() -> void:
 		assert_eq(c.realm_index, int(row["index"]), "%s index matches realms.json" % realm_id)
 		assert_eq(Guidance.goal_ladder_id(c), row["ladder"], realm_id)
 		assert_true(not Guidance.goal_ladder(String(row["ladder"]), c, data(), {}).is_empty(), "%s ladder has goals" % realm_id)
+
+
+func test_heal_source_names_item_clinic_or_fallback() -> void:
+	var c := _fresh()
+	Injuries.inflict(c, data(), "broken_bones")
+	c.inventory = {}
+	# Matching item owned
+	c.inventory["bone_setting_salve"] = 1
+	assert_eq(Guidance.heal_source(c, data(), "qingshi_village"), "use your Bone-Setting Salve")
+	# Non-matching item is not named
+	c.inventory = {"meridian_mending_pill": 1, "spirit_stone": 500}
+	var line := Guidance.heal_source(c, data(), "qingshi_village")
+	assert_false(line.contains("Meridian"), line)
+	assert_true(line.contains("Village Clinic treats it for"), line)
+	var hint := Guidance.hints(c, data(), 1.0, 20, {}, {}, "qingshi_village")
+	assert_true(_has(hint, "The Village Clinic treats it for"))
+	# No stones: not the clinic
+	c.inventory = {}
+	assert_false(Guidance.heal_source(c, data(), "qingshi_village").contains("Village Clinic treats it for"))
+	# No region: old wording
+	assert_eq(Guidance.heal_source(c, data(), ""), "")
+	assert_true(_has(Guidance.hints(c, data(), 1.0, 20), "Use a healing item or see a doctor."))

@@ -34,7 +34,9 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 	if years <= LIFESPAN_WARNING_YEARS:
 		out.append("Only %d %s of life remain. Break through to a higher realm or find a longevity treasure." % [years, "year" if years == 1 else "years"])
 	if Injuries.has_any(c):
-		out.append("Treat your injuries (%s): they slow your cultivation to x%s. Use a healing item or see a doctor." % [", ".join(Injuries.describe(c, data)), String.num(Injuries.cultivation_multiplier(c, data), 2)])
+		var heal := heal_source(c, data, region_id)
+		heal = heal.substr(0, 1).to_upper() + heal.substr(1) + "." if heal != "" else "Use a healing item or see a doctor."
+		out.append("Treat your injuries (%s): they slow your cultivation to x%s. %s" % [", ".join(Injuries.describe(c, data)), String.num(Injuries.cultivation_multiplier(c, data), 2), heal])
 	if Sects.duty_days_left(c) <= Sects.DUTY_REMINDER_DAYS:
 		var duty := Sects.duty_reminder(c, data)
 		if duty != "":
@@ -210,6 +212,41 @@ static func merchant_selling(data: GameData, region_id: String, item_id: String)
 		if String(p.get("type", "")) == "merchant" and Items.merchant_sells(data, item, p.get("stock_tags", []), int(p.get("max_price", 0))):
 			return String(p.get("display_name", "merchant"))
 	return ""
+
+
+## GUIDE-071: where c's first injury can be healed, as a clause ("use your X", "the Y treats it for N stones");
+## "" when no source is known or region_id is empty.
+static func heal_source(c: CharacterData, data: GameData, region_id: String) -> String:
+	if region_id == "" or not Injuries.has_any(c):
+		return ""
+	var injury_id := String(c.injuries.keys()[0])
+	var stones := c.item_count("spirit_stone")
+	for item_id: String in c.inventory:
+		if c.item_count(item_id) > 0 and _heals(data, item_id, injury_id):
+			return "use your %s" % String(data.items[item_id].get("name", item_id))
+	var places: Array = data.regions.get(region_id, {}).get("places", [])
+	var cost := Medicine.clinic_cost(c, data, injury_id)
+	for p: Dictionary in places:
+		if String(p.get("type", "")) == "clinic" and cost <= stones:
+			return "the %s treats it for %s" % [p.get("display_name", "clinic"), "%d stones" % cost]
+	for p: Dictionary in places:
+		if String(p.get("type", "")) != "merchant":
+			continue
+		for item_id: String in data.items:
+			var item: Dictionary = data.items[item_id]
+			if _heals(data, item_id, injury_id) and int(item.get("price", 0)) <= stones and Items.merchant_sells(data, item, p.get("stock_tags", []), int(p.get("max_price", 0))):
+				return "the %s sells %s for %d stones" % [p.get("display_name", "merchant"), item.get("name", item_id), int(item["price"])]
+	for p: Dictionary in data.regions.get(region_id, {}).get("routes", []):
+		var to := String(p.get("to", ""))
+		for q: Dictionary in data.regions.get(to, {}).get("places", []):
+			if String(q.get("type", "")) == "clinic":
+				return "the %s in %s treats it" % [q.get("display_name", "clinic"), data.regions[to].get("name", to)]
+	return ""
+
+
+static func _heals(data: GameData, item_id: String, injury_id: String) -> bool:
+	var heals := String(data.items.get(item_id, {}).get("effects", {}).get("heal_injury", ""))
+	return heals != "" and (heals == "all" or heals == injury_id)
 
 
 ## Shared by the Mortal and idle-crafter hints: the region's best qi spot (or a generic one), the qi still
