@@ -24,6 +24,10 @@ var _hunt: Label
 var _fair: Label
 var _fair_queued := false
 var _log: RichTextLabel
+var _last_text: String = ""
+var _last_category: String = ""
+var _repeat: int = 0
+var _log_lines: Array[String] = []  ## BBCode of each HUD log line, for collapsing repeats.
 var _status_panel: Control
 var _log_panel: Control
 var _fade_timer := 0.0
@@ -647,11 +651,34 @@ static func bottleneck_hint(c: CharacterData, data: GameData) -> String:
 	return ""
 
 
+## The log line for a message seen `repeat` times in a row ("text", "text (x2)", ...).
+static func collapsed_line(text: String, repeat: int) -> String:
+	return text if repeat <= 1 else "%s (x%d)" % [text, repeat]
+
+
 func _on_message(text: String, category: String) -> void:
 	var color: Color = UIStyle.CATEGORY_COLORS.get(category, Color.WHITE)
-	_log.append_text("[color=#%s]%s[/color]\n" % [color.to_html(false), text])
-	if _log.get_paragraph_count() > MAX_LOG_LINES:
+	if _repeat > 0 and text == _last_text and category == _last_category and not _log_lines.is_empty():
+		_repeat += 1
+		_log_lines[-1] = _log_line(color, collapsed_line(text, _repeat))
+		# Rewriting the last paragraph in place is unreliable (trailing "\n"); the log is short, so rebuild it.
+		_log.clear()
+		for line: String in _log_lines:
+			_log.append_text(line)
+		return
+	_repeat = 1
+	_last_text = text
+	_last_category = category
+	var line := _log_line(color, text)
+	_log_lines.append(line)
+	_log.append_text(line)
+	if _log_lines.size() > MAX_LOG_LINES:
+		_log_lines.pop_front()
 		_log.remove_paragraph(0)
+
+
+func _log_line(color: Color, text: String) -> String:
+	return "[color=#%s]%s[/color]\n" % [color.to_html(false), text]
 
 
 func _on_target_changed(display_name: String) -> void:
