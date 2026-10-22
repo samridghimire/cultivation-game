@@ -1403,7 +1403,11 @@ static func practice_hint(c: CharacterData, data: GameData) -> String:
 	var id := Techniques.practice_target(c, data)
 	if id == "":
 		return ""
-	return "Practise %s on the Techniques screen: each level raises your odds in a fight (level %d now)." % [data.techniques[id].name, Techniques.level(c, id)]
+	var days := Techniques.days_to_next(c, data, id)
+	var next := ""
+	if days > 0:
+		next = ", about %s to level %d" % [Calendar.format_duration(days), Techniques.level(c, id) + 1]
+	return "Practise %s on the Techniques screen: each level raises your odds in a fight (level %d now%s)." % [data.techniques[id].name, Techniques.level(c, id), next]
 
 
 ## First-steps pointers for Mortal and Qi Refining players, most useful first.

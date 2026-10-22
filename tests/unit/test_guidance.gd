@@ -1102,6 +1102,7 @@ func test_practice_hint_for_a_low_level_fighting_style() -> void:
 	c.techniques = {"iron_fist": {"level": 1, "xp": 0.0}}
 	var hint := Guidance.practice_hint(c, data())
 	assert_true(hint.contains("Practise Iron Fist") and hint.contains("level 1 now"), hint)
+	assert_true(hint.contains(" to level 2)"), hint)
 	var hints := Guidance._newcomer_hints(c, data(), {Guidance.ELDER_MO_FLAG: true}, "qingshi_village")
 	assert_true(_has(hints, "Practise Iron Fist"))
 	assert_false(_has(hints, "no fighting style"))

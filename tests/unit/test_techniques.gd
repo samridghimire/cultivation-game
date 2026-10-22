@@ -84,3 +84,16 @@ func test_knows_kind() -> void:
 	assert_false(Techniques.knows_kind(c, data(), "combat"))
 	c.techniques["iron_fist"] = {"level": 1, "xp": 0.0}
 	assert_true(Techniques.knows_kind(c, data(), "combat"))
+
+
+func test_days_to_next() -> void:
+	var c := new_character()
+	c.techniques = {"iron_fist": {"level": 1, "xp": 0.0}}
+	var expected := ceili(data().techniques["iron_fist"].xp_to_next(1) / Techniques.xp_per_day(c))
+	assert_eq(Techniques.days_to_next(c, data(), "iron_fist"), expected)
+	assert_true(expected > 0)
+	Techniques.practice(c, data(), "iron_fist", 7)
+	assert_true(Techniques.days_to_next(c, data(), "iron_fist") < expected)
+	c.techniques["iron_fist"]["level"] = data().techniques["iron_fist"].max_level
+	assert_eq(Techniques.days_to_next(c, data(), "iron_fist"), 0)
+	assert_eq(Techniques.days_to_next(c, data(), "no_such_art"), 0)

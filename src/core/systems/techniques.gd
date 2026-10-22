@@ -82,6 +82,15 @@ static func xp_to_next(c: CharacterData, data: GameData, tech_id: String) -> flo
 	return def.xp_to_next(level(c, tech_id)) - float(c.techniques[tech_id]["xp"])
 
 
+## Days of practice until the next level (0 at max level, unknown, or when no xp accrues).
+static func days_to_next(c: CharacterData, data: GameData, tech_id: String) -> int:
+	var need := xp_to_next(c, data, tech_id)
+	var rate := xp_per_day(c)
+	if need <= 0.0 or rate <= 0.0:
+		return 0
+	return ceili(need / rate)
+
+
 static func is_mastered(c: CharacterData, data: GameData, tech_id: String) -> bool:
 	var def: TechniqueDef = data.techniques.get(tech_id)
 	return def != null and level(c, tech_id) >= def.max_level
