@@ -3293,6 +3293,7 @@ func test_dangerous_missions_say_grow_a_stage_when_mastered() -> void:
 
 func test_dangerous_missions_say_heal_when_injuries_are_the_cause() -> void:
 	var d := data()
+	var saved: Dictionary = d.sect_missions.duplicate()
 	var found := false
 	for stage in range(0, 9):
 		var c := new_character()
@@ -3300,17 +3301,24 @@ func test_dangerous_missions_say_heal_when_injuries_are_the_cause() -> void:
 		c.stage = stage
 		c.sect = {"id": "azure_cloud_sect", "rank": 0, "contribution": 0, "spent": 0}
 		c.injuries = {"internal_injury": 100, "broken_bones": 100}
-		if _only_dangerous_ready(c, d) == 0:
+		# Keep only the missions that are too dangerous (a safe one on cooldown speaks instead, GUIDE-110).
+		var dangerous := 0
+		d.sect_missions = saved.duplicate()
+		for id: String in saved:
+			if Sects.check_mission(c, d, id, {}) != "" or not Guidance._mission_too_dangerous(c, d, id):
+				d.sect_missions.erase(id)
+			else:
+				dangerous += 1
+		if dangerous == 0:
 			continue
 		var wins := false
 		for id: String in d.sect_missions:
-			if c.mission_cooldowns.has(id):
-				continue
 			wins = wins or Guidance.odds_unhurt(c, d, d.enemies[String(d.sect_missions[id]["enemy"])]) >= 0.5
 		if wins:
 			found = true
 			assert_true(Guidance._mission_hint(c, d, {}).ends_with("too dangerous for you yet; heal your injuries first."))
 			break
+	d.sect_missions = saved
 	assert_true(found, "some stage has injuries as the only obstacle")
 
 
@@ -3399,3 +3407,26 @@ func test_single_ready_mission_says_it_pays() -> void:
 	var lines := Guidance.hints(c, d, 1.0, 20, {}, {}, "qingshi_village")
 	assert_true(_has(lines, " It pays "))
 	assert_false(_has(lines, " The best pays "))
+
+
+func _cooldown_player(d: GameData) -> CharacterData:
+	var c := new_character()
+	c.realm_index = 1
+	c.stage = 2
+	c.sect = {"id": "azure_cloud_sect", "rank": 0, "contribution": 0, "spent": 0}
+	c.techniques["iron_fist"] = {"level": 1, "xp": 0.0}
+	return c
+
+
+func test_cooling_mission_is_not_too_dangerous() -> void:
+	var d := data()
+	var c := _cooldown_player(d)
+	if Sects.check_mission(c, d, "escort_mortal_villagers", {}) != "" or Guidance._mission_too_dangerous(c, d, "escort_mortal_villagers"):
+		return
+	c.mission_cooldowns["escort_mortal_villagers"] = c.age_days + 12
+	var text := Guidance._mission_hint(c, d, {})
+	var name: String = d.sect_missions["escort_mortal_villagers"].name
+	assert_true(text.contains("%s (%d contribution) is ready again in %s." % [name, int(d.sect_missions["escort_mortal_villagers"]["contribution"]), Calendar.format_duration(12)]), text)
+	assert_false(text.contains("practise"), text)
+	c.mission_cooldowns.clear()
+	assert_false(Guidance._mission_hint(c, d, {}).contains("is ready again"))

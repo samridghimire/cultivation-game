@@ -1413,8 +1413,14 @@ static func _mission_hint(c: CharacterData, data: GameData, flags: Dictionary = 
 	var ready := 0
 	var too_dangerous := 0
 	var healed_wins := false
+	var cooling := ""
 	for id: String in Sects.available_missions(c, data, flags):
 		if Sects.check_mission(c, data, id, flags) != "":
+			var left := Sects.mission_cooldown_left(c, id)
+			if left > 0 and Sects.mission_rank_realm_reason(c, data, data.sect_missions[id]) == "" and not _mission_too_dangerous(c, data, id):
+				if cooling == "" or left < Sects.mission_cooldown_left(c, cooling) \
+						or (left == Sects.mission_cooldown_left(c, cooling) and _mission_beats(data.sect_missions[id], data.sect_missions[cooling])):
+					cooling = id
 			continue
 		if _mission_too_dangerous(c, data, id):
 			too_dangerous += 1
@@ -1431,6 +1437,11 @@ static func _mission_hint(c: CharacterData, data: GameData, flags: Dictionary = 
 		if best != "":
 			var m: Dictionary = data.sect_missions[best]
 			text += (" It pays" if ready == 1 else " The best pays") + " %d contribution: %s (%s)." % [int(m.get("contribution", 0)), String(m.get("name", best)), Calendar.format_duration(int(m.get("days", 1)))]
+	elif cooling != "":
+		var cm: Dictionary = data.sect_missions[cooling]
+		text = "%s (%d contribution) is ready again in %s." % [String(cm.get("name", cooling)), int(cm.get("contribution", 0)), Calendar.format_duration(Sects.mission_cooldown_left(c, cooling))]
+		if too_dangerous > 0:
+			text += " The other %d %s too dangerous for you yet." % [too_dangerous, "mission is" if too_dangerous == 1 else "missions are"]
 	elif too_dangerous > 0:
 		text = "The sect's missions are too dangerous for you yet; "
 		var best_style := _best_unmastered_combat(c, data)
