@@ -805,6 +805,9 @@ func _start_inherit_shot(gs: Node) -> void:
 			"name": "Hollow of the Unbroken Body", "prefix": "inherit", "steps": [["", 0], ["_gate", 1]]},
 		{"id": "great_vehicle_sutra_barge", "realm": "mahayana", "attr": "comprehension", "tag": "Sutra Barge",
 			"name": "Sutra Barge of the Great Vehicle", "prefix": "inherit_maha", "steps": [["_gate", 1]]},
+		# WU-241: C-158's Terrace of the Last Stair (Tribulation Transcendence, azure_peak).
+		{"id": "last_stair_lightning_terrace", "realm": "tribulation_transcendence", "attr": "comprehension", "tag": "Last Stair",
+			"name": "Terrace of the Last Stair", "prefix": "inherit_trib", "steps": [["", 0], ["_gate", 1]]},
 	]
 	var first_def: Dictionary = gs.data.inheritances[cases[0]["id"]]
 	root.get_node("GameClock").total_days = Inheritances.appears_day(first_def) + 2 * Calendar.DAYS_PER_YEAR
