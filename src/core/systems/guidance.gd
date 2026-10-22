@@ -1287,7 +1287,7 @@ static func _stipend_clause(data: GameData, stipend: Dictionary) -> String:
 	for id: String in items:
 		var count := int(items[id])
 		var name: String = data.items[id]["name"] if data.items.has(id) else id
-		parts.append("a %s" % name if count == 1 else "%d %s" % [count, name])
+		parts.append(Text.a(name) if count == 1 else "%d %s" % [count, name])
 	if parts.is_empty():
 		return ""
 	return " (it pays %s a month)" % " and ".join(parts)

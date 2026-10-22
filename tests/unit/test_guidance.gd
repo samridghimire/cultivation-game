@@ -143,6 +143,15 @@ func test_sect_hints_for_rogue_and_member() -> void:
 	assert_true(_has(Guidance.hints(c, data(), 1.0, 10), "Earn %d more sect contribution" % need))
 
 
+## GUIDE-093: a vowel-initial stipend item reads "an ...".
+func test_stipend_clause_uses_an_before_a_vowel() -> void:
+	var d := data()
+	d.items["test_elixir"] = {"name": "Elixir of Calm"}
+	var clause := Guidance._stipend_clause(d, {"items": {"test_elixir": 1}})
+	d.items.erase("test_elixir")
+	assert_true(clause.contains(" an Elixir of Calm"), clause)
+
+
 ## GUIDE-084: the sect-rank hint says what the next rank pays.
 func test_sect_hint_names_stipend() -> void:
 	var d := data()
