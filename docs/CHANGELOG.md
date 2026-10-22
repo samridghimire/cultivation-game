@@ -2,6 +2,21 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-22 [GUIDE-104] No change: the open sect trial's 0 in 100 was an injury, and the hint already says so.
+- 2026-10-22 [C-189] Help says missions and bounties show your odds, and that "to the death" can kill.
+- 2026-10-22 [C-194] Help says your hints name the ready mission that pays the most contribution.
+- 2026-10-22 [WU-290] Mission board screenshots at Steam Deck sizes: the odds fit.
+- 2026-10-22 [GUIDE-107] Sect hints name the hall and the region it stands in.
+- 2026-10-22 [QA-135] Crafter balance baselines refreshed.
+- 2026-10-22 [WU-289] Screenshots of the road marker, the route note and the hint badge at Steam Deck sizes.
+- 2026-10-22 [GUIDE-109] The "use your herb" hint says how much qi it holds and how many days of meditation that saves.
+- 2026-10-22 [C-198] Two encounters for the upper Qi Refining layers: an elder's carriage and a hunted spirit fox.
+- 2026-10-22 [C-197] The Mist Python: something to hunt in Misty Forest from the 7th layer of Qi Refining.
+- 2026-10-22 [QA-133] Found why the open sect trial read 0 in 100: an injury, which the hint already explains.
+- 2026-10-22 [WU-288] The best-mission hint checked at Steam Deck sizes.
+- 2026-10-22 [WU-287] Bounty boards and tournaments show your odds on every foe.
+- 2026-10-22 [GUIDE-106] The unexplored-road hint says how far it is and whether you can win there.
+- 2026-10-22 [C-188] Help explains the gold marker on the road out.
 - 2026-10-22 [WU-285] Hidden place labels no longer push visible ones aside, and the gold "!" counts when labels are spread.
 - 2026-10-22 [C-195] A Misty Forest bounty for the middle Qi Refining layers: the Fog-Antler Stag.
 - 2026-10-22 [GUIDE-103] At the last layer of a realm the qi hints speak of the breakthrough, not "the next layer".

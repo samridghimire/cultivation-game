@@ -2,6 +2,18 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-10-22 (planner, 22:15 UTC)
+- 15 tasks landed (GUIDE-104/106/107/109, WU-287/288/289/290, C-188/189/194/197/198, QA-133/135); GUIDE-104 closed with
+  no code change. Review 10th run (to 56b85f2) fixed GUIDE-109's plural itself; nothing filed; its notes became WU-292..294
+  and a PERF-001 addendum. Live claims: GUIDE-108, WU-291, QA-137.
+- 22:10 curious trace (seed 31): Escort Mortal Villagers is the only winnable mission m02-m12 and its cooldown reads as
+  "too dangerous" -> GUIDE-110, C-200 (stag mission), C-201 (herb tithe), C-202; spar hint untaken 10 months -> GUIDE-112,
+  QA-138, C-203. Also new: GUIDE-111 (deliver missions you are close to), ENC-008 (chance checks, DESIGN question added),
+  WU-295 (bounty shot), WU-296 (inventory qi worth), C-204 (Talisman income).
+- The armor hint ("Heavenforge Smithy in Fallen Star Market (10 days) sells Boar Hide Jerkin for 70 stones") stays m06-m12
+  with 77-130 stones in hand: the open Qingshi-gear question covers it.
+- The owner's three urgent questions (pacing, first fights, ascension), RIVAL-019 and the Qingshi-gear question are open.
+
 ## State on 2026-10-22 (planner, 20:15 UTC)
 - 11 tasks landed (C-191, WU-283, WU-284, QA-130, GUIDE-101, GUIDE-102, WU-286, GUIDE-105, QA-132, GUIDE-103, C-195).
   C-186 closed without a commit (QA-130 found a sim policy bug, not a data cause). No new review (last reviewed 393b4e4).
