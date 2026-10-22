@@ -777,3 +777,18 @@ func test_road_talisman_peddler_sells_paper_for_eight_stones() -> void:
 	Exploration.resolve_choice(c, d, enc, 0, {})
 	assert_eq(c.item_count("talisman_paper"), 5)
 	assert_eq(c.item_count("spirit_stone"), 0)
+
+
+func test_choice_effect_renown_raises_current_region() -> void:
+	var gs: Node = _root().get_node("GameState")
+	var c := CharacterFactory.create("Wanderer", gs.data, seeded_rng())
+	gs.start_session(c)
+	var enc := TRAVELLER.duplicate(true)
+	enc["choices"][0]["effects"]["renown"] = 5
+	gs.data.encounters["test_renown"] = enc
+	gs.pending_encounter = "test_renown"
+	var before := Renown.value(c, gs.current_region)
+	gs.choose_encounter(0)
+	assert_eq(Renown.value(c, gs.current_region), before + 5)
+	gs.end_session()
+	gs.data.encounters.erase("test_renown")

@@ -726,7 +726,7 @@ static func explore_prefix(encounter: Dictionary, discovery: bool, deep_path: bo
 func _meet_encounter(encounter: Dictionary, prefix: String = "") -> Dictionary:
 	LifeStats.add(player, "encounters")
 	Exploration.note_met(player, encounter)
-	var result := Exploration.resolve(player, data, encounter, world_flags)
+	var result := Exploration.resolve(player, data, encounter, world_flags, current_region)
 	var text := rival_text(String(encounter.get("text", "")))
 	if not result["notes"].is_empty():
 		text += " (%s)" % ", ".join(result["notes"])
@@ -950,7 +950,7 @@ func choose_encounter(index: int) -> void:
 	if pending_encounter == "" or not _can_act():
 		return
 	var encounter: Dictionary = data.encounters.get(pending_encounter, {})
-	var result := Exploration.resolve_choice(player, data, encounter, index, world_flags)
+	var result := Exploration.resolve_choice(player, data, encounter, index, world_flags, current_region)
 	if not result["ok"]:
 		EventBus.post(result["reason"], "warning")
 		EventBus.player_changed.emit()

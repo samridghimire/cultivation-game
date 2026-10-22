@@ -488,14 +488,14 @@ static func roll_encounter(c: CharacterData, data: GameData, tags: Array, flags:
 
 ## Applies an encounter's non-combat part. Returns {ok, reason, notes, days, enemy}.
 ## `enemy` is an enemy id the caller must fight ("" = none).
-static func resolve(c: CharacterData, data: GameData, encounter: Dictionary, flags: Dictionary) -> Dictionary:
+static func resolve(c: CharacterData, data: GameData, encounter: Dictionary, flags: Dictionary, region_id: String = "") -> Dictionary:
 	var effects: Dictionary = encounter.get("effects", {})
 	var notes: PackedStringArray = []
 	# Losses the player cannot cover (e.g. a pickpocket finding an empty
 	# pouch) are clamped instead of refusing the encounter.
 	effects = _clamp_losses(c, effects)
 	if not effects.is_empty():
-		notes = Effects.apply(c, data, effects, flags)
+		notes = Effects.apply(c, data, effects, flags, region_id)
 	return {"ok": true, "reason": "", "notes": notes, "days": int(encounter.get("days", 0)), "enemy": encounter.get("enemy", "")}
 
 
@@ -589,7 +589,7 @@ static func choices(c: CharacterData, data: GameData, encounter: Dictionary, fla
 ## Applies choice `index` of `encounter`. Returns {ok, reason, text, notes,
 ## days, enemy, karma}; `enemy` is an enemy id the caller must fight ("" = none)
 ## and `karma` is true when the choice shifted alignment.
-static func resolve_choice(c: CharacterData, data: GameData, encounter: Dictionary, index: int, flags: Dictionary) -> Dictionary:
+static func resolve_choice(c: CharacterData, data: GameData, encounter: Dictionary, index: int, flags: Dictionary, region_id: String = "") -> Dictionary:
 	var list: Array = encounter.get("choices", [])
 	if index < 0 or index >= list.size():
 		return {"ok": false, "reason": "That is not a choice here.", "text": "", "notes": PackedStringArray(), "days": 0, "enemy": "", "karma": false}
@@ -598,7 +598,7 @@ static func resolve_choice(c: CharacterData, data: GameData, encounter: Dictiona
 	if reason != "":
 		return {"ok": false, "reason": reason, "text": "", "notes": PackedStringArray(), "days": 0, "enemy": "", "karma": false}
 	var effects: Dictionary = choice.get("effects", {})
-	var notes := Effects.apply(c, data, effects, flags) if not effects.is_empty() else PackedStringArray()
+	var notes := Effects.apply(c, data, effects, flags, region_id) if not effects.is_empty() else PackedStringArray()
 	return {"ok": true, "reason": "", "text": String(choice.get("text", "")), "notes": notes, "days": int(choice.get("days", 0)), "enemy": String(choice.get("enemy", "")), "karma": effects.has("alignment")}
 
 

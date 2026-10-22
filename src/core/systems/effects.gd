@@ -26,6 +26,8 @@ extends RefCounted
 ##   witnessed: bool            the alignment change was seen: every sect's reputation
 ##                              moves by alignment * its deed_scale (data/sects.json)
 ##   attributes: {attr_id: int} raise (or lower) attributes (data/attributes.json ids)
+##   renown: int                local renown in the region the effects happen in (1..50, see renown.gd);
+##                              needs a region_id passed to apply(), else it does nothing
 ##   bloodline: String          grant a bloodline (data/bloodlines.json) to someone who has
 ##                              none; it awakens at once if they are past its awaken_realm
 
@@ -82,8 +84,18 @@ static func _check_breakthrough_realm(c: CharacterData, data: GameData, realm_id
 
 ## Applies effects. `flags` is the world flag dictionary (mutated by set_flag).
 ## Returns a list of human-readable outcome strings.
-static func apply(c: CharacterData, data: GameData, effects: Dictionary, flags: Dictionary) -> PackedStringArray:
+static func apply(c: CharacterData, data: GameData, effects: Dictionary, flags: Dictionary, region_id: String = "") -> PackedStringArray:
 	var notes: PackedStringArray = []
+	if effects.has("renown") and region_id != "":
+		var region_name := String(data.regions[region_id].get("name", region_id)) if data.regions.has(region_id) else region_id
+		var gain := Renown.add(c, data, region_id, int(effects["renown"]))
+		if int(gain["gained"]) > 0:
+			notes.append("+%d renown in %s" % [int(gain["gained"]), region_name])
+			c.life_stats["best_renown"] = maxi(LifeStats.get_stat(c, "best_renown"), Renown.best(c))
+			if String(gain["new_tier"]) != "":
+				if bool(gain["first_title"]):
+					LifeStats.add(c, "renown_titles")
+				notes.append("Your name is %s in %s now" % [String(gain["new_tier"]).to_lower(), region_name])
 	if effects.has("alignment"):
 		var delta := int(effects["alignment"])
 		Alignment.shift(c, data, delta)
@@ -174,7 +186,7 @@ const KEYS: Array[String] = [
 	"qi", "alignment", "items", "breakthrough_bonus", "breakthrough_realm", "set_flag", "clear_flag",
 	"learn_technique", "heal_injury", "burn_lifespan", "extend_lifespan", "learn_recipe", "dao_insight",
 	"buff", "reputation", "witnessed", "attributes", "bloodline", "practice_days",
-	"profession_xp",
+	"profession_xp", "renown",
 ]
 
 
@@ -226,6 +238,10 @@ static func validate(data: GameData, effects: Dictionary, where: String) -> Pack
 				var amount: Variant = xp_block[prof_id]
 				if not (amount is int or (amount is float and amount == floorf(amount))) or int(amount) < 1 or int(amount) > 500:
 					errors.append("%s: profession_xp must be an int 1..500" % where)
+	if effects.has("renown"):
+		var renown: Variant = effects["renown"]
+		if not (renown is int or (renown is float and renown == floorf(renown))) or int(renown) < 1 or int(renown) > 50:
+			errors.append("%s: renown must be an int 1..50" % where)
 	for key in ["set_flag", "clear_flag"]:
 		if not effects.has(key):
 			continue

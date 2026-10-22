@@ -174,3 +174,20 @@ func test_profession_xp_validation() -> void:
 	assert_eq(Effects.validate(d, {"profession_xp": {"alchemist": 0}}, "t").size(), 1)
 	assert_eq(Effects.validate(d, {"profession_xp": {"alchemist": 501}}, "t").size(), 1)
 	assert_eq(Effects.validate(d, {"profession_xp": "x"}, "t").size(), 1)
+
+
+func test_renown_effect() -> void:
+	var d := data()
+	var c := new_character()
+	var notes := Effects.apply(c, d, {"renown": 5}, {}, "qingshi_village")
+	assert_eq(Renown.value(c, "qingshi_village"), 5)
+	assert_true(", ".join(notes).contains("+5 renown in"), str(notes))
+	var none := Effects.apply(c, d, {"renown": 5}, {})
+	assert_eq(Renown.value(c, "qingshi_village"), 5, "no region: nothing")
+	assert_eq(none.size(), 0)
+	c.renown["qingshi_village"] = int(d.renown.get("max", 150)) - 1
+	Effects.apply(c, d, {"renown": 5}, {}, "qingshi_village")
+	assert_eq(Renown.value(c, "qingshi_village"), int(d.renown.get("max", 150)), "cap respected")
+	assert_eq(Effects.validate(d, {"renown": 5}, "t").size(), 0)
+	assert_eq(Effects.validate(d, {"renown": 0}, "t").size(), 1)
+	assert_eq(Effects.validate(d, {"renown": 51}, "t").size(), 1)
