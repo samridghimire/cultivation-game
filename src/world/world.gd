@@ -64,6 +64,7 @@ func _ready() -> void:
 	_build_npcs()
 	_build_bounds()
 	_limit_camera()
+	_spread_on_screen()
 	var hud := get_node_or_null("HUD")
 	if hud != null:
 		hud.hints_changed.connect(_mark_hinted.bind(hud))
@@ -331,6 +332,16 @@ func _process(_delta: float) -> void:
 	for node in get_children():
 		if node is Interactable:
 			(node as Interactable).camera_moved()
+	_spread_on_screen()
+
+
+## Lifts labels that the screen-edge clamp pushed together (WU-281).
+func _spread_on_screen() -> void:
+	if not is_inside_tree():
+		return
+	var nodes: Array = get_children().filter(func(n: Node) -> bool: return n is Interactable)
+	var view := get_canvas_transform().affine_inverse() * get_viewport_rect()
+	Interactable.spread_on_screen(nodes, view)
 
 
 func _limit_camera() -> void:

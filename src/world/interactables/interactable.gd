@@ -35,6 +35,8 @@ const LABEL_FONT_SIZE := 14
 var _label_node: Node2D
 ## The top hint names this place: a gold "!" is drawn above its label (WU-280).
 var hinted := false
+## Added to the label's y (and badge) by spread_on_screen when the screen-edge clamp made it overlap (WU-281).
+var screen_lift := 0.0
 
 
 func _ready() -> void:
@@ -174,6 +176,37 @@ static func label_visible(is_target: bool) -> bool:
 	return not is_target
 
 
+## The rect the label is drawn at in the parent's coordinates once clamped inside `view` (WU-281).
+func drawn_label_rect(view: Rect2) -> Rect2:
+	var rect := label_rect()
+	rect.position.x = clamp_label_left(rect.position.x, rect.size.x, view.position.x, view.end.x)
+	rect.position.y += screen_lift
+	return rect
+
+
+## Lifts labels (in order) whose screen-clamped rects overlap an earlier one; `view` is the visible
+## area in the nodes' parent coordinates. Redraws the labels that moved (WU-281).
+static func spread_on_screen(nodes: Array, view: Rect2) -> void:
+	var placed: Array[Rect2] = []
+	for node: Interactable in nodes:
+		var before := node.screen_lift
+		node.screen_lift = 0.0
+		var rect := node.drawn_label_rect(view)
+		for _i in 6:
+			var hit := false
+			for other in placed:
+				if rect.intersects(other):
+					hit = true
+					break
+			if not hit:
+				break
+			node.screen_lift -= rect.size.y + 2.0
+			rect = node.drawn_label_rect(view)
+		placed.append(rect)
+		if node.screen_lift != before:
+			node._redraw_label()
+
+
 ## Shifts labels sideways so none sticks out past `bounds` (WU-160).
 static func clamp_labels(nodes: Array, bounds: Rect2, margin: float = 6.0) -> void:
 	for node: Interactable in nodes:
@@ -250,14 +283,14 @@ func _draw_label() -> void:
 		left = clamp_label_left(left, text_width, view.position.x, view.end.x)
 	if hinted:
 		# A gold badge with a dark "!" above the label.
-		var center := Vector2(left + text_width / 2.0, -size.y / 2.0 - 8.0 + label_offset.y - LABEL_FONT_SIZE - 10.0)
+		var center := Vector2(left + text_width / 2.0, -size.y / 2.0 - 8.0 + label_offset.y + screen_lift - LABEL_FONT_SIZE - 10.0)
 		_label_node.draw_circle(center, 10.0, UIStyle.ACCENT)
 		_label_node.draw_arc(center, 10.0, 0.0, TAU, 24, Color(0.1, 0.08, 0.04), 1.5)
 		var mw := font.get_string_size("!", HORIZONTAL_ALIGNMENT_LEFT, -1, 16).x
 		_label_node.draw_string(font, center + Vector2(-mw / 2.0, 6.0), "!", HORIZONTAL_ALIGNMENT_LEFT, -1, 16, Color(0.1, 0.08, 0.04))
 	if not label_visible(highlighted):
 		return
-	_label_node.draw_string(font, Vector2(left, -size.y / 2.0 - 8.0 + label_offset.y), text, HORIZONTAL_ALIGNMENT_LEFT, -1, LABEL_FONT_SIZE, label_color())
+	_label_node.draw_string(font, Vector2(left, -size.y / 2.0 - 8.0 + label_offset.y + screen_lift), text, HORIZONTAL_ALIGNMENT_LEFT, -1, LABEL_FONT_SIZE, label_color())
 
 
 ## A small diamond in the top-right corner of artifact anchor places: hollow

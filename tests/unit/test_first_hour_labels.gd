@@ -160,3 +160,23 @@ func test_set_hinted_only_changes_on_a_new_value() -> void:
 	n.set_hinted(false)
 	assert_false(n.hinted)
 	n.free()
+
+
+func test_spread_on_screen_lifts_labels_the_edge_clamp_pushed_together() -> void:
+	var view := Rect2(0, 0, 400, 400)
+	var a := _npc("Founder's Old Well Keeper", Vector2(395, 200))
+	var b := _npc("Dongfang Beichen", Vector2(190, 200))
+	assert_false(a.label_rect().intersects(b.label_rect()), "world rects start apart")
+	a.label_offset.x = 0.0
+	Interactable.spread_on_screen([a, b], view)
+	assert_false(a.drawn_label_rect(view).intersects(b.drawn_label_rect(view)), "drawn rects overlap")
+	assert_true(b.screen_lift < 0.0 or a.screen_lift < 0.0)
+
+
+func test_spread_on_screen_leaves_central_labels_alone() -> void:
+	var view := Rect2(0, 0, 1000, 800)
+	var a := _npc("Aa", Vector2(300, 300))
+	var b := _npc("Bb", Vector2(600, 300))
+	Interactable.spread_on_screen([a, b], view)
+	assert_eq(a.screen_lift, 0.0)
+	assert_eq(b.screen_lift, 0.0)
