@@ -143,7 +143,7 @@ func test_payoff_line_in_details() -> void:
 	assert_true(c != null, "some stage has a foe that level 2 turns around")
 	var payoff := Guidance.practice_payoff(c, data(), "iron_fist", "misty_forest", 10)
 	var text := TechniquesScreen.payoff_text(c, data(), "iron_fist", "misty_forest", 10)
-	assert_true(text.begins_with("At level 2 you would beat a %s about" % payoff["enemy"]), text)
+	assert_true(text.begins_with("At level 2 you would beat %s about" % Text.a(String(payoff["enemy"]))), text)
 	assert_true(text.ends_with("(now %d)." % roundi(float(payoff["now"]) * 100.0)), text)
 	assert_eq(TechniquesScreen.payoff_text(c, data(), "iron_fist", "", 10), "")
 	c.techniques["iron_fist"]["level"] = data().techniques["iron_fist"].max_level

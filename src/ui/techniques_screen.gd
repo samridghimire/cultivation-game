@@ -159,7 +159,7 @@ static func payoff_text(c: CharacterData, data: GameData, tech_id: String, regio
 	var payoff := Guidance.practice_payoff(c, data, tech_id, region_id, today, flags)
 	if payoff.is_empty():
 		return ""
-	return "At level %d you would beat a %s about %d times in 100 (now %d)." % [payoff["level"], payoff["enemy"], roundi(float(payoff["next"]) * 100.0), roundi(float(payoff["now"]) * 100.0)]
+	return "At level %d you would beat %s about %d times in 100 (now %d)." % [payoff["level"], Text.a(String(payoff["enemy"])), roundi(float(payoff["next"]) * 100.0), roundi(float(payoff["now"]) * 100.0)]
 
 
 ## WU-119: the guidance line shown while the character knows no combat technique ("" otherwise).

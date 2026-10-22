@@ -93,6 +93,7 @@ func is_available() -> bool:
 func _refresh() -> void:
 	visible = is_available()
 	queue_redraw()
+	_redraw_label()
 
 
 func _on_body_entered(body: Node2D) -> void:

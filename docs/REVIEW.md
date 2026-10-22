@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: bdadd91
+Last reviewed commit: 275a886
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -867,3 +867,21 @@ Last reviewed commit: bdadd91
     count even when some are owned (errs toward the warning). GUIDE-085's under-even clause says "practise or grow a
     stage" even when every style is mastered. QA-126: docs/balance_baseline.txt first-hour curious sections are stale,
     and the game itself still offers 0% rival duels with only the choice's fight label as warning; for the planner.
+- 2026-10-22 (reviewer, 7th run): reviewed bdadd91..275a886 (1f468b9 WU-270, 852ca9c GUIDE-088, 93c4fb2 WU-272, d0e6f1a WU-274,
+  18545f1 C-179, cdfb2f9 C-176, 24a2bfa WU-271, 7991253 C-180, a60bb90 QA-127, 553e1fa C-177, fc28516 WU-276, d93d849 GUIDE-092,
+  2fd5f51 QA-111, f10b31a QA-129, 41678fe WU-278, e084bbe WU-279, d935e0f GUIDE-090, 80e370d WU-280,
+  5618558 C-181, 275a886 ENC-007; [PLAN]/[REVIEW] commits skipped). Main green. No
+  BACKLOG/CHANGELOG edits by workers; no save-format changes. Nothing filed.
+  - Fixed ([REVIEW] commit): WU-270's Techniques payoff line hard-coded "beat a %s" (the same "a Iron-Back Boar" bug fixed
+    in Guidance last run); it now uses Text.a and the test asserts the article form. WU-278 moved the name label to a
+    child Node2D, but Interactable._refresh (on player_changed) still only redrew the parent, so an NPC turning into
+    "(rival)" or changing danger color kept its stale label until the near-range or camera-edge redraw; _refresh now
+    redraws the label layer too.
+  - Checked: GUIDE-092's odds_unhurt rates a copied, healed character, and fight_fingerprint includes injuries, so the
+    win_chance cache can't return the injured odds. GUIDE-088's sell_offer is the old _sell_hint body; the loot budget only
+    feeds affordable_armor/_far_armor_clause. C-179 adds renown 3 to six help choices; C-177 power_mult is validated
+    data. WU-278 spreads place and NPC labels together (tested). QA-111/127/129 and WU-271/272/276/279 are sim/screenshot-only.
+  - Also checked: ENC-007 rates a choice only when it is enabled (win_chance is cached); GUIDE-090 reuses sell_offer
+    and the shared _sell_first_clause; WU-280 marks via HUD.hints_changed and also on world _ready (scene reload per region).
+  - Notes, not filed: the GUIDE-092 heal clause doesn't name where to heal (heal_source exists). WU-280 matches whole
+    display_name, so an NPC ("Name (Qi Refining, ...)") is never marked even when the hint names them. For the planner.
