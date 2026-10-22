@@ -91,6 +91,7 @@ extends SceneTree
 ## WU-210: it then breaks through level with the rival (rival_caught_up_log / rival_caught_up_journal).
 ## WU-246: `-- --first-hour` also writes fh_<workshop|shop|journal_first_goals|journal_next_steps|journal_commissions|board>_<day1|month1>_<size>.png.
 ## WU-273: append `-- --techniques-shot` for techniques_practice[_scale115].png (Iron Fist level 1 details, practice button focused); run once per --resolution. Checked at 1280x720 and 1280x800: nothing clipped, the action row wraps.
+## WU-271: `--hint-shot` also writes hint_trial_[journal_]<size>.png (open sect trial odds, Fights you can win) and hint_sell_armor_[journal_]<size>.png ("Sell your ..." armor line).
 ## WU-258: `--hint-shot` also writes hint_armor_far_[journal_]<size>.png and hint_empty_fights_journal_<size>.png.
 ## WU-268: `--hint-shot` also writes hint_long_[journal_]<size>.png (Azure Cloud outer disciple, Qi Refining 1st layer, Iron Fist 1: practice days, far qi, stipend).
 ## WU-252: `--hint-shot` also writes hint_buy_ingredient_[poor_][journal_]<size>.png and hint_thin_defence_long_[journal_]<size>.png (longest thin-defence line); all fit at 1280x720 and 1280x800. With the injury the HUD panel drops the hint lines by design (_fit_status_panel), so the journal carries them.
@@ -1372,6 +1373,63 @@ func _start_hint_shot(gs: Node) -> void:
 		assert(long_at >= 0, "journal has no far-qi line")
 		var long_scroll: ScrollContainer = journal.get("_scroll")
 		long_scroll.scroll_vertical = maxi(0, int(long_rich.get_paragraph_offset(long_parsed.substr(0, long_at).count("\n"))) - 160), "close": journal.close})
+	# WU-271: GUIDE-085/087's open sect trial (odds line in the HUD/journal, "Sect trial: Inner Disciple" under
+	# Fights you can win) and GUIDE-088's "Sell your ..." armor line. Both in qingshi_village.
+	var loot_item := func(tag: String) -> String:
+		for id: String in gs.data.items:
+			if Items.has_tag(gs.data, id, [tag]) and Items.sell_price(gs.data, id) > 0:
+				return id
+		return ""
+	var setup_trial := func() -> void:
+		hud.get("_banner").visible = false
+		c.realm_index = 2
+		c.stage = 0
+		c.injuries.clear()
+		c.sect = {"id": "azure_cloud_sect", "rank": 0, "contribution": 500}
+		gs.world_flags[Guidance.ELDER_MO_FLAG] = true
+		for attr: String in c.attributes:
+			c.attributes[attr] = 4  # a weak disciple, so the trial is a close fight and "Fights you can win" lists it
+		c.techniques = {}
+		c.inventory = {"spirit_stone": 10}
+		c.equipment = {}
+		c.last_meditated_day = 40
+		clock.total_days = 40
+		gs.current_region = "qingshi_village"
+		root.get_node("EventBus").player_changed.emit()
+	var setup_sell := func() -> void:
+		hud.get("_banner").visible = false
+		c.realm_index = 1
+		c.stage = Guidance.ARMOR_HINT_MIN_STAGE
+		c.injuries.clear()
+		c.sect = {}
+		gs.world_flags[Guidance.ELDER_MO_FLAG] = true
+		c.techniques = {"iron_fist": {"level": 1, "xp": 0.0}}
+		c.inventory = {"spirit_stone": 10, loot_item.call("ore"): 100, loot_item.call("beast_material"): 100}
+		c.equipment = {}
+		c.last_meditated_day = 40
+		clock.total_days = 40
+		gs.current_region = "qingshi_village"
+		root.get_node("EventBus").player_changed.emit()
+	for case: Array in [["hint_trial_", setup_trial, "You face the", "Next steps"], ["hint_trial_fights_", setup_trial, "Sect trial", "Fights you can win"], ["hint_sell_armor_", setup_sell, "Sell your", "Next steps"]]:
+		var setup: Callable = case[1]
+		var needle: String = case[2]
+		var heading: String = case[3]
+		if case[0] != "hint_trial_fights_" and case[0] != "hint_trial_":  # the trial line is below the HUD's top hints
+			shots.append({"name": case[0] + size_tag, "open": func() -> void:
+				setup.call()
+				print("hint-shot ", needle, " HUD: ", hint_text.call()), "close": func() -> void: pass})
+		shots.append({"name": case[0] + "journal_" + size_tag, "open": func() -> void:
+			setup.call()
+			print("hint-shot ", needle, " list: ", "\n".join(Guidance.hints(c, gs.data, 3, 12, gs.npcs, gs.world_flags, "qingshi_village", 40, gs.npc_favor)))
+			await show_journal.call(heading)
+			for _i in 3:
+				await root.get_tree().process_frame
+			var rich: RichTextLabel = journal.get("_text")
+			var parsed := rich.get_parsed_text()
+			var at := parsed.find(needle if heading == "Next steps" else heading)
+			assert(at >= 0, "journal has no " + needle + " line")
+			var scroll: ScrollContainer = journal.get("_scroll")
+			scroll.scroll_vertical = maxi(0, int(rich.get_paragraph_offset(parsed.substr(0, at).count("\n"))) - 120), "close": journal.close})
 
 
 ## WU-190: the encounter window on real encounters with attribute, profession and enemy choices.
