@@ -1202,9 +1202,32 @@ static func _sect_hint(c: CharacterData, data: GameData) -> String:
 		return ""
 	var pays := _stipend_clause(data, sect.ranks[rank + 1].get("stipend", {}))
 	if Sects.check_promotion(c, data) == "":
-		return "The trial for %s is open%s. Attempt it at a sect hall." % [sect.rank_name(rank + 1), pays]
+		return "The trial for %s is open%s. Attempt it at a sect hall.%s" % [sect.rank_name(rank + 1), pays, _trial_odds_clause(c, data)]
 	var need := int(sect.ranks[rank + 1].get("contribution", 0)) - int(c.sect["contribution"])
 	return "Earn %d more sect contribution (missions, duties) to become %s%s." % [maxi(need, 0), sect.rank_name(rank + 1), pays]
+
+
+## GUIDE-085: the chance of winning the open sect trial, or -1.0 when no trial is open to `c`.
+## Sects.trial_opponent is a non-lethal spar, so a loss only injures.
+static func trial_odds(c: CharacterData, data: GameData) -> float:
+	if Sects.check_promotion(c, data) != "":
+		return -1.0
+	var enemy_id := Sects.trial_enemy(c, data)
+	if enemy_id == "":
+		return -1.0
+	return Combat.win_chance(c, data, Sects.trial_opponent(data, enemy_id))
+
+
+## GUIDE-085: " You face the X (Even, 80 in 100)." plus a warning when the odds are under even.
+static func _trial_odds_clause(c: CharacterData, data: GameData) -> String:
+	var chance := trial_odds(c, data)
+	if chance < 0.0:
+		return ""
+	var enemy: Dictionary = data.enemies[Sects.trial_enemy(c, data)]
+	var line := " You face the %s (%s, %d in 100)." % [enemy.get("name", ""), Combat.label_for_chance(chance), roundi(chance * 100.0)]
+	if chance < 0.5:
+		line += " A loss only injures you; practise or grow a stage first."
+	return line
 
 
 ## GUIDE-084: " (it pays 6 stones and a Qi Gathering Pill a month)" for a rank's stipend, "" when it pays nothing.

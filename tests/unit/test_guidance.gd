@@ -167,6 +167,28 @@ func test_sect_hint_names_stipend() -> void:
 	assert_true(plain.ends_with("to become Core Disciple."), plain)
 
 
+## GUIDE-085: the open trial hint gives the odds.
+func test_trial_odds_hint() -> void:
+	var d := data()
+	var c := new_character()
+	c.realm_index = 1
+	c.sect = {"id": "azure_cloud_sect", "rank": 0, "contribution": 0}
+	assert_eq(Guidance.trial_odds(c, d), -1.0)
+	assert_false(Guidance._sect_hint(c, d).contains("You face"))
+	c.sect["contribution"] = 600
+	var enemy_name: String = d.enemies["azure_sword_examiner"]["name"]
+	var hint := Guidance._sect_hint(c, d)
+	assert_true(hint.contains("You face the " + enemy_name), hint)
+	assert_true(hint.contains("%d in 100" % roundi(Guidance.trial_odds(c, d) * 100.0)), hint)
+	assert_eq(hint.contains("practise or grow a stage first"), Guidance.trial_odds(c, d) < 0.5)
+	for k: String in c.attributes:
+		c.attributes[k] = 1
+	c.techniques = {}
+	c.stage = 0
+	assert_true(Guidance.trial_odds(c, d) < 0.5, "weak disciple should be unlikely to win")
+	assert_true(Guidance._sect_hint(c, d).contains("practise or grow a stage first"))
+
+
 ## UI-009b: missions, promotion trials, tribulations, Dao, abodes and family.
 func test_system_hints() -> void:
 	var d := data()
