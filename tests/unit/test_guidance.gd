@@ -1149,6 +1149,41 @@ func test_practice_hint_for_a_low_level_fighting_style() -> void:
 	assert_eq(Guidance.practice_hint(c, data()), "")
 
 
+## Finds a Qi Refining fighter in the misty forest for whom Iron Fist level 2 flips a foe (stats are
+## raised stage by stage until one does; the fixture is searched because the foe ratings are balance data).
+func _payoff_fighter() -> CharacterData:
+	for stage in range(0, 9):
+		var c := _fresh()
+		c.realm_index = 1
+		c.stage = stage
+		c.techniques = {"iron_fist": {"level": 1, "xp": 0.0}}
+		if not Guidance.practice_payoff(c, data(), "iron_fist", "misty_forest", 10).is_empty():
+			return c
+	return null
+
+
+func test_practice_payoff_names_the_fight_the_next_level_opens() -> void:
+	var c := _payoff_fighter()
+	assert_true(c != null, "some stage has a foe that level 2 turns around")
+	var payoff := Guidance.practice_payoff(c, data(), "iron_fist", "misty_forest", 10)
+	assert_true(float(payoff["now"]) < Guidance.FAIR_FIGHT_MIN_CHANCE and float(payoff["next"]) >= 0.5)
+	assert_eq(int(payoff["level"]), 2)
+	var hint := Guidance.practice_hint(c, data(), "misty_forest", 10)
+	assert_true(hint.contains("at level 2 you would beat a %s" % payoff["enemy"]), hint)
+	assert_true(hint.contains("about %d times in 100, now %d" % [roundi(float(payoff["next"]) * 100.0), roundi(float(payoff["now"]) * 100.0)]), hint)
+	assert_false(Guidance.practice_hint(c, data()).contains("you would beat"), "no region: old text")
+
+
+func test_practice_payoff_is_empty_when_mastered_unknown_or_unplaced() -> void:
+	var c := _payoff_fighter()
+	assert_true(c != null)
+	assert_true(Guidance.practice_payoff(c, data(), "iron_fist", "", 10).is_empty())
+	assert_true(Guidance.practice_payoff(c, data(), "iron_fist", "misty_forest", -1).is_empty())
+	assert_true(Guidance.practice_payoff(c, data(), "stone_skin", "misty_forest", 10).is_empty(), "unknown technique")
+	c.techniques["iron_fist"]["level"] = data().techniques["iron_fist"].max_level
+	assert_true(Guidance.practice_payoff(c, data(), "iron_fist", "misty_forest", 10).is_empty(), "mastered")
+
+
 func test_every_region_with_a_merchant_sells_a_fighting_style() -> void:
 	var d := data()
 	var c := _fresh()

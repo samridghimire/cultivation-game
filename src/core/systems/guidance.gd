@@ -58,7 +58,7 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 	var buy := buy_ingredient_hint(c, data, region_id)
 	if buy != "":
 		out.append(buy)
-	var newcomer := _newcomer_hints(c, data, flags, region_id) if c.realm_index <= NEWCOMER_MAX_REALM else PackedStringArray()
+	var newcomer := _newcomer_hints(c, data, flags, region_id, today) if c.realm_index <= NEWCOMER_MAX_REALM else PackedStringArray()
 	out.append_array(newcomer)
 	var sell := _sell_hint(c, data, region_id)
 	if sell != "":
@@ -1442,8 +1442,30 @@ static func armor_hint(c: CharacterData, data: GameData, region_id: String) -> S
 	return "Armor would keep you standing in fights: the %s sells %s for %d stones." % [merchant_selling(data, region_id, armor_id), data.items[armor_id]["name"], merchant_price(c, data, region_id, armor_id)]
 
 
+## GUIDE-086: the fight (in `region_id`) that practising `tech_id` one more level turns from a loss into a
+## fair one, as {enemy, now, next, level}, or {} when none does (or no region/day, or the style is mastered).
+static func practice_payoff(c: CharacterData, data: GameData, tech_id: String, region_id: String, today: int, flags: Dictionary = {}) -> Dictionary:
+	if region_id == "" or today < 0 or not Techniques.knows(c, tech_id) or Techniques.is_mastered(c, data, tech_id):
+		return {}
+	var upgraded := CharacterData.from_dict(c.to_dict())
+	upgraded.techniques[tech_id] = {"level": Techniques.level(c, tech_id) + 1, "xp": 0.0}
+	var tags: Array = data.regions.get(region_id, {}).get("encounter_tags", [])
+	var best: Dictionary = {}
+	var rated := 0
+	for enemy_id in Exploration.eligible_fights(c, data, tags, flags, Calendar.season_of(today), region_id):
+		if rated >= FAIR_FIGHT_EXPLORE_MAX:
+			break
+		rated += 1
+		var foe: Dictionary = data.enemies[enemy_id]
+		var now := Combat.win_chance(c, data, foe)
+		var next := Combat.win_chance(upgraded, data, foe)
+		if now < FAIR_FIGHT_MIN_CHANCE and next >= 0.5 and next - now >= 0.1 and next > float(best.get("next", 0.0)):
+			best = {"enemy": String(foe.get("name", enemy_id)), "now": now, "next": next, "level": Techniques.level(c, tech_id) + 1}
+	return best
+
+
 ## "Practise <style> on the Techniques screen..." for a newcomer with a low-level fighting style, or "" (GUIDE-020).
-static func practice_hint(c: CharacterData, data: GameData) -> String:
+static func practice_hint(c: CharacterData, data: GameData, region_id: String = "", today: int = -1, flags: Dictionary = {}) -> String:
 	var id := Techniques.practice_target(c, data)
 	if id == "":
 		return ""
@@ -1451,11 +1473,14 @@ static func practice_hint(c: CharacterData, data: GameData) -> String:
 	var next := ""
 	if days > 0:
 		next = ", about %s to level %d" % [Calendar.format_duration(days), Techniques.level(c, id) + 1]
+	var payoff := practice_payoff(c, data, id, region_id, today, flags)
+	if not payoff.is_empty():
+		next += "; at level %d you would beat a %s about %d times in 100, now %d" % [payoff["level"], payoff["enemy"], roundi(float(payoff["next"]) * 100.0), roundi(float(payoff["now"]) * 100.0)]
 	return "Practise %s on the Techniques screen: each level raises your odds in a fight (level %d now%s)." % [data.techniques[id].name, Techniques.level(c, id), next]
 
 
 ## First-steps pointers for Mortal and Qi Refining players, most useful first.
-static func _newcomer_hints(c: CharacterData, data: GameData, flags: Dictionary, region_id: String) -> PackedStringArray:
+static func _newcomer_hints(c: CharacterData, data: GameData, flags: Dictionary, region_id: String, today: int = -1) -> PackedStringArray:
 	var out: PackedStringArray = []
 	var breathing := c.techniques.is_empty() and data.techniques.has("basic_breathing")
 	var technique_done := false
@@ -1477,7 +1502,7 @@ static func _newcomer_hints(c: CharacterData, data: GameData, flags: Dictionary,
 	var fighting := first_combat_hint(c, data, region_id)
 	if fighting != "":
 		out.append(fighting)
-	var practise := practice_hint(c, data)
+	var practise := practice_hint(c, data, region_id, today, flags)
 	if practise != "":
 		out.append(practise)
 	var armor := armor_hint(c, data, region_id)
