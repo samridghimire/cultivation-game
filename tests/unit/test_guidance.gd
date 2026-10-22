@@ -3124,3 +3124,71 @@ func test_keep_trial_leaves_other_lists_alone() -> void:
 	shown = Guidance._keep_trial(with_trial, Guidance.FAIR_FIGHTS_MAX)
 	assert_eq(shown[1]["text"], "T")
 	assert_eq(shown[2]["text"], "f1")
+
+
+## GUIDE-102: the mission hint names the best-paying ready mission, folded into the "Earn" line.
+func _best_expected(c: CharacterData, d: GameData) -> String:
+	var best := ""
+	for id: String in Sects.available_missions(c, d, {}):
+		if Sects.check_mission(c, d, id, {}) != "" or Guidance._mission_too_dangerous(c, d, id):
+			continue
+		var m: Dictionary = d.sect_missions[id]
+		if best == "":
+			best = id
+			continue
+		var b: Dictionary = d.sect_missions[best]
+		var mc := int(m.get("contribution", 0))
+		var bc := int(b.get("contribution", 0))
+		if mc > bc or (mc == bc and (int(m.get("days", 1)) < int(b.get("days", 1)) or (int(m.get("days", 1)) == int(b.get("days", 1)) and id < best))):
+			best = id
+	return best
+
+
+func _qr3_disciple() -> CharacterData:
+	var c := new_character()
+	c.realm_index = 1
+	c.stage = 2
+	c.sect = {"id": "azure_cloud_sect", "rank": 0, "contribution": 0, "spent": 0}
+	return c
+
+
+func test_best_mission_named_in_earn_line() -> void:
+	var d := data()
+	var c := _qr3_disciple()
+	var best := Guidance.best_mission(c, d)
+	assert_eq(best, _best_expected(c, d))
+	assert_true(best != "", "baseline has a ready mission")
+	var lines := Guidance.hints(c, d, 1.0, 20)
+	var found := 0
+	for line: String in lines:
+		if line.contains("Earn ") and line.contains("The best pays "):
+			found += 1
+			assert_true(line.contains(String(d.sect_missions[best]["name"])))
+	assert_eq(found, 1)
+	for line: String in lines:
+		if not line.begins_with("Earn "):
+			assert_false(line.contains("The best pays "))
+
+
+func test_best_mission_absent_when_all_on_cooldown() -> void:
+	var d := data()
+	var c := _qr3_disciple()
+	for id: String in d.sect_missions:
+		c.mission_cooldowns[id] = c.age_days + 30
+	assert_eq(Guidance.best_mission(c, d), "")
+	assert_false(_has(Guidance.hints(c, d, 1.0, 20), "The best pays "))
+	assert_true(_has(Guidance.hints(c, d, 1.0, 20), "Earn "))
+
+
+func test_best_mission_never_too_dangerous() -> void:
+	var d := data()
+	var c := _qr3_disciple()
+	var best := Guidance.best_mission(c, d)
+	if best != "":
+		assert_false(Guidance._mission_too_dangerous(c, d, best))
+
+
+func test_best_mission_empty_for_rogue() -> void:
+	var c := new_character()
+	c.realm_index = 1
+	assert_eq(Guidance.best_mission(c, data()), "")

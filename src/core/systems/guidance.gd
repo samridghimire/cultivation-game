@@ -104,7 +104,15 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 			out.append(sect)
 	var missions := _mission_hint(c, data, flags)
 	if missions != "":
-		out.append(missions)
+		var earn := -1
+		for i in out.size():
+			if out[i].begins_with("Earn "):
+				earn = i
+				break
+		if earn >= 0:
+			out[earn] = out[earn] + " " + missions
+		else:
+			out.append(missions)
 	if today >= 0:
 		var lecture := _lecture_hint(c, data, today)
 		if lecture != "":
@@ -1383,11 +1391,38 @@ static func _mission_hint(c: CharacterData, data: GameData, flags: Dictionary = 
 	var text := ""
 	if ready > 0:
 		text = "%d sect %s ready on the mission board at a sect hall." % [ready, "mission is" if ready == 1 else "missions are"]
+		var best := best_mission(c, data, flags)
+		if best != "":
+			var m: Dictionary = data.sect_missions[best]
+			text += " The best pays %d contribution: %s (%s)." % [int(m.get("contribution", 0)), String(m.get("name", best)), Calendar.format_duration(int(m.get("days", 1)))]
 		if too_dangerous > 0:
 			text = text.trim_suffix(".") + " (%d more %s too dangerous for you yet)." % [too_dangerous, "mission is" if too_dangerous == 1 else "missions are"]
 	elif too_dangerous > 0:
 		text = "The sect's missions are too dangerous for you yet; practise your techniques first."
 	return text
+
+
+## The ready mission paying the most contribution (ties: fewer days, then id); "" when none.
+static func best_mission(c: CharacterData, data: GameData, flags: Dictionary = {}) -> String:
+	var best := ""
+	for id: String in Sects.available_missions(c, data, flags):
+		if Sects.check_mission(c, data, id, flags) != "" or _mission_too_dangerous(c, data, id):
+			continue
+		if best == "" or _mission_beats(data.sect_missions[id], data.sect_missions[best]):
+			best = id
+	return best
+
+
+static func _mission_beats(a: Dictionary, b: Dictionary) -> bool:
+	var ca := int(a.get("contribution", 0))
+	var cb := int(b.get("contribution", 0))
+	if ca != cb:
+		return ca > cb
+	var da := int(a.get("days", 1))
+	var db := int(b.get("days", 1))
+	if da != db:
+		return da < db
+	return String(a["id"]) < String(b["id"])
 
 
 ## A mission with an enemy you would more likely lose to than beat (below Risky).
