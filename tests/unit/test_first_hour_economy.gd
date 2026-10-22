@@ -44,8 +44,8 @@ func test_every_sect_has_safe_rank0_mission() -> void:
 		assert_true(ok, "%s has a safe rank-0 mission" % sect_id)
 
 
-## QA-032: gate-stage-1 hunts that a bare (no extra techniques) newcomer cannot win; the typical player can.
-const QA032_BARE_DEADLY := ["cull_mist_wolves", "patrol_misty_peaks", "answer_azure_call", "answer_blood_lotus_call"]
+## QA-032: gate-stage hunts that a bare (no extra techniques) newcomer cannot win; the typical player can (C-200: the stag mission assumes a fighting style).
+const QA032_BARE_DEADLY := ["cull_mist_wolves", "patrol_misty_peaks", "answer_azure_call", "answer_blood_lotus_call", "drive_off_fog_antler_stag"]
 
 ## FH-024/FH-026: missions are always fought, so a Qi Refining mission with an enemy must not
 ## be a likely death for the first-hour player (starter technique, Qingshi iron sword and scale armor) at
