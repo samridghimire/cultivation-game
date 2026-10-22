@@ -33,6 +33,9 @@ static func play(gs: Node, seed_value: int, realm_index: int, region_id: String,
 	c.realm_index = realm_index
 	c.stage = 0
 	c.qi = 0.0
+	var saves: Node = gs.get_node("/root/SaveManager")
+	var autosave_was: bool = saves.autosave_enabled
+	saves.autosave_enabled = false  # a sim month must not write the autosave slot (QA-137)
 	gs.start_session(c)
 	gs.pending_event = ""
 	if sect:
@@ -78,6 +81,7 @@ static func play(gs: Node, seed_value: int, realm_index: int, region_id: String,
 		"alive": c.alive,
 	}
 	gs.end_session()
+	saves.autosave_enabled = autosave_was
 	return out
 
 

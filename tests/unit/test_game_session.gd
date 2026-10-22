@@ -110,11 +110,14 @@ func test_player_dies_of_old_age() -> void:
 	var c := _start()
 	var gs := _game_state()
 	c.spiritual_roots = {}  # no cultivation, so lifespan never grows
+	var saves := _root().get_node("SaveManager")
+	saves.autosave_enabled = false  # a year-long loop would write the autosave every month
 	for i in 100:
 		if not c.alive:
 			break
 		gs.perform_deed("help_villager")
 		gs.work_profession("doctor", Calendar.DAYS_PER_YEAR)
+	saves.autosave_enabled = true
 	assert_false(c.alive)
 	assert_true(c.cause_of_death != "")
 

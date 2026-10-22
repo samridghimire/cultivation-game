@@ -32,6 +32,9 @@ static func play(gs: Node, clock: Node, seed_value: int, months: int, curious: b
 	var rng := RandomNumberGenerator.new()
 	rng.seed = seed_value
 	var c := CharacterFactory.create("Newcomer", gs.data, rng)
+	var saves: Node = gs.get_node("/root/SaveManager")
+	var autosave_was: bool = saves.autosave_enabled
+	saves.autosave_enabled = false  # a sim month must not write the autosave slot (QA-137)
 	gs.start_session(c)
 	gs.pending_event = ""
 	var bus: Node = gs.get_node("/root/EventBus")
@@ -131,6 +134,7 @@ static func play(gs: Node, clock: Node, seed_value: int, months: int, curious: b
 	out["fights_won"] = LifeStats.get_stat(c, "fights_won")
 	out["fights_lost"] = LifeStats.get_stat(c, "fights_lost")
 	out["fights_fled"] = LifeStats.get_stat(c, "threats_fled")
+	saves.autosave_enabled = autosave_was
 	return out
 
 
