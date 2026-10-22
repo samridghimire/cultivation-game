@@ -976,7 +976,30 @@ func test_unexplored_hint_waits_for_day_ten() -> void:
 	assert_false(_has(Guidance.hints(c, d, 1.0, 99, {}, {}, "qingshi_village", 5), "have never been to"))
 	assert_false(_has(Guidance.hints(c, d, 1.0, 99, {}, {}, "qingshi_village", -1), "have never been to"))
 	var hints := Guidance.hints(c, d, 1.0, 99, {}, {}, "qingshi_village", 10)
-	assert_true(_has(hints, "You have never been to Misty Forest; the road from here is open."))
+	var days := 0
+	for r: Dictionary in d.regions["qingshi_village"]["routes"]:
+		if r["to"] == "misty_forest":
+			days = int(r["days"])
+	assert_true(_has(hints, "You have never been to Misty Forest (%s); the road from here is open." % Calendar.format_duration(days)))
+
+
+## GUIDE-106: the unexplored-road hint says whether you could win fights there.
+func test_unexplored_hint_mentions_winnable_fights() -> void:
+	var d := data()
+	var strong := _fresh()
+	strong.realm_index = 2
+	strong.stage = 8
+	strong.techniques["iron_fist"] = {"level": d.techniques["iron_fist"].max_level, "xp": 0.0}
+	var road := Guidance.unexplored_routes(strong, d, "qingshi_village")[0]
+	var expected := false
+	for f: Dictionary in Guidance.fair_fights(strong, d, {}, 10, String(road["to"])):
+		expected = expected or f["kind"] == "explore"
+	var hint := Guidance._untried_hint(strong, d, 10, {}, {}, "qingshi_village")
+	if hint.begins_with("You have never been to"):
+		assert_eq(hint.ends_with("You could win fights there."), expected)
+	var weak := _fresh()
+	weak.realm_index = 0
+	assert_false(Guidance._untried_hint(weak, d, 10, {}, {}, "qingshi_village").contains("You could win fights there."))
 
 
 func test_unexplored_journal_lines_capped_at_two() -> void:

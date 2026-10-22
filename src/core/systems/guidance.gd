@@ -736,7 +736,11 @@ static func _untried_hint(c: CharacterData, data: GameData, today: int, people: 
 	var roads := unexplored_routes(c, data, region_id)
 	if roads.is_empty():
 		return ""
-	return "You have never been to %s; the road from here is open." % String(roads[0]["name"])
+	var text := "You have never been to %s (%s); the road from here is open." % [String(roads[0]["name"]), Calendar.format_duration(int(roads[0]["days"]))]
+	for fight: Dictionary in fair_fights(c, data, {}, today, String(roads[0]["to"])):
+		if String(fight.get("kind", "")) == "explore":
+			return text + " You could win fights there."
+	return text
 
 
 ## Open roads from `region_id` to regions the character has never visited,
