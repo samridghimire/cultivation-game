@@ -2105,8 +2105,10 @@ func test_journal_renown_line_at_top_tier_and_without_config() -> void:
 	var rows := _renown_rows(c, d)
 	assert_eq(rows.size(), 1)
 	assert_true(String(rows[0]["text"]).contains("the highest name there is"))
+	var saved_renown: Dictionary = d.renown
 	d.renown = {}
 	assert_eq(_renown_rows(c, d).size(), 0)
+	d.renown = saved_renown  # data() is shared between tests
 
 ## C-127: a late Soul Formation player gets a goal for the real Void Piercing Pill (shops stock it like the other realm pills).
 func test_pill_goal_names_void_piercing_pill() -> void:
@@ -2542,3 +2544,50 @@ func test_merchant_goods() -> void:
 	assert_eq(Guidance.merchant_goods({"stock_tags": ["talisman", "inscription"]}), "talismans and array materials")
 	assert_eq(Guidance.merchant_goods({"stock_tags": ["beast_part"], "max_price": 100}), "beast part (cheap goods)")
 	assert_true(Guidance.market_lines(data(), "fallen_star_market").has("Heavenforge Smithy: weapons and armor, ore, smithing materials"))
+
+func test_merchant_price_applies_renown() -> void:
+	var c := _fresh()
+	var base := int(data().items["talisman_paper"]["price"])
+	assert_eq(Guidance.merchant_price(c, data(), "qingshi_village", "talisman_paper"), base)
+	c.renown["qingshi_village"] = 100000
+	var mult := Renown.buy_multiplier(c, data(), "qingshi_village")
+	assert_true(mult < 1.0, "top renown tier discounts")
+	assert_eq(Guidance.merchant_price(c, data(), "qingshi_village", "talisman_paper"), maxi(1, roundi(base * mult)))
+	assert_eq(Guidance.merchant_place(data(), "qingshi_village", "no_such_item"), {})
+
+
+func test_buy_hint_quotes_discounted_price() -> void:
+	var c := _fresh()
+	c.realm_index = 1
+	c.professions["array_master"] = {"rank": 0, "xp": 0.0}
+	c.inventory = {"spirit_stone": 20, "spirit_herb": 2}
+	c.renown["qingshi_village"] = 100000
+	var price := Guidance.merchant_price(c, data(), "qingshi_village", "talisman_paper")
+	var line := Guidance.buy_ingredient_hint(c, data(), "qingshi_village")
+	assert_true(line.contains("for %d stones each" % price), line)
+
+
+func test_affordable_armor_uses_charged_price() -> void:
+	var c := _armor_hint_fighter()
+	c.equipment = {}
+	var armor_id := Guidance.affordable_armor(c, data(), "myriad_peaks_ridge")
+	assert_true(armor_id != "")
+	var price := Guidance.merchant_price(c, data(), "myriad_peaks_ridge", armor_id)
+	c.inventory["spirit_stone"] = price - 1
+	assert_true(Guidance.affordable_armor(c, data(), "myriad_peaks_ridge") != armor_id, "one stone short")
+	c.inventory["spirit_stone"] = price
+	assert_eq(Guidance.affordable_armor(c, data(), "myriad_peaks_ridge"), armor_id)
+
+
+func test_sect_faction_merchant_price_follows_reputation() -> void:
+	var c := _fresh()
+	var item_id := ""
+	for id: String in data().items:
+		var place := Guidance.merchant_place(data(), "fallen_star_market", id)
+		if String(place.get("faction", "")) == "blood_lotus_sect" and int(data().items[id].get("price", 0)) >= 10:
+			item_id = id
+			break
+	assert_true(item_id != "", "a Blood Lotus Apothecary item")
+	var neutral := Guidance.merchant_price(c, data(), "fallen_star_market", item_id)
+	Reputation.change(c, data(), "blood_lotus_sect", -2000)
+	assert_true(Guidance.merchant_price(c, data(), "fallen_star_market", item_id) > neutral, "hated sect charges more")

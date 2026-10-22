@@ -142,13 +142,13 @@ static func thin_defence_hint(c: CharacterData, data: GameData, region_id: Strin
 		if not has_armor:
 			var armor_id := affordable_armor(c, data, region_id)
 			if armor_id != "":
-				line += " The %s sells %s for %d stones." % [merchant_selling(data, region_id, armor_id), data.items[armor_id]["name"], int(data.items[armor_id].get("price", 0))]
+				line += " The %s sells %s for %d stones." % [merchant_selling(data, region_id, armor_id), data.items[armor_id]["name"], merchant_price(c, data, region_id, armor_id)]
 			else:
 				# GUIDE-072: none here, so point to the nearest market that sells one.
 				var far := nearest_selling(c, data, region_id, func(r: String) -> String: return affordable_armor(c, data, r))
 				if not far.is_empty():
 					var far_armor: String = far["result"]
-					line += " The %s in %s (%s) sells %s for %d stones." % [merchant_selling(data, far["region_id"], far_armor), far["region_name"], Calendar.format_duration(int(far["days"])), data.items[far_armor]["name"], int(data.items[far_armor].get("price", 0))]
+					line += " The %s in %s (%s) sells %s for %d stones." % [merchant_selling(data, far["region_id"], far_armor), far["region_name"], Calendar.format_duration(int(far["days"])), data.items[far_armor]["name"], merchant_price(c, data, far["region_id"], far_armor)]
 		if not has_body:
 			var source := body_manual_source(c, data, region_id)
 			if source != "":
@@ -173,10 +173,12 @@ static func affordable_armor(c: CharacterData, data: GameData, region_id: String
 		if Equipment.slot_of(data, item_id) != "armor":
 			continue
 		var defense := Equipment.defense_of(data, item_id)
-		var price := int(data.items[item_id].get("price", 0))
-		if defense <= worn or price > stones or merchant_selling(data, region_id, item_id) == "":
+		if defense <= worn or merchant_selling(data, region_id, item_id) == "":
 			continue
-		if best == "" or defense > Equipment.defense_of(data, best) or (defense == Equipment.defense_of(data, best) and price < int(data.items[best].get("price", 0))):
+		var price := merchant_price(c, data, region_id, item_id)
+		if price > stones:
+			continue
+		if best == "" or defense > Equipment.defense_of(data, best) or (defense == Equipment.defense_of(data, best) and price < merchant_price(c, data, region_id, best)):
 			best = item_id
 	return best
 
@@ -298,7 +300,7 @@ static func buy_ingredient_hint(c: CharacterData, data: GameData, region_id: Str
 					item_id = ing
 			if not bought_only or item_id == "":
 				continue
-			var line := "Your %s needs %s: the %s sells them for %d stones each." % [recipe["name"], Items.item_plural(data, item_id, 2), merchant_selling(data, region_id, item_id), int(data.items[item_id].get("price", 0))]
+			var line := "Your %s needs %s: the %s sells them for %d stones each." % [recipe["name"], Items.item_plural(data, item_id, 2), merchant_selling(data, region_id, item_id), merchant_price(c, data, region_id, item_id)]
 			if c.item_count("spirit_stone") < Alchemy.shortfall_cost(c, data, recipe_id):
 				line += " Sell gathered herbs or take odd jobs first."
 			return line
@@ -307,11 +309,27 @@ static func buy_ingredient_hint(c: CharacterData, data: GameData, region_id: Str
 
 ## GUIDE-066: display name of the first merchant place in `region_id` that stocks `item_id`; "" if none.
 static func merchant_selling(data: GameData, region_id: String, item_id: String) -> String:
+	var place := merchant_place(data, region_id, item_id)
+	return String(place.get("display_name", "merchant")) if not place.is_empty() else ""
+
+
+## GUIDE-073: the first merchant place in `region_id` that stocks `item_id`, or {}.
+static func merchant_place(data: GameData, region_id: String, item_id: String) -> Dictionary:
 	var item: Dictionary = data.items.get(item_id, {})
 	for p: Dictionary in data.regions.get(region_id, {}).get("places", []):
 		if String(p.get("type", "")) == "merchant" and Items.merchant_sells(data, item, p.get("stock_tags", []), int(p.get("max_price", 0))):
-			return String(p.get("display_name", "merchant"))
-	return ""
+			return p
+	return {}
+
+
+## GUIDE-073: what the merchant selling `item_id` in `region_id` charges `c`: base price with the merchant's
+## sect reputation and the region's renown applied. World-event prices need GameState and are left out.
+static func merchant_price(c: CharacterData, data: GameData, region_id: String, item_id: String) -> int:
+	return _place_price(c, data, region_id, item_id, merchant_place(data, region_id, item_id))
+
+
+static func _place_price(c: CharacterData, data: GameData, region_id: String, item_id: String, place: Dictionary) -> int:
+	return maxi(1, roundi(Reputation.buy_price(c, data, item_id, String(place.get("faction", ""))) * Renown.buy_multiplier(c, data, region_id)))
 
 
 ## WU-253: plain-words description of what a merchant place sells, from its `stock_tags`.
@@ -366,8 +384,11 @@ static func heal_source(c: CharacterData, data: GameData, region_id: String) -> 
 			continue
 		for item_id: String in data.items:
 			var item: Dictionary = data.items[item_id]
-			if _heals(data, item_id, injury_id) and int(item.get("price", 0)) <= stones and Items.merchant_sells(data, item, p.get("stock_tags", []), int(p.get("max_price", 0))):
-				return "the %s sells %s for %d stones" % [p.get("display_name", "merchant"), item.get("name", item_id), int(item["price"])]
+			if not _heals(data, item_id, injury_id) or not Items.merchant_sells(data, item, p.get("stock_tags", []), int(p.get("max_price", 0))):
+				continue
+			var heal_price := _place_price(c, data, region_id, item_id, p)
+			if heal_price <= stones:
+				return "the %s sells %s for %d stones" % [p.get("display_name", "merchant"), item.get("name", item_id), heal_price]
 	for p: Dictionary in data.regions.get(region_id, {}).get("routes", []):
 		var to := String(p.get("to", ""))
 		for q: Dictionary in data.regions.get(to, {}).get("places", []):
@@ -1290,7 +1311,7 @@ static func armor_hint(c: CharacterData, data: GameData, region_id: String) -> S
 	var armor_id := affordable_armor(c, data, region_id)
 	if armor_id == "":
 		return ""
-	return "Armor would keep you standing in fights: the %s sells %s for %d stones." % [merchant_selling(data, region_id, armor_id), data.items[armor_id]["name"], int(data.items[armor_id].get("price", 0))]
+	return "Armor would keep you standing in fights: the %s sells %s for %d stones." % [merchant_selling(data, region_id, armor_id), data.items[armor_id]["name"], merchant_price(c, data, region_id, armor_id)]
 
 
 ## "Practise <style> on the Techniques screen..." for a newcomer with a low-level fighting style, or "" (GUIDE-020).
