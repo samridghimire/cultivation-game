@@ -83,6 +83,9 @@ func _record_death(cause: String, final: bool) -> void:
 var _seed := 0
 ## QA-114: the curious player's state the first month after the Foundation breakthrough, per seed.
 var _fe_snaps := {}
+## QA-121: the same player two months (~60 days) after the snapshot, and the month of the first snapshot.
+var _fe_snaps60 := {}
+var _fe_month := {}
 var _wait_for_pill := 0
 var _trace_seed := 0
 
@@ -135,9 +138,12 @@ func _run() -> void:
 	print("  seed  block  kinds  new  stones  realm")
 	for s in range(1, seeds + 1):
 		_seed = s
-		var snap_hook := func(_m: int) -> void:
+		var snap_hook := func(m: int) -> void:
 			if gs.player.realm_index >= 2 and not _fe_snaps.has(s):
 				_fe_snaps[s] = CharacterData.from_dict(gs.player.to_dict())
+				_fe_month[s] = m
+			elif _fe_month.has(s) and not _fe_snaps60.has(s) and m >= int(_fe_month[s]) + 2:
+				_fe_snaps60[s] = CharacterData.from_dict(gs.player.to_dict())
 		var r: Dictionary = FirstHour.play(gs, clock, s, months, true, snap_hook, false, _wait_for_pill)
 		runs.append(r.duplicate())
 		runs[-1].erase("player")
@@ -348,12 +354,32 @@ func _print_fe_gap() -> void:
 	print("  typical odds: %s" % ", ".join(names))
 	var sums := {"all": 0.0, "typical_techs": 0.0, "typical_gear": 0.0, "typical_attrs": 0.0, "typical_all": 0.0}
 	var n := 0
+	var n60 := 0
+	var half60 := 0
+	var rogue60 := 0
 	for s: int in _fe_snaps:
 		var c: CharacterData = _fe_snaps[s]
 		var odds: Array[String] = []
 		for e in rated:
 			odds.append("%.0f%%" % (100.0 * Combat.win_chance(c, data, e)))
-		print("  seed %2d stage %d: %s | techniques %s | gear %s | rated %s" % [s, c.stage, _stat_line(c, data), _tech_line(c), _gear_line(c, data), " / ".join(odds)])
+		print("  seed %2d at entry stage %d: %s | techniques %s | gear %s | rated %s" % [s, c.stage, _stat_line(c, data), _tech_line(c), _gear_line(c, data), " / ".join(odds)])
+		if _fe_snaps60.has(s):
+			var c60: CharacterData = _fe_snaps60[s]
+			var odds60: Array[String] = []
+			var all_half := true
+			for e in rated:
+				var w := Combat.win_chance(c60, data, e)
+				odds60.append("%.0f%%" % (100.0 * w))
+				if w < 0.5:
+					all_half = false
+			n60 += 1
+			if all_half:
+				half60 += 1
+			if Combat.win_chance(c60, data, target) >= 0.5:
+				rogue60 += 1
+			print("  seed %2d +60 days stage %d: %s | techniques %s | gear %s | rated %s" % [s, c60.stage, _stat_line(c60, data), _tech_line(c60), _gear_line(c60, data), " / ".join(odds60)])
+		else:
+			print("  seed %2d +60 days: run ended before the snapshot" % s)
 		var variants := {"typical_techs": ["techniques"], "typical_gear": ["equipment"], "typical_attrs": ["attributes"], "typical_all": ["techniques", "equipment", "attributes"]}
 		sums["all"] += Combat.win_chance(c, data, target)
 		for key: String in variants:
@@ -372,6 +398,7 @@ func _print_fe_gap() -> void:
 	if n == 0:
 		print("  no seed reached Foundation")
 		return
+	print("  at +60 days (%d seeds with a snapshot): rated >= 50%% against all three foes in %d, against the roadside rogue in %d" % [n60, half60, rogue60])
 	print("  mean rated odds vs roadside_rogue_cultivator over %d seeds: curious %.0f%%; with the typical player's techniques %.0f%%, gear %.0f%%, attributes %.0f%%, all three (injuries cleared) %.0f%%" % [n, 100.0 * sums["all"] / n, 100.0 * sums["typical_techs"] / n, 100.0 * sums["typical_gear"] / n, 100.0 * sums["typical_attrs"] / n, 100.0 * sums["typical_all"] / n])
 
 
