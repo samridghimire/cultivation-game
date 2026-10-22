@@ -1198,7 +1198,7 @@ static func _sect_hint(c: CharacterData, data: GameData) -> String:
 		return ""
 	var pays := _stipend_clause(data, sect.ranks[rank + 1].get("stipend", {}))
 	if Sects.check_promotion(c, data) == "":
-		return "The trial for %s is open. Attempt it at a sect hall.%s" % [sect.rank_name(rank + 1), pays]
+		return "The trial for %s is open%s. Attempt it at a sect hall." % [sect.rank_name(rank + 1), pays]
 	var need := int(sect.ranks[rank + 1].get("contribution", 0)) - int(c.sect["contribution"])
 	return "Earn %d more sect contribution (missions, duties) to become %s%s." % [maxi(need, 0), sect.rank_name(rank + 1), pays]
 

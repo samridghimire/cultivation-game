@@ -142,7 +142,7 @@ func test_sect_hint_names_stipend() -> void:
 	var stones := int(ranks[1]["stipend"]["spirit_stones"])
 	assert_true(_has(Guidance.hints(c, d, 1.0, 20), "Inner Disciple (it pays %d stones a month)" % stones))
 	c.sect["contribution"] = 600
-	assert_true(_has(Guidance.hints(c, d, 1.0, 20), "is open. Attempt it at a sect hall. (it pays %d stones a month)" % stones))
+	assert_true(_has(Guidance.hints(c, d, 1.0, 20), "is open (it pays %d stones a month). Attempt it at a sect hall." % stones))
 	c.sect["rank"] = 1
 	c.realm_index = 3
 	var pill: String = d.items["qi_gathering_pill"]["name"]

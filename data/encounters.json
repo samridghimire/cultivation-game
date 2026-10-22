@@ -375,7 +375,7 @@
     {"id": "forest_hunter_wolf_lunge", "tags": ["forest"], "weight": 1, "kind": "neutral", "days": 1, "min_realm": "qi_refining", "max_realm": "qi_refining", "text": "A grey-bearded hunter crouches over a patch of torn earth, tracing the claw marks with his thumb. \"Wolf, and a big one. See how it dug in before the lunge? If you must walk these woods, learn to read that.\"", "choices": [
       {"label": "Ask him to show you how a wolf lunges", "text": "He plays the wolf with a stick and you the prey, over and over, until your feet know when to give ground and when to strike.", "days": 6, "effects": {"practice_days": 6}},
       {"label": "Read the sign yourself and answer his test", "text": "You study the marks, name the wolf's weak side, and the old hunter grunts, impressed. He spends ten days drilling you in turning a lunge aside.", "days": 10, "requires": {"min_attributes": {"comprehension": 12}}, "effects": {"practice_days": 10}},
-      {"label": "Trade him a few stones for a skinning knife", "text": "He sells you a plain, sharp knife and a word of thanks.", "effects": {"items": {"spirit_stone": 2}}}
+      {"label": "Help him carry his pelts to the road", "text": "The bundle is heavy and smells of the forest. At the road he presses two stones into your hand and a word of thanks.", "effects": {"items": {"spirit_stone": 2}}}
     ]}
 ]
 }

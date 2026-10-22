@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 157a41d
+Last reviewed commit: be6f18b
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -838,3 +838,18 @@ Last reviewed commit: 157a41d
     owned item for injury 2 (dictionary order, as spec'd). A merchant clause with two injuries still reads
     "sells X for N stones for your <injury>". QA-121: the defence hint alone leaves 0/9 seeds at >=50% vs Foundation
     foes 60 days in (healing and a body art missing); for the planner.
+- 2026-10-22 (reviewer, 5th run): reviewed 157a41d..be6f18b (ab1bb8a QA-119, 94392f1 C-172, 6c301eb GUIDE-081, b427f8e CMB-011,
+  9237d4d QA-123, 347ff2d C-178, d47cc8e GUIDE-083, ba4a862 WU-267, 5dae9b5 GUIDE-084, 279b2ed WU-269, be6f18b QA-122;
+  [PLAN]/[REVIEW] commits skipped). Main green (2107 tests). No BACKLOG/CHANGELOG edits by workers; no save-format changes. Nothing filed.
+  - Fixed ([REVIEW] commit): GUIDE-084 tacked the stipend after the sentence on the open-trial line ("Attempt it at a sect
+    hall. (it pays 6 stones a month)"); it now reads "The trial for Inner Disciple is open (it pays 6 stones a month).
+    Attempt it at a sect hall." (GUIDE-085's "The trial for Inner Disciple is open" match still holds). C-178's forest
+    choice "Trade him a few stones for a skinning knife" paid the player 2 stones and gave no knife; relabelled to
+    helping him carry pelts for 2 stones.
+  - Checked: GUIDE-081 days_to_next matches Techniques.practice's rate (ceil, 0 at max). CMB-011 validated in GameData,
+    applied once in enemy_stats before the flat bonuses. GUIDE-083 shares one Dijkstra with nearest_selling (hop limit
+    kept there). WU-267 adds the to-level button first so _focus_first_action reaches it; HFlowContainer wraps. WU-269
+    clamps in local coords from the canvas transform; world.gd only redraws near-edge labels when the camera moved.
+  - Notes, not filed: WU-267 and WU-269 skipped their screenshots (WU-268 / follow-ups cover them). QA-122: a 10-stone
+    Array Master can never afford the cheapest in-rank recipe (21); for the planner. "a %s" in _stipend_clause would
+    read "a Elixir..." for a vowel-initial item (none in sect stipends today).
