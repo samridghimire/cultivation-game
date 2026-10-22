@@ -669,6 +669,10 @@ func _validate_combat() -> void:
 	for enemy: Dictionary in enemies.values():
 		if realm_index_of(enemy.get("realm", "")) < 0:
 			load_errors.append("Enemy '%s' has unknown realm '%s'" % [enemy["id"], enemy.get("realm", "")])
+		if enemy.has("power_mult"):
+			var pm: Variant = enemy["power_mult"]
+			if (typeof(pm) != TYPE_INT and typeof(pm) != TYPE_FLOAT) or float(pm) < 0.5 or float(pm) > 1.5:
+				load_errors.append("enemies.json %s: power_mult must be a number in [0.5, 1.5]" % enemy["id"])
 		for tech_id in enemy.get("techniques", []):
 			if not techniques.has(tech_id):
 				load_errors.append("Enemy '%s' knows unknown technique '%s'" % [enemy["id"], tech_id])

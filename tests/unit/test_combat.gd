@@ -358,3 +358,28 @@ func test_win_chance_cache_clears_past_limit() -> void:
 		c.attributes["fortune"] = 10 + i
 		Combat.win_chance(c, data(), enemy, 1)
 	assert_gt(Combat.CHANCE_CACHE_MAX + 1, Combat._chance_cache.size())
+
+
+func test_power_mult_scales_scaled_stats_before_flat_bonus() -> void:
+	var base := {"realm": "qi_refining", "stage": 3}
+	var plain := Combat.enemy_stats(base, data())
+	var strong := Combat.enemy_stats({"realm": "qi_refining", "stage": 3, "power_mult": 1.2}, data())
+	assert_eq(strong["max_hp"], roundi(plain["max_hp"] * 1.2))
+	assert_eq(strong["attack"], roundi(plain["attack"] * 1.2))
+	assert_eq(strong["defense"], roundi(plain["defense"] * 1.2))
+	assert_eq(strong["speed"], plain["speed"])
+	var flat := Combat.enemy_stats({"realm": "qi_refining", "stage": 3, "power_mult": 1.2, "hp": 10}, data())
+	assert_eq(flat["max_hp"], strong["max_hp"] + 10)
+	assert_eq(Combat.enemy_stats({"realm": "qi_refining", "stage": 3, "power_mult": 1.0}, data()), plain)
+
+
+func test_power_mult_out_of_range_is_a_load_error() -> void:
+	var d := GameData.load_from_dir()
+	d.enemies[d.enemies.keys()[0]]["power_mult"] = 2.0
+	d.load_errors.clear()
+	d._validate()
+	var found := false
+	for e in d.load_errors:
+		if "power_mult must be a number in [0.5, 1.5]" in e:
+			found = true
+	assert_true(found, str(d.load_errors))

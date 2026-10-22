@@ -64,7 +64,8 @@ static func stats(c: CharacterData, data: GameData) -> Dictionary:
 
 
 ## Combat stats of an enemy definition. The flat hp/attack/defense/speed in
-## the enemy data are added after scaling.
+## the enemy data are added after scaling; power_mult (0.5-1.5) scales the
+## scaled hp/attack/defense first.
 static func enemy_stats(enemy: Dictionary, data: GameData) -> Dictionary:
 	var realm_index := maxi(0, data.realm_index_of(enemy.get("realm", "mortal")))
 	var power := realm_power(realm_index, int(enemy.get("stage", 0)))
@@ -73,6 +74,11 @@ static func enemy_stats(enemy: Dictionary, data: GameData) -> Dictionary:
 		levels[tech_id] = data.enemy_technique_level
 	var training := realm_training(data, realm_index)
 	var s := _build_stats(power, {}, func(key: String) -> float: return Techniques.bonus_from(levels, {}, data, key) + float(training.get(key, 0.0)))
+	var mult := float(enemy.get("power_mult", 1.0))
+	if mult != 1.0:
+		s["max_hp"] = maxi(1, roundi(s["max_hp"] * mult))
+		s["attack"] = maxi(1, roundi(s["attack"] * mult))
+		s["defense"] = maxi(0, roundi(s["defense"] * mult))
 	s["max_hp"] = maxi(1, s["max_hp"] + int(enemy.get("hp", 0)))
 	s["attack"] = maxi(1, s["attack"] + int(enemy.get("attack", 0)))
 	s["defense"] = maxi(0, s["defense"] + int(enemy.get("defense", 0)))
