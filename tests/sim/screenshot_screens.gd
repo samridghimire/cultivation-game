@@ -1046,6 +1046,11 @@ func _start_shop_shot(gs: Node) -> void:
 	shots.append({"name": "shop_upgrade_tag", "open": func() -> void:
 		shop.open("Wandering Merchant", 0, ["herb", "ore", "equipment", "manual"])
 		shop._set_category("All"), "close": shop.close})
+	# WU-263: Heavenforge Smithy in Fallen Star Market: affordable "(upgrade)" armor next to unmarked rows (worse or too dear).
+	shots.append({"name": "shop_smithy_upgrade", "open": func() -> void:
+		gs.current_region = "fallen_star_market"
+		shop.open("Heavenforge Smithy", 0, ["equipment", "ore", "smithing"])
+		shop._set_category("All"), "close": shop.close})
 
 
 ## WU-253: `--map-shot` writes map_sells_<size>.png, the world map with Fallen Star Market selected (its "Sells:" line).
