@@ -9,6 +9,8 @@ extends SceneTree
 ## or crafting (--no-nudge restores the old policy for before/after runs); the medians report the realm at day 120.
 ## QA-117: when GUIDE-066's buy hint shows, the crafter buys the missing bought-only ingredient for one craft (--no-buy restores the old policy).
 ## QA-127: --no-jobs restores the old policy of never taking odd jobs.
+## QA-111: for an open order still short of an ingredient no gather place here yields, the crafter walks one route to a
+## neighbouring region that does, gathers enough for the order there and walks back (--walk; off by default, it lowers the crafter's stones).
 ## QA-107: --orders prints every commission (roll day, item, count, reward, days allowed, whether each ingredient
 ## was available nearby at roll time) with its fate and why the sim did not fill it.
 
@@ -23,6 +25,8 @@ var _clock: Node
 var _orders_mode := false
 var _follow_nudge := true  ## QA-108
 var _follow_buy := true  ## QA-117
+var _follow_walk := false  ## QA-111 (--walk)
+var _trips := 0  ## QA-111: walks to a neighbouring region this life
 var _tracked: Array[Dictionary] = []  ## QA-107: orders seen so far, with their fate
 var _sold := {}  ## QA-107: item id -> units the sim sold this life
 var _crafted_out := {}  ## QA-107: item id -> units crafted this life
@@ -61,6 +65,7 @@ func _run() -> void:
 	_follow_nudge = not args.has("--no-nudge")
 	_follow_buy = not args.has("--no-buy")
 	_follow_jobs = not args.has("--no-jobs")
+	_follow_walk = args.has("--walk")
 	for a in args:
 		if String(a).begins_with("--prof="):
 			_prof = String(a).substr(7)
@@ -74,7 +79,7 @@ func _run() -> void:
 	_clock = root.get_node("GameClock")
 	print("Crafter start: new %s in Qingshi Village, %d seeds, %d days" % [_prof, seeds, days])
 	print("  seed  d30  d90 d180  crafted  comm(got/del)  rank  renown  gather% craft% meditate%  stuck-wk (faded)  curious(d30/d90/d180)  realm d90 | d180 | d365 (curious)  cult-hint-steps")
-	var cols := {"d30": [], "d90": [], "r120": [], "d180": [], "crafted": [], "got": [], "delivered": [], "rank": [], "renown": [], "gather": [], "craft": [], "meditate": [], "stuck": [], "faded": [], "c30": [], "c90": [], "c180": [], "d365": [], "hint": [], "post": [], "stuck_post": [], "rank_gap": []}
+	var cols := {"d30": [], "d90": [], "r120": [], "d180": [], "crafted": [], "got": [], "delivered": [], "rank": [], "renown": [], "gather": [], "craft": [], "meditate": [], "stuck": [], "faded": [], "c30": [], "c90": [], "c180": [], "d365": [], "hint": [], "post": [], "stuck_post": [], "rank_gap": [], "trips": []}
 	for s in range(1, seeds + 1):
 		var base: Dictionary = FirstHour.play(_gs, _clock, s, maxi(6, days / 30), true)
 		var cur: Array = base["stones"]
@@ -88,6 +93,7 @@ func _run() -> void:
 			cols[k].append(r[k])
 		if int(r["crafted"]) == 0:
 			print("    QA-122: seed %d never crafted: started with %d stones, cheapest in-rank recipe needs %d (paper at shop price plus its own stones)" % [s, r["start_stones"], r["cheapest"]])
+		cols["trips"].append(r["trips"])
 		cols["gather"].append(100.0 * r["gather_days"] / total)
 		cols["craft"].append(100.0 * r["craft_days"] / total)
 		cols["meditate"].append(100.0 * r["meditate_days"] / total)
@@ -107,6 +113,7 @@ func _run() -> void:
 	var never := 0
 	for n: int in cols["crafted"]:
 		never += 1 if n == 0 else 0
+	print("  QA-111: order walks %s; trips to a neighbouring region per seed: median %d, max %d" % ["followed" if _follow_walk else "off", _median(cols["trips"]), cols["trips"].max()])
 	print("  QA-117: buy hint %s; seeds that never crafted: %d of %d" % ["followed" if _follow_buy else "ignored", never, seeds])
 	var met_ids: Array = _met.keys()
 	met_ids.sort()
@@ -136,6 +143,7 @@ func _crafter(seed_value: int, days: int) -> Dictionary:
 	Alchemy.grant_rank_recipes(c, _gs.data)
 	var start: int = _clock.total_days
 	var start_stones := c.item_count("spirit_stone")
+	_trips = 0
 	var out := {"start_stones": start_stones, "cheapest": _cheapest_craft_cost(c), "d30": 0, "d90": 0, "d120": 0, "d180": 0, "crafted": 0, "got": 0, "delivered": 0, "rank": 0, "renown": 0, "gather_days": 0, "craft_days": 0, "meditate_days": 0, "stuck": 0, "faded": 0, "d365": 0, "realm90": "-", "realm120": "-", "realm180": "-", "realm365": "-", "cult_hint": 0, "crafted_post": 0, "stuck_post": 0}
 	var checkpoints := CHECKPOINTS.duplicate()
 	_tracked.clear()
@@ -176,6 +184,7 @@ func _crafter(seed_value: int, days: int) -> Dictionary:
 	out["got"] = out["delivered"] + c.commissions.size()
 	out["rank"] = Professions.rank_of(c, _prof)
 	out["renown"] = Renown.value(c, REGION)
+	out["trips"] = _trips
 	if _orders_mode:
 		_track_orders(c, seed_value, start)
 		for t in _tracked:
@@ -335,6 +344,8 @@ func _act(c: CharacterData) -> String:
 		_deliver_open(c)
 		_sell_surplus(c)
 		return "craft"
+	if _follow_walk and _walk_for_order(c):
+		return "gather"
 	if _gather_for_order(c) or _gather_hinted(c):
 		return "gather"
 	return "stuck" if Guidance.herb_here_hint(c, _gs.data, REGION) == "" else "meditate"
@@ -427,9 +438,62 @@ func _gather_for_order(c: CharacterData) -> bool:
 	return false
 
 
-## Gathers at the place in this region that yields item_id. False if there is none.
-func _gather_item(_c: CharacterData, item_id: String) -> bool:
-	for place: Dictionary in _gs.data.regions[REGION].get("places", []):
+## QA-111: an open order short of an ingredient no place here yields: walks one route to a region that yields it,
+## gathers up to what the order needs (at most 12 gathers, never past the deadline) and walks home. False if no trip was made.
+func _walk_for_order(c: CharacterData) -> bool:
+	for order in c.commissions:
+		var id := _short_elsewhere(c, order)
+		if id == "":
+			continue
+		for route: Dictionary in Exploration.routes(c, _gs.data, REGION):
+			if not route["ok"] or not _yields(c, String(route["to"]), id):
+				continue
+			var left := Commissions.days_left(order, _clock.total_days)
+			if 2 * int(route["days"]) >= left:
+				continue
+			var dest := String(route["to"])
+			_gs.travel(dest)
+			if _gs.current_region != dest:
+				return false
+			_trips += 1
+			var recipe: Dictionary = _gs.data.recipes[String(order["recipe"])]
+			var per := maxi(1, int(recipe["output"].get("count", 1)))
+			var want := int(recipe["ingredients"][id]) * ceili(float(int(order["count"]) - c.item_count(String(order["item"]))) / per)
+			var gathers := 0
+			while c.alive and c.item_count(id) < want and gathers < 12 and _clock.total_days + int(route["days"]) < int(order["due_day"]):
+				_gather_item(c, id, dest)
+				gathers += 1
+			_gs.travel(REGION)
+			return true
+	return false
+
+
+## The first ingredient the order still lacks that no gather place in the sim's region yields ("" if none).
+func _short_elsewhere(c: CharacterData, order: Dictionary) -> String:
+	if Commissions.short_ingredient(c, _gs.data, order) == "":
+		return ""
+	var recipe: Dictionary = _gs.data.recipes[String(order["recipe"])]
+	var per := maxi(1, int(recipe["output"].get("count", 1)))
+	var crafts := ceili(float(int(order["count"]) - c.item_count(String(order["item"]))) / per)
+	for id: String in recipe["ingredients"]:
+		if id != "spirit_stone" and c.item_count(id) < int(recipe["ingredients"][id]) * crafts and not _yields(c, REGION, id):
+			return id
+	return ""
+
+
+func _yields(c: CharacterData, region_id: String, item_id: String) -> bool:
+	for place: Dictionary in _gs.data.regions[region_id].get("places", []):
+		if String(place.get("type", "")) != "gather":
+			continue
+		for entry: Dictionary in Exploration.gather_table_for(c, _gs.data, place.get("gather_table", [])):
+			if String(entry.get("item", "")) == item_id:
+				return true
+	return false
+
+
+## Gathers at the place in `region_id` (default: the sim's own) that yields item_id. False if there is none.
+func _gather_item(_c: CharacterData, item_id: String, region_id: String = REGION) -> bool:
+	for place: Dictionary in _gs.data.regions[region_id].get("places", []):
 		if String(place.get("type", "")) != "gather":
 			continue
 		for entry: Dictionary in Exploration.gather_table_for(_c, _gs.data, place.get("gather_table", [])):
