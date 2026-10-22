@@ -1344,22 +1344,25 @@ func test_foundation_goals_ladder_and_journal_section() -> void:
 	var c := _fresh()
 	c.realm_index = 2
 	var goals := Guidance.foundation_goals(c, data(), {})
-	assert_eq(goals.size(), 5)
+	assert_eq(goals.size(), 6)
 	for g in goals:
 		assert_false(g["done"])
 	assert_true(Guidance.foundation_goals_active(c, data(), {}))
 	var section := Guidance.journal(c, data(), {}, 0, "qingshi_village").filter(func(e: Dictionary) -> bool: return e["section"] == "Foundation goals")
-	assert_eq(section.size(), 5)
+	assert_eq(section.size(), 6)
 	assert_eq(section[0]["tone"], "warning")
 	assert_eq(section[1]["tone"], "normal")
 	c.stage = 1
 	c.abode = "any_abode"
 	c.body_stage = 1
 	goals = Guidance.foundation_goals(c, data(), {})
-	assert_true(goals[0]["done"] and goals[2]["done"] and goals[3]["done"])
+	assert_true(goals[0]["done"] and goals[3]["done"] and goals[4]["done"])
 	assert_false(goals[1]["done"])
-	assert_false(goals[4]["done"])
+	assert_false(goals[2]["done"])
+	assert_false(goals[5]["done"])
 	c.sect = {"id": data().sects.keys()[0], "rank": 2, "contribution": 0, "spent": 0}
+	c.techniques["stone_skin"] = {"level": 1, "xp": 0.0}
+	c.equipment["armor"] = "cloth_robe"
 	var beaten := {Guidance.beat_realm_flag("foundation_establishment"): true}
 	assert_false(Guidance.foundation_goals_active(c, data(), beaten))
 	var after := Guidance.journal(c, data(), beaten, 0, "qingshi_village").filter(func(e: Dictionary) -> bool: return e["section"] == "Foundation goals")
@@ -1369,8 +1372,8 @@ func test_foundation_goals_ladder_and_journal_section() -> void:
 func test_foundation_goals_clan_and_realm_limits() -> void:
 	var c := _fresh()
 	c.realm_index = 2
-	assert_true(Guidance.foundation_goals(c, data(), {}, ClanData.new())[4]["done"])
-	assert_eq(Guidance.active_goal_ladder(c, data(), {}).size(), 5)
+	assert_true(Guidance.foundation_goals(c, data(), {}, ClanData.new())[5]["done"])
+	assert_eq(Guidance.active_goal_ladder(c, data(), {}).size(), 6)
 	c.realm_index = 9
 	assert_false(Guidance.foundation_goals_active(c, data(), {}))
 	assert_eq(Guidance.active_goal_ladder(c, data(), {}).size(), Guidance.tribulation_goals(c, data(), {}).size(), "only the Tribulation ladder is left")
@@ -1385,9 +1388,11 @@ func test_goal_ladder_keeps_a_finished_ladder() -> void:
 	c.stage = 1
 	c.abode = "x"
 	c.body_stage = 1
+	c.techniques["stone_skin"] = {"level": 1, "xp": 0.0}
+	c.equipment["armor"] = "cloth_robe"
 	assert_false(Guidance.foundation_goals_active(c, data(), {Guidance.beat_realm_flag("foundation_establishment"): true}, ClanData.new()))
 	assert_eq(Guidance.goal_ladder_id(c), "foundation")
-	assert_eq(Guidance.goal_ladder("foundation", c, data(), {}, ClanData.new()).size(), 5)
+	assert_eq(Guidance.goal_ladder("foundation", c, data(), {}, ClanData.new()).size(), 6)
 	c.realm_index = 1
 	assert_eq(Guidance.goal_ladder_id(c), "first")
 	c.realm_index = 9
@@ -1520,10 +1525,24 @@ func test_foundation_goal_beat_foundation_foe() -> void:
 	c.realm_index = 2
 	var flag := Guidance.beat_realm_flag("foundation_establishment")
 	assert_eq(flag, "beat_realm_foundation_establishment")
-	var row := Guidance.foundation_goals(c, data(), {})[1]
+	var row := Guidance.foundation_goals(c, data(), {})[2]
 	assert_eq(row["text"], "Win a fight against a Foundation foe")
 	assert_false(row["done"])
-	assert_true(Guidance.foundation_goals(c, data(), {flag: true})[1]["done"])
+	assert_true(Guidance.foundation_goals(c, data(), {flag: true})[2]["done"])
+
+
+func test_foundation_goal_defence_row() -> void:
+	var c := _fresh()
+	c.realm_index = 2
+	c.stage = 1
+	var row := Guidance.foundation_goals(c, data(), {})[1]
+	assert_eq(row["text"], "Learn a body art and wear armor")
+	assert_false(row["done"])
+	c.techniques["stone_skin"] = {"level": 1, "xp": 0.0}
+	assert_true(Techniques.knows_kind(c, data(), "body"))
+	assert_false(Guidance.foundation_goals(c, data(), {})[1]["done"], "body art only")
+	c.equipment["armor"] = "cloth_robe"
+	assert_true(Guidance.foundation_goals(c, data(), {})[1]["done"])
 
 
 func test_core_goals_rows_and_ladder() -> void:

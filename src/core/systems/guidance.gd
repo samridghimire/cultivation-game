@@ -1483,6 +1483,7 @@ static func beat_realm_flag(realm_id: String) -> String:
 static func foundation_goals(c: CharacterData, data: GameData, flags: Dictionary, clan: ClanData = null) -> Array[Dictionary]:
 	var rows: Array = [
 		["Reach Foundation Establishment Middle", c.realm_index > 2 or (c.realm_index == 2 and c.stage >= 1)],
+		["Learn a body art and wear armor", Techniques.knows_kind(c, data, "body") and String(c.equipment.get("armor", "")) != ""],
 		["Win a fight against a Foundation foe", bool(flags.get(beat_realm_flag("foundation_establishment"), false))],
 		["Claim a cave abode", c.abode != ""],
 		["Temper your body to its first stage", c.body_stage >= 1],

@@ -1992,3 +1992,21 @@ func test_equipping_armor_clears_the_armor_hint() -> void:
 	c.add_item(armor_id, 1)
 	gs.equip_item(armor_id)
 	assert_eq(Guidance.armor_hint(c, gs.data, "myriad_peaks_ridge"), "")
+
+
+## GUIDE-080: learning a body art and equipping armor completes the Foundation defence goal.
+func test_foundation_defence_goal_flips_on_armor() -> void:
+	var c := _start()
+	var gs := _game_state()
+	c.realm_index = 2
+	c.stage = 1
+	c.equipment = {}
+	c.techniques = {"stone_skin": {"level": 1, "xp": 0.0}}
+	assert_false(Guidance.foundation_goals(c, gs.data, {})[1]["done"])
+	var armor_id := Guidance.affordable_armor(c, gs.data, "fallen_star_market")
+	c.inventory = {"spirit_stone": 500}
+	armor_id = Guidance.affordable_armor(c, gs.data, "fallen_star_market")
+	assert_true(armor_id != "")
+	c.add_item(armor_id, 1)
+	gs.equip_item(armor_id)
+	assert_true(Guidance.foundation_goals(c, gs.data, {})[1]["done"])
