@@ -1427,18 +1427,19 @@ Beast Tamer (odd jobs)       1.2   1.2   1.2   3.5   2.3   2.3   4.6 |  2.0  100
 
 Crafter start: new alchemist in Qingshi Village, 10 seeds, 180 days
   seed  d30  d90 d180  crafted  comm(got/del)  rank  renown  gather% craft% meditate%  stuck-wk (faded)  curious(d30/d90/d180)  realm d90 | d180 | d365 (curious)  cult-hint-steps
-     1   81   81  173       22      4/2         1      10      49%    17%       33%         0 (    0)  19/39/82  Qi Refining, 1st Layer | Qi Refining, 1st Layer | - (Qi Refining, 1st Layer | Qi Refining, 3rd Layer | -)  30
-     2   39   81  228       30      3/1         1       5      53%    27%       18%         0 (    0)  26/31/53  Qi Refining, 1st Layer | Qi Refining, 1st Layer | - (Qi Refining, 3rd Layer | Qi Refining, 5th Layer | -)  34
-     3   52   52  167       16      4/2         1      10      48%    20%       31%         0 (    0)  23/36/62  Qi Refining, 1st Layer | Qi Refining, 1st Layer | - (Qi Refining, 2nd Layer | Qi Refining, 3rd Layer | -)  30
-     4   31   31  148       19      4/2         1      10      38%    20%       40%         0 (    0)  23/32/63  Mortal | Qi Refining, 1st Layer | - (Qi Refining, 2nd Layer | Qi Refining, 3rd Layer | -)  27
-     5   63  168  305       40      4/2         2      10      53%    35%       11%         0 (    0)  35/42/78  Qi Refining, 1st Layer | Qi Refining, 1st Layer | - (Qi Refining, 4th Layer | Qi Refining, 7th Layer | -)  37
-     6   31   31  157       21      2/0         1       0      39%    20%       39%         0 (    0)  23/39/62  Mortal | Qi Refining, 1st Layer | - (Qi Refining, 2nd Layer | Qi Refining, 3rd Layer | -)  28
-     7   31   31  144       19      3/1         1       5      43%    26%       30%         0 (    0)  25/32/69  Qi Refining, 1st Layer | Qi Refining, 1st Layer | - (Qi Refining, 2nd Layer | Qi Refining, 4th Layer | -)  30
-     8   52  136  157       21      1/0         1       0      51%    32%       16%         0 (    0)  23/37/71  Qi Refining, 1st Layer | Qi Refining, 1st Layer | - (Qi Refining, 3rd Layer | Qi Refining, 6th Layer | -)  35
-     9   73   73  115       15      1/0         1       0      36%    20%       42%         0 (    0)  23/33/113  Mortal | Qi Refining, 1st Layer | - (Qi Refining, 2nd Layer | Qi Refining, 4th Layer | -)  26
-    10   10   39  159       19      5/3         1      15      48%    29%       22%         0 (    0)  21/32/76  Qi Refining, 1st Layer | Qi Refining, 1st Layer | - (Qi Refining, 2nd Layer | Qi Refining, 4th Layer | -)  33
-  medians: stones d30/d90/d180 52/73/159 (curious 23/36/71), crafted 21, commissions got 4 delivered 2, rank 1, renown 10
+     1   81   81  173       22      4/2         1      10      49%    17%       33%         0 (    0)  19/43/71  Qi Refining, 1st Layer | Qi Refining, 1st Layer | - (Qi Refining, 1st Layer | Qi Refining, 3rd Layer | -)  30
+     2   39   81  228       30      3/1         1       5      53%    27%       18%         0 (    0)  23/46/66  Qi Refining, 1st Layer | Qi Refining, 1st Layer | - (Qi Refining, 3rd Layer | Qi Refining, 5th Layer | -)  34
+     3   52   52  167       16      4/2         1      10      48%    20%       31%         0 (    0)  23/34/56  Qi Refining, 1st Layer | Qi Refining, 1st Layer | - (Qi Refining, 2nd Layer | Qi Refining, 4th Layer | -)  30
+     4   31   31  148       19      4/2         1      10      38%    20%       40%         0 (    0)  23/39/86  Mortal | Qi Refining, 1st Layer | - (Qi Refining, 2nd Layer | Qi Refining, 3rd Layer | -)  27
+     5   63  168  305       40      4/2         2      10      53%    35%       11%         0 (    0)  31/55/71  Qi Refining, 1st Layer | Qi Refining, 1st Layer | - (Qi Refining, 4th Layer | Qi Refining, 7th Layer | -)  37
+     6   31   31  157       21      2/0         1       0      39%    20%       39%         0 (    0)  23/37/66  Mortal | Qi Refining, 1st Layer | - (Qi Refining, 2nd Layer | Qi Refining, 3rd Layer | -)  28
+     7   31   31  144       19      3/1         1       5      43%    26%       30%         0 (    0)  23/38/69  Qi Refining, 1st Layer | Qi Refining, 1st Layer | - (Qi Refining, 2nd Layer | Qi Refining, 4th Layer | -)  30
+     8   52  136  157       21      1/0         1       0      51%    32%       16%         0 (    0)  29/44/76  Qi Refining, 1st Layer | Qi Refining, 1st Layer | - (Qi Refining, 3rd Layer | Qi Refining, 6th Layer | -)  35
+     9   73   73  115       15      1/0         1       0      36%    20%       42%         0 (    0)  23/42/70  Mortal | Qi Refining, 1st Layer | - (Qi Refining, 2nd Layer | Qi Refining, 3rd Layer | -)  26
+    10   10   39  159       19      5/3         1      15      48%    29%       22%         0 (    0)  21/32/85  Qi Refining, 1st Layer | Qi Refining, 1st Layer | - (Qi Refining, 2nd Layer | Qi Refining, 4th Layer | -)  33
+  medians: stones d30/d90/d180 52/73/159 (curious 23/42/71), crafted 21, commissions got 4 delivered 2, rank 1, renown 10
   medians: days gathering 48% / crafting 26% / meditating 31%; weeks stuck (no hint, nothing to craft, nothing to deliver) median 0, max 0; of those the craft-now hint had faded (rank 2) in 0%
+  QA-111: order walks off; trips to a neighbouring region per seed: median 0, max 0
   QA-117: buy hint followed; seeds that never crafted: 0 of 10
   QA-119: encounter road_talisman_peddler met 0 times in 0 of 10 seeds
   QA-108: seeds past Mortal by day 120: 10 of 10 (nudge followed)
@@ -1448,10 +1449,11 @@ Crafter start: new alchemist in Qingshi Village, 10 seeds, 180 days
 
 Crafter start: new blacksmith in Qingshi Village, 1 seeds, 365 days
   seed  d30  d90 d180  crafted  comm(got/del)  rank  renown  gather% craft% meditate%  stuck-wk (faded)  curious(d30/d90/d180)  realm d90 | d180 | d365 (curious)  cult-hint-steps
-     1   83   94  138       50      6/4         1      20      55%    27%       16%         0 (    0)  19/39/82  Qi Refining, 1st Layer | Qi Refining, 1st Layer | Qi Refining, 1st Layer (Qi Refining, 1st Layer | Qi Refining, 3rd Layer | Qi Refining, 5th Layer)  89
-  medians: stones d30/d90/d180 83/94/138 (curious 19/39/82), crafted 50, commissions got 6 delivered 4, rank 1, renown 20
+     1   83   94  138       50      6/4         1      20      55%    27%       16%         0 (    0)  19/43/71  Qi Refining, 1st Layer | Qi Refining, 1st Layer | Qi Refining, 1st Layer (Qi Refining, 1st Layer | Qi Refining, 3rd Layer | Qi Refining, 5th Layer)  89
+  medians: stones d30/d90/d180 83/94/138 (curious 19/43/71), crafted 50, commissions got 6 delivered 4, rank 1, renown 20
   medians: days gathering 55% / crafting 27% / meditating 16%; weeks stuck (no hint, nothing to craft, nothing to deliver) median 0, max 0; of those the craft-now hint had faded (rank 2) in 0%
   medians past day 180: stones d180 -> d365 138 -> 225, crafts in days 181-365 26 (4.2 a month), weeks stuck after d180 median 0 max 0
+  QA-111: order walks off; trips to a neighbouring region per seed: median 0, max 0
   QA-117: buy hint followed; seeds that never crafted: 0 of 1
   QA-119: encounter road_talisman_peddler met 0 times in 0 of 1 seeds
   QA-108: seeds past Mortal by day 120: 1 of 1 (nudge followed)
@@ -1461,23 +1463,25 @@ Crafter start: new blacksmith in Qingshi Village, 1 seeds, 365 days
 
 Crafter start: new talisman_master in Qingshi Village, 1 seeds, 365 days
   seed  d30  d90 d180  crafted  comm(got/del)  rank  renown  gather% craft% meditate%  stuck-wk (faded)  curious(d30/d90/d180)  realm d90 | d180 | d365 (curious)  cult-hint-steps
-     1   54   65    1       46      5/5         0      25      44%    27%       28%         0 (    0)  19/39/82  Qi Refining, 1st Layer | Qi Refining, 1st Layer | Qi Refining, 1st Layer (Qi Refining, 1st Layer | Qi Refining, 3rd Layer | Qi Refining, 5th Layer)  57
-  medians: stones d30/d90/d180 54/65/1 (curious 19/39/82), crafted 46, commissions got 5 delivered 5, rank 0, renown 25
-  medians: days gathering 44% / crafting 27% / meditating 28%; weeks stuck (no hint, nothing to craft, nothing to deliver) median 0, max 0; of those the craft-now hint had faded (rank 2) in 0%
-  medians past day 180: stones d180 -> d365 1 -> 79, crafts in days 181-365 24 (3.9 a month), weeks stuck after d180 median 0 max 0
+     1   54   65    2       61      7/7         0      35      34%    27%       37%         0 (    0)  19/43/71  Qi Refining, 1st Layer | Qi Refining, 1st Layer | Qi Refining, 1st Layer (Qi Refining, 1st Layer | Qi Refining, 3rd Layer | Qi Refining, 5th Layer)  51
+  medians: stones d30/d90/d180 54/65/2 (curious 19/43/71), crafted 61, commissions got 7 delivered 7, rank 0, renown 35
+  medians: days gathering 34% / crafting 27% / meditating 37%; weeks stuck (no hint, nothing to craft, nothing to deliver) median 0, max 0; of those the craft-now hint had faded (rank 2) in 0%
+  medians past day 180: stones d180 -> d365 2 -> 0, crafts in days 181-365 39 (6.3 a month), weeks stuck after d180 median 0 max 0
+  QA-111: order walks off; trips to a neighbouring region per seed: median 0, max 0
   QA-117: buy hint followed; seeds that never crafted: 0 of 1
   QA-119: encounter road_talisman_peddler met 0 times in 0 of 1 seeds
   QA-108: seeds past Mortal by day 120: 1 of 1 (nudge followed)
-  steps where the top hint is about cultivating or a breakthrough: median 57, max 57
+  steps where the top hint is about cultivating or a breakthrough: median 51, max 51
 
 ## crafter crafts: array_master (seed 1, 365 days)
 
 Crafter start: new array_master in Qingshi Village, 1 seeds, 365 days
   seed  d30  d90 d180  crafted  comm(got/del)  rank  renown  gather% craft% meditate%  stuck-wk (faded)  curious(d30/d90/d180)  realm d90 | d180 | d365 (curious)  cult-hint-steps
-     1   24   24  119       46      7/5         0      25      58%    24%       16%         0 (    0)  19/39/82  Qi Refining, 1st Layer | Qi Refining, 1st Layer | Qi Refining, 1st Layer (Qi Refining, 1st Layer | Qi Refining, 3rd Layer | Qi Refining, 5th Layer)  89
-  medians: stones d30/d90/d180 24/24/119 (curious 19/39/82), crafted 46, commissions got 7 delivered 5, rank 0, renown 25
+     1   24   24  119       46      7/5         0      25      58%    24%       16%         0 (    0)  19/43/71  Qi Refining, 1st Layer | Qi Refining, 1st Layer | Qi Refining, 1st Layer (Qi Refining, 1st Layer | Qi Refining, 3rd Layer | Qi Refining, 5th Layer)  89
+  medians: stones d30/d90/d180 24/24/119 (curious 19/43/71), crafted 46, commissions got 7 delivered 5, rank 0, renown 25
   medians: days gathering 58% / crafting 24% / meditating 16%; weeks stuck (no hint, nothing to craft, nothing to deliver) median 0, max 0; of those the craft-now hint had faded (rank 2) in 0%
   medians past day 180: stones d180 -> d365 119 -> 229, crafts in days 181-365 26 (4.2 a month), weeks stuck after d180 median 0 max 0
+  QA-111: order walks off; trips to a neighbouring region per seed: median 0, max 0
   QA-117: buy hint followed; seeds that never crafted: 0 of 1
   QA-119: encounter road_talisman_peddler met 0 times in 0 of 1 seeds
   QA-108: seeds past Mortal by day 120: 1 of 1 (nudge followed)
@@ -1487,10 +1491,11 @@ Crafter start: new array_master in Qingshi Village, 1 seeds, 365 days
 
 Crafter start: new beast_tamer in Qingshi Village, 1 seeds, 365 days
   seed  d30  d90 d180  crafted  comm(got/del)  rank  renown  gather% craft% meditate%  stuck-wk (faded)  curious(d30/d90/d180)  realm d90 | d180 | d365 (curious)  cult-hint-steps
-     1   54   54  115       50      9/9         1      45      54%    22%       22%         0 (    0)  19/39/82  Mortal | Mortal | Qi Refining, 1st Layer (Qi Refining, 1st Layer | Qi Refining, 3rd Layer | Qi Refining, 5th Layer)  86
-  medians: stones d30/d90/d180 54/54/115 (curious 19/39/82), crafted 50, commissions got 9 delivered 9, rank 1, renown 45
+     1   54   54  115       50      9/9         1      45      54%    22%       22%         0 (    0)  19/43/71  Mortal | Mortal | Qi Refining, 1st Layer (Qi Refining, 1st Layer | Qi Refining, 3rd Layer | Qi Refining, 5th Layer)  86
+  medians: stones d30/d90/d180 54/54/115 (curious 19/43/71), crafted 50, commissions got 9 delivered 9, rank 1, renown 45
   medians: days gathering 54% / crafting 22% / meditating 22%; weeks stuck (no hint, nothing to craft, nothing to deliver) median 0, max 0; of those the craft-now hint had faded (rank 2) in 0%
   medians past day 180: stones d180 -> d365 115 -> 293, crafts in days 181-365 33 (5.4 a month), weeks stuck after d180 median 0 max 0
+  QA-111: order walks off; trips to a neighbouring region per seed: median 0, max 0
   QA-117: buy hint followed; seeds that never crafted: 0 of 1
   QA-119: encounter road_talisman_peddler met 0 times in 0 of 1 seeds
   QA-108: seeds past Mortal by day 120: 0 of 1 (nudge followed)
