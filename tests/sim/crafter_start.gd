@@ -7,6 +7,7 @@ extends SceneTree
 ## QA-109: --prof=<id> follows another craft (blacksmith, talisman_master, array_master, beast_tamer; default alchemist).
 ## QA-108: while the top hint is GUIDE-054's "You are still a mortal" line the crafter meditates that step instead of gathering
 ## or crafting (--no-nudge restores the old policy for before/after runs); the medians report the realm at day 120.
+## QA-117: when GUIDE-066's buy hint shows, the crafter buys the missing bought-only ingredient for one craft (--no-buy restores the old policy).
 ## QA-107: --orders prints every commission (roll day, item, count, reward, days allowed, whether each ingredient
 ## was available nearby at roll time) with its fate and why the sim did not fill it.
 
@@ -20,6 +21,7 @@ var _gs: Node
 var _clock: Node
 var _orders_mode := false
 var _follow_nudge := true  ## QA-108
+var _follow_buy := true  ## QA-117
 var _tracked: Array[Dictionary] = []  ## QA-107: orders seen so far, with their fate
 var _sold := {}  ## QA-107: item id -> units the sim sold this life
 var _crafted_out := {}  ## QA-107: item id -> units crafted this life
@@ -49,6 +51,7 @@ func _run() -> void:
 	var args := OS.get_cmdline_user_args()
 	_orders_mode = args.has("--orders")
 	_follow_nudge = not args.has("--no-nudge")
+	_follow_buy = not args.has("--no-buy")
 	for a in args:
 		if String(a).begins_with("--prof="):
 			_prof = String(a).substr(7)
@@ -90,6 +93,10 @@ func _run() -> void:
 	print("  medians: days gathering %d%% / crafting %d%% / meditating %d%%; weeks stuck (no hint, nothing to craft, nothing to deliver) median %d, max %d; of those the craft-now hint had faded (rank %d) in %d%%" % [_median(cols["gather"]), _median(cols["craft"]), _median(cols["meditate"]), _median(cols["stuck"]), cols["stuck"].max(), Guidance.CRAFT_HINT_MAX_RANK, 100 * _sum(cols["faded"]) / maxi(1, _sum(cols["stuck"]))])
 	if days > 180:
 		print("  medians past day 180: stones d180 -> d365 %d -> %d, crafts in days 181-%d %d (%.1f a month), weeks stuck after d180 median %d max %d" % [_median(cols["d180"]), _median(cols["d365"]), days, _median(cols["post"]), _median(cols["post"]) / ((days - 180) / 30.0), _median(cols["stuck_post"]), cols["stuck_post"].max()])
+	var never := 0
+	for n: int in cols["crafted"]:
+		never += 1 if n == 0 else 0
+	print("  QA-117: buy hint %s; seeds that never crafted: %d of %d" % ["followed" if _follow_buy else "ignored", never, seeds])
 	print("  QA-108: seeds past Mortal by day 120: %d of %d (nudge %s)" % [_sum(cols["r120"]), seeds, "followed" if _follow_nudge else "ignored"])
 	print("  steps where the top hint is about cultivating or a breakthrough: median %d, max %d" % [_median(cols["hint"]), cols["hint"].max()])
 	quit()
@@ -275,6 +282,8 @@ func _act(c: CharacterData) -> String:
 	if _follow_nudge and c.realm_index == 0 and Cultivation.can_attempt_breakthrough(c, _gs.data):  # the nudge's next line: step into Qi Refining
 		_gs.attempt_breakthrough()
 		return "meditate"
+	if _follow_buy and Guidance.buy_ingredient_hint(c, _gs.data, REGION) != "":
+		_buy_for_hint(c)
 	var recipe_id := _best_craftable(c)
 	if recipe_id != "":
 		var out_item := String(_gs.data.recipes[recipe_id]["output"]["item"])
@@ -287,6 +296,30 @@ func _act(c: CharacterData) -> String:
 	if _gather_for_order(c) or _gather_hinted(c):
 		return "gather"
 	return "stuck" if Guidance.herb_here_hint(c, _gs.data, REGION) == "" else "meditate"
+
+
+## QA-117: follows GUIDE-066's buy hint: buys what the first in-rank recipe lacks (bought-only, sold in this region) for one craft, stones allowing.
+func _buy_for_hint(c: CharacterData) -> void:
+	for prof_id: String in _gs.data.professions:
+		if not c.professions.has(prof_id):
+			continue
+		for recipe_id: String in Alchemy.known_recipes(c, _gs.data, prof_id):
+			var recipe: Dictionary = _gs.data.recipes[recipe_id]
+			if int(recipe.get("min_rank", 0)) > Professions.rank_of(c, prof_id):
+				continue
+			var need := {}
+			for ing: String in recipe["ingredients"]:
+				var short: int = int(recipe["ingredients"][ing]) - c.item_count(ing)
+				if ing != "spirit_stone" and short > 0:
+					if Guidance.merchant_selling(_gs.data, REGION, ing) == "":
+						need.clear()
+						break
+					need[ing] = short
+			if need.is_empty():
+				continue
+			for ing: String in need:
+				_gs.buy_item(ing, "", need[ing])
+			return
 
 
 func _deliver_open(c: CharacterData) -> void:
