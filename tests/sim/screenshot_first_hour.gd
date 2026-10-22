@@ -55,7 +55,9 @@ func _start() -> void:
 	# like in play; seed 11 is a newcomer win. The HUD opens the report itself.
 	shots.append({"name": "combat_report", "open": func() -> void:
 		gs.rng.seed = 11
-		gs.fight("wild_boar"), "close": report.close})
+		gs.fight("wild_boar")
+		report.skip(),  # WU-262: close() refuses while the playback runs, so the report covered later shots
+		"close": report.close})
 	for action: String in ["toggle_journal", "toggle_inventory", "toggle_character_sheet"]:
 		if hud.get("_screens").has(action):
 			var s: Control = hud.get("_screens")[action]

@@ -524,6 +524,11 @@ Short-lived context for the next session. Update or trim it when you finish a se
 - Nearly every PR conflicts on `docs/BACKLOG.md` and `docs/CHANGELOG.md`. Merge main into the PR branch, never rebase. Keep both sides' rows and lines, and check for **duplicate task ids** (agents often reuse an id; rename the newer one).
 - After merging, rerun the full checks. Typical breakages were tests made stale by a newer rule (clans need an abode seat, tougher enemies since QA-007d, the intro story event at session start, choice encounters must set their `blocked_by_flag` on every choice) and two places placed at the same map position.
 
+## First-hour screenshot look (WU-262, 2026-10-22, 1280x800 and 1280x720)
+Re-ran `screenshot_first_hour.gd` on main and opened all 8 PNGs at both sizes. Nothing clipped inside any window.
+- Script bug fixed: `CombatReport.close()` refuses while playback runs, so the combat report stayed open and covered the journal, inventory and sheet shots; the shot now calls `skip()` first.
+- Edge labels: in hud_arrival at 1280x800 "Founder's Old..." and "Sect Recruitmen..." are still cut at the right edge (objects at the screen edge); at 1280x720 (and after the player moves) they are whole. "Hunters' Bounty Board" is whole at both sizes. No world change made.
+
 ## First-hour screenshot look (WU-175, 2026-10-16, 1280x800)
 Looked at all 8 PNGs from `screenshot_first_hour.gd` against WU-157's list. Nothing clipped inside any window; no layout bug fixed in this pass.
 - Edge labels ("Founder's Old...", "Sect Recruitmen..." cut at the right edge; "Hunters' Bo..." behind the HUD panel): still there (labels sit on world objects that are themselves at the screen edge; needs a camera/world-layout call).
