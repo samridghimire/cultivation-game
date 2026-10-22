@@ -2937,3 +2937,24 @@ func test_armor_hint_counts_loot_local_market() -> void:
 	var line := Guidance.armor_hint(c, data(), "myriad_peaks_ridge")
 	assert_true(line.contains("sell your"), line)
 	assert_true(line.contains("Ridge Hermit's Stall"), line)
+
+
+## GUIDE-090: the thin-defence hint counts loot too.
+func test_thin_defence_hint_counts_loot() -> void:
+	var c := _fresh()
+	c.realm_index = Guidance.THIN_DEFENCE_REALM
+	c.techniques = {}
+	c.equipment = {}
+	var pelt := _loot_id("beast_material")
+	c.inventory = {"spirit_stone": 1, pelt: 400}
+	assert_eq(Guidance.affordable_armor(c, data(), "myriad_peaks_ridge"), "", "stones alone fall short")
+	var offer := Guidance.sell_offer(c, data(), "myriad_peaks_ridge")
+	assert_false(offer.is_empty(), "the Ridge stall buys beast materials")
+	var loot_armor := Guidance.affordable_armor(c, data(), "myriad_peaks_ridge", 1 + int(offer["total"]))
+	assert_true(loot_armor != "", "stones plus loot buy armor at the Ridge stall")
+	var line := Guidance.thin_defence_hint(c, data(), "myriad_peaks_ridge")
+	assert_true(line.contains("Sell your %s to the %s (about %d stones) first." % [offer["goods"], offer["merchant"], offer["total"]]), line)
+	c.inventory = {"spirit_stone": 1}
+	assert_false(Guidance.thin_defence_hint(c, data(), "myriad_peaks_ridge").contains("Sell your"), "nothing to sell")
+	c.inventory = {"spirit_stone": 500, pelt: 400}
+	assert_false(Guidance.thin_defence_hint(c, data(), "myriad_peaks_ridge").contains("Sell your"), "enough stones")

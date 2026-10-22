@@ -140,16 +140,30 @@ static func thin_defence_hint(c: CharacterData, data: GameData, region_id: Strin
 	var missing := _thin_defence_missing(c, data)
 	var line := "Your defence is thin for Foundation foes: %s before fighting cultivators." % missing
 	if region_id != "":
+		var offer := sell_offer(c, data, region_id)
 		if not has_armor:
 			var armor_id := affordable_armor(c, data, region_id)
 			if armor_id != "":
 				line += " The %s sells %s for %d stones." % [merchant_selling(data, region_id, armor_id), data.items[armor_id]["name"], merchant_price(c, data, region_id, armor_id)]
 			else:
-				line += _far_armor_clause(c, data, region_id)
+				var far_clause := _far_armor_clause(c, data, region_id)
+				line += far_clause
+				if far_clause == "":
+					# GUIDE-090: not affordable with stones, but the loot would pay for it.
+					var loot_armor := affordable_armor(c, data, region_id, c.item_count("spirit_stone") + int(offer.get("total", 0)))
+					if loot_armor != "" and not offer.is_empty():
+						line += " The %s sells %s for %d stones.%s" % [merchant_selling(data, region_id, loot_armor), data.items[loot_armor]["name"], merchant_price(c, data, region_id, loot_armor), _sell_first_clause(offer)]
 		if not has_body:
 			var source := body_manual_source(c, data, region_id)
 			if source != "":
 				line += " %s teaches one." % source
+				var manual := _body_manual_merchant(c, data, region_id)
+				if not manual.is_empty() and not offer.is_empty():
+					# GUIDE-090: the manual costs more than the stones in hand but the loot would cover it.
+					var cost := merchant_price(c, data, region_id, String(manual["item_id"]))
+					var stones := c.item_count("spirit_stone")
+					if cost > stones and cost <= stones + int(offer["total"]):
+						line += _sell_first_clause(offer)
 			else:
 				var far := nearest_selling(c, data, region_id, func(r: String) -> String: return String(_body_manual_merchant(c, data, r).get("item_id", "")))
 				if not far.is_empty():
@@ -158,6 +172,11 @@ static func thin_defence_hint(c: CharacterData, data: GameData, region_id: Strin
 	if Injuries.has_any(c):
 		line += " Heal your injuries before you fight."
 	return line
+
+
+## GUIDE-088/090: " Sell your <goods> to the <Merchant> (about N stones) first." from a sell_offer; `here` adds "here".
+static func _sell_first_clause(offer: Dictionary, here: bool = false) -> String:
+	return " Sell your %s to the %s%s (about %d stones) first." % [offer["goods"], offer["merchant"], " here" if here else "", offer["total"]]
 
 
 ## What a thin-defence Foundation cultivator lacks, named only for what is missing: a cultivator who already knows a
@@ -1510,7 +1529,7 @@ static func _loot_armor_hint(c: CharacterData, data: GameData, region_id: String
 	var far := _far_armor_clause(c, data, region_id, budget)
 	if far == "":
 		return ""
-	return "Armor would keep you standing in fights. Sell your %s to the %s here (about %d stones) first.%s" % [offer["goods"], offer["merchant"], offer["total"], far]
+	return "Armor would keep you standing in fights." + _sell_first_clause(offer, true) + far
 
 
 ## GUIDE-086: the fight (in `region_id`) that practising `tech_id` one more level turns from a loss into a
