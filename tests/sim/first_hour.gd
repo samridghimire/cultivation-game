@@ -17,6 +17,10 @@ const SPRING_DENSITY := 2.0  # Spirit Spring, see data/regions.json
 ## many days (out["waited_days"]) before attempting, as long as a merchant-sold pill exists to save for.
 ## QA-091: what the policy is doing now ("mission", "deed", "bounty" or "other"); the sims read it when a fight starts.
 static var fight_origin := "other"
+## QA-116: the curious player follows GUIDE-065's thin-defence hint (see _follow_defence_hint).
+static var follow_defence := false
+## QA-116: per seed, what following the hint did: {"trips": travels to another region, "armor": bought, "manual": bought}.
+static var defence_log := {}
 
 
 static func play(gs: Node, clock: Node, seed_value: int, months: int, curious: bool = false, month_hook: Callable = Callable(), no_help: bool = false, wait_for_pill: int = 0) -> Dictionary:
@@ -239,6 +243,8 @@ static func _bitter_detour(gs: Node, c: CharacterData) -> String:
 ## set of action kinds done.
 static func _curious_month(gs: Node, c: CharacterData, done: Dictionary, today: int) -> Dictionary:
 	var kinds := {}
+	if follow_defence:
+		_follow_defence_hint(gs, c)
 	var detour_home := _bitter_detour(gs, c)
 	for week in 3:
 		if not c.alive:
@@ -451,7 +457,7 @@ static func _learn_fighting_style(gs: Node, c: CharacterData, done: Dictionary, 
 				done["style_month"] = today / Calendar.DAYS_PER_MONTH
 	for tech_id: String in c.techniques:
 		var def: TechniqueDef = gs.data.techniques[tech_id]
-		if def.kind == "combat" and not Techniques.is_mastered(c, gs.data, tech_id) and c.alive:
+		if (def.kind == "combat" or (follow_defence and def.kind == "body")) and not Techniques.is_mastered(c, gs.data, tech_id) and c.alive:
 			gs.practice_technique(tech_id, 7)
 			break
 
@@ -622,3 +628,91 @@ static func _use_qi_items(gs: Node, c: CharacterData) -> void:
 		if def.get("effects", {}).has("qi"):
 			for i in int(c.inventory.get(item_id, 0)):
 				gs.use_item(item_id)
+
+
+## QA-116: while Guidance.thin_defence_hint speaks, heal injuries (items, then a clinic here), then buy the cheapest
+## body-technique manual and the best armor the purse reaches (this region's merchants, else the nearest region that
+## sells them: one trip, then home), learn and equip them. Counts go to defence_log[seed].
+static func _follow_defence_hint(gs: Node, c: CharacterData) -> void:
+	var data: GameData = gs.data
+	if not c.alive or Guidance.thin_defence_hint(c, data) == "":
+		return
+	var log: Dictionary = defence_log.get(int(gs.rng.seed), {"trips": 0, "armor": 0, "manual": 0, "healed": 0})
+	defence_log[int(gs.rng.seed)] = log
+	_heal_before_fighting(gs, c, log)
+	var home: String = gs.current_region
+	var targets: Array[String] = [home]
+	for rid: String in data.regions:
+		if rid != home:
+			targets.append(rid)
+	for rid: String in targets:
+		if not c.alive or Guidance.thin_defence_hint(c, data) == "":
+			break
+		var wants_armor: bool = c.equipment.get("armor", "") == "" and Guidance.affordable_armor(c, data, rid) != ""
+		var wants_manual: bool = not Techniques.knows_kind(c, data, "body") and _cheapest_body_manual(gs, c, rid) != ""
+		if not wants_armor and not wants_manual:
+			continue
+		if rid != gs.current_region:
+			gs.travel(rid)
+			if gs.current_region != rid:
+				continue
+			log["trips"] += 1
+		var manual: String = _cheapest_body_manual(gs, c, rid) if not Techniques.knows_kind(c, data, "body") else ""
+		if manual != "" and c.alive:
+			gs.buy_item(manual)
+			gs.use_item(manual)
+			if Techniques.knows_kind(c, data, "body"):
+				log["manual"] += 1
+		var armor: String = Guidance.affordable_armor(c, data, rid) if c.equipment.get("armor", "") == "" else ""
+		if armor != "" and c.alive:
+			gs.buy_item(armor)
+			gs.equip_item(armor)
+			if c.equipment.get("armor", "") == armor:
+				log["armor"] += 1
+		break
+	if gs.current_region != home and c.alive:
+		gs.travel(home)
+	if not Techniques.knows_kind(c, data, "body") and c.alive:
+		for entry: Dictionary in Sects.shop_items(c, data):
+			var tech_id := Items.manual_technique(data, String(entry["item_id"]))
+			if tech_id != "" and data.techniques[tech_id].kind == "body" and Sects.contribution_balance(c) >= int(entry["contribution"]):
+				gs.buy_with_contribution(String(entry["item_id"]))
+				gs.use_item(String(entry["item_id"]))
+				log["manual"] += 1
+				break
+
+
+static func _cheapest_body_manual(gs: Node, c: CharacterData, region_id: String) -> String:
+	var data: GameData = gs.data
+	var best := ""
+	for item_id: String in data.items:
+		var tech_id := Items.manual_technique(data, item_id)
+		if tech_id == "" or data.techniques[tech_id].kind != "body" or Techniques.knows(c, tech_id) or not data.techniques[tech_id].activation.is_empty():
+			continue
+		var price := int(data.items[item_id].get("price", 0))
+		if price > c.item_count("spirit_stone") or Guidance.merchant_selling(data, region_id, item_id) == "":
+			continue
+		if best == "" or price < int(data.items[best].get("price", 0)):
+			best = item_id
+	return best
+
+
+static func _heal_before_fighting(gs: Node, c: CharacterData, log: Dictionary) -> void:
+	var data: GameData = gs.data
+	for injury_id: String in c.injuries.keys():
+		if not c.alive:
+			return
+		var healed := false
+		for item_id: String in c.inventory.keys():
+			if c.item_count(item_id) > 0 and Guidance._heals(data, item_id, injury_id):
+				gs.use_item(item_id)
+				healed = true
+				break
+		if not healed:
+			for p: Dictionary in data.regions.get(gs.current_region, {}).get("places", []):
+				if String(p.get("type", "")) == "clinic" and Medicine.clinic_cost(c, data, injury_id) <= c.item_count("spirit_stone"):
+					gs.visit_clinic(injury_id)
+					healed = true
+					break
+		if healed:
+			log["healed"] += 1

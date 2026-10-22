@@ -99,6 +99,8 @@ func _run() -> void:
 	for a: String in OS.get_cmdline_user_args():
 		if a.begins_with("--wait-for-pill="):
 			_wait_for_pill = int(a.get_slice("=", 1))
+		elif a == "--defence":
+			FirstHour.follow_defence = true
 		elif a.begins_with("--trace="):
 			_trace_seed = int(a.get_slice("=", 1))
 		else:
@@ -211,6 +213,8 @@ func _run() -> void:
 	_print_lives(runs)
 	_print_foundation_breakthrough(runs)
 	_print_fe_gap()
+	if FirstHour.follow_defence:
+		_print_defence_log(seeds)
 	quit(1 if early * 10 > maxi(seeds, 10) else 0)
 
 
@@ -369,3 +373,22 @@ func _print_fe_gap() -> void:
 		print("  no seed reached Foundation")
 		return
 	print("  mean rated odds vs roadside_rogue_cultivator over %d seeds: curious %.0f%%; with the typical player's techniques %.0f%%, gear %.0f%%, attributes %.0f%%, all three (injuries cleared) %.0f%%" % [n, 100.0 * sums["all"] / n, 100.0 * sums["typical_techs"] / n, 100.0 * sums["typical_gear"] / n, 100.0 * sums["typical_attrs"] / n, 100.0 * sums["typical_all"] / n])
+
+
+## QA-116 (--defence): per seed, what following GUIDE-065's hint cost and bought.
+func _print_defence_log(seeds: int) -> void:
+	var trips := 0
+	var armored := 0
+	var armed := 0
+	var hint_seeds := 0
+	print("Defence hint followed (QA-116): seed, trips to another region, armor bought, body manual bought, injuries healed")
+	for s in range(1, seeds + 1):
+		if not FirstHour.defence_log.has(s):
+			continue
+		var l: Dictionary = FirstHour.defence_log[s]
+		hint_seeds += 1
+		trips += int(l["trips"])
+		armored += 1 if int(l["armor"]) > 0 else 0
+		armed += 1 if int(l["manual"]) > 0 else 0
+		print("  seed %2d: trips %d, armor %d, manual %d, healed %d" % [s, l["trips"], l["armor"], l["manual"], l["healed"]])
+	print("  %d of %d seeds heard the hint; %d bought armor, %d learned a body art, %d trips away from the home region" % [hint_seeds, seeds, armored, armed, trips])
