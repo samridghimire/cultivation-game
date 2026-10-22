@@ -2471,3 +2471,38 @@ func test_fair_fights_sort_by_pay_before_chance() -> void:
 	]
 	found.sort_custom(Guidance.fair_fight_before)
 	assert_eq(found.map(func(f: Dictionary) -> String: return f["text"]), ["a", "b", "c", "d"])
+
+## GUIDE-069: an unarmored Qi Refining fighter hears about armor they can afford.
+func _armor_hint_fighter() -> CharacterData:
+	var c := _fresh()
+	c.realm_index = 1
+	c.stage = Guidance.ARMOR_HINT_MIN_STAGE
+	c.techniques = {"blood_shadow_flight": {"level": 1}}
+	c.equipment = {}
+	c.inventory = {"spirit_stone": 200}
+	return c
+
+
+func test_armor_hint_shown_to_unarmored_fighter() -> void:
+	var c := _armor_hint_fighter()
+	var armor_id := Guidance.affordable_armor(c, data(), "myriad_peaks_ridge")
+	var line := Guidance.armor_hint(c, data(), "myriad_peaks_ridge")
+	assert_true(line.begins_with("Armor would keep you standing in fights"), line)
+	assert_true(line.contains(data().items[armor_id]["name"]), line)
+	assert_true(_has(Guidance._newcomer_hints(c, data(), {}, "myriad_peaks_ridge"), "Armor would keep you"))
+
+
+func test_armor_hint_hidden_when_it_does_not_apply() -> void:
+	var c := _armor_hint_fighter()
+	c.equipment = {"armor": "boar_hide_jerkin"}
+	assert_eq(Guidance.armor_hint(c, data(), "myriad_peaks_ridge"), "", "armor on")
+	c = _armor_hint_fighter()
+	c.inventory = {"spirit_stone": 1}
+	assert_eq(Guidance.armor_hint(c, data(), "myriad_peaks_ridge"), "", "too few stones")
+	c = _armor_hint_fighter()
+	c.stage = Guidance.ARMOR_HINT_MIN_STAGE - 1
+	assert_eq(Guidance.armor_hint(c, data(), "myriad_peaks_ridge"), "", "stage too low")
+	c = _armor_hint_fighter()
+	c.techniques = {}
+	assert_eq(Guidance.armor_hint(c, data(), "myriad_peaks_ridge"), "", "no combat technique")
+	assert_eq(Guidance.armor_hint(_armor_hint_fighter(), data(), ""), "", "no region")

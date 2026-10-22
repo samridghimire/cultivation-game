@@ -21,6 +21,7 @@ const CHORE_REGION := "qingshi_village"
 ## GUIDE-054: game days a Mortal crafter plays before hearing where to begin cultivating.
 const MORTAL_CRAFTER_NUDGE_DAY := 30
 const THIN_DEFENCE_REALM := 2  # GUIDE-065: Foundation Establishment, where foes first outclass a bare-handed fighter
+const ARMOR_HINT_MIN_STAGE := 3  # GUIDE-069: Qi Refining stage from which an unarmored fighter is nudged to buy armor
 const IDLE_CULTIVATION_DAYS := 30  # GUIDE-057: days without cultivating before a Qi Refining crafter is nudged
 
 
@@ -1193,6 +1194,19 @@ static func first_combat_hint(c: CharacterData, data: GameData, region_id: Strin
 	return "%s Look for the %s (%s)." % [lead, manual, found["source"]]
 
 
+## GUIDE-069: a Qi Refining fighter (stage >= ARMOR_HINT_MIN_STAGE, knows a combat technique) with no armor
+## equipped hears about armor a merchant here sells that they can afford. "" otherwise.
+static func armor_hint(c: CharacterData, data: GameData, region_id: String) -> String:
+	if c.realm_index != 1 or c.stage < ARMOR_HINT_MIN_STAGE or region_id == "":
+		return ""
+	if c.equipment.get("armor", "") != "" or not Techniques.knows_kind(c, data, "combat"):
+		return ""
+	var armor_id := affordable_armor(c, data, region_id)
+	if armor_id == "":
+		return ""
+	return "Armor would keep you standing in fights: the %s sells %s for %d stones." % [merchant_selling(data, region_id, armor_id), data.items[armor_id]["name"], int(data.items[armor_id].get("price", 0))]
+
+
 ## "Practise <style> on the Techniques screen..." for a newcomer with a low-level fighting style, or "" (GUIDE-020).
 static func practice_hint(c: CharacterData, data: GameData) -> String:
 	var id := Techniques.practice_target(c, data)
@@ -1227,6 +1241,9 @@ static func _newcomer_hints(c: CharacterData, data: GameData, flags: Dictionary,
 	var practise := practice_hint(c, data)
 	if practise != "":
 		out.append(practise)
+	var armor := armor_hint(c, data, region_id)
+	if armor != "":
+		out.append(armor)
 	if region_id == CHORE_REGION:
 		for deed: Dictionary in data.deeds.values():
 			if String(deed["id"]).begins_with("chore_") and not flags.get(String(deed.get("blocked_by_flag", "")), false):

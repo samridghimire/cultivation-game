@@ -1975,3 +1975,20 @@ func test_meditating_resets_idle_cultivation_day() -> void:
 	var d := c.to_dict()
 	d.erase("last_meditated_day")
 	assert_eq(CharacterData.from_dict(d).last_meditated_day, -1)
+
+
+## GUIDE-069: equipping the armor clears the armor hint.
+func test_equipping_armor_clears_the_armor_hint() -> void:
+	var c := _start()
+	var gs := _game_state()
+	c.realm_index = 1
+	c.stage = Guidance.ARMOR_HINT_MIN_STAGE
+	c.techniques = {"blood_shadow_flight": {"level": 1}}
+	c.equipment = {}
+	var armor_id := Guidance.affordable_armor(c, gs.data, "myriad_peaks_ridge")
+	c.inventory = {"spirit_stone": 500}
+	armor_id = Guidance.affordable_armor(c, gs.data, "myriad_peaks_ridge")
+	assert_true(Guidance.armor_hint(c, gs.data, "myriad_peaks_ridge") != "")
+	c.add_item(armor_id, 1)
+	gs.equip_item(armor_id)
+	assert_eq(Guidance.armor_hint(c, gs.data, "myriad_peaks_ridge"), "")
