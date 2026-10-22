@@ -1549,7 +1549,7 @@ func _start_encounter_shot(gs: Node) -> void:
 						recent += String(entry["text"]) + "\n"
 					assert(recent.contains("+5 renown"), "no renown note in the log: " + recent)
 				root.get_node("/root/EventBus").player_changed.emit()
-				hud.get("_banner").visible = false, "close": func() -> void: pass})
+				_clear_result_popups(gs), "close": func() -> void: pass})
 
 	# WU-276: C-178's two first-hour fighting encounters: the choice window with the attribute-tagged choice
 	# (gate met via 12 constitution / comprehension, so the tag is shown), and the HUD log after the training choice.
@@ -1560,6 +1560,7 @@ func _start_encounter_shot(gs: Node) -> void:
 			c.stage = 0
 			c.attributes["constitution"] = 12
 			c.attributes["comprehension"] = 12
+			gs.world_flags[Rivals.FIRST_MEETING_FLAG] = true
 			c.techniques = {"iron_fist": {"level": 1, "xp": 0.0}}
 			gs.pending_encounter = enc_id
 		var fstem := "encounter_%s_%s" % [enc_id, size_tag]
@@ -1576,7 +1577,20 @@ func _start_encounter_shot(gs: Node) -> void:
 			assert(recent.contains("Iron Fist"), "no Iron Fist line in the log: " + recent)
 			print("fight result ", enc_id, ": ", recent)
 			root.get_node("/root/EventBus").player_changed.emit()
-			hud.get("_banner").visible = false, "close": func() -> void: pass})
+			_clear_result_popups(gs), "close": func() -> void: pass})
+
+
+## WU-282: the encounter result shots show only the result and the HUD log, so whatever a day advance queued over
+## it (the rival's first meeting, a day-event dialogue, a combat report) is cleared before the shot is taken.
+func _clear_result_popups(gs: Node) -> void:
+	gs.pending_event = ""
+	if gs.in_dialogue():
+		gs.end_dialogue()
+	for node_name: String in ["_dialogue", "_combat_report", "_encounter"]:
+		var popup: Control = hud.get(node_name)
+		if popup != null and popup.visible:
+			popup.close()
+	hud.get("_banner").visible = false
 
 
 ## WU-177: the final-death screen with every epilogue line present.
