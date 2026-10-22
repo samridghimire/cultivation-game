@@ -213,3 +213,25 @@ func test_travel_point_marks_the_first_hop_route() -> void:
 			assert_true(String(o["label"]).contains(Exploration.region_name(gs.data, "misty_forest")))
 	assert_eq(marked, 1)
 	road.free()
+
+
+func test_spread_on_screen_skips_labels_that_are_not_drawn() -> void:
+	var view := Rect2(0, 0, 1000, 800)
+	var hidden := _npc("Same Name", Vector2(300, 300))
+	var shown := _npc("Same Name", Vector2(300, 300))
+	hidden.visible = false
+	Interactable.spread_on_screen([hidden, shown], view)
+	assert_eq(shown.screen_lift, 0.0, "a hidden label must not push a drawn one")
+	hidden.free()
+	shown.free()
+
+
+func test_drawn_label_rect_includes_the_hinted_badge() -> void:
+	var view := Rect2(0, 0, 1000, 800)
+	var n := _npc("Aa", Vector2(300, 300))
+	var plain := n.drawn_label_rect(view)
+	n.hinted = true
+	var badged := n.drawn_label_rect(view)
+	assert_true(badged.size.y > plain.size.y + 10.0, "badge adds height")
+	assert_true(badged.end.y <= plain.end.y + 0.01 and badged.position.y < plain.position.y)
+	n.free()

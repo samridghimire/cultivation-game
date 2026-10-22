@@ -193,7 +193,17 @@ func drawn_label_rect(view: Rect2) -> Rect2:
 	var rect := label_rect()
 	rect.position.x = clamp_label_left(rect.position.x, rect.size.x, view.position.x, view.end.x)
 	rect.position.y += screen_lift
+	if hinted:
+		# The "!" badge sits above the label: a 20px circle centered on it, 14px over the baseline.
+		var base := position.y - size.y / 2.0 - 8.0 + label_offset.y + screen_lift
+		var badge := Rect2(rect.position.x + rect.size.x / 2.0 - 10.0, base - 34.0, 20.0, 20.0)
+		rect = rect.merge(badge)
 	return rect
+
+
+## Whether the name label is drawn at all (unavailable places and the current target hide it).
+func label_drawn() -> bool:
+	return visible and label_visible(highlighted)
 
 
 ## Lifts labels (in order) whose screen-clamped rects overlap an earlier one; `view` is the visible
@@ -201,6 +211,8 @@ func drawn_label_rect(view: Rect2) -> Rect2:
 static func spread_on_screen(nodes: Array, view: Rect2) -> void:
 	var placed: Array[Rect2] = []
 	for node: Interactable in nodes:
+		if not node.label_drawn():
+			continue
 		var before := node.screen_lift
 		node.screen_lift = 0.0
 		var rect := node.drawn_label_rect(view)
