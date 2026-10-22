@@ -1212,6 +1212,34 @@ func _start_encounter_shot(gs: Node) -> void:
 			gs.pending_encounter = enc_id
 			enc.open(), "close": enc.close})
 
+	# WU-250: C-166's road encounters at both Steam Deck sizes: the choice window and the result line the HUD log
+	# shows after the first choice. The peddler's "Buy a bundle" costs 8 stones: shot with 20 and with 7 (disabled).
+	var size_tag := "%dx%d" % [root.size.x, root.size.y]
+	var road_cases: Array = [["road_talisman_peddler", 20, ""], ["road_talisman_peddler", 7, "_poor"],
+			["road_milestone_carver", 20, ""], ["road_rain_shelter", 20, ""]]
+	for case: Array in road_cases:
+		var enc_id: String = case[0]
+		var stones: int = case[1]
+		var stem := "encounter_%s%s_%s" % [enc_id, case[2], size_tag]
+		var stage := func() -> void:
+			hud.get("_banner").visible = false
+			c.realm_index = gs.data.realm_index_of("qi_refining")
+			c.stage = 0
+			c.inventory.erase("spirit_stone")
+			c.add_item("spirit_stone", stones)
+			gs.pending_encounter = enc_id
+		shots.append({"name": stem, "open": func() -> void:
+			stage.call()
+			enc.open(), "close": enc.close})
+		if case[2] == "":
+			shots.append({"name": stem + "_result", "open": func() -> void:
+				stage.call()
+				gs.choose_encounter(0)
+				assert(gs.pending_encounter == "", "road choice did not resolve: " + enc_id)
+				print("road result ", enc_id, ": ", root.get_node("/root/EventBus").history[-1]["text"])
+				root.get_node("/root/EventBus").player_changed.emit()
+				hud.get("_banner").visible = false, "close": func() -> void: pass})
+
 
 ## WU-177: the final-death screen with every epilogue line present.
 func _start_year_shot(gs: Node) -> void:
