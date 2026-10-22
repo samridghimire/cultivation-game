@@ -1533,6 +1533,33 @@ func _start_encounter_shot(gs: Node) -> void:
 				root.get_node("/root/EventBus").player_changed.emit()
 				hud.get("_banner").visible = false, "close": func() -> void: pass})
 
+	# WU-276: C-178's two first-hour fighting encounters: the choice window with the attribute-tagged choice
+	# (gate met via 12 constitution / comprehension, so the tag is shown), and the HUD log after the training choice.
+	for enc_id: String in ["village_boxing_yard", "forest_hunter_wolf_lunge"]:
+		var fstage := func() -> void:
+			hud.get("_banner").visible = false
+			c.realm_index = gs.data.realm_index_of("qi_refining")
+			c.stage = 0
+			c.attributes["constitution"] = 12
+			c.attributes["comprehension"] = 12
+			c.techniques = {"iron_fist": {"level": 1, "xp": 0.0}}
+			gs.pending_encounter = enc_id
+		var fstem := "encounter_%s_%s" % [enc_id, size_tag]
+		shots.append({"name": fstem, "open": func() -> void:
+			fstage.call()
+			enc.open(), "close": enc.close})
+		shots.append({"name": fstem + "_result", "open": func() -> void:
+			fstage.call()
+			gs.choose_encounter(0)
+			assert(gs.pending_encounter == "", "fighting choice did not resolve: " + enc_id)
+			var recent := ""
+			for entry: Dictionary in root.get_node("/root/EventBus").history.slice(-3):
+				recent += String(entry["text"]) + "\n"
+			assert(recent.contains("Iron Fist"), "no Iron Fist line in the log: " + recent)
+			print("fight result ", enc_id, ": ", recent)
+			root.get_node("/root/EventBus").player_changed.emit()
+			hud.get("_banner").visible = false, "close": func() -> void: pass})
+
 
 ## WU-177: the final-death screen with every epilogue line present.
 func _start_year_shot(gs: Node) -> void:
