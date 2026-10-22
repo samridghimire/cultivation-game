@@ -126,3 +126,25 @@ func test_practice_to_next_level_button() -> void:
 	screen._select("iron_fist")
 	assert_true(screen._actions.get_node_or_null("PracticeToLevel") == null, "mastered: no button")
 	screen.free()
+
+
+## WU-270: the details say which fight the next level opens; mastered or no payoff shows nothing.
+func test_payoff_line_in_details() -> void:
+	var c: CharacterData = null
+	for stage in range(0, 9):
+		var f := new_character()
+		f.realm_index = 1
+		f.stage = stage
+		f.techniques = {"iron_fist": {"level": 1, "xp": 0.0}}
+		f.inventory = {}
+		if not Guidance.practice_payoff(f, data(), "iron_fist", "misty_forest", 10).is_empty():
+			c = f
+			break
+	assert_true(c != null, "some stage has a foe that level 2 turns around")
+	var payoff := Guidance.practice_payoff(c, data(), "iron_fist", "misty_forest", 10)
+	var text := TechniquesScreen.payoff_text(c, data(), "iron_fist", "misty_forest", 10)
+	assert_true(text.begins_with("At level 2 you would beat a %s about" % payoff["enemy"]), text)
+	assert_true(text.ends_with("(now %d)." % roundi(float(payoff["now"]) * 100.0)), text)
+	assert_eq(TechniquesScreen.payoff_text(c, data(), "iron_fist", "", 10), "")
+	c.techniques["iron_fist"]["level"] = data().techniques["iron_fist"].max_level
+	assert_eq(TechniquesScreen.payoff_text(c, data(), "iron_fist", "misty_forest", 10), "", "mastered")

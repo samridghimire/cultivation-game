@@ -15,6 +15,7 @@ var _info: Label
 var _description: Label
 var _bonuses: Label
 var _mastery: Label
+var _payoff: Label
 var _xp_bar: ProgressBar
 var _actions: HFlowContainer
 var _close_button: Button
@@ -58,6 +59,10 @@ func _init() -> void:
 	_mastery = UIStyle.label("", 15)
 	_mastery.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	details.add_child(_mastery)
+	_payoff = UIStyle.label("", 14, Color(0.7, 0.7, 0.7))
+	_payoff.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_payoff.visible = false
+	details.add_child(_payoff)
 	_xp_bar = ProgressBar.new()
 	_xp_bar.custom_minimum_size = Vector2(400, 14)
 	_xp_bar.show_percentage = false
@@ -149,6 +154,14 @@ func _rebuild() -> void:
 	_show_details()
 
 
+## WU-270: what the next level opens, e.g. "At level 3 you would beat a Mist Wolf about 62 times in 100 (now 45)."; "" when nothing.
+static func payoff_text(c: CharacterData, data: GameData, tech_id: String, region_id: String, today: int, flags: Dictionary = {}) -> String:
+	var payoff := Guidance.practice_payoff(c, data, tech_id, region_id, today, flags)
+	if payoff.is_empty():
+		return ""
+	return "At level %d you would beat a %s about %d times in 100 (now %d)." % [payoff["level"], payoff["enemy"], roundi(float(payoff["next"]) * 100.0), roundi(float(payoff["now"]) * 100.0)]
+
+
 ## WU-119: the guidance line shown while the character knows no combat technique ("" otherwise).
 static func combat_hint(c: CharacterData, data: GameData, region_id: String) -> String:
 	return Guidance.first_combat_hint(c, data, region_id)
@@ -197,6 +210,7 @@ func _show_details() -> void:
 	var def: TechniqueDef = data.techniques.get(_selected)
 	for c in [_name, _info, _description, _bonuses, _mastery, _xp_bar]:
 		c.visible = def != null
+	_payoff.visible = false
 	if def == null:
 		return
 	_name.text = def.name
@@ -228,6 +242,8 @@ func _show_details() -> void:
 				_mastery.text += ", %d days to level %d" % [to_next, lvl + 1]
 			_xp_bar.max_value = needed
 			_xp_bar.value = have
+			_payoff.text = payoff_text(p, data, def.id, GameState.current_region, GameClock.total_days, GameState.world_flags)
+			_payoff.visible = _payoff.text != ""
 			if to_next > 0 and not PRACTICE_DAYS.has(to_next):
 				var to_level := UIStyle.button("Practice to level %d (%s)" % [lvl + 1, Calendar.format_duration(to_next)], _practice.bind(to_next))
 				to_level.name = "PracticeToLevel"
