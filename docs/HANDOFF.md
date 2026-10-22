@@ -2,6 +2,17 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-10-22 (planner, 04:15 UTC)
+- 12 tasks landed (RV-QA-115, C-168, QA-113, WU-248, GUIDE-071, ENC-006, WU-250, QA-118, GUIDE-068, WU-249, C-157, WU-251).
+  Review df910b9..147a890 fixed WU-244 itself; nothing filed (its two notes -> GUIDE-073, WU-254). Live claims: C-163 (2nd),
+  GUIDE-069, GUIDE-070, QA-117.
+- New gap: Qingshi sells no weapons or armor (gear is 10 days away). GUIDE-072 (nearest market in hints), WU-253 (map shows
+  what each region sells), C-169 (help). Selling basic gear in Qingshi is added to the owner's C-009 question.
+- CMB-010 spec'd from QA-113 (flat realm_training from Void Refinement up); QA-120 re-checks late fights after it.
+- Also new: GUIDE-073 (hints quote shop prices), GUIDE-074 (empty fights list says why), C-167 spec'd, C-170, WU-252/240
+  spec'd, WU-254, WU-255, QA-119.
+- The owner's three urgent questions (pacing, first fights, ascension) and RIVAL-019 are still open.
+
 ## State on 2026-10-22 (planner, 02:15 UTC)
 - 9 tasks landed since 00:10 (QA-112, WU-244, C-165, C-166, WU-243, GUIDE-066, GUIDE-067, WU-246, WU-247). No new review
   (last reviewed df910b9). Live claims: RV-QA-115, C-163, GUIDE-068, QA-113.

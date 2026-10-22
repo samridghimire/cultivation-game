@@ -2,6 +2,18 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-22 [WU-251] The road talisman peddler's choices work with a gamepad.
+- 2026-10-22 [C-157] Heavenly Tribulation Pill: a breakthrough pill for Tribulation Transcendence, brewed by top Alchemists.
+- 2026-10-22 [WU-249] Repeated message log lines collapse into one line with a count.
+- 2026-10-22 [GUIDE-068] The thin-defence hint says which merchant sells armor and where to learn a body art.
+- 2026-10-22 [QA-118] The first-hour sim counts road encounters: the curious player meets them in most seeds.
+- 2026-10-22 [WU-250] The three new road encounters fit on screen at Steam Deck sizes.
+- 2026-10-22 [ENC-006] Encounters can raise your renown in the region.
+- 2026-10-22 [GUIDE-071] The injury hint says where to heal: your own item, the clinic, or a merchant.
+- 2026-10-22 [WU-248] Body-art manuals in the shop say "(defence)".
+- 2026-10-22 [QA-113] A sim shows the late realms' Peak foes are too hard (Tribulation Transcendence Peak wins 20%).
+- 2026-10-22 [C-168] Help says where talisman paper and other bought-only ingredients come from.
+- 2026-10-22 [RV-QA-115] The balance baseline is refreshed.
 - 2026-10-22 [WU-247] The shop's upgrade row and an empty crafting screen work with a gamepad.
 - 2026-10-22 [WU-246] The first hour's workshop, shop, journal and mission board fit at Steam Deck sizes.
 - 2026-10-22 [GUIDE-067] The late-realm goal ladders are read from one table; no goal changed.
