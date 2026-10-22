@@ -2486,6 +2486,27 @@ func test_heal_source_names_item_clinic_or_fallback() -> void:
 	assert_true(_has(Guidance.hints(c, data(), 1.0, 20), "Use a healing item or see a doctor."))
 
 
+func test_heal_source_looks_past_the_first_injury() -> void:
+	var c := _fresh()
+	Injuries.inflict(c, data(), "qi_deviation")
+	Injuries.inflict(c, data(), "broken_bones")
+	c.inventory = {"bone_setting_salve": 1}
+	var line := Guidance.heal_source(c, data(), "misty_forest")
+	assert_eq(line, "use your Bone-Setting Salve for your Broken Bones")
+
+
+func test_heal_source_far_clinic_needs_the_stones() -> void:
+	var c := _fresh()
+	Injuries.inflict(c, data(), "broken_bones")
+	c.inventory = {"spirit_stone": 500}
+	var cost := Medicine.clinic_cost(c, data(), "broken_bones")
+	var line := Guidance.heal_source(c, data(), "misty_forest")
+	assert_true(line.begins_with("the Village Clinic in Qingshi Village ("), line)
+	assert_true(line.ends_with("treats it for %d stones" % cost), line)
+	c.inventory = {}
+	assert_eq(Guidance.heal_source(c, data(), "misty_forest"), "")
+
+
 func test_thin_defence_hint_names_where_to_get_armor() -> void:
 	var c := _fresh()
 	c.realm_index = Guidance.THIN_DEFENCE_REALM

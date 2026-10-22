@@ -432,12 +432,23 @@ static func market_lines(data: GameData, region_id: String) -> PackedStringArray
 	return out
 
 
-## GUIDE-071: where c's first injury can be healed, as a clause ("use your X", "the Y treats it for N stones");
+## GUIDE-071/077: where one of c's injuries can be healed, as a clause ("use your X", "the Y treats it for N
+## stones"); the first source found for any injury (dictionary order), naming the injury when c has two or more.
 ## "" when no source is known or region_id is empty.
 static func heal_source(c: CharacterData, data: GameData, region_id: String) -> String:
 	if region_id == "" or not Injuries.has_any(c):
 		return ""
-	var injury_id := String(c.injuries.keys()[0])
+	for injury_id: String in c.injuries:
+		var clause := _heal_source_for(c, data, region_id, injury_id)
+		if clause == "":
+			continue
+		if c.injuries.size() > 1:
+			clause += " for your %s" % Injuries.injury_name(data, injury_id)
+		return clause
+	return ""
+
+
+static func _heal_source_for(c: CharacterData, data: GameData, region_id: String, injury_id: String) -> String:
 	var stones := c.item_count("spirit_stone")
 	for item_id: String in c.inventory:
 		if c.item_count(item_id) > 0 and _heals(data, item_id, injury_id):
@@ -446,7 +457,7 @@ static func heal_source(c: CharacterData, data: GameData, region_id: String) -> 
 	var cost := Medicine.clinic_cost(c, data, injury_id)
 	for p: Dictionary in places:
 		if String(p.get("type", "")) == "clinic" and cost <= stones:
-			return "the %s treats it for %s" % [p.get("display_name", "clinic"), "%d stones" % cost]
+			return "the %s treats it for %d stones" % [p.get("display_name", "clinic"), cost]
 	for p: Dictionary in places:
 		if String(p.get("type", "")) != "merchant":
 			continue
@@ -457,11 +468,15 @@ static func heal_source(c: CharacterData, data: GameData, region_id: String) -> 
 			var heal_price := _place_price(c, data, region_id, item_id, p)
 			if heal_price <= stones:
 				return "the %s sells %s for %d stones" % [p.get("display_name", "merchant"), item.get("name", item_id), heal_price]
-	for p: Dictionary in data.regions.get(region_id, {}).get("routes", []):
-		var to := String(p.get("to", ""))
-		for q: Dictionary in data.regions.get(to, {}).get("places", []):
+	var far := nearest_selling(c, data, region_id, func(r: String) -> String:
+		if cost > stones:
+			return ""
+		for q: Dictionary in data.regions.get(r, {}).get("places", []):
 			if String(q.get("type", "")) == "clinic":
-				return "the %s in %s treats it" % [q.get("display_name", "clinic"), data.regions[to].get("name", to)]
+				return String(q.get("display_name", "clinic"))
+		return "")
+	if not far.is_empty() and int(far["days"]) > 0:
+		return "the %s in %s (%s) treats it for %d stones" % [far["result"], far["region_name"], Calendar.format_duration(int(far["days"])), cost]
 	return ""
 
 
