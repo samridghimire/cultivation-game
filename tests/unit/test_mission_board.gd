@@ -36,6 +36,20 @@ func test_requirement_lines_show_have_over_need_and_danger() -> void:
 	var hunt := MissionBoard.requirement_lines(c, data(), data().sect_missions["cull_mist_wolves"])
 	assert_eq(hunt.size(), 1)
 	assert_true(hunt[0].begins_with("Defeat: %s (" % data().enemies["mist_wolf"]["name"]), hunt[0])
+	assert_true(hunt[0].contains(" in 100"), hunt[0])
+	assert_eq(hunt[0].contains(", to the death"), bool(data().enemies["mist_wolf"]["lethal"]), hunt[0])
+
+
+func test_odds_text_wording() -> void:
+	assert_eq(UIStyle.odds_wording(0.8, true), "Even, 80 in 100, to the death")
+	assert_eq(UIStyle.odds_wording(0.04, false), "Deadly, 4 in 100")
+
+
+func test_trial_line_never_says_to_the_death() -> void:
+	var c := _disciple()
+	var board := MissionBoard.new()
+	board._set_tab("rank")
+	assert_false(board._requirements.text.contains("to the death"), board._requirements.text)
 
 
 func test_sect_hall_offers_board_only_to_disciples() -> void:
@@ -163,7 +177,7 @@ func test_board_shows_colored_danger_for_fight_missions() -> void:
 			assert_false(b.text.contains("["), b.text)
 			continue
 		fights += 1
-		assert_true(b.text.ends_with("[%s]" % danger), b.text)
+		assert_true(b.text.contains("[%s, " % danger) and b.text.ends_with(" in 100]") or b.text.ends_with(" in 100, to the death]"), b.text)
 		assert_eq(b.get_theme_color("font_color"), UIStyle.danger_color(danger))
 		board._select(mission_id)
 		assert_true(board._danger.visible)

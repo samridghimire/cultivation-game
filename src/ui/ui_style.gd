@@ -35,6 +35,16 @@ static func fight_label(c: CharacterData, data: GameData, enemy: Dictionary, wit
 	return label
 
 
+## "Even, 80 in 100, to the death": the label and win chance of fighting `enemy`.
+static func odds_text(c: CharacterData, data: GameData, enemy: Dictionary, lethal: bool) -> String:
+	return odds_wording(Combat.win_chance(c, data, enemy), lethal)
+
+
+## odds_text for a known win `chance` (0..1).
+static func odds_wording(chance: float, lethal: bool) -> String:
+	return "%s, %d in 100%s" % [Combat.label_for_chance(chance), roundi(chance * 100.0), ", to the death" if lethal else ""]
+
+
 ## The color for a Combat.danger_label rating (white for anything else).
 static func danger_color(danger: String) -> Color:
 	return DANGER_COLORS.get(danger, Color.WHITE)

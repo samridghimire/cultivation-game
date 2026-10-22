@@ -144,7 +144,7 @@ static func requirement_lines(c: CharacterData, data: GameData, mission: Diction
 	var enemy_id := String(mission.get("enemy", ""))
 	if data.enemies.has(enemy_id):
 		var enemy: Dictionary = data.enemies[enemy_id]
-		lines.append("Defeat: %s (%s)" % [enemy["name"], Appraisal.danger_text(c, data, enemy)])
+		lines.append("Defeat: %s (%s)" % [enemy["name"], UIStyle.odds_text(c, data, enemy, bool(enemy.get("lethal", false)))])
 	return lines
 
 
@@ -174,7 +174,7 @@ static func rank_requirement_lines(c: CharacterData, data: GameData, rank: int) 
 		lines.append("Realm: %s or above" % data.realms[data.realm_index_of(String(def["min_realm"]))].name)
 	var trial := String(def.get("trial", ""))
 	if trial != "" and data.enemies.has(trial):
-		lines.append("Trial: defeat %s in a sparring match (%s)" % [data.enemies[trial]["name"], Appraisal.danger_text(c, data, data.enemies[trial])])
+		lines.append("Trial: defeat %s in a sparring match (%s)" % [data.enemies[trial]["name"], UIStyle.odds_text(c, data, data.enemies[trial], false)])
 	return lines
 
 
@@ -354,7 +354,8 @@ func _rebuild_missions() -> void:
 			label += " (in %s)" % Calendar.format_duration(wait)
 		var danger := Sects.mission_danger(p, data, mission_id)
 		if danger != "":
-			label += "  [%s]" % Sects.mission_danger_text(p, data, mission_id)
+			var foe: Dictionary = data.enemies[String(mission["enemy"])]
+			label += "  [%s]" % UIStyle.odds_text(p, data, foe, bool(foe.get("lethal", false)))
 			if low_artifact_warning(p, data, mission_id) != "":
 				label += " !"
 		_add_entry(mission_id, label, Sects.check_mission(p, data, mission_id, GameState.world_flags) == "")

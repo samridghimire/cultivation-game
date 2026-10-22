@@ -53,7 +53,7 @@ static func fight_suffix(choice: Dictionary) -> String:
 	var chance: float = float(choice.get("chance", -1.0))
 	if chance < 0.0:
 		return ""
-	return " (%s, %d in 100%s)" % [Combat.label_for_chance(chance), roundi(chance * 100.0), ", to the death" if choice.get("lethal", false) else ""]
+	return " (%s)" % UIStyle.odds_wording(chance, bool(choice.get("lethal", false)))
 
 
 ## True when at least one choice label carries a [bracketed] tag (see choice_label).
