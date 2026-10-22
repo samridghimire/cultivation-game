@@ -11,6 +11,8 @@ extends SceneTree
 ## QA-127: --no-jobs restores the old policy of never taking odd jobs.
 ## QA-111: for an open order still short of an ingredient no gather place here yields, the crafter walks one route to a
 ## neighbouring region that does, gathers enough for the order there and walks back (--walk; off by default, it lowers the crafter's stones).
+## QA-130: --ledger prints, per seed and as medians, where the stones went and came from (buys and sales by item id and region,
+## commission pay, odd-job pay) and how many crafted goods are still held at the end.
 ## QA-107: --orders prints every commission (roll day, item, count, reward, days allowed, whether each ingredient
 ## was available nearby at roll time) with its fate and why the sim did not fill it.
 
@@ -25,6 +27,9 @@ var _clock: Node
 var _orders_mode := false
 var _follow_nudge := true  ## QA-108
 var _follow_buy := true  ## QA-117
+var _buy_any := false  ## QA-130 (--buy-any)
+var _ledger_mode := false  ## QA-130
+var _ledger := {}  ## QA-130: "kind:item@region" -> stones (negative = spent) for this life
 var _follow_walk := false  ## QA-111 (--walk)
 var _trips := 0  ## QA-111: walks to a neighbouring region this life
 var _tracked: Array[Dictionary] = []  ## QA-107: orders seen so far, with their fate
@@ -66,6 +71,8 @@ func _run() -> void:
 	_follow_buy = not args.has("--no-buy")
 	_follow_jobs = not args.has("--no-jobs")
 	_follow_walk = args.has("--walk")
+	_ledger_mode = args.has("--ledger")
+	_buy_any = args.has("--buy-any")
 	for a in args:
 		if String(a).begins_with("--prof="):
 			_prof = String(a).substr(7)
@@ -80,6 +87,7 @@ func _run() -> void:
 	print("Crafter start: new %s in Qingshi Village, %d seeds, %d days" % [_prof, seeds, days])
 	print("  seed  d30  d90 d180  crafted  comm(got/del)  rank  renown  gather% craft% meditate%  stuck-wk (faded)  curious(d30/d90/d180)  realm d90 | d180 | d365 (curious)  cult-hint-steps")
 	var cols := {"d30": [], "d90": [], "r120": [], "d180": [], "crafted": [], "got": [], "delivered": [], "rank": [], "renown": [], "gather": [], "craft": [], "meditate": [], "stuck": [], "faded": [], "c30": [], "c90": [], "c180": [], "d365": [], "hint": [], "post": [], "stuck_post": [], "rank_gap": [], "trips": []}
+	var ledger_rows: Array = []
 	for s in range(1, seeds + 1):
 		var base: Dictionary = FirstHour.play(_gs, _clock, s, maxi(6, days / 30), true)
 		var cur: Array = base["stones"]
@@ -87,6 +95,9 @@ func _run() -> void:
 		var total := float(maxi(1, r["gather_days"] + r["craft_days"] + r["meditate_days"]))
 		var cur_realms: Array = base["realms"]
 		var realm_cols := "%s | %s | %s (%s | %s | %s)" % [r["realm90"], r["realm180"], r["realm365"], _at(cur_realms, 2), _at(cur_realms, 5), _at(cur_realms, 11)]
+		if _ledger_mode:
+			_print_ledger(s, r)
+			ledger_rows.append(r["ledger"])
 		print("  %4d %4d %4d %4d  %7d  %5d/%-5d  %4d  %6d  %6d%% %5d%% %8d%%  %8d (%5d)  %d/%d/%d  %s  %d" % [s, r["d30"], r["d90"], r["d180"], r["crafted"], r["got"], r["delivered"], r["rank"], r["renown"],
 			100 * r["gather_days"] / total, 100 * r["craft_days"] / total, 100 * r["meditate_days"] / total, r["stuck"], r["faded"], cur[0], cur[2], cur[5], realm_cols, r["cult_hint"]])
 		for k in ["d30", "d90", "d180", "crafted", "got", "delivered", "rank", "renown", "stuck", "faded"]:
@@ -115,6 +126,8 @@ func _run() -> void:
 		never += 1 if n == 0 else 0
 	print("  QA-111: order walks %s; trips to a neighbouring region per seed: median %d, max %d" % ["followed" if _follow_walk else "off", _median(cols["trips"]), cols["trips"].max()])
 	print("  QA-117: buy hint %s; seeds that never crafted: %d of %d" % ["followed" if _follow_buy else "ignored", never, seeds])
+	if _ledger_mode:
+		_print_ledger_medians(ledger_rows)
 	var met_ids: Array = _met.keys()
 	met_ids.sort()
 	for id: String in met_ids:
@@ -144,6 +157,7 @@ func _crafter(seed_value: int, days: int) -> Dictionary:
 	var start: int = _clock.total_days
 	var start_stones := c.item_count("spirit_stone")
 	_trips = 0
+	_ledger.clear()
 	var out := {"start_stones": start_stones, "cheapest": _cheapest_craft_cost(c), "d30": 0, "d90": 0, "d120": 0, "d180": 0, "crafted": 0, "got": 0, "delivered": 0, "rank": 0, "renown": 0, "gather_days": 0, "craft_days": 0, "meditate_days": 0, "stuck": 0, "faded": 0, "d365": 0, "realm90": "-", "realm120": "-", "realm180": "-", "realm365": "-", "cult_hint": 0, "crafted_post": 0, "stuck_post": 0}
 	var checkpoints := CHECKPOINTS.duplicate()
 	_tracked.clear()
@@ -185,6 +199,8 @@ func _crafter(seed_value: int, days: int) -> Dictionary:
 	out["rank"] = Professions.rank_of(c, _prof)
 	out["renown"] = Renown.value(c, REGION)
 	out["trips"] = _trips
+	out["ledger"] = _ledger.duplicate()
+	out["held"] = _held_goods(c)
 	if _orders_mode:
 		_track_orders(c, seed_value, start)
 		for t in _tracked:
@@ -193,6 +209,47 @@ func _crafter(seed_value: int, days: int) -> Dictionary:
 				t["why"] = _why(c, t)
 			print(_order_line(t))
 	return out
+
+
+## QA-130: adds stones (negative when spent) to the ledger under kind, item and the current region.
+func _note(kind: String, item: String, stones: int) -> void:
+	var key := "%s:%s@%s" % [kind, item, _gs.current_region]
+	_ledger[key] = int(_ledger.get(key, 0)) + stones
+
+
+## QA-130: units held at the end of the crafter's recipe outputs (and great outputs), item id -> count.
+func _held_goods(c: CharacterData) -> Dictionary:
+	var held := {}
+	for recipe_id: String in Alchemy.known_recipes(c, _gs.data, _prof):
+		for id in [String(_gs.data.recipes[recipe_id]["output"]["item"]), String(_gs.data.recipes[recipe_id].get("great_output", {}).get("item", ""))]:
+			if id != "" and c.item_count(id) > 0:
+				held[id] = c.item_count(id)
+	return held
+
+
+func _ledger_total(ledger: Dictionary, kind: String) -> int:
+	var total := 0
+	for key: String in ledger:
+		if key.begins_with(kind + ":"):
+			total += int(ledger[key])
+	return total
+
+
+func _print_ledger(seed_value: int, r: Dictionary) -> void:
+	var keys: Array = r["ledger"].keys()
+	keys.sort()
+	var parts: PackedStringArray = []
+	for k: String in keys:
+		parts.append("%s %+d" % [k, r["ledger"][k]])
+	print("    QA-130 seed %d ledger: %s; held at end: %s" % [seed_value, ", ".join(parts), str(r["held"])])
+
+
+func _print_ledger_medians(rows: Array) -> void:
+	var cols := {"bought": [], "sold": [], "commission": [], "oddjob": []}
+	for ledger: Dictionary in rows:
+		for kind: String in cols:
+			cols[kind].append(_ledger_total(ledger, kind))
+	print("  QA-130 medians (stones): spent buying %d, earned selling %d, commission pay %d, odd-job pay %d" % [_median(cols["bought"]), _median(cols["sold"]), _median(cols["commission"]), _median(cols["oddjob"])])
 
 
 ## QA-107: notes new orders in the pack and closes the ones that left it (delivered or lapsed).
@@ -334,7 +391,9 @@ func _act(c: CharacterData) -> String:
 		_buy_for_hint(c)
 	var recipe_id := _best_craftable(c)
 	if recipe_id == "" and _follow_jobs and _has_odd_jobs_hint(c):
+		var stones := c.item_count("spirit_stone")
 		_gs.work_profession(_prof, 30)
+		_note("oddjob", _prof, c.item_count("spirit_stone") - stones)
 		return "meditate"
 	if recipe_id != "":
 		var out_item := String(_gs.data.recipes[recipe_id]["output"]["item"])
@@ -359,10 +418,11 @@ func _has_odd_jobs_hint(c: CharacterData) -> bool:
 	return false
 
 
-## QA-117: follows GUIDE-066's buy hint: buys what the first in-rank recipe lacks (bought-only, sold in this region) for one craft, stones allowing.
+## QA-117: follows GUIDE-066's buy hint: buys what the first in-rank recipe lacks (QA-130: of the followed craft only, not every profession the character holds;
+## --buy-any restores buying for all of them) (bought-only, sold in this region) for one craft, stones allowing.
 func _buy_for_hint(c: CharacterData) -> void:
 	for prof_id: String in _gs.data.professions:
-		if not c.professions.has(prof_id):
+		if not c.professions.has(prof_id) or (prof_id != _prof and not _buy_any):
 			continue
 		for recipe_id: String in Alchemy.known_recipes(c, _gs.data, prof_id):
 			var recipe: Dictionary = _gs.data.recipes[recipe_id]
@@ -384,14 +444,19 @@ func _buy_for_hint(c: CharacterData) -> void:
 			if c.item_count("spirit_stone") < cost:
 				continue
 			for ing: String in need:
+				var stones := c.item_count("spirit_stone")
 				_gs.buy_item(ing, "", need[ing])
+				_note("bought", ing, c.item_count("spirit_stone") - stones)
 			return
 
 
 func _deliver_open(c: CharacterData) -> void:
 	for i in range(c.commissions.size() - 1, -1, -1):
 		if Commissions.check_deliver(c, _gs.data, i) == "":
+			var stones := c.item_count("spirit_stone")
+			var item := String(c.commissions[i]["item"])
 			_gs.deliver_commission(i)
+			_note("commission", item, c.item_count("spirit_stone") - stones)
 
 
 ## Sells crafted output no open commission still wants.
@@ -405,7 +470,9 @@ func _sell_surplus(c: CharacterData) -> void:
 		for id in [item_id, great]:
 			if id != "" and not wanted.has(id) and c.item_count(id) > 0:
 				_sold[id] = int(_sold.get(id, 0)) + c.item_count(id)
+				var stones := c.item_count("spirit_stone")
 				_gs.sell_item(id, c.item_count(id))
+				_note("sold", id, c.item_count("spirit_stone") - stones)
 
 
 ## The craftable recipe that leaves the most stones (output value minus ingredients bought at shop price), preferring one an open order wants.
