@@ -89,6 +89,17 @@ func test_urgent_hints_come_first() -> void:
 	assert_true(hints[1].begins_with("Treat your injuries"))
 
 
+func test_injury_hint_names_cultivation_cost() -> void:
+	var c := _fresh()
+	Injuries.inflict(c, data(), "internal_injury")
+	var hints := Guidance.hints(c, data())
+	assert_true(_has(hints, "Treat your injuries"))
+	assert_true(_has(hints, "Left alone they cost about"))
+	assert_true(_has(hints, "weaken you in fights"))
+	c.injuries = {"internal_injury": 1}
+	assert_false(_has(Guidance.hints(c, data()), "Left alone"))
+
+
 func test_pregnancy_and_low_artifact_lives() -> void:
 	var c := _fresh()
 	c.pregnancy = {"partner": "x", "days_left": 30}

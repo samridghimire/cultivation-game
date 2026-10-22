@@ -157,3 +157,14 @@ func test_chance_matches_the_roll_formula() -> void:
 	tempered.body_stage = 1
 	assert_almost_eq(Injuries.chance(tempered, d, "breakthrough_failure"), clampf((base - (tempered.attribute("fortune") - 10) * d.injury_fortune_step) * (1.0 - BodyTempering.injury_resistance(tempered, d)), 0.0, 1.0))
 	assert_eq(Injuries.chance(new_character(), d, "no_such_source"), 0.0)
+
+
+func test_qi_days_lost() -> void:
+	var c := new_character()
+	assert_eq(Injuries.qi_days_lost(c, data()), 0)
+	var m := float(data().injuries["internal_injury"]["cultivation_mult"])
+	c.injuries = {"internal_injury": 40}
+	assert_eq(Injuries.qi_days_lost(c, data()), roundi(40 * (1.0 - m)))
+	var m2 := float(data().injuries["qi_deviation"]["cultivation_mult"])
+	c.injuries = {"internal_injury": 40, "qi_deviation": 10}
+	assert_eq(Injuries.qi_days_lost(c, data()), roundi(10 * (1.0 - m * m2) + 30 * (1.0 - m)))

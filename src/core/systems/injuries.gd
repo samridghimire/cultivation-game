@@ -90,6 +90,22 @@ static func _product(c: CharacterData, data: GameData, key: String) -> float:
 	return mult
 
 
+## GUIDE-091: cultivation days lost if the injuries are left to heal on their own. Walks each day
+## the injuries last, multiplying the cultivation_mult of those still active, and sums 1 - product.
+static func qi_days_lost(c: CharacterData, data: GameData) -> int:
+	var longest := 0
+	for id in c.injuries:
+		longest = maxi(longest, int(c.injuries[id]))
+	var lost := 0.0
+	for d in longest:
+		var mult := 1.0
+		for id in c.injuries:
+			if int(c.injuries[id]) > d:
+				mult *= float(data.injuries.get(id, {}).get("cultivation_mult", 1.0))
+		lost += 1.0 - mult
+	return roundi(lost)
+
+
 static func injury_name(data: GameData, injury_id: String) -> String:
 	return data.injuries.get(injury_id, {}).get("name", injury_id)
 

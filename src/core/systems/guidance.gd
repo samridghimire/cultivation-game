@@ -38,7 +38,11 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 	if Injuries.has_any(c):
 		var heal := heal_source(c, data, region_id)
 		heal = heal.substr(0, 1).to_upper() + heal.substr(1) + "." if heal != "" else "Use a healing item or see a doctor."
-		out.append("Treat your injuries (%s): they slow your cultivation to x%s. %s" % [", ".join(Injuries.describe(c, data)), String.num(Injuries.cultivation_multiplier(c, data), 2), heal])
+		var lost := Injuries.qi_days_lost(c, data)
+		var cost := ""
+		if lost >= 3:
+			cost = " Left alone they cost about %s of cultivation%s." % [Calendar.format_duration(lost), " and weaken you in fights" if Injuries.combat_multiplier(c, data) < 1.0 else ""]
+		out.append("Treat your injuries (%s): they slow your cultivation to x%s.%s %s" % [", ".join(Injuries.describe(c, data)), String.num(Injuries.cultivation_multiplier(c, data), 2), cost, heal])
 	if Sects.duty_days_left(c) <= Sects.DUTY_REMINDER_DAYS:
 		var duty := Sects.duty_reminder(c, data)
 		if duty != "":
