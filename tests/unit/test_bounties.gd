@@ -22,7 +22,7 @@ func _errors_after(mutate: Callable) -> Array:
 
 
 func test_shipped_bounties_validate() -> void:
-	assert_eq(data().bounties.size(), 14)
+	assert_eq(data().bounties.size(), 15)
 	var puppet: Dictionary = data().bounties["marsh_corpse_puppet_bounty"]
 	assert_eq(puppet["min_realm"], "qi_refining", "C-081: the marsh posts a Qi Refining bounty")
 	assert_eq(int(_count_in("qingshi_village")), 2, "C-064: Qingshi posts two bounties")
@@ -279,3 +279,16 @@ func _count_in(region_id: String) -> int:
 		if b["region"] == region_id:
 			n += 1
 	return n
+
+
+## C-195: a first-year forest hunt between the boar and the marsh puppet.
+func test_fog_antler_stag_bounty_opens_at_the_fifth_layer() -> void:
+	var b: Dictionary = data().bounties["fog_antler_stag_bounty"]
+	assert_true(data().enemies.has(b["enemy"]))
+	assert_eq(b["region"], "misty_forest")
+	assert_eq(int(b["min_stage"]), 4)
+	var c := _qi(3)
+	assert_false(Bounties.offers(c, data(), 0, "misty_forest").any(func(o: Dictionary) -> bool: return o["id"] == "fog_antler_stag_bounty"), "not at the 4th layer")
+	c.stage = 4
+	var ids := Bounties.offers(c, data(), 0, "misty_forest").map(func(o: Dictionary) -> String: return o["id"])
+	assert_true(ids.has("fog_antler_stag_bounty"), str(ids))
