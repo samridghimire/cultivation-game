@@ -327,6 +327,18 @@ func test_no_newcomer_hints_past_qi_refining() -> void:
 	assert_false(_has(hints, "Headman Zhou"))
 
 
+func test_newcomer_herb_hint_says_what_it_is_worth() -> void:
+	var d := data()
+	var qi := int(d.items["spirit_herb"]["effects"]["qi"])
+	var c := _fresh()
+	c.inventory = {"spirit_herb": 1}
+	var hints := Guidance.hints(c, d, 1.0, 10, {}, {Guidance.ELDER_MO_FLAG: true}, "qingshi_village")
+	assert_true(_has(hints, "Use your Spirit Herb (Inventory, I): %d qi at once, about " % qi))
+	c.inventory = {"spirit_herb": 3}
+	hints = Guidance.hints(c, d, 1.0, 10, {}, {Guidance.ELDER_MO_FLAG: true}, "qingshi_village")
+	assert_true(_has(hints, "Use your 3 Spirit Herbs (Inventory, I): %d qi at once, about " % (qi * 3)))
+
+
 func test_newcomer_pill_hint_skips_harmful_pills() -> void:
 	var c := _fresh()
 	c.inventory = {"blood_essence_pill": 1, "blood_demon_pill": 1}

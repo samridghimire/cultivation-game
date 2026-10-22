@@ -1703,7 +1703,14 @@ static func _newcomer_hints(c: CharacterData, data: GameData, flags: Dictionary,
 			# Never steer a newcomer toward pills that burn lifespan or taint the heart.
 			var harmful := fx.has("burn_lifespan") or int(fx.get("alignment", 0)) < 0
 			if c.item_count(item_id) > 0 and float(fx.get("qi", 0.0)) > 0.0 and not harmful:
-				out.append("Use your %s (Inventory, I) to gather qi at once." % item["name"])
+				var count := c.item_count(item_id)
+				var qi := float(fx["qi"]) * count
+				var rate := Cultivation.qi_per_day(c, data, float(best_qi_in_region(c, data, region_id, flags)["density"]))
+				if rate <= 0.0:
+					out.append("Use your %s (Inventory, I) to gather qi at once." % item["name"])
+				else:
+					var label: String = String(item["name"]) if count == 1 else "%d %ss" % [count, item["name"]]
+					out.append("Use your %s (Inventory, I): %d qi at once, about %s of meditation here." % [label, roundi(qi), Calendar.format_duration(maxi(1, ceili(qi / rate)))])
 				break
 	var fighting := first_combat_hint(c, data, region_id)
 	if fighting != "":
