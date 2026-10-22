@@ -368,6 +368,22 @@ func test_first_hop_names_the_neighbour_on_the_cheapest_path() -> void:
 	assert_eq(Guidance.first_hop(c, d, "nowhere", "qingshi_village"), "")
 
 
+func test_far_where_says_by_way_of_only_for_a_two_hop_road() -> void:
+	var c := _fresh()
+	c.realm_index = 1
+	var d := data()
+	var direct := {"region_id": "misty_forest", "region_name": "Misty Forest", "days": 3}
+	var near := Guidance._far_where(c, d, "qingshi_village", direct)
+	assert_true(near.begins_with("in Misty Forest ("))
+	assert_false(near.contains("by way of"))
+	var hop := Guidance.first_hop(c, d, "qingshi_village", "azure_peak")
+	assert_true(hop != "" and hop != "azure_peak")
+	var far := {"region_id": "azure_peak", "region_name": "Azure Peak", "days": 9}
+	var line := Guidance._far_where(c, d, "qingshi_village", far)
+	assert_true(line.contains("by way of " + Exploration.region_name(d, hop)))
+	assert_true(line.begins_with("in Azure Peak (9"))
+
+
 func test_hinted_region_finds_the_region_a_hint_names() -> void:
 	var d := data()
 	assert_eq(Guidance.hinted_region(d, "... in Fallen Star Market (10 days) sells ...", "qingshi_village"), "fallen_star_market")

@@ -169,7 +169,7 @@ static func thin_defence_hint(c: CharacterData, data: GameData, region_id: Strin
 				var far := nearest_selling(c, data, region_id, func(r: String) -> String: return String(_body_manual_merchant(c, data, r).get("item_id", "")))
 				if not far.is_empty():
 					var manual: String = far["result"]
-					line += " %s (%s, %s, %s) teaches one." % [data.items[manual]["name"], merchant_selling(data, far["region_id"], manual), far["region_name"], Calendar.format_duration(int(far["days"]))]
+					line += " %s (%s, %s, %s%s) teaches one." % [data.items[manual]["name"], merchant_selling(data, far["region_id"], manual), far["region_name"], Calendar.format_duration(int(far["days"])), _by_way_of(c, data, region_id, far)]
 	if Injuries.has_any(c):
 		line += " Heal your injuries before you fight."
 	return line
@@ -274,7 +274,20 @@ static func _far_armor_clause(c: CharacterData, data: GameData, region_id: Strin
 	if far.is_empty():
 		return ""
 	var far_armor: String = far["result"]
-	return " The %s in %s (%s) sells %s for %d stones." % [merchant_selling(data, far["region_id"], far_armor), far["region_name"], Calendar.format_duration(int(far["days"])), data.items[far_armor]["name"], merchant_price(c, data, far["region_id"], far_armor)]
+	return " The %s %s sells %s for %d stones." % [merchant_selling(data, far["region_id"], far_armor), _far_where(c, data, region_id, far), data.items[far_armor]["name"], merchant_price(c, data, far["region_id"], far_armor)]
+
+
+## GUIDE-100: ", by way of <Region>" when the first stop towards `far` (a nearest_selling result) is not `far` itself, else "".
+static func _by_way_of(c: CharacterData, data: GameData, region_id: String, far: Dictionary) -> String:
+	var hop := first_hop(c, data, region_id, String(far["region_id"]))
+	if hop == "" or hop == String(far["region_id"]):
+		return ""
+	return ", by way of " + Exploration.region_name(data, hop)
+
+
+## GUIDE-100: "in <Region> (<duration>[, by way of <Region>])" for a nearest_selling result.
+static func _far_where(c: CharacterData, data: GameData, region_id: String, far: Dictionary) -> String:
+	return "in %s (%s%s)" % [far["region_name"], Calendar.format_duration(int(far["days"])), _by_way_of(c, data, region_id, far)]
 
 
 ## GUIDE-072: the nearest region (at most NEAREST_HOPS routes away, nearest by total route days, routes gated
@@ -422,7 +435,7 @@ static func buy_ingredient_hint(c: CharacterData, data: GameData, region_id: Str
 			if int(seller["days"]) == 0:
 				line = "Your %s needs %s: the %s sells them for %d stones each." % [recipe["name"], Items.item_plural(data, item_id, 2), merchant_selling(data, region_id, item_id), merchant_price(c, data, region_id, item_id)]
 			else:
-				line = "Your %s needs %s: the %s in %s (%s) sells them for %d stones each." % [recipe["name"], Items.item_plural(data, item_id, 2), seller["result"], seller["region_name"], Calendar.format_duration(int(seller["days"])), merchant_price(c, data, seller["region_id"], item_id)]
+				line = "Your %s needs %s: the %s %s sells them for %d stones each." % [recipe["name"], Items.item_plural(data, item_id, 2), seller["result"], _far_where(c, data, region_id, seller), merchant_price(c, data, seller["region_id"], item_id)]
 			if c.item_count("spirit_stone") < Alchemy.shortfall_cost(c, data, recipe_id):
 				line += " Sell gathered herbs or take odd jobs first."
 			var unit_price: int = merchant_price(c, data, String(seller["region_id"]) if int(seller["days"]) > 0 else region_id, item_id)
@@ -498,7 +511,7 @@ static func gear_elsewhere_line(c: CharacterData, data: GameData, region_id: Str
 	var far := nearest_selling(c, data, region_id, pick)
 	if far.is_empty():
 		return ""
-	return "No weapons or armor here. The %s in %s (%s) sells them." % [far["result"], far["region_name"], Calendar.format_duration(int(far["days"]))]
+	return "No weapons or armor here. The %s %s sells them." % [far["result"], _far_where(c, data, region_id, far)]
 
 
 ## WU-253: one "<Merchant>: <goods>" line per merchant place in `region_id`.
