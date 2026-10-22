@@ -16,7 +16,7 @@ var _description: Label
 var _bonuses: Label
 var _mastery: Label
 var _xp_bar: ProgressBar
-var _actions: HBoxContainer
+var _actions: HFlowContainer
 var _close_button: Button
 var _selected := ""
 
@@ -62,7 +62,7 @@ func _init() -> void:
 	_xp_bar.custom_minimum_size = Vector2(400, 14)
 	_xp_bar.show_percentage = false
 	details.add_child(_xp_bar)
-	_actions = HBoxContainer.new()
+	_actions = HFlowContainer.new()
 	_actions.add_theme_constant_override("separation", 8)
 	details.add_child(_actions)
 
@@ -223,8 +223,15 @@ func _show_details() -> void:
 			var needed := def.xp_to_next(lvl)
 			var have := float(p.techniques[def.id]["xp"])
 			_mastery.text = "Level %d / %d   (%d / %d practice)   ~%.1f per day" % [lvl, def.max_level, int(have), int(needed), Techniques.xp_per_day(p)]
+			var to_next := Techniques.days_to_next(p, data, def.id)
+			if to_next > 0:
+				_mastery.text += ", %d days to level %d" % [to_next, lvl + 1]
 			_xp_bar.max_value = needed
 			_xp_bar.value = have
+			if to_next > 0 and not PRACTICE_DAYS.has(to_next):
+				var to_level := UIStyle.button("Practice to level %d (%s)" % [lvl + 1, Calendar.format_duration(to_next)], _practice.bind(to_next))
+				to_level.name = "PracticeToLevel"
+				_actions.add_child(to_level)
 			for days in PRACTICE_DAYS:
 				_actions.add_child(UIStyle.button("Practice %s" % Calendar.format_duration(days), _practice.bind(days)))
 		if not def.activation.is_empty():

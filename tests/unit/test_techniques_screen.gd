@@ -98,3 +98,31 @@ func test_combat_hint_line_for_a_bare_character_only() -> void:
 	screen.free()
 	Techniques.learn(c, data(), "iron_fist")
 	assert_eq(TechniquesScreen.combat_hint(c, data(), "qingshi_village"), "")
+
+
+## WU-267: a "Practice to level N" button runs exactly the days to the next level; none once mastered.
+func test_practice_to_next_level_button() -> void:
+	var gs := _root().get_node("GameState")
+	var c := new_character()
+	c.techniques = {"iron_fist": {"level": 1, "xp": 0.0}}
+	c.inventory = {}
+	gs.start_session(c)
+	var screen := TechniquesScreen.new()
+	screen._rebuild()
+	screen._select("iron_fist")
+	var days := Techniques.days_to_next(c, data(), "iron_fist")
+	var button := screen._actions.get_node_or_null("PracticeToLevel") as Button
+	if TechniquesScreen.PRACTICE_DAYS.has(days):
+		assert_true(button == null, "no duplicate of a fixed-duration button")
+	else:
+		assert_true(button != null and button.text.begins_with("Practice to level 2"), "button present")
+		assert_true(screen._mastery.text.contains("%d days to level 2" % days), screen._mastery.text)
+		var day: int = _root().get_node("GameClock").total_days
+		button.pressed.emit()
+		assert_eq(Techniques.level(gs.player, "iron_fist"), 2)
+		assert_eq(_root().get_node("GameClock").total_days - day, days)
+	var def: TechniqueDef = data().techniques["iron_fist"]
+	gs.player.techniques["iron_fist"] = {"level": def.max_level, "xp": 0.0}
+	screen._select("iron_fist")
+	assert_true(screen._actions.get_node_or_null("PracticeToLevel") == null, "mastered: no button")
+	screen.free()
