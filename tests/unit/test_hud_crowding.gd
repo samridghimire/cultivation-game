@@ -78,3 +78,40 @@ func test_lives_text_and_color() -> void:
 	assert_eq(HudScript.lives_color(1), UIStyle.CATEGORY_COLORS["warning"])
 	assert_eq(HudScript.lives_color(0), UIStyle.CATEGORY_COLORS["danger"])
 	assert_eq(HudScript.lives_color(4), Color.WHITE)
+
+
+func test_first_sentence() -> void:
+	assert_eq(HudScript.first_sentence("A b. C d."), "A b. (J)")
+	assert_eq(HudScript.first_sentence("No stop here"), "No stop here")
+
+
+func test_fit_keeps_one_hint_when_three_do_not_fit() -> void:
+	var root := _tree().root
+	var old_size := root.size
+	root.size = Vector2i(DECK)
+	var gs: Node = root.get_node("GameState")
+	gs.start_session(CharacterFactory.create("Lin", gs.data, seeded_rng(5), "male"))
+	var hud: CanvasLayer = load("res://src/ui/hud.tscn").instantiate()
+	root.add_child(hud)
+	await _frames()
+	var hint: Label = hud.get("_hint")
+	var panel: Control = hud.get("_status_panel")
+	var lines := PackedStringArray(["One hint line. More.", "Two hint line.", "Three hint line."])
+	hud.set("_hint_lines", lines)
+	hud.call("_set_hint_text", lines)
+	for name: String in ["_key_bar", "_fair"]:
+		hud.get(name).visible = false
+	panel.reset_size()
+	var full := panel.size.y
+	hud.call("_set_hint_text", lines.slice(0, 1))
+	panel.reset_size()
+	var one := panel.size.y
+	hud.call("_set_hint_text", lines)
+	assert_true(one < full, "three hints are taller than one")
+	var fits: bool = hud.call("_shrink_hint", one + 1.0)
+	assert_true(fits, "one hint fits the limit")
+	assert_true(hint.visible, "hint still shown")
+	assert_eq(hint.text.count("\n"), 0, "cut to one line")
+	hud.queue_free()
+	root.size = old_size
+	gs.end_session()

@@ -19,6 +19,7 @@ var _bottleneck: Label
 var _next_layer: Label
 var _injuries: Label
 var _hint: Label
+var _hint_lines: PackedStringArray = []
 var _goal: Label
 var _hunt: Label
 var _fair: Label
@@ -528,8 +529,8 @@ func _refresh() -> void:
 	_hunt.text = hunt
 	_hunt.tooltip_text = hunt
 	_hunt.visible = hunt != ""
-	_hint.visible = not hints.is_empty()
-	_hint.text = "\n".join(Array(hints).map(func(h: String) -> String: return "> " + h))
+	_hint_lines = hints
+	_set_hint_text(hints)
 	_fit_status_panel.call_deferred()
 
 
@@ -604,9 +605,42 @@ func _fit_status_panel() -> void:
 		_status_panel.reset_size()
 		if _status_panel.size.y <= limit:
 			return
+		if label == _hint and label.visible and _shrink_hint(limit):
+			return
 		if label == _key_bar or label.visible:
 			label.visible = false
 	_status_panel.reset_size()
+
+
+func _set_hint_text(lines: PackedStringArray) -> void:
+	_hint.visible = not lines.is_empty()
+	_hint.text = "\n".join(Array(lines).map(func(h: String) -> String: return "> " + h))
+
+
+## WU-257: keeps a shorter hint instead of hiding it. Drops hints from the end down to one, then cuts
+## that one to its first sentence. True when the panel fits.
+func _shrink_hint(limit: float) -> bool:
+	var count := _hint_lines.size()
+	while count > 1:
+		count -= 1
+		_set_hint_text(_hint_lines.slice(0, count))
+		_status_panel.reset_size()
+		if _status_panel.size.y <= limit:
+			return true
+	if count == 1:
+		_set_hint_text(PackedStringArray([first_sentence(_hint_lines[0])]))
+		_status_panel.reset_size()
+		if _status_panel.size.y <= limit:
+			return true
+	return false
+
+
+## The text up to the first ". ", plus " (J)" so the player knows the journal has the rest. Unchanged without one.
+static func first_sentence(text: String) -> String:
+	var i := text.find(". ")
+	if i < 0:
+		return text
+	return text.substr(0, i + 1) + " (J)"
 
 
 ## "Goal: ..." line: the first unfinished first goal, then the realm goal ladder's next step, then the generic goal ("" = none).
