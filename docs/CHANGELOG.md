@@ -2,6 +2,17 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-22 [C-195] A Misty Forest bounty for the middle Qi Refining layers: the Fog-Antler Stag.
+- 2026-10-22 [GUIDE-103] At the last layer of a realm the qi hints speak of the breakthrough, not "the next layer".
+- 2026-10-22 [QA-132] The interactable fuzz test runs about twice as fast and reaches more menu options.
+- 2026-10-22 [GUIDE-105] The "missions too dangerous" hint says what to do about it.
+- 2026-10-22 [WU-286] The sect mission board shows your odds on every foe, like "(Risky, 55 in 100, to the death)".
+- 2026-10-22 [GUIDE-102] The sect hint names the ready mission that pays the most contribution.
+- 2026-10-22 [GUIDE-101] The far-clinic hint says which region the road runs through.
+- 2026-10-22 [QA-130] The crafter sim no longer buys ingredients for crafts it is not playing (the Talisman Master purse was a sim bug, not a balance problem).
+- 2026-10-22 [WU-284] The HUD's first hint wears the same gold "!" as the place it names.
+- 2026-10-22 [WU-283] When your first hint names another region, the road out wears the gold marker and the route says "The hint points this way."
+- 2026-10-22 [C-191] Two road encounters for the middle Qi Refining layers: a caravan that needs guarding and a fallen rogue by the road.
 - 2026-10-22 [C-158] A Tribulation Transcendence inheritance: the Terrace of the Last Stair in Azure Peak.
 - 2026-10-22 [GUIDE-099] The empty "Fights you can win" note says to heal first when your injuries are what holds you back.
 - 2026-10-22 [GUIDE-100] Hints that send you to a far shop say which region the road runs through.

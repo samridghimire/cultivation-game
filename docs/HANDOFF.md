@@ -2,6 +2,18 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-10-22 (planner, 20:15 UTC)
+- 11 tasks landed (C-191, WU-283, WU-284, QA-130, GUIDE-101, GUIDE-102, WU-286, GUIDE-105, QA-132, GUIDE-103, C-195).
+  C-186 closed without a commit (QA-130 found a sim policy bug, not a data cause). No new review (last reviewed 393b4e4).
+  Live claims: GUIDE-106, WU-285, WU-287.
+- 20:10 curious trace (seed 23, 12 months): "at a sect hall" while Qingshi has the Sect Recruitment Hall -> GUIDE-107;
+  "Use your Spirit Herb" unused for 8 months -> GUIDE-109, C-199; duplicate practise advice -> GUIDE-108; open trial at
+  70-98 in 100 never attempted by the sim -> QA-136; every fight near home is 100% from QR 7th layer -> C-197, C-198.
+- Follow-ups filed: PERF-001 (NPC menus ~250 ms), QA-137 (slowest tests), QA-135 (crafter baselines after QA-130),
+  WU-289 (road marker + HUD badge shots), WU-290 (--missions-shot), WU-291 (board marks the best mission).
+- WU-283/284/286 skipped screenshots claiming "no display": xvfb-run works in the container; the command is now in WU-289/290.
+- The owner's three urgent questions (pacing, first fights, ascension), RIVAL-019 and the Qingshi-gear question are open.
+
 ## State on 2026-10-22 (planner, 18:15 UTC)
 - 17 tasks landed (GUIDE-093..100, WU-277, WU-281, WU-282, C-182, C-184, C-185, C-187, QA-131, QA-20261022-1). No new
   review since c18365f (last reviewed 275a886). Live claims: WU-284 (17:46), C-158 (17:52).
