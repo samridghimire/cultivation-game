@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-22 [C-158] A Tribulation Transcendence inheritance: the Terrace of the Last Stair in Azure Peak.
 - 2026-10-22 [GUIDE-099] The empty "Fights you can win" note says to heal first when your injuries are what holds you back.
 - 2026-10-22 [GUIDE-100] Hints that send you to a far shop say which region the road runs through.
 - 2026-10-22 [C-182] Help explains the odds on encounter fight choices and that rival duels never kill.
