@@ -96,6 +96,7 @@
       "body": [
         "Interact with an Explore spot to wander the region for a few days. Each trip rolls an encounter chosen from what the place offers: herbs, windfalls, travellers, strangers, beasts or bandits.",
         "Some encounters ask you to choose. Kindness and cruelty move you along the righteous and demonic paths, and people remember.",
+        "A choice that starts a fight shows your odds, like \"(Dangerous, 30 in 100)\". A duel with your rival never kills; a choice marked \"to the death\" can.",
         "Stronger realms unlock stranger events, and many one-time stories will not repeat once you have lived them."
       ]
     },
