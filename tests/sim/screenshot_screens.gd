@@ -91,6 +91,7 @@ extends SceneTree
 ## WU-210: it then breaks through level with the rival (rival_caught_up_log / rival_caught_up_journal).
 ## WU-246: `-- --first-hour` also writes fh_<workshop|shop|journal_first_goals|journal_next_steps|journal_commissions|board>_<day1|month1>_<size>.png.
 ## WU-273: append `-- --techniques-shot` for techniques_practice[_scale115].png (Iron Fist level 1 details, practice button focused); run once per --resolution. Checked at 1280x720 and 1280x800: nothing clipped, the action row wraps.
+## WU-288: `--hint-shot` also writes hint_best_mission_[journal_]<size>.png ("The best pays N contribution: <mission> (<days>)" on the sect line).
 ## WU-271: `--hint-shot` also writes hint_trial_[journal_]<size>.png (open sect trial odds, Fights you can win) and hint_sell_armor_[journal_]<size>.png ("Sell your ..." armor line).
 ## WU-258: `--hint-shot` also writes hint_armor_far_[journal_]<size>.png and hint_empty_fights_journal_<size>.png.
 ## WU-268: `--hint-shot` also writes hint_long_[journal_]<size>.png (Azure Cloud outer disciple, Qi Refining 1st layer, Iron Fist 1: practice days, far qi, stipend).
@@ -1428,7 +1429,20 @@ func _start_hint_shot(gs: Node) -> void:
 		clock.total_days = 40
 		gs.current_region = "qingshi_village"
 		root.get_node("EventBus").player_changed.emit()
-	for case: Array in [["hint_trial_", setup_trial, "You face the", "Next steps"], ["hint_trial_fights_", setup_trial, "Sect trial", "Fights you can win"], ["hint_sell_armor_", setup_sell, "Sell your", "Next steps"]]:
+	# WU-288: GUIDE-102's "The best pays N contribution: <mission> (<days>)" on the merged sect line (Azure Cloud outer disciple, Qi Refining 3rd layer).
+	var setup_best := func() -> void:
+		hud.get("_banner").visible = false
+		c.realm_index = 1
+		c.stage = 2
+		c.injuries.clear()
+		c.sect = {"id": "azure_cloud_sect", "rank": 0, "contribution": 0}
+		c.techniques = {"iron_fist": {"level": 1, "xp": 0.0}}
+		c.inventory = {"spirit_stone": 10}
+		c.last_meditated_day = 40
+		clock.total_days = 40
+		gs.current_region = "qingshi_village"
+		root.get_node("EventBus").player_changed.emit()
+	for case: Array in [["hint_trial_", setup_trial, "You face the", "Next steps"], ["hint_trial_fights_", setup_trial, "Sect trial", "Fights you can win"], ["hint_sell_armor_", setup_sell, "Sell your", "Next steps"], ["hint_best_mission_", setup_best, "The best pays", "Next steps"]]:
 		var setup: Callable = case[1]
 		var needle: String = case[2]
 		var heading: String = case[3]
