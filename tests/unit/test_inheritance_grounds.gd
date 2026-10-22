@@ -120,3 +120,24 @@ func test_stage_title_drops_leading_the() -> void:
 	var script: GDScript = load("res://src/world/interactables/inheritance_grounds.gd")
 	var folder: Dictionary = script.attempt_option(c, d, "door_ajar_folder", 0)
 	assert_true(String(folder["label"]).begins_with("Attempt the Hand's-Breadth Gap"), folder["label"])
+
+
+## C-158: a Tribulation Transcendence legacy (C-152's pattern one realm up).
+func test_tribulation_legacy_is_gated_and_rewarded() -> void:
+	var d := data()
+	var inh: Dictionary = d.inheritances["last_stair_lightning_terrace"]
+	assert_true(Inheritances.in_region(d, String(inh["region"])).has("last_stair_lightning_terrace"))
+	var stages: Array = inh["stages"]
+	assert_eq(stages.size(), 3)
+	assert_eq(String(stages[0]["test"]), "realm")
+	assert_eq(String(stages[0]["min_realm"]), "tribulation_transcendence")
+	assert_eq(String(stages[1]["test"]), "attribute")
+	assert_eq(String(stages[2]["test"]), "fight")
+	var guardian: Dictionary = d.enemies[String(stages[2]["enemy"])]
+	assert_eq(String(guardian["realm"]), "tribulation_transcendence")
+	assert_false(bool(guardian.get("lethal", false)), "the guardian never kills")
+	assert_true(int(inh["deadline_years"]) > int(inh["appears_years"]))
+	var barge: Dictionary = d.inheritances["great_vehicle_sutra_barge"]
+	assert_true(int(inh["reward"]["items"]["spirit_stone"]) >= 2 * int(barge["reward"]["items"]["spirit_stone"]) - 1, "pays about twice the Mahayana legacy")
+	for item_id: String in inh["reward"]["items"]:
+		assert_true(d.items.has(item_id), item_id)
