@@ -1,6 +1,6 @@
 extends SceneTree
 ## Late-realm fight gates (QA-106, QA-110): every fight encounter, enemy choice and inheritance
-## guardian from Soul Formation to Mahayana, with its gate and the typical player's win rate at the
+## guardian from Soul Formation to Tribulation Transcendence, with its gate and the typical player's win rate at the
 ## gate's lowest stage. Flags forced fights (non-lethal, so never slipped away from; choices are opt-in)
 ## under 20% and names the first stage that clears 20%. Inheritance guardians are forced but never lethal
 ## and can be retried, so they are listed only.
@@ -8,7 +8,7 @@ extends SceneTree
 
 const Balance := preload("res://tests/sim/combat_balance.gd")
 const FIRST_REALM := "soul_formation"
-const LAST_REALM := "mahayana"
+const LAST_REALM := "tribulation_transcendence"
 const FLAG_BELOW := 0.2
 
 
