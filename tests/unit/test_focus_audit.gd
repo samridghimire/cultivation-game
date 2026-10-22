@@ -1146,3 +1146,61 @@ func test_wu264_world_map_navigation_keeps_focus_and_details() -> void:
 	hud.free()
 	gs.end_session()
 	await _frames()
+
+
+func test_wu274_techniques_screen_focus_and_actions() -> void:
+	var root := _tree().root
+	var gs: Node = root.get_node("GameState")
+	var c := new_character()
+	c.techniques["iron_fist"] = {"level": 1, "xp": 0.0}
+	# "Practice to level" is hidden when the days equal a fixed 7/30-day button: nudge xp off those.
+	while TechniquesScreen.PRACTICE_DAYS.has(Techniques.days_to_next(c, gs.data, "iron_fist")):
+		c.techniques["iron_fist"]["xp"] += 1.0
+	gs.start_session(c)
+	gs.pending_event = ""
+	var hud: CanvasLayer = load("res://src/ui/hud.tscn").instantiate()
+	root.add_child(hud)
+	await _frames()
+	var screen: Control = hud.get("_screens")["toggle_techniques"]
+	screen.open()
+	await _frames(3)
+	var list: Control = screen.get("_list")
+	var actions: Control = screen.get("_actions")
+	# The list focuses a technique; select Iron Fist so its details (and Practice to level) show.
+	var fist := list.get_node("iron_fist") as Button
+	fist.grab_focus()
+	await _frames()
+	var to_level := actions.get_node_or_null("PracticeToLevel") as Button
+	assert_true(to_level != null, "Iron Fist level 1 offers Practice to level 2")
+	# Every action button is reachable from the list by ui_right / ui_down.
+	for action in ["ui_right", "ui_down", "ui_right", "ui_down", "ui_right", "ui_down"]:
+		_press(action)
+		await _frames()
+		var owner := root.gui_get_focus_owner()
+		assert_true(owner != null and screen.is_ancestor_of(owner), "%s: focus stays inside Techniques" % action)
+	var reachable := 0
+	for b in actions.get_children():
+		if b is Button and not b.disabled:
+			b.grab_focus()
+			await _frames()
+			if root.gui_get_focus_owner() == b:
+				reachable += 1
+	assert_true(reachable >= 3, "Practice to level and the fixed practice buttons can all take focus")
+	# ui_cancel closes the screen.
+	_press("ui_cancel")
+	await _frames()
+	assert_false(screen.visible, "ui_cancel closes Techniques")
+	# A mastered technique focuses a real button and has no Practice to level.
+	var def: TechniqueDef = gs.data.techniques["iron_fist"]
+	c.techniques["iron_fist"] = {"level": def.max_level, "xp": 0.0}
+	screen.open()
+	await _frames(3)
+	assert_true(actions.get_node_or_null("PracticeToLevel") == null, "mastered: no Practice to level button")
+	var owner2 := root.gui_get_focus_owner()
+	assert_true(owner2 is Button and screen.is_ancestor_of(owner2) and owner2.is_visible_in_tree(), "mastered: a real button has focus")
+	_press("ui_cancel")
+	await _frames()
+	root.remove_child(hud)
+	hud.free()
+	gs.end_session()
+	await _frames()
