@@ -86,6 +86,7 @@ extends SceneTree
 ## WU-207: append `-- --rival-shot` for the journal's Household section with a met rival one realm ahead (the
 ## "Reach <realm> to stand a chance against <name>." line), then the bitter variant. Shoot at 1280x800 and 1280x720.
 ## WU-210: it then breaks through level with the rival (rival_caught_up_log / rival_caught_up_journal).
+## WU-243: `-- --hint-shot` also writes hint_thin_defence_<size>.png / hint_idle_crafter_<size>.png (HUD) and *_journal_<size>.png (Next steps); checked at 1280x720 and 1280x800, nothing clipped.
 
 const OUT_DIR := "user://screenshots/screens"
 const SETTLE_FRAMES := 6
@@ -1037,6 +1038,51 @@ func _start_hint_shot(gs: Node) -> void:
 		var text: String = hint_text.call()
 		assert(text.contains("You are still a mortal"), "mortal nudge not on screen: " + text)
 		print("hint-shot mortal (", c.commissions.size(), " orders): ", text), "close": func() -> void: pass})
+	# WU-243: GUIDE-065's thin-defence line (Foundation, no body art, no armor, injured) and GUIDE-057's idle-crafter
+	# line (Qi Refining Alchemist idle 40 days), each in the HUD hint panel and the journal's Next steps.
+	var size_tag := "%dx%d" % [root.size.x, root.size.y]
+	var journal: Control = hud.get("_screens")["toggle_journal"]
+	var show_journal := func(heading: String) -> void:
+		journal.open()
+		await root.get_tree().process_frame
+		await root.get_tree().process_frame
+		for l: Node in journal.find_children("*", "Label", true, false):
+			if (l as Label).text == heading:
+				journal.get("_scroll").set_deferred("scroll_vertical", int((l as Label).position.y))
+	var setup_thin := func() -> void:
+		hud.get("_banner").visible = false
+		c.realm_index = 2
+		c.stage = 0
+		c.equipment.erase("armor")
+		c.techniques.clear()
+		c.injuries.clear()
+		for injury_id: String in gs.data.injuries:
+			Injuries.inflict(c, gs.data, injury_id)
+			break
+		clock.total_days = 40
+		gs.current_region = "qingshi_village"
+		root.get_node("EventBus").player_changed.emit()
+	var setup_idle := func() -> void:
+		hud.get("_banner").visible = false
+		c.realm_index = 1
+		c.stage = 0
+		c.injuries.clear()
+		for prof_id: String in c.professions:
+			c.professions[prof_id]["rank"] = 0
+		c.last_meditated_day = 0
+		clock.total_days = 40
+		gs.current_region = "qingshi_village"
+		root.get_node("EventBus").player_changed.emit()
+	for case: Array in [["hint_thin_defence_", setup_thin, "Your defence is thin"], ["hint_idle_crafter_", setup_idle, "You have not cultivated"]]:
+		var setup: Callable = case[1]
+		var needle: String = case[2]
+		shots.append({"name": case[0] + size_tag, "open": func() -> void:
+			setup.call()
+			assert(String(hint_text.call()).contains(needle), "hint not on screen: " + String(hint_text.call()))
+			print("hint-shot ", needle, ": ", hint_text.call()), "close": func() -> void: pass})
+		shots.append({"name": case[0] + "journal_" + size_tag, "open": func() -> void:
+			setup.call()
+			show_journal.call("Next steps"), "close": journal.close})
 
 
 ## WU-190: the encounter window on real encounters with attribute, profession and enemy choices.
