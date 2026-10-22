@@ -203,6 +203,14 @@ static func empty_fair_fights_note(c: CharacterData, data: GameData) -> String:
 	var missing := _thin_defence_missing(c, data)
 	if missing != "":
 		return lead + missing + "."
+	var best := _best_unmastered_combat(c, data)
+	if best == "":
+		return lead + "grow a stage."
+	return lead + "practise %s past level %d or grow a stage." % [data.techniques[best].name, Techniques.level(c, best) + 1]
+
+
+## The highest-level combat technique `c` knows and has not mastered (ties: lowest id); "" when none.
+static func _best_unmastered_combat(c: CharacterData, data: GameData) -> String:
 	var best := ""
 	for tech_id: String in c.techniques:
 		var def: TechniqueDef = data.techniques.get(tech_id)
@@ -211,9 +219,7 @@ static func empty_fair_fights_note(c: CharacterData, data: GameData) -> String:
 		var lvl := Techniques.level(c, tech_id)
 		if best == "" or lvl > Techniques.level(c, best) or (lvl == Techniques.level(c, best) and tech_id < best):
 			best = tech_id
-	if best == "":
-		return lead + "grow a stage."
-	return lead + "practise %s past level %d or grow a stage." % [data.techniques[best].name, Techniques.level(c, best) + 1]
+	return best
 
 
 ## GUIDE-068: the armor item a merchant in `region_id` sells that beats what `c` wears (most defense, then
@@ -1298,6 +1304,8 @@ static func _trial_odds_clause(c: CharacterData, data: GameData) -> String:
 		var unhurt := odds_unhurt(c, data, Sects.trial_opponent(data, Sects.trial_enemy(c, data)))
 		if unhurt >= 0.5:
 			line += " Your injuries hold you back: healed, you would win about %d in 100." % roundi(unhurt * 100.0)
+		elif Techniques.knows_kind(c, data, "combat") and _best_unmastered_combat(c, data) == "":
+			line += " A loss only injures you; grow a stage first."
 		else:
 			line += " A loss only injures you; practise or grow a stage first."
 	return line

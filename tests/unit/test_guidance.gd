@@ -177,6 +177,31 @@ func test_sect_hint_names_stipend() -> void:
 
 
 ## GUIDE-085: the open trial hint gives the odds.
+func test_trial_hint_when_every_combat_style_is_mastered() -> void:
+	var d := data()
+	var c := new_character()
+	c.realm_index = 1
+	c.stage = 0
+	c.sect = {"id": "azure_cloud_sect", "rank": 0, "contribution": 600}
+	for k: String in c.attributes:
+		c.attributes[k] = 1
+	var combat_id := ""
+	for id: String in d.techniques:
+		if d.techniques[id].kind == "combat" and d.techniques[id].max_level > 1:
+			combat_id = id
+			break
+	assert_true(combat_id != "", "no combat tech")
+	c.techniques = {combat_id: {"level": 1, "xp": 0.0}}
+	assert_true(Guidance.trial_odds(c, d) < 0.5, "lvl1 odds %s" % Guidance.trial_odds(c, d))
+	assert_true(Guidance._sect_hint(c, d).contains("practise or grow a stage first"), Guidance._sect_hint(c, d))
+	c.techniques[combat_id]["level"] = d.techniques[combat_id].max_level
+	assert_true(Techniques.is_mastered(c, d, combat_id))
+	assert_true(Guidance.trial_odds(c, d) < 0.5, "mastered odds %s" % Guidance.trial_odds(c, d))
+	var hint := Guidance._sect_hint(c, d)
+	assert_true(hint.contains("grow a stage first"), hint)
+	assert_false(hint.contains("practise"), hint)
+
+
 func test_trial_odds_hint() -> void:
 	var d := data()
 	var c := new_character()
