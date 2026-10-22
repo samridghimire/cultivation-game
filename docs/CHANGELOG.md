@@ -2,6 +2,21 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-22 [C-159] Help says crafting orders fit what you can gather nearby, and where a smith finds iron in Qingshi.
+- 2026-10-22 [GUIDE-072] The thin-defence hint names the nearest market that sells armor or a body-art manual when this region has none.
+- 2026-10-22 [WU-254] The shop's "(upgrade)" mark counts every stat of the gear, not just its main one.
+- 2026-10-22 [WU-255] Helping the milestone carver shows its renown gain in the message log at Steam Deck sizes.
+- 2026-10-22 [WU-253] The world map says what each visited region's merchants sell.
+- 2026-10-22 [QA-116] A sim shows the thin-defence hint works: players who follow it win most fights against the Foundation rogue.
+- 2026-10-22 [CMB-010] The late realms' Peak foes are winnable again (Tribulation Transcendence Peak 20% -> 78%).
+- 2026-10-22 [GUIDE-069] A Qi Refining fighter with no armor hears about one they can afford.
+- 2026-10-22 [WU-240] The Heavenly Tribulation Pill's breakthrough window fits at Steam Deck sizes.
+- 2026-10-22 [QA-117] The crafter sim buys talisman paper when the hint says so; every Talisman Master now crafts.
+- 2026-10-22 [C-169] Help says Qingshi sells no weapons or armor and where to buy them.
+- 2026-10-22 [C-167] Helping people on the road raises your renown.
+- 2026-10-22 [WU-252] The buy-ingredient and thin-defence hints fit at Steam Deck sizes.
+- 2026-10-22 [GUIDE-070] "Fights you can win" lists the fights that pay first.
+- 2026-10-22 [C-164] Talisman Master income checked: no change needed.
 - 2026-10-22 [WU-251] The road talisman peddler's choices work with a gamepad.
 - 2026-10-22 [C-157] Heavenly Tribulation Pill: a breakthrough pill for Tribulation Transcendence, brewed by top Alchemists.
 - 2026-10-22 [WU-249] Repeated message log lines collapse into one line with a count.
