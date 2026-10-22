@@ -2,6 +2,18 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-22 [C-170] Help says helping travellers and villagers raises your renown.
+- 2026-10-22 [WU-263] The smithy's "(upgrade)" marks checked on screen at Steam Deck sizes.
+- 2026-10-22 [WU-256] The world map lists what a region sells above its places.
+- 2026-10-22 [WU-257] When the status panel is crowded, the HUD keeps a short hint instead of hiding them all.
+- 2026-10-22 [C-175] Helping villagers and forest travellers near Qingshi raises your renown.
+- 2026-10-22 [QA-120] Late-realm fights re-checked after the CMB-010 retune: all inside the intended range.
+- 2026-10-22 [GUIDE-076] The buy-ingredient hint names the nearest market that sells it.
+- 2026-10-22 [GUIDE-080] The Foundation goals ask for a body art and armor.
+- 2026-10-22 [GUIDE-074] An empty "Fights you can win" list says what would change that.
+- 2026-10-22 [C-171] The Ascent-Warden Arbiter is a real fight again.
+- 2026-10-22 [GUIDE-075] The armor hint names the nearest market that sells armor.
+- 2026-10-22 [GUIDE-073] Hints quote the price the shop will actually charge.
 - 2026-10-22 [C-159] Help says crafting orders fit what you can gather nearby, and where a smith finds iron in Qingshi.
 - 2026-10-22 [GUIDE-072] The thin-defence hint names the nearest market that sells armor or a body-art manual when this region has none.
 - 2026-10-22 [WU-254] The shop's "(upgrade)" mark counts every stat of the gear, not just its main one.

@@ -2,6 +2,18 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-10-22 (planner, 08:15 UTC)
+- 12 tasks landed (GUIDE-073, GUIDE-075, C-171, GUIDE-074, GUIDE-080, GUIDE-076, QA-120, C-175, WU-257, WU-256, WU-263,
+  C-170). No new review (last reviewed fe1822e). Live claims: WU-260, GUIDE-077, WU-264, GUIDE-078.
+- C-163 has a stale claim branch (01:26) that the cleanup Action has not removed: it runs ~every 4h, not hourly, so
+  workers may skip tasks with old branches. BACKLOG's C-163 row says to push a fresh claim.
+- 08:15 curious first-hour trace (seed 8): Iron Fist stays level 1 for ~200 days although level 2 takes ~30 days of
+  practice. New: GUIDE-081 (practice hint gives days), WU-267 (practise-to-next-level button), C-178 (training
+  encounters), QA-123 (does the curious sim practise). Also GUIDE-082 (armor hint "fights: The" typo), GUIDE-083 (far-qi
+  distance), GUIDE-084 (next sect rank's stipend), CMB-011 (enemy power_mult) -> C-177, C-179 (renown in more regions),
+  WU-265/266 (WU-256/257 follow-up shots), WU-268, C-176, QA-124.
+- The owner's three urgent questions (pacing, first fights, ascension), RIVAL-019 and the Qingshi-gear question are open.
+
 ## State on 2026-10-22 (planner, 04:15 UTC)
 - 12 tasks landed (RV-QA-115, C-168, QA-113, WU-248, GUIDE-071, ENC-006, WU-250, QA-118, GUIDE-068, WU-249, C-157, WU-251).
   Review df910b9..147a890 fixed WU-244 itself; nothing filed (its two notes -> GUIDE-073, WU-254). Live claims: C-163 (2nd),
