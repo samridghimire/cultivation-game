@@ -840,3 +840,34 @@ func test_road_lost_child_carry_her_raises_renown_by_five() -> void:
 	gs.choose_encounter(1)
 	assert_eq(Renown.value(c, gs.current_region) - before, 5, "carry her")
 	gs.end_session()
+
+
+## C-178: two first-hour encounters that train your fighting style.
+func _style_xp_after(enc_id: String, index: int, constitution: int, comprehension: int) -> float:
+	var gs: Node = _root().get_node("GameState")
+	var c := CharacterData.new()
+	c = CharacterFactory.create("Wanderer", gs.data, seeded_rng())
+	c.attributes["constitution"] = constitution
+	c.attributes["comprehension"] = comprehension
+	c.techniques["iron_fist"] = {"level": 1, "xp": 0.0}
+	gs.start_session(c)
+	gs.current_region = "qingshi_village"
+	gs.pending_encounter = enc_id
+	gs.choose_encounter(index)
+	var xp := float(c.techniques["iron_fist"]["xp"]) + 1000.0 * (Techniques.level(c, "iron_fist") - 1)
+	gs.end_session()
+	return xp
+
+
+func test_fighting_style_encounters() -> void:
+	var d := data()
+	assert_true(d.encounters["village_boxing_yard"]["tags"].has("village"))
+	assert_true(d.encounters["forest_hunter_wolf_lunge"]["tags"].has("forest"))
+	for enc_id: String in ["village_boxing_yard", "forest_hunter_wolf_lunge"]:
+		var attr := "constitution" if enc_id == "village_boxing_yard" else "comprehension"
+		assert_true(_style_xp_after(enc_id, 0, 5, 5) > 0.0, enc_id + " training trains")
+		assert_eq(_style_xp_after(enc_id, 2, 5, 5), 0.0, enc_id + " plain choice trains nothing")
+		assert_eq(_style_xp_after(enc_id, 1, 5, 5), 0.0, enc_id + " gated choice refused when weak")
+		var hi := 20
+		var gated := _style_xp_after(enc_id, 1, hi, hi)
+		assert_true(gated > _style_xp_after(enc_id, 0, hi, hi), enc_id + " gated " + attr + " choice trains more")
