@@ -1322,6 +1322,12 @@ func _start_encounter_shot(gs: Node) -> void:
 				gs.choose_encounter(0)
 				assert(gs.pending_encounter == "", "road choice did not resolve: " + enc_id)
 				print("road result ", enc_id, ": ", root.get_node("/root/EventBus").history[-1]["text"])
+				if enc_id == "road_milestone_carver":
+					# WU-255: ENC-006's renown note reaches the HUD log in the same result.
+					var recent := ""
+					for entry: Dictionary in root.get_node("/root/EventBus").history.slice(-4):
+						recent += String(entry["text"]) + "\n"
+					assert(recent.contains("+5 renown"), "no renown note in the log: " + recent)
 				root.get_node("/root/EventBus").player_changed.emit()
 				hud.get("_banner").visible = false, "close": func() -> void: pass})
 
