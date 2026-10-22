@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: df910b9
+Last reviewed commit: 147a890
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -769,3 +769,15 @@ Last reviewed commit: df910b9
     allows, baseline rows refreshed. WU-242 is sim-only. QA-114's numbers are clear and GUIDE-065 follows its text.
   - Filed RV-QA-115 (qa, P0): docs/balance_baseline.txt is stale on main (~1000 changed lines on --check), refresh
     it after checking for real regressions.
+- 2026-10-22 (reviewer): reviewed df910b9..147a890 (9b3a988 WU-244, 08645d4 QA-112, 31a00d2 C-165, b714be7 C-166,
+  7301934 WU-243, e5a2b4a GUIDE-066, a6adbaf GUIDE-067, cb62be7 WU-246, 147a890 WU-247; [PLAN] commit skipped). Main green.
+  No BACKLOG/CHANGELOG edits by workers; no save changes. Nothing filed.
+  - Fixed ([REVIEW] commit): WU-244's ShopScreen.upgrade_tag priced gear with no faction, so at a sect-affiliated
+    merchant a Respected+ player who could afford an upgrade only at the discounted price got no "(upgrade)" mark. It
+    now takes the shop's faction (the row price the player sees). Test extended.
+  - Checked: GUIDE-067's table lookups call realm_goals exactly as the removed soul/void/... wrappers did; the new
+    `index` column is pinned to realms.json by a test. GUIDE-066 skips any recipe with a gatherable or unsold
+    shortfall and tests both paths. C-166's peddler choice is gated by check_choice on 8 stones (tested); C-165 is
+    text only. QA-112's TT rows: the only forced fight wins 39%. WU-243/WU-246 are sim-only, WU-247 test-only.
+  - Notes, not filed: GUIDE-066 quotes the item's base price, not the merchant's (reputation/world-event) price;
+    upgrade_tag only compares attack/defense, so a lower-defense armor with more max_hp is never tagged.

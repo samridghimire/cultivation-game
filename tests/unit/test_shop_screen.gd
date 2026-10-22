@@ -306,6 +306,10 @@ func test_upgrade_tag_marks_better_affordable_armor() -> void:
 	c.equipment = {"armor": "boar_hide_jerkin"}
 	c.inventory = {"spirit_stone": 5}
 	assert_eq(ShopScreen.upgrade_tag(c, d, "wolfhide_brigandine"), "")  # unaffordable
+	c.inventory = {"spirit_stone": 140}
+	c.reputation["azure_cloud_sect"] = 700  # Revered: 170 * 0.8 = 136
+	assert_eq(ShopScreen.upgrade_tag(c, d, "wolfhide_brigandine"), "", "140 < 170 at full price")
+	assert_eq(ShopScreen.upgrade_tag(c, d, "wolfhide_brigandine", "azure_cloud_sect"), "upgrade", "the shop's faction discount counts")
 
 
 func test_upgrade_tag_marks_body_manual_at_foundation() -> void:
