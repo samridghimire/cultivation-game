@@ -99,10 +99,10 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 	if lives_hint != "":
 		out.append(lives_hint)
 	if c.realm_index > NEWCOMER_MAX_REALM:
-		var sect := _sect_hint(c, data)
+		var sect := _sect_hint(c, data, region_id)
 		if sect != "":
 			out.append(sect)
-	var missions := _mission_hint(c, data, flags)
+	var missions := _mission_hint(c, data, flags, region_id)
 	if missions != "":
 		var earn := -1
 		for i in out.size():
@@ -1290,8 +1290,25 @@ static func _usable_breakthrough_item(c: CharacterData, data: GameData, item_id:
 	return c.item_count(item_id) > 0 and float(effects.get("breakthrough_bonus", 0.0)) > 0.0 and Effects.check(c, data, effects) == ""
 
 
+## GUIDE-107: where the nearest sect hall is: "at the <Hall> here", "at the <Hall> in <Region> (...)", or "at a sect hall".
+static func _hall_where(c: CharacterData, data: GameData, region_id: String) -> String:
+	if region_id == "":
+		return "at a sect hall"
+	var pick := func(r: String) -> String:
+		for p: Dictionary in data.regions.get(r, {}).get("places", []):
+			if String(p.get("type", "")) == "sect_hall":
+				return String(p.get("display_name", ""))
+		return ""
+	var far := nearest_selling(c, data, region_id, pick)
+	if far.is_empty():
+		return "at a sect hall"
+	if int(far["days"]) == 0:
+		return "at the %s here" % far["result"]
+	return "at the %s %s" % [far["result"], _far_where(c, data, region_id, far)]
+
+
 ## Rogues: which sects would take them. Members: contribution to the next rank.
-static func _sect_hint(c: CharacterData, data: GameData) -> String:
+static func _sect_hint(c: CharacterData, data: GameData, region_id: String = "") -> String:
 	if c.is_rogue():
 		var open: PackedStringArray = []
 		for sect: SectDef in data.sects.values():
@@ -1301,14 +1318,14 @@ static func _sect_hint(c: CharacterData, data: GameData) -> String:
 			return _mortal_sect_hint(c, data, open)
 		if open.is_empty():
 			return ""
-		return "As a rogue cultivator you could join %s at a sect hall." % " or ".join(open)
+		return "As a rogue cultivator you could join %s %s." % [" or ".join(open), _hall_where(c, data, region_id)]
 	var sect: SectDef = data.sects[c.sect["id"]]
 	var rank := int(c.sect["rank"])
 	if rank + 1 >= sect.ranks.size():
 		return ""
 	var pays := _stipend_clause(data, sect.ranks[rank + 1].get("stipend", {}))
 	if Sects.check_promotion(c, data) == "":
-		return "The trial for %s is open%s. Attempt it at a sect hall.%s" % [sect.rank_name(rank + 1), pays, _trial_odds_clause(c, data)]
+		return "The trial for %s is open%s. Attempt it %s.%s" % [sect.rank_name(rank + 1), pays, _hall_where(c, data, region_id), _trial_odds_clause(c, data)]
 	var need := int(sect.ranks[rank + 1].get("contribution", 0)) - int(c.sect["contribution"])
 	return "Earn %d more sect contribution (missions, duties) to become %s%s." % [maxi(need, 0), sect.rank_name(rank + 1), pays]
 
@@ -1389,7 +1406,7 @@ static func _mortal_sect_hint(c: CharacterData, data: GameData, open: PackedStri
 
 ## Members: how many sect missions they can take right now.
 ## GUIDE-105: when all are too dangerous, says whether to heal, practise a style, or grow a stage.
-static func _mission_hint(c: CharacterData, data: GameData, flags: Dictionary = {}) -> String:
+static func _mission_hint(c: CharacterData, data: GameData, flags: Dictionary = {}, region_id: String = "") -> String:
 	if c.is_rogue():
 		return ""
 	var ready := 0
@@ -1406,13 +1423,13 @@ static func _mission_hint(c: CharacterData, data: GameData, flags: Dictionary = 
 			ready += 1
 	var text := ""
 	if ready > 0:
-		text = "%d sect %s ready on the mission board at a sect hall." % [ready, "mission is" if ready == 1 else "missions are"]
+		text = "%d sect %s ready on the mission board %s." % [ready, "mission is" if ready == 1 else "missions are", _hall_where(c, data, region_id)]
 		if too_dangerous > 0:
 			text = text.trim_suffix(".") + " (%d more %s too dangerous for you yet)." % [too_dangerous, "mission is" if too_dangerous == 1 else "missions are"]
 		var best := best_mission(c, data, flags)
 		if best != "":
 			var m: Dictionary = data.sect_missions[best]
-			text += " The best pays %d contribution: %s (%s)." % [int(m.get("contribution", 0)), String(m.get("name", best)), Calendar.format_duration(int(m.get("days", 1)))]
+			text += (" It pays" if ready == 1 else " The best pays") + " %d contribution: %s (%s)." % [int(m.get("contribution", 0)), String(m.get("name", best)), Calendar.format_duration(int(m.get("days", 1)))]
 	elif too_dangerous > 0:
 		text = "The sect's missions are too dangerous for you yet; "
 		var best_style := _best_unmastered_combat(c, data)
@@ -1728,7 +1745,7 @@ static func _newcomer_hints(c: CharacterData, data: GameData, flags: Dictionary,
 				break
 	if c.techniques.is_empty() and not technique_done:
 		out.append("Elder Mo in Qingshi Village teaches a breathing technique for free." if breathing else TECHNIQUE_HINT)
-	var sect := _sect_hint(c, data)
+	var sect := _sect_hint(c, data, region_id)
 	if sect != "":
 		out.append(sect)
 	return out

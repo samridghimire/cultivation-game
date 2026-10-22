@@ -3197,13 +3197,13 @@ func test_best_mission_named_in_earn_line() -> void:
 	var lines := Guidance.hints(c, d, 1.0, 20)
 	var found := 0
 	for line: String in lines:
-		if line.contains("Earn ") and line.contains("The best pays "):
+		if line.contains("Earn ") and (line.contains("The best pays ") or line.contains(" It pays ")):
 			found += 1
 			assert_true(line.contains(String(d.sect_missions[best]["name"])))
 	assert_eq(found, 1)
 	for line: String in lines:
 		if not line.begins_with("Earn "):
-			assert_false(line.contains("The best pays "))
+			assert_false(line.contains("The best pays ") or line.contains(" It pays "))
 
 
 func test_best_mission_absent_when_all_on_cooldown() -> void:
@@ -3321,7 +3321,57 @@ func test_best_mission_after_too_dangerous_count() -> void:
 			c.stage = stage
 			c.sect = {"id": "azure_cloud_sect", "rank": 0, "contribution": 0, "spent": 0}
 			var text := Guidance._mission_hint(c, d)
-			if text.contains("too dangerous for you yet).") and text.contains(" The best pays "):
+			if text.contains("too dangerous for you yet).") and (text.contains(" The best pays ") or text.contains(" It pays ")):
 				found = true
-				assert_true(text.find("too dangerous for you yet).") < text.find(" The best pays "), text)
+				assert_true(text.find("too dangerous for you yet).") < maxi(text.find(" The best pays "), text.find(" It pays ")), text)
 	assert_true(found, "some stage has both ready and too-dangerous missions")
+
+
+func _hall_name(d: GameData, region_id: String) -> String:
+	for p: Dictionary in d.regions[region_id]["places"]:
+		if String(p.get("type", "")) == "sect_hall":
+			return String(p["display_name"])
+	return ""
+
+
+func test_sect_hints_name_the_hall() -> void:
+	var d := data()
+	var c := _qr3_disciple()
+	var hall := _hall_name(d, "qingshi_village")
+	assert_true(hall != "")
+	var lines := Guidance.hints(c, d, 1.0, 20, {}, {}, "qingshi_village")
+	assert_true(_has(lines, "on the mission board at the %s here" % hall))
+	assert_false(_has(lines, "at a sect hall"))
+	# no region id keeps the generic wording
+	assert_true(_has(Guidance.hints(c, d, 1.0, 20), "on the mission board at a sect hall"))
+	# the open trial names the hall
+	c.sect["contribution"] = 600
+	assert_true(_has(Guidance.hints(c, d, 1.0, 20, {}, {}, "qingshi_village"), "Attempt it at the %s here" % hall))
+	assert_true(_has(Guidance.hints(c, d, 1.0, 20), "Attempt it at a sect hall"))
+
+
+func test_sect_hint_far_hall_names_region() -> void:
+	var d := data()
+	var c := _qr3_disciple()
+	for rid: String in d.regions:
+		if _hall_name(d, rid) != "":
+			continue
+		var far := Guidance.nearest_selling(c, d, rid, func(r: String) -> String: return _hall_name(d, r))
+		if far.is_empty():
+			continue
+		var lines := Guidance.hints(c, d, 1.0, 20, {}, {}, rid)
+		assert_true(_has(lines, "at the %s in %s (" % [far["result"], far["region_name"]]), rid)
+		return
+	assert_true(false, "no hall-less region with a hall nearby")
+
+
+func test_single_ready_mission_says_it_pays() -> void:
+	var d := data()
+	var c := _qr3_disciple()
+	var best := Guidance.best_mission(c, d)
+	for id: String in d.sect_missions:
+		if id != best:
+			c.mission_cooldowns[id] = c.age_days + 30
+	var lines := Guidance.hints(c, d, 1.0, 20, {}, {}, "qingshi_village")
+	assert_true(_has(lines, " It pays "))
+	assert_false(_has(lines, " The best pays "))
