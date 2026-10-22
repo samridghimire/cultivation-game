@@ -91,6 +91,7 @@ extends SceneTree
 ## WU-210: it then breaks through level with the rival (rival_caught_up_log / rival_caught_up_journal).
 ## WU-246: `-- --first-hour` also writes fh_<workshop|shop|journal_first_goals|journal_next_steps|journal_commissions|board>_<day1|month1>_<size>.png.
 ## WU-273: append `-- --techniques-shot` for techniques_practice[_scale115].png (Iron Fist level 1 details, practice button focused); run once per --resolution. Checked at 1280x720 and 1280x800: nothing clipped, the action row wraps.
+## WU-289: `--hint-shot` also writes hint_road_marker_/hint_road_menu_/hint_badge_<size>.png (road-out "!", route line "The hint points this way.", clinic badge).
 ## WU-288: `--hint-shot` also writes hint_best_mission_[journal_]<size>.png ("The best pays N contribution: <mission> (<days>)" on the sect line).
 ## WU-271: `--hint-shot` also writes hint_trial_[journal_]<size>.png (open sect trial odds, Fights you can win) and hint_sell_armor_[journal_]<size>.png ("Sell your ..." armor line).
 ## WU-258: `--hint-shot` also writes hint_armor_far_[journal_]<size>.png and hint_empty_fights_journal_<size>.png.
@@ -1462,6 +1463,70 @@ func _start_hint_shot(gs: Node) -> void:
 			assert(at >= 0, "journal has no " + needle + " line")
 			var scroll: ScrollContainer = journal.get("_scroll")
 			scroll.scroll_vertical = maxi(0, int(rich.get_paragraph_offset(parsed.substr(0, at).count("\n"))) - 120), "close": journal.close})
+
+	# WU-289: WU-283's gold "!" on the road out and the "The hint points this way." route line (far armor line), and
+	# WU-284's "!" on the HUD hint line plus the world badge on the Village Clinic (injury line).
+	var setup_road := func() -> void:
+		# The backdrop world was built for the herb-hint region; these shots need Qingshi's places on screen.
+		world.free()
+		gs.current_region = "qingshi_village"
+		world = load("res://src/world/world.tscn").instantiate()
+		root.add_child(world)
+		hud = world.get_node("HUD")
+		hud.get("_banner").visible = false
+		c.realm_index = 1
+		c.stage = 5
+		c.injuries.clear()
+		c.sect = {}
+		c.equipment.erase("armor")
+		c.techniques = {"iron_fist": {"level": Techniques.PRACTICE_LEVEL, "xp": 0.0}}
+		c.inventory = {"spirit_stone": 200}
+		# Headman Zhou's chore line would outrank the armor line in Qingshi; mark the chores as done.
+		for deed: Dictionary in gs.data.deeds.values():
+			if String(deed["id"]).begins_with("chore_") and String(deed.get("blocked_by_flag", "")) != "":
+				gs.world_flags[String(deed["blocked_by_flag"])] = true
+		c.last_meditated_day = 40
+		clock.total_days = 40
+		gs.current_region = "qingshi_village"
+		root.get_node("EventBus").player_changed.emit()
+	var travel_node := func() -> Node:
+		for n: Node in world.get_children():
+			if n.get_script() != null and String(n.get_script().resource_path).ends_with("travel_point.gd"):
+				return n
+		return null
+	shots.append({"name": "hint_road_marker_" + size_tag, "open": func() -> void:
+		setup_road.call()
+		await root.get_tree().process_frame
+		hud.get("_banner").visible = false  # player_changed can raise a Milestone banner
+		print("hint-shot road: ", hint_text.call()), "close": func() -> void: pass})
+	shots.append({"name": "hint_road_menu_" + size_tag, "open": func() -> void:
+		setup_road.call()
+		await root.get_tree().process_frame
+		var tp: Node = travel_node.call()
+		assert(tp != null, "no travel point in the world")
+		root.get_node("EventBus").interaction_menu_requested.emit(tp)
+		await root.get_tree().process_frame
+		var found := false
+		for o: Dictionary in tp.call("get_options"):
+			if String(o.get("description", "")).begins_with("The hint points this way."):
+				found = true
+		assert(found, "no route carries the hint note; hint: " + String(hint_text.call()))
+		# The note shows under the menu when its route is focused (the first route is Misty Forest).
+		var routes: Array = hud.get("_choice_menu").get("_buttons").get_children()
+		(routes[1] as Button).grab_focus()
+		await root.get_tree().process_frame
+		var shown: String = hud.get("_choice_menu").get("_description").text
+		assert(shown.begins_with("The hint points this way."), "focused route shows: " + shown), "close": func() -> void: hud.get("_choice_menu").close()})
+	shots.append({"name": "hint_badge_" + size_tag, "open": func() -> void:
+		setup_road.call()
+		c.injuries = {"internal_injury": 30}
+		c.inventory = {"spirit_stone": 50}
+		root.get_node("EventBus").player_changed.emit()
+		world.get_node("Player").position = Vector2(900, 260)  # below the Village Clinic, which sits at the map's top edge
+		await root.get_tree().process_frame
+		await root.get_tree().process_frame
+		hud.get("_banner").visible = false
+		print("hint-shot badge: ", hint_text.call()), "close": func() -> void: pass})
 
 
 ## WU-190: the encounter window on real encounters with attribute, profession and enemy choices.
