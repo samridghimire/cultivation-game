@@ -1337,15 +1337,15 @@ static func _claimed_realm_inheritance(data: GameData, flags: Dictionary, realm_
 	return false
 
 
-## GUIDE-062: the late-realm goal ladders share one shape. realm id -> {ladder, body}: `ladder` is the
-## id goal_ladder_id gives, `body` is true when the ladder ends with a "Temper your body" row (the body
+## GUIDE-062: the late-realm goal ladders share one shape. realm id -> {index, ladder, body}: `index` is
+## the realm's index (goal_ladder_id has no GameData), `ladder` is the id goal_ladder_id gives, `body` is true when the ladder ends with a "Temper your body" row (the body
 ## stage at index realm_index, done once body_stage passes it).
 const REALM_GOAL_TABLE := {
-	"soul_formation": {"ladder": "soul", "body": true},
-	"void_refinement": {"ladder": "void", "body": true},
-	"body_integration": {"ladder": "body", "body": true},
-	"mahayana": {"ladder": "mahayana", "body": false},
-	"tribulation_transcendence": {"ladder": "tribulation", "body": false},
+	"soul_formation": {"index": 5, "ladder": "soul", "body": true},
+	"void_refinement": {"index": 6, "ladder": "void", "body": true},
+	"body_integration": {"index": 7, "ladder": "body", "body": true},
+	"mahayana": {"index": 8, "ladder": "mahayana", "body": false},
+	"tribulation_transcendence": {"index": 9, "ladder": "tribulation", "body": false},
 }
 
 
@@ -1437,16 +1437,9 @@ static func goal_ladder_id(c: CharacterData) -> String:
 		return "core"
 	if c.realm_index == 4:
 		return "nascent"
-	if c.realm_index == 5:
-		return "soul"
-	if c.realm_index == 6:
-		return "void"
-	if c.realm_index == 7:
-		return "body"
-	if c.realm_index == 8:
-		return "mahayana"
-	if c.realm_index == 9:
-		return "tribulation"
+	for row: Dictionary in REALM_GOAL_TABLE.values():
+		if c.realm_index == int(row["index"]):
+			return String(row["ladder"])
 	return ""
 
 
@@ -1460,16 +1453,9 @@ static func goal_ladder(id: String, c: CharacterData, data: GameData, flags: Dic
 		return core_goals(c, data, flags, clan)
 	if id == "nascent":
 		return nascent_goals(c, data, flags, clan)
-	if id == "soul":
-		return soul_goals(c, data, flags, clan)
-	if id == "void":
-		return void_goals(c, data, flags, clan)
-	if id == "body":
-		return body_integration_goals(c, data, flags, clan)
-	if id == "mahayana":
-		return mahayana_goals(c, data, flags, clan)
-	if id == "tribulation":
-		return tribulation_goals(c, data, flags, clan)
+	for realm_id: String in REALM_GOAL_TABLE:
+		if REALM_GOAL_TABLE[realm_id]["ladder"] == id:
+			return realm_goals(c, data, flags, realm_id)
 	for realm_id: String in REALM_GOAL_TABLE:
 		if realm_goals_active(c, data, flags, realm_id):
 			return realm_goals(c, data, flags, realm_id)

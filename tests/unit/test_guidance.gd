@@ -2382,3 +2382,13 @@ func test_buy_ingredient_hint_skips_gatherable_shortfalls() -> void:
 	c.inventory = {"spirit_stone": 50}
 	assert_eq(Guidance.buy_ingredient_hint(c, data(), "qingshi_village"), "")
 	assert_eq(Guidance.merchant_selling(data(), "qingshi_village", "talisman_paper"), "Wandering Merchant")
+
+
+func test_goal_ladder_reads_the_realm_goal_table() -> void:
+	for realm_id: String in Guidance.REALM_GOAL_TABLE:
+		var row: Dictionary = Guidance.REALM_GOAL_TABLE[realm_id]
+		var c := CharacterData.new()
+		c.realm_index = data().realm_index_of(realm_id)
+		assert_eq(c.realm_index, int(row["index"]), "%s index matches realms.json" % realm_id)
+		assert_eq(Guidance.goal_ladder_id(c), row["ladder"], realm_id)
+		assert_true(not Guidance.goal_ladder(String(row["ladder"]), c, data(), {}).is_empty(), "%s ladder has goals" % realm_id)
