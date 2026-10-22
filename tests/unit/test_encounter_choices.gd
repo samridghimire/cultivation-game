@@ -792,3 +792,25 @@ func test_choice_effect_renown_raises_current_region() -> void:
 	assert_eq(Renown.value(c, gs.current_region), before + 5)
 	gs.end_session()
 	gs.data.encounters.erase("test_renown")
+
+
+func _road_choice_renown(enc_id: String, index: int) -> int:
+	var gs: Node = _root().get_node("GameState")
+	var c := CharacterFactory.create("Wanderer", gs.data, seeded_rng())
+	gs.start_session(c)
+	gs.current_region = "qingshi_village"
+	gs.pending_encounter = enc_id
+	var before := Renown.value(c, gs.current_region)
+	gs.choose_encounter(index)
+	var gained := Renown.value(c, gs.current_region) - before
+	gs.end_session()
+	return gained
+
+
+func test_road_encounters_reward_helping_with_renown() -> void:
+	assert_eq(_road_choice_renown("road_milestone_carver", 0), 5, "carver's helping choice")
+	assert_eq(_road_choice_renown("road_milestone_carver", 1), 0, "reading the script")
+	assert_eq(_road_choice_renown("road_overturned_cart", 0), 3, "helping the farmer")
+	assert_eq(_road_choice_renown("road_overturned_cart", 1), 0, "robbing the farmer")
+	assert_eq(_road_choice_renown("road_lost_child", 0), 3, "walking the child home")
+	assert_eq(_road_choice_renown("road_lost_child", 2), 0, "pointing down the road")
