@@ -2366,6 +2366,33 @@ func test_thin_defence_hint() -> void:
 	assert_eq(Guidance.thin_defence_hint(c, data()), "", "not past Foundation")
 
 
+func test_thin_defence_hint_points_to_the_nearest_market() -> void:
+	var c := _fresh()
+	c.realm_index = Guidance.THIN_DEFENCE_REALM
+	c.techniques = {}
+	c.equipment = {}
+	c.inventory = {"spirit_stone": 200}
+	var line := Guidance.thin_defence_hint(c, data(), "qingshi_village")
+	assert_true(line.contains("Fallen Star Market") and line.contains("10 days") and line.contains("Heavenforge Smithy"), line)
+	var near := Guidance.nearest_selling(c, data(), "qingshi_village", func(r: String) -> String: return Guidance.affordable_armor(c, data(), r))
+	assert_eq(near["region_id"], "fallen_star_market")
+	assert_eq(int(near["days"]), 10)
+	assert_true(Guidance.thin_defence_hint(c, data(), "misty_forest").contains("8 days"))
+	c.inventory = {}
+	assert_false(Guidance.thin_defence_hint(c, data(), "qingshi_village").contains("sells"), "no stones, no armor sentence")
+	# Qingshi's own Wandering Merchant sells a body manual, so no far market is named; armor already worn
+	c.equipment = {"armor": "boar_hide_jerkin"}
+	var body := Guidance.thin_defence_hint(c, data(), "qingshi_village")
+	assert_true(body.contains("teaches one") and not body.contains("sect shop"), body)
+	# a gated route is never used
+	c.realm_index = Guidance.THIN_DEFENCE_REALM
+	assert_true(Guidance.nearest_selling(c, data(), "azure_peak", func(r: String) -> String: return r if r == "myriad_peaks_ridge" else "").is_empty(), "Core-gated route skipped")
+	c.realm_index = data().realm_index_of("core_formation")
+	assert_eq(Guidance.nearest_selling(c, data(), "azure_peak", func(r: String) -> String: return r if r == "myriad_peaks_ridge" else "")["days"], 10)
+	c.realm_index = Guidance.THIN_DEFENCE_REALM
+	assert_eq(Guidance.nearest_selling(c, data(), "qingshi_village", func(r: String) -> String: return "here" if r == "qingshi_village" else "")["days"], 0)
+
+
 func test_buy_ingredient_hint() -> void:
 	var c := _fresh()
 	c.realm_index = 1

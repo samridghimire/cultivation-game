@@ -20,6 +20,7 @@ const FAIR_FIGHT_MIN_CHANCE := 0.7  # "Even" or better (Combat.label_for_chance)
 const CHORE_REGION := "qingshi_village"
 ## GUIDE-054: game days a Mortal crafter plays before hearing where to begin cultivating.
 const MORTAL_CRAFTER_NUDGE_DAY := 30
+const NEAREST_HOPS := 2  # GUIDE-072: how many routes away a hint may send the player
 const THIN_DEFENCE_REALM := 2  # GUIDE-065: Foundation Establishment, where foes first outclass a bare-handed fighter
 const ARMOR_HINT_MIN_STAGE := 3  # GUIDE-069: Qi Refining stage from which an unarmored fighter is nudged to buy armor
 const IDLE_CULTIVATION_DAYS := 30  # GUIDE-057: days without cultivating before a Qi Refining crafter is nudged
@@ -142,10 +143,21 @@ static func thin_defence_hint(c: CharacterData, data: GameData, region_id: Strin
 			var armor_id := affordable_armor(c, data, region_id)
 			if armor_id != "":
 				line += " The %s sells %s for %d stones." % [merchant_selling(data, region_id, armor_id), data.items[armor_id]["name"], int(data.items[armor_id].get("price", 0))]
+			else:
+				# GUIDE-072: none here, so point to the nearest market that sells one.
+				var far := nearest_selling(c, data, region_id, func(r: String) -> String: return affordable_armor(c, data, r))
+				if not far.is_empty():
+					var far_armor: String = far["result"]
+					line += " The %s in %s (%s) sells %s for %d stones." % [merchant_selling(data, far["region_id"], far_armor), far["region_name"], Calendar.format_duration(int(far["days"])), data.items[far_armor]["name"], int(data.items[far_armor].get("price", 0))]
 		if not has_body:
 			var source := body_manual_source(c, data, region_id)
 			if source != "":
 				line += " %s teaches one." % source
+			else:
+				var far := nearest_selling(c, data, region_id, func(r: String) -> String: return String(_body_manual_merchant(c, data, r).get("item_id", "")))
+				if not far.is_empty():
+					var manual: String = far["result"]
+					line += " %s (%s, %s, %s) teaches one." % [data.items[manual]["name"], merchant_selling(data, far["region_id"], manual), far["region_name"], Calendar.format_duration(int(far["days"]))]
 	if Injuries.has_any(c):
 		line += " Heal your injuries before you fight."
 	return line
@@ -172,18 +184,60 @@ static func affordable_armor(c: CharacterData, data: GameData, region_id: String
 ## GUIDE-068: "<Manual> (<Merchant>)" for a body-art manual `c` lacks that a merchant in `region_id` sells,
 ## else "<Manual> (sect shop, N contribution)" from `c`'s sect shop; "" when neither exists.
 static func body_manual_source(c: CharacterData, data: GameData, region_id: String) -> String:
+	var found := _body_manual_merchant(c, data, region_id)
+	if not found.is_empty():
+		return "%s (%s)" % [data.items[found["item_id"]]["name"], found["merchant"]]
+	for entry: Dictionary in Sects.shop_items(c, data):
+		var tech_id := Items.manual_technique(data, String(entry["item_id"]))
+		if tech_id != "" and data.techniques[tech_id].kind == "body" and not Techniques.knows(c, tech_id):
+			return "%s (sect shop, %d contribution)" % [data.items[entry["item_id"]]["name"], int(entry["contribution"])]
+	return ""
+
+
+## GUIDE-072: {item_id, merchant} for the first body-art manual `c` lacks that a merchant in `region_id` sells; {} if none.
+static func _body_manual_merchant(c: CharacterData, data: GameData, region_id: String) -> Dictionary:
 	for item_id: String in data.items:
 		var tech_id := Items.manual_technique(data, item_id)
 		if tech_id == "" or data.techniques[tech_id].kind != "body" or Techniques.knows(c, tech_id):
 			continue
 		var merchant := merchant_selling(data, region_id, item_id)
 		if merchant != "":
-			return "%s (%s)" % [data.items[item_id]["name"], merchant]
-	for entry: Dictionary in Sects.shop_items(c, data):
-		var tech_id := Items.manual_technique(data, String(entry["item_id"]))
-		if tech_id != "" and data.techniques[tech_id].kind == "body" and not Techniques.knows(c, tech_id):
-			return "%s (sect shop, %d contribution)" % [data.items[entry["item_id"]]["name"], int(entry["contribution"])]
-	return ""
+			return {"item_id": item_id, "merchant": merchant}
+	return {}
+
+
+## GUIDE-072: the nearest region (at most NEAREST_HOPS routes away, nearest by total route days, routes gated
+## above `c`'s realm skipped) where `pick.call(region_id) -> String` is non-empty. Returns
+## {region_id, region_name, days, result}, or {} when none; `region_id` itself counts with days 0.
+static func nearest_selling(c: CharacterData, data: GameData, region_id: String, pick: Callable) -> Dictionary:
+	var best_days := {region_id: 0}
+	var hops := {region_id: 0}
+	var frontier: Array[String] = [region_id]
+	var order: Array[String] = []
+	while not frontier.is_empty():
+		var cur: String = frontier[0]
+		for f: String in frontier:
+			if int(best_days[f]) < int(best_days[cur]):
+				cur = f
+		frontier.erase(cur)
+		order.append(cur)
+		if int(hops[cur]) >= NEAREST_HOPS:
+			continue
+		for route: Dictionary in data.regions.get(cur, {}).get("routes", []):
+			var to: String = route["to"]
+			if not data.regions.has(to) or not Exploration.check_travel(c, data, cur, to)["ok"] or order.has(to):
+				continue
+			var d := int(best_days[cur]) + int(route.get("days", 1))
+			if not best_days.has(to) or d < int(best_days[to]):
+				best_days[to] = d
+				hops[to] = int(hops[cur]) + 1
+				if not frontier.has(to):
+					frontier.append(to)
+	for r: String in order:
+		var result: String = pick.call(r)
+		if result != "":
+			return {"region_id": r, "region_name": Exploration.region_name(data, r), "days": int(best_days[r]), "result": result}
+	return {}
 
 
 ## GUIDE-054: a Mortal who practises a craft and has played MORTAL_CRAFTER_NUDGE_DAY days hears where to begin
