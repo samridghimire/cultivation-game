@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-22 [WU-285] Hidden place labels no longer push visible ones aside, and the gold "!" counts when labels are spread.
 - 2026-10-22 [C-195] A Misty Forest bounty for the middle Qi Refining layers: the Fog-Antler Stag.
 - 2026-10-22 [GUIDE-103] At the last layer of a realm the qi hints speak of the breakthrough, not "the next layer".
 - 2026-10-22 [QA-132] The interactable fuzz test runs about twice as fast and reaches more menu options.
