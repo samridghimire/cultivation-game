@@ -426,7 +426,7 @@
       "group": "crafts",
       "body": [
         "Once you practise a crafting profession, buyers post a monthly order for a few units of something you already know how to make. Each profession has at most one open order at a time, and an order pays about double the materials' worth plus profession experience.",
-        "An order stays open for 60 days. Letting it lapse costs you nothing: no penalty, no lost reputation. Your journal (J) lists your open orders and how many days are left."
+        "An order stays open for 60 days. Letting it lapse costs you nothing: no penalty, no lost reputation. Your journal (J) lists your open orders and how many days are left. Order sizes are set so you can gather what they need nearby in the time given. A smith can find iron at Qingshi's Old Quarry Tailings."
       ]
     },
     {
