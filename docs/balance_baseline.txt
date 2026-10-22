@@ -1254,7 +1254,7 @@ Late-realm fight gates, 200 fights per row. Typical player at the gate's lowest 
   mahayana   ruins_charnel_heaven_sovereign    charnel_heaven_soverei maha/0  ruins,marsh          yes       2%  yes    
   mahayana   ruins_heaven_gate_vow_guardian    heaven_gate_vow_guardi maha/0  ruins,mountain       yes       3%  yes    
   tribulatio mountain_thunder_vault_tortoise   thunder_vault_tortoise trib/0  mountain,wild        yes      44%  yes    
-  tribulatio wild_ascent_warden_arbiter        ascension_seeking_arbi trib/3  wild,ruins           no       77%  no     
+  tribulatio wild_ascent_warden_arbiter        ascension_seeking_arbi trib/3  wild,ruins           no       87%  no     
   tribulatio marsh_hidden_tribulation_elder    hidden_tribulation_eld trib/0  marsh,wild           yes      10%  yes    
   tribulatio mountain_nine_thunder_peng        nine_thunder_peng      trib/0  mountain             yes       6%  yes    
   tribulatio ruins_lightning_tithe_sovereign   lightning_tithe_sovere trib/0  ruins,marsh          yes       8%  yes    
