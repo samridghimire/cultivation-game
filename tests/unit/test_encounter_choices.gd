@@ -763,3 +763,17 @@ func test_tribulation_transcendence_choice_encounters() -> void:
 	var elder: Dictionary = d.encounters["ruins_elder_waiting_for_the_sky"]
 	assert_eq(elder["choices"][2]["enemy"], "hidden_tribulation_elder")
 	assert_true(d.enemies.has("hidden_tribulation_elder"), "the foe exists")
+
+
+func test_road_talisman_peddler_sells_paper_for_eight_stones() -> void:
+	var d := data()
+	var enc: Dictionary = d.encounters["road_talisman_peddler"]
+	var c := new_character()
+	c.realm_index = 1
+	c.inventory = {"spirit_stone": 7}
+	assert_true(Exploration.check_choice(c, d, enc["choices"][0], {}) != "", "7 stones cannot buy the bundle")
+	c.inventory = {"spirit_stone": 8}
+	assert_eq(Exploration.check_choice(c, d, enc["choices"][0], {}), "", "8 stones can")
+	Exploration.resolve_choice(c, d, enc, 0, {})
+	assert_eq(c.item_count("talisman_paper"), 5)
+	assert_eq(c.item_count("spirit_stone"), 0)
