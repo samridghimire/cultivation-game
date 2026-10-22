@@ -80,6 +80,8 @@ func _run() -> void:
 			100 * r["gather_days"] / total, 100 * r["craft_days"] / total, 100 * r["meditate_days"] / total, r["stuck"], r["faded"], cur[0], cur[2], cur[5], realm_cols, r["cult_hint"]])
 		for k in ["d30", "d90", "d180", "crafted", "got", "delivered", "rank", "renown", "stuck", "faded"]:
 			cols[k].append(r[k])
+		if int(r["crafted"]) == 0:
+			print("    QA-122: seed %d never crafted: started with %d stones, cheapest in-rank recipe needs %d (paper at shop price plus its own stones)" % [s, r["start_stones"], r["cheapest"]])
 		cols["gather"].append(100.0 * r["gather_days"] / total)
 		cols["craft"].append(100.0 * r["craft_days"] / total)
 		cols["meditate"].append(100.0 * r["meditate_days"] / total)
@@ -127,7 +129,8 @@ func _crafter(seed_value: int, days: int) -> Dictionary:
 	c.professions[_prof] = {"rank": 0, "xp": 0.0}
 	Alchemy.grant_rank_recipes(c, _gs.data)
 	var start: int = _clock.total_days
-	var out := {"d30": 0, "d90": 0, "d120": 0, "d180": 0, "crafted": 0, "got": 0, "delivered": 0, "rank": 0, "renown": 0, "gather_days": 0, "craft_days": 0, "meditate_days": 0, "stuck": 0, "faded": 0, "d365": 0, "realm90": "-", "realm120": "-", "realm180": "-", "realm365": "-", "cult_hint": 0, "crafted_post": 0, "stuck_post": 0}
+	var start_stones := c.item_count("spirit_stone")
+	var out := {"start_stones": start_stones, "cheapest": _cheapest_craft_cost(c), "d30": 0, "d90": 0, "d120": 0, "d180": 0, "crafted": 0, "got": 0, "delivered": 0, "rank": 0, "renown": 0, "gather_days": 0, "craft_days": 0, "meditate_days": 0, "stuck": 0, "faded": 0, "d365": 0, "realm90": "-", "realm120": "-", "realm180": "-", "realm365": "-", "cult_hint": 0, "crafted_post": 0, "stuck_post": 0}
 	var checkpoints := CHECKPOINTS.duplicate()
 	_tracked.clear()
 	_sold.clear()
@@ -288,6 +291,21 @@ func _clear_pending() -> void:
 		_gs.face_threat(false)
 
 
+## QA-122: stones the cheapest in-rank recipe costs (its own stones plus other ingredients at shop price), ignoring what is held.
+func _cheapest_craft_cost(c: CharacterData) -> int:
+	var best := -1
+	for recipe_id: String in Alchemy.known_recipes(c, _gs.data, _prof):
+		var recipe: Dictionary = _gs.data.recipes[recipe_id]
+		if int(recipe.get("min_rank", 0)) > Professions.rank_of(c, _prof):
+			continue
+		var cost := 0
+		for ing: String in recipe["ingredients"]:
+			var n := int(recipe["ingredients"][ing])
+			cost += n if ing == "spirit_stone" else Reputation.buy_price(c, _gs.data, ing, "", 1.0) * n
+		best = cost if best < 0 else mini(best, cost)
+	return best
+
+
 ## One decision: returns "gather", "craft", "meditate" or "stuck" (nothing to act on).
 func _act(c: CharacterData) -> String:
 	_deliver_open(c)
@@ -331,6 +349,11 @@ func _buy_for_hint(c: CharacterData) -> void:
 						break
 					need[ing] = short
 			if need.is_empty():
+				continue
+			var cost := int(recipe["ingredients"].get("spirit_stone", 0))  # QA-122: the recipe's own stones come on top of the paper
+			for ing: String in need:
+				cost += Reputation.buy_price(c, _gs.data, ing, "", _gs.buy_multiplier()) * int(need[ing])
+			if c.item_count("spirit_stone") < cost:
 				continue
 			for ing: String in need:
 				_gs.buy_item(ing, "", need[ing])
