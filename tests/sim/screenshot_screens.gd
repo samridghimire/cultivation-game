@@ -90,6 +90,7 @@ extends SceneTree
 ## "Reach <realm> to stand a chance against <name>." line), then the bitter variant. Shoot at 1280x800 and 1280x720.
 ## WU-210: it then breaks through level with the rival (rival_caught_up_log / rival_caught_up_journal).
 ## WU-246: `-- --first-hour` also writes fh_<workshop|shop|journal_first_goals|journal_next_steps|journal_commissions|board>_<day1|month1>_<size>.png.
+## WU-273: append `-- --techniques-shot` for techniques_practice[_scale115].png (Iron Fist level 1 details, practice button focused); run once per --resolution. Checked at 1280x720 and 1280x800: nothing clipped, the action row wraps.
 ## WU-258: `--hint-shot` also writes hint_armor_far_[journal_]<size>.png and hint_empty_fights_journal_<size>.png.
 ## WU-268: `--hint-shot` also writes hint_long_[journal_]<size>.png (Azure Cloud outer disciple, Qi Refining 1st layer, Iron Fist 1: practice days, far qi, stipend).
 ## WU-252: `--hint-shot` also writes hint_buy_ingredient_[poor_][journal_]<size>.png and hint_thin_defence_long_[journal_]<size>.png (longest thin-defence line); all fit at 1280x720 and 1280x800. With the injury the HUD panel drops the hint lines by design (_fit_status_panel), so the journal carries them.
@@ -184,6 +185,9 @@ func _start() -> void:
 		return
 	if OS.get_cmdline_user_args().has("--map-shot"):
 		_start_map_shot(gs)
+		return
+	if OS.get_cmdline_user_args().has("--techniques-shot"):
+		_start_techniques_shot(gs)
 		return
 	if OS.get_cmdline_user_args().has("--soul-shot"):
 		_start_soul_shot(gs)
@@ -1059,6 +1063,33 @@ func _start_shop_shot(gs: Node) -> void:
 		gs.current_region = "qingshi_village"
 		shop.open("Wandering Merchant", 0, ["herb", "ore"])
 		shop._set_category("All"), "close": shop.close})
+
+
+## WU-273: `--techniques-shot` writes techniques_practice.png and techniques_practice_scale115.png (UI scale 115%): a Qi Refining
+## 1st-layer player in Qingshi Village with Iron Fist and Basic Breathing at level 1, the Techniques screen on Iron Fist's details.
+## Run once per --resolution (1280x720, 1280x800); the file name has no size suffix, so copy it between runs.
+func _start_techniques_shot(gs: Node) -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 5
+	var c := CharacterFactory.create("Lin Feng", gs.data, rng, "male")
+	gs.start_session(c)
+	gs.pending_event = ""
+	gs.current_region = "qingshi_village"
+	c.techniques = {"iron_fist": {"level": 1, "xp": 0.0}, "basic_breathing": {"level": 1, "xp": 0.0}}
+	world = load("res://src/world/world.tscn").instantiate()
+	root.add_child(world)
+	hud = world.get_node("HUD")
+	var techs: Control = hud.get("_screens")["toggle_techniques"]
+	var open_iron_fist := func() -> void:
+		techs.open()
+		techs._select("iron_fist")
+		techs._focus_first_action.call_deferred()
+	shots.append({"name": "techniques_practice", "open": open_iron_fist, "close": techs.close})
+	shots.append({"name": "techniques_practice_scale115", "open": func() -> void:
+		root.content_scale_factor = 1.15
+		open_iron_fist.call(), "close": func() -> void:
+		techs.close()
+		root.content_scale_factor = 1.0})
 
 
 ## WU-253: `--map-shot` writes map_sells_<size>.png, the world map with Fallen Star Market selected (its "Sells:" line).
