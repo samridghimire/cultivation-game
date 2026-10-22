@@ -1191,6 +1191,35 @@ func test_fair_fights_are_even_or_better_sorted_and_capped() -> void:
 	assert_eq(fights, Guidance.fair_fights(c, data(), {}, c.age_days, "qingshi_village"))
 
 
+## GUIDE-087: the open promotion trial is a listed fight ("trial"), only when eligible and winnable.
+func test_fair_fights_list_an_open_sect_trial() -> void:
+	var c := _fighter()
+	c.sect["contribution"] = 600
+	# Iron Fist/Stone Skin level 5 puts the Inner Disciple trial well above FAIR_FIGHT_MIN_CHANCE.
+	c.techniques = {"iron_fist": {"level": 5, "xp": 0.0}, "stone_skin": {"level": 5, "xp": 0.0}}
+	assert_eq(Sects.check_promotion(c, data()), "", "fixture is eligible")
+	# The trial pays no stones, so paying missions would crowd it out of the top three: put them on cooldown.
+	for mission_id: String in data().sect_missions:
+		c.mission_cooldowns[mission_id] = c.age_days + 100
+	var fights := Guidance.fair_fights(c, data(), {"chore_boar_done": true}, c.age_days, "")
+	var trials := fights.filter(func(f: Dictionary) -> bool: return f["kind"] == "trial")
+	assert_eq(trials.size(), 1, "the open trial is listed")
+	assert_true(String(trials[0]["text"]).begins_with("Sect trial: Inner Disciple"))
+
+
+func test_fair_fights_skip_the_trial_without_contribution_or_strength() -> void:
+	var c := _fighter()
+	var kinds: Array = Guidance.fair_fights(c, data(), {}, c.age_days, "qingshi_village").map(func(f: Dictionary) -> String: return f["kind"])
+	assert_false(kinds.has("trial"), "short of contribution")
+	var weak := new_character()
+	weak.realm_index = 1
+	weak.stage = 1
+	weak.sect = {"id": "azure_cloud_sect", "rank": 0, "contribution": 600, "spent": 0}
+	weak.techniques = {}
+	kinds = Guidance.fair_fights(weak, data(), {}, weak.age_days, "qingshi_village").map(func(f: Dictionary) -> String: return f["kind"])
+	assert_false(kinds.has("trial"), "too weak")
+
+
 func test_bare_rogue_gets_first_combat_hint_instead() -> void:
 	var c := _fresh()
 	c.sect = {}

@@ -2092,12 +2092,18 @@ static func _fair_fight_entries(out: Array[Dictionary], fights: Array[Dictionary
 
 
 ## Up to FAIR_FIGHTS_MAX fights `c` can take now with a win chance >= FAIR_FIGHT_MIN_CHANCE, best
-## chance first: [{text, chance, kind}] with kind "mission" | "deed" | "bounty". Rates at most
+## chance first: [{text, chance, kind}] with kind "mission" | "deed" | "bounty" | "rival" | "explore" | "trial". Rates at most
 ## FAIR_FIGHT_MAX_RATED candidates (each rating is 40 simulated fights): missions, open chores, then bounties.
 ## GUIDE-033: with `people` (and `favor`) the living, met rival of this region is rated too (kind "rival").
 static func fair_fights(c: CharacterData, data: GameData, flags: Dictionary, today: int, region_id: String, people: Dictionary = {}, favor: Dictionary = {}) -> Array[Dictionary]:
 	var found: Array[Dictionary] = []
 	var rated := 0
+	# GUIDE-087: the promotion trial is the one fight that raises your rank.
+	var trial_id := Sects.trial_enemy(c, data)
+	if trial_id != "" and Sects.check_promotion(c, data) == "":
+		rated += 1
+		var sect: SectDef = data.sects[c.sect["id"]]
+		_rate_fight(found, c, data, Sects.trial_opponent(data, trial_id), "trial", "Sect trial: %s" % sect.rank_name(Sects.next_rank(c, data)), 0)
 	for id in Sects.available_missions(c, data, flags):
 		if rated >= FAIR_FIGHT_MAX_RATED:
 			break
