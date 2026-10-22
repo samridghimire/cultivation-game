@@ -339,6 +339,16 @@ func test_newcomer_herb_hint_says_what_it_is_worth() -> void:
 	assert_true(_has(hints, "Use your 3 Spirit Herbs (Inventory, I): %d qi at once, about " % (qi * 3)))
 
 
+## REVIEW: the count form uses Items.item_plural, not a bare "s" ("Lotuses", never "Lotuss").
+func test_newcomer_herb_hint_plural_follows_item_plural() -> void:
+	var d := data()
+	var c := _fresh()
+	c.inventory = {"hundred_year_snow_lotus": 2}
+	var hints := Guidance.hints(c, d, 1.0, 10, {}, {Guidance.ELDER_MO_FLAG: true}, "qingshi_village")
+	assert_true(_has(hints, "Use your 2 %s (Inventory, I)" % Items.item_plural(d, "hundred_year_snow_lotus", 2)))
+	assert_false(_has(hints, "Lotuss"))
+
+
 func test_newcomer_pill_hint_skips_harmful_pills() -> void:
 	var c := _fresh()
 	c.inventory = {"blood_essence_pill": 1, "blood_demon_pill": 1}

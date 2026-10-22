@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: f75f86d
+Last reviewed commit: 56b85f2
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -914,3 +914,16 @@ Last reviewed commit: f75f86d
     no route says "The hint points this way". WU-284 matches against data place names, while the world matches Interactable
     display_names, so a hint that names only an NPC marks the NPC but shows no HUD badge. WU-283/284/286 screenshots are
     still owed (their Follow-ups).
+- 2026-10-22 (reviewer, 10th run): reviewed f75f86d..56b85f2 (bce24d0 GUIDE-105, 32291d1 QA-132, 4ffa9d0 GUIDE-103, 1367fc0 C-195,
+  e220831 WU-285, 33762b6 C-188, cb21345 GUIDE-106, d8f1bd1 WU-287, cba3444 WU-288, 2a27718 QA-133, f3b60e6 C-197, 3a745a0 C-198,
+  4b4a6df GUIDE-109, 25282c0 WU-289, 31a34bc QA-135, 5cd9e05 GUIDE-107, 56b85f2 WU-290; [PLAN]/[REVIEW] commits skipped).
+  Main green. No save-format changes, no worker BACKLOG/CHANGELOG edits. Nothing filed.
+  - Fixed ([REVIEW] commit): GUIDE-109 pluralized the item with a bare "s", so two snow lotuses read "2 Hundred-Year Snow
+    Lotuss"; it now uses Items.item_plural (items.json `plural` + Text.plural). Regression test
+    test_newcomer_herb_hint_plural_follows_item_plural.
+  - Checked: GUIDE-105's "heal first" only fires when odds_unhurt (-1 when uninjured) reaches the same 0.5 line
+    mission_too_dangerous uses. WU-287's lethal flags match the fights: bounty foes use the enemy's own flag, tournament and
+    incursion foes come from WorldEvents.opponent (lethal false). GUIDE-107 _hall_where reuses nearest_selling/_far_where.
+    GUIDE-103 names the breakthrough only below the last realm. C-195/197/198 content validates (test_encounter_choices).
+  - Notes, not filed: GUIDE-106 calls fair_fights (up to FAIR_FIGHT_MAX_RATED x 40 simulated fights) for the untried road
+    on every hints() call; worth folding into PERF-001. WU-285 leaves a hidden label's old screen_lift until the next spread.

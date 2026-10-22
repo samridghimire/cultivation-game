@@ -1726,7 +1726,7 @@ static func _newcomer_hints(c: CharacterData, data: GameData, flags: Dictionary,
 				if rate <= 0.0:
 					out.append("Use your %s (Inventory, I) to gather qi at once." % item["name"])
 				else:
-					var label: String = String(item["name"]) if count == 1 else "%d %ss" % [count, item["name"]]
+					var label: String = String(item["name"]) if count == 1 else "%d %s" % [count, Items.item_plural(data, item_id, count)]
 					out.append("Use your %s (Inventory, I): %d qi at once, about %s of meditation here." % [label, roundi(qi), Calendar.format_duration(maxi(1, ceili(qi / rate)))])
 				break
 	var fighting := first_combat_hint(c, data, region_id)
