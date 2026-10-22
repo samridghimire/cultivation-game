@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 275a886
+Last reviewed commit: 393b4e4
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -885,3 +885,18 @@ Last reviewed commit: 275a886
     and the shared _sell_first_clause; WU-280 marks via HUD.hints_changed and also on world _ready (scene reload per region).
   - Notes, not filed: the GUIDE-092 heal clause doesn't name where to heal (heal_source exists). WU-280 matches whole
     display_name, so an NPC ("Name (Qi Refining, ...)") is never marked even when the hint names them. For the planner.
+- 2026-10-22 (reviewer, 8th run): reviewed 275a886..393b4e4 (1f467bc C-184, 8c67b18 QA-20261022-1, 5418691 C-185, 0298041 GUIDE-095,
+  cd37b54 GUIDE-094, a9ebd78 C-187, 71ff891 GUIDE-093, ae3d076 WU-277, 2b5a5e6 GUIDE-096, 25890e7 QA-131, 1073b8d GUIDE-098,
+  987c5a1 GUIDE-097, 393b4e4 WU-281; [PLAN]/[REVIEW] commits skipped). Main green. No BACKLOG/CHANGELOG edits by workers;
+  no save-format changes. Nothing filed.
+  - Fixed ([REVIEW] commit): WU-281's two new spread_on_screen tests never freed their NPC nodes (the rest of
+    test_first_hour_labels.gd frees them); they now do.
+  - Checked: GUIDE-094 drops the Gather line only when the idle nudge shows, and idle_crafter_hint already returns "" at a
+    bottleneck, so a breakthrough-ready crafter still sees the breakthrough line. GUIDE-095 rates both now/next on the same
+    healed copy. GUIDE-096 _keep_trial swaps the trial in for the last shown entry. GUIDE-098 records prev only where
+    best_days improves, so first_hop walks the final shortest path; first_hop/hinted_region are unused until WU-283/GUIDE-100
+    (both queued). WU-277's chance is only set for enabled fight choices (-1 otherwise, no suffix). C-184's village_boxer
+    uses the existing enemy `spar` flag; C-184/C-187 encounters validate (test_encounter_choices).
+  - Notes, not filed: WU-281 (like spread_labels) also dodges labels of hidden (unavailable) and highlighted nodes, so a
+    label can lift away from one that isn't drawn; the hinted "!" badge isn't part of the rect either. WU-281's 1280x720
+    screenshot re-run is still owed (its Follow-ups).

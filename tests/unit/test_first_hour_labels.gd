@@ -171,6 +171,8 @@ func test_spread_on_screen_lifts_labels_the_edge_clamp_pushed_together() -> void
 	Interactable.spread_on_screen([a, b], view)
 	assert_false(a.drawn_label_rect(view).intersects(b.drawn_label_rect(view)), "drawn rects overlap")
 	assert_true(b.screen_lift < 0.0 or a.screen_lift < 0.0)
+	a.free()
+	b.free()
 
 
 func test_spread_on_screen_leaves_central_labels_alone() -> void:
@@ -180,3 +182,5 @@ func test_spread_on_screen_leaves_central_labels_alone() -> void:
 	Interactable.spread_on_screen([a, b], view)
 	assert_eq(a.screen_lift, 0.0)
 	assert_eq(b.screen_lift, 0.0)
+	a.free()
+	b.free()
