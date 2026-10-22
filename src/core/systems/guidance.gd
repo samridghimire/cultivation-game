@@ -327,17 +327,27 @@ static func buy_ingredient_hint(c: CharacterData, data: GameData, region_id: Str
 				continue
 			var item_id := ""
 			var bought_only := true
+			var seller := {}
 			for ing: String in recipe["ingredients"]:
 				if ing == "spirit_stone" or c.item_count(ing) >= int(recipe["ingredients"][ing]):
 					continue
-				if herb_place(c, data, ing, region_id) != "" or Exploration.best_gather_place(c, data, ing, region_id) != "" or merchant_selling(data, region_id, ing) == "":
+				if herb_place(c, data, ing, region_id) != "" or Exploration.best_gather_place(c, data, ing, region_id) != "":
+					bought_only = false
+					break
+				var found := nearest_selling(c, data, region_id, func(r: String) -> String: return merchant_selling(data, r, ing))
+				if found.is_empty():
 					bought_only = false
 					break
 				if item_id == "":
 					item_id = ing
+					seller = found
 			if not bought_only or item_id == "":
 				continue
-			var line := "Your %s needs %s: the %s sells them for %d stones each." % [recipe["name"], Items.item_plural(data, item_id, 2), merchant_selling(data, region_id, item_id), merchant_price(c, data, region_id, item_id)]
+			var line := ""
+			if int(seller["days"]) == 0:
+				line = "Your %s needs %s: the %s sells them for %d stones each." % [recipe["name"], Items.item_plural(data, item_id, 2), merchant_selling(data, region_id, item_id), merchant_price(c, data, region_id, item_id)]
+			else:
+				line = "Your %s needs %s: the %s in %s (%s) sells them for %d stones each." % [recipe["name"], Items.item_plural(data, item_id, 2), seller["result"], seller["region_name"], Calendar.format_duration(int(seller["days"])), merchant_price(c, data, seller["region_id"], item_id)]
 			if c.item_count("spirit_stone") < Alchemy.shortfall_cost(c, data, recipe_id):
 				line += " Sell gathered herbs or take odd jobs first."
 			return line

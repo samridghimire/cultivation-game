@@ -2431,6 +2431,20 @@ func test_buy_ingredient_hint() -> void:
 	assert_eq(Guidance.buy_ingredient_hint(_fresh(), data(), "qingshi_village"), "")
 
 
+## GUIDE-076: out of paper in Misty Forest, the hint points to the nearest market that sells it.
+func test_buy_ingredient_hint_points_to_the_nearest_market() -> void:
+	var c := _fresh()
+	c.realm_index = 1
+	c.professions["talisman_master"] = {"rank": 0, "xp": 0.0}
+	c.inventory = {"spirit_stone": 20, "dew_grass": 2}
+	var far := Guidance.buy_ingredient_hint(c, data(), "misty_forest")
+	assert_true(far.contains("Blank Talisman Paper") and far.contains("Qingshi Village") and far.contains("Wandering Merchant"), far)
+	assert_true(far.contains(" in Qingshi Village ("), far)
+	var near := Guidance.buy_ingredient_hint(c, data(), "qingshi_village")
+	assert_true(near.contains("the Wandering Merchant sells them"), near)
+	assert_false(near.contains(" days"), near)
+
+
 func test_buy_ingredient_hint_skips_gatherable_shortfalls() -> void:
 	var c := _fresh()
 	c.realm_index = 1
