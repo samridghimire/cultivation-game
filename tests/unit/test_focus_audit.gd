@@ -1096,3 +1096,53 @@ func test_wu251_road_talisman_peddler_focus() -> void:
 	hud.free()
 	gs.end_session()
 	await _frames()
+
+
+## WU-264: the world map keeps focus while the selection moves, and its details follow the focused region.
+func test_wu264_world_map_navigation_keeps_focus_and_details() -> void:
+	var root := _tree().root
+	var gs: Node = root.get_node("GameState")
+	var c := new_character()
+	gs.start_session(c)
+	gs.pending_event = ""
+	Exploration.visit(c, "fallen_star_market")
+	var hud: CanvasLayer = load("res://src/ui/hud.tscn").instantiate()
+	root.add_child(hud)
+	await _frames()
+	var map: Control = hud.get("_screens")["toggle_map"]
+	map.open()
+	await _frames(3)
+	assert_true(root.gui_get_focus_owner() != null and map.is_ancestor_of(root.gui_get_focus_owner()), "map opens with focus inside")
+	var canvas: Control = map.get("_canvas")
+	var unexplored := ""
+	for b in canvas.get_children():
+		if b is Button and WorldMapScreen.is_unexplored(c, String(b.name), gs.current_region):
+			unexplored = String(b.name)
+			break
+	assert_true(unexplored != "", "the map has an unexplored region")
+	var places: Label = map.get("_places")
+	# Arrow keys: focus never lands on nothing, and the details always describe the focused region.
+	for action in ["ui_down", "ui_right", "ui_down", "ui_left", "ui_up", "ui_right"]:
+		_press(action)
+		await _frames()
+		var owner := root.gui_get_focus_owner()
+		assert_true(owner != null and map.is_ancestor_of(owner), "%s: focus stays inside the map" % action)
+		if owner != null and owner.get_parent() == canvas:  # a region button (not Close): details follow it
+			var id := String(owner.name)
+			var has_sells := places.text.contains("Sells:")
+			if WorldMapScreen.is_unexplored(c, id, gs.current_region):
+				assert_false(has_sells, "%s: an unexplored region shows no Sells line" % id)
+	# Jump to the two interesting regions.
+	canvas.get_node("fallen_star_market").grab_focus()
+	await _frames()
+	assert_true(places.text.contains("Sells:"), "visited Fallen Star Market lists what it sells")
+	canvas.get_node(unexplored).grab_focus()
+	await _frames()
+	assert_false(places.text.contains("Sells:"), "an unexplored region lists no Sells line")
+	_press("ui_cancel")
+	await _frames()
+	assert_false(map.visible, "ui_cancel closes the map")
+	root.remove_child(hud)
+	hud.free()
+	gs.end_session()
+	await _frames()
