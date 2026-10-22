@@ -144,11 +144,7 @@ static func thin_defence_hint(c: CharacterData, data: GameData, region_id: Strin
 			if armor_id != "":
 				line += " The %s sells %s for %d stones." % [merchant_selling(data, region_id, armor_id), data.items[armor_id]["name"], merchant_price(c, data, region_id, armor_id)]
 			else:
-				# GUIDE-072: none here, so point to the nearest market that sells one.
-				var far := nearest_selling(c, data, region_id, func(r: String) -> String: return affordable_armor(c, data, r))
-				if not far.is_empty():
-					var far_armor: String = far["result"]
-					line += " The %s in %s (%s) sells %s for %d stones." % [merchant_selling(data, far["region_id"], far_armor), far["region_name"], Calendar.format_duration(int(far["days"])), data.items[far_armor]["name"], merchant_price(c, data, far["region_id"], far_armor)]
+				line += _far_armor_clause(c, data, region_id)
 		if not has_body:
 			var source := body_manual_source(c, data, region_id)
 			if source != "":
@@ -206,6 +202,16 @@ static func _body_manual_merchant(c: CharacterData, data: GameData, region_id: S
 		if merchant != "":
 			return {"item_id": item_id, "merchant": merchant}
 	return {}
+
+
+## GUIDE-075: " The <Merchant> in <Region> (<duration>) sells <Armor> for N stones." for the nearest market that
+## sells armor `c` can afford (GUIDE-072), or "" when none is in reach.
+static func _far_armor_clause(c: CharacterData, data: GameData, region_id: String) -> String:
+	var far := nearest_selling(c, data, region_id, func(r: String) -> String: return affordable_armor(c, data, r))
+	if far.is_empty():
+		return ""
+	var far_armor: String = far["result"]
+	return " The %s in %s (%s) sells %s for %d stones." % [merchant_selling(data, far["region_id"], far_armor), far["region_name"], Calendar.format_duration(int(far["days"])), data.items[far_armor]["name"], merchant_price(c, data, far["region_id"], far_armor)]
 
 
 ## GUIDE-072: the nearest region (at most NEAREST_HOPS routes away, nearest by total route days, routes gated
@@ -1310,7 +1316,8 @@ static func armor_hint(c: CharacterData, data: GameData, region_id: String) -> S
 		return ""
 	var armor_id := affordable_armor(c, data, region_id)
 	if armor_id == "":
-		return ""
+		var far := _far_armor_clause(c, data, region_id)
+		return "" if far == "" else "Armor would keep you standing in fights:" + far
 	return "Armor would keep you standing in fights: the %s sells %s for %d stones." % [merchant_selling(data, region_id, armor_id), data.items[armor_id]["name"], merchant_price(c, data, region_id, armor_id)]
 
 

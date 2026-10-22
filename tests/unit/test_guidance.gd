@@ -2591,3 +2591,14 @@ func test_sect_faction_merchant_price_follows_reputation() -> void:
 	var neutral := Guidance.merchant_price(c, data(), "fallen_star_market", item_id)
 	Reputation.change(c, data(), "blood_lotus_sect", -2000)
 	assert_true(Guidance.merchant_price(c, data(), "fallen_star_market", item_id) > neutral, "hated sect charges more")
+
+
+func test_armor_hint_points_to_the_nearest_market() -> void:
+	var c := _armor_hint_fighter()
+	var line := Guidance.armor_hint(c, data(), "qingshi_village")
+	assert_true(line.begins_with("Armor would keep you standing in fights: The "), line)
+	assert_true(line.contains("Fallen Star Market") and line.contains("10 days"), line)
+	var local := Guidance.armor_hint(c, data(), "fallen_star_market")
+	assert_true(local.contains("sells") and not local.contains("days"), local)
+	c.inventory = {"spirit_stone": 0}
+	assert_eq(Guidance.armor_hint(c, data(), "qingshi_village"), "", "no stones")
