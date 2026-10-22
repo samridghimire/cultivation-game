@@ -322,6 +322,26 @@ func _rebuild_shop() -> void:
 	_show_details()
 
 
+## The list label of a mission: name, the sect's call, the pay mark the hint names, cooldown and odds.
+static func label_for(p: CharacterData, data: GameData, flags: Dictionary, mission_id: String, call_id: String, call_left: int) -> String:
+	var mission: Dictionary = data.sect_missions[mission_id]
+	var label := String(mission["name"])
+	if mission_id == call_id:
+		label += " (the sect's call: %d days left)" % call_left
+	if mission_id == Guidance.best_mission(p, data, flags):
+		label += " (best pay)"
+	var wait := Sects.mission_cooldown_left(p, mission_id)
+	if wait > 0:
+		label += " (in %s)" % Calendar.format_duration(wait)
+	var danger := Sects.mission_danger(p, data, mission_id)
+	if danger != "":
+		var foe: Dictionary = data.enemies[String(mission["enemy"])]
+		label += "  [%s]" % UIStyle.odds_text(p, data, foe, bool(foe.get("lethal", false)))
+		if low_artifact_warning(p, data, mission_id) != "":
+			label += " !"
+	return label
+
+
 func _rebuild_missions() -> void:
 	var p := GameState.player
 	var data := GameState.data
@@ -336,7 +356,11 @@ func _rebuild_missions() -> void:
 		call_id = ""
 	if not ids.has(_selected):
 		_selected = ""
+		var best := Guidance.best_mission(p, data, GameState.world_flags)
 		for mission_id in ids:
+			if mission_id == best:
+				_selected = mission_id
+				break
 			if Sects.check_mission(p, data, mission_id, GameState.world_flags) == "":
 				_selected = mission_id
 				break
@@ -345,19 +369,8 @@ func _rebuild_missions() -> void:
 	if ids.is_empty():
 		_add_hint("No missions are posted for you. Only sect disciples receive sect missions.")
 	for mission_id in ids:
-		var mission: Dictionary = data.sect_missions[mission_id]
-		var label := String(mission["name"])
-		if mission_id == call_id:
-			label += " (the sect's call: %d days left)" % call_left
-		var wait := Sects.mission_cooldown_left(p, mission_id)
-		if wait > 0:
-			label += " (in %s)" % Calendar.format_duration(wait)
+		var label := label_for(p, data, GameState.world_flags, mission_id, call_id, call_left)
 		var danger := Sects.mission_danger(p, data, mission_id)
-		if danger != "":
-			var foe: Dictionary = data.enemies[String(mission["enemy"])]
-			label += "  [%s]" % UIStyle.odds_text(p, data, foe, bool(foe.get("lethal", false)))
-			if low_artifact_warning(p, data, mission_id) != "":
-				label += " !"
 		_add_entry(mission_id, label, Sects.check_mission(p, data, mission_id, GameState.world_flags) == "")
 		if danger != "":
 			UIStyle.tint_button_text(_list.get_child(-1) as Button, UIStyle.danger_color(danger))

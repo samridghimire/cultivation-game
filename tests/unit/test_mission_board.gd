@@ -400,3 +400,22 @@ func test_low_artifact_warns_on_risky_lethal_missions() -> void:
 		enemy[k] = saved[k]
 	board.free()
 	gs.end_session()
+
+
+## WU-291: exactly one mission wears " (best pay)", and none when all are on cooldown.
+func test_best_pay_mark_on_exactly_one_mission() -> void:
+	var c := _disciple()
+	c.stage = 2
+	var d := data()
+	var ids := Sects.available_missions(c, d, {})
+	var best := Guidance.best_mission(c, d, {})
+	assert_true(best != "", "a ready mission exists")
+	var marked: Array[String] = []
+	for id in ids:
+		if MissionBoard.label_for(c, d, {}, id, "", -1).contains(" (best pay)"):
+			marked.append(id)
+	assert_eq(marked, [best] as Array[String])
+	for id in ids:
+		c.mission_cooldowns[id] = 999999
+	for id in ids:
+		assert_false(MissionBoard.label_for(c, d, {}, id, "", -1).contains(" (best pay)"), id)
