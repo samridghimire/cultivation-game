@@ -2788,6 +2788,19 @@ func test_heal_source_far_clinic_needs_the_stones() -> void:
 
 
 
+func test_heal_source_far_clinic_names_the_way() -> void:
+	var c := _fresh()
+	c.realm_index = 1
+	Injuries.inflict(c, data(), "broken_bones")
+	c.inventory = {"spirit_stone": 500}
+	var hop := Guidance.first_hop(c, data(), "azure_peak", "qingshi_village")
+	assert_true(hop != "" and hop != "qingshi_village")
+	var line := Guidance.heal_source(c, data(), "azure_peak")
+	assert_true(line.contains("by way of " + Exploration.region_name(data(), hop)), line)
+	assert_true(line.contains("Village Clinic in Qingshi Village ("), line)
+	assert_false(Guidance.heal_source(c, data(), "misty_forest").contains("by way of"))
+
+
 func test_heal_source_names_the_injury_a_far_clinic_treats() -> void:
 	var c := _fresh()
 	Injuries.inflict(c, data(), "qi_deviation")

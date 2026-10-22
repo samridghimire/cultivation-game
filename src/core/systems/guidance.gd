@@ -579,7 +579,7 @@ static func _heal_source_for(c: CharacterData, data: GameData, region_id: String
 				return String(q.get("display_name", "clinic"))
 		return "")
 	if not far.is_empty() and int(far["days"]) > 0:
-		return "the %s in %s (%s) treats it for %d stones" % [far["result"], far["region_name"], Calendar.format_duration(int(far["days"])), cost]
+		return "the %s %s treats it for %d stones" % [far["result"], _far_where(c, data, region_id, far), cost]
 	return ""
 
 
