@@ -189,6 +189,25 @@ func test_trial_odds_hint() -> void:
 	assert_true(Guidance._sect_hint(c, d).contains("practise or grow a stage first"))
 
 
+## GUIDE-092: an injury that loses the trial says to heal, not to practise.
+func test_trial_hint_injury_holds_back() -> void:
+	var d := data()
+	var c := new_character()
+	c.realm_index = 1
+	c.sect = {"id": "azure_cloud_sect", "rank": 0, "contribution": 600}
+	assert_eq(Guidance.odds_unhurt(c, d, d.enemies["azure_sword_examiner"]), -1.0)
+	for k: String in c.attributes:
+		c.attributes[k] = 40
+	c.stage = 0
+	var unhurt := Guidance.trial_odds(c, d)
+	assert_true(unhurt >= 0.5, "strong disciple should win unhurt: %f" % unhurt)
+	Injuries.inflict(c, d, "broken_bones")
+	assert_true(Guidance.trial_odds(c, d) < 0.5, "injured: %f" % Guidance.trial_odds(c, d))
+	var hint := Guidance._sect_hint(c, d)
+	assert_true(hint.contains("Your injuries hold you back: healed, you would win about"), hint)
+	assert_false(hint.contains("practise or grow"), hint)
+
+
 ## UI-009b: missions, promotion trials, tribulations, Dao, abodes and family.
 func test_system_hints() -> void:
 	var d := data()

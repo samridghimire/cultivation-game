@@ -1232,6 +1232,15 @@ static func trial_odds(c: CharacterData, data: GameData) -> float:
 	return Combat.win_chance(c, data, Sects.trial_opponent(data, enemy_id))
 
 
+## GUIDE-092: the chance of winning `enemy` with `c`'s injuries healed, or -1.0 when `c` has none.
+static func odds_unhurt(c: CharacterData, data: GameData, enemy: Dictionary) -> float:
+	if c.injuries.is_empty():
+		return -1.0
+	var copy := CharacterData.from_dict(c.to_dict())
+	copy.injuries.clear()
+	return Combat.win_chance(copy, data, enemy)
+
+
 ## GUIDE-085: " You face the X (Even, 80 in 100)." plus a warning when the odds are under even.
 static func _trial_odds_clause(c: CharacterData, data: GameData) -> String:
 	var chance := trial_odds(c, data)
@@ -1240,7 +1249,11 @@ static func _trial_odds_clause(c: CharacterData, data: GameData) -> String:
 	var enemy: Dictionary = data.enemies[Sects.trial_enemy(c, data)]
 	var line := " You face the %s (%s, %d in 100)." % [enemy.get("name", ""), Combat.label_for_chance(chance), roundi(chance * 100.0)]
 	if chance < 0.5:
-		line += " A loss only injures you; practise or grow a stage first."
+		var unhurt := odds_unhurt(c, data, Sects.trial_opponent(data, Sects.trial_enemy(c, data)))
+		if unhurt >= 0.5:
+			line += " Your injuries hold you back: healed, you would win about %d in 100." % roundi(unhurt * 100.0)
+		else:
+			line += " A loss only injures you; practise or grow a stage first."
 	return line
 
 
