@@ -303,6 +303,35 @@ static func is_first_combat_manual(c: CharacterData, data: GameData, item_id: St
 	return not Techniques.knows_kind(c, data, "combat")
 
 
+## The stat that makes gear better in its slot: attack for weapons, defense for armor.
+static func slot_stat(slot: String) -> String:
+	return "attack" if slot == "weapon" else "defense"
+
+
+## WU-244: "upgrade" for affordable gear that beats what `c` wears, "defence" for a body-art manual a
+## Foundation-or-higher cultivator lacks, else "".
+static func upgrade_tag(c: CharacterData, data: GameData, item_id: String) -> String:
+	if Equipment.is_equipment(data, item_id):
+		var slot := Equipment.slot_of(data, item_id)
+		var stat := slot_stat(slot)
+		var worn := String(c.equipment.get(slot, ""))
+		var worn_val := 0 if worn == "" else int(data.items[worn].get("equip", {}).get("stats", {}).get(stat, 0))
+		var val := int(data.items[item_id].get("equip", {}).get("stats", {}).get(stat, 0))
+		if val > worn_val and c.item_count("spirit_stone") >= unit_price(c, data, item_id, false, "", GameState.buy_multiplier()):
+			return "upgrade"
+		return ""
+	var tech_id := manual_technique(data, item_id)
+	if tech_id != "" and data.techniques[tech_id].kind == "body" and not Techniques.knows(c, tech_id) \
+			and c.realm_index >= data.realm_index_of("foundation_establishment"):
+		return "defence"
+	return ""
+
+
+## Short row suffix for an upgrade tag; only equipment rows get one (manual rows already say what they are).
+static func tag_note(tag: String) -> String:
+	return " (upgrade)" if tag == "upgrade" else ""
+
+
 ## "Equipped: Iron Sword (+5 attack)" for whatever `c` wears in the item's slot.
 static func compare_text(c: CharacterData, data: GameData, item_id: String) -> String:
 	var tech_id := manual_technique(data, item_id)
@@ -373,11 +402,16 @@ func _rebuild() -> void:
 			var note := manual_note(p, data, item_id)
 			if row_fits(label + note):
 				label += note
+			var tag_text := tag_note(upgrade_tag(p, data, item_id))
+			if tag_text != "" and row_fits(label + tag_text):
+				label += tag_text
 		if not _selling and GameState.festival_stock(_stock_tags).has(item_id) and not Items.shop_stock(data, _max_price, _stock_tags).has(item_id):
 			label += " (festival)"
 		var b := UIStyle.button(label, _select.bind(item_id))
 		b.name = item_id
 		if not _selling and is_first_combat_manual(p, data, item_id):
+			b.add_theme_color_override("font_color", UIStyle.ACCENT)
+		elif not _selling and upgrade_tag(p, data, item_id) != "":
 			b.add_theme_color_override("font_color", UIStyle.ACCENT)
 		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		b.clip_text = true

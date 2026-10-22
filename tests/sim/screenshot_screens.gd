@@ -105,6 +105,9 @@ func _start() -> void:
 	if OS.get_cmdline_user_args().has("--workshop-shot"):
 		_start_workshop_shot(gs)
 		return
+	if OS.get_cmdline_user_args().has("--shop-shot"):
+		_start_shop_shot(gs)
+		return
 	if OS.get_cmdline_user_args().has("--goal-shot"):
 		_start_goal_shot(gs)
 		return
@@ -938,6 +941,25 @@ func _start_banner_shot(gs: Node) -> void:
 ## WU-211: the HUD hint panel at its maximum setting with the longest crafter hints: the away-region
 ## herb hint (GUIDE-046/048) and the broke-crafter odd-jobs line (GUIDE-047).
 ## WU-220: also hint_mortal_nudge (GUIDE-054 "You are still a mortal" line, day 40, open order).
+## WU-244: the Wandering Merchant buy tab with an "(upgrade)" armor row and an affordable body-art manual.
+func _start_shop_shot(gs: Node) -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 5
+	var c := CharacterFactory.create("Lin Feng", gs.data, rng, "male")
+	gs.start_session(c)
+	gs.pending_event = ""
+	c.realm_index = gs.data.realm_index_of("foundation_establishment")
+	c.equipment = {"armor": "boar_hide_jerkin"}
+	c.inventory = {"spirit_stone": 400}
+	world = load("res://src/world/world.tscn").instantiate()
+	root.add_child(world)
+	hud = world.get_node("HUD")
+	var shop: Control = hud.get("_shop")
+	shots.append({"name": "shop_upgrade_tag", "open": func() -> void:
+		shop.open("Wandering Merchant", 0, ["herb", "ore", "equipment", "manual"])
+		shop._set_category("All"), "close": shop.close})
+
+
 func _start_hint_shot(gs: Node) -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 5

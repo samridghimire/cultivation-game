@@ -288,3 +288,44 @@ func test_manual_row_shows_full_name_and_price() -> void:
 	screen.close()
 	screen.free()
 	gs.end_session()
+
+
+func test_upgrade_tag_marks_better_affordable_armor() -> void:
+	var root := (Engine.get_main_loop() as SceneTree).root
+	var gs := root.get_node("GameState")
+	var c := new_character()
+	c.inventory = {"spirit_stone": 500}
+	gs.start_session(c)
+	var d := data()
+	c = gs.player
+	c.equipment = {"armor": "boar_hide_jerkin"}
+	assert_eq(ShopScreen.upgrade_tag(c, d, "wolfhide_brigandine"), "upgrade")
+	assert_eq(ShopScreen.upgrade_tag(c, d, "boar_hide_jerkin"), "")  # equal, not better
+	c.equipment = {"armor": "wolfhide_brigandine"}
+	assert_eq(ShopScreen.upgrade_tag(c, d, "boar_hide_jerkin"), "")  # worse
+	c.equipment = {"armor": "boar_hide_jerkin"}
+	c.inventory = {"spirit_stone": 5}
+	assert_eq(ShopScreen.upgrade_tag(c, d, "wolfhide_brigandine"), "")  # unaffordable
+
+
+func test_upgrade_tag_marks_body_manual_at_foundation() -> void:
+	var root := (Engine.get_main_loop() as SceneTree).root
+	var gs := root.get_node("GameState")
+	var c := new_character()
+	gs.start_session(c)
+	var d := data()
+	c = gs.player
+	assert_eq(ShopScreen.upgrade_tag(c, d, "manual_stone_skin"), "")  # Mortal
+	c.realm_index = d.realm_index_of("foundation_establishment")
+	assert_eq(ShopScreen.upgrade_tag(c, d, "manual_stone_skin"), "defence")
+	c.techniques["stone_skin"] = {"level": 1, "xp": 0.0}
+	assert_eq(ShopScreen.upgrade_tag(c, d, "manual_stone_skin"), "")
+
+
+func test_upgrade_tag_row_fits_for_longest_armor() -> void:
+	var d := data()
+	for id: String in d.items:
+		if Equipment.is_equipment(d, id) and Equipment.slot_of(d, id) == "armor":
+			var label := "%s  %d" % [d.items[id]["name"], int(d.items[id]["price"])]
+			if ShopScreen.row_fits(label):
+				assert_true(ShopScreen.row_fits(label + ShopScreen.tag_note("upgrade")), id)
