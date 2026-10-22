@@ -133,10 +133,7 @@ static func thin_defence_hint(c: CharacterData, data: GameData, region_id: Strin
 	var has_armor: bool = c.equipment.get("armor", "") != ""
 	if has_body and has_armor:
 		return ""
-	# Name only what is missing: a cultivator who already knows a body art is told to wear armor, and vice versa.
-	var missing := "wear armor"
-	if not has_body:
-		missing = "learn a body technique such as Stone Skin Tempering" + ("" if has_armor else " and wear armor")
+	var missing := _thin_defence_missing(c, data)
 	var line := "Your defence is thin for Foundation foes: %s before fighting cultivators." % missing
 	if region_id != "":
 		if not has_armor:
@@ -157,6 +154,40 @@ static func thin_defence_hint(c: CharacterData, data: GameData, region_id: Strin
 	if Injuries.has_any(c):
 		line += " Heal your injuries before you fight."
 	return line
+
+
+## What a thin-defence Foundation cultivator lacks, named only for what is missing: a cultivator who already knows a
+## body art is told to wear armor, and vice versa. "" when the defence is not thin.
+static func _thin_defence_missing(c: CharacterData, data: GameData) -> String:
+	if c.realm_index != THIN_DEFENCE_REALM:
+		return ""
+	var has_body := Techniques.knows_kind(c, data, "body")
+	var has_armor: bool = c.equipment.get("armor", "") != ""
+	if has_body and has_armor:
+		return ""
+	if has_body:
+		return "wear armor"
+	return "learn a body technique such as Stone Skin Tempering" + ("" if has_armor else " and wear armor")
+
+
+## GUIDE-074: why "Fights you can win" is empty for a fighter: thin defence first, else the combat technique to
+## practise. "" when no combat technique is known (first_combat_hint covers that) or nothing useful applies.
+static func empty_fair_fights_note(c: CharacterData, data: GameData) -> String:
+	if not Techniques.knows_kind(c, data, "combat"):
+		return ""
+	var lead := "Nothing here is in your favour yet: "
+	var missing := _thin_defence_missing(c, data)
+	if missing != "":
+		return lead + missing + "."
+	var best := ""
+	for tech_id: String in c.techniques:
+		var def: TechniqueDef = data.techniques.get(tech_id)
+		if def == null or def.kind != "combat":
+			continue
+		var lvl := Techniques.level(c, tech_id)
+		if best == "" or lvl > Techniques.level(c, best) or (lvl == Techniques.level(c, best) and tech_id < best):
+			best = tech_id
+	return lead + "practise %s past level %d or grow a stage." % [data.techniques[best].name, Techniques.level(c, best) + 1]
 
 
 ## GUIDE-068: the armor item a merchant in `region_id` sells that beats what `c` wears (most defense, then
@@ -1950,10 +1981,12 @@ static func journal(c: CharacterData, data: GameData, flags: Dictionary, today: 
 
 
 ## Journal section "Fights you can win" (GUIDE-021): fair fights, or the first-fighting-style hint when
-## there are none and no combat technique is known.
+## there are none and no combat technique is known; GUIDE-074: a fighter with none is told why.
 static func _fair_fight_entries(out: Array[Dictionary], fights: Array[Dictionary], c: CharacterData, data: GameData, region_id: String) -> void:
 	for fight in fights:
 		_add(out, "Fights you can win", String(fight["text"]), "normal")
+	if fights.is_empty() and Techniques.knows_kind(c, data, "combat"):
+		_add(out, "Fights you can win", empty_fair_fights_note(c, data), "dim")
 	if fights.is_empty() and not Techniques.knows_kind(c, data, "combat"):
 		var hint := first_combat_hint(c, data, region_id)
 		var shown := false

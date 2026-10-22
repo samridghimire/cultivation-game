@@ -2602,3 +2602,50 @@ func test_armor_hint_points_to_the_nearest_market() -> void:
 	assert_true(local.contains("sells") and not local.contains("days"), local)
 	c.inventory = {"spirit_stone": 0}
 	assert_eq(Guidance.armor_hint(c, data(), "qingshi_village"), "", "no stones")
+
+
+# --- Empty "Fights you can win" (GUIDE-074) --------------------------------------
+
+func _gv74_fighter() -> CharacterData:
+	var c := _fresh()
+	c.techniques = {}
+	for id: String in data().techniques:
+		if data().techniques[id].kind == "combat":
+			c.techniques[id] = {"level": 2}
+			break
+	return c
+
+
+func test_empty_fair_fights_note_asks_for_practice() -> void:
+	var c := _gv74_fighter()
+	var id: String = c.techniques.keys()[0]
+	var note := Guidance.empty_fair_fights_note(c, data())
+	assert_true(note.begins_with("Nothing here is in your favour yet: practise %s past level 3" % data().techniques[id].name), note)
+
+
+func test_empty_fair_fights_note_prefers_thin_defence() -> void:
+	var c := _gv74_fighter()
+	c.realm_index = Guidance.THIN_DEFENCE_REALM
+	c.equipment = {}
+	var note := Guidance.empty_fair_fights_note(c, data())
+	assert_true(note.contains("wear armor"), note)
+	assert_false(note.contains("practise"), note)
+
+
+func test_empty_fair_fights_note_blank_without_combat_technique() -> void:
+	var c := _fresh()
+	c.techniques = {}
+	assert_eq(Guidance.empty_fair_fights_note(c, data()), "")
+
+
+func test_empty_fair_fights_entry_only_when_no_fights() -> void:
+	var c := _gv74_fighter()
+	var out: Array[Dictionary] = []
+	Guidance._fair_fight_entries(out, [], c, data(), "qingshi_village")
+	assert_eq(out.size(), 1)
+	assert_eq(out[0]["section"], "Fights you can win")
+	var listed: Array[Dictionary] = [{"text": "Fight a boar", "chance": 0.9, "kind": "explore"}]
+	var out2: Array[Dictionary] = []
+	Guidance._fair_fight_entries(out2, listed, c, data(), "qingshi_village")
+	assert_eq(out2.size(), 1)
+	assert_eq(out2[0]["text"], "Fight a boar")
