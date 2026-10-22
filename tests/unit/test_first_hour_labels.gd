@@ -184,3 +184,32 @@ func test_spread_on_screen_leaves_central_labels_alone() -> void:
 	assert_eq(b.screen_lift, 0.0)
 	a.free()
 	b.free()
+
+
+
+func test_hinted_targets_picks_the_road_for_a_hint_naming_another_region() -> void:
+	var data := data()
+	var road: Interactable = load("res://src/world/interactables/travel_point.gd").new()
+	road.display_name = "Village Gate"
+	var npc := _npc("Aa", Vector2(10, 10))
+	var other := Exploration.region_name(data, "misty_forest")
+	assert_eq(Interactable.hinted_targets("Try the market in %s." % other, [road, npc], data, "qingshi_village"), [road])
+	assert_eq(Interactable.hinted_targets("Talk to Aa.", [road, npc], data, "qingshi_village"), [npc])
+	assert_eq(Interactable.hinted_targets("Rest.", [road, npc], data, "qingshi_village"), [])
+	road.free()
+	npc.free()
+
+
+func test_travel_point_marks_the_first_hop_route() -> void:
+	var gs = Engine.get_main_loop().root.get_node("GameState")
+	gs.start_session(CharacterFactory.create("Hop", gs.data, seeded_rng(1), "male"))
+	gs.current_region = "qingshi_village"
+	var road: Interactable = load("res://src/world/interactables/travel_point.gd").new()
+	road.hint_region = "misty_forest"
+	var marked := 0
+	for o: Dictionary in road.get_options():
+		if String(o.get("description", "")).begins_with("The hint points this way. "):
+			marked += 1
+			assert_true(String(o["label"]).contains(Exploration.region_name(gs.data, "misty_forest")))
+	assert_eq(marked, 1)
+	road.free()

@@ -142,6 +142,18 @@ static func hinted_names(hint: String, names: Array) -> Array:
 	return found
 
 
+## The nodes the top `hint` points at: those whose display_name it names; when it names none here but names
+## another region, the road (nodes with a `hint_region` property) instead (WU-283).
+static func hinted_targets(hint: String, nodes: Array, data: GameData, region_id: String) -> Array:
+	var names: Array = nodes.map(func(n: Interactable) -> String: return n.display_name)
+	var hit := hinted_names(hint, names)
+	if not hit.is_empty():
+		return nodes.filter(func(n: Interactable) -> bool: return hit.has(n.display_name))
+	if Guidance.hinted_region(data, hint, region_id) == "":
+		return []
+	return nodes.filter(func(n: Interactable) -> bool: return "hint_region" in n)
+
+
 ## Sets or clears `hinted`, redrawing only when it changed.
 func set_hinted(value: bool) -> void:
 	if hinted == value:

@@ -277,10 +277,13 @@ func _build_npcs() -> void:
 ## Puts the gold marker on the places the HUD's first hint names (WU-280).
 func _mark_hinted(hud: Node) -> void:
 	var nodes: Array = get_children().filter(func(n: Node) -> bool: return n is Interactable)
-	var names: Array = nodes.map(func(n: Interactable) -> String: return n.display_name)
-	var hit := Interactable.hinted_names(hud.first_hint(), names)
+	var hint: String = hud.first_hint()
+	var hit := Interactable.hinted_targets(hint, nodes, GameState.data, GameState.current_region)
+	var region := Guidance.hinted_region(GameState.data, hint, GameState.current_region)
 	for node: Interactable in nodes:
-		node.set_hinted(hit.has(node.display_name))
+		if "hint_region" in node:
+			node.hint_region = region
+		node.set_hinted(hit.has(node))
 
 
 ## Generated NPCs (Npcs.spawn, no def) stand at the region's npc_spots (the

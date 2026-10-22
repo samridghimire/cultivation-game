@@ -1,9 +1,12 @@
 extends Interactable
 ## A road out of the region. Lists every route from data/regions.json.
+## The region the top hint names when no place here is named (set by World._mark_hinted, WU-283).
+var hint_region := ""
 
 
 func get_options() -> Array[Dictionary]:
 	var options: Array[Dictionary] = []
+	var hop := Guidance.first_hop(GameState.player, GameState.data, GameState.current_region, hint_region) if hint_region != "" else ""
 	for route in Exploration.routes(GameState.player, GameState.data, GameState.current_region):
 		var label := "Travel to %s (%s)" % [route["name"], Calendar.format_duration(route["days"])]
 		if not route["ok"]:
@@ -14,5 +17,7 @@ func get_options() -> Array[Dictionary]:
 			option["description"] = "(never visited) " + note
 		else:
 			option["description"] = note
+		if hop != "" and route["to"] == hop:
+			option["description"] = "The hint points this way. " + String(option["description"])
 		options.append(option)
 	return options
