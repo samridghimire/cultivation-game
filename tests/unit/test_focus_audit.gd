@@ -1040,3 +1040,59 @@ func test_wu247_shop_upgrade_row_buys_and_empty_crafting_focus() -> void:
 	hud.free()
 	gs.end_session()
 	await _frames()
+
+
+## WU-251: the road talisman peddler. With 7 stones "Buy a bundle" is disabled: focus lands on "Walk on",
+## ui_accept cannot take the bundle, ui_cancel leaves the window usable. With 8 stones ui_accept buys 5 paper.
+func test_wu251_road_talisman_peddler_focus() -> void:
+	var root := _tree().root
+	var gs: Node = root.get_node("GameState")
+	var c := new_character()
+	c.realm_index = 1
+	c.inventory = {"spirit_stone": 7}
+	gs.start_session(c)
+	gs.pending_event = ""
+	var hud: CanvasLayer = load("res://src/ui/hud.tscn").instantiate()
+	root.add_child(hud)
+	await _frames()
+	var encounter: EncounterWindow = hud.get("_encounter")
+
+	gs.pending_encounter = "road_talisman_peddler"
+	encounter.open()
+	await _expect_focus(encounter, "peddler with 7 stones")
+	var buttons := encounter.choice_buttons()
+	assert_eq(buttons.size(), 2, "the peddler offers two choices")
+	assert_true(buttons[0].disabled, "Buy a bundle is disabled with 7 stones")
+	assert_false(buttons[1].disabled, "Walk on stays enabled")
+	assert_eq(root.gui_get_focus_owner(), buttons[1], "focus lands on Walk on")
+	_press("ui_cancel")
+	await _frames()
+	assert_true(encounter.visible, "ui_cancel leaves the peddler window open")
+	assert_true(root.gui_get_focus_owner() != null and encounter.is_ancestor_of(root.gui_get_focus_owner()), "focus is still inside the window after ui_cancel")
+	buttons[0].grab_focus()
+	_press("ui_accept")
+	await _frames(2)
+	assert_eq(c.item_count("talisman_paper"), 0, "ui_accept on the disabled Buy a bundle buys nothing")
+	assert_eq(c.item_count("spirit_stone"), 7, "no stones spent")
+	assert_eq(gs.pending_encounter, "road_talisman_peddler", "the encounter is still pending")
+	encounter.choice_buttons()[1].grab_focus()
+	_press("ui_accept")
+	await _frames(3)
+	assert_eq(gs.pending_encounter, "", "Walk on resolves it")
+	encounter.close()
+
+	c.inventory = {"spirit_stone": 8}
+	gs.pending_encounter = "road_talisman_peddler"
+	encounter.open()
+	await _expect_focus(encounter, "peddler with 8 stones")
+	assert_eq(root.gui_get_focus_owner(), encounter.choice_buttons()[0], "focus lands on Buy a bundle")
+	_press("ui_accept")
+	await _frames(3)
+	assert_eq(c.item_count("talisman_paper"), 5, "ui_accept on Buy a bundle gives 5 paper")
+	assert_eq(c.item_count("spirit_stone"), 0, "8 stones spent")
+	assert_eq(gs.pending_encounter, "", "the encounter resolved")
+
+	root.remove_child(hud)
+	hud.free()
+	gs.end_session()
+	await _frames()
