@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 147a890
+Last reviewed commit: 26a9b5b
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -781,3 +781,16 @@ Last reviewed commit: 147a890
     text only. QA-112's TT rows: the only forced fight wins 39%. WU-243/WU-246 are sim-only, WU-247 test-only.
   - Notes, not filed: GUIDE-066 quotes the item's base price, not the merchant's (reputation/world-event) price;
     upgrade_tag only compares attack/defense, so a lower-defense armor with more max_hp is never tagged.
+- 2026-10-22 (reviewer): reviewed 147a890..26a9b5b (765226b RV-QA-115, 286bc33 C-168, 0b020b6 QA-113, d3e55f7 WU-248,
+  6e5264a GUIDE-071, 970de24 ENC-006, 30a60ad WU-250, 26a9b5b QA-118; [PLAN]/[REVIEW] commits skipped). Main green
+  (2054 tests). No BACKLOG/CHANGELOG edits by workers; no save changes. Nothing filed.
+  - Fixed ([REVIEW] commit): ENC-006's `renown` effect is applied inside Effects (core, no signals), so a title it
+    earned showed only as a note in the log and never raised the HUD renown banner that every other renown gain
+    raises (renown_tier_reached). GameState now emits it after an encounter/choice whose effects crossed a tier.
+    Test in test_renown_ui.gd.
+  - Checked: ENC-006 validates 1..50 and is a no-op without a region (items/deeds never pass one; no content uses
+    the key yet, C-167 will). GUIDE-071 only names items whose heal_injury matches or is "all", and falls back to
+    the old wording without a region. WU-248 is a row suffix (tested). QA-113's numbers back CMB-010 (already
+    planned); QA-118/WU-250 are sim-only, C-168 text only.
+  - Notes, not filed: GUIDE-071 checks only the first injury, quotes the merchant's base price, and when the local
+    clinic is unaffordable may point at a neighbouring region's clinic without checking its cost.

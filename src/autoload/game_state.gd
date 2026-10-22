@@ -726,7 +726,9 @@ static func explore_prefix(encounter: Dictionary, discovery: bool, deep_path: bo
 func _meet_encounter(encounter: Dictionary, prefix: String = "") -> Dictionary:
 	LifeStats.add(player, "encounters")
 	Exploration.note_met(player, encounter)
+	var renown_before := Renown.value(player, current_region)
 	var result := Exploration.resolve(player, data, encounter, world_flags, current_region)
+	_effect_renown_banner(renown_before)
 	var text := rival_text(String(encounter.get("text", "")))
 	if not result["notes"].is_empty():
 		text += " (%s)" % ", ".join(result["notes"])
@@ -950,7 +952,9 @@ func choose_encounter(index: int) -> void:
 	if pending_encounter == "" or not _can_act():
 		return
 	var encounter: Dictionary = data.encounters.get(pending_encounter, {})
+	var renown_before := Renown.value(player, current_region)
 	var result := Exploration.resolve_choice(player, data, encounter, index, world_flags, current_region)
+	_effect_renown_banner(renown_before)
 	if not result["ok"]:
 		EventBus.post(result["reason"], "warning")
 		EventBus.player_changed.emit()
@@ -2237,6 +2241,14 @@ func _gain_renown(source: String) -> void:
 ## Local renown by amount (RENOWN-004, encounter choices).
 func _add_renown(amount: int) -> void:
 	_announce_renown(Renown.add(player, data, current_region, amount), false)
+
+
+## ENC-006: an encounter's `renown` effect is applied in Effects (core), which cannot emit signals;
+## raise the title banner here when it crossed a tier.
+func _effect_renown_banner(before: int) -> void:
+	var title := String(Renown.tier(data, Renown.value(player, current_region)).get("title", ""))
+	if title != "" and title != String(Renown.tier(data, before).get("title", "")):
+		EventBus.renown_tier_reached.emit(current_region, title)
 
 
 ## `quiet_gain` false also says so when a gain crosses no tier (RENOWN-005).

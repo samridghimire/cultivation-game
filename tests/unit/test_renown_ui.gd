@@ -63,3 +63,20 @@ func test_map_qi_line_names_the_flag_reason() -> void:
 	assert_false(off.contains("("))
 	var on := WorldMapScreen.qi_line(d, region_id, {String(entry["flag"]): true}, [])
 	assert_true(on.ends_with("(%s)" % String(entry["text"])))
+
+
+func test_effect_renown_crossing_a_tier_raises_the_banner() -> void:
+	var gs: Node = Engine.get_main_loop().root.get_node("GameState")
+	var c := CharacterFactory.create("Renowned", gs.data, seeded_rng(5))
+	gs.start_session(c)
+	var seen: Array[String] = []
+	var on_tier := func(region: String, title: String) -> void: seen.append(region + ":" + title)
+	EventBus.renown_tier_reached.connect(on_tier)
+	c.renown[gs.current_region] = 18
+	var enc := {"id": "test_effect_renown", "tags": [], "weight": 1, "kind": "neutral", "days": 0, "text": "Word spreads.", "effects": {"renown": 1}}
+	gs._meet_encounter(enc)
+	assert_eq(seen.size(), 0, "19 is still untitled")
+	gs._meet_encounter(enc)
+	EventBus.renown_tier_reached.disconnect(on_tier)
+	assert_eq(seen, [gs.current_region + ":Known"])
+	gs.end_session()
