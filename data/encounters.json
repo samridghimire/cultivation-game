@@ -386,6 +386,16 @@
       {"label": "Spar with the old boxer", "text": "He hits like a mule and moves like a cat, and for three rounds you trade blows over the frozen dirt.", "days": 1, "enemy": "village_boxer", "renown": 3},
       {"label": "Watch him work the post instead", "text": "You sit on a barrel and study how he turns his hip into each blow. It is a small thing, but you carry it away.", "days": 2, "effects": {"qi": 20}},
       {"label": "Decline politely", "text": "He shrugs and goes back to his post. \"Everybody young is busy,\" he says to the post."}
+    ]},
+    {"id": "forest_spilled_herb_basket", "name": "The Spilled Basket", "tags": ["forest"], "weight": 1, "kind": "neutral", "days": 1, "min_realm": "qi_refining", "min_stage": 2, "blocked_by_flag": "helped_spilled_basket", "text": "By a mist-slick stream an old herb-picker kneels over a split basket, its morning's catch of pale grass floating off downstream. Her hands are too stiff to chase it, and she is counting the blades that remain with a sinking face.", "choices": [
+      {"label": "Wade in and help her gather it", "text": "You spend the day knee-deep in cold water, fishing the blades out one by one. She presses a bundle of Qi Condensing Grass on you and tells the Qingshi stalls who helped her.", "days": 3, "renown": 2, "effects": {"alignment": 5, "items": {"qi_condensing_grass": 2}, "set_flag": "helped_spilled_basket"}},
+      {"label": "Help her, and keep a share for yourself", "text": "You gather the grass and quietly slip a good handful into your sleeve. She counts her bundle twice and says nothing, which is worse.", "days": 3, "effects": {"alignment": -3, "items": {"qi_condensing_grass": 4}, "set_flag": "helped_spilled_basket"}},
+      {"label": "Leave her to it", "text": "It is her basket and her stream. You walk on, and the grass drifts out of sight.", "effects": {"set_flag": "helped_spilled_basket"}}
+    ]},
+    {"id": "forest_snared_wolf_cub", "name": "The Snared Wolf Cub", "tags": ["forest"], "weight": 1, "kind": "neutral", "days": 1, "min_realm": "qi_refining", "min_stage": 2, "blocked_by_flag": "answered_wolf_cub", "text": "A grey wolf cub lies in a hunter's snare, whimpering, one paw bloodied by the wire. Mist wolves hunt in packs, and somewhere in the fog a dam is calling. A beast cultivator would tell you a freed cub remembers for years, and so does a skinned one.", "choices": [
+      {"label": "Cut the wire and set it free", "text": "You hold it down with your sleeve and cut the snare away. It bolts into the mist, and from the dark behind it comes a single low howl that does not sound like a threat.", "days": 1, "effects": {"alignment": 5, "set_flag": "answered_wolf_cub"}},
+      {"label": "Skin the cub and sell the pelt", "text": "It is quickly done, and you do not look at it afterwards. The pelt is soft and grey and worth more than the mercy would have been.", "days": 1, "effects": {"alignment": -5, "items": {"mist_wolf_pelt": 1}, "set_flag": "answered_wolf_cub"}},
+      {"label": "Walk on", "text": "You leave the cub to the hunter and the dam. Its whimpering follows you for a long time.", "effects": {"set_flag": "answered_wolf_cub"}}
     ]}
 ]
 }

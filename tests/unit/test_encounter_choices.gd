@@ -957,3 +957,26 @@ func test_village_middle_qi_refining_encounters() -> void:
 	for ch: Dictionary in d.encounters["village_old_boxer_spar"]["choices"]:
 		chosen = chosen or ch.get("enemy", "") == "village_boxer"
 	assert_true(chosen, "a choice spars the boxer")
+
+
+## C-187: two Misty Forest encounters for the middle Qi Refining layers.
+func _forest_ids_at(stage: int) -> Array:
+	var d := data()
+	var c := CharacterFactory.create("Wanderer", d, seeded_rng())
+	c.realm_index = d.realm_index_of("qi_refining")
+	c.stage = stage
+	var ids: Array = []
+	for e: Dictionary in Exploration.eligible_encounters(c, d, ["forest", "wild"], {}):
+		ids.append(e["encounter"]["id"])
+	return ids
+
+
+func test_forest_middle_qi_refining_encounters() -> void:
+	var d := data()
+	for id in ["forest_spilled_herb_basket", "forest_snared_wolf_cub"]:
+		assert_true(d.encounters.has(id), id + " exists")
+		assert_true(_forest_ids_at(2).has(id), id + " eligible at the 3rd Layer")
+		assert_false(_forest_ids_at(1).has(id), id + " not eligible at the 2nd Layer")
+		for ch: Dictionary in d.encounters[id]["choices"]:
+			for item_id: String in ch.get("effects", {}).get("items", {}):
+				assert_true(d.items.has(item_id), item_id + " exists")
