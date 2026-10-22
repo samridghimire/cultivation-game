@@ -333,3 +333,30 @@ func test_upgrade_tag_row_fits_for_longest_armor() -> void:
 			var label := "%s  %d" % [d.items[id]["name"], int(d.items[id]["price"])]
 			if ShopScreen.row_fits(label):
 				assert_true(ShopScreen.row_fits(label + ShopScreen.tag_note("upgrade")), id)
+
+
+func test_tag_note_names_defence_and_upgrade() -> void:
+	assert_eq(ShopScreen.tag_note("upgrade"), " (upgrade)")
+	assert_true(ShopScreen.tag_note("defence") != "")
+	assert_true(ShopScreen.tag_note("defence").contains("(defence)"))
+	assert_eq(ShopScreen.tag_note(""), "")
+
+
+func test_stone_skin_row_says_defence_only_for_foundation() -> void:
+	var root := (Engine.get_main_loop() as SceneTree).root
+	var gs := root.get_node("GameState")
+	var c := new_character()
+	c.inventory = {"spirit_stone": 500}
+	gs.start_session(c)
+	var d := data()
+	for foundation: bool in [true, false]:
+		gs.player.realm_index = d.realm_index_of("foundation_establishment") if foundation else 0
+		var screen := ShopScreen.new()
+		root.add_child(screen)
+		screen.open("Wandering Merchant", 0, ["herb", "ore", "beast_material"])
+		var b: Button = screen._list.get_node_or_null("manual_stone_skin")
+		if b != null:
+			assert_eq(b.text.contains("(defence)"), foundation, b.text)
+		screen.close()
+		screen.free()
+	gs.end_session()

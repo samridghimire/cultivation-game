@@ -327,9 +327,13 @@ static func upgrade_tag(c: CharacterData, data: GameData, item_id: String, facti
 	return ""
 
 
-## Short row suffix for an upgrade tag; only equipment rows get one (manual rows already say what they are).
+## Short row suffix for an upgrade or body-art defence tag.
 static func tag_note(tag: String) -> String:
-	return " (upgrade)" if tag == "upgrade" else ""
+	if tag == "upgrade":
+		return " (upgrade)"
+	if tag == "defence":
+		return "  (defence)"
+	return ""
 
 
 ## "Equipped: Iron Sword (+5 attack)" for whatever `c` wears in the item's slot.
