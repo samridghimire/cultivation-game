@@ -86,6 +86,7 @@ extends SceneTree
 ## WU-207: append `-- --rival-shot` for the journal's Household section with a met rival one realm ahead (the
 ## "Reach <realm> to stand a chance against <name>." line), then the bitter variant. Shoot at 1280x800 and 1280x720.
 ## WU-210: it then breaks through level with the rival (rival_caught_up_log / rival_caught_up_journal).
+## WU-246: `-- --first-hour` also writes fh_<workshop|shop|journal_first_goals|journal_next_steps|journal_commissions|board>_<day1|month1>_<size>.png.
 ## WU-243: `-- --hint-shot` also writes hint_thin_defence_<size>.png / hint_idle_crafter_<size>.png (HUD) and *_journal_<size>.png (Next steps); checked at 1280x720 and 1280x800, nothing clipped.
 
 const OUT_DIR := "user://screenshots/screens"
@@ -261,6 +262,65 @@ func _start_first_hour(gs: Node) -> void:
 		hud.get("_combat_report").close()
 		hud.get("_respawn").close()})
 	shots.append({"name": "fh_journal", "open": func() -> void: hud.get("_screens")["toggle_journal"].open(), "close": func() -> void: hud.get("_screens")["toggle_journal"].close()})
+	# WU-246: the workshop menu, the Wandering Merchant, the journal sections and the mission board as a fresh
+	# Qingshi character sees them on day 1 and after the first month (named fh_<what>_<day1|month1>_<size>.png).
+	var size_tag := "%dx%d" % [root.size.x, root.size.y]
+	var clock: Node = root.get_node("GameClock")
+	# The HUD only exists once fh_intro_dialogue has opened, so the screens are looked up on first use.
+	var ui := {}
+	var ensure := func() -> void:
+		if ui.has("journal"):
+			return
+		ui["journal"] = hud.get("_screens")["toggle_journal"]
+		ui["menu"] = hud.get("_choice_menu")
+		ui["board"] = hud.get("_mission_board")
+		ui["shop"] = hud.get("_shop")
+		var stack: Array[Node] = [world]
+		while not stack.is_empty():
+			var node: Node = stack.pop_back()
+			stack.append_array(node.get_children())
+			if node.get_script() != null and String(node.get_script().resource_path).ends_with("workshop.gd"):
+				ui["workshop"] = node
+		assert(ui.has("workshop"), "no workshop in the starting region")
+	var journal_at := func(heading: String) -> void:
+		ensure.call()
+		hud.get("_banner").visible = false
+		ui["journal"].open()
+		for _i in 4:
+			await root.get_tree().process_frame
+		# The journal is one RichTextLabel: scroll to the paragraph holding the section heading.
+		var text: RichTextLabel = ui["journal"].get("_text")
+		var lines := text.get_parsed_text().split("\n")
+		var at := lines.find(heading)
+		assert(at >= 0, "journal has no section " + heading)
+		ui["journal"].get("_scroll").scroll_vertical = int(text.get_paragraph_offset(at))
+	var month_start := func() -> void:
+		clock.total_days = Calendar.DAYS_PER_MONTH
+		# By month one the newcomer has taken up Alchemy at the village workshop and has an order posted.
+		gs.player.professions["alchemist"] = {"rank": 0, "xp": 0.0}
+		gs.call("_commissions_month", "alchemist")
+		root.get_node("EventBus").player_changed.emit()
+	for phase: String in ["day1", "month1"]:
+		var tag := "%s_%s" % [phase, size_tag]
+		shots.append({"name": "fh_workshop_%s" % tag, "open": func() -> void:
+			ensure.call()
+			if phase == "month1":
+				month_start.call()
+			hud.get("_banner").visible = false
+			ui["menu"].open_for(ui["workshop"]), "close": func() -> void: ui["menu"].close()})
+		shots.append({"name": "fh_shop_%s" % tag, "open": func() -> void:
+			ensure.call()
+			hud.get("_banner").visible = false
+			ui["shop"].open("Wandering Merchant", 0, ["herb", "ore", "equipment", "manual"])
+			ui["shop"]._set_category("All"), "close": func() -> void: ui["shop"].close()})
+		for heading: String in ["First goals", "Next steps", "Commissions"]:
+			if heading == "Commissions" and phase == "day1":
+				continue  # no order is posted until the first month
+			shots.append({"name": "fh_journal_%s_%s" % [heading.to_lower().replace(" ", "_"), tag], "open": journal_at.bind(heading), "close": func() -> void: ui["journal"].close()})
+		shots.append({"name": "fh_board_%s" % tag, "open": func() -> void:
+			ensure.call()
+			hud.get("_banner").visible = false
+			ui["board"].open(), "close": func() -> void: ui["board"].close()})
 
 
 ## WU-132: a character who knows one fighting style, in the village, then the screens around a win.
