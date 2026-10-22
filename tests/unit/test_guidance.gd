@@ -2885,3 +2885,36 @@ func test_gear_elsewhere_line_names_nearest_gear_seller() -> void:
 	assert_true(line.contains("Fallen Star Market"), line)
 	assert_true(line.contains("10 days"), line)
 	assert_eq(Guidance.gear_elsewhere_line(c, data(), "fallen_star_market"), "")
+
+
+## GUIDE-088: the armor hint counts what your loot would sell for.
+func _loot_id(tag: String) -> String:
+	for id: String in data().items:
+		if Items.has_tag(data(), id, [tag]) and Items.sell_price(data(), id) > 0:
+			return id
+	return ""
+
+
+func test_armor_hint_counts_loot_far_market() -> void:
+	var c := _armor_hint_fighter()
+	var ore := _loot_id("ore")
+	c.inventory = {"spirit_stone": 10, ore: 100}
+	assert_false(Guidance.sell_offer(c, data(), "qingshi_village").is_empty(), "the Qingshi merchant buys ore")
+	var line := Guidance.armor_hint(c, data(), "qingshi_village")
+	assert_true(line.contains("Sell your"), line)
+	assert_true(line.contains("Heavenforge Smithy"), line)
+	c.inventory = {"spirit_stone": 10}
+	assert_eq(Guidance.armor_hint(c, data(), "qingshi_village"), "", "nothing to sell")
+	c.inventory = {"spirit_stone": 200, ore: 100}
+	assert_false(Guidance.armor_hint(c, data(), "qingshi_village").contains("Sell"), "enough stones")
+
+
+func test_armor_hint_counts_loot_local_market() -> void:
+	var c := _armor_hint_fighter()
+	var pelt := _loot_id("beast_material")
+	c.inventory = {"spirit_stone": 1, pelt: 400}
+	assert_eq(Guidance.affordable_armor(c, data(), "myriad_peaks_ridge"), "", "stones alone fall short")
+	assert_false(Guidance.sell_offer(c, data(), "myriad_peaks_ridge").is_empty(), "the Ridge stall buys beast materials")
+	var line := Guidance.armor_hint(c, data(), "myriad_peaks_ridge")
+	assert_true(line.contains("sell your"), line)
+	assert_true(line.contains("Ridge Hermit's Stall"), line)

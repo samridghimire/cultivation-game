@@ -198,9 +198,9 @@ static func empty_fair_fights_note(c: CharacterData, data: GameData) -> String:
 
 ## GUIDE-068: the armor item a merchant in `region_id` sells that beats what `c` wears (most defense, then
 ## cheapest) and that `c` can pay for in spirit stones; "" when none.
-static func affordable_armor(c: CharacterData, data: GameData, region_id: String) -> String:
+static func affordable_armor(c: CharacterData, data: GameData, region_id: String, budget: int = -1) -> String:
 	var worn := Equipment.defense_of(data, String(c.equipment.get("armor", "")))
-	var stones := c.item_count("spirit_stone")
+	var stones := c.item_count("spirit_stone") if budget < 0 else budget
 	var best := ""
 	for item_id: String in data.items:
 		if Equipment.slot_of(data, item_id) != "armor":
@@ -243,8 +243,8 @@ static func _body_manual_merchant(c: CharacterData, data: GameData, region_id: S
 
 ## GUIDE-075: " The <Merchant> in <Region> (<duration>) sells <Armor> for N stones." for the nearest market that
 ## sells armor `c` can afford (GUIDE-072), or "" when none is in reach.
-static func _far_armor_clause(c: CharacterData, data: GameData, region_id: String) -> String:
-	var far := nearest_selling(c, data, region_id, func(r: String) -> String: return affordable_armor(c, data, r))
+static func _far_armor_clause(c: CharacterData, data: GameData, region_id: String, budget: int = -1) -> String:
+	var far := nearest_selling(c, data, region_id, func(r: String) -> String: return affordable_armor(c, data, r, budget))
 	if far.is_empty():
 		return ""
 	var far_armor: String = far["result"]
@@ -586,8 +586,17 @@ const SELL_GOODS_NAMES := {"herb": "herbs", "ore": "ore", "beast_material": "bea
 ## "A merchant here would pay about N spirit stones for your herbs": the best
 ## buyer in the region for what "sell all loot" would sell (nothing worn).
 static func _sell_hint(c: CharacterData, data: GameData, region_id: String) -> String:
-	if region_id == "" or not data.regions.has(region_id):
+	var offer := sell_offer(c, data, region_id)
+	if offer.is_empty():
 		return ""
+	return "The %s here would pay about %d spirit stones for your %s." % [offer["merchant"], offer["total"], offer["goods"]]
+
+
+## GUIDE-088: {merchant, total, goods} for the best buyer in `region_id` of what "sell all loot" would sell
+## (nothing worn); {} when the best total is below SELL_HINT_MIN.
+static func sell_offer(c: CharacterData, data: GameData, region_id: String) -> Dictionary:
+	if region_id == "" or not data.regions.has(region_id):
+		return {}
 	var best_total := 0
 	var best_name := ""
 	var best_goods := ""
@@ -608,8 +617,8 @@ static func _sell_hint(c: CharacterData, data: GameData, region_id: String) -> S
 		best_name = String(place.get("display_name", "A merchant"))
 		best_goods = " and ".join(names.slice(0, 2)) if not names.is_empty() else "goods"
 	if best_total < SELL_HINT_MIN:
-		return ""
-	return "The %s here would pay about %d spirit stones for your %s." % [best_name, best_total, best_goods]
+		return {}
+	return {"merchant": best_name, "total": best_total, "goods": best_goods}
 
 
 ## Most letters listed in the journal (WU-081).
@@ -1470,8 +1479,25 @@ static func armor_hint(c: CharacterData, data: GameData, region_id: String) -> S
 	var armor_id := affordable_armor(c, data, region_id)
 	if armor_id == "":
 		var far := _far_armor_clause(c, data, region_id)
-		return "" if far == "" else "Armor would keep you standing in fights." + far
+		if far != "":
+			return "Armor would keep you standing in fights." + far
+		return _loot_armor_hint(c, data, region_id)
 	return "Armor would keep you standing in fights: the %s sells %s for %d stones." % [merchant_selling(data, region_id, armor_id), data.items[armor_id]["name"], merchant_price(c, data, region_id, armor_id)]
+
+
+## GUIDE-088: armor_hint when stones alone fall short but stones + what the local buyer pays for your loot would do.
+static func _loot_armor_hint(c: CharacterData, data: GameData, region_id: String) -> String:
+	var offer := sell_offer(c, data, region_id)
+	if offer.is_empty():
+		return ""
+	var budget := c.item_count("spirit_stone") + int(offer["total"])
+	var armor_id := affordable_armor(c, data, region_id, budget)
+	if armor_id != "":
+		return "Armor would keep you standing in fights: sell your %s to the %s (about %d stones), then the %s sells %s for %d stones." % [offer["goods"], offer["merchant"], offer["total"], merchant_selling(data, region_id, armor_id), data.items[armor_id]["name"], merchant_price(c, data, region_id, armor_id)]
+	var far := _far_armor_clause(c, data, region_id, budget)
+	if far == "":
+		return ""
+	return "Armor would keep you standing in fights. Sell your %s to the %s here (about %d stones) first.%s" % [offer["goods"], offer["merchant"], offer["total"], far]
 
 
 ## GUIDE-086: the fight (in `region_id`) that practising `tech_id` one more level turns from a loss into a
