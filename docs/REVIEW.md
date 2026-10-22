@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 26a9b5b
+Last reviewed commit: fe1822e
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -794,3 +794,16 @@ Last reviewed commit: 26a9b5b
     planned); QA-118/WU-250 are sim-only, C-168 text only.
   - Notes, not filed: GUIDE-071 checks only the first injury, quotes the merchant's base price, and when the local
     clinic is unaffordable may point at a neighbouring region's clinic without checking its cost.
+- 2026-10-22 (reviewer, 2nd run): reviewed 26a9b5b..fe1822e (db44262 GUIDE-068, 1c214d8 WU-249, 4517bd4 C-157,
+  a5fa0be WU-251, 00cf914 GUIDE-070, ae2338f WU-252, 7f3ce78 C-167, 6a208a6 C-169, c72362a QA-117, 61e503e WU-240,
+  5060f58 GUIDE-069, 2412461 CMB-010, fe1822e QA-116; [PLAN]/[REVIEW] commits skipped). Main green. No BACKLOG/CHANGELOG
+  edits by workers; no save-format changes. Nothing filed.
+  - Fixed ([REVIEW] commit): GUIDE-069's GameState test computed `affordable_armor` before giving stones (dead line) and
+    never asserted an armor was found; now it asserts one is.
+  - Checked: GUIDE-070's sort (stones, chance, text) matches the spec, and every caller still reads correctly
+    (pill_gap_note already picks the best payer). CMB-010 matches spec (indices 7-9 = index 6, doc updated). C-157's
+    pill gates on Mahayana (tested) and its recipe is an auction lot. C-169's "ten days" matches regions.json.
+    WU-249 keeps `_log_lines` and the RichTextLabel in sync (rebuilds on collapse, cap still enforced, tested).
+    C-167's renown amounts are tested per choice; the ENC-006 banner fix covers them.
+  - Notes, not filed: C-167's test skips road_lost_child's "carry her" choice (+5, needs CON 12). GUIDE-068/069 still
+    quote the base item price, not the merchant's; GUIDE-072 (spec'd) covers Qingshi's empty "where".

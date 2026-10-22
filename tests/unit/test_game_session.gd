@@ -1985,9 +1985,9 @@ func test_equipping_armor_clears_the_armor_hint() -> void:
 	c.stage = Guidance.ARMOR_HINT_MIN_STAGE
 	c.techniques = {"blood_shadow_flight": {"level": 1}}
 	c.equipment = {}
-	var armor_id := Guidance.affordable_armor(c, gs.data, "myriad_peaks_ridge")
 	c.inventory = {"spirit_stone": 500}
-	armor_id = Guidance.affordable_armor(c, gs.data, "myriad_peaks_ridge")
+	var armor_id := Guidance.affordable_armor(c, gs.data, "myriad_peaks_ridge")
+	assert_true(armor_id != "", "some armor is affordable")
 	assert_true(Guidance.armor_hint(c, gs.data, "myriad_peaks_ridge") != "")
 	c.add_item(armor_id, 1)
 	gs.equip_item(armor_id)
