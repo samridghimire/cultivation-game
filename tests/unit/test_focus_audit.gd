@@ -989,3 +989,54 @@ func test_wu239_bell_gate_missed_and_the_stage_grounds_focus() -> void:
 	hud.free()
 	gs.end_session()
 	await _frames()
+
+
+## WU-247: the shop buy tab with an "upgrade" row (WU-244) reaches it and buys with ui_accept; the
+## crafting screen of an Array Master with no paper (nothing craftable) still has focus and closes.
+func test_wu247_shop_upgrade_row_buys_and_empty_crafting_focus() -> void:
+	var root := _tree().root
+	var gs: Node = root.get_node("GameState")
+	var c := new_character()
+	c.add_item("spirit_stone", 500)
+	c.equipment = {"armor": "boar_hide_jerkin"}
+	c.professions["array_master"] = {"rank": 0, "xp": 0.0}
+	gs.start_session(c)
+	gs.pending_event = ""
+	gs.current_region = "qingshi_village"
+	var hud: CanvasLayer = load("res://src/ui/hud.tscn").instantiate()
+	root.add_child(hud)
+	await _frames()
+
+	var shop: ShopScreen = hud.get("_shop")
+	shop.open("Armorer", 0, ["equipment"])
+	await _expect_focus(shop, "shop buy tab with an upgrade row")
+	var row := shop.find_child("wolfhide_brigandine", true, false) as Button
+	assert_true(row != null, "the upgrade armor has a row")
+	if row != null:
+		assert_true(row.text.contains("(upgrade)") or row.tooltip_text.contains("(upgrade)"), "the row carries the upgrade tag")
+		row.grab_focus()
+		await _frames()
+		assert_true(root.gui_get_focus_owner() == row, "the upgrade row takes focus")
+		var trade := shop.find_child("Trade", true, false) as Button
+		assert_true(trade != null and not trade.disabled, "Trade is enabled for the upgrade row")
+		trade.grab_focus()
+		await _frames()
+		_press("ui_accept")
+		await _frames(3)
+		assert_eq(c.item_count("wolfhide_brigandine"), 1, "ui_accept on Trade buys the upgrade")
+	_press("ui_cancel")
+	await _frames()
+	assert_false(shop.visible, "shop: ui_cancel closes it")
+
+	# No spirit paper (nor anything else an array needs): nothing is craftable, focus still lands.
+	var crafting: CraftingScreen = hud.get("_crafting")
+	crafting.open("array_master")
+	await _expect_focus(crafting, "array master crafting screen with nothing craftable")
+	_press("ui_cancel")
+	await _frames()
+	assert_false(crafting.visible, "crafting screen: ui_cancel closes it")
+
+	root.remove_child(hud)
+	hud.free()
+	gs.end_session()
+	await _frames()
