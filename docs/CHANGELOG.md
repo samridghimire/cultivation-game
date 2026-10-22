@@ -2,6 +2,16 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-22 [GUIDE-087] The journal's "Fights you can win" lists an open sect promotion trial.
+- 2026-10-22 [C-173] Help's Injuries and Healing page says where to heal.
+- 2026-10-22 [WU-268] The longer practice, qi-spot and sect-pay hints checked on screen at Steam Deck sizes.
+- 2026-10-22 [QA-122] The crafter sim only buys supplies it can afford to craft with; two Array Master starts still never craft.
+- 2026-10-22 [WU-269] Place names in the world no longer get cut off at the screen edge.
+- 2026-10-22 [GUIDE-084] The sect-rank hint says what the next rank pays each month.
+- 2026-10-22 [WU-267] The Techniques screen has a "Practice to level N" button that practises exactly as long as the next level takes.
+- 2026-10-22 [GUIDE-083] The better-qi hint says how many days away the better spot is.
+- 2026-10-22 [C-178] Two new first-hour encounters let you train your fighting style.
+- 2026-10-22 [QA-123] A sim shows how practising early trades cultivation days for technique levels.
 - 2026-10-22 [CMB-011] Enemies can be made slightly easier or harder with a per-enemy power multiplier (for fine balance).
 - 2026-10-22 [GUIDE-081] The practice hint says how many days the next technique level takes.
 - 2026-10-22 [C-172] Help explains why "Fights you can win" can be empty and that paying fights come first.

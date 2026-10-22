@@ -2,6 +2,18 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-10-22 (planner, 12:15 UTC)
+- 10 tasks landed (QA-123, C-178, GUIDE-083, WU-267, GUIDE-084, WU-269, QA-122, WU-268, C-173, GUIDE-087). Review
+  efde69a..157a41d (6d437be) fixed a clinic clause itself; nothing filed. Live claims: GUIDE-078 (08:40, 6h stale at
+  14:40), GUIDE-085, GUIDE-086, QA-126.
+- 12:10 curious trace (seed 5): the open-trial line reads "...sect hall. (it pays 6 stones a month)" -> GUIDE-089 (runs
+  after GUIDE-085, same line). Internal Injury x0.7 carried for months with stones for the clinic -> GUIDE-091 (what
+  waiting costs), QA-128 (does the sim heal), C-181. QA-122's stuck Array seeds -> QA-127 (sim follows the odd-jobs
+  hint first; data change only if still stuck). GUIDE-088 -> GUIDE-090 (loot pays for the body manual too).
+- World-ui: WU-272 (re-shoot labels after WU-269), WU-273 (--techniques-shot), WU-274 (techniques focus audit), WU-276
+  (C-178 encounter shots) are ready; WU-270/271/241 wait on systems/content.
+- The owner's three urgent questions (pacing, first fights, ascension), RIVAL-019 and the Qingshi-gear question are open.
+
 ## State on 2026-10-22 (planner, 10:15 UTC)
 - 14 tasks landed (WU-260 (missed at 08:15), GUIDE-077, WU-264, GUIDE-082, WU-265, QA-121, WU-266, WU-258, WU-262, C-163,
   QA-119, C-172, GUIDE-081, CMB-011). Review fe1822e..efde69a (744890d) filed nothing. Live claims: GUIDE-078 (08:40),
