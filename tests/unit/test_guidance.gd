@@ -230,7 +230,19 @@ func test_better_qi_hint_names_the_best_reachable_spot() -> void:
 	var c := _fresh()
 	c.realm_index = 1
 	var hints := Guidance.hints(c, data(), 1.0, 20, {}, {}, "qingshi_village")
-	assert_true(_has(hints, "Meditation at Cloud-Sea Cliff (2x qi) in Azure Peak gathers qi x2.5 faster than here."))
+	assert_true(_has(hints, "Meditation at Cloud-Sea Cliff (2x qi) in Azure Peak (10 days away) gathers qi x2.5 faster than here."))
+
+
+func test_route_days_follows_routes_and_gating() -> void:
+	var c := _fresh()
+	c.realm_index = 1
+	assert_eq(Guidance.route_days(c, data(), "qingshi_village", "qingshi_village"), 0)
+	assert_eq(Guidance.route_days(c, data(), "qingshi_village", "misty_forest"), 3)
+	assert_eq(Guidance.route_days(c, data(), "qingshi_village", "azure_peak"), 10)
+	assert_eq(Guidance.route_days(c, data(), "qingshi_village", "myriad_peaks_ridge"), -1)
+	assert_eq(Guidance.route_days(c, data(), "qingshi_village", "nowhere"), -1)
+	c.realm_index = 0
+	assert_eq(Guidance.route_days(c, data(), "qingshi_village", "azure_peak"), -1)
 
 
 func test_better_qi_hint_respects_travel_gating() -> void:

@@ -251,6 +251,27 @@ static func _far_armor_clause(c: CharacterData, data: GameData, region_id: Strin
 ## above `c`'s realm skipped) where `pick.call(region_id) -> String` is non-empty. Returns
 ## {region_id, region_name, days, result}, or {} when none; `region_id` itself counts with days 0.
 static func nearest_selling(c: CharacterData, data: GameData, region_id: String, pick: Callable) -> Dictionary:
+	var map := _route_day_map(c, data, region_id, NEAREST_HOPS)
+	var best_days: Dictionary = map["days"]
+	for r: String in map["order"]:
+		var result: String = pick.call(r)
+		if result != "":
+			return {"region_id": r, "region_name": Exploration.region_name(data, r), "days": int(best_days[r]), "result": result}
+	return {}
+
+
+## GUIDE-083: shortest total base route days from `from_id` to `to_id` (no hop limit, routes failing
+## Exploration.check_travel skipped). 0 when equal, -1 when unreachable or unknown.
+static func route_days(c: CharacterData, data: GameData, from_id: String, to_id: String) -> int:
+	if not data.regions.has(from_id) or not data.regions.has(to_id):
+		return -1
+	var days: Dictionary = _route_day_map(c, data, from_id, -1)["days"]
+	return int(days[to_id]) if days.has(to_id) else -1
+
+
+## Dijkstra over region routes: {"days": region_id -> total days, "order": regions in settle order}.
+## `max_hops` < 0 means unlimited.
+static func _route_day_map(c: CharacterData, data: GameData, region_id: String, max_hops: int) -> Dictionary:
 	var best_days := {region_id: 0}
 	var hops := {region_id: 0}
 	var frontier: Array[String] = [region_id]
@@ -262,7 +283,7 @@ static func nearest_selling(c: CharacterData, data: GameData, region_id: String,
 				cur = f
 		frontier.erase(cur)
 		order.append(cur)
-		if int(hops[cur]) >= NEAREST_HOPS:
+		if max_hops >= 0 and int(hops[cur]) >= max_hops:
 			continue
 		for route: Dictionary in data.regions.get(cur, {}).get("routes", []):
 			var to: String = route["to"]
@@ -274,11 +295,7 @@ static func nearest_selling(c: CharacterData, data: GameData, region_id: String,
 				hops[to] = int(hops[cur]) + 1
 				if not frontier.has(to):
 					frontier.append(to)
-	for r: String in order:
-		var result: String = pick.call(r)
-		if result != "":
-			return {"region_id": r, "region_name": Exploration.region_name(data, r), "days": int(best_days[r]), "result": result}
-	return {}
+	return {"days": best_days, "order": order}
 
 
 ## GUIDE-054: a Mortal who practises a craft and has played MORTAL_CRAFTER_NUDGE_DAY days hears where to begin
@@ -1004,7 +1021,12 @@ static func _better_qi_hint(c: CharacterData, data: GameData, region_id: String,
 	var place := String(best["name"])
 	if place == "":
 		place = "the grounds"
-	return "Meditation at %s in %s gathers qi x%s faster than here." % [place, Exploration.region_name(data, String(best["region"])), String.num(float(best["density"]) / here, 1)]
+	var where := Exploration.region_name(data, String(best["region"]))
+	if String(best["region"]) != region_id:
+		var days := route_days(c, data, region_id, String(best["region"]))
+		if days > 0:
+			where += " (%s away)" % Calendar.format_duration(days)
+	return "Meditation at %s in %s gathers qi x%s faster than here." % [place, where, String.num(float(best["density"]) / here, 1)]
 
 
 ## "Base 30% + Foundation Establishment Pill 25% + Fortune 4% = 59%." (percent rounded;
