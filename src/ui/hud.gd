@@ -22,6 +22,7 @@ var _bottleneck: Label
 var _next_layer: Label
 var _injuries: Label
 var _hint: Label
+var _hint_badge: Label  # WU-284: gold "!" over the first hint when it names a place here
 var _hint_lines: PackedStringArray = []
 var _goal: Label
 var _hunt: Label
@@ -386,6 +387,9 @@ func _build_status_panel() -> void:
 	_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_hint.custom_minimum_size = Vector2(316, 0)
 	box.add_child(_hint)
+	_hint_badge = UIStyle.label("!", 14, UIStyle.ACCENT)
+	_hint_badge.visible = false
+	_hint.add_child(_hint_badge)
 	_key_bar = UIStyle.label("", 12, Color(0.7, 0.7, 0.7))
 	_key_bar.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_key_bar.custom_minimum_size = Vector2(316, 0)
@@ -623,7 +627,26 @@ func first_hint() -> String:
 
 func _set_hint_text(lines: PackedStringArray) -> void:
 	_hint.visible = not lines.is_empty()
-	_hint.text = "\n".join(Array(lines).map(func(h: String) -> String: return "> " + h))
+	var marked := not lines.is_empty() and first_hint_names_place(lines[0], _region_place_names())
+	_hint_badge.visible = marked
+	var out: Array = []
+	for i in lines.size():
+		out.append(("  " if i == 0 and marked else "> ") + lines[i])
+	_hint.text = "\n".join(out)
+
+
+## Names of the places in the current region (what the world marks with its "!" badge).
+func _region_place_names() -> Array:
+	var names: Array = []
+	var region: Dictionary = GameState.data.regions.get(GameState.current_region, {})
+	for place: Dictionary in region.get("places", []):
+		names.append(str(place.get("display_name", "")))
+	return names
+
+
+## True when `hint` names any of `names` (WU-284; the same check the world uses to mark places).
+static func first_hint_names_place(hint: String, names: Array) -> bool:
+	return not Interactable.hinted_names(hint, names).is_empty()
 
 
 ## WU-257: keeps a shorter hint instead of hiding it. Drops hints from the end down to one, then cuts

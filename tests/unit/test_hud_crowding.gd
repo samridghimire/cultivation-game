@@ -115,3 +115,22 @@ func test_fit_keeps_one_hint_when_three_do_not_fit() -> void:
 	hud.queue_free()
 	root.size = old_size
 	gs.end_session()
+
+
+func test_first_hint_badge_only_when_a_place_is_named() -> void:
+	var names: Array = ["Village Clinic", "Village Gate"]
+	assert_true(HudScript.first_hint_names_place("Try the Village Clinic.", names))
+	assert_true(not HudScript.first_hint_names_place("Rest and meditate.", names))
+	var root := _tree().root
+	var gs: Node = root.get_node("GameState")
+	gs.start_session(CharacterFactory.create("Lin", gs.data, seeded_rng(5), "male"))
+	var hud: CanvasLayer = load("res://src/ui/hud.tscn").instantiate()
+	root.add_child(hud)
+	await _frames()
+	var place := str(gs.data.regions[gs.current_region]["places"][0]["display_name"])
+	hud.call("_set_hint_text", PackedStringArray(["Visit " + place + " now."]))
+	assert_true(hud.get("_hint_badge").visible, "badge shown beside a named place")
+	hud.call("_set_hint_text", PackedStringArray(["Just breathe."]))
+	assert_true(not hud.get("_hint_badge").visible, "no badge otherwise")
+	hud.queue_free()
+	gs.end_session()
