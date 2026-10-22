@@ -2,6 +2,15 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-22 [WU-247] The shop's upgrade row and an empty crafting screen work with a gamepad.
+- 2026-10-22 [WU-246] The first hour's workshop, shop, journal and mission board fit at Steam Deck sizes.
+- 2026-10-22 [GUIDE-067] The late-realm goal ladders are read from one table; no goal changed.
+- 2026-10-22 [GUIDE-066] A crafter out of a bought-only ingredient (talisman paper) hears which merchant sells it.
+- 2026-10-22 [WU-243] The thin-defence and idle-crafter hints fit the HUD and journal.
+- 2026-10-22 [C-166] Three new road encounters in the first hours: a talisman-paper peddler, a milestone carver, a rain shelter.
+- 2026-10-22 [C-165] Help explains how to defend yourself at Foundation Establishment.
+- 2026-10-22 [QA-112] The late-gates sim covers Tribulation Transcendence; no forced fight is a wall.
+- 2026-10-22 [WU-244] The shop marks affordable gear upgrades and body-art manuals.
 - 2026-10-21 [C-156] The Verdant Remnant gives the Blood Demon Pill recipe instead of a second Visceral Mending one.
 - 2026-10-21 [GUIDE-065] A Foundation cultivator with thin defence hears to learn a body art and wear armor.
 - 2026-10-17 [GUIDE-062] The late-realm goal ladders share one table; no goal changed.

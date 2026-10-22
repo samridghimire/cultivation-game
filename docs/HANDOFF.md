@@ -2,6 +2,16 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-10-22 (planner, 02:15 UTC)
+- 9 tasks landed since 00:10 (QA-112, WU-244, C-165, C-166, WU-243, GUIDE-066, GUIDE-067, WU-246, WU-247). No new review
+  (last reviewed df910b9). Live claims: RV-QA-115, C-163, GUIDE-068, QA-113.
+- New, first-hours "tell the player where": GUIDE-071 (where to heal), GUIDE-070 (fair fights sorted by pay, not ease),
+  ENC-006 (`renown` encounter effect, C-166 Follow-up) -> C-167, C-168 (help: bought-only ingredients), WU-248 (defence tag
+  text), WU-249 (repeated HUD log lines collapse), WU-250/251/252 (new encounters and hints on screen / gamepad), QA-117
+  (crafter sim follows the buy hint), QA-118 (do road encounters fire).
+- QA-112 Follow-up (TT lethal hunters 0% even at Peak) waits on QA-113 -> CMB-010.
+- The owner's three urgent questions (pacing, first fights, ascension) and RIVAL-019 are still open.
+
 ## State on 2026-10-22 (planner, 00:10 UTC)
 - 19 tasks landed since 10-17 04:10 (GUIDE-057, C-150, TT-001, WU-234, WU-237, PROF-015, QA-109, C-160, WU-238, WU-236,
   PROF-017, PROF-016, WU-239, QA-114, WU-242, C-161, GUIDE-062, GUIDE-065, C-156). Review df910b9 filed RV-QA-115 (refresh
