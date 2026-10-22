@@ -2,6 +2,22 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-22 [GUIDE-099] The empty "Fights you can win" note says to heal first when your injuries are what holds you back.
+- 2026-10-22 [GUIDE-100] Hints that send you to a far shop say which region the road runs through.
+- 2026-10-22 [C-182] Help explains the odds on encounter fight choices and that rival duels never kill.
+- 2026-10-22 [WU-282] Encounter result screenshots no longer catch a popup over the log.
+- 2026-10-22 [WU-281] Place and NPC names at the screen edge no longer overlap.
+- 2026-10-22 [GUIDE-097] The sect-trial hint stops telling you to practise a style you have already mastered.
+- 2026-10-22 [GUIDE-098] The game can tell which road leads toward the region a hint names.
+- 2026-10-22 [QA-131] The crafter balance baselines refreshed after the sim started taking odd jobs.
+- 2026-10-22 [GUIDE-096] An open sect trial always stays in the "Fights you can win" list.
+- 2026-10-22 [WU-277] Encounter choices that start a fight show your odds, like "(Dangerous, 30 in 100)".
+- 2026-10-22 [GUIDE-093] The sect stipend hint says "an" before a vowel.
+- 2026-10-22 [C-187] Two new Misty Forest encounters for the middle Qi Refining layers: a spilled herb basket and a snared wolf cub.
+- 2026-10-22 [GUIDE-094] The hints show one qi line, not two, when you have not cultivated for a while.
+- 2026-10-22 [GUIDE-095] The practice hint no longer promises a win that healing, not practice, would bring.
+- 2026-10-22 [C-185] Help explains the gold "!" over the place your first hint names.
+- 2026-10-22 [C-184] Two new Qingshi encounters for the middle Qi Refining months: a chore swap and a spar with an old boxer.
 - 2026-10-22 [ENC-007] Encounter choices that start a fight now know your odds and whether it is to the death.
 - 2026-10-22 [C-181] Help says injuries slow your cultivation and weaken you in fights (also C-183).
 - 2026-10-22 [WU-280] A gold "!" floats over the place your top hint is about.

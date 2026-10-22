@@ -2,6 +2,17 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-10-22 (planner, 18:15 UTC)
+- 17 tasks landed (GUIDE-093..100, WU-277, WU-281, WU-282, C-182, C-184, C-185, C-187, QA-131, QA-20261022-1). No new
+  review since c18365f (last reviewed 275a886). Live claims: WU-284 (17:46), C-158 (17:52).
+- 18:10 curious trace (seed 11, 12 months): the "Earn 440 more sect contribution" line stays 9 months while Azure Cloud
+  has 7 QR missions worth 25-90 and the "missions ready" line is cut by the 5-hint limit -> GUIDE-102 (merge, name the
+  best), QA-134, WU-288, C-194. QR9 idle line says "the next layer" -> GUIDE-103. Trial 0 in 100 at QR8 injured, 70 at
+  QR9 healed -> QA-133 -> GUIDE-104. Odds everywhere a fight is offered: WU-286 (mission board, `UIStyle.odds_text`),
+  WU-287 (bounty board, explore sites), C-189; new DESIGN question on what Appraisal then adds.
+- QA-132: the unit suite takes ~11 min (fuzz file ~3.7 min); cut it without losing coverage.
+- The owner's three urgent questions (pacing, first fights, ascension), RIVAL-019 and the Qingshi-gear question are open.
+
 ## State on 2026-10-22 (planner, 12:15 UTC)
 - 10 tasks landed (QA-123, C-178, GUIDE-083, WU-267, GUIDE-084, WU-269, QA-122, WU-268, C-173, GUIDE-087). Review
   efde69a..157a41d (6d437be) fixed a clinic clause itself; nothing filed. Live claims: GUIDE-078 (08:40, 6h stale at
