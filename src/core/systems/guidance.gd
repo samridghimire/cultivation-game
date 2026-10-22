@@ -373,6 +373,11 @@ static func buy_ingredient_hint(c: CharacterData, data: GameData, region_id: Str
 				line = "Your %s needs %s: the %s in %s (%s) sells them for %d stones each." % [recipe["name"], Items.item_plural(data, item_id, 2), seller["result"], seller["region_name"], Calendar.format_duration(int(seller["days"])), merchant_price(c, data, seller["region_id"], item_id)]
 			if c.item_count("spirit_stone") < Alchemy.shortfall_cost(c, data, recipe_id):
 				line += " Sell gathered herbs or take odd jobs first."
+			var unit_price: int = merchant_price(c, data, String(seller["region_id"]) if int(seller["days"]) > 0 else region_id, item_id)
+			# GUIDE-078: bought paper plus the recipe's stones (the rest is gathered) against what the output sells for.
+			var spend := int(recipe["ingredients"][item_id]) * unit_price + int(recipe["ingredients"].get("spirit_stone", 0))
+			if spend >= int(Alchemy.recipe_margin(data, recipe_id)["value"]):
+				line += " It barely pays: sell what you craft before buying more."
 			return line
 	return ""
 

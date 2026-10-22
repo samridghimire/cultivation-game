@@ -2565,6 +2565,25 @@ func test_buy_ingredient_hint() -> void:
 	assert_eq(Guidance.buy_ingredient_hint(_fresh(), data(), "qingshi_village"), "")
 
 
+## GUIDE-078: the buy hint warns when the bought paper plus stones cost at least what the output sells for.
+func test_buy_ingredient_hint_warns_when_barely_paying() -> void:
+	var c := _fresh()
+	c.realm_index = 1
+	c.professions["talisman_master"] = {"rank": 0, "xp": 0.0}
+	c.inventory = {"spirit_stone": 20, "dew_grass": 2}
+	var recipe_id := "swift_wind_talisman"
+	var spend: int = Guidance.merchant_price(c, data(), "qingshi_village", "talisman_paper")
+	assert_true(spend < int(Alchemy.recipe_margin(data(), recipe_id)["value"]), "fixture: this craft pays")
+	assert_false(Guidance.buy_ingredient_hint(c, data(), "qingshi_village").contains("barely pays"))
+	# Make the output nearly worthless so the same craft loses stones.
+	var item: Dictionary = data().items["swift_wind_talisman"]
+	var old_price: Variant = item["price"]
+	item["price"] = 2
+	var line := Guidance.buy_ingredient_hint(c, data(), "qingshi_village")
+	item["price"] = old_price
+	assert_true(line.ends_with("It barely pays: sell what you craft before buying more."), line)
+
+
 ## GUIDE-076: out of paper in Misty Forest, the hint points to the nearest market that sells it.
 func test_buy_ingredient_hint_points_to_the_nearest_market() -> void:
 	var c := _fresh()
