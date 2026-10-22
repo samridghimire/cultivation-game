@@ -2682,3 +2682,13 @@ func test_empty_fair_fights_entry_only_when_no_fights() -> void:
 	Guidance._fair_fight_entries(out2, listed, c, data(), "qingshi_village")
 	assert_eq(out2.size(), 1)
 	assert_eq(out2[0]["text"], "Fight a boar")
+
+
+func test_gear_elsewhere_line_names_nearest_gear_seller() -> void:
+	var c := _fresh()
+	var line := Guidance.gear_elsewhere_line(c, data(), "qingshi_village")
+	assert_true(line.begins_with("No weapons or armor here."), line)
+	assert_true(line.contains("Heavenforge Smithy"), line)
+	assert_true(line.contains("Fallen Star Market"), line)
+	assert_true(line.contains("10 days"), line)
+	assert_eq(Guidance.gear_elsewhere_line(c, data(), "fallen_star_market"), "")

@@ -402,6 +402,25 @@ static func merchant_goods(place: Dictionary) -> String:
 	return text
 
 
+## WU-260: "No weapons or armor here. The <Merchant> in <Region> (<duration>) sells them." when no merchant in
+## `region_id` sells equipment and one within reach does; "" otherwise.
+static func gear_elsewhere_line(c: CharacterData, data: GameData, region_id: String) -> String:
+	var pick := func(r: String) -> String:
+		for p: Dictionary in data.regions.get(r, {}).get("places", []):
+			if String(p.get("type", "")) != "merchant":
+				continue
+			for item_id: String in data.items:
+				if Equipment.slot_of(data, item_id) != "" and Items.merchant_sells(data, data.items[item_id], p.get("stock_tags", []), int(p.get("max_price", 0))):
+					return String(p.get("display_name", "merchant"))
+		return ""
+	if pick.call(region_id) != "":
+		return ""
+	var far := nearest_selling(c, data, region_id, pick)
+	if far.is_empty():
+		return ""
+	return "No weapons or armor here. The %s in %s (%s) sells them." % [far["result"], far["region_name"], Calendar.format_duration(int(far["days"]))]
+
+
 ## WU-253: one "<Merchant>: <goods>" line per merchant place in `region_id`.
 static func market_lines(data: GameData, region_id: String) -> PackedStringArray:
 	var out: PackedStringArray = []

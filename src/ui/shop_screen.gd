@@ -23,6 +23,7 @@ var _compare: Label
 var _quantity_label: Label
 var _trade_button: Button
 var _hint_label: Label
+var _gear_note: Label
 var _close_button: Button
 var _max_price := 0
 var _stock_tags: Array = []
@@ -92,7 +93,15 @@ func _init() -> void:
 	var scroll := ScrollContainer.new()
 	scroll.custom_minimum_size = Vector2(LIST_WIDTH, 380)
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	columns.add_child(scroll)
+	var left := VBoxContainer.new()
+	left.add_theme_constant_override("separation", 6)
+	columns.add_child(left)
+	left.add_child(scroll)
+	_gear_note = _wrapped(UIStyle.label("", 14, Color(0.7, 0.7, 0.7)))
+	_gear_note.name = "GearNote"
+	_gear_note.custom_minimum_size.x = LIST_WIDTH
+	_gear_note.visible = false
+	left.add_child(_gear_note)
 	_list = VBoxContainer.new()
 	_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll.add_child(_list)
@@ -432,6 +441,9 @@ func _rebuild() -> void:
 		b.focus_entered.connect(_select.bind(item_id))
 		b.gui_input.connect(_on_item_input)
 		_list.add_child(b)
+	var gear_line := "" if _selling else Guidance.gear_elsewhere_line(p, data, GameState.current_region)
+	_gear_note.text = gear_line
+	_gear_note.visible = gear_line != ""
 	_show_details()
 
 

@@ -1051,6 +1051,11 @@ func _start_shop_shot(gs: Node) -> void:
 		gs.current_region = "fallen_star_market"
 		shop.open("Heavenforge Smithy", 0, ["equipment", "ore", "smithing"])
 		shop._set_category("All"), "close": shop.close})
+	# WU-260: a Qingshi merchant that sells no gear points at the smithy.
+	shots.append({"name": "shop_gear_elsewhere", "open": func() -> void:
+		gs.current_region = "qingshi_village"
+		shop.open("Wandering Merchant", 0, ["herb", "ore"])
+		shop._set_category("All"), "close": shop.close})
 
 
 ## WU-253: `--map-shot` writes map_sells_<size>.png, the world map with Fallen Star Market selected (its "Sells:" line).

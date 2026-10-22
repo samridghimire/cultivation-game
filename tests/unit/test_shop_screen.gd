@@ -377,3 +377,25 @@ func test_stone_skin_row_says_defence_only_for_foundation() -> void:
 		screen.close()
 		screen.free()
 	gs.end_session()
+
+
+func test_buy_tab_says_where_gear_is_when_region_sells_none() -> void:
+	var root := (Engine.get_main_loop() as SceneTree).root
+	var gs := root.get_node("GameState")
+	gs.start_session(new_character())
+	var screen := ShopScreen.new()
+	root.add_child(screen)
+	gs.current_region = "qingshi_village"
+	screen.open("Herb Stall", 0, ["herb"])
+	var note: Label = screen._gear_note
+	assert_true(note.visible)
+	assert_true(note.text.contains("Heavenforge Smithy"), note.text)
+	assert_eq(note.focus_mode, Control.FOCUS_NONE)
+	screen._set_tab(true)
+	assert_false(screen._gear_note.visible)
+	gs.current_region = "fallen_star_market"
+	screen.open("Heavenforge Smithy", 0, ["equipment", "ore", "smithing"])
+	assert_false(screen._gear_note.visible)
+	screen.close()
+	screen.free()
+	gs.end_session()
