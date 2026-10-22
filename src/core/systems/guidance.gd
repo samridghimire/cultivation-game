@@ -293,10 +293,35 @@ static func route_days(c: CharacterData, data: GameData, from_id: String, to_id:
 	return int(days[to_id]) if days.has(to_id) else -1
 
 
-## Dijkstra over region routes: {"days": region_id -> total days, "order": regions in settle order}.
+## GUIDE-098: the first region on the shortest-days route from `from_id` to `to_id`; "" when equal, unknown or unreachable.
+static func first_hop(c: CharacterData, data: GameData, from_id: String, to_id: String) -> String:
+	if from_id == to_id or not data.regions.has(from_id) or not data.regions.has(to_id):
+		return ""
+	var prev: Dictionary = _route_day_map(c, data, from_id, -1)["prev"]
+	if not prev.has(to_id):
+		return ""
+	var cur: String = to_id
+	while prev[cur] != from_id:
+		cur = prev[cur]
+	return cur
+
+
+## GUIDE-098: the id of the region whose name appears in `hint` (longest name first), skipping `current_id`; "" when none.
+static func hinted_region(data: GameData, hint: String, current_id: String) -> String:
+	var ids: Array = data.regions.keys()
+	ids.sort_custom(func(a: String, b: String) -> bool: return Exploration.region_name(data, a).length() > Exploration.region_name(data, b).length())
+	for id: String in ids:
+		var n := Exploration.region_name(data, id)
+		if id != current_id and n != "" and hint.contains(n):
+			return id
+	return ""
+
+
+## Dijkstra over region routes: {"days": region_id -> total days, "order": regions in settle order, "prev": region_id -> region it was reached from}.
 ## `max_hops` < 0 means unlimited.
 static func _route_day_map(c: CharacterData, data: GameData, region_id: String, max_hops: int) -> Dictionary:
 	var best_days := {region_id: 0}
+	var prev := {}
 	var hops := {region_id: 0}
 	var frontier: Array[String] = [region_id]
 	var order: Array[String] = []
@@ -316,10 +341,11 @@ static func _route_day_map(c: CharacterData, data: GameData, region_id: String, 
 			var d := int(best_days[cur]) + int(route.get("days", 1))
 			if not best_days.has(to) or d < int(best_days[to]):
 				best_days[to] = d
+				prev[to] = cur
 				hops[to] = int(hops[cur]) + 1
 				if not frontier.has(to):
 					frontier.append(to)
-	return {"days": best_days, "order": order}
+	return {"days": best_days, "order": order, "prev": prev}
 
 
 ## GUIDE-054: a Mortal who practises a craft and has played MORTAL_CRAFTER_NUDGE_DAY days hears where to begin

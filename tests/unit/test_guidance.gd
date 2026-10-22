@@ -330,6 +330,26 @@ func test_route_days_follows_routes_and_gating() -> void:
 	assert_eq(Guidance.route_days(c, data(), "qingshi_village", "azure_peak"), -1)
 
 
+func test_first_hop_names_the_neighbour_on_the_cheapest_path() -> void:
+	var c := _fresh()
+	c.realm_index = 1
+	var d := data()
+	assert_eq(Guidance.first_hop(c, d, "qingshi_village", "misty_forest"), "misty_forest")
+	var hop := Guidance.first_hop(c, d, "qingshi_village", "azure_peak")
+	assert_true(hop != "")
+	assert_eq(Guidance.route_days(c, d, "qingshi_village", hop) + Guidance.route_days(c, d, hop, "azure_peak"), Guidance.route_days(c, d, "qingshi_village", "azure_peak"))
+	assert_eq(Guidance.first_hop(c, d, "qingshi_village", "qingshi_village"), "")
+	assert_eq(Guidance.first_hop(c, d, "qingshi_village", "nowhere"), "")
+	assert_eq(Guidance.first_hop(c, d, "nowhere", "qingshi_village"), "")
+
+
+func test_hinted_region_finds_the_region_a_hint_names() -> void:
+	var d := data()
+	assert_eq(Guidance.hinted_region(d, "... in Fallen Star Market (10 days) sells ...", "qingshi_village"), "fallen_star_market")
+	assert_eq(Guidance.hinted_region(d, "... in Fallen Star Market (10 days) sells ...", "fallen_star_market"), "")
+	assert_eq(Guidance.hinted_region(d, "no place named here", "qingshi_village"), "")
+
+
 func test_better_qi_hint_respects_travel_gating() -> void:
 	var c := _fresh()
 	c.realm_index = 0
