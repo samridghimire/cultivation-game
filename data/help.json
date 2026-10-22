@@ -284,7 +284,7 @@
       "group": "fighting",
       "body": [
         "Bounty boards in towns post a few hunts for dangerous beasts, each with a region, a deadline and a reward in spirit stones. Take one and abandon it at the board if you change your mind; only one hunt can be open at a time.",
-        "Explore the named region and the quarry's trail may turn up as a fight. Win before the deadline and you are paid. The board shows how dangerous each foe is for you, and a bounty you finish or drop cannot be taken again for a while."
+        "Explore the named region and the quarry's trail may turn up as a fight. Win before the deadline and you are paid. The board shows how dangerous each foe is for you, and a bounty you finish or drop cannot be taken again for a while. Odds read like \"(Risky, 55 in 100)\"; \"to the death\" means a loss can kill you."
       ]
     },
     {
@@ -363,6 +363,7 @@
       "group": "people",
       "body": [
         "Sect halls accept disciples who meet their realm and alignment requirements. A sect offers missions for contribution, pays a monthly stipend to disciples who meet their monthly duty, and promotes those who win the trial for the next rank (see the Rank tab of the mission board).",
+        "Each foe shows your odds, like \"(Risky, 55 in 100)\"; \"to the death\" means a loss can kill you.",
         "Your Next steps hints name the ready mission that pays the most contribution.",
         "You may also stay a rogue cultivator, free to go anywhere and do anything, with nobody to protect you."
       ]
