@@ -1006,3 +1006,19 @@ func test_road_middle_qi_refining_encounters() -> void:
 			if ch.has("enemy"):
 				assert_true(d.enemies.has(ch["enemy"]), "enemy exists")
 				assert_false(bool(d.enemies[ch["enemy"]]["lethal"]), "the guard fight never kills")
+
+
+## C-198: two encounters for the upper Qi Refining layers (7th-9th).
+func test_upper_qi_refining_encounters() -> void:
+	var d := data()
+	for id in ["village_foundation_elder_carriage", "forest_hunted_spirit_fox"]:
+		assert_true(d.encounters.has(id), id + " exists")
+		var ids_at := func(stage: int) -> Array: return _village_ids_at(stage) if id.begins_with("village") else _forest_ids_at(stage)
+		assert_true(ids_at.call(6).has(id), id + " eligible at the 7th Layer")
+		assert_false(ids_at.call(5).has(id), id + " not eligible at the 6th Layer")
+		for ch: Dictionary in d.encounters[id]["choices"]:
+			for item_id: String in ch.get("effects", {}).get("items", {}):
+				assert_true(d.items.has(item_id), item_id + " exists")
+			if ch.has("enemy"):
+				assert_true(d.enemies.has(ch["enemy"]), "enemy exists")
+				assert_false(bool(d.enemies[ch["enemy"]]["lethal"]), "the hunters never kill")
