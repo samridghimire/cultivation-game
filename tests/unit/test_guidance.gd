@@ -3192,3 +3192,63 @@ func test_best_mission_empty_for_rogue() -> void:
 	var c := new_character()
 	c.realm_index = 1
 	assert_eq(Guidance.best_mission(c, data()), "")
+
+
+## GUIDE-105: the all-too-dangerous mission line says what to do.
+## Puts every mission that is not too dangerous on cooldown; returns how many dangerous ones remain ready.
+func _only_dangerous_ready(c: CharacterData, d: GameData) -> int:
+	var left := 0
+	for id: String in d.sect_missions:
+		if Sects.check_mission(c, d, id, {}) != "" or not Guidance._mission_too_dangerous(c, d, id):
+			c.mission_cooldowns[id] = c.age_days + 30
+		else:
+			left += 1
+	return left
+
+
+func test_dangerous_missions_say_practise_style() -> void:
+	var d := data()
+	var c := new_character()
+	c.realm_index = 1
+	c.stage = 0
+	c.sect = {"id": "azure_cloud_sect", "rank": 0, "contribution": 0, "spent": 0}
+	c.techniques["iron_fist"] = {"level": 1, "xp": 0.0}
+	if _only_dangerous_ready(c, d) == 0:
+		return
+	var text := Guidance._mission_hint(c, d, {})
+	assert_true(text.contains("too dangerous for you yet; practise %s first." % d.techniques["iron_fist"].name), text)
+
+
+func test_dangerous_missions_say_grow_a_stage_when_mastered() -> void:
+	var d := data()
+	var c := new_character()
+	c.realm_index = 1
+	c.stage = 0
+	c.sect = {"id": "azure_cloud_sect", "rank": 0, "contribution": 0, "spent": 0}
+	c.techniques["iron_fist"] = {"level": d.techniques["iron_fist"].max_level, "xp": 0.0}
+	if _only_dangerous_ready(c, d) == 0:
+		return
+	assert_true(Guidance._mission_hint(c, d, {}).ends_with("too dangerous for you yet; grow a stage first."))
+
+
+func test_dangerous_missions_say_heal_when_injuries_are_the_cause() -> void:
+	var d := data()
+	var found := false
+	for stage in range(0, 9):
+		var c := new_character()
+		c.realm_index = 1
+		c.stage = stage
+		c.sect = {"id": "azure_cloud_sect", "rank": 0, "contribution": 0, "spent": 0}
+		c.injuries = {"internal_injury": 100, "broken_bones": 100}
+		if _only_dangerous_ready(c, d) == 0:
+			continue
+		var wins := false
+		for id: String in d.sect_missions:
+			if c.mission_cooldowns.has(id):
+				continue
+			wins = wins or Guidance.odds_unhurt(c, d, d.enemies[String(d.sect_missions[id]["enemy"])]) >= 0.5
+		if wins:
+			found = true
+			assert_true(Guidance._mission_hint(c, d, {}).ends_with("too dangerous for you yet; heal your injuries first."))
+			break
+	assert_true(found, "some stage has injuries as the only obstacle")

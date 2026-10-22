@@ -1376,16 +1376,20 @@ static func _mortal_sect_hint(c: CharacterData, data: GameData, open: PackedStri
 
 
 ## Members: how many sect missions they can take right now.
+## GUIDE-105: when all are too dangerous, says whether to heal, practise a style, or grow a stage.
 static func _mission_hint(c: CharacterData, data: GameData, flags: Dictionary = {}) -> String:
 	if c.is_rogue():
 		return ""
 	var ready := 0
 	var too_dangerous := 0
+	var healed_wins := false
 	for id: String in Sects.available_missions(c, data, flags):
 		if Sects.check_mission(c, data, id, flags) != "":
 			continue
 		if _mission_too_dangerous(c, data, id):
 			too_dangerous += 1
+			if odds_unhurt(c, data, data.enemies[String(data.sect_missions[id]["enemy"])]) >= 0.5:
+				healed_wins = true
 		else:
 			ready += 1
 	var text := ""
@@ -1398,7 +1402,14 @@ static func _mission_hint(c: CharacterData, data: GameData, flags: Dictionary = 
 		if too_dangerous > 0:
 			text = text.trim_suffix(".") + " (%d more %s too dangerous for you yet)." % [too_dangerous, "mission is" if too_dangerous == 1 else "missions are"]
 	elif too_dangerous > 0:
-		text = "The sect's missions are too dangerous for you yet; practise your techniques first."
+		text = "The sect's missions are too dangerous for you yet; "
+		var best_style := _best_unmastered_combat(c, data)
+		if healed_wins:
+			text += "heal your injuries first."
+		elif best_style == "":
+			text += "grow a stage first."
+		else:
+			text += "practise %s first." % data.techniques[best_style].name
 	return text
 
 
