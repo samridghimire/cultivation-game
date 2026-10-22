@@ -396,6 +396,15 @@
       {"label": "Cut the wire and set it free", "text": "You hold it down with your sleeve and cut the snare away. It bolts into the mist, and from the dark behind it comes a single low howl that does not sound like a threat.", "days": 1, "effects": {"alignment": 5, "set_flag": "answered_wolf_cub"}},
       {"label": "Skin the cub and sell the pelt", "text": "It is quickly done, and you do not look at it afterwards. The pelt is soft and grey and worth more than the mercy would have been.", "days": 1, "effects": {"alignment": -5, "items": {"mist_wolf_pelt": 1}, "set_flag": "answered_wolf_cub"}},
       {"label": "Walk on", "text": "You leave the cub to the hunter and the dam. Its whimpering follows you for a long time.", "effects": {"set_flag": "answered_wolf_cub"}}
+    ]},
+    {"id": "road_caravan_guard", "name": "The Salt Caravan", "tags": ["road"], "weight": 2, "kind": "neutral", "days": 0, "min_realm": "qi_refining", "min_stage": 2, "blocked_by_flag": "guarded_salt_caravan", "text": "A salt caravan has halted at the roadside, its master pacing beside the lead cart. \"Bandits work the next stretch,\" he says, eyeing your stance. \"Walk beside my wagons until the hills end and there are stones in it for you.\"", "choices": [
+      {"label": "Guard the caravan", "text": "You walk the hills beside the wagons. When the raiders come down from the rocks, you are the one they find waiting.", "days": 2, "enemy": "caravan_raider", "renown": 2, "effects": {"set_flag": "guarded_salt_caravan"}},
+      {"label": "Wish them well", "text": "The master shrugs and clicks his tongue at the oxen. The wagons creak on without you.", "effects": {"set_flag": "guarded_salt_caravan"}}
+    ]},
+    {"id": "road_fallen_rogue", "name": "The Fallen Rogue", "tags": ["road"], "weight": 2, "kind": "neutral", "days": 0, "min_realm": "qi_refining", "min_stage": 2, "blocked_by_flag": "met_fallen_rogue", "text": "Crows wheel over a ditch beside the road. A rogue cultivator lies there on his back, robes torn, his satchel still strapped across his chest. No one has come for him, and by the look of the crows, no one will.", "choices": [
+      {"label": "Bury him", "text": "You dig with a broken stone until dusk and lay him under a cairn. The crows scatter and the satchel is yours, which he would not have begrudged a fellow wanderer.", "days": 1, "effects": {"alignment": 3, "items": {"spirit_stone": 8, "spirit_herb": 1}, "set_flag": "met_fallen_rogue"}},
+      {"label": "Take the satchel and walk on", "text": "You cut the strap, weigh it in your hand and leave him to the crows. The road does not hold grudges, only debts.", "effects": {"alignment": -3, "items": {"spirit_stone": 8, "spirit_herb": 1}, "set_flag": "met_fallen_rogue"}},
+      {"label": "Leave him", "text": "Not your dead, not your road. You step around the ditch and do not look back at the crows.", "effects": {"set_flag": "met_fallen_rogue"}}
     ]}
 ]
 }

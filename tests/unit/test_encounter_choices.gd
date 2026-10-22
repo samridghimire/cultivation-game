@@ -980,3 +980,29 @@ func test_forest_middle_qi_refining_encounters() -> void:
 		for ch: Dictionary in d.encounters[id]["choices"]:
 			for item_id: String in ch.get("effects", {}).get("items", {}):
 				assert_true(d.items.has(item_id), item_id + " exists")
+
+
+## C-191: two road encounters for the middle Qi Refining layers.
+func _road_ids_at(stage: int) -> Array:
+	var d := data()
+	var c := CharacterFactory.create("Wanderer", d, seeded_rng())
+	c.realm_index = d.realm_index_of("qi_refining")
+	c.stage = stage
+	var ids: Array = []
+	for e: Dictionary in Exploration.eligible_encounters(c, d, ["road"], {}):
+		ids.append(e["encounter"]["id"])
+	return ids
+
+
+func test_road_middle_qi_refining_encounters() -> void:
+	var d := data()
+	for id in ["road_caravan_guard", "road_fallen_rogue"]:
+		assert_true(d.encounters.has(id), id + " exists")
+		assert_true(_road_ids_at(2).has(id), id + " eligible at the 3rd Layer")
+		assert_false(_road_ids_at(1).has(id), id + " not eligible at the 2nd Layer")
+		for ch: Dictionary in d.encounters[id]["choices"]:
+			for item_id: String in ch.get("effects", {}).get("items", {}):
+				assert_true(d.items.has(item_id), item_id + " exists")
+			if ch.has("enemy"):
+				assert_true(d.enemies.has(ch["enemy"]), "enemy exists")
+				assert_false(bool(d.enemies[ch["enemy"]]["lethal"]), "the guard fight never kills")
