@@ -1407,12 +1407,12 @@ static func _mission_hint(c: CharacterData, data: GameData, flags: Dictionary = 
 	var text := ""
 	if ready > 0:
 		text = "%d sect %s ready on the mission board at a sect hall." % [ready, "mission is" if ready == 1 else "missions are"]
+		if too_dangerous > 0:
+			text = text.trim_suffix(".") + " (%d more %s too dangerous for you yet)." % [too_dangerous, "mission is" if too_dangerous == 1 else "missions are"]
 		var best := best_mission(c, data, flags)
 		if best != "":
 			var m: Dictionary = data.sect_missions[best]
 			text += " The best pays %d contribution: %s (%s)." % [int(m.get("contribution", 0)), String(m.get("name", best)), Calendar.format_duration(int(m.get("days", 1)))]
-		if too_dangerous > 0:
-			text = text.trim_suffix(".") + " (%d more %s too dangerous for you yet)." % [too_dangerous, "mission is" if too_dangerous == 1 else "missions are"]
 	elif too_dangerous > 0:
 		text = "The sect's missions are too dangerous for you yet; "
 		var best_style := _best_unmastered_combat(c, data)

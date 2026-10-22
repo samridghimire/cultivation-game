@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 393b4e4
+Last reviewed commit: f75f86d
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -900,3 +900,17 @@ Last reviewed commit: 393b4e4
   - Notes, not filed: WU-281 (like spread_labels) also dodges labels of hidden (unavailable) and highlighted nodes, so a
     label can lift away from one that isn't drawn; the hinted "!" badge isn't part of the rect either. WU-281's 1280x720
     screenshot re-run is still owed (its Follow-ups).
+- 2026-10-22 (reviewer, 9th run): reviewed 393b4e4..f75f86d (cd17f87 WU-282, 43d4b24 C-182, 5c39e36 GUIDE-100, a8d8ae8 GUIDE-099,
+  7caa1ea C-158, 76a3641 C-191, dbcd289 WU-283, 915b95c WU-284, ab250cb QA-130, 961ba59 GUIDE-101, 055f597 GUIDE-102,
+  f75f86d WU-286). Main green. No save-format changes, no worker BACKLOG/CHANGELOG edits. Nothing filed.
+  - Fixed ([REVIEW] commit): GUIDE-102 put the best mission before the "(N more ... too dangerous for you yet)" clause, so
+    the line read "...: Patrol (2 days) (1 more mission is too dangerous for you yet)." The count clause now stays on the
+    count sentence and the best mission follows it. Regression test test_best_mission_after_too_dangerous_count.
+  - Checked: WU-286's lethal flag comes from the mission's enemy, matching take_mission -> fight_enemy, and rank trials go
+    through Sects.trial_opponent (lethal false), so "to the death" is right in both places. Per the spec, the odds now show
+    without the appraising eye (Appraisal.danger_text stays for bounty/explore until WU-287). GUIDE-099 rates a healed copy
+    (from_dict(to_dict())). GUIDE-100/101 _by_way_of drops the clause when the first hop is the destination.
+  - Notes, not filed: WU-283 still marks the road when hinted_region names a region with no path (first_hop ""); then
+    no route says "The hint points this way". WU-284 matches against data place names, while the world matches Interactable
+    display_names, so a hint that names only an NPC marks the NPC but shows no HUD badge. WU-283/284/286 screenshots are
+    still owed (their Follow-ups).

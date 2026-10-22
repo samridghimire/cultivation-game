@@ -3296,3 +3296,20 @@ func test_last_layer_qi_lines_name_the_breakthrough() -> void:
 	c.stage = 3
 	assert_true(Guidance._cultivation_hint(c, d, 1.0).contains("to reach the next stage"))
 	assert_true(Guidance.idle_crafter_hint(c, d, "qingshi_village", Guidance.IDLE_CULTIVATION_DAYS).contains("the next layer"))
+
+
+## REVIEW: the "too dangerous" count stays on the count sentence; the best mission's "(days)" is not followed by a second parenthesis.
+func test_best_mission_after_too_dangerous_count() -> void:
+	var d := data()
+	var found := false
+	for realm in 3:
+		for stage in range(1, 10):
+			var c := new_character()
+			c.realm_index = realm
+			c.stage = stage
+			c.sect = {"id": "azure_cloud_sect", "rank": 0, "contribution": 0, "spent": 0}
+			var text := Guidance._mission_hint(c, d)
+			if text.contains("too dangerous for you yet).") and text.contains(" The best pays "):
+				found = true
+				assert_true(text.find("too dangerous for you yet).") < text.find(" The best pays "), text)
+	assert_true(found, "some stage has both ready and too-dangerous missions")
