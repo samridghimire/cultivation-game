@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: f702631
+Last reviewed commit: df910b9
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -757,3 +757,15 @@ Last reviewed commit: f702631
     recipe_scrolls keeps the first scroll in data order, as the old scans did. TT-001's ladder id 9 matches realms.json.
   - Notes, not filed: QA-109's shop-only talisman_paper and C-160's still-unwinnable rogue are in the planner's
     QA-114/GUIDE-065 queue.
+- 2026-10-22 (reviewer): reviewed f702631..df910b9 (782b198 QA-114, 79663f7 WU-242, 2e64d73 C-161, 35c59cc GUIDE-062,
+  df910b9 GUIDE-065; [REVIEW] commit skipped). Main green (2040 tests). No BACKLOG/CHANGELOG edits by workers; no save
+  changes.
+  - Fixed ([REVIEW] commit): GUIDE-065's thin-defence hint told a Foundation cultivator who already knew a body art to
+    "learn a body technique ... and wear armor" (and one in armor to wear armor). It now names only what is missing;
+    the spec's full line stays when both are. Test extended.
+  - Checked: GUIDE-062's REALM_GOAL_TABLE body row uses body_stages[realm_index], matching the old hard-coded 5/6/7
+    (soul/void/body realm indices in realms.json); goal texts unchanged; goal_ladder's fallback now also covers
+    soul/void/body (harmless, those ids are named first). C-161's min_stage gates are in the realm stage the doc
+    allows, baseline rows refreshed. WU-242 is sim-only. QA-114's numbers are clear and GUIDE-065 follows its text.
+  - Filed RV-QA-115 (qa, P0): docs/balance_baseline.txt is stale on main (~1000 changed lines on --check), refresh
+    it after checking for real regressions.

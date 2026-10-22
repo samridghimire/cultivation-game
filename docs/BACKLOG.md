@@ -11,6 +11,7 @@ Many leftover `claude/*` branches from the old PR flow point at tasks already do
 Filed by the reviewer (see docs/REVIEW.md). Take these before other work for your role.
 | id | role | status | task |
 |---|---|---|---|
+| RV-QA-115 | qa | todo | docs/balance_baseline.txt is stale (QA-114 noted it; reviewer confirmed 2026-10-22: `tools/balance.sh --check` on 136d107+ differs in ~1000 lines across first hour, three curious years, combat, economy and crafter start; the changes look like small RNG drift from many landed commits, e.g. first-hour QR3 median 141 -> 139). *Fix:* run `tools/balance.sh --check`, skim each changed section for a real regression (a median that moves >20%, a flagged row, a section that vanished), note any in the commit body, then `tools/balance.sh` and commit the refreshed baseline alone as `[RV-QA-115] Refresh balance baseline`. Workers who tune balance should refresh only their `--section` afterwards. |
 
 ## P0: Playable and fun (the first hours)
 Next (planner 2026-10-17 04:10): 14 tasks landed (WU-229, WU-228, QA-108, PROF-013, C-154, WU-231, WU-232, C-155, PROF-014,
