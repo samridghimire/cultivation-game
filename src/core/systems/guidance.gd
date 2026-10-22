@@ -1394,7 +1394,7 @@ static func armor_hint(c: CharacterData, data: GameData, region_id: String) -> S
 	var armor_id := affordable_armor(c, data, region_id)
 	if armor_id == "":
 		var far := _far_armor_clause(c, data, region_id)
-		return "" if far == "" else "Armor would keep you standing in fights:" + far
+		return "" if far == "" else "Armor would keep you standing in fights." + far
 	return "Armor would keep you standing in fights: the %s sells %s for %d stones." % [merchant_selling(data, region_id, armor_id), data.items[armor_id]["name"], merchant_price(c, data, region_id, armor_id)]
 
 
