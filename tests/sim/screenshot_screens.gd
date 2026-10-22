@@ -192,6 +192,9 @@ func _start() -> void:
 	if OS.get_cmdline_user_args().has("--techniques-shot"):
 		_start_techniques_shot(gs)
 		return
+	if OS.get_cmdline_user_args().has("--missions-shot"):
+		_start_missions_shot(gs)
+		return
 	if OS.get_cmdline_user_args().has("--soul-shot"):
 		_start_soul_shot(gs)
 		return
@@ -1111,6 +1114,31 @@ func _start_techniques_shot(gs: Node) -> void:
 		open_iron_fist.call(), "close": func() -> void:
 		techs.close()
 		root.content_scale_factor = 1.0})
+
+
+## WU-290: `--missions-shot` writes missions_list_<size>.png and missions_ranks_<size>.png: the mission board for an Azure Cloud
+## outer disciple (Qi Refining 3rd layer, Iron Fist level 2) in Qingshi Village; list labels carry the odds, the Ranks tab the trial line.
+func _start_missions_shot(gs: Node) -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 5
+	var c := CharacterFactory.create("Lin Feng", gs.data, rng, "male")
+	gs.start_session(c)
+	gs.pending_event = ""
+	gs.current_region = "qingshi_village"
+	c.realm_index = 1
+	c.stage = 2
+	c.sect = {"id": "azure_cloud_sect", "rank": 0, "contribution": 50}
+	c.techniques = {"iron_fist": {"level": 2, "xp": 0.0}}
+	world = load("res://src/world/world.tscn").instantiate()
+	root.add_child(world)
+	hud = world.get_node("HUD")
+	var size_tag := "%dx%d" % [root.size.x, root.size.y]
+	var board: Control = hud.get("_mission_board")
+	shots.append({"name": "missions_list_" + size_tag, "open": board.open, "close": board.close})
+	shots.append({"name": "missions_ranks_" + size_tag, "open": func() -> void:
+		board.open()
+		board._set_tab("rank")
+		board._focus_selected.call_deferred(), "close": board.close})
 
 
 ## WU-253: `--map-shot` writes map_sells_<size>.png, the world map with Fallen Star Market selected (its "Sells:" line).
