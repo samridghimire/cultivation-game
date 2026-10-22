@@ -1140,34 +1140,34 @@ Late-realm fight gates, 200 fights per row. Typical player at the gate's lowest 
   void_refin mountain_starfall_thunder_roc     starfall_thunder_roc   void/0  mountain             yes       3%  yes    
   void_refin ruins_hollow_realm_lord           hollow_realm_lord      void/0  ruins,marsh          yes       2%  yes    
   void_refin ruins_heaven_sundering_construct  heaven_sundering_const void/0  ruins,mountain       yes       4%  yes    
-  body_integ mountain_flesh_world_behemoth     flesh_world_behemoth   body/0  mountain,wild        yes      19%  yes    
-  body_integ wild_one_body_arbiter             one_body_arbiter       body/2  wild,ruins           no       31%  no     
-  body_integ marsh_marrow_throne_ancestor      marrow_throne_ancestor body/0  marsh,wild           yes       3%  yes    
-  body_integ mountain_nine_heavens_vermilion_r nine_heavens_vermilion body/0  mountain             yes       1%  yes    
-  body_integ ruins_bone_court_sovereign        bone_court_sovereign   body/0  ruins,marsh          yes       0%  yes    
-  body_integ ruins_dao_forged_colossus         dao_forged_colossus    body/0  ruins,mountain       yes       0%  yes    
-  body_integ mountain_arbiter_of_one_body      one_body_arbiter       body/2  mountain,ruins       no       31%  no     choice
-  mahayana   mountain_sky_bearing_tortoise     sky_bearing_tortoise   maha/0  mountain,wild        yes       5%  yes    
-  mahayana   wild_great_vehicle_magistrate     great_vehicle_magistra maha/3  wild,ruins           no       35%  no     
-  mahayana   marsh_myriad_throne_ancestor      myriad_throne_ancestor maha/0  marsh,wild           yes       0%  yes    
-  mahayana   mountain_ten_thousand_li_peng     ten_thousand_li_peng   maha/0  mountain             yes       0%  yes    
-  mahayana   ruins_charnel_heaven_sovereign    charnel_heaven_soverei maha/0  ruins,marsh          yes       0%  yes    
-  mahayana   ruins_heaven_gate_vow_guardian    heaven_gate_vow_guardi maha/0  ruins,mountain       yes       0%  yes    
-  tribulatio mountain_thunder_vault_tortoise   thunder_vault_tortoise trib/0  mountain,wild        yes       1%  yes    
-  tribulatio wild_ascent_warden_arbiter        ascension_seeking_arbi trib/3  wild,ruins           no       39%  no     
-  tribulatio marsh_hidden_tribulation_elder    hidden_tribulation_eld trib/0  marsh,wild           yes       0%  yes    
-  tribulatio mountain_nine_thunder_peng        nine_thunder_peng      trib/0  mountain             yes       0%  yes    
-  tribulatio ruins_lightning_tithe_sovereign   lightning_tithe_sovere trib/0  ruins,marsh          yes       0%  yes    
-  tribulatio ruins_final_stair_vow_guardian    final_stair_vow_guardi trib/0  ruins,mountain       yes       0%  yes    
-  tribulatio ruins_elder_waiting_for_the_sky   hidden_tribulation_eld trib/0  ruins,marsh          yes       0%  no     choice
-  mahayana   mountain_ferryman_of_the_last_riv great_vehicle_magistra maha/0  mountain,marsh       no        0%  no     choice
-  mahayana   ruins_ancestor_who_would_not_asce myriad_throne_ancestor maha/0  ruins,wild           yes       0%  no     choice
+  body_integ mountain_flesh_world_behemoth     flesh_world_behemoth   body/0  mountain,wild        yes      44%  yes    
+  body_integ wild_one_body_arbiter             one_body_arbiter       body/2  wild,ruins           no       48%  no     
+  body_integ marsh_marrow_throne_ancestor      marrow_throne_ancestor body/0  marsh,wild           yes      10%  yes    
+  body_integ mountain_nine_heavens_vermilion_r nine_heavens_vermilion body/0  mountain             yes       3%  yes    
+  body_integ ruins_bone_court_sovereign        bone_court_sovereign   body/0  ruins,marsh          yes       2%  yes    
+  body_integ ruins_dao_forged_colossus         dao_forged_colossus    body/0  ruins,mountain       yes       3%  yes    
+  body_integ mountain_arbiter_of_one_body      one_body_arbiter       body/2  mountain,ruins       no       48%  no     choice
+  mahayana   mountain_sky_bearing_tortoise     sky_bearing_tortoise   maha/0  mountain,wild        yes      44%  yes    
+  mahayana   wild_great_vehicle_magistrate     great_vehicle_magistra maha/3  wild,ruins           no       79%  no     
+  mahayana   marsh_myriad_throne_ancestor      myriad_throne_ancestor maha/0  marsh,wild           yes      10%  yes    
+  mahayana   mountain_ten_thousand_li_peng     ten_thousand_li_peng   maha/0  mountain             yes       3%  yes    
+  mahayana   ruins_charnel_heaven_sovereign    charnel_heaven_soverei maha/0  ruins,marsh          yes       2%  yes    
+  mahayana   ruins_heaven_gate_vow_guardian    heaven_gate_vow_guardi maha/0  ruins,mountain       yes       3%  yes    
+  tribulatio mountain_thunder_vault_tortoise   thunder_vault_tortoise trib/0  mountain,wild        yes      44%  yes    
+  tribulatio wild_ascent_warden_arbiter        ascension_seeking_arbi trib/3  wild,ruins           no       96%  no     
+  tribulatio marsh_hidden_tribulation_elder    hidden_tribulation_eld trib/0  marsh,wild           yes      10%  yes    
+  tribulatio mountain_nine_thunder_peng        nine_thunder_peng      trib/0  mountain             yes       6%  yes    
+  tribulatio ruins_lightning_tithe_sovereign   lightning_tithe_sovere trib/0  ruins,marsh          yes       8%  yes    
+  tribulatio ruins_final_stair_vow_guardian    final_stair_vow_guardi trib/0  ruins,mountain       yes      11%  yes    
+  tribulatio ruins_elder_waiting_for_the_sky   hidden_tribulation_eld trib/0  ruins,marsh          yes      10%  no     choice
+  mahayana   mountain_ferryman_of_the_last_riv great_vehicle_magistra maha/0  mountain,marsh       no       10%  no     choice
+  mahayana   ruins_ancestor_who_would_not_asce myriad_throne_ancestor maha/0  ruins,wild           yes      10%  no     choice
   soul_forma eternal_sky_patriarch_peak        heavenly_mandate_elder soul/0  inheritance          no       31%  no     inheritance (retry)
   soul_forma ghost_sovereign_hollow            ghost_banner_lord      soul/1  inheritance          no       33%  no     inheritance (retry)
   soul_forma chaos_alchemist_furnace           star_devouring_colossu soul/1  inheritance          no       42%  no     inheritance (retry)
   void_refin door_ajar_folder                  void_tribunal_censor   void/1  inheritance          no       31%  no     inheritance (retry)
-  body_integ marrow_throne_hollow              flesh_world_behemoth   body/0  inheritance          no       19%  no     inheritance (retry)
-  mahayana   great_vehicle_sutra_barge         great_vehicle_magistra maha/3  inheritance          no       35%  no     inheritance (retry)
+  body_integ marrow_throne_hollow              flesh_world_behemoth   body/0  inheritance          no       44%  no     inheritance (retry)
+  mahayana   great_vehicle_sutra_barge         great_vehicle_magistra maha/3  inheritance          no       79%  no     inheritance (retry)
 flagged: 0
 
 ## economy (seed defaults)
@@ -1457,8 +1457,8 @@ Peak curve, 100 fights per foe. Typical player vs the realm's own foes at their 
   nascent_soul                  8   41%   98%  | 13087/3219/2562 | 12004/2948/2317 | 16/16/64
   soul_formation                6   31%   91%  | 41397/10194/8261 | 39803/9793/7898 | 19/19/76
   void_refinement               6    8%   76%  | 123531/30411/24688 | 130783/32222/26536 | 22/22/88
-  body_integration              6    2%   49%  | 369933/91064/73969 | 426465/105195/88136 | 25/25/100
-  mahayana                      6    0%   34%  | 1109139/273023/221810 | 1381747/341172/289996 | 28/28/112
-  tribulation_transcendence     6    0%   20%  | 3326757/818898/665333 | 4452295/1100280/946752 | 31/31/124
-First realm whose median Peak win% is under 50%: body_integration
+  body_integration              6    7%   76%  | 369933/91064/73969 | 392348/96665/79607 | 22/22/88
+  mahayana                      6    8%   76%  | 1109139/273023/221810 | 1177043/289996/238820 | 22/22/88
+  tribulation_transcendence     6   10%   78%  | 3326757/818898/665333 | 3531130/869989/716461 | 22/22/88
+First realm whose median Peak win% is under 50%: none
 
