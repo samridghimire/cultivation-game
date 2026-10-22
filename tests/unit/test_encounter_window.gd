@@ -123,6 +123,14 @@ func test_choice_label_shows_check() -> void:
 	assert_eq(EncounterWindow.choice_label(locked), "Answer better  (Needs Comprehension 12)")
 
 
+## WU-277: a fight choice's odds are appended to its label.
+func test_fight_suffix() -> void:
+	assert_eq(EncounterWindow.fight_suffix({"chance": 0.04, "lethal": false}), " (Deadly, 4 in 100)")
+	assert_eq(EncounterWindow.fight_suffix({"chance": 0.8, "lethal": true}), " (Even, 80 in 100, to the death)")
+	assert_eq(EncounterWindow.fight_suffix({"chance": -1.0}), "")
+	assert_eq(EncounterWindow.fight_suffix({}), "")
+
+
 func test_tag_footer_only_when_a_choice_is_tagged() -> void:
 	var tagged := ENCOUNTER.duplicate(true)
 	tagged["id"] = "test_window_tagged"

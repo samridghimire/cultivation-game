@@ -48,6 +48,14 @@ static func choice_label(choice: Dictionary) -> String:
 	return text
 
 
+## " (Even, 80 in 100, to the death)" for a fight choice carrying odds (chance >= 0), else "".
+static func fight_suffix(choice: Dictionary) -> String:
+	var chance: float = float(choice.get("chance", -1.0))
+	if chance < 0.0:
+		return ""
+	return " (%s, %d in 100%s)" % [Combat.label_for_chance(chance), roundi(chance * 100.0), ", to the death" if choice.get("lethal", false) else ""]
+
+
 ## True when at least one choice label carries a [bracketed] tag (see choice_label).
 static func has_tags(choices: Array) -> bool:
 	for choice: Dictionary in choices:
@@ -92,7 +100,7 @@ func open() -> void:
 	_footer.text = tags_footer(InputConfig.current_label("toggle_help"))
 	var any_enabled := false
 	for choice in choices:
-		var label := choice_label(choice)
+		var label := choice_label(choice) + fight_suffix(choice)
 		if choice.get("fight", false):
 			label = Warnings.append_to(GameState.player, label)
 		var b := UIStyle.button(GameState.rival_text(label), GameState.choose_encounter.bind(choice["index"]))
