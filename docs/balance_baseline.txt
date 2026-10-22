@@ -1463,29 +1463,29 @@ Crafter start: new blacksmith in Qingshi Village, 1 seeds, 365 days
 
 Crafter start: new talisman_master in Qingshi Village, 1 seeds, 365 days
   seed  d30  d90 d180  crafted  comm(got/del)  rank  renown  gather% craft% meditate%  stuck-wk (faded)  curious(d30/d90/d180)  realm d90 | d180 | d365 (curious)  cult-hint-steps
-     1   54   65    2       61      7/7         0      35      34%    27%       37%         0 (    0)  19/43/71  Qi Refining, 1st Layer | Qi Refining, 1st Layer | Qi Refining, 1st Layer (Qi Refining, 1st Layer | Qi Refining, 3rd Layer | Qi Refining, 5th Layer)  51
-  medians: stones d30/d90/d180 54/65/2 (curious 19/43/71), crafted 61, commissions got 7 delivered 7, rank 0, renown 35
-  medians: days gathering 34% / crafting 27% / meditating 37%; weeks stuck (no hint, nothing to craft, nothing to deliver) median 0, max 0; of those the craft-now hint had faded (rank 2) in 0%
-  medians past day 180: stones d180 -> d365 2 -> 0, crafts in days 181-365 39 (6.3 a month), weeks stuck after d180 median 0 max 0
+     1   54   65  154      226      8/8         4      40      12%    71%       16%         0 (    0)  19/43/71  Qi Refining, 1st Layer | Qi Refining, 1st Layer | Qi Refining, 1st Layer (Qi Refining, 1st Layer | Qi Refining, 3rd Layer | Qi Refining, 5th Layer)  130
+  medians: stones d30/d90/d180 54/65/154 (curious 19/43/71), crafted 226, commissions got 8 delivered 8, rank 4, renown 40
+  medians: days gathering 12% / crafting 71% / meditating 16%; weeks stuck (no hint, nothing to craft, nothing to deliver) median 0, max 0; of those the craft-now hint had faded (rank 2) in 0%
+  medians past day 180: stones d180 -> d365 154 -> 592, crafts in days 181-365 184 (29.8 a month), weeks stuck after d180 median 0 max 0
   QA-111: order walks off; trips to a neighbouring region per seed: median 0, max 0
   QA-117: buy hint followed; seeds that never crafted: 0 of 1
   QA-119: encounter road_talisman_peddler met 0 times in 0 of 1 seeds
   QA-108: seeds past Mortal by day 120: 1 of 1 (nudge followed)
-  steps where the top hint is about cultivating or a breakthrough: median 51, max 51
+  steps where the top hint is about cultivating or a breakthrough: median 130, max 130
 
 ## crafter crafts: array_master (seed 1, 365 days)
 
 Crafter start: new array_master in Qingshi Village, 1 seeds, 365 days
   seed  d30  d90 d180  crafted  comm(got/del)  rank  renown  gather% craft% meditate%  stuck-wk (faded)  curious(d30/d90/d180)  realm d90 | d180 | d365 (curious)  cult-hint-steps
-     1   24   24  119       46      7/5         0      25      58%    24%       16%         0 (    0)  19/43/71  Qi Refining, 1st Layer | Qi Refining, 1st Layer | Qi Refining, 1st Layer (Qi Refining, 1st Layer | Qi Refining, 3rd Layer | Qi Refining, 5th Layer)  89
-  medians: stones d30/d90/d180 24/24/119 (curious 19/43/71), crafted 46, commissions got 7 delivered 5, rank 0, renown 25
-  medians: days gathering 58% / crafting 24% / meditating 16%; weeks stuck (no hint, nothing to craft, nothing to deliver) median 0, max 0; of those the craft-now hint had faded (rank 2) in 0%
-  medians past day 180: stones d180 -> d365 119 -> 229, crafts in days 181-365 26 (4.2 a month), weeks stuck after d180 median 0 max 0
+     1   42   42  121       42      6/4         0      20      57%    25%       16%         0 (    0)  19/43/71  Qi Refining, 1st Layer | Qi Refining, 1st Layer | Qi Refining, 1st Layer (Qi Refining, 1st Layer | Qi Refining, 3rd Layer | Qi Refining, 5th Layer)  90
+  medians: stones d30/d90/d180 42/42/121 (curious 19/43/71), crafted 42, commissions got 6 delivered 4, rank 0, renown 20
+  medians: days gathering 57% / crafting 25% / meditating 16%; weeks stuck (no hint, nothing to craft, nothing to deliver) median 0, max 0; of those the craft-now hint had faded (rank 2) in 0%
+  medians past day 180: stones d180 -> d365 121 -> 176, crafts in days 181-365 23 (3.7 a month), weeks stuck after d180 median 0 max 0
   QA-111: order walks off; trips to a neighbouring region per seed: median 0, max 0
   QA-117: buy hint followed; seeds that never crafted: 0 of 1
   QA-119: encounter road_talisman_peddler met 0 times in 0 of 1 seeds
   QA-108: seeds past Mortal by day 120: 1 of 1 (nudge followed)
-  steps where the top hint is about cultivating or a breakthrough: median 89, max 89
+  steps where the top hint is about cultivating or a breakthrough: median 90, max 90
 
 ## crafter crafts: beast_tamer (seed 1, 365 days)
 
