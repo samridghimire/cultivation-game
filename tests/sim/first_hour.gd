@@ -263,7 +263,7 @@ static func _curious_month(gs: Node, c: CharacterData, done: Dictionary, today: 
 		_log_explore_fights(done, seen)
 		kinds["explore"] = true
 		if gs.pending_encounter != "":
-			gs.choose_encounter(0)
+			gs.choose_encounter(encounter_choice(c, gs.data, gs.data.encounters[gs.pending_encounter], gs.world_flags, gs.npcs))
 		if gs.pending_threat != "":
 			gs.face_threat(false)
 	if detour_home != "" and c.alive:
@@ -438,10 +438,13 @@ static func _take_listed_bounty(gs: Node, c: CharacterData, done: Dictionary, fa
 		bus.bounty_claimed.disconnect(on_claim)
 		return
 	var start: int = today
+	var foe: Dictionary = gs.data.enemies[String(picked["enemy"])]
 	while c.alive and not c.bounty.is_empty() and gs.get_node("/root/GameClock").total_days - start < 30:
+		if Combat.win_chance(c, gs.data, foe) < 0.5:
+			break  # QA-126: injured since taking it; a player gives the hunt up and heals first
 		_explore(gs)
 		if gs.pending_encounter != "":
-			gs.choose_encounter(0)
+			gs.choose_encounter(encounter_choice(c, gs.data, gs.data.encounters[gs.pending_encounter], gs.world_flags, gs.npcs))
 		if gs.pending_threat != "":
 			gs.face_threat(false)
 	bus.bounty_claimed.disconnect(on_claim)
@@ -575,12 +578,30 @@ static func _everything_month(gs: Node, c: CharacterData, kinds: Dictionary, tod
 			if gs.current_region != home:
 				_explore(gs)
 				if gs.pending_encounter != "":
-					gs.choose_encounter(0)
+					gs.choose_encounter(encounter_choice(c, gs.data, gs.data.encounters[gs.pending_encounter], gs.world_flags, gs.npcs))
 				if gs.pending_threat != "":
 					gs.face_threat(false)
 				kinds["travel"] = true
 				if c.alive:
 					gs.travel(home)
+
+
+## QA-126: the first open choice that is not a fight rated below 50% (a player reads the
+## odds on the choice before accepting a duel); 0 when every choice is a bad fight.
+static func encounter_choice(c: CharacterData, data: GameData, encounter: Dictionary, flags: Dictionary, people: Dictionary) -> int:
+	var list: Array = encounter.get("choices", [])
+	for choice: Dictionary in Exploration.choices(c, data, encounter, flags):
+		if choice["disabled"]:
+			continue
+		var def: Dictionary = list[choice["index"]]
+		var foe: Dictionary = {}
+		if bool(def.get("fight_rival", false)) and people.has(c.rival):
+			foe = Karma.npc_enemy(people[c.rival], data)
+		elif def.has("enemy"):
+			foe = data.enemies[def["enemy"]]
+		if foe.is_empty() or Combat.win_chance(c, data, foe) >= 0.5:
+			return int(choice["index"])
+	return 0
 
 
 ## Rated win chance against the mission's foe (1.0 when it has none).

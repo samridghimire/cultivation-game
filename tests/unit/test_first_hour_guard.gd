@@ -140,3 +140,24 @@ func test_curious_month_records_more_than_two_kinds() -> void:
 		most = maxi(most, int(r["kinds"][m]))
 	gs.end_session()
 	assert_true(most > 2, "no curious month after month 6 recorded more than 2 kinds (best %d)" % most)
+
+
+## QA-126: a sensible player reads the odds on an encounter choice and does not
+## accept a rival's duel (or any fight) rated below 50% when another choice is open.
+func test_encounter_choice_declines_a_hopeless_rival_duel() -> void:
+	var d := data()
+	var c := new_character()
+	c.realm_index = 1
+	var people := {}
+	var rival := Rivals.spawn(c, people, d, seeded_rng(), "qingshi_village")
+	rival.realm_index = 2
+	rival.stage = 8
+	c.rival = rival.id
+	var encounter: Dictionary = d.encounters["rival_contest"]
+	assert_eq(FirstHour.encounter_choice(c, d, encounter, {}, people), 1, "skips 'Accept the duel' against a far stronger rival")
+	rival.realm_index = 1
+	rival.stage = 0
+	c.stage = 8
+	assert_eq(FirstHour.encounter_choice(c, d, encounter, {}, people), 0, "takes the duel against a weaker rival")
+	var no_fight: Dictionary = d.encounters["rival_sneers"]
+	assert_eq(FirstHour.encounter_choice(c, d, no_fight, {}, people), 0, "first choice when it is not a fight")

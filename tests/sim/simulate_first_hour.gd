@@ -1,6 +1,6 @@
 extends SceneTree
 ## First-hour sim (QA-016): scripted newcomers in Qingshi Village (tests/sim/first_hour.gd).
-## Usage: tools/godot.sh --headless --path . -s res://tests/sim/simulate_first_hour.gd -- [seeds] [months]
+## Usage: tools/godot.sh --headless --path . -s res://tests/sim/simulate_first_hour.gd -- [seeds] [months]  [--curious] [--trace] [--zero]
 
 const FirstHour := preload("res://tests/sim/first_hour.gd")
 
@@ -20,13 +20,16 @@ func _median(values: Array) -> float:
 func _run() -> void:
 	var args := OS.get_cmdline_user_args()
 	var curious := args.has("--curious")
+	var zero := args.has("--zero")  # QA-126: count fights rated 0%, by what started them
+	var zero_by := {}
+	var fights_seen := {"n": 0}
 	var trace := args.has("--trace")  # QA-065: print each month's state and every fight
 	var only_seed := 0  # --seed=N runs just that seed
 	var nums: Array[int] = []
 	for a in args:
 		if a.begins_with("--seed="):
 			only_seed = int(a.substr(7))
-		elif a != "--curious" and a != "--trace":
+		elif a != "--curious" and a != "--trace" and a != "--zero":
 			nums.append(int(a))
 	var seeds := nums[0] if nums.size() > 0 else 30
 	var months := nums[1] if nums.size() > 1 else 12
@@ -57,6 +60,19 @@ func _run() -> void:
 			fight_notes.append("%s%s (odds %.0f%%)" % [enemy.get("id", enemy.get("name", "?")), " [spar]" if enemy.get("spar", false) else "", 100.0 * Combat.win_chance(gs.player, gs.data, enemy)])
 		var on_end := func(_n: String, victory: bool, _l: PackedStringArray) -> void:
 			fight_notes[fight_notes.size() - 1] += " -> " + ("won" if victory else "lost")
+		var on_zero := func(enemy: Dictionary) -> void:
+			fights_seen["n"] += 1
+			if Combat.win_chance(gs.player, gs.data, enemy) >= 0.005:
+				return
+			var source := "other"
+			for frame: Dictionary in get_stack():
+				var fn := String(frame["function"])
+				if fn not in ["<anonymous lambda>", "fight_enemy", "fight"]:
+					source = fn
+					break
+			zero_by[source] = int(zero_by.get(source, 0)) + 1
+		if zero:
+			root.get_node("EventBus").combat_started.connect(on_zero)
 		if trace:
 			var bus: Node = root.get_node("EventBus")
 			bus.combat_started.connect(on_start)
@@ -69,6 +85,8 @@ func _run() -> void:
 				print("    m%02d day %d %s %s stones %d techs %s hint: %s | fights: %s" % [month + 1, clock.total_days, gs.current_region, Cultivation.realm_label(p, gs.data), p.item_count("spirit_stone"), str(techs), str(Guidance.hints(p, gs.data, 1.0, 5, gs.npcs, gs.world_flags, gs.current_region, clock.total_days, gs.npc_favor)), str(fight_notes)])
 				fight_notes.clear()
 		var r: Dictionary = FirstHour.play(gs, clock, s, months, curious, hook)
+		if zero:
+			root.get_node("EventBus").combat_started.disconnect(on_zero)
 		if trace:
 			var bus2: Node = root.get_node("EventBus")
 			bus2.combat_started.disconnect(on_start)
@@ -116,5 +134,7 @@ func _run() -> void:
 			sum += k
 		print("Distinct action kinds per month: %.1f; months after the first with no log lines: %d" % [float(sum) / maxi(1, kinds_all.size()), zero_months])
 	print("Road encounters (QA-118): %d/%d seeds met one; %s" % [road_seeds, seeds, str(road_seen)])
+	if zero:
+		print("Fights rated 0%%: %d of %d, by source: %s" % [zero_by.values().reduce(func(a: int, b: int) -> int: return a + b, 0), fights_seen["n"], str(zero_by)])
 	print("Lines by category: %s" % str(by_cat))
 	quit()
