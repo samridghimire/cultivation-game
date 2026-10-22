@@ -3005,3 +3005,28 @@ func test_thin_defence_hint_counts_loot() -> void:
 	assert_false(Guidance.thin_defence_hint(c, data(), "myriad_peaks_ridge").contains("Sell your"), "nothing to sell")
 	c.inventory = {"spirit_stone": 500, pelt: 400}
 	assert_false(Guidance.thin_defence_hint(c, data(), "myriad_peaks_ridge").contains("Sell your"), "enough stones")
+
+
+func test_keep_trial_replaces_last_shown() -> void:
+	var found: Array[Dictionary] = []
+	for i in 5:
+		found.append({"text": "f%d" % i, "chance": 90, "kind": "mission", "enemy": "e", "stones": 10 - i})
+	found.append({"text": "Sect trial: x", "chance": 70, "kind": "trial", "enemy": "e", "stones": 0})
+	var shown := Guidance._keep_trial(found, Guidance.FAIR_FIGHTS_MAX)
+	assert_eq(shown.size(), Guidance.FAIR_FIGHTS_MAX)
+	assert_eq(shown[shown.size() - 1]["kind"], "trial")
+	assert_eq(shown[0]["text"], "f0")
+	assert_eq(shown[1]["text"], "f1")
+
+
+func test_keep_trial_leaves_other_lists_alone() -> void:
+	var found: Array[Dictionary] = []
+	for i in 5:
+		found.append({"text": "f%d" % i, "chance": 90, "kind": "mission", "enemy": "e", "stones": 10 - i})
+	var shown := Guidance._keep_trial(found, Guidance.FAIR_FIGHTS_MAX)
+	assert_eq(shown.size(), Guidance.FAIR_FIGHTS_MAX)
+	assert_eq(shown[2]["text"], "f2")
+	var with_trial: Array[Dictionary] = [found[0], {"text": "T", "chance": 70, "kind": "trial", "enemy": "e", "stones": 0}, found[1], found[2], found[3]]
+	shown = Guidance._keep_trial(with_trial, Guidance.FAIR_FIGHTS_MAX)
+	assert_eq(shown[1]["text"], "T")
+	assert_eq(shown[2]["text"], "f1")

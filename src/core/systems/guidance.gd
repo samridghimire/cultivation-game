@@ -2214,6 +2214,7 @@ static func _fair_fight_entries(out: Array[Dictionary], fights: Array[Dictionary
 ## chance first: [{text, chance, kind}] with kind "mission" | "deed" | "bounty" | "rival" | "explore" | "trial". Rates at most
 ## FAIR_FIGHT_MAX_RATED candidates (each rating is 40 simulated fights): missions, open chores, then bounties.
 ## GUIDE-033: with `people` (and `favor`) the living, met rival of this region is rated too (kind "rival").
+## An open trial is always kept (GUIDE-096).
 static func fair_fights(c: CharacterData, data: GameData, flags: Dictionary, today: int, region_id: String, people: Dictionary = {}, favor: Dictionary = {}) -> Array[Dictionary]:
 	var found: Array[Dictionary] = []
 	var rated := 0
@@ -2282,7 +2283,22 @@ static func fair_fights(c: CharacterData, data: GameData, flags: Dictionary, tod
 			explore_rated += 1
 			_rate_fight(found, c, data, foe, "explore", "Explore here: %s" % foe.get("name", enemy_id))
 	found.sort_custom(fair_fight_before)
-	return found.slice(0, FAIR_FIGHTS_MAX)
+	return _keep_trial(found, FAIR_FIGHTS_MAX)
+
+
+## The first `n` of the sorted `found`, but an open sect trial (kind "trial") is never dropped: when it
+## falls outside the first `n` it replaces the last shown entry (GUIDE-096).
+static func _keep_trial(found: Array[Dictionary], n: int) -> Array[Dictionary]:
+	var shown: Array[Dictionary] = found.slice(0, n)
+	for f in shown:
+		if f.get("kind", "") == "trial":
+			return shown
+	for f in found:
+		if f.get("kind", "") == "trial":
+			if not shown.is_empty():
+				shown[shown.size() - 1] = f
+			return shown
+	return shown
 
 
 ## fair_fights order: stones paid (most first), then win chance, then text.
