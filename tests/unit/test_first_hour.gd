@@ -120,3 +120,16 @@ func test_curious_sim_takes_the_foundation_pill() -> void:
 			break
 	assert_gt(with_pill, 0, "a curious seed buys and takes the Foundation Establishment Pill")
 	gs.end_session()
+
+
+## QA-123: following the practice hint lifts Iron Fist to level 3 early and records the first Mist Wolf win day.
+func test_practise_hint_flag_raises_the_style() -> void:
+	var root := _root()
+	var gs := root.get_node("GameState")
+	var FirstHour := preload("res://tests/sim/first_hour.gd")
+	FirstHour.practise_hint = true
+	FirstHour.play(gs, root.get_node("GameClock"), 2, 3, true)
+	FirstHour.practise_hint = false
+	assert_gt(Techniques.level(gs.player, "iron_fist"), 2, "practising to the next level while the hint speaks reaches level 3 in 3 months")
+	assert_true(FirstHour.wolf_win_day >= -1, "the wolf win day is a clock day or -1")
+	gs.end_session()

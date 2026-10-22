@@ -21,6 +21,10 @@ static var fight_origin := "other"
 static var follow_defence := false
 ## QA-116: per seed, what following the hint did: {"trips": travels to another region, "armor": bought, "manual": bought}.
 static var defence_log := {}
+## QA-123: the curious player follows GUIDE-081's practice hint: while it speaks, practise that style to its next level.
+static var practise_hint := false
+## QA-123: day of the first win over a Mist Wolf in the last play() (-1 = none); read by tests/sim/simulate_practise.gd.
+static var wolf_win_day := -1
 
 
 static func play(gs: Node, clock: Node, seed_value: int, months: int, curious: bool = false, month_hook: Callable = Callable(), no_help: bool = false, wait_for_pill: int = 0) -> Dictionary:
@@ -37,9 +41,12 @@ static func play(gs: Node, clock: Node, seed_value: int, months: int, curious: b
 	# QA-063: remember the foe of the first real (non-spar) win; the day comes from the fights_won stat.
 	var fight := {"enemy": "", "first_enemy": ""}
 	var on_start := func(enemy: Dictionary) -> void: fight["enemy"] = "" if enemy.get("spar", false) else String(enemy.get("id", enemy.get("name", "?")))
+	wolf_win_day = -1
 	var on_end := func(_name: String, victory: bool, _log: PackedStringArray) -> void:
 		if victory and fight["enemy"] != "" and fight["first_enemy"] == "":
 			fight["first_enemy"] = fight["enemy"]
+		if victory and fight["enemy"] == "mist_wolf" and wolf_win_day < 0:
+			wolf_win_day = clock.total_days
 	bus.combat_started.connect(on_start)
 	bus.combat_finished.connect(on_end)
 	_talk_to_elder_mo(gs)
@@ -245,6 +252,8 @@ static func _curious_month(gs: Node, c: CharacterData, done: Dictionary, today: 
 	var kinds := {}
 	if follow_defence:
 		_follow_defence_hint(gs, c)
+	if practise_hint:
+		_follow_practice_hint(gs, c)
 	var detour_home := _bitter_detour(gs, c)
 	for week in 3:
 		if not c.alive:
@@ -460,6 +469,16 @@ static func _learn_fighting_style(gs: Node, c: CharacterData, done: Dictionary, 
 		if (def.kind == "combat" or (follow_defence and def.kind == "body")) and not Techniques.is_mastered(c, gs.data, tech_id) and c.alive:
 			gs.practice_technique(tech_id, 7)
 			break
+
+
+## QA-123: while Guidance.practice_hint speaks, practise its style until the next level (at most 60 days a month).
+static func _follow_practice_hint(gs: Node, c: CharacterData) -> void:
+	if not c.alive or Guidance.practice_hint(c, gs.data) == "":
+		return
+	var id := Techniques.practice_target(c, gs.data)
+	var days := mini(Techniques.days_to_next(c, gs.data, id), 60)
+	if id != "" and days > 0:
+		gs.practice_technique(id, days)
 
 
 ## The cheapest manual of a plain combat technique (no lifespan cost) that a merchant in the

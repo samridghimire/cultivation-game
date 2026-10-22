@@ -1567,3 +1567,33 @@ Peak curve, 100 fights per foe. Typical player vs the realm's own foes at their 
   tribulation_transcendence     6   10%   78%  | 3326757/818898/665333 | 3531130/869989/716461 | 22/22/88
 First realm whose median Peak win% is under 50%: none
 
+## first hour, curious practiser (seeds 1-10, 12 months)
+
+Curious practiser: 10 seeds, 12 months
+  --practise=false
+  seed  fist@m3  fist@m6  fist@m12  wolf win day  won  lost  QR3
+     1        1        2         4           619   13     3  303
+     2        2        2         5           530   17     9  127
+     3        1        2         4           422   16     3  242
+     4        1        2         4             -   14     3  239
+     5        1        2         4           349   16     4  72
+     6        1        2         4           501   17     8  241
+     7        1        2         4           720   14    11  204
+     8        1        2         4           709   16    13  132
+     9        1        2         3           444   20     3  341
+    10        1        3         5             -   15     6  186
+  Medians: iron_fist level m3 1, m6 2, m12 4; first wolf win day 530 (2 seeds never); fights won 16, lost 6; QR3 day 239 (10/10 reached)
+  --practise=true
+  seed  fist@m3  fist@m6  fist@m12  wolf win day  won  lost  QR3
+     1        3        3         5             -   12     8  350
+     2        3        3         5           629   18     6  150
+     3        3        4         5             -   18     7  308
+     4        3        3         5           754   15     5  328
+     5        3        3         5           499   20    12  72
+     6        3        4         5             -   18     6  309
+     7        3        3         5           576   13     3  255
+     8        3        3         5           244   21     2  154
+     9        3        3         4           739   17     6  336
+    10        3        3         5           493   16     6  249
+  Medians: iron_fist level m3 3, m6 3, m12 5; first wolf win day 576 (3 seeds never); fights won 18, lost 6; QR3 day 308 (10/10 reached)
+

@@ -51,6 +51,7 @@ fresh() {
 	run "crafter crafts: beast_tamer (seed 1, 365 days)" res://tests/sim/crafter_start.gd -- 1 365 --prof=beast_tamer
 	run "quiet stretches (seeds 1-10, 365 days)" res://tests/sim/quiet_stretches.gd -- 10 365
 	run "first Foundation Establishment year (seeds 1-10)" res://tests/sim/simulate_foundation_year.gd -- 10 2
+	run "first hour, curious practiser (seeds 1-10, 12 months)" res://tests/sim/simulate_practise.gd -- 10 12
 }
 CHECK=0
 while [[ $# -gt 0 ]]; do
