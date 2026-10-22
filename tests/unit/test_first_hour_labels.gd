@@ -235,3 +235,27 @@ func test_drawn_label_rect_includes_the_hinted_badge() -> void:
 	assert_true(badged.size.y > plain.size.y + 10.0, "badge adds height")
 	assert_true(badged.end.y <= plain.end.y + 0.01 and badged.position.y < plain.position.y)
 	n.free()
+
+
+func test_hinted_targets_skips_a_region_no_route_reaches() -> void:
+	var data := data()
+	var c := CharacterData.new()
+	var road: Interactable = load("res://src/world/interactables/travel_point.gd").new()
+	road.display_name = "Village Gate"
+	var reachable := ""
+	var cut_off := ""
+	for id: String in data.regions.keys():
+		if id == "qingshi_village":
+			continue
+		var hop := Guidance.first_hop(c, data, "qingshi_village", id)
+		if hop != "" and reachable == "":
+			reachable = id
+		if hop == "" and cut_off == "":
+			cut_off = id
+	assert_true(reachable != "" and cut_off != "", "data has a reachable and an unreachable region")
+	var near := "Try the market in %s." % Exploration.region_name(data, reachable)
+	var far := "Try the market in %s." % Exploration.region_name(data, cut_off)
+	assert_eq(Interactable.hinted_targets(near, [road], data, "qingshi_village", c), [road])
+	assert_eq(Interactable.hinted_targets(far, [road], data, "qingshi_village", c), [])
+	assert_eq(Interactable.hinted_targets(far, [road], data, "qingshi_village"), [road])
+	road.free()

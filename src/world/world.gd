@@ -278,7 +278,7 @@ func _build_npcs() -> void:
 func _mark_hinted(hud: Node) -> void:
 	var nodes: Array = get_children().filter(func(n: Node) -> bool: return n is Interactable)
 	var hint: String = hud.first_hint()
-	var hit := Interactable.hinted_targets(hint, nodes, GameState.data, GameState.current_region)
+	var hit := Interactable.hinted_targets(hint, nodes, GameState.data, GameState.current_region, GameState.player)
 	var region := Guidance.hinted_region(GameState.data, hint, GameState.current_region)
 	for node: Interactable in nodes:
 		if "hint_region" in node:
