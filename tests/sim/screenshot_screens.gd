@@ -1059,6 +1059,7 @@ func _start_shop_shot(gs: Node) -> void:
 
 
 ## WU-253: `--map-shot` writes map_sells_<size>.png, the world map with Fallen Star Market selected (its "Sells:" line).
+## WU-265: checked at 1280x720 and 1280x800: the full Sells line (all 8 merchants) shows above Places without scrolling; Places scrolls.
 func _start_map_shot(gs: Node) -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 5
