@@ -87,6 +87,7 @@ extends SceneTree
 ## "Reach <realm> to stand a chance against <name>." line), then the bitter variant. Shoot at 1280x800 and 1280x720.
 ## WU-210: it then breaks through level with the rival (rival_caught_up_log / rival_caught_up_journal).
 ## WU-246: `-- --first-hour` also writes fh_<workshop|shop|journal_first_goals|journal_next_steps|journal_commissions|board>_<day1|month1>_<size>.png.
+## WU-252: `--hint-shot` also writes hint_buy_ingredient_[poor_][journal_]<size>.png and hint_thin_defence_long_[journal_]<size>.png (longest thin-defence line); all fit at 1280x720 and 1280x800. With the injury the HUD panel drops the hint lines by design (_fit_status_panel), so the journal carries them.
 ## WU-243: `-- --hint-shot` also writes hint_thin_defence_<size>.png / hint_idle_crafter_<size>.png (HUD) and *_journal_<size>.png (Next steps); checked at 1280x720 and 1280x800, nothing clipped.
 
 const OUT_DIR := "user://screenshots/screens"
@@ -1133,6 +1134,48 @@ func _start_hint_shot(gs: Node) -> void:
 		clock.total_days = 40
 		gs.current_region = "qingshi_village"
 		root.get_node("EventBus").player_changed.emit()
+	# WU-252: GUIDE-066's buy-ingredient line (Array Master in Qingshi, no paper; 20 stones, then none for the odd-jobs
+	# suffix) and GUIDE-068's longest thin-defence line (no armor, no body art, injured, 500 stones so both "where"
+	# sentences show; the region with the longest line wins).
+	var setup_buy := func(stones: int) -> void:
+		hud.get("_banner").visible = false
+		c.realm_index = 1
+		c.stage = 0
+		c.injuries.clear()
+		c.professions.clear()
+		c.professions["array_master"] = {"rank": 0, "xp": 0.0}
+		c.inventory = {"spirit_stone": stones, "spirit_herb": 2} if stones > 0 else {"spirit_herb": 2}
+		c.last_meditated_day = 40
+		clock.total_days = 40
+		gs.current_region = "qingshi_village"
+		root.get_node("EventBus").player_changed.emit()
+	var thin_region := "qingshi_village"
+	var thin_len := 0
+	c.realm_index = 2
+	c.equipment.erase("armor")
+	c.techniques.clear()
+	c.inventory = {"spirit_stone": 500}
+	for region_id: String in gs.data.regions:
+		var l := Guidance.thin_defence_hint(c, gs.data, region_id).length()
+		if l > thin_len:
+			thin_len = l
+			thin_region = region_id
+	print("hint-shot longest thin-defence region: ", thin_region, " (", thin_len, " chars)")
+	var setup_thin_long := func() -> void:
+		setup_thin.call()
+		c.inventory = {"spirit_stone": 500}
+		gs.current_region = thin_region
+		root.get_node("EventBus").player_changed.emit()
+	for case: Array in [["hint_buy_ingredient_", func() -> void: setup_buy.call(20), "needs Blank Talisman Paper"], ["hint_buy_ingredient_poor_", func() -> void: setup_buy.call(0), "Sell gathered herbs or take odd jobs"], ["hint_thin_defence_long_", setup_thin_long, "Your defence is thin"]]:
+		var setup: Callable = case[1]
+		var needle: String = case[2]
+		shots.append({"name": case[0] + size_tag, "open": func() -> void:
+			setup.call()
+			assert(String(hint_text.call()).contains(needle), "hint not on screen: " + String(hint_text.call()))
+			print("hint-shot ", needle, ": ", hint_text.call()), "close": func() -> void: pass})
+		shots.append({"name": case[0] + "journal_" + size_tag, "open": func() -> void:
+			setup.call()
+			show_journal.call("Next steps"), "close": journal.close})
 	for case: Array in [["hint_thin_defence_", setup_thin, "Your defence is thin"], ["hint_idle_crafter_", setup_idle, "You have not cultivated"]]:
 		var setup: Callable = case[1]
 		var needle: String = case[2]
