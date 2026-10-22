@@ -179,6 +179,9 @@ func _start() -> void:
 	if OS.get_cmdline_user_args().has("--hint-shot"):
 		_start_hint_shot(gs)
 		return
+	if OS.get_cmdline_user_args().has("--map-shot"):
+		_start_map_shot(gs)
+		return
 	if OS.get_cmdline_user_args().has("--soul-shot"):
 		_start_soul_shot(gs)
 		return
@@ -1043,6 +1046,22 @@ func _start_shop_shot(gs: Node) -> void:
 	shots.append({"name": "shop_upgrade_tag", "open": func() -> void:
 		shop.open("Wandering Merchant", 0, ["herb", "ore", "equipment", "manual"])
 		shop._set_category("All"), "close": shop.close})
+
+
+## WU-253: `--map-shot` writes map_sells_<size>.png, the world map with Fallen Star Market selected (its "Sells:" line).
+func _start_map_shot(gs: Node) -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 5
+	var c := CharacterFactory.create("Lin Feng", gs.data, rng, "male")
+	gs.start_session(c)
+	gs.pending_event = ""
+	world = load("res://src/world/world.tscn").instantiate()
+	root.add_child(world)
+	hud = world.get_node("HUD")
+	var map: Control = hud.get("_screens")["toggle_map"]
+	shots.append({"name": "map_sells", "open": func() -> void:
+		gs.current_region = "fallen_star_market"
+		map.open(), "close": map.close})
 
 
 func _start_hint_shot(gs: Node) -> void:

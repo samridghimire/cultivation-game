@@ -260,6 +260,38 @@ static func merchant_selling(data: GameData, region_id: String, item_id: String)
 	return ""
 
 
+## WU-253: plain-words description of what a merchant place sells, from its `stock_tags`.
+static func merchant_goods(place: Dictionary) -> String:
+	var words: PackedStringArray = []
+	for tag: Variant in place.get("stock_tags", []):
+		var word := ""
+		match String(tag):
+			"equipment": word = "weapons and armor"
+			"scripture": word = "technique manuals"
+			"herb": word = "herbs"
+			"ore": word = "ore"
+			"talisman", "inscription", "formation": word = "talismans and array materials"
+			"smithing": word = "smithing materials"
+			"demonic": word = "demonic goods"
+			"blood_art": word = "blood arts"
+			_: word = String(tag).replace("_", " ")
+		if not words.has(word):
+			words.append(word)
+	var text := ", ".join(words) if not words.is_empty() else "pills and sundries"
+	if int(place.get("max_price", 0)) > 0:
+		text += " (cheap goods)"
+	return text
+
+
+## WU-253: one "<Merchant>: <goods>" line per merchant place in `region_id`.
+static func market_lines(data: GameData, region_id: String) -> PackedStringArray:
+	var out: PackedStringArray = []
+	for p: Dictionary in data.regions.get(region_id, {}).get("places", []):
+		if String(p.get("type", "")) == "merchant":
+			out.append("%s: %s" % [p.get("display_name", "Merchant"), merchant_goods(p)])
+	return out
+
+
 ## GUIDE-071: where c's first injury can be healed, as a clause ("use your X", "the Y treats it for N stones");
 ## "" when no source is known or region_id is empty.
 static func heal_source(c: CharacterData, data: GameData, region_id: String) -> String:

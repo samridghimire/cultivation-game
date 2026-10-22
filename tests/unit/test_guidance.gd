@@ -2506,3 +2506,12 @@ func test_armor_hint_hidden_when_it_does_not_apply() -> void:
 	c.techniques = {}
 	assert_eq(Guidance.armor_hint(c, data(), "myriad_peaks_ridge"), "", "no combat technique")
 	assert_eq(Guidance.armor_hint(_armor_hint_fighter(), data(), ""), "", "no region")
+
+
+## WU-253: merchant stock tags in plain words.
+func test_merchant_goods() -> void:
+	assert_eq(Guidance.merchant_goods({"stock_tags": ["equipment", "ore", "smithing"]}), "weapons and armor, ore, smithing materials")
+	assert_eq(Guidance.merchant_goods({}), "pills and sundries")
+	assert_eq(Guidance.merchant_goods({"stock_tags": ["talisman", "inscription"]}), "talismans and array materials")
+	assert_eq(Guidance.merchant_goods({"stock_tags": ["beast_part"], "max_price": 100}), "beast part (cheap goods)")
+	assert_true(Guidance.market_lines(data(), "fallen_star_market").has("Heavenforge Smithy: weapons and armor, ore, smithing materials"))

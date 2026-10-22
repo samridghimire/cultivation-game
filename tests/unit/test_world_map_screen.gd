@@ -331,3 +331,21 @@ func test_realm_notice_banner() -> void:
 	var id: String = d.secret_realms.keys()[0]
 	var lines: PackedStringArray = load("res://src/ui/hud.gd").realm_notice_banner(d, id, 0)
 	assert_true(lines[0].ends_with("opens soon") and lines[1].begins_with("In about "), str(lines))
+
+
+## WU-253: the details of a market region list what its merchants sell.
+func test_details_list_what_merchants_sell() -> void:
+	var root := (Engine.get_main_loop() as SceneTree).root
+	var gs := root.get_node("GameState")
+	gs.start_session(new_character())
+	var screen := WorldMapScreen.new()
+	root.add_child(screen)
+	screen.open()
+	screen._select("fallen_star_market")
+	assert_false(screen._places.text.contains("Sells:"), "unexplored regions stay hidden")
+	gs.current_region = "fallen_star_market"
+	screen._select("fallen_star_market")
+	assert_true(screen._places.text.contains("Heavenforge Smithy: weapons and armor"), screen._places.text)
+	screen.close()
+	screen.free()
+	gs.end_session()

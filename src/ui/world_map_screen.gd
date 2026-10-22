@@ -404,6 +404,10 @@ func _show_details() -> void:
 		_description.text += "\n" + deal
 	var places := place_names(data, _selected)
 	_places.text = "Places: " + (", ".join(places) if not places.is_empty() else "none known")
+	if not is_unexplored(GameState.player, _selected, GameState.current_region):
+		var sells := Guidance.market_lines(data, _selected)
+		if not sells.is_empty():
+			_places.text += "\nSells: " + "; ".join(sells)
 	var familiar := familiarity_lines(GameState.player, data, _selected, GameState.current_region, GameState.world_flags)
 	if not familiar.is_empty():
 		_places.text += "\n" + "   |   ".join(familiar)
