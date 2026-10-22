@@ -1146,7 +1146,11 @@ func test_fair_fights_are_even_or_better_sorted_and_capped() -> void:
 	for i in fights.size():
 		assert_true(float(fights[i]["chance"]) >= Guidance.FAIR_FIGHT_MIN_CHANCE)
 		if i > 0:
-			assert_true(float(fights[i - 1]["chance"]) >= float(fights[i]["chance"]))
+			var prev: Dictionary = fights[i - 1]
+			var cur: Dictionary = fights[i]
+			assert_true(int(prev["stones"]) >= int(cur["stones"]))
+			if int(prev["stones"]) == int(cur["stones"]):
+				assert_true(float(prev["chance"]) >= float(cur["chance"]))
 	assert_eq(fights, Guidance.fair_fights(c, data(), {}, c.age_days, "qingshi_village"))
 
 
@@ -1808,7 +1812,7 @@ func test_bitter_rival_hint_with_cost() -> void:
 	var c: CharacterData = s[1]
 	var people: Dictionary = s[2]
 	var rival: CharacterData = s[3]
-	var flags := {Rivals.FIRST_MEETING_FLAG: true}
+	var flags := {Rivals.FIRST_MEETING_FLAG: true, "chore_boar_done": true}
 	assert_eq(_bitter_hint(Guidance.hints(c, d, 1.0, 20, people, flags)), "", "proud: none")
 	Karma.add_grudge(c, d, rival.id, 20)
 	var cost := Karma.amends_cost(c, rival.id, d)
@@ -1827,7 +1831,7 @@ func test_bitter_rival_hint_unaffordable_unmet_and_dead() -> void:
 	Karma.add_grudge(c, d, rival.id, 20)
 	var cost := Karma.amends_cost(c, rival.id, d)
 	assert_eq(_bitter_hint(Guidance.hints(c, d, 1.0, 20, people, {})), "", "not met")
-	var flags := {Rivals.FIRST_MEETING_FLAG: true}
+	var flags := {Rivals.FIRST_MEETING_FLAG: true, "chore_boar_done": true}
 	assert_true(_bitter_hint(Guidance.hints(c, d, 1.0, 20, people, flags)).contains("Amends would cost %d stones" % cost))
 	rival.alive = false
 	assert_eq(_bitter_hint(Guidance.hints(c, d, 1.0, 20, people, flags)), "", "dead")
@@ -1856,6 +1860,10 @@ func _fair_rival_fixture() -> Array:
 	var rival: CharacterData = s[3]
 	c.realm_index = 2
 	c.stage = 8
+	# GUIDE-070: paying fights sort first and would crowd the unpaid bout out of the top three
+	c.sect = {}
+	for bounty_id: String in d.bounties:
+		c.bounty_cooldowns[bounty_id] = c.age_days + 1000
 	rival.realm_index = 1
 	rival.stage = 0
 	rival.techniques = {}
@@ -1869,7 +1877,7 @@ func test_fair_fights_list_a_fair_rival_bout() -> void:
 	var c: CharacterData = s[1]
 	var people: Dictionary = s[2]
 	var rival: CharacterData = s[3]
-	var flags := {Rivals.FIRST_MEETING_FLAG: true}
+	var flags := {Rivals.FIRST_MEETING_FLAG: true, "chore_boar_done": true}
 	var fights := Guidance.fair_fights(c, d, flags, c.age_days, "qingshi_village", people, {rival.id: 20})
 	assert_true(_rival_kinds(fights).has("rival"), "fair bout listed")
 	for f in fights:
@@ -1884,7 +1892,7 @@ func test_fair_fights_skip_the_rival_when_away_bitter_unmet_or_on_cooldown() -> 
 	var c: CharacterData = s[1]
 	var people: Dictionary = s[2]
 	var rival: CharacterData = s[3]
-	var flags := {Rivals.FIRST_MEETING_FLAG: true}
+	var flags := {Rivals.FIRST_MEETING_FLAG: true, "chore_boar_done": true}
 	var favor := {rival.id: 20}
 	var base := Guidance.fair_fights(c, d, flags, c.age_days, "qingshi_village", people, favor)
 	assert_true(_rival_kinds(base).has("rival"), "listed at home")
@@ -2452,3 +2460,14 @@ func test_thin_defence_hint_names_a_body_manual_source() -> void:
 	c.sect = {"id": "azure_cloud_sect", "rank": 0, "contribution": 0, "spent": 0, "month_earned": 0}
 	c.techniques = {}
 	assert_eq(Guidance.body_manual_source(c, data(), "nowhere"), "Manual: Stone Skin Tempering (sect shop, 45 contribution)")
+
+
+func test_fair_fights_sort_by_pay_before_chance() -> void:
+	var found: Array[Dictionary] = [
+		{"text": "b", "chance": 1.0, "stones": 0},
+		{"text": "a", "chance": 0.75, "stones": 30},
+		{"text": "c", "chance": 0.9, "stones": 0},
+		{"text": "d", "chance": 0.9, "stones": 0},
+	]
+	found.sort_custom(Guidance.fair_fight_before)
+	assert_eq(found.map(func(f: Dictionary) -> String: return f["text"]), ["a", "b", "c", "d"])

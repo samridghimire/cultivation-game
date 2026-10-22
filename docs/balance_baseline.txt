@@ -725,11 +725,11 @@ Per inheritance (10 seeds): seeds that could pass every non-fight trial, median 
 
 Fair-fights sim: 10 seeds, 12 months (curious player)
 Entries listed per month: median 2, max 3; empty months 0 of 120
-Listed fights taken: 117, won 111 (95%), mean rated chance 97%
-  mission  listed 167, taken  99, won  95%, mean rated  97%
+Listed fights taken: 126, won 119 (94%), mean rated chance 96%
+  mission  listed 155, taken  99, won  96%, mean rated  97%
   deed     listed   1, taken   1, won 100%, mean rated 100%
-  bounty   listed   2, taken   2, won  50%, mean rated  86%
-  explore  listed  95, taken  15, won 100%, mean rated  99%
+  bounty   listed  12, taken  11, won  73%, mean rated  78%
+  explore  listed  96, taken  15, won 100%, mean rated  99%
 
 ## first fights, rated vs real (starter character, Qi Refining layers 1-3)
 

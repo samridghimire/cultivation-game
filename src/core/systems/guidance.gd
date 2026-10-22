@@ -1897,11 +1897,17 @@ static func fair_fights(c: CharacterData, data: GameData, flags: Dictionary, tod
 			rated += 1
 			explore_rated += 1
 			_rate_fight(found, c, data, foe, "explore", "Explore here: %s" % foe.get("name", enemy_id))
-	found.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
-		if not is_equal_approx(float(a["chance"]), float(b["chance"])):
-			return float(a["chance"]) > float(b["chance"])
-		return String(a["text"]) < String(b["text"]))
+	found.sort_custom(fair_fight_before)
 	return found.slice(0, FAIR_FIGHTS_MAX)
+
+
+## fair_fights order: stones paid (most first), then win chance, then text.
+static func fair_fight_before(a: Dictionary, b: Dictionary) -> bool:
+	if int(a["stones"]) != int(b["stones"]):
+		return int(a["stones"]) > int(b["stones"])
+	if not is_equal_approx(float(a["chance"]), float(b["chance"])):
+		return float(a["chance"]) > float(b["chance"])
+	return String(a["text"]) < String(b["text"])
 
 
 static func _rate_fight(found: Array[Dictionary], c: CharacterData, data: GameData, enemy: Dictionary, kind: String, label: String, stones: int = 0) -> void:
