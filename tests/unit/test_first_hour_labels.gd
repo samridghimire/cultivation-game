@@ -125,3 +125,17 @@ func test_target_label_hidden_while_prompt_names_it() -> void:
 	var n := _npc("Lin", Vector2.ZERO)
 	n.highlighted = true
 	assert_false(Interactable.label_visible(n.highlighted))
+
+
+func test_place_and_npc_labels_spread_together() -> void:
+	var place := _npc("Founder's Old Well", Vector2(300, 300))
+	var npc := _npc("Xiong Muxue", Vector2(310, 302))
+	Interactable.spread_labels([place, npc])
+	assert_false(place.label_rect().intersects(npc.label_rect()), "place and NPC labels overlap")
+
+
+func test_label_layer_sits_above_buildings() -> void:
+	var n := _npc("Sect Recruitment Hall", Vector2(100, 100))
+	(Engine.get_main_loop() as SceneTree).root.add_child(n)
+	assert_true(n._label_node.z_index > 0, "label node must draw above siblings")
+	n.queue_free()

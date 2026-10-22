@@ -547,6 +547,10 @@ Short-lived context for the next session. Update or trim it when you finish a se
 - Nearly every PR conflicts on `docs/BACKLOG.md` and `docs/CHANGELOG.md`. Merge main into the PR branch, never rebase. Keep both sides' rows and lines, and check for **duplicate task ids** (agents often reuse an id; rename the newer one).
 - After merging, rerun the full checks. Typical breakages were tests made stale by a newer rule (clans need an abode seat, tougher enemies since QA-007d, the intro story event at session start, choice encounters must set their `blocked_by_flag` on every choice) and two places placed at the same map position.
 
+## First-hour screenshot look (WU-278, 2026-10-22, 1280x800 and 1280x720)
+
+WU-278: labels now draw from a child `_label_node` (z_index 10) and `spread_labels` runs over places and NPCs together. hud_arrival at 1280x800: "Sect Recruitment Hall" is whole (no longer behind the workshop). Still overlapping: "Founder's Old Well" and "Dongfang Beichen" at the right screen edge, because the draw-time screen clamp (WU-269) shifts a label after the world-space spread. Fixing it needs a screen-space spread pass.
+
 ## First-hour screenshot look (WU-262, 2026-10-22, 1280x800 and 1280x720)
 
 WU-272 (2026-10-22): re-ran `screenshot_first_hour.gd` at 1280x800 and 1280x720 under xvfb-run and opened hud_arrival at both. WU-269's clamp works: "Founder's Old Well", "Spirit Spring (2x qi)", "Sect Recruitment Hall" and "Hunters' Bounty Board" are all inside the screen at both sizes (the clamp is not at fault; no code change). Two cosmetic leftovers at 1280x800 only, both from labels that sit on world objects at the screen edge:

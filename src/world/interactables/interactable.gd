@@ -25,14 +25,21 @@ var highlighted := false:
 		highlighted = value
 		set_process(value)
 		queue_redraw()
+		_redraw_label()
 
 var _pulse_time := 0.0
 ## Added to the name label's position; World.spread_labels lifts labels that would overlap (WU-087).
 var label_offset := Vector2.ZERO
 const LABEL_FONT_SIZE := 14
+## Draws the name label above every sibling building (WU-278).
+var _label_node: Node2D
 
 
 func _ready() -> void:
+	_label_node = Node2D.new()
+	_label_node.z_index = 10
+	_label_node.draw.connect(_draw_label)
+	add_child(_label_node)
 	var shape := CollisionShape2D.new()
 	var rect := RectangleShape2D.new()
 	rect.size = size + Vector2(reach, reach) * 2.0
@@ -48,6 +55,7 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	_pulse_time += delta
 	queue_redraw()
+	_redraw_label()
 
 
 func get_options() -> Array[Dictionary]:
@@ -171,7 +179,7 @@ func _view_rect_local() -> Rect2:
 ## Called by the world when the camera moved: redraws the label if it is near a screen edge (WU-269).
 func camera_moved() -> void:
 	if _label_near_edge():
-		queue_redraw()
+		_redraw_label()
 
 
 ## True when the label is within one label width of a screen edge (cheap redraw test).
@@ -196,17 +204,28 @@ func _draw() -> void:
 	if highlighted:
 		var glow := 0.5 + 0.5 * sin(_pulse_time * 5.0)
 		draw_rect(Rect2(-size / 2.0, size).grow(6.0 + 2.0 * glow), Color(1.0, 0.9, 0.5, 0.45 + 0.4 * glow), false, 2.0)
-	if label_visible(highlighted):
-		var font := ThemeDB.fallback_font
-		var text := label_text()
-		var text_width := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, LABEL_FONT_SIZE).x
-		var left := -text_width / 2.0 + label_offset.x
-		if is_inside_tree():
-			var view := _view_rect_local()
-			left = clamp_label_left(left, text_width, view.position.x, view.end.x)
-		draw_string(font, Vector2(left, -size.y / 2.0 - 8.0 + label_offset.y), text, HORIZONTAL_ALIGNMENT_LEFT, -1, LABEL_FONT_SIZE, label_color())
 	if anchor_id != "":
 		_draw_anchor_marker()
+
+
+## Asks the label layer to redraw.
+func _redraw_label() -> void:
+	if _label_node != null:
+		_label_node.queue_redraw()
+
+
+## Draws the name label on the label layer (WU-278).
+func _draw_label() -> void:
+	if not label_visible(highlighted):
+		return
+	var font := ThemeDB.fallback_font
+	var text := label_text()
+	var text_width := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, LABEL_FONT_SIZE).x
+	var left := -text_width / 2.0 + label_offset.x
+	if is_inside_tree():
+		var view := _view_rect_local()
+		left = clamp_label_left(left, text_width, view.position.x, view.end.x)
+	_label_node.draw_string(font, Vector2(left, -size.y / 2.0 - 8.0 + label_offset.y), text, HORIZONTAL_ALIGNMENT_LEFT, -1, LABEL_FONT_SIZE, label_color())
 
 
 ## A small diamond in the top-right corner of artifact anchor places: hollow

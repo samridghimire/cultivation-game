@@ -264,9 +264,8 @@ func _build_npcs() -> void:
 		add_child(node)
 		move_child(node, player.get_index())
 	_build_generated_npcs()
-	var npcs: Array = get_children().filter(func(n: Node) -> bool: return n is Interactable and "npc_id" in n)
-	Interactable.spread_labels(npcs)
 	var all: Array = get_children().filter(func(n: Node) -> bool: return n is Interactable)
+	Interactable.spread_labels(all)
 	Interactable.clamp_labels(all, Rect2(Vector2.ZERO, map_size))
 
 

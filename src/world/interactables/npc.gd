@@ -140,6 +140,7 @@ func _update_near() -> void:
 	if near != _near:
 		_near = near
 		queue_redraw()
+		_redraw_label()
 
 
 func is_available() -> bool:
