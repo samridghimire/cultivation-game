@@ -3265,6 +3265,20 @@ func test_dangerous_missions_say_practise_style() -> void:
 	assert_true(text.contains("too dangerous for you yet; practise %s first." % d.techniques["iron_fist"].name), text)
 
 
+func test_practise_advice_not_repeated() -> void:
+	var name: String = data().techniques["iron_fist"].name
+	var out: Array[String] = [
+		"Practise %s on the Techniques screen: each level raises your odds." % name,
+		"The sect's missions are too dangerous for you yet; practise %s first." % name,
+	]
+	Guidance._merge_practise_advice(out)
+	assert_eq(out[0], "Practise %s on the Techniques screen: each level raises your odds." % name)
+	assert_eq(out[1], "The sect's missions are too dangerous for you yet; the practice above would open them.")
+	var lone: Array[String] = ["The sect's missions are too dangerous for you yet; practise %s first." % name]
+	Guidance._merge_practise_advice(lone)
+	assert_true(lone[0].ends_with("practise %s first." % name), lone[0])
+
+
 func test_dangerous_missions_say_grow_a_stage_when_mastered() -> void:
 	var d := data()
 	var c := new_character()

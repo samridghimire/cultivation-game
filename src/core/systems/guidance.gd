@@ -131,6 +131,7 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 	for hint in [_dao_hint(c, data), _abode_hint(c, data), _family_hint(c, data, people)]:
 		if hint != "":
 			out.append(hint)
+	_merge_practise_advice(out)
 	if out.size() > limit:
 		out.resize(limit)
 	return out
@@ -1440,6 +1441,20 @@ static func _mission_hint(c: CharacterData, data: GameData, flags: Dictionary = 
 		else:
 			text += "practise %s first." % data.techniques[best_style].name
 	return text
+
+
+## One practise advice, not two (GUIDE-108): when a "Practise <style> on the Techniques screen" hint is
+## present, a mission line ending "practise <style> first." points at it instead of repeating it.
+static func _merge_practise_advice(out: Array[String]) -> void:
+	for line in out:
+		if not line.begins_with("Practise ") or not line.contains(" on the Techniques screen"):
+			continue
+		var style := line.substr("Practise ".length(), line.find(" on the Techniques screen") - "Practise ".length())
+		var tail := "practise %s first." % style
+		for i in out.size():
+			if out[i] != line and out[i].ends_with(tail):
+				out[i] = out[i].trim_suffix(tail) + "the practice above would open them."
+		return
 
 
 ## The ready mission paying the most contribution (ties: fewer days, then id); "" when none.
