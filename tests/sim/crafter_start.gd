@@ -8,6 +8,7 @@ extends SceneTree
 ## QA-108: while the top hint is GUIDE-054's "You are still a mortal" line the crafter meditates that step instead of gathering
 ## or crafting (--no-nudge restores the old policy for before/after runs); the medians report the realm at day 120.
 ## QA-117: when GUIDE-066's buy hint shows, the crafter buys the missing bought-only ingredient for one craft (--no-buy restores the old policy).
+## QA-127: --no-jobs restores the old policy of never taking odd jobs.
 ## QA-107: --orders prints every commission (roll day, item, count, reward, days allowed, whether each ingredient
 ## was available nearby at roll time) with its fate and why the sim did not fill it.
 
@@ -28,6 +29,10 @@ var _crafted_out := {}  ## QA-107: item id -> units crafted this life
 var _met := {}  ## QA-119: encounter id -> times met across all seeds
 var _met_seeds := {}  ## QA-119: encounter id -> seeds that met it at least once
 var _seed_met := {}  ## QA-119: encounter ids met in the current seed
+
+
+## QA-127: when GUIDE-047's odd-jobs line shows, work the craft for 30 days (--no-jobs restores the old policy).
+var _follow_jobs := true
 
 
 func _initialize() -> void:
@@ -55,6 +60,7 @@ func _run() -> void:
 	_orders_mode = args.has("--orders")
 	_follow_nudge = not args.has("--no-nudge")
 	_follow_buy = not args.has("--no-buy")
+	_follow_jobs = not args.has("--no-jobs")
 	for a in args:
 		if String(a).begins_with("--prof="):
 			_prof = String(a).substr(7)
@@ -318,6 +324,9 @@ func _act(c: CharacterData) -> String:
 	if _follow_buy and Guidance.buy_ingredient_hint(c, _gs.data, REGION) != "":
 		_buy_for_hint(c)
 	var recipe_id := _best_craftable(c)
+	if recipe_id == "" and _follow_jobs and _has_odd_jobs_hint(c):
+		_gs.work_profession(_prof, 30)
+		return "meditate"
 	if recipe_id != "":
 		var out_item := String(_gs.data.recipes[recipe_id]["output"]["item"])
 		var had := c.item_count(out_item)
@@ -329,6 +338,14 @@ func _act(c: CharacterData) -> String:
 	if _gather_for_order(c) or _gather_hinted(c):
 		return "gather"
 	return "stuck" if Guidance.herb_here_hint(c, _gs.data, REGION) == "" else "meditate"
+
+
+## QA-127: is GUIDE-047's odd-jobs line among the hints?
+func _has_odd_jobs_hint(c: CharacterData) -> bool:
+	for h in Guidance.hints(c, _gs.data, 1.0, 8, {}, _gs.world_flags, REGION, _clock.total_days):
+		if String(h).begins_with("Short of stones? Odd jobs"):
+			return true
+	return false
 
 
 ## QA-117: follows GUIDE-066's buy hint: buys what the first in-rank recipe lacks (bought-only, sold in this region) for one craft, stones allowing.
