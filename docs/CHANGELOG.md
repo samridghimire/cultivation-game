@@ -2,6 +2,20 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-22 [CMB-011] Enemies can be made slightly easier or harder with a per-enemy power multiplier (for fine balance).
+- 2026-10-22 [GUIDE-081] The practice hint says how many days the next technique level takes.
+- 2026-10-22 [C-172] Help explains why "Fights you can win" can be empty and that paying fights come first.
+- 2026-10-22 [QA-119] The crafter sim counts road encounters (an in-village crafter meets none).
+- 2026-10-22 [C-163] The Array Master's first array costs 3 spirit stones instead of 6, so a new Array Master can afford a first craft.
+- 2026-10-22 [WU-262] The first-hour screenshots were re-checked at Steam Deck sizes; nothing clips inside a window.
+- 2026-10-22 [WU-258] The empty "Fights you can win" note and the far-market armor hint checked on screen at Steam Deck sizes.
+- 2026-10-22 [WU-266] The Heavenly Tribulation Pill hint now shows on the HUD at Steam Deck sizes.
+- 2026-10-22 [QA-121] A sim shows new Foundation cultivators still lose to their own realm 60 days in, even with armor: injuries and no body art.
+- 2026-10-22 [WU-265] The world map's "Sells" line fits above the fold at Steam Deck sizes.
+- 2026-10-22 [GUIDE-082] The armor hint that points to a far market reads as two clean sentences.
+- 2026-10-22 [WU-264] The world map keeps gamepad focus while its region details update.
+- 2026-10-22 [GUIDE-077] The injury hint checks every injury and only names a far clinic you can afford.
+- 2026-10-22 [WU-260] A shop with no weapons or armor says where the nearest smithy is.
 - 2026-10-22 [C-170] Help says helping travellers and villagers raises your renown.
 - 2026-10-22 [WU-263] The smithy's "(upgrade)" marks checked on screen at Steam Deck sizes.
 - 2026-10-22 [WU-256] The world map lists what a region sells above its places.

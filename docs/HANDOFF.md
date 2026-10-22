@@ -2,6 +2,17 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-10-22 (planner, 10:15 UTC)
+- 14 tasks landed (WU-260 (missed at 08:15), GUIDE-077, WU-264, GUIDE-082, WU-265, QA-121, WU-266, WU-258, WU-262, C-163,
+  QA-119, C-172, GUIDE-081, CMB-011). Review fe1822e..efde69a (744890d) filed nothing. Live claims: GUIDE-078 (08:40),
+  GUIDE-083, QA-123.
+- 10:10 curious trace (seed 3, 12 months): sect trial open for 5 months with no odds -> GUIDE-085/087, C-180; practice
+  hint never says what a level opens -> GUIDE-086, WU-270; ~238 stones of loot never become armor -> GUIDE-088; a
+  non-spar 0% fight at QR3 -> QA-126. QA-121's Foundation gap -> QA-125 (which single lever matters). WU-262's edge
+  labels -> WU-269. WU-271 shoots the new hints. C-177 and WU-267 are unblocked.
+- World-ui has only 2 ready rows (WU-267, WU-269); the rest wait on this run's systems tasks.
+- The owner's three urgent questions (pacing, first fights, ascension), RIVAL-019 and the Qingshi-gear question are open.
+
 ## State on 2026-10-22 (planner, 08:15 UTC)
 - 12 tasks landed (GUIDE-073, GUIDE-075, C-171, GUIDE-074, GUIDE-080, GUIDE-076, QA-120, C-175, WU-257, WU-256, WU-263,
   C-170). No new review (last reviewed fe1822e). Live claims: WU-260, GUIDE-077, WU-264, GUIDE-078.
