@@ -2,6 +2,25 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-21 [C-156] The Verdant Remnant gives the Blood Demon Pill recipe instead of a second Visceral Mending one.
+- 2026-10-21 [GUIDE-065] A Foundation cultivator with thin defence hears to learn a body art and wear armor.
+- 2026-10-17 [GUIDE-062] The late-realm goal ladders share one table; no goal changed.
+- 2026-10-17 [C-161] Three late inheritance guardians wait a stage, so they are beatable at the gate.
+- 2026-10-17 [WU-242] The Tribulation Transcendence foes' threat prompt and lost fight fit on screen.
+- 2026-10-17 [QA-114] The curious-years sim shows why a fresh Foundation cultivator loses: no body art, armor or healing.
+- 2026-10-17 [WU-239] The Tribulation bell and the Door Ajar grounds work with a gamepad.
+- 2026-10-17 [PROF-016] An order short only of spirit stones says so.
+- 2026-10-17 [PROF-017] The crafting margin line is worked out in the core rules, not the screen.
+- 2026-10-17 [WU-236] Tribulation Transcendence goals fit on screen; the HUD goal line wraps.
+- 2026-10-17 [WU-238] The three Tribulation Transcendence choice encounters fit on screen.
+- 2026-10-17 [C-160] The roadside rogue meets a new Foundation cultivator a stage later, and less often.
+- 2026-10-17 [QA-109] The crafter sim runs every craft's first year; a "crafter crafts" balance section.
+- 2026-10-17 [PROF-015] An order with two gathered ingredients is sized to fit the time given.
+- 2026-10-17 [WU-237] Inheritance stage names no longer read "the The ...".
+- 2026-10-17 [WU-234] The orders line in the year review and the longest lapse text fit on screen.
+- 2026-10-17 [TT-001] Goals at Tribulation Transcendence.
+- 2026-10-17 [C-150] Crafted goods keep their 1.3 markup: higher values break the income guards.
+- 2026-10-17 [GUIDE-057] A Qi Refining crafter who stops meditating hears where to carry on.
 - 2026-10-17 [WU-233] The gathering estimate on an order fits the HUD hint and the journal.
 - 2026-10-17 [GUIDE-060] Recipe scrolls are looked up once at load instead of on every hint.
 - 2026-10-17 [WU-235] The Old Quarry Tailings, Sutra Barge grounds and Mahayana encounters work with a gamepad.

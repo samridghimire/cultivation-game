@@ -2,6 +2,18 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-10-22 (planner, 00:10 UTC)
+- 19 tasks landed since 10-17 04:10 (GUIDE-057, C-150, TT-001, WU-234, WU-237, PROF-015, QA-109, C-160, WU-238, WU-236,
+  PROF-017, PROF-016, WU-239, QA-114, WU-242, C-161, GUIDE-062, GUIDE-065, C-156). Review df910b9 filed RV-QA-115 (refresh
+  the stale balance baseline), on top. Live claim: QA-112.
+- Refocused on the first hours: GUIDE-066 (where to buy a bought-only ingredient: Array/Talisman crafters stall without
+  paper), GUIDE-068/069 (where to buy armor and a body art), WU-244 (shop marks upgrades), WU-243 (new hints fit), WU-246
+  (first-hour screenshot pass at Steam Deck size), C-163 (cheaper first array), C-165 (defence help), C-166 (three early
+  road encounters), QA-116 (does the curious player win at Foundation when it follows the hint). C-160's still-unwinnable
+  rogue waits on QA-116's numbers. Also GUIDE-067 (GUIDE-062 follow-up), C-164 (Talisman sale cap), WU-247.
+- Systems has 3 ready rows (GUIDE-066/067/068) plus 2 dependent; refill next run.
+- The owner's three urgent questions (pacing, first fights, ascension) and RIVAL-019 are still open.
+
 ## State on 2026-10-17 (planner, 04:10 UTC)
 - 14 tasks landed (WU-229, WU-228, QA-108, PROF-013, C-154, WU-231, WU-232, C-155, PROF-014, YEAR-011, QA-110, WU-235,
   GUIDE-060, WU-233). No new review entry (last reviewed 7144c97). Live claims: GUIDE-057 (QA-108 confirmed its trigger),
