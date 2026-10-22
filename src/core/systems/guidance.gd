@@ -1607,6 +1607,23 @@ static func _family_hint(c: CharacterData, data: GameData, people: Dictionary) -
 static func first_combat_manual(c: CharacterData, data: GameData, region_id: String) -> Dictionary:
 	if Techniques.knows_kind(c, data, "combat"):
 		return {}
+	# PERF-001: the scan (merchant stock, item sources) cost ~300 ms and every NPC menu asked for it.
+	var key := "%d|%s|%d|%d" % [data.get_instance_id(), region_id, c.realm_index, c.alignment]
+	if _manual_cache.has(key):
+		return (_manual_cache[key] as Dictionary).duplicate()
+	var found := _scan_first_combat_manual(c, data, region_id)
+	if _manual_cache.size() >= MANUAL_CACHE_MAX:
+		_manual_cache.clear()
+	_manual_cache[key] = found
+	return found.duplicate()
+
+
+## Memo for first_combat_manual, keyed by (data, region, realm, alignment); cleared when it grows past the cap.
+static var _manual_cache: Dictionary = {}
+const MANUAL_CACHE_MAX := 64
+
+
+static func _scan_first_combat_manual(c: CharacterData, data: GameData, region_id: String) -> Dictionary:
 	var best: Dictionary = {}
 	var places: Array = data.regions.get(region_id, {}).get("places", [])
 	var anywhere: Dictionary = {}

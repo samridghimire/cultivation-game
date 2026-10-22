@@ -116,3 +116,20 @@ func test_spar_label_odds() -> void:
 	var want := "Challenge your rival Lin to a bout (%s, 52 in 100)" % Combat.label_for_chance(0.52)
 	assert_eq(load("res://src/world/interactables/npc.gd").spar_label("Lin", true, 0.52), want)
 	assert_eq(load("res://src/world/interactables/npc.gd").spar_label("Lin", false, -1.0), "Spar with Lin")
+
+
+## PERF-001: a Foundation NPC's menu is the same on a cold and a warm odds cache, and a repeat call is fast.
+func test_foundation_menu_is_stable_and_cheap() -> void:
+	var gs: Node = _root().get_node("GameState")
+	var r := _setup(gs, gs.data.realm_index_of("foundation_establishment"), 100)
+	gs.player.realm_index = gs.data.realm_index_of("foundation_establishment")
+	var labels := func(opts: Array) -> Array:
+		return opts.map(func(o: Dictionary) -> String: return String(o["label"]))
+	Combat._chance_cache.clear()
+	var cold: Array = labels.call(r[0].get_options())
+	var t0 := Time.get_ticks_usec()
+	var warm: Array = labels.call(r[0].get_options())
+	var warm_ms := (Time.get_ticks_usec() - t0) / 1000.0
+	assert_eq(warm, cold, "labels do not change between calls")
+	assert_true(String(cold.filter(func(l: String) -> bool: return l.begins_with("Spar with"))[0]).contains(" in 100)"), "spar odds shown")
+	assert_true(warm_ms < 50.0, "warm get_options took %.1f ms" % warm_ms)
