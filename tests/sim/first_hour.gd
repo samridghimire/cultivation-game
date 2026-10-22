@@ -25,6 +25,10 @@ static var defence_log := {}
 static var practise_hint := false
 ## QA-123: day of the first win over a Mist Wolf in the last play() (-1 = none); read by tests/sim/simulate_practise.gd.
 static var wolf_win_day := -1
+## QA-136: the curious player attempts an open sect promotion trial when the hint's odds are >= TRIAL_MIN_ODDS
+## (once a month, travelling to a sect hall if needed). `--no-trial` in simulate_first_hour.gd turns it off.
+static var attempt_trials := true
+const TRIAL_MIN_ODDS := 0.7
 
 
 static func play(gs: Node, clock: Node, seed_value: int, months: int, curious: bool = false, month_hook: Callable = Callable(), no_help: bool = false, wait_for_pill: int = 0) -> Dictionary:
@@ -39,7 +43,7 @@ static func play(gs: Node, clock: Node, seed_value: int, months: int, curious: b
 	gs.pending_event = ""
 	var bus: Node = gs.get_node("/root/EventBus")
 	bus.clear_history()
-	var out := {"layer_day": {}, "sect_day": -1, "month_lines": [], "injuries": 0, "player": c, "kinds": [], "kind_sets": [], "stones": [], "realms": [], "first_win_day": -1, "first_style_day": -1, "first_win_enemy": "", "breaks": [], "bottleneck_day": {}, "waited_days": 0, "road": []}
+	var out := {"layer_day": {}, "sect_day": -1, "rank_day": -1, "month_lines": [], "injuries": 0, "player": c, "kinds": [], "kind_sets": [], "stones": [], "realms": [], "first_win_day": -1, "first_style_day": -1, "first_win_enemy": "", "breaks": [], "bottleneck_day": {}, "waited_days": 0, "road": []}
 	var done := {"no_help": no_help}
 	# QA-063: remember the foe of the first real (non-spar) win; the day comes from the fights_won stat.
 	var fight := {"enemy": "", "first_enemy": ""}
@@ -90,6 +94,8 @@ static func play(gs: Node, clock: Node, seed_value: int, months: int, curious: b
 				break
 		if not c.is_rogue() and out["sect_day"] < 0:
 			out["sect_day"] = clock.total_days
+		if not c.is_rogue() and int(c.sect["rank"]) >= 1 and out["rank_day"] < 0:
+			out["rank_day"] = clock.total_days  # QA-136: first day (month-granular) as Inner Disciple or above
 		if c.realm_index == 1 and not out["layer_day"].has(c.stage + 1):
 			for layer in range(1, c.stage + 2):
 				if not out["layer_day"].has(layer):
@@ -130,6 +136,9 @@ static func play(gs: Node, clock: Node, seed_value: int, months: int, curious: b
 	out["fair_log"] = done.get("fair_log", {"listed": [], "taken": [], "by_kind": {}})
 	out["injuries"] = c.injuries.size()
 	out["recharges"] = int(done.get("recharges", 0))
+	out["trials_won"] = int(done.get("trials_won", 0))
+	out["trials_lost"] = int(done.get("trials_lost", 0))
+	out["sect_rank"] = -1 if c.is_rogue() else int(c.sect["rank"])
 	out["lives"] = c.artifact_lives
 	out["fights_won"] = LifeStats.get_stat(c, "fights_won")
 	out["fights_lost"] = LifeStats.get_stat(c, "fights_lost")
@@ -319,6 +328,7 @@ static func _curious_month(gs: Node, c: CharacterData, done: Dictionary, today: 
 			if LifeStats.get_stat(c, "fights_lost") > lost_before:
 				done["lost_missions"][mission_id] = {"day": today, "odds": odds_before}
 			break
+	_attempt_open_trial(gs, c, done, kinds)
 	_take_listed_deed(gs, c, done, fair, kinds, today)
 	_take_listed_bounty(gs, c, done, fair, kinds)
 	if not done.get("saving", false):
@@ -345,6 +355,38 @@ static func _curious_month(gs: Node, c: CharacterData, done: Dictionary, today: 
 	if c.alive:
 		_everything_month(gs, c, kinds, today, bool(done.get("no_help", false)))
 	return kinds
+
+
+## QA-136: when the hint says "The trial for <rank> is open" and its odds are >= TRIAL_MIN_ODDS, walk to a sect hall
+## (the current region's, else the first region with one), attempt the trial through GameState and walk home.
+## done["trials_won"] / done["trials_lost"] count the outcomes.
+static func _attempt_open_trial(gs: Node, c: CharacterData, done: Dictionary, kinds: Dictionary) -> void:
+	if not attempt_trials or not c.alive or c.is_rogue() or not c.injuries.is_empty():
+		return
+	if Guidance.trial_odds(c, gs.data) < TRIAL_MIN_ODDS:
+		return
+	var home: String = gs.current_region
+	var hall_region := ""
+	for rid: String in ([home] + gs.data.regions.keys()):
+		for place: Dictionary in gs.data.regions.get(rid, {}).get("places", []):
+			if String(place.get("type", "")) == "sect_hall":
+				hall_region = rid
+				break
+		if hall_region != "":
+			break
+	if hall_region == "":
+		return
+	if home != hall_region:
+		gs.travel(hall_region)
+		if gs.current_region != hall_region or not c.alive:
+			return
+	var rank_before := int(c.sect["rank"])
+	gs.attempt_promotion_trial()
+	var won := c.alive and not c.is_rogue() and int(c.sect["rank"]) > rank_before
+	done["trials_won" if won else "trials_lost"] = int(done.get("trials_won" if won else "trials_lost", 0)) + 1
+	kinds["trial"] = true
+	if home != hall_region and c.alive:
+		gs.travel(home)
 
 
 ## QA-072: from Qi Refining 7th Layer, when Guidance.next_realm_pill names a pill a merchant sells, stop optional

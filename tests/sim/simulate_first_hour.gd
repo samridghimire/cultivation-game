@@ -23,13 +23,14 @@ func _run() -> void:
 	var zero := args.has("--zero")  # QA-126: count fights rated 0%, by what started them
 	var zero_by := {}
 	var fights_seen := {"n": 0}
+	FirstHour.attempt_trials = not args.has("--no-trial")  # QA-136
 	var trace := args.has("--trace")  # QA-065: print each month's state and every fight
 	var only_seed := 0  # --seed=N runs just that seed
 	var nums: Array[int] = []
 	for a in args:
 		if a.begins_with("--seed="):
 			only_seed = int(a.substr(7))
-		elif a != "--curious" and a != "--trace" and a != "--zero":
+		elif a != "--curious" and a != "--trace" and a != "--zero" and a != "--no-trial":
 			nums.append(int(a))
 	var seeds := nums[0] if nums.size() > 0 else 30
 	var months := nums[1] if nums.size() > 1 else 12
@@ -37,6 +38,10 @@ func _run() -> void:
 	var clock: Node = root.get_node("GameClock")
 	var layers := {1: [], 3: [], 9: []}
 	var sects: Array = []
+	var rank_days: Array = []  # QA-136
+	var final_stones: Array = []
+	var trials_won := 0
+	var trials_lost := 0
 	var injuries: Array = []
 	var lines: Array = []
 	var won: Array = []
@@ -112,6 +117,12 @@ func _run() -> void:
 		if r["sect_day"] >= 0:
 			sects.append(r["sect_day"])
 		injuries.append(r["injuries"])
+		if r["rank_day"] >= 0:
+			rank_days.append(r["rank_day"])
+		if not r["stones"].is_empty():
+			final_stones.append(r["stones"][r["stones"].size() - 1])
+		trials_won += int(r["trials_won"])
+		trials_lost += int(r["trials_lost"])
 		lines.append(per_month)
 		won.append(r["fights_won"])
 		lost.append(r["fights_lost"])
@@ -129,6 +140,7 @@ func _run() -> void:
 	print("Medians (day): QR1 %.0f, QR3 %.0f, QR9 %.0f (%d/%d seeds reached it), sect %.0f; injuries %.0f; fights won %.0f, lost %.0f, fled %.0f; %.1f log lines/month" % [_median(layers[1]), _median(layers[3]), _median(layers[9]), layers[9].size(), seeds, _median(sects), _median(injuries), _median(won), _median(lost), _median(fled), _median(lines)])
 	print("First win: median day %.0f, seeds with no win in %d months: %d; first-win foes: %s; median style day %.0f (%d seeds)" % [_median(first_wins), months, no_win, str(win_enemies), _median(first_styles), first_styles.size()])
 	if curious:
+		print("Sect trials: Inner Disciple median day %.0f (%d/%d seeds); trials won %d, lost %d; stones at the last month: median %.0f" % [_median(rank_days), rank_days.size(), seeds, trials_won, trials_lost, _median(final_stones)])
 		var sum := 0
 		for k: int in kinds_all:
 			sum += k
