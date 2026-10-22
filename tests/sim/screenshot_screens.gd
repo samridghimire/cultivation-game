@@ -91,6 +91,7 @@ extends SceneTree
 ## WU-210: it then breaks through level with the rival (rival_caught_up_log / rival_caught_up_journal).
 ## WU-246: `-- --first-hour` also writes fh_<workshop|shop|journal_first_goals|journal_next_steps|journal_commissions|board>_<day1|month1>_<size>.png.
 ## WU-258: `--hint-shot` also writes hint_armor_far_[journal_]<size>.png and hint_empty_fights_journal_<size>.png.
+## WU-268: `--hint-shot` also writes hint_long_[journal_]<size>.png (Azure Cloud outer disciple, Qi Refining 1st layer, Iron Fist 1: practice days, far qi, stipend).
 ## WU-252: `--hint-shot` also writes hint_buy_ingredient_[poor_][journal_]<size>.png and hint_thin_defence_long_[journal_]<size>.png (longest thin-defence line); all fit at 1280x720 and 1280x800. With the injury the HUD panel drops the hint lines by design (_fit_status_panel), so the journal carries them.
 ## WU-243: `-- --hint-shot` also writes hint_thin_defence_<size>.png / hint_idle_crafter_<size>.png (HUD) and *_journal_<size>.png (Next steps); checked at 1280x720 and 1280x800, nothing clipped.
 
@@ -1300,6 +1301,46 @@ func _start_hint_shot(gs: Node) -> void:
 		shots.append({"name": case[0] + "journal_" + size_tag, "open": func() -> void:
 			setup.call()
 			show_journal.call("Next steps"), "close": journal.close})
+	# WU-268: the longer GUIDE-081/083/084 hints for an Azure Cloud outer disciple, Qi Refining 1st layer, Iron Fist
+	# level 1, meditating at the Spirit Spring: practice days, "(N days away)" better qi and the sect rank's stipend.
+	var long_region := "qingshi_village"
+	var long_len := 0
+	c.realm_index = 1
+	c.stage = 0
+	c.sect = {"id": "azure_cloud_sect", "rank": 0, "contribution": 50}
+	for region_id: String in gs.data.regions:
+		var qi_line: String = Guidance._better_qi_hint(c, gs.data, region_id, gs.world_flags)
+		if qi_line.contains(" away)") and qi_line.length() > long_len:
+			long_len = qi_line.length()
+			long_region = region_id
+	print("hint-shot far-qi region: ", long_region, " (", long_len, " chars)")
+	var setup_long := func() -> void:
+		hud.get("_banner").visible = false
+		c.realm_index = 1
+		c.stage = 0
+		c.injuries.clear()
+		c.sect = {"id": "azure_cloud_sect", "rank": 0, "contribution": 50}
+		c.techniques = {"iron_fist": {"level": 1, "xp": 0.0}}
+		c.inventory = {"spirit_stone": 10}
+		c.last_meditated_day = 40
+		clock.total_days = 40
+		gs.current_region = long_region
+		root.get_node("EventBus").player_changed.emit()
+	shots.append({"name": "hint_long_" + size_tag, "open": func() -> void:
+		setup_long.call()
+		print("hint-shot long: ", hint_text.call()), "close": func() -> void: pass})
+	shots.append({"name": "hint_long_journal_" + size_tag, "open": func() -> void:
+		setup_long.call()
+		print("hint-shot long list: ", "\n".join(Guidance.hints(c, gs.data, 3, 12, gs.npcs, gs.world_flags, long_region, 40, gs.npc_favor)))
+		await show_journal.call("Next steps")
+		for _i in 3:
+			await root.get_tree().process_frame
+		var long_rich: RichTextLabel = journal.get("_text")
+		var long_parsed := long_rich.get_parsed_text()
+		var long_at := long_parsed.find("Meditation at")
+		assert(long_at >= 0, "journal has no far-qi line")
+		var long_scroll: ScrollContainer = journal.get("_scroll")
+		long_scroll.scroll_vertical = maxi(0, int(long_rich.get_paragraph_offset(long_parsed.substr(0, long_at).count("\n"))) - 160), "close": journal.close})
 
 
 ## WU-190: the encounter window on real encounters with attribute, profession and enemy choices.
