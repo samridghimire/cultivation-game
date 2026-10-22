@@ -226,6 +226,18 @@ func test_spread_on_screen_skips_labels_that_are_not_drawn() -> void:
 	shown.free()
 
 
+func test_spread_on_screen_zeroes_the_lift_of_a_label_that_gets_hidden() -> void:
+	var view := Rect2(0, 0, 1000, 800)
+	var n := _npc("Aa", Vector2(300, 300))
+	n.screen_lift = -30.0
+	n.visible = false
+	Interactable.spread_on_screen([n], view)
+	n.visible = true
+	Interactable.spread_on_screen([n], view)
+	assert_eq(n.screen_lift, 0.0, "a stale lift must not come back")
+	n.free()
+
+
 func test_drawn_label_rect_includes_the_hinted_badge() -> void:
 	var view := Rect2(0, 0, 1000, 800)
 	var n := _npc("Aa", Vector2(300, 300))

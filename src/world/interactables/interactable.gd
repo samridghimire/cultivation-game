@@ -232,6 +232,9 @@ static func spread_on_screen(nodes: Array, view: Rect2) -> void:
 	var placed: Array[Rect2] = []
 	for node: Interactable in nodes:
 		if not node.label_drawn():
+			if node.screen_lift != 0.0:
+				node.screen_lift = 0.0
+				node._redraw_label()
 			continue
 		var before := node.screen_lift
 		node.screen_lift = 0.0
