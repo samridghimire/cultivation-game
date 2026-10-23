@@ -3474,3 +3474,23 @@ func test_cooling_mission_is_not_too_dangerous() -> void:
 	assert_false(text.contains("practise"), text)
 	c.mission_cooldowns.clear()
 	assert_false(Guidance._mission_hint(c, d, {}).contains("is ready again"))
+
+
+## GUIDE-114: one line carries the merchant's offer, not two.
+func test_sell_offer_not_repeated_in_armor_line() -> void:
+	var c := _armor_hint_fighter()
+	var ore := _loot_id("ore")
+	c.inventory = {"spirit_stone": 10, ore: 100}
+	var offer := Guidance.sell_offer(c, data(), "qingshi_village")
+	assert_false(offer.is_empty(), "the Qingshi merchant buys ore")
+	var mentions := 0
+	for line in Guidance.hints(c, data(), 1.0, 40, {}, {}, "qingshi_village"):
+		if line.contains(offer["merchant"]) and (line.contains("Sell your") or line.contains("would pay about")):
+			mentions += 1
+		assert_false(line.contains("here would pay about"), "standalone sell line dropped: " + line)
+	assert_eq(mentions, 1, "exactly one line mentions the offer")
+	c.inventory = {"spirit_stone": 500, ore: 100}
+	var kept := false
+	for line in Guidance.hints(c, data(), 1.0, 40, {}, {}, "qingshi_village"):
+		kept = kept or line.contains("here would pay about")
+	assert_true(kept, "with enough stones the standalone sell line stays")

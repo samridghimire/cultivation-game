@@ -133,6 +133,7 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 			out.append(hint)
 	out = _merge_better_qi(out, c, data, density, region_id, flags)
 	out = _merge_practise_advice(out)
+	out = _merge_sell_advice(out, sell)
 	if out.size() > limit:
 		out.resize(limit)
 	return out
@@ -1518,6 +1519,18 @@ static func _merge_practise_advice(out: PackedStringArray) -> PackedStringArray:
 			if out[i] != line and out[i].ends_with(tail):
 				out[i] = out[i].trim_suffix(tail) + "the practice above would open them."
 		return out
+	return out
+
+
+## GUIDE-114: the standalone "<Merchant> here would pay about N stones" line is dropped when another line already
+## says "Sell your <goods> to the <Merchant> (about N stones) first." (the armor and thin-defence clauses).
+static func _merge_sell_advice(out: PackedStringArray, sell_line: String) -> PackedStringArray:
+	if sell_line == "" or not out.has(sell_line):
+		return out
+	for line in out:
+		if line != sell_line and line.to_lower().contains(" sell your "):
+			out.remove_at(out.find(sell_line))
+			break
 	return out
 
 
