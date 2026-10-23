@@ -2,6 +2,16 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-10-23 (planner, 02:15 UTC)
+- 19 tasks landed (GUIDE-108b/110/111/112/113/114, DATA-001, ENC-008/009, WU-294..299, C-202/205, QA-128/139). No new
+  review (last reviewed 65d397e). Live claims: PERF-002, QA-138, WU-300, C-203 (none stale).
+- 02:10 curious trace (seed 47, 12 months): calm and winnable (18 won / 2 lost, 0 injuries, QR8 at day 788). The deliver
+  clause names the wrong mission (GUIDE-120), three hints want the same Spirit Herbs (GUIDE-115/118/119, WU-303/308), and the
+  open trial at 60 in 100 gives no lever (GUIDE-117). New: TOOL-001 (sims fail in a fresh container until `--import`),
+  QA-142 (balance baseline drift), C-209 (drunk bully power_mult), WU-301 (`--hint-shot` WU-288 case fails on main).
+- DESIGN.md had the ENC-008 question twice; merged. Owner questions unchanged (pacing, first fights, ascension, RIVAL-019,
+  ENC-008 checks, GEAR-001).
+
 ## State on 2026-10-23 (planner, 00:15 UTC)
 - 11 tasks landed (GUIDE-108, PERF-001, C-199/200/201, WU-241/291/292/293, QA-136/137). No new review (last reviewed
   56b85f2). Live claims: GUIDE-110, GUIDE-112, ENC-008, WU-294, WU-295.

@@ -2,6 +2,25 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-23 [WU-299] The clinic says how many days of cultivation each treatment saves.
+- 2026-10-23 [ENC-009] A forced fight you almost surely can't win is sensed in time to slip away.
+- 2026-10-23 [GUIDE-111] Sect missions that ask for items you carry or can gather here show in your hints.
+- 2026-10-23 [C-202] Help says your hints tell you when a resting mission is ready again.
+- 2026-10-23 [GUIDE-114] The hints give one piece of selling advice, not two.
+- 2026-10-23 [QA-128] The first-year balance sim now treats its injuries.
+- 2026-10-23 [WU-298] The "(best pay)" mission board checked at Steam Deck sizes.
+- 2026-10-23 [GUIDE-113] When a stage would take long, the same hint names a faster meditation spot, if the trip is worth it.
+- 2026-10-23 [DATA-001] A data file with two entries of the same id now fails the game's checks.
+- 2026-10-23 [C-205] The Herb Hall tithe is listed once.
+- 2026-10-23 [GUIDE-108b] Practise advice really is no longer repeated in two hints.
+- 2026-10-23 [WU-297] The hint badge lights on a person named in your first hint.
+- 2026-10-23 [QA-139] Found why the village drunk bully read 2 in 100: he fights like a trained disciple (fix: C-209).
+- 2026-10-23 [ENC-008] Encounter choices can now be a gamble on an attribute, with a cost when it fails.
+- 2026-10-23 [WU-296] Inventory details say how many days of meditation a qi herb or pill is worth.
+- 2026-10-23 [WU-294] World labels no longer reappear shifted after being hidden.
+- 2026-10-23 [GUIDE-112] The spar hint says what a friendly bout is worth and how often a partner will spar.
+- 2026-10-23 [WU-295] The Fallen Star Market bounty board checked at Steam Deck sizes.
+- 2026-10-23 [GUIDE-110] A safe mission that is only resting no longer reads as "too dangerous"; the hint says when it is ready.
 - 2026-10-23 [C-201] Azure Cloud disciples can tithe three Spirit Herbs to the Herb Hall for contribution and a few stones.
 - 2026-10-22 [PERF-001] Opening a mentor's menu no longer hitches for a quarter second.
 - 2026-10-22 [C-199] Help says you can eat qi herbs and pills from the Inventory.
