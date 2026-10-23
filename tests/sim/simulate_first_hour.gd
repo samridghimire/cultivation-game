@@ -150,6 +150,8 @@ func _print_deaths(rows: Array, lethal: Array, seeds: int) -> void:
 		spent.append(row["spent"])
 		final += 1 if row["final"] >= 0 else 0
 	print("Seeds with a final death: %d/%d; median lives spent %.0f" % [final, seeds, _median(spent)])
+	var blank: Array = rows.map(func(r: Dictionary) -> int: return int(r.get("no_hint", 0)))
+	print("Months the mission hint named nothing (QA-154), per seed median %.0f, total %d" % [_median(blank), blank.reduce(func(a: int, b: int) -> int: return a + b, 0)])
 	var by_source := {}
 	var by_foe := {}
 	var odds: Array = []
@@ -444,7 +446,7 @@ func _run() -> void:
 					var last: Dictionary = seed_lethal[seed_lethal.size() - 1]
 					last["final"] = true
 					lethal_rows.append(last)
-			death_rows.append({"seed": s, "spent": LifeStats.get_stat(gs.player, "respawns"), "final": final_day})
+			death_rows.append({"seed": s, "spent": LifeStats.get_stat(gs.player, "respawns"), "final": final_day, "no_hint": int(r.get("no_hint_months", 0))})
 		var contribs: Array = r["contribution"]
 		if contribs.size() >= 6:
 			contrib6.append(contribs[5])

@@ -206,6 +206,7 @@ static func play(gs: Node, clock: Node, seed_value: int, months: int, curious: b
 	out["fair_log"] = done.get("fair_log", {"listed": [], "taken": [], "by_kind": {}})
 	out["injuries"] = c.injuries.size()
 	out["recharges"] = int(done.get("recharges", 0))
+	out["no_hint_months"] = int(done.get("no_hint_months", 0))
 	out["trials_won"] = int(done.get("trials_won", 0))
 	out["trials_lost"] = int(done.get("trials_lost", 0))
 	out["sect_rank"] = -1 if c.is_rogue() else int(c.sect["rank"])
@@ -400,6 +401,8 @@ static func _curious_month(gs: Node, c: CharacterData, done: Dictionary, today: 
 			# QA-134: the hint names the best-paying mission ("The best pays N contribution"); take it, up to 3 a month.
 			for _i in 3:
 				var best := Guidance.best_mission(c, gs.data, gs.world_flags)
+				if c.alive and best == "" and _i == 0:
+					done["no_hint_months"] = int(done.get("no_hint_months", 0)) + 1  # QA-154
 				if not c.alive or best == "" or not _mission_is_sane(gs, c, best, done, today):
 					break
 				_take_one_mission(gs, c, done, kinds, fair, best, today)
