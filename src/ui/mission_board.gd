@@ -143,13 +143,13 @@ static func info_text(c: CharacterData, data: GameData, mission: Dictionary) -> 
 
 ## Hand-in items as "2 / 5 Spirit Herb" lines and the enemy with its danger
 ## for `c`; empty when the mission needs neither.
-static func requirement_lines(c: CharacterData, data: GameData, mission: Dictionary, region_id: String = "") -> PackedStringArray:
+static func requirement_lines(c: CharacterData, data: GameData, mission: Dictionary, region_id: String = "", today: int = -1) -> PackedStringArray:
 	var lines: PackedStringArray = []
 	var needed: Dictionary = mission.get("requires", {}).get("items", {})
 	for item_id in needed:
 		var line := "%d / %d %s" % [c.item_count(item_id), int(needed[item_id]), data.items.get(item_id, {}).get("name", item_id)]
 		if c.item_count(item_id) < int(needed[item_id]):
-			var place := Guidance.gather_place_for(c, data, region_id, item_id)
+			var place := Guidance.gather_place_for(c, data, region_id, item_id, today)
 			if place != "":
 				var verb := "grows at" if (data.items.get(item_id, {}).get("tags", []) as Array).has("herb") else "found at"
 				line += " (%s %s here)" % [verb, place]
@@ -528,7 +528,7 @@ func _show_details() -> void:
 	_name.text = mission["name"]
 	_info.text = info_text(p, data, mission)
 	_description.text = String(mission.get("description", ""))
-	var reqs := requirement_lines(p, data, mission, GameState.current_region)
+	var reqs := requirement_lines(p, data, mission, GameState.current_region, GameClock.total_days)
 	_requirements.visible = not reqs.is_empty()
 	_requirements.text = "Requires:\n  " + "\n  ".join(coloured_requirement_lines(p, data, mission, reqs))
 	var rewards := Items.describe_effects(mission.get("rewards", {}), data)

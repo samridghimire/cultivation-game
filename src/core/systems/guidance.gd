@@ -107,7 +107,7 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 		var sect := _sect_hint(c, data, region_id)
 		if sect != "":
 			out.append(sect)
-	var missions := _mission_hint(c, data, flags, region_id)
+	var missions := _mission_hint(c, data, flags, region_id, today)
 	if missions != "":
 		var earn := -1
 		for i in out.size():
@@ -1528,7 +1528,7 @@ static func _mortal_sect_hint(c: CharacterData, data: GameData, open: PackedStri
 
 ## Members: how many sect missions they can take right now.
 ## GUIDE-105: when all are too dangerous, says whether to heal, practise a style, or grow a stage.
-static func _mission_hint(c: CharacterData, data: GameData, flags: Dictionary = {}, region_id: String = "") -> String:
+static func _mission_hint(c: CharacterData, data: GameData, flags: Dictionary = {}, region_id: String = "", today: int = -1) -> String:
 	if c.is_rogue():
 		return ""
 	var ready := 0
@@ -1593,7 +1593,7 @@ static func _mission_hint(c: CharacterData, data: GameData, flags: Dictionary = 
 		else:
 			text += "practise %s first." % data.techniques[best_style].name
 	if ready == 0 and deliver != "":
-		var clause := _deliver_clause(c, data, deliver, region_id)
+		var clause := _deliver_clause(c, data, deliver, region_id, today)
 		text = clause if text == "" else clause + " " + text
 	return text
 
@@ -1626,7 +1626,7 @@ static func _deliver_missing_elsewhere(c: CharacterData, data: GameData, mission
 
 
 ## "<name> (N contribution) needs A, B: you have x of y." plus where a missing item grows in `region_id`.
-static func _deliver_clause(c: CharacterData, data: GameData, mission_id: String, region_id: String = "") -> String:
+static func _deliver_clause(c: CharacterData, data: GameData, mission_id: String, region_id: String = "", today: int = -1) -> String:
 	var m: Dictionary = data.sect_missions[mission_id]
 	var needed: Dictionary = m.get("requires", {}).get("items", {})
 	var names: PackedStringArray = []
@@ -1638,7 +1638,8 @@ static func _deliver_clause(c: CharacterData, data: GameData, mission_id: String
 		total += n
 		have += mini(c.item_count(item_id), n)
 	var text := "%s (%d contribution) needs %s: you have %d of %d." % [String(m.get("name", mission_id)), int(m.get("contribution", 0)), ", ".join(names), have, total]
-	var here := _gatherable_items(c, data, region_id) if region_id != "" else {}
+	var season := Calendar.season_of(today) if today >= 0 else ""
+	var here := _gatherable_items(c, data, region_id, season) if region_id != "" else {}
 	for item_id: String in needed:
 		if c.item_count(item_id) < int(needed[item_id]) and here.has(item_id):
 			var plural := Items.item_plural(data, item_id, 2)

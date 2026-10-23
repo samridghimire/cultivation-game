@@ -3546,6 +3546,30 @@ func test_deliver_mission_gatherable_here() -> void:
 			return
 
 
+func test_deliver_clause_respects_the_season() -> void:
+	var d := data()
+	var c := _deliver_only(d)
+	# Find a herb that grows in a region only outside winter (GUIDE-130).
+	var found_region := ""
+	var found_item := ""
+	for rid: String in d.regions:
+		var winter := Guidance._gatherable_items(c, d, rid, "Winter")
+		var all := Guidance._gatherable_items(c, d, rid)
+		for item_id: String in all:
+			if not winter.has(item_id) and found_region == "":
+				found_region = rid
+				found_item = item_id
+	assert_true(found_region != "", "some herb must be out of season in winter somewhere")
+	d.sect_missions["tmp_season_mission"] = {"name": "Winter Tithe", "contribution": 10, "requires": {"items": {found_item: 1}}}
+	var place := String(Guidance._gatherable_items(c, d, found_region)[found_item])
+	var winter_text := Guidance._deliver_clause(c, d, "tmp_season_mission", found_region, 270)
+	var unknown := Guidance._deliver_clause(c, d, "tmp_season_mission", found_region)
+	d.sect_missions.erase("tmp_season_mission")
+	assert_eq(Calendar.season_of(270), "Winter")
+	assert_false(winter_text.contains("%s here" % place), winter_text)
+	assert_true(unknown.contains("%s here" % place), unknown)
+
+
 func test_deliver_mission_held_none_is_silent() -> void:
 	var d := data()
 	var c := _deliver_only(d)
