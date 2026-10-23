@@ -1454,7 +1454,7 @@ func _start_hint_shot(gs: Node) -> void:
 	var long_region := "qingshi_village"
 	var long_len := 0
 	c.realm_index = 1
-	c.stage = 0
+	c.stage = 3
 	c.sect = {"id": "azure_cloud_sect", "rank": 0, "contribution": 50}
 	for region_id: String in gs.data.regions:
 		var qi_line: String = Guidance._better_qi_hint(c, gs.data, region_id, gs.world_flags)
@@ -1465,7 +1465,9 @@ func _start_hint_shot(gs: Node) -> void:
 	var setup_long := func() -> void:
 		hud.get("_banner").visible = false
 		c.realm_index = 1
-		c.stage = 0
+		c.stage = 3  # WU-301: a slow stage, so GUIDE-113 merges the faster spot into the Gather line
+		for attr: String in c.attributes:
+			c.attributes[attr] = 10  # WU-301: an earlier case weakened them to 4, which hides the far-qi line
 		c.injuries.clear()
 		c.sect = {"id": "azure_cloud_sect", "rank": 0, "contribution": 50}
 		c.techniques = {"iron_fist": {"level": 1, "xp": 0.0}}
@@ -1485,7 +1487,11 @@ func _start_hint_shot(gs: Node) -> void:
 			await root.get_tree().process_frame
 		var long_rich: RichTextLabel = journal.get("_text")
 		var long_parsed := long_rich.get_parsed_text()
+		# GUIDE-113 merges the standalone line into the "Gather N more qi" line ("At <place> ... it would take about <T>.")
+		# when the trip pays off, and drops it when it does not; the shot must show one of the two.
 		var long_at := long_parsed.find("Meditation at")
+		if long_at < 0:
+			long_at = long_parsed.find("it would take about")
 		assert(long_at >= 0, "journal has no far-qi line")
 		var long_scroll: ScrollContainer = journal.get("_scroll")
 		long_scroll.scroll_vertical = maxi(0, int(long_rich.get_paragraph_offset(long_parsed.substr(0, long_at).count("\n"))) - 160), "close": journal.close})
@@ -1530,10 +1536,12 @@ func _start_hint_shot(gs: Node) -> void:
 	var setup_best := func() -> void:
 		hud.get("_banner").visible = false
 		c.realm_index = 1
-		c.stage = 2
+		c.stage = 4  # WU-301: two ready missions (as in --missions-shot) so the line says "The best pays", not "It pays"
 		c.injuries.clear()
 		c.sect = {"id": "azure_cloud_sect", "rank": 0, "contribution": 0}
-		c.techniques = {"iron_fist": {"level": 1, "xp": 0.0}}
+		c.techniques = {"iron_fist": {"level": 3, "xp": 0.0}}
+		for attr: String in c.attributes:
+			c.attributes[attr] = 10  # the trial case above weakened them to 4
 		c.inventory = {"spirit_stone": 10}
 		c.last_meditated_day = 40
 		clock.total_days = 40
