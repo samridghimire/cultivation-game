@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-23 [WU-336] A screenshot check of the thin-defence hint naming the sect treasury.
 - 2026-10-23 [WU-331] A screenshot check keeps the clinic's price and "(you have 19)" in a short newcomer's injury hint.
 - 2026-10-23 [GUIDE-146] When nothing at home tests you any more, the hint names a fair fight one road away.
 - 2026-10-23 [PERF-005] Two single-region fuzz tests walk only their region, so the test suite runs faster.
