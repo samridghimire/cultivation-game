@@ -62,3 +62,18 @@ func test_injured_player_can_treat_self_or_pay() -> void:
 	assert_eq(gs.player.item_count("spirit_stone"), 100 - 20)
 	assert_eq(clinic.get_options().size(), 1)
 	clinic.free()
+
+
+func test_pay_label_says_what_treatment_saves() -> void:
+	var gs := _gs()
+	var c := new_character()
+	c.injuries = {"internal_injury": 40}
+	gs.start_session(c)
+	gs.player.add_item("spirit_stone", 100)
+	var clinic := _clinic()
+	var saved := Injuries.qi_days_lost_for(gs.player, gs.data, "internal_injury")
+	assert_true(saved >= 3)
+	var pay := _find(clinic.get_options(), "Pay the doctor to heal your Internal Injury")
+	assert_true(String(pay["label"]).contains("saves about %s of cultivation" % Calendar.format_duration(saved)))
+	assert_true(String(pay["label"]).length() < 100)
+	clinic.free()

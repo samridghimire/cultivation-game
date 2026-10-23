@@ -17,7 +17,9 @@ func get_options() -> Array[Dictionary]:
 		var left := Calendar.format_duration(int(c.injuries[injury_id]))
 		options.append({"label": "Treat your %s (%s, heals %s; %s left)" % [injury_name, Calendar.format_duration(self_days), Calendar.format_duration(power), left], "action": GameState.treat_own_injury.bind(injury_id), "disabled": power <= 0, "keep_open": true})
 		var cost := Medicine.clinic_cost(c, data, injury_id)
-		var label := "Pay the doctor to heal your %s (%d spirit stones)" % [injury_name, cost]
+		var saved := Injuries.qi_days_lost_for(c, data, injury_id)
+		var saves := ", saves about %s of cultivation" % Calendar.format_duration(saved) if saved >= 3 else ""
+		var label := "Pay the doctor to heal your %s (%d stones%s)" % [injury_name, cost, saves]
 		if stones < cost:
 			label += " (you have %d)" % stones
 		options.append({"label": label, "action": GameState.visit_clinic.bind(injury_id), "disabled": stones < cost, "keep_open": true})

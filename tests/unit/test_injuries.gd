@@ -168,3 +168,11 @@ func test_qi_days_lost() -> void:
 	var m2 := float(data().injuries["qi_deviation"]["cultivation_mult"])
 	c.injuries = {"internal_injury": 40, "qi_deviation": 10}
 	assert_eq(Injuries.qi_days_lost(c, data()), roundi(10 * (1.0 - m * m2) + 30 * (1.0 - m)))
+
+
+func test_qi_days_lost_for() -> void:
+	var c := new_character()
+	assert_eq(Injuries.qi_days_lost_for(c, data(), "internal_injury"), 0)
+	var m := float(data().injuries["internal_injury"]["cultivation_mult"])
+	c.injuries = {"internal_injury": 40, "qi_deviation": 10}
+	assert_eq(Injuries.qi_days_lost_for(c, data(), "internal_injury"), roundi(40 * (1.0 - m)))

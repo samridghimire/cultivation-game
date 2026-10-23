@@ -106,6 +106,14 @@ static func qi_days_lost(c: CharacterData, data: GameData) -> int:
 	return roundi(lost)
 
 
+## WU-299: cultivation days lost to one injury alone, were it left to heal on its own.
+static func qi_days_lost_for(c: CharacterData, data: GameData, injury_id: String) -> int:
+	if not c.injuries.has(injury_id):
+		return 0
+	var mult := float(data.injuries.get(injury_id, {}).get("cultivation_mult", 1.0))
+	return roundi(int(c.injuries[injury_id]) * (1.0 - mult))
+
+
 static func injury_name(data: GameData, injury_id: String) -> String:
 	return data.injuries.get(injury_id, {}).get("name", injury_id)
 
