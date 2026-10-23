@@ -386,7 +386,7 @@ static func fight_fingerprint(c: CharacterData) -> String:
 
 
 ## Sample count behind every player-facing fight rating.
-const RATING_SAMPLES := 40
+const RATING_SAMPLES := 120
 
 ## Estimated chance (0..1) that `c` beats `enemy`, by simulating fights with
 ## a private fixed-seed rng (so it is stable and never touches game rng).

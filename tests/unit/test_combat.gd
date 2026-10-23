@@ -383,3 +383,18 @@ func test_power_mult_out_of_range_is_a_load_error() -> void:
 		if "power_mult must be a number in [0.5, 1.5]" in e:
 			found = true
 	assert_true(found, str(d.load_errors))
+
+
+## GUIDE-156: the shown odds (RATING_SAMPLES fights) stay within 5 points of a 2000-fight estimate.
+func test_win_chance_close_to_large_sample() -> void:
+	var worst := 0.0
+	for foe_id in ["mist_wolf", "iron_back_boar"]:
+		for stage in [2, 4, 6]:
+			var c := new_character()
+			c.realm_index = 1
+			c.stage = stage
+			c.techniques["common_qi_gathering"] = {"level": 1, "xp": 0.0}
+			var foe: Dictionary = data().enemies[foe_id]
+			var gap := absf(Combat.win_chance(c, data(), foe) - Combat.win_chance(c, data(), foe, 2000))
+			worst = maxf(worst, gap)
+			assert_true(gap < 0.05, "%s stage %d off by %.3f" % [foe_id, stage, gap])
