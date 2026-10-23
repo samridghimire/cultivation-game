@@ -787,6 +787,13 @@ static func _untried_feature_hint(c: CharacterData, data: GameData, today: int, 
 		var partner := _region_people(c, data, people, favor, region_id, today, "spar")
 		if not partner.is_empty():
 			var npc: CharacterData = partner[0]
+			var style := _best_unmastered_combat(c, data)
+			var terms := Mentorship.spar_terms(data)
+			if style != "" and int(terms["practice_days"]) > 0:
+				var again := ", every %s" % Calendar.format_duration(int(terms["cooldown_days"]))
+				if int(terms["cooldown_days"]) == 7:
+					again = ", once a week"
+				return "%s (%s) here would spar with you: a %s bout trains %s like %s of practice%s." % [npc.name, data.realms[npc.realm_index].name, Calendar.format_duration(int(terms["days"])), data.techniques[style].name, Calendar.format_duration(int(terms["practice_days"])), again]
 			return "%s (%s) here would spar with you: a friendly bout trains your techniques." % [npc.name, data.realms[npc.realm_index].name]
 	return ""
 

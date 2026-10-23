@@ -229,6 +229,24 @@ func test_never_sparred_hint() -> void:
 	assert_false(_any_contains(_hints_of(s), "would spar with you"), "already sparred")
 
 
+func test_spar_hint_states_worth() -> void:
+	var s := _hint_setup()
+	var c: CharacterData = s["c"]
+	LifeStats.add(c, "encounters")
+	LifeStats.add(c, "realm_floors_cleared")
+	assert_true(_any_contains(_hints_of(s), "a 1 day bout trains Iron Fist like 3 days of practice, once a week."))
+	c.techniques["iron_fist"]["level"] = data().techniques["iron_fist"].max_level
+	assert_true(_any_contains(_hints_of(s), "a friendly bout trains your techniques"), "mastered")
+
+
+func test_spar_terms_match_data() -> void:
+	var t := Mentorship.spar_terms(data())
+	var raw: Dictionary = data().family["mentorship"]["spar"]
+	assert_eq(t["days"], int(raw["days"]))
+	assert_eq(t["practice_days"], int(raw["practice_days"]))
+	assert_eq(t["cooldown_days"], int(raw["cooldown_days"]))
+
+
 ## RV-014: a friendly spar is free; pointers are only shared with a better teacher.
 func _talisman_fighter() -> CharacterData:
 	var p := _pair()

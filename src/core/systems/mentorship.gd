@@ -8,6 +8,12 @@ static func _rules(data: GameData, kind: String) -> Dictionary:
 	return data.family.get("mentorship", {}).get(kind, {})
 
 
+## What a friendly bout costs and is worth, straight from data/family.json (hints quote it).
+static func spar_terms(data: GameData) -> Dictionary:
+	var rules := _rules(data, "spar")
+	return {"days": int(rules.get("days", 1)), "practice_days": int(rules.get("practice_days", 0)), "cooldown_days": int(rules.get("cooldown_days", 0))}
+
+
 static func is_senior(c: CharacterData, npc: CharacterData) -> bool:
 	return npc.realm_index > c.realm_index or (npc.realm_index == c.realm_index and npc.stage > c.stage)
 
@@ -156,6 +162,7 @@ static func spar_enemy(npc: CharacterData, data: GameData) -> Dictionary:
 ## cooldown, and favor on a win. Returns {favor, practiced, levels, days}.
 static func after_spar(c: CharacterData, npc: CharacterData, data: GameData, won: bool, today: int) -> Dictionary:
 	var rules := _rules(data, "spar")
+	var terms := spar_terms(data)
 	var practiced: PackedStringArray = []
 	var levels: PackedStringArray = []
 	var ids: Array = c.techniques.keys()
@@ -164,14 +171,14 @@ static func after_spar(c: CharacterData, npc: CharacterData, data: GameData, won
 		var def: TechniqueDef = data.techniques.get(tech_id)
 		if def == null or def.is_method() or Techniques.is_mastered(c, data, tech_id):
 			continue
-		var r := Techniques.practice(c, data, tech_id, int(rules.get("practice_days", 0)))
+		var r := Techniques.practice(c, data, tech_id, int(terms["practice_days"]))
 		if not r["ok"]:
 			continue
 		practiced.append(def.name)
 		if int(r["levels_gained"]) > 0:
 			levels.append("%s reaches level %d" % [def.name, Techniques.level(c, tech_id)])
 	c.npc_action_days["spar:" + npc.id] = today
-	return {"favor": int(rules.get("win_favor", 0)) if won else 0, "practiced": practiced, "levels": levels, "days": int(rules.get("days", 1))}
+	return {"favor": int(rules.get("win_favor", 0)) if won else 0, "practiced": practiced, "levels": levels, "days": int(terms["days"])}
 
 
 ## Favor `npc` needs to teach or spar with `c`: `same_sect_min_favor` for a fellow sect member.
