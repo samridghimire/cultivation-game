@@ -90,6 +90,7 @@ extends SceneTree
 ## "Reach <realm> to stand a chance against <name>." line), then the bitter variant. Shoot at 1280x800 and 1280x720.
 ## WU-210: it then breaks through level with the rival (rival_caught_up_log / rival_caught_up_journal).
 ## WU-246: `-- --first-hour` also writes fh_<workshop|shop|journal_first_goals|journal_next_steps|journal_commissions|board>_<day1|month1>_<size>.png.
+## WU-296: append `-- --inventory-shot` for inventory_qi_worth.png (Spirit Herb selected: "Worth about N of meditation here"); run once per --resolution.
 ## WU-273: append `-- --techniques-shot` for techniques_practice[_scale115].png (Iron Fist level 1 details, practice button focused); run once per --resolution. Checked at 1280x720 and 1280x800: nothing clipped, the action row wraps.
 ## WU-295: `--bounty-shot` writes bounty_menu_<size>.png: the Fallen Star Market bounty board with the longest hunt label any realm sees (the hunt's description is shown for the focused entry).
 ## WU-289: `--hint-shot` also writes hint_road_marker_/hint_road_menu_/hint_badge_<size>.png (road-out "!", route line "The hint points this way.", clinic badge).
@@ -195,6 +196,9 @@ func _start() -> void:
 		return
 	if OS.get_cmdline_user_args().has("--techniques-shot"):
 		_start_techniques_shot(gs)
+		return
+	if OS.get_cmdline_user_args().has("--inventory-shot"):
+		_start_inventory_shot(gs)
 		return
 	if OS.get_cmdline_user_args().has("--missions-shot"):
 		_start_missions_shot(gs)
@@ -1076,6 +1080,23 @@ func _start_shop_shot(gs: Node) -> void:
 		gs.current_region = "qingshi_village"
 		shop.open("Wandering Merchant", 0, ["herb", "ore"])
 		shop._set_category("All"), "close": shop.close})
+
+
+func _start_inventory_shot(gs: Node) -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 5
+	var c := CharacterFactory.create("Lin Feng", gs.data, rng, "male")
+	gs.start_session(c)
+	gs.pending_event = ""
+	gs.current_region = "qingshi_village"
+	c.inventory = {"spirit_herb": 3, "spirit_stone": 20}
+	world = load("res://src/world/world.tscn").instantiate()
+	root.add_child(world)
+	hud = world.get_node("HUD")
+	var inv: Control = hud.get("_screens")["toggle_inventory"]
+	shots.append({"name": "inventory_qi_worth", "open": func() -> void:
+		inv.open()
+		inv._select("spirit_herb"), "close": inv.close})
 
 
 ## WU-273: `--techniques-shot` writes techniques_practice.png and techniques_practice_scale115.png (UI scale 115%): a Qi Refining

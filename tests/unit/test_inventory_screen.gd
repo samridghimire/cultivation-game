@@ -180,3 +180,20 @@ func test_season_lines_mark_current_season() -> void:
 	var summer := InventoryScreen.season_lines(data(), "ice_soul_flower", "Summer")
 	assert_eq(summer[0], "Richest in Winter at Frost Ledge (Azure Peak)")
 	assert_eq(InventoryScreen.season_lines(data(), "cold_iron", "Winter").size(), 0)
+
+
+func test_qi_worth_line_matches_meditation_days() -> void:
+	var data := data()
+	var c := new_character()
+	var line := InventoryScreen.qi_worth_line(c, data, "spirit_herb", "qingshi_village", {})
+	assert_true(line.begins_with("Worth about ") and line.ends_with(" of meditation here"), line)
+	var rate := Cultivation.qi_per_day(c, data, float(Guidance.best_qi_in_region(c, data, "qingshi_village", {})["density"]))
+	assert_eq(line, "Worth about %s of meditation here" % Calendar.format_duration(maxi(1, ceili(80.0 / rate))))
+
+
+func test_qi_worth_line_empty_for_non_qi_and_harmful() -> void:
+	var data := data()
+	var c := new_character()
+	assert_eq(InventoryScreen.qi_worth_line(c, data, "golden_bell_talisman", "qingshi_village", {}), "")
+	data.items["bad_pill"] = {"effects": {"qi": 50, "burn_lifespan": 5}}
+	assert_eq(InventoryScreen.qi_worth_line(c, data, "bad_pill", "qingshi_village", {}), "")

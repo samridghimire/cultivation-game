@@ -211,6 +211,19 @@ static func list_height(rows: int) -> float:
 	return clampf(rows * LIST_ROW_HEIGHT, LIST_MIN_HEIGHT, LIST_MAX_HEIGHT)
 
 
+## WU-296: "Worth about N days of meditation here" for an item that gives qi, matching the
+## Guidance hint. "" when the item gives no qi, harms (burn_lifespan, negative alignment) or the rate is 0.
+static func qi_worth_line(c: CharacterData, data: GameData, item_id: String, region_id: String, flags: Dictionary) -> String:
+	var fx: Dictionary = data.items.get(item_id, {}).get("effects", {})
+	var qi := float(fx.get("qi", 0.0))
+	if qi <= 0.0 or fx.has("burn_lifespan") or int(fx.get("alignment", 0)) < 0:
+		return ""
+	var rate := Cultivation.qi_per_day(c, data, float(Guidance.best_qi_in_region(c, data, region_id, flags)["density"]))
+	if rate <= 0.0:
+		return ""
+	return "Worth about %s of meditation here" % Calendar.format_duration(maxi(1, ceili(qi / rate)))
+
+
 func _select(item_id: String) -> void:
 	if item_id == _selected:
 		return
@@ -230,6 +243,10 @@ func _show_details() -> void:
 	if int(item.get("price", 0)) > 0:
 		lines.append("Market price: %d spirit stones" % int(item["price"]))
 	var equippable := _selected != "" and Equipment.is_equipment(data, _selected)
+	if _selected != "":
+		var worth := qi_worth_line(GameState.player, data, _selected, GameState.current_region, GameState.world_flags)
+		if worth != "":
+			lines.append(worth)
 	if _selected != "" and not GameState.player.equipment.values().has(_selected):
 		lines.append_array(use_lines(data, _selected, GameState.current_region))
 	if _selected != "":
