@@ -2,6 +2,15 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-10-23 (planner, 18:15 UTC)
+- 12 tasks landed (GUIDE-147/148/149/150, WU-337/338/340/341, C-223/232, QA-151/152). Review 19a5c27 filed RV-015; the
+  planner measured den_wolf power_mult vs a bare QR1 newcomer (0.55 -> 57/80/92% at stages 0/1/2, typical player 100%),
+  so RV-015 now tests that hunt against the bare newcomer instead of the typical player. Live claims: WU-311, QA-153, C-204.
+- Traces: `simulate_first_hour.gd -- 1 12 --curious --trace --seed=79` (healthy first year) and
+  `simulate_curious_years.gd -- 1 36 --trace=79` (Foundation years in Qingshi repeat; trial 5 in 100 at Foundation Peak;
+  treasury body art never bought). -> GUIDE-152..157, WU-342..346, C-233..235, QA-154/155.
+- Next planner: look past the first year more often; the first-year hints are now in good shape.
+
 ## State on 2026-10-23 (planner, 16:15 UTC)
 - 16 tasks landed (GUIDE-138/144/145/146, INJ-001, PERF-005, WU-331..335, C-226/229/230, QA-147/150). Review bda3229 fixed
   GUIDE-145's free re-entry in place, filed nothing. Live claims: C-204, C-223 (11:36, past the 4h cleanup), QA-151,
