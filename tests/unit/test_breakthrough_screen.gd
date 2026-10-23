@@ -149,3 +149,31 @@ func test_buttons_fit_at_720p() -> void:
 		var r := button.get_global_rect()
 		assert_true(r.size.y > 0.0 and view.encloses(r), "%s at %s inside %s" % [button.name, r, view])
 	vp.free()
+
+
+func _sect_bottleneck(rank: int, contribution: int) -> CharacterData:
+	_bottleneck(false)
+	var p: CharacterData = _gs().player
+	p.sect = {"id": "azure_cloud_sect", "rank": rank, "contribution": contribution, "spent": 0}
+	return p
+
+
+## WU-330: an Inner Disciple is told to claim the pill, not to buy it.
+func test_pill_hint_inner_disciple_claims_from_treasury() -> void:
+	var hint := BreakthroughScreen.pill_hint(_sect_bottleneck(1, 300), data())
+	assert_true(hint.begins_with("Claim a Foundation Establishment Pill"), hint)
+	assert_false(hint.contains("stones"), hint)
+
+
+func test_pill_hint_outer_disciple_sees_stones_and_rank_clause() -> void:
+	var hint := BreakthroughScreen.pill_hint(_sect_bottleneck(0, 300), data())
+	assert_true(hint.contains("stones"), hint)
+	assert_true(hint.contains("you could claim it"), hint)
+
+
+func test_pill_hint_rogue_unchanged() -> void:
+	_bottleneck(false)
+	var p: CharacterData = _gs().player
+	var hint := BreakthroughScreen.pill_hint(p, data())
+	assert_false(hint.contains("claim"), hint)
+	assert_eq(hint, Guidance.pill_source_hint(p, data()) + " You have %d of %d stones." % [p.item_count("spirit_stone"), Guidance.next_realm_pill_price(p, data())])

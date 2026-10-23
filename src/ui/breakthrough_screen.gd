@@ -76,14 +76,17 @@ static func realm_blurb(data: GameData, realm_index: int) -> String:
 
 ## The pill source plus how many stones you have against its price.
 static func pill_hint(p: CharacterData, data: GameData) -> String:
+	var claim := Guidance.sect_pill_claim(p, data)
+	if claim != "":
+		return claim
 	var text := Guidance.pill_source_hint(p, data)
 	var price := Guidance.next_realm_pill_price(p, data)
 	if text == "" or price <= 0:
 		return text
 	var stones := p.item_count("spirit_stone")
 	if stones >= price:
-		return text + " You can afford it."
-	return text + " You have %d of %d stones." % [stones, price]
+		return text + " You can afford it." + Guidance.sect_pill_rank_clause(p, data)
+	return text + " You have %d of %d stones." % [stones, price] + Guidance.sect_pill_rank_clause(p, data)
 
 
 func open() -> void:

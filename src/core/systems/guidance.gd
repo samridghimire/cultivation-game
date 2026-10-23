@@ -1299,10 +1299,16 @@ static func pill_saving_goal(c: CharacterData, data: GameData) -> String:
 	var stones := c.item_count("spirit_stone")
 	var have := "you can afford it now" if stones >= price else "you have %d" % stones
 	var line := "Save for %s (+%d percent): %d stones, %s. %s." % [Text.a(String(pill["name"])), roundi(float(pill["effects"]["breakthrough_bonus"]) * 100), price, have, Items.sources(data, String(pill["id"]))[0]]
+	return line + sect_pill_rank_clause(c, data)
+
+
+## " As Inner Disciple you could claim it for 250 contribution." when the sect treasury sells the next
+## realm's pill but c's rank is too low; "" otherwise.
+static func sect_pill_rank_clause(c: CharacterData, data: GameData) -> String:
 	var entry := sect_pill_entry(c, data)
-	if not entry.is_empty() and int(c.sect.get("rank", 0)) < int(entry["min_rank"]):
-		line += " As %s you could claim it for %d contribution." % [(data.sects[c.sect["id"]] as SectDef).rank_name(int(entry["min_rank"])), int(entry["cost"])]
-	return line
+	if entry.is_empty() or int(c.sect.get("rank", 0)) >= int(entry["min_rank"]):
+		return ""
+	return " As %s you could claim it for %d contribution." % [(data.sects[c.sect["id"]] as SectDef).rank_name(int(entry["min_rank"])), int(entry["cost"])]
 
 
 ## GUIDE-132: {item_id, name, bonus, cost, min_rank} of the best breakthrough pill for the next realm in `c`'s sect
