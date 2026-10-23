@@ -197,3 +197,14 @@ func test_qi_worth_line_empty_for_non_qi_and_harmful() -> void:
 	assert_eq(InventoryScreen.qi_worth_line(c, data, "golden_bell_talisman", "qingshi_village", {}), "")
 	data.items["bad_pill"] = {"effects": {"qi": 50, "burn_lifespan": 5}}
 	assert_eq(InventoryScreen.qi_worth_line(c, data, "bad_pill", "qingshi_village", {}), "")
+
+
+func test_wanted_by_sect_line_names_mission_count_and_contribution() -> void:
+	var data := data()
+	var c := new_character()
+	assert_eq(InventoryScreen.wanted_by_sect_line(c, data, "spirit_herb", {}), "", "rogues are not asked")
+	c.sect = {"id": "azure_cloud_sect", "rank": 0, "contribution": 0}
+	var line := InventoryScreen.wanted_by_sect_line(c, data, "spirit_herb", {})
+	assert_true(line.begins_with("Wanted by the sect: "), line)
+	assert_true(line.ends_with(" contribution)") and line.contains(" for "), line)
+	assert_eq(InventoryScreen.wanted_by_sect_line(c, data, "spirit_stone", {}), "")

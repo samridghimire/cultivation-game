@@ -247,6 +247,10 @@ func _show_details() -> void:
 		var worth := qi_worth_line(GameState.player, data, _selected, GameState.current_region, GameState.world_flags)
 		if worth != "":
 			lines.append(worth)
+	if _selected != "":
+		var wanted := wanted_by_sect_line(GameState.player, data, _selected, GameState.world_flags)
+		if wanted != "":
+			lines.append(wanted)
 	if _selected != "" and not GameState.player.equipment.values().has(_selected):
 		lines.append_array(use_lines(data, _selected, GameState.current_region))
 	if _selected != "":
@@ -296,6 +300,16 @@ static func season_lines(data: GameData, item_id: String, season: String) -> Arr
 			now = now or s.to_lower() == season.to_lower()
 		out.append("Richest in %s at %s (%s)%s" % [" / ".join(names), src["place"], src["region_name"], " (now)" if now else ""])
 	return out
+
+
+## WU-308: "Wanted by the sect: <mission> (<N> for <C> contribution)" for an item a mission your sect offers hands in; "" otherwise.
+static func wanted_by_sect_line(c: CharacterData, data: GameData, item_id: String, flags: Dictionary) -> String:
+	for mission_id: String in Sects.available_missions(c, data, flags):
+		var mission: Dictionary = data.sect_missions[mission_id]
+		var needed: Dictionary = mission.get("requires", {}).get("items", {})
+		if needed.has(item_id):
+			return "Wanted by the sect: %s (%d for %d contribution)" % [mission.get("name", mission_id), int(needed[item_id]), int(mission.get("contribution", 0))]
+	return ""
 
 
 ## WU-045: who buys the item and which recipes use it.

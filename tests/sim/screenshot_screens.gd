@@ -1097,6 +1097,7 @@ func _start_inventory_shot(gs: Node) -> void:
 	gs.pending_event = ""
 	gs.current_region = "qingshi_village"
 	c.inventory = {"spirit_herb": 3, "spirit_stone": 20}
+	c.sect = {"id": "azure_cloud_sect", "rank": 0, "contribution": 50}  # WU-308: the "Wanted by the sect" line
 	world = load("res://src/world/world.tscn").instantiate()
 	root.add_child(world)
 	hud = world.get_node("HUD")
