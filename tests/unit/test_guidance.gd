@@ -377,6 +377,44 @@ func test_better_qi_hint_names_the_best_reachable_spot() -> void:
 	assert_true(gather.ends_with("(10 days away)."), gather)
 
 
+func _gather_or_travel(hints: PackedStringArray) -> String:
+	for line in hints:
+		if line.begins_with("Gather ") or line.begins_with("Travel to "):
+			return line
+	return ""
+
+
+func test_far_qi_trip_leads_the_gather_line() -> void:
+	var c := _fresh()
+	c.realm_index = 2
+	var hints := Guidance.hints(c, data(), 1.0, 20, {}, {}, "qingshi_village")
+	assert_false(_has(hints, "Meditation at"))
+	var gather := _gather_or_travel(hints)
+	# GUIDE-128: the far spot saves over a month, so the trip leads the line.
+	assert_true(gather.begins_with("Travel to Azure Peak ("), gather)
+	assert_true(gather.substr(0, 120).contains("Cloud-Sea Cliff"), gather)
+	assert_true(gather.contains(" in about "), gather)
+	assert_true(gather.contains("at Spirit Spring here."), gather)
+	assert_false(gather.contains("(5x qi)"), gather)
+	assert_eq(Guidance.hinted_region(data(), gather, "qingshi_village"), "azure_peak")
+	var offer := Guidance.far_qi_offer(c, data(), "qingshi_village", {}, 1.0)
+	assert_eq(offer["region"], "azure_peak")
+	assert_true(int(offer["days_here"]) - int(offer["days_far"]) - 2 * int(offer["away"]) >= Guidance.FAR_QI_LEAD_DAYS)
+
+
+func test_no_travel_line_when_already_at_the_far_spot() -> void:
+	var c := _fresh()
+	c.realm_index = 2
+	var hints := Guidance.hints(c, data(), 1.0, 20, {}, {}, "azure_peak")
+	assert_false(_has(hints, "Travel to Azure Peak"))
+
+
+func test_short_stage_keeps_the_gather_line() -> void:
+	var c := _fresh()
+	var gather := _gather_or_travel(Guidance.hints(c, data(), 1.0, 20, {}, {}, "qingshi_village"))
+	assert_false(gather.begins_with("Travel to "), gather)
+
+
 func test_better_qi_dropped_when_the_trip_costs_more_than_it_saves() -> void:
 	var c := _fresh()
 	c.realm_index = 1
@@ -3861,6 +3899,9 @@ func test_hint_actions_fit_headline() -> void:
 	# far meditation spot
 	c = _fresh()
 	c.realm_index = 1
+	lines.append_array(Guidance.hints(c, d, 1.0, 20, {}, {}, "qingshi_village"))
+	c = _fresh()
+	c.realm_index = 2
 	lines.append_array(Guidance.hints(c, d, 1.0, 20, {}, {}, "qingshi_village"))
 	# idle crafter
 	c = _fresh()

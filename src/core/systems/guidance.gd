@@ -13,6 +13,8 @@ const NEWCOMER_MAX_REALM := 1
 const TECHNIQUE_HINT := "Learn a technique from a manual. Merchants sell them."
 const ELDER_MO_FLAG := "talked_elder_mo"
 const BETTER_QI_RATIO := 1.5
+## GUIDE-128: days a far meditation spot must save, net of the round trip, to lead the Gather line with the trip.
+const FAR_QI_LEAD_DAYS := 30
 const FAIR_FIGHTS_MAX := 3
 const FAIR_FIGHT_MAX_RATED := 8
 const FAIR_FIGHT_EXPLORE_MAX := 2
@@ -1639,6 +1641,34 @@ static func _deliver_clause(c: CharacterData, data: GameData, mission_id: String
 	return text
 
 
+## GUIDE-128: the faster spot outside the player's best spot here, as {region, region_name, place, away, days_far, days_here},
+## or {} when none is worth the trip. `days_here` is the days at the best spot in `region_id` (or where you stand,
+## at `density`, when there is none); a spot is offered only when it saves more than the round trip.
+static func far_qi_offer(c: CharacterData, data: GameData, region_id: String, flags: Dictionary = {}, density: float = 1.0) -> Dictionary:
+	var needed := maxf(Cultivation.qi_required(c, data) - c.qi, 0.0)
+	var rate_here := Cultivation.qi_per_day(c, data, density)
+	if rate_here <= 0.0:
+		return {}
+	var days_base := ceili(needed / rate_here)
+	var local := best_qi_in_region(c, data, region_id, flags) if region_id != "" else {}
+	var has_local := not local.is_empty() and String(local["name"]) != "" and float(local["density"]) > density + 0.001
+	if has_local:
+		days_base = ceili(needed / Cultivation.qi_per_day(c, data, float(local["density"])))
+	var best := best_qi_reachable(c, data, region_id, flags)
+	var rate_best := Cultivation.qi_per_day(c, data, float(best["density"]))
+	var best_region := String(best["region"])
+	if rate_best <= 0.0 or (best_region == region_id and has_local):
+		return {}
+	var away := 0 if best_region == region_id else route_days(c, data, region_id, best_region)
+	var days_best := ceili(needed / rate_best)
+	if days_base - days_best <= 2 * away:
+		return {}
+	var place := String(best["name"])
+	if place == "":
+		place = "the grounds"
+	return {"region": best_region, "region_name": Exploration.region_name(data, best_region), "place": place, "away": away, "days_far": days_best, "days_here": days_base}
+
+
 ## A slow stage names the faster spot in the same line (GUIDE-113): the "Gather N more qi" line gains
 ## ": about <T> at <place> in <region> (<D> away), <T_here> here." and the standalone better-qi line goes.
 ## GUIDE-124: a better spot in the region the player stands in is named first ("about <T> at <spot> here, ...").
@@ -1673,22 +1703,22 @@ static func _merge_better_qi(out: PackedStringArray, c: CharacterData, data: Gam
 		local_clause = "%s at %s here" % [Calendar.format_duration(days_base), String(local["name"])]
 	var far_clause := ""
 	if standalone >= 0:
-		var best := best_qi_reachable(c, data, region_id, flags)
-		var rate_best := Cultivation.qi_per_day(c, data, float(best["density"]))
-		var best_region := String(best["region"])
-		var away := 0 if best_region == region_id else route_days(c, data, region_id, best_region)
-		if rate_best > 0.0 and (best_region != region_id or local_clause == ""):
-			var days_best := ceili(needed / rate_best)
-			if days_base - days_best > 2 * away:
-				var place := String(best["name"])
-				if place == "":
-					place = "the grounds"
-				var where := Exploration.region_name(data, best_region)
-				if away > 0:
-					where += " (%s away)" % Calendar.format_duration(away)
-				far_clause = "%s at %s in %s" % [Calendar.format_duration(days_best), place, where]
-				if local_clause == "":
-					far_clause += ", %s here" % Calendar.format_duration(days_here)
+		var offer := far_qi_offer(c, data, region_id, flags, density)
+		if not offer.is_empty():
+			var where := String(offer["region_name"])
+			if int(offer["away"]) > 0:
+				where += " (%s away)" % Calendar.format_duration(int(offer["away"]))
+			far_clause = "%s at %s in %s" % [Calendar.format_duration(int(offer["days_far"])), String(offer["place"]), where]
+			if local_clause == "":
+				far_clause += ", %s here" % Calendar.format_duration(days_here)
+			# GUIDE-128: a far spot that saves a month or more leads the line with the trip.
+			if int(offer["days_here"]) - int(offer["days_far"]) - 2 * int(offer["away"]) >= FAR_QI_LEAD_DAYS and int(offer["away"]) > 0:
+				var base_where := "at %s here" % GameData.plain_name(String(local["name"])) if local_clause != "" else "where you stand"
+				out[gather] = "Travel to %s (%s): %s gathers %s in about %s, against %s %s." % [
+					String(offer["region_name"]), Calendar.format_duration(int(offer["away"])), GameData.plain_name(String(offer["place"])),
+					_next_step_name(c, data, "the next stage"), Calendar.format_duration(int(offer["days_far"])),
+					Calendar.format_duration(int(offer["days_here"])), base_where]
+				return out
 	var clauses: PackedStringArray = []
 	for clause: String in [local_clause, far_clause]:
 		if clause != "":
