@@ -2101,13 +2101,9 @@ static func practice_hint(c: CharacterData, data: GameData, region_id: String = 
 	return line + ". Each level raises your odds in a fight."
 
 
-## True when a sect mission that `c` can take right now needs `item_id` (the mission hint names it) (GUIDE-118).
+## True when a sect mission blocked only by items (or ready now) needs `item_id`, so a partial stack is not eaten (GUIDE-118, GUIDE-140).
 static func _ready_mission_wants(c: CharacterData, data: GameData, item_id: String, flags: Dictionary) -> bool:
-	for mission_id in Sects.available_missions(c, data, flags):
-		var needed: Dictionary = data.sect_missions[mission_id].get("requires", {}).get("items", {})
-		if needed.has(item_id) and Sects.check_mission(c, data, mission_id, flags) == "":
-			return true
-	return false
+	return Sects.deliver_needs(c, data, flags).has(item_id)
 
 
 ## First-steps pointers for Mortal and Qi Refining players, most useful first.

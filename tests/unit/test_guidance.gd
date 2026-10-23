@@ -3638,9 +3638,27 @@ func test_herb_hint_leaves_herbs_the_tithe_wants() -> void:
 	assert_eq(Sects.check_mission(c, d, "herb_hall_tithe", flags), "")
 	var hints := Guidance.hints(c, d, 1.0, 40, {}, flags, "qingshi_village")
 	assert_false(_has(hints, "Use your"), str(hints))
-	c.mission_cooldowns["herb_hall_tithe"] = c.age_days + 20
+	for mid in ["herb_hall_tithe", "gather_spirit_herbs", "relieve_fevered_village"]:
+		c.mission_cooldowns[mid] = c.age_days + 20
 	hints = Guidance.hints(c, d, 1.0, 40, {}, flags, "qingshi_village")
 	assert_true(_has(hints, "Use your 3 Spirit Herbs"), str(hints))
+
+
+## GUIDE-140: a partial stack of a mission item is not offered as qi food.
+func test_herb_hint_leaves_partial_mission_stack() -> void:
+	var d := data()
+	var c := _cooldown_player(d)
+	c.inventory = {"spirit_herb": 1}
+	var flags := {Guidance.ELDER_MO_FLAG: true}
+	var hints := Guidance.hints(c, d, 1.0, 40, {}, flags, "qingshi_village")
+	assert_false(_has(hints, "Use your Spirit Herb"), str(hints))
+	for mid in ["herb_hall_tithe", "gather_spirit_herbs", "relieve_fevered_village"]:
+		c.mission_cooldowns[mid] = c.age_days + 20
+	hints = Guidance.hints(c, d, 1.0, 40, {}, flags, "qingshi_village")
+	assert_true(_has(hints, "Use your Spirit Herb"), str(hints))
+	var rogue := CharacterData.new()
+	rogue.inventory = {"spirit_herb": 1}
+	assert_false(Guidance._ready_mission_wants(rogue, d, "spirit_herb", flags))
 
 
 ## GUIDE-114: one line carries the merchant's offer, not two.
