@@ -103,6 +103,7 @@
         "Some encounters ask you to choose. Kindness and cruelty move you along the righteous and demonic paths, and people remember.",
         "A choice that starts a fight shows your odds, like \"(Dangerous, 30 in 100)\". A duel with your rival never kills; a choice marked \"to the death\" can.",
         "When your first hint names another region, the road out of this one wears the gold marker, and the route that leads there says so.",
+        "Each road says the qi at the other end and, once you have been there, what you can find: a merchant, a clinic, a bounty board.",
         "Stronger realms unlock stranger events, and many one-time stories will not repeat once you have lived them."
       ]
     },
