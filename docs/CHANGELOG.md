@@ -2,6 +2,21 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-23 [GUIDE-154] The sect rank goal says which foe the promotion trial puts in front of you and your odds.
+- 2026-10-23 [C-234] Tiny repeatable finds (a few stones, a common herb) stop appearing once you outgrow them.
+- 2026-10-23 [WU-345] A screenshot check of the Foundation Peak trial advice naming Stone Skin Tempering.
+- 2026-10-23 [GUIDE-155] When you are saving for a breakthrough pill, the goal says what selling your materials would bring.
+- 2026-10-23 [QA-154] The sim confirms the hinted sect missions no longer cost extra lives (0/20 final deaths).
+- 2026-10-23 [C-233] Qingshi stays alive after Foundation: a headman's petition, hopeful youths and a beast at the fold.
+- 2026-10-23 [WU-344] A screenshot check of the den wolf hunt rated Weak, not Deadly, for a bare newcomer.
+- 2026-10-23 [WU-343] A screenshot check of the shop's recharge warning at one life.
+- 2026-10-23 [GUIDE-153] The cave abode hint says which abode, where, what it costs and whether it gathers qi faster.
+- 2026-10-23 [GUIDE-152] A hopeless promotion trial names what you lack (often the sect treasury's body art) instead of "grow a stage".
+- 2026-10-23 [GUIDE-157] The thin-defence hint leads with the body art your sect contribution can buy.
+- 2026-10-23 [WU-342] A screenshot check of the artifact screen opening on Recharge at one life.
+- 2026-10-23 [C-231] Help explains the one-life recharge hint and when hints suggest a fight to the death.
+- 2026-10-23 [RV-015] Drive Off the Den Wolves is now winnable (about 2 in 3) for a brand-new sect disciple.
+- 2026-10-23 [WU-339] A screenshot check of the mission board warning a one-life player off the Mist Wolf cull.
 - 2026-10-23 [QA-153] The sim checks that the fight odds shown to the player match how fights actually go.
 - 2026-10-23 [GUIDE-149] When you can't afford the clinic, the injury hint says if selling your loot would cover it.
 - 2026-10-23 [GUIDE-150] The qi-pill hint keeps enough stones for the armor the armor hint names.

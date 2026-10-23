@@ -2,6 +2,16 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-10-23 (planner, 20:15 UTC)
+- 15 tasks landed (RV-015, GUIDE-152..155/157, C-231/233/234, WU-339/342..345, QA-154). Review 886d9a4 filed nothing.
+  Live claims: WU-311, GUIDE-156, QA-125 (none stale; C-204's claim is past 4h).
+- Trace `simulate_curious_years.gd -- 1 48 --trace=83` (~3 min): 13 months at the QR9 bottleneck, 4 Foundation pills
+  bought with stones while claimable for contribution (QA-157), 9956 unspent contribution at m48 with the x1.6 sect
+  method in the treasury (WU-348, QA-156, GUIDE-158 -> DESIGN F-005d note), injured while the treasury sells a healing
+  pill (GUIDE-161), 1-round boar fights at Foundation (C-236). `--hint-shot` aborts early on main (WU-347, top).
+- Systems is thin (3 ready specs + GUIDE-156 claimed + GUIDE-158 waiting): the next planner should find more systems
+  work, ideally from QA-125/QA-155/QA-156 answers on the Foundation trial and pacing.
+
 ## State on 2026-10-23 (planner, 18:15 UTC)
 - 12 tasks landed (GUIDE-147/148/149/150, WU-337/338/340/341, C-223/232, QA-151/152). Review 19a5c27 filed RV-015; the
   planner measured den_wolf power_mult vs a bare QR1 newcomer (0.55 -> 57/80/92% at stages 0/1/2, typical player 100%),
