@@ -100,6 +100,7 @@ extends SceneTree
 ## WU-302: `--clinic-shot` writes clinic_one_<size>.png / clinic_two_<size>.png: the Village Clinic menu for a Qi Refining 3rd-layer
 ## character with Internal Injury, then with a second injury (Qi Deviation); the "Pay the doctor ... saves about" lines must fit or wrap unclipped.
 ## WU-295: `--bounty-shot` writes bounty_menu_<size>.png: the Fallen Star Market bounty board with the longest hunt label any realm sees (the hunt's description is shown for the focused entry).
+## WU-351: `--hint-shot` also writes hud_contribution_<size>.png (Azure Cloud Inner Disciple, 7773 contribution, 1296 stones).
 ## WU-350: `--hint-shot` also writes hint_abode_<size>.png (rogue, Qi Refining 5, 400 stones, no abode: journal Next steps names the Waterfall Cave and 300; the capped HUD line keeps the cave's name).
 ## WU-349: `--hint-shot` also writes hint_heal_treasury_<size>.png (Azure Cloud outer disciple, qi deviation, 5 stones, 300 contribution: HUD line names the Meridian Mending Pill from "your sect treasury", never the Village Clinic).
 ## WU-345: `--hint-shot` also writes hint_trial_peak_<size>.png (Inner Disciple at Foundation Peak, Iron Fist mastered, no body art or armor: a hint names Stone Skin Tempering, none says grow a stage).
@@ -2239,6 +2240,23 @@ func _start_hint_shot(gs: Node) -> void:
 			await root.get_tree().process_frame
 		var parsed: String = (treasury_journal.get("_text") as RichTextLabel).get_parsed_text()
 		assert(parsed.contains("your sect treasury"), "journal Next steps lacks the treasury:\n" + dump), "close": func() -> void: (hud.get("_screens")["toggle_journal"] as Control).close()})
+
+	# WU-351: an Azure Cloud Inner Disciple with 7773 contribution and 1296 stones: the HUD status shows both on the currency line.
+	var contrib_saved: Array = []
+	shots.append({"name": "hud_contribution_" + size_tag, "open": func() -> void:
+		setup_long.call()
+		contrib_saved.append_array([c.sect.duplicate(), c.inventory.duplicate()])
+		c.sect = {"id": "azure_cloud_sect", "rank": 1, "contribution": 7773, "spent": 0}
+		c.inventory["spirit_stone"] = 1296
+		root.get_node("EventBus").player_changed.emit()
+		await root.get_tree().process_frame
+		await root.get_tree().process_frame
+		var status_text: String = (hud.get("_status") as Label).text
+		assert(status_text.contains("Spirit Stones: 1296   Contribution: 7773"), "HUD lacks the contribution:\n" + status_text), "close": func() -> void:
+			c.sect = contrib_saved[0]
+			c.inventory = contrib_saved[1]
+			contrib_saved.clear()
+			root.get_node("EventBus").player_changed.emit()})
 
 	# WU-345: GUIDE-152's Inner Disciple at Foundation Peak with Iron Fist mastered, no body art or armor: the trial advice
 	# names Stone Skin Tempering, and no HUD line tells them to grow a stage.

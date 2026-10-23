@@ -166,6 +166,19 @@ func test_hunt_line_and_banner() -> void:
 	assert_eq(HUD.bounty_banner("Boar", 40), PackedStringArray(["Bounty claimed", "Boar: 40 spirit stones"]))
 
 
+## WU-351: the HUD currency line shows spendable contribution for sect members only.
+func test_currency_line() -> void:
+	var c := new_character()
+	c.inventory = {"spirit_stone": 1296}
+	assert_eq(HUD.currency_line(c), "Spirit Stones: 1296")
+	c.sect = {"id": "azure_cloud_sect", "rank": 1, "contribution": 7773, "spent": 0}
+	var line: String = HUD.currency_line(c)
+	assert_true(line.contains("Contribution: 7773"), line)
+	assert_true(line.begins_with("Spirit Stones: 1296"), line)
+	c.sect["spent"] = 73
+	assert_true(HUD.currency_line(c).contains("Contribution: 7700"))
+
+
 ## WU-125: the fair-fight status line.
 func test_fair_fight_line() -> void:
 	assert_eq(HUD.fair_fight_line([]), "")

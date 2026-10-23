@@ -509,7 +509,7 @@ func _refresh() -> void:
 	_status.text += "\n" + "\n".join(PackedStringArray([
 		"Alignment: %s (%d)" % [Alignment.tier_name(p.alignment, data), p.alignment],
 		Sects.describe(p, data),
-		"Spirit Stones: %d" % p.item_count("spirit_stone"),
+		currency_line(p),
 		"%s · %s" % [GameClock.date_string(), season_label(GameClock.total_days)],
 	]))
 	var density := GameState.region_qi_density()
@@ -1059,6 +1059,14 @@ static func realm_notice_banner(data: GameData, realm_id: String, total_days: in
 ## [title, subtitle] of the letter banner.
 static func letter_banner(npc_name: String) -> PackedStringArray:
 	return PackedStringArray(["A letter", "from %s" % npc_name])
+
+
+## WU-351: spirit stones, plus the sect contribution a member can still spend.
+static func currency_line(p: CharacterData) -> String:
+	var line := "Spirit Stones: %d" % p.item_count("spirit_stone")
+	if not p.is_rogue():
+		line += "   Contribution: %d" % Sects.contribution_balance(p)
+	return line
 
 
 ## [title, subtitle] of the bounty-claimed banner.
