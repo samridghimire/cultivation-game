@@ -104,3 +104,50 @@ func test_place_labels_do_not_overlap() -> void:
 		for i in rects.size():
 			for j in range(i + 1, rects.size()):
 				assert_false((rects[i][1] as Rect2).intersects(rects[j][1]), "%s: label %s overlaps label %s" % [region["id"], rects[i][0], rects[j][0]])
+
+
+## WU-325: no region's npc_spots entry puts an NPC label on a place label. NPC label width: the longest named NPC
+## in the region (data/npcs.json), or 18 characters when it has none; NPC size 28 like the world's NPCs.
+func test_npc_spot_labels_do_not_overlap_place_labels() -> void:
+	var longest := {}
+	var named: Array = (JSON.parse_string(FileAccess.get_file_as_string("res://data/npcs.json")) as Dictionary)["npcs"]
+	for n: Dictionary in named:
+		var r := String(n.get("region", ""))
+		if String(n["name"]).length() > String(longest.get(r, "")).length():
+			longest[r] = String(n["name"])
+	for region: Dictionary in data().regions.values():
+		var places: Array = []
+		for place: Dictionary in region.get("places", []):
+			places.append([String(place.get("display_name", place["type"])), place, [30, 30]])
+		for abode: Dictionary in region.get("abodes", []):
+			places.append([String(abode.get("display_name", abode["id"])), abode, [80, 60]])
+		if region.has("family_home"):
+			places.append(["Family Home", region["family_home"], [90, 64]])
+		var place_rects: Array = []
+		for e: Array in places:
+			var node := Interactable.new()
+			var pos: Array = e[1]["pos"]
+			var sz: Array = e[1].get("size", e[2])
+			node.position = Vector2(float(pos[0]), float(pos[1]))
+			node.size = Vector2(float(sz[0]), float(sz[1]))
+			place_rects.append([e[0], node.label_rect(e[0])])
+			node.free()
+		var npc_text: String = String(longest.get(region["id"], "n".repeat(18)))
+		for spot: Array in region.get("npc_spots", []):
+			var npc := Interactable.new()
+			npc.position = Vector2(float(spot[0]), float(spot[1]))
+			npc.size = Vector2(28, 28)
+			var rect := npc.label_rect(npc_text)
+			npc.free()
+			for pr: Array in place_rects:
+				assert_false(rect.intersects(pr[1]), "%s: npc spot %s label (%s) overlaps %s" % [region["id"], spot, npc_text, pr[0]])
+		for n: Dictionary in named:  # placed named NPCs (fixed pos) too
+			if String(n.get("region", "")) != String(region["id"]) or not n.has("pos"):
+				continue
+			var npc := Interactable.new()
+			npc.position = Vector2(float(n["pos"][0]), float(n["pos"][1]))
+			npc.size = Vector2(28, 28)
+			var rect := npc.label_rect(String(n["name"]))
+			npc.free()
+			for pr: Array in place_rects:
+				assert_false(rect.intersects(pr[1]), "%s: %s label overlaps %s" % [region["id"], n["name"], pr[0]])
