@@ -1159,3 +1159,21 @@ func test_check_validation() -> void:
 	assert_eq(errors.size(), 5, str(errors))
 	d.encounters["t_bad"] = _check_encounter()
 	assert_true(Exploration.validate_choices(d).is_empty(), str(Exploration.validate_choices(d)))
+
+
+## C-217: two Qingshi encounters from the Qi Refining 5th layer.
+func test_qingshi_fifth_layer_encounters() -> void:
+	var d := data()
+	for id in ["village_ford_cart", "village_sect_senior_test"]:
+		assert_true(_village_ids_at(4).has(id), id + " eligible at the 5th Layer")
+		assert_false(_village_ids_at(3).has(id), id + " not eligible at the 4th Layer")
+	var foe: Dictionary = d.enemies["sect_senior_tester"]
+	assert_false(bool(foe["lethal"]), "the senior never kills")
+	var c := CharacterFactory.create("Wanderer", d, seeded_rng())
+	c.realm_index = d.realm_index_of("qi_refining")
+	c.techniques["iron_fist"] = {"level": 3, "xp": 0.0}
+	for stage in [4, 5, 6]:
+		c.stage = stage
+		var odds := Combat.win_chance(c, d, foe)
+		print("senior_test odds QR%d Iron Fist L3: %.2f" % [stage + 1, odds])
+		assert_true(odds > 0.3 and odds < 0.95, "stage %d odds %.2f" % [stage, odds])

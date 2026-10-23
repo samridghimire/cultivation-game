@@ -495,7 +495,9 @@ func test_region_progress_counts_met_and_realm_gated() -> void:
 func test_region_progress_leaves_out_happenings_past_your_realm() -> void:
 	var c := new_character()
 	c.realm_index = data().realm_index_of("qi_refining")
+	c.stage = 6 # deep enough for the stage-gated Qi Refining happenings to count
 	var at_qi := Exploration.region_progress(c, data(), "qingshi_village")
+	c.stage = 0
 	Exploration.note_met(c, data().encounters["village_runaway_mule"])
 	c.realm_index = data().realm_index_of("foundation_establishment")
 	var at_foundation := Exploration.region_progress(c, data(), "qingshi_village")
