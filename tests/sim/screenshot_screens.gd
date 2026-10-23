@@ -98,6 +98,7 @@ extends SceneTree
 ## WU-302: `--clinic-shot` writes clinic_one_<size>.png / clinic_two_<size>.png: the Village Clinic menu for a Qi Refining 3rd-layer
 ## character with Internal Injury, then with a second injury (Qi Deviation); the "Pay the doctor ... saves about" lines must fit or wrap unclipped.
 ## WU-295: `--bounty-shot` writes bounty_menu_<size>.png: the Fallen Star Market bounty board with the longest hunt label any realm sees (the hunt's description is shown for the focused entry).
+## WU-336: `--hint-shot` also writes hint_thin_treasury_<size>.png (Foundation outer disciple, 100 contribution: thin-defence line names "your sect treasury"; capped HUD line keeps its opening).
 ## WU-331: `--hint-shot` also writes hint_clinic_short_<size>.png (qi deviation, 19 stones: the capped line keeps "Village Clinic treats it for" and "(you have 19)"; the clinic carries the gold marker).
 ## WU-297: `--hint-shot` also writes hint_npc_badge_<size>.png (first hint is a Qingshi NPC's pointers line, the NPC-only kind; the gold "!" sits before it).
 ## WU-289: `--hint-shot` also writes hint_road_marker_/hint_road_menu_/hint_badge_<size>.png (road-out "!", route line "The hint points this way.", clinic badge).
@@ -1965,6 +1966,42 @@ func _start_hint_shot(gs: Node) -> void:
 			if "hinted" in n and String(n.get("display_name")).contains("Clinic") and n.get("hinted"):
 				marked = true
 		assert(marked, "the Village Clinic has no gold hint marker; first hint: " + first), "close": func() -> void: c.injuries.clear()})
+
+	# WU-336: an Azure Cloud outer disciple at Foundation Early with no armor, no body art and 100 contribution: the thin-defence line
+	# names the sect treasury (GUIDE-144); the capped HUD line still leads with the defence warning, the journal's Next steps has the treasury.
+	shots.append({"name": "hint_thin_treasury_" + size_tag, "open": func() -> void:
+		setup_long.call()
+		c.realm_index = 2
+		c.stage = 0
+		c.qi = 0.0
+		c.sect = {"id": "azure_cloud_sect", "rank": 0, "contribution": 100, "spent": 0}
+		c.equipment.erase("armor")
+		c.techniques.clear()
+		c.inventory = {}
+		c.mission_cooldowns = {}
+		gs.current_region = "qingshi_village"
+		root.get_node("EventBus").player_changed.emit()
+		await root.get_tree().process_frame
+		await root.get_tree().process_frame
+		hud.get("_banner").visible = false
+		var lines: Array = Guidance.hints(c, gs.data, 3, 12, gs.npcs, gs.world_flags, "qingshi_village", 40, gs.npc_favor)
+		var dump := "\n".join(lines)
+		print("hint-shot thin treasury: ", dump)
+		var thin := ""
+		for h: String in lines:
+			if h.begins_with("Your defence is thin"):
+				thin = h
+				break
+		assert(thin != "", "no thin-defence line:\n" + dump)
+		assert(thin.contains("your sect treasury"), "thin-defence line lacks the treasury:\n" + dump)
+		var capped: String = hud.call("cap_hint", thin)
+		assert(capped.begins_with("Your defence is thin."), "capped line lost its opening: " + capped)
+		var treasury_journal: Control = hud.get("_screens")["toggle_journal"]
+		await _show_journal(treasury_journal, "Next steps")
+		for _i in 3:
+			await root.get_tree().process_frame
+		var parsed: String = (treasury_journal.get("_text") as RichTextLabel).get_parsed_text()
+		assert(parsed.contains("your sect treasury"), "journal Next steps lacks the treasury:\n" + dump), "close": func() -> void: (hud.get("_screens")["toggle_journal"] as Control).close()})
 
 
 ## WU-190: the encounter window on real encounters with attribute, profession and enemy choices.
