@@ -1427,7 +1427,7 @@ func _start_hint_shot(gs: Node) -> void:
 		c.inventory = {"spirit_stone": 500}
 		gs.current_region = thin_region
 		root.get_node("EventBus").player_changed.emit()
-	for case: Array in [["hint_buy_ingredient_", func() -> void: setup_buy.call(20), "needs Blank Talisman Paper"], ["hint_buy_ingredient_poor_", func() -> void: setup_buy.call(0), "Sell gathered herbs or take odd jobs"], ["hint_thin_defence_long_", setup_thin_long, "Your defence is thin"]]:
+	for case: Array in [["hint_buy_ingredient_", func() -> void: setup_buy.call(20), "needs Blank Talisman Paper"], ["hint_buy_ingredient_poor_", func() -> void: setup_buy.call(0), "needs Blank Talisman Paper"], ["hint_thin_defence_long_", setup_thin_long, "Your defence is thin"]]:
 		var setup: Callable = case[1]
 		var needle: String = case[2]
 		shots.append({"name": case[0] + size_tag, "open": func() -> void:
@@ -1539,6 +1539,15 @@ func _start_hint_shot(gs: Node) -> void:
 	shots.append({"name": "hint_long_journal_" + size_tag, "open": func() -> void:
 		setup_long.call()
 		print("hint-shot long list: ", "\n".join(Guidance.hints(c, gs.data, 3, 12, gs.npcs, gs.world_flags, long_region, 40, gs.npc_favor)))
+		# WU-313: the capped line keeps the far meditation place's name (no region has a "(N days away)" better-qi line today, so far_line is usually "").
+		var far_place := String(Guidance.best_qi_reachable(c, gs.data, long_region, gs.world_flags)["name"])
+		var far_line := ""
+		for h: String in Guidance.hints(c, gs.data, 3, 12, gs.npcs, gs.world_flags, long_region, 40, gs.npc_favor):
+			if h.contains(far_place):
+				far_line = h
+		print("hint-shot far-qi capped: ", hud.call("cap_hint", far_line))
+		if far_line != "":
+			assert(hud.call("cap_hint", far_line).contains(far_place), "capped far-qi line lost '" + far_place + "': " + hud.call("cap_hint", far_line))
 		await show_journal.call("Next steps")
 		for _i in 3:
 			await root.get_tree().process_frame
@@ -1615,6 +1624,11 @@ func _start_hint_shot(gs: Node) -> void:
 		shots.append({"name": case[0] + "journal_" + size_tag, "open": func() -> void:
 			setup.call()
 			print("hint-shot ", needle, " list: ", "\n".join(Guidance.hints(c, gs.data, 3, 12, gs.npcs, gs.world_flags, "qingshi_village", 40, gs.npc_favor)))
+			if case[0] == "hint_sell_armor_":  # WU-313: the capped line still names the price
+				for h: String in Guidance.hints(c, gs.data, 3, 12, gs.npcs, gs.world_flags, "qingshi_village", 40, gs.npc_favor):
+					if h.contains("Sell your"):
+						print("hint-shot sell-armor capped: ", hud.call("cap_hint", h))
+						assert(hud.call("cap_hint", h).contains("stones"), "capped sell line lost its price: " + hud.call("cap_hint", h))
 			await show_journal.call(heading)
 			for _i in 3:
 				await root.get_tree().process_frame
@@ -1687,7 +1701,8 @@ func _start_hint_shot(gs: Node) -> void:
 		await root.get_tree().process_frame
 		await root.get_tree().process_frame
 		hud.get("_banner").visible = false
-		print("hint-shot badge: ", hint_text.call()), "close": func() -> void: pass})
+		print("hint-shot badge: ", hint_text.call())
+		assert(String(hint_text.call()).contains("stones"), "clinic line lost its price: " + String(hint_text.call())), "close": func() -> void: pass})
 
 	shots.append({"name": "hint_npc_badge_" + size_tag, "open": func() -> void:
 		setup_road.call()
