@@ -8,7 +8,18 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 BIN_DIR="$ROOT/.godot-bin"
 BIN="$BIN_DIR/Godot_v${GODOT_VERSION}-stable_linux.x86_64"
 
+# A fresh checkout has no class cache, so scripts using class_name fail until an import has run.
+ensure_imported() {
+  local bin="$1"; shift
+  [[ -f "$ROOT/.godot/global_script_class_cache.cfg" ]] && return 0
+  local a
+  for a in "$@"; do [[ "$a" == "--import" ]] && return 0; done
+  echo "Importing project (first run)..." >&2
+  "$bin" --headless --path "$ROOT" --import >/dev/null 2>&1 || true
+}
+
 if [[ -n "${GODOT:-}" ]]; then
+  ensure_imported "$GODOT" "$@"
   exec "$GODOT" "$@"
 fi
 
@@ -22,4 +33,5 @@ if [[ ! -x "$BIN" ]]; then
   chmod +x "$BIN"
 fi
 
+ensure_imported "$BIN" "$@"
 exec "$BIN" "$@"
