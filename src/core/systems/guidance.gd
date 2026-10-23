@@ -1522,7 +1522,10 @@ static func _deliver_close(c: CharacterData, data: GameData, mission_id: String,
 		return false
 	var here := _gatherable_items(c, data, region_id) if region_id != "" else {}
 	for item_id: String in needed:
-		if c.item_count(item_id) > 0 or here.has(item_id):
+		var held := c.item_count(item_id)
+		# REV-030: a spirit-stone tithe is not "close" until you hold half of it.
+		var enough := held * 2 >= int(needed[item_id]) if item_id == "spirit_stone" else held > 0
+		if enough or here.has(item_id):
 			return true
 	return false
 
@@ -1555,7 +1558,8 @@ static func _deliver_clause(c: CharacterData, data: GameData, mission_id: String
 	for item_id: String in needed:
 		if c.item_count(item_id) < int(needed[item_id]) and here.has(item_id):
 			var plural := Items.item_plural(data, item_id, 2)
-			return text + " %s grow at %s here." % [plural, here[item_id]]
+			var verb := "grow at" if (data.items.get(item_id, {}).get("tags", []) as Array).has("herb") else "can be found at"
+			return text + " %s %s %s here." % [plural, verb, here[item_id]]
 	return text
 
 

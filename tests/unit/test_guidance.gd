@@ -3596,3 +3596,34 @@ func test_trial_practice_payoff() -> void:
 	m.sect = {"id": "azure_cloud_sect", "rank": 0, "contribution": 600}
 	m.techniques = {"iron_fist": {"level": d.techniques["iron_fist"].max_level, "xp": 0.0}}
 	assert_eq(Guidance.trial_practice_payoff(m, d), {})
+
+
+## REV-030: a spirit-stone tithe is "close" only when you hold at least half of it; other items keep the any-held rule.
+func test_deliver_close_stone_tithe_needs_half() -> void:
+	var d := data()
+	var c := _deliver_only(d)
+	d.sect_missions["rev030_tithe"] = {"name": "Stone Tithe", "requires": {"items": {"spirit_stone": 960}}, "contribution": 1}
+	c.add_item("spirit_stone", 10)
+	assert_false(Guidance._deliver_close(c, d, "rev030_tithe", ""))
+	c.add_item("spirit_stone", 470)
+	assert_true(Guidance._deliver_close(c, d, "rev030_tithe", ""))
+	d.sect_missions.erase("rev030_tithe")
+	var iron := CharacterData.new()
+	iron.add_item("cold_iron", 1)
+	assert_true(Guidance._deliver_close(iron, d, "deliver_cold_iron", ""))
+
+
+## REV-030: ores are "found at", herbs "grow at", in the guidance clause and on the mission board.
+func test_deliver_wording_found_at_for_ore() -> void:
+	var d := data()
+	var c := CharacterData.new()
+	for rid: String in d.regions:
+		var g := Guidance._gatherable_items(c, d, rid)
+		if g.has("cold_iron"):
+			var text := Guidance._deliver_clause(c, d, "deliver_cold_iron", rid)
+			assert_true(text.contains("can be found at %s here." % g["cold_iron"]), text)
+			assert_false(text.contains(" grow at"), text)
+			var line := MissionBoard.requirement_lines(c, d, d.sect_missions["deliver_cold_iron"], rid)[0]
+			assert_true(line.contains("(found at %s here)" % g["cold_iron"]), line)
+			return
+	assert_true(true, "cold iron is gathered nowhere")

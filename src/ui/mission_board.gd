@@ -144,7 +144,8 @@ static func requirement_lines(c: CharacterData, data: GameData, mission: Diction
 		if c.item_count(item_id) < int(needed[item_id]):
 			var place := Guidance.gather_place_for(c, data, region_id, item_id)
 			if place != "":
-				line += " (grows at %s here)" % place
+				var verb := "grows at" if (data.items.get(item_id, {}).get("tags", []) as Array).has("herb") else "found at"
+				line += " (%s %s here)" % [verb, place]
 		lines.append(line)
 	var enemy_id := String(mission.get("enemy", ""))
 	if data.enemies.has(enemy_id):
