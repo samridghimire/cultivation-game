@@ -100,6 +100,7 @@ extends SceneTree
 ## WU-302: `--clinic-shot` writes clinic_one_<size>.png / clinic_two_<size>.png: the Village Clinic menu for a Qi Refining 3rd-layer
 ## character with Internal Injury, then with a second injury (Qi Deviation); the "Pay the doctor ... saves about" lines must fit or wrap unclipped.
 ## WU-295: `--bounty-shot` writes bounty_menu_<size>.png: the Fallen Star Market bounty board with the longest hunt label any realm sees (the hunt's description is shown for the focused entry).
+## WU-349: `--hint-shot` also writes hint_heal_treasury_<size>.png (Azure Cloud outer disciple, qi deviation, 5 stones, 300 contribution: HUD line names the Meridian Mending Pill from "your sect treasury", never the Village Clinic).
 ## WU-345: `--hint-shot` also writes hint_trial_peak_<size>.png (Inner Disciple at Foundation Peak, Iron Fist mastered, no body art or armor: a hint names Stone Skin Tempering, none says grow a stage).
 ## WU-336: `--hint-shot` also writes hint_thin_treasury_<size>.png (Foundation outer disciple, 100 contribution: thin-defence line names "your sect treasury"; capped HUD line keeps its opening).
 ## WU-331: `--hint-shot` also writes hint_clinic_short_<size>.png (qi deviation, 19 stones: the capped line keeps "Village Clinic treats it for" and "(you have 19)"; the clinic carries the gold marker).
@@ -2121,6 +2122,38 @@ func _start_hint_shot(gs: Node) -> void:
 			if "hinted" in n and String(n.get("display_name")).contains("Clinic") and n.get("hinted"):
 				marked = true
 		assert(marked, "the Village Clinic has no gold hint marker; first hint: " + first), "close": func() -> void: c.injuries.clear()})
+
+	# WU-349: GUIDE-161's heal source. An Azure Cloud outer disciple with a qi deviation, 5 stones and 300 contribution: the HUD
+	# hint names the Meridian Mending Pill from the sect treasury and never sends them to the (unaffordable) Village Clinic.
+	var heal_saved: Array = []
+	shots.append({"name": "hint_heal_treasury_" + size_tag, "open": func() -> void:
+		setup_road.call()
+		heal_saved.append_array([c.sect.duplicate(), c.inventory.duplicate(), c.injuries.duplicate(true)])
+		c.realm_index = 1
+		c.stage = 5
+		c.sect = {"id": "azure_cloud_sect", "rank": 0, "contribution": 300, "spent": 0}
+		c.injuries = {"qi_deviation": 100}
+		c.inventory = {"spirit_stone": 5}
+		gs.current_region = "qingshi_village"
+		root.get_node("EventBus").player_changed.emit()
+		await root.get_tree().process_frame
+		await root.get_tree().process_frame
+		hud.get("_banner").visible = false
+		var first: String = hud.call("first_hint")
+		var shown: String = (hud.get("_hint") as Label).text
+		print("hint-shot heal treasury: ", first, " | HUD: ", shown)
+		var lines: Array = Guidance.hints(c, gs.data, 3, 12, gs.npcs, gs.world_flags, "qingshi_village", 40, gs.npc_favor)
+		var dump := "\n".join(lines)
+		assert(first.contains("Meridian Mending Pill") and first.contains("your sect treasury"), "first hint lacks the treasury pill:\n" + first + "\n" + dump)
+		var capped: String = hud.call("cap_hint", first)
+		assert(capped.contains("Meridian Mending Pill") and capped.contains("your sect treasury"), "capped line lost the treasury pill: " + capped)
+		for h: String in lines:
+			assert(not h.contains("Village Clinic"), "a hint names the Village Clinic:\n" + dump)
+		assert(not shown.contains("Village Clinic"), "HUD names the Village Clinic: " + shown), "close": func() -> void:
+			c.sect = heal_saved[0]
+			c.inventory = heal_saved[1]
+			c.injuries = heal_saved[2]
+			heal_saved.clear()})
 
 	# WU-336: an Azure Cloud outer disciple at Foundation Early with no armor, no body art and 100 contribution: the thin-defence line
 	# names the sect treasury (GUIDE-144); the capped HUD line still leads with the defence warning, the journal's Next steps has the treasury.
