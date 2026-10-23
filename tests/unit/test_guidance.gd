@@ -3230,6 +3230,8 @@ func test_empty_fair_fights_note_skips_mastered_technique() -> void:
 	var note := Guidance.empty_fair_fights_note(c, data())
 	assert_true(note.contains("practise %s past level 3" % data().techniques["iron_fist"].name), note)
 	c.techniques["iron_fist"]["level"] = data().techniques["iron_fist"].max_level
+	c.realm_index = 1
+	c.stage = 0
 	assert_eq(Guidance.empty_fair_fights_note(c, data()), "Nothing here is in your favour yet: grow a stage.")
 
 
@@ -4412,3 +4414,49 @@ func test_clinic_clause_names_the_sale_that_covers_it() -> void:
 	c.inventory = {"spirit_stone": 19}
 	line = Guidance.heal_source(c, d, "qingshi_village")
 	assert_true(line.contains("(you have 19)") and not line.contains("sell your"), line)
+
+
+# --- GUIDE-152: the trial advice never says "grow a stage" at a realm's last stage ---
+
+func _g152_inner_disciple(stage: int) -> CharacterData:
+	var c := new_character()
+	c.realm_index = Guidance.THIN_DEFENCE_REALM
+	c.stage = stage
+	c.sect = {"id": "azure_cloud_sect", "rank": 1, "contribution": 3500}
+	for k: String in c.attributes:
+		c.attributes[k] = 1
+	c.techniques = {"iron_fist": {"level": data().techniques["iron_fist"].max_level}}
+	c.equipment = {}
+	return c
+
+
+func test_trial_advice_at_last_stage_names_the_missing_defence() -> void:
+	var d := data()
+	var c := _g152_inner_disciple(d.realms[Guidance.THIN_DEFENCE_REALM].stage_count() - 1)
+	assert_true(Guidance.trial_odds(c, d) >= 0.0 and Guidance.trial_odds(c, d) < 0.5, "odds %s" % Guidance.trial_odds(c, d))
+	var advice := Guidance._trial_advice(c, d, "qingshi_village")
+	assert_true(advice.contains("Stone Skin Tempering"), advice)
+	assert_true(advice.contains("your sect treasury"), advice)
+	assert_false(advice.contains("grow a stage"), advice)
+
+
+func test_trial_advice_with_stages_left_may_say_grow_a_stage() -> void:
+	var d := data()
+	var c := _g152_inner_disciple(0)
+	c.techniques["stone_skin"] = {"level": 1}
+	c.equipment = {"armor": "azure_guard_robe"}
+	assert_eq(Guidance._thin_defence_missing(c, d), "")
+	var advice := Guidance._trial_advice(c, d, "qingshi_village")
+	if Guidance.trial_odds(c, d) < 0.5:
+		assert_true(advice.contains("grow a stage first"), advice)
+
+
+func test_empty_fair_fights_note_breaks_through_at_the_last_stage() -> void:
+	var d := data()
+	var c := _gv74_fighter()
+	c.techniques["iron_fist"]["level"] = d.techniques["iron_fist"].max_level
+	c.realm_index = 1
+	c.stage = d.realms[1].stage_count() - 1
+	assert_eq(Guidance.empty_fair_fights_note(c, d), "Nothing here is in your favour yet: break through to Foundation Establishment.")
+	c.stage = 0
+	assert_eq(Guidance.empty_fair_fights_note(c, d), "Nothing here is in your favour yet: grow a stage.")

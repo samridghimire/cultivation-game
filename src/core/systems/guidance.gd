@@ -247,9 +247,22 @@ static func empty_fair_fights_note(c: CharacterData, data: GameData, region_id: 
 		if not could.is_empty():
 			return lead + "heal your injuries first (healed, you could win: %s)." % String(could[0]["text"])
 	var best := _best_unmastered_combat(c, data)
+	var can_grow := _can_grow_stage(c, data)
 	if best == "":
-		return lead + "grow a stage."
+		if can_grow:
+			return lead + "grow a stage."
+		if c.realm_index + 1 < data.realms.size():
+			return lead + "break through to %s." % data.realms[c.realm_index + 1].name
+		return ""
+	if not can_grow:
+		return lead + "practise %s past level %d." % [data.techniques[best].name, Techniques.level(c, best) + 1]
 	return lead + "practise %s past level %d or grow a stage." % [data.techniques[best].name, Techniques.level(c, best) + 1]
+
+
+## GUIDE-152: whether `c` has a stage left to grow in the current realm (false at its last stage).
+static func _can_grow_stage(c: CharacterData, data: GameData) -> bool:
+	var realm: RealmDef = data.realms[c.realm_index]
+	return c.stage < realm.stage_count() - 1
 
 
 ## The highest-level combat technique `c` knows and has not mastered (ties: lowest id); "" when none.
@@ -1569,7 +1582,7 @@ static func _sect_hint(c: CharacterData, data: GameData, region_id: String = "")
 		var face := _trial_face(c, data)
 		if face == "":
 			return "The trial for %s is open. Attempt it %s.%s" % [sect.rank_name(rank + 1), _hall_where(c, data, region_id), pays_sentence]
-		return "The trial for %s is open %s: %s.%s%s" % [sect.rank_name(rank + 1), _hall_where(c, data, region_id), face, _trial_advice(c, data), pays_sentence]
+		return "The trial for %s is open %s: %s.%s%s" % [sect.rank_name(rank + 1), _hall_where(c, data, region_id), face, _trial_advice(c, data, region_id), pays_sentence]
 	var need := int(sect.ranks[rank + 1].get("contribution", 0)) - int(c.sect["contribution"])
 	var realm_label := _rank_realm_gap(c, data, sect.ranks[rank + 1])
 	if need <= 0 and realm_label != "":
@@ -1617,7 +1630,7 @@ static func _trial_face(c: CharacterData, data: GameData) -> String:
 
 
 ## GUIDE-085: a warning when the odds are under even, and what practice would change (starts with a space, "" if none).
-static func _trial_advice(c: CharacterData, data: GameData) -> String:
+static func _trial_advice(c: CharacterData, data: GameData, region_id: String = "") -> String:
 	var chance := trial_odds(c, data)
 	var line := ""
 	if chance < 0.0:
@@ -1630,10 +1643,25 @@ static func _trial_advice(c: CharacterData, data: GameData) -> String:
 			var payoff := trial_practice_payoff(c, data)
 			if not payoff.is_empty():
 				line += " A loss only injures you." + _payoff_sentence(payoff, not c.injuries.is_empty())
-			elif Techniques.knows_kind(c, data, "combat") and _best_unmastered_combat(c, data) == "":
-				line += " A loss only injures you; grow a stage first."
+			elif _thin_defence_missing(c, data) != "":
+				# GUIDE-152: the real lever is the missing defence, not another stage.
+				line += " A loss only injures you; %s first" % _thin_defence_missing(c, data)
+				if not Techniques.knows_kind(c, data, "body"):
+					var source := body_manual_source(c, data, region_id)
+					if source != "":
+						line += ": " + source
+				line += "."
 			else:
-				line += " A loss only injures you; practise or grow a stage first."
+				var can_practise := Techniques.knows_kind(c, data, "combat") and _best_unmastered_combat(c, data) != ""
+				var can_grow := _can_grow_stage(c, data)
+				if can_practise and can_grow or not Techniques.knows_kind(c, data, "combat") and can_grow:
+					line += " A loss only injures you; practise or grow a stage first."
+				elif can_grow:
+					line += " A loss only injures you; grow a stage first."
+				elif can_practise:
+					line += " A loss only injures you; practise first."
+				else:
+					line += " A loss only injures you."
 	elif chance < 0.7:
 		var payoff := trial_practice_payoff(c, data)
 		if not payoff.is_empty():
@@ -1767,7 +1795,7 @@ static func _mission_hint(c: CharacterData, data: GameData, flags: Dictionary = 
 		if healed_wins:
 			text += "heal your injuries first."
 		elif best_style == "":
-			text += "grow a stage first."
+			text = text.trim_suffix("; ") + "." if not _can_grow_stage(c, data) else text + "grow a stage first."
 		else:
 			text += "practise %s first." % data.techniques[best_style].name
 	if ready == 0 and deliver != "":
