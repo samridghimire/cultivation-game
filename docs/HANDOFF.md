@@ -2,6 +2,19 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-10-23 (planner, 06:15 UTC)
+- 13 tasks landed (REV-030, GUIDE-118/122, WU-303/310/312, C-206/207/213/214, QA-141/142/143). No new review since 04:00
+  (last reviewed ddada62). Live claims: GUIDE-121, WU-309, WU-311, C-204, QA-134 (none stale).
+- Planner re-ran `--curious --long-hints` (10x12) on 8afd8bd: GUIDE-122 works; sect/trial lines wait on GUIDE-121; idle,
+  practise and thin-defence lines -> GUIDE-125 (spec). GUIDE-127 adds a headline guard test after both.
+- 06:10 trace (seed 59): QR6 at m12, 26 won / 2 lost, never left Qingshi, 349 stones unspent. The Wandering Merchant sells
+  15-stone Qi Gathering Pills (no stock_tags = every untagged item) and nothing says so -> QA-144 (spec, measure first),
+  GUIDE-126 (hint, after QA-144; may need the owner's pacing call), WU-314 (worth in the shop), WU-318 (shop marks the
+  hinted item). Also new: WU-315/316/317, C-215..218.
+- The first-hour sim prints "Compile Error: Identifier not found: EventBus (hud.gd:193)" at start because QA-143 uses
+  `HUD.HINT_MAX_CHARS`; harmless, QA-144 step 3 switches it to `Guidance.HEADLINE_CHARS` once GUIDE-121 lands.
+- Owner questions unchanged (pacing, first fights, ascension, RIVAL-019, ENC-008 checks, GEAR-001).
+
 ## State on 2026-10-23 (planner, 04:15 UTC)
 - 13 tasks landed (TOOL-001, GUIDE-115/117/120, WU-300/301/302/305/306/308, C-209/210, QA-138). Review c2dec34
   (65d397e..89bc68f) filed nothing. Live claims: GUIDE-118, QA-141, QA-142 (none stale).

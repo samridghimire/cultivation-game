@@ -2,6 +2,19 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-23 [GUIDE-122] Injury, meditation-spot and armor hints now start with what to do, so the status panel shows it.
+- 2026-10-23 [C-207] Help says a slow stage's hint names a better meditation spot.
+- 2026-10-23 [C-206] Three first-year encounter choices became gambles on an attribute; failing costs days, never your life.
+- 2026-10-23 [WU-310] The mission board colours each requirement: green when you have it, red when you don't.
+- 2026-10-23 [QA-143] The first-year sim lists hints too long for the status panel.
+- 2026-10-23 [WU-312] The shop's Sell tab warns when a sect mission wants the item.
+- 2026-10-23 [GUIDE-118] The "use your herbs" hint no longer eats the herbs a ready sect mission wants.
+- 2026-10-23 [C-214] Help explains item counts on the mission board and the Inventory's "wanted" mark.
+- 2026-10-23 [C-213] Help explains the "… (J)" at the end of a long hint.
+- 2026-10-23 [QA-142] Balance baselines refreshed.
+- 2026-10-23 [REV-030] Stone tithes no longer count as "close" when you hold a handful of stones; ores are "found at", not "grown".
+- 2026-10-23 [WU-303] The Sell-all confirmation lists the herbs and pills it keeps for your cultivation.
+- 2026-10-23 [QA-141] The first-year sim skips hopeless sect missions, as a player reading the odds would.
 - 2026-10-23 [GUIDE-117] An open sect trial's hint says what one more level of practice would do to your odds.
 - 2026-10-23 [WU-308] The Inventory says which sect mission wants an item.
 - 2026-10-23 [WU-305] Very long hints are shortened in the HUD; the journal keeps the whole line.
