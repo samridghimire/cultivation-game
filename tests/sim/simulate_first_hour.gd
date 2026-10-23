@@ -18,7 +18,6 @@ func _median(values: Array) -> float:
 	return float(values[values.size() / 2])
 
 
-const HUD := preload("res://src/ui/hud.gd")
 
 
 func _mask_digits(text: String) -> String:
@@ -43,6 +42,8 @@ func _run() -> void:
 	FirstHour.heal_log = {"healed": 0, "stones": 0}
 	FirstHour.min_mission_odds = 0.0 if args.has("--blind-missions") else 0.4  # QA-141
 	FirstHour.chase_best_mission = not args.has("--one-mission")  # QA-134
+	FirstHour.buy_qi = curious and args.has("--buy-qi")  # QA-144
+	FirstHour.qi_log = {"bought": 0, "stones": 0, "used": 0, "qi": 0}
 	FirstHour.spar_hint = curious and not args.has("--no-spar-hint")  # QA-138
 	FirstHour.spar_log = {"bouts": 0, "refused": []}
 	var trace := args.has("--trace")  # QA-065: print each month's state and every fight
@@ -51,7 +52,7 @@ func _run() -> void:
 	for a in args:
 		if a.begins_with("--seed="):
 			only_seed = int(a.substr(7))
-		elif a != "--curious" and a != "--trace" and a != "--zero" and a != "--forced" and a != "--no-trial" and a != "--no-heal" and a != "--no-spar-hint" and a != "--blind-missions" and a != "--one-mission" and a != "--long-hints":
+		elif a != "--curious" and a != "--trace" and a != "--zero" and a != "--forced" and a != "--no-trial" and a != "--no-heal" and a != "--no-spar-hint" and a != "--blind-missions" and a != "--one-mission" and a != "--long-hints" and a != "--buy-qi":
 			nums.append(int(a))
 	var seeds := nums[0] if nums.size() > 0 else 30
 	var months := nums[1] if nums.size() > 1 else 12
@@ -139,7 +140,7 @@ func _run() -> void:
 			if long_hints:
 				var density: float = gs.hint_density()
 				for h: String in Guidance.hints(gs.player, gs.data, density, 5, gs.npcs, gs.world_flags, gs.current_region, clock.total_days, gs.npc_favor):
-					if h.length() > HUD.HINT_MAX_CHARS:
+					if h.length() > Guidance.HEADLINE_CHARS:
 						var key := _mask_digits(h.substr(0, 30))
 						var row: Dictionary = long_rows.get(key, {"count": 0, "max": 0, "example": ""})
 						row["count"] += 1
@@ -215,6 +216,8 @@ func _run() -> void:
 	if curious:
 		print("Iron Fist level median (QA-138): m03 %.0f, m06 %.0f, m12 %.0f; first Mist Wolf win: median day %.0f (%d/%d seeds)" % [_median(iron_levels[3]), _median(iron_levels[6]), _median(iron_levels[12]), _median(wolf_days), wolf_days.size(), seeds])
 		print("Spar-hint bouts (QA-138): %d, refusals: %s%s" % [FirstHour.spar_log["bouts"], str(FirstHour.spar_log["refused"]), "" if FirstHour.spar_hint else " (--no-spar-hint)"])
+	if FirstHour.buy_qi:
+		print("Qi pills (QA-144): bought %d for %d stones, used %d, qi %d" % [FirstHour.qi_log["bought"], FirstHour.qi_log["stones"], FirstHour.qi_log["used"], FirstHour.qi_log["qi"]])
 	print("Road encounters (QA-118): %d/%d seeds met one; %s" % [road_seeds, seeds, str(road_seen)])
 	if zero:
 		print("Fights rated 0%%: %d of %d, by source: %s" % [zero_by.values().reduce(func(a: int, b: int) -> int: return a + b, 0), fights_seen["n"], str(zero_by)])
@@ -224,11 +227,11 @@ func _run() -> void:
 		for row: Dictionary in forced_rows:
 			print("  %4d  %s  %s  QR%d  %.0f%%  %s  %s" % [row["seed"], row["id"], row["source"], row["layer"], 100.0 * float(row["odds"]), row["outcome"], "yes" if row.get("new_injury", false) else "no"])
 	if long_hints:
-		print("Hint lines over %d characters (QA-143), by first 30 characters (digits masked):" % HUD.HINT_MAX_CHARS)
+		print("Hint lines over %d characters (QA-143), by first 30 characters (digits masked):" % Guidance.HEADLINE_CHARS)
 		var keys := long_rows.keys()
 		keys.sort_custom(func(a: String, b: String) -> bool: return int(long_rows[a]["count"]) > int(long_rows[b]["count"]))
 		for key: String in keys:
 			var row: Dictionary = long_rows[key]
-			print("  x%d max %d | %s | cut-off: %s" % [row["count"], row["max"], key, String(row["example"]).substr(HUD.HINT_MAX_CHARS, 80)])
+			print("  x%d max %d | %s | cut-off: %s" % [row["count"], row["max"], key, String(row["example"]).substr(Guidance.HEADLINE_CHARS, 80)])
 	print("Lines by category: %s" % str(by_cat))
 	quit()

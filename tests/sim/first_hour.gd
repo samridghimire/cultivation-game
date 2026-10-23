@@ -44,6 +44,11 @@ static var min_mission_odds := 0.4
 ## QA-134: take the mission the sect hint names (the best-paying one), up to 3 a month;
 ## simulate_first_hour.gd's --one-mission sets it false (one mission a month, first listed).
 static var chase_best_mission := true
+## QA-144: once a month, spend stones above the next realm pill's reserve (and 20 for the clinic) on the best qi per
+## stone the current region's merchant sells, and use the pills (not at a bottleneck); simulate_first_hour.gd's
+## --buy-qi sets it. qi_log counts "bought", "stones" spent, pills "used" and "qi" gained from them.
+static var buy_qi := false
+static var qi_log := {"bought": 0, "stones": 0, "used": 0, "qi": 0}
 const TRIAL_MIN_ODDS := 0.7
 
 
@@ -311,6 +316,8 @@ static func _curious_month(gs: Node, c: CharacterData, done: Dictionary, today: 
 	_buy_breakthrough_pill(gs, c, done)
 	if not c.alive:
 		return kinds
+	if buy_qi:
+		_buy_qi_pills(gs, c)
 	var region: Dictionary = gs.data.regions.get(gs.current_region, {})
 	for place: Dictionary in region.get("places", []):
 		var ctx := String(place.get("deed_context", ""))
@@ -442,6 +449,53 @@ static func _buy_breakthrough_pill(gs: Node, c: CharacterData, done: Dictionary)
 		gs.buy_item(pill_id)
 	if home != region_id and c.alive:
 		gs.travel(home)
+
+
+## QA-144: see buy_qi. The reserve is the next realm pill's price in the last three stages while none is held.
+static func _buy_qi_pills(gs: Node, c: CharacterData) -> void:
+	var reserve := 0
+	if Guidance._pill_goal_applies(c, gs.data):
+		reserve = Guidance.next_realm_pill_price(c, gs.data)
+	var spare := c.item_count("spirit_stone") - reserve - 20
+	if spare <= 0:
+		return
+	# Qi stops at the bottleneck, so only pills that fit in the room left are worth buying.
+	var realm: RealmDef = gs.data.realms[c.realm_index]
+	var room := realm.qi_required(realm.stage_count() - 1) - c.qi
+	var best_id := ""
+	var best_price := 0
+	var best_rate := 0.0
+	for p: Dictionary in gs.data.regions.get(gs.current_region, {}).get("places", []):
+		if String(p.get("type", "")) != "merchant":
+			continue
+		for item_id: String in gs.data.items:
+			var item: Dictionary = gs.data.items[item_id]
+			var fx: Dictionary = item.get("effects", {})
+			if int(fx.get("qi", 0)) <= 0 or float(fx["qi"]) > room or fx.has("burn_lifespan") or int(fx.get("alignment", 0)) < 0 or not Items.merchant_sells(gs.data, item, p.get("stock_tags", []), int(p.get("max_price", 0))):
+				continue
+			var price := Guidance.merchant_price(c, gs.data, gs.current_region, item_id)
+			var rate := float(fx["qi"]) / price
+			if rate > best_rate:
+				best_rate = rate
+				best_id = item_id
+				best_price = price
+	if best_id == "" or best_price > spare:
+		return
+	var count := mini(spare / best_price, int(room / float(gs.data.items[best_id]["effects"]["qi"])))
+	var stones_before := c.item_count("spirit_stone")
+	var had := c.item_count(best_id)
+	gs.buy_item(best_id, "", count)
+	var bought := c.item_count(best_id) - had
+	qi_log["bought"] += bought
+	qi_log["stones"] += stones_before - c.item_count("spirit_stone")
+	for i in bought:
+		if not c.alive or Cultivation.is_at_bottleneck(c, gs.data):
+			break
+		var qi_before := c.qi
+		gs.use_item(best_id)
+		if c.item_count(best_id) < had + bought - i:
+			qi_log["used"] += 1
+			qi_log["qi"] += maxi(0, c.qi - qi_before)
 
 
 ## QA-075: once a month, does the open chore fight "Fights you can win" lists at >= 0.7 (the list only covers the
