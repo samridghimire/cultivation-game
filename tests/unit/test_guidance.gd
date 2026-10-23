@@ -4117,3 +4117,24 @@ func test_use_hint_counts_only_usable_qi() -> void:
 	c.add_item("qi_gathering_pill", 3)
 	assert_eq(Guidance.usable_qi(c, d, "qi_gathering_pill", 3), 200.0)
 	assert_true(_has(_buy_hints(c), "200 qi"))
+
+
+## GUIDE-141: the rank line says when the next rank also needs a realm.
+func _inner_disciple(contribution: int, realm: int, stage: int) -> CharacterData:
+	var c := new_character()
+	c.realm_index = realm
+	c.stage = stage
+	c.sect = {"id": "azure_cloud_sect", "rank": 1, "contribution": contribution, "spent": 0}
+	return c
+
+
+func test_rank_line_names_the_realm_the_next_rank_needs() -> void:
+	var d := data()
+	var short := _inner_disciple(1290, 1, 6)
+	assert_true(_has(Guidance.hints(short, d, 1.0, 20), "Core Disciple"))
+	assert_true(_has(Guidance.hints(short, d, 1.0, 20), "and reach Foundation Establishment"))
+	var there := _inner_disciple(1290, 2, 0)
+	assert_false(_has(Guidance.hints(there, d, 1.0, 20), "and reach "))
+	var rich := _inner_disciple(3000, 1, 6)
+	assert_true(_has(Guidance.hints(rich, d, 1.0, 20), "Reach Foundation Establishment to become Core Disciple (you have the contribution)"))
+	assert_false(_has(Guidance.hints(rich, d, 1.0, 20), "Earn 0"))

@@ -1455,7 +1455,20 @@ static func _sect_hint(c: CharacterData, data: GameData, region_id: String = "")
 			return "The trial for %s is open. Attempt it %s.%s" % [sect.rank_name(rank + 1), _hall_where(c, data, region_id), pays_sentence]
 		return "The trial for %s is open %s: %s.%s%s" % [sect.rank_name(rank + 1), _hall_where(c, data, region_id), face, _trial_advice(c, data), pays_sentence]
 	var need := int(sect.ranks[rank + 1].get("contribution", 0)) - int(c.sect["contribution"])
-	return "Earn %d more sect contribution (missions, duties) to become %s%s." % [maxi(need, 0), sect.rank_name(rank + 1), pays]
+	var realm_label := _rank_realm_gap(c, data, sect.ranks[rank + 1])
+	if need <= 0 and realm_label != "":
+		return "Reach %s to become %s (you have the contribution)%s." % [realm_label, sect.rank_name(rank + 1), pays]
+	var realm_clause := " and reach %s" % realm_label if realm_label != "" else ""
+	return "Earn %d more sect contribution (missions, duties)%s to become %s%s." % [maxi(need, 0), realm_clause, sect.rank_name(rank + 1), pays]
+
+
+## GUIDE-141: the realm (with stage when the rank asks for one) a rank needs that `c` has not reached, or "".
+static func _rank_realm_gap(c: CharacterData, data: GameData, rank_def: Dictionary) -> String:
+	var min_realm := data.realm_index_of(String(rank_def.get("min_realm", "mortal")))
+	var min_stage := int(rank_def.get("min_stage", 0)) if min_realm > 0 else 0
+	if c.realm_index > min_realm or (c.realm_index == min_realm and c.stage >= min_stage):
+		return ""
+	return data.realms[min_realm].stage_label(min_stage) if min_stage > 0 else data.realms[min_realm].name
 
 
 ## GUIDE-085: the chance of winning the open sect trial, or -1.0 when no trial is open to `c`.
