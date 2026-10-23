@@ -1,8 +1,9 @@
 extends SceneTree
 ## First-hour sim (QA-016): scripted newcomers in Qingshi Village (tests/sim/first_hour.gd).
-## Usage: tools/godot.sh --headless --path . -s res://tests/sim/simulate_first_hour.gd -- [seeds] [months]  [--curious] [--trace] [--zero]
+## Usage: tools/godot.sh --headless --path . -s res://tests/sim/simulate_first_hour.gd -- [seeds] [months]  [--curious] [--trace] [--zero] [--forced]
 
 const FirstHour := preload("res://tests/sim/first_hour.gd")
+const FORCED_ODDS := 0.2
 
 
 func _initialize() -> void:
@@ -21,6 +22,8 @@ func _run() -> void:
 	var args := OS.get_cmdline_user_args()
 	var curious := args.has("--curious")
 	var zero := args.has("--zero")  # QA-126: count fights rated 0%, by what started them
+	var forced := args.has("--forced")  # QA-139: tally every fight rated under 20%, by source, with its outcome
+	var forced_rows: Array = []
 	var zero_by := {}
 	var fights_seen := {"n": 0}
 	FirstHour.attempt_trials = not args.has("--no-trial")  # QA-136
@@ -30,7 +33,7 @@ func _run() -> void:
 	for a in args:
 		if a.begins_with("--seed="):
 			only_seed = int(a.substr(7))
-		elif a != "--curious" and a != "--trace" and a != "--zero" and a != "--no-trial":
+		elif a != "--curious" and a != "--trace" and a != "--zero" and a != "--forced" and a != "--no-trial":
 			nums.append(int(a))
 	var seeds := nums[0] if nums.size() > 0 else 30
 	var months := nums[1] if nums.size() > 1 else 12
@@ -76,6 +79,26 @@ func _run() -> void:
 					source = fn
 					break
 			zero_by[source] = int(zero_by.get(source, 0)) + 1
+		var on_forced_start := func(enemy: Dictionary) -> void:
+			var odds: float = Combat.win_chance(gs.player, gs.data, enemy)
+			if odds >= FORCED_ODDS or enemy.get("spar", false):
+				return
+			var source := "other"
+			for frame: Dictionary in get_stack():
+				var fn := String(frame["function"])
+				if fn not in ["<anonymous lambda>", "fight_enemy", "fight"]:
+					source = fn
+					break
+			forced_rows.append({"seed": s, "id": String(enemy.get("id", "?")), "source": source, "layer": gs.player.stage + 1, "odds": odds, "hurt": gs.player.injuries.size(), "outcome": ""})
+		var on_forced_end := func(_n: String, victory: bool, _l: PackedStringArray) -> void:
+			if forced_rows.is_empty() or forced_rows[forced_rows.size() - 1]["outcome"] != "":
+				return
+			var row: Dictionary = forced_rows[forced_rows.size() - 1]
+			row["outcome"] = "won" if victory else "lost"
+			row["new_injury"] = gs.player.injuries.size() > int(row["hurt"])
+		if forced:
+			root.get_node("EventBus").combat_started.connect(on_forced_start)
+			root.get_node("EventBus").combat_finished.connect(on_forced_end)
 		if zero:
 			root.get_node("EventBus").combat_started.connect(on_zero)
 		if trace:
@@ -90,6 +113,9 @@ func _run() -> void:
 				print("    m%02d day %d %s %s stones %d techs %s hint: %s | fights: %s" % [month + 1, clock.total_days, gs.current_region, Cultivation.realm_label(p, gs.data), p.item_count("spirit_stone"), str(techs), str(Guidance.hints(p, gs.data, 1.0, 5, gs.npcs, gs.world_flags, gs.current_region, clock.total_days, gs.npc_favor)), str(fight_notes)])
 				fight_notes.clear()
 		var r: Dictionary = FirstHour.play(gs, clock, s, months, curious, hook)
+		if forced:
+			root.get_node("EventBus").combat_started.disconnect(on_forced_start)
+			root.get_node("EventBus").combat_finished.disconnect(on_forced_end)
 		if zero:
 			root.get_node("EventBus").combat_started.disconnect(on_zero)
 		if trace:
@@ -148,5 +174,10 @@ func _run() -> void:
 	print("Road encounters (QA-118): %d/%d seeds met one; %s" % [road_seeds, seeds, str(road_seen)])
 	if zero:
 		print("Fights rated 0%%: %d of %d, by source: %s" % [zero_by.values().reduce(func(a: int, b: int) -> int: return a + b, 0), fights_seen["n"], str(zero_by)])
+	if forced:
+		print("Fights rated under %.0f%% (QA-139): %d" % [100.0 * FORCED_ODDS, forced_rows.size()])
+		print("  seed  enemy  source  layer  odds  outcome  injured")
+		for row: Dictionary in forced_rows:
+			print("  %4d  %s  %s  QR%d  %.0f%%  %s  %s" % [row["seed"], row["id"], row["source"], row["layer"], 100.0 * float(row["odds"]), row["outcome"], "yes" if row.get("new_injury", false) else "no"])
 	print("Lines by category: %s" % str(by_cat))
 	quit()
