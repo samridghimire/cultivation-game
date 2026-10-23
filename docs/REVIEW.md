@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 3c8c769
+Last reviewed commit: e46c09d
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -1017,3 +1017,19 @@ Last reviewed commit: 3c8c769
     a future deliver mission gated by requires_flag would make the hint total and the shop's sell-all differ (no mission
     uses requires_flag today). WU-324 found the WU-317 overlap is an NPC label vs a place label, which its guard does not
     cover (its own follow-up).
+- 2026-10-23 (reviewer, 6th run): reviewed 3c8c769..e46c09d (GUIDE-129/130/131/132/133, WU-320/321/323/327, C-218/220/221/222,
+  QA-148, QA-20261023-2; [PLAN]/[REVIEW] commits skipped). Main green before (ALL CHECKS PASSED). No BACKLOG/CHANGELOG
+  edits by workers; no save-format changes. Nothing fixed or filed.
+  - Checked: GUIDE-133 threads world flags through every sell_offer/deliver_needs caller (thin defence, armor, loot armor,
+    sell hint), closing the gap noted last run; shop_screen.sell_wanted_line now takes flags instead of reading GameState.
+    GUIDE-129's Sects.only_items_missing is the old deliver_needs condition verbatim, now shared with the inventory and
+    shop "Wanted by the sect" lines. GUIDE-130 passes `today` to every gather_place_for/_deliver_clause caller (mission
+    board uses GameClock.total_days). GUIDE-132 follows its spec: the claim line replaces "Save for", and both the qi-pill
+    reserve and pill_gap_note drop while it shows; all three sects sell the same pill next_realm_pill picks, so the
+    "As <rank> you could claim it" suffix names the right item. GUIDE-131/WU-320 cap qi at qi_to_bottleneck. QA-20261023-2's
+    test changes keep the assertions meaningful (sure-win foe, meeting pushed out, count measured from after travel).
+    C-218's captain is non-lethal and its odds test spans stages 4 and 6.
+  - Notes, not filed: GUIDE-132 (per spec) also drops the stone reserve when the claim line shows with too little
+    contribution ("you have N"), so the qi-pill hint may spend stones the player could have used on the pill.
+    QA-148's follow-up is an owner balance question: contribution qi pills put 10/10 seeds past QR9 by month 12 (base
+    2/10), so GUIDE-135 should not hint bulk contribution qi pills until F-005d is settled.
