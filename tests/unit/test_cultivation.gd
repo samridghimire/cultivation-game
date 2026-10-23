@@ -309,3 +309,18 @@ func test_breakthrough_failures_round_trip() -> void:
 	var d := c.to_dict()
 	d.erase("breakthrough_failures")
 	assert_eq(CharacterData.from_dict(d).breakthrough_failures, 0)
+
+
+func test_qi_to_bottleneck() -> void:
+	var d := data()
+	var c := new_character()
+	c.realm_index = 1
+	c.stage = 0
+	c.qi = 0.0
+	var total := 0.0
+	for stage in d.realms[1].stage_count():
+		total += d.realms[1].qi_required(stage)
+	assert_eq(Cultivation.qi_to_bottleneck(c, d), total)
+	c.stage = d.realms[1].stage_count() - 1
+	c.qi = d.realms[1].qi_required(c.stage)
+	assert_eq(Cultivation.qi_to_bottleneck(c, d), 0.0)

@@ -77,11 +77,18 @@ static func days_to_bottleneck(c: CharacterData, data: GameData, density: float 
 	var per_day := qi_per_day(c, data, density)
 	if per_day <= 0.0:
 		return -1
+	return maxi(1, ceili(qi_to_bottleneck(c, data) / per_day - 0.000001))
+
+
+## Qi still needed to fill the realm up to its bottleneck (0.0 at the bottleneck).
+static func qi_to_bottleneck(c: CharacterData, data: GameData) -> float:
+	if is_at_bottleneck(c, data):
+		return 0.0
 	var realm: RealmDef = data.realms[c.realm_index]
 	var remaining := realm.qi_required(c.stage) - c.qi
 	for stage in range(c.stage + 1, realm.stage_count()):
 		remaining += realm.qi_required(stage)
-	return maxi(1, ceili(remaining / per_day - 0.000001))
+	return remaining
 
 
 ## Days of meditation at `density` until the next stage (or the realm's bottleneck

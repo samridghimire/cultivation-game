@@ -3880,6 +3880,9 @@ func test_hint_actions_fit_headline() -> void:
 	c.inventory = {"spirit_stone": 500}
 	lines.append(Guidance.thin_defence_hint(c, d, "myriad_peaks_ridge"))
 	lines.append(Guidance.armor_hint(c, d, "qingshi_village"))
+	# spare stones buy qi pills
+	c = _qr(2, 200)
+	lines.append_array(Guidance.hints(c, d, 1.0, 20, {}, {}, "qingshi_village"))
 	var checked := 0
 	for line: String in lines:
 		if line == "" or line.begins_with("As a rogue cultivator"):  # the sect list is the action; not one of the canonical states
@@ -3887,3 +3890,65 @@ func test_hint_actions_fit_headline() -> void:
 		checked += 1
 		assert_true(_clause_end(line) < Guidance.HEADLINE_CHARS, "first clause ends at %d: %s" % [_clause_end(line), line])
 	assert_true(checked >= 10, "checked %d hint lines" % checked)
+
+
+func _buy_hints(c: CharacterData) -> PackedStringArray:
+	return Guidance.hints(c, data(), 1.0, 20, {}, {}, "qingshi_village")
+
+
+func test_qi_pill_offer_spends_spare_stones() -> void:
+	var offer := Guidance.qi_pill_offer(_qr(2, 200), data(), "qingshi_village")
+	assert_false(offer.is_empty())
+	assert_true(int(offer["count"]) >= 1)
+	assert_true(int(offer["count"]) * int(offer["price"]) <= 180)
+	assert_true(_has(_buy_hints(_qr(2, 200)), "Buy "))
+	assert_true(_has(_buy_hints(_qr(2, 200)), "with spare stones"))
+
+
+func test_qi_pill_offer_needs_spare_stones() -> void:
+	assert_true(Guidance.qi_pill_offer(_qr(2, 30), data(), "qingshi_village").is_empty())
+	assert_false(_has(_buy_hints(_qr(2, 30)), "Buy "))
+
+
+func test_qi_pill_offer_keeps_the_next_realm_pill_money() -> void:
+	var reserve := Guidance.next_realm_pill_price(_qr(7, 0), data())
+	assert_true(reserve > 0)
+	assert_true(Guidance.qi_pill_offer(_qr(7, reserve + Guidance.QI_BUY_KEEP), data(), "qingshi_village").is_empty())
+	var offer := Guidance.qi_pill_offer(_qr(7, reserve + Guidance.QI_BUY_KEEP + 80), data(), "qingshi_village")
+	if not offer.is_empty():
+		assert_true(int(offer["count"]) * int(offer["price"]) <= 80)
+
+
+func test_qi_pill_hint_yields_to_a_held_pill() -> void:
+	var c := _qr(2, 200)
+	c.add_item("qi_gathering_pill", 1)
+	assert_true(_has(_buy_hints(c), "Use your"))
+	assert_false(_has(_buy_hints(c), "Buy "))
+
+
+func test_qi_pill_offer_silent_at_bottleneck_mortal_and_without_merchant() -> void:
+	var d := data()
+	var c := _qr(2, 200)
+	c.stage = d.realms[1].stage_count() - 1
+	c.qi = d.realms[1].qi_required(c.stage)
+	assert_true(Guidance.qi_pill_offer(c, d, "qingshi_village").is_empty())
+	var m := _qr(2, 200)
+	m.realm_index = 0
+	assert_true(Guidance.qi_pill_offer(m, d, "qingshi_village").is_empty())
+	for region_id: String in d.regions:
+		var has_merchant := false
+		for p: Dictionary in d.regions[region_id].get("places", []):
+			has_merchant = has_merchant or String(p.get("type", "")) == "merchant"
+		if not has_merchant:
+			assert_true(Guidance.qi_pill_offer(_qr(2, 200), d, region_id).is_empty())
+			break
+	assert_true(Guidance.qi_pill_offer(_qr(2, 200), d, "nowhere").is_empty())
+
+
+func test_qi_pill_offer_skips_pills_bigger_than_the_room() -> void:
+	var d := data()
+	var c := _qr(7, 5000)
+	c.qi = d.realms[1].qi_required(7) - 500.0
+	var offer := Guidance.qi_pill_offer(c, d, "qingshi_village")
+	if not offer.is_empty():
+		assert_true(float(d.items[offer["item_id"]]["effects"]["qi"]) <= Cultivation.qi_to_bottleneck(c, d))

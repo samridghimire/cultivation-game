@@ -18,6 +18,7 @@ const FAIR_FIGHT_MAX_RATED := 8
 const FAIR_FIGHT_EXPLORE_MAX := 2
 const FAIR_FIGHT_MIN_CHANCE := 0.7  # "Even" or better (Combat.label_for_chance)
 const CHORE_REGION := "qingshi_village"
+const QI_BUY_KEEP := 20  ## Stones the qi-pill hint leaves for the clinic (GUIDE-126).
 const HEADLINE_CHARS := 120  ## The HUD shows this many characters of a hint (HUD.HINT_MAX_CHARS, WU-305).
 ## GUIDE-054: game days a Mortal crafter plays before hearing where to begin cultivating.
 const MORTAL_CRAFTER_NUDGE_DAY := 30
@@ -1237,6 +1238,42 @@ static func next_realm_pill(c: CharacterData, data: GameData) -> Dictionary:
 	return best
 
 
+## GUIDE-126: the qi pill `c` could buy with spare stones in `region_id`: {item_id, name, merchant, price, count, days}
+## (days of meditation per pill here), or {} when nothing fits. Keeps the next realm pill's price and QI_BUY_KEEP.
+static func qi_pill_offer(c: CharacterData, data: GameData, region_id: String, flags: Dictionary = {}) -> Dictionary:
+	if not data.regions.has(region_id) or c.realm_index < 1 or Cultivation.is_at_bottleneck(c, data):
+		return {}
+	var reserve := next_realm_pill_price(c, data) if _pill_goal_applies(c, data) else 0
+	var spare := c.item_count("spirit_stone") - reserve - QI_BUY_KEEP
+	if spare <= 0:
+		return {}
+	var room := Cultivation.qi_to_bottleneck(c, data)
+	var best := {}
+	var best_ratio := 0.0
+	for place: Dictionary in data.regions[region_id].get("places", []):
+		if String(place.get("type", "")) != "merchant":
+			continue
+		for item_id: String in data.items:
+			var item: Dictionary = data.items[item_id]
+			var qi := float(item.get("effects", {}).get("qi", 0.0))
+			if qi <= 0.0 or qi > room or not item_id.ends_with("_pill") or not Items.feeds_cultivation(data, item_id) or not Items.merchant_sells(data, item, place.get("stock_tags", []), int(place.get("max_price", 0))):
+				continue
+			var price := _place_price(c, data, region_id, item_id, place)
+			if price <= spare and qi / price > best_ratio:
+				best_ratio = qi / price
+				best = {"item_id": item_id, "name": String(item["name"]), "merchant": String(place.get("display_name", "merchant")), "price": price, "qi": qi}
+	if best.is_empty():
+		return {}
+	var count := mini(spare / int(best["price"]), int(room / float(best["qi"])))
+	var rate := Cultivation.qi_per_day(c, data, float(best_qi_in_region(c, data, region_id, flags)["density"]))
+	if count < 1 or rate <= 0.0:
+		return {}
+	best["count"] = count
+	best["days"] = maxi(1, ceili(float(best["qi"]) / rate))
+	best.erase("qi")
+	return best
+
+
 ## Shop price of the next realm's breakthrough pill, 0 when there is none.
 static func next_realm_pill_price(c: CharacterData, data: GameData) -> int:
 	return int(next_realm_pill(c, data).get("price", 0))
@@ -2014,6 +2051,10 @@ static func _newcomer_hints(c: CharacterData, data: GameData, flags: Dictionary,
 					var label: String = String(item["name"]) if count == 1 else "%d %s" % [count, Items.item_plural(data, item_id, count)]
 					out.append("Use your %s (Inventory, I): %d qi at once, about %s of meditation here." % [label, roundi(qi), Calendar.format_duration(maxi(1, ceili(qi / rate)))])
 				break
+		if out.is_empty() or not String(out[out.size() - 1]).begins_with("Use your"):
+			var offer := qi_pill_offer(c, data, region_id, flags)
+			if not offer.is_empty():
+				out.append("Buy %s with spare stones: the %s here sells them for %d stones, about %s of meditation each." % [Items.item_plural(data, String(offer["item_id"]), 2), offer["merchant"], offer["price"], Calendar.format_duration(int(offer["days"]))])
 	var fighting := first_combat_hint(c, data, region_id)
 	if fighting != "":
 		out.append(fighting)
