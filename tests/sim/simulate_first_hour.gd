@@ -1,6 +1,6 @@
 extends SceneTree
 ## First-hour sim (QA-016): scripted newcomers in Qingshi Village (tests/sim/first_hour.gd).
-## Usage: tools/godot.sh --headless --path . -s res://tests/sim/simulate_first_hour.gd -- [seeds] [months]  [--curious] [--trace] [--zero] [--forced] [--injury-origins] [--odds-bands] [--qi-pill-cap=N] [--deaths] [--recharge] [--hint-missions]
+## Usage: tools/godot.sh --headless --path . -s res://tests/sim/simulate_first_hour.gd -- [seeds] [months]  [--curious] [--trace] [--zero] [--forced] [--injury-origins] [--odds-bands] [--qi-pill-cap=N] [--deaths] [--recharge] [--hint-missions] [--rating-check]
 
 const FirstHour := preload("res://tests/sim/first_hour.gd")
 const FORCED_ODDS := 0.2
@@ -85,6 +85,61 @@ func _print_odds_bands(rows: Array, foes: Dictionary, months: int, seeds: int) -
 		print("  %s  %.0f%%  %.0f%%  %d/%d  %s" % [key, 100.0 * _median(odds.duplicate()), 100.0 * float(odds.min()), under, odds.size(), "%.0f%%" % (100.0 * _median(unhurt)) if not unhurt.is_empty() else "-"])
 
 
+## QA-153: per rated-odds band the fights, mean rating and actual win share; then 40 vs 2000 samples (seed 7) on up to 40 matchups.
+func _print_rating_check(rows: Array, data: GameData) -> void:
+	var edges := [0.4, 0.7, 0.85, 0.95]
+	var labels := ["<40", "40-70", "70-85", "85-95", ">=95"]
+	print("Rated odds vs outcome (QA-153), %d non-spar fights:" % rows.size())
+	print("  band  fights  mean rating  actual win share  gap (points)  mean injuries")
+	for b in range(5):
+		var n := 0
+		var rated := 0.0
+		var wins := 0
+		var hurt := 0.0
+		for r: Dictionary in rows:
+			var o: float = r["odds"]
+			var band := 0
+			while band < 4 and o >= edges[band]:
+				band += 1
+			if band != b:
+				continue
+			n += 1
+			rated += o
+			wins += 1 if r["won"] else 0
+			hurt += float(r["injuries"])
+		if n == 0:
+			print("  %s  0" % labels[b])
+		else:
+			print("  %s  %d  %.1f%%  %.1f%%  %+.1f  %.1f" % [labels[b], n, 100.0 * rated / n, 100.0 * wins / n, 100.0 * (float(wins) / n - rated / n), hurt / n])
+	var picks: Array = []
+	var step := maxi(1, rows.size() / 40)
+	for i in range(0, rows.size(), step):
+		picks.append(rows[i])
+		if picks.size() >= 40:
+			break
+	var errs: Array = []
+	var worst: Array = []
+	for r: Dictionary in picks:
+		var c := CharacterData.from_dict(r["player"])
+		var rng := RandomNumberGenerator.new()
+		rng.seed = 7
+		var wins := 0
+		for i in 2000:
+			if Combat.resolve(c, data, r["enemy"], rng)["victory"]:
+				wins += 1
+		var truth := wins / 2000.0
+		errs.append(absf(float(r["odds"]) - truth))
+		worst.append([absf(float(r["odds"]) - truth), String(r["enemy"].get("id", "?")), float(r["odds"]), truth])
+	worst.sort_custom(func(a: Array, b: Array) -> bool: return a[0] > b[0])
+	var mean_err := 0.0
+	for e: float in errs:
+		mean_err += e
+	print("Matchups checked: %d. Mean |rated(40) - 2000 samples|: %.1f points" % [picks.size(), 100.0 * mean_err / maxf(1.0, picks.size())])
+	print("Worst 5: foe  rated(40)  2000 samples")
+	for i in range(mini(5, worst.size())):
+		print("  %s  %.0f%%  %.0f%%" % [worst[i][1], 100.0 * worst[i][2], 100.0 * worst[i][3]])
+
+
 ## QA-152: per seed lives spent and final-death day; per lethal loss the foe, source and rated odds at its start.
 func _print_deaths(rows: Array, lethal: Array, seeds: int) -> void:
 	print("Deaths (QA-152): seed  lives spent  final death day")
@@ -150,6 +205,8 @@ func _run() -> void:
 	var odds_bands := args.has("--odds-bands")  # QA-147: fights by month and rated-odds band
 	var move_rows: Array = []
 	var deaths := args.has("--deaths")  # QA-152
+	var rating_check := args.has("--rating-check")  # QA-153: rated odds vs actual wins, and 40 vs 2000 samples
+	var rating_rows: Array = []  # {odds, hp_frac, won, player, enemy}
 	var death_rows: Array = []
 	var lethal_rows: Array = []
 	var band_rows: Array = []
@@ -193,7 +250,7 @@ func _run() -> void:
 			only_seed = int(a.substr(7))
 		elif a.begins_with("--qi-pill-cap="):
 			FirstHour.qi_pill_cap = int(a.substr(14))  # QA-150
-		elif a != "--curious" and a != "--trace" and a != "--zero" and a != "--forced" and a != "--no-trial" and a != "--no-heal" and a != "--no-spar-hint" and a != "--blind-missions" and a != "--one-mission" and a != "--long-hints" and a != "--buy-qi" and a != "--spend-contribution" and a != "--no-armor" and a != "--far-qi" and a != "--injury-origins" and a != "--odds-bands" and a != "--deaths" and a != "--recharge" and a != "--hint-missions":
+		elif a != "--curious" and a != "--trace" and a != "--zero" and a != "--forced" and a != "--no-trial" and a != "--no-heal" and a != "--no-spar-hint" and a != "--blind-missions" and a != "--one-mission" and a != "--long-hints" and a != "--buy-qi" and a != "--spend-contribution" and a != "--no-armor" and a != "--far-qi" and a != "--injury-origins" and a != "--odds-bands" and a != "--deaths" and a != "--recharge" and a != "--hint-missions" and a != "--rating-check":
 			nums.append(int(a))
 	var seeds := nums[0] if nums.size() > 0 else 30
 	var months := nums[1] if nums.size() > 1 else 12
@@ -292,6 +349,14 @@ func _run() -> void:
 			row["won"] = victory
 			row["injured"] = gs.player.injuries.size() > int(row["hurt"])
 			row["life"] = gs.player.artifact_lives < int(row["lives"])
+		var on_rating_start := func(enemy: Dictionary) -> void:
+			if enemy.get("spar", false):
+				rating_rows.append({})
+				return
+			rating_rows.append({"odds": Combat.win_chance(gs.player, gs.data, enemy), "injuries": gs.player.injuries.size(), "won": false, "player": gs.player.to_dict(), "enemy": enemy.duplicate(true)})
+		var on_rating_end := func(_n: String, victory: bool, _l: PackedStringArray) -> void:
+			if not rating_rows.is_empty() and not rating_rows[rating_rows.size() - 1].is_empty():
+				rating_rows[rating_rows.size() - 1]["won"] = victory
 		var seed_lethal: Array = []
 		var on_death_start := func(enemy: Dictionary) -> void:
 			if enemy.get("spar", false):
@@ -314,6 +379,9 @@ func _run() -> void:
 		if FirstHour.far_qi and odds_bands:
 			root.get_node("EventBus").combat_started.connect(on_move_start)
 			root.get_node("EventBus").combat_finished.connect(on_move_end)
+		if rating_check:
+			root.get_node("EventBus").combat_started.connect(on_rating_start)
+			root.get_node("EventBus").combat_finished.connect(on_rating_end)
 		if odds_bands:
 			root.get_node("EventBus").combat_started.connect(on_band_start)
 		if forced:
@@ -393,6 +461,9 @@ func _run() -> void:
 		if FirstHour.far_qi and odds_bands:
 			root.get_node("EventBus").combat_started.disconnect(on_move_start)
 			root.get_node("EventBus").combat_finished.disconnect(on_move_end)
+		if rating_check:
+			root.get_node("EventBus").combat_started.disconnect(on_rating_start)
+			root.get_node("EventBus").combat_finished.disconnect(on_rating_end)
 		if odds_bands:
 			root.get_node("EventBus").combat_started.disconnect(on_band_start)
 		if forced:
@@ -482,6 +553,8 @@ func _run() -> void:
 			_print_move_bands(move_rows)
 	if deaths:
 		_print_deaths(death_rows, lethal_rows, seeds)
+	if rating_check:
+		_print_rating_check(rating_rows.filter(func(r: Dictionary) -> bool: return not r.is_empty()), root.get_node("GameState").data)
 	if injury_origins:
 		_print_injury_origins(origin_rows, slow_days, break_rows, seeds)
 	if long_hints:
