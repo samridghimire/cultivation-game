@@ -85,6 +85,15 @@ func test_first_sentence() -> void:
 	assert_eq(HudScript.first_sentence("No stop here"), "No stop here")
 
 
+func test_cap_hint() -> void:
+	assert_eq(HudScript.cap_hint("Short line."), "Short line.")
+	var long_text := "Earn 440 more sect contribution to reach the next rank, by Relieve a Fevered Village or Escort Mortal Villagers, which is ready again in 6 days. " + "x".repeat(40)
+	var capped := HudScript.cap_hint(long_text)
+	assert_true(capped.length() <= HudScript.HINT_MAX_CHARS + 8, "capped length %d" % capped.length())
+	assert_true(capped.ends_with("\u2026 (J)"))
+	assert_true(long_text.begins_with(capped.trim_suffix("\u2026 (J)")), "cut is a prefix at a word boundary")
+
+
 func test_fit_keeps_one_hint_when_three_do_not_fit() -> void:
 	var root := _tree().root
 	var old_size := root.size

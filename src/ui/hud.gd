@@ -5,6 +5,7 @@ extends CanvasLayer
 const MAIN_MENU := "res://src/ui/main_menu.tscn"
 const MAX_LOG_LINES := 60
 const LOG_HEIGHT := 196.0  ## Space the log panel takes at the bottom (offset 196 in _build_log).
+const HINT_MAX_CHARS := 120  ## WU-305: a status-panel hint line is cut past this (about three wrapped lines).
 const STATUS_MARGIN := 8.0  ## Gap kept between the status panel and the log.
 ## Lifespan cue thresholds (fraction of the lifespan left).
 const LIFESPAN_WARNING := 0.15
@@ -631,7 +632,7 @@ func _set_hint_text(lines: PackedStringArray) -> void:
 	_hint_badge.visible = marked
 	var out: Array = []
 	for i in lines.size():
-		out.append(("  " if i == 0 and marked else "> ") + lines[i])
+		out.append(("  " if i == 0 and marked else "> ") + cap_hint(lines[i]))
 	_hint.text = "\n".join(out)
 
 
@@ -661,6 +662,18 @@ func _shrink_hint(limit: float) -> bool:
 		if _status_panel.size.y <= limit:
 			return true
 	return false
+
+
+## WU-305: a hint line longer than `max_chars` is cut at a word boundary and ends with "… (J)" (about three wrapped
+## lines in the status panel); the journal keeps the full text.
+static func cap_hint(text: String, max_chars: int = HINT_MAX_CHARS) -> String:
+	if text.length() <= max_chars:
+		return text
+	var cut := text.substr(0, max_chars)
+	var sp := cut.rfind(" ")
+	if sp > max_chars / 2:
+		cut = cut.substr(0, sp)
+	return cut.rstrip(" ,;:.") + "\u2026 (J)"
 
 
 ## The text up to the first ". ", plus " (J)" so the player knows the journal has the rest. Unchanged without one.
