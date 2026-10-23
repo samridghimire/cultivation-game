@@ -27,13 +27,15 @@ func _run() -> void:
 	var zero_by := {}
 	var fights_seen := {"n": 0}
 	FirstHour.attempt_trials = not args.has("--no-trial")  # QA-136
+	FirstHour.heal_injuries = curious and not args.has("--no-heal")  # QA-128
+	FirstHour.heal_log = {"healed": 0, "stones": 0}
 	var trace := args.has("--trace")  # QA-065: print each month's state and every fight
 	var only_seed := 0  # --seed=N runs just that seed
 	var nums: Array[int] = []
 	for a in args:
 		if a.begins_with("--seed="):
 			only_seed = int(a.substr(7))
-		elif a != "--curious" and a != "--trace" and a != "--zero" and a != "--forced" and a != "--no-trial":
+		elif a != "--curious" and a != "--trace" and a != "--zero" and a != "--forced" and a != "--no-trial" and a != "--no-heal":
 			nums.append(int(a))
 	var seeds := nums[0] if nums.size() > 0 else 30
 	var months := nums[1] if nums.size() > 1 else 12
@@ -171,6 +173,8 @@ func _run() -> void:
 		for k: int in kinds_all:
 			sum += k
 		print("Distinct action kinds per month: %.1f; months after the first with no log lines: %d" % [float(sum) / maxi(1, kinds_all.size()), zero_months])
+	if curious:
+		print("Injury treatments (QA-128): %d, clinic stones %d%s" % [FirstHour.heal_log["healed"], FirstHour.heal_log["stones"], "" if FirstHour.heal_injuries else " (--no-heal)"])
 	print("Road encounters (QA-118): %d/%d seeds met one; %s" % [road_seeds, seeds, str(road_seen)])
 	if zero:
 		print("Fights rated 0%%: %d of %d, by source: %s" % [zero_by.values().reduce(func(a: int, b: int) -> int: return a + b, 0), fights_seen["n"], str(zero_by)])

@@ -31,32 +31,33 @@ Lines by category: { "warning": 56, "danger": 36, "info": 336, "progress": 232, 
 
 First-hour sim (curious player): 10 seeds, 12 months
   seed  QR1  QR3  QR9  sect  injuries  won  lost  fled  lines/month
-     1   55  282    -    55         0    9     4     0  23.0
+     1   55  283    -    55         0   11     3     0  23.2
         first win day 14 (wild_boar), style bought day 27
      2   14  132    -    14         0   17     3     0  30.3
         first win day 14 (wild_boar), style bought day 41
      3   14  193    -    14         0   24     2     1  35.5
         first win day 14 (wild_boar), style bought day 38
-     4   14  258    -    14         1   13     3     0  27.1
+     4   14  258    -    14         0   12     3     0  27.2
         first win day 14 (wild_boar), style bought day 45
-     5   14   71  482    14         0   16     4     0  30.7
+     5   14   71  482    14         0   16     4     0  32.8
         first win day 14 (wild_boar), style bought day 40
      6   14  247    -    14         1   18     3     0  26.9
         first win day 14 (wild_boar), style bought day 44
-     7   14  200    -    14         0   15     3     0  27.8
+     7   14  200    -    14         1   14     4     0  26.0
         first win day 14 (wild_boar), style bought day 39
      8   14  128  606    14         0   25     1     0  33.9
         first win day 14 (wild_boar), style bought day 39
-     9   14  253    -    14         0   14     3     0  25.2
+     9   14  253    -    14         0   14     3     0  26.1
         first win day 14 (wild_boar), style bought day 40
-    10   14  192    -    14         1   16     4     0  28.2
+    10   14  192    -    14         1   17     3     0  29.8
         first win day 41 (mountain_bandit), style bought day 41
-Medians (day): QR1 14, QR3 200, QR9 606 (2/10 seeds reached it), sect 14; injuries 0; fights won 16, lost 3, fled 0; 28.2 log lines/month
+Medians (day): QR1 14, QR3 200, QR9 606 (2/10 seeds reached it), sect 14; injuries 0; fights won 17, lost 3, fled 0; 29.8 log lines/month
 First win: median day 14, seeds with no win in 12 months: 0; first-win foes: { "wild_boar": 9, "mountain_bandit": 1 }; median style day 40 (10 seeds)
-Sect trials: Inner Disciple median day 746 (2/10 seeds); trials won 3, lost 0; stones at the last month: median 129
-Distinct action kinds per month: 6.2; months after the first with no log lines: 0
-Road encounters (QA-118): 6/10 seeds met one; { "road_milestone_carver": 2, "road_fallen_rogue": 3, "road_highwayman": 1, "road_caravan_guard": 2, "road_caravan_fire": 2, "road_overturned_cart": 1, "road_talisman_peddler": 1, "road_rain_shelter": 1 }
-Lines by category: { "warning": 166, "danger": 396, "info": 1423, "progress": 1281, "karma": 187, "world": 9, "normal": 1 }
+Sect trials: Inner Disciple median day 692 (3/10 seeds); trials won 3, lost 0; stones at the last month: median 129
+Distinct action kinds per month: 6.3; months after the first with no log lines: 0
+Injury treatments (QA-128): 8, clinic stones 122
+Road encounters (QA-118): 8/10 seeds met one; { "road_milestone_carver": 3, "road_lost_child": 1, "road_fallen_rogue": 2, "road_highwayman": 2, "road_caravan_guard": 2, "road_caravan_fire": 2, "road_talisman_peddler": 1, "road_rain_shelter": 1, "road_wandering_boxer": 1 }
+Lines by category: { "warning": 172, "danger": 397, "info": 1434, "progress": 1298, "karma": 188, "world": 9, "normal": 3 }
 
 ## log noise (seeds 1-5, 12 months)
 

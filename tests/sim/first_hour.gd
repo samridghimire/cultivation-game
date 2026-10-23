@@ -28,6 +28,10 @@ static var wolf_win_day := -1
 ## QA-136: the curious player attempts an open sect promotion trial when the hint's odds are >= TRIAL_MIN_ODDS
 ## (once a month, travelling to a sect hall if needed). `--no-trial` in simulate_first_hour.gd turns it off.
 static var attempt_trials := true
+## QA-128: a curious player treats injuries (owned items, then a clinic in the region) once a month; simulate_first_hour.gd's
+## --no-heal turns it off. heal_log["healed"] counts treatments, ["stones"] the stones the clinic took.
+static var heal_injuries := false
+static var heal_log := {"healed": 0, "stones": 0}
 const TRIAL_MIN_ODDS := 0.7
 
 
@@ -263,6 +267,12 @@ static func _bitter_detour(gs: Node, c: CharacterData) -> String:
 ## set of action kinds done.
 static func _curious_month(gs: Node, c: CharacterData, done: Dictionary, today: int) -> Dictionary:
 	var kinds := {}
+	if heal_injuries and c.alive and not c.injuries.is_empty():
+		var stones_before := c.item_count("spirit_stone")
+		var log := {"healed": 0}
+		_heal_before_fighting(gs, c, log)
+		heal_log["healed"] += int(log["healed"])
+		heal_log["stones"] += maxi(0, stones_before - c.item_count("spirit_stone"))
 	if follow_defence:
 		_follow_defence_hint(gs, c)
 	if practise_hint:
