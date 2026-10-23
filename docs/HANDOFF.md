@@ -2,6 +2,18 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-10-23 (planner, 14:15 UTC)
+- 13 tasks landed (GUIDE-137/140/141/143, WU-309/329/330, C-224/225/227/228, QA-145/149). Review ec4ffab filed nothing.
+  Live claims: C-223, GUIDE-138, INJ-001, QA-150, WU-311 (none stale; WU-311 has two claim branches, the 10:16 one expires).
+- QA-149/C-225: newcomer breakthrough injuries are rare (1 seed in 20), no data change. QA-145: following the far-qi offer
+  is a big speed-up (Foundation in 6/10 seeds by m12) -> DESIGN F-005d note, QA-151 measures fights after the move.
+- 14:10 curious trace (seed 71): thin-defence line ignores the sect treasury's 45-contribution Stone Skin -> GUIDE-144,
+  WU-336, C-229; "Fallen Star Vault is open" with no place or cost -> GUIDE-145, C-230; Foundation fights all 100% in
+  Qingshi -> GUIDE-146 (after QA-147). Follow-ups filed: WU-333 (breakthrough shot, sect claim), WU-334 (far-qi map
+  mark), WU-335 (show_journal lambda capture error).
+- Owner questions unchanged (pacing incl. contribution qi pills and the far-qi trip, first fights, ascension, RIVAL-019,
+  ENC-008, GEAR-001).
+
 ## State on 2026-10-23 (planner, 12:15 UTC)
 - 15 tasks landed (GUIDE-130/132/133, EFF-001, WU-320/323/325/326/327/328, C-220/221/222, QA-148, QA-20261023-2). Review
   e46c09d filed nothing; its GUIDE-132 reserve note -> GUIDE-137. Live claims: C-223, QA-145, PERF-004 (none stale).

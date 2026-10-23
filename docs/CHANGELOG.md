@@ -2,6 +2,19 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-23 [GUIDE-143] A sect member hears when the sect treasury sells a body art they can buy now.
+- 2026-10-23 [GUIDE-141] The sect rank line says when the next rank also needs a higher realm.
+- 2026-10-23 [GUIDE-140] The "use your herb" hint no longer eats herbs a sect mission still needs.
+- 2026-10-23 [WU-329] Screenshot checks for the herb and road hints match today's hint order again.
+- 2026-10-23 [C-228] A new Qingshi bounty, the Black Ferry Ringleader, for the upper Qi Refining layers.
+- 2026-10-23 [C-225] Breakthrough injuries stay as they are: the sim shows they are rare for newcomers.
+- 2026-10-23 [C-227] Help: a sect disciple can claim the breakthrough pill for contribution.
+- 2026-10-23 [QA-149] The first-year sim reports where early injuries come from.
+- 2026-10-23 [WU-330] The breakthrough window says when you can claim the pill from your sect treasury.
+- 2026-10-23 [WU-309] A screenshot check keeps the mission name in a long sect hint.
+- 2026-10-23 [QA-145] The first-year sim can follow the "travel to faster qi" hint; doing so speeds the first year up a lot.
+- 2026-10-23 [GUIDE-137] The qi pill hint keeps stones for the breakthrough pill until you can claim it from the sect.
+- 2026-10-23 [C-224] Help: the sect treasury sells the Foundation Establishment Pill.
 - 2026-10-23 [PERF-004] The first-hour tests share their sim runs, so the test suite runs faster.
 - 2026-10-23 [WU-326] A screenshot check keeps a busy region's road notes short.
 - 2026-10-23 [EFF-001] Encounters and deeds can now reward sect contribution.
