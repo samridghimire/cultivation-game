@@ -2,6 +2,19 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-10-23 (planner, 00:15 UTC)
+- 11 tasks landed (GUIDE-108, PERF-001, C-199/200/201, WU-241/291/292/293, QA-136/137). No new review (last reviewed
+  56b85f2). Live claims: GUIDE-110, GUIDE-112, ENC-008, WU-294, WU-295.
+- Two workers claimed C-201 on different branch names (claude/C-201-herb-hall-tithe, claude/C-201-herb-tithe) and both
+  landed: a duplicate `herb_hall_tithe` row -> C-205 (P0) and DATA-001 (duplicate-id validator). Workers should check
+  `git branch -r | grep "claude/<id>-"` right before claiming.
+- GUIDE-108 only works on an Array[String]; `hints()` passes a PackedStringArray copy, so the game still repeats the
+  practise advice -> GUIDE-108b (P0). New helpers that edit `out` must return the array.
+- 00:15 curious trace (seed 43): forced drunk-bully fight at 2 in 100 (QA-139 -> ENC-009), untreated injuries (QA-128 up),
+  a year-long stage while the better spot was cut (GUIDE-113), duplicate sell advice (GUIDE-114), armor hint ignored for
+  6 months (QA-140 + new DESIGN question GEAR-001, which was referenced in earlier handoffs but missing from DESIGN.md).
+- The owner's three urgent questions (pacing, first fights, ascension), RIVAL-019, ENC-008 and GEAR-001 are open.
+
 ## State on 2026-10-22 (planner, 22:15 UTC)
 - 15 tasks landed (GUIDE-104/106/107/109, WU-287/288/289/290, C-188/189/194/197/198, QA-133/135); GUIDE-104 closed with
   no code change. Review 10th run (to 56b85f2) fixed GUIDE-109's plural itself; nothing filed; its notes became WU-292..294

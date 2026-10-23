@@ -2,6 +2,17 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-23 [C-201] Azure Cloud disciples can tithe three Spirit Herbs to the Herb Hall for contribution and a few stones.
+- 2026-10-22 [PERF-001] Opening a mentor's menu no longer hitches for a quarter second.
+- 2026-10-22 [C-199] Help says you can eat qi herbs and pills from the Inventory.
+- 2026-10-22 [WU-293] The hint badge also marks a person when your first hint names only them.
+- 2026-10-22 [C-200] A new Azure Cloud mission for the middle Qi Refining layers: drive off the Fog-Antler Stag.
+- 2026-10-22 [QA-136] The first-year balance sim now attempts sect trials it can win.
+- 2026-10-22 [WU-292] The road out wears the hint marker only when it actually leads toward the hinted region.
+- 2026-10-22 [WU-241] The Tribulation Transcendence inheritance checked at Steam Deck sizes.
+- 2026-10-22 [QA-137] The slowest tests run faster.
+- 2026-10-22 [WU-291] The mission board marks the best-paying mission "(best pay)" and selects it first.
+- 2026-10-22 [GUIDE-108] Practise advice is no longer repeated in two hints (completed by GUIDE-108b).
 - 2026-10-22 [GUIDE-104] No change: the open sect trial's 0 in 100 was an injury, and the hint already says so.
 - 2026-10-22 [C-189] Help says missions and bounties show your odds, and that "to the death" can kill.
 - 2026-10-22 [C-194] Help says your hints name the ready mission that pays the most contribution.
