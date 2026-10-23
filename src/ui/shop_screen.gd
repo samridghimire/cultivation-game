@@ -35,6 +35,8 @@ var _selected := ""
 var _cat_row: HBoxContainer
 var _sell_all_button: Button
 var _sell_all_note: Label
+var _hinted := ""  # WU-318: the item the HUD's first hint names (gold "!" row)
+
 ## True after the first press of "Sell all loot", until focus leaves or the list changes.
 var _sell_all_armed := false
 ## Selected category tab ("All" = everything); reset when switching Buy/Sell.
@@ -170,6 +172,26 @@ func _unhandled_input(event: InputEvent) -> void:
 		close()
 
 
+## WU-318: the item whose name appears in `hint` (the longest name wins) among `item_ids`; "" if none.
+static func hinted_item(data: GameData, hint: String, item_ids: Array) -> String:
+	var best := ""
+	var best_len := 0
+	for id in item_ids:
+		var item_name := String(data.items[id]["name"])
+		if item_name.length() > best_len and hint.contains(item_name):
+			best = String(id)
+			best_len = item_name.length()
+	return best
+
+
+## The HUD's first hint ("" when the shop has no HUD above it).
+func _hud_hint() -> String:
+	var node := get_parent()
+	while node != null and not node.has_method("first_hint"):
+		node = node.get_parent()
+	return "" if node == null else String(node.call("first_hint"))
+
+
 ## Opens the merchant's wares (see merchant.gd for max_price / stock_tags / faction).
 func open(merchant_name: String = "Merchant", max_price: int = 0, stock_tags: Array = [], faction: String = "", buy_tags: Array = []) -> void:
 	_title.text = merchant_name + price_note(GameState.player, GameState.data, faction) + renown_note(GameState.player, GameState.data, GameState.current_region) + deal_note(GameState.player, GameState.current_region, GameClock.total_days)
@@ -180,7 +202,8 @@ func open(merchant_name: String = "Merchant", max_price: int = 0, stock_tags: Ar
 	_refresh_hint()
 	_selling = false
 	_category = "All"
-	_selected = ""
+	_hinted = hinted_item(GameState.data, _hud_hint(), item_ids())
+	_selected = _hinted
 	_quantity = 1
 	_rebuild()
 	visible = true
@@ -444,8 +467,12 @@ func _rebuild() -> void:
 				label += tag_text
 		if not _selling and GameState.festival_stock(_stock_tags).has(item_id) and not Items.shop_stock(data, _max_price, _stock_tags).has(item_id):
 			label += " (festival)"
+		if not _selling and item_id == _hinted:
+			label = "! " + label
 		var b := UIStyle.button(label, _select.bind(item_id))
 		b.name = item_id
+		if not _selling and item_id == _hinted:
+			b.add_theme_color_override("font_color", UIStyle.ACCENT)
 		if not _selling and is_first_combat_manual(p, data, item_id):
 			b.add_theme_color_override("font_color", UIStyle.ACCENT)
 		elif not _selling and upgrade_tag(p, data, item_id, _faction) != "":

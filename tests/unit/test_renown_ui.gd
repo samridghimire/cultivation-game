@@ -80,3 +80,10 @@ func test_effect_renown_crossing_a_tier_raises_the_banner() -> void:
 	EventBus.renown_tier_reached.disconnect(on_tier)
 	assert_eq(seen, [gs.current_region + ":Known"])
 	gs.end_session()
+
+
+func test_hinted_item() -> void:
+	var d := data()
+	var ids: Array = ["boar_hide_jerkin", "iron_sword", "spirit_herb"]
+	assert_eq(ShopScreen.hinted_item(d, "Heavenforge Smithy sells Boar Hide Jerkin for 70 stones", ids), "boar_hide_jerkin")
+	assert_eq(ShopScreen.hinted_item(d, "Rest and meditate.", ids), "")

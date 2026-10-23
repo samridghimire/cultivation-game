@@ -91,6 +91,7 @@ extends SceneTree
 ## "Reach <realm> to stand a chance against <name>." line), then the bitter variant. Shoot at 1280x800 and 1280x720.
 ## WU-210: it then breaks through level with the rival (rival_caught_up_log / rival_caught_up_journal).
 ## WU-246: `-- --first-hour` also writes fh_<workshop|shop|journal_first_goals|journal_next_steps|journal_commissions|board>_<day1|month1>_<size>.png.
+## WU-318: `--shop-shot` also writes shop_hinted_item_<size>.png (the row the first hint names: gold "!", selected).
 ## WU-314: `--shop-shot` also writes shop_buy_qi_worth_<size>.png (Buy tab, Qi Gathering Pill: "Worth about N days of meditation here each").
 ## WU-296: append `-- --inventory-shot` for inventory_qi_worth.png (Spirit Herb selected: "Worth about N of meditation here"); run once per --resolution.
 ## WU-273: append `-- --techniques-shot` for techniques_practice[_scale115].png (Iron Fist level 1 details, practice button focused); run once per --resolution. Checked at 1280x720 and 1280x800: nothing clipped, the action row wraps.
@@ -1104,6 +1105,13 @@ func _start_shop_shot(gs: Node) -> void:
 		shop.open("Wandering Merchant", 0, ["herb", "ore"])
 		shop._set_tab(false)
 		shop._select("qi_gathering_pill"), "close": shop.close})
+	# WU-318: the Smithy's armor row the first hint names wears the gold "!" and is selected first.
+	shots.append({"name": "shop_hinted_item", "open": func() -> void:
+		gs.current_region = "fallen_star_market"
+		c.inventory = {"spirit_stone": 400}
+		hud.set("_hint_lines", PackedStringArray(["Heavenforge Smithy in Fallen Star Market sells Boar Hide Jerkin for 70 stones."]))
+		shop.open("Heavenforge Smithy", 0, ["equipment", "ore", "smithing"])
+		pass, "close": shop.close})
 
 
 func _start_inventory_shot(gs: Node) -> void:
