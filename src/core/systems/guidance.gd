@@ -57,7 +57,7 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 		var injuries := Injuries.describe(c, data)
 		out.append("Treat your injuries: %s %s %s your cultivation to x%s.%s" % [heal, ", ".join(injuries), "slows" if injuries.size() == 1 else "slow", String.num(Injuries.cultivation_multiplier(c, data), 2), cost])
 	if Sects.duty_days_left(c) <= Sects.DUTY_REMINDER_DAYS:
-		var duty := Sects.duty_reminder(c, data)
+		var duty := duty_hint(c, data, flags)
 		if duty != "":
 			out.append(duty)
 	if Children.is_pregnant(c):
@@ -2040,6 +2040,52 @@ static func _merge_sell_advice(out: PackedStringArray, sell_line: String) -> Pac
 	return out
 
 
+## GUIDE-167: the duty reminder plus the quickest ready mission that covers what is owed, else what missing it costs.
+static func duty_hint(c: CharacterData, data: GameData, flags: Dictionary = {}) -> String:
+	var line := Sects.duty_reminder(c, data)
+	if line == "":
+		return ""
+	var owed := Sects.monthly_duty(c, data) - Sects.duty_progress(c)
+	var left := Sects.duty_days_left(c)
+	var pick := ""
+	for id: String in Sects.available_missions(c, data, flags):
+		var m: Dictionary = data.sect_missions[id]
+		if int(m.get("contribution", 0)) < owed or int(m.get("days", 1)) > left:
+			continue
+		if Sects.check_mission(c, data, id, flags) != "" or _mission_too_dangerous(c, data, id):
+			continue
+		if pick == "" or _duty_mission_beats(m, data.sect_missions[pick]):
+			pick = id
+	if pick != "":
+		var m: Dictionary = data.sect_missions[pick]
+		return "%s %s (%d contribution, %s) covers it." % [line, m["name"], int(m.get("contribution", 0)), Calendar.format_duration(int(m.get("days", 1)))]
+	var pay := Sects.stipend(c, data)
+	var parts: PackedStringArray = []
+	var stones := int(pay.get("spirit_stones", 0))
+	if stones > 0:
+		parts.append("%d spirit stones" % stones)
+	var items: Dictionary = pay.get("items", {})
+	for id: String in items:
+		var count := int(items[id])
+		var name: String = data.items[id]["name"] if data.items.has(id) else id
+		parts.append(Text.a(name) if count == 1 else "%d %s" % [count, name])
+	if parts.is_empty():
+		return line
+	return "%s Missing it skips this month's stipend (%s)." % [line, " and ".join(parts)]
+
+
+static func _duty_mission_beats(a: Dictionary, b: Dictionary) -> bool:
+	var da := int(a.get("days", 1))
+	var db := int(b.get("days", 1))
+	if da != db:
+		return da < db
+	var ca := int(a.get("contribution", 0))
+	var cb := int(b.get("contribution", 0))
+	if ca != cb:
+		return ca > cb
+	return String(a["id"]) < String(b["id"])
+
+
 ## The ready mission paying the most contribution (ties: fewer days, then id); "" when none.
 static func best_mission(c: CharacterData, data: GameData, flags: Dictionary = {}) -> String:
 	var best := ""
@@ -2974,7 +3020,7 @@ static func journal(c: CharacterData, data: GameData, flags: Dictionary, today: 
 	if Injuries.has_any(c):
 		urgent += 1
 	# The duty reminder lives in the Sect section; keep it out of Next steps.
-	var duty_line := Sects.duty_reminder(c, data) if Sects.duty_days_left(c) <= Sects.DUTY_REMINDER_DAYS else ""
+	var duty_line := duty_hint(c, data, flags) if Sects.duty_days_left(c) <= Sects.DUTY_REMINDER_DAYS else ""
 	var method_line := _method_hint(c, data)
 	# Newcomers only: past Qi Refining (or on saves from before the Elder Mo flag
 	# and life stats) the ladder would otherwise never go away.

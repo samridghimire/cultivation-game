@@ -4618,3 +4618,43 @@ func test_g162_qi_refining_keeps_bare_advice() -> void:
 	assert_eq(Guidance._practice_target_text(c, d, "iron_fist"), "")
 	c.realm_index = 2
 	assert_eq(Guidance._practice_target_text(c, d, "iron_fist"), " to level 5 (now 1)")
+
+
+## GUIDE-167: the duty reminder names the mission that covers it, or what missing it costs.
+func _duty_member_for_hint(d: GameData) -> CharacterData:
+	var c := new_character()
+	c.realm_index = 2
+	for sect: SectDef in d.sects.values():
+		for r in sect.ranks.size():
+			if c.is_rogue() and int(sect.ranks[r].get("monthly_duty", 0)) > 0 and not sect.ranks[r].get("stipend", {}).is_empty():
+				c.sect = {"id": sect.id, "rank": r, "contribution": 0, "spent": 0, "month_earned": 0}
+	c.age_days = 30 * 100 + 25
+	return c
+
+
+func test_duty_hint_names_the_mission_that_covers_it() -> void:
+	var d := GameData.load_from_dir()
+	var c := _duty_member_for_hint(d)
+	d.sect_missions = {"quick": {"id": "quick", "name": "Quick Errand", "contribution": 20, "days": 3, "sects": []}}
+	c.sect["month_earned"] = Sects.monthly_duty(c, d) - 10
+	var line := Guidance.duty_hint(c, d)
+	assert_true(line.begins_with("Your sect duty is "), line)
+	assert_true(line.contains("Quick Errand (20 contribution, 3 days) covers it."), line)
+
+
+func test_duty_hint_names_the_stipend_when_no_mission_fits() -> void:
+	var d := GameData.load_from_dir()
+	var c := _duty_member_for_hint(d)
+	d.sect_missions = {"slow": {"id": "slow", "name": "Slow Trek", "contribution": 20, "days": 7, "sects": []}}
+	c.sect["month_earned"] = Sects.monthly_duty(c, d) - 10
+	var line := Guidance.duty_hint(c, d)
+	assert_true(line.contains("Missing it skips this month's stipend ("), line)
+	assert_false(line.contains("covers it"), line)
+
+
+func test_duty_hint_empty_when_met_or_rogue() -> void:
+	var d := GameData.load_from_dir()
+	var c := _duty_member_for_hint(d)
+	c.sect["month_earned"] = Sects.monthly_duty(c, d)
+	assert_eq(Guidance.duty_hint(c, d), "")
+	assert_eq(Guidance.duty_hint(new_character(), d), "")
