@@ -1095,6 +1095,26 @@ func test_check_choice_through_game_state() -> void:
 	for entry: Dictionary in EB.history.slice(-3):
 		recent += String(entry["text"]) + "\n"
 	assert_true(recent.contains("Your Comprehension carried it."), recent)
+	# Both outcomes through GameState: a failed check applies on_fail's choice-level keys (renown 3), a passed one the
+	# choice's own (renown 5). The game rng is probed to know which way the roll goes.
+	var enc := _check_encounter(10)
+	enc["choices"][0]["renown"] = 5
+	enc["choices"][0]["on_fail"]["renown"] = 3
+	gs.data.encounters["t_check"] = enc
+	gs.player.attributes["comprehension"] = 5
+	var seen := {}
+	for s in 12:
+		gs.rng.seed = s
+		var probe := RandomNumberGenerator.new()
+		probe.seed = gs.rng.seed
+		probe.state = gs.rng.state
+		var fails := probe.randf() >= 0.5
+		seen[fails] = true
+		var before := Renown.value(gs.player, gs.current_region)
+		gs.pending_encounter = "t_check"
+		gs.choose_encounter(0)
+		assert_eq(Renown.value(gs.player, gs.current_region) - before, 3 if fails else 5, "seed %d failed=%s" % [s, fails])
+	assert_eq(seen.size(), 2, "both outcomes exercised")
 	gs.data.encounters.erase("t_check")
 	gs.end_session()
 

@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 65d397e
+Last reviewed commit: 89bc68f
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -947,3 +947,15 @@ Last reviewed commit: 65d397e
     test_data_unique_ids (DATA-001's validator still owed), which fails on any repeated
     id in a top-level data list (most tables load into id-keyed dictionaries, so duplicates silently overwrite).
     c3e0255/5828c50/752addf/5e062ff/9aae3a6/8737204 are otherwise left for the next review.
+- 2026-10-23 (reviewer): reviewed 65d397e..89bc68f (C-201 x2, PERF-001, GUIDE-110/112/113/114/108b, WU-294..298, C-199,
+  C-205, ENC-008, QA-128/139, DATA-001; [PLAN] commits skipped). Main green before and after (2197 tests). No
+  BACKLOG/CHANGELOG edits by workers; no save-format changes.
+  - ENC-008 (attribute checks): core roll on the passed rng (rng = null succeeds), on_fail validated (attribute, target,
+    enemy, items), GameState applies on_fail's rival/renown/grateful keys. Its GameState test passed whichever way the
+    roll went (qi only grows, target 1 = 90%); the [REVIEW] commit adds a deterministic both-outcomes check (rng probed,
+    on_fail renown 3 vs success renown 5). No encounter uses `check` yet (ENC-009's content). A check choice that also
+    fights shows the roll chance, not the fight odds; acceptable while none exists.
+  - PERF-001: the cache key (data, region, realm, alignment) covers everything _scan_first_combat_manual reads.
+  - GUIDE-113/114, GUIDE-108b: merges now return PackedStringArray and are reassigned in hints(); the sell merge matches
+    both " Sell your" clauses (both mid-line). GUIDE-110/112, WU-294/296/297, DATA-001 (load_errors on any duplicate id
+    in a top-level list, overlapping test_data_unique_ids, harmless) match their specs with tests. Nothing filed.
