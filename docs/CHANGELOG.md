@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-23 [WU-346] The world map names a visited region's unclaimed cave abode, its price and how fast it gathers qi.
 - 2026-10-23 [GUIDE-162] From Foundation on, practice advice names the level to train a technique to ("practise Iron Fist to level 5 (now 2)").
 - 2026-10-23 [GUIDE-160] When every sect mission is too dangerous at a realm's last stage, the hint says to break through first.
 - 2026-10-23 [C-239] Help explains that the sect treasury hands out the sect's own cultivation method.
