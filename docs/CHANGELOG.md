@@ -2,6 +2,19 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-23 [GUIDE-117] An open sect trial's hint says what one more level of practice would do to your odds.
+- 2026-10-23 [WU-308] The Inventory says which sect mission wants an item.
+- 2026-10-23 [WU-305] Very long hints are shortened in the HUD; the journal keeps the whole line.
+- 2026-10-23 [C-210] Help says item missions show in your hints with how many you hold.
+- 2026-10-23 [WU-302] The clinic menu checked at Steam Deck sizes with one and two injuries.
+- 2026-10-23 [GUIDE-120] The hint names the item mission you can actually finish, and where its herbs grow.
+- 2026-10-23 [GUIDE-115] "Sell all loot" keeps the herbs and pills that feed your cultivation.
+- 2026-10-23 [WU-306] The mission board shows how many of a mission's items you hold and where they grow.
+- 2026-10-23 [C-209] The village drunk bully now fights like a drunk.
+- 2026-10-23 [TOOL-001] The balance sims work in a fresh checkout.
+- 2026-10-23 [WU-301] The hint screenshot checks pass again.
+- 2026-10-23 [QA-138] The first-year sim spars when a hint names a partner (it does not speed up the first year).
+- 2026-10-23 [WU-300] A gamble on an attribute says whether it paid off.
 - 2026-10-23 [PERF-002] Measured a simulated year of world upkeep (~1 s); nothing worth cutting.
 - 2026-10-23 [C-203] Help says what a friendly spar is worth.
 - 2026-10-23 [WU-299] The clinic says how many days of cultivation each treatment saves.

@@ -2,6 +2,17 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-10-23 (planner, 04:15 UTC)
+- 13 tasks landed (TOOL-001, GUIDE-115/117/120, WU-300/301/302/305/306/308, C-209/210, QA-138). Review c2dec34
+  (65d397e..89bc68f) filed nothing. Live claims: GUIDE-118, QA-141, QA-142 (none stale).
+- 04:10 curious trace (seed 53, 12 months; TOOL-001 made it work in a fresh container): QR7, 27 won / 3 lost, 2 clinic
+  visits, never left Qingshi, 262 stones unspent at m12 with the armor hint shown m06-m12 (GEAR-001 note added).
+- WU-305 caps HUD hints at 120 characters, which now hides the action on the sect line (always the "Earn N more ..."
+  preamble), the trial odds, the clinic price and the faster meditation spot -> GUIDE-121/122 (P0, specs in docs/specs/),
+  QA-143 (tally of cut lines), WU-309/313 (shots after). Also new: GUIDE-123 (spar gain vs hint, QA-138 follow-up),
+  GUIDE-124 (Gather line misses Qingshi's own Spirit Spring), WU-310/311/312, C-213/214.
+- Owner questions unchanged (pacing, first fights, ascension, RIVAL-019, ENC-008 checks, GEAR-001).
+
 ## State on 2026-10-23 (planner, 02:15 UTC)
 - 19 tasks landed (GUIDE-108b/110/111/112/113/114, DATA-001, ENC-008/009, WU-294..299, C-202/205, QA-128/139). No new
   review (last reviewed 65d397e). PERF-002 (no code change -> PERF-003) and C-203 landed during the run. Live
