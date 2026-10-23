@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-23 [PERF-004] The first-hour tests share their sim runs, so the test suite runs faster.
 - 2026-10-23 [WU-326] A screenshot check keeps a busy region's road notes short.
 - 2026-10-23 [EFF-001] Encounters and deeds can now reward sect contribution.
 - 2026-10-23 [WU-328] The sect treasury opens on, and marks, the breakthrough pill you can claim.
