@@ -3817,3 +3817,73 @@ func test_thin_defence_shop_in_headline() -> void:
 	assert_true(line.find("stones.") > 0 and line.find("stones.") < Guidance.HEADLINE_CHARS, line)
 	c.equipment["armor"] = "boar_hide_jerkin"
 	assert_true(Guidance.thin_defence_hint(c, data(), "myriad_peaks_ridge").contains("Learn a body technique"))
+
+
+## GUIDE-127: the first clause of every hint ends before the HUD's cut, so the action is always visible.
+func _clause_end(line: String) -> int:
+	var ends: Array[int] = []
+	for sep: String in [". ", ": "]:
+		var at := line.find(sep, 20)
+		if at >= 0:
+			ends.append(at)
+	return ends.min() if not ends.is_empty() else line.length()
+
+
+func test_hint_actions_fit_headline() -> void:
+	var d := data()
+	var lines := PackedStringArray()
+	# ready mission, and the best of several
+	var c := _qr3_disciple()
+	var best := Guidance.best_mission(c, d)
+	for id: String in d.sect_missions:
+		if id != best:
+			c.mission_cooldowns[id] = c.age_days + 30
+	lines.append_array(Guidance.hints(c, d, 1.0, 20, {}, {}, "qingshi_village"))
+	c = _qr3_disciple()
+	c.stage = 4
+	c.techniques = {"iron_fist": {"level": 3, "xp": 0.0}}
+	lines.append_array(Guidance.hints(c, d, 1.0, 20, {}, {}, "qingshi_village"))
+	# deliver
+	c = _deliver_only(d)
+	c.add_item("spirit_herb", 1)
+	lines.append_array(Guidance.hints(c, d, 1.0, 20, {}, {}, "qingshi_village"))
+	# open trial
+	c = new_character()
+	c.realm_index = 1
+	c.sect = {"id": "azure_cloud_sect", "rank": 0, "contribution": 600}
+	lines.append(Guidance._sect_hint(c, d, "qingshi_village"))
+	# injury at the clinic
+	c = _fresh()
+	c.realm_index = 0
+	c.injuries = {"internal_injury": 1}
+	c.inventory["spirit_stone"] = 500
+	lines.append_array(Guidance.hints(c, d, 1.0, 10, {}, {}, "qingshi_village"))
+	# far meditation spot
+	c = _fresh()
+	c.realm_index = 1
+	lines.append_array(Guidance.hints(c, d, 1.0, 20, {}, {}, "qingshi_village"))
+	# idle crafter
+	c = _fresh()
+	c.professions["alchemist"] = {"rank": 0, "xp": 0.0}
+	c.realm_index = 1
+	c.last_meditated_day = 0
+	lines.append(Guidance.idle_crafter_hint(c, d, "qingshi_village", Guidance.IDLE_CULTIVATION_DAYS))
+	# practise
+	c = _fresh()
+	c.techniques = {"iron_fist": {"level": 2, "xp": 0.0}}
+	lines.append(Guidance.practice_hint(c, d))
+	# thin defence, far armor
+	c = _fresh()
+	c.realm_index = Guidance.THIN_DEFENCE_REALM
+	c.techniques = {}
+	c.equipment = {}
+	c.inventory = {"spirit_stone": 500}
+	lines.append(Guidance.thin_defence_hint(c, d, "myriad_peaks_ridge"))
+	lines.append(Guidance.armor_hint(c, d, "qingshi_village"))
+	var checked := 0
+	for line: String in lines:
+		if line == "" or line.begins_with("As a rogue cultivator"):  # the sect list is the action; not one of the canonical states
+			continue
+		checked += 1
+		assert_true(_clause_end(line) < Guidance.HEADLINE_CHARS, "first clause ends at %d: %s" % [_clause_end(line), line])
+	assert_true(checked >= 10, "checked %d hint lines" % checked)
