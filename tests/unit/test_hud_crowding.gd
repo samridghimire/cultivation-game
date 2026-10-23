@@ -174,3 +174,23 @@ func test_first_hint_badge_for_a_hint_naming_only_an_npc() -> void:
 	assert_true(hud.get("_hint_badge").visible, "badge shown for an NPC-only hint")
 	hud.queue_free()
 	gs.end_session()
+
+
+func test_capped_hint_tooltip_has_full_text() -> void:
+	var root := _tree().root
+	var gs: Node = root.get_node("GameState")
+	gs.start_session(CharacterFactory.create("Lin", gs.data, seeded_rng(5), "male"))
+	var hud: CanvasLayer = load("res://src/ui/hud.tscn").instantiate()
+	root.add_child(hud)
+	await _frames()
+	var long_text := "Walk to the far market and ".repeat(8) + "buy armor."
+	assert_true(long_text.length() > 150)
+	hud.call("_set_hint_text", PackedStringArray([long_text]))
+	var label: Label = hud.get("_hint")
+	assert_true(label.text.ends_with("… (J)"), "line is capped")
+	assert_eq(label.tooltip_text, long_text)
+	assert_eq(label.mouse_filter, Control.MOUSE_FILTER_PASS)
+	hud.call("_set_hint_text", PackedStringArray(["Just breathe."]))
+	assert_eq(label.tooltip_text, "")
+	hud.queue_free()
+	gs.end_session()

@@ -631,9 +631,14 @@ func _set_hint_text(lines: PackedStringArray) -> void:
 	var marked := not lines.is_empty() and first_hint_names_place(lines[0], _region_place_names())
 	_hint_badge.visible = marked
 	var out: Array = []
+	var cut := false
 	for i in lines.size():
 		out.append(("  " if i == 0 and marked else "> ") + cap_hint(lines[i]))
+		cut = cut or cap_hint(lines[i]) != lines[i]
 	_hint.text = "\n".join(out)
+	# WU-315: mouse hover shows the whole text when a line was cut.
+	_hint.tooltip_text = "\n".join(lines) if cut else ""
+	_hint.mouse_filter = Control.MOUSE_FILTER_PASS
 
 
 ## Names of the places and NPCs in the current region (what the world marks with its "!" badge).
