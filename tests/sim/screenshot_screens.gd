@@ -2138,7 +2138,7 @@ func _start_hint_shot(gs: Node) -> void:
 	var peak_saved: Array = []
 	shots.append({"name": "hint_trial_peak_" + size_tag, "open": func() -> void:
 		setup_long.call()
-		peak_saved = [c.realm_index, c.stage, c.sect.duplicate(), c.techniques.duplicate(true), c.equipment.duplicate(), c.inventory.duplicate()]
+		peak_saved.append_array([c.realm_index, c.stage, c.sect.duplicate(), c.techniques.duplicate(true), c.equipment.duplicate(), c.inventory.duplicate()])
 		c.realm_index = Guidance.THIN_DEFENCE_REALM
 		c.stage = gs.data.realms[Guidance.THIN_DEFENCE_REALM].stage_count() - 1
 		c.qi = 0.0
