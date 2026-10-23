@@ -2,6 +2,20 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-23 [WU-321] The meditation spot names a much faster spot elsewhere and how far it is.
+- 2026-10-23 [GUIDE-129] "Wanted by the sect" lines only name missions that just need the items.
+- 2026-10-23 [C-218] A new Qingshi bounty, the Salt-Road Captain, for the middle Qi Refining layers.
+- 2026-10-23 [GUIDE-131] The "use your pill" hint counts only the qi that fits before your breakthrough.
+- 2026-10-23 [GUIDE-128] When a spot elsewhere is much faster, the hint leads with the trip there.
+- 2026-10-23 [WU-324] A test keeps place labels from overlapping in every region.
+- 2026-10-23 [QA-146] The first-year sim reports sect contribution, stage at month 12 and bounties.
+- 2026-10-23 [C-217] Two new Qingshi encounters for the middle Qi Refining layers.
+- 2026-10-23 [WU-319] Each road says the qi at the other end and what you found there.
+- 2026-10-23 [GUIDE-126] A hint says spare stones can buy qi pills, keeping enough for your breakthrough pill.
+- 2026-10-23 [GUIDE-119] "Sell all loot" keeps what your sect's delivery missions need.
+- 2026-10-23 [PERF-003] The fuzz tests take about half as long, so the test suite runs faster.
+- 2026-10-23 [C-219] Meditation spot labels show their real qi (Cloud-Sea Cliff is 5x).
+- 2026-10-23 [QA-140] The first-year sim buys armor where the hint points; armor barely changes early fights.
 - 2026-10-23 [C-212] Help says how many days of cultivation each clinic treatment saves.
 - 2026-10-23 [GUIDE-127] A test keeps every hint's action inside what the status panel shows.
 - 2026-10-23 [C-208] Help says the mission board marks the best-paying mission.
