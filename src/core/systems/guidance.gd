@@ -181,7 +181,8 @@ static func thin_defence_hint(c: CharacterData, data: GameData, region_id: Strin
 			if source != "":
 				line += " %s teaches one." % source
 				var manual := _body_manual_merchant(c, data, region_id)
-				if not manual.is_empty() and not offer.is_empty():
+				# GUIDE-144: the sell-first clause belongs to the merchant source only, not the sect treasury.
+				if not manual.is_empty() and not offer.is_empty() and _body_manual_treasury(c, data).is_empty():
 					# GUIDE-090: the manual costs more than the stones in hand but the loot would cover it.
 					var cost := merchant_price(c, data, region_id, String(manual["item_id"]))
 					var stones := c.item_count("spirit_stone")
@@ -275,6 +276,10 @@ static func affordable_armor(c: CharacterData, data: GameData, region_id: String
 ## GUIDE-068: "<Manual> (<Merchant>)" for a body-art manual `c` lacks that a merchant in `region_id` sells,
 ## else "<Manual> (sect shop, N contribution)" from `c`'s sect shop; "" when neither exists.
 static func body_manual_source(c: CharacterData, data: GameData, region_id: String) -> String:
+	# GUIDE-144: a manual the sect treasury sells and `c` can claim now beats the merchant.
+	var claim := _body_manual_treasury(c, data)
+	if not claim.is_empty():
+		return "%s (your sect treasury, %d contribution)" % [data.items[claim["item_id"]]["name"], int(claim["contribution"])]
 	var found := _body_manual_merchant(c, data, region_id)
 	if not found.is_empty():
 		return "%s (%s)" % [data.items[found["item_id"]]["name"], found["merchant"]]
@@ -283,6 +288,16 @@ static func body_manual_source(c: CharacterData, data: GameData, region_id: Stri
 		if tech_id != "" and data.techniques[tech_id].kind == "body" and not Techniques.knows(c, tech_id):
 			return "%s (sect shop, %d contribution)" % [data.items[entry["item_id"]]["name"], int(entry["contribution"])]
 	return ""
+
+
+## GUIDE-144: the sect shop entry for a body-art manual `c` lacks and can buy right now ({} if none).
+static func _body_manual_treasury(c: CharacterData, data: GameData) -> Dictionary:
+	for entry: Dictionary in Sects.shop_items(c, data):
+		var item_id := String(entry["item_id"])
+		var tech_id := Items.manual_technique(data, item_id)
+		if tech_id != "" and data.techniques[tech_id].kind == "body" and not Techniques.knows(c, tech_id) and Sects.check_purchase(c, data, item_id) == "":
+			return entry
+	return {}
 
 
 ## GUIDE-072: {item_id, merchant} for the first body-art manual `c` lacks that a merchant in `region_id` sells; {} if none.

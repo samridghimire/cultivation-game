@@ -4193,3 +4193,21 @@ func test_injury_news_adds_the_heal_source() -> void:
 	var line := Guidance.injury_news(c, d, "qi_deviation", "qingshi_village")
 	assert_true(line.contains(" The Village Clinic treats it for"), line)
 	assert_true(line.ends_with("."), line)
+
+
+func test_thin_defence_hint_prefers_the_sect_treasury() -> void:
+	var d := data()
+	var c := _cooldown_player(d)
+	c.realm_index = Guidance.THIN_DEFENCE_REALM
+	c.techniques = {}
+	c.equipment = {}
+	c.sect["contribution"] = 100
+	var line := Guidance.thin_defence_hint(c, d, "qingshi_village")
+	assert_true(line.contains("your sect treasury"), line)
+	assert_false(line.contains("Wandering Merchant"), line)
+	c.sect["contribution"] = 0
+	line = Guidance.thin_defence_hint(c, d, "qingshi_village")
+	assert_true(line.contains("Wandering Merchant"), line)
+	assert_false(line.contains("your sect treasury"), line)
+	c.sect = {}
+	assert_false(Guidance.thin_defence_hint(c, d, "qingshi_village").contains("your sect treasury"))
