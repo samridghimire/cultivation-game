@@ -111,3 +111,29 @@ func test_hud_shows_prompt_with_slip_away_focused() -> void:
 	tree.root.remove_child(hud)
 	hud.free()
 	_gs().end_session()
+
+
+## [REVIEW] ENC-009 senses non-lethal foes too: neither the log line nor the prompt may speak of death.
+func test_non_lethal_threat_never_warns_of_death() -> void:
+	var gs := _gs()
+	var c := _start()
+	c.artifact_lives = 0
+	_foe(gs, c, "t_soft_danger", "Dangerous", false)
+	gs.data.enemies["t_soft_danger"]["attack"] = 400
+	assert_true(Exploration.should_offer_flee(c, gs.data, "t_soft_danger"))
+	var lines: Array[String] = []
+	var grab := func(text: String, _category: String) -> void: lines.append(text)
+	EventBus.message_posted.connect(grab)
+	gs._resolve_explore_enemy("t_soft_danger")
+	EventBus.message_posted.disconnect(grab)
+	assert_eq(gs.pending_threat, "t_soft_danger")
+	assert_false(" ".join(lines).contains("kill"), "a non-lethal foe is not hungry for a kill")
+	var prompt := ThreatPrompt.new()
+	prompt.prepare("t_soft_danger")
+	var fight := prompt.menu_options()[1]
+	assert_false(String(fight["description"]).contains(Warnings.FINAL_DEATH))
+	assert_false(String(fight["label"]).contains("to the death"))
+	prompt.free()
+	gs.pending_threat = ""
+	gs.data.enemies.erase("t_soft_danger")
+	gs.end_session()

@@ -815,7 +815,8 @@ func _resolve_explore_enemy(enemy_id: String) -> void:
 		return
 	if Exploration.should_offer_flee(player, data, enemy_id):
 		pending_threat = enemy_id
-		EventBus.post("You sense a %s nearby, hungry for a kill (%s, %d%% to win)." % [enemy["name"], Combat.danger_label(player, data, enemy), roundi(Combat.win_chance(player, data, enemy) * 100.0)], "danger")
+		var intent := "hungry for a kill" if bool(enemy.get("lethal", false)) else "far stronger than you"
+		EventBus.post("You sense a %s nearby, %s (%s, %d%% to win)." % [enemy["name"], intent, Combat.danger_label(player, data, enemy), roundi(Combat.win_chance(player, data, enemy) * 100.0)], "danger")
 		EventBus.threat_sensed.emit(enemy_id)
 		return
 	fight(enemy_id)

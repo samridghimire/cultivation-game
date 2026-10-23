@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 89bc68f
+Last reviewed commit: ddada62
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -959,3 +959,18 @@ Last reviewed commit: 89bc68f
   - GUIDE-113/114, GUIDE-108b: merges now return PackedStringArray and are reassigned in hints(); the sell merge matches
     both " Sell your" clauses (both mid-line). GUIDE-110/112, WU-294/296/297, DATA-001 (load_errors on any duplicate id
     in a top-level list, overlapping test_data_unique_ids, harmless) match their specs with tests. Nothing filed.
+- 2026-10-23 (reviewer, 2nd run): reviewed 89bc68f..ddada62 (GUIDE-111/115/120, ENC-009, WU-299/300/301/306, QA-138, PERF-002,
+  TOOL-001, C-202/203/209; [PLAN]/[REVIEW] commits skipped). Main green before and after. No BACKLOG/CHANGELOG edits by
+  workers; no save-format changes.
+  - Fixed ([REVIEW] commit): ENC-009 routes non-lethal foes the player would likely lose to through the FH-004 threat
+    prompt, but the prompt and log were written for lethal foes: the log said "hungry for a kill" and, on the last life,
+    the Fight option carried the final-death warning although losing a non-lethal fight never kills. Both now depend on
+    the enemy's lethal flag. Regression test test_non_lethal_threat_never_warns_of_death.
+  - Filed REV-030 (P0): GUIDE-111's "close" deliver test treats any held spirit stone as progress toward stone tithes (up
+    to 960), and GUIDE-120/WU-306 say ores "grow at" a place.
+  - Checked: WU-300's verdict is computed before on_fail replaces the choice. WU-299's qi_days_lost_for mirrors
+    qi_days_lost per injury. GUIDE-115's feeds_cultivation is shared by bulk_sell_ids and the newcomer hint, so the
+    shop total and Guidance.sell_offer stay in step. GUIDE-120's pick and clause match the spec. TOOL-001 skips the
+    import when --import is passed or the class cache exists. C-209 (power_mult 0.6) answers ENC-009's follow-up.
+  - Notes, not filed: WU-306's gather_place_for is called without `today`, so an out-of-season place still reads
+    "grows ... here" on the board (the hint passes no season either).

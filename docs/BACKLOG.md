@@ -11,6 +11,7 @@ Many leftover `claude/*` branches from the old PR flow point at tasks already do
 Filed by the reviewer (see docs/REVIEW.md). Take these before other work for your role.
 | id | role | status | task |
 |---|---|---|---|
+| REV-030 | systems | todo | GUIDE-111's `Guidance._deliver_close` (src/core/systems/guidance.gd ~line 1487) counts a mission as "close" when the player holds at least one of any required item, and many deliver missions are spirit-stone tithes (sect_missions.json: 2..960 `spirit_stone`), so nearly every disciple is "close" to a 960-stone tithe and, when nothing else is ready, gets "<tithe> (N contribution) needs 960 spirit stones: you have 12 of 960." Fix: in `_deliver_close`, a `spirit_stone` requirement counts only when held >= half of it (other items keep today's rule). Also the gather wording added by GUIDE-120 (`_deliver_clause`, " <plural> grow at <place> here.") and WU-306 (`MissionBoard.requirement_lines`, " (grows at <place> here)") reads wrong for ores (Cold Iron, Azure Crystal, Star Silver are deliver items): use "grows"/"grow" only for items tagged as herbs (check items.json tags; else "can be found at"), the way test_guidance.gd:2583 already accepts "found at". Tests: an Azure Cloud outer disciple holding 10 stones and no herbs is not offered a stone tithe clause; a cold_iron deliver line says "found at". |
 
 ## P0: Playable and fun (the first hours)
 Next (planner 2026-10-23 04:15): 13 tasks landed (TOOL-001, GUIDE-115/117/120, WU-300/301/302/305/306/308, C-209/210,
