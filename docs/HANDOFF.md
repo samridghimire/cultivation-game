@@ -4,7 +4,8 @@ Short-lived context for the next session. Update or trim it when you finish a se
 
 ## State on 2026-10-23 (planner, 02:15 UTC)
 - 19 tasks landed (GUIDE-108b/110/111/112/113/114, DATA-001, ENC-008/009, WU-294..299, C-202/205, QA-128/139). No new
-  review (last reviewed 65d397e). Live claims: PERF-002, QA-138, WU-300, C-203 (none stale).
+  review (last reviewed 65d397e). PERF-002 (no code change -> PERF-003) and C-203 landed during the run. Live
+  claims: QA-138, WU-300 (none stale).
 - 02:10 curious trace (seed 47, 12 months): calm and winnable (18 won / 2 lost, 0 injuries, QR8 at day 788). The deliver
   clause names the wrong mission (GUIDE-120), three hints want the same Spirit Herbs (GUIDE-115/118/119, WU-303/308), and the
   open trial at 60 in 100 gives no lever (GUIDE-117). New: TOOL-001 (sims fail in a fresh container until `--import`),

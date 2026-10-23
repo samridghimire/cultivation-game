@@ -2,6 +2,8 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-23 [PERF-002] Measured a simulated year of world upkeep (~1 s); nothing worth cutting.
+- 2026-10-23 [C-203] Help says what a friendly spar is worth.
 - 2026-10-23 [WU-299] The clinic says how many days of cultivation each treatment saves.
 - 2026-10-23 [ENC-009] A forced fight you almost surely can't win is sensed in time to slip away.
 - 2026-10-23 [GUIDE-111] Sect missions that ask for items you carry or can gather here show in your hints.
