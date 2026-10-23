@@ -48,7 +48,7 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 	if years <= LIFESPAN_WARNING_YEARS:
 		out.append("Only %d %s of life remain. Break through to a higher realm or find a longevity treasure." % [years, "year" if years == 1 else "years"])
 	if Injuries.has_any(c):
-		var heal := heal_source(c, data, region_id)
+		var heal := heal_source(c, data, region_id, flags)
 		heal = heal + "." if heal != "" else "use a healing item or see a doctor."
 		var lost := Injuries.qi_days_lost(c, data)
 		var cost := ""
@@ -620,11 +620,11 @@ static func market_lines(data: GameData, region_id: String) -> PackedStringArray
 ## stones"); the first source found for any injury (dictionary order), naming the injury when c has two or more
 ## ("treats your <injury>" for a clinic, else a "for your <injury>" suffix).
 ## "" when no source is known or region_id is empty.
-static func heal_source(c: CharacterData, data: GameData, region_id: String) -> String:
+static func heal_source(c: CharacterData, data: GameData, region_id: String, flags: Dictionary = {}) -> String:
 	if region_id == "" or not Injuries.has_any(c):
 		return ""
 	for injury_id: String in c.injuries:
-		var clause := _heal_source_for(c, data, region_id, injury_id)
+		var clause := _heal_source_for(c, data, region_id, injury_id, flags)
 		if clause == "":
 			continue
 		if c.injuries.size() > 1:
@@ -640,7 +640,7 @@ static func heal_source(c: CharacterData, data: GameData, region_id: String) -> 
 ## INJ-001: what a fresh injury costs, e.g. "Qi Deviation: cultivation x0.5, combat x0.9 for about 6 months.
 ## The Village Clinic treats it for 80 stones (you have 19)." Multipliers of 1.0 are left out; the heal
 ## source clause (GUIDE-071/138) follows when there is one. "" for an unknown injury.
-static func injury_news(c: CharacterData, data: GameData, injury_id: String, region_id: String) -> String:
+static func injury_news(c: CharacterData, data: GameData, injury_id: String, region_id: String, flags: Dictionary = {}) -> String:
 	var def: Dictionary = data.injuries.get(injury_id, {})
 	if def.is_empty():
 		return ""
@@ -655,13 +655,13 @@ static func injury_news(c: CharacterData, data: GameData, injury_id: String, reg
 		line += ": " + ", ".join(effects)
 	line += " for about %s." % Calendar.format_duration(days)
 	if region_id != "":
-		var clause := _heal_source_for(c, data, region_id, injury_id)
+		var clause := _heal_source_for(c, data, region_id, injury_id, flags)
 		if clause != "":
 			line += " " + clause.substr(0, 1).to_upper() + clause.substr(1) + "."
 	return line
 
 
-static func _heal_source_for(c: CharacterData, data: GameData, region_id: String, injury_id: String) -> String:
+static func _heal_source_for(c: CharacterData, data: GameData, region_id: String, injury_id: String, flags: Dictionary = {}) -> String:
 	var stones := c.item_count("spirit_stone")
 	for item_id: String in c.inventory:
 		if c.item_count(item_id) > 0 and _heals(data, item_id, injury_id):
@@ -692,7 +692,12 @@ static func _heal_source_for(c: CharacterData, data: GameData, region_id: String
 		return "the %s %s treats it for %d stones" % [far["result"], _far_where(c, data, region_id, far), cost]
 	for p: Dictionary in places:
 		if String(p.get("type", "")) == "clinic" and cost > stones:
-			return "the %s treats it for %d stones (you have %d)" % [p.get("display_name", "clinic"), cost, stones]
+			var line := "the %s treats it for %d stones (you have %d)" % [p.get("display_name", "clinic"), cost, stones]
+			# GUIDE-149: say when selling loot would cover the gap.
+			var offer := sell_offer(c, data, region_id, flags)
+			if not offer.is_empty() and stones + int(offer["total"]) >= cost:
+				line += "; sell your %s to the %s (about %d stones) first" % [offer["goods"], offer["merchant"], offer["total"]]
+			return line
 	return ""
 
 

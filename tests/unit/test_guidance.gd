@@ -4374,3 +4374,18 @@ func test_outgrown_hint_is_silent_for_a_newcomer_or_a_hard_home() -> void:
 	assert_false(home.is_empty())
 	if not sure:
 		assert_eq(Guidance.outgrown_hint(weak, data(), "qingshi_village", 0), "")
+
+
+## GUIDE-149: the unaffordable-clinic clause says when selling loot covers the gap.
+func test_clinic_clause_names_the_sale_that_covers_it() -> void:
+	var d := data()
+	var c := _qr(1, 0)
+	c.injuries = {"qi_deviation": 100}
+	c.inventory = {"spirit_stone": 19, "mist_wolf_pelt": 12}
+	var line := Guidance.heal_source(c, d, "qingshi_village")
+	assert_true(line.contains("(you have 19)"), line)
+	assert_true(line.contains("sell your ") and line.contains("first"), line)
+	assert_true(Guidance.injury_news(c, d, "qi_deviation", "qingshi_village").contains("first."))
+	c.inventory = {"spirit_stone": 19}
+	line = Guidance.heal_source(c, d, "qingshi_village")
+	assert_true(line.contains("(you have 19)") and not line.contains("sell your"), line)
