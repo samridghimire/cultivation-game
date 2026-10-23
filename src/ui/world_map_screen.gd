@@ -214,6 +214,16 @@ static func place_names(data: GameData, region_id: String) -> PackedStringArray:
 	return names
 
 
+## WU-346: "Cave abode: Waterfall Cave, 300 stones, qi x1.5" for an abode in `region_id` the player has not claimed, else "".
+static func abode_line(c: CharacterData, data: GameData, region_id: String) -> String:
+	for abode_id: String in Abodes.in_region(data, region_id):
+		if c.abode == abode_id:
+			continue
+		var def := Abodes.get_def(data, abode_id)
+		return "Cave abode: %s, %d stones, qi x%s" % [Abodes.abode_name(data, abode_id), int(def.get("cost", 0)), String.num(float(def.get("qi_density", 1.0)), 2)]
+	return ""
+
+
 ## Regions never visited (WU-061); the region you stand in always counts as visited.
 static func is_unexplored(c: CharacterData, region_id: String, current_region: String) -> bool:
 	return region_id != current_region and not Exploration.visited(c, region_id)
@@ -435,6 +445,9 @@ func _show_details() -> void:
 		var sells := Guidance.market_lines(data, _selected)
 		if not sells.is_empty():
 			_places.text = "Sells: " + "; ".join(sells) + "\n"
+		var abode := abode_line(GameState.player, data, _selected)
+		if abode != "":
+			_places.text += abode + "\n"
 	_places.text += "Places: " + (", ".join(places) if not places.is_empty() else "none known")
 	var familiar := familiarity_lines(GameState.player, data, _selected, GameState.current_region, GameState.world_flags)
 	if not familiar.is_empty():

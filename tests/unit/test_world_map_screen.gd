@@ -357,3 +357,12 @@ func test_hint_note_marks_only_the_hinted_region() -> void:
 	assert_eq(WorldMapScreen.hint_note(data(), hint, "qingshi_village", "qingshi_village"), "")
 	assert_eq(WorldMapScreen.hint_note(data(), hint, "qingshi_village", "misty_forest"), "")
 	assert_eq(WorldMapScreen.hint_note(data(), hint, "fallen_star_market", "fallen_star_market"), "")
+
+
+func test_abode_line_names_unclaimed_abode() -> void:
+	var c := new_character()
+	var line := WorldMapScreen.abode_line(c, data(), "misty_forest")
+	assert_true(line.contains("Waterfall Cave") and line.contains("300"), line)
+	assert_eq(WorldMapScreen.abode_line(c, data(), "qingshi_village"), "")
+	c.abode = "waterfall_cave"
+	assert_eq(WorldMapScreen.abode_line(c, data(), "misty_forest"), "")
