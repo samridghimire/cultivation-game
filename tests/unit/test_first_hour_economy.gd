@@ -45,7 +45,7 @@ func test_every_sect_has_safe_rank0_mission() -> void:
 
 
 ## QA-032: gate-stage hunts that a bare (no extra techniques) newcomer cannot win; the typical player can (C-200: the stag mission assumes a fighting style).
-const QA032_BARE_DEADLY := ["cull_mist_wolves", "patrol_misty_peaks", "answer_azure_call", "answer_blood_lotus_call", "drive_off_fog_antler_stag"]
+const QA032_BARE_DEADLY := ["cull_mist_wolves", "patrol_misty_peaks", "answer_azure_call", "answer_blood_lotus_call", "drive_off_fog_antler_stag", "drive_off_den_wolves"]
 
 ## FH-024/FH-026: missions are always fought, so a Qi Refining mission with an enemy must not
 ## be a likely death for the first-hour player (starter technique, Qingshi iron sword and scale armor) at
@@ -72,7 +72,7 @@ func test_qi_refining_mission_fights_are_weak_or_even_for_newcomers() -> void:
 ## QA-032: the early hunts and sect calls must be a real fight, not a walkover, for the typical
 ## player (simulate_combat.gd's yardstick) at their own gate: 60-95% win rate.
 func test_early_hunt_missions_are_a_fair_fight_for_the_typical_player() -> void:
-	for mission_id in ["cull_mist_wolves", "patrol_misty_peaks", "answer_azure_call", "answer_blood_lotus_call"]:
+	for mission_id in ["cull_mist_wolves", "patrol_misty_peaks", "answer_azure_call", "answer_blood_lotus_call", "drive_off_den_wolves"]:
 		var m: Dictionary = data().sect_missions[mission_id]
 		var c := Balance.typical_player(data(), maxi(0, data().realm_index_of(String(m["min_realm"]))), int(m.get("min_stage", 0)))
 		var rate := Balance.win_rate(c, data(), data().enemies[String(m["enemy"])], 300)

@@ -3372,12 +3372,12 @@ func test_best_mission_empty_for_rogue() -> void:
 
 
 ## GUIDE-105: the all-too-dangerous mission line says what to do.
-## Puts every mission that is not too dangerous on cooldown; returns how many dangerous ones remain ready.
+## Erases every mission that is not too dangerous from d.sect_missions (callers restore a duplicate); returns how many dangerous ones remain ready.
 func _only_dangerous_ready(c: CharacterData, d: GameData) -> int:
 	var left := 0
-	for id: String in d.sect_missions:
+	for id: String in d.sect_missions.keys():
 		if Sects.check_mission(c, d, id, {}) != "" or not Guidance._mission_too_dangerous(c, d, id):
-			c.mission_cooldowns[id] = c.age_days + 30
+			d.sect_missions.erase(id)
 		else:
 			left += 1
 	return left
@@ -3390,9 +3390,12 @@ func test_dangerous_missions_say_practise_style() -> void:
 	c.stage = 0
 	c.sect = {"id": "azure_cloud_sect", "rank": 0, "contribution": 0, "spent": 0}
 	c.techniques["iron_fist"] = {"level": 1, "xp": 0.0}
+	var saved: Dictionary = d.sect_missions.duplicate()
 	if _only_dangerous_ready(c, d) == 0:
+		d.sect_missions = saved
 		return
 	var text := Guidance._mission_hint(c, d, {})
+	d.sect_missions = saved
 	assert_true(text.contains("too dangerous for you yet; practise %s first." % d.techniques["iron_fist"].name), text)
 
 
@@ -3417,10 +3420,13 @@ func test_hints_merge_practise_advice_end_to_end() -> void:
 	c.stage = 0
 	c.sect = {"id": "azure_cloud_sect", "rank": 0, "contribution": 0, "spent": 0}
 	c.techniques["iron_fist"] = {"level": 1, "xp": 0.0}
+	var saved: Dictionary = d.sect_missions.duplicate()
 	if _only_dangerous_ready(c, d) == 0:
+		d.sect_missions = saved
 		return
 	var name: String = d.techniques["iron_fist"].name
 	var lines := Guidance.hints(c, d, 1.0, 20)
+	d.sect_missions = saved
 	var practise := false
 	for line in lines:
 		practise = practise or line.contains("Practise %s on the Techniques screen" % name)
@@ -3435,9 +3441,13 @@ func test_dangerous_missions_say_grow_a_stage_when_mastered() -> void:
 	c.stage = 0
 	c.sect = {"id": "azure_cloud_sect", "rank": 0, "contribution": 0, "spent": 0}
 	c.techniques["iron_fist"] = {"level": d.techniques["iron_fist"].max_level, "xp": 0.0}
+	var saved: Dictionary = d.sect_missions.duplicate()
 	if _only_dangerous_ready(c, d) == 0:
+		d.sect_missions = saved
 		return
-	assert_true(Guidance._mission_hint(c, d, {}).ends_with("too dangerous for you yet; grow a stage first."))
+	var text := Guidance._mission_hint(c, d, {})
+	d.sect_missions = saved
+	assert_true(text.ends_with("too dangerous for you yet; grow a stage first."), text)
 
 
 func test_dangerous_missions_say_heal_when_injuries_are_the_cause() -> void:
