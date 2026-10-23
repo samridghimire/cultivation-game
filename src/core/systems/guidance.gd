@@ -254,9 +254,24 @@ static func empty_fair_fights_note(c: CharacterData, data: GameData, region_id: 
 		if c.realm_index + 1 < data.realms.size():
 			return lead + "break through to %s." % data.realms[c.realm_index + 1].name
 		return ""
+	var target := _practice_target_text(c, data, best)
+	if target != "":
+		return lead + "practise %s%s%s." % [data.techniques[best].name, target, "" if not can_grow else " or grow a stage"]
 	if not can_grow:
 		return lead + "practise %s past level %d." % [data.techniques[best].name, Techniques.level(c, best) + 1]
 	return lead + "practise %s past level %d or grow a stage." % [data.techniques[best].name, Techniques.level(c, best) + 1]
+
+
+## GUIDE-162: " to level N (now M)" when a Foundation-or-higher fighter's `tech_id` is below the level a typical
+## player has reached by this realm; "" otherwise (today's bare advice stands).
+static func _practice_target_text(c: CharacterData, data: GameData, tech_id: String) -> String:
+	if tech_id == "" or c.realm_index < 2:
+		return ""
+	var typical := Techniques.typical_level(data, c.realm_index, tech_id)
+	var now := Techniques.level(c, tech_id)
+	if now >= typical:
+		return ""
+	return " to level %d (now %d)" % [typical, now]
 
 
 ## GUIDE-152: whether `c` has a stage left to grow in the current realm (false at its last stage).
@@ -1681,6 +1696,10 @@ static func _trial_advice(c: CharacterData, data: GameData, region_id: String = 
 			else:
 				var can_practise := Techniques.knows_kind(c, data, "combat") and _best_unmastered_combat(c, data) != ""
 				var can_grow := _can_grow_stage(c, data)
+				var target := _practice_target_text(c, data, _best_unmastered_combat(c, data)) if can_practise else ""
+				var practise_name := "practise"
+				if target != "":
+					practise_name = "practise %s%s" % [data.techniques[_best_unmastered_combat(c, data)].name, target]
 				if not Techniques.knows_kind(c, data, "combat"):
 					# GUIDE-159: nothing to practise; the lever is learning a combat technique.
 					var manual := first_combat_manual(c, data, region_id)
@@ -1692,11 +1711,11 @@ static func _trial_advice(c: CharacterData, data: GameData, region_id: String = 
 					else:
 						line += " A loss only injures you; %s first." % lever
 				elif can_practise and can_grow:
-					line += " A loss only injures you; practise or grow a stage first."
+					line += " A loss only injures you; %s or grow a stage first." % practise_name
 				elif can_grow:
 					line += " A loss only injures you; grow a stage first."
 				elif can_practise:
-					line += " A loss only injures you; practise first."
+					line += " A loss only injures you; %s first." % practise_name
 				else:
 					line += " A loss only injures you."
 	elif chance < 0.7:
@@ -1840,7 +1859,7 @@ static func _mission_hint(c: CharacterData, data: GameData, flags: Dictionary = 
 			else:
 				text = text.trim_suffix("; ") + "."
 		else:
-			text += "practise %s first." % data.techniques[best_style].name
+			text += "practise %s%s first." % [data.techniques[best_style].name, _practice_target_text(c, data, best_style)]
 	if ready == 0 and deliver != "":
 		var clause := _deliver_clause(c, data, deliver, region_id, today)
 		text = clause if text == "" else clause + " " + text

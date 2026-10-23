@@ -91,6 +91,15 @@ static func days_to_next(c: CharacterData, data: GameData, tech_id: String) -> i
 	return ceili(need / rate)
 
 
+## GUIDE-162: the level a typical player has practised an art to on reaching `realm_index` (1 + 2 per realm, capped
+## at the art's max level); combat_balance's typical player uses the same curve.
+static func typical_level(data: GameData, realm_index: int, tech_id: String) -> int:
+	var def: TechniqueDef = data.techniques.get(tech_id)
+	if def == null:
+		return 1
+	return mini(1 + 2 * realm_index, def.max_level)
+
+
 static func is_mastered(c: CharacterData, data: GameData, tech_id: String) -> bool:
 	var def: TechniqueDef = data.techniques.get(tech_id)
 	return def != null and level(c, tech_id) >= def.max_level

@@ -4582,3 +4582,39 @@ func test_rank_goal_names_the_trial_foe_and_odds() -> void:
 	c.sect = {"id": "azure_cloud_sect", "rank": 0, "contribution": 0}
 	for l in Guidance.goals(c, d, {}):
 		assert_false(l.contains("The trial:"), l)
+
+
+## GUIDE-162: a Foundation fighter below the typical practice level is told the target level.
+func test_g162_typical_level_follows_realm_and_max_level() -> void:
+	var d := data()
+	assert_eq(Techniques.typical_level(d, 0, "iron_fist"), 1)
+	assert_eq(Techniques.typical_level(d, 2, "iron_fist"), 5)
+	assert_eq(Techniques.typical_level(d, 9, "iron_fist"), d.techniques["iron_fist"].max_level)
+	assert_eq(Techniques.typical_level(d, 2, "no_such_art"), 1)
+
+
+func test_g162_fair_fights_note_names_target_level_at_foundation() -> void:
+	var d := data()
+	var c := new_character()
+	c.realm_index = 2
+	c.stage = 0
+	c.techniques = {"iron_fist": {"level": 2, "xp": 0.0}, "stone_skin": {"level": 5, "xp": 0.0}}
+	c.equipment["armor"] = "cloth_robe" if d.items.has("cloth_robe") else String(c.equipment.get("armor", ""))
+	if Guidance._thin_defence_missing(c, d) != "":
+		return
+	var note := Guidance.empty_fair_fights_note(c, d)
+	assert_true(note.contains("practise Iron Fist to level 5 (now 2)"), note)
+	c.techniques["iron_fist"]["level"] = 5
+	note = Guidance.empty_fair_fights_note(c, d)
+	assert_false(note.contains("to level 5 (now"), note)
+	assert_true(note.contains("past level 6"), note)
+
+
+func test_g162_qi_refining_keeps_bare_advice() -> void:
+	var d := data()
+	var c := new_character()
+	c.realm_index = 1
+	c.techniques = {"iron_fist": {"level": 1, "xp": 0.0}}
+	assert_eq(Guidance._practice_target_text(c, d, "iron_fist"), "")
+	c.realm_index = 2
+	assert_eq(Guidance._practice_target_text(c, d, "iron_fist"), " to level 5 (now 1)")
