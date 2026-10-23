@@ -33,6 +33,7 @@ extends SceneTree
 ## WU-187: append `-- --respawn-shot` for the respawn screen after a 98%-odds loss to a long-named foe
 ## (the longest "still fell" lesson). `--year-shot` now has a four-line year with a respawn line.
 
+## WU-342: append `-- --artifact-shot` for the Creation Artifact screen at one life (Lives & Anchors, recharge focused) and at three (main page).
 ## WU-184: append `-- --soul-shot` for a Soul Formation Early player: the journal's Soul Formation goals
 ## (with the Starfire Body row) and the HUD goal ladder.
 
@@ -158,6 +159,9 @@ func _start() -> void:
 		return
 	if OS.get_cmdline_user_args().has("--respawn-shot"):
 		_start_respawn_shot(gs)
+		return
+	if OS.get_cmdline_user_args().has("--artifact-shot"):
+		_start_artifact_shot(gs)
 		return
 	if OS.get_cmdline_user_args().has("--late-realms"):
 		_start_late_realms(gs)
@@ -2313,6 +2317,37 @@ func _start_year_shot(gs: Node) -> void:
 	shots.append({"name": "lapse_log", "open": func() -> void:
 		banner.visible = false
 		log_screen.open(), "close": log_screen.close})
+
+
+## WU-342: the artifact screen at one life lands on Lives & Anchors with "recharge" focused; at three lives it opens on the main page.
+func _start_artifact_shot(gs: Node) -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 5
+	var c := CharacterFactory.create("Lin Feng", gs.data, rng, "male")
+	gs.start_session(c)
+	gs.pending_event = ""
+	c.realm_index = 0
+	c.stage = 2
+	c.inventory = {"spirit_stone": 120}
+	world = load("res://src/world/world.tscn").instantiate()
+	root.add_child(world)
+	hud = world.get_node("HUD")
+	var screen: Control = hud.get("_screens")["toggle_artifact"]
+	var size_tag := "%dx%d" % [root.size.x, root.size.y]
+	var lives_before: Array = [c.artifact_lives]
+	for lives: int in [1, 3]:
+		shots.append({"name": ("artifact_low_lives_%s" if lives == 1 else "artifact_lives3_%s") % size_tag, "open": func() -> void:
+			hud.get("_banner").visible = false
+			lives_before[0] = c.artifact_lives
+			c.artifact_lives = lives
+			screen.open(), "close": func() -> void:
+			var focus: Control = root.get_viewport().gui_get_focus_owner()
+			assert(screen.page() == screen.get("PAGE_ANCHORS" if lives == 1 else "PAGE_MAIN"), "wrong artifact page at %d lives: %s" % [lives, screen.page()])
+			if lives == 1:
+				assert(focus != null and focus.name == &"recharge", "recharge not focused at one life: " + str(focus))
+			print("artifact-shot lives %d page %s focus %s" % [lives, screen.page(), focus])
+			screen.close()
+			c.artifact_lives = lives_before[0]})
 
 
 ## WU-187: the respawn screen with the longest lesson (98% odds) and the longest enemy name.
