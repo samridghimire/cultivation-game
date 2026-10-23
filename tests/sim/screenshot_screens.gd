@@ -1478,6 +1478,23 @@ func _start_hint_shot(gs: Node) -> void:
 		root.get_node("EventBus").player_changed.emit()
 		assert(String(hint_text.call()).contains("Short of stones?"), "odd-jobs hint not on screen: " + String(hint_text.call()))
 		print("hint-shot broke: ", hint_text.call()), "close": drop_style})
+	# WU-338: GUIDE-147's low-lives line leads at one life with stones for the recharge; no "with spare stones" line competes.
+	var lives_before: Array = [c.artifact_lives]
+	shots.append({"name": "hint_low_lives_%dx%d" % [root.size.x, root.size.y], "open": func() -> void:
+		hud.get("_banner").visible = false
+		give_style.call()
+		lives_before[0] = c.artifact_lives
+		c.artifact_lives = 1
+		c.realm_index = 0
+		c.stage = 2
+		c.inventory = {"spirit_stone": 110}
+		gs.current_region = "qingshi_village"
+		root.get_node("EventBus").player_changed.emit()
+		assert(String(hint_text.call()).trim_prefix("> ").begins_with("Your Creation Artifact holds 1 life"), "low-lives hint not first: " + String(hint_text.call()))
+		assert(not String(hint_text.call()).contains("with spare stones"), "spare-stones line still shown: " + String(hint_text.call()))
+		print("hint-shot low lives: ", hint_text.call()), "close": func() -> void:
+			c.artifact_lives = lives_before[0]
+			drop_style.call()})
 	# WU-220: GUIDE-054's Mortal nudge on day 40 in Qingshi with an open order and herbs still to gather, so the
 	# panel holds the nudge plus the crafter hints (shows the rank-0 Alchemist; nothing in the pack).
 	shots.append({"name": "hint_mortal_nudge", "open": func() -> void:
