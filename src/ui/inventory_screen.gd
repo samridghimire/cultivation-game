@@ -307,7 +307,7 @@ static func wanted_by_sect_line(c: CharacterData, data: GameData, item_id: Strin
 	for mission_id: String in Sects.available_missions(c, data, flags):
 		var mission: Dictionary = data.sect_missions[mission_id]
 		var needed: Dictionary = mission.get("requires", {}).get("items", {})
-		if needed.has(item_id):
+		if needed.has(item_id) and Sects.only_items_missing(c, data, mission_id):
 			return "Wanted by the sect: %s (%d for %d contribution)" % [mission.get("name", mission_id), int(needed[item_id]), int(mission.get("contribution", 0))]
 	return ""
 

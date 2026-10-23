@@ -386,10 +386,10 @@ static func buy_worth_line(c: CharacterData, data: GameData, item_id: String, re
 
 
 ## WU-312: the Sell tab says when a sect mission wants the selected item.
-static func sell_wanted_line(c: CharacterData, data: GameData, item_id: String, selling: bool) -> String:
+static func sell_wanted_line(c: CharacterData, data: GameData, item_id: String, selling: bool, flags: Dictionary = {}) -> String:
 	if not selling:
 		return ""
-	return InventoryScreen.wanted_by_sect_line(c, data, item_id, GameState.world_flags)
+	return InventoryScreen.wanted_by_sect_line(c, data, item_id, flags)
 
 
 ## "Equipped: Iron Sword (+5 attack)" for whatever `c` wears in the item's slot.
@@ -630,7 +630,7 @@ func _show_details() -> void:
 	_effects.text = "\n".join(lines)
 	_compare.text = compare_text(p, data, _selected)
 	_compare.visible = _compare.text != ""
-	_wanted.text = sell_wanted_line(p, data, _selected, _selling)
+	_wanted.text = sell_wanted_line(p, data, _selected, _selling, GameState.world_flags)
 	_wanted.visible = _wanted.text != ""
 	var most := max_quantity(p, data, _selected, _selling, _faction, GameState.buy_multiplier())
 	_quantity = clampi(_quantity, 1, maxi(most, 1))

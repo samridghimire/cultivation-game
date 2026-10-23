@@ -199,6 +199,21 @@ func test_qi_worth_line_empty_for_non_qi_and_harmful() -> void:
 	assert_eq(InventoryScreen.qi_worth_line(c, data, "bad_pill", "qingshi_village", {}), "")
 
 
+func test_wanted_by_sect_line_skips_missions_on_cooldown() -> void:
+	var data := data()
+	var c := new_character()
+	c.sect = {"id": "azure_cloud_sect", "rank": 0, "contribution": 0}
+	var saved: Dictionary = data.sect_missions
+	data.sect_missions = {"tithe": {"id": "tithe", "name": "Tithe", "sects": [], "requires": {"items": {"spirit_herb": 3}}, "contribution": 5, "cooldown_days": 30}}
+	assert_true(InventoryScreen.wanted_by_sect_line(c, data, "spirit_herb", {}).contains("Tithe"), "ready mission gives a line")
+	c.mission_cooldowns["tithe"] = c.age_days + 10
+	assert_eq(InventoryScreen.wanted_by_sect_line(c, data, "spirit_herb", {}), "", "on cooldown gives none")
+	c.mission_cooldowns.clear()
+	data.sect_missions["tithe"]["min_rank"] = 3
+	assert_eq(InventoryScreen.wanted_by_sect_line(c, data, "spirit_herb", {}), "", "above rank gives none")
+	data.sect_missions = saved
+
+
 func test_wanted_by_sect_line_names_mission_count_and_contribution() -> void:
 	var data := data()
 	var c := new_character()

@@ -526,11 +526,17 @@ static func deliver_needs(c: CharacterData, data: GameData, flags: Dictionary = 
 	for id: String in available_missions(c, data, flags):
 		var mission: Dictionary = data.sect_missions[id]
 		var needed: Dictionary = mission.get("requires", {}).get("items", {})
-		if needed.is_empty() or mission_rank_realm_reason(c, data, mission) != "" or mission_cooldown_left(c, id) > 0:
+		if needed.is_empty() or not only_items_missing(c, data, id):
 			continue
 		for item_id: String in needed:
 			out[item_id] = int(out.get(item_id, 0)) + int(needed[item_id])
 	return out
+
+
+## True when `c` meets `mission_id`'s rank/realm and it is off cooldown, so only the items could stop them.
+static func only_items_missing(c: CharacterData, data: GameData, mission_id: String) -> bool:
+	var mission: Dictionary = data.sect_missions.get(mission_id, {})
+	return not mission.is_empty() and mission_rank_realm_reason(c, data, mission) == "" and mission_cooldown_left(c, mission_id) <= 0
 
 
 ## Days until `c` may take `mission_id` again (0 = ready).

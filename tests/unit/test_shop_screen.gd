@@ -421,6 +421,13 @@ func test_sell_wanted_line_names_the_sect_mission() -> void:
 	c.inventory = {"spirit_herb": 3}
 	assert_true(ShopScreen.sell_wanted_line(c, data(), "spirit_herb", true).begins_with("Wanted by the sect: "))
 	assert_eq(ShopScreen.sell_wanted_line(c, data(), "spirit_herb", false), "", "not shown when buying")
+	var d := data()
+	var saved: Dictionary = d.sect_missions
+	d.sect_missions = {"tithe": {"id": "tithe", "name": "Tithe", "sects": [], "requires": {"items": {"spirit_herb": 3}}, "contribution": 5}}
+	assert_true(ShopScreen.sell_wanted_line(c, d, "spirit_herb", true, {}).contains("Tithe"))
+	c.mission_cooldowns["tithe"] = c.age_days + 5
+	assert_eq(ShopScreen.sell_wanted_line(c, d, "spirit_herb", true, {}), "", "on cooldown gives none")
+	d.sect_missions = saved
 
 
 func test_buy_worth_line_for_qi_items_only_when_buying() -> void:
