@@ -12,6 +12,10 @@ extends Interactable
 func get_options() -> Array[Dictionary]:
 	var options: Array[Dictionary] = []
 	options.append_array(next_stage_option(qi_density, func(days: int) -> void: GameState.cultivate(days, qi_density)))
+	if not options.is_empty():
+		var far := far_spot_line(GameState.player, GameState.data, GameState.current_region, GameState.world_flags, qi_density)
+		if far != "":
+			options[0]["description"] = String(options[0].get("description", "")) + "\n" + far
 	options.append_array([
 		{"label": "Meditate (1 month)", "description": GameState.meditation_preview(Calendar.DAYS_PER_MONTH, qi_density), "action": GameState.cultivate.bind(Calendar.DAYS_PER_MONTH, qi_density), "keep_open": true},
 		{"label": "Closed-door cultivation (1 year)", "description": GameState.meditation_preview(Calendar.DAYS_PER_YEAR, qi_density), "action": GameState.cultivate.bind(Calendar.DAYS_PER_YEAR, qi_density), "keep_open": true},
@@ -74,6 +78,17 @@ static func _temper_option() -> Dictionary:
 	var label := "Temper your body: %s (%s)" % [stage["name"], BodyTempering.describe_next(p, data)]
 	var reason := BodyTempering.check_temper(p, data)
 	return {"label": label, "action": GameState.temper_body, "disabled": reason != "", "reason": reason, "keep_open": true}
+
+
+## WU-321: "Cloud-Sea Cliff in Azure Peak (10 days away): about 1 month, 24 days."; empty without a far offer.
+static func far_spot_line(c: CharacterData, data: GameData, region_id: String, flags: Dictionary, density: float) -> String:
+	var offer := Guidance.far_qi_offer(c, data, region_id, flags, density)
+	if offer.is_empty():
+		return ""
+	var where := String(offer["region_name"])
+	if int(offer["away"]) > 0:
+		where += " (%s away)" % Calendar.format_duration(int(offer["away"]))
+	return "%s in %s: about %s." % [GameData.plain_name(String(offer["place"])), where, Calendar.format_duration(int(offer["days_far"]))]
 
 
 ## "Meditate until the next layer (~N days)" (WU-034); empty at the bottleneck or when

@@ -114,3 +114,12 @@ func test_tribulation_option_carries_warning_tone() -> void:
 	assert_eq(safe.get("tone", ""), "normal", "safe tribulation is not tinted")
 	spot.free()
 	gs.end_session()
+
+
+func test_far_spot_line_names_the_faster_spot() -> void:
+	var c := new_character()
+	c.realm_index = 2
+	var line: String = load("res://src/world/interactables/meditation_spot.gd").far_spot_line(c, _gs().data, "qingshi_village", {}, 1.0)
+	assert_true(line.begins_with("Cloud-Sea Cliff in Azure Peak ("), line)
+	assert_true(line.contains(" away): about "), line)
+	assert_eq(load("res://src/world/interactables/meditation_spot.gd").far_spot_line(c, _gs().data, "azure_peak", {}, 5.0), "")
