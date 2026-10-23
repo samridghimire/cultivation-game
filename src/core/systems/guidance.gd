@@ -612,6 +612,9 @@ static func _heal_source_for(c: CharacterData, data: GameData, region_id: String
 		return "")
 	if not far.is_empty() and int(far["days"]) > 0:
 		return "the %s %s treats it for %d stones" % [far["result"], _far_where(c, data, region_id, far), cost]
+	for p: Dictionary in places:
+		if String(p.get("type", "")) == "clinic" and cost > stones:
+			return "the %s treats it for %d stones (you have %d)" % [p.get("display_name", "clinic"), cost, stones]
 	return ""
 
 

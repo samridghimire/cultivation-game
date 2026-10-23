@@ -2901,12 +2901,27 @@ func test_heal_source_names_item_clinic_or_fallback() -> void:
 	assert_true(line.contains("Village Clinic treats it for"), line)
 	var hint := Guidance.hints(c, data(), 1.0, 20, {}, {}, "qingshi_village")
 	assert_true(_has(hint, "Treat your injuries: the Village Clinic treats it for"))
-	# No stones: not the clinic
+	# No stones: the clinic is named with its price and what you hold (GUIDE-138)
 	c.inventory = {}
-	assert_false(Guidance.heal_source(c, data(), "qingshi_village").contains("Village Clinic treats it for"))
+	assert_true(Guidance.heal_source(c, data(), "qingshi_village").contains("(you have 0)"))
 	# No region: old wording
 	assert_eq(Guidance.heal_source(c, data(), ""), "")
 	assert_true(_has(Guidance.hints(c, data(), 1.0, 20), "Treat your injuries: use a healing item or see a doctor."))
+
+
+func test_heal_source_names_an_unaffordable_clinic() -> void:
+	var c := _fresh()
+	c.realm_index = 1
+	Injuries.inflict(c, data(), "qi_deviation")
+	c.inventory = {"spirit_stone": 10}
+	var line := Guidance.heal_source(c, data(), "qingshi_village")
+	assert_true(line.contains("Village Clinic treats it for"), line)
+	assert_true(line.contains("(you have 10)"), line)
+	assert_true(Guidance.hints(c, data(), 1.0, 20, {}, {}, "qingshi_village")[0].substr(0, Guidance.HEADLINE_CHARS).contains("Village Clinic") or _has(Guidance.hints(c, data(), 1.0, 20, {}, {}, "qingshi_village"), "Village Clinic"))
+	c.inventory = {"spirit_stone": 500}
+	assert_false(Guidance.heal_source(c, data(), "qingshi_village").contains("(you have"))
+	c.inventory = {}
+	assert_eq(Guidance.heal_source(c, data(), "myriad_peaks_ridge").contains("(you have"), false)
 
 
 func test_heal_source_looks_past_the_first_injury() -> void:
