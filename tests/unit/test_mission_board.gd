@@ -465,3 +465,15 @@ func test_deliver_mission_shows_item_progress() -> void:
 	c.add_item("spirit_herb", 2)
 	assert_false(MissionBoard.label_for(c, d, "herb_hall_tithe", "", -1, "").contains("/3)"))
 	assert_false(MissionBoard.requirement_lines(c, d, d.sect_missions["herb_hall_tithe"], d.start_region)[0].contains("grows at"))
+
+
+func test_coloured_requirement_lines_mark_met_and_unmet_differently() -> void:
+	var d := data()
+	var c := _disciple()
+	var mission: Dictionary = d.sect_missions["herb_hall_tithe"]
+	c.add_item("spirit_herb", 1)
+	var unmet := MissionBoard.coloured_requirement_lines(c, d, mission, MissionBoard.requirement_lines(c, d, mission, d.start_region))[0]
+	c.add_item("spirit_herb", 2)
+	var met := MissionBoard.coloured_requirement_lines(c, d, mission, MissionBoard.requirement_lines(c, d, mission, d.start_region))[0]
+	assert_true(unmet.begins_with("[color=#%s]" % UIStyle.danger_color("Deadly").to_html(false)), unmet)
+	assert_true(met.begins_with("[color=#%s]" % MissionBoard.REQ_MET_COLOR.to_html(false)), met)

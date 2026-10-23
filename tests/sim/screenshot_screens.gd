@@ -1180,6 +1180,15 @@ func _start_missions_shot(gs: Node) -> void:
 	var size_tag := "%dx%d" % [root.size.x, root.size.y]
 	var board: Control = hud.get("_mission_board")
 	shots.append({"name": "missions_list_" + size_tag, "open": board.open, "close": board.close})
+	# WU-310: a deliver mission with 1 of 3 Spirit Herbs held: "(1/3)" in the list, requirement line in red.
+	shots.append({"name": "missions_deliver_" + size_tag, "open": func() -> void:
+		c.inventory = {"spirit_herb": 1}
+		board.open()
+		board._selected = "herb_hall_tithe"
+		board._show_details()
+		var list_text: String = board.label_for(c, gs.data, "herb_hall_tithe", "", -1, "")
+		assert(list_text.contains("(1/3)"), list_text)
+		assert(board._requirements.get_combined_minimum_size().y > 0.0), "close": board.close})
 	shots.append({"name": "missions_ranks_" + size_tag, "open": func() -> void:
 		board.open()
 		board._set_tab("rank")

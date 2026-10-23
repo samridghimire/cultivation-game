@@ -23,10 +23,12 @@ var _missions_tab: Button
 var _shop_tab: Button
 var _rank_tab: Button
 var _list: VBoxContainer
+const REQ_MET_COLOR := Color("8fd18f")
+
 var _name: Label
 var _info: Label
 var _description: Label
-var _requirements: Label
+var _requirements: RichTextLabel
 var _danger: Label
 var _rewards: Label
 var _status: Label
@@ -77,7 +79,12 @@ func _init() -> void:
 	details.add_child(_info)
 	_description = _wrapped(UIStyle.label("", 16))
 	details.add_child(_description)
-	_requirements = _wrapped(UIStyle.label("", 16))
+	_requirements = RichTextLabel.new()
+	_requirements.bbcode_enabled = true
+	_requirements.fit_content = true
+	_requirements.scroll_active = false
+	_requirements.add_theme_font_size_override("normal_font_size", 16)
+	_requirements.add_theme_font_size_override("bold_font_size", 16)
 	details.add_child(_requirements)
 	_danger = _wrapped(UIStyle.label("", 16))
 	details.add_child(_danger)
@@ -152,6 +159,24 @@ static func requirement_lines(c: CharacterData, data: GameData, mission: Diction
 		var enemy: Dictionary = data.enemies[enemy_id]
 		lines.append("Defeat: %s (%s)" % [enemy["name"], UIStyle.odds_text(c, data, enemy, bool(enemy.get("lethal", false)))])
 	return lines
+
+
+## WU-310: `lines` (from requirement_lines) as BBCode: a hand-in item you hold enough of is green, one you
+## lack is red; other lines (the foe) are left alone.
+static func coloured_requirement_lines(c: CharacterData, data: GameData, mission: Dictionary, lines: PackedStringArray) -> PackedStringArray:
+	var needed: Dictionary = mission.get("requires", {}).get("items", {})
+	var out: PackedStringArray = []
+	var i := 0
+	for item_id: String in needed:
+		if i >= lines.size():
+			break
+		var met := c.item_count(item_id) >= int(needed[item_id])
+		var color := REQ_MET_COLOR if met else UIStyle.danger_color("Deadly")
+		out.append("[color=#%s]%s[/color]" % [color.to_html(false), lines[i]])
+		i += 1
+	for j in range(i, lines.size()):
+		out.append(lines[j])
+	return out
 
 
 ## "Costs 40 contribution  |  Inner Disciple or above" for a shop entry.
@@ -505,7 +530,7 @@ func _show_details() -> void:
 	_description.text = String(mission.get("description", ""))
 	var reqs := requirement_lines(p, data, mission, GameState.current_region)
 	_requirements.visible = not reqs.is_empty()
-	_requirements.text = "Requires:\n  " + "\n  ".join(reqs)
+	_requirements.text = "Requires:\n  " + "\n  ".join(coloured_requirement_lines(p, data, mission, reqs))
 	var rewards := Items.describe_effects(mission.get("rewards", {}), data)
 	_rewards.visible = not rewards.is_empty()
 	_rewards.text = "Rewards:\n  " + "\n  ".join(rewards)
