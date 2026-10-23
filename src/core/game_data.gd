@@ -354,7 +354,23 @@ func _read(dir: String, file_name: String) -> Dictionary:
 	if not parsed is Dictionary:
 		load_errors.append("Invalid JSON (expected an object): %s" % path)
 		return {}
+	for key: String in parsed:
+		if parsed[key] is Array:
+			_check_unique_ids(parsed[key], file_name)
 	return parsed
+
+
+## Reports "duplicate id '<id>' in <file>" for every id that appears twice in `rows`, because id-keyed tables
+## would silently let the second row replace the first.
+func _check_unique_ids(rows: Array, file: String) -> void:
+	var seen := {}
+	for row: Variant in rows:
+		if not row is Dictionary or not row.has("id"):
+			continue
+		var id := String(row["id"])
+		if seen.has(id):
+			load_errors.append("duplicate id '%s' in %s" % [id, file])
+		seen[id] = true
 
 
 ## Cross-reference checks so broken content fails loudly in tests.

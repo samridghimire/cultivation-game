@@ -25,3 +25,16 @@ func test_top_level_lists_have_unique_ids() -> void:
 					offenders.append("%s %s: %s" % [file_name, key, id])
 				seen[id] = true
 	assert_eq(offenders, PackedStringArray(), "duplicate ids")
+
+
+func test_game_data_reports_repeated_ids_per_file() -> void:
+	var data := GameData.new()
+	data._check_unique_ids([{"id": "a"}, {"id": "b"}, {"id": "a"}], "one.json")
+	data._check_unique_ids([{"id": "x"}, {"id": "x"}, {"name": "no id"}], "two.json")
+	assert_eq(data.load_errors, PackedStringArray(["duplicate id 'a' in one.json", "duplicate id 'x' in two.json"]))
+
+
+func test_shipped_data_reports_no_duplicate_id_errors() -> void:
+	var data := GameData.load_from_dir()
+	for error in data.load_errors:
+		assert_false(error.begins_with("duplicate id"), error)
