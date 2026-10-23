@@ -1,6 +1,6 @@
 extends SceneTree
 ## First-hour sim (QA-016): scripted newcomers in Qingshi Village (tests/sim/first_hour.gd).
-## Usage: tools/godot.sh --headless --path . -s res://tests/sim/simulate_first_hour.gd -- [seeds] [months]  [--curious] [--trace] [--zero] [--forced]
+## Usage: tools/godot.sh --headless --path . -s res://tests/sim/simulate_first_hour.gd -- [seeds] [months]  [--curious] [--trace] [--zero] [--forced] [--injury-origins]
 
 const FirstHour := preload("res://tests/sim/first_hour.gd")
 const FORCED_ODDS := 0.2
@@ -27,12 +27,43 @@ func _mask_digits(text: String) -> String:
 	return out
 
 
+## QA-149: injuries that began in the first 365 days, with their source and what the clinic would cost against the
+## stones held, the breakthrough attempts, and a summary of the early (first 120 days) injuries.
+func _print_injury_origins(rows: Array, slow_days: Array, breaks: Array, seeds: int) -> void:
+	print("Breakthrough attempts in the first 365 days (QA-149):")
+	print("  seed  day  from  chance  pill  success  injury")
+	for b: Dictionary in breaks:
+		print("  %4d  %3d  r%d  %.0f%%  %s  %s  %s" % [b["seed"], b["day"], b["from_realm"], 100.0 * float(b["chance"]), "yes" if b["pill"] else "no", "yes" if b["success"] else "no", "yes" if b["injury"] else "no"])
+	print("Injuries begun in the first 365 days (QA-149):")
+	print("  seed  day  injury  source  stones  clinic")
+	var early_seeds := {}
+	var by_source := {}
+	var afford := 0
+	var early := 0
+	for row: Dictionary in rows:
+		if int(row["day"]) > 365:
+			continue
+		print("  %4d  %3d  %s  %s  %d  %d" % [row["seed"], row["day"], row["id"], row["source"], row["stones"], row["cost"]])
+		if int(row["day"]) <= 120:
+			early += 1
+			early_seeds[row["seed"]] = true
+			by_source[row["source"]] = int(by_source.get(row["source"], 0)) + 1
+			if int(row["stones"]) >= int(row["cost"]):
+				afford += 1
+	print("Slowed days per seed (months with a cultivation_mult < 1 injury at month end): %s; median %.0f" % [str(slow_days), _median(slow_days)])
+	print("Seeds with an injury in the first 120 days: %d/%d; %d injuries by source %s; clinic affordable the day it began: %d/%d" % [early_seeds.size(), seeds, early, str(by_source), afford, early])
+
+
 func _run() -> void:
 	var args := OS.get_cmdline_user_args()
 	var curious := args.has("--curious")
 	var zero := args.has("--zero")  # QA-126: count fights rated 0%, by what started them
 	var forced := args.has("--forced")  # QA-139: tally every fight rated under 20%, by source, with its outcome
 	var long_hints := args.has("--long-hints")  # QA-143: tally hint lines longer than the HUD cap
+	var injury_origins := args.has("--injury-origins")  # QA-149: where and when injuries begin in the first year
+	var origin_rows: Array = []  # {seed, day, id, source, stones, cost}
+	var slow_days: Array = []  # per seed: days (month-granular) cultivating under a cultivation_mult < 1 injury
+	var break_rows: Array = []  # {seed, day, from, chance, success, injury}
 	var long_rows := {}
 	var forced_rows: Array = []
 	var zero_by := {}
@@ -63,7 +94,7 @@ func _run() -> void:
 	for a in args:
 		if a.begins_with("--seed="):
 			only_seed = int(a.substr(7))
-		elif a != "--curious" and a != "--trace" and a != "--zero" and a != "--forced" and a != "--no-trial" and a != "--no-heal" and a != "--no-spar-hint" and a != "--blind-missions" and a != "--one-mission" and a != "--long-hints" and a != "--buy-qi" and a != "--spend-contribution" and a != "--no-armor" and a != "--far-qi":
+		elif a != "--curious" and a != "--trace" and a != "--zero" and a != "--forced" and a != "--no-trial" and a != "--no-heal" and a != "--no-spar-hint" and a != "--blind-missions" and a != "--one-mission" and a != "--long-hints" and a != "--buy-qi" and a != "--spend-contribution" and a != "--no-armor" and a != "--far-qi" and a != "--injury-origins":
 			nums.append(int(a))
 	var seeds := nums[0] if nums.size() > 0 else 30
 	var months := nums[1] if nums.size() > 1 else 12
@@ -96,6 +127,26 @@ func _run() -> void:
 	print("  seed  QR1  QR3  QR9  sect  injuries  won  lost  fled  lines/month")
 	for s in range(maxi(1, only_seed), (only_seed if only_seed > 0 else seeds) + 1):
 		var hook := Callable()
+		var seen_injuries := {}
+		var slowed := {"days": 0}
+		var on_message := func(_text: String, _category: String) -> void:
+			var p: CharacterData = gs.player
+			for id: String in p.injuries:
+				if seen_injuries.has(id):
+					continue
+				seen_injuries[id] = true
+				var source := "other"
+				for frame: Dictionary in get_stack():
+					var fn := String(frame["function"])
+					if fn not in ["<anonymous lambda>", "post", "_post"] and not fn.begins_with("_on_"):
+						source = fn
+						break
+				origin_rows.append({"seed": s, "day": clock.total_days, "id": id, "source": source, "stones": p.item_count("spirit_stone"), "cost": Medicine.clinic_cost(p, gs.data, id)})
+			for id: String in seen_injuries.keys():
+				if not p.injuries.has(id):
+					seen_injuries.erase(id)
+		if injury_origins:
+			root.get_node("EventBus").message_posted.connect(on_message)
 		var fight_notes: Array = []
 		var on_start := func(enemy: Dictionary) -> void:
 			fight_notes.append("%s%s (odds %.0f%%)" % [enemy.get("id", enemy.get("name", "?")), " [spar]" if enemy.get("spar", false) else "", 100.0 * Combat.win_chance(gs.player, gs.data, enemy)])
@@ -160,9 +211,18 @@ func _run() -> void:
 						if row["example"] == "":
 							row["example"] = h
 						long_rows[key] = row
+			if injury_origins and Injuries.cultivation_multiplier(gs.player, gs.data) < 1.0 and clock.total_days <= 365 + Calendar.DAYS_PER_MONTH:
+				slowed["days"] += Calendar.DAYS_PER_MONTH
 			if month == 2 or month == 5 or month == 11:
 				iron_levels[month + 1].append(Techniques.level(gs.player, "iron_fist"))  # QA-138
 		var r: Dictionary = FirstHour.play(gs, clock, s, months, curious, hook)
+		if injury_origins:
+			root.get_node("EventBus").message_posted.disconnect(on_message)
+			slow_days.append(slowed["days"])
+			for b: Dictionary in r["breaks"]:
+				if int(b["day"]) <= 365:
+					b["seed"] = s
+					break_rows.append(b)
 		var contribs: Array = r["contribution"]
 		if contribs.size() >= 6:
 			contrib6.append(contribs[5])
@@ -257,6 +317,8 @@ func _run() -> void:
 		print("  seed  enemy  source  layer  odds  outcome  injured")
 		for row: Dictionary in forced_rows:
 			print("  %4d  %s  %s  QR%d  %.0f%%  %s  %s" % [row["seed"], row["id"], row["source"], row["layer"], 100.0 * float(row["odds"]), row["outcome"], "yes" if row.get("new_injury", false) else "no"])
+	if injury_origins:
+		_print_injury_origins(origin_rows, slow_days, break_rows, seeds)
 	if long_hints:
 		print("Hint lines over %d characters (QA-143), by first 30 characters (digits masked):" % Guidance.HEADLINE_CHARS)
 		var keys := long_rows.keys()
