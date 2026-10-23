@@ -154,6 +154,10 @@ func test_first_hint_badge_for_a_hint_naming_only_an_npc() -> void:
 	var names := Interactable.region_marker_names(gs.data, gs.npcs, gs.current_region, gs.player)
 	assert_true(HudScript.first_hint_names_place("%s here would spar with you." % here, names))
 	assert_true(not HudScript.first_hint_names_place("%s here would spar with you." % elsewhere, names))
+	# WU-297: hints write "Name (Realm)", labels "Name (Title)"; the badge must match on the name.
+	var realm_form := here.get_slice(" (", 0) + " (Qi Refining)"
+	assert_true(HudScript.first_hint_names_place("%s here would spar with you." % realm_form, names), "realm form of the name")
+	assert_true(not HudScript.first_hint_names_place("%s here would spar with you." % (elsewhere.get_slice(" (", 0) + " (Qi Refining)"), names))
 	var hud: CanvasLayer = load("res://src/ui/hud.tscn").instantiate()
 	root.add_child(hud)
 	await _frames()

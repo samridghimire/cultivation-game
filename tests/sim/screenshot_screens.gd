@@ -93,6 +93,7 @@ extends SceneTree
 ## WU-296: append `-- --inventory-shot` for inventory_qi_worth.png (Spirit Herb selected: "Worth about N of meditation here"); run once per --resolution.
 ## WU-273: append `-- --techniques-shot` for techniques_practice[_scale115].png (Iron Fist level 1 details, practice button focused); run once per --resolution. Checked at 1280x720 and 1280x800: nothing clipped, the action row wraps.
 ## WU-295: `--bounty-shot` writes bounty_menu_<size>.png: the Fallen Star Market bounty board with the longest hunt label any realm sees (the hunt's description is shown for the focused entry).
+## WU-297: `--hint-shot` also writes hint_npc_badge_<size>.png (first hint is a Qingshi NPC's pointers line, the NPC-only kind; the gold "!" sits before it).
 ## WU-289: `--hint-shot` also writes hint_road_marker_/hint_road_menu_/hint_badge_<size>.png (road-out "!", route line "The hint points this way.", clinic badge).
 ## WU-288: `--hint-shot` also writes hint_best_mission_[journal_]<size>.png ("The best pays N contribution: <mission> (<days>)" on the sect line).
 ## WU-271: `--hint-shot` also writes hint_trial_[journal_]<size>.png (open sect trial odds, Fights you can win) and hint_sell_armor_[journal_]<size>.png ("Sell your ..." armor line).
@@ -1620,6 +1621,35 @@ func _start_hint_shot(gs: Node) -> void:
 		await root.get_tree().process_frame
 		hud.get("_banner").visible = false
 		print("hint-shot badge: ", hint_text.call()), "close": func() -> void: pass})
+
+	shots.append({"name": "hint_npc_badge_" + size_tag, "open": func() -> void:
+		setup_road.call()
+		c.realm_index = 1
+		c.stage = 0
+		c.inventory = {}
+		c.sect = {}
+		c.realm_index = 2
+		c.equipment["armor"] = "boar_hide_jerkin"
+		c.professions.clear()
+		c.known_recipes.clear()
+		for region_id: String in gs.data.regions:
+			Exploration.visit(c, region_id)
+		c.techniques = {"iron_fist": {"level": Techniques.PRACTICE_LEVEL + 3, "xp": 0.0}, "stone_skin": {"level": Techniques.PRACTICE_LEVEL + 3, "xp": 0.0}}
+		for deed: Dictionary in gs.data.deeds.values():
+			if String(deed["id"]).begins_with("chore_") and String(deed.get("blocked_by_flag", "")) != "":
+				gs.world_flags[String(deed["blocked_by_flag"])] = true
+		# The spar line sits below the qi, breakthrough and sect hints, so it is never first for a character that can
+		# also meditate; the pointers line (also NPC-only) is, so this case shows that one. Elder Mo is in Qingshi.
+		for npc: CharacterData in Npcs.in_region(gs.npcs, gs.data, "qingshi_village"):
+			gs.npc_favor[npc.id] = 100
+		root.get_node("EventBus").player_changed.emit()
+		await root.get_tree().process_frame
+		await root.get_tree().process_frame
+		hud.get("_banner").visible = false
+		var first: String = hud.call("first_hint")
+		print("hint-shot npc badge: ", first)
+		assert(first.contains("here could point out flaws"), "first hint is not the NPC pointers line: " + first)
+		assert((hud.get("_hint_badge") as Label).visible, "no gold badge on the NPC hint"), "close": func() -> void: pass})
 
 
 ## WU-190: the encounter window on real encounters with attribute, profession and enemy choices.

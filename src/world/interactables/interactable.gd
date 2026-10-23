@@ -129,16 +129,22 @@ func label_rect(text: String = "") -> Rect2:
 
 
 ## The names in `names` that appear in `hint`, longest first; a name inside an already-counted longer one
-## (e.g. "Clinic" within "Village Clinic") is not counted again (WU-280).
+## (e.g. "Clinic" within "Village Clinic") is not counted again (WU-280). An NPC label "Name (Title)" also
+## matches a hint that writes "Name (Realm)" (WU-297: hints name people by realm, labels by title).
 static func hinted_names(hint: String, names: Array) -> Array:
 	var sorted := names.duplicate()
 	sorted.sort_custom(func(a: String, b: String) -> bool: return a.length() > b.length())
 	var found: Array = []
 	var rest := hint
 	for n: String in sorted:
-		if n != "" and not found.has(n) and rest.contains(n):
+		if n == "" or found.has(n):
+			continue
+		var key := n
+		if not rest.contains(key) and n.contains(" ("):
+			key = n.get_slice(" (", 0) + " ("
+		if rest.contains(key):
 			found.append(n)
-			rest = rest.replace(n, "")
+			rest = rest.replace(key, "")
 	return found
 
 
