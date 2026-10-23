@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-23 [QA-153] The sim checks that the fight odds shown to the player match how fights actually go.
 - 2026-10-23 [GUIDE-149] When you can't afford the clinic, the injury hint says if selling your loot would cover it.
 - 2026-10-23 [GUIDE-150] The qi-pill hint keeps enough stones for the armor the armor hint names.
 - 2026-10-23 [GUIDE-148] Hints no longer suggest a fight to the death you are likely to lose (Even or better; Weak or better at one life left).
