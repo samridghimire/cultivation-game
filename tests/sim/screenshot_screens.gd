@@ -101,6 +101,7 @@ extends SceneTree
 ## WU-297: `--hint-shot` also writes hint_npc_badge_<size>.png (first hint is a Qingshi NPC's pointers line, the NPC-only kind; the gold "!" sits before it).
 ## WU-289: `--hint-shot` also writes hint_road_marker_/hint_road_menu_/hint_badge_<size>.png (road-out "!", route line "The hint points this way.", clinic badge).
 ## WU-288: `--hint-shot` also writes hint_best_mission_[journal_]<size>.png ("The best pays N contribution: <mission> (<days>)" on the sect line).
+## WU-323: `--hint-shot` also writes hint_far_qi_<size>.png (rogue, Foundation Early, no qi: "Travel to Azure Peak ..." leads; asserts the capped line, the hinted region and the road marker).
 ## WU-271: `--hint-shot` also writes hint_trial_[journal_]<size>.png (open sect trial odds, Fights you can win) and hint_sell_armor_[journal_]<size>.png ("Sell your ..." armor line).
 ## WU-258: `--hint-shot` also writes hint_armor_far_[journal_]<size>.png and hint_empty_fights_journal_<size>.png.
 ## WU-268: `--hint-shot` also writes hint_long_[journal_]<size>.png (Azure Cloud outer disciple, Qi Refining 1st layer, Iron Fist 1: practice days, far qi, stipend).
@@ -1810,6 +1811,33 @@ func _start_hint_shot(gs: Node) -> void:
 		print("hint-shot npc badge: ", first)
 		assert(first.contains("here could point out flaws"), "first hint is not the NPC pointers line: " + first)
 		assert((hud.get("_hint_badge") as Label).visible, "no gold badge on the NPC hint"), "close": func() -> void: pass})
+
+	# WU-323: a rogue at Foundation Early with no qi in Qingshi gets "Travel to Azure Peak ..."; the capped HUD line keeps
+	# the trip, the road marker (WU-283) and the map note (WU-316) point at Azure Peak.
+	shots.append({"name": "hint_far_qi_" + size_tag, "open": func() -> void:
+		setup_road.call()
+		c.realm_index = gs.data.realm_index_of("foundation_establishment")
+		c.stage = 0
+		c.qi = 0.0
+		c.sect = {}
+		c.inventory = {}
+		c.equipment["armor"] = "boar_hide_jerkin"  # no thin-defence line ahead of the qi line
+		c.techniques = {"stone_skin": {"level": 99, "xp": 0.0}, "iron_fist": {"level": 99, "xp": 0.0}}  # mastered: no pointers or style lines ahead of the qi line
+		c.attributes["comprehension"] = 1  # a slow cultivator, so the far spot saves over a month (FAR_QI_LEAD_DAYS)
+		c.injuries.clear()
+		for region_id: String in gs.data.regions:
+			Exploration.visit(c, region_id)
+		root.get_node("EventBus").player_changed.emit()
+		await root.get_tree().process_frame
+		await root.get_tree().process_frame
+		hud.get("_banner").visible = false
+		var first: String = hud.call("first_hint")
+		print("hint-shot far qi: ", first)
+		assert(first.contains("Travel to Azure Peak"), "first hint is not the Travel line: " + first)
+		assert(String(hud.call("cap_hint", first)).contains("Travel to Azure Peak"), "capped line lost the trip: " + String(hud.call("cap_hint", first)))
+		assert(Guidance.hinted_region(gs.data, first, "qingshi_village") == "azure_peak", "hinted region (the map mark and note) is not Azure Peak")
+		var tp: Node = travel_node.call()
+		assert(tp != null and String(tp.get("hint_region")) == "azure_peak", "road marker does not point at Azure Peak"), "close": func() -> void: pass})
 
 
 ## WU-190: the encounter window on real encounters with attribute, profession and enemy choices.
