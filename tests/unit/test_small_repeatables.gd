@@ -54,3 +54,16 @@ func test_youths_sent_to_sect_hall_still_pay_a_member() -> void:
 	var gs := _send_youths_to_sect_hall({"id": "azure_cloud_sect", "rank": 0, "contribution": 0, "spent": 0})
 	assert_eq(int(gs.player.sect["contribution"]), 10)
 	gs.end_session()
+
+
+func test_foundation_village_pool_has_six_one_shots_and_repeatables() -> void:
+	var ids: Array[String] = []
+	for e: Dictionary in data().encounters.values():
+		if not ("village" in e.get("tags", [])) or String(e.get("min_realm", "")) != "foundation_establishment":
+			continue
+		ids.append(String(e["id"]))
+	assert_gt(ids.size(), 5, "Foundation village pool: %s" % str(ids))
+	for id in ["village_name_the_newborn", "village_rogue_begs_pointers", "village_well_vein_stirs"]:
+		assert_true(ids.has(id), id)
+		assert_false(data().encounters[id].get("repeatable", false), "%s is a one-shot" % id)
+	assert_eq(String(data().encounters["village_beggar_child"].get("max_realm", "")), "qi_refining")
