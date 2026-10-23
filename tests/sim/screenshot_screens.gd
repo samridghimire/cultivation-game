@@ -93,6 +93,8 @@ extends SceneTree
 ## WU-246: `-- --first-hour` also writes fh_<workshop|shop|journal_first_goals|journal_next_steps|journal_commissions|board>_<day1|month1>_<size>.png.
 ## WU-296: append `-- --inventory-shot` for inventory_qi_worth.png (Spirit Herb selected: "Worth about N of meditation here"); run once per --resolution.
 ## WU-273: append `-- --techniques-shot` for techniques_practice[_scale115].png (Iron Fist level 1 details, practice button focused); run once per --resolution. Checked at 1280x720 and 1280x800: nothing clipped, the action row wraps.
+## WU-302: `--clinic-shot` writes clinic_one_<size>.png / clinic_two_<size>.png: the Village Clinic menu for a Qi Refining 3rd-layer
+## character with Internal Injury, then with a second injury (Qi Deviation); the "Pay the doctor ... saves about" lines must fit or wrap unclipped.
 ## WU-295: `--bounty-shot` writes bounty_menu_<size>.png: the Fallen Star Market bounty board with the longest hunt label any realm sees (the hunt's description is shown for the focused entry).
 ## WU-297: `--hint-shot` also writes hint_npc_badge_<size>.png (first hint is a Qingshi NPC's pointers line, the NPC-only kind; the gold "!" sits before it).
 ## WU-289: `--hint-shot` also writes hint_road_marker_/hint_road_menu_/hint_badge_<size>.png (road-out "!", route line "The hint points this way.", clinic badge).
@@ -192,6 +194,9 @@ func _start() -> void:
 		return
 	if OS.get_cmdline_user_args().has("--bounty-shot"):
 		_start_bounty_shot(gs)
+		return
+	if OS.get_cmdline_user_args().has("--clinic-shot"):
+		_start_clinic_shot(gs)
 		return
 	if OS.get_cmdline_user_args().has("--map-shot"):
 		_start_map_shot(gs)
@@ -1187,6 +1192,40 @@ func _start_map_shot(gs: Node) -> void:
 	shots.append({"name": "map_sells", "open": func() -> void:
 		gs.current_region = "fallen_star_market"
 		map.open(), "close": map.close})
+
+
+func _start_clinic_shot(gs: Node) -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 5
+	var c := CharacterFactory.create("Lin Feng", gs.data, rng, "male")
+	gs.start_session(c)
+	gs.pending_event = ""
+	gs.current_region = "qingshi_village"
+	c.realm_index = 1
+	c.stage = 3
+	c.add_item("spirit_stone", 300)
+	c.injuries = {"internal_injury": 120}
+	world = load("res://src/world/world.tscn").instantiate()
+	root.add_child(world)
+	hud = world.get_node("HUD")
+	hud.get("_banner").visible = false
+	var clinic: Node = load("res://src/world/interactables/clinic.gd").new()
+	clinic.display_name = "Village Clinic"
+	var size_tag := "%dx%d" % [root.size.x, root.size.y]
+	for case_name: String in ["one", "two"]:
+		shots.append({"name": "clinic_%s_%s" % [case_name, size_tag], "open": func() -> void:
+			c.injuries = {"internal_injury": 120}
+			if case_name == "two":
+				c.injuries["qi_deviation"] = 180
+			hud.get("_choice_menu").open_for(clinic)
+			await root.get_tree().process_frame
+			await root.get_tree().process_frame
+			var menu: Control = hud.get("_choice_menu")
+			var vp := root.get_visible_rect()
+			print("clinic-shot ", case_name, ": menu ", menu.get_global_rect(), " viewport ", vp, " inside ", vp.encloses(menu.get_global_rect()))
+			for b: Node in menu.get("_buttons").get_children():
+				var bb := b as Button
+				print("  ", bb.size, " ", bb.text), "close": func() -> void: hud.get("_choice_menu").close()})
 
 
 func _start_bounty_shot(gs: Node) -> void:
