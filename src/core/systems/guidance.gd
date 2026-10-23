@@ -1276,6 +1276,12 @@ static func qi_pill_offer(c: CharacterData, data: GameData, region_id: String, f
 	return best
 
 
+## GUIDE-131: the qi `count` of `item_id` can add before the realm's bottleneck stops qi.
+static func usable_qi(c: CharacterData, data: GameData, item_id: String, count: int = 1) -> float:
+	var qi := float(data.items.get(item_id, {}).get("effects", {}).get("qi", 0.0))
+	return minf(qi * count, Cultivation.qi_to_bottleneck(c, data))
+
+
 ## Shop price of the next realm's breakthrough pill, 0 when there is none.
 static func next_realm_pill_price(c: CharacterData, data: GameData) -> int:
 	return int(next_realm_pill(c, data).get("price", 0))
@@ -2073,7 +2079,10 @@ static func _newcomer_hints(c: CharacterData, data: GameData, flags: Dictionary,
 			# Never steer a newcomer toward pills that burn lifespan or taint the heart.
 			if c.item_count(item_id) > 0 and Items.feeds_cultivation(data, item_id) and not _ready_mission_wants(c, data, item_id, flags):
 				var count := c.item_count(item_id)
-				var qi := float(fx["qi"]) * count
+				# GUIDE-131: qi past the bottleneck is lost; never steer a player to waste a pill.
+				if float(fx["qi"]) > 2.0 * Cultivation.qi_to_bottleneck(c, data):
+					continue
+				var qi := usable_qi(c, data, item_id, count)
 				var rate := Cultivation.qi_per_day(c, data, float(best_qi_in_region(c, data, region_id, flags)["density"]))
 				if rate <= 0.0:
 					out.append("Use your %s (Inventory, I) to gather qi at once." % item["name"])

@@ -343,6 +343,7 @@ func test_newcomer_herb_hint_says_what_it_is_worth() -> void:
 func test_newcomer_herb_hint_plural_follows_item_plural() -> void:
 	var d := data()
 	var c := _fresh()
+	c.realm_index = 1  # a mortal has too little room for a 2500 qi lotus (GUIDE-131)
 	c.inventory = {"hundred_year_snow_lotus": 2}
 	var hints := Guidance.hints(c, d, 1.0, 10, {}, {Guidance.ELDER_MO_FLAG: true}, "qingshi_village")
 	assert_true(_has(hints, "Use your 2 %s (Inventory, I)" % Items.item_plural(d, "hundred_year_snow_lotus", 2)))
@@ -3993,3 +3994,23 @@ func test_qi_pill_offer_skips_pills_bigger_than_the_room() -> void:
 	var offer := Guidance.qi_pill_offer(c, d, "qingshi_village")
 	if not offer.is_empty():
 		assert_true(float(d.items[offer["item_id"]]["effects"]["qi"]) <= Cultivation.qi_to_bottleneck(c, d))
+
+
+func test_use_hint_skips_a_pill_that_would_be_wasted() -> void:
+	var d := data()
+	var c := _qr(2, 0)
+	c.stage = d.realms[1].stage_count() - 1
+	c.qi = d.realms[1].qi_required(c.stage) - 50.0
+	c.add_item("bog_lily_qi_pill", 1)
+	assert_true(Cultivation.qi_to_bottleneck(c, d) < 7000.0 / 2.0)
+	assert_false(_has(_buy_hints(c), "Use your Bog Lily"))
+
+
+func test_use_hint_counts_only_usable_qi() -> void:
+	var d := data()
+	var c := _qr(2, 0)
+	c.stage = d.realms[1].stage_count() - 1
+	c.qi = d.realms[1].qi_required(c.stage) - 200.0
+	c.add_item("qi_gathering_pill", 3)
+	assert_eq(Guidance.usable_qi(c, d, "qi_gathering_pill", 3), 200.0)
+	assert_true(_has(_buy_hints(c), "200 qi"))
