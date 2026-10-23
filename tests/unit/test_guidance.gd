@@ -4058,7 +4058,10 @@ func test_qi_pill_offer_keeps_stones_while_the_sect_pill_is_short() -> void:
 	var offer := Guidance.qi_pill_offer(short, d, "qingshi_village")
 	assert_true(offer.is_empty() or int(offer["count"]) * int(offer["price"]) <= stones - keep)
 	offer = Guidance.qi_pill_offer(ready, d, "qingshi_village")
-	assert_true(offer.is_empty() or int(offer["count"]) * int(offer["price"]) <= stones - Guidance.QI_BUY_KEEP)
+	assert_false(offer.is_empty(), "a claimable sect pill frees the stone reserve")
+	var spend := int(offer["count"]) * int(offer["price"])
+	assert_true(spend <= stones - Guidance.QI_BUY_KEEP)
+	assert_gt(spend, stones - keep, "the offer spends stones the short case keeps")
 
 
 func test_qi_pill_hint_yields_to_a_held_pill() -> void:

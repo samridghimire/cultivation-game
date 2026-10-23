@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: e46c09d
+Last reviewed commit: ec4ffab
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -1033,3 +1033,14 @@ Last reviewed commit: e46c09d
     contribution ("you have N"), so the qi-pill hint may spend stones the player could have used on the pill.
     QA-148's follow-up is an owner balance question: contribution qi pills put 10/10 seeds past QR9 by month 12 (base
     2/10), so GUIDE-135 should not hint bulk contribution qi pills until F-005d is settled.
+- 2026-10-23 (reviewer): reviewed e46c09d..ec4ffab (WU-325, WU-328, EFF-001, WU-326, PERF-004, C-224, GUIDE-137, QA-145,
+  WU-309, WU-330, QA-149, C-227, C-225, C-228, WU-329; [PLAN]/[REVIEW] skipped). Main green before and after. No
+  BACKLOG/CHANGELOG edits by workers; no save-format changes; no logic outside src/core.
+  - EFF-001: `contribution` effect goes through Sects.add_contribution (month_earned, auto-promote), validated 1..500,
+    documented in encounters.json _doc; rogues get nothing. GUIDE-137 resolves last run's GUIDE-132 note (reserve kept
+    while the claim is short). WU-328/WU-330 reuse Guidance.sect_pill_claim/sect_pill_entry, no duplicated rules; the
+    treasury opens focused on the pill button. WU-325 moves keep NPCs clear of place rects. C-228 foe is non-lethal.
+  - Fixed: PERF-004's FirstHour.play_cached memo key lacked QA-145's new `far_qi` sim flag (a far-qi run could be
+    served a cached normal run); added it and noted that every sim flag belongs in the key. Tightened GUIDE-137's test,
+    which passed vacuously when an offer was empty: it now asserts the claimable case offers more than the short case keeps.
+  - Nothing filed.
