@@ -100,6 +100,7 @@ extends SceneTree
 ## WU-302: `--clinic-shot` writes clinic_one_<size>.png / clinic_two_<size>.png: the Village Clinic menu for a Qi Refining 3rd-layer
 ## character with Internal Injury, then with a second injury (Qi Deviation); the "Pay the doctor ... saves about" lines must fit or wrap unclipped.
 ## WU-295: `--bounty-shot` writes bounty_menu_<size>.png: the Fallen Star Market bounty board with the longest hunt label any realm sees (the hunt's description is shown for the focused entry).
+## WU-353: `--hint-shot` also writes hint_practice_target_<size>.png (Inner Disciple, Foundation Peak, Iron Fist 2: trial advice says "to level N (now 2)").
 ## WU-351: `--hint-shot` also writes hud_contribution_<size>.png (Azure Cloud Inner Disciple, 7773 contribution, 1296 stones).
 ## WU-350: `--hint-shot` also writes hint_abode_<size>.png (rogue, Qi Refining 5, 400 stones, no abode: journal Next steps names the Waterfall Cave and 300; the capped HUD line keeps the cave's name).
 ## WU-349: `--hint-shot` also writes hint_heal_treasury_<size>.png (Azure Cloud outer disciple, qi deviation, 5 stones, 300 contribution: HUD line names the Meridian Mending Pill from "your sect treasury", never the Village Clinic).
@@ -2294,6 +2295,49 @@ func _start_hint_shot(gs: Node) -> void:
 			c.techniques = peak_saved[3]
 			c.equipment = peak_saved[4]
 			c.inventory = peak_saved[5]})
+
+	# WU-353: GUIDE-162's practice target. An Azure Cloud Inner Disciple at Foundation Peak with Iron Fist at level 2,
+	# Stone Skin Tempering learned and armor worn, at the recruitment hall: the trial advice names the level to reach.
+	var prac_saved: Array = []
+	shots.append({"name": "hint_practice_target_" + size_tag, "open": func() -> void:
+		setup_long.call()
+		prac_saved.append_array([c.realm_index, c.stage, c.sect.duplicate(), c.techniques.duplicate(true), c.equipment.duplicate(), c.inventory.duplicate(), c.mission_cooldowns.duplicate()])
+		c.realm_index = 2
+		c.stage = gs.data.realms[2].stage_count() - 1
+		c.qi = 0.0
+		c.sect = {"id": "azure_cloud_sect", "rank": 1, "contribution": 3500, "spent": 0}
+		c.techniques = {"iron_fist": {"level": 2, "xp": 0.0}, "stone_skin": {"level": 1, "xp": 0.0}}
+		c.equipment = {"armor": "boar_hide_jerkin"}
+		c.inventory = {}
+		c.mission_cooldowns = {}
+		gs.current_region = "qingshi_village"
+		root.get_node("EventBus").player_changed.emit()
+		await root.get_tree().process_frame
+		await root.get_tree().process_frame
+		hud.get("_banner").visible = false
+		var target: int = Techniques.typical_level(gs.data, c.realm_index, "iron_fist")
+		var want := "to level %d (now 2)" % target
+		var trial: String = Guidance._sect_hint(c, gs.data, "qingshi_village")
+		assert(trial.contains(want), "trial line lacks '" + want + "':\n" + trial)
+		print("hint-shot practice target: ", trial)
+		# The 120-char HUD cap cuts the advice off after the odds clause (follow-up: shorten the trial line); the opening stays.
+		var capped: String = hud.call("cap_hint", trial)
+		assert(capped.begins_with("The trial for Core Disciple is open"), "capped line lost its opening: " + capped)
+		var prac_journal: Control = hud.get("_screens")["toggle_journal"]
+		await _show_journal(prac_journal, "Next steps")
+		for _i in 3:
+			await root.get_tree().process_frame
+		var parsed: String = (prac_journal.get("_text") as RichTextLabel).get_parsed_text()
+		assert(parsed.contains(want), "journal Next steps lacks '" + want + "':\n" + parsed), "close": func() -> void:
+			(hud.get("_screens")["toggle_journal"] as Control).close()
+			c.realm_index = prac_saved[0]
+			c.stage = prac_saved[1]
+			c.sect = prac_saved[2]
+			c.techniques = prac_saved[3]
+			c.equipment = prac_saved[4]
+			c.inventory = prac_saved[5]
+			c.mission_cooldowns = prac_saved[6]
+			prac_saved.clear()})
 
 
 ## WU-190: the encounter window on real encounters with attribute, profession and enemy choices.
