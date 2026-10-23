@@ -236,6 +236,8 @@ func _run() -> void:
 	FirstHour.far_qi = args.has("--far-qi")  # QA-145
 	FirstHour.recharge_first = args.has("--recharge")  # QA-152
 	FirstHour.hint_missions = args.has("--hint-missions")
+	FirstHour.sect_method = curious and args.has("--sect-method")  # QA-156
+	FirstHour.sect_method_log = {"day": [], "tech": []}
 	FirstHour.far_qi_log = {"moved": 0, "month": [], "road_days": []}
 	FirstHour.spar_hint = curious and not args.has("--no-spar-hint")  # QA-138
 	FirstHour.spar_log = {"bouts": 0, "refused": []}
@@ -252,7 +254,7 @@ func _run() -> void:
 			only_seed = int(a.substr(7))
 		elif a.begins_with("--qi-pill-cap="):
 			FirstHour.qi_pill_cap = int(a.substr(14))  # QA-150
-		elif a != "--curious" and a != "--trace" and a != "--zero" and a != "--forced" and a != "--no-trial" and a != "--no-heal" and a != "--no-spar-hint" and a != "--blind-missions" and a != "--one-mission" and a != "--long-hints" and a != "--buy-qi" and a != "--spend-contribution" and a != "--no-armor" and a != "--far-qi" and a != "--injury-origins" and a != "--odds-bands" and a != "--deaths" and a != "--recharge" and a != "--hint-missions" and a != "--rating-check":
+		elif a != "--curious" and a != "--trace" and a != "--zero" and a != "--forced" and a != "--no-trial" and a != "--no-heal" and a != "--no-spar-hint" and a != "--blind-missions" and a != "--one-mission" and a != "--long-hints" and a != "--buy-qi" and a != "--spend-contribution" and a != "--no-armor" and a != "--far-qi" and a != "--injury-origins" and a != "--odds-bands" and a != "--deaths" and a != "--recharge" and a != "--hint-missions" and a != "--sect-method" and a != "--rating-check":
 			nums.append(int(a))
 	var seeds := nums[0] if nums.size() > 0 else 30
 	var months := nums[1] if nums.size() > 1 else 12
@@ -538,6 +540,8 @@ func _run() -> void:
 	if FirstHour.spend_contribution:
 		var cl: Dictionary = FirstHour.contribution_log
 		print("Contribution spent (QA-148): pill %d seeds (median day %.0f), body art %d contribution, qi pills %d for %d contribution, used %d, qi %d" % [cl["pill_days"].size(), _median(cl["pill_days"]), cl["body"], cl["qi_items"], cl["qi_cost"], cl["qi_used"], cl["qi"]])
+	if FirstHour.sect_method:
+		print("Sect method (QA-156): claimed in %d/%d seeds, days %s, techniques %s" % [FirstHour.sect_method_log["day"].size(), seeds, str(FirstHour.sect_method_log["day"]), str(FirstHour.sect_method_log["tech"])])
 	if FirstHour.far_qi:
 		var fl: Dictionary = FirstHour.far_qi_log
 		print("Far qi (QA-145): moved in %d/%d seeds, median month %.0f, days on the road %.0f" % [fl["moved"], seeds, _median(fl["month"]), _median(fl["road_days"])])

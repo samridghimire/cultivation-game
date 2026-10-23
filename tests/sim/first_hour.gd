@@ -65,6 +65,11 @@ const TRIAL_MIN_ODDS := 0.7
 ## QA-145: once a month, before meditating, move to the faster spot Guidance.far_qi_offer names when it saves >= 30 days
 ## net of the round trip, and stay there (the new region is home from then on).
 static var far_qi := false
+## QA-156: once a month a sect member buys the treasury's best qi-gathering method manual with contribution (keeping the
+## Foundation pill's claim while it is still to claim), learns it and makes it the main method. sect_method_log["month"]
+## holds the day of each purchase (one per seed that made one), ["tech"] the technique ids.
+static var sect_method := false
+static var sect_method_log := {"day": [], "tech": []}
 ## QA-152: before any purchase, recharge the artifact when lives <= Guidance.LOW_ARTIFACT_LIVES and the stones cover it.
 static var recharge_first := false
 ## QA-152: take only what Guidance.best_mission names (no odds rule of our own).
@@ -80,7 +85,7 @@ static var _memo := {}
 
 
 static func play_cached(gs: Node, clock: Node, seed_value: int, months: int, curious: bool = false, no_help: bool = false, wait_for_pill: int = 0) -> Dictionary:
-	var key := [seed_value, months, curious, no_help, wait_for_pill, follow_defence, practise_hint, attempt_trials, heal_injuries, spar_hint, min_mission_odds, chase_best_mission, buy_qi, shop_armor, spend_contribution, qi_pill_cap, far_qi, recharge_first, hint_missions]
+	var key := [seed_value, months, curious, no_help, wait_for_pill, follow_defence, practise_hint, attempt_trials, heal_injuries, spar_hint, min_mission_odds, chase_best_mission, buy_qi, shop_armor, spend_contribution, qi_pill_cap, far_qi, recharge_first, hint_missions, sect_method]
 	if not _memo.has(key):
 		_memo[key] = play(gs, clock, seed_value, months, curious, Callable(), no_help, wait_for_pill)
 		gs.end_session()
@@ -99,7 +104,7 @@ static func play(gs: Node, clock: Node, seed_value: int, months: int, curious: b
 	gs.pending_event = ""
 	var bus: Node = gs.get_node("/root/EventBus")
 	bus.clear_history()
-	var out := {"layer_day": {}, "sect_day": -1, "rank_day": -1, "month_lines": [], "injuries": 0, "player": c, "kinds": [], "kind_sets": [], "stones": [], "realms": [], "first_win_day": -1, "first_style_day": -1, "first_win_enemy": "", "breaks": [], "bottleneck_day": {}, "waited_days": 0, "road": [], "contribution": [], "bottleneck_stones": -1}
+	var out := {"layer_day": {}, "sect_day": -1, "rank_day": -1, "month_lines": [], "injuries": 0, "player": c, "kinds": [], "kind_sets": [], "stones": [], "realms": [], "first_win_day": -1, "first_style_day": -1, "first_win_enemy": "", "breaks": [], "bottleneck_day": {}, "waited_days": 0, "road": [], "contribution": [], "bottleneck_stones": -1, "month_days": []}
 	bounty_log["seen"] = {}
 	far_qi_day = -1
 	var done := {"no_help": no_help}
@@ -197,6 +202,7 @@ static func play(gs: Node, clock: Node, seed_value: int, months: int, curious: b
 			with_break["breakthrough"] = true
 		out["kind_sets"].append(with_break)
 		out["stones"].append(c.item_count("spirit_stone"))
+		out["month_days"].append(clock.total_days)
 		out["realms"].append(Cultivation.realm_label(c, gs.data))
 		if month_hook.is_valid():
 			month_hook.call(month)
@@ -373,6 +379,8 @@ static func _curious_month(gs: Node, c: CharacterData, done: Dictionary, today: 
 		_buy_qi_pills(gs, c)
 	if spend_contribution and not c.is_rogue():
 		_spend_contribution(gs, c)
+	if sect_method and not c.is_rogue():
+		_buy_sect_method(gs, c)
 	if shop_armor:
 		_shop_for_armor(gs, c)
 	var region: Dictionary = gs.data.regions.get(gs.current_region, {})
@@ -712,6 +720,39 @@ static func _spend_contribution(gs: Node, c: CharacterData) -> void:
 		if c.item_count(best_id) <= had:
 			log["qi_used"] += 1
 			log["qi"] += maxi(0, c.qi - qi_before)
+
+
+## QA-156: see sect_method.
+static func _buy_sect_method(gs: Node, c: CharacterData) -> void:
+	var data: GameData = gs.data
+	var reserve := 0
+	var pill := Guidance.next_realm_pill(c, data)
+	if not pill.is_empty() and c.realm_index == 1 and c.breakthrough_pill == "" and Guidance.breakthrough_items(c, data).is_empty():
+		reserve = int(Sects.shop_entry(c, data, String(pill["id"])).get("contribution", 0))
+	var current := Techniques.method_rate_of(c, data, Techniques.main_method(c, data))
+	var best_item := ""
+	var best_tech := ""
+	var best_rate := current
+	for entry: Dictionary in Sects.shop_items(c, data):
+		var item_id := String(entry["item_id"])
+		var tech_id := Items.manual_technique(data, item_id)
+		if tech_id == "" or not data.techniques[tech_id].is_method() or Techniques.knows(c, tech_id):
+			continue
+		var rate := Techniques.method_rate_of(c, data, tech_id)
+		if rate <= best_rate or Sects.check_purchase(c, data, item_id) != "" or Sects.contribution_balance(c) - int(entry["contribution"]) < reserve:
+			continue
+		best_rate = rate
+		best_item = item_id
+		best_tech = tech_id
+	if best_item == "":
+		return
+	gs.buy_with_contribution(best_item)
+	gs.use_item(best_item)
+	if not Techniques.knows(c, best_tech):
+		return
+	gs.set_main_method(best_tech)
+	sect_method_log["day"].append(gs.get_node("/root/GameClock").total_days)
+	sect_method_log["tech"].append(best_tech)
 
 
 ## QA-075: once a month, does the open chore fight "Fights you can win" lists at >= 0.7 (the list only covers the

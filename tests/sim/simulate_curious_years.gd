@@ -104,6 +104,8 @@ func _run() -> void:
 			_wait_for_pill = int(a.get_slice("=", 1))
 		elif a == "--far-qi":
 			FirstHour.far_qi = true  # QA-151
+		elif a == "--sect-method":
+			FirstHour.sect_method = true  # QA-156
 		elif a == "--defence":
 			FirstHour.follow_defence = true
 		elif a.begins_with("--trace="):
@@ -136,6 +138,7 @@ func _run() -> void:
 	bus.combat_started.connect(_on_combat_started)
 	bus.player_respawned.connect(func(_a: String, _l: int) -> void: _record_death(String(gs.pending_respawn.get("cause", "?")), false))
 	bus.player_died.connect(func(cause: String) -> void: _record_death(cause, true))
+	FirstHour.sect_method_log = {"day": [], "tech": []}
 	print("Curious player, %d seeds, %d months" % [seeds, months])
 	print("  seed  block  kinds  new  stones  realm")
 	for s in range(1, seeds + 1):
@@ -223,6 +226,9 @@ func _run() -> void:
 	_print_fe_gap()
 	if FirstHour.follow_defence:
 		_print_defence_log(seeds)
+	_print_pacing_summary(runs, months)
+	if FirstHour.sect_method:
+		print("Sect method (QA-156): claimed in %d/%d seeds, days %s, techniques %s" % [FirstHour.sect_method_log["day"].size(), seeds, str(FirstHour.sect_method_log["day"]), str(FirstHour.sect_method_log["tech"])])
 	quit(1 if early * 10 > maxi(seeds, 10) else 0)
 
 
@@ -261,6 +267,35 @@ func _print_foundation_breakthrough(runs: Array[Dictionary]) -> void:
 			if success_day >= 0:
 				stuck.append(success_day - bday)
 	print("  medians: days stuck at the bottleneck %.0f (%d seeds that succeeded), attempts %.0f, share of attempts with a pill %d%% (%d of %d), attempts under 50%%: %d of %d" % [_median(stuck.duplicate()), stuck.size(), _median(attempt_counts.duplicate()), 100 * with_pill / maxi(1, total), with_pill, total, below_half, total])
+
+
+## QA-156: QR9 (the Foundation bottleneck) and Foundation days, seeds at Foundation by m12/m24/m36, injuries and lives spent.
+func _print_pacing_summary(runs: Array[Dictionary], months: int) -> void:
+	var qr9: Array = []
+	var found: Array = []
+	var lives := 0
+	var injuries := 0
+	for r: Dictionary in runs:
+		injuries += int(r.get("injuries", 0))
+		if r["bottleneck_day"].has(1):
+			qr9.append(int(r["bottleneck_day"][1]))
+		for a: Dictionary in r["breaks"]:
+			if int(a["from_realm"]) == 1 and a["success"]:
+				found.append(int(a["day"]))
+				break
+		lives += int(r.get("recharges", 0))
+	var by := []
+	for m in [12, 24, 36]:
+		if m <= months:
+			var n := 0
+			for r: Dictionary in runs:
+				var md: Array = r["month_days"]
+				for a: Dictionary in r["breaks"]:
+					if int(a["from_realm"]) == 1 and a["success"] and md.size() >= m and int(a["day"]) <= int(md[m - 1]):
+						n += 1
+						break
+			by.append("m%d %d/%d" % [m, n, runs.size()])
+	print("Pacing (QA-156): QR9 median day %.0f (%d seeds), Foundation median day %.0f (%d seeds); Foundation by %s; artifact lives bought %d, injuries at the end %d" % [_median(qr9.duplicate()), qr9.size(), _median(found.duplicate()), found.size(), ", ".join(by), lives, injuries])
 
 
 ## QA-091: per foe over all seeds: fights, wins, real win %, mean rated %, deaths, how fights started.

@@ -324,11 +324,11 @@ Foundation entry gap (QA-114): curious player right after the breakthrough vs th
   seed  1 at entry stage 0: hp 450 atk 241 def 54 spd 10 | techniques iron_fist L7 | gear none | rated 0% / 2% / 2%
   seed  1 +60 days stage 0: hp 450 atk 241 def 54 spd 10 | techniques iron_fist L7 | gear none | rated 0% / 2% / 2%
     HUD hints for seed 1 at that moment:
-      - Your sect duty is 3 / 30 contribution with 7 days left this month.
+      - Your sect duty is 3 / 30 contribution with 7 days left this month. Drive Off the Den Wolves (45 contribution, 4 days) covers it.
       - Your defence is thin. Claim Manual: Stone Skin Tempering from your sect treasury (45 contribution, you have 4462). The Heavenforge Smithy in Fallen Star Market (10 days) sells Profound Iron Lamellar for 900 stones. Foundation foes hit hard.
       - The Wandering Merchant here would pay about 418 spirit stones for your ore and beast materials.
       - Spirit Herb grows at Village Herb Slope: gather it to refine Qi Gathering Pill (it sells for more than the ingredients cost).
-      - Travel to Azure Peak (10 days): Cloud-Sea Cliff gathers the next stage in about 5 months, 21 days, against 1 year, 2 months, 8 days at Spirit Spring here.
+      - Travel to Azure Peak (10 days): Cloud-Sea Cliff gathers the next stage in about 5 months and 21 days, against 1 year, 2 months and 8 days at Spirit Spring here.
       - The trial for Core Disciple is open at the Sect Recruitment Hall here: you face the Sword Pavilion Warden (Deadly, 0 in 100). A loss only injures you; learn a body technique such as Stone Skin Tempering and wear armor first: Manual: Stone Skin Tempering (your sect treasury, 45 contribution). The rank pays 20 stones and a Qi Gathering Pill a month.
       - The best pays 80 contribution: Cull the Mist Wolves (5 days), one of 4 missions ready at the Sect Recruitment Hall here.
       - Your sect's elder lectures this month; attend at the sect hall.
@@ -376,6 +376,7 @@ Foundation entry gap (QA-114): curious player right after the breakthrough vs th
     seed 10:   0 |   0 |  55 |   4 |   0 |   0
     median :   0 |   0 |  71 |  10 |   0 |   3
   mean rated odds vs roadside_rogue_cultivator over 10 seeds: curious 0%; with the typical player's techniques 34%, gear 7%, attributes 0%, all three (injuries cleared) 88%
+Pacing (QA-156): QR9 median day 1632 (10 seeds), Foundation median day 1632 (10 seeds); Foundation by m12 1/10, m24 6/10, m36 10/10; artifact lives bought 35, injuries at the end 0
 
 ## pill wait (curious, seeds 1-10, 36 months, wait up to 120 days)
 
@@ -609,11 +610,11 @@ Foundation entry gap (QA-114): curious player right after the breakthrough vs th
   seed  1 at entry stage 0: hp 450 atk 241 def 54 spd 10 | techniques iron_fist L7 | gear none | rated 0% / 2% / 2%
   seed  1 +60 days stage 0: hp 450 atk 241 def 54 spd 10 | techniques iron_fist L7 | gear none | rated 0% / 2% / 2%
     HUD hints for seed 1 at that moment:
-      - Your sect duty is 3 / 30 contribution with 7 days left this month.
+      - Your sect duty is 3 / 30 contribution with 7 days left this month. Drive Off the Den Wolves (45 contribution, 4 days) covers it.
       - Your defence is thin. Claim Manual: Stone Skin Tempering from your sect treasury (45 contribution, you have 4462). The Heavenforge Smithy in Fallen Star Market (10 days) sells Profound Iron Lamellar for 900 stones. Foundation foes hit hard.
       - The Wandering Merchant here would pay about 418 spirit stones for your ore and beast materials.
       - Spirit Herb grows at Village Herb Slope: gather it to refine Qi Gathering Pill (it sells for more than the ingredients cost).
-      - Travel to Azure Peak (10 days): Cloud-Sea Cliff gathers the next stage in about 5 months, 21 days, against 1 year, 2 months, 8 days at Spirit Spring here.
+      - Travel to Azure Peak (10 days): Cloud-Sea Cliff gathers the next stage in about 5 months and 21 days, against 1 year, 2 months and 8 days at Spirit Spring here.
       - The trial for Core Disciple is open at the Sect Recruitment Hall here: you face the Sword Pavilion Warden (Deadly, 0 in 100). A loss only injures you; learn a body technique such as Stone Skin Tempering and wear armor first: Manual: Stone Skin Tempering (your sect treasury, 45 contribution). The rank pays 20 stones and a Qi Gathering Pill a month.
       - The best pays 80 contribution: Cull the Mist Wolves (5 days), one of 4 missions ready at the Sect Recruitment Hall here.
       - Your sect's elder lectures this month; attend at the sect hall.
@@ -661,6 +662,7 @@ Foundation entry gap (QA-114): curious player right after the breakthrough vs th
     seed 10:   0 |   0 |  55 |   4 |   0 |   0
     median :   1 |   1 |  72 |  18 |   0 |   8
   mean rated odds vs roadside_rogue_cultivator over 10 seeds: curious 0%; with the typical player's techniques 38%, gear 7%, attributes 0%, all three (injuries cleared) 88%
+Pacing (QA-156): QR9 median day 1632 (10 seeds), Foundation median day 1632 (10 seeds); Foundation by m12 1/10, m24 6/10, m36 10/10; artifact lives bought 35, injuries at the end 0
 
 ## early inheritances (curious, seeds 1-10, 36 months)
 
