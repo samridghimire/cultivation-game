@@ -2018,7 +2018,7 @@ func _start_hint_shot(gs: Node) -> void:
 		c.stage = 0
 		c.qi = 0.0
 		c.inventory = {}
-		c.mission_cooldowns = {"escort_mortal_villagers": c.age_days + 30}
+		c.mission_cooldowns = {"escort_mortal_villagers": c.age_days + 30, "drive_off_den_wolves": c.age_days + 30}
 		gs.current_region = "qingshi_village"
 		root.get_node("EventBus").player_changed.emit()
 		await root.get_tree().process_frame
