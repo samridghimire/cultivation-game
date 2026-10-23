@@ -4137,6 +4137,24 @@ func test_qi_pill_offer_spends_spare_stones() -> void:
 	assert_true(_has(_buy_hints(_qr(2, 200)), "with spare stones"))
 
 
+## GUIDE-150: the qi-pill hint keeps the price of the armor the armor line names.
+func test_qi_pill_offer_keeps_the_armor_price() -> void:
+	var d := data()
+	var c := _qr(Guidance.ARMOR_HINT_MIN_STAGE, 100)
+	c.techniques["iron_fist"] = {"level": 1, "xp": 0.0}
+	var armor_price := Guidance.armor_hint_price(c, d, "qingshi_village")
+	assert_true(armor_price > 0, "an armor line is showing: " + Guidance.armor_hint(c, d, "qingshi_village"))
+	var offer := Guidance.qi_pill_offer(c, d, "qingshi_village")
+	if not offer.is_empty():
+		assert_true(100 - int(offer["count"]) * int(offer["price"]) >= armor_price)
+	var armored := _qr(Guidance.ARMOR_HINT_MIN_STAGE, 100)
+	armored.techniques["iron_fist"] = {"level": 1, "xp": 0.0}
+	armored.equipment = {"armor": "boar_hide_jerkin"}
+	assert_eq(Guidance.armor_hint_price(armored, d, "qingshi_village"), 0)
+	assert_false(Guidance.qi_pill_offer(armored, d, "qingshi_village").is_empty(), "no armor line, today's offer")
+	assert_true(Guidance.qi_pill_offer(c, d, "qingshi_village").get("count", 0) < Guidance.qi_pill_offer(armored, d, "qingshi_village")["count"])
+
+
 func test_qi_pill_offer_needs_spare_stones() -> void:
 	assert_true(Guidance.qi_pill_offer(_qr(2, 30), data(), "qingshi_village").is_empty())
 	assert_false(_has(_buy_hints(_qr(2, 30)), "Buy "))

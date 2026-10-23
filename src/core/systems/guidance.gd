@@ -323,11 +323,42 @@ static func _body_manual_merchant(c: CharacterData, data: GameData, region_id: S
 ## GUIDE-075: " The <Merchant> in <Region> (<duration>) sells <Armor> for N stones." for the nearest market that
 ## sells armor `c` can afford (GUIDE-072), or "" when none is in reach.
 static func _far_armor_clause(c: CharacterData, data: GameData, region_id: String, budget: int = -1) -> String:
+	var found := _far_armor(c, data, region_id, budget)
+	if found.is_empty():
+		return ""
+	var far: Dictionary = found["far"]
+	return " The %s %s sells %s for %d stones." % [merchant_selling(data, far["region_id"], found["armor_id"]), _far_where(c, data, region_id, far), data.items[found["armor_id"]]["name"], found["price"]]
+
+
+## GUIDE-150: {armor_id, price, far} for the nearest market's affordable armor (see _far_armor_clause), {} when none.
+static func _far_armor(c: CharacterData, data: GameData, region_id: String, budget: int = -1) -> Dictionary:
 	var far := nearest_selling(c, data, region_id, func(r: String) -> String: return affordable_armor(c, data, r, budget))
 	if far.is_empty():
-		return ""
-	var far_armor: String = far["result"]
-	return " The %s %s sells %s for %d stones." % [merchant_selling(data, far["region_id"], far_armor), _far_where(c, data, region_id, far), data.items[far_armor]["name"], merchant_price(c, data, far["region_id"], far_armor)]
+		return {}
+	var armor_id: String = far["result"]
+	return {"armor_id": armor_id, "price": merchant_price(c, data, far["region_id"], armor_id), "far": far}
+
+
+## GUIDE-150: the stone price of the armor `armor_hint` names for `c` in `region_id` (including its loot-selling and
+## far-market variants), 0 when the hint is silent.
+static func armor_hint_price(c: CharacterData, data: GameData, region_id: String, flags: Dictionary = {}) -> int:
+	if armor_hint(c, data, region_id, flags) == "":
+		return 0
+	var armor_id := affordable_armor(c, data, region_id)
+	if armor_id != "":
+		return merchant_price(c, data, region_id, armor_id)
+	var far := _far_armor(c, data, region_id)
+	if not far.is_empty():
+		return int(far["price"])
+	var offer := sell_offer(c, data, region_id, flags)
+	if offer.is_empty():
+		return 0
+	var budget := c.item_count("spirit_stone") + int(offer["total"])
+	armor_id = affordable_armor(c, data, region_id, budget)
+	if armor_id != "":
+		return merchant_price(c, data, region_id, armor_id)
+	far = _far_armor(c, data, region_id, budget)
+	return int(far.get("price", 0))
 
 
 ## GUIDE-100: ", by way of <Region>" when the first stop towards `far` (a nearest_selling result) is not `far` itself, else "".
@@ -1321,6 +1352,7 @@ static func qi_pill_offer(c: CharacterData, data: GameData, region_id: String, f
 	var reserve := next_realm_pill_price(c, data) if _pill_goal_applies(c, data) and not sect_pill_claimable(c, data) else 0
 	if c.artifact_lives >= 0 and c.artifact_lives <= LOW_ARTIFACT_LIVES:
 		reserve += CreationArtifact.recharge_cost(c, data)  # GUIDE-147
+	reserve += armor_hint_price(c, data, region_id, flags)  # GUIDE-150
 	var spare := c.item_count("spirit_stone") - reserve - QI_BUY_KEEP
 	if spare <= 0:
 		return {}
