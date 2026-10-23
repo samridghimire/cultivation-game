@@ -40,6 +40,10 @@ const IDLE_CULTIVATION_DAYS := 30  # GUIDE-057: days without cultivating before 
 ## and `region_id` drive the newcomer hints shown while Mortal or Qi Refining.
 static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit: int = 5, people: Dictionary = {}, flags: Dictionary = {}, region_id: String = "", today: int = -1, favor: Dictionary = {}) -> PackedStringArray:
 	var out: PackedStringArray = []
+	# GUIDE-147: a nearly empty Creation Artifact leads, so the HUD headline shows it.
+	var lives_hint := artifact_lives_hint(c, data)
+	if lives_hint != "":
+		out.append(lives_hint)
 	var years := Cultivation.years_left(c, data)
 	if years <= LIFESPAN_WARNING_YEARS:
 		out.append("Only %d %s of life remain. Break through to a higher realm or find a longevity treasure." % [years, "year" if years == 1 else "years"])
@@ -107,9 +111,6 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 	var outgrown := outgrown_hint(c, data, region_id, today, flags)
 	if outgrown != "":
 		out.append(outgrown)
-	var lives_hint := artifact_lives_hint(c, data)
-	if lives_hint != "":
-		out.append(lives_hint)
 	if c.realm_index > NEWCOMER_MAX_REALM:
 		var sect := _sect_hint(c, data, region_id)
 		if sect != "":
@@ -1318,6 +1319,8 @@ static func qi_pill_offer(c: CharacterData, data: GameData, region_id: String, f
 	if not data.regions.has(region_id) or c.realm_index < 1 or Cultivation.is_at_bottleneck(c, data):
 		return {}
 	var reserve := next_realm_pill_price(c, data) if _pill_goal_applies(c, data) and not sect_pill_claimable(c, data) else 0
+	if c.artifact_lives >= 0 and c.artifact_lives <= LOW_ARTIFACT_LIVES:
+		reserve += CreationArtifact.recharge_cost(c, data)  # GUIDE-147
 	var spare := c.item_count("spirit_stone") - reserve - QI_BUY_KEEP
 	if spare <= 0:
 		return {}

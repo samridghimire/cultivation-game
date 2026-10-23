@@ -4056,6 +4056,21 @@ func _buy_hints(c: CharacterData) -> PackedStringArray:
 	return Guidance.hints(c, data(), 1.0, 20, {}, {}, "qingshi_village")
 
 
+func test_low_artifact_lives_lead_and_reserve_the_recharge() -> void:
+	var c := _qr(3, 110)
+	c.artifact_lives = 1
+	var hints := _buy_hints(c)
+	assert_true(hints[0].begins_with("Your Creation Artifact holds 1 life"), hints[0])
+	assert_false(_has(hints, "with spare stones"))
+	assert_true(hints[0].substr(0, Guidance.HEADLINE_CHARS).contains("Recharge it for"))
+	c.artifact_lives = 3
+	hints = _buy_hints(c)
+	assert_false(_has(hints, "Creation Artifact"))
+	assert_true(_has(hints, "with spare stones"))
+	c.artifact_lives = 0
+	assert_true(_buy_hints(c)[0].begins_with("Your Creation Artifact is empty"))
+
+
 func test_qi_pill_offer_spends_spare_stones() -> void:
 	var offer := Guidance.qi_pill_offer(_qr(2, 200), data(), "qingshi_village")
 	assert_false(offer.is_empty())
