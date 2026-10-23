@@ -1243,7 +1243,7 @@ func _start_map_shot(gs: Node) -> void:
 	shots.append({"name": "map_hint", "open": func() -> void:
 		hud.get("_banner").visible = false
 		c.realm_index = 1
-		c.stage = 5
+		c.stage = 7  # GUIDE-126: the pill goal reserves the Foundation pill price, so the qi pill offer stays quiet
 		c.injuries.clear()
 		c.sect = {}
 		c.equipment.erase("armor")
@@ -1414,8 +1414,9 @@ func _start_hint_shot(gs: Node) -> void:
 		return (hud.get("_hint") as Label).text
 	shots.append({"name": "hint_herb_away", "open": func() -> void:
 		hud.get("_banner").visible = false
+		c.inventory = {"spirit_stone": 14}  # GUIDE-126: no spare stones, so the qi pill offer does not lead
 		root.get_node("EventBus").player_changed.emit()
-		assert(String(hint_text.call()).contains("a short walk away"), "away hint not on screen"), "close": func() -> void: pass})
+		assert(String(hint_text.call()).contains("a short walk away"), "away hint not on screen; hint: " + String(hint_text.call())), "close": func() -> void: pass})
 	# Broke crafter: no stones, nothing craftable, so the odd-jobs line fires (longest region name wins).
 	# The herb hint fades at rank CRAFT_HINT_MAX_RANK (GUIDE-049), which is when this line shows. WU-215: checked on screen;
 	# the line reads "Short of stones? Odd jobs as X at the <workshop> pay about N a month." and fits at 1280x720 and 1280x800.
@@ -1749,7 +1750,7 @@ func _start_hint_shot(gs: Node) -> void:
 		hud = world.get_node("HUD")
 		hud.get("_banner").visible = false
 		c.realm_index = 1
-		c.stage = 5
+		c.stage = 6  # GUIDE-126: the pill goal reserves the Foundation pill price, so the qi pill offer stays quiet
 		c.injuries.clear()
 		c.sect = {}
 		c.equipment.erase("armor")
