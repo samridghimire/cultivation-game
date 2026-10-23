@@ -765,9 +765,13 @@ static func _heal_source_for(c: CharacterData, data: GameData, region_id: String
 ## GUIDE-161: the cheapest sect-treasury entry that heals `injury_id` and `c` can claim now ({} if none).
 static func _heal_treasury(c: CharacterData, data: GameData, injury_id: String) -> Dictionary:
 	var best := {}
+	# GUIDE-165: while the breakthrough pill is still to claim, a heal must leave its price in the balance.
+	var pill := sect_pill_entry(c, data) if sect_pill_claim(c, data) != "" else {}
 	for entry: Dictionary in Sects.shop_items(c, data):
 		var item_id := String(entry["item_id"])
 		if not _heals(data, item_id, injury_id) or Sects.check_purchase(c, data, item_id) != "":
+			continue
+		if not pill.is_empty() and Sects.contribution_balance(c) - int(entry["contribution"]) < int(pill["cost"]):
 			continue
 		if best.is_empty() or int(entry["contribution"]) < int(best["contribution"]):
 			best = entry

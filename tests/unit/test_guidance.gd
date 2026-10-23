@@ -4497,6 +4497,20 @@ func test_heal_source_names_the_treasury_pill() -> void:
 	assert_eq(Guidance.heal_source(c, d, "qingshi_village"), "use your Meridian Mending Pill for your Qi Deviation".replace(" for your Qi Deviation", ""))
 
 
+## GUIDE-165: the treasury heal keeps the Foundation pill claim's contribution.
+func test_heal_source_keeps_the_pill_claim() -> void:
+	var d := data()
+	var c := _sect_qr("azure_cloud_sect", 1, 300, 0)
+	c.injuries = {"qi_deviation": 100}
+	assert_true(Guidance.sect_pill_claim(c, d) != "", "pill claim shows")
+	assert_false(Guidance.heal_source(c, d, "qingshi_village").contains("treasury"))
+	c.sect["contribution"] = 400
+	assert_true(Guidance.heal_source(c, d, "qingshi_village").contains("your sect treasury"))
+	c.sect["contribution"] = 300
+	c.breakthrough_pill = "foundation_establishment_pill"
+	assert_true(Guidance.heal_source(c, d, "qingshi_village").contains("your sect treasury"))
+
+
 # --- GUIDE-152: the trial advice never says "grow a stage" at a realm's last stage ---
 
 func _g152_inner_disciple(stage: int) -> CharacterData:
