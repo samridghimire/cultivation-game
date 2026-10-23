@@ -29,6 +29,24 @@ func _odds_band(odds: float) -> int:
 	return 2 if odds < 0.95 else 3
 
 
+## QA-151: with --far-qi, real fights before vs after the move by rated odds, with wins, injuries and artifact lives spent.
+func _print_move_bands(rows: Array) -> void:
+	print("Fights before/after the far-qi move (QA-151): when  band  fights  won  injured  lives spent")
+	for post in [false, true]:
+		for band in 4:
+			var n := 0
+			var wins := 0
+			var hurt := 0
+			var lives := 0
+			for row: Dictionary in rows:
+				if bool(row["post"]) == post and _odds_band(float(row["odds"])) == band:
+					n += 1
+					wins += 1 if row["won"] else 0
+					hurt += 1 if row["injured"] else 0
+					lives += 1 if row["life"] else 0
+			print("  %s  %s  %d  %d  %d  %d" % ["after" if post else "before", BAND_LABELS[band], n, wins, hurt, lives])
+
+
 ## QA-147: fights by month and rated-odds band, the first month where >= 80% are >= 95%, and the Misty Forest foes
 ## (Exploration.eligible_fights) rated at months 6 and 12.
 func _print_odds_bands(rows: Array, foes: Dictionary, months: int, seeds: int) -> void:
@@ -108,6 +126,7 @@ func _run() -> void:
 	var forced := args.has("--forced")  # QA-139: tally every fight rated under 20%, by source, with its outcome
 	var long_hints := args.has("--long-hints")  # QA-143: tally hint lines longer than the HUD cap
 	var odds_bands := args.has("--odds-bands")  # QA-147: fights by month and rated-odds band
+	var move_rows: Array = []
 	var band_rows: Array = []
 	var band_foes := {}
 	var injury_origins := args.has("--injury-origins")  # QA-149: where and when injuries begin in the first year
@@ -235,6 +254,20 @@ func _run() -> void:
 			row["new_injury"] = gs.player.injuries.size() > int(row["hurt"])
 		var on_band_start := func(enemy: Dictionary) -> void:
 			band_rows.append({"month": (clock.total_days - 1) / Calendar.DAYS_PER_MONTH, "odds": Combat.win_chance(gs.player, gs.data, enemy), "stage": gs.player.stage + 1})
+		var on_move_start := func(enemy: Dictionary) -> void:
+			if enemy.get("spar", false):
+				return
+			move_rows.append({"post": FirstHour.far_qi_day >= 0, "odds": Combat.win_chance(gs.player, gs.data, enemy), "hurt": gs.player.injuries.size(), "lives": gs.player.artifact_lives, "won": true, "injured": false, "life": false})
+		var on_move_end := func(_n: String, victory: bool, _l: PackedStringArray) -> void:
+			if move_rows.is_empty():
+				return
+			var row: Dictionary = move_rows[move_rows.size() - 1]
+			row["won"] = victory
+			row["injured"] = gs.player.injuries.size() > int(row["hurt"])
+			row["life"] = gs.player.artifact_lives < int(row["lives"])
+		if FirstHour.far_qi and odds_bands:
+			root.get_node("EventBus").combat_started.connect(on_move_start)
+			root.get_node("EventBus").combat_finished.connect(on_move_end)
 		if odds_bands:
 			root.get_node("EventBus").combat_started.connect(on_band_start)
 		if forced:
@@ -300,6 +333,9 @@ func _run() -> void:
 			armor_days.append(FirstHour.armor_log["day"])
 		if FirstHour.wolf_win_day >= 0:
 			wolf_days.append(FirstHour.wolf_win_day)
+		if FirstHour.far_qi and odds_bands:
+			root.get_node("EventBus").combat_started.disconnect(on_move_start)
+			root.get_node("EventBus").combat_finished.disconnect(on_move_end)
 		if odds_bands:
 			root.get_node("EventBus").combat_started.disconnect(on_band_start)
 		if forced:
@@ -385,6 +421,8 @@ func _run() -> void:
 			print("  %4d  %s  %s  QR%d  %.0f%%  %s  %s" % [row["seed"], row["id"], row["source"], row["layer"], 100.0 * float(row["odds"]), row["outcome"], "yes" if row.get("new_injury", false) else "no"])
 	if odds_bands:
 		_print_odds_bands(band_rows, band_foes, months, seeds)
+		if FirstHour.far_qi:
+			_print_move_bands(move_rows)
 	if injury_origins:
 		_print_injury_origins(origin_rows, slow_days, break_rows, seeds)
 	if long_hints:

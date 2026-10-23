@@ -102,6 +102,8 @@ func _run() -> void:
 	for a: String in OS.get_cmdline_user_args():
 		if a.begins_with("--wait-for-pill="):
 			_wait_for_pill = int(a.get_slice("=", 1))
+		elif a == "--far-qi":
+			FirstHour.far_qi = true  # QA-151
 		elif a == "--defence":
 			FirstHour.follow_defence = true
 		elif a.begins_with("--trace="):

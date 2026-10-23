@@ -65,6 +65,7 @@ const TRIAL_MIN_ODDS := 0.7
 ## QA-145: once a month, before meditating, move to the faster spot Guidance.far_qi_offer names when it saves >= 30 days
 ## net of the round trip, and stay there (the new region is home from then on).
 static var far_qi := false
+static var far_qi_day := -1  # QA-151: day the current seed arrived at the far spot, -1 before
 static var far_qi_log := {"moved": 0, "month": [], "road_days": []}
 const FAR_QI_MIN_SAVED := 30
 
@@ -96,6 +97,7 @@ static func play(gs: Node, clock: Node, seed_value: int, months: int, curious: b
 	bus.clear_history()
 	var out := {"layer_day": {}, "sect_day": -1, "rank_day": -1, "month_lines": [], "injuries": 0, "player": c, "kinds": [], "kind_sets": [], "stones": [], "realms": [], "first_win_day": -1, "first_style_day": -1, "first_win_enemy": "", "breaks": [], "bottleneck_day": {}, "waited_days": 0, "road": [], "contribution": [], "bottleneck_stones": -1}
 	bounty_log["seen"] = {}
+	far_qi_day = -1
 	var done := {"no_help": no_help}
 	# QA-063: remember the foe of the first real (non-spar) win; the day comes from the fights_won stat.
 	var fight := {"enemy": "", "first_enemy": ""}
@@ -490,6 +492,7 @@ static func _move_for_qi(gs: Node, c: CharacterData, clock: Node, month: int, de
 	far_qi_log["month"].append(month + 1)
 	far_qi_log["road_days"].append(clock.total_days - start)
 	out["far_qi_region"] = target
+	far_qi_day = clock.total_days
 	return float(Guidance.best_qi_in_region(c, gs.data, target, gs.world_flags)["density"])
 
 
