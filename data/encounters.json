@@ -55,7 +55,7 @@
     {"id": "village_bandit", "tags": ["forest"], "min_realm": "qi_refining", "weight": 1, "kind": "misfortune", "days": 1, "text": "A bandit steps onto the road, blade drawn.", "enemy": "mountain_bandit"},
     {"id": "village_old_man", "tags": ["village"], "weight": 1, "kind": "fortune", "days": 1, "blocked_by_flag": "met_old_man", "text": "A ragged old man shares a breathing method before vanishing. Was he an immortal?", "effects": {"qi": 200, "set_flag": "met_old_man"}},
 
-    {"id": "forest_herbs", "repeatable": true, "tags": ["forest", "herbs"], "weight": 4, "kind": "fortune", "days": 3, "text": "You gather spirit herbs from the misty undergrowth.", "effects": {"items": {"spirit_herb": 2}}},
+    {"id": "forest_herbs", "repeatable": true, "max_realm": "foundation_establishment", "tags": ["forest", "herbs"], "weight": 4, "kind": "fortune", "days": 3, "text": "You gather spirit herbs from the misty undergrowth.", "effects": {"items": {"spirit_herb": 2}}},
     {"id": "forest_ginseng", "repeatable": true, "tags": ["herbs"], "weight": 1, "kind": "fortune", "days": 5, "text": "Deep in the valley you unearth a centuries-old blood ginseng!", "effects": {"items": {"blood_ginseng": 1}}},
     {"id": "forest_lost", "tags": ["forest", "herbs"], "weight": 2, "kind": "misfortune", "days": 7, "text": "The mist thickens and you lose your way for a week."},
     {"id": "forest_wolf", "tags": ["forest"], "weight": 2, "kind": "misfortune", "days": 1, "min_realm": "qi_refining", "text": "Glowing eyes in the mist: a pack of mist wolves!", "enemy": "mist_wolf"},
