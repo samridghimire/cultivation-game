@@ -21,6 +21,7 @@ var _description: Label
 var _effects: Label
 var _compare: Label
 var _wanted: Label
+var _recharge_warn: Label
 var _quantity_label: Label
 var _trade_button: Button
 var _hint_label: Label
@@ -123,6 +124,8 @@ func _init() -> void:
 	details.add_child(_compare)
 	_wanted = _wrapped(UIStyle.label("", 15, UIStyle.ACCENT))
 	details.add_child(_wanted)
+	_recharge_warn = _wrapped(UIStyle.label("", 15, UIStyle.CATEGORY_COLORS["warning"]))
+	details.add_child(_recharge_warn)
 	var stepper := HBoxContainer.new()
 	stepper.add_theme_constant_override("separation", 8)
 	details.add_child(stepper)
@@ -393,6 +396,17 @@ static func sell_wanted_line(c: CharacterData, data: GameData, item_id: String, 
 
 
 ## "Equipped: Iron Sword (+5 attack)" for whatever `c` wears in the item's slot.
+## At low artifact lives: a warning when paying `price` is what puts the recharge out of reach.
+static func recharge_warning(c: CharacterData, data: GameData, price: int) -> String:
+	if c.artifact_lives < 0 or c.artifact_lives > Guidance.LOW_ARTIFACT_LIVES:
+		return ""
+	var cost := CreationArtifact.recharge_cost(c, data)
+	var stones := c.item_count("spirit_stone")
+	if stones < cost or stones - price >= cost:
+		return ""
+	return "This leaves %d stones; recharging your Creation Artifact costs %d." % [stones - price, cost]
+
+
 static func compare_text(c: CharacterData, data: GameData, item_id: String) -> String:
 	var tech_id := manual_technique(data, item_id)
 	if tech_id != "":
@@ -636,6 +650,8 @@ func _show_details() -> void:
 	_quantity = clampi(_quantity, 1, maxi(most, 1))
 	var unit := unit_price(p, data, _selected, _selling, _faction, GameState.buy_multiplier())
 	_quantity_label.text = "x%d  (you have %d)" % [_quantity, p.item_count(_selected)]
+	_recharge_warn.text = "" if _selling else recharge_warning(p, data, unit * _quantity)
+	_recharge_warn.visible = _recharge_warn.text != ""
 	_trade_button.text = "%s %d for %d spirit stones" % ["Sell" if _selling else "Buy", _quantity, unit * _quantity]
 	_trade_button.disabled = most < 1
 	_trade_button.tooltip_text = "You cannot afford it." if most < 1 and not _selling else ""

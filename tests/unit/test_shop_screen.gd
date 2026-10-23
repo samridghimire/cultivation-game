@@ -436,3 +436,18 @@ func test_buy_worth_line_for_qi_items_only_when_buying() -> void:
 	assert_true(line.contains("days of meditation") and line.ends_with(" each"), line)
 	assert_eq(ShopScreen.buy_worth_line(c, data(), "qi_gathering_pill", "qingshi_village", {}, true), "")
 	assert_eq(ShopScreen.buy_worth_line(c, data(), "iron_sword", "qingshi_village", {}, false), "")
+
+
+func test_recharge_warning_only_when_the_buy_makes_recharge_unaffordable() -> void:
+	var c := new_character()
+	var cost := CreationArtifact.recharge_cost(c, data())
+	c.artifact_lives = 1
+	c.inventory = {"spirit_stone": cost + 20}
+	var line := ShopScreen.recharge_warning(c, data(), 39)
+	assert_eq(line, "This leaves %d stones; recharging your Creation Artifact costs %d." % [cost - 19, cost])
+	assert_eq(ShopScreen.recharge_warning(c, data(), 10), "", "still affordable after the buy")
+	c.artifact_lives = 3
+	assert_eq(ShopScreen.recharge_warning(c, data(), 39), "", "not at low lives")
+	c.artifact_lives = 1
+	c.inventory = {"spirit_stone": cost - 1}
+	assert_eq(ShopScreen.recharge_warning(c, data(), 5), "", "already short")
