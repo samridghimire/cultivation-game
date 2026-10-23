@@ -100,6 +100,7 @@ extends SceneTree
 ## WU-302: `--clinic-shot` writes clinic_one_<size>.png / clinic_two_<size>.png: the Village Clinic menu for a Qi Refining 3rd-layer
 ## character with Internal Injury, then with a second injury (Qi Deviation); the "Pay the doctor ... saves about" lines must fit or wrap unclipped.
 ## WU-295: `--bounty-shot` writes bounty_menu_<size>.png: the Fallen Star Market bounty board with the longest hunt label any realm sees (the hunt's description is shown for the focused entry).
+## WU-356: `--hint-shot` also writes hint_missions_last_stage_<size>.png (Qi Refining last stage, missions too dangerous, style mastered: the mission line says break through).
 ## WU-353: `--hint-shot` also writes hint_practice_target_<size>.png (Inner Disciple, Foundation Peak, Iron Fist 2: trial advice says "to level N (now 2)").
 ## WU-351: `--hint-shot` also writes hud_contribution_<size>.png (Azure Cloud Inner Disciple, 7773 contribution, 1296 stones).
 ## WU-350: `--hint-shot` also writes hint_abode_<size>.png (rogue, Qi Refining 5, 400 stones, no abode: journal Next steps names the Waterfall Cave and 300; the capped HUD line keeps the cave's name).
@@ -2022,6 +2023,8 @@ func _start_hint_shot(gs: Node) -> void:
 		c.realm_index = gs.data.realm_index_of("foundation_establishment")
 		c.stage = 0
 		c.qi = 0.0
+		for attr: String in c.attributes:
+			c.attributes[attr] = 1  # a bare newcomer: the fight missions are all too dangerous
 		c.sect = {}
 		c.inventory = {}
 		c.equipment["armor"] = "boar_hide_jerkin"  # no thin-defence line ahead of the qi line
@@ -2301,7 +2304,7 @@ func _start_hint_shot(gs: Node) -> void:
 	var prac_saved: Array = []
 	shots.append({"name": "hint_practice_target_" + size_tag, "open": func() -> void:
 		setup_long.call()
-		prac_saved.append_array([c.realm_index, c.stage, c.sect.duplicate(), c.techniques.duplicate(true), c.equipment.duplicate(), c.inventory.duplicate(), c.mission_cooldowns.duplicate()])
+		prac_saved.append_array([c.realm_index, c.stage, c.sect.duplicate(), c.techniques.duplicate(true), c.equipment.duplicate(), c.inventory.duplicate(), c.mission_cooldowns.duplicate(), c.attributes.duplicate()])
 		c.realm_index = 2
 		c.stage = gs.data.realms[2].stage_count() - 1
 		c.qi = 0.0
@@ -2338,6 +2341,53 @@ func _start_hint_shot(gs: Node) -> void:
 			c.inventory = prac_saved[5]
 			c.mission_cooldowns = prac_saved[6]
 			prac_saved.clear()})
+
+	# WU-356: GUIDE-160. An Azure Cloud member at Qi Refining's last stage with no combat style left to practise and every
+	# ready mission too dangerous: the mission line says to break through, never to grow a stage.
+	var last_saved: Array = []
+	var last_foes: Dictionary = {}
+	shots.append({"name": "hint_missions_last_stage_" + size_tag, "open": func() -> void:
+		setup_long.call()
+		last_saved.append_array([c.realm_index, c.stage, c.sect.duplicate(), c.techniques.duplicate(true), c.equipment.duplicate(), c.inventory.duplicate(), c.mission_cooldowns.duplicate(), c.attributes.duplicate()])
+		var qr: int = gs.data.realm_index_of("qi_refining")
+		c.realm_index = qr
+		c.stage = gs.data.realms[qr].stage_count() - 1
+		c.qi = 0.0
+		for attr: String in c.attributes:
+			c.attributes[attr] = 1  # a bare newcomer: the fight missions are all too dangerous
+		c.sect = {"id": "azure_cloud_sect", "rank": 0, "contribution": 0, "spent": 0}
+		c.techniques = {}
+		# The two bandit/wolf missions are still beatable by a bare QR9 body: give them a Foundation foe for this shot.
+		for mid: String in ["escort_mortal_villagers", "drive_off_den_wolves"]:
+			last_foes[mid] = gs.data.sect_missions[mid]["enemy"]
+			gs.data.sect_missions[mid]["enemy"] = "demonic_cultivator"
+		c.equipment = {}
+		c.inventory = {}
+		c.mission_cooldowns = {}
+		gs.current_region = "qingshi_village"
+		root.get_node("EventBus").player_changed.emit()
+		await root.get_tree().process_frame
+		await root.get_tree().process_frame
+		hud.get("_banner").visible = false
+		var line: String = Guidance._mission_hint(c, gs.data, gs.world_flags, "qingshi_village", int(root.get_node("GameClock").total_days))
+		print("hint-shot missions last stage: ", line)
+		assert(line.contains("break through to"), "mission line lacks the breakthrough:\n" + line)
+		assert(not line.contains("grow a stage"), "mission line says grow a stage:\n" + line)
+		var lines: Array = Guidance.hints(c, gs.data, 3, 12, gs.npcs, gs.world_flags, "qingshi_village", 40, gs.npc_favor)
+		for h: String in lines:
+			assert(not h.contains("grow a stage"), "a hint says grow a stage at the last stage:\n" + "\n".join(lines)), "close": func() -> void:
+			c.realm_index = last_saved[0]
+			c.stage = last_saved[1]
+			c.sect = last_saved[2]
+			c.techniques = last_saved[3]
+			c.equipment = last_saved[4]
+			c.inventory = last_saved[5]
+			c.mission_cooldowns = last_saved[6]
+			c.attributes = last_saved[7]
+			for mid: String in last_foes:
+				gs.data.sect_missions[mid]["enemy"] = last_foes[mid]
+			last_foes.clear()
+			last_saved.clear()})
 
 
 ## WU-190: the encounter window on real encounters with attribute, profession and enemy choices.
