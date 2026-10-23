@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: bda3229
+Last reviewed commit: 19a5c27
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -1053,3 +1053,15 @@ Last reviewed commit: bda3229
     entered this opening and lost the first guardian fight (re-entry is free then, SecretRealms.entry_cost /
     entry_item_needed), so the hint vanished exactly when the player was poorest. It now uses those helpers; test added.
   - Nothing filed.
+- 2026-10-23 (reviewer): reviewed bda3229..19a5c27 (GUIDE-146/147, WU-331/336/337/340/341, QA-151/152, C-223/232;
+  [PLAN]/[REVIEW] skipped). Main green before and after. No worker touched BACKLOG/CHANGELOG; no save-format changes;
+  no logic outside src/core (WU-341's recharge_warning is a static display helper over CreationArtifact.recharge_cost).
+  - GUIDE-147 follows its spec: the lives line now leads hints() and qi_pill_offer (the only "spare stones" spender)
+    reserves the recharge price. WU-340 focuses the recharge button for gamepad. C-223's contribution is paid win or
+    lose, per spec (effects resolve before the fight). GUIDE-146's outgrown_hint is bounded (4 foes/region, cached
+    win_chance); its "hard home" test only asserts conditionally, which is weak but harmless.
+  - Fixed: WU-340 and WU-341 inserted new functions between an existing `##` doc comment and its function
+    (hud._refresh_lives, shop_screen.compare_text); moved the docs back and documented the new helpers.
+  - Filed RV-015: C-232's newcomer hunt rates 0% for a fresh QR1 player with Iron Fist L1 (spec wanted >= 60%); only
+    the typical player wins, so it joined QA032_BARE_DEADLY instead of being the safe first hunt it was meant to be.
+  - Note: WU-336's empty claim commit (0c21046) landed on main; harmless, but rebase with --no-keep-empty drops it.

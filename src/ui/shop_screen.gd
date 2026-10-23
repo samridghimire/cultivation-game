@@ -395,8 +395,7 @@ static func sell_wanted_line(c: CharacterData, data: GameData, item_id: String, 
 	return InventoryScreen.wanted_by_sect_line(c, data, item_id, flags)
 
 
-## "Equipped: Iron Sword (+5 attack)" for whatever `c` wears in the item's slot.
-## At low artifact lives: a warning when paying `price` is what puts the recharge out of reach.
+## WU-341: at low artifact lives: a warning when paying `price` is what puts the recharge out of reach.
 static func recharge_warning(c: CharacterData, data: GameData, price: int) -> String:
 	if c.artifact_lives < 0 or c.artifact_lives > Guidance.LOW_ARTIFACT_LIVES:
 		return ""
@@ -407,6 +406,7 @@ static func recharge_warning(c: CharacterData, data: GameData, price: int) -> St
 	return "This leaves %d stones; recharging your Creation Artifact costs %d." % [stones - price, cost]
 
 
+## "Equipped: Iron Sword (+5 attack)" for whatever `c` wears in the item's slot.
 static func compare_text(c: CharacterData, data: GameData, item_id: String) -> String:
 	var tech_id := manual_technique(data, item_id)
 	if tech_id != "":

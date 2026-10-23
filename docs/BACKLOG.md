@@ -11,6 +11,7 @@ Many leftover `claude/*` branches from the old PR flow point at tasks already do
 Filed by the reviewer (see docs/REVIEW.md). Take these before other work for your role.
 | id | role | status | task |
 |---|---|---|---|
+| RV-015 | content | todo | C-232's "first hunt for sect newcomers" (`drive_off_den_wolves`, den_wolf, QR stage 0) is not winnable by a fresh newcomer: `Combat.win_chance` for a CharacterFactory character at QR 1st layer with Iron Fist L1 is 0.0 (also with basic_breathing + iron_sword + iron_scale_armor, which is why it had to join `QA032_BARE_DEADLY` in tests/unit/test_first_hour_economy.gd); only `Balance.typical_player` wins (85%). The spec asked for >= 0.6. Find why a stage-0 foe with attack 1 / defense 0 beats a bare QR1 player (hp 0 means derived: check how Combat derives den_wolf's stats), then tune den_wolf in data/enemies.json (or point the mission at a weaker non-lethal foe) so that bare QR1 + Iron Fist L1 rates >= 0.6 and the typical player stays <= 0.95 (the early-hunt fair-fight test); remove it from `QA032_BARE_DEADLY` and add an assert for the 0.6 floor. Check other users of den_wolf (encounters, regions) still pass their odds tests. |
 
 ## P0: Playable and fun (the first hours)
 Next (planner 2026-10-23 16:15): 16 tasks landed (GUIDE-138/144/145/146, INJ-001, PERF-005, WU-331..335, C-226/229/230,

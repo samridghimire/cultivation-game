@@ -589,7 +589,7 @@ static func fair_fight_line(entries: Array, font: Font = null, font_size: int = 
 	return full
 
 
-## "Lives N" from the Creation Artifact (WU-095): warning at 1 life, danger with "Final life" at 0.
+## WU-340: keeps the gold "!" just right of the Lives text.
 func _place_lives_badge() -> void:
 	_lives_badge.position = Vector2(_lives.get_minimum_size().x + 6.0, 0.0)
 
@@ -599,6 +599,7 @@ func lives_badge_visible() -> bool:
 	return _lives_badge.visible and _lives.visible
 
 
+## "Lives N" from the Creation Artifact (WU-095): warning at 1 life, danger with "Final life" at 0.
 func _refresh_lives(p: CharacterData) -> void:
 	_lives.text = lives_text(p.artifact_lives)
 	_lives.visible = _lives.text != ""
