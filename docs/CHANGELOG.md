@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-23 [C-212] Help says how many days of cultivation each clinic treatment saves.
 - 2026-10-23 [GUIDE-127] A test keeps every hint's action inside what the status panel shows.
 - 2026-10-23 [C-208] Help says the mission board marks the best-paying mission.
 - 2026-10-23 [WU-317] First-hour screenshots re-checked; nothing clipped.
