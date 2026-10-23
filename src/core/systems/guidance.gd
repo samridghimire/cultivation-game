@@ -830,9 +830,9 @@ static func _secret_realm_line(c: CharacterData, data: GameData, def: Dictionary
 	var name := String(def.get("name", def.get("id", "")))
 	if region_id == "":
 		return "%s is open: delve for treasure." % name
-	var entry_item := String(def.get("entry_item", ""))
-	var stones := int(def.get("entry_stones", 0))
-	if (entry_item != "" and c.item_count(entry_item) == 0) or stones > c.item_count("spirit_stone"):
+	# Entry is paid once per opening: after a lost first fight the stones and item are no longer due.
+	var stones := SecretRealms.entry_cost(c, def, today)
+	if SecretRealms.entry_item_needed(c, data, def, today) != "" or stones > c.item_count("spirit_stone"):
 		return ""
 	var left := SecretRealms.days_until_close(def, today)
 	var cost := " stones, open %s more" % Calendar.format_duration(left)

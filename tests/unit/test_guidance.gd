@@ -4227,6 +4227,12 @@ func test_secret_realm_hint_names_place_and_cost() -> void:
 	c.inventory = {"spirit_stone": 300}
 	line = Guidance._untried_feature_hint(c, d, open_day, {}, {}, "fallen_star_market")
 	assert_true(line.contains("Fallen Star Vault is open here"), line)
+	# [REVIEW] entered this opening and lost the first fight: re-entry is free, so the hint stays.
+	var def: Dictionary = d.secret_realms["fallen_star_vault"]
+	c.secret_realms["fallen_star_vault"] = {"opening": SecretRealms.opening_index(def, open_day), "floor": 0}
+	c.inventory = {"spirit_stone": 10}
+	line = Guidance._untried_feature_hint(c, d, open_day, {}, {}, "fallen_star_market")
+	assert_true(line.contains("Fallen Star Vault is open here (entry 0 stones"), line)
 
 
 ## GUIDE-146: a Foundation player who wins every home fight is pointed at a fair fight one route away.

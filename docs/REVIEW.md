@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: ec4ffab
+Last reviewed commit: bda3229
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -1043,4 +1043,13 @@ Last reviewed commit: ec4ffab
   - Fixed: PERF-004's FirstHour.play_cached memo key lacked QA-145's new `far_qi` sim flag (a far-qi run could be
     served a cached normal run); added it and noted that every sim flag belongs in the key. Tightened GUIDE-137's test,
     which passed vacuously when an offer was empty: it now asserts the claimable case offers more than the short case keeps.
+  - Nothing filed.
+- 2026-10-23 (reviewer): reviewed ec4ffab..bda3229 (GUIDE-138/140/141/143/144/145, INJ-001, C-226/229/230, QA-147/150,
+  WU-332/333/334/335, PERF-005; [PLAN] skipped). Main green. No worker touched BACKLOG/CHANGELOG.
+  - GUIDE-143 (Qi Refining) and GUIDE-144 (thin-defence, Foundation) don't overlap (different realms). GUIDE-140 reuses
+    Sects.deliver_needs. QA-150's qi_pill_cap and far_qi are in the play_cached key. PERF-005 lowers fuzz call floors
+    to 10 for the two single-region profiles; acceptable since the region is asserted to exist.
+  - Fixed: GUIDE-145's secret-realm hint required the full entry stones and entry item even after the player had
+    entered this opening and lost the first guardian fight (re-entry is free then, SecretRealms.entry_cost /
+    entry_item_needed), so the hint vanished exactly when the player was poorest. It now uses those helpers; test added.
   - Nothing filed.
