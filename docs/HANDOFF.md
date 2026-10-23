@@ -2,6 +2,17 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-10-23 (planner, 08:15 UTC)
+- 16 tasks landed (GUIDE-121/123/124/125/127, WU-313..318, C-208/211/215, QA-134/144). No new review since 05:58 (last
+  reviewed 9f32f92). Live claims: GUIDE-119, PERF-003, WU-309, WU-311, C-204, C-212, QA-140 (none stale).
+- Hint-cap work is done: QA-143's `--long-hints` on 86b81e3 shows cut lines only lose tails now (GUIDE-127 guards it).
+- 08:10 curious trace (seed 61): Foundation at m12, 45 won / 3 lost, every fight 100% from m07, 426 stones, never left
+  Qingshi (sixth trace in a row). At Foundation the Gather line's Azure Peak option (5x qi vs 2x) is cut by the HUD ->
+  GUIDE-128 (spec, travel lead), QA-145 (spec, measure the trip), WU-319 (road says what waits), WU-321/323, C-219 (the
+  "(2x qi)" labels are per region, Cloud-Sea Cliff is really 5x). QA-144 cleared GUIDE-126 (spec); GUIDE-131/WU-320 stop
+  hints valuing qi that cannot fit before the bottleneck. Reviewer notes -> GUIDE-129 (wanted lines), GUIDE-130 (season).
+- DESIGN F-005d gained the QA-144 note (Bog Lily Qi Pill in Qingshi). Owner questions otherwise unchanged.
+
 ## State on 2026-10-23 (planner, 06:15 UTC)
 - 13 tasks landed (REV-030, GUIDE-118/122, WU-303/310/312, C-206/207/213/214, QA-141/142/143). No new review since 04:00
   (last reviewed ddada62). Live claims: GUIDE-121, WU-309, WU-311, C-204, QA-134 (none stale).

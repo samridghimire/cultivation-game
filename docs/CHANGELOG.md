@@ -2,6 +2,22 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-23 [GUIDE-127] A test keeps every hint's action inside what the status panel shows.
+- 2026-10-23 [C-208] Help says the mission board marks the best-paying mission.
+- 2026-10-23 [WU-317] First-hour screenshots re-checked; nothing clipped.
+- 2026-10-23 [WU-318] The shop selects and marks the item your top hint names.
+- 2026-10-23 [GUIDE-125] Meditate, practise and thin-defence hints now start with what to do.
+- 2026-10-23 [WU-315] Hover a cut-off hint to read all of it.
+- 2026-10-23 [QA-144] The first-year sim measures buying qi pills with spare stones.
+- 2026-10-23 [WU-314] The shop says how many days of meditation a qi pill is worth.
+- 2026-10-23 [C-215] Help explains the mission board's colours and the shop's sell warning.
+- 2026-10-23 [WU-316] The world map marks the region your top hint points to.
+- 2026-10-23 [C-211] Help explains chance choices and what failing one costs.
+- 2026-10-23 [WU-313] Screenshot checks confirm the shortened clinic and armor hints keep their action.
+- 2026-10-23 [GUIDE-124] The meditation hint names the better spot in the region you stand in.
+- 2026-10-23 [QA-134] The first-year sim takes the mission the sect hint names.
+- 2026-10-23 [GUIDE-123] Confirmed a friendly spar trains your style as much as the hint says.
+- 2026-10-23 [GUIDE-121] Sect and promotion-trial hints now start with the mission or the examiner's odds.
 - 2026-10-23 [GUIDE-122] Injury, meditation-spot and armor hints now start with what to do, so the status panel shows it.
 - 2026-10-23 [C-207] Help says a slow stage's hint names a better meditation spot.
 - 2026-10-23 [C-206] Three first-year encounter choices became gambles on an attribute; failing costs days, never your life.
