@@ -3561,3 +3561,38 @@ func test_sell_offer_ignores_spirit_herbs() -> void:
 	assert_true(Guidance.sell_offer(c, data(), "qingshi_village").is_empty(), "no offer for herbs alone")
 	for line in Guidance.hints(c, data(), 1.0, 40, {}, {}, "qingshi_village"):
 		assert_false(line.contains("would pay about"), line)
+
+
+## GUIDE-117: the trial clause says what one more level of the best combat style would do.
+func test_trial_practice_payoff() -> void:
+	var d := data()
+	var found := 0
+	for attr in [8, 12, 16, 20, 24, 28, 32, 40]:
+		for lvl in [1, 2, 3, 4, 5]:
+			var c := new_character()
+			c.realm_index = 1
+			c.sect = {"id": "azure_cloud_sect", "rank": 0, "contribution": 600}
+			for k: String in c.attributes:
+				c.attributes[k] = attr
+			c.stage = 0
+			c.techniques = {"iron_fist": {"level": lvl, "xp": 0.0}}
+			var chance := Guidance.trial_odds(c, d)
+			var payoff := Guidance.trial_practice_payoff(c, d)
+			var hint := Guidance._sect_hint(c, d)
+			if payoff.is_empty():
+				assert_false(hint.contains("would make it about"), hint)
+				continue
+			assert_true(payoff["next"] - chance >= 0.1)
+			if chance < 0.7:
+				found += 1
+				assert_true(hint.contains("Iron Fist level %d (about" % (lvl + 1)), hint)
+				assert_true(hint.contains("would make it about %d in 100." % roundi(payoff["next"] * 100.0)), hint)
+				assert_eq(hint.contains("practise or grow"), false, hint)
+			else:
+				assert_false(hint.contains("would make it about"), hint)
+	assert_true(found > 0, "no setup produced a payoff")
+	var m := new_character()
+	m.realm_index = 1
+	m.sect = {"id": "azure_cloud_sect", "rank": 0, "contribution": 600}
+	m.techniques = {"iron_fist": {"level": d.techniques["iron_fist"].max_level, "xp": 0.0}}
+	assert_eq(Guidance.trial_practice_payoff(m, d), {})

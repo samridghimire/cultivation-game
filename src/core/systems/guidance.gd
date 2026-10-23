@@ -1378,11 +1378,43 @@ static func _trial_odds_clause(c: CharacterData, data: GameData) -> String:
 		var unhurt := odds_unhurt(c, data, Sects.trial_opponent(data, Sects.trial_enemy(c, data)))
 		if unhurt >= 0.5:
 			line += " Your injuries hold you back: healed, you would win about %d in 100." % roundi(unhurt * 100.0)
-		elif Techniques.knows_kind(c, data, "combat") and _best_unmastered_combat(c, data) == "":
-			line += " A loss only injures you; grow a stage first."
 		else:
-			line += " A loss only injures you; practise or grow a stage first."
+			var payoff := trial_practice_payoff(c, data)
+			if not payoff.is_empty():
+				line += " A loss only injures you." + _payoff_sentence(payoff)
+			elif Techniques.knows_kind(c, data, "combat") and _best_unmastered_combat(c, data) == "":
+				line += " A loss only injures you; grow a stage first."
+			else:
+				line += " A loss only injures you; practise or grow a stage first."
+	elif chance < 0.7:
+		var payoff := trial_practice_payoff(c, data)
+		if not payoff.is_empty():
+			line += _payoff_sentence(payoff)
 	return line
+
+
+## GUIDE-117: what one more level of the best unmastered combat style would do for the open trial:
+## {style, level, days, next} (level = the level reached, next = the win chance then), or {} when there is no such
+## style, the trial is not open, or the gain over the unhurt odds is under 0.1.
+static func trial_practice_payoff(c: CharacterData, data: GameData) -> Dictionary:
+	if trial_odds(c, data) < 0.0:
+		return {}
+	var style := _best_unmastered_combat(c, data)
+	if style == "":
+		return {}
+	var opponent := Sects.trial_opponent(data, Sects.trial_enemy(c, data))
+	var copy := CharacterData.from_dict(c.to_dict())
+	copy.injuries.clear()
+	var base := Combat.win_chance(copy, data, opponent)
+	copy.techniques[style] = {"level": Techniques.level(c, style) + 1, "xp": 0.0}
+	var next := Combat.win_chance(copy, data, opponent)
+	if next - base < 0.1:
+		return {}
+	return {"style": style, "style_name": data.techniques[style].name, "level": Techniques.level(c, style) + 1, "days": Techniques.days_to_next(c, data, style), "next": next}
+
+
+static func _payoff_sentence(payoff: Dictionary) -> String:
+	return " %s level %d (about %s of practice) would make it about %d in 100." % [payoff["style_name"], payoff["level"], Calendar.format_duration(maxi(1, int(payoff["days"]))), roundi(float(payoff["next"]) * 100.0)]
 
 
 ## GUIDE-084: " (it pays 6 stones and a Qi Gathering Pill a month)" for a rank's stipend, "" when it pays nothing.
