@@ -18,6 +18,10 @@ const FAR_QI_LEAD_DAYS := 30
 const FAIR_FIGHTS_MAX := 3
 const FAIR_FIGHT_MAX_RATED := 8
 const FAIR_FIGHT_EXPLORE_MAX := 2
+const OUTGROWN_RATED_MAX := 4  # foes rated per region by outgrown_hint (hints() runs every HUD refresh)
+const OUTGROWN_SURE_CHANCE := 0.95
+const OUTGROWN_FAIR_MIN := 0.4
+const OUTGROWN_FAIR_MAX := 0.85
 const FAIR_FIGHT_MIN_CHANCE := 0.7  # "Even" or better (Combat.label_for_chance)
 const CHORE_REGION := "qingshi_village"
 const QI_BUY_KEEP := 20  ## Stones the qi-pill hint leaves for the clinic (GUIDE-126).
@@ -100,6 +104,9 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 	var better_qi := _better_qi_hint(c, data, region_id, flags)
 	if better_qi != "":
 		out.append(better_qi)
+	var outgrown := outgrown_hint(c, data, region_id, today, flags)
+	if outgrown != "":
+		out.append(outgrown)
 	var lives_hint := artifact_lives_hint(c, data)
 	if lives_hint != "":
 		out.append(lives_hint)
@@ -2147,6 +2154,49 @@ static func _loot_armor_hint(c: CharacterData, data: GameData, region_id: String
 	if far == "":
 		return ""
 	return "Armor keeps you standing." + _sell_first_clause(offer, true) + far
+
+
+## GUIDE-146: the foes of `region_id` that `c` could meet, rated unhurt like practice_payoff, as [{name, chance}]
+## (at most OUTGROWN_RATED_MAX of them; empty with no region/day).
+static func _rated_region_fights(c: CharacterData, data: GameData, region_id: String, today: int, flags: Dictionary) -> Array[Dictionary]:
+	var rated: Array[Dictionary] = []
+	if region_id == "" or today < 0 or not data.regions.has(region_id):
+		return rated
+	var unhurt := CharacterData.from_dict(c.to_dict())
+	unhurt.injuries.clear()
+	var tags: Array = data.regions[region_id].get("encounter_tags", [])
+	for enemy_id in Exploration.eligible_fights(c, data, tags, flags, Calendar.season_of(today), region_id):
+		if rated.size() >= OUTGROWN_RATED_MAX:
+			break
+		var foe: Dictionary = data.enemies[enemy_id]
+		rated.append({"name": String(foe.get("name", enemy_id)), "chance": Combat.win_chance(unhurt, data, foe)})
+	return rated
+
+
+## GUIDE-146: when every fight in `region_id` is a sure win (>= OUTGROWN_SURE_CHANCE) and a region one route away
+## holds a fair one (OUTGROWN_FAIR_MIN..OUTGROWN_FAIR_MAX), say where it is. "" otherwise.
+static func outgrown_hint(c: CharacterData, data: GameData, region_id: String, today: int, flags: Dictionary = {}) -> String:
+	if c.realm_index <= NEWCOMER_MAX_REALM:
+		return ""
+	var home := _rated_region_fights(c, data, region_id, today, flags)
+	if home.is_empty():
+		return ""
+	for f in home:
+		if float(f["chance"]) < OUTGROWN_SURE_CHANCE:
+			return ""
+	var map := _route_day_map(c, data, region_id, 1)
+	var best_days: Dictionary = map["days"]
+	for r: String in map["order"]:
+		if r == region_id:
+			continue
+		var best: Dictionary = {}
+		for f in _rated_region_fights(c, data, r, today, flags):
+			var chance := float(f["chance"])
+			if chance >= OUTGROWN_FAIR_MIN and chance <= OUTGROWN_FAIR_MAX and (best.is_empty() or chance > float(best["chance"])):
+				best = f
+		if not best.is_empty():
+			return "Nothing here tests you any more: %s in %s (%s) is a fair fight (%d in 100)." % [best["name"], Exploration.region_name(data, r), Calendar.format_duration(int(best_days[r])), roundi(float(best["chance"]) * 100.0)]
+	return ""
 
 
 ## GUIDE-086: the fight (in `region_id`) that practising `tech_id` one more level turns from a loss into a

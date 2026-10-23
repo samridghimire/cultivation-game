@@ -4227,3 +4227,43 @@ func test_secret_realm_hint_names_place_and_cost() -> void:
 	c.inventory = {"spirit_stone": 300}
 	line = Guidance._untried_feature_hint(c, d, open_day, {}, {}, "fallen_star_market")
 	assert_true(line.contains("Fallen Star Vault is open here"), line)
+
+
+## GUIDE-146: a Foundation player who wins every home fight is pointed at a fair fight one route away.
+func _outgrown_foundation(attribute: int) -> CharacterData:
+	var c := _fresh()
+	c.realm_index = data().realm_index_of("foundation_establishment")
+	c.stage = 0
+	c.equipment = {"armor": "boar_hide_jerkin"}
+	for k: String in c.attributes.keys():
+		c.attributes[k] = attribute
+	return c
+
+
+func test_outgrown_hint_names_a_fair_fight_in_a_neighbouring_region() -> void:
+	var line := Guidance.outgrown_hint(_outgrown_foundation(6), data(), "qingshi_village", 0)
+	assert_true(line.begins_with("Nothing here tests you any more: Rogue Cultivator in Fallen Star Market (10 days) is a fair fight ("), line)
+	assert_true(line.ends_with(" in 100)."), line)
+	var hints := Guidance.hints(_outgrown_foundation(6), data(), 1.0, 30, {}, {}, "qingshi_village", 0)
+	assert_true(_has(hints, "Nothing here tests you any more"))
+
+
+func test_outgrown_hint_is_silent_for_a_newcomer_or_a_hard_home() -> void:
+	assert_eq(Guidance.outgrown_hint(_fresh(), data(), "qingshi_village", 0), "")
+	assert_eq(Guidance.outgrown_hint(_outgrown_foundation(6), data(), "", 0), "")
+	assert_eq(Guidance.outgrown_hint(_outgrown_foundation(6), data(), "qingshi_village", -1), "")
+	# Too strong: the neighbour is a sure win as well, so there is nowhere fair to send them.
+	assert_eq(Guidance.outgrown_hint(_outgrown_foundation(10), data(), "qingshi_village", 0), "")
+	# Not outgrown: a home foe is below 95%.
+	var weak := _outgrown_foundation(6)
+	var home := Guidance._rated_region_fights(weak, data(), "qingshi_village", 0, {})
+	weak.equipment = {}
+	weak.realm_index = 1
+	weak.attributes["strength"] = 1
+	var rated := Guidance._rated_region_fights(weak, data(), "qingshi_village", 0, {})
+	var sure := true
+	for f in rated:
+		sure = sure and float(f["chance"]) >= Guidance.OUTGROWN_SURE_CHANCE
+	assert_false(home.is_empty())
+	if not sure:
+		assert_eq(Guidance.outgrown_hint(weak, data(), "qingshi_village", 0), "")
