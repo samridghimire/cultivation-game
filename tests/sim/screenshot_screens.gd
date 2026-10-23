@@ -91,6 +91,7 @@ extends SceneTree
 ## WU-210: it then breaks through level with the rival (rival_caught_up_log / rival_caught_up_journal).
 ## WU-246: `-- --first-hour` also writes fh_<workshop|shop|journal_first_goals|journal_next_steps|journal_commissions|board>_<day1|month1>_<size>.png.
 ## WU-273: append `-- --techniques-shot` for techniques_practice[_scale115].png (Iron Fist level 1 details, practice button focused); run once per --resolution. Checked at 1280x720 and 1280x800: nothing clipped, the action row wraps.
+## WU-295: `--bounty-shot` writes bounty_menu_<size>.png: the Fallen Star Market bounty board with the longest hunt label any realm sees (the hunt's description is shown for the focused entry).
 ## WU-289: `--hint-shot` also writes hint_road_marker_/hint_road_menu_/hint_badge_<size>.png (road-out "!", route line "The hint points this way.", clinic badge).
 ## WU-288: `--hint-shot` also writes hint_best_mission_[journal_]<size>.png ("The best pays N contribution: <mission> (<days>)" on the sect line).
 ## WU-271: `--hint-shot` also writes hint_trial_[journal_]<size>.png (open sect trial odds, Fights you can win) and hint_sell_armor_[journal_]<size>.png ("Sell your ..." armor line).
@@ -185,6 +186,9 @@ func _start() -> void:
 		return
 	if OS.get_cmdline_user_args().has("--hint-shot"):
 		_start_hint_shot(gs)
+		return
+	if OS.get_cmdline_user_args().has("--bounty-shot"):
+		_start_bounty_shot(gs)
 		return
 	if OS.get_cmdline_user_args().has("--map-shot"):
 		_start_map_shot(gs)
@@ -1159,6 +1163,43 @@ func _start_map_shot(gs: Node) -> void:
 	shots.append({"name": "map_sells", "open": func() -> void:
 		gs.current_region = "fallen_star_market"
 		map.open(), "close": map.close})
+
+
+func _start_bounty_shot(gs: Node) -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 5
+	var c := CharacterFactory.create("Lin Feng", gs.data, rng, "male")
+	gs.start_session(c)
+	gs.pending_event = ""
+	gs.current_region = "fallen_star_market"
+	var clock: Node = root.get_node("GameClock")
+	clock.total_days = 40
+	world = load("res://src/world/world.tscn").instantiate()
+	root.add_child(world)
+	hud = world.get_node("HUD")
+	var board: Node = load("res://src/world/interactables/bounty_board.gd").new()
+	board.display_name = "Hunters' Bounty Board"
+	# The realm whose board carries the longest hunt label.
+	var best_realm := 0
+	var best_len := 0
+	for ri in range(gs.data.realms.size()):
+		c.realm_index = ri
+		c.stage = 0
+		for o: Dictionary in board.get_options():
+			if String(o["label"]).length() > best_len:
+				best_len = String(o["label"]).length()
+				best_realm = ri
+	c.realm_index = best_realm
+	c.stage = 0
+	hud.get("_banner").visible = false
+	var size_tag := "%dx%d" % [root.size.x, root.size.y]
+	shots.append({"name": "bounty_menu_" + size_tag, "open": func() -> void:
+		hud.get("_choice_menu").open_for(board)
+		await root.get_tree().process_frame
+		var buttons: Array = hud.get("_choice_menu").get("_buttons").get_children()
+		print("bounty-shot: realm ", best_realm, " label length ", best_len, " buttons ", buttons.size())
+		for b: Node in buttons:
+			print("  ", (b as Button).text), "close": func() -> void: hud.get("_choice_menu").close()})
 
 
 func _start_hint_shot(gs: Node) -> void:
