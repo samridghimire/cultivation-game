@@ -1315,6 +1315,25 @@ func _start_travel_shot(gs: Node) -> void:
 	var road: Node = load("res://src/world/interactables/travel_point.gd").new()
 	road.display_name = "Road"
 	var size_tag := "%dx%d" % [root.size.x, root.size.y]
+	# WU-326: Fallen Star Market has 4 roads; with every region visited the notes are at their longest.
+	var busy: Node = load("res://src/world/interactables/travel_point.gd").new()
+	busy.display_name = "Road"
+	shots.append({"name": "travel_road_busy_" + size_tag, "open": func() -> void:
+		gs.current_region = "fallen_star_market"
+		for region_id: String in gs.data.regions:
+			c.visited_regions.append(region_id)
+		hud.get("_choice_menu").open_for(busy)
+		await root.get_tree().process_frame
+		await root.get_tree().process_frame
+		var menu: Control = hud.get("_choice_menu")
+		print("travel-shot busy: menu ", menu.get_global_rect(), " inside ", root.get_visible_rect().encloses(menu.get_global_rect()))
+		for o: Dictionary in busy.get_options():
+			var note := String(o.get("description", "")).split("\n")[-1]
+			print("  ", o["label"], " | ", note, " (", note.length(), ")")
+			if note.length() > 90:
+				push_error("travel note too long: " + note), "close": func() -> void:
+			hud.get("_choice_menu").close()
+			gs.current_region = "qingshi_village"})
 	shots.append({"name": "travel_road_" + size_tag, "open": func() -> void:
 		hud.get("_choice_menu").open_for(road)
 		await root.get_tree().process_frame

@@ -22,3 +22,12 @@ func test_visited_region_lists_places_under_limit() -> void:
 	var note := TravelPoint.destination_note(c, data(), "qingshi_village", {})
 	assert_true(note.contains("Merchant"), note)
 	assert_true(note.length() < 90, note)
+
+
+func test_every_note_fits_when_all_regions_visited() -> void:
+	var c := new_character()
+	for region_id: String in data().regions:
+		c.visited_regions.append(region_id)
+	for region_id: String in data().regions:
+		var note := TravelPoint.destination_note(c, data(), region_id, {})
+		assert_true(note.length() <= 90, "%s: %s" % [region_id, note])
