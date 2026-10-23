@@ -256,6 +256,15 @@ static func shop_item_lines(c: CharacterData, data: GameData, item_id: String) -
 	return Items.describe_effects(data.items.get(item_id, {}).get("effects", {}), data)
 
 
+## WU-327: details lines for a shop item: its effects/equipment plus, for qi items, what the qi is worth in meditation.
+static func shop_detail_lines(c: CharacterData, data: GameData, item_id: String, region_id: String, flags: Dictionary) -> PackedStringArray:
+	var lines := shop_item_lines(c, data, item_id)
+	var worth := InventoryScreen.qi_worth_line(c, data, item_id, region_id, flags)
+	if worth != "":
+		lines.append(worth)
+	return lines
+
+
 ## Mission ids ordered for the list: takeable fights by rating (Weak first,
 ## Deadly last), then takeable non-fight missions, then the ones you can't take
 ## now. Data order is kept inside each group.
@@ -556,7 +565,7 @@ func _show_shop_details() -> void:
 	_info.text = shop_info_text(p, data, entry)
 	_description.text = String(item.get("description", ""))
 	_requirements.visible = false
-	var lines := shop_item_lines(p, data, _selected)
+	var lines := shop_detail_lines(p, data, _selected, GameState.current_region, GameState.world_flags)
 	_rewards.visible = not lines.is_empty()
 	_rewards.text = "\n".join(lines)
 	var reason := Sects.check_purchase(p, data, _selected)

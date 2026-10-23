@@ -477,3 +477,11 @@ func test_coloured_requirement_lines_mark_met_and_unmet_differently() -> void:
 	var met := MissionBoard.coloured_requirement_lines(c, d, mission, MissionBoard.requirement_lines(c, d, mission, d.start_region))[0]
 	assert_true(unmet.begins_with("[color=#%s]" % UIStyle.danger_color("Deadly").to_html(false)), unmet)
 	assert_true(met.begins_with("[color=#%s]" % MissionBoard.REQ_MET_COLOR.to_html(false)), met)
+
+
+func test_shop_detail_lines_say_what_qi_is_worth() -> void:
+	var c := new_character()
+	var pill := "\n".join(MissionBoard.shop_detail_lines(c, data(), "superior_qi_gathering_pill", "qingshi_village", {}))
+	assert_true(pill.contains("of meditation"), pill)
+	var talisman := "\n".join(MissionBoard.shop_detail_lines(c, data(), "golden_bell_talisman", "qingshi_village", {}))
+	assert_false(talisman.contains("meditation"), talisman)

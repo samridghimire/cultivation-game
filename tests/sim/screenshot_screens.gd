@@ -1209,6 +1209,13 @@ func _start_missions_shot(gs: Node) -> void:
 		var list_text: String = board.label_for(c, gs.data, "herb_hall_tithe", "", -1, "")
 		assert(list_text.contains("(1/3)"), list_text)
 		assert(board._requirements.get_combined_minimum_size().y > 0.0), "close": board.close})
+	# WU-327: the shop tab with the Superior Qi Gathering Pill selected shows its worth line.
+	shots.append({"name": "missions_shop_" + size_tag, "open": func() -> void:
+		board.open()
+		board._set_tab("shop")
+		board._selected = "superior_qi_gathering_pill"
+		board._show_details()
+		assert(board._rewards.text.contains("of meditation"), board._rewards.text), "close": board.close})
 	shots.append({"name": "missions_ranks_" + size_tag, "open": func() -> void:
 		board.open()
 		board._set_tab("rank")
