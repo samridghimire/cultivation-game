@@ -53,6 +53,8 @@ static func fight_suffix(choice: Dictionary) -> String:
 	var chance: float = float(choice.get("chance", -1.0))
 	if chance < 0.0:
 		return ""
+	if bool(choice.get("roll", false)):
+		return " (about %d in 100)" % roundi(chance * 100.0)
 	return " (%s)" % UIStyle.odds_wording(chance, bool(choice.get("lethal", false)))
 
 

@@ -662,7 +662,7 @@ func test_wu171_choice_menu_and_encounter_footer_focus() -> void:
 		"id": "audit_tags", "tags": ["audit_tag"], "weight": 1, "kind": "neutral", "days": 1,
 		"text": "A riddle is carved into the gate.",
 		"choices": [
-			{"label": "Think it through", "check": {"attribute": "comprehension", "min": 1}},
+			{"label": "Think it through"},
 			{"label": "Walk on"},
 		],
 	}

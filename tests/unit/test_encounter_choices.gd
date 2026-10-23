@@ -1022,3 +1022,87 @@ func test_upper_qi_refining_encounters() -> void:
 			if ch.has("enemy"):
 				assert_true(d.enemies.has(ch["enemy"]), "enemy exists")
 				assert_false(bool(d.enemies[ch["enemy"]]["lethal"]), "the hunters never kill")
+
+
+## ENC-008: a choice with a `check` {attribute, target} succeeds with chance attribute/target (0.1..0.9), else on_fail applies.
+func _check_encounter(target: int = 20) -> Dictionary:
+	return {"id": "t_check", "tags": ["x"], "weight": 1, "kind": "neutral", "days": 0, "text": "A rope bridge.", "choices": [
+		{"label": "Leap across", "text": "You land safely.", "days": 1, "effects": {"qi": 10},
+			"check": {"attribute": "comprehension", "target": target},
+			"on_fail": {"text": "You slip.", "days": 3, "effects": {"qi": 1}}},
+		{"label": "Walk around"}]}
+
+
+func test_check_chance_is_clamped_ratio() -> void:
+	var c := new_character()
+	var choice: Dictionary = _check_encounter()["choices"][0]
+	c.attributes["comprehension"] = 12
+	assert_eq(snappedf(Exploration.check_chance(c, choice), 0.001), 0.6)
+	c.attributes["comprehension"] = 1
+	assert_eq(Exploration.check_chance(c, choice), 0.1)
+	c.attributes["comprehension"] = 99
+	assert_eq(Exploration.check_chance(c, choice), 0.9)
+	assert_eq(Exploration.check_chance(c, {"label": "x"}), -1.0)
+
+
+func test_check_choice_listing_carries_chance() -> void:
+	var d := GameData.load_from_dir()
+	var c := new_character()
+	c.attributes["comprehension"] = 12
+	var list := Exploration.choices(c, d, _check_encounter(), {})
+	assert_eq(snappedf(float(list[0]["chance"]), 0.001), 0.6)
+	assert_eq(float(list[1]["chance"]), -1.0)
+	assert_true(list[0]["roll"])
+	assert_eq(EncounterWindow.fight_suffix(list[0]), " (about 60 in 100)")
+
+
+func test_check_choice_success_and_failure() -> void:
+	var d := GameData.load_from_dir()
+	var enc := _check_encounter()
+	var c := new_character()
+	c.attributes["comprehension"] = 12
+	var wins := 0
+	var fails := 0
+	for s in 40:
+		var r := Exploration.resolve_choice(c, d, enc, 0, {}, "", seeded_rng(s))
+		assert_true(r["ok"])
+		if r["failed"]:
+			fails += 1
+			assert_eq(r["text"], "You slip.")
+			assert_eq(r["days"], 3)
+		else:
+			wins += 1
+			assert_eq(r["text"], "You land safely.")
+			assert_eq(r["days"], 1)
+	assert_true(wins > 10 and fails > 5, "about 60/40: %d/%d" % [wins, fails])
+	var again := Exploration.resolve_choice(c, d, enc, 0, {}, "", seeded_rng(7))
+	assert_eq(again["failed"], Exploration.resolve_choice(c, d, enc, 0, {}, "", seeded_rng(7))["failed"], "deterministic")
+	assert_false(Exploration.resolve_choice(c, d, enc, 1, {}, "", seeded_rng(7))["failed"], "no check, no failure")
+
+
+func test_check_choice_through_game_state() -> void:
+	var gs: Node = _root().get_node("GameState")
+	gs.start_session(CharacterFactory.create("Wanderer", gs.data, seeded_rng()))
+	gs.data.encounters["t_check"] = _check_encounter(1)
+	gs.player.attributes["comprehension"] = 99
+	gs.pending_encounter = "t_check"
+	var qi: float = gs.player.qi
+	gs.choose_encounter(0)
+	assert_eq(gs.pending_encounter, "")
+	assert_true(gs.player.qi >= qi, "qi not lost")
+	gs.data.encounters.erase("t_check")
+	gs.end_session()
+
+
+func test_check_validation() -> void:
+	var d := GameData.load_from_dir()
+	d.encounters["t_bad"] = {"id": "t_bad", "tags": ["x"], "weight": 1, "kind": "neutral", "days": 0, "text": "t", "choices": [
+		{"label": "A", "check": {"attribute": "nope", "target": 5}, "on_fail": {}},
+		{"label": "B", "check": {"attribute": "comprehension", "target": 0}, "on_fail": {}},
+		{"label": "C", "check": {"attribute": "comprehension", "target": 5}},
+		{"label": "D", "on_fail": {}},
+		{"label": "E", "check": {"attribute": "comprehension", "target": 5}, "on_fail": {"enemy": "ghost"}}]}
+	var errors := Exploration.validate_choices(d)
+	assert_eq(errors.size(), 5, str(errors))
+	d.encounters["t_bad"] = _check_encounter()
+	assert_true(Exploration.validate_choices(d).is_empty(), str(Exploration.validate_choices(d)))

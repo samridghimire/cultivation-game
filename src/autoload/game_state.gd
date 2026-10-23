@@ -953,7 +953,7 @@ func choose_encounter(index: int) -> void:
 		return
 	var encounter: Dictionary = data.encounters.get(pending_encounter, {})
 	var renown_before := Renown.value(player, current_region)
-	var result := Exploration.resolve_choice(player, data, encounter, index, world_flags, current_region)
+	var result := Exploration.resolve_choice(player, data, encounter, index, world_flags, current_region, rng)
 	_effect_renown_banner(renown_before)
 	if not result["ok"]:
 		EventBus.post(result["reason"], "warning")
@@ -970,6 +970,8 @@ func choose_encounter(index: int) -> void:
 	_check_mastery()
 	_pass_time(result["days"])
 	var choice: Dictionary = encounter["choices"][index]
+	if result["failed"]:
+		choice = choice["on_fail"]
 	if _can_act():
 		_rival_consequences(choice)
 	if result["enemy"] != "" and _can_act():

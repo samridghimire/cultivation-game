@@ -587,7 +587,18 @@ static func choices(c: CharacterData, data: GameData, encounter: Dictionary, fla
 		if reason == "" and not foe.is_empty():
 			chance = Combat.win_chance(c, data, foe)
 		out.append({"index": i, "label": String(list[i].get("label", "")), "disabled": reason != "", "reason": reason, "fight": list[i].has("enemy") or bool(list[i].get("fight_rival", false)), "check": check_tag(data, list[i]), "chance": chance, "lethal": bool(foe.get("lethal", false))})
+		if list[i].has("check"):
+			out[i]["chance"] = check_chance(c, list[i])
+			out[i]["roll"] = true
 	return out
+
+
+## ENC-008: the chance an attribute `check` {attribute, target} choice succeeds, clamped 0.1..0.9; -1.0 when the choice has no check.
+static func check_chance(c: CharacterData, choice: Dictionary) -> float:
+	var check: Dictionary = choice.get("check", {})
+	if check.is_empty():
+		return -1.0
+	return clampf(float(c.attribute(String(check["attribute"]))) / float(check["target"]), 0.1, 0.9)
 
 
 ## The foe a choice fights ({} when none): the player's rival (needs `people`) or its enemy id.
@@ -603,8 +614,10 @@ static func choice_foe(c: CharacterData, data: GameData, choice: Dictionary, peo
 
 ## Applies choice `index` of `encounter`. Returns {ok, reason, text, notes,
 ## days, enemy, karma}; `enemy` is an enemy id the caller must fight ("" = none)
-## and `karma` is true when the choice shifted alignment.
-static func resolve_choice(c: CharacterData, data: GameData, encounter: Dictionary, index: int, flags: Dictionary, region_id: String = "") -> Dictionary:
+## and `karma` is true when the choice shifted alignment. A choice with a
+## `check` rolls `rng` (no rng = the check succeeds); on failure its `on_fail`
+## block is applied instead and `failed` is true.
+static func resolve_choice(c: CharacterData, data: GameData, encounter: Dictionary, index: int, flags: Dictionary, region_id: String = "", rng: RandomNumberGenerator = null) -> Dictionary:
 	var list: Array = encounter.get("choices", [])
 	if index < 0 or index >= list.size():
 		return {"ok": false, "reason": "That is not a choice here.", "text": "", "notes": PackedStringArray(), "days": 0, "enemy": "", "karma": false}
@@ -612,9 +625,12 @@ static func resolve_choice(c: CharacterData, data: GameData, encounter: Dictiona
 	var reason := check_choice(c, data, choice, flags)
 	if reason != "":
 		return {"ok": false, "reason": reason, "text": "", "notes": PackedStringArray(), "days": 0, "enemy": "", "karma": false}
+	var failed := choice.has("check") and rng != null and rng.randf() >= check_chance(c, choice)
+	if failed:
+		choice = choice["on_fail"]
 	var effects: Dictionary = choice.get("effects", {})
 	var notes := Effects.apply(c, data, effects, flags, region_id) if not effects.is_empty() else PackedStringArray()
-	return {"ok": true, "reason": "", "text": String(choice.get("text", "")), "notes": notes, "days": int(choice.get("days", 0)), "enemy": String(choice.get("enemy", "")), "karma": effects.has("alignment")}
+	return {"ok": true, "reason": "", "text": String(choice.get("text", "")), "notes": notes, "days": int(choice.get("days", 0)), "enemy": String(choice.get("enemy", "")), "karma": effects.has("alignment"), "failed": failed}
 
 
 ## Load errors for encounter `choices`, `requires_flag` and alignment bounds.
@@ -662,6 +678,23 @@ static func validate_choices(data: GameData) -> PackedStringArray:
 				var rn: Variant = choice["renown"]
 				if (typeof(rn) != TYPE_INT and typeof(rn) != TYPE_FLOAT) or float(rn) != int(rn) or int(rn) < 1 or int(rn) > 50:
 					errors.append("Encounter '%s' choice '%s' renown must be 1..50" % [e["id"], label])
+			if choice.has("check"):
+				var check: Variant = choice["check"]
+				if not (check is Dictionary and data.attribute_ids().has(String(check.get("attribute", "")))):
+					errors.append("Encounter '%s' choice '%s' check needs a known attribute" % [e["id"], label])
+				elif not ((check.get("target") is int or check.get("target") is float) and float(check["target"]) > 0.0):
+					errors.append("Encounter '%s' choice '%s' check needs target > 0" % [e["id"], label])
+				if not choice.get("on_fail") is Dictionary:
+					errors.append("Encounter '%s' choice '%s' has a check but no on_fail" % [e["id"], label])
+				else:
+					var fail_enemy := String(choice["on_fail"].get("enemy", ""))
+					if fail_enemy != "" and not data.enemies.has(fail_enemy):
+						errors.append("Encounter '%s' choice '%s' on_fail has unknown enemy '%s'" % [e["id"], label, fail_enemy])
+					for item_id in choice["on_fail"].get("effects", {}).get("items", {}):
+						if not data.items.has(item_id):
+							errors.append("Encounter '%s' choice '%s' on_fail references unknown item '%s'" % [e["id"], label, item_id])
+			elif choice.has("on_fail"):
+				errors.append("Encounter '%s' choice '%s' has on_fail without a check" % [e["id"], label])
 			if choice.has("grateful_npc"):
 				errors.append_array(_validate_grateful(data, choice["grateful_npc"], "Encounter '%s' choice '%s'" % [e["id"], label]))
 	return errors
