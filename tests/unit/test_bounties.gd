@@ -22,10 +22,10 @@ func _errors_after(mutate: Callable) -> Array:
 
 
 func test_shipped_bounties_validate() -> void:
-	assert_eq(data().bounties.size(), 16)
+	assert_eq(data().bounties.size(), 17)
 	var puppet: Dictionary = data().bounties["marsh_corpse_puppet_bounty"]
 	assert_eq(puppet["min_realm"], "qi_refining", "C-081: the marsh posts a Qi Refining bounty")
-	assert_eq(int(_count_in("qingshi_village")), 2, "C-064: Qingshi posts two bounties")
+	assert_eq(int(_count_in("qingshi_village")), 3, "C-064/C-218: Qingshi posts three bounties")
 	var regions := {}
 	for b: Dictionary in data().bounties.values():
 		regions[b["region"]] = int(regions.get(b["region"], 0)) + 1
@@ -307,3 +307,21 @@ func test_mist_python_bounty_opens_at_the_seventh_layer() -> void:
 	var ids := Bounties.offers(c, data(), 0, "misty_forest").map(func(o: Dictionary) -> String: return o["id"])
 	assert_true(ids.has("mist_python_bounty"), str(ids))
 	assert_eq(data().encounters["forest_mist_python"]["enemy"], "mist_python")
+
+
+## C-218: a middle-layer Qingshi hunt, a fair fight for the 5th-7th layers.
+func test_salt_road_captain_bounty_is_a_fair_hunt_for_the_middle_layers() -> void:
+	var b: Dictionary = data().bounties["salt_road_captain_bounty"]
+	assert_eq(b["enemy"], "salt_road_captain")
+	assert_eq(b["region"], "qingshi_village")
+	assert_eq(int(b["min_stage"]), 4)
+	assert_false(bool(data().enemies["salt_road_captain"]["lethal"]))
+	var c := _qi(3)
+	assert_false(Bounties.offers(c, data(), 0, "qingshi_village").any(func(o: Dictionary) -> bool: return o["id"] == "salt_road_captain_bounty"), "not at the 4th layer")
+	for stage: int in [4, 6]:
+		var f := _qi(stage)
+		f.techniques["iron_fist"] = {"level": 3, "xp": 0.0}
+		assert_true(Bounties.offers(f, data(), 0, "qingshi_village").any(func(o: Dictionary) -> bool: return o["id"] == "salt_road_captain_bounty"), "offered at index %d" % stage)
+		var odds := Combat.win_chance(f, data(), data().enemies["salt_road_captain"])
+		print("C-218 odds stage index %d, Iron Fist L3: %.2f" % [stage, odds])
+		assert_true(odds >= 0.45 and odds <= 0.95, "odds %.2f at index %d" % [odds, stage])

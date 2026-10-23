@@ -199,6 +199,7 @@ static func appearances(data: GameData) -> Array[Dictionary]:
 	_add_inheritance_trials(data, out)
 	_add_world_event_foes(data, out)
 	_add_sect_trials(data, out)
+	_add_bounty_foes(data, out)
 	out.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return [a["realm_index"], a["enemy"], a["source"]] < [b["realm_index"], b["enemy"], b["source"]])
 	return out
 
@@ -305,3 +306,12 @@ static func verdict(entry: float, peak: float) -> String:
 	if entry < HARD_BELOW:
 		return "hard"
 	return "ok"
+
+
+## C-218: bounty foes, rated at the bounty's min_realm and min_stage. The player
+## takes a hunt by choice, so it is "optional" and never forced.
+static func _add_bounty_foes(data: GameData, out: Array[Dictionary]) -> void:
+	for id: String in data.bounties:
+		var b: Dictionary = data.bounties[id]
+		if data.enemies.has(String(b.get("enemy", ""))):
+			out.append({"enemy": String(b["enemy"]), "source": "bounty " + id, "realm_index": maxi(0, data.realm_index_of(String(b.get("min_realm", "mortal")))), "stage": int(b.get("min_stage", 0)), "forced": false, "optional": true})
