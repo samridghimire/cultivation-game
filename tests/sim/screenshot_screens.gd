@@ -1314,6 +1314,39 @@ func _start_missions_shot(gs: Node) -> void:
 			c.stage = saved["stage"]
 			c.techniques = saved["techniques"]
 			c.inventory = saved["inventory"]})
+	# WU-344: a bare QR 1st-layer newcomer can win Drive Off the Den Wolves (RV-015): not "Deadly", and the sect hint counts it ready (it does not name it: Escort pays more).
+	var saved_den: Dictionary = {}
+	shots.append({"name": "missions_den_wolf_" + size_tag, "open": func() -> void:
+		saved_den["realm"] = c.realm_index
+		saved_den["stage"] = c.stage
+		saved_den["techniques"] = c.techniques.duplicate(true)
+		saved_den["inventory"] = c.inventory.duplicate(true)
+		saved_den["equipment"] = c.equipment.duplicate(true)
+		c.realm_index = 1
+		c.stage = 0
+		c.techniques = {"iron_fist": {"level": 1, "xp": 0.0}}
+		c.inventory = {}
+		c.equipment = {}
+		hud.get("_banner").visible = false
+		root.get_node("EventBus").player_changed.emit()
+		await root.get_tree().process_frame
+		await root.get_tree().process_frame
+		board.open()
+		board._selected = "drive_off_den_wolves"
+		board._show_details()
+		var row: String = board.label_for(c, gs.data, "drive_off_den_wolves", "", -1, "")
+		var danger: String = (board._danger as Label).text
+		var hint := " / ".join(Guidance.hints(c, gs.data, 3, 12, gs.npcs, gs.world_flags, "qingshi_village", 40, gs.npc_favor))  # the HUD shows the first; the journal lists them all
+		print("missions-shot den wolf: ", row, " | ", danger, " | ", hint)
+		assert(not row.contains("Deadly") and not danger.contains("Deadly"), "still deadly: %s | %s" % [row, danger])
+		# The sect line names the best-paying mission (Escort Mortal Villagers, 60 vs 45), so the hunt shows as "one of 2 ready".
+		assert(hint.contains("one of 2 missions ready") and not hint.contains("too dangerous"), "the hunt is not counted ready: " + hint), "close": func() -> void:
+			board.close()
+			c.realm_index = saved_den["realm"]
+			c.stage = saved_den["stage"]
+			c.techniques = saved_den["techniques"]
+			c.inventory = saved_den["inventory"]
+			c.equipment = saved_den["equipment"]})
 
 
 ## WU-253: `--map-shot` writes map_sells_<size>.png, the world map with Fallen Star Market selected (its "Sells:" line).
