@@ -18,11 +18,23 @@ func _median(values: Array) -> float:
 	return float(values[values.size() / 2])
 
 
+const HUD := preload("res://src/ui/hud.gd")
+
+
+func _mask_digits(text: String) -> String:
+	var out := ""
+	for ch in text:
+		out += "#" if ch >= "0" and ch <= "9" else ch
+	return out
+
+
 func _run() -> void:
 	var args := OS.get_cmdline_user_args()
 	var curious := args.has("--curious")
 	var zero := args.has("--zero")  # QA-126: count fights rated 0%, by what started them
 	var forced := args.has("--forced")  # QA-139: tally every fight rated under 20%, by source, with its outcome
+	var long_hints := args.has("--long-hints")  # QA-143: tally hint lines longer than the HUD cap
+	var long_rows := {}
 	var forced_rows: Array = []
 	var zero_by := {}
 	var fights_seen := {"n": 0}
@@ -38,7 +50,7 @@ func _run() -> void:
 	for a in args:
 		if a.begins_with("--seed="):
 			only_seed = int(a.substr(7))
-		elif a != "--curious" and a != "--trace" and a != "--zero" and a != "--forced" and a != "--no-trial" and a != "--no-heal" and a != "--no-spar-hint" and a != "--blind-missions":
+		elif a != "--curious" and a != "--trace" and a != "--zero" and a != "--forced" and a != "--no-trial" and a != "--no-heal" and a != "--no-spar-hint" and a != "--blind-missions" and a != "--long-hints":
 			nums.append(int(a))
 	var seeds := nums[0] if nums.size() > 0 else 30
 	var months := nums[1] if nums.size() > 1 else 12
@@ -123,6 +135,17 @@ func _run() -> void:
 		hook = func(month: int) -> void:
 			if trace_hook.is_valid():
 				trace_hook.call(month)
+			if long_hints:
+				var density: float = gs.hint_density()
+				for h: String in Guidance.hints(gs.player, gs.data, density, 5, gs.npcs, gs.world_flags, gs.current_region, clock.total_days, gs.npc_favor):
+					if h.length() > HUD.HINT_MAX_CHARS:
+						var key := _mask_digits(h.substr(0, 30))
+						var row: Dictionary = long_rows.get(key, {"count": 0, "max": 0, "example": ""})
+						row["count"] += 1
+						row["max"] = maxi(int(row["max"]), h.length())
+						if row["example"] == "":
+							row["example"] = h
+						long_rows[key] = row
 			if month == 2 or month == 5 or month == 11:
 				iron_levels[month + 1].append(Techniques.level(gs.player, "iron_fist"))  # QA-138
 		var r: Dictionary = FirstHour.play(gs, clock, s, months, curious, hook)
@@ -199,5 +222,12 @@ func _run() -> void:
 		print("  seed  enemy  source  layer  odds  outcome  injured")
 		for row: Dictionary in forced_rows:
 			print("  %4d  %s  %s  QR%d  %.0f%%  %s  %s" % [row["seed"], row["id"], row["source"], row["layer"], 100.0 * float(row["odds"]), row["outcome"], "yes" if row.get("new_injury", false) else "no"])
+	if long_hints:
+		print("Hint lines over %d characters (QA-143), by first 30 characters (digits masked):" % HUD.HINT_MAX_CHARS)
+		var keys := long_rows.keys()
+		keys.sort_custom(func(a: String, b: String) -> bool: return int(long_rows[a]["count"]) > int(long_rows[b]["count"]))
+		for key: String in keys:
+			var row: Dictionary = long_rows[key]
+			print("  x%d max %d | %s | cut-off: %s" % [row["count"], row["max"], key, String(row["example"]).substr(HUD.HINT_MAX_CHARS, 80)])
 	print("Lines by category: %s" % str(by_cat))
 	quit()
