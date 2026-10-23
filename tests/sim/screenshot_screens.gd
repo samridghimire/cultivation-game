@@ -101,6 +101,7 @@ extends SceneTree
 ## WU-297: `--hint-shot` also writes hint_npc_badge_<size>.png (first hint is a Qingshi NPC's pointers line, the NPC-only kind; the gold "!" sits before it).
 ## WU-289: `--hint-shot` also writes hint_road_marker_/hint_road_menu_/hint_badge_<size>.png (road-out "!", route line "The hint points this way.", clinic badge).
 ## WU-288: `--hint-shot` also writes hint_best_mission_[journal_]<size>.png ("The best pays N contribution: <mission> (<days>)" on the sect line).
+## WU-309: `--hint-shot` also writes hint_long_sect_<size>.png (outer disciple, Qi Refining 1st layer, Escort on cooldown, no herbs; capped sect line keeps the mission name).
 ## WU-323: `--hint-shot` also writes hint_far_qi_<size>.png (rogue, Foundation Early, no qi: "Travel to Azure Peak ..." leads; asserts the capped line, the hinted region and the road marker).
 ## WU-271: `--hint-shot` also writes hint_trial_[journal_]<size>.png (open sect trial odds, Fights you can win) and hint_sell_armor_[journal_]<size>.png ("Sell your ..." armor line).
 ## WU-258: `--hint-shot` also writes hint_armor_far_[journal_]<size>.png and hint_empty_fights_journal_<size>.png.
@@ -1857,6 +1858,31 @@ func _start_hint_shot(gs: Node) -> void:
 		assert(Guidance.hinted_region(gs.data, first, "qingshi_village") == "azure_peak", "hinted region (the map mark and note) is not Azure Peak")
 		var tp: Node = travel_node.call()
 		assert(tp != null and String(tp.get("hint_region")) == "azure_peak", "road marker does not point at Azure Peak"), "close": func() -> void: pass})
+
+	# WU-309: an Azure Cloud outer disciple at Qi Refining 1st layer with Escort Mortal Villagers on cooldown and no herbs:
+	# the capped HUD sect line keeps the mission name and the journal's Next steps shows the full line.
+	shots.append({"name": "hint_long_sect_" + size_tag, "open": func() -> void:
+		setup_long.call()
+		c.realm_index = 1
+		c.stage = 0
+		c.qi = 0.0
+		c.inventory = {}
+		c.mission_cooldowns = {"escort_mortal_villagers": c.age_days + 30}
+		gs.current_region = "qingshi_village"
+		root.get_node("EventBus").player_changed.emit()
+		await root.get_tree().process_frame
+		await root.get_tree().process_frame
+		hud.get("_banner").visible = false
+		var sect_line := ""
+		for h: String in Guidance.hints(c, gs.data, 3, 12, gs.npcs, gs.world_flags, "qingshi_village", 40, gs.npc_favor):
+			if h.contains("Gather Spirit Herbs") or h.contains("Escort Mortal Villagers"):
+				sect_line = h
+				break
+		print("hint-shot long sect: ", sect_line)
+		assert(sect_line != "", "no sect mission hint")
+		var capped: String = hud.call("cap_hint", sect_line)
+		assert(capped.contains("Gather Spirit Herbs") or capped.contains("Escort Mortal Villagers"), "capped sect line lost the mission name: " + capped)
+		assert(sect_line.length() > capped.length() or sect_line == capped, "the journal line (uncapped) is shorter than the capped HUD line"), "close": func() -> void: pass})
 
 
 ## WU-190: the encounter window on real encounters with attribute, profession and enemy choices.
