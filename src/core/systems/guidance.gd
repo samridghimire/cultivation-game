@@ -152,11 +152,12 @@ static func thin_defence_hint(c: CharacterData, data: GameData, region_id: Strin
 	var has_armor: bool = c.equipment.get("armor", "") != ""
 	if has_body and has_armor:
 		return ""
-	var missing := _thin_defence_missing(c, data)
-	var line := "Your defence is thin for Foundation foes: %s before fighting cultivators." % missing
-	if region_id != "":
-		var offer := sell_offer(c, data, region_id)
-		if not has_armor:
+	# GUIDE-125: the shop first (the HUD shows only HEADLINE_CHARS), then the body art, the reason last.
+	var line := "Your defence is thin."
+	var offer := sell_offer(c, data, region_id) if region_id != "" else {}
+	if not has_armor:
+		var armor_start := line.length()
+		if region_id != "":
 			var armor_id := affordable_armor(c, data, region_id)
 			if armor_id != "":
 				line += " The %s sells %s for %d stones." % [merchant_selling(data, region_id, armor_id), data.items[armor_id]["name"], merchant_price(c, data, region_id, armor_id)]
@@ -168,7 +169,11 @@ static func thin_defence_hint(c: CharacterData, data: GameData, region_id: Strin
 					var loot_armor := affordable_armor(c, data, region_id, c.item_count("spirit_stone") + int(offer.get("total", 0)))
 					if loot_armor != "" and not offer.is_empty():
 						line += " The %s sells %s for %d stones.%s" % [merchant_selling(data, region_id, loot_armor), data.items[loot_armor]["name"], merchant_price(c, data, region_id, loot_armor), _sell_first_clause(offer)]
-		if not has_body:
+		if line.length() == armor_start:
+			line += " Wear armor."
+	if not has_body:
+		line += " Learn a body technique such as Stone Skin Tempering."
+		if region_id != "":
 			var source := body_manual_source(c, data, region_id)
 			if source != "":
 				line += " %s teaches one." % source
@@ -184,6 +189,7 @@ static func thin_defence_hint(c: CharacterData, data: GameData, region_id: Strin
 				if not far.is_empty():
 					var manual: String = far["result"]
 					line += " %s (%s, %s, %s%s) teaches one." % [data.items[manual]["name"], merchant_selling(data, far["region_id"], manual), far["region_name"], Calendar.format_duration(int(far["days"])), _by_way_of(c, data, region_id, far)]
+	line += " Foundation foes hit hard."
 	if Injuries.has_any(c):
 		line += " Heal your injuries before you fight."
 	return line
@@ -414,11 +420,12 @@ static func idle_crafter_hint(c: CharacterData, data: GameData, region_id: Strin
 		return ""
 	var best := _meditation_spot(c, data, region_id, flags)
 	# -1: older saves never stamped the day, so don't claim how long it has been.
-	var line := "You have not cultivated lately." if c.last_meditated_day < 0 else "You have not cultivated in %s." % Calendar.format_duration(idle)
+	var since := "lately" if c.last_meditated_day < 0 else "in %s" % Calendar.format_duration(idle)
 	if float(best["rate"]) > 0.0:
+		# GUIDE-125: the spot first (the HUD shows only HEADLINE_CHARS), the idle time last.
 		var days := ceili(Cultivation.days_to_next_stage(c, data, float(best["density"])))
-		line += " %s would carry you to %s in about %s." % [String(best["spot"]), _next_step_name(c, data), Calendar.format_duration(days)]
-	return line
+		return "Meditate at %s: about %s to %s (you have not cultivated %s)." % [String(best["spot"]), Calendar.format_duration(days), _next_step_name(c, data), since]
+	return "You have not cultivated %s." % since
 
 
 ## GUIDE-103: what the next qi goal is called: "the next layer" (or `plain`), or at a realm's last
@@ -1958,13 +1965,17 @@ static func practice_hint(c: CharacterData, data: GameData, region_id: String = 
 	if id == "":
 		return ""
 	var days := Techniques.days_to_next(c, data, id)
-	var next := ""
+	var lvl := Techniques.level(c, id)
+	# GUIDE-125: the next level and its time first (the HUD shows only HEADLINE_CHARS), the reason last.
+	var line := "Practise %s on the Techniques screen: " % data.techniques[id].name
 	if days > 0:
-		next = ", about %s to level %d" % [Calendar.format_duration(days), Techniques.level(c, id) + 1]
+		line += "level %d in about %s (level %d now)" % [lvl + 1, Calendar.format_duration(days), lvl]
+	else:
+		line += "level %d now" % lvl
 	var payoff := practice_payoff(c, data, id, region_id, today, flags)
 	if not payoff.is_empty():
-		next += "; at level %d you would beat %s about %d times in 100, now %d" % [payoff["level"], Text.a(String(payoff["enemy"])), roundi(float(payoff["next"]) * 100.0), roundi(float(payoff["now"]) * 100.0)]
-	return "Practise %s on the Techniques screen: each level raises your odds in a fight (level %d now%s)." % [data.techniques[id].name, Techniques.level(c, id), next]
+		line += "; at level %d you would beat %s about %d times in 100, now %d" % [payoff["level"], Text.a(String(payoff["enemy"])), roundi(float(payoff["next"]) * 100.0), roundi(float(payoff["now"]) * 100.0)]
+	return line + ". Each level raises your odds in a fight."
 
 
 ## True when a sect mission that `c` can take right now needs `item_id` (the mission hint names it) (GUIDE-118).

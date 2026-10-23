@@ -1334,8 +1334,8 @@ func test_practice_hint_for_a_low_level_fighting_style() -> void:
 	var c := _fresh()
 	c.techniques = {"iron_fist": {"level": 1, "xp": 0.0}}
 	var hint := Guidance.practice_hint(c, data())
-	assert_true(hint.contains("Practise Iron Fist") and hint.contains("level 1 now"), hint)
-	assert_true(hint.contains(" to level 2)"), hint)
+	assert_true(hint.contains("Practise Iron Fist") and hint.contains("(level 1 now)"), hint)
+	assert_true(hint.contains("level 2 in about "), hint)
 	var hints := Guidance._newcomer_hints(c, data(), {Guidance.ELDER_MO_FLAG: true}, "qingshi_village")
 	assert_true(_has(hints, "Practise Iron Fist"))
 	assert_false(_has(hints, "no fighting style"))
@@ -2646,7 +2646,7 @@ func test_idle_hint_replaces_gather_line() -> void:
 	var found := false
 	for line in idle:
 		assert_false(line.begins_with("Gather "), line)
-		found = found or line.begins_with("You have not cultivated")
+		found = found or (line.begins_with("Meditate at ") and line.contains("(you have not cultivated in "))
 	assert_true(found, str(idle))
 	c.last_meditated_day = Guidance.IDLE_CULTIVATION_DAYS
 	var fresh := Guidance.hints(c, data(), 1.0, 30, {}, {}, "qingshi_village", Guidance.IDLE_CULTIVATION_DAYS)
@@ -2663,15 +2663,15 @@ func test_idle_crafter_hint() -> void:
 	c.realm_index = 1
 	c.last_meditated_day = 0
 	var line := Guidance.idle_crafter_hint(c, data(), "qingshi_village", Guidance.IDLE_CULTIVATION_DAYS)
-	assert_true(line.begins_with("You have not cultivated in "), line)
-	assert_true(line.contains("would carry you to the next layer in about"), line)
+	assert_true(line.begins_with("Meditate at "), line)
+	assert_true(line.contains("to the next layer (you have not cultivated in "), line)
 	assert_eq(Guidance.idle_crafter_hint(c, data(), "qingshi_village", Guidance.IDLE_CULTIVATION_DAYS - 1), "")
 	assert_eq(Guidance.idle_crafter_hint(c, data(), "qingshi_village", -1), "")
 	assert_true(Guidance.idle_crafter_hint(c, data(), "", 40).begins_with("You have not cultivated"))
 	var unknown := _fresh()
 	unknown.professions["alchemist"] = {"rank": 0, "xp": 0.0}
 	unknown.realm_index = 1
-	assert_true(Guidance.idle_crafter_hint(unknown, data(), "qingshi_village", 400).begins_with("You have not cultivated lately."), "an unstamped (old) save does not claim a duration")
+	assert_true(Guidance.idle_crafter_hint(unknown, data(), "qingshi_village", 400).contains("not cultivated lately"), "an unstamped (old) save does not claim a duration")
 	var none := _fresh()
 	none.realm_index = 1
 	assert_eq(Guidance.idle_crafter_hint(none, data(), "qingshi_village", 90), "")
@@ -2680,7 +2680,7 @@ func test_idle_crafter_hint() -> void:
 	foundation.realm_index = 2
 	assert_eq(Guidance.idle_crafter_hint(foundation, data(), "qingshi_village", 90), "")
 	var hints := Guidance.hints(c, data(), 1.0, 1, {}, {}, "qingshi_village", 60)
-	assert_true(_has(hints, "You have not cultivated in"))
+	assert_true(_has(hints, "you have not cultivated in"))
 
 
 func test_realm_goals_table_matches_named_ladders() -> void:
@@ -2701,18 +2701,18 @@ func test_thin_defence_hint() -> void:
 	c.techniques = {}
 	c.equipment = {}
 	var line := Guidance.thin_defence_hint(c, data())
-	assert_true(line.contains("Your defence is thin for Foundation foes"), line)
+	assert_true(line.contains("Your defence is thin."), line)
 	assert_false(line.contains("Heal your injuries"))
 	assert_true(_has(Guidance.hints(c, data(), 1.0, 20), "Your defence is thin"))
 	c.techniques["stone_skin"] = {"level": 1, "xp": 0.0}
-	assert_true(line.contains("learn a body technique such as Stone Skin Tempering and wear armor"), line)
+	assert_true(line.contains("Wear armor.") and line.contains("Learn a body technique such as Stone Skin Tempering."), line)
 	var body_only := Guidance.thin_defence_hint(c, data())
-	assert_true(body_only.contains("wear armor") and not body_only.contains("learn a body technique"), "a body art without armor is still thin: " + body_only)
+	assert_true(body_only.contains("Wear armor") and not body_only.contains("Learn a body technique"), "a body art without armor is still thin: " + body_only)
 	c.equipment["armor"] = "boar_hide_jerkin"
 	assert_eq(Guidance.thin_defence_hint(c, data()), "")
 	c.techniques = {}
 	var armor_only := Guidance.thin_defence_hint(c, data())
-	assert_true(armor_only.contains("learn a body technique") and not armor_only.contains("wear armor"), "armor without a body art: " + armor_only)
+	assert_true(armor_only.contains("Learn a body technique") and not armor_only.contains("Wear armor"), "armor without a body art: " + armor_only)
 	c.equipment = {}
 	c.techniques = {}
 	c.injuries = {"broken_ribs": 5}
@@ -3785,3 +3785,35 @@ func test_gather_line_far_spot_must_beat_the_local_spot() -> void:
 	var local := Guidance.best_qi_in_region(c, data(), "qingshi_village")
 	if float(far["density"]) <= float(local["density"]) * 1.2:
 		assert_false(line.contains(String(far["name"])) and String(far["region"]) != "qingshi_village", line)
+
+## GUIDE-125: the spot, the next level and the shop come before the HUD's cut.
+func test_idle_line_leads_with_spot() -> void:
+	var c := _fresh()
+	c.professions["alchemist"] = {"rank": 0, "xp": 0.0}
+	c.realm_index = 1
+	c.last_meditated_day = 0
+	var line := Guidance.idle_crafter_hint(c, data(), "qingshi_village", Guidance.IDLE_CULTIVATION_DAYS)
+	assert_true(line.begins_with("Meditate at "), line)
+	assert_true(line.find("(you have not cultivated in ") > 0, line)
+	assert_true(line.find(": about ") < Guidance.HEADLINE_CHARS, line)
+
+
+func test_practise_line_next_level_in_headline() -> void:
+	var c := _fresh()
+	c.techniques = {"iron_fist": {"level": 2, "xp": 0.0}}
+	var hint := Guidance.practice_hint(c, data())
+	assert_true(hint.begins_with("Practise Iron Fist on the Techniques screen: level 3 in about "), hint)
+	assert_true(hint.find("(level 2 now)") + "(level 2 now)".length() < Guidance.HEADLINE_CHARS, hint)
+
+
+func test_thin_defence_shop_in_headline() -> void:
+	var c := _fresh()
+	c.realm_index = Guidance.THIN_DEFENCE_REALM
+	c.techniques = {}
+	c.equipment = {}
+	c.inventory = {"spirit_stone": 500}
+	var line := Guidance.thin_defence_hint(c, data(), "myriad_peaks_ridge")
+	assert_true(line.begins_with("Your defence is thin. The "), line)
+	assert_true(line.find("stones.") > 0 and line.find("stones.") < Guidance.HEADLINE_CHARS, line)
+	c.equipment["armor"] = "boar_hide_jerkin"
+	assert_true(Guidance.thin_defence_hint(c, data(), "myriad_peaks_ridge").contains("Learn a body technique"))

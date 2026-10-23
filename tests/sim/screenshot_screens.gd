@@ -1529,7 +1529,7 @@ func _start_hint_shot(gs: Node) -> void:
 		var scroll: ScrollContainer = journal.get("_scroll")
 		scroll.scroll_vertical = int(rich.get_paragraph_offset(parsed.substr(0, at).count("\n")))
 		print("hint-shot journal scrolled to ", scroll.scroll_vertical), "close": journal.close})
-	for case: Array in [["hint_thin_defence_", setup_thin, "Your defence is thin"], ["hint_idle_crafter_", setup_idle, "You have not cultivated"]]:
+	for case: Array in [["hint_thin_defence_", setup_thin, "Your defence is thin"], ["hint_idle_crafter_", setup_idle, "Meditate at "]]:
 		var setup: Callable = case[1]
 		var needle: String = case[2]
 		shots.append({"name": case[0] + size_tag, "open": func() -> void:
