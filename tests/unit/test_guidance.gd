@@ -3744,6 +3744,19 @@ func test_deliver_close_stone_tithe_needs_half() -> void:
 	assert_true(Guidance._deliver_close(iron, d, "deliver_cold_iron", ""))
 
 
+## GUIDE-133: sell_offer keeps what a flag-gated deliver mission wants only while its flag is set, like Sell all.
+func test_sell_offer_respects_mission_flags() -> void:
+	var d := data()
+	var c := _deliver_only(d)
+	d.sect_missions["g133_gated"] = {"id": "g133_gated", "name": "Gated Ore", "requires_flag": "g133_flag", "requires": {"items": {"iron_essence": 40}}, "contribution": 1}
+	c.add_item("iron_essence", 40)
+	var total := Items.sell_price(d, "iron_essence") * 40
+	assert_eq(int(Guidance.sell_offer(c, d, "qingshi_village", {}).get("total", 0)), total, "flag unset: counted")
+	assert_eq(Guidance.sell_offer(c, d, "qingshi_village", {"g133_flag": true}), {}, "flag set: kept for the mission")
+	assert_eq(Guidance._sell_hint(c, d, "qingshi_village", {"g133_flag": true}), "")
+	d.sect_missions.erase("g133_gated")
+
+
 ## REV-030: ores are "found at", herbs "grow at", in the guidance clause and on the mission board.
 func test_deliver_wording_found_at_for_ore() -> void:
 	var d := data()

@@ -55,7 +55,7 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 	if Children.is_pregnant(c):
 		var days := int(c.pregnancy.get("days_left", 0))
 		out.append("A child is due in %s." % Calendar.format_duration(days))
-	var thin := thin_defence_hint(c, data, region_id)
+	var thin := thin_defence_hint(c, data, region_id, flags)
 	if thin != "":
 		out.append(thin)
 	var mortal_nudge := mortal_crafter_hint(c, data, region_id, today, flags)
@@ -69,7 +69,7 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 		out.append(buy)
 	var newcomer := _newcomer_hints(c, data, flags, region_id, today) if c.realm_index <= NEWCOMER_MAX_REALM else PackedStringArray()
 	out.append_array(newcomer)
-	var sell := _sell_hint(c, data, region_id)
+	var sell := _sell_hint(c, data, region_id, flags)
 	if sell != "":
 		out.append(sell)
 	var pointers := _pointers_hint(c, data, people, favor, region_id, today)
@@ -148,7 +148,7 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 ## GUIDE-065: a Foundation cultivator with no body technique or no armor equipped hears that their defence is
 ## thin (QA-114: the curious player reaches Foundation with neither and wins 0-2% against its foes). "" otherwise.
 ## GUIDE-068: with a `region_id`, it also says where to get what is missing (affordable_armor, body_manual_source).
-static func thin_defence_hint(c: CharacterData, data: GameData, region_id: String = "") -> String:
+static func thin_defence_hint(c: CharacterData, data: GameData, region_id: String = "", flags: Dictionary = {}) -> String:
 	if c.realm_index != THIN_DEFENCE_REALM:
 		return ""
 	var has_body := Techniques.knows_kind(c, data, "body")
@@ -157,7 +157,7 @@ static func thin_defence_hint(c: CharacterData, data: GameData, region_id: Strin
 		return ""
 	# GUIDE-125: the shop first (the HUD shows only HEADLINE_CHARS), then the body art, the reason last.
 	var line := "Your defence is thin."
-	var offer := sell_offer(c, data, region_id) if region_id != "" else {}
+	var offer := sell_offer(c, data, region_id, flags) if region_id != "" else {}
 	if not has_armor:
 		var armor_start := line.length()
 		if region_id != "":
@@ -689,8 +689,8 @@ const SELL_GOODS_NAMES := {"herb": "herbs", "ore": "ore", "beast_material": "bea
 
 ## "A merchant here would pay about N spirit stones for your herbs": the best
 ## buyer in the region for what "sell all loot" would sell (nothing worn).
-static func _sell_hint(c: CharacterData, data: GameData, region_id: String) -> String:
-	var offer := sell_offer(c, data, region_id)
+static func _sell_hint(c: CharacterData, data: GameData, region_id: String, flags: Dictionary = {}) -> String:
+	var offer := sell_offer(c, data, region_id, flags)
 	if offer.is_empty():
 		return ""
 	return "The %s here would pay about %d spirit stones for your %s." % [offer["merchant"], offer["total"], offer["goods"]]
@@ -698,10 +698,10 @@ static func _sell_hint(c: CharacterData, data: GameData, region_id: String) -> S
 
 ## GUIDE-088: {merchant, total, goods} for the best buyer in `region_id` of what "sell all loot" would sell
 ## (nothing worn); {} when the best total is below SELL_HINT_MIN.
-static func sell_offer(c: CharacterData, data: GameData, region_id: String) -> Dictionary:
+static func sell_offer(c: CharacterData, data: GameData, region_id: String, flags: Dictionary = {}) -> Dictionary:
 	if region_id == "" or not data.regions.has(region_id):
 		return {}
-	var keep := Sects.deliver_needs(c, data)
+	var keep := Sects.deliver_needs(c, data, flags)
 	var best_total := 0
 	var best_name := ""
 	var best_goods := ""
@@ -2015,7 +2015,7 @@ static func first_combat_hint(c: CharacterData, data: GameData, region_id: Strin
 
 ## GUIDE-069: a Qi Refining fighter (stage >= ARMOR_HINT_MIN_STAGE, knows a combat technique) with no armor
 ## equipped hears about armor a merchant here sells that they can afford. "" otherwise.
-static func armor_hint(c: CharacterData, data: GameData, region_id: String) -> String:
+static func armor_hint(c: CharacterData, data: GameData, region_id: String, flags: Dictionary = {}) -> String:
 	if c.realm_index != 1 or c.stage < ARMOR_HINT_MIN_STAGE or region_id == "":
 		return ""
 	if c.equipment.get("armor", "") != "" or not Techniques.knows_kind(c, data, "combat"):
@@ -2025,13 +2025,13 @@ static func armor_hint(c: CharacterData, data: GameData, region_id: String) -> S
 		var far := _far_armor_clause(c, data, region_id)
 		if far != "":
 			return "Armor keeps you standing." + far
-		return _loot_armor_hint(c, data, region_id)
+		return _loot_armor_hint(c, data, region_id, flags)
 	return "Armor keeps you standing: the %s sells %s for %d stones." % [merchant_selling(data, region_id, armor_id), data.items[armor_id]["name"], merchant_price(c, data, region_id, armor_id)]
 
 
 ## GUIDE-088: armor_hint when stones alone fall short but stones + what the local buyer pays for your loot would do.
-static func _loot_armor_hint(c: CharacterData, data: GameData, region_id: String) -> String:
-	var offer := sell_offer(c, data, region_id)
+static func _loot_armor_hint(c: CharacterData, data: GameData, region_id: String, flags: Dictionary = {}) -> String:
+	var offer := sell_offer(c, data, region_id, flags)
 	if offer.is_empty():
 		return ""
 	var budget := c.item_count("spirit_stone") + int(offer["total"])
@@ -2136,7 +2136,7 @@ static func _newcomer_hints(c: CharacterData, data: GameData, flags: Dictionary,
 	var practise := practice_hint(c, data, region_id, today, flags)
 	if practise != "":
 		out.append(practise)
-	var armor := armor_hint(c, data, region_id)
+	var armor := armor_hint(c, data, region_id, flags)
 	if armor != "":
 		out.append(armor)
 	if region_id == CHORE_REGION:
