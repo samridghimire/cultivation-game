@@ -21,6 +21,10 @@ var _pairs := {}
 ## character has lived for years), which made this file ~60% of the suite.
 ## Only test_fuzz_with_hud keeps the hints on; Guidance has its own tests.
 var _hints_on := false
+## PERF-005: the two profiles built around one spot (a secret realm's window, a
+## promotion trial) only walk the region that holds it; the other profiles
+## already walk every region with the same menus.
+var _only_region := ""
 
 
 func _tree() -> SceneTree:
@@ -261,6 +265,12 @@ func _fuzz_all_regions(kind: String) -> void:
 		var entrance := String(_gs().data.secret_realms[_window_realm]["region"])
 		ids.erase(entrance)
 		ids.push_front(entrance)
+		_only_region = entrance
+	elif kind == "trial":
+		_only_region = (_gs().data.sects[String(_gs().player.sect["id"])] as SectDef).home_region
+	if _only_region != "":
+		assert_true(ids.has(_only_region), "%s: region '%s' exists" % [kind, _only_region])
+		ids = [_only_region]
 	for region_id: String in ids:
 		if not _gs().player.alive:
 			_start(kind)
@@ -274,6 +284,7 @@ func _fuzz_all_regions(kind: String) -> void:
 		print("FUZZ %s calls=%d day=%d pairs=%d" % [kind, _calls, _clock().total_days, _pairs.size()])
 	bus.message_posted.disconnect(_check_message)
 	Settings.set_value("hud_hints", old_hints)
+	_only_region = ""
 	_gs().end_session()
 
 
@@ -325,10 +336,10 @@ func _log_message(text: String, category: String) -> void:
 func test_fuzz_secret_realm_window() -> void:
 	await _fuzz_all_regions("realm_window")
 	assert_true(_window_realm != "", "a realm admits a Qi Refining disciple")
-	assert_gt(_calls, 50, "the fuzz should reach many options")
+	assert_gt(_calls, 10, "the fuzz should reach many options")
 
 
 ## QA-033: a profile with a sect promotion trial available.
 func test_fuzz_promotion_trial() -> void:
 	await _fuzz_all_regions("trial")
-	assert_gt(_calls, 80, "the fuzz should reach many options")
+	assert_gt(_calls, 10, "the fuzz should reach many options")
