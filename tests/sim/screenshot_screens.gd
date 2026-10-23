@@ -1315,6 +1315,31 @@ func _start_missions_shot(gs: Node) -> void:
 			c.stage = saved["stage"]
 			c.techniques = saved["techniques"]
 			c.inventory = saved["inventory"]})
+	# WU-348: the treasury details say what the Azure Cloud Heart Sutra does for qi next to the current method.
+	var saved_method: Dictionary = {}
+	shots.append({"name": "treasury_method_" + size_tag, "open": func() -> void:
+		saved_method["sect"] = c.sect.duplicate(true)
+		saved_method["techniques"] = c.techniques.duplicate(true)
+		saved_method["main"] = c.main_method
+		saved_method["roots"] = c.spiritual_roots.duplicate()
+		c.spiritual_roots = {}  # no affinity, so the listed x1.6 shows
+		c.sect["rank"] = 1
+		c.sect["contribution"] = 1000
+		c.techniques.erase("azure_cloud_heart_sutra")
+		c.main_method = ""
+		hud.get("_banner").visible = false
+		root.get_node("EventBus").player_changed.emit()
+		board.open()
+		board._set_tab("shop")
+		board._select("manual_azure_cloud_heart")
+		var details: String = (board._rewards as Label).text
+		print("missions-shot treasury method: ", details)
+		assert(details.contains("x1.6"), "no method note: " + details), "close": func() -> void:
+			board.close()
+			c.sect = saved_method["sect"]
+			c.techniques = saved_method["techniques"]
+			c.main_method = saved_method["main"]
+			c.spiritual_roots = saved_method["roots"]})
 	# WU-344: a bare QR 1st-layer newcomer can win Drive Off the Den Wolves (RV-015): not "Deadly", and the sect hint counts it ready (it does not name it: Escort pays more).
 	var saved_den: Dictionary = {}
 	shots.append({"name": "missions_den_wolf_" + size_tag, "open": func() -> void:

@@ -365,6 +365,8 @@ static func upgrade_tag(c: CharacterData, data: GameData, item_id: String, facti
 			return "upgrade"
 		return ""
 	var tech_id := manual_technique(data, item_id)
+	if MissionBoard.is_faster_method(c, data, item_id):
+		return "upgrade"
 	if tech_id != "" and data.techniques[tech_id].kind == "body" and not Techniques.knows(c, tech_id) \
 			and c.realm_index >= data.realm_index_of("foundation_establishment"):
 		return "defence"
@@ -413,6 +415,9 @@ static func compare_text(c: CharacterData, data: GameData, item_id: String) -> S
 		var tech_name: String = data.techniques[tech_id].name
 		if Techniques.knows(c, tech_id):
 			return "Teaches %s. You already know it." % tech_name
+		var note := MissionBoard.method_note(c, data, item_id)
+		if note != "":
+			return note
 		return "Teaches %s, a %s you do not know yet." % [tech_name, kind_word(data.techniques[tech_id].kind)]
 	if not Equipment.is_equipment(data, item_id):
 		return ""

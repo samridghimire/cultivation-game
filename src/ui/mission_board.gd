@@ -257,7 +257,27 @@ static func shop_info_text(c: CharacterData, data: GameData, entry: Dictionary) 
 static func shop_item_lines(c: CharacterData, data: GameData, item_id: String) -> PackedStringArray:
 	if Equipment.is_equipment(data, item_id):
 		return InventoryScreen.describe_equipment(c, data, item_id)
-	return Items.describe_effects(data.items.get(item_id, {}).get("effects", {}), data)
+	var lines := Items.describe_effects(data.items.get(item_id, {}).get("effects", {}), data)
+	var note := method_note(c, data, item_id)
+	if note != "":
+		lines.append(note)
+	return lines
+
+
+## WU-348: what a method manual does for `c`'s qi next to their current main method; "" for anything else or a method they know.
+static func method_note(c: CharacterData, data: GameData, item_id: String) -> String:
+	var tech_id := Items.manual_technique(data, item_id)
+	var def: TechniqueDef = data.techniques.get(tech_id)
+	if def == null or not def.is_method() or Techniques.knows(c, tech_id):
+		return ""
+	var main_id := Techniques.main_method(c, data)
+	var main_def: TechniqueDef = data.techniques.get(main_id)
+	var main_name := "no method" if main_def == null else main_def.name
+	var through := ""
+	if def.max_realm != "":
+		through = ", good through %s" % data.realms[data.realm_index_of(def.max_realm)].name
+	return "Cultivation method: qi x%s%s. Yours: %s, x%s." % [
+		Techniques.method_rate_of(c, data, tech_id), through, main_name, Techniques.method_rate_of(c, data, main_id)]
 
 
 ## WU-327: details lines for a shop item: its effects/equipment plus, for qi items, what the qi is worth in meditation.
@@ -356,7 +376,18 @@ static func shop_label(p: CharacterData, data: GameData, item_id: String) -> Str
 	var label := "%s (%d)" % [data.items.get(item_id, {}).get("name", item_id), int(entry["contribution"])]
 	if item_id == breakthrough_pill_id(p, data):
 		label += " (your breakthrough)"
+	if is_faster_method(p, data, item_id):
+		label += " (faster qi)"
 	return label
+
+
+## WU-348: true for a method manual `c` does not know whose qi rate beats their main method's and is not outgrown.
+static func is_faster_method(c: CharacterData, data: GameData, item_id: String) -> bool:
+	if method_note(c, data, item_id) == "":
+		return false
+	var tech_id := Items.manual_technique(data, item_id)
+	return not Techniques.is_outgrown(c, data, tech_id) \
+			and Techniques.method_rate_of(c, data, tech_id) > Techniques.method_rate_of(c, data, Techniques.main_method(c, data))
 
 
 func _rebuild_shop() -> void:

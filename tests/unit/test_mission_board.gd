@@ -122,6 +122,25 @@ func test_shop_item_lines_describe_effects_and_equipment() -> void:
 	assert_true(saber.size() > 0 and saber[0].contains(Equipment.describe_stats(data(), "cold_iron_saber")), str(saber))
 
 
+func test_method_note_compares_a_manual_with_the_main_method() -> void:
+	var c := _disciple()
+	c.spiritual_roots = {}  # no element affinity: the sutra's listed rate applies as is
+	var note := MissionBoard.method_note(c, data(), "manual_azure_cloud_heart")
+	assert_true(note.contains("x1.6") and note.contains("x1.0"), note)
+	assert_true(note.contains("good through"), note)
+	assert_true(MissionBoard.shop_label(c, data(), "manual_azure_cloud_heart").contains("(faster qi)"))
+	assert_true(ShopScreen.row_fits(MissionBoard.shop_label(c, data(), "manual_azure_cloud_heart")))
+	assert_eq(ShopScreen.upgrade_tag(c, data(), "manual_azure_cloud_heart"), "upgrade")
+	assert_true(MissionBoard.shop_item_lines(c, data(), "manual_azure_cloud_heart").has(note))
+	assert_true(ShopScreen.compare_text(c, data(), "manual_azure_cloud_heart").contains("x1.6"))
+	assert_eq(MissionBoard.method_note(c, data(), "manual_stone_skin"), "")
+	Techniques.learn(c, data(), "azure_cloud_heart_sutra")
+	c.main_method = "azure_cloud_heart_sutra"
+	assert_eq(MissionBoard.method_note(c, data(), "manual_azure_cloud_heart"), "")
+	assert_false(MissionBoard.shop_label(c, data(), "manual_azure_cloud_heart").contains("faster"))
+	assert_eq(ShopScreen.upgrade_tag(c, data(), "manual_azure_cloud_heart"), "")
+
+
 func test_treasury_tab_lists_shop_and_buys() -> void:
 	var gs := _root().get_node("GameState")
 	var c := _disciple()
