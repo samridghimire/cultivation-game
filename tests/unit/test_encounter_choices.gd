@@ -1090,8 +1090,32 @@ func test_check_choice_through_game_state() -> void:
 	gs.choose_encounter(0)
 	assert_eq(gs.pending_encounter, "")
 	assert_true(gs.player.qi >= qi, "qi not lost")
+	var EB: Node = _root().get_node("EventBus")
+	var recent := ""
+	for entry: Dictionary in EB.history.slice(-3):
+		recent += String(entry["text"]) + "\n"
+	assert_true(recent.contains("Your Comprehension carried it."), recent)
 	gs.data.encounters.erase("t_check")
 	gs.end_session()
+
+
+## WU-300: the result line says whether the check passed.
+func test_check_verdict() -> void:
+	var choice: Dictionary = _check_encounter()["choices"][0]
+	assert_eq(Exploration.check_verdict(choice, false), "Your Comprehension carried it.")
+	assert_eq(Exploration.check_verdict(choice, true), "It was beyond you.")
+	assert_eq(Exploration.check_verdict({"label": "x"}, false), "")
+	var d := GameData.load_from_dir()
+	var c := new_character()
+	c.attributes["comprehension"] = 99
+	assert_eq(Exploration.resolve_choice(c, d, _check_encounter(1), 0, {}, "", seeded_rng(1))["verdict"], "Your Comprehension carried it.")
+	c.attributes["comprehension"] = 1
+	var enc := _check_encounter(99)
+	var beyond := 0
+	for s in 30:
+		if Exploration.resolve_choice(c, d, enc, 0, {}, "", seeded_rng(s))["verdict"] == "It was beyond you.":
+			beyond += 1
+	assert_true(beyond > 0)
 
 
 func test_check_validation() -> void:

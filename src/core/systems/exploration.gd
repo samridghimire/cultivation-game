@@ -626,11 +626,22 @@ static func resolve_choice(c: CharacterData, data: GameData, encounter: Dictiona
 	if reason != "":
 		return {"ok": false, "reason": reason, "text": "", "notes": PackedStringArray(), "days": 0, "enemy": "", "karma": false}
 	var failed := choice.has("check") and rng != null and rng.randf() >= check_chance(c, choice)
+	var verdict := check_verdict(choice, failed)
 	if failed:
 		choice = choice["on_fail"]
 	var effects: Dictionary = choice.get("effects", {})
 	var notes := Effects.apply(c, data, effects, flags, region_id) if not effects.is_empty() else PackedStringArray()
-	return {"ok": true, "reason": "", "text": String(choice.get("text", "")), "notes": notes, "days": int(choice.get("days", 0)), "enemy": String(choice.get("enemy", "")), "karma": effects.has("alignment"), "failed": failed}
+	return {"ok": true, "reason": "", "text": String(choice.get("text", "")), "notes": notes, "days": int(choice.get("days", 0)), "enemy": String(choice.get("enemy", "")), "karma": effects.has("alignment"), "failed": failed, "verdict": verdict}
+
+
+## WU-300: the line saying whether an attribute `check` choice passed ("Your Comprehension carried it." /
+## "It was beyond you."); "" for a choice without a check.
+static func check_verdict(choice: Dictionary, failed: bool) -> String:
+	if not choice.has("check"):
+		return ""
+	if failed:
+		return "It was beyond you."
+	return "Your %s carried it." % String(choice["check"].get("attribute", "")).capitalize()
 
 
 ## Load errors for encounter `choices`, `requires_flag` and alignment bounds.

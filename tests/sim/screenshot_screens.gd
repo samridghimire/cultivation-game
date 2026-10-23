@@ -68,6 +68,7 @@ extends SceneTree
 ## WU-180: append `-- --debts-shot` for the journal with two grateful NPCs, a grudge holder at hunt
 ## strength and an inheritance three months from its deadline (Debts and grudges, Opportunities).
 
+## WU-300: also encounter_check_[pass_|fail_]<size>.png (a test-only attribute-check encounter).
 ## WU-190: append `-- --encounter-shot` for the encounter window with tagged choices. No single encounter has an
 ## attribute gate, a profession gate and an enemy choice, so three real ones are shot (a gate met and a gate missed in
 ## each of the first two): village_field_quarrel (charisma), marsh_yin_ferryman (doctor, 5 choices, longest labels)
@@ -1781,6 +1782,36 @@ func _start_encounter_shot(gs: Node) -> void:
 			print("fight result ", enc_id, ": ", recent)
 			root.get_node("/root/EventBus").player_changed.emit()
 			_clear_result_popups(gs), "close": func() -> void: pass})
+
+	# WU-300: a test-only attribute-check encounter (no shipped one yet, C-206): the odds suffix, then a pass and a fail result.
+	gs.data.encounters["shot_check"] = {"id": "shot_check", "name": "Rope Bridge", "tags": ["x"], "weight": 1, "kind": "neutral", "days": 0,
+		"text": "A frayed rope bridge sways over a gorge.", "choices": [
+			{"label": "Leap across", "text": "You land safely.", "days": 1, "effects": {"qi": 5},
+				"check": {"attribute": "comprehension", "target": 20},
+				"on_fail": {"text": "You slip and scrape your palms.", "days": 1, "effects": {"qi": 1}}},
+			{"label": "Walk around"}]}
+	for outcome: String in ["", "pass", "fail"]:
+		var cstem := "encounter_check_%s%s" % [outcome + "_" if outcome != "" else "", size_tag]
+		shots.append({"name": cstem, "open": func() -> void:
+			hud.get("_banner").visible = false
+			c.attributes["comprehension"] = 99 if outcome == "pass" else 12 if outcome == "" else 1
+			gs.pending_encounter = "shot_check"
+			if outcome == "":
+				enc.open()
+				return
+			# pass: chance 0.9 (seed until a pass); fail: chance 0.1 (seed until a fail)
+			var want_fail := outcome == "fail"
+			for s in 200:
+				gs.rng.seed = s
+				var probe := RandomNumberGenerator.new()
+				probe.seed = s
+				if (probe.randf() >= Exploration.check_chance(c, gs.data.encounters["shot_check"]["choices"][0])) == want_fail:
+					break
+			gs.choose_encounter(0)
+			root.get_node("/root/EventBus").player_changed.emit()
+			_clear_result_popups(gs), "close": func() -> void:
+				if outcome == "":
+					enc.close()})
 
 
 ## WU-282: the encounter result shots show only the result and the HUD log, so whatever a day advance queued over

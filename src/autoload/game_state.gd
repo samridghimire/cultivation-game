@@ -964,6 +964,8 @@ func choose_encounter(index: int) -> void:
 	var text := rival_text(String(result["text"]))
 	if not result["notes"].is_empty():
 		text += " (%s)" % ", ".join(result["notes"])
+	if String(result.get("verdict", "")) != "":
+		text = (String(result["verdict"]) + " " + text).strip_edges()
 	if text != "":
 		EventBus.post(text, "danger" if result["enemy"] != "" else "karma" if result["karma"] else "info")
 	EventBus.encounter_choice_resolved.emit()
