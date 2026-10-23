@@ -1,9 +1,10 @@
 extends SceneTree
 ## First-hour sim (QA-016): scripted newcomers in Qingshi Village (tests/sim/first_hour.gd).
-## Usage: tools/godot.sh --headless --path . -s res://tests/sim/simulate_first_hour.gd -- [seeds] [months]  [--curious] [--trace] [--zero] [--forced] [--injury-origins] [--qi-pill-cap=N]
+## Usage: tools/godot.sh --headless --path . -s res://tests/sim/simulate_first_hour.gd -- [seeds] [months]  [--curious] [--trace] [--zero] [--forced] [--injury-origins] [--odds-bands] [--qi-pill-cap=N]
 
 const FirstHour := preload("res://tests/sim/first_hour.gd")
 const FORCED_ODDS := 0.2
+const BAND_LABELS := ["<40", "40-70", "70-95", ">=95"]
 
 
 func _initialize() -> void:
@@ -18,6 +19,52 @@ func _median(values: Array) -> float:
 	return float(values[values.size() / 2])
 
 
+
+
+func _odds_band(odds: float) -> int:
+	if odds < 0.4:
+		return 0
+	if odds < 0.7:
+		return 1
+	return 2 if odds < 0.95 else 3
+
+
+## QA-147: fights by month and rated-odds band, the first month where >= 80% are >= 95%, and the Misty Forest foes
+## (Exploration.eligible_fights) rated at months 6 and 12.
+func _print_odds_bands(rows: Array, foes: Dictionary, months: int, seeds: int) -> void:
+	print("Fight odds by month (QA-147), %d fights over %d seeds; bands %s:" % [rows.size(), seeds, str(BAND_LABELS)])
+	print("  month  fights  <40  40-70  70-95  >=95  >=95%  median QR layer")
+	var first_easy := -1
+	var last_hard := -1
+	for m in range(months):
+		var counts := [0, 0, 0, 0]
+		var stages: Array = []
+		for row: Dictionary in rows:
+			if int(row["month"]) == m:
+				counts[_odds_band(float(row["odds"]))] += 1
+				stages.append(int(row["stage"]))
+		var n: int = counts[0] + counts[1] + counts[2] + counts[3]
+		var share := float(counts[3]) / n if n > 0 else 0.0
+		if first_easy < 0 and n >= 5 and share >= 0.8:
+			first_easy = m + 1
+		if n >= 5 and share < 0.8:
+			last_hard = m + 1
+		print("  %5d  %6d  %3d  %5d  %5d  %4d  %4.0f%%  %s" % [m + 1, n, counts[0], counts[1], counts[2], counts[3], 100.0 * share, "%.0f" % _median(stages) if not stages.is_empty() else "-"])
+	print("First month with >= 80%% of fights rated >= 95%% (at least 5 fights): %s" % ["m%d" % first_easy if first_easy > 0 else "none"])
+	print("Last month with at least 5 fights where under 80%% were rated >= 95%%: %s" % ["m%d" % last_hard if last_hard > 0 else "none"])
+	print("Misty Forest foes (eligible fights), rated for each seed's player at m6 / m12: foe  median odds  min odds  seeds under 70%  (unhurt median)")
+	for key: String in foes:
+		var vals: Array = foes[key]
+		var odds: Array = []
+		var unhurt: Array = []
+		var under := 0
+		for v: Array in vals:
+			odds.append(v[0])
+			if v[1] >= 0.0:
+				unhurt.append(v[1])
+			if v[0] < 0.7:
+				under += 1
+		print("  %s  %.0f%%  %.0f%%  %d/%d  %s" % [key, 100.0 * _median(odds.duplicate()), 100.0 * float(odds.min()), under, odds.size(), "%.0f%%" % (100.0 * _median(unhurt)) if not unhurt.is_empty() else "-"])
 
 
 func _mask_digits(text: String) -> String:
@@ -60,6 +107,9 @@ func _run() -> void:
 	var zero := args.has("--zero")  # QA-126: count fights rated 0%, by what started them
 	var forced := args.has("--forced")  # QA-139: tally every fight rated under 20%, by source, with its outcome
 	var long_hints := args.has("--long-hints")  # QA-143: tally hint lines longer than the HUD cap
+	var odds_bands := args.has("--odds-bands")  # QA-147: fights by month and rated-odds band
+	var band_rows: Array = []
+	var band_foes := {}
 	var injury_origins := args.has("--injury-origins")  # QA-149: where and when injuries begin in the first year
 	var origin_rows: Array = []  # {seed, day, id, source, stones, cost}
 	var slow_days: Array = []  # per seed: days (month-granular) cultivating under a cultivation_mult < 1 injury
@@ -97,7 +147,7 @@ func _run() -> void:
 			only_seed = int(a.substr(7))
 		elif a.begins_with("--qi-pill-cap="):
 			FirstHour.qi_pill_cap = int(a.substr(14))  # QA-150
-		elif a != "--curious" and a != "--trace" and a != "--zero" and a != "--forced" and a != "--no-trial" and a != "--no-heal" and a != "--no-spar-hint" and a != "--blind-missions" and a != "--one-mission" and a != "--long-hints" and a != "--buy-qi" and a != "--spend-contribution" and a != "--no-armor" and a != "--far-qi" and a != "--injury-origins":
+		elif a != "--curious" and a != "--trace" and a != "--zero" and a != "--forced" and a != "--no-trial" and a != "--no-heal" and a != "--no-spar-hint" and a != "--blind-missions" and a != "--one-mission" and a != "--long-hints" and a != "--buy-qi" and a != "--spend-contribution" and a != "--no-armor" and a != "--far-qi" and a != "--injury-origins" and a != "--odds-bands":
 			nums.append(int(a))
 	var seeds := nums[0] if nums.size() > 0 else 30
 	var months := nums[1] if nums.size() > 1 else 12
@@ -183,6 +233,10 @@ func _run() -> void:
 			var row: Dictionary = forced_rows[forced_rows.size() - 1]
 			row["outcome"] = "won" if victory else "lost"
 			row["new_injury"] = gs.player.injuries.size() > int(row["hurt"])
+		var on_band_start := func(enemy: Dictionary) -> void:
+			band_rows.append({"month": (clock.total_days - 1) / Calendar.DAYS_PER_MONTH, "odds": Combat.win_chance(gs.player, gs.data, enemy), "stage": gs.player.stage + 1})
+		if odds_bands:
+			root.get_node("EventBus").combat_started.connect(on_band_start)
 		if forced:
 			root.get_node("EventBus").combat_started.connect(on_forced_start)
 			root.get_node("EventBus").combat_finished.connect(on_forced_end)
@@ -216,6 +270,13 @@ func _run() -> void:
 						long_rows[key] = row
 			if injury_origins and Injuries.cultivation_multiplier(gs.player, gs.data) < 1.0 and clock.total_days <= 365 + Calendar.DAYS_PER_MONTH:
 				slowed["days"] += Calendar.DAYS_PER_MONTH
+			if odds_bands and (month == 5 or month == 11):
+				for foe_id: String in Exploration.eligible_fights(gs.player, gs.data, ["forest", "wild"], gs.world_flags, "spring", "misty_forest"):
+					var foe: Dictionary = gs.data.enemies[foe_id]
+					var key := "%s (m%d)" % [foe_id, month + 1]
+					if not band_foes.has(key):
+						band_foes[key] = []
+					band_foes[key].append([Combat.win_chance(gs.player, gs.data, foe), Guidance.odds_unhurt(gs.player, gs.data, foe)])
 			if month == 2 or month == 5 or month == 11:
 				iron_levels[month + 1].append(Techniques.level(gs.player, "iron_fist"))  # QA-138
 		var r: Dictionary = FirstHour.play(gs, clock, s, months, curious, hook)
@@ -239,6 +300,8 @@ func _run() -> void:
 			armor_days.append(FirstHour.armor_log["day"])
 		if FirstHour.wolf_win_day >= 0:
 			wolf_days.append(FirstHour.wolf_win_day)
+		if odds_bands:
+			root.get_node("EventBus").combat_started.disconnect(on_band_start)
 		if forced:
 			root.get_node("EventBus").combat_started.disconnect(on_forced_start)
 			root.get_node("EventBus").combat_finished.disconnect(on_forced_end)
@@ -320,6 +383,8 @@ func _run() -> void:
 		print("  seed  enemy  source  layer  odds  outcome  injured")
 		for row: Dictionary in forced_rows:
 			print("  %4d  %s  %s  QR%d  %.0f%%  %s  %s" % [row["seed"], row["id"], row["source"], row["layer"], 100.0 * float(row["odds"]), row["outcome"], "yes" if row.get("new_injury", false) else "no"])
+	if odds_bands:
+		_print_odds_bands(band_rows, band_foes, months, seeds)
 	if injury_origins:
 		_print_injury_origins(origin_rows, slow_days, break_rows, seeds)
 	if long_hints:
