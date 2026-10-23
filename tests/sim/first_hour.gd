@@ -52,6 +52,8 @@ static var buy_qi := false
 ## wear the armor, walk home. simulate_first_hour.gd turns it on for --curious (`--no-armor` restores the old policy of never selling or buying armor).
 static var shop_armor := false
 static var armor_log := {"day": -1, "sold": 0, "stones_from_sales": 0, "trips": 0}
+## QA-146: bounties the board listed vs taken, by the bounty's region (ids counted once per seed).
+static var bounty_log := {"offered": {}, "taken": {}}
 static var qi_log := {"bought": 0, "stones": 0, "used": 0, "qi": 0}
 const TRIAL_MIN_ODDS := 0.7
 
@@ -68,7 +70,8 @@ static func play(gs: Node, clock: Node, seed_value: int, months: int, curious: b
 	gs.pending_event = ""
 	var bus: Node = gs.get_node("/root/EventBus")
 	bus.clear_history()
-	var out := {"layer_day": {}, "sect_day": -1, "rank_day": -1, "month_lines": [], "injuries": 0, "player": c, "kinds": [], "kind_sets": [], "stones": [], "realms": [], "first_win_day": -1, "first_style_day": -1, "first_win_enemy": "", "breaks": [], "bottleneck_day": {}, "waited_days": 0, "road": []}
+	var out := {"layer_day": {}, "sect_day": -1, "rank_day": -1, "month_lines": [], "injuries": 0, "player": c, "kinds": [], "kind_sets": [], "stones": [], "realms": [], "first_win_day": -1, "first_style_day": -1, "first_win_enemy": "", "breaks": [], "bottleneck_day": {}, "waited_days": 0, "road": [], "contribution": [], "bottleneck_stones": -1}
+	bounty_log["seen"] = {}
 	var done := {"no_help": no_help}
 	# QA-063: remember the foe of the first real (non-spar) win; the day comes from the fights_won stat.
 	var fight := {"enemy": "", "first_enemy": ""}
@@ -98,6 +101,8 @@ static func play(gs: Node, clock: Node, seed_value: int, months: int, curious: b
 		# QA-066: log every breakthrough attempt (and the first day each realm's bottleneck was seen, month-granular).
 		if Cultivation.is_at_bottleneck(c, gs.data) and not out["bottleneck_day"].has(c.realm_index):
 			out["bottleneck_day"][c.realm_index] = clock.total_days
+			if c.realm_index == 1 and out["bottleneck_stones"] < 0:
+				out["bottleneck_stones"] = c.item_count("spirit_stone")  # QA-146
 		if Cultivation.can_attempt_breakthrough(c, gs.data) and _keeps_saving_for_pill(gs, c, out, wait_for_pill):
 			out["waited_days"] += Calendar.DAYS_PER_MONTH
 		elif Cultivation.can_attempt_breakthrough(c, gs.data):
@@ -127,6 +132,12 @@ static func play(gs: Node, clock: Node, seed_value: int, months: int, curious: b
 				if not out["layer_day"].has(layer):
 					out["layer_day"][layer] = clock.total_days
 		var kinds := {}
+		out["contribution"].append(Sects.contribution_balance(c) if c.is_rogue() else int(c.sect.get("contribution", 0)))
+		for b: Dictionary in Bounties.offers(c, gs.data, clock.total_days, gs.current_region):
+			if not bounty_log["seen"].has(b["id"]):
+				bounty_log["seen"][b["id"]] = true
+				var offered: Dictionary = bounty_log["offered"]
+				offered[String(b["region"])] = int(offered.get(String(b["region"]), 0)) + 1
 		_note_first_win(out, c, clock, fight)
 		if not curious:
 			_retry_chores(gs, c)
@@ -601,6 +612,8 @@ static func _take_listed_bounty(gs: Node, c: CharacterData, done: Dictionary, fa
 		return
 	var home: String = gs.current_region
 	var where := String(picked["region"])
+	var taken: Dictionary = bounty_log["taken"]
+	taken[where] = int(taken.get(where, 0)) + 1
 	if where != home:
 		gs.travel(where)
 		if gs.current_region != where:

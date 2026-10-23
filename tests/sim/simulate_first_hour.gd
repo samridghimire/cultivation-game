@@ -48,6 +48,11 @@ func _run() -> void:
 	FirstHour.qi_log = {"bought": 0, "stones": 0, "used": 0, "qi": 0}
 	FirstHour.spar_hint = curious and not args.has("--no-spar-hint")  # QA-138
 	FirstHour.spar_log = {"bouts": 0, "refused": []}
+	FirstHour.bounty_log = {"offered": {}, "taken": {}}
+	var contrib6: Array = []  # QA-146
+	var contrib12: Array = []
+	var stage12: Array = []
+	var pill_stones: Array = []
 	var trace := args.has("--trace")  # QA-065: print each month's state and every fight
 	var only_seed := 0  # --seed=N runs just that seed
 	var nums: Array[int] = []
@@ -154,6 +159,15 @@ func _run() -> void:
 			if month == 2 or month == 5 or month == 11:
 				iron_levels[month + 1].append(Techniques.level(gs.player, "iron_fist"))  # QA-138
 		var r: Dictionary = FirstHour.play(gs, clock, s, months, curious, hook)
+		var contribs: Array = r["contribution"]
+		if contribs.size() >= 6:
+			contrib6.append(contribs[5])
+		if contribs.size() >= 12:
+			contrib12.append(contribs[11])
+		if r["realms"].size() >= 12:
+			stage12.append(r["realms"][11])
+		if r["bottleneck_stones"] >= 0:
+			pill_stones.append(r["bottleneck_stones"])
 		if FirstHour.armor_log["day"] >= 0:
 			armor_days.append(FirstHour.armor_log["day"])
 		if FirstHour.wolf_win_day >= 0:
@@ -240,5 +254,14 @@ func _run() -> void:
 		for key: String in keys:
 			var row: Dictionary = long_rows[key]
 			print("  x%d max %d | %s | cut-off: %s" % [row["count"], row["max"], key, String(row["example"]).substr(Guidance.HEADLINE_CHARS, 80)])
+	var stage_counts := {}
+	for full: String in stage12:
+		var label := full
+		if full.begins_with("Qi Refining, ") and full.length() > 16:
+			label = "QR" + full.substr(13, 1)
+		stage_counts[label] = int(stage_counts.get(label, 0)) + 1
+	print("Sect contribution (QA-146): m06 median %.0f, m12 median %.0f; stage at m12: %s" % [_median(contrib6), _median(contrib12), str(stage_counts)])
+	print("Stones at the QR9 bottleneck (QA-146): median %.0f (%d/%d seeds reached it)" % [_median(pill_stones), pill_stones.size(), seeds])
+	print("Bounties (QA-146), offered by region (ids once per seed): %s; taken (times): %s" % [str(FirstHour.bounty_log["offered"]), str(FirstHour.bounty_log["taken"])])
 	print("Lines by category: %s" % str(by_cat))
 	quit()

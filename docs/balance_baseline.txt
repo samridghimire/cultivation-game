@@ -25,6 +25,9 @@ First-hour sim: 10 seeds, 12 months
 Medians (day): QR1 14, QR3 142, QR9 295 (1/10 seeds reached it), sect 14; injuries 0; fights won 2, lost 0, fled 0; 5.5 log lines/month
 First win: median day 14, seeds with no win in 12 months: 0; first-win foes: { "wild_boar": 10 }; median style day -1 (0 seeds)
 Road encounters (QA-118): 0/10 seeds met one; {  }
+Sect contribution (QA-146): m06 median 0, m12 median 0; stage at m12: { "QR4": 4, "QR7": 2, "QR5": 1, "QR9": 1, "QR6": 2 }
+Stones at the QR9 bottleneck (QA-146): median -1 (0/10 seeds reached it)
+Bounties (QA-146), offered by region (ids once per seed): { "qingshi_village": 10, "fallen_star_market": 10, "myriad_peaks_ridge": 10, "misty_forest": 16 }; taken (times): {  }
 Lines by category: { "warning": 56, "danger": 29, "info": 339, "progress": 220, "karma": 1 }
 
 ## first hour, curious player (seeds 1-10)
@@ -60,6 +63,9 @@ Iron Fist level median (QA-138): m03 2, m06 2, m12 5; first Mist Wolf win: media
 Spar-hint bouts (QA-138): 10, refusals: []
 Armor shopping (QA-140): armor worn by day 420 median (10/10 seeds); 1 loot sales for 262 stones, 10 trips to a smithy
 Road encounters (QA-118): 10/10 seeds met one; { "road_caravan_guard": 2, "road_lost_child": 4, "road_caravan_fire": 4, "road_milestone_carver": 6, "road_highwayman": 1, "road_rain_shelter": 3, "road_talisman_peddler": 2, "road_overturned_cart": 3, "road_fallen_rogue": 3, "road_wandering_boxer": 1 }
+Sect contribution (QA-146): m06 median 361, m12 median 1346; stage at m12: { "QR7": 3, "QR8": 2, "QR6": 3, "Foundation Establishment, Middle": 1, "QR9": 1 }
+Stones at the QR9 bottleneck (QA-146): median 185 (1/10 seeds reached it)
+Bounties (QA-146), offered by region (ids once per seed): { "qingshi_village": 11, "fallen_star_market": 10, "myriad_peaks_ridge": 10, "azure_peak": 5, "misty_forest": 27, "withered_bone_marsh": 5 }; taken (times): { "qingshi_village": 39, "misty_forest": 32 }
 Lines by category: { "warning": 235, "danger": 678, "info": 1728, "progress": 1824, "karma": 235, "world": 8, "normal": 5 }
 
 ## log noise (seeds 1-5, 12 months)
