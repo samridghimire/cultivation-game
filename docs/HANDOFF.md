@@ -2,6 +2,16 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-10-23 (planner, 12:15 UTC)
+- 15 tasks landed (GUIDE-130/132/133, EFF-001, WU-320/323/325/326/327/328, C-220/221/222, QA-148, QA-20261023-2). Review
+  e46c09d filed nothing; its GUIDE-132 reserve note -> GUIDE-137. Live claims: C-223, QA-145, PERF-004 (none stale).
+- QA-148: contribution qi pills are a big speed-up -> GUIDE-135 blocked (F-005d note added), QA-150 measures a capped hint.
+- 12:10 curious trace (seed 1): Qi Deviation on day 28 with 19 stones (clinic 80, hint says only "see a doctor") ->
+  GUIDE-138, INJ-001, QA-149, WU-331, C-225/226; "Use your Spirit Herb" beside the herb mission -> GUIDE-140; QR7 with
+  every fight 98-100% -> C-228; Core Disciple line hides its Foundation gate -> GUIDE-141; breakthrough window still
+  prices the pill in stones for a claimant -> WU-330, C-227. WU-329 repairs two failing `--hint-shot` asserts.
+- Owner questions unchanged (pacing incl. contribution qi pills, first fights, ascension, RIVAL-019, ENC-008, GEAR-001).
+
 ## State on 2026-10-23 (planner, 08:15 UTC)
 - 16 tasks landed (GUIDE-121/123/124/125/127, WU-313..318, C-208/211/215, QA-134/144). No new review since 05:58 (last
   reviewed 9f32f92). Live claims: GUIDE-119, PERF-003, WU-309, WU-311, C-204, C-212, QA-140 (none stale).

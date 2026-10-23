@@ -2,6 +2,21 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-23 [WU-326] A screenshot check keeps a busy region's road notes short.
+- 2026-10-23 [EFF-001] Encounters and deeds can now reward sect contribution.
+- 2026-10-23 [WU-328] The sect treasury opens on, and marks, the breakthrough pill you can claim.
+- 2026-10-23 [WU-325] NPC name labels no longer cover place names.
+- 2026-10-23 [C-222] Help: each road names the qi and the places at its far end.
+- 2026-10-23 [WU-323] A screenshot check keeps "Travel to Azure Peak" visible when a far spot is much faster.
+- 2026-10-23 [QA-148] The first-year sim can spend sect contribution; qi pills from the treasury speed the first year up a lot.
+- 2026-10-23 [GUIDE-133] Sell hints count the same sect deliveries that "Sell all" keeps.
+- 2026-10-23 [GUIDE-132] An Inner Disciple's goal points at the breakthrough pill in the sect treasury instead of saving stones.
+- 2026-10-23 [WU-327] The sect treasury says how much meditation a qi pill is worth.
+- 2026-10-23 [C-221] Help: qi differs by region, and the hint says when to travel.
+- 2026-10-23 [C-220] Help: spare stones can buy qi pills.
+- 2026-10-23 [QA-20261023-2] Three tests no longer depend on the random seed.
+- 2026-10-23 [GUIDE-130] Out-of-season herbs no longer read "grows here" on the mission board and in hints.
+- 2026-10-23 [WU-320] The qi worth line says when only part of a pill's qi fits before your breakthrough.
 - 2026-10-23 [WU-321] The meditation spot names a much faster spot elsewhere and how far it is.
 - 2026-10-23 [GUIDE-129] "Wanted by the sect" lines only name missions that just need the items.
 - 2026-10-23 [C-218] A new Qingshi bounty, the Salt-Road Captain, for the middle Qi Refining layers.
