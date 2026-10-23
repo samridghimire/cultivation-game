@@ -92,6 +92,7 @@ extends SceneTree
 ## "Reach <realm> to stand a chance against <name>." line), then the bitter variant. Shoot at 1280x800 and 1280x720.
 ## WU-210: it then breaks through level with the rival (rival_caught_up_log / rival_caught_up_journal).
 ## WU-246: `-- --first-hour` also writes fh_<workshop|shop|journal_first_goals|journal_next_steps|journal_commissions|board>_<day1|month1>_<size>.png.
+## WU-343: `--shop-shot` also writes shop_recharge_warning_<size>.png and shop_recharge_calm_<size>.png (one life: recharge warning; three: none).
 ## WU-318: `--shop-shot` also writes shop_hinted_item_<size>.png (the row the first hint names: gold "!", selected).
 ## WU-314: `--shop-shot` also writes shop_buy_qi_worth_<size>.png (Buy tab, Qi Gathering Pill: "Worth about N days of meditation here each").
 ## WU-296: append `-- --inventory-shot` for inventory_qi_worth.png (Spirit Herb selected: "Worth about N of meditation here"); run once per --resolution.
@@ -1144,6 +1145,36 @@ func _start_shop_shot(gs: Node) -> void:
 		hud.set("_hint_lines", PackedStringArray(["Heavenforge Smithy in Fallen Star Market sells Boar Hide Jerkin for 70 stones."]))
 		shop.open("Heavenforge Smithy", 0, ["equipment", "ore", "smithing"])
 		pass, "close": shop.close})
+	# WU-343: at one artifact life a buy that leaves under the recharge price shows the warning; at three lives it is hidden.
+	var saved: Dictionary = {}
+	var size_tag := "%dx%d" % [root.size.x, root.size.y]
+	var open_recharge := func(lives: int) -> void:
+		saved["lives"] = c.artifact_lives  # filled in place: a lambda cannot reassign the outer variable
+		saved["realm"] = c.realm_index
+		saved["inventory"] = c.inventory.duplicate(true)
+		gs.current_region = "qingshi_village"
+		c.realm_index = gs.data.realm_index_of("qi_refining")
+		c.stage = 2
+		c.artifact_lives = lives
+		c.inventory = {"spirit_stone": 120}
+		shop.open("Wandering Merchant", 0, ["herb", "ore"])
+		shop._set_tab(false)
+		shop._select("fox_spirit_pill")
+	var restore_recharge := func() -> void:
+		c.artifact_lives = int(saved["lives"])
+		c.realm_index = int(saved["realm"])
+		c.inventory = saved["inventory"]
+		shop.close()
+	shots.append({"name": "shop_recharge_warning_" + size_tag, "open": func() -> void:
+		open_recharge.call(1)
+		var price: int = shop.unit_price(c, gs.data, "fox_spirit_pill", false, shop.get("_faction"), gs.buy_multiplier())
+		assert(price > 20 and price < 120, "price %d" % price)
+		var warn: Label = shop.get("_recharge_warn")
+		assert(warn.visible and warn.text.contains("recharging your Creation Artifact costs"), warn.text), "close": restore_recharge})
+	shots.append({"name": "shop_recharge_calm_" + size_tag, "open": func() -> void:
+		open_recharge.call(3)
+		var warn: Label = shop.get("_recharge_warn")
+		assert(not warn.visible and warn.text == "", warn.text), "close": restore_recharge})
 
 
 func _start_inventory_shot(gs: Node) -> void:
