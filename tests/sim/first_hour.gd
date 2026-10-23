@@ -40,6 +40,10 @@ static var spar_log := {"bouts": 0, "refused": []}
 ## QA-141: missions rated below this are skipped, as a player reading the board's odds (WU-286) would;
 ## simulate_first_hour.gd's --blind-missions sets it to 0 (the old policy).
 static var min_mission_odds := 0.4
+
+## QA-134: take the mission the sect hint names (the best-paying one), up to 3 a month;
+## simulate_first_hour.gd's --one-mission sets it false (one mission a month, first listed).
+static var chase_best_mission := true
 const TRIAL_MIN_ODDS := 0.7
 
 
@@ -329,26 +333,19 @@ static func _curious_month(gs: Node, c: CharacterData, done: Dictionary, today: 
 		var k := String(f.get("kind", ""))
 		done["fair_log"]["by_kind"][k] = int(done["fair_log"]["by_kind"].get(k, 0)) + 1
 	if not c.is_rogue() and c.alive:
-		for mission_id in Sects.available_missions(c, gs.data, gs.world_flags):
-			if Sects.check_mission(c, gs.data, mission_id, gs.world_flags) != "" or not _mission_is_sane(gs, c, mission_id, done, today):
-				continue
-			var lost_before := LifeStats.get_stat(c, "fights_lost")
-			var odds_before := _mission_odds(gs, c, mission_id)
-			var won_before := LifeStats.get_stat(c, "fights_won")
-			var label := "Sect mission: %s" % gs.data.sect_missions[mission_id]["name"]
-			var listed_chance := -1.0
-			for f: Dictionary in fair:
-				if String(f["text"]).begins_with(label):
-					listed_chance = float(f["chance"])
-			fight_origin = "mission"
-			gs.take_mission(mission_id)
-			fight_origin = "other"
-			if listed_chance >= 0.0:
-				done["fair_log"]["taken"].append({"kind": "mission", "chance": listed_chance, "won": LifeStats.get_stat(c, "fights_won") > won_before})
-			kinds["mission"] = true
-			if LifeStats.get_stat(c, "fights_lost") > lost_before:
-				done["lost_missions"][mission_id] = {"day": today, "odds": odds_before}
-			break
+		if chase_best_mission:
+			# QA-134: the hint names the best-paying mission ("The best pays N contribution"); take it, up to 3 a month.
+			for _i in 3:
+				var best := Guidance.best_mission(c, gs.data, gs.world_flags)
+				if not c.alive or best == "" or not _mission_is_sane(gs, c, best, done, today):
+					break
+				_take_one_mission(gs, c, done, kinds, fair, best, today)
+		else:
+			for mission_id in Sects.available_missions(c, gs.data, gs.world_flags):
+				if Sects.check_mission(c, gs.data, mission_id, gs.world_flags) != "" or not _mission_is_sane(gs, c, mission_id, done, today):
+					continue
+				_take_one_mission(gs, c, done, kinds, fair, mission_id, today)
+				break
 	_attempt_open_trial(gs, c, done, kinds)
 	_take_listed_deed(gs, c, done, fair, kinds, today)
 	_take_listed_bounty(gs, c, done, fair, kinds)
@@ -682,6 +679,26 @@ static func encounter_choice(c: CharacterData, data: GameData, encounter: Dictio
 		if not choice["fight"] or choice["chance"] < 0.0 or choice["chance"] >= 0.5:
 			return int(choice["index"])
 	return 0
+
+
+## Takes one mission and logs its outcome. Missions need no travel (Sects.check_mission has no place rule).
+static func _take_one_mission(gs: Node, c: CharacterData, done: Dictionary, kinds: Dictionary, fair: Array[Dictionary], mission_id: String, today: int) -> void:
+	var lost_before := LifeStats.get_stat(c, "fights_lost")
+	var odds_before := _mission_odds(gs, c, mission_id)
+	var won_before := LifeStats.get_stat(c, "fights_won")
+	var label := "Sect mission: %s" % gs.data.sect_missions[mission_id]["name"]
+	var listed_chance := -1.0
+	for f: Dictionary in fair:
+		if String(f["text"]).begins_with(label):
+			listed_chance = float(f["chance"])
+	fight_origin = "mission"
+	gs.take_mission(mission_id)
+	fight_origin = "other"
+	if listed_chance >= 0.0:
+		done["fair_log"]["taken"].append({"kind": "mission", "chance": listed_chance, "won": LifeStats.get_stat(c, "fights_won") > won_before})
+	kinds["mission"] = true
+	if LifeStats.get_stat(c, "fights_lost") > lost_before:
+		done["lost_missions"][mission_id] = {"day": today, "odds": odds_before}
 
 
 ## Rated win chance against the mission's foe (1.0 when it has none).
