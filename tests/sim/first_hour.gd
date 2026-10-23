@@ -58,6 +58,8 @@ static var qi_log := {"bought": 0, "stones": 0, "used": 0, "qi": 0}
 ## QA-148: once a month a sect member spends contribution: the next realm's pill (once), a body art (once), then
 ## the shop's best qi pills with the rest, keeping the pill's cost while it is still to claim.
 static var spend_contribution := false
+## QA-150: at most this many contribution qi pills a month (-1 = no cap; the pill claim and body art are unchanged).
+static var qi_pill_cap := -1
 static var contribution_log := {"pill_days": [], "pill": 0, "body": 0, "qi_items": 0, "qi_cost": 0, "qi_used": 0, "qi": 0}
 const TRIAL_MIN_ODDS := 0.7
 ## QA-145: once a month, before meditating, move to the faster spot Guidance.far_qi_offer names when it saves >= 30 days
@@ -73,7 +75,7 @@ static var _memo := {}
 
 
 static func play_cached(gs: Node, clock: Node, seed_value: int, months: int, curious: bool = false, no_help: bool = false, wait_for_pill: int = 0) -> Dictionary:
-	var key := [seed_value, months, curious, no_help, wait_for_pill, follow_defence, practise_hint, attempt_trials, heal_injuries, spar_hint, min_mission_odds, chase_best_mission, buy_qi, shop_armor, spend_contribution, far_qi]
+	var key := [seed_value, months, curious, no_help, wait_for_pill, follow_defence, practise_hint, attempt_trials, heal_injuries, spar_hint, min_mission_odds, chase_best_mission, buy_qi, shop_armor, spend_contribution, qi_pill_cap, far_qi]
 	if not _memo.has(key):
 		_memo[key] = play(gs, clock, seed_value, months, curious, Callable(), no_help, wait_for_pill)
 		gs.end_session()
@@ -674,6 +676,8 @@ static func _spend_contribution(gs: Node, c: CharacterData) -> void:
 	if best_id == "":
 		return
 	var count := mini((Sects.contribution_balance(c) - pill_cost) / best_cost, room / best_qi)
+	if qi_pill_cap >= 0:
+		count = mini(count, qi_pill_cap)
 	for i in count:
 		if not c.alive or Cultivation.is_at_bottleneck(c, data):
 			break

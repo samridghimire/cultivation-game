@@ -1,6 +1,6 @@
 extends SceneTree
 ## First-hour sim (QA-016): scripted newcomers in Qingshi Village (tests/sim/first_hour.gd).
-## Usage: tools/godot.sh --headless --path . -s res://tests/sim/simulate_first_hour.gd -- [seeds] [months]  [--curious] [--trace] [--zero] [--forced] [--injury-origins]
+## Usage: tools/godot.sh --headless --path . -s res://tests/sim/simulate_first_hour.gd -- [seeds] [months]  [--curious] [--trace] [--zero] [--forced] [--injury-origins] [--qi-pill-cap=N]
 
 const FirstHour := preload("res://tests/sim/first_hour.gd")
 const FORCED_ODDS := 0.2
@@ -78,6 +78,7 @@ func _run() -> void:
 	FirstHour.buy_qi = curious and args.has("--buy-qi")  # QA-144
 	FirstHour.qi_log = {"bought": 0, "stones": 0, "used": 0, "qi": 0}
 	FirstHour.spend_contribution = curious and args.has("--spend-contribution")  # QA-148
+	FirstHour.qi_pill_cap = -1  # QA-150
 	FirstHour.contribution_log = {"pill_days": [], "pill": 0, "body": 0, "qi_items": 0, "qi_cost": 0, "qi_used": 0, "qi": 0}
 	FirstHour.far_qi = args.has("--far-qi")  # QA-145
 	FirstHour.far_qi_log = {"moved": 0, "month": [], "road_days": []}
@@ -94,6 +95,8 @@ func _run() -> void:
 	for a in args:
 		if a.begins_with("--seed="):
 			only_seed = int(a.substr(7))
+		elif a.begins_with("--qi-pill-cap="):
+			FirstHour.qi_pill_cap = int(a.substr(14))  # QA-150
 		elif a != "--curious" and a != "--trace" and a != "--zero" and a != "--forced" and a != "--no-trial" and a != "--no-heal" and a != "--no-spar-hint" and a != "--blind-missions" and a != "--one-mission" and a != "--long-hints" and a != "--buy-qi" and a != "--spend-contribution" and a != "--no-armor" and a != "--far-qi" and a != "--injury-origins":
 			nums.append(int(a))
 	var seeds := nums[0] if nums.size() > 0 else 30
