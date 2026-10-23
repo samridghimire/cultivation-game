@@ -157,3 +157,31 @@ func test_spar_does_not_drain_lifespan() -> void:
 	gs.fight_enemy({"name": "Wolf", "hp": 5, "attack": 1, "defense": 0, "speed": 1})
 	assert_true(Cultivation.years_left(c, gs.data) < years)
 	gs.end_session()
+
+
+## GUIDE-123: the spar hint says a bout trains "like N days of practice"; a bout
+## through GameState grants exactly the xp that many days of practising give,
+## whether it is won or lost.
+func _total_xp(c: CharacterData, tech_id: String) -> float:
+	var def: TechniqueDef = _gs().data.techniques[tech_id]
+	var total := float(c.techniques[tech_id]["xp"])
+	for lvl in range(1, int(c.techniques[tech_id]["level"])):
+		total += def.xp_to_next(lvl)
+	return total
+
+
+func test_spar_practice_matches_terms() -> void:
+	var gs := _gs()
+	for seed_value in 12:
+		var c := _setup(4, 50)
+		gs.rng.seed = seed_value + 1
+		c.techniques = {"iron_fist": {"level": 2, "xp": 0.0}}
+		var days := int(Mentorship.spar_terms(gs.data)["practice_days"])
+		assert_true(days > 0)
+		var expected := Techniques.xp_per_day(c) * days
+		var before := _total_xp(c, "iron_fist")
+		gs.spar_with("friend")
+		assert_true(c.npc_action_days.has("spar:friend"), "the bout happened")
+		var gained := _total_xp(c, "iron_fist") - before
+		assert_true(absf(gained - expected) <= expected * 0.1, "seed %d: bout gave %.2f xp, %d days of practice give %.2f" % [seed_value, gained, days, expected])
+		gs.end_session()
