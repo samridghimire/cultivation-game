@@ -1596,51 +1596,70 @@ static func _deliver_clause(c: CharacterData, data: GameData, mission_id: String
 
 ## A slow stage names the faster spot in the same line (GUIDE-113): the "Gather N more qi" line gains
 ## ": about <T> at <place> in <region> (<D> away), <T_here> here." and the standalone better-qi line goes.
+## GUIDE-124: a better spot in the region the player stands in is named first ("about <T> at <spot> here, ...").
 ## The clause is added only when the days saved exceed the round trip; a trip that costs more than it
 ## saves is not advice, so then the better-qi line is just dropped. Without a Gather line nothing changes.
 static func _merge_better_qi(out: PackedStringArray, c: CharacterData, data: GameData, density: float, region_id: String, flags: Dictionary = {}) -> PackedStringArray:
 	var better := _better_qi_hint(c, data, region_id, flags)
-	if better == "":
-		return out
 	var gather := -1
 	var standalone := -1
 	for i in out.size():
 		if gather < 0 and out[i].begins_with("Gather ") and out[i].contains(" more qi to reach "):
 			gather = i
-		if out[i] == better:
+		if better != "" and out[i] == better:
 			standalone = i
-	if gather < 0 or standalone < 0:
+	if gather < 0:
 		return out
-	out.remove_at(standalone)
-	if standalone < gather:
-		gather -= 1
-	var best := best_qi_reachable(c, data, region_id, flags)
+	if standalone >= 0:
+		out.remove_at(standalone)
+		if standalone < gather:
+			gather -= 1
 	var needed := maxf(Cultivation.qi_required(c, data) - c.qi, 0.0)
 	var rate_here := Cultivation.qi_per_day(c, data, density)
-	var rate_best := Cultivation.qi_per_day(c, data, float(best["density"]))
-	if rate_here <= 0.0 or rate_best <= 0.0:
+	if rate_here <= 0.0:
 		return out
 	var days_here := ceili(needed / rate_here)
-	var days_best := ceili(needed / rate_best)
-	var away := 0
-	var best_region := String(best["region"])
-	if best_region != region_id:
-		away = route_days(c, data, region_id, best_region)
-	if days_here - days_best <= 2 * away:
+	# GUIDE-124: the better spot in the region the player stands in comes first.
+	var local := best_qi_in_region(c, data, region_id, flags) if region_id != "" else {}
+	var local_clause := ""
+	var days_base := days_here
+	if not local.is_empty() and String(local["name"]) != "" and float(local["density"]) > density + 0.001:
+		days_base = ceili(needed / Cultivation.qi_per_day(c, data, float(local["density"])))
+		local_clause = "%s at %s here" % [Calendar.format_duration(days_base), String(local["name"])]
+	var far_clause := ""
+	if standalone >= 0:
+		var best := best_qi_reachable(c, data, region_id, flags)
+		var rate_best := Cultivation.qi_per_day(c, data, float(best["density"]))
+		var best_region := String(best["region"])
+		var away := 0 if best_region == region_id else route_days(c, data, region_id, best_region)
+		if rate_best > 0.0 and (best_region != region_id or local_clause == ""):
+			var days_best := ceili(needed / rate_best)
+			if days_base - days_best > 2 * away:
+				var place := String(best["name"])
+				if place == "":
+					place = "the grounds"
+				var where := Exploration.region_name(data, best_region)
+				if away > 0:
+					where += " (%s away)" % Calendar.format_duration(away)
+				far_clause = "%s at %s in %s" % [Calendar.format_duration(days_best), place, where]
+				if local_clause == "":
+					far_clause += ", %s here" % Calendar.format_duration(days_here)
+	var clauses: PackedStringArray = []
+	for clause: String in [local_clause, far_clause]:
+		if clause != "":
+			clauses.append(clause)
+	var advice := ", ".join(clauses)
+	if advice == "":
 		return out
-	var place := String(best["name"])
-	if place == "":
-		place = "the grounds"
-	var where := Exploration.region_name(data, best_region)
-	if away > 0:
-		where += " (%s away)" % Calendar.format_duration(away)
+	if far_clause == "":
+		advice += ", %s where you stand" % Calendar.format_duration(days_here)
 	var line := out[gather]
 	var idx := line.find(" (about ")
 	var close := line.find(").", idx) if idx >= 0 else -1
 	if close < 0:
-		out[gather] = line + " At %s in %s it would take about %s." % [place, where, Calendar.format_duration(days_best)]
+		out[gather] = line + " About " + advice + "."
 	else:
-		out[gather] = "%s: about %s at %s in %s, %s here.%s" % [line.substr(0, idx), Calendar.format_duration(days_best), place, where, Calendar.format_duration(days_here), line.substr(close + 2)]
+		out[gather] = "%s: about %s.%s" % [line.substr(0, idx), advice, line.substr(close + 2)]
 	return out
 
 

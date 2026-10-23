@@ -369,12 +369,12 @@ func test_better_qi_hint_names_the_best_reachable_spot() -> void:
 		if line.begins_with("Gather "):
 			gather = line
 	assert_true(gather.contains(": about "), gather)
-	assert_true(gather.find("Cloud-Sea Cliff") < 120, gather)
-	assert_true(gather.contains(" at Cloud-Sea Cliff (2x qi) in Azure Peak (10 days away), "), gather)
+	assert_true(gather.find("Spirit Spring") < 120, gather)  # GUIDE-124: the local spot leads
+	assert_true(gather.contains(" at Cloud-Sea Cliff (2x qi) in Azure Peak (10 days away)"), gather)
 	var needed := Cultivation.qi_required(c, data()) - c.qi
 	var days := Calendar.format_duration(ceili(needed / Cultivation.qi_per_day(c, data(), Guidance.best_qi_reachable(c, data(), "qingshi_village")["density"])))
-	assert_true(gather.contains(": about %s at " % days), gather)
-	assert_true(gather.ends_with(" here."), gather)
+	assert_true(gather.contains(", %s at Cloud-Sea Cliff" % days), gather)
+	assert_true(gather.ends_with("(10 days away)."), gather)
 
 
 func test_better_qi_dropped_when_the_trip_costs_more_than_it_saves() -> void:
@@ -3746,3 +3746,42 @@ func test_plain_earn_line_keeps_missions_duties() -> void:
 	for id: String in d.sect_missions:
 		c.mission_cooldowns[id] = c.age_days + 30
 	assert_true(Guidance._sect_hint(c, d).contains("(missions, duties)"))
+
+
+## GUIDE-124: the Gather line names the better spot in the region the player stands in before any far spot.
+func _gather_line(lines: PackedStringArray) -> String:
+	for line: String in lines:
+		if line.begins_with("Gather "):
+			return line
+	return ""
+
+
+func test_gather_line_names_the_local_spring() -> void:
+	var c := _fresh()
+	c.realm_index = 1
+	var line := _gather_line(Guidance.hints(c, data(), 1.0, 20, {}, {}, "qingshi_village"))
+	assert_true(line.contains(" at Spirit Spring (2x qi) here"), line)
+	assert_true(line.find("Spirit Spring") + "Spirit Spring (2x qi) here".length() < Guidance.HEADLINE_CHARS, line)
+	var local := Guidance.best_qi_in_region(c, data(), "qingshi_village")
+	var needed := Cultivation.qi_required(c, data()) - c.qi
+	var days := Calendar.format_duration(ceili(needed / Cultivation.qi_per_day(c, data(), float(local["density"]))))
+	assert_true(line.contains(": about %s at Spirit Spring" % days), line)
+
+
+func test_gather_line_no_local_clause_at_the_spring() -> void:
+	var c := _fresh()
+	c.realm_index = 1
+	var spring := float(Guidance.best_qi_in_region(c, data(), "qingshi_village")["density"])
+	var lines := PackedStringArray(["Gather 500 more qi to reach the next stage (about 2 months of meditation here)."])
+	var merged := Guidance._merge_better_qi(lines, c, data(), spring, "qingshi_village")
+	assert_false(_gather_line(merged).contains("Spirit Spring"), _gather_line(merged))
+
+
+func test_gather_line_far_spot_must_beat_the_local_spot() -> void:
+	var c := _fresh()
+	c.realm_index = 1
+	var line := _gather_line(Guidance.hints(c, data(), 1.0, 20, {}, {}, "qingshi_village"))
+	var far := Guidance.best_qi_reachable(c, data(), "qingshi_village")
+	var local := Guidance.best_qi_in_region(c, data(), "qingshi_village")
+	if float(far["density"]) <= float(local["density"]) * 1.2:
+		assert_false(line.contains(String(far["name"])) and String(far["region"]) != "qingshi_village", line)
