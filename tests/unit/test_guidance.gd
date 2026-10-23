@@ -1631,6 +1631,35 @@ func test_pill_saving_goal_late_qi_refining() -> void:
 	assert_true(_has(Guidance.goals(_qr(6, 400), data(), {}), "you can afford it now"))
 
 
+func _sect_qr(sect_id: String, rank: int, contribution: int, spent: int, stage: int = 6) -> CharacterData:
+	var c := _qr(stage, 0)
+	c.sect = {"id": sect_id, "rank": rank, "contribution": contribution, "spent": spent}
+	return c
+
+
+func test_sect_pill_claim_now() -> void:
+	var c := _sect_qr("azure_cloud_sect", 1, 300, 0)
+	var goals := Guidance.goals(c, data(), {})
+	assert_true(goals.has("Claim a Foundation Establishment Pill (+25 percent) from the sect treasury: 250 contribution, you can claim it now."), str(goals))
+	assert_false(_has(goals, "Save for"))
+	assert_eq(Guidance.pill_gap_note(c, data(), []), "")
+
+
+func test_sect_pill_claim_balance_and_blood_lotus() -> void:
+	var goals := Guidance.goals(_sect_qr("azure_cloud_sect", 1, 600, 500), data(), {})
+	assert_true(goals.has("Claim a Foundation Establishment Pill (+25 percent) from the sect treasury: 250 contribution, you have 100."), str(goals))
+	assert_true(_has(Guidance.goals(_sect_qr("blood_lotus_sect", 1, 0, 0), data(), {}), "250 contribution"))
+
+
+func test_sect_pill_outer_disciple_and_others() -> void:
+	var goals := Guidance.goals(_sect_qr("azure_cloud_sect", 0, 300, 0), data(), {})
+	assert_true(_has(goals, "As Inner Disciple you could claim it for 250 contribution."), str(goals))
+	assert_false(_has(goals, "Claim a"))
+	assert_eq(Guidance.sect_pill_claim(_qr(6, 20), data()), "")
+	assert_false(Guidance.pill_saving_goal(_qr(6, 20), data()).contains("claim"))
+	assert_eq(Guidance.sect_pill_claim(_sect_qr("azure_cloud_sect", 1, 300, 0, 4), data()), "")
+
+
 func test_pill_saving_goal_skipped_when_held_or_other_realm() -> void:
 	var c := _qr(6, 20)
 	c.add_item("foundation_establishment_pill", 1)

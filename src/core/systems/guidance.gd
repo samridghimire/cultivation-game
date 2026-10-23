@@ -1245,7 +1245,7 @@ static func next_realm_pill(c: CharacterData, data: GameData) -> Dictionary:
 static func qi_pill_offer(c: CharacterData, data: GameData, region_id: String, flags: Dictionary = {}) -> Dictionary:
 	if not data.regions.has(region_id) or c.realm_index < 1 or Cultivation.is_at_bottleneck(c, data):
 		return {}
-	var reserve := next_realm_pill_price(c, data) if _pill_goal_applies(c, data) else 0
+	var reserve := next_realm_pill_price(c, data) if _pill_goal_applies(c, data) and sect_pill_claim(c, data) == "" else 0
 	var spare := c.item_count("spirit_stone") - reserve - QI_BUY_KEEP
 	if spare <= 0:
 		return {}
@@ -1298,7 +1298,42 @@ static func pill_saving_goal(c: CharacterData, data: GameData) -> String:
 	var price := int(pill.get("price", 0))
 	var stones := c.item_count("spirit_stone")
 	var have := "you can afford it now" if stones >= price else "you have %d" % stones
-	return "Save for %s (+%d percent): %d stones, %s. %s." % [Text.a(String(pill["name"])), roundi(float(pill["effects"]["breakthrough_bonus"]) * 100), price, have, Items.sources(data, String(pill["id"]))[0]]
+	var line := "Save for %s (+%d percent): %d stones, %s. %s." % [Text.a(String(pill["name"])), roundi(float(pill["effects"]["breakthrough_bonus"]) * 100), price, have, Items.sources(data, String(pill["id"]))[0]]
+	var entry := sect_pill_entry(c, data)
+	if not entry.is_empty() and int(c.sect.get("rank", 0)) < int(entry["min_rank"]):
+		line += " As %s you could claim it for %d contribution." % [(data.sects[c.sect["id"]] as SectDef).rank_name(int(entry["min_rank"])), int(entry["cost"])]
+	return line
+
+
+## GUIDE-132: {item_id, name, bonus, cost, min_rank} of the best breakthrough pill for the next realm in `c`'s sect
+## shop (highest breakthrough_bonus, then cheapest), whatever c's rank; {} for rogues or when the shop has none.
+static func sect_pill_entry(c: CharacterData, data: GameData) -> Dictionary:
+	if c.is_rogue() or Cultivation.is_final_realm(c, data):
+		return {}
+	var next_id: String = data.realms[c.realm_index + 1].id
+	var best := {}
+	for entry: Dictionary in Sects.shop_items(c, data):
+		var item: Dictionary = data.items.get(String(entry["item_id"]), {})
+		var effects: Dictionary = item.get("effects", {})
+		var bonus := float(effects.get("breakthrough_bonus", 0.0))
+		if String(effects.get("breakthrough_realm", "")) != next_id or bonus <= 0.0:
+			continue
+		if best.is_empty() or bonus > float(best["bonus"]) or (is_equal_approx(bonus, float(best["bonus"])) and int(entry["contribution"]) < int(best["cost"])):
+			best = {"item_id": String(entry["item_id"]), "name": String(item["name"]), "bonus": bonus, "cost": int(entry["contribution"]), "min_rank": int(entry.get("min_rank", 0))}
+	return best
+
+
+## "Claim a Foundation Establishment Pill (+25 percent) from the sect treasury: 250 contribution, you have 1730."
+## when `_pill_goal_applies` and c's rank reaches the entry's min_rank; "" otherwise.
+static func sect_pill_claim(c: CharacterData, data: GameData) -> String:
+	if not _pill_goal_applies(c, data):
+		return ""
+	var entry := sect_pill_entry(c, data)
+	if entry.is_empty() or int(c.sect.get("rank", 0)) < int(entry["min_rank"]):
+		return ""
+	var balance := Sects.contribution_balance(c)
+	var have := "you can claim it now" if balance >= int(entry["cost"]) else "you have %d" % balance
+	return "Claim %s (+%d percent) from the sect treasury: %d contribution, %s." % [Text.a(String(entry["name"])), roundi(float(entry["bonus"]) * 100), int(entry["cost"]), have]
 
 
 ## True in the last three stages of a cultivation realm while no breakthrough pill is held or taken.
@@ -2462,7 +2497,9 @@ static func goals(c: CharacterData, data: GameData, flags: Dictionary, clan: Cla
 			out.append("Reach %s: about %s of meditation, then a breakthrough (%s)." % [next_name, Calendar.format_rough(days), odds])
 		else:
 			out.append("Reach %s: gather qi, then attempt a breakthrough (%s)." % [next_name, odds])
-		var saving := pill_saving_goal(c, data)
+		var saving := sect_pill_claim(c, data)
+		if saving == "":
+			saving = pill_saving_goal(c, data)
 		if saving == "":
 			saving = pill_source_goal(c, data)
 		if saving != "":
@@ -2829,7 +2866,7 @@ static func _item_stones(block: Dictionary) -> int:
 static func pill_gap_note(c: CharacterData, data: GameData, fights: Array) -> String:
 	var price := next_realm_pill_price(c, data)
 	var short := price - c.item_count("spirit_stone")
-	if pill_saving_goal(c, data) == "" or short <= 0:
+	if pill_saving_goal(c, data) == "" or short <= 0 or sect_pill_claim(c, data) != "":
 		return ""
 	var best: Dictionary = {}
 	for f: Dictionary in fights:
