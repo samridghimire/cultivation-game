@@ -100,6 +100,7 @@ extends SceneTree
 ## WU-302: `--clinic-shot` writes clinic_one_<size>.png / clinic_two_<size>.png: the Village Clinic menu for a Qi Refining 3rd-layer
 ## character with Internal Injury, then with a second injury (Qi Deviation); the "Pay the doctor ... saves about" lines must fit or wrap unclipped.
 ## WU-295: `--bounty-shot` writes bounty_menu_<size>.png: the Fallen Star Market bounty board with the longest hunt label any realm sees (the hunt's description is shown for the focused entry).
+## WU-345: `--hint-shot` also writes hint_trial_peak_<size>.png (Inner Disciple at Foundation Peak, Iron Fist mastered, no body art or armor: a hint names Stone Skin Tempering, none says grow a stage).
 ## WU-336: `--hint-shot` also writes hint_thin_treasury_<size>.png (Foundation outer disciple, 100 contribution: thin-defence line names "your sect treasury"; capped HUD line keeps its opening).
 ## WU-331: `--hint-shot` also writes hint_clinic_short_<size>.png (qi deviation, 19 stones: the capped line keeps "Village Clinic treats it for" and "(you have 19)"; the clinic carries the gold marker).
 ## WU-297: `--hint-shot` also writes hint_npc_badge_<size>.png (first hint is a Qingshi NPC's pointers line, the NPC-only kind; the gold "!" sits before it).
@@ -2131,6 +2132,43 @@ func _start_hint_shot(gs: Node) -> void:
 			await root.get_tree().process_frame
 		var parsed: String = (treasury_journal.get("_text") as RichTextLabel).get_parsed_text()
 		assert(parsed.contains("your sect treasury"), "journal Next steps lacks the treasury:\n" + dump), "close": func() -> void: (hud.get("_screens")["toggle_journal"] as Control).close()})
+
+	# WU-345: GUIDE-152's Inner Disciple at Foundation Peak with Iron Fist mastered, no body art or armor: the trial advice
+	# names Stone Skin Tempering, and no HUD line tells them to grow a stage.
+	var peak_saved: Array = []
+	shots.append({"name": "hint_trial_peak_" + size_tag, "open": func() -> void:
+		setup_long.call()
+		peak_saved = [c.realm_index, c.stage, c.sect.duplicate(), c.techniques.duplicate(true), c.equipment.duplicate(), c.inventory.duplicate()]
+		c.realm_index = Guidance.THIN_DEFENCE_REALM
+		c.stage = gs.data.realms[Guidance.THIN_DEFENCE_REALM].stage_count() - 1
+		c.qi = 0.0
+		c.sect = {"id": "azure_cloud_sect", "rank": 1, "contribution": 3500, "spent": 0}
+		c.techniques = {"iron_fist": {"level": gs.data.techniques["iron_fist"].max_level, "xp": 0.0}}
+		c.equipment = {}
+		c.inventory = {}
+		c.mission_cooldowns = {}
+		gs.current_region = "qingshi_village"
+		root.get_node("EventBus").player_changed.emit()
+		await root.get_tree().process_frame
+		await root.get_tree().process_frame
+		hud.get("_banner").visible = false
+		var lines: Array = Guidance.hints(c, gs.data, 3, 12, gs.npcs, gs.world_flags, "qingshi_village", 40, gs.npc_favor)
+		var dump := "\n".join(lines)
+		print("hint-shot trial peak: ", dump)
+		var named := false
+		for h: String in lines:
+			assert(not h.contains("grow a stage"), "a hint says grow a stage at the last stage:\n" + dump)
+			if h.contains("Stone Skin Tempering"):
+				named = true
+		assert(named, "no hint names Stone Skin Tempering:\n" + dump)
+		var shown: String = (hud.get("_hint") as Label).text
+		assert(not shown.contains("grow a stage"), "HUD says grow a stage: " + shown), "close": func() -> void:
+			c.realm_index = peak_saved[0]
+			c.stage = peak_saved[1]
+			c.sect = peak_saved[2]
+			c.techniques = peak_saved[3]
+			c.equipment = peak_saved[4]
+			c.inventory = peak_saved[5]})
 
 
 ## WU-190: the encounter window on real encounters with attribute, profession and enemy choices.
