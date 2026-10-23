@@ -37,6 +37,9 @@ static var heal_log := {"healed": 0, "stones": 0}
 ## ["refused"] collects check_spar's text when the named partner refuses (a hint bug).
 static var spar_hint := false
 static var spar_log := {"bouts": 0, "refused": []}
+## QA-141: missions rated below this are skipped, as a player reading the board's odds (WU-286) would;
+## simulate_first_hour.gd's --blind-missions sets it to 0 (the old policy).
+static var min_mission_odds := 0.4
 const TRIAL_MIN_ODDS := 0.7
 
 
@@ -698,6 +701,8 @@ static func _mission_is_sane(gs: Node, c: CharacterData, mission_id: String, don
 	if danger == "Deadly":
 		return false
 	var odds := _mission_odds(gs, c, mission_id)
+	if odds < min_mission_odds:
+		return false
 	var lost: Dictionary = done["lost_missions"].get(mission_id, {})
 	if not lost.is_empty() and today - int(lost["day"]) < 60 and odds < float(lost["odds"]) + 0.15:
 		return false

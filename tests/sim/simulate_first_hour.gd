@@ -29,6 +29,7 @@ func _run() -> void:
 	FirstHour.attempt_trials = not args.has("--no-trial")  # QA-136
 	FirstHour.heal_injuries = curious and not args.has("--no-heal")  # QA-128
 	FirstHour.heal_log = {"healed": 0, "stones": 0}
+	FirstHour.min_mission_odds = 0.0 if args.has("--blind-missions") else 0.4  # QA-141
 	FirstHour.spar_hint = curious and not args.has("--no-spar-hint")  # QA-138
 	FirstHour.spar_log = {"bouts": 0, "refused": []}
 	var trace := args.has("--trace")  # QA-065: print each month's state and every fight
@@ -37,7 +38,7 @@ func _run() -> void:
 	for a in args:
 		if a.begins_with("--seed="):
 			only_seed = int(a.substr(7))
-		elif a != "--curious" and a != "--trace" and a != "--zero" and a != "--forced" and a != "--no-trial" and a != "--no-heal" and a != "--no-spar-hint":
+		elif a != "--curious" and a != "--trace" and a != "--zero" and a != "--forced" and a != "--no-trial" and a != "--no-heal" and a != "--no-spar-hint" and a != "--blind-missions":
 			nums.append(int(a))
 	var seeds := nums[0] if nums.size() > 0 else 30
 	var months := nums[1] if nums.size() > 1 else 12
