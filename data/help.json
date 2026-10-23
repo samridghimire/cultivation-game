@@ -87,7 +87,8 @@
       "body": [
         "When the game opens a feature for you for the first time, such as your first sect mission or your first abode, a \"New\" banner appears briefly and a line is added to the message log. Reopen the log (Message log key) to read old notices again.",
         "The HUD hints panel suggests next steps. Choose how many it shows (0-3) under \"HUD hints\" in Settings; at 0 both the panel and the \"New\" banners are hidden, though the log still records them.",
-        "A gold \"!\" floats over the place your first Next steps hint is about, such as the merchant it names or the clinic that treats your injury. Follow it when you are not sure what to do next."
+        "A gold \"!\" floats over the place your first Next steps hint is about, such as the merchant it names or the clinic that treats your injury. Follow it when you are not sure what to do next.",
+        "A long hint ends with \"… (J)\": press J (the journal) to read the whole line under Next steps."
       ]
     },
     {
