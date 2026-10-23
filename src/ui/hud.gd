@@ -23,6 +23,7 @@ var _bottleneck: Label
 var _next_layer: Label
 var _injuries: Label
 var _hint: Label
+var _lives_badge: Label  # WU-340: the same gold "!" beside the Lives label while the first hint is the artifact lives line
 var _hint_badge: Label  # WU-284: gold "!" over the first hint when it names a place here
 var _hint_lines: PackedStringArray = []
 var _goal: Label
@@ -359,6 +360,9 @@ func _build_status_panel() -> void:
 	box.add_child(_age)
 	_lives = UIStyle.label("", 15)
 	box.add_child(_lives)
+	_lives_badge = UIStyle.label("!", 15, UIStyle.ACCENT)
+	_lives_badge.visible = false
+	_lives.add_child(_lives_badge)
 	_status = UIStyle.label("", 15)
 	box.add_child(_status)
 	_qi_bar = ProgressBar.new()
@@ -586,10 +590,20 @@ static func fair_fight_line(entries: Array, font: Font = null, font_size: int = 
 
 
 ## "Lives N" from the Creation Artifact (WU-095): warning at 1 life, danger with "Final life" at 0.
+func _place_lives_badge() -> void:
+	_lives_badge.position = Vector2(_lives.get_minimum_size().x + 6.0, 0.0)
+
+
+## True when the gold "!" beside the Lives label is showing (WU-340).
+func lives_badge_visible() -> bool:
+	return _lives_badge.visible and _lives.visible
+
+
 func _refresh_lives(p: CharacterData) -> void:
 	_lives.text = lives_text(p.artifact_lives)
 	_lives.visible = _lives.text != ""
 	_lives.add_theme_color_override("font_color", lives_color(p.artifact_lives))
+	_place_lives_badge()
 
 
 static func lives_text(lives: int) -> String:
@@ -630,6 +644,8 @@ func _set_hint_text(lines: PackedStringArray) -> void:
 	_hint.visible = not lines.is_empty()
 	var marked := not lines.is_empty() and first_hint_names_place(lines[0], _region_place_names())
 	_hint_badge.visible = marked
+	_lives_badge.visible = not lines.is_empty() and lines[0].begins_with("Your Creation Artifact")
+	_place_lives_badge()
 	var out: Array = []
 	var cut := false
 	for i in lines.size():

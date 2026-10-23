@@ -68,9 +68,14 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func open() -> void:
 	_page = PAGE_MAIN
+	var p := GameState.player
+	# WU-340: a nearly-dead player lands on the recharge button.
+	var low := p != null and p.artifact_lives >= 0 and p.artifact_lives <= Guidance.LOW_ARTIFACT_LIVES
+	if low:
+		_page = PAGE_ANCHORS
 	_rebuild()
 	visible = true
-	_focus("")
+	_focus("recharge" if low else "")
 
 
 func close() -> void:

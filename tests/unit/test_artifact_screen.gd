@@ -115,3 +115,25 @@ func test_check_recharge_reasons() -> void:
 	assert_eq(CreationArtifact.check_recharge(c, d), "")
 	c.artifact_lives = int(d.artifact.get("max_lives", 9))
 	assert_eq(CreationArtifact.check_recharge(c, d), "The artifact cannot hold more lives.")
+
+
+## WU-340: a nearly-dead player opens on Lives & Anchors with the recharge button focused.
+func test_low_lives_open_on_recharge() -> void:
+	var gs := _gs()
+	var c := new_character()
+	c.inventory = {"spirit_stone": 500}
+	c.artifact_lives = 1
+	gs.start_session(c)
+	var screen := ArtifactScreen.new()
+	(Engine.get_main_loop() as SceneTree).root.add_child(screen)
+	screen.open()
+	await (Engine.get_main_loop() as SceneTree).process_frame
+	assert_eq(screen.page(), ArtifactScreen.PAGE_ANCHORS)
+	assert_true(_button(screen, "recharge").has_focus(), "recharge focused at 1 life")
+	screen.close()
+	c.artifact_lives = 3
+	screen.open()
+	await (Engine.get_main_loop() as SceneTree).process_frame
+	assert_eq(screen.page(), ArtifactScreen.PAGE_MAIN, "3 lives opens the main page")
+	screen.free()
+	gs.end_session()

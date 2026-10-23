@@ -237,3 +237,21 @@ func test_goals_done_banner() -> void:
 	assert_eq(HUD.goals_done_banner(["A"] as Array[String], goals, "first", "J"), "B  Your first goals are done; the journal (J) has more.")
 	assert_eq(HUD.goals_done_banner(["A"] as Array[String], goals, "foundation", "J"), "B  Your Foundation goals are done; the journal (J) has more.")
 	assert_eq(HUD.goals_done_banner(["A"] as Array[String], goals, "core", "J"), "B  Your Core Formation goals are done; the journal (J) has more.")
+
+
+## WU-340: the gold "!" sits beside the Lives label while the first hint is the artifact lives line.
+func test_lives_badge_follows_lives_hint() -> void:
+	var root := (Engine.get_main_loop() as SceneTree).root
+	var gs := root.get_node("GameState")
+	var c := CharacterFactory.create("Wanderer", gs.data, seeded_rng(3))
+	c.artifact_lives = 1
+	gs.start_session(c)
+	var hud: CanvasLayer = load("res://src/ui/hud.tscn").instantiate()
+	root.add_child(hud)
+	hud.call("_refresh")
+	hud.call("_set_hint_text", PackedStringArray(["Your Creation Artifact holds 1 life. Recharge it."]))
+	assert_true(hud.lives_badge_visible(), "badge shows for the lives hint")
+	hud.call("_set_hint_text", PackedStringArray(["Meditate to gain qi."]))
+	assert_false(hud.lives_badge_visible(), "badge hidden for other hints")
+	hud.free()
+	gs.end_session()
