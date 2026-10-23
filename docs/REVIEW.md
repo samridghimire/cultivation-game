@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 2950dde
+Last reviewed commit: f7ea31e
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -1088,3 +1088,13 @@ Last reviewed commit: 2950dde
     src/ui/mission_board.gd; fine as a display helper, but move it to Techniques if a system ever needs it. GUIDE-156
     makes the first-hour sim ~88% slower (worker's follow-up: cheaper win_chance).
   - Nothing fixed, nothing filed.
+- 2026-10-23 (reviewer): reviewed 2950dde..f7ea31e (C-235/238/239/240/243, GUIDE-160/162/163/167, WU-346/351/353/354,
+  QA-157; [PLAN]/[REVIEW] skipped). Main green (ALL CHECKS PASSED) before and after. No worker touched
+  BACKLOG/CHANGELOG; no save-format changes; no logic outside src/core (WU-346/351/354 are display helpers).
+  - GUIDE-167's duty_hint credits the mission's contribution before the month can roll over (take_mission completes,
+    then passes time), so "covers it" with days <= days left is correct. GUIDE-162's typical_level matches
+    combat_balance's 1 + 2/realm curve. GUIDE-163's "a, b and c" durations are tested. C-238's elk test pins 70-95%.
+  - Fixed: C-240 committed a stray tests/unit/test_zz_scratch.gd.uid with no script (a worker's scratch test);
+    removed it.
+  - Note, not filed: WU-353's follow-up is real: the HUD's 120-char trial line cuts off before the practise advice,
+    so GUIDE-162's level target only shows in the journal. Worth a guidance task (advice before the odds detail).
