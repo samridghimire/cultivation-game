@@ -980,7 +980,7 @@ func test_rank_goal_without_trial_uses_requirement_helpers() -> void:
 	c.sect["contribution"] = 500
 	for l in Guidance.goals(c, d, {}):
 		assert_false(l.begins_with("Become "), "met requirements, trial-free: no rank line")
-	sect.ranks[1]["trial"] = "wolf"
+	sect.ranks[1]["trial"] = "mist_wolf"
 	var found := false
 	for l in Guidance.goals(c, d, {}):
 		if l.contains("you can seek promotion"):
@@ -4496,3 +4496,24 @@ func test_empty_fair_fights_note_breaks_through_at_the_last_stage() -> void:
 	assert_eq(Guidance.empty_fair_fights_note(c, d), "Nothing here is in your favour yet: break through to Foundation Establishment.")
 	c.stage = 0
 	assert_eq(Guidance.empty_fair_fights_note(c, d), "Nothing here is in your favour yet: grow a stage.")
+
+
+# --- GUIDE-154: the rank goal says how the trial looks ---
+
+func test_rank_goal_names_the_trial_foe_and_odds() -> void:
+	var d := data()
+	var c := new_character()
+	c.realm_index = 2
+	c.stage = 0
+	c.sect = {"id": "azure_cloud_sect", "rank": 1, "contribution": 3500}
+	assert_eq(Sects.rank_requirement_reason(c, d), "")
+	var line := ""
+	for l in Guidance.goals(c, d, {}):
+		if l.begins_with("Become "):
+			line = l
+	assert_true(line.contains(" The trial: the Sword Pavilion Warden ("), line)
+	assert_true(line.contains(" in 100)."), line)
+	# A trial-free rank keeps the plain text (no trial odds to show).
+	c.sect = {"id": "azure_cloud_sect", "rank": 0, "contribution": 0}
+	for l in Guidance.goals(c, d, {}):
+		assert_false(l.contains("The trial:"), l)

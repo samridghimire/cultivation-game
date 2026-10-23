@@ -1627,11 +1627,17 @@ static func odds_unhurt(c: CharacterData, data: GameData, enemy: Dictionary) -> 
 
 ## GUIDE-121: "you face the X (Even, 80 in 100)", or "" when no trial is open.
 static func _trial_face(c: CharacterData, data: GameData) -> String:
+	var who := _trial_foe(c, data)
+	return "" if who == "" else "you face " + who
+
+
+## GUIDE-154: "the X (Even, 80 in 100)", or "" when no trial is open.
+static func _trial_foe(c: CharacterData, data: GameData) -> String:
 	var chance := trial_odds(c, data)
 	if chance < 0.0:
 		return ""
 	var enemy: Dictionary = data.enemies[Sects.trial_enemy(c, data)]
-	return "you face the %s (%s, %d in 100)" % [enemy.get("name", ""), Combat.label_for_chance(chance), roundi(chance * 100.0)]
+	return "the %s (%s, %d in 100)" % [enemy.get("name", ""), Combat.label_for_chance(chance), roundi(chance * 100.0)]
 
 
 ## GUIDE-085: a warning when the odds are under even, and what practice would change (starts with a space, "" if none).
@@ -2797,7 +2803,8 @@ static func goals(c: CharacterData, data: GameData, flags: Dictionary, clan: Cla
 			if need != "":
 				out.append("Become %s: %s" % [rank_name, need])
 			elif Sects.needs_trial(c, data):
-				out.append("Become %s: you can seek promotion at the sect hall." % rank_name)
+				var foe := _trial_foe(c, data)
+				out.append("Become %s: you can seek promotion at the sect hall.%s" % [rank_name, (" The trial: %s." % foe) if foe != "" else ""])
 	elif clan == null:
 		var why := Clans.check_found(c, clan, data)
 		if why != "":
