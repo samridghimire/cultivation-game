@@ -102,7 +102,7 @@ extends SceneTree
 ## WU-289: `--hint-shot` also writes hint_road_marker_/hint_road_menu_/hint_badge_<size>.png (road-out "!", route line "The hint points this way.", clinic badge).
 ## WU-288: `--hint-shot` also writes hint_best_mission_[journal_]<size>.png ("The best pays N contribution: <mission> (<days>)" on the sect line).
 ## WU-309: `--hint-shot` also writes hint_long_sect_<size>.png (outer disciple, Qi Refining 1st layer, Escort on cooldown, no herbs; capped sect line keeps the mission name).
-## WU-323: `--hint-shot` also writes hint_far_qi_<size>.png (rogue, Foundation Early, no qi: "Travel to Azure Peak ..." leads; asserts the capped line, the hinted region and the road marker).
+## WU-323: `--hint-shot` also writes hint_far_qi_<size>.png (WU-334: also asserts the world-map hint note; rogue, Foundation Early, no qi: "Travel to Azure Peak ..." leads; asserts the capped line, the hinted region and the road marker).
 ## WU-271: `--hint-shot` also writes hint_trial_[journal_]<size>.png (open sect trial odds, Fights you can win) and hint_sell_armor_[journal_]<size>.png ("Sell your ..." armor line).
 ## WU-258: `--hint-shot` also writes hint_armor_far_[journal_]<size>.png and hint_empty_fights_journal_<size>.png.
 ## WU-268: `--hint-shot` also writes hint_long_[journal_]<size>.png (Azure Cloud outer disciple, Qi Refining 1st layer, Iron Fist 1: practice days, far qi, stipend).
@@ -1872,7 +1872,11 @@ func _start_hint_shot(gs: Node) -> void:
 		assert(String(hud.call("cap_hint", first)).contains("Travel to Azure Peak"), "capped line lost the trip: " + String(hud.call("cap_hint", first)))
 		assert(Guidance.hinted_region(gs.data, first, "qingshi_village") == "azure_peak", "hinted region (the map mark and note) is not Azure Peak")
 		var tp: Node = travel_node.call()
-		assert(tp != null and String(tp.get("hint_region")) == "azure_peak", "road marker does not point at Azure Peak"), "close": func() -> void: pass})
+		assert(tp != null and String(tp.get("hint_region")) == "azure_peak", "road marker does not point at Azure Peak")
+		# WU-334: the world map's hint note, read through a run-time load (a parse-time WorldMapScreen reference fails under -s).
+		var map_script: GDScript = load("res://src/ui/world_map_screen.gd")
+		assert(map_script.hint_note(gs.data, first, "qingshi_village", "azure_peak") == "Your hint points here.", "world map does not mark Azure Peak")
+		assert(map_script.hint_note(gs.data, first, "qingshi_village", "qingshi_village") == "", "world map marks the current region"), "close": func() -> void: pass})
 
 	# WU-309: an Azure Cloud outer disciple at Qi Refining 1st layer with Escort Mortal Villagers on cooldown and no herbs:
 	# the capped HUD sect line keeps the mission name and the journal's Next steps shows the full line.
