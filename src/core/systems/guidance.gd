@@ -142,7 +142,7 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 			out.append(fighting)
 		elif c.techniques.is_empty():
 			out.append(TECHNIQUE_HINT)
-	for hint in [_dao_hint(c, data), _abode_hint(c, data), _family_hint(c, data, people)]:
+	for hint in [_dao_hint(c, data), _abode_hint(c, data, region_id, flags), _family_hint(c, data, people)]:
 		if hint != "":
 			out.append(hint)
 	out = _merge_better_qi(out, c, data, density, region_id, flags)
@@ -2104,13 +2104,56 @@ static func _dao_hint(c: CharacterData, data: GameData) -> String:
 
 
 ## Seclusion at the player's abode, or claiming one once they cultivate.
-static func _abode_hint(c: CharacterData, data: GameData) -> String:
+## GUIDE-153: the claim names the abode, where it is, what it costs and what it gives.
+static func _abode_hint(c: CharacterData, data: GameData, region_id: String = "", flags: Dictionary = {}) -> String:
 	if c.abode != "":
 		var density := float(Abodes.get_def(data, c.abode).get("qi_density", 1.0)) * (1.0 + Abodes.array_bonus(c, data))
 		return "Cultivate in seclusion at %s (qi x%s)." % [Abodes.abode_name(data, c.abode), String.num(density, 2)]
-	if c.realm_index >= 1 and not data.abodes.is_empty():
+	if c.realm_index < 1 or data.abodes.is_empty():
+		return ""
+	# the densest abode `c` can enter and afford, else the cheapest one they can enter
+	var stones := c.item_count("spirit_stone")
+	var pick := ""
+	for abode_id: String in data.abodes:
+		var def: Dictionary = data.abodes[abode_id]
+		var realm_id := String(def.get("min_realm", ""))
+		if realm_id != "" and c.realm_index < data.realm_index_of(realm_id):
+			continue
+		if pick == "":
+			pick = abode_id
+			continue
+		var best: Dictionary = data.abodes[pick]
+		var affordable := int(def.get("cost", 0)) <= stones
+		var best_affordable := int(best.get("cost", 0)) <= stones
+		if affordable and not best_affordable:
+			pick = abode_id
+		elif affordable == best_affordable:
+			if affordable and float(def.get("qi_density", 1.0)) > float(best.get("qi_density", 1.0)):
+				pick = abode_id
+			elif not affordable and int(def.get("cost", 0)) < int(best.get("cost", 0)):
+				pick = abode_id
+	if pick == "":
 		return "Claim a cave abode to cultivate in seclusion and store your treasures."
-	return ""
+	var abode: Dictionary = data.abodes[pick]
+	var abode_region := String(abode.get("region", ""))
+	var where := Exploration.region_name(data, abode_region)
+	var travel := ""
+	if region_id != "":
+		var days := 0 if abode_region == region_id else route_days(c, data, region_id, abode_region)
+		travel = " (here)" if abode_region == region_id else (" (%s)" % Calendar.format_duration(days) if days > 0 else "")
+	var cost := int(abode.get("cost", 0))
+	var short := "" if stones >= cost else " (you have %d)" % stones
+	var seclusion := float(abode.get("qi_density", 1.0))
+	var qi_clause := "qi x%s in seclusion" % String.num(seclusion, 2)
+	if region_id != "" and data.regions.has(region_id):
+		var here := best_qi_in_region(c, data, region_id, flags)
+		if String(here["name"]) != "" and Exploration.qi_density(data, abode_region, flags) * seclusion <= float(here["density"]):
+			qi_clause = "an anchor, though %s here gathers qi faster" % here["name"]
+	var anchor := "a Creation Artifact anchor, " if String(abode.get("anchor_id", "")) != "" else ""
+	var room := "room for %d items and " % int(abode.get("storage_slots", 0))
+	if qi_clause.begins_with("an anchor"):
+		return "Claim %s in %s%s for %d stones%s: %s." % [Abodes.abode_name(data, pick), where, travel, cost, short, qi_clause]
+	return "Claim %s in %s%s for %d stones%s: %s%s%s." % [Abodes.abode_name(data, pick), where, travel, cost, short, anchor, room, qi_clause]
 
 
 ## Trying for a child with a spouse, or courting someone when unmarried.

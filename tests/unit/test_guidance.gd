@@ -256,7 +256,7 @@ func test_system_hints() -> void:
 	var insight_id: String = d.dao_insights.keys()[0]
 	Dao.gain_levels(c, d, insight_id, 1)
 	assert_true(_has(Guidance.hints(c, d, 1.0, 20), "Contemplate the %s" % Dao.def_of(d, insight_id)["name"]))
-	assert_true(_has(Guidance.hints(c, d, 1.0, 20), "Claim a cave abode"))
+	assert_true(_has(Guidance.hints(c, d, 1.0, 20), "Claim "))
 	c.abode = "waterfall_cave"
 	assert_true(_has(Guidance.hints(c, d, 1.0, 20), "Cultivate in seclusion at %s" % Abodes.abode_name(d, "waterfall_cave")))
 	var people := {}
@@ -4126,7 +4126,7 @@ func test_low_artifact_lives_lead_and_reserve_the_recharge() -> void:
 	assert_true(hints[0].substr(0, Guidance.HEADLINE_CHARS).contains("Recharge it for"))
 	c.artifact_lives = 3
 	hints = _buy_hints(c)
-	assert_false(_has(hints, "Creation Artifact"))
+	assert_false(_has(hints, "Your Creation Artifact"))
 	assert_true(_has(hints, "with spare stones"))
 	c.artifact_lives = 0
 	assert_true(_buy_hints(c)[0].begins_with("Your Creation Artifact is empty"))
@@ -4326,6 +4326,23 @@ func test_thin_defence_hint_leads_with_the_treasury_body_art() -> void:
 	assert_false(line.contains("Claim "), line)
 	c.sect = {}
 	assert_false(Guidance.thin_defence_hint(c, d, "qingshi_village").contains("Claim "))
+
+
+## GUIDE-153: the abode hint names the abode, where it is, what it costs and gives.
+func test_abode_hint_names_place_and_price() -> void:
+	var d := data()
+	var c := _fresh()
+	c.realm_index = 1
+	c.inventory = {"spirit_stone": 100}
+	var line := Guidance._abode_hint(c, d, "qingshi_village")
+	for part: String in ["Waterfall Cave", "Misty Forest", "300", "(you have 100)"]:
+		assert_true(line.contains(part), line)
+	c.realm_index = Guidance.THIN_DEFENCE_REALM
+	c.inventory = {"spirit_stone": 3000}
+	line = Guidance._abode_hint(c, d, "qingshi_village")
+	assert_true(line.contains("Cloud-Piercing Grotto") and not line.contains("(you have"), line)
+	c.abode = "waterfall_cave"
+	assert_true(Guidance._abode_hint(c, d, "qingshi_village").begins_with("Cultivate in seclusion"))
 
 
 func test_secret_realm_hint_names_place_and_cost() -> void:
