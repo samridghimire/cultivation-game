@@ -26,3 +26,31 @@ func test_mortal_home_fights_have_a_realm_ceiling() -> void:
 		if foe == null or str(foe.realm) != "mortal":
 			continue
 		assert_true(e.has("max_realm"), "%s: a mortal foe at home never fades" % e["id"])
+
+
+func _send_youths_to_sect_hall(sect: Dictionary) -> Node:
+	var gs: Node = (Engine.get_main_loop() as SceneTree).root.get_node("GameState")
+	var c := new_character()
+	c.sect = sect
+	gs.start_session(c)
+	gs.current_region = "qingshi_village"
+	gs.pending_encounter = "village_hopeful_youths"
+	var index := -1
+	for ch: Dictionary in gs.data.encounters["village_hopeful_youths"]["choices"]:
+		if String(ch["label"]).begins_with("Send"):
+			index = gs.data.encounters["village_hopeful_youths"]["choices"].find(ch)
+	gs.choose_encounter(index)
+	return gs
+
+
+func test_youths_sent_to_sect_hall_earn_a_rogue_renown() -> void:
+	var gs := _send_youths_to_sect_hall({})
+	assert_true(gs.player.is_rogue(), "a rogue stays a rogue")
+	assert_gt(Renown.value(gs.player, "qingshi_village"), 0)
+	gs.end_session()
+
+
+func test_youths_sent_to_sect_hall_still_pay_a_member() -> void:
+	var gs := _send_youths_to_sect_hall({"id": "azure_cloud_sect", "rank": 0, "contribution": 0, "spent": 0})
+	assert_eq(int(gs.player.sect["contribution"]), 10)
+	gs.end_session()
