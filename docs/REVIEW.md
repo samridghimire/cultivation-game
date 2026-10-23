@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 86d415e
+Last reviewed commit: 3c8c769
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -1002,3 +1002,18 @@ Last reviewed commit: 86d415e
     and hint_note skip the current region (hinted_region excludes it). C-206's on_fail outcomes cost days only.
   - Notes, not filed: WU-315 sets the hint label's mouse_filter to PASS even when no line was cut (harmless: the world
     has no mouse input). The thin-defence and injury hints still name Stone Skin Tempering in code (as before).
+- 2026-10-23 (reviewer, 5th run): reviewed 86d415e..3c8c769 (WU-317/318/319/324, GUIDE-119/126/127/128, C-208/212/217/219,
+  PERF-003, QA-140/146; [PLAN]/[REVIEW] commits skipped). Main green before and after. No BACKLOG/CHANGELOG edits by
+  workers; no save-format changes (C-219's relabels are display text only; nothing stores place display names).
+  - Fixed ([REVIEW] commit): GameData.plain_name's doc example still quoted the pre-C-219 "Cloud-Sea Cliff (2x qi)" label.
+  - Checked: GUIDE-128's far_qi_offer reproduces the old far-clause rule exactly (same days_base, same same-region
+    exclusion); the Travel line resolves through hinted_region (tested), and no UI/world code string-matches the old
+    "Gather ..." prefix. GUIDE-126's pill pick excludes pills bigger than the qi left to the bottleneck and keeps the next
+    realm pill's price plus 20 stones; WU-318's hinted_item matches its singular name inside the hint's plural. WU-319's
+    note uses total density (matches C-219's labels). PERF-003's _hints_on reset is right (the fuzz instance is shared).
+    C-217's encounters are non-lethal (sect_senior_tester has lethal false, spar true) and one-shot via their flags.
+  - Notes, not filed: GUIDE-119's keep dict skips every copy of a needed item, not just the count the missions need
+    (matches the spec). Guidance.sell_offer calls Sects.deliver_needs without world flags while the shop passes them, so
+    a future deliver mission gated by requires_flag would make the hint total and the shop's sell-all differ (no mission
+    uses requires_flag today). WU-324 found the WU-317 overlap is an NPC label vs a place label, which its guard does not
+    cover (its own follow-up).

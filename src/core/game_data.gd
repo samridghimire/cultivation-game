@@ -139,7 +139,7 @@ static func load_from_dir(dir: String = DEFAULT_DIR) -> GameData:
 
 
 ## A place's display name without its trailing map hint, for use in sentences:
-## "Cloud-Sea Cliff (2x qi)" -> "Cloud-Sea Cliff", "Waterfall Cave (abode)" -> "Waterfall Cave".
+## "Cloud-Sea Cliff (5x qi)" -> "Cloud-Sea Cliff", "Waterfall Cave (abode)" -> "Waterfall Cave".
 static func plain_name(display_name: String) -> String:
 	var cut := display_name.rfind(" (")
 	return display_name.left(cut) if cut > 0 and display_name.ends_with(")") else display_name
