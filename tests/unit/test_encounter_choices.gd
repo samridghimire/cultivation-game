@@ -706,10 +706,10 @@ func test_crafter_first_year_encounters() -> void:
 	var c := new_character()
 	var gated: Dictionary = notes["choices"][0]
 	assert_eq(gated["effects"]["learn_recipe"], "visceral_mending_pill")
+	assert_eq(gated["check"]["attribute"], "comprehension", "notes are a Comprehension check (C-206)")
+	assert_true(gated.has("on_fail"), "a failed read costs something")
 	c.attributes["comprehension"] = 5
-	assert_true(Exploration.check_choice(c, d, gated, {}) != "", "notes need Comprehension")
-	c.attributes["comprehension"] = 12
-	assert_eq(Exploration.check_choice(c, d, gated, {}), "", "notes open at Comprehension 12")
+	assert_eq(Exploration.check_choice(c, d, gated, {}), "", "the check is open to anyone")
 	var forge: Dictionary = d.encounters["village_broken_forge"]
 	var smith_choice: Dictionary = forge["choices"][0]
 	assert_true(smith_choice["requires"]["min_profession"].has("blacksmith"))
@@ -867,10 +867,18 @@ func test_fighting_style_encounters() -> void:
 		var attr := "constitution" if enc_id == "village_boxing_yard" else "comprehension"
 		assert_true(_style_xp_after(enc_id, 0, 5, 5) > 0.0, enc_id + " training trains")
 		assert_eq(_style_xp_after(enc_id, 2, 5, 5), 0.0, enc_id + " plain choice trains nothing")
-		assert_eq(_style_xp_after(enc_id, 1, 5, 5), 0.0, enc_id + " gated choice refused when weak")
+		var checked: bool = d.encounters[enc_id]["choices"][1].has("check")
+		if checked:
+			# C-206: a chance check; a weak player may fail but is never locked out.
+			assert_eq(d.encounters[enc_id]["choices"][1]["check"]["attribute"], attr)
+			assert_true(d.encounters[enc_id]["choices"][1].has("on_fail"))
+		else:
+			assert_eq(_style_xp_after(enc_id, 1, 5, 5), 0.0, enc_id + " gated choice refused when weak")
 		var hi := 20
 		var gated := _style_xp_after(enc_id, 1, hi, hi)
-		assert_true(gated > _style_xp_after(enc_id, 0, hi, hi), enc_id + " gated " + attr + " choice trains more")
+		assert_true(gated >= _style_xp_after(enc_id, 0, hi, hi) * (0.0 if checked else 1.0), enc_id + " gated " + attr + " choice trains")
+		if not checked:
+			assert_true(gated > _style_xp_after(enc_id, 0, hi, hi), enc_id + " gated " + attr + " choice trains more")
 
 
 func _region_choice_renown(region: String, enc_id: String, index: int) -> int:

@@ -334,6 +334,15 @@ func test_first_year_attribute_checks() -> void:
 		var found := false
 		for ch in d.encounters[id]["choices"]:
 			var need: Dictionary = ch.get("requires", {}).get("min_attributes", {})
+			if ch.has("check") and str(ch["check"].get("attribute", "")) == attr:
+				# C-206: a chance check instead of a hard gate; always selectable, has a cost on failure.
+				found = true
+				covered[attr] = true
+				assert_true(ch.has("on_fail"), "%s check has an on_fail" % id)
+				var c0 := CharacterData.new()
+				c0.attributes[attr] = 1
+				assert_eq(Exploration.check_choice(c0, d, ch, {}), "", "%s selectable at any level" % id)
+				continue
 			if not need.has(attr):
 				continue
 			found = true
