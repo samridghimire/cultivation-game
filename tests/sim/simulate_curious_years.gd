@@ -401,7 +401,43 @@ func _print_fe_gap() -> void:
 		print("  no seed reached Foundation")
 		return
 	print("  at +60 days (%d seeds with a snapshot): rated >= 50%% against all three foes in %d, against the roadside rogue in %d" % [n60, half60, rogue60])
+	_print_fe_levers(data, typical, rated)
 	print("  mean rated odds vs roadside_rogue_cultivator over %d seeds: curious %.0f%%; with the typical player's techniques %.0f%%, gear %.0f%%, attributes %.0f%%, all three (injuries cleared) %.0f%%" % [n, 100.0 * sums["all"] / n, 100.0 * sums["typical_techs"] / n, 100.0 * sums["typical_gear"] / n, 100.0 * sums["typical_attrs"] / n, 100.0 * sums["typical_all"] / n])
+
+
+## QA-125: at +60 days, the curious player changed in ONE way at a time (on a copy): injuries cleared,
+## the typical player's techniques / gear / attributes, Stone Skin Tempering at level 1. Rated odds against
+## the roadside rogue and the easiest Foundation foe, one row per seed, medians per column.
+func _print_fe_levers(data: GameData, typical: CharacterData, rated: Array[Dictionary]) -> void:
+	var cols := ["base", "a_healed", "b_techs", "c_gear", "d_attrs", "e_stone_skin"]
+	for target: Dictionary in [rated[0], rated[1]]:
+		print("  QA-125 levers at +60 days vs %s (rated %%): %s" % [target["id"], " | ".join(cols)])
+		var per_col := {}
+		for k: String in cols:
+			per_col[k] = []
+		for s: int in _fe_snaps60:
+			var row: Array[String] = []
+			for k: String in cols:
+				var v := CharacterData.from_dict((_fe_snaps60[s] as CharacterData).to_dict())
+				match k:
+					"a_healed":
+						v.injuries.clear()
+					"b_techs":
+						v.techniques = typical.techniques.duplicate(true)
+					"c_gear":
+						v.equipment = typical.equipment.duplicate(true)
+					"d_attrs":
+						v.attributes = typical.attributes.duplicate(true)
+					"e_stone_skin":
+						v.techniques["stone_skin"] = {"level": 1, "xp": 0.0}
+				var w := 100.0 * Combat.win_chance(v, data, target)
+				per_col[k].append(w)
+				row.append("%3.0f" % w)
+			print("    seed %2d: %s" % [s, " | ".join(row)])
+		var meds: Array[String] = []
+		for k: String in cols:
+			meds.append("%3.0f" % _median(per_col[k]))
+		print("    median : %s" % " | ".join(meds))
 
 
 ## QA-116 (--defence): per seed, what following GUIDE-065's hint cost and bought.
