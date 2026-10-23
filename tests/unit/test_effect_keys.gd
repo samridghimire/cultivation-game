@@ -191,3 +191,23 @@ func test_renown_effect() -> void:
 	assert_eq(Effects.validate(d, {"renown": 5}, "t").size(), 0)
 	assert_eq(Effects.validate(d, {"renown": 0}, "t").size(), 1)
 	assert_eq(Effects.validate(d, {"renown": 51}, "t").size(), 1)
+
+
+func test_contribution_pays_sect_members_only() -> void:
+	var d := data()
+	var c := new_character()
+	c.sect = {"id": "azure_cloud_sect", "rank": 0, "contribution": 0, "spent": 0, "month_earned": 0}
+	var before := int(c.sect["contribution"])
+	var notes := Effects.apply(c, d, {"contribution": 20}, {})
+	assert_eq(int(c.sect["contribution"]), before + 20)
+	assert_true(Array(notes).has("+20 sect contribution"), str(notes))
+	var rogue := new_character()
+	assert_eq(Effects.apply(rogue, d, {"contribution": 20}, {}).size(), 0)
+	assert_true(rogue.is_rogue())
+
+
+func test_contribution_validation() -> void:
+	var d := data()
+	assert_eq(Effects.validate(d, {"contribution": 20}, "t").size(), 0)
+	for bad: Variant in [0, 501, "20"]:
+		assert_eq(Effects.validate(d, {"contribution": bad}, "t").size(), 1, str(bad))

@@ -28,6 +28,8 @@ extends RefCounted
 ##   attributes: {attr_id: int} raise (or lower) attributes (data/attributes.json ids)
 ##   renown: int                local renown in the region the effects happen in (1..50, see renown.gd);
 ##                              needs a region_id passed to apply(), else it does nothing
+##   contribution: int          sect contribution (1..500) for a sect member (Sects.add_contribution);
+##                              a rogue gets nothing
 ##   bloodline: String          grant a bloodline (data/bloodlines.json) to someone who has
 ##                              none; it awakens at once if they are past its awaken_realm
 
@@ -96,6 +98,12 @@ static func apply(c: CharacterData, data: GameData, effects: Dictionary, flags: 
 				if bool(gain["first_title"]):
 					LifeStats.add(c, "renown_titles")
 				notes.append("Your name is %s in %s now" % [String(gain["new_tier"]).to_lower(), region_name])
+	if effects.has("contribution") and not c.is_rogue():
+		var gained := int(effects["contribution"])
+		var promoted := Sects.add_contribution(c, data, gained)
+		notes.append("+%d sect contribution" % gained)
+		if promoted:
+			notes.append("Your sect promotes you to %s" % Sects.describe(c, data))
 	if effects.has("alignment"):
 		var delta := int(effects["alignment"])
 		Alignment.shift(c, data, delta)
@@ -186,7 +194,7 @@ const KEYS: Array[String] = [
 	"qi", "alignment", "items", "breakthrough_bonus", "breakthrough_realm", "set_flag", "clear_flag",
 	"learn_technique", "heal_injury", "burn_lifespan", "extend_lifespan", "learn_recipe", "dao_insight",
 	"buff", "reputation", "witnessed", "attributes", "bloodline", "practice_days",
-	"profession_xp", "renown",
+	"profession_xp", "renown", "contribution",
 ]
 
 
@@ -242,6 +250,10 @@ static func validate(data: GameData, effects: Dictionary, where: String) -> Pack
 		var renown: Variant = effects["renown"]
 		if not (renown is int or (renown is float and renown == floorf(renown))) or int(renown) < 1 or int(renown) > 50:
 			errors.append("%s: renown must be an int 1..50" % where)
+	if effects.has("contribution"):
+		var contribution: Variant = effects["contribution"]
+		if not (contribution is int or (contribution is float and contribution == floorf(contribution))) or int(contribution) < 1 or int(contribution) > 500:
+			errors.append("%s: contribution must be an int 1..500" % where)
 	for key in ["set_flag", "clear_flag"]:
 		if not effects.has(key):
 			continue
