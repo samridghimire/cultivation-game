@@ -22,10 +22,10 @@ func _errors_after(mutate: Callable) -> Array:
 
 
 func test_shipped_bounties_validate() -> void:
-	assert_eq(data().bounties.size(), 17)
+	assert_eq(data().bounties.size(), 18)
 	var puppet: Dictionary = data().bounties["marsh_corpse_puppet_bounty"]
 	assert_eq(puppet["min_realm"], "qi_refining", "C-081: the marsh posts a Qi Refining bounty")
-	assert_eq(int(_count_in("qingshi_village")), 3, "C-064/C-218: Qingshi posts three bounties")
+	assert_eq(int(_count_in("qingshi_village")), 4, "C-064/C-218/C-228: Qingshi posts four bounties")
 	var regions := {}
 	for b: Dictionary in data().bounties.values():
 		regions[b["region"]] = int(regions.get(b["region"], 0)) + 1
@@ -329,3 +329,21 @@ func test_salt_road_captain_bounty_is_a_fair_hunt_for_the_middle_layers() -> voi
 		var odds := Combat.win_chance(f, data(), data().enemies["salt_road_captain"])
 		print("C-218 odds stage index %d, Iron Fist L3: %.2f" % [stage, odds])
 		assert_true(odds >= 0.45 and odds <= 0.95, "odds %.2f at index %d" % [odds, stage])
+
+
+func test_black_ferry_ringleader_bounty_is_a_fair_hunt_for_the_upper_layers() -> void:
+	var b: Dictionary = data().bounties["black_ferry_ringleader_bounty"]
+	assert_eq(b["enemy"], "black_ferry_ringleader")
+	assert_eq(b["region"], "qingshi_village")
+	assert_eq(int(b["min_stage"]), 7)
+	assert_false(bool(data().enemies["black_ferry_ringleader"]["lethal"]))
+	var offered := func(c: CharacterData) -> bool:
+		return Bounties.offers(c, data(), 0, "qingshi_village").any(func(o: Dictionary) -> bool: return o["id"] == "black_ferry_ringleader_bounty")
+	assert_false(offered.call(_qi(6)), "not at index 6")
+	for stage: int in [7, 8]:
+		var f := _qi(stage)
+		f.techniques["iron_fist"] = {"level": 5, "xp": 0.0}
+		assert_true(offered.call(f), "offered at index %d" % stage)
+		var odds := Combat.win_chance(f, data(), data().enemies["black_ferry_ringleader"])
+		print("C-228 odds stage index %d, Iron Fist L5: %.2f" % [stage, odds])
+		assert_true(odds >= 0.45 and odds <= 0.85, "odds %.2f at index %d" % [odds, stage])
