@@ -683,6 +683,10 @@ static func _heal_source_for(c: CharacterData, data: GameData, region_id: String
 	for item_id: String in c.inventory:
 		if c.item_count(item_id) > 0 and _heals(data, item_id, injury_id):
 			return "use your %s" % String(data.items[item_id].get("name", item_id))
+	# GUIDE-161: a member's treasury pays in contribution, not stones, so it beats the clinic.
+	var claim := _heal_treasury(c, data, injury_id)
+	if not claim.is_empty():
+		return "claim %s from your sect treasury (%d contribution, you have %d)" % [Text.a(String(data.items[claim["item_id"]].get("name", claim["item_id"]))), int(claim["contribution"]), Sects.contribution_balance(c)]
 	var places: Array = data.regions.get(region_id, {}).get("places", [])
 	var cost := Medicine.clinic_cost(c, data, injury_id)
 	for p: Dictionary in places:
@@ -716,6 +720,18 @@ static func _heal_source_for(c: CharacterData, data: GameData, region_id: String
 				line += "; sell your %s to the %s (about %d stones) first" % [offer["goods"], offer["merchant"], offer["total"]]
 			return line
 	return ""
+
+
+## GUIDE-161: the cheapest sect-treasury entry that heals `injury_id` and `c` can claim now ({} if none).
+static func _heal_treasury(c: CharacterData, data: GameData, injury_id: String) -> Dictionary:
+	var best := {}
+	for entry: Dictionary in Sects.shop_items(c, data):
+		var item_id := String(entry["item_id"])
+		if not _heals(data, item_id, injury_id) or Sects.check_purchase(c, data, item_id) != "":
+			continue
+		if best.is_empty() or int(entry["contribution"]) < int(best["contribution"]):
+			best = entry
+	return best
 
 
 static func _heals(data: GameData, item_id: String, injury_id: String) -> bool:

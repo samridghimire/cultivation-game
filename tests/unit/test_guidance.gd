@@ -4455,6 +4455,30 @@ func test_clinic_clause_names_the_sale_that_covers_it() -> void:
 	assert_true(line.contains("(you have 19)") and not line.contains("sell your"), line)
 
 
+## GUIDE-161: a member's heal source names the sect treasury's pill when contribution pays for it.
+func test_heal_source_names_the_treasury_pill() -> void:
+	var d := data()
+	var c := _qr(1, 5)
+	c.sect = {"id": "azure_cloud_sect", "rank": 0, "contribution": 300, "spent": 0}
+	c.injuries = {"qi_deviation": 100}
+	var line := Guidance.heal_source(c, d, "qingshi_village")
+	assert_true(line.contains("Meridian Mending Pill") and line.contains("your sect treasury"), line)
+	assert_true(line.contains("100 contribution, you have 300"), line)
+	assert_true(Guidance.injury_news(c, d, "qi_deviation", "qingshi_village").contains("Claim a Meridian"))
+	c.sect["contribution"] = 50
+	line = Guidance.heal_source(c, d, "qingshi_village")
+	assert_false(line.contains("treasury"), line)
+	assert_true(line.contains("Village Clinic"), line)
+	# A rogue is unchanged.
+	var rogue := _qr(1, 5)
+	rogue.injuries = {"qi_deviation": 100}
+	assert_false(Guidance.heal_source(rogue, d, "qingshi_village").contains("treasury"))
+	# Holding the pill still wins.
+	c.sect["contribution"] = 300
+	c.add_item("meridian_mending_pill", 1)
+	assert_eq(Guidance.heal_source(c, d, "qingshi_village"), "use your Meridian Mending Pill for your Qi Deviation".replace(" for your Qi Deviation", ""))
+
+
 # --- GUIDE-152: the trial advice never says "grow a stage" at a realm's last stage ---
 
 func _g152_inner_disciple(stage: int) -> CharacterData:
