@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 19a5c27
+Last reviewed commit: 886d9a4
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -1065,3 +1065,14 @@ Last reviewed commit: 19a5c27
   - Filed RV-015: C-232's newcomer hunt rates 0% for a fresh QR1 player with Iron Fist L1 (spec wanted >= 60%); only
     the typical player wins, so it joined QA032_BARE_DEADLY instead of being the safe first hunt it was meant to be.
   - Note: WU-336's empty claim commit (0c21046) landed on main; harmless, but rebase with --no-keep-empty drops it.
+- 2026-10-23 (reviewer): reviewed 19a5c27..886d9a4 (GUIDE-148/149/150/152/153/157, RV-015, C-231, QA-153,
+  WU-338/339/342/343; [PLAN] skipped). Main green before and after. No worker touched BACKLOG/CHANGELOG; no save-format
+  changes; no logic outside src/core (GUIDE-149 only threads world_flags through GameState's injury_news calls).
+  - GUIDE-148's fight_floor (0.5 / 0.7 lethal / 0.9 lethal at <= 1 life) is applied consistently to mission_too_dangerous,
+    healed_wins and outgrown_hint. GUIDE-150's armor_hint_price mirrors armor_hint's branch order. RV-015 resolves last
+    run's filing: den_wolf rates 65% for a bare QR1 newcomer, test added, removed from QA032_BARE_DEADLY.
+  - Fixed: GUIDE-153's abode hint said "an anchor, though X here gathers qi faster" even for an abode without an
+    anchor_id (all three abodes have one today, so latent); it now offers the storage instead, and the branch, which
+    had no test, is covered (Azure Peak's cliff beats the waterfall cave). Re-indented C-231's new help.json line.
+  - Notes, not filed: GUIDE-152's trial advice for a fighter with no combat technique at a realm's last stage ends
+    at "A loss only injures you." with no lever; QA-153 suggests RATING_SAMPLES 200 (GUIDE-156 is already spec'd).

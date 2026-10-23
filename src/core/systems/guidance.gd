@@ -2156,14 +2156,15 @@ static func _abode_hint(c: CharacterData, data: GameData, region_id: String = ""
 	var short := "" if stones >= cost else " (you have %d)" % stones
 	var seclusion := float(abode.get("qi_density", 1.0))
 	var qi_clause := "qi x%s in seclusion" % String.num(seclusion, 2)
+	var has_anchor := String(abode.get("anchor_id", "")) != ""
 	if region_id != "" and data.regions.has(region_id):
 		var here := best_qi_in_region(c, data, region_id, flags)
 		if String(here["name"]) != "" and Exploration.qi_density(data, abode_region, flags) * seclusion <= float(here["density"]):
-			qi_clause = "an anchor, though %s here gathers qi faster" % here["name"]
-	var anchor := "a Creation Artifact anchor, " if String(abode.get("anchor_id", "")) != "" else ""
+			# an abode without an anchor offers its storage instead
+			var gives := "an anchor" if has_anchor else "room for %d items" % int(abode.get("storage_slots", 0))
+			return "Claim %s in %s%s for %d stones%s: %s, though %s here gathers qi faster." % [Abodes.abode_name(data, pick), where, travel, cost, short, gives, here["name"]]
+	var anchor := "a Creation Artifact anchor, " if has_anchor else ""
 	var room := "room for %d items and " % int(abode.get("storage_slots", 0))
-	if qi_clause.begins_with("an anchor"):
-		return "Claim %s in %s%s for %d stones%s: %s." % [Abodes.abode_name(data, pick), where, travel, cost, short, qi_clause]
 	return "Claim %s in %s%s for %d stones%s: %s%s%s." % [Abodes.abode_name(data, pick), where, travel, cost, short, anchor, room, qi_clause]
 
 

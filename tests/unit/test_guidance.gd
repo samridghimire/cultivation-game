@@ -4356,6 +4356,9 @@ func test_abode_hint_names_place_and_price() -> void:
 	var line := Guidance._abode_hint(c, d, "qingshi_village")
 	for part: String in ["Waterfall Cave", "Misty Forest", "300", "(you have 100)"]:
 		assert_true(line.contains(part), line)
+	# [REVIEW] at Azure Peak the Cloud-Sea Cliff (2.5 x 2.0) beats the cave's seclusion (1.5 x 1.5)
+	line = Guidance._abode_hint(c, d, "azure_peak")
+	assert_true(line.contains("an anchor, though Cloud-Sea Cliff") and line.contains("gathers qi faster."), line)
 	c.realm_index = Guidance.THIN_DEFENCE_REALM
 	c.inventory = {"spirit_stone": 3000}
 	line = Guidance._abode_hint(c, d, "qingshi_village")
