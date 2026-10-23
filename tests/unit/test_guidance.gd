@@ -3014,6 +3014,25 @@ func _armor_hint_fighter() -> CharacterData:
 	return c
 
 
+## GUIDE-143: the sect treasury's body-art manual is named when claimable.
+func test_treasury_body_art_hint() -> void:
+	var d := data()
+	var c := _cooldown_player(d)
+	c.stage = Guidance.ARMOR_HINT_MIN_STAGE
+	c.sect["contribution"] = 100
+	var line := Guidance.treasury_body_art_hint(c, d)
+	assert_true(line.contains("Stone Skin") and line.contains("(you have 100)"), line)
+	assert_true(_has(Guidance.hints(c, d, 1.0, 40, {}, {}, "qingshi_village"), "Your sect treasury sells"))
+	c.sect["contribution"] = 10
+	assert_eq(Guidance.treasury_body_art_hint(c, d), "")
+	c.sect["contribution"] = 100
+	c.techniques["stone_skin"] = {"level": 1, "xp": 0.0}
+	assert_eq(Guidance.treasury_body_art_hint(c, d), "")
+	c.techniques.erase("stone_skin")
+	c.sect = {}
+	assert_eq(Guidance.treasury_body_art_hint(c, d), "")
+
+
 func test_armor_hint_shown_to_unarmored_fighter() -> void:
 	var c := _armor_hint_fighter()
 	var armor_id := Guidance.affordable_armor(c, data(), "myriad_peaks_ridge")

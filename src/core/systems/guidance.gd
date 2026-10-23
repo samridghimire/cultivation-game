@@ -2055,6 +2055,20 @@ static func armor_hint(c: CharacterData, data: GameData, region_id: String, flag
 	return "Armor keeps you standing: the %s sells %s for %d stones." % [merchant_selling(data, region_id, armor_id), data.items[armor_id]["name"], merchant_price(c, data, region_id, armor_id)]
 
 
+## GUIDE-143: a sect member in Qi Refining (stage >= ARMOR_HINT_MIN_STAGE) with no body art hears about a
+## body-art manual the sect treasury sells that they can claim now. "" for rogues, other realms or no such manual.
+static func treasury_body_art_hint(c: CharacterData, data: GameData) -> String:
+	if c.is_rogue() or c.realm_index != 1 or c.stage < ARMOR_HINT_MIN_STAGE or Techniques.knows_kind(c, data, "body"):
+		return ""
+	for entry: Dictionary in Sects.shop_items(c, data):
+		var item_id := String(entry["item_id"])
+		var tech_id := Items.manual_technique(data, item_id)
+		if tech_id == "" or data.techniques[tech_id].kind != "body" or Sects.check_purchase(c, data, item_id) != "":
+			continue
+		return "Your sect treasury sells %s for %d contribution (you have %d): a body art makes you harder to hurt." % [data.items[item_id]["name"], int(entry["contribution"]), Sects.contribution_balance(c)]
+	return ""
+
+
 ## GUIDE-088: armor_hint when stones alone fall short but stones + what the local buyer pays for your loot would do.
 static func _loot_armor_hint(c: CharacterData, data: GameData, region_id: String, flags: Dictionary = {}) -> String:
 	var offer := sell_offer(c, data, region_id, flags)
@@ -2161,6 +2175,9 @@ static func _newcomer_hints(c: CharacterData, data: GameData, flags: Dictionary,
 	var armor := armor_hint(c, data, region_id, flags)
 	if armor != "":
 		out.append(armor)
+	var body_art := treasury_body_art_hint(c, data)
+	if body_art != "":
+		out.append(body_art)
 	if region_id == CHORE_REGION:
 		for deed: Dictionary in data.deeds.values():
 			if String(deed["id"]).begins_with("chore_") and not flags.get(String(deed.get("blocked_by_flag", "")), false):
