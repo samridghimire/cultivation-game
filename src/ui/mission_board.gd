@@ -323,12 +323,13 @@ func _rebuild_shop() -> void:
 
 
 ## The list label of a mission: name, the sect's call, the pay mark the hint names, cooldown and odds.
-static func label_for(p: CharacterData, data: GameData, flags: Dictionary, mission_id: String, call_id: String, call_left: int) -> String:
+## `best_id` is Guidance.best_mission, computed once per rebuild (it rates every mission's fight).
+static func label_for(p: CharacterData, data: GameData, mission_id: String, call_id: String, call_left: int, best_id: String) -> String:
 	var mission: Dictionary = data.sect_missions[mission_id]
 	var label := String(mission["name"])
 	if mission_id == call_id:
 		label += " (the sect's call: %d days left)" % call_left
-	if mission_id == Guidance.best_mission(p, data, flags):
+	if mission_id == best_id:
 		label += " (best pay)"
 	var wait := Sects.mission_cooldown_left(p, mission_id)
 	if wait > 0:
@@ -354,22 +355,18 @@ func _rebuild_missions() -> void:
 		ids.insert(0, call_id)
 	else:
 		call_id = ""
+	var best := Guidance.best_mission(p, data, GameState.world_flags)
 	if not ids.has(_selected):
-		_selected = ""
-		var best := Guidance.best_mission(p, data, GameState.world_flags)
+		_selected = best if ids.has(best) else ""
 		for mission_id in ids:
-			if mission_id == best:
+			if _selected == "" and Sects.check_mission(p, data, mission_id, GameState.world_flags) == "":
 				_selected = mission_id
-				break
-			if Sects.check_mission(p, data, mission_id, GameState.world_flags) == "":
-				_selected = mission_id
-				break
 		if _selected == "" and not ids.is_empty():
 			_selected = ids[0]
 	if ids.is_empty():
 		_add_hint("No missions are posted for you. Only sect disciples receive sect missions.")
 	for mission_id in ids:
-		var label := label_for(p, data, GameState.world_flags, mission_id, call_id, call_left)
+		var label := label_for(p, data, mission_id, call_id, call_left, best)
 		var danger := Sects.mission_danger(p, data, mission_id)
 		_add_entry(mission_id, label, Sects.check_mission(p, data, mission_id, GameState.world_flags) == "")
 		if danger != "":

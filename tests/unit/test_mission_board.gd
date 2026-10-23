@@ -46,10 +46,13 @@ func test_odds_text_wording() -> void:
 
 
 func test_trial_line_never_says_to_the_death() -> void:
-	var c := _disciple()
+	var gs := _root().get_node("GameState")
+	gs.start_session(_disciple())
 	var board := MissionBoard.new()
 	board._set_tab("rank")
 	assert_false(board._requirements.text.contains("to the death"), board._requirements.text)
+	board.free()
+	gs.end_session()
 
 
 func test_sect_hall_offers_board_only_to_disciples() -> void:
@@ -81,7 +84,9 @@ func test_board_lists_missions_and_takes_one() -> void:
 	var ids := Sects.available_missions(gs.player, data())
 	var buttons := board.find_children("*", "Button", true, false).filter(func(b: Button) -> bool: return ids.has(String(b.name)))
 	assert_eq(buttons.size(), ids.size())
-	assert_eq(board._selected, MissionBoard.ordered(gs.player, data(), gs.world_flags, ids)[0], "first takeable mission is preselected")
+	var best := Guidance.best_mission(gs.player, data(), gs.world_flags)
+	var first: String = best if best != "" else MissionBoard.ordered(gs.player, data(), gs.world_flags, ids)[0]
+	assert_eq(board._selected, first, "the best-pay mission, else the first takeable one, is preselected")
 	board._select("gather_spirit_herbs")
 	assert_false(board._take_button.disabled)
 	board._take()
@@ -412,10 +417,35 @@ func test_best_pay_mark_on_exactly_one_mission() -> void:
 	assert_true(best != "", "a ready mission exists")
 	var marked: Array[String] = []
 	for id in ids:
-		if MissionBoard.label_for(c, d, {}, id, "", -1).contains(" (best pay)"):
+		if MissionBoard.label_for(c, d, id, "", -1, best).contains(" (best pay)"):
 			marked.append(id)
 	assert_eq(marked, [best] as Array[String])
 	for id in ids:
 		c.mission_cooldowns[id] = 999999
+	var none := Guidance.best_mission(c, d, {})
+	assert_eq(none, "")
 	for id in ids:
-		assert_false(MissionBoard.label_for(c, d, {}, id, "", -1).contains(" (best pay)"), id)
+		assert_false(MissionBoard.label_for(c, d, id, "", -1, none).contains(" (best pay)"), id)
+
+
+## WU-291 review: the best-pay mission is preselected even when another ready mission is listed above it.
+func test_best_pay_mission_preselected_below_the_top() -> void:
+	var gs := _root().get_node("GameState")
+	var d := data()
+	var c := _disciple()
+	gs.start_session(c)
+	var found := false
+	for stage in range(0, 9):
+		gs.player.stage = stage
+		var ids := MissionBoard.ordered(gs.player, d, gs.world_flags, Sects.available_missions(gs.player, d, gs.world_flags))
+		var best := Guidance.best_mission(gs.player, d, gs.world_flags)
+		if best == "" or ids.is_empty() or ids[0] == best:
+			continue
+		found = true
+		var board := MissionBoard.new()
+		board._rebuild()
+		assert_eq(board._selected, best, "stage %d" % stage)
+		board.free()
+		break
+	assert_true(found, "some stage lists a ready mission above the best-pay one")
+	gs.end_session()

@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 56b85f2
+Last reviewed commit: 65d397e
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -927,3 +927,15 @@ Last reviewed commit: 56b85f2
     GUIDE-103 names the breakthrough only below the last realm. C-195/197/198 content validates (test_encounter_choices).
   - Notes, not filed: GUIDE-106 calls fair_fights (up to FAIR_FIGHT_MAX_RATED x 40 simulated fights) for the untried road
     on every hints() call; worth folding into PERF-001. WU-285 leaves a hidden label's old screen_lift until the next spread.
+- 2026-10-22 (reviewer, 11th run): reviewed 56b85f2..65d397e (95f80ee C-194, a2d4395 C-189, 25da799 GUIDE-104, 8d387f0 GUIDE-108,
+  e2dfab6 WU-291, fc623d2 QA-137, ffb7c92 WU-241, 85fa6d7 WU-292, d77cfdb QA-136, 56323fa C-200, 65d397e WU-293; [PLAN]/[REVIEW]
+  commits skipped). Main green. No save-format changes, no worker BACKLOG/CHANGELOG edits. Nothing filed.
+  - Fixed ([REVIEW] commit): WU-291 preselected the best-pay mission only when it came before every other ready mission in
+    the list (the loop broke on the first takeable one), so with a Weak mission listed above it the hint's mission was not
+    selected. It also called Guidance.best_mission (which rates every mission's fight) once per label, O(n^2) fights per
+    rebuild; it is now computed once and passed to label_for. Regression test test_best_pay_mission_preselected_below_the_top;
+    test_trial_line_never_says_to_the_death no longer relies on a session left over from an earlier test.
+  - Checked: GUIDE-108's "the practice above" is true: practice_hint comes from _newcomer_hints, appended before the
+    mission hint, so resize(limit) cannot cut it while keeping the mission line. WU-293's region_marker_names mirrors
+    World._build_npcs/_build_generated_npcs naming. WU-292 passes the player so an unreachable hinted region marks nothing.
+    C-200's stag is non-lethal and joins QA032_BARE_DEADLY. QA-136/QA-137 only touch sims/tests.
