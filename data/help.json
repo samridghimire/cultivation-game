@@ -110,6 +110,7 @@
       "group": "start",
       "body": [
         "Some encounter choices need something from you: an attribute (\"[Comprehension 12]\"), a profession rank (\"[Doctor, Apprentice]\"), a moral standing, or an item they cost. A locked choice stays on the list and says why in brackets.",
+        "Some choices depend on an attribute and show a chance, like \"(about 60 in 100)\". A failed attempt costs a little, a day or two and sometimes the chance itself, but never your life.",
         "When every choice is locked, you can always walk away.",
         "Attributes can still grow a little from rare encounters. Profession ranks come from working and crafting."
       ]
