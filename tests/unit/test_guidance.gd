@@ -370,7 +370,7 @@ func test_better_qi_hint_names_the_best_reachable_spot() -> void:
 			gather = line
 	assert_true(gather.contains(": about "), gather)
 	assert_true(gather.find("Spirit Spring") < 120, gather)  # GUIDE-124: the local spot leads
-	assert_true(gather.contains(" at Cloud-Sea Cliff (2x qi) in Azure Peak (10 days away)"), gather)
+	assert_true(gather.contains(" at Cloud-Sea Cliff (5x qi) in Azure Peak (10 days away)"), gather)
 	var needed := Cultivation.qi_required(c, data()) - c.qi
 	var days := Calendar.format_duration(ceili(needed / Cultivation.qi_per_day(c, data(), Guidance.best_qi_reachable(c, data(), "qingshi_village")["density"])))
 	assert_true(gather.contains(", %s at Cloud-Sea Cliff" % days), gather)

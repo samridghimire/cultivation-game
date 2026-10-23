@@ -602,7 +602,7 @@ func test_fight_summary_is_one_line_with_its_spoils() -> void:
 
 
 func test_place_names_in_sentences_drop_map_hints() -> void:
-	assert_eq(GameData.plain_name("Cloud-Sea Cliff (2x qi)"), "Cloud-Sea Cliff")
+	assert_eq(GameData.plain_name("Cloud-Sea Cliff (5x qi)"), "Cloud-Sea Cliff")
 	assert_eq(GameData.plain_name("Waterfall Cave (abode)"), "Waterfall Cave")
 	assert_eq(GameData.plain_name("Meditation Rock"), "Meditation Rock")
 	var gs := _game_state()

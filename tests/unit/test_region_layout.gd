@@ -64,3 +64,18 @@ func test_village_places_clear_of_hud_at_spawn() -> void:
 		r.position -= cam
 		for h: Rect2 in hud_rects:
 			assert_false(r.intersects(h), "%s sits under the HUD at %s" % [place["display_name"], r])
+
+
+## C-219: a meditation place's "(Nx qi)" label is the total (region x spot) multiplier.
+func test_meditation_labels_state_total_qi() -> void:
+	var rx := RegEx.new()
+	rx.compile("\\(([0-9.]+)x qi\\)")
+	for region: Dictionary in data().regions.values():
+		for place: Dictionary in region.get("places", []):
+			if place["type"] != "meditation":
+				continue
+			var m := rx.search(String(place.get("display_name", "")))
+			if m == null:
+				continue
+			var total: float = float(region.get("qi_density", 1.0)) * float(place.get("qi_density", 1.0))
+			assert_true(absf(float(m.get_string(1)) - total) <= 0.1, "%s: label %s but total qi is %.2f" % [region["id"], place["display_name"], total])
