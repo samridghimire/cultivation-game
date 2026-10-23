@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: ddada62
+Last reviewed commit: 9f32f92
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -974,3 +974,17 @@ Last reviewed commit: ddada62
     import when --import is passed or the class cache exists. C-209 (power_mult 0.6) answers ENC-009's follow-up.
   - Notes, not filed: WU-306's gather_place_for is called without `today`, so an out-of-season place still reads
     "grows ... here" on the board (the hint passes no season either).
+- 2026-10-23 (reviewer, 3rd run): reviewed ddada62..9f32f92 (WU-302/303/305/308/310/312, GUIDE-117/118, REV-030, C-210/213/214,
+  QA-141/142/143; [PLAN]/[REVIEW] commits skipped). Main green before and after (2223 tests). No BACKLOG/CHANGELOG edits
+  by workers; no save-format changes. WU-305's empty claim commit (53ab40c) reached main (rebase without --no-keep-empty); harmless.
+  - Fixed ([REVIEW] commit): GUIDE-117's payoff is rated unhurt (per spec, after GUIDE-095), but the sentence quoted that
+    number as if it were the player's odds, so an injured player read "Iron Fist level 4 ... would make it about 15 in 100"
+    while really lower. It now starts "Healed, ..." when the player is injured. Test
+    test_trial_practice_payoff_says_healed_when_injured.
+  - Checked: REV-030 (stone tithes close at half; ores "found at") matches the filed fix. WU-310's coloured lines index
+    the hand-in items in requirement_lines' order (items first, then the foe); no data name contains "[" for BBCode.
+    GUIDE-118 hides the herb hint only while a ready mission (check_mission == "") wants the herb. WU-305's cap cuts at
+    a word boundary and the journal keeps the full line. QA-141/142/143 touch sims and the baseline only.
+  - Notes, not filed: WU-308/WU-312's "Wanted by the sect" line also names missions on cooldown or above your rank
+    (available_missions does not filter them); ShopScreen.sell_wanted_line reads GameState.world_flags from a static
+    helper (UI, so allowed, but the inventory variant takes flags as a parameter).

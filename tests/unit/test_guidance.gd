@@ -3615,6 +3615,28 @@ func test_trial_practice_payoff() -> void:
 	assert_eq(Guidance.trial_practice_payoff(m, d), {})
 
 
+
+## GUIDE-117 review: the payoff is rated unhurt, so an injured player is told "Healed, ..." rather than today's odds.
+func test_trial_practice_payoff_says_healed_when_injured() -> void:
+	var d := data()
+	for attr in [8, 12, 16, 20, 24, 28, 32, 40]:
+		for lvl in [1, 2, 3, 4, 5]:
+			var c := new_character()
+			c.realm_index = 1
+			c.sect = {"id": "azure_cloud_sect", "rank": 0, "contribution": 600}
+			for k: String in c.attributes:
+				c.attributes[k] = attr
+			c.techniques = {"iron_fist": {"level": lvl, "xp": 0.0}}
+			c.injuries = {"internal_injury": 30}
+			var chance := Guidance.trial_odds(c, d)
+			var unhurt := Guidance.odds_unhurt(c, d, Sects.trial_opponent(d, Sects.trial_enemy(c, d)))
+			if Guidance.trial_practice_payoff(c, d).is_empty() or chance >= 0.7 or (chance < 0.5 and unhurt >= 0.5):
+				continue
+			var hint := Guidance._sect_hint(c, d)
+			assert_true(hint.contains("Healed, Iron Fist level %d (about" % (lvl + 1)), hint)
+			return
+	assert_true(false, "no injured setup produced a payoff")
+
 ## REV-030: a spirit-stone tithe is "close" only when you hold at least half of it; other items keep the any-held rule.
 func test_deliver_close_stone_tithe_needs_half() -> void:
 	var d := data()

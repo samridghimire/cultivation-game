@@ -1399,7 +1399,7 @@ static func _trial_advice(c: CharacterData, data: GameData) -> String:
 		else:
 			var payoff := trial_practice_payoff(c, data)
 			if not payoff.is_empty():
-				line += " A loss only injures you." + _payoff_sentence(payoff)
+				line += " A loss only injures you." + _payoff_sentence(payoff, not c.injuries.is_empty())
 			elif Techniques.knows_kind(c, data, "combat") and _best_unmastered_combat(c, data) == "":
 				line += " A loss only injures you; grow a stage first."
 			else:
@@ -1407,7 +1407,7 @@ static func _trial_advice(c: CharacterData, data: GameData) -> String:
 	elif chance < 0.7:
 		var payoff := trial_practice_payoff(c, data)
 		if not payoff.is_empty():
-			line += _payoff_sentence(payoff)
+			line += _payoff_sentence(payoff, not c.injuries.is_empty())
 	return line
 
 
@@ -1431,8 +1431,10 @@ static func trial_practice_payoff(c: CharacterData, data: GameData) -> Dictionar
 	return {"style": style, "style_name": data.techniques[style].name, "level": Techniques.level(c, style) + 1, "days": Techniques.days_to_next(c, data, style), "next": next}
 
 
-static func _payoff_sentence(payoff: Dictionary) -> String:
-	return " %s level %d (about %s of practice) would make it about %d in 100." % [payoff["style_name"], payoff["level"], Calendar.format_duration(maxi(1, int(payoff["days"]))), roundi(float(payoff["next"]) * 100.0)]
+## `injured`: the payoff is rated unhurt (GUIDE-095), so the sentence says "healed" rather than overstate today's odds.
+static func _payoff_sentence(payoff: Dictionary, injured: bool = false) -> String:
+	var lead := " Healed, " if injured else " "
+	return lead + "%s level %d (about %s of practice) would make it about %d in 100." % [payoff["style_name"], payoff["level"], Calendar.format_duration(maxi(1, int(payoff["days"]))), roundi(float(payoff["next"]) * 100.0)]
 
 
 ## GUIDE-084: " (it pays 6 stones and a Qi Gathering Pill a month)" for a rank's stipend, "" when it pays nothing.
