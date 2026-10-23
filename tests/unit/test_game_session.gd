@@ -1389,15 +1389,19 @@ func test_explore_counts_met_encounter() -> void:
 	var gs := _game_state()
 	var c := _start()
 	c.realm_index = 1
-	gs.travel("misty_forest")
+	gs.travel("misty_forest")  # the road can meet an encounter too, so count from here
+	var before := _encounter_total(c)
 	gs.explore()
+	var met := _encounter_total(c) - before
+	assert_true(met >= 0 and met <= 1, "one explore day meets at most one encounter, got %d" % met)
+	gs.end_session()
+
+
+func _encounter_total(c: CharacterData) -> int:
 	var total := 0
 	for n in c.encounter_counts.values():
 		total += int(n)
-	assert_true(total <= 1)
-	if total == 1:
-		assert_eq(c.encounter_counts.size(), 1)
-	gs.end_session()
+	return total
 
 
 ## C-043: every region has a first_visit line.
@@ -1682,6 +1686,7 @@ func test_surpassing_needs_the_first_meeting() -> void:
 	var gs := _game_state()
 	c.realm_index = 1
 	Rivals.rival_of(c, gs.npcs).realm_index = 1
+	gs.world_flags[Rivals.MEETING_FROM_FLAG] = 1000000  # the meeting must not play while breakthroughs pass days
 	_break_through_once(gs, c)
 	assert_false(gs.world_flags.get(Rivals.SURPASSED_FLAG, false))
 	gs.end_session()

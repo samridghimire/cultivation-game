@@ -135,12 +135,16 @@ func _finish(gs: Node) -> void:
 	gs.data.bounties.erase("t_bounty")
 	gs.data.bounty_config["hunt_chance"] = 0.3
 	gs.data.enemies.erase("t_titan")
+	gs.data.enemies.erase("t_weakling")
 	gs.end_session()
 
 
 func test_gamestate_win_claims_the_bounty() -> void:
 	var gs := _gs()
-	var c := _start_hunt(gs, "wild_boar")
+	var weak: Dictionary = gs.data.enemies["wild_boar"].duplicate(true)
+	weak.merge({"id": "t_weakling", "hp": -1000, "attack": -1000, "defense": -1000, "speed": -1000}, true)
+	gs.data.enemies["t_weakling"] = weak  # a sure win under any seed
+	var c := _start_hunt(gs, "t_weakling")
 	gs.take_bounty("t_bounty")
 	assert_eq(String(c.bounty.get("id", "")), "t_bounty")
 	var stones := c.item_count("spirit_stone")
