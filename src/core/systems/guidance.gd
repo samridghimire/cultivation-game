@@ -1245,7 +1245,7 @@ static func next_realm_pill(c: CharacterData, data: GameData) -> Dictionary:
 static func qi_pill_offer(c: CharacterData, data: GameData, region_id: String, flags: Dictionary = {}) -> Dictionary:
 	if not data.regions.has(region_id) or c.realm_index < 1 or Cultivation.is_at_bottleneck(c, data):
 		return {}
-	var reserve := next_realm_pill_price(c, data) if _pill_goal_applies(c, data) and sect_pill_claim(c, data) == "" else 0
+	var reserve := next_realm_pill_price(c, data) if _pill_goal_applies(c, data) and not sect_pill_claimable(c, data) else 0
 	var spare := c.item_count("spirit_stone") - reserve - QI_BUY_KEEP
 	if spare <= 0:
 		return {}
@@ -1334,6 +1334,13 @@ static func sect_pill_claim(c: CharacterData, data: GameData) -> String:
 	var balance := Sects.contribution_balance(c)
 	var have := "you can claim it now" if balance >= int(entry["cost"]) else "you have %d" % balance
 	return "Claim %s (+%d percent) from the sect treasury: %d contribution, %s." % [Text.a(String(entry["name"])), roundi(float(entry["bonus"]) * 100), int(entry["cost"]), have]
+
+
+## GUIDE-137: true when `sect_pill_claim` shows a claim and the contribution balance already covers its cost.
+static func sect_pill_claimable(c: CharacterData, data: GameData) -> bool:
+	if sect_pill_claim(c, data) == "":
+		return false
+	return Sects.contribution_balance(c) >= int(sect_pill_entry(c, data)["cost"])
 
 
 ## True in the last three stages of a cultivation realm while no breakthrough pill is held or taken.

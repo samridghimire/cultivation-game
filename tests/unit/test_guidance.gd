@@ -4027,6 +4027,22 @@ func test_qi_pill_offer_keeps_the_next_realm_pill_money() -> void:
 		assert_true(int(offer["count"]) * int(offer["price"]) <= 80)
 
 
+func test_qi_pill_offer_keeps_stones_while_the_sect_pill_is_short() -> void:
+	var short := _sect_qr("azure_cloud_sect", 1, 100, 0)
+	short.add_item("spirit_stone", 400)
+	var ready := _sect_qr("azure_cloud_sect", 1, 300, 0)
+	ready.add_item("spirit_stone", 400)
+	var d := data()
+	assert_false(Guidance.sect_pill_claimable(short, d))
+	assert_true(Guidance.sect_pill_claimable(ready, d))
+	var stones := short.item_count("spirit_stone")
+	var keep := Guidance.next_realm_pill_price(short, d) + Guidance.QI_BUY_KEEP
+	var offer := Guidance.qi_pill_offer(short, d, "qingshi_village")
+	assert_true(offer.is_empty() or int(offer["count"]) * int(offer["price"]) <= stones - keep)
+	offer = Guidance.qi_pill_offer(ready, d, "qingshi_village")
+	assert_true(offer.is_empty() or int(offer["count"]) * int(offer["price"]) <= stones - Guidance.QI_BUY_KEEP)
+
+
 func test_qi_pill_hint_yields_to_a_held_pill() -> void:
 	var c := _qr(2, 200)
 	c.add_item("qi_gathering_pill", 1)
