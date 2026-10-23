@@ -3476,6 +3476,43 @@ func test_cooling_mission_is_not_too_dangerous() -> void:
 	assert_false(Guidance._mission_hint(c, d, {}).contains("is ready again"))
 
 
+## GUIDE-111: a delivery mission the player is close to is named when no fight mission is ready.
+func _deliver_only(d: GameData) -> CharacterData:
+	var c := _cooldown_player(d)
+	for id: String in d.sect_missions:
+		if id != "relieve_fevered_village":
+			c.mission_cooldowns[id] = c.age_days + 30
+	return c
+
+
+func test_deliver_mission_held_some() -> void:
+	var d := data()
+	var c := _deliver_only(d)
+	c.add_item("spirit_herb", 1)
+	var text := Guidance._mission_hint(c, d, {}, "qingshi_village")
+	assert_true(text.contains("Relieve a Fevered Village (90 contribution) needs 2 "), text)
+	assert_true(text.contains("you have 1 of 5."), text)
+
+
+func test_deliver_mission_gatherable_here() -> void:
+	var d := data()
+	var c := _deliver_only(d)
+	for rid: String in d.regions:
+		var g := Guidance._gatherable_items(c, d, rid)
+		if g.has("spirit_herb") or g.has("bone_setting_salve"):
+			assert_true(Guidance._mission_hint(c, d, {}, rid).contains("you have 0 of 5."))
+			return
+
+
+func test_deliver_mission_held_none_is_silent() -> void:
+	var d := data()
+	var c := _deliver_only(d)
+	assert_false(Guidance._mission_hint(c, d, {}, "").contains("needs"))
+	c.add_item("spirit_herb", 1)
+	c.mission_cooldowns.clear()
+	assert_false(Guidance._mission_hint(c, d, {}, "").contains("Relieve a Fevered Village (90 contribution) needs"))
+
+
 ## GUIDE-114: one line carries the merchant's offer, not two.
 func test_sell_offer_not_repeated_in_armor_line() -> void:
 	var c := _armor_hint_fighter()

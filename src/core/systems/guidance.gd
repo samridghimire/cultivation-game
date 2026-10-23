@@ -1423,9 +1423,13 @@ static func _mission_hint(c: CharacterData, data: GameData, flags: Dictionary = 
 	var too_dangerous := 0
 	var healed_wins := false
 	var cooling := ""
+	var deliver := ""
 	for id: String in Sects.available_missions(c, data, flags):
 		if Sects.check_mission(c, data, id, flags) != "":
 			var left := Sects.mission_cooldown_left(c, id)
+			if left == 0 and Sects.mission_rank_realm_reason(c, data, data.sect_missions[id]) == "" and _deliver_close(c, data, id, region_id):
+				if deliver == "" or _mission_beats(data.sect_missions[id], data.sect_missions[deliver]):
+					deliver = id
 			if left > 0 and Sects.mission_rank_realm_reason(c, data, data.sect_missions[id]) == "" and not _mission_too_dangerous(c, data, id):
 				if cooling == "" or left < Sects.mission_cooldown_left(c, cooling) \
 						or (left == Sects.mission_cooldown_left(c, cooling) and _mission_beats(data.sect_missions[id], data.sect_missions[cooling])):
@@ -1460,7 +1464,38 @@ static func _mission_hint(c: CharacterData, data: GameData, flags: Dictionary = 
 			text += "grow a stage first."
 		else:
 			text += "practise %s first." % data.techniques[best_style].name
+	if ready == 0 and deliver != "":
+		var clause := _deliver_clause(c, data, deliver)
+		text = clause if text == "" else clause + " " + text
 	return text
+
+
+## GUIDE-111: a mission that hands in items (relieve_fevered_village) the player is close to: holds at
+## least one of what it needs, or can gather one in this region. Missions failing for any other reason are not close.
+static func _deliver_close(c: CharacterData, data: GameData, mission_id: String, region_id: String) -> bool:
+	var needed: Dictionary = data.sect_missions[mission_id].get("requires", {}).get("items", {})
+	if needed.is_empty():
+		return false
+	var here := _gatherable_items(c, data, region_id) if region_id != "" else {}
+	for item_id: String in needed:
+		if c.item_count(item_id) > 0 or here.has(item_id):
+			return true
+	return false
+
+
+## "<name> (N contribution) needs A, B: you have x of y."
+static func _deliver_clause(c: CharacterData, data: GameData, mission_id: String) -> String:
+	var m: Dictionary = data.sect_missions[mission_id]
+	var needed: Dictionary = m.get("requires", {}).get("items", {})
+	var names: PackedStringArray = []
+	var have := 0
+	var total := 0
+	for item_id: String in needed:
+		var n := int(needed[item_id])
+		names.append("%d %s" % [n, Items.item_plural(data, item_id, n)])
+		total += n
+		have += mini(c.item_count(item_id), n)
+	return "%s (%d contribution) needs %s: you have %d of %d." % [String(m.get("name", mission_id)), int(m.get("contribution", 0)), ", ".join(names), have, total]
 
 
 ## A slow stage names the faster spot in the same line (GUIDE-113): the "Gather N more qi" line gains
