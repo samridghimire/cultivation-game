@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 9f32f92
+Last reviewed commit: 86d415e
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -988,3 +988,17 @@ Last reviewed commit: 9f32f92
   - Notes, not filed: WU-308/WU-312's "Wanted by the sect" line also names missions on cooldown or above your rank
     (available_missions does not filter them); ShopScreen.sell_wanted_line reads GameState.world_flags from a static
     helper (UI, so allowed, but the inventory variant takes flags as a parameter).
+- 2026-10-23 (reviewer, 4th run): reviewed 9f32f92..86d415e (C-206/207/211/215, GUIDE-121..125, WU-313..316, QA-134/144;
+  [PLAN]/[REVIEW] commits skipped). Main green before and after (2239 tests). No BACKLOG/CHANGELOG edits by workers; no
+  save-format changes.
+  - Fixed ([REVIEW] commit): C-206's test_fighting_style_encounters asserted `gated >= plain * 0.0` for checked choices,
+    which always passes; it now asserts the check trains on either outcome (gated > 0). WU-314 inserted buy_worth_line
+    between sell_wanted_line and its `## WU-312` doc comment; the doc comments (and the orphaned "Equipped:" one, which
+    belongs to compare_text) are back on their functions.
+  - Checked: GUIDE-121/122/125's reordered hints: no other code string-matches the old wording (the first-hour sim's
+    QA-134 policy calls best_mission directly, not the "The best pays" text); the trial stipend sentence trims
+    _stipend_clause's " (it pays ...)" wrapper correctly. GUIDE-124's local spot is named only when denser than where
+    the player stands, and the far spot only when it beats the local one by more than the round trip. WU-316's map "!"
+    and hint_note skip the current region (hinted_region excludes it). C-206's on_fail outcomes cost days only.
+  - Notes, not filed: WU-315 sets the hint label's mouse_filter to PASS even when no line was cut (harmless: the world
+    has no mouse input). The thin-defence and injury hints still name Stone Skin Tempering in code (as before).

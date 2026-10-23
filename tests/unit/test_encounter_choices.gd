@@ -876,7 +876,8 @@ func test_fighting_style_encounters() -> void:
 			assert_eq(_style_xp_after(enc_id, 1, 5, 5), 0.0, enc_id + " gated choice refused when weak")
 		var hi := 20
 		var gated := _style_xp_after(enc_id, 1, hi, hi)
-		assert_true(gated >= _style_xp_after(enc_id, 0, hi, hi) * (0.0 if checked else 1.0), enc_id + " gated " + attr + " choice trains")
+		# A check trains on both outcomes (on_fail keeps some practice_days).
+		assert_true(gated > 0.0, enc_id + " gated " + attr + " choice trains")
 		if not checked:
 			assert_true(gated > _style_xp_after(enc_id, 0, hi, hi), enc_id + " gated " + attr + " choice trains more")
 
