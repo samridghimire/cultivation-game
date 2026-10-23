@@ -1734,6 +1734,25 @@ func test_pill_saving_goal_at_foundation() -> void:
 	assert_false(_has(Guidance.goals(late, d, {}), "Save for"))
 
 
+func test_pill_saving_goal_mentions_sellable_loot() -> void:
+	var d := data()
+	var c := _qr(0, 20)
+	c.realm_index = 2
+	c.stage = d.realms[2].stage_count() - 3
+	var ore := _loot_id("ore")
+	c.inventory = {"spirit_stone": 480, ore: 100}
+	var offer := Guidance.sell_offer(c, d, "qingshi_village")
+	assert_false(offer.is_empty())
+	var line := Guidance.pill_saving_goal(c, d, "qingshi_village")
+	assert_true(line.contains("Selling your materials would bring about %d." % int(offer["total"])), line)
+	assert_true(_has(Guidance.goals(c, d, {}, null, 1.0, "qingshi_village"), "Selling your materials"))
+	assert_false(Guidance.pill_saving_goal(c, d).contains("Selling"), "no region, no clause")
+	c.inventory = {"spirit_stone": 480}
+	assert_false(Guidance.pill_saving_goal(c, d, "qingshi_village").contains("Selling"))
+	c.inventory = {"spirit_stone": 5000, ore: 100}
+	assert_false(Guidance.pill_saving_goal(c, d, "qingshi_village").contains("Selling"), "affordable: unchanged")
+
+
 func _deed_texts(c: CharacterData, flags: Dictionary) -> Array:
 	var out: Array = []
 	for f in Guidance.fair_fights(c, data(), flags, c.age_days, "qingshi_village"):

@@ -1418,7 +1418,8 @@ static func next_realm_pill_price(c: CharacterData, data: GameData) -> int:
 
 ## "Save for a Foundation Establishment Pill (+25 percent): ..." in the last three stages of
 ## any cultivation realm while no pill is held or taken; "" otherwise.
-static func pill_saving_goal(c: CharacterData, data: GameData) -> String:
+## GUIDE-155: when c cannot afford the pill and `region_id` has a buyer, adds what selling loot there would bring.
+static func pill_saving_goal(c: CharacterData, data: GameData, region_id: String = "", flags: Dictionary = {}) -> String:
 	if not _pill_goal_applies(c, data):
 		return ""
 	var pill := next_realm_pill(c, data)
@@ -1428,6 +1429,10 @@ static func pill_saving_goal(c: CharacterData, data: GameData) -> String:
 	var stones := c.item_count("spirit_stone")
 	var have := "you can afford it now" if stones >= price else "you have %d" % stones
 	var line := "Save for %s (+%d percent): %d stones, %s. %s." % [Text.a(String(pill["name"])), roundi(float(pill["effects"]["breakthrough_bonus"]) * 100), price, have, Items.sources(data, String(pill["id"]))[0]]
+	if stones < price:
+		var offer := sell_offer(c, data, region_id, flags)
+		if not offer.is_empty():
+			line += " Selling your materials would bring about %d." % int(offer["total"])
 	return line + sect_pill_rank_clause(c, data)
 
 
@@ -2779,7 +2784,7 @@ static func goals(c: CharacterData, data: GameData, flags: Dictionary, clan: Cla
 			out.append("Reach %s: gather qi, then attempt a breakthrough (%s)." % [next_name, odds])
 		var saving := sect_pill_claim(c, data)
 		if saving == "":
-			saving = pill_saving_goal(c, data)
+			saving = pill_saving_goal(c, data, region_id, flags)
 		if saving == "":
 			saving = pill_source_goal(c, data)
 		if saving != "":
