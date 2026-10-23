@@ -42,6 +42,7 @@ var renown: Dictionary = {}  # regions.json "renown" block (Renown); {} = none
 var travel_speed: Array = []  # TRAV-007: regions.json "travel_speed" (empty = everyone walks)
 var road: Dictionary = {}  # TRAV-006: regions.json "road" (empty = no road encounters)
 var encounters: Dictionary = {}  # id -> Dictionary
+var encounter_sense_below_chance: float = 0.2  # encounters.json sense_below_chance (ENC-009)
 ## Bounties by id and the file's top-level numbers (data/bounties.json, Bounties).
 var bounties: Dictionary = {}
 ## data/rumors.json (RUMOR-001): merchant gossip by id, and the file's `max_per_visit`.
@@ -242,7 +243,9 @@ func _load(dir: String) -> void:
 
 	artifact = _read(dir, "artifact.json")
 
-	for encounter in _read(dir, "encounters.json").get("encounters", []):
+	var encounter_file := _read(dir, "encounters.json")
+	encounter_sense_below_chance = float(encounter_file.get("sense_below_chance", 0.2))
+	for encounter in encounter_file.get("encounters", []):
 		encounters[encounter["id"]] = encounter
 
 	var bounty_file := _read(dir, "bounties.json")
@@ -562,6 +565,8 @@ func _validate_world() -> void:
 	for region: Dictionary in regions.values():
 		if region.has("discovery"):
 			discoveries[String(region["discovery"])] = true
+	if encounter_sense_below_chance < 0.0 or encounter_sense_below_chance > 1.0:
+		load_errors.append("encounters.json sense_below_chance %s is outside 0..1" % encounter_sense_below_chance)
 	for e: Dictionary in encounters.values():
 		if e.get("discovery_only", false) and not discoveries.has(String(e["id"])):
 			load_errors.append("Encounter '%s' is discovery_only but is no region's discovery" % e["id"])

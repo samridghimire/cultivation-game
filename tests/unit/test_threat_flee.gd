@@ -98,3 +98,61 @@ func test_deadly_evaded_and_non_lethal_dangerous_forced() -> void:
 	assert_false(Exploration.should_offer_flee(c, gs.data, "t_soft"))
 	gs.data.enemies.erase("t_deadly")
 	gs.data.enemies.erase("t_soft")
+
+
+## Registers a non-lethal clone of the mist wolf whose win chance falls in [lo, hi).
+func _chance_foe(gs: Node, c: CharacterData, id: String, lo: float, hi: float) -> void:
+	for atk in range(-10, 400, 2):
+		var foe: Dictionary = gs.data.enemies["mist_wolf"].duplicate(true)
+		foe["id"] = id
+		foe["realm"] = "mortal"
+		foe["attack"] = atk
+		foe["lethal"] = false
+		var p := Combat.win_chance(c, gs.data, foe)
+		if p >= lo and p < hi:
+			gs.data.enemies[id] = foe
+			return
+	assert_true(false, "no foe found with chance in [%s, %s)" % [lo, hi])
+
+
+## ENC-009: a non-lethal foe the player would very likely lose to is sensed, not forced.
+func test_non_lethal_unwinnable_foe_is_sensed() -> void:
+	var gs := _gs()
+	var c := _start()
+	_chance_foe(gs, c, "t_bully", 0.0, 0.19)
+	assert_true(Exploration.should_offer_flee(c, gs.data, "t_bully"))
+	_signalled.clear()
+	EventBus.threat_sensed.connect(_on_threat)
+	var qi := c.qi
+	gs._resolve_explore_enemy("t_bully")
+	EventBus.threat_sensed.disconnect(_on_threat)
+	assert_eq(gs.pending_threat, "t_bully")
+	assert_eq(_signalled, ["t_bully"] as Array[String])
+	assert_eq(c.qi, qi)
+	gs.pending_threat = ""
+	gs.data.enemies.erase("t_bully")
+
+
+func test_non_lethal_fair_foe_is_still_fought() -> void:
+	var gs := _gs()
+	var c := _start()
+	_chance_foe(gs, c, "t_fair", 0.25, 1.01)
+	assert_false(Exploration.should_offer_flee(c, gs.data, "t_fair"))
+	gs._resolve_explore_enemy("t_fair")
+	assert_eq(gs.pending_threat, "")
+	gs.data.enemies.erase("t_fair")
+
+
+func test_sense_below_chance_is_loaded_and_validated() -> void:
+	var gs := _gs()
+	assert_eq(gs.data.encounter_sense_below_chance, 0.2)
+	var saved: float = gs.data.encounter_sense_below_chance
+	gs.data.encounter_sense_below_chance = 1.5
+	gs.data.load_errors.clear()
+	gs.data._validate()
+	var found := false
+	for e: String in gs.data.load_errors:
+		found = found or e.contains("sense_below_chance")
+	gs.data.encounter_sense_below_chance = saved
+	gs.data.load_errors.clear()
+	assert_true(found)
