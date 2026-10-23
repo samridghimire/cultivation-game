@@ -421,3 +421,11 @@ func test_sell_wanted_line_names_the_sect_mission() -> void:
 	c.inventory = {"spirit_herb": 3}
 	assert_true(ShopScreen.sell_wanted_line(c, data(), "spirit_herb", true).begins_with("Wanted by the sect: "))
 	assert_eq(ShopScreen.sell_wanted_line(c, data(), "spirit_herb", false), "", "not shown when buying")
+
+
+func test_buy_worth_line_for_qi_items_only_when_buying() -> void:
+	var c := new_character()
+	var line := ShopScreen.buy_worth_line(c, data(), "qi_gathering_pill", "qingshi_village", {}, false)
+	assert_true(line.contains("days of meditation") and line.ends_with(" each"), line)
+	assert_eq(ShopScreen.buy_worth_line(c, data(), "qi_gathering_pill", "qingshi_village", {}, true), "")
+	assert_eq(ShopScreen.buy_worth_line(c, data(), "iron_sword", "qingshi_village", {}, false), "")

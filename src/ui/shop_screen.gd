@@ -356,6 +356,14 @@ static func tag_note(tag: String) -> String:
 
 ## "Equipped: Iron Sword (+5 attack)" for whatever `c` wears in the item's slot.
 ## WU-312: the Sell tab says when a sect mission wants the selected item.
+## What a qi item is worth in meditation (WU-314); "" when selling or the item gives no qi.
+static func buy_worth_line(c: CharacterData, data: GameData, item_id: String, region_id: String, flags: Dictionary, selling: bool) -> String:
+	if selling:
+		return ""
+	var worth := InventoryScreen.qi_worth_line(c, data, item_id, region_id, flags)
+	return worth + " each" if worth != "" else ""
+
+
 static func sell_wanted_line(c: CharacterData, data: GameData, item_id: String, selling: bool) -> String:
 	if not selling:
 		return ""
@@ -586,6 +594,9 @@ func _show_details() -> void:
 	var lines := Items.describe_effects(item.get("effects", {}), data)
 	if Equipment.is_equipment(data, _selected):
 		lines.insert(0, Equipment.describe_stats(data, _selected))
+	var worth := buy_worth_line(p, data, _selected, GameState.current_region, GameState.world_flags, _selling)
+	if worth != "":
+		lines.append(worth)
 	_effects.text = "\n".join(lines)
 	for line in Appraisal.describe_item(p, data, _selected):
 		lines.append("Appraisal: " + line)

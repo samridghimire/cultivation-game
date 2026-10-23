@@ -91,6 +91,7 @@ extends SceneTree
 ## "Reach <realm> to stand a chance against <name>." line), then the bitter variant. Shoot at 1280x800 and 1280x720.
 ## WU-210: it then breaks through level with the rival (rival_caught_up_log / rival_caught_up_journal).
 ## WU-246: `-- --first-hour` also writes fh_<workshop|shop|journal_first_goals|journal_next_steps|journal_commissions|board>_<day1|month1>_<size>.png.
+## WU-314: `--shop-shot` also writes shop_buy_qi_worth_<size>.png (Buy tab, Qi Gathering Pill: "Worth about N days of meditation here each").
 ## WU-296: append `-- --inventory-shot` for inventory_qi_worth.png (Spirit Herb selected: "Worth about N of meditation here"); run once per --resolution.
 ## WU-273: append `-- --techniques-shot` for techniques_practice[_scale115].png (Iron Fist level 1 details, practice button focused); run once per --resolution. Checked at 1280x720 and 1280x800: nothing clipped, the action row wraps.
 ## WU-302: `--clinic-shot` writes clinic_one_<size>.png / clinic_two_<size>.png: the Village Clinic menu for a Qi Refining 3rd-layer
@@ -1095,6 +1096,14 @@ func _start_shop_shot(gs: Node) -> void:
 		shop.open("Wandering Merchant", 0, ["herb", "ore"])
 		shop._set_tab(true)
 		shop._select("spirit_herb"), "close": shop.close})
+	# WU-314: the Buy tab says what a Qi Gathering Pill is worth in meditation.
+	shots.append({"name": "shop_buy_qi_worth", "open": func() -> void:
+		gs.current_region = "qingshi_village"
+		c.realm_index = 0
+		c.inventory = {"spirit_stone": 300}
+		shop.open("Wandering Merchant", 0, ["herb", "ore"])
+		shop._set_tab(false)
+		shop._select("qi_gathering_pill"), "close": shop.close})
 
 
 func _start_inventory_shot(gs: Node) -> void:
