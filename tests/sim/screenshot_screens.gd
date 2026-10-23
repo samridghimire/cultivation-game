@@ -442,6 +442,27 @@ func _start_breakthrough_shots(gs: Node) -> void:
 		c.breakthrough_failures = 3
 		hide_banner.call()
 		win.open(), "close": win.close})
+	# WU-333: an Azure Cloud Inner Disciple (rank 1) with 300 contribution is told to claim the pill, not buy it.
+	var saved := {}
+	shots.append({"name": "bs_d_sect_claim", "open": func() -> void:
+		saved["sect"] = c.sect.duplicate()
+		saved["inventory"] = c.inventory.duplicate()
+		saved["failures"] = c.breakthrough_failures
+		c.sect = {"id": "azure_cloud_sect", "rank": 1, "contribution": 300, "spent": 0}
+		c.inventory = {}
+		c.add_item("spirit_stone", 40)
+		c.breakthrough_failures = 0
+		hide_banner.call()
+		win.open(), "close": func() -> void:
+		var label: Label = win.get("_hint")
+		var inside: bool = label.size.y > 0.0 and win.get_global_rect().encloses(label.get_global_rect())
+		if not label.text.contains("Claim a Foundation Establishment Pill") or label.text.contains("stones") or not inside:
+			push_error("WU-333: sect claim hint wrong or clipped (inside=%s, panel=%s, label=%s): %s" % [inside, win.get_global_rect(), label.get_global_rect(), label.text])
+			quit(1)
+		win.close()
+		c.sect = saved["sect"]
+		c.inventory = saved["inventory"]
+		c.breakthrough_failures = saved["failures"]})
 
 
 ## WU-226: C-147's Great Vehicle Pills in the breakthrough window, and the HUD hint with no pill.
