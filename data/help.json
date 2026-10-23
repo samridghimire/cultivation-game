@@ -497,6 +497,7 @@
       "group": "world",
       "body": [
         "Secret realms open only at certain times. Walk to a realm entrance while it is open, and descend floor by floor for treasure and danger.",
+        "When a secret realm you could enter opens, the hint names where it is, the entry cost and how long it stays open.",
         "Inheritance grounds hold the legacy of dead cultivators. Passing their trials can reward you with techniques, methods and gear.",
         "Both are risky: go in healed, supplied, and at a realm that matches the depth you plan to reach."
       ]
