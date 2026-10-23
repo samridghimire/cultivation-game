@@ -1435,11 +1435,20 @@ func _start_hint_shot(gs: Node) -> void:
 	hud = world.get_node("HUD")
 	var hint_text := func() -> String:
 		return (hud.get("_hint") as Label).text
+	var had_style: Array = [false]  # WU-337: a known fighting style keeps the newcomer line off the HUD; undone on close
+	var give_style := func() -> void:
+		had_style[0] = c.techniques.has("iron_fist")
+		if not had_style[0]:
+			c.techniques["iron_fist"] = {"level": 99, "xp": 0.0}  # mastered: no practice pointer either
+	var drop_style := func() -> void:
+		if not had_style[0]:
+			c.techniques.erase("iron_fist")
 	shots.append({"name": "hint_herb_away", "open": func() -> void:
 		hud.get("_banner").visible = false
+		give_style.call()
 		c.inventory = {"spirit_stone": 14}  # GUIDE-126: no spare stones, so the qi pill offer does not lead
 		root.get_node("EventBus").player_changed.emit()
-		assert(String(hint_text.call()).contains("a short walk away"), "away hint not on screen; hint: " + String(hint_text.call())), "close": func() -> void: pass})
+		assert(String(hint_text.call()).contains("a short walk away"), "away hint not on screen; hint: " + String(hint_text.call())), "close": drop_style})
 	# Broke crafter: no stones, nothing craftable, so the odd-jobs line fires (longest region name wins).
 	# The herb hint fades at rank CRAFT_HINT_MAX_RANK (GUIDE-049), which is when this line shows. WU-215: checked on screen;
 	# the line reads "Short of stones? Odd jobs as X at the <workshop> pay about N a month." and fits at 1280x720 and 1280x800.
@@ -1461,13 +1470,14 @@ func _start_hint_shot(gs: Node) -> void:
 	assert(broke_region != "", "no odd-jobs hint found in data")
 	shots.append({"name": "hint_broke_crafter", "open": func() -> void:
 		hud.get("_banner").visible = false
+		give_style.call()
 		c.inventory = {}
 		for prof_id: String in c.professions:
 			c.professions[prof_id]["rank"] = Guidance.CRAFT_HINT_MAX_RANK
 		gs.current_region = broke_region
 		root.get_node("EventBus").player_changed.emit()
 		assert(String(hint_text.call()).contains("Short of stones?"), "odd-jobs hint not on screen: " + String(hint_text.call()))
-		print("hint-shot broke: ", hint_text.call()), "close": func() -> void: pass})
+		print("hint-shot broke: ", hint_text.call()), "close": drop_style})
 	# WU-220: GUIDE-054's Mortal nudge on day 40 in Qingshi with an open order and herbs still to gather, so the
 	# panel holds the nudge plus the crafter hints (shows the rank-0 Alchemist; nothing in the pack).
 	shots.append({"name": "hint_mortal_nudge", "open": func() -> void:
