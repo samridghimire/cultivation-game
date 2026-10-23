@@ -55,6 +55,10 @@ static var armor_log := {"day": -1, "sold": 0, "stones_from_sales": 0, "trips": 
 ## QA-146: bounties the board listed vs taken, by the bounty's region (ids counted once per seed).
 static var bounty_log := {"offered": {}, "taken": {}}
 static var qi_log := {"bought": 0, "stones": 0, "used": 0, "qi": 0}
+## QA-148: once a month a sect member spends contribution: the next realm's pill (once), a body art (once), then
+## the shop's best qi pills with the rest, keeping the pill's cost while it is still to claim.
+static var spend_contribution := false
+static var contribution_log := {"pill_days": [], "pill": 0, "body": 0, "qi_items": 0, "qi_cost": 0, "qi_used": 0, "qi": 0}
 const TRIAL_MIN_ODDS := 0.7
 
 
@@ -334,6 +338,8 @@ static func _curious_month(gs: Node, c: CharacterData, done: Dictionary, today: 
 		return kinds
 	if buy_qi:
 		_buy_qi_pills(gs, c)
+	if spend_contribution and not c.is_rogue():
+		_spend_contribution(gs, c)
 	if shop_armor:
 		_shop_for_armor(gs, c)
 	var region: Dictionary = gs.data.regions.get(gs.current_region, {})
@@ -565,6 +571,73 @@ static func _buy_qi_pills(gs: Node, c: CharacterData) -> void:
 		if c.item_count(best_id) < had + bought - i:
 			qi_log["used"] += 1
 			qi_log["qi"] += maxi(0, c.qi - qi_before)
+
+
+## QA-148: see spend_contribution.
+static func _spend_contribution(gs: Node, c: CharacterData) -> void:
+	var data: GameData = gs.data
+	var log := contribution_log
+	var pill := Guidance.next_realm_pill(c, data)
+	var pill_cost := 0
+	var pill_open := false  # the pill is sold here and still to claim in this realm
+	if not pill.is_empty() and c.realm_index == 1 and c.breakthrough_pill == "" and Guidance.breakthrough_items(c, data).is_empty():
+		var entry := Sects.shop_entry(c, data, String(pill["id"]))
+		if not entry.is_empty():
+			pill_open = true
+			pill_cost = int(entry["contribution"])
+			if Guidance._pill_goal_applies(c, data) and Sects.check_purchase(c, data, String(pill["id"])) == "":
+				gs.buy_with_contribution(String(pill["id"]))
+				if c.item_count(String(pill["id"])) > 0:
+					log["pill"] += pill_cost
+					log["pill_days"].append(gs.get_node("/root/GameClock").total_days)
+					pill_open = false
+					pill_cost = 0
+	if not Techniques.knows_kind(c, data, "body"):
+		for entry: Dictionary in Sects.shop_items(c, data):
+			var tech_id := Items.manual_technique(data, String(entry["item_id"]))
+			if tech_id == "" or data.techniques[tech_id].kind != "body" or Sects.check_purchase(c, data, String(entry["item_id"])) != "":
+				continue
+			if Sects.contribution_balance(c) - int(entry["contribution"]) < pill_cost:
+				continue
+			gs.buy_with_contribution(String(entry["item_id"]))
+			gs.use_item(String(entry["item_id"]))
+			if Techniques.knows_kind(c, data, "body"):
+				log["body"] += int(entry["contribution"])
+			break
+	var realm: RealmDef = data.realms[c.realm_index]
+	var room := realm.qi_required(realm.stage_count() - 1) - c.qi
+	var best_id := ""
+	var best_cost := 0
+	var best_qi := 0
+	var best_rate := 0.0
+	for entry: Dictionary in Sects.shop_items(c, data):
+		var item: Dictionary = data.items.get(String(entry["item_id"]), {})
+		var fx: Dictionary = item.get("effects", {})
+		if int(fx.get("qi", 0)) <= 0 or int(fx["qi"]) > room or fx.has("burn_lifespan") or int(fx.get("alignment", 0)) < 0:
+			continue
+		var rate := float(fx["qi"]) / int(entry["contribution"])
+		if rate > best_rate and Sects.check_purchase(c, data, String(entry["item_id"])) == "":
+			best_rate = rate
+			best_id = String(entry["item_id"])
+			best_cost = int(entry["contribution"])
+			best_qi = int(fx["qi"])
+	if best_id == "":
+		return
+	var count := mini((Sects.contribution_balance(c) - pill_cost) / best_cost, room / best_qi)
+	for i in count:
+		if not c.alive or Cultivation.is_at_bottleneck(c, data):
+			break
+		var had := c.item_count(best_id)
+		gs.buy_with_contribution(best_id)
+		if c.item_count(best_id) <= had:
+			break
+		log["qi_items"] += 1
+		log["qi_cost"] += best_cost
+		var qi_before := c.qi
+		gs.use_item(best_id)
+		if c.item_count(best_id) <= had:
+			log["qi_used"] += 1
+			log["qi"] += maxi(0, c.qi - qi_before)
 
 
 ## QA-075: once a month, does the open chore fight "Fights you can win" lists at >= 0.7 (the list only covers the
