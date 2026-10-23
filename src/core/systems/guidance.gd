@@ -1911,6 +1911,15 @@ static func practice_hint(c: CharacterData, data: GameData, region_id: String = 
 	return "Practise %s on the Techniques screen: each level raises your odds in a fight (level %d now%s)." % [data.techniques[id].name, Techniques.level(c, id), next]
 
 
+## True when a sect mission that `c` can take right now needs `item_id` (the mission hint names it) (GUIDE-118).
+static func _ready_mission_wants(c: CharacterData, data: GameData, item_id: String, flags: Dictionary) -> bool:
+	for mission_id in Sects.available_missions(c, data, flags):
+		var needed: Dictionary = data.sect_missions[mission_id].get("requires", {}).get("items", {})
+		if needed.has(item_id) and Sects.check_mission(c, data, mission_id, flags) == "":
+			return true
+	return false
+
+
 ## First-steps pointers for Mortal and Qi Refining players, most useful first.
 static func _newcomer_hints(c: CharacterData, data: GameData, flags: Dictionary, region_id: String, today: int = -1) -> PackedStringArray:
 	var out: PackedStringArray = []
@@ -1927,7 +1936,7 @@ static func _newcomer_hints(c: CharacterData, data: GameData, flags: Dictionary,
 			var item: Dictionary = data.items.get(item_id, {})
 			var fx: Dictionary = item.get("effects", {})
 			# Never steer a newcomer toward pills that burn lifespan or taint the heart.
-			if c.item_count(item_id) > 0 and Items.feeds_cultivation(data, item_id):
+			if c.item_count(item_id) > 0 and Items.feeds_cultivation(data, item_id) and not _ready_mission_wants(c, data, item_id, flags):
 				var count := c.item_count(item_id)
 				var qi := float(fx["qi"]) * count
 				var rate := Cultivation.qi_per_day(c, data, float(best_qi_in_region(c, data, region_id, flags)["density"]))

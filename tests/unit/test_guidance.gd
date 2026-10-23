@@ -3534,6 +3534,20 @@ func test_deliver_ready_mission_has_no_clause() -> void:
 	assert_false(Guidance._mission_hint(c, d, {}, "qingshi_village").contains("needs"))
 
 
+## GUIDE-118: herbs a ready sect mission wants are not offered as qi food.
+func test_herb_hint_leaves_herbs_the_tithe_wants() -> void:
+	var d := data()
+	var c := _cooldown_player(d)
+	c.inventory = {"spirit_herb": 3}
+	var flags := {Guidance.ELDER_MO_FLAG: true}
+	assert_eq(Sects.check_mission(c, d, "herb_hall_tithe", flags), "")
+	var hints := Guidance.hints(c, d, 1.0, 40, {}, flags, "qingshi_village")
+	assert_false(_has(hints, "Use your"), str(hints))
+	c.mission_cooldowns["herb_hall_tithe"] = c.age_days + 20
+	hints = Guidance.hints(c, d, 1.0, 40, {}, flags, "qingshi_village")
+	assert_true(_has(hints, "Use your 3 Spirit Herbs"), str(hints))
+
+
 ## GUIDE-114: one line carries the merchant's offer, not two.
 func test_sell_offer_not_repeated_in_armor_line() -> void:
 	var c := _armor_hint_fighter()
