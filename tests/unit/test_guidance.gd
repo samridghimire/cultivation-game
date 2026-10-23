@@ -3267,16 +3267,34 @@ func test_dangerous_missions_say_practise_style() -> void:
 
 func test_practise_advice_not_repeated() -> void:
 	var name: String = data().techniques["iron_fist"].name
-	var out: Array[String] = [
+	var out := PackedStringArray([
 		"Practise %s on the Techniques screen: each level raises your odds." % name,
 		"The sect's missions are too dangerous for you yet; practise %s first." % name,
-	]
-	Guidance._merge_practise_advice(out)
+	])
+	out = Guidance._merge_practise_advice(out)
 	assert_eq(out[0], "Practise %s on the Techniques screen: each level raises your odds." % name)
 	assert_eq(out[1], "The sect's missions are too dangerous for you yet; the practice above would open them.")
-	var lone: Array[String] = ["The sect's missions are too dangerous for you yet; practise %s first." % name]
-	Guidance._merge_practise_advice(lone)
+	var lone := PackedStringArray(["The sect's missions are too dangerous for you yet; practise %s first." % name])
+	lone = Guidance._merge_practise_advice(lone)
 	assert_true(lone[0].ends_with("practise %s first." % name), lone[0])
+
+
+func test_hints_merge_practise_advice_end_to_end() -> void:
+	var d := data()
+	var c := new_character()
+	c.realm_index = 1
+	c.stage = 0
+	c.sect = {"id": "azure_cloud_sect", "rank": 0, "contribution": 0, "spent": 0}
+	c.techniques["iron_fist"] = {"level": 1, "xp": 0.0}
+	if _only_dangerous_ready(c, d) == 0:
+		return
+	var name: String = d.techniques["iron_fist"].name
+	var lines := Guidance.hints(c, d, 1.0, 20)
+	var practise := false
+	for line in lines:
+		practise = practise or line.contains("Practise %s on the Techniques screen" % name)
+		assert_false(line.ends_with("practise %s first." % name), line)
+	assert_true(practise, str(lines))
 
 
 func test_dangerous_missions_say_grow_a_stage_when_mastered() -> void:
