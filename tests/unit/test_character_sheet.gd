@@ -117,3 +117,11 @@ func test_next_steps_text_caps_at_three() -> void:
 	assert_eq(four.count("\n"), 4)
 	assert_true(four.contains("More in the Journal (J)"))
 	assert_false(four.contains("- d"))
+
+
+func test_contribution_line() -> void:
+	var gs := _game_state()
+	var c := CharacterFactory.create("Han Li", gs.data, seeded_rng(79), "male")
+	assert_eq(CharacterSheet.contribution_line(c), "")
+	c.sect = {"id": "azure_cloud", "rank": 1, "contribution": 7773, "spent": 1000}
+	assert_eq(CharacterSheet.contribution_line(c), "Contribution: 6773 to spend (lifetime 7773)")

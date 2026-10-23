@@ -136,8 +136,11 @@ func _rebuild() -> void:
 	var devoured := "   |   Cultivators devoured: %d" % p.devoured if p.devoured > 0 else ""
 	t += "Alignment: %s (%d)%s   |   %s\n\n" % [Alignment.tier_name(p.alignment, data), p.alignment, devoured, Sects.describe(p, data)]
 	var rank_line := SectFactions.rank_line(p, GameState.sect_standings())
+	var contribution := contribution_line(p)
 	if rank_line != "":
-		t += rank_line + "\n\n"
+		t += rank_line + "\n" + (contribution + "\n" if contribution != "" else "") + "\n"
+	elif contribution != "":
+		t += contribution + "\n\n"
 	var rival_line := rival_line(p, data, GameState.npcs, GameState.npc_favor, GameState.world_flags, GameState.current_region)
 	if rival_line != "":
 		t += "[color=#%s]Rival[/color]\n  %s\n\n" % [accent, rival_line]
@@ -287,6 +290,13 @@ static func next_steps_text(hints: PackedStringArray, journal_key: String) -> St
 	if hints.size() > 3:
 		t += "[color=#%s]  More in the Journal (%s)[/color]\n" % [UIStyle.HINT.to_html(false), journal_key]
 	return t
+
+
+## "Contribution: M to spend (lifetime L)" for sect members; "" for rogues.
+static func contribution_line(c: CharacterData) -> String:
+	if c.is_rogue():
+		return ""
+	return "Contribution: %d to spend (lifetime %d)" % [Sects.contribution_balance(c), int(c.sect.get("contribution", 0))]
 
 
 static func rival_line(c: CharacterData, data: GameData, people: Dictionary, favor: Dictionary, flags: Dictionary = {}, region_id: String = "") -> String:
