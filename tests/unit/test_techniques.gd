@@ -97,3 +97,15 @@ func test_days_to_next() -> void:
 	c.techniques["iron_fist"]["level"] = data().techniques["iron_fist"].max_level
 	assert_eq(Techniques.days_to_next(c, data(), "iron_fist"), 0)
 	assert_eq(Techniques.days_to_next(c, data(), "no_such_art"), 0)
+
+
+## GUIDE-166: is_faster_method compares an unknown method's qi rate with the main method's.
+func test_is_faster_method() -> void:
+	var c := new_character()
+	c.realm_index = 1
+	c.spiritual_roots = {}  # no element affinity: the sutra's listed rate applies as is
+	assert_true(Techniques.is_faster_method(c, data(), "azure_cloud_heart_sutra"))
+	assert_false(Techniques.is_faster_method(c, data(), "stone_skin"), "not a method")
+	assert_false(Techniques.is_faster_method(c, data(), "no_such_art"))
+	Techniques.learn(c, data(), "azure_cloud_heart_sutra")
+	assert_false(Techniques.is_faster_method(c, data(), "azure_cloud_heart_sutra"), "already known")

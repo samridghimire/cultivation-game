@@ -100,6 +100,16 @@ static func typical_level(data: GameData, realm_index: int, tech_id: String) -> 
 	return mini(1 + 2 * realm_index, def.max_level)
 
 
+## WU-348/GUIDE-166: true for a cultivation method `c` does not know whose qi rate beats their main method's and
+## is not outgrown at their realm.
+static func is_faster_method(c: CharacterData, data: GameData, tech_id: String) -> bool:
+	var def: TechniqueDef = data.techniques.get(tech_id)
+	if def == null or not def.is_method() or knows(c, tech_id):
+		return false
+	return not is_outgrown(c, data, tech_id) \
+			and method_rate_of(c, data, tech_id) > method_rate_of(c, data, main_method(c, data))
+
+
 static func is_mastered(c: CharacterData, data: GameData, tech_id: String) -> bool:
 	var def: TechniqueDef = data.techniques.get(tech_id)
 	return def != null and level(c, tech_id) >= def.max_level

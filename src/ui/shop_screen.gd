@@ -365,7 +365,7 @@ static func upgrade_tag(c: CharacterData, data: GameData, item_id: String, facti
 			return "upgrade"
 		return ""
 	var tech_id := manual_technique(data, item_id)
-	if MissionBoard.is_faster_method(c, data, item_id):
+	if Techniques.is_faster_method(c, data, Items.manual_technique(data, item_id)):
 		return "upgrade"
 	if tech_id != "" and data.techniques[tech_id].kind == "body" and not Techniques.knows(c, tech_id) \
 			and c.realm_index >= data.realm_index_of("foundation_establishment"):
