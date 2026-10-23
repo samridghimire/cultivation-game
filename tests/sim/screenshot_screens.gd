@@ -98,6 +98,7 @@ extends SceneTree
 ## WU-302: `--clinic-shot` writes clinic_one_<size>.png / clinic_two_<size>.png: the Village Clinic menu for a Qi Refining 3rd-layer
 ## character with Internal Injury, then with a second injury (Qi Deviation); the "Pay the doctor ... saves about" lines must fit or wrap unclipped.
 ## WU-295: `--bounty-shot` writes bounty_menu_<size>.png: the Fallen Star Market bounty board with the longest hunt label any realm sees (the hunt's description is shown for the focused entry).
+## WU-331: `--hint-shot` also writes hint_clinic_short_<size>.png (qi deviation, 19 stones: the capped line keeps "Village Clinic treats it for" and "(you have 19)"; the clinic carries the gold marker).
 ## WU-297: `--hint-shot` also writes hint_npc_badge_<size>.png (first hint is a Qingshi NPC's pointers line, the NPC-only kind; the gold "!" sits before it).
 ## WU-289: `--hint-shot` also writes hint_road_marker_/hint_road_menu_/hint_badge_<size>.png (road-out "!", route line "The hint points this way.", clinic badge).
 ## WU-288: `--hint-shot` also writes hint_best_mission_[journal_]<size>.png ("The best pays N contribution: <mission> (<days>)" on the sect line).
@@ -1941,6 +1942,29 @@ func _start_hint_shot(gs: Node) -> void:
 			await root.get_tree().process_frame
 		var parsed: String = (herbs_journal.get("_text") as RichTextLabel).get_parsed_text()
 		assert(parsed.contains("Core Disciple") and parsed.contains("Foundation Establishment"), "journal Next steps lacks the rank line:\n" + dump), "close": func() -> void: (hud.get("_screens")["toggle_journal"] as Control).close()})
+
+	# WU-331: a QR1 character with a qi deviation, 19 stones and no healing items: the capped HUD line keeps the clinic price
+	# and what you hold, and the Village Clinic carries the gold hint marker.
+	shots.append({"name": "hint_clinic_short_" + size_tag, "open": func() -> void:
+		setup_road.call()
+		c.realm_index = 1
+		c.stage = 0
+		c.sect = {}
+		c.injuries = {"qi_deviation": 100}  # full severity: the clinic wants more than the 19 stones held
+		c.inventory = {"spirit_stone": 19}
+		root.get_node("EventBus").player_changed.emit()
+		await root.get_tree().process_frame
+		await root.get_tree().process_frame
+		hud.get("_banner").visible = false
+		var first: String = hud.call("first_hint")
+		print("hint-shot clinic short: ", first)
+		var capped: String = hud.call("cap_hint", first)
+		assert(capped.contains("Village Clinic treats it for") and capped.contains("(you have 19)"), "capped clinic line lost its price: " + capped + "\nfull: " + first)
+		var marked := false
+		for n: Node in world.get_children():
+			if "hinted" in n and String(n.get("display_name")).contains("Clinic") and n.get("hinted"):
+				marked = true
+		assert(marked, "the Village Clinic has no gold hint marker; first hint: " + first), "close": func() -> void: c.injuries.clear()})
 
 
 ## WU-190: the encounter window on real encounters with attribute, profession and enemy choices.
