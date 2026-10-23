@@ -100,6 +100,7 @@ extends SceneTree
 ## WU-302: `--clinic-shot` writes clinic_one_<size>.png / clinic_two_<size>.png: the Village Clinic menu for a Qi Refining 3rd-layer
 ## character with Internal Injury, then with a second injury (Qi Deviation); the "Pay the doctor ... saves about" lines must fit or wrap unclipped.
 ## WU-295: `--bounty-shot` writes bounty_menu_<size>.png: the Fallen Star Market bounty board with the longest hunt label any realm sees (the hunt's description is shown for the focused entry).
+## WU-350: `--hint-shot` also writes hint_abode_<size>.png (rogue, Qi Refining 5, 400 stones, no abode: journal Next steps names the Waterfall Cave and 300; the capped HUD line keeps the cave's name).
 ## WU-349: `--hint-shot` also writes hint_heal_treasury_<size>.png (Azure Cloud outer disciple, qi deviation, 5 stones, 300 contribution: HUD line names the Meridian Mending Pill from "your sect treasury", never the Village Clinic).
 ## WU-345: `--hint-shot` also writes hint_trial_peak_<size>.png (Inner Disciple at Foundation Peak, Iron Fist mastered, no body art or armor: a hint names Stone Skin Tempering, none says grow a stage).
 ## WU-336: `--hint-shot` also writes hint_thin_treasury_<size>.png (Foundation outer disciple, 100 contribution: thin-defence line names "your sect treasury"; capped HUD line keeps its opening).
@@ -2154,6 +2155,47 @@ func _start_hint_shot(gs: Node) -> void:
 			c.inventory = heal_saved[1]
 			c.injuries = heal_saved[2]
 			heal_saved.clear()})
+
+	# WU-350: GUIDE-153's abode hint. A rogue at Qi Refining 5 with 400 stones and no abode: the journal's Next steps names the
+	# Waterfall Cave and its 300-stone price, and the capped HUD line keeps the cave's name.
+	var abode_saved: Array = []
+	shots.append({"name": "hint_abode_" + size_tag, "open": func() -> void:
+		setup_road.call()
+		abode_saved.append_array([c.sect.duplicate(), c.inventory.duplicate(), c.abode, c.injuries.duplicate(true)])
+		c.realm_index = 1
+		c.stage = 5
+		c.sect = {}
+		c.abode = ""
+		c.injuries = {}
+		c.inventory = {"spirit_stone": 400}
+		gs.current_region = "qingshi_village"
+		root.get_node("EventBus").player_changed.emit()
+		await root.get_tree().process_frame
+		await root.get_tree().process_frame
+		hud.get("_banner").visible = false
+		var lines: Array = Guidance.hints(c, gs.data, 3, 12, gs.npcs, gs.world_flags, "qingshi_village", 40, gs.npc_favor)
+		var dump := "\n".join(lines)
+		var abode_line := ""
+		for h: String in lines:
+			if h.contains("Waterfall Cave"):
+				abode_line = h
+				break
+		print("hint-shot abode: ", abode_line)
+		assert(abode_line != "" and abode_line.contains("300"), "no abode line naming the Waterfall Cave and 300:\n" + dump)
+		var capped: String = hud.call("cap_hint", abode_line)
+		assert(capped.contains("Waterfall Cave"), "capped abode line lost the cave: " + capped)
+		var abode_journal: Control = hud.get("_screens")["toggle_journal"]
+		await _show_journal(abode_journal, "Next steps")
+		for _i in 3:
+			await root.get_tree().process_frame
+		var parsed: String = (abode_journal.get("_text") as RichTextLabel).get_parsed_text()
+		assert(parsed.contains("Waterfall Cave") and parsed.contains("300"), "journal Next steps lacks the abode line:\n" + parsed), "close": func() -> void:
+			(hud.get("_screens")["toggle_journal"] as Control).close()
+			c.sect = abode_saved[0]
+			c.inventory = abode_saved[1]
+			c.abode = abode_saved[2]
+			c.injuries = abode_saved[3]
+			abode_saved.clear()})
 
 	# WU-336: an Azure Cloud outer disciple at Foundation Early with no armor, no body art and 100 contribution: the thin-defence line
 	# names the sect treasury (GUIDE-144); the capped HUD line still leads with the defence warning, the journal's Next steps has the treasury.
