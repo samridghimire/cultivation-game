@@ -209,7 +209,8 @@
       "group": "cultivation",
       "body": [
         "Buy a cave abode in a region to claim a private place to cultivate. Its qi density is higher than the open road, and its chest stores your goods.",
-        "You may hold one abode at a time. Arrays, set up by an Array Master, gather qi, guard or conceal a place."
+        "You may hold one abode at a time. Arrays, set up by an Array Master, gather qi, guard or conceal a place.",
+        "The Next steps hint names the nearest abode you can claim, its price and whether it gathers qi faster than where you meditate now."
       ]
     },
     {
@@ -403,7 +404,7 @@
       "body": [
         "Climbing a sect's ranks needs lifetime contribution, a minimum realm and, for the highest ranks, a minimum stage within that realm. Early, Middle and Late stages of a realm count separately: a Foundation Establishment disciple at the first layer may meet the realm requirement and still be turned away from a stage-gated rank.",
         "The character sheet and the sect hall tell you what is missing. Cultivate to the stage named, then face the rank trial, a sparring match that never kills or robs you.",
-        "A promotion trial is a spar: losing injures you but never kills. The Next steps hint gives your odds before you try, and the journal lists the trial under Fights you can win when the odds are good."
+        "A promotion trial is a spar: losing injures you but never kills. The Next steps hint gives your odds before you try, and the journal lists the trial under Fights you can win when the odds are good. If a promotion trial looks hopeless, the hint names what you lack, often a body art from the sect treasury."
       ]
     },
     {
