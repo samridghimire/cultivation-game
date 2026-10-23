@@ -203,6 +203,9 @@ func _start() -> void:
 	if OS.get_cmdline_user_args().has("--map-shot"):
 		_start_map_shot(gs)
 		return
+	if OS.get_cmdline_user_args().has("--travel-shot"):
+		_start_travel_shot(gs)
+		return
 	if OS.get_cmdline_user_args().has("--techniques-shot"):
 		_start_techniques_shot(gs)
 		return
@@ -1285,6 +1288,33 @@ func _start_clinic_shot(gs: Node) -> void:
 			for b: Node in menu.get("_buttons").get_children():
 				var bb := b as Button
 				print("  ", bb.size, " ", bb.text), "close": func() -> void: hud.get("_choice_menu").close()})
+
+
+## WU-319: `--travel-shot` writes travel_road_<size>.png: the Qingshi road menu with the destination notes.
+func _start_travel_shot(gs: Node) -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 5
+	var c := CharacterFactory.create("Lin Feng", gs.data, rng, "male")
+	gs.start_session(c)
+	gs.pending_event = ""
+	gs.current_region = "qingshi_village"
+	c.realm_index = 1
+	c.stage = 3
+	world = load("res://src/world/world.tscn").instantiate()
+	root.add_child(world)
+	hud = world.get_node("HUD")
+	hud.get("_banner").visible = false
+	var road: Node = load("res://src/world/interactables/travel_point.gd").new()
+	road.display_name = "Road"
+	var size_tag := "%dx%d" % [root.size.x, root.size.y]
+	shots.append({"name": "travel_road_" + size_tag, "open": func() -> void:
+		hud.get("_choice_menu").open_for(road)
+		await root.get_tree().process_frame
+		await root.get_tree().process_frame
+		var menu: Control = hud.get("_choice_menu")
+		print("travel-shot: menu ", menu.get_global_rect(), " inside ", root.get_visible_rect().encloses(menu.get_global_rect()))
+		for o: Dictionary in road.get_options():
+			print("  ", o["label"], " | ", String(o.get("description", "")).replace("\n", " / ")), "close": func() -> void: hud.get("_choice_menu").close()})
 
 
 func _start_bounty_shot(gs: Node) -> void:
