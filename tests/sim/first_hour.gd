@@ -32,6 +32,11 @@ static var attempt_trials := true
 ## --no-heal turns it off. heal_log["healed"] counts treatments, ["stones"] the stones the clinic took.
 static var heal_injuries := false
 static var heal_log := {"healed": 0, "stones": 0}
+## QA-138: a curious player takes the bout the spar hint names ("<Name> (<realm>) here would spar with you"), once a
+## week while the hint speaks; simulate_first_hour.gd's --no-spar-hint turns it off. spar_log["bouts"] counts them,
+## ["refused"] collects check_spar's text when the named partner refuses (a hint bug).
+static var spar_hint := false
+static var spar_log := {"bouts": 0, "refused": []}
 const TRIAL_MIN_ODDS := 0.7
 
 
@@ -281,6 +286,9 @@ static func _curious_month(gs: Node, c: CharacterData, done: Dictionary, today: 
 	for week in 3:
 		if not c.alive:
 			return kinds
+		_follow_spar_hint(gs, c, today + week * 7)
+		if not c.alive:
+			return kinds
 		var seen := _explore_watched(gs, c, today)
 		_explore(gs)
 		_log_explore_fights(done, seen)
@@ -528,6 +536,26 @@ static func _learn_fighting_style(gs: Node, c: CharacterData, done: Dictionary, 
 		if (def.kind == "combat" or (follow_defence and def.kind == "body")) and not Techniques.is_mastered(c, gs.data, tech_id) and c.alive:
 			gs.practice_technique(tech_id, 7)
 			break
+
+
+## QA-138: when a hint says "<Name> (...) here would spar with you", spar with that NPC.
+static func _follow_spar_hint(gs: Node, c: CharacterData, today: int) -> void:
+	if not spar_hint or not c.alive:
+		return
+	for h: String in Guidance.hints(c, gs.data, gs.hint_density(), 5, gs.npcs, gs.world_flags, gs.current_region, today, gs.npc_favor):
+		if not h.contains(" here would spar with you"):
+			continue
+		for npc_id: String in gs.npcs:
+			var npc: CharacterData = gs.npcs[npc_id]
+			if not h.begins_with("%s (" % npc.name):
+				continue
+			var reason: String = gs.check_spar(npc_id)
+			if reason == "":
+				gs.spar_with(npc_id)
+				spar_log["bouts"] += 1
+			else:
+				spar_log["refused"].append(reason)
+			return
 
 
 ## QA-123: while Guidance.practice_hint speaks, practise its style until the next level (at most 60 days a month).

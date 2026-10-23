@@ -29,13 +29,15 @@ func _run() -> void:
 	FirstHour.attempt_trials = not args.has("--no-trial")  # QA-136
 	FirstHour.heal_injuries = curious and not args.has("--no-heal")  # QA-128
 	FirstHour.heal_log = {"healed": 0, "stones": 0}
+	FirstHour.spar_hint = curious and not args.has("--no-spar-hint")  # QA-138
+	FirstHour.spar_log = {"bouts": 0, "refused": []}
 	var trace := args.has("--trace")  # QA-065: print each month's state and every fight
 	var only_seed := 0  # --seed=N runs just that seed
 	var nums: Array[int] = []
 	for a in args:
 		if a.begins_with("--seed="):
 			only_seed = int(a.substr(7))
-		elif a != "--curious" and a != "--trace" and a != "--zero" and a != "--forced" and a != "--no-trial" and a != "--no-heal":
+		elif a != "--curious" and a != "--trace" and a != "--zero" and a != "--forced" and a != "--no-trial" and a != "--no-heal" and a != "--no-spar-hint":
 			nums.append(int(a))
 	var seeds := nums[0] if nums.size() > 0 else 30
 	var months := nums[1] if nums.size() > 1 else 12
@@ -45,6 +47,8 @@ func _run() -> void:
 	var sects: Array = []
 	var rank_days: Array = []  # QA-136
 	var final_stones: Array = []
+	var iron_levels := {3: [], 6: [], 12: []}  # QA-138: Iron Fist level after months 3, 6, 12
+	var wolf_days: Array = []
 	var trials_won := 0
 	var trials_lost := 0
 	var injuries: Array = []
@@ -114,7 +118,15 @@ func _run() -> void:
 					techs.append("%s:%s" % [t, str(p.techniques[t])])
 				print("    m%02d day %d %s %s stones %d techs %s hint: %s | fights: %s" % [month + 1, clock.total_days, gs.current_region, Cultivation.realm_label(p, gs.data), p.item_count("spirit_stone"), str(techs), str(Guidance.hints(p, gs.data, 1.0, 5, gs.npcs, gs.world_flags, gs.current_region, clock.total_days, gs.npc_favor)), str(fight_notes)])
 				fight_notes.clear()
+		var trace_hook := hook
+		hook = func(month: int) -> void:
+			if trace_hook.is_valid():
+				trace_hook.call(month)
+			if month == 2 or month == 5 or month == 11:
+				iron_levels[month + 1].append(Techniques.level(gs.player, "iron_fist"))  # QA-138
 		var r: Dictionary = FirstHour.play(gs, clock, s, months, curious, hook)
+		if FirstHour.wolf_win_day >= 0:
+			wolf_days.append(FirstHour.wolf_win_day)
 		if forced:
 			root.get_node("EventBus").combat_started.disconnect(on_forced_start)
 			root.get_node("EventBus").combat_finished.disconnect(on_forced_end)
@@ -175,6 +187,9 @@ func _run() -> void:
 		print("Distinct action kinds per month: %.1f; months after the first with no log lines: %d" % [float(sum) / maxi(1, kinds_all.size()), zero_months])
 	if curious:
 		print("Injury treatments (QA-128): %d, clinic stones %d%s" % [FirstHour.heal_log["healed"], FirstHour.heal_log["stones"], "" if FirstHour.heal_injuries else " (--no-heal)"])
+	if curious:
+		print("Iron Fist level median (QA-138): m03 %.0f, m06 %.0f, m12 %.0f; first Mist Wolf win: median day %.0f (%d/%d seeds)" % [_median(iron_levels[3]), _median(iron_levels[6]), _median(iron_levels[12]), _median(wolf_days), wolf_days.size(), seeds])
+		print("Spar-hint bouts (QA-138): %d, refusals: %s%s" % [FirstHour.spar_log["bouts"], str(FirstHour.spar_log["refused"]), "" if FirstHour.spar_hint else " (--no-spar-hint)"])
 	print("Road encounters (QA-118): %d/%d seeds met one; %s" % [road_seeds, seeds, str(road_seen)])
 	if zero:
 		print("Fights rated 0%%: %d of %d, by source: %s" % [zero_by.values().reduce(func(a: int, b: int) -> int: return a + b, 0), fights_seen["n"], str(zero_by)])

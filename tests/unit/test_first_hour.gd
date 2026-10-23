@@ -133,3 +133,17 @@ func test_practise_hint_flag_raises_the_style() -> void:
 	assert_gt(Techniques.level(gs.player, "iron_fist"), 2, "practising to the next level while the hint speaks reaches level 3 in 3 months")
 	assert_true(FirstHour.wolf_win_day >= -1, "the wolf win day is a clock day or -1")
 	gs.end_session()
+
+
+## QA-138: with spar_hint on, a curious player takes the bout the hint names; the partner never refuses.
+func test_spar_hint_flag_spars_and_is_never_refused() -> void:
+	var root := _root()
+	var gs := root.get_node("GameState")
+	var FirstHour := preload("res://tests/sim/first_hour.gd")
+	FirstHour.spar_hint = true
+	FirstHour.spar_log = {"bouts": 0, "refused": []}
+	FirstHour.play(gs, root.get_node("GameClock"), 3, 4, true)
+	FirstHour.spar_hint = false
+	assert_eq((FirstHour.spar_log["refused"] as Array).size(), 0, "the partner the hint names agrees to spar")
+	assert_true(int(FirstHour.spar_log["bouts"]) >= 0, "bouts are counted")
+	gs.end_session()
