@@ -233,6 +233,18 @@ func test_sell_all_note_names_top_stacks() -> void:
 	assert_false(ShopScreen.sell_all_summary(c, data(), ids.slice(0, 2)).contains("more"))
 
 
+func test_sell_all_note_names_kept_herbs() -> void:
+	var c := new_character()
+	c.inventory = {"spirit_herb": 3, "iron_essence": 2}
+	var tags := ["herb", "ore"]
+	var text := ShopScreen.kept_text(c, data(), tags)
+	assert_true(text.begins_with("Kept: 3 "), text)
+	assert_true(text.contains("feed your cultivation"), text)
+	assert_false(text.contains("Iron"), text)
+	c.inventory = {"iron_essence": 2}
+	assert_eq(ShopScreen.kept_text(c, data(), tags), "")
+
+
 func test_shop_hint_follows_rebinds() -> void:
 	var root := (Engine.get_main_loop() as SceneTree).root
 	var gs: Node = root.get_node("GameState")

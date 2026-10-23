@@ -463,6 +463,9 @@ func _refresh_sell_all() -> void:
 	for id in loot:
 		count += GameState.player.item_count(id)
 	_sell_all_note.text = sell_all_summary(GameState.player, GameState.data, loot)
+	var kept := kept_text(GameState.player, GameState.data, _stock_tags, _buy_tags)
+	if kept != "":
+		_sell_all_note.text += "\n" + kept
 	if _sell_all_armed:
 		_sell_all_button.text = "Press again to sell %d items for %d stones" % [count, total]
 	else:
@@ -482,6 +485,19 @@ static func sell_all_summary(c: CharacterData, data: GameData, ids: Array) -> St
 	if rest > 0:
 		text += " and %d more kind%s" % [rest, "" if rest == 1 else "s"]
 	return text
+
+
+## "Kept: 3 Spirit Herbs (they feed your cultivation)": sellable stacks Sell all leaves alone
+## because using them gives qi. "" when there are none.
+static func kept_text(c: CharacterData, data: GameData, stock_tags: Array, buy_tags: Array = []) -> String:
+	var worn: Array = c.equipment.values()
+	var parts: Array[String] = []
+	for id: String in Items.buyback_ids(c, data, stock_tags, buy_tags):
+		if not worn.has(id) and Items.feeds_cultivation(data, id):
+			parts.append("%d %s" % [c.item_count(id), Items.item_plural(data, id, c.item_count(id))])
+	if parts.is_empty():
+		return ""
+	return "Kept: %s (they feed your cultivation)" % ", ".join(parts)
 
 
 func _sell_all() -> void:
