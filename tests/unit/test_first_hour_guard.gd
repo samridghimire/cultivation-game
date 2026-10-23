@@ -21,10 +21,9 @@ func test_chores_and_pills_reach_qi_refining_within_30_days() -> void:
 	var clock := _root().get_node("GameClock")
 	var reached := 0
 	for s in range(1, SEEDS + 1):
-		var r: Dictionary = FirstHour.play(gs, clock, s, 1)
+		var r: Dictionary = FirstHour.play_cached(gs, clock, s, 1)
 		if r["layer_day"].has(1) and int(r["layer_day"][1]) <= 30:
 			reached += 1
-		gs.end_session()
 	assert_true(reached >= 4, "only %d of %d newcomers reached Qi Refining 1st Layer within 30 days" % [reached, SEEDS])
 
 
@@ -106,9 +105,8 @@ func test_first_year_loses_few_fights() -> void:
 	var clock := _root().get_node("GameClock")
 	var worst := 0
 	for s in range(1, SEEDS + 1):
-		var r: Dictionary = FirstHour.play(gs, clock, s, 12)
+		var r: Dictionary = FirstHour.play_cached(gs, clock, s, 12)
 		worst = maxi(worst, int(r["fights_lost"]))
-		gs.end_session()
 	assert_true(worst <= MAX_FIGHTS_LOST, "a newcomer lost %d fights in 12 months (limit %d)" % [worst, MAX_FIGHTS_LOST])
 
 
@@ -120,13 +118,12 @@ func test_curious_player_first_year() -> void:
 	var clock := _root().get_node("GameClock")
 	var reached := 0
 	for s in range(1, SEEDS + 1):
-		var r: Dictionary = FirstHour.play(gs, clock, s, 12, true)
+		var r: Dictionary = FirstHour.play_cached(gs, clock, s, 12, true)
 		assert_true(r["player"].alive, "seed %d: the curious player died" % s)
 		for m in range(1, r["month_lines"].size()):
 			assert_false(r["month_lines"][m].is_empty(), "seed %d: month %d logged nothing" % [s, m + 1])
 		if r["layer_day"].has(3) and int(r["layer_day"][3]) <= 360:
 			reached += 1
-		gs.end_session()
 	assert_true(reached >= 4, "only %d of %d curious players reached QR3 within a year" % [reached, SEEDS])
 
 
@@ -135,11 +132,10 @@ func test_curious_player_first_year() -> void:
 func test_curious_month_records_more_than_two_kinds() -> void:
 	var gs := _root().get_node("GameState")
 	var clock := _root().get_node("GameClock")
-	var r: Dictionary = FirstHour.play(gs, clock, 1, 12, true)
+	var r: Dictionary = FirstHour.play_cached(gs, clock, 1, 12, true)
 	var most := 0
 	for m in range(6, r["kinds"].size()):
 		most = maxi(most, int(r["kinds"][m]))
-	gs.end_session()
 	assert_true(most > 2, "no curious month after month 6 recorded more than 2 kinds (best %d)" % most)
 
 

@@ -62,6 +62,19 @@ static var contribution_log := {"pill_days": [], "pill": 0, "body": 0, "qi_items
 const TRIAL_MIN_ODDS := 0.7
 
 
+## PERF-004: unit tests that only read a run's result share one run per (seed, months, curious, no_help, wait, flags).
+## A run is deterministic for those inputs; tests that read the statics (wolf_win_day, the logs) or pass a hook call play().
+static var _memo := {}
+
+
+static func play_cached(gs: Node, clock: Node, seed_value: int, months: int, curious: bool = false, no_help: bool = false, wait_for_pill: int = 0) -> Dictionary:
+	var key := [seed_value, months, curious, no_help, wait_for_pill, follow_defence, practise_hint, attempt_trials, heal_injuries, spar_hint, min_mission_odds, chase_best_mission, buy_qi, shop_armor, spend_contribution]
+	if not _memo.has(key):
+		_memo[key] = play(gs, clock, seed_value, months, curious, Callable(), no_help, wait_for_pill)
+		gs.end_session()
+	return _memo[key]
+
+
 static func play(gs: Node, clock: Node, seed_value: int, months: int, curious: bool = false, month_hook: Callable = Callable(), no_help: bool = false, wait_for_pill: int = 0) -> Dictionary:
 	gs.rng.seed = seed_value
 	var rng := RandomNumberGenerator.new()

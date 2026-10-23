@@ -71,7 +71,7 @@ func test_sim_records_first_win_and_style() -> void:
 func test_play_logs_breakthrough_attempts() -> void:
 	var gs := _root().get_node("GameState")
 	var clock := _root().get_node("GameClock")
-	var r: Dictionary = preload("res://tests/sim/first_hour.gd").play(gs, clock, 3, 36, true)
+	var r: Dictionary = preload("res://tests/sim/first_hour.gd").play_cached(gs, clock, 3, 36, true)
 	assert_true(r.has("breaks") and r.has("bottleneck_day"))
 	var seen := false
 	var qr: int = gs.data.realm_index_of("qi_refining")
@@ -87,7 +87,6 @@ func test_play_logs_breakthrough_attempts() -> void:
 			assert_true(r["bottleneck_day"].has(a["from_realm"]), "success without a bottleneck day")
 	assert_gt(foundation_attempts, 0, "seed 3 attempts Foundation Establishment inside 36 months")
 	assert_true(seen, "seed 3 reaches Foundation inside 36 months (first Foundation breakthrough logged)")
-	gs.end_session()
 
 
 ## QA-076: wait_for_pill delays the attempt by whole months, never past the limit, and 0 changes nothing.
@@ -95,11 +94,9 @@ func test_wait_for_pill_delays_the_attempt() -> void:
 	var gs := _root().get_node("GameState")
 	var clock := _root().get_node("GameClock")
 	var first = preload("res://tests/sim/first_hour.gd")
-	var base: Dictionary = first.play(gs, clock, 5, 36, true)
-	gs.end_session()
+	var base: Dictionary = first.play_cached(gs, clock, 3, 36, true)  # waited_days is 0 for any default run, so share the seed-3 run QA-066 already plays
 	assert_eq(int(base["waited_days"]), 0, "no waiting by default")
-	var waited: Dictionary = first.play(gs, clock, 5, 36, true, Callable(), false, 60)
-	gs.end_session()
+	var waited: Dictionary = first.play_cached(gs, clock, 5, 36, true, false, 60)
 	assert_true(int(waited["waited_days"]) <= 60 and int(waited["waited_days"]) % 30 == 0, "waits whole months up to the limit")
 
 
@@ -110,8 +107,8 @@ func test_curious_sim_takes_the_foundation_pill() -> void:
 	var qr: int = gs.data.realm_index_of("qi_refining")
 	var with_pill := 0
 	# Any of a few seeds will do: new encounters shift the roll order, and one seed may never save up in time.
-	for seed_value: int in [1, 2, 3, 4, 5, 6, 7, 8]:
-		var r: Dictionary = preload("res://tests/sim/first_hour.gd").play(gs, clock, seed_value, 36, true)
+	for seed_value: int in [3, 1, 2, 4, 5, 6, 7, 8]:
+		var r: Dictionary = preload("res://tests/sim/first_hour.gd").play_cached(gs, clock, seed_value, 36, true)
 		for a: Dictionary in r["breaks"]:
 			if int(a["from_realm"]) == qr and a["pill"]:
 				with_pill += 1
@@ -119,7 +116,6 @@ func test_curious_sim_takes_the_foundation_pill() -> void:
 		if with_pill > 0:
 			break
 	assert_gt(with_pill, 0, "a curious seed buys and takes the Foundation Establishment Pill")
-	gs.end_session()
 
 
 ## QA-123: following the practice hint lifts Iron Fist to level 3 early and records the first Mist Wolf win day.
