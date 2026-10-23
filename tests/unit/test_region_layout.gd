@@ -79,3 +79,28 @@ func test_meditation_labels_state_total_qi() -> void:
 				continue
 			var total: float = float(region.get("qi_density", 1.0)) * float(place.get("qi_density", 1.0))
 			assert_true(absf(float(m.get_string(1)) - total) <= 0.1, "%s: label %s but total qi is %.2f" % [region["id"], place["display_name"], total])
+
+
+## WU-324: no two name labels in a region overlap before the runtime spread (so the lift is a fallback,
+## not the layout). Rects come from Interactable.label_rect, the font width the world uses.
+func test_place_labels_do_not_overlap() -> void:
+	for region: Dictionary in data().regions.values():
+		var rects: Array = []
+		var entries: Array = []
+		for place: Dictionary in region.get("places", []):
+			entries.append([String(place.get("display_name", place["type"])), place, [30, 30]])
+		for abode: Dictionary in region.get("abodes", []):
+			entries.append([String(abode.get("display_name", abode["id"])), abode, [80, 60]])
+		if region.has("family_home"):
+			entries.append(["Family Home", region["family_home"], [90, 64]])
+		for e: Array in entries:
+			var node := Interactable.new()
+			var pos: Array = e[1]["pos"]
+			var sz: Array = e[1].get("size", e[2])
+			node.position = Vector2(float(pos[0]), float(pos[1]))
+			node.size = Vector2(float(sz[0]), float(sz[1]))
+			rects.append([e[0], node.label_rect(e[0])])
+			node.free()
+		for i in rects.size():
+			for j in range(i + 1, rects.size()):
+				assert_false((rects[i][1] as Rect2).intersects(rects[j][1]), "%s: label %s overlaps label %s" % [region["id"], rects[i][0], rects[j][0]])
