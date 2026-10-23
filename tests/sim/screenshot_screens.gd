@@ -1145,6 +1145,7 @@ func _start_techniques_shot(gs: Node) -> void:
 		root.content_scale_factor = 1.0})
 
 
+## WU-298: the character is at the 5th layer with Iron Fist 3 so the board shows a "(best pay)" row.
 ## WU-290: `--missions-shot` writes missions_list_<size>.png and missions_ranks_<size>.png: the mission board for an Azure Cloud
 ## outer disciple (Qi Refining 3rd layer, Iron Fist level 2) in Qingshi Village; list labels carry the odds, the Ranks tab the trial line.
 func _start_missions_shot(gs: Node) -> void:
@@ -1155,9 +1156,9 @@ func _start_missions_shot(gs: Node) -> void:
 	gs.pending_event = ""
 	gs.current_region = "qingshi_village"
 	c.realm_index = 1
-	c.stage = 2
+	c.stage = 4
 	c.sect = {"id": "azure_cloud_sect", "rank": 0, "contribution": 50}
-	c.techniques = {"iron_fist": {"level": 2, "xp": 0.0}}
+	c.techniques = {"iron_fist": {"level": 3, "xp": 0.0}}
 	world = load("res://src/world/world.tscn").instantiate()
 	root.add_child(world)
 	hud = world.get_node("HUD")
