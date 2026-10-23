@@ -115,6 +115,10 @@ func _unhandled_input(event: InputEvent) -> void:
 func open() -> void:
 	_selected = ""
 	_tab = "missions"
+	var pill := breakthrough_pill_id(GameState.player, GameState.data)
+	if pill != "":  # WU-328: the claim goal leads here, so open on the treasury with the pill selected
+		_tab = "shop"
+		_selected = pill
 	_rebuild()
 	visible = true
 	_focus_selected.call_deferred()
@@ -339,6 +343,22 @@ func _rebuild() -> void:
 		_rebuild_missions()
 
 
+## WU-328: the treasury item the HUD's claim goal names (Guidance.sect_pill_claim), "" when the goal is not up.
+static func breakthrough_pill_id(p: CharacterData, data: GameData) -> String:
+	if Guidance.sect_pill_claim(p, data) == "":
+		return ""
+	return String(Guidance.sect_pill_entry(p, data).get("item_id", ""))
+
+
+## "Foundation Establishment Pill (250)", plus " (your breakthrough)" on the pill the claim goal names.
+static func shop_label(p: CharacterData, data: GameData, item_id: String) -> String:
+	var entry := Sects.shop_entry(p, data, item_id)
+	var label := "%s (%d)" % [data.items.get(item_id, {}).get("name", item_id), int(entry["contribution"])]
+	if item_id == breakthrough_pill_id(p, data):
+		label += " (your breakthrough)"
+	return label
+
+
 func _rebuild_shop() -> void:
 	var p := GameState.player
 	var data := GameState.data
@@ -357,7 +377,7 @@ func _rebuild_shop() -> void:
 		_add_hint("The sect treasury has nothing to offer you.")
 	for item_id in ids:
 		var entry := Sects.shop_entry(p, data, item_id)
-		var label := "%s (%d)" % [data.items.get(item_id, {}).get("name", item_id), int(entry["contribution"])]
+		var label := shop_label(p, data, item_id)
 		_add_entry(item_id, label, Sects.check_purchase(p, data, item_id) == "")
 	_show_details()
 

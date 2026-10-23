@@ -485,3 +485,35 @@ func test_shop_detail_lines_say_what_qi_is_worth() -> void:
 	assert_true(pill.contains("of meditation"), pill)
 	var talisman := "\n".join(MissionBoard.shop_detail_lines(c, data(), "golden_bell_talisman", "qingshi_village", {}))
 	assert_false(talisman.contains("meditation"), talisman)
+
+
+func test_shop_label_marks_the_breakthrough_pill() -> void:
+	var d := data()
+	var c := _disciple()
+	c.realm_index = 1
+	c.stage = 6
+	c.sect = {"id": "azure_cloud_sect", "rank": 1, "contribution": 300, "spent": 0}
+	var pill := MissionBoard.breakthrough_pill_id(c, d)
+	assert_eq(pill, "foundation_establishment_pill")
+	assert_eq(MissionBoard.shop_label(c, d, pill), "Foundation Establishment Pill (250) (your breakthrough)")
+	for entry: Dictionary in Sects.shop_items(c, d):
+		if String(entry["item_id"]) != pill:
+			assert_false(MissionBoard.shop_label(c, d, String(entry["item_id"])).contains("your breakthrough"))
+	c.stage = 1
+	assert_eq(MissionBoard.breakthrough_pill_id(c, d), "")
+	assert_false(MissionBoard.shop_label(c, d, pill).contains("your breakthrough"))
+
+
+func test_board_opens_on_the_treasury_when_the_claim_goal_is_up() -> void:
+	var gs := _root().get_node("GameState")
+	var c := _disciple()
+	c.realm_index = 1
+	c.stage = 6
+	c.sect = {"id": "azure_cloud_sect", "rank": 1, "contribution": 300, "spent": 0}
+	gs.start_session(c)
+	var board := MissionBoard.new()
+	board.open()
+	assert_eq(board._tab, "shop")
+	assert_eq(board._selected, "foundation_establishment_pill")
+	board.free()
+	gs.end_session()
