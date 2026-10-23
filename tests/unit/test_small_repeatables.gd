@@ -13,3 +13,16 @@ func test_small_change_repeatables_have_a_realm_ceiling() -> void:
 		if only_stones:
 			assert_true(int(items["spirit_stone"]) > 10, "%s pays <= 10 stones forever" % e["id"])
 		assert_false(items.keys() == ["spirit_herb"], "%s gives only a common herb forever" % e["id"])
+
+
+func test_mortal_home_fights_have_a_realm_ceiling() -> void:
+	for e: Dictionary in data().encounters.values():
+		if not e.has("enemy") or e.has("choices"):
+			continue
+		var tags: Array = e.get("tags", [])
+		if not ("village" in tags or "city" in tags):
+			continue
+		var foe: Variant = data().enemies.get(e["enemy"])
+		if foe == null or str(foe.realm) != "mortal":
+			continue
+		assert_true(e.has("max_realm"), "%s: a mortal foe at home never fades" % e["id"])
