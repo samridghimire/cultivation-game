@@ -510,6 +510,13 @@ static func _buy_breakthrough_pill(gs: Node, c: CharacterData, done: Dictionary)
 	done["saving"] = false
 	if c.realm_index != 1 or c.stage < 6 or c.breakthrough_pill != "" or not Guidance.breakthrough_items(c, gs.data).is_empty():
 		return
+	# QA-157: an Inner Disciple claims the pill from the sect treasury (GUIDE-132) instead of paying stones for it.
+	if Guidance.sect_pill_claimable(c, gs.data):
+		var claim_id := String(Guidance.sect_pill_entry(c, gs.data)["item_id"])
+		if Sects.check_purchase(c, gs.data, claim_id) == "":
+			gs.buy_with_contribution(claim_id)
+			if c.item_count(claim_id) > 0:
+				return
 	var pill := Guidance.next_realm_pill(c, gs.data)
 	if pill.is_empty():
 		return
