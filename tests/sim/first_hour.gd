@@ -60,6 +60,11 @@ static var qi_log := {"bought": 0, "stones": 0, "used": 0, "qi": 0}
 static var spend_contribution := false
 static var contribution_log := {"pill_days": [], "pill": 0, "body": 0, "qi_items": 0, "qi_cost": 0, "qi_used": 0, "qi": 0}
 const TRIAL_MIN_ODDS := 0.7
+## QA-145: once a month, before meditating, move to the faster spot Guidance.far_qi_offer names when it saves >= 30 days
+## net of the round trip, and stay there (the new region is home from then on).
+static var far_qi := false
+static var far_qi_log := {"moved": 0, "month": [], "road_days": []}
+const FAR_QI_MIN_SAVED := 30
 
 
 ## PERF-004: unit tests that only read a run's result share one run per (seed, months, curious, no_help, wait, flags).
@@ -111,7 +116,10 @@ static func play(gs: Node, clock: Node, seed_value: int, months: int, curious: b
 			break
 		bus.clear_history()  # the log is capped, which would hide a month's lines from the count
 		var mark := 0
-		gs.cultivate(Calendar.DAYS_PER_MONTH, SPRING_DENSITY)
+		var qi_density := SPRING_DENSITY
+		if far_qi:
+			qi_density = _move_for_qi(gs, c, clock, month, qi_density, out)
+		gs.cultivate(Calendar.DAYS_PER_MONTH, qi_density)
 		if not c.alive:
 			break
 		var broke := false
@@ -454,6 +462,35 @@ static func _attempt_open_trial(gs: Node, c: CharacterData, done: Dictionary, ki
 ## QA-072: from Qi Refining 7th Layer, when Guidance.next_realm_pill names a pill a merchant sells, stop optional
 ## spending (done["saving"]) once stones reach 60% of its price and buy it as soon as they cover it (travelling to
 ## the merchant's region and back). The pill is taken right before the attempt (see play).
+## QA-145: see far_qi. Returns the density to meditate at this month: the offered spot's after a move, else `density`
+## (the Spirit Spring while still in Qingshi; the best local spot once the player has moved).
+static func _move_for_qi(gs: Node, c: CharacterData, clock: Node, month: int, density: float, out: Dictionary) -> float:
+	if out.has("far_qi_region"):
+		return float(Guidance.best_qi_in_region(c, gs.data, gs.current_region, gs.world_flags)["density"])
+	var offer := Guidance.far_qi_offer(c, gs.data, gs.current_region, gs.world_flags, density)
+	if offer.is_empty() or int(offer["away"]) <= 0 or int(offer["days_here"]) - int(offer["days_far"]) - 2 * int(offer["away"]) < FAR_QI_MIN_SAVED:
+		return density
+	var target := String(offer["region"])
+	var start: int = clock.total_days
+	for hop in 12:
+		if gs.current_region == target or not c.alive:
+			break
+		var next := Guidance.first_hop(c, gs.data, gs.current_region, target)
+		if next == "":
+			break
+		var before: String = gs.current_region
+		gs.travel(next)
+		if gs.current_region == before:
+			break
+	if gs.current_region != target:
+		return density
+	far_qi_log["moved"] += 1
+	far_qi_log["month"].append(month + 1)
+	far_qi_log["road_days"].append(clock.total_days - start)
+	out["far_qi_region"] = target
+	return float(Guidance.best_qi_in_region(c, gs.data, target, gs.world_flags)["density"])
+
+
 static func _buy_breakthrough_pill(gs: Node, c: CharacterData, done: Dictionary) -> void:
 	done["saving"] = false
 	if c.realm_index != 1 or c.stage < 6 or c.breakthrough_pill != "" or not Guidance.breakthrough_items(c, gs.data).is_empty():

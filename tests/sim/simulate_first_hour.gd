@@ -48,6 +48,8 @@ func _run() -> void:
 	FirstHour.qi_log = {"bought": 0, "stones": 0, "used": 0, "qi": 0}
 	FirstHour.spend_contribution = curious and args.has("--spend-contribution")  # QA-148
 	FirstHour.contribution_log = {"pill_days": [], "pill": 0, "body": 0, "qi_items": 0, "qi_cost": 0, "qi_used": 0, "qi": 0}
+	FirstHour.far_qi = args.has("--far-qi")  # QA-145
+	FirstHour.far_qi_log = {"moved": 0, "month": [], "road_days": []}
 	FirstHour.spar_hint = curious and not args.has("--no-spar-hint")  # QA-138
 	FirstHour.spar_log = {"bouts": 0, "refused": []}
 	FirstHour.bounty_log = {"offered": {}, "taken": {}}
@@ -61,7 +63,7 @@ func _run() -> void:
 	for a in args:
 		if a.begins_with("--seed="):
 			only_seed = int(a.substr(7))
-		elif a != "--curious" and a != "--trace" and a != "--zero" and a != "--forced" and a != "--no-trial" and a != "--no-heal" and a != "--no-spar-hint" and a != "--blind-missions" and a != "--one-mission" and a != "--long-hints" and a != "--buy-qi" and a != "--spend-contribution" and a != "--no-armor":
+		elif a != "--curious" and a != "--trace" and a != "--zero" and a != "--forced" and a != "--no-trial" and a != "--no-heal" and a != "--no-spar-hint" and a != "--blind-missions" and a != "--one-mission" and a != "--long-hints" and a != "--buy-qi" and a != "--spend-contribution" and a != "--no-armor" and a != "--far-qi":
 			nums.append(int(a))
 	var seeds := nums[0] if nums.size() > 0 else 30
 	var months := nums[1] if nums.size() > 1 else 12
@@ -244,6 +246,9 @@ func _run() -> void:
 	if FirstHour.spend_contribution:
 		var cl: Dictionary = FirstHour.contribution_log
 		print("Contribution spent (QA-148): pill %d seeds (median day %.0f), body art %d contribution, qi pills %d for %d contribution, used %d, qi %d" % [cl["pill_days"].size(), _median(cl["pill_days"]), cl["body"], cl["qi_items"], cl["qi_cost"], cl["qi_used"], cl["qi"]])
+	if FirstHour.far_qi:
+		var fl: Dictionary = FirstHour.far_qi_log
+		print("Far qi (QA-145): moved in %d/%d seeds, median month %.0f, days on the road %.0f" % [fl["moved"], seeds, _median(fl["month"]), _median(fl["road_days"])])
 	print("Road encounters (QA-118): %d/%d seeds met one; %s" % [road_seeds, seeds, str(road_seen)])
 	if zero:
 		print("Fights rated 0%%: %d of %d, by source: %s" % [zero_by.values().reduce(func(a: int, b: int) -> int: return a + b, 0), fights_seen["n"], str(zero_by)])
