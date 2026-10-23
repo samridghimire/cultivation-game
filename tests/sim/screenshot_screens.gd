@@ -1245,6 +1245,40 @@ func _start_missions_shot(gs: Node) -> void:
 		board.open()
 		board._set_tab("rank")
 		board._focus_selected.call_deferred(), "close": board.close})
+	# WU-339: one artifact life left and a Cull the Mist Wolves rated below 90%: the board warns the fight could be the end
+	# and the HUD sect line (GUIDE-148) does not steer the player to it.
+	var saved: Dictionary = {}
+	shots.append({"name": "missions_low_lives_" + size_tag, "open": func() -> void:
+		saved["lives"] = c.artifact_lives  # filled in place: a lambda cannot reassign the outer variable
+		saved["realm"] = c.realm_index
+		saved["stage"] = c.stage
+		saved["techniques"] = c.techniques.duplicate(true)
+		saved["inventory"] = c.inventory.duplicate(true)
+		c.artifact_lives = 1
+		c.realm_index = 0
+		c.stage = 2
+		c.techniques = {"iron_fist": {"level": 1, "xp": 0.0}}
+		c.inventory = {}
+		hud.get("_banner").visible = false
+		root.get_node("EventBus").player_changed.emit()
+		var wolves: Dictionary = gs.data.enemies[String(gs.data.sect_missions["cull_mist_wolves"]["enemy"])]
+		var odds: float = Combat.win_chance(c, gs.data, wolves)
+		assert(odds < 0.9, "wolves rated %.2f, not below 90%%" % odds)
+		board.open()
+		board._selected = "cull_mist_wolves"
+		board._show_details()
+		var warning: String = board.low_artifact_warning(c, gs.data, "cull_mist_wolves")
+		assert(warning.contains("Losing this fight could be the end."), "no low-lives warning (odds %.2f): %s" % [odds, warning])
+		assert((board._danger as Label).text.contains("Losing this fight could be the end."), (board._danger as Label).text)
+		var hint: String = (hud.get("_hint") as Label).text
+		assert(not hint.contains("Cull the Mist Wolves"), "HUD names the wolves: " + hint)
+		print("missions-shot low lives: ", hint, " | ", (board._danger as Label).text), "close": func() -> void:
+			board.close()
+			c.artifact_lives = saved["lives"]
+			c.realm_index = saved["realm"]
+			c.stage = saved["stage"]
+			c.techniques = saved["techniques"]
+			c.inventory = saved["inventory"]})
 
 
 ## WU-253: `--map-shot` writes map_sells_<size>.png, the world map with Fallen Star Market selected (its "Sells:" line).
