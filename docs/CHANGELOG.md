@@ -2,6 +2,19 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-23 [GUIDE-162] From Foundation on, practice advice names the level to train a technique to ("practise Iron Fist to level 5 (now 2)").
+- 2026-10-23 [GUIDE-160] When every sect mission is too dangerous at a realm's last stage, the hint says to break through first.
+- 2026-10-23 [C-239] Help explains that the sect treasury hands out the sect's own cultivation method.
+- 2026-10-23 [C-235] Help explains what a hopeless trial hint and the cave abode hint tell you.
+- 2026-10-23 [WU-350] A screenshot check of the cave abode hint naming the Waterfall Cave and its price.
+- 2026-10-23 [WU-349] A screenshot check of the injury hint naming the sect treasury's healing pill.
+- 2026-10-23 [GUIDE-156] Shown fight odds are steadier: 120 simulated fights per rating instead of 40.
+- 2026-10-23 [WU-348] The sect treasury shows how fast a method manual gathers qi compared with yours.
+- 2026-10-23 [GUIDE-161] The injury hint names the healing pill your sect treasury hands out.
+- 2026-10-23 [C-237] Sending the hopeful youths to the sect hall now earns a rogue some renown too.
+- 2026-10-23 [GUIDE-159] A fighter with no combat technique is told to learn one instead of "practise".
+- 2026-10-23 [WU-347] The hint screenshot checks run to the end again.
+- 2026-10-23 [C-236] Wild boars and alley thugs stop bothering cultivators past Qi Refining.
 - 2026-10-23 [QA-125] The sim shows practised fighting techniques, more than gear, are what a new Foundation cultivator lacks.
 - 2026-10-23 [GUIDE-154] The sect rank goal says which foe the promotion trial puts in front of you and your odds.
 - 2026-10-23 [C-234] Tiny repeatable finds (a few stones, a common herb) stop appearing once you outgrow them.
