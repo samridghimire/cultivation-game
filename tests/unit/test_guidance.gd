@@ -4305,6 +4305,27 @@ func test_thin_defence_hint_prefers_the_sect_treasury() -> void:
 	assert_false(Guidance.thin_defence_hint(c, d, "qingshi_village").contains("your sect treasury"))
 
 
+## GUIDE-157: the body art the treasury can pay for leads the thin-defence line, before the far armor shop.
+func test_thin_defence_hint_leads_with_the_treasury_body_art() -> void:
+	var d := data()
+	var c := _cooldown_player(d)
+	c.realm_index = Guidance.THIN_DEFENCE_REALM
+	c.techniques = {}
+	c.equipment = {}
+	c.inventory = {"spirit_stone": 480}
+	c.sect["contribution"] = 500
+	var line := Guidance.thin_defence_hint(c, d, "qingshi_village")
+	var head := line.substr(0, Guidance.HEADLINE_CHARS)
+	assert_true(head.contains("Stone Skin Tempering") and head.contains("sect treasury"), line)
+	assert_true(line.contains("you have 500") and line.ends_with("Foundation foes hit hard."), line)
+	assert_false(line.contains("Learn a body technique"), line)
+	c.sect["contribution"] = 10
+	line = Guidance.thin_defence_hint(c, d, "qingshi_village")
+	assert_false(line.contains("Claim "), line)
+	c.sect = {}
+	assert_false(Guidance.thin_defence_hint(c, d, "qingshi_village").contains("Claim "))
+
+
 func test_secret_realm_hint_names_place_and_cost() -> void:
 	var d := data()
 	var c := _veteran()

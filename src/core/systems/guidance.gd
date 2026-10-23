@@ -166,6 +166,10 @@ static func thin_defence_hint(c: CharacterData, data: GameData, region_id: Strin
 	# GUIDE-125: the shop first (the HUD shows only HEADLINE_CHARS), then the body art, the reason last.
 	var line := "Your defence is thin."
 	var offer := sell_offer(c, data, region_id, flags) if region_id != "" else {}
+	# GUIDE-157: a body art the sect treasury can pay for now leads, before the (possibly far) armor shop.
+	var treasury := _body_manual_treasury(c, data) if not has_body else {}
+	if not treasury.is_empty():
+		line += " Claim %s from your sect treasury (%d contribution, you have %d)." % [data.items[treasury["item_id"]]["name"], int(treasury["contribution"]), Sects.contribution_balance(c)]
 	if not has_armor:
 		var armor_start := line.length()
 		if region_id != "":
@@ -182,7 +186,7 @@ static func thin_defence_hint(c: CharacterData, data: GameData, region_id: Strin
 						line += " The %s sells %s for %d stones.%s" % [merchant_selling(data, region_id, loot_armor), data.items[loot_armor]["name"], merchant_price(c, data, region_id, loot_armor), _sell_first_clause(offer)]
 		if line.length() == armor_start:
 			line += " Wear armor."
-	if not has_body:
+	if not has_body and treasury.is_empty():
 		line += " Learn a body technique such as Stone Skin Tempering."
 		if region_id != "":
 			var source := body_manual_source(c, data, region_id)
