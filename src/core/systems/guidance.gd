@@ -698,6 +698,7 @@ static func _sell_hint(c: CharacterData, data: GameData, region_id: String) -> S
 static func sell_offer(c: CharacterData, data: GameData, region_id: String) -> Dictionary:
 	if region_id == "" or not data.regions.has(region_id):
 		return {}
+	var keep := Sects.deliver_needs(c, data)
 	var best_total := 0
 	var best_name := ""
 	var best_goods := ""
@@ -706,7 +707,7 @@ static func sell_offer(c: CharacterData, data: GameData, region_id: String) -> D
 			continue
 		var stock: Array = place.get("stock_tags", [])
 		var buy: Array = place.get("buy_tags", [])
-		var ids := Items.bulk_sell_ids(c, data, stock, buy)
+		var ids := Items.bulk_sell_ids(c, data, stock, buy, keep)
 		var total := Items.bulk_sell_total(c, data, ids)
 		if total <= best_total:
 			continue

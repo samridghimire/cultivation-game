@@ -493,7 +493,7 @@ func _rebuild() -> void:
 
 
 func _loot_ids() -> Array:
-	return Items.bulk_sell_ids(GameState.player, GameState.data, _stock_tags, _buy_tags)
+	return Items.bulk_sell_ids(GameState.player, GameState.data, _stock_tags, _buy_tags, Sects.deliver_needs(GameState.player, GameState.data, GameState.world_flags))
 
 
 func _refresh_sell_all() -> void:

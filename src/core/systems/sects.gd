@@ -519,6 +519,20 @@ static func available_missions(c: CharacterData, data: GameData, flags: Dictiona
 	return out
 
 
+## Items (id -> count, summed) that `c`'s sect deliver-style missions are waiting on: missions with
+## `requires.items` that `c` could take now except for the items (rank/realm met, not on cooldown).
+static func deliver_needs(c: CharacterData, data: GameData, flags: Dictionary = {}) -> Dictionary:
+	var out := {}
+	for id: String in available_missions(c, data, flags):
+		var mission: Dictionary = data.sect_missions[id]
+		var needed: Dictionary = mission.get("requires", {}).get("items", {})
+		if needed.is_empty() or mission_rank_realm_reason(c, data, mission) != "" or mission_cooldown_left(c, id) > 0:
+			continue
+		for item_id: String in needed:
+			out[item_id] = int(out.get(item_id, 0)) + int(needed[item_id])
+	return out
+
+
 ## Days until `c` may take `mission_id` again (0 = ready).
 static func mission_cooldown_left(c: CharacterData, mission_id: String) -> int:
 	return maxi(0, int(c.mission_cooldowns.get(mission_id, 0)) - c.age_days)

@@ -305,12 +305,12 @@ static func feeds_cultivation(data: GameData, item_id: String) -> bool:
 
 
 ## Ids `sell all loot` may sell: buyback_ids minus anything worn, manuals and
-## scrolls, qi items that feed cultivation, readied combat talismans, breakthrough pills and items whose use/equip carries a warning.
-static func bulk_sell_ids(c: CharacterData, data: GameData, stock_tags: Array, buy_tags: Array = []) -> Array:
+## scrolls, qi items that feed cultivation, readied combat talismans, breakthrough pills, items in `keep` (item id -> count, e.g. Sects.deliver_needs) and items whose use/equip carries a warning.
+static func bulk_sell_ids(c: CharacterData, data: GameData, stock_tags: Array, buy_tags: Array = [], keep: Dictionary = {}) -> Array:
 	var worn: Array = c.equipment.values()
 	return buyback_ids(c, data, stock_tags, buy_tags).filter(func(id: String) -> bool:
 		var item: Dictionary = data.items[id]
-		if worn.has(id) or c.readied_talismans.has(id) or category(item) == "Manuals & Scrolls":
+		if keep.has(id) or worn.has(id) or c.readied_talismans.has(id) or category(item) == "Manuals & Scrolls":
 			return false
 		if float(item.get("effects", {}).get("breakthrough_bonus", 0.0)) > 0.0:
 			return false

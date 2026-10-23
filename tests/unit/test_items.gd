@@ -86,3 +86,16 @@ func test_buyers_and_recipes_using() -> void:
 	assert_true(Items.recipes_using(d, "boar_hide").has("Boar Hide Jerkin"))
 	assert_eq(Items.buyers(d, "no_such_item"), [])
 	assert_eq(Items.recipes_using(d, "no_such_item").size(), 0)
+
+
+## GUIDE-119: sell-all keeps what the sect's deliver missions need; a rogue's are sold.
+func test_bulk_sell_keeps_deliver_needs() -> void:
+	var c := new_character()
+	c.realm_index = 1
+	c.inventory = {"cold_iron": 2}
+	var tags := ["herb", "ore", "pill", "equipment"]
+	var rogue_ids := Items.bulk_sell_ids(c, data(), tags, [], Sects.deliver_needs(c, data()))
+	assert_true(rogue_ids.has("cold_iron"), "a rogue sells them")
+	Sects.join(c, data(), "azure_cloud_sect")
+	var ids := Items.bulk_sell_ids(c, data(), tags, [], Sects.deliver_needs(c, data()))
+	assert_false(ids.has("cold_iron"), "outer disciple keeps them")

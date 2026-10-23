@@ -207,3 +207,18 @@ func test_rank_zero_fight_missions_are_fair_at_their_gate() -> void:
 		assert_false(danger in ["Dangerous", "Deadly"], "%s is rated %s for a typical player at its gate" % [id, danger])
 		checked += 1
 	assert_true(checked > 0, "some rank-0 fight mission was checked")
+
+
+## GUIDE-119: items a takeable deliver mission waits on are listed; rogues, rank gaps and cooldowns list nothing.
+func test_deliver_needs() -> void:
+	var c := new_character()
+	c.realm_index = 1
+	assert_eq(Sects.deliver_needs(c, data()), {}, "rogue")
+	Sects.join(c, data(), "azure_cloud_sect")
+	var needs := Sects.deliver_needs(c, data())
+	assert_true(int(needs.get("bone_setting_salve", 0)) >= 2)
+	assert_true(int(needs.get("spirit_herb", 0)) >= 3)
+	assert_false(needs.has("blood_ginseng"), "another sect's tithe")
+	for id: String in Sects.available_missions(c, data()):
+		c.mission_cooldowns[id] = c.age_days + 100
+	assert_eq(Sects.deliver_needs(c, data()), {}, "all on cooldown")
