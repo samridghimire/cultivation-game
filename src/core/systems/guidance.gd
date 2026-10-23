@@ -816,6 +816,27 @@ static func unexplored_routes(c: CharacterData, data: GameData, region_id: Strin
 	return out
 
 
+## GUIDE-145: "<Realm> is open here (entry N stones, open D more): delve for treasure." (or "... in <Region> (<trip> away)")
+## for an open realm `c` can pay for; "" when the entry item or stones are missing or the trip outlasts the opening.
+## Without a `region_id` it keeps the bare "<Realm> is open: delve for treasure."
+static func _secret_realm_line(c: CharacterData, data: GameData, def: Dictionary, region_id: String, today: int) -> String:
+	var name := String(def.get("name", def.get("id", "")))
+	if region_id == "":
+		return "%s is open: delve for treasure." % name
+	var entry_item := String(def.get("entry_item", ""))
+	var stones := int(def.get("entry_stones", 0))
+	if (entry_item != "" and c.item_count(entry_item) == 0) or stones > c.item_count("spirit_stone"):
+		return ""
+	var left := SecretRealms.days_until_close(def, today)
+	var cost := " stones, open %s more" % Calendar.format_duration(left)
+	if String(def.get("region", "")) == region_id:
+		return "%s is open here (entry %d%s): delve for treasure." % [name, stones, cost]
+	var trip := route_days(c, data, region_id, String(def.get("region", "")))
+	if trip < 0 or trip > left:
+		return ""
+	return "%s is open in %s (%s away): delve for treasure (entry %d%s)." % [name, Exploration.region_name(data, String(def.get("region", ""))), Calendar.format_duration(trip), stones, cost]
+
+
 static func _untried_feature_hint(c: CharacterData, data: GameData, today: int, people: Dictionary = {}, favor: Dictionary = {}, region_id: String = "") -> String:
 	if c.realm_index < 1 or today < UNTRIED_MIN_DAYS:
 		return ""
@@ -840,7 +861,9 @@ static func _untried_feature_hint(c: CharacterData, data: GameData, today: int, 
 		for realm_id: String in realm_ids:
 			var def: Dictionary = data.secret_realms[realm_id]
 			if SecretRealms.admits(c, data, def) and SecretRealms.is_open(def, today):
-				return "%s is open: delve for treasure." % String(def.get("name", realm_id))
+				var line := _secret_realm_line(c, data, def, region_id, today)
+				if line != "":
+					return line
 	if not _has_sparred(c):
 		var partner := _region_people(c, data, people, favor, region_id, today, "spar")
 		if not partner.is_empty():

@@ -4211,3 +4211,19 @@ func test_thin_defence_hint_prefers_the_sect_treasury() -> void:
 	assert_false(line.contains("your sect treasury"), line)
 	c.sect = {}
 	assert_false(Guidance.thin_defence_hint(c, d, "qingshi_village").contains("your sect treasury"))
+
+
+func test_secret_realm_hint_names_place_and_cost() -> void:
+	var d := data()
+	var c := _veteran()
+	c.realm_index = d.realm_index_of("foundation_establishment")
+	c.life_stats["realm_floors_cleared"] = 0
+	var open_day := 2 * Calendar.DAYS_PER_YEAR + 5
+	c.inventory = {"spirit_stone": 300}
+	var line := Guidance._untried_feature_hint(c, d, open_day, {}, {}, "qingshi_village")
+	assert_true(line.contains("Fallen Star Market") and line.contains("200 stones"), line)
+	c.inventory = {"spirit_stone": 100}
+	assert_false(Guidance._untried_feature_hint(c, d, open_day, {}, {}, "qingshi_village").contains("Fallen Star Vault"), "cannot pay the entry")
+	c.inventory = {"spirit_stone": 300}
+	line = Guidance._untried_feature_hint(c, d, open_day, {}, {}, "fallen_star_market")
+	assert_true(line.contains("Fallen Star Vault is open here"), line)
