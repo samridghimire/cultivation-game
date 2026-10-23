@@ -1604,7 +1604,7 @@ func _start_hint_shot(gs: Node) -> void:
 		clock.total_days = 40
 		gs.current_region = "qingshi_village"
 		root.get_node("EventBus").player_changed.emit()
-	for case: Array in [["hint_trial_", setup_trial, "You face the", "Next steps"], ["hint_trial_fights_", setup_trial, "Sect trial", "Fights you can win"], ["hint_sell_armor_", setup_sell, "Sell your", "Next steps"], ["hint_best_mission_", setup_best, "The best pays", "Next steps"]]:
+	for case: Array in [["hint_trial_", setup_trial, "you face the", "Next steps"], ["hint_trial_fights_", setup_trial, "Sect trial", "Fights you can win"], ["hint_sell_armor_", setup_sell, "Sell your", "Next steps"], ["hint_best_mission_", setup_best, "The best pays", "Next steps"]]:
 		var setup: Callable = case[1]
 		var needle: String = case[2]
 		var heading: String = case[3]

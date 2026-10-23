@@ -163,7 +163,7 @@ func test_sect_hint_names_stipend() -> void:
 	var stones := int(ranks[1]["stipend"]["spirit_stones"])
 	assert_true(_has(Guidance.hints(c, d, 1.0, 20), "Inner Disciple (it pays %d stones a month)" % stones))
 	c.sect["contribution"] = 600
-	assert_true(_has(Guidance.hints(c, d, 1.0, 20), "is open (it pays %d stones a month). Attempt it at a sect hall." % stones))
+	assert_true(_has(Guidance.hints(c, d, 1.0, 20), "The rank pays %d stones a month." % stones))
 	c.sect["rank"] = 1
 	c.realm_index = 3
 	var pill: String = d.items["qi_gathering_pill"]["name"]
@@ -213,7 +213,7 @@ func test_trial_odds_hint() -> void:
 	c.sect["contribution"] = 600
 	var enemy_name: String = d.enemies["azure_sword_examiner"]["name"]
 	var hint := Guidance._sect_hint(c, d)
-	assert_true(hint.contains("You face the " + enemy_name), hint)
+	assert_true(hint.contains("you face the " + enemy_name), hint)
 	assert_true(hint.contains("%d in 100" % roundi(Guidance.trial_odds(c, d) * 100.0)), hint)
 	assert_eq(hint.contains("practise or grow a stage first"), Guidance.trial_odds(c, d) < 0.5)
 	for k: String in c.attributes:
@@ -250,7 +250,7 @@ func test_system_hints() -> void:
 	c.realm_index = 1
 	c.sect = {"id": "azure_cloud_sect", "rank": 0, "contribution": 0}
 	c.inventory["spirit_herb"] = 5
-	assert_true(_has(Guidance.hints(c, d, 1.0, 20), "ready on the mission board"))
+	assert_true(_has(Guidance.hints(c, d, 1.0, 20), "Sect mission ready: ") or _has(Guidance.hints(c, d, 1.0, 20), "The best pays "))
 	c.sect["contribution"] = 600
 	assert_true(_has(Guidance.hints(c, d, 1.0, 20), "The trial for Inner Disciple is open"))
 	var insight_id: String = d.dao_insights.keys()[0]
@@ -3236,13 +3236,13 @@ func test_best_mission_named_in_earn_line() -> void:
 	var lines := Guidance.hints(c, d, 1.0, 20)
 	var found := 0
 	for line: String in lines:
-		if line.contains("Earn ") and (line.contains("The best pays ") or line.contains(" It pays ")):
+		if line.contains("Earn ") and (line.contains("The best pays ") or line.contains("Sect mission ready: ")):
 			found += 1
 			assert_true(line.contains(String(d.sect_missions[best]["name"])))
 	assert_eq(found, 1)
 	for line: String in lines:
-		if not line.begins_with("Earn "):
-			assert_false(line.contains("The best pays ") or line.contains(" It pays "))
+		if not line.contains("to become "):
+			assert_false(line.contains("The best pays ") or line.contains("Sect mission ready: "))
 
 
 func test_best_mission_absent_when_all_on_cooldown() -> void:
@@ -3400,9 +3400,9 @@ func test_best_mission_after_too_dangerous_count() -> void:
 			c.stage = stage
 			c.sect = {"id": "azure_cloud_sect", "rank": 0, "contribution": 0, "spent": 0}
 			var text := Guidance._mission_hint(c, d)
-			if text.contains("too dangerous for you yet).") and (text.contains(" The best pays ") or text.contains(" It pays ")):
+			if text.contains("too dangerous for you yet.") and (text.contains("The best pays ") or text.contains("Sect mission ready: ")):
 				found = true
-				assert_true(text.find("too dangerous for you yet).") < maxi(text.find(" The best pays "), text.find(" It pays ")), text)
+				assert_true(text.find("too dangerous for you yet.") > maxi(text.find("The best pays "), text.find("Sect mission ready: ")), text)
 	assert_true(found, "some stage has both ready and too-dangerous missions")
 
 
@@ -3419,14 +3419,14 @@ func test_sect_hints_name_the_hall() -> void:
 	var hall := _hall_name(d, "qingshi_village")
 	assert_true(hall != "")
 	var lines := Guidance.hints(c, d, 1.0, 20, {}, {}, "qingshi_village")
-	assert_true(_has(lines, "on the mission board at the %s here" % hall))
+	assert_true(_has(lines, "at the %s here" % hall))
 	assert_false(_has(lines, "at a sect hall"))
 	# no region id keeps the generic wording
-	assert_true(_has(Guidance.hints(c, d, 1.0, 20), "on the mission board at a sect hall"))
+	assert_true(_has(Guidance.hints(c, d, 1.0, 20), "at a sect hall"))
 	# the open trial names the hall
 	c.sect["contribution"] = 600
-	assert_true(_has(Guidance.hints(c, d, 1.0, 20, {}, {}, "qingshi_village"), "Attempt it at the %s here" % hall))
-	assert_true(_has(Guidance.hints(c, d, 1.0, 20), "Attempt it at a sect hall"))
+	assert_true(_has(Guidance.hints(c, d, 1.0, 20, {}, {}, "qingshi_village"), "is open at the %s here" % hall))
+	assert_true(_has(Guidance.hints(c, d, 1.0, 20), "is open at a sect hall"))
 
 
 func test_sect_hint_far_hall_names_region() -> void:
@@ -3452,8 +3452,8 @@ func test_single_ready_mission_says_it_pays() -> void:
 		if id != best:
 			c.mission_cooldowns[id] = c.age_days + 30
 	var lines := Guidance.hints(c, d, 1.0, 20, {}, {}, "qingshi_village")
-	assert_true(_has(lines, " It pays "))
-	assert_false(_has(lines, " The best pays "))
+	assert_true(_has(lines, "Sect mission ready: "))
+	assert_false(_has(lines, "The best pays "))
 
 
 func _cooldown_player(d: GameData) -> CharacterData:
@@ -3663,3 +3663,64 @@ func test_injury_line_leads_with_treatment() -> void:
 		if h.begins_with("Treat your injuries"):
 			line = h
 	assert_true(line.contains(" slow your cultivation"), line)
+
+## GUIDE-121: the HUD shows HEADLINE_CHARS of a hint, so the action leads and the rank goal comes last.
+func _line_with(lines: PackedStringArray, needle: String) -> String:
+	for line: String in lines:
+		if line.contains(needle):
+			return line
+	return ""
+
+
+func test_sect_line_leads_with_ready_mission() -> void:
+	var d := data()
+	var c := _qr3_disciple()
+	var best := Guidance.best_mission(c, d)
+	for id: String in d.sect_missions:
+		if id != best:
+			c.mission_cooldowns[id] = c.age_days + 30
+	var line := _line_with(Guidance.hints(c, d, 1.0, 20, {}, {}, "qingshi_village"), "Sect mission ready: ")
+	assert_true(line.begins_with("Sect mission ready: "), line)
+	assert_true(line.substr(0, Guidance.HEADLINE_CHARS).contains(String(d.sect_missions[best]["name"])), line)
+	assert_true(line.contains("to become "), line)
+	assert_false(line.contains("(missions, duties)"), line)
+
+
+func test_sect_line_best_pays_first() -> void:
+	var d := data()
+	var c := _qr3_disciple()
+	c.stage = 4  # two ready missions
+	c.techniques = {"iron_fist": {"level": 3, "xp": 0.0}}
+	var best := Guidance.best_mission(c, d)
+	var line := _line_with(Guidance.hints(c, d, 1.0, 20, {}, {}, "qingshi_village"), "The best pays ")
+	assert_true(line.begins_with("The best pays "), line)
+	assert_true(line.substr(0, Guidance.HEADLINE_CHARS).contains(String(d.sect_missions[best]["name"])), line)
+
+
+func test_sect_line_deliver_first() -> void:
+	var d := data()
+	var c := _deliver_only(d)
+	c.add_item("spirit_herb", 1)
+	var line := _line_with(Guidance.hints(c, d, 1.0, 20, {}, {}, "qingshi_village"), "you have 1 of")
+	var head := line.substr(0, Guidance.HEADLINE_CHARS)
+	assert_true(head.contains("Relieve a Fevered Village") and head.contains("you have 1 of"), line)
+
+
+func test_trial_line_odds_in_headline() -> void:
+	var d := data()
+	var c := new_character()
+	c.realm_index = 1
+	c.sect = {"id": "azure_cloud_sect", "rank": 0, "contribution": 600}
+	var line := Guidance._sect_hint(c, d, "qingshi_village")
+	assert_true(line.begins_with("The trial for "), line)
+	var odds_end := line.find("in 100)")
+	assert_true(odds_end > 0 and odds_end < Guidance.HEADLINE_CHARS + 20, line)  # a long examiner name; the odds are the first thing after the hall
+	assert_true(line.ends_with("The rank pays 6 stones a month."), line)
+
+
+func test_plain_earn_line_keeps_missions_duties() -> void:
+	var d := data()
+	var c := _qr3_disciple()
+	for id: String in d.sect_missions:
+		c.mission_cooldowns[id] = c.age_days + 30
+	assert_true(Guidance._sect_hint(c, d).contains("(missions, duties)"))

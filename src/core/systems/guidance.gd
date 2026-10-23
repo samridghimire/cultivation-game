@@ -18,6 +18,7 @@ const FAIR_FIGHT_MAX_RATED := 8
 const FAIR_FIGHT_EXPLORE_MAX := 2
 const FAIR_FIGHT_MIN_CHANCE := 0.7  # "Even" or better (Combat.label_for_chance)
 const CHORE_REGION := "qingshi_village"
+const HEADLINE_CHARS := 120  ## The HUD shows this many characters of a hint (HUD.HINT_MAX_CHARS, WU-305).
 ## GUIDE-054: game days a Mortal crafter plays before hearing where to begin cultivating.
 const MORTAL_CRAFTER_NUDGE_DAY := 30
 const NEAREST_HOPS := 2  # GUIDE-072: how many routes away a hint may send the player
@@ -111,7 +112,8 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 				earn = i
 				break
 		if earn >= 0:
-			out[earn] = out[earn] + " " + missions
+			# GUIDE-121: the action first (the HUD shows only HEADLINE_CHARS), the rank goal last.
+			out[earn] = missions + " " + out[earn].replace(" (missions, duties)", "")
 		else:
 			out.append(missions)
 	if today >= 0:
@@ -1343,7 +1345,14 @@ static func _sect_hint(c: CharacterData, data: GameData, region_id: String = "")
 		return ""
 	var pays := _stipend_clause(data, sect.ranks[rank + 1].get("stipend", {}))
 	if Sects.check_promotion(c, data) == "":
-		return "The trial for %s is open%s. Attempt it %s.%s" % [sect.rank_name(rank + 1), pays, _hall_where(c, data, region_id), _trial_odds_clause(c, data)]
+		# GUIDE-121: the odds come early; what the rank pays comes last.
+		var pays_sentence := ""
+		if pays != "":
+			pays_sentence = " The rank pays %s." % pays.trim_prefix(" (it pays ").trim_suffix(")")
+		var face := _trial_face(c, data)
+		if face == "":
+			return "The trial for %s is open. Attempt it %s.%s" % [sect.rank_name(rank + 1), _hall_where(c, data, region_id), pays_sentence]
+		return "The trial for %s is open %s: %s.%s%s" % [sect.rank_name(rank + 1), _hall_where(c, data, region_id), face, _trial_advice(c, data), pays_sentence]
 	var need := int(sect.ranks[rank + 1].get("contribution", 0)) - int(c.sect["contribution"])
 	return "Earn %d more sect contribution (missions, duties) to become %s%s." % [maxi(need, 0), sect.rank_name(rank + 1), pays]
 
@@ -1368,13 +1377,21 @@ static func odds_unhurt(c: CharacterData, data: GameData, enemy: Dictionary) -> 
 	return Combat.win_chance(copy, data, enemy)
 
 
-## GUIDE-085: " You face the X (Even, 80 in 100)." plus a warning when the odds are under even.
-static func _trial_odds_clause(c: CharacterData, data: GameData) -> String:
+## GUIDE-121: "you face the X (Even, 80 in 100)", or "" when no trial is open.
+static func _trial_face(c: CharacterData, data: GameData) -> String:
 	var chance := trial_odds(c, data)
 	if chance < 0.0:
 		return ""
 	var enemy: Dictionary = data.enemies[Sects.trial_enemy(c, data)]
-	var line := " You face the %s (%s, %d in 100)." % [enemy.get("name", ""), Combat.label_for_chance(chance), roundi(chance * 100.0)]
+	return "you face the %s (%s, %d in 100)" % [enemy.get("name", ""), Combat.label_for_chance(chance), roundi(chance * 100.0)]
+
+
+## GUIDE-085: a warning when the odds are under even, and what practice would change (starts with a space, "" if none).
+static func _trial_advice(c: CharacterData, data: GameData) -> String:
+	var chance := trial_odds(c, data)
+	var line := ""
+	if chance < 0.0:
+		return line
 	if chance < 0.5:
 		var unhurt := odds_unhurt(c, data, Sects.trial_opponent(data, Sects.trial_enemy(c, data)))
 		if unhurt >= 0.5:
@@ -1488,13 +1505,24 @@ static func _mission_hint(c: CharacterData, data: GameData, flags: Dictionary = 
 			ready += 1
 	var text := ""
 	if ready > 0:
-		text = "%d sect %s ready on the mission board %s." % [ready, "mission is" if ready == 1 else "missions are", _hall_where(c, data, region_id)]
+		var too_dangerous_text := ""
 		if too_dangerous > 0:
-			text = text.trim_suffix(".") + " (%d more %s too dangerous for you yet)." % [too_dangerous, "mission is" if too_dangerous == 1 else "missions are"]
+			too_dangerous_text = " %d more %s too dangerous for you yet." % [too_dangerous, "is" if too_dangerous == 1 else "are"]
 		var best := best_mission(c, data, flags)
-		if best != "":
+		if best == "":
+			text = "%d sect %s ready on the mission board %s." % [ready, "mission is" if ready == 1 else "missions are", _hall_where(c, data, region_id)]
+			if too_dangerous > 0:
+				text = text.trim_suffix(".") + " (%d more %s too dangerous for you yet)." % [too_dangerous, "mission is" if too_dangerous == 1 else "missions are"]
+		else:
 			var m: Dictionary = data.sect_missions[best]
-			text += (" It pays" if ready == 1 else " The best pays") + " %d contribution: %s (%s)." % [int(m.get("contribution", 0)), String(m.get("name", best)), Calendar.format_duration(int(m.get("days", 1)))]
+			var name := String(m.get("name", best))
+			var contribution := int(m.get("contribution", 0))
+			var duration := Calendar.format_duration(int(m.get("days", 1)))
+			if ready == 1:
+				text = "Sect mission ready: %s (%d contribution, %s) %s." % [name, contribution, duration, _hall_where(c, data, region_id)]
+			else:
+				text = "The best pays %d contribution: %s (%s), one of %d missions ready %s." % [contribution, name, duration, ready, _hall_where(c, data, region_id)]
+			text += too_dangerous_text
 	elif cooling != "":
 		var cm: Dictionary = data.sect_missions[cooling]
 		text = "%s (%d contribution) is ready again in %s." % [String(cm.get("name", cooling)), int(cm.get("contribution", 0)), Calendar.format_duration(Sects.mission_cooldown_left(c, cooling))]
