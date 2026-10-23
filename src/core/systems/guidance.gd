@@ -1869,8 +1869,7 @@ static func _newcomer_hints(c: CharacterData, data: GameData, flags: Dictionary,
 			var item: Dictionary = data.items.get(item_id, {})
 			var fx: Dictionary = item.get("effects", {})
 			# Never steer a newcomer toward pills that burn lifespan or taint the heart.
-			var harmful := fx.has("burn_lifespan") or int(fx.get("alignment", 0)) < 0
-			if c.item_count(item_id) > 0 and float(fx.get("qi", 0.0)) > 0.0 and not harmful:
+			if c.item_count(item_id) > 0 and Items.feeds_cultivation(data, item_id):
 				var count := c.item_count(item_id)
 				var qi := float(fx["qi"]) * count
 				var rate := Cultivation.qi_per_day(c, data, float(best_qi_in_region(c, data, region_id, flags)["density"]))

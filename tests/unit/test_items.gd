@@ -53,6 +53,18 @@ func test_beast_materials_are_dropped_and_bought() -> void:
 	assert_eq(count, 8)
 
 
+## GUIDE-115: sell-all keeps herbs that feed cultivation; harmful pills keep today's behaviour.
+func test_bulk_sell_keeps_qi_items() -> void:
+	var c := new_character()
+	c.inventory = {"spirit_herb": 3, "iron_essence": 2, "blood_demon_pill": 1}
+	var ids := Items.bulk_sell_ids(c, data(), ["herb", "ore", "pill"], ["blood_art"])
+	assert_eq(ids, ["iron_essence"])
+	assert_true(Items.feeds_cultivation(data(), "spirit_herb"))
+	assert_false(Items.feeds_cultivation(data(), "iron_essence"))
+	assert_false(Items.feeds_cultivation(data(), "blood_demon_pill"), "stains the heart")
+	assert_true(Items.use_warning(data(), "blood_demon_pill") != "", "so sell-all skipped it before too")
+
+
 ## RV-011: "sell all loot" keeps talismans readied for the next fight.
 func test_bulk_sell_keeps_readied_talismans() -> void:
 	var c := new_character()

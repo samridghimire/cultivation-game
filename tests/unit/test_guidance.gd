@@ -844,15 +844,15 @@ func test_sell_hint() -> void:
 	var d := data()
 	var c := _fresh()
 	assert_eq(Guidance._sell_hint(c, d, "qingshi_village"), "", "nothing to sell")
-	c.add_item("spirit_herb", 10)
+	c.add_item("iron_essence", 10)
 	assert_eq(Guidance._sell_hint(c, d, "qingshi_village"), "", "below the minimum")
-	c.add_item("spirit_herb", 30)
-	var total := Items.sell_price(d, "spirit_herb") * 40
+	c.add_item("iron_essence", 30)
+	var total := Items.sell_price(d, "iron_essence") * 40
 	var hint := Guidance._sell_hint(c, d, "qingshi_village")
 	assert_true(total >= Guidance.SELL_HINT_MIN)
 	assert_true(hint.contains("Wandering Merchant"), hint)
 	assert_true(hint.contains("%d spirit stones" % total), hint)
-	assert_true(hint.contains("herbs"), hint)
+	assert_true(hint.contains("ore"), hint)
 	assert_true(Guidance.hints(c, d, 1.0, 99, {}, {}, "qingshi_village").has(hint))
 	assert_eq(Guidance._sell_hint(c, d, ""), "")
 	assert_eq(Guidance._sell_hint(c, d, "misty_forest"), "", "no merchant in the region")
@@ -3531,3 +3531,12 @@ func test_sell_offer_not_repeated_in_armor_line() -> void:
 	for line in Guidance.hints(c, data(), 1.0, 40, {}, {}, "qingshi_village"):
 		kept = kept or line.contains("here would pay about")
 	assert_true(kept, "with enough stones the standalone sell line stays")
+
+
+## GUIDE-115: herbs that feed cultivation are not offered for sale.
+func test_sell_offer_ignores_spirit_herbs() -> void:
+	var c := _armor_hint_fighter()
+	c.inventory = {"spirit_stone": 10, "spirit_herb": 50}
+	assert_true(Guidance.sell_offer(c, data(), "qingshi_village").is_empty(), "no offer for herbs alone")
+	for line in Guidance.hints(c, data(), 1.0, 40, {}, {}, "qingshi_village"):
+		assert_false(line.contains("would pay about"), line)
