@@ -1,6 +1,6 @@
 extends SceneTree
 ## First-hour sim (QA-016): scripted newcomers in Qingshi Village (tests/sim/first_hour.gd).
-## Usage: tools/godot.sh --headless --path . -s res://tests/sim/simulate_first_hour.gd -- [seeds] [months]  [--curious] [--trace] [--zero] [--forced] [--injury-origins] [--odds-bands] [--qi-pill-cap=N]
+## Usage: tools/godot.sh --headless --path . -s res://tests/sim/simulate_first_hour.gd -- [seeds] [months]  [--curious] [--trace] [--zero] [--forced] [--injury-origins] [--odds-bands] [--qi-pill-cap=N] [--deaths] [--recharge] [--hint-missions]
 
 const FirstHour := preload("res://tests/sim/first_hour.gd")
 const FORCED_ODDS := 0.2
@@ -85,6 +85,28 @@ func _print_odds_bands(rows: Array, foes: Dictionary, months: int, seeds: int) -
 		print("  %s  %.0f%%  %.0f%%  %d/%d  %s" % [key, 100.0 * _median(odds.duplicate()), 100.0 * float(odds.min()), under, odds.size(), "%.0f%%" % (100.0 * _median(unhurt)) if not unhurt.is_empty() else "-"])
 
 
+## QA-152: per seed lives spent and final-death day; per lethal loss the foe, source and rated odds at its start.
+func _print_deaths(rows: Array, lethal: Array, seeds: int) -> void:
+	print("Deaths (QA-152): seed  lives spent  final death day")
+	var final := 0
+	var spent: Array = []
+	for row: Dictionary in rows:
+		print("  %4d  %d  %s" % [row["seed"], row["spent"], str(row["final"]) if row["final"] >= 0 else "-"])
+		spent.append(row["spent"])
+		final += 1 if row["final"] >= 0 else 0
+	print("Seeds with a final death: %d/%d; median lives spent %.0f" % [final, seeds, _median(spent)])
+	var by_source := {}
+	var by_foe := {}
+	var odds: Array = []
+	print("Lethal losses: seed  day  foe  source  rated odds  final")
+	for l: Dictionary in lethal:
+		print("  %4d  %3d  %s  %s  %.0f%%  %s" % [l["seed"], l["day"], l["foe"], l["source"], 100.0 * float(l["odds"]), "yes" if l["final"] else "no"])
+		by_source[l["source"]] = int(by_source.get(l["source"], 0)) + 1
+		by_foe[l["foe"]] = int(by_foe.get(l["foe"], 0)) + 1
+		odds.append(l["odds"])
+	print("Lethal losses: %d; by source %s; by foe %s; median rated odds %s" % [lethal.size(), str(by_source), str(by_foe), "%.0f%%" % (100.0 * _median(odds)) if not odds.is_empty() else "-"])
+
+
 func _mask_digits(text: String) -> String:
 	var out := ""
 	for ch in text:
@@ -127,6 +149,9 @@ func _run() -> void:
 	var long_hints := args.has("--long-hints")  # QA-143: tally hint lines longer than the HUD cap
 	var odds_bands := args.has("--odds-bands")  # QA-147: fights by month and rated-odds band
 	var move_rows: Array = []
+	var deaths := args.has("--deaths")  # QA-152
+	var death_rows: Array = []
+	var lethal_rows: Array = []
 	var band_rows: Array = []
 	var band_foes := {}
 	var injury_origins := args.has("--injury-origins")  # QA-149: where and when injuries begin in the first year
@@ -150,6 +175,8 @@ func _run() -> void:
 	FirstHour.qi_pill_cap = -1  # QA-150
 	FirstHour.contribution_log = {"pill_days": [], "pill": 0, "body": 0, "qi_items": 0, "qi_cost": 0, "qi_used": 0, "qi": 0}
 	FirstHour.far_qi = args.has("--far-qi")  # QA-145
+	FirstHour.recharge_first = args.has("--recharge")  # QA-152
+	FirstHour.hint_missions = args.has("--hint-missions")
 	FirstHour.far_qi_log = {"moved": 0, "month": [], "road_days": []}
 	FirstHour.spar_hint = curious and not args.has("--no-spar-hint")  # QA-138
 	FirstHour.spar_log = {"bouts": 0, "refused": []}
@@ -166,7 +193,7 @@ func _run() -> void:
 			only_seed = int(a.substr(7))
 		elif a.begins_with("--qi-pill-cap="):
 			FirstHour.qi_pill_cap = int(a.substr(14))  # QA-150
-		elif a != "--curious" and a != "--trace" and a != "--zero" and a != "--forced" and a != "--no-trial" and a != "--no-heal" and a != "--no-spar-hint" and a != "--blind-missions" and a != "--one-mission" and a != "--long-hints" and a != "--buy-qi" and a != "--spend-contribution" and a != "--no-armor" and a != "--far-qi" and a != "--injury-origins" and a != "--odds-bands":
+		elif a != "--curious" and a != "--trace" and a != "--zero" and a != "--forced" and a != "--no-trial" and a != "--no-heal" and a != "--no-spar-hint" and a != "--blind-missions" and a != "--one-mission" and a != "--long-hints" and a != "--buy-qi" and a != "--spend-contribution" and a != "--no-armor" and a != "--far-qi" and a != "--injury-origins" and a != "--odds-bands" and a != "--deaths" and a != "--recharge" and a != "--hint-missions":
 			nums.append(int(a))
 	var seeds := nums[0] if nums.size() > 0 else 30
 	var months := nums[1] if nums.size() > 1 else 12
@@ -265,6 +292,25 @@ func _run() -> void:
 			row["won"] = victory
 			row["injured"] = gs.player.injuries.size() > int(row["hurt"])
 			row["life"] = gs.player.artifact_lives < int(row["lives"])
+		var seed_lethal: Array = []
+		var on_death_start := func(enemy: Dictionary) -> void:
+			if enemy.get("spar", false):
+				seed_lethal.append({})
+				return
+			var source := FirstHour.fight_origin
+			if source == "other":
+				for frame: Dictionary in get_stack():
+					var fn := String(frame["function"])
+					if fn not in ["<anonymous lambda>", "fight_enemy", "fight", "_start_combat", "start_combat"]:
+						source = fn
+						break
+			seed_lethal.append({"seed": s, "day": clock.total_days, "foe": String(enemy.get("id", enemy.get("name", "?"))), "source": source, "odds": Combat.win_chance(gs.player, gs.data, enemy), "final": false})
+		var on_respawn := func(_anchor: String, _lives: int) -> void:
+			if not seed_lethal.is_empty() and not seed_lethal[seed_lethal.size() - 1].is_empty():
+				lethal_rows.append(seed_lethal[seed_lethal.size() - 1])
+		if deaths:
+			root.get_node("EventBus").combat_started.connect(on_death_start)
+			root.get_node("EventBus").player_respawned.connect(on_respawn)
 		if FirstHour.far_qi and odds_bands:
 			root.get_node("EventBus").combat_started.connect(on_move_start)
 			root.get_node("EventBus").combat_finished.connect(on_move_end)
@@ -320,6 +366,17 @@ func _run() -> void:
 				if int(b["day"]) <= 365:
 					b["seed"] = s
 					break_rows.append(b)
+		if deaths:
+			root.get_node("EventBus").combat_started.disconnect(on_death_start)
+			root.get_node("EventBus").player_respawned.disconnect(on_respawn)
+			var final_day := -1
+			if not gs.player.alive:
+				final_day = clock.total_days
+				if not seed_lethal.is_empty() and not seed_lethal[seed_lethal.size() - 1].is_empty():
+					var last: Dictionary = seed_lethal[seed_lethal.size() - 1]
+					last["final"] = true
+					lethal_rows.append(last)
+			death_rows.append({"seed": s, "spent": LifeStats.get_stat(gs.player, "respawns"), "final": final_day})
 		var contribs: Array = r["contribution"]
 		if contribs.size() >= 6:
 			contrib6.append(contribs[5])
@@ -423,6 +480,8 @@ func _run() -> void:
 		_print_odds_bands(band_rows, band_foes, months, seeds)
 		if FirstHour.far_qi:
 			_print_move_bands(move_rows)
+	if deaths:
+		_print_deaths(death_rows, lethal_rows, seeds)
 	if injury_origins:
 		_print_injury_origins(origin_rows, slow_days, break_rows, seeds)
 	if long_hints:

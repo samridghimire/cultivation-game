@@ -65,6 +65,10 @@ const TRIAL_MIN_ODDS := 0.7
 ## QA-145: once a month, before meditating, move to the faster spot Guidance.far_qi_offer names when it saves >= 30 days
 ## net of the round trip, and stay there (the new region is home from then on).
 static var far_qi := false
+## QA-152: before any purchase, recharge the artifact when lives <= Guidance.LOW_ARTIFACT_LIVES and the stones cover it.
+static var recharge_first := false
+## QA-152: take only what Guidance.best_mission names (no odds rule of our own).
+static var hint_missions := false
 static var far_qi_day := -1  # QA-151: day the current seed arrived at the far spot, -1 before
 static var far_qi_log := {"moved": 0, "month": [], "road_days": []}
 const FAR_QI_MIN_SAVED := 30
@@ -76,7 +80,7 @@ static var _memo := {}
 
 
 static func play_cached(gs: Node, clock: Node, seed_value: int, months: int, curious: bool = false, no_help: bool = false, wait_for_pill: int = 0) -> Dictionary:
-	var key := [seed_value, months, curious, no_help, wait_for_pill, follow_defence, practise_hint, attempt_trials, heal_injuries, spar_hint, min_mission_odds, chase_best_mission, buy_qi, shop_armor, spend_contribution, qi_pill_cap, far_qi]
+	var key := [seed_value, months, curious, no_help, wait_for_pill, follow_defence, practise_hint, attempt_trials, heal_injuries, spar_hint, min_mission_odds, chase_best_mission, buy_qi, shop_armor, spend_contribution, qi_pill_cap, far_qi, recharge_first, hint_missions]
 	if not _memo.has(key):
 		_memo[key] = play(gs, clock, seed_value, months, curious, Callable(), no_help, wait_for_pill)
 		gs.end_session()
@@ -329,6 +333,9 @@ static func _bitter_detour(gs: Node, c: CharacterData) -> String:
 ## set of action kinds done.
 static func _curious_month(gs: Node, c: CharacterData, done: Dictionary, today: int) -> Dictionary:
 	var kinds := {}
+	if recharge_first and c.alive and c.artifact_lives >= 0 and c.artifact_lives <= Guidance.LOW_ARTIFACT_LIVES:
+		if CreationArtifact.check_recharge(c, gs.data) == "" and c.item_count("spirit_stone") >= CreationArtifact.recharge_cost(c, gs.data):
+			gs.recharge_artifact()
 	if heal_injuries and c.alive and not c.injuries.is_empty():
 		var stones_before := c.item_count("spirit_stone")
 		var log := {"healed": 0}
@@ -969,6 +976,8 @@ static func _mission_odds(gs: Node, c: CharacterData, mission_id: String) -> flo
 static func _mission_is_sane(gs: Node, c: CharacterData, mission_id: String, done: Dictionary, today: int) -> bool:
 	if not done.has("lost_missions"):
 		done["lost_missions"] = {}
+	if hint_missions:
+		return true
 	var danger := Sects.mission_danger(c, gs.data, mission_id)
 	if danger == "Deadly":
 		return false
