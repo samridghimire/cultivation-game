@@ -198,6 +198,7 @@
         "You can rest and let the days pass, pay a doctor at a clinic, or find a healer who treats you for free. Qingshi's Village Clinic and the Hall of Gentle Hands Clinic in Fallen Star Market treat injuries for stones, merchants sell salves and pills that heal some of them (a Bone-Setting Salve mends broken bones), and a Doctor can treat themselves. The Next steps hints name the nearest place that can treat yours. Cultivating with an injury is slow, so heal before big efforts.",
         "An injury slows your cultivation every day until it heals, so a long one can cost a month of qi; the Next steps hint says how many days yours would cost. Paying the clinic is usually cheaper than waiting.",
         "The clinic tells you how many days of cultivation each treatment saves.",
+        "Injuries heal by themselves with time. If the clinic costs more than you hold, the hint says its price and how many stones you have.",
         "Injuries weaken you in fights too. When a sect trial or a fight looks hopeless, check whether healing first would win it: the Next steps hint says so."
       ]
     },
