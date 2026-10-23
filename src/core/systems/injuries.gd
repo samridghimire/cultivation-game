@@ -118,7 +118,7 @@ static func injury_name(data: GameData, injury_id: String) -> String:
 	return data.injuries.get(injury_id, {}).get("name", injury_id)
 
 
-## One line per injury, e.g. "Broken Bones (heals in 1 month, 20 days)".
+## One line per injury, e.g. "Broken Bones (heals in 1 month and 20 days)".
 static func describe(c: CharacterData, data: GameData) -> PackedStringArray:
 	var lines: PackedStringArray = []
 	for id in c.injuries:

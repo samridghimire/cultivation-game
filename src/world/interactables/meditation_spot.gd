@@ -80,7 +80,7 @@ static func _temper_option() -> Dictionary:
 	return {"label": label, "action": GameState.temper_body, "disabled": reason != "", "reason": reason, "keep_open": true}
 
 
-## WU-321: "Cloud-Sea Cliff in Azure Peak (10 days away): about 1 month, 24 days."; empty without a far offer.
+## WU-321: "Cloud-Sea Cliff in Azure Peak (10 days away): about 1 month and 24 days."; empty without a far offer.
 static func far_spot_line(c: CharacterData, data: GameData, region_id: String, flags: Dictionary, density: float) -> String:
 	var offer := Guidance.far_qi_offer(c, data, region_id, flags, density)
 	if offer.is_empty():

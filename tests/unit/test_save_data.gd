@@ -21,7 +21,10 @@ func test_character_round_trips_through_json() -> void:
 func test_calendar() -> void:
 	assert_eq(Calendar.format_date(0), "Year 1, Month 1, Day 1")
 	assert_eq(Calendar.format_date(Calendar.DAYS_PER_YEAR + Calendar.DAYS_PER_MONTH + 4), "Year 2, Month 2, Day 5")
-	assert_eq(Calendar.format_duration(Calendar.DAYS_PER_YEAR + Calendar.DAYS_PER_MONTH), "1 year, 1 month")
+	assert_eq(Calendar.format_duration(Calendar.DAYS_PER_YEAR + Calendar.DAYS_PER_MONTH), "1 year and 1 month")
+	assert_eq(Calendar.format_duration(51), "1 month and 21 days")
+	assert_eq(Calendar.format_duration(Calendar.DAYS_PER_MONTH), "1 month")
+	assert_eq(Calendar.format_duration(Calendar.DAYS_PER_YEAR + 2 * Calendar.DAYS_PER_MONTH + 3), "1 year, 2 months and 3 days")
 	assert_eq(Calendar.format_duration(0), "0 days")
 
 

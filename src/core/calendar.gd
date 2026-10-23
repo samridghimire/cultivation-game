@@ -57,7 +57,7 @@ static func format_date(total_days: int) -> String:
 	return "Year %d, Month %d, Day %d" % [year_of(total_days), month_of(total_days), day_of(total_days)]
 
 
-## Human-readable duration, e.g. "1 year, 2 months" or "5 days".
+## Human-readable duration, e.g. "1 year and 2 months" or "5 days".
 @warning_ignore("integer_division")
 static func format_duration(days: int) -> String:
 	var years := days / DAYS_PER_YEAR
@@ -70,7 +70,9 @@ static func format_duration(days: int) -> String:
 		parts.append("%d month%s" % [months, "" if months == 1 else "s"])
 	if rem_days > 0 or parts.is_empty():
 		parts.append("%d day%s" % [rem_days, "" if rem_days == 1 else "s"])
-	return ", ".join(parts)
+	if parts.size() < 2:
+		return parts[0]
+	return "%s and %s" % [", ".join(parts.slice(0, parts.size() - 1)), parts[parts.size() - 1]]
 
 
 ## Rough duration for long waits: days under 60, months under 2 years, else years.
