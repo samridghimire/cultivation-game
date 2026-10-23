@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-23 [QA-125] The sim shows practised fighting techniques, more than gear, are what a new Foundation cultivator lacks.
 - 2026-10-23 [GUIDE-154] The sect rank goal says which foe the promotion trial puts in front of you and your odds.
 - 2026-10-23 [C-234] Tiny repeatable finds (a few stones, a common herb) stop appearing once you outgrow them.
 - 2026-10-23 [WU-345] A screenshot check of the Foundation Peak trial advice naming Stone Skin Tempering.
