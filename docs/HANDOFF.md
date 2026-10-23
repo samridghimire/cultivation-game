@@ -2,6 +2,19 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-10-23 (planner, 16:15 UTC)
+- 16 tasks landed (GUIDE-138/144/145/146, INJ-001, PERF-005, WU-331..335, C-226/229/230, QA-147/150). Review bda3229 fixed
+  GUIDE-145's free re-entry in place, filed nothing. Live claims: C-204, C-223 (11:36, past the 4h cleanup), QA-151,
+  WU-311, WU-336.
+- 16:10 curious trace (seed 73): final death on day 386 (3 lives spent on lethal Mist Wolves: 2 at 62% on the hinted
+  mission, 2 at 85%; recharge line buried, qi-pill line led with 81-101 stones) -> GUIDE-147/148/150, QA-152/153,
+  WU-338..341, C-231/232; DESIGN C-009 note. To reproduce: `simulate_first_hour.gd -- 1 12 --curious --trace --seed=73`
+  (the sim stops silently at death; QA-152 adds a deaths report).
+- QA-150 answer copied to F-005d (cap 2/month ~12% sooner); GUIDE-135 stays blocked. QA-147: Misty Forest's roadside
+  rogue_cultivator rates 8% at m12 but is sensed and avoidable; left as is (C-009 territory).
+- Four workers hit the same 2 failing `--hint-shot` asserts -> WU-337 at the top of world-ui.
+- Systems has 4 ready tasks (GUIDE-147..150); QA-153's answer may add a rating fix. Content has 2 ready + 3 waiting/claimed.
+
 ## State on 2026-10-23 (planner, 14:15 UTC)
 - 13 tasks landed (GUIDE-137/140/141/143, WU-309/329/330, C-224/225/227/228, QA-145/149). Review ec4ffab filed nothing.
   Live claims: C-223, GUIDE-138, INJ-001, QA-150, WU-311 (none stale; WU-311 has two claim branches, the 10:16 one expires).

@@ -2,6 +2,22 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-23 [WU-331] A screenshot check keeps the clinic's price and "(you have 19)" in a short newcomer's injury hint.
+- 2026-10-23 [GUIDE-146] When nothing at home tests you any more, the hint names a fair fight one road away.
+- 2026-10-23 [PERF-005] Two single-region fuzz tests walk only their region, so the test suite runs faster.
+- 2026-10-23 [C-230] Help: the secret realm hint names where the realm is, its entry cost and how long it stays open.
+- 2026-10-23 [WU-334] A screenshot check confirms the world map marks the faster-qi region.
+- 2026-10-23 [WU-335] A screenshot tool error ("freed lambda capture") can no longer happen.
+- 2026-10-23 [QA-147] The first-year sim reports fights by month and odds; the home region never becomes "always easy" in year one.
+- 2026-10-23 [WU-333] A screenshot check of the breakthrough window when a disciple can claim the pill.
+- 2026-10-23 [GUIDE-145] The secret realm hint says where the realm is, what entry costs and how long it stays open.
+- 2026-10-23 [WU-332] A screenshot check of a sect disciple's herb and rank hints.
+- 2026-10-23 [GUIDE-144] At Foundation, the thin-defence hint names the sect treasury when you can afford its body art.
+- 2026-10-23 [C-226] Help: injuries heal with time, and the hint names the clinic's price.
+- 2026-10-23 [C-229] Help: the sect treasury sells body-art manuals.
+- 2026-10-23 [INJ-001] A new injury's message says what it costs you and how to heal it.
+- 2026-10-23 [GUIDE-138] The injury hint names the clinic's price even when you cannot afford it yet.
+- 2026-10-23 [QA-150] The first-year sim measures a capped contribution qi-pill habit (2 a month keeps pacing within 15%).
 - 2026-10-23 [GUIDE-143] A sect member hears when the sect treasury sells a body art they can buy now.
 - 2026-10-23 [GUIDE-141] The sect rank line says when the next rank also needs a higher realm.
 - 2026-10-23 [GUIDE-140] The "use your herb" hint no longer eats herbs a sect mission still needs.
