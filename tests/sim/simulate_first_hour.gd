@@ -42,6 +42,8 @@ func _run() -> void:
 	FirstHour.heal_log = {"healed": 0, "stones": 0}
 	FirstHour.min_mission_odds = 0.0 if args.has("--blind-missions") else 0.4  # QA-141
 	FirstHour.chase_best_mission = not args.has("--one-mission")  # QA-134
+	FirstHour.shop_armor = curious and not args.has("--no-armor")  # QA-140
+	FirstHour.armor_log = {"day": -1, "sold": 0, "stones_from_sales": 0, "trips": 0}
 	FirstHour.buy_qi = curious and args.has("--buy-qi")  # QA-144
 	FirstHour.qi_log = {"bought": 0, "stones": 0, "used": 0, "qi": 0}
 	FirstHour.spar_hint = curious and not args.has("--no-spar-hint")  # QA-138
@@ -52,7 +54,7 @@ func _run() -> void:
 	for a in args:
 		if a.begins_with("--seed="):
 			only_seed = int(a.substr(7))
-		elif a != "--curious" and a != "--trace" and a != "--zero" and a != "--forced" and a != "--no-trial" and a != "--no-heal" and a != "--no-spar-hint" and a != "--blind-missions" and a != "--one-mission" and a != "--long-hints" and a != "--buy-qi":
+		elif a != "--curious" and a != "--trace" and a != "--zero" and a != "--forced" and a != "--no-trial" and a != "--no-heal" and a != "--no-spar-hint" and a != "--blind-missions" and a != "--one-mission" and a != "--long-hints" and a != "--buy-qi" and a != "--no-armor":
 			nums.append(int(a))
 	var seeds := nums[0] if nums.size() > 0 else 30
 	var months := nums[1] if nums.size() > 1 else 12
@@ -64,6 +66,7 @@ func _run() -> void:
 	var final_stones: Array = []
 	var iron_levels := {3: [], 6: [], 12: []}  # QA-138: Iron Fist level after months 3, 6, 12
 	var wolf_days: Array = []
+	var armor_days: Array = []  # QA-140
 	var trials_won := 0
 	var trials_lost := 0
 	var injuries: Array = []
@@ -151,6 +154,8 @@ func _run() -> void:
 			if month == 2 or month == 5 or month == 11:
 				iron_levels[month + 1].append(Techniques.level(gs.player, "iron_fist"))  # QA-138
 		var r: Dictionary = FirstHour.play(gs, clock, s, months, curious, hook)
+		if FirstHour.armor_log["day"] >= 0:
+			armor_days.append(FirstHour.armor_log["day"])
 		if FirstHour.wolf_win_day >= 0:
 			wolf_days.append(FirstHour.wolf_win_day)
 		if forced:
@@ -216,6 +221,8 @@ func _run() -> void:
 	if curious:
 		print("Iron Fist level median (QA-138): m03 %.0f, m06 %.0f, m12 %.0f; first Mist Wolf win: median day %.0f (%d/%d seeds)" % [_median(iron_levels[3]), _median(iron_levels[6]), _median(iron_levels[12]), _median(wolf_days), wolf_days.size(), seeds])
 		print("Spar-hint bouts (QA-138): %d, refusals: %s%s" % [FirstHour.spar_log["bouts"], str(FirstHour.spar_log["refused"]), "" if FirstHour.spar_hint else " (--no-spar-hint)"])
+	if curious:
+		print("Armor shopping (QA-140): armor worn by day %.0f median (%d/%d seeds); %d loot sales for %d stones, %d trips to a smithy%s" % [_median(armor_days), armor_days.size(), seeds, FirstHour.armor_log["sold"], FirstHour.armor_log["stones_from_sales"], FirstHour.armor_log["trips"], "" if FirstHour.shop_armor else " (--no-armor)"])
 	if FirstHour.buy_qi:
 		print("Qi pills (QA-144): bought %d for %d stones, used %d, qi %d" % [FirstHour.qi_log["bought"], FirstHour.qi_log["stones"], FirstHour.qi_log["used"], FirstHour.qi_log["qi"]])
 	print("Road encounters (QA-118): %d/%d seeds met one; %s" % [road_seeds, seeds, str(road_seen)])

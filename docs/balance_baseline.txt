@@ -29,42 +29,38 @@ Lines by category: { "warning": 56, "danger": 29, "info": 339, "progress": 220, 
 
 ## first hour, curious player (seeds 1-10)
 
-SCRIPT ERROR: Compile Error: Identifier not found: EventBus
-          at: GDScript::reload (res://src/ui/hud.gd:193)
-SCRIPT ERROR: Compile Error: Failed to compile depended scripts.
-          at: GDScript::reload (res://tests/sim/simulate_first_hour.gd:0)
-ERROR: Failed to load script "res://tests/sim/simulate_first_hour.gd" with error "Compilation failed".
 First-hour sim (curious player): 10 seeds, 12 months
   seed  QR1  QR3  QR9  sect  injuries  won  lost  fled  lines/month
-     1   55  263    -    55         0   31     3     1  37.7
+     1   55  263    -    55         0   35     1     0  41.2
         first win day 14 (wild_boar), style bought day 27
-     2   14  138  894    14         0   40     2     0  42.8
+     2   14  138    -    14         0   37     3     1  43.4
         first win day 14 (wild_boar), style bought day 41
-     3   14  260    -    14         0   32     3     0  38.8
+     3   14  260    -    14         0   37     1     0  40.2
         first win day 14 (wild_boar), style bought day 38
-     4   14  270    -    14         1   21     1     0  28.2
+     4   14  270    -    14         0   25     1     0  30.5
         first win day 14 (wild_boar), style bought day 45
-     5   14   71  528    14         0   39     3     1  43.9
+     5   14   71  516    14         0   42     1     0  40.6
         first win day 14 (wild_boar), style bought day 40
-     6   14  280    -    14         0   40     1     0  42.3
+     6   14  280    -    14         0   37     2     0  43.9
         first win day 14 (wild_boar), style bought day 44
-     7   14  202    -    14         0   27     5     0  34.2
+     7   14  202    -    14         0   20     7     0  32.6
         first win day 14 (wild_boar), style bought day 39
-     8   14  140  718    14         0   38     1     0  42.5
+     8   14  140  789    14         0   41     4     0  45.9
         first win day 14 (wild_boar), style bought day 39
-     9   14  252    -    14         0   37     3     1  39.0
+     9   14  252    -    14         0   25     3     0  34.4
         first win day 14 (wild_boar), style bought day 40
-    10   14  199    -    14         0   29     3     0  36.0
+    10   14  199    -    14         0   33     4     0  40.0
         first win day 41 (mountain_bandit), style bought day 41
-Medians (day): QR1 14, QR3 252, QR9 718 (3/10 seeds reached it), sect 14; injuries 0; fights won 37, lost 3, fled 0; 39.0 log lines/month
+Medians (day): QR1 14, QR3 252, QR9 789 (2/10 seeds reached it), sect 14; injuries 0; fights won 37, lost 3, fled 0; 40.6 log lines/month
 First win: median day 14, seeds with no win in 12 months: 0; first-win foes: { "wild_boar": 9, "mountain_bandit": 1 }; median style day 40 (10 seeds)
-Sect trials: Inner Disciple median day 819 (5/10 seeds); trials won 7, lost 2; stones at the last month: median 228
+Sect trials: Inner Disciple median day 725 (7/10 seeds); trials won 8, lost 1; stones at the last month: median 222
 Distinct action kinds per month: 6.8; months after the first with no log lines: 0
-Injury treatments (QA-128): 6, clinic stones 88
-Iron Fist level median (QA-138): m03 2, m06 2, m12 4; first Mist Wolf win: median day 535 (8/10 seeds)
+Injury treatments (QA-128): 8, clinic stones 137
+Iron Fist level median (QA-138): m03 2, m06 2, m12 5; first Mist Wolf win: median day 515 (10/10 seeds)
 Spar-hint bouts (QA-138): 10, refusals: []
-Road encounters (QA-118): 8/10 seeds met one; { "road_caravan_guard": 3, "road_highwayman": 2, "road_fallen_rogue": 2, "road_overturned_cart": 3, "road_lost_child": 2, "road_caravan_fire": 1, "road_milestone_carver": 1, "road_talisman_peddler": 2, "road_rain_shelter": 1 }
-Lines by category: { "warning": 209, "danger": 673, "info": 1702, "progress": 1800, "karma": 226, "world": 10, "normal": 4 }
+Armor shopping (QA-140): armor worn by day 420 median (10/10 seeds); 1 loot sales for 262 stones, 10 trips to a smithy
+Road encounters (QA-118): 10/10 seeds met one; { "road_caravan_guard": 2, "road_lost_child": 4, "road_caravan_fire": 4, "road_milestone_carver": 6, "road_highwayman": 1, "road_rain_shelter": 3, "road_talisman_peddler": 2, "road_overturned_cart": 3, "road_fallen_rogue": 3, "road_wandering_boxer": 1 }
+Lines by category: { "warning": 235, "danger": 678, "info": 1728, "progress": 1824, "karma": 235, "world": 8, "normal": 5 }
 
 ## log noise (seeds 1-5, 12 months)
 

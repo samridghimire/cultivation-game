@@ -48,6 +48,10 @@ static var chase_best_mission := true
 ## stone the current region's merchant sells, and use the pills (not at a bottleneck); simulate_first_hour.gd's
 ## --buy-qi sets it. qi_log counts "bought", "stones" spent, pills "used" and "qi" gained from them.
 static var buy_qi := false
+## QA-140: follow the "Sell your ..." / armor hints: sell loot to the named merchant, walk to the smithy, buy and
+## wear the armor, walk home. simulate_first_hour.gd turns it on for --curious (`--no-armor` restores the old policy of never selling or buying armor).
+static var shop_armor := false
+static var armor_log := {"day": -1, "sold": 0, "stones_from_sales": 0, "trips": 0}
 static var qi_log := {"bought": 0, "stones": 0, "used": 0, "qi": 0}
 const TRIAL_MIN_ODDS := 0.7
 
@@ -70,6 +74,7 @@ static func play(gs: Node, clock: Node, seed_value: int, months: int, curious: b
 	var fight := {"enemy": "", "first_enemy": ""}
 	var on_start := func(enemy: Dictionary) -> void: fight["enemy"] = "" if enemy.get("spar", false) else String(enemy.get("id", enemy.get("name", "?")))
 	wolf_win_day = -1
+	armor_log["day"] = -1
 	var on_end := func(_name: String, victory: bool, _log: PackedStringArray) -> void:
 		if victory and fight["enemy"] != "" and fight["first_enemy"] == "":
 			fight["first_enemy"] = fight["enemy"]
@@ -318,6 +323,8 @@ static func _curious_month(gs: Node, c: CharacterData, done: Dictionary, today: 
 		return kinds
 	if buy_qi:
 		_buy_qi_pills(gs, c)
+	if shop_armor:
+		_shop_for_armor(gs, c)
 	var region: Dictionary = gs.data.regions.get(gs.current_region, {})
 	for place: Dictionary in region.get("places", []):
 		var ctx := String(place.get("deed_context", ""))
@@ -449,6 +456,57 @@ static func _buy_breakthrough_pill(gs: Node, c: CharacterData, done: Dictionary)
 		gs.buy_item(pill_id)
 	if home != region_id and c.alive:
 		gs.travel(home)
+
+
+## QA-140: see shop_armor. Gate and budget mirror Guidance.armor_hint: an unarmored Qi Refining fighter who knows a
+## combat style. Stones plus what the local buyer pays for loot must cover armor sold in the nearest region that has
+## one; sell here, travel there, buy, wear, travel back.
+static func _shop_for_armor(gs: Node, c: CharacterData) -> void:
+	if c.realm_index != 1 or c.stage < Guidance.ARMOR_HINT_MIN_STAGE or c.equipment.get("armor", "") != "" or not Techniques.knows_kind(c, gs.data, "combat"):
+		return
+	var home: String = gs.current_region
+	var offer := Guidance.sell_offer(c, gs.data, home)
+	var budget := c.item_count("spirit_stone") + int(offer.get("total", 0))
+	var far := Guidance.nearest_selling(c, gs.data, home, func(r: String) -> String: return Guidance.affordable_armor(c, gs.data, r, budget))
+	if far.is_empty():
+		return
+	var armor_id: String = far["result"]
+	var region_id: String = far["region_id"]
+	if c.item_count("spirit_stone") < Guidance.merchant_price(c, gs.data, region_id, armor_id) and not offer.is_empty():
+		_sell_loot_here(gs, c, home)
+	if c.item_count("spirit_stone") < Guidance.merchant_price(c, gs.data, region_id, armor_id):
+		return
+	if region_id != home:
+		gs.travel(region_id)
+		if gs.current_region != region_id:
+			return
+		armor_log["trips"] += 1
+	if c.alive:
+		gs.buy_item(armor_id)
+		if c.item_count(armor_id) > 0:
+			gs.equip_item(armor_id)
+			if armor_log["day"] < 0:
+				armor_log["day"] = gs.get_node("/root/GameClock").total_days
+	if region_id != home and c.alive:
+		gs.travel(home)
+
+
+## QA-140: sells every sellable stack the best buyer in `region_id` takes (the Sell all button).
+static func _sell_loot_here(gs: Node, c: CharacterData, region_id: String) -> void:
+	var best_ids: Array = []
+	var best_total := 0
+	for place: Dictionary in gs.data.regions[region_id].get("places", []):
+		if String(place.get("type", "")) != "merchant":
+			continue
+		var ids := Items.bulk_sell_ids(c, gs.data, place.get("stock_tags", []), place.get("buy_tags", []))
+		var total := Items.bulk_sell_total(c, gs.data, ids)
+		if total > best_total:
+			best_total = total
+			best_ids = ids
+	if best_ids.is_empty():
+		return
+	armor_log["stones_from_sales"] += gs.sell_all(best_ids)
+	armor_log["sold"] += 1
 
 
 ## QA-144: see buy_qi. The reserve is the next realm pill's price in the last three stages while none is held.
