@@ -45,7 +45,7 @@ func test_every_sect_has_safe_rank0_mission() -> void:
 
 
 ## QA-032: gate-stage hunts that a bare (no extra techniques) newcomer cannot win; the typical player can (C-200: the stag mission assumes a fighting style).
-const QA032_BARE_DEADLY := ["cull_mist_wolves", "patrol_misty_peaks", "answer_azure_call", "answer_blood_lotus_call", "drive_off_fog_antler_stag", "drive_off_den_wolves"]
+const QA032_BARE_DEADLY := ["cull_mist_wolves", "patrol_misty_peaks", "answer_azure_call", "answer_blood_lotus_call", "drive_off_fog_antler_stag"]
 
 ## FH-024/FH-026: missions are always fought, so a Qi Refining mission with an enemy must not
 ## be a likely death for the first-hour player (starter technique, Qingshi iron sword and scale armor) at
@@ -72,8 +72,18 @@ func test_qi_refining_mission_fights_are_weak_or_even_for_newcomers() -> void:
 ## QA-032: the early hunts and sect calls must be a real fight, not a walkover, for the typical
 ## player (simulate_combat.gd's yardstick) at their own gate: 60-95% win rate.
 func test_early_hunt_missions_are_a_fair_fight_for_the_typical_player() -> void:
-	for mission_id in ["cull_mist_wolves", "patrol_misty_peaks", "answer_azure_call", "answer_blood_lotus_call", "drive_off_den_wolves"]:
+	for mission_id in ["cull_mist_wolves", "patrol_misty_peaks", "answer_azure_call", "answer_blood_lotus_call"]:
 		var m: Dictionary = data().sect_missions[mission_id]
 		var c := Balance.typical_player(data(), maxi(0, data().realm_index_of(String(m["min_realm"]))), int(m.get("min_stage", 0)))
 		var rate := Balance.win_rate(c, data(), data().enemies[String(m["enemy"])], 300)
 		assert_true(rate >= 0.6 and rate <= 0.95, "%s win rate %.2f should be 60-95%%" % [mission_id, rate])
+
+
+## RV-015: the newcomer hunt's yardstick is the bare newcomer (no gear, Iron Fist L1), not the typical player.
+func test_newcomer_hunt_is_winnable_bare() -> void:
+	var m: Dictionary = data().sect_missions["drive_off_den_wolves"]
+	var c := new_character(31)
+	c.realm_index = data().realm_index_of(String(m["min_realm"]))
+	c.stage = int(m.get("min_stage", 0))
+	var rate := Combat.win_chance(c, data(), data().enemies["den_wolf"])
+	assert_true(rate >= 0.6 and rate <= 0.95, "bare newcomer vs den_wolf rates %.2f, want 0.6-0.95" % rate)
