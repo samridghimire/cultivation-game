@@ -131,6 +131,7 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 	for hint in [_dao_hint(c, data), _abode_hint(c, data), _family_hint(c, data, people)]:
 		if hint != "":
 			out.append(hint)
+	out = _merge_better_qi(out, c, data, density, region_id, flags)
 	out = _merge_practise_advice(out)
 	if out.size() > limit:
 		out.resize(limit)
@@ -1459,6 +1460,50 @@ static func _mission_hint(c: CharacterData, data: GameData, flags: Dictionary = 
 		else:
 			text += "practise %s first." % data.techniques[best_style].name
 	return text
+
+
+## A slow stage names the faster spot in the same line (GUIDE-113): the "Gather N more qi" line gains
+## "At <place> in <region> (<D> away) it would take about <T>." and the standalone better-qi line goes.
+## The clause is added only when the days saved exceed the round trip; a trip that costs more than it
+## saves is not advice, so then the better-qi line is just dropped. Without a Gather line nothing changes.
+static func _merge_better_qi(out: PackedStringArray, c: CharacterData, data: GameData, density: float, region_id: String, flags: Dictionary = {}) -> PackedStringArray:
+	var better := _better_qi_hint(c, data, region_id, flags)
+	if better == "":
+		return out
+	var gather := -1
+	var standalone := -1
+	for i in out.size():
+		if gather < 0 and out[i].begins_with("Gather ") and out[i].contains(" more qi to reach "):
+			gather = i
+		if out[i] == better:
+			standalone = i
+	if gather < 0 or standalone < 0:
+		return out
+	out.remove_at(standalone)
+	if standalone < gather:
+		gather -= 1
+	var best := best_qi_reachable(c, data, region_id, flags)
+	var needed := maxf(Cultivation.qi_required(c, data) - c.qi, 0.0)
+	var rate_here := Cultivation.qi_per_day(c, data, density)
+	var rate_best := Cultivation.qi_per_day(c, data, float(best["density"]))
+	if rate_here <= 0.0 or rate_best <= 0.0:
+		return out
+	var days_here := ceili(needed / rate_here)
+	var days_best := ceili(needed / rate_best)
+	var away := 0
+	var best_region := String(best["region"])
+	if best_region != region_id:
+		away = route_days(c, data, region_id, best_region)
+	if days_here - days_best <= 2 * away:
+		return out
+	var place := String(best["name"])
+	if place == "":
+		place = "the grounds"
+	var where := Exploration.region_name(data, best_region)
+	if away > 0:
+		where += " (%s away)" % Calendar.format_duration(away)
+	out[gather] = out[gather] + " At %s in %s it would take about %s." % [place, where, Calendar.format_duration(days_best)]
+	return out
 
 
 ## One practise advice, not two (GUIDE-108): when a "Practise <style> on the Techniques screen" hint is

@@ -363,7 +363,33 @@ func test_better_qi_hint_names_the_best_reachable_spot() -> void:
 	var c := _fresh()
 	c.realm_index = 1
 	var hints := Guidance.hints(c, data(), 1.0, 20, {}, {}, "qingshi_village")
-	assert_true(_has(hints, "Meditation at Cloud-Sea Cliff (2x qi) in Azure Peak (10 days away) gathers qi x2.5 faster than here."))
+	assert_false(_has(hints, "Meditation at"))
+	var gather := ""
+	for line in hints:
+		if line.begins_with("Gather "):
+			gather = line
+	assert_true(gather.contains(" At Cloud-Sea Cliff (2x qi) in Azure Peak (10 days away) it would take about "), gather)
+	var needed := Cultivation.qi_required(c, data()) - c.qi
+	var days := Calendar.format_duration(ceili(needed / Cultivation.qi_per_day(c, data(), Guidance.best_qi_reachable(c, data(), "qingshi_village")["density"])))
+	assert_true(gather.ends_with("it would take about %s." % days), gather)
+
+
+func test_better_qi_dropped_when_the_trip_costs_more_than_it_saves() -> void:
+	var c := _fresh()
+	c.realm_index = 1
+	c.qi = Cultivation.qi_required(c, data()) - 5.0
+	var hints := Guidance.hints(c, data(), 1.0, 20, {}, {}, "qingshi_village")
+	assert_true(_has(hints, "Gather "))
+	assert_false(_has(hints, "Meditation at"))
+	assert_false(_has(hints, "it would take about"))
+
+
+func test_better_qi_keeps_standalone_line_without_a_gather_line() -> void:
+	var c := _fresh()
+	c.realm_index = 1
+	var d := data()
+	var lines := PackedStringArray(["Something else."])
+	assert_eq(Guidance._merge_better_qi(lines, c, d, 1.0, "qingshi_village"), lines)
 
 
 func test_route_days_follows_routes_and_gating() -> void:
