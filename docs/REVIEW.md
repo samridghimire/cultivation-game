@@ -935,7 +935,15 @@ Last reviewed commit: 65d397e
     selected. It also called Guidance.best_mission (which rates every mission's fight) once per label, O(n^2) fights per
     rebuild; it is now computed once and passed to label_for. Regression test test_best_pay_mission_preselected_below_the_top;
     test_trial_line_never_says_to_the_death no longer relies on a session left over from an earlier test.
-  - Checked: GUIDE-108's "the practice above" is true: practice_hint comes from _newcomer_hints, appended before the
-    mission hint, so resize(limit) cannot cut it while keeping the mission line. WU-293's region_marker_names mirrors
+  - Missed, caught by the planner (GUIDE-108b, P0): GUIDE-108's helper takes Array[String] but hints() passes a
+    PackedStringArray, so it edits a copy and never reaches the game. Its wording ("the practice above") is right once
+    wired: practice_hint comes from _newcomer_hints, before the mission hint. WU-293's region_marker_names mirrors
     World._build_npcs/_build_generated_npcs naming. WU-292 passes the player so an unreachable hinted region marks nothing.
     C-200's stag is non-lethal and joins QA032_BARE_DEADLY. QA-136/QA-137 only touch sims/tests.
+  - Main went red after the reviewed range: two workers both landed C-201 (c3e0255, then 752addf), so sect_missions.json
+    held two herb_hall_tithe entries; the first (no stone reward) failed test_item_missions_pay_at_least_the_items_cost
+    (5e062ff then gave the first entry the same 22 stones, keeping the duplicate).
+    9aae3a6 (a worker) removed one row; the [REVIEW] commit finishes C-205 (the spec's description) and adds
+    test_data_unique_ids (DATA-001's validator still owed), which fails on any repeated
+    id in a top-level data list (most tables load into id-keyed dictionaries, so duplicates silently overwrite).
+    c3e0255/5828c50/752addf/5e062ff/9aae3a6/8737204 are otherwise left for the next review.
