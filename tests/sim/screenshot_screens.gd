@@ -1485,13 +1485,6 @@ func _start_hint_shot(gs: Node) -> void:
 	# line (Qi Refining Alchemist idle 40 days), each in the HUD hint panel and the journal's Next steps.
 	var size_tag := "%dx%d" % [root.size.x, root.size.y]
 	var journal: Control = hud.get("_screens")["toggle_journal"]
-	var show_journal := func(heading: String) -> void:
-		journal.open()
-		await root.get_tree().process_frame
-		await root.get_tree().process_frame
-		for l: Node in journal.find_children("*", "Label", true, false):
-			if (l as Label).text == heading:
-				journal.get("_scroll").set_deferred("scroll_vertical", int((l as Label).position.y))
 	var setup_thin := func() -> void:
 		hud.get("_banner").visible = false
 		c.realm_index = 2
@@ -1557,7 +1550,7 @@ func _start_hint_shot(gs: Node) -> void:
 			print("hint-shot ", needle, ": ", hint_text.call()), "close": func() -> void: pass})
 		shots.append({"name": case[0] + "journal_" + size_tag, "open": func() -> void:
 			setup.call()
-			show_journal.call("Next steps"), "close": journal.close})
+			_show_journal(journal, "Next steps"), "close": journal.close})
 	# WU-258: GUIDE-074's empty "Fights you can win" note (journal) and GUIDE-075's far-armor line (HUD and Next steps)
 	# for a Qi Refining fighter in Qingshi with no armor, 200 stones and nothing fair to fight.
 	var setup_armor_far := func() -> void:
@@ -1580,7 +1573,7 @@ func _start_hint_shot(gs: Node) -> void:
 		assert("\n".join(listed).contains("Armor keeps you standing"), "armor hint missing: " + "\n".join(listed)), "close": func() -> void: pass})
 	shots.append({"name": "hint_armor_far_journal_" + size_tag, "open": func() -> void:
 		setup_armor_far.call()
-		show_journal.call("Next steps"), "close": journal.close})
+		_show_journal(journal, "Next steps"), "close": journal.close})
 	# The first (realm, stage, region) where an armorless fighter has no fair fight; Qi Refining preferred.
 	var empty_realm := 2
 	var empty_stage := 0
@@ -1607,7 +1600,7 @@ func _start_hint_shot(gs: Node) -> void:
 		c.realm_index = empty_realm
 		c.stage = empty_stage
 		gs.current_region = empty_region
-		await show_journal.call("Fights you can win")
+		await _show_journal(journal, "Fights you can win")
 		for _i in 3:
 			await root.get_tree().process_frame
 		var rich: RichTextLabel = journal.get("_text")
@@ -1626,7 +1619,7 @@ func _start_hint_shot(gs: Node) -> void:
 			print("hint-shot ", needle, ": ", hint_text.call()), "close": func() -> void: pass})
 		shots.append({"name": case[0] + "journal_" + size_tag, "open": func() -> void:
 			setup.call()
-			show_journal.call("Next steps"), "close": journal.close})
+			_show_journal(journal, "Next steps"), "close": journal.close})
 	# WU-268: the longer GUIDE-081/083/084 hints for an Azure Cloud outer disciple, Qi Refining 1st layer, Iron Fist
 	# level 1, meditating at the Spirit Spring: practice days, "(N days away)" better qi and the sect rank's stipend.
 	var long_region := "qingshi_village"
@@ -1669,7 +1662,7 @@ func _start_hint_shot(gs: Node) -> void:
 		print("hint-shot far-qi capped: ", hud.call("cap_hint", far_line))
 		if far_line != "":
 			assert(hud.call("cap_hint", far_line).contains(far_place), "capped far-qi line lost '" + far_place + "': " + hud.call("cap_hint", far_line))
-		await show_journal.call("Next steps")
+		await _show_journal(journal, "Next steps")
 		for _i in 3:
 			await root.get_tree().process_frame
 		var long_rich: RichTextLabel = journal.get("_text")
@@ -1750,7 +1743,7 @@ func _start_hint_shot(gs: Node) -> void:
 					if h.contains("Sell your"):
 						print("hint-shot sell-armor capped: ", hud.call("cap_hint", h))
 						assert(hud.call("cap_hint", h).contains("stones"), "capped sell line lost its price: " + hud.call("cap_hint", h))
-			await show_journal.call(heading)
+			await _show_journal(journal, heading)
 			for _i in 3:
 				await root.get_tree().process_frame
 			var rich: RichTextLabel = journal.get("_text")
@@ -2473,6 +2466,16 @@ func _find_menu_source() -> Node:
 			if best == null or node.menu_options().size() > best.menu_options().size():
 				best = node
 	return best
+
+
+## WU-335: opens the journal and scrolls to a heading. A member method, not a lambda: queued shots outlive lambda captures.
+func _show_journal(journal: Control, heading: String) -> void:
+	journal.open()
+	await root.get_tree().process_frame
+	await root.get_tree().process_frame
+	for l: Node in journal.find_children("*", "Label", true, false):
+		if (l as Label).text == heading:
+			journal.get("_scroll").set_deferred("scroll_vertical", int((l as Label).position.y))
 
 
 func _process(_d: float) -> bool:
