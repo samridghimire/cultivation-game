@@ -3518,6 +3518,24 @@ func test_dangerous_missions_say_grow_a_stage_when_mastered() -> void:
 	assert_true(text.ends_with("too dangerous for you yet; grow a stage first."), text)
 
 
+## GUIDE-160: at a realm's last stage the mission line names the breakthrough.
+func test_dangerous_missions_say_break_through_at_the_last_stage() -> void:
+	var d := data()
+	var c := new_character()
+	c.realm_index = 1
+	c.stage = d.realms[1].stage_count() - 1
+	c.sect = {"id": "azure_cloud_sect", "rank": 0, "contribution": 0, "spent": 0}
+	c.techniques["iron_fist"] = {"level": d.techniques["iron_fist"].max_level, "xp": 0.0}
+	var saved: Dictionary = d.sect_missions.duplicate()
+	if _only_dangerous_ready(c, d) == 0:
+		d.sect_missions = saved
+		return
+	var text := Guidance._mission_hint(c, d, {})
+	d.sect_missions = saved
+	assert_true(text.contains("break through to %s first." % d.realms[2].name), text)
+	assert_false(text.contains("grow a stage"), text)
+
+
 func test_dangerous_missions_say_heal_when_injuries_are_the_cause() -> void:
 	var d := data()
 	var saved: Dictionary = d.sect_missions.duplicate()

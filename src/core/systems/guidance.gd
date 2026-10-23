@@ -1832,7 +1832,13 @@ static func _mission_hint(c: CharacterData, data: GameData, flags: Dictionary = 
 		if healed_wins:
 			text += "heal your injuries first."
 		elif best_style == "":
-			text = text.trim_suffix("; ") + "." if not _can_grow_stage(c, data) else text + "grow a stage first."
+			if _can_grow_stage(c, data):
+				text += "grow a stage first."
+			elif c.realm_index + 1 < data.realms.size():
+				# GUIDE-160: at a last stage the lever is the breakthrough.
+				text += "break through to %s first." % data.realms[c.realm_index + 1].name
+			else:
+				text = text.trim_suffix("; ") + "."
 		else:
 			text += "practise %s first." % data.techniques[best_style].name
 	if ready == 0 and deliver != "":
