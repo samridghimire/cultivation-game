@@ -412,3 +412,12 @@ func test_buy_tab_says_where_gear_is_when_region_sells_none() -> void:
 	screen.close()
 	screen.free()
 	gs.end_session()
+
+
+func test_sell_wanted_line_names_the_sect_mission() -> void:
+	var c := new_character()
+	assert_eq(ShopScreen.sell_wanted_line(c, data(), "spirit_herb", true), "", "rogues are not asked")
+	c.sect = {"id": "azure_cloud_sect", "rank": 0, "contribution": 0}
+	c.inventory = {"spirit_herb": 3}
+	assert_true(ShopScreen.sell_wanted_line(c, data(), "spirit_herb", true).begins_with("Wanted by the sect: "))
+	assert_eq(ShopScreen.sell_wanted_line(c, data(), "spirit_herb", false), "", "not shown when buying")

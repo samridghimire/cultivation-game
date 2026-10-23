@@ -1087,6 +1087,14 @@ func _start_shop_shot(gs: Node) -> void:
 		gs.current_region = "qingshi_village"
 		shop.open("Wandering Merchant", 0, ["herb", "ore"])
 		shop._set_category("All"), "close": shop.close})
+	# WU-312: the Sell tab says a sect mission wants the Spirit Herbs.
+	shots.append({"name": "shop_sell_wanted", "open": func() -> void:
+		gs.current_region = "qingshi_village"
+		c.sect = {"id": "azure_cloud_sect", "rank": 0, "contribution": 0}
+		c.inventory = {"spirit_herb": 3, "spirit_stone": 20}
+		shop.open("Wandering Merchant", 0, ["herb", "ore"])
+		shop._set_tab(true)
+		shop._select("spirit_herb"), "close": shop.close})
 
 
 func _start_inventory_shot(gs: Node) -> void:
