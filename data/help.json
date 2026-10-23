@@ -366,6 +366,7 @@
         "Sect halls accept disciples who meet their realm and alignment requirements. A sect offers missions for contribution, pays a monthly stipend to disciples who meet their monthly duty, and promotes those who win the trial for the next rank (see the Rank tab of the mission board).",
         "Each foe shows your odds, like \"(Risky, 55 in 100)\"; \"to the death\" means a loss can kill you.",
         "Your Next steps hints name the ready mission that pays the most contribution.",
+        "When a mission you can win is resting, your hints say when it is ready again.",
         "You may also stay a rogue cultivator, free to go anywhere and do anything, with nobody to protect you."
       ]
     },
