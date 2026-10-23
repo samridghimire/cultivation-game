@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 886d9a4
+Last reviewed commit: 2950dde
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -1076,3 +1076,15 @@ Last reviewed commit: 886d9a4
     had no test, is covered (Azure Peak's cliff beats the waterfall cave). Re-indented C-231's new help.json line.
   - Notes, not filed: GUIDE-152's trial advice for a fighter with no combat technique at a realm's last stage ends
     at "A loss only injures you." with no lever; QA-153 suggests RATING_SAMPLES 200 (GUIDE-156 is already spec'd).
+- 2026-10-23 (reviewer): reviewed 886d9a4..2950dde (QA-125, C-236/237, GUIDE-156/159/161, WU-347/348/349/350; [PLAN]
+  skipped). Main green (ALL CHECKS PASSED). No worker touched BACKLOG/CHANGELOG; no save-format changes.
+  - All five spec'd tasks match their specs. GUIDE-159 resolves last run's GUIDE-152 note (its test ran, not skipped).
+    GUIDE-161 picks the cheapest claimable treasury heal via Sects.check_purchase, before the clinic; tests cover member,
+    short contribution, rogue and held pill. C-236's audit test guards every mortal home fight with a max_realm.
+    WU-348's method_note/is_faster_method compare via Techniques.method_rate_of (outgrown handled); GUIDE-156 adds an
+    accuracy test against a 2000-sample estimate.
+  - Notes, not filed: GUIDE-161 spends contribution on a heal without reserving for an unclaimed breakthrough pill
+    (100 contribution, minor; no contribution reserve exists anywhere yet). WU-348's is_faster_method is a rule living in
+    src/ui/mission_board.gd; fine as a display helper, but move it to Techniques if a system ever needs it. GUIDE-156
+    makes the first-hour sim ~88% slower (worker's follow-up: cheaper win_chance).
+  - Nothing fixed, nothing filed.
