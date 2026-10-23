@@ -3513,6 +3513,27 @@ func test_deliver_mission_held_none_is_silent() -> void:
 	assert_false(Guidance._mission_hint(c, d, {}, "").contains("Relieve a Fevered Village (90 contribution) needs"))
 
 
+## GUIDE-120: the closest deliver mission wins (fewest units missing that cannot be gathered here) and the clause says where the missing item grows.
+func test_deliver_pick_prefers_gatherable_here() -> void:
+	var d := data()
+	var c := _cooldown_player(d)
+	for id: String in d.sect_missions:
+		if id != "relieve_fevered_village" and id != "herb_hall_tithe":
+			c.mission_cooldowns[id] = c.age_days + 30
+	var text := Guidance._mission_hint(c, d, {}, "qingshi_village")
+	assert_true(text.contains("Tithe to the Herb Hall (35 contribution) needs 3 Spirit Herbs: you have 0 of 3."), text)
+	assert_true(text.contains("Spirit Herbs grow at Village Herb Slope here."), text)
+	assert_false(text.contains("Relieve a Fevered Village"), text)
+
+
+func test_deliver_ready_mission_has_no_clause() -> void:
+	var d := data()
+	var c := _deliver_only(d)
+	c.add_item("bone_setting_salve", 2)
+	c.add_item("spirit_herb", 3)
+	assert_false(Guidance._mission_hint(c, d, {}, "qingshi_village").contains("needs"))
+
+
 ## GUIDE-114: one line carries the merchant's offer, not two.
 func test_sell_offer_not_repeated_in_armor_line() -> void:
 	var c := _armor_hint_fighter()

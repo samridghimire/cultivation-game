@@ -1435,8 +1435,13 @@ static func _mission_hint(c: CharacterData, data: GameData, flags: Dictionary = 
 		if Sects.check_mission(c, data, id, flags) != "":
 			var left := Sects.mission_cooldown_left(c, id)
 			if left == 0 and Sects.mission_rank_realm_reason(c, data, data.sect_missions[id]) == "" and _deliver_close(c, data, id, region_id):
-				if deliver == "" or _mission_beats(data.sect_missions[id], data.sect_missions[deliver]):
+				if deliver == "":
 					deliver = id
+				else:
+					var gap := _deliver_missing_elsewhere(c, data, id, region_id)
+					var best_gap := _deliver_missing_elsewhere(c, data, deliver, region_id)
+					if gap < best_gap or (gap == best_gap and _mission_beats(data.sect_missions[id], data.sect_missions[deliver])):
+						deliver = id
 			if left > 0 and Sects.mission_rank_realm_reason(c, data, data.sect_missions[id]) == "" and not _mission_too_dangerous(c, data, id):
 				if cooling == "" or left < Sects.mission_cooldown_left(c, cooling) \
 						or (left == Sects.mission_cooldown_left(c, cooling) and _mission_beats(data.sect_missions[id], data.sect_missions[cooling])):
@@ -1472,7 +1477,7 @@ static func _mission_hint(c: CharacterData, data: GameData, flags: Dictionary = 
 		else:
 			text += "practise %s first." % data.techniques[best_style].name
 	if ready == 0 and deliver != "":
-		var clause := _deliver_clause(c, data, deliver)
+		var clause := _deliver_clause(c, data, deliver, region_id)
 		text = clause if text == "" else clause + " " + text
 	return text
 
@@ -1490,8 +1495,19 @@ static func _deliver_close(c: CharacterData, data: GameData, mission_id: String,
 	return false
 
 
-## "<name> (N contribution) needs A, B: you have x of y."
-static func _deliver_clause(c: CharacterData, data: GameData, mission_id: String) -> String:
+## GUIDE-120: units a deliver mission still needs of items that are neither held nor gatherable in `region_id`.
+static func _deliver_missing_elsewhere(c: CharacterData, data: GameData, mission_id: String, region_id: String) -> int:
+	var needed: Dictionary = data.sect_missions[mission_id].get("requires", {}).get("items", {})
+	var here := _gatherable_items(c, data, region_id) if region_id != "" else {}
+	var missing := 0
+	for item_id: String in needed:
+		if not here.has(item_id):
+			missing += maxi(0, int(needed[item_id]) - c.item_count(item_id))
+	return missing
+
+
+## "<name> (N contribution) needs A, B: you have x of y." plus where a missing item grows in `region_id`.
+static func _deliver_clause(c: CharacterData, data: GameData, mission_id: String, region_id: String = "") -> String:
 	var m: Dictionary = data.sect_missions[mission_id]
 	var needed: Dictionary = m.get("requires", {}).get("items", {})
 	var names: PackedStringArray = []
@@ -1502,7 +1518,13 @@ static func _deliver_clause(c: CharacterData, data: GameData, mission_id: String
 		names.append("%d %s" % [n, Items.item_plural(data, item_id, n)])
 		total += n
 		have += mini(c.item_count(item_id), n)
-	return "%s (%d contribution) needs %s: you have %d of %d." % [String(m.get("name", mission_id)), int(m.get("contribution", 0)), ", ".join(names), have, total]
+	var text := "%s (%d contribution) needs %s: you have %d of %d." % [String(m.get("name", mission_id)), int(m.get("contribution", 0)), ", ".join(names), have, total]
+	var here := _gatherable_items(c, data, region_id) if region_id != "" else {}
+	for item_id: String in needed:
+		if c.item_count(item_id) < int(needed[item_id]) and here.has(item_id):
+			var plural := Items.item_plural(data, item_id, 2)
+			return text + " %s grow at %s here." % [plural, here[item_id]]
+	return text
 
 
 ## A slow stage names the faster spot in the same line (GUIDE-113): the "Gather N more qi" line gains
