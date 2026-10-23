@@ -34,6 +34,8 @@ var _canvas: Control
 var _name: Label
 var _info: Label
 var _description: Label
+var _hint_note: Label
+var _hint_region := ""  # WU-316: the region the HUD's first hint points to
 var _places: Label
 var _marks: Label
 var _foes: RichTextLabel
@@ -78,6 +80,8 @@ func _init() -> void:
 	details.add_child(_name)
 	_info = UIStyle.label("", 15, Color(0.75, 0.75, 0.75))
 	details.add_child(_info)
+	_hint_note = _wrapped(UIStyle.label("", 16, UIStyle.ACCENT))
+	details.add_child(_hint_note)
 	_description = _wrapped(UIStyle.label("", 16))
 	details.add_child(_description)
 	_places = _wrapped(UIStyle.label("", 15))
@@ -114,6 +118,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func open() -> void:
 	_selected = GameState.current_region
+	_hint_region = _read_hint_region()
 	_rebuild()
 	visible = true
 	_focus_selected.call_deferred()
@@ -124,6 +129,23 @@ func close() -> void:
 		return
 	visible = false
 	closed.emit()
+
+
+## WU-316: the region the HUD's first hint names ("" when it names none, or the screen has no HUD).
+func _read_hint_region() -> String:
+	var node := get_parent()
+	while node != null and not node.has_method("first_hint"):
+		node = node.get_parent()
+	if node == null:
+		return ""
+	return Guidance.hinted_region(GameState.data, String(node.call("first_hint")), GameState.current_region)
+
+
+## WU-316: "Your hint points here." on the region the first hint names (never the current one), else "".
+static func hint_note(data: GameData, hint: String, current_region: String, region_id: String) -> String:
+	if region_id != current_region and Guidance.hinted_region(data, hint, current_region) == region_id:
+		return "Your hint points here."
+	return ""
 
 
 ## Region id -> position as 0..1 fractions of the map. Uses `map_pos` when set;
@@ -366,6 +388,9 @@ func _draw_map() -> void:
 		var start: Vector2 = Vector2(_positions[region_id]) + Vector2(-(kinds.size() - 1) * 7.0, NODE_SIZE.y / 2.0 + 8.0)
 		for i in kinds.size():
 			_canvas.draw_circle(start + Vector2(i * 14.0, 0), 5.0, MARK_COLORS[kinds[i]])
+	if _hint_region != "" and _positions.has(_hint_region):
+		var tip: Vector2 = Vector2(_positions[_hint_region]) + Vector2(NODE_SIZE.x / 2.0 - 4.0, -NODE_SIZE.y / 2.0 - 2.0)
+		_canvas.draw_string(font, tip, "!", HORIZONTAL_ALIGNMENT_LEFT, -1, 22, UIStyle.ACCENT)
 	if _positions.has(GameState.current_region):
 		var here := Rect2(Vector2(_positions[GameState.current_region]) - NODE_SIZE / 2.0, NODE_SIZE).grow(5.0)
 		_canvas.draw_rect(here, UIStyle.ACCENT, false, 3.0)
@@ -395,6 +420,8 @@ func _show_details() -> void:
 		return
 	_name.text = String(region.get("name", _selected))
 	_info.text = "%s   |   Danger: %s" % [qi_line(data, _selected, GameState.world_flags, GameState.world_events), danger_name(data, _selected)]
+	_hint_note.text = "Your hint points here." if _selected == _hint_region and _selected != GameState.current_region else ""
+	_hint_note.visible = _hint_note.text != ""
 	_description.text = String(region.get("description", ""))
 	var name_here := renown_note(GameState.player, data, _selected)
 	if name_here != "":

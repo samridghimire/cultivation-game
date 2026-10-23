@@ -1210,6 +1210,30 @@ func _start_map_shot(gs: Node) -> void:
 	shots.append({"name": "map_sells", "open": func() -> void:
 		gs.current_region = "fallen_star_market"
 		map.open(), "close": map.close})
+	# WU-316: the far-armor hint (Qingshi, 200 stones, no armor) puts a gold "!" on Fallen Star Market and a note in its details.
+	shots.append({"name": "map_hint", "open": func() -> void:
+		hud.get("_banner").visible = false
+		c.realm_index = 1
+		c.stage = 5
+		c.injuries.clear()
+		c.sect = {}
+		c.equipment.erase("armor")
+		c.techniques = {"iron_fist": {"level": Techniques.PRACTICE_LEVEL, "xp": 0.0}}
+		c.inventory = {"spirit_stone": 200}
+		for deed: Dictionary in gs.data.deeds.values():
+			if String(deed["id"]).begins_with("chore_") and String(deed.get("blocked_by_flag", "")) != "":
+				gs.world_flags[String(deed["blocked_by_flag"])] = true
+		c.last_meditated_day = 40
+		root.get_node("GameClock").total_days = 40
+		gs.current_region = "qingshi_village"
+		root.get_node("EventBus").player_changed.emit()
+		await root.get_tree().process_frame
+		hud.get("_banner").visible = false
+		print("map-shot hint: ", hud.call("first_hint"))
+		map.open()
+		map._select("fallen_star_market")
+		assert(map.get("_hint_region") == "fallen_star_market", "map hint region: " + String(map.get("_hint_region")))
+		assert((map.get("_hint_note") as Label).text == "Your hint points here.", "no hint note"), "close": map.close})
 
 
 func _start_clinic_shot(gs: Node) -> void:

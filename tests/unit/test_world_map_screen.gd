@@ -349,3 +349,11 @@ func test_details_list_what_merchants_sell() -> void:
 	screen.close()
 	screen.free()
 	gs.end_session()
+
+
+func test_hint_note_marks_only_the_hinted_region() -> void:
+	var hint := "Armor keeps you standing. The Heavenforge Smithy in Fallen Star Market (10 days) sells Stone Ape Bracers for 160 stones."
+	assert_eq(WorldMapScreen.hint_note(data(), hint, "qingshi_village", "fallen_star_market"), "Your hint points here.")
+	assert_eq(WorldMapScreen.hint_note(data(), hint, "qingshi_village", "qingshi_village"), "")
+	assert_eq(WorldMapScreen.hint_note(data(), hint, "qingshi_village", "misty_forest"), "")
+	assert_eq(WorldMapScreen.hint_note(data(), hint, "fallen_star_market", "fallen_star_market"), "")
