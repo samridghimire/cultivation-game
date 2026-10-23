@@ -294,6 +294,8 @@ func test_fuzz_with_hud() -> void:
 	var hud: CanvasLayer = load("res://src/ui/hud.tscn").instantiate()
 	_tree().root.add_child(hud)
 	await _fuzz_all_regions("disciple")
+	# The test instance is shared by the tests after this one: keep their hints off.
+	_hints_on = false
 	hud.queue_free()
 	await _tree().process_frame
 

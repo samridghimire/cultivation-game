@@ -81,5 +81,14 @@ func _run() -> void:
 	print("Slowest tests (total %.1f s):" % (total_ms / 1000.0))
 	for i in mini(15, timings.size()):
 		print("  %6d ms  %s" % [timings[i][0], timings[i][1]])
+	var per_file := {}
+	for t in timings:
+		var file_name: String = String(t[1]).get_slice("::", 0)
+		per_file[file_name] = int(per_file.get(file_name, 0)) + int(t[0])
+	var files_sorted: Array = per_file.keys()
+	files_sorted.sort_custom(func(a: String, b: String) -> bool: return per_file[a] > per_file[b])
+	print("Slowest files:")
+	for i in mini(10, files_sorted.size()):
+		print("  %6d ms  %s" % [per_file[files_sorted[i]], files_sorted[i]])
 	print("%d passed, %d failed" % [passed, failed.size()])
 	quit(1 if failed.size() > 0 else 0)
