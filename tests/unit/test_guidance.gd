@@ -4620,6 +4620,41 @@ func test_g162_qi_refining_keeps_bare_advice() -> void:
 	assert_eq(Guidance._practice_target_text(c, d, "iron_fist"), " to level 5 (now 1)")
 
 
+## GUIDE-164: the body art's target level is named when the combat style is already at the typical level.
+func _g164_fighter(d: GameData) -> CharacterData:
+	var c := new_character()
+	c.realm_index = 2
+	c.stage = 0
+	c.techniques = {"iron_fist": {"level": 5, "xp": 0.0}, "stone_skin": {"level": 1, "xp": 0.0}}
+	c.equipment["armor"] = "boar_hide_jerkin"
+	return c
+
+
+func test_g164_body_art_below_typical() -> void:
+	var d := data()
+	var c := _g164_fighter(d)
+	assert_eq(Guidance._body_art_below_typical(c, d), "stone_skin")
+	c.techniques["stone_skin"]["level"] = Techniques.typical_level(d, 2, "stone_skin")
+	assert_eq(Guidance._body_art_below_typical(c, d), "")
+	c.techniques["stone_skin"]["level"] = 1
+	c.realm_index = 1
+	assert_eq(Guidance._body_art_below_typical(c, d), "")
+
+
+func test_g164_note_names_body_art_target() -> void:
+	var d := data()
+	var c := _g164_fighter(d)
+	if Guidance._thin_defence_missing(c, d) != "":
+		return
+	var typical := Techniques.typical_level(d, 2, "stone_skin")
+	var note := Guidance.empty_fair_fights_note(c, d)
+	assert_true(note.contains("practise %s to level %d (now 1)" % [d.techniques["stone_skin"].name, typical]), note)
+	# A combat style below its typical level is still named first.
+	c.techniques["iron_fist"]["level"] = 2
+	note = Guidance.empty_fair_fights_note(c, d)
+	assert_true(note.contains("practise Iron Fist to level 5 (now 2)"), note)
+
+
 ## GUIDE-167: the duty reminder names the mission that covers it, or what missing it costs.
 func _duty_member_for_hint(d: GameData) -> CharacterData:
 	var c := new_character()

@@ -248,6 +248,9 @@ static func empty_fair_fights_note(c: CharacterData, data: GameData, region_id: 
 			return lead + "heal your injuries first (healed, you could win: %s)." % String(could[0]["text"])
 	var best := _best_unmastered_combat(c, data)
 	var can_grow := _can_grow_stage(c, data)
+	var body := _body_art_below_typical(c, data)
+	if body != "" and (best == "" or _practice_target_text(c, data, best) == ""):
+		return lead + "practise %s%s%s." % [data.techniques[body].name, _practice_target_text(c, data, body), "" if not can_grow else " or grow a stage"]
 	if best == "":
 		if can_grow:
 			return lead + "grow a stage."
@@ -272,6 +275,28 @@ static func _practice_target_text(c: CharacterData, data: GameData, tech_id: Str
 	if now >= typical:
 		return ""
 	return " to level %d (now %d)" % [typical, now]
+
+
+## GUIDE-164: the known, unmastered body art furthest worth practising: highest level below the typical level for
+## this realm (ties: id). "" below Foundation or when none is below it.
+static func _body_art_below_typical(c: CharacterData, data: GameData) -> String:
+	if c.realm_index < 2:
+		return ""
+	var best := ""
+	var best_level := -1
+	var ids: Array = c.techniques.keys()
+	ids.sort()
+	for tech_id: String in ids:
+		var def: TechniqueDef = data.techniques.get(tech_id)
+		if def == null or def.kind != "body" or Techniques.is_mastered(c, data, tech_id):
+			continue
+		var lvl := Techniques.level(c, tech_id)
+		if lvl >= Techniques.typical_level(data, c.realm_index, tech_id):
+			continue
+		if lvl > best_level:
+			best = tech_id
+			best_level = lvl
+	return best
 
 
 ## GUIDE-152: whether `c` has a stage left to grow in the current realm (false at its last stage).
@@ -1700,6 +1725,11 @@ static func _trial_advice(c: CharacterData, data: GameData, region_id: String = 
 				var practise_name := "practise"
 				if target != "":
 					practise_name = "practise %s%s" % [data.techniques[_best_unmastered_combat(c, data)].name, target]
+				elif Techniques.knows_kind(c, data, "combat") and _body_art_below_typical(c, data) != "":
+					# GUIDE-164: the combat style is at its typical level; the body art is the lever.
+					var body_id := _body_art_below_typical(c, data)
+					practise_name = "practise %s%s" % [data.techniques[body_id].name, _practice_target_text(c, data, body_id)]
+					can_practise = true
 				if not Techniques.knows_kind(c, data, "combat"):
 					# GUIDE-159: nothing to practise; the lever is learning a combat technique.
 					var manual := first_combat_manual(c, data, region_id)
@@ -1848,8 +1878,11 @@ static func _mission_hint(c: CharacterData, data: GameData, flags: Dictionary = 
 	elif too_dangerous > 0:
 		text = "The sect's missions are too dangerous for you yet; "
 		var best_style := _best_unmastered_combat(c, data)
+		var body_style := _body_art_below_typical(c, data)
 		if healed_wins:
 			text += "heal your injuries first."
+		elif body_style != "" and (best_style == "" or _practice_target_text(c, data, best_style) == ""):
+			text += "practise %s%s first." % [data.techniques[body_style].name, _practice_target_text(c, data, body_style)]
 		elif best_style == "":
 			if _can_grow_stage(c, data):
 				text += "grow a stage first."
