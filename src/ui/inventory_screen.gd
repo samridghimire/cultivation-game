@@ -221,6 +221,11 @@ static func qi_worth_line(c: CharacterData, data: GameData, item_id: String, reg
 	var rate := Cultivation.qi_per_day(c, data, float(Guidance.best_qi_in_region(c, data, region_id, flags)["density"]))
 	if rate <= 0.0:
 		return ""
+	var usable := Guidance.usable_qi(c, data, item_id)
+	if usable < qi:  # WU-320: the bottleneck stops the rest
+		if usable <= 0.0:
+			return "None of its %d qi fits before your breakthrough" % roundi(qi)
+		return "Only %d of its %d qi fit before your breakthrough (about %s of meditation here)" % [roundi(usable), roundi(qi), Calendar.format_duration(maxi(1, ceili(usable / rate)))]
 	return "Worth about %s of meditation here" % Calendar.format_duration(maxi(1, ceili(qi / rate)))
 
 

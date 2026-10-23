@@ -223,3 +223,14 @@ func test_wanted_by_sect_line_names_mission_count_and_contribution() -> void:
 	assert_true(line.begins_with("Wanted by the sect: "), line)
 	assert_true(line.ends_with(" contribution)") and line.contains(" for "), line)
 	assert_eq(InventoryScreen.wanted_by_sect_line(c, data, "spirit_stone", {}), "")
+
+
+func test_qi_worth_line_says_when_qi_will_not_fit() -> void:
+	var data := data()
+	var c := new_character()
+	data.items["big_pill"] = {"effects": {"qi": 7000}}
+	var room := Cultivation.qi_to_bottleneck(c, data)
+	var line := InventoryScreen.qi_worth_line(c, data, "big_pill", "qingshi_village", {})
+	assert_true(line.begins_with("Only %d of its 7000 qi fit before your breakthrough (about " % roundi(room)), line)
+	c.qi += room
+	assert_eq(InventoryScreen.qi_worth_line(c, data, "big_pill", "qingshi_village", {}), "None of its 7000 qi fits before your breakthrough")
