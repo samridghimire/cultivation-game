@@ -2018,3 +2018,22 @@ func test_foundation_defence_goal_flips_on_armor() -> void:
 	c.add_item(armor_id, 1)
 	gs.equip_item(armor_id)
 	assert_true(Guidance.foundation_goals(c, gs.data, {})[1]["done"])
+
+
+func test_failed_breakthrough_injury_posts_what_it_costs() -> void:
+	var c := _start()
+	var gs := _game_state()
+	var found := false
+	for i in 40:
+		if not _fail_breakthrough(gs, c):
+			continue
+		if not c.injuries.is_empty():
+			found = true
+			break
+		c.injuries.clear()
+	assert_true(found)
+	var injury_id: String = c.injuries.keys()[0]
+	var name := Injuries.injury_name(gs.data, injury_id)
+	assert_true(EventBus.history.any(func(e: Dictionary) -> bool:
+		return String(e["text"]).begins_with(name + ": ") and String(e["text"]).contains(" for about ")))
+	gs.end_session()

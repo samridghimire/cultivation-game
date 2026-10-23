@@ -583,6 +583,30 @@ static func heal_source(c: CharacterData, data: GameData, region_id: String) -> 
 	return ""
 
 
+## INJ-001: what a fresh injury costs, e.g. "Qi Deviation: cultivation x0.5, combat x0.9 for about 6 months.
+## The Village Clinic treats it for 80 stones (you have 19)." Multipliers of 1.0 are left out; the heal
+## source clause (GUIDE-071/138) follows when there is one. "" for an unknown injury.
+static func injury_news(c: CharacterData, data: GameData, injury_id: String, region_id: String) -> String:
+	var def: Dictionary = data.injuries.get(injury_id, {})
+	if def.is_empty():
+		return ""
+	var effects: PackedStringArray = []
+	for pair: Array in [["cultivation", "cultivation_mult"], ["combat", "combat_mult"]]:
+		var mult := float(def.get(pair[1], 1.0))
+		if not is_equal_approx(mult, 1.0):
+			effects.append("%s x%s" % [pair[0], String.num(mult, 2)])
+	var days := int(c.injuries.get(injury_id, def.get("heal_days", 0)))
+	var line := Injuries.injury_name(data, injury_id)
+	if not effects.is_empty():
+		line += ": " + ", ".join(effects)
+	line += " for about %s." % Calendar.format_duration(days)
+	if region_id != "":
+		var clause := _heal_source_for(c, data, region_id, injury_id)
+		if clause != "":
+			line += " " + clause.substr(0, 1).to_upper() + clause.substr(1) + "."
+	return line
+
+
 static func _heal_source_for(c: CharacterData, data: GameData, region_id: String, injury_id: String) -> String:
 	var stones := c.item_count("spirit_stone")
 	for item_id: String in c.inventory:

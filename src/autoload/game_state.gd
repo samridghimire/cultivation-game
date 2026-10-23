@@ -324,6 +324,7 @@ func attempt_breakthrough() -> void:
 			EventBus.post("Your breakthrough to %s fails in the tribulation. Your qi scatters." % result["realm_name"], "danger")
 		if result["injury"] != "":
 			EventBus.post("You suffer %s." % Injuries.injury_name(data, result["injury"]), "danger")
+			EventBus.post(Guidance.injury_news(player, data, result["injury"], current_region), "danger")
 		var lesson := _failure_lesson_line()
 		if lesson != "":
 			EventBus.post(lesson, "info")
@@ -1909,6 +1910,7 @@ func temper_body() -> void:
 	EventBus.post("You spend %s tempering your body. You attain %s! (%s)" % [Calendar.format_duration(result["days"]), result["name"], BodyTempering.describe_bonuses(player, data)], "progress")
 	if result["injury"] != "":
 		EventBus.post("The tempering leaves you with %s." % Injuries.injury_name(data, result["injury"]), "danger")
+		EventBus.post(Guidance.injury_news(player, data, result["injury"], current_region), "danger")
 	_pass_time(result["days"])
 
 

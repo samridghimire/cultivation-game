@@ -4172,3 +4172,24 @@ func test_rank_line_names_the_realm_the_next_rank_needs() -> void:
 	var rich := _inner_disciple(3000, 1, 6)
 	assert_true(_has(Guidance.hints(rich, d, 1.0, 20), "Reach Foundation Establishment to become Core Disciple (you have the contribution)"))
 	assert_false(_has(Guidance.hints(rich, d, 1.0, 20), "Earn 0"))
+
+
+func test_injury_news_names_the_cost() -> void:
+	var c := _fresh()
+	var d := data()
+	Injuries.inflict(c, d, "qi_deviation")
+	var line := Guidance.injury_news(c, d, "qi_deviation", "")
+	assert_eq(line, "Qi Deviation: cultivation x0.5, combat x0.9 for about 6 months.")
+	Injuries.inflict(c, d, "broken_bones")
+	assert_true(Guidance.injury_news(c, d, "broken_bones", "").begins_with("Broken Bones: cultivation x0.9, combat x0.5 for about 2 months."))
+	assert_eq(Guidance.injury_news(c, d, "nope", ""), "")
+
+
+func test_injury_news_adds_the_heal_source() -> void:
+	var c := _fresh()
+	var d := data()
+	Injuries.inflict(c, d, "qi_deviation")
+	c.inventory = {"spirit_stone": 500}
+	var line := Guidance.injury_news(c, d, "qi_deviation", "qingshi_village")
+	assert_true(line.contains(" The Village Clinic treats it for"), line)
+	assert_true(line.ends_with("."), line)
