@@ -1885,6 +1885,45 @@ func _start_hint_shot(gs: Node) -> void:
 		assert(capped.contains("Gather Spirit Herbs") or capped.contains("Escort Mortal Villagers"), "capped sect line lost the mission name: " + capped)
 		assert(sect_line.length() > capped.length() or sect_line == capped, "the journal line (uncapped) is shorter than the capped HUD line"), "close": func() -> void: pass})
 
+	# WU-332: an Inner Disciple at Qi Refining 7th layer with 1290 contribution, one Spirit Herb and Gather Spirit Herbs ready:
+	# no "Use your Spirit Herb" HUD line (GUIDE-140), and the journal's Next steps names the Core Disciple rank and its realm (GUIDE-141).
+	shots.append({"name": "hint_sect_herbs_" + size_tag, "open": func() -> void:
+		setup_long.call()
+		c.realm_index = 1
+		c.stage = 6
+		c.qi = 0.0
+		c.sect = {"id": "azure_cloud_sect", "rank": 1, "contribution": 1290, "spent": 0}
+		c.inventory = {"spirit_herb": 1}
+		c.mission_cooldowns = {}
+		gs.current_region = "qingshi_village"
+		root.get_node("EventBus").player_changed.emit()
+		await root.get_tree().process_frame
+		await root.get_tree().process_frame
+		hud.get("_banner").visible = false
+		var lines: Array = Guidance.hints(c, gs.data, 3, 12, gs.npcs, gs.world_flags, "qingshi_village", 40, gs.npc_favor)
+		var dump := "\n".join(lines)
+		print("hint-shot sect herbs: ", dump)
+		var rank_line := ""
+		var first_sect := ""
+		for h: String in lines:
+			assert(not h.begins_with("Use your Spirit Herb"), "herb line still shown:\n" + dump)
+			if rank_line == "" and h.contains("Core Disciple") and h.contains("Foundation Establishment"):
+				rank_line = h
+			if first_sect == "" and h.begins_with("The best pays"):
+				first_sect = h
+		assert(rank_line != "", "no Core Disciple / Foundation Establishment line:\n" + dump)
+		assert(first_sect != "", "no sect mission line:\n" + dump)
+		var mission_name: String = first_sect.get_slice(" contribution: ", 1).get_slice(" (", 0)
+		var capped: String = hud.call("cap_hint", first_sect)
+		assert(mission_name != "" and capped.contains(mission_name), "capped sect line lost its mission '" + mission_name + "': " + capped + "\n" + dump)
+		# Fetch the journal here, not through the show_journal lambda: its captures can be freed by the time a queued shot runs (WU-335).
+		var herbs_journal: Control = hud.get("_screens")["toggle_journal"]
+		herbs_journal.open()
+		for _i in 4:
+			await root.get_tree().process_frame
+		var parsed: String = (herbs_journal.get("_text") as RichTextLabel).get_parsed_text()
+		assert(parsed.contains("Core Disciple") and parsed.contains("Foundation Establishment"), "journal Next steps lacks the rank line:\n" + dump), "close": func() -> void: (hud.get("_screens")["toggle_journal"] as Control).close()})
+
 
 ## WU-190: the encounter window on real encounters with attribute, profession and enemy choices.
 func _start_encounter_shot(gs: Node) -> void:
