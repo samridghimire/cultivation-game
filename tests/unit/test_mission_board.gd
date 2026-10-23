@@ -449,3 +449,19 @@ func test_best_pay_mission_preselected_below_the_top() -> void:
 		break
 	assert_true(found, "some stage lists a ready mission above the best-pay one")
 	gs.end_session()
+
+
+## WU-306: a deliver mission short on items shows x/y in the list and where the item grows.
+func test_deliver_mission_shows_item_progress() -> void:
+	var d := data()
+	var c := _disciple()
+	c.stage = 3
+	c.add_item("spirit_herb", 1)
+	var label := MissionBoard.label_for(c, d, "herb_hall_tithe", "", -1, "")
+	assert_true(label.contains("(1/3)"), label)
+	var lines := MissionBoard.requirement_lines(c, d, d.sect_missions["herb_hall_tithe"], d.start_region)
+	assert_true(lines[0].begins_with("1 / 3"), lines[0])
+	assert_true(lines[0].contains("grows at") == (Guidance.gather_place_for(c, d, d.start_region, "spirit_herb") != ""), lines[0])
+	c.add_item("spirit_herb", 2)
+	assert_false(MissionBoard.label_for(c, d, "herb_hall_tithe", "", -1, "").contains("/3)"))
+	assert_false(MissionBoard.requirement_lines(c, d, d.sect_missions["herb_hall_tithe"], d.start_region)[0].contains("grows at"))

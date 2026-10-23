@@ -136,11 +136,16 @@ static func info_text(c: CharacterData, data: GameData, mission: Dictionary) -> 
 
 ## Hand-in items as "2 / 5 Spirit Herb" lines and the enemy with its danger
 ## for `c`; empty when the mission needs neither.
-static func requirement_lines(c: CharacterData, data: GameData, mission: Dictionary) -> PackedStringArray:
+static func requirement_lines(c: CharacterData, data: GameData, mission: Dictionary, region_id: String = "") -> PackedStringArray:
 	var lines: PackedStringArray = []
 	var needed: Dictionary = mission.get("requires", {}).get("items", {})
 	for item_id in needed:
-		lines.append("%d / %d %s" % [c.item_count(item_id), int(needed[item_id]), data.items.get(item_id, {}).get("name", item_id)])
+		var line := "%d / %d %s" % [c.item_count(item_id), int(needed[item_id]), data.items.get(item_id, {}).get("name", item_id)]
+		if c.item_count(item_id) < int(needed[item_id]):
+			var place := Guidance.gather_place_for(c, data, region_id, item_id)
+			if place != "":
+				line += " (grows at %s here)" % place
+		lines.append(line)
 	var enemy_id := String(mission.get("enemy", ""))
 	if data.enemies.has(enemy_id):
 		var enemy: Dictionary = data.enemies[enemy_id]
@@ -324,7 +329,7 @@ func _rebuild_shop() -> void:
 
 ## The list label of a mission: name, the sect's call, the pay mark the hint names, cooldown and odds.
 ## `best_id` is Guidance.best_mission, computed once per rebuild (it rates every mission's fight).
-static func label_for(p: CharacterData, data: GameData, mission_id: String, call_id: String, call_left: int, best_id: String) -> String:
+static func label_for(p: CharacterData, data: GameData, mission_id: String, call_id: String, call_left: int, best_id: String, flags: Dictionary = {}) -> String:
 	var mission: Dictionary = data.sect_missions[mission_id]
 	var label := String(mission["name"])
 	if mission_id == call_id:
@@ -334,6 +339,12 @@ static func label_for(p: CharacterData, data: GameData, mission_id: String, call
 	var wait := Sects.mission_cooldown_left(p, mission_id)
 	if wait > 0:
 		label += " (in %s)" % Calendar.format_duration(wait)
+	if String(mission.get("kind", "")) == "deliver" and Sects.check_mission(p, data, mission_id, flags).begins_with("You need "):
+		var needed: Dictionary = mission.get("requires", {}).get("items", {})
+		for item_id in needed:
+			if p.item_count(item_id) < int(needed[item_id]):
+				label += " (%d/%d)" % [p.item_count(item_id), int(needed[item_id])]
+				break
 	var danger := Sects.mission_danger(p, data, mission_id)
 	if danger != "":
 		var foe: Dictionary = data.enemies[String(mission["enemy"])]
@@ -366,7 +377,7 @@ func _rebuild_missions() -> void:
 	if ids.is_empty():
 		_add_hint("No missions are posted for you. Only sect disciples receive sect missions.")
 	for mission_id in ids:
-		var label := label_for(p, data, mission_id, call_id, call_left, best)
+		var label := label_for(p, data, mission_id, call_id, call_left, best, GameState.world_flags)
 		var danger := Sects.mission_danger(p, data, mission_id)
 		_add_entry(mission_id, label, Sects.check_mission(p, data, mission_id, GameState.world_flags) == "")
 		if danger != "":
@@ -491,7 +502,7 @@ func _show_details() -> void:
 	_name.text = mission["name"]
 	_info.text = info_text(p, data, mission)
 	_description.text = String(mission.get("description", ""))
-	var reqs := requirement_lines(p, data, mission)
+	var reqs := requirement_lines(p, data, mission, GameState.current_region)
 	_requirements.visible = not reqs.is_empty()
 	_requirements.text = "Requires:\n  " + "\n  ".join(reqs)
 	var rewards := Items.describe_effects(mission.get("rewards", {}), data)

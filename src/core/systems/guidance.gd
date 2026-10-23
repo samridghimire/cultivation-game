@@ -877,6 +877,13 @@ static func _gatherable_items(c: CharacterData, data: GameData, region_id: Strin
 	return out
 
 
+## The display name of the gather place in `region_id` that yields `item_id` for `c` (in season
+## today when `today >= 0`), "" when none does (WU-306).
+static func gather_place_for(c: CharacterData, data: GameData, region_id: String, item_id: String, today: int = -1) -> String:
+	var season := Calendar.season_of(today) if today >= 0 else ""
+	return String(_gatherable_items(c, data, region_id, season).get(item_id, ""))
+
+
 ## Where `item_id` can be gathered (WU-206): the display name of the first gather
 ## place offering it, the current region first, then the rest in data order; a place
 ## in another region reads "<place> in <Region>". With `today >= 0` in-season places
