@@ -368,10 +368,13 @@ func test_better_qi_hint_names_the_best_reachable_spot() -> void:
 	for line in hints:
 		if line.begins_with("Gather "):
 			gather = line
-	assert_true(gather.contains(" At Cloud-Sea Cliff (2x qi) in Azure Peak (10 days away) it would take about "), gather)
+	assert_true(gather.contains(": about "), gather)
+	assert_true(gather.find("Cloud-Sea Cliff") < 120, gather)
+	assert_true(gather.contains(" at Cloud-Sea Cliff (2x qi) in Azure Peak (10 days away), "), gather)
 	var needed := Cultivation.qi_required(c, data()) - c.qi
 	var days := Calendar.format_duration(ceili(needed / Cultivation.qi_per_day(c, data(), Guidance.best_qi_reachable(c, data(), "qingshi_village")["density"])))
-	assert_true(gather.ends_with("it would take about %s." % days), gather)
+	assert_true(gather.contains(": about %s at " % days), gather)
+	assert_true(gather.ends_with(" here."), gather)
 
 
 func test_better_qi_dropped_when_the_trip_costs_more_than_it_saves() -> void:
@@ -381,7 +384,7 @@ func test_better_qi_dropped_when_the_trip_costs_more_than_it_saves() -> void:
 	var hints := Guidance.hints(c, data(), 1.0, 20, {}, {}, "qingshi_village")
 	assert_true(_has(hints, "Gather "))
 	assert_false(_has(hints, "Meditation at"))
-	assert_false(_has(hints, "it would take about"))
+	assert_false(_has(hints, " at Cloud-Sea Cliff"))
 
 
 func test_better_qi_keeps_standalone_line_without_a_gather_line() -> void:
@@ -2829,13 +2832,13 @@ func test_heal_source_names_item_clinic_or_fallback() -> void:
 	assert_false(line.contains("Meridian"), line)
 	assert_true(line.contains("Village Clinic treats it for"), line)
 	var hint := Guidance.hints(c, data(), 1.0, 20, {}, {}, "qingshi_village")
-	assert_true(_has(hint, "The Village Clinic treats it for"))
+	assert_true(_has(hint, "Treat your injuries: the Village Clinic treats it for"))
 	# No stones: not the clinic
 	c.inventory = {}
 	assert_false(Guidance.heal_source(c, data(), "qingshi_village").contains("Village Clinic treats it for"))
 	# No region: old wording
 	assert_eq(Guidance.heal_source(c, data(), ""), "")
-	assert_true(_has(Guidance.hints(c, data(), 1.0, 20), "Use a healing item or see a doctor."))
+	assert_true(_has(Guidance.hints(c, data(), 1.0, 20), "Treat your injuries: use a healing item or see a doctor."))
 
 
 func test_heal_source_looks_past_the_first_injury() -> void:
@@ -2947,9 +2950,9 @@ func test_armor_hint_shown_to_unarmored_fighter() -> void:
 	var c := _armor_hint_fighter()
 	var armor_id := Guidance.affordable_armor(c, data(), "myriad_peaks_ridge")
 	var line := Guidance.armor_hint(c, data(), "myriad_peaks_ridge")
-	assert_true(line.begins_with("Armor would keep you standing in fights"), line)
+	assert_true(line.begins_with("Armor keeps you standing"), line)
 	assert_true(line.contains(data().items[armor_id]["name"]), line)
-	assert_true(_has(Guidance._newcomer_hints(c, data(), {}, "myriad_peaks_ridge"), "Armor would keep you"))
+	assert_true(_has(Guidance._newcomer_hints(c, data(), {}, "myriad_peaks_ridge"), "Armor keeps you standing"))
 
 
 func test_armor_hint_hidden_when_it_does_not_apply() -> void:
@@ -3027,7 +3030,7 @@ func test_sect_faction_merchant_price_follows_reputation() -> void:
 func test_armor_hint_points_to_the_nearest_market() -> void:
 	var c := _armor_hint_fighter()
 	var line := Guidance.armor_hint(c, data(), "qingshi_village")
-	assert_true(line.begins_with("Armor would keep you standing in fights. The "), line)
+	assert_true(line.begins_with("Armor keeps you standing. The "), line)
 	assert_false(line.contains(": The "), line)
 	assert_true(line.contains("Fallen Star Market") and line.contains("10 days"), line)
 	var local := Guidance.armor_hint(c, data(), "fallen_star_market")
@@ -3641,3 +3644,22 @@ func test_deliver_wording_found_at_for_ore() -> void:
 			assert_true(line.contains("(found at %s here)" % g["cold_iron"]), line)
 			return
 	assert_true(true, "cold iron is gathered nowhere")
+
+
+func test_injury_line_leads_with_treatment() -> void:
+	var c := _fresh()
+	c.realm_index = 0
+	c.injuries = {"internal_injury": 1}
+	c.inventory["spirit_stone"] = 500
+	var line := ""
+	for h in Guidance.hints(c, data(), 1.0, 10, {}, {}, "qingshi_village"):
+		if h.begins_with("Treat your injuries"):
+			line = h
+	assert_true(line.begins_with("Treat your injuries: the Village Clinic treats it for "), line)
+	assert_true(line.find("stones.") > 0 and line.find("stones.") < 120, line)
+	assert_true(line.contains(" slows your cultivation"), line)
+	Injuries.inflict(c, data(), "qi_deviation")
+	for h in Guidance.hints(c, data(), 1.0, 10, {}, {}, "qingshi_village"):
+		if h.begins_with("Treat your injuries"):
+			line = h
+	assert_true(line.contains(" slow your cultivation"), line)

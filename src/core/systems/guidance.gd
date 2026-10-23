@@ -37,12 +37,13 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 		out.append("Only %d %s of life remain. Break through to a higher realm or find a longevity treasure." % [years, "year" if years == 1 else "years"])
 	if Injuries.has_any(c):
 		var heal := heal_source(c, data, region_id)
-		heal = heal.substr(0, 1).to_upper() + heal.substr(1) + "." if heal != "" else "Use a healing item or see a doctor."
+		heal = heal + "." if heal != "" else "use a healing item or see a doctor."
 		var lost := Injuries.qi_days_lost(c, data)
 		var cost := ""
 		if lost >= 3:
 			cost = " Left alone they cost about %s of cultivation%s." % [Calendar.format_duration(lost), " and weaken you in fights" if Injuries.combat_multiplier(c, data) < 1.0 else ""]
-		out.append("Treat your injuries (%s): they slow your cultivation to x%s.%s %s" % [", ".join(Injuries.describe(c, data)), String.num(Injuries.cultivation_multiplier(c, data), 2), cost, heal])
+		var injuries := Injuries.describe(c, data)
+		out.append("Treat your injuries: %s %s %s your cultivation to x%s.%s" % [heal, ", ".join(injuries), "slows" if injuries.size() == 1 else "slow", String.num(Injuries.cultivation_multiplier(c, data), 2), cost])
 	if Sects.duty_days_left(c) <= Sects.DUTY_REMINDER_DAYS:
 		var duty := Sects.duty_reminder(c, data)
 		if duty != "":
@@ -1564,7 +1565,7 @@ static func _deliver_clause(c: CharacterData, data: GameData, mission_id: String
 
 
 ## A slow stage names the faster spot in the same line (GUIDE-113): the "Gather N more qi" line gains
-## "At <place> in <region> (<D> away) it would take about <T>." and the standalone better-qi line goes.
+## ": about <T> at <place> in <region> (<D> away), <T_here> here." and the standalone better-qi line goes.
 ## The clause is added only when the days saved exceed the round trip; a trip that costs more than it
 ## saves is not advice, so then the better-qi line is just dropped. Without a Gather line nothing changes.
 static func _merge_better_qi(out: PackedStringArray, c: CharacterData, data: GameData, density: float, region_id: String, flags: Dictionary = {}) -> PackedStringArray:
@@ -1603,7 +1604,13 @@ static func _merge_better_qi(out: PackedStringArray, c: CharacterData, data: Gam
 	var where := Exploration.region_name(data, best_region)
 	if away > 0:
 		where += " (%s away)" % Calendar.format_duration(away)
-	out[gather] = out[gather] + " At %s in %s it would take about %s." % [place, where, Calendar.format_duration(days_best)]
+	var line := out[gather]
+	var idx := line.find(" (about ")
+	var close := line.find(").", idx) if idx >= 0 else -1
+	if close < 0:
+		out[gather] = line + " At %s in %s it would take about %s." % [place, where, Calendar.format_duration(days_best)]
+	else:
+		out[gather] = "%s: about %s at %s in %s, %s here.%s" % [line.substr(0, idx), Calendar.format_duration(days_best), place, where, Calendar.format_duration(days_here), line.substr(close + 2)]
 	return out
 
 
@@ -1851,9 +1858,9 @@ static func armor_hint(c: CharacterData, data: GameData, region_id: String) -> S
 	if armor_id == "":
 		var far := _far_armor_clause(c, data, region_id)
 		if far != "":
-			return "Armor would keep you standing in fights." + far
+			return "Armor keeps you standing." + far
 		return _loot_armor_hint(c, data, region_id)
-	return "Armor would keep you standing in fights: the %s sells %s for %d stones." % [merchant_selling(data, region_id, armor_id), data.items[armor_id]["name"], merchant_price(c, data, region_id, armor_id)]
+	return "Armor keeps you standing: the %s sells %s for %d stones." % [merchant_selling(data, region_id, armor_id), data.items[armor_id]["name"], merchant_price(c, data, region_id, armor_id)]
 
 
 ## GUIDE-088: armor_hint when stones alone fall short but stones + what the local buyer pays for your loot would do.
@@ -1864,11 +1871,11 @@ static func _loot_armor_hint(c: CharacterData, data: GameData, region_id: String
 	var budget := c.item_count("spirit_stone") + int(offer["total"])
 	var armor_id := affordable_armor(c, data, region_id, budget)
 	if armor_id != "":
-		return "Armor would keep you standing in fights: sell your %s to the %s (about %d stones), then the %s sells %s for %d stones." % [offer["goods"], offer["merchant"], offer["total"], merchant_selling(data, region_id, armor_id), data.items[armor_id]["name"], merchant_price(c, data, region_id, armor_id)]
+		return "Armor keeps you standing: sell your %s to the %s (about %d stones), then the %s sells %s for %d stones." % [offer["goods"], offer["merchant"], offer["total"], merchant_selling(data, region_id, armor_id), data.items[armor_id]["name"], merchant_price(c, data, region_id, armor_id)]
 	var far := _far_armor_clause(c, data, region_id, budget)
 	if far == "":
 		return ""
-	return "Armor would keep you standing in fights." + _sell_first_clause(offer, true) + far
+	return "Armor keeps you standing." + _sell_first_clause(offer, true) + far
 
 
 ## GUIDE-086: the fight (in `region_id`) that practising `tech_id` one more level turns from a loss into a

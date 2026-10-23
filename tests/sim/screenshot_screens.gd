@@ -1456,7 +1456,7 @@ func _start_hint_shot(gs: Node) -> void:
 		print("hint-shot armor far: ", hint_text.call())
 		# Qingshi's chore line ranks above the armor line, so the HUD shows the chore; the journal lists both.
 		var listed: PackedStringArray = Guidance.hints(c, gs.data, 3, 12, gs.npcs, gs.world_flags, "qingshi_village", 40, gs.npc_favor)
-		assert("\n".join(listed).contains("Armor would keep you standing"), "armor hint missing: " + "\n".join(listed)), "close": func() -> void: pass})
+		assert("\n".join(listed).contains("Armor keeps you standing"), "armor hint missing: " + "\n".join(listed)), "close": func() -> void: pass})
 	shots.append({"name": "hint_armor_far_journal_" + size_tag, "open": func() -> void:
 		setup_armor_far.call()
 		show_journal.call("Next steps"), "close": journal.close})
@@ -1544,11 +1544,11 @@ func _start_hint_shot(gs: Node) -> void:
 			await root.get_tree().process_frame
 		var long_rich: RichTextLabel = journal.get("_text")
 		var long_parsed := long_rich.get_parsed_text()
-		# GUIDE-113 merges the standalone line into the "Gather N more qi" line ("At <place> ... it would take about <T>.")
+		# GUIDE-113 merges the standalone line into the "Gather N more qi" line (": about <T> at <place> ...")
 		# when the trip pays off, and drops it when it does not; the shot must show one of the two.
 		var long_at := long_parsed.find("Meditation at")
 		if long_at < 0:
-			long_at = long_parsed.find("it would take about")
+			long_at = long_parsed.find(": about ")
 		assert(long_at >= 0, "journal has no far-qi line")
 		var long_scroll: ScrollContainer = journal.get("_scroll")
 		long_scroll.scroll_vertical = maxi(0, int(long_rich.get_paragraph_offset(long_parsed.substr(0, long_at).count("\n"))) - 160), "close": journal.close})
