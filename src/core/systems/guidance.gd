@@ -1690,7 +1690,8 @@ static func _mission_hint(c: CharacterData, data: GameData, flags: Dictionary = 
 			continue
 		if _mission_too_dangerous(c, data, id):
 			too_dangerous += 1
-			if odds_unhurt(c, data, data.enemies[String(data.sect_missions[id]["enemy"])]) >= 0.5:
+			var mission_foe: Dictionary = data.enemies[String(data.sect_missions[id]["enemy"])]
+			if odds_unhurt(c, data, mission_foe) >= fight_floor(c, mission_foe):
 				healed_wins = true
 		else:
 			ready += 1
@@ -1943,7 +1944,17 @@ static func _mission_too_dangerous(c: CharacterData, data: GameData, mission_id:
 static func mission_too_dangerous(c: CharacterData, data: GameData, enemy_id: String) -> bool:
 	if not data.enemies.has(enemy_id):
 		return false
-	return Combat.win_chance(c, data, data.enemies[enemy_id]) < 0.5
+	return Combat.win_chance(c, data, data.enemies[enemy_id]) < fight_floor(c, data.enemies[enemy_id])
+
+
+## GUIDE-148: the lowest win chance a hint will steer `c` into: 0.5 for a non-lethal foe, 0.7 ("Even") for a lethal
+## one, 0.9 ("Weak") for a lethal one while the Creation Artifact is nearly out of lives.
+static func fight_floor(c: CharacterData, enemy: Dictionary) -> float:
+	if not bool(enemy.get("lethal", false)):
+		return 0.5
+	if c.artifact_lives >= 0 and c.artifact_lives <= LOW_ARTIFACT_LIVES:
+		return 0.9
+	return 0.7
 
 
 ## Announcements for features that just became available and whose flag
@@ -2172,7 +2183,7 @@ static func _rated_region_fights(c: CharacterData, data: GameData, region_id: St
 		if rated.size() >= OUTGROWN_RATED_MAX:
 			break
 		var foe: Dictionary = data.enemies[enemy_id]
-		rated.append({"name": String(foe.get("name", enemy_id)), "chance": Combat.win_chance(unhurt, data, foe)})
+		rated.append({"name": String(foe.get("name", enemy_id)), "chance": Combat.win_chance(unhurt, data, foe), "floor": fight_floor(c, foe)})
 	return rated
 
 
@@ -2195,7 +2206,7 @@ static func outgrown_hint(c: CharacterData, data: GameData, region_id: String, t
 		var best: Dictionary = {}
 		for f in _rated_region_fights(c, data, r, today, flags):
 			var chance := float(f["chance"])
-			if chance >= OUTGROWN_FAIR_MIN and chance <= OUTGROWN_FAIR_MAX and (best.is_empty() or chance > float(best["chance"])):
+			if chance >= maxf(OUTGROWN_FAIR_MIN, float(f["floor"])) and chance <= OUTGROWN_FAIR_MAX and (best.is_empty() or chance > float(best["chance"])):
 				best = f
 		if not best.is_empty():
 			return "Nothing here tests you any more: %s in %s (%s) is a fair fight (%d in 100)." % [best["name"], Exploration.region_name(data, r), Calendar.format_duration(int(best_days[r])), roundi(float(best["chance"]) * 100.0)]

@@ -1607,9 +1607,56 @@ func test_mission_too_dangerous_matches_rating() -> void:
 	c.realm_index = 1
 	c.stage = 0
 	var enemy_id := String(d.sect_missions["patrol_misty_peaks"]["enemy"])
-	var expected := Combat.win_chance(c, d, d.enemies[enemy_id]) < 0.5
+	var expected := Combat.win_chance(c, d, d.enemies[enemy_id]) < Guidance.fight_floor(c, d.enemies[enemy_id])
 	assert_eq(Guidance.mission_too_dangerous(c, d, enemy_id), expected)
 	assert_false(Guidance.mission_too_dangerous(c, d, "no_such_enemy"))
+
+## GUIDE-148: a character whose Combat.win_chance against `enemy` is in [lo, hi), found by scanning QR stages and
+## Iron Fist levels; null when none.
+func _rated_between(d: GameData, enemy: Dictionary, lo: float, hi: float) -> CharacterData:
+	for stage in range(0, 9):
+		for level in range(0, 6):
+			var c := new_character()
+			c.realm_index = 1
+			c.stage = stage
+			c.sect = {"id": "azure_cloud_sect", "rank": 0, "contribution": 0}
+			if level > 0:
+				c.techniques["iron_fist"] = {"level": level, "xp": 0.0}
+			var chance := Combat.win_chance(c, d, enemy)
+			if chance >= lo and chance < hi:
+				return c
+	return null
+
+func test_fight_floor_by_lethality_and_lives() -> void:
+	var d := data()
+	var c := new_character()
+	c.artifact_lives = 3
+	assert_eq(Guidance.fight_floor(c, d.enemies["den_wolf"]), 0.5)
+	assert_eq(Guidance.fight_floor(c, d.enemies["mist_wolf"]), 0.7)
+	c.artifact_lives = 1
+	assert_eq(Guidance.fight_floor(c, d.enemies["mist_wolf"]), 0.9)
+	assert_eq(Guidance.fight_floor(c, d.enemies["den_wolf"]), 0.5)
+
+func test_lethal_mission_too_dangerous_below_even() -> void:
+	var d := data()
+	var wolf: Dictionary = d.enemies["mist_wolf"]
+	var c := _rated_between(d, wolf, 0.5, 0.7)
+	assert_true(c != null, "a QR character rated 50-70% vs the mist wolf exists")
+	c.artifact_lives = 3
+	assert_true(Guidance._mission_too_dangerous(c, d, "cull_mist_wolves"))
+	assert_false(Guidance._mission_hint(c, d, {}).contains("Cull the Mist Wolves"))
+	var mid := _rated_between(d, wolf, 0.7, 0.9)
+	assert_true(mid != null, "a QR character rated 70-90% vs the mist wolf exists")
+	mid.artifact_lives = 3
+	assert_false(Guidance._mission_too_dangerous(mid, d, "cull_mist_wolves"))
+	mid.artifact_lives = 1
+	assert_true(Guidance._mission_too_dangerous(mid, d, "cull_mist_wolves"))
+	# A non-lethal foe at 55% still counts as worth fighting.
+	var den: Dictionary = d.enemies["den_wolf"]
+	var soft := _rated_between(d, den, 0.5, 0.7)
+	if soft != null:
+		soft.artifact_lives = 1
+		assert_false(Guidance.mission_too_dangerous(soft, d, "den_wolf"))
 
 func _qr(stage: int, stones: int) -> CharacterData:
 	var c := new_character()
@@ -4272,11 +4319,22 @@ func _outgrown_foundation(attribute: int) -> CharacterData:
 
 
 func test_outgrown_hint_names_a_fair_fight_in_a_neighbouring_region() -> void:
-	var line := Guidance.outgrown_hint(_outgrown_foundation(6), data(), "qingshi_village", 0)
+	# GUIDE-148: the Rogue Cultivator is lethal, so it only counts once the odds reach the 70% floor.
+	var attr := 6
+	var line := ""
+	while attr < 10 and line == "":
+		line = Guidance.outgrown_hint(_outgrown_foundation(attr), data(), "qingshi_village", 0)
+		attr += 1
 	assert_true(line.begins_with("Nothing here tests you any more: Rogue Cultivator in Fallen Star Market (10 days) is a fair fight ("), line)
 	assert_true(line.ends_with(" in 100)."), line)
-	var hints := Guidance.hints(_outgrown_foundation(6), data(), 1.0, 30, {}, {}, "qingshi_village", 0)
+	var chance := int(line.get_slice("(", 2).get_slice(" in 100", 0))
+	assert_true(chance >= 70, line)
+	var hints := Guidance.hints(_outgrown_foundation(attr - 1), data(), 1.0, 30, {}, {}, "qingshi_village", 0)
 	assert_true(_has(hints, "Nothing here tests you any more"))
+	# At one artifact life the floor is 90%, above the 85% ceiling: no lethal fight is offered.
+	var low := _outgrown_foundation(attr - 1)
+	low.artifact_lives = 1
+	assert_eq(Guidance.outgrown_hint(low, data(), "qingshi_village", 0), "")
 
 
 func test_outgrown_hint_is_silent_for_a_newcomer_or_a_hard_home() -> void:
