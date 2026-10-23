@@ -215,13 +215,13 @@ func test_trial_odds_hint() -> void:
 	var hint := Guidance._sect_hint(c, d)
 	assert_true(hint.contains("you face the " + enemy_name), hint)
 	assert_true(hint.contains("%d in 100" % roundi(Guidance.trial_odds(c, d) * 100.0)), hint)
-	assert_eq(hint.contains("practise or grow a stage first"), Guidance.trial_odds(c, d) < 0.5)
+	assert_eq(hint.contains("or grow a stage first"), Guidance.trial_odds(c, d) < 0.5)
 	for k: String in c.attributes:
 		c.attributes[k] = 1
 	c.techniques = {}
 	c.stage = 0
 	assert_true(Guidance.trial_odds(c, d) < 0.5, "weak disciple should be unlikely to win")
-	assert_true(Guidance._sect_hint(c, d).contains("practise or grow a stage first"))
+	assert_true(Guidance._sect_hint(c, d).contains("learn a combat technique"))
 
 
 ## GUIDE-092: an injury that loses the trial says to heal, not to practise.
@@ -4488,6 +4488,26 @@ func test_trial_advice_with_stages_left_may_say_grow_a_stage() -> void:
 	var advice := Guidance._trial_advice(c, d, "qingshi_village")
 	if Guidance.trial_odds(c, d) < 0.5:
 		assert_true(advice.contains("grow a stage first"), advice)
+
+
+func test_trial_advice_without_combat_technique_says_learn_one() -> void:
+	var d := data()
+	for last in [true, false]:
+		var c := _g152_inner_disciple(d.realms[Guidance.THIN_DEFENCE_REALM].stage_count() - 1 if last else 0)
+		c.techniques = {"stone_skin": {"level": 1}}
+		c.equipment = {"armor": "azure_guard_robe"}
+		assert_eq(Guidance._thin_defence_missing(c, d), "")
+		var odds := Guidance.trial_odds(c, d)
+		if odds < 0.0 or odds >= 0.5:
+			print("  (skipped: trial odds %s)" % odds)
+			continue
+		var advice := Guidance._trial_advice(c, d, "qingshi_village")
+		assert_true(advice.contains("learn a combat technique"), advice)
+		assert_false(advice.contains("practise"), advice)
+		if last:
+			assert_false(advice.contains("grow a stage"), advice)
+		else:
+			assert_true(advice.contains("or grow a stage first"), advice)
 
 
 func test_empty_fair_fights_note_breaks_through_at_the_last_stage() -> void:

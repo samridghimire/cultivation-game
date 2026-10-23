@@ -1665,7 +1665,17 @@ static func _trial_advice(c: CharacterData, data: GameData, region_id: String = 
 			else:
 				var can_practise := Techniques.knows_kind(c, data, "combat") and _best_unmastered_combat(c, data) != ""
 				var can_grow := _can_grow_stage(c, data)
-				if can_practise and can_grow or not Techniques.knows_kind(c, data, "combat") and can_grow:
+				if not Techniques.knows_kind(c, data, "combat"):
+					# GUIDE-159: nothing to practise; the lever is learning a combat technique.
+					var manual := first_combat_manual(c, data, region_id)
+					var lever := "learn a combat technique"
+					if not manual.is_empty():
+						lever += " such as %s" % data.techniques[manual["technique"]].name
+					if can_grow:
+						line += " A loss only injures you; %s or grow a stage first." % lever
+					else:
+						line += " A loss only injures you; %s first." % lever
+				elif can_practise and can_grow:
 					line += " A loss only injures you; practise or grow a stage first."
 				elif can_grow:
 					line += " A loss only injures you; grow a stage first."
