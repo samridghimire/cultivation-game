@@ -36,6 +36,7 @@ const MENU_HINT := "In menus: arrow keys / d-pad move, Enter / A chooses, Esc / 
 var _list: VBoxContainer
 var _title: Label
 var _body: RichTextLabel
+var _scroll: ScrollContainer
 var _page_buttons: Array[Button] = []
 var _page := ""
 
@@ -71,6 +72,9 @@ func _init() -> void:
 	var scroll := ScrollContainer.new()
 	scroll.custom_minimum_size = Vector2(600, 500)
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	# WU-369: focusable so the right stick / d-pad scrolls a long page.
+	scroll.focus_mode = Control.FOCUS_ALL
+	_scroll = scroll
 	details.add_child(scroll)
 	_body = RichTextLabel.new()
 	_body.bbcode_enabled = true
@@ -177,6 +181,7 @@ func _add_page_button(id: String, title: String) -> void:
 func _show_page(id: String) -> void:
 	_page = id
 	_body.clear()
+	_scroll.scroll_vertical = 0
 	if id == CONTROLS_ID:
 		_title.text = "Controls"
 		_body.append_text(controls_text(control_rows(InputConfig.keys, InputConfig.joy_buttons, InputConfig.JOY_AXES, GameState.data.help_action_names)))
@@ -185,3 +190,20 @@ func _show_page(id: String) -> void:
 		if page["id"] == id:
 			_title.text = page["title"]
 			_body.append_text(page_text(page))
+
+
+## True when the current page's text is taller than the scroll area (it scrolls instead of clipping).
+func body_overflows() -> bool:
+	return _body.get_combined_minimum_size().y > _scroll.custom_minimum_size.y
+
+
+## Page ids in list order (Controls first), for the screenshot pass.
+func page_ids() -> Array[String]:
+	var ids: Array[String] = [CONTROLS_ID]
+	for page: Dictionary in GameState.data.help_pages:
+		ids.append(String(page["id"]))
+	return ids
+
+
+func show_page(id: String) -> void:
+	_show_page(id)

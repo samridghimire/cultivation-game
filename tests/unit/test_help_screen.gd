@@ -212,3 +212,20 @@ func test_list_shows_group_headers_and_focus_stays_on_buttons() -> void:
 	assert_true(screen.get_viewport().gui_get_focus_owner() is Button, "focus on a button")
 	assert_eq(HelpScreen.group_title([{"id": "a", "title": "Alpha"}], "a"), "Alpha")
 	screen.queue_free()
+
+
+## WU-369: every page's body sits in a focusable ScrollContainer, so a long page scrolls rather than clipping.
+func test_body_scrolls_and_is_focusable() -> void:
+	var screen := HelpScreen.new()
+	_root().add_child(screen)
+	screen.open()
+	assert_true(screen._body.get_parent() is ScrollContainer, "body inside a ScrollContainer")
+	assert_eq(screen._scroll.focus_mode, Control.FOCUS_ALL)
+	assert_eq(screen._scroll.horizontal_scroll_mode, ScrollContainer.SCROLL_MODE_DISABLED)
+	var ids := screen.page_ids()
+	assert_eq(ids.size(), data().help_pages.size() + 1)
+	for id in ids:
+		screen.show_page(id)
+		assert_eq(screen._scroll.scroll_vertical, 0, "page %s starts at the top" % id)
+		assert_gt(screen._body.get_parsed_text().length(), 0, "page %s has text" % id)
+	screen.queue_free()

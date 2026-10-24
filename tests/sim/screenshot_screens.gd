@@ -106,6 +106,7 @@ extends SceneTree
 ## WU-357: `--hint-shot` also writes hint_trial_no_style_<size>.png (Foundation Peak, no combat technique, trial open: advice says "learn a combat technique", never "practise").
 ## WU-356: `--hint-shot` also writes hint_missions_last_stage_<size>.png (Qi Refining last stage, missions too dangerous, style mastered: the mission line says break through).
 ## WU-353: `--hint-shot` also writes hint_practice_target_<size>.png (Inner Disciple, Foundation Peak, Iron Fist 2: trial advice says "to level N (now 2)").
+## WU-369: `--help-shot` writes help_<topic>_<size>.png for every help page (long ones scroll in a focusable ScrollContainer).
 ## WU-364: `--hint-shot` also writes journal_goals_realm_/journal_goals_rank_<size>.png (Foundation Early: realm goal names Cloud-Sea Cliff in Azure Peak; Foundation Peak with a hopeless Core Disciple trial: rank goal says "beyond you yet").
 ## WU-363: `--hint-shot` also writes hint_sect_method_<size>.png (Azure Cloud Inner Disciple, QR5, 1200 contribution: hint names the treasury method, both rates and the Learn-it sentence; short of the cost the sentence is gone).
 ## WU-361: `--hint-shot` also writes hint_body_art_target_<size>.png (Iron Fist at its typical level, Stone Skin Tempering 1: trial line says "practise Stone Skin Tempering to level N (now 1)", never "practise Iron Fist").
@@ -233,6 +234,9 @@ func _start() -> void:
 		return
 	if OS.get_cmdline_user_args().has("--inventory-shot"):
 		_start_inventory_shot(gs)
+		return
+	if OS.get_cmdline_user_args().has("--help-shot"):
+		_start_help_shot(gs)
 		return
 	if OS.get_cmdline_user_args().has("--missions-shot"):
 		_start_missions_shot(gs)
@@ -1256,6 +1260,28 @@ func _start_techniques_shot(gs: Node) -> void:
 ## WU-298: the character is at the 5th layer with Iron Fist 3 so the board shows a "(best pay)" row.
 ## WU-290: `--missions-shot` writes missions_list_<size>.png and missions_ranks_<size>.png: the mission board for an Azure Cloud
 ## outer disciple (Qi Refining 3rd layer, Iron Fist level 2) in Qingshi Village; list labels carry the odds, the Ranks tab the trial line.
+## WU-369: `--help-shot` writes help_<topic>_<size>.png for Controls and every data/help.json page.
+func _start_help_shot(gs: Node) -> void:
+	var c := CharacterFactory.create("Lin Feng", gs.data, seeded_shot_rng())
+	gs.start_session(c)
+	gs.pending_event = ""
+	world = load("res://src/world/world.tscn").instantiate()
+	root.add_child(world)
+	hud = world.get_node("HUD")
+	var size_tag := "%dx%d" % [root.size.x, root.size.y]
+	var help: Control = hud.get("_help")
+	for id: String in help.call("page_ids"):
+		shots.append({"name": "help_%s_%s" % [id, size_tag], "open": func() -> void:
+			help.open()
+			help.show_page.call_deferred(id), "close": help.close})
+
+
+func seeded_shot_rng() -> RandomNumberGenerator:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 5
+	return rng
+
+
 func _start_missions_shot(gs: Node) -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 5
