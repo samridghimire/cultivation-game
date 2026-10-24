@@ -2,6 +2,23 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-24 [ITEM-003] Some pills now need a higher realm: the Cloud-Mist Qi Pill only works from Foundation, the Earth Marrow Essence Pill from Core Formation.
+- 2026-10-24 [GUIDE-178] Alchemy orders ask for pills you can make from ingredients in your own region first.
+- 2026-10-24 [GUIDE-181] The sect rank goal lists everything the next rank still needs at once.
+- 2026-10-24 [GUIDE-179] The sect treasury method hint shows both qi rates up front, so the HUD line keeps them.
+- 2026-10-24 [PERF-006] The journal opens about ten times faster.
+- 2026-10-24 [WU-374] A screenshot check that an order you cannot fill stays out of the hints.
+- 2026-10-24 [WU-369] Help pages scroll with the right stick or d-pad; a screenshot check of every help topic.
+- 2026-10-24 [WU-370] A screenshot check that the busiest HUD still fits on screen.
+- 2026-10-24 [WU-367] A screenshot check that the breakthrough pill line never offers an Elder rank you cannot hold yet.
+- 2026-10-24 [WU-365] A screenshot check of the rogue's sect-join hint.
+- 2026-10-24 [WU-366] A screenshot check of the journal's clan goal.
+- 2026-10-24 [C-251] Help explains the clan goal's list of needs and why an unfillable order leaves the hints.
+- 2026-10-24 [C-253] Three new moments for Foundation rogues: a cave-swap board, a wandering master and a shared night watch.
+- 2026-10-24 [C-250] Help explains the faraway qi spot and hopeless-trial goal lines.
+- 2026-10-24 [C-247] Help explains when the sect treasury method hint appears.
+- 2026-10-24 [QA-163] The sim reports every injury and why far-qi trips end injured.
+- 2026-10-24 [QA-155] The sim measured how much a body art helps the Core Disciple trial.
 - 2026-10-24 [GUIDE-177] An order you cannot fill in time no longer takes a hint slot; the journal still lists it.
 - 2026-10-24 [C-249] Three quiet moments only a rogue meets: a loose cultivator's breathing trick, a riverside barter and a sect recruiter.
 - 2026-10-24 [GUIDE-176] The clan goal lists every need at once (realm, abode, stones).

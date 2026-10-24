@@ -74,7 +74,7 @@ Every great cultivation protagonist has something that sets them apart. Ours is 
 | Talismans (buff talismans, combat strike/shield/escape) | ✅ (ready/unready in the inventory) | `Alchemy`, `Buffs`, `CombatTalismans` |
 | Temporary buffs and forbidden secret arts | ✅ | `Buffs`, `data/techniques.json` |
 | Medicine / Doctor (treat injuries, clinic, patients) | ✅ (clinic places) | `Medicine` |
-| Items, merchants (shop screen with Buy/Sell tabs), using pills | ✅ | `data/items.json`, `Items`, `src/ui/shop_screen.gd` |
+| Items, merchants (shop screen with Buy/Sell tabs), using pills (realm-gated pills via `min_realm`: ITEM-003) | ✅ | `data/items.json`, `Items`, `src/ui/shop_screen.gd` |
 | Save/load, multiple slots | ✅ | `SaveManager` |
 | Creation Artifact: lives, anchors, respawn, recharge, functions (storage) | ✅ (artifact screen: O) | `data/artifact.json`, `CreationArtifact` |
 | Data-driven regions (6), travel, exploration encounters | ✅ (choice window: W-004d; choices that check an attribute or profession, tagged "[Comprehension 12]": CHOICE-001/002, WU-146; Dangerous lethal foes are sensed first and prompted: slip away or fight) | `data/regions.json`, `data/encounters.json`, `Exploration` |

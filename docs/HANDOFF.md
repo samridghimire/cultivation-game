@@ -2,6 +2,18 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-10-24 (planner, 06:15 UTC)
+- 17 tasks landed (ITEM-003, GUIDE-178/179/181, PERF-006, WU-365/366/367/369/370/374, C-247/250/251/253, QA-155/163).
+  Review 155b49f..257aa9c filed nothing (shop realm-tag note -> WU-375). Live claims: GUIDE-180, PERF-007, WU-362,
+  WU-373, QA-162 (all fresh).
+- QA-163: far-qi injuries go untreated (no healer at Azure Peak; hint silent when the clinic is far/unaffordable; sim
+  ignores hints) -> GUIDE-183/187, C-254, QA-165. QA-155: body art lifts the Core Disciple trial median 10 -> 41 -> QA-169.
+- Trace `simulate_curious_years.gd -- 1 36 --trace=103 --rogue` (~3 min): rogue Foundation m33, 1058 stones unspent
+  -> GUIDE-184/185/186 (name the scroll seller, the local body manual first, the abode in the clan goal), C-256 (work pay).
+- New: GUIDE-182..187, WU-375..378, C-254..256, QA-165..169.
+- Next planner: read QA-162 (sect + far qi) first; if a travelling sect member is not faster than a travelling rogue,
+  add numbers to DESIGN (QA-158), don't retune. Then QA-165 (does the far-qi speed-up survive healing?).
+
 ## State on 2026-10-24 (planner, 04:15 UTC)
 - 13 tasks landed (GUIDE-173..177, C-244/246/249, QA-160/161, WU-363/364/368). No review since 41ee758 (next reviewer
   run covers c5b1ff15..558c8d5). Live claims: PERF-006, QA-155, WU-362, WU-369 (all fresh).
