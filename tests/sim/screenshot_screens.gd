@@ -100,6 +100,7 @@ extends SceneTree
 ## WU-302: `--clinic-shot` writes clinic_one_<size>.png / clinic_two_<size>.png: the Village Clinic menu for a Qi Refining 3rd-layer
 ## character with Internal Injury, then with a second injury (Qi Deviation); the "Pay the doctor ... saves about" lines must fit or wrap unclipped.
 ## WU-295: `--bounty-shot` writes bounty_menu_<size>.png: the Fallen Star Market bounty board with the longest hunt label any realm sees (the hunt's description is shown for the focused entry).
+## WU-370: `--hint-shot` also writes hud_busy_<size>.png (Azure Cloud Inner Disciple, Foundation Peak, one artifact life, injury, duty shortfall, order due soon, hopeless trial: lives line first, hint count within the setting, panel on screen).
 ## WU-352: `--hint-shot` also writes hint_qi_two_spots_<size>.png (Foundation Middle member ~120 days short: gather line names Cloud-Sea Cliff in Azure Peak against here, durations joined by "and").
 ## WU-359: `--hint-shot` also writes sheet_member_<size>.png (Azure Cloud Inner Disciple, 7400 lifetime contribution, 402 spent: the sheet reads "Contribution: 6998 to spend (lifetime 7400)").
 ## WU-355: `--hint-shot` also writes hint_duty_covers_/hint_duty_skips_<size>.png (Inner Disciple at duty 18/30, 3 days left: the line names the Herb Hall tithe "covers it", else "skips this month's stipend").
@@ -2546,6 +2547,60 @@ func _start_hint_shot(gs: Node) -> void:
 			c.inventory = method_saved[4]
 			c.main_method = method_saved[5]
 			method_saved.clear()})
+
+	# WU-370: the busiest HUD. An Azure Cloud Inner Disciple at Foundation Peak in Qingshi with one artifact life, an injury,
+	# a duty shortfall, an open order due soon and a hopeless Core Disciple trial: the hint panel keeps the lives line first,
+	# shows at most the configured number of lines and stays on screen.
+	var busy_saved: Array = []
+	shots.append({"name": "hud_busy_" + size_tag, "open": func() -> void:
+		setup_long.call()
+		busy_saved.append_array([c.realm_index, c.stage, c.sect.duplicate(), c.techniques.duplicate(true), c.equipment.duplicate(), c.inventory.duplicate(), c.mission_cooldowns.duplicate(), c.artifact_lives, c.injuries.duplicate(), c.commissions.duplicate(true), c.age_days])
+		c.realm_index = gs.data.realm_index_of("foundation_establishment")
+		c.stage = gs.data.realms[c.realm_index].stage_count() - 1
+		c.qi = 0.0
+		c.sect = {"id": "azure_cloud_sect", "rank": 1, "contribution": 3500, "spent": 0, "month_earned": 0}
+		c.techniques = {}
+		c.equipment = {}
+		c.inventory = {"spirit_stone": 120}
+		c.mission_cooldowns = {}
+		c.artifact_lives = 1
+		c.injuries = {"qi_deviation": 100}
+		c.age_days = c.age_days - c.age_days % Calendar.DAYS_PER_MONTH + Calendar.DAYS_PER_MONTH - 3
+		c.commissions = []
+		gs.current_region = "qingshi_village"
+		gs.call("_commissions_month", "alchemist")
+		for order: Dictionary in c.commissions:
+			order["due_day"] = clock.total_days + 4
+		root.get_node("EventBus").player_changed.emit()
+		await root.get_tree().process_frame
+		await root.get_tree().process_frame
+		hud.get("_banner").visible = false
+		var full: Array = Guidance.hints(c, gs.data, 3, 12, gs.npcs, gs.world_flags, "qingshi_village", clock.total_days, gs.npc_favor)
+		print("hint-shot busy (", full.size(), " hints): ", "\n".join(full))
+		var shown: Array = (hud.get("_hint_lines") as PackedStringArray).duplicate()
+		assert(not shown.is_empty(), "busy HUD shows no hint")
+		assert(String(shown[0]).begins_with("Your Creation Artifact"), "lives line not first: " + String(shown[0]))
+		var hint_label: Label = hud.get("_hint")
+		var panel: Control = hud.get("_status_panel")
+		var visible_lines := hint_label.text.split("\n").size() if hint_label.visible else 0
+		assert(visible_lines <= int(root.get_node("Settings").call("get_value", "hud_hints")), "more hint lines than the setting allows: " + hint_label.text)
+		# WU-252: with an injury _fit_status_panel drops the hint lines by design (the journal carries them); the panel must still fit.
+		var view: Vector2 = hud.get_viewport().get_visible_rect().size
+		assert(panel.get_global_rect().end.y <= view.y, "status panel runs off screen: " + str(panel.get_global_rect()))
+		print("hint-shot busy: ", visible_lines, " visible hint lines, panel ", panel.get_global_rect()), "close": func() -> void:
+			c.realm_index = busy_saved[0]
+			c.stage = busy_saved[1]
+			c.sect = busy_saved[2]
+			c.techniques = busy_saved[3]
+			c.equipment = busy_saved[4]
+			c.inventory = busy_saved[5]
+			c.mission_cooldowns = busy_saved[6]
+			c.artifact_lives = busy_saved[7]
+			c.injuries = busy_saved[8]
+			c.commissions = busy_saved[9]
+			c.age_days = busy_saved[10]
+			busy_saved.clear()
+			root.get_node("EventBus").player_changed.emit()})
 
 	# WU-364: GUIDE-168's faster-spot clause and GUIDE-171's hopeless-trial wording, read from the journal's Goals section.
 	# (a) Azure Cloud Inner Disciple at Foundation Early in qingshi_village; (b) Foundation Peak Inner Disciple, bare of techniques,
