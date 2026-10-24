@@ -1719,6 +1719,36 @@ func test_sect_pill_rank_clause_skips_unreachable_rank() -> void:
 	assert_eq(Guidance.sect_pill_rank_clause(qr, data()), " As Inner Disciple you could claim it for 250 contribution.")
 
 
+func _method_member(rank: int, contribution: int, pill: String) -> CharacterData:
+	var c := _sect_qr("azure_cloud_sect", rank, contribution, 0)
+	c.breakthrough_pill = pill
+	c.main_method = data().starter_method
+	return c
+
+
+func test_sect_method_hint() -> void:
+	var d := data()
+	var line := Guidance.sect_method_hint(_method_member(1, 2000, "foundation_establishment_pill"), d)
+	assert_true(line.contains("Azure Cloud Heart Sutra") and line.contains("x%s" % String.num(Techniques.method_rate_of(_method_member(1, 0, ""), d, "azure_cloud_heart_sutra"), 1)) and line.contains("x1.0"), line)
+	assert_true(line.ends_with("set it as your main method on the Techniques screen."), line)
+	assert_true(Guidance.hints(_method_member(1, 2000, "foundation_establishment_pill"), d, 1.0, 20).has(line))
+	# pill still to claim: 700 + 250 must fit in the balance
+	assert_eq(Guidance.sect_method_hint(_method_member(1, 800, ""), d), "")
+	assert_true(Guidance.sect_method_hint(_method_member(1, 1000, ""), d).contains("you have 1000"))
+	var short := Guidance.sect_method_hint(_method_member(1, 600, "foundation_establishment_pill"), d)
+	assert_true(short.contains("you have 600") and not short.contains("Learn it"), short)
+
+
+func test_sect_method_hint_none() -> void:
+	var d := data()
+	var known := _method_member(1, 2000, "foundation_establishment_pill")
+	known.techniques["azure_cloud_heart_sutra"] = 1
+	assert_eq(Guidance.sect_method_hint(known, d), "")
+	assert_eq(Guidance.sect_method_hint(_method_member(0, 2000, "foundation_establishment_pill"), d), "")
+	var rogue := _qr(6, 20)
+	assert_eq(Guidance.sect_method_hint(rogue, d), "")
+
+
 func test_pill_saving_goal_skipped_when_held_or_other_realm() -> void:
 	var c := _qr(6, 20)
 	c.add_item("foundation_establishment_pill", 1)

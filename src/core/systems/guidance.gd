@@ -66,6 +66,9 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 	var thin := thin_defence_hint(c, data, region_id, flags)
 	if thin != "":
 		out.append(thin)
+	var method_offer := sect_method_hint(c, data)
+	if method_offer != "":
+		out.append(method_offer)
 	var mortal_nudge := mortal_crafter_hint(c, data, region_id, today, flags)
 	if mortal_nudge != "":
 		out.append(mortal_nudge)
@@ -336,6 +339,45 @@ static func affordable_armor(c: CharacterData, data: GameData, region_id: String
 		if best == "" or defense > Equipment.defense_of(data, best) or (defense == Equipment.defense_of(data, best) and price < merchant_price(c, data, region_id, best)):
 			best = item_id
 	return best
+
+
+## GUIDE-158: {item_id, tech_id, cost, rate, current} of the sect treasury's fastest cultivation method that `c` can
+## claim by rank, does not know, and that beats the main method; {} if none. A method that would eat the
+## contribution reserved for the breakthrough pill still to claim is not offered yet.
+static func sect_method_offer(c: CharacterData, data: GameData) -> Dictionary:
+	if c.is_rogue():
+		return {}
+	var reserve := 0
+	if c.breakthrough_pill == "" and breakthrough_items(c, data).is_empty():
+		var pill := sect_pill_entry(c, data)
+		if not pill.is_empty():
+			reserve = int(pill["cost"])
+	var balance := Sects.contribution_balance(c)
+	var best := {}
+	for entry: Dictionary in Sects.shop_items(c, data):
+		var item_id := String(entry["item_id"])
+		var tech_id := Items.manual_technique(data, item_id)
+		if tech_id == "" or not Techniques.is_faster_method(c, data, tech_id):
+			continue
+		var cost := int(entry["contribution"])
+		if int(c.sect["rank"]) < int(entry.get("min_rank", 0)) or (reserve > 0 and balance - cost < reserve):
+			continue
+		var rate := Techniques.method_rate_of(c, data, tech_id)
+		if best.is_empty() or rate > float(best["rate"]) or (is_equal_approx(rate, float(best["rate"])) and (cost < int(best["cost"]) or (cost == int(best["cost"]) and item_id < String(best["item_id"])))):
+			best = {"item_id": item_id, "tech_id": tech_id, "cost": cost, "rate": rate, "current": Techniques.method_rate(c, data)}
+	return best
+
+
+## GUIDE-158: points at the sect treasury's faster cultivation method; "" without an offer.
+static func sect_method_hint(c: CharacterData, data: GameData) -> String:
+	var offer := sect_method_offer(c, data)
+	if offer.is_empty():
+		return ""
+	var balance := Sects.contribution_balance(c)
+	var line := "Your sect treasury hands out the %s for %d contribution (you have %d): it gathers qi x%s, your method x%s." % [data.techniques[offer["tech_id"]].name, int(offer["cost"]), balance, String.num(float(offer["rate"]), 1), String.num(float(offer["current"]), 1)]
+	if balance >= int(offer["cost"]):
+		line += " Learn it from the Inventory and set it as your main method on the Techniques screen."
+	return line
 
 
 ## GUIDE-068: "<Manual> (<Merchant>)" for a body-art manual `c` lacks that a merchant in `region_id` sells,
