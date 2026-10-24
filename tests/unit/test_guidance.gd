@@ -4681,6 +4681,9 @@ func test_rank_goal_names_the_trial_foe_and_odds() -> void:
 	c.stage = 0
 	c.sect = {"id": "azure_cloud_sect", "rank": 1, "contribution": 3500}
 	assert_eq(Sects.rank_requirement_reason(c, d), "")
+	for k: String in c.attributes:
+		c.attributes[k] = 200
+	assert_true(Guidance.trial_odds(c, d) >= 0.2, str(Guidance.trial_odds(c, d)))
 	var line := ""
 	for l in Guidance.goals(c, d, {}):
 		if l.begins_with("Become "):
@@ -4691,6 +4694,31 @@ func test_rank_goal_names_the_trial_foe_and_odds() -> void:
 	c.sect = {"id": "azure_cloud_sect", "rank": 0, "contribution": 0}
 	for l in Guidance.goals(c, d, {}):
 		assert_false(l.contains("The trial:"), l)
+
+
+## GUIDE-171: a hopeless trial (< 20 percent) is not an invitation to seek promotion.
+func test_rank_goal_hopeless_trial_is_beyond_you() -> void:
+	var d := data()
+	var c := new_character()
+	c.realm_index = 2
+	c.stage = 0
+	c.sect = {"id": "azure_cloud_sect", "rank": 1, "contribution": 3500}
+	var odds := Guidance.trial_odds(c, d)
+	var line := ""
+	for l in Guidance.goals(c, d, {}):
+		if l.begins_with("Become "):
+			line = l
+	assert_true(odds >= 0.0 and odds < 0.2, str(odds))
+	assert_true(line.contains("you have what the rank asks, but the trial (the Sword Pavilion Warden, Deadly, 0 in 100) is beyond you yet."), line)
+	assert_false(line.contains("you can seek promotion"), line)
+	# A strong player keeps the old opening.
+	c.stage = 3
+	for k: String in c.attributes:
+		c.attributes[k] = 200
+	assert_true(Guidance.trial_odds(c, d) >= 0.2, str(Guidance.trial_odds(c, d)))
+	for l in Guidance.goals(c, d, {}):
+		if l.begins_with("Become "):
+			assert_true(l.contains("you can seek promotion"), l)
 
 
 ## GUIDE-162: a Foundation fighter below the typical practice level is told the target level.

@@ -3026,7 +3026,12 @@ static func goals(c: CharacterData, data: GameData, flags: Dictionary, clan: Cla
 				out.append("Become %s: %s" % [rank_name, need])
 			elif Sects.needs_trial(c, data):
 				var foe := _trial_foe(c, data)
-				out.append("Become %s: you can seek promotion at the sect hall.%s" % [rank_name, (" The trial: %s." % foe) if foe != "" else ""])
+				var odds := trial_odds(c, data)
+				if odds >= 0.0 and odds < 0.2:
+					# GUIDE-171: the requirements are met but the trial is hopeless; don't invite the attempt.
+					out.append("Become %s: you have what the rank asks, but the trial (%s) is beyond you yet." % [rank_name, foe.replace(" (", ", ").trim_suffix(")")])
+				else:
+					out.append("Become %s: you can seek promotion at the sect hall.%s" % [rank_name, (" The trial: %s." % foe) if foe != "" else ""])
 	elif clan == null:
 		var why := Clans.check_found(c, clan, data)
 		if why != "":
