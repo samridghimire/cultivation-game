@@ -1351,6 +1351,31 @@ func _start_missions_shot(gs: Node) -> void:
 			c.techniques = saved_method["techniques"]
 			c.main_method = saved_method["main"]
 			c.spiritual_roots = saved_method["roots"]})
+	# WU-368: after claiming the Azure Cloud Heart Sutra the treasury offers "Learn it now", focused.
+	var saved_learn: Dictionary = {}
+	shots.append({"name": "treasury_learn_" + size_tag, "open": func() -> void:
+		saved_learn["sect"] = c.sect.duplicate(true)
+		saved_learn["techniques"] = c.techniques.duplicate(true)
+		saved_learn["main"] = c.main_method
+		saved_learn["inventory"] = c.inventory.duplicate(true)
+		c.sect["rank"] = 1
+		c.sect["contribution"] = 1000
+		c.techniques.erase("azure_cloud_heart_sutra")
+		c.main_method = ""
+		c.inventory.erase("manual_azure_cloud_heart")
+		hud.get("_banner").visible = false
+		root.get_node("EventBus").player_changed.emit()
+		board.open()
+		board._set_tab("shop")
+		board._select("manual_azure_cloud_heart")
+		board._act()
+		var offer: Button = board._offer_button
+		assert(offer.visible and offer.text.begins_with("Learn"), "no learn button"), "close": func() -> void:
+			board.close()
+			c.sect = saved_learn["sect"]
+			c.techniques = saved_learn["techniques"]
+			c.main_method = saved_learn["main"]
+			c.inventory = saved_learn["inventory"]})
 	# WU-344: a bare QR 1st-layer newcomer can win Drive Off the Den Wolves (RV-015): not "Deadly", and the sect hint counts it ready (it does not name it: Escort pays more).
 	var saved_den: Dictionary = {}
 	shots.append({"name": "missions_den_wolf_" + size_tag, "open": func() -> void:

@@ -35,6 +35,10 @@ var _status: Label
 var _take_button: Button
 var _close_button: Button
 var _selected := ""
+## WU-368: the treasury item just claimed (its manual offers "Learn it now"), and whether its method beat the main one.
+var _offer_item := ""
+var _offer_faster := false
+var _offer_button: Button
 ## "missions", "shop" (the contribution treasury) or "rank".
 var _tab := "missions"
 
@@ -95,6 +99,10 @@ func _init() -> void:
 	_take_button = UIStyle.button("Take mission", _act)
 	_take_button.name = "Take"
 	details.add_child(_take_button)
+	_offer_button = UIStyle.button("", _offer_pressed)
+	_offer_button.name = "Offer"
+	_offer_button.visible = false
+	details.add_child(_offer_button)
 
 	_close_button = UIStyle.button("Close", close)
 	box.add_child(_close_button)
@@ -114,6 +122,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func open() -> void:
 	_selected = ""
+	_offer_item = ""
 	_tab = "missions"
 	var pill := breakthrough_pill_id(GameState.player, GameState.data)
 	if pill != "":  # WU-328: the claim goal leads here, so open on the treasury with the pill selected
@@ -317,6 +326,7 @@ func _set_tab(tab: String) -> void:
 		return
 	_tab = tab
 	_selected = ""
+	_offer_item = ""
 	_rebuild()
 	_focus_selected.call_deferred()
 
@@ -520,6 +530,7 @@ func _select(mission_id: String) -> void:
 	if mission_id == _selected:
 		return
 	_selected = mission_id
+	_offer_item = ""
 	for b in _list.get_children():
 		if b is Button:
 			b.set_pressed_no_signal(b.name == mission_id)
@@ -615,6 +626,7 @@ func _show_shop_details() -> void:
 	_status.visible = reason != ""
 	_take_button.text = "Buy"
 	_take_button.disabled = reason != ""
+	_update_offer()
 
 
 func _act() -> void:
@@ -631,9 +643,53 @@ func _act() -> void:
 func _buy() -> void:
 	if _selected == "":
 		return
+	var before := GameState.player.item_count(_selected)
 	GameState.buy_with_contribution(_selected)
+	_offer_item = ""
+	var tech_id := Items.manual_technique(GameState.data, _selected)
+	if tech_id != "" and GameState.player.item_count(_selected) > before \
+			and Techniques.can_learn(GameState.player, GameState.data, tech_id) == "":
+		_offer_item = _selected
+		_offer_faster = Techniques.is_faster_method(GameState.player, GameState.data, tech_id)
+		_update_offer()
+		if visible:
+			_offer_button.grab_focus.call_deferred()
+		return
 	if visible:
 		_focus_selected.call_deferred()
+
+
+## WU-368: after a claim, a button to learn the manual's technique, then (a faster method) to make it the main one.
+func _update_offer() -> void:
+	_offer_button.visible = false
+	if _tab != "shop" or _offer_item == "" or _offer_item != _selected:
+		return
+	var p := GameState.player
+	var data := GameState.data
+	var tech_id := Items.manual_technique(data, _offer_item)
+	var def: TechniqueDef = data.techniques.get(tech_id)
+	if def == null:
+		return
+	if not Techniques.knows(p, tech_id):
+		if p.item_count(_offer_item) > 0 and Techniques.can_learn(p, data, tech_id) == "":
+			_offer_button.text = "Learn %s now" % def.name
+			_offer_button.visible = true
+	elif _offer_faster and Techniques.main_method(p, data) != tech_id:
+		_offer_button.text = "Set %s as your main method" % def.name
+		_offer_button.visible = true
+
+
+func _offer_pressed() -> void:
+	var tech_id := Items.manual_technique(GameState.data, _offer_item)
+	if tech_id == "":
+		return
+	if Techniques.knows(GameState.player, tech_id):
+		GameState.set_main_method(tech_id)
+	else:
+		GameState.use_item(_offer_item)
+	_update_offer()
+	if visible:
+		(_offer_button if _offer_button.visible else _close_button).grab_focus.call_deferred()
 
 
 func _take() -> void:

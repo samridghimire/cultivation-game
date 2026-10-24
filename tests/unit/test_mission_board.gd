@@ -536,3 +536,67 @@ func test_board_opens_on_the_treasury_when_the_claim_goal_is_up() -> void:
 	assert_eq(board._selected, "foundation_establishment_pill")
 	board.free()
 	gs.end_session()
+
+
+## WU-368: claiming a manual offers "Learn it now" (and, for a faster method, "Set it as your main method").
+func _treasury_board(c: CharacterData) -> MissionBoard:
+	var gs := _root().get_node("GameState")
+	gs.start_session(c)
+	gs.pending_event = ""
+	var board := MissionBoard.new()
+	_root().add_child(board)
+	board._set_tab("shop")
+	return board
+
+
+func test_treasury_learn_button_learns_manual() -> void:
+	var c := _disciple()
+	c.sect["contribution"] = 100
+	var board := _treasury_board(c)
+	board._select("manual_stone_skin")
+	assert_false(board._offer_button.visible)
+	board._act()
+	assert_true(board._offer_button.visible)
+	assert_true(board._offer_button.text.contains("Stone Skin Tempering"), board._offer_button.text)
+	board._offer_button.pressed.emit()
+	assert_true(Techniques.knows(c, "stone_skin"))
+	assert_false(board._offer_button.visible)
+	board.free()
+	_root().get_node("GameState").end_session()
+
+
+func test_treasury_offer_drops_on_other_selection() -> void:
+	var c := _disciple()
+	c.sect["contribution"] = 100
+	var board := _treasury_board(c)
+	board._select("manual_stone_skin")
+	board._act()
+	assert_true(board._offer_button.visible)
+	board._select("qi_gathering_pill")
+	assert_false(board._offer_button.visible)
+	board.free()
+	_root().get_node("GameState").end_session()
+
+
+func test_treasury_faster_method_sets_main() -> void:
+	var c := _disciple()
+	c.sect["rank"] = 1
+	c.sect["contribution"] = 1000
+	c.spiritual_roots = {}
+	c.techniques.erase("azure_cloud_heart_sutra")
+	# A real main method already (learning the first one replaces the starter by itself, so no "Set" button then).
+	c.techniques["verdant_spring_method"] = {"level": 1, "xp": 0.0}
+	c.main_method = "verdant_spring_method"
+	assert_true(Techniques.method_rate_of(c, data(), "azure_cloud_heart_sutra") > Techniques.method_rate_of(c, data(), "verdant_spring_method"))
+	var board := _treasury_board(c)
+	board._select("manual_azure_cloud_heart")
+	board._act()
+	assert_true(board._offer_button.text.begins_with("Learn"), board._offer_button.text)
+	board._offer_button.pressed.emit()
+	assert_true(Techniques.knows(c, "azure_cloud_heart_sutra"))
+	assert_true(board._offer_button.visible)
+	assert_true(board._offer_button.text.begins_with("Set"), board._offer_button.text)
+	board._offer_button.pressed.emit()
+	assert_eq(Techniques.main_method(c, data()), "azure_cloud_heart_sutra")
+	board.free()
+	_root().get_node("GameState").end_session()
