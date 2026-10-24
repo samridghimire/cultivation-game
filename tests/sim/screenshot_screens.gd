@@ -110,6 +110,7 @@ extends SceneTree
 ## WU-353: `--hint-shot` also writes hint_practice_target_<size>.png (Inner Disciple, Foundation Peak, Iron Fist 2: trial advice says "to level N (now 2)").
 ## WU-369: `--help-shot` writes help_<topic>_<size>.png for every help page (long ones scroll in a focusable ScrollContainer).
 ## WU-367: `--hint-shot` also writes pill_rank_gate_/pill_rank_open_<size>.png (Foundation Peak Inner Disciple, 6998 contribution: no hint, goal or breakthrough text says "As Elder"; QR8 Outer Disciple: the Foundation pill line still says "As Inner Disciple you could claim it").
+## WU-373: `--hint-shot` also writes journal_rank_needs_<size>.png (Inner Disciple, Qi Refining 3, 40 contribution: Goals reads "Become Core Disciple: earn 3000 contribution (you have 40) and reach Foundation Establishment.").
 ## WU-366: `--hint-shot` also writes journal_clan_goal_<size>.png (rogue QR8, no abode, 120 stones: Goals reads "Found a clan: reach Foundation Establishment, claim an abode as its seat and gather 500 spirit stones (you have 120).").
 ## WU-374: `--hint-shot` also writes hint_order_doomed_<size>.png (rank-0 Alchemist, one order gathering cannot finish in time plus a meetable one: no hint leads with the doomed order, the journal still says "longer than the order has").
 ## WU-364: `--hint-shot` also writes journal_goals_realm_/journal_goals_rank_<size>.png (Foundation Early: realm goal names Cloud-Sea Cliff in Azure Peak; Foundation Peak with a hopeless Core Disciple trial: rank goal says "beyond you yet").
@@ -2797,6 +2798,42 @@ func _start_hint_shot(gs: Node) -> void:
 			c.life_stats = clan_saved[6]
 			c.techniques = clan_saved[7]
 			clan_saved.clear()})
+
+	# WU-373: GUIDE-181. The spec's Outer Disciple has only the contribution need (Inner asks no realm), so use an Inner Disciple at
+	# Qi Refining 3 with 40 contribution: the Core Disciple goal joins both needs with "and" and names the rank once.
+	var needs_saved: Array = []
+	shots.append({"name": "journal_rank_needs_" + size_tag, "open": func() -> void:
+		setup_long.call()
+		needs_saved.append_array([c.realm_index, c.stage, c.sect.duplicate(), c.life_stats.duplicate()])
+		c.life_stats["fights_won"] = maxi(1, int(c.life_stats.get("fights_won", 0)))  # Goals show once the First goals ladder is done
+		c.realm_index = 1
+		c.stage = 2
+		c.qi = 0.0
+		c.sect = {"id": "azure_cloud_sect", "rank": 1, "contribution": 40, "spent": 0}
+		gs.current_region = "qingshi_village"
+		root.get_node("EventBus").player_changed.emit()
+		await root.get_tree().process_frame
+		hud.get("_banner").visible = false
+		var want := "Become Core Disciple: earn 3000 contribution (you have 40) and reach Foundation Establishment."
+		var rank_line := ""
+		for l: String in Guidance.goals(c, gs.data, gs.world_flags):
+			if l.begins_with("Become "):
+				rank_line = l
+		assert(rank_line == want, "rank goal wrong: " + rank_line)
+		var nj: Control = hud.get("_screens")["toggle_journal"]
+		await _show_journal(nj, "Goals")
+		for _i in 3:
+			await root.get_tree().process_frame
+		var parsed: String = (nj.get("_text") as RichTextLabel).get_parsed_text()
+		assert(parsed.contains(want), "journal lacks the rank goal:\n" + parsed)
+		var goals_part: String = parsed.split("Goals")[1].split("Next steps")[0]
+		assert(goals_part.count("Core Disciple") == 1, "rank named " + str(goals_part.count("Core Disciple")) + " times in Goals:\n" + goals_part), "close": func() -> void:
+			(hud.get("_screens")["toggle_journal"] as Control).close()
+			c.realm_index = needs_saved[0]
+			c.stage = needs_saved[1]
+			c.sect = needs_saved[2]
+			c.life_stats = needs_saved[3]
+			needs_saved.clear()})
 
 	# WU-356: GUIDE-160. An Azure Cloud member at Qi Refining's last stage with no combat style left to practise and every
 	# ready mission too dangerous: the mission line says to break through, never to grow a stage.
