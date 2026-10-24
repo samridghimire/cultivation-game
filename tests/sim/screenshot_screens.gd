@@ -106,6 +106,7 @@ extends SceneTree
 ## WU-357: `--hint-shot` also writes hint_trial_no_style_<size>.png (Foundation Peak, no combat technique, trial open: advice says "learn a combat technique", never "practise").
 ## WU-356: `--hint-shot` also writes hint_missions_last_stage_<size>.png (Qi Refining last stage, missions too dangerous, style mastered: the mission line says break through).
 ## WU-353: `--hint-shot` also writes hint_practice_target_<size>.png (Inner Disciple, Foundation Peak, Iron Fist 2: trial advice says "to level N (now 2)").
+## WU-363: `--hint-shot` also writes hint_sect_method_<size>.png (Azure Cloud Inner Disciple, QR5, 1200 contribution: hint names the treasury method, both rates and the Learn-it sentence; short of the cost the sentence is gone).
 ## WU-361: `--hint-shot` also writes hint_body_art_target_<size>.png (Iron Fist at its typical level, Stone Skin Tempering 1: trial line says "practise Stone Skin Tempering to level N (now 1)", never "practise Iron Fist").
 ## WU-351: `--hint-shot` also writes hud_contribution_<size>.png (Azure Cloud Inner Disciple, 7773 contribution, 1296 stones).
 ## WU-350: `--hint-shot` also writes hint_abode_<size>.png (rogue, Qi Refining 5, 400 stones, no abode: journal Next steps names the Waterfall Cave and 300; the capped HUD line keeps the cave's name).
@@ -2446,6 +2447,52 @@ func _start_hint_shot(gs: Node) -> void:
 			c.inventory = body_saved[5]
 			c.mission_cooldowns = body_saved[6]
 			body_saved.clear()})
+
+	# WU-363: GUIDE-158's treasury method hint. An Azure Cloud Inner Disciple at Qi Refining 5 whose main method is the starter
+	# one, with 1200 contribution: the hint list names the treasury's method with both rates and where to learn it; the capped HUD
+	# line keeps its opening. Under the cost the "Learn it" sentence is gone.
+	var method_saved: Array = []
+	shots.append({"name": "hint_sect_method_" + size_tag, "open": func() -> void:
+		setup_long.call()
+		method_saved.append_array([c.realm_index, c.stage, c.sect.duplicate(), c.techniques.duplicate(true), c.inventory.duplicate(), c.main_method])
+		c.realm_index = gs.data.realm_index_of("qi_refining")
+		c.stage = 4
+		c.qi = 0.0
+		c.sect = {"id": "azure_cloud_sect", "rank": 1, "contribution": 1200, "spent": 0}
+		c.inventory = {}
+		gs.current_region = "qingshi_village"
+		root.get_node("EventBus").player_changed.emit()
+		await root.get_tree().process_frame
+		await root.get_tree().process_frame
+		hud.get("_banner").visible = false
+		var offer: Dictionary = Guidance.sect_method_offer(c, gs.data)
+		assert(not offer.is_empty(), "no sect method offer for the Inner Disciple with 1200 contribution")
+		var tech_name: String = gs.data.techniques[offer["tech_id"]].name
+		var lines: Array = Guidance.hints(c, gs.data, 3, 12, gs.npcs, gs.world_flags, "qingshi_village", 40, gs.npc_favor)
+		var dump := "\n".join(lines)
+		var found := ""
+		for h: String in lines:
+			if h.contains("Your sect treasury hands out the " + tech_name):
+				found = h
+		assert(found != "", "no sect method hint:\n" + dump)
+		assert(found.count(" x") >= 2, "hint lacks both rates: " + found)
+		assert(found.contains("Learn it from the Inventory"), "hint lacks the learn sentence: " + found)
+		var capped: String = hud.call("cap_hint", found)
+		assert(capped.contains("sect treasury hands out"), "capped line lost its opening: " + capped)
+		print("hint-shot sect method: ", found)
+		c.sect["contribution"] = int(offer["cost"]) - 1
+		var poor: String = Guidance.sect_method_hint(c, gs.data)
+		assert(not poor.contains("Learn it"), "short of the cost still says Learn it: " + poor)
+		c.sect["contribution"] = 1200
+		root.get_node("EventBus").player_changed.emit()
+		await root.get_tree().process_frame, "close": func() -> void:
+			c.realm_index = method_saved[0]
+			c.stage = method_saved[1]
+			c.sect = method_saved[2]
+			c.techniques = method_saved[3]
+			c.inventory = method_saved[4]
+			c.main_method = method_saved[5]
+			method_saved.clear()})
 
 	# WU-356: GUIDE-160. An Azure Cloud member at Qi Refining's last stage with no combat style left to practise and every
 	# ready mission too dangerous: the mission line says to break through, never to grow a stage.
