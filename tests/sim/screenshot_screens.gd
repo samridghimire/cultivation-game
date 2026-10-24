@@ -12,6 +12,7 @@ extends SceneTree
 ## WU-132: append `-- --win-shots` for "from a style to a win" (HUD fair-fight and goal lines with the
 ## Wandering Merchant's scroll mark, the journal's fights section, the mission board, an inheritance
 ## ground menu, the shop with a long manual row).
+## WU-367: `--breakthrough-shots` also writes pill_rank_gate_peak/_outer (Inner Disciple at Foundation Peak: no "As Elder"; Outer Disciple at Qi Refining 9: "As Inner Disciple you could claim it").
 ## WU-145: append `-- --breakthrough-shots` for the breakthrough window of a Qi Refining 9th Layer player at
 ## full qi: (a) no pill, 120 stones, (b) holding a Foundation Establishment Pill, (c) pill and 3 failed
 ## attempts (lessons line). Check each PNG at 1280x800 and 1280x720.
@@ -489,6 +490,59 @@ func _start_breakthrough_shots(gs: Node) -> void:
 		c.sect = saved["sect"]
 		c.inventory = saved["inventory"]
 		c.breakthrough_failures = saved["failures"]})
+	# WU-367: GUIDE-170's rank clause. (a) Azure Cloud Inner Disciple at Foundation Peak with 6998 contribution: the Core Forming
+	# Pill is named but no text offers "As Elder" (the rank is out of reach before the breakthrough). (b) Outer Disciple at
+	# Qi Refining 9th Layer: the Foundation pill line still says "As Inner Disciple you could claim it".
+	var rank_saved := {}
+	var rank_save := func() -> void:
+		rank_saved["sect"] = c.sect.duplicate()
+		rank_saved["inventory"] = c.inventory.duplicate()
+		rank_saved["realm"] = c.realm_index
+		rank_saved["stage"] = c.stage
+		rank_saved["qi"] = c.qi
+		rank_saved["failures"] = c.breakthrough_failures
+	var rank_restore := func() -> void:
+		win.close()
+		c.sect = rank_saved["sect"]
+		c.inventory = rank_saved["inventory"]
+		c.realm_index = rank_saved["realm"]
+		c.stage = rank_saved["stage"]
+		c.qi = rank_saved["qi"]
+		c.breakthrough_failures = rank_saved["failures"]
+	shots.append({"name": "pill_rank_gate_peak", "open": func() -> void:
+		rank_save.call()
+		c.realm_index = gs.data.realm_index_of("foundation_establishment")
+		c.stage = gs.data.realms[c.realm_index].stage_count() - 1
+		c.qi = gs.data.realms[c.realm_index].qi_required(c.stage)
+		c.sect = {"id": "azure_cloud_sect", "rank": 1, "contribution": 6998, "spent": 0}
+		c.inventory = {}
+		c.add_item("spirit_stone", 40)
+		c.breakthrough_failures = 0
+		hide_banner.call()
+		win.open()
+		await root.get_tree().process_frame
+		await root.get_tree().process_frame
+		var texts: Array = [String((win.get("_hint") as Label).text), "\n".join(Guidance.goals(c, gs.data, gs.world_flags)), "\n".join(Guidance.hints(c, gs.data, 3, 12, gs.npcs, gs.world_flags, "qingshi_village", 40, gs.npc_favor))]
+		print("pill-rank-gate peak: ", texts)
+		assert(String(texts[0]).contains("Core Forming Pill") or String(texts[1]).contains("Core Forming Pill"), "Core Forming Pill not named: " + str(texts))
+		for t: String in texts:
+			assert(not t.contains("As Elder"), "text offers the Elder rank: " + t), "close": rank_restore})
+	shots.append({"name": "pill_rank_gate_outer", "open": func() -> void:
+		rank_save.call()
+		c.realm_index = 1
+		c.stage = gs.data.realms[1].stage_count() - 1
+		c.qi = gs.data.realms[1].qi_required(c.stage)
+		c.sect = {"id": "azure_cloud_sect", "rank": 0, "contribution": 300, "spent": 0}
+		c.inventory = {}
+		c.add_item("spirit_stone", 40)
+		c.breakthrough_failures = 0
+		hide_banner.call()
+		win.open()
+		await root.get_tree().process_frame
+		await root.get_tree().process_frame
+		var hint_text: String = (win.get("_hint") as Label).text
+		print("pill-rank-gate outer: ", hint_text)
+		assert(hint_text.contains("As Inner Disciple you could claim it"), "outer disciple lacks the rank clause: " + hint_text), "close": rank_restore})
 
 
 ## WU-226: C-147's Great Vehicle Pills in the breakthrough window, and the HUD hint with no pill.
