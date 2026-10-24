@@ -32,6 +32,11 @@ static var attempt_trials := true
 ## --no-heal turns it off. heal_log["healed"] counts treatments, ["stones"] the stones the clinic took.
 static var heal_injuries := false
 static var heal_log := {"healed": 0, "stones": 0}
+## QA-163: with injury_report on, play() logs every injury the player takes: injury_log entries are
+## {seed, id, day, region, news (the danger line the HUD showed), days (healing time), qi_lost (cultivation days it costs
+## if left alone), end (day it went, -1 still open), treated (it went well before its time)}.
+static var injury_report := false
+static var injury_log: Array[Dictionary] = []
 ## QA-138: a curious player takes the bout the spar hint names ("<Name> (<realm>) here would spar with you"), once a
 ## week while the hint speaks; simulate_first_hour.gd's --no-spar-hint turns it off. spar_log["bouts"] counts them,
 ## ["refused"] collects check_spar's text when the named partner refuses (a hint bug).
@@ -129,6 +134,11 @@ static func play(gs: Node, clock: Node, seed_value: int, months: int, curious: b
 			wolf_win_day = clock.total_days
 	bus.combat_started.connect(on_start)
 	bus.combat_finished.connect(on_end)
+	var open_injuries := {}
+	var on_msg := func(text: String, category: String) -> void:
+		_injury_sync(gs, c, clock.total_days, open_injuries, seed_value, text if category == "danger" else "")
+	if injury_report:
+		bus.message_posted.connect(on_msg)
 	_talk_to_elder_mo(gs)
 	for chore in CHORES:
 		gs.perform_deed(chore)
@@ -213,8 +223,12 @@ static func play(gs: Node, clock: Node, seed_value: int, months: int, curious: b
 		out["stones"].append(c.item_count("spirit_stone"))
 		out["month_days"].append(clock.total_days)
 		out["realms"].append(Cultivation.realm_label(c, gs.data))
+		if injury_report:
+			_injury_sync(gs, c, clock.total_days, open_injuries, seed_value, "")
 		if month_hook.is_valid():
 			month_hook.call(month)
+	if injury_report:
+		bus.message_posted.disconnect(on_msg)
 	bus.combat_started.disconnect(on_start)
 	bus.combat_finished.disconnect(on_end)
 	out["style_month"] = int(done.get("style_month", -1))
@@ -342,6 +356,25 @@ static func _bitter_detour(gs: Node, c: CharacterData) -> String:
 		return ""
 	gs.travel(best)
 	return home if gs.current_region == best else ""
+
+
+## QA-163: diff c.injuries against the open entries: new ids are logged (with the danger line that announced
+## them), vanished ids are closed.
+static func _injury_sync(gs: Node, c: CharacterData, day: int, open: Dictionary, seed_value: int, news: String) -> void:
+	for id: String in c.injuries.keys():
+		if open.has(id):
+			continue
+		var entry := {"seed": seed_value, "id": id, "day": day, "region": gs.current_region, "news": news, "days": int(c.injuries[id]), "qi_lost": Injuries.qi_days_lost_for(c, gs.data, id), "end": -1, "treated": false}
+		open[id] = entry
+		injury_log.append(entry)
+	for id: String in open.keys():
+		if news != "" and String(open[id]["news"]) == "" and news.begins_with(Injuries.injury_name(gs.data, id)):
+			open[id]["news"] = news  # the combat/breakthrough line synced the injury first; the danger line follows
+		if not c.injuries.has(id):
+			var e: Dictionary = open[id]
+			e["end"] = day
+			e["treated"] = day - int(e["day"]) < int(e["days"]) - 2
+			open.erase(id)
 
 
 ## The extra things a curious player does in one month: explore weekly, one

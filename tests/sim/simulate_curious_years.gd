@@ -115,6 +115,8 @@ func _run() -> void:
 			FirstHour.body_art = true  # QA-155
 		elif a == "--trial-report":
 			FirstHour.trial_report = true  # QA-155
+		elif a == "--injury-report":
+			FirstHour.injury_report = true  # QA-163
 		elif a == "--arm-report":
 			_arm_report = true  # QA-161
 		elif a == "--defence":
@@ -240,6 +242,8 @@ func _run() -> void:
 	_print_pacing_summary(runs, months)
 	if _arm_report:
 		_print_arm_report(runs, months)
+	if FirstHour.injury_report:
+		_print_injury_report(seeds)
 	if FirstHour.body_art or FirstHour.trial_report:
 		_print_body_art(seeds)
 	if FirstHour.sect_method:
@@ -349,6 +353,33 @@ func _print_arm_report(runs: Array[Dictionary], months: int) -> void:
 		lives += int(r.get("recharges", 0))
 	var ql: Dictionary = FirstHour.qi_log
 	print("Arm report (QA-161): stones median m12 %.0f, m36 %.0f; qi pills bought %d for %d stones (used %d, +%d qi); fights lost %d; artifact lives bought %d; final deaths %d" % [_median(s12.duplicate()), _median(s36.duplicate()), ql["bought"], ql["stones"], ql["used"], ql["qi"], lost, lives, finals])
+
+
+## QA-163: every injury taken, per seed: id, day, region, days it lasted, whether it was treated early, the qi-days
+## it cost left alone, and whether the danger line named a way to heal it.
+func _print_injury_report(seeds: int) -> void:
+	print("Injuries (QA-163): seed, injury, day, region, lasted/healing days, treated early?, qi-days lost if untreated, hint named a cure?")
+	var taken := 0
+	var untreated := 0
+	var hinted := 0
+	var hinted_untreated := 0
+	var qi_total := 0
+	var seeds_hit := {}
+	for e: Dictionary in FirstHour.injury_log:
+		var lasted: String = "open" if int(e["end"]) < 0 else str(int(e["end"]) - int(e["day"]))
+		var news := String(e["news"])
+		var named := news.contains(". ")  # Guidance.injury_news appends the cure as a second sentence
+		taken += 1
+		seeds_hit[e["seed"]] = true
+		if not e["treated"]:
+			untreated += 1
+			qi_total += int(e["qi_lost"])
+		if named:
+			hinted += 1
+			if not e["treated"]:
+				hinted_untreated += 1
+		print("  seed %2d %-18s d%-5d %-18s %5s/%-4d %-5s qi-days %-4d %s" % [e["seed"], e["id"], e["day"], e["region"], lasted, e["days"], "yes" if e["treated"] else "no", e["qi_lost"], "named" if named else "silent"])
+	print("  total: %d injuries in %d of %d seeds; %d untreated (qi-days lost %d); hint named a cure for %d, of which %d went untreated" % [taken, seeds_hit.size(), seeds, untreated, qi_total, hinted, hinted_untreated])
 
 
 ## QA-091: per foe over all seeds: fights, wins, real win %, mean rated %, deaths, how fights started.
