@@ -1474,7 +1474,10 @@ func _start_missions_shot(gs: Node) -> void:
 		board._select("manual_azure_cloud_heart")
 		board._act()
 		var offer: Button = board._offer_button
-		assert(offer.visible and offer.text.begins_with("Learn"), "no learn button"), "close": func() -> void:
+		assert(offer.visible and offer.text.begins_with("Learn"), "no learn button")
+		await root.get_tree().process_frame
+		await root.get_tree().process_frame
+		assert(offer.has_focus(), "the learn button is not focused (gamepad): " + str(offer.get_viewport().gui_get_focus_owner())), "close": func() -> void:
 			board.close()
 			c.sect = saved_learn["sect"]
 			c.techniques = saved_learn["techniques"]
