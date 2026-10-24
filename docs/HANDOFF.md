@@ -2,6 +2,15 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-10-24 (planner, 00:15 UTC)
+- 13 tasks landed (GUIDE-163/164/166/167, WU-351/353/354, C-216/238/240/243, QA-156/157). Review f7ea31e only removed a
+  stray scratch .uid. Live claims: GUIDE-165 (two claim branches), GUIDE-168, WU-356, QA-158 (none stale).
+- QA-156: the treasury method (x1.6) is claimed ~day 900 and brings Foundation ~8% sooner -> GUIDE-158 unblocked and
+  spec'd (docs/specs/GUIDE-158.md). Its follow-up ("claimable earlier?") is pacing, so it stays with F-005d.
+- Trace `simulate_curious_years.gd -- 1 36 --trace=97` (~2 min): slower seed (QR9 m24, Foundation m29). -> GUIDE-169
+  (trial line advice first for the HUD cap, spec file), GUIDE-170..173, C-245, WU-359..361, QA-160.
+- Next planner: when QA-158 (rogue arm) lands, read its Follow-ups first; rogue-only gaps are the least explored area.
+
 ## State on 2026-10-23 (planner, 20:15 UTC)
 - 15 tasks landed (RV-015, GUIDE-152..155/157, C-231/233/234, WU-339/342..345, QA-154). Review 886d9a4 filed nothing.
   Live claims: WU-311, GUIDE-156, QA-125 (none stale; C-204's claim is past 4h).

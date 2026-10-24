@@ -2,6 +2,19 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-23 [QA-156] The sim measured the sect's own method: claimed around day 900, it brings Foundation about 8% sooner.
+- 2026-10-23 [GUIDE-166] Internal: the faster-method check moved into the core rules.
+- 2026-10-23 [C-216] Help explains the world map's merchant goods and claimable abode lines.
+- 2026-10-23 [GUIDE-164] Practice advice names the body art and its target level when your combat style is already trained enough.
+- 2026-10-23 [C-243] Help explains the practice hint's target level.
+- 2026-10-23 [C-238] The beast at the shepherd's fold is now a Moon-Ridge Elk, a fair fight for a new Foundation cultivator.
+- 2026-10-23 [WU-354] The character sheet shows the sect contribution you can spend and your lifetime total.
+- 2026-10-23 [C-240] Three new one-time Foundation moments in Qingshi: naming a newborn, a rogue's plea and a humming well.
+- 2026-10-23 [WU-353] A screenshot check of the trial advice naming the level to practise a technique to.
+- 2026-10-23 [WU-351] The HUD shows your sect contribution next to your spirit stones.
+- 2026-10-23 [GUIDE-167] The sect duty reminder names a mission that covers the shortfall, or says missing it skips the stipend.
+- 2026-10-23 [GUIDE-163] Durations read "1 month and 21 days", so they no longer blur into the sentence's commas.
+- 2026-10-23 [QA-157] The sim now claims the Foundation pill with sect contribution instead of paying stones.
 - 2026-10-23 [WU-346] The world map names a visited region's unclaimed cave abode, its price and how fast it gathers qi.
 - 2026-10-23 [GUIDE-162] From Foundation on, practice advice names the level to train a technique to ("practise Iron Fist to level 5 (now 2)").
 - 2026-10-23 [GUIDE-160] When every sect mission is too dangerous at a realm's last stage, the hint says to break through first.
