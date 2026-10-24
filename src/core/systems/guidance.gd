@@ -1502,6 +1502,10 @@ static func sect_pill_rank_clause(c: CharacterData, data: GameData) -> String:
 	var entry := sect_pill_entry(c, data)
 	if entry.is_empty() or int(c.sect.get("rank", 0)) >= int(entry["min_rank"]):
 		return ""
+	var rank_def: Dictionary = (data.sects[c.sect["id"]] as SectDef).ranks[int(entry["min_rank"])]
+	var gate := String(rank_def.get("min_realm", ""))
+	if gate != "" and data.realm_index_of(gate) > c.realm_index:
+		return ""
 	return " As %s you could claim it for %d contribution." % [(data.sects[c.sect["id"]] as SectDef).rank_name(int(entry["min_rank"])), int(entry["cost"])]
 
 
