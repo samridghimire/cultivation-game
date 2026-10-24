@@ -88,6 +88,7 @@ var _fe_snaps60 := {}
 var _fe_month := {}
 var _wait_for_pill := 0
 var _trace_seed := 0
+var _arm_report := false
 
 
 func _median(values: Array) -> float:
@@ -108,6 +109,10 @@ func _run() -> void:
 			FirstHour.sect_method = true  # QA-156
 		elif a == "--rogue":
 			FirstHour.stay_rogue = true  # QA-158
+		elif a == "--buy-qi":
+			FirstHour.buy_qi = true  # QA-161
+		elif a == "--arm-report":
+			_arm_report = true  # QA-161
 		elif a == "--defence":
 			FirstHour.follow_defence = true
 		elif a.begins_with("--trace="):
@@ -229,6 +234,8 @@ func _run() -> void:
 	if FirstHour.follow_defence:
 		_print_defence_log(seeds)
 	_print_pacing_summary(runs, months)
+	if _arm_report:
+		_print_arm_report(runs, months)
 	if FirstHour.sect_method:
 		print("Sect method (QA-156): claimed in %d/%d seeds, days %s, techniques %s" % [FirstHour.sect_method_log["day"].size(), seeds, str(FirstHour.sect_method_log["day"]), str(FirstHour.sect_method_log["tech"])])
 	quit(1 if early * 10 > maxi(seeds, 10) else 0)
@@ -298,6 +305,29 @@ func _print_pacing_summary(runs: Array[Dictionary], months: int) -> void:
 						break
 			by.append("m%d %d/%d" % [m, n, runs.size()])
 	print("Pacing (QA-156): QR9 median day %.0f (%d seeds), Foundation median day %.0f (%d seeds); Foundation by %s; artifact lives bought %d, injuries at the end %d" % [_median(qr9.duplicate()), qr9.size(), _median(found.duplicate()), found.size(), ", ".join(by), lives, injuries])
+
+
+## QA-161: one line per arm: stones at m12/m36, qi pills bought, fights lost, artifact lives, final deaths.
+func _print_arm_report(runs: Array[Dictionary], months: int) -> void:
+	var s12: Array = []
+	var s36: Array = []
+	for r: Dictionary in runs:
+		if r["stones"].size() >= 12:
+			s12.append(int(r["stones"][11]))
+		if r["stones"].size() >= months:
+			s36.append(int(r["stones"][months - 1]))
+	var lost := 0
+	for t: Dictionary in _foes.values():
+		lost += int(t["fights"]) - int(t["wins"])
+	var finals := 0
+	for d: Dictionary in _deaths:
+		if d["final"]:
+			finals += 1
+	var lives := 0
+	for r: Dictionary in runs:
+		lives += int(r.get("recharges", 0))
+	var ql: Dictionary = FirstHour.qi_log
+	print("Arm report (QA-161): stones median m12 %.0f, m36 %.0f; qi pills bought %d for %d stones (used %d, +%d qi); fights lost %d; artifact lives bought %d; final deaths %d" % [_median(s12.duplicate()), _median(s36.duplicate()), ql["bought"], ql["stones"], ql["used"], ql["qi"], lost, lives, finals])
 
 
 ## QA-091: per foe over all seeds: fights, wins, real win %, mean rated %, deaths, how fights started.
