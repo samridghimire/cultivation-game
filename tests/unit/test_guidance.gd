@@ -78,7 +78,8 @@ func test_realm_tied_pills_are_only_recommended_when_usable() -> void:
 	c.breakthrough_pill = "foundation_establishment"
 	assert_eq(Guidance.breakthrough_items(c, data()), PackedStringArray())
 	var rows := Guidance.journal(c, data(), {}, 0, c.home_region)
-	assert_false(rows.any(func(r: Dictionary) -> bool: return not String(r["text"]).begins_with("Odds now: ") and (String(r["text"]).contains(core_name) or String(r["text"]).contains(fe_name))))
+	# GUIDE-175: the rogue join line names the sect pill as a membership perk, which is not a recommendation to use one.
+	assert_false(rows.any(func(r: Dictionary) -> bool: return not String(r["text"]).begins_with("Odds now: ") and not String(r["text"]).contains(" members gather") and (String(r["text"]).contains(core_name) or String(r["text"]).contains(fe_name))))
 
 
 func test_urgent_hints_come_first() -> void:
@@ -705,6 +706,17 @@ func test_qi_refining_rogue_sect_hint_wording_unchanged() -> void:
 	c.realm_index = 1
 	var hint := Guidance._sect_hint(c, data())
 	assert_true(hint == "" or hint.begins_with("As a rogue cultivator you could join"))
+
+
+func test_rogue_sect_hint_says_what_membership_gives() -> void:
+	var c := _fresh()
+	c.realm_index = 1
+	c.stage = 7
+	var hint := Guidance._sect_hint(c, data())
+	assert_true(hint.begins_with("As a rogue cultivator you could join"), hint)
+	assert_true(hint.contains("Azure Cloud Sect members gather qi x1.5"), hint)
+	c.sect = {"id": "azure_cloud_sect", "rank": 0, "contribution": 0}
+	assert_false(Guidance._sect_hint(c, data()).contains("members gather"))
 
 
 func test_one_elder_mo_line_mentions_breathing() -> void:

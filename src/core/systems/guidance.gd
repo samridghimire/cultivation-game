@@ -1556,17 +1556,7 @@ static func sect_pill_rank_clause(c: CharacterData, data: GameData) -> String:
 static func sect_pill_entry(c: CharacterData, data: GameData) -> Dictionary:
 	if c.is_rogue() or Cultivation.is_final_realm(c, data):
 		return {}
-	var next_id: String = data.realms[c.realm_index + 1].id
-	var best := {}
-	for entry: Dictionary in Sects.shop_items(c, data):
-		var item: Dictionary = data.items.get(String(entry["item_id"]), {})
-		var effects: Dictionary = item.get("effects", {})
-		var bonus := float(effects.get("breakthrough_bonus", 0.0))
-		if String(effects.get("breakthrough_realm", "")) != next_id or bonus <= 0.0:
-			continue
-		if best.is_empty() or bonus > float(best["bonus"]) or (is_equal_approx(bonus, float(best["bonus"])) and int(entry["contribution"]) < int(best["cost"])):
-			best = {"item_id": String(entry["item_id"]), "name": String(item["name"]), "bonus": bonus, "cost": int(entry["contribution"]), "min_rank": int(entry.get("min_rank", 0))}
-	return best
+	return Sects.best_breakthrough_entry(data, Sects.shop_items(c, data), data.realms[c.realm_index + 1].id)
 
 
 ## "Claim a Foundation Establishment Pill (+25 percent) from the sect treasury: 250 contribution, you have 1730."
@@ -1679,7 +1669,16 @@ static func _sect_hint(c: CharacterData, data: GameData, region_id: String = "")
 			return _mortal_sect_hint(c, data, open)
 		if open.is_empty():
 			return ""
-		return "As a rogue cultivator you could join %s %s." % [" or ".join(open), _hall_where(c, data, region_id)]
+		var line := "As a rogue cultivator you could join %s %s." % [" or ".join(open), _hall_where(c, data, region_id)]
+		# GUIDE-175: say what the most generous open sect gives its members.
+		var best: SectDef = null
+		for sect: SectDef in data.sects.values():
+			if sect.name in open and (best == null or sect.cultivation_bonus > best.cultivation_bonus):
+				best = sect
+		var perks := Sects.membership_perks(c, data, best.id)
+		if not perks.is_empty():
+			line += " %s members %s." % [best.name, Text.join_and(perks)]
+		return line
 	var sect: SectDef = data.sects[c.sect["id"]]
 	var rank := int(c.sect["rank"])
 	if rank + 1 >= sect.ranks.size():

@@ -371,6 +371,48 @@ static func shop_items(c: CharacterData, data: GameData) -> Array[Dictionary]:
 	return out
 
 
+## GUIDE-132: {item_id, name, bonus, cost, min_rank} of the best breakthrough pill for `next_realm_id` in `shop`
+## (highest breakthrough_bonus, then cheapest); {} when it has none.
+static func best_breakthrough_entry(data: GameData, shop: Array, next_realm_id: String) -> Dictionary:
+	var best := {}
+	for entry: Dictionary in shop:
+		var item: Dictionary = data.items.get(String(entry["item_id"]), {})
+		var effects: Dictionary = item.get("effects", {})
+		var bonus := float(effects.get("breakthrough_bonus", 0.0))
+		if String(effects.get("breakthrough_realm", "")) != next_realm_id or bonus <= 0.0:
+			continue
+		if best.is_empty() or bonus > float(best["bonus"]) or (is_equal_approx(bonus, float(best["bonus"])) and int(entry["contribution"]) < int(best["cost"])):
+			best = {"item_id": String(entry["item_id"]), "name": String(item["name"]), "bonus": bonus, "cost": int(entry["contribution"]), "min_rank": int(entry.get("min_rank", 0))}
+	return best
+
+
+## GUIDE-175: what joining `sect_id` would give `c`, as verb phrases for "Members ...":
+## ["gather qi x1.5", "hear Elder Feng's sword lecture each month", "can claim a Foundation Establishment Pill for 250 contribution"].
+## Empty for an unknown sect.
+static func membership_perks(c: CharacterData, data: GameData, sect_id: String) -> PackedStringArray:
+	var out: PackedStringArray = []
+	if not data.sects.has(sect_id):
+		return out
+	var sect: SectDef = data.sects[sect_id]
+	if sect.cultivation_bonus > 1.0:
+		out.append("gather qi x%s" % String.num(sect.cultivation_bonus, 1))
+	if not sect.lecture.is_empty():
+		out.append("hear %s each month" % String(sect.lecture.get("name", "the elder's lecture")))
+	if not Cultivation.is_final_realm(c, data):
+		var pill := best_breakthrough_entry(data, sect.shop, data.realms[c.realm_index + 1].id)
+		if not pill.is_empty():
+			var gate := String(sect.ranks[int(pill["min_rank"])].get("min_realm", ""))
+			if gate == "" or data.realm_index_of(gate) <= c.realm_index:
+				out.append("can claim %s for %d contribution" % [Text.a(String(pill["name"])), int(pill["cost"])])
+	return out
+
+
+## "Members gather qi x1.5, hear ... and can claim ... for 250 contribution." ("" when there are no perks).
+static func membership_line(c: CharacterData, data: GameData, sect_id: String) -> String:
+	var perks := membership_perks(c, data, sect_id)
+	return "" if perks.is_empty() else "Members %s." % Text.join_and(perks)
+
+
 ## The shop entry for `item_id` in `c`'s sect ({} if it does not sell it).
 static func shop_entry(c: CharacterData, data: GameData, item_id: String) -> Dictionary:
 	for entry in shop_items(c, data):

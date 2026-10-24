@@ -222,3 +222,35 @@ func test_deliver_needs() -> void:
 	for id: String in Sects.available_missions(c, data()):
 		c.mission_cooldowns[id] = c.age_days + 100
 	assert_eq(Sects.deliver_needs(c, data()), {}, "all on cooldown")
+
+
+func test_membership_perks_azure_qr8_rogue() -> void:
+	var c := new_character()
+	c.realm_index = 1
+	c.stage = 7
+	var sect: SectDef = data().sects["azure_cloud_sect"]
+	var perks := Sects.membership_perks(c, data(), "azure_cloud_sect")
+	assert_eq(perks[0], "gather qi x%s" % String.num(sect.cultivation_bonus, 1))
+	assert_eq(perks[1], "hear %s each month" % sect.lecture["name"])
+	var pill := Sects.best_breakthrough_entry(data(), sect.shop, data().realms[2].id)
+	if pill.is_empty():
+		assert_eq(perks.size(), 2)
+	else:
+		assert_eq(perks.size(), 3)
+		assert_true(perks[2].begins_with("can claim"), perks[2])
+	assert_true(Sects.membership_line(c, data(), "azure_cloud_sect").begins_with("Members gather qi x"))
+
+
+func test_membership_perks_skip_pill_gated_by_realm() -> void:
+	var c := new_character()
+	c.realm_index = 2
+	for p in Sects.membership_perks(c, data(), "azure_cloud_sect"):
+		assert_false(p.contains("Core"), p)
+
+
+func test_membership_perks_myriad_and_unknown() -> void:
+	var c := new_character()
+	c.realm_index = 1
+	assert_eq(Sects.membership_perks(c, data(), "myriad_treasure_pavilion")[0], "gather qi x1.2")
+	assert_true(Sects.membership_perks(c, data(), "nope").is_empty())
+	assert_eq(Sects.membership_line(c, data(), "nope"), "")
