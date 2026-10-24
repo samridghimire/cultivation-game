@@ -3639,6 +3639,24 @@ func test_dangerous_missions_say_heal_when_injuries_are_the_cause() -> void:
 	assert_true(found, "some stage has injuries as the only obstacle")
 
 
+## PERF-007: the mission hint rates each mission's foe once; unhurt ratings run only for the "too dangerous" advice.
+func test_mission_hint_rates_each_foe_once_when_a_mission_is_ready() -> void:
+	var d := data()
+	var c := new_character()
+	c.realm_index = 1
+	c.stage = 4
+	c.sect = {"id": "azure_cloud_sect", "rank": 0, "contribution": 0, "spent": 0}
+	c.injuries = {"internal_injury": 100, "broken_bones": 100}
+	var foes := {}
+	for id: String in Sects.available_missions(c, d, {}):
+		foes[String(d.sect_missions[id].get("enemy", ""))] = true
+	Combat._chance_cache.clear()
+	var sims0: int = Combat._sim_count
+	Guidance._mission_hint(c, d, {})
+	var sims: int = Combat._sim_count - sims0
+	assert_true(sims <= foes.size(), "%d ratings for %d distinct foes" % [sims, foes.size()])
+
+
 ## GUIDE-103: at the last layer the qi lines speak of the breakthrough.
 func test_last_layer_qi_lines_name_the_breakthrough() -> void:
 	var d := data()

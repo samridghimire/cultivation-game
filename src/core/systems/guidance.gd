@@ -1909,7 +1909,7 @@ static func _mission_hint(c: CharacterData, data: GameData, flags: Dictionary = 
 		return ""
 	var ready := 0
 	var too_dangerous := 0
-	var healed_wins := false
+	var dangerous_foes: Array[Dictionary] = []
 	var cooling := ""
 	var deliver := ""
 	for id: String in Sects.available_missions(c, data, flags):
@@ -1930,9 +1930,7 @@ static func _mission_hint(c: CharacterData, data: GameData, flags: Dictionary = 
 			continue
 		if _mission_too_dangerous(c, data, id):
 			too_dangerous += 1
-			var mission_foe: Dictionary = data.enemies[String(data.sect_missions[id]["enemy"])]
-			if odds_unhurt(c, data, mission_foe) >= fight_floor(c, mission_foe):
-				healed_wins = true
+			dangerous_foes.append(data.enemies[String(data.sect_missions[id]["enemy"])])
 		else:
 			ready += 1
 	var text := ""
@@ -1962,6 +1960,12 @@ static func _mission_hint(c: CharacterData, data: GameData, flags: Dictionary = 
 			text += " The other %d %s too dangerous for you yet." % [too_dangerous, "mission is" if too_dangerous == 1 else "missions are"]
 	elif too_dangerous > 0:
 		text = "The sect's missions are too dangerous for you yet; "
+		# PERF-007: the unhurt ratings only matter here, so only this branch pays for them.
+		var healed_wins := false
+		for foe in dangerous_foes:
+			if odds_unhurt(c, data, foe) >= fight_floor(c, foe):
+				healed_wins = true
+				break
 		var best_style := _best_unmastered_combat(c, data)
 		var body_style := _body_art_below_typical(c, data)
 		if healed_wins:
