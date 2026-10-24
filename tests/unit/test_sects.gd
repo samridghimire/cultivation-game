@@ -254,3 +254,25 @@ func test_membership_perks_myriad_and_unknown() -> void:
 	assert_eq(Sects.membership_perks(c, data(), "myriad_treasure_pavilion")[0], "gather qi x1.2")
 	assert_true(Sects.membership_perks(c, data(), "nope").is_empty())
 	assert_eq(Sects.membership_line(c, data(), "nope"), "")
+
+
+## GUIDE-181: rank_needs lists every unmet need of the next rank.
+func test_rank_needs_lists_every_unmet_need() -> void:
+	var d := GameData.load_from_dir()
+	var c := new_character()
+	assert_eq(Sects.rank_needs(c, d).size(), 0, "a rogue")
+	c.sect = {"id": "azure_cloud_sect", "rank": 1, "contribution": 120, "spent": 0}
+	c.realm_index = 1
+	var needs := Sects.rank_needs(c, d)
+	assert_eq(needs.size(), 2)
+	assert_eq(needs[0], "earn 3000 contribution (you have 120)")
+	assert_true(needs[1].begins_with("reach "), needs[1])
+	c.sect["contribution"] = 3000
+	assert_eq(Sects.rank_needs(c, d).size(), 1, "contribution met")
+	c.sect["contribution"] = 120
+	c.realm_index = 2
+	assert_eq(Sects.rank_needs(c, d).size(), 1, "realm met")
+	c.sect["contribution"] = 3000
+	assert_eq(Sects.rank_needs(c, d).size(), 0)
+	c.sect["rank"] = (d.sects["azure_cloud_sect"] as SectDef).ranks.size() - 1
+	assert_eq(Sects.rank_needs(c, d).size(), 0, "highest rank")

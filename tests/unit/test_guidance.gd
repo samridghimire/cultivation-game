@@ -994,7 +994,8 @@ func test_rank_goal_without_trial_uses_requirement_helpers() -> void:
 	for l in Guidance.goals(c, d, {}):
 		if l.begins_with("Become "):
 			line = l
-	assert_true(line.begins_with("Become %s:" % rank_name) and line.contains("contribution"), line)
+	assert_true(line.begins_with("Become %s:" % rank_name) and line.contains("earn 500 contribution (you have 0)") and line.ends_with("."), line)
+	assert_false(line.contains(" needs "), line)
 	c.sect["contribution"] = 500
 	for l in Guidance.goals(c, d, {}):
 		assert_false(l.begins_with("Become "), "met requirements, trial-free: no rank line")
@@ -4909,3 +4910,16 @@ func test_qi_pill_offer_skips_realm_gated_pills() -> void:
 		assert_true(String(Guidance.qi_pill_offer(c, d, region_id).get("item_id", "")) != "cloud_mist_qi_pill", region_id)
 	c.inventory["cloud_mist_qi_pill"] = 1
 	assert_false(_has(_buy_hints(c), "Use your Cloud-Mist"))
+
+
+## GUIDE-181: the rank goal lists every need at once.
+func test_rank_goal_lists_every_need() -> void:
+	var d := data()
+	var c := new_character()
+	c.realm_index = 1
+	c.sect = {"id": "azure_cloud_sect", "rank": 1, "contribution": 120, "spent": 0}
+	var line := ""
+	for l in Guidance.goals(c, d, {}):
+		if l.begins_with("Become "):
+			line = l
+	assert_true(line.contains("earn 3000 contribution (you have 120) and reach "), line)

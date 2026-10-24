@@ -186,6 +186,24 @@ static func _rank_requirement_reason(c: CharacterData, data: GameData, rank: int
 	return ""
 
 
+## Every unmet need of the next rank as phrases, in check order ("earn 300 contribution (you have 120)",
+## "reach Qi Refining 7th Layer"); empty with no next rank or when both are met (GUIDE-181).
+static func rank_needs(c: CharacterData, data: GameData) -> PackedStringArray:
+	var out := PackedStringArray()
+	var rank := next_rank(c, data)
+	if rank < 0:
+		return out
+	var def: Dictionary = (data.sects[c.sect["id"]] as SectDef).ranks[rank]
+	var needed := int(def.get("contribution", 0))
+	if int(c.sect["contribution"]) < needed:
+		out.append("earn %d contribution (you have %d)" % [needed, int(c.sect["contribution"])])
+	var min_realm := data.realm_index_of(String(def.get("min_realm", "mortal")))
+	var min_stage := int(def.get("min_stage", 0)) if min_realm > 0 else 0
+	if c.realm_index < min_realm or (c.realm_index == min_realm and c.stage < min_stage):
+		out.append("reach %s" % (data.realms[min_realm].stage_label(min_stage) if min_stage > 0 else data.realms[min_realm].name))
+	return out
+
+
 ## True when the next rank exists and is gated by a trial.
 static func needs_trial(c: CharacterData, data: GameData) -> bool:
 	return next_rank(c, data) >= 0 and trial_enemy(c, data) != ""

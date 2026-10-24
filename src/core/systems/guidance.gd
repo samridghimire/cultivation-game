@@ -3047,9 +3047,9 @@ static func goals(c: CharacterData, data: GameData, flags: Dictionary, clan: Cla
 		var rank := Sects.next_rank(c, data)
 		if rank >= 0:
 			var rank_name: String = (data.sects[c.sect["id"]] as SectDef).rank_name(rank)
-			var need := Sects.rank_requirement_reason(c, data)
-			if need != "":
-				out.append("Become %s: %s" % [rank_name, need])
+			var needs := Sects.rank_needs(c, data)
+			if not needs.is_empty():
+				out.append("Become %s: %s." % [rank_name, Text.join_and(needs)])
 			elif Sects.needs_trial(c, data):
 				var foe := _trial_foe(c, data)
 				var odds := trial_odds(c, data)
