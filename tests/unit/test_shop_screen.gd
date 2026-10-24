@@ -56,6 +56,16 @@ func test_compare_text_names_equipped_item() -> void:
 	assert_true(ShopScreen.compare_text(c, data(), "iron_sword").begins_with("Equipped: %s (" % data().items["iron_sword"]["name"]))
 
 
+func test_realm_tag_for_gated_pills() -> void:
+	var c := new_character()
+	c.realm_index = 1
+	assert_true(ShopScreen.realm_tag(c, data(), "cloud_mist_qi_pill").contains("needs Foundation Establishment"))
+	assert_eq(ShopScreen.realm_tag(c, data(), "qi_gathering_pill"), "")
+	assert_eq(ShopScreen.compare_text(c, data(), "cloud_mist_qi_pill"), Items.realm_block(c, data(), "cloud_mist_qi_pill"))
+	c.realm_index = data().realm_index_of("foundation_establishment")
+	assert_eq(ShopScreen.realm_tag(c, data(), "cloud_mist_qi_pill"), "")
+
+
 func test_merchant_browse_opens_shop_and_screen_trades() -> void:
 	var root := (Engine.get_main_loop() as SceneTree).root
 	var gs := root.get_node("GameState")

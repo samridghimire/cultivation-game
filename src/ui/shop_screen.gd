@@ -382,6 +382,13 @@ static func tag_note(tag: String) -> String:
 	return ""
 
 
+## WU-375: row suffix "  [needs Foundation Establishment]" when the item's `min_realm` is above `c`'s realm; "" otherwise.
+static func realm_tag(c: CharacterData, data: GameData, item_id: String) -> String:
+	if Items.realm_block(c, data, item_id) == "":
+		return ""
+	return "  [needs %s]" % data.realms[data.realm_index_of(String(data.items[item_id].get("min_realm", "")))].name
+
+
 ## What a qi item is worth in meditation (WU-314); "" when selling or the item gives no qi.
 static func buy_worth_line(c: CharacterData, data: GameData, item_id: String, region_id: String, flags: Dictionary, selling: bool) -> String:
 	if selling:
@@ -410,6 +417,9 @@ static func recharge_warning(c: CharacterData, data: GameData, price: int) -> St
 
 ## "Equipped: Iron Sword (+5 attack)" for whatever `c` wears in the item's slot.
 static func compare_text(c: CharacterData, data: GameData, item_id: String) -> String:
+	var blocked := Items.realm_block(c, data, item_id)
+	if blocked != "":
+		return blocked
 	var tech_id := manual_technique(data, item_id)
 	if tech_id != "":
 		var tech_name: String = data.techniques[tech_id].name
@@ -484,6 +494,9 @@ func _rebuild() -> void:
 			var tag_text := tag_note(upgrade_tag(p, data, item_id, _faction))
 			if tag_text != "" and row_fits(label + tag_text):
 				label += tag_text
+			var realm_text := realm_tag(p, data, item_id)
+			if realm_text != "" and row_fits(label + realm_text):
+				label += realm_text
 		if not _selling and GameState.festival_stock(_stock_tags).has(item_id) and not Items.shop_stock(data, _max_price, _stock_tags).has(item_id):
 			label += " (festival)"
 		if not _selling and item_id == _hinted:

@@ -256,6 +256,10 @@ func _show_details() -> void:
 		var wanted := wanted_by_sect_line(GameState.player, data, _selected, GameState.world_flags)
 		if wanted != "":
 			lines.append(wanted)
+	if _selected != "":
+		var blocked := Items.realm_block(GameState.player, data, _selected)
+		if blocked != "":
+			lines.append(blocked)
 	if _selected != "" and not GameState.player.equipment.values().has(_selected):
 		lines.append_array(use_lines(data, _selected, GameState.current_region))
 	if _selected != "":

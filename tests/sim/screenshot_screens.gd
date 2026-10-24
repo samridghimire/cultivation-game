@@ -95,6 +95,7 @@ extends SceneTree
 ## WU-246: `-- --first-hour` also writes fh_<workshop|shop|journal_first_goals|journal_next_steps|journal_commissions|board>_<day1|month1>_<size>.png.
 ## WU-343: `--shop-shot` also writes shop_recharge_warning_<size>.png and shop_recharge_calm_<size>.png (one life: recharge warning; three: none).
 ## WU-318: `--shop-shot` also writes shop_hinted_item_<size>.png (the row the first hint names: gold "!", selected).
+## WU-375: `--shop-shot` also writes shop_realm_tag_<size>.png (Pill Pavilion in fallen_star_market, QR3 with 500 stones: Cloud-Mist Qi Pill row tagged "[needs Foundation Establishment]", details give the full sentence).
 ## WU-314: `--shop-shot` also writes shop_buy_qi_worth_<size>.png (Buy tab, Qi Gathering Pill: "Worth about N days of meditation here each").
 ## WU-296: append `-- --inventory-shot` for inventory_qi_worth.png (Spirit Herb selected: "Worth about N of meditation here"); run once per --resolution.
 ## WU-273: append `-- --techniques-shot` for techniques_practice[_scale115].png (Iron Fist level 1 details, practice button focused); run once per --resolution. Checked at 1280x720 and 1280x800: nothing clipped, the action row wraps.
@@ -1215,6 +1216,22 @@ func _start_shop_shot(gs: Node) -> void:
 		shop.open("Wandering Merchant", 0, ["herb", "ore"])
 		shop._set_tab(false)
 		shop._select("qi_gathering_pill"), "close": shop.close})
+	# WU-375: a Qi Refining buyer sees which pills are beyond their realm.
+	shots.append({"name": "shop_realm_tag", "open": func() -> void:
+		gs.current_region = "fallen_star_market"
+		c.realm_index = 1
+		c.stage = 2
+		c.inventory = {"spirit_stone": 500}
+		shop.open("Pill Pavilion", 0, [], "myriad_treasure_pavilion")
+		shop._set_tab(false)
+		shop._set_category("All")
+		shop._select("cloud_mist_qi_pill")
+		var row: Button = shop.get("_list").get_node_or_null("cloud_mist_qi_pill")
+		if row == null or not row.text.contains("[needs Foundation Establishment]"):
+			push_error("WU-375: realm tag missing from the Cloud-Mist row: %s" % (row.text if row else "no row"))
+		if not (shop.get("_compare") as Label).text.contains("Only a cultivator of the Foundation Establishment realm"):
+			push_error("WU-375: details lack the realm sentence")
+		print("WU-375 row: ", row.text if row else "", " | ", ("fits" if shop.row_fits(row.text) else "TRIMMED") if row else ""), "close": shop.close})
 	# WU-318: the Smithy's armor row the first hint names wears the gold "!" and is selected first.
 	shots.append({"name": "shop_hinted_item", "open": func() -> void:
 		gs.current_region = "fallen_star_market"
