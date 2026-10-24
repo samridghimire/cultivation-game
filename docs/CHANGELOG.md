@@ -2,6 +2,19 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-24 [GUIDE-177] An order you cannot fill in time no longer takes a hint slot; the journal still lists it.
+- 2026-10-24 [C-249] Three quiet moments only a rogue meets: a loose cultivator's breathing trick, a riverside barter and a sect recruiter.
+- 2026-10-24 [GUIDE-176] The clan goal lists every need at once (realm, abode, stones).
+- 2026-10-24 [GUIDE-175] As a rogue, the sect hint says what joining gives: faster qi, a monthly lecture and the next breakthrough pill.
+- 2026-10-24 [WU-364] A screenshot check of the journal's realm and rank goals.
+- 2026-10-24 [WU-368] After claiming a manual in the sect treasury you can learn it there, and set a faster method as your main one.
+- 2026-10-24 [WU-363] A screenshot check of the sect treasury method hint.
+- 2026-10-24 [QA-161] The sim measured a rogue who follows the hints: with the far qi spot, Foundation comes sooner than in a sect.
+- 2026-10-24 [GUIDE-174] The village drunk stops picking fights once you reach Foundation; the outgrown hint copes with a home that has no fights left.
+- 2026-10-24 [QA-160] Refreshed the balance baseline; workers now check it when they change data or hint text.
+- 2026-10-24 [C-244] Audited which alchemy orders a Qingshi alchemist can fill (no data change).
+- 2026-10-24 [C-246] Help explains that the practice hint names your body art once your fighting style is trained far enough.
+- 2026-10-24 [GUIDE-173] The mission hint says what else the best mission pays (spirit stones, qi).
 - 2026-10-24 [GUIDE-172] The trial advice no longer names the same sect treasury manual as the defence hint.
 - 2026-10-24 [WU-360] A screenshot check that the HUD's trial line keeps the practice advice.
 - 2026-10-24 [GUIDE-171] When a rank's trial is hopeless, the rank goal says it is beyond you yet instead of inviting you to try.

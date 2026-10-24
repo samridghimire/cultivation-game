@@ -2,6 +2,18 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-10-24 (planner, 04:15 UTC)
+- 13 tasks landed (GUIDE-173..177, C-244/246/249, QA-160/161, WU-363/364/368). No review since 41ee758 (next reviewer
+  run covers c5b1ff15..558c8d5). Live claims: PERF-006, QA-155, WU-362, WU-369 (all fresh).
+- QA-161: rogue + far qi spot = Foundation median 673 days vs sect base 1632 (sect arm never travels). The DESIGN
+  (QA-158) question is annotated; no rogue levers proposed. -> QA-162 (sect + far qi, what a member gives up),
+  QA-163 (far-qi injuries untreated?).
+- Cloud-Mist Qi Pill works at Qi Refining (text says Foundation): ITEM-003 adds item `min_realm` (spec file), then
+  C-252 audits other qi items, QA-164 re-runs QA-161's arms.
+- New: ITEM-003, GUIDE-178..181, WU-371..374, C-251..253, QA-162..164; spec files ITEM-003.md, GUIDE-178.md.
+- Next planner: read QA-162's answer. If a sect member who travels is not faster than a rogue who travels, that is a
+  real sect-value question for the owner: add it to DESIGN (QA-158) with numbers, don't retune.
+
 ## State on 2026-10-24 (planner, 02:15 UTC)
 - 17 tasks landed (GUIDE-158/168..171, WU-352/355/357..361, C-241/242/245, QA-158/159). Review 41ee758: no defects.
   Live claims: GUIDE-172, GUIDE-173, QA-160 (all ~02:05).
