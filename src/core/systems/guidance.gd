@@ -1183,6 +1183,11 @@ static func available_nearby(c: CharacterData, data: GameData, item_id: String, 
 	var season := Calendar.season_of(today) if today >= 0 else ""
 	if _gatherable_items(c, data, region_id, season).has(item_id):
 		return true
+	return merchant_sells_nearby(data, item_id, region_id)
+
+
+## True when a merchant in `region_id` or a region one route away stocks `item_id` (any region when "").
+static func merchant_sells_nearby(data: GameData, item_id: String, region_id: String) -> bool:
 	var item: Dictionary = data.items.get(item_id, {})
 	for rid: String in data.regions:
 		if region_id != "" and not Exploration.is_nearby(data, region_id, rid):

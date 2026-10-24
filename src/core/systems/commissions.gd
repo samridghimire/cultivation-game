@@ -267,6 +267,15 @@ static func _gather_estimate(c: CharacterData, data: GameData, entry: Dictionary
 	return " (about %s of gathering)" % Calendar.format_duration(days)
 
 
+## GUIDE-177: false when the order's short ingredient can only be gathered here (no merchant
+## nearby sells it) and the gathering estimate runs past the order's deadline.
+static func can_meet_in_time(c: CharacterData, data: GameData, entry: Dictionary, region_id: String, today: int) -> bool:
+	var id := short_ingredient(c, data, entry)
+	if id == "" or id == STONE_ID or Guidance.merchant_sells_nearby(data, id, region_id):
+		return true
+	return not _gather_estimate(c, data, entry, id, region_id, today).contains("longer than the order has")
+
+
 ## The recipe that makes an order's item (the order's own recipe first); {} when none does.
 static func _recipe_for(data: GameData, entry: Dictionary) -> Dictionary:
 	var recipe: Dictionary = data.recipes.get(String(entry.get("recipe", "")), {})
@@ -331,7 +340,7 @@ static func due_soon_hint(c: CharacterData, data: GameData, region_id: String, t
 		if days_left(order, today) > DUE_SOON_DAYS or (not best.is_empty() and int(order["due_day"]) >= int(best["due_day"])):
 			continue
 		var missing := missing_line(c, data, order, region_id, today)
-		if missing != "":
+		if missing != "" and can_meet_in_time(c, data, order, region_id, today):
 			best = order
 			line = missing
 	if best.is_empty():

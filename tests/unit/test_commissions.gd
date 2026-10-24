@@ -468,3 +468,21 @@ func test_lapse_text_names_spirit_stones() -> void:
 	c.add_item("spirit_herb", 2)
 	var text := Commissions.lapse_text(c, data(), _array_order(2))
 	assert_true(text.ends_with(" lapsed. You were short of %s." % Items.item_plural(data(), "spirit_stone", 2)), text)
+
+
+## GUIDE-177: an order that gathering cannot finish in time stops taking a hint slot.
+func test_due_soon_hint_skips_a_doomed_order() -> void:
+	var c := _alchemist()
+	var d := data()
+	var doomed := _pill_order(2, 11)
+	assert_true(Commissions.missing_line(c, d, doomed, "qingshi_village", 10).contains("longer than the order has"))
+	if Guidance.merchant_sells_nearby(d, Commissions.short_ingredient(c, d, doomed), "qingshi_village"):
+		assert_true(Commissions.can_meet_in_time(c, d, doomed, "qingshi_village", 10), "a merchant sells it")
+		return
+	assert_false(Commissions.can_meet_in_time(c, d, doomed, "qingshi_village", 10))
+	c.commissions = [doomed]
+	assert_eq(Commissions.due_soon_hint(c, d, "qingshi_village", 10), "")
+	var roomy := _pill_order(2, 100)
+	assert_true(Commissions.can_meet_in_time(c, d, roomy, "qingshi_village", 10))
+	c.commissions = [roomy]
+	assert_true(Commissions.due_soon_hint(c, d, "qingshi_village", 90).begins_with("Order due in "))
