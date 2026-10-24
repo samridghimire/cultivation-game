@@ -574,6 +574,8 @@ func _validate_world() -> void:
 		_validate_seasons(e, "Encounter '%s'" % e["id"])
 		if e.has("repeatable") and typeof(e["repeatable"]) != TYPE_BOOL:
 			load_errors.append("Encounter '%s' repeatable must be a bool" % e["id"])
+		if e.has("rogue_only") and typeof(e["rogue_only"]) != TYPE_BOOL:
+			load_errors.append("Encounter '%s' rogue_only must be a bool" % e["id"])
 		if e.has("min_explores") and (typeof(e["min_explores"]) != TYPE_INT and typeof(e["min_explores"]) != TYPE_FLOAT or int(e["min_explores"]) < 1 or float(e["min_explores"]) != int(e["min_explores"])):
 			load_errors.append("Encounter '%s' min_explores must be an int >= 1" % e["id"])
 		if e.has("min_renown"):
