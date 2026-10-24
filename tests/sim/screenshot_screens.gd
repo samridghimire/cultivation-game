@@ -116,6 +116,7 @@ extends SceneTree
 ## WU-363: `--hint-shot` also writes hint_sect_method_<size>.png (Azure Cloud Inner Disciple, QR5, 1200 contribution: hint names the treasury method, both rates and the Learn-it sentence; short of the cost the sentence is gone).
 ## WU-361: `--hint-shot` also writes hint_body_art_target_<size>.png (Iron Fist at its typical level, Stone Skin Tempering 1: trial line says "practise Stone Skin Tempering to level N (now 1)", never "practise Iron Fist").
 ## WU-351: `--hint-shot` also writes hud_contribution_<size>.png (Azure Cloud Inner Disciple, 7773 contribution, 1296 stones).
+## WU-365: `--hint-shot` also writes hint_rogue_join_<size>.png (rogue at Qi Refining 8, ~1400 stones: the hint says Azure Cloud Sect members gather qi x1.5 and the capped HUD line keeps "join Azure Cloud Sect").
 ## WU-350: `--hint-shot` also writes hint_abode_<size>.png (rogue, Qi Refining 5, 400 stones, no abode: journal Next steps names the Waterfall Cave and 300; the capped HUD line keeps the cave's name).
 ## WU-349: `--hint-shot` also writes hint_heal_treasury_<size>.png (Azure Cloud outer disciple, qi deviation, 5 stones, 300 contribution: HUD line names the Meridian Mending Pill from "your sect treasury", never the Village Clinic).
 ## WU-345: `--hint-shot` also writes hint_trial_peak_<size>.png (Inner Disciple at Foundation Peak, Iron Fist mastered, no body art or armor: a hint names Stone Skin Tempering, none says grow a stage).
@@ -2339,6 +2340,40 @@ func _start_hint_shot(gs: Node) -> void:
 			c.inventory = heal_saved[1]
 			c.injuries = heal_saved[2]
 			heal_saved.clear()})
+
+	# WU-365: GUIDE-175. A rogue at Qi Refining 8 with ~1400 stones: the sect hint names what Azure Cloud Sect gives its
+	# members; the capped HUD line keeps the sect's name.
+	var rogue_saved: Array = []
+	shots.append({"name": "hint_rogue_join_" + size_tag, "open": func() -> void:
+		setup_road.call()
+		rogue_saved.append_array([c.realm_index, c.stage, c.sect.duplicate(), c.inventory.duplicate(), c.injuries.duplicate(true)])
+		c.realm_index = gs.data.realm_index_of("qi_refining")
+		c.stage = 7
+		c.sect = {}
+		c.injuries = {}
+		c.inventory = {"spirit_stone": 1400}
+		gs.current_region = "qingshi_village"
+		root.get_node("EventBus").player_changed.emit()
+		await root.get_tree().process_frame
+		await root.get_tree().process_frame
+		hud.get("_banner").visible = false
+		var lines: Array = Guidance.hints(c, gs.data, 3, 12, gs.npcs, gs.world_flags, "qingshi_village", 40, gs.npc_favor)
+		var dump := "\n".join(lines)
+		var join_line := ""
+		for h: String in lines:
+			if h.contains("join Azure Cloud Sect"):
+				join_line = h
+				break
+		print("hint-shot rogue join: ", join_line)
+		assert(join_line.contains("Azure Cloud Sect members gather qi x1.5"), "no perks sentence in the join hint:\n" + dump)
+		var capped: String = hud.call("cap_hint", join_line)
+		assert(capped.contains("join Azure Cloud Sect"), "capped HUD line lost the join: " + capped), "close": func() -> void:
+			c.realm_index = rogue_saved[0]
+			c.stage = rogue_saved[1]
+			c.sect = rogue_saved[2]
+			c.inventory = rogue_saved[3]
+			c.injuries = rogue_saved[4]
+			rogue_saved.clear()})
 
 	# WU-350: GUIDE-153's abode hint. A rogue at Qi Refining 5 with 400 stones and no abode: the journal's Next steps names the
 	# Waterfall Cave and its 300-stone price, and the capped HUD line keeps the cave's name.
