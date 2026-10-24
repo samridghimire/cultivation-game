@@ -486,3 +486,42 @@ func test_due_soon_hint_skips_a_doomed_order() -> void:
 	assert_true(Commissions.can_meet_in_time(c, d, roomy, "qingshi_village", 10))
 	c.commissions = [roomy]
 	assert_true(Commissions.due_soon_hint(c, d, "qingshi_village", 90).begins_with("Order due in "))
+
+
+## GUIDE-178: orders prefer recipes whose ingredients are all in the region.
+func _only_recipes(ids: Array) -> GameData:
+	var d := GameData.load_from_dir()
+	for rid: String in d.recipes.keys():
+		if String(d.recipes[rid]["profession"]) == "alchemist" and not ids.has(rid):
+			d.recipes.erase(rid)
+	return d
+
+
+func _rolled_orders(d: GameData, region: String) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	for i in 40:
+		var c := _alchemist()
+		c.professions["alchemist"]["rank"] = 1
+		out.append_array(Commissions.roll(c, d, seeded_rng(i + 1), 0, "alchemist", region))
+	return out
+
+
+func test_orders_prefer_local_ingredients() -> void:
+	var d := _only_recipes(["qi_gathering_pill", "bone_setting_salve"])
+	var orders := _rolled_orders(d, "qingshi_village")
+	assert_eq(orders.size(), 40)
+	for o in orders:
+		assert_eq(String(o["recipe"]), "qi_gathering_pill")
+
+
+func test_orders_needing_a_neighbours_ingredient_ask_for_one() -> void:
+	var d := _only_recipes(["bone_setting_salve", "spirit_gathering_pill"])
+	for o in _rolled_orders(d, "qingshi_village"):
+		assert_eq(int(o["count"]), 1)
+
+
+func test_available_nearby_local_only_ignores_neighbours() -> void:
+	var d := data()
+	var c := _alchemist()
+	assert_false(Guidance.available_nearby(c, d, "qi_condensing_grass", "qingshi_village", -1, true))
+	assert_true(Guidance.available_nearby(c, d, "qi_condensing_grass", "misty_forest", -1, true))

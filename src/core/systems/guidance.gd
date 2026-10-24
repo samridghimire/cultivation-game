@@ -1183,18 +1183,19 @@ static func _seasons_until(from: String, to: String) -> int:
 ## True when `item_id` can be had near `region_id` (PROF-009): a gather place there yields it
 ## in season (`today >= 0`; any season otherwise), or a merchant in `region_id` or a region one
 ## route away stocks it (PROF-011); with `region_id` "" a merchant in any region counts.
-static func available_nearby(c: CharacterData, data: GameData, item_id: String, region_id: String, today: int = -1) -> bool:
+static func available_nearby(c: CharacterData, data: GameData, item_id: String, region_id: String, today: int = -1, local_only: bool = false) -> bool:
 	var season := Calendar.season_of(today) if today >= 0 else ""
 	if _gatherable_items(c, data, region_id, season).has(item_id):
 		return true
-	return merchant_sells_nearby(data, item_id, region_id)
+	return merchant_sells_nearby(data, item_id, region_id, local_only)
 
 
 ## True when a merchant in `region_id` or a region one route away stocks `item_id` (any region when "").
-static func merchant_sells_nearby(data: GameData, item_id: String, region_id: String) -> bool:
+## With `local_only` (GUIDE-178) only `region_id` itself counts.
+static func merchant_sells_nearby(data: GameData, item_id: String, region_id: String, local_only: bool = false) -> bool:
 	var item: Dictionary = data.items.get(item_id, {})
 	for rid: String in data.regions:
-		if region_id != "" and not Exploration.is_nearby(data, region_id, rid):
+		if region_id != "" and (rid != region_id if local_only else not Exploration.is_nearby(data, region_id, rid)):
 			continue
 		for p: Dictionary in data.regions[rid].get("places", []):
 			if String(p.get("type", "")) == "merchant" and Items.merchant_sells(data, item, p.get("stock_tags", []), int(p.get("max_price", 0))):

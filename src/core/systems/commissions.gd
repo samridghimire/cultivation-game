@@ -27,6 +27,7 @@ static func _open_count(c: CharacterData, prof_id: String) -> int:
 ## (only `only_prof` when given). Returns the new orders. With a `region_id` (PROF-009) the order
 ## is picked among recipes whose ingredients are spirit stones, already in the pack or available
 ## nearby (Guidance.available_nearby) when there are any; "" picks uniformly as before.
+## Recipes whose ingredients are all in `region_id` win over ones needing a neighbour's (those ask for 1) (GUIDE-178).
 ## The count is capped by max_count so it fits what can be gathered in the order's window (PROF-012).
 static func roll(c: CharacterData, data: GameData, rng: RandomNumberGenerator, today: int, only_prof: String = "", region_id: String = "") -> Array[Dictionary]:
 	var added: Array[Dictionary] = []
@@ -41,6 +42,7 @@ static func roll(c: CharacterData, data: GameData, rng: RandomNumberGenerator, t
 		if not data.professions.has(prof_id) or _open_count(c, prof_id) >= int(r["per_profession"]):
 			continue
 		var options: Array[Dictionary] = []
+		var only_near := false
 		for recipe_id in Alchemy.known_recipes(c, data, prof_id):
 			var recipe: Dictionary = data.recipes[recipe_id]
 			if int(recipe.get("min_rank", 0)) > Professions.rank_of(c, prof_id):
@@ -51,16 +53,24 @@ static func roll(c: CharacterData, data: GameData, rng: RandomNumberGenerator, t
 		if options.is_empty():
 			continue
 		if region_id != "":
+			var local: Array[Dictionary] = []
 			var near: Array[Dictionary] = []
 			for opt: Dictionary in options:
+				if _ingredients_near(c, data, opt, region_id, today, true):
+					local.append(opt)
 				if _ingredients_near(c, data, opt, region_id, today):
 					near.append(opt)
-			if not near.is_empty():
+			if not local.is_empty():
+				options = local
+			elif not near.is_empty():
 				options = near
+				only_near = true
 		var recipe: Dictionary = options[rng.randi_range(0, options.size() - 1)]
 		var item_id := String(recipe["output"]["item"])
 		var count := rng.randi_range(int(r["count"][0]), int(r["count"][1]))
 		count = mini(count, max_count(c, data, recipe, region_id, today, int(r["days"])))
+		if only_near:
+			count = 1
 		var order := {
 			"profession": prof_id, "recipe": String(recipe["id"]), "item": item_id, "count": count,
 			"reward": maxi(1, ceili(unit_reward(data, item_id) * count)),
@@ -105,11 +115,11 @@ static func max_count(c: CharacterData, data: GameData, recipe: Dictionary, regi
 	return maxi(1, floori(float(days) * FILL_SHARE / total))
 
 
-static func _ingredients_near(c: CharacterData, data: GameData, recipe: Dictionary, region_id: String, today: int) -> bool:
+static func _ingredients_near(c: CharacterData, data: GameData, recipe: Dictionary, region_id: String, today: int, local_only: bool = false) -> bool:
 	for ing: String in recipe["ingredients"]:
 		if ing == "spirit_stone" or c.item_count(ing) >= int(recipe["ingredients"][ing]):
 			continue
-		if not Guidance.available_nearby(c, data, ing, region_id, today):
+		if not Guidance.available_nearby(c, data, ing, region_id, today, local_only):
 			return false
 	return true
 
