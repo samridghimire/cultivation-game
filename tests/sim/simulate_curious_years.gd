@@ -117,6 +117,8 @@ func _run() -> void:
 			FirstHour.trial_report = true  # QA-155
 		elif a == "--injury-report":
 			FirstHour.injury_report = true  # QA-163
+		elif a == "--sect-report":
+			FirstHour.sect_report = true  # QA-162
 		elif a == "--arm-report":
 			_arm_report = true  # QA-161
 		elif a == "--defence":
@@ -244,6 +246,8 @@ func _run() -> void:
 		_print_arm_report(runs, months)
 	if FirstHour.injury_report:
 		_print_injury_report(seeds)
+	if FirstHour.sect_report:
+		_print_sect_report()
 	if FirstHour.body_art or FirstHour.trial_report:
 		_print_body_art(seeds)
 	if FirstHour.sect_method:
@@ -353,6 +357,29 @@ func _print_arm_report(runs: Array[Dictionary], months: int) -> void:
 		lives += int(r.get("recharges", 0))
 	var ql: Dictionary = FirstHour.qi_log
 	print("Arm report (QA-161): stones median m12 %.0f, m36 %.0f; qi pills bought %d for %d stones (used %d, +%d qi); fights lost %d; artifact lives bought %d; final deaths %d" % [_median(s12.duplicate()), _median(s36.duplicate()), ql["bought"], ql["stones"], ql["used"], ql["qi"], lost, lives, finals])
+
+
+## QA-162: per seed what the sect member did with the sect (see FirstHour.sect_report), then medians.
+func _print_sect_report() -> void:
+	print("Sect (QA-162): seed, joined day, sect months, days away from the sect's region, stipends paid/skipped, missions, lectures")
+	var away: Array = []
+	var skipped := 0
+	var paid := 0
+	var months := 0
+	var missions: Array = []
+	var lectures: Array = []
+	var members := 0
+	for e: Dictionary in FirstHour.sect_log:
+		print("  seed %2d joined d%-5d months %2d away %4d paid %2d skipped %2d missions %3d lectures %2d" % [e["seed"], e["joined"], e["months"], e["away"], e["paid"], e["skipped"], e["missions"], e["lectures"]])
+		if int(e["joined"]) >= 0:
+			members += 1
+			away.append(int(e["away"]))
+			missions.append(int(e["missions"]))
+			lectures.append(int(e["lectures"]))
+		skipped += int(e["skipped"])
+		paid += int(e["paid"])
+		months += int(e["paid"]) + int(e["skipped"])
+	print("  total: %d members; days away median %.0f; stipends paid %d, skipped %d over %d sect months; missions median %.0f; lectures median %.0f" % [members, _median(away), paid, skipped, months, _median(missions), _median(lectures)])
 
 
 ## QA-163: every injury taken, per seed: id, day, region, days it lasted, whether it was treated early, the qi-days

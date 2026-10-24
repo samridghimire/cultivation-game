@@ -37,6 +37,11 @@ static var heal_log := {"healed": 0, "stones": 0}
 ## if left alone), end (day it went, -1 still open), treated (it went well before its time)}.
 static var injury_report := false
 static var injury_log: Array[Dictionary] = []
+## QA-162: with sect_report on, play() logs per seed what a sect member does with the sect: sect_log entries are
+## {seed, joined (day or -1), away (days the month ended outside the sect's home region), months (sim months since
+## joining), skipped (stipends withheld for missed duty), paid, missions, lectures}.
+static var sect_report := false
+static var sect_log: Array[Dictionary] = []
 ## QA-138: a curious player takes the bout the spar hint names ("<Name> (<realm>) here would spar with you"), once a
 ## week while the hint speaks; simulate_first_hour.gd's --no-spar-hint turns it off. spar_log["bouts"] counts them,
 ## ["refused"] collects check_spar's text when the named partner refuses (a hint bug).
@@ -99,7 +104,7 @@ static var _memo := {}
 
 
 static func play_cached(gs: Node, clock: Node, seed_value: int, months: int, curious: bool = false, no_help: bool = false, wait_for_pill: int = 0) -> Dictionary:
-	var key := [seed_value, months, curious, no_help, wait_for_pill, follow_defence, practise_hint, attempt_trials, heal_injuries, spar_hint, min_mission_odds, chase_best_mission, buy_qi, shop_armor, spend_contribution, qi_pill_cap, far_qi, recharge_first, hint_missions, sect_method, stay_rogue, body_art, trial_report]
+	var key := [seed_value, months, curious, no_help, wait_for_pill, follow_defence, practise_hint, attempt_trials, heal_injuries, spar_hint, min_mission_odds, chase_best_mission, buy_qi, shop_armor, spend_contribution, qi_pill_cap, far_qi, recharge_first, hint_missions, sect_method, stay_rogue, body_art, trial_report, sect_report]
 	if not _memo.has(key):
 		_memo[key] = play(gs, clock, seed_value, months, curious, Callable(), no_help, wait_for_pill)
 		gs.end_session()
@@ -139,6 +144,14 @@ static func play(gs: Node, clock: Node, seed_value: int, months: int, curious: b
 		_injury_sync(gs, c, clock.total_days, open_injuries, seed_value, text if category == "danger" else "")
 	if injury_report:
 		bus.message_posted.connect(on_msg)
+	var sect_entry := {"seed": seed_value, "joined": -1, "away": 0, "months": 0, "skipped": 0, "paid": 0, "missions": 0, "lectures": 0}
+	var on_sect_msg := func(text: String, _category: String) -> void:
+		if text.contains("this month's stipend is withheld"):
+			sect_entry["skipped"] += 1
+		elif text.begins_with("Your sect pays your monthly stipend"):
+			sect_entry["paid"] += 1
+	if sect_report:
+		bus.message_posted.connect(on_sect_msg)
 	_talk_to_elder_mo(gs)
 	for chore in CHORES:
 		gs.perform_deed(chore)
@@ -225,10 +238,21 @@ static func play(gs: Node, clock: Node, seed_value: int, months: int, curious: b
 		out["realms"].append(Cultivation.realm_label(c, gs.data))
 		if injury_report:
 			_injury_sync(gs, c, clock.total_days, open_injuries, seed_value, "")
+		if sect_report and not c.is_rogue():
+			if sect_entry["joined"] < 0:
+				sect_entry["joined"] = clock.total_days
+			sect_entry["months"] += 1
+			if gs.current_region != (gs.data.sects[c.sect["id"]] as SectDef).home_region:
+				sect_entry["away"] += Calendar.DAYS_PER_MONTH
 		if month_hook.is_valid():
 			month_hook.call(month)
 	if injury_report:
 		bus.message_posted.disconnect(on_msg)
+	if sect_report:
+		bus.message_posted.disconnect(on_sect_msg)
+		sect_entry["missions"] = LifeStats.get_stat(c, "missions_done")
+		sect_entry["lectures"] = LifeStats.get_stat(c, "lectures_attended")
+		sect_log.append(sect_entry)
 	bus.combat_started.disconnect(on_start)
 	bus.combat_finished.disconnect(on_end)
 	out["style_month"] = int(done.get("style_month", -1))
