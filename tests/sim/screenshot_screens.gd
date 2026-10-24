@@ -107,6 +107,7 @@ extends SceneTree
 ## WU-356: `--hint-shot` also writes hint_missions_last_stage_<size>.png (Qi Refining last stage, missions too dangerous, style mastered: the mission line says break through).
 ## WU-353: `--hint-shot` also writes hint_practice_target_<size>.png (Inner Disciple, Foundation Peak, Iron Fist 2: trial advice says "to level N (now 2)").
 ## WU-369: `--help-shot` writes help_<topic>_<size>.png for every help page (long ones scroll in a focusable ScrollContainer).
+## WU-374: `--hint-shot` also writes hint_order_doomed_<size>.png (rank-0 Alchemist, one order gathering cannot finish in time plus a meetable one: no hint leads with the doomed order, the journal still says "longer than the order has").
 ## WU-364: `--hint-shot` also writes journal_goals_realm_/journal_goals_rank_<size>.png (Foundation Early: realm goal names Cloud-Sea Cliff in Azure Peak; Foundation Peak with a hopeless Core Disciple trial: rank goal says "beyond you yet").
 ## WU-363: `--hint-shot` also writes hint_sect_method_<size>.png (Azure Cloud Inner Disciple, QR5, 1200 contribution: hint names the treasury method, both rates and the Learn-it sentence; short of the cost the sentence is gone).
 ## WU-361: `--hint-shot` also writes hint_body_art_target_<size>.png (Iron Fist at its typical level, Stone Skin Tempering 1: trial line says "practise Stone Skin Tempering to level N (now 1)", never "practise Iron Fist").
@@ -2655,6 +2656,50 @@ func _start_hint_shot(gs: Node) -> void:
 				gs.data.sect_missions[mid]["enemy"] = last_foes[mid]
 			last_foes.clear()
 			last_saved.clear()})
+
+	# WU-374: GUIDE-177. A rank-0 Alchemist with one order that gathering cannot finish in time and a second that can be
+	# met: no hint leads with the doomed order's "Order due in", the journal still lists it as "longer than the order has".
+	var doomed_saved: Array = []
+	shots.append({"name": "hint_order_doomed_" + size_tag, "open": func() -> void:
+		setup_long.call()
+		doomed_saved.append_array([c.professions.duplicate(true), c.commissions.duplicate(true), c.inventory.duplicate(), c.sect.duplicate()])
+		var today: int = int(root.get_node("GameClock").total_days)
+		c.professions["alchemist"] = {"rank": 0, "xp": 0.0}
+		# Village and market herb sellers stock every herb here, so no real ingredient is gather-only: make Dew Grass unsellable
+		# for this shot so no merchant "sells" it, and hold the Spirit Herb so Dew Grass is the short ingredient.
+		doomed_saved.append(gs.data.items["dew_grass"]["price"])
+		gs.data.items["dew_grass"]["price"] = 0
+		c.inventory = {"spirit_herb": 40}
+		c.sect = {}
+		var doomed := {"profession": "alchemist", "item": "qi_gathering_pill", "count": 30, "reward": 10, "xp": 5.0, "due_day": today + 6, "recipe": "qi_gathering_pill"}
+		var meetable := {"profession": "alchemist", "item": "qi_gathering_pill", "count": 3, "reward": 10, "xp": 5.0, "due_day": today + 14, "recipe": "qi_gathering_pill"}
+		c.commissions = [doomed, meetable]
+		gs.current_region = "qingshi_village"
+		root.get_node("EventBus").player_changed.emit()
+		await root.get_tree().process_frame
+		await root.get_tree().process_frame
+		hud.get("_banner").visible = false
+		var doomed_line: String = Commissions.missing_line(c, gs.data, doomed, "qingshi_village", today)
+		print("hint-shot doomed order: ", doomed_line)
+		assert(doomed_line.contains("longer than the order has"), "setup: the doomed order is not doomed: " + doomed_line)
+		assert(Commissions.can_meet_in_time(c, gs.data, meetable, "qingshi_village", today), "setup: the second order cannot be met")
+		var lines: Array = Guidance.hints(c, gs.data, 3, 12, gs.npcs, gs.world_flags, "qingshi_village", 40, gs.npc_favor)
+		for h: String in lines:
+			assert(not h.begins_with("Order due in 6 days"), "a hint leads with the doomed order:\n" + "\n".join(lines))
+		var due_hint: String = Commissions.due_soon_hint(c, gs.data, "qingshi_village", today)
+		assert(due_hint == "" or not due_hint.begins_with("Order due in 6 days"), "due_soon_hint picked the doomed order: " + due_hint)
+		var dj: Control = hud.get("_screens")["toggle_journal"]
+		await _show_journal(dj, "Next steps")
+		for _i in 3:
+			await root.get_tree().process_frame
+		var parsed: String = (dj.get("_text") as RichTextLabel).get_parsed_text()
+		assert(parsed.contains("longer than the order has"), "journal lost the doomed order:\n" + parsed), "close": func() -> void:
+			c.professions = doomed_saved[0]
+			c.commissions = doomed_saved[1]
+			c.inventory = doomed_saved[2]
+			c.sect = doomed_saved[3]
+			gs.data.items["dew_grass"]["price"] = doomed_saved[4]
+			doomed_saved.clear()})
 
 	# WU-357: GUIDE-159. A bare Foundation Peak Azure Cloud member who knows no combat technique, with a hopeless
 	# promotion trial open: the trial advice says to learn a combat technique, never to practise.
