@@ -1749,7 +1749,7 @@ func test_sect_method_hint() -> void:
 	var d := data()
 	var line := Guidance.sect_method_hint(_method_member(1, 2000, "foundation_establishment_pill"), d)
 	assert_true(line.contains("Azure Cloud Heart Sutra") and line.contains("x%s" % String.num(Techniques.method_rate_of(_method_member(1, 0, ""), d, "azure_cloud_heart_sutra"), 1)) and line.contains("x1.0"), line)
-	assert_true(line.ends_with("set it as your main method on the Techniques screen."), line)
+	assert_true(line.contains("(qi x") and line.contains(", yours x1.0)") and line.ends_with("Claim it at the sect treasury and learn it there."), line)
 	assert_true(Guidance.hints(_method_member(1, 2000, "foundation_establishment_pill"), d, 1.0, 20).has(line))
 	# pill still to claim: 700 + 250 must fit in the balance
 	assert_eq(Guidance.sect_method_hint(_method_member(1, 800, ""), d), "")

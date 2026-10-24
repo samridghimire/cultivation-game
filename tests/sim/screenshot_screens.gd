@@ -2586,9 +2586,9 @@ func _start_hint_shot(gs: Node) -> void:
 				found = h
 		assert(found != "", "no sect method hint:\n" + dump)
 		assert(found.count(" x") >= 2, "hint lacks both rates: " + found)
-		assert(found.contains("Learn it from the Inventory"), "hint lacks the learn sentence: " + found)
+		assert(found.contains("Claim it at the sect treasury"), "hint lacks the learn sentence: " + found)
 		var capped: String = hud.call("cap_hint", found)
-		assert(capped.contains("sect treasury hands out"), "capped line lost its opening: " + capped)
+		assert(capped.contains("sect treasury hands out") and capped.contains("yours x"), "capped line lost its rates: " + capped)
 		print("hint-shot sect method: ", found)
 		c.sect["contribution"] = int(offer["cost"]) - 1
 		var poor: String = Guidance.sect_method_hint(c, gs.data)

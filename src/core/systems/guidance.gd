@@ -378,9 +378,9 @@ static func sect_method_hint(c: CharacterData, data: GameData) -> String:
 	if bool(offer.get("held", false)):
 		return "You hold the %s manual: learn it from the Inventory and set it as your main method on the Techniques screen (it gathers qi x%s, your method x%s)." % [data.techniques[offer["tech_id"]].name, String.num(float(offer["rate"]), 1), String.num(float(offer["current"]), 1)]
 	var balance := Sects.contribution_balance(c)
-	var line := "Your sect treasury hands out the %s for %d contribution (you have %d): it gathers qi x%s, your method x%s." % [data.techniques[offer["tech_id"]].name, int(offer["cost"]), balance, String.num(float(offer["rate"]), 1), String.num(float(offer["current"]), 1)]
+	var line := "Your sect treasury hands out the %s (qi x%s, yours x%s) for %d contribution (you have %d)." % [data.techniques[offer["tech_id"]].name, String.num(float(offer["rate"]), 1), String.num(float(offer["current"]), 1), int(offer["cost"]), balance]
 	if balance >= int(offer["cost"]):
-		line += " Learn it from the Inventory and set it as your main method on the Techniques screen."
+		line += " Claim it at the sect treasury and learn it there."
 	return line
 
 
