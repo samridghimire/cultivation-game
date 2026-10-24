@@ -106,6 +106,7 @@ extends SceneTree
 ## WU-357: `--hint-shot` also writes hint_trial_no_style_<size>.png (Foundation Peak, no combat technique, trial open: advice says "learn a combat technique", never "practise").
 ## WU-356: `--hint-shot` also writes hint_missions_last_stage_<size>.png (Qi Refining last stage, missions too dangerous, style mastered: the mission line says break through).
 ## WU-353: `--hint-shot` also writes hint_practice_target_<size>.png (Inner Disciple, Foundation Peak, Iron Fist 2: trial advice says "to level N (now 2)").
+## WU-361: `--hint-shot` also writes hint_body_art_target_<size>.png (Iron Fist at its typical level, Stone Skin Tempering 1: trial line says "practise Stone Skin Tempering to level N (now 1)", never "practise Iron Fist").
 ## WU-351: `--hint-shot` also writes hud_contribution_<size>.png (Azure Cloud Inner Disciple, 7773 contribution, 1296 stones).
 ## WU-350: `--hint-shot` also writes hint_abode_<size>.png (rogue, Qi Refining 5, 400 stones, no abode: journal Next steps names the Waterfall Cave and 300; the capped HUD line keeps the cave's name).
 ## WU-349: `--hint-shot` also writes hint_heal_treasury_<size>.png (Azure Cloud outer disciple, qi deviation, 5 stones, 300 contribution: HUD line names the Meridian Mending Pill from "your sect treasury", never the Village Clinic).
@@ -2401,6 +2402,49 @@ func _start_hint_shot(gs: Node) -> void:
 			c.inventory = prac_saved[5]
 			c.mission_cooldowns = prac_saved[6]
 			prac_saved.clear()})
+
+	# WU-361: GUIDE-164's body-art target. As hint_practice_target, but Iron Fist is already at the typical level, so the
+	# lever is Stone Skin Tempering (level 1): the trial line says "practise Stone Skin Tempering to level N (now 1)".
+	var body_saved: Array = []
+	shots.append({"name": "hint_body_art_target_" + size_tag, "open": func() -> void:
+		setup_long.call()
+		body_saved.append_array([c.realm_index, c.stage, c.sect.duplicate(), c.techniques.duplicate(true), c.equipment.duplicate(), c.inventory.duplicate(), c.mission_cooldowns.duplicate()])
+		c.realm_index = 2
+		c.stage = gs.data.realms[2].stage_count() - 1
+		c.qi = 0.0
+		c.sect = {"id": "azure_cloud_sect", "rank": 1, "contribution": 3500, "spent": 0}
+		var fist_level: int = Techniques.typical_level(gs.data, c.realm_index, "iron_fist")
+		c.techniques = {"iron_fist": {"level": fist_level, "xp": 0.0}, "stone_skin": {"level": 1, "xp": 0.0}}
+		c.equipment = {"armor": "boar_hide_jerkin"}
+		c.inventory = {}
+		c.mission_cooldowns = {}
+		gs.current_region = "qingshi_village"
+		root.get_node("EventBus").player_changed.emit()
+		await root.get_tree().process_frame
+		await root.get_tree().process_frame
+		hud.get("_banner").visible = false
+		var skin_target: int = Techniques.typical_level(gs.data, c.realm_index, "stone_skin")
+		var body_want := "practise Stone Skin Tempering to level %d (now 1)" % skin_target
+		var body_trial: String = Guidance._sect_hint(c, gs.data, "qingshi_village")
+		assert(body_trial.contains(body_want), "trial line lacks '" + body_want + "':\n" + body_trial)
+		assert(not body_trial.contains("practise Iron Fist"), "trial line practises Iron Fist:\n" + body_trial)
+		print("hint-shot body art target: ", body_trial)
+		var body_journal: Control = hud.get("_screens")["toggle_journal"]
+		await _show_journal(body_journal, "Next steps")
+		for _i in 3:
+			await root.get_tree().process_frame
+		var body_parsed: String = (body_journal.get("_text") as RichTextLabel).get_parsed_text()
+		assert(body_parsed.contains(body_want), "journal Next steps lacks '" + body_want + "':\n" + body_parsed)
+		assert(not body_parsed.contains("practise Iron Fist"), "journal practises Iron Fist:\n" + body_parsed), "close": func() -> void:
+			(hud.get("_screens")["toggle_journal"] as Control).close()
+			c.realm_index = body_saved[0]
+			c.stage = body_saved[1]
+			c.sect = body_saved[2]
+			c.techniques = body_saved[3]
+			c.equipment = body_saved[4]
+			c.inventory = body_saved[5]
+			c.mission_cooldowns = body_saved[6]
+			body_saved.clear()})
 
 	# WU-356: GUIDE-160. An Azure Cloud member at Qi Refining's last stage with no combat style left to practise and every
 	# ready mission too dangerous: the mission line says to break through, never to grow a stage.
