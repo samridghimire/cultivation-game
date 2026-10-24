@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: f7ea31e
+Last reviewed commit: 41ee758
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -1098,3 +1098,16 @@ Last reviewed commit: f7ea31e
     removed it.
   - Note, not filed: WU-353's follow-up is real: the HUD's 120-char trial line cuts off before the practise advice,
     so GUIDE-162's level target only shows in the journal. Worth a guidance task (advice before the odds detail).
+- 2026-10-24 (reviewer): reviewed f7ea31e..41ee758 (GUIDE-164/165/166/168/169/170, C-216/241/245, QA-156/158/159,
+  WU-352/355/356/357/358/359/361; [PLAN]/[REVIEW] skipped). Main green (ALL CHECKS PASSED). No worker touched
+  BACKLOG/CHANGELOG; no save-format changes; no new logic outside src/core (GUIDE-166 moves is_faster_method from
+  MissionBoard into Techniques, resolving last run's note).
+  - GUIDE-169 extracts _trial_lever from _trial_advice with the same branch order (injury and practice payoff still
+    fall through to the old line), so the journal text is unchanged and the HUD line leads with the lever. GUIDE-170's
+    rank gate reads ranks[min_rank].min_realm (ignores min_stage; fine, the clause is about unreachable realms).
+    GUIDE-165 reserves the pill's cost before a treasury heal, resolving the GUIDE-161 note. GUIDE-168's clause needs a
+    net saving of a year after the round trip; tests cover at-the-spot and too-young cases.
+  - Notes, not filed: C-245 caps village_thief_caught at Qi Refining in cities too (it is tagged village+city); minor.
+    C-245 leaves village_drunk_bully uncapped because outgrown_hint needs a home fight (worker's follow-up is right).
+    C-241's line sits in the Goals help topic; there is no HUD page, acceptable.
+  - Nothing fixed, nothing filed.
