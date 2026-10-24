@@ -2,6 +2,8 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-24 [GUIDE-165] The injury hint no longer spends the contribution you need for your Foundation pill.
+- 2026-10-24 [WU-356] A screenshot check of the mission hint telling a 9th Layer cultivator to break through first.
 - 2026-10-23 [QA-156] The sim measured the sect's own method: claimed around day 900, it brings Foundation about 8% sooner.
 - 2026-10-23 [GUIDE-166] Internal: the faster-method check moved into the core rules.
 - 2026-10-23 [C-216] Help explains the world map's merchant goods and claimable abode lines.
