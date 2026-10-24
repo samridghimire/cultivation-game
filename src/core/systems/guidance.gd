@@ -2908,6 +2908,24 @@ static func active_goal_ladder(c: CharacterData, data: GameData, flags: Dictiona
 	return none
 
 
+## GUIDE-168: " (about 5 years at Cloud-Sea Cliff in Azure Peak)" when the best reachable qi spot cuts the days to the
+## realm's bottleneck by a year or more net of the round trip; "" otherwise. `days` is the time at the current `density`.
+static func _faster_spot_clause(c: CharacterData, data: GameData, density: float, region_id: String, flags: Dictionary, days: int) -> String:
+	if region_id == "":
+		return ""
+	var best := best_qi_reachable(c, data, region_id, flags)
+	if best.is_empty() or float(best["density"]) <= density + 0.001 or String(best["name"]) == "":
+		return ""
+	var days_best := Cultivation.days_to_bottleneck(c, data, float(best["density"]))
+	if days_best < 0:
+		return ""
+	var best_region := String(best["region"])
+	var away := 0 if best_region == region_id else route_days(c, data, region_id, best_region)
+	if days - days_best - 2 * away < Calendar.DAYS_PER_YEAR:
+		return ""
+	return " (about %s at %s in %s)" % [Calendar.format_rough(days_best + 2 * away), GameData.plain_name(String(best["name"])), Exploration.region_name(data, best_region)]
+
+
 ## Mid-game goals (GOAL-003): the next realm, the next sect
 ## rank (or founding a clan for a rogue), each craft's next rank and next recipe (GUIDE-053),
 ## and the nearest unearned milestone.
@@ -2920,7 +2938,7 @@ static func goals(c: CharacterData, data: GameData, flags: Dictionary, clan: Cla
 		if days == 0:
 			out.append("Reach %s: attempt the breakthrough (%s)." % [next_name, odds])
 		elif days > 0:
-			out.append("Reach %s: about %s of meditation, then a breakthrough (%s)." % [next_name, Calendar.format_rough(days), odds])
+			out.append("Reach %s: about %s of meditation%s, then a breakthrough (%s)." % [next_name, Calendar.format_rough(days), _faster_spot_clause(c, data, density, region_id, flags, days), odds])
 		else:
 			out.append("Reach %s: gather qi, then attempt a breakthrough (%s)." % [next_name, odds])
 		var saving := sect_pill_claim(c, data)

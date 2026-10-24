@@ -4511,6 +4511,25 @@ func test_heal_source_keeps_the_pill_claim() -> void:
 	assert_true(Guidance.heal_source(c, d, "qingshi_village").contains("your sect treasury"))
 
 
+## GUIDE-168: the realm goal names a spot that saves a year or more.
+func test_goal_names_the_faster_spot() -> void:
+	var d := data()
+	var c := new_character()
+	c.realm_index = 2
+	c.stage = 0
+	c.sect = {"id": "azure_cloud_sect", "rank": 1, "contribution": 0, "spent": 0}
+	var goal := String(Guidance.goals(c, d, {}, null, 1.0, "qingshi_village")[0])
+	assert_true(goal.contains("Cloud-Sea Cliff in Azure Peak"), goal)
+	assert_true(goal.contains("), then a breakthrough") or goal.contains("Azure Peak), then"), goal)
+	var at_cliff := String(Guidance.goals(c, d, {}, null, 5.0, "azure_peak")[0])
+	assert_false(at_cliff.contains(" at Cloud-Sea"), at_cliff)
+	var young := new_character()
+	young.realm_index = 1
+	young.stage = 8
+	var young_goal := String(Guidance.goals(young, d, {}, null, 1.0, "qingshi_village")[0])
+	assert_false(young_goal.contains(" in Azure Peak"), young_goal)
+
+
 # --- GUIDE-152: the trial advice never says "grow a stage" at a realm's last stage ---
 
 func _g152_inner_disciple(stage: int) -> CharacterData:
