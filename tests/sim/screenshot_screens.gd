@@ -2384,9 +2384,10 @@ func _start_hint_shot(gs: Node) -> void:
 		var trial: String = Guidance._sect_hint(c, gs.data, "qingshi_village")
 		assert(trial.contains(want), "trial line lacks '" + want + "':\n" + trial)
 		print("hint-shot practice target: ", trial)
-		# The 120-char HUD cap cuts the advice off after the odds clause (follow-up: shorten the trial line); the opening stays.
+		# WU-360: GUIDE-169 puts the advice before the odds, so the 120-char HUD cap keeps the lever.
 		var capped: String = hud.call("cap_hint", trial)
 		assert(capped.contains("Core Disciple") and capped.contains(" trial "), "capped line lost its opening: " + capped)
+		assert(capped.contains("Iron Fist"), "capped HUD trial line lost 'Iron Fist': " + capped)
 		var prac_journal: Control = hud.get("_screens")["toggle_journal"]
 		await _show_journal(prac_journal, "Next steps")
 		for _i in 3:
