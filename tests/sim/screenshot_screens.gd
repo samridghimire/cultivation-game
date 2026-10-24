@@ -100,6 +100,7 @@ extends SceneTree
 ## WU-302: `--clinic-shot` writes clinic_one_<size>.png / clinic_two_<size>.png: the Village Clinic menu for a Qi Refining 3rd-layer
 ## character with Internal Injury, then with a second injury (Qi Deviation); the "Pay the doctor ... saves about" lines must fit or wrap unclipped.
 ## WU-295: `--bounty-shot` writes bounty_menu_<size>.png: the Fallen Star Market bounty board with the longest hunt label any realm sees (the hunt's description is shown for the focused entry).
+## WU-357: `--hint-shot` also writes hint_trial_no_style_<size>.png (Foundation Peak, no combat technique, trial open: advice says "learn a combat technique", never "practise").
 ## WU-356: `--hint-shot` also writes hint_missions_last_stage_<size>.png (Qi Refining last stage, missions too dangerous, style mastered: the mission line says break through).
 ## WU-353: `--hint-shot` also writes hint_practice_target_<size>.png (Inner Disciple, Foundation Peak, Iron Fist 2: trial advice says "to level N (now 2)").
 ## WU-351: `--hint-shot` also writes hud_contribution_<size>.png (Azure Cloud Inner Disciple, 7773 contribution, 1296 stones).
@@ -2388,6 +2389,52 @@ func _start_hint_shot(gs: Node) -> void:
 				gs.data.sect_missions[mid]["enemy"] = last_foes[mid]
 			last_foes.clear()
 			last_saved.clear()})
+
+	# WU-357: GUIDE-159. A bare Foundation Peak Azure Cloud member who knows no combat technique, with a hopeless
+	# promotion trial open: the trial advice says to learn a combat technique, never to practise.
+	var nostyle_saved: Array = []
+	shots.append({"name": "hint_trial_no_style_" + size_tag, "open": func() -> void:
+		setup_long.call()
+		nostyle_saved.append_array([c.realm_index, c.stage, c.sect.duplicate(), c.techniques.duplicate(true), c.equipment.duplicate(), c.inventory.duplicate(), c.mission_cooldowns.duplicate(), c.attributes.duplicate()])
+		c.realm_index = 2
+		c.stage = gs.data.realms[2].stage_count() - 1
+		c.qi = 0.0
+		for attr: String in c.attributes:
+			c.attributes[attr] = 1
+		c.sect = {"id": "azure_cloud_sect", "rank": 1, "contribution": 3500, "spent": 0}
+		c.techniques = {"stone_skin": {"level": 1, "xp": 0.0}}  # a body art and armor, so the thin-defence advice steps aside
+		c.equipment = {"armor": "boar_hide_jerkin"}
+		c.inventory = {}
+		c.mission_cooldowns = {}
+		gs.current_region = "qingshi_village"
+		root.get_node("EventBus").player_changed.emit()
+		await root.get_tree().process_frame
+		await root.get_tree().process_frame
+		hud.get("_banner").visible = false
+		var trial: String = Guidance._sect_hint(c, gs.data, "qingshi_village")
+		print("hint-shot trial no style: ", trial)
+		assert(trial.contains("learn a combat technique"), "trial line lacks 'learn a combat technique':\n" + trial)
+		assert(not trial.contains("practise"), "trial line says practise with no style known:\n" + trial)
+		var capped: String = hud.call("cap_hint", trial)
+		# As in hint_practice_target: the 120-char HUD cap cuts the advice off after the odds clause; the opening stays.
+		assert(capped.begins_with("The trial for Core Disciple is open"), "capped line lost its opening: " + capped)
+		var ns_journal: Control = hud.get("_screens")["toggle_journal"]
+		await _show_journal(ns_journal, "Next steps")
+		for _i in 3:
+			await root.get_tree().process_frame
+		var parsed: String = (ns_journal.get("_text") as RichTextLabel).get_parsed_text()
+		assert(parsed.contains("learn a combat technique"), "journal lacks 'learn a combat technique':\n" + parsed)
+		assert(not parsed.contains("practise"), "journal says practise with no style known:\n" + parsed), "close": func() -> void:
+			(hud.get("_screens")["toggle_journal"] as Control).close()
+			c.realm_index = nostyle_saved[0]
+			c.stage = nostyle_saved[1]
+			c.sect = nostyle_saved[2]
+			c.techniques = nostyle_saved[3]
+			c.equipment = nostyle_saved[4]
+			c.inventory = nostyle_saved[5]
+			c.mission_cooldowns = nostyle_saved[6]
+			c.attributes = nostyle_saved[7]
+			nostyle_saved.clear()})
 
 
 ## WU-190: the encounter window on real encounters with attribute, profession and enemy choices.
