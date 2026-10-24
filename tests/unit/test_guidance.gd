@@ -4515,9 +4515,24 @@ func test_outgrown_hint_is_silent_for_a_newcomer_or_a_hard_home() -> void:
 	var sure := true
 	for f in rated:
 		sure = sure and float(f["chance"]) >= Guidance.OUTGROWN_SURE_CHANCE
-	assert_false(home.is_empty())
+	# GUIDE-174: the drunk bully is capped at Qi Refining, so a Foundation character has no home fight at all.
+	assert_true(home.is_empty())
 	if not sure:
 		assert_eq(Guidance.outgrown_hint(weak, data(), "qingshi_village", 0), "")
+
+
+## GUIDE-174: a home with no fight left for a Foundation character counts as outgrown.
+func test_outgrown_hint_treats_a_home_without_fights_as_outgrown() -> void:
+	var c := _outgrown_foundation(6)
+	assert_true(Guidance._rated_region_fights(c, data(), "qingshi_village", 0, {}).is_empty())
+	# Same neighbour search as a home of sure wins: the Rogue Cultivator one route away once the odds are fair.
+	var line := ""
+	var attr := 6
+	while attr < 10 and line == "":
+		line = Guidance.outgrown_hint(_outgrown_foundation(attr), data(), "qingshi_village", 0)
+		attr += 1
+	assert_true(line.begins_with("Nothing here tests you any more: "), line)
+	assert_eq(Guidance.outgrown_hint(c, data(), "nowhere", 0), "")
 
 
 ## GUIDE-149: the unaffordable-clinic clause says when selling loot covers the gap.

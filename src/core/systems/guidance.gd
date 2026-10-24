@@ -2535,9 +2535,10 @@ static func _rated_region_fights(c: CharacterData, data: GameData, region_id: St
 static func outgrown_hint(c: CharacterData, data: GameData, region_id: String, today: int, flags: Dictionary = {}) -> String:
 	if c.realm_index <= NEWCOMER_MAX_REALM:
 		return ""
-	var home := _rated_region_fights(c, data, region_id, today, flags)
-	if home.is_empty():
+	if region_id == "" or today < 0 or not data.regions.has(region_id):
 		return ""
+	var home := _rated_region_fights(c, data, region_id, today, flags)
+	# GUIDE-174: a home with no fight left for you is outgrown too.
 	for f in home:
 		if float(f["chance"]) < OUTGROWN_SURE_CHANCE:
 			return ""
