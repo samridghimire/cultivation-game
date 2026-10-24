@@ -100,6 +100,7 @@ extends SceneTree
 ## WU-302: `--clinic-shot` writes clinic_one_<size>.png / clinic_two_<size>.png: the Village Clinic menu for a Qi Refining 3rd-layer
 ## character with Internal Injury, then with a second injury (Qi Deviation); the "Pay the doctor ... saves about" lines must fit or wrap unclipped.
 ## WU-295: `--bounty-shot` writes bounty_menu_<size>.png: the Fallen Star Market bounty board with the longest hunt label any realm sees (the hunt's description is shown for the focused entry).
+## WU-352: `--hint-shot` also writes hint_qi_two_spots_<size>.png (Foundation Middle member ~120 days short: gather line names Cloud-Sea Cliff in Azure Peak against here, durations joined by "and").
 ## WU-357: `--hint-shot` also writes hint_trial_no_style_<size>.png (Foundation Peak, no combat technique, trial open: advice says "learn a combat technique", never "practise").
 ## WU-356: `--hint-shot` also writes hint_missions_last_stage_<size>.png (Qi Refining last stage, missions too dangerous, style mastered: the mission line says break through).
 ## WU-353: `--hint-shot` also writes hint_practice_target_<size>.png (Inner Disciple, Foundation Peak, Iron Fist 2: trial advice says "to level N (now 2)").
@@ -2059,6 +2060,52 @@ func _start_hint_shot(gs: Node) -> void:
 		var map_script: GDScript = load("res://src/ui/world_map_screen.gd")
 		assert(map_script.hint_note(gs.data, first, "qingshi_village", "azure_peak") == "Your hint points here.", "world map does not mark Azure Peak")
 		assert(map_script.hint_note(gs.data, first, "qingshi_village", "qingshi_village") == "", "world map marks the current region"), "close": func() -> void: pass})
+
+	# WU-352: GUIDE-163. An Azure Cloud member at Foundation Middle in Qingshi, ~120 days of meditation short of the next stage: the gather
+	# line names Cloud-Sea Cliff in Azure Peak against "here", with durations joined by "and".
+	var two_saved: Array = []
+	shots.append({"name": "hint_qi_two_spots_" + size_tag, "open": func() -> void:
+		setup_road.call()
+		two_saved.append_array([c.realm_index, c.stage, c.sect.duplicate(), c.techniques.duplicate(true), c.equipment.duplicate(), c.inventory.duplicate(), c.mission_cooldowns.duplicate(), c.attributes.duplicate()])
+		c.realm_index = gs.data.realm_index_of("foundation_establishment")
+		c.stage = 1
+		c.sect = {"id": "azure_cloud_sect", "rank": 1, "contribution": 3500, "spent": 0}
+		c.equipment["armor"] = "boar_hide_jerkin"
+		c.techniques = {"stone_skin": {"level": 99, "xp": 0.0}, "iron_fist": {"level": 99, "xp": 0.0}}
+		c.inventory = {}
+		c.mission_cooldowns = {}
+		c.attributes["comprehension"] = 1  # a slow cultivator, so the far spot saves over a month (FAR_QI_LEAD_DAYS)
+		c.injuries.clear()
+		for region_id: String in gs.data.regions:
+			Exploration.visit(c, region_id)
+		# Far enough from the next stage that the far spot saves over FAR_QI_LEAD_DAYS even after the 10-day trip: ~120 days here.
+		var here_density := float(Guidance.best_qi_in_region(c, gs.data, "qingshi_village", gs.world_flags)["density"])
+		c.qi = maxf(0.0, Cultivation.qi_required(c, gs.data) - 120.0 * Cultivation.qi_per_day(c, gs.data, here_density))
+		root.get_node("EventBus").player_changed.emit()
+		await root.get_tree().process_frame
+		await root.get_tree().process_frame
+		hud.get("_banner").visible = false
+		var gather := ""
+		for h: String in Guidance.hints(c, gs.data, 3, 12, gs.npcs, gs.world_flags, "qingshi_village", 40, gs.npc_favor):
+			if h.contains("Cloud-Sea Cliff"):
+				gather = h
+		print("hint-shot qi two spots: ", gather, "\n", "\n".join(Guidance.hints(c, gs.data, 3, 12, gs.npcs, gs.world_flags, "qingshi_village", 40, gs.npc_favor)))
+		assert(gather != "", "no hint names Cloud-Sea Cliff")
+		# This line names the far spot and then "here" without a place name; "Spirit Spring" only appears in the Travel line (see Follow-ups).
+		assert(gather.contains("Azure Peak") and gather.contains("here."), "gather line lacks Azure Peak / here: " + gather)
+		var dur := RegEx.create_from_string("\\d+ (?:months?|years?|days?) and \\d+ (?:months?|days?)")
+		assert(dur.search(gather) != null, "no 'X and Y' duration in: " + gather)
+		var capped: String = hud.call("cap_hint", gather)
+		assert(capped.contains("Cloud-Sea Cliff"), "capped line lost Cloud-Sea Cliff: " + capped), "close": func() -> void:
+			c.realm_index = two_saved[0]
+			c.stage = two_saved[1]
+			c.sect = two_saved[2]
+			c.techniques = two_saved[3]
+			c.equipment = two_saved[4]
+			c.inventory = two_saved[5]
+			c.mission_cooldowns = two_saved[6]
+			c.attributes = two_saved[7]
+			two_saved.clear()})
 
 	# WU-309: an Azure Cloud outer disciple at Qi Refining 1st layer with Escort Mortal Villagers on cooldown and no herbs:
 	# the capped HUD sect line keeps the mission name and the journal's Next steps shows the full line.
