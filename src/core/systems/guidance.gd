@@ -1951,7 +1951,7 @@ static func _mission_hint(c: CharacterData, data: GameData, flags: Dictionary = 
 			var contribution := int(m.get("contribution", 0))
 			var duration := Calendar.format_duration(int(m.get("days", 1)))
 			if ready == 1:
-				text = "Sect mission ready: %s (%d contribution, %s) %s." % [name, contribution, duration, _hall_where(c, data, region_id)]
+				text = "Sect mission ready: %s (%d contribution%s, %s) %s." % [name, contribution, _mission_extra_pay(m), duration, _hall_where(c, data, region_id)]
 			else:
 				text = "The best pays %d contribution%s: %s (%s), one of %d missions ready %s." % [contribution, _mission_extra_pay(m), name, duration, ready, _hall_where(c, data, region_id)]
 			text += too_dangerous_text

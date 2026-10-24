@@ -4054,6 +4054,24 @@ func test_mission_extra_pay_names_stones_and_qi() -> void:
 	assert_eq(Guidance._mission_extra_pay({"rewards": {"qi": 5, "items": {"spirit_stone": 7}}}), " and 7 spirit stones and 5 qi")
 
 
+func test_single_ready_mission_line_names_extra_pay() -> void:
+	var d := data()
+	var checked := 0
+	for id: String in ["cull_mist_wolves", "escort_mortal_villagers"]:
+		var c := _qr3_disciple()
+		for other: String in d.sect_missions:
+			if other != id:
+				c.mission_cooldowns[other] = c.age_days + 30
+		var line := _line_with(Guidance.hints(c, d, 1.0, 20, {}, {}, "qingshi_village"), "Sect mission ready: ")
+		if line == "":
+			continue  # not ready for this disciple
+		var m: Dictionary = d.sect_missions[id]
+		var head := "(%d contribution%s, " % [int(m["contribution"]), Guidance._mission_extra_pay(m)]
+		assert_true(line.contains(head), line)
+		checked += 1
+	assert_true(checked >= 1)
+
+
 func test_sect_line_best_pays_names_extra_reward() -> void:
 	var d := data()
 	var c := _qr3_disciple()
