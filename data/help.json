@@ -82,6 +82,8 @@
         "The HUD's Goal line shows the next step, and a \"Goal done\" banner appears when you finish one, naming what comes after.",
         "Sect members see their contribution next to their spirit stones; spend it at the sect treasury on the mission board.",
         "The clan goal lists everything founding still needs: the realm, an abode for its seat and the stones.",
+        "When a faraway spot would get you to the next realm years sooner, even counting the trip there and back, the realm goal names it.",
+        "When you meet a rank's needs but its trial is far beyond you, the goal names the trial's foe and says it is beyond you yet, instead of inviting you to try.",
         "Goals are only suggestions, never requirements. Skip any of them and play your own way."
       ]
     },
