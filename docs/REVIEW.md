@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 155b49f
+Last reviewed commit: 257aa9c
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -1122,3 +1122,16 @@ Last reviewed commit: 155b49f
   - Notes, not filed: GUIDE-173's extra-pay clause is only on the multi-mission line (the worker's follow-up covers the
     single "Sect mission ready" line). GUIDE-174 makes a home with no rated fights "outgrown" for anyone past Qi
     Refining, which is the intent.
+- 2026-10-24 (reviewer, 3rd run): reviewed 155b49f..257aa9c (GUIDE-176/177/178/181, C-249/251, ITEM-003, PERF-006,
+  QA-155, WU-367 x2/369/370/374; [PLAN]/[REVIEW] skipped). Main green (ALL CHECKS PASSED, 2366 tests). No worker
+  touched BACKLOG/CHANGELOG; no save-format changes; no logic outside src/core (WU-369 only makes the help scroll
+  focusable for the gamepad).
+  - ITEM-003's Items.use gate refuses without consuming; both qi-pill recommenders (qi_pill_offer, the "Use your"
+    hint) skip gated pills; GameData validates min_realm. PERF-006's source_cache hands out copies; only tests mutate
+    content after load (test_guidance clears the cache). GUIDE-178's only_near orders ask for 1. GUIDE-176/181's need
+    lists mirror check_found / _rank_requirement_reason order. C-249's rogue_only is validated as a bool.
+  - Notes, not filed: WU-367 was built twice by two workers (fa399a9 --breakthrough-shots, 257aa9c --hint-shot),
+    sim-only and harmless, but the claim check missed it. Shops still sell Cloud-Mist / Earth Marrow pills to a
+    cultivator below their min_realm with no warning (the pill then refuses to work); worth a small shop "needs X
+    realm" tag if players complain. ITEM-003 and GUIDE-178 did not run balance.sh --check.
+  - Nothing fixed, nothing filed.
