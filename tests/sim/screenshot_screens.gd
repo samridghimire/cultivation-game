@@ -2386,7 +2386,7 @@ func _start_hint_shot(gs: Node) -> void:
 		print("hint-shot practice target: ", trial)
 		# The 120-char HUD cap cuts the advice off after the odds clause (follow-up: shorten the trial line); the opening stays.
 		var capped: String = hud.call("cap_hint", trial)
-		assert(capped.begins_with("The trial for Core Disciple is open"), "capped line lost its opening: " + capped)
+		assert(capped.contains("Core Disciple") and capped.contains(" trial "), "capped line lost its opening: " + capped)
 		var prac_journal: Control = hud.get("_screens")["toggle_journal"]
 		await _show_journal(prac_journal, "Next steps")
 		for _i in 3:
@@ -2520,7 +2520,7 @@ func _start_hint_shot(gs: Node) -> void:
 		assert(not trial.contains("practise"), "trial line says practise with no style known:\n" + trial)
 		var capped: String = hud.call("cap_hint", trial)
 		# As in hint_practice_target: the 120-char HUD cap cuts the advice off after the odds clause; the opening stays.
-		assert(capped.begins_with("The trial for Core Disciple is open"), "capped line lost its opening: " + capped)
+		assert(capped.contains("Core Disciple") and capped.contains(" trial "), "capped line lost its opening: " + capped)
 		var ns_journal: Control = hud.get("_screens")["toggle_journal"]
 		await _show_journal(ns_journal, "Next steps")
 		for _i in 3:

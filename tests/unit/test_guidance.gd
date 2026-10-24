@@ -252,7 +252,7 @@ func test_system_hints() -> void:
 	c.inventory["spirit_herb"] = 5
 	assert_true(_has(Guidance.hints(c, d, 1.0, 20), "Sect mission ready: ") or _has(Guidance.hints(c, d, 1.0, 20), "The best pays "))
 	c.sect["contribution"] = 600
-	assert_true(_has(Guidance.hints(c, d, 1.0, 20), "The trial for Inner Disciple is open"))
+	assert_true(_has(Guidance.hints(c, d, 1.0, 20), "The trial for Inner Disciple is open") or _has(Guidance.hints(c, d, 1.0, 20), "The Inner Disciple trial is too hard"))
 	var insight_id: String = d.dao_insights.keys()[0]
 	Dao.gain_levels(c, d, insight_id, 1)
 	assert_true(_has(Guidance.hints(c, d, 1.0, 20), "Contemplate the %s" % Dao.def_of(d, insight_id)["name"]))
@@ -4001,9 +4001,10 @@ func test_trial_line_odds_in_headline() -> void:
 	c.realm_index = 1
 	c.sect = {"id": "azure_cloud_sect", "rank": 0, "contribution": 600}
 	var line := Guidance._sect_hint(c, d, "qingshi_village")
-	assert_true(line.begins_with("The trial for "), line)
+	assert_true(line.begins_with("The trial for ") or line.begins_with("The Inner Disciple trial is too hard"), line)
 	var odds_end := line.find("in 100)")
-	assert_true(odds_end > 0 and odds_end < Guidance.HEADLINE_CHARS + 20, line)  # a long examiner name; the odds are the first thing after the hall
+	# GUIDE-169: a too-hard trial leads with the lever; the odds follow the hall
+	assert_true(odds_end > 0 and (line.begins_with("The Inner Disciple trial is too hard") or odds_end < Guidance.HEADLINE_CHARS + 20), line)  # a long examiner name; the odds are the first thing after the hall
 	assert_true(line.ends_with("The rank pays 6 stones a month."), line)
 
 
@@ -4595,6 +4596,39 @@ func test_trial_advice_without_combat_technique_says_learn_one() -> void:
 			assert_false(advice.contains("grow a stage"), advice)
 		else:
 			assert_true(advice.contains("or grow a stage first"), advice)
+
+
+func test_hopeless_trial_line_leads_with_the_lever() -> void:
+	var d := data()
+	var c := _g152_inner_disciple(0)
+	c.techniques = {"iron_fist": {"level": 2}, "stone_skin": {"level": 1}}
+	c.equipment = {"armor": "azure_guard_robe"}
+	if Guidance.trial_odds(c, d) < 0.0 or Guidance.trial_odds(c, d) >= 0.5 or Guidance._trial_lever(c, d, "qingshi_village") == "":
+		print("  (skipped: trial odds %s)" % Guidance.trial_odds(c, d))
+		return
+	var line := Guidance._sect_hint(c, d, "qingshi_village")
+	assert_true(line.begins_with("The "), line)
+	assert_true(line.contains(" trial is too hard for now: "), line)
+	assert_true(line.contains(Guidance._trial_lever(c, d, "qingshi_village") + " first"), line)
+	assert_true(line.left(120).contains(Guidance._trial_lever(c, d, "qingshi_village")), line.left(120))
+	assert_true(line.contains("in 100)") and line.contains("a loss only injures you"), line)
+
+
+func test_hopeless_trial_line_without_body_art_says_learn_one() -> void:
+	var d := data()
+	var c := _g152_inner_disciple(d.realms[Guidance.THIN_DEFENCE_REALM].stage_count() - 1)
+	assert_true(Guidance.trial_odds(c, d) < 0.5)
+	var line := Guidance._sect_hint(c, d, "qingshi_village")
+	assert_true(line.contains("trial is too hard for now: learn a body technique"), line)
+
+
+func test_fair_trial_line_keeps_the_old_opening() -> void:
+	var d := data()
+	var c := new_character()
+	c.realm_index = 1
+	c.sect = {"id": "azure_cloud_sect", "rank": 0, "contribution": 600}
+	if Guidance.trial_odds(c, d) >= 0.5:
+		assert_true(Guidance._sect_hint(c, d, "qingshi_village").begins_with("The trial for "))
 
 
 func test_empty_fair_fights_note_breaks_through_at_the_last_stage() -> void:

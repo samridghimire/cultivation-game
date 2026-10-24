@@ -1651,6 +1651,11 @@ static func _sect_hint(c: CharacterData, data: GameData, region_id: String = "")
 		var face := _trial_face(c, data)
 		if face == "":
 			return "The trial for %s is open. Attempt it %s.%s" % [sect.rank_name(rank + 1), _hall_where(c, data, region_id), pays_sentence]
+		var lever := _trial_lever(c, data, region_id)
+		if lever != "":
+			# GUIDE-169: lead with what to do, so the HUD's hint cap keeps the advice.
+			var source := _trial_lever_source(c, data, region_id) if _thin_defence_missing(c, data) != "" else ""
+			return "The %s trial is too hard for now: %s first%s. It is open %s; you face %s, and a loss only injures you.%s" % [sect.rank_name(rank + 1), lever, source, _hall_where(c, data, region_id), _trial_foe(c, data), pays_sentence]
 		return "The trial for %s is open %s: %s.%s%s" % [sect.rank_name(rank + 1), _hall_where(c, data, region_id), face, _trial_advice(c, data, region_id), pays_sentence]
 	var need := int(sect.ranks[rank + 1].get("contribution", 0)) - int(c.sect["contribution"])
 	var realm_label := _rank_realm_gap(c, data, sect.ranks[rank + 1])
@@ -1704,6 +1709,55 @@ static func _trial_foe(c: CharacterData, data: GameData) -> String:
 	return "the %s (%s, %d in 100)" % [enemy.get("name", ""), Combat.label_for_chance(chance), roundi(chance * 100.0)]
 
 
+## GUIDE-169: the action that would improve a too-hard trial ("practise Iron Fist to level 5 (now 2) or grow a stage"),
+## without "first" or the thin-defence source (`_trial_lever_source`). "" when the odds are >= 0.5, an injury or a
+## practice payoff explains them, or nothing is left to do.
+static func _trial_lever(c: CharacterData, data: GameData, region_id: String = "") -> String:
+	var chance := trial_odds(c, data)
+	if chance < 0.0 or chance >= 0.5:
+		return ""
+	if odds_unhurt(c, data, Sects.trial_opponent(data, Sects.trial_enemy(c, data))) >= 0.5:
+		return ""
+	if not trial_practice_payoff(c, data).is_empty():
+		return ""
+	if _thin_defence_missing(c, data) != "":
+		# GUIDE-152: the real lever is the missing defence, not another stage.
+		return _thin_defence_missing(c, data)
+	var can_practise := Techniques.knows_kind(c, data, "combat") and _best_unmastered_combat(c, data) != ""
+	var can_grow := _can_grow_stage(c, data)
+	var target := _practice_target_text(c, data, _best_unmastered_combat(c, data)) if can_practise else ""
+	var practise_name := "practise"
+	if target != "":
+		practise_name = "practise %s%s" % [data.techniques[_best_unmastered_combat(c, data)].name, target]
+	elif Techniques.knows_kind(c, data, "combat") and _body_art_below_typical(c, data) != "":
+		# GUIDE-164: the combat style is at its typical level; the body art is the lever.
+		var body_id := _body_art_below_typical(c, data)
+		practise_name = "practise %s%s" % [data.techniques[body_id].name, _practice_target_text(c, data, body_id)]
+		can_practise = true
+	if not Techniques.knows_kind(c, data, "combat"):
+		# GUIDE-159: nothing to practise; the lever is learning a combat technique.
+		var manual := first_combat_manual(c, data, region_id)
+		var lever := "learn a combat technique"
+		if not manual.is_empty():
+			lever += " such as %s" % data.techniques[manual["technique"]].name
+		return lever + " or grow a stage" if can_grow else lever
+	if can_practise and can_grow:
+		return practise_name + " or grow a stage"
+	if can_grow:
+		return "grow a stage"
+	if can_practise:
+		return practise_name
+	return ""
+
+
+## GUIDE-152: ": <where to learn the body art>" after the thin-defence lever, "" when it is known or has no source.
+static func _trial_lever_source(c: CharacterData, data: GameData, region_id: String = "") -> String:
+	if Techniques.knows_kind(c, data, "body"):
+		return ""
+	var source := body_manual_source(c, data, region_id)
+	return ": " + source if source != "" else ""
+
+
 ## GUIDE-085: a warning when the odds are under even, and what practice would change (starts with a space, "" if none).
 static func _trial_advice(c: CharacterData, data: GameData, region_id: String = "") -> String:
 	var chance := trial_odds(c, data)
@@ -1716,46 +1770,15 @@ static func _trial_advice(c: CharacterData, data: GameData, region_id: String = 
 			line += " Your injuries hold you back: healed, you would win about %d in 100." % roundi(unhurt * 100.0)
 		else:
 			var payoff := trial_practice_payoff(c, data)
+			var lever := _trial_lever(c, data, region_id)
 			if not payoff.is_empty():
 				line += " A loss only injures you." + _payoff_sentence(payoff, not c.injuries.is_empty())
+			elif lever == "":
+				line += " A loss only injures you."
 			elif _thin_defence_missing(c, data) != "":
-				# GUIDE-152: the real lever is the missing defence, not another stage.
-				line += " A loss only injures you; %s first" % _thin_defence_missing(c, data)
-				if not Techniques.knows_kind(c, data, "body"):
-					var source := body_manual_source(c, data, region_id)
-					if source != "":
-						line += ": " + source
-				line += "."
+				line += " A loss only injures you; %s first%s." % [lever, _trial_lever_source(c, data, region_id)]
 			else:
-				var can_practise := Techniques.knows_kind(c, data, "combat") and _best_unmastered_combat(c, data) != ""
-				var can_grow := _can_grow_stage(c, data)
-				var target := _practice_target_text(c, data, _best_unmastered_combat(c, data)) if can_practise else ""
-				var practise_name := "practise"
-				if target != "":
-					practise_name = "practise %s%s" % [data.techniques[_best_unmastered_combat(c, data)].name, target]
-				elif Techniques.knows_kind(c, data, "combat") and _body_art_below_typical(c, data) != "":
-					# GUIDE-164: the combat style is at its typical level; the body art is the lever.
-					var body_id := _body_art_below_typical(c, data)
-					practise_name = "practise %s%s" % [data.techniques[body_id].name, _practice_target_text(c, data, body_id)]
-					can_practise = true
-				if not Techniques.knows_kind(c, data, "combat"):
-					# GUIDE-159: nothing to practise; the lever is learning a combat technique.
-					var manual := first_combat_manual(c, data, region_id)
-					var lever := "learn a combat technique"
-					if not manual.is_empty():
-						lever += " such as %s" % data.techniques[manual["technique"]].name
-					if can_grow:
-						line += " A loss only injures you; %s or grow a stage first." % lever
-					else:
-						line += " A loss only injures you; %s first." % lever
-				elif can_practise and can_grow:
-					line += " A loss only injures you; %s or grow a stage first." % practise_name
-				elif can_grow:
-					line += " A loss only injures you; grow a stage first."
-				elif can_practise:
-					line += " A loss only injures you; %s first." % practise_name
-				else:
-					line += " A loss only injures you."
+				line += " A loss only injures you; %s first." % lever
 	elif chance < 0.7:
 		var payoff := trial_practice_payoff(c, data)
 		if not payoff.is_empty():
