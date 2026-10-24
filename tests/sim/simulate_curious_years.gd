@@ -106,6 +106,8 @@ func _run() -> void:
 			FirstHour.far_qi = true  # QA-151
 		elif a == "--sect-method":
 			FirstHour.sect_method = true  # QA-156
+		elif a == "--rogue":
+			FirstHour.stay_rogue = true  # QA-158
 		elif a == "--defence":
 			FirstHour.follow_defence = true
 		elif a.begins_with("--trace="):

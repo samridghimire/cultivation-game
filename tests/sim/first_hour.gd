@@ -74,6 +74,8 @@ static var sect_method_log := {"day": [], "tech": []}
 static var recharge_first := false
 ## QA-152: take only what Guidance.best_mission names (no odds rule of our own).
 static var hint_missions := false
+## QA-158: never join a sect (the rogue path).
+static var stay_rogue := false
 static var far_qi_day := -1  # QA-151: day the current seed arrived at the far spot, -1 before
 static var far_qi_log := {"moved": 0, "month": [], "road_days": []}
 const FAR_QI_MIN_SAVED := 30
@@ -85,7 +87,7 @@ static var _memo := {}
 
 
 static func play_cached(gs: Node, clock: Node, seed_value: int, months: int, curious: bool = false, no_help: bool = false, wait_for_pill: int = 0) -> Dictionary:
-	var key := [seed_value, months, curious, no_help, wait_for_pill, follow_defence, practise_hint, attempt_trials, heal_injuries, spar_hint, min_mission_odds, chase_best_mission, buy_qi, shop_armor, spend_contribution, qi_pill_cap, far_qi, recharge_first, hint_missions, sect_method]
+	var key := [seed_value, months, curious, no_help, wait_for_pill, follow_defence, practise_hint, attempt_trials, heal_injuries, spar_hint, min_mission_odds, chase_best_mission, buy_qi, shop_armor, spend_contribution, qi_pill_cap, far_qi, recharge_first, hint_missions, sect_method, stay_rogue]
 	if not _memo.has(key):
 		_memo[key] = play(gs, clock, seed_value, months, curious, Callable(), no_help, wait_for_pill)
 		gs.end_session()
@@ -157,7 +159,7 @@ static func play(gs: Node, clock: Node, seed_value: int, months: int, curious: b
 			out["breaks"].append(attempt)
 			broke = true
 		_use_qi_items(gs, c)
-		if c.is_rogue() and out["sect_day"] < 0:
+		if c.is_rogue() and out["sect_day"] < 0 and not stay_rogue:
 			for sect_id: String in Sects.accepting_sects(c, gs.data):
 				gs.join_sect(sect_id)
 				break

@@ -234,6 +234,7 @@ func _run() -> void:
 	FirstHour.qi_pill_cap = -1  # QA-150
 	FirstHour.contribution_log = {"pill_days": [], "pill": 0, "body": 0, "qi_items": 0, "qi_cost": 0, "qi_used": 0, "qi": 0}
 	FirstHour.far_qi = args.has("--far-qi")  # QA-145
+	FirstHour.stay_rogue = args.has("--rogue")  # QA-158
 	FirstHour.recharge_first = args.has("--recharge")  # QA-152
 	FirstHour.hint_missions = args.has("--hint-missions")
 	FirstHour.sect_method = curious and args.has("--sect-method")  # QA-156
@@ -254,7 +255,7 @@ func _run() -> void:
 			only_seed = int(a.substr(7))
 		elif a.begins_with("--qi-pill-cap="):
 			FirstHour.qi_pill_cap = int(a.substr(14))  # QA-150
-		elif a != "--curious" and a != "--trace" and a != "--zero" and a != "--forced" and a != "--no-trial" and a != "--no-heal" and a != "--no-spar-hint" and a != "--blind-missions" and a != "--one-mission" and a != "--long-hints" and a != "--buy-qi" and a != "--spend-contribution" and a != "--no-armor" and a != "--far-qi" and a != "--injury-origins" and a != "--odds-bands" and a != "--deaths" and a != "--recharge" and a != "--hint-missions" and a != "--sect-method" and a != "--rating-check":
+		elif a != "--curious" and a != "--trace" and a != "--zero" and a != "--forced" and a != "--no-trial" and a != "--no-heal" and a != "--no-spar-hint" and a != "--blind-missions" and a != "--one-mission" and a != "--long-hints" and a != "--buy-qi" and a != "--spend-contribution" and a != "--no-armor" and a != "--far-qi" and a != "--injury-origins" and a != "--odds-bands" and a != "--deaths" and a != "--recharge" and a != "--hint-missions" and a != "--sect-method" and a != "--rogue" and a != "--rating-check":
 			nums.append(int(a))
 	var seeds := nums[0] if nums.size() > 0 else 30
 	var months := nums[1] if nums.size() > 1 else 12
