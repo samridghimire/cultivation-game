@@ -1757,6 +1757,15 @@ func test_sect_method_hint() -> void:
 	assert_true(short.contains("you have 600") and not short.contains("Learn it"), short)
 
 
+func test_sect_method_hint_held_manual_says_read_it() -> void:
+	var d := data()
+	var c := _method_member(1, 0, "")
+	c.add_item("manual_azure_cloud_heart", 1)
+	var line := Guidance.sect_method_hint(c, d)
+	assert_true(line.begins_with("You hold the Azure Cloud Heart Sutra manual: learn it from the Inventory"), line)
+	assert_false(line.contains("hands out"), line)
+
+
 func test_sect_method_hint_none() -> void:
 	var d := data()
 	var known := _method_member(1, 2000, "foundation_establishment_pill")

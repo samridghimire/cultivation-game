@@ -341,7 +341,7 @@ static func affordable_armor(c: CharacterData, data: GameData, region_id: String
 	return best
 
 
-## GUIDE-158: {item_id, tech_id, cost, rate, current} of the sect treasury's fastest cultivation method that `c` can
+## GUIDE-158: {item_id, tech_id, cost, rate, current, held} of the sect treasury's fastest cultivation method that `c` can
 ## claim by rank, does not know, and that beats the main method; {} if none. A method that would eat the
 ## contribution reserved for the breakthrough pill still to claim is not offered yet.
 static func sect_method_offer(c: CharacterData, data: GameData) -> Dictionary:
@@ -360,11 +360,13 @@ static func sect_method_offer(c: CharacterData, data: GameData) -> Dictionary:
 		if tech_id == "" or not Techniques.is_faster_method(c, data, tech_id):
 			continue
 		var cost := int(entry["contribution"])
-		if int(c.sect["rank"]) < int(entry.get("min_rank", 0)) or (reserve > 0 and balance - cost < reserve):
+		# A manual already claimed but not yet read is offered whatever the balance (the hint says to read it).
+		var held := c.item_count(item_id) > 0
+		if not held and (int(c.sect["rank"]) < int(entry.get("min_rank", 0)) or (reserve > 0 and balance - cost < reserve)):
 			continue
 		var rate := Techniques.method_rate_of(c, data, tech_id)
 		if best.is_empty() or rate > float(best["rate"]) or (is_equal_approx(rate, float(best["rate"])) and (cost < int(best["cost"]) or (cost == int(best["cost"]) and item_id < String(best["item_id"])))):
-			best = {"item_id": item_id, "tech_id": tech_id, "cost": cost, "rate": rate, "current": Techniques.method_rate(c, data)}
+			best = {"item_id": item_id, "tech_id": tech_id, "cost": cost, "rate": rate, "current": Techniques.method_rate(c, data), "held": held}
 	return best
 
 
@@ -373,6 +375,8 @@ static func sect_method_hint(c: CharacterData, data: GameData) -> String:
 	var offer := sect_method_offer(c, data)
 	if offer.is_empty():
 		return ""
+	if bool(offer.get("held", false)):
+		return "You hold the %s manual: learn it from the Inventory and set it as your main method on the Techniques screen (it gathers qi x%s, your method x%s)." % [data.techniques[offer["tech_id"]].name, String.num(float(offer["rate"]), 1), String.num(float(offer["current"]), 1)]
 	var balance := Sects.contribution_balance(c)
 	var line := "Your sect treasury hands out the %s for %d contribution (you have %d): it gathers qi x%s, your method x%s." % [data.techniques[offer["tech_id"]].name, int(offer["cost"]), balance, String.num(float(offer["rate"]), 1), String.num(float(offer["current"]), 1)]
 	if balance >= int(offer["cost"]):

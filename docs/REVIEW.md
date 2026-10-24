@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 41ee758
+Last reviewed commit: 155b49f
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -1111,3 +1111,14 @@ Last reviewed commit: 41ee758
     C-245 leaves village_drunk_bully uncapped because outgrown_hint needs a home fight (worker's follow-up is right).
     C-241's line sits in the Goals help topic; there is no HUD page, acceptable.
   - Nothing fixed, nothing filed.
+- 2026-10-24 (reviewer, 2nd run): reviewed 41ee758..155b49f (GUIDE-158/171/172/173/174, C-242/244/246, QA-160/161,
+  WU-360/363/364/368, GUIDE-175; [PLAN]/[REVIEW] skipped). Main green (ALL CHECKS PASSED, 2348 -> 2349 tests). No worker touched
+  BACKLOG/CHANGELOG; no save-format changes; WU-368's treasury "Learn it now" button keeps logic in GameState
+  (use_item / set_main_method) and grabs focus.
+  - Fixed (GUIDE-158): once the treasury method manual was claimed but not yet read, sect_method_hint kept saying
+    "Your sect treasury hands out the X for N contribution (you have M)", inviting a second purchase (and, with the
+    balance spent, dropping the "Learn it" instruction). A held manual now yields "You hold the X manual: learn it from
+    the Inventory ..."; test added.
+  - Notes, not filed: GUIDE-173's extra-pay clause is only on the multi-mission line (the worker's follow-up covers the
+    single "Sect mission ready" line). GUIDE-174 makes a home with no rated fights "outgrown" for anyone past Qi
+    Refining, which is the intent.
