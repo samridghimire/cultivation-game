@@ -2600,8 +2600,10 @@ func test_pill_source_goal_recipe_and_auction() -> void:
 	var c := _void_pill_player(d)
 	assert_eq(Guidance.pill_source_goal(c, d), "")  # no source at all
 	d.auction_houses["fallen_star_auction"]["lot_table"].append({"item": "void_pill", "base_price": 1, "weight": 1, "rarity": "epic"})
+	d.source_cache.clear()  # PERF-006: injected content invalidates the sources cache
 	assert_eq(Guidance.pill_source_goal(c, d), "Bid for a Void Pill at the Fallen Star Market auction.")
 	d.recipes["void_pill"] = {"id": "void_pill", "profession": "alchemist", "output": {"item": "void_pill", "count": 1}}
+	d.source_cache.clear()
 	assert_eq(Guidance.pill_source_goal(c, d), "Find an alchemist to brew a Void Pill for Void Refinement.")
 	c.professions["alchemist"] = {"rank": 0, "xp": 0.0}
 	assert_eq(Guidance.pill_source_goal(c, d), "Brew a Void Pill for Void Refinement (Alchemist).")

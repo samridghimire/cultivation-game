@@ -162,6 +162,16 @@ static func has_known_source(data: GameData, item_id: String) -> bool:
 
 
 static func _scan_sources(data: GameData, item_id: String) -> Array[String]:
+	if data.source_cache.has(item_id):
+		var cached: Array[String] = []
+		cached.assign(data.source_cache[item_id])
+		return cached
+	var lines := _compute_sources(data, item_id)
+	data.source_cache[item_id] = lines.duplicate()
+	return lines
+
+
+static func _compute_sources(data: GameData, item_id: String) -> Array[String]:
 	var lines: Array[String] = []
 	var item: Dictionary = data.items.get(item_id, {})
 	for region: Dictionary in data.regions.values():

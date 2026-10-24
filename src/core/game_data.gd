@@ -32,6 +32,7 @@ var sect_factions: Dictionary = {}
 ## sects.json top-level "reputation" rules (Reputation system).
 var sect_reputation: Dictionary = {}
 var items: Dictionary = {}  # id -> Dictionary
+var source_cache: Dictionary = {}  # PERF-006: item id -> Items._scan_sources lines (the content never changes after load)
 var recipe_scrolls: Dictionary = {}  # recipe id -> first item id (data order) that teaches it
 ## items.json "restricted_tags": only merchants that stock these tags explicitly sell such items.
 var restricted_item_tags: PackedStringArray = []

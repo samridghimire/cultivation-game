@@ -99,3 +99,15 @@ func test_bulk_sell_keeps_deliver_needs() -> void:
 	Sects.join(c, data(), "azure_cloud_sect")
 	var ids := Items.bulk_sell_ids(c, data(), tags, [], Sects.deliver_needs(c, data()))
 	assert_false(ids.has("cold_iron"), "outer disciple keeps them")
+
+
+## PERF-006: sources are cached per GameData; the cached answer equals a fresh scan and callers cannot corrupt it.
+func test_sources_cache_matches_fresh_scan() -> void:
+	var d := GameData.load_from_dir()
+	for id: String in ["spirit_herb", "spirit_stone", "foundation_establishment_pill"]:
+		if not d.items.has(id):
+			continue
+		var fresh := Items._compute_sources(d, id)
+		var first := Items._scan_sources(d, id)
+		first.append("junk")
+		assert_eq(Items._scan_sources(d, id), fresh, "cached sources for %s match a fresh scan" % id)
