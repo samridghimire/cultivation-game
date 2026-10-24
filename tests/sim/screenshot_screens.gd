@@ -101,6 +101,7 @@ extends SceneTree
 ## character with Internal Injury, then with a second injury (Qi Deviation); the "Pay the doctor ... saves about" lines must fit or wrap unclipped.
 ## WU-295: `--bounty-shot` writes bounty_menu_<size>.png: the Fallen Star Market bounty board with the longest hunt label any realm sees (the hunt's description is shown for the focused entry).
 ## WU-352: `--hint-shot` also writes hint_qi_two_spots_<size>.png (Foundation Middle member ~120 days short: gather line names Cloud-Sea Cliff in Azure Peak against here, durations joined by "and").
+## WU-355: `--hint-shot` also writes hint_duty_covers_/hint_duty_skips_<size>.png (Inner Disciple at duty 18/30, 3 days left: the line names the Herb Hall tithe "covers it", else "skips this month's stipend").
 ## WU-357: `--hint-shot` also writes hint_trial_no_style_<size>.png (Foundation Peak, no combat technique, trial open: advice says "learn a combat technique", never "practise").
 ## WU-356: `--hint-shot` also writes hint_missions_last_stage_<size>.png (Qi Refining last stage, missions too dangerous, style mastered: the mission line says break through).
 ## WU-353: `--hint-shot` also writes hint_practice_target_<size>.png (Inner Disciple, Foundation Peak, Iron Fist 2: trial advice says "to level N (now 2)").
@@ -2492,6 +2493,47 @@ func _start_hint_shot(gs: Node) -> void:
 			c.mission_cooldowns = nostyle_saved[6]
 			c.attributes = nostyle_saved[7]
 			nostyle_saved.clear()})
+
+	# WU-355: GUIDE-167. An Inner Disciple at 18/30 duty with 3 days left: with 3 spirit herbs the HUD duty line names the
+	# Herb Hall tithe and "covers it"; with nothing that fits, it says missing the duty skips this month's stipend.
+	var duty_saved: Array = []
+	for duty_case: String in ["covers", "skips"]:
+		shots.append({"name": "hint_duty_%s_%s" % [duty_case, size_tag], "open": func() -> void:
+			setup_long.call()
+			duty_saved.append_array([c.realm_index, c.stage, c.sect.duplicate(), c.techniques.duplicate(true), c.inventory.duplicate(), c.mission_cooldowns.duplicate(), c.attributes.duplicate(), c.age_days])
+			c.realm_index = 1
+			c.stage = 3
+			c.age_days = 30 * 40 + 27  # 3 days left in the sect month
+			c.sect = {"id": "azure_cloud_sect", "rank": 1, "contribution": 600, "spent": 0, "month_earned": 18}
+			c.inventory = {"spirit_stone": 10, "spirit_herb": 3} if duty_case == "covers" else {"spirit_stone": 10}
+			c.mission_cooldowns = {}
+			if duty_case == "skips":
+				c.mission_cooldowns = {}
+				for mid: String in gs.data.sect_missions:
+					c.mission_cooldowns[mid] = int(root.get_node("GameClock").total_days) + 100
+			gs.current_region = "qingshi_village"
+			root.get_node("EventBus").player_changed.emit()
+			await root.get_tree().process_frame
+			await root.get_tree().process_frame
+			hud.get("_banner").visible = false
+			var line: String = Guidance.duty_hint(c, gs.data, gs.world_flags)
+			print("hint-shot duty ", duty_case, ": ", line)
+			assert(line.contains("18 / 30"), "duty line lacks the progress: " + line)
+			if duty_case == "covers":
+				assert(line.contains("covers it") and line.contains("Tithe to the Herb Hall"), "duty line lacks the covering mission:\n" + line)
+			else:
+				assert(line.contains("skips this month's stipend") and not line.contains("covers it"), "duty line lacks the stipend warning:\n" + line)
+			var capped: String = hud.call("cap_hint", line)
+			assert(capped.begins_with("Your sect duty is 18 / 30"), "capped duty line lost its opening: " + capped), "close": func() -> void:
+				c.realm_index = duty_saved[0]
+				c.stage = duty_saved[1]
+				c.sect = duty_saved[2]
+				c.techniques = duty_saved[3]
+				c.inventory = duty_saved[4]
+				c.mission_cooldowns = duty_saved[5]
+				c.attributes = duty_saved[6]
+				c.age_days = duty_saved[7]
+				duty_saved.clear()})
 
 
 ## WU-190: the encounter window on real encounters with attribute, profession and enemy choices.
