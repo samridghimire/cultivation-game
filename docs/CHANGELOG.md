@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-24 [GUIDE-172] The trial advice no longer names the same sect treasury manual as the defence hint.
 - 2026-10-24 [WU-360] A screenshot check that the HUD's trial line keeps the practice advice.
 - 2026-10-24 [GUIDE-171] When a rank's trial is hopeless, the rank goal says it is beyond you yet instead of inviting you to try.
 - 2026-10-24 [C-242] Help explains the duty reminder's covering mission and that missing the duty only skips the stipend.
