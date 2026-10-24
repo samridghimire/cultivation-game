@@ -4593,8 +4593,14 @@ func test_trial_advice_at_last_stage_names_the_missing_defence() -> void:
 	assert_true(Guidance.trial_odds(c, d) >= 0.0 and Guidance.trial_odds(c, d) < 0.5, "odds %s" % Guidance.trial_odds(c, d))
 	var advice := Guidance._trial_advice(c, d, "qingshi_village")
 	assert_true(advice.contains("Stone Skin Tempering"), advice)
-	assert_true(advice.contains("your sect treasury"), advice)
+	# GUIDE-172: the thin-defence hint already names the treasury manual, so the trial advice does not repeat it.
+	assert_false(advice.contains("(your sect treasury"), advice)
 	assert_false(advice.contains("grow a stage"), advice)
+	assert_true(Guidance.thin_defence_hint(c, d, "qingshi_village").contains("sect treasury"))
+	# Without a treasury source (a rogue) the source stays.
+	c.sect = {}
+	var rogue_source := Guidance._trial_lever_source(c, d, "qingshi_village")
+	assert_eq(rogue_source, ": " + Guidance.body_manual_source(c, d, "qingshi_village") if Guidance.body_manual_source(c, d, "qingshi_village") != "" else "")
 
 
 func test_trial_advice_with_stages_left_may_say_grow_a_stage() -> void:

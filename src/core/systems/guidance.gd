@@ -1796,6 +1796,9 @@ static func _trial_lever(c: CharacterData, data: GameData, region_id: String = "
 static func _trial_lever_source(c: CharacterData, data: GameData, region_id: String = "") -> String:
 	if Techniques.knows_kind(c, data, "body"):
 		return ""
+	# GUIDE-172: at Foundation the thin-defence hint (always shown) already names the treasury manual.
+	if c.realm_index == THIN_DEFENCE_REALM and not _body_manual_treasury(c, data).is_empty():
+		return ""
 	var source := body_manual_source(c, data, region_id)
 	return ": " + source if source != "" else ""
 
