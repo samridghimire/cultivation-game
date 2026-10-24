@@ -2,6 +2,23 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-24 [WU-360] A screenshot check that the HUD's trial line keeps the practice advice.
+- 2026-10-24 [GUIDE-171] When a rank's trial is hopeless, the rank goal says it is beyond you yet instead of inviting you to try.
+- 2026-10-24 [C-242] Help explains the duty reminder's covering mission and that missing the duty only skips the stipend.
+- 2026-10-24 [GUIDE-158] A hint points at a faster cultivation method in your sect treasury once you can spare the contribution.
+- 2026-10-24 [C-241] Help explains the contribution shown next to your spirit stones.
+- 2026-10-24 [GUIDE-169] A too-hard trial hint now leads with what to do first, so the HUD shows the advice.
+- 2026-10-24 [WU-361] A screenshot check of the trial advice naming the body art to practise.
+- 2026-10-24 [GUIDE-170] The breakthrough pill hint no longer promises a sect rank you cannot reach before that breakthrough.
+- 2026-10-24 [C-245] Four small Qingshi village moments (the old boxer, the widow's thief, the chore swap, the harvest festival) stop once you leave Qi Refining.
+- 2026-10-24 [QA-159] Measured what refreshing the hints and the journal costs.
+- 2026-10-24 [WU-359] A screenshot check of the character sheet's sect contribution line.
+- 2026-10-24 [WU-355] A screenshot check of the duty reminder naming a covering mission.
+- 2026-10-24 [GUIDE-168] The realm goal names a qi spot that would get you there years sooner.
+- 2026-10-24 [QA-158] The sim measured a rogue's first three years: Foundation by month 36 in 3 of 10 runs, against 10 of 10 in a sect.
+- 2026-10-24 [WU-352] A screenshot check of the far qi spot hint's durations.
+- 2026-10-24 [WU-358] A screenshot check that the world map's busiest market details fit.
+- 2026-10-24 [WU-357] A screenshot check of the trial advice telling a fighter with no combat technique to learn one.
 - 2026-10-24 [GUIDE-165] The injury hint no longer spends the contribution you need for your Foundation pill.
 - 2026-10-24 [WU-356] A screenshot check of the mission hint telling a 9th Layer cultivator to break through first.
 - 2026-10-23 [QA-156] The sim measured the sect's own method: claimed around day 900, it brings Foundation about 8% sooner.

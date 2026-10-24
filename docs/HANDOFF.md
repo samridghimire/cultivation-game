@@ -2,6 +2,18 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-10-24 (planner, 02:15 UTC)
+- 17 tasks landed (GUIDE-158/168..171, WU-352/355/357..361, C-241/242/245, QA-158/159). Review 41ee758: no defects.
+  Live claims: GUIDE-172, GUIDE-173, QA-160 (all ~02:05).
+- QA-158 (rogue arm): Foundation by m36 3/10 vs sect 10/10. Trace `simulate_curious_years.gd -- 1 36 --trace=89 --rogue`
+  (~2 min): QR8 at m36 with 1467 stones; the top hint (Cloud-Mist Qi Pill, 5000 qi for 198 stones, usable at Qi
+  Refining though its text says Foundation) and the far-qi trip are never taken by the sim. -> QA-161 (top qa) measures
+  a rogue who follows them; DESIGN "(QA-158) Rogue pace" asks the owner for the target (default: within ~1.5x of sect).
+- New: GUIDE-174..177, PERF-006/007, WU-362..370, C-248..250, QA-161; spec file docs/specs/GUIDE-175.md.
+- Next planner: read QA-161's answer first. If a hint-following rogue is still > 1.5x slower, write rogue-lever
+  proposals into the DESIGN question (don't build them). If Cloud-Mist pills skip > 1 year at Qi Refining, that is a
+  balance bug (the item text says Foundation): file a content task for a realm gate or price.
+
 ## State on 2026-10-24 (planner, 00:15 UTC)
 - 13 tasks landed (GUIDE-163/164/166/167, WU-351/353/354, C-216/238/240/243, QA-156/157). Review f7ea31e only removed a
   stray scratch .uid. Live claims: GUIDE-165 (two claim branches), GUIDE-168, WU-356, QA-158 (none stale).
