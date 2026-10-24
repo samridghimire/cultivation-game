@@ -1695,15 +1695,23 @@ static func _sect_hint(c: CharacterData, data: GameData, region_id: String = "")
 			return _mortal_sect_hint(c, data, open)
 		if open.is_empty():
 			return ""
-		var line := "As a rogue cultivator you could join %s %s." % [" or ".join(open), _hall_where(c, data, region_id)]
+		var where := _hall_where(c, data, region_id)
 		# GUIDE-175: say what the most generous open sect gives its members.
 		var best: SectDef = null
 		for sect: SectDef in data.sects.values():
 			if sect.name in open and (best == null or sect.cultivation_bonus > best.cultivation_bonus):
 				best = sect
 		var perks := Sects.membership_perks(c, data, best.id)
-		if not perks.is_empty():
-			line += " %s members %s." % [best.name, Text.join_and(perks)]
+		if perks.is_empty():
+			return "As a rogue cultivator you could join %s %s." % [" or ".join(open), where]
+		# GUIDE-182: lead with the perks so the HUD's hint cap keeps them.
+		var line := "Join %s %s: members %s." % [best.name, where, Text.join_and(perks)]
+		var others: PackedStringArray = []
+		for n: String in open:
+			if n != best.name:
+				others.append(n)
+		if not others.is_empty():
+			line += " %s would also take you." % " or ".join(others)
 		return line
 	var sect: SectDef = data.sects[c.sect["id"]]
 	var rank := int(c.sect["rank"])

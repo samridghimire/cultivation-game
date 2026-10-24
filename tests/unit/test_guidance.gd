@@ -137,7 +137,7 @@ func test_sect_hints_for_rogue_and_member() -> void:
 	for sect: SectDef in data().sects.values():
 		if Sects.check_join(c, data(), sect.id)["ok"]:
 			open_sects.append(sect.name)
-	assert_eq(_has(rogue, "As a rogue cultivator"), not open_sects.is_empty())
+	assert_eq(_has(rogue, "As a rogue cultivator") or _has(rogue, "Join "), not open_sects.is_empty())
 	var sect: SectDef = data().sects.values()[0]
 	c.alignment = 0
 	c.sect = {"id": sect.id, "rank": 0, "contribution": 100, "spent": 0}
@@ -705,7 +705,7 @@ func test_qi_refining_rogue_sect_hint_wording_unchanged() -> void:
 	var c := _fresh()
 	c.realm_index = 1
 	var hint := Guidance._sect_hint(c, data())
-	assert_true(hint == "" or hint.begins_with("As a rogue cultivator you could join"))
+	assert_true(hint == "" or hint.begins_with("As a rogue cultivator you could join") or hint.begins_with("Join "))
 
 
 func test_rogue_sect_hint_says_what_membership_gives() -> void:
@@ -713,8 +713,9 @@ func test_rogue_sect_hint_says_what_membership_gives() -> void:
 	c.realm_index = 1
 	c.stage = 7
 	var hint := Guidance._sect_hint(c, data())
-	assert_true(hint.begins_with("As a rogue cultivator you could join"), hint)
-	assert_true(hint.contains("Azure Cloud Sect members gather qi x1.5"), hint)
+	assert_true(hint.begins_with("Join Azure Cloud Sect at "), hint)
+	assert_true(hint.contains(": members gather qi x1.5"), hint)
+	assert_true(hint.substr(0, 120).contains("gather qi x"), hint)
 	c.sect = {"id": "azure_cloud_sect", "rank": 0, "contribution": 0}
 	assert_false(Guidance._sect_hint(c, data()).contains("members gather"))
 
@@ -4304,7 +4305,7 @@ func test_hint_actions_fit_headline() -> void:
 	lines.append_array(Guidance.hints(c, d, 1.0, 20, {}, {}, "qingshi_village"))
 	var checked := 0
 	for line: String in lines:
-		if line == "" or line.begins_with("As a rogue cultivator"):  # the sect list is the action; not one of the canonical states
+		if line == "" or line.begins_with("As a rogue cultivator") or line.begins_with("Join "):  # the sect list is the action; not one of the canonical states
 			continue
 		checked += 1
 		assert_true(_clause_end(line) < Guidance.HEADLINE_CHARS, "first clause ends at %d: %s" % [_clause_end(line), line])

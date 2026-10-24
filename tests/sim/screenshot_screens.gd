@@ -2379,13 +2379,13 @@ func _start_hint_shot(gs: Node) -> void:
 		var dump := "\n".join(lines)
 		var join_line := ""
 		for h: String in lines:
-			if h.contains("join Azure Cloud Sect"):
+			if h.to_lower().contains("join azure cloud sect"):
 				join_line = h
 				break
 		print("hint-shot rogue join: ", join_line)
-		assert(join_line.contains("Azure Cloud Sect members gather qi x1.5"), "no perks sentence in the join hint:\n" + dump)
+		assert(join_line.contains("members gather qi x1.5"), "no perks sentence in the join hint:\n" + dump)
 		var capped: String = hud.call("cap_hint", join_line)
-		assert(capped.contains("join Azure Cloud Sect"), "capped HUD line lost the join: " + capped), "close": func() -> void:
+		assert(capped.to_lower().contains("join azure cloud sect"), "capped HUD line lost the join: " + capped), "close": func() -> void:
 			c.realm_index = rogue_saved[0]
 			c.stage = rogue_saved[1]
 			c.sect = rogue_saved[2]
