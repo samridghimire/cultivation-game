@@ -81,6 +81,7 @@
         "The journal (J) keeps goal ladders for each stage of your life: First goals as a newcomer, Foundation goals in Foundation Establishment, and Core Formation goals in Core Formation. The next unfinished step is marked.",
         "The HUD's Goal line shows the next step, and a \"Goal done\" banner appears when you finish one, naming what comes after.",
         "Sect members see their contribution next to their spirit stones; spend it at the sect treasury on the mission board.",
+        "The clan goal lists everything founding still needs: the realm, an abode for its seat and the stones.",
         "Goals are only suggestions, never requirements. Skip any of them and play your own way."
       ]
     },
@@ -457,7 +458,7 @@
       "group": "crafts",
       "body": [
         "Once you practise a crafting profession, buyers post a monthly order for a few units of something you already know how to make. Each profession has at most one open order at a time, and an order pays about double the materials' worth plus profession experience.",
-        "An order stays open for 60 days. Letting it lapse costs you nothing: no penalty, no lost reputation. Your journal (J) lists your open orders and how many days are left. Order sizes are set so you can gather what they need nearby in the time given. A smith can find iron at Qingshi's Old Quarry Tailings."
+        "An order stays open for 60 days. Letting it lapse costs you nothing: no penalty, no lost reputation. Your journal (J) lists your open orders and how many days are left. Order sizes are set so you can gather what they need nearby in the time given. An order you cannot fill before it lapses (its ingredient only grows far from any seller and takes longer to gather than the days left) drops out of the hints; the journal still lists it. A smith can find iron at Qingshi's Old Quarry Tailings."
       ]
     },
     {
