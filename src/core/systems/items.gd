@@ -306,6 +306,15 @@ static func buyback_ids(c: CharacterData, data: GameData, stock_tags: Array, buy
 	return ids
 
 
+## Why the item cannot be used at this realm (items.json `min_realm`); "" when it can.
+static func realm_block(c: CharacterData, data: GameData, item_id: String) -> String:
+	var item: Dictionary = data.items.get(item_id, {})
+	var min_index := data.realm_index_of(String(item.get("min_realm", "")))
+	if min_index < 0 or c.realm_index >= min_index:
+		return ""
+	return "Only a cultivator of the %s realm can draw on the %s." % [data.realms[min_index].name, item.get("name", item_id)]
+
+
 ## True when using the item feeds cultivation: it gives qi and is not harmful
 ## (no burn_lifespan, no negative alignment). Sell-all keeps these.
 static func feeds_cultivation(data: GameData, item_id: String) -> bool:
@@ -432,6 +441,9 @@ static func use(c: CharacterData, data: GameData, item_id: String, flags: Dictio
 		return {"ok": false, "reason": "That cannot be used.", "notes": PackedStringArray()}
 	if c.item_count(item_id) <= 0:
 		return {"ok": false, "reason": "You have none left.", "notes": PackedStringArray()}
+	var blocked := realm_block(c, data, item_id)
+	if blocked != "":
+		return {"ok": false, "reason": blocked, "notes": PackedStringArray()}
 	var reason := Effects.check(c, data, item.get("effects", {}))
 	if reason != "":
 		return {"ok": false, "reason": reason, "notes": PackedStringArray()}

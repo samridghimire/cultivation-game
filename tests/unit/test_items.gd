@@ -111,3 +111,36 @@ func test_sources_cache_matches_fresh_scan() -> void:
 		var first := Items._scan_sources(d, id)
 		first.append("junk")
 		assert_eq(Items._scan_sources(d, id), fresh, "cached sources for %s match a fresh scan" % id)
+
+## ITEM-003: realm-gated pills refuse below their realm and are not consumed.
+func test_realm_gated_pills() -> void:
+	var d := data()
+	var c := new_character()
+	c.realm_index = 1
+	c.stage = 8
+	c.inventory = {"cloud_mist_qi_pill": 1}
+	var qi_before := c.qi
+	var r := Items.use(c, d, "cloud_mist_qi_pill", {})
+	assert_false(r["ok"])
+	assert_true("Foundation" in String(r["reason"]), String(r["reason"]))
+	assert_eq(c.item_count("cloud_mist_qi_pill"), 1)
+	assert_eq(c.qi, qi_before)
+	c.realm_index = 2
+	c.stage = 1
+	assert_eq(Items.realm_block(c, d, "cloud_mist_qi_pill"), "")
+	assert_true(Items.use(c, d, "cloud_mist_qi_pill", {})["ok"])
+	assert_true(c.qi > qi_before)
+	c.inventory = {"earth_marrow_essence_pill": 1}
+	assert_false(Items.use(c, d, "earth_marrow_essence_pill", {})["ok"])
+	assert_eq(Items.realm_block(c, d, "moon_cake"), "")
+
+
+func test_item_min_realm_is_validated() -> void:
+	var d := GameData.load_from_dir()
+	d.items["moon_cake"]["min_realm"] = "nope"
+	d.items["paper_lantern"]["min_realm"] = "qi_refining"
+	d.load_errors.clear()
+	d._validate()
+	var text := "\n".join(d.load_errors)
+	assert_true("unknown min_realm 'nope'" in text, text)
+	assert_true("Item 'paper_lantern': min_realm needs a usable item" in text, text)

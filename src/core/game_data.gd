@@ -454,6 +454,11 @@ func _validate() -> void:
 				load_errors.append("Item '%s': breakthrough_realm needs breakthrough_bonus" % item["id"])
 			if realm_index_of(String(fx["breakthrough_realm"])) < 1:
 				load_errors.append("Item '%s': unknown breakthrough_realm '%s'" % [item["id"], fx["breakthrough_realm"]])
+		if item.has("min_realm"):
+			if not item.get("usable", false):
+				load_errors.append("Item '%s': min_realm needs a usable item" % item["id"])
+			if typeof(item["min_realm"]) != TYPE_STRING or realm_index_of(String(item["min_realm"])) < 0:
+				load_errors.append("Item '%s': unknown min_realm '%s'" % [item["id"], item["min_realm"]])
 		for key in ["burn_lifespan", "extend_lifespan"]:
 			if item.get("effects", {}).has(key) and int(item["effects"][key]) <= 0:
 				load_errors.append("Item '%s' needs a positive %s" % [item["id"], key])

@@ -4899,3 +4899,13 @@ func test_duty_hint_empty_when_met_or_rogue() -> void:
 	c.sect["month_earned"] = Sects.monthly_duty(c, d)
 	assert_eq(Guidance.duty_hint(c, d), "")
 	assert_eq(Guidance.duty_hint(new_character(), d), "")
+
+
+## ITEM-003: the qi-pill offer never picks a pill the character's realm cannot use.
+func test_qi_pill_offer_skips_realm_gated_pills() -> void:
+	var d := data()
+	var c := _qr(8, 1500)
+	for region_id: String in d.regions:
+		assert_true(String(Guidance.qi_pill_offer(c, d, region_id).get("item_id", "")) != "cloud_mist_qi_pill", region_id)
+	c.inventory["cloud_mist_qi_pill"] = 1
+	assert_false(_has(_buy_hints(c), "Use your Cloud-Mist"))
