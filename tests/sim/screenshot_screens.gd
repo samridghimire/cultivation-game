@@ -1381,6 +1381,7 @@ func _start_missions_shot(gs: Node) -> void:
 			c.equipment = saved_den["equipment"]})
 
 
+## WU-358: `--map-shot` also writes map_market_<size>.png (Fallen Star Market details, the longest Sells line).
 ## WU-253: `--map-shot` writes map_sells_<size>.png, the world map with Fallen Star Market selected (its "Sells:" line).
 ## WU-265: checked at 1280x720 and 1280x800: the full Sells line (all 8 merchants) shows above Places without scrolling; Places scrolls.
 func _start_map_shot(gs: Node) -> void:
@@ -1396,6 +1397,15 @@ func _start_map_shot(gs: Node) -> void:
 	shots.append({"name": "map_sells", "open": func() -> void:
 		gs.current_region = "fallen_star_market"
 		map.open(), "close": map.close})
+	# WU-358: the busiest details (most merchants) at both sizes, Fallen Star Market selected and visited.
+	var map_size_tag := "%dx%d" % [root.size.x, root.size.y]
+	shots.append({"name": "map_market_" + map_size_tag, "open": func() -> void:
+		gs.current_region = "fallen_star_market"
+		map.open()
+		map._select("fallen_star_market")
+		var details: String = (map.get("_places") as Label).text
+		print("map-shot market details: ", details)
+		assert(details.contains("Sells:"), "no Sells line: " + details), "close": map.close})
 	# WU-346: Misty Forest (visited) shows its unclaimed Waterfall Cave under the Sells line.
 	shots.append({"name": "map_abode", "open": func() -> void:
 		gs.current_region = "misty_forest"
