@@ -106,6 +106,7 @@ extends SceneTree
 ## WU-357: `--hint-shot` also writes hint_trial_no_style_<size>.png (Foundation Peak, no combat technique, trial open: advice says "learn a combat technique", never "practise").
 ## WU-356: `--hint-shot` also writes hint_missions_last_stage_<size>.png (Qi Refining last stage, missions too dangerous, style mastered: the mission line says break through).
 ## WU-353: `--hint-shot` also writes hint_practice_target_<size>.png (Inner Disciple, Foundation Peak, Iron Fist 2: trial advice says "to level N (now 2)").
+## WU-364: `--hint-shot` also writes journal_goals_realm_/journal_goals_rank_<size>.png (Foundation Early: realm goal names Cloud-Sea Cliff in Azure Peak; Foundation Peak with a hopeless Core Disciple trial: rank goal says "beyond you yet").
 ## WU-363: `--hint-shot` also writes hint_sect_method_<size>.png (Azure Cloud Inner Disciple, QR5, 1200 contribution: hint names the treasury method, both rates and the Learn-it sentence; short of the cost the sentence is gone).
 ## WU-361: `--hint-shot` also writes hint_body_art_target_<size>.png (Iron Fist at its typical level, Stone Skin Tempering 1: trial line says "practise Stone Skin Tempering to level N (now 1)", never "practise Iron Fist").
 ## WU-351: `--hint-shot` also writes hud_contribution_<size>.png (Azure Cloud Inner Disciple, 7773 contribution, 1296 stones).
@@ -2518,6 +2519,69 @@ func _start_hint_shot(gs: Node) -> void:
 			c.inventory = method_saved[4]
 			c.main_method = method_saved[5]
 			method_saved.clear()})
+
+	# WU-364: GUIDE-168's faster-spot clause and GUIDE-171's hopeless-trial wording, read from the journal's Goals section.
+	# (a) Azure Cloud Inner Disciple at Foundation Early in qingshi_village; (b) Foundation Peak Inner Disciple, bare of techniques,
+	# the Core Disciple trial open and hopeless.
+	var goals_saved: Array = []
+	var goals_save := func() -> void:
+		goals_saved.append_array([c.realm_index, c.stage, c.sect.duplicate(), c.techniques.duplicate(true), c.equipment.duplicate(), c.inventory.duplicate(), c.mission_cooldowns.duplicate()])
+	var goals_restore := func() -> void:
+		(hud.get("_screens")["toggle_journal"] as Control).close()
+		c.realm_index = goals_saved[0]
+		c.stage = goals_saved[1]
+		c.sect = goals_saved[2]
+		c.techniques = goals_saved[3]
+		c.equipment = goals_saved[4]
+		c.inventory = goals_saved[5]
+		c.mission_cooldowns = goals_saved[6]
+		goals_saved.clear()
+	shots.append({"name": "journal_goals_realm_" + size_tag, "open": func() -> void:
+		setup_long.call()
+		goals_save.call()
+		c.realm_index = gs.data.realm_index_of("foundation_establishment")
+		c.stage = 0
+		c.qi = 0.0
+		c.sect = {"id": "azure_cloud_sect", "rank": 1, "contribution": 0, "spent": 0}
+		c.techniques = {}
+		c.inventory = {}
+		gs.current_region = "qingshi_village"
+		root.get_node("EventBus").player_changed.emit()
+		await root.get_tree().process_frame
+		hud.get("_banner").visible = false
+		var gj: Control = hud.get("_screens")["toggle_journal"]
+		await _show_journal(gj, "Goals")
+		for _i in 3:
+			await root.get_tree().process_frame
+		var parsed: String = (gj.get("_text") as RichTextLabel).get_parsed_text()
+		assert(parsed.contains(" at Cloud-Sea Cliff in Azure Peak)"), "journal realm goal lacks the faster-spot clause:\n" + parsed), "close": goals_restore})
+	shots.append({"name": "journal_goals_rank_" + size_tag, "open": func() -> void:
+		setup_long.call()
+		goals_save.call()
+		c.realm_index = gs.data.realm_index_of("foundation_establishment")
+		c.stage = gs.data.realms[c.realm_index].stage_count() - 1
+		c.qi = 0.0
+		c.sect = {"id": "azure_cloud_sect", "rank": 1, "contribution": 3500, "spent": 0}
+		c.techniques = {}
+		c.equipment = {}
+		c.inventory = {}
+		c.mission_cooldowns = {}
+		gs.current_region = "qingshi_village"
+		root.get_node("EventBus").player_changed.emit()
+		await root.get_tree().process_frame
+		hud.get("_banner").visible = false
+		var rank_line := ""
+		for l: String in Guidance.goals(c, gs.data, gs.world_flags):
+			if l.begins_with("Become "):
+				rank_line = l
+		assert(rank_line.contains("is beyond you yet"), "rank goal not hopeless: " + rank_line)
+		var gj: Control = hud.get("_screens")["toggle_journal"]
+		await _show_journal(gj, "Goals")
+		for _i in 3:
+			await root.get_tree().process_frame
+		var parsed: String = (gj.get("_text") as RichTextLabel).get_parsed_text()
+		assert(parsed.contains("is beyond you yet"), "journal rank goal lacks 'is beyond you yet':\n" + parsed)
+		assert(not parsed.contains("you can seek promotion"), "journal invites the hopeless trial:\n" + parsed), "close": goals_restore})
 
 	# WU-356: GUIDE-160. An Azure Cloud member at Qi Refining's last stage with no combat style left to practise and every
 	# ready mission too dangerous: the mission line says to break through, never to grow a stage.
