@@ -811,3 +811,20 @@ func test_child_training_uses_qi_flags() -> void:
 		assert_true(Training.assign(parent, kid, "cultivate", "", d)["ok"])
 		Training.advance(parent, {kid.id: kid}, d, 1, 1.0, {"planted_guardian_seed": true} if kid == flagged else {})
 	assert_gt(_total_qi(flagged), _total_qi(plain))
+
+
+func test_rogue_only_encounters_skip_sect_members() -> void:
+	var c := new_character()
+	c.realm_index = data().realm_index_of("qi_refining")
+	c.stage = 3
+	var ids: Array[String] = []
+	c.sect = {}
+	for entry in Exploration.eligible_encounters(c, data(), ["village"], {}):
+		ids.append(entry["encounter"]["id"])
+	assert_true(ids.has("village_grey_robed_recruiter"))
+	c.sect = {"id": "azure_cloud_sect", "rank": 0}
+	ids.clear()
+	for entry in Exploration.eligible_encounters(c, data(), ["village"], {}):
+		ids.append(entry["encounter"]["id"])
+	assert_false(ids.has("village_grey_robed_recruiter"))
+	assert_false(ids.has("village_river_barter"))

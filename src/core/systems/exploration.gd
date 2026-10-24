@@ -221,8 +221,10 @@ static func check_travel(c: CharacterData, data: GameData, from_id: String, to_i
 
 
 ## True when `c`'s realm (and, inside min_realm, stage) fits the encounter's
-## min_realm / min_stage / max_realm.
+## min_realm / min_stage / max_realm, and (rogue_only) that a sectless wanderer is meeting it.
 static func realm_allows(c: CharacterData, data: GameData, e: Dictionary) -> bool:
+	if e.get("rogue_only", false) and not c.is_rogue():
+		return false
 	if e.has("min_realm"):
 		var min_index := data.realm_index_of(e["min_realm"])
 		if c.realm_index < min_index:
