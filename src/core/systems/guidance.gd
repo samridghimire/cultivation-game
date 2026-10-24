@@ -1944,7 +1944,7 @@ static func _mission_hint(c: CharacterData, data: GameData, flags: Dictionary = 
 			if ready == 1:
 				text = "Sect mission ready: %s (%d contribution, %s) %s." % [name, contribution, duration, _hall_where(c, data, region_id)]
 			else:
-				text = "The best pays %d contribution: %s (%s), one of %d missions ready %s." % [contribution, name, duration, ready, _hall_where(c, data, region_id)]
+				text = "The best pays %d contribution%s: %s (%s), one of %d missions ready %s." % [contribution, _mission_extra_pay(m), name, duration, ready, _hall_where(c, data, region_id)]
 			text += too_dangerous_text
 	elif cooling != "":
 		var cm: Dictionary = data.sect_missions[cooling]
@@ -2204,6 +2204,19 @@ static func best_mission(c: CharacterData, data: GameData, flags: Dictionary = {
 		if best == "" or _mission_beats(data.sect_missions[id], data.sect_missions[best]):
 			best = id
 	return best
+
+
+## " and 75 spirit stones" / " and 100 qi" / both: what a mission pays besides contribution.
+static func _mission_extra_pay(m: Dictionary) -> String:
+	var rewards: Dictionary = m.get("rewards", {})
+	var parts: Array[String] = []
+	var stones := int(rewards.get("items", {}).get("spirit_stone", 0))
+	if stones > 0:
+		parts.append("%d spirit stones" % stones)
+	var qi := int(rewards.get("qi", 0))
+	if qi > 0:
+		parts.append("%d qi" % qi)
+	return "" if parts.is_empty() else " and " + " and ".join(parts)
 
 
 static func _mission_beats(a: Dictionary, b: Dictionary) -> bool:

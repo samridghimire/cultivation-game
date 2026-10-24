@@ -4016,6 +4016,25 @@ func test_sect_line_best_pays_first() -> void:
 	assert_true(line.substr(0, Guidance.HEADLINE_CHARS).contains(String(d.sect_missions[best]["name"])), line)
 
 
+func test_mission_extra_pay_names_stones_and_qi() -> void:
+	var d := data()
+	assert_eq(Guidance._mission_extra_pay(d.sect_missions["cull_mist_wolves"]), " and 100 qi")
+	assert_eq(Guidance._mission_extra_pay(d.sect_missions["deliver_cold_iron"]), " and 75 spirit stones")
+	assert_eq(Guidance._mission_extra_pay(d.sect_missions["escort_mortal_villagers"]), "")
+	assert_eq(Guidance._mission_extra_pay({"rewards": {"qi": 5, "items": {"spirit_stone": 7}}}), " and 7 spirit stones and 5 qi")
+
+
+func test_sect_line_best_pays_names_extra_reward() -> void:
+	var d := data()
+	var c := _qr3_disciple()
+	c.stage = 4
+	c.techniques = {"iron_fist": {"level": 3, "xp": 0.0}}
+	var best := Guidance.best_mission(c, d)
+	var line := _line_with(Guidance.hints(c, d, 1.0, 20, {}, {}, "qingshi_village"), "The best pays ")
+	var extra := Guidance._mission_extra_pay(d.sect_missions[best])
+	assert_true(line.begins_with("The best pays %d contribution%s: " % [int(d.sect_missions[best]["contribution"]), extra]), line)
+
+
 func test_sect_line_deliver_first() -> void:
 	var d := data()
 	var c := _deliver_only(d)
