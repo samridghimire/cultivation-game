@@ -109,6 +109,7 @@ extends SceneTree
 ## WU-356: `--hint-shot` also writes hint_missions_last_stage_<size>.png (Qi Refining last stage, missions too dangerous, style mastered: the mission line says break through).
 ## WU-353: `--hint-shot` also writes hint_practice_target_<size>.png (Inner Disciple, Foundation Peak, Iron Fist 2: trial advice says "to level N (now 2)").
 ## WU-369: `--help-shot` writes help_<topic>_<size>.png for every help page (long ones scroll in a focusable ScrollContainer).
+## WU-367: `--hint-shot` also writes pill_rank_gate_/pill_rank_open_<size>.png (Foundation Peak Inner Disciple, 6998 contribution: no hint, goal or breakthrough text says "As Elder"; QR8 Outer Disciple: the Foundation pill line still says "As Inner Disciple you could claim it").
 ## WU-374: `--hint-shot` also writes hint_order_doomed_<size>.png (rank-0 Alchemist, one order gathering cannot finish in time plus a meetable one: no hint leads with the doomed order, the journal still says "longer than the order has").
 ## WU-364: `--hint-shot` also writes journal_goals_realm_/journal_goals_rank_<size>.png (Foundation Early: realm goal names Cloud-Sea Cliff in Azure Peak; Foundation Peak with a hopeless Core Disciple trial: rank goal says "beyond you yet").
 ## WU-363: `--hint-shot` also writes hint_sect_method_<size>.png (Azure Cloud Inner Disciple, QR5, 1200 contribution: hint names the treasury method, both rates and the Learn-it sentence; short of the cost the sentence is gone).
@@ -2765,6 +2766,78 @@ func _start_hint_shot(gs: Node) -> void:
 				gs.data.sect_missions[mid]["enemy"] = last_foes[mid]
 			last_foes.clear()
 			last_saved.clear()})
+
+	# WU-367: GUIDE-170. The pill's rank clause never names a rank (Elder) whose realm gate you cannot reach before the
+	# breakthrough; a QR8 Outer Disciple still hears "As Inner Disciple you could claim it".
+	var gate_saved: Array = []
+	var gate_save := func() -> void:
+		gate_saved.append_array([c.realm_index, c.stage, c.sect.duplicate(), c.techniques.duplicate(true), c.inventory.duplicate(), c.mission_cooldowns.duplicate()])
+	var gate_restore := func() -> void:
+		(hud.get("_screens")["toggle_journal"] as Control).close()
+		(hud.get("_breakthrough") as Control).close()
+		c.realm_index = gate_saved[0]
+		c.stage = gate_saved[1]
+		c.sect = gate_saved[2]
+		c.techniques = gate_saved[3]
+		c.inventory = gate_saved[4]
+		c.mission_cooldowns = gate_saved[5]
+		gate_saved.clear()
+	shots.append({"name": "pill_rank_gate_" + size_tag, "open": func() -> void:
+		setup_long.call()
+		gate_save.call()
+		c.realm_index = gs.data.realm_index_of("foundation_establishment")
+		c.stage = gs.data.realms[c.realm_index].stage_count() - 1
+		c.qi = gs.data.realms[c.realm_index].qi_required(c.stage)
+		c.sect = {"id": "azure_cloud_sect", "rank": 1, "contribution": 6998, "spent": 0}
+		c.inventory = {}
+		c.mission_cooldowns = {}
+		gs.current_region = "qingshi_village"
+		root.get_node("EventBus").player_changed.emit()
+		await root.get_tree().process_frame
+		await root.get_tree().process_frame
+		hud.get("_banner").visible = false
+		var entry: Dictionary = Guidance.sect_pill_entry(c, gs.data)
+		assert(String(entry.get("name", "")).contains("Core Forming"), "setup: the pill is not the Core Forming Pill: " + str(entry))
+		var texts: Array = Guidance.hints(c, gs.data, 3, 12, gs.npcs, gs.world_flags, "qingshi_village", 40, gs.npc_favor)
+		texts.append_array(Guidance.goals(c, gs.data, gs.world_flags))
+		for t: String in texts:
+			assert(not t.contains("As Elder"), "text names the unreachable Elder rank:\n" + t)
+		var bw: Control = hud.get("_breakthrough")
+		bw.open()
+		await root.get_tree().process_frame
+		await root.get_tree().process_frame
+		var win_text: String = (bw.get("_hint") as Label).text
+		print("hint-shot pill rank gate window: ", win_text)
+		assert(win_text.contains("Core Forming Pill"), "window does not name the Core Forming Pill: " + win_text)
+		assert(not win_text.contains("As Elder"), "window names Elder: " + win_text)
+		bw.close()
+		var gj: Control = hud.get("_screens")["toggle_journal"]
+		await _show_journal(gj, "Goals")
+		for _i in 3:
+			await root.get_tree().process_frame
+		var parsed: String = (gj.get("_text") as RichTextLabel).get_parsed_text()
+		assert(not parsed.contains("As Elder"), "journal names Elder:\n" + parsed), "close": gate_restore})
+	shots.append({"name": "pill_rank_open_" + size_tag, "open": func() -> void:
+		setup_long.call()
+		gate_save.call()
+		c.realm_index = gs.data.realm_index_of("qi_refining")
+		c.stage = gs.data.realms[c.realm_index].stage_count() - 1
+		c.qi = gs.data.realms[c.realm_index].qi_required(c.stage)
+		c.sect = {"id": "azure_cloud_sect", "rank": 0, "contribution": 300, "spent": 0}
+		c.inventory = {}
+		c.mission_cooldowns = {}
+		gs.current_region = "qingshi_village"
+		root.get_node("EventBus").player_changed.emit()
+		await root.get_tree().process_frame
+		hud.get("_banner").visible = false
+		# The journal's pill goal starts at Foundation, so the Qi Refining rank clause is read from the breakthrough window.
+		var bw: Control = hud.get("_breakthrough")
+		bw.open()
+		await root.get_tree().process_frame
+		await root.get_tree().process_frame
+		var win_text: String = (bw.get("_hint") as Label).text
+		print("hint-shot pill rank open window: ", win_text)
+		assert(win_text.contains("As Inner Disciple you could claim it"), "window lost the rank clause: " + win_text), "close": gate_restore})
 
 	# WU-374: GUIDE-177. A rank-0 Alchemist with one order that gathering cannot finish in time and a second that can be
 	# met: no hint leads with the doomed order's "Order due in", the journal still lists it as "longer than the order has".
