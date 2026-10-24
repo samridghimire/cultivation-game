@@ -111,6 +111,10 @@ func _run() -> void:
 			FirstHour.stay_rogue = true  # QA-158
 		elif a == "--buy-qi":
 			FirstHour.buy_qi = true  # QA-161
+		elif a == "--body-art":
+			FirstHour.body_art = true  # QA-155
+		elif a == "--trial-report":
+			FirstHour.trial_report = true  # QA-155
 		elif a == "--arm-report":
 			_arm_report = true  # QA-161
 		elif a == "--defence":
@@ -236,6 +240,8 @@ func _run() -> void:
 	_print_pacing_summary(runs, months)
 	if _arm_report:
 		_print_arm_report(runs, months)
+	if FirstHour.body_art or FirstHour.trial_report:
+		_print_body_art(seeds)
 	if FirstHour.sect_method:
 		print("Sect method (QA-156): claimed in %d/%d seeds, days %s, techniques %s" % [FirstHour.sect_method_log["day"].size(), seeds, str(FirstHour.sect_method_log["day"]), str(FirstHour.sect_method_log["tech"])])
 	quit(1 if early * 10 > maxi(seeds, 10) else 0)
@@ -305,6 +311,21 @@ func _print_pacing_summary(runs: Array[Dictionary], months: int) -> void:
 						break
 			by.append("m%d %d/%d" % [m, n, runs.size()])
 	print("Pacing (QA-156): QR9 median day %.0f (%d seeds), Foundation median day %.0f (%d seeds); Foundation by %s; artifact lives bought %d, injuries at the end %d" % [_median(qr9.duplicate()), qr9.size(), _median(found.duplicate()), found.size(), ", ".join(by), lives, injuries])
+
+
+## QA-155: per seed the day the body art was learned and the Core Disciple trial odds the first month a trial was open.
+func _print_body_art(seeds: int) -> void:
+	print("Body art / trial (QA-155): seed, art learned day, trial first open month, odds then")
+	var odds: Array = []
+	var learned := 0
+	for sd in range(1, seeds + 1):
+		var l: Dictionary = FirstHour.body_art_log.get(sd, {"learned": -1, "odds": -1.0, "month": -1})
+		print("  seed %2d art d%d trial m%d odds %.0f" % [sd, int(l["learned"]), int(l["month"]), 100.0 * float(l["odds"])])
+		if int(l["learned"]) >= 0:
+			learned += 1
+		if float(l["odds"]) >= 0.0:
+			odds.append(float(l["odds"]))
+	print("  art learned in %d/%d seeds; trial opened in %d; median odds %.0f in 100" % [learned, seeds, odds.size(), 100.0 * _median(odds.duplicate())])
 
 
 ## QA-161: one line per arm: stones at m12/m36, qi pills bought, fights lost, artifact lives, final deaths.

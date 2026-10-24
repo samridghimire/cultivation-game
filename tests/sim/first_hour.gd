@@ -76,6 +76,13 @@ static var recharge_first := false
 static var hint_missions := false
 ## QA-158: never join a sect (the rogue path).
 static var stay_rogue := false
+## QA-155: once a month a sect member buys the cheapest body-art manual the treasury sells (keeping the Foundation
+## pill's claim while it is still to claim) or a merchant here sells for stones, learns it and practises it 7 days a
+## month. trial_report (implied by body_art) records per seed the day the art was learned and the Core Disciple trial
+## odds the first month a trial is open: body_art_log[seed] = {"learned": day or -1, "odds": float, "month": int}.
+static var body_art := false
+static var trial_report := false
+static var body_art_log := {}
 static var far_qi_day := -1  # QA-151: day the current seed arrived at the far spot, -1 before
 static var far_qi_log := {"moved": 0, "month": [], "road_days": []}
 const FAR_QI_MIN_SAVED := 30
@@ -87,7 +94,7 @@ static var _memo := {}
 
 
 static func play_cached(gs: Node, clock: Node, seed_value: int, months: int, curious: bool = false, no_help: bool = false, wait_for_pill: int = 0) -> Dictionary:
-	var key := [seed_value, months, curious, no_help, wait_for_pill, follow_defence, practise_hint, attempt_trials, heal_injuries, spar_hint, min_mission_odds, chase_best_mission, buy_qi, shop_armor, spend_contribution, qi_pill_cap, far_qi, recharge_first, hint_missions, sect_method, stay_rogue]
+	var key := [seed_value, months, curious, no_help, wait_for_pill, follow_defence, practise_hint, attempt_trials, heal_injuries, spar_hint, min_mission_odds, chase_best_mission, buy_qi, shop_armor, spend_contribution, qi_pill_cap, far_qi, recharge_first, hint_missions, sect_method, stay_rogue, body_art, trial_report]
 	if not _memo.has(key):
 		_memo[key] = play(gs, clock, seed_value, months, curious, Callable(), no_help, wait_for_pill)
 		gs.end_session()
@@ -383,6 +390,8 @@ static func _curious_month(gs: Node, c: CharacterData, done: Dictionary, today: 
 		_spend_contribution(gs, c)
 	if sect_method and not c.is_rogue():
 		_buy_sect_method(gs, c)
+	if body_art or trial_report:
+		_body_art_month(gs, c, today)
 	if shop_armor:
 		_shop_for_armor(gs, c)
 	var region: Dictionary = gs.data.regions.get(gs.current_region, {})
@@ -722,6 +731,46 @@ static func _spend_contribution(gs: Node, c: CharacterData) -> void:
 		if c.item_count(best_id) <= had:
 			log["qi_used"] += 1
 			log["qi"] += maxi(0, c.qi - qi_before)
+
+
+## QA-155: see body_art. The reserve is the next realm pill's contribution price while it is still to claim.
+static func _body_art_month(gs: Node, c: CharacterData, today: int) -> void:
+	var data: GameData = gs.data
+	var log: Dictionary = body_art_log.get(int(gs.rng.seed), {"learned": -1, "odds": -1.0, "month": -1})
+	body_art_log[int(gs.rng.seed)] = log
+	if body_art and c.alive and not c.is_rogue() and not Techniques.knows_kind(c, data, "body"):
+		var reserve := 0
+		var pill := Guidance.next_realm_pill(c, data)
+		if not pill.is_empty() and c.realm_index == 1 and c.breakthrough_pill == "" and Guidance.breakthrough_items(c, data).is_empty():
+			reserve = int(Sects.shop_entry(c, data, String(pill["id"])).get("contribution", 0))
+		var bought := false
+		for entry: Dictionary in Sects.shop_items(c, data):
+			var item_id := String(entry["item_id"])
+			var tech_id := Items.manual_technique(data, item_id)
+			if tech_id == "" or data.techniques[tech_id].kind != "body" or Techniques.knows(c, tech_id) or not data.techniques[tech_id].activation.is_empty():
+				continue
+			if Sects.check_purchase(c, data, item_id) == "" and Sects.contribution_balance(c) - int(entry["contribution"]) >= reserve:
+				gs.buy_with_contribution(item_id)
+				gs.use_item(item_id)
+				bought = true
+				break
+		if not bought:
+			var manual := _cheapest_body_manual(gs, c, gs.current_region)
+			if manual != "":
+				gs.buy_item(manual)
+				gs.use_item(manual)
+		if Techniques.knows_kind(c, data, "body"):
+			log["learned"] = today
+	if body_art and c.alive:
+		for tech_id: String in c.techniques:
+			if data.techniques[tech_id].kind == "body" and not Techniques.is_mastered(c, data, tech_id):
+				gs.practice_technique(tech_id, 7)
+				break
+	if c.alive and float(log["odds"]) < 0.0:
+		var odds := Guidance.trial_odds(c, data)
+		if odds >= 0.0:
+			log["odds"] = odds
+			log["month"] = today / Calendar.DAYS_PER_MONTH
 
 
 ## QA-156: see sect_method.
