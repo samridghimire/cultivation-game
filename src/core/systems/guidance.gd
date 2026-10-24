@@ -726,17 +726,19 @@ static func market_lines(data: GameData, region_id: String) -> PackedStringArray
 static func heal_source(c: CharacterData, data: GameData, region_id: String, flags: Dictionary = {}) -> String:
 	if region_id == "" or not Injuries.has_any(c):
 		return ""
-	for injury_id: String in c.injuries:
-		var clause := _heal_source_for(c, data, region_id, injury_id, flags)
-		if clause == "":
-			continue
-		if c.injuries.size() > 1:
-			var injury_name := Injuries.injury_name(data, injury_id)
-			if clause.contains(" treats it "):
-				clause = clause.replace(" treats it ", " treats your %s " % injury_name)
-			else:
-				clause += " for your %s" % injury_name
-		return clause
+	# GUIDE-183: a source you can use now ("(you have N)" marks an unaffordable one) beats one you cannot.
+	for affordable_only: bool in [true, false]:
+		for injury_id: String in c.injuries:
+			var clause := _heal_source_for(c, data, region_id, injury_id, flags)
+			if clause == "" or (affordable_only and clause.contains("(you have ")):
+				continue
+			if c.injuries.size() > 1:
+				var injury_name := Injuries.injury_name(data, injury_id)
+				if clause.contains(" treats it "):
+					clause = clause.replace(" treats it ", " treats your %s " % injury_name)
+				else:
+					clause += " for your %s" % injury_name
+			return clause
 	return ""
 
 
@@ -801,10 +803,24 @@ static func _heal_source_for(c: CharacterData, data: GameData, region_id: String
 		if String(p.get("type", "")) == "clinic" and cost > stones:
 			var line := "the %s treats it for %d stones (you have %d)" % [p.get("display_name", "clinic"), cost, stones]
 			# GUIDE-149: say when selling loot would cover the gap.
-			var offer := sell_offer(c, data, region_id, flags)
-			if not offer.is_empty() and stones + int(offer["total"]) >= cost:
-				line += "; sell your %s to the %s (about %d stones) first" % [offer["goods"], offer["merchant"], offer["total"]]
-			return line
+			return line + _sell_gap_clause(c, data, region_id, flags, cost)
+	# GUIDE-183: no clinic here and the nearest one costs more than the stones in hand: still name it.
+	var far_any := nearest_selling(c, data, region_id, func(r: String) -> String:
+		for q: Dictionary in data.regions.get(r, {}).get("places", []):
+			if String(q.get("type", "")) == "clinic":
+				return String(q.get("display_name", "clinic"))
+		return "")
+	if not far_any.is_empty() and int(far_any["days"]) > 0:
+		var far_line := "the %s %s treats it for %d stones (you have %d)" % [far_any["result"], _far_where(c, data, region_id, far_any), cost, stones]
+		return far_line + _sell_gap_clause(c, data, region_id, flags, cost)
+	return ""
+
+
+## GUIDE-149: "; sell your <goods> to the <merchant> (about N stones) first" when selling loot would cover the gap to `cost`, else "".
+static func _sell_gap_clause(c: CharacterData, data: GameData, region_id: String, flags: Dictionary, cost: int) -> String:
+	var offer := sell_offer(c, data, region_id, flags)
+	if not offer.is_empty() and c.item_count("spirit_stone") + int(offer["total"]) >= cost:
+		return "; sell your %s to the %s (about %d stones) first" % [offer["goods"], offer["merchant"], offer["total"]]
 	return ""
 
 

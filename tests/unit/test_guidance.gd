@@ -3079,8 +3079,30 @@ func test_heal_source_far_clinic_needs_the_stones() -> void:
 	var line := Guidance.heal_source(c, data(), "misty_forest")
 	assert_true(line.begins_with("the Village Clinic in Qingshi Village ("), line)
 	assert_true(line.ends_with("treats it for %d stones" % cost), line)
+	# GUIDE-183: with no stones the far clinic is still named, with what you hold
 	c.inventory = {}
-	assert_eq(Guidance.heal_source(c, data(), "misty_forest"), "")
+	var broke := Guidance.heal_source(c, data(), "misty_forest")
+	assert_true(broke.begins_with("the Village Clinic in Qingshi Village ("), broke)
+	assert_true(broke.contains("treats it for %d stones (you have 0)" % cost), broke)
+
+
+func test_heal_source_far_clinic_unaffordable_names_trip_and_stones() -> void:
+	var c := _fresh()
+	Injuries.inflict(c, data(), "internal_injury")
+	c.inventory = {"spirit_stone": 5}
+	var line := Guidance.injury_news(c, data(), "internal_injury", "misty_forest")
+	var days := Guidance.route_days(c, data(), "misty_forest", "qingshi_village")
+	assert_true(line.contains("Village Clinic"), line)
+	assert_true(line.contains("(you have 5)"), line)
+	assert_true(line.contains(Calendar.format_duration(days)), line)
+	# Enough stones: the affordable far text has no "(you have"
+	c.inventory = {"spirit_stone": 500}
+	assert_false(Guidance.injury_news(c, data(), "internal_injury", "misty_forest").contains("(you have"))
+	# A clinic here and too few stones: the local text is unchanged
+	c.inventory = {"spirit_stone": 5}
+	var here := Guidance.injury_news(c, data(), "internal_injury", "qingshi_village")
+	assert_true(here.contains("The Village Clinic treats it for") and here.contains("(you have 5)"), here)
+	assert_false(here.contains("Qingshi Village ("), here)
 
 
 
