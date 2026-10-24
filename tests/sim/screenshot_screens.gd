@@ -101,6 +101,7 @@ extends SceneTree
 ## character with Internal Injury, then with a second injury (Qi Deviation); the "Pay the doctor ... saves about" lines must fit or wrap unclipped.
 ## WU-295: `--bounty-shot` writes bounty_menu_<size>.png: the Fallen Star Market bounty board with the longest hunt label any realm sees (the hunt's description is shown for the focused entry).
 ## WU-352: `--hint-shot` also writes hint_qi_two_spots_<size>.png (Foundation Middle member ~120 days short: gather line names Cloud-Sea Cliff in Azure Peak against here, durations joined by "and").
+## WU-359: `--hint-shot` also writes sheet_member_<size>.png (Azure Cloud Inner Disciple, 7400 lifetime contribution, 402 spent: the sheet reads "Contribution: 6998 to spend (lifetime 7400)").
 ## WU-355: `--hint-shot` also writes hint_duty_covers_/hint_duty_skips_<size>.png (Inner Disciple at duty 18/30, 3 days left: the line names the Herb Hall tithe "covers it", else "skips this month's stipend").
 ## WU-357: `--hint-shot` also writes hint_trial_no_style_<size>.png (Foundation Peak, no combat technique, trial open: advice says "learn a combat technique", never "practise").
 ## WU-356: `--hint-shot` also writes hint_missions_last_stage_<size>.png (Qi Refining last stage, missions too dangerous, style mastered: the mission line says break through).
@@ -2534,6 +2535,23 @@ func _start_hint_shot(gs: Node) -> void:
 				c.attributes = duty_saved[6]
 				c.age_days = duty_saved[7]
 				duty_saved.clear()})
+
+	# WU-359: WU-354. The character sheet of an Azure Cloud Inner Disciple with 6998 contribution to spend (7400 lifetime).
+	var sheet_saved: Array = []
+	shots.append({"name": "sheet_member_" + size_tag, "open": func() -> void:
+		hud.get("_banner").visible = false
+		sheet_saved.append(c.sect.duplicate())
+		c.sect = {"id": "azure_cloud_sect", "rank": 1, "contribution": 7400, "spent": 402}
+		var member_sheet: Control = hud.get("_screens")["toggle_character_sheet"]
+		member_sheet.open()
+		for _i in 3:
+			await root.get_tree().process_frame
+		var parsed: String = (member_sheet.get("_text") as RichTextLabel).get_parsed_text()
+		print("hint-shot sheet member: ", parsed.count("\n"), " lines")
+		assert(parsed.contains("Contribution: 6998 to spend (lifetime 7400)"), "sheet lacks the contribution line:\n" + parsed), "close": func() -> void:
+			(hud.get("_screens")["toggle_character_sheet"] as Control).close()
+			c.sect = sheet_saved[0]
+			sheet_saved.clear()})
 
 
 ## WU-190: the encounter window on real encounters with attribute, profession and enemy choices.
