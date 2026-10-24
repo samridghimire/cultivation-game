@@ -66,6 +66,25 @@ static func check_found(c: CharacterData, clan: ClanData, data: GameData) -> Str
 	return ""
 
 
+## GUIDE-176: every need `c` still has before founding a clan, as short phrases in check order
+## ("reach Foundation Establishment", "claim an abode as its seat", "gather 500 spirit stones (you have 120)").
+## Empty when check_found would pass or `clan` exists.
+static func found_needs(c: CharacterData, clan: ClanData, data: GameData) -> PackedStringArray:
+	var needs: PackedStringArray = []
+	var r := rules(data)
+	if clan != null or r.is_empty():
+		return needs
+	var min_index := data.realm_index_of(String(r.get("min_realm", "mortal")))
+	if c.realm_index < min_index:
+		needs.append("reach %s" % data.realms[min_index].name)
+	if bool(r.get("requires_abode", false)) and c.abode == "":
+		needs.append("claim an abode as its seat")
+	var cost := int(r.get("found_cost", 0))
+	if c.item_count("spirit_stone") < cost:
+		needs.append("gather %d spirit stones (you have %d)" % [cost, c.item_count("spirit_stone")])
+	return needs
+
+
 ## Founds `c`'s clan on game day `day`, paying found_cost; family in `people`
 ## joins. Returns {ok, reason, clan, days}.
 static func found(c: CharacterData, clan: ClanData, people: Dictionary, data: GameData, day: int) -> Dictionary:

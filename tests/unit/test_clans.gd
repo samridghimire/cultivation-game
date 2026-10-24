@@ -43,6 +43,25 @@ func test_founding_needs_realm_and_stones() -> void:
 	assert_true(Clans.check_found(c, ClanData.new(), data()).contains("already"))
 
 
+## GUIDE-176: found_needs lists every unmet need in check order.
+func test_found_needs_lists_every_unmet_need() -> void:
+	var c := new_character()
+	c.realm_index = data().realm_index_of("qi_refining")
+	c.abode = ""
+	c.inventory = {"spirit_stone": 120}
+	var needs := Clans.found_needs(c, null, data())
+	assert_eq(needs.size(), 3)
+	assert_eq(needs[0], "reach Foundation Establishment")
+	assert_eq(needs[1], "claim an abode as its seat")
+	assert_eq(needs[2], "gather 500 spirit stones (you have 120)")
+	var f := _founder()
+	f.inventory = {"spirit_stone": 600}
+	assert_eq(Clans.found_needs(f, null, data()).size(), 0)
+	f.abode = ""
+	assert_eq(Array(Clans.found_needs(f, null, data())), ["claim an abode as its seat"])
+	assert_eq(Clans.found_needs(c, ClanData.new(), data()).size(), 0)
+
+
 func test_founding_needs_an_abode_as_seat() -> void:
 	assert_true(bool(Clans.rules(data()).get("requires_abode", false)))
 	var c := _founder()

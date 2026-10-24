@@ -948,6 +948,12 @@ func test_rogue_goal_names_clan_and_final_realm_has_no_realm_line() -> void:
 	c.realm_index = 2
 	c.sect = {}
 	assert_true(_has(Guidance.goals(c, data(), {}), "Found a clan: "))
+	# GUIDE-176: all three needs at once.
+	c.realm_index = data().realm_index_of("qi_refining")
+	c.abode = ""
+	c.inventory = {"spirit_stone": 120}
+	assert_true(_has(Guidance.goals(c, data(), {}), "Found a clan: reach Foundation Establishment, claim an abode as its seat and gather 500 spirit stones (you have 120)."))
+	c.realm_index = 2
 	c.realm_index = data().realms.size() - 1
 	for l in Guidance.goals(c, data(), {}):
 		assert_false(l.begins_with("Reach "))

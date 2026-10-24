@@ -3049,9 +3049,9 @@ static func goals(c: CharacterData, data: GameData, flags: Dictionary, clan: Cla
 				else:
 					out.append("Become %s: you can seek promotion at the sect hall.%s" % [rank_name, (" The trial: %s." % foe) if foe != "" else ""])
 	elif clan == null:
-		var why := Clans.check_found(c, clan, data)
-		if why != "":
-			out.append("Found a clan: %s" % why)
+		var needs := Clans.found_needs(c, clan, data)
+		if not needs.is_empty():
+			out.append("Found a clan: " + Text.join_and(needs) + ".")
 	var craft := _profession_goal(c, data)
 	if craft != "":
 		out.append(craft)
