@@ -71,6 +71,7 @@ directly on `main`, and an **Opus reviewer** reviews what landed. There are **no
    them, which avoids the merge conflicts that used to block everything. Put follow-up ideas in your commit message under
    `Follow-ups:`.
 5. Run `tools/test.sh` until it prints `ALL CHECKS PASSED`. (A brand-new `class_name` is only visible after an import; test.sh imports first.)
+   If you touched `data/*.json`, `src/core` or guidance text, also run `tools/balance.sh --check` (about 25 min) and refresh (`tools/balance.sh`) the sections your change explains; list any unexplained diff under `Follow-ups:`.
 6. Commit with the subject `[<task-id>] <title>` (the planner marks tasks done by finding that id on main).
 7. **Land it on main yourself:** `git fetch origin main && git rebase --no-keep-empty --force-rebase origin/main` (this also drops the empty
    claim commit), run `tools/test.sh` again, then `git push origin HEAD:main`.
