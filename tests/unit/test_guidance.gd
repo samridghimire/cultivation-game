@@ -3111,12 +3111,23 @@ func test_heal_source_far_clinic_names_the_way() -> void:
 	c.realm_index = 1
 	Injuries.inflict(c, data(), "broken_bones")
 	c.inventory = {"spirit_stone": 500}
+	# Azure Peak and Fallen Star Market have clinics now; take them away so the way home is Qingshi's.
+	var saved := {}
+	for rid: String in ["azure_peak", "fallen_star_market"]:
+		var places: Array = data().regions[rid]["places"]
+		saved[rid] = places.duplicate()
+		for i in range(places.size() - 1, -1, -1):
+			if String((places[i] as Dictionary)["type"]) == "clinic":
+				places.remove_at(i)
 	var hop := Guidance.first_hop(c, data(), "azure_peak", "qingshi_village")
 	assert_true(hop != "" and hop != "qingshi_village")
 	var line := Guidance.heal_source(c, data(), "azure_peak")
+	for rid: String in saved:
+		data().regions[rid]["places"] = saved[rid]
 	assert_true(line.contains("by way of " + Exploration.region_name(data(), hop)), line)
 	assert_true(line.contains("Village Clinic in Qingshi Village ("), line)
 	assert_false(Guidance.heal_source(c, data(), "misty_forest").contains("by way of"))
+	assert_true(Guidance.heal_source(c, data(), "azure_peak").begins_with("the Cliffside Hermit Physician treats it"))
 
 
 func test_heal_source_names_the_injury_a_far_clinic_treats() -> void:

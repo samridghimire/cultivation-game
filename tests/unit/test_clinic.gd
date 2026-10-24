@@ -27,6 +27,14 @@ func test_clinic_is_a_valid_place_type_in_regions() -> void:
 	assert_true(found >= 2)
 
 
+func test_azure_peak_has_a_clinic() -> void:
+	var found := false
+	for place: Dictionary in data().regions["azure_peak"].get("places", []):
+		if place["type"] == "clinic":
+			found = true
+	assert_true(found)
+
+
 func test_healthy_player_can_only_treat_patients() -> void:
 	var gs := _gs()
 	var c := new_character()
