@@ -112,6 +112,7 @@ extends SceneTree
 ## WU-369: `--help-shot` writes help_<topic>_<size>.png for every help page (long ones scroll in a focusable ScrollContainer).
 ## WU-367: `--hint-shot` also writes pill_rank_gate_/pill_rank_open_<size>.png (Foundation Peak Inner Disciple, 6998 contribution: no hint, goal or breakthrough text says "As Elder"; QR8 Outer Disciple: the Foundation pill line still says "As Inner Disciple you could claim it").
 ## WU-362: `--hint-shot` also writes sect_join_prompt_<size>.png (rogue QR3 at the Azure Cloud hall with the join prompt open: the description lists the membership perks and fits the viewport).
+## WU-376: `--hint-shot` also writes hint_injury_far_<size>.png (rogue at Misty Forest, internal injury, 5 stones: a hint names the nearest clinic, its trip and "(you have 5)").
 ## WU-373: `--hint-shot` also writes journal_rank_needs_<size>.png (Inner Disciple, Qi Refining 3, 40 contribution: Goals reads "Become Core Disciple: earn 3000 contribution (you have 40) and reach Foundation Establishment.").
 ## WU-366: `--hint-shot` also writes journal_clan_goal_<size>.png (rogue QR8, no abode, 120 stones: Goals reads "Found a clan: reach Foundation Establishment, claim an abode as its seat and gather 500 spirit stones (you have 120).").
 ## WU-374: `--hint-shot` also writes hint_order_doomed_<size>.png (rank-0 Alchemist, one order gathering cannot finish in time plus a meetable one: no hint leads with the doomed order, the journal still says "longer than the order has").
@@ -2362,6 +2363,41 @@ func _start_hint_shot(gs: Node) -> void:
 			c.inventory = heal_saved[1]
 			c.injuries = heal_saved[2]
 			heal_saved.clear()})
+
+	# WU-376: GUIDE-183. A rogue at Misty Forest (no clinic) with an internal injury and 5 stones: the injury hint names the nearest
+	# clinic, its trip and "(you have 5)".
+	var far_saved: Array = []
+	shots.append({"name": "hint_injury_far_" + size_tag, "open": func() -> void:
+		setup_road.call()
+		far_saved.append_array([c.realm_index, c.stage, c.sect.duplicate(), c.inventory.duplicate(), c.injuries.duplicate(true)])
+		c.realm_index = 1
+		c.stage = 5
+		c.sect = {}
+		c.injuries = {"internal_injury": 100}
+		c.inventory = {"spirit_stone": 5}
+		gs.current_region = "misty_forest"
+		root.get_node("EventBus").player_changed.emit()
+		await root.get_tree().process_frame
+		await root.get_tree().process_frame
+		hud.get("_banner").visible = false
+		var lines: Array = Guidance.hints(c, gs.data, 3, 12, gs.npcs, gs.world_flags, "misty_forest", 40, gs.npc_favor)
+		var dump := "\n".join(lines)
+		var inj_line := ""
+		for h: String in lines:
+			if h.contains("(you have 5)") and (h.contains("Clinic") or h.contains("Physician")):
+				inj_line = h
+				break
+		print("hint-shot injury far: ", inj_line, " | HUD: ", (hud.get("_hint") as Label).text)
+		assert(inj_line != "", "no hint names a far clinic with (you have 5):\n" + dump)
+		assert(inj_line.contains("day"), "the far clinic line gives no trip duration: " + inj_line)
+		var capped: String = hud.call("cap_hint", inj_line)
+		print("hint-shot injury far capped: ", capped), "close": func() -> void:
+			c.realm_index = far_saved[0]
+			c.stage = far_saved[1]
+			c.sect = far_saved[2]
+			c.inventory = far_saved[3]
+			c.injuries = far_saved[4]
+			far_saved.clear()})
 
 	# WU-365: GUIDE-175. A rogue at Qi Refining 8 with ~1400 stones: the sect hint names what Azure Cloud Sect gives its
 	# members; the capped HUD line keeps the sect's name.
