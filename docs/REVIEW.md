@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 257aa9c
+Last reviewed commit: 4bc1f62
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -1134,4 +1134,16 @@ Last reviewed commit: 257aa9c
     sim-only and harmless, but the claim check missed it. Shops still sell Cloud-Mist / Earth Marrow pills to a
     cultivator below their min_realm with no warning (the pill then refuses to work); worth a small shop "needs X
     realm" tag if players complain. ITEM-003 and GUIDE-178 did not run balance.sh --check.
+  - Nothing fixed, nothing filed.
+- 2026-10-28 (reviewer): reviewed 257aa9c..4bc1f62 (GUIDE-179/180/182/183/185, C-247/250/252/253/254, PERF-007,
+  QA-162/163, WU-365/366/371/372/373/375; [PLAN]/[REVIEW] skipped). Main green (ALL CHECKS PASSED). No worker touched
+  BACKLOG/CHANGELOG; no save-format changes; WU-375's shop/inventory realm tag calls Items.realm_block (logic stays in core).
+  - GUIDE-183's far-clinic fallback only runs after the affordable paths; heal_source now prefers an affordable source
+    across several injuries (keyed on the "(you have " marker, brittle but tested). PERF-007 keeps the hint text and only
+    moves the odds_unhurt ratings into the branch that reads them. GUIDE-182 keeps the old wording when no perks.
+    C-254's clinic rect does not overlap Azure Peak's other places; the far-clinic test now strips clinics to keep
+    covering the "by way of" route. WU-375 resolves last run's note on unflagged gated pills.
+  - Notes, not filed: GUIDE-185's "Buy X here" clause and the armor-shop clause can both spend the same stones.
+    C-252's follow-up (blood_demon/snow_lotus/blood_essence pills worth >2.5 Qi Refining stages for <300 stones, no
+    min_realm) belongs to F-005d pacing. C-254 did not run balance.sh --check (worker listed it as a follow-up).
   - Nothing fixed, nothing filed.
