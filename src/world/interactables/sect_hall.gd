@@ -74,7 +74,10 @@ static func confirm_text(player: CharacterData, data: GameData, what: String) ->
 	var duty := ""
 	if not join.ranks.is_empty() and int(join.ranks[0].get("monthly_duty", 0)) > 0:
 		duty = " Monthly duty: %d contribution." % int(join.ranks[0]["monthly_duty"])
-	return "Join %s (%s sect)?%s You can leave later, at a cost." % [join.name, join.alignment_tag, duty]
+	var perks := Sects.membership_line(player, data, join.id)
+	if perks != "":
+		perks = " " + perks
+	return "Join %s (%s sect)?%s%s You can leave later, at a cost." % [join.name, join.alignment_tag, perks, duty]
 
 
 ## "Attend <lecture> (N days)" for a disciple whose sect holds a monthly lecture

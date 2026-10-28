@@ -111,6 +111,7 @@ extends SceneTree
 ## WU-353: `--hint-shot` also writes hint_practice_target_<size>.png (Inner Disciple, Foundation Peak, Iron Fist 2: trial advice says "to level N (now 2)").
 ## WU-369: `--help-shot` writes help_<topic>_<size>.png for every help page (long ones scroll in a focusable ScrollContainer).
 ## WU-367: `--hint-shot` also writes pill_rank_gate_/pill_rank_open_<size>.png (Foundation Peak Inner Disciple, 6998 contribution: no hint, goal or breakthrough text says "As Elder"; QR8 Outer Disciple: the Foundation pill line still says "As Inner Disciple you could claim it").
+## WU-362: `--hint-shot` also writes sect_join_prompt_<size>.png (rogue QR3 at the Azure Cloud hall with the join prompt open: the description lists the membership perks and fits the viewport).
 ## WU-373: `--hint-shot` also writes journal_rank_needs_<size>.png (Inner Disciple, Qi Refining 3, 40 contribution: Goals reads "Become Core Disciple: earn 3000 contribution (you have 40) and reach Foundation Establishment.").
 ## WU-366: `--hint-shot` also writes journal_clan_goal_<size>.png (rogue QR8, no abode, 120 stones: Goals reads "Found a clan: reach Foundation Establishment, claim an abode as its seat and gather 500 spirit stones (you have 120).").
 ## WU-374: `--hint-shot` also writes hint_order_doomed_<size>.png (rank-0 Alchemist, one order gathering cannot finish in time plus a meetable one: no hint leads with the doomed order, the journal still says "longer than the order has").
@@ -2395,6 +2396,30 @@ func _start_hint_shot(gs: Node) -> void:
 			c.inventory = rogue_saved[3]
 			c.injuries = rogue_saved[4]
 			rogue_saved.clear()})
+
+	# WU-362: the sect hall's join prompt lists what membership gives; the description must fit inside the menu.
+	var join_saved: Array = []
+	var join_hall: Node = load("res://src/world/interactables/sect_hall.gd").new()
+	shots.append({"name": "sect_join_prompt_" + size_tag, "open": func() -> void:
+		join_saved.append_array([c.realm_index, c.stage, c.sect.duplicate()])
+		c.realm_index = gs.data.realm_index_of("qi_refining")
+		c.stage = 2
+		c.sect = {}
+		join_hall.call("_ask", "join:azure_cloud_sect")
+		hud.get("_choice_menu").open_for(join_hall)
+		await root.get_tree().process_frame
+		await root.get_tree().process_frame
+		var menu: Control = hud.get("_choice_menu")
+		var vp := root.get_visible_rect()
+		var text: String = join_hall.confirm_text(c, gs.data, "join:azure_cloud_sect")
+		print("sect-join-shot: ", text)
+		assert(text.contains("Members gather qi x"), "no perks in the join prompt: " + text)
+		assert(vp.encloses(menu.get_global_rect()), "join prompt menu leaves the viewport"), "close": func() -> void:
+			hud.get("_choice_menu").close()
+			c.realm_index = join_saved[0]
+			c.stage = join_saved[1]
+			c.sect = join_saved[2]
+			join_saved.clear()})
 
 	# WU-350: GUIDE-153's abode hint. A rogue at Qi Refining 5 with 400 stones and no abode: the journal's Next steps names the
 	# Waterfall Cave and its 300-stone price, and the capped HUD line keeps the cave's name.

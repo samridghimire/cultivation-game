@@ -130,3 +130,18 @@ func test_inventory_risky_use_and_equip_arm_first() -> void:
 	assert_true(c.lifespan_spent_years > years)
 	inv.free()
 	gs.end_session()
+
+
+func test_sect_join_prompt_lists_perks_but_leave_does_not() -> void:
+	var gs := _gs()
+	var c := new_character()
+	c.realm_index = gs.data.realm_index_of("qi_refining")
+	c.stage = 2
+	gs.start_session(c)
+	var hall_script: GDScript = load("res://src/world/interactables/sect_hall.gd")
+	var join: String = hall_script.confirm_text(c, gs.data, "join:azure_cloud_sect")
+	assert_true(join.begins_with("Join Azure Cloud Sect (righteous sect)? Members gather qi x"), join)
+	assert_true(join.ends_with("You can leave later, at a cost."), join)
+	c.sect = {"id": "azure_cloud_sect", "rank": 0, "contribution": 5}
+	assert_false(hall_script.confirm_text(c, gs.data, "leave").contains("Members "), "leave prompt has no perks")
+	gs.end_session()
