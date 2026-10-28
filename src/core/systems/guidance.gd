@@ -173,6 +173,14 @@ static func thin_defence_hint(c: CharacterData, data: GameData, region_id: Strin
 	var treasury := _body_manual_treasury(c, data) if not has_body else {}
 	if not treasury.is_empty():
 		line += " Claim %s from your sect treasury (%d contribution, you have %d)." % [data.items[treasury["item_id"]]["name"], int(treasury["contribution"]), Sects.contribution_balance(c)]
+	# GUIDE-185: a body art sold right here for the stones in hand leads, before the armor shop.
+	var buy_here := ""
+	if not has_body and treasury.is_empty() and region_id != "":
+		var here := _body_manual_merchant(c, data, region_id)
+		if not here.is_empty() and merchant_price(c, data, region_id, String(here["item_id"])) <= c.item_count("spirit_stone"):
+			var here_id := String(here["item_id"])
+			buy_here = " Buy %s from the %s here for %d stones and learn it." % [data.items[here_id]["name"], here["merchant"], merchant_price(c, data, region_id, here_id)]
+			line += buy_here
 	if not has_armor:
 		var armor_start := line.length()
 		if region_id != "":
@@ -189,13 +197,15 @@ static func thin_defence_hint(c: CharacterData, data: GameData, region_id: Strin
 						line += " The %s sells %s for %d stones.%s" % [merchant_selling(data, region_id, loot_armor), data.items[loot_armor]["name"], merchant_price(c, data, region_id, loot_armor), _sell_first_clause(offer)]
 		if line.length() == armor_start:
 			line += " Wear armor."
-	if not has_body and treasury.is_empty():
+	if not has_body and treasury.is_empty() and buy_here == "":
 		line += " Learn a body technique such as Stone Skin Tempering."
 		if region_id != "":
 			var source := body_manual_source(c, data, region_id)
 			if source != "":
-				line += " %s teaches one." % source
 				var manual := _body_manual_merchant(c, data, region_id)
+				if not manual.is_empty():
+					source = "%s (%s here, %d stones)" % [data.items[manual["item_id"]]["name"], manual["merchant"], merchant_price(c, data, region_id, String(manual["item_id"]))]
+				line += " %s teaches one." % source
 				# GUIDE-144: the sell-first clause belongs to the merchant source only, not the sect treasury.
 				if not manual.is_empty() and not offer.is_empty() and _body_manual_treasury(c, data).is_empty():
 					# GUIDE-090: the manual costs more than the stones in hand but the loot would cover it.

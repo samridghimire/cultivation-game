@@ -4993,3 +4993,24 @@ func test_rank_goal_lists_every_need() -> void:
 		if l.begins_with("Become "):
 			line = l
 	assert_true(line.contains("earn 3000 contribution (you have 120) and reach "), line)
+
+
+## GUIDE-185: a body manual sold here and affordable leads the thin-defence line; unaffordable, its price joins the source.
+func test_thin_defence_buys_the_manual_sold_here() -> void:
+	var c := _fresh()
+	c.realm_index = Guidance.THIN_DEFENCE_REALM
+	c.techniques = {}
+	c.equipment = {}
+	c.inventory = {"spirit_stone": 1000}
+	var manual := Guidance._body_manual_merchant(c, data(), "qingshi_village")
+	assert_false(manual.is_empty(), "a body manual is sold in qingshi_village")
+	var item_id := String(manual["item_id"])
+	var price := Guidance.merchant_price(c, data(), "qingshi_village", item_id)
+	var line := Guidance.thin_defence_hint(c, data(), "qingshi_village")
+	var buy := "Your defence is thin. Buy %s from the %s here for %d stones and learn it." % [data().items[item_id]["name"], manual["merchant"], price]
+	assert_true(line.begins_with(buy), line)
+	assert_false(line.contains("Learn a body technique"), line)
+	c.inventory = {"spirit_stone": 5}
+	line = Guidance.thin_defence_hint(c, data(), "qingshi_village")
+	assert_false(line.contains("Buy "), line)
+	assert_true(line.contains(", %d stones) teaches one." % price), line)
