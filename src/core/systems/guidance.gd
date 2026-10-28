@@ -3168,12 +3168,27 @@ static func next_recipe_line(c: CharacterData, data: GameData, prof_id: String, 
 	var source := ""
 	if scroll_id != "":
 		source = source_phrase(c, data, scroll_id, region_id, today)
+		if source == "sold by merchants" and region_id != "":
+			source = _scroll_merchant_phrase(c, data, region_id, scroll_id, source)
 		if source == "":
 			var found := Items.sources(data, scroll_id)
 			source = String(found[0]).to_lower() if not found.is_empty() else ""
 	if source == "":
 		source = "found in the wider world"
 	return "Next recipe: %s (rank %d). Its scroll: %s." % [recipe.get("name", recipe_id), int(recipe.get("min_rank", 0)), source]
+
+
+## GUIDE-184: "sold by the <Merchant> here for N stones" / "... in <Region> (<days>) for N stones" for the
+## nearest merchant stocking `scroll_id`; `fallback` when none is in reach.
+static func _scroll_merchant_phrase(c: CharacterData, data: GameData, region_id: String, scroll_id: String, fallback: String) -> String:
+	var far := nearest_selling(c, data, region_id, func(r: String) -> String: return merchant_selling(data, r, scroll_id))
+	if far.is_empty():
+		return fallback
+	var rid: String = far["region_id"]
+	var price := merchant_price(c, data, rid, scroll_id)
+	if rid == region_id:
+		return "sold by the %s here for %d stones" % [far["result"], price]
+	return "sold by the %s %s for %d stones" % [far["result"], _far_where(c, data, region_id, far), price]
 
 
 ## The next rank of the player's highest-ranked unmaxed profession (GOAL-004), or "".

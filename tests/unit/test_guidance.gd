@@ -2809,6 +2809,42 @@ func test_next_recipe_line_sources_and_length() -> void:
 	assert_true(seen_other, "some scroll is only found elsewhere")
 
 
+func test_next_recipe_line_names_the_scroll_merchant() -> void:
+	# GUIDE-184: "sold by merchants" becomes the merchant, its region, distance and price.
+	var checked_far := false
+	var checked_here := false
+	for rid: String in data().recipes:
+		var prof_id := String(data().recipes[rid].get("profession", ""))
+		var scroll := data().scroll_for_recipe(rid)
+		if scroll == "":
+			continue
+		var c := CharacterData.new()
+		c.professions[prof_id] = {"rank": int(data().recipes[rid].get("min_rank", 0)), "xp": 0.0}
+		for other: String in data().recipes:
+			if other != rid and String(data().recipes[other].get("profession", "")) == prof_id:
+				c.known_recipes.append(other)
+		if Guidance.source_phrase(c, data(), scroll, "", 0) != "sold by merchants":
+			continue
+		if Guidance.next_recipe_line(c, data(), prof_id, "", 0).contains("sold by merchants") == false:
+			continue
+		for region: String in ["qingshi_village", "fallen_star_market"]:
+			var far := Guidance.nearest_selling(c, data(), region, func(r: String) -> String: return Guidance.merchant_selling(data(), r, scroll))
+			if far.is_empty():
+				continue
+			var line := Guidance.next_recipe_line(c, data(), prof_id, region, 0)
+			var price := Guidance.merchant_price(c, data(), String(far["region_id"]), scroll)
+			assert_true(line.contains("sold by the %s " % far["result"]), line)
+			assert_true(line.contains("for %d stones." % price), line)
+			assert_false(line.contains("sold by merchants"), line)
+			if far["region_id"] == region:
+				assert_true(line.contains(" here for "), line)
+				checked_here = true
+			else:
+				assert_true(line.contains("in %s (" % far["region_name"]), line)
+				checked_far = true
+	assert_true(checked_here and checked_far, "covered both the here and far wording")
+
+
 func test_next_recipe_line_empty_when_all_known_or_doctor() -> void:
 	var c := CharacterData.new()
 	c.professions["alchemist"] = {"rank": Professions.max_rank(data()), "xp": 0.0}
