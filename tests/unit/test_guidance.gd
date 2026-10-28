@@ -953,7 +953,20 @@ func test_rogue_goal_names_clan_and_final_realm_has_no_realm_line() -> void:
 	c.realm_index = data().realm_index_of("qi_refining")
 	c.abode = ""
 	c.inventory = {"spirit_stone": 120}
-	assert_true(_has(Guidance.goals(c, data(), {}), "Found a clan: reach Foundation Establishment, claim an abode as its seat and gather 500 spirit stones (you have 120)."))
+	assert_true(_has(Guidance.goals(c, data(), {}), "Found a clan: reach Foundation Establishment, claim an abode as its seat ("))
+	assert_true(_has(Guidance.goals(c, data(), {}), ") and gather 500 spirit stones (you have 120)."))
+	# GUIDE-186: the seat names the abode _abode_hint points at, its region, distance and price.
+	c.inventory = {"spirit_stone": 1000}
+	var pick := Guidance._abode_pick(c, data())
+	var abode: Dictionary = data().abodes[pick]
+	var aname := Abodes.abode_name(data(), pick)
+	var rname := Exploration.region_name(data(), String(abode["region"]))
+	var lines := Guidance.goals(c, data(), {}, null, 1.0, "qingshi_village")
+	assert_true(_has(lines, "claim an abode as its seat (%s in %s, " % [aname, rname]))
+	assert_true(_has(lines, "%d stones)" % int(abode["cost"])))
+	assert_true(_has(Guidance.goals(c, data(), {}, null, 1.0, String(abode["region"])), "(%s in %s, here, " % [aname, rname]))
+	assert_true(Guidance._abode_hint(c, data(), "qingshi_village").begins_with("Claim %s in %s" % [aname, rname]))
+	c.inventory = {"spirit_stone": 120}
 	c.realm_index = 2
 	c.realm_index = data().realms.size() - 1
 	for l in Guidance.goals(c, data(), {}):

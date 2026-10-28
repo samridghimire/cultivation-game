@@ -2796,18 +2796,19 @@ func _start_hint_shot(gs: Node) -> void:
 		root.get_node("EventBus").player_changed.emit()
 		await root.get_tree().process_frame
 		hud.get("_banner").visible = false
-		var want := "Found a clan: reach Foundation Establishment, claim an abode as its seat and gather 500 spirit stones (you have 120)."
+		var want_head := "Found a clan: reach Foundation Establishment, claim an abode as its seat ("
+		var want_tail := ") and gather 500 spirit stones (you have 120)."
 		var clan_line := ""
 		for l: String in Guidance.goals(c, gs.data, gs.world_flags):
 			if l.begins_with("Found a clan"):
 				clan_line = l
-		assert(clan_line == want, "clan goal line wrong: " + clan_line)
+		assert(clan_line.begins_with(want_head) and clan_line.ends_with(want_tail), "clan goal line wrong: " + clan_line)
 		var cj: Control = hud.get("_screens")["toggle_journal"]
 		await _show_journal(cj, "Goals")
 		for _i in 3:
 			await root.get_tree().process_frame
 		var parsed: String = (cj.get("_text") as RichTextLabel).get_parsed_text()
-		assert(parsed.contains(want), "journal lacks the clan goal:\n" + parsed), "close": func() -> void:
+		assert(parsed.contains(want_head), "journal lacks the clan goal:\n" + parsed), "close": func() -> void:
 			(hud.get("_screens")["toggle_journal"] as Control).close()
 			c.realm_index = clan_saved[0]
 			c.stage = clan_saved[1]

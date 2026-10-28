@@ -2380,15 +2380,8 @@ static func _dao_hint(c: CharacterData, data: GameData) -> String:
 	return ""
 
 
-## Seclusion at the player's abode, or claiming one once they cultivate.
-## GUIDE-153: the claim names the abode, where it is, what it costs and what it gives.
-static func _abode_hint(c: CharacterData, data: GameData, region_id: String = "", flags: Dictionary = {}) -> String:
-	if c.abode != "":
-		var density := float(Abodes.get_def(data, c.abode).get("qi_density", 1.0)) * (1.0 + Abodes.array_bonus(c, data))
-		return "Cultivate in seclusion at %s (qi x%s)." % [Abodes.abode_name(data, c.abode), String.num(density, 2)]
-	if c.realm_index < 1 or data.abodes.is_empty():
-		return ""
-	# the densest abode `c` can enter and afford, else the cheapest one they can enter
+## The densest abode `c` can enter and afford, else the cheapest one they can enter ("" when none).
+static func _abode_pick(c: CharacterData, data: GameData) -> String:
 	var stones := c.item_count("spirit_stone")
 	var pick := ""
 	for abode_id: String in data.abodes:
@@ -2409,6 +2402,40 @@ static func _abode_hint(c: CharacterData, data: GameData, region_id: String = ""
 				pick = abode_id
 			elif not affordable and int(def.get("cost", 0)) < int(best.get("cost", 0)):
 				pick = abode_id
+	return pick
+
+
+## " (<Abode> in <Region>, <days>, N stones)" for the abode `_abode_hint` would name.
+static func _abode_seat_clause(c: CharacterData, data: GameData, region_id: String) -> String:
+	var pick := _abode_pick(c, data)
+	if pick == "":
+		return ""
+	var abode: Dictionary = data.abodes[pick]
+	var abode_region := String(abode.get("region", ""))
+	var parts: Array[String] = [Abodes.abode_name(data, pick) + " in " + Exploration.region_name(data, abode_region)]
+	if region_id != "":
+		if abode_region == region_id:
+			parts.append("here")
+		else:
+			var days := route_days(c, data, region_id, abode_region)
+			if days > 0:
+				parts.append(Calendar.format_duration(days))
+	var stones := c.item_count("spirit_stone")
+	var cost := int(abode.get("cost", 0))
+	parts.append("%d stones%s" % [cost, "" if stones >= cost else " (you have %d)" % stones])
+	return " (%s)" % ", ".join(parts)
+
+
+## Seclusion at the player's abode, or claiming one once they cultivate.
+## GUIDE-153: the claim names the abode, where it is, what it costs and what it gives.
+static func _abode_hint(c: CharacterData, data: GameData, region_id: String = "", flags: Dictionary = {}) -> String:
+	if c.abode != "":
+		var density := float(Abodes.get_def(data, c.abode).get("qi_density", 1.0)) * (1.0 + Abodes.array_bonus(c, data))
+		return "Cultivate in seclusion at %s (qi x%s)." % [Abodes.abode_name(data, c.abode), String.num(density, 2)]
+	if c.realm_index < 1 or data.abodes.is_empty():
+		return ""
+	var stones := c.item_count("spirit_stone")
+	var pick := _abode_pick(c, data)
 	if pick == "":
 		return "Claim a cave abode to cultivate in seclusion and store your treasures."
 	var abode: Dictionary = data.abodes[pick]
@@ -3099,6 +3126,11 @@ static func goals(c: CharacterData, data: GameData, flags: Dictionary, clan: Cla
 	elif clan == null:
 		var needs := Clans.found_needs(c, clan, data)
 		if not needs.is_empty():
+			var seat := _abode_seat_clause(c, data, region_id)
+			if seat != "":
+				for i in needs.size():
+					if needs[i] == "claim an abode as its seat":
+						needs[i] += seat
 			out.append("Found a clan: " + Text.join_and(needs) + ".")
 	var craft := _profession_goal(c, data)
 	if craft != "":
