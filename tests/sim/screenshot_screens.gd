@@ -112,6 +112,7 @@ extends SceneTree
 ## WU-369: `--help-shot` writes help_<topic>_<size>.png for every help page (long ones scroll in a focusable ScrollContainer).
 ## WU-367: `--hint-shot` also writes pill_rank_gate_/pill_rank_open_<size>.png (Foundation Peak Inner Disciple, 6998 contribution: no hint, goal or breakthrough text says "As Elder"; QR8 Outer Disciple: the Foundation pill line still says "As Inner Disciple you could claim it").
 ## WU-362: `--hint-shot` also writes sect_join_prompt_<size>.png (rogue QR3 at the Azure Cloud hall with the join prompt open: the description lists the membership perks and fits the viewport).
+## WU-380: `--hint-shot` also writes journal_recipe_treasury_<size>.png (Azure Cloud Outer Disciple Alchemist, 500 contribution: Goals reads "Its scroll: claim it from your sect treasury for N contribution.").
 ## WU-383: `--hint-shot` also writes hint_heal_before_travel_<size>.png (injured Foundation rogue, Azure Peak clinic removed: the far-qi Travel line ends "Heal first: Azure Peak has no healer."; the capped HUD line cuts it).
 ## WU-381: `--hint-shot` also writes hint_thin_defence_budget_<size>.png (same rogue with the manual price + 10 stones: HUD line still starts with the manual; no armor named costs over 10).
 ## WU-378: `--hint-shot` also writes hint_thin_defence_local_<size>.png (Foundation rogue in Qingshi, no armor or body art, 1000 stones: the capped HUD line starts "Your defence is thin. Buy Manual: Stone Skin Tempering"; the journal's clan goal names the Waterfall Cave).
@@ -2928,6 +2929,52 @@ func _start_hint_shot(gs: Node) -> void:
 			c.life_stats = clan_saved[6]
 			c.techniques = clan_saved[7]
 			clan_saved.clear()})
+
+	# WU-380: GUIDE-189. An Azure Cloud Outer Disciple Alchemist with 500 contribution whose next recipe is Meridian Mending Pill:
+	# the journal's Goals section says its scroll can be claimed from the sect treasury.
+	var recipe_saved: Array = []
+	shots.append({"name": "journal_recipe_treasury_" + size_tag, "open": func() -> void:
+		setup_long.call()
+		recipe_saved.append_array([c.realm_index, c.stage, c.sect.duplicate(), c.inventory.duplicate(), c.professions.duplicate(true), c.known_recipes.duplicate(), c.life_stats.duplicate()])
+		c.life_stats["fights_won"] = maxi(1, int(c.life_stats.get("fights_won", 0)))
+		c.life_stats["encounters"] = maxi(5, int(c.life_stats.get("encounters", 0)))
+		c.realm_index = 1
+		c.stage = 3
+		c.qi = 0.0
+		c.sect = {"id": "azure_cloud_sect", "rank": 0, "contribution": 500, "spent": 0}
+		c.inventory = {}
+		c.professions = {"alchemist": {"rank": 1, "xp": 0.0}}
+		c.known_recipes.clear()
+		for rid: String in gs.data.recipes:
+			var r: Dictionary = gs.data.recipes[rid]
+			if String(r.get("profession", "")) == "alchemist" and int(r.get("min_rank", 0)) < 1:
+				c.known_recipes.append(rid)
+		gs.current_region = "qingshi_village"
+		root.get_node("EventBus").player_changed.emit()
+		await root.get_tree().process_frame
+		hud.get("_banner").visible = false
+		var cost := int(Sects.shop_entry(c, gs.data, "recipe_meridian_mending_pill")["contribution"])
+		var want := "Its scroll: claim it from your sect treasury for %d contribution." % cost
+		var recipe_line := ""
+		for l: String in Guidance.goals(c, gs.data, gs.world_flags, gs.clan, 1.0, gs.current_region, int(root.get_node("GameClock").total_days)):
+			if l.begins_with("Next recipe: Meridian Mending Pill"):
+				recipe_line = l
+		assert(recipe_line.ends_with(want), "recipe goal line wrong: " + recipe_line)
+		var rj: Control = hud.get("_screens")["toggle_journal"]
+		await _show_journal(rj, "Goals")
+		for _i in 3:
+			await root.get_tree().process_frame
+		var parsed: String = (rj.get("_text") as RichTextLabel).get_parsed_text()
+		assert(parsed.contains(want), "journal lacks the treasury scroll clause:\n" + parsed), "close": func() -> void:
+			(hud.get("_screens")["toggle_journal"] as Control).close()
+			c.realm_index = recipe_saved[0]
+			c.stage = recipe_saved[1]
+			c.sect = recipe_saved[2]
+			c.inventory = recipe_saved[3]
+			c.professions = recipe_saved[4]
+			c.known_recipes = recipe_saved[5]
+			c.life_stats = recipe_saved[6]
+			recipe_saved.clear()})
 
 	# WU-378: GUIDE-185 + GUIDE-186. A Foundation rogue in Qingshi with no armor or body art and 1000 stones: the capped HUD line
 	# leads with the body manual sold here; the journal's clan goal names the Waterfall Cave.
