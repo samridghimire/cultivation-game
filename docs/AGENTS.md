@@ -1,17 +1,29 @@
 # The agent team
 
-How the 24/7 cloud agents (claude.ai routines) build this game. Manage them at https://claude.ai/code/routines.
+How the cloud agents (claude.ai routines) build this game. Manage them at https://claude.ai/code/routines.
 
 ## Roles
 
 | Role | Model | Schedule (UTC) | Does |
 |---|---|---|---|
-| **Planner** (orchestrator) | Opus 5.5 | every 2h at :10 | Owns `docs/BACKLOG.md`, `docs/CHANGELOG.md`, `docs/DESIGN.md` "Current systems". Marks tasks done from `[ID]` commits on main, writes detailed specs for the next tasks, keeps every role stocked, orders work so the game becomes playable end to end. |
-| **Reviewer** | Opus 5.5 | every 2h at :40 (odd hours) | Reviews every commit that landed on main since `docs/REVIEW.md`'s last reviewed commit. Fixes red builds immediately (small fix or `git revert`), files P0 fix tasks for real problems, and records what it reviewed. |
-| Systems worker A / B | Sonnet 5.5 | hourly at :05 / :35 | Game rules in `src/core`, with tests. |
-| World & UI worker A / B | Sonnet 5.5 | hourly at :15 / :45 | Scenes, screens, gamepad UX. |
-| Content worker | Sonnet 5.5 | hourly at :25 | `data/*.json` content. |
-| QA worker | Sonnet 5.5 | hourly at :55 | Bugs, missing tests, balance sims. |
+| **Planner** (orchestrator) | Opus 5.5 | every 6h at :10 (00, 06, 12, 18) | Owns `docs/BACKLOG.md`, `docs/CHANGELOG.md`, `docs/DESIGN.md` "Current systems". Marks tasks done from `[ID]` commits on main, writes detailed specs for the next tasks, keeps every role stocked, orders work so the game becomes playable end to end. |
+| **Reviewer** | Opus 5.5 | every 6h at :40 (03, 09, 15, 21) | Reviews every commit that landed on main since `docs/REVIEW.md`'s last reviewed commit. Fixes red builds immediately (small fix or `git revert`), files P0 fix tasks for real problems, and records what it reviewed. |
+| Systems worker A / B | Sonnet 5.5 | A every 2h at :05 (00, 02, ...) / B every 3h at :20 (01, 04, ...) | Game rules in `src/core`, with tests. |
+| World & UI worker A / B | Sonnet 5.5 | A every 2h at :35 (00, 02, ...) / B every 3h at :50 (01, 04, ...) | Scenes, screens, gamepad UX, pixel art (GFX). |
+| Content worker | Sonnet 5.5 | every 4h at :25 (02, 06, ...) | `data/*.json` content. |
+| QA worker | Sonnet 5.5 | every 4h at :55 (03, 07, ...) | Bugs, missing tests, balance sims. |
+
+## Usage budget (owner request, 2026-10-28)
+At the old pace (6 workers every hour, planner and reviewer every 2h: about 168 runs a day) the plan's usage ran out after about
+3 days and the agents sat idle for the rest of the week. The schedule above is about 52 runs a day (roughly a third of the cost),
+so the budget lasts the whole week with a little margin. If usage still runs out early, slow the B workers first; if a lot is
+left at the end of the week, speed them up. Every agent spends usage only on work that lands:
+- No task for your role (all done, claimed or blocked)? Stop right away: no test run, no exploring, no "small extra" work.
+- Read only the parts of BACKLOG/DESIGN/HANDOFF you need (grep for your task id), not whole files.
+- Run `tools/balance.sh --check` (about 25 min) only when the change alters numbers the sim measures (balance values in data,
+  formulas in `src/core`). Hint and wording changes don't need it.
+- Planner: write fewer, larger tasks (one meaningful player-facing change each) instead of many one-line hint tweaks.
+  Workers get fewer runs now, so each run should count.
 
 ## Flow
 1. The planner writes or updates a task in BACKLOG.md with status `todo`, plus `spec` when it has a detailed implementation spec.

@@ -21,6 +21,30 @@ Your lifespan is limited, and breaking through to a higher realm is how you exte
 5. **Systems over scripts.** Content is data-driven so the world can grow quickly.
 6. **Family and legacy.** You can marry, have children, train your descendants, and found a clan as its Patriarch or Matriarch. Family and sect are not exclusive: you can do either, both, or neither.
 
+## Reference games (owner request)
+When planning a feature, check how popular cultivation and wuxia games handled it, and say in the spec which one you drew on.
+Borrow ideas and mechanics, never names, characters, story, UI layouts or art. We are not recreating any of them.
+- **Tale of Immortal**: open-world sandbox. NPCs who cultivate and remember you, sect life, breakthrough preparation with
+  "heart demon" trials, rich item and technique variety. The reference for "a living world" (pillar 4).
+- **Amazing Cultivation Simulator**: sect management, disciples with their own roots and moods, feng shui and qi flow,
+  tribulations. The reference for running a sect or clan base later on.
+- **The Scroll of Taiwu**: a generational wuxia sandbox. Marriage, heirs, inheriting the protagonist role, NPC relationships.
+  The reference for Family & legacy (pillar 6).
+- **Immortal Life**: a cozy cultivation life sim. Farming, crafting and day-to-day routines. The reference for professions
+  and the spirit garden.
+- **Wandering Sword**: a pixel-art wuxia RPG. The reference for readable top-down pixel art, towns and martial-arts presentation.
+
+## Art direction (owner decision, 2026-10-28)
+The owner finds the code-drawn placeholder art too basic. **Decided:** top-down **pixel art**, built from **free licensed asset
+packs** (CC0 preferred, CC-BY with credit is fine; no NC/ND or unclear licenses). Custom art may be commissioned before release.
+- Pick one coherent pack family (one tile size, ideally 16x16 or 32x32, one palette feel) with an East Asian / xianxia look
+  where possible: tiled terrain, buildings, trees, water, characters with 4-direction walk cycles, item icons, UI frames.
+- Every file gets a row in `docs/ASSETS.md` (file, pack, author, license, URL). Credits screen lists CC-BY authors.
+- Use nearest-neighbour filtering and integer scaling so pixels stay crisp at 1280x800 (Steam Deck) and 1080p.
+- Keep the `_draw()` placeholder as a fallback when a sprite is missing, so content can still be added as data first.
+- Planner: art tasks use the `GFX-xxx` prefix (ART-xxx is the Creation Artifact) and sit in P0 next to the first-hour work,
+  starting with the start village, the player and the HUD, the things a new player sees first.
+
 ## Family & Clan system (owner priority)
 The player may start a family and/or join a sect.
 - **Courtship and marriage.** Build favor with NPCs and marry a Dao companion. Spouses are full characters who cultivate, age and can die. Dual cultivation gives both partners a bonus.
@@ -137,7 +161,6 @@ Void Refinement → Body Integration → Mahayana → Tribulation Transcendence.
 - Permadeath, or reincarnation / legacy system on death?
 - Real-time world (NPCs move, time flows) or turn-like time that only passes through actions (current)?
 - Combat style: turn-based, real-time action, or auto-resolved with techniques/strategy?
-- Art direction: pixel art? ink-wash painterly? (affects asset pipeline)
 - Should evil paths include demonic cultivation techniques (blood refining, soul devouring) as a separate progression tree?
 - (FAM-002) Smallest version implemented, tunable in `data/family.json`: courting is only between opposite genders, an NPC of a higher major realm (or flagged `proud`) refuses to be a concubine, proposals need favor 60, at most 1 major realm apart and alignment within 600. Should same-gender Dao companions be allowed, and are these thresholds right?
 - (FAM-002g) **Widowed spouses.** Default the agents will build: a dead spouse stays in your family history but no longer takes up a wife/concubine/Dao companion slot, so you can remarry. Should there be a mourning period or an alignment/favor penalty for remarrying quickly?

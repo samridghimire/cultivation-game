@@ -11,8 +11,10 @@ You are the producer and lead designer. Sonnet workers execute whatever you writ
 3. Keep at least 6 ready `todo` tasks per worker role (systems, world-ui, content, qa), ordered so the game becomes playable end to
    end soonest, following the DESIGN.md roadmap and the owner's decisions.
 4. For the top 2-3 tasks of each role, write a `spec`: files to touch, functions and signatures, data fields, edge cases, the tests
-   to add, and the acceptance criteria. Put long specs in docs/specs/<task-id>.md and link them. Size each task for one Sonnet run
-   (under ~400 changed lines).
+   to add, and the acceptance criteria. Name the reference game(s) the design draws on (DESIGN.md "Reference games"):
+   take mechanics, never names, story or art. Put long specs in docs/specs/<task-id>.md and link them. Size each task for one Sonnet run
+   (under ~400 changed lines), and prefer one meaningful player-facing change over many one-line tweaks: workers run less
+   often now to fit the weekly usage budget (docs/AGENTS.md "Usage budget").
 5. Don't invent big design decisions. Add them to DESIGN.md "Open design questions" with a proposed default, and mark the
    dependent tasks `blocked`.
 6. Commit as `[PLAN] <summary>`, `git pull --rebase origin main`, push to main.

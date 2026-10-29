@@ -47,7 +47,8 @@ tests/unit/test_*.gd   Tests extend TestCase. Methods named test_* run automatic
    When you bump `SaveManager.SAVE_VERSION`, add a fixture save of the new version to `tests/fixtures/saves/` (keep the old ones);
    `tests/unit/test_save_fixtures.gd` loads every fixture.
 6. **Static typing everywhere** (`var x: int`, `-> void`). Tabs for indentation. `snake_case` files/functions, `PascalCase` classes. A `##` doc comment at the top of every script.
-7. Placeholder art is drawn in `_draw()`. Don't add binary assets without a clear license; note the source in `docs/ASSETS.md`.
+7. Art is top-down pixel art from free licensed packs (see DESIGN.md "Art direction"); `_draw()` placeholders remain the fallback.
+   Don't add binary assets without a clear license (CC0/CC-BY); record every file's source and license in `docs/ASSETS.md`.
 8. Keep the game controllable with a gamepad: every new menu must have keyboard/gamepad focus (`grab_focus`).
 
 ## Autonomous agent workflow
@@ -65,13 +66,15 @@ directly on `main`, and an **Opus reviewer** reviews what landed. There are **no
      log looks short);
    - not claimed: no remote branch `claude/<task-id>-*` exists (`git fetch --prune && git branch -r`).
    Prefer tasks marked `spec` (the planner wrote a detailed spec for them, sometimes in `docs/specs/<task-id>.md`).
+   If there is no such task for your role, stop right away: no test run and no extra work (usage budget, see `docs/AGENTS.md`).
 3. **Claim it** with a timestamped claim commit: `git checkout -b claude/<task-id>-<slug>`,
    `git commit --allow-empty -m "claim <task-id>"`, `git push -u origin HEAD`. Do this before writing code.
 4. Implement it, small and complete, with tests. **Do not edit `docs/BACKLOG.md` or `docs/CHANGELOG.md`**. The planner keeps
    them, which avoids the merge conflicts that used to block everything. Put follow-up ideas in your commit message under
    `Follow-ups:`.
 5. Run `tools/test.sh` until it prints `ALL CHECKS PASSED`. (A brand-new `class_name` is only visible after an import; test.sh imports first.)
-   If you touched `data/*.json`, `src/core` or guidance text, also run `tools/balance.sh --check` (about 25 min) and refresh (`tools/balance.sh`) the sections your change explains; list any unexplained diff under `Follow-ups:`.
+   If your change alters numbers the balance sim measures (balance values in `data/*.json`, formulas in `src/core`; not hint or
+   wording changes), also run `tools/balance.sh --check` (about 25 min) and refresh (`tools/balance.sh`) the sections your change explains; list any unexplained diff under `Follow-ups:`.
 6. Commit with the subject `[<task-id>] <title>` (the planner marks tasks done by finding that id on main).
 7. **Land it on main yourself:** `git fetch origin main && git rebase --no-keep-empty --force-rebase origin/main` (this also drops the empty
    claim commit), run `tools/test.sh` again, then `git push origin HEAD:main`.
