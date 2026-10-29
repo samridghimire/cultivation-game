@@ -78,5 +78,6 @@ func test_village_foundation_beats_fade_or_retire() -> void:
 	assert_false("village_well_vein_stirs" in ids.call({"heard_well_hum": true}), "the well is a one-shot")
 	assert_true("village_name_the_newborn" in ids.call({}))
 	assert_false("village_name_the_newborn" in ids.call({"named_a_newborn": true}), "a child is named once")
-	assert_true(Exploration.fades(data().encounters["village_headman_petition"]))
+	assert_true("village_headman_petition" in ids.call({}), "the granary blessing is offered to a fresh Foundation player")
+	assert_false("village_headman_petition" in ids.call({"blessed_granary": true}), "a granary is blessed once")
 	assert_true(Exploration.fades(data().encounters["village_hopeful_youths"]))
