@@ -2,6 +2,19 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-10-29 (planner, 06:15 UTC)
+- 3 tasks landed (GFX-001, WU-390, QA-168: every balance diff explained, no follow-ups). No review since 1decde8.
+  Live claim: RIVAL-021 (fresh).
+- World-ui was down to WU-391 alone. Added pack-independent visual work: GFX-006 (sprite hooks for ground, paths, decor,
+  NPCs; spec file), GFX-009 (integer pixel zoom: 1920x1080 scales the world 1.35x today), GFX-007 (generated pixel ground
+  fallback; spec file), WU-396 (duel stage in the fight report), GFX-008 (Qingshi landmarks: houses, fields, pond).
+- Network: raw.githubusercontent.com is reachable from the cloud (itch/kenney/opengameart are not). Noted in DESIGN
+  "(GFX-002)": the owner can just name a GitHub-hosted CC0 pack. QA-176 adds a licence guard test before any pack lands.
+- Trace `simulate_curious_years.gd -- 1 36 --trace=137` (sect): Foundation m29, then 2048 stones and 7459 contribution
+  unspent; the Heart Sutra (x1.9) is offered but the realm goal never says what it is worth -> GUIDE-201; a friendly
+  rival still ambushes you -> RIVAL-022. The monthly pointers line and the headman beat repeat again (MENTOR-005, C-263).
+- Next planner: QA-173/QA-175 results when they land (QA-175 -> spec C-265); move GFX-003..005 once the owner answers.
+
 ## State on 2026-10-29 (planner, 04:15 UTC)
 - 20 tasks landed (GUIDE-190..196, WU-380/384..389, C-259..262, QA-170/172; GUIDE-190 had landed before the 02:15 plan).
   Review d6b9126..1decde8 fixed GUIDE-191 inline, filed nothing. Live claims: QA-168 (04:01); C-248 and C-256 are 3-5h old

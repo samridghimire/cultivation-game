@@ -2,6 +2,9 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-29 [WU-390] The road-unlock notice no longer reads as if you stood in the road's far region.
+- 2026-10-29 [GFX-001] A sprite pipeline for pixel art (data/sprites.json), with today's drawings as the fallback.
+- 2026-10-29 [QA-168] Balance baseline refreshed after the 2026-10-29 guidance and content changes.
 - 2026-10-29 [WU-387] A screenshot check that a claimable sect method leads the HUD hints.
 - 2026-10-29 [C-262] Help says where a Core Forming Pill comes from.
 - 2026-10-29 [C-259] Four new once-only Foundation-realm happenings in Misty Forest and Fallen Star Market.
