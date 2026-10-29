@@ -95,3 +95,39 @@ func test_solid_landmarks_keep_places_spots_and_spawn_reachable() -> void:
 				assert_false(r.grow(16.0).has_point(pt), "%s: solid landmark covers %s" % [region["id"], pt])
 			for path: Array in region["map"].get("paths", []):
 				assert_false(r.intersects(Rect2(float(path[0]), float(path[1]), float(path[2]), float(path[3]))), "%s: landmark on a path" % region["id"])
+
+
+func test_every_region_has_landmarks_inside_the_map() -> void:
+	for region: Dictionary in data().regions.values():
+		var size: Array = region["map"]["size"]
+		var map_rect := Rect2(0, 0, float(size[0]), float(size[1]))
+		var rects := Scenery.landmark_rects(region)
+		assert_gt(rects.size(), 5, "%s needs landmarks" % region["id"])
+		assert_true(rects.size() < 13, "%s has too many landmarks" % region["id"])
+		for r in rects:
+			assert_true(map_rect.encloses(r), "%s: landmark %s leaves the map" % [region["id"], r])
+
+
+func test_solid_landmarks_clear_place_rects_homes_and_abodes_everywhere() -> void:
+	for region: Dictionary in data().regions.values():
+		var keep: Array[Rect2] = []
+		for p: Dictionary in region.get("places", []) + region.get("abodes", []):
+			var sz: Array = p.get("size", [64, 64])
+			keep.append(Rect2(Vector2(float(p["pos"][0]), float(p["pos"][1])) - Vector2(float(sz[0]), float(sz[1])) / 2.0, Vector2(float(sz[0]), float(sz[1]))))
+		if region.has("family_home"):
+			var home: Dictionary = region["family_home"]
+			var hs := Vector2(float(home["size"][0]), float(home["size"][1]))
+			keep.append(Rect2(Vector2(float(home["pos"][0]), float(home["pos"][1])) - hs / 2.0, hs))
+		for r in Scenery.landmark_rects(region, true):
+			for k in keep:
+				assert_false(r.intersects(k), "%s: solid landmark %s overlaps %s" % [region["id"], r, k])
+
+
+func test_new_landmark_kinds_validate_and_are_solid_where_expected() -> void:
+	for kind in ["wall", "cliff", "stream", "lantern", "pine", "stall"]:
+		assert_true(Scenery.LANDMARK_KINDS.has(kind), kind)
+	assert_false(Scenery.SOLID_LANDMARKS.has("stream"))
+	assert_true(Scenery.SOLID_LANDMARKS.has("wall"))
+	var d := GameData.new()
+	d.regions = {"bad": {"id": "bad", "map": {"landmarks": [{"kind": "pond", "pos": [1, 2], "size": [3, 4], "color": "nope"}, {"kind": "stream", "pos": [1, 2], "size": [3, 4], "color": "3b4a2e"}]}}}
+	assert_eq(Scenery.validate(d).size(), 1)

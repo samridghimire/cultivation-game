@@ -14,9 +14,9 @@ const DEFAULTS := {
 	"tree_color": "2e5a2a", "rock_color": "7d7a72", "grass_color": "5f8a45", "flower_color": "e8c9e0",
 }
 const MAX_COUNT := 300
-## map.landmarks kinds (GFX-008); house and well are solid, the rest can be walked over.
-const LANDMARK_KINDS: PackedStringArray = ["house", "field", "pond", "fence", "well"]
-const SOLID_LANDMARKS: PackedStringArray = ["house", "well"]
+## map.landmarks kinds (GFX-008, GFX-012); the solid ones block the player, the rest can be walked over.
+const LANDMARK_KINDS: PackedStringArray = ["house", "field", "pond", "fence", "well", "wall", "cliff", "stream", "lantern", "pine", "stall"]
+const SOLID_LANDMARKS: PackedStringArray = ["house", "well", "wall", "cliff", "lantern", "pine", "stall"]
 ## Clearance kept around places, npc spots and the spawn point, and from the map edge.
 const CLEARANCE := 28.0
 const SPOT_RADIUS := 30.0
@@ -125,6 +125,8 @@ static func validate(data: GameData) -> PackedStringArray:
 				errors.append("Region '%s' has a landmark with an unknown kind (%s)" % [region["id"], ", ".join(LANDMARK_KINDS)])
 			elif not (_is_pair(lm.get("pos")) and _is_pair(lm.get("size")) and float(lm["size"][0]) > 0.0 and float(lm["size"][1]) > 0.0):
 				errors.append("Region '%s' landmark '%s' needs numeric pos and positive size [x, y]" % [region["id"], lm["kind"]])
+			elif lm.has("color") and not (lm["color"] is String and Color.html_is_valid(lm["color"])):
+				errors.append("Region '%s' landmark '%s' color is not a color" % [region["id"], lm["kind"]])
 	return errors
 
 

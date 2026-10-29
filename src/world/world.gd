@@ -485,8 +485,9 @@ func _draw_landmark(lm: Dictionary) -> void:
 		"pond":
 			draw_set_transform(r.get_center(), 0.0, Vector2(1.0, r.size.y / r.size.x))
 			draw_circle(Vector2.ZERO, r.size.x / 2.0 + 5.0, Color("8a9a70"))
-			draw_circle(Vector2.ZERO, r.size.x / 2.0, Color("3f7fa8"))
-			draw_circle(Vector2(-r.size.x * 0.12, -r.size.x * 0.08), r.size.x * 0.22, Color("5fa0c8"))
+			var water := Color(str(lm["color"])) if lm.has("color") else Color("3f7fa8")
+			draw_circle(Vector2.ZERO, r.size.x / 2.0, water)
+			draw_circle(Vector2(-r.size.x * 0.12, -r.size.x * 0.08), r.size.x * 0.22, water.lightened(0.25))
 			draw_set_transform(Vector2.ZERO)
 		"fence":
 			for y in [r.position.y + 6.0, r.end.y - 6.0]:
@@ -498,6 +499,70 @@ func _draw_landmark(lm: Dictionary) -> void:
 		"well":
 			draw_circle(r.get_center(), minf(r.size.x, r.size.y) / 2.0, Color("7d7a72"))
 			draw_circle(r.get_center(), minf(r.size.x, r.size.y) / 2.0 - 6.0, Color("23323f"))
+		"wall":
+			draw_rect(r, Color("8a8478"))
+			draw_rect(Rect2(r.position, Vector2(r.size.x, minf(5.0, r.size.y))), Color("b8b2a2"))
+			draw_rect(Rect2(r.position.x, r.end.y - minf(4.0, r.size.y), r.size.x, minf(4.0, r.size.y)), Color("5f5a50"))
+			draw_rect(r, Color("4a463e"), false, 2.0)
+		"cliff":
+			draw_rect(r, Color("6e7078"))
+			draw_rect(Rect2(r.position, Vector2(r.size.x, r.size.y * 0.35)), Color("8b8e96"))
+			draw_rect(Rect2(r.position.x, r.end.y - r.size.y * 0.3, r.size.x, r.size.y * 0.3), Color("3f4148"))
+			var cx := r.position.x + 14.0
+			while cx < r.end.x - 6.0:
+				draw_line(Vector2(cx, r.position.y + 3.0), Vector2(cx - 6.0, r.end.y - 3.0), Color("4d5058"), 2.0)
+				cx += 38.0
+		"stream":
+			draw_rect(r, Color("3f7fa8"))
+			draw_rect(r, Color("2e6488"), false, 2.0)
+			var ripple := r.position.y + 12.0
+			while ripple < r.end.y - 6.0:
+				draw_line(Vector2(r.get_center().x - r.size.x * 0.25, ripple), Vector2(r.get_center().x + r.size.x * 0.25, ripple), Color("8cc4e0"), 2.0)
+				ripple += 46.0
+			for pr: Array in _region.get("map", {}).get("paths", []):
+				var path_rect := Rect2(pr[0], pr[1], pr[2], pr[3])
+				if path_rect.intersects(r):
+					_draw_bridge(r.intersection(path_rect), path_rect)
+		"lantern":
+			var c := r.get_center()
+			draw_circle(c - Vector2(0, r.size.y * 0.3), 20.0, Color(1.0, 0.8, 0.4, 0.18))
+			draw_rect(Rect2(c.x - 1.5, c.y - r.size.y * 0.1, 3, r.size.y * 0.6), Color("4a3524"))
+			draw_rect(Rect2(c.x - 6, c.y - r.size.y * 0.5, 12, 11), Color("c0392b"))
+			draw_rect(Rect2(c.x - 3, c.y - r.size.y * 0.5 + 3, 6, 5), Color("f2c35b"))
+		"pine":
+			var c := r.get_center()
+			draw_rect(Rect2(c.x - 3, r.end.y - 12, 6, 12), Color("4a3524"))
+			for i in 3:
+				var w := r.size.x * (0.55 + 0.22 * i)
+				var top := r.position.y + r.size.y * 0.2 * i
+				draw_colored_polygon(PackedVector2Array([Vector2(c.x, top), Vector2(c.x - w / 2.0, top + r.size.y * 0.42), Vector2(c.x + w / 2.0, top + r.size.y * 0.42)]), Color("1f3d2a").lightened(0.06 * i))
+		"stall":
+			draw_rect(Rect2(r.position.x + 4, r.position.y + r.size.y * 0.4, r.size.x - 8, r.size.y * 0.6), Color("7a5a3a"))
+			draw_rect(Rect2(r.position.x, r.position.y, r.size.x, r.size.y * 0.4), Color("b5493a"))
+			var sx := r.position.x
+			var flip := false
+			while sx < r.end.x:
+				if flip:
+					draw_rect(Rect2(sx, r.position.y, minf(10.0, r.end.x - sx), r.size.y * 0.4), Color("e8dcc0"))
+				flip = not flip
+				sx += 10.0
+			draw_rect(Rect2(r.position.x + 8, r.position.y + r.size.y * 0.55, r.size.x - 16, 6), Color("c9a24a"))
+
+
+## Planks across a stream where `crossing` (its overlap with `path_rect`) is, laid along the path's direction.
+func _draw_bridge(crossing: Rect2, path_rect: Rect2) -> void:
+	var span := crossing.grow(4.0)
+	draw_rect(span, Color("8a6a44"))
+	var along_x := path_rect.size.x >= path_rect.size.y
+	var pos := span.position.x if along_x else span.position.y
+	var end := span.end.x if along_x else span.end.y
+	while pos < end:
+		if along_x:
+			draw_line(Vector2(pos, span.position.y), Vector2(pos, span.end.y), Color("5a4028"), 2.0)
+		else:
+			draw_line(Vector2(span.position.x, pos), Vector2(span.end.x, pos), Color("5a4028"), 2.0)
+		pos += 8.0
+	draw_rect(span, Color("4a3524"), false, 2.0)
 
 
 func _draw_decor(d: Dictionary) -> void:
