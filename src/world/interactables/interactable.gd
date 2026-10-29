@@ -301,6 +301,11 @@ func _label_near_edge() -> bool:
 	return label_offset.x - w / 2.0 < view.position.x + w or label_offset.x + w / 2.0 > view.end.x - w
 
 
+## Sprite keys tried in order for this node's art (GFX-006); subclasses prepend more specific ones.
+func sprite_keys() -> PackedStringArray:
+	return PackedStringArray(["place_" + art_kind])
+
+
 ## Whether the place's art shows its live state (e.g. an open secret realm).
 func art_active() -> bool:
 	return false
@@ -311,7 +316,7 @@ func _draw() -> void:
 		# Artifact anchor places sit on a faint golden ring (VIS-004).
 		PlaceArt.ellipse(self, Vector2(0, size.y * 0.35), Vector2(size.x * 0.65, size.y * 0.3), Color(UIStyle.ACCENT.r, UIStyle.ACCENT.g, UIStyle.ACCENT.b, 0.18))
 		PlaceArt.ellipse(self, Vector2(0, size.y * 0.35), Vector2(size.x * 0.65, size.y * 0.3), Color(UIStyle.ACCENT.r, UIStyle.ACCENT.g, UIStyle.ACCENT.b, 0.5), 1.5)
-	var art := Sprites.texture("place_" + art_kind)
+	var art := Sprites.first(sprite_keys())
 	if art != null:
 		var tex_size := art.get_size()
 		var k := maxi(1, int(minf(size.x / tex_size.x, size.y / tex_size.y)))

@@ -50,3 +50,38 @@ func test_json_shape() -> void:
 		assert_true(d["sprites"][key].get("path") is String, key)
 	assert_eq(Sprites.scale(), int(d["scale"]))
 	assert_eq(Sprites.credits().size(), (d["packs"] as Array).size())
+
+
+func test_first_picks_mapped_key() -> void:
+	assert_true(Sprites.first(PackedStringArray(["a_none", "b_none"])) == null)
+	var t := _tex(16, 16)
+	Sprites.override("b_none", t)
+	assert_true(Sprites.first(PackedStringArray(["a_none", "b_none"])) == t)
+	Sprites.clear_overrides()
+
+
+func test_shipped_json_maps_no_world_keys() -> void:
+	for key in ["ground", "path", "npc", "ground_qingshi_village", "path_qingshi_village"]:
+		assert_true(Sprites.texture(key) == null, key)
+	for kind in Scenery.KINDS:
+		assert_true(Sprites.texture("decor_" + kind) == null, kind)
+
+
+func test_world_draws_with_world_sprites() -> void:
+	var root := (Engine.get_main_loop() as SceneTree).root
+	var gs := root.get_node("GameState")
+	gs.start_session(CharacterFactory.create("Lin Feng", gs.data, seeded_rng(), "male"))
+	gs.current_region = "qingshi_village"
+	for mapped in [true, false]:
+		Sprites.clear_overrides()
+		if mapped:
+			for key in ["ground", "path", "npc", "decor_tree", "decor_rock", "decor_grass", "decor_flower"]:
+				Sprites.override(key, _tex(16, 16))
+		var world: Node = load("res://src/world/world.tscn").instantiate()
+		root.add_child(world)
+		await (Engine.get_main_loop() as SceneTree).process_frame
+		await (Engine.get_main_loop() as SceneTree).process_frame
+		assert_true(world.is_inside_tree())
+		world.free()
+	Sprites.clear_overrides()
+	gs.end_session()

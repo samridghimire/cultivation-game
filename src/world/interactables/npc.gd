@@ -49,6 +49,11 @@ var _modal_open := false
 var _on_screen := true
 
 
+## Named NPCs try "npc_<id>" before the shared "npc" sprite, then the generic place art (GFX-006).
+func sprite_keys() -> PackedStringArray:
+	return PackedStringArray(["npc_" + npc_id, "npc", "place_" + art_kind])
+
+
 func _ready() -> void:
 	super._ready()
 	home = position

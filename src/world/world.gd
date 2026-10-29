@@ -377,19 +377,52 @@ func _vec(a: Array) -> Vector2:
 
 func _draw() -> void:
 	var map: Dictionary = _region.get("map", {})
-	draw_rect(Rect2(Vector2.ZERO, map_size), Color(map.get("ground", "4d6b3c")))
+	var rid := GameState.current_region
+	var ground := Sprites.first(["ground_" + rid, "ground"])
+	if ground != null:
+		_draw_tiled(ground, Rect2(Vector2.ZERO, map_size))
+	else:
+		draw_rect(Rect2(Vector2.ZERO, map_size), Color(map.get("ground", "4d6b3c")))
+	var path_tile := Sprites.first(["path_" + rid, "path"])
 	var path_color := Color(map.get("path_color", "8a7350"))
 	for r in map.get("paths", []):
-		draw_rect(Rect2(r[0], r[1], r[2], r[3]), path_color)
+		var rect := Rect2(r[0], r[1], r[2], r[3])
+		if path_tile != null:
+			_draw_tiled(path_tile, rect)
+		else:
+			draw_rect(rect, path_color)
 	for d in _decor:
 		_draw_decor(d)
 	draw_rect(Rect2(Vector2.ZERO, map_size), Color(map.get("border", "2a3a20")), false, 6.0)
+
+
+## Tiles `tile` at the sprite scale over `area`, clipping the last row and column (GFX-006).
+func _draw_tiled(tile: Texture2D, area: Rect2) -> void:
+	var step := tile.get_size() * float(Sprites.scale())
+	if step.x <= 0.0 or step.y <= 0.0:
+		return
+	var y := area.position.y
+	while y < area.end.y:
+		var h := minf(step.y, area.end.y - y)
+		var x := area.position.x
+		while x < area.end.x:
+			var w := minf(step.x, area.end.x - x)
+			var src := Rect2(Vector2.ZERO, Vector2(w / step.x * tile.get_width(), h / step.y * tile.get_height()))
+			draw_texture_rect_region(tile, Rect2(x, y, w, h), src)
+			x += step.x
+		y += step.y
 
 
 func _draw_decor(d: Dictionary) -> void:
 	var p: Vector2 = d["pos"]
 	var k: float = d["scale"]
 	var c: Color = d["color"]
+	var tex := Sprites.texture("decor_" + str(d["kind"]))
+	if tex != null:
+		var z := float(maxi(1, roundi(Sprites.scale() * k)))
+		var sz := tex.get_size() * z
+		draw_texture_rect(tex, Rect2(p - Vector2(sz.x / 2.0, sz.y), sz), false)
+		return
 	match d["kind"]:
 		"tree":
 			draw_circle(p + Vector2(4, 6) * k, 20.0 * k, Color(0, 0, 0, 0.25))

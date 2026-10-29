@@ -56,6 +56,15 @@ static func texture(key: String) -> Texture2D:
 	return tex
 
 
+## The first of `keys` that has a texture, or null (GFX-006: "npc_<id>" before "npc").
+static func first(keys: PackedStringArray) -> Texture2D:
+	for key: String in keys:
+		var tex := texture(key)
+		if tex != null:
+			return tex
+	return null
+
+
 ## Number of frames in the strip (1 when not animated or missing).
 static func frame_count(key: String) -> int:
 	return maxi(1, int(_entry(key).get("frames", 1)))
