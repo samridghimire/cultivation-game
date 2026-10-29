@@ -583,3 +583,29 @@ func test_year_line_says_where_the_rival_stands() -> void:
 	r.alive = false
 	assert_eq(Rivals.year_line(c, r, flags), "", "dead rival")
 	assert_eq(Rivals.year_line(c, null, flags), "")
+
+
+func test_encounter_cooldown() -> void:
+	var d := data()
+	var flags := {}
+	assert_true(Rivals.encounter_ready(d, flags, 0), "ready with empty flags")
+	Rivals.note_encounter(d, flags, 100)
+	assert_false(Rivals.encounter_ready(d, flags, 159))
+	assert_true(Rivals.encounter_ready(d, flags, 160))
+	var zero := data()
+	zero.karma["rival"]["encounter_cooldown_days"] = 0
+	var f2 := {}
+	Rivals.note_encounter(zero, f2, 100)
+	assert_true(f2.is_empty(), "cooldown 0 sets nothing")
+	assert_true(Rivals.encounter_ready(zero, f2, 100))
+
+
+func test_game_state_rival_for_roll_respects_cooldown() -> void:
+	var gs := _root().get_node("GameState")
+	gs.start_session(new_character())
+	assert_true(gs._rival_for_roll() != null, "rival available at first")
+	Rivals.note_encounter(gs.data, gs.world_flags, GameClock.total_days)
+	assert_true(gs._rival_for_roll() == null, "rival quiet during the cooldown")
+	GameClock.total_days += Rivals.encounter_cooldown(gs.data)
+	assert_true(gs._rival_for_roll() != null, "rival back after the cooldown")
+	gs.end_session()

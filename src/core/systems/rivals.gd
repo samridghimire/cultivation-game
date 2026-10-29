@@ -17,6 +17,7 @@ const SUCCESSOR_DAY_FLAG := "rival_successor_day"  # RIVAL-014: day a new rival 
 const MEETING_FROM_FLAG := "rival_meeting_from"  # RIVAL-014: first meeting window starts here
 const BOUTS_WON_FLAG := "rival_bouts_won"  # RIVAL-016: bouts against the current rival (a successor starts at 0)
 const BOUTS_LOST_FLAG := "rival_bouts_lost"
+const QUIET_UNTIL_FLAG := "rival_quiet_until"  # RIVAL-021: no rival encounter rolls before this day
 const SPUR_CAP := 0.95
 
 
@@ -61,6 +62,23 @@ static func first_meeting_due(c: CharacterData, people: Dictionary, data: GameDa
 	var start := int(flags.get(MEETING_FROM_FLAG, r.get("first_meeting_day", 10)))
 	return today >= start and today <= start + int(r.get("first_meeting_window", 365))
 
+
+
+## RIVAL-021: days between rival encounters while exploring; 0 = no cooldown.
+static func encounter_cooldown(data: GameData) -> int:
+	return int(rules(data).get("encounter_cooldown_days", 60))
+
+
+## True when the rival may turn up in an encounter roll on day `today` (RIVAL-021).
+static func encounter_ready(_data: GameData, flags: Dictionary, today: int) -> bool:
+	return today >= int(flags.get(QUIET_UNTIL_FLAG, 0))
+
+
+## Starts the cooldown after a rival encounter on day `today` (RIVAL-021).
+static func note_encounter(data: GameData, flags: Dictionary, today: int) -> void:
+	var cooldown := encounter_cooldown(data)
+	if cooldown > 0:
+		flags[QUIET_UNTIL_FLAG] = today + cooldown
 
 
 ## RIVAL-014: days from word of the rival's death (not by the player's hand) until a successor appears; 0 = never.
@@ -242,6 +260,8 @@ static func validate(data: GameData) -> PackedStringArray:
 			errors.append("karma.json rival %s must be a whole number >= 0" % key)
 	if r.has("friendly_favor") and (not (r["friendly_favor"] is int or r["friendly_favor"] is float) or int(r["friendly_favor"]) < 1 or int(r["friendly_favor"]) > 100):
 		errors.append("karma.json rival friendly_favor must be a whole number 1-100")
+	if r.has("encounter_cooldown_days") and (not (r["encounter_cooldown_days"] is int or r["encounter_cooldown_days"] is float) or int(r["encounter_cooldown_days"]) < 0):
+		errors.append("karma.json rival encounter_cooldown_days must be a whole number >= 0")
 	if r.has("successor_delay_days") and (not (r["successor_delay_days"] is int or r["successor_delay_days"] is float) or int(r["successor_delay_days"]) < 0):
 		errors.append("karma.json rival successor_delay_days must be a whole number >= 0")
 	if r.has("bitter_grudge") and (not (r["bitter_grudge"] is int or r["bitter_grudge"] is float) or int(r["bitter_grudge"]) < 1):

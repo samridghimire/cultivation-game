@@ -695,7 +695,9 @@ func _explore_day(tags: Array, quiet: bool) -> Dictionary:
 		var hunted := Bounties.hunt_roll(player, data, current_region, GameClock.total_days, rng)
 		if hunted != "":
 			return _hunt_bounty_foe(hunted)
-		encounter = Exploration.roll_encounter(player, data, tags, world_flags, rng, Rivals.rival_of(player, npcs), 1.0 - ClanEstate.ward(clan, data, current_region), Calendar.season_of(GameClock.total_days), current_region, int(npc_favor.get(player.rival, 0)))
+		encounter = Exploration.roll_encounter(player, data, tags, world_flags, rng, _rival_for_roll(), 1.0 - ClanEstate.ward(clan, data, current_region), Calendar.season_of(GameClock.total_days), current_region, int(npc_favor.get(player.rival, 0)))
+		if String(encounter.get("rival", "")) != "" or encounter.has("rival_attitude"):
+			Rivals.note_encounter(data, world_flags, GameClock.total_days)
 	else:
 		# Only the discovery itself marks the region discovered; a deeper path must not
 		# use up a discovery the player has not met yet.
@@ -709,6 +711,13 @@ func _explore_day(tags: Array, quiet: bool) -> Dictionary:
 		_pass_time(1)
 		return {"event": "nothing"}
 	return _meet_encounter(encounter, explore_prefix(encounter, last_explore_discovery, last_explore_deep_path))
+
+
+## The rival an encounter roll may use: none while the rival is keeping quiet (RIVAL-021).
+func _rival_for_roll() -> CharacterData:
+	if not Rivals.encounter_ready(data, world_flags, GameClock.total_days):
+		return null
+	return Rivals.rival_of(player, npcs)
 
 
 ## Message prefix for an encounter met while exploring.
