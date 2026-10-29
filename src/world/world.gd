@@ -40,7 +40,8 @@ var _decor: Array[Dictionary] = []
 ## Seasonal tint (CanvasModulate only affects this canvas, not the HUD CanvasLayer).
 var _season_tint: CanvasModulate
 var _season := ""
-var _ambient: CPUParticles2D
+var _ambient: Node
+var _weather_kind := "clear"
 ## Festival stalls beside merchants (WU-097), rebuilt when the day or region changes.
 var _stalls: Array[Node2D] = []
 var _merchant_spots: Array[Vector2] = []
@@ -86,7 +87,8 @@ func _ready() -> void:
 func _build_season_tint() -> void:
 	_season_tint = CanvasModulate.new()
 	_season = Calendar.season_of(GameClock.total_days)
-	_season_tint.color = Calendar.season_tint(_season)
+	_weather_kind = Weather.of(GameState.data, GameState.current_region, GameClock.total_days)
+	_season_tint.color = _tint_for(_season)
 	add_child(_season_tint)
 	GameClock.days_advanced.connect(_on_days_advanced)
 
@@ -94,12 +96,19 @@ func _build_season_tint() -> void:
 func _on_days_advanced(_days: int) -> void:
 	_refresh_stalls()
 	var season := Calendar.season_of(GameClock.total_days)
-	if season == _season:
+	var weather := Weather.of(GameState.data, GameState.current_region, GameClock.total_days)
+	if season == _season and weather == _weather_kind:
 		return
 	_season = season
+	_weather_kind = weather
 	_refresh_ambient()
 	var tween := create_tween()
-	tween.tween_property(_season_tint, "color", Calendar.season_tint(season), 0.6)
+	tween.tween_property(_season_tint, "color", _tint_for(season), 0.6)
+
+
+## Season tint dimmed by the day's weather.
+func _tint_for(season: String) -> Color:
+	return Calendar.season_tint(season) * (Ambient.weather_plan(_weather_kind)["tint"] as Color)
 
 
 ## Rebuilds the particle layer for the region, season and "Ambient effects" setting.
@@ -109,10 +118,18 @@ func _refresh_ambient() -> void:
 		_ambient = null
 	if not Settings.get_value("ambient_effects"):
 		return
-	var kind := Ambient.kind_for(_region.get("map", {}).get("ambient", {}), _season)
-	if kind == "":
-		return
-	_ambient = Ambient.make_emitter(kind, map_size)
+	var plan := Ambient.weather_plan(_weather_kind)
+	if plan["fog"]:
+		_ambient = Ambient.make_fog(map_size, not Settings.get_value("reduce_motion"))
+	elif plan["emitter"] == "rain":
+		_ambient = Ambient.make_rain(map_size)
+	elif plan["emitter"] == "snow":
+		_ambient = Ambient.make_emitter("snow", map_size)
+	else:
+		var kind := Ambient.kind_for(_region.get("map", {}).get("ambient", {}), _season)
+		if kind == "":
+			return
+		_ambient = Ambient.make_emitter(kind, map_size)
 	add_child(_ambient)
 
 

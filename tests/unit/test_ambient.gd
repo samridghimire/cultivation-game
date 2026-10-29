@@ -53,3 +53,24 @@ func test_world_emitter_follows_setting_and_region() -> void:
 	world.free()
 	settings.set_value("ambient_effects", old)
 	gs.end_session()
+
+
+func test_weather_plan_maps_kind_to_preset() -> void:
+	assert_eq(Ambient.weather_plan("rain")["emitter"], "rain")
+	assert_eq(Ambient.weather_plan("snow")["emitter"], "snow")
+	assert_true(Ambient.weather_plan("fog")["fog"])
+	assert_eq(Ambient.weather_plan("cloudy")["tint"], Ambient.CLOUDY_TINT)
+	assert_eq(Ambient.weather_plan("clear")["emitter"], "")
+	assert_eq(Ambient.weather_plan("clear")["tint"], Color.WHITE)
+	assert_true(Ambient.replaces_season("rain"))
+	assert_true(not Ambient.replaces_season("cloudy"))
+	assert_true(not Ambient.replaces_season("clear"))
+
+
+func test_rain_and_fog_nodes_build() -> void:
+	var rain := Ambient.make_rain(Vector2(1600, 1000))
+	assert_true(rain.amount <= 300)
+	rain.free()
+	var fog := Ambient.make_fog(Vector2(1600, 1000), false)
+	assert_eq(fog.get_child_count(), Ambient.FOG_SHEETS)
+	fog.free()

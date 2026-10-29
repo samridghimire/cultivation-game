@@ -5,6 +5,8 @@ extends SceneTree
 ##     --resolution 1280x800 -s res://tests/sim/screenshot_regions.gd
 ## PNGs go to user://screenshots/<region>.png (OUT_DIR). Add `-- --season=Winter` for
 ## one season (files become <region>_<season>.png) or `-- --season=all` for all four.
+## `-- --weather=rain` (clear|cloudy|rain|snow|fog) jumps each region to a day with that weather
+## (WU-399; files become <region>_<weather>.png; regions that never have it are skipped).
 
 const OUT_DIR := "user://screenshots"
 var regions: Array = []
@@ -15,6 +17,7 @@ var world: Node = null
 var started := false
 var seasons: Array = []
 var si := 0
+var weather := ""
 
 func _start() -> void:
 	started = true
@@ -26,6 +29,8 @@ func _start() -> void:
 		if arg.begins_with("--season="):
 			var v := arg.substr(9).capitalize()
 			seasons = ["Spring", "Summer", "Autumn", "Winter"] if v == "All" else [v]
+		elif arg.begins_with("--weather="):
+			weather = arg.substr(10)
 	# A spouse and children in every region, so the Family Home (FAM-011) shows.
 	var rng := RandomNumberGenerator.new()
 	for region_id: String in regions:
@@ -43,6 +48,21 @@ func _load() -> void:
 		# Middle of the season's second month: season index * 3 months + 1.
 		var idx: int = ["Spring", "Summer", "Autumn", "Winter"].find(seasons[si])
 		root.get_node("GameClock").total_days = (idx * 3 + 1) * Calendar.DAYS_PER_MONTH + 15
+	if weather != "":
+		var found := -1
+		for d in range(30, 1500):
+			if Weather.of(gs.data, regions[i], d) == weather:
+				found = d
+				break
+		if found < 0:
+			print("no %s day in %s" % [weather, regions[i]])
+			i += 1
+			if i >= regions.size():
+				quit()
+				return
+			_load()
+			return
+		root.get_node("GameClock").total_days = found
 	if world != null:
 		world.queue_free()
 	world = load("res://src/world/world.tscn").instantiate()
@@ -66,6 +86,8 @@ func _process(_d: float) -> bool:
 	if frames == 16:
 		DirAccess.make_dir_recursive_absolute(OUT_DIR)
 		var fname: String = regions[i] if seasons.is_empty() else "%s_%s" % [regions[i], seasons[si]]
+		if weather != "":
+			fname = "%s_%s" % [regions[i], weather]
 		root.get_viewport().get_texture().get_image().save_png("%s/%s.png" % [OUT_DIR, fname])
 		print("saved %s" % ProjectSettings.globalize_path("%s/%s.png" % [OUT_DIR, fname]))
 		i += 1
