@@ -112,6 +112,7 @@ extends SceneTree
 ## WU-369: `--help-shot` writes help_<topic>_<size>.png for every help page (long ones scroll in a focusable ScrollContainer).
 ## WU-367: `--hint-shot` also writes pill_rank_gate_/pill_rank_open_<size>.png (Foundation Peak Inner Disciple, 6998 contribution: no hint, goal or breakthrough text says "As Elder"; QR8 Outer Disciple: the Foundation pill line still says "As Inner Disciple you could claim it").
 ## WU-362: `--hint-shot` also writes sect_join_prompt_<size>.png (rogue QR3 at the Azure Cloud hall with the join prompt open: the description lists the membership perks and fits the viewport).
+## WU-381: `--hint-shot` also writes hint_thin_defence_budget_<size>.png (same rogue with the manual price + 10 stones: HUD line still starts with the manual; no armor named costs over 10).
 ## WU-378: `--hint-shot` also writes hint_thin_defence_local_<size>.png (Foundation rogue in Qingshi, no armor or body art, 1000 stones: the capped HUD line starts "Your defence is thin. Buy Manual: Stone Skin Tempering"; the journal's clan goal names the Waterfall Cave).
 ## WU-377: hint_rogue_join also asserts the capped HUD line keeps "members gather qi x".
 ## WU-376: `--hint-shot` also writes hint_injury_far_<size>.png (rogue at Misty Forest, internal injury, 5 stones: a hint names the nearest clinic, its trip and "(you have 5)").
@@ -2940,6 +2941,62 @@ func _start_hint_shot(gs: Node) -> void:
 			c.equipment = thin_local_saved[8]
 			c.injuries = thin_local_saved[9]
 			thin_local_saved.clear()})
+
+	# WU-381: GUIDE-188. Same character as WU-378 but holding only the manual price + 10 stones: the capped HUD line still leads with
+	# the manual, and the full hint names no armor costing more than the 10 stones left over.
+	var thin_budget_saved: Array = []
+	shots.append({"name": "hint_thin_defence_budget_" + size_tag, "open": func() -> void:
+		setup_long.call()
+		thin_budget_saved.append_array([c.realm_index, c.stage, c.sect.duplicate(), c.inventory.duplicate(), c.abode, gs.clan, c.life_stats.duplicate(), c.techniques.duplicate(true), c.equipment.duplicate(), c.injuries.duplicate(true)])
+		c.life_stats["fights_won"] = maxi(1, int(c.life_stats.get("fights_won", 0)))
+		c.life_stats["encounters"] = maxi(5, int(c.life_stats.get("encounters", 0)))
+		c.realm_index = 2
+		c.stage = 0
+		c.qi = 0.0
+		c.sect = {}
+		c.abode = ""
+		c.techniques.clear()
+		c.equipment.erase("armor")
+		c.injuries.clear()
+		c.inventory = {"spirit_stone": 0}
+		gs.clan = null
+		gs.current_region = "qingshi_village"
+		var manual: Dictionary = Guidance._body_manual_merchant(c, gs.data, "qingshi_village")
+		var price: int = Guidance.merchant_price(c, gs.data, "qingshi_village", String(manual["item_id"]))
+		c.inventory = {"spirit_stone": price + 10}
+		root.get_node("EventBus").player_changed.emit()
+		await root.get_tree().process_frame
+		await root.get_tree().process_frame
+		hud.get("_banner").visible = false
+		var lines: Array = Guidance.hints(c, gs.data, 3, 12, gs.npcs, gs.world_flags, "qingshi_village", clock.total_days, gs.npc_favor)
+		var thin_line := ""
+		for h: String in lines:
+			if h.contains("Your defence is thin"):
+				thin_line = h
+				break
+		var want := "Your defence is thin. Buy Manual: Stone Skin Tempering"
+		print("hint-shot thin budget (", price + 10, " stones): ", thin_line, " | HUD: ", (hud.get("_hint") as Label).text)
+		assert(thin_line.begins_with(want), "thin-defence line wrong:\n" + "\n".join(lines))
+		assert(String((hud.get("_hint") as Label).text).contains(want), "HUD hint lacks the manual: " + (hud.get("_hint") as Label).text)
+		var re := RegEx.new()
+		re.compile("sells [^.]*? for (\\d+) stones")
+		var armor_seen := 0
+		for m in re.search_all(thin_line.substr(maxi(0, thin_line.find("and learn it.")))):
+			if not m.get_string().contains("Manual"):
+				armor_seen += 1
+				assert(int(m.get_string(1)) <= 10, "armor over the 10 stones left: " + thin_line)
+		print("hint-shot thin budget: armor mentions after the manual = ", armor_seen), "close": func() -> void:
+			c.realm_index = thin_budget_saved[0]
+			c.stage = thin_budget_saved[1]
+			c.sect = thin_budget_saved[2]
+			c.inventory = thin_budget_saved[3]
+			c.abode = thin_budget_saved[4]
+			gs.clan = thin_budget_saved[5]
+			c.life_stats = thin_budget_saved[6]
+			c.techniques = thin_budget_saved[7]
+			c.equipment = thin_budget_saved[8]
+			c.injuries = thin_budget_saved[9]
+			thin_budget_saved.clear()})
 
 	# WU-373: GUIDE-181. The spec's Outer Disciple has only the contribution need (Inner asks no realm), so use an Inner Disciple at
 	# Qi Refining 3 with 40 contribution: the Core Disciple goal joins both needs with "and" and names the rank once.
