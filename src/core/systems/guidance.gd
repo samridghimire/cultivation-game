@@ -2388,7 +2388,7 @@ static func unlock_notices(c: CharacterData, data: GameData, flags: Dictionary, 
 		var route := _shortest_gated_route(data, region_id)
 		if route.is_empty() or c.realm_index < data.realm_index_of(String(route["min_realm"])):
 			continue
-		_add_notice(out, flags, "road_" + region_id, "You are strong enough to travel to %s (%d days from %s)." % [Exploration.region_name(data, region_id), int(route["days"]), Exploration.region_name(data, String(route["from"]))])
+		_add_notice(out, flags, "road_" + region_id, "You are strong enough to travel to %s (the road from %s takes %d days)." % [Exploration.region_name(data, region_id), Exploration.region_name(data, String(route["from"])), int(route["days"])])
 	if not c.is_rogue():
 		var promo_rank := Sects.next_rank(c, data)
 		if promo_rank >= 0 and Sects.needs_trial(c, data) and Sects.check_promotion(c, data) == "":

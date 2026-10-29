@@ -190,3 +190,13 @@ func test_valley_guardian_seed_can_be_swallowed_at_foundation() -> void:
 	c.breakthrough_pill = "foundation_establishment"
 	for choice: Dictionary in data().encounters["misty_forest_valley_guardian"]["choices"]:
 		assert_eq(Exploration.check_choice(c, data(), choice, flags), "", String(choice["label"]))
+
+
+func test_road_notice_names_the_gated_road_not_a_distance_from_the_player() -> void:
+	var c := new_character()
+	c.realm_index = 3
+	var notes := Guidance.unlock_notices(c, data(), {})
+	var roads := notes.filter(func(n: Dictionary) -> bool: return String(n["id"]).begins_with("road_"))
+	for n: Dictionary in roads:
+		assert_true(String(n["text"]).contains("the road from "), "road notice reads as a road: " + String(n["text"]))
+		assert_false(String(n["text"]).contains("days from"), "no 'N days from <elsewhere>': " + String(n["text"]))
