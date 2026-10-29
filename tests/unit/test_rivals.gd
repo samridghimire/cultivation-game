@@ -592,12 +592,19 @@ func test_encounter_cooldown() -> void:
 	Rivals.note_encounter(d, flags, 100)
 	assert_false(Rivals.encounter_ready(d, flags, 159))
 	assert_true(Rivals.encounter_ready(d, flags, 160))
-	var zero := data()
-	zero.karma["rival"]["encounter_cooldown_days"] = 0
+	# data() is cached per test file, so restore the cooldown for the tests that follow.
+	var rules: Dictionary = d.karma["rival"]
+	var had := rules.has("encounter_cooldown_days")
+	var old: Variant = rules.get("encounter_cooldown_days")
+	rules["encounter_cooldown_days"] = 0
 	var f2 := {}
-	Rivals.note_encounter(zero, f2, 100)
+	Rivals.note_encounter(d, f2, 100)
 	assert_true(f2.is_empty(), "cooldown 0 sets nothing")
-	assert_true(Rivals.encounter_ready(zero, f2, 100))
+	assert_true(Rivals.encounter_ready(d, f2, 100))
+	if had:
+		rules["encounter_cooldown_days"] = old
+	else:
+		rules.erase("encounter_cooldown_days")
 
 
 func test_game_state_rival_for_roll_respects_cooldown() -> void:

@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 1decde8
+Last reviewed commit: c83d675
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -1167,3 +1167,17 @@ Last reviewed commit: 1decde8
     test silently returned when Qingshi was not mastered, so it could pass without asserting; it now asserts mastery.
   - Notes, not filed: GUIDE-189, GUIDE-191 saw unexplained balance.sh diffs and GUIDE-192, C-260, C-261 skipped
     balance.sh; QA-168 already covers the attribution and refresh.
+- 2026-10-29 (reviewer, 3rd run): reviewed 1decde8..c83d675 (GUIDE-194/196/197/200, C-258/259/262/263, QA-172/176,
+  WU-387/390/396, RIVAL-021, GFX-001/006/007/008/009; [PLAN]/[REVIEW] skipped; GUIDE-194/196, C-259/262, QA-172 and
+  WU-387 landed after the last run's range was set, so they are covered here). Main green (ALL CHECKS PASSED, 2423
+  tests). No worker touched BACKLOG/CHANGELOG; no save-format changes (RIVAL-021's `rival_quiet_until` is a world flag);
+  no binary assets added yet (sprites.json has no packs); QA-176's guard checks ASSETS.md rows, LICENSE files and
+  CC0/CC-BY. Sprites lives in src/world (rendering only); every sprite path falls back to the _draw() placeholder.
+  - C-259/C-263: every outcome (including check on_fail blocks) sets the blocking flag. GFX-008's solid landmarks
+    don't cover any place, npc spot, spawn, family home or path in Qingshi (checked by script and by its test).
+    GUIDE-200's order_needs keeps the order item plus ingredients for the crafts still needed; the shop's Sell all uses it.
+  - Fixed (RIVAL-021 test): test_encounter_cooldown set the cached per-file GameData's cooldown to 0 and left it there,
+    so any later test in test_rivals.gd would have run without the cooldown; it now restores the value.
+  - Notes, not filed: interactables drawn from a sprite lose PlaceArt's art_active() state (open secret realm) until the
+    pack maps an active variant; Sprites.frame() allocates an AtlasTexture per draw for animated strips (cheap, but
+    worth caching once a pack lands). RIVAL-021's cooldown only gates exploration rolls, as specced.
