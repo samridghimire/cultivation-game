@@ -527,3 +527,17 @@ func test_available_nearby_local_only_ignores_neighbours() -> void:
 	var c := _alchemist()
 	assert_false(Guidance.available_nearby(c, d, "qi_condensing_grass", "qingshi_village", -1, true))
 	assert_true(Guidance.available_nearby(c, d, "qi_condensing_grass", "misty_forest", -1, true))
+
+
+## QA-166: an order the player can still meet shows its due-soon line even with 3 days left, whether
+## the ingredients are missing, in the pack, or the craft is the only step left.
+func test_due_soon_hint_shows_an_order_due_in_three_days() -> void:
+	var c := _alchemist()
+	c.commissions = [_pill_order(2, 13)]
+	var hint := Commissions.due_soon_hint(c, data(), "qingshi_village", 10)
+	assert_true(hint.begins_with("Order due in 3 days"), hint)
+	assert_true(Guidance.hints(c, data(), 1.0, 8, {}, {}, "qingshi_village", 10).has(hint))
+	c.add_item("spirit_herb", 2)
+	c.add_item("dew_grass", 1)
+	hint = Commissions.due_soon_hint(c, data(), "qingshi_village", 10)
+	assert_true(hint.contains("craft it at a workshop"), hint)
