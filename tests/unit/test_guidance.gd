@@ -1768,7 +1768,7 @@ func test_sect_pill_rank_clause_names_core_disciple() -> void:
 	c.stage = 0
 	var entry := Guidance.sect_pill_entry(c, data())
 	assert_eq(entry.get("item_id", ""), "core_forming_pill")
-	assert_eq(Guidance.sect_pill_rank_clause(c, data()), " As Core Disciple you could claim it for 3200 contribution.")
+	assert_true(Guidance.sect_pill_rank_clause(c, data()).begins_with(" As Core Disciple you could claim it for 3200 contribution"))
 
 	var qr := _sect_qr("azure_cloud_sect", 0, 300, 0)
 	assert_eq(Guidance.sect_pill_rank_clause(qr, data()), " As Inner Disciple you could claim it for 250 contribution.")
@@ -4869,7 +4869,8 @@ func test_goal_names_the_faster_spot() -> void:
 	young.realm_index = 1
 	young.stage = 8
 	var young_goal := String(Guidance.goals(young, d, {}, null, 1.0, "qingshi_village")[0])
-	assert_false(young_goal.contains(" in Azure Peak"), young_goal)
+	# GUIDE-197: a spot that saves 90+ days (and a third of the wait) is named even to a young cultivator.
+	assert_true(young_goal.contains(" in Azure Peak"), young_goal)
 
 
 # --- GUIDE-152: the trial advice never says "grow a stage" at a realm's last stage ---
@@ -5280,3 +5281,50 @@ func test_sell_offer_keeps_what_open_orders_need() -> void:
 	c.commissions = [{"profession": "blacksmith", "item": "iron_sword", "count": 2, "reward": 10, "xp": 5.0, "due_day": 100, "recipe": "iron_sword"}]
 	assert_eq(int(Guidance.sell_keep(c, d, {}).get("iron_essence", 0)), 4)
 	assert_true(Guidance.sell_offer(c, d, "qingshi_village").is_empty(), "the order's ore stays in the pack")
+
+# --- GUIDE-197: goals that tell the truth about the next step ---
+
+func test_faster_spot_threshold_scales_with_the_wait() -> void:
+	var d := data()
+	var c := new_character()
+	c.realm_index = 2
+	c.stage = 0
+	c.sect = {"id": "azure_cloud_sect", "rank": 1, "contribution": 0, "spent": 0}
+	var days := Cultivation.days_to_bottleneck(c, d, 1.0)
+	var best := Guidance.best_qi_reachable(c, d, "qingshi_village", {})
+	var days_best := Cultivation.days_to_bottleneck(c, d, float(best["density"]))
+	var away := Guidance.route_days(c, d, "qingshi_village", String(best["region"]))
+	var saved := days - days_best - 2 * away
+	var clause := Guidance._faster_spot_clause(c, d, 1.0, "qingshi_village", {}, days)
+	assert_eq(clause != "", saved >= maxi(Guidance.FASTER_SPOT_MIN_SAVED, days / 3), "saved %d of %d: %s" % [saved, days, clause])
+	# A short wait that a spot would cut by only a few weeks stays silent.
+	assert_eq(Guidance._faster_spot_clause(c, d, 1.0, "qingshi_village", {}, days_best + 2 * away + 30), "")
+
+
+func test_core_pill_clause_waits_on_a_hopeless_trial() -> void:
+	var d := data()
+	var c := _sect_qr("azure_cloud_sect", 1, 6998, 0)
+	c.realm_index = 2
+	c.stage = 0
+	c.techniques = {}
+	assert_true(Guidance.trial_odds(c, d) < 0.2, "odds %s" % Guidance.trial_odds(c, d))
+	assert_eq(Guidance.sect_pill_rank_clause(c, d), " As Core Disciple you could claim it for 3200 contribution, once you can pass the rank's trial.")
+	# A pill two ranks up is not behind the next trial.
+	var qr := _sect_qr("azure_cloud_sect", 0, 300, 0)
+	assert_eq(Guidance.sect_pill_rank_clause(qr, d), " As Inner Disciple you could claim it for 250 contribution.")
+
+
+func test_mission_hint_skipped_for_a_rich_member_with_duty_met() -> void:
+	var d := data()
+	var c := _qr3_disciple()
+	c.stage = 4
+	c.techniques = {"iron_fist": {"level": 3, "xp": 0.0}}
+	c.sect["contribution"] = 7411
+	c.sect["month_earned"] = 0
+	if Sects.monthly_duty(c, d) > 0:
+		assert_true(_has(Guidance.hints(c, d, 1.0, 20, {}, {}, "qingshi_village"), "The best pays "))
+	c.sect["month_earned"] = Sects.monthly_duty(c, d)
+	assert_eq(Guidance._mission_hint_rich(c, d), true)
+	assert_false(_has(Guidance.hints(c, d, 1.0, 20, {}, {}, "qingshi_village"), "The best pays "))
+	c.sect["contribution"] = 100
+	assert_false(Guidance._mission_hint_rich(c, d))

@@ -24,6 +24,8 @@ const OUTGROWN_SURE_CHANCE := 0.95
 const OUTGROWN_FAIR_MIN := 0.4
 const OUTGROWN_FAIR_MAX := 0.85
 const FAIR_FIGHT_MIN_CHANCE := 0.7  # "Even" or better (Combat.label_for_chance)
+const FASTER_SPOT_MIN_SAVED := 90  ## GUIDE-197: days a faster qi spot must save (or a third of the wait, if more) to be named.
+const MISSION_HINT_RICH := 2000  ## GUIDE-197: a duty-met member holding this much contribution gets no mission hint.
 const CHORE_REGION := "qingshi_village"
 const QI_BUY_KEEP := 20  ## Stones the qi-pill hint leaves for the clinic (GUIDE-126).
 const HEADLINE_CHARS := 120  ## The HUD shows this many characters of a hint (HUD.HINT_MAX_CHARS, WU-305).
@@ -134,7 +136,7 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 		var sect := _sect_hint(c, data, region_id)
 		if sect != "":
 			out.append(sect)
-	var missions := _mission_hint(c, data, flags, region_id, today)
+	var missions := "" if _mission_hint_rich(c, data) else _mission_hint(c, data, flags, region_id, today)
 	if missions != "":
 		var earn := -1
 		for i in out.size():
@@ -1647,7 +1649,34 @@ static func sect_pill_rank_clause(c: CharacterData, data: GameData) -> String:
 	var gate := String(rank_def.get("min_realm", ""))
 	if gate != "" and data.realm_index_of(gate) > c.realm_index:
 		return ""
-	return " As %s you could claim it for %d contribution." % [(data.sects[c.sect["id"]] as SectDef).rank_name(int(entry["min_rank"])), int(entry["cost"])]
+	var claim := " As %s you could claim it for %d contribution" % [(data.sects[c.sect["id"]] as SectDef).rank_name(int(entry["min_rank"])), int(entry["cost"])]
+	# GUIDE-197: the next rank's trial is hopeless, so the claim is not near.
+	if int(entry["min_rank"]) == Sects.next_rank(c, data) and _trial_hopeless(c, data):
+		return claim + ", once you can pass the rank's trial."
+	return claim + "."
+
+
+## GUIDE-197: true when the next rank asks a trial and the odds of passing it are below 20 percent.
+static func _trial_hopeless(c: CharacterData, data: GameData) -> bool:
+	if c.is_rogue() or not Sects.needs_trial(c, data):
+		return false
+	var odds := trial_odds(c, data)
+	return odds >= 0.0 and odds < 0.2
+
+
+## GUIDE-197: a sect member whose duty is met, with contribution to spare and the next rank's contribution reached
+## (or no next rank), needs no mission nudge.
+static func _mission_hint_rich(c: CharacterData, data: GameData) -> bool:
+	if c.is_rogue() or Sects.duty_progress(c) < Sects.monthly_duty(c, data):
+		return false
+	var balance := Sects.contribution_balance(c)
+	if balance < MISSION_HINT_RICH:
+		return false
+	var rank := Sects.next_rank(c, data)
+	if rank < 0:
+		return true
+	var need := int((data.sects[c.sect["id"]] as SectDef).ranks[rank].get("contribution", 0))
+	return balance >= need
 
 
 ## GUIDE-132: {item_id, name, bonus, cost, min_rank} of the best breakthrough pill for the next realm in `c`'s sect
@@ -3153,7 +3182,7 @@ static func active_goal_ladder(c: CharacterData, data: GameData, flags: Dictiona
 
 
 ## GUIDE-168: " (about 5 years at Cloud-Sea Cliff in Azure Peak)" when the best reachable qi spot cuts the days to the
-## realm's bottleneck by a year or more net of the round trip; "" otherwise. `days` is the time at the current `density`.
+## realm's bottleneck by 90 days or a third (whichever is more) net of the round trip; "" otherwise. `days` is the time at the current `density`.
 static func _faster_spot_clause(c: CharacterData, data: GameData, density: float, region_id: String, flags: Dictionary, days: int) -> String:
 	if region_id == "":
 		return ""
@@ -3165,7 +3194,7 @@ static func _faster_spot_clause(c: CharacterData, data: GameData, density: float
 		return ""
 	var best_region := String(best["region"])
 	var away := 0 if best_region == region_id else route_days(c, data, region_id, best_region)
-	if days - days_best - 2 * away < Calendar.DAYS_PER_YEAR:
+	if days - days_best - 2 * away < maxi(FASTER_SPOT_MIN_SAVED, days / 3):
 		return ""
 	return " (about %s at %s in %s)" % [Calendar.format_rough(days_best + 2 * away), GameData.plain_name(String(best["name"])), Exploration.region_name(data, best_region)]
 
@@ -3211,8 +3240,7 @@ static func goals(c: CharacterData, data: GameData, flags: Dictionary, clan: Cla
 				out.append("Become %s: %s." % [rank_name, Text.join_and(needs)])
 			elif Sects.needs_trial(c, data):
 				var foe := _trial_foe(c, data)
-				var odds := trial_odds(c, data)
-				if odds >= 0.0 and odds < 0.2:
+				if _trial_hopeless(c, data):
 					# GUIDE-171: the requirements are met but the trial is hopeless; don't invite the attempt.
 					out.append("Become %s: you have what the rank asks, but the trial (%s) is beyond you yet." % [rank_name, foe.replace(" (", ", ").trim_suffix(")")])
 				else:
