@@ -122,6 +122,7 @@ extends SceneTree
 ## WU-376: `--hint-shot` also writes hint_injury_far_<size>.png (rogue at Misty Forest, internal injury, 5 stones: a hint names the nearest clinic, its trip and "(you have 5)").
 ## WU-373: `--hint-shot` also writes journal_rank_needs_<size>.png (Inner Disciple, Qi Refining 3, 40 contribution: Goals reads "Become Core Disciple: earn 3000 contribution (you have 40) and reach Foundation Establishment.").
 ## WU-366: `--hint-shot` also writes journal_clan_goal_<size>.png (rogue QR8, no abode, 120 stones: Goals reads "Found a clan: reach Foundation Establishment, claim an abode as its seat and gather 500 spirit stones (you have 120).").
+## WU-391: `--hint-shot` also writes journal_explored_out_/hint_goal_held_pill_/hint_order_urgent_<size>.png (explored-out Next steps line; held-pill odds in the Goal line; duty line then urgent order line).
 ## WU-374: `--hint-shot` also writes hint_order_doomed_<size>.png (rank-0 Alchemist, one order gathering cannot finish in time plus a meetable one: no hint leads with the doomed order, the journal still says "longer than the order has").
 ## WU-364: `--hint-shot` also writes journal_goals_realm_/journal_goals_rank_<size>.png (Foundation Early: realm goal names Cloud-Sea Cliff in Azure Peak; Foundation Peak with a hopeless Core Disciple trial: rank goal says "beyond you yet").
 ## WU-363: `--hint-shot` also writes hint_sect_method_<size>.png (Azure Cloud Inner Disciple, QR5, 1200 contribution: hint names the treasury method, both rates and the Learn-it sentence; short of the cost the sentence is gone).
@@ -3378,6 +3379,127 @@ func _start_hint_shot(gs: Node) -> void:
 			c.sect = doomed_saved[3]
 			gs.data.items["dew_grass"]["price"] = doomed_saved[4]
 			doomed_saved.clear()})
+
+	# WU-391 (a): GUIDE-191. A Foundation Early rogue who has met everything in Qingshi: the journal's Next steps says
+	# "You know Qingshi Village through and through".
+	var explored_saved: Array = []
+	shots.append({"name": "journal_explored_out_" + size_tag, "open": func() -> void:
+		setup_long.call()
+		explored_saved.append_array([c.realm_index, c.stage, c.sect.duplicate(), c.encounter_counts.duplicate(), gs.world_flags.duplicate(), c.life_stats.duplicate(), c.explore_days.duplicate()])
+		c.life_stats["fights_won"] = maxi(1, int(c.life_stats.get("fights_won", 0)))
+		c.life_stats["encounters"] = maxi(5, int(c.life_stats.get("encounters", 0)))
+		c.realm_index = gs.data.realm_index_of("foundation_establishment")
+		c.stage = 0
+		c.qi = 0.0
+		c.sect = {}
+		var tags: Array = gs.data.regions["qingshi_village"].get("encounter_tags", [])
+		for e: Dictionary in gs.data.encounters.values():
+			if e.get("tags", []).any(func(t: Variant) -> bool: return tags.has(t)):
+				Exploration.note_met(c, e)
+				if String(e.get("blocked_by_flag", "")) != "":
+					gs.world_flags[e["blocked_by_flag"]] = true
+		if String(gs.data.regions["qingshi_village"].get("discovery", "")) != "":
+			gs.world_flags["discovered_qingshi_village"] = true
+		c.explore_days["qingshi_village"] = 100000
+		gs.current_region = "qingshi_village"
+		root.get_node("EventBus").player_changed.emit()
+		await root.get_tree().process_frame
+		hud.get("_banner").visible = false
+		assert(Exploration.mastered(c, gs.data, "qingshi_village", gs.world_flags), "setup: Qingshi is not mastered")
+		var ej: Control = hud.get("_screens")["toggle_journal"]
+		await _show_journal(ej, "Next steps")
+		for _i in 3:
+			await root.get_tree().process_frame
+		var parsed: String = (ej.get("_text") as RichTextLabel).get_parsed_text()
+		assert(parsed.contains("through and through"), "Next steps lacks the explored-out line:\n" + parsed), "close": func() -> void:
+			(hud.get("_screens")["toggle_journal"] as Control).close()
+			c.realm_index = explored_saved[0]
+			c.stage = explored_saved[1]
+			c.sect = explored_saved[2]
+			c.encounter_counts = explored_saved[3]
+			gs.world_flags = explored_saved[4]
+			c.life_stats = explored_saved[5]
+			c.explore_days = explored_saved[6]
+			explored_saved.clear()})
+
+	# WU-391 (b): GUIDE-192. A rogue at the top of Qi Refining holding a Foundation Establishment Pill: the HUD Goal line
+	# gives the odds "with your Foundation Establishment Pill" (or, if the HUD cap cuts it, the journal line does).
+	var held_saved: Array = []
+	shots.append({"name": "hint_goal_held_pill_" + size_tag, "open": func() -> void:
+		setup_long.call()
+		held_saved.append_array([c.realm_index, c.stage, c.sect.duplicate(), c.inventory.duplicate(), c.breakthrough_pill, c.life_stats.duplicate()])
+		c.life_stats["fights_won"] = maxi(1, int(c.life_stats.get("fights_won", 0)))
+		c.life_stats["encounters"] = maxi(5, int(c.life_stats.get("encounters", 0)))
+		c.realm_index = 1
+		c.stage = gs.data.realms[1].stage_count() - 1
+		c.qi = 0.0
+		c.sect = {}
+		c.breakthrough_pill = ""
+		c.inventory = {"foundation_establishment_pill": 1}
+		gs.current_region = "qingshi_village"
+		root.get_node("EventBus").player_changed.emit()
+		await root.get_tree().process_frame
+		await root.get_tree().process_frame
+		hud.get("_banner").visible = false
+		var want := "with your Foundation Establishment Pill"
+		var goal_label: Label = hud.get("_goal")
+		print("hint-shot held pill HUD goal: ", goal_label.text)
+		var joined := "\n".join(Guidance.goals(c, gs.data, gs.world_flags, gs.clan, 1.0, gs.current_region, int(root.get_node("GameClock").total_days)))
+		print("hint-shot held pill: HUD line has the clause: ", goal_label.text.contains(want))
+		assert(goal_label.text.contains(want) or joined.contains(want), "neither the HUD goal nor the journal goals carry the held-pill clause:\n" + joined), "close": func() -> void:
+			c.realm_index = held_saved[0]
+			c.stage = held_saved[1]
+			c.sect = held_saved[2]
+			c.inventory = held_saved[3]
+			c.breakthrough_pill = held_saved[4]
+			c.life_stats = held_saved[5]
+			held_saved.clear()
+			root.get_node("EventBus").player_changed.emit()})
+
+	# WU-391 (c): GUIDE-194. An Azure Cloud Inner Disciple Alchemist (Outer ranks owe no duty) with the duty reminder showing and a Qi Gathering Pill
+	# order due in 2 days: the duty line comes first, the order line right after it.
+	var urgent_saved: Array = []
+	shots.append({"name": "hint_order_urgent_" + size_tag, "open": func() -> void:
+		setup_long.call()
+		urgent_saved.append_array([c.realm_index, c.stage, c.sect.duplicate(), c.professions.duplicate(true), c.commissions.duplicate(true), c.inventory.duplicate(), c.age_days, c.known_recipes.duplicate()])
+		var today: int = int(root.get_node("GameClock").total_days)
+		c.realm_index = 1
+		c.stage = 4
+		c.qi = 0.0
+		c.sect = {"id": "azure_cloud_sect", "rank": 1, "contribution": 500, "spent": 0, "month_earned": 0}
+		c.professions["alchemist"] = {"rank": 0, "xp": 0.0}
+		if not c.known_recipes.has("qi_gathering_pill"):
+			c.known_recipes.append("qi_gathering_pill")
+		c.inventory = {"spirit_herb": 40, "dew_grass": 40}
+		c.age_days = c.age_days - c.age_days % Calendar.DAYS_PER_MONTH + Calendar.DAYS_PER_MONTH - 4
+		c.commissions = [{"profession": "alchemist", "item": "qi_gathering_pill", "count": 3, "reward": 10, "xp": 5.0, "due_day": today + 2, "recipe": "qi_gathering_pill"}]
+		gs.current_region = "qingshi_village"
+		root.get_node("EventBus").player_changed.emit()
+		await root.get_tree().process_frame
+		await root.get_tree().process_frame
+		hud.get("_banner").visible = false
+		var lines: Array = Guidance.hints(c, gs.data, 3, 12, gs.npcs, gs.world_flags, "qingshi_village", today, gs.npc_favor)
+		print("hint-shot urgent order hints: ", "\n".join(lines))
+		var duty_i := -1
+		var order_i := -1
+		for i in lines.size():
+			var h: String = lines[i]
+			if duty_i < 0 and h == Guidance.duty_hint(c, gs.data, gs.world_flags):
+				duty_i = i
+			if order_i < 0 and h.begins_with("Order due in"):
+				order_i = i
+		assert(duty_i >= 0, "no duty line among the hints:\n" + "\n".join(lines))
+		assert(order_i == duty_i + 1, "the order line does not follow the duty line:\n" + "\n".join(lines)), "close": func() -> void:
+			c.realm_index = urgent_saved[0]
+			c.stage = urgent_saved[1]
+			c.sect = urgent_saved[2]
+			c.professions = urgent_saved[3]
+			c.commissions = urgent_saved[4]
+			c.inventory = urgent_saved[5]
+			c.age_days = urgent_saved[6]
+			c.known_recipes = urgent_saved[7]
+			urgent_saved.clear()
+			root.get_node("EventBus").player_changed.emit()})
 
 	# WU-357: GUIDE-159. A bare Foundation Peak Azure Cloud member who knows no combat technique, with a hopeless
 	# promotion trial open: the trial advice says to learn a combat technique, never to practise.
