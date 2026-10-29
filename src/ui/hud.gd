@@ -528,7 +528,7 @@ func _refresh() -> void:
 	_injuries.visible = Injuries.has_any(p)
 	_injuries.text = "Injured: " + ", ".join(Injuries.describe(p, data))
 	var hint_count := int(Settings.get_value("hud_hints"))
-	var goal := goal_text(p, data, GameState.world_flags, GameState.clan, density) if hint_count > 0 else ""
+	var goal := goal_text(p, data, GameState.world_flags, GameState.clan, density, GameState.current_region, GameClock.total_days) if hint_count > 0 else ""
 	_goal.text = goal
 	_goal.tooltip_text = goal
 	_goal.visible = goal != ""
@@ -707,12 +707,12 @@ static func first_sentence(text: String) -> String:
 
 
 ## "Goal: ..." line: the first unfinished first goal, then the realm goal ladder's next step, then the generic goal ("" = none).
-static func goal_text(c: CharacterData, data: GameData, flags: Dictionary, clan: ClanData, density: float) -> String:
+static func goal_text(c: CharacterData, data: GameData, flags: Dictionary, clan: ClanData, density: float, region_id: String = "", today: int = -1) -> String:
 	if Guidance.first_goals_done(c, data, flags) or c.realm_index >= 2:
 		for row in Guidance.active_goal_ladder(c, data, flags, clan):
 			if not row["done"]:
 				return "Goal: " + str(row["text"])
-		var lines := Guidance.goals(c, data, flags, clan, density)
+		var lines := Guidance.goals(c, data, flags, clan, density, region_id, today)
 		return "Goal: " + lines[0] if not lines.is_empty() else ""
 	for goal in Guidance.first_goals(c, data, flags):
 		if not goal["done"]:

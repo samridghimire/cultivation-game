@@ -136,6 +136,27 @@ func test_goal_text() -> void:
 		assert_eq(HUD.goal_text(top, d, {}, null, 1.0), "Goal: " + tl[0] if not tl.is_empty() else "")
 
 
+## WU-379: the HUD Goal line passes the region and day through to Guidance.goals (faster-spot clause etc.).
+func test_goal_text_region_aware() -> void:
+	var d := data()
+	var c := new_character()
+	c.realm_index = 2
+	var flags := {}
+	var expected := ""
+	var ladder_open := false
+	for row in Guidance.active_goal_ladder(c, d, flags, null):
+		if not row["done"]:
+			ladder_open = true
+	if not ladder_open:
+		var lines := Guidance.goals(c, d, flags, null, 1.0, "qingshi_village", 100)
+		expected = "Goal: " + lines[0] if not lines.is_empty() else ""
+	var got := HUD.goal_text(c, d, flags, null, 1.0, "qingshi_village", 100)
+	if not ladder_open:
+		assert_eq(got, expected)
+	# Defaults keep the old behaviour.
+	assert_eq(HUD.goal_text(c, d, flags, null, 1.0), HUD.goal_text(c, d, flags, null, 1.0, "", -1))
+
+
 ## WU-192: the arrival banner subtitle names the region's renown title.
 func test_arrival_subtitle() -> void:
 	var d := data()

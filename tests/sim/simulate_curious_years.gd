@@ -449,7 +449,7 @@ func _trace(args: Array[String]) -> void:
 	for h: String in Guidance.hints(c, gs.data, 1.0, 8, {}, gs.world_flags, gs.current_region, clock.total_days):
 		print("  - ", h)
 	print("Goals now:")
-	for g: String in Guidance.goals(c, gs.data, gs.world_flags):
+	for g: String in Guidance.goals(c, gs.data, gs.world_flags, gs.clan, 1.0, gs.current_region, clock.total_days):
 		print("  - ", g)
 	gs.end_session()
 	quit(0)

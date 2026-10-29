@@ -530,7 +530,7 @@ func _start_breakthrough_shots(gs: Node) -> void:
 		win.open()
 		await root.get_tree().process_frame
 		await root.get_tree().process_frame
-		var texts: Array = [String((win.get("_hint") as Label).text), "\n".join(Guidance.goals(c, gs.data, gs.world_flags)), "\n".join(Guidance.hints(c, gs.data, 3, 12, gs.npcs, gs.world_flags, "qingshi_village", 40, gs.npc_favor))]
+		var texts: Array = [String((win.get("_hint") as Label).text), "\n".join(Guidance.goals(c, gs.data, gs.world_flags, gs.clan, 1.0, gs.current_region, GameClock.total_days)), "\n".join(Guidance.hints(c, gs.data, 3, 12, gs.npcs, gs.world_flags, "qingshi_village", 40, gs.npc_favor))]
 		print("pill-rank-gate peak: ", texts)
 		assert(String(texts[0]).contains("Core Forming Pill") or String(texts[1]).contains("Core Forming Pill"), "Core Forming Pill not named: " + str(texts))
 		for t: String in texts:
@@ -2830,7 +2830,7 @@ func _start_hint_shot(gs: Node) -> void:
 		await root.get_tree().process_frame
 		hud.get("_banner").visible = false
 		var rank_line := ""
-		for l: String in Guidance.goals(c, gs.data, gs.world_flags):
+		for l: String in Guidance.goals(c, gs.data, gs.world_flags, gs.clan, 1.0, gs.current_region, GameClock.total_days):
 			if l.begins_with("Become "):
 				rank_line = l
 		assert(rank_line.contains("is beyond you yet"), "rank goal not hopeless: " + rank_line)
@@ -2864,7 +2864,7 @@ func _start_hint_shot(gs: Node) -> void:
 		var want_head := "Found a clan: reach Foundation Establishment, claim an abode as its seat ("
 		var want_tail := ") and gather 500 spirit stones (you have 120)."
 		var clan_line := ""
-		for l: String in Guidance.goals(c, gs.data, gs.world_flags):
+		for l: String in Guidance.goals(c, gs.data, gs.world_flags, gs.clan, 1.0, gs.current_region, GameClock.total_days):
 			if l.begins_with("Found a clan"):
 				clan_line = l
 		assert(clan_line.begins_with(want_head) and clan_line.ends_with(want_tail), "clan goal line wrong: " + clan_line)
@@ -2902,7 +2902,7 @@ func _start_hint_shot(gs: Node) -> void:
 		hud.get("_banner").visible = false
 		var want := "Become Core Disciple: earn 3000 contribution (you have 40) and reach Foundation Establishment."
 		var rank_line := ""
-		for l: String in Guidance.goals(c, gs.data, gs.world_flags):
+		for l: String in Guidance.goals(c, gs.data, gs.world_flags, gs.clan, 1.0, gs.current_region, GameClock.total_days):
 			if l.begins_with("Become "):
 				rank_line = l
 		assert(rank_line == want, "rank goal wrong: " + rank_line)
@@ -3000,7 +3000,7 @@ func _start_hint_shot(gs: Node) -> void:
 		var entry: Dictionary = Guidance.sect_pill_entry(c, gs.data)
 		assert(String(entry.get("name", "")).contains("Core Forming"), "setup: the pill is not the Core Forming Pill: " + str(entry))
 		var texts: Array = Guidance.hints(c, gs.data, 3, 12, gs.npcs, gs.world_flags, "qingshi_village", 40, gs.npc_favor)
-		texts.append_array(Guidance.goals(c, gs.data, gs.world_flags))
+		texts.append_array(Guidance.goals(c, gs.data, gs.world_flags, gs.clan, 1.0, gs.current_region, GameClock.total_days))
 		for t: String in texts:
 			assert(not t.contains("As Elder"), "text names the unreachable Elder rank:\n" + t)
 		var bw: Control = hud.get("_breakthrough")
