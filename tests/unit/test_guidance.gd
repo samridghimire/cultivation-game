@@ -2865,6 +2865,41 @@ func test_next_recipe_line_names_the_scroll_merchant() -> void:
 	assert_true(checked_here and checked_far, "covered both the here and far wording")
 
 
+func _azure_alchemist(contribution: int) -> CharacterData:
+	var c := CharacterData.new()
+	c.sect = {"id": "azure_cloud_sect", "rank": 0, "contribution": contribution}
+	c.professions["alchemist"] = {"rank": 1, "xp": 0.0}
+	for rid: String in data().recipes:
+		var r: Dictionary = data().recipes[rid]
+		if String(r.get("profession", "")) == "alchemist" and int(r.get("min_rank", 0)) < 1:
+			c.known_recipes.append(rid)
+	return c
+
+
+func test_next_recipe_line_claims_scroll_from_sect_treasury() -> void:
+	# GUIDE-189
+	var c := _azure_alchemist(500)
+	assert_eq(Professions.next_unknown_recipe(c, data(), "alchemist"), "meridian_mending_pill")
+	var cost := int(Sects.shop_entry(c, data(), "recipe_meridian_mending_pill")["contribution"])
+	var line := Guidance.next_recipe_line(c, data(), "alchemist", "", 0)
+	assert_true(line.ends_with("Its scroll: claim it from your sect treasury for %d contribution." % cost), line)
+	c.sect["contribution"] = 40
+	line = Guidance.next_recipe_line(c, data(), "alchemist", "", 0)
+	assert_true(line.ends_with("for %d contribution (you have 40)." % cost), line)
+	c.sect = {}
+	assert_false(Guidance.next_recipe_line(c, data(), "alchemist", "", 0).contains("treasury"))
+
+
+func test_scroll_treasury_phrase_names_the_rank_that_reaches_it() -> void:
+	var c := _azure_alchemist(0)
+	c.realm_index = 3
+	var entry := Sects.shop_entry(c, data(), "recipe_foundation_establishment_pill")
+	var rank_name := (data().sects["azure_cloud_sect"] as SectDef).rank_name(int(entry["min_rank"]))
+	var out := Guidance._scroll_treasury_phrase(c, data(), "recipe_foundation_establishment_pill", "found at X")
+	assert_eq(out, "found at X; your sect treasury hands it to %s for %d contribution" % [rank_name, int(entry["contribution"])])
+	assert_eq(Guidance._scroll_treasury_phrase(c, data(), "recipe_not_sold", "found at X"), "found at X")
+
+
 func test_next_recipe_line_empty_when_all_known_or_doctor() -> void:
 	var c := CharacterData.new()
 	c.professions["alchemist"] = {"rank": Professions.max_rank(data()), "xp": 0.0}

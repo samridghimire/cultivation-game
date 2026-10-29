@@ -3194,9 +3194,30 @@ static func next_recipe_line(c: CharacterData, data: GameData, prof_id: String, 
 		if source == "":
 			var found := Items.sources(data, scroll_id)
 			source = String(found[0]).to_lower() if not found.is_empty() else ""
+		source = _scroll_treasury_phrase(c, data, scroll_id, source)
 	if source == "":
 		source = "found in the wider world"
 	return "Next recipe: %s (rank %d). Its scroll: %s." % [recipe.get("name", recipe_id), int(recipe.get("min_rank", 0)), source]
+
+
+## GUIDE-189: the sect treasury as the scroll's source. A rank that reaches it replaces `source` with "claim it from
+## your sect treasury for N contribution" (" (you have M)" when short); a lower rank keeps `source` and adds what the
+## rank that does reach it gets, unless that rank's realm gate is beyond c. Rogues and other sects: `source`.
+static func _scroll_treasury_phrase(c: CharacterData, data: GameData, scroll_id: String, source: String) -> String:
+	var entry := Sects.shop_entry(c, data, scroll_id)
+	if entry.is_empty():
+		return source
+	var cost := int(entry["contribution"])
+	var min_rank := int(entry.get("min_rank", 0))
+	if int(c.sect.get("rank", 0)) >= min_rank:
+		var balance := Sects.contribution_balance(c)
+		var phrase := "claim it from your sect treasury for %d contribution" % cost
+		return phrase if balance >= cost else "%s (you have %d)" % [phrase, balance]
+	var sect: SectDef = data.sects[c.sect["id"]]
+	var gate := String(sect.ranks[min_rank].get("min_realm", ""))
+	if gate != "" and data.realm_index_of(gate) > c.realm_index:
+		return source
+	return "%s; your sect treasury hands it to %s for %d contribution" % [source, sect.rank_name(min_rank), cost]
 
 
 ## GUIDE-184: "sold by the <Merchant> here for N stones" / "... in <Region> (<days>) for N stones" for the
