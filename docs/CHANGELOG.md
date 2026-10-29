@@ -2,6 +2,22 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-28 [WU-376] A screenshot check that the injury hint names the nearest clinic, the trip and its price when you cannot afford it.
+- 2026-10-28 [GUIDE-184] The next-recipe line says which merchant sells the scroll, where and for how much.
+- 2026-10-28 [WU-362] The sect hall's join prompt says what members get: faster qi, a monthly lecture, the next breakthrough pill.
+- 2026-10-28 [GUIDE-186] The clan goal names the abode you could claim as its seat, where it is and what it costs.
+- 2026-10-28 [C-252] Help explains that some pills are too potent for a lower realm.
+- 2026-10-28 [GUIDE-185] When a merchant where you stand sells a body art you can afford, the defence hint says to buy it first.
+- 2026-10-24 [WU-371] A screenshot check of the sect treasury's "Learn now" button.
+- 2026-10-24 [GUIDE-182] As a rogue, the sect hint leads with the best sect and what its members get, so the HUD line keeps it.
+- 2026-10-24 [C-254] A hermit physician at Azure Peak treats injuries near the Cloud-Sea Cliff.
+- 2026-10-24 [GUIDE-183] When the nearest clinic is far or too dear, the injury hint still names it, the trip and the price.
+- 2026-10-24 [WU-372] A screenshot check that the sect method hint keeps both qi rates.
+- 2026-10-24 [PERF-007] Hints refresh a little faster after an injury-free stage-up.
+- 2026-10-24 [WU-375] Shops and the inventory mark pills that need a higher realm than yours.
+- 2026-10-24 [QA-162] The sim measured a sect member who travels to the far qi spot: much faster, but still slower than a rogue there.
+- 2026-10-24 [GUIDE-180] A single ready sect mission says what else it pays.
+- 2026-10-24 [WU-373] A screenshot check of the journal's rank goal listing two needs.
 - 2026-10-24 [ITEM-003] Some pills now need a higher realm: the Cloud-Mist Qi Pill only works from Foundation, the Earth Marrow Essence Pill from Core Formation.
 - 2026-10-24 [GUIDE-178] Alchemy orders ask for pills you can make from ingredients in your own region first.
 - 2026-10-24 [GUIDE-181] The sect rank goal lists everything the next rank still needs at once.
