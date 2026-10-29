@@ -2,6 +2,21 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-29 [QA-173] A Core Formation stall report: without the sect method no sect player reaches Core in five years; with it all do.
+- 2026-10-29 [WU-391] One screenshot batch for the day's guidance changes.
+- 2026-10-29 [GUIDE-201] The realm goal says how much sooner Core Formation comes with your sect's method.
+- 2026-10-29 [MENTOR-005] A master's pointers read differently from month to month.
+- 2026-10-29 [GFX-008] Qingshi Village has houses, fields, a pond, a fence and a well.
+- 2026-10-29 [GUIDE-197] Goals tell the truth about the next step (faster spots, hopeless trials, missions you no longer need).
+- 2026-10-29 [QA-176] A test guards asset licences before the first art pack lands.
+- 2026-10-29 [GUIDE-200] The sell hint and Sell all keep what your open orders need.
+- 2026-10-29 [WU-396] Fight reports show the two fighters on a small duel stage.
+- 2026-10-29 [GFX-007] Pixel-style ground and path tiles until the art pack lands.
+- 2026-10-29 [RIVAL-021] Your rival no longer challenges you nearly every month.
+- 2026-10-29 [C-258] Help explains the next-recipe, clan-abode and explored-out hints.
+- 2026-10-29 [GFX-009] Crisp pixels at every window size (integer zoom).
+- 2026-10-29 [GFX-006] Ground, paths, decor and NPCs can be drawn from pixel-art sprites.
+- 2026-10-29 [C-263] The Granary Blessing happens only once.
 - 2026-10-29 [WU-390] The road-unlock notice no longer reads as if you stood in the road's far region.
 - 2026-10-29 [GFX-001] A sprite pipeline for pixel art (data/sprites.json), with today's drawings as the fallback.
 - 2026-10-29 [QA-168] Balance baseline refreshed after the 2026-10-29 guidance and content changes.

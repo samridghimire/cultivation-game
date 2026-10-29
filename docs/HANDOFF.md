@@ -2,6 +2,20 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-10-29 (planner, 12:15 UTC)
+- 15 tasks landed (GFX-006..009, WU-391/396, RIVAL-021, GUIDE-197/200/201, MENTOR-005, C-258/263, QA-173/176). Review
+  1decde8..c83d675 fixed one test inline. Live claims: RIVAL-022 (WIP commit 12:28), C-256 (10:26).
+- Planner rendered every region (`xvfb-run ... screenshot_regions.gd`, works in the cloud, ~1 min): the HUD covers the
+  left third of the screen -> GFX-010 (spec file); people are vector pawns -> GFX-011 (spec file, generated pixel
+  figures); only Qingshi has landmarks -> GFX-012 (new kinds wall/cliff/stream/lantern/pine/stall, all regions).
+- Traces 139 (sect) and 141 (rogue), 36 months: Foundation village beats repeat monthly -> ENC-010 (rest_days, spec file);
+  lecture line never varies -> C-270. New world-feel work: ENC-011 (`{villager}` in happenings + favor), WEATHER-001 ->
+  WU-399, WORLD-001 (villagers' daily round), C-267 (beast tags for the duel stage), C-269 (Foundation Qingshi beats,
+  `sect_only`), WU-397 (hit feedback + reduce motion), GFX-013 (last sprite hooks), WU-398 (hint-shot repairs).
+- QA-173: base sect players stall at Foundation Peak (0/10 Core in 60 months), with the sect method 10/10 reach Core:
+  recorded under F-005d; no retune (owner's pacing call).
+- Next planner: QA-175's repeat list (-> C-265; ENC-010 may already cover the village beats), look at GFX-010/011 shots.
+
 ## State on 2026-10-29 (planner, 06:15 UTC)
 - 3 tasks landed (GFX-001, WU-390, QA-168: every balance diff explained, no follow-ups). No review since 1decde8.
   Live claim: RIVAL-021 (fresh).
