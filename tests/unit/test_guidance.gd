@@ -381,7 +381,7 @@ func test_better_qi_hint_names_the_best_reachable_spot() -> void:
 
 func _gather_or_travel(hints: PackedStringArray) -> String:
 	for line in hints:
-		if line.begins_with("Gather ") or line.begins_with("Travel to "):
+		if line.begins_with("Gather ") or line.begins_with("Travel to ") or line.begins_with("Heal first, then travel to "):
 			return line
 	return ""
 
@@ -419,8 +419,10 @@ func test_far_qi_trip_warns_when_injured_and_destination_has_no_healer() -> void
 	places.assign(saved.filter(func(p: Dictionary) -> bool: return String(p.get("type", "")) != "clinic"))
 	var line := _gather_or_travel(Guidance.hints(c, data(), 1.0, 20, {}, {}, "qingshi_village"))
 	places.assign(saved)
-	assert_true(line.begins_with("Travel to Azure Peak ("), line)
-	assert_true(line.ends_with(" Heal first: Azure Peak has no healer."), line)
+	assert_true(line.begins_with("Heal first, then travel to Azure Peak ("), line)
+	assert_true(line.contains("which has no healer:"), line)
+	assert_false(line.ends_with("has no healer."), line)
+	assert_true(line.left(120).contains("Heal first"), line)
 	assert_eq(Guidance._no_healer_warning(c, data(), "qingshi_village"), "")
 
 

@@ -113,7 +113,7 @@ extends SceneTree
 ## WU-367: `--hint-shot` also writes pill_rank_gate_/pill_rank_open_<size>.png (Foundation Peak Inner Disciple, 6998 contribution: no hint, goal or breakthrough text says "As Elder"; QR8 Outer Disciple: the Foundation pill line still says "As Inner Disciple you could claim it").
 ## WU-362: `--hint-shot` also writes sect_join_prompt_<size>.png (rogue QR3 at the Azure Cloud hall with the join prompt open: the description lists the membership perks and fits the viewport).
 ## WU-380: `--hint-shot` also writes journal_recipe_treasury_<size>.png (Azure Cloud Outer Disciple Alchemist, 500 contribution: Goals reads "Its scroll: claim it from your sect treasury for N contribution.").
-## WU-383: `--hint-shot` also writes hint_heal_before_travel_<size>.png (injured Foundation rogue, Azure Peak clinic removed: the far-qi Travel line ends "Heal first: Azure Peak has no healer."; the capped HUD line cuts it).
+## WU-383: `--hint-shot` also writes hint_heal_before_travel_<size>.png (injured Foundation rogue, Azure Peak clinic removed: the far-qi line opens "Heal first, then travel to Azure Peak (...), which has no healer:"; the capped HUD line keeps it).
 ## WU-381: `--hint-shot` also writes hint_thin_defence_budget_<size>.png (same rogue with the manual price + 10 stones: HUD line still starts with the manual; no armor named costs over 10).
 ## WU-378: `--hint-shot` also writes hint_thin_defence_local_<size>.png (Foundation rogue in Qingshi, no armor or body art, 1000 stones: the capped HUD line starts "Your defence is thin. Buy Manual: Stone Skin Tempering"; the journal's clan goal names the Waterfall Cave).
 ## WU-377: hint_rogue_join also asserts the capped HUD line keeps "members gather qi x".
@@ -2405,7 +2405,7 @@ func _start_hint_shot(gs: Node) -> void:
 			far_saved.clear()})
 
 	# WU-383: GUIDE-187. An injured Foundation rogue in Qingshi whose far-qi Travel line points at Azure Peak with its clinic taken out
-	# (it has one since C-254): the line ends "Heal first: Azure Peak has no healer."; print whether the capped HUD line keeps it.
+	# (it has one since C-254): the line opens "Heal first, then travel to Azure Peak"; print whether the capped HUD line keeps it.
 	var heal_first_saved: Array = []
 	var heal_first_places: Array = []
 	shots.append({"name": "hint_heal_before_travel_" + size_tag, "open": func() -> void:
@@ -2428,12 +2428,11 @@ func _start_hint_shot(gs: Node) -> void:
 		var lines: Array = Guidance.hints(c, gs.data, 1.0, 20, gs.npcs, gs.world_flags, "qingshi_village", clock.total_days, gs.npc_favor)
 		var travel := ""
 		for h: String in lines:
-			if h.begins_with("Travel to Azure Peak ("):
+			if h.begins_with("Heal first, then travel to Azure Peak ("):
 				travel = h
 				break
-		var warn := " Heal first: Azure Peak has no healer."
 		print("hint-shot heal first: ", travel, " | HUD: ", (hud.get("_hint") as Label).text)
-		assert(travel.ends_with(warn), "far-qi line lacks the heal-first warning:\n" + "\n".join(lines))
+		assert(travel.contains("which has no healer:"), "far-qi line lacks the heal-first warning:\n" + "\n".join(lines))
 		var capped: String = hud.call("cap_hint", travel)
 		print("hint-shot heal first capped keeps warning: ", capped.contains("Heal first"), " | ", capped), "close": func() -> void:
 			(gs.data.regions["azure_peak"]["places"] as Array).assign(heal_first_places)

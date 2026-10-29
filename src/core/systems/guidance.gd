@@ -2177,11 +2177,13 @@ static func _merge_better_qi(out: PackedStringArray, c: CharacterData, data: Gam
 			# GUIDE-128: a far spot that saves a month or more leads the line with the trip.
 			if int(offer["days_here"]) - int(offer["days_far"]) - 2 * int(offer["away"]) >= FAR_QI_LEAD_DAYS and int(offer["away"]) > 0:
 				var base_where := "at %s here" % GameData.plain_name(String(local["name"])) if local_clause != "" else "where you stand"
-				out[gather] = "Travel to %s (%s): %s gathers %s in about %s, against %s %s." % [
+				# GUIDE-193: the no-healer warning leads the line so the capped HUD line keeps it.
+				var warn := _no_healer_warning(c, data, String(offer["region"]))
+				var opener := "Heal first, then travel to %s (%s), which has no healer:" if warn != "" else "Travel to %s (%s):"
+				out[gather] = (opener + " %s gathers %s in about %s, against %s %s.") % [
 					String(offer["region_name"]), Calendar.format_duration(int(offer["away"])), GameData.plain_name(String(offer["place"])),
 					_next_step_name(c, data, "the next stage"), Calendar.format_duration(int(offer["days_far"])),
 					Calendar.format_duration(int(offer["days_here"])), base_where]
-				out[gather] += _no_healer_warning(c, data, String(offer["region"]))
 				return out
 	var clauses: PackedStringArray = []
 	for clause: String in [local_clause, far_clause]:
