@@ -14,6 +14,9 @@ const DEFAULTS := {
 	"tree_color": "2e5a2a", "rock_color": "7d7a72", "grass_color": "5f8a45", "flower_color": "e8c9e0",
 }
 const MAX_COUNT := 300
+## map.landmarks kinds (GFX-008); house and well are solid, the rest can be walked over.
+const LANDMARK_KINDS: PackedStringArray = ["house", "field", "pond", "fence", "well"]
+const SOLID_LANDMARKS: PackedStringArray = ["house", "well"]
 ## Clearance kept around places, npc spots and the spawn point, and from the map edge.
 const CLEARANCE := 28.0
 const SPOT_RADIUS := 30.0
@@ -69,6 +72,21 @@ static func blocked_rects(region: Dictionary) -> Array[Rect2]:
 		var sz: Array = p.get("size", [64, 64])
 		var size := Vector2(float(sz[0]), float(sz[1]))
 		out.append(Rect2(Vector2(float(pos[0]), float(pos[1])) - size / 2.0, size).grow(CLEARANCE))
+	for r in landmark_rects(region):
+		out.append(r.grow(CLEARANCE / 2.0))
+	return out
+
+
+## Landmark rects of a region: map.landmarks `pos` is the centre, like a place's.
+static func landmark_rects(region: Dictionary, solid_only: bool = false) -> Array[Rect2]:
+	var out: Array[Rect2] = []
+	for lm: Dictionary in region.get("map", {}).get("landmarks", []):
+		if solid_only and not SOLID_LANDMARKS.has(String(lm.get("kind", ""))):
+			continue
+		var pos: Array = lm["pos"]
+		var sz: Array = lm["size"]
+		var size := Vector2(float(sz[0]), float(sz[1]))
+		out.append(Rect2(Vector2(float(pos[0]), float(pos[1])) - size / 2.0, size))
 	return out
 
 
@@ -98,4 +116,17 @@ static func validate(data: GameData) -> PackedStringArray:
 					errors.append("Region '%s' map.decor.%s is not a color" % [region["id"], key])
 			elif not (decor[key] is float or decor[key] is int) or int(decor[key]) < 0 or int(decor[key]) > MAX_COUNT:
 				errors.append("Region '%s' map.decor.%s must be 0-%d" % [region["id"], key, MAX_COUNT])
+		var landmarks: Variant = region.get("map", {}).get("landmarks", [])
+		if not landmarks is Array:
+			errors.append("Region '%s' map.landmarks must be a list" % region["id"])
+			continue
+		for lm: Variant in landmarks:
+			if not (lm is Dictionary and LANDMARK_KINDS.has(String(lm.get("kind", "")))):
+				errors.append("Region '%s' has a landmark with an unknown kind (%s)" % [region["id"], ", ".join(LANDMARK_KINDS)])
+			elif not (_is_pair(lm.get("pos")) and _is_pair(lm.get("size")) and float(lm["size"][0]) > 0.0 and float(lm["size"][1]) > 0.0):
+				errors.append("Region '%s' landmark '%s' needs numeric pos and positive size [x, y]" % [region["id"], lm["kind"]])
 	return errors
+
+
+static func _is_pair(v: Variant) -> bool:
+	return v is Array and (v as Array).size() == 2 and (v as Array).all(func(n: Variant) -> bool: return n is float or n is int)

@@ -64,3 +64,34 @@ func test_abodes_are_kept_clear() -> void:
 	assert_true(Scenery.blocked_rects(region).has(abode))
 	for d in Scenery.place(region, seeded_rng(5)):
 		assert_false(abode.has_point(d["pos"]), "%s inside the abode" % d["kind"])
+
+
+func test_validate_flags_bad_landmarks() -> void:
+	var d := GameData.new()
+	d.regions = {"bad": {"id": "bad", "map": {"landmarks": [{"kind": "castle", "pos": [1, 2], "size": [3, 4]}, {"kind": "house", "pos": ["a", 2], "size": [3, 4]}, {"kind": "house", "pos": [1, 2], "size": [0, 4]}]}}}
+	assert_eq(Scenery.validate(d).size(), 3)
+
+
+func test_decor_avoids_landmarks() -> void:
+	var region := _region()
+	region["map"]["landmarks"] = [{"kind": "pond", "pos": [600, 100], "size": [200, 120]}]
+	var rect := Scenery.landmark_rects(region)[0]
+	for d in Scenery.place(region, seeded_rng(3)):
+		assert_false(rect.has_point(d["pos"]), "%s inside the pond" % d["kind"])
+
+
+func test_solid_landmarks_keep_places_spots_and_spawn_reachable() -> void:
+	for region: Dictionary in data().regions.values():
+		var solid := Scenery.landmark_rects(region, true)
+		var points: Array[Vector2] = []
+		for s: Array in region.get("npc_spots", []):
+			points.append(Vector2(float(s[0]), float(s[1])))
+		for p: Dictionary in region.get("places", []):
+			points.append(Vector2(float(p["pos"][0]), float(p["pos"][1])))
+		if region.has("spawn"):
+			points.append(Vector2(float(region["spawn"][0]), float(region["spawn"][1])))
+		for r in solid:
+			for pt in points:
+				assert_false(r.grow(16.0).has_point(pt), "%s: solid landmark covers %s" % [region["id"], pt])
+			for path: Array in region["map"].get("paths", []):
+				assert_false(r.intersects(Rect2(float(path[0]), float(path[1]), float(path[2]), float(path[3]))), "%s: landmark on a path" % region["id"])

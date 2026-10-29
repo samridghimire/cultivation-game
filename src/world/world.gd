@@ -63,6 +63,7 @@ func _ready() -> void:
 	_place_at_spawn_anchor()
 	_build_npcs()
 	_build_bounds()
+	_build_landmark_bodies()
 	_limit_camera()
 	_fit_pixel_zoom()
 	get_viewport().size_changed.connect(_fit_pixel_zoom)
@@ -188,6 +189,19 @@ func _build_bounds() -> void:
 		shape.shape = box
 		shape.position = rect.position + rect.size / 2.0
 		walls.add_child(shape)
+
+
+## House and well landmarks block the player (GFX-008).
+func _build_landmark_bodies() -> void:
+	var body := StaticBody2D.new()
+	add_child(body)
+	for rect in Scenery.landmark_rects(_region, true):
+		var shape := CollisionShape2D.new()
+		var box := RectangleShape2D.new()
+		box.size = rect.size
+		shape.shape = box
+		shape.position = rect.get_center()
+		body.add_child(shape)
 
 
 ## Scenery is seeded from the region id, so a region always looks the same.
@@ -411,6 +425,8 @@ func _draw() -> void:
 		else:
 			_draw_tiled(GroundTiles.cached(path_color, rid, "path"), rect)
 			draw_rect(rect.grow(-1.0), GroundTiles.edge_color(path_color), false, 2.0)
+	for lm: Dictionary in map.get("landmarks", []):
+		_draw_landmark(lm)
 	for d in _decor:
 		_draw_decor(d)
 	draw_rect(Rect2(Vector2.ZERO, map_size), Color(map.get("border", "2a3a20")), false, 6.0)
@@ -431,6 +447,57 @@ func _draw_tiled(tile: Texture2D, area: Rect2) -> void:
 			draw_texture_rect_region(tile, Rect2(x, y, w, h), src)
 			x += step.x
 		y += step.y
+
+
+## One map.landmarks entry: its `landmark_<kind>` sprite scaled into the rect, else placeholder art (GFX-008).
+func _draw_landmark(lm: Dictionary) -> void:
+	var size := _vec(lm["size"])
+	var r := Rect2(_vec(lm["pos"]) - size / 2.0, size)
+	var tex := Sprites.texture("landmark_" + str(lm["kind"]))
+	if tex != null:
+		draw_texture_rect(tex, r, false)
+		return
+	match lm["kind"]:
+		"house":
+			var roof_h := r.size.y * 0.55
+			draw_rect(Rect2(r.position.x + 6, r.position.y + roof_h - 6, r.size.x - 12, r.size.y - roof_h + 6), Color("c9b48a"))
+			draw_rect(Rect2(r.position.x + r.size.x / 2.0 - 8, r.end.y - 26, 16, 26), Color("4a3524"))
+			draw_rect(Rect2(r.position.x + 14, r.end.y - 36, 14, 14), Color("3a2f26"))
+			var roof := PackedVector2Array([
+				Vector2(r.position.x - 4, r.position.y + roof_h),
+				Vector2(r.position.x + 10, r.position.y + roof_h - 6),
+				Vector2(r.position.x + 24, r.position.y),
+				Vector2(r.end.x - 24, r.position.y),
+				Vector2(r.end.x - 10, r.position.y + roof_h - 6),
+				Vector2(r.end.x + 4, r.position.y + roof_h),
+			])
+			draw_colored_polygon(roof, Color("5a4638"))
+			for i in 4:
+				var y := r.position.y + roof_h * (i + 1) / 5.0
+				draw_line(Vector2(r.position.x + 6, y), Vector2(r.end.x - 6, y), Color("3f3128"), 2.0)
+		"field":
+			draw_rect(r, Color("6e5636"))
+			var y := r.position.y + 8.0
+			while y < r.end.y - 4.0:
+				draw_line(Vector2(r.position.x + 6, y), Vector2(r.end.x - 6, y), Color("9ab34f"), 4.0)
+				y += 14.0
+			draw_rect(r, Color("4a3a24"), false, 2.0)
+		"pond":
+			draw_set_transform(r.get_center(), 0.0, Vector2(1.0, r.size.y / r.size.x))
+			draw_circle(Vector2.ZERO, r.size.x / 2.0 + 5.0, Color("8a9a70"))
+			draw_circle(Vector2.ZERO, r.size.x / 2.0, Color("3f7fa8"))
+			draw_circle(Vector2(-r.size.x * 0.12, -r.size.x * 0.08), r.size.x * 0.22, Color("5fa0c8"))
+			draw_set_transform(Vector2.ZERO)
+		"fence":
+			for y in [r.position.y + 6.0, r.end.y - 6.0]:
+				draw_line(Vector2(r.position.x, y), Vector2(r.end.x, y), Color("7a5a3a"), 3.0)
+			var x := r.position.x
+			while x <= r.end.x:
+				draw_rect(Rect2(x - 2, r.position.y, 4, r.size.y), Color("5a4028"))
+				x += 20.0
+		"well":
+			draw_circle(r.get_center(), minf(r.size.x, r.size.y) / 2.0, Color("7d7a72"))
+			draw_circle(r.get_center(), minf(r.size.x, r.size.y) / 2.0 - 6.0, Color("23323f"))
 
 
 func _draw_decor(d: Dictionary) -> void:
