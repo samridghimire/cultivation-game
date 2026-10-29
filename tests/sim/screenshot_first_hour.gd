@@ -11,12 +11,14 @@ extends SceneTree
 
 const OUT_DIR := "user://screenshots/first_hour"
 const SETTLE_FRAMES := 6
+const BANNER_WAIT_MSEC := 3000
 
 var world: Node = null
 var hud: CanvasLayer = null
 var shots: Array[Dictionary] = []  # {name, open: Callable, close: Callable}
 var index := 0
 var frames := 0
+var banner_wait_start := -1
 var started := false
 var opened := false
 
@@ -79,7 +81,7 @@ func _start() -> void:
 	for action: String in ["toggle_journal", "toggle_inventory", "toggle_character_sheet"]:
 		if hud.get("_screens").has(action):
 			var s: Control = hud.get("_screens")[action]
-			shots.append({"name": action.trim_prefix("toggle_"), "open": s.open, "close": s.close})
+			shots.append({"name": action.trim_prefix("toggle_"), "open": s.open, "close": s.close, "wait_banner": true})
 
 
 ## The node under the world whose script file ends with `script_name` (for a gather site, one whose
@@ -204,7 +206,22 @@ func _process(_d: float) -> bool:
 		frames = 0
 		return false
 	frames += 1
-	if frames == SETTLE_FRAMES:
+	# WU-386: after a fight a milestone banner is still fading; wait it out (at most ~3 s) so it never dims a screen shot.
+	if frames >= SETTLE_FRAMES and shot.get("wait_banner", false) and hud.get("_banner").visible:
+		if banner_wait_start < 0:
+			banner_wait_start = Time.get_ticks_msec()
+		if Time.get_ticks_msec() - banner_wait_start < BANNER_WAIT_MSEC:
+			return false
+		var banner: Control = hud.get("_banner")
+		push_warning("%s: banner still showing after %d ms (queued=%d); hidden by hand" % [shot["name"], BANNER_WAIT_MSEC, banner.queued_count()])
+		while banner.queued_count() > 0:
+			banner.finish_current()  # each call plays the next queued banner
+		banner.finish_current()
+		frames = 0  # let a frame render without it before the capture
+		banner_wait_start = -1
+		return false
+	if frames >= SETTLE_FRAMES:
+		banner_wait_start = -1
 		DirAccess.make_dir_recursive_absolute(OUT_DIR)
 		var file := "%s/%s.png" % [OUT_DIR, shot["name"]]
 		root.get_viewport().get_texture().get_image().save_png(file)
