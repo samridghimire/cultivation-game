@@ -373,17 +373,13 @@ const HAUNT_CHILD_PLACES: PackedStringArray = ["orphanage"]
 ## next one as days pass. Never inside a solid landmark or a place.
 static func haunt(npc: CharacterData, region: Dictionary, day: int, adult: bool = true) -> Vector2:
 	var h := absi(hash(npc.id))
-	var anchors := _haunt_anchors(region, adult)
-	if anchors.is_empty():
+	var place := haunt_place(npc, region, day, adult)
+	if place.is_empty():
 		var spots: Array = region.get("npc_spots", [])
 		if spots.is_empty():
 			return Vector2.ZERO
 		return Vector2(float(spots[h % spots.size()][0]), float(spots[h % spots.size()][1]))
-	var n := mini(anchors.size(), 2 + h % 2)
-	var picked: Array[Rect2] = []
-	for k in n:
-		picked.append(anchors[(h / 7 + k * (1 + h % 3)) % anchors.size()])
-	var rect := picked[posmod(day + h, n)]
+	var rect := _rect_of(place)
 	var blocked := _haunt_blocked(region)
 	var centre := rect.get_center()
 	var radius := maxf(rect.size.x, rect.size.y) / 2.0 + HAUNT_STAND_OFF
@@ -396,21 +392,62 @@ static func haunt(npc: CharacterData, region: Dictionary, day: int, adult: bool 
 	return fallback
 
 
-static func _haunt_anchors(region: Dictionary, adult: bool) -> Array[Rect2]:
-	var out: Array[Rect2] = []
+## The place dict (a region place, landmark or family home, with a normalized
+## `type`) the villager stands by today, {} when they fall back to `npc_spots` (WORLD-002).
+static func haunt_place(npc: CharacterData, region: Dictionary, day: int, adult: bool = true) -> Dictionary:
+	var h := absi(hash(npc.id))
+	var anchors := _haunt_anchors(region, adult)
+	if anchors.is_empty():
+		return {}
+	var n := mini(anchors.size(), 2 + h % 2)
+	var picked: Array[Dictionary] = []
+	for k in n:
+		picked.append(anchors[(h / 7 + k * (1 + h % 3)) % anchors.size()])
+	return picked[posmod(day + h, n)]
+
+
+## What a villager is up to at `place` (from `haunt_place`), "" for no place.
+static func activity_line(_npc: CharacterData, place: Dictionary) -> String:
+	if place.is_empty():
+		return ""
+	var what := String(place.get("display_name", String(place.get("type", "place")).replace("_", " ")))
+	match String(place.get("type", "")):
+		"merchant", "stall":
+			return "browsing the stalls at the %s" % what
+		"workshop":
+			return "lending a hand at the %s" % what
+		"gather", "field":
+			return "picking herbs on the %s" % what
+		"meditation":
+			return "sitting quietly by the %s" % what
+		"clinic":
+			return "waiting at the %s" % what
+		"landmark", "well", "pond":
+			return "drawing water at the %s" % what
+		"orphanage", "family_home":
+			return "playing near the %s" % what
+	return "about the %s" % what
+
+
+static func _haunt_anchors(region: Dictionary, adult: bool) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
 	if adult:
 		for p: Dictionary in region.get("places", []):
 			if HAUNT_ADULT_PLACES.has(String(p.get("type", ""))):
-				out.append(_rect_of(p))
+				out.append(p)
 		for lm: Dictionary in region.get("map", {}).get("landmarks", []):
 			if ["field", "well", "pond", "stall"].has(String(lm.get("kind", ""))):
-				out.append(_rect_of(lm))
+				var d: Dictionary = lm.duplicate()
+				d["type"] = String(lm["kind"])
+				out.append(d)
 	else:
 		if region.has("family_home"):
-			out.append(_rect_of(region["family_home"]))
+			var home: Dictionary = (region["family_home"] as Dictionary).duplicate()
+			home["type"] = "family_home"
+			out.append(home)
 		for p: Dictionary in region.get("places", []):
 			if HAUNT_CHILD_PLACES.has(String(p.get("type", ""))):
-				out.append(_rect_of(p))
+				out.append(p)
 	return out
 
 

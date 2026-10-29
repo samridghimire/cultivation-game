@@ -575,6 +575,14 @@ static func known_tastes_text(flags: Dictionary, data: GameData, npc_id: String)
 	return " ".join(parts)
 
 
+## "browsing the stalls at X" for a villager standing at a haunt, else "" (WORLD-002).
+func _activity_text(npc: CharacterData) -> String:
+	var region: Dictionary = GameState.data.regions.get(GameState.current_region, {})
+	var adult := npc.age_years() >= int(GameState.data.family.get("adult_age", 16))
+	var place := Npcs.haunt_place(npc, region, GameClock.total_days, adult)
+	return Npcs.activity_line(npc, place)
+
+
 func _look() -> void:
 	var npc: CharacterData = GameState.npcs.get(npc_id)
 	if npc == null:
@@ -588,6 +596,9 @@ func _look() -> void:
 		var clan_id := NpcClans.clan_of(GameState.npc_clans, npc_id)
 		if not GameState.data.clan_relations.is_empty():
 			text += " The %s is %s." % [(GameState.npc_clans[clan_id] as ClanData).name, NpcClans.standing_text(GameState.npc_clans, GameState.data, clan_id)]
+	var doing := _activity_text(npc)
+	if doing != "":
+		text += " Today they are %s." % doing
 	var injuries := Injuries.describe(npc, GameState.data)
 	if not injuries.is_empty():
 		text += " Injuries: %s." % ", ".join(injuries)

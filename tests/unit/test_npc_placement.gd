@@ -91,6 +91,32 @@ func test_haunt_is_deterministic_and_changes_across_days() -> void:
 	assert_gt(moved, 3, "most villagers rotate between haunts")
 
 
+func test_haunt_place_agrees_with_haunt() -> void:
+	var region: Dictionary = data().regions["qingshi_village"]
+	for i in 20:
+		var c := _villager("npc_%d" % i)
+		for day in 5:
+			var place := Npcs.haunt_place(c, region, day)
+			assert_false(place.is_empty())
+			var rect := Npcs._rect_of(place)
+			var stand := Npcs.haunt(c, region, day)
+			assert_true(stand.distance_to(rect.get_center()) < maxf(rect.size.x, rect.size.y) / 2.0 + Npcs.HAUNT_STAND_OFF + 1.0)
+
+
+func test_activity_line_by_place_type() -> void:
+	var c := _villager("npc_x")
+	var cases := {
+		"merchant": "browsing the stalls at the Shop", "workshop": "lending a hand at the Shop",
+		"gather": "picking herbs on the Shop", "meditation": "sitting quietly by the Shop",
+		"clinic": "waiting at the Shop", "well": "drawing water at the Shop",
+		"orphanage": "playing near the Shop", "bounty_board": "about the Shop",
+	}
+	for t: String in cases:
+		assert_eq(Npcs.activity_line(c, {"type": t, "display_name": "Shop"}), cases[t], t)
+	assert_eq(Npcs.activity_line(c, {}), "")
+	assert_eq(Npcs.activity_line(c, {"type": "well"}), "drawing water at the well")
+
+
 func test_haunt_never_stands_in_a_solid_landmark_or_place() -> void:
 	for region: Dictionary in data().regions.values():
 		var solids := Scenery.landmark_rects(region, true)
@@ -108,12 +134,12 @@ func test_haunt_never_stands_in_a_solid_landmark_or_place() -> void:
 
 func test_haunt_children_stay_near_home_or_orphanage() -> void:
 	var region: Dictionary = data().regions[data().start_region]
-	var anchors: Array[Rect2] = Npcs._haunt_anchors(region, false)
+	var anchors: Array[Dictionary] = Npcs._haunt_anchors(region, false)
 	assert_false(anchors.is_empty())
 	for i in 6:
 		var pos := Npcs.haunt(_villager("kid_%d" % i), region, 3, false)
 		var near := false
-		for r in anchors:
-			if r.grow(Npcs.HAUNT_STAND_OFF + 80.0).has_point(pos):
+		for a in anchors:
+			if Npcs._rect_of(a).grow(Npcs.HAUNT_STAND_OFF + 80.0).has_point(pos):
 				near = true
 		assert_true(near, "child %d stays near the Family Home or orphanage" % i)
