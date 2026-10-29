@@ -58,6 +58,21 @@ func test_relation_gates_encounters() -> void:
 	assert_eq(text, "%s has reached %s." % [rival.name, Cultivation.realm_label(rival, d)])
 
 
+func test_encounter_spar_sets_the_spar_cooldown() -> void:
+	var gs := _root().get_node("GameState")
+	gs.start_session(new_character())
+	var rival: CharacterData = Rivals.rival_of(gs.player, gs.npcs)
+	gs.player.realm_index = 1
+	rival.realm_index = 1
+	gs.npc_favor[rival.id] = 30
+	assert_eq(gs.check_spar(rival.id), "", "the NPC menu spar is open before the encounter")
+	gs.pending_encounter = "rival_spar_friendly"
+	gs.choose_encounter(0)
+	assert_true(gs.check_spar(rival.id).contains("sparred with"), "the encounter spar leaves the cooldown: " + gs.check_spar(rival.id))
+	gs.pending_encounter = ""
+	gs.end_session()
+
+
 func test_game_state_spawns_and_resolves_rival_encounters() -> void:
 	var gs := _root().get_node("GameState")
 	var c := new_character()

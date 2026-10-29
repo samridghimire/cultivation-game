@@ -1077,7 +1077,12 @@ func _rival_consequences(entry: Dictionary) -> void:
 	_post_attitude_change(before)
 	if bool(entry.get("fight_rival", false)):
 		# RIVAL-022: a friendly invitation is a spar (no stones lost, no death), not a duel.
-		fight_enemy(Mentorship.spar_enemy(rival, data) if bool(entry.get("spar", false)) else Karma.npc_enemy(rival, data))
+		if bool(entry.get("spar", false)):
+			# RIVAL-023: the same cooldown the NPC menu's spar sets, so the loss advice is true.
+			player.npc_action_days["spar:" + rival.id] = GameClock.total_days
+			fight_enemy(Mentorship.spar_enemy(rival, data))
+		else:
+			fight_enemy(Karma.npc_enemy(rival, data))
 
 
 ## Leave the pending encounter without choosing (the UI offers this only when
