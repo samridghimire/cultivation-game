@@ -10,6 +10,7 @@ static var _loaded := false
 static var _data: Dictionary = {}
 static var _cache: Dictionary = {}
 static var _overrides: Dictionary = {}
+static var _frames: Dictionary = {}
 static var _test_entries: Array[String] = []
 
 
@@ -70,7 +71,7 @@ static func frame_count(key: String) -> int:
 	return maxi(1, int(_entry(key).get("frames", 1)))
 
 
-## Frame `index % frames` of a strip, or null when the sprite is missing.
+## Frame `index % frames` of a strip, or null when the sprite is missing. Cached per (key, index).
 static func frame(key: String, index: int) -> Texture2D:
 	var tex := texture(key)
 	if tex == null:
@@ -78,17 +79,48 @@ static func frame(key: String, index: int) -> Texture2D:
 	var n := frame_count(key)
 	if n <= 1:
 		return tex
+	var slot := index % n
+	var cache_key := "%s#%d" % [key, slot]
+	var cached: Variant = _frames.get(cache_key)
+	if cached is Array and (cached as Array)[0] == tex:
+		return (cached as Array)[1]
 	var size := tex.get_size()
 	var w := size.x / n
 	var atlas := AtlasTexture.new()
 	if tex is AtlasTexture:
 		var base := tex as AtlasTexture
 		atlas.atlas = base.atlas
-		atlas.region = Rect2(base.region.position.x + w * (index % n), base.region.position.y, w, size.y)
+		atlas.region = Rect2(base.region.position.x + w * slot, base.region.position.y, w, size.y)
 	else:
 		atlas.atlas = tex
-		atlas.region = Rect2(w * (index % n), 0, w, size.y)
+		atlas.region = Rect2(w * slot, 0, w, size.y)
+	_frames[cache_key] = [tex, atlas]
 	return atlas
+
+
+## The nine [dst, src] Rect2 pairs that 9-slice a `src_size` texture into `rect`, `margin` source pixels at the edges;
+## empty slices are left out (GFX-013).
+static func nine_patch_rects(src_size: Vector2, rect: Rect2, margin: float) -> Array[Array]:
+	var m := minf(margin, minf(src_size.x, src_size.y) / 2.0 - 0.5)
+	var d := minf(m, minf(rect.size.x, rect.size.y) / 2.0)
+	var sx := [0.0, m, src_size.x - m, src_size.x]
+	var sy := [0.0, m, src_size.y - m, src_size.y]
+	var dx := [rect.position.x, rect.position.x + d, rect.end.x - d, rect.end.x]
+	var dy := [rect.position.y, rect.position.y + d, rect.end.y - d, rect.end.y]
+	var out: Array[Array] = []
+	for j in 3:
+		for i in 3:
+			var dst := Rect2(dx[i], dy[j], dx[i + 1] - dx[i], dy[j + 1] - dy[j])
+			var from := Rect2(sx[i], sy[j], sx[i + 1] - sx[i], sy[j + 1] - sy[j])
+			if dst.size.x > 0.0 and dst.size.y > 0.0 and from.size.x > 0.0 and from.size.y > 0.0:
+				out.append([dst, from])
+	return out
+
+
+## Draws `tex` 9-sliced into `rect` on `canvas` (call from its _draw).
+static func draw_nine_patch(canvas: CanvasItem, tex: Texture2D, rect: Rect2, margin: float, modulate: Color = Color.WHITE) -> void:
+	for pair: Array in nine_patch_rects(tex.get_size(), rect, margin):
+		canvas.draw_texture_rect_region(tex, pair[0], pair[1], modulate)
 
 
 static func fps(key: String) -> float:
@@ -120,6 +152,7 @@ static func override(key: String, tex: Texture2D) -> void:
 
 static func clear_overrides() -> void:
 	_overrides.clear()
+	_frames.clear()
 	for key: String in _test_entries:
 		(_data["sprites"] as Dictionary).erase(key)
 	_test_entries.clear()

@@ -330,7 +330,12 @@ func _draw() -> void:
 		PlaceArt.draw(self, art_kind, size, color, art_active())
 	if highlighted:
 		var glow := 0.5 + 0.5 * sin(_pulse_time * 5.0)
-		draw_rect(Rect2(-size / 2.0, size).grow(6.0 + 2.0 * glow), Color(1.0, 0.9, 0.5, 0.45 + 0.4 * glow), false, 2.0)
+		var ring := Rect2(-size / 2.0, size).grow(6.0 + 2.0 * glow)
+		var ring_tex := Sprites.texture("highlight")
+		if ring_tex != null:
+			Sprites.draw_nine_patch(self, ring_tex, ring, float(Sprites.scale() * 4), Color(1, 1, 1, 0.45 + 0.4 * glow))
+		else:
+			draw_rect(ring, Color(1.0, 0.9, 0.5, 0.45 + 0.4 * glow), false, 2.0)
 	if anchor_id != "":
 		_draw_anchor_marker()
 

@@ -430,7 +430,12 @@ func _draw() -> void:
 		_draw_landmark(lm)
 	for d in _decor:
 		_draw_decor(d)
-	draw_rect(Rect2(Vector2.ZERO, map_size), Color(map.get("border", "2a3a20")), false, 6.0)
+	var border_tile := Sprites.first(["border_" + rid, "border"])
+	if border_tile != null:
+		for strip: Rect2 in [Rect2(0, 0, map_size.x, 6), Rect2(0, map_size.y - 6, map_size.x, 6), Rect2(0, 6, 6, map_size.y - 12), Rect2(map_size.x - 6, 6, 6, map_size.y - 12)]:
+			_draw_tiled(border_tile, strip)
+	else:
+		draw_rect(Rect2(Vector2.ZERO, map_size), Color(map.get("border", "2a3a20")), false, 6.0)
 
 
 ## Tiles `tile` at the sprite scale over `area`, clipping the last row and column (GFX-006).

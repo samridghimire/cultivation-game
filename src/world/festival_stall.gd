@@ -19,6 +19,11 @@ static func decor_for(festival_id: String) -> String:
 
 
 func _draw() -> void:
+	var art := Sprites.texture("festival_stall")
+	if art != null:
+		var k := Sprites.scale()
+		draw_texture_rect(art, Rect2(Vector2(-art.get_size().x * k / 2.0, 28.0 - art.get_size().y * k), art.get_size() * k), false)
+		return
 	draw_line(Vector2(-22, 0), Vector2(-22, 28), POLE, 3.0)
 	draw_line(Vector2(22, 0), Vector2(22, 28), POLE, 3.0)
 	var awning := PackedVector2Array([Vector2(-28, 2), Vector2(28, 2), Vector2(22, -12), Vector2(-22, -12)])

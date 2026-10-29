@@ -85,3 +85,24 @@ func test_world_draws_with_world_sprites() -> void:
 		world.free()
 	Sprites.clear_overrides()
 	gs.end_session()
+
+
+func test_gfx013_hooks_fall_back_when_unmapped() -> void:
+	for key in ["border", "border_qingshi_village", "festival_stall", "highlight"]:
+		assert_true(Sprites.texture(key) == null, key)
+
+
+func test_gfx013_nine_patch_and_frame_cache() -> void:
+	var pairs := Sprites.nine_patch_rects(Vector2(16, 16), Rect2(0, 0, 40, 30), 4.0)
+	assert_eq(pairs.size(), 9)
+	var area := 0.0
+	for pair: Array in pairs:
+		area += (pair[0] as Rect2).get_area()
+	assert_almost_eq(area, 1200.0)
+	assert_true(Sprites.nine_patch_rects(Vector2(16, 16), Rect2(0, 0, 3, 3), 4.0).size() > 0)
+	var strip := ImageTexture.create_from_image(Image.create(64, 16, false, Image.FORMAT_RGBA8))
+	Sprites._set_entry_for_test("player_down", {"frames": 4}, strip)
+	assert_true(Sprites.frame("player_down", 1) == Sprites.frame("player_down", 1))
+	assert_true(Sprites.frame("player_down", 1) == Sprites.frame("player_down", 5))
+	assert_true(Sprites.frame("player_down", 1) != Sprites.frame("player_down", 2))
+	Sprites.clear_overrides()
