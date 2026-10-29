@@ -2,6 +2,16 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## First-hour screenshot look (WU-382, 2026-10-29)
+`screenshot_first_hour.gd` writes 8 pngs (it overwrites between sizes, so copy them out after each run). Viewed hud_arrival and journal at both 1280x720 and 1280x800, the other six at 1280x720 only (they share one modal layout code path); nothing clipped, overlapping or cut mid-word beyond the intended "... (J)" cap. No layout changes needed.
+- hud_arrival: Goal "Talk to Elder Mo" + fair fight + three hints fit the panel; the last hint is capped "... Blood Lotus Sect takes mortals now... (J)". The Goal line does not repeat any hint. The log panel and interact prompt do not overlap the status panel. `hud_after_sect` is not produced by this script (WU-379's region-aware clause is covered by test_hud_cues and the hint shots instead).
+- journal: First goals + Next steps scroll cleanly; the milestone "First Blood" banner overlaps the top of the dimmed screen (a capture-timing artifact: the shot is taken while the banner is still fading, not a layout bug).
+- character_sheet: Next steps (3 lines + "More in the Journal (J)"), Sect Reputation and the greyed Recharge button all fit; sheet is scrollable.
+- inventory: Boar Hide detail wraps ("Sells for 2 each at ... and 2 more") without clipping.
+- elder_mo_dialogue, explore_menu, encounter, combat_report: all fit; the greyed "Needs more favor (0/20)" option is still readable.
+- Reading oddly (text, so Follow-up only): the Journal "Next steps" repeats the HUD hints nearly word for word (by design); the Explore menu's footer "Often quiet (14%). Fights 14%: Wild Boar (Weak). Crossroads 27%. Fortunes 45%." mixes ":" and "." separators.
+
+
 ## State on 2026-10-24 (planner, 06:15 UTC)
 - 17 tasks landed (ITEM-003, GUIDE-178/179/181, PERF-006, WU-365/366/367/369/370/374, C-247/250/251/253, QA-155/163).
   Review 155b49f..257aa9c filed nothing (shop realm-tag note -> WU-375). Live claims: GUIDE-180, PERF-007, WU-362,
