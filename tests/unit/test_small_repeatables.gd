@@ -67,3 +67,14 @@ func test_foundation_village_pool_has_six_one_shots_and_repeatables() -> void:
 		assert_true(ids.has(id), id)
 		assert_false(data().encounters[id].get("repeatable", false), "%s is a one-shot" % id)
 	assert_eq(String(data().encounters["village_beggar_child"].get("max_realm", "")), "qi_refining")
+
+
+func test_village_foundation_beats_fade_or_retire() -> void:
+	var c := new_character()
+	c.realm_index = data().realm_index_of("foundation_establishment")
+	var ids := func(flags: Dictionary) -> Array:
+		return Exploration.eligible_encounters(c, data(), ["village"], flags).map(func(e: Dictionary) -> String: return e["encounter"]["id"])
+	assert_true("village_well_vein_stirs" in ids.call({}), "the well hums for a fresh Foundation player")
+	assert_false("village_well_vein_stirs" in ids.call({"heard_well_hum": true}), "the well is a one-shot")
+	assert_true(Exploration.fades(data().encounters["village_headman_petition"]))
+	assert_true(Exploration.fades(data().encounters["village_hopeful_youths"]))
