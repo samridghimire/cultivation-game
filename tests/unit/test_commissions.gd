@@ -473,12 +473,14 @@ func test_lapse_text_names_spirit_stones() -> void:
 ## GUIDE-177: an order that gathering cannot finish in time stops taking a hint slot.
 func test_due_soon_hint_skips_a_doomed_order() -> void:
 	var c := _alchemist()
-	var d := data()
+	var d := GameData.load_from_dir()  # a private copy: the price is mutated below
 	var doomed := _pill_order(2, 11)
+	var short := Commissions.short_ingredient(c, d, doomed)
+	assert_true(short != "")
+	d.items[short]["price"] = 0  # no merchant stocks it any more, so only gathering can finish the order
+	d.source_cache.clear()
+	assert_false(Guidance.merchant_sells_nearby(d, short, "qingshi_village"))
 	assert_true(Commissions.missing_line(c, d, doomed, "qingshi_village", 10).contains("longer than the order has"))
-	if Guidance.merchant_sells_nearby(d, Commissions.short_ingredient(c, d, doomed), "qingshi_village"):
-		assert_true(Commissions.can_meet_in_time(c, d, doomed, "qingshi_village", 10), "a merchant sells it")
-		return
 	assert_false(Commissions.can_meet_in_time(c, d, doomed, "qingshi_village", 10))
 	c.commissions = [doomed]
 	assert_eq(Commissions.due_soon_hint(c, d, "qingshi_village", 10), "")
