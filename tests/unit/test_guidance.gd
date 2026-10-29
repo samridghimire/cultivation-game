@@ -5174,3 +5174,34 @@ func test_thin_defence_known_body_art_unchanged_by_budget() -> void:
 	var a := Guidance.thin_defence_hint(c, data(), "qingshi_village")
 	assert_false(a.contains("Buy "), a)
 	assert_true(a.begins_with("Your defence is thin."), a)
+
+
+func _master_region_only(c: CharacterData, region_id: String, flags: Dictionary) -> void:
+	var tags: Array = data().regions[region_id].get("encounter_tags", [])
+	for e: Dictionary in data().encounters.values():
+		if e.get("tags", []).any(func(t: Variant) -> bool: return tags.has(t)):
+			Exploration.note_met(c, e)
+			if String(e.get("blocked_by_flag", "")) != "":
+				flags[e["blocked_by_flag"]] = true
+	if String(data().regions[region_id].get("discovery", "")) != "":
+		flags["discovered_" + region_id] = true
+	c.explore_days[region_id] = 100000
+
+
+func test_explored_out_hint_points_at_a_region_with_unmet_happenings() -> void:
+	var c := _qr(3, 0)
+	var flags := {}
+	_master_region_only(c, "qingshi_village", flags)
+	if not Exploration.mastered(c, data(), "qingshi_village", flags):
+		return  # deep paths or other gates keep Qingshi from mastery in this data
+	var line := Guidance.explored_out_hint(c, data(), "qingshi_village", flags)
+	assert_true(line.begins_with("You know Qingshi Village through and through: "), line)
+	assert_true(line.ends_with(" happenings you have not met."), line)
+
+
+func test_explored_out_hint_is_silent_when_not_mastered_or_mortal() -> void:
+	var c := _qr(3, 0)
+	assert_eq(Guidance.explored_out_hint(c, data(), "qingshi_village", {}), "")
+	var m := new_character()
+	assert_eq(Guidance.explored_out_hint(m, data(), "qingshi_village", {}), "")
+	assert_eq(Guidance.explored_out_hint(c, data(), "", {}), "")

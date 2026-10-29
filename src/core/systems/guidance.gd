@@ -114,6 +114,10 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 	var outgrown := outgrown_hint(c, data, region_id, today, flags)
 	if outgrown != "":
 		out.append(outgrown)
+	else:
+		var explored := explored_out_hint(c, data, region_id, flags)
+		if explored != "":
+			out.append(explored)
 	if c.realm_index > NEWCOMER_MAX_REALM:
 		var sect := _sect_hint(c, data, region_id)
 		if sect != "":
@@ -2633,6 +2637,24 @@ static func _rated_region_fights(c: CharacterData, data: GameData, region_id: St
 	return rated
 
 
+## GUIDE-191: a player who has met everything in `region_id` is pointed at the nearest region (within 2 hops)
+## that still holds happenings they have not met. "" for a Mortal, an unknown region, a region not yet mastered, or no such region.
+static func explored_out_hint(c: CharacterData, data: GameData, region_id: String, flags: Dictionary = {}) -> String:
+	if c.realm_index < 1 or region_id == "" or not data.regions.has(region_id):
+		return ""
+	if not Exploration.mastered(c, data, region_id, flags):
+		return ""
+	var map := _route_day_map(c, data, region_id, 2)
+	var best_days: Dictionary = map["days"]
+	for r: String in map["order"]:
+		if r == region_id:
+			continue
+		var progress := Exploration.region_progress(c, data, r, flags)
+		if int(progress["met"]) < int(progress["total"]):
+			return "You know %s through and through: %s (%s) holds %d happenings you have not met." % [_region_name(data, region_id), _region_name(data, r), Calendar.format_duration(int(best_days[r])), int(progress["total"]) - int(progress["met"])]
+	return ""
+
+
 ## GUIDE-146: when every fight in `region_id` is a sure win (>= OUTGROWN_SURE_CHANCE) and a region one route away
 ## holds a fair one (OUTGROWN_FAIR_MIN..OUTGROWN_FAIR_MAX), say where it is. "" otherwise.
 static func outgrown_hint(c: CharacterData, data: GameData, region_id: String, today: int, flags: Dictionary = {}) -> String:
@@ -3740,6 +3762,10 @@ static func _opportunity_entries(out: Array[Dictionary], c: CharacterData, data:
 		var progress := Exploration.region_progress(c, data, region_id, flags)
 		if int(progress["met"]) < int(progress["total"]):
 			_add(out, "Opportunities", "%s: you have seen %d of %d happenings here." % [_region_name(data, region_id), progress["met"], progress["total"]], "dim")
+		else:
+			var explored := explored_out_hint(c, data, region_id, flags)
+			if explored != "":
+				_add(out, "Opportunities", explored, "dim")
 	if region_id != "":
 		var fame := Renown.title(c, data, region_id)
 		if fame != "":
