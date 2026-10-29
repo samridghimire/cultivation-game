@@ -52,6 +52,8 @@ var pending_event := ""
 ## Encounter id waiting for the player's choice (W-004c, "" = none). Like a
 ## conversation it is not saved: loading a save drops it.
 var pending_encounter := ""
+## ENC-011: the people the pending encounter names ({villager: npc id, elder: npc id}); not saved, like the encounter.
+var pending_cast: Dictionary = {}
 ## True when the last explore day used a region discovery (TRAV-005).
 var last_explore_discovery := false
 var last_explore_deep_path := false
@@ -113,6 +115,7 @@ func start_session(character: CharacterData) -> void:
 	clan = null
 	dialogue_npc = ""
 	pending_encounter = ""
+	pending_cast = {}
 	pending_threat = ""
 	pending_respawn = {}
 	load_recap = []
@@ -150,6 +153,7 @@ func end_session() -> void:
 	npc_clans = {}
 	dialogue_npc = ""
 	pending_encounter = ""
+	pending_cast = {}
 	pending_threat = ""
 	pending_respawn = {}
 	load_recap = []
@@ -695,7 +699,7 @@ func _explore_day(tags: Array, quiet: bool) -> Dictionary:
 		var hunted := Bounties.hunt_roll(player, data, current_region, GameClock.total_days, rng)
 		if hunted != "":
 			return _hunt_bounty_foe(hunted)
-		encounter = Exploration.roll_encounter(player, data, tags, world_flags, rng, _rival_for_roll(), 1.0 - ClanEstate.ward(clan, data, current_region), Calendar.season_of(GameClock.total_days), current_region, int(npc_favor.get(player.rival, 0)))
+		encounter = Exploration.roll_encounter(player, data, tags, world_flags, rng, _rival_for_roll(), 1.0 - ClanEstate.ward(clan, data, current_region), Calendar.season_of(GameClock.total_days), current_region, int(npc_favor.get(player.rival, 0)), func(e: Dictionary) -> bool: return Folk.available(e, npcs, data, player, current_region))
 		if String(encounter.get("rival", "")) != "" or encounter.has("rival_attitude"):
 			Rivals.note_encounter(data, world_flags, GameClock.total_days)
 	else:
@@ -736,9 +740,11 @@ static func explore_prefix(encounter: Dictionary, discovery: bool, deep_path: bo
 func _meet_encounter(encounter: Dictionary, prefix: String = "") -> Dictionary:
 	LifeStats.add(player, "encounters")
 	Exploration.note_met(player, encounter)
+	pending_cast = Folk.pick(encounter, npcs, data, player, current_region, npc_favor, rng)
 	var renown_before := Renown.value(player, current_region)
 	var result := Exploration.resolve(player, data, encounter, world_flags, current_region)
 	_effect_renown_banner(renown_before)
+	result["notes"].append_array(_folk_favor(encounter.get("effects", {})))
 	var text := rival_text(String(encounter.get("text", "")))
 	if not result["notes"].is_empty():
 		text += " (%s)" % ", ".join(result["notes"])
@@ -972,6 +978,10 @@ func choose_encounter(index: int) -> void:
 		return
 	pending_encounter = ""
 	pending_threat = ""
+	var picked: Dictionary = encounter["choices"][index]
+	if result["failed"]:
+		picked = picked["on_fail"]
+	result["notes"].append_array(_folk_favor(picked.get("effects", {})))
 	var text := rival_text(String(result["text"]))
 	if not result["notes"].is_empty():
 		text += " (%s)" % ", ".join(result["notes"])
@@ -1015,7 +1025,21 @@ func _grateful_npc(choice: Dictionary) -> void:
 
 ## Encounter text with the rival's name and realm filled in (Rivals.fill).
 func rival_text(text: String) -> String:
-	return Rivals.fill(text, Rivals.rival_of(player, npcs), data)
+	return Folk.fill(Rivals.fill(text, Rivals.rival_of(player, npcs), data), pending_cast, npcs)
+
+
+## ENC-011: applies the villager_favor / elder_favor of `effects` to the people the encounter named; the notes say whom.
+func _folk_favor(effects: Dictionary) -> PackedStringArray:
+	var notes: PackedStringArray = []
+	var changes := Folk.favor_changes(effects, pending_cast)
+	for npc_id: String in changes:
+		var npc: CharacterData = npcs.get(npc_id)
+		if npc == null:
+			continue
+		var delta := int(changes[npc_id])
+		npc_favor[npc_id] = clampi(int(npc_favor.get(npc_id, 0)) + delta, -100, 100)
+		notes.append("%s thinks %s of you" % [npc.name, "better" if delta > 0 else "worse"])
+	return notes
 
 
 ## RIVAL-013: the living, met rival's attitude toward the player; "" without one.
@@ -2849,6 +2873,7 @@ func load_save_dict(d: Dictionary) -> void:
 	dialogue_event = ""
 	pending_event = ""  # a loaded game never replays the intro event
 	pending_encounter = ""
+	pending_cast = {}
 	pending_threat = ""
 	if not data.regions.has(current_region):
 		current_region = data.start_region

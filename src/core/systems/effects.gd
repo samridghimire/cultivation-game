@@ -30,6 +30,8 @@ extends RefCounted
 ##                              needs a region_id passed to apply(), else it does nothing
 ##   contribution: int          sect contribution (1..500) for a sect member (Sects.add_contribution);
 ##                              a rogue gets nothing
+##   villager_favor / elder_favor: int  favor change with the person an encounter named ({villager} / {elder},
+##                              see folk.gd, -20..20); applied by GameState, ignored by apply()
 ##   bloodline: String          grant a bloodline (data/bloodlines.json) to someone who has
 ##                              none; it awakens at once if they are past its awaken_realm
 
@@ -194,7 +196,7 @@ const KEYS: Array[String] = [
 	"qi", "alignment", "items", "breakthrough_bonus", "breakthrough_realm", "set_flag", "clear_flag",
 	"learn_technique", "heal_injury", "burn_lifespan", "extend_lifespan", "learn_recipe", "dao_insight",
 	"buff", "reputation", "witnessed", "attributes", "bloodline", "practice_days",
-	"profession_xp", "renown", "contribution",
+	"profession_xp", "renown", "contribution", "villager_favor", "elder_favor",
 ]
 
 

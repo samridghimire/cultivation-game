@@ -266,7 +266,7 @@ static func road_encounter(c: CharacterData, data: GameData, days: int, flags: D
 	var chance := road_chance(data, days)
 	if rng.randf() >= chance:
 		return {}
-	return roll_encounter(c, data, data.road["encounter_tags"], flags, rng, null, 1.0, season, "")
+	return roll_encounter(c, data, data.road["encounter_tags"], flags, rng, null, 1.0, season, "", 0, func(e: Dictionary) -> bool: return not Folk.uses(e))
 
 
 ## The region's first-exploration discovery (TRAV-005): its `discovery`
@@ -287,7 +287,8 @@ static func discovery_for(c: CharacterData, data: GameData, region_id: String, f
 ## rival (Rivals) or null; encounters with a `rival` condition need one.
 ## `misfortune_scale` multiplies misfortune weights (a clan estate's ward).
 ## `rival_favor` is the rival's favor toward `c`, for `rival_attitude` encounters (RIVAL-010).
-static func eligible_encounters(c: CharacterData, data: GameData, tags: Array, flags: Dictionary, rival: CharacterData = null, misfortune_scale: float = 1.0, season: String = "", region_id: String = "", rival_favor: int = 0) -> Array[Dictionary]:
+## `folk_ok` (ENC-011) says whether an encounter naming people can happen here (Folk.available); none = always.
+static func eligible_encounters(c: CharacterData, data: GameData, tags: Array, flags: Dictionary, rival: CharacterData = null, misfortune_scale: float = 1.0, season: String = "", region_id: String = "", rival_favor: int = 0, folk_ok: Callable = Callable()) -> Array[Dictionary]:
 	var result: Array[Dictionary] = []
 	var fortune_shift := (c.attribute("fortune") - 10) * FORTUNE_WEIGHT_PER_POINT
 	var unfaded_total := 0.0
@@ -309,6 +310,8 @@ static func eligible_encounters(c: CharacterData, data: GameData, tags: Array, f
 		if not Rivals.allows(c, rival, String(e.get("rival", ""))):
 			continue
 		if e.has("rival_attitude") and (rival == null or not Rivals.attitudes_of(e).has(Rivals.attitude(c, rival, rival_favor, data))):
+			continue
+		if folk_ok.is_valid() and not folk_ok.call(e):
 			continue
 		var blocker: String = e.get("blocked_by_flag", "")
 		if blocker != "" and flags.get(blocker, false):
@@ -473,8 +476,8 @@ static func outlook(c: CharacterData, data: GameData, tags: Array, flags: Dictio
 
 
 ## Picks a weighted random encounter, or {} if none are eligible.
-static func roll_encounter(c: CharacterData, data: GameData, tags: Array, flags: Dictionary, rng: RandomNumberGenerator, rival: CharacterData = null, misfortune_scale: float = 1.0, season: String = "", region_id: String = "", rival_favor: int = 0) -> Dictionary:
-	var pool := eligible_encounters(c, data, tags, flags, rival, misfortune_scale, season, region_id, rival_favor)
+static func roll_encounter(c: CharacterData, data: GameData, tags: Array, flags: Dictionary, rng: RandomNumberGenerator, rival: CharacterData = null, misfortune_scale: float = 1.0, season: String = "", region_id: String = "", rival_favor: int = 0, folk_ok: Callable = Callable()) -> Dictionary:
+	var pool := eligible_encounters(c, data, tags, flags, rival, misfortune_scale, season, region_id, rival_favor, folk_ok)
 	var total := 0.0
 	for entry in pool:
 		total += entry["weight"]
