@@ -37,6 +37,8 @@ var _label_node: Node2D
 var hinted := false
 ## Added to the label's y (and badge) by spread_on_screen when the screen-edge clamp made it overlap (WU-281).
 var screen_lift := 0.0
+## Fade of the name label by distance to the player (GFX-015); 0 hides it and frees its spot.
+var label_fade := 1.0
 
 
 func _ready() -> void:
@@ -185,6 +187,8 @@ func set_hinted(value: bool) -> void:
 	if hinted == value:
 		return
 	hinted = value
+	if value:
+		label_fade = 1.0
 	_redraw_label()
 
 
@@ -229,7 +233,30 @@ func drawn_label_rect(view: Rect2) -> Rect2:
 
 ## Whether the name label is drawn at all (unavailable places and the current target hide it).
 func label_drawn() -> bool:
-	return visible and label_visible(highlighted)
+	return visible and label_visible(highlighted) and label_fade > 0.0
+
+
+## How visible the name label is for a player standing at `player_pos` (parent coordinates).
+## Places always show theirs; NPC labels override this (GFX-015).
+func label_alpha(_player_pos: Vector2) -> float:
+	return 1.0
+
+
+## 1 within `near`, 0 beyond `far`, linear between (GFX-015).
+static func proximity_alpha(dist: float, near: float, far: float) -> float:
+	if dist <= near:
+		return 1.0
+	if dist >= far:
+		return 0.0
+	return (far - dist) / (far - near)
+
+
+## Updates `label_fade` for the player's position and redraws the label if it changed.
+func refresh_label_alpha(player_pos: Vector2) -> void:
+	var a := label_alpha(player_pos)
+	if not is_equal_approx(a, label_fade):
+		label_fade = a
+		_redraw_label()
 
 
 ## Lifts labels (in order) whose screen-clamped rects overlap an earlier one; `view` is the visible
@@ -364,7 +391,14 @@ func _draw_label() -> void:
 		_label_node.draw_string(font, center + Vector2(-mw / 2.0, 6.0), "!", HORIZONTAL_ALIGNMENT_LEFT, -1, 16, Color(0.1, 0.08, 0.04))
 	if not label_visible(highlighted):
 		return
-	_label_node.draw_string(font, Vector2(left, -size.y / 2.0 - 8.0 + label_offset.y + screen_lift), text, HORIZONTAL_ALIGNMENT_LEFT, -1, LABEL_FONT_SIZE, label_color())
+	if label_fade <= 0.0:
+		return
+	var at := Vector2(left, -size.y / 2.0 - 8.0 + label_offset.y + screen_lift)
+	var fill := label_color()
+	fill.a *= label_fade
+	# A dark outline first so the name reads on any ground (GFX-015).
+	_label_node.draw_string_outline(font, at, text, HORIZONTAL_ALIGNMENT_LEFT, -1, LABEL_FONT_SIZE, 3, Color(0, 0, 0, 0.7 * label_fade))
+	_label_node.draw_string(font, at, text, HORIZONTAL_ALIGNMENT_LEFT, -1, LABEL_FONT_SIZE, fill)
 
 
 ## A small diamond in the top-right corner of artifact anchor places: hollow

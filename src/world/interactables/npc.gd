@@ -142,6 +142,21 @@ func label_text() -> String:
 	return text
 
 
+## Generated villagers show their name only near the player; named NPCs, the rival, family and
+## hinted people always do (GFX-015).
+const NAME_NEAR := 140.0
+const NAME_FAR := 200.0
+
+
+func label_alpha(player_pos: Vector2) -> float:
+	if hinted or not GameState.data.npcs.get(npc_id, {}).is_empty() or _is_my_rival():
+		return 1.0
+	var p := GameState.player
+	if p != null and (p.spouses.has(npc_id) or p.children.has(npc_id)):
+		return 1.0
+	return proximity_alpha(position.distance_to(player_pos), NAME_NEAR, NAME_FAR)
+
+
 ## True when `npc_id` is the player's rival and the first meeting has happened (WU-138).
 static func is_rival(c: CharacterData, people: Dictionary, flags: Dictionary, npc_id: String) -> bool:
 	if not flags.get(Rivals.FIRST_MEETING_FLAG, false):

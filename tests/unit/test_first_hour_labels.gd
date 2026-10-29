@@ -271,3 +271,34 @@ func test_hinted_targets_skips_a_region_no_route_reaches() -> void:
 	assert_eq(Interactable.hinted_targets(far, [road], data, "qingshi_village", c), [])
 	assert_eq(Interactable.hinted_targets(far, [road], data, "qingshi_village"), [road])
 	road.free()
+
+
+func test_proximity_alpha_fades_between_near_and_far() -> void:
+	assert_eq(Interactable.proximity_alpha(0.0, 140.0, 200.0), 1.0)
+	assert_eq(Interactable.proximity_alpha(140.0, 140.0, 200.0), 1.0)
+	assert_true(absf(Interactable.proximity_alpha(170.0, 140.0, 200.0) - 0.5) < 0.001)
+	assert_eq(Interactable.proximity_alpha(200.0, 140.0, 200.0), 0.0)
+	assert_eq(Interactable.proximity_alpha(500.0, 140.0, 200.0), 0.0)
+
+
+func test_generated_villager_label_fades_but_hinted_one_stays() -> void:
+	var gs: Node = (Engine.get_main_loop() as SceneTree).root.get_node("GameState")
+	gs.start_session(CharacterFactory.create("Label", gs.data, seeded_rng(7)))
+	var n := _npc("Villager (Farmer)", Vector2(0, 0))
+	n.npc_id = "nobody_generated"
+	assert_eq(n.label_alpha(Vector2(50, 0)), 1.0)
+	assert_eq(n.label_alpha(Vector2(300, 0)), 0.0)
+	n.set_hinted(true)
+	assert_eq(n.label_alpha(Vector2(300, 0)), 1.0)
+	n.free()
+
+
+func test_spread_on_screen_ignores_labels_faded_to_nothing() -> void:
+	var view := Rect2(0, 0, 1000, 800)
+	var hidden := _npc("Same Name", Vector2(300, 300))
+	var shown := _npc("Same Name", Vector2(300, 300))
+	hidden.label_fade = 0.0
+	Interactable.spread_on_screen([hidden, shown], view)
+	assert_eq(shown.screen_lift, 0.0, "a faded-out name must not push a place label up")
+	hidden.free()
+	shown.free()

@@ -32,6 +32,8 @@ const GENDER_COLORS := {"male": Color("8fb3e0"), "female": Color("e6a3c4")}
 var map_size := Vector2(1600, 1000)
 ## Canvas origin last seen by _process (WU-269).
 var _last_canvas_origin := Vector2.INF
+## Where the player stood when the name labels last faded (GFX-015).
+var _last_label_pos := Vector2.INF
 var _region: Dictionary = {}
 ## Scenery.place() output, drawn under everything else.
 var _decor: Array[Dictionary] = []
@@ -67,6 +69,10 @@ func _ready() -> void:
 	_limit_camera()
 	_fit_pixel_zoom()
 	get_viewport().size_changed.connect(_fit_pixel_zoom)
+	_last_label_pos = player.position
+	for node in get_children():
+		if node is Interactable:
+			(node as Interactable).refresh_label_alpha(player.position)
 	_spread_on_screen()
 	var hud := get_node_or_null("HUD")
 	if hud != null:
@@ -348,7 +354,13 @@ func _build_generated_npcs() -> void:
 ## Labels stay on screen as the camera moves (WU-269).
 func _process(_delta: float) -> void:
 	var origin := get_canvas_transform().origin
-	if origin == _last_canvas_origin:
+	var moved := player != null and _last_label_pos.distance_to(player.position) > 8.0
+	if moved:
+		_last_label_pos = player.position
+		for node in get_children():
+			if node is Interactable:
+				(node as Interactable).refresh_label_alpha(player.position)
+	if origin == _last_canvas_origin and not moved:
 		return
 	_last_canvas_origin = origin
 	for node in get_children():
