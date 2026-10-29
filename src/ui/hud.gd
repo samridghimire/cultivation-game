@@ -687,10 +687,11 @@ func _fit_panels() -> void:
 	_update_guide_visibility()
 
 
-## The guide card shows only while one of its lines does (and hints are on).
+## The guide card shows only while one of its lines does. With hints off only the hunt line can (an active
+## bounty's deadline is state, not a hint, and showed with hints off before GFX-010).
 func _update_guide_visibility() -> void:
 	var any_line: bool = _goal.visible or _hunt.visible or _fair.visible or _hint.visible
-	_guide_panel.visible = any_line and int(Settings.get_value("hud_hints")) > 0 and _status_panel.visible
+	_guide_panel.visible = any_line and _status_panel.visible
 
 
 ## The first hint line the status panel is showing, "" when none (WU-280).

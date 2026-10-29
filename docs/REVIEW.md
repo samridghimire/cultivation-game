@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: c83d675
+Last reviewed commit: f62a1fb
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -1181,3 +1181,20 @@ Last reviewed commit: c83d675
   - Notes, not filed: interactables drawn from a sprite lose PlaceArt's art_active() state (open secret realm) until the
     pack maps an active variant; Sprites.frame() allocates an AtlasTexture per draw for animated strips (cheap, but
     worth caching once a pack lands). RIVAL-021's cooldown only gates exploration rolls, as specced.
+- 2026-10-29 (reviewer, 4th run): reviewed c83d675..f62a1fb (MENTOR-005, GUIDE-201, WU-391, QA-173, GFX-010/011/012,
+  RIVAL-022, ENC-011, C-267, C-270; [PLAN]/[REVIEW] skipped). Main green before the fixes (2454 tests). No worker touched
+  BACKLOG/CHANGELOG; no save-format changes (GFX-010's `key_help` setting has a default; ENC-011's `pending_cast` is
+  unsaved like `pending_encounter`); no binary assets (GFX-011 figures are generated from text templates and cached).
+  - ENC-011 (Folk): candidates exclude family, rival and children; the folk filter keeps placeholder encounters off the
+    road and out of empty regions; every shown text (window, choice labels, log) goes through rival_text -> Folk.fill.
+    C-267 kept the 37 existing `cultivator` tags Devouring keys on; no enemy is both beast and cultivator.
+    RIVAL-022's attitude arrays are handled everywhere `rival_attitude` is read. GFX-012's solid landmarks clear every
+    region's places, abodes and family home (tested).
+  - Fixed (GFX-010): the guide card hid whenever `hud_hints` was 0, which also hid the active bounty's
+    "Hunting: ... (N days left)" line that showed with hints off before. The card now shows while any line does (with
+    hints off only the hunt line can). Test added.
+  - Fixed (C-270): lecture lines open with {elder}, so the Blood Elder's and the Chief Steward's read "the Blood Elder
+    speaks..."; Sects.lecture_line capitalizes the first letter. Test added.
+  - Notes, not filed: a lost RIVAL-022 encounter spar ends with "You can spar again in N days", but only the NPC spar
+    sets that cooldown. `villager_favor`/`elder_favor` are valid Effects keys anywhere but only applied for encounters
+    (Folk.validate checks only encounters); fine until content uses them elsewhere.

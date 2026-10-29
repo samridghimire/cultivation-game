@@ -114,8 +114,9 @@ func test_lectures_attended_counts_and_milestone_at_twelve() -> void:
 func test_lecture_line_picks_by_month_and_fills_names() -> void:
 	var lecture := {"elder": "Elder Wu", "topic": "rain", "lines": ["{elder} on {topic} one.", "two."]}
 	assert_eq(Sects.lecture_line(lecture, 0), "Elder Wu on rain one.")
-	assert_eq(Sects.lecture_line(lecture, 3), "two.")
-	assert_eq(Sects.lecture_line({"name": "x", "lines": ["{elder}: {topic}"]}, 0), "the elder: the lesson")
+	assert_eq(Sects.lecture_line(lecture, 3), "Two.")
+	assert_eq(Sects.lecture_line({"name": "x", "lines": ["{elder}: {topic}"]}, 0), "The elder: the lesson")
+	assert_eq(Sects.lecture_line({"elder": "the Blood Elder", "lines": ["{elder} smiles."]}, 0), "The Blood Elder smiles.")
 
 
 func test_lecture_line_falls_back_when_absent() -> void:

@@ -523,7 +523,9 @@ static func lecture_line(lecture: Dictionary, month_index: int) -> String:
 	if lines.is_empty():
 		return ""
 	var line := String(lines[posmod(month_index, lines.size())])
-	return line.replace("{elder}", String(lecture.get("elder", "the elder"))).replace("{topic}", String(lecture.get("topic", "the lesson")))
+	line = line.replace("{elder}", String(lecture.get("elder", "the elder"))).replace("{topic}", String(lecture.get("topic", "the lesson")))
+	# "{elder} speaks..." with elder "the Blood Elder" must still open with a capital.
+	return line.left(1).to_upper() + line.substr(1)
 
 
 ## Load errors for the sects.json `lecture` blocks.

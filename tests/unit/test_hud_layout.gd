@@ -75,6 +75,27 @@ func test_key_help_setting() -> void:
 	_done(hud)
 
 
+func test_hunt_line_shows_with_hints_off() -> void:
+	var old: Variant = Settings.get_value("hud_hints")
+	var hud := await _build()
+	var gs: Node = _tree().root.get_node("GameState")
+	var bounty_id: String = gs.data.bounties.keys()[0]
+	gs.player.bounty = {"id": bounty_id, "until_day": GameClock.total_days + 10}
+	Settings.set_value("hud_hints", 0)
+	hud.call("_refresh")
+	hud.call("_refresh_fair_fight")
+	hud.call("_fit_panels")
+	assert_true((hud.get("_hunt") as Label).visible, "hunt line")
+	assert_true((hud.get("_guide_panel") as Control).visible, "the hunt deadline stays on screen with hints off")
+	gs.player.bounty = {}
+	hud.call("_refresh")
+	hud.call("_refresh_fair_fight")
+	hud.call("_fit_panels")
+	assert_false((hud.get("_guide_panel") as Control).visible, "nothing to show with hints off")
+	Settings.set_value("hud_hints", old)
+	_done(hud)
+
+
 func test_log_idle_alpha() -> void:
 	assert_eq(HudScript.log_idle_alpha(0.0), 1.0)
 	assert_true(HudScript.log_idle_alpha(9.0) <= 0.55)
