@@ -738,11 +738,12 @@ static func market_lines(data: GameData, region_id: String) -> PackedStringArray
 static func heal_source(c: CharacterData, data: GameData, region_id: String, flags: Dictionary = {}) -> String:
 	if region_id == "" or not Injuries.has_any(c):
 		return ""
-	# GUIDE-183: a source you can use now ("(you have N)" marks an unaffordable one) beats one you cannot.
+	# GUIDE-183/190: a source you can use now beats one you cannot.
 	for affordable_only: bool in [true, false]:
 		for injury_id: String in c.injuries:
-			var clause := _heal_source_for(c, data, region_id, injury_id, flags)
-			if clause == "" or (affordable_only and clause.contains("(you have ")):
+			var entry := _heal_source_entry(c, data, region_id, injury_id, flags)
+			var clause := String(entry["text"])
+			if clause == "" or (affordable_only and not bool(entry["affordable"])):
 				continue
 			if c.injuries.size() > 1:
 				var injury_name := Injuries.injury_name(data, injury_id)
@@ -778,20 +779,27 @@ static func injury_news(c: CharacterData, data: GameData, injury_id: String, reg
 	return line
 
 
+## GUIDE-190: the clause text of `_heal_source_entry` (the String every caller wants).
 static func _heal_source_for(c: CharacterData, data: GameData, region_id: String, injury_id: String, flags: Dictionary = {}) -> String:
+	return String(_heal_source_entry(c, data, region_id, injury_id, flags)["text"])
+
+
+## GUIDE-190: {text, affordable} for the source of one injury; affordable = usable now (an item held, a
+## treasury claim within the balance, a clinic or merchant whose price is within the stones in hand).
+static func _heal_source_entry(c: CharacterData, data: GameData, region_id: String, injury_id: String, flags: Dictionary = {}) -> Dictionary:
 	var stones := c.item_count("spirit_stone")
 	for item_id: String in c.inventory:
 		if c.item_count(item_id) > 0 and _heals(data, item_id, injury_id):
-			return "use your %s" % String(data.items[item_id].get("name", item_id))
+			return {"text": "use your %s" % String(data.items[item_id].get("name", item_id)), "affordable": true}
 	# GUIDE-161: a member's treasury pays in contribution, not stones, so it beats the clinic.
 	var claim := _heal_treasury(c, data, injury_id)
 	if not claim.is_empty():
-		return "claim %s from your sect treasury (%d contribution, you have %d)" % [Text.a(String(data.items[claim["item_id"]].get("name", claim["item_id"]))), int(claim["contribution"]), Sects.contribution_balance(c)]
+		return {"text": "claim %s from your sect treasury (%d contribution, you have %d)" % [Text.a(String(data.items[claim["item_id"]].get("name", claim["item_id"]))), int(claim["contribution"]), Sects.contribution_balance(c)], "affordable": true}
 	var places: Array = data.regions.get(region_id, {}).get("places", [])
 	var cost := Medicine.clinic_cost(c, data, injury_id)
 	for p: Dictionary in places:
 		if String(p.get("type", "")) == "clinic" and cost <= stones:
-			return "the %s treats it for %d stones" % [p.get("display_name", "clinic"), cost]
+			return {"text": "the %s treats it for %d stones" % [p.get("display_name", "clinic"), cost], "affordable": true}
 	for p: Dictionary in places:
 		if String(p.get("type", "")) != "merchant":
 			continue
@@ -801,7 +809,7 @@ static func _heal_source_for(c: CharacterData, data: GameData, region_id: String
 				continue
 			var heal_price := _place_price(c, data, region_id, item_id, p)
 			if heal_price <= stones:
-				return "the %s sells %s for %d stones" % [p.get("display_name", "merchant"), item.get("name", item_id), heal_price]
+				return {"text": "the %s sells %s for %d stones" % [p.get("display_name", "merchant"), item.get("name", item_id), heal_price], "affordable": true}
 	var far := nearest_selling(c, data, region_id, func(r: String) -> String:
 		if cost > stones:
 			return ""
@@ -810,12 +818,12 @@ static func _heal_source_for(c: CharacterData, data: GameData, region_id: String
 				return String(q.get("display_name", "clinic"))
 		return "")
 	if not far.is_empty() and int(far["days"]) > 0:
-		return "the %s %s treats it for %d stones" % [far["result"], _far_where(c, data, region_id, far), cost]
+		return {"text": "the %s %s treats it for %d stones" % [far["result"], _far_where(c, data, region_id, far), cost], "affordable": true}
 	for p: Dictionary in places:
 		if String(p.get("type", "")) == "clinic" and cost > stones:
 			var line := "the %s treats it for %d stones (you have %d)" % [p.get("display_name", "clinic"), cost, stones]
 			# GUIDE-149: say when selling loot would cover the gap.
-			return line + _sell_gap_clause(c, data, region_id, flags, cost)
+			return {"text": line + _sell_gap_clause(c, data, region_id, flags, cost), "affordable": false}
 	# GUIDE-183: no clinic here and the nearest one costs more than the stones in hand: still name it.
 	var far_any := nearest_selling(c, data, region_id, func(r: String) -> String:
 		for q: Dictionary in data.regions.get(r, {}).get("places", []):
@@ -824,8 +832,8 @@ static func _heal_source_for(c: CharacterData, data: GameData, region_id: String
 		return "")
 	if not far_any.is_empty() and int(far_any["days"]) > 0:
 		var far_line := "the %s %s treats it for %d stones (you have %d)" % [far_any["result"], _far_where(c, data, region_id, far_any), cost, stones]
-		return far_line + _sell_gap_clause(c, data, region_id, flags, cost)
-	return ""
+		return {"text": far_line + _sell_gap_clause(c, data, region_id, flags, cost), "affordable": false}
+	return {"text": "", "affordable": false}
 
 
 ## GUIDE-187: " Heal first: <Region> has no healer." when `c` is injured and `region_id` has neither a clinic

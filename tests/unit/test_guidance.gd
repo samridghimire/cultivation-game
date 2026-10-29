@@ -3176,6 +3176,19 @@ func test_heal_source_looks_past_the_first_injury() -> void:
 	assert_eq(line, "use your Bone-Setting Salve for your Broken Bones")
 
 
+func test_heal_source_prefers_the_affordable_cure_structurally() -> void:
+	var c := _fresh()
+	Injuries.inflict(c, data(), "qi_deviation")
+	Injuries.inflict(c, data(), "broken_bones")
+	# qi_deviation is first in dictionary order, but only the salve for broken bones is usable now.
+	c.inventory = {"bone_setting_salve": 1}
+	var entry := Guidance._heal_source_entry(c, data(), "qingshi_village", "qi_deviation")
+	assert_false(bool(entry["affordable"]), str(entry))
+	assert_eq(Guidance.heal_source(c, data(), "qingshi_village"), "use your Bone-Setting Salve for your Broken Bones")
+	# a sell-first clause also contains "(you have " yet the entry flag, not the text, decides
+	assert_true(bool(Guidance._heal_source_entry(c, data(), "qingshi_village", "broken_bones")["affordable"]))
+
+
 func test_heal_source_far_clinic_needs_the_stones() -> void:
 	var c := _fresh()
 	Injuries.inflict(c, data(), "broken_bones")
