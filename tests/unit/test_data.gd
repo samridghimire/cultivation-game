@@ -6,6 +6,15 @@ func test_data_loads_without_errors() -> void:
 	assert_eq(data().load_errors.size(), 0, ", ".join(data().load_errors))
 
 
+func test_animal_enemies_are_tagged_beast() -> void:
+	for enemy: Dictionary in data().enemies.values():
+		var label: String = (String(enemy["id"]) + " " + String(enemy.get("name", ""))).to_lower()
+		for animal in ["wolf", "boar", "ape", "serpent", "tiger", "bear"]:
+			if label.contains(animal):
+				assert_true("beast" in enemy.get("tags", []), "%s should be tagged beast" % enemy["id"])
+				break
+
+
 func test_every_realm_has_a_short_description() -> void:
 	for realm in data().realms:
 		assert_true(realm.description != "", "%s needs a description" % realm.id)

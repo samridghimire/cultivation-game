@@ -699,6 +699,14 @@ func _validate_combat() -> void:
 	for enemy: Dictionary in enemies.values():
 		if realm_index_of(enemy.get("realm", "")) < 0:
 			load_errors.append("Enemy '%s' has unknown realm '%s'" % [enemy["id"], enemy.get("realm", "")])
+		if enemy.has("tags"):
+			var tag_list: Variant = enemy["tags"]
+			if not (tag_list is Array):
+				load_errors.append("enemies.json %s: tags must be a list" % enemy["id"])
+			else:
+				for tag: Variant in tag_list:
+					if not (tag is String) or String(tag) == "":
+						load_errors.append("enemies.json %s: tags must be non-empty strings" % enemy["id"])
 		if enemy.has("power_mult"):
 			var pm: Variant = enemy["power_mult"]
 			if (typeof(pm) != TYPE_INT and typeof(pm) != TYPE_FLOAT) or float(pm) < 0.5 or float(pm) > 1.5:
