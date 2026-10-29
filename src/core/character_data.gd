@@ -103,6 +103,7 @@ var abode_storage: Dictionary = {}
 var abode_array := ""
 ## Times each random encounter was met: encounter id -> count (ENC-003, fades familiar sights).
 var encounter_counts: Dictionary = {}
+var encounter_last_day: Dictionary = {}  # ENC-010: encounter id -> total day last met
 ## Days spent exploring each region: region id -> days (EXPL-001, unlocks `min_explores` encounters).
 var explore_days: Dictionary = {}
 ## Local renown: region id -> int (RENOWN-001).
@@ -265,6 +266,7 @@ func to_dict() -> Dictionary:
 		"body_stage": body_stage,
 		"abode_array": abode_array,
 		"encounter_counts": encounter_counts.duplicate(),
+		"encounter_last_day": encounter_last_day.duplicate(),
 		"explore_days": explore_days.duplicate(),
 		"renown": renown.duplicate(),
 		"bounty": bounty.duplicate(),
@@ -395,6 +397,8 @@ static func from_dict(d: Dictionary) -> CharacterData:
 	c.abode_array = String(d.get("abode_array", ""))
 	for enc_id in d.get("encounter_counts", {}):
 		c.encounter_counts[String(enc_id)] = int(d["encounter_counts"][enc_id])
+	for enc_id in d.get("encounter_last_day", {}):
+		c.encounter_last_day[String(enc_id)] = int(d["encounter_last_day"][enc_id])
 	for region_id in d.get("renown", {}):
 		c.renown[String(region_id)] = int(d["renown"][region_id])
 	for region_id in d.get("explore_days", {}):

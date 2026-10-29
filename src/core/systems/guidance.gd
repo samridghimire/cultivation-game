@@ -2691,7 +2691,7 @@ static func _rated_region_fights(c: CharacterData, data: GameData, region_id: St
 	var unhurt := CharacterData.from_dict(c.to_dict())
 	unhurt.injuries.clear()
 	var tags: Array = data.regions[region_id].get("encounter_tags", [])
-	for enemy_id in Exploration.eligible_fights(c, data, tags, flags, Calendar.season_of(today), region_id):
+	for enemy_id in Exploration.eligible_fights(c, data, tags, flags, Calendar.season_of(today), region_id, today):
 		if rated.size() >= OUTGROWN_RATED_MAX:
 			break
 		var foe: Dictionary = data.enemies[enemy_id]
@@ -2757,7 +2757,7 @@ static func practice_payoff(c: CharacterData, data: GameData, tech_id: String, r
 	var tags: Array = data.regions.get(region_id, {}).get("encounter_tags", [])
 	var best: Dictionary = {}
 	var rated := 0
-	for enemy_id in Exploration.eligible_fights(c, data, tags, flags, Calendar.season_of(today), region_id):
+	for enemy_id in Exploration.eligible_fights(c, data, tags, flags, Calendar.season_of(today), region_id, today):
 		if rated >= FAIR_FIGHT_EXPLORE_MAX:
 			break
 		rated += 1
@@ -3607,7 +3607,7 @@ static func fair_fights(c: CharacterData, data: GameData, flags: Dictionary, tod
 	if found.size() < FAIR_FIGHTS_MAX and region_id != "":
 		var explore_rated := 0
 		var tags: Array = data.regions.get(region_id, {}).get("encounter_tags", [])
-		for enemy_id in Exploration.eligible_fights(c, data, tags, flags, Calendar.season_of(today), region_id):
+		for enemy_id in Exploration.eligible_fights(c, data, tags, flags, Calendar.season_of(today), region_id, today):
 			if rated >= FAIR_FIGHT_MAX_RATED or explore_rated >= FAIR_FIGHT_EXPLORE_MAX:
 				break
 			var foe: Dictionary = data.enemies[enemy_id]

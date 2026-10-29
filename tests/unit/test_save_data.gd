@@ -95,6 +95,7 @@ func test_every_character_field_survives_a_save() -> void:
 	c.commissions = [{"profession": "alchemist", "recipe": "qi_gathering_pill", "item": "qi_gathering_pill", "count": 2, "reward": 9, "xp": 10.0, "due_day": 77}]
 	c.companion_xp = {"x_companions": 30}
 	c.encounter_counts = {"forest_lost": 3}
+	c.encounter_last_day = {"forest_lost": 410}
 	c.explore_days = {"misty_forest": 7}
 	c.renown = {"misty_forest": 30}
 	c.shop_deals = {"misty_forest": {"mult": 0.9, "until": 120}}

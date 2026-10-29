@@ -595,7 +595,7 @@ func travel(region_id: String) -> void:
 		EventBus.post(first_sight, "info")
 	_pass_time(check["days"], "Travelling to %s" % Exploration.region_name(data, region_id))
 	if not _road_ambush() and _can_act():
-		var road := Exploration.road_encounter(player, data, int(check["days"]), world_flags, rng, Calendar.season_of(GameClock.total_days))
+		var road := Exploration.road_encounter(player, data, int(check["days"]), world_flags, rng, Calendar.season_of(GameClock.total_days), GameClock.total_days)
 		if not road.is_empty():
 			last_travel_road_encounter = String(road.get("id", ""))
 			# Not an exploration find: the encounter window must not title it a discovery.
@@ -656,7 +656,7 @@ func explore_outlook(tags: Array = []) -> String:
 	if tags.is_empty():
 		tags = data.regions.get(current_region, {}).get("encounter_tags", [])
 	tags = tags + WorldEvents.encounter_tags(data, world_events, current_region)
-	var line := Guidance.outlook_text(Exploration.outlook(player, data, tags, world_flags, Calendar.season_of(GameClock.total_days), current_region))
+	var line := Guidance.outlook_text(Exploration.outlook(player, data, tags, world_flags, Calendar.season_of(GameClock.total_days), current_region, GameClock.total_days))
 	if Exploration.mastered(player, data, current_region, world_flags):
 		line = (line + " You know every path here.").strip_edges()
 	return line
@@ -699,7 +699,7 @@ func _explore_day(tags: Array, quiet: bool) -> Dictionary:
 		var hunted := Bounties.hunt_roll(player, data, current_region, GameClock.total_days, rng)
 		if hunted != "":
 			return _hunt_bounty_foe(hunted)
-		encounter = Exploration.roll_encounter(player, data, tags, world_flags, rng, _rival_for_roll(), 1.0 - ClanEstate.ward(clan, data, current_region), Calendar.season_of(GameClock.total_days), current_region, int(npc_favor.get(player.rival, 0)), func(e: Dictionary) -> bool: return Folk.available(e, npcs, data, player, current_region))
+		encounter = Exploration.roll_encounter(player, data, tags, world_flags, rng, _rival_for_roll(), 1.0 - ClanEstate.ward(clan, data, current_region), Calendar.season_of(GameClock.total_days), current_region, int(npc_favor.get(player.rival, 0)), func(e: Dictionary) -> bool: return Folk.available(e, npcs, data, player, current_region), GameClock.total_days)
 		if String(encounter.get("rival", "")) != "" or encounter.has("rival_attitude"):
 			Rivals.note_encounter(data, world_flags, GameClock.total_days)
 	else:
@@ -739,7 +739,7 @@ static func explore_prefix(encounter: Dictionary, discovery: bool, deep_path: bo
 ## time, rival consequences, then a choice or a fight. `prefix` heads the text.
 func _meet_encounter(encounter: Dictionary, prefix: String = "") -> Dictionary:
 	LifeStats.add(player, "encounters")
-	Exploration.note_met(player, encounter)
+	Exploration.note_met(player, encounter, GameClock.total_days)
 	pending_cast = Folk.pick(encounter, npcs, data, player, current_region, npc_favor, rng)
 	var renown_before := Renown.value(player, current_region)
 	var result := Exploration.resolve(player, data, encounter, world_flags, current_region)

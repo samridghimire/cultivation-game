@@ -43,6 +43,12 @@ var renown: Dictionary = {}  # regions.json "renown" block (Renown); {} = none
 var travel_speed: Array = []  # TRAV-007: regions.json "travel_speed" (empty = everyone walks)
 var road: Dictionary = {}  # TRAV-006: regions.json "road" (empty = no road encounters)
 var encounters: Dictionary = {}  # id -> Dictionary
+## True for an int or a whole-number float (JSON numbers load as floats).
+static func _is_whole(v: Variant) -> bool:
+	return (typeof(v) == TYPE_INT) or (typeof(v) == TYPE_FLOAT and float(v) == floorf(float(v)))
+
+
+var encounter_rest_days: int = 0  # encounters.json rest_days (ENC-010)
 var encounter_sense_below_chance: float = 0.2  # encounters.json sense_below_chance (ENC-009)
 ## Bounties by id and the file's top-level numbers (data/bounties.json, Bounties).
 var bounties: Dictionary = {}
@@ -245,6 +251,11 @@ func _load(dir: String) -> void:
 	artifact = _read(dir, "artifact.json")
 
 	var encounter_file := _read(dir, "encounters.json")
+	var rest_raw: Variant = encounter_file.get("rest_days", 0)
+	if _is_whole(rest_raw) and int(rest_raw) >= 0:
+		encounter_rest_days = int(rest_raw)
+	else:
+		load_errors.append("encounters.json rest_days must be an int >= 0")
 	encounter_sense_below_chance = float(encounter_file.get("sense_below_chance", 0.2))
 	for encounter in encounter_file.get("encounters", []):
 		encounters[encounter["id"]] = encounter
@@ -581,6 +592,8 @@ func _validate_world() -> void:
 		_validate_seasons(e, "Encounter '%s'" % e["id"])
 		if e.has("repeatable") and typeof(e["repeatable"]) != TYPE_BOOL:
 			load_errors.append("Encounter '%s' repeatable must be a bool" % e["id"])
+		if e.has("rest_days") and not (_is_whole(e["rest_days"]) and int(e["rest_days"]) >= 0):
+			load_errors.append("Encounter '%s' rest_days must be an int >= 0" % e["id"])
 		if e.has("rogue_only") and typeof(e["rogue_only"]) != TYPE_BOOL:
 			load_errors.append("Encounter '%s' rogue_only must be a bool" % e["id"])
 		if e.has("min_explores") and (typeof(e["min_explores"]) != TYPE_INT and typeof(e["min_explores"]) != TYPE_FLOAT or int(e["min_explores"]) < 1 or float(e["min_explores"]) != int(e["min_explores"])):

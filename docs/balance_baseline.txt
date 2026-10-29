@@ -2,19 +2,19 @@
 
 First-hour sim: 10 seeds, 12 months
   seed  QR1  QR3  QR9  sect  injuries  won  lost  fled  lines/month
-     1   51  270    -    51         0    1     0     0  5.8
+     1   51  277    -    51         0    2     0     0  6.2
         first win day 14 (wild_boar), style bought day -
      2   14   75    -    14         0    2     0     0  4.7
         first win day 14 (wild_boar), style bought day -
      3   14  142    -    14         0    4     0     0  6.1
         first win day 14 (wild_boar), style bought day -
-     4   14  175    -    14         0    2     0     0  5.8
+     4   14  175    -    14         0    1     0     0  5.4
         first win day 14 (wild_boar), style bought day -
-     5   14   45  296    14         0    1     0     0  5.1
+     5   14   45  297    14         0    1     0     0  5.6
         first win day 14 (wild_boar), style bought day -
      6   14  168    -    14         0    3     0     0  6.0
         first win day 14 (wild_boar), style bought day -
-     7   14  139    -    14         0    1     0     0  4.8
+     7   14  137    -    14         0    2     0     0  5.4
         first win day 14 (wild_boar), style bought day -
      8   14   76    -    14         0    1     0     0  6.0
         first win day 14 (wild_boar), style bought day -
@@ -22,659 +22,525 @@ First-hour sim: 10 seeds, 12 months
         first win day 14 (wild_boar), style bought day -
     10   14  138    -    14         0    1     1     0  5.5
         first win day 140 (wild_boar), style bought day -
-Medians (day): QR1 14, QR3 142, QR9 296 (1/10 seeds reached it), sect 14; injuries 0; fights won 1, lost 0, fled 0; 5.8 log lines/month
+Medians (day): QR1 14, QR3 142, QR9 297 (1/10 seeds reached it), sect 14; injuries 0; fights won 2, lost 0, fled 0; 5.6 log lines/month
 First win: median day 14, seeds with no win in 12 months: 0; first-win foes: { "wild_boar": 10 }; median style day -1 (0 seeds)
 Road encounters (QA-118): 0/10 seeds met one; {  }
 Sect contribution (QA-146): m06 median 0, m12 median 0; stage at m12: { "QR4": 4, "QR7": 2, "QR5": 2, "QR9": 1, "QR6": 1 }
 Stones at the QR9 bottleneck (QA-146): median -1 (0/10 seeds reached it)
 Bounties (QA-146), offered by region (ids once per seed): { "qingshi_village": 17, "fallen_star_market": 10, "myriad_peaks_ridge": 10, "misty_forest": 10 }; taken (times): {  }
-Lines by category: { "warning": 55, "danger": 26, "info": 341, "progress": 226, "karma": 1 }
+Lines by category: { "warning": 58, "danger": 29, "info": 342, "progress": 233, "karma": 1 }
 
 ## first hour, curious player (seeds 1-10)
 
 First-hour sim (curious player): 10 seeds, 12 months
   seed  QR1  QR3  QR9  sect  injuries  won  lost  fled  lines/month
-     1   55  310    -    55         0   38     3     0  39.3
+     1   55  322    -    55         1   33     5     0  35.5
         first win day 14 (wild_boar), style bought day 27
-     2   14  148  905    14         1   51     3     0  44.5
+     2   14  147    -    14         0   41     4     0  37.8
         first win day 14 (wild_boar), style bought day 46
-     3   14  216    -    14         0   41     4     0  41.5
+     3   14  221    -    14         0   47     3     0  43.3
         first win day 14 (wild_boar), style bought day 43
-     4   14  216    -    14         0   38     0     0  37.2
-        first win day 14 (wild_boar), style bought day 50
-     5   14   76  565    14         0   44     1     0  45.2
+     4   14  269    -    14         1   37     1     0  34.6
+        first win day 14 (wild_boar), style bought day 54
+     5   14   76  583    14         0   40     3     1  46.2
         first win day 14 (wild_boar), style bought day 45
-     6   14  176    -    14         0   45     0     0  44.4
+     6   14  220    -    14         0   47     0     0  43.0
         first win day 14 (wild_boar), style bought day 49
-     7   14  221    -    14         0   37     3     0  40.1
+     7   14  218    -    14         0   47     4     0  47.1
         first win day 14 (wild_boar), style bought day 44
-     8   14  155  823    14         0   44     2     0  41.4
+     8   14  155  882    14         0   42     3     0  42.7
         first win day 14 (wild_boar), style bought day 44
-     9   14  234    -    14         0   45     1     0  45.0
-        first win day 14 (wild_boar), style bought day 45
-    10   14  196    -    14         0   40     1     0  40.6
+     9   14  207    -    14         0   37     1     0  36.7
+        first win day 14 (wild_boar), style bought day 44
+    10   14  195    -    14         0   42     3     0  40.3
         first win day 41 (mountain_bandit), style bought day 41
-Medians (day): QR1 14, QR3 216, QR9 823 (3/10 seeds reached it), sect 14; injuries 0; fights won 44, lost 2, fled 0; 41.5 log lines/month
-First win: median day 14, seeds with no win in 12 months: 0; first-win foes: { "wild_boar": 9, "mountain_bandit": 1 }; median style day 45 (10 seeds)
-Sect trials: Inner Disciple median day 750 (9/10 seeds); trials won 9, lost 3; stones at the last month: median 349
-Distinct action kinds per month: 7.0; months after the first with no log lines: 0
-Injury treatments (QA-128): 12, clinic stones 171
-Iron Fist level median (QA-138): m03 2, m06 2, m12 4; first Mist Wolf win: median day 562 (10/10 seeds)
+Medians (day): QR1 14, QR3 218, QR9 882 (2/10 seeds reached it), sect 14; injuries 0; fights won 42, lost 3, fled 0; 42.7 log lines/month
+First win: median day 14, seeds with no win in 12 months: 0; first-win foes: { "wild_boar": 9, "mountain_bandit": 1 }; median style day 44 (10 seeds)
+Sect trials: Inner Disciple median day 828 (7/10 seeds); trials won 8, lost 8; stones at the last month: median 282
+Distinct action kinds per month: 6.9; months after the first with no log lines: 0
+Injury treatments (QA-128): 22, clinic stones 357
+Iron Fist level median (QA-138): m03 2, m06 2, m12 4; first Mist Wolf win: median day 608 (10/10 seeds)
 Spar-hint bouts (QA-138): 10, refusals: []
-Armor shopping (QA-140): armor worn by day 371 median (10/10 seeds); 0 loot sales for 0 stones, 10 trips to a smithy
-Road encounters (QA-118): 9/10 seeds met one; { "road_caravan_guard": 2, "road_caravan_fire": 2, "road_lost_child": 2, "road_rain_shelter": 2, "road_talisman_peddler": 2, "road_milestone_carver": 2, "road_dying_cultivator": 1, "road_fallen_rogue": 1, "road_overturned_cart": 1 }
-Sect contribution (QA-146): m06 median 609, m12 median 1822; stage at m12: { "QR7": 4, "QR9": 2, "QR6": 1, "Foundation Establishment, Middle": 1, "QR8": 2 }
-Stones at the QR9 bottleneck (QA-146): median 159 (1/10 seeds reached it)
-Bounties (QA-146), offered by region (ids once per seed): { "qingshi_village": 26, "fallen_star_market": 10, "myriad_peaks_ridge": 10, "azure_peak": 2, "misty_forest": 22, "withered_bone_marsh": 1 }; taken (times): { "qingshi_village": 64, "misty_forest": 10 }
-Lines by category: { "warning": 207, "danger": 755, "info": 1811, "progress": 2032, "karma": 219, "world": 6, "normal": 2 }
+Armor shopping (QA-140): armor worn by day 375 median (10/10 seeds); 1 loot sales for 56 stones, 10 trips to a smithy
+Road encounters (QA-118): 9/10 seeds met one; { "road_talisman_peddler": 1, "road_lost_child": 3, "road_overturned_cart": 3, "road_highwayman": 3, "road_fallen_rogue": 2, "road_milestone_carver": 3, "road_caravan_fire": 1 }
+Sect contribution (QA-146): m06 median 585, m12 median 1684; stage at m12: { "QR6": 2, "QR8": 2, "QR7": 4, "Foundation Establishment, Middle": 1, "QR9": 1 }
+Stones at the QR9 bottleneck (QA-146): median 227 (1/10 seeds reached it)
+Bounties (QA-146), offered by region (ids once per seed): { "qingshi_village": 25, "fallen_star_market": 10, "myriad_peaks_ridge": 10, "azure_peak": 3, "misty_forest": 22, "withered_bone_marsh": 1 }; taken (times): { "qingshi_village": 61, "misty_forest": 7 }
+Lines by category: { "warning": 198, "danger": 813, "info": 1723, "progress": 1932, "karma": 211, "world": 6, "normal": 3 }
 
 ## log noise (seeds 1-5, 12 months)
 
 Log noise: 5 seeds, 12 months, curious player
 Posts per month by topic:
-  world          12.8/month (busiest month in any seed: 86)
-  combat         11.3/month (busiest month in any seed: 39)
-  cultivation     5.0/month (busiest month in any seed: 42)
-  trade           3.7/month (busiest month in any seed: 15)
-  family          2.7/month (busiest month in any seed: 13)
-  sect            1.9/month (busiest month in any seed: 9)
+  world          12.9/month (busiest month in any seed: 85)
+  combat         12.2/month (busiest month in any seed: 49)
+  cultivation     5.5/month (busiest month in any seed: 42)
+  trade           3.5/month (busiest month in any seed: 19)
+  family          2.7/month (busiest month in any seed: 12)
+  sect            2.0/month (busiest month in any seed: 11)
   life            0.8/month (busiest month in any seed: 25)
   (none)          0.1/month (busiest month in any seed: 5)
 Most repeated line templates (per month, averaged):
    1.00  You practice the Iron Fist for N days.
-   0.98  You attend Elder Feng's sword lecture. (+N qi)
-   0.72  Sect mission: Escort Mortal Villagers. You face the Mountain Bandit. (You: N hp, N atk. Foe: N hp, N atk.)
-   0.68  Sect mission: Drive Off the Den Wolves. You face the Den Wolf. (You: N hp, N atk. Foe: N hp, N atk.)
-   0.68  You cultivate for N month and gather N qi (N/N qi to the Nth Layer).
-   0.67  Mission complete: Drive Off the Den Wolves. (+N contribution, +N qi, Azure Cloud Sect reputation +N)
-   0.67  The Den Wolf collapses. (N rounds, N/N hp left; +N Mist Wolf Pelt, +N qi)
-   0.55  Mission complete: Escort Mortal Villagers. (+N contribution, Alignment +N, now Virtuous, Blood Lotus Sect repu
-   0.50  You work as a Blacksmith for N days: +N xp, +N spirit stones.
-   0.45  You face the Drunk Bully Disciple. (You: N hp, N atk. Foe: N hp, N atk.)
+   0.97  You attend Elder Feng's sword lecture. (+N qi)
+   0.67  Sect mission: Escort Mortal Villagers. You face the Mountain Bandit. (You: N hp, N atk. Foe: N hp, N atk.)
+   0.65  You cultivate for N month and gather N qi (N/N qi to the Nth Layer).
+   0.65  You face the Wild Boar. (You: N hp, N atk. Foe: N hp, N atk.)
+   0.60  Sect mission: Drive Off the Den Wolves. You face the Den Wolf. (You: N hp, N atk. Foe: N hp, N atk.)
+   0.57  A wild boar charges out of the fields!
+   0.57  Mission complete: Drive Off the Den Wolves. (+N contribution, +N qi, Azure Cloud Sect reputation +N)
+   0.55  The Den Wolf collapses. (N rounds, N/N hp left; +N Mist Wolf Pelt, +N qi)
+   0.55  The Mist Wolf collapses. (N rounds, N/N hp left; +N Spirit Stone, +N Mist Wolf Pelt, +N qi)
 
 ## three curious years (seeds 1-10, 36 months)
 
 Curious player, 10 seeds, 36 months
   seed  block  kinds  new  stones  realm
-     1      1    7.0   12     181  Qi Refining, 3rd Layer
-     1      2    7.3    2     385  Qi Refining, 6th Layer
-     1      3    7.0    1     750  Qi Refining, 9th Layer
-     1      4    7.0    0    1052  Foundation Establishment, Early
-     1      5    6.2    0    1287  Foundation Establishment, Early
-     1      6    5.0    0    1513  Foundation Establishment, Middle
-     2      1    7.2   11     106  Qi Refining, 5th Layer
-     2      2    7.0    3     178  Qi Refining, 8th Layer
-     2      3    6.8    0     406  Foundation Establishment, Early
-     2      4    5.5    0     667  Foundation Establishment, Middle
-     2      5    5.0    0     466  Foundation Establishment, Late
-     2      6    5.5    0     674  Foundation Establishment, Peak
-     3      1    6.8   11      30  Qi Refining, 4th Layer
-     3      2    7.0    2     302  Qi Refining, 7th Layer
-     3      3    6.2    0     687  Qi Refining, 9th Layer
-     3      4    6.5    1     971  Foundation Establishment, Early
-     3      5    5.0    0    1175  Foundation Establishment, Middle
-     3      6    5.0    0    1369  Foundation Establishment, Middle
-     4      1    5.8    9     137  Qi Refining, 4th Layer
-     4      2    6.8    2     292  Qi Refining, 7th Layer
-     4      3    7.2    2     299  Qi Refining, 8th Layer
-     4      4    7.7    0     622  Qi Refining, 9th Layer
-     4      5    5.5    0     852  Foundation Establishment, Early
-     4      6    5.0    0    1022  Foundation Establishment, Middle
-     5      1    6.8   11      93  Qi Refining, 7th Layer
-     5      2    6.8    3     328  Foundation Establishment, Middle
-     5      3    5.7    0     581  Foundation Establishment, Late
-     5      4    5.2    0     737  Foundation Establishment, Peak
-     5      5    5.3    0     572  Foundation Establishment, Peak
-     5      6    6.0    0     752  Foundation Establishment, Peak
-     6      1    7.2   10     202  Qi Refining, 4th Layer
-     6      2    7.5    2     484  Qi Refining, 7th Layer
-     6      3    6.3    0     956  Qi Refining, 8th Layer
-     6      4    6.5    1    1349  Qi Refining, 9th Layer
-     6      5    5.3    0    1750  Foundation Establishment, Early
-     6      6    5.0    0    1933  Foundation Establishment, Middle
-     7      1    7.2   11     113  Qi Refining, 5th Layer
-     7      2    6.8    2     194  Qi Refining, 7th Layer
-     7      3    6.5    1     541  Qi Refining, 9th Layer
-     7      4    5.8    0     757  Foundation Establishment, Early
-     7      5    6.0    0     947  Foundation Establishment, Middle
-     7      6    6.0    0    1109  Foundation Establishment, Late
-     8      1    6.5   10     105  Qi Refining, 6th Layer
-     8      2    8.5    3     263  Qi Refining, 9th Layer
-     8      3    6.5    0     753  Foundation Establishment, Middle
-     8      4    5.3    1     641  Foundation Establishment, Late
-     8      5    5.0    0     915  Foundation Establishment, Peak
-     8      6    5.2    0    1394  Foundation Establishment, Peak
-     9      1    6.5   11     140  Qi Refining, 4th Layer
-     9      2    6.8    1     252  Qi Refining, 6th Layer
-     9      3    7.5    1     748  Qi Refining, 8th Layer
-     9      4    7.5    1    1467  Qi Refining, 9th Layer
-     9      5    7.2    0    1651  Foundation Establishment, Early
-     9      6    6.0    0    1873  Foundation Establishment, Early
-    10      1    6.3   12     170  Qi Refining, 5th Layer
-    10      2    7.3    3     245  Qi Refining, 8th Layer
-    10      3    8.0    1     924  Foundation Establishment, Early
-    10      4    5.8    0     736  Foundation Establishment, Middle
-    10      5    5.2    0     948  Foundation Establishment, Late
-    10      6    5.0    0    1141  Foundation Establishment, Late
+     1      1    5.3    8     123  Qi Refining, 3rd Layer
+     1      2    7.0    5     298  Qi Refining, 7th Layer
+     1      3    6.8    1     228  Qi Refining, 9th Layer
+     1      4    6.0    0    1038  Foundation Establishment, Early
+     1      5    5.0    0    1180  Foundation Establishment, Middle
+     1      6    5.0    0    1356  Foundation Establishment, Middle
+     2      1    7.0   11     192  Qi Refining, 5th Layer
+     2      2    7.3    3      41  Qi Refining, 8th Layer
+     2      3    7.3    0     384  Foundation Establishment, Early
+     2      4    6.2    0     559  Foundation Establishment, Middle
+     2      5    6.0    0     723  Foundation Establishment, Late
+     2      6    6.0    0     495  Foundation Establishment, Peak
+     3      1    7.0   11     180  Qi Refining, 5th Layer
+     3      2    7.5    2     503  Qi Refining, 7th Layer
+     3      3    7.0    0     781  Qi Refining, 9th Layer
+     3      4    7.8    2    1205  Foundation Establishment, Early
+     3      5    6.0    0    1322  Foundation Establishment, Early
+     3      6    5.3    0    1498  Foundation Establishment, Middle
+     4      1    5.5    9     140  Qi Refining, 3rd Layer
+     4      2    7.0    2     310  Qi Refining, 7th Layer
+     4      3    8.0    2     529  Qi Refining, 8th Layer
+     4      4    7.2    0     893  Foundation Establishment, Early
+     4      5    5.5    0    1044  Foundation Establishment, Early
+     4      6    5.0    0    1211  Foundation Establishment, Middle
+     5      1    6.3   10     200  Qi Refining, 8th Layer
+     5      2    8.0    2     381  Foundation Establishment, Early
+     5      3    6.3    2     591  Foundation Establishment, Late
+     5      4    6.2    0     847  Foundation Establishment, Peak
+     5      5    5.5    0     658  Foundation Establishment, Peak
+     5      6    5.3    0     804  Foundation Establishment, Peak
+     6      1    6.2    9     196  Qi Refining, 4th Layer
+     6      2    7.8    4     385  Qi Refining, 7th Layer
+     6      3    7.2    0    1044  Qi Refining, 9th Layer
+     6      4    6.5    0    1208  Foundation Establishment, Early
+     6      5    5.0    0    1324  Foundation Establishment, Early
+     6      6    5.2    1    1486  Foundation Establishment, Middle
+     7      1    6.3    9     152  Qi Refining, 5th Layer
+     7      2    6.7    2     152  Qi Refining, 7th Layer
+     7      3    8.2    2     320  Qi Refining, 9th Layer
+     7      4    7.7    0     685  Foundation Establishment, Early
+     7      5    6.2    0     945  Foundation Establishment, Middle
+     7      6    5.7    0    1110  Foundation Establishment, Middle
+     8      1    6.3    9     158  Qi Refining, 6th Layer
+     8      2    7.8    3      62  Qi Refining, 9th Layer
+     8      3    5.8    1     387  Foundation Establishment, Middle
+     8      4    5.2    0     431  Foundation Establishment, Late
+     8      5    5.0    0     484  Foundation Establishment, Peak
+     8      6    5.2    0     733  Foundation Establishment, Peak
+     9      1    6.8   12     158  Qi Refining, 4th Layer
+     9      2    7.5    1     194  Qi Refining, 7th Layer
+     9      3    7.5    0     570  Qi Refining, 9th Layer
+     9      4    7.2    1     870  Foundation Establishment, Early
+     9      5    5.7    0    1144  Foundation Establishment, Early
+     9      6    5.0    0    1228  Foundation Establishment, Middle
+    10      1    6.3   11     165  Qi Refining, 4th Layer
+    10      2    6.5    1     211  Qi Refining, 7th Layer
+    10      3    7.8    1     515  Qi Refining, 9th Layer
+    10      4    6.5    0     660  Foundation Establishment, Early
+    10      5    5.2    0     779  Foundation Establishment, Middle
+    10      6    5.5    1     966  Foundation Establishment, Late
 Medians per 6-month block: distinct kinds / seeds with a new feature / stones
-  months  1- 6: 6.8 kinds, 10 of 10 seeds new feature, 137 stones
-  months  7-12: 7.0 kinds, 10 of 10 seeds new feature, 292 stones
-  months 13-18: 6.8 kinds, 5 of 10 seeds new feature, 748 stones
-  months 19-24: 6.5 kinds, 4 of 10 seeds new feature, 757 stones [nothing new]
-  months 25-30: 5.3 kinds, 0 of 10 seeds new feature, 948 stones [nothing new]
-  months 31-36: 5.2 kinds, 0 of 10 seeds new feature, 1369 stones [nothing new]
+  months  1- 6: 6.3 kinds, 10 of 10 seeds new feature, 165 stones
+  months  7-12: 7.5 kinds, 10 of 10 seeds new feature, 298 stones
+  months 13-18: 7.3 kinds, 6 of 10 seeds new feature, 529 stones
+  months 19-24: 6.5 kinds, 2 of 10 seeds new feature, 870 stones [nothing new]
+  months 25-30: 5.5 kinds, 0 of 10 seeds new feature, 1044 stones [nothing new]
+  months 31-36: 5.3 kinds, 2 of 10 seeds new feature, 1211 stones [nothing new]
 Seeds whose life ended before month 36: none
 Guard (QA-054): at most 1 of 10 seeds may end early: ok
 First month each feature was used (median over seeds that used it):
   mission       month 1 (10 of 10 seeds)
   deed          month 1 (10 of 10 seeds)
   talk          month 1 (10 of 10 seeds)
-  commission    month 8 (9 of 10 seeds)
+  commission    month 12 (9 of 10 seeds)
   breakthrough  month 1 (10 of 10 seeds)
-  craft         month 3 (10 of 10 seeds)
-  work          month 3 (10 of 10 seeds)
-  secret_realm  month 23 (4 of 10 seeds)
+  craft         month 4 (10 of 10 seeds)
+  work          month 4 (10 of 10 seeds)
+  secret_realm  month 23 (3 of 10 seeds)
   gift          month 1 (10 of 10 seeds)
   pointer       month 6 (10 of 10 seeds)
-  spar          month 6 (7 of 10 seeds)
+  spar          month 13 (5 of 10 seeds)
   lecture       month 1 (10 of 10 seeds)
 Longest 'nothing new' stretches:
-  seed 2: 24 months from month 13 (Qi Refining, 9th Layer, 185 stones)
-  seed 5: 24 months from month 13 (Foundation Establishment, Middle, 370 stones)
-  seed 7: 23 months from month 14 (Qi Refining, 8th Layer, 385 stones)
-Deaths (10): seed, game month, final?, foe (rated odds), lives left, stones, region
-  seed  2 m22  respawn mist_wolf (80%) lives=2 stones=75 qingshi_village
-      cause: You were slain by a Mist Wolf at age 17.
-      | The Old Village Boxer yields. (3 rounds, 160/221 hp left; +1 Spirit Herb)
-      | Word of it spreads through Qingshi Village (renown +3).
-      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 221 hp, 72 atk. Foe: 228
-      | You fall. (6 rounds, 0/221 hp left)
-      | You were slain by a Mist Wolf at age 17.
+  seed 2: 25 months from month 12 (Qi Refining, 8th Layer, 41 stones)
+  seed 6: 24 months from month 12 (Qi Refining, 7th Layer, 385 stones)
+  seed 8: 23 months from month 14 (Foundation Establishment, Early, 215 stones)
+Deaths (2): seed, game month, final?, foe (rated odds), lives left, stones, region
+  seed  4 m36  respawn mist_wolf (91%) lives=3 stones=309 qingshi_village
+      cause: You were slain by a Mist Wolf at age 19.
+      | You crafted 1 item.
+      | Hei Tianhe is far ahead of you.
+      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 224 hp, 76 atk. Foe: 228
+      | You fall. (5 rounds, 0/224 hp left)
+      | You were slain by a Mist Wolf at age 19.
       | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
-  seed  3 m17  respawn mist_wolf (88%) lives=3 stones=129 qingshi_village
-      cause: You were slain by a Mist Wolf at age 17.
-      | A hunter's cart sits canted on the lane with its axle snapped clean through, a load of boa
-      | You put your shoulder to the wheel and drag the cart out of the lane. He thanks you with a
-      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 252 hp, 102 atk. Foe: 22
-      | You fall. (4 rounds, 0/252 hp left)
-      | You were slain by a Mist Wolf at age 17.
-      | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
-  seed  5 m13  respawn mist_wolf (78%) lives=2 stones=31 qingshi_village
-      cause: You were slain by a Mist Wolf at age 17.
-      | You catch the house man's sleeve and the weighted dice roll out. The farmer gets his coin 
-      | You buy a Foundation Establishment Pill for 282 spirit stones.
-      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 240 hp, 74 atk. Foe: 228
-      | You fall. (6 rounds, 0/240 hp left)
-      | You were slain by a Mist Wolf at age 17.
-      | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
-  seed  5 m16  respawn mist_wolf (88%) lives=1 stones=114 qingshi_village
-      cause: You were slain by a Mist Wolf at age 17.
-      | The Fog-Antler Stag collapses. (5 rounds, 59/255 hp left; +14 Spirit Stone, +1 Spirit Herb
-      | Mission complete: Drive Off the Fog-Antler Stag. (+70 contribution, Alignment +5, now Virt
-      | Sect mission: Patrol the Misty Peaks. You face the Mist Wolf. (You: 255 hp, 63 atk. Foe: 2
-      | You fall. (5 rounds, 0/255 hp left)
-      | You were slain by a Mist Wolf at age 17.
-      | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
-  seed  5 m59  respawn Elder Mo (4%) lives=2 stones=723 qingshi_village
+  seed  5 m77  respawn Elder Mo (8%) lives=5 stones=656 qingshi_village
       cause: The final bolt of the Core Formation tribulation tears through you. Your body turns to ash.
       | Heaven answers your breakthrough: tribulation clouds gather over the Core Formation thresh
-      | Lightning wave 1 strikes: 213 damage (372/585 left).
-      | Lightning wave 2 strikes: 243 damage (130/585 left).
-      | Lightning wave 3 strikes: 387 damage (0/585 left).
+      | Lightning wave 1 strikes: 183 damage (402/585 left).
+      | Lightning wave 2 strikes: 369 damage (33/585 left).
+      | Lightning wave 3 strikes: 253 damage (0/585 left).
       | The final bolt of the Core Formation tribulation tears through you. Your body turns to ash
       | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
-  seed  8 m15  respawn mist_wolf (84%) lives=2 stones=125 qingshi_village
-      cause: You were slain by a Mist Wolf at age 17.
-      | The Fog-Antler Stag collapses. (4 rounds, 184/278 hp left; +14 Spirit Stone, +1 Spirit Her
-      | Mission complete: Drive Off the Fog-Antler Stag. (+70 contribution, Alignment +5, now Virt
-      | Sect mission: Patrol the Misty Peaks. You face the Mist Wolf. (You: 278 hp, 56 atk. Foe: 2
-      | You fall. (6 rounds, 0/278 hp left)
-      | You were slain by a Mist Wolf at age 17.
-      | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
-  seed  8 m17  respawn mist_wolf (88%) lives=1 stones=202 qingshi_village
-      cause: You were slain by a Mist Wolf at age 17.
-      | You wander for a day. Nothing of note happens.
-      | You spot a spirit stone glinting in a ditch. (+1 Spirit Stone)
-      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 278 hp, 63 atk. Foe: 228
-      | You fall. (6 rounds, 0/278 hp left)
-      | You were slain by a Mist Wolf at age 17.
-      | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
-  seed  9 m24  respawn mist_wolf (74%) lives=3 stones=92 qingshi_village
-      cause: You were slain by a Mist Wolf at age 18.
-      | The Fog-Antler Stag collapses. (6 rounds, 2/235 hp left; +14 Spirit Stone, +1 Spirit Herb)
-      | Mission complete: Drive Off the Fog-Antler Stag. (+70 contribution, Alignment +5, now Virt
-      | Sect mission: Patrol the Misty Peaks. You face the Mist Wolf. (You: 235 hp, 76 atk. Foe: 2
-      | You fall. (5 rounds, 0/235 hp left)
-      | You were slain by a Mist Wolf at age 18.
-      | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
-  seed 10 m20  respawn mist_wolf (77%) lives=2 stones=205 qingshi_village
-      cause: You were slain by a Mist Wolf at age 17.
-      | The Fog-Antler Stag collapses. (6 rounds, 87/240 hp left; +14 Spirit Stone, +1 Spirit Herb
-      | Mission complete: Drive Off the Fog-Antler Stag. (+70 contribution, Alignment +5, now Virt
-      | Sect mission: Patrol the Misty Peaks. You face the Mist Wolf. (You: 240 hp, 67 atk. Foe: 2
-      | You fall. (7 rounds, 0/240 hp left)
-      | You were slain by a Mist Wolf at age 17.
-      | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
-  seed 10 m22  respawn mist_wolf (83%) lives=1 stones=20 qingshi_village
-      cause: You were slain by a Mist Wolf at age 17.
-      | The Wild Boar collapses. (1 round, 240/240 hp left; +1 Boar Hide)
-      | You buy a Foundation Establishment Pill for 270 spirit stones.
-      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 240 hp, 66 atk. Foe: 228
-      | You fall. (5 rounds, 0/240 hp left)
-      | You were slain by a Mist Wolf at age 17.
-      | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
 Per foe (QA-091): fights, wins, real win %, mean rated %, deaths, started by mission/deed/bounty/other
-  mist_wolf                  472 fights 463 wins  real  98%  rated  98%  deaths  9  471/0/0/1
-  Elder Mo                    48 fights   4 wins  real   8%  rated   7%  deaths  1  0/0/0/48
-  fog_antler_stag            285 fights 279 wins  real  97%  rated  98%  deaths  0  280/0/4/1
-  wild_boar                   91 fights  90 wins  real  98%  rated  99%  deaths  0  0/1/12/78
-  mountain_bandit             89 fights  89 wins  real 100%  rated 100%  deaths  0  88/0/1/0
-  drunk_bully_disciple        83 fights  80 wins  real  96%  rated  97%  deaths  0  0/0/49/34
-  den_wolf                    81 fights  80 wins  real  98%  rated  98%  deaths  0  81/0/0/0
-  salt_road_captain           61 fights  56 wins  real  91%  rated  91%  deaths  0  0/0/61/0
-  blood_lotus_raider          42 fights  41 wins  real  97%  rated  97%  deaths  0  42/0/0/0
-  village_boxer               28 fights  27 wins  real  96%  rated  93%  deaths  0  0/0/3/25
-  black_ferry_ringleader      19 fights  17 wins  real  89%  rated  81%  deaths  0  0/0/19/0
-  Xu Jiuxiao                  12 fights   8 wins  real  66%  rated  55%  deaths  0  0/0/0/12
-  azure_sword_examiner        11 fights  10 wins  real  90%  rated  82%  deaths  0  0/0/0/11
-  iron_back_boar              10 fights   8 wins  real  80%  rated  81%  deaths  0  0/0/10/0
-  sect_senior_tester           8 fights   7 wins  real  87%  rated  92%  deaths  0  0/0/0/8
-  Hei Jue                      8 fights   7 wins  real  87%  rated  98%  deaths  0  0/0/0/8
-  Wu Ce                        5 fights   0 wins  real   0%  rated   0%  deaths  0  0/0/0/5
-  moon_ridge_elk               3 fights   3 wins  real 100%  rated  69%  deaths  0  0/0/0/3
-  Shangguan Ruyi               2 fights   2 wins  real 100%  rated 100%  deaths  0  0/0/0/2
-  roadside_rogue_cultivator    2 fights   2 wins  real 100%  rated  37%  deaths  0  0/0/0/2
-  mist_python                  1 fights   0 wins  real   0%  rated  34%  deaths  0  0/0/0/1
-  Zhou Muyang                  1 fights   0 wins  real   0%  rated   1%  deaths  0  0/0/0/1
-  mist_fox                     1 fights   1 wins  real 100%  rated  86%  deaths  0  0/0/0/1
-  caravan_raider               1 fights   1 wins  real 100%  rated 100%  deaths  0  0/0/0/1
-  rogue_cultivator             1 fights   1 wins  real 100%  rated  53%  deaths  0  0/0/0/1
-  Xia Xiang                    1 fights   1 wins  real 100%  rated  43%  deaths  0  0/0/0/1
+  mist_wolf                  466 fights 465 wins  real  99%  rated  98%  deaths  1  466/0/0/0
+  Elder Mo                    30 fights   3 wins  real  10%  rated   5%  deaths  1  0/0/0/30
+  fog_antler_stag            290 fights 286 wins  real  98%  rated  98%  deaths  0  285/0/5/0
+  wild_boar                  135 fights 134 wins  real  99%  rated  99%  deaths  0  0/1/9/125
+  drunk_bully_disciple        97 fights  95 wins  real  97%  rated  97%  deaths  0  0/0/58/39
+  mountain_bandit             92 fights  92 wins  real 100%  rated 100%  deaths  0  91/0/1/0
+  den_wolf                    80 fights  76 wins  real  95%  rated  96%  deaths  0  80/0/0/0
+  village_boxer               66 fights  66 wins  real 100%  rated  98%  deaths  0  0/0/8/58
+  salt_road_captain           61 fights  51 wins  real  83%  rated  83%  deaths  0  0/0/61/0
+  blood_lotus_raider          45 fights  45 wins  real 100%  rated  96%  deaths  0  45/0/0/0
+  Zhou Muyang                 20 fights  16 wins  real  80%  rated  83%  deaths  0  0/0/0/20
+  black_ferry_ringleader      17 fights  14 wins  real  82%  rated  77%  deaths  0  0/0/17/0
+  azure_sword_examiner        14 fights  10 wins  real  71%  rated  83%  deaths  0  0/0/0/14
+  iron_back_boar              13 fights  11 wins  real  84%  rated  86%  deaths  0  0/0/13/0
+  sect_senior_tester           8 fights   5 wins  real  62%  rated  78%  deaths  0  0/0/2/6
+  moon_ridge_elk               5 fights   5 wins  real 100%  rated  68%  deaths  0  0/0/0/5
+  Wu Ce                        4 fights   0 wins  real   0%  rated   1%  deaths  0  0/0/0/4
+  roadside_rogue_cultivator    4 fights   1 wins  real  25%  rated  28%  deaths  0  0/0/0/4
+  caravan_raider               2 fights   2 wins  real 100%  rated 100%  deaths  0  0/0/1/1
+  Zhou Qiang                   1 fights   0 wins  real   0%  rated   0%  deaths  0  0/0/0/1
+  Duan Yang                    1 fights   1 wins  real 100%  rated 100%  deaths  0  0/0/0/1
+  mist_python                  1 fights   1 wins  real 100%  rated  56%  deaths  0  0/0/0/1
+  mist_fox                     1 fights   0 wins  real   0%  rated  97%  deaths  0  0/0/0/1
 Artifact lives (QA-091): seed, recharges bought, lives at the end
-  seed  1 bought 4 lives at end 7
-  seed  2 bought 3 lives at end 5
-  seed  3 bought 3 lives at end 5
-  seed  4 bought 3 lives at end 6
-  seed  5 bought 3 lives at end 3
+  seed  1 bought 3 lives at end 6
+  seed  2 bought 3 lives at end 6
+  seed  3 bought 4 lives at end 7
+  seed  4 bought 3 lives at end 5
+  seed  5 bought 3 lives at end 5
   seed  6 bought 4 lives at end 7
   seed  7 bought 3 lives at end 6
-  seed  8 bought 3 lives at end 4
-  seed  9 bought 4 lives at end 6
-  seed 10 bought 3 lives at end 4
+  seed  8 bought 2 lives at end 5
+  seed  9 bought 4 lives at end 7
+  seed 10 bought 3 lives at end 6
 First Foundation breakthrough (QA-066): seed, bottleneck day, attempts [day chance pill? ok?/injury], success day, stones at bottleneck
-  seed  1 bottleneck d1842 attempts 1 [d1842 73% pill ok] success d1842 stones 940
-  seed  2 bottleneck d1130 attempts 1 [d1130 71% pill ok] success d1130 stones 398
-  seed  3 bottleneck d1501 attempts 2 [d1501 75% pill fail+injury, d1646 67% pill ok] success d1646 stones 470
-  seed  4 bottleneck d1882 attempts 1 [d1882 78% pill ok] success d1882 stones 622
-  seed  5 bottleneck d704  attempts 1 [d704 77% pill ok] success d704 stones 359
-  seed  6 bottleneck d2065 attempts 1 [d2065 74% pill ok] success d2065 stones 1526
-  seed  7 bottleneck d1479 attempts 2 [d1479 80% pill fail, d1631 73% pill ok] success d1631 stones 541
-  seed  8 bottleneck d1039 attempts 1 [d1039 78% pill ok] success d1039 stones 420
-  seed  9 bottleneck d2056 attempts 2 [d2056 75% pill fail, d2226 68% pill ok] success d2226 stones 1039
-  seed 10 bottleneck d1323 attempts 1 [d1323 80% pill ok] success d1323 stones 733
-  medians: days stuck at the bottleneck 0 (10 seeds that succeeded), attempts 1, share of attempts with a pill 100% (13 of 13), attempts under 50%: 0 of 13
+  seed  1 bottleneck d1672 attempts 1 [d1672 74% pill ok] success d1672 stones 806
+  seed  2 bottleneck d1268 attempts 1 [d1268 70% pill ok] success d1268 stones 322
+  seed  3 bottleneck d1722 attempts 2 [d1722 73% pill fail+injury, d1900 66% pill ok] success d1900 stones 1436
+  seed  4 bottleneck d1850 attempts 1 [d1850 79% pill ok] success d1850 stones 781
+  seed  5 bottleneck d615  attempts 3 [d615 42% fail, d680 70% pill fail, d758 73% pill ok] success d758 stones 341
+  seed  6 bottleneck d1730 attempts 1 [d1730 73% pill ok] success d1730 stones 1072
+  seed  7 bottleneck d1577 attempts 2 [d1577 80% pill fail+injury, d1805 73% pill ok] success d1805 stones 593
+  seed  8 bottleneck d1040 attempts 1 [d1040 80% pill ok] success d1040 stones 151
+  seed  9 bottleneck d1881 attempts 1 [d1881 74% pill ok] success d1881 stones 1564
+  seed 10 bottleneck d1355 attempts 3 [d1355 80% pill fail, d1496 72% pill fail, d1653 75% pill ok] success d1653 stones 584
+  medians: days stuck at the bottleneck 0 (10 seeds that succeeded), attempts 1, share of attempts with a pill 93% (15 of 16), attempts under 50%: 1 of 16
 Foundation entry gap (QA-114): curious player right after the breakthrough vs the typical player (Foundation, stage 0)
   typical: hp 890 atk 224 def 159 spd 11 | techniques iron_fist L5, stone_skin L5 | gear weapon=profound_iron_spear, armor=profound_iron_lamellar
   typical odds: roadside_rogue_cultivator 73%, moon_ridge_elk 81%, stone_hide_boar_king 72%
-  seed  1 at entry stage 0: hp 450 atk 227 def 54 spd 10 | techniques iron_fist L6 | gear none | rated 0% / 1% / 0%
-  seed  1 +60 days stage 0: hp 450 atk 245 def 54 spd 10 | techniques iron_fist L7 | gear none | rated 0% / 3% / 2%
+  seed  1 at entry stage 0: hp 450 atk 223 def 54 spd 10 | techniques iron_fist L6 | gear none | rated 0% / 0% / 0%
+  seed  1 +60 days stage 0: hp 450 atk 241 def 54 spd 10 | techniques iron_fist L7 | gear none | rated 0% / 3% / 2%
     HUD hints for seed 1 at that moment:
-      - Your sect treasury hands out the Azure Cloud Heart Sutra (qi x1.9, yours x1.0) for 700 contribution (you have 4700). Claim it at the sect treasury and learn it there.
-      - Your defence is thin. Claim Manual: Stone Skin Tempering from your sect treasury (45 contribution, you have 4700). The Heavenforge Smithy in Fallen Star Market (10 days) sells Profound Iron Lamellar for 900 stones. Foundation foes hit hard.
-      - The Wandering Merchant here would pay about 440 spirit stones for your ore and beast materials.
-      - Spirit Herb grows at Village Herb Slope: gather it to refine Qi Gathering Pill (it sells for more than the ingredients cost).
-      - Travel to Azure Peak (10 days): Cloud-Sea Cliff gathers the next stage in about 5 months and 21 days, against 1 year, 2 months and 6 days at Spirit Spring here.
+      - Your sect treasury hands out the Azure Cloud Heart Sutra (qi x1.9, yours x1.0) for 700 contribution (you have 4252). Claim it at the sect treasury and learn it there.
+      - Your defence is thin. Claim Manual: Stone Skin Tempering from your sect treasury (45 contribution, you have 4252). The Heavenforge Smithy in Fallen Star Market (10 days) sells Profound Iron Lamellar for 900 stones. Foundation foes hit hard.
+      - The Wandering Merchant here would pay about 422 spirit stones for your ore and beast materials.
+      - Morning Dew Grass grows at Village Herb Slope: gather it to refine Qi Gathering Pill (it sells for more than the ingredients cost).
+      - Travel to Azure Peak (10 days): Cloud-Sea Cliff gathers the next stage in about 5 months and 24 days, against 1 year, 2 months and 14 days at Spirit Spring here.
       - The Core Disciple trial is too hard for now: learn a body technique such as Stone Skin Tempering and wear armor first. It is open at the Sect Recruitment Hall here; you face the Sword Pavilion Warden (Deadly, 0 in 100), and a loss only injures you. The rank pays 20 stones and a Qi Gathering Pill a month.
-      - The best pays 70 contribution: Patrol the Misty Peaks (7 days), one of 4 missions ready at the Sect Recruitment Hall here.
+      - The best pays 70 contribution: Patrol the Misty Peaks (7 days), one of 3 missions ready at the Sect Recruitment Hall here.
       - Your sect's elder lectures this month; attend at the sect hall.
-  seed  2 at entry stage 0: hp 414 atk 191 def 50 spd 10 | techniques iron_fist L5 | gear none | rated 0% / 0% / 0%
+  seed  2 at entry stage 0: hp 414 atk 209 def 50 spd 10 | techniques iron_fist L6 | gear none | rated 0% / 0% / 0%
   seed  2 +60 days stage 0: hp 414 atk 209 def 50 spd 10 | techniques iron_fist L6 | gear none | rated 0% / 0% / 0%
-  seed  3 at entry stage 0: hp 504 atk 230 def 59 spd 10 | techniques iron_fist L7 | gear none | rated 0% / 6% / 4%
-  seed  3 +60 days stage 0: hp 504 atk 230 def 59 spd 10 | techniques iron_fist L7 | gear none | rated 0% / 6% / 4%
+  seed  3 at entry stage 0: hp 504 atk 212 def 59 spd 10 | techniques iron_fist L6 | gear none | rated 0% / 2% / 2%
+  seed  3 +60 days stage 0: hp 504 atk 212 def 59 spd 10 | techniques iron_fist L6 | gear none | rated 0% / 2% / 2%
   seed  4 at entry stage 0: hp 396 atk 205 def 49 spd 10 | techniques iron_fist L6 | gear none | rated 0% / 1% / 0%
   seed  4 +60 days stage 0: hp 396 atk 205 def 49 spd 10 | techniques iron_fist L6 | gear none | rated 0% / 1% / 0%
-  seed  5 at entry stage 0: hp 450 atk 162 def 54 spd 10 | techniques iron_fist L3 | gear none | rated 0% / 0% / 0%
-  seed  5 +60 days stage 1: hp 495 atk 198 def 59 spd 10 | techniques iron_fist L4 | gear none | rated 0% / 2% / 1%
-  seed  6 at entry stage 0: hp 540 atk 252 def 63 spd 10 | techniques iron_fist L7 | gear none | rated 0% / 11% / 5%
-  seed  6 +60 days stage 0: hp 540 atk 252 def 63 spd 10 | techniques iron_fist L7 | gear none | rated 0% / 11% / 5%
+  seed  5 at entry stage 0: hp 450 atk 180 def 54 spd 10 | techniques iron_fist L4 | gear none | rated 0% / 0% / 0%
+  seed  5 +60 days stage 1: hp 495 atk 218 def 59 spd 10 | techniques iron_fist L5 | gear none | rated 0% / 3% / 2%
+  seed  6 at entry stage 0: hp 522 atk 234 def 61 spd 10 | techniques iron_fist L6 | gear none | rated 0% / 3% / 2%
+  seed  6 +60 days stage 0: hp 522 atk 252 def 61 spd 10 | techniques iron_fist L7 | gear none | rated 1% / 9% / 8%
   seed  7 at entry stage 0: hp 414 atk 216 def 50 spd 10 | techniques iron_fist L6 | gear none | rated 0% / 0% / 1%
   seed  7 +60 days stage 0: hp 414 atk 216 def 50 spd 10 | techniques iron_fist L6 | gear none | rated 0% / 0% / 1%
-  seed  8 at entry stage 0: hp 540 atk 187 def 63 spd 10 | techniques iron_fist L5 | gear none | rated 0% / 1% / 0%
-  seed  8 +60 days stage 0: hp 540 atk 187 def 63 spd 10 | techniques iron_fist L5 | gear none | rated 0% / 1% / 0%
-  seed  9 at entry stage 0: hp 522 atk 227 def 61 spd 10 | techniques iron_fist L7 | gear none | rated 0% / 3% / 3%
-  seed  9 +60 days stage 0: hp 522 atk 227 def 61 spd 10 | techniques iron_fist L7 | gear none | rated 0% / 3% / 3%
+  seed  8 at entry stage 0: hp 522 atk 187 def 61 spd 10 | techniques iron_fist L5 | gear none | rated 0% / 0% / 0%
+  seed  8 +60 days stage 0: hp 522 atk 187 def 61 spd 10 | techniques iron_fist L5 | gear none | rated 0% / 0% / 0%
+  seed  9 at entry stage 0: hp 522 atk 209 def 61 spd 10 | techniques iron_fist L6 | gear none | rated 0% / 1% / 0%
+  seed  9 +60 days stage 0: hp 522 atk 209 def 61 spd 10 | techniques iron_fist L6 | gear none | rated 0% / 1% / 0%
   seed 10 at entry stage 0: hp 450 atk 198 def 54 spd 10 | techniques iron_fist L6 | gear none | rated 0% / 1% / 0%
-  seed 10 +60 days stage 0: hp 450 atk 198 def 54 spd 10 | techniques iron_fist L6 | gear none | rated 0% / 1% / 0%
+  seed 10 +60 days stage 0: hp 450 atk 216 def 54 spd 10 | techniques iron_fist L7 | gear none | rated 0% / 1% / 1%
   at +60 days (10 seeds with a snapshot): rated >= 50% against all three foes in 0, against the roadside rogue in 0
   QA-125 levers at +60 days vs roadside_rogue_cultivator (rated %): base | a_healed | b_techs | c_gear | d_attrs | e_stone_skin
-    seed  1:   0 |   0 |  55 |  20 |   0 |   2
+    seed  1:   0 |   0 |  53 |  17 |   0 |   2
     seed  2:   0 |   0 |   0 |   2 |   0 |   0
-    seed  3:   0 |   0 |  58 |  22 |   0 |   3
+    seed  3:   0 |   0 |  58 |  17 |   0 |   3
     seed  4:   0 |   0 |  35 |   4 |   0 |   0
-    seed  5:   0 |   0 |  78 |   8 |   0 |   3
-    seed  6:   0 |   0 |  73 |  38 |   0 |  16
+    seed  5:   0 |   0 |  78 |  15 |   0 |   4
+    seed  6:   1 |   1 |  67 |  35 |   0 |  12
     seed  7:   0 |   0 |  40 |   5 |   0 |   0
-    seed  8:   0 |   0 |  52 |   9 |   0 |   0
-    seed  9:   0 |   0 |  52 |  31 |   0 |   4
-    seed 10:   0 |   0 |  37 |   5 |   0 |   1
-    median :   0 |   0 |  52 |   9 |   0 |   2
+    seed  8:   0 |   0 |  51 |   7 |   0 |   0
+    seed  9:   0 |   0 |  52 |  13 |   0 |   2
+    seed 10:   0 |   0 |  37 |  15 |   0 |   1
+    median :   0 |   0 |  52 |  15 |   0 |   2
   QA-125 levers at +60 days vs moon_ridge_elk (rated %): base | a_healed | b_techs | c_gear | d_attrs | e_stone_skin
-    seed  1:   3 |   3 |  82 |  22 |   2 |  24
+    seed  1:   3 |   3 |  80 |  21 |   2 |  12
     seed  2:   0 |   0 |   3 |   5 |   1 |   0
-    seed  3:   6 |   6 |  80 |  25 |   2 |  20
+    seed  3:   2 |   2 |  80 |  18 |   1 |  13
     seed  4:   1 |   1 |  65 |   4 |   1 |   2
-    seed  5:   2 |   2 |  92 |  17 |   0 |  10
-    seed  6:  11 |  11 |  92 |  46 |   2 |  51
+    seed  5:   3 |   3 |  92 |  23 |   3 |  20
+    seed  6:   9 |   9 |  90 |  38 |   2 |  33
     seed  7:   0 |   0 |  79 |   8 |   1 |   4
-    seed  8:   1 |   1 |  80 |  14 |   0 |   5
-    seed  9:   3 |   3 |  72 |  27 |   2 |  18
-    seed 10:   1 |   1 |  64 |   8 |   1 |   4
-    median :   2 |   2 |  80 |  17 |   1 |  10
-  mean rated odds vs roadside_rogue_cultivator over 10 seeds: curious 0%; with the typical player's techniques 45%, gear 13%, attributes 0%, all three (injuries cleared) 88%
-Pacing (QA-156): QR9 median day 1501 (10 seeds), Foundation median day 1646 (10 seeds); Foundation by m12 1/10, m24 7/10, m36 10/10; artifact lives bought 33, injuries at the end 0
+    seed  8:   0 |   0 |  75 |  14 |   0 |   7
+    seed  9:   1 |   1 |  72 |  20 |   1 |  12
+    seed 10:   1 |   1 |  64 |  12 |   2 |  10
+    median :   1 |   1 |  79 |  18 |   1 |  12
+  mean rated odds vs roadside_rogue_cultivator over 10 seeds: curious 0%; with the typical player's techniques 44%, gear 9%, attributes 0%, all three (injuries cleared) 88%
+Pacing (QA-156): QR9 median day 1672 (10 seeds), Foundation median day 1730 (10 seeds); Foundation by m12 1/10, m24 10/10, m36 10/10; artifact lives bought 32, injuries at the end 0
 
 ## pill wait (curious, seeds 1-10, 36 months, wait up to 120 days)
 
 Curious player, 10 seeds, 36 months
   seed  block  kinds  new  stones  realm
-     1      1    7.0   12     181  Qi Refining, 3rd Layer
-     1      2    7.3    2     385  Qi Refining, 6th Layer
-     1      3    7.0    1     750  Qi Refining, 9th Layer
-     1      4    7.0    0    1052  Foundation Establishment, Early
-     1      5    6.2    0    1287  Foundation Establishment, Early
-     1      6    5.0    0    1513  Foundation Establishment, Middle
-     2      1    7.2   11     106  Qi Refining, 5th Layer
-     2      2    7.0    3     178  Qi Refining, 8th Layer
-     2      3    6.8    0     406  Foundation Establishment, Early
-     2      4    5.5    0     667  Foundation Establishment, Middle
-     2      5    5.0    0     466  Foundation Establishment, Late
-     2      6    5.5    0     674  Foundation Establishment, Peak
-     3      1    6.8   11      30  Qi Refining, 4th Layer
-     3      2    7.0    2     302  Qi Refining, 7th Layer
-     3      3    6.2    0     687  Qi Refining, 9th Layer
-     3      4    6.5    1     971  Foundation Establishment, Early
-     3      5    5.0    0    1175  Foundation Establishment, Middle
-     3      6    5.0    0    1369  Foundation Establishment, Middle
-     4      1    5.8    9     137  Qi Refining, 4th Layer
-     4      2    6.8    2     292  Qi Refining, 7th Layer
-     4      3    7.2    2     299  Qi Refining, 8th Layer
-     4      4    7.7    0     622  Qi Refining, 9th Layer
-     4      5    5.5    0     852  Foundation Establishment, Early
-     4      6    5.0    0    1022  Foundation Establishment, Middle
-     5      1    6.8   11      93  Qi Refining, 7th Layer
-     5      2    6.8    3     328  Foundation Establishment, Middle
-     5      3    5.7    0     581  Foundation Establishment, Late
-     5      4    5.2    0     737  Foundation Establishment, Peak
-     5      5    5.3    0     572  Foundation Establishment, Peak
-     5      6    6.0    0     752  Foundation Establishment, Peak
-     6      1    7.2   10     202  Qi Refining, 4th Layer
-     6      2    7.5    2     484  Qi Refining, 7th Layer
-     6      3    6.3    0     956  Qi Refining, 8th Layer
-     6      4    6.5    1    1349  Qi Refining, 9th Layer
-     6      5    5.3    0    1750  Foundation Establishment, Early
-     6      6    5.0    0    1933  Foundation Establishment, Middle
-     7      1    7.2   11     113  Qi Refining, 5th Layer
-     7      2    6.8    2     194  Qi Refining, 7th Layer
-     7      3    6.5    1     541  Qi Refining, 9th Layer
-     7      4    5.8    0     757  Foundation Establishment, Early
-     7      5    6.0    0     947  Foundation Establishment, Middle
-     7      6    6.0    0    1109  Foundation Establishment, Late
-     8      1    6.5   10     105  Qi Refining, 6th Layer
-     8      2    8.5    3     263  Qi Refining, 9th Layer
-     8      3    6.5    0     753  Foundation Establishment, Middle
-     8      4    5.3    1     641  Foundation Establishment, Late
-     8      5    5.0    0     915  Foundation Establishment, Peak
-     8      6    5.2    0    1394  Foundation Establishment, Peak
-     9      1    6.5   11     140  Qi Refining, 4th Layer
-     9      2    6.8    1     252  Qi Refining, 6th Layer
-     9      3    7.5    1     748  Qi Refining, 8th Layer
-     9      4    7.5    1    1467  Qi Refining, 9th Layer
-     9      5    7.2    0    1651  Foundation Establishment, Early
-     9      6    6.0    0    1873  Foundation Establishment, Early
-    10      1    6.3   12     170  Qi Refining, 5th Layer
-    10      2    7.3    3     245  Qi Refining, 8th Layer
-    10      3    8.0    1     924  Foundation Establishment, Early
-    10      4    5.8    0     736  Foundation Establishment, Middle
-    10      5    5.2    0     948  Foundation Establishment, Late
-    10      6    5.0    0    1141  Foundation Establishment, Late
+     1      1    5.3    8     123  Qi Refining, 3rd Layer
+     1      2    7.0    5     298  Qi Refining, 7th Layer
+     1      3    6.8    1     228  Qi Refining, 9th Layer
+     1      4    6.0    0    1038  Foundation Establishment, Early
+     1      5    5.0    0    1180  Foundation Establishment, Middle
+     1      6    5.0    0    1356  Foundation Establishment, Middle
+     2      1    7.0   11     192  Qi Refining, 5th Layer
+     2      2    7.3    3      41  Qi Refining, 8th Layer
+     2      3    7.3    0     384  Foundation Establishment, Early
+     2      4    6.2    0     559  Foundation Establishment, Middle
+     2      5    6.0    0     723  Foundation Establishment, Late
+     2      6    6.0    0     495  Foundation Establishment, Peak
+     3      1    7.0   11     180  Qi Refining, 5th Layer
+     3      2    7.5    2     503  Qi Refining, 7th Layer
+     3      3    7.0    0     781  Qi Refining, 9th Layer
+     3      4    7.8    2    1205  Foundation Establishment, Early
+     3      5    6.0    0    1322  Foundation Establishment, Early
+     3      6    5.3    0    1498  Foundation Establishment, Middle
+     4      1    5.5    9     140  Qi Refining, 3rd Layer
+     4      2    7.0    2     310  Qi Refining, 7th Layer
+     4      3    8.0    2     529  Qi Refining, 8th Layer
+     4      4    7.2    0     893  Foundation Establishment, Early
+     4      5    5.5    0    1044  Foundation Establishment, Early
+     4      6    5.0    0    1211  Foundation Establishment, Middle
+     5      1    6.3   10     200  Qi Refining, 8th Layer
+     5      2    8.5    3     456  Foundation Establishment, Early
+     5      3    5.7    2     612  Foundation Establishment, Late
+     5      4    5.3    0     422  Foundation Establishment, Peak
+     5      5    6.0    0     538  Foundation Establishment, Peak
+     5      6    6.3    0     721  Foundation Establishment, Peak
+     6      1    6.2    9     196  Qi Refining, 4th Layer
+     6      2    7.8    4     385  Qi Refining, 7th Layer
+     6      3    7.2    0    1044  Qi Refining, 9th Layer
+     6      4    6.5    0    1208  Foundation Establishment, Early
+     6      5    5.0    0    1324  Foundation Establishment, Early
+     6      6    5.2    1    1486  Foundation Establishment, Middle
+     7      1    6.3    9     152  Qi Refining, 5th Layer
+     7      2    6.7    2     152  Qi Refining, 7th Layer
+     7      3    8.2    2     320  Qi Refining, 9th Layer
+     7      4    7.7    0     685  Foundation Establishment, Early
+     7      5    6.2    0     945  Foundation Establishment, Middle
+     7      6    5.7    0    1110  Foundation Establishment, Middle
+     8      1    6.3    9     158  Qi Refining, 6th Layer
+     8      2    7.8    3      62  Qi Refining, 9th Layer
+     8      3    5.8    1     387  Foundation Establishment, Middle
+     8      4    5.2    0     431  Foundation Establishment, Late
+     8      5    5.0    0     484  Foundation Establishment, Peak
+     8      6    5.2    0     733  Foundation Establishment, Peak
+     9      1    6.8   12     158  Qi Refining, 4th Layer
+     9      2    7.5    1     194  Qi Refining, 7th Layer
+     9      3    7.5    0     570  Qi Refining, 9th Layer
+     9      4    7.2    1     870  Foundation Establishment, Early
+     9      5    5.7    0    1144  Foundation Establishment, Early
+     9      6    5.0    0    1228  Foundation Establishment, Middle
+    10      1    6.3   11     165  Qi Refining, 4th Layer
+    10      2    6.5    1     211  Qi Refining, 7th Layer
+    10      3    7.8    1     515  Qi Refining, 9th Layer
+    10      4    6.5    0     660  Foundation Establishment, Early
+    10      5    5.2    0     779  Foundation Establishment, Middle
+    10      6    5.5    1     966  Foundation Establishment, Late
 Medians per 6-month block: distinct kinds / seeds with a new feature / stones
-  months  1- 6: 6.8 kinds, 10 of 10 seeds new feature, 137 stones
-  months  7-12: 7.0 kinds, 10 of 10 seeds new feature, 292 stones
-  months 13-18: 6.8 kinds, 5 of 10 seeds new feature, 748 stones
-  months 19-24: 6.5 kinds, 4 of 10 seeds new feature, 757 stones [nothing new]
-  months 25-30: 5.3 kinds, 0 of 10 seeds new feature, 948 stones [nothing new]
-  months 31-36: 5.2 kinds, 0 of 10 seeds new feature, 1369 stones [nothing new]
+  months  1- 6: 6.3 kinds, 10 of 10 seeds new feature, 165 stones
+  months  7-12: 7.5 kinds, 10 of 10 seeds new feature, 298 stones
+  months 13-18: 7.3 kinds, 6 of 10 seeds new feature, 529 stones
+  months 19-24: 6.5 kinds, 2 of 10 seeds new feature, 870 stones [nothing new]
+  months 25-30: 5.7 kinds, 0 of 10 seeds new feature, 1044 stones [nothing new]
+  months 31-36: 5.3 kinds, 2 of 10 seeds new feature, 1211 stones [nothing new]
 Seeds whose life ended before month 36: none
 Guard (QA-054): at most 1 of 10 seeds may end early: ok
 First month each feature was used (median over seeds that used it):
   mission       month 1 (10 of 10 seeds)
   deed          month 1 (10 of 10 seeds)
   talk          month 1 (10 of 10 seeds)
-  commission    month 8 (9 of 10 seeds)
+  commission    month 12 (9 of 10 seeds)
   breakthrough  month 1 (10 of 10 seeds)
-  craft         month 3 (10 of 10 seeds)
-  work          month 3 (10 of 10 seeds)
+  craft         month 4 (10 of 10 seeds)
+  work          month 4 (10 of 10 seeds)
   secret_realm  month 23 (4 of 10 seeds)
   gift          month 1 (10 of 10 seeds)
   pointer       month 6 (10 of 10 seeds)
-  spar          month 6 (7 of 10 seeds)
+  spar          month 14 (5 of 10 seeds)
   lecture       month 1 (10 of 10 seeds)
 Longest 'nothing new' stretches:
-  seed 2: 24 months from month 13 (Qi Refining, 9th Layer, 185 stones)
-  seed 5: 24 months from month 13 (Foundation Establishment, Middle, 370 stones)
-  seed 7: 23 months from month 14 (Qi Refining, 8th Layer, 385 stones)
-Deaths (10): seed, game month, final?, foe (rated odds), lives left, stones, region
-  seed  2 m22  respawn mist_wolf (80%) lives=2 stones=75 qingshi_village
+  seed 2: 25 months from month 12 (Qi Refining, 8th Layer, 41 stones)
+  seed 6: 24 months from month 12 (Qi Refining, 7th Layer, 385 stones)
+  seed 8: 23 months from month 14 (Foundation Establishment, Early, 215 stones)
+Deaths (2): seed, game month, final?, foe (rated odds), lives left, stones, region
+  seed  4 m36  respawn mist_wolf (91%) lives=3 stones=309 qingshi_village
+      cause: You were slain by a Mist Wolf at age 19.
+      | You crafted 1 item.
+      | Hei Tianhe is far ahead of you.
+      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 224 hp, 76 atk. Foe: 228
+      | You fall. (5 rounds, 0/224 hp left)
+      | You were slain by a Mist Wolf at age 19.
+      | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
+  seed  5 m22  respawn mist_wolf (96%) lives=3 stones=311 qingshi_village
       cause: You were slain by a Mist Wolf at age 17.
-      | The Old Village Boxer yields. (3 rounds, 160/221 hp left; +1 Spirit Herb)
-      | Word of it spreads through Qingshi Village (renown +3).
-      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 221 hp, 72 atk. Foe: 228
-      | You fall. (6 rounds, 0/221 hp left)
-      | You were slain by a Mist Wolf at age 17.
-      | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
-  seed  3 m17  respawn mist_wolf (88%) lives=3 stones=129 qingshi_village
-      cause: You were slain by a Mist Wolf at age 17.
-      | A hunter's cart sits canted on the lane with its axle snapped clean through, a load of boa
-      | You put your shoulder to the wheel and drag the cart out of the lane. He thanks you with a
-      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 252 hp, 102 atk. Foe: 22
-      | You fall. (4 rounds, 0/252 hp left)
-      | You were slain by a Mist Wolf at age 17.
-      | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
-  seed  5 m13  respawn mist_wolf (78%) lives=2 stones=31 qingshi_village
-      cause: You were slain by a Mist Wolf at age 17.
-      | You catch the house man's sleeve and the weighted dice roll out. The farmer gets his coin 
-      | You buy a Foundation Establishment Pill for 282 spirit stones.
-      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 240 hp, 74 atk. Foe: 228
-      | You fall. (6 rounds, 0/240 hp left)
-      | You were slain by a Mist Wolf at age 17.
-      | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
-  seed  5 m16  respawn mist_wolf (88%) lives=1 stones=114 qingshi_village
-      cause: You were slain by a Mist Wolf at age 17.
-      | The Fog-Antler Stag collapses. (5 rounds, 59/255 hp left; +14 Spirit Stone, +1 Spirit Herb
-      | Mission complete: Drive Off the Fog-Antler Stag. (+70 contribution, Alignment +5, now Virt
-      | Sect mission: Patrol the Misty Peaks. You face the Mist Wolf. (You: 255 hp, 63 atk. Foe: 2
-      | You fall. (5 rounds, 0/255 hp left)
-      | You were slain by a Mist Wolf at age 17.
-      | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
-  seed  5 m59  respawn Elder Mo (4%) lives=2 stones=723 qingshi_village
-      cause: The final bolt of the Core Formation tribulation tears through you. Your body turns to ash.
-      | Heaven answers your breakthrough: tribulation clouds gather over the Core Formation thresh
-      | Lightning wave 1 strikes: 213 damage (372/585 left).
-      | Lightning wave 2 strikes: 243 damage (130/585 left).
-      | Lightning wave 3 strikes: 387 damage (0/585 left).
-      | The final bolt of the Core Formation tribulation tears through you. Your body turns to ash
-      | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
-  seed  8 m15  respawn mist_wolf (84%) lives=2 stones=125 qingshi_village
-      cause: You were slain by a Mist Wolf at age 17.
-      | The Fog-Antler Stag collapses. (4 rounds, 184/278 hp left; +14 Spirit Stone, +1 Spirit Her
-      | Mission complete: Drive Off the Fog-Antler Stag. (+70 contribution, Alignment +5, now Virt
-      | Sect mission: Patrol the Misty Peaks. You face the Mist Wolf. (You: 278 hp, 56 atk. Foe: 2
-      | You fall. (6 rounds, 0/278 hp left)
-      | You were slain by a Mist Wolf at age 17.
-      | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
-  seed  8 m17  respawn mist_wolf (88%) lives=1 stones=202 qingshi_village
-      cause: You were slain by a Mist Wolf at age 17.
-      | You wander for a day. Nothing of note happens.
-      | You spot a spirit stone glinting in a ditch. (+1 Spirit Stone)
-      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 278 hp, 63 atk. Foe: 228
-      | You fall. (6 rounds, 0/278 hp left)
-      | You were slain by a Mist Wolf at age 17.
-      | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
-  seed  9 m24  respawn mist_wolf (74%) lives=3 stones=92 qingshi_village
-      cause: You were slain by a Mist Wolf at age 18.
-      | The Fog-Antler Stag collapses. (6 rounds, 2/235 hp left; +14 Spirit Stone, +1 Spirit Herb)
-      | Mission complete: Drive Off the Fog-Antler Stag. (+70 contribution, Alignment +5, now Virt
-      | Sect mission: Patrol the Misty Peaks. You face the Mist Wolf. (You: 235 hp, 76 atk. Foe: 2
-      | You fall. (5 rounds, 0/235 hp left)
-      | You were slain by a Mist Wolf at age 18.
-      | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
-  seed 10 m20  respawn mist_wolf (77%) lives=2 stones=205 qingshi_village
-      cause: You were slain by a Mist Wolf at age 17.
-      | The Fog-Antler Stag collapses. (6 rounds, 87/240 hp left; +14 Spirit Stone, +1 Spirit Herb
-      | Mission complete: Drive Off the Fog-Antler Stag. (+70 contribution, Alignment +5, now Virt
-      | Sect mission: Patrol the Misty Peaks. You face the Mist Wolf. (You: 240 hp, 67 atk. Foe: 2
-      | You fall. (7 rounds, 0/240 hp left)
-      | You were slain by a Mist Wolf at age 17.
-      | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
-  seed 10 m22  respawn mist_wolf (83%) lives=1 stones=20 qingshi_village
-      cause: You were slain by a Mist Wolf at age 17.
-      | The Wild Boar collapses. (1 round, 240/240 hp left; +1 Boar Hide)
-      | You buy a Foundation Establishment Pill for 270 spirit stones.
-      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 240 hp, 66 atk. Foe: 228
-      | You fall. (5 rounds, 0/240 hp left)
+      | The Wild Boar collapses. (1 round, 243/243 hp left; +1 Boar Hide)
+      | The sect treasury grants you Foundation Establishment Pill for 250 contribution. (1440 con
+      | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 243 hp, 75 atk. Foe: 228
+      | You fall. (5 rounds, 0/243 hp left)
       | You were slain by a Mist Wolf at age 17.
       | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
 Per foe (QA-091): fights, wins, real win %, mean rated %, deaths, started by mission/deed/bounty/other
-  mist_wolf                  472 fights 463 wins  real  98%  rated  98%  deaths  9  471/0/0/1
-  Elder Mo                    48 fights   4 wins  real   8%  rated   7%  deaths  1  0/0/0/48
-  fog_antler_stag            285 fights 279 wins  real  97%  rated  98%  deaths  0  280/0/4/1
-  wild_boar                   91 fights  90 wins  real  98%  rated  99%  deaths  0  0/1/12/78
-  mountain_bandit             89 fights  89 wins  real 100%  rated 100%  deaths  0  88/0/1/0
-  drunk_bully_disciple        83 fights  80 wins  real  96%  rated  97%  deaths  0  0/0/49/34
-  den_wolf                    81 fights  80 wins  real  98%  rated  98%  deaths  0  81/0/0/0
-  salt_road_captain           61 fights  56 wins  real  91%  rated  91%  deaths  0  0/0/61/0
-  blood_lotus_raider          42 fights  41 wins  real  97%  rated  97%  deaths  0  42/0/0/0
-  village_boxer               28 fights  27 wins  real  96%  rated  93%  deaths  0  0/0/3/25
-  black_ferry_ringleader      19 fights  17 wins  real  89%  rated  81%  deaths  0  0/0/19/0
-  Xu Jiuxiao                  12 fights   8 wins  real  66%  rated  55%  deaths  0  0/0/0/12
-  azure_sword_examiner        11 fights  10 wins  real  90%  rated  82%  deaths  0  0/0/0/11
-  iron_back_boar              10 fights   8 wins  real  80%  rated  81%  deaths  0  0/0/10/0
-  sect_senior_tester           8 fights   7 wins  real  87%  rated  92%  deaths  0  0/0/0/8
-  Hei Jue                      8 fights   7 wins  real  87%  rated  98%  deaths  0  0/0/0/8
-  Wu Ce                        5 fights   0 wins  real   0%  rated   0%  deaths  0  0/0/0/5
-  moon_ridge_elk               3 fights   3 wins  real 100%  rated  69%  deaths  0  0/0/0/3
-  Shangguan Ruyi               2 fights   2 wins  real 100%  rated 100%  deaths  0  0/0/0/2
-  roadside_rogue_cultivator    2 fights   2 wins  real 100%  rated  37%  deaths  0  0/0/0/2
-  mist_python                  1 fights   0 wins  real   0%  rated  34%  deaths  0  0/0/0/1
-  Zhou Muyang                  1 fights   0 wins  real   0%  rated   1%  deaths  0  0/0/0/1
-  mist_fox                     1 fights   1 wins  real 100%  rated  86%  deaths  0  0/0/0/1
-  caravan_raider               1 fights   1 wins  real 100%  rated 100%  deaths  0  0/0/0/1
-  rogue_cultivator             1 fights   1 wins  real 100%  rated  53%  deaths  0  0/0/0/1
-  Xia Xiang                    1 fights   1 wins  real 100%  rated  43%  deaths  0  0/0/0/1
+  mist_wolf                  461 fights 459 wins  real  99%  rated  98%  deaths  2  461/0/0/0
+  fog_antler_stag            289 fights 285 wins  real  98%  rated  98%  deaths  0  284/0/5/0
+  wild_boar                  137 fights 136 wins  real  99%  rated  99%  deaths  0  0/1/9/127
+  drunk_bully_disciple       100 fights  98 wins  real  98%  rated  97%  deaths  0  0/0/58/42
+  mountain_bandit             92 fights  92 wins  real 100%  rated 100%  deaths  0  91/0/1/0
+  den_wolf                    80 fights  76 wins  real  95%  rated  96%  deaths  0  80/0/0/0
+  village_boxer               66 fights  66 wins  real 100%  rated  98%  deaths  0  0/0/8/58
+  salt_road_captain           61 fights  51 wins  real  83%  rated  83%  deaths  0  0/0/61/0
+  blood_lotus_raider          50 fights  50 wins  real 100%  rated  96%  deaths  0  50/0/0/0
+  Elder Mo                    28 fights   3 wins  real  10%  rated   6%  deaths  0  0/0/0/28
+  Zhou Muyang                 20 fights  16 wins  real  80%  rated  83%  deaths  0  0/0/0/20
+  black_ferry_ringleader      17 fights  14 wins  real  82%  rated  77%  deaths  0  0/0/17/0
+  azure_sword_examiner        14 fights  10 wins  real  71%  rated  83%  deaths  0  0/0/0/14
+  iron_back_boar              13 fights  11 wins  real  84%  rated  86%  deaths  0  0/0/13/0
+  sect_senior_tester           8 fights   5 wins  real  62%  rated  78%  deaths  0  0/0/2/6
+  moon_ridge_elk               5 fights   5 wins  real 100%  rated  68%  deaths  0  0/0/0/5
+  Wu Ce                        4 fights   0 wins  real   0%  rated   1%  deaths  0  0/0/0/4
+  roadside_rogue_cultivator    4 fights   1 wins  real  25%  rated  28%  deaths  0  0/0/0/4
+  caravan_raider               2 fights   2 wins  real 100%  rated 100%  deaths  0  0/0/1/1
+  Zhou Qiang                   1 fights   0 wins  real   0%  rated   0%  deaths  0  0/0/0/1
+  Duan Yang                    1 fights   1 wins  real 100%  rated 100%  deaths  0  0/0/0/1
+  mist_python                  1 fights   1 wins  real 100%  rated  56%  deaths  0  0/0/0/1
+  mist_fox                     1 fights   0 wins  real   0%  rated  97%  deaths  0  0/0/0/1
 Artifact lives (QA-091): seed, recharges bought, lives at the end
-  seed  1 bought 4 lives at end 7
-  seed  2 bought 3 lives at end 5
-  seed  3 bought 3 lives at end 5
-  seed  4 bought 3 lives at end 6
-  seed  5 bought 3 lives at end 3
+  seed  1 bought 3 lives at end 6
+  seed  2 bought 3 lives at end 6
+  seed  3 bought 4 lives at end 7
+  seed  4 bought 3 lives at end 5
+  seed  5 bought 3 lives at end 5
   seed  6 bought 4 lives at end 7
   seed  7 bought 3 lives at end 6
-  seed  8 bought 3 lives at end 4
-  seed  9 bought 4 lives at end 6
-  seed 10 bought 3 lives at end 4
+  seed  8 bought 2 lives at end 5
+  seed  9 bought 4 lives at end 7
+  seed 10 bought 3 lives at end 6
 First Foundation breakthrough (QA-066): seed, bottleneck day, attempts [day chance pill? ok?/injury], success day, stones at bottleneck
-  seed  1 bottleneck d1842 attempts 1 [d1842 73% pill ok] success d1842 stones 940  waited 0d
-  seed  2 bottleneck d1130 attempts 1 [d1130 71% pill ok] success d1130 stones 398  waited 0d
-  seed  3 bottleneck d1501 attempts 2 [d1501 75% pill fail+injury, d1646 67% pill ok] success d1646 stones 470  waited 0d
-  seed  4 bottleneck d1882 attempts 1 [d1882 78% pill ok] success d1882 stones 622  waited 0d
-  seed  5 bottleneck d704  attempts 1 [d704 77% pill ok] success d704 stones 359  waited 0d
-  seed  6 bottleneck d2065 attempts 1 [d2065 74% pill ok] success d2065 stones 1526  waited 0d
-  seed  7 bottleneck d1479 attempts 2 [d1479 80% pill fail, d1631 73% pill ok] success d1631 stones 541  waited 0d
-  seed  8 bottleneck d1039 attempts 1 [d1039 78% pill ok] success d1039 stones 420  waited 0d
-  seed  9 bottleneck d2056 attempts 2 [d2056 75% pill fail, d2226 68% pill ok] success d2226 stones 1039  waited 0d
-  seed 10 bottleneck d1323 attempts 1 [d1323 80% pill ok] success d1323 stones 733  waited 0d
-  medians: days stuck at the bottleneck 0 (10 seeds that succeeded), attempts 1, share of attempts with a pill 100% (13 of 13), attempts under 50%: 0 of 13
+  seed  1 bottleneck d1672 attempts 1 [d1672 74% pill ok] success d1672 stones 806  waited 0d
+  seed  2 bottleneck d1268 attempts 1 [d1268 70% pill ok] success d1268 stones 322  waited 0d
+  seed  3 bottleneck d1722 attempts 2 [d1722 73% pill fail+injury, d1900 66% pill ok] success d1900 stones 1436  waited 0d
+  seed  4 bottleneck d1850 attempts 1 [d1850 79% pill ok] success d1850 stones 781  waited 0d
+  seed  5 bottleneck d615  attempts 2 [d659 77% pill fail+injury, d834 71% pill ok] success d834 stones 305  waited 30d
+  seed  6 bottleneck d1730 attempts 1 [d1730 73% pill ok] success d1730 stones 1072  waited 0d
+  seed  7 bottleneck d1577 attempts 2 [d1577 80% pill fail+injury, d1805 73% pill ok] success d1805 stones 593  waited 0d
+  seed  8 bottleneck d1040 attempts 1 [d1040 80% pill ok] success d1040 stones 151  waited 0d
+  seed  9 bottleneck d1881 attempts 1 [d1881 74% pill ok] success d1881 stones 1564  waited 0d
+  seed 10 bottleneck d1355 attempts 3 [d1355 80% pill fail, d1496 72% pill fail, d1653 75% pill ok] success d1653 stones 584  waited 0d
+  medians: days stuck at the bottleneck 0 (10 seeds that succeeded), attempts 1, share of attempts with a pill 100% (15 of 15), attempts under 50%: 0 of 15
 Foundation entry gap (QA-114): curious player right after the breakthrough vs the typical player (Foundation, stage 0)
   typical: hp 890 atk 224 def 159 spd 11 | techniques iron_fist L5, stone_skin L5 | gear weapon=profound_iron_spear, armor=profound_iron_lamellar
   typical odds: roadside_rogue_cultivator 73%, moon_ridge_elk 81%, stone_hide_boar_king 72%
-  seed  1 at entry stage 0: hp 450 atk 227 def 54 spd 10 | techniques iron_fist L6 | gear none | rated 0% / 1% / 0%
-  seed  1 +60 days stage 0: hp 450 atk 245 def 54 spd 10 | techniques iron_fist L7 | gear none | rated 0% / 3% / 2%
+  seed  1 at entry stage 0: hp 450 atk 223 def 54 spd 10 | techniques iron_fist L6 | gear none | rated 0% / 0% / 0%
+  seed  1 +60 days stage 0: hp 450 atk 241 def 54 spd 10 | techniques iron_fist L7 | gear none | rated 0% / 3% / 2%
     HUD hints for seed 1 at that moment:
-      - Your sect treasury hands out the Azure Cloud Heart Sutra (qi x1.9, yours x1.0) for 700 contribution (you have 4700). Claim it at the sect treasury and learn it there.
-      - Your defence is thin. Claim Manual: Stone Skin Tempering from your sect treasury (45 contribution, you have 4700). The Heavenforge Smithy in Fallen Star Market (10 days) sells Profound Iron Lamellar for 900 stones. Foundation foes hit hard.
-      - The Wandering Merchant here would pay about 440 spirit stones for your ore and beast materials.
-      - Spirit Herb grows at Village Herb Slope: gather it to refine Qi Gathering Pill (it sells for more than the ingredients cost).
-      - Travel to Azure Peak (10 days): Cloud-Sea Cliff gathers the next stage in about 5 months and 21 days, against 1 year, 2 months and 6 days at Spirit Spring here.
+      - Your sect treasury hands out the Azure Cloud Heart Sutra (qi x1.9, yours x1.0) for 700 contribution (you have 4252). Claim it at the sect treasury and learn it there.
+      - Your defence is thin. Claim Manual: Stone Skin Tempering from your sect treasury (45 contribution, you have 4252). The Heavenforge Smithy in Fallen Star Market (10 days) sells Profound Iron Lamellar for 900 stones. Foundation foes hit hard.
+      - The Wandering Merchant here would pay about 422 spirit stones for your ore and beast materials.
+      - Morning Dew Grass grows at Village Herb Slope: gather it to refine Qi Gathering Pill (it sells for more than the ingredients cost).
+      - Travel to Azure Peak (10 days): Cloud-Sea Cliff gathers the next stage in about 5 months and 24 days, against 1 year, 2 months and 14 days at Spirit Spring here.
       - The Core Disciple trial is too hard for now: learn a body technique such as Stone Skin Tempering and wear armor first. It is open at the Sect Recruitment Hall here; you face the Sword Pavilion Warden (Deadly, 0 in 100), and a loss only injures you. The rank pays 20 stones and a Qi Gathering Pill a month.
-      - The best pays 70 contribution: Patrol the Misty Peaks (7 days), one of 4 missions ready at the Sect Recruitment Hall here.
+      - The best pays 70 contribution: Patrol the Misty Peaks (7 days), one of 3 missions ready at the Sect Recruitment Hall here.
       - Your sect's elder lectures this month; attend at the sect hall.
-  seed  2 at entry stage 0: hp 414 atk 191 def 50 spd 10 | techniques iron_fist L5 | gear none | rated 0% / 0% / 0%
+  seed  2 at entry stage 0: hp 414 atk 209 def 50 spd 10 | techniques iron_fist L6 | gear none | rated 0% / 0% / 0%
   seed  2 +60 days stage 0: hp 414 atk 209 def 50 spd 10 | techniques iron_fist L6 | gear none | rated 0% / 0% / 0%
-  seed  3 at entry stage 0: hp 504 atk 230 def 59 spd 10 | techniques iron_fist L7 | gear none | rated 0% / 6% / 4%
-  seed  3 +60 days stage 0: hp 504 atk 230 def 59 spd 10 | techniques iron_fist L7 | gear none | rated 0% / 6% / 4%
+  seed  3 at entry stage 0: hp 504 atk 212 def 59 spd 10 | techniques iron_fist L6 | gear none | rated 0% / 2% / 2%
+  seed  3 +60 days stage 0: hp 504 atk 212 def 59 spd 10 | techniques iron_fist L6 | gear none | rated 0% / 2% / 2%
   seed  4 at entry stage 0: hp 396 atk 205 def 49 spd 10 | techniques iron_fist L6 | gear none | rated 0% / 1% / 0%
   seed  4 +60 days stage 0: hp 396 atk 205 def 49 spd 10 | techniques iron_fist L6 | gear none | rated 0% / 1% / 0%
-  seed  5 at entry stage 0: hp 450 atk 162 def 54 spd 10 | techniques iron_fist L3 | gear none | rated 0% / 0% / 0%
-  seed  5 +60 days stage 1: hp 495 atk 198 def 59 spd 10 | techniques iron_fist L4 | gear none | rated 0% / 2% / 1%
-  seed  6 at entry stage 0: hp 540 atk 252 def 63 spd 10 | techniques iron_fist L7 | gear none | rated 0% / 11% / 5%
-  seed  6 +60 days stage 0: hp 540 atk 252 def 63 spd 10 | techniques iron_fist L7 | gear none | rated 0% / 11% / 5%
+  seed  5 at entry stage 0: hp 450 atk 198 def 54 spd 10 | techniques iron_fist L5 | gear none | rated 0% / 1% / 0%
+  seed  5 +60 days stage 1: hp 495 atk 218 def 59 spd 10 | techniques iron_fist L5 | gear none | rated 0% / 3% / 2%
+  seed  6 at entry stage 0: hp 522 atk 234 def 61 spd 10 | techniques iron_fist L6 | gear none | rated 0% / 3% / 2%
+  seed  6 +60 days stage 0: hp 522 atk 252 def 61 spd 10 | techniques iron_fist L7 | gear none | rated 1% / 9% / 8%
   seed  7 at entry stage 0: hp 414 atk 216 def 50 spd 10 | techniques iron_fist L6 | gear none | rated 0% / 0% / 1%
   seed  7 +60 days stage 0: hp 414 atk 216 def 50 spd 10 | techniques iron_fist L6 | gear none | rated 0% / 0% / 1%
-  seed  8 at entry stage 0: hp 540 atk 187 def 63 spd 10 | techniques iron_fist L5 | gear none | rated 0% / 1% / 0%
-  seed  8 +60 days stage 0: hp 540 atk 187 def 63 spd 10 | techniques iron_fist L5 | gear none | rated 0% / 1% / 0%
-  seed  9 at entry stage 0: hp 522 atk 227 def 61 spd 10 | techniques iron_fist L7 | gear none | rated 0% / 3% / 3%
-  seed  9 +60 days stage 0: hp 522 atk 227 def 61 spd 10 | techniques iron_fist L7 | gear none | rated 0% / 3% / 3%
+  seed  8 at entry stage 0: hp 522 atk 187 def 61 spd 10 | techniques iron_fist L5 | gear none | rated 0% / 0% / 0%
+  seed  8 +60 days stage 0: hp 522 atk 187 def 61 spd 10 | techniques iron_fist L5 | gear none | rated 0% / 0% / 0%
+  seed  9 at entry stage 0: hp 522 atk 209 def 61 spd 10 | techniques iron_fist L6 | gear none | rated 0% / 1% / 0%
+  seed  9 +60 days stage 0: hp 522 atk 209 def 61 spd 10 | techniques iron_fist L6 | gear none | rated 0% / 1% / 0%
   seed 10 at entry stage 0: hp 450 atk 198 def 54 spd 10 | techniques iron_fist L6 | gear none | rated 0% / 1% / 0%
-  seed 10 +60 days stage 0: hp 450 atk 198 def 54 spd 10 | techniques iron_fist L6 | gear none | rated 0% / 1% / 0%
+  seed 10 +60 days stage 0: hp 450 atk 216 def 54 spd 10 | techniques iron_fist L7 | gear none | rated 0% / 1% / 1%
   at +60 days (10 seeds with a snapshot): rated >= 50% against all three foes in 0, against the roadside rogue in 0
   QA-125 levers at +60 days vs roadside_rogue_cultivator (rated %): base | a_healed | b_techs | c_gear | d_attrs | e_stone_skin
-    seed  1:   0 |   0 |  55 |  20 |   0 |   2
+    seed  1:   0 |   0 |  53 |  17 |   0 |   2
     seed  2:   0 |   0 |   0 |   2 |   0 |   0
-    seed  3:   0 |   0 |  58 |  22 |   0 |   3
+    seed  3:   0 |   0 |  58 |  17 |   0 |   3
     seed  4:   0 |   0 |  35 |   4 |   0 |   0
-    seed  5:   0 |   0 |  78 |   8 |   0 |   3
-    seed  6:   0 |   0 |  73 |  38 |   0 |  16
+    seed  5:   0 |   0 |  78 |  15 |   0 |   4
+    seed  6:   1 |   1 |  67 |  35 |   0 |  12
     seed  7:   0 |   0 |  40 |   5 |   0 |   0
-    seed  8:   0 |   0 |  52 |   9 |   0 |   0
-    seed  9:   0 |   0 |  52 |  31 |   0 |   4
-    seed 10:   0 |   0 |  37 |   5 |   0 |   1
-    median :   0 |   0 |  52 |   9 |   0 |   2
+    seed  8:   0 |   0 |  51 |   7 |   0 |   0
+    seed  9:   0 |   0 |  52 |  13 |   0 |   2
+    seed 10:   0 |   0 |  37 |  15 |   0 |   1
+    median :   0 |   0 |  52 |  15 |   0 |   2
   QA-125 levers at +60 days vs moon_ridge_elk (rated %): base | a_healed | b_techs | c_gear | d_attrs | e_stone_skin
-    seed  1:   3 |   3 |  82 |  22 |   2 |  24
+    seed  1:   3 |   3 |  80 |  21 |   2 |  12
     seed  2:   0 |   0 |   3 |   5 |   1 |   0
-    seed  3:   6 |   6 |  80 |  25 |   2 |  20
+    seed  3:   2 |   2 |  80 |  18 |   1 |  13
     seed  4:   1 |   1 |  65 |   4 |   1 |   2
-    seed  5:   2 |   2 |  92 |  17 |   0 |  10
-    seed  6:  11 |  11 |  92 |  46 |   2 |  51
+    seed  5:   3 |   3 |  92 |  23 |   3 |  20
+    seed  6:   9 |   9 |  90 |  38 |   2 |  33
     seed  7:   0 |   0 |  79 |   8 |   1 |   4
-    seed  8:   1 |   1 |  80 |  14 |   0 |   5
-    seed  9:   3 |   3 |  72 |  27 |   2 |  18
-    seed 10:   1 |   1 |  64 |   8 |   1 |   4
-    median :   2 |   2 |  80 |  17 |   1 |  10
-  mean rated odds vs roadside_rogue_cultivator over 10 seeds: curious 0%; with the typical player's techniques 45%, gear 13%, attributes 0%, all three (injuries cleared) 88%
-Pacing (QA-156): QR9 median day 1501 (10 seeds), Foundation median day 1646 (10 seeds); Foundation by m12 1/10, m24 7/10, m36 10/10; artifact lives bought 33, injuries at the end 0
+    seed  8:   0 |   0 |  75 |  14 |   0 |   7
+    seed  9:   1 |   1 |  72 |  20 |   1 |  12
+    seed 10:   1 |   1 |  64 |  12 |   2 |  10
+    median :   1 |   1 |  79 |  18 |   1 |  12
+  mean rated odds vs roadside_rogue_cultivator over 10 seeds: curious 0%; with the typical player's techniques 44%, gear 9%, attributes 0%, all three (injuries cleared) 88%
+Pacing (QA-156): QR9 median day 1672 (10 seeds), Foundation median day 1730 (10 seeds); Foundation by m12 1/10, m24 10/10, m36 10/10; artifact lives bought 32, injuries at the end 0
 
 ## early inheritances (curious, seeds 1-10, 36 months)
 
 Early inheritances, curious player, 10 seeds, 36 months
 Per inheritance (10 seeds): seeds that could pass every non-fight trial, median month, median rated odds of the final fight then (claiming retries the non-lethal fight until won, so the odds only decide the month the policy tries), seeds that claimed it, seeds lost to the deadline
-  fist_saint_grave       misty_forest             deadline y15 passable  4/10  month 1  odds 0%  claimed 4 (median month 12)  lost 0
-      never passable; blocking trial at the end: { "Stone of Endurance": 6 }
-  village_founder_well   qingshi_village          deadline y12 passable 10/10  month 1  odds 0%  claimed 10 (median month 9)  lost 0
-  reed_hermit_hut        withered_bone_marsh      deadline y10 passable  4/10  month 14  odds 70%  claimed 4 (median month 17)  lost 0
+  fist_saint_grave       misty_forest             deadline y15 passable  5/10  month 1  odds 0%  claimed 5 (median month 11)  lost 0
+      never passable; blocking trial at the end: { "Stone of Endurance": 5 }
+  village_founder_well   qingshi_village          deadline y12 passable 10/10  month 1  odds 0%  claimed 10 (median month 10)  lost 0
+  reed_hermit_hut        withered_bone_marsh      deadline y10 passable  4/10  month 15  odds 98%  claimed 4 (median month 15)  lost 0
       never passable; blocking trial at the end: { "Silence of the Reeds": 6 }
-  sword_mound_traveller  fallen_star_market       deadline y12 passable  6/10  month 10  odds 57%  claimed 6 (median month 17)  lost 0
+  sword_mound_traveller  fallen_star_market       deadline y12 passable  6/10  month 10  odds 11%  claimed 6 (median month 14)  lost 0
       never passable; blocking trial at the end: { "Reading the Scratches": 4 }
 
 ## fair fights (curious, seeds 1-10, 12 months)
 
 Fair-fights sim: 10 seeds, 12 months (curious player)
 Entries listed per month: median 3, max 3; empty months 0 of 120
-Listed fights taken: 243, won 236 (97%), mean rated chance 97%
-  mission  listed 219, taken 174, won  99%, mean rated  99%
+Listed fights taken: 246, won 233 (95%), mean rated chance 98%
+  mission  listed 214, taken 170, won  99%, mean rated  99%
   deed     listed   1, taken   1, won 100%, mean rated 100%
-  bounty   listed  77, taken  64, won  91%, mean rated  93%
-  explore  listed  40, taken   4, won 100%, mean rated  97%
+  bounty   listed  79, taken  66, won  83%, mean rated  93%
+  explore  listed  40, taken   9, won 100%, mean rated  99%
 
 ## first fights, rated vs real (starter character, Qi Refining layers 1-3)
 
@@ -703,80 +569,80 @@ Rows off by more than 15 points: 0
 
 Rival story, default policy, 10 seeds, 36 months (cells: player/rival realm+stage; "-" = no rival or dead)
            bouts won 0, lost 0, first win month -
-  seed  1  met day 15  surpassed day never  news 2  rival encounters 6  qi1/qi2 qi3/qi5 qi4/qi7 qi6/qi8 qi6/fo0 qi7/fo1
+  seed  1  met day 15  surpassed day never  news 2  rival encounters 2  qi1/qi2 qi3/qi5 qi4/qi7 qi6/qi8 qi7/fo0 qi7/fo1
            attitude  p p p p p p
            bouts won 0, lost 0, first win month -
-  seed  2  met day 15  surpassed day 724  news 2  rival encounters 4  qi3/qi3 qi6/qi6 qi7/qi7 fo0/qi8 fo1/fo0 fo2/fo2
+  seed  2  met day 15  surpassed day 725  news 2  rival encounters 2  qi3/qi3 qi6/qi6 qi7/qi7 fo0/qi8 fo1/fo0 fo2/fo2
            attitude  p p p p p p
            bouts won 0, lost 0, first win month -
-  seed  3  met day 15  surpassed day never  news 1  rival encounters 8  qi2/qi2 qi4/qi4 qi5/qi6 qi6/qi7 qi7/qi8 qi8/qi8
+  seed  3  met day 15  surpassed day never  news 1  rival encounters 6  qi2/qi2 qi4/qi4 qi5/qi6 qi6/qi7 qi7/qi8 qi8/qi8
            attitude  p p p p p p
            bouts won 0, lost 0, first win month -
-  seed  4  met day 15  surpassed day never  news 2  rival encounters 3  qi2/qi3 qi3/qi6 qi4/qi8 qi5/qi8 qi6/fo0 qi7/fo2
-           attitude  p p p p p p
-           bouts won 0, lost 0, first win month -
-  seed  5  met day 15  surpassed day 469  news 3  rival encounters 3  qi6/qi2 qi8/qi6 fo0/qi7 fo2/fo0 fo3/fo1 fo3/-
+  seed  4  met day 15  surpassed day never  news 3  rival encounters 3  qi2/qi3 qi3/qi6 qi4/qi8 qi5/fo1 qi6/fo2 qi7/-
            attitude  p p p p p -
            bouts won 0, lost 0, first win month -
-  seed  6  met day 15  surpassed day never  news 2  rival encounters 5  qi2/qi3 qi3/qi6 qi4/qi8 qi5/fo0 qi6/fo1 qi7/fo2
+  seed  5  met day 15  surpassed day 368  news 2  rival encounters 3  qi6/qi2 qi8/qi5 fo1/qi6 fo3/qi8 fo3/qi8 fo3/fo0
            attitude  p p p p p p
            bouts won 0, lost 0, first win month -
-  seed  7  met day 15  surpassed day never  news 2  rival encounters 4  qi2/qi3 qi4/qi6 qi6/qi8 qi7/fo0 qi8/fo1 qi8/fo2
+  seed  6  met day 15  surpassed day never  news 2  rival encounters 3  qi2/qi3 qi3/qi6 qi4/qi8 qi5/qi8 qi6/fo0 qi7/fo2
            attitude  p p p p p p
            bouts won 0, lost 0, first win month -
-  seed  8  met day 15  surpassed day 760  news 2  rival encounters 4  qi4/qi3 qi6/qi6 qi8/qi8 qi8/qi8 fo0/fo0 fo2/fo1
+  seed  7  met day 15  surpassed day never  news 2  rival encounters 3  qi2/qi3 qi4/qi6 qi6/qi7 qi7/fo0 qi8/fo1 fo0/fo2
            attitude  p p p p p p
            bouts won 0, lost 0, first win month -
-  seed  9  met day 15  surpassed day never  news 2  rival encounters 3  qi1/qi3 qi3/qi6 qi4/qi8 qi5/fo1 qi6/fo2 qi7/fo3
+  seed  8  met day 15  surpassed day 612  news 2  rival encounters 4  qi4/qi3 qi6/qi6 qi8/qi8 fo0/qi8 fo2/fo1 fo2/fo2
            attitude  p p p p p p
            bouts won 0, lost 0, first win month -
-  seed 10  met day 15  surpassed day never  news 2  rival encounters 4  qi2/qi3 qi5/qi5 qi6/qi7 qi8/qi8 qi8/fo1 fo0/fo2
+  seed  9  met day 15  surpassed day never  news 2  rival encounters 5  qi1/qi3 qi3/qi6 qi4/qi8 qi5/qi8 qi6/- qi7/qi7
+           attitude  p p p p - p
+           bouts won 0, lost 0, first win month -
+  seed 10  met day 15  surpassed day 938  news 1  rival encounters 4  qi2/qi3 qi5/qi5 qi6/qi7 qi8/qi8 qi8/qi8 fo0/qi8
            attitude  p p p p p p
-  summary: met 10/10 (median day 15), surpassed 3/10 (median day 724, under a year 0), news lines 20, rival encounters 44
-  attitude at checkpoints (59 with a living rival): proud 59 (100%), friendly 0 (0%), bitter 0 (0%)
+  summary: met 10/10 (median day 15), surpassed 4/10 (median day 725, under a year 0), news lines 19, rival encounters 35
+  attitude at checkpoints (58 with a living rival): proud 58 (100%), friendly 0 (0%), bitter 0 (0%)
   rival_shares_insight: met 0 (never)
   rival_spoils_gathering: met 0 (never)
-  rival_public_challenge: met 23 (proud 23)
+  rival_public_challenge: met 16 (proud 16)
   bouts with the rival: won 0, lost 0; first win in 0/10 seeds (median month -)
   bitter explore days in spoils regions per seed: median 0, max 0; before the encounter was met: median 0 (under 5: the sim policy rarely meets the condition)
   FLAG: one attitude covers over 80% of checkpoints; C-093's encounters would barely show
 Rival story, curious policy, 10 seeds, 36 months (cells: player/rival realm+stage; "-" = no rival or dead)
            bouts won 0, lost 0, first win month -
-  seed  1  met day 28  surpassed day never  news 4  rival encounters 21  qi2/qi6 qi5/qi8 qi8/- fo0/fo1 fo0/fo3 fo1/fo3
-           attitude  f f - p f f
-           bouts won 0, lost 0, first win month -
-  seed  2  met day 47  surpassed day never  news 3  rival encounters 22  qi4/qi7 qi7/fo1 fo0/fo3 fo1/fo3 fo2/fo3 fo3/-
-           attitude  p p f f f -
-           bouts won 0, lost 0, first win month -
-  seed  3  met day 44  surpassed day never  news 3  rival encounters 23  qi3/qi6 qi6/fo0 qi8/fo2 fo0/fo3 fo1/co0 fo1/co1
+  seed  1  met day 28  surpassed day never  news 3  rival encounters 20  qi2/qi6 qi6/qi8 qi8/fo0 fo0/fo2 fo1/fo3 fo1/co1
            attitude  p f f f f f
            bouts won 0, lost 0, first win month -
-  seed  4  met day 50  surpassed day never  news 3  rival encounters 20  qi3/qi6 qi6/fo0 qi7/fo3 qi8/fo3 fo0/fo3 fo1/co1
-           attitude  p f f f f f
-           bouts won 2, lost 0, first win month 12
-  seed  5  met day 46  surpassed day 771  news 3  rival encounters 20  qi6/qi6 fo1/qi8 fo2/fo1 fo3/fo3 fo3/fo3 fo3/co0
+  seed  2  met day 47  surpassed day never  news 4  rival encounters 21  qi4/qi7 qi7/fo1 fo0/fo3 fo1/fo1 fo2/fo3 fo3/co1
+           attitude  p f f p f f
+           bouts won 0, lost 0, first win month -
+  seed  3  met day 44  surpassed day 1958  news 4  rival encounters 16  qi4/qi6 qi6/fo1 qi8/fo3 fo0/fo0 fo0/fo2 fo1/fo3
+           attitude  p p f f f f
+           bouts won 0, lost 0, first win month -
+  seed  4  met day 54  surpassed day never  news 3  rival encounters 21  qi2/qi7 qi6/fo1 qi7/fo3 fo0/co0 fo0/co1 fo1/co2
+           attitude  p p f f f f
+           bouts won 0, lost 0, first win month -
+  seed  5  met day 46  surpassed day 814  news 3  rival encounters 16  qi7/qi6 fo0/fo0 fo2/fo2 fo3/fo3 fo3/fo3 fo3/co0
+           attitude  p p f f f f
+           bouts won 0, lost 0, first win month -
+  seed  6  met day 50  surpassed day never  news 3  rival encounters 16  qi3/qi6 qi6/qi8 qi8/fo1 fo0/fo3 fo0/fo3 fo1/-
+           attitude  p f f f f -
+           bouts won 0, lost 0, first win month -
+  seed  7  met day 45  surpassed day never  news 3  rival encounters 21  qi4/qi7 qi6/fo1 qi8/fo3 fo0/co1 fo1/co2 fo1/co3
+           attitude  p p p p p p
+           bouts won 0, lost 0, first win month -
+  seed  8  met day 46  surpassed day never  news 3  rival encounters 21  qi5/qi8 qi8/fo0 fo1/fo3 fo2/co0 fo3/co1 fo3/co2
            attitude  p f f f f f
            bouts won 0, lost 0, first win month -
-  seed  6  met day 50  surpassed day never  news 3  rival encounters 22  qi3/qi7 qi6/fo1 qi7/fo3 qi8/co0 fo0/co1 fo1/co2
+  seed  9  met day 46  surpassed day never  news 3  rival encounters 23  qi3/qi6 qi6/fo1 qi8/fo3 fo0/co0 fo0/co1 fo1/co2
            attitude  f f f f f f
            bouts won 0, lost 0, first win month -
-  seed  7  met day 45  surpassed day never  news 3  rival encounters 20  qi4/qi7 qi6/qi8 qi8/fo3 fo0/fo3 fo1/fo1 fo2/fo3
-           attitude  f f f f f f
-           bouts won 0, lost 0, first win month -
-  seed  8  met day 46  surpassed day never  news 3  rival encounters 19  qi5/qi7 qi8/fo1 fo1/fo3 fo2/fo3 fo3/co0 fo3/co2
-           attitude  p p f f f f
-           bouts won 0, lost 0, first win month -
-  seed  9  met day 46  surpassed day never  news 3  rival encounters 15  qi3/qi7 qi5/fo0 qi7/fo2 qi8/co0 fo0/co2 fo0/co2
-           attitude  p p f f f f
-           bouts won 0, lost 0, first win month -
-  seed 10  met day 42  surpassed day 1369  news 3  rival encounters 17  qi4/qi6 qi7/qi8 fo0/qi8 fo1/fo2 fo2/fo3 fo2/co1
-           attitude  p p f f f f
-  summary: met 10/10 (median day 46), surpassed 2/10 (median day 1369, under a year 0), news lines 31, rival encounters 199
-  attitude at checkpoints (58 with a living rival): proud 12 (21%), friendly 46 (79%), bitter 0 (0%)
-  rival_shares_insight: met 12 (friendly 12)
+  seed 10  met day 42  surpassed day never  news 4  rival encounters 16  qi3/qi6 qi6/qi8 qi8/fo2 fo0/fo3 fo1/fo3 fo2/-
+           attitude  p f f f f -
+  summary: met 10/10 (median day 46), surpassed 2/10 (median day 1958, under a year 0), news lines 33, rival encounters 191
+  attitude at checkpoints (58 with a living rival): proud 18 (31%), friendly 40 (69%), bitter 0 (0%)
+  rival_shares_insight: met 9 (friendly 8, - 1)
   rival_spoils_gathering: met 0 (never)
-  rival_public_challenge: met 9 (proud 9)
-  bouts with the rival: won 2, lost 0; first win in 1/10 seeds (median month 12)
+  rival_public_challenge: met 11 (proud 11)
+  bouts with the rival: won 0, lost 0; first win in 0/10 seeds (median month -)
   bitter explore days in spoils regions per seed: median 0, max 0; before the encounter was met: median 0 (under 5: the sim policy rarely meets the condition)
 
 ## combat (200 fights per cell)
@@ -1256,39 +1122,39 @@ Net stones per sect mission over all lives (top 12): procure_azure_crystal 78745
 Bounty-hunter sim: 10 seeds, 12 months, Qi Refining layer 4, iron_back_boar_bounty in misty_forest (reward 40 stones)
   seed  bounties  hunt weeks  stones  stones/month  injuries  lives spent
      1         3           7     120          10.0         0            0
-     2         2          24      80           6.7         0            0
+     2         2          48      80           6.7         2            0
      3         3           5     120          10.0         0            0
      4         3           8     120          10.0         0            0
      5         3           8     120          10.0         0            0
      6         3           8     120          10.0         0            0
-     7         3          24     120          10.0         0            0
+     7         3          19     120          10.0         0            0
      8         3           5     120          10.0         0            0
      9         2          33      80           6.7         0            0
-    10         3          14     120          10.0         0            0
-Hunt weeks per bounty claimed: 4.9; fights won 41, lost 13 (76% won)
-Gathering in misty_forest: 4.0 stones/week (best place). One bounty = 10.12 weeks of gather income; a week hunting earns 8.2 stones.
-Best gathering anywhere for this realm: qingshi_village at 5.3 stones/week (a bounty week earns 1.6x that).
+    10         3          23     120          10.0         0            0
+Hunt weeks per bounty claimed: 5.9; fights won 49, lost 15 (77% won)
+Gathering in misty_forest: 4.0 stones/week (best place). One bounty = 10.12 weeks of gather income; a week hunting earns 6.8 stones.
+Best gathering anywhere for this realm: qingshi_village at 5.3 stones/week (a bounty week earns 1.3x that).
 
 Bounty-hunter sim: 10 seeds, 12 months, Qi Refining layer 4, drunk_bully_bounty in qingshi_village (reward 20 stones)
   seed  bounties  hunt weeks  stones  stones/month  injuries  lives spent
-     1         4           7      80           6.7         0            0
-     2         4          11      80           6.7         0            0
-     3         4          21      80           6.7         0            0
+     1         4          18      80           6.7         0            0
+     2         3          35      60           5.0         0            0
+     3         4          13      80           6.7         0            0
      4         4           9      80           6.7         0            0
-     5         4          11      80           6.7         0            0
+     5         4          10      80           6.7         0            0
      6         4           7      80           6.7         0            0
-     7         4          12      80           6.7         0            0
-     8         4          21      80           6.7         0            0
+     7         4          18      80           6.7         0            0
+     8         4          26      80           6.7         0            0
      9         4           9      80           6.7         0            0
-    10         4          23      80           6.7         0            0
-Hunt weeks per bounty claimed: 3.3; fights won 55, lost 4 (93% won)
-Gathering in qingshi_village: 5.3 stones/week (best place). One bounty = 3.80 weeks of gather income; a week hunting earns 6.1 stones.
-Best gathering anywhere for this realm: qingshi_village at 5.3 stones/week (a bounty week earns 1.2x that).
+    10         4          14      80           6.7         0            0
+Hunt weeks per bounty claimed: 4.1; fights won 56, lost 6 (90% won)
+Gathering in qingshi_village: 5.3 stones/week (best place). One bounty = 3.80 weeks of gather income; a week hunting earns 4.9 stones.
+Best gathering anywhere for this realm: qingshi_village at 5.3 stones/week (a bounty week earns 0.9x that).
 
 Bounty-hunter sim: 10 seeds, 12 months, Core Formation layer 1, sword_madman_bounty in fallen_star_market (reward 100 stones)
   seed  bounties  hunt weeks  stones  stones/month  injuries  lives spent
-     1         3           9     300          25.0         0            0
-     2         3          10     300          25.0         0            0
+     1         3          12     300          25.0         0            0
+     2         3           8     300          25.0         0            0
      3         3          10     300          25.0         0            0
      4         3           6     300          25.0         0            0
      5         3           7     300          25.0         0            0
@@ -1296,10 +1162,10 @@ Bounty-hunter sim: 10 seeds, 12 months, Core Formation layer 1, sword_madman_bou
      7         3           8     300          25.0         0            0
      8         3           5     300          25.0         0            0
      9         3           6     300          25.0         0            0
-    10         3          11     300          25.0         0            0
-Hunt weeks per bounty claimed: 2.8; fights won 38, lost 0 (100% won)
-Gathering in fallen_star_market: 1.8 stones/week (best place). One bounty = 56.18 weeks of gather income; a week hunting earns 35.3 stones.
-Best gathering anywhere for this realm: myriad_peaks_ridge at 5.6 stones/week (a bounty week earns 6.3x that).
+    10         3          15     300          25.0         0            0
+Hunt weeks per bounty claimed: 3.0; fights won 36, lost 0 (100% won)
+Gathering in fallen_star_market: 1.8 stones/week (best place). One bounty = 56.18 weeks of gather income; a week hunting earns 33.3 stones.
+Best gathering anywhere for this realm: myriad_peaks_ridge at 5.6 stones/week (a bounty week earns 5.9x that).
 
 
 ## profession income (Qi Refining, seeds 1-5, 24 months)
@@ -1330,17 +1196,17 @@ Beast Tamer (odd jobs)       1.2   1.2   1.2   3.5   2.3   2.3   4.6 |  2.0  100
 
 Crafter start: new alchemist in Qingshi Village, 10 seeds, 180 days
   seed  d30  d90 d180  crafted  comm(got/del)  rank  renown  gather% craft% meditate%  stuck-wk (faded)  curious(d30/d90/d180)  realm d90 | d180 | d365 (curious)  cult-hint-steps
-     1   81   81  131       17      4/2         1      10      46%    19%       33%         0 (    0)  19/33/181  Mortal | Qi Refining, 1st Layer | - (Qi Refining, 1st Layer | Qi Refining, 3rd Layer | -)  25
-     2   35  130  183       21      5/3         1      15      56%    25%       18%         0 (    0)  23/41/106  Qi Refining, 1st Layer | Qi Refining, 1st Layer | - (Qi Refining, 3rd Layer | Qi Refining, 5th Layer | -)  31
-     3   52   52  186       24      3/1         1       5      44%    24%       31%         0 (    0)  23/93/30  Qi Refining, 1st Layer | Qi Refining, 1st Layer | - (Qi Refining, 3rd Layer | Qi Refining, 4th Layer | -)  30
-     4   31   31  102       13      3/1         1       5      36%    22%       40%         0 (    0)  23/44/137  Mortal | Qi Refining, 1st Layer | - (Qi Refining, 2nd Layer | Qi Refining, 4th Layer | -)  26
-     5   60  159  321       29      6/5         2      25      59%    29%       10%         0 (    0)  31/100/93  Qi Refining, 1st Layer | Qi Refining, 1st Layer | - (Qi Refining, 5th Layer | Qi Refining, 7th Layer | -)  36
-     6   31   31   98       13      3/1         1       5      44%    15%       39%         0 (    0)  23/79/202  Mortal | Qi Refining, 1st Layer | - (Qi Refining, 2nd Layer | Qi Refining, 4th Layer | -)  27
-     7   31   31  148       19      4/2         1      10      41%    28%       30%         0 (    0)  23/70/113  Qi Refining, 1st Layer | Qi Refining, 1st Layer | - (Qi Refining, 3rd Layer | Qi Refining, 5th Layer | -)  28
-     8   52  134  296       38      6/4         2      20      46%    37%       16%         0 (    0)  29/72/105  Qi Refining, 1st Layer | Qi Refining, 1st Layer | - (Qi Refining, 3rd Layer | Qi Refining, 6th Layer | -)  35
-     9   73   73  165       21      3/2         1      10      33%    24%       42%         0 (    0)  24/52/140  Mortal | Qi Refining, 1st Layer | - (Qi Refining, 2nd Layer | Qi Refining, 4th Layer | -)  25
-    10   10   42  192       22      6/5         2      25      48%    28%       22%         0 (    0)  21/38/170  Qi Refining, 1st Layer | Qi Refining, 1st Layer | - (Qi Refining, 3rd Layer | Qi Refining, 5th Layer | -)  31
-  medians: stones d30/d90/d180 52/73/183 (curious 23/70/137), crafted 21, commissions got 4 delivered 2, rank 1, renown 10
+     1   81   81  131       17      4/2         1      10      46%    19%       33%         0 (    0)  19/83/123  Mortal | Qi Refining, 1st Layer | - (Qi Refining, 1st Layer | Qi Refining, 3rd Layer | -)  25
+     2   35  130  183       21      5/3         1      15      56%    25%       18%         0 (    0)  23/81/192  Qi Refining, 1st Layer | Qi Refining, 1st Layer | - (Qi Refining, 3rd Layer | Qi Refining, 5th Layer | -)  31
+     3   52   52  186       24      3/1         1       5      44%    24%       31%         0 (    0)  23/97/180  Qi Refining, 1st Layer | Qi Refining, 1st Layer | - (Qi Refining, 2nd Layer | Qi Refining, 5th Layer | -)  30
+     4   31   31  102       13      3/1         1       5      36%    22%       40%         0 (    0)  23/34/140  Mortal | Qi Refining, 1st Layer | - (Qi Refining, 2nd Layer | Qi Refining, 3rd Layer | -)  26
+     5   60  159  321       29      6/5         2      25      59%    29%       10%         0 (    0)  31/106/200  Qi Refining, 1st Layer | Qi Refining, 1st Layer | - (Qi Refining, 5th Layer | Qi Refining, 8th Layer | -)  36
+     6   31   31   98       13      3/1         1       5      44%    15%       39%         0 (    0)  23/78/196  Mortal | Qi Refining, 1st Layer | - (Qi Refining, 2nd Layer | Qi Refining, 4th Layer | -)  27
+     7   31   31  148       19      4/2         1      10      41%    28%       30%         0 (    0)  23/82/152  Qi Refining, 1st Layer | Qi Refining, 1st Layer | - (Qi Refining, 3rd Layer | Qi Refining, 5th Layer | -)  28
+     8   52  134  296       38      6/4         2      20      46%    37%       16%         0 (    0)  29/57/158  Qi Refining, 1st Layer | Qi Refining, 1st Layer | - (Qi Refining, 4th Layer | Qi Refining, 6th Layer | -)  35
+     9   73   73  165       21      3/2         1      10      33%    24%       42%         0 (    0)  23/68/158  Mortal | Qi Refining, 1st Layer | - (Qi Refining, 2nd Layer | Qi Refining, 4th Layer | -)  25
+    10   10   42  192       22      6/5         2      25      48%    28%       22%         0 (    0)  21/38/165  Qi Refining, 1st Layer | Qi Refining, 1st Layer | - (Qi Refining, 2nd Layer | Qi Refining, 4th Layer | -)  31
+  medians: stones d30/d90/d180 52/73/183 (curious 23/81/165), crafted 21, commissions got 4 delivered 2, rank 1, renown 10
   medians: days gathering 46% / crafting 25% / meditating 31%; weeks stuck (no hint, nothing to craft, nothing to deliver) median 0, max 0; of those the craft-now hint had faded (rank 2) in 0%
   QA-111: order walks off; trips to a neighbouring region per seed: median 0, max 0
   QA-117: buy hint followed; seeds that never crafted: 0 of 10
@@ -1352,8 +1218,8 @@ Crafter start: new alchemist in Qingshi Village, 10 seeds, 180 days
 
 Crafter start: new blacksmith in Qingshi Village, 1 seeds, 365 days
   seed  d30  d90 d180  crafted  comm(got/del)  rank  renown  gather% craft% meditate%  stuck-wk (faded)  curious(d30/d90/d180)  realm d90 | d180 | d365 (curious)  cult-hint-steps
-     1   72  104  258       34     14/13        1      65      60%    22%       16%         0 (    0)  19/33/181  Qi Refining, 1st Layer | Qi Refining, 1st Layer | Qi Refining, 1st Layer (Qi Refining, 1st Layer | Qi Refining, 3rd Layer | Qi Refining, 6th Layer)  85
-  medians: stones d30/d90/d180 72/104/258 (curious 19/33/181), crafted 34, commissions got 14 delivered 13, rank 1, renown 65
+     1   72  104  258       34     14/13        1      65      60%    22%       16%         0 (    0)  19/83/123  Qi Refining, 1st Layer | Qi Refining, 1st Layer | Qi Refining, 1st Layer (Qi Refining, 1st Layer | Qi Refining, 3rd Layer | Qi Refining, 7th Layer)  85
+  medians: stones d30/d90/d180 72/104/258 (curious 19/83/123), crafted 34, commissions got 14 delivered 13, rank 1, renown 65
   medians: days gathering 60% / crafting 22% / meditating 16%; weeks stuck (no hint, nothing to craft, nothing to deliver) median 0, max 0; of those the craft-now hint had faded (rank 2) in 0%
   medians past day 180: stones d180 -> d365 258 -> 449, crafts in days 181-365 16 (2.6 a month), weeks stuck after d180 median 0 max 0
   QA-111: order walks off; trips to a neighbouring region per seed: median 0, max 0
@@ -1366,8 +1232,8 @@ Crafter start: new blacksmith in Qingshi Village, 1 seeds, 365 days
 
 Crafter start: new talisman_master in Qingshi Village, 1 seeds, 365 days
   seed  d30  d90 d180  crafted  comm(got/del)  rank  renown  gather% craft% meditate%  stuck-wk (faded)  curious(d30/d90/d180)  realm d90 | d180 | d365 (curious)  cult-hint-steps
-     1   43   64  179      244     10/7         5      35       7%    76%       16%         0 (    0)  19/33/181  Mortal | Qi Refining, 1st Layer | Qi Refining, 1st Layer (Qi Refining, 1st Layer | Qi Refining, 3rd Layer | Qi Refining, 6th Layer)  119
-  medians: stones d30/d90/d180 43/64/179 (curious 19/33/181), crafted 244, commissions got 10 delivered 7, rank 5, renown 35
+     1   43   64  179      244     10/7         5      35       7%    76%       16%         0 (    0)  19/83/123  Mortal | Qi Refining, 1st Layer | Qi Refining, 1st Layer (Qi Refining, 1st Layer | Qi Refining, 3rd Layer | Qi Refining, 7th Layer)  119
+  medians: stones d30/d90/d180 43/64/179 (curious 19/83/123), crafted 244, commissions got 10 delivered 7, rank 5, renown 35
   medians: days gathering 7% / crafting 76% / meditating 16%; weeks stuck (no hint, nothing to craft, nothing to deliver) median 0, max 0; of those the craft-now hint had faded (rank 2) in 0%
   medians past day 180: stones d180 -> d365 179 -> 555, crafts in days 181-365 176 (28.5 a month), weeks stuck after d180 median 0 max 0
   QA-111: order walks off; trips to a neighbouring region per seed: median 0, max 0
@@ -1380,8 +1246,8 @@ Crafter start: new talisman_master in Qingshi Village, 1 seeds, 365 days
 
 Crafter start: new array_master in Qingshi Village, 1 seeds, 365 days
   seed  d30  d90 d180  crafted  comm(got/del)  rank  renown  gather% craft% meditate%  stuck-wk (faded)  curious(d30/d90/d180)  realm d90 | d180 | d365 (curious)  cult-hint-steps
-     1   53   44  181       34     16/15        0      75      61%    22%       16%         0 (    0)  19/33/181  Mortal | Qi Refining, 1st Layer | Qi Refining, 1st Layer (Qi Refining, 1st Layer | Qi Refining, 3rd Layer | Qi Refining, 6th Layer)  85
-  medians: stones d30/d90/d180 53/44/181 (curious 19/33/181), crafted 34, commissions got 16 delivered 15, rank 0, renown 75
+     1   53   44  181       34     16/15        0      75      61%    22%       16%         0 (    0)  19/83/123  Mortal | Qi Refining, 1st Layer | Qi Refining, 1st Layer (Qi Refining, 1st Layer | Qi Refining, 3rd Layer | Qi Refining, 7th Layer)  85
+  medians: stones d30/d90/d180 53/44/181 (curious 19/83/123), crafted 34, commissions got 16 delivered 15, rank 0, renown 75
   medians: days gathering 61% / crafting 22% / meditating 16%; weeks stuck (no hint, nothing to craft, nothing to deliver) median 0, max 0; of those the craft-now hint had faded (rank 2) in 0%
   medians past day 180: stones d180 -> d365 181 -> 421, crafts in days 181-365 17 (2.8 a month), weeks stuck after d180 median 0 max 0
   QA-111: order walks off; trips to a neighbouring region per seed: median 0, max 0
@@ -1394,8 +1260,8 @@ Crafter start: new array_master in Qingshi Village, 1 seeds, 365 days
 
 Crafter start: new beast_tamer in Qingshi Village, 1 seeds, 365 days
   seed  d30  d90 d180  crafted  comm(got/del)  rank  renown  gather% craft% meditate%  stuck-wk (faded)  curious(d30/d90/d180)  realm d90 | d180 | d365 (curious)  cult-hint-steps
-     1   43   75  201       53     19/16        2      80      61%    21%       16%         0 (    0)  19/33/181  Mortal | Qi Refining, 1st Layer | Qi Refining, 1st Layer (Qi Refining, 1st Layer | Qi Refining, 3rd Layer | Qi Refining, 6th Layer)  84
-  medians: stones d30/d90/d180 43/75/201 (curious 19/33/181), crafted 53, commissions got 19 delivered 16, rank 2, renown 80
+     1   43   75  201       53     19/16        2      80      61%    21%       16%         0 (    0)  19/83/123  Mortal | Qi Refining, 1st Layer | Qi Refining, 1st Layer (Qi Refining, 1st Layer | Qi Refining, 3rd Layer | Qi Refining, 7th Layer)  84
+  medians: stones d30/d90/d180 43/75/201 (curious 19/83/123), crafted 53, commissions got 19 delivered 16, rank 2, renown 80
   medians: days gathering 61% / crafting 21% / meditating 16%; weeks stuck (no hint, nothing to craft, nothing to deliver) median 0, max 0; of those the craft-now hint had faded (rank 2) in 0%
   medians past day 180: stones d180 -> d365 201 -> 421, crafts in days 181-365 28 (4.5 a month), weeks stuck after d180 median 0 max 0
   QA-111: order walks off; trips to a neighbouring region per seed: median 0, max 0
@@ -1407,58 +1273,58 @@ Crafter start: new beast_tamer in Qingshi Village, 1 seeds, 365 days
 ## quiet stretches (seeds 1-10, 365 days)
 
 Quiet stretches, default policy, 10 seeds, 365 days
-  seed  1:  20 new days, longest stretch  60 days
+  seed  1:  19 new days, longest stretch  60 days
   seed  2:  21 new days, longest stretch  60 days
   seed  3:  23 new days, longest stretch  34 days
-  seed  4:  20 new days, longest stretch  35 days
-  seed  5:  22 new days, longest stretch  60 days
+  seed  4:  19 new days, longest stretch  35 days
+  seed  5:  21 new days, longest stretch  60 days
   seed  6:  21 new days, longest stretch  60 days
-  seed  7:  20 new days, longest stretch  32 days
+  seed  7:  21 new days, longest stretch  60 days
   seed  8:  22 new days, longest stretch  35 days
   seed  9:  19 new days, longest stretch  33 days
   seed 10:  21 new days, longest stretch  60 days
 Stretch (days between new things): median 7, max 60; median of per-seed medians 9, of per-seed maxes 60
-New days per month (median over seeds): 5 1 2 1 2 2 1 1 1 1 1 1 1
-  longest 1: seed 1, days 271-331 (60 days), months 10-12, actions: meditate,explore
-  longest 2: seed 1, days 54-114 (60 days), months 2-4, actions: meditate,explore,breakthrough
-  longest 3: seed 2, days 263-323 (60 days), months 9-11, actions: meditate,explore
+New days per month (median over seeds): 5 1 2 2 2 2 2 1 2 1 1 1 1
+  longest 1: seed 1, days 54-114 (60 days), months 2-4, actions: meditate,explore,breakthrough
+  longest 2: seed 2, days 263-323 (60 days), months 9-11, actions: meditate,explore
+  longest 3: seed 5, days 237-297 (60 days), months 8-10, actions: meditate,explore
 
 Quiet stretches, curious policy, 10 seeds, 365 days
-  seed  1:  66 new days, longest stretch  31 days
-  seed  2:  69 new days, longest stretch  31 days
-  seed  3:  68 new days, longest stretch  32 days
-  seed  4:  62 new days, longest stretch  31 days
-  seed  5:  87 new days, longest stretch  30 days
-  seed  6:  70 new days, longest stretch  31 days
-  seed  7:  71 new days, longest stretch  31 days
-  seed  8:  74 new days, longest stretch  31 days
-  seed  9:  67 new days, longest stretch  31 days
-  seed 10:  65 new days, longest stretch  31 days
-Stretch (days between new things): median 2, max 32; median of per-seed medians 2, of per-seed maxes 31
-New days per month (median over seeds): 10 6 6 7 4 6 4 6 6 4 7 4 2
-  longest 1: seed 3, days 44-76 (32 days), months 2-3, actions: meditate,explore,deed,mission,gift,spar,lecture,bounty,craft,work,pointer
-  longest 2: seed 1, days 235-266 (31 days), months 8-9, actions: meditate,explore,mission,bounty,work,gift,pointer,lecture
-  longest 3: seed 1, days 316-347 (31 days), months 11-12, actions: meditate,explore,mission,trial,bounty,work,gift,pointer,lecture,secret_realm,craft
+  seed  1:  68 new days, longest stretch  32 days
+  seed  2:  69 new days, longest stretch  30 days
+  seed  3:  76 new days, longest stretch  32 days
+  seed  4:  67 new days, longest stretch  31 days
+  seed  5:  84 new days, longest stretch  30 days
+  seed  6:  69 new days, longest stretch  31 days
+  seed  7:  69 new days, longest stretch  34 days
+  seed  8:  78 new days, longest stretch  31 days
+  seed  9:  70 new days, longest stretch  31 days
+  seed 10:  63 new days, longest stretch  31 days
+Stretch (days between new things): median 2, max 34; median of per-seed medians 2, of per-seed maxes 31
+New days per month (median over seeds): 10 6 6 7 3 7 3 9 5 5 8 5 1
+  longest 1: seed 7, days 110-144 (34 days), months 4-5, actions: meditate,explore,mission,bounty,work,gift,lecture,craft
+  longest 2: seed 1, days 225-257 (32 days), months 8-9, actions: meditate,explore,mission,gift,pointer,lecture,bounty,travel
+  longest 3: seed 3, days 44-76 (32 days), months 2-3, actions: meditate,explore,deed,mission,gift,spar,lecture,bounty,craft,work,pointer
 
 
 ## first Foundation Establishment year (seeds 1-10)
 
 First Foundation Establishment year: 10 seeds
   region / variant               won  lost  fled  injur  lives  stones  stage
-  qingshi_village rogue             4     0     0      0      0      58      0
-  qingshi_village sect             18     0     0      0      0     112      0
-  misty_forest rogue               12     0     0      0      0     285      0
-  misty_forest sect                24     0     0      0      0     307      0
-  fallen_star_market rogue          3     0     0      0      0      40      0
-  fallen_star_market sect          13     0     0      0      0      92      0
-  azure_peak rogue                  8     0     0      0      0     293      1
-  azure_peak sect                  21     0     0      0      0     325      2
-  withered_bone_marsh rogue         9     0     0      0      0     530      1
-  withered_bone_marsh sect         19     0     0      0      0     458      1
-  myriad_peaks_ridge rogue          6     0     0      0      0     411      2
-  myriad_peaks_ridge sect          18     0     0      0      0     581      3
-  median of all runs: won 13 lost 0 fled 0 injuries 0 lives 0 stones 242 stage 1
-  runs with no artifact life spent: 109 of 120
+  qingshi_village rogue             6     0     0      0      0      47      0
+  qingshi_village sect             19     0     0      0      0     124      0
+  misty_forest rogue               13     0     0      0      0     275      0
+  misty_forest sect                22     0     0      0      0     398      1
+  fallen_star_market rogue          4     0     0      0      0      35      0
+  fallen_star_market sect          14     0     0      0      0     133      0
+  azure_peak rogue                  9     0     0      0      0     393      1
+  azure_peak sect                  22     0     0      0      0     443      2
+  withered_bone_marsh rogue        10     0     0      0      0     583      1
+  withered_bone_marsh sect         22     0     0      0      0     735      1
+  myriad_peaks_ridge rogue          7     0     0      0      0     374      2
+  myriad_peaks_ridge sect          17     0     0      0      0     802      2
+  median of all runs: won 14 lost 0 fled 0 injuries 0 lives 0 stones 322 stage 1
+  runs with no artifact life spent: 116 of 120
   median win share of fought fights: 100%
 
 ## first hour, curious practiser (seeds 1-10, 12 months)
@@ -1466,28 +1332,28 @@ First Foundation Establishment year: 10 seeds
 Curious practiser: 10 seeds, 12 months
   --practise=false
   seed  fist@m3  fist@m6  fist@m12  wolf win day  won  lost  QR3
-     1        2        4         5           733   38     0  346
-     2        1        2         5           834   31     5  140
-     3        2        3         5           445   36     3  216
-     4        1        2         4           824   37     1  292
-     5        1        2         4           330   44     2  76
-     6        2        3         5           546   41     0  221
-     7        2        3         5           724   40     2  224
-     8        1        2         4           453   45     3  142
-     9        2        3         4           724   34     6  228
-    10        1        2         4           597   40     3  204
-  Medians: iron_fist level m3 2, m6 3, m12 5; first wolf win day 724 (0 seeds never); fights won 40, lost 3; QR3 day 221 (10/10 reached)
+     1        2        3         5           528   39     1  320
+     2        1        3         5           617   39     5  140
+     3        2        3         5           632   48     0  223
+     4        1        2         4             -   43     1  271
+     5        1        2         5           313   43     0  76
+     6        1        3         4           516   45     0  217
+     7        1        2         4           816   37     6  219
+     8        1        2         4           623   46     5  149
+     9        2        2         4           803   45     0  207
+    10        2        2         4           817   33     3  203
+  Medians: iron_fist level m3 1, m6 2, m12 4; first wolf win day 623 (1 seeds never); fights won 43, lost 1; QR3 day 217 (10/10 reached)
   --practise=true
   seed  fist@m3  fist@m6  fist@m12  wolf win day  won  lost  QR3
-     1        3        4         5           657   35     2  289
-     2        3        4         5           714   37     3  163
-     3        3        3         5           657   38     3  275
-     4        3        4         5             -   36     1  295
-     5        3        3         5           440   43     2  76
-     6        3        3         5           547   49     0  267
-     7        3        4         5           709   39     2  285
-     8        3        3         5           435   42     4  169
-     9        3        3         5           649   41     1  290
-    10        3        3         5           820   39     2  272
-  Medians: iron_fist level m3 3, m6 3, m12 5; first wolf win day 657 (1 seeds never); fights won 39, lost 2; QR3 day 275 (10/10 reached)
+     1        3        4         5           693   38     1  291
+     2        3        4         5           699   37     5  163
+     3        3        3         5           765   42     5  275
+     4        3        3         5             -   42     0  284
+     5        3        3         5           377   43     1  76
+     6        3        3         5           549   45     0  286
+     7        3        4         5           619   45     0  279
+     8        3        3         5           445   48     1  172
+     9        3        4         5           519   46     0  293
+    10        3        4         5           682   40     3  254
+  Medians: iron_fist level m3 3, m6 4, m12 5; first wolf win day 619 (1 seeds never); fights won 43, lost 1; QR3 day 279 (10/10 reached)
 
