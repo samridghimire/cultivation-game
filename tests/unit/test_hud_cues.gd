@@ -157,6 +157,26 @@ func test_goal_text_region_aware() -> void:
 	assert_eq(HUD.goal_text(c, d, flags, null, 1.0), HUD.goal_text(c, d, flags, null, 1.0, "", -1))
 
 
+## QA-172: the HUD Goal line carries GUIDE-168's faster-spot clause only when given the region and day.
+func test_goal_text_faster_spot_clause() -> void:
+	var d := data()
+	var c := new_character()
+	c.realm_index = 2
+	c.stage = 1
+	# Finish the Foundation ladder so the realm goal (not an open ladder row) is the Goal line.
+	c.sect = {"id": "azure_cloud_sect", "rank": 2, "contribution": 0, "spent": 0}
+	c.techniques = {"stone_skin": {"level": 1, "xp": 0.0}}
+	c.equipment["armor"] = "cloth_robe"
+	c.abode = "cave"
+	c.body_stage = 1
+	var flags := {Guidance.beat_realm_flag("foundation_establishment"): true}
+	for row in Guidance.active_goal_ladder(c, d, flags, null):
+		assert_true(row["done"], str(row["text"]))
+	var with_region := HUD.goal_text(c, d, flags, null, 1.0, "qingshi_village", 100)
+	assert_true(with_region.contains("Azure Peak"), with_region)
+	assert_false(HUD.goal_text(c, d, flags, null, 1.0).contains("Azure Peak"))
+
+
 ## WU-192: the arrival banner subtitle names the region's renown title.
 func test_arrival_subtitle() -> void:
 	var d := data()
