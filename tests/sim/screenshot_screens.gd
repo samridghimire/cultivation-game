@@ -112,6 +112,7 @@ extends SceneTree
 ## WU-369: `--help-shot` writes help_<topic>_<size>.png for every help page (long ones scroll in a focusable ScrollContainer).
 ## WU-367: `--hint-shot` also writes pill_rank_gate_/pill_rank_open_<size>.png (Foundation Peak Inner Disciple, 6998 contribution: no hint, goal or breakthrough text says "As Elder"; QR8 Outer Disciple: the Foundation pill line still says "As Inner Disciple you could claim it").
 ## WU-362: `--hint-shot` also writes sect_join_prompt_<size>.png (rogue QR3 at the Azure Cloud hall with the join prompt open: the description lists the membership perks and fits the viewport).
+## WU-377: hint_rogue_join also asserts the capped HUD line keeps "members gather qi x".
 ## WU-376: `--hint-shot` also writes hint_injury_far_<size>.png (rogue at Misty Forest, internal injury, 5 stones: a hint names the nearest clinic, its trip and "(you have 5)").
 ## WU-373: `--hint-shot` also writes journal_rank_needs_<size>.png (Inner Disciple, Qi Refining 3, 40 contribution: Goals reads "Become Core Disciple: earn 3000 contribution (you have 40) and reach Foundation Establishment.").
 ## WU-366: `--hint-shot` also writes journal_clan_goal_<size>.png (rogue QR8, no abode, 120 stones: Goals reads "Found a clan: reach Foundation Establishment, claim an abode as its seat and gather 500 spirit stones (you have 120).").
@@ -2425,7 +2426,10 @@ func _start_hint_shot(gs: Node) -> void:
 		print("hint-shot rogue join: ", join_line)
 		assert(join_line.contains("members gather qi x1.5"), "no perks sentence in the join hint:\n" + dump)
 		var capped: String = hud.call("cap_hint", join_line)
-		assert(capped.to_lower().contains("join azure cloud sect"), "capped HUD line lost the join: " + capped), "close": func() -> void:
+		assert(capped.to_lower().contains("join azure cloud sect"), "capped HUD line lost the join: " + capped)
+		# WU-377: GUIDE-182. The perks lead the sentence, so the capped HUD line (first 120 chars) keeps them.
+		assert(capped.contains("members gather qi x"), "capped HUD line lost the perks: " + capped)
+		print("hint-shot rogue join capped: ", capped), "close": func() -> void:
 			c.realm_index = rogue_saved[0]
 			c.stage = rogue_saved[1]
 			c.sect = rogue_saved[2]
