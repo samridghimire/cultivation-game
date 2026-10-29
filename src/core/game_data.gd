@@ -41,6 +41,7 @@ var regions: Dictionary = {}  # id -> Dictionary
 var start_region := ""
 var renown: Dictionary = {}  # regions.json "renown" block (Renown); {} = none
 var travel_speed: Array = []  # TRAV-007: regions.json "travel_speed" (empty = everyone walks)
+var weather_persist: float = Weather.DEFAULT_PERSIST  # WEATHER-001: regions.json "weather_persist"
 var road: Dictionary = {}  # TRAV-006: regions.json "road" (empty = no road encounters)
 var encounters: Dictionary = {}  # id -> Dictionary
 ## True for an int or a whole-number float (JSON numbers load as floats).
@@ -227,6 +228,9 @@ func _load(dir: String) -> void:
 	start_region = world.get("start_region", "")
 	renown = world.get("renown", {})
 	road = world.get("road", {})
+	weather_persist = float(world.get("weather_persist", Weather.DEFAULT_PERSIST))
+	if weather_persist < 0.0 or weather_persist > 1.0:
+		load_errors.append("weather_persist must be 0..1")
 	travel_speed = world.get("travel_speed", [])
 	for region in world.get("regions", []):
 		regions[region["id"]] = region
@@ -563,6 +567,22 @@ func _validate_world() -> void:
 					load_errors.append("Region '%s' map.ambient has unknown season '%s'" % [region["id"], key])
 				elif not Scenery.AMBIENT_KINDS.has(String(ambient[key])):
 					load_errors.append("Region '%s' map.ambient kind '%s' is not one of %s" % [region["id"], ambient[key], ", ".join(Scenery.AMBIENT_KINDS)])
+		var weather: Variant = region.get("weather", {})
+		if not weather is Dictionary:
+			load_errors.append("Region '%s' weather must be an object" % region["id"])
+		else:
+			for key: String in weather:
+				if not ["spring", "summer", "autumn", "winter", "any"].has(key):
+					load_errors.append("Region '%s' weather has unknown season '%s'" % [region["id"], key])
+				elif not weather[key] is Dictionary:
+					load_errors.append("Region '%s' weather.%s must be an object" % [region["id"], key])
+				else:
+					for kind: String in weather[key]:
+						var w: Variant = weather[key][kind]
+						if not Weather.KINDS.has(kind):
+							load_errors.append("Region '%s' weather kind '%s' is not one of %s" % [region["id"], kind, ", ".join(Weather.KINDS)])
+						elif not ((w is float or w is int) and w > 0):
+							load_errors.append("Region '%s' weather.%s.%s weight must be > 0" % [region["id"], key, kind])
 		for spot in region.get("npc_spots", []):
 			if not (spot is Array and (spot as Array).size() == 2):
 				load_errors.append("Region '%s' has an npc_spot that is not [x, y]: %s" % [region["id"], spot])

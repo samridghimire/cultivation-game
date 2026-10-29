@@ -545,7 +545,7 @@ func _refresh() -> void:
 	_status.text = "\n".join(PackedStringArray([
 		"Alignment: %s (%d)" % [Alignment.tier_name(p.alignment, data), p.alignment],
 		Sects.describe(p, data),
-		"%s · %s" % [GameClock.date_string(), season_label(GameClock.total_days)],
+		"%s · %s · %s" % [GameClock.date_string(), season_label(GameClock.total_days), Weather.label(Weather.of(data, GameState.current_region, GameClock.total_days))],
 	]))
 	var density := GameState.region_qi_density()
 	var qi_why := ", ".join(Exploration.qi_flag_reasons(data, GameState.current_region, GameState.world_flags))
