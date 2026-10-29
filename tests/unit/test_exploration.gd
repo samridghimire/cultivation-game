@@ -268,7 +268,7 @@ func test_outlook_min_stage_fight_is_absent_below_its_stage() -> void:
 func test_outlook_with_no_encounters_is_quiet() -> void:
 	var o := Exploration.outlook(new_character(), _outlook_data(), ["nothing_here"], {})
 	assert_almost_eq(float(o["other"]), 1.0)
-	assert_eq(Guidance.outlook_text(o), "Mostly quiet (100%).")
+	assert_eq(Guidance.outlook_text(o), "Mostly quiet 100%.")
 
 
 func test_outlook_text_reads_cleanly() -> void:
