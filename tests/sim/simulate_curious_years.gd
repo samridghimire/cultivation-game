@@ -89,6 +89,9 @@ var _fe_month := {}
 var _wait_for_pill := 0
 var _trace_seed := 0
 var _arm_report := false
+var _repeat_report := false
+## QA-175: per seed, encounter id -> times met.
+var _repeat_counts: Array[Dictionary] = []
 
 
 func _median(values: Array) -> float:
@@ -121,6 +124,8 @@ func _run() -> void:
 			FirstHour.sect_report = true  # QA-162
 		elif a == "--core-report":
 			FirstHour.core_report = true  # QA-173
+		elif a == "--repeat-report":
+			_repeat_report = true  # QA-175
 		elif a == "--arm-report":
 			_arm_report = true  # QA-161
 		elif a == "--defence":
@@ -168,6 +173,8 @@ func _run() -> void:
 				_fe_snaps60[s] = CharacterData.from_dict(gs.player.to_dict())
 		var r: Dictionary = FirstHour.play(gs, clock, s, months, true, snap_hook, false, _wait_for_pill)
 		runs.append(r.duplicate())
+		if _repeat_report:
+			_repeat_counts.append((r["player"] as CharacterData).encounter_counts.duplicate())
 		runs[-1].erase("player")
 		var sets: Array = r["kind_sets"]
 		if sets.size() < months:
@@ -248,6 +255,8 @@ func _run() -> void:
 		_print_arm_report(runs, months)
 	if FirstHour.core_report:
 		_print_core_report(runs)
+	if _repeat_report:
+		_print_repeat_report(gs)
 	if FirstHour.injury_report:
 		_print_injury_report(seeds)
 	if FirstHour.sect_report:
@@ -294,6 +303,35 @@ func _print_foundation_breakthrough(runs: Array[Dictionary]) -> void:
 			if success_day >= 0:
 				stuck.append(success_day - bday)
 	print("  medians: days stuck at the bottleneck %.0f (%d seeds that succeeded), attempts %.0f, share of attempts with a pill %d%% (%d of %d), attempts under 50%%: %d of %d" % [_median(stuck.duplicate()), stuck.size(), _median(attempt_counts.duplicate()), 100 * with_pill / maxi(1, total), with_pill, total, below_half, total])
+
+
+## QA-175: every encounter met >= 3 times per seed, then median and max count per id over seeds (top 25 by median).
+func _print_repeat_report(gs: Node) -> void:
+	print("Repeat report (QA-175): encounters met >= 3 times, per seed: id count [fades repeatable blocked_by_flag min_realm] text")
+	var per_id := {}
+	for i in _repeat_counts.size():
+		var counts: Dictionary = _repeat_counts[i]
+		var ids: Array = counts.keys()
+		ids.sort()
+		for id: String in ids:
+			if not per_id.has(id):
+				per_id[id] = []
+			per_id[id].append(int(counts[id]))
+			if int(counts[id]) >= 3:
+				var e: Dictionary = gs.data.encounters.get(id, {})
+				print("  seed %2d %-32s %3d [fades=%s repeatable=%s blocked_by_flag=%s min_realm=%s] %s" % [i + 1, id, counts[id], Exploration.fades(e), e.get("repeatable", false), e.get("blocked_by_flag", ""), e.get("min_realm", ""), String(e.get("text", "")).replace("\n", " ").left(60)])
+	var rows: Array = []
+	for id: String in per_id:
+		var v: Array = per_id[id]
+		var padded: Array = v.duplicate()
+		for _j in _repeat_counts.size() - v.size():
+			padded.append(0)
+		rows.append({"id": id, "median": _median(padded), "max": v.max(), "seen": v.size()})
+	rows.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return a["median"] > b["median"] or (a["median"] == b["median"] and (a["max"] > b["max"] or (a["max"] == b["max"] and a["id"] < b["id"]))))
+	print("  top 25 by median count over %d seeds (zeros included): id median max seeds_met" % _repeat_counts.size())
+	for i in mini(25, rows.size()):
+		var row: Dictionary = rows[i]
+		print("    %-32s median %4.1f max %3d seeds %d" % [row["id"], row["median"], row["max"], row["seen"]])
 
 
 ## QA-173: per seed the Foundation Peak day, every Core Formation attempt, the Core day, and the contribution / method rate at the first attempt.
