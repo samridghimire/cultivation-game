@@ -1,0 +1,113 @@
+extends TestCase
+## HEART-001: the heart vision before a major breakthrough.
+
+
+func _at_peak(realm: int = 1) -> CharacterData:
+	var c := new_character()
+	c.realm_index = realm
+	c.stage = data().realms[realm].stage_count() - 1
+	Cultivation.add_qi(c, data(), 1e15)
+	return c
+
+
+func test_no_vision_for_mid_realm_or_qi_refining_entry() -> void:
+	var c := new_character()
+	c.realm_index = 1
+	assert_true(HeartVision.vision(c, data()).is_empty(), "mid-realm")
+	var m := _at_peak(0)
+	assert_true(HeartVision.vision(m, data()).is_empty(), "Qi Refining entry has none")
+
+
+func test_vision_at_qi_refining_peak() -> void:
+	var c := _at_peak(1)
+	var v := HeartVision.vision(c, data())
+	assert_false(v.is_empty())
+	assert_true(String(v["text"]).contains("a faceless figure"))
+	assert_false(String(v["text"]).contains("{"))
+
+
+func test_vision_names_the_rival() -> void:
+	var c := _at_peak(1)
+	var rival := new_character(77)
+	rival.id = "rv"
+	rival.name = "Lin Mo"
+	c.rival = "rv"
+	assert_true(String(HeartVision.vision(c, data(), {"rv": rival})["text"]).contains("Lin Mo"))
+
+
+func test_choose_without_check_gives_bonus() -> void:
+	var c := _at_peak(1)
+	var r := HeartVision.choose(c, data(), 2, seeded_rng())
+	assert_true(r["passed"])
+	assert_almost_eq(c.heart_bonus, 0.0)
+	assert_eq(c.heart_seen_realm, 2)
+
+
+func test_choose_check_pass_and_fail() -> void:
+	var passed := false
+	var failed := false
+	for s in 40:
+		var c := _at_peak(1)
+		c.attributes["comprehension"] = 14  # 90% clamp is not reached: chance 0.9 at target 14
+		var r := HeartVision.choose(c, data(), 0, seeded_rng(s))
+		if r["passed"]:
+			passed = true
+			assert_almost_eq(c.heart_bonus, 0.05)
+		else:
+			failed = true
+			assert_almost_eq(c.heart_bonus, -0.03)
+	assert_true(passed and failed)
+
+
+func test_invalid_index_changes_nothing() -> void:
+	var c := _at_peak(1)
+	assert_true(HeartVision.choose(c, data(), 9, seeded_rng()).is_empty())
+	assert_eq(c.heart_seen_realm, -1)
+
+
+func test_breakdown_term_and_attempt_resets() -> void:
+	var c := _at_peak(1)
+	var before := Cultivation.breakthrough_chance(c, data())
+	c.heart_bonus = 0.05
+	assert_almost_eq(Cultivation.breakthrough_chance(c, data()), before + 0.05)
+	assert_true(Cultivation.chance_breakdown(c, data()).any(func(t: Dictionary) -> bool: return t["label"] == "Heart steadied"))
+	c.heart_bonus = -0.03
+	assert_true(Cultivation.chance_breakdown(c, data()).any(func(t: Dictionary) -> bool: return t["label"] == "Heart shaken"))
+	c.heart_seen_realm = 2
+	Cultivation.attempt_breakthrough(c, data(), seeded_rng())
+	assert_almost_eq(c.heart_bonus, 0.0)
+	assert_eq(c.heart_seen_realm, 2)
+
+
+func test_seen_vision_is_not_offered_again() -> void:
+	var c := _at_peak(1)
+	HeartVision.choose(c, data(), 2, seeded_rng())
+	assert_true(HeartVision.vision(c, data()).is_empty())
+
+
+func test_round_trip_and_old_saves() -> void:
+	var c := _at_peak(1)
+	c.heart_bonus = 0.05
+	c.heart_seen_realm = 2
+	var back := CharacterData.from_dict(c.to_dict())
+	assert_almost_eq(back.heart_bonus, 0.05)
+	assert_eq(back.heart_seen_realm, 2)
+	var d := c.to_dict()
+	d.erase("heart_bonus")
+	d.erase("heart_seen_realm")
+	var old := CharacterData.from_dict(d)
+	assert_almost_eq(old.heart_bonus, 0.0)
+	assert_eq(old.heart_seen_realm, -1)
+
+
+func test_validation_rejects_bad_visions() -> void:
+	var d := GameData.load_from_dir()
+	var good: Dictionary = d.realms[2].heart_vision.duplicate(true)
+	d.realms[2].heart_vision = good.duplicate(true)
+	d.realms[2].heart_vision["choices"][0]["bonus"] = 0.3
+	assert_gt(HeartVision.validate(d).size(), 0, "bonus 0.3")
+	d.realms[2].heart_vision = good.duplicate(true)
+	d.realms[2].heart_vision["choices"][2]["fail_bonus"] = -0.02
+	assert_gt(HeartVision.validate(d).size(), 0, "fail_bonus without check")
+	d.realms[2].heart_vision = good
+	assert_eq(HeartVision.validate(d).size(), 0)

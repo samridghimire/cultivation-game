@@ -145,6 +145,7 @@ static func chance_breakdown(c: CharacterData, data: GameData) -> Array[Dictiona
 	var terms: Array[Dictionary] = [
 		{"label": _pill_label(c, data), "value": c.breakthrough_bonus},
 		{"label": "Fortune %d" % c.attribute("fortune"), "value": (c.attribute("fortune") - 10) * 0.01},
+		{"label": "Heart steadied" if c.heart_bonus > 0.0 else "Heart shaken", "value": c.heart_bonus},
 		{"label": "Dao insights", "value": Dao.breakthrough_bonus(c, data)},
 		{"label": "Bloodline", "value": Bloodlines.bonus(c, data, "breakthrough")},
 		{
@@ -187,6 +188,7 @@ static func attempt_breakthrough(c: CharacterData, data: GameData, rng: RandomNu
 	var next: RealmDef = data.realms[c.realm_index + 1]
 	c.breakthrough_bonus = 0.0
 	c.breakthrough_pill = ""
+	c.heart_bonus = 0.0
 	var success := rng.randf() < chance
 	var injury := ""
 	var trib := {}

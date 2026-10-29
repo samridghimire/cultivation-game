@@ -18,6 +18,8 @@ var failure_qi_loss := 0.0
 ## Heavenly Tribulation summoned when breaking INTO this realm ({} = none):
 ## {waves, strength, growth, variance} (see Tribulation).
 var tribulation: Dictionary = {}
+## Optional inner vision before breaking INTO this realm ({} = none, see HeartVision).
+var heart_vision: Dictionary = {}
 
 
 static func from_dict(d: Dictionary) -> RealmDef:
@@ -33,6 +35,7 @@ static func from_dict(d: Dictionary) -> RealmDef:
 	r.breakthrough_chance = float(d.get("breakthrough_chance", 1))
 	r.failure_qi_loss = float(d.get("failure_qi_loss", 0))
 	r.tribulation = d.get("tribulation", {})
+	r.heart_vision = d.get("heart_vision", {})
 	return r
 
 

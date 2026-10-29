@@ -402,6 +402,7 @@ func _validate() -> void:
 		if realm.description.strip_edges() == "":
 			load_errors.append("Realm '%s' has no description" % realm.id)
 	load_errors.append_array(Tribulation.validate(self))
+	load_errors.append_array(HeartVision.validate(self))
 	load_errors.append_array(Dao.validate(self))
 	var attr_ids := attribute_ids()
 	for def: ProfessionDef in professions.values():

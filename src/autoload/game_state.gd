@@ -286,6 +286,29 @@ func retrieve_from_abode(item_id: String, quantity: int = 1) -> void:
 	EventBus.player_changed.emit()
 
 
+## HEART-001: the heart vision due before the next major breakthrough ({} = none). No time passes.
+func heart_vision() -> Dictionary:
+	return HeartVision.vision(player, data, npcs)
+
+
+## Faces choice `index` of heart_vision(): posts what happens and the change to the odds.
+func face_heart_vision(index: int) -> void:
+	EventBus.topic = "cultivation"
+	if not _can_act():
+		return
+	var result := HeartVision.choose(player, data, index, rng)
+	if result.is_empty():
+		return
+	var bonus := float(result["bonus"])
+	var note := "no change to your odds"
+	if bonus > 0.0:
+		note = "+%d%% to break through" % roundi(bonus * 100)
+	elif bonus < 0.0:
+		note = "%d%% to break through" % roundi(bonus * 100)
+	EventBus.post("%s (%s)." % [result["text"], note], "cultivation")
+	EventBus.player_changed.emit()
+
+
 func attempt_breakthrough() -> void:
 	EventBus.topic = "cultivation"
 	if not _can_act():

@@ -47,6 +47,10 @@ var qi := 0.0
 var breakthrough_bonus := 0.0
 ## Realm id of the breakthrough pill taken for the next attempt, "" if none (herbs don't set it).
 var breakthrough_pill := ""
+## HEART-001: one-shot bonus (or penalty) from the heart vision, reset by the attempt.
+var heart_bonus := 0.0
+## Realm index whose heart vision the player has faced this life (-1 = none).
+var heart_seen_realm := -1
 ## Failed major breakthroughs since the last success (FOUND-003): each adds a small
 ## bonus to the next attempt (see realms.json failure_bonus).
 var breakthrough_failures: int = 0
@@ -212,6 +216,8 @@ func to_dict() -> Dictionary:
 		"qi": qi,
 		"breakthrough_bonus": breakthrough_bonus,
 		"breakthrough_pill": breakthrough_pill,
+		"heart_bonus": heart_bonus,
+		"heart_seen_realm": heart_seen_realm,
 		"breakthrough_failures": breakthrough_failures,
 		"alignment": alignment,
 		"professions": professions.duplicate(true),
@@ -314,6 +320,8 @@ static func from_dict(d: Dictionary) -> CharacterData:
 	c.qi = float(d.get("qi", 0))
 	c.breakthrough_bonus = float(d.get("breakthrough_bonus", 0))
 	c.breakthrough_pill = String(d.get("breakthrough_pill", ""))
+	c.heart_bonus = float(d.get("heart_bonus", 0.0))
+	c.heart_seen_realm = int(d.get("heart_seen_realm", -1))
 	c.breakthrough_failures = int(d.get("breakthrough_failures", 0))
 	c.alignment = int(d.get("alignment", 0))
 	var profs: Dictionary = d.get("professions", {})

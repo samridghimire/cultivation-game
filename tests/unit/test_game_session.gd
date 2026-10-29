@@ -2037,3 +2037,19 @@ func test_failed_breakthrough_injury_posts_what_it_costs() -> void:
 	assert_true(EventBus.history.any(func(e: Dictionary) -> bool:
 		return String(e["text"]).begins_with(name + ": ") and String(e["text"]).contains(" for about ")))
 	gs.end_session()
+
+
+func test_face_heart_vision_posts_and_shifts_odds() -> void:
+	var c := _start()
+	var gs := _game_state()
+	c.realm_index = 1
+	c.stage = gs.data.realms[1].stage_count() - 1
+	Cultivation.add_qi(c, gs.data, 1e12)
+	assert_false(gs.heart_vision().is_empty())
+	var before := Cultivation.breakthrough_chance(c, gs.data)
+	EventBus.clear_history()
+	gs.face_heart_vision(2)
+	assert_eq(EventBus.history.filter(func(e: Dictionary) -> bool: return String(e["text"]).contains("no change to your odds")).size(), 1)
+	assert_almost_eq(Cultivation.breakthrough_chance(c, gs.data), before)
+	assert_true(gs.heart_vision().is_empty())
+	gs.end_session()
