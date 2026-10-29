@@ -142,6 +142,8 @@ func _draw() -> void:
 	draw_set_transform(Vector2.ZERO)
 	var bob := -absf(sin(_time * BOB_SPEED)) * BOB_PIXELS if velocity != Vector2.ZERO else 0.0
 	var o := Vector2(shake, bob)
+	if _draw_sprite(o, sash):
+		return
 	# Robe: a flared trapezoid with a sash across the waist.
 	var robe_shape := PackedVector2Array([o + Vector2(-7, -6), o + Vector2(7, -6), o + Vector2(12, 12), o + Vector2(-12, 12)])
 	draw_colored_polygon(robe_shape, robe)
@@ -158,6 +160,26 @@ func _draw() -> void:
 		var eyes := head + Vector2(_facing.x * 3.0, 1.0 + _facing.y)
 		draw_circle(eyes + Vector2(-2.5, 0), 1.0, outline)
 		draw_circle(eyes + Vector2(2.5, 0), 1.0, outline)
+
+
+## Draws the pixel-art player sprite (GFX-001) when data/sprites.json maps one for the facing; false means "use the placeholder".
+func _draw_sprite(o: Vector2, sash: Color) -> bool:
+	var dir := "down"
+	if absf(_facing.x) > absf(_facing.y):
+		dir = "right" if _facing.x > 0.0 else "left"
+	elif _facing.y < 0.0:
+		dir = "up"
+	var key := "player_" + dir
+	var index := int(_time * Sprites.fps(key)) if velocity != Vector2.ZERO else 0
+	var tex := Sprites.frame(key, index)
+	if tex == null:
+		return false
+	var s := float(Sprites.scale())
+	var size := tex.get_size() * s
+	# Centred on the feet (the placeholder robe hem sits at y=12); the sash line keeps sect and alignment readable.
+	draw_texture_rect(tex, Rect2(o + Vector2(-size.x / 2.0, 12.0 - size.y), size), false)
+	draw_line(o + Vector2(-size.x * 0.3, 12.0 - size.y * 0.35), o + Vector2(size.x * 0.3, 12.0 - size.y * 0.35), sash, 2.0)
+	return true
 
 
 ## A spirit beast companion trots a step behind the player (BEAST-001b).

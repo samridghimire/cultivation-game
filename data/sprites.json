@@ -1,0 +1,7 @@
+{
+	"_doc": "Pixel-art sprite map (GFX-001). Read by src/world/sprites.gd, not by GameData. 'tile_size': pixel size of one source tile; 'scale': integer on-screen scale (nearest filter). 'packs': credits [{id, name, author, license, url}] shown on the credits screen. 'sprites': key -> {path: 'res://assets/third_party/<pack>/x.png', region: [x, y, w, h] (optional, whole texture when absent), frames: int (optional, default 1, laid out left to right in the region), fps: float (optional), pack: pack id}. Keys: player_down/up/left/right, place_<PlaceArt kind>, npc. A key that is missing, or whose file is absent, draws the _draw() placeholder.",
+	"tile_size": 16,
+	"scale": 2,
+	"packs": [],
+	"sprites": {}
+}

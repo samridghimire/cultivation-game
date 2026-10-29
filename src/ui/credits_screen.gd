@@ -52,6 +52,12 @@ static func credits_text() -> String:
 	if parsed is Dictionary:
 		for entry: Dictionary in parsed.get("third_party", []):
 			lines.append("- %s: %s (%s)" % [entry.get("name", "?"), entry.get("what", ""), entry.get("license", "?")])
+	var packs := Sprites.credits()
+	if not packs.is_empty():
+		lines.append("")
+		lines.append("Art:")
+		for p: Dictionary in packs:
+			lines.append("- %s by %s (%s) %s" % [p.get("name", "?"), p.get("author", "?"), p.get("license", "?"), p.get("url", "")])
 	lines.append("")
 	lines.append("Godot Engine license:")
 	lines.append(Engine.get_license_text())

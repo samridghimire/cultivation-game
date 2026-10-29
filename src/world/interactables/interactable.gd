@@ -311,7 +311,13 @@ func _draw() -> void:
 		# Artifact anchor places sit on a faint golden ring (VIS-004).
 		PlaceArt.ellipse(self, Vector2(0, size.y * 0.35), Vector2(size.x * 0.65, size.y * 0.3), Color(UIStyle.ACCENT.r, UIStyle.ACCENT.g, UIStyle.ACCENT.b, 0.18))
 		PlaceArt.ellipse(self, Vector2(0, size.y * 0.35), Vector2(size.x * 0.65, size.y * 0.3), Color(UIStyle.ACCENT.r, UIStyle.ACCENT.g, UIStyle.ACCENT.b, 0.5), 1.5)
-	PlaceArt.draw(self, art_kind, size, color, art_active())
+	var art := Sprites.texture("place_" + art_kind)
+	if art != null:
+		var tex_size := art.get_size()
+		var k := maxi(1, int(minf(size.x / tex_size.x, size.y / tex_size.y)))
+		draw_texture_rect(art, Rect2(-tex_size * k / 2.0, tex_size * k), false)
+	else:
+		PlaceArt.draw(self, art_kind, size, color, art_active())
 	if highlighted:
 		var glow := 0.5 + 0.5 * sin(_pulse_time * 5.0)
 		draw_rect(Rect2(-size / 2.0, size).grow(6.0 + 2.0 * glow), Color(1.0, 0.9, 0.5, 0.45 + 0.4 * glow), false, 2.0)
