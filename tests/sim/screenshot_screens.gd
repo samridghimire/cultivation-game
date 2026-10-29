@@ -114,7 +114,7 @@ extends SceneTree
 ## WU-362: `--hint-shot` also writes sect_join_prompt_<size>.png (rogue QR3 at the Azure Cloud hall with the join prompt open: the description lists the membership perks and fits the viewport).
 ## WU-389: `--hint-shot` also writes journal_core_pill_rank_<size>.png (Azure Cloud Inner Disciple, Foundation Peak, 717 stones, 4000 contribution: Goals ends "As Core Disciple you could claim it for N contribution.").
 ## WU-380: `--hint-shot` also writes journal_recipe_treasury_<size>.png (Azure Cloud Outer Disciple Alchemist, 500 contribution: Goals reads "Its scroll: claim it from your sect treasury for N contribution.").
-## WU-383: `--hint-shot` also writes hint_heal_before_travel_<size>.png (injured Foundation rogue, Azure Peak clinic removed: the far-qi line opens "Heal first, then travel to Azure Peak (...), which has no healer:"; the capped HUD line keeps it).
+## WU-383: `--hint-shot` also writes hint_heal_before_travel_<size>.png (injured Foundation rogue, Azure Peak clinic removed: the far-qi line opens "Heal first, then travel to Azure Peak (...), which has no healer:"; the capped HUD line keeps it; WU-384 asserts it within the first 120 chars).
 ## WU-381: `--hint-shot` also writes hint_thin_defence_budget_<size>.png (same rogue with the manual price + 10 stones: HUD line still starts with the manual; no armor named costs over 10).
 ## WU-378: `--hint-shot` also writes hint_thin_defence_local_<size>.png (Foundation rogue in Qingshi, no armor or body art, 1000 stones: the capped HUD line starts "Your defence is thin. Buy Manual: Stone Skin Tempering"; the journal's clan goal names the Waterfall Cave).
 ## WU-377: hint_rogue_join also asserts the capped HUD line keeps "members gather qi x".
@@ -2435,7 +2435,10 @@ func _start_hint_shot(gs: Node) -> void:
 		print("hint-shot heal first: ", travel, " | HUD: ", (hud.get("_hint") as Label).text)
 		assert(travel.contains("which has no healer:"), "far-qi line lacks the heal-first warning:\n" + "\n".join(lines))
 		var capped: String = hud.call("cap_hint", travel)
-		print("hint-shot heal first capped keeps warning: ", capped.contains("Heal first"), " | ", capped), "close": func() -> void:
+		print("hint-shot heal first capped keeps warning: ", capped.contains("Heal first"), " | ", capped)
+		# WU-384: the capped HUD line (first 120 chars) keeps the warning that now leads the line.
+		assert(capped.substr(0, 120).contains("Heal first, then travel to"), "capped HUD line lost the heal-first warning: " + capped)
+		print("hint-shot heal first full line length: ", travel.length()), "close": func() -> void:
 			(gs.data.regions["azure_peak"]["places"] as Array).assign(heal_first_places)
 			c.realm_index = heal_first_saved[0]
 			c.stage = heal_first_saved[1]
