@@ -3144,7 +3144,17 @@ static func goals(c: CharacterData, data: GameData, flags: Dictionary, clan: Cla
 	var out: PackedStringArray = []
 	if not Cultivation.is_final_realm(c, data):
 		var next_name: String = data.realms[c.realm_index + 1].name
-		var odds := "%d percent" % roundi(Cultivation.breakthrough_chance(c, data) * 100)
+		var chance := Cultivation.breakthrough_chance(c, data)
+		var odds := "%d percent" % roundi(chance * 100)
+		# GUIDE-192: a breakthrough pill held but not yet taken adds to the odds.
+		if c.breakthrough_pill == "":
+			var held := ""
+			for item_id in breakthrough_item_ids(c, data):
+				if held == "" or float(data.items[item_id]["effects"]["breakthrough_bonus"]) > float(data.items[held]["effects"]["breakthrough_bonus"]):
+					held = item_id
+			if held != "":
+				var boosted := minf(chance + float(data.items[held]["effects"]["breakthrough_bonus"]), 0.99)
+				odds += ", %d with your %s" % [roundi(boosted * 100), data.items[held]["name"]]
 		var days := Cultivation.days_to_bottleneck(c, data, density)
 		if days == 0:
 			out.append("Reach %s: attempt the breakthrough (%s)." % [next_name, odds])

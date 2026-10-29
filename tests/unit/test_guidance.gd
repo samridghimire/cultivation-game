@@ -5205,3 +5205,17 @@ func test_explored_out_hint_is_silent_when_not_mastered_or_mortal() -> void:
 	var m := new_character()
 	assert_eq(Guidance.explored_out_hint(m, data(), "qingshi_village", {}), "")
 	assert_eq(Guidance.explored_out_hint(c, data(), "", {}), "")
+
+
+func test_realm_goal_odds_include_a_held_breakthrough_pill() -> void:
+	var c := _qr(9, 0)
+	var plain := String(Guidance.goals(c, data(), {})[0])
+	assert_false(plain.contains("with your"), plain)
+	c.add_item("foundation_establishment_pill", 1)
+	var bonus := float(data().items["foundation_establishment_pill"]["effects"]["breakthrough_bonus"])
+	var chance := Cultivation.breakthrough_chance(c, data())
+	var line := String(Guidance.goals(c, data(), {})[0])
+	var want := ", %d with your Foundation Establishment Pill)" % roundi(minf(chance + bonus, 0.99) * 100)
+	assert_true(line.contains(want), line)
+	c.breakthrough_pill = "foundation_establishment_pill"
+	assert_false(String(Guidance.goals(c, data(), {})[0]).contains("with your"))
