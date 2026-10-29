@@ -205,7 +205,8 @@
         "An injury slows your cultivation every day until it heals, so a long one can cost a month of qi; the Next steps hint says how many days yours would cost. Paying the clinic is usually cheaper than waiting.",
         "The clinic tells you how many days of cultivation each treatment saves.",
         "Injuries heal by themselves with time. If the clinic costs more than you hold, the hint says its price and how many stones you have.",
-        "Injuries weaken you in fights too. When a sect trial or a fight looks hopeless, check whether healing first would win it: the Next steps hint says so."
+        "Injuries weaken you in fights too. When a sect trial or a fight looks hopeless, check whether healing first would win it: the Next steps hint says so.",
+        "When no healer is near, the hint names the nearest clinic, the trip and its price, and warns you before you travel hurt to a place without one."
       ]
     },
     {
@@ -264,6 +265,7 @@
         "A fight is either lethal (to the death) or non-lethal (you are beaten, robbed or driven off). Read the prompt before you accept: slipping away costs a day, not your life.",
         "When you lose, the report ends with a line of advice: whether the foe outclassed your realm, hit too hard, or you hit too softly.",
         "Losing can leave an injury that slows cultivation or weakens you in battle; a doctor or the clinic can heal it, or time will.",
+        "If a merchant where you stand sells a body art you can afford, the hint says so first.",
         "A violent death with a life left in your Creation Artifact respawns you at a bound anchor. With none left, death is final."
       ]
     },
