@@ -56,6 +56,7 @@ var _threat_prompt: ThreatPrompt
 var _screens: Dictionary = {}
 var _combat_report: CombatReport
 var _fight_rating: String = ""
+var _fight_enemy: Dictionary = {}
 var _dialogue: DialogueWindow
 var _encounter: EncounterWindow
 var _arrival_waiting: String = ""  # arrival card held back while a road encounter window is open (WU-080)
@@ -830,6 +831,7 @@ func _on_player_died(cause: String) -> void:
 ## The rating is read before the fight, while hp and qi are still whole (WU-104).
 func _on_combat_started(enemy: Dictionary) -> void:
 	_fight_rating = CombatReport.rating_line(GameState.player, GameState.data, enemy)
+	_fight_enemy = enemy
 
 
 ## Fights can start from an interaction menu or a random encounter; either
@@ -838,8 +840,10 @@ func _on_combat_finished(enemy_name: String, victory: bool, lines: PackedStringA
 	_choice_menu.close()
 	_close_screens()
 	_combat_report.show_fight(enemy_name, victory, lines, GameState.last_loss_advice, GameState.last_fight_spoils,
-			GameState.last_fight_playback.get("trace", []), int(GameState.last_fight_playback.get("player_max", 0)), int(GameState.last_fight_playback.get("enemy_max", 0)), GameState.last_fight_friendly, _fight_rating)
+			GameState.last_fight_playback.get("trace", []), int(GameState.last_fight_playback.get("player_max", 0)), int(GameState.last_fight_playback.get("enemy_max", 0)), GameState.last_fight_friendly, _fight_rating,
+			str(_fight_enemy.get("id", "")), _fight_enemy.get("tags", []))
 	_fight_rating = ""
+	_fight_enemy = {}
 	_update_modal()
 
 

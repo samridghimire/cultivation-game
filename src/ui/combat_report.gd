@@ -14,6 +14,8 @@ var _close_button: Button
 var _player_bar: ProgressBar
 var _enemy_bar: ProgressBar
 var _skip_button: Button
+var _stage: DuelStage
+var _friendly: bool = false
 var _timer: Timer
 
 # Playback state (WU-036): lines revealed so far and what to show once done.
@@ -42,6 +44,9 @@ func _init() -> void:
 	_rated.name = "Rated"
 	_rated.visible = false
 	box.add_child(_rated)
+	_stage = DuelStage.new()
+	_stage.name = "Stage"
+	box.add_child(_stage)
 	var bars := HBoxContainer.new()
 	bars.add_theme_constant_override("separation", 12)
 	box.add_child(bars)
@@ -113,7 +118,7 @@ func _unhandled_input(event: InputEvent) -> void:
 ## `trace`: Combat.resolve's per-line [your hp, foe hp]; with it (and the
 ## "Animate fights" setting) the lines are revealed one at a time. Without
 ## it, or with the setting off, the report is complete at once.
-func show_fight(enemy_name: String, victory: bool, lines: PackedStringArray, advice: String = "", spoils: PackedStringArray = PackedStringArray(), trace: Array = [], player_max: int = 0, enemy_max: int = 0, friendly: bool = false, rated: String = "") -> void:
+func show_fight(enemy_name: String, victory: bool, lines: PackedStringArray, advice: String = "", spoils: PackedStringArray = PackedStringArray(), trace: Array = [], player_max: int = 0, enemy_max: int = 0, friendly: bool = false, rated: String = "", enemy_id: String = "", enemy_tags: Array = []) -> void:
 	_color = UIStyle.ACCENT if victory else UIStyle.CATEGORY_COLORS["danger"]
 	_victory = victory
 	_advice = advice
@@ -135,6 +140,9 @@ func show_fight(enemy_name: String, victory: bool, lines: PackedStringArray, adv
 		_set_bar(_player_bar, player_max, player_max)
 		_set_bar(_enemy_bar, enemy_max, enemy_max)
 		_enemy_bar.set_meta("caption", enemy_name)
+	_friendly = friendly
+	_stage.visible = has_bars
+	_stage.setup(enemy_id, enemy_tags)
 	playing = has_bars and bool(Settings.get_value("animate_fights"))
 	visible = true
 	_devour_button.visible = false
@@ -169,6 +177,9 @@ func _reveal(i: int, sound: bool = true) -> void:
 	if i < _trace.size() and _player_bar.get_parent().visible:
 		_set_bar(_player_bar, int(_trace[i][0]), int(_player_bar.get_meta("max")))
 		_set_bar(_enemy_bar, int(_trace[i][1]), int(_enemy_bar.get_meta("max")))
+		var prev: Array = [int(_player_bar.get_meta("max")), int(_enemy_bar.get_meta("max"))] if i == 0 else _trace[i - 1]
+		if sound:
+			_stage.blow(DuelStage.blow_side(prev, _trace[i]), _lines[i].contains("critically"))
 	if sound and _is_hit(_lines[i]):
 		Audio.play(_sound_for_line(_lines[i]))
 
@@ -223,6 +234,8 @@ func _finish() -> void:
 	_timer.stop()
 	_skip_button.visible = false
 	_close_button.disabled = false
+	if _stage.visible:
+		_stage.show_end_pose(_victory, _friendly)
 	if not _victory and _advice != "":
 		_log.append_text("[color=#%s]%s[/color]\n" % [UIStyle.CATEGORY_COLORS["warning"].to_html(false), _advice])
 	if _victory and not _spoils.is_empty():
