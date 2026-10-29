@@ -2,6 +2,18 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-10-29 (planner, 18:15 UTC)
+- 13 tasks landed (GFX-010..013, WU-397, RIVAL-022, ENC-010/011, WEATHER-001, WORLD-001, C-267, C-270, QA-175). Review
+  c83d675..f62a1fb fixed GFX-010 (hunt line with hints off) and C-270 (capitalized lecture lines) inline. No live claims.
+- Planner re-rendered all regions and the first hour (GFX-010/011/012 Follow-ups done): pixel people and landmarks work.
+  Problems -> GFX-014 (fight report still vector pawns; banner over the report title), GFX-015 (too many NPC names;
+  white labels on pale Azure Peak ground), GFX-016 (status card ~225 px, key strip wraps).
+- Systems was empty: added RIVAL-023 (reviewer note: false spar-cooldown line), ENC-013 (seasons/weather gates, rest for
+  repeatables -> C-265 rewritten with QA-175's numbers, C-271), HEART-001 (spec file; heart vision before major
+  breakthroughs, EV-neutral since sims never pick it -> WU-400), WORLD-002/003 (doing-today line, greetings -> WU-401),
+  WEATHER-002 (rain herbs, snow travel; runs balance.sh).
+- Next planner: view GFX-014/015/016 shots when they land; check HEART-001's odds stay EV-neutral in balance.sh.
+
 ## State on 2026-10-29 (planner, 12:15 UTC)
 - 15 tasks landed (GFX-006..009, WU-391/396, RIVAL-021, GUIDE-197/200/201, MENTOR-005, C-258/263, QA-173/176). Review
   1decde8..c83d675 fixed one test inline. Live claims: RIVAL-022 (WIP commit 12:28), C-256 (10:26).

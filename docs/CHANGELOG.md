@@ -2,6 +2,19 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-29 [WU-397] Heavy hits and breakthroughs shake the screen, death fades to red; a Reduce motion setting turns it all off.
+- 2026-10-29 [GFX-013] The map border, festival stalls and the highlight ring can be drawn from the art pack.
+- 2026-10-29 [WEATHER-001] Every region has daily weather (clear, cloudy, rain, snow, fog), shown on the HUD date line.
+- 2026-10-29 [WORLD-001] Villagers keep a daily round between the places of their village.
+- 2026-10-29 [QA-175] A sim report of which happenings repeat over a long life.
+- 2026-10-29 [ENC-010] Happenings rest for a few months after you meet them, so the same beat no longer returns month after month.
+- 2026-10-29 [C-270] Sect lectures read like scenes and change from month to month.
+- 2026-10-29 [GFX-012] Every region has landmarks: city walls, cliffs, streams with bridges, lanterns, pines and stalls.
+- 2026-10-29 [GFX-011] People are drawn as small pixel-art figures with walk cycles.
+- 2026-10-29 [C-267] Beasts look like beasts on the duel stage.
+- 2026-10-29 [ENC-011] Village happenings can name the people who live there, and helping them makes them like you.
+- 2026-10-29 [RIVAL-022] A rival who has warmed to you invites you to a friendly spar instead of a duel.
+- 2026-10-29 [GFX-010] A compact HUD that leaves the world visible: status and next-step cards in the corners, a short log.
 - 2026-10-29 [QA-173] A Core Formation stall report: without the sect method no sect player reaches Core in five years; with it all do.
 - 2026-10-29 [WU-391] One screenshot batch for the day's guidance changes.
 - 2026-10-29 [GUIDE-201] The realm goal says how much sooner Core Formation comes with your sect's method.
