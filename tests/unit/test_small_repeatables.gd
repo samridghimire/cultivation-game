@@ -76,5 +76,7 @@ func test_village_foundation_beats_fade_or_retire() -> void:
 		return Exploration.eligible_encounters(c, data(), ["village"], flags).map(func(e: Dictionary) -> String: return e["encounter"]["id"])
 	assert_true("village_well_vein_stirs" in ids.call({}), "the well hums for a fresh Foundation player")
 	assert_false("village_well_vein_stirs" in ids.call({"heard_well_hum": true}), "the well is a one-shot")
+	assert_true("village_name_the_newborn" in ids.call({}))
+	assert_false("village_name_the_newborn" in ids.call({"named_a_newborn": true}), "a child is named once")
 	assert_true(Exploration.fades(data().encounters["village_headman_petition"]))
 	assert_true(Exploration.fades(data().encounters["village_hopeful_youths"]))
