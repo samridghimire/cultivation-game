@@ -7,10 +7,14 @@ Short-lived context for the next session. Update or trim it when you finish a se
   Review d6b9126..1decde8 fixed GUIDE-191 inline, filed nothing. Live claims: QA-168 (04:01); C-248 and C-256 are 3-5h old
   and the cleanup Action will release them.
 - QA-170: skipped stipends are rank-1 months with no mission (the sim's policy), not a bug -> QA-174.
+- Owner commit 11e79aa (2026-10-28): pixel-art direction, reference games, ~52 runs/day, fewer larger tasks. Applied:
+  GFX-001 (sprite pipeline, spec file) on top of world-ui; GFX-002..005 blocked on the pack (the cloud can't reach
+  itch.io/kenney/opengameart; DESIGN "(GFX-002)"); per-hint screenshot tasks merged into WU-391; hint-only specs skip
+  balance.sh.
 - Traces 127 (sect) and 131 (rogue), 36 months: rival duel nearly monthly -> RIVAL-021 (cooldown); Granary Blessing x4 ->
-  C-263; identical pointers line -> MENTOR-005/C-264; sell hint sells order ingredients -> GUIDE-200; Core pill "as Core
-  Disciple" behind a 2-in-100 trial -> GUIDE-199; faster-spot clause needs a year saved -> GUIDE-197; mission hint for a
-  member drowning in contribution -> GUIDE-198. QA-175 counts every repeat in a long life -> C-265.
+  C-263; identical pointers line -> MENTOR-005 (10 lines); sell hint sells order ingredients -> GUIDE-200; GUIDE-197
+  bundles three Goals/hint truth fixes (faster spot after 90 days saved, Core pill behind a hopeless trial, no mission
+  hint for a rich member). QA-175 counts every repeat in a long life -> C-265.
 - Next planner: QA-168's attribution of the balance diffs, QA-173's Foundation Peak numbers (put them under F-005d, don't
   retune), QA-175's repeat list (spec C-265 from it).
 
