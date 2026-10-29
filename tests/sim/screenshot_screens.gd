@@ -112,6 +112,7 @@ extends SceneTree
 ## WU-369: `--help-shot` writes help_<topic>_<size>.png for every help page (long ones scroll in a focusable ScrollContainer).
 ## WU-367: `--hint-shot` also writes pill_rank_gate_/pill_rank_open_<size>.png (Foundation Peak Inner Disciple, 6998 contribution: no hint, goal or breakthrough text says "As Elder"; QR8 Outer Disciple: the Foundation pill line still says "As Inner Disciple you could claim it").
 ## WU-362: `--hint-shot` also writes sect_join_prompt_<size>.png (rogue QR3 at the Azure Cloud hall with the join prompt open: the description lists the membership perks and fits the viewport).
+## WU-383: `--hint-shot` also writes hint_heal_before_travel_<size>.png (injured Foundation rogue, Azure Peak clinic removed: the far-qi Travel line ends "Heal first: Azure Peak has no healer."; the capped HUD line cuts it).
 ## WU-381: `--hint-shot` also writes hint_thin_defence_budget_<size>.png (same rogue with the manual price + 10 stones: HUD line still starts with the manual; no armor named costs over 10).
 ## WU-378: `--hint-shot` also writes hint_thin_defence_local_<size>.png (Foundation rogue in Qingshi, no armor or body art, 1000 stones: the capped HUD line starts "Your defence is thin. Buy Manual: Stone Skin Tempering"; the journal's clan goal names the Waterfall Cave).
 ## WU-377: hint_rogue_join also asserts the capped HUD line keeps "members gather qi x".
@@ -2401,6 +2402,47 @@ func _start_hint_shot(gs: Node) -> void:
 			c.inventory = far_saved[3]
 			c.injuries = far_saved[4]
 			far_saved.clear()})
+
+	# WU-383: GUIDE-187. An injured Foundation rogue in Qingshi whose far-qi Travel line points at Azure Peak with its clinic taken out
+	# (it has one since C-254): the line ends "Heal first: Azure Peak has no healer."; print whether the capped HUD line keeps it.
+	var heal_first_saved: Array = []
+	var heal_first_places: Array = []
+	shots.append({"name": "hint_heal_before_travel_" + size_tag, "open": func() -> void:
+		setup_road.call()
+		heal_first_saved.append_array([c.realm_index, c.stage, c.sect.duplicate(), c.inventory.duplicate(), c.injuries.duplicate(true)])
+		c.realm_index = 2
+		c.stage = 0
+		c.qi = 0.0
+		c.sect = {}
+		c.injuries = {"internal_injury": 100}
+		c.inventory = {"spirit_stone": 5}
+		var places: Array = gs.data.regions["azure_peak"]["places"]
+		heal_first_places.append_array(places)
+		places.assign(heal_first_places.filter(func(p: Dictionary) -> bool: return String(p.get("type", "")) != "clinic"))
+		gs.current_region = "qingshi_village"
+		root.get_node("EventBus").player_changed.emit()
+		await root.get_tree().process_frame
+		await root.get_tree().process_frame
+		hud.get("_banner").visible = false
+		var lines: Array = Guidance.hints(c, gs.data, 1.0, 20, gs.npcs, gs.world_flags, "qingshi_village", clock.total_days, gs.npc_favor)
+		var travel := ""
+		for h: String in lines:
+			if h.begins_with("Travel to Azure Peak ("):
+				travel = h
+				break
+		var warn := " Heal first: Azure Peak has no healer."
+		print("hint-shot heal first: ", travel, " | HUD: ", (hud.get("_hint") as Label).text)
+		assert(travel.ends_with(warn), "far-qi line lacks the heal-first warning:\n" + "\n".join(lines))
+		var capped: String = hud.call("cap_hint", travel)
+		print("hint-shot heal first capped keeps warning: ", capped.contains("Heal first"), " | ", capped), "close": func() -> void:
+			(gs.data.regions["azure_peak"]["places"] as Array).assign(heal_first_places)
+			c.realm_index = heal_first_saved[0]
+			c.stage = heal_first_saved[1]
+			c.sect = heal_first_saved[2]
+			c.inventory = heal_first_saved[3]
+			c.injuries = heal_first_saved[4]
+			heal_first_saved.clear()
+			heal_first_places.clear()})
 
 	# WU-365: GUIDE-175. A rogue at Qi Refining 8 with ~1400 stones: the sect hint names what Azure Cloud Sect gives its
 	# members; the capped HUD line keeps the sect's name.
