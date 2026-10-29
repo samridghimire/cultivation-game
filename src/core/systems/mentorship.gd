@@ -52,6 +52,15 @@ static func pointer_technique(c: CharacterData, npc: CharacterData, data: GameDa
 	return best
 
 
+## The line posted when a master points out a flaw (MENTOR-005): `lines[day % size]` from
+## data/family.json, no RNG so sim streams do not move.
+static func pointer_line(data: GameData, npc_name: String, tech_name: String, day: int) -> String:
+	var lines: Array = _rules(data, "pointers").get("lines", [])
+	if lines.is_empty():
+		return "%s watches your %s and points out a flaw." % [npc_name, tech_name]
+	return String(lines[posmod(day, lines.size())]).replace("{npc}", npc_name).replace("{tech}", tech_name)
+
+
 ## Days until `key` may be used again (0 = ready, also when never used).
 static func cooldown_left(c: CharacterData, key: String, cooldown: int, today: int) -> int:
 	if not c.npc_action_days.has(key):
@@ -196,6 +205,8 @@ static func validate(data: GameData) -> PackedStringArray:
 	for kind in block:
 		var rules: Dictionary = block[kind]
 		for key in rules:
+			if key == "lines":
+				continue
 			if float(rules[key]) < 0.0:
 				errors.append("family.json mentorship.%s.%s must be >= 0" % [kind, key])
 		if int(rules.get("min_favor", 0)) > 100:
@@ -204,4 +215,8 @@ static func validate(data: GameData) -> PackedStringArray:
 			errors.append("family.json mentorship.%s.same_sect_min_favor must be <= min_favor" % kind)
 	if block.has("pointers") and float(block["pointers"].get("shared_multiplier", 1.0)) < 1.0:
 		errors.append("family.json mentorship.pointers.shared_multiplier must be >= 1")
+	var lines: Array = block.get("pointers", {}).get("lines", [])
+	for line in lines:
+		if not String(line).contains("{npc}") or not String(line).contains("{tech}"):
+			errors.append("family.json mentorship.pointers.lines entry needs {npc} and {tech}: %s" % line)
 	return errors

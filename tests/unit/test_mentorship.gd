@@ -328,3 +328,17 @@ func test_same_sect_seniors_need_less_favor() -> void:
 	d.family["mentorship"]["pointers"]["same_sect_min_favor"] = 50
 	assert_true(str(Mentorship.validate(d)).contains("same_sect_min_favor"))
 	d.family["mentorship"]["pointers"]["same_sect_min_favor"] = 5
+
+
+func test_pointer_line_varies_and_validates() -> void:
+	var d := GameData.load_from_dir()
+	var a := Mentorship.pointer_line(d, "Elder Lu", "Iron Fist", 0)
+	var b := Mentorship.pointer_line(d, "Elder Lu", "Iron Fist", 1)
+	assert_true(a.contains("Elder Lu") and a.contains("Iron Fist"), a)
+	assert_true(b.contains("Elder Lu") and b.contains("Iron Fist"), b)
+	assert_false(a.contains("{"))
+	assert_true(a != b, "day 0 and day 1 differ")
+	d.family["mentorship"]["pointers"]["lines"] = []
+	assert_eq(Mentorship.pointer_line(d, "Elder Lu", "Iron Fist", 3), "Elder Lu watches your Iron Fist and points out a flaw.")
+	d.family["mentorship"]["pointers"]["lines"] = ["{npc} nods."]
+	assert_eq(Mentorship.validate(d).size(), 1)

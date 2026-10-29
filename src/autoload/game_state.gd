@@ -1328,7 +1328,7 @@ func ask_pointers(npc_id: String) -> void:
 		EventBus.post(result["reason"], "warning")
 		EventBus.player_changed.emit()
 		return
-	var text := "%s watches your %s and points out a flaw." % [npcs[npc_id].name, result["tech_name"]]
+	var text := Mentorship.pointer_line(data, npcs[npc_id].name, result["tech_name"], GameClock.total_days)
 	if result["shared"]:
 		text += " You both know this art; the advice cuts deep."
 	if int(result["levels_gained"]) > 0:
