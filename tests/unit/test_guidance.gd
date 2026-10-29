@@ -1762,14 +1762,14 @@ func test_sect_pill_outer_disciple_and_others() -> void:
 	assert_eq(Guidance.sect_pill_claim(_sect_qr("azure_cloud_sect", 1, 300, 0, 4), data()), "")
 
 
-func test_sect_pill_rank_clause_skips_unreachable_rank() -> void:
+func test_sect_pill_rank_clause_names_core_disciple() -> void:
 	var c := _sect_qr("azure_cloud_sect", 1, 6998, 0)
 	c.realm_index = 2
 	c.stage = 0
 	var entry := Guidance.sect_pill_entry(c, data())
 	assert_eq(entry.get("item_id", ""), "core_forming_pill")
-	assert_eq(Guidance.sect_pill_rank_clause(c, data()), "")
-	assert_false(_has(Guidance.goals(c, data(), {}), "As Elder"))
+	assert_eq(Guidance.sect_pill_rank_clause(c, data()), " As Core Disciple you could claim it for 3200 contribution.")
+
 	var qr := _sect_qr("azure_cloud_sect", 0, 300, 0)
 	assert_eq(Guidance.sect_pill_rank_clause(qr, data()), " As Inner Disciple you could claim it for 250 contribution.")
 

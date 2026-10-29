@@ -243,9 +243,14 @@ func test_membership_perks_azure_qr8_rogue() -> void:
 
 func test_membership_perks_skip_pill_gated_by_realm() -> void:
 	var c := new_character()
-	c.realm_index = 2
+	c.realm_index = 1
 	for p in Sects.membership_perks(c, data(), "azure_cloud_sect"):
 		assert_false(p.contains("Core"), p)
+	c.realm_index = 2
+	var core_perk := false
+	for p in Sects.membership_perks(c, data(), "azure_cloud_sect"):
+		core_perk = core_perk or p.contains("Core Forming Pill")
+	assert_true(core_perk, "C-260: a Foundation member can claim the Core pill")
 
 
 func test_membership_perks_myriad_and_unknown() -> void:

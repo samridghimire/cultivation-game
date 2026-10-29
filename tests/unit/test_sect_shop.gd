@@ -36,6 +36,22 @@ func test_shop_data_is_valid() -> void:
 	assert_eq(Sects.validate_shops(d).size(), 4, "unknown item, cost, rank, duplicate")
 
 
+func test_breakthrough_items_are_claimable_before_their_realm() -> void:
+	var d := data()
+	var failures: PackedStringArray = []
+	for sect: SectDef in d.sects.values():
+		for entry in sect.shop:
+			var item: Dictionary = d.items.get(String(entry["item_id"]), {})
+			var fx: Dictionary = item.get("effects", {})
+			if not fx.has("breakthrough_realm"):
+				continue
+			var rank: int = int(entry.get("min_rank", 0))
+			var need: int = d.realm_index_of(String(sect.ranks[rank].get("min_realm", "mortal")))
+			if need >= d.realm_index_of(String(fx["breakthrough_realm"])):
+				failures.append("%s/%s" % [sect.id, entry["item_id"]])
+	assert_true(failures.is_empty(), "breakthrough items whose rank needs the realm they open: %s" % ", ".join(failures))
+
+
 func test_rogues_have_no_shop() -> void:
 	var c := new_character()
 	assert_true(Sects.shop_items(c, data()).is_empty())
