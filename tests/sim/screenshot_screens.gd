@@ -112,6 +112,7 @@ extends SceneTree
 ## WU-369: `--help-shot` writes help_<topic>_<size>.png for every help page (long ones scroll in a focusable ScrollContainer).
 ## WU-367: `--hint-shot` also writes pill_rank_gate_/pill_rank_open_<size>.png (Foundation Peak Inner Disciple, 6998 contribution: no hint, goal or breakthrough text says "As Elder"; QR8 Outer Disciple: the Foundation pill line still says "As Inner Disciple you could claim it").
 ## WU-362: `--hint-shot` also writes sect_join_prompt_<size>.png (rogue QR3 at the Azure Cloud hall with the join prompt open: the description lists the membership perks and fits the viewport).
+## WU-378: `--hint-shot` also writes hint_thin_defence_local_<size>.png (Foundation rogue in Qingshi, no armor or body art, 1000 stones: the capped HUD line starts "Your defence is thin. Buy Manual: Stone Skin Tempering"; the journal's clan goal names the Waterfall Cave).
 ## WU-377: hint_rogue_join also asserts the capped HUD line keeps "members gather qi x".
 ## WU-376: `--hint-shot` also writes hint_injury_far_<size>.png (rogue at Misty Forest, internal injury, 5 stones: a hint names the nearest clinic, its trip and "(you have 5)").
 ## WU-373: `--hint-shot` also writes journal_rank_needs_<size>.png (Inner Disciple, Qi Refining 3, 40 contribution: Goals reads "Become Core Disciple: earn 3000 contribution (you have 40) and reach Foundation Establishment.").
@@ -530,7 +531,7 @@ func _start_breakthrough_shots(gs: Node) -> void:
 		win.open()
 		await root.get_tree().process_frame
 		await root.get_tree().process_frame
-		var texts: Array = [String((win.get("_hint") as Label).text), "\n".join(Guidance.goals(c, gs.data, gs.world_flags, gs.clan, 1.0, gs.current_region, GameClock.total_days)), "\n".join(Guidance.hints(c, gs.data, 3, 12, gs.npcs, gs.world_flags, "qingshi_village", 40, gs.npc_favor))]
+		var texts: Array = [String((win.get("_hint") as Label).text), "\n".join(Guidance.goals(c, gs.data, gs.world_flags, gs.clan, 1.0, gs.current_region, int(root.get_node("GameClock").total_days))), "\n".join(Guidance.hints(c, gs.data, 3, 12, gs.npcs, gs.world_flags, "qingshi_village", 40, gs.npc_favor))]
 		print("pill-rank-gate peak: ", texts)
 		assert(String(texts[0]).contains("Core Forming Pill") or String(texts[1]).contains("Core Forming Pill"), "Core Forming Pill not named: " + str(texts))
 		for t: String in texts:
@@ -2830,7 +2831,7 @@ func _start_hint_shot(gs: Node) -> void:
 		await root.get_tree().process_frame
 		hud.get("_banner").visible = false
 		var rank_line := ""
-		for l: String in Guidance.goals(c, gs.data, gs.world_flags, gs.clan, 1.0, gs.current_region, GameClock.total_days):
+		for l: String in Guidance.goals(c, gs.data, gs.world_flags, gs.clan, 1.0, gs.current_region, int(root.get_node("GameClock").total_days)):
 			if l.begins_with("Become "):
 				rank_line = l
 		assert(rank_line.contains("is beyond you yet"), "rank goal not hopeless: " + rank_line)
@@ -2864,7 +2865,7 @@ func _start_hint_shot(gs: Node) -> void:
 		var want_head := "Found a clan: reach Foundation Establishment, claim an abode as its seat ("
 		var want_tail := ") and gather 500 spirit stones (you have 120)."
 		var clan_line := ""
-		for l: String in Guidance.goals(c, gs.data, gs.world_flags, gs.clan, 1.0, gs.current_region, GameClock.total_days):
+		for l: String in Guidance.goals(c, gs.data, gs.world_flags, gs.clan, 1.0, gs.current_region, int(root.get_node("GameClock").total_days)):
 			if l.begins_with("Found a clan"):
 				clan_line = l
 		assert(clan_line.begins_with(want_head) and clan_line.ends_with(want_tail), "clan goal line wrong: " + clan_line)
@@ -2885,6 +2886,61 @@ func _start_hint_shot(gs: Node) -> void:
 			c.techniques = clan_saved[7]
 			clan_saved.clear()})
 
+	# WU-378: GUIDE-185 + GUIDE-186. A Foundation rogue in Qingshi with no armor or body art and 1000 stones: the capped HUD line
+	# leads with the body manual sold here; the journal's clan goal names the Waterfall Cave.
+	var thin_local_saved: Array = []
+	shots.append({"name": "hint_thin_defence_local_" + size_tag, "open": func() -> void:
+		setup_long.call()
+		thin_local_saved.append_array([c.realm_index, c.stage, c.sect.duplicate(), c.inventory.duplicate(), c.abode, gs.clan, c.life_stats.duplicate(), c.techniques.duplicate(true), c.equipment.duplicate(), c.injuries.duplicate(true)])
+		c.life_stats["fights_won"] = maxi(1, int(c.life_stats.get("fights_won", 0)))
+		c.life_stats["encounters"] = maxi(5, int(c.life_stats.get("encounters", 0)))
+		c.realm_index = 2
+		c.stage = 0
+		c.qi = 0.0
+		c.sect = {}
+		c.abode = ""
+		c.techniques.clear()
+		c.equipment.erase("armor")
+		c.injuries.clear()
+		c.inventory = {"spirit_stone": 1000}
+		gs.clan = null
+		gs.current_region = "qingshi_village"
+		root.get_node("EventBus").player_changed.emit()
+		await root.get_tree().process_frame
+		await root.get_tree().process_frame
+		hud.get("_banner").visible = false
+		var lines: Array = Guidance.hints(c, gs.data, 3, 12, gs.npcs, gs.world_flags, "qingshi_village", clock.total_days, gs.npc_favor)
+		var thin_line := ""
+		for h: String in lines:
+			if h.contains("Your defence is thin"):
+				thin_line = h
+				break
+		var want := "Your defence is thin. Buy Manual: Stone Skin Tempering"
+		print("hint-shot thin local: ", thin_line, " | HUD: ", (hud.get("_hint") as Label).text)
+		assert(thin_line.begins_with(want), "thin-defence line wrong:\n" + "\n".join(lines))
+		var capped: String = hud.call("cap_hint", thin_line)
+		assert(capped.begins_with(want), "capped line lost the manual: " + capped)
+		assert(String((hud.get("_hint") as Label).text).contains(want), "HUD hint lacks the manual: " + (hud.get("_hint") as Label).text)
+		var cj: Control = hud.get("_screens")["toggle_journal"]
+		await _show_journal(cj, "Goals")
+		for _i in 3:
+			await root.get_tree().process_frame
+		var parsed: String = (cj.get("_text") as RichTextLabel).get_parsed_text()
+		print("hint-shot thin local journal: ", parsed.substr(0, 700))
+		assert(parsed.contains("Waterfall Cave"), "journal clan goal lacks the Waterfall Cave:\n" + parsed), "close": func() -> void:
+			(hud.get("_screens")["toggle_journal"] as Control).close()
+			c.realm_index = thin_local_saved[0]
+			c.stage = thin_local_saved[1]
+			c.sect = thin_local_saved[2]
+			c.inventory = thin_local_saved[3]
+			c.abode = thin_local_saved[4]
+			gs.clan = thin_local_saved[5]
+			c.life_stats = thin_local_saved[6]
+			c.techniques = thin_local_saved[7]
+			c.equipment = thin_local_saved[8]
+			c.injuries = thin_local_saved[9]
+			thin_local_saved.clear()})
+
 	# WU-373: GUIDE-181. The spec's Outer Disciple has only the contribution need (Inner asks no realm), so use an Inner Disciple at
 	# Qi Refining 3 with 40 contribution: the Core Disciple goal joins both needs with "and" and names the rank once.
 	var needs_saved: Array = []
@@ -2902,7 +2958,7 @@ func _start_hint_shot(gs: Node) -> void:
 		hud.get("_banner").visible = false
 		var want := "Become Core Disciple: earn 3000 contribution (you have 40) and reach Foundation Establishment."
 		var rank_line := ""
-		for l: String in Guidance.goals(c, gs.data, gs.world_flags, gs.clan, 1.0, gs.current_region, GameClock.total_days):
+		for l: String in Guidance.goals(c, gs.data, gs.world_flags, gs.clan, 1.0, gs.current_region, int(root.get_node("GameClock").total_days)):
 			if l.begins_with("Become "):
 				rank_line = l
 		assert(rank_line == want, "rank goal wrong: " + rank_line)
@@ -3000,7 +3056,7 @@ func _start_hint_shot(gs: Node) -> void:
 		var entry: Dictionary = Guidance.sect_pill_entry(c, gs.data)
 		assert(String(entry.get("name", "")).contains("Core Forming"), "setup: the pill is not the Core Forming Pill: " + str(entry))
 		var texts: Array = Guidance.hints(c, gs.data, 3, 12, gs.npcs, gs.world_flags, "qingshi_village", 40, gs.npc_favor)
-		texts.append_array(Guidance.goals(c, gs.data, gs.world_flags, gs.clan, 1.0, gs.current_region, GameClock.total_days))
+		texts.append_array(Guidance.goals(c, gs.data, gs.world_flags, gs.clan, 1.0, gs.current_region, int(root.get_node("GameClock").total_days)))
 		for t: String in texts:
 			assert(not t.contains("As Elder"), "text names the unreachable Elder rank:\n" + t)
 		var bw: Control = hud.get("_breakthrough")
