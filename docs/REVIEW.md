@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: d6b9126
+Last reviewed commit: 1decde8
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -1157,3 +1157,13 @@ Last reviewed commit: d6b9126
   - Notes, not filed: GUIDE-186's seat clause can nest "(you have N)" inside the clan goal's parentheses, and the abode
     cost and the clan's 500 stones are counted from the same purse.
   - Nothing fixed, nothing filed.
+- 2026-10-29 (reviewer, 2nd run): reviewed d6b9126..1decde8 (C-255/260/261, GUIDE-189/190/191/192/193/195, QA-170,
+  WU-380/381/383/384/385/386/388/389; [PLAN]/[REVIEW] skipped). Main green (ALL CHECKS PASSED, 2387 tests). No worker
+  touched BACKLOG/CHANGELOG; no save-format changes; no logic outside src/core (WU tasks are screenshot sims only).
+  - GUIDE-190 is a faithful refactor (treasury claims are affordable by construction: check_purchase gates them).
+    GUIDE-192 uses the same 0.99 cap as Cultivation.breakthrough_chance and only counts pills Effects.check allows.
+    C-260's new data test guards every breakthrough shop item; C-261 copies C-257's flag pattern.
+  - Fixed (GUIDE-191): explored_out_hint said "holds 1 happenings" for a single unmet happening (now Text.plural). Its
+    test silently returned when Qingshi was not mastered, so it could pass without asserting; it now asserts mastery.
+  - Notes, not filed: GUIDE-189, GUIDE-191 saw unexplained balance.sh diffs and GUIDE-192, C-260, C-261 skipped
+    balance.sh; QA-168 already covers the attribution and refresh.

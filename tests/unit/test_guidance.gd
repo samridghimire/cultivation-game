@@ -5240,11 +5240,12 @@ func test_explored_out_hint_points_at_a_region_with_unmet_happenings() -> void:
 	var c := _qr(3, 0)
 	var flags := {}
 	_master_region_only(c, "qingshi_village", flags)
-	if not Exploration.mastered(c, data(), "qingshi_village", flags):
-		return  # deep paths or other gates keep Qingshi from mastery in this data
+	assert_true(Exploration.mastered(c, data(), "qingshi_village", flags), "Qingshi should be mastered")
 	var line := Guidance.explored_out_hint(c, data(), "qingshi_village", flags)
 	assert_true(line.begins_with("You know Qingshi Village through and through: "), line)
-	assert_true(line.ends_with(" happenings you have not met."), line)
+	assert_true(line.ends_with(" you have not met."), line)
+	# The count agrees with the noun: "1 happening", "3 happenings".
+	assert_false(line.contains(" 1 happenings"), line)
 
 
 func test_explored_out_hint_is_silent_when_not_mastered_or_mortal() -> void:

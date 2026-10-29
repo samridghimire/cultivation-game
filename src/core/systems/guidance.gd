@@ -2675,7 +2675,7 @@ static func explored_out_hint(c: CharacterData, data: GameData, region_id: Strin
 			continue
 		var progress := Exploration.region_progress(c, data, r, flags)
 		if int(progress["met"]) < int(progress["total"]):
-			return "You know %s through and through: %s (%s) holds %d happenings you have not met." % [_region_name(data, region_id), _region_name(data, r), Calendar.format_duration(int(best_days[r])), int(progress["total"]) - int(progress["met"])]
+			return "You know %s through and through: %s (%s) holds %d %s you have not met." % [_region_name(data, region_id), _region_name(data, r), Calendar.format_duration(int(best_days[r])), int(progress["total"]) - int(progress["met"]), Text.plural("happening", int(progress["total"]) - int(progress["met"]))]
 	return ""
 
 
