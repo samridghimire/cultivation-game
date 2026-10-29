@@ -119,6 +119,8 @@ func _run() -> void:
 			FirstHour.injury_report = true  # QA-163
 		elif a == "--sect-report":
 			FirstHour.sect_report = true  # QA-162
+		elif a == "--core-report":
+			FirstHour.core_report = true  # QA-173
 		elif a == "--arm-report":
 			_arm_report = true  # QA-161
 		elif a == "--defence":
@@ -244,6 +246,8 @@ func _run() -> void:
 	_print_pacing_summary(runs, months)
 	if _arm_report:
 		_print_arm_report(runs, months)
+	if FirstHour.core_report:
+		_print_core_report(runs)
 	if FirstHour.injury_report:
 		_print_injury_report(seeds)
 	if FirstHour.sect_report:
@@ -290,6 +294,39 @@ func _print_foundation_breakthrough(runs: Array[Dictionary]) -> void:
 			if success_day >= 0:
 				stuck.append(success_day - bday)
 	print("  medians: days stuck at the bottleneck %.0f (%d seeds that succeeded), attempts %.0f, share of attempts with a pill %d%% (%d of %d), attempts under 50%%: %d of %d" % [_median(stuck.duplicate()), stuck.size(), _median(attempt_counts.duplicate()), 100 * with_pill / maxi(1, total), with_pill, total, below_half, total])
+
+
+## QA-173: per seed the Foundation Peak day, every Core Formation attempt, the Core day, and the contribution / method rate at the first attempt.
+func _print_core_report(runs: Array[Dictionary]) -> void:
+	print("Core report (QA-173): seed, Foundation Peak day, attempts [day odds pill? result], Core day, contribution and method rate at the first attempt")
+	var stall: Array = []
+	var tries: Array = []
+	var contribs: Array = []
+	var rich := 0
+	for i in runs.size():
+		var r: Dictionary = runs[i]
+		var peak: int = int(r["bottleneck_day"].get(2, -1))
+		var parts: Array = []
+		var core_day := -1
+		var first: Dictionary = {}
+		for a: Dictionary in r["breaks"]:
+			if int(a["from_realm"]) != 2:
+				continue
+			if first.is_empty():
+				first = a
+			parts.append("d%d %.0f%%%s %s" % [a["day"], 100.0 * float(a["chance"]), " pill" if a["pill"] else "", "ok" if a["success"] else "fail"])
+			if a["success"] and core_day < 0:
+				core_day = int(a["day"])
+		print("  seed %2d peak %s attempts %d [%s] core %s %s" % [i + 1, ("d%d" % peak) if peak >= 0 else "never", parts.size(), ", ".join(parts), ("d%d" % core_day) if core_day >= 0 else "no", ("contribution %d method x%.2f" % [first["contribution"], first["method"]]) if not first.is_empty() else ""])
+		if peak >= 0:
+			var end_day: int = core_day if core_day >= 0 else int(r["month_days"].back())
+			stall.append(float(end_day - peak) / Calendar.DAYS_PER_MONTH)
+			tries.append(parts.size())
+		if not first.is_empty():
+			contribs.append(int(first["contribution"]))
+			if int(first["contribution"]) >= 3200:
+				rich += 1
+	print("  medians: months at Foundation Peak %.1f (%d seeds; open stalls counted to the run's end), attempts %.0f, contribution at first attempt %.0f; %d of %d seeds with an attempt held >= 3200 contribution" % [_median(stall.duplicate()), stall.size(), _median(tries.duplicate()), _median(contribs.duplicate()), rich, contribs.size()])
 
 
 ## QA-156: QR9 (the Foundation bottleneck) and Foundation days, seeds at Foundation by m12/m24/m36, injuries and lives spent.

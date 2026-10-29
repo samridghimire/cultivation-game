@@ -41,6 +41,8 @@ static var injury_log: Array[Dictionary] = []
 ## {seed, joined (day or -1), away (days the month ended outside the sect's home region), months (sim months since
 ## joining), skipped (stipends withheld for missed duty), paid, missions, lectures}.
 static var sect_report := false
+## QA-173: read by simulate_curious_years.gd's --core-report (the attempt log already records every Core try); part of the memo key.
+static var core_report := false
 static var sect_log: Array[Dictionary] = []
 ## QA-138: a curious player takes the bout the spar hint names ("<Name> (<realm>) here would spar with you"), once a
 ## week while the hint speaks; simulate_first_hour.gd's --no-spar-hint turns it off. spar_log["bouts"] counts them,
@@ -104,7 +106,7 @@ static var _memo := {}
 
 
 static func play_cached(gs: Node, clock: Node, seed_value: int, months: int, curious: bool = false, no_help: bool = false, wait_for_pill: int = 0) -> Dictionary:
-	var key := [seed_value, months, curious, no_help, wait_for_pill, follow_defence, practise_hint, attempt_trials, heal_injuries, spar_hint, min_mission_odds, chase_best_mission, buy_qi, shop_armor, spend_contribution, qi_pill_cap, far_qi, recharge_first, hint_missions, sect_method, stay_rogue, body_art, trial_report, sect_report]
+	var key := [seed_value, months, curious, no_help, wait_for_pill, follow_defence, practise_hint, attempt_trials, heal_injuries, spar_hint, min_mission_odds, chase_best_mission, buy_qi, shop_armor, spend_contribution, qi_pill_cap, far_qi, recharge_first, hint_missions, sect_method, stay_rogue, body_art, trial_report, sect_report, core_report]
 	if not _memo.has(key):
 		_memo[key] = play(gs, clock, seed_value, months, curious, Callable(), no_help, wait_for_pill)
 		gs.end_session()
@@ -186,7 +188,7 @@ static func play(gs: Node, clock: Node, seed_value: int, months: int, curious: b
 			# QA-072: take a held breakthrough pill right before the attempt, as the breakthrough window's "Take" button does.
 			for pill_id in Guidance.breakthrough_item_ids(c, gs.data):
 				gs.use_item(pill_id)
-			var attempt := {"day": clock.total_days, "from_realm": c.realm_index, "chance": Cultivation.breakthrough_chance(c, gs.data), "pill": c.breakthrough_pill != "", "stones": stones_now}
+			var attempt := {"day": clock.total_days, "from_realm": c.realm_index, "chance": Cultivation.breakthrough_chance(c, gs.data), "pill": c.breakthrough_pill != "", "stones": stones_now, "contribution": Sects.contribution_balance(c), "method": Techniques.method_rate(c, gs.data)}
 			var injuries_before := c.injuries.size()
 			var realm_before := c.realm_index
 			gs.attempt_breakthrough()
