@@ -132,9 +132,7 @@ func _draw() -> void:
 	if _celebrate_left > 0.0 and not _celebrate_ok and _celebrate_t() * CELEBRATE_SECONDS < SHAKE_SECONDS:
 		shake = sin(_celebrate_t() * CELEBRATE_SECONDS * 80.0) * 4.0
 	_draw_companion()
-	var robe: Color = _look.get("robe", PlayerLook.ROGUE_ROBE)
 	var sash: Color = _look.get("sash", PlayerLook.SASH_COLORS["neutral"])
-	var outline := Color("3b2f1e")
 	_draw_aura()
 	# Shadow stays on the ground; the body bobs while walking.
 	draw_set_transform(Vector2(0, RADIUS - 2), 0.0, Vector2(1.0, 0.4))
@@ -144,32 +142,23 @@ func _draw() -> void:
 	var o := Vector2(shake, bob)
 	if _draw_sprite(o, sash):
 		return
-	# Robe: a flared trapezoid with a sash across the waist.
-	var robe_shape := PackedVector2Array([o + Vector2(-7, -6), o + Vector2(7, -6), o + Vector2(12, 12), o + Vector2(-12, 12)])
-	draw_colored_polygon(robe_shape, robe)
-	robe_shape.append(robe_shape[0])
-	draw_polyline(robe_shape, outline, 1.5)
-	draw_line(o + Vector2(-9, 2), o + Vector2(9, 2), sash, 3.0)
-	# Head, hair bun and a face that looks where the player walks.
-	var head := o + Vector2(0, -12)
-	draw_circle(head, 7.0, Color("e8d9a8"))
-	draw_arc(head, 7.0, 0, TAU, 24, outline, 1.5)
-	var away := -_facing * 4.0 if _facing.y > -0.5 else Vector2(0, -2)
-	draw_circle(head + away + Vector2(0, -3), 3.5, Color("2a2018"))
-	if _facing.y > -0.5:
-		var eyes := head + Vector2(_facing.x * 3.0, 1.0 + _facing.y)
-		draw_circle(eyes + Vector2(-2.5, 0), 1.0, outline)
-		draw_circle(eyes + Vector2(2.5, 0), 1.0, outline)
+	# Generated pixel figure (GFX-011), feet on the hem line.
+	var tex := PixelFigure.frame(_look, _dir_name(), int(_time * 6.0) if velocity != Vector2.ZERO else 0)
+	var s := float(Sprites.scale())
+	var size := Vector2(tex.get_size()) * s
+	draw_texture_rect(tex, Rect2(o + Vector2(-size.x / 2.0, 12.0 - size.y), size), false)
+
+
+## "down", "up", "left" or "right" from the facing vector.
+func _dir_name() -> String:
+	if absf(_facing.x) > absf(_facing.y):
+		return "right" if _facing.x > 0.0 else "left"
+	return "up" if _facing.y < 0.0 else "down"
 
 
 ## Draws the pixel-art player sprite (GFX-001) when data/sprites.json maps one for the facing; false means "use the placeholder".
 func _draw_sprite(o: Vector2, sash: Color) -> bool:
-	var dir := "down"
-	if absf(_facing.x) > absf(_facing.y):
-		dir = "right" if _facing.x > 0.0 else "left"
-	elif _facing.y < 0.0:
-		dir = "up"
-	var key := "player_" + dir
+	var key := "player_" + _dir_name()
 	var index := int(_time * Sprites.fps(key)) if velocity != Vector2.ZERO else 0
 	var tex := Sprites.frame(key, index)
 	if tex == null:

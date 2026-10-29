@@ -47,6 +47,10 @@ var _wander_target := Vector2.ZERO
 var _wait := 0.0
 var _modal_open := false
 var _on_screen := true
+var _dir := "down"
+var _walk_frame := 0
+## Muted robes for NPCs without a sect, picked by hash(npc_id) (GFX-011).
+const CIVILIAN_ROBES := [Color("7d6a55"), Color("5f7a6a"), Color("7a5f6a"), Color("6a6f8a"), Color("8a7a4f"), Color("5a6b78")]
 
 
 ## Named NPCs try "npc_<id>" before the shared "npc" sprite, then the generic place art (GFX-006).
@@ -85,6 +89,41 @@ func breathe(delta: float) -> void:
 		_wander_target = Vector2.ZERO if _wander_target != Vector2.ZERO and _rng.randf() < 0.5 else Vector2.from_angle(_rng.randf() * TAU) * _rng.randf_range(3.0, WANDER_RADIUS)
 	_wander = _wander.move_toward(_wander_target, WALK_SPEED * delta)
 	position = home + _wander + Vector2(0, sin(_time * 2.0 + _phase) * BOB_AMPLITUDE)
+	var to_target := _wander_target - _wander
+	var dir := "down"
+	var frame := 0
+	if to_target.length() > 0.5:
+		frame = int(_time * 6.0) % 3
+		dir = ("right" if to_target.x > 0.0 else "left") if absf(to_target.x) > absf(to_target.y) else ("up" if to_target.y < 0.0 else "down")
+	if dir != _dir or frame != _walk_frame:
+		_dir = dir
+		_walk_frame = frame
+		queue_redraw()
+
+
+## The look of this NPC's generated pixel figure (GFX-011).
+func figure_look() -> Dictionary:
+	var look := {"robe": color, "sash": PlayerLook.SASH_COLORS["neutral"]}
+	var c: CharacterData = GameState.npcs.get(npc_id) if GameState.npcs != null else null
+	if c == null:
+		return look
+	look["robe"] = CIVILIAN_ROBES[absi(hash(npc_id)) % CIVILIAN_ROBES.size()]
+	if not c.is_rogue():
+		var sect: SectDef = GameState.data.sects.get(String(c.sect.get("id", "")))
+		if sect != null and sect.robe_color != "":
+			look["robe"] = Color(sect.robe_color)
+	look["hair"] = Color("b8b8b8") if c.age_years() >= 60 else PlayerLook.HAIR
+	look["style"] = "long" if c.gender == "female" else "bun"
+	look["child"] = c.age_years() < 12
+	return look
+
+
+func draw_generated_art() -> bool:
+	var tex := PixelFigure.frame(figure_look(), _dir, _walk_frame)
+	var s := float(Sprites.scale())
+	var tex_size := Vector2(tex.get_size()) * s
+	draw_texture_rect(tex, Rect2(Vector2(-tex_size.x / 2.0, size.y / 2.0 - tex_size.y), tex_size), false)
+	return true
 
 
 ## Within this distance of the player the label shows the full "(realm)" suffix (WU-087).

@@ -16,9 +16,11 @@ const SASH_COLORS := {
 const AURA_LOW := Color("9fe3ff")
 const AURA_HIGH := Color("ffd76a")
 const MAX_AURA_RINGS := 4
+const SKIN := Color("e8c9a0")
+const HAIR := Color("2a2018")
 
 
-## {robe: Color, sash: Color, aura_rings: int, aura: Color}. Mortals have no aura.
+## {robe, sash, skin, hair, style ("bun"/"long"), aura_rings: int, aura: Color}. Mortals have no aura.
 static func of(c: CharacterData, data: GameData) -> Dictionary:
 	var robe := ROGUE_ROBE
 	if not c.is_rogue():
@@ -31,6 +33,9 @@ static func of(c: CharacterData, data: GameData) -> Dictionary:
 	return {
 		"robe": robe,
 		"sash": SASH_COLORS.get(tier_id, SASH_COLORS["neutral"]),
+		"skin": SKIN,
+		"hair": HAIR,
+		"style": "long" if c.gender == "female" else "bun",
 		"aura_rings": rings,
 		"aura": AURA_LOW.lerp(AURA_HIGH, t),
 	}
