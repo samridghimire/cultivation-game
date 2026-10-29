@@ -64,6 +64,8 @@ func _ready() -> void:
 	_build_npcs()
 	_build_bounds()
 	_limit_camera()
+	_fit_pixel_zoom()
+	get_viewport().size_changed.connect(_fit_pixel_zoom)
 	_spread_on_screen()
 	var hud := get_node_or_null("HUD")
 	if hud != null:
@@ -134,6 +136,8 @@ func _on_setting_changed(key: String, _value: Variant) -> void:
 
 
 func _exit_tree() -> void:
+	if get_viewport() != null and get_viewport().size_changed.is_connected(_fit_pixel_zoom):
+		get_viewport().size_changed.disconnect(_fit_pixel_zoom)
 	if Settings.changed.is_connected(_on_setting_changed):
 		Settings.changed.disconnect(_on_setting_changed)
 	if GameClock.days_advanced.is_connected(_on_days_advanced):
@@ -355,6 +359,20 @@ func _limit_camera() -> void:
 	camera.limit_top = 0
 	camera.limit_right = int(map_size.x)
 	camera.limit_bottom = int(map_size.y)
+
+
+## The camera zoom that makes one sprite pixel a whole number of screen pixels (GFX-009).
+static func pixel_zoom(stretch: float, sprite_scale: int) -> float:
+	var total := stretch * sprite_scale
+	return maxf(1.0, roundf(total)) / total
+
+
+func _fit_pixel_zoom() -> void:
+	var camera := player.get_node_or_null("Camera2D") as Camera2D
+	if camera == null or not is_inside_tree():
+		return
+	var stretch := get_viewport().get_final_transform().get_scale().x
+	camera.zoom = Vector2.ONE * pixel_zoom(stretch, Sprites.scale())
 
 
 ## Converts a JSON value to the type of the property it is assigned to.
