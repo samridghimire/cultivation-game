@@ -485,6 +485,13 @@ func _start_breakthrough_shots(gs: Node) -> void:
 		c.breakthrough_failures = 3
 		hide_banner.call()
 		win.open(), "close": win.close})
+	# WU-400: the heart vision above the Attempt button.
+	shots.append({"name": "breakthrough_vision", "open": func() -> void:
+		c.add_item("spirit_stone", 0)
+		c.heart_seen_realm = 0
+		c.attributes["comprehension"] = 12
+		hide_banner.call()
+		win.open(), "close": win.close})
 	# WU-333: an Azure Cloud Inner Disciple (rank 1) with 300 contribution is told to claim the pill, not buy it.
 	var saved := {}
 	shots.append({"name": "bs_d_sect_claim", "open": func() -> void:

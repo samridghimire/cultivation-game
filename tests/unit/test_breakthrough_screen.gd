@@ -75,6 +75,8 @@ func test_focus_never_starts_on_attempt_and_closed_fires() -> void:
 	screen._later_button.pressed.emit()
 	assert_eq(fired[0], 1)
 	screen.open()
+	screen._attempt_button.pressed.emit()  # WU-400: the open heart vision asks "Push on?" first
+	assert_eq(fired[0], 1)
 	screen._attempt_button.pressed.emit()
 	assert_eq(fired[0], 2)
 	host.queue_free()
@@ -177,3 +179,36 @@ func test_pill_hint_rogue_unchanged() -> void:
 	var hint := BreakthroughScreen.pill_hint(p, data())
 	assert_false(hint.contains("claim"), hint)
 	assert_eq(hint, Guidance.pill_source_hint(p, data()) + " You have %d of %d stones." % [p.item_count("spirit_stone"), Guidance.next_realm_pill_price(p, data())])
+
+
+## WU-400: the heart vision is listed above Attempt, with check tags and odds.
+func test_heart_vision_choices_listed_and_faced() -> void:
+	_bottleneck(false)
+	var screen := BreakthroughScreen.new()
+	screen.open()
+	assert_true(screen._vision_box.visible, "vision shown")
+	assert_eq(screen._vision_choices.get_child_count(), 3)
+	var first := screen._vision_choices.get_child(0) as Button
+	assert_true(first.text.begins_with("[Comprehension 14, "), first.text)
+	assert_true(first.text.contains("%]"), first.text)
+	assert_false((screen._vision_choices.get_child(2) as Button).text.begins_with("["))
+	# Attempt asks once first.
+	screen._attempt_button.pressed.emit()
+	assert_eq(screen._attempt_button.text, "Push on without facing it?")
+	assert_true(screen.visible)
+	(screen._vision_choices.get_child(2) as Button).pressed.emit()
+	assert_eq(_gs().player.heart_seen_realm, 2)
+	assert_true(screen._vision_outcome.visible)
+	assert_eq(screen._attempt_button.text, "Attempt")
+	screen._refresh()
+	assert_eq(screen._vision_choices.get_child_count(), 0)
+	screen.free()
+
+
+func test_no_vision_hides_the_box() -> void:
+	_bottleneck(false)
+	_gs().player.heart_seen_realm = 2
+	var screen := BreakthroughScreen.new()
+	screen.open()
+	assert_false(screen._vision_box.visible)
+	screen.free()
