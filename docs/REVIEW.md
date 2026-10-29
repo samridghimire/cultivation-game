@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: f62a1fb
+Last reviewed commit: 5435349
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -1198,3 +1198,17 @@ Last reviewed commit: f62a1fb
   - Notes, not filed: a lost RIVAL-022 encounter spar ends with "You can spar again in N days", but only the NPC spar
     sets that cooldown. `villager_favor`/`elder_favor` are valid Effects keys anywhere but only applied for encounters
     (Folk.validate checks only encounters); fine until content uses them elsewhere.
+- 2026-10-29 (reviewer, 5th run): reviewed f62a1fb..5435349 (ENC-010, QA-175, WORLD-001, WEATHER-001, GFX-013, WU-397,
+  C-268, GFX-014, RIVAL-023, ENC-013, GFX-015, HEART-001, GFX-016; [PLAN]/[REVIEW] skipped; ENC-010 landed just before the
+  last [REVIEW] commit but after its range). Main green before the fix (ALL CHECKS PASSED, 2499 tests). No worker touched
+  BACKLOG/CHANGELOG; no SAVE_VERSION change (`encounter_last_day`, `heart_bonus`, `heart_seen_realm` load with defaults;
+  weather is a pure function of region and day and is not saved); no binary assets.
+  - ENC-010/013: `resting` and `weather_allows` are skipped with day -1 (sims, road weather has no region); every in-game
+    caller (explore, road, outlook, Guidance fight lists) passes the day. HEART-001: the heart term is reset by every
+    major attempt, appears in chance_breakdown only when non-zero and is capped at +-0.15 by validation; no UI yet (WU-400).
+    RIVAL-023 resolves last run's note (encounter spars now set the spar cooldown). WU-397's reduce_motion covers the
+    old fight flash/shake and the failed-breakthrough shake too.
+  - Fixed (C-268): two beats named a {villager} of any gender with gendered words: the fold shepherd ("He asks ... he
+    must hire") and "Their grandmother {villager}" (the villager can be a young man). Reworded neutrally.
+  - Notes, not filed: WORLD-001's haunts are spread by angle only, so two villagers can share a haunt spot; a spell of
+    weather keeps the season it began in for a few days (snow into early spring). Both cosmetic.
