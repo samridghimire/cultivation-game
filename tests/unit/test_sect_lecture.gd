@@ -109,3 +109,25 @@ func test_lectures_attended_counts_and_milestone_at_twelve() -> void:
 		if i == 11:
 			break
 	assert_eq(LifeStats.get_stat(c, "lectures_attended"), 12)
+
+
+func test_lecture_line_picks_by_month_and_fills_names() -> void:
+	var lecture := {"elder": "Elder Wu", "topic": "rain", "lines": ["{elder} on {topic} one.", "two."]}
+	assert_eq(Sects.lecture_line(lecture, 0), "Elder Wu on rain one.")
+	assert_eq(Sects.lecture_line(lecture, 3), "two.")
+	assert_eq(Sects.lecture_line({"name": "x", "lines": ["{elder}: {topic}"]}, 0), "the elder: the lesson")
+
+
+func test_lecture_line_falls_back_when_absent() -> void:
+	assert_eq(Sects.lecture_line({"name": "x"}, 4), "")
+
+
+func test_every_sect_lecture_has_enough_lines() -> void:
+	for sect: SectDef in data().sects.values():
+		if sect.lecture.is_empty():
+			continue
+		assert_true((sect.lecture.get("lines", []) as Array).size() >= 8, "%s needs 8+ lecture lines" % sect.id)
+		var c := new_character()
+		c.realm_index = 1
+		Sects.join(c, data(), sect.id)
+		assert_true(String(Sects.attend_lecture(c, data(), seeded_rng(), 5)["line"]) != "", sect.id)

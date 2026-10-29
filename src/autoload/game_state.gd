@@ -2192,10 +2192,11 @@ func attend_lecture() -> void:
 		return
 	_start_time_skip()
 	var result := Sects.attend_lecture(player, data, rng, GameClock.total_days, _cultivation_density(1.0))
+	var scene: String = result["line"] if result["line"] != "" else "You attend %s." % result["name"]
 	if int(result["qi"]) == 0:
-		EventBus.post("You attend %s. Your qi is at a bottleneck; the words settle in your mind instead." % result["name"], "progress")
+		EventBus.post("%s Your qi is at a bottleneck; the words settle in your mind instead." % scene, "progress")
 	else:
-		EventBus.post("You attend %s. (+%d qi)" % [result["name"], int(result["qi"])], "progress")
+		EventBus.post("%s (+%d qi)" % [scene, int(result["qi"])], "progress")
 	if result["insight_id"] != "":
 		var insight: Dictionary = Dao.def_of(data, result["insight_id"])
 		EventBus.post("A line of the lecture clicks: you glimpse the %s." % insight.get("name", "Dao"), "progress")

@@ -513,7 +513,17 @@ static func attend_lecture(c: CharacterData, data: GameData, rng: RandomNumberGe
 			if Dao.level(c, id) <= 0 and Dao.gain_levels(c, data, id) > 0:
 				insight_id = id
 				break
-	return {"ok": true, "reason": "", "name": String(lecture.get("name", "the lecture")), "days": int(lecture.get("days", 1)), "qi": qi, "insight_id": insight_id}
+	return {"ok": true, "reason": "", "line": lecture_line(lecture, _month_index(total_days)), "name": String(lecture.get("name", "the lecture")), "days": int(lecture.get("days", 1)), "qi": qi, "insight_id": insight_id}
+
+
+## The scene line of `lecture` for `month_index` (C-270): `lines[month % size]` with
+## {elder} and {topic} filled in, or "" when the lecture has no lines.
+static func lecture_line(lecture: Dictionary, month_index: int) -> String:
+	var lines: Array = lecture.get("lines", [])
+	if lines.is_empty():
+		return ""
+	var line := String(lines[posmod(month_index, lines.size())])
+	return line.replace("{elder}", String(lecture.get("elder", "the elder"))).replace("{topic}", String(lecture.get("topic", "the lesson")))
 
 
 ## Load errors for the sects.json `lecture` blocks.
@@ -533,6 +543,13 @@ static func validate_lectures(data: GameData) -> PackedStringArray:
 		var chance := float(lecture.get("insight_chance", 0.0))
 		if chance < 0.0 or chance > 1.0:
 			errors.append("%s needs insight_chance within 0..1" % label)
+		var lines: Variant = lecture.get("lines", [])
+		if not (lines is Array):
+			errors.append("%s lines must be an array" % label)
+		else:
+			for line: Variant in lines:
+				if not (line is String) or String(line) == "":
+					errors.append("%s lines must be non-empty strings" % label)
 		for id: String in lecture.get("insights", []):
 			if not data.dao_insights.has(id):
 				errors.append("%s lists unknown insight '%s'" % [label, id])
