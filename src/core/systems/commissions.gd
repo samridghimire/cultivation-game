@@ -344,6 +344,11 @@ static func lapse_text(c: CharacterData, data: GameData, order: Dictionary) -> S
 ## GUIDE-052: for the order due soonest (14 days or less left) that is still short, "Order due in
 ## <time>: <missing line>"; "" otherwise.
 static func due_soon_hint(c: CharacterData, data: GameData, region_id: String, today: int) -> String:
+	return String(due_soon_order(c, data, region_id, today).get("line", ""))
+
+
+## GUIDE-194: the order `due_soon_hint` talks about, as {order, line} ({} when none).
+static func due_soon_order(c: CharacterData, data: GameData, region_id: String, today: int) -> Dictionary:
 	var best: Dictionary = {}
 	var line := ""
 	for order in c.commissions:
@@ -354,5 +359,5 @@ static func due_soon_hint(c: CharacterData, data: GameData, region_id: String, t
 			best = order
 			line = missing
 	if best.is_empty():
-		return ""
-	return "Order due in %s: %s" % [Calendar.format_duration(days_left(best, today)), line]
+		return {}
+	return {"order": best, "line": "Order due in %s: %s" % [Calendar.format_duration(days_left(best, today)), line]}

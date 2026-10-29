@@ -541,3 +541,25 @@ func test_due_soon_hint_shows_an_order_due_in_three_days() -> void:
 	c.add_item("dew_grass", 1)
 	hint = Commissions.due_soon_hint(c, data(), "qingshi_village", 10)
 	assert_true(hint.contains("craft it at a workshop"), hint)
+
+
+## GUIDE-194: an order due in 3 days or less jumps ahead of the herb/untried hints; one due later keeps its old slot.
+func test_urgent_due_order_leads_the_hints() -> void:
+	var c := _alchemist()
+	c.commissions = [_pill_order(2, 13)]
+	var d := data()
+	var due := Commissions.due_soon_hint(c, d, "qingshi_village", 10)
+	var hints := Guidance.hints(c, d, 1.0, 8, {}, {}, "qingshi_village", 10)
+	var herb := Guidance.herb_here_hint(c, d, "qingshi_village", 10)
+	assert_true(hints.has(due), due)
+	var due_i := hints.find(due)
+	if herb != "":
+		assert_true(due_i < hints.find(herb), "urgent due line before the herb hint")
+	assert_true(due_i < 3, "within the top 3")
+	c.commissions = [_pill_order(2, 20)]
+	due = Commissions.due_soon_hint(c, d, "qingshi_village", 10)
+	hints = Guidance.hints(c, d, 1.0, 8, {}, {}, "qingshi_village", 10)
+	assert_true(hints.has(due), due)
+	if herb != "":
+		assert_true(hints.find(due) > hints.find(herb), "a later order keeps its old slot")
+	assert_eq(Commissions.due_soon_order(c, d, "qingshi_village", 10)["line"], due)

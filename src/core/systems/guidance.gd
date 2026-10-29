@@ -6,6 +6,7 @@ extends RefCounted
 
 ## Years of life left at which the lifespan warning appears.
 const LIFESPAN_WARNING_YEARS := 10
+const DUE_URGENT_DAYS := 3  ## GUIDE-194: an order due this soon takes a slot right after the sect duty.
 ## Artifact lives at or below which recharging is suggested.
 const LOW_ARTIFACT_LIVES := 1
 ## Highest realm index (Qi Refining) that still gets newcomer hints.
@@ -60,6 +61,15 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 		var duty := duty_hint(c, data, flags)
 		if duty != "":
 			out.append(duty)
+	var due := ""
+	var due_urgent := false
+	if today >= 0:
+		var due_order := Commissions.due_soon_order(c, data, region_id, today)
+		if not due_order.is_empty():
+			due = String(due_order["line"])
+			due_urgent = Commissions.days_left(due_order["order"], today) <= DUE_URGENT_DAYS
+	if due_urgent:
+		out.append(due)
 	if Children.is_pregnant(c):
 		var days := int(c.pregnancy.get("days_left", 0))
 		out.append("A child is due in %s." % Calendar.format_duration(days))
@@ -100,10 +110,8 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 		var odd_jobs := _odd_jobs_hint(c, data, region_id)
 		if odd_jobs != "":
 			out.append(odd_jobs)
-	if today >= 0:
-		var due := Commissions.due_soon_hint(c, data, region_id, today)
-		if due != "":
-			out.append(due)
+	if due != "" and not due_urgent:
+		out.append(due)
 	var bitter := _bitter_rival_hint(c, data, people, flags, favor)
 	if bitter != "":
 		out.append(bitter)
