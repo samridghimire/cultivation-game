@@ -3181,22 +3181,42 @@ static func active_goal_ladder(c: CharacterData, data: GameData, flags: Dictiona
 	return none
 
 
-## GUIDE-168: " (about 5 years at Cloud-Sea Cliff in Azure Peak)" when the best reachable qi spot cuts the days to the
-## realm's bottleneck by 90 days or a third (whichever is more) net of the round trip; "" otherwise. `days` is the time at the current `density`.
-static func _faster_spot_clause(c: CharacterData, data: GameData, density: float, region_id: String, flags: Dictionary, days: int) -> String:
+## GUIDE-168: {saved, clause} of the best reachable qi spot when it cuts the days to the realm's bottleneck by
+## FASTER_SPOT_MIN_SAVED days or a third (whichever is more) net of the round trip, e.g. " (about 5 years at
+## Cloud-Sea Cliff in Azure Peak)"; {} otherwise. `days` is the time at the current `density`.
+static func _faster_spot(c: CharacterData, data: GameData, density: float, region_id: String, flags: Dictionary, days: int) -> Dictionary:
 	if region_id == "":
-		return ""
+		return {}
 	var best := best_qi_reachable(c, data, region_id, flags)
 	if best.is_empty() or float(best["density"]) <= density + 0.001 or String(best["name"]) == "":
-		return ""
+		return {}
 	var days_best := Cultivation.days_to_bottleneck(c, data, float(best["density"]))
 	if days_best < 0:
-		return ""
+		return {}
 	var best_region := String(best["region"])
 	var away := 0 if best_region == region_id else route_days(c, data, region_id, best_region)
-	if days - days_best - 2 * away < maxi(FASTER_SPOT_MIN_SAVED, days / 3):
-		return ""
-	return " (about %s at %s in %s)" % [Calendar.format_rough(days_best + 2 * away), GameData.plain_name(String(best["name"])), Exploration.region_name(data, best_region)]
+	var saved := days - days_best - 2 * away
+	if saved < maxi(FASTER_SPOT_MIN_SAVED, days / 3):
+		return {}
+	return {"saved": saved, "clause": " (about %s at %s in %s)" % [Calendar.format_rough(days_best + 2 * away), GameData.plain_name(String(best["name"])), Exploration.region_name(data, best_region)]}
+
+
+static func _faster_spot_clause(c: CharacterData, data: GameData, density: float, region_id: String, flags: Dictionary, days: int) -> String:
+	return String(_faster_spot(c, data, density, region_id, flags, days).get("clause", ""))
+
+
+## GUIDE-201: the one parenthesis after the realm goal's meditation time: the sect method (when
+## `_method_offer_leads`) or the faster qi spot, whichever saves more days; ties go to the method (no travel).
+static func _goal_speedup_clause(c: CharacterData, data: GameData, density: float, region_id: String, flags: Dictionary, days: int) -> String:
+	var spot := _faster_spot(c, data, density, region_id, flags, days)
+	if _method_offer_leads(c, data):
+		var offer := sect_method_offer(c, data)
+		var with_method := ceili(days * float(offer["current"]) / float(offer["rate"]))
+		if days - with_method >= int(spot.get("saved", 0)):
+			var source := "you hold" if bool(offer.get("held", false)) else "from your sect treasury"
+			var tech_name: String = data.techniques[offer["tech_id"]].name
+			return " (about %s with the %s %s)" % [Calendar.format_rough(with_method), tech_name, source]
+	return String(spot.get("clause", ""))
 
 
 ## Mid-game goals (GOAL-003): the next realm, the next sect
@@ -3221,7 +3241,7 @@ static func goals(c: CharacterData, data: GameData, flags: Dictionary, clan: Cla
 		if days == 0:
 			out.append("Reach %s: attempt the breakthrough (%s)." % [next_name, odds])
 		elif days > 0:
-			out.append("Reach %s: about %s of meditation%s, then a breakthrough (%s)." % [next_name, Calendar.format_rough(days), _faster_spot_clause(c, data, density, region_id, flags, days), odds])
+			out.append("Reach %s: about %s of meditation%s, then a breakthrough (%s)." % [next_name, Calendar.format_rough(days), _goal_speedup_clause(c, data, density, region_id, flags, days), odds])
 		else:
 			out.append("Reach %s: gather qi, then attempt a breakthrough (%s)." % [next_name, odds])
 		var saving := sect_pill_claim(c, data)

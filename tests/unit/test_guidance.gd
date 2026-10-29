@@ -5328,3 +5328,59 @@ func test_mission_hint_skipped_for_a_rich_member_with_duty_met() -> void:
 	assert_false(_has(Guidance.hints(c, d, 1.0, 20, {}, {}, "qingshi_village"), "The best pays "))
 	c.sect["contribution"] = 100
 	assert_false(Guidance._mission_hint_rich(c, d))
+
+
+# --- GUIDE-201: the realm goal shows what the sect method is worth ---
+
+func _method_goal_member(rank: int, contribution: int) -> CharacterData:
+	var c := _method_member(rank, contribution, "foundation_establishment_pill")
+	c.realm_index = 1
+	c.stage = 0
+	c.spiritual_roots = {"water": 100}  # a pure water root: the sutra's full qi rate
+	return c
+
+
+func _realm_goal(c: CharacterData, region: String = "azure_peak") -> String:
+	var d := data()
+	return Guidance.goals(c, d, {}, null, 1.0, region)[0]
+
+
+func test_goal_shows_the_sect_method_when_claimable() -> void:
+	var d := data()
+	var c := _method_goal_member(1, 1000)
+	assert_true(Guidance._method_offer_leads(c, d), "setup: the method leads")
+	var days := Cultivation.days_to_bottleneck(c, d, 1.0)
+	var offer := Guidance.sect_method_offer(c, d)
+	var with_method := ceili(days * float(offer["current"]) / float(offer["rate"]))
+	var spot := Guidance._faster_spot(c, d, 1.0, "azure_peak", {}, days)
+	var line := _realm_goal(c)
+	if days - with_method >= int(spot.get("saved", 0)):
+		assert_true(line.contains("with the Azure Cloud Heart Sutra from your sect treasury)"), line)
+		assert_true(line.contains(Calendar.format_rough(with_method)), line)
+	# Too poor to claim it: no method clause.
+	assert_false(_realm_goal(_method_goal_member(1, 100)).contains("with the "))
+	# A rogue has no sect treasury.
+	var rogue := new_character()
+	rogue.realm_index = 1
+	assert_false(_realm_goal(rogue).contains("with the "))
+
+
+func test_goal_method_clause_held_and_spot_precedence() -> void:
+	var d := data()
+	var c := _method_goal_member(1, 0)
+	c.add_item("manual_azure_cloud_heart", 1)
+	if Guidance.sect_method_offer(c, d).is_empty():
+		return
+	var line := _realm_goal(c)
+	assert_true(line.contains("you hold)") or line.contains("(about ") , line)
+	# When the spot saves more days than the method, the spot clause wins.
+	var rich := _method_goal_member(1, 1000)
+	var days := Cultivation.days_to_bottleneck(rich, d, 1.0)
+	var spot := Guidance._faster_spot(rich, d, 1.0, "qingshi_village", {}, days)
+	var offer := Guidance.sect_method_offer(rich, d)
+	var with_method := ceili(days * float(offer["current"]) / float(offer["rate"]))
+	var clause := Guidance._goal_speedup_clause(rich, d, 1.0, "qingshi_village", {}, days)
+	if not spot.is_empty() and int(spot["saved"]) > days - with_method:
+		assert_eq(clause, spot["clause"])
+	else:
+		assert_true(clause.contains("with the Azure Cloud Heart Sutra") or clause == String(spot.get("clause", "")), clause)
