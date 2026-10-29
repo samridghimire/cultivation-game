@@ -85,3 +85,46 @@ func test_game_state_does_not_repeat_a_beat_on_consecutive_days() -> void:
 	assert_eq(gs.explore_many(3, ["t_rest_only"]), 3, "the beat is resting, so three quiet days")
 	assert_eq(int(gs.player.encounter_counts.get("t_rest_only", 0)), 1, "still resting")
 	gs.end_session()
+
+
+func test_repeatable_with_rest_days_rests() -> void:
+	var c := new_character()
+	var d := data()
+	var timed := {"id": "t", "repeatable": true, "rest_days": 60}
+	var plain := {"id": "p", "repeatable": true}
+	Exploration.note_met(c, timed, 100)
+	Exploration.note_met(c, plain, 100)
+	assert_true(Exploration.resting(c, d, timed, 159))
+	assert_false(Exploration.resting(c, d, timed, 160))
+	assert_false(Exploration.resting(c, d, plain, 101), "no rest_days: never rests")
+
+
+func test_weather_gate_and_validation() -> void:
+	var d := data()
+	var region := d.start_region
+	var rainy := -1
+	var dry := -1
+	for day in range(1, 400):
+		if Weather.of(d, region, day) == "rain":
+			rainy = day if rainy < 0 else rainy
+		elif dry < 0:
+			dry = day
+	assert_gt(rainy, 0, "the start region rains some day")
+	var e := {"id": "w", "weather": ["rain"]}
+	assert_true(Exploration.weather_allows(d, e, region, rainy))
+	assert_false(Exploration.weather_allows(d, e, region, dry))
+	assert_true(Exploration.weather_allows(d, e, region, -1), "day < 0 ignores the gate")
+	assert_true(Exploration.weather_allows(d, e, "", dry), "no region ignores the gate")
+	assert_true(Exploration.weather_allows(d, {"id": "x"}, region, dry))
+	var c := new_character()
+	d.encounters["w_beat"] = {"id": "w_beat", "tags": ["rest_tag"], "weight": 1, "text": "x", "effects": {}, "weather": ["rain"]}
+	var count := func(day: int) -> int:
+		return Exploration.eligible_encounters(c, d, ["rest_tag"], {}, null, 1.0, "", region, 0, Callable(), day).size()
+	assert_eq(count.call(rainy), 1)
+	assert_eq(count.call(dry), 0)
+	var bad := GameData.load_from_dir()
+	var first: String = bad.encounters.keys()[0]
+	bad.encounters[first]["weather"] = ["hail"]
+	bad.load_errors.clear()
+	bad._validate()
+	assert_true(", ".join(bad.load_errors).contains("unknown weather"), str(bad.load_errors))

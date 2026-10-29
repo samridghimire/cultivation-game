@@ -302,6 +302,8 @@ static func eligible_encounters(c: CharacterData, data: GameData, tags: Array, f
 			continue
 		if resting(c, data, e, day):
 			continue
+		if not weather_allows(data, e, region_id, day):
+			continue
 		if e.has("min_explores") and (region_id == "" or familiarity(c, region_id) < int(e["min_explores"])):
 			continue
 		if not realm_allows(c, data, e):
@@ -376,10 +378,19 @@ static func freshness(c: CharacterData, e: Dictionary) -> float:
 	return maxf(FRESHNESS_FLOOR, 1.0 / (1.0 + FRESHNESS_DECAY * int(c.encounter_counts.get(String(e.get("id", "")), 0))))
 
 
+## ENC-013: false when `e` lists `weather` kinds and `Weather.of` for `region_id` on `day` is none of
+## them. Ignored with no region or day < 0, like `resting`.
+static func weather_allows(data: GameData, e: Dictionary, region_id: String, day: int) -> bool:
+	if day < 0 or region_id == "" or not e.has("weather"):
+		return true
+	return (e["weather"] as Array).has(Weather.of(data, region_id, day))
+
+
 ## ENC-010: true while a fading happening `c` met before is still resting, i.e. fewer than its
 ## `rest_days` (per encounter, else the top-level default) have passed since `encounter_last_day`.
+## ENC-013: a repeatable happening rests only when it sets `rest_days` itself.
 static func resting(c: CharacterData, data: GameData, e: Dictionary, day: int) -> bool:
-	if day < 0 or not fades(e):
+	if day < 0 or not (fades(e) or e.has("rest_days")):
 		return false
 	var id := String(e.get("id", ""))
 	if not c.encounter_last_day.has(id):

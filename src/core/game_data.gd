@@ -614,6 +614,14 @@ func _validate_world() -> void:
 			load_errors.append("Encounter '%s' repeatable must be a bool" % e["id"])
 		if e.has("rest_days") and not (_is_whole(e["rest_days"]) and int(e["rest_days"]) >= 0):
 			load_errors.append("Encounter '%s' rest_days must be an int >= 0" % e["id"])
+		if e.has("weather"):
+			var kinds: Variant = e["weather"]
+			if not (kinds is Array) or (kinds as Array).is_empty():
+				load_errors.append("Encounter '%s' has `weather` that is not a non-empty list" % e["id"])
+			else:
+				for kind: Variant in kinds:
+					if not (kind is String) or not Weather.KINDS.has(kind):
+						load_errors.append("Encounter '%s' has unknown weather '%s'" % [e["id"], kind])
 		if e.has("rogue_only") and typeof(e["rogue_only"]) != TYPE_BOOL:
 			load_errors.append("Encounter '%s' rogue_only must be a bool" % e["id"])
 		if e.has("min_explores") and (typeof(e["min_explores"]) != TYPE_INT and typeof(e["min_explores"]) != TYPE_FLOAT or int(e["min_explores"]) < 1 or float(e["min_explores"]) != int(e["min_explores"])):
