@@ -54,3 +54,18 @@ func test_ticking_with_blows_does_not_fail() -> void:
 		r.tick()
 	assert_true(r._stage._foe_beast)
 	r.queue_free()
+
+
+func test_shake_offset_is_zero_when_reduced_and_bounded_otherwise() -> void:
+	assert_eq(MotionFx.shake_offset(0.05, 0.15, 3.0, true), Vector2.ZERO)
+	assert_eq(MotionFx.shake_offset(0.2, 0.15, 3.0, false), Vector2.ZERO)
+	for i in 15:
+		var o := MotionFx.shake_offset(i * 0.01, 0.15, 3.0, false)
+		assert_true(absf(o.x) <= 3.0 and absf(o.y) <= 3.0)
+	assert_true(MotionFx.shake_offset(0.05, 0.15, 3.0, false) != Vector2.ZERO)
+
+
+func test_heavy_hit_is_over_fifteen_percent() -> void:
+	assert_true(MotionFx.is_heavy_hit(4, 20))
+	assert_false(MotionFx.is_heavy_hit(3, 20))
+	assert_false(MotionFx.is_heavy_hit(5, 0))

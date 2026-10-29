@@ -87,3 +87,9 @@ func test_hud_hints_round_trip_and_legacy() -> void:
 	u.load_settings()
 	assert_eq(u.get_value("hud_hints"), 0)
 	_cleanup(u)
+
+
+func test_reduce_motion_defaults_off_and_sanitizes() -> void:
+	assert_eq(SettingsScript.DEFAULTS["reduce_motion"], false)
+	assert_eq(SettingsScript.sanitize("reduce_motion", true), true)
+	assert_eq(SettingsScript.sanitize("reduce_motion", "yes"), false)

@@ -16,6 +16,10 @@ var _flash: Array[float] = [0.0, 0.0]
 var _alpha: Array[float] = [1.0, 1.0]
 var _tilt: Array[float] = [0.0, 0.0]
 var _tween: Tween
+var _stage_shake_start := -1.0  # ticks (s) when the heavy-hit shake began
+
+const STAGE_SHAKE_SECONDS := 0.15
+const STAGE_SHAKE_PIXELS := 3.0
 
 
 func _init() -> void:
@@ -52,11 +56,12 @@ func reset_pose() -> void:
 	_flash = [0.0, 0.0]
 	_alpha = [1.0, 1.0]
 	_tilt = [0.0, 0.0]
+	_stage_shake_start = -1.0
 	queue_redraw()
 
 
 ## `side` as from blow_side: 1 the player strikes, -1 the foe strikes, 0 nothing.
-func blow(side: int, crit: bool = false) -> void:
+func blow(side: int, crit: bool = false, heavy: bool = false) -> void:
 	if side == 0 or not is_inside_tree():
 		return
 	var striker := 0 if side == 1 else 1
@@ -70,8 +75,13 @@ func blow(side: int, crit: bool = false) -> void:
 	_tween = create_tween().set_parallel(true)
 	_tween.tween_method(_set_offset.bind(striker), 0.0, dir * LUNGE, LUNGE_SECONDS / 2.0)
 	_tween.tween_method(_set_offset.bind(striker), dir * LUNGE, 0.0, LUNGE_SECONDS / 2.0).set_delay(LUNGE_SECONDS / 2.0)
+	if MotionFx.reduced():
+		return
 	_tween.tween_method(_set_flash.bind(struck), 1.0, 0.0, LUNGE_SECONDS * 2.0)
 	_tween.tween_method(_set_shake.bind(struck), 6.0 if crit else 3.0, 0.0, LUNGE_SECONDS * 2.0)
+	if heavy:
+		_stage_shake_start = Time.get_ticks_msec() / 1000.0
+		_tween.tween_method(func(_v: float) -> void: queue_redraw(), 0.0, 1.0, STAGE_SHAKE_SECONDS)
 
 
 func _set_offset(v: float, who: int) -> void:
@@ -105,9 +115,18 @@ func alpha_of(who: int) -> float:
 
 
 func _draw() -> void:
-	var base_y := size.y - 14.0
-	_draw_fighter(0, Vector2(size.x * 0.25, base_y))
-	_draw_fighter(1, Vector2(size.x * 0.75, base_y))
+	var base_y := size.y - 14.0 + _stage_offset().y
+	var dx := _stage_offset().x
+	_draw_fighter(0, Vector2(size.x * 0.25 + dx, base_y))
+	_draw_fighter(1, Vector2(size.x * 0.75 + dx, base_y))
+
+
+## The whole-stage offset of a heavy hit's 3 px, 0.15 s shake.
+func _stage_offset() -> Vector2:
+	if _stage_shake_start < 0.0:
+		return Vector2.ZERO
+	var elapsed := Time.get_ticks_msec() / 1000.0 - _stage_shake_start
+	return MotionFx.shake_offset(elapsed, STAGE_SHAKE_SECONDS, STAGE_SHAKE_PIXELS, MotionFx.reduced())
 
 
 func _draw_fighter(who: int, feet: Vector2) -> void:

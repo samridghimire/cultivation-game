@@ -22,6 +22,10 @@ var _facing := Vector2.DOWN
 var _time := 0.0
 var _celebrate_left := 0.0
 var _celebrate_ok := true
+var _camera_shake_left := 0.0
+
+const CAMERA_SHAKE_SECONDS := 0.3
+const CAMERA_SHAKE_PIXELS := 4.0
 
 
 func _ready() -> void:
@@ -41,6 +45,7 @@ func refresh_look() -> void:
 
 func _process(delta: float) -> void:
 	_time += delta
+	_update_camera_shake(delta)
 	if _celebrate_left > 0.0:
 		_celebrate_left = maxf(0.0, _celebrate_left - delta)
 		queue_redraw()
@@ -48,10 +53,21 @@ func _process(delta: float) -> void:
 		queue_redraw()
 
 
+## A successful breakthrough shakes the camera 4 px for 0.3 s (WU-397).
+func _update_camera_shake(delta: float) -> void:
+	var camera := get_node_or_null("Camera2D") as Camera2D
+	if camera == null or (_camera_shake_left <= 0.0 and camera.offset == Vector2.ZERO):
+		return
+	_camera_shake_left = maxf(0.0, _camera_shake_left - delta)
+	camera.offset = MotionFx.shake_offset(CAMERA_SHAKE_SECONDS - _camera_shake_left, CAMERA_SHAKE_SECONDS, CAMERA_SHAKE_PIXELS, MotionFx.reduced())
+
+
 ## Breakthrough effect (WU-063): a gold ring and rays on success, a dull
 ## contracting ring and a sideways shake on failure. Drawn only; never moves `position`.
 func celebrate(success: bool) -> void:
 	_celebrate_ok = success
+	if success and not MotionFx.reduced():
+		_camera_shake_left = CAMERA_SHAKE_SECONDS
 	_celebrate_left = CELEBRATE_SECONDS
 	queue_redraw()
 
@@ -129,7 +145,7 @@ func _update_target() -> void:
 func _draw() -> void:
 	_draw_celebration()
 	var shake := 0.0
-	if _celebrate_left > 0.0 and not _celebrate_ok and _celebrate_t() * CELEBRATE_SECONDS < SHAKE_SECONDS:
+	if not MotionFx.reduced() and _celebrate_left > 0.0 and not _celebrate_ok and _celebrate_t() * CELEBRATE_SECONDS < SHAKE_SECONDS:
 		shake = sin(_celebrate_t() * CELEBRATE_SECONDS * 80.0) * 4.0
 	_draw_companion()
 	var sash: Color = _look.get("sash", PlayerLook.SASH_COLORS["neutral"])

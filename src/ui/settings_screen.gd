@@ -22,6 +22,7 @@ var _yearly_recap: CheckButton
 var _fast_skips: CheckButton
 var _animate_fights: CheckButton
 var _ambient: CheckButton
+var _reduce_motion: CheckButton
 var _key_help: CheckButton
 var _sliders: Dictionary = {}  # setting key -> HSlider
 var _value_labels: Dictionary = {}  # setting key -> Label
@@ -89,6 +90,11 @@ func _init() -> void:
 	_ambient.add_theme_font_size_override("font_size", 18)
 	_ambient.toggled.connect(func(on: bool): Settings.set_value("ambient_effects", on))
 	box.add_child(_ambient)
+	_reduce_motion = CheckButton.new()
+	_reduce_motion.text = "Reduce motion (no screen shakes or flashes)"
+	_reduce_motion.add_theme_font_size_override("font_size", 18)
+	_reduce_motion.toggled.connect(func(on: bool): Settings.set_value("reduce_motion", on))
+	box.add_child(_reduce_motion)
 	_key_help = CheckButton.new()
 	_key_help.text = "Key help on the HUD"
 	_key_help.add_theme_font_size_override("font_size", 18)
@@ -296,6 +302,7 @@ func _sync() -> void:
 	_fast_skips.set_pressed_no_signal(Settings.get_value("fast_time_skips"))
 	_animate_fights.set_pressed_no_signal(Settings.get_value("animate_fights"))
 	_ambient.set_pressed_no_signal(Settings.get_value("ambient_effects"))
+	_reduce_motion.set_pressed_no_signal(Settings.get_value("reduce_motion"))
 	_key_help.set_pressed_no_signal(Settings.get_value("key_help"))
 	for key in _sliders:
 		_sliders[key].set_value_no_signal(Settings.get_value(key))

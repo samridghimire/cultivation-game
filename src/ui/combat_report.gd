@@ -179,7 +179,10 @@ func _reveal(i: int, sound: bool = true) -> void:
 		_set_bar(_enemy_bar, int(_trace[i][1]), int(_enemy_bar.get_meta("max")))
 		var prev: Array = [int(_player_bar.get_meta("max")), int(_enemy_bar.get_meta("max"))] if i == 0 else _trace[i - 1]
 		if sound:
-			_stage.blow(DuelStage.blow_side(prev, _trace[i]), _lines[i].contains("critically"))
+			var side := DuelStage.blow_side(prev, _trace[i])
+			var struck := 1 if side == 1 else 0
+			var heavy := side != 0 and MotionFx.is_heavy_hit(int(prev[struck]) - int(_trace[i][struck]), int(_player_bar.get_meta("max") if struck == 0 else _enemy_bar.get_meta("max")))
+			_stage.blow(side, _lines[i].contains("critically"), heavy)
 	if sound and _is_hit(_lines[i]):
 		Audio.play(_sound_for_line(_lines[i]))
 

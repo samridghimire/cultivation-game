@@ -867,6 +867,20 @@ func _on_menu_requested(source: Node) -> void:
 	_update_modal()
 
 
+## A 0.4 s red vignette over the death screen (WU-397); skipped with reduce_motion.
+func _death_vignette() -> void:
+	if MotionFx.reduced():
+		return
+	var veil := ColorRect.new()
+	veil.color = Color(0.6, 0.0, 0.0, 0.5)
+	veil.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	veil.set_anchors_preset(Control.PRESET_FULL_RECT)
+	add_child(veil)
+	var tween := veil.create_tween()
+	tween.tween_property(veil, "color:a", 0.0, 0.4)
+	tween.tween_callback(veil.queue_free)
+
+
 func _on_player_died(cause: String) -> void:
 	_choice_menu.close()
 	_close_screens()
@@ -883,6 +897,7 @@ func _on_player_died(cause: String) -> void:
 	(_death_screen.find_child("Cause", true, false) as Label).text = cause
 	(_death_screen.find_child("Epilogue", true, false) as Label).text = "\n".join(LifeStats.epilogue(GameState.player, GameState.data, GameState.clan, 8, GameState.npcs, GameState.world_flags))
 	_death_screen.visible = true
+	_death_vignette()
 	_death_screen.find_children("*", "Button", true, false)[0].grab_focus()
 	_update_modal()
 
@@ -1379,7 +1394,7 @@ func _process(delta: float) -> void:
 		_fade_targets = _compute_fade_targets()
 	if _status_panel == null or _log_panel == null:
 		return
-	var k := minf(1.0, 8.0 * delta)
+	var k := 1.0 if MotionFx.reduced() else minf(1.0, 8.0 * delta)
 	var log_target := _fade_targets.y
 	var idle := log_idle_alpha(float(Time.get_ticks_msec() - _last_message_msec) / 1000.0)
 	if idle < 1.0 and not _log_panel.get_global_rect().has_point(_log_panel.get_global_mouse_position()):
