@@ -114,6 +114,18 @@ static func attitude(c: CharacterData, rival: CharacterData, favor: int, data: G
 	return "proud"
 
 
+## RIVAL-022: the attitudes an encounter's `rival_attitude` allows (a string or an array of them); [] when ungated.
+static func attitudes_of(encounter: Dictionary) -> Array[String]:
+	var out: Array[String] = []
+	var raw: Variant = encounter.get("rival_attitude", [])
+	if raw is Array:
+		for a: Variant in raw:
+			out.append(String(a))
+	elif String(raw) != "":
+		out.append(String(raw))
+	return out
+
+
 ## The journal wording of an `attitude`; "" for the default "proud".
 static func attitude_text(attitude: String) -> String:
 	match attitude:
@@ -270,8 +282,9 @@ static func validate(data: GameData) -> PackedStringArray:
 		if e.has("rival") and not RELATIONS.has(String(e["rival"])):
 			errors.append("Encounter '%s' has unknown rival condition '%s'" % [e["id"], e["rival"]])
 		if e.has("rival_attitude"):
-			if not ATTITUDES.has(String(e["rival_attitude"])):
-				errors.append("Encounter '%s' has unknown rival_attitude '%s'" % [e["id"], e["rival_attitude"]])
+			for att: String in attitudes_of(e):
+				if not ATTITUDES.has(att):
+					errors.append("Encounter '%s' has unknown rival_attitude '%s'" % [e["id"], att])
 			if not e.has("rival"):
 				errors.append("Encounter '%s' has a rival_attitude but no rival condition" % e["id"])
 		var uses_rival := e.has("fight_rival") or e.has("rival_grudge") or e.has("rival_favor") or String(e.get("text", "")).contains("{rival")

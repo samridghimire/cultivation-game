@@ -308,7 +308,7 @@ static func eligible_encounters(c: CharacterData, data: GameData, tags: Array, f
 			continue
 		if not Rivals.allows(c, rival, String(e.get("rival", ""))):
 			continue
-		if e.has("rival_attitude") and (rival == null or Rivals.attitude(c, rival, rival_favor, data) != String(e["rival_attitude"])):
+		if e.has("rival_attitude") and (rival == null or not Rivals.attitudes_of(e).has(Rivals.attitude(c, rival, rival_favor, data))):
 			continue
 		var blocker: String = e.get("blocked_by_flag", "")
 		if blocker != "" and flags.get(blocker, false):

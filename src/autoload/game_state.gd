@@ -1052,7 +1052,8 @@ func _rival_consequences(entry: Dictionary) -> void:
 		npc_favor[rival.id] = clampi(int(npc_favor.get(rival.id, 0)) + favor, -100, 100)
 	_post_attitude_change(before)
 	if bool(entry.get("fight_rival", false)):
-		fight_enemy(Karma.npc_enemy(rival, data))
+		# RIVAL-022: a friendly invitation is a spar (no stones lost, no death), not a duel.
+		fight_enemy(Mentorship.spar_enemy(rival, data) if bool(entry.get("spar", false)) else Karma.npc_enemy(rival, data))
 
 
 ## Leave the pending encounter without choosing (the UI offers this only when

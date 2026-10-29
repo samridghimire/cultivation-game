@@ -616,3 +616,37 @@ func test_game_state_rival_for_roll_respects_cooldown() -> void:
 	GameClock.total_days += Rivals.encounter_cooldown(gs.data)
 	assert_true(gs._rival_for_roll() != null, "rival back after the cooldown")
 	gs.end_session()
+
+
+func test_friendly_rival_gets_spar_not_contest() -> void:
+	var d := GameData.load_from_dir()
+	var c := new_character()
+	var rival := new_character(77)
+	rival.id = "gen_rival"
+	c.realm_index = 1
+	rival.realm_index = 1
+	# Only the two real encounters under test, on a private tag, so the fight-share trimming has nothing else to trim.
+	for id: String in d.encounters.keys():
+		if id != "rival_contest" and id != "rival_spar_friendly" and not id.begins_with("wild_"):
+			continue
+		d.encounters[id] = d.encounters[id].duplicate()
+		d.encounters[id]["tags"] = ["spar_tag"]
+	var ids := func(favor: int) -> Array:
+		return Exploration.eligible_encounters(c, d, ["spar_tag"], {}, rival, 1.0, "", "", favor).map(func(e: Dictionary) -> String: return e["encounter"]["id"])
+	var friendly: Array = ids.call(20)
+	assert_true(friendly.has("rival_spar_friendly"), "friendly rival invites a spar")
+	assert_false(friendly.has("rival_contest"), "friendly rival never ambushes")
+	var proud: Array = ids.call(0)
+	assert_true(proud.has("rival_contest"), "proud rival duels")
+	assert_false(proud.has("rival_spar_friendly"), "proud rival never offers the friendly spar")
+	c.grudges["gen_rival"] = 10
+	var bitter: Array = ids.call(20)
+	assert_true(bitter.has("rival_contest") and not bitter.has("rival_spar_friendly"), "bitter rival duels")
+
+
+func test_attitude_array_validation() -> void:
+	var d := GameData.load_from_dir()
+	d.encounters["ok_att"] = {"id": "ok_att", "tags": ["city"], "rival": "any", "rival_attitude": ["proud", "bitter"], "text": "Hi."}
+	assert_eq(Rivals.validate(d).size(), 0, ", ".join(Rivals.validate(d)))
+	d.encounters["bad_att3"] = {"id": "bad_att3", "tags": ["city"], "rival": "any", "rival_attitude": ["proud", "angry"], "text": "Hi."}
+	assert_eq(Rivals.validate(d).size(), 1, ", ".join(Rivals.validate(d)))
