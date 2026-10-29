@@ -1794,6 +1794,52 @@ func test_sect_method_hint() -> void:
 	assert_true(short.contains("you have 600") and not short.contains("Learn it"), short)
 
 
+func _foundation_method_member(contribution: int) -> CharacterData:
+	var c := _method_member(1, contribution, "foundation_establishment_pill")
+	c.realm_index = Guidance.THIN_DEFENCE_REALM
+	c.stage = 0
+	c.techniques = {}
+	c.equipment = {}
+	c.spiritual_roots = {}  # no element affinity: listed rates apply as is
+	c.main_method = data().starter_method
+	return c
+
+
+func _hint_index(lines: PackedStringArray, prefix: String) -> int:
+	for i in lines.size():
+		if lines[i].begins_with(prefix):
+			return i
+	return -1
+
+
+func test_claimable_method_leads_thin_defence() -> void:
+	var d := data()
+	var c := _foundation_method_member(1000)
+	var lines := Guidance.hints(c, d, 1.0, 20)
+	var i_method := _hint_index(lines, "Your sect treasury hands out")
+	var i_thin := _hint_index(lines, "Your defence is thin")
+	assert_true(i_method >= 0 and i_thin >= 0, str(lines))
+	assert_true(i_method < i_thin, str(lines))
+	# cannot claim yet: thin first, as before
+	var poor := Guidance.hints(_foundation_method_member(100), d, 1.0, 20)
+	var p_thin := _hint_index(poor, "Your defence is thin")
+	assert_true(p_thin >= 0, str(poor))
+	var p_method := _hint_index(poor, "Your sect treasury hands out")
+	assert_true(p_method < 0 or p_thin < p_method, str(poor))
+
+
+func test_method_within_one_and_a_half_keeps_thin_first() -> void:
+	var d := data()
+	var c := _foundation_method_member(1000)
+	c.techniques["iron_marrow_method"] = {"level": 1, "xp": 0.0}
+	c.main_method = "iron_marrow_method"
+	var lines := Guidance.hints(c, d, 1.0, 20)
+	var i_method := _hint_index(lines, "Your sect treasury hands out")
+	var i_thin := _hint_index(lines, "Your defence is thin")
+	assert_true(i_method >= 0 and i_thin >= 0, str(lines))
+	assert_true(i_thin < i_method, str(lines))
+
+
 func test_sect_method_hint_held_manual_says_read_it() -> void:
 	var d := data()
 	var c := _method_member(1, 0, "")

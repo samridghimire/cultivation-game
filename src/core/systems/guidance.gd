@@ -64,10 +64,14 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 		var days := int(c.pregnancy.get("days_left", 0))
 		out.append("A child is due in %s." % Calendar.format_duration(days))
 	var thin := thin_defence_hint(c, data, region_id, flags)
+	var method_offer := sect_method_hint(c, data)
+	# GUIDE-196: a claimable method that nearly doubles qi leads the thin-defence line.
+	var method_leads := method_offer != "" and _method_offer_leads(c, data)
+	if method_leads:
+		out.append(method_offer)
 	if thin != "":
 		out.append(thin)
-	var method_offer := sect_method_hint(c, data)
-	if method_offer != "":
+	if method_offer != "" and not method_leads:
 		out.append(method_offer)
 	var mortal_nudge := mortal_crafter_hint(c, data, region_id, today, flags)
 	if mortal_nudge != "":
@@ -384,6 +388,16 @@ static func sect_method_offer(c: CharacterData, data: GameData) -> Dictionary:
 		if best.is_empty() or rate > float(best["rate"]) or (is_equal_approx(rate, float(best["rate"])) and (cost < int(best["cost"]) or (cost == int(best["cost"]) and item_id < String(best["item_id"])))):
 			best = {"item_id": item_id, "tech_id": tech_id, "cost": cost, "rate": rate, "current": Techniques.method_rate(c, data), "held": held}
 	return best
+
+
+## GUIDE-196: true when the treasury method can be claimed (or is held) and gathers qi at 1.5x or more of `c`'s own.
+static func _method_offer_leads(c: CharacterData, data: GameData) -> bool:
+	var offer := sect_method_offer(c, data)
+	if offer.is_empty():
+		return false
+	if not bool(offer.get("held", false)) and Sects.contribution_balance(c) < int(offer["cost"]):
+		return false
+	return float(offer["rate"]) >= 1.5 * float(offer["current"])
 
 
 ## GUIDE-158: points at the sect treasury's faster cultivation method; "" without an offer.
