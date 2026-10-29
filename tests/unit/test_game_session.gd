@@ -2053,3 +2053,18 @@ func test_face_heart_vision_posts_and_shifts_odds() -> void:
 	assert_almost_eq(Cultivation.breakthrough_chance(c, gs.data), before)
 	assert_true(gs.heart_vision().is_empty())
 	gs.end_session()
+
+
+func test_greeting_for_reads_favor_and_fills_player_name() -> void:
+	var c := _start()
+	var gs := _game_state()
+	var npc := Npcs.spawn(gs.npcs, gs.data, seeded_rng(5), {"age_years": 30, "region": "qingshi_village", "realm": "mortal"})
+	assert_eq(gs.greeting_for(npc.id), "")
+	gs.npc_favor[npc.id] = 40
+	var warm: String = gs.greeting_for(npc.id)
+	assert_true(warm != "")
+	assert_false(warm.contains("{player}"))
+	gs.npc_favor[npc.id] = -40
+	assert_true(gs.greeting_for(npc.id) != warm)
+	assert_eq(gs.greeting_for("nobody"), "")
+	assert_eq(c.name, "Integration")

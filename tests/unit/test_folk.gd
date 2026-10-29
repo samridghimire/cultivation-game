@@ -131,3 +131,41 @@ func test_game_state_names_the_villager_and_changes_favor() -> void:
 	assert_eq(int(gs.npc_favor.get(npc.id, 0)), before + 4)
 	gs.data.encounters.erase("test_folk")
 	gs.end_session()
+
+
+func test_greeting_bands_and_edges() -> void:
+	var npcs := {}
+	_village(npcs, 1)
+	var npc: CharacterData = npcs.values()[0]
+	assert_eq(Folk.greeting(npc, 19, 5, data()), "")
+	assert_true(Folk.greeting(npc, 20, 5, data()) != "")
+	assert_eq(Folk.greeting(npc, -9, 5, data()), "")
+	assert_true(Folk.greeting(npc, -10, 5, data()) != "")
+	assert_eq(Folk.greeting(npc, 0, 5, data()), "")
+	var warm: Array = data().family["folk_greetings"]["warm"]["lines"]
+	var cool: Array = data().family["folk_greetings"]["cool"]["lines"]
+	assert_true(warm.has(Folk.greeting(npc, 50, 5, data())))
+	assert_true(cool.has(Folk.greeting(npc, -50, 5, data())))
+
+
+func test_greeting_is_deterministic_per_day_and_varies() -> void:
+	var npcs := {}
+	_village(npcs, 1)
+	var npc: CharacterData = npcs.values()[0]
+	assert_eq(Folk.greeting(npc, 30, 7, data()), Folk.greeting(npc, 30, 7, data()))
+	var seen := {}
+	for day in 40:
+		seen[Folk.greeting(npc, 30, day, data())] = true
+	assert_true(seen.size() > 1)
+
+
+func test_greeting_validation() -> void:
+	var d := data()
+	assert_eq(Folk.validate_greetings(d).size(), 0)
+	var saved: Dictionary = d.family["folk_greetings"].duplicate(true)
+	d.family["folk_greetings"]["warm"]["lines"] = []
+	assert_true(Folk.validate_greetings(d).size() > 0)
+	d.family["folk_greetings"] = saved.duplicate(true)
+	d.family["folk_greetings"]["warm"]["min_favor"] = -20
+	assert_true(Folk.validate_greetings(d).size() > 0)
+	d.family["folk_greetings"] = saved

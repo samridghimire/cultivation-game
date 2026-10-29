@@ -1321,6 +1321,14 @@ func court(npc_id: String) -> void:
 	_pass_time(result["days"])
 
 
+## WORLD-003: what a neighbour says in passing today given your favor with them ("" if nothing).
+func greeting_for(npc_id: String) -> String:
+	var npc: CharacterData = npcs.get(npc_id)
+	if npc == null:
+		return ""
+	return Folk.greeting(npc, int(npc_favor.get(npc_id, 0)), GameClock.total_days, data).replace("{player}", player.name)
+
+
 ## Pass a few days chatting with an NPC who has no dialogue file; raises favor
 ## up to data/family.json acquaintance.chat_max_favor (enough to court).
 func chat(npc_id: String) -> void:

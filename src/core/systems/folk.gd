@@ -92,9 +92,49 @@ static func favor_changes(effects: Dictionary, cast: Dictionary) -> Dictionary:
 	return out
 
 
+## What `npc` says in passing (WORLD-003) given the player's `favor` with them: a warm or cool line from
+## data/family.json folk_greetings picked by hash(npc id + day), with {player} left for the caller. "" in between.
+static func greeting(npc: CharacterData, favor: int, day: int, data: GameData) -> String:
+	var bands: Dictionary = data.family.get("folk_greetings", {})
+	var band: Dictionary = {}
+	if favor >= int(bands.get("warm", {}).get("min_favor", 1000)):
+		band = bands["warm"]
+	elif favor <= int(bands.get("cool", {}).get("max_favor", -1000)):
+		band = bands["cool"]
+	var lines: Array = band.get("lines", [])
+	if lines.is_empty():
+		return ""
+	return String(lines[absi(hash(npc.id + str(day))) % lines.size()])
+
+
+## Load errors in folk_greetings: both bands, non-empty string lines, min_favor above max_favor.
+static func validate_greetings(data: GameData) -> PackedStringArray:
+	var errors: PackedStringArray = []
+	var bands: Dictionary = data.family.get("folk_greetings", {})
+	if bands.is_empty():
+		return errors
+	for key: String in ["warm", "cool"]:
+		var band: Variant = bands.get(key)
+		if not (band is Dictionary):
+			errors.append("family.json folk_greetings: missing band %s" % key)
+			continue
+		var lines: Variant = band.get("lines")
+		if not (lines is Array) or lines.is_empty():
+			errors.append("family.json folk_greetings.%s: lines must be a non-empty array" % key)
+		else:
+			for line: Variant in lines:
+				if not (line is String) or String(line) == "":
+					errors.append("family.json folk_greetings.%s: lines must be non-empty strings" % key)
+		if not band.has("min_favor" if key == "warm" else "max_favor"):
+			errors.append("family.json folk_greetings.%s: needs %s" % [key, "min_favor" if key == "warm" else "max_favor"])
+	if errors.is_empty() and int(bands["warm"]["min_favor"]) <= int(bands["cool"]["max_favor"]):
+		errors.append("family.json folk_greetings: warm min_favor must be above cool max_favor")
+	return errors
+
+
 ## Load errors: favor effects are ints within +-FAVOR_LIMIT and need their placeholder in the encounter's texts.
 static func validate(data: GameData) -> PackedStringArray:
-	var errors: PackedStringArray = []
+	var errors: PackedStringArray = validate_greetings(data)
 	for e: Dictionary in data.encounters.values():
 		var blocks: Array = [[String(e["id"]), e.get("effects", {})]]
 		for i in e.get("choices", []).size():
