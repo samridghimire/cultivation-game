@@ -39,6 +39,24 @@ func _start() -> void:
 		_gather_note_shots(gs)
 		return
 	shots.append({"name": "hud_arrival", "open": func() -> void: pass, "close": func() -> void: pass})
+	# WU-385: the HUD of a brand-new sect member (Azure Cloud Outer Disciple, Qi Refining 1, Qingshi Village).
+	var sect_saved: Array = []
+	shots.append({"name": "hud_after_sect", "open": func() -> void:
+		sect_saved.append_array([c.sect.duplicate(), c.realm_index, c.stage, c.qi])
+		c.realm_index = gs.data.realm_index_of("qi_refining")
+		c.stage = 0
+		c.qi = 0.0
+		gs.current_region = "qingshi_village"
+		gs.join_sect("azure_cloud_sect")
+		assert(c.sect.get("id", "") == "azure_cloud_sect", "join_sect did not make the player a member")
+		hud.get("_banner").visible = false
+		root.get_node("EventBus").player_changed.emit(), "close": func() -> void:
+			c.sect = sect_saved[0]
+			c.realm_index = sect_saved[1]
+			c.stage = sect_saved[2]
+			c.qi = sect_saved[3]
+			sect_saved.clear()
+			root.get_node("EventBus").player_changed.emit()})
 	shots.append({"name": "elder_mo_dialogue", "open": func() -> void: gs.start_dialogue("elder_mo"), "close": func() -> void: gs.end_dialogue()})
 	var explore_site := _find_explore()
 	if explore_site != null:
