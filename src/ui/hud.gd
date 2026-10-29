@@ -22,12 +22,12 @@ var _status: Label
 var _lives: Label
 var _qi_bar: ProgressBar
 var _bottleneck: Label
-var _next_layer: Label
 var _injuries: Label
 var _hint: Label
 var _lives_badge: Label  # WU-340: the same gold "!" beside the Lives label while the first hint is the artifact lives line
 var _hint_badge: Label  # WU-284: gold "!" over the first hint when it names a place here
 var _hint_lines: PackedStringArray = []
+var _hint_full := ""  ## GFX-016: the hint text before the line cap.
 var _goal: Label
 var _hunt: Label
 var _fair: Label
@@ -52,10 +52,13 @@ var _target_name := ""
 
 ## [action, caption] pairs shown in the key bar.
 const KEY_HINTS := [
-	["interact", "interact"], ["toggle_character_sheet", "character"], ["toggle_inventory", "inventory"],
-	["toggle_techniques", "techniques"], ["toggle_map", "map"], ["toggle_message_log", "log"],
-	["toggle_artifact", "artifact"], ["toggle_clan", "clan"], ["toggle_family", "family"], ["toggle_journal", "journal"], ["quick_save", "save"], ["quick_load", "load"], ["pause_menu", "pause"], ["toggle_help", "help"],
-]
+	["interact", "act"], ["toggle_character_sheet", "sheet"], ["toggle_inventory", "bag"],
+	["toggle_techniques", "arts"], ["toggle_map", "map"], ["toggle_message_log", "log"],
+	["toggle_artifact", "artifact"], ["toggle_clan", "clan"], ["toggle_family", "family"], ["toggle_journal", "journal"], ["toggle_help", "help"],
+]  # GFX-016: one line at 1280 px; save/load/pause live in the pause menu and the help screen
+const GUIDE_MAX_LINES := 5  ## GFX-016: wrapped lines the "Next steps" card may show.
+const CARD_FADE_MARGIN := 16.0  ## GFX-016: the player this close to a card fades it.
+const CARD_FADE_ALPHA := 0.35
 var _choice_menu: ChoiceMenu
 var _threat_prompt: ThreatPrompt
 ## Toggleable modal screens keyed by the input action that opens them. Each
@@ -364,9 +367,9 @@ func _build_status_panel() -> void:
 	panel.position = Vector2(16, 16)
 	var box := VBoxContainer.new()
 	panel.add_child(box)
-	_age = UIStyle.label("", 15)
+	_age = UIStyle.label("", 14)
 	box.add_child(_age)
-	_realm = UIStyle.label("", 15, UIStyle.ACCENT)
+	_realm = UIStyle.label("", 14, UIStyle.ACCENT)
 	box.add_child(_realm)
 	_qi_bar = ProgressBar.new()
 	_qi_bar.custom_minimum_size = Vector2(300, 16)
@@ -381,20 +384,20 @@ func _build_status_panel() -> void:
 	var money_row := HBoxContainer.new()
 	money_row.add_theme_constant_override("separation", 16)
 	box.add_child(money_row)
-	_lives = UIStyle.label("", 15)
+	_lives = UIStyle.label("", 14)
 	money_row.add_child(_lives)
 	_lives_badge = UIStyle.label("!", 15, UIStyle.ACCENT)
 	_lives_badge.visible = false
 	_lives.add_child(_lives_badge)
-	_currency = UIStyle.label("", 15)
+	_currency = UIStyle.label("", 14)
 	money_row.add_child(_currency)
 	_status = UIStyle.label("", 13, Color(0.75, 0.76, 0.8))
+	_status.add_theme_constant_override("line_spacing", -3)
 	box.add_child(_status)
+	box.add_theme_constant_override("separation", 0)
 	_bottleneck = UIStyle.label("", 14, UIStyle.ACCENT)
 	_bottleneck.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	box.add_child(_bottleneck)
-	_next_layer = UIStyle.label("", 14, Color(0.62, 0.64, 0.7))
-	box.add_child(_next_layer)
 	_injuries = UIStyle.label("", 14, UIStyle.CATEGORY_COLORS["danger"])
 	_injuries.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	box.add_child(_injuries)
@@ -431,10 +434,10 @@ func _build_guide_panel() -> void:
 	_hint.add_child(_hint_badge)
 	add_child(panel)
 	_key_bar = UIStyle.label("", 12, Color(0.7, 0.7, 0.7, 0.85))
-	_key_bar.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_key_bar.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	_key_bar.custom_minimum_size = Vector2(600, 0)
+	_key_bar.add_theme_stylebox_override("normal", key_bar_style())
 	_set_anchored_rect(_key_bar, Vector4(1, 1, 1, 1), Vector4(-616, -34, -16, -8))
+	_key_bar.grow_horizontal = Control.GROW_DIRECTION_BEGIN
 	_key_bar.grow_vertical = Control.GROW_DIRECTION_BEGIN
 	_key_bar.visible = bool(Settings.get_value("key_help"))
 	add_child(_key_bar)
@@ -542,24 +545,22 @@ func _refresh() -> void:
 	_realm.text = Cultivation.realm_label(p, data)
 	_qi_text.text = "Qi: %d / %d" % [int(p.qi), int(Cultivation.qi_required(p, data))]
 	_currency.text = currency_line(p)
-	_status.text = "\n".join(PackedStringArray([
-		"Alignment: %s (%d)" % [Alignment.tier_name(p.alignment, data), p.alignment],
-		Sects.describe(p, data),
-		"%s · %s · %s" % [GameClock.date_string(), season_label(GameClock.total_days), Weather.label(Weather.of(data, GameState.current_region, GameClock.total_days))],
-	]))
 	var density := GameState.region_qi_density()
 	var qi_why := ", ".join(Exploration.qi_flag_reasons(data, GameState.current_region, GameState.world_flags))
-	_status.text += "\n%s   (Qi x%s%s)" % [Exploration.region_name(data, GameState.current_region), String.num(density, 2), ", " + qi_why if qi_why != "" else ""]
-	_status.text += region_event_suffix(data, GameState.world_events, GameState.current_region, p)
+	_status.text = "\n".join(PackedStringArray([
+		alignment_line(Alignment.tier_name(p.alignment, data), Sects.describe(p, data)),
+		"%s · %s · %s" % [GameClock.date_string(), season_label(GameClock.total_days), Weather.label(Weather.of(data, GameState.current_region, GameClock.total_days))],
+	]))
+	var region := "%s (Qi x%s%s)" % [Exploration.region_name(data, GameState.current_region), String.num(density, 2), ", " + qi_why if qi_why != "" else ""]
+	region += region_event_suffix(data, GameState.world_events, GameState.current_region, p)
 	if SecretRealms.open_in_region(data, GameState.current_region, GameClock.total_days):
-		_status.text += "   (Secret realm open)"
+		region += "   (Secret realm open)"
+	_status.text += "\n" + region_line(region, next_stage_short(GameState.days_to_next_stage(density), p, data), _status.get_theme_font("font"), 13, 292.0)
 	_qi_bar.max_value = maxf(Cultivation.qi_required(p, data), 1.0)
 	_qi_bar.value = p.qi
 	_bottleneck.text = bottleneck_hint(p, data)
 	_bottleneck.visible = _bottleneck.text != ""
 	_qi_bar.modulate = UIStyle.ACCENT if _bottleneck.visible else Color.WHITE
-	_next_layer.text = next_layer_text(GameState.days_to_next_stage(density), p, data)
-	_next_layer.visible = _next_layer.text != ""
 	_injuries.visible = Injuries.has_any(p)
 	_injuries.text = "Injured: " + ", ".join(Injuries.describe(p, data))
 	var hint_count := int(Settings.get_value("hud_hints"))
@@ -667,13 +668,9 @@ static func lives_color(lives: int) -> Color:
 func _fit_panels() -> void:
 	if _status_panel == null or _guide_panel == null or not is_inside_tree():
 		return
-	_next_layer.visible = _next_layer.text != ""
 	var height := get_viewport().get_visible_rect().size.y - LOG_HEIGHT - 2.0 * STATUS_MARGIN
 	var limit := height - _status_panel.position.y
 	_status_panel.reset_size()
-	if _status_panel.size.y > limit and _next_layer.visible:
-		_next_layer.visible = false
-		_status_panel.reset_size()
 	var glimit := height - _guide_panel.position.y
 	for label: Label in [_fair, _hint, _goal]:
 		_guide_panel.reset_size()
@@ -683,8 +680,25 @@ func _fit_panels() -> void:
 			break
 		if label.visible:
 			label.visible = false
+	_apply_line_cap()
 	_guide_panel.reset_size()
 	_update_guide_visibility()
+
+
+## GFX-016: the card shows at most GUIDE_MAX_LINES wrapped lines; the hint gives up the lines past that.
+func _apply_line_cap() -> void:
+	_hint.text = _hint_full
+	if not _hint.visible:
+		return
+	var font := _hint.get_theme_font("font")
+	var used := 0
+	for label: Label in [_goal, _hunt, _fair]:
+		if label.visible:
+			used += maxi(1, wrapped_lines(label.text, font, 14, 316.0).size()) if label == _goal else 1
+	var budget := maxi(1, GUIDE_MAX_LINES - used)
+	var full := wrapped_lines(_hint_full, font, 14, 316.0)
+	if full.size() > budget:
+		_hint.text = "\n".join(overflow_cut(full, budget))
 
 
 ## The guide card shows only while one of its lines does. With hints off only the hunt line can (an active
@@ -710,7 +724,8 @@ func _set_hint_text(lines: PackedStringArray) -> void:
 	for i in lines.size():
 		out.append(("  " if i == 0 and marked else "> ") + cap_hint(lines[i]))
 		cut = cut or cap_hint(lines[i]) != lines[i]
-	_hint.text = "\n".join(out)
+	_hint_full = "\n".join(out)
+	_hint.text = _hint_full
 	# WU-315: mouse hover shows the whole text when a line was cut.
 	_hint.tooltip_text = "\n".join(lines) if cut else ""
 	_hint.mouse_filter = Control.MOUSE_FILTER_PASS
@@ -1427,7 +1442,10 @@ func _compute_fade_targets() -> Vector3:
 			if it != null and it.global_position.distance_to(player.global_position) < 250.0:
 				var lr := it.label_rect()
 				covered.append(Rect2(xf * (it.get_parent() as Node2D).to_global(lr.position) if it.get_parent() is Node2D else xf * lr.position, lr.size * xf.get_scale()))
-	return Vector3(panel_alpha(_status_panel.get_global_rect(), covered), panel_alpha(_log_panel.get_global_rect(), covered), panel_alpha(_guide_panel.get_global_rect(), covered))
+	return Vector3(
+		minf(panel_alpha(_status_panel.get_global_rect(), covered), card_fade_target(_status_panel.get_global_rect(), pp)),
+		minf(panel_alpha(_log_panel.get_global_rect(), covered), card_fade_target(_log_panel.get_global_rect(), pp)),
+		minf(panel_alpha(_guide_panel.get_global_rect(), covered), card_fade_target(_guide_panel.get_global_rect(), pp)))
 
 
 func _update_modal() -> void:
@@ -1450,3 +1468,64 @@ func _return_to_menu() -> void:
 	_showing_skip = {}
 	GameState.end_session()
 	get_tree().change_scene_to_file(MAIN_MENU)
+
+
+## GFX-016: "Neutral · Azure Cloud Sect, Outer Disciple" (the alignment number stays on the sheet).
+static func alignment_line(tier: String, affiliation: String) -> String:
+	return "%s · %s" % [tier, affiliation]
+
+
+## "~70 days to the next stage" for the status card ("" like next_layer_text).
+static func next_stage_short(days: int, c: CharacterData, data: GameData) -> String:
+	var text := next_layer_text(days, c, data)
+	return text.trim_suffix(" here")
+
+
+## `region` and the estimate on one line, or two when that line is wider than `max_width`.
+static func region_line(region: String, estimate: String, font: Font = null, font_size: int = 13, max_width: float = 0.0) -> String:
+	if estimate == "":
+		return region
+	var one := "%s · %s" % [region, estimate]
+	if font != null and max_width > 0.0 and font.get_string_size(one, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x > max_width:
+		return "%s\n%s" % [region, estimate]
+	return one
+
+
+## `text` wrapped at word boundaries to `width` px, one entry per rendered line.
+static func wrapped_lines(text: String, font: Font, font_size: int, width: float) -> PackedStringArray:
+	var out := PackedStringArray()
+	for raw in text.split("\n"):
+		var para := TextParagraph.new()
+		para.width = width
+		para.break_flags = TextServer.BREAK_WORD_BOUND | TextServer.BREAK_MANDATORY
+		para.add_string(raw, font, font_size)
+		for i in para.get_line_count():
+			var r := para.get_line_range(i)
+			out.append(raw.substr(r.x, r.y - r.x).strip_edges())
+	return out
+
+
+## At most `max_lines` lines; past that the last one becomes "... more in the journal (J)".
+static func overflow_cut(lines: PackedStringArray, max_lines: int) -> PackedStringArray:
+	if lines.size() <= max_lines:
+		return lines
+	var out := lines.slice(0, maxi(max_lines - 1, 0))
+	out.append("... more in the journal (J)")
+	return out
+
+
+## The key strip's translucent dark backing (GFX-016).
+static func key_bar_style() -> StyleBoxFlat:
+	var style := UIStyle.panel_style().duplicate() as StyleBoxFlat
+	style.bg_color.a = 0.6
+	style.border_width_left = 0
+	style.border_width_right = 0
+	style.border_width_top = 0
+	style.border_width_bottom = 0
+	style.set_content_margin_all(4)
+	return style
+
+
+## Alpha a card takes while the player (screen position) is within CARD_FADE_MARGIN of its rect.
+static func card_fade_target(card_rect: Rect2, player_screen_pos: Vector2) -> float:
+	return CARD_FADE_ALPHA if card_rect.grow(CARD_FADE_MARGIN).has_point(player_screen_pos) else 1.0

@@ -59,7 +59,7 @@ func test_lines_moved_into_their_rows() -> void:
 	assert_true((hud.get("_currency") as Label).text != "")
 	var hints: PackedStringArray = hud.get("_hint_lines")
 	if not hints.is_empty():
-		assert_true((hud.get("_hint") as Label).text.contains(HudScript.cap_hint(hints[0])))
+		assert_true((hud.get("_hint") as Label).text.contains(HudScript.cap_hint(hints[0]).substr(0, 20)))
 	_done(hud)
 
 
@@ -99,3 +99,47 @@ func test_hunt_line_shows_with_hints_off() -> void:
 func test_log_idle_alpha() -> void:
 	assert_eq(HudScript.log_idle_alpha(0.0), 1.0)
 	assert_true(HudScript.log_idle_alpha(9.0) <= 0.55)
+
+
+## GFX-016: slimmer cards.
+func test_status_card_is_slim_and_merged() -> void:
+	var hud := await _build()
+	var panel := hud.get("_status_panel") as Control
+	assert_true(panel.size.y <= 170.0, "status card %.0f px tall: %s | %s | bottleneck %s" % [panel.size.y, (hud.get("_status") as Label).text, (hud.get("_status") as Label).size, (hud.get("_bottleneck") as Label).text])
+	var text: String = (hud.get("_status") as Label).text
+	assert_false(text.contains("Alignment:"), text)
+	assert_true(text.contains(" · Rogue Cultivator"), text)
+	var key_bar := hud.get("_key_bar") as Label
+	assert_eq(key_bar.get_line_count(), 1, key_bar.text)
+	assert_true(key_bar.get_global_rect().end.x <= DECK.x)
+	_done(hud)
+
+
+func test_card_text_helpers() -> void:
+	assert_eq(HudScript.alignment_line("Neutral", "Rogue Cultivator"), "Neutral · Rogue Cultivator")
+	var font := ThemeDB.fallback_font
+	assert_eq(HudScript.region_line("Qingshi Village (Qi x1.0)", "~70 days to the next stage"), "Qingshi Village (Qi x1.0) · ~70 days to the next stage")
+	assert_eq(HudScript.region_line("Qingshi Village (Qi x1.0)", "", font, 13, 300.0), "Qingshi Village (Qi x1.0)")
+	assert_true(HudScript.region_line("Qingshi Village (Qi x1.0)", "~70 days to the next stage", font, 13, 100.0).contains("\n"), "wraps only when too wide")
+	var lines := PackedStringArray(["a", "b", "c", "d", "e", "f"])
+	assert_eq(HudScript.overflow_cut(lines, 5), PackedStringArray(["a", "b", "c", "d", "... more in the journal (J)"]))
+	assert_eq(HudScript.overflow_cut(lines.slice(0, 5), 5), lines.slice(0, 5))
+	assert_true(HudScript.wrapped_lines("one two three four five six seven eight", font, 14, 60.0).size() > 1)
+	var rect := Rect2(16, 16, 316, 150)
+	assert_eq(HudScript.card_fade_target(rect, Vector2(100, 100)), 0.35)
+	assert_eq(HudScript.card_fade_target(rect, Vector2(340, 100)), 0.35, "within the 16 px margin")
+	assert_eq(HudScript.card_fade_target(rect, Vector2(400, 100)), 1.0)
+
+
+func test_guide_card_caps_wrapped_lines() -> void:
+	var hud := await _build()
+	var long := PackedStringArray()
+	for i in 6:
+		long.append("Hint number %d says something fairly long so that it wraps across the card." % i)
+	hud.call("_set_hint_text", long)
+	hud.call("_fit_panels")
+	var font: Font = (hud.get("_hint") as Label).get_theme_font("font")
+	var shown := HudScript.wrapped_lines((hud.get("_hint") as Label).text, font, 14, 316.0)
+	assert_true(shown.size() <= HudScript.GUIDE_MAX_LINES, str(shown))
+	assert_true((hud.get("_hint") as Label).text.contains("more in the journal (J)"))
+	_done(hud)

@@ -114,16 +114,16 @@ func test_binding_label_and_key_bar_follow_device_and_rebinds() -> void:
 	assert_eq(ic.binding_label("interact", true), "A")
 	assert_eq(ic.binding_label("quick_save", true), "", "no gamepad binding")
 	ic.last_input_joypad = false
-	assert_true(ic.key_bar_text(hints).contains("[E] interact"))
-	assert_true(ic.key_bar_text(hints).contains("[F5] save"))
+	assert_true(ic.key_bar_text(hints).contains("[E] act"))
+	assert_false(ic.key_bar_text(hints).contains("save"), "save/load/pause live in the pause menu")
 	ic.last_input_joypad = true
 	var pad_bar: String = ic.key_bar_text(hints)
-	assert_true(pad_bar.contains("[A] interact"), pad_bar)
+	assert_true(pad_bar.contains("[A] act"), pad_bar)
 	assert_false(pad_bar.contains("save"))
 	assert_true(pad_bar.contains("[RT] family"), "trigger-bound actions show in the gamepad key bar: " + pad_bar)
 	ic.last_input_joypad = false
 	ic.rebind_key("interact", KEY_F)
-	assert_true(ic.key_bar_text(hints).contains("[F] interact"))
+	assert_true(ic.key_bar_text(hints).contains("[F] act"))
 	ic.reset_controls()
 	ic.path = saved_path
 	DirAccess.remove_absolute("user://test_controls_fh012.cfg")
