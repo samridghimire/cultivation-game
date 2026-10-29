@@ -109,6 +109,7 @@
         "A choice that starts a fight shows your odds, like \"(Dangerous, 30 in 100)\". A duel with your rival never kills; a choice marked \"to the death\" can.",
         "When your first hint names another region, the road out of this one wears the gold marker, and the route that leads there says so.",
         "Each road says the qi at the other end and, once you have been there, what you can find: a merchant, a clinic, a bounty board.",
+        "Once you have seen everything a region holds, a hint names the nearest region with happenings you have not met.",
         "Stronger realms unlock stranger events, and many one-time stories will not repeat once you have lived them."
       ]
     },
@@ -374,7 +375,8 @@
       "group": "people",
       "body": [
         "A Foundation Establishment cultivator with an abode can found a clan: 500 spirit stones and 30 days. Recruit family and acquaintances (favor 40 and 50 stones each); the clan ranks run from Patriarch and up to three Elders to Core and Outer members.",
-        "Build estate projects from the clan treasury, one at a time: income, reputation, a qi-dense seat, wards against misfortune and training grounds. When the patriarch dies, the heir takes over: by default the eldest child of the best-ranked spouse, or whoever you named. Other clans have their own heads and feuds, and your deeds toward their members change how they treat you."
+        "Build estate projects from the clan treasury, one at a time: income, reputation, a qi-dense seat, wards against misfortune and training grounds. When the patriarch dies, the heir takes over: by default the eldest child of the best-ranked spouse, or whoever you named. Other clans have their own heads and feuds, and your deeds toward their members change how they treat you.",
+        "The clan goal names an abode you could claim as its seat, with its road and price."
       ]
     },
     {
@@ -455,7 +457,8 @@
         "Ingredients come from three places: a merchant's shelves, gather spots in the wild, and rare finds while exploring. Higher herbs need a higher realm to gather. Some ingredients grow nowhere: Blank Talisman Paper and the like are bought. The Wandering Merchant in Qingshi sells paper, and travelling peddlers sometimes carry it.",
         "Learn new recipes from scrolls and teachers, and rank up your profession to unlock more.",
         "Each month buyers may post commissions for things you can craft. Deliver them at a workshop before the deadline for spirit stones and profession xp; open orders are listed in the journal (J).",
-        "At first, a craft pays when you gather your own herbs and ores or fill a buyer's order; bought ingredients barely cover their cost. A gather spot lists which of your recipes its herbs feed (\"Used in\"), and the inventory shows the same on an ingredient. Finished commissions and treated patients also spread your name, which counts toward renown. Helping travellers and villagers you meet on the road also raises your renown in the region where it happens."
+        "At first, a craft pays when you gather your own herbs and ores or fill a buyer's order; bought ingredients barely cover their cost. A gather spot lists which of your recipes its herbs feed (\"Used in\"), and the inventory shows the same on an ingredient. Finished commissions and treated patients also spread your name, which counts toward renown. Helping travellers and villagers you meet on the road also raises your renown in the region where it happens.",
+        "The next-recipe goal names who sells the scroll, where and for how much (or your sect treasury's price)."
       ]
     },
     {
