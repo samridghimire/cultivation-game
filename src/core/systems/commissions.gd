@@ -318,6 +318,28 @@ static func short_ingredient(c: CharacterData, data: GameData, entry: Dictionary
 	return ""
 
 
+## GUIDE-200: item id -> quantity that c's open orders still need: the order's item (its count) plus
+## each non-stone ingredient times the crafts still needed. Selling leaves these in the pack.
+static func order_needs(c: CharacterData, data: GameData) -> Dictionary:
+	var out := {}
+	for entry: Dictionary in c.commissions:
+		var item_id := String(entry.get("item", ""))
+		var count := int(entry.get("count", 0))
+		if item_id == "":
+			continue
+		out[item_id] = int(out.get(item_id, 0)) + count
+		var recipe := _recipe_for(data, entry)
+		var have := c.item_count(item_id)
+		if recipe.is_empty() or have >= count:
+			continue
+		var per_craft := maxi(1, int(recipe["output"].get("count", 1)))
+		var crafts := ceili(float(count - have) / per_craft)
+		for id: String in recipe["ingredients"]:
+			if id != STONE_ID:
+				out[id] = int(out.get(id, 0)) + int(recipe["ingredients"][id]) * crafts
+	return out
+
+
 ## PROF-016: the spirit stones the crafts still needed for this order consume (0 when none or no recipe).
 static func _stones_needed(c: CharacterData, data: GameData, entry: Dictionary) -> int:
 	var recipe := _recipe_for(data, entry)

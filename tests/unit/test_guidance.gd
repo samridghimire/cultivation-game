@@ -5268,3 +5268,15 @@ func test_realm_goal_odds_include_a_held_breakthrough_pill() -> void:
 	assert_true(line.contains(want), line)
 	c.breakthrough_pill = "foundation_establishment_pill"
 	assert_false(String(Guidance.goals(c, data(), {})[0]).contains("with your"))
+
+
+func test_sell_offer_keeps_what_open_orders_need() -> void:
+	var d := data()
+	var c := _qr(0, 20)
+	c.professions["blacksmith"] = {"rank": 0, "xp": 0.0}
+	c.inventory = {"iron_essence": 200}
+	var before := Guidance.sell_offer(c, d, "qingshi_village")
+	assert_false(before.is_empty(), "ore sells without an order")
+	c.commissions = [{"profession": "blacksmith", "item": "iron_sword", "count": 2, "reward": 10, "xp": 5.0, "due_day": 100, "recipe": "iron_sword"}]
+	assert_eq(int(Guidance.sell_keep(c, d, {}).get("iron_essence", 0)), 4)
+	assert_true(Guidance.sell_offer(c, d, "qingshi_village").is_empty(), "the order's ore stays in the pack")

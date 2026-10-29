@@ -985,12 +985,21 @@ static func _sell_hint(c: CharacterData, data: GameData, region_id: String, flag
 	return "The %s here would pay about %d spirit stones for your %s." % [offer["merchant"], offer["total"], offer["goods"]]
 
 
+## GUIDE-200: item id -> quantity that selling should leave: sect deliver missions plus open orders.
+static func sell_keep(c: CharacterData, data: GameData, flags: Dictionary = {}) -> Dictionary:
+	var keep := Sects.deliver_needs(c, data, flags)
+	var orders := Commissions.order_needs(c, data)
+	for id: String in orders:
+		keep[id] = int(keep.get(id, 0)) + int(orders[id])
+	return keep
+
+
 ## GUIDE-088: {merchant, total, goods} for the best buyer in `region_id` of what "sell all loot" would sell
 ## (nothing worn); {} when the best total is below SELL_HINT_MIN.
 static func sell_offer(c: CharacterData, data: GameData, region_id: String, flags: Dictionary = {}) -> Dictionary:
 	if region_id == "" or not data.regions.has(region_id):
 		return {}
-	var keep := Sects.deliver_needs(c, data, flags)
+	var keep := sell_keep(c, data, flags)
 	var best_total := 0
 	var best_name := ""
 	var best_goods := ""

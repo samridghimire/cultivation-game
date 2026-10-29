@@ -563,3 +563,20 @@ func test_urgent_due_order_leads_the_hints() -> void:
 	if herb != "":
 		assert_true(hints.find(due) > hints.find(herb), "a later order keeps its old slot")
 	assert_eq(Commissions.due_soon_order(c, d, "qingshi_village", 10)["line"], due)
+
+
+func test_order_needs_item_and_ingredients() -> void:
+	var c := _alchemist()
+	assert_eq(Commissions.order_needs(c, data()), {}, "no orders")
+	c.commissions = [_pill_order(2, 100)]
+	var recipe: Dictionary = data().recipes["qi_gathering_pill"]
+	var per_craft := maxi(1, int(recipe["output"].get("count", 1)))
+	var crafts := ceili(2.0 / per_craft)
+	var needs := Commissions.order_needs(c, data())
+	assert_eq(int(needs["qi_gathering_pill"]), 2)
+	for id: String in recipe["ingredients"]:
+		if id != "spirit_stone":
+			assert_eq(int(needs[id]), int(recipe["ingredients"][id]) * crafts, id)
+	assert_false(needs.has("spirit_stone"))
+	c.add_item("qi_gathering_pill", 2)
+	assert_eq(Commissions.order_needs(c, data()), {"qi_gathering_pill": 2}, "held in full: only the item")

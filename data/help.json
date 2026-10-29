@@ -487,7 +487,8 @@
       "body": [
         "Only specialist merchants buy goods back, and only what matches their trade: a herb seller takes herbs and ore. Some general traders also take a few extra kinds (herbs, ore, beast materials) without selling them. If one will not take an item, try another stall.",
         "Open a shop and choose the Sell tab to sell a stack at a time, or press \"Sell all loot\" to sell every full stack that merchant buys. The button shows the total and what it will sell; press it again to confirm.",
-        "Sell all loot never sells what you wear, manuals and scrolls, breakthrough pills, readied talismans, or anything that carries a warning. Sell those by hand if you mean to."
+        "Sell all loot never sells what you wear, manuals and scrolls, breakthrough pills, readied talismans, or anything that carries a warning. Sell those by hand if you mean to.",
+        "Sell all loot also keeps what your open orders need."
       ]
     },
     {
