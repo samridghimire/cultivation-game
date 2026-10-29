@@ -122,6 +122,7 @@ extends SceneTree
 ## WU-376: `--hint-shot` also writes hint_injury_far_<size>.png (rogue at Misty Forest, internal injury, 5 stones: a hint names the nearest clinic, its trip and "(you have 5)").
 ## WU-373: `--hint-shot` also writes journal_rank_needs_<size>.png (Inner Disciple, Qi Refining 3, 40 contribution: Goals reads "Become Core Disciple: earn 3000 contribution (you have 40) and reach Foundation Establishment.").
 ## WU-366: `--hint-shot` also writes journal_clan_goal_<size>.png (rogue QR8, no abode, 120 stones: Goals reads "Found a clan: reach Foundation Establishment, claim an abode as its seat and gather 500 spirit stones (you have 120).").
+## WU-398: `--hint-shot` also writes journal_core_pill_trial_/hint_sell_keeps_order_<size>.png (Deadly Core Disciple trial: the pill goal waits on it; an open Iron Sword order keeps its Iron Essence out of the sell sum); journal_explored_out scrolls to its line.
 ## WU-391: `--hint-shot` also writes journal_explored_out_/hint_goal_held_pill_/hint_order_urgent_<size>.png (explored-out Next steps line; held-pill odds in the Goal line; duty line then urgent order line).
 ## WU-374: `--hint-shot` also writes hint_order_doomed_<size>.png (rank-0 Alchemist, one order gathering cannot finish in time plus a meetable one: no hint leads with the doomed order, the journal still says "longer than the order has").
 ## WU-364: `--hint-shot` also writes journal_goals_realm_/journal_goals_rank_<size>.png (Foundation Early: realm goal names Cloud-Sea Cliff in Azure Peak; Foundation Peak with a hopeless Core Disciple trial: rank goal says "beyond you yet").
@@ -3000,13 +3001,14 @@ func _start_hint_shot(gs: Node) -> void:
 		await root.get_tree().process_frame
 		hud.get("_banner").visible = false
 		var cost := int(Sects.shop_entry(c, gs.data, "core_forming_pill")["contribution"])
-		var want := "As Core Disciple you could claim it for %d contribution." % cost
+		# GUIDE-197: a hopeless rank trial adds ", once you can pass the rank's trial" after the cost, so match the clause itself.
+		var want := "As Core Disciple you could claim it for %d contribution" % cost
 		var pill_line := ""
 		for l: String in Guidance.goals(c, gs.data, gs.world_flags, gs.clan, 1.0, gs.current_region, int(root.get_node("GameClock").total_days)):
-			if l.ends_with(want):
+			if l.contains(want):
 				pill_line = l
 		print("hint-shot core pill goal: ", pill_line)
-		assert(pill_line != "", "no goal line ends with the rank clause")
+		assert(pill_line != "", "no goal line carries the rank clause")
 		var pj: Control = hud.get("_screens")["toggle_journal"]
 		await _show_journal(pj, "Goals")
 		for _i in 3:
@@ -3021,6 +3023,84 @@ func _start_hint_shot(gs: Node) -> void:
 			c.breakthrough_pill = core_pill_saved[4]
 			c.life_stats = core_pill_saved[5]
 			core_pill_saved.clear()})
+
+	# WU-398 (b): GUIDE-197. A Foundation Peak Inner Disciple whose Core Disciple trial is Deadly (no style, no armor):
+	# the Core Forming Pill goal says the claim waits until they can pass the rank's trial.
+	var core_trial_saved: Array = []
+	shots.append({"name": "journal_core_pill_trial_" + size_tag, "open": func() -> void:
+		setup_long.call()
+		core_trial_saved.append_array([c.realm_index, c.stage, c.sect.duplicate(), c.inventory.duplicate(), c.breakthrough_pill, c.life_stats.duplicate(), c.techniques.duplicate(true), c.equipment.duplicate()])
+		c.life_stats["fights_won"] = maxi(1, int(c.life_stats.get("fights_won", 0)))
+		c.life_stats["encounters"] = maxi(5, int(c.life_stats.get("encounters", 0)))
+		c.realm_index = gs.data.realm_index_of("foundation_establishment")
+		c.stage = gs.data.realms[c.realm_index].stage_count() - 1
+		c.qi = 0.0
+		c.sect = {"id": "azure_cloud_sect", "rank": 1, "contribution": 4000, "spent": 0}
+		c.inventory = {"spirit_stone": 717}
+		c.breakthrough_pill = ""
+		c.techniques = {}
+		c.equipment = {}
+		gs.current_region = "qingshi_village"
+		root.get_node("EventBus").player_changed.emit()
+		await root.get_tree().process_frame
+		hud.get("_banner").visible = false
+		var trial_line := ""
+		for l: String in Guidance.goals(c, gs.data, gs.world_flags, gs.clan, 1.0, gs.current_region, int(root.get_node("GameClock").total_days)):
+			if l.contains("As Core Disciple you could claim it for"):
+				trial_line = l
+		print("hint-shot core pill trial goal: ", trial_line)
+		assert(trial_line.ends_with("once you can pass the rank's trial."), "pill goal ignores the hopeless trial: " + trial_line)
+		var tj: Control = hud.get("_screens")["toggle_journal"]
+		await _show_journal(tj, "Goals")
+		for _i in 3:
+			await root.get_tree().process_frame
+		var parsed: String = (tj.get("_text") as RichTextLabel).get_parsed_text()
+		assert(parsed.contains("once you can pass the rank's trial"), "journal lacks the trial clause:\n" + parsed), "close": func() -> void:
+			(hud.get("_screens")["toggle_journal"] as Control).close()
+			c.realm_index = core_trial_saved[0]
+			c.stage = core_trial_saved[1]
+			c.sect = core_trial_saved[2]
+			c.inventory = core_trial_saved[3]
+			c.breakthrough_pill = core_trial_saved[4]
+			c.life_stats = core_trial_saved[5]
+			c.techniques = core_trial_saved[6]
+			c.equipment = core_trial_saved[7]
+			core_trial_saved.clear()})
+
+	# WU-398 (c): GUIDE-200. A Blacksmith with an open Iron Sword order holding Iron Essence: the sell offer's sum leaves the
+	# ore the order still needs out (selling everything would pay more).
+	var keeps_saved: Array = []
+	shots.append({"name": "hint_sell_keeps_order_" + size_tag, "open": func() -> void:
+		setup_long.call()
+		keeps_saved.append_array([c.professions.duplicate(true), c.commissions.duplicate(true), c.inventory.duplicate(), c.sect.duplicate()])
+		var today: int = int(root.get_node("GameClock").total_days)
+		c.professions["blacksmith"] = {"rank": 0, "xp": 0.0}
+		c.sect = {}
+		c.inventory = {"iron_essence": 20, "spirit_herb": 10}
+		c.commissions = []
+		gs.current_region = "qingshi_village"
+		var free_offer := Guidance.sell_offer(c, gs.data, "qingshi_village", gs.world_flags)
+		c.commissions = [{"profession": "blacksmith", "item": "iron_sword", "count": 1, "reward": 30, "xp": 5.0, "due_day": today + 10, "recipe": "iron_sword"}]
+		var kept_offer := Guidance.sell_offer(c, gs.data, "qingshi_village", gs.world_flags)
+		var keep := Guidance.sell_keep(c, gs.data, gs.world_flags)
+		print("hint-shot sell keeps order: free ", free_offer, " kept ", kept_offer, " keep ", keep)
+		assert(int(keep.get("iron_essence", 0)) >= 2, "setup: the order does not keep Iron Essence: " + str(keep))
+		assert(not free_offer.is_empty(), "setup: nothing sells without the order")
+		assert(kept_offer.is_empty() or int(kept_offer["total"]) < int(free_offer["total"]), "the sell sum still counts the ore the order needs")
+		root.get_node("EventBus").player_changed.emit()
+		await root.get_tree().process_frame
+		hud.get("_banner").visible = false
+		var kj: Control = hud.get("_screens")["toggle_journal"]
+		await _show_journal(kj, "Next steps")
+		for _i in 3:
+			await root.get_tree().process_frame
+		print("hint-shot sell keeps order: journal shown"), "close": func() -> void:
+			(hud.get("_screens")["toggle_journal"] as Control).close()
+			c.professions = keeps_saved[0]
+			c.commissions = keeps_saved[1]
+			c.inventory = keeps_saved[2]
+			c.sect = keeps_saved[3]
+			keeps_saved.clear()})
 
 	# WU-378: GUIDE-185 + GUIDE-186. A Foundation rogue in Qingshi with no armor or body art and 1000 stones: the capped HUD line
 	# leads with the body manual sold here; the journal's clan goal names the Waterfall Cave.
@@ -3411,7 +3491,9 @@ func _start_hint_shot(gs: Node) -> void:
 		for _i in 3:
 			await root.get_tree().process_frame
 		var parsed: String = (ej.get("_text") as RichTextLabel).get_parsed_text()
-		assert(parsed.contains("through and through"), "Next steps lacks the explored-out line:\n" + parsed), "close": func() -> void:
+		assert(parsed.contains("through and through"), "Next steps lacks the explored-out line:\n" + parsed)
+		await _scroll_to_text(ej, "through and through")
+		print("hint-shot explored-out line scrolled into view"), "settle": 20, "close": func() -> void:
 			(hud.get("_screens")["toggle_journal"] as Control).close()
 			c.realm_index = explored_saved[0]
 			c.stage = explored_saved[1]
@@ -4176,6 +4258,20 @@ func _show_journal(journal: Control, heading: String) -> void:
 			journal.get("_scroll").set_deferred("scroll_vertical", int((l as Label).position.y))
 
 
+## Scrolls an open journal so the line holding `needle` (in its "_text" RichTextLabel) is at the top of the view.
+func _scroll_to_text(journal: Control, needle: String) -> void:
+	await root.get_tree().process_frame
+	var rt: RichTextLabel = journal.get("_text")
+	var at := rt.get_parsed_text().find(needle)
+	if at < 0:
+		return
+	var y := int(rt.global_position.y - (journal.get("_scroll") as Control).global_position.y + rt.get_line_offset(rt.get_character_line(at)))
+	print("hint-shot scroll to ", needle, ": y=", y, " max=", (journal.get("_scroll") as ScrollContainer).get_v_scroll_bar().max_value)
+	(journal.get("_scroll") as ScrollContainer).scroll_vertical = maxi(0, y - 40)
+	await root.get_tree().process_frame
+	await root.get_tree().process_frame
+
+
 func _process(_d: float) -> bool:
 	if not started:
 		_start()
@@ -4189,7 +4285,7 @@ func _process(_d: float) -> bool:
 		frames = 0
 		return false
 	frames += 1
-	if frames == SETTLE_FRAMES:
+	if frames == int(shot.get("settle", SETTLE_FRAMES)):
 		DirAccess.make_dir_recursive_absolute(OUT_DIR)
 		var file := "%s/%s.png" % [OUT_DIR, shot["name"]]
 		root.get_viewport().get_texture().get_image().save_png(file)
