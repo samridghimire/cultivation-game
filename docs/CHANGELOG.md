@@ -2,6 +2,26 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-29 [WU-387] A screenshot check that a claimable sect method leads the HUD hints.
+- 2026-10-29 [C-262] Help says where a Core Forming Pill comes from.
+- 2026-10-29 [C-259] Four new once-only Foundation-realm happenings in Misty Forest and Fallen Star Market.
+- 2026-10-29 [GUIDE-194] An order due within 3 days now takes a hint slot right after the sect duty.
+- 2026-10-29 [QA-172] A test for the HUD Goal line's faster-qi-spot clause.
+- 2026-10-29 [GUIDE-196] A sect method you can claim that nearly doubles your qi now leads the hints.
+- 2026-10-29 [WU-388] A fresh screenshot check of the Explore menu footer.
+- 2026-10-29 [C-261] "A Name for the Newborn" happens only once.
+- 2026-10-29 [WU-384] A screenshot check that the HUD keeps the heal-first travel warning.
+- 2026-10-29 [WU-389] A screenshot check of the Core Forming Pill claim in the Goals.
+- 2026-10-29 [C-260] Sects now hand out the Core Forming Pill from Core Disciple rank; it used to need Elder, a rank only Core cultivators reach.
+- 2026-10-29 [GUIDE-195] The Explore menu footer writes the quiet share like the other odds.
+- 2026-10-29 [WU-386] First-hour screenshots wait for the milestone banner to fade.
+- 2026-10-29 [GUIDE-193] The travel-for-faster-qi hint starts with "Heal first" when the destination has no healer.
+- 2026-10-29 [GUIDE-192] The realm goal's odds now include a breakthrough pill you hold but have not taken.
+- 2026-10-29 [GUIDE-191] Once you have seen everything a region holds, a hint names the nearest region with happenings you have not met.
+- 2026-10-29 [QA-170] The sect sim report shows why stipends are skipped: months without a mission miss the duty.
+- 2026-10-29 [WU-385] The first-hour screenshot audit now includes a new Outer Disciple's HUD.
+- 2026-10-29 [WU-380] A screenshot check that the next-recipe goal names the sect treasury.
+- 2026-10-29 [GUIDE-190] Internal: the injury hint picks an affordable cure without matching text.
 - 2026-10-29 [GUIDE-189] When your sect treasury sells the next recipe scroll, the recipe goal says to claim it there and for how much contribution.
 - 2026-10-29 [WU-383] A screenshot check of the warning to heal before travelling to a place with no healer.
 - 2026-10-29 [WU-381] A screenshot check that the defence hint never names armor you could not afford after buying the manual.

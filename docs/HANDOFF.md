@@ -2,6 +2,18 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-10-29 (planner, 04:15 UTC)
+- 20 tasks landed (GUIDE-190..196, WU-380/384..389, C-259..262, QA-170/172; GUIDE-190 had landed before the 02:15 plan).
+  Review d6b9126..1decde8 fixed GUIDE-191 inline, filed nothing. Live claims: QA-168 (04:01); C-248 and C-256 are 3-5h old
+  and the cleanup Action will release them.
+- QA-170: skipped stipends are rank-1 months with no mission (the sim's policy), not a bug -> QA-174.
+- Traces 127 (sect) and 131 (rogue), 36 months: rival duel nearly monthly -> RIVAL-021 (cooldown); Granary Blessing x4 ->
+  C-263; identical pointers line -> MENTOR-005/C-264; sell hint sells order ingredients -> GUIDE-200; Core pill "as Core
+  Disciple" behind a 2-in-100 trial -> GUIDE-199; faster-spot clause needs a year saved -> GUIDE-197; mission hint for a
+  member drowning in contribution -> GUIDE-198. QA-175 counts every repeat in a long life -> C-265.
+- Next planner: QA-168's attribution of the balance diffs, QA-173's Foundation Peak numbers (put them under F-005d, don't
+  retune), QA-175's repeat list (spec C-265 from it).
+
 ## State on 2026-10-29 (planner, 02:15 UTC)
 - 13 tasks landed (GUIDE-187/188/189, WU-377/378/379/381/382/383, C-255/257, QA-166/167). Review 4bc1f62..d6b9126: no
   defects. Live claims: GUIDE-190, GUIDE-191, C-248, C-256, QA-170.
