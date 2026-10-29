@@ -404,6 +404,26 @@ func test_far_qi_trip_leads_the_gather_line() -> void:
 	assert_true(int(offer["days_here"]) - int(offer["days_far"]) - 2 * int(offer["away"]) >= Guidance.FAR_QI_LEAD_DAYS)
 
 
+func test_far_qi_trip_warns_when_injured_and_destination_has_no_healer() -> void:
+	var c := _fresh()
+	c.realm_index = 2
+	var plain := _gather_or_travel(Guidance.hints(c, data(), 1.0, 20, {}, {}, "qingshi_village"))
+	assert_false(plain.contains("Heal first"), plain)
+	c.injuries["internal_injury"] = 100
+	# Azure Peak has a clinic (C-254): no warning there.
+	var with_clinic := _gather_or_travel(Guidance.hints(c, data(), 1.0, 20, {}, {}, "qingshi_village"))
+	assert_false(with_clinic.contains("Heal first"), with_clinic)
+	# Take the clinic out for the check, then put it back.
+	var places: Array = data().regions["azure_peak"]["places"]
+	var saved := places.duplicate()
+	places.assign(saved.filter(func(p: Dictionary) -> bool: return String(p.get("type", "")) != "clinic"))
+	var line := _gather_or_travel(Guidance.hints(c, data(), 1.0, 20, {}, {}, "qingshi_village"))
+	places.assign(saved)
+	assert_true(line.begins_with("Travel to Azure Peak ("), line)
+	assert_true(line.ends_with(" Heal first: Azure Peak has no healer."), line)
+	assert_eq(Guidance._no_healer_warning(c, data(), "qingshi_village"), "")
+
+
 func test_no_travel_line_when_already_at_the_far_spot() -> void:
 	var c := _fresh()
 	c.realm_index = 2

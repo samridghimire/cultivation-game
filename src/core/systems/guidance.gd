@@ -826,6 +826,24 @@ static func _heal_source_for(c: CharacterData, data: GameData, region_id: String
 	return ""
 
 
+## GUIDE-187: " Heal first: <Region> has no healer." when `c` is injured and `region_id` has neither a clinic
+## nor a merchant selling a cure for any of the injuries, else "".
+static func _no_healer_warning(c: CharacterData, data: GameData, region_id: String) -> String:
+	if not Injuries.has_any(c):
+		return ""
+	for p: Dictionary in data.regions.get(region_id, {}).get("places", []):
+		var type := String(p.get("type", ""))
+		if type == "clinic":
+			return ""
+		if type != "merchant":
+			continue
+		for injury_id: String in c.injuries:
+			for item_id: String in data.items:
+				if _heals(data, item_id, injury_id) and Items.merchant_sells(data, data.items[item_id], p.get("stock_tags", []), int(p.get("max_price", 0))):
+					return ""
+	return " Heal first: %s has no healer." % Exploration.region_name(data, region_id)
+
+
 ## GUIDE-149: "; sell your <goods> to the <merchant> (about N stones) first" when selling loot would cover the gap to `cost`, else "".
 static func _sell_gap_clause(c: CharacterData, data: GameData, region_id: String, flags: Dictionary, cost: int) -> String:
 	var offer := sell_offer(c, data, region_id, flags)
@@ -2149,6 +2167,7 @@ static func _merge_better_qi(out: PackedStringArray, c: CharacterData, data: Gam
 					String(offer["region_name"]), Calendar.format_duration(int(offer["away"])), GameData.plain_name(String(offer["place"])),
 					_next_step_name(c, data, "the next stage"), Calendar.format_duration(int(offer["days_far"])),
 					Calendar.format_duration(int(offer["days_here"])), base_where]
+				out[gather] += _no_healer_warning(c, data, String(offer["region"]))
 				return out
 	var clauses: PackedStringArray = []
 	for clause: String in [local_clause, far_clause]:
