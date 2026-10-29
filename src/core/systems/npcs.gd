@@ -359,6 +359,86 @@ static func spot_positions(count: int, spots: Array, center: Vector2, avoid: Arr
 	return out
 
 
+## How far outside a place or landmark rect a villager stands, and the keep-out
+## margin around every place and solid landmark (WORLD-001).
+const HAUNT_STAND_OFF := 55.0
+const HAUNT_KEEP_OUT := 40.0
+const HAUNT_ADULT_PLACES: PackedStringArray = ["merchant", "workshop", "clinic", "gather", "meditation", "bounty_board"]
+const HAUNT_CHILD_PLACES: PackedStringArray = ["orphanage"]
+
+
+## Where `npc` stands on `day` (WORLD-001, pure): each villager keeps a daily round
+## between 2-3 haunts of the region picked by hash(npc.id) (merchants, workshops,
+## fields, the well; children the Family Home or the orphanage) and moves to the
+## next one as days pass. Never inside a solid landmark or a place.
+static func haunt(npc: CharacterData, region: Dictionary, day: int, adult: bool = true) -> Vector2:
+	var h := absi(hash(npc.id))
+	var anchors := _haunt_anchors(region, adult)
+	if anchors.is_empty():
+		var spots: Array = region.get("npc_spots", [])
+		if spots.is_empty():
+			return Vector2.ZERO
+		return Vector2(float(spots[h % spots.size()][0]), float(spots[h % spots.size()][1]))
+	var n := mini(anchors.size(), 2 + h % 2)
+	var picked: Array[Rect2] = []
+	for k in n:
+		picked.append(anchors[(h / 7 + k * (1 + h % 3)) % anchors.size()])
+	var rect := picked[posmod(day + h, n)]
+	var blocked := _haunt_blocked(region)
+	var centre := rect.get_center()
+	var radius := maxf(rect.size.x, rect.size.y) / 2.0 + HAUNT_STAND_OFF
+	var fallback := centre + Vector2(radius, 0)
+	for t in 24:
+		var angle := TAU * float((h / 3 + t * 5) % 24) / 24.0
+		var pos := centre + Vector2.from_angle(angle) * radius
+		if _haunt_clear(pos, blocked):
+			return pos
+	return fallback
+
+
+static func _haunt_anchors(region: Dictionary, adult: bool) -> Array[Rect2]:
+	var out: Array[Rect2] = []
+	if adult:
+		for p: Dictionary in region.get("places", []):
+			if HAUNT_ADULT_PLACES.has(String(p.get("type", ""))):
+				out.append(_rect_of(p))
+		for lm: Dictionary in region.get("map", {}).get("landmarks", []):
+			if ["field", "well", "pond", "stall"].has(String(lm.get("kind", ""))):
+				out.append(_rect_of(lm))
+	else:
+		if region.has("family_home"):
+			out.append(_rect_of(region["family_home"]))
+		for p: Dictionary in region.get("places", []):
+			if HAUNT_CHILD_PLACES.has(String(p.get("type", ""))):
+				out.append(_rect_of(p))
+	return out
+
+
+static func _rect_of(d: Dictionary) -> Rect2:
+	var pos: Array = d.get("pos", [0, 0])
+	var sz: Array = d.get("size", [64, 64])
+	var size := Vector2(float(sz[0]), float(sz[1]))
+	return Rect2(Vector2(float(pos[0]), float(pos[1])) - size / 2.0, size)
+
+
+static func _haunt_blocked(region: Dictionary) -> Array[Rect2]:
+	var out: Array[Rect2] = []
+	for r in Scenery.landmark_rects(region, true):
+		out.append(r.grow(HAUNT_KEEP_OUT))
+	for p: Dictionary in region.get("places", []) + region.get("abodes", []):
+		out.append(_rect_of(p).grow(HAUNT_KEEP_OUT))
+	if region.has("family_home"):
+		out.append(_rect_of(region["family_home"]).grow(HAUNT_KEEP_OUT))
+	return out
+
+
+static func _haunt_clear(pos: Vector2, blocked: Array[Rect2]) -> bool:
+	for r in blocked:
+		if r.has_point(pos):
+			return false
+	return true
+
+
 static func _spot_clear(pos: Vector2, avoid: Array[Vector2], chosen: Array[Vector2]) -> bool:
 	for p in avoid:
 		if pos.distance_to(p) < SPOT_CLEARANCE:

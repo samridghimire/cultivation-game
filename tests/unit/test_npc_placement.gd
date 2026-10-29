@@ -69,3 +69,51 @@ func test_world_title_and_describe() -> void:
 	assert_true(Npcs.describe(kid, data()).contains("boy of 3"))
 	player.children.append(kid.id)
 	assert_eq(Npcs.world_title(kid, player, data()), "Your Son")
+
+
+func _villager(id: String) -> CharacterData:
+	var c := new_character(id.hash())
+	c.id = id
+	return c
+
+
+func test_haunt_is_deterministic_and_changes_across_days() -> void:
+	var region: Dictionary = data().regions[data().start_region]
+	var moved := 0
+	for i in 8:
+		var c := _villager("npc_%d" % i)
+		assert_eq(Npcs.haunt(c, region, 10), Npcs.haunt(c, region, 10))
+		var seen := {}
+		for day in 6:
+			seen[Npcs.haunt(c, region, day)] = true
+		if seen.size() > 1:
+			moved += 1
+	assert_gt(moved, 3, "most villagers rotate between haunts")
+
+
+func test_haunt_never_stands_in_a_solid_landmark_or_place() -> void:
+	for region: Dictionary in data().regions.values():
+		var solids := Scenery.landmark_rects(region, true)
+		var rects: Array[Rect2] = []
+		for p: Dictionary in region.get("places", []):
+			rects.append(Npcs._rect_of(p))
+		for i in 12:
+			var c := _villager("npc_%d" % i)
+			for adult in [true, false]:
+				for day in 5:
+					var pos := Npcs.haunt(c, region, day, adult)
+					for r in solids + rects:
+						assert_false(r.has_point(pos), "%s: %s on day %d inside %s" % [region["id"], c.id, day, r])
+
+
+func test_haunt_children_stay_near_home_or_orphanage() -> void:
+	var region: Dictionary = data().regions[data().start_region]
+	var anchors: Array[Rect2] = Npcs._haunt_anchors(region, false)
+	assert_false(anchors.is_empty())
+	for i in 6:
+		var pos := Npcs.haunt(_villager("kid_%d" % i), region, 3, false)
+		var near := false
+		for r in anchors:
+			if r.grow(Npcs.HAUNT_STAND_OFF + 80.0).has_point(pos):
+				near = true
+		assert_true(near, "child %d stays near the Family Home or orphanage" % i)
