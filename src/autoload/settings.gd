@@ -19,6 +19,8 @@ const DEFAULTS := {
 	"sfx_volume": 0.8,
 	# How many next-step hints the HUD shows, 0-3 (0 hides the panel).
 	"hud_hints": 2,
+	# The key strip at the bottom right of the HUD (GFX-010); F1 help stays available.
+	"key_help": true,
 	# Skip the time-skip overlay after meditation, travel... (UI-010).
 	"fast_time_skips": false,
 	# Silent autosave on travel, breakthrough, each month and window close (REL-001).
@@ -71,7 +73,7 @@ static func sanitize(key: String, value: Variant) -> Variant:
 			return clampf(float(value), UI_SCALE_RANGE.x, UI_SCALE_RANGE.y)
 		"hud_hints":
 			return clampi(int(value), 0, 3) if value is int or value is float else DEFAULTS["hud_hints"]
-		"autosave", "yearly_recap", "animate_fights", "ambient_effects":
+		"autosave", "yearly_recap", "animate_fights", "ambient_effects", "key_help":
 			return value if value is bool else DEFAULTS[key]
 		"fast_time_skips":
 			return (value is bool and value) or str(value).to_lower() == "true"

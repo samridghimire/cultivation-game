@@ -4,7 +4,9 @@ extends CanvasLayer
 
 const MAIN_MENU := "res://src/ui/main_menu.tscn"
 const MAX_LOG_LINES := 60
-const LOG_HEIGHT := 196.0  ## Space the log panel takes at the bottom (offset 196 in _build_log).
+const LOG_HEIGHT := 108.0  ## Space the log panel takes at the bottom (offset 108 in _build_log).
+const LOG_IDLE_SECONDS := 8.0  ## GFX-010: the log fades after this long without a message.
+const LOG_IDLE_ALPHA := 0.55
 const HINT_MAX_CHARS := 120  ## WU-305: a status-panel hint line is cut past this (about three wrapped lines).
 const STATUS_MARGIN := 8.0  ## Gap kept between the status panel and the log.
 ## Lifespan cue thresholds (fraction of the lifespan left).
@@ -38,7 +40,12 @@ var _log_lines: Array[String] = []  ## BBCode of each HUD log line, for collapsi
 var _status_panel: Control
 var _log_panel: Control
 var _fade_timer := 0.0
-var _fade_targets := Vector2.ONE
+var _fade_targets := Vector3.ONE  # status, log, guide
+var _guide_panel: Control
+var _realm: Label
+var _qi_text: Label
+var _currency: Label
+var _last_message_msec := 0
 var _prompt: Label
 var _key_bar: Label
 var _target_name := ""
@@ -99,7 +106,7 @@ func _ready() -> void:
 	_build_status_panel()
 	_build_log()
 	_prompt = UIStyle.label("", 18, UIStyle.ACCENT)
-	_set_anchored_rect(_prompt, Vector4(0.5, 1, 0.5, 1), Vector4(-300, -110, 300, -72))
+	_set_anchored_rect(_prompt, Vector4(0.5, 1, 0.5, 1), Vector4(-300, -170, 300, -132))
 	_prompt.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	add_child(_prompt)
 	_refresh_key_hints()
@@ -201,7 +208,7 @@ func _ready() -> void:
 	EventBus.region_changed.connect(func(_id): _refresh())
 	EventBus.region_changed.connect(_on_arrival)
 	EventBus.message_posted.connect(_on_message)
-	Settings.changed.connect(func(key: String, _v): if key == "hud_hints": _refresh(); _queue_fair_fight())
+	Settings.changed.connect(_on_setting_changed)
 	EventBus.interaction_target_changed.connect(_on_target_changed)
 	InputConfig.controls_changed.connect(_refresh_key_hints)
 	EventBus.interaction_menu_requested.connect(_on_menu_requested)
@@ -352,24 +359,37 @@ func _any_screen_open() -> bool:
 
 
 func _build_status_panel() -> void:
-	var panel := UIStyle.panel(Vector2(340, 0))
+	var panel := UIStyle.panel(Vector2(316, 0))
 	_status_panel = panel
 	panel.position = Vector2(16, 16)
 	var box := VBoxContainer.new()
 	panel.add_child(box)
 	_age = UIStyle.label("", 15)
 	box.add_child(_age)
+	_realm = UIStyle.label("", 15, UIStyle.ACCENT)
+	box.add_child(_realm)
+	_qi_bar = ProgressBar.new()
+	_qi_bar.custom_minimum_size = Vector2(300, 16)
+	_qi_bar.show_percentage = false
+	box.add_child(_qi_bar)
+	_qi_text = UIStyle.label("", 12)
+	_qi_text.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_qi_text.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_qi_text.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_qi_text.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_qi_bar.add_child(_qi_text)
+	var money_row := HBoxContainer.new()
+	money_row.add_theme_constant_override("separation", 16)
+	box.add_child(money_row)
 	_lives = UIStyle.label("", 15)
-	box.add_child(_lives)
+	money_row.add_child(_lives)
 	_lives_badge = UIStyle.label("!", 15, UIStyle.ACCENT)
 	_lives_badge.visible = false
 	_lives.add_child(_lives_badge)
-	_status = UIStyle.label("", 15)
+	_currency = UIStyle.label("", 15)
+	money_row.add_child(_currency)
+	_status = UIStyle.label("", 13, Color(0.75, 0.76, 0.8))
 	box.add_child(_status)
-	_qi_bar = ProgressBar.new()
-	_qi_bar.custom_minimum_size = Vector2(300, 14)
-	_qi_bar.show_percentage = false
-	box.add_child(_qi_bar)
 	_bottleneck = UIStyle.label("", 14, UIStyle.ACCENT)
 	_bottleneck.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	box.add_child(_bottleneck)
@@ -378,6 +398,19 @@ func _build_status_panel() -> void:
 	_injuries = UIStyle.label("", 14, UIStyle.CATEGORY_COLORS["danger"])
 	_injuries.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	box.add_child(_injuries)
+	add_child(panel)
+	_build_guide_panel()
+
+
+## GFX-010: the "Next steps" card on the top right (goal, hunt, festival fight, hints).
+func _build_guide_panel() -> void:
+	var panel := UIStyle.panel(Vector2(340, 0))
+	_guide_panel = panel
+	_set_anchored_rect(panel, Vector4(1, 0, 1, 0), Vector4(-356, 16, -16, 16))
+	panel.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	var box := VBoxContainer.new()
+	panel.add_child(box)
+	box.add_child(UIStyle.label("Next steps", 12, Color(0.55, 0.57, 0.63)))
 	_goal = UIStyle.label("", 14, Color(0.62, 0.64, 0.7))
 	_goal.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART  # WU-236: "Goal: Reach Tribulation Transcendence Middle" wraps
 	box.add_child(_goal)
@@ -396,12 +429,16 @@ func _build_status_panel() -> void:
 	_hint_badge = UIStyle.label("!", 14, UIStyle.ACCENT)
 	_hint_badge.visible = false
 	_hint.add_child(_hint_badge)
-	_key_bar = UIStyle.label("", 12, Color(0.7, 0.7, 0.7))
-	_key_bar.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_key_bar.custom_minimum_size = Vector2(316, 0)
-	box.add_child(_key_bar)
-	_refresh_key_hints()
 	add_child(panel)
+	_key_bar = UIStyle.label("", 12, Color(0.7, 0.7, 0.7, 0.85))
+	_key_bar.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_key_bar.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	_key_bar.custom_minimum_size = Vector2(600, 0)
+	_set_anchored_rect(_key_bar, Vector4(1, 1, 1, 1), Vector4(-616, -34, -16, -8))
+	_key_bar.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	_key_bar.visible = bool(Settings.get_value("key_help"))
+	add_child(_key_bar)
+	_refresh_key_hints()
 
 
 func _build_log() -> void:
@@ -410,11 +447,11 @@ func _build_log() -> void:
 	_log = RichTextLabel.new()
 	_log.bbcode_enabled = true
 	_log.scroll_following = true
-	_log.custom_minimum_size = Vector2(496, 156)
+	_log.custom_minimum_size = Vector2(376, 76)
 	_log.add_theme_font_size_override("normal_font_size", 14)
 	panel.add_child(_log)
 	add_child(panel)
-	_set_anchored_rect(panel, Vector4(0, 1, 0, 1), Vector4(16, -196, 536, -16))
+	_set_anchored_rect(panel, Vector4(0, 1, 0, 1), Vector4(16, -108, 416, -16))
 	# Seed from the history so the log survives a world reload (travel, respawn).
 	var recent: Array = EventBus.history.slice(maxi(0, EventBus.history.size() - MAX_LOG_LINES))
 	for e: Dictionary in recent:
@@ -502,15 +539,12 @@ func _refresh() -> void:
 		_age.text += "   (%d %s left)" % [years_left, "year" if years_left == 1 else "years"]
 	_age.add_theme_color_override("font_color", UIStyle.CATEGORY_COLORS.get(age_cue, Color.WHITE))
 	_refresh_lives(p)
-	var lines: PackedStringArray = [
-		Cultivation.realm_label(p, data),
-		"Qi: %d / %d" % [int(p.qi), int(Cultivation.qi_required(p, data))],
-	]
-	_status.text = "\n".join(lines)
-	_status.text += "\n" + "\n".join(PackedStringArray([
+	_realm.text = Cultivation.realm_label(p, data)
+	_qi_text.text = "Qi: %d / %d" % [int(p.qi), int(Cultivation.qi_required(p, data))]
+	_currency.text = currency_line(p)
+	_status.text = "\n".join(PackedStringArray([
 		"Alignment: %s (%d)" % [Alignment.tier_name(p.alignment, data), p.alignment],
 		Sects.describe(p, data),
-		currency_line(p),
 		"%s · %s" % [GameClock.date_string(), season_label(GameClock.total_days)],
 	]))
 	var density := GameState.region_qi_density()
@@ -545,7 +579,15 @@ func _refresh() -> void:
 	_hint_lines = hints
 	hints_changed.emit()
 	_set_hint_text(hints)
-	_fit_status_panel.call_deferred()
+	_fit_panels.call_deferred()
+
+
+func _on_setting_changed(key: String, _v: Variant) -> void:
+	if key == "hud_hints":
+		_refresh()
+		_queue_fair_fight()
+	elif key == "key_help":
+		_refresh_key_hints()
 
 
 ## Coalesces the signals one action emits (player_changed, days_advanced...) into one recompute per frame.
@@ -569,7 +611,7 @@ func _refresh_fair_fight() -> void:
 	_fair.text = line
 	_fair.tooltip_text = "\n".join(entries.map(func(e: Dictionary) -> String: return String(e.get("text", ""))))
 	_fair.visible = line != ""
-	_fit_status_panel.call_deferred()
+	_fit_panels.call_deferred()
 
 
 ## "Fair fight: <enemy> (<rating> <percent>)" for the best entry ("" for an empty list). Falls back to the entry's
@@ -620,21 +662,35 @@ static func lives_color(lives: int) -> Color:
 	return UIStyle.CATEGORY_COLORS["warning"] if lives == 1 else Color.WHITE
 
 
-## Drops the lowest-priority status lines (key bar, hints, goal, next layer) until the panel clears the log (WU-091).
-func _fit_status_panel() -> void:
-	if _status_panel == null or not is_inside_tree():
+## Drops the lowest-priority lines until each card clears the log (WU-091, GFX-010): the status card loses its
+## next-layer line, the guide card its festival line, then shrinks the hint, then drops the goal.
+func _fit_panels() -> void:
+	if _status_panel == null or _guide_panel == null or not is_inside_tree():
 		return
-	_key_bar.visible = true
-	var limit := get_viewport().get_visible_rect().size.y - LOG_HEIGHT - 2.0 * STATUS_MARGIN - _status_panel.position.y
-	for label: Label in [_key_bar, _fair, _hint, _goal, _next_layer]:
-		_status_panel.reset_size()
-		if _status_panel.size.y <= limit:
-			return
-		if label == _hint and label.visible and _shrink_hint(limit):
-			return
-		if label == _key_bar or label.visible:
-			label.visible = false
+	_next_layer.visible = _next_layer.text != ""
+	var height := get_viewport().get_visible_rect().size.y - LOG_HEIGHT - 2.0 * STATUS_MARGIN
+	var limit := height - _status_panel.position.y
 	_status_panel.reset_size()
+	if _status_panel.size.y > limit and _next_layer.visible:
+		_next_layer.visible = false
+		_status_panel.reset_size()
+	var glimit := height - _guide_panel.position.y
+	for label: Label in [_fair, _hint, _goal]:
+		_guide_panel.reset_size()
+		if _guide_panel.size.y <= glimit:
+			break
+		if label == _hint and label.visible and _shrink_hint(glimit):
+			break
+		if label.visible:
+			label.visible = false
+	_guide_panel.reset_size()
+	_update_guide_visibility()
+
+
+## The guide card shows only while one of its lines does (and hints are on).
+func _update_guide_visibility() -> void:
+	var any_line: bool = _goal.visible or _hunt.visible or _fair.visible or _hint.visible
+	_guide_panel.visible = any_line and int(Settings.get_value("hud_hints")) > 0 and _status_panel.visible
 
 
 ## The first hint line the status panel is showing, "" when none (WU-280).
@@ -676,13 +732,13 @@ func _shrink_hint(limit: float) -> bool:
 	while count > 1:
 		count -= 1
 		_set_hint_text(_hint_lines.slice(0, count))
-		_status_panel.reset_size()
-		if _status_panel.size.y <= limit:
+		_guide_panel.reset_size()
+		if _guide_panel.size.y <= limit:
 			return true
 	if count == 1:
 		_set_hint_text(PackedStringArray([first_sentence(_hint_lines[0])]))
-		_status_panel.reset_size()
-		if _status_panel.size.y <= limit:
+		_guide_panel.reset_size()
+		if _guide_panel.size.y <= limit:
 			return true
 	return false
 
@@ -755,6 +811,7 @@ static func collapsed_line(text: String, repeat: int) -> String:
 
 
 func _on_message(text: String, category: String) -> void:
+	_last_message_msec = Time.get_ticks_msec()
 	var color: Color = UIStyle.CATEGORY_COLORS.get(category, Color.WHITE)
 	if _repeat > 0 and text == _last_text and category == _last_category and not _log_lines.is_empty():
 		_repeat += 1
@@ -789,6 +846,7 @@ func _refresh_key_hints() -> void:
 	if _key_bar == null or _prompt == null:
 		return
 	_key_bar.text = InputConfig.key_bar_text(KEY_HINTS)
+	_key_bar.visible = bool(Settings.get_value("key_help")) and (_status_panel == null or _status_panel.visible)
 	_prompt.text = "[%s] %s" % [InputConfig.current_label("interact"), _target_name] if _target_name != "" else ""
 	# A dark backdrop keeps the prompt readable over place labels (WU-087).
 	if _target_name != "":
@@ -1321,17 +1379,27 @@ func _process(delta: float) -> void:
 	if _status_panel == null or _log_panel == null:
 		return
 	var k := minf(1.0, 8.0 * delta)
+	var log_target := _fade_targets.y
+	var idle := log_idle_alpha(float(Time.get_ticks_msec() - _last_message_msec) / 1000.0)
+	if idle < 1.0 and not _log_panel.get_global_rect().has_point(_log_panel.get_global_mouse_position()):
+		log_target = minf(log_target, idle)
 	_status_panel.modulate.a = lerpf(_status_panel.modulate.a, _fade_targets.x, k)
-	_log_panel.modulate.a = lerpf(_log_panel.modulate.a, _fade_targets.y, k)
+	_log_panel.modulate.a = lerpf(_log_panel.modulate.a, log_target, k)
+	_guide_panel.modulate.a = lerpf(_guide_panel.modulate.a, _fade_targets.z, k)
 
 
-## Target alphas (status, log). Always 1 while a modal is open or no player is in the world.
-func _compute_fade_targets() -> Vector2:
+## GFX-010: the log's target alpha after `seconds_since` seconds without a new message.
+static func log_idle_alpha(seconds_since: float) -> float:
+	return LOG_IDLE_ALPHA if seconds_since >= LOG_IDLE_SECONDS else 1.0
+
+
+## Target alphas (status, log, guide). Always 1 while a modal is open or no player is in the world.
+func _compute_fade_targets() -> Vector3:
 	if _status_panel == null or _log_panel == null or not is_inside_tree() or not _status_panel.visible:
-		return Vector2.ONE
+		return Vector3.ONE
 	var player := get_tree().get_first_node_in_group("player") as Node2D
 	if player == null:
-		return Vector2.ONE
+		return Vector3.ONE
 	var xf := get_viewport().get_canvas_transform()
 	var covered: Array[Rect2] = []
 	var pp := xf * player.global_position
@@ -1343,7 +1411,7 @@ func _compute_fade_targets() -> Vector2:
 			if it != null and it.global_position.distance_to(player.global_position) < 250.0:
 				var lr := it.label_rect()
 				covered.append(Rect2(xf * (it.get_parent() as Node2D).to_global(lr.position) if it.get_parent() is Node2D else xf * lr.position, lr.size * xf.get_scale()))
-	return Vector2(panel_alpha(_status_panel.get_global_rect(), covered), panel_alpha(_log_panel.get_global_rect(), covered))
+	return Vector3(panel_alpha(_status_panel.get_global_rect(), covered), panel_alpha(_log_panel.get_global_rect(), covered), panel_alpha(_guide_panel.get_global_rect(), covered))
 
 
 func _update_modal() -> void:
@@ -1351,6 +1419,8 @@ func _update_modal() -> void:
 	# The status panel, hints and log hide behind modals; a time-skip overlay alone keeps them.
 	_status_panel.visible = not blocking
 	_log_panel.visible = not blocking
+	_update_guide_visibility()
+	_key_bar.visible = bool(Settings.get_value("key_help")) and not blocking
 	EventBus.ui_modal_changed.emit(blocking or _time_skip.visible)
 	_hold_banners()
 

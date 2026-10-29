@@ -104,11 +104,11 @@ func test_fit_keeps_one_hint_when_three_do_not_fit() -> void:
 	root.add_child(hud)
 	await _frames()
 	var hint: Label = hud.get("_hint")
-	var panel: Control = hud.get("_status_panel")
+	var panel: Control = hud.get("_guide_panel")
 	var lines := PackedStringArray(["One hint line. More.", "Two hint line.", "Three hint line."])
 	hud.set("_hint_lines", lines)
 	hud.call("_set_hint_text", lines)
-	for name: String in ["_key_bar", "_fair"]:
+	for name: String in ["_fair"]:
 		hud.get(name).visible = false
 	panel.reset_size()
 	var full := panel.size.y
