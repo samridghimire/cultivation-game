@@ -159,3 +159,42 @@ static func _build(template: PackedStringArray, colors: Dictionary, mirror: bool
 			if ch != ".":
 				img.set_pixel(x, y, colors[ch])
 	return ImageTexture.create_from_image(img)
+
+
+## GFX-014: 24x16 side-view quadruped facing right, rows 0-11 body and head, then two leg frames.
+## . transparent, o outline, f fur, F fur shade, e eye.
+const BEAST_ROWS := [
+	"..................oo....",
+	"................oofoo...",
+	"...ooooooooooo.oofffeoo.",
+	"..offffffffffooffffffffo",
+	".offffffffffffofffffffo.",
+	"offfffffffffffffffffooo.",
+	"offFFFFFFFFFFFFffffoo...",
+	".offffffffffffffffo.....",
+	"..oFFFFFFFFFFFFFFo......",
+	"..ofo.ofo....ofo.ofo....",
+]
+const BEAST_LEGS := [
+	["..ofo.ofo....ofo.ofo...", "..ooo.ooo....ooo.ooo...."],
+	["...ofo.ofo..ofo.ofo....", "...ooo.ooo..ooo.ooo....."],
+]
+const BEAST_SIZE := Vector2i(24, 16)
+
+
+## A generated 24x16 beast facing right (the foe mirrors it). `index` picks one of two leg frames.
+static func beast_frame(fur: Color, index: int) -> ImageTexture:
+	var i := posmod(index, 2)
+	var key := "beast|%s|%d" % [fur.to_html(), i]
+	if not _cache.has(key):
+		var img := Image.create(BEAST_SIZE.x, BEAST_SIZE.y, false, Image.FORMAT_RGBA8)
+		var colors := {"o": OUTLINE, "f": fur, "F": fur.darkened(0.25), "e": Color("e8d8a0")}
+		var rows: Array = BEAST_ROWS.slice(0, 9)
+		rows.append_array(BEAST_LEGS[i])
+		for y in rows.size():
+			var row: String = rows[y]
+			for x in mini(row.length(), BEAST_SIZE.x):
+				if colors.has(row[x]):
+					img.set_pixel(x, y + 4, colors[row[x]])
+		_cache[key] = ImageTexture.create_from_image(img)
+	return _cache[key]

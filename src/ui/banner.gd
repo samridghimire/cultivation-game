@@ -14,6 +14,7 @@ var _tween: Tween
 var _queue: Array = []
 ## While held (a combat report or similar window is open) announcements wait in the queue.
 var held: bool = false
+var _current: Array = []
 
 
 func _init() -> void:
@@ -70,6 +71,15 @@ func announce(title: String, subtitle: String, color: Color, hold: float = HOLD_
 ## Hold or release the banner. Releasing plays the next queued banner if none is showing.
 func set_held(value: bool) -> void:
 	held = value
+	if held and visible and not _current.is_empty():
+		# GFX-014: a banner already on screen when a report opens steps back to the front of the queue.
+		if _tween != null:
+			_tween.kill()
+			_tween = null
+		_queue.push_front(_current)
+		_current = []
+		hide()
+		return
 	if not held and not visible and not _queue.is_empty():
 		finish_current()
 
@@ -83,6 +93,7 @@ func finish_current() -> void:
 	if _tween != null:
 		_tween.kill()
 		_tween = null
+	_current = []
 	if _queue.is_empty() or held:
 		hide()
 		return
@@ -99,6 +110,7 @@ func _drop_oldest() -> void:
 
 
 func _play(title: String, subtitle: String, color: Color, hold: float) -> void:
+	_current = [title, subtitle, color, hold]
 	if _tween != null:
 		_tween.kill()
 	_title.text = title

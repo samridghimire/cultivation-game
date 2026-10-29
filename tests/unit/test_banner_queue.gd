@@ -41,17 +41,31 @@ func test_held_banner_queues_until_released() -> void:
 	b.free()
 
 
-## A banner already showing when the hold starts finishes without starting the queued one.
+## GFX-014: a banner showing when the hold starts steps back, ahead of what queues later.
 func test_banner_ending_while_held_keeps_queue() -> void:
 	var b := Banner.new()
 	b.announce("Breakthrough!", "x", Color.WHITE)
 	b.set_held(true)
 	b.announce("Milestone", "a", Color.WHITE)
 	b.finish_current()
-	assert_false(b.visible, "the queued banner waits for the report to close")
+	assert_false(b.visible, "the queued banners wait for the report to close")
+	assert_eq(b.queued_count(), 2)
+	b.set_held(false)
+	assert_eq(b.subtitle_text(), "x")
+	b.free()
+
+
+## GFX-014: a banner already on screen when a report opens steps back and replays after it.
+func test_visible_banner_steps_back_when_held() -> void:
+	var b := Banner.new()
+	b.announce("New", "travel", Color.WHITE)
+	assert_true(b.visible)
+	b.set_held(true)
+	assert_false(b.visible, "hidden while the report is up")
 	assert_eq(b.queued_count(), 1)
 	b.set_held(false)
-	assert_eq(b.subtitle_text(), "a")
+	assert_true(b.visible)
+	assert_eq(b.subtitle_text(), "travel")
 	b.free()
 
 

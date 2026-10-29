@@ -69,3 +69,16 @@ func test_heavy_hit_is_over_fifteen_percent() -> void:
 	assert_true(MotionFx.is_heavy_hit(4, 20))
 	assert_false(MotionFx.is_heavy_hit(3, 20))
 	assert_false(MotionFx.is_heavy_hit(5, 0))
+
+
+## GFX-014: beasts get fur by id and a generated 24x16 texture with two leg frames.
+func test_beast_fur_and_frames() -> void:
+	assert_eq(DuelStage.fur_for("grey_wolf"), DuelStage.BEAST_FURS["wolf"])
+	assert_eq(DuelStage.fur_for("wild_boar"), DuelStage.BEAST_FURS["boar"])
+	assert_eq(DuelStage.fur_for("mystery"), DuelStage.DEFAULT_FUR)
+	var a := PixelFigure.beast_frame(DuelStage.DEFAULT_FUR, 0)
+	var b := PixelFigure.beast_frame(DuelStage.DEFAULT_FUR, 1)
+	assert_eq(a.get_size(), Vector2(24, 16))
+	assert_true(a != b, "two leg frames")
+	assert_true(a.get_image().get_data() != b.get_image().get_data(), "legs differ")
+	assert_true(a == PixelFigure.beast_frame(DuelStage.DEFAULT_FUR, 2), "cached by frame parity")

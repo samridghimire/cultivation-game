@@ -7,8 +7,12 @@ extends Control
 const LUNGE := 24.0
 const LUNGE_SECONDS := 0.12
 const FOE_ROBE := Color("3a2f3d")
+const FOE_SASH := Color("7a2a2a")
+const BEAST_FURS := {"wolf": Color("8a8d92"), "boar": Color("3b3028"), "tiger": Color("b5652a"), "fox": Color("b5652a")}
+const DEFAULT_FUR := Color("6b5a48")
 
 var _foe_beast: bool = false
+var _foe_id: String = ""
 var _foe_texture: Texture2D
 var _offset: Array[float] = [0.0, 0.0]  # [player, foe] x offsets
 var _shake: Array[float] = [0.0, 0.0]
@@ -42,6 +46,7 @@ static func blow_side(prev: Array, cur: Array) -> int:
 ## enemies tagged "beast", otherwise a robed cultivator. Resets both fighters.
 func setup(enemy_id: String, tags: Array) -> void:
 	_foe_beast = tags.has("beast")
+	_foe_id = enemy_id
 	_foe_texture = null
 	if enemy_id != "":
 		_foe_texture = Sprites.first(PackedStringArray(["enemy_" + enemy_id, "enemy"]))
@@ -109,6 +114,29 @@ func show_end_pose(victory: bool, friendly: bool) -> void:
 	queue_redraw()
 
 
+## The fur colour of a beast by id: grey wolves, dark boars, rust tigers and foxes, brown otherwise.
+static func fur_for(enemy_id: String) -> Color:
+	for key in BEAST_FURS:
+		if enemy_id.contains(key):
+			return BEAST_FURS[key]
+	return DEFAULT_FUR
+
+
+## The generated pixel texture for a fighter without a mapped sprite; the walk frame alternates while lunging.
+func _pixel_texture(who: int) -> Texture2D:
+	var step := 0
+	if absf(_offset[who]) > 0.5:
+		step = 1 + int(Time.get_ticks_msec() / 80) % 2
+	if who == 1 and _foe_beast:
+		return PixelFigure.beast_frame(fur_for(_foe_id), step % 2)
+	var look := {"robe": FOE_ROBE, "sash": FOE_SASH}
+	if who == 0:
+		look = {"robe": PlayerLook.ROGUE_ROBE, "sash": PlayerLook.SASH_COLORS["neutral"]}
+		if GameState.player != null and GameState.data != null:
+			look = PlayerLook.of(GameState.player, GameState.data)
+	return PixelFigure.frame(look, "right", step)
+
+
 ## The loser's alpha, for tests: 0 = player, 1 = foe.
 func alpha_of(who: int) -> float:
 	return _alpha[who]
@@ -135,9 +163,17 @@ func _draw_fighter(who: int, feet: Vector2) -> void:
 	var tex: Texture2D = _foe_texture if who == 1 else Sprites.texture("player_right")
 	var tint := Color(1, 1, 1, _alpha[who]).lerp(Color(3, 3, 3, _alpha[who]), _flash[who])
 	draw_set_transform(pos, _tilt[who] * (-1.0 if who == 1 else 1.0), Vector2.ONE)
+	var generated := tex == null
+	if generated:
+		tex = _pixel_texture(who)
 	if tex != null:
-		var z := float(Sprites.scale()) * 2.0
-		draw_texture_rect(tex, Rect2(Vector2(-tex.get_width() * z / 2.0, -tex.get_height() * z), tex.get_size() * z), false, tint)
+		var z := 3.0 if generated else float(Sprites.scale()) * 2.0
+		var w := tex.get_width() * z
+		var h := tex.get_height() * z
+		if generated and who == 1:  # the foe faces left: a negative width mirrors the texture
+			draw_texture_rect(tex, Rect2(Vector2(w / 2.0, -h), Vector2(-w, h)), false, tint)
+		else:
+			draw_texture_rect(tex, Rect2(Vector2(-w / 2.0, -h), Vector2(w, h)), false, tint)
 	elif who == 1 and _foe_beast:
 		_draw_beast(tint)
 	else:
