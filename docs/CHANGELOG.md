@@ -2,6 +2,19 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-29 [GUIDE-189] When your sect treasury sells the next recipe scroll, the recipe goal says to claim it there and for how much contribution.
+- 2026-10-29 [WU-383] A screenshot check of the warning to heal before travelling to a place with no healer.
+- 2026-10-29 [WU-381] A screenshot check that the defence hint never names armor you could not afford after buying the manual.
+- 2026-10-29 [C-255] Help: the injuries page mentions far clinics; the combat page mentions the body-art hint.
+- 2026-10-29 [C-257] Qingshi's Foundation-realm beats fade: the old well hums only once, and the headman and the two youths stop repeating.
+- 2026-10-29 [WU-382] A fresh screenshot audit of the first hour: nothing clips or overlaps.
+- 2026-10-29 [WU-378] A screenshot check of the defence hint that recommends the local body manual first.
+- 2026-10-29 [QA-166] A test that an order due in 3 days shows a hint.
+- 2026-10-29 [GUIDE-188] The defence hint no longer spends the same stones on the manual and on armor.
+- 2026-10-29 [WU-379] The HUD's Goal line now knows where you are, so it can name a faster qi spot, an abode or a scroll seller.
+- 2026-10-29 [QA-167] The test for skipping an order you cannot finish in time really runs now.
+- 2026-10-29 [GUIDE-187] The hint to travel for faster qi warns you to heal first when the destination has no healer.
+- 2026-10-29 [WU-377] A screenshot check that the rogue's join hint keeps the sect's qi bonus visible on the HUD.
 - 2026-10-28 [WU-376] A screenshot check that the injury hint names the nearest clinic, the trip and its price when you cannot afford it.
 - 2026-10-28 [GUIDE-184] The next-recipe line says which merchant sells the scroll, where and for how much.
 - 2026-10-28 [WU-362] The sect hall's join prompt says what members get: faster qi, a monthly lecture, the next breakthrough pill.

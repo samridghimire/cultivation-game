@@ -2,6 +2,19 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-10-29 (planner, 02:15 UTC)
+- 13 tasks landed (GUIDE-187/188/189, WU-377/378/379/381/382/383, C-255/257, QA-166/167). Review 4bc1f62..d6b9126: no
+  defects. Live claims: GUIDE-190, GUIDE-191, C-248, C-256, QA-170.
+- Trace `simulate_curious_years.gd -- 1 36 --trace=121` (sect, ~4 min): Foundation m11, then Foundation Peak m20-m36 with
+  5 failed Core attempts (31-40%), method x1.0 and 7942 contribution unspent. Core Forming Pill is sold only to Elders (who
+  must already be Core) in all three sects -> C-260 (move it to Core Disciple + data test). Method hint below the defence
+  hint -> GUIDE-196. Newborn beat repeats -> C-261. QA-173 measures the Foundation Peak stall for F-005d.
+- Follow-ups filed: GUIDE-193 (heal-first clause forward, WU-383), GUIDE-194 (urgent orders, QA-166), GUIDE-195 (explore
+  footer, WU-382), WU-385/386 (first-hour shots), QA-172 (WU-379 test), QA-168 now also covers GUIDE-187/188/189's skipped
+  balance checks and GUIDE-189's unexplained early-fights diff.
+- Next planner: read QA-168 (is the early-fights diff real?) and QA-170's stipend answer; after QA-173, put its Foundation
+  Peak numbers in front of the owner under F-005d, don't retune.
+
 ## First-hour screenshot look (WU-382, 2026-10-29)
 `screenshot_first_hour.gd` writes 8 pngs (it overwrites between sizes, so copy them out after each run). Viewed hud_arrival and journal at both 1280x720 and 1280x800, the other six at 1280x720 only (they share one modal layout code path); nothing clipped, overlapping or cut mid-word beyond the intended "... (J)" cap. No layout changes needed.
 - hud_arrival: Goal "Talk to Elder Mo" + fair fight + three hints fit the panel; the last hint is capped "... Blood Lotus Sect takes mortals now... (J)". The Goal line does not repeat any hint. The log panel and interact prompt do not overlap the status panel. `hud_after_sect` is not produced by this script (WU-379's region-aware clause is covered by test_hud_cues and the hint shots instead).
