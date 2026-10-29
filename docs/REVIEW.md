@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 4bc1f62
+Last reviewed commit: d6b9126
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -1146,4 +1146,14 @@ Last reviewed commit: 4bc1f62
   - Notes, not filed: GUIDE-185's "Buy X here" clause and the armor-shop clause can both spend the same stones.
     C-252's follow-up (blood_demon/snow_lotus/blood_essence pills worth >2.5 Qi Refining stages for <300 stones, no
     min_realm) belongs to F-005d pacing. C-254 did not run balance.sh --check (worker listed it as a follow-up).
+  - Nothing fixed, nothing filed.
+- 2026-10-29 (reviewer): reviewed 4bc1f62..d6b9126 (GUIDE-184/186/187/188, WU-362/376/377/378/379/382, QA-166/167,
+  C-257; [PLAN]/[REVIEW] skipped). Main green (ALL CHECKS PASSED). No worker touched BACKLOG/CHANGELOG; no save-format
+  changes (C-257's `heard_well_hum` is a world flag); WU-362's join prompt and WU-379's HUD goal call core (Sects, Guidance).
+  - GUIDE-188 resolves last run's note: the armor clause and its loot fallback now spend only what the manual leaves
+    (budget -1 = all stones; 0 is a real budget). GUIDE-187 checks clinics and merchants curing any current injury, only on
+    the travel-led gather line. GUIDE-184 keys on the literal "sold by merchants" from source_phrase (brittle, tested).
+    C-257: headman/youths lose `repeatable` so they fade; the well is a one-shot; baseline refreshed.
+  - Notes, not filed: GUIDE-186's seat clause can nest "(you have N)" inside the clan goal's parentheses, and the abode
+    cost and the clan's 500 stones are counted from the same purse.
   - Nothing fixed, nothing filed.
