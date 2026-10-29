@@ -400,7 +400,8 @@ func _draw() -> void:
 	if ground != null:
 		_draw_tiled(ground, Rect2(Vector2.ZERO, map_size))
 	else:
-		draw_rect(Rect2(Vector2.ZERO, map_size), Color(map.get("ground", "4d6b3c")))
+		var ground_color := Color(map.get("ground", "4d6b3c"))
+		_draw_tiled(GroundTiles.cached(ground_color, rid, "ground"), Rect2(Vector2.ZERO, map_size))
 	var path_tile := Sprites.first(["path_" + rid, "path"])
 	var path_color := Color(map.get("path_color", "8a7350"))
 	for r in map.get("paths", []):
@@ -408,7 +409,8 @@ func _draw() -> void:
 		if path_tile != null:
 			_draw_tiled(path_tile, rect)
 		else:
-			draw_rect(rect, path_color)
+			_draw_tiled(GroundTiles.cached(path_color, rid, "path"), rect)
+			draw_rect(rect.grow(-1.0), GroundTiles.edge_color(path_color), false, 2.0)
 	for d in _decor:
 		_draw_decor(d)
 	draw_rect(Rect2(Vector2.ZERO, map_size), Color(map.get("border", "2a3a20")), false, 6.0)
