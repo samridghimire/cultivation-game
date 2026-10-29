@@ -112,6 +112,7 @@ extends SceneTree
 ## WU-369: `--help-shot` writes help_<topic>_<size>.png for every help page (long ones scroll in a focusable ScrollContainer).
 ## WU-367: `--hint-shot` also writes pill_rank_gate_/pill_rank_open_<size>.png (Foundation Peak Inner Disciple, 6998 contribution: no hint, goal or breakthrough text says "As Elder"; QR8 Outer Disciple: the Foundation pill line still says "As Inner Disciple you could claim it").
 ## WU-362: `--hint-shot` also writes sect_join_prompt_<size>.png (rogue QR3 at the Azure Cloud hall with the join prompt open: the description lists the membership perks and fits the viewport).
+## WU-387: `--hint-shot` also writes hint_method_first_<size>.png (Azure Cloud Inner Disciple, Foundation Early, no method/armor, 1000 contribution: the first HUD hint starts "Your sect treasury hands out the").
 ## WU-389: `--hint-shot` also writes journal_core_pill_rank_<size>.png (Azure Cloud Inner Disciple, Foundation Peak, 717 stones, 4000 contribution: Goals ends "As Core Disciple you could claim it for N contribution.").
 ## WU-380: `--hint-shot` also writes journal_recipe_treasury_<size>.png (Azure Cloud Outer Disciple Alchemist, 500 contribution: Goals reads "Its scroll: claim it from your sect treasury for N contribution.").
 ## WU-383: `--hint-shot` also writes hint_heal_before_travel_<size>.png (injured Foundation rogue, Azure Peak clinic removed: the far-qi line opens "Heal first, then travel to Azure Peak (...), which has no healer:"; the capped HUD line keeps it; WU-384 asserts it within the first 120 chars).
@@ -3130,6 +3131,54 @@ func _start_hint_shot(gs: Node) -> void:
 			c.equipment = thin_budget_saved[8]
 			c.injuries = thin_budget_saved[9]
 			thin_budget_saved.clear()})
+
+	# WU-387: GUIDE-196. Azure Cloud Inner Disciple, Foundation Early, no method or armor or body art, 1000 contribution: the treasury's
+	# method leads the HUD hints; the log says whether the thin-defence line is still shown at the default hint count.
+	var method_first_saved: Array = []
+	shots.append({"name": "hint_method_first_" + size_tag, "open": func() -> void:
+		setup_long.call()
+		method_first_saved.append_array([c.realm_index, c.stage, c.sect.duplicate(), c.inventory.duplicate(), c.abode, gs.clan, c.life_stats.duplicate(), c.techniques.duplicate(true), c.equipment.duplicate(), c.injuries.duplicate(true), c.main_method, c.breakthrough_pill])
+		c.life_stats["fights_won"] = maxi(1, int(c.life_stats.get("fights_won", 0)))
+		c.life_stats["encounters"] = maxi(5, int(c.life_stats.get("encounters", 0)))
+		c.realm_index = 2
+		c.stage = 0
+		c.qi = 0.0
+		c.sect = {"id": "azure_cloud_sect", "rank": 1, "contribution": 1000, "spent": 0}
+		c.abode = ""
+		c.techniques.clear()
+		c.main_method = ""
+		c.breakthrough_pill = "core_forming_pill"  # 1000 contribution cannot cover both the 700 manual and the 3200 pill reserve, so hold the pill
+		c.equipment.erase("armor")
+		c.injuries.clear()
+		gs.clan = null
+		gs.current_region = "qingshi_village"
+		root.get_node("EventBus").player_changed.emit()
+		await root.get_tree().process_frame
+		await root.get_tree().process_frame
+		hud.get("_banner").visible = false
+		print("hint-shot method first offer: ", Guidance.sect_method_offer(c, gs.data), " leads=", Guidance._method_offer_leads(c, gs.data))
+		var hud_text: String = (hud.get("_hint") as Label).text
+		var want := "Your sect treasury hands out the"
+		print("hint-shot method first: HUD: ", hud_text)
+		assert(hud_text.trim_prefix("> ").begins_with(want), "HUD hint does not lead with the treasury method: " + hud_text)
+		var shown: Array = Guidance.hints(c, gs.data, 3, 12, gs.npcs, gs.world_flags, "qingshi_village", clock.total_days, gs.npc_favor)
+		var thin_shown := false
+		for h: String in shown:
+			thin_shown = thin_shown or h.contains("Your defence is thin")
+		print("hint-shot method first: thin-defence line among the ", shown.size(), " shown hints = ", thin_shown), "close": func() -> void:
+			c.realm_index = method_first_saved[0]
+			c.stage = method_first_saved[1]
+			c.sect = method_first_saved[2]
+			c.inventory = method_first_saved[3]
+			c.abode = method_first_saved[4]
+			gs.clan = method_first_saved[5]
+			c.life_stats = method_first_saved[6]
+			c.techniques = method_first_saved[7]
+			c.equipment = method_first_saved[8]
+			c.injuries = method_first_saved[9]
+			c.main_method = method_first_saved[10]
+			c.breakthrough_pill = method_first_saved[11]
+			method_first_saved.clear()})
 
 	# WU-373: GUIDE-181. The spec's Outer Disciple has only the contribution need (Inner asks no realm), so use an Inner Disciple at
 	# Qi Refining 3 with 40 contribution: the Core Disciple goal joins both needs with "and" and names the rank once.
