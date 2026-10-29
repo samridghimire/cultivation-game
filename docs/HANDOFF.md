@@ -24,6 +24,7 @@ Short-lived context for the next session. Update or trim it when you finish a se
 - elder_mo_dialogue, explore_menu, encounter, combat_report: all fit; the greyed "Needs more favor (0/20)" option is still readable.
 - Reading oddly (text, so Follow-up only): the Journal "Next steps" repeats the HUD hints nearly word for word (by design); the Explore menu's footer "Often quiet (14%). Fights 14%: Wild Boar (Weak). Crossroads 27%. Fortunes 45%." mixes ":" and "." separators.
 - WU-385: the script now writes 9 pngs (new `hud_after_sect`: Outer Disciple at Qi Refining 1 in Qingshi Village; the shot restores sect, realm, stage and qi on close). 1280x720: the status panel (ends y=484) clears the message log (starts y=545); Goal "Talk to Elder Mo in Qingshi Village" is not repeated by a hint; the capped mission hint ends "... (J)". 1280x800: same, nothing clips or overlaps. Text oddity (Follow-up, not fixed): the message log still shows arrival lines naming travel "from Misty Forest" while the player stands in Qingshi Village.
+- WU-388: explore_menu re-rendered at 1280x720: the footer reads "Often quiet 14%. Fights 14%: Wild Boar (Weak). Crossroads 27%. Fortunes 45%." with no parentheses; it wraps onto two lines and nothing clips.
 
 
 ## State on 2026-10-24 (planner, 06:15 UTC)
