@@ -175,24 +175,26 @@ static func thin_defence_hint(c: CharacterData, data: GameData, region_id: Strin
 		line += " Claim %s from your sect treasury (%d contribution, you have %d)." % [data.items[treasury["item_id"]]["name"], int(treasury["contribution"]), Sects.contribution_balance(c)]
 	# GUIDE-185: a body art sold right here for the stones in hand leads, before the armor shop.
 	var buy_here := ""
+	var budget := -1  # GUIDE-188: stones left for armor once the manual named above is bought; -1 = all in hand
 	if not has_body and treasury.is_empty() and region_id != "":
 		var here := _body_manual_merchant(c, data, region_id)
 		if not here.is_empty() and merchant_price(c, data, region_id, String(here["item_id"])) <= c.item_count("spirit_stone"):
 			var here_id := String(here["item_id"])
 			buy_here = " Buy %s from the %s here for %d stones and learn it." % [data.items[here_id]["name"], here["merchant"], merchant_price(c, data, region_id, here_id)]
 			line += buy_here
+			budget = c.item_count("spirit_stone") - merchant_price(c, data, region_id, here_id)
 	if not has_armor:
 		var armor_start := line.length()
 		if region_id != "":
-			var armor_id := affordable_armor(c, data, region_id)
+			var armor_id := affordable_armor(c, data, region_id, budget)
 			if armor_id != "":
 				line += " The %s sells %s for %d stones." % [merchant_selling(data, region_id, armor_id), data.items[armor_id]["name"], merchant_price(c, data, region_id, armor_id)]
 			else:
-				var far_clause := _far_armor_clause(c, data, region_id)
+				var far_clause := _far_armor_clause(c, data, region_id, budget)
 				line += far_clause
 				if far_clause == "":
 					# GUIDE-090: not affordable with stones, but the loot would pay for it.
-					var loot_armor := affordable_armor(c, data, region_id, c.item_count("spirit_stone") + int(offer.get("total", 0)))
+					var loot_armor := affordable_armor(c, data, region_id, (c.item_count("spirit_stone") if budget < 0 else budget) + int(offer.get("total", 0)))
 					if loot_armor != "" and not offer.is_empty():
 						line += " The %s sells %s for %d stones.%s" % [merchant_selling(data, region_id, loot_armor), data.items[loot_armor]["name"], merchant_price(c, data, region_id, loot_armor), _sell_first_clause(offer)]
 		if line.length() == armor_start:

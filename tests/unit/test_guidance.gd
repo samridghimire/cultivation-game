@@ -5083,3 +5083,46 @@ func test_thin_defence_buys_the_manual_sold_here() -> void:
 	line = Guidance.thin_defence_hint(c, data(), "qingshi_village")
 	assert_false(line.contains("Buy "), line)
 	assert_true(line.contains(", %d stones) teaches one." % price), line)
+
+
+## GUIDE-188: stones spent on the manual named by the thin-defence line are not offered again for armor.
+func _armor_price_in(line: String) -> int:
+	var re := RegEx.new()
+	re.compile("sells [^.]*? for (\\d+) stones")
+	var best := -1
+	for m in re.search_all(line):
+		if not m.get_string().contains("Manual"):
+			best = int(m.get_string(1))
+	return best
+
+
+func _thin_manual_char(stones: int) -> CharacterData:
+	var c := _fresh()
+	c.realm_index = Guidance.THIN_DEFENCE_REALM
+	c.techniques = {}
+	c.equipment = {}
+	c.inventory = {"spirit_stone": stones}
+	return c
+
+
+func test_thin_defence_armor_fits_stones_left_after_manual() -> void:
+	var c := _thin_manual_char(0)
+	var manual := Guidance._body_manual_merchant(c, data(), "qingshi_village")
+	var price := Guidance.merchant_price(c, data(), "qingshi_village", String(manual["item_id"]))
+	c.inventory = {"spirit_stone": price + 10}
+	var line := Guidance.thin_defence_hint(c, data(), "qingshi_village")
+	assert_true(line.contains("Buy "), line)
+	var armor_price := _armor_price_in(line.substr(line.find("and learn it.")))
+	assert_true(armor_price <= 10, "armor priced %d after the manual: %s" % [armor_price, line])
+	c.inventory = {"spirit_stone": 2000}
+	line = Guidance.thin_defence_hint(c, data(), "qingshi_village")
+	armor_price = _armor_price_in(line.substr(line.find("and learn it.")))
+	assert_true(armor_price <= 2000 - price, line)
+
+
+func test_thin_defence_known_body_art_unchanged_by_budget() -> void:
+	var c := _thin_manual_char(2000)
+	c.techniques = {"stone_skin": {"level": 1, "xp": 0.0}}
+	var a := Guidance.thin_defence_hint(c, data(), "qingshi_village")
+	assert_false(a.contains("Buy "), a)
+	assert_true(a.begins_with("Your defence is thin."), a)
