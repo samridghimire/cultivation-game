@@ -376,6 +376,10 @@ func _print_sect_report() -> void:
 			away.append(int(e["away"]))
 			missions.append(int(e["missions"]))
 			lectures.append(int(e["lectures"]))
+		print("    sim ran %d days = %d sect months closed" % [int(e.get("end_day", 0)) - maxi(0, int(e["joined"])), int(e["paid"]) + int(e["skipped"])])
+		print("    sect missions done at rank 0/1/2: %d/%d/%d" % [e.get("missions_rank0", 0), e.get("missions_rank1", 0), e.get("missions_rank2", 0)])
+		for sh: Array in e["short"]:
+			print("    short: rank %d earned %d / duty %d" % [sh[0], sh[1], sh[2]])  # QA-170
 		skipped += int(e["skipped"])
 		paid += int(e["paid"])
 		months += int(e["paid"]) + int(e["skipped"])

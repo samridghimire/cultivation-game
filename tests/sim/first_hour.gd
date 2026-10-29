@@ -144,10 +144,16 @@ static func play(gs: Node, clock: Node, seed_value: int, months: int, curious: b
 		_injury_sync(gs, c, clock.total_days, open_injuries, seed_value, text if category == "danger" else "")
 	if injury_report:
 		bus.message_posted.connect(on_msg)
-	var sect_entry := {"seed": seed_value, "joined": -1, "away": 0, "months": 0, "skipped": 0, "paid": 0, "missions": 0, "lectures": 0}
+	var sect_entry := {"seed": seed_value, "joined": -1, "away": 0, "months": 0, "skipped": 0, "paid": 0, "missions": 0, "lectures": 0, "short": [], "earned": []}
 	var on_sect_msg := func(text: String, _category: String) -> void:
 		if text.contains("this month's stipend is withheld"):
 			sect_entry["skipped"] += 1
+			var short := RegEx.create_from_string("\\((\\d+)/(\\d+) contribution\\)").search(text)  # QA-170: earned/duty
+			var rank_now := int(c.sect.get("rank", 0)) if not c.is_rogue() else -1
+			sect_entry["short"].append([rank_now, int(short.get_string(1)), int(short.get_string(2))] if short != null else [rank_now, -1, -1])
+		elif text.begins_with("Mission complete:") and not c.is_rogue():
+			var key := "missions_rank%d" % int(c.sect.get("rank", 0))  # QA-170
+			sect_entry[key] = int(sect_entry.get(key, 0)) + 1
 		elif text.begins_with("Your sect pays your monthly stipend"):
 			sect_entry["paid"] += 1
 	if sect_report:
@@ -252,6 +258,7 @@ static func play(gs: Node, clock: Node, seed_value: int, months: int, curious: b
 		bus.message_posted.disconnect(on_sect_msg)
 		sect_entry["missions"] = LifeStats.get_stat(c, "missions_done")
 		sect_entry["lectures"] = LifeStats.get_stat(c, "lectures_attended")
+		sect_entry["end_day"] = clock.total_days
 		sect_log.append(sect_entry)
 	bus.combat_started.disconnect(on_start)
 	bus.combat_finished.disconnect(on_end)
