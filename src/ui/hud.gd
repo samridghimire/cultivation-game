@@ -47,6 +47,7 @@ var _qi_text: Label
 var _currency: Label
 var _last_message_msec := 0
 var _prompt: Label
+var _backdrop: ColorRect  ## GFX-017: dims the world behind any open modal.
 var _key_bar: Label
 var _target_name := ""
 
@@ -59,6 +60,10 @@ const KEY_HINTS := [
 const GUIDE_MAX_LINES := 5  ## GFX-016: wrapped lines the "Next steps" card may show.
 const CARD_FADE_MARGIN := 16.0  ## GFX-016: the player this close to a card fades it.
 const CARD_FADE_ALPHA := 0.35
+const BACKDROP_ALPHA := 0.45  ## GFX-017
+const LOG_CARD_MIN_LINE_PX := 20  ## GFX-017: one log line, in content pixels.
+const LOG_CARD_MAX_LINES := 4
+const LOG_CARD_PADDING := 24.0  ## the panel's top and bottom margins
 var _choice_menu: ChoiceMenu
 var _threat_prompt: ThreatPrompt
 ## Toggleable modal screens keyed by the input action that opens them. Each
@@ -113,6 +118,12 @@ func _ready() -> void:
 	_prompt.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	add_child(_prompt)
 	_refresh_key_hints()
+	_backdrop = ColorRect.new()
+	_backdrop.color = Color(0, 0, 0, BACKDROP_ALPHA)
+	_backdrop.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_backdrop.mouse_filter = Control.MOUSE_FILTER_STOP
+	_backdrop.visible = false
+	add_child(_backdrop)
 
 	_choice_menu = ChoiceMenu.new()
 	_choice_menu.closed.connect(_update_modal)
@@ -429,7 +440,8 @@ func _build_guide_panel() -> void:
 	_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_hint.custom_minimum_size = Vector2(316, 0)
 	box.add_child(_hint)
-	_hint_badge = UIStyle.label("!", 14, UIStyle.ACCENT)
+	_hint_badge = UIStyle.label("●", 9, Color("9fd3c7"))  # GFX-017: a real bullet, not a thin "!" that reads as a bar
+	_hint_badge.position = Vector2(0, 3)
 	_hint_badge.visible = false
 	_hint.add_child(_hint_badge)
 	add_child(panel)
@@ -455,6 +467,8 @@ func _build_log() -> void:
 	panel.add_child(_log)
 	add_child(panel)
 	_set_anchored_rect(panel, Vector4(0, 1, 0, 1), Vector4(16, -108, 416, -16))
+	_log.custom_minimum_size.y = LOG_CARD_MIN_LINE_PX
+	panel.offset_top = -16.0 - LOG_CARD_MIN_LINE_PX - LOG_CARD_PADDING
 	# Seed from the history so the log survives a world reload (travel, respawn).
 	var recent: Array = EventBus.history.slice(maxi(0, EventBus.history.size() - MAX_LOG_LINES))
 	for e: Dictionary in recent:
@@ -836,6 +850,7 @@ func _on_message(text: String, category: String) -> void:
 		_log.clear()
 		for line: String in _log_lines:
 			_log.append_text(line)
+		_fit_log_card.call_deferred()
 		return
 	_repeat = 1
 	_last_text = text
@@ -846,6 +861,22 @@ func _on_message(text: String, category: String) -> void:
 	if _log_lines.size() > MAX_LOG_LINES:
 		_log_lines.pop_front()
 		_log.remove_paragraph(0)
+	_fit_log_card.call_deferred()
+
+
+## GFX-017: the content height (px) the log card shows: its text, one to LOG_CARD_MAX_LINES lines.
+static func log_card_height(content_px: int) -> float:
+	return float(clampi(content_px, LOG_CARD_MIN_LINE_PX, LOG_CARD_MAX_LINES * LOG_CARD_MIN_LINE_PX))
+
+
+## Resizes the log card to its visible lines.
+func _fit_log_card() -> void:
+	if _log == null or _log_panel == null:
+		return
+	var h := log_card_height(_log.get_content_height())
+	_log.custom_minimum_size.y = h
+	_log_panel.offset_top = -16.0 - h - LOG_CARD_PADDING
+	_log_panel.size.y = 0.0
 
 
 func _log_line(color: Color, text: String) -> String:
@@ -1453,6 +1484,8 @@ func _update_modal() -> void:
 	# The status panel, hints and log hide behind modals; a time-skip overlay alone keeps them.
 	_status_panel.visible = not blocking
 	_log_panel.visible = not blocking
+	_backdrop.visible = blocking
+	_prompt.visible = not blocking
 	_update_guide_visibility()
 	_key_bar.visible = bool(Settings.get_value("key_help")) and not blocking
 	EventBus.ui_modal_changed.emit(blocking or _time_skip.visible)

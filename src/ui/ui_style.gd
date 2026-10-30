@@ -3,7 +3,7 @@ extends RefCounted
 ## Shared colors and small widget helpers so UI built in code looks consistent.
 
 const BG := Color("1b1d2b")
-const PANEL := Color(0.08, 0.09, 0.13, 0.97)
+const PANEL := Color(0.08, 0.09, 0.13, 1.0)  # GFX-017: opaque, so world labels never show through a window
 const ACCENT := Color("e8c76a")
 ## A dimmer gold for hints that are not yet confirmed.
 const HINT := Color("b5a46a")
