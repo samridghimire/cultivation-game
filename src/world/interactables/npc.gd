@@ -107,6 +107,9 @@ func figure_look() -> Dictionary:
 	var c: CharacterData = GameState.npcs.get(npc_id) if GameState.npcs != null else null
 	if c == null:
 		return look
+	var party := Folk.celebrants(GameState.world_flags, [npc_id], GameClock.total_days)
+	if party.has(npc_id):
+		look["sash"] = Folk.celebration_sash(party[npc_id])
 	look["robe"] = CIVILIAN_ROBES[absi(hash(npc_id)) % CIVILIAN_ROBES.size()]
 	if not c.is_rogue():
 		var sect: SectDef = GameState.data.sects.get(String(c.sect.get("id", "")))

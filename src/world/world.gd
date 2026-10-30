@@ -380,6 +380,21 @@ func _build_generated_npcs() -> void:
 		node.color = GENDER_COLORS.get(c.gender, Color("e6bf99"))
 		add_child(node)
 		move_child(node, player.get_index())
+	_build_celebration_lanterns(people, stands)
+
+
+## GFX-023: strings of lanterns near the haunt of the first villager whose celebration is open here.
+func _build_celebration_lanterns(people: Array[CharacterData], stands: Dictionary) -> void:
+	var ids: Array = people.map(func(c: CharacterData) -> String: return c.id)
+	var party := Folk.celebrants(GameState.world_flags, ids, GameClock.total_days)
+	for id: String in ids:
+		if party.has(id) and stands.has(id):
+			var lanterns := CelebrationLanterns.new()
+			lanterns.lantern_color = Folk.celebration_lantern(party[id])
+			lanterns.position = (stands[id] as Vector2) + Vector2(0, 30)
+			add_child(lanterns)
+			move_child(lanterns, 0)
+			return
 
 
 ## Labels stay on screen as the camera moves (WU-269).

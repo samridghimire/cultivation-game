@@ -494,3 +494,18 @@ func test_gift_day_round_trips_through_save() -> void:
 	var back := CharacterData.from_dict(JSON.parse_string(JSON.stringify(c.to_dict())))
 	assert_eq(back.folk_gift_day, {"npc_x": 123})
 	assert_eq(CharacterData.from_dict({}).folk_gift_day, {})
+
+
+func test_celebrants_and_sash_looks() -> void:
+	var flags := {}
+	Folk.start_celebration(flags, ["a"], 10, data(), Folk.WEDDING)
+	Folk.start_celebration(flags, ["b"], 10, data(), "funeral")
+	var party := Folk.celebrants(flags, ["a", "b", "c"], 10)
+	assert_eq(party.size(), 2)
+	assert_eq(party["a"], Folk.WEDDING)
+	assert_eq(party["b"], "funeral")
+	assert_false(party.has("c"))
+	assert_true(Folk.celebrants(flags, ["a", "b"], 400).is_empty())
+	assert_true(Folk.celebration_sash(Folk.WEDDING).r > Folk.celebration_sash(Folk.WEDDING).g * 2.0)
+	assert_true(Folk.celebration_sash("funeral").g > 0.8)
+	assert_true(Folk.celebration_lantern("funeral") != Folk.celebration_lantern(Folk.WEDDING))

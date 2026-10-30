@@ -340,6 +340,25 @@ static func celebration_label(flags: Dictionary, npc_id: String, data: GameData)
 	return "%s (%s)" % [r.get("label", "Attend the celebration"), Calendar.format_duration(int(r.get("attend_days", 1)))]
 
 
+## GFX-023: which of `ids` have a celebration open on day `today`: {npc_id: kind}.
+static func celebrants(flags: Dictionary, ids: Array, today: int) -> Dictionary:
+	var out := {}
+	for id in ids:
+		if celebration_open(flags, String(id), today):
+			out[String(id)] = celebration_kind(flags, String(id))
+	return out
+
+
+## GFX-023: the sash colour a villager wears during a celebration: red at a wedding, grey-white at a funeral.
+static func celebration_sash(kind: String) -> Color:
+	return Color("e8e4dc") if kind == "funeral" else Color("d02828")
+
+
+## GFX-023: the lantern colour strung for a celebration of `kind`.
+static func celebration_lantern(kind: String) -> Color:
+	return Color("f4f0e6") if kind == "funeral" else Color("e03030")
+
+
 ## Whether `key` is a celebration end-day flag (not an attended / gift / kind mark).
 static func _is_end_key(key: String) -> bool:
 	return key.begins_with(CELEBRATION_PREFIX) and not key.begins_with(ATTENDED_PREFIX) and not key.begins_with(GIFT_PREFIX) and not key.begins_with(KIND_PREFIX)

@@ -5,6 +5,7 @@ extends SceneTree
 ##     --resolution 1280x800 -s res://tests/sim/screenshot_first_hour.gd
 ## WU-218: append `-- --crafter` for a new Alchemist's first hour (workshop, hint, gather site, crafting,
 ## journal Commissions, Deliver) as crafter_*.png.
+## GFX-023: append `-- --celebration` for celebration.png (wedding lanterns and red sashes).
 ## WU-223: append `-- --gather-note` for the Village Herb Slope menu in each season: gather_note_<season>.png.
 ## WU-404: shots open through the HUD's _update_modal, so the dim backdrop and hidden prompt show.
 ## append `-- --fight=cultivator` for combat_report_cultivator.png (GFX-020).
@@ -33,6 +34,10 @@ func _start() -> void:
 	var c := CharacterFactory.create("Lin Feng", gs.data, rng, "male")
 	gs.start_session(c)
 	gs.pending_event = ""
+	var party := OS.get_cmdline_user_args().has("--celebration")
+	if party:  # GFX-023: a wedding for a Qingshi villager, before the world is built
+		var bride := Npcs.spawn(gs.npcs, gs.data, rng, {"age_years": 24, "region": "qingshi_village", "realm": "mortal", "gender": "female"})
+		Folk.start_celebration(gs.world_flags, [bride.id], gs.get_node("/root/GameClock").total_days, gs.data, Folk.WEDDING)
 	world = load("res://src/world/world.tscn").instantiate()
 	root.add_child(world)
 	hud = world.get_node("HUD")
@@ -41,6 +46,13 @@ func _start() -> void:
 		return
 	if OS.get_cmdline_user_args().has("--gather-note"):
 		_gather_note_shots(gs)
+		return
+	if party:
+		shots.append({"name": "celebration", "open": func() -> void:
+			hud.get("_banner").visible = false
+			for node in world.get_children():
+				if node.get_script() != null and String(node.get_script().resource_path).ends_with("celebration_lanterns.gd"):
+					world.get_node("Player").position = node.position + Vector2(0, 50), "close": func() -> void: pass})
 		return
 	shots.append({"name": "hud_arrival", "open": func() -> void: pass, "close": func() -> void: pass})
 	# WU-385: the HUD of a brand-new sect member (Azure Cloud Outer Disciple, Qi Refining 1, Qingshi Village).
