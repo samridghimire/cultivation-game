@@ -116,13 +116,13 @@ func test_beast_kinds_look_different_and_cache() -> void:
 func test_stage_is_taller_and_report_fits_720() -> void:
 	assert_true(DuelStage.STAGE_HEIGHT >= 130.0)
 	var r := _report()
-	r.show_fight("Wild Boar", true, PackedStringArray(LINES), "", PackedStringArray(), TRACE, 20, 10, false, "", "wild_boar", ["beast"])
 	var long_lines := PackedStringArray()
 	for i in 30:
 		long_lines.append("You strike for 5.")
 	r.show_fight("Wild Boar", true, long_lines, "", PackedStringArray(), TRACE, 20, 10, false, "", "wild_boar", ["beast"])
 	await (Engine.get_main_loop() as SceneTree).process_frame
 	assert_true(r.get_combined_minimum_size().y <= 720.0, "report fits 1280x720: %s" % r.get_combined_minimum_size().y)
+	r.free()
 
 
 func test_foe_name_label() -> void:
@@ -130,3 +130,4 @@ func test_foe_name_label() -> void:
 	r.show_fight("Wild Boar", true, PackedStringArray(LINES), "", PackedStringArray(), TRACE, 20, 10, false, "", "wild_boar", ["beast"])
 	assert_eq(r._foe_name.text, "Wild Boar")
 	assert_eq(r._you_name.text, "You")
+	r.free()
