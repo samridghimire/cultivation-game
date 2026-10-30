@@ -2,6 +2,19 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-30 [WORLD-003] Villagers greet you in passing, warmly or coolly depending on how they feel about you.
+- 2026-10-30 [WU-400] The breakthrough window lets you still your heart: face the vision, see the outcome and the new odds.
+- 2026-10-30 [WU-398] Repairs to the hint screenshot checks.
+- 2026-10-30 [WU-399] Rain, snow, fog and cloudy skies show in the world.
+- 2026-10-30 [WORLD-002] Looking at a villager tells you what they are doing today.
+- 2026-10-30 [C-248] Help explains the rogue sect hint and the rival's friendly spar.
+- 2026-10-29 [GFX-016] Slimmer HUD cards that leave more of the map visible.
+- 2026-10-29 [HEART-001] A heart vision before each major breakthrough: face it to steady (or shake) your odds.
+- 2026-10-29 [GFX-015] Villagers' names show only when you are near; every map label is outlined and easier to read.
+- 2026-10-29 [ENC-013] Happenings can depend on the weather, and repeatable ones can rest between meetings.
+- 2026-10-29 [RIVAL-023] Losing a friendly spar with your rival now really starts the spar cooldown.
+- 2026-10-29 [GFX-014] Fights show pixel-art fighters and beasts; banners wait until the fight report closes.
+- 2026-10-29 [C-268] Eight village happenings name a neighbour, who likes you more when you help.
 - 2026-10-29 [WU-397] Heavy hits and breakthroughs shake the screen, death fades to red; a Reduce motion setting turns it all off.
 - 2026-10-29 [GFX-013] The map border, festival stalls and the highlight ring can be drawn from the art pack.
 - 2026-10-29 [WEATHER-001] Every region has daily weather (clear, cloudy, rain, snow, fog), shown on the HUD date line.
