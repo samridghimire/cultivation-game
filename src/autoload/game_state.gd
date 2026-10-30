@@ -1463,7 +1463,7 @@ func share_tea(npc_id: String) -> void:
 		neighbours.append(String(route.get("to", "")))
 	var tip := Folk.roll_tip(player, data, world_flags, current_region, neighbours, int(npc_favor[npc_id]), npc_id, GameClock.total_days, Calendar.season_of(GameClock.total_days), rng, float(rules.get("tip_chance", 0.0)))
 	if not tip.is_empty():
-		EventBus.post(Folk.tip_line(data, tip, String(npc.name), GameClock.total_days), "info")
+		EventBus.post(Folk.tip_line(data, tip, String(npc.name), GameClock.total_days, Weather.of(data, current_region, GameClock.total_days)), "info")
 	EventBus.player_changed.emit()
 
 
@@ -1653,7 +1653,7 @@ func chat(npc_id: String) -> void:
 			neighbours.append(String(route.get("to", "")))
 		var tip := Folk.roll_tip(player, data, world_flags, current_region, neighbours, int(npc_favor[npc_id]), npc_id, GameClock.total_days, Calendar.season_of(GameClock.total_days), rng)
 		if not tip.is_empty():
-			EventBus.post(Folk.tip_line(data, tip, String(npcs[npc_id].name), GameClock.total_days), "info")
+			EventBus.post(Folk.tip_line(data, tip, String(npcs[npc_id].name), GameClock.total_days, Weather.of(data, current_region, GameClock.total_days)), "info")
 	_pass_time(result["days"])
 
 

@@ -569,7 +569,18 @@ static func validate_tips(data: GameData) -> PackedStringArray:
 	if lines.is_empty():
 		errors.append("family.json folk_tips: lines must be a non-empty array")
 	for line in lines:
-		if not (line is String) or not String(line).contains("{item}"):
+		var text := ""
+		if line is String:
+			text = line
+		elif line is Dictionary:
+			text = String((line as Dictionary).get("text", ""))
+			for season in (line as Dictionary).get("seasons", []):
+				if not ["spring", "summer", "autumn", "winter"].has(String(season)):
+					errors.append("family.json folk_tips: unknown season '%s'" % season)
+			var weather := String((line as Dictionary).get("weather", ""))
+			if weather != "" and not Weather.KINDS.has(weather):
+				errors.append("family.json folk_tips: unknown weather '%s'" % weather)
+		if not text.contains("{item}"):
 			errors.append("family.json folk_tips: every line needs {item}")
 	return errors
 
@@ -634,9 +645,23 @@ static func tip_bonus(data: GameData, flags: Dictionary, today: int, region_id: 
 	return {}
 
 
-## The villager's words, from folk_tips.lines[line_index % size], with {villager}, {item}, {region}, {place_kind} filled.
-static func tip_line(data: GameData, tip: Dictionary, villager_name: String, line_index: int) -> String:
-	var lines: Array = tip_rules(data).get("lines", [])
+## True when a tip line may be told on `day` in `weather` (plain strings and unconstrained objects always may).
+static func tip_line_fits(line: Variant, day: int, weather: String) -> bool:
+	if not line is Dictionary:
+		return true
+	var l: Dictionary = line
+	if l.has("seasons") and not (l["seasons"] as Array).has(Calendar.season_of(day).to_lower()):
+		return false
+	return not l.has("weather") or String(l["weather"]) == weather
+
+
+## The villager's words, from the folk_tips.lines that fit today's season and `weather` (line_index % count),
+## with {villager}, {item}, {region}, {place_kind} filled. A line is a string or {text, seasons, weather}.
+static func tip_line(data: GameData, tip: Dictionary, villager_name: String, line_index: int, weather: String = "") -> String:
+	var lines: Array = []
+	for line: Variant in tip_rules(data).get("lines", []):
+		if tip_line_fits(line, line_index, weather):
+			lines.append(line)
 	if lines.is_empty() or tip.is_empty():
 		return ""
 	var item_id := String(tip["item"])
@@ -646,7 +671,8 @@ static func tip_line(data: GameData, tip: Dictionary, villager_name: String, lin
 		kind = "herb slope"
 	elif tags.has("ore"):
 		kind = "ore tailings"
-	return String(lines[absi(line_index) % lines.size()]).replace("{villager}", villager_name) \
+	var chosen: Variant = lines[absi(line_index) % lines.size()]
+	return (String((chosen as Dictionary).get("text", "")) if chosen is Dictionary else String(chosen)).replace("{villager}", villager_name) \
 		.replace("{item}", String(data.items.get(item_id, {}).get("name", item_id))) \
 		.replace("{region}", String(data.regions.get(String(tip["region"]), {}).get("name", tip["region"]))) \
 		.replace("{place_kind}", kind)

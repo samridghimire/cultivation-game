@@ -447,6 +447,31 @@ func test_tip_is_deterministic_and_bonus_needs_region_and_item() -> void:
 	assert_true(Folk.tip_line(d, a, "Wu Lan", 3).contains("Wu Lan") or Folk.tip_line(d, a, "Wu Lan", 3) != "")
 
 
+func test_tip_lines_follow_season_and_weather() -> void:
+	var d := _tip_data()
+	var tip := {"region": "qingshi_village", "item": "spirit_grass"}
+	var lines: Array = d.family["folk_tips"]["lines"]
+	var seasonal := 0
+	var rainy := 0
+	for line: Variant in lines:
+		assert_true((String(line.get("text", "")) if line is Dictionary else String(line)).contains("{item}"), "every tip line names {item}")
+		if line is Dictionary and line.has("seasons"):
+			seasonal += 1
+		if line is Dictionary and line.has("weather"):
+			rainy += 1
+	assert_eq(lines.size(), 10)
+	assert_eq(seasonal, 4)
+	assert_true(rainy >= 2)
+	for day in range(0, 360):
+		var said := Folk.tip_line(d, tip, "Wu Lan", day, "clear")
+		assert_true(said != "")
+		assert_true(not said.contains("{"), "all placeholders filled")
+		if Calendar.season_of(day) != "Winter":
+			assert_false(said.contains("brazier"), "a winter-only line never shows out of winter (day %d)" % day)
+		assert_false(said.contains("wet cloak") or said.contains("Fog sits"), "weather lines need their weather")
+	assert_true(Folk.tip_line(d, tip, "Wu Lan", 5, "rain") != "")
+
+
 func test_tip_validation_rejects_bad_rules() -> void:
 	var d := data()
 	var rules: Dictionary = d.family["folk_tips"].duplicate(true)
