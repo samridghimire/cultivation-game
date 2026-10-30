@@ -6,6 +6,7 @@ extends SceneTree
 ## WU-218: append `-- --crafter` for a new Alchemist's first hour (workshop, hint, gather site, crafting,
 ## journal Commissions, Deliver) as crafter_*.png.
 ## WU-223: append `-- --gather-note` for the Village Herb Slope menu in each season: gather_note_<season>.png.
+## WU-404: shots open through the HUD's _update_modal, so the dim backdrop and hidden prompt show.
 ## append `-- --fight=cultivator` for combat_report_cultivator.png (GFX-020).
 ## PNGs go to user://screenshots/first_hour/<name>.png. Never writes saves.
 ## (The mid-game sibling is screenshot_screens.gd.)
@@ -71,6 +72,11 @@ func _start() -> void:
 				gs.pending_encounter = enc_id
 				hud.get("_encounter").open(), "close": hud.get("_encounter").close})
 			break
+	# WU-404: the Wandering Merchant's list with its GFX-019 icons.
+	var merchant := _find_script("merchant.gd")
+	if merchant != null:
+		var shop_menu: Control = hud.get("_choice_menu")
+		shots.append({"name": "shop", "open": func() -> void: shop_menu.open_for(merchant), "close": shop_menu.close})
 	var report: Control = hud.get("_combat_report")
 	# A real fight through GameState.fight (WU-181): the boar is rated and resolved
 	# like in play; seed 11 is a newcomer win. The HUD opens the report itself.
@@ -211,6 +217,7 @@ func _process(_d: float) -> bool:
 	var shot: Dictionary = shots[index]
 	if not opened:
 		(shot["open"] as Callable).call()
+		hud.call("_update_modal")  # WU-404: the dim backdrop and hidden prompt, as in play
 		opened = true
 		frames = 0
 		return false

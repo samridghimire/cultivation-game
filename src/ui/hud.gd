@@ -736,13 +736,21 @@ func _set_hint_text(lines: PackedStringArray) -> void:
 	var out: Array = []
 	var cut := false
 	for i in lines.size():
-		out.append(("  " if i == 0 and marked else "> ") + cap_hint(lines[i]))
+		out.append((hint_indent() if i == 0 and marked else "> ") + cap_hint(lines[i]))
 		cut = cut or cap_hint(lines[i]) != lines[i]
 	_hint_full = "\n".join(out)
 	_hint.text = _hint_full
 	# WU-315: mouse hover shows the whole text when a line was cut.
 	_hint.tooltip_text = "\n".join(lines) if cut else ""
 	_hint.mouse_filter = Control.MOUSE_FILTER_PASS
+
+
+## WU-404: spaces wide enough to clear the "●" badge (its width + 4 px) so the bullet never covers a letter.
+func hint_indent() -> String:
+	var font := _hint.get_theme_font("font")
+	var space_w := maxf(1.0, font.get_string_size(" ", HORIZONTAL_ALIGNMENT_LEFT, -1, 14).x)
+	var badge_w := _hint_badge.get_minimum_size().x
+	return " ".repeat(int(ceil((badge_w + 4.0) / space_w)))
 
 
 ## Names of the places and NPCs in the current region (what the world marks with its "!" badge).
