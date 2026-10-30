@@ -395,3 +395,62 @@ func test_mourners_are_living_relatives_in_the_region() -> void:
 	far.home_region = "misty_forest"
 	assert_eq(Folk.mourners(npcs, d, dead, "qingshi_village", player), ["kin"] as Array[String])
 	assert_true(Folk.mourners(npcs, d, dead, "fallen_star_market", player).is_empty())
+
+
+# --- FOLK-003: a friend's tip ---
+
+func _tip_data() -> GameData:
+	var d := data()
+	d.family["folk_tips"]["chance"] = 1.0
+	return d
+
+
+func test_tip_needs_favor_no_active_tip_and_cooldown() -> void:
+	var d := _tip_data()
+	var c := new_character()
+	var flags := {}
+	assert_true(Folk.roll_tip(c, d, flags, "qingshi_village", [], 5, "n1", 100, "spring", seeded_rng(1)).is_empty())
+	var tip := Folk.roll_tip(c, d, flags, "qingshi_village", [], 40, "n1", 100, "spring", seeded_rng(1))
+	assert_false(tip.is_empty())
+	assert_true(Folk.tip_candidates(c, d, "qingshi_village", "spring").has(tip["item"]))
+	assert_eq(int(tip["until"]), 100 + int(d.family["folk_tips"]["days"]))
+	assert_true(Folk.roll_tip(c, d, flags, "qingshi_village", [], 40, "n1", 101, "spring", seeded_rng(1)).is_empty())  # active
+	flags.erase(Folk.TIP_KEY)
+	assert_true(Folk.roll_tip(c, d, flags, "qingshi_village", [], 40, "n1", 110, "spring", seeded_rng(1)).is_empty())  # cooldown
+	assert_false(Folk.roll_tip(c, d, flags, "qingshi_village", [], 40, "n1", 130, "spring", seeded_rng(1)).is_empty())
+
+
+func test_tip_falls_back_to_a_neighbour_and_is_off_without_rules() -> void:
+	var d := _tip_data()
+	var c := new_character()
+	var tip := Folk.roll_tip(c, d, {}, "no_such_region", ["qingshi_village"], 40, "n1", 100, "spring", seeded_rng(2))
+	assert_eq(tip["region"], "qingshi_village")
+	var rules: Dictionary = d.family["folk_tips"]
+	d.family.erase("folk_tips")
+	assert_true(Folk.roll_tip(c, d, {}, "qingshi_village", [], 40, "n1", 100, "spring", seeded_rng(2)).is_empty())
+	d.family["folk_tips"] = rules
+	assert_eq(Folk.validate_tips(d).size(), 0)
+
+
+func test_tip_is_deterministic_and_bonus_needs_region_and_item() -> void:
+	var d := _tip_data()
+	var c := new_character()
+	var a := Folk.roll_tip(c, d, {}, "qingshi_village", [], 40, "n1", 100, "summer", seeded_rng(7))
+	var b := Folk.roll_tip(c, d, {}, "qingshi_village", [], 40, "n1", 100, "summer", seeded_rng(7))
+	assert_eq(a, b)
+	var flags := {Folk.TIP_KEY: a}
+	var table := [{"item": a["item"], "weight": 1}]
+	assert_eq(Folk.tip_bonus(d, flags, 105, "qingshi_village", table), {a["item"]: int(d.family["folk_tips"]["bonus"])})
+	assert_true(Folk.tip_bonus(d, flags, 105, "misty_forest", table).is_empty())
+	assert_true(Folk.tip_bonus(d, flags, 105, "qingshi_village", [{"item": "", "weight": 1}]).is_empty())
+	assert_true(Folk.active_tip(flags, 100 + int(d.family["folk_tips"]["days"]) + 1).is_empty())
+	assert_true(Folk.tip_line(d, a, "Wu Lan", 3).contains("Wu Lan") or Folk.tip_line(d, a, "Wu Lan", 3) != "")
+
+
+func test_tip_validation_rejects_bad_rules() -> void:
+	var d := data()
+	var rules: Dictionary = d.family["folk_tips"].duplicate(true)
+	d.family["folk_tips"]["lines"] = ["no placeholder"]
+	d.family["folk_tips"]["bonus"] = 9
+	assert_true(Folk.validate_tips(d).size() >= 2)
+	d.family["folk_tips"] = rules

@@ -2171,6 +2171,39 @@ func test_greeting_for_reads_favor_and_fills_player_name() -> void:
 	assert_eq(c.name, "Integration")
 
 
+func test_chat_may_give_a_tip_that_boosts_gathering() -> void:
+	var c := _start()
+	var gs := _game_state()
+	var old: float = gs.data.family["folk_tips"]["chance"]
+	gs.data.family["folk_tips"]["chance"] = 1.0
+	var npc := Npcs.spawn(gs.npcs, gs.data, seeded_rng(5), {"age_years": 30, "region": gs.current_region, "realm": "mortal"})
+	gs.npc_favor[npc.id] = 29
+	gs.chat(npc.id)
+	var tip: Dictionary = Folk.active_tip(gs.world_flags, GameClock.total_days)
+	gs.data.family["folk_tips"]["chance"] = old
+	assert_false(tip.is_empty())
+	assert_true(gs.active_tip_text().begins_with("Tip: "))
+	var table := [{"item": tip["item"], "weight": 1, "min": 1, "max": 1}]
+	var before := c.item_count(tip["item"])
+	gs.gather(table, 1)
+	assert_true(c.item_count(tip["item"]) >= before + 1 + int(gs.data.family["folk_tips"]["bonus"]))
+	gs.end_session()
+
+
+func test_family_never_gives_a_tip() -> void:
+	var c := _start()
+	var gs := _game_state()
+	var old: float = gs.data.family["folk_tips"]["chance"]
+	gs.data.family["folk_tips"]["chance"] = 1.0
+	var npc := Npcs.spawn(gs.npcs, gs.data, seeded_rng(5), {"age_years": 30, "region": gs.current_region, "realm": "mortal"})
+	c.parents.append(npc.id)
+	gs.npc_favor[npc.id] = 40
+	gs.chat(npc.id)
+	gs.data.family["folk_tips"]["chance"] = old
+	assert_true(Folk.active_tip(gs.world_flags, GameClock.total_days).is_empty())
+	gs.end_session()
+
+
 func test_attend_celebration_gives_favor_to_both_once() -> void:
 	var c := _start()
 	var gs := _game_state()

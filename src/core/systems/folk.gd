@@ -216,6 +216,7 @@ static func validate(data: GameData) -> PackedStringArray:
 	var errors: PackedStringArray = validate_greetings(data)
 	errors.append_array(validate_requests(data))
 	errors.append_array(validate_celebrations(data))
+	errors.append_array(validate_tips(data))
 	for e: Dictionary in data.encounters.values():
 		var blocks: Array = [[String(e["id"]), e.get("effects", {})]]
 		for i in e.get("choices", []).size():
@@ -376,3 +377,116 @@ static func validate_celebrations(data: GameData) -> PackedStringArray:
 			if (kind != WEDDING or r.has(key)) and String(r.get(key, "")) == "":
 				errors.append("%s: %s must be non-empty" % [who, key])
 	return errors
+
+
+# --- A friend's tip (FOLK-003) ---
+
+const TIP_KEY := "folk_tip"
+const TIP_LAST_KEY := "folk_tip_last"
+
+
+## data/family.json folk_tips ({} = feature off).
+static func tip_rules(data: GameData) -> Dictionary:
+	return data.family.get("folk_tips", {})
+
+
+## Load errors in folk_tips: numbers in range, lines non-empty and each naming {item}.
+static func validate_tips(data: GameData) -> PackedStringArray:
+	var errors: PackedStringArray = []
+	var r: Dictionary = tip_rules(data)
+	if r.is_empty():
+		return errors
+	var chance := float(r.get("chance", 0))
+	if chance <= 0.0 or chance > 1.0:
+		errors.append("family.json folk_tips: chance must be in (0, 1]")
+	for key in ["min_favor", "cooldown_days", "days", "bonus"]:
+		if int(r.get(key, 0)) <= 0:
+			errors.append("family.json folk_tips: %s must be > 0" % key)
+	if int(r.get("days", 0)) > 60:
+		errors.append("family.json folk_tips: days must be <= 60")
+	if int(r.get("bonus", 0)) > 5:
+		errors.append("family.json folk_tips: bonus must be 1..5")
+	var lines: Array = r.get("lines", [])
+	if lines.is_empty():
+		errors.append("family.json folk_tips: lines must be a non-empty array")
+	for line in lines:
+		if not (line is String) or not String(line).contains("{item}"):
+			errors.append("family.json folk_tips: every line needs {item}")
+	return errors
+
+
+## Item ids the gather places of `region_id` can yield this season for `c`, de-duplicated and sorted.
+static func tip_candidates(c: CharacterData, data: GameData, region_id: String, season: String) -> Array[String]:
+	var out: Array[String] = []
+	for place: Dictionary in data.regions.get(region_id, {}).get("places", []):
+		if place.get("type", "") != "gather":
+			continue
+		for entry: Dictionary in Exploration.gather_table_for(c, data, place.get("gather_table", []), season):
+			var item_id := String(entry.get("item", ""))
+			if item_id != "" and not out.has(item_id):
+				out.append(item_id)
+	out.sort()
+	return out
+
+
+## The tip in force on `today`, {region, item, until, npc_id}, or {}.
+static func active_tip(flags: Dictionary, today: int) -> Dictionary:
+	var tip: Dictionary = flags.get(TIP_KEY, {})
+	if tip.is_empty() or today > int(tip.get("until", -1)):
+		return {}
+	return tip
+
+
+## A friend may let slip a gathering tip while you chat. Returns the new tip ({} = none) and stores it in `flags`.
+## The chance is rolled before the item is picked, so the rng stream does not depend on the candidates.
+static func roll_tip(c: CharacterData, data: GameData, flags: Dictionary, region_id: String, neighbours: Array, favor: int, npc_id: String, today: int, season: String, rng: RandomNumberGenerator) -> Dictionary:
+	var r: Dictionary = tip_rules(data)
+	if r.is_empty() or favor < int(r["min_favor"]) or not active_tip(flags, today).is_empty():
+		return {}
+	if flags.has(TIP_LAST_KEY) and today - int(flags[TIP_LAST_KEY]) < int(r["cooldown_days"]):
+		return {}
+	if rng.randf() >= float(r["chance"]):
+		return {}
+	var where := region_id
+	var options := tip_candidates(c, data, region_id, season)
+	if options.is_empty():
+		for other in neighbours:
+			options = tip_candidates(c, data, String(other), season)
+			if not options.is_empty():
+				where = String(other)
+				break
+	if options.is_empty():
+		return {}
+	var tip := {"region": where, "item": options[rng.randi_range(0, options.size() - 1)], "until": today + int(r["days"]), "npc_id": npc_id}
+	flags[TIP_KEY] = tip
+	flags[TIP_LAST_KEY] = today
+	return tip
+
+
+## {item: bonus} when the active tip is for `region_id` and the (season/realm-filtered) table can yield its item.
+static func tip_bonus(data: GameData, flags: Dictionary, today: int, region_id: String, season_table: Array) -> Dictionary:
+	var tip := active_tip(flags, today)
+	if tip.is_empty() or String(tip.get("region", "")) != region_id:
+		return {}
+	for entry: Dictionary in season_table:
+		if String(entry.get("item", "")) == String(tip["item"]):
+			return {String(tip["item"]): int(tip_rules(data).get("bonus", 0))}
+	return {}
+
+
+## The villager's words, from folk_tips.lines[line_index % size], with {villager}, {item}, {region}, {place_kind} filled.
+static func tip_line(data: GameData, tip: Dictionary, villager_name: String, line_index: int) -> String:
+	var lines: Array = tip_rules(data).get("lines", [])
+	if lines.is_empty() or tip.is_empty():
+		return ""
+	var item_id := String(tip["item"])
+	var tags: Array = data.items.get(item_id, {}).get("tags", [])
+	var kind := "gathering ground"
+	if tags.has("herb"):
+		kind = "herb slope"
+	elif tags.has("ore"):
+		kind = "ore tailings"
+	return String(lines[absi(line_index) % lines.size()]).replace("{villager}", villager_name) \
+		.replace("{item}", String(data.items.get(item_id, {}).get("name", item_id))) \
+		.replace("{region}", String(data.regions.get(String(tip["region"]), {}).get("name", tip["region"]))) \
+		.replace("{place_kind}", kind)

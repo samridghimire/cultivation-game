@@ -1137,6 +1137,9 @@ func gather(table: Array, days: int) -> void:
 	var thrived: Array[String] = Weather.herb_bonus(data, Weather.of(data, current_region, GameClock.total_days), found, rng)
 	for item_id in thrived:
 		found[item_id] = int(found[item_id]) + 1
+	var tipped := Folk.tip_bonus(data, world_flags, GameClock.total_days, current_region, Exploration.gather_table_for(player, data, table, season))
+	for item_id in tipped:
+		found[item_id] = int(found.get(item_id, 0)) + int(tipped[item_id])
 	var notes: PackedStringArray = []
 	for item_id in found:
 		player.add_item(item_id, found[item_id])
@@ -1145,11 +1148,24 @@ func gather(table: Array, days: int) -> void:
 		EventBus.post("You search for %s but find nothing worth taking." % Calendar.format_duration(days))
 	else:
 		EventBus.post("You gather for %s. (%s)" % [Calendar.format_duration(days), ", ".join(notes)], "progress")
+	for item_id in tipped:
+		var tip: Dictionary = Folk.active_tip(world_flags, GameClock.total_days)
+		var friend: CharacterData = npcs.get(String(tip.get("npc_id", "")))
+		EventBus.post("%s's tip was good: +%d %s." % [friend.name if friend != null else "Your friend", tipped[item_id], Items.item_plural(data, item_id, tipped[item_id])], "info")
 	for item_id in thrived:
 		EventBus.post("The rain has the herbs thriving: +1 %s." % Items.item_plural(data, item_id, 1), "info")
 	if Exploration.locked_gather_count(player, data, table) > 0:
 		EventBus.post("You sense rarer treasures here, but your cultivation is too shallow to find them.")
 	_pass_time(days)
+
+
+## The friend's tip in force, for the UI: "" or "Tip: Spirit Grass in Misty Forest (4 days left)".
+func active_tip_text() -> String:
+	var tip := Folk.active_tip(world_flags, GameClock.total_days)
+	if tip.is_empty():
+		return ""
+	var left := int(tip["until"]) - GameClock.total_days
+	return "Tip: %s in %s (%s left)" % [data.items.get(String(tip["item"]), {}).get("name", tip["item"]), data.regions.get(String(tip["region"]), {}).get("name", tip["region"]), Calendar.format_duration(left + 1)]
 
 
 ## Fish a pond's catch table (FISH-001): like gather, but the weather moves the chance of a catch.
@@ -1455,6 +1471,13 @@ func chat(npc_id: String) -> void:
 	if visit > 0:
 		npc_favor[npc_id] = mini(100, int(npc_favor[npc_id]) + visit)
 		EventBus.post("%s is glad you came when invited. (%s)" % [npcs[npc_id].name, Family.favor_progress(int(npc_favor[npc_id]), data)], "progress")
+	if not data.npcs.has(npc_id) and not (player.parents.has(npc_id) or player.children.has(npc_id) or player.spouses.has(npc_id)):
+		var neighbours: Array = []
+		for route: Dictionary in data.regions.get(current_region, {}).get("routes", []):
+			neighbours.append(String(route.get("to", "")))
+		var tip := Folk.roll_tip(player, data, world_flags, current_region, neighbours, int(npc_favor[npc_id]), npc_id, GameClock.total_days, Calendar.season_of(GameClock.total_days), rng)
+		if not tip.is_empty():
+			EventBus.post(Folk.tip_line(data, tip, String(npcs[npc_id].name), GameClock.total_days), "info")
 	_pass_time(result["days"])
 
 
