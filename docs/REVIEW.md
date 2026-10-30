@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: fae2671
+Last reviewed commit: e4c0e6a
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -1227,3 +1227,21 @@ Last reviewed commit: fae2671
   - Notes, not filed: FOLK-001's spec asked to validate that each ask item is gatherable/buyable somewhere; only
     "known item" is checked. HEART-002 doesn't range-check a choice's `alignment` shift (Alignment.shift clamps).
     World `_greeted` (WU-401) resets on every world reload, so a villager may greet twice a day after travel; harmless.
+- 2026-10-30 (reviewer, 2nd run): reviewed fae2671..e4c0e6a (QA-178, WORLD-005, GFX-019, GFX-020, WU-402, FISH-001,
+  WORLD-006, GFX-021, FOLK-003, C-271, WU-404, WU-403, QA-179; [PLAN]/[REVIEW] skipped). Main green (2586 tests; the one
+  failure in the first run was this review's new test racing its own edit). No worker touched BACKLOG/CHANGELOG; no
+  SAVE_VERSION change (celebrations and the tip live in world_flags with defaults: a missing `celebration_kind_` is a
+  wedding, tip `until`/`folk_tip_last` are int()-read); no binary assets (GFX-019/021 art is generated in code).
+  - WORLD-006 follows its spec, including skipping `celebration_kind_` keys on expiry. FISH-001 validates catch tables
+    (items, seasons, min_realm) and feeds item sources. WU-403's `journey_days` matches what travel spends; the travel
+    menu adds the same snow day to `route["days"]` (already speed-adjusted). C-271's gendered words are about the
+    peddler, never `{villager}`.
+  - Fixed (FOLK-003): `folk_tips.min_favor` was 30, but `Family.check_chat` refuses small talk at favor >=
+    `chat_max_favor` (30), so a tip could only come on the single chat that lands exactly on 30 (35%), once per villager
+    ever (the worker flagged this). Lowered to 20 (the warm-greeting "friend" threshold), and `Folk.validate_tips` now
+    rejects min_favor >= chat_max_favor. `test_family_never_gives_a_tip` chatted at favor 40, where chat is refused
+    anyway, so it passed vacuously; it now chats at min_favor. Test added.
+  - Notes, not filed: each funeral mourner (and each full-month parent) has their own celebration, so a three-mourner
+    funeral can be attended three times (+8 favor each, +1 alignment each, a day each), as the spec allows. A wedding's
+    attended mark survives into a full-month feast opened for the same NPC within the 30 days ("already paid your
+    respects"); rare. FISH-001 posts under the "trade" log topic.

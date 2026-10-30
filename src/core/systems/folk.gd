@@ -404,6 +404,9 @@ static func validate_tips(data: GameData) -> PackedStringArray:
 			errors.append("family.json folk_tips: %s must be > 0" % key)
 	if int(r.get("days", 0)) > 60:
 		errors.append("family.json folk_tips: days must be <= 60")
+	var chat_max := int(data.family.get("acquaintance", {}).get("chat_max_favor", 0))
+	if chat_max > 0 and int(r.get("min_favor", 0)) >= chat_max:
+		errors.append("family.json folk_tips: min_favor must be below acquaintance.chat_max_favor (%d), or no chat can ever give a tip" % chat_max)
 	if int(r.get("bonus", 0)) > 5:
 		errors.append("family.json folk_tips: bonus must be 1..5")
 	var lines: Array = r.get("lines", [])

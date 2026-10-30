@@ -2205,7 +2205,7 @@ func test_chat_may_give_a_tip_that_boosts_gathering() -> void:
 	var old: float = gs.data.family["folk_tips"]["chance"]
 	gs.data.family["folk_tips"]["chance"] = 1.0
 	var npc := Npcs.spawn(gs.npcs, gs.data, seeded_rng(5), {"age_years": 30, "region": gs.current_region, "realm": "mortal"})
-	gs.npc_favor[npc.id] = 29
+	gs.npc_favor[npc.id] = int(gs.data.family["folk_tips"]["min_favor"])
 	gs.chat(npc.id)
 	var tip: Dictionary = Folk.active_tip(gs.world_flags, GameClock.total_days)
 	gs.data.family["folk_tips"]["chance"] = old
@@ -2225,7 +2225,7 @@ func test_family_never_gives_a_tip() -> void:
 	gs.data.family["folk_tips"]["chance"] = 1.0
 	var npc := Npcs.spawn(gs.npcs, gs.data, seeded_rng(5), {"age_years": 30, "region": gs.current_region, "realm": "mortal"})
 	c.parents.append(npc.id)
-	gs.npc_favor[npc.id] = 40
+	gs.npc_favor[npc.id] = int(gs.data.family["folk_tips"]["min_favor"])
 	gs.chat(npc.id)
 	gs.data.family["folk_tips"]["chance"] = old
 	assert_true(Folk.active_tip(gs.world_flags, GameClock.total_days).is_empty())

@@ -454,3 +454,12 @@ func test_tip_validation_rejects_bad_rules() -> void:
 	d.family["folk_tips"]["bonus"] = 9
 	assert_true(Folk.validate_tips(d).size() >= 2)
 	d.family["folk_tips"] = rules
+
+
+func test_tip_min_favor_is_below_where_chat_stops() -> void:
+	var d := data()
+	assert_eq(Folk.validate_tips(d).size(), 0)
+	var old := int(d.family["folk_tips"]["min_favor"])
+	d.family["folk_tips"]["min_favor"] = int(d.family["acquaintance"]["chat_max_favor"])
+	assert_eq(Folk.validate_tips(d).size(), 1, "chat is refused at chat_max_favor, so a tip there could never come")
+	d.family["folk_tips"]["min_favor"] = old
