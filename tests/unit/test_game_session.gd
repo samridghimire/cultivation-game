@@ -2256,14 +2256,17 @@ func test_greeting_for_hands_over_a_gift_once_per_cooldown() -> void:
 	var npc := Npcs.spawn(gs.npcs, gs.data, seeded_rng(5), {"age_years": 30, "region": "qingshi_village", "realm": "mortal"})
 	gs.npc_favor[npc.id] = 39
 	var before := c.inventory.duplicate()
-	gs.greeting_for(npc.id)
+	gs.receive_greeting_gift(npc.id)
 	assert_eq(c.inventory, before)
 	gs.npc_favor[npc.id] = 50
 	gs.greeting_for(npc.id)
+	gs.greeting_for(npc.id)
+	assert_eq(c.inventory, before, "greeting_for is a pure getter")
+	gs.receive_greeting_gift(npc.id)
 	assert_true(c.inventory != before)
 	assert_true(c.folk_gift_day.has(npc.id))
 	var after := c.inventory.duplicate()
-	gs.greeting_for(npc.id)
+	gs.receive_greeting_gift(npc.id)
 	assert_eq(c.inventory, after)
 
 

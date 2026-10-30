@@ -182,6 +182,7 @@ static func advance(c: CharacterData, data: GameData, world_days: int, today: in
 ## Harvests every ready crop. Returns {ok, items: {item_id: count}}.
 static func harvest(c: CharacterData, place: Dictionary, plot_key: String, rng: RandomNumberGenerator) -> Dictionary:
 	var items := {}
+	var orphaned: Array[String] = []
 	var entry := _entry(c, plot_key)
 	var keep: Array = []
 	var bonus := int(place.get("wood_bonus", 1)) if int(c.spiritual_roots.get("wood", 0)) >= WOOD_MIN_PURITY else 0
@@ -190,13 +191,19 @@ static func harvest(c: CharacterData, place: Dictionary, plot_key: String, rng: 
 			keep.append(crop)
 			continue
 		var item_id := String(crop["item"])
-		var span: Array = place["plants"][item_id]["yield"]
-		var amount := rng.randi_range(int(span[0]), int(span[1])) + bonus
+		var plant: Dictionary = place["plants"].get(item_id, {})
+		# A data edit after a save can drop the plant: still pay out a single herb.
+		var amount := 1
+		if not plant.has("yield"):
+			orphaned.append(item_id)
+		else:
+			var span: Array = plant["yield"]
+			amount = rng.randi_range(int(span[0]), int(span[1])) + bonus
 		c.add_item(item_id, amount)
 		items[item_id] = int(items.get(item_id, 0)) + amount
 	if not items.is_empty():
 		entry["crops"] = keep
-	return {"ok": not items.is_empty(), "items": items}
+	return {"ok": not items.is_empty(), "items": items, "orphaned": orphaned}
 
 
 ## How far a crop has grown, 0.0 (just planted) .. 1.0 (ripe).

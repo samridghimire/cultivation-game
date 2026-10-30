@@ -103,6 +103,20 @@ func test_harvest_range_and_wood_bonus() -> void:
 	assert_eq(wn, n + 1, "same roll, one more")
 
 
+func test_harvest_survives_a_plant_removed_from_the_data() -> void:
+	var c := _farmer()
+	var place := _place()
+	FieldPlots.rent(c, "qingshi_village", place, 0)
+	FieldPlots.plant(c, data(), place, KEY, "spirit_herb", 0)
+	c.field_plots[KEY]["crops"][0]["days_left"] = 0
+	var edited := place.duplicate(true)
+	edited["plants"] = {}
+	var got := FieldPlots.harvest(c, edited, KEY, seeded_rng())
+	assert_true(got["ok"])
+	assert_eq(int(got["items"]["spirit_herb"]), 1)
+	assert_eq(got["orphaned"], ["spirit_herb"])
+
+
 func test_validation_rejects_bad_plants_and_a_second_field() -> void:
 	var d := GameData.load_from_dir()
 	var region: Dictionary = d.regions["qingshi_village"]

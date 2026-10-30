@@ -445,6 +445,7 @@ func _check_greetings() -> void:
 	if id == "":
 		return
 	_greeted[id] = day
+	GameState.receive_greeting_gift(id)
 	var text := GameState.greeting_for(id)
 	var req := GameState.letter_request(id)
 	if not req.is_empty():

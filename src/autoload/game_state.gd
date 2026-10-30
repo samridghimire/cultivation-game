@@ -1417,7 +1417,6 @@ func greeting_for(npc_id: String) -> String:
 	var npc: CharacterData = npcs.get(npc_id)
 	if npc == null:
 		return ""
-	_receive_folk_gift(npc)
 	var line := Folk.greeting(npc, int(npc_favor.get(npc_id, 0)), GameClock.total_days, data, world_flags).replace("{player}", player.name)
 	if line.contains("{partner}"):
 		line = line.replace("{partner}", String(npcs[npc.spouses[0]].name) if not npc.spouses.is_empty() and npcs.has(npc.spouses[0]) else "their spouse")
@@ -1590,7 +1589,11 @@ func attend_celebration(npc_id: String) -> void:
 	_pass_time(int(result["days"]))
 
 ## FOLK-002: a friendly villager hands over a small gift when you are greeted (once per cooldown).
-func _receive_folk_gift(npc: CharacterData) -> void:
+## The world calls this once per greeting; `greeting_for` itself has no side effects.
+func receive_greeting_gift(npc_id: String) -> void:
+	var npc: CharacterData = npcs.get(npc_id)
+	if npc == null:
+		return
 	var gift := Folk.gift(player, npc, int(npc_favor.get(npc.id, 0)), GameClock.total_days, data)
 	if gift.is_empty():
 		return
@@ -3183,6 +3186,8 @@ func harvest_field() -> void:
 		for item_id in result["items"]:
 			parts.append("%d %s" % [result["items"][item_id], Items.item_plural(data, item_id, result["items"][item_id])])
 		EventBus.post("You harvest %s: %s." % [place["display_name"], ", ".join(parts)], "progress")
+		if not (result["orphaned"] as Array).is_empty():
+			EventBus.post("Some of the crop was an odd, forgotten strain; you salvage a single herb of it.", "info")
 	else:
 		EventBus.post("Nothing in the field is ready yet.", "warning")
 	EventBus.player_changed.emit()
