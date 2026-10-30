@@ -149,7 +149,7 @@ func test_quantity_max_and_ten_steps() -> void:
 	screen._set_tab(false)
 	screen._select("spirit_herb")
 	screen._step(ShopScreen.MAX_STEP)
-	assert_eq(screen._quantity, ShopScreen.max_quantity(gs.player, gs.data, "spirit_herb", false), "Max on buy is capped by stones")
+	assert_eq(screen._quantity, ShopScreen.max_quantity(gs.player, gs.data, "spirit_herb", false, "", gs.buy_multiplier(), gs.price_season()), "Max on buy is capped by stones")
 	var key := InputEventKey.new()
 	key.pressed = true
 	key.keycode = KEY_PAGEUP

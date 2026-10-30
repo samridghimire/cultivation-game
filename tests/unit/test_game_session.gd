@@ -215,6 +215,21 @@ func test_buy_item_quantity_buys_all_or_nothing() -> void:
 	gs.end_session()
 
 
+func test_seasonal_herb_price_follows_the_season() -> void:
+	var c := _start()
+	var gs := _game_state()
+	c.inventory["spirit_stone"] = 100
+	GameClock.total_days = 0  # spring: spirit herb is in season
+	gs.buy_item("spirit_herb")
+	assert_eq(c.item_count("spirit_stone"), 95)
+	GameClock.total_days = 300  # winter
+	gs.buy_item("spirit_herb")
+	assert_eq(c.item_count("spirit_stone"), 88)
+	gs.sell_item("spirit_herb")
+	assert_eq(c.item_count("spirit_stone"), 92)
+	gs.end_session()
+
+
 func test_buy_item_spends_stones() -> void:
 	var c := _start()
 	var gs := _game_state()
@@ -1112,7 +1127,7 @@ func test_sell_all_pays_sum_with_one_message() -> void:
 	var gs := _game_state()
 	c.inventory = {"spirit_herb": 3, "iron_essence": 2}
 	var before := c.item_count("spirit_stone")
-	var expected := 3 * Items.sell_price(gs.data, "spirit_herb") + 2 * Items.sell_price(gs.data, "iron_essence")
+	var expected := 3 * Items.sell_price(gs.data, "spirit_herb", gs.price_season()) + 2 * Items.sell_price(gs.data, "iron_essence", gs.price_season())
 	var stones: int = gs.sell_all(["spirit_herb", "iron_essence"])
 	assert_eq(stones, expected)
 	assert_eq(c.item_count("spirit_stone"), before + expected)

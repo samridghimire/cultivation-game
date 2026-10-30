@@ -82,7 +82,7 @@ func test_every_merchant_survives_tab_and_sell_all_fuzz() -> void:
 		if not screen._sell_tab.disabled:
 			screen._set_tab(true)
 			var loot := screen._loot_ids()
-			var shown := Items.bulk_sell_total(c, gs.data, loot)
+			var shown := Items.bulk_sell_total(c, gs.data, loot, gs.price_season())
 			var kept := _protected(c, gs.data)
 			var before := c.item_count("spirit_stone")
 			paid_total += shown

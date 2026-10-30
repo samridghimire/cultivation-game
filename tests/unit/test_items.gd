@@ -144,3 +144,39 @@ func test_item_min_realm_is_validated() -> void:
 	var text := "\n".join(d.load_errors)
 	assert_true("unknown min_realm 'nope'" in text, text)
 	assert_true("Item 'paper_lantern': min_realm needs a usable item" in text, text)
+
+
+## MARKET-001: seasonal herbs are cheaper in their season and dearer outside it.
+func test_seasonal_mult_in_and_out_of_season() -> void:
+	var d := data()
+	assert_eq(Items.harvest_seasons(d, "spirit_herb"), ["spring"])
+	assert_eq(Items.seasonal_mult(d, "spirit_herb", "spring"), 0.85)
+	assert_eq(Items.seasonal_mult(d, "spirit_herb", "winter"), 1.2)
+	assert_eq(Items.seasonal_mult(d, "dew_grass", "winter"), 1.0)  # no seasonal entry
+	assert_eq(Items.seasonal_mult(d, "spirit_herb", ""), 1.0)
+	assert_eq(Items.seasonal_note(d, "spirit_herb", "spring"), "In season: cheaper now")
+	assert_eq(Items.seasonal_note(d, "spirit_herb", "autumn"), "Out of season: dearer")
+	assert_eq(Items.seasonal_note(d, "dew_grass", "autumn"), "")
+
+
+func test_seasonal_prices_move_buy_and_sell() -> void:
+	var d := data()
+	var c := CharacterData.new()
+	assert_eq(Reputation.buy_price(c, d, "spirit_herb", "", 1.0, ""), 6)
+	assert_eq(Reputation.buy_price(c, d, "spirit_herb", "", 1.0, "spring"), 5)
+	assert_eq(Reputation.buy_price(c, d, "spirit_herb", "", 1.0, "winter"), 7)
+	assert_eq(Items.sell_price(d, "spirit_herb"), 3)
+	assert_eq(Items.sell_price(d, "spirit_herb", "spring"), 3)
+	assert_eq(Items.sell_price(d, "spirit_herb", "winter"), 4)
+	assert_eq(Items.sell_price(d, "dew_grass", "winter"), Items.sell_price(d, "dew_grass"))
+
+
+func test_validate_seasonal_prices() -> void:
+	var errors: Array[String] = []
+	Items.validate_seasonal_prices({"in_season_mult": 0.85, "out_of_season_mult": 1.2}, errors)
+	Items.validate_seasonal_prices({}, errors)
+	assert_eq(errors.size(), 0)
+	Items.validate_seasonal_prices({"in_season_mult": 0.1, "out_of_season_mult": 1.2}, errors)
+	Items.validate_seasonal_prices({"in_season_mult": 0.9}, errors)
+	Items.validate_seasonal_prices({"bogus": 1.0, "in_season_mult": 0.9, "out_of_season_mult": 1.1}, errors)
+	assert_eq(errors.size(), 3)

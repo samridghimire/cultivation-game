@@ -73,9 +73,9 @@ static func use_warning(data: GameData, item_id: String) -> String:
 ## Buys at a merchant affiliated with sect `faction` ("" = none), whose
 ## prices follow the buyer's reputation (Reputation.buy_price).
 ## Returns {ok, reason, stones}.
-static func buy(c: CharacterData, data: GameData, item_id: String, quantity: int = 1, faction: String = "", market_mult: float = 1.0) -> Dictionary:
+static func buy(c: CharacterData, data: GameData, item_id: String, quantity: int = 1, faction: String = "", market_mult: float = 1.0, season: String = "") -> Dictionary:
 	var item: Dictionary = data.items.get(item_id, {})
-	var price := Reputation.buy_price(c, data, item_id, faction, market_mult) * quantity
+	var price := Reputation.buy_price(c, data, item_id, faction, market_mult, season) * quantity
 	if item.is_empty() or price <= 0:
 		return {"ok": false, "reason": "That is not for sale."}
 	if c.item_count("spirit_stone") < price:
@@ -344,10 +344,10 @@ static func bulk_sell_ids(c: CharacterData, data: GameData, stock_tags: Array, b
 
 
 ## Spirit stones selling every full stack of `ids` would pay.
-static func bulk_sell_total(c: CharacterData, data: GameData, ids: Array) -> int:
+static func bulk_sell_total(c: CharacterData, data: GameData, ids: Array, season: String = "") -> int:
 	var total := 0
 	for id in ids:
-		total += sell_price(data, id) * c.item_count(id)
+		total += sell_price(data, id, season) * c.item_count(id)
 	return total
 
 
@@ -359,12 +359,60 @@ static func _price_then_name(data: GameData, a: String, b: String) -> bool:
 	return String(data.items[a]["name"]).naturalnocasecmp_to(String(data.items[b]["name"])) < 0
 
 
+## The seasons in which some gather place yields `item_id` (only entries that carry
+## `seasons`); empty = not a seasonal item.
+static func harvest_seasons(data: GameData, item_id: String) -> Array:
+	var seasons: Array = []
+	for source: Dictionary in Exploration.seasonal_sources(data, item_id):
+		for s: String in source["seasons"]:
+			if not seasons.has(s):
+				seasons.append(s)
+	return seasons
+
+
+## MARKET-001: price factor for `item_id` in `season`: seasonal_prices.in_season_mult
+## while it is harvested, out_of_season_mult otherwise; 1.0 for other items, an
+## empty season or absent data.
+static func seasonal_mult(data: GameData, item_id: String, season: String) -> float:
+	if season == "" or data.seasonal_prices.is_empty():
+		return 1.0
+	var seasons := harvest_seasons(data, item_id)
+	if seasons.is_empty():
+		return 1.0
+	return float(data.seasonal_prices["in_season_mult" if seasons.has(season) else "out_of_season_mult"])
+
+
+## "In season: cheaper now" / "Out of season: dearer" for the inventory, or "".
+static func seasonal_note(data: GameData, item_id: String, season: String) -> String:
+	var mult := seasonal_mult(data, item_id, season)
+	if mult < 1.0:
+		return "In season: cheaper now"
+	if mult > 1.0:
+		return "Out of season: dearer"
+	return ""
+
+
+static func validate_seasonal_prices(block: Dictionary, errors: Array[String]) -> void:
+	for key: String in block:
+		var v: Variant = block[key]
+		if not ["in_season_mult", "out_of_season_mult"].has(key) or not (v is float or v is int) or float(v) < 0.5 or float(v) > 2.0:
+			errors.append("seasonal_prices '%s' must be in_season_mult or out_of_season_mult with a value in 0.5..2.0" % key)
+	if not block.is_empty() and (not block.has("in_season_mult") or not block.has("out_of_season_mult")):
+		errors.append("seasonal_prices needs both in_season_mult and out_of_season_mult")
+
+
+static func _seasonal_round(price: int, mult: float) -> int:
+	if price <= 0 or mult == 1.0:
+		return price
+	return maxi(1, roundi(price * mult))
+
+
 ## Merchants buy items back at SELL_RATE of their price. Crafted goods (the
 ## output of any recipe) are also capped at their material cost per unit times
 ## recipes.json alchemy.crafted_sell_markup, so crafting cheap materials into
 ## pricey talismans or gear is a modest trade, not a money press.
-static func sell_price(data: GameData, item_id: String) -> int:
-	var price := int(int(data.items.get(item_id, {}).get("price", 0)) * SELL_RATE)
+static func sell_price(data: GameData, item_id: String, season: String = "") -> int:
+	var price := _seasonal_round(int(int(data.items.get(item_id, {}).get("price", 0)) * SELL_RATE), seasonal_mult(data, item_id, season))
 	var material := material_value(data, item_id)
 	if price <= 0 or material < 0.0:
 		return price
@@ -412,8 +460,8 @@ static func compute_material_value(data: GameData, item_id: String) -> float:
 
 
 ## Returns {ok, reason, stones}.
-static func sell(c: CharacterData, data: GameData, item_id: String, quantity: int = 1) -> Dictionary:
-	var price := sell_price(data, item_id) * quantity
+static func sell(c: CharacterData, data: GameData, item_id: String, quantity: int = 1, season: String = "") -> Dictionary:
+	var price := sell_price(data, item_id, season) * quantity
 	if price <= 0 or item_id == "spirit_stone":
 		return {"ok": false, "reason": "No one will buy that.", "stones": 0}
 	if c.item_count(item_id) < quantity:

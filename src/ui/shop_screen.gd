@@ -285,16 +285,16 @@ static func deal_note(c: CharacterData, region_id: String, today: int) -> String
 
 ## Price of one `item_id` on the current tab.
 ## `market_mult`: the region's world-event price multiplier (GameState.buy_multiplier: world events and local renown; buying only).
-static func unit_price(c: CharacterData, data: GameData, item_id: String, selling: bool, faction: String = "", market_mult: float = 1.0) -> int:
-	return Items.sell_price(data, item_id) if selling else Reputation.buy_price(c, data, item_id, faction, market_mult)
+static func unit_price(c: CharacterData, data: GameData, item_id: String, selling: bool, faction: String = "", market_mult: float = 1.0, season: String = "") -> int:
+	return Items.sell_price(data, item_id, season) if selling else Reputation.buy_price(c, data, item_id, faction, market_mult, season)
 
 
 ## Most of `item_id` that `c` can buy with their stones or sell from their pouch.
 @warning_ignore("integer_division")
-static func max_quantity(c: CharacterData, data: GameData, item_id: String, selling: bool, faction: String = "", market_mult: float = 1.0) -> int:
+static func max_quantity(c: CharacterData, data: GameData, item_id: String, selling: bool, faction: String = "", market_mult: float = 1.0, season: String = "") -> int:
 	if selling:
 		return mini(c.item_count(item_id), MAX_QUANTITY)
-	var price := unit_price(c, data, item_id, false, faction, market_mult)
+	var price := unit_price(c, data, item_id, false, faction, market_mult, season)
 	return 0 if price <= 0 else mini(c.item_count("spirit_stone") / price, MAX_QUANTITY)
 
 
@@ -361,7 +361,7 @@ static func upgrade_tag(c: CharacterData, data: GameData, item_id: String, facti
 				return ""
 			if val > worn_val:
 				higher = true
-		if higher and c.item_count("spirit_stone") >= unit_price(c, data, item_id, false, faction, GameState.buy_multiplier()):
+		if higher and c.item_count("spirit_stone") >= unit_price(c, data, item_id, false, faction, GameState.buy_multiplier(), GameState.price_season()):
 			return "upgrade"
 		return ""
 	var tech_id := manual_technique(data, item_id)
@@ -483,7 +483,7 @@ func _rebuild() -> void:
 			empty = "You have nothing this merchant wants." if _selling else "Nothing for sale."
 		_list.add_child(UIStyle.label(empty, 16, Color(0.7, 0.7, 0.7)))
 	for item_id in ids:
-		var price := unit_price(p, data, item_id, _selling, _faction, GameState.buy_multiplier())
+		var price := unit_price(p, data, item_id, _selling, _faction, GameState.buy_multiplier(), GameState.price_season())
 		var label := "%s  %d" % [data.items[item_id]["name"], price]
 		if _selling:
 			label += "  (have %d)" % p.item_count(item_id)
@@ -531,7 +531,7 @@ func _loot_ids() -> Array:
 
 func _refresh_sell_all() -> void:
 	var loot := _loot_ids()
-	var total := Items.bulk_sell_total(GameState.player, GameState.data, loot)
+	var total := Items.bulk_sell_total(GameState.player, GameState.data, loot, GameState.price_season())
 	_sell_all_button.visible = _selling and total > 0
 	_sell_all_note.visible = _sell_all_button.visible
 	if not _sell_all_button.visible:
@@ -554,7 +554,7 @@ func _refresh_sell_all() -> void:
 static func sell_all_summary(c: CharacterData, data: GameData, ids: Array) -> String:
 	var sorted := ids.duplicate()
 	sorted.sort_custom(func(a: String, b: String) -> bool:
-		return Items.sell_price(data, a) * c.item_count(a) > Items.sell_price(data, b) * c.item_count(b))
+		return Items.sell_price(data, a, GameState.price_season()) * c.item_count(a) > Items.sell_price(data, b, GameState.price_season()) * c.item_count(b))
 	var parts: Array[String] = []
 	for id: String in sorted.slice(0, 3):
 		parts.append("%d %s" % [c.item_count(id), Items.item_plural(data, id, c.item_count(id))])
@@ -631,7 +631,7 @@ func _is_ten_step(event: InputEvent, up: bool) -> bool:
 func _step(delta: int) -> void:
 	if _selected == "":
 		return
-	var most := max_quantity(GameState.player, GameState.data, _selected, _selling, _faction, GameState.buy_multiplier())
+	var most := max_quantity(GameState.player, GameState.data, _selected, _selling, _faction, GameState.buy_multiplier(), GameState.price_season())
 	_quantity = clampi(_quantity + delta, 1, maxi(most, 1))
 	_show_details()
 
@@ -647,7 +647,7 @@ func _show_details() -> void:
 	_name.text = item["name"]
 	if not _selling:
 		var note := manual_note(p, data, _selected)
-		var base := "%s  %d" % [item["name"], unit_price(p, data, _selected, false, _faction, GameState.buy_multiplier())]
+		var base := "%s  %d" % [item["name"], unit_price(p, data, _selected, false, _faction, GameState.buy_multiplier(), GameState.price_season())]
 		if note != "" and not row_fits(base + note):
 			_name.text += note
 	_description.text = String(item.get("description", ""))
@@ -665,9 +665,9 @@ func _show_details() -> void:
 	_compare.visible = _compare.text != ""
 	_wanted.text = sell_wanted_line(p, data, _selected, _selling, GameState.world_flags)
 	_wanted.visible = _wanted.text != ""
-	var most := max_quantity(p, data, _selected, _selling, _faction, GameState.buy_multiplier())
+	var most := max_quantity(p, data, _selected, _selling, _faction, GameState.buy_multiplier(), GameState.price_season())
 	_quantity = clampi(_quantity, 1, maxi(most, 1))
-	var unit := unit_price(p, data, _selected, _selling, _faction, GameState.buy_multiplier())
+	var unit := unit_price(p, data, _selected, _selling, _faction, GameState.buy_multiplier(), GameState.price_season())
 	_quantity_label.text = "x%d  (you have %d)" % [_quantity, p.item_count(_selected)]
 	_recharge_warn.text = "" if _selling else recharge_warning(p, data, unit * _quantity)
 	_recharge_warn.visible = _recharge_warn.text != ""

@@ -334,10 +334,13 @@ static func use_lines(data: GameData, item_id: String, region_id: String) -> Arr
 		var shown: Array[String] = []
 		for b in buyers.slice(0, 2):
 			shown.append("%s (%s)" % [b["place_name"], b["region_name"]])
-		var text := "Sells for %d each at %s" % [Items.sell_price(data, item_id), " and ".join(shown)]
+		var text := "Sells for %d each at %s" % [Items.sell_price(data, item_id, GameState.price_season()), " and ".join(shown)]
 		if buyers.size() > 2:
 			text += " and %d more" % (buyers.size() - 2)
 		lines.append(text)
+		var season_note := Items.seasonal_note(data, item_id, GameState.price_season())
+		if season_note != "":
+			lines.append(season_note)
 	var recipes := Items.recipes_using(data, item_id)
 	if not recipes.is_empty():
 		var names := Array(recipes.slice(0, 3))

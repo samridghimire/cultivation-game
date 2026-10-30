@@ -537,7 +537,7 @@ func buy_item(item_id: String, faction: String = "", quantity: int = 1) -> void:
 	EventBus.topic = "trade"
 	if not _can_act():
 		return
-	var result := Items.buy(player, data, item_id, quantity, faction, buy_multiplier())
+	var result := Items.buy(player, data, item_id, quantity, faction, buy_multiplier(), price_season())
 	if result["ok"]:
 		var item_name: String = data.items[item_id]["name"]
 		var what := Text.a(item_name) if quantity == 1 else "%d %s" % [quantity, item_name]
@@ -1199,7 +1199,7 @@ func sell_item(item_id: String, quantity: int = 1) -> void:
 	EventBus.topic = "trade"
 	if not _can_act():
 		return
-	var result := Items.sell(player, data, item_id, quantity)
+	var result := Items.sell(player, data, item_id, quantity, price_season())
 	if result["ok"]:
 		EventBus.post("You sell %d %s for %d spirit stones." % [quantity, Items.item_plural(data, item_id, quantity), result["stones"]])
 	else:
@@ -1217,7 +1217,7 @@ func sell_all(ids: Array) -> int:
 	var stones := 0
 	for id in ids:
 		var count := player.item_count(id)
-		var result := Items.sell(player, data, id, count)
+		var result := Items.sell(player, data, id, count, price_season())
 		if result["ok"]:
 			sold += count
 			stones += int(result["stones"])
@@ -2440,6 +2440,11 @@ func region_qi_density() -> float:
 
 
 ## Merchant price multiplier of the current region's active world events.
+## The season shop prices follow (MARKET-001).
+func price_season() -> String:
+	return Calendar.season_of(GameClock.total_days).to_lower()
+
+
 func market_multiplier() -> float:
 	return WorldEvents.price_multiplier(data, world_events, current_region)
 
