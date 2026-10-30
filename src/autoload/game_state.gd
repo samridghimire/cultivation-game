@@ -2262,7 +2262,7 @@ func contemplate_dao(insight_id: String, days: int) -> void:
 	if not _can_act():
 		return
 	_start_time_skip()
-	var result := Dao.contemplate(player, data, insight_id, days, rng, Weather.dao_mult(data, Weather.of(data, current_region, GameClock.total_days), insight_id))
+	var result := Dao.contemplate(player, data, insight_id, days, rng, Weather.mean_dao_mult(data, current_region, insight_id, GameClock.total_days, days))
 	if not result["ok"]:
 		EventBus.post(result["reason"], "warning")
 		return
@@ -2888,7 +2888,7 @@ func fight_enemy(enemy: Dictionary, start_hp: int = -1, prefix: String = "") -> 
 		if ally_id != "":
 			allies.append(Karma.ally_strike(player, npcs, data, ally_id))
 		companion_id = Folk.companion_today(player, GameClock.total_days)
-		if companion_id != "" and npcs.has(companion_id):
+		if companion_id != "" and npcs.has(companion_id) and npcs[companion_id].alive:
 			allies.append(Folk.companion_strike(npcs, data, companion_id))
 			EventBus.post("%s joins the fight at your side." % npcs[companion_id].name, "progress")
 		else:

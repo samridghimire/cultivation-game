@@ -171,6 +171,10 @@ static func effects_text(data: GameData, kind: String) -> String:
 		parts.append("fish are shy")
 	if int(e.get("travel_extra_days", 0)) > 0:
 		parts.append("journeys take +%d %s" % [int(e["travel_extra_days"]), "day" if int(e["travel_extra_days"]) == 1 else "days"])
+	if int(e.get("herb_yield_penalty", 0)) > 0:
+		parts.append("herb yields cut by %d" % int(e["herb_yield_penalty"]))
+	if e.has("dao_boost"):
+		parts.append("%s contemplation x%.1f" % [String(e["dao_boost"]["insight"]).replace("_", " ").capitalize(), float(e["dao_boost"]["mult"])])
 	if e.has("qi_element"):
 		parts.append("%s-root cultivation x%.2f" % [String(e["qi_element"]["element"]).capitalize(), float(e["qi_element"]["mult"])])
 	return ", ".join(parts)
@@ -219,6 +223,18 @@ static func _validate_dao_boost(v: Variant, errors: Array[String]) -> void:
 static func dao_mult(data: GameData, kind: String, insight_id: String) -> float:
 	var b: Dictionary = data.weather_effects.get(kind, {}).get("dao_boost", {})
 	return float(b.get("mult", 1.0)) if String(b.get("insight", "")) == insight_id else 1.0
+
+
+## Mean of `dao_mult` over the `days` days from `from_day` in `region_id`, so a month of contemplation begun on
+## a storm day is not doubled throughout (like mean_qi_mult). At most MAX_MEAN_SAMPLES days, spread evenly, are rolled.
+static func mean_dao_mult(data: GameData, region_id: String, insight_id: String, from_day: int, days: int) -> float:
+	if days <= 1:
+		return dao_mult(data, of(data, region_id, from_day), insight_id)
+	var samples := mini(days, MAX_MEAN_SAMPLES)
+	var total := 0.0
+	for i in samples:
+		total += dao_mult(data, of(data, region_id, from_day + i * days / samples), insight_id)
+	return total / samples
 
 
 ## `found` (item id -> count) after a `kind` day's gather penalty: every herb stack loses

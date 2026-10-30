@@ -226,3 +226,24 @@ func test_storm_cuts_herbs_boosts_thunder_dao_and_metal_qi() -> void:
 	c.spiritual_roots = {"metal": 60}
 	assert_almost_eq(Weather.qi_mult(d, "storm", c), 1.1)
 	assert_true(Weather.effect_note(d, "storm", "meditate").contains("thunder speaks"))
+
+
+## Review: a month of contemplation begun on a storm day is not doubled for the whole month.
+func test_mean_dao_mult_averages_the_span() -> void:
+	var d := GameData.load_from_dir()
+	d.regions["qingshi_village"]["weather"] = {"any": {"storm": 1, "clear": 1}}
+	d.weather_persist = 0.0
+	var start := 0
+	while Weather.of(d, "qingshi_village", start) != "storm":
+		start += 1
+	assert_almost_eq(Weather.mean_dao_mult(d, "qingshi_village", "thunder_dao", start, 1), 2.0)
+	var mean := Weather.mean_dao_mult(d, "qingshi_village", "thunder_dao", start, 30)
+	assert_true(mean > 1.0 and mean < 2.0, "a mix of storm and clear days is between the two")
+	assert_almost_eq(Weather.mean_dao_mult(d, "qingshi_village", "fire_dao", start, 30), 1.0)
+
+
+func test_effects_text_words_the_storm() -> void:
+	var text := Weather.effects_text(data(), "storm")
+	assert_true(text.contains("herb yields cut by 1"), text)
+	assert_true(text.contains("Thunder Dao contemplation x2.0"), text)
+	assert_true(text.contains("Metal-root"), text)

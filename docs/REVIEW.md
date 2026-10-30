@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: d09c568
+Last reviewed commit: a12ccef
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -1260,3 +1260,17 @@ Last reviewed commit: d09c568
   - Notes, not filed: Guidance's sell/merchant price hints ignore the season (approximate by design, like world events);
     FOLK-002 gifts are handed out from `greeting_for`, a getter with a side effect (guarded by the cooldown);
     harvesting a crop whose item was later removed from a plot's `plants` would error (data never removes one).
+- 2026-10-30 (reviewer, 4th run): reviewed d09c568..a12ccef (FOLK-004, RV-016, WU-405, WU-407, FOLK-005, WU-408,
+  WEATHER-004, GFX-028, GUIDE-202, C-275, COOK-002, FISH-003, WU-409, GFX-029, FARM-002; [PLAN]/[REVIEW] skipped). Main
+  green (2696 tests with this review's). No worker touched BACKLOG/CHANGELOG; no SAVE_VERSION change (fishing_xp, folk_companion(_day),
+  a plot's watered_day/expanded all default when missing); no binary assets (portraits and crops are drawn in code).
+  - RV-016 settles the span/bottleneck circularity in a bounded loop; FARM-002 watering counts the next day as rain and
+    is refused on rain/snow/storm/frozen days; FOLK-004 quarrels clear their flag on settle and expiry; COOK-002 validates
+    meal buffs (1-7 days, <= +0.15).
+  - Fixed (WEATHER-004): `contemplate_dao` took the storm's x2 Thunder Dao boost from the first day and applied it to the
+    whole month (the bug RV-016 fixed for qi). New `Weather.mean_dao_mult` averages it over the span like `mean_qi_mult`.
+    Fixed: `Weather.effects_text` (journal "Around the village", WU-407) said nothing about a storm's herb penalty or Dao
+    boost. Fixed (FOLK-005): a companion who died between the invite and the fight still struck. Tests added.
+  - Notes, not filed: FISH-003's cast quality is always 0.5 until WU-412 adds the cast bar; the meditation menu's storm
+    tag on contemplation still reads today's weather (a hint; the progress is now averaged); `check_invite` does not
+    re-check the companion's region (the menu only lists villagers present).
