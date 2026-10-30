@@ -2151,7 +2151,7 @@ func _start_hint_shot(gs: Node) -> void:
 		await root.get_tree().process_frame
 		hud.get("_banner").visible = false
 		print("hint-shot badge: ", hint_text.call())
-		assert(String(hint_text.call()).contains("stones"), "clinic line lost its price: " + String(hint_text.call())), "close": func() -> void: pass})
+		assert(String(hint_text.call()).replace("\n", " ").contains("Village Clinic treats it"), "clinic line lost its source: " + String(hint_text.call())), "close": func() -> void: pass})
 
 	shots.append({"name": "hint_npc_badge_" + size_tag, "open": func() -> void:
 		setup_road.call()
@@ -2606,7 +2606,7 @@ func _start_hint_shot(gs: Node) -> void:
 		root.get_node("EventBus").player_changed.emit()
 		await root.get_tree().process_frame
 		await root.get_tree().process_frame
-		var status_text: String = (hud.get("_status") as Label).text
+		var status_text: String = (hud.get("_currency") as Label).text
 		assert(status_text.contains("Spirit Stones: 1296   Contribution: 7773"), "HUD lacks the contribution:\n" + status_text), "close": func() -> void:
 			c.sect = contrib_saved[0]
 			c.inventory = contrib_saved[1]
@@ -3143,7 +3143,7 @@ func _start_hint_shot(gs: Node) -> void:
 		assert(thin_line.begins_with(want), "thin-defence line wrong:\n" + "\n".join(lines))
 		var capped: String = hud.call("cap_hint", thin_line)
 		assert(capped.begins_with(want), "capped line lost the manual: " + capped)
-		assert(String((hud.get("_hint") as Label).text).contains(want), "HUD hint lacks the manual: " + (hud.get("_hint") as Label).text)
+		assert(String((hud.get("_hint") as Label).text).replace("\n", " ").contains(want), "HUD hint lacks the manual: " + (hud.get("_hint") as Label).text)
 		var cj: Control = hud.get("_screens")["toggle_journal"]
 		await _show_journal(cj, "Goals")
 		for _i in 3:
@@ -3199,7 +3199,7 @@ func _start_hint_shot(gs: Node) -> void:
 		var want := "Your defence is thin. Buy Manual: Stone Skin Tempering"
 		print("hint-shot thin budget (", price + 10, " stones): ", thin_line, " | HUD: ", (hud.get("_hint") as Label).text)
 		assert(thin_line.begins_with(want), "thin-defence line wrong:\n" + "\n".join(lines))
-		assert(String((hud.get("_hint") as Label).text).contains(want), "HUD hint lacks the manual: " + (hud.get("_hint") as Label).text)
+		assert(String((hud.get("_hint") as Label).text).replace("\n", " ").contains(want), "HUD hint lacks the manual: " + (hud.get("_hint") as Label).text)
 		var re := RegEx.new()
 		re.compile("sells [^.]*? for (\\d+) stones")
 		var armor_seen := 0
