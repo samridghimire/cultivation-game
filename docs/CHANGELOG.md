@@ -2,6 +2,19 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-30 [RV-016] Waiting for one rainy day no longer boosts a whole year of seclusion: the weather's qi bonus is averaged over the days you cultivate.
+- 2026-10-30 [WU-405] The village pond has a pixel jetty, and the fishing option says when the weather makes fish bite.
+- 2026-10-30 [WU-407] The journal has an "Around the village" section: weather, a friend's tip, requests, celebrations and your best catch.
+- 2026-10-30 [FOLK-004] Two villagers may fall out; mediate, take a side, or demand payment to settle it.
+- 2026-10-30 [C-274] Feasts and funerals are told in varied words, and villagers greet you differently while they celebrate.
+- 2026-10-30 [GFX-026] The village grass has clover, tufts and flowers, and paths have ragged natural edges.
+- 2026-10-30 [GFX-025] Far place names fade and never hide under the HUD; a setting shows them all.
+- 2026-10-30 [GFX-024] The character sheet shows your portrait, a qi bar and your five element roots as bars.
+- 2026-10-30 [FARM-001] Rent Farmer Tian's spare field, plant herbs and harvest them weeks later; rain helps, winter freezes.
+- 2026-10-30 [WU-406] The hint bullet no longer covers the first letter of the hint.
+- 2026-10-30 [WORLD-007] Friends drop by for tea, and sometimes share a tip.
+- 2026-10-30 [FISH-002] Cook Fish Stew or Eel Congee at a workshop to ease an injury; villagers ask for fish.
+- 2026-10-30 [MARKET-001] Herbs are cheaper in their season and dearer out of it.
 - 2026-10-30 [QA-180] The sell-keeps-order hint screenshot shows its hint again.
 - 2026-10-30 [GFX-023] Weddings and funerals hang red or white lanterns in the village, and the celebrants wear a sash.
 - 2026-10-30 [GFX-022] Meditation rocks, herb patches, caves, steles, rifts, ponds, fields and fences are pixel art too.

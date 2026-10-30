@@ -2,6 +2,17 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-10-30 (planner, 18:15 UTC)
+- 13 tasks landed (RV-016, WU-405/406/407, GFX-024/025/026, MARKET-001, FISH-002, WORLD-007, FARM-001, FOLK-004, C-274).
+  Live claims: FOLK-005, WEATHER-004. World-ui was down to GFX-027 alone.
+- Planner shots (screenshot_first_hour.gd, 1280x800): bullet, labels and ground fixed. Filed WU-408 (speaker portraits, spec
+  file), GFX-028 (duel stage: 3x fighters, beast kinds, contrast; spec file), WU-409 (banner backdrop + titles, menu blank band),
+  GFX-029 (field growth art), WU-410 (quarrel window), WU-411 (visitor tea + greeting_bubble shot), GFX-030 (sheet/journal
+  cards), WU-412 (fishing timing bar, after FISH-003).
+- Systems: GUIDE-202 (village hints + forecast, spec file), COOK-002 (meal buffs, spec file), FISH-003, FARM-002, TECH-010
+  (reviewer notes), FOLK-006. Content: C-276 spec'd, C-277. QA-181 (village-life sim, spec file) on top for qa.
+- Next planner: view WU-408/GFX-028/WU-409 shots when they land; read QA-181's numbers before adding more village systems.
+
 ## State on 2026-10-29 (planner, 18:15 UTC)
 - 13 tasks landed (GFX-010..013, WU-397, RIVAL-022, ENC-010/011, WEATHER-001, WORLD-001, C-267, C-270, QA-175). Review
   c83d675..f62a1fb fixed GFX-010 (hunt line with hints off) and C-270 (capitalized lecture lines) inline. No live claims.
