@@ -9,7 +9,7 @@ extends RefCounted
 ## Rendering only: pure and deterministic, no node access.
 
 const KINDS := ["merchant", "workshop", "sect_hall", "clinic", "orphanage", "family_home", "bounty_board", "travel", "auction"]
-const NATURE_KINDS := ["meditation", "gather", "explore", "inheritance", "abode", "secret_realm", "camp"]
+const NATURE_KINDS := ["meditation", "gather", "explore", "inheritance", "abode", "secret_realm", "camp", "fishing"]
 const PALETTE := ".owWrRhdtTpgsSev"
 const OUTLINE := Color("2b2118")
 const DOOR := Color("3a2f26")
@@ -90,6 +90,8 @@ static func rows(kind: String, horizontal: bool = true, active: bool = false) ->
 			c = _rift(active)
 		"camp":
 			c = _camp()
+		"fishing":
+			c = _jetty()
 		_:
 			return []
 	outline(c)
@@ -335,6 +337,28 @@ static func _gather() -> Array:
 		rect(c, p[0] - 2, p[1] + 1, 5, 2, "r")
 		rect(c, p[0] - 1, p[1], 3, 1, "h")
 		rect(c, p[0], p[1] - 2, 1, 2, "h")
+	return c
+
+
+## A plank jetty on posts with a line and float on the water and a few reeds (WU-405); planks take the place colour.
+static func _jetty() -> Array:
+	var c := canvas(44, 22)
+	rect(c, 2, 6, 34, 9, "r")
+	rect(c, 2, 6, 34, 1, "h")
+	rect(c, 2, 14, 34, 1, "R")
+	for x in range(6, 34, 5):
+		rect(c, x, 7, 1, 7, "R")
+	for x: int in [4, 17, 29, 34]:
+		rect(c, x, 15, 2, 5, "t")
+		rect(c, x + 1, 15, 1, 5, "T")
+	rect(c, 38, 3, 1, 9, "T")
+	rect(c, 36, 3, 3, 1, "T")
+	rect(c, 38, 12, 2, 2, "g")
+	rect(c, 38, 11, 2, 1, "p")
+	rect(c, 36, 16, 8, 1, "S")
+	rect(c, 38, 18, 5, 1, "S")
+	for x: int in [41, 43]:
+		rect(c, x, 8, 1, 6, "v")
 	return c
 
 

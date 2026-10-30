@@ -155,3 +155,11 @@ func test_qi_element_validation_and_note() -> void:
 		assert_false(errors.is_empty(), str(bad))
 	assert_eq(Weather.effect_note(data(), "rain", "meditate"), "(rain: water qi stirs)")
 	assert_eq(Weather.effect_note(data(), "cloudy", "meditate"), "")
+
+
+## WU-405: the fishing option words the weather like the gather note.
+func test_fish_effect_note() -> void:
+	var d := data()
+	assert_eq(Weather.effect_note(d, "rain", "fish"), "(rain: fish bite more)")
+	assert_eq(Weather.effect_note(d, "snow", "fish"), "(snow: fish are shy)")
+	assert_eq(Weather.effect_note(d, "clear", "fish"), "")

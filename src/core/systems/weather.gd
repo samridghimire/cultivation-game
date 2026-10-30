@@ -133,6 +133,8 @@ static func effect_note(data: GameData, kind: String, context: String) -> String
 	var e: Dictionary = data.weather_effects.get(kind, {})
 	if context == "gather" and float(e.get("herb_bonus_chance", 0.0)) > 0.0:
 		return "(%s: herbs thrive)" % kind
+	if context == "fish" and fishing_multiplier(data, kind) != 1.0:
+		return "(%s: fish bite more)" % kind if fishing_multiplier(data, kind) > 1.0 else "(%s: fish are shy)" % kind
 	if context == "meditate" and e.has("qi_element"):
 		return "(%s: %s qi stirs)" % [kind, e["qi_element"]["element"]]
 	if context == "travel" and int(e.get("travel_extra_days", 0)) > 0:

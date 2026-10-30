@@ -30,7 +30,7 @@ func test_supports() -> void:
 	assert_eq(PixelPlace.KINDS.size(), 9)
 	for kind in PixelPlace.NATURE_KINDS:
 		assert_true(PixelPlace.supports(kind), kind)
-	assert_false(PixelPlace.supports("fishing"))
+	assert_true(PixelPlace.supports("fishing"))
 	assert_false(PixelPlace.supports("deed_giver"))
 
 
