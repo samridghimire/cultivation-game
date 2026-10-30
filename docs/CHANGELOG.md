@@ -2,6 +2,20 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-30 [QA-180] The sell-keeps-order hint screenshot shows its hint again.
+- 2026-10-30 [GFX-023] Weddings and funerals hang red or white lanterns in the village, and the celebrants wear a sash.
+- 2026-10-30 [GFX-022] Meditation rocks, herb patches, caves, steles, rifts, ponds, fields and fences are pixel art too.
+- 2026-10-30 [WEATHER-003] The weather stirs the elements: a matching spiritual root cultivates faster on rainy, snowy or clear days.
+- 2026-10-30 [FOLK-002] Friends sometimes press a small gift into your hands when they greet you.
+- 2026-10-30 [C-256] Checked profession work pay against crafting: balanced, no change.
+- 2026-10-30 [QA-179] Balance baseline re-checked after the village-life additions.
+- 2026-10-30 [WU-403] Gather spots mention the weather, and travel times include snow delays.
+- 2026-10-30 [WU-404] Screens in the first-hour screenshots show the dimmed backdrop; a shop screenshot was added.
+- 2026-10-30 [C-271] Six new seasonal and weather happenings; the harvest festival only comes in autumn.
+- 2026-10-30 [FOLK-003] A friend may tip you off about where a herb grows thick this season.
+- 2026-10-30 [GFX-021] Village buildings and stalls are pixel art, matching the villagers.
+- 2026-10-30 [WORLD-006] Births bring full-month feasts and deaths bring funerals you can attend.
+- 2026-10-30 [FISH-001] Fish at the village pond and in the Misty Forest; the catch sells to the Wandering Merchant.
 - 2026-10-30 [WU-402] Villagers who need something show a gold "!" and ask whether you brought it.
 - 2026-10-30 [GFX-020] The fallen foe stays on the duel stage, and rain looks crisper.
 - 2026-10-30 [GFX-019] Inventory, shop and crafting lists show a small pixel icon for every item.
