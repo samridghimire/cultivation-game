@@ -186,19 +186,86 @@ const BEAST_LEGS := [
 const BEAST_SIZE := Vector2i(24, 16)
 
 
-## A generated 24x16 beast facing right (the foe mirrors it). `index` picks one of two leg frames.
-static func beast_frame(fur: Color, index: int) -> ImageTexture:
+## GFX-028: kinds that are not the plain quadruped. Snake and bird are drawn from their own rows (same 24x16 frame);
+## wolf, boar and tiger edit the plain body (ears and tail, tusks and bristles, stripes) in `_beast_marks`.
+const SNAKE_ROWS := [
+	"........................",
+	"........................",
+	"........................",
+	"........................",
+	"..............oooo......",
+	".............offffoo....",
+	"....oooooo...offfefffo..",
+	"..ooffffffoo.offffffoo..",
+	".offFFFFFFffoofffffoo...",
+	"offfffooooFFfffffoo.....",
+	"offfoo...ooFFFFFFo......",
+	".ooo.......oooooo.......",
+]
+const BIRD_ROWS := [
+	"........................",
+	"........................",
+	"..........oo............",
+	".........offo...........",
+	"...oo....offfoo.....oo..",
+	"..offo..offffffo...offo.",
+	"..offfooffFFFFfffooofffo",
+	"...offfffFFFFFFfffffffo.",
+	"....ooffffffffffffffooo.",
+	".....ooofffffffooo.eeoo.",
+	"........oofooffo.eoo....",
+	"........oo.oo.oo........",
+]
+const BEAST_KINDS := ["wolf", "boar", "tiger", "snake", "bird"]
+
+
+## A generated 24x16 beast facing right (the foe mirrors it). `index` picks one of two leg frames;
+## `kind` (one of BEAST_KINDS, "" = the plain body) picks the silhouette.
+static func beast_frame(fur: Color, index: int, kind: String = "") -> ImageTexture:
 	var i := posmod(index, 2)
-	var key := "beast|%s|%d" % [fur.to_html(), i]
+	var key := "beast|%s|%d|%s" % [fur.to_html(), i, kind]
 	if not _cache.has(key):
 		var img := Image.create(BEAST_SIZE.x, BEAST_SIZE.y, false, Image.FORMAT_RGBA8)
 		var colors := {"o": OUTLINE, "f": fur, "F": fur.darkened(0.25), "e": Color("e8d8a0")}
 		var rows: Array = BEAST_ROWS.slice(0, 9)
-		rows.append_array(BEAST_LEGS[i])
+		var top := 4
+		if kind == "snake":
+			rows = SNAKE_ROWS.duplicate()
+			top = 3
+		elif kind == "bird":
+			rows = BIRD_ROWS.duplicate()
+			top = 3
+			if i == 1:  # wings up on the second frame
+				rows[4] = "..oo...ooffooo.....oo..."
+				rows[5] = "..ofo.ooffffffo...ofo..."
+		else:
+			rows.append_array(BEAST_LEGS[i])
 		for y in rows.size():
 			var row: String = rows[y]
 			for x in mini(row.length(), BEAST_SIZE.x):
 				if colors.has(row[x]):
-					img.set_pixel(x, y + 4, colors[row[x]])
+					img.set_pixel(x, y + top, colors[row[x]])
+		_beast_marks(img, fur, kind)
 		_cache[key] = ImageTexture.create_from_image(img)
 	return _cache[key]
+
+
+## Kind-specific marks on the plain body: wolf ears and a long tail, boar tusks and a bristle ridge, tiger stripes.
+static func _beast_marks(img: Image, fur: Color, kind: String) -> void:
+	match kind:
+		"wolf":
+			for p in [Vector2i(16, 3), Vector2i(21, 3), Vector2i(16, 2), Vector2i(21, 2)]:
+				img.set_pixelv(p, OUTLINE)
+			for p in [Vector2i(0, 7), Vector2i(0, 8), Vector2i(1, 6), Vector2i(0, 6)]:
+				img.set_pixelv(p, fur.darkened(0.25))
+			img.set_pixelv(Vector2i(0, 5), OUTLINE)
+		"boar":
+			for x in range(4, 13):
+				img.set_pixelv(Vector2i(x, 6), fur.darkened(0.4))
+			for p in [Vector2i(22, 11), Vector2i(23, 10), Vector2i(21, 11)]:
+				img.set_pixelv(p, Color("f0e8d0"))
+		"tiger":
+			for x in range(3, 14, 3):
+				for y in range(7, 12):
+					if img.get_pixel(x, y).a > 0.0 and img.get_pixel(x, y) != OUTLINE:
+						img.set_pixel(x, y, OUTLINE.lightened(0.1))

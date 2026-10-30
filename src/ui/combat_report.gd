@@ -15,6 +15,9 @@ var _player_bar: ProgressBar
 var _enemy_bar: ProgressBar
 var _skip_button: Button
 var _stage: DuelStage
+var _names: HBoxContainer
+var _you_name: Label
+var _foe_name: Label
 var _friendly: bool = false
 var _timer: Timer
 
@@ -47,6 +50,11 @@ func _init() -> void:
 	_stage = DuelStage.new()
 	_stage.name = "Stage"
 	box.add_child(_stage)
+	_names = HBoxContainer.new()
+	_names.add_theme_constant_override("separation", 12)
+	box.add_child(_names)
+	_you_name = _make_name("You")
+	_foe_name = _make_name("Foe")
 	var bars := HBoxContainer.new()
 	bars.add_theme_constant_override("separation", 12)
 	box.add_child(bars)
@@ -84,6 +92,19 @@ static func rating_line(c: CharacterData, data: GameData, enemy: Dictionary) -> 
 ## Height of the fight log for `rows` lines: short fights get a short panel (WU-087).
 static func log_height(rows: int) -> float:
 	return clampf(rows * 26.0 + 20.0, 120.0, 360.0)
+
+
+## The most the log may take so the stage, bars and buttons still fit a viewport `height` px tall (GFX-028).
+static func log_room(height: float) -> float:
+	return maxf(height - 420.0, 120.0)
+
+
+func _make_name(text: String) -> Label:
+	var l := UIStyle.label(text, 14, Color("bbbbbb"))
+	l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_names.add_child(l)
+	return l
 
 
 func _make_bar(parent: Control, caption: String, color: Color) -> ProgressBar:
@@ -135,10 +156,12 @@ func show_fight(enemy_name: String, victory: bool, lines: PackedStringArray, adv
 	_rated.text = rated
 	_rated.visible = rated != "" and not friendly
 	_log.clear()
-	_log.custom_minimum_size.y = log_height(lines.size() + spoils.size() + (2 if advice != "" else 0))
+	_log.custom_minimum_size.y = minf(log_height(lines.size() + spoils.size() + (2 if advice != "" else 0)), log_room(get_viewport_rect().size.y if is_inside_tree() else 800.0))
 	_shown = 0
 	var has_bars := trace.size() >= lines.size() and not trace.is_empty() and player_max > 0 and enemy_max > 0
 	_player_bar.get_parent().visible = has_bars
+	_names.visible = has_bars
+	_foe_name.text = enemy_name
 	if has_bars:
 		_player_bar.set_meta("max", player_max)
 		_enemy_bar.set_meta("max", enemy_max)

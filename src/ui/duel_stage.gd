@@ -8,9 +8,20 @@ const LUNGE := 24.0
 const LUNGE_SECONDS := 0.12
 const FOE_ROBE := Color("3a2f3d")
 const FOE_SASH := Color("7a2a2a")
-const BEAST_FURS := {"wolf": Color("8a8d92"), "boar": Color("3b3028"), "tiger": Color("b5652a"), "fox": Color("b5652a")}
+const BEAST_FURS := {"wolf": Color("8a8d92"), "boar": Color("5a4636"), "tiger": Color("b5652a"), "fox": Color("b5652a")}
 const FALLEN_DARKEN := 0.3
 const DEFAULT_FUR := Color("6b5a48")
+const STAGE_HEIGHT := 130.0
+const GROUND_BAND := 24.0
+const RIM_LIGHTEN := 0.45
+## Enemy id keywords -> PixelFigure beast kind, checked in order (GFX-028).
+const BEAST_KEYWORDS := [
+	["wolf", "wolf"], ["fox", "wolf"], ["dog", "wolf"], ["hound", "wolf"],
+	["boar", "boar"], ["pig", "boar"],
+	["tiger", "tiger"], ["leopard", "tiger"], ["cat", "tiger"],
+	["snake", "snake"], ["serpent", "snake"], ["python", "snake"], ["viper", "snake"],
+	["bird", "bird"], ["crow", "bird"], ["hawk", "bird"], ["crane", "bird"], ["eagle", "bird"], ["roc", "bird"], ["condor", "bird"],
+]
 
 var _foe_beast: bool = false
 var _foe_id: String = ""
@@ -29,7 +40,7 @@ const STAGE_SHAKE_PIXELS := 3.0
 
 
 func _init() -> void:
-	custom_minimum_size = Vector2(0, 96)
+	custom_minimum_size = Vector2(0, STAGE_HEIGHT)
 	visible = false
 
 
@@ -136,19 +147,46 @@ static func fur_for(enemy_id: String) -> Color:
 	return DEFAULT_FUR
 
 
+## The beast silhouette kind for an enemy id ("" = the plain body).
+static func beast_kind(enemy_id: String) -> String:
+	for pair: Array in BEAST_KEYWORDS:
+		if enemy_id.contains(pair[0]):
+			return pair[1]
+	return ""
+
+
+var _rim_cache: Dictionary = {}
+
+
+## `tex` with its top-edge outline pixels lightened to `rim`, so a dark fighter reads on the dark panel.
+func _rimmed(tex: Texture2D, rim: Color) -> Texture2D:
+	var key := "%d|%s" % [tex.get_instance_id(), rim.to_html()]
+	if not _rim_cache.has(key):
+		var img := tex.get_image()
+		var out := img.duplicate() as Image
+		for y in img.get_height():
+			for x in img.get_width():
+				var c := img.get_pixel(x, y)
+				if c.a > 0.0 and (y == 0 or img.get_pixel(x, y - 1).a == 0.0):
+					out.set_pixel(x, y, rim)
+		_rim_cache[key] = ImageTexture.create_from_image(out)
+	return _rim_cache[key]
+
+
 ## The generated pixel texture for a fighter without a mapped sprite; the walk frame alternates while lunging.
 func _pixel_texture(who: int) -> Texture2D:
 	var step := 0
 	if absf(_offset[who]) > 0.5:
 		step = 1 + int(Time.get_ticks_msec() / 80) % 2
 	if who == 1 and _foe_beast:
-		return PixelFigure.beast_frame(fur_for(_foe_id), step % 2)
+		var fur := fur_for(_foe_id)
+		return _rimmed(PixelFigure.beast_frame(fur, step % 2, beast_kind(_foe_id)), fur.lightened(RIM_LIGHTEN))
 	var look := {"robe": FOE_ROBE, "sash": FOE_SASH}
 	if who == 0:
 		look = {"robe": PlayerLook.ROGUE_ROBE, "sash": PlayerLook.SASH_COLORS["neutral"]}
 		if GameState.player != null and GameState.data != null:
 			look = PlayerLook.of(GameState.player, GameState.data)
-	return PixelFigure.frame(look, "right", step)
+	return _rimmed(PixelFigure.frame(look, "right", step), (look["robe"] as Color).lightened(RIM_LIGHTEN))
 
 
 ## How dark a fighter is drawn (0 = normal), for tests: 0 = player, 1 = foe.
@@ -162,10 +200,30 @@ func alpha_of(who: int) -> float:
 
 
 func _draw() -> void:
-	var base_y := size.y - 14.0 + _stage_offset().y
+	_draw_ground()
+	var base_y := size.y - 12.0 + _stage_offset().y
 	var dx := _stage_offset().x
+	for who in 2:
+		var cx := size.x * (0.25 if who == 0 else 0.75) + dx + _offset[who]
+		draw_set_transform(Vector2(cx, base_y), 0.0, Vector2(1.0, 0.28))
+		draw_circle(Vector2.ZERO, 30.0, Color(0, 0, 0, 0.35 * _alpha[who]))
+		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 	_draw_fighter(0, Vector2(size.x * 0.25 + dx, base_y))
 	_draw_fighter(1, Vector2(size.x * 0.75 + dx, base_y))
+
+
+## The current region's grass as a strip along the bottom (flat dark band when no region is loaded).
+func _draw_ground() -> void:
+	var band := Rect2(0.0, size.y - GROUND_BAND, size.x, GROUND_BAND)
+	var rid := GameState.current_region
+	if GameState.data == null or not GameState.data.regions.has(rid):
+		draw_rect(band, Color("33402a"))
+		return
+	var map: Dictionary = GameState.data.regions[rid].get("map", {})
+	var base := Color(map.get("ground", "4d6b3c"))
+	var tex := GroundTiles.ground_texture(base, rid, Vector2i(ceili(size.x / 3.0), int(GROUND_BAND / 3.0)), false)
+	draw_texture_rect(tex, Rect2(band.position, Vector2(tex.get_size()) * 3.0), false)
+	draw_line(band.position, Vector2(size.x, band.position.y), base.darkened(0.5), 2.0)
 
 
 ## The whole-stage offset of a heavy hit's 3 px, 0.15 s shake.

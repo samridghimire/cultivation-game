@@ -91,3 +91,42 @@ func test_beast_fur_and_frames() -> void:
 	assert_true(a != b, "two leg frames")
 	assert_true(a.get_image().get_data() != b.get_image().get_data(), "legs differ")
 	assert_true(a == PixelFigure.beast_frame(DuelStage.DEFAULT_FUR, 2), "cached by frame parity")
+
+
+func test_beast_kind_by_id() -> void:
+	assert_eq(DuelStage.beast_kind("wild_boar"), "boar")
+	assert_eq(DuelStage.beast_kind("mist_wolf"), "wolf")
+	assert_eq(DuelStage.beast_kind("mist_python"), "snake")
+	assert_eq(DuelStage.beast_kind("azure_crane"), "bird")
+	assert_eq(DuelStage.beast_kind("flame_tailed_fox"), "wolf")
+	assert_eq(DuelStage.beast_kind("stone_ape"), "")
+
+
+func test_beast_kinds_look_different_and_cache() -> void:
+	var fur := Color("8a8d92")
+	var kinds: Array[String] = ["", "wolf", "boar", "tiger", "snake", "bird"]
+	for a in kinds.size():
+		for b in range(a + 1, kinds.size()):
+			var ia := PixelFigure.beast_frame(fur, 0, kinds[a]).get_image()
+			var ib := PixelFigure.beast_frame(fur, 0, kinds[b]).get_image()
+			assert_true(ia.get_data() != ib.get_data(), "%s differs from %s" % [kinds[a], kinds[b]])
+	assert_true(PixelFigure.beast_frame(fur, 0, "wolf") == PixelFigure.beast_frame(fur, 0, "wolf"), "cached per kind")
+
+
+func test_stage_is_taller_and_report_fits_720() -> void:
+	assert_true(DuelStage.STAGE_HEIGHT >= 130.0)
+	var r := _report()
+	r.show_fight("Wild Boar", true, PackedStringArray(LINES), "", PackedStringArray(), TRACE, 20, 10, false, "", "wild_boar", ["beast"])
+	var long_lines := PackedStringArray()
+	for i in 30:
+		long_lines.append("You strike for 5.")
+	r.show_fight("Wild Boar", true, long_lines, "", PackedStringArray(), TRACE, 20, 10, false, "", "wild_boar", ["beast"])
+	await (Engine.get_main_loop() as SceneTree).process_frame
+	assert_true(r.get_combined_minimum_size().y <= 720.0, "report fits 1280x720: %s" % r.get_combined_minimum_size().y)
+
+
+func test_foe_name_label() -> void:
+	var r := _report()
+	r.show_fight("Wild Boar", true, PackedStringArray(LINES), "", PackedStringArray(), TRACE, 20, 10, false, "", "wild_boar", ["beast"])
+	assert_eq(r._foe_name.text, "Wild Boar")
+	assert_eq(r._you_name.text, "You")
