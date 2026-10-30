@@ -384,21 +384,21 @@ static func haunt(npc: CharacterData, region: Dictionary, day: int, adult: bool 
 ## Positions for `people` (all living in one region, any order) on `day`: like
 ## `haunt`, but villagers sharing a place stand at least HAUNT_SPACING apart
 ## (placed in id order, so the result is stable). Returns id -> Vector2 (WORLD-004).
-static func haunt_positions(people: Array[CharacterData], region: Dictionary, day: int, adult_age: int, weather: String = "") -> Dictionary:
+static func haunt_positions(people: Array[CharacterData], region: Dictionary, day: int, adult_age: int, weather: String = "", visitor_id: String = "", visit_place: Dictionary = {}) -> Dictionary:
 	var sorted := people.duplicate()
 	sorted.sort_custom(func(a: CharacterData, b: CharacterData) -> bool: return a.id.naturalnocasecmp_to(b.id) < 0)
 	var placed: Array[Vector2] = []
 	var out := {}
 	for c: CharacterData in sorted:
-		var pos := _haunt_at(c, region, day, c.age_years() >= adult_age, weather, placed)
+		var pos := _haunt_at(c, region, day, c.age_years() >= adult_age, weather, placed, visit_place if c.id == visitor_id else {})
 		placed.append(pos)
 		out[c.id] = pos
 	return out
 
 
-static func _haunt_at(npc: CharacterData, region: Dictionary, day: int, adult: bool, weather: String, placed: Array[Vector2]) -> Vector2:
+static func _haunt_at(npc: CharacterData, region: Dictionary, day: int, adult: bool, weather: String, placed: Array[Vector2], visit_place: Dictionary = {}) -> Vector2:
 	var h := absi(hash(npc.id))
-	var place := haunt_place(npc, region, day, adult, weather)
+	var place := haunt_place(npc, region, day, adult, weather, visit_place)
 	if place.is_empty():
 		var spots: Array = region.get("npc_spots", [])
 		if spots.is_empty():
@@ -429,9 +429,12 @@ static func _spaced(pos: Vector2, placed: Array[Vector2]) -> bool:
 
 ## The place dict (a region place, landmark or family home, with a normalized
 ## `type`) the villager stands by today, {} when they fall back to `npc_spots` (WORLD-002).
+## A non-empty `visit_place` (see `visit_place_of`) is where a visiting friend stands instead (WORLD-007).
 ## On a rain or snow day (`weather`) an outdoor pick is swapped for a sheltered
 ## place of the region, if it has one (WORLD-004).
-static func haunt_place(npc: CharacterData, region: Dictionary, day: int, adult: bool = true, weather: String = "") -> Dictionary:
+static func haunt_place(npc: CharacterData, region: Dictionary, day: int, adult: bool = true, weather: String = "", visit_place: Dictionary = {}) -> Dictionary:
+	if not visit_place.is_empty():
+		return visit_place
 	var h := absi(hash(npc.id))
 	var anchors := _haunt_anchors(region, adult)
 	if anchors.is_empty():
@@ -446,6 +449,32 @@ static func haunt_place(npc: CharacterData, region: Dictionary, day: int, adult:
 		if not shelters.is_empty():
 			return shelters[posmod(h / 5 + day, shelters.size())]
 	return place
+
+
+## WORLD-007: where a friend who drops by stands: the Family Home spot when `has_home` and the region draws one, else the
+## meditation place nearest the spawn. {} when the region has neither.
+static func visit_place_of(region: Dictionary, has_home: bool) -> Dictionary:
+	if has_home and region.has("family_home"):
+		var home: Dictionary = (region["family_home"] as Dictionary).duplicate()
+		home["type"] = "family_home"
+		home["display_name"] = "your home"
+		home["visit"] = true
+		return home
+	var spawn: Array = region.get("spawn", [0, 0])
+	var spawn_pos := Vector2(float(spawn[0]), float(spawn[1]))
+	var best: Dictionary = {}
+	var best_dist := INF
+	for p: Dictionary in region.get("places", []):
+		if String(p.get("type", "")) != "meditation":
+			continue
+		var d := _rect_of(p).get_center().distance_to(spawn_pos)
+		if d < best_dist:
+			best = p
+			best_dist = d
+	if not best.is_empty():
+		best = best.duplicate()
+		best["visit"] = true
+	return best
 
 
 ## Whether the villager is indoors today only because of the weather (WORLD-004).
@@ -468,6 +497,8 @@ static func keeps_round(npc: CharacterData, player: CharacterData, people: Dicti
 static func activity_line(_npc: CharacterData, place: Dictionary, sheltering: String = "") -> String:
 	if place.is_empty():
 		return ""
+	if String(place.get("type", "")) == "family_home" or bool(place.get("visit", false)):
+		return "visiting"
 	var what := String(place.get("display_name", String(place.get("type", "place")).replace("_", " ")))
 	if sheltering == "rain":
 		return "sheltering from the rain at the %s" % what

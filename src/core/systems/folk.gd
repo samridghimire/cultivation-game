@@ -267,6 +267,7 @@ static func validate(data: GameData) -> PackedStringArray:
 	errors.append_array(validate_requests(data))
 	errors.append_array(validate_celebrations(data))
 	errors.append_array(validate_tips(data))
+	errors.append_array(validate_visits(data))
 	errors.append_array(validate_gifts(data))
 	for e: Dictionary in data.encounters.values():
 		var blocks: Array = [[String(e["id"]), e.get("effects", {})]]
@@ -455,6 +456,58 @@ const TIP_KEY := "folk_tip"
 const TIP_LAST_KEY := "folk_tip_last"
 
 
+## data/family.json folk_visits ({} = feature off).
+static func visit_rules(data: GameData) -> Dictionary:
+	return data.family.get("folk_visits", {})
+
+
+## Load errors in folk_visits: chance in (0, 1], tip_chance in [0, 1], whole numbers >= 0, min_favor not below folk_tips.min_favor.
+static func validate_visits(data: GameData) -> PackedStringArray:
+	var errors: PackedStringArray = []
+	var r: Dictionary = visit_rules(data)
+	if r.is_empty():
+		return errors
+	var chance := float(r.get("chance", 0))
+	if chance <= 0.0 or chance > 1.0:
+		errors.append("family.json folk_visits: chance must be in (0, 1]")
+	var tip_chance := float(r.get("tip_chance", 0))
+	if tip_chance < 0.0 or tip_chance > 1.0:
+		errors.append("family.json folk_visits: tip_chance must be in [0, 1]")
+	for key in ["min_favor", "cooldown_days", "tea_favor"]:
+		if not (r.get(key, -1) is int or r.get(key, -1) is float) or int(r.get(key, -1)) < 0:
+			errors.append("family.json folk_visits: %s must be a whole number >= 0" % key)
+	if int(r.get("min_favor", 0)) < int(tip_rules(data).get("min_favor", 0)):
+		errors.append("family.json folk_visits: min_favor must be at least folk_tips.min_favor")
+	return errors
+
+
+## WORLD-007: the generated villager who drops by on `day` ("" = nobody). `npcs` id -> CharacterData, `favors` id -> favor,
+## `last_visit` id -> day of their last tea. Only on clear or cloudy days, among adult villagers living in `region_id`
+## with enough favor and no tea in the last cooldown_days (a tea taken today keeps today's visitor). Deterministic: a hash
+## of day and region against `chance`, then a hash picks among the eligible in id order. No rng.
+static func visitor(npcs: Dictionary, favors: Dictionary, data: GameData, player: CharacterData, region_id: String, day: int, weather: String, last_visit: Dictionary) -> String:
+	var r: Dictionary = visit_rules(data)
+	if r.is_empty() or not ["clear", "cloudy"].has(weather):
+		return ""
+	var adult_age := int(data.family.get("adult_age", 16))
+	var eligible: Array[String] = []
+	for c in Npcs.generated_in_region(npcs, data, region_id):
+		if c.age_years() < adult_age or player.spouses.has(c.id) or player.children.has(c.id) or player.parents.has(c.id):
+			continue
+		if int(favors.get(c.id, 0)) < int(r["min_favor"]):
+			continue
+		var last := int(last_visit.get(c.id, -100000))
+		if last != day and day - last < int(r["cooldown_days"]):
+			continue
+		eligible.append(c.id)
+	if eligible.is_empty():
+		return ""
+	var roll := float(absi(hash("%d|%s|visit" % [day, region_id])) % 10000) / 10000.0
+	if roll >= float(r["chance"]):
+		return ""
+	return eligible[absi(hash("%d|%s|who" % [day, region_id])) % eligible.size()]
+
+
 ## data/family.json folk_tips ({} = feature off).
 static func tip_rules(data: GameData) -> Dictionary:
 	return data.family.get("folk_tips", {})
@@ -510,15 +563,16 @@ static func active_tip(flags: Dictionary, today: int) -> Dictionary:
 	return tip
 
 
+## `chance_override` >= 0 (WORLD-007 tea) replaces the chance and skips the cooldown.
 ## A friend may let slip a gathering tip while you chat. Returns the new tip ({} = none) and stores it in `flags`.
 ## The chance is rolled before the item is picked, so the rng stream does not depend on the candidates.
-static func roll_tip(c: CharacterData, data: GameData, flags: Dictionary, region_id: String, neighbours: Array, favor: int, npc_id: String, today: int, season: String, rng: RandomNumberGenerator) -> Dictionary:
+static func roll_tip(c: CharacterData, data: GameData, flags: Dictionary, region_id: String, neighbours: Array, favor: int, npc_id: String, today: int, season: String, rng: RandomNumberGenerator, chance_override: float = -1.0) -> Dictionary:
 	var r: Dictionary = tip_rules(data)
 	if r.is_empty() or favor < int(r["min_favor"]) or not active_tip(flags, today).is_empty():
 		return {}
-	if flags.has(TIP_LAST_KEY) and today - int(flags[TIP_LAST_KEY]) < int(r["cooldown_days"]):
+	if chance_override < 0.0 and flags.has(TIP_LAST_KEY) and today - int(flags[TIP_LAST_KEY]) < int(r["cooldown_days"]):
 		return {}
-	if rng.randf() >= float(r["chance"]):
+	if rng.randf() >= (float(r["chance"]) if chance_override < 0.0 else chance_override):
 		return {}
 	var where := region_id
 	var options := tip_candidates(c, data, region_id, season)

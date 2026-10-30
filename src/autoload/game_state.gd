@@ -1396,6 +1396,57 @@ func greeting_for(npc_id: String) -> String:
 	return Folk.greeting(npc, int(npc_favor.get(npc_id, 0)), GameClock.total_days, data).replace("{player}", player.name)
 
 
+## WORLD-007: the generated villager dropping by today ("" = nobody). The world places them and the Look line reports it.
+func visitor_today() -> String:
+	if player == null:
+		return ""
+	var region: Dictionary = data.regions.get(current_region, {})
+	if Npcs.visit_place_of(region, FamilyHome.has_home(player, npcs, data, current_region)).is_empty():
+		return ""
+	var weather := Weather.of(data, current_region, GameClock.total_days)
+	return Folk.visitor(npcs, npc_favor, data, player, current_region, GameClock.total_days, weather, player.folk_visit_day)
+
+
+## WORLD-007: where today's visitor stands ({} for anyone else).
+func visit_place_for(npc_id: String) -> Dictionary:
+	if npc_id == "" or npc_id != visitor_today():
+		return {}
+	return Npcs.visit_place_of(data.regions.get(current_region, {}), FamilyHome.has_home(player, npcs, data, current_region))
+
+
+## WORLD-007: why you cannot share tea with `npc_id` now ("" when you can).
+func check_tea(npc_id: String) -> String:
+	if npc_id == "" or npc_id != visitor_today():
+		return "There is nobody here to share tea with."
+	if int(player.folk_visit_day.get(npc_id, -1)) == GameClock.total_days:
+		return "You have already shared tea today."
+	return ""
+
+
+## WORLD-007: share tea with today's visitor: favor (ignoring the chat cap) and maybe a gathering tip.
+func share_tea(npc_id: String) -> void:
+	EventBus.topic = "family"
+	if not _can_act():
+		return
+	var reason := check_tea(npc_id)
+	if reason != "":
+		EventBus.post(reason, "warning")
+		EventBus.player_changed.emit()
+		return
+	var rules := Folk.visit_rules(data)
+	var npc: CharacterData = npcs[npc_id]
+	npc_favor[npc_id] = mini(100, int(npc_favor.get(npc_id, 0)) + int(rules["tea_favor"]))
+	player.folk_visit_day[npc_id] = GameClock.total_days
+	EventBus.post("You share a pot of tea with %s and talk about small things. (%s)" % [npc.name, Family.favor_progress(int(npc_favor[npc_id]), data)], "progress")
+	var neighbours: Array = []
+	for route: Dictionary in data.regions.get(current_region, {}).get("routes", []):
+		neighbours.append(String(route.get("to", "")))
+	var tip := Folk.roll_tip(player, data, world_flags, current_region, neighbours, int(npc_favor[npc_id]), npc_id, GameClock.total_days, Calendar.season_of(GameClock.total_days), rng, float(rules.get("tip_chance", 0.0)))
+	if not tip.is_empty():
+		EventBus.post(Folk.tip_line(data, tip, String(npc.name), GameClock.total_days), "info")
+	EventBus.player_changed.emit()
+
+
 ## WORLD-005: why `npc_id`'s wedding cannot be attended now ("" when it can).
 func check_celebration(npc_id: String) -> String:
 	if not npcs.has(npc_id):

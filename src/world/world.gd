@@ -366,7 +366,8 @@ func _build_generated_npcs() -> void:
 	for c in people:
 		if not family.has(c):
 			neighbours.append(c)
-	var stands := Npcs.haunt_positions(neighbours, _region, GameClock.total_days, int(data.family.get("adult_age", 16)), Weather.of(data, GameState.current_region, GameClock.total_days))
+	var visitor := GameState.visitor_today()
+	var stands := Npcs.haunt_positions(neighbours, _region, GameClock.total_days, int(data.family.get("adult_age", 16)), Weather.of(data, GameState.current_region, GameClock.total_days), visitor, GameState.visit_place_for(visitor))
 	for i in people.size():
 		var c := people[i]
 		var node: Interactable = NPC_SCRIPT.new()

@@ -302,6 +302,8 @@ func _acquaintance_options() -> Array[Dictionary]:
 		var days := int(data.family.get("acquaintance", {}).get("chat_days", 1))
 		var label := "Chat with %s (%s, favor %d)%s" % [npc.name, Calendar.format_duration(days), favor, festival_note(data, GameState.world_events, GameState.current_region)]
 		options.append(_entry(label, Family.check_chat(p, npc, favor, data), GameState.chat.bind(npc_id)))
+	if GameState.visitor_today() == npc_id:
+		options.append(_entry("Share tea with %s" % npc.name, GameState.check_tea(npc_id), GameState.share_tea.bind(npc_id)))
 	if Folk.celebration_open(GameState.world_flags, npc_id, GameClock.total_days):
 		options.append(_entry(Folk.celebration_label(GameState.world_flags, npc_id, data), GameState.check_celebration(npc_id), GameState.attend_celebration.bind(npc_id)))
 	var reason := "" if not p.inventory.is_empty() else "you carry nothing"
@@ -606,6 +608,9 @@ func _activity_text(npc: CharacterData) -> String:
 	var region: Dictionary = GameState.data.regions.get(GameState.current_region, {})
 	var adult := npc.age_years() >= int(GameState.data.family.get("adult_age", 16))
 	var weather := Weather.of(GameState.data, GameState.current_region, GameClock.total_days)
+	var visit := GameState.visit_place_for(npc.id)
+	if not visit.is_empty():
+		return "here to see how you are"
 	var place := Npcs.haunt_place(npc, region, GameClock.total_days, adult, weather)
 	var shelter := weather if Npcs.is_sheltering(npc, region, GameClock.total_days, adult, weather) else ""
 	return Npcs.activity_line(npc, place, shelter)

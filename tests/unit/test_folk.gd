@@ -509,3 +509,77 @@ func test_celebrants_and_sash_looks() -> void:
 	assert_true(Folk.celebration_sash(Folk.WEDDING).r > Folk.celebration_sash(Folk.WEDDING).g * 2.0)
 	assert_true(Folk.celebration_sash("funeral").g > 0.8)
 	assert_true(Folk.celebration_lantern("funeral") != Folk.celebration_lantern(Folk.WEDDING))
+
+
+# --- WORLD-007: friends drop by ----------------------------------------------
+
+func _visit_setup(chance: float = 1.0) -> Dictionary:
+	var npcs := {}
+	_village(npcs, 3)
+	var favors := {}
+	for id: String in npcs:
+		favors[id] = 50
+	data().family["folk_visits"]["chance"] = chance
+	return {"npcs": npcs, "favors": favors}
+
+
+func test_visitor_needs_clear_or_cloudy_weather() -> void:
+	var s := _visit_setup()
+	var c := new_character()
+	for weather in ["rain", "snow", "fog"]:
+		assert_eq(Folk.visitor(s["npcs"], s["favors"], data(), c, "qingshi_village", 10, weather, {}), "")
+	assert_true(Folk.visitor(s["npcs"], s["favors"], data(), c, "qingshi_village", 10, "clear", {}) != "")
+	assert_true(Folk.visitor(s["npcs"], s["favors"], data(), c, "qingshi_village", 10, "cloudy", {}) != "")
+
+
+func test_visitor_needs_favor_and_other_regions_do_not_count() -> void:
+	var s := _visit_setup()
+	var c := new_character()
+	var low := {}
+	for id: String in s["npcs"]:
+		low[id] = int(data().family["folk_visits"]["min_favor"]) - 1
+	assert_eq(Folk.visitor(s["npcs"], low, data(), c, "qingshi_village", 10, "clear", {}), "")
+	assert_eq(Folk.visitor(s["npcs"], s["favors"], data(), c, "misty_forest", 10, "clear", {}), "")
+
+
+func test_visitor_cooldown_and_same_day_tea() -> void:
+	var s := _visit_setup()
+	var c := new_character()
+	var first := Folk.visitor(s["npcs"], s["favors"], data(), c, "qingshi_village", 100, "clear", {})
+	var last := {}
+	for id: String in s["npcs"]:
+		last[id] = 100
+	assert_eq(Folk.visitor(s["npcs"], s["favors"], data(), c, "qingshi_village", 100, "clear", last), first, "tea today keeps today's visitor")
+	assert_eq(Folk.visitor(s["npcs"], s["favors"], data(), c, "qingshi_village", 101, "clear", last), "", "everyone is on cooldown")
+	assert_true(Folk.visitor(s["npcs"], s["favors"], data(), c, "qingshi_village", 100 + int(data().family["folk_visits"]["cooldown_days"]), "clear", last) != "")
+
+
+func test_visitor_is_deterministic_and_chance_gates_it() -> void:
+	var s := _visit_setup(0.15)
+	var c := new_character()
+	var days := 0
+	for day in 200:
+		var a := Folk.visitor(s["npcs"], s["favors"], data(), c, "qingshi_village", day, "clear", {})
+		assert_eq(a, Folk.visitor(s["npcs"], s["favors"], data(), c, "qingshi_village", day, "clear", {}))
+		if a != "":
+			days += 1
+	assert_true(days > 10 and days < 60, "about 15%% of days, got %d" % days)
+	data().family["folk_visits"]["chance"] = 0.15
+
+
+func test_visits_validation_and_visit_place() -> void:
+	var d := data()
+	assert_eq(Folk.validate_visits(d).size(), 0)
+	var saved: Dictionary = d.family["folk_visits"].duplicate()
+	d.family["folk_visits"]["chance"] = 0.0
+	assert_true(Folk.validate_visits(d).size() > 0)
+	d.family["folk_visits"] = saved.duplicate()
+	d.family["folk_visits"]["min_favor"] = 1
+	assert_true(Folk.validate_visits(d).size() > 0)
+	d.family["folk_visits"] = saved
+	var region: Dictionary = d.regions["qingshi_village"]
+	var place := Npcs.visit_place_of(region, false)
+	assert_eq(String(place["type"]), "meditation")
+	var home := Npcs.visit_place_of(region, true)
+	assert_eq(String(home["type"]), "family_home")
+	assert_eq(Npcs.visit_place_of({}, true), {})

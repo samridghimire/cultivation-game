@@ -91,6 +91,7 @@ func test_every_character_field_survives_a_save() -> void:
 	c.grudges = {"npc_test_victim": 40}
 	c.gratitude = {"npc_test_friend": 25}
 	c.folk_gift_day = {"npc_test_friend": 77}
+	c.folk_visit_day = {"npc_test_friend": 88}
 	c.dao = {"sword_dao": {"level": 2, "progress": 30.5}}
 	c.garden = [{"item": "flame_lotus", "days_left": 40}]
 	c.commissions = [{"profession": "alchemist", "recipe": "qi_gathering_pill", "item": "qi_gathering_pill", "count": 2, "reward": 9, "xp": 10.0, "due_day": 77}]

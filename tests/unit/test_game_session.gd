@@ -2251,6 +2251,35 @@ func test_greeting_for_hands_over_a_gift_once_per_cooldown() -> void:
 	assert_eq(c.inventory, after)
 
 
+func test_friend_visits_and_shares_tea() -> void:
+	var c := _start()
+	var gs := _game_state()
+	var npc := Npcs.spawn(gs.npcs, gs.data, seeded_rng(5), {"age_years": 30, "region": "qingshi_village", "realm": "mortal"})
+	gs.npc_favor[npc.id] = 50
+	gs.data.family["folk_visits"]["chance"] = 1.0
+	_set_weather(gs, "clear")
+	assert_eq(gs.visitor_today(), npc.id)
+	assert_false(gs.visit_place_for(npc.id).is_empty())
+	assert_eq(gs.check_tea(npc.id), "")
+	gs.share_tea(npc.id)
+	assert_eq(int(gs.npc_favor[npc.id]), 50 + int(gs.data.family["folk_visits"]["tea_favor"]))
+	assert_eq(int(c.folk_visit_day[npc.id]), GameClock.total_days)
+	assert_true(gs.check_tea(npc.id) != "", "once per visit")
+	var favor_now := int(gs.npc_favor[npc.id])
+	gs.share_tea(npc.id)
+	assert_eq(int(gs.npc_favor[npc.id]), favor_now)
+	gs.data.family["folk_visits"]["chance"] = 0.15
+	_restore_weather(gs)
+
+
+func test_folk_visit_day_round_trips() -> void:
+	var c := _start()
+	c.folk_visit_day = {"npc_1": 77}
+	var back := CharacterData.from_dict(c.to_dict())
+	assert_eq(int(back.folk_visit_day["npc_1"]), 77)
+	assert_true(CharacterData.from_dict({}).folk_visit_day.is_empty())
+
+
 func test_greeting_for_reads_favor_and_fills_player_name() -> void:
 	var c := _start()
 	var gs := _game_state()
