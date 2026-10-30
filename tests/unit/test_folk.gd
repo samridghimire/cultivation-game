@@ -583,3 +583,30 @@ func test_visits_validation_and_visit_place() -> void:
 	var home := Npcs.visit_place_of(region, true)
 	assert_eq(String(home["type"]), "family_home")
 	assert_eq(Npcs.visit_place_of({}, true), {})
+
+
+func test_celebration_news_picks_a_variant_by_day() -> void:
+	var d := GameData.load_from_dir()
+	for kind in ["wedding", "full_month", "funeral"]:
+		var seen := {}
+		for day in 3:
+			var line := Folk.celebration_news(d, kind, day)
+			assert_true(line.contains("{region}") and line.contains("{text}"), kind)
+			seen[line] = true
+		assert_eq(seen.size(), 3, kind)
+		assert_eq(Folk.celebration_news(d, kind, 0), Folk.celebration_news(d, kind, 3))
+	assert_eq(Folk.validate_celebrations(d).size(), 0)
+
+
+func test_celebration_greeting_only_while_open() -> void:
+	var npcs := {}
+	_village(npcs, 1)
+	var npc: CharacterData = npcs.values()[0]
+	var flags := {}
+	var d := GameData.load_from_dir()
+	Folk.start_celebration(flags, [npc.id], 100, d, "funeral")
+	var lines: Array = d.family["folk_greetings"]["celebration"]["funeral"]
+	assert_true(lines.has(Folk.greeting(npc, 0, 105, d, flags)), "open: celebration bucket even at neutral favor")
+	assert_true(lines.has(Folk.greeting(npc, 50, 105, d, flags)))
+	assert_eq(Folk.greeting(npc, 0, 111, d, flags), "", "closed: normal rules")
+	assert_eq(Folk.greeting(npc, 0, 105, d), "", "no flags: normal rules")

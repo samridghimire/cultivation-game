@@ -94,8 +94,11 @@ static func favor_changes(effects: Dictionary, cast: Dictionary) -> Dictionary:
 
 ## What `npc` says in passing (WORLD-003) given the player's `favor` with them: a warm or cool line from
 ## data/family.json folk_greetings picked by hash(npc id + day), with {player} left for the caller. "" in between.
-static func greeting(npc: CharacterData, favor: int, day: int, data: GameData) -> String:
+static func greeting(npc: CharacterData, favor: int, day: int, data: GameData, flags: Dictionary = {}) -> String:
 	var bands: Dictionary = data.family.get("folk_greetings", {})
+	var party: Array = bands.get("celebration", {}).get(celebration_kind(flags, npc.id), [])
+	if celebration_open(flags, npc.id, day) and not party.is_empty():
+		return String(party[absi(hash(npc.id + str(day))) % party.size()])
 	var band: Dictionary = {}
 	if favor >= int(bands.get("warm", {}).get("min_favor", 1000)):
 		band = bands["warm"]
@@ -113,6 +116,18 @@ static func validate_greetings(data: GameData) -> PackedStringArray:
 	var bands: Dictionary = data.family.get("folk_greetings", {})
 	if bands.is_empty():
 		return errors
+	var party: Variant = bands.get("celebration", {})
+	if not (party is Dictionary):
+		errors.append("family.json folk_greetings.celebration must be an object")
+	else:
+		for kind: String in party:
+			var plines: Variant = party[kind]
+			if not (plines is Array) or plines.is_empty():
+				errors.append("family.json folk_greetings.celebration.%s: lines must be a non-empty array" % kind)
+				continue
+			for line: Variant in plines:
+				if not (line is String) or String(line) == "":
+					errors.append("family.json folk_greetings.celebration.%s: lines must be non-empty strings" % kind)
 	for key: String in ["warm", "cool"]:
 		var band: Variant = bands.get(key)
 		if not (band is Dictionary):
@@ -315,6 +330,14 @@ static func celebration_rules(data: GameData, kind: String = WEDDING) -> Diction
 	return rules
 
 
+## C-274: the news line of a `kind` celebration on day `today`: a `news` array is picked by today % size, a single string is used as is.
+static func celebration_news(data: GameData, kind: String, today: int) -> String:
+	var news: Variant = celebration_rules(data, kind).get("news", "{text}")
+	if news is Array and not (news as Array).is_empty():
+		return String(news[posmod(today, (news as Array).size())])
+	return String(news)
+
+
 ## Opens a `kind` celebration for each of `ids` until day `today` + the type's days.
 static func start_celebration(flags: Dictionary, ids: Array, today: int, data: GameData, kind: String = WEDDING) -> void:
 	var days := int(celebration_rules(data, kind).get("days", 0))
@@ -444,7 +467,15 @@ static func validate_celebrations(data: GameData) -> PackedStringArray:
 			errors.append("%s: favor must be >= 0" % who)
 		if int(r.get("gift_mult", 1)) < 1:
 			errors.append("%s: gift_mult must be >= 1" % who)
+		if r.get("news") is Array:
+			var ok := not (r["news"] as Array).is_empty()
+			for line: Variant in r["news"]:
+				ok = ok and line is String and String(line) != ""
+			if not ok:
+				errors.append("%s: news must be a non-empty array of non-empty strings" % who)
 		for key in ["label", "news", "attend_text"]:
+			if r.get(key) is Array and key == "news":
+				continue
 			if (kind != WEDDING or r.has(key)) and String(r.get(key, "")) == "":
 				errors.append("%s: %s must be non-empty" % [who, key])
 	return errors

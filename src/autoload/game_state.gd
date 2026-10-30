@@ -1393,7 +1393,12 @@ func greeting_for(npc_id: String) -> String:
 	if npc == null:
 		return ""
 	_receive_folk_gift(npc)
-	return Folk.greeting(npc, int(npc_favor.get(npc_id, 0)), GameClock.total_days, data).replace("{player}", player.name)
+	var line := Folk.greeting(npc, int(npc_favor.get(npc_id, 0)), GameClock.total_days, data, world_flags).replace("{player}", player.name)
+	if line.contains("{partner}"):
+		line = line.replace("{partner}", String(npcs[npc.spouses[0]].name) if not npc.spouses.is_empty() and npcs.has(npc.spouses[0]) else "their spouse")
+	if line.contains("{child}"):
+		line = line.replace("{child}", String(npcs[npc.children[0]].name) if not npc.children.is_empty() and npcs.has(npc.children[0]) else "the little one")
+	return line
 
 
 ## WORLD-007: the generated villager dropping by today ("" = nobody). The world places them and the Look line reports it.
@@ -3347,7 +3352,7 @@ func _on_days_advanced(days: int) -> void:
 		var party := _celebration_for(event)
 		if party["kind"] != "":
 			Folk.start_celebration(world_flags, party["ids"], GameClock.total_days, data, party["kind"])
-			var news := String(Folk.celebration_rules(data, party["kind"]).get("news", "{text}"))
+			var news := Folk.celebration_news(data, party["kind"], GameClock.total_days)
 			EventBus.post(news.replace("{region}", data.regions.get(current_region, {}).get("name", current_region)).replace("{text}", event["text"]), "info")
 			continue
 		# News about generated strangers is noise; only report people the player knows.
