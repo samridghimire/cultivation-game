@@ -16,6 +16,7 @@ const PLACE_SCRIPTS := {
 	"explore": preload("res://src/world/interactables/explore_site.gd"),
 	"travel": preload("res://src/world/interactables/travel_point.gd"),
 	"gather": preload("res://src/world/interactables/gather_site.gd"),
+	"fishing": preload("res://src/world/interactables/fishing_spot.gd"),
 	"secret_realm": preload("res://src/world/interactables/secret_realm_entrance.gd"),
 	"auction": preload("res://src/world/interactables/auction_house.gd"),
 	"bounty_board": preload("res://src/world/interactables/bounty_board.gd"),

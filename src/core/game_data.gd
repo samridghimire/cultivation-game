@@ -42,6 +42,7 @@ var start_region := ""
 var renown: Dictionary = {}  # regions.json "renown" block (Renown); {} = none
 var travel_speed: Array = []  # TRAV-007: regions.json "travel_speed" (empty = everyone walks)
 var weather_persist: float = Weather.DEFAULT_PERSIST  # WEATHER-001: regions.json "weather_persist"
+var fishing_weather: Dictionary = {}  # FISH-001: regions.json "fishing_weather"
 var weather_effects: Dictionary = {}  # WEATHER-002: regions.json "weather_effects"
 var road: Dictionary = {}  # TRAV-006: regions.json "road" (empty = no road encounters)
 var encounters: Dictionary = {}  # id -> Dictionary
@@ -234,6 +235,8 @@ func _load(dir: String) -> void:
 		load_errors.append("weather_persist must be 0..1")
 	weather_effects = world.get("weather_effects", {})
 	Weather.validate_effects(weather_effects, load_errors)
+	fishing_weather = world.get("fishing_weather", {})
+	Weather.validate_fishing(fishing_weather, load_errors)
 	travel_speed = world.get("travel_speed", [])
 	for region in world.get("regions", []):
 		regions[region["id"]] = region
@@ -533,7 +536,7 @@ func _validate_world() -> void:
 			load_errors.append("travel_speed mult must be a number in (0, 1]")
 		if String(speed.get("how", "")).strip_edges() == "":
 			load_errors.append("travel_speed entries need a non-empty 'how'")
-	var place_types := ["meditation", "merchant", "sect_hall", "workshop", "clinic", "orphanage", "deed_giver", "explore", "travel", "gather", "secret_realm", "auction", "inheritance", "bounty_board"]
+	var place_types := ["meditation", "merchant", "sect_hall", "workshop", "clinic", "orphanage", "deed_giver", "explore", "travel", "gather", "fishing", "secret_realm", "auction", "inheritance", "bounty_board"]
 	for region: Dictionary in regions.values():
 		for route: Dictionary in region.get("routes", []):
 			if not regions.has(route.get("to", "")):
@@ -596,6 +599,14 @@ func _validate_world() -> void:
 				if place.get("type", "") != "deed_giver":
 					load_errors.append("%s: look is only for deed_giver places" % who)
 				load_errors.append_array(PlaceLooks.errors(place["look"], who))
+			if place.get("type", "") == "fishing" and (place.get("catch_table", []) as Array).is_empty():
+				load_errors.append("Region '%s' fishing place '%s' needs a catch_table" % [region["id"], place.get("display_name", "")])
+			for entry: Dictionary in place.get("catch_table", []):
+				_validate_seasons(entry, "Region '%s' catch entry '%s'" % [region["id"], entry.get("item", "")])
+				if entry.get("item", "") != "" and not items.has(entry["item"]):
+					load_errors.append("Region '%s' catches unknown item '%s'" % [region["id"], entry["item"]])
+				if entry.has("min_realm") and realm_index_of(String(entry["min_realm"])) < 0:
+					load_errors.append("Region '%s' catch entry '%s' has unknown min_realm '%s'" % [region["id"], entry.get("item", ""), entry["min_realm"]])
 			for entry: Dictionary in place.get("gather_table", []):
 				_validate_seasons(entry, "Region '%s' gather entry '%s'" % [region["id"], entry.get("item", "")])
 				if entry.get("item", "") != "" and not items.has(entry["item"]):

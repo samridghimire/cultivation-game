@@ -8,7 +8,7 @@ extends RefCounted
 ## that have a live state (an open secret realm). Unknown kinds draw a plain box.
 
 ## Kinds with their own look; anything else is a plain box.
-const KINDS := ["meditation", "merchant", "workshop", "sect_hall", "travel", "gather", "explore", "deed_giver", "npc",
+const KINDS := ["meditation", "merchant", "workshop", "sect_hall", "travel", "gather", "fishing", "explore", "deed_giver", "npc",
 	"camp", "clinic", "orphanage", "secret_realm", "auction", "inheritance", "bounty_board", "abode", "family_home"]
 const OUTLINE := Color("2a2018")
 const WOOD := Color("6b4a2e")
@@ -30,6 +30,8 @@ static func draw(ci: CanvasItem, kind: String, size: Vector2, color: Color, acti
 			_gate(ci, h, color)
 		"gather":
 			_herb_patch(ci, h, color)
+		"fishing":
+			_jetty(ci, h, color)
 		"explore":
 			_cave(ci, h, color)
 		"deed_giver", "npc":
@@ -152,6 +154,17 @@ static func _herb_patch(ci: CanvasItem, h: Vector2, c: Color) -> void:
 			ci.draw_line(p + Vector2(0, 5), p + Vector2(-4, -3), c, 2.0)
 			ci.draw_line(p + Vector2(0, 5), p + Vector2(4, -3), c, 2.0)
 			ci.draw_circle(p + Vector2(0, -4), 2.5, c.lightened(0.3))
+
+
+## A wooden jetty (planks in the place color) with a fishing rod leaning on its end.
+static func _jetty(ci: CanvasItem, h: Vector2, c: Color) -> void:
+	for i in 5:
+		var x := -h.x + (i + 0.5) * h.x * 0.4
+		ci.draw_rect(Rect2(x - h.x * 0.18, -h.y * 0.6, h.x * 0.36, h.y * 1.2), c.lightened(0.1 * (i % 2)))
+	ci.draw_rect(Rect2(-h.x, -h.y * 0.6, h.x * 2.0, h.y * 1.2), OUTLINE, false, 1.5)
+	var tip := Vector2(h.x * 0.9, -h.y * 1.4)
+	ci.draw_line(Vector2(h.x * 0.4, h.y * 0.2), tip, Color("4a3a28"), 2.0)
+	ci.draw_line(tip, tip + Vector2(0, h.y * 1.3), Color("d8d8d8"), 1.0)
 
 
 ## A rock mound (tinted with the place color) with a dark cave mouth.

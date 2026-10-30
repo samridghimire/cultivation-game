@@ -97,3 +97,37 @@ func test_effects_validation() -> void:
 	var ok: Array[String] = []
 	Weather.validate_effects(data().weather_effects, ok)
 	assert_true(ok.is_empty())
+
+
+func test_fishing_weather_validation_and_multiplier() -> void:
+	for bad: Variant in [{"hail": 1.5}, {"rain": 0}, {"rain": "x"}]:
+		var errors: Array[String] = []
+		Weather.validate_fishing(bad, errors)
+		assert_false(errors.is_empty(), str(bad))
+	var d := data()
+	var ok: Array[String] = []
+	Weather.validate_fishing(d.fishing_weather, ok)
+	assert_true(ok.is_empty())
+	assert_almost_eq(Weather.fishing_multiplier(d, "rain"), 1.5)
+	assert_almost_eq(Weather.fishing_multiplier(d, "clear"), 1.0)
+
+
+func test_scale_catch_moves_only_real_catches() -> void:
+	var table := [{"item": "", "weight": 4}, {"item": "silver_carp", "weight": 4, "min": 1, "max": 1}]
+	var scaled := Weather.scale_catch(table, 0.5)
+	assert_almost_eq(float(scaled[0]["weight"]), 4.0)
+	assert_almost_eq(float(scaled[1]["weight"]), 2.0)
+	assert_almost_eq(float(table[1]["weight"]), 4.0, 0.001, "the source table is untouched")
+
+
+func test_pond_places_validate_and_fish_exist() -> void:
+	var d := data()
+	assert_true(d.load_errors.is_empty(), str(d.load_errors))
+	var ponds := 0
+	for region: Dictionary in d.regions.values():
+		for place: Dictionary in region.get("places", []):
+			if place.get("type", "") == "fishing":
+				ponds += 1
+	assert_eq(ponds, 2)
+	for id in ["silver_carp", "mist_koi", "marsh_eel"]:
+		assert_true((d.items[id]["tags"] as Array).has("fish"), id)

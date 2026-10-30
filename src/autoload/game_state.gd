@@ -1152,6 +1152,27 @@ func gather(table: Array, days: int) -> void:
 	_pass_time(days)
 
 
+## Fish a pond's catch table (FISH-001): like gather, but the weather moves the chance of a catch.
+func fish(table: Array, days: int, place_name: String = "") -> void:
+	EventBus.topic = "trade"
+	if not _can_act():
+		return
+	var season := Calendar.season_of(GameClock.total_days)
+	var mult := Weather.fishing_multiplier(data, Weather.of(data, current_region, GameClock.total_days))
+	var usable := Weather.scale_catch(Exploration.gather_table_for(player, data, table, season), mult)
+	var found := Exploration.gather(player, usable, rng)
+	var notes: PackedStringArray = []
+	for item_id in found:
+		player.add_item(item_id, found[item_id])
+		notes.append("+%d %s" % [found[item_id], Items.item_plural(data, item_id, found[item_id])])
+	var where := " at the %s" % place_name if place_name != "" else ""
+	if notes.is_empty():
+		EventBus.post("You fish for %s%s but nothing bites." % [Calendar.format_duration(days), where])
+	else:
+		EventBus.post("You fish for %s%s: %s." % [Calendar.format_duration(days), where, ", ".join(notes)], "progress")
+	_pass_time(days)
+
+
 func sell_item(item_id: String, quantity: int = 1) -> void:
 	EventBus.topic = "trade"
 	if not _can_act():

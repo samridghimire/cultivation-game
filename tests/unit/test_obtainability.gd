@@ -116,6 +116,10 @@ func _collect_grants(granted: Dictionary) -> void:
 				var item_id: String = entry.get("item", "")
 				if item_id != "":
 					granted[item_id] = "regions.json gather_table"
+			for entry: Dictionary in place.get("catch_table", []):
+				var item_id: String = entry.get("item", "")
+				if item_id != "":
+					granted[item_id] = "regions.json catch_table"
 
 
 ## Positive counts under an `items` key are grants; `requires.items` are costs.

@@ -463,6 +463,28 @@ func test_rain_adds_a_thriving_herb_when_gathering() -> void:
 	_restore_weather(gs)
 
 
+func test_fishing_catches_and_weather_changes_the_odds() -> void:
+	var c := _start()
+	var gs := _game_state()
+	var table := [{"item": "", "weight": 1}, {"item": "silver_carp", "weight": 1, "min": 1, "max": 1}]
+	_set_weather(gs, "clear")
+	var day := GameClock.total_days
+	gs.data.fishing_weather = {"rain": 0.000001}
+	gs.fish(table, 1, "Test Pond")
+	assert_eq(GameClock.total_days, day + 1, "fishing takes the days")
+	var clear_catch := c.item_count("silver_carp")
+	_set_weather(gs, "rain")
+	var before := c.item_count("silver_carp")
+	for i in 20:
+		gs.fish(table, 1)
+	assert_eq(c.item_count("silver_carp"), before, "a rain day with a tiny multiplier catches nothing")
+	_set_weather(gs, "clear")
+	for i in 20:
+		gs.fish(table, 1)
+	assert_gt(c.item_count("silver_carp"), before + clear_catch, "clear days catch fish")
+	_restore_weather(gs)
+
+
 func test_snow_adds_a_day_to_travel() -> void:
 	var c := _start()
 	var gs := _game_state()

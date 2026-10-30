@@ -81,6 +81,30 @@ static func validate_effects(effects: Dictionary, errors: Array[String]) -> void
 				errors.append("weather_effects.%s has unknown key '%s'" % [kind, key])
 
 
+## Checks regions.json `fishing_weather` (FISH-001), appending problems to `errors`.
+static func validate_fishing(table: Dictionary, errors: Array[String]) -> void:
+	for kind: String in table:
+		var v: Variant = table[kind]
+		if not KINDS.has(kind) or not (v is float or v is int) or float(v) <= 0.0:
+			errors.append("fishing_weather '%s' must be a weather kind with a multiplier > 0" % kind)
+
+
+## Multiplier on a catch table's non-empty entries on a `kind` day (1.0 when unlisted).
+static func fishing_multiplier(data: GameData, kind: String) -> float:
+	return float(data.fishing_weather.get(kind, 1.0))
+
+
+## `table` with every non-empty entry's weight times `mult`, so the chance of a catch moves with the weather.
+static func scale_catch(table: Array, mult: float) -> Array:
+	var scaled: Array = []
+	for entry: Dictionary in table:
+		var e := entry.duplicate()
+		if String(e.get("item", "")) != "":
+			e["weight"] = float(e.get("weight", 1)) * mult
+		scaled.append(e)
+	return scaled
+
+
 ## Extra days a journey starting from `region_id` on `day` takes (snow).
 static func travel_extra_days(data: GameData, region_id: String, day: int) -> int:
 	var e: Dictionary = data.weather_effects.get(of(data, region_id, day), {})
