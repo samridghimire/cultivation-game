@@ -5440,3 +5440,69 @@ func test_village_lines_request_line() -> void:
 func test_effects_text_empty_on_plain_day() -> void:
 	var d := data()
 	assert_eq(Weather.effects_text(d, "cloudy"), "")
+
+
+func _has_line(lines: PackedStringArray, prefix: String) -> bool:
+	for l in lines:
+		if l.begins_with(prefix):
+			return true
+	return false
+
+
+func test_forecast_matches_weather_of() -> void:
+	var d := data()
+	var got := Weather.forecast(d, "qingshi_village", 40, 3)
+	assert_eq(got.size(), 3)
+	for i in 3:
+		assert_eq(got[i], Weather.of(d, "qingshi_village", 41 + i))
+	for kind in Weather.forecast(d, "no_such_region", 5):
+		assert_eq(kind, "clear")
+
+
+func test_village_lines_field_plant_then_harvest() -> void:
+	var d := _village_data("clear")
+	var c := new_character()
+	assert_false(_has_line(Guidance.village_lines(c, d, {}, {}, "qingshi_village", 10), "Plant your"))
+	c.add_item("spirit_herb", 1)
+	var lines := Guidance.village_lines(c, d, {}, {}, "qingshi_village", 10)
+	assert_true(_has_line(lines, "Plant your Spirit Herb in") and "\n".join(lines).contains("stones a season"), "\n".join(lines))
+	var place := FieldPlots.place_def(d, "qingshi_village")
+	c.field_plots[FieldPlots.key("qingshi_village", place)] = {"paid_until": 99, "crops": [{"item": "dew_grass", "days_left": 0}]}
+	lines = Guidance.village_lines(c, d, {}, {}, "qingshi_village", 10)
+	assert_true(_has_line(lines, "Your Morning Dew Grass is ready to harvest"), "\n".join(lines))
+	assert_false(_has_line(lines, "Plant your"))
+	assert_false(_has_line(Guidance.village_lines(c, d, {}, {}, "misty_forest", 10), "Your Morning Dew Grass"))
+
+
+func test_village_lines_meal_needs_injury_and_ingredients() -> void:
+	var d := _village_data("clear")
+	var c := new_character()
+	c.add_item("silver_carp", 2)
+	assert_false(_has_line(Guidance.village_lines(c, d, {}, {}, "qingshi_village", 10), "Cook"))
+	Injuries.inflict(c, d, "internal_injury")
+	assert_true(_has_line(Guidance.village_lines(c, d, {}, {}, "qingshi_village", 10), "Cook Fish Stew"))
+	c.add_item("silver_carp", -2)
+	assert_false(_has_line(Guidance.village_lines(c, d, {}, {}, "qingshi_village", 10), "Cook"))
+
+
+func test_village_lines_forecast_only_when_tomorrow_differs_and_matters() -> void:
+	var d := _village_data("rain")
+	assert_false(_has_line(Guidance.village_lines(new_character(), d, {}, {}, "qingshi_village", 10), "Tomorrow"), "same weather: no line")
+	d.regions["qingshi_village"]["weather"] = {"any": {"rain": 1}}
+	d.weather_persist = 0.0
+	d.regions["qingshi_village"]["weather"] = {"any": {"rain": 1}}
+	var lines := Guidance.village_lines(new_character(), d, {}, {}, "qingshi_village", 10)
+	assert_false(_has_line(lines, "Tomorrow"), "rain after rain")
+	d.regions["qingshi_village"]["weather"] = {"any": {"clear": 1}}
+	assert_false(_has_line(Guidance.village_lines(new_character(), d, {}, {}, "qingshi_village", 10), "Tomorrow"), "clear has no effects")
+
+
+func test_village_lines_visitor() -> void:
+	var d := _village_data("clear")
+	d.family["folk_visits"]["chance"] = 1.0
+	var npcs := {}
+	var npc := Npcs.spawn(npcs, d, seeded_rng(5), {"age_years": 30, "region": "qingshi_village", "realm": "mortal"})
+	var lines := Guidance.village_lines(new_character(), d, npcs, {}, "qingshi_village", 10, {npc.id: 50})
+	assert_true(_has_line(lines, "%s has come to see you" % npc.name), "\n".join(lines))
+	assert_false(_has_line(Guidance.village_lines(new_character(), d, npcs, {}, "qingshi_village", 10, {npc.id: 0}), npc.name))
+	d.family["folk_visits"]["chance"] = 0.15

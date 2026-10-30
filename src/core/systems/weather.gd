@@ -28,6 +28,14 @@ static func of(data: GameData, region_id: String, day: int) -> String:
 	return _roll(region, region_id, d)
 
 
+## The kinds for today+1 .. today+`days` (GUIDE-202); a region without weather is clear throughout.
+static func forecast(data: GameData, region_id: String, today: int, days: int = 2) -> Array[String]:
+	var out: Array[String] = []
+	for i in range(1, days + 1):
+		out.append(of(data, region_id, today + i))
+	return out
+
+
 static func label(kind: String) -> String:
 	return kind.capitalize()
 

@@ -3523,7 +3523,7 @@ static func journal(c: CharacterData, data: GameData, flags: Dictionary, today: 
 		_add(out, "Commissions", Commissions.describe(c, data, order, today) + (". " + missing if missing != "" else ""), "warning" if Commissions.days_left(order, today) <= 7 else "normal")
 	_renown_entry(out, c, data, region_id)
 	_milestone_entries(out, c, data, flags, clan)
-	var village := village_lines(c, data, people, flags, region_id, today)
+	var village := village_lines(c, data, people, flags, region_id, today, favor)
 	if village.size() > 1:
 		for line in village:
 			_add(out, "Around the village", line, "normal")
@@ -3532,11 +3532,22 @@ static func journal(c: CharacterData, data: GameData, flags: Dictionary, today: 
 
 ## Journal section "Around the village" (WU-407): today's weather and what it does, the friend's tip, open requests,
 ## an open celebration and the nearest fishing spot. Only reads; the weather line is always first.
-static func village_lines(c: CharacterData, data: GameData, people: Dictionary, flags: Dictionary, region_id: String, today: int) -> PackedStringArray:
+static func village_lines(c: CharacterData, data: GameData, people: Dictionary, flags: Dictionary, region_id: String, today: int, favor: Dictionary = {}) -> PackedStringArray:
 	var out: PackedStringArray = []
 	var kind := Weather.of(data, region_id, today)
 	var effects := Weather.effects_text(data, kind)
 	out.append("%s today%s" % [Weather.label(kind), ": " + effects if effects != "" else ""])
+	var tomorrow: String = Weather.forecast(data, region_id, today, 1)[0]
+	var tomorrow_effects := Weather.effects_text(data, tomorrow)
+	if tomorrow != kind and tomorrow_effects != "":
+		out.append("Tomorrow looks like %s: %s" % [tomorrow, tomorrow_effects])
+	_field_line(out, c, data, region_id, today)
+	_meal_line(out, c, data)
+	var visitor := Folk.visitor(people, favor, data, c, region_id, today, kind, c.folk_visit_day)
+	if visitor != "" and people.has(visitor):
+		var home := FamilyHome.has_home(c, people, data, region_id)
+		var spot := Npcs.visit_place_of(data.regions.get(region_id, {}), home)
+		out.append("%s has come to see you%s." % [people[visitor].name, " by the " + String(spot["display_name"]) if not spot.is_empty() and not home else ""])
 	var tip := Folk.active_tip(flags, today)
 	if not tip.is_empty():
 		var friend: CharacterData = people.get(String(tip.get("npc_id", "")))
@@ -3560,6 +3571,39 @@ static func village_lines(c: CharacterData, data: GameData, people: Dictionary, 
 			out.append("Fishing at %s: best catch this %s is %s" % [place.get("display_name", "the pond"), season.to_lower(), data.items.get(best, {}).get("name", best)])
 			break
 	return out
+
+
+## GUIDE-202: a ripe crop to harvest, else a carried plantable and a free plot.
+static func _field_line(out: PackedStringArray, c: CharacterData, data: GameData, region_id: String, today: int) -> void:
+	var place := FieldPlots.place_def(data, region_id)
+	if place.is_empty():
+		return
+	var plot_key := FieldPlots.key(region_id, place)
+	var name := String(place.get("display_name", "the field"))
+	for crop: Dictionary in c.field_plots.get(plot_key, {}).get("crops", []):
+		if int(crop["days_left"]) <= 0:
+			out.append("Your %s is ready to harvest at %s." % [data.items.get(String(crop["item"]), {}).get("name", crop["item"]), name])
+			return
+	var carried := ""
+	for item_id in FieldPlots.plantable(place):
+		if c.item_count(item_id) > 0:
+			carried = item_id
+			break
+	var rented := FieldPlots.rented(c, plot_key, today)
+	if carried != "" and (not rented or FieldPlots.check_plant(c, data, place, plot_key, carried, today) == ""):
+		var rent := "" if rented else " (%d stones a season)" % int(place.get("rent", 0))
+		out.append("Plant your %s in %s%s." % [data.items.get(carried, {}).get("name", carried), name, rent])
+
+
+## GUIDE-202: an injured player holding a home meal's ingredients is told to cook it.
+static func _meal_line(out: PackedStringArray, c: CharacterData, data: GameData) -> void:
+	if not Injuries.has_any(c):
+		return
+	for m: Dictionary in data.home_meals:
+		var days := int(data.items.get(String(m["output"]["item"]), {}).get("effects", {}).get("shorten_injury", 0))
+		if days > 0 and Cooking.check(c, data, String(m["id"])) == "":
+			out.append("Cook %s at a workshop: it eases your injury by %d days." % [m["name"], days])
+			return
 
 
 ## Journal section "Fights you can win" (GUIDE-021): fair fights, or the first-fighting-style hint when

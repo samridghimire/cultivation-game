@@ -571,7 +571,7 @@ func _refresh() -> void:
 	var qi_why := ", ".join(Exploration.qi_flag_reasons(data, GameState.current_region, GameState.world_flags))
 	_status.text = "\n".join(PackedStringArray([
 		alignment_line(Alignment.tier_name(p.alignment, data), Sects.describe(p, data)),
-		"%s · %s · %s" % [GameClock.date_string(), season_label(GameClock.total_days), Weather.label(Weather.of(data, GameState.current_region, GameClock.total_days))],
+		"%s · %s · %s" % [GameClock.date_string(), season_label(GameClock.total_days), _weather_label(data)],
 	]))
 	var region := "%s (Qi x%s%s)" % [Exploration.region_name(data, GameState.current_region), String.num(density, 2), ", " + qi_why if qi_why != "" else ""]
 	region += region_event_suffix(data, GameState.world_events, GameState.current_region, p)
@@ -1524,6 +1524,13 @@ func _return_to_menu() -> void:
 	_showing_skip = {}
 	GameState.end_session()
 	get_tree().change_scene_to_file(MAIN_MENU)
+
+
+## "Rain" or "Rain (tomorrow: Clear)" (GUIDE-202).
+func _weather_label(data: GameData) -> String:
+	var today := Weather.label(Weather.of(data, GameState.current_region, GameClock.total_days))
+	var next: Array[String] = Weather.forecast(data, GameState.current_region, GameClock.total_days, 1)
+	return "%s (tomorrow: %s)" % [today, Weather.label(next[0])]
 
 
 ## GFX-016: "Neutral · Azure Cloud Sect, Outer Disciple" (the alignment number stays on the sheet).
