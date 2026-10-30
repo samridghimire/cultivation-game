@@ -38,17 +38,17 @@ First-hour sim (curious player): 10 seeds, 12 months
         first win day 14 (wild_boar), style bought day 28
      2   14  142    -    14         0   44     5     0  42.8
         first win day 14 (wild_boar), style bought day 45
-     3   14  224    -    14         0   45     1     0  46.6
+     3   14  224    -    14         0   45     1     0  46.7
         first win day 14 (wild_boar), style bought day 52
      4   14  287    -    14         1   35     2     0  39.7
         first win day 14 (wild_boar), style bought day 48
-     5   14   83  654    14         0   45     1     0  46.1
+     5   14   83  654    14         0   45     1     0  46.2
         first win day 14 (wild_boar), style bought day 49
-     6   14  208    -    14         0   43     2     0  42.4
+     6   14  208    -    14         0   43     2     0  42.5
         first win day 14 (wild_boar), style bought day 45
      7   14  237    -    14         0   42     5     0  44.8
         first win day 14 (wild_boar), style bought day 44
-     8   14  158  880    14         0   47     2     0  46.0
+     8   14  158  880    14         0   47     2     0  46.1
         first win day 14 (wild_boar), style bought day 44
      9   14  213    -    14         0   48     0     0  44.2
         first win day 14 (wild_boar), style bought day 44
@@ -66,7 +66,7 @@ Road encounters (QA-118): 9/10 seeds met one; { "road_lost_child": 1, "road_high
 Sect contribution (QA-146): m06 median 574, m12 median 1804; stage at m12: { "QR6": 3, "QR8": 2, "QR7": 3, "Foundation Establishment, Middle": 1, "QR9": 1 }
 Stones at the QR9 bottleneck (QA-146): median 203 (1/10 seeds reached it)
 Bounties (QA-146), offered by region (ids once per seed): { "qingshi_village": 25, "fallen_star_market": 10, "myriad_peaks_ridge": 10, "misty_forest": 22, "azure_peak": 4, "withered_bone_marsh": 1 }; taken (times): { "qingshi_village": 65, "misty_forest": 9 }
-Lines by category: { "warning": 212, "danger": 909, "info": 1859, "progress": 2007, "karma": 239, "world": 7, "normal": 1 }
+Lines by category: { "warning": 212, "danger": 909, "info": 1864, "progress": 2007, "karma": 239, "world": 7, "normal": 1 }
 
 ## log noise (seeds 1-5, 12 months)
 
@@ -76,7 +76,7 @@ Posts per month by topic:
   combat         13.0/month (busiest month in any seed: 39)
   cultivation     5.5/month (busiest month in any seed: 42)
   trade           4.1/month (busiest month in any seed: 14)
-  family          2.7/month (busiest month in any seed: 13)
+  family          2.8/month (busiest month in any seed: 13)
   sect            2.1/month (busiest month in any seed: 9)
   life            0.8/month (busiest month in any seed: 25)
   (none)          0.1/month (busiest month in any seed: 5)
@@ -1551,7 +1551,7 @@ Curious practiser: 10 seeds, 12 months
      6        3        3         5           632   44     1  285
      7        3        3         5           680   38     4  272
      8        3        3         4           527   45     3  163
-     9        3        3         5           516   42     2  286
+     9        3        3         5           666   40     2  286
     10        3        4         4           833   37     4  261
-  Medians: iron_fist level m3 3, m6 3, m12 5; first wolf win day 632 (1 seeds never); fights won 43, lost 3; QR3 day 273 (10/10 reached)
+  Medians: iron_fist level m3 3, m6 3, m12 5; first wolf win day 666 (1 seeds never); fights won 43, lost 3; QR3 day 273 (10/10 reached)
 
