@@ -1238,7 +1238,18 @@ func _on_feature_unlocked(text: String) -> void:
 		_recent_notices.pop_front()
 	if int(Settings.get_value("hud_hints")) <= 0:
 		return
-	_banner.announce("New", text, UIStyle.ACCENT, 2.5)
+	_banner.announce(notice_title(EventBus.last_notice_id), text, UIStyle.ACCENT, 2.5)
+
+
+## Banner title for a `Guidance.unlock_notices` id (WU-409).
+static func notice_title(notice_id: String) -> String:
+	if notice_id.begins_with("road_"):
+		return "New road"
+	if notice_id.begins_with("promotion_") or notice_id == "clan":
+		return "Sect news"
+	if notice_id.begins_with("technique_") or notice_id.begins_with("recipe_"):
+		return "Learned"
+	return "Notice"
 
 
 ## The turn of the seasons (WU-062): one low-priority banner for the season you end up in.

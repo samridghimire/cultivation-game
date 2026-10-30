@@ -90,9 +90,9 @@ func test_hud_holds_banner_while_combat_report_open() -> void:
 ## covering an inheritance menu's title).
 func test_banner_text_stays_above_centred_windows() -> void:
 	var b := Banner.new()
-	var box: VBoxContainer = null
+	var box: HBoxContainer = null
 	for child in b.get_children():
-		if child is VBoxContainer:
+		if child is HBoxContainer:
 			box = child
 	assert_true(box != null, "banner has a text box")
 	assert_true(box.anchor_bottom < 0.21, "banner text ends in the top fifth of the screen")
@@ -106,3 +106,19 @@ func test_long_subtitle_stays_one_line() -> void:
 	var sub: Label = b.get("_subtitle")
 	assert_eq(sub.get_line_count(), 1)
 	b.free()
+
+
+func test_notice_titles_by_kind() -> void:
+	var hud_script: GDScript = load("res://src/ui/hud.gd")
+	assert_eq(hud_script.notice_title("road_myriad_peaks"), "New road")
+	assert_eq(hud_script.notice_title("promotion_azure_cloud_2"), "Sect news")
+	assert_eq(hud_script.notice_title("rival"), "Notice")
+	assert_eq(hud_script.notice_title(""), "Notice")
+
+
+func test_queued_hold_is_shorter() -> void:
+	assert_eq(Banner.hold_for(2.5, 0), 2.5)
+	assert_eq(Banner.hold_for(2.5, 1), Banner.QUEUED_HOLD_SECONDS)
+	assert_eq(Banner.hold_for(0.8, 1), 0.8)
+	# two notices: shortened first + second at the queued hold + fades finish under 3 s
+	assert_true(Banner.QUEUED_HOLD_SECONDS * 2.0 + Banner.FADE_SECONDS < 3.0)

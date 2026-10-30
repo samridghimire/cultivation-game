@@ -1,5 +1,5 @@
 extends TestCase
-## WU-042: new-feature notices show a "New" banner besides the log line.
+## WU-042: new-feature notices show a "Notice" banner besides the log line.
 
 
 func _root() -> Node:
@@ -26,7 +26,7 @@ func test_notice_emits_one_banner() -> void:
 	gs.world_flags.erase("notice_body_tempering")
 	gs.check_unlock_notices()
 	assert_true(banner.visible)
-	assert_eq(banner.title_text(), "New")
+	assert_eq(banner.title_text(), "Notice")
 	assert_true(banner.subtitle_text().contains("temper your body"))
 	assert_eq(banner.queued_count(), 0)
 	settings.set_value("hud_hints", old)

@@ -43,7 +43,7 @@ func _init() -> void:
 	box.add_child(HSeparator.new())
 	_description = UIStyle.label("", 14, Color(0.7, 0.7, 0.75))
 	_description.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_description.custom_minimum_size = Vector2(0, 40)
+	_description.custom_minimum_size = Vector2(0, 22)
 	box.add_child(_description)
 
 
