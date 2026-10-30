@@ -193,6 +193,7 @@ func _rebuild() -> void:
 			label += READY_SUFFIX
 		var b := UIStyle.button(label, _select.bind(recipe_id))
 		b.name = recipe_id
+		ItemIcon.apply(b, ItemIcon.for_id(data, str((data.recipes[recipe_id].get("output", {}) as Dictionary).get("item", ""))))
 		if ready:
 			b.add_theme_color_override("font_color", UIStyle.CATEGORY_COLORS.get("good", UIStyle.ACCENT))
 		b.alignment = HORIZONTAL_ALIGNMENT_LEFT

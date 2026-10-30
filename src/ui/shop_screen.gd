@@ -503,6 +503,7 @@ func _rebuild() -> void:
 			label = "! " + label
 		var b := UIStyle.button(label, _select.bind(item_id))
 		b.name = item_id
+		ItemIcon.apply(b, ItemIcon.for_id(data, item_id))
 		if not _selling and item_id == _hinted:
 			b.add_theme_color_override("font_color", UIStyle.ACCENT)
 		if not _selling and is_first_combat_manual(p, data, item_id):

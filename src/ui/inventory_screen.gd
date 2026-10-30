@@ -197,6 +197,7 @@ func _rebuild() -> void:
 			label += "  (readied)"
 		var b := UIStyle.button(label, _select.bind(item_id))
 		b.name = item_id
+		ItemIcon.apply(b, ItemIcon.for_id(data, item_id))
 		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		b.toggle_mode = true
 		b.button_pressed = item_id == _selected
