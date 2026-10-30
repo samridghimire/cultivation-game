@@ -1190,14 +1190,24 @@ func active_tip_text() -> String:
 
 
 ## Fish a pond's catch table (FISH-001): like gather, but the weather moves the chance of a catch.
-func fish(table: Array, days: int, place_name: String = "") -> void:
+## `quality` (0..1, FISH-003) is how well the cast went; 0.5 is an ordinary one.
+func fish(table: Array, days: int, place_name: String = "", quality: float = 0.5) -> void:
 	EventBus.topic = "trade"
 	if not _can_act():
 		return
 	var season := Calendar.season_of(GameClock.total_days)
 	var mult := Weather.fishing_multiplier(data, Weather.of(data, current_region, GameClock.total_days))
-	var usable := Weather.scale_catch(Exploration.gather_table_for(player, data, table, season), mult)
-	var found := Exploration.gather(player, usable, rng)
+	var base := Exploration.gather_table_for(player, data, table, season)
+	var usable := Weather.scale_catch(Fishing.skill_table(base, quality, player.fishing_xp), mult)
+	var found: Dictionary = {}
+	if Fishing.got_away(quality, rng):
+		EventBus.post("A fish takes the bait, then it got away.")
+	else:
+		found = Exploration.gather(player, usable, rng)
+	var old_rank := Fishing.rank_name(player.fishing_xp)
+	player.fishing_xp += Fishing.xp_gain(base, found)
+	if Fishing.rank_name(player.fishing_xp) != old_rank:
+		EventBus.post("Your fishing has improved: %s." % Fishing.rank_name(player.fishing_xp), "progress")
 	var notes: PackedStringArray = []
 	for item_id in found:
 		player.add_item(item_id, found[item_id])
