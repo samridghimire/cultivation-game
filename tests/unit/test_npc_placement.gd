@@ -143,3 +143,64 @@ func test_haunt_children_stay_near_home_or_orphanage() -> void:
 			if Npcs._rect_of(a).grow(Npcs.HAUNT_STAND_OFF + 80.0).has_point(pos):
 				near = true
 		assert_true(near, "child %d stays near the Family Home or orphanage" % i)
+
+
+func _outdoor_swapped(region: Dictionary, weather: String) -> int:
+	var swapped := 0
+	for i in 30:
+		var c := _villager("npc_%d" % i)
+		for day in 6:
+			var clear := Npcs.haunt_place(c, region, day)
+			var wet := Npcs.haunt_place(c, region, day, true, weather)
+			if clear != wet:
+				swapped += 1
+				assert_true(Npcs.HAUNT_OUTDOOR.has(String(clear["type"])), "only outdoor picks move")
+				assert_true(Npcs.HAUNT_SHELTER_PLACES.has(String(wet["type"])), "to a sheltered place")
+				assert_true(Npcs.is_sheltering(c, region, day, true, weather))
+			else:
+				assert_false(Npcs.is_sheltering(c, region, day, true, weather))
+	return swapped
+
+
+func test_rain_and_snow_send_villagers_indoors_clear_does_not() -> void:
+	var region: Dictionary = data().regions["qingshi_village"]
+	assert_gt(_outdoor_swapped(region, "rain"), 0)
+	assert_gt(_outdoor_swapped(region, "snow"), 0)
+	assert_eq(_outdoor_swapped(region, "clear"), 0)
+	assert_eq(_outdoor_swapped(region, "fog"), 0)
+
+
+func test_region_without_shelter_keeps_outdoor_pick() -> void:
+	var region: Dictionary = data().regions["misty_forest"]
+	assert_eq(_outdoor_swapped(region, "rain"), 0)
+
+
+func test_sheltered_pick_is_stable_for_the_day() -> void:
+	var region: Dictionary = data().regions["qingshi_village"]
+	var c := _villager("npc_3")
+	assert_eq(Npcs.haunt_place(c, region, 8, true, "rain"), Npcs.haunt_place(c, region, 8, true, "rain"))
+	assert_eq(Npcs.haunt(c, region, 8, true, "rain"), Npcs.haunt(c, region, 8, true, "rain"))
+
+
+func test_activity_line_sheltering_variants() -> void:
+	var c := _villager("npc_x")
+	var place := {"type": "workshop", "display_name": "Village Workshop"}
+	assert_eq(Npcs.activity_line(c, place, "rain"), "sheltering from the rain at the Village Workshop")
+	assert_eq(Npcs.activity_line(c, place, "snow"), "waiting out the snow at the Village Workshop")
+	assert_eq(Npcs.activity_line(c, place), "lending a hand at the Village Workshop")
+
+
+func test_villagers_at_one_place_stand_apart() -> void:
+	var region: Dictionary = data().regions["qingshi_village"]
+	var people: Array[CharacterData] = []
+	for i in 25:
+		people.append(_villager("npc_%d" % i))
+	for weather in ["", "rain"]:
+		for day in 4:
+			var stands := Npcs.haunt_positions(people, region, day, 16, weather)
+			assert_eq(stands.size(), people.size())
+			assert_eq(stands, Npcs.haunt_positions(people, region, day, 16, weather), "deterministic")
+			for a in people:
+				for b in people:
+					if a.id < b.id and Npcs.haunt_place(a, region, day, true, weather) == Npcs.haunt_place(b, region, day, true, weather):
+						assert_true((stands[a.id] as Vector2).distance_to(stands[b.id]) >= Npcs.HAUNT_SPACING - 0.01, "%s/%s day %d" % [a.id, b.id, day])

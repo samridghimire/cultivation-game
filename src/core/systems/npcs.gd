@@ -365,15 +365,40 @@ const HAUNT_STAND_OFF := 55.0
 const HAUNT_KEEP_OUT := 40.0
 const HAUNT_ADULT_PLACES: PackedStringArray = ["merchant", "workshop", "clinic", "gather", "meditation", "bounty_board"]
 const HAUNT_CHILD_PLACES: PackedStringArray = ["orphanage"]
+## Weather that sends villagers indoors, the places they leave, and where they go (WORLD-004).
+const HAUNT_STORMY: PackedStringArray = ["rain", "snow"]
+const HAUNT_OUTDOOR: PackedStringArray = ["gather", "field", "well", "pond", "stall", "landmark", "meditation", "explore", "travel", "bounty_board"]
+const HAUNT_SHELTER_PLACES: PackedStringArray = ["merchant", "workshop", "clinic", "sect_hall", "orphanage", "auction"]
+## Villagers at one place stand at least this far apart.
+const HAUNT_SPACING := 28.0
 
 
 ## Where `npc` stands on `day` (WORLD-001, pure): each villager keeps a daily round
 ## between 2-3 haunts of the region picked by hash(npc.id) (merchants, workshops,
 ## fields, the well; children the Family Home or the orphanage) and moves to the
 ## next one as days pass. Never inside a solid landmark or a place.
-static func haunt(npc: CharacterData, region: Dictionary, day: int, adult: bool = true) -> Vector2:
+static func haunt(npc: CharacterData, region: Dictionary, day: int, adult: bool = true, weather: String = "") -> Vector2:
+	return _haunt_at(npc, region, day, adult, weather, [])
+
+
+## Positions for `people` (all living in one region, any order) on `day`: like
+## `haunt`, but villagers sharing a place stand at least HAUNT_SPACING apart
+## (placed in id order, so the result is stable). Returns id -> Vector2 (WORLD-004).
+static func haunt_positions(people: Array[CharacterData], region: Dictionary, day: int, adult_age: int, weather: String = "") -> Dictionary:
+	var sorted := people.duplicate()
+	sorted.sort_custom(func(a: CharacterData, b: CharacterData) -> bool: return a.id.naturalnocasecmp_to(b.id) < 0)
+	var placed: Array[Vector2] = []
+	var out := {}
+	for c: CharacterData in sorted:
+		var pos := _haunt_at(c, region, day, c.age_years() >= adult_age, weather, placed)
+		placed.append(pos)
+		out[c.id] = pos
+	return out
+
+
+static func _haunt_at(npc: CharacterData, region: Dictionary, day: int, adult: bool, weather: String, placed: Array[Vector2]) -> Vector2:
 	var h := absi(hash(npc.id))
-	var place := haunt_place(npc, region, day, adult)
+	var place := haunt_place(npc, region, day, adult, weather)
 	if place.is_empty():
 		var spots: Array = region.get("npc_spots", [])
 		if spots.is_empty():
@@ -382,19 +407,31 @@ static func haunt(npc: CharacterData, region: Dictionary, day: int, adult: bool 
 	var rect := _rect_of(place)
 	var blocked := _haunt_blocked(region)
 	var centre := rect.get_center()
-	var radius := maxf(rect.size.x, rect.size.y) / 2.0 + HAUNT_STAND_OFF
-	var fallback := centre + Vector2(radius, 0)
-	for t in 24:
-		var angle := TAU * float((h / 3 + t * 5) % 24) / 24.0
-		var pos := centre + Vector2.from_angle(angle) * radius
-		if _haunt_clear(pos, blocked):
-			return pos
+	var base_radius := maxf(rect.size.x, rect.size.y) / 2.0 + HAUNT_STAND_OFF
+	var fallback := centre + Vector2(base_radius, 0)
+	# Ring around the place; if a neighbour crowds every point, try wider rings.
+	for ring in 4:
+		var radius := base_radius + HAUNT_SPACING * float(ring)
+		for t in 24:
+			var angle := TAU * float((h / 3 + t * 5) % 24) / 24.0
+			var pos := centre + Vector2.from_angle(angle) * radius
+			if _haunt_clear(pos, blocked) and _spaced(pos, placed):
+				return pos
 	return fallback
+
+
+static func _spaced(pos: Vector2, placed: Array[Vector2]) -> bool:
+	for p in placed:
+		if pos.distance_to(p) < HAUNT_SPACING:
+			return false
+	return true
 
 
 ## The place dict (a region place, landmark or family home, with a normalized
 ## `type`) the villager stands by today, {} when they fall back to `npc_spots` (WORLD-002).
-static func haunt_place(npc: CharacterData, region: Dictionary, day: int, adult: bool = true) -> Dictionary:
+## On a rain or snow day (`weather`) an outdoor pick is swapped for a sheltered
+## place of the region, if it has one (WORLD-004).
+static func haunt_place(npc: CharacterData, region: Dictionary, day: int, adult: bool = true, weather: String = "") -> Dictionary:
 	var h := absi(hash(npc.id))
 	var anchors := _haunt_anchors(region, adult)
 	if anchors.is_empty():
@@ -403,14 +440,28 @@ static func haunt_place(npc: CharacterData, region: Dictionary, day: int, adult:
 	var picked: Array[Dictionary] = []
 	for k in n:
 		picked.append(anchors[(h / 7 + k * (1 + h % 3)) % anchors.size()])
-	return picked[posmod(day + h, n)]
+	var place := picked[posmod(day + h, n)]
+	if HAUNT_STORMY.has(weather) and HAUNT_OUTDOOR.has(String(place.get("type", ""))):
+		var shelters := _shelters(region)
+		if not shelters.is_empty():
+			return shelters[posmod(h / 5 + day, shelters.size())]
+	return place
+
+
+## Whether the villager is indoors today only because of the weather (WORLD-004).
+static func is_sheltering(npc: CharacterData, region: Dictionary, day: int, adult: bool, weather: String) -> bool:
+	return HAUNT_STORMY.has(weather) and haunt_place(npc, region, day, adult) != haunt_place(npc, region, day, adult, weather)
 
 
 ## What a villager is up to at `place` (from `haunt_place`), "" for no place.
-static func activity_line(_npc: CharacterData, place: Dictionary) -> String:
+static func activity_line(_npc: CharacterData, place: Dictionary, sheltering: String = "") -> String:
 	if place.is_empty():
 		return ""
 	var what := String(place.get("display_name", String(place.get("type", "place")).replace("_", " ")))
+	if sheltering == "rain":
+		return "sheltering from the rain at the %s" % what
+	if sheltering == "snow":
+		return "waiting out the snow at the %s" % what
 	match String(place.get("type", "")):
 		"merchant", "stall":
 			return "browsing the stalls at the %s" % what
@@ -427,6 +478,14 @@ static func activity_line(_npc: CharacterData, place: Dictionary) -> String:
 		"orphanage", "family_home":
 			return "playing near the %s" % what
 	return "about the %s" % what
+
+
+static func _shelters(region: Dictionary) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	for p: Dictionary in region.get("places", []):
+		if HAUNT_SHELTER_PLACES.has(String(p.get("type", ""))):
+			out.append(p)
+	return out
 
 
 static func _haunt_anchors(region: Dictionary, adult: bool) -> Array[Dictionary]:

@@ -579,8 +579,10 @@ static func known_tastes_text(flags: Dictionary, data: GameData, npc_id: String)
 func _activity_text(npc: CharacterData) -> String:
 	var region: Dictionary = GameState.data.regions.get(GameState.current_region, {})
 	var adult := npc.age_years() >= int(GameState.data.family.get("adult_age", 16))
-	var place := Npcs.haunt_place(npc, region, GameClock.total_days, adult)
-	return Npcs.activity_line(npc, place)
+	var weather := Weather.of(GameState.data, GameState.current_region, GameClock.total_days)
+	var place := Npcs.haunt_place(npc, region, GameClock.total_days, adult, weather)
+	var shelter := weather if Npcs.is_sheltering(npc, region, GameClock.total_days, adult, weather) else ""
+	return Npcs.activity_line(npc, place, shelter)
 
 
 func _look() -> void:
