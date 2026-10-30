@@ -591,6 +591,11 @@ func _validate_world() -> void:
 			if not (spot is Array and (spot as Array).size() == 2):
 				load_errors.append("Region '%s' has an npc_spot that is not [x, y]: %s" % [region["id"], spot])
 		for place: Dictionary in region.get("places", []):
+			if place.has("look"):
+				var who := "Region '%s' place '%s'" % [region["id"], place.get("display_name", "")]
+				if place.get("type", "") != "deed_giver":
+					load_errors.append("%s: look is only for deed_giver places" % who)
+				load_errors.append_array(PlaceLooks.errors(place["look"], who))
 			for entry: Dictionary in place.get("gather_table", []):
 				_validate_seasons(entry, "Region '%s' gather entry '%s'" % [region["id"], entry.get("item", "")])
 				if entry.get("item", "") != "" and not items.has(entry["item"]):

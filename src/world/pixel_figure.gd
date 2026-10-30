@@ -108,6 +108,10 @@ static func rows(dir: String, index: int, style: String, child: bool) -> PackedS
 		out[1] = "......oooo......"
 		for y in [4, 5, 6, 7, 8, 9]:
 			out[y] = _hair_edges(out[y], family == "side")
+	if style == "hood":
+		for y in 10:
+			out[y] = out[y].replace("h", "r")
+		out[1] = out[1].replace("r", "R")
 	if child:
 		var short := PackedStringArray()
 		for _i in 4:

@@ -4,6 +4,24 @@ extends Interactable
 
 @export var deed_context := "villager"
 @export var hidden_by_flag := ""
+## Optional look from regions.json (GFX-018, see PlaceLooks).
+@export var look := {}
+
+
+## Named sprite per deed context before the generic place art, once a pack lands.
+func sprite_keys() -> PackedStringArray:
+	return PackedStringArray(["npc_" + deed_context, "place_" + art_kind])
+
+
+func draw_generated_art() -> bool:
+	if PlaceLooks.is_camp(look):
+		PlaceArt.draw(self, "camp", size, color)
+		return true
+	var tex := PixelFigure.frame(PlaceLooks.figure_look(look, color), "down", 0)
+	var s := float(Sprites.scale())
+	var tex_size := Vector2(tex.get_size()) * s
+	draw_texture_rect(tex, Rect2(Vector2(-tex_size.x / 2.0, size.y / 2.0 - tex_size.y), tex_size), false)
+	return true
 
 
 func is_available() -> bool:

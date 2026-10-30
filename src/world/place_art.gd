@@ -9,7 +9,7 @@ extends RefCounted
 
 ## Kinds with their own look; anything else is a plain box.
 const KINDS := ["meditation", "merchant", "workshop", "sect_hall", "travel", "gather", "explore", "deed_giver", "npc",
-	"clinic", "orphanage", "secret_realm", "auction", "inheritance", "bounty_board", "abode", "family_home"]
+	"camp", "clinic", "orphanage", "secret_realm", "auction", "inheritance", "bounty_board", "abode", "family_home"]
 const OUTLINE := Color("2a2018")
 const WOOD := Color("6b4a2e")
 const STONE := Color("8d8a82")
@@ -34,6 +34,8 @@ static func draw(ci: CanvasItem, kind: String, size: Vector2, color: Color, acti
 			_cave(ci, h, color)
 		"deed_giver", "npc":
 			_figure(ci, h, color)
+		"camp":
+			_camp(ci, h, color)
 		"clinic":
 			_clinic(ci, h, color)
 		"orphanage":
@@ -176,6 +178,22 @@ static func _figure(ci: CanvasItem, h: Vector2, c: Color) -> void:
 	ci.draw_circle(head, h.x * 0.45, Color("e8d9a8"))
 	ci.draw_arc(head, h.x * 0.45, 0, TAU, 20, OUTLINE, 1.5)
 	ci.draw_circle(head + Vector2(0, -h.y * 0.35), h.x * 0.22, Color("2a2018"))
+
+
+## A small tent in the place colour with a campfire beside it (GFX-018).
+static func _camp(ci: CanvasItem, h: Vector2, c: Color) -> void:
+	ellipse(ci, Vector2(0, h.y * 0.8), Vector2(h.x * 0.9, h.y * 0.2), Color(0, 0, 0, 0.3))
+	var tent := PackedVector2Array([Vector2(-h.x * 0.85, h.y * 0.75), Vector2(-h.x * 0.3, -h.y * 0.7), Vector2(h.x * 0.25, h.y * 0.75)])
+	ci.draw_colored_polygon(tent, c)
+	ci.draw_colored_polygon(PackedVector2Array([Vector2(-h.x * 0.3, -h.y * 0.7), Vector2(-h.x * 0.05, h.y * 0.75), Vector2(h.x * 0.25, h.y * 0.75)]), c.darkened(0.25))
+	tent.append(tent[0])
+	ci.draw_polyline(tent, OUTLINE, 1.5)
+	ci.draw_polygon(PackedVector2Array([Vector2(-h.x * 0.1, h.y * 0.75), Vector2(-h.x * 0.05, h.y * 0.2), Vector2(0, h.y * 0.75)]), PackedColorArray([OUTLINE, OUTLINE, OUTLINE]))
+	var fire := Vector2(h.x * 0.6, h.y * 0.6)
+	ci.draw_line(fire + Vector2(-5, 3), fire + Vector2(5, -1), WOOD, 3.0)
+	ci.draw_line(fire + Vector2(-5, -1), fire + Vector2(5, 3), WOOD, 3.0)
+	ci.draw_colored_polygon(PackedVector2Array([fire + Vector2(-4, 0), fire + Vector2(0, -10), fire + Vector2(4, 0)]), Color("e8742a"))
+	ci.draw_colored_polygon(PackedVector2Array([fire + Vector2(-2, 0), fire + Vector2(0, -5), fire + Vector2(2, 0)]), Color("f5d04a"))
 
 
 ## A white-walled house with a medicine gourd hanging by the door.
