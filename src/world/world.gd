@@ -111,6 +111,7 @@ func _on_days_advanced(_days: int) -> void:
 		return
 	_season = season
 	_weather_kind = weather
+	queue_redraw()
 	_refresh_ambient()
 	var tween := create_tween()
 	tween.tween_property(_season_tint, "color", _tint_for(season), 0.6)
@@ -511,7 +512,10 @@ func _draw() -> void:
 		_draw_tiled(ground, Rect2(Vector2.ZERO, map_size))
 	else:
 		var ground_color := Color(map.get("ground", "4d6b3c"))
-		_draw_tiled(GroundTiles.cached(ground_color, rid, "ground"), Rect2(Vector2.ZERO, map_size))
+		var sc := float(Sprites.scale())
+		var flowers := ["spring", "summer"].has(Calendar.season_of(GameClock.total_days))
+		var gtex := GroundTiles.ground_texture(ground_color, rid, Vector2i(ceili(map_size.x / sc), ceili(map_size.y / sc)), flowers)
+		draw_texture_rect(gtex, Rect2(Vector2.ZERO, Vector2(gtex.get_size()) * sc), false)
 	var path_tile := Sprites.first(["path_" + rid, "path"])
 	var path_color := Color(map.get("path_color", "8a7350"))
 	for r in map.get("paths", []):
@@ -519,8 +523,9 @@ func _draw() -> void:
 		if path_tile != null:
 			_draw_tiled(path_tile, rect)
 		else:
-			_draw_tiled(GroundTiles.cached(path_color, rid, "path"), rect)
-			draw_rect(rect.grow(-1.0), GroundTiles.edge_color(path_color), false, 2.0)
+			var psc := float(Sprites.scale())
+			var ptex := GroundTiles.path_texture(path_color, rid, Vector2i(ceili(rect.size.x / psc), ceili(rect.size.y / psc)))
+			draw_texture_rect(ptex, Rect2(rect.position, Vector2(ptex.get_size()) * psc), false)
 	for lm: Dictionary in map.get("landmarks", []):
 		_draw_landmark(lm)
 	for d in _decor:
@@ -563,6 +568,8 @@ func _draw_landmark(lm: Dictionary) -> void:
 		var ptex := PixelLandmark.texture(str(lm["kind"]), size, water)
 		var px := Vector2(ptex.get_size()) * float(Sprites.scale())
 		draw_texture_rect(ptex, Rect2(Vector2(r.get_center().x - px.x / 2.0, r.end.y - px.y), px), false)
+		if lm["kind"] == "stream":
+			_draw_bridges(r)
 		return
 	match lm["kind"]:
 		"house":
@@ -626,10 +633,7 @@ func _draw_landmark(lm: Dictionary) -> void:
 			while ripple < r.end.y - 6.0:
 				draw_line(Vector2(r.get_center().x - r.size.x * 0.25, ripple), Vector2(r.get_center().x + r.size.x * 0.25, ripple), Color("8cc4e0"), 2.0)
 				ripple += 46.0
-			for pr: Array in _region.get("map", {}).get("paths", []):
-				var path_rect := Rect2(pr[0], pr[1], pr[2], pr[3])
-				if path_rect.intersects(r):
-					_draw_bridge(r.intersection(path_rect), path_rect)
+			_draw_bridges(r)
 		"lantern":
 			var c := r.get_center()
 			draw_circle(c - Vector2(0, r.size.y * 0.3), 20.0, Color(1.0, 0.8, 0.4, 0.18))
@@ -657,6 +661,14 @@ func _draw_landmark(lm: Dictionary) -> void:
 
 
 ## Planks across a stream where `crossing` (its overlap with `path_rect`) is, laid along the path's direction.
+## The plank bridge wherever a path crosses the stream `r`.
+func _draw_bridges(r: Rect2) -> void:
+	for pr: Array in _region.get("map", {}).get("paths", []):
+		var path_rect := Rect2(pr[0], pr[1], pr[2], pr[3])
+		if path_rect.intersects(r):
+			_draw_bridge(r.intersection(path_rect), path_rect)
+
+
 func _draw_bridge(crossing: Rect2, path_rect: Rect2) -> void:
 	var span := crossing.grow(4.0)
 	draw_rect(span, Color("8a6a44"))

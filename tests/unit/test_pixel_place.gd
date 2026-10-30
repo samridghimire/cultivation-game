@@ -89,7 +89,11 @@ func test_landmarks_well_formed_and_cached() -> void:
 			for ch in row:
 				assert_true(PixelPlace.PALETTE.contains(ch), "%s unknown char %s" % [kind, ch])
 		assert_true(PixelLandmark.texture(kind, size) == PixelLandmark.texture(kind, size), kind + " cached")
-	assert_false(PixelLandmark.supports("wall"))
+	assert_false(PixelLandmark.supports("lantern_post"))
+	for kind in ["wall", "cliff", "stream"]:
+		assert_true(PixelLandmark.supports(kind), kind)
+		var rr := PixelLandmark.rows(kind, Vector2(160, 64))
+		assert_true(rr.size() > 10 and rr[0].length() > 10, kind)
 
 
 func test_landmarks_fit_data() -> void:

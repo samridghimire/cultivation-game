@@ -48,3 +48,33 @@ func test_blades_do_not_cross_the_edge() -> void:
 
 func test_edge_color_darker() -> void:
 	assert_true(GroundTiles.edge_color(BASE).get_luminance() < BASE.get_luminance())
+
+
+func test_variant_choice_deterministic_and_mostly_plain() -> void:
+	var plain := 0
+	var seen := {}
+	for cy in 25:
+		for cx in 40:
+			var v := GroundTiles.variant_for("qingshi_village", cx, cy)
+			assert_eq(v, GroundTiles.variant_for("qingshi_village", cx, cy))
+			seen[v] = true
+			if v == 0:
+				plain += 1
+	assert_true(plain >= 600 and plain <= 800, "about 70%% plain, got %d of 1000" % plain)
+	assert_eq(seen.size(), 4)
+
+
+func test_ground_texture_size_cached_and_flowers_by_season() -> void:
+	var a := GroundTiles.ground_texture(BASE, "t_region", Vector2i(100, 70), true)
+	assert_eq(a.get_size(), Vector2(100, 70))
+	assert_true(a == GroundTiles.ground_texture(BASE, "t_region", Vector2i(100, 70), true))
+	var b := GroundTiles.ground_texture(BASE, "t_region", Vector2i(100, 70), false)
+	assert_true(_bytes(a) != _bytes(b), "flowers change the lawn")
+
+
+func test_path_texture_has_fringe_and_rounded_corners() -> void:
+	var img := GroundTiles.path_texture(Color("8a7350"), "t_region", Vector2i(60, 30)).get_image()
+	assert_eq(img.get_pixel(0, 0).a, 0.0)
+	assert_eq(img.get_pixel(30, 0).a, 0.0)
+	assert_eq(img.get_pixel(30, 15).a, 1.0)
+	assert_eq(img.get_pixel(30, 4).a, 1.0)

@@ -4,7 +4,7 @@ extends RefCounted
 ## on-screen size, drawn at Sprites.scale()); pond, field and fence are built to fill their rect at that scale,
 ## so they never stretch. Shares PixelPlace's palette and helpers. Rendering only: pure, deterministic, cached.
 
-const KINDS := ["house", "well", "stall", "pine", "lantern", "pond", "field", "fence"]
+const KINDS := ["house", "well", "stall", "pine", "lantern", "pond", "field", "fence", "wall", "cliff", "stream"]
 const FIXED := ["house", "well", "stall", "pine", "lantern"]
 
 static var _cache: Dictionary = {}
@@ -53,9 +53,15 @@ static func rows(kind: String, size: Vector2) -> Array[String]:
 			c = _field(n.x, n.y)
 		"fence":
 			c = _fence(n.x, n.y)
+		"wall":
+			c = _wall(n.x, n.y)
+		"cliff":
+			c = _cliff(n.x, n.y)
+		"stream":
+			c = _stream(n.x, n.y)
 		_:
 			return []
-	if kind != "pond":
+	if kind != "pond" and kind != "stream":
 		PixelPlace.outline(c)
 	var out: Array[String] = []
 	for row: Array in c:
@@ -160,4 +166,64 @@ static func _fence(w: int, h: int) -> Array:
 		PixelPlace.rect(c, x, 0, 2, h, "t")
 		PixelPlace.rect(c, x + 1, 0, 1, h, "T")
 		x += 10
+	return c
+
+
+## Grey stone blocks in 4-px courses (staggered joints) under a darker top course.
+static func _wall(w: int, h: int) -> Array:
+	var c := PixelPlace.canvas(w, h)
+	PixelPlace.rect(c, 0, 0, w, h, "s")
+	PixelPlace.rect(c, 0, 0, w, mini(3, h), "S")
+	var y := 3
+	var row := 0
+	while y < h:
+		PixelPlace.rect(c, 0, y, w, 1, "S")
+		var x := 4 if row % 2 == 0 else 0
+		while x < w:
+			PixelPlace.rect(c, x, y + 1, 1, 3, "S")
+			x += 8
+		y += 4
+		row += 1
+	return c
+
+
+## A brown rock face: a lit top edge, vertical cracks and darker earth patches, a shaded foot.
+static func _cliff(w: int, h: int) -> Array:
+	var c := PixelPlace.canvas(w, h)
+	PixelPlace.rect(c, 0, 0, w, h, "t")
+	PixelPlace.rect(c, 0, 0, w, mini(2, h), "W")
+	PixelPlace.rect(c, 0, h - 2, w, 2, "T")
+	var x := 3
+	while x < w - 2:
+		var len := 4 + (x * 7) % 9
+		PixelPlace.rect(c, x, 2 + (x * 5) % 6, 1, mini(len, h - 4), "T")
+		PixelPlace.rect(c, x + 5, 4 + (x * 3) % 7, 3, 2, "e")
+		x += 11
+	return c
+
+
+## Two-tone water with a light ripple row, a darker bank on the long edges.
+static func _stream(w: int, h: int) -> Array:
+	var c := PixelPlace.canvas(w, h)
+	PixelPlace.rect(c, 0, 0, w, h, "r")
+	if w >= h:
+		PixelPlace.rect(c, 0, 0, w, 1, "R")
+		PixelPlace.rect(c, 0, h - 1, w, 1, "R")
+		var y := 3
+		while y < h - 2:
+			var x := (y * 5) % 9
+			while x < w:
+				PixelPlace.rect(c, x, y, 4, 1, "h")
+				x += 11
+			y += 5
+	else:
+		PixelPlace.rect(c, 0, 0, 1, h, "R")
+		PixelPlace.rect(c, w - 1, 0, 1, h, "R")
+		var x := 3
+		while x < w - 2:
+			var y := (x * 5) % 9
+			while y < h:
+				PixelPlace.rect(c, x, y, 1, 4, "h")
+				y += 11
+			x += 5
 	return c

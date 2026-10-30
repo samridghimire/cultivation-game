@@ -41,6 +41,112 @@ static func cached(base: Color, seed_text: String, kind: String) -> ImageTexture
 	return _cache[key]
 
 
+## Which of the four grass variants (0 plain, 1 clover, 2 darker tuft patch, 3 flowers) the 16-px cell
+## (cx, cy) of region `rid` gets: about 70% plain so the lawn does not look noisy (GFX-026).
+static func variant_for(rid: String, cx: int, cy: int) -> int:
+	var roll := absi(hash("%s|%d|%d" % [rid, cx, cy])) % 100
+	if roll < 70:
+		return 0
+	if roll < 80:
+		return 1
+	if roll < 90:
+		return 2
+	return 3
+
+
+## One grass variant tile. Flowers only bloom when `flowers` is true (spring/summer); otherwise variant 3 is plain.
+static func make_variant(base: Color, rid: String, variant: int, flowers: bool) -> ImageTexture:
+	var img := make_tile(base, rid, "ground").get_image()
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash("%s|v%d" % [rid, variant])
+	match variant:
+		1:
+			var clover := base.darkened(0.2)
+			for i in 3:
+				var x := rng.randi_range(1, SIZE - 3)
+				var y := rng.randi_range(1, SIZE - 3)
+				img.fill_rect(Rect2i(x, y, 2, 2), clover)
+				img.set_pixel(x, y, base.lightened(0.22))
+		2:
+			var dark := base.darkened(0.1)
+			for y in SIZE:
+				for x in SIZE:
+					if rng.randf() < 0.55:
+						img.set_pixel(x, y, dark)
+			for i in 2:
+				var bx := rng.randi_range(0, SIZE - 1)
+				var by := rng.randi_range(0, SIZE - 2)
+				img.set_pixel(bx, by, base.lightened(0.2))
+				img.set_pixel(bx, by + 1, base.lightened(0.2))
+		3:
+			if flowers:
+				var blooms := [Color("f4efe0"), Color("f2d24b"), Color("e88aa8")]
+				for i in 3:
+					img.set_pixel(rng.randi_range(1, SIZE - 2), rng.randi_range(1, SIZE - 2), blooms[rng.randi() % blooms.size()])
+	return ImageTexture.create_from_image(img)
+
+
+## The whole ground of a region as one texture, 1 px per sprite pixel (the caller scales it): 16-px
+## cells picked by `variant_for`. Built once per region and season-bloom state, so `_draw()` stays cheap.
+static func ground_texture(base: Color, rid: String, size_px: Vector2i, flowers: bool) -> ImageTexture:
+	var key := "ground|%s|%s|%s|%s" % [base.to_html(), rid, size_px, flowers]
+	if _cache.has(key):
+		return _cache[key]
+	var img := Image.create(size_px.x, size_px.y, false, Image.FORMAT_RGBA8)
+	var variants: Array[Image] = []
+	for v in 4:
+		variants.append(make_variant(base, rid, v, flowers).get_image())
+	for cy in ceili(float(size_px.y) / SIZE):
+		for cx in ceili(float(size_px.x) / SIZE):
+			var src := variants[variant_for(rid, cx, cy)]
+			var w := mini(SIZE, size_px.x - cx * SIZE)
+			var h := mini(SIZE, size_px.y - cy * SIZE)
+			img.blit_rect(src, Rect2i(0, 0, w, h), Vector2i(cx * SIZE, cy * SIZE))
+	var tex := ImageTexture.create_from_image(img)
+	_cache[key] = tex
+	return tex
+
+
+## A path rectangle of `size_px` sprite pixels: the path tile with an irregular 2-3 px fringe along each
+## edge cut away (transparent, so the grass or a crossing path shows) and rounded corners.
+static func path_texture(base: Color, rid: String, size_px: Vector2i) -> ImageTexture:
+	var key := "pathrect|%s|%s|%s" % [base.to_html(), rid, size_px]
+	if _cache.has(key):
+		return _cache[key]
+	var w := maxi(size_px.x, 1)
+	var h := maxi(size_px.y, 1)
+	var tile := make_tile(base, rid, "path").get_image()
+	var img := Image.create(w, h, false, Image.FORMAT_RGBA8)
+	for y in h:
+		for x in w:
+			img.set_pixel(x, y, tile.get_pixel(x % SIZE, y % SIZE))
+	var clear := Color(0, 0, 0, 0)
+	for side in 4:
+		var length := w if side < 2 else h
+		for i in length:
+			var depth := 2 + absi(hash("%s|%d|%d|%d|%d" % [rid, side, i, w, h])) % 2
+			for d in depth:
+				match side:
+					0: img.set_pixel(i, d, clear)
+					1: img.set_pixel(i, h - 1 - d, clear)
+					2: img.set_pixel(d, i, clear)
+					_: img.set_pixel(w - 1 - d, i, clear)
+	# Rounded corners: clear what lies outside a quarter circle of radius 3 at each corner.
+	for corner in [Vector2i(0, 0), Vector2i(w - 1, 0), Vector2i(0, h - 1), Vector2i(w - 1, h - 1)]:
+		var sx := 1 if corner.x == 0 else -1
+		var sy := 1 if corner.y == 0 else -1
+		for dy in 4:
+			for dx in 4:
+				if Vector2(dx - 3, dy - 3).length() > 3.2:
+					var px: int = corner.x + sx * dx
+					var py: int = corner.y + sy * dy
+					if px >= 0 and py >= 0 and px < w and py < h:
+						img.set_pixel(px, py, clear)
+	var tex := ImageTexture.create_from_image(img)
+	_cache[key] = tex
+	return tex
+
+
 ## The darker outline colour drawn along path rectangles.
 static func edge_color(base: Color) -> Color:
 	return base.darkened(0.25)
