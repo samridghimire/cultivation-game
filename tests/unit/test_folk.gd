@@ -463,3 +463,34 @@ func test_tip_min_favor_is_below_where_chat_stops() -> void:
 	d.family["folk_tips"]["min_favor"] = int(d.family["acquaintance"]["chat_max_favor"])
 	assert_eq(Folk.validate_tips(d).size(), 1, "chat is refused at chat_max_favor, so a tip there could never come")
 	d.family["folk_tips"]["min_favor"] = old
+
+
+func test_gift_needs_favor_and_cooldown() -> void:
+	var c := new_character()
+	var npc := Npcs.spawn({}, data(), seeded_rng(5), {"age_years": 30, "region": "qingshi_village", "realm": "mortal"})
+	assert_true(Folk.gift(c, npc, 39, 100, data()).is_empty())
+	var g := Folk.gift(c, npc, 40, 100, data())
+	assert_true(data().items.has(g["item"]))
+	assert_true(String(g["text"]).contains(npc.name))
+	assert_false(String(g["text"]).contains("{"))
+	c.folk_gift_day[npc.id] = 100
+	assert_true(Folk.gift(c, npc, 90, 144, data()).is_empty())
+	assert_false(Folk.gift(c, npc, 90, 145, data()).is_empty())
+
+
+func test_gift_pick_is_deterministic_per_day() -> void:
+	var c := new_character()
+	var npc := Npcs.spawn({}, data(), seeded_rng(5), {"age_years": 30, "region": "qingshi_village", "realm": "mortal"})
+	assert_eq(Folk.gift(c, npc, 60, 200, data()), Folk.gift(c, npc, 60, 200, data()))
+	var seen := {}
+	for day in 60:
+		seen[Folk.gift(c, npc, 60, day, data())["item"]] = true
+	assert_true(seen.size() > 1)
+
+
+func test_gift_day_round_trips_through_save() -> void:
+	var c := new_character()
+	c.folk_gift_day["npc_x"] = 123
+	var back := CharacterData.from_dict(JSON.parse_string(JSON.stringify(c.to_dict())))
+	assert_eq(back.folk_gift_day, {"npc_x": 123})
+	assert_eq(CharacterData.from_dict({}).folk_gift_day, {})

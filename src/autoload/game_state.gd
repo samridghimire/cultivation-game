@@ -1378,6 +1378,7 @@ func greeting_for(npc_id: String) -> String:
 	var npc: CharacterData = npcs.get(npc_id)
 	if npc == null:
 		return ""
+	_receive_folk_gift(npc)
 	return Folk.greeting(npc, int(npc_favor.get(npc_id, 0)), GameClock.total_days, data).replace("{player}", player.name)
 
 
@@ -1417,6 +1418,15 @@ func attend_celebration(npc_id: String) -> void:
 	Alignment.shift(player, data, int(result["alignment"]))
 	EventBus.post(String(result["text"]).replace("{names}", " and ".join(names)), "progress")
 	_pass_time(int(result["days"]))
+
+## FOLK-002: a friendly villager hands over a small gift when you are greeted (once per cooldown).
+func _receive_folk_gift(npc: CharacterData) -> void:
+	var gift := Folk.gift(player, npc, int(npc_favor.get(npc.id, 0)), GameClock.total_days, data)
+	if gift.is_empty():
+		return
+	player.add_item(String(gift["item"]), int(gift["count"]))
+	player.folk_gift_day[npc.id] = GameClock.total_days
+	EventBus.post(String(gift["text"]), "progress")
 
 
 ## WORLD-005/006: the celebration a family event in the current region opens: {kind, ids}, kind "" for none.

@@ -132,6 +132,56 @@ static func validate_greetings(data: GameData) -> PackedStringArray:
 	return errors
 
 
+## FOLK-002: the gift `npc` presses on the player today, {item, count, text} (text has {villager}/{item}/{count}
+## filled), or {} when favor is below min_favor, the cooldown since their last gift (`c.folk_gift_day`) has not
+## passed, or no gifts are defined. The pick is a hash of npc id + day, weighted by `weight`; no rng.
+static func gift(c: CharacterData, npc: CharacterData, favor: int, day: int, data: GameData) -> Dictionary:
+	var rules: Dictionary = data.family.get("folk_gifts", {})
+	var gifts: Array = rules.get("gifts", [])
+	if gifts.is_empty() or favor < int(rules.get("min_favor", 40)):
+		return {}
+	if c.folk_gift_day.has(npc.id) and day - int(c.folk_gift_day[npc.id]) < int(rules.get("cooldown_days", 45)):
+		return {}
+	var total := 0
+	for g: Dictionary in gifts:
+		total += int(g.get("weight", 1))
+	var pick := absi(hash(npc.id + "|gift|" + str(day))) % maxi(total, 1)
+	for g: Dictionary in gifts:
+		pick -= int(g.get("weight", 1))
+		if pick < 0:
+			var count := int(g.get("count", 1))
+			var item := String(g["item"])
+			var text := String(g["text"]).replace(VILLAGER, npc.name).replace("{count}", str(count))
+			text = text.replace("{item}", Items.item_plural(data, item, count))
+			return {"item": item, "count": count, "text": text}
+	return {}
+
+
+## Load errors in family.json folk_gifts: ints, a non-empty gift list of known items with positive weight and count.
+static func validate_gifts(data: GameData) -> PackedStringArray:
+	var errors: PackedStringArray = []
+	var rules: Dictionary = data.family.get("folk_gifts", {})
+	if rules.is_empty():
+		return errors
+	if absi(int(rules.get("min_favor", 0))) > 100 or int(rules.get("cooldown_days", 0)) < 1:
+		errors.append("family.json folk_gifts needs min_favor -100..100 and cooldown_days >= 1")
+	if not (rules.get("gifts") is Array) or rules["gifts"].is_empty():
+		errors.append("family.json folk_gifts.gifts must be a non-empty list")
+		return errors
+	for i in rules["gifts"].size():
+		var g: Dictionary = rules["gifts"][i]
+		var where := "family.json folk_gifts gift %d" % i
+		if not data.items.is_empty() and not data.items.has(String(g.get("item", ""))):
+			errors.append("%s names unknown item %s" % [where, g.get("item", "?")])
+		if int(g.get("count", 0)) < 1 or int(g.get("weight", 0)) < 1:
+			errors.append("%s needs count >= 1 and weight >= 1" % where)
+		var text := String(g.get("text", ""))
+		for token: String in [VILLAGER, "{item}"]:
+			if not text.contains(token):
+				errors.append("%s text needs %s" % [where, token])
+	return errors
+
+
 static func request_rules(data: GameData) -> Dictionary:
 	return data.family.get("folk_requests", {})
 
@@ -217,6 +267,7 @@ static func validate(data: GameData) -> PackedStringArray:
 	errors.append_array(validate_requests(data))
 	errors.append_array(validate_celebrations(data))
 	errors.append_array(validate_tips(data))
+	errors.append_array(validate_gifts(data))
 	for e: Dictionary in data.encounters.values():
 		var blocks: Array = [[String(e["id"]), e.get("effects", {})]]
 		for i in e.get("choices", []).size():

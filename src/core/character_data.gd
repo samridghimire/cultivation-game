@@ -149,6 +149,8 @@ var letters: Array[String] = []
 var letter_day: int = -1
 ## Open requests made in letters (LETTER-003): {npc_id, item, count, until, favor, effects}.
 var letter_requests: Array[Dictionary] = []
+## World day each generated villager last gave the player a gift (FOLK-002): npc id -> day.
+var folk_gift_day: Dictionary = {}
 ## Friend's prices from letters (SHOP-001): region id -> {"mult": float, "until": int world day}.
 var shop_deals: Dictionary = {}
 ## Secret realm id -> {"opening": int, "floor": int}: floors cleared in that opening (see SecretRealms).
@@ -266,6 +268,7 @@ func to_dict() -> Dictionary:
 		"letters": letters.duplicate(),
 		"letter_day": letter_day,
 		"letter_requests": letter_requests.duplicate(true),
+		"folk_gift_day": folk_gift_day.duplicate(),
 		"shop_deals": shop_deals.duplicate(true),
 		"secret_realms": secret_realms.duplicate(true),
 		"inheritances": inheritances.duplicate(),
@@ -391,6 +394,7 @@ static func from_dict(d: Dictionary) -> CharacterData:
 	for letter in d.get("letters", []):
 		c.letters.append(String(letter))
 	c.letter_day = int(d.get("letter_day", -1))
+	c.folk_gift_day = _int_values(d.get("folk_gift_day", {}))
 	for req in d.get("letter_requests", []):
 		var entry: Dictionary = (req as Dictionary).duplicate(true)
 		for key: String in ["count", "until", "favor"]:

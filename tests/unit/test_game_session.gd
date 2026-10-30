@@ -2184,6 +2184,23 @@ func test_face_heart_vision_posts_and_shifts_odds() -> void:
 	gs.end_session()
 
 
+func test_greeting_for_hands_over_a_gift_once_per_cooldown() -> void:
+	var c := _start()
+	var gs := _game_state()
+	var npc := Npcs.spawn(gs.npcs, gs.data, seeded_rng(5), {"age_years": 30, "region": "qingshi_village", "realm": "mortal"})
+	gs.npc_favor[npc.id] = 39
+	var before := c.inventory.duplicate()
+	gs.greeting_for(npc.id)
+	assert_eq(c.inventory, before)
+	gs.npc_favor[npc.id] = 50
+	gs.greeting_for(npc.id)
+	assert_true(c.inventory != before)
+	assert_true(c.folk_gift_day.has(npc.id))
+	var after := c.inventory.duplicate()
+	gs.greeting_for(npc.id)
+	assert_eq(c.inventory, after)
+
+
 func test_greeting_for_reads_favor_and_fills_player_name() -> void:
 	var c := _start()
 	var gs := _game_state()
