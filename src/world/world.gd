@@ -49,6 +49,12 @@ var _merchant_spots: Array[Vector2] = []
 @onready var player: Player = $Player
 
 
+## WU-401: day each villager last greeted (npc id -> day), the bubble showing now, modal state.
+var _greeted: Dictionary = {}
+var _greet_bubble: Control = null
+var _greet_modal := false
+
+
 func _ready() -> void:
 	if not GameState.has_session():
 		GameState.rng.randomize()
@@ -79,7 +85,9 @@ func _ready() -> void:
 	if hud != null:
 		hud.hints_changed.connect(_mark_hinted.bind(hud))
 		_mark_hinted(hud)
-	EventBus.ui_modal_changed.connect(func(is_open: bool): player.input_enabled = not is_open)
+	EventBus.ui_modal_changed.connect(func(is_open: bool):
+		player.input_enabled = not is_open
+		_greet_modal = is_open)
 	EventBus.region_changed.connect(_on_region_changed)
 	get_tree().auto_accept_quit = false
 
@@ -379,6 +387,7 @@ func _process(_delta: float) -> void:
 	var moved := player != null and _last_label_pos.distance_to(player.position) > 8.0
 	if moved:
 		_last_label_pos = player.position
+		_check_greetings()
 		for node in get_children():
 			if node is Interactable:
 				(node as Interactable).refresh_label_alpha(player.position)
@@ -389,6 +398,26 @@ func _process(_delta: float) -> void:
 		if node is Interactable:
 			(node as Interactable).camera_moved()
 	_spread_on_screen()
+
+
+## WU-401: a nearby generated villager who has not greeted today says their line in a bubble.
+func _check_greetings() -> void:
+	var candidates: Array = []
+	for node in get_children():
+		if node is Interactable and node.get("npc_id") != null and not GameState.data.npcs.has(node.npc_id):
+			candidates.append({"id": node.npc_id, "pos": node.position})
+	var day := GameClock.total_days
+	var id := VillagerGreeting.pick(candidates, player.position, _greeted, day, _greet_modal, is_instance_valid(_greet_bubble))
+	if id == "":
+		return
+	_greeted[id] = day
+	var text := GameState.greeting_for(id)
+	if text == "":
+		return
+	for node in get_children():
+		if node is Interactable and node.get("npc_id") == id:
+			_greet_bubble = VillagerGreeting.show_bubble(node, node.size.y, text, Settings.get_value("reduce_motion"))
+			return
 
 
 ## Lifts labels that the screen-edge clamp pushed together (WU-281).
