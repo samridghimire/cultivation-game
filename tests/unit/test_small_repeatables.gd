@@ -80,4 +80,16 @@ func test_village_foundation_beats_fade_or_retire() -> void:
 	assert_false("village_name_the_newborn" in ids.call({"named_a_newborn": true}), "a child is named once")
 	assert_true("village_headman_petition" in ids.call({}), "the granary blessing is offered to a fresh Foundation player")
 	assert_false("village_headman_petition" in ids.call({"blessed_granary": true}), "a granary is blessed once")
-	assert_true(Exploration.fades(data().encounters["village_hopeful_youths"]))
+	assert_false("village_hopeful_youths" in ids.call({"met_hopeful_youths": true}), "the same two youths come once")
+
+
+func test_c265_repeats_rest_or_retire() -> void:
+	var rests := {"village_lost_coin": 60, "village_boar": 45, "city_pickpocket_caught": 90, "village_old_boxer_spar": 60, "village_drunk_bully": 90}
+	for id: String in rests:
+		assert_eq(int(data().encounters[id].get("rest_days", 0)), rests[id], "%s rest_days" % id)
+	var once := {"village_beast_at_the_fold": "met_fold_beast", "village_hopeful_youths": "met_hopeful_youths", "village_rogue_begs_pointers": "met_peak_rogue", "village_name_the_newborn": "named_a_newborn"}
+	for id: String in once:
+		var e: Dictionary = data().encounters[id]
+		assert_eq(String(e.get("blocked_by_flag", "")), once[id], "%s is retired by its flag" % id)
+		for ch: Dictionary in e["choices"]:
+			assert_eq(String(ch.get("effects", {}).get("set_flag", "")), once[id], "%s: every choice sets the flag" % id)
