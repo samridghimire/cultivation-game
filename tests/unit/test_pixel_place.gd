@@ -5,12 +5,16 @@ const MAP := {"merchant": "merchant", "workshop": "workshop", "sect_hall": "sect
 	"orphanage": "orphanage", "bounty_board": "bounty_board", "travel": "travel", "auction": "auction"}
 
 
+func _all_kinds() -> Array:
+	return PixelPlace.KINDS + PixelPlace.NATURE_KINDS
+
+
 func _variants(kind: String) -> Array:
 	return [true, false] if kind == "travel" else [true]
 
 
 func test_templates_are_well_formed() -> void:
-	for kind in PixelPlace.KINDS:
+	for kind in _all_kinds():
 		for horizontal in _variants(kind):
 			var r := PixelPlace.rows(kind, horizontal)
 			assert_true(r.size() > 8, kind + " has rows")
@@ -24,7 +28,9 @@ func test_supports() -> void:
 	for kind in PixelPlace.KINDS:
 		assert_true(PixelPlace.supports(kind), kind)
 	assert_eq(PixelPlace.KINDS.size(), 9)
-	assert_false(PixelPlace.supports("meditation"))
+	for kind in PixelPlace.NATURE_KINDS:
+		assert_true(PixelPlace.supports(kind), kind)
+	assert_false(PixelPlace.supports("fishing"))
 	assert_false(PixelPlace.supports("deed_giver"))
 
 
@@ -55,7 +61,7 @@ func test_cache_and_colour() -> void:
 
 
 func test_outline_first_pixel() -> void:
-	for kind in PixelPlace.KINDS:
+	for kind in _all_kinds():
 		for horizontal in _variants(kind):
 			var size := Vector2(120, 40) if horizontal else Vector2(40, 120)
 			var img := PixelPlace.texture(kind, size, Color("aa4433")).get_image()
@@ -65,3 +71,33 @@ func test_outline_first_pixel() -> void:
 					if not found and img.get_pixel(x, y).a > 0.0:
 						found = true
 						assert_eq(img.get_pixel(x, y), PixelPlace.OUTLINE, kind + " outline")
+
+
+func test_secret_realm_active_differs() -> void:
+	var off := PixelPlace.texture("secret_realm", Vector2(90, 70), Color("7755cc"), false)
+	var on := PixelPlace.texture("secret_realm", Vector2(90, 70), Color("7755cc"), true)
+	assert_true(off.get_image().get_data() != on.get_image().get_data(), "active rift looks different")
+
+
+func test_landmarks_well_formed_and_cached() -> void:
+	for kind in PixelLandmark.KINDS:
+		var size := Vector2(160, 60)
+		var r := PixelLandmark.rows(kind, size)
+		assert_true(r.size() > 0, kind)
+		for row in r:
+			assert_eq(row.length(), r[0].length(), kind + " row width")
+			for ch in row:
+				assert_true(PixelPlace.PALETTE.contains(ch), "%s unknown char %s" % [kind, ch])
+		assert_true(PixelLandmark.texture(kind, size) == PixelLandmark.texture(kind, size), kind + " cached")
+	assert_false(PixelLandmark.supports("wall"))
+
+
+func test_landmarks_fit_data() -> void:
+	var scale := float(Sprites.scale())
+	for region: Dictionary in data().regions.values():
+		for lm: Dictionary in region.get("map", {}).get("landmarks", []):
+			if not PixelLandmark.supports(lm["kind"]):
+				continue
+			var size := Vector2(lm["size"][0], lm["size"][1])
+			var px := Vector2(PixelLandmark.texture(lm["kind"], size).get_size()) * scale
+			assert_true(px.x <= size.x + 8.0 and px.y <= size.y + 8.0, "%s %s: %s vs %s" % [region.get("id", "?"), lm["kind"], px, size])

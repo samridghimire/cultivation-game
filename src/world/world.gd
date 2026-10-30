@@ -531,6 +531,12 @@ func _draw_landmark(lm: Dictionary) -> void:
 	if tex != null:
 		draw_texture_rect(tex, r, false)
 		return
+	if PixelLandmark.supports(str(lm["kind"])):
+		var water := Color(str(lm["color"])) if lm.has("color") else Color("3f7fa8")
+		var ptex := PixelLandmark.texture(str(lm["kind"]), size, water)
+		var px := Vector2(ptex.get_size()) * float(Sprites.scale())
+		draw_texture_rect(ptex, Rect2(Vector2(r.get_center().x - px.x / 2.0, r.end.y - px.y), px), false)
+		return
 	match lm["kind"]:
 		"house":
 			var roof_h := r.size.y * 0.55
