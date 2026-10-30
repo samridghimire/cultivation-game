@@ -17,6 +17,13 @@ const STONE := Color("8d8a82")
 
 static func draw(ci: CanvasItem, kind: String, size: Vector2, color: Color, active: bool = false) -> void:
 	var h := size / 2.0
+	# GFX-021: PixelPlace kinds are drawn as pixel art, base on the place rect's lower edge (the vector
+	# functions below for those kinds are unused while PixelPlace supports them).
+	if PixelPlace.supports(kind):
+		var tex := PixelPlace.texture(kind, size, color)
+		var px := Vector2(tex.get_size()) * float(Sprites.scale())
+		ci.draw_texture_rect(tex, Rect2(Vector2(-px.x / 2.0, h.y - px.y), px), false)
+		return
 	match kind:
 		"meditation":
 			_meditation(ci, h, color)
