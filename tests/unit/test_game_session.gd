@@ -2455,6 +2455,27 @@ func test_settle_quarrel_mediate_and_extort() -> void:
 	assert_eq(int(gs.npc_favor[b.id]), -6 - 8)
 
 
+func test_settling_a_quarrel_leaves_a_mark() -> void:
+	var c := _start()
+	var gs := _game_state()
+	var a := Npcs.spawn(gs.npcs, gs.data, seeded_rng(5), {"age_years": 30, "region": "qingshi_village", "realm": "mortal"})
+	var b := Npcs.spawn(gs.npcs, gs.data, seeded_rng(6), {"age_years": 40, "region": "qingshi_village", "realm": "mortal"})
+	var key := Folk.quarrel_flag(gs.current_region)
+	var mark_key := Folk.mark_flag(gs.current_region)
+	gs.world_flags[key] = {"a": a.id, "b": b.id, "topic": "rice_debt", "until": GameClock.total_days + 10}
+	gs.settle_quarrel(a.id, "side_a")
+	assert_eq(String(gs.world_flags[mark_key]["loser"]), b.id)
+	assert_true(gs.together_places().is_empty())
+	c.attributes["charisma"] = 1000
+	gs.rng.seed = 1
+	gs.world_flags[key] = {"a": a.id, "b": b.id, "topic": "rice_debt", "until": GameClock.total_days + 10}
+	gs.settle_quarrel(a.id, "mediate")
+	if gs.world_flags[mark_key]["choice"] == "mediate":
+		assert_eq(gs.together_places().size(), 2)
+	else:
+		assert_eq(String(gs.world_flags[mark_key]["choice"]), "side_a", "a failed mediation leaves the old mark")
+
+
 func test_friend_joins_the_fight() -> void:
 	var c := _start()
 	var gs := _game_state()

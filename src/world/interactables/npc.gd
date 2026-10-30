@@ -654,7 +654,7 @@ func _activity_text(npc: CharacterData) -> String:
 	var visit := GameState.visit_place_for(npc.id)
 	if not visit.is_empty():
 		return "here to see how you are"
-	var place := Npcs.haunt_place(npc, region, GameClock.total_days, adult, weather)
+	var place: Dictionary = GameState.together_places().get(npc.id, Npcs.haunt_place(npc, region, GameClock.total_days, adult, weather))
 	var shelter := weather if Npcs.is_sheltering(npc, region, GameClock.total_days, adult, weather) else ""
 	return Npcs.activity_line(npc, place, shelter)
 

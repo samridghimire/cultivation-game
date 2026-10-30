@@ -99,6 +99,9 @@ static func greeting(npc: CharacterData, favor: int, day: int, data: GameData, f
 	var party: Array = bands.get("celebration", {}).get(celebration_kind(flags, npc.id), [])
 	if celebration_open(flags, npc.id, day) and not party.is_empty():
 		return String(party[absi(hash(npc.id + str(day))) % party.size()])
+	var shunned: Array = bands.get("shunned", [])
+	if not shunned.is_empty() and shunned_by_mark(flags, npc.id, day):
+		return String(shunned[absi(hash(npc.id + str(day))) % shunned.size()])
 	var band: Dictionary = {}
 	if favor >= int(bands.get("warm", {}).get("min_favor", 1000)):
 		band = bands["warm"]
@@ -710,6 +713,7 @@ static func monthly_quarrel(c: CharacterData, npcs: Dictionary, data: GameData, 
 	if not open_quarrel(flags, region_id, today).is_empty():
 		return {}
 	flags.erase(quarrel_flag(region_id))
+	expire_mark(flags, region_id, today)
 	if rng.randf() >= float(r.get("chance", 0.0)):
 		return {}
 	var pool := candidates(npcs, data, c, region_id)
@@ -820,9 +824,81 @@ static func validate_quarrels(data: GameData) -> PackedStringArray:
 		errors.append("family.json folk_quarrels mediate.check needs a known attribute and target >= 1")
 	if int(o["mediate"].get("fail_favor", 1)) > 0:
 		errors.append("family.json folk_quarrels mediate.fail_favor must be <= 0")
+	if int(r.get("mark_days", 1)) < 1:
+		errors.append("family.json folk_quarrels.mark_days must be >= 1")
 	if int(o["extort"].get("stones", -1)) < 0:
 		errors.append("family.json folk_quarrels extort.stones must be >= 0")
 	return errors
+
+
+# --- FOLK-006: quarrels leave marks for a season ---
+
+const QUARREL_MARK_PREFIX := "quarrel_mark_"
+
+
+static func mark_flag(region_id: String) -> String:
+	return QUARREL_MARK_PREFIX + region_id
+
+
+## Stores how the quarrel `q` was settled (`choice`) in `region_id`'s mark flag for `marks_days` (folk_quarrels.mark_days):
+## {choice, a, b, until}. For side_a/side_b `loser` is the villager turned cold. A new mark replaces the old one.
+static func record_mark(data: GameData, flags: Dictionary, region_id: String, q: Dictionary, choice: String, today: int) -> void:
+	var days := int(quarrel_rules(data).get("mark_days", 0))
+	if days < 1 or region_id == "":
+		return
+	var mark := {"choice": choice, "a": String(q["a"]), "b": String(q["b"]), "until": today + days}
+	if choice == "side_a":
+		mark["loser"] = String(q["b"])
+	elif choice == "side_b":
+		mark["loser"] = String(q["a"])
+	flags[mark_flag(region_id)] = mark
+
+
+## The mark of `region_id` still in force on `today` ({} when none or it has run out).
+static func active_mark(flags: Dictionary, region_id: String, today: int) -> Dictionary:
+	var m: Variant = flags.get(mark_flag(region_id))
+	if m is Dictionary and int(m.get("until", -1)) >= today:
+		return m
+	return {}
+
+
+## Whether a mark in force makes `npc_id` greet you coldly (you sided against them).
+static func shunned_by_mark(flags: Dictionary, npc_id: String, today: int) -> bool:
+	for key: Variant in flags:
+		if String(key).begins_with(QUARREL_MARK_PREFIX):
+			var m: Dictionary = active_mark(flags, String(key).substr(QUARREL_MARK_PREFIX.length()), today)
+			if String(m.get("loser", "")) == npc_id:
+				return true
+	return false
+
+
+## Whether `region_id` has a mark of `choice` in force (an unknown `today` < 0 counts any stored mark).
+static func has_mark(flags: Dictionary, region_id: String, choice: String, today: int) -> bool:
+	var m: Variant = flags.get(mark_flag(region_id))
+	if not (m is Dictionary) or String(m.get("choice", "")) != choice:
+		return false
+	return today < 0 or int(m.get("until", -1)) >= today
+
+
+## Mediated villagers are seen together: both stand at the first one's haunt place. {npc id: place} (empty without
+## an active mediate mark or when the pair is not in `region`). `adult_age` decides their haunt anchors.
+static func together_places(npcs: Dictionary, flags: Dictionary, region_id: String, region: Dictionary, today: int, weather: String) -> Dictionary:
+	var m := active_mark(flags, region_id, today)
+	if String(m.get("choice", "")) != "mediate":
+		return {}
+	var a: CharacterData = npcs.get(String(m["a"]))
+	if a == null or not a.alive or not npcs.has(String(m["b"])) or not npcs[String(m["b"])].alive:
+		return {}
+	var place := Npcs.haunt_place(a, region, today, true, weather)
+	if place.is_empty():
+		return {}
+	return {String(m["a"]): place, String(m["b"]): place}
+
+
+## Clears the mark of `region_id` once it has run out.
+static func expire_mark(flags: Dictionary, region_id: String, today: int) -> void:
+	if flags.has(mark_flag(region_id)) and active_mark(flags, region_id, today).is_empty():
+		flags.erase(mark_flag(region_id))
 
 
 # --- A friend at your side (FOLK-005) ---

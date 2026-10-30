@@ -785,3 +785,63 @@ func test_companion_strike_and_validation() -> void:
 	data().family["folk_companions"]["blows"] = 0
 	assert_eq(Folk.validate_companions(data()).size(), 2)
 	data().family["folk_companions"] = saved
+
+
+func test_quarrel_marks_record_expire_and_shun() -> void:
+	var d := data()
+	var flags := {}
+	var q := {"a": "x", "b": "y", "topic": "rice_debt", "until": 200}
+	Folk.record_mark(d, flags, "qingshi_village", q, "side_a", 100)
+	var mark := Folk.active_mark(flags, "qingshi_village", 100)
+	assert_eq(String(mark["loser"]), "y")
+	assert_eq(int(mark["until"]), 100 + int(d.family["folk_quarrels"]["mark_days"]))
+	assert_true(Folk.shunned_by_mark(flags, "y", 110))
+	assert_false(Folk.shunned_by_mark(flags, "x", 110))
+	assert_false(Folk.shunned_by_mark(flags, "y", 131), "expired")
+	Folk.record_mark(d, flags, "qingshi_village", q, "side_b", 100)
+	assert_eq(String(Folk.active_mark(flags, "qingshi_village", 100)["loser"]), "x")
+	Folk.expire_mark(flags, "qingshi_village", 110)
+	assert_true(flags.has("quarrel_mark_qingshi_village"))
+	Folk.expire_mark(flags, "qingshi_village", 131)
+	assert_false(flags.has("quarrel_mark_qingshi_village"), "expiry clears the flag")
+
+
+func test_shunned_villager_greets_coldly() -> void:
+	var d := data()
+	var npc := new_character()
+	npc.id = "y"
+	var flags := {}
+	Folk.record_mark(d, flags, "qingshi_village", {"a": "x", "b": "y"}, "side_a", 10)
+	var line := Folk.greeting(npc, 50, 11, d, flags)
+	assert_true(d.family["folk_greetings"]["shunned"].has(line), line)
+	assert_false(d.family["folk_greetings"]["warm"]["lines"].has(line), "cold beats warm")
+	assert_false(d.family["folk_greetings"]["shunned"].has(Folk.greeting(npc, 50, 50, d, flags)), "after the season")
+
+
+func test_mediated_pair_is_seen_together_for_the_season() -> void:
+	var d := data()
+	var npcs := {}
+	var a := Npcs.spawn(npcs, d, seeded_rng(5), {"age_years": 30, "region": "qingshi_village", "realm": "mortal"})
+	var b := Npcs.spawn(npcs, d, seeded_rng(6), {"age_years": 40, "region": "qingshi_village", "realm": "mortal"})
+	var flags := {}
+	var region: Dictionary = d.regions["qingshi_village"]
+	assert_true(Folk.together_places(npcs, flags, "qingshi_village", region, 10, "").is_empty())
+	Folk.record_mark(d, flags, "qingshi_village", {"a": a.id, "b": b.id}, "mediate", 10)
+	var places := Folk.together_places(npcs, flags, "qingshi_village", region, 11, "")
+	assert_eq(places.size(), 2)
+	assert_eq(places[a.id], places[b.id])
+	assert_true(Folk.together_places(npcs, flags, "qingshi_village", region, 41, "").is_empty(), "expired")
+	Folk.record_mark(d, flags, "qingshi_village", {"a": a.id, "b": b.id}, "extort", 10)
+	assert_true(Folk.together_places(npcs, flags, "qingshi_village", region, 11, "").is_empty(), "extort does not unite")
+
+
+func test_extort_mark_starts_a_rumor_until_it_expires() -> void:
+	var d := data()
+	var c := new_character()
+	var flags := {}
+	var q := {"a": "x", "b": "y"}
+	assert_false(Rumors.eligible(c, d, flags, "qingshi_village", 10).has("takes_coin_to_settle"))
+	Folk.record_mark(d, flags, "qingshi_village", q, "extort", 10)
+	assert_true(Rumors.eligible(c, d, flags, "qingshi_village", 11).has("takes_coin_to_settle"))
+	assert_false(Rumors.eligible(c, d, flags, "misty_forest", 11).has("takes_coin_to_settle"), "only where it happened")
+	assert_false(Rumors.eligible(c, d, flags, "qingshi_village", 41).has("takes_coin_to_settle"))

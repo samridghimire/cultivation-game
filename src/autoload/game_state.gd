@@ -1443,6 +1443,14 @@ func visit_place_for(npc_id: String) -> Dictionary:
 	return Npcs.visit_place_of(data.regions.get(current_region, {}), FamilyHome.has_home(player, npcs, data, current_region))
 
 
+## FOLK-006: where villagers made friends by your mediation stand today (npc id -> place; empty when no mark).
+func together_places() -> Dictionary:
+	if player == null:
+		return {}
+	var day := GameClock.total_days
+	return Folk.together_places(npcs, world_flags, current_region, data.regions.get(current_region, {}), day, Weather.of(data, current_region, day))
+
+
 ## WORLD-007: why you cannot share tea with `npc_id` now ("" when you can).
 func check_tea(npc_id: String) -> String:
 	if npc_id == "" or npc_id != visitor_today():
@@ -1534,6 +1542,8 @@ func settle_quarrel(npc_id: String, choice: String) -> Dictionary:
 		player.add_item("spirit_stone", int(result["stones"]))
 		notes.append("+%d spirit stones" % int(result["stones"]))
 	world_flags.erase(Folk.quarrel_flag(current_region))
+	if bool(result["ok"]):
+		Folk.record_mark(data, world_flags, current_region, q, choice, GameClock.total_days)
 	var a: String = npcs[q["a"]].name
 	var b: String = npcs[q["b"]].name
 	var line := ""

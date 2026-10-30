@@ -16,6 +16,8 @@ static func eligible(c: CharacterData, data: GameData, flags: Dictionary, region
 			continue
 		if r.has("blocked_by_flag") and flags.get(String(r["blocked_by_flag"]), false):
 			continue
+		if r.has("requires_quarrel_mark") and not Folk.has_mark(flags, String(r.get("region", region_id)), String(r["requires_quarrel_mark"]), today):
+			continue
 		if _place_found(c, data, flags, r, today):
 			continue
 		ids.append(String(r["id"]))

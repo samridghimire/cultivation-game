@@ -384,13 +384,13 @@ static func haunt(npc: CharacterData, region: Dictionary, day: int, adult: bool 
 ## Positions for `people` (all living in one region, any order) on `day`: like
 ## `haunt`, but villagers sharing a place stand at least HAUNT_SPACING apart
 ## (placed in id order, so the result is stable). Returns id -> Vector2 (WORLD-004).
-static func haunt_positions(people: Array[CharacterData], region: Dictionary, day: int, adult_age: int, weather: String = "", visitor_id: String = "", visit_place: Dictionary = {}) -> Dictionary:
+static func haunt_positions(people: Array[CharacterData], region: Dictionary, day: int, adult_age: int, weather: String = "", visitor_id: String = "", visit_place: Dictionary = {}, shared: Dictionary = {}) -> Dictionary:
 	var sorted := people.duplicate()
 	sorted.sort_custom(func(a: CharacterData, b: CharacterData) -> bool: return a.id.naturalnocasecmp_to(b.id) < 0)
 	var placed: Array[Vector2] = []
 	var out := {}
 	for c: CharacterData in sorted:
-		var pos := _haunt_at(c, region, day, c.age_years() >= adult_age, weather, placed, visit_place if c.id == visitor_id else {})
+		var pos := _haunt_at(c, region, day, c.age_years() >= adult_age, weather, placed, visit_place if c.id == visitor_id else shared.get(c.id, {}))
 		placed.append(pos)
 		out[c.id] = pos
 	return out
