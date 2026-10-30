@@ -16,8 +16,8 @@ const PRESETS := {
 	"fireflies": {"amount": 20, "color": Color(0.95, 1.0, 0.45, 0.7), "gravity": Vector2.ZERO, "speed": 12.0, "size": 2.5, "lifetime": 7.0},
 }
 
-## Weather presets (WU-399), not region-selectable: rain is drawn as 1x4 streaks, fog as sheets.
-const RAIN := {"amount": 300, "color": Color(0.75, 0.85, 1.0, 0.9), "gravity": Vector2(70, 420), "speed": 40.0, "size": 1.0, "lifetime": 2.5}
+## Weather presets (WU-399), not region-selectable: rain is drawn as 1x5 streaks, fog as sheets.
+const RAIN := {"amount": 300, "color": Color("c8d8f0", 0.7), "gravity": Vector2(70, 420), "speed": 40.0, "size": 1.0, "lifetime": 2.5}
 const CLOUDY_TINT := Color(0.9, 0.9, 0.9)
 const FOG_SHEETS := 2
 
@@ -42,7 +42,7 @@ static func replaces_season(kind: String) -> bool:
 	return kind == "rain" or kind == "snow" or kind == "fog"
 
 
-## Rain: a CPUParticles2D of slanted 1x4 px streaks over `area`.
+## Rain: a CPUParticles2D of slanted 1x5 px streaks over `area`.
 static func make_rain(area: Vector2) -> CPUParticles2D:
 	var p := make_emitter("snow", area)
 	p.name = "Rain"
@@ -55,7 +55,7 @@ static func make_rain(area: Vector2) -> CPUParticles2D:
 	p.scale_amount_min = 1.0
 	p.scale_amount_max = 1.0
 	p.color = RAIN["color"]
-	var img := Image.create(1, 4, false, Image.FORMAT_RGBA8)
+	var img := Image.create(1, 5, false, Image.FORMAT_RGBA8)
 	img.fill(Color.WHITE)
 	p.texture = ImageTexture.create_from_image(img)
 	p.particle_flag_align_y = true

@@ -2,13 +2,14 @@ class_name DuelStage
 extends Control
 ## The two fighters above the fight report's hp bars (WU-396). The player stands on the
 ## left, the foe on the right; `blow()` lunges the striker and flashes the struck one,
-## `show_end_pose()` leaves the loser dimmed and toppled. Placeholder art drawn in _draw().
+## `show_end_pose()` leaves the loser darkened and lying down. Placeholder art drawn in _draw().
 
 const LUNGE := 24.0
 const LUNGE_SECONDS := 0.12
 const FOE_ROBE := Color("3a2f3d")
 const FOE_SASH := Color("7a2a2a")
 const BEAST_FURS := {"wolf": Color("8a8d92"), "boar": Color("3b3028"), "tiger": Color("b5652a"), "fox": Color("b5652a")}
+const FALLEN_DARKEN := 0.3
 const DEFAULT_FUR := Color("6b5a48")
 
 var _foe_beast: bool = false
@@ -19,6 +20,7 @@ var _shake: Array[float] = [0.0, 0.0]
 var _flash: Array[float] = [0.0, 0.0]
 var _alpha: Array[float] = [1.0, 1.0]
 var _tilt: Array[float] = [0.0, 0.0]
+var _dark: Array[float] = [0.0, 0.0]  # 0..1 darkening of a fallen fighter
 var _tween: Tween
 var _stage_shake_start := -1.0  # ticks (s) when the heavy-hit shake began
 
@@ -61,6 +63,7 @@ func reset_pose() -> void:
 	_flash = [0.0, 0.0]
 	_alpha = [1.0, 1.0]
 	_tilt = [0.0, 0.0]
+	_dark = [0.0, 0.0]
 	_stage_shake_start = -1.0
 	queue_redraw()
 
@@ -104,14 +107,25 @@ func _set_shake(v: float, who: int) -> void:
 	queue_redraw()
 
 
-## The end pose: the loser at 40% alpha and toppled; on a friendly spar both stand.
+## The end pose: the loser lies on its side at full alpha, darkened 30%; on a friendly spar both stand.
 func show_end_pose(victory: bool, friendly: bool) -> void:
 	reset_pose()
 	if not friendly:
 		var loser := 1 if victory else 0
-		_alpha[loser] = 0.4
-		_tilt[loser] = PI / 2.0
+		_dark[loser] = FALLEN_DARKEN
+		_tilt[loser] = toppled_tilt(loser == 1 and _foe_beast)
 	queue_redraw()
+
+
+## The loser's tilt: a person falls over (90 degrees); a four-legged beast is already horizontal,
+## so it rolls onto its back (180 degrees).
+static func toppled_tilt(beast: bool) -> float:
+	return PI if beast else PI / 2.0
+
+
+## The tilt of a fighter, for tests: 0 = player, 1 = foe.
+func tilt_of(who: int) -> float:
+	return _tilt[who]
 
 
 ## The fur colour of a beast by id: grey wolves, dark boars, rust tigers and foxes, brown otherwise.
@@ -135,6 +149,11 @@ func _pixel_texture(who: int) -> Texture2D:
 		if GameState.player != null and GameState.data != null:
 			look = PlayerLook.of(GameState.player, GameState.data)
 	return PixelFigure.frame(look, "right", step)
+
+
+## How dark a fighter is drawn (0 = normal), for tests: 0 = player, 1 = foe.
+func dark_of(who: int) -> float:
+	return _dark[who]
 
 
 ## The loser's alpha, for tests: 0 = player, 1 = foe.
@@ -161,8 +180,10 @@ func _draw_fighter(who: int, feet: Vector2) -> void:
 	var jitter := _shake[who] * sin(Time.get_ticks_msec() * 0.09)
 	var pos := feet + Vector2(_offset[who] + jitter, 0.0)
 	var tex: Texture2D = _foe_texture if who == 1 else Sprites.texture("player_right")
-	var tint := Color(1, 1, 1, _alpha[who]).lerp(Color(3, 3, 3, _alpha[who]), _flash[who])
-	draw_set_transform(pos, _tilt[who] * (-1.0 if who == 1 else 1.0), Vector2.ONE)
+	var base := 1.0 - _dark[who]
+	var tint := Color(base, base, base, _alpha[who]).lerp(Color(3, 3, 3, _alpha[who]), _flash[who])
+	var on_back := is_equal_approx(_tilt[who], PI)  # a beast rolled onto its back: flipped, not rotated
+	draw_set_transform(pos, 0.0 if on_back else _tilt[who] * (-1.0 if who == 1 else 1.0), Vector2.ONE)
 	var generated := tex == null
 	if generated:
 		tex = _pixel_texture(who)
@@ -170,6 +191,8 @@ func _draw_fighter(who: int, feet: Vector2) -> void:
 		var z := 3.0 if generated else float(Sprites.scale()) * 2.0
 		var w := tex.get_width() * z
 		var h := tex.get_height() * z
+		if on_back:
+			draw_set_transform(pos + Vector2(0.0, -h), 0.0, Vector2(1.0, -1.0))
 		if generated and who == 1:  # the foe faces left: a negative width mirrors the texture
 			draw_texture_rect(tex, Rect2(Vector2(w / 2.0, -h), Vector2(-w, h)), false, tint)
 		else:

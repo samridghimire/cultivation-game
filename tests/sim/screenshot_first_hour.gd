@@ -6,6 +6,7 @@ extends SceneTree
 ## WU-218: append `-- --crafter` for a new Alchemist's first hour (workshop, hint, gather site, crafting,
 ## journal Commissions, Deliver) as crafter_*.png.
 ## WU-223: append `-- --gather-note` for the Village Herb Slope menu in each season: gather_note_<season>.png.
+## append `-- --fight=cultivator` for combat_report_cultivator.png (GFX-020).
 ## PNGs go to user://screenshots/first_hour/<name>.png. Never writes saves.
 ## (The mid-game sibling is screenshot_screens.gd.)
 
@@ -73,15 +74,23 @@ func _start() -> void:
 	var report: Control = hud.get("_combat_report")
 	# A real fight through GameState.fight (WU-181): the boar is rated and resolved
 	# like in play; seed 11 is a newcomer win. The HUD opens the report itself.
-	shots.append({"name": "combat_report", "open": func() -> void:
+	shots.append({"name": "combat_report" + ("_cultivator" if _fight_foe() != "wild_boar" else ""), "open": func() -> void:
 		gs.rng.seed = 11
-		gs.fight("wild_boar")
+		gs.fight(_fight_foe())
 		report.skip(),  # WU-262: close() refuses while the playback runs, so the report covered later shots
 		"close": report.close})
 	for action: String in ["toggle_journal", "toggle_inventory", "toggle_character_sheet"]:
 		if hud.get("_screens").has(action):
 			var s: Control = hud.get("_screens")[action]
 			shots.append({"name": action.trim_prefix("toggle_"), "open": s.open, "close": s.close, "wait_banner": true})
+
+
+## `--fight=beast|cultivator` picks the combat_report foe (default: the boar).
+func _fight_foe() -> String:
+	for arg in OS.get_cmdline_user_args():
+		if arg == "--fight=cultivator":
+			return "rogue_cultivator"
+	return "wild_boar"
 
 
 ## The node under the world whose script file ends with `script_name` (for a gather site, one whose

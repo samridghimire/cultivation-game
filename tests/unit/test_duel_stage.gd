@@ -24,11 +24,19 @@ func test_skip_dims_the_loser() -> void:
 	assert_true(r._stage.visible)
 	r.skip()
 	assert_eq(r._stage.alpha_of(0), 1.0)
-	assert_eq(r._stage.alpha_of(1), 0.4)
+	assert_eq(r._stage.alpha_of(1), 1.0)
+	assert_eq(r._stage.dark_of(1), 0.3)
+	assert_eq(r._stage.dark_of(0), 0.0)
 	r.show_fight("Foe", false, PackedStringArray(LINES), "", PackedStringArray(), TRACE, 20, 10)
 	r.skip()
-	assert_eq(r._stage.alpha_of(0), 0.4)
+	assert_eq(r._stage.alpha_of(0), 1.0)
+	assert_eq(r._stage.dark_of(0), 0.3)
 	r.queue_free()
+
+
+func test_toppled_tilt_depends_on_body() -> void:
+	assert_eq(DuelStage.toppled_tilt(false), PI / 2.0)
+	assert_eq(DuelStage.toppled_tilt(true), PI)
 
 
 func test_no_trace_hides_stage() -> void:
@@ -44,6 +52,7 @@ func test_friendly_spar_leaves_both_standing() -> void:
 	r.skip()
 	assert_eq(r._stage.alpha_of(0), 1.0)
 	assert_eq(r._stage.alpha_of(1), 1.0)
+	assert_eq(r._stage.dark_of(1), 0.0)
 	r.queue_free()
 
 

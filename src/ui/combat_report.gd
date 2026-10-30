@@ -95,6 +95,11 @@ func _make_bar(parent: Control, caption: String, color: Color) -> ProgressBar:
 	var fill := StyleBoxFlat.new()
 	fill.bg_color = color
 	bar.add_theme_stylebox_override("fill", fill)
+	var track := StyleBoxFlat.new()  # visible when empty, so the loser's bar still shows
+	track.bg_color = Color(0.2, 0.2, 0.26)
+	track.set_border_width_all(1)
+	track.border_color = Color(0.45, 0.45, 0.55)
+	bar.add_theme_stylebox_override("background", track)
 	bar.set_meta("caption", caption)
 	parent.add_child(bar)
 	return bar

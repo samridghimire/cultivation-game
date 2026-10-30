@@ -70,6 +70,8 @@ func test_weather_plan_maps_kind_to_preset() -> void:
 func test_rain_and_fog_nodes_build() -> void:
 	var rain := Ambient.make_rain(Vector2(1600, 1000))
 	assert_true(rain.amount <= 300)
+	assert_eq(rain.texture.get_size(), Vector2(1, 5))
+	assert_eq(rain.color, Color("c8d8f0", 0.7))
 	rain.free()
 	var fog := Ambient.make_fog(Vector2(1600, 1000), false)
 	assert_eq(fog.get_child_count(), Ambient.FOG_SHEETS)
