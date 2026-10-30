@@ -125,3 +125,25 @@ func test_contribution_line() -> void:
 	assert_eq(CharacterSheet.contribution_line(c), "")
 	c.sect = {"id": "azure_cloud", "rank": 1, "contribution": 7773, "spent": 1000}
 	assert_eq(CharacterSheet.contribution_line(c), "Contribution: 6773 to spend (lifetime 7773)")
+
+
+## GFX-024: the left column shows one root bar per element with the character's values.
+func test_root_bars_and_portrait() -> void:
+	var gs := _game_state()
+	var c := CharacterFactory.create("Han Li", gs.data, seeded_rng(81), "male")
+	gs.start_session(c)
+	var sheet := CharacterSheet.new()
+	(Engine.get_main_loop() as SceneTree).root.add_child(sheet)
+	sheet.open()
+	var rows := CharacterSheet.root_rows(c.spiritual_roots, gs.data)
+	assert_eq(rows.size(), gs.data.root_elements.size())
+	assert_eq(sheet._root_box.get_child_count(), rows.size())
+	for row in rows:
+		assert_eq(row["value"], int(c.spiritual_roots.get(row["id"], 0)))
+		var bar := sheet._root_box.get_node("root_" + String(row["id"])).get_child(1) as ProgressBar
+		assert_eq(int(bar.value), row["value"])
+	assert_true(sheet._portrait.texture != null, "portrait drawn")
+	assert_eq(sheet._name_label.text, c.name)
+	assert_false(sheet._text.get_parsed_text().contains("Spiritual Root:"), "moved to the bars")
+	sheet.free()
+	gs.end_session()

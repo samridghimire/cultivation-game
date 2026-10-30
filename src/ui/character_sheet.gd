@@ -11,8 +11,21 @@ signal closed
 ## Tallest the text area may grow before it scrolls, so the sheet fits 1280x800.
 const MAX_TEXT_HEIGHT := 470.0
 const SCROLL_SPEED := 900.0
+const LEFT_WIDTH := 250.0
+const ELEMENT_COLORS := {
+	"metal": Color("c8ccd4"), "wood": Color("6fbf5a"), "water": Color("4a9be8"),
+	"fire": Color("e8603a"), "earth": Color("c49a4a"),
+}
 
 var _scroll: ScrollContainer
+var _portrait: TextureRect
+var _name_label: Label
+var _realm_label: Label
+var _age_label: Label
+var _qi_bar: ProgressBar
+var _qi_label: Label
+var _root_title: Label
+var _root_box: VBoxContainer
 var _text: RichTextLabel
 var _recharge: Button
 var _action_row: HFlowContainer
@@ -26,18 +39,23 @@ var _release_confirm := ""
 
 func _init() -> void:
 	add_theme_stylebox_override("panel", UIStyle.panel_style())
-	custom_minimum_size = Vector2(620, 0)
+	custom_minimum_size = Vector2(620 + LEFT_WIDTH + 12, 0)
 	visible = false
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 10)
 	add_child(box)
+	var columns := HBoxContainer.new()
+	columns.add_theme_constant_override("separation", 12)
+	box.add_child(columns)
+	columns.add_child(_build_left_column())
 	_scroll = ScrollContainer.new()
 	_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	box.add_child(_scroll)
+	columns.add_child(_scroll)
 	_text = RichTextLabel.new()
 	_text.bbcode_enabled = true
 	_text.fit_content = true
 	_text.custom_minimum_size = Vector2(596, 0)
+	_text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_text.resized.connect(_fit_scroll)
 	_scroll.add_child(_text)
 	_gender_row = HBoxContainer.new()
@@ -66,6 +84,94 @@ func _init() -> void:
 	EventBus.player_changed.connect(func(): if visible: _rebuild())
 
 
+func _build_left_column() -> VBoxContainer:
+	var col := VBoxContainer.new()
+	col.custom_minimum_size = Vector2(LEFT_WIDTH, 0)
+	col.add_theme_constant_override("separation", 6)
+	var frame := PanelContainer.new()
+	frame.add_theme_stylebox_override("panel", UIStyle.panel_style())
+	_portrait = TextureRect.new()
+	_portrait.custom_minimum_size = Vector2(PixelFigure.SIZE * 4)
+	_portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_portrait.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	frame.add_child(_portrait)
+	var framed := CenterContainer.new()
+	framed.add_child(frame)
+	col.add_child(framed)
+	_name_label = UIStyle.label("", 24, UIStyle.ACCENT)
+	_name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	col.add_child(_name_label)
+	_age_label = UIStyle.label("", 14, Color("bbbbbb"))
+	_age_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	col.add_child(_age_label)
+	_realm_label = UIStyle.label("", 17)
+	_realm_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_realm_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	col.add_child(_realm_label)
+	_qi_bar = ProgressBar.new()
+	_qi_bar.show_percentage = false
+	_qi_bar.custom_minimum_size = Vector2(0, 12)
+	col.add_child(_qi_bar)
+	_qi_label = UIStyle.label("", 13, Color("bbbbbb"))
+	_qi_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	col.add_child(_qi_label)
+	_root_title = UIStyle.label("", 15, UIStyle.ACCENT)
+	col.add_child(_root_title)
+	_root_box = VBoxContainer.new()
+	_root_box.add_theme_constant_override("separation", 3)
+	col.add_child(_root_box)
+	return col
+
+
+## Fills the left column from the player: portrait, name, age, realm, qi bar, root bars.
+func _rebuild_left() -> void:
+	var p := GameState.player
+	var data := GameState.data
+	_portrait.texture = PixelFigure.frame(PlayerLook.of(p, data), "down", 0)
+	_name_label.text = p.name
+	_age_label.text = "Age %d of %d" % [p.age_years(), Cultivation.lifespan_years(p, data)]
+	_realm_label.text = Cultivation.realm_label(p, data)
+	var need := Cultivation.qi_required(p, data)
+	_qi_bar.max_value = maxf(need, 1.0)
+	_qi_bar.value = minf(p.qi, need)
+	_qi_label.text = "Qi %d / %d" % [int(p.qi), int(need)] if not Cultivation.is_at_bottleneck(p, data) else "At the bottleneck"
+	_root_title.text = SpiritualRoots.grade_for(p.spiritual_roots, data).get("name", "No Spiritual Root")
+	for child in _root_box.get_children():
+		_root_box.remove_child(child)
+		child.queue_free()
+	for row in root_rows(p.spiritual_roots, data):
+		var line := HBoxContainer.new()
+		line.name = "root_" + String(row["id"])
+		line.add_theme_constant_override("separation", 6)
+		var name_label := UIStyle.label(String(row["name"]), 14)
+		name_label.custom_minimum_size = Vector2(52, 0)
+		line.add_child(name_label)
+		var bar := ProgressBar.new()
+		bar.max_value = 100
+		bar.value = int(row["value"])
+		bar.show_percentage = false
+		bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		bar.custom_minimum_size = Vector2(0, 10)
+		var fill := StyleBoxFlat.new()
+		fill.bg_color = ELEMENT_COLORS.get(String(row["id"]), Color.WHITE)
+		bar.add_theme_stylebox_override("fill", fill)
+		line.add_child(bar)
+		var value_label := UIStyle.label(str(int(row["value"])), 14)
+		value_label.custom_minimum_size = Vector2(28, 0)
+		value_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+		line.add_child(value_label)
+		_root_box.add_child(line)
+
+
+## One row per element, in data order: {id, name, value 0-100}; a missing element is 0.
+static func root_rows(roots: Dictionary, data: GameData) -> Array[Dictionary]:
+	var rows: Array[Dictionary] = []
+	for e in data.root_elements:
+		rows.append({"id": e["id"], "name": e["name"], "value": int(roots.get(e["id"], 0))})
+	return rows
+
+
 func _unhandled_input(event: InputEvent) -> void:
 	if visible and event.is_action_pressed("ui_cancel"):
 		get_viewport().set_input_as_handled()
@@ -82,7 +188,7 @@ func _process(delta: float) -> void:
 
 ## The scroll area is as tall as the text, up to MAX_TEXT_HEIGHT.
 func _fit_scroll() -> void:
-	_scroll.custom_minimum_size = Vector2(596, minf(_text.size.y, MAX_TEXT_HEIGHT))
+	_scroll.custom_minimum_size = Vector2(620, minf(_text.size.y, MAX_TEXT_HEIGHT))
 
 
 func open() -> void:
@@ -116,7 +222,8 @@ func _rebuild() -> void:
 	var p := GameState.player
 	var data := GameState.data
 	var accent := UIStyle.ACCENT.to_html(false)
-	var t := "[font_size=24][color=#%s]%s[/color][/font_size]\n" % [accent, p.name]
+	_rebuild_left()
+	var t := ""
 	var identity: Array[String] = []
 	if p.gender != "":
 		identity.append(p.gender.capitalize())
@@ -124,8 +231,6 @@ func _rebuild() -> void:
 		identity.append("of the %s family" % p.surname)
 	if not identity.is_empty():
 		t += "%s\n" % " ".join(identity)
-	t += "%s, age %d of %d\n" % [Cultivation.realm_label(p, data), p.age_years(), Cultivation.lifespan_years(p, data)]
-	t += "Spiritual Root: %s\n" % SpiritualRoots.describe(p.spiritual_roots, data)
 	var bloodline := Bloodlines.describe(p, data)
 	if bloodline != "":
 		t += "Bloodline: %s\n" % bloodline
