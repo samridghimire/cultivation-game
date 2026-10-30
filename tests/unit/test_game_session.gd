@@ -2295,6 +2295,22 @@ func test_greeting_for_reads_favor_and_fills_player_name() -> void:
 	assert_eq(c.name, "Integration")
 
 
+func test_full_month_greeting_names_the_newborn() -> void:
+	_start()
+	var gs := _game_state()
+	var mother := Npcs.spawn(gs.npcs, gs.data, seeded_rng(5), {"age_years": 30, "region": "qingshi_village", "realm": "mortal"})
+	var elder_child := Npcs.spawn(gs.npcs, gs.data, seeded_rng(6), {"age_years": 8, "region": "qingshi_village", "realm": "mortal"})
+	var baby := Npcs.spawn(gs.npcs, gs.data, seeded_rng(7), {"age_years": 0, "region": "qingshi_village", "realm": "mortal"})
+	mother.children.append(elder_child.id)
+	mother.children.append(baby.id)
+	var greetings: Dictionary = gs.data.family["folk_greetings"]
+	var saved: Variant = greetings.get("celebration", {}).duplicate(true)
+	greetings["celebration"] = {"full_month": ["Wish {child} a long life."]}
+	Folk.start_celebration(gs.world_flags, [mother.id], GameClock.total_days, gs.data, "full_month")
+	assert_eq(gs.greeting_for(mother.id), "Wish %s a long life." % baby.name, "the newest child, not the eldest")
+	greetings["celebration"] = saved
+
+
 func test_chat_may_give_a_tip_that_boosts_gathering() -> void:
 	var c := _start()
 	var gs := _game_state()

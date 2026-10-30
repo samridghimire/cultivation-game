@@ -1397,7 +1397,7 @@ func greeting_for(npc_id: String) -> String:
 	if line.contains("{partner}"):
 		line = line.replace("{partner}", String(npcs[npc.spouses[0]].name) if not npc.spouses.is_empty() and npcs.has(npc.spouses[0]) else "their spouse")
 	if line.contains("{child}"):
-		line = line.replace("{child}", String(npcs[npc.children[0]].name) if not npc.children.is_empty() and npcs.has(npc.children[0]) else "the little one")
+		line = line.replace("{child}", String(npcs[npc.children.back()].name) if not npc.children.is_empty() and npcs.has(npc.children.back()) else "the little one")
 	return line
 
 
@@ -2864,7 +2864,7 @@ func fight_enemy(enemy: Dictionary, start_hp: int = -1, prefix: String = "") -> 
 	if result["victory"]:
 		var worth := {}
 		for item_id in enemy.get("rewards", {}).get("items", {}):
-			var price := Items.sell_price(data, String(item_id))
+			var price := Items.sell_price(data, String(item_id), price_season())
 			if price > 0 and int(enemy["rewards"]["items"][item_id]) > 0:
 				var count := int(enemy["rewards"]["items"][item_id])
 				worth["+%d %s" % [count, data.items.get(item_id, {}).get("name", item_id)]] = {"price": price, "count": count}

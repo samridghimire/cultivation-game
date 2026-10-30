@@ -11,6 +11,7 @@ Many leftover `claude/*` branches from the old PR flow point at tasks already do
 Filed by the reviewer (see docs/REVIEW.md). Take these before other work for your role.
 | id | role | status | task |
 |---|---|---|---|
+| RV-016 | systems | todo | **Weather qi bonus is taken from the first day for the whole session (WEATHER-003).** `GameState.region_qi_density()` multiplies by `Weather.qi_mult` of *today's* weather, and `cultivate()` (and so `cultivate_in_seclusion`, dual cultivation, lectures) computes one density before a multi-day skip. A Water-root player can wait for one rain day and seclude for a year at x1.1 (snow x1.05, a clear day x1.05 for Fire). Fix: add `Weather.mean_qi_mult(data, region_id, c, from_day, days) -> float` (average of `qi_mult` over `Weather.of` for each day of the span; cap the loop, e.g. sample at most 365 days evenly, so long seclusions stay cheap) and use it in `cultivate()`/`dual_cultivate()` for the days actually spent (after `days_to_bottleneck` trims them; recompute `needed` with the mean density, or accept one pass), keeping today's factor only for the HUD/preview estimate. Tests: a span with one rain day then clear days gets less than the full rain mult; a Water 50+ character's 30-day seclusion starting on rain matches the mean. Changes sim pacing: run `tools/balance.sh --check` and refresh the baseline. |
 
 ## P0: Playable and fun (the first hours)
 Next (planner 2026-10-30 12:20): 14 tasks landed (GFX-021/022/023, WU-403/404, FOLK-002/003, FISH-001, WORLD-006,

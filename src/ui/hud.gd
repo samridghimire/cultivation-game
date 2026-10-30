@@ -683,8 +683,6 @@ static func lives_color(lives: int) -> Color:
 	return UIStyle.CATEGORY_COLORS["warning"] if lives == 1 else Color.WHITE
 
 
-## Drops the lowest-priority lines until each card clears the log (WU-091, GFX-010): the status card loses its
-## next-layer line, the guide card its festival line, then shrinks the hint, then drops the goal.
 ## Screen-space rects of the visible status, Next-steps, log and key-bar panels (GFX-025):
 ## the world keeps place and NPC labels out from under them.
 func occupied_rects() -> Array[Rect2]:
@@ -695,6 +693,8 @@ func occupied_rects() -> Array[Rect2]:
 	return rects
 
 
+## Drops the lowest-priority lines until each card clears the log (WU-091, GFX-010): the status card loses its
+## next-layer line, the guide card its festival line, then shrinks the hint, then drops the goal.
 func _fit_panels() -> void:
 	if _status_panel == null or _guide_panel == null or not is_inside_tree():
 		return

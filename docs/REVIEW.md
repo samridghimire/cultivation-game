@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: e4c0e6a
+Last reviewed commit: d09c568
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -1245,3 +1245,18 @@ Last reviewed commit: e4c0e6a
     funeral can be attended three times (+8 favor each, +1 alignment each, a day each), as the spec allows. A wedding's
     attended mark survives into a full-month feast opened for the same NPC within the 30 days ("already paid your
     respects"); rare. FISH-001 posts under the "trade" log topic.
+- 2026-10-30 (reviewer, 3rd run): reviewed e4c0e6a..d09c568 (FOLK-002, C-256, WEATHER-003, GFX-022, GFX-023, QA-180,
+  MARKET-001, FISH-002, WORLD-007, WU-406, FARM-001, GFX-024, GFX-025, GFX-026, C-274; [PLAN]/[REVIEW] skipped). No worker
+  touched BACKLOG/CHANGELOG; no SAVE_VERSION change (`field_plots`, `folk_gift_day`, `folk_visit_day` default to {} and
+  are int()-read; the GFX-025 setting `show_all_labels` has a default); no binary assets (GFX-022/026 art is generated).
+  - FARM-001 follows its spec (rent window, rain bonus, frozen winter, lapsed rent pauses growth, Wood 50+ bonus,
+    one field_plot per region validated). MARKET-001 can't be arbitraged (buy x0.85 in season, sell back at half x1.2).
+    FISH-002 meals are no_shop and `shorten_injury` refuses without an injury. WORLD-007 visitors are deterministic.
+  - Fixed: C-274's full-month greeting filled {child} with the mother's *eldest* child, not the newborn (test added; main was otherwise green, 2632 tests -> 2633);
+    the "sells for N" note on fight spoils ignored MARKET-001's season (the sale itself used it); GFX-025 put
+    `occupied_rects()` between `_fit_panels()` and its doc comment.
+  - Filed RV-016 (systems): WEATHER-003's qi bonus is read from the first day's weather and applied to a whole
+    multi-day meditation or seclusion (wait for rain, seclude a year at x1.1). Needs a mean over the span plus a balance run.
+  - Notes, not filed: Guidance's sell/merchant price hints ignore the season (approximate by design, like world events);
+    FOLK-002 gifts are handed out from `greeting_for`, a getter with a side effect (guarded by the cooldown);
+    harvesting a crop whose item was later removed from a plot's `plants` would error (data never removes one).
