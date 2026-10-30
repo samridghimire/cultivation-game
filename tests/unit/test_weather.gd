@@ -164,6 +164,7 @@ func test_fish_effect_note() -> void:
 	assert_eq(Weather.effect_note(d, "snow", "fish"), "(snow: fish are shy)")
 	assert_eq(Weather.effect_note(d, "clear", "fish"), "")
 
+
 func test_mean_qi_mult_averages_the_span() -> void:
 	var d := GameData.load_from_dir()
 	d.regions["qingshi_village"]["weather"] = {"any": {"rain": 1, "clear": 1}}
