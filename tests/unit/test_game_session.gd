@@ -499,6 +499,20 @@ func test_rain_stirs_water_qi_for_a_water_root() -> void:
 	_restore_weather(gs)
 
 
+func test_seclusion_starting_on_rain_uses_the_mean_weather() -> void:
+	var c := _start()
+	c.spiritual_roots = {"water": 80}
+	var gs := _game_state()
+	gs.data.weather_effects = {"rain": {"qi_element": {"element": "water", "mult": 1.1}}}
+	gs.data.regions[gs.current_region]["weather"] = {"any": {"rain": 1, "clear": 1}}
+	gs.data.weather_persist = 0.0
+	var day: int = GameClock.total_days
+	var mean: float = Weather.mean_qi_mult(gs.data, gs.current_region, c, day, 30)
+	assert_true(mean < 1.1, "a mixed month is below the full rain bonus")
+	assert_almost_eq(gs.region_qi_density(30) / gs.region_qi_density(1), mean / Weather.qi_mult(gs.data, Weather.of(gs.data, gs.current_region, day), c))
+	_restore_weather(gs)
+
+
 func test_fishing_catches_and_weather_changes_the_odds() -> void:
 	var c := _start()
 	var gs := _game_state()
@@ -762,7 +776,9 @@ func test_long_cultivation_stops_at_the_bottleneck() -> void:
 	assert_gt(needed, 0)
 	assert_true(needed < Calendar.DAYS_PER_YEAR * 10)
 	gs.cultivate(needed + 500)
-	assert_eq(clock.total_days, needed)
+	var stopped: int = clock.total_days
+	assert_true(absi(stopped - needed) <= 2, "weather averaged over the span moves the stop day only slightly")
+	needed = stopped
 	assert_true(Cultivation.is_at_bottleneck(c, gs.data))
 	gs.cultivate(30)
 	assert_eq(clock.total_days, needed)

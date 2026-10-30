@@ -163,3 +163,22 @@ func test_fish_effect_note() -> void:
 	assert_eq(Weather.effect_note(d, "rain", "fish"), "(rain: fish bite more)")
 	assert_eq(Weather.effect_note(d, "snow", "fish"), "(snow: fish are shy)")
 	assert_eq(Weather.effect_note(d, "clear", "fish"), "")
+
+func test_mean_qi_mult_averages_the_span() -> void:
+	var d := GameData.load_from_dir()
+	d.regions["qingshi_village"]["weather"] = {"any": {"rain": 1, "clear": 1}}
+	d.weather_persist = 0.0
+	var c := CharacterData.new()
+	c.spiritual_roots = {"water": 80}
+	var start := 0
+	while Weather.of(d, "qingshi_village", start) != "rain":
+		start += 1
+	assert_almost_eq(Weather.mean_qi_mult(d, "qingshi_village", c, start, 1), 1.1)
+	var expect := 0.0
+	for i in 30:
+		expect += Weather.qi_mult(d, Weather.of(d, "qingshi_village", start + i), c)
+	var mean := Weather.mean_qi_mult(d, "qingshi_village", c, start, 30)
+	assert_almost_eq(mean, expect / 30.0)
+	assert_true(mean > 1.0 and mean < 1.1, "a mix of rain and clear days is between the two")
+	var year := Weather.mean_qi_mult(d, "qingshi_village", c, start, 2000)
+	assert_true(year > 1.0 and year < 1.1, "long spans are sampled, not walked day by day")

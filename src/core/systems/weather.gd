@@ -8,6 +8,7 @@ const DEFAULT_PERSIST := 0.6
 const MAX_SPELL_DAYS := 30
 const QI_ELEMENTS: Array[String] = ["metal", "wood", "water", "fire", "earth"]
 const QI_ELEMENT_MIN_PURITY := 50
+const MAX_MEAN_SAMPLES := 365
 
 
 ## The weather of `region_id` on `day` (GameClock.total_days): clear, cloudy, rain, snow or fog.
@@ -176,3 +177,15 @@ static func qi_mult(data: GameData, kind: String, c: CharacterData) -> float:
 	if q.is_empty() or int(c.spiritual_roots.get(String(q.get("element", "")), 0)) < QI_ELEMENT_MIN_PURITY:
 		return 1.0
 	return float(q.get("mult", 1.0))
+
+
+## Mean of `qi_mult` over the `days` days from `from_day` in `region_id` (RV-016), so a long seclusion does not
+## keep the first day's weather. At most MAX_MEAN_SAMPLES days, spread evenly, are rolled.
+static func mean_qi_mult(data: GameData, region_id: String, c: CharacterData, from_day: int, days: int) -> float:
+	if days <= 1:
+		return qi_mult(data, of(data, region_id, from_day), c)
+	var samples := mini(days, MAX_MEAN_SAMPLES)
+	var total := 0.0
+	for i in samples:
+		total += qi_mult(data, of(data, region_id, from_day + i * days / samples), c)
+	return total / samples

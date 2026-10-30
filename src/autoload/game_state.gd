@@ -176,11 +176,20 @@ func cultivate(days: int, location_density: float = 1.0, skip_title: String = "M
 	if Cultivation.is_at_bottleneck(player, data):
 		EventBus.post("You are at a bottleneck. More meditation will not help; attempt a breakthrough.", "warning")
 		return
-	var density := _cultivation_density(location_density)
+	# Weather is averaged over the days spent (RV-016); the span and the days to the bottleneck depend on each
+	# other, so settle them in a few passes.
+	var density := _cultivation_density(location_density, days)
 	var needed := Cultivation.days_to_bottleneck(player, data, density)
-	var ends_early := needed > 0 and needed < days
-	if ends_early:
-		days = needed
+	var asked := days
+	for _pass in 6:
+		if needed <= 0 or needed == days or (needed > days and days >= asked):
+			break
+		days = mini(needed, asked)
+		density = _cultivation_density(location_density, days)
+		needed = Cultivation.days_to_bottleneck(player, data, density)
+	if needed > days and days < asked: # the passes kept flipping between two spans: take the longer, it reaches the bottleneck
+		days = mini(needed, asked)
+	var ends_early := days < asked
 	player.last_meditated_day = GameClock.total_days + days
 	_start_time_skip()
 	var result := Cultivation.cultivate(player, data, days, density)
@@ -1852,7 +1861,7 @@ func dual_cultivate(spouse_id: String, days: int, location_density: float = 1.0)
 		EventBus.post("%s is not here." % spouse.name, "warning")
 		EventBus.player_changed.emit()
 		return
-	var density := _cultivation_density(location_density)
+	var density := _cultivation_density(location_density, days)
 	_start_time_skip()
 	var result := Family.dual_cultivate(player, spouse, data, days, density)
 	if not result["ok"]:
@@ -2534,8 +2543,8 @@ func bid(house_id: String, lot_index: int, amount: int) -> void:
 
 
 ## The density cultivate() and dual_cultivate() use at a spot of `location_density`.
-func _cultivation_density(location_density: float) -> float:
-	return location_density * region_qi_density() * Sects.cultivation_bonus(player, data)
+func _cultivation_density(location_density: float, days: int = 1) -> float:
+	return location_density * region_qi_density(days) * Sects.cultivation_bonus(player, data)
 
 
 ## Days of meditation at a spot of `location_density` until the next stage (-1 = at the bottleneck).
@@ -2559,9 +2568,9 @@ func journal_entries() -> Array[Dictionary]:
 
 
 ## Qi density of the current region, including active world events (LW-001) and today's weather for the player's root (WEATHER-003).
-func region_qi_density() -> float:
-	var weather := Weather.of(data, current_region, GameClock.total_days)
-	return Exploration.qi_density(data, current_region, world_flags) * WorldEvents.qi_multiplier(data, world_events, current_region) * Weather.qi_mult(data, weather, player)
+## With `days` > 1 the weather factor is the mean over those days (RV-016).
+func region_qi_density(days: int = 1) -> float:
+	return Exploration.qi_density(data, current_region, world_flags) * WorldEvents.qi_multiplier(data, world_events, current_region) * Weather.mean_qi_mult(data, current_region, player, GameClock.total_days, days)
 
 
 ## Merchant price multiplier of the current region's active world events.
