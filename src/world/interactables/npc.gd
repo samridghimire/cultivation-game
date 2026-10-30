@@ -35,7 +35,6 @@ var _just_ended := false
 var _hostile := false
 ## True while the menu shows the gift picker instead of the main entries.
 var _gift_mode := false
-var _quarrel_mode := false
 ## "" (main entries), "teach" or "give": the child pickers (FAM-004c).
 var _child_mode := ""
 ## Where the NPC stands when idle (set in _ready; the world places the node first).
@@ -104,14 +103,19 @@ func breathe(delta: float) -> void:
 
 ## The look of this NPC's generated pixel figure (GFX-011).
 func figure_look() -> Dictionary:
-	var look := {"robe": color, "sash": PlayerLook.SASH_COLORS["neutral"]}
-	var c: CharacterData = GameState.npcs.get(npc_id) if GameState.npcs != null else null
+	return look_of(npc_id, color)
+
+
+## The pixel-figure look of villager `id` (also used for the portraits of a quarrel's two sides).
+static func look_of(id: String, fallback: Color) -> Dictionary:
+	var look := {"robe": fallback, "sash": PlayerLook.SASH_COLORS["neutral"]}
+	var c: CharacterData = GameState.npcs.get(id) if GameState.npcs != null else null
 	if c == null:
 		return look
-	var party := Folk.celebrants(GameState.world_flags, [npc_id], GameClock.total_days)
-	if party.has(npc_id):
-		look["sash"] = Folk.celebration_sash(party[npc_id])
-	look["robe"] = CIVILIAN_ROBES[absi(hash(npc_id)) % CIVILIAN_ROBES.size()]
+	var party := Folk.celebrants(GameState.world_flags, [id], GameClock.total_days)
+	if party.has(id):
+		look["sash"] = Folk.celebration_sash(party[id])
+	look["robe"] = CIVILIAN_ROBES[absi(hash(id)) % CIVILIAN_ROBES.size()]
 	if not c.is_rogue():
 		var sect: SectDef = GameState.data.sects.get(String(c.sect.get("id", "")))
 		if sect != null and sect.robe_color != "":
@@ -237,8 +241,6 @@ func get_options() -> Array[Dictionary]:
 		return _hostile_options()
 	if _gift_mode:
 		return _gift_options()
-	if _quarrel_mode:
-		return _quarrel_options()
 	if _child_mode == "teach":
 		return _teach_options()
 	if _child_mode == "give":
@@ -268,7 +270,6 @@ func get_options() -> Array[Dictionary]:
 ## Called by ChoiceMenu when it closes, so the next visit starts at the main entries.
 func on_menu_closed() -> void:
 	_gift_mode = false
-	_quarrel_mode = false
 	_child_mode = ""
 
 
@@ -318,7 +319,7 @@ func _acquaintance_options() -> Array[Dictionary]:
 	if not quarrel.is_empty():
 		var other: CharacterData = GameState.npcs.get(Folk.quarrel_other(quarrel, npc_id))
 		if other != null:
-			options.append(_entry("Settle the quarrel with %s" % other.name, GameState.check_quarrel(npc_id), _set_quarrel_mode.bind(true)))
+			options.append(_entry("Settle the quarrel with %s" % other.name, GameState.check_quarrel(npc_id), EventBus.quarrel_requested.emit.bind(npc_id)))
 	if Folk.celebration_open(GameState.world_flags, npc_id, GameClock.total_days):
 		options.append(_entry(Folk.celebration_label(GameState.world_flags, npc_id, data), GameState.check_celebration(npc_id), GameState.attend_celebration.bind(npc_id)))
 	var reason := "" if not p.inventory.is_empty() else "you carry nothing"
@@ -366,34 +367,6 @@ func _gift_options() -> Array[Dictionary]:
 		options.append(entry)
 	options.append({"label": "Back (favor %d)" % favor, "action": _set_gift_mode.bind(false), "keep_open": true})
 	return options
-
-
-## FOLK-004: the four ways to settle a quarrel, then Back.
-func _quarrel_options() -> Array[Dictionary]:
-	var options: Array[Dictionary] = []
-	var q := GameState.quarrel_of(npc_id)
-	if q.is_empty():
-		_quarrel_mode = false
-		return options
-	var a: CharacterData = GameState.npcs[q["a"]]
-	var b: CharacterData = GameState.npcs[q["b"]]
-	var check: Dictionary = Folk.quarrel_rules(GameState.data)["outcomes"]["mediate"]["check"]
-	var labels := {
-		"mediate": "Mediate [%s %d]" % [String(check["attribute"]).capitalize(), int(check["target"])],
-		"side_a": "Side with %s" % a.name, "side_b": "Side with %s" % b.name, "extort": "Demand payment to keep quiet"}
-	for choice: String in Folk.QUARREL_CHOICES:
-		options.append(_entry(labels[choice], GameState.check_quarrel(npc_id), _settle.bind(choice)))
-	options.append({"label": "Back", "action": _set_quarrel_mode.bind(false), "keep_open": true})
-	return options
-
-
-func _settle(choice: String) -> void:
-	_quarrel_mode = false
-	GameState.settle_quarrel(npc_id, choice)
-
-
-func _set_quarrel_mode(on: bool) -> void:
-	_quarrel_mode = on
 
 
 func _set_gift_mode(on: bool) -> void:

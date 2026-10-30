@@ -76,6 +76,7 @@ var _dialogue: DialogueWindow
 ## The interactable whose menu was opened last: its portrait shows in the dialogue it starts (WU-408).
 var _last_source: Node
 var _encounter: EncounterWindow
+var _quarrel: QuarrelWindow
 var _arrival_waiting: String = ""  # arrival card held back while a road encounter window is open (WU-080)
 var _pause_menu: PauseMenu
 var _settings: SettingsScreen
@@ -173,6 +174,9 @@ func _ready() -> void:
 	_encounter.closed.connect(_update_modal)
 	_encounter.closed.connect(_show_waiting_arrival)
 	add_child(UIStyle.centered(_encounter))
+	_quarrel = QuarrelWindow.new()
+	_quarrel.closed.connect(_update_modal)
+	add_child(UIStyle.centered(_quarrel))
 	_pause_menu = PauseMenu.new()
 	_pause_menu.closed.connect(_update_modal)
 	add_child(UIStyle.centered(_pause_menu))
@@ -249,6 +253,7 @@ func _ready() -> void:
 	EventBus.dialogue_ended.connect(func(_id): _dialogue.close())
 	EventBus.encounter_choice_requested.connect(_on_encounter_choice_requested)
 	EventBus.encounter_choice_resolved.connect(_encounter.close)
+	EventBus.quarrel_requested.connect(_on_quarrel_requested)
 	EventBus.threat_sensed.connect(_on_threat_sensed)
 	EventBus.time_skipped.connect(_on_time_skipped)
 	EventBus.year_reviewed.connect(_on_year_reviewed)
@@ -280,7 +285,7 @@ func _ready() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if _choice_menu.visible or _dialogue.visible or _encounter.visible or _combat_report.visible or _tribulation.visible or _respawn.visible or _realm_card.visible or _pause_menu.visible or _settings.visible or _help.visible or _load_screen.visible or _death_screen.visible:
+	if _choice_menu.visible or _dialogue.visible or _encounter.visible or _quarrel.visible or _combat_report.visible or _tribulation.visible or _respawn.visible or _realm_card.visible or _pause_menu.visible or _settings.visible or _help.visible or _load_screen.visible or _death_screen.visible:
 		return
 	if event.is_action_pressed("pause_menu"):
 		# Consumed here so the world's own Esc handling never runs mid-session.
@@ -925,7 +930,7 @@ func _refresh_key_hints() -> void:
 
 
 func _on_menu_requested(source: Node) -> void:
-	if _any_screen_open() or _dialogue.visible or _encounter.visible or _combat_report.visible or _tribulation.visible or _respawn.visible or _realm_card.visible or _pause_menu.visible or _settings.visible or _help.visible or _load_screen.visible or _death_screen.visible:
+	if _any_screen_open() or _dialogue.visible or _encounter.visible or _quarrel.visible or _combat_report.visible or _tribulation.visible or _respawn.visible or _realm_card.visible or _pause_menu.visible or _settings.visible or _help.visible or _load_screen.visible or _death_screen.visible:
 		return
 	_last_source = source
 	_choice_menu.open_for(source)
@@ -954,6 +959,7 @@ func _on_player_died(cause: String) -> void:
 	_tribulation.close()
 	_dialogue.close()
 	_encounter.close()
+	_quarrel.close()
 	_pause_menu.close()
 	_settings.close()
 	_help.close()
@@ -1018,6 +1024,13 @@ func _open_pending_respawn() -> void:
 	_choice_menu.close()
 	_close_screens()
 	_respawn.open()
+	_update_modal()
+
+
+## "Settle the quarrel" in a villager's menu opens the quarrel window (WU-410).
+func _on_quarrel_requested(npc_id: String) -> void:
+	_choice_menu.close()
+	_quarrel.open_for(npc_id)
 	_update_modal()
 
 
@@ -1276,7 +1289,7 @@ func _flush_season() -> void:
 func _on_time_skipped(days: int, summary: Dictionary) -> void:
 	if not TimeSkip.should_show(days, Settings.get_value("fast_time_skips")):
 		return
-	if _combat_report.visible or _encounter.visible or _dialogue.visible or _respawn.visible or _death_screen.visible:
+	if _combat_report.visible or _encounter.visible or _quarrel.visible or _dialogue.visible or _respawn.visible or _death_screen.visible:
 		return
 	_show_time_skip(summary)
 
@@ -1514,7 +1527,7 @@ func _compute_fade_targets() -> Vector3:
 
 
 func _update_modal() -> void:
-	var blocking := _choice_menu.visible or _dialogue.visible or _encounter.visible or _any_screen_open() or _combat_report.visible or _tribulation.visible or _respawn.visible or _realm_card.visible or _pause_menu.visible or _settings.visible or _help.visible or _load_screen.visible or _death_screen.visible
+	var blocking := _choice_menu.visible or _dialogue.visible or _encounter.visible or _quarrel.visible or _any_screen_open() or _combat_report.visible or _tribulation.visible or _respawn.visible or _realm_card.visible or _pause_menu.visible or _settings.visible or _help.visible or _load_screen.visible or _death_screen.visible
 	# The status panel, hints and log hide behind modals; a time-skip overlay alone keeps them.
 	_status_panel.visible = not blocking
 	_log_panel.visible = not blocking

@@ -61,6 +61,8 @@ signal encounter_choice_resolved
 
 ## A conversation with an NPC started; render GameState.dialogue_view().
 signal dialogue_requested(npc_id: String)
+## The player wants to settle the quarrel `npc_id` is part of (WU-410); the HUD opens the QuarrelWindow.
+signal quarrel_requested(npc_id: String)
 ## The conversation ended (after its effects and time were applied).
 signal dialogue_ended(npc_id: String)
 
