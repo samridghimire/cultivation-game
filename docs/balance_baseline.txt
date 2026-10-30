@@ -61,7 +61,7 @@ Distinct action kinds per month: 6.8; months after the first with no log lines: 
 Injury treatments (QA-128): 14, clinic stones 206
 Iron Fist level median (QA-138): m03 2, m06 2, m12 4; first Mist Wolf win: median day 554 (9/10 seeds)
 Spar-hint bouts (QA-138): 10, refusals: []
-Armor shopping (QA-140): armor worn by day 332 median (10/10 seeds); 1 loot sales for 52 stones, 10 trips to a smithy
+Armor shopping (QA-140): armor worn by day 332 median (10/10 seeds); 1 loot sales for 54 stones, 10 trips to a smithy
 Road encounters (QA-118): 9/10 seeds met one; { "road_fallen_rogue": 1, "road_highwayman": 1, "road_milestone_carver": 2, "road_caravan_fire": 4, "road_talisman_peddler": 2, "road_caravan_guard": 3, "road_rain_shelter": 1 }
 Sect contribution (QA-146): m06 median 574, m12 median 1801; stage at m12: { "QR6": 2, "QR8": 1, "QR7": 5, "Foundation Establishment, Middle": 1, "QR9": 1 }
 Stones at the QR9 bottleneck (QA-146): median 203 (1/10 seeds reached it)
