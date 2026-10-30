@@ -302,3 +302,34 @@ func test_spread_on_screen_ignores_labels_faded_to_nothing() -> void:
 	assert_eq(shown.screen_lift, 0.0, "a faded-out name must not push a place label up")
 	hidden.free()
 	shown.free()
+
+
+## GFX-025: places fade with distance unless hinted, highlighted or "Show all place names" is on.
+func test_place_label_alpha_near_far_hinted_and_toggle() -> void:
+	var place := Interactable.new()
+	place.display_name = "Village Clinic"
+	place.position = Vector2.ZERO
+	assert_eq(place.label_alpha(Vector2(Interactable.PLACE_NEAR - 1.0, 0)), 1.0)
+	assert_true(is_equal_approx(place.label_alpha(Vector2(Interactable.PLACE_FAR + 50.0, 0)), Interactable.PLACE_FAR_ALPHA))
+	var mid := place.label_alpha(Vector2(320, 0))
+	assert_true(mid > Interactable.PLACE_FAR_ALPHA and mid < 1.0, str(mid))
+	place.hinted = true
+	assert_eq(place.label_alpha(Vector2(900, 0)), 1.0)
+	place.hinted = false
+	Settings.set_value("show_all_labels", true)
+	assert_eq(place.label_alpha(Vector2(900, 0)), 1.0)
+	Settings.set_value("show_all_labels", false)
+	assert_true(place.label_alpha(Vector2(900, 0)) < 1.0)
+	place.free()
+
+
+func test_spread_on_screen_moves_a_label_out_of_a_hud_rect() -> void:
+	var view := Rect2(0, 0, 1000, 800)
+	var a := _npc("Village Clinic Keeper", Vector2(300, 300))
+	var panel := a.drawn_label_rect(view).grow(4.0)
+	var occupied: Array[Rect2] = [panel]
+	Interactable.spread_on_screen([a], view, occupied)
+	assert_true(a.screen_lift < 0.0, "lifted")
+	assert_false(a.drawn_label_rect(view).intersects(panel), "clear of the panel")
+	assert_false(a.label_covered)
+	a.free()

@@ -31,6 +31,9 @@ var _pulse_time := 0.0
 ## Added to the name label's position; World.spread_labels lifts labels that would overlap (WU-087).
 var label_offset := Vector2.ZERO
 const LABEL_FONT_SIZE := 14
+const PLACE_NEAR := 220.0
+const PLACE_FAR := 420.0
+const PLACE_FAR_ALPHA := 0.35
 ## Draws the name label above every sibling building (WU-278).
 var _label_node: Node2D
 ## The top hint names this place: a gold "!" is drawn above its label (WU-280).
@@ -39,6 +42,8 @@ var hinted := false
 var screen_lift := 0.0
 ## Fade of the name label by distance to the player (GFX-015); 0 hides it and frees its spot.
 var label_fade := 1.0
+## Set by spread_on_screen when a HUD panel covers the label and it cannot move clear: drawn dimmed.
+var label_covered := false
 
 
 func _ready() -> void:
@@ -242,9 +247,12 @@ func label_drawn() -> bool:
 
 
 ## How visible the name label is for a player standing at `player_pos` (parent coordinates).
-## Places always show theirs; NPC labels override this (GFX-015).
-func label_alpha(_player_pos: Vector2) -> float:
-	return 1.0
+## Places are full strength within PLACE_NEAR px and fade to PLACE_FAR_ALPHA at PLACE_FAR px (GFX-025),
+## except hinted or highlighted ones and with the "Show all place names" setting. NPC labels override this (GFX-015).
+func label_alpha(player_pos: Vector2) -> float:
+	if hinted or highlighted or Settings.get_value("show_all_labels"):
+		return 1.0
+	return lerpf(PLACE_FAR_ALPHA, 1.0, proximity_alpha(position.distance_to(player_pos), PLACE_NEAR, PLACE_FAR))
 
 
 ## 1 within `near`, 0 beyond `far`, linear between (GFX-015).
@@ -266,8 +274,9 @@ func refresh_label_alpha(player_pos: Vector2) -> void:
 
 ## Lifts labels (in order) whose screen-clamped rects overlap an earlier one; `view` is the visible
 ## area in the nodes' parent coordinates. Redraws the labels that moved (WU-281).
-static func spread_on_screen(nodes: Array, view: Rect2) -> void:
-	var placed: Array[Rect2] = []
+## `occupied` are HUD rects in the same coordinates; they count as already-placed labels (GFX-025).
+static func spread_on_screen(nodes: Array, view: Rect2, occupied: Array[Rect2] = []) -> void:
+	var placed: Array[Rect2] = occupied.duplicate()
 	for node: Interactable in nodes:
 		if not node.label_drawn():
 			if node.screen_lift != 0.0:
@@ -287,8 +296,12 @@ static func spread_on_screen(nodes: Array, view: Rect2) -> void:
 				break
 			node.screen_lift -= rect.size.y + 2.0
 			rect = node.drawn_label_rect(view)
+		var covered := false
+		for other in occupied:
+			covered = covered or rect.intersects(other)
 		placed.append(rect)
-		if node.screen_lift != before:
+		if node.screen_lift != before or node.label_covered != covered:
+			node.label_covered = covered
 			node._redraw_label()
 
 
@@ -396,13 +409,14 @@ func _draw_label() -> void:
 		_label_node.draw_string(font, center + Vector2(-mw / 2.0, 6.0), "!", HORIZONTAL_ALIGNMENT_LEFT, -1, 16, Color(0.1, 0.08, 0.04))
 	if not label_visible(highlighted):
 		return
-	if label_fade <= 0.0:
+	var fade := minf(label_fade, PLACE_FAR_ALPHA) if label_covered else label_fade
+	if fade <= 0.0:
 		return
 	var at := Vector2(left, -size.y / 2.0 - 8.0 + label_offset.y + screen_lift)
 	var fill := label_color()
-	fill.a *= label_fade
+	fill.a *= fade
 	# A dark outline first so the name reads on any ground (GFX-015).
-	_label_node.draw_string_outline(font, at, text, HORIZONTAL_ALIGNMENT_LEFT, -1, LABEL_FONT_SIZE, 3, Color(0, 0, 0, 0.7 * label_fade))
+	_label_node.draw_string_outline(font, at, text, HORIZONTAL_ALIGNMENT_LEFT, -1, LABEL_FONT_SIZE, 3, Color(0, 0, 0, 0.7 * fade))
 	_label_node.draw_string(font, at, text, HORIZONTAL_ALIGNMENT_LEFT, -1, LABEL_FONT_SIZE, fill)
 
 

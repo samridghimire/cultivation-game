@@ -31,6 +31,8 @@ const DEFAULTS := {
 	"ambient_effects": true,
 	# No screen shakes, flashes or vignettes; fades snap instead of easing (WU-397).
 	"reduce_motion": false,
+	# Every place name at full strength instead of fading with distance (GFX-025).
+	"show_all_labels": false,
 	# Banner card with the year's review on each new year (WU-031).
 	"yearly_recap": true,
 }
@@ -75,7 +77,7 @@ static func sanitize(key: String, value: Variant) -> Variant:
 			return clampf(float(value), UI_SCALE_RANGE.x, UI_SCALE_RANGE.y)
 		"hud_hints":
 			return clampi(int(value), 0, 3) if value is int or value is float else DEFAULTS["hud_hints"]
-		"autosave", "yearly_recap", "animate_fights", "ambient_effects", "key_help", "reduce_motion":
+		"autosave", "yearly_recap", "animate_fights", "ambient_effects", "key_help", "reduce_motion", "show_all_labels":
 			return value if value is bool else DEFAULTS[key]
 		"fast_time_skips":
 			return (value is bool and value) or str(value).to_lower() == "true"

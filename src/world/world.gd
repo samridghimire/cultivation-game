@@ -167,6 +167,10 @@ func _refresh_stalls() -> void:
 func _on_setting_changed(key: String, _value: Variant) -> void:
 	if key == "ambient_effects":
 		_refresh_ambient()
+	elif key == "show_all_labels" and player != null:
+		for node in get_children():
+			if node is Interactable:
+				(node as Interactable).refresh_label_alpha(player.position)
 
 
 func _exit_tree() -> void:
@@ -448,7 +452,13 @@ func _spread_on_screen() -> void:
 		return
 	var nodes: Array = get_children().filter(func(n: Node) -> bool: return n is Interactable)
 	var view := get_canvas_transform().affine_inverse() * get_viewport_rect()
-	Interactable.spread_on_screen(nodes, view)
+	var occupied: Array[Rect2] = []
+	var hud := get_node_or_null("HUD")
+	if hud != null and hud.has_method("occupied_rects"):
+		var to_world := get_canvas_transform().affine_inverse()
+		for r: Rect2 in hud.occupied_rects():
+			occupied.append(to_world * r)
+	Interactable.spread_on_screen(nodes, view, occupied)
 
 
 func _limit_camera() -> void:
