@@ -597,6 +597,12 @@ func unequip(slot: String) -> void:
 	EventBus.player_changed.emit()
 
 
+## The days a journey along `route` ({"days": base days}) spends now: the character's
+## travel speed plus the snow day (WU-403). `travel` and both travel labels use this.
+func journey_days(route: Dictionary) -> int:
+	return Exploration.travel_days(player, data, int(route.get("days", 1))) + Weather.travel_extra_days(data, current_region, GameClock.total_days)
+
+
 func travel(region_id: String) -> void:
 	EventBus.topic = "world"
 	pending_threat = ""
@@ -610,7 +616,7 @@ func travel(region_id: String) -> void:
 	last_travel_road_encounter = ""
 	var snow_days := Weather.travel_extra_days(data, current_region, GameClock.total_days)
 	if snow_days > 0:
-		check["days"] = int(check["days"]) + snow_days
+		check["days"] = journey_days({"days": check["base_days"]})
 		EventBus.post("Snow slows the road: +%d %s." % [snow_days, "day" if snow_days == 1 else "days"], "info")
 	current_region = region_id
 	last_arrival_first_visit = Exploration.visit(player, region_id)

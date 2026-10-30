@@ -499,6 +499,34 @@ func test_snow_adds_a_day_to_travel() -> void:
 	_restore_weather(gs)
 
 
+func test_journey_days_matches_days_spent_and_labels() -> void:
+	var c := _start()
+	var gs := _game_state()
+	c.realm_index = 1
+	gs.data.road = {}
+	var route: Dictionary = gs.data.regions[gs.data.start_region]["routes"][0]
+	_set_weather(gs, "snow")
+	var planned: int = gs.journey_days(route)
+	assert_eq(WorldMapScreen.route_days_label(c, gs.data, route, 1), "%dd" % planned, "map label shows the snow day")
+	var start_day := GameClock.total_days
+	gs.travel(String(route["to"]))
+	assert_eq(GameClock.total_days - start_day, planned, "journey_days is what travel spends")
+	_set_weather(gs, "clear")
+	assert_eq(gs.journey_days(route), Exploration.travel_days(c, gs.data, int(route["days"])))
+	_restore_weather(gs)
+
+
+func test_gather_option_notes_rain() -> void:
+	_start()
+	var gs := _game_state()
+	gs.data.weather_effects = {"rain": {"herb_bonus_chance": 0.5}}
+	_set_weather(gs, "rain")
+	assert_true(GatherSite.gather_weather_note("Used in: x.").contains("herbs thrive"))
+	_set_weather(gs, "clear")
+	assert_eq(GatherSite.gather_weather_note("x"), "")
+	_restore_weather(gs)
+
+
 func test_deed_with_enemy_needs_a_win() -> void:
 	var c := _start()
 	var gs := _game_state()
