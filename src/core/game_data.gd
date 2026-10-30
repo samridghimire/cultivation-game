@@ -961,6 +961,17 @@ func _validate_home_meals() -> void:
 		var output: Dictionary = meal.get("output", {})
 		if not items.has(String(output.get("item", ""))) or int(output.get("count", 0)) < 1:
 			load_errors.append("Home meal '%s' has a bad output" % id)
+			continue
+		var buff: Dictionary = items[String(output["item"])].get("effects", {}).get("buff", {})
+		if buff.is_empty():
+			continue
+		var days := int(buff.get("days", 0))
+		if days < 1 or days > 7:
+			load_errors.append("Home meal '%s' buff must last 1-7 days" % id)
+		var mults: Dictionary = buff.get("mults", {})
+		for stat: Variant in mults:
+			if float(mults[stat]) > 0.15:
+				load_errors.append("Home meal '%s' buff %s is above +0.15" % [id, stat])
 
 
 func _validate_recipes() -> void:

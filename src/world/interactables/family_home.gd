@@ -25,6 +25,7 @@ func get_options() -> Array[Dictionary]:
 		var movers := FamilyHome.movers(p, GameState.npcs, data, region)
 		move_label += ": %s" % ", ".join(movers.map(func(c: CharacterData) -> String: return c.name))
 	options.append({"label": move_label, "action": GameState.move_household_here, "disabled": move_reason != "", "reason": move_reason, "keep_open": true})
+	options.append_array(Workshop.cook_options(p, data))
 	options.append({"label": "Family tree", "action": func(): EventBus.family_requested.emit()})
 	return options
 

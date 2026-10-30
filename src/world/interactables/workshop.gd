@@ -1,3 +1,4 @@
+class_name Workshop
 extends Interactable
 ## Odd jobs that train a profession and pay spirit stones. Alchemists refine
 ## pills, Blacksmiths forge artifacts and Talisman Masters inscribe talismans and Array Masters refine array discs and Beast Tamers mix beast feed from recipes (data/recipes.json)
@@ -15,9 +16,7 @@ func get_options() -> Array[Dictionary]:
 		if data.professions.has(prof_id):
 			var known := Alchemy.known_recipes(c, data, prof_id).size()
 			options.append({"label": "%s (%s, %d %s)" % [CraftingScreen.TITLES[prof_id], Professions.rank_title(c, data, prof_id), known, "recipe" if known == 1 else "recipes"], "action": EventBus.crafting_requested.emit.bind(prof_id)})
-	for m: Dictionary in data.home_meals:
-		var meal_reason := Cooking.check(c, data, String(m["id"]))
-		options.append({"label": "Cook: %s" % m["name"], "description": "No profession needed. Eases injuries once eaten.", "reason": meal_reason, "action": GameState.cook_meal.bind(String(m["id"])), "disabled": meal_reason != "", "keep_open": true})
+	options.append_array(cook_options(c, data))
 	for i in c.commissions.size():
 		var reason := Commissions.check_deliver(c, data, i)
 		var label := Commissions.short_label(c, data, c.commissions[i], GameClock.total_days)
@@ -29,6 +28,15 @@ func get_options() -> Array[Dictionary]:
 		var title := Professions.rank_title(c, data, def.id)
 		var verb := "Odd jobs as %s" % def.name if is_craft else "Work as %s" % def.name
 		options.append({"label": "%s (1 month) [%s]" % [verb, title], "description": _pay_note(c, data, def.id), "action": GameState.work_profession.bind(def.id, Calendar.DAYS_PER_MONTH), "keep_open": true})
+	return options
+
+
+## COOK-002: the "Cook ..." entries, shared with the Family Home.
+static func cook_options(c: CharacterData, data: GameData) -> Array[Dictionary]:
+	var options: Array[Dictionary] = []
+	for m: Dictionary in data.home_meals:
+		var meal_reason := Cooking.check(c, data, String(m["id"]))
+		options.append({"label": "Cook: %s" % m["name"], "description": "No profession needed. %s" % Cooking.describe(data, String(m["id"])), "reason": meal_reason, "action": GameState.cook_meal.bind(String(m["id"])), "disabled": meal_reason != "", "keep_open": true})
 	return options
 
 

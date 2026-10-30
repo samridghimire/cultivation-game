@@ -52,7 +52,7 @@ static func check(c: CharacterData, data: GameData, effects: Dictionary) -> Stri
 		return "Burning %d years of life would kill you." % int(effects["burn_lifespan"])
 	if effects.has("heal_injury") and not _has_healable(c, effects["heal_injury"]):
 		return "You have no injury that this would heal."
-	if effects.has("shorten_injury") and not Injuries.has_any(c):
+	if effects.has("shorten_injury") and not effects.has("buff") and not Injuries.has_any(c):
 		return "You have no injury that this would ease."
 	if effects.has("bloodline") and c.bloodline != "":
 		return "Your blood already carries the %s." % Bloodlines.bloodline_name(data, c.bloodline)

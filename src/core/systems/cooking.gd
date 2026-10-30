@@ -39,3 +39,12 @@ static func cook(c: CharacterData, data: GameData, meal_id: String) -> Dictionar
 	var count := int(output["count"])
 	c.add_item(item, count)
 	return {"ok": true, "reason": "", "item": item, "count": count, "days": int(m["days"])}
+
+
+## What eating the meal gives, generated from the dish item's effects ("Eases injuries by 3 days. +10% defense for 3 days.").
+static func describe(data: GameData, meal_id: String) -> String:
+	var m := meal(data, meal_id)
+	if m.is_empty():
+		return ""
+	var item: Dictionary = data.items.get(String(m["output"]["item"]), {})
+	return ". ".join(Items.describe_effects(item.get("effects", {}), data)) + "."
