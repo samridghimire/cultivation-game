@@ -1452,6 +1452,61 @@ func share_tea(npc_id: String) -> void:
 	EventBus.player_changed.emit()
 
 
+## FOLK-004: why the quarrel `npc_id` is part of cannot be settled now ("" when it can).
+func check_quarrel(npc_id: String) -> String:
+	return Folk.check_settle(npcs, data, world_flags, current_region, npc_id, GameClock.total_days)
+
+
+## FOLK-004: the open quarrel `npc_id` is in ({} when none).
+func quarrel_of(npc_id: String) -> Dictionary:
+	if player == null:
+		return {}
+	var q := Folk.open_quarrel(world_flags, current_region, GameClock.total_days)
+	return q if Folk.quarrel_other(q, npc_id) != "" else {}
+
+
+## FOLK-004: settle the open quarrel of this region with `choice` (Folk.QUARREL_CHOICES): favor with both, maybe
+## alignment and stones. Clears the quarrel. `npc_id` is the villager you came through.
+func settle_quarrel(npc_id: String, choice: String) -> Dictionary:
+	EventBus.topic = "family"
+	if not _can_act():
+		return {}
+	var reason := check_quarrel(npc_id)
+	if reason != "" or not Folk.QUARREL_CHOICES.has(choice):
+		EventBus.post(reason if reason != "" else "You cannot settle it that way.", "warning")
+		EventBus.player_changed.emit()
+		return {}
+	var q := Folk.open_quarrel(world_flags, current_region, GameClock.total_days)
+	var result := Folk.settle(player, data, q, choice, rng)
+	var notes: PackedStringArray = []
+	for id: String in result["favor"]:
+		var delta := int(result["favor"][id])
+		npc_favor[id] = clampi(int(npc_favor.get(id, 0)) + delta, -100, 100)
+		if delta != 0:
+			notes.append("%s %s" % [npcs[id].name, "%+d" % delta])
+	if int(result["alignment"]) != 0:
+		Alignment.shift(player, data, int(result["alignment"]))
+	if int(result["stones"]) > 0:
+		player.add_item("spirit_stone", int(result["stones"]))
+		notes.append("+%d spirit stones" % int(result["stones"]))
+	world_flags.erase(Folk.quarrel_flag(current_region))
+	var a: String = npcs[q["a"]].name
+	var b: String = npcs[q["b"]].name
+	var line := ""
+	match choice:
+		"mediate":
+			line = "You hear out both sides and %s." % ("find a settlement they can both live with" if result["ok"] else "only make both of them sulk")
+		"side_a":
+			line = "You take %s's side against %s." % [a, b]
+		"side_b":
+			line = "You take %s's side against %s." % [b, a]
+		_:
+			line = "You offer to keep quiet about the matter, for a price."
+	EventBus.post("%s (%s)" % [line, ", ".join(notes)], "progress")
+	EventBus.player_changed.emit()
+	return result
+
+
 ## WORLD-005: why `npc_id`'s wedding cannot be attended now ("" when it can).
 func check_celebration(npc_id: String) -> String:
 	if not npcs.has(npc_id):
@@ -3418,6 +3473,9 @@ func _on_days_advanced(days: int) -> void:
 		var asked := Folk.monthly_request(player, npcs, data, rng, current_region, npc_favor, GameClock.total_days)
 		if not asked.is_empty():
 			EventBus.post(String(asked["text"]) + " (Give it to them in person within %d days.)" % int(Folk.request_rules(data).get("days", 20)), "info")
+		var quarrel := Folk.monthly_quarrel(player, npcs, data, rng, current_region, GameClock.total_days, world_flags)
+		if not quarrel.is_empty():
+			EventBus.post(Folk.quarrel_text(quarrel, npcs, data) + " (Either of them would welcome a word from you.)", "info")
 	for req in player.letter_requests.duplicate():
 		var asker: CharacterData = npcs.get(req["npc_id"])
 		if asker == null or not asker.alive:

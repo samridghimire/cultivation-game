@@ -2397,3 +2397,24 @@ func test_field_rent_plant_grow_harvest() -> void:
 	assert_true(c.item_count("spirit_herb") >= 2, "harvested")
 	var back := CharacterData.from_dict(JSON.parse_string(JSON.stringify(c.to_dict())))
 	assert_eq(back.field_plots.size(), 1)
+
+
+func test_settle_quarrel_mediate_and_extort() -> void:
+	var c := _start()
+	var gs := _game_state()
+	var a := Npcs.spawn(gs.npcs, gs.data, seeded_rng(5), {"age_years": 30, "region": "qingshi_village", "realm": "mortal"})
+	var b := Npcs.spawn(gs.npcs, gs.data, seeded_rng(6), {"age_years": 40, "region": "qingshi_village", "realm": "mortal"})
+	var key := Folk.quarrel_flag(gs.current_region)
+	gs.world_flags[key] = {"a": a.id, "b": b.id, "topic": "rice_debt", "until": GameClock.total_days + 10}
+	assert_eq(gs.check_quarrel(a.id), "")
+	assert_false(gs.quarrel_of(b.id).is_empty())
+	c.attributes["charisma"] = 1000
+	gs.rng.seed = 1
+	gs.settle_quarrel(a.id, "extort")
+	assert_eq(int(gs.npc_favor[a.id]), -6)
+	assert_false(gs.world_flags.has(key), "settling clears the quarrel")
+	assert_true(gs.check_quarrel(a.id) != "")
+	gs.world_flags[key] = {"a": a.id, "b": b.id, "topic": "rice_debt", "until": GameClock.total_days + 10}
+	gs.settle_quarrel(b.id, "side_a")
+	assert_eq(int(gs.npc_favor[a.id]), -6 + 8)
+	assert_eq(int(gs.npc_favor[b.id]), -6 - 8)

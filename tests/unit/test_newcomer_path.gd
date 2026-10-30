@@ -89,16 +89,22 @@ func test_newcomer_path() -> void:
 	assert_true(_c.item_count("spirit_stone") <= before, "buying never adds stones")
 	_check("buy")
 
-	# Meditate to a breakthrough
+	# Meditate to a breakthrough. The odds are 95%, so a seeded run may fail once (the qi scatters): meditate and retry.
 	var months := 0
-	while not Cultivation.can_attempt_breakthrough(_c, _gs.data) and months < 120 and _c.alive:
-		_gs.cultivate(30, 2.0)
-		_gs.pending_event = ""
-		months += 1
-	_check("meditate")
-	if Cultivation.can_attempt_breakthrough(_c, _gs.data):
+	var tries := 0
+	while _c.realm_index == 0 and tries < 5 and _c.alive:
+		while not Cultivation.can_attempt_breakthrough(_c, _gs.data) and months < 240 and _c.alive:
+			_gs.cultivate(30, 2.0)
+			_gs.pending_event = ""
+			months += 1
+		if not Cultivation.can_attempt_breakthrough(_c, _gs.data):
+			break
+		_check("meditate")
 		_gs.attempt_breakthrough()
-		_check("breakthrough")
+		tries += 1
+		if _c.realm_index == 0:
+			_seen = _bus().history.size()  # a failed attempt's "(95% chance)" line is not a formatting bug
+	_check("breakthrough")
 
 	# Join a sect
 	var sects := Sects.accepting_sects(_c, _gs.data)

@@ -283,6 +283,7 @@ static func validate(data: GameData) -> PackedStringArray:
 	errors.append_array(validate_celebrations(data))
 	errors.append_array(validate_tips(data))
 	errors.append_array(validate_visits(data))
+	errors.append_array(validate_quarrels(data))
 	errors.append_array(validate_gifts(data))
 	for e: Dictionary in data.encounters.values():
 		var blocks: Array = [[String(e["id"]), e.get("effects", {})]]
@@ -648,3 +649,150 @@ static func tip_line(data: GameData, tip: Dictionary, villager_name: String, lin
 		.replace("{item}", String(data.items.get(item_id, {}).get("name", item_id))) \
 		.replace("{region}", String(data.regions.get(String(tip["region"]), {}).get("name", tip["region"]))) \
 		.replace("{place_kind}", kind)
+
+
+# --- FOLK-004: a quarrel between two villagers that the player may settle ------------------------
+
+const QUARREL_PREFIX := "quarrel_"
+const QUARREL_CHOICES: PackedStringArray = ["mediate", "side_a", "side_b", "extort"]
+
+
+## data/family.json folk_quarrels ({} = feature off).
+static func quarrel_rules(data: GameData) -> Dictionary:
+	return data.family.get("folk_quarrels", {})
+
+
+static func quarrel_flag(region_id: String) -> String:
+	return QUARREL_PREFIX + region_id
+
+
+## The open quarrel of `region_id` ({} when none or it has run out).
+static func open_quarrel(flags: Dictionary, region_id: String, today: int) -> Dictionary:
+	var q: Variant = flags.get(quarrel_flag(region_id))
+	if q is Dictionary and int(q.get("until", -1)) >= today:
+		return q
+	return {}
+
+
+## This month's quarrel in `region_id`, stored in flags and returned ({} when none starts). An expired one is cleared
+## quietly; while one is open nothing is drawn. The chance is rolled first, then two different non-family adults are picked.
+static func monthly_quarrel(c: CharacterData, npcs: Dictionary, data: GameData, rng: RandomNumberGenerator, region_id: String, today: int, flags: Dictionary) -> Dictionary:
+	var r := quarrel_rules(data)
+	if r.is_empty() or region_id == "":
+		return {}
+	if not open_quarrel(flags, region_id, today).is_empty():
+		return {}
+	flags.erase(quarrel_flag(region_id))
+	if rng.randf() >= float(r.get("chance", 0.0)):
+		return {}
+	var pool := candidates(npcs, data, c, region_id)
+	if pool.size() < 2:
+		return {}
+	pool.sort_custom(func(x: CharacterData, y: CharacterData) -> bool: return x.id < y.id)
+	var ia := rng.randi_range(0, pool.size() - 1)
+	var ib := rng.randi_range(0, pool.size() - 2)
+	if ib >= ia:
+		ib += 1
+	var topics: Array = r["topics"]
+	var topic: Dictionary = topics[rng.randi_range(0, topics.size() - 1)]
+	var q := {"a": pool[ia].id, "b": pool[ib].id, "topic": String(topic["id"]), "until": today + int(r.get("days", 20))}
+	flags[quarrel_flag(region_id)] = q
+	return q
+
+
+## The quarrel's one-line description with the villagers' names.
+static func quarrel_text(q: Dictionary, npcs: Dictionary, data: GameData) -> String:
+	var a: CharacterData = npcs.get(String(q.get("a", "")))
+	var b: CharacterData = npcs.get(String(q.get("b", "")))
+	for topic: Dictionary in quarrel_rules(data).get("topics", []):
+		if String(topic["id"]) == String(q.get("topic", "")) and a != null and b != null:
+			return String(topic["text"]).replace("{a}", a.name).replace("{b}", b.name)
+	return ""
+
+
+## Why the quarrel of `region_id` cannot be settled through `npc_id` now ("" when it can).
+static func check_settle(npcs: Dictionary, data: GameData, flags: Dictionary, region_id: String, npc_id: String, today: int) -> String:
+	var q := open_quarrel(flags, region_id, today)
+	if q.is_empty() or (String(q["a"]) != npc_id and String(q["b"]) != npc_id):
+		return "There is no quarrel to settle."
+	for id: String in [q["a"], q["b"]]:
+		var npc: CharacterData = npcs.get(id)
+		if npc == null or not npc.alive:
+			return "One of them is no longer here to settle with."
+	return ""
+
+
+## The other villager of a quarrel `npc_id` is in ("" when not in `q`).
+static func quarrel_other(q: Dictionary, npc_id: String) -> String:
+	if String(q.get("a", "")) == npc_id:
+		return String(q.get("b", ""))
+	if String(q.get("b", "")) == npc_id:
+		return String(q.get("a", ""))
+	return ""
+
+
+## Odds of the mediate check, 0.1..0.9 like exploration checks.
+static func mediate_chance(c: CharacterData, data: GameData) -> float:
+	var check: Dictionary = quarrel_rules(data)["outcomes"]["mediate"]["check"]
+	return clampf(float(c.attribute(String(check["attribute"]))) / float(check["target"]), 0.1, 0.9)
+
+
+## Applies `choice` (QUARREL_CHOICES) to quarrel `q`: {favor: {npc id: delta}, alignment: int, stones: int, ok: bool}.
+## Only mediate draws from `rng` (the check). The caller applies the numbers and clears the flag.
+static func settle(c: CharacterData, data: GameData, q: Dictionary, choice: String, rng: RandomNumberGenerator) -> Dictionary:
+	var o: Dictionary = quarrel_rules(data)["outcomes"]
+	var a := String(q["a"])
+	var b := String(q["b"])
+	var out := {"favor": {a: 0, b: 0}, "alignment": 0, "stones": 0, "ok": true}
+	match choice:
+		"mediate":
+			var m: Dictionary = o["mediate"]
+			if rng.randf() < mediate_chance(c, data):
+				out["favor"] = {a: int(m["favor_a"]), b: int(m["favor_b"])}
+				out["alignment"] = int(m["alignment"])
+			else:
+				out["ok"] = false
+				out["favor"] = {a: int(m["fail_favor"]), b: int(m["fail_favor"])}
+		"side_a", "side_b":
+			var s: Dictionary = o[choice]
+			var a_wins := choice == "side_a"
+			out["favor"] = {a: int(s["favor_winner"] if a_wins else s["favor_loser"]), b: int(s["favor_loser"] if a_wins else s["favor_winner"])}
+		"extort":
+			var e: Dictionary = o["extort"]
+			out["favor"] = {a: int(e["favor_a"]), b: int(e["favor_b"])}
+			out["alignment"] = int(e["alignment"])
+			out["stones"] = int(e["stones"])
+	return out
+
+
+static func validate_quarrels(data: GameData) -> PackedStringArray:
+	var errors: PackedStringArray = []
+	var r := quarrel_rules(data)
+	if r.is_empty():
+		return errors
+	var chance := float(r.get("chance", 0.0))
+	if chance <= 0.0 or chance > 1.0 or int(r.get("days", 0)) < 1:
+		errors.append("family.json folk_quarrels needs chance in (0, 1] and days >= 1")
+	if not (r.get("topics") is Array) or r["topics"].is_empty():
+		errors.append("family.json folk_quarrels.topics must be a non-empty list")
+	else:
+		for topic: Dictionary in r["topics"]:
+			var text := String(topic.get("text", ""))
+			if String(topic.get("id", "")) == "" or not text.contains("{a}") or not text.contains("{b}"):
+				errors.append("family.json folk_quarrels topic needs an id and a text with {a} and {b}")
+	var o: Variant = r.get("outcomes")
+	if not (o is Dictionary):
+		errors.append("family.json folk_quarrels.outcomes is missing")
+		return errors
+	for key in ["mediate", "side_a", "side_b", "extort"]:
+		if not (o.get(key) is Dictionary):
+			errors.append("family.json folk_quarrels.outcomes.%s is missing" % key)
+			return errors
+	var check: Variant = o["mediate"].get("check")
+	if not (check is Dictionary) or not (data.attributes.is_empty() or data.attribute_ids().has(String(check.get("attribute", "")))) or int(check.get("target", 0)) < 1:
+		errors.append("family.json folk_quarrels mediate.check needs a known attribute and target >= 1")
+	if int(o["mediate"].get("fail_favor", 1)) > 0:
+		errors.append("family.json folk_quarrels mediate.fail_favor must be <= 0")
+	if int(o["extort"].get("stones", -1)) < 0:
+		errors.append("family.json folk_quarrels extort.stones must be >= 0")
+	return errors

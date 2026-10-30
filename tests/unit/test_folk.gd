@@ -610,3 +610,101 @@ func test_celebration_greeting_only_while_open() -> void:
 	assert_true(lines.has(Folk.greeting(npc, 50, 105, d, flags)))
 	assert_eq(Folk.greeting(npc, 0, 111, d, flags), "", "closed: normal rules")
 	assert_eq(Folk.greeting(npc, 0, 105, d), "", "no flags: normal rules")
+
+
+# --- FOLK-004: quarrels ---
+
+func _quarrel_rig() -> Array:
+	var npcs := {}
+	_village(npcs, 4)
+	return [new_character(), npcs]
+
+
+func test_quarrel_picks_two_non_family_adults_deterministically() -> void:
+	var d := data()
+	d.family["folk_quarrels"]["chance"] = 1.0
+	var rig := _quarrel_rig()
+	var c: CharacterData = rig[0]
+	var npcs: Dictionary = rig[1]
+	var family: CharacterData = Folk.candidates(npcs, d, c, "qingshi_village")[0]
+	c.spouses = [family.id]
+	var flags := {}
+	var q := Folk.monthly_quarrel(c, npcs, d, seeded_rng(3), "qingshi_village", 100, flags)
+	assert_false(q.is_empty())
+	assert_true(q["a"] != q["b"])
+	assert_true(q["a"] != family.id and q["b"] != family.id)
+	assert_eq(flags[Folk.quarrel_flag("qingshi_village")], q)
+	var again := {}
+	assert_eq(Folk.monthly_quarrel(c, npcs, d, seeded_rng(3), "qingshi_village", 100, again), q)
+	assert_true(Folk.quarrel_text(q, npcs, d).find("{") < 0)
+	d.family["folk_quarrels"]["chance"] = 0.25
+
+
+func test_quarrel_one_at_a_time_and_expiry_clears_quietly() -> void:
+	var d := data()
+	d.family["folk_quarrels"]["chance"] = 1.0
+	var rig := _quarrel_rig()
+	var flags := {}
+	var q := Folk.monthly_quarrel(rig[0], rig[1], d, seeded_rng(), "qingshi_village", 100, flags)
+	assert_true(Folk.monthly_quarrel(rig[0], rig[1], d, seeded_rng(), "qingshi_village", 110, flags).is_empty())
+	assert_eq(Folk.open_quarrel(flags, "qingshi_village", 110), q)
+	assert_true(Folk.open_quarrel(flags, "qingshi_village", int(q["until"]) + 1).is_empty())
+	var next := Folk.monthly_quarrel(rig[0], rig[1], d, seeded_rng(), "qingshi_village", int(q["until"]) + 1, flags)
+	assert_false(next.is_empty())
+	d.family["folk_quarrels"]["chance"] = 0.25
+
+
+func test_quarrel_needs_two_villagers() -> void:
+	var d := data()
+	d.family["folk_quarrels"]["chance"] = 1.0
+	var npcs := {}
+	_village(npcs, 1)
+	assert_true(Folk.monthly_quarrel(new_character(), npcs, d, seeded_rng(), "qingshi_village", 100, {}).is_empty())
+	d.family["folk_quarrels"]["chance"] = 0.25
+
+
+func test_quarrel_settle_outcomes() -> void:
+	var d := data()
+	var o: Dictionary = d.family["folk_quarrels"]["outcomes"]
+	var c := new_character()
+	var q := {"a": "x", "b": "y", "topic": "rice_debt", "until": 200}
+	var side := Folk.settle(c, d, q, "side_a", seeded_rng())
+	assert_eq(int(side["favor"]["x"]), int(o["side_a"]["favor_winner"]))
+	assert_eq(int(side["favor"]["y"]), int(o["side_a"]["favor_loser"]))
+	side = Folk.settle(c, d, q, "side_b", seeded_rng())
+	assert_eq(int(side["favor"]["y"]), int(o["side_b"]["favor_winner"]))
+	var ext := Folk.settle(c, d, q, "extort", seeded_rng())
+	assert_eq(int(ext["stones"]), int(o["extort"]["stones"]))
+	assert_eq(int(ext["alignment"]), int(o["extort"]["alignment"]))
+	assert_eq(int(ext["favor"]["x"]), int(o["extort"]["favor_a"]))
+
+
+func test_quarrel_mediate_check_passes_and_fails() -> void:
+	var d := data()
+	var c := new_character()
+	var q := {"a": "x", "b": "y", "topic": "rice_debt", "until": 200}
+	c.attributes["charisma"] = 100
+	var rng := RandomNumberGenerator.new()
+	var ok := Folk.settle(c, d, q, "mediate", seeded_rng())
+	assert_true(Folk.mediate_chance(c, d) == 0.9)
+	var wins := 0
+	var losses := 0
+	for i in 40:
+		rng.seed = i
+		var r := Folk.settle(c, d, q, "mediate", rng)
+		if r["ok"]:
+			wins += 1
+			assert_eq(int(r["favor"]["x"]), 4)
+		else:
+			losses += 1
+			assert_eq(int(r["favor"]["x"]), -2)
+	assert_true(wins > 0 and losses > 0)
+	assert_true(ok.has("ok"))
+
+
+func test_quarrel_validation() -> void:
+	var d := data()
+	assert_true(Folk.validate_quarrels(d).is_empty())
+	d.family["folk_quarrels"]["topics"][0]["text"] = "no names"
+	assert_false(Folk.validate_quarrels(d).is_empty())
+	d.family["folk_quarrels"]["topics"][0]["text"] = "{a} {b}"
