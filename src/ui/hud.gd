@@ -73,6 +73,8 @@ var _combat_report: CombatReport
 var _fight_rating: String = ""
 var _fight_enemy: Dictionary = {}
 var _dialogue: DialogueWindow
+## The interactable whose menu was opened last: its portrait shows in the dialogue it starts (WU-408).
+var _last_source: Node
 var _encounter: EncounterWindow
 var _arrival_waiting: String = ""  # arrival card held back while a road encounter window is open (WU-080)
 var _pause_menu: PauseMenu
@@ -925,6 +927,7 @@ func _refresh_key_hints() -> void:
 func _on_menu_requested(source: Node) -> void:
 	if _any_screen_open() or _dialogue.visible or _encounter.visible or _combat_report.visible or _tribulation.visible or _respawn.visible or _realm_card.visible or _pause_menu.visible or _settings.visible or _help.visible or _load_screen.visible or _death_screen.visible:
 		return
+	_last_source = source
 	_choice_menu.open_for(source)
 	_update_modal()
 
@@ -1022,6 +1025,10 @@ func _open_pending_respawn() -> void:
 func _on_dialogue_requested(_npc_id: String) -> void:
 	_choice_menu.close()
 	_close_screens()
+	var portrait: Texture2D = null
+	if is_instance_valid(_last_source) and _last_source.has_method("portrait_texture"):
+		portrait = _last_source.portrait_texture()
+	_dialogue.set_portrait(portrait)
 	_dialogue.open()
 	_update_modal()
 

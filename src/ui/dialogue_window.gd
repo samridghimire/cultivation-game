@@ -6,23 +6,33 @@ extends PanelContainer
 
 signal closed
 
+## Text column width without a portrait; with one it shrinks by PortraitBox.COLUMN_WIDTH.
+const TEXT_WIDTH := 656
+
 var _speaker: Label
 var _text: Label
 var _choices: VBoxContainer
+var _portrait: PortraitBox
 
 
 func _init() -> void:
 	add_theme_stylebox_override("panel", UIStyle.panel_style())
 	custom_minimum_size = Vector2(680, 0)
 	visible = false
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 12)
+	add_child(row)
+	_portrait = PortraitBox.new()
+	row.add_child(_portrait)
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 12)
-	add_child(box)
+	box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(box)
 	_speaker = UIStyle.label("", 22, UIStyle.ACCENT)
 	box.add_child(_speaker)
 	_text = UIStyle.label("", 17)
 	_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_text.custom_minimum_size = Vector2(656, 0)
+	_text.custom_minimum_size = Vector2(TEXT_WIDTH, 0)
 	box.add_child(_text)
 	box.add_child(HSeparator.new())
 	_choices = VBoxContainer.new()
@@ -43,6 +53,16 @@ static func choice_label(choice: Dictionary) -> String:
 	if choice["disabled"] and choice["reason"] != "":
 		text += "  (%s)" % choice["reason"]
 	return text
+
+
+## Shows the speaker's portrait left of the text; null hides the column and gives the text its width back.
+func set_portrait(tex: Texture2D) -> void:
+	_portrait.set_portrait(tex)
+	_text.custom_minimum_size.x = TEXT_WIDTH - (PortraitBox.COLUMN_WIDTH if tex != null else 0)
+
+
+func portrait_visible() -> bool:
+	return _portrait.visible
 
 
 ## Shows the current node of the conversation in progress (or closes if none).

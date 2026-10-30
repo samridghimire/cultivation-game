@@ -12,15 +12,22 @@ var _title: Label
 var _buttons: VBoxContainer
 var _scroll: ScrollContainer
 var _description: Label
+var _portrait: PortraitBox
 
 
 func _init() -> void:
 	add_theme_stylebox_override("panel", UIStyle.panel_style())
 	custom_minimum_size = Vector2(440, 0)
 	visible = false
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 12)
+	add_child(row)
+	_portrait = PortraitBox.new()
+	row.add_child(_portrait)
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 10)
-	add_child(box)
+	box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(box)
 	_title = UIStyle.label("", 22, UIStyle.ACCENT)
 	box.add_child(_title)
 	# A rule under the title so it does not read as one of the options (WU-161).
@@ -59,6 +66,10 @@ func open_for(source: Node) -> void:
 	visible = true
 
 
+func portrait_visible() -> bool:
+	return _portrait.visible
+
+
 func close() -> void:
 	if not visible:
 		return
@@ -73,6 +84,7 @@ func _rebuild() -> void:
 	for child in _buttons.get_children():
 		child.queue_free()
 	_title.text = _source.display_name
+	_portrait.set_portrait(_source.portrait_texture() if _source.has_method("portrait_texture") else null)
 	var options: Array[Dictionary] = _source.menu_options()
 	if options.is_empty():
 		_buttons.add_child(UIStyle.label("There is nothing to do here.", 16))

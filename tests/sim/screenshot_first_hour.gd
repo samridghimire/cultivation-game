@@ -89,7 +89,11 @@ func _start() -> void:
 			c.qi = sect_saved[3]
 			sect_saved.clear()
 			root.get_node("EventBus").player_changed.emit()})
-	shots.append({"name": "elder_mo_dialogue", "open": func() -> void: gs.start_dialogue("elder_mo"), "close": func() -> void: gs.end_dialogue()})
+	shots.append({"name": "elder_mo_dialogue", "open": func() -> void:
+		for node in world.get_children():  # WU-408: the HUD remembers whose menu was opened, for the portrait
+			if node.has_method("portrait_texture") and node.get("npc_id") == "elder_mo":
+				root.get_node("EventBus").interaction_menu_requested.emit(node)
+		gs.start_dialogue("elder_mo"), "close": func() -> void: gs.end_dialogue()})
 	var explore_site := _find_explore()
 	if explore_site != null:
 		var menu: Control = hud.get("_choice_menu")

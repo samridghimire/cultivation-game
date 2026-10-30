@@ -73,6 +73,11 @@ func get_options() -> Array[Dictionary]:
 	return []
 
 
+## The speaker's framed portrait in menus and dialogue (WU-408); null = no portrait column.
+func portrait_texture() -> Texture2D:
+	return null
+
+
 ## get_options() plus the anchor entry when this place is an artifact anchor.
 func menu_options() -> Array[Dictionary]:
 	var options := get_options()

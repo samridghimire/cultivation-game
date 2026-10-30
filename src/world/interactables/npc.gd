@@ -122,6 +122,10 @@ func figure_look() -> Dictionary:
 	return look
 
 
+func portrait_texture() -> Texture2D:
+	return PixelFigure.frame(figure_look(), "down", 0)
+
+
 func draw_generated_art() -> bool:
 	var tex := PixelFigure.frame(figure_look(), _dir, _walk_frame)
 	var s := float(Sprites.scale())

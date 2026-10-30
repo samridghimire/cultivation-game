@@ -13,6 +13,12 @@ func sprite_keys() -> PackedStringArray:
 	return PackedStringArray(["npc_" + deed_context, "place_" + art_kind])
 
 
+func portrait_texture() -> Texture2D:
+	if PlaceLooks.is_camp(look):
+		return null
+	return PixelFigure.frame(PlaceLooks.figure_look(look, color), "down", 0)
+
+
 func draw_generated_art() -> bool:
 	if PlaceLooks.is_camp(look):
 		PlaceArt.draw(self, "camp", size, color)
