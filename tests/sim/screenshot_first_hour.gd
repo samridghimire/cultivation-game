@@ -5,6 +5,7 @@ extends SceneTree
 ##     --resolution 1280x800 -s res://tests/sim/screenshot_first_hour.gd
 ## WU-218: append `-- --crafter` for a new Alchemist's first hour (workshop, hint, gather site, crafting,
 ## journal Commissions, Deliver) as crafter_*.png.
+## GFX-029: append `-- --field` for field.png (a growing field).
 ## GFX-023: append `-- --celebration` for celebration.png (wedding lanterns and red sashes).
 ## WU-223: append `-- --gather-note` for the Village Herb Slope menu in each season: gather_note_<season>.png.
 ## WU-404: shots open through the HUD's _update_modal, so the dim backdrop and hidden prompt show.
@@ -46,6 +47,9 @@ func _start() -> void:
 		return
 	if OS.get_cmdline_user_args().has("--gather-note"):
 		_gather_note_shots(gs)
+		return
+	if OS.get_cmdline_user_args().has("--field"):  # GFX-029: a rented field with a young and a nearly ripe crop
+		_field_shots(gs, c)
 		return
 	if party:
 		shots.append({"name": "celebration", "open": func() -> void:
@@ -230,6 +234,23 @@ func _gather_note_shots(gs: Node) -> void:
 		hud.get("_banner").visible = false
 		menu.open_for(quarry)
 		print("Quarry: %s" % quarry.get_options()[0].get("description", "")), "close": menu.close})
+
+
+func _field_shots(gs: Node, c: CharacterData) -> void:
+	var field: Node = null
+	var stack: Array[Node] = [world]
+	while not stack.is_empty():
+		var node: Node = stack.pop_back()
+		stack.append_array(node.get_children())
+		if node.get_script() != null and String(node.get_script().resource_path).ends_with("field_plot.gd"):
+			field = node
+	var place := FieldPlots.place_def(gs.data, "qingshi_village")
+	var key := FieldPlots.key("qingshi_village", place)
+	c.field_plots[key] = {"paid_until": 90, "crops": [{"item": "spirit_herb", "days_left": 20}, {"item": "dew_grass", "days_left": 3}]}
+	shots.append({"name": "field", "open": func() -> void:
+		hud.get("_banner").visible = false
+		world.get_node("Player").position = field.position + Vector2(0, 70)
+		field.queue_redraw(), "close": func() -> void: pass})
 
 
 func _find_gather_site(site_name: String) -> Node:

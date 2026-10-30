@@ -123,3 +123,23 @@ func test_save_round_trip() -> void:
 	var back := CharacterData.from_dict(JSON.parse_string(JSON.stringify(c.to_dict())))
 	assert_eq(back.field_plots, c.field_plots)
 	assert_true(CharacterData.from_dict({}).field_plots.is_empty())
+
+
+func test_growth_stage_thresholds() -> void:
+	assert_eq(FieldPlots.growth_stage(10, 10), 0, "just planted")
+	assert_eq(FieldPlots.growth_stage(7, 10), 0, "0.3 grown")
+	assert_eq(FieldPlots.growth_stage(6, 10), 1, "0.4 grown")
+	assert_eq(FieldPlots.growth_stage(3, 10), 2, "0.7 grown")
+	assert_eq(FieldPlots.growth_stage(1, 10), 2, "almost ripe")
+	assert_eq(FieldPlots.growth_stage(0, 10), 3, "ripe")
+	assert_eq(FieldPlots.growth_stage(5, 0), 3, "bad total counts as ripe")
+	assert_eq(FieldPlots.crop_total_days(_place(), "spirit_herb"), 5)
+	assert_true(FieldPlots.is_frozen(_place(), 11 * Calendar.DAYS_PER_MONTH), "month 12 is winter")
+	assert_false(FieldPlots.is_frozen(_place(), 0))
+
+
+func test_describe_says_ready_in() -> void:
+	var c := _farmer()
+	c.field_plots[KEY] = {"paid_until": 99, "crops": [{"item": "spirit_herb", "days_left": 3}]}
+	var lines := FieldPlots.describe(c, GameData.new(), _place(), KEY, 1)
+	assert_true("\n".join(lines).contains("ready in"), "\n".join(lines))

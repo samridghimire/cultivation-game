@@ -31,26 +31,52 @@ func get_options() -> Array[Dictionary]:
 func _ready() -> void:
 	super()
 	EventBus.player_changed.connect(queue_redraw)
+	GameClock.days_advanced.connect(func(_days: int) -> void: queue_redraw())
 
 
-## Tilled earth with furrows, and a sprout (or a full plant when ripe) for each crop.
+## Soil by state (bare tilled / rented with a rope marker), a plant per crop by growth stage, frost in a frozen season.
 func draw_generated_art() -> bool:
 	var rect := Rect2(-size / 2.0, size)
-	draw_rect(rect, color)
+	var place := FieldPlots.place_def(GameState.data, GameState.current_region)
+	var plot_key := FieldPlots.key(GameState.current_region, place) if not place.is_empty() else ""
+	var today := GameClock.total_days
+	var rented := not place.is_empty() and GameState.player != null and FieldPlots.rented(GameState.player, plot_key, today)
+	var soil := color if rented else color.lightened(0.12)
+	draw_rect(rect, soil)
 	draw_rect(rect, Color(0.16, 0.11, 0.07), false, 2.0)
 	for i in 4:
 		var y := rect.position.y + 8.0 + i * (size.y - 14.0) / 3.0
-		draw_line(Vector2(rect.position.x + 4.0, y), Vector2(rect.end.x - 4.0, y), color.darkened(0.3), 2.0)
-	var place := FieldPlots.place_def(GameState.data, GameState.current_region)
+		draw_line(Vector2(rect.position.x + 4.0, y), Vector2(rect.end.x - 4.0, y), soil.darkened(0.3), 2.0)
 	if place.is_empty() or GameState.player == null:
 		return true
-	var crops: Array = GameState.player.field_plots.get(FieldPlots.key(GameState.current_region, place), {}).get("crops", [])
-	for i in crops.size():
-		var base := Vector2(rect.position.x + size.x * (i + 1.0) / (crops.size() + 1.0), 0.0)
-		var ripe := int(crops[i]["days_left"]) <= 0
-		var green := Color("6fbf4a") if ripe else Color("8fd16a")
-		var height := 14.0 if ripe else 6.0
-		draw_line(base, base + Vector2(0, -height), green, 3.0)
-		draw_line(base + Vector2(0, -height * 0.6), base + Vector2(-5, -height), green, 2.0)
-		draw_line(base + Vector2(0, -height * 0.6), base + Vector2(5, -height), green, 2.0)
+	if rented:  # rope marker along the edges
+		var rope := Color("c9b27a")
+		for corner in [rect.position, Vector2(rect.end.x, rect.position.y), Vector2(rect.position.x, rect.end.y), rect.end]:
+			draw_rect(Rect2(corner - Vector2(2, 2), Vector2(4, 4)), rope)
+		draw_line(rect.position + Vector2(2, 2), Vector2(rect.end.x - 2, rect.position.y + 2), rope, 1.0)
+		draw_line(Vector2(rect.position.x + 2, rect.end.y - 2), rect.end - Vector2(2, 2), rope, 1.0)
+	var crops: Array = GameState.player.field_plots.get(plot_key, {}).get("crops", [])
+	var slots := maxi(1, int(place.get("plots", 1)))
+	for i in mini(crops.size(), slots):
+		var crop: Dictionary = crops[i]
+		var base := Vector2(rect.position.x + size.x * (i + 1.0) / (slots + 1.0), rect.position.y + size.y * 0.65)
+		var total := FieldPlots.crop_total_days(place, String(crop["item"]))
+		_draw_crop(base, FieldPlots.growth_stage(int(crop["days_left"]), total), String(crop["item"]))
+	if FieldPlots.is_frozen(place, today):
+		draw_rect(rect, Color(0.8, 0.9, 1.0, 0.3))
 	return true
+
+
+func _draw_crop(base: Vector2, stage: int, item_id: String) -> void:
+	var green := Color("8fd16a") if stage < 2 else Color("5fae44")
+	var height: float = [4.0, 8.0, 14.0, 16.0][stage]
+	draw_line(base, base + Vector2(0, -height), green, 2.0)
+	if stage >= 1:
+		draw_line(base + Vector2(0, -height * 0.5), base + Vector2(-5, -height * 0.8), green, 2.0)
+		draw_line(base + Vector2(0, -height * 0.5), base + Vector2(5, -height * 0.8), green, 2.0)
+	if stage >= 2:
+		draw_line(base + Vector2(0, -height * 0.8), base + Vector2(-7, -height), green, 2.0)
+		draw_line(base + Vector2(0, -height * 0.8), base + Vector2(7, -height), green, 2.0)
+	if stage == 3:
+		var tint: Color = ItemIcon.TINTS[absi(item_id.hash()) % ItemIcon.TINTS.size()]
+		draw_rect(Rect2(base + Vector2(-2, -height - 3), Vector2(5, 5)), tint)

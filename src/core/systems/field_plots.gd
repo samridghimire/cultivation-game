@@ -140,6 +140,35 @@ static func harvest(c: CharacterData, place: Dictionary, plot_key: String, rng: 
 	return {"ok": not items.is_empty(), "items": items}
 
 
+## How far a crop has grown, 0.0 (just planted) .. 1.0 (ripe).
+static func growth_fraction(days_left: int, total_days: int) -> float:
+	if days_left <= 0 or total_days <= 0:
+		return 1.0
+	return clampf(1.0 - float(days_left) / float(total_days), 0.0, 1.0)
+
+
+## Drawn growth stage: 0 sprout (< 0.33), 1 young (< 0.66), 2 leafy (< 1.0), 3 ripe.
+static func growth_stage(days_left: int, total_days: int) -> int:
+	var f := growth_fraction(days_left, total_days)
+	if f >= 1.0:
+		return 3
+	if f >= 0.66:
+		return 2
+	if f >= 0.33:
+		return 1
+	return 0
+
+
+## Days a crop of `item_id` takes to ripen in `place` (1 when unknown).
+static func crop_total_days(place: Dictionary, item_id: String) -> int:
+	return maxi(1, int(place.get("plants", {}).get(item_id, {}).get("days", 1)))
+
+
+## True when `today` falls in one of the place's frozen seasons.
+static func is_frozen(place: Dictionary, today: int) -> bool:
+	return (place.get("frozen_seasons", []) as Array).has(Calendar.season_of(today).to_lower())
+
+
 ## Status lines for the interact menu.
 static func describe(c: CharacterData, data: GameData, place: Dictionary, plot_key: String, today: int) -> PackedStringArray:
 	var lines: PackedStringArray = []
@@ -150,7 +179,7 @@ static func describe(c: CharacterData, data: GameData, place: Dictionary, plot_k
 			lines.append("%s: ready" % name)
 		else:
 			var frozen := " (frozen in %s)" % ", ".join(place.get("frozen_seasons", [])) if not (place.get("frozen_seasons", []) as Array).is_empty() else ""
-			lines.append("%s: %s%s" % [name, Calendar.format_duration(int(crop["days_left"])), frozen])
+			lines.append("%s: ready in %s%s" % [name, Calendar.format_duration(int(crop["days_left"])), frozen])
 	if rented(c, plot_key, today):
 		lines.append("Rent paid until %s" % Calendar.format_date(int(entry["paid_until"])))
 	else:

@@ -5467,7 +5467,10 @@ func test_village_lines_field_plant_then_harvest() -> void:
 	var lines := Guidance.village_lines(c, d, {}, {}, "qingshi_village", 10)
 	assert_true(_has_line(lines, "Plant your Spirit Herb in") and "\n".join(lines).contains("stones a season"), "\n".join(lines))
 	var place := FieldPlots.place_def(d, "qingshi_village")
-	c.field_plots[FieldPlots.key("qingshi_village", place)] = {"paid_until": 99, "crops": [{"item": "dew_grass", "days_left": 0}]}
+	c.field_plots[FieldPlots.key("qingshi_village", place)] = {"paid_until": 99, "crops": [{"item": "dew_grass", "days_left": 6}]}
+	lines = Guidance.village_lines(c, d, {}, {}, "qingshi_village", 10)
+	assert_true(_has_line(lines, "Your field: Morning Dew Grass, ready in"), "\n".join(lines))
+	c.field_plots[FieldPlots.key("qingshi_village", place)]["crops"][0]["days_left"] = 0
 	lines = Guidance.village_lines(c, d, {}, {}, "qingshi_village", 10)
 	assert_true(_has_line(lines, "Your Morning Dew Grass is ready to harvest"), "\n".join(lines))
 	assert_false(_has_line(lines, "Plant your"))
