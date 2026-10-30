@@ -169,3 +169,118 @@ func test_greeting_validation() -> void:
 	d.family["folk_greetings"]["warm"]["min_favor"] = -20
 	assert_true(Folk.validate_greetings(d).size() > 0)
 	d.family["folk_greetings"] = saved
+
+
+# --- FOLK-001: neighbours ask small favours --------------------------------
+
+func _rules(d: GameData, chance: float = 1.0) -> Dictionary:
+	var r: Dictionary = d.family["folk_requests"]
+	r["monthly_chance"] = chance
+	return r
+
+
+func test_request_chance_zero_gives_nothing() -> void:
+	var d := GameData.load_from_dir()
+	_rules(d, 0.0)
+	var npcs := {}
+	_village(npcs, 3)
+	assert_true(Folk.monthly_request(new_character(), npcs, d, seeded_rng(), "qingshi_village", {}, 100).is_empty())
+
+
+func test_request_entry_is_a_folk_letter_request() -> void:
+	var d := GameData.load_from_dir()
+	var r := _rules(d)
+	var npcs := {}
+	_village(npcs, 3)
+	var c := new_character()
+	var e := Folk.monthly_request(c, npcs, d, seeded_rng(), "qingshi_village", {}, 100)
+	assert_false(e.is_empty())
+	assert_eq(e["source"], "folk")
+	assert_eq(int(e["until"]), 100 + int(r["days"]))
+	assert_true(npcs.has(e["npc_id"]))
+	assert_false(String(e["text"]).contains("{"))
+	assert_true(String(e["text"]).contains(npcs[e["npc_id"]].name))
+	assert_eq(c.letter_requests.size(), 1)
+	var ask := {}
+	for a: Dictionary in r["asks"]:
+		if a["item"] == e["item"]:
+			ask = a
+	assert_true(int(e["count"]) >= int(ask["count"][0]) and int(e["count"]) <= int(ask["count"][1]))
+	var stones := int(e["effects"]["items"]["spirit_stone"])
+	assert_true(stones >= int(ask["stones"][0]) and stones <= int(ask["stones"][1]))
+
+
+func test_request_is_deterministic_per_seed() -> void:
+	var d := GameData.load_from_dir()
+	_rules(d)
+	var npcs := {}
+	_village(npcs, 4)
+	var a := Folk.monthly_request(new_character(), npcs, d, seeded_rng(7), "qingshi_village", {}, 100)
+	var b := Folk.monthly_request(new_character(), npcs, d, seeded_rng(7), "qingshi_village", {}, 100)
+	assert_eq(a, b)
+
+
+func test_request_respects_max_open_and_open_askers() -> void:
+	var d := GameData.load_from_dir()
+	var r := _rules(d)
+	r["max_open"] = 2
+	var npcs := {}
+	_village(npcs, 3)
+	var c := new_character()
+	var rng := seeded_rng()
+	var first := Folk.monthly_request(c, npcs, d, rng, "qingshi_village", {}, 100)
+	var second := Folk.monthly_request(c, npcs, d, rng, "qingshi_village", {}, 100)
+	assert_false(second.is_empty())
+	assert_true(first["npc_id"] != second["npc_id"], "nobody asks twice at once")
+	assert_true(Folk.monthly_request(c, npcs, d, rng, "qingshi_village", {}, 100).is_empty(), "max_open reached")
+	assert_false(Folk.monthly_request(c, npcs, d, rng, "qingshi_village", {}, 100 + int(r["days"]) + 1).is_empty(), "expired ones no longer count")
+
+
+func test_request_skips_family_rival_and_low_favor() -> void:
+	var d := GameData.load_from_dir()
+	var r := _rules(d)
+	var npcs := {}
+	_village(npcs, 2)
+	var c := new_character()
+	var ids: Array = npcs.keys()
+	c.rival = ids[0]
+	c.spouses = [ids[1]]
+	assert_true(Folk.monthly_request(c, npcs, d, seeded_rng(), "qingshi_village", {}, 100).is_empty())
+	c.spouses = []
+	r["min_favor"] = 10
+	assert_true(Folk.monthly_request(c, npcs, d, seeded_rng(), "qingshi_village", {ids[1]: 9}, 100).is_empty())
+	assert_eq(Folk.monthly_request(c, npcs, d, seeded_rng(), "qingshi_village", {ids[1]: 10}, 100)["npc_id"], ids[1])
+
+
+func test_request_region_and_season_filters() -> void:
+	var d := GameData.load_from_dir()
+	var r := _rules(d)
+	r["asks"] = [{"item": "spirit_herb", "count": [1, 1], "favor": 1, "stones": [0, 0], "regions": ["misty_forest"], "seasons": ["winter"], "text": "{villager} wants {count} {item}."}]
+	var npcs := {}
+	_village(npcs, 2)
+	assert_true(Folk.monthly_request(new_character(), npcs, d, seeded_rng(), "qingshi_village", {}, 100).is_empty(), "wrong region")
+	r["asks"][0]["regions"] = ["qingshi_village"]
+	var winter := 0
+	while Calendar.season_of(winter) != "Winter":
+		winter += 1
+	assert_false(Folk.monthly_request(new_character(), npcs, d, seeded_rng(), "qingshi_village", {}, winter).is_empty())
+	assert_true(Folk.monthly_request(new_character(), npcs, d, seeded_rng(), "qingshi_village", {}, winter + 180).is_empty() or Calendar.season_of(winter + 180) == "Winter")
+	var e := Folk.monthly_request(new_character(), npcs, d, seeded_rng(), "qingshi_village", {}, winter)
+	assert_eq(e["effects"], {}, "zero stones pays nothing")
+
+
+func test_request_validation() -> void:
+	var d := GameData.load_from_dir()
+	assert_eq(Folk.validate_requests(d).size(), 0)
+	var ask: Dictionary = d.family["folk_requests"]["asks"][0]
+	ask["text"] = "Someone wants {count} {item}."
+	assert_eq(Folk.validate_requests(d).size(), 1, "missing {villager}")
+	ask["text"] = "{villager} wants {count} {item}."
+	ask["count"] = [3, 2]
+	assert_eq(Folk.validate_requests(d).size(), 1, "min > max")
+	ask["count"] = [1, 2]
+	ask["item"] = "nope"
+	assert_eq(Folk.validate_requests(d).size(), 1, "unknown item")
+	ask["item"] = "spirit_herb"
+	ask["favor"] = 16
+	assert_eq(Folk.validate_requests(d).size(), 1, "favor out of range")

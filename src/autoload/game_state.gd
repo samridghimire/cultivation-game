@@ -2970,7 +2970,10 @@ func answer_letter_request(npc_id: String) -> void:
 	_post_attitude_change(before)
 	var notes: PackedStringArray = [Family.favor_progress(int(npc_favor[npc_id]), data)]
 	notes.append_array(result["notes"])
-	EventBus.post("You give %s the %s they asked for. (%s)" % [npcs[npc_id].name, item_name, ", ".join(notes)], "progress")
+	if String(req.get("source", "letter")) == "folk":
+		EventBus.post("You give %s %d %s. (%s)" % [npcs[npc_id].name, int(req["count"]), Items.item_plural(data, String(req["item"]), int(req["count"])), ", ".join(notes)], "progress")
+	else:
+		EventBus.post("You give %s the %s they asked for. (%s)" % [npcs[npc_id].name, item_name, ", ".join(notes)], "progress")
 	EventBus.player_changed.emit()
 
 
@@ -3148,14 +3151,20 @@ func _on_days_advanced(days: int) -> void:
 			Letters.remember(player, data, line, GameClock.total_days)
 			EventBus.letter_arrived.emit(npcs[letter["npc_id"]].name)
 			EventBus.post(line + (" (%s)" % ", ".join(letter["notes"]) if not letter["notes"].is_empty() else "") + (" They hope you will bring it when you pass." if letter["request"] else ""), "progress")
+	EventBus.topic = "world"
+	for i in months:
+		var asked := Folk.monthly_request(player, npcs, data, rng, current_region, npc_favor, GameClock.total_days)
+		if not asked.is_empty():
+			EventBus.post(String(asked["text"]) + " (Give it to them in person within %d days.)" % int(Folk.request_rules(data).get("days", 20)), "info")
 	for req in player.letter_requests.duplicate():
 		var asker: CharacterData = npcs.get(req["npc_id"])
 		if asker == null or not asker.alive:
 			player.letter_requests.erase(req)
 	Letters.expire_deals(player, GameClock.total_days)
 	EventBus.topic = "family"
-	for gone_id in Letters.expire_requests(player, GameClock.total_days):
-		EventBus.post("%s no longer waits for your answer." % npcs[gone_id].name, "normal")
+	for gone in Letters.expire_requests(player, GameClock.total_days):
+		if String(gone.get("source", "letter")) != "folk":
+			EventBus.post("%s no longer waits for your answer." % npcs[gone["npc_id"]].name, "normal")
 	if clan != null:
 		_advance_estate(days, months)
 		for joined in Clans.sync_family(player, clan, npcs, data):

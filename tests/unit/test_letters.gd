@@ -162,7 +162,7 @@ func test_answer_request() -> void:
 	_only("pill_request")
 	var c := new_character()
 	Letters.monthly(c, _friend(), {"friend": 50}, data(), seeded_rng(), {}, 100)
-	assert_eq(Letters.check_answer(c, data(), "nobody", 100), "No letter from them is waiting for an answer.")
+	assert_eq(Letters.check_answer(c, data(), "nobody", 100), "They have not asked you for anything.")
 	assert_true(Letters.check_answer(c, data(), "friend", 100).begins_with("They asked for 1 Qi Gathering Pill; you have 0."))
 	assert_eq(Letters.request_lines(c, data(), _friend(), 100).size(), 1)
 	c.add_item("qi_gathering_pill", 2)
@@ -179,7 +179,9 @@ func test_expire_requests() -> void:
 	var c := new_character()
 	c.letter_requests.append({"npc_id": "a", "item": "qi_gathering_pill", "count": 1, "until": 50, "favor": 1, "effects": {}})
 	c.letter_requests.append({"npc_id": "b", "item": "qi_gathering_pill", "count": 1, "until": 150, "favor": 1, "effects": {}})
-	assert_eq(Letters.expire_requests(c, 100), ["a"] as Array[String])
+	var gone := Letters.expire_requests(c, 100)
+	assert_eq(gone.size(), 1)
+	assert_eq(gone[0]["npc_id"], "a")
 	assert_eq(c.letter_requests.size(), 1)
 
 
@@ -374,3 +376,15 @@ func test_requested_items_are_sold_or_dropped_before_foundation() -> void:
 		assert_true(d.items.has(item_id), "request item %s exists" % item_id)
 		assert_true(sold.has(item_id) or dropped.has(item_id), "request item %s is sold or dropped by a Qi Refining beast" % item_id)
 	assert_true(requests >= 5)
+
+
+func test_folk_request_lines_read_differently_from_letters() -> void:
+	var c := new_character()
+	var friend := _friend()
+	c.letter_requests.append({"npc_id": "friend", "item": "spirit_herb", "count": 2, "until": 120, "favor": 5, "effects": {}, "source": "folk"})
+	var line := Letters.request_lines(c, data(), friend, 100)[0]
+	assert_true(line.contains("asked you for 2 Spirit Herbs") or line.contains("asked you for 2 Spirit Herb"), line)
+	assert_false(line.contains("letter"), line)
+	assert_true(line.contains("20 days left"), line)
+	c.letter_requests[0].erase("source")
+	assert_true(Letters.request_lines(c, data(), friend, 100)[0].contains("in a letter"))

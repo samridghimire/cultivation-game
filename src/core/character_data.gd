@@ -392,7 +392,14 @@ static func from_dict(d: Dictionary) -> CharacterData:
 		c.letters.append(String(letter))
 	c.letter_day = int(d.get("letter_day", -1))
 	for req in d.get("letter_requests", []):
-		c.letter_requests.append((req as Dictionary).duplicate(true))
+		var entry: Dictionary = (req as Dictionary).duplicate(true)
+		for key: String in ["count", "until", "favor"]:
+			if entry.has(key):
+				entry[key] = int(entry[key])
+		var gifts: Dictionary = entry.get("effects", {}).get("items", {})
+		for item_id: String in gifts:
+			gifts[item_id] = int(gifts[item_id])
+		c.letter_requests.append(entry)
 	for region_id: String in d.get("shop_deals", {}):
 		var deal: Dictionary = d["shop_deals"][region_id]
 		c.shop_deals[region_id] = {"mult": float(deal["mult"]), "until": int(deal["until"])}

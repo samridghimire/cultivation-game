@@ -132,9 +132,89 @@ static func validate_greetings(data: GameData) -> PackedStringArray:
 	return errors
 
 
+static func request_rules(data: GameData) -> Dictionary:
+	return data.family.get("folk_requests", {})
+
+
+## FOLK-001: this month's favour a villager of `region_id` asks of the player, stored as a letter request with
+## source "folk" and returned ({} when nobody asks). The chance is rolled first, so a closed door costs one draw.
+static func monthly_request(c: CharacterData, npcs: Dictionary, data: GameData, rng: RandomNumberGenerator, region_id: String, favor: Dictionary, today: int) -> Dictionary:
+	var r := request_rules(data)
+	if r.is_empty() or rng.randf() >= float(r.get("monthly_chance", 0.0)):
+		return {}
+	var open := 0
+	for req: Dictionary in c.letter_requests:
+		if String(req.get("source", "letter")) == "folk" and int(req["until"]) >= today:
+			open += 1
+	if open >= int(r.get("max_open", 1)):
+		return {}
+	var min_favor := int(r.get("min_favor", 0))
+	var villagers: Array[CharacterData] = []
+	for npc in candidates(npcs, data, c, region_id):
+		if int(favor.get(npc.id, 0)) >= min_favor and Letters.open_request(c, npc.id, today).is_empty():
+			villagers.append(npc)
+	var season := Calendar.season_of(today).to_lower()
+	var asks: Array[Dictionary] = []
+	for ask: Dictionary in r.get("asks", []):
+		if ask.has("regions") and not (ask["regions"] as Array).has(region_id):
+			continue
+		if ask.has("seasons") and not (ask["seasons"] as Array).has(season):
+			continue
+		asks.append(ask)
+	if villagers.is_empty() or asks.is_empty():
+		return {}
+	villagers.sort_custom(func(a: CharacterData, b: CharacterData) -> bool: return a.id < b.id)
+	var npc: CharacterData = villagers[rng.randi_range(0, villagers.size() - 1)]
+	var ask: Dictionary = asks[rng.randi_range(0, asks.size() - 1)]
+	var count := rng.randi_range(int(ask["count"][0]), int(ask["count"][1]))
+	var stones := rng.randi_range(int(ask["stones"][0]), int(ask["stones"][1]))
+	var text := String(ask["text"]).replace(VILLAGER, npc.name).replace("{count}", str(count)).replace("{item}", Items.item_plural(data, String(ask["item"]), count))
+	var entry := {"npc_id": npc.id, "item": String(ask["item"]), "count": count, "until": today + int(r.get("days", 20)),
+		"favor": int(ask["favor"]), "effects": {"items": {"spirit_stone": stones}} if stones > 0 else {}, "source": "folk", "text": text}
+	c.letter_requests.append(entry)
+	return entry
+
+
+static func validate_requests(data: GameData) -> PackedStringArray:
+	var errors: PackedStringArray = []
+	var r := request_rules(data)
+	if r.is_empty():
+		return errors
+	var chance := float(r.get("monthly_chance", 0.0))
+	if chance < 0.0 or chance > 1.0 or absi(int(r.get("min_favor", 0))) > 100 or int(r.get("days", 0)) < 1 or int(r.get("max_open", 0)) < 1:
+		errors.append("family.json folk_requests needs monthly_chance 0..1, min_favor -100..100, days >= 1, max_open >= 1")
+	if not (r.get("asks") is Array) or r["asks"].is_empty():
+		errors.append("family.json folk_requests.asks must be a non-empty list")
+		return errors
+	for i in r["asks"].size():
+		var ask: Dictionary = r["asks"][i]
+		var where := "family.json folk_requests ask %d" % i
+		if not data.items.is_empty() and not data.items.has(String(ask.get("item", ""))):
+			errors.append("%s names unknown item %s" % [where, ask.get("item", "?")])
+		for key: String in ["count", "stones"]:
+			var range_v: Variant = ask.get(key)
+			var low := 1 if key == "count" else 0
+			if not (range_v is Array) or range_v.size() != 2 or int(range_v[0]) < low or int(range_v[0]) > int(range_v[1]):
+				errors.append("%s %s must be [min, max] with %d <= min <= max" % [where, key, low])
+		if int(ask.get("favor", 0)) < 1 or int(ask.get("favor", 0)) > 15:
+			errors.append("%s favor must be 1..15" % where)
+		var text := String(ask.get("text", ""))
+		for token: String in [VILLAGER, "{count}", "{item}"]:
+			if not text.contains(token):
+				errors.append("%s text needs %s" % [where, token])
+		for key: String in ["regions", "seasons"]:
+			if ask.has(key) and (not (ask[key] is Array) or ask[key].is_empty()):
+				errors.append("%s %s must be a non-empty list" % [where, key])
+		for region_id: String in ask.get("regions", []):
+			if not data.regions.is_empty() and not data.regions.has(region_id):
+				errors.append("%s names unknown region %s" % [where, region_id])
+	return errors
+
+
 ## Load errors: favor effects are ints within +-FAVOR_LIMIT and need their placeholder in the encounter's texts.
 static func validate(data: GameData) -> PackedStringArray:
 	var errors: PackedStringArray = validate_greetings(data)
+	errors.append_array(validate_requests(data))
 	for e: Dictionary in data.encounters.values():
 		var blocks: Array = [[String(e["id"]), e.get("effects", {})]]
 		for i in e.get("choices", []).size():

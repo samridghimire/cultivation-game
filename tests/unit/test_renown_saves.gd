@@ -124,7 +124,8 @@ func test_letter_requests_and_deals_survive_round_trip() -> void:
 	assert_eq(Letters.request_lines(p, gs.data, gs.npcs, today).size(), 2, "two lines")
 
 	var gone := Letters.expire_requests(p, today + 6)
-	assert_eq(gone, ["asker_a"] as Array[String], "only the first expires")
+	assert_eq(gone.size(), 1, "only the first expires")
+	assert_eq(gone[0]["npc_id"], "asker_a")
 	assert_eq(p.letter_requests.size(), 1)
 	_round_trip(gs)
 	p = gs.player

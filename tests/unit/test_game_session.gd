@@ -1203,6 +1203,28 @@ func test_answer_letter_request() -> void:
 	gs.end_session()
 
 
+func test_answer_folk_request() -> void:
+	var c := _start()
+	var gs := _game_state()
+	var npc := CharacterFactory.create("Wu Lan", gs.data, seeded_rng(9))
+	npc.id = "wu_lan"
+	gs.npcs["wu_lan"] = npc
+	gs.npc_favor["wu_lan"] = 10
+	npc.home_region = gs.current_region
+	c.letter_requests.append({"npc_id": "wu_lan", "item": "spirit_herb", "count": 3, "until": GameClock.total_days + 20, "favor": 5, "effects": {"items": {"spirit_stone": 5}}, "source": "folk"})
+	var stones := c.item_count("spirit_stone")
+	gs.answer_letter_request("wu_lan")
+	assert_eq(c.item_count("spirit_stone"), stones, "without the items nothing changes")
+	assert_eq(c.letter_requests.size(), 1)
+	c.add_item("spirit_herb", 3)
+	gs.answer_letter_request("wu_lan")
+	assert_eq(c.item_count("spirit_herb"), 0)
+	assert_eq(c.item_count("spirit_stone"), stones + 5)
+	assert_eq(int(gs.npc_favor["wu_lan"]), 15)
+	assert_eq(c.letter_requests.size(), 0)
+	gs.end_session()
+
+
 func test_answer_letter_request_needs_the_asker_present() -> void:
 	var c := _start()
 	var gs := _game_state()

@@ -177,7 +177,7 @@ static func _item_name(data: GameData, item_id: String) -> String:
 static func check_answer(c: CharacterData, data: GameData, npc_id: String, today: int) -> String:
 	var req := open_request(c, npc_id, today)
 	if req.is_empty():
-		return "No letter from them is waiting for an answer."
+		return "They have not asked you for anything."
 	var have := c.item_count(String(req["item"]))
 	if have < int(req["count"]):
 		return "They asked for %d %s; you have %d." % [int(req["count"]), Items.item_plural(data, String(req["item"]), int(req["count"])), have]
@@ -196,13 +196,13 @@ static func answer(c: CharacterData, data: GameData, npc_id: String, today: int,
 	return {"ok": true, "reason": "", "favor": int(req["favor"]), "notes": notes}
 
 
-## Drops requests past their deadline (no penalty); returns the npc ids.
-static func expire_requests(c: CharacterData, today: int) -> Array[String]:
-	var gone: Array[String] = []
+## Drops requests past their deadline (no penalty); returns the dropped requests.
+static func expire_requests(c: CharacterData, today: int) -> Array[Dictionary]:
+	var gone: Array[Dictionary] = []
 	for req in c.letter_requests.duplicate():
 		if int(req["until"]) < today:
 			c.letter_requests.erase(req)
-			gone.append(String(req["npc_id"]))
+			gone.append(req)
 	return gone
 
 
@@ -214,6 +214,9 @@ static func request_lines(c: CharacterData, data: GameData, npcs: Dictionary, to
 		if npc == null or not npc.alive or int(req["until"]) < today:
 			continue
 		var region: Dictionary = data.regions.get(Npcs.region_of(npc, data), {})
+		if String(req.get("source", "letter")) == "folk":
+			out.append("%s asked you for %d %s (%d days left; they are in %s)." % [npc.name, int(req["count"]), Items.item_plural(data, String(req["item"]), int(req["count"])), int(req["until"]) - today, String(region.get("name", "their home"))])
+			continue
 		out.append("%s asked for %d %s in a letter (%d days left; give it in person in %s)." % [npc.name, int(req["count"]), _item_name(data, String(req["item"])), int(req["until"]) - today, String(region.get("name", "their home"))])
 	return out
 
