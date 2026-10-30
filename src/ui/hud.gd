@@ -439,11 +439,17 @@ func _build_guide_panel() -> void:
 	_hint = UIStyle.label("", 14, Color("9fd3c7"))
 	_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_hint.custom_minimum_size = Vector2(316, 0)
-	box.add_child(_hint)
+	# WU-406: the bullet sits beside the label (not in leading spaces, which autowrap trims).
+	var hint_row := HBoxContainer.new()
+	hint_row.add_theme_constant_override("separation", 4)
+	box.add_child(hint_row)
 	_hint_badge = UIStyle.label("●", 9, Color("9fd3c7"))  # GFX-017: a real bullet, not a thin "!" that reads as a bar
-	_hint_badge.position = Vector2(0, 3)
+	_hint_badge.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	_hint_badge.visible = false
-	_hint.add_child(_hint_badge)
+	hint_row.add_child(_hint_badge)
+	_hint.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	hint_row.add_child(_hint)
+	_hint.visibility_changed.connect(func() -> void: hint_row.visible = _hint.visible)
 	add_child(panel)
 	_key_bar = UIStyle.label("", 12, Color(0.7, 0.7, 0.7, 0.85))
 	_key_bar.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
@@ -736,21 +742,13 @@ func _set_hint_text(lines: PackedStringArray) -> void:
 	var out: Array = []
 	var cut := false
 	for i in lines.size():
-		out.append((hint_indent() if i == 0 and marked else "> ") + cap_hint(lines[i]))
+		out.append(("" if i == 0 and marked else "> ") + cap_hint(lines[i]))
 		cut = cut or cap_hint(lines[i]) != lines[i]
 	_hint_full = "\n".join(out)
 	_hint.text = _hint_full
 	# WU-315: mouse hover shows the whole text when a line was cut.
 	_hint.tooltip_text = "\n".join(lines) if cut else ""
 	_hint.mouse_filter = Control.MOUSE_FILTER_PASS
-
-
-## WU-404: spaces wide enough to clear the "●" badge (its width + 4 px) so the bullet never covers a letter.
-func hint_indent() -> String:
-	var font := _hint.get_theme_font("font")
-	var space_w := maxf(1.0, font.get_string_size(" ", HORIZONTAL_ALIGNMENT_LEFT, -1, 14).x)
-	var badge_w := _hint_badge.get_minimum_size().x
-	return " ".repeat(int(ceil((badge_w + 4.0) / space_w)))
 
 
 ## Names of the places and NPCs in the current region (what the world marks with its "!" badge).

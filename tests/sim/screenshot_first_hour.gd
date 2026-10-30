@@ -55,6 +55,22 @@ func _start() -> void:
 					world.get_node("Player").position = node.position + Vector2(0, 50), "close": func() -> void: pass})
 		return
 	shots.append({"name": "hud_arrival", "open": func() -> void: pass, "close": func() -> void: pass})
+	# WU-406: a generated villager's greeting bubble, and one with the gold "!" for a folk request.
+	var villager := _generated_villager()
+	if villager != null:
+		shots.append({"name": "greeting_bubble", "open": func() -> void:
+			world.get_node("Player").position = villager.position + Vector2(40, 30)
+			world.set("_greeted", {})
+			world.call("_check_greetings"), "close": func() -> void: _clear_bubble()})
+		shots.append({"name": "folk_asker", "open": func() -> void:
+			c.letter_requests.append({"npc_id": villager.npc_id, "item": "spirit_herb", "count": 3, "until": root.get_node("GameClock").total_days + 20, "favor": 5, "effects": {}, "source": "folk", "text": ""})
+			villager.call("refresh_request")
+			world.get_node("Player").position = villager.position + Vector2(40, 30)
+			world.set("_greeted", {})
+			world.call("_check_greetings"), "close": func() -> void:
+			_clear_bubble()
+			c.letter_requests.clear()
+			villager.call("refresh_request")})
 	# WU-385: the HUD of a brand-new sect member (Azure Cloud Outer Disciple, Qi Refining 1, Qingshi Village).
 	var sect_saved: Array = []
 	shots.append({"name": "hud_after_sect", "open": func() -> void:
@@ -101,6 +117,21 @@ func _start() -> void:
 		if hud.get("_screens").has(action):
 			var s: Control = hud.get("_screens")[action]
 			shots.append({"name": action.trim_prefix("toggle_"), "open": s.open, "close": s.close, "wait_banner": true})
+
+
+## A generated (non-data) villager node of the world, null when none spawned.
+func _generated_villager() -> Node2D:
+	for node in world.get_children():
+		if node.has_method("get_options") and node.get("npc_id") != null and not root.get_node("GameState").data.npcs.has(node.npc_id):
+			return node
+	return null
+
+
+func _clear_bubble() -> void:
+	var bubble: Variant = world.get("_greet_bubble")
+	if bubble != null and is_instance_valid(bubble):
+		(bubble as Node).queue_free()
+	world.set("_greet_bubble", null)
 
 
 ## `--fight=beast|cultivator` picks the combat_report foe (default: the boar).
