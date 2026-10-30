@@ -6,6 +6,7 @@ extends RefCounted
 ## One vision per realm per life (heart_seen_realm). Content: realms.json heart_vision.
 
 const MAX_BONUS := 0.15
+const MAX_CHOICES := 6
 const NO_FIGURE := "a faceless figure"
 
 
@@ -19,7 +20,19 @@ static func vision(c: CharacterData, data: GameData, people: Dictionary = {}) ->
 		return {}
 	var rival := Rivals.rival_of(c, people)
 	var out := def.duplicate(true)
+	out["choices"] = visible_choices(def.get("choices", []), c.alignment)
+	if (out["choices"] as Array).is_empty():
+		return {}
 	out["text"] = String(def["text"]).replace("{rival_or_parent}", rival.name if rival != null else NO_FIGURE)
+	return out
+
+
+## The choices whose optional min_alignment / max_alignment admit `alignment`.
+static func visible_choices(choices: Array, alignment: int) -> Array:
+	var out: Array = []
+	for choice: Dictionary in choices:
+		if alignment >= int(choice.get("min_alignment", -1000000)) and alignment <= int(choice.get("max_alignment", 1000000)):
+			out.append(choice)
 	return out
 
 
@@ -37,6 +50,8 @@ static func choose(c: CharacterData, data: GameData, index: int, rng: RandomNumb
 	var bonus := float(choice.get("bonus", 0.0)) if passed else float(choice.get("fail_bonus", 0.0))
 	c.heart_bonus = bonus
 	c.heart_seen_realm = c.realm_index + 1
+	if choice.has("alignment"):
+		Alignment.shift(c, data, int(choice["alignment"]))
 	return {"text": String(choice["text"] if passed else choice.get("fail_text", choice["text"])), "bonus": bonus, "passed": passed}
 
 
@@ -52,11 +67,20 @@ static func validate(data: GameData) -> PackedStringArray:
 		if String(v.get("text", "")).strip_edges() == "":
 			errors.append("%s needs text" % where)
 		var choices: Array = v.get("choices", [])
-		if choices.size() < 2 or choices.size() > 4:
-			errors.append("%s needs 2-4 choices" % where)
+		if choices.size() < 2 or choices.size() > MAX_CHOICES:
+			errors.append("%s needs 2-%d choices" % [where, MAX_CHOICES])
+		for a in [data.alignment_min, 0, data.alignment_max]:
+			var shown := visible_choices(choices, a).size()
+			if shown < 2 or shown > 4:
+				errors.append("%s shows %d choices at alignment %d (needs 2-4)" % [where, shown, a])
 		for choice: Dictionary in choices:
 			if String(choice.get("label", "")).strip_edges() == "" or String(choice.get("text", "")).strip_edges() == "":
 				errors.append("%s choice needs label and text" % where)
+			for key: String in ["min_alignment", "max_alignment"]:
+				if choice.has(key) and (int(choice[key]) < data.alignment_min or int(choice[key]) > data.alignment_max):
+					errors.append("%s %s is outside the alignment range" % [where, key])
+			if int(choice.get("min_alignment", data.alignment_min)) > int(choice.get("max_alignment", data.alignment_max)):
+				errors.append("%s choice has min_alignment above max_alignment" % where)
 			for key: String in ["bonus", "fail_bonus"]:
 				if choice.has(key) and absf(float(choice[key])) > MAX_BONUS:
 					errors.append("%s %s must be within +-%s" % [where, key, MAX_BONUS])

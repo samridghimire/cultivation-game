@@ -111,3 +111,75 @@ func test_validation_rejects_bad_visions() -> void:
 	assert_gt(HeartVision.validate(d).size(), 0, "fail_bonus without check")
 	d.realms[2].heart_vision = good
 	assert_eq(HeartVision.validate(d).size(), 0)
+
+
+func _labels(c: CharacterData) -> Array:
+	return HeartVision.vision(c, data())["choices"].map(func(ch: Dictionary) -> String: return ch["label"])
+
+
+func test_choices_filtered_by_alignment() -> void:
+	var c := _at_peak(1)
+	c.alignment = -50
+	assert_eq(_labels(c).size(), 4)
+	assert_true(_labels(c).has("Embrace the hunger"))
+	assert_false(_labels(c).has("Swear a vow to the righteous path"))
+	c.alignment = 0
+	assert_eq(_labels(c).size(), 3)
+	c.alignment = 50
+	assert_eq(_labels(c).size(), 4)
+	assert_true(_labels(c).has("Swear a vow to the righteous path"))
+	assert_false(_labels(c).has("Embrace the hunger"))
+
+
+func test_every_vision_has_both_gated_choices() -> void:
+	for realm in [1, 2, 3]:
+		var def: Dictionary = data().realms[realm + 1].heart_vision
+		var gated := 0
+		for ch: Dictionary in def["choices"]:
+			if ch.has("min_alignment") or ch.has("max_alignment"):
+				gated += 1
+		assert_eq(gated, 2, data().realms[realm + 1].id)
+
+
+func test_demonic_choice_shifts_alignment_on_pass_or_fail() -> void:
+	var c := _at_peak(1)
+	c.alignment = -100
+	assert_eq(_labels(c)[3], "Embrace the hunger")
+	HeartVision.choose(c, data(), 3, seeded_rng())
+	assert_eq(c.alignment, -103)
+
+
+func test_hidden_index_is_refused() -> void:
+	var c := _at_peak(1)
+	c.alignment = 0
+	assert_true(HeartVision.choose(c, data(), 3, seeded_rng()).is_empty())
+	assert_eq(c.heart_seen_realm, -1)
+	assert_eq(c.alignment, 0)
+
+
+func test_vision_with_every_choice_hidden_is_skipped() -> void:
+	var d := data()
+	var realm = d.realms[2]
+	var saved: Dictionary = realm.heart_vision
+	realm.heart_vision = {"text": "x", "choices": [{"label": "a", "text": "a", "min_alignment": 500}]}
+	var c := _at_peak(1)
+	c.alignment = 0
+	assert_true(HeartVision.vision(c, d).is_empty())
+	realm.heart_vision = saved
+
+
+func test_validation_flags_bad_alignment_ranges() -> void:
+	var d := data()
+	var realm = d.realms[2]
+	var saved: Dictionary = realm.heart_vision
+	var v: Dictionary = saved.duplicate(true)
+	v["choices"][3]["min_alignment"] = 50
+	v["choices"][3]["max_alignment"] = 10
+	realm.heart_vision = v
+	assert_gt(HeartVision.validate(d).size(), 0)
+	v = saved.duplicate(true)
+	v["choices"][3]["max_alignment"] = 5000
+	realm.heart_vision = v
+	assert_gt(HeartVision.validate(d).size(), 0)
+	realm.heart_vision = saved
+	assert_eq(HeartVision.validate(d).size(), 0)

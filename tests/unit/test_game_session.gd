@@ -2083,6 +2083,19 @@ func test_failed_breakthrough_injury_posts_what_it_costs() -> void:
 	gs.end_session()
 
 
+func test_face_heart_vision_refuses_hidden_choice() -> void:
+	var c := _start()
+	var gs := _game_state()
+	c.realm_index = 1
+	c.stage = gs.data.realms[1].stage_count() - 1
+	c.alignment = 0
+	Cultivation.add_qi(c, gs.data, 1e12)
+	gs.face_heart_vision(3)
+	assert_false(gs.heart_vision().is_empty(), "the hidden demonic choice is not a choice")
+	assert_eq(c.alignment, 0)
+	gs.end_session()
+
+
 func test_face_heart_vision_posts_and_shifts_odds() -> void:
 	var c := _start()
 	var gs := _game_state()
