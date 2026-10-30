@@ -3002,6 +3002,51 @@ func harvest_garden() -> void:
 	EventBus.player_changed.emit()
 
 
+## Rent the region's field plot (FARM-001). Takes no time.
+func rent_field() -> void:
+	EventBus.topic = "trade"
+	var place := FieldPlots.place_def(data, current_region)
+	if not _can_act() or place.is_empty():
+		return
+	var result := FieldPlots.rent(player, current_region, place, GameClock.total_days)
+	if result["ok"]:
+		EventBus.post("You rent %s for %s (%d spirit stones)." % [place["display_name"], Calendar.format_duration(int(place["rent_days"])), int(place["rent"])], "trade")
+	else:
+		EventBus.post(result["reason"], "warning")
+	EventBus.player_changed.emit()
+
+
+## Plant one carried herb in the region's rented field. Takes no time.
+func plant_field(item_id: String) -> void:
+	EventBus.topic = "trade"
+	var place := FieldPlots.place_def(data, current_region)
+	if not _can_act() or place.is_empty():
+		return
+	var result := FieldPlots.plant(player, data, place, FieldPlots.key(current_region, place), item_id, GameClock.total_days)
+	if result["ok"]:
+		EventBus.post("You plant %s in %s." % [Text.a(String(data.items[item_id].get("name", item_id))), place["display_name"]], "progress")
+	else:
+		EventBus.post(result["reason"], "warning")
+	EventBus.player_changed.emit()
+
+
+## Harvest every ripe crop in the region's field. Takes no time.
+func harvest_field() -> void:
+	EventBus.topic = "trade"
+	var place := FieldPlots.place_def(data, current_region)
+	if not _can_act() or place.is_empty():
+		return
+	var result := FieldPlots.harvest(player, place, FieldPlots.key(current_region, place), rng)
+	if result["ok"]:
+		var parts: PackedStringArray = []
+		for item_id in result["items"]:
+			parts.append("%d %s" % [result["items"][item_id], Items.item_plural(data, item_id, result["items"][item_id])])
+		EventBus.post("You harvest %s: %s." % [place["display_name"], ", ".join(parts)], "progress")
+	else:
+		EventBus.post("Nothing in the field is ready yet.", "warning")
+	EventBus.player_changed.emit()
+
+
 ## Feed items (spirit stones, treasures) to the Creation Artifact for energy.
 func feed_artifact(item_id: String, quantity: int = 1) -> void:
 	EventBus.topic = "cultivation"
@@ -3283,6 +3328,11 @@ func _on_days_advanced(days: int) -> void:
 		EventBus.post("Your bounty on the %s has lapsed." % data.enemies.get(lapsed_enemy, {}).get("name", lapsed_enemy), "info")
 	for buff_name in Buffs.pass_days(player, days):
 		EventBus.post("The power of your %s fades." % buff_name)
+	var weather_of := func(region_id: String, day: int) -> String: return Weather.of(data, region_id, day)
+	for ready in FieldPlots.advance(player, data, days, GameClock.total_days, weather_of):
+		var ready_region := ready.get_slice(":", 0)
+		var ready_item := ready.substr(ready_region.length() + 1)
+		EventBus.post("Your %s in %s is ready." % [data.items.get(ready_item, {}).get("name", ready_item), FieldPlots.place_def(data, ready_region).get("display_name", "the field")], "progress")
 	for item_id in SpiritGarden.advance(player, data, days):
 		EventBus.post("The %s in your spirit garden is ready to harvest." % data.items.get(item_id, {}).get("name", item_id), "progress")
 	var season_line := Exploration.season_news(player, data, GameClock.total_days - days, GameClock.total_days)

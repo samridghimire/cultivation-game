@@ -2375,3 +2375,25 @@ func test_birth_and_death_events_open_feast_and_funeral() -> void:
 	assert_eq(c.alignment, align + 1)
 	assert_true(gs.check_celebration(mother.id) != "")
 	gs.end_session()
+
+
+func test_field_rent_plant_grow_harvest() -> void:
+	var c := _start()
+	var gs := _game_state()
+	var place := FieldPlots.place_def(gs.data, gs.current_region)
+	assert_false(place.is_empty(), "the start village rents a field")
+	gs.current_region = "qingshi_village"
+	c.inventory["spirit_stone"] = 20
+	c.inventory["spirit_herb"] = 1
+	c.spiritual_roots = {"fire": 80}
+	gs.rent_field()
+	assert_eq(c.item_count("spirit_stone"), 20 - int(place["rent"]))
+	gs.plant_field("spirit_herb")
+	assert_eq(c.item_count("spirit_herb"), 0)
+	gs.harvest_field()
+	assert_eq(c.item_count("spirit_herb"), 0, "not ripe yet")
+	_game_state().get_node("/root/GameClock").advance(60)
+	gs.harvest_field()
+	assert_true(c.item_count("spirit_herb") >= 2, "harvested")
+	var back := CharacterData.from_dict(JSON.parse_string(JSON.stringify(c.to_dict())))
+	assert_eq(back.field_plots.size(), 1)

@@ -123,6 +123,8 @@ var artifact_functions: Array[String] = []
 var artifact_storage: Dictionary = {}
 ## Spirit garden plots in the inner world (SpiritGarden, ART-004): [{item, days_left}].
 var garden: Array = []
+## Rented village field plots (FieldPlots, FARM-001): place key -> {paid_until, crops: [{item, days_left}]}.
+var field_plots: Dictionary = {}
 ## Sect mission id -> age_days when it may be taken again (Sects missions).
 var mission_cooldowns: Dictionary = {}
 ## Sect mission id -> age_days of the last lost fight, cleared when it is completed (MISS-001).
@@ -246,6 +248,7 @@ func to_dict() -> Dictionary:
 		"artifact_functions": artifact_functions.duplicate(),
 		"artifact_storage": artifact_storage.duplicate(),
 		"garden": garden.duplicate(true),
+		"field_plots": field_plots.duplicate(true),
 		"mission_cooldowns": mission_cooldowns.duplicate(),
 		"mission_losses": mission_losses.duplicate(),
 		"deed_days": deed_days.duplicate(),
@@ -366,6 +369,14 @@ static func from_dict(d: Dictionary) -> CharacterData:
 	for plot in d.get("garden", []):
 		if plot is Dictionary:
 			c.garden.append({"item": String(plot.get("item", "")), "days_left": int(plot.get("days_left", 0))})
+	for plot_key in d.get("field_plots", {}):
+		var saved: Variant = d["field_plots"][plot_key]
+		if saved is Dictionary:
+			var crops: Array = []
+			for crop in saved.get("crops", []):
+				if crop is Dictionary:
+					crops.append({"item": String(crop.get("item", "")), "days_left": int(crop.get("days_left", 0))})
+			c.field_plots[String(plot_key)] = {"paid_until": int(saved.get("paid_until", 0)), "crops": crops}
 	c.mission_cooldowns = _int_values(d.get("mission_cooldowns", {}))
 	c.mission_losses = _int_values(d.get("mission_losses", {}))
 	c.deed_days = _int_values(d.get("deed_days", {}))

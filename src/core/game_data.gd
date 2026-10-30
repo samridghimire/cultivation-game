@@ -542,7 +542,7 @@ func _validate_world() -> void:
 			load_errors.append("travel_speed mult must be a number in (0, 1]")
 		if String(speed.get("how", "")).strip_edges() == "":
 			load_errors.append("travel_speed entries need a non-empty 'how'")
-	var place_types := ["meditation", "merchant", "sect_hall", "workshop", "clinic", "orphanage", "deed_giver", "explore", "travel", "gather", "fishing", "secret_realm", "auction", "inheritance", "bounty_board"]
+	var place_types := ["meditation", "merchant", "sect_hall", "workshop", "clinic", "orphanage", "deed_giver", "explore", "travel", "gather", "fishing", "field_plot", "secret_realm", "auction", "inheritance", "bounty_board"]
 	for region: Dictionary in regions.values():
 		for route: Dictionary in region.get("routes", []):
 			if not regions.has(route.get("to", "")):
@@ -596,6 +596,7 @@ func _validate_world() -> void:
 							load_errors.append("Region '%s' weather kind '%s' is not one of %s" % [region["id"], kind, ", ".join(Weather.KINDS)])
 						elif not ((w is float or w is int) and w > 0):
 							load_errors.append("Region '%s' weather.%s.%s weight must be > 0" % [region["id"], key, kind])
+		load_errors.append_array(FieldPlots.validate(self, String(region["id"]), region))
 		for spot in region.get("npc_spots", []):
 			if not (spot is Array and (spot as Array).size() == 2):
 				load_errors.append("Region '%s' has an npc_spot that is not [x, y]: %s" % [region["id"], spot])

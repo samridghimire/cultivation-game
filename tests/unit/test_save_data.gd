@@ -94,6 +94,7 @@ func test_every_character_field_survives_a_save() -> void:
 	c.folk_visit_day = {"npc_test_friend": 88}
 	c.dao = {"sword_dao": {"level": 2, "progress": 30.5}}
 	c.garden = [{"item": "flame_lotus", "days_left": 40}]
+	c.field_plots = {"qingshi_village:Farmer Tian's Spare Field": {"paid_until": 90, "crops": [{"item": "spirit_herb", "days_left": 12}]}}
 	c.commissions = [{"profession": "alchemist", "recipe": "qi_gathering_pill", "item": "qi_gathering_pill", "count": 2, "reward": 9, "xp": 10.0, "due_day": 77}]
 	c.companion_xp = {"x_companions": 30}
 	c.encounter_counts = {"forest_lost": 3}

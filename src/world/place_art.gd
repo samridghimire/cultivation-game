@@ -8,7 +8,7 @@ extends RefCounted
 ## that have a live state (an open secret realm). Unknown kinds draw a plain box.
 
 ## Kinds with their own look; anything else is a plain box.
-const KINDS := ["meditation", "merchant", "workshop", "sect_hall", "travel", "gather", "fishing", "explore", "deed_giver", "npc",
+const KINDS := ["meditation", "merchant", "workshop", "sect_hall", "travel", "gather", "fishing", "field_plot", "explore", "deed_giver", "npc",
 	"camp", "clinic", "orphanage", "secret_realm", "auction", "inheritance", "bounty_board", "abode", "family_home"]
 const OUTLINE := Color("2a2018")
 const WOOD := Color("6b4a2e")
