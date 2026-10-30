@@ -433,6 +433,50 @@ func test_gathering_skips_realm_gated_finds() -> void:
 	assert_gt(c.item_count("nine_leaf_soul_grass"), 0)
 
 
+func _set_weather(gs: Node, kind: String) -> void:
+	gs.data.regions[gs.current_region]["weather"] = {"any": {kind: 1}}
+	gs.data.weather_persist = 0.0
+
+
+## The shared GameState data is reloaded fresh so these weather edits cannot leak into other tests.
+func _restore_weather(gs: Node) -> void:
+	gs.data = GameData.load_from_dir()
+
+
+func test_rain_adds_a_thriving_herb_when_gathering() -> void:
+	var c := _start()
+	var gs := _game_state()
+	gs.data.weather_effects = {"rain": {"herb_bonus_chance": 1.0}}
+	var table := [{"item": "spirit_herb", "weight": 1, "min": 1, "max": 1}]
+	_set_weather(gs, "clear")
+	gs.gather(table, 1)
+	var dry := c.item_count("spirit_herb")
+	_set_weather(gs, "rain")
+	var heard: Array[String] = []
+	var cb := func(text: String, _cat: String) -> void: heard.append(text)
+	EventBus.message_posted.connect(cb)
+	gs.gather(table, 1)
+	EventBus.message_posted.disconnect(cb)
+	var wet := c.item_count("spirit_herb") - dry
+	assert_eq(wet, dry + 1, "one extra on the rain day")
+	assert_true("\n".join(heard).contains("The rain has the herbs thriving: +1"))
+	_restore_weather(gs)
+
+
+func test_snow_adds_a_day_to_travel() -> void:
+	var c := _start()
+	var gs := _game_state()
+	c.realm_index = 1
+	gs.data.road = {}
+	var route: Dictionary = gs.data.regions[gs.data.start_region]["routes"][0]
+	var normal: int = Exploration.check_travel(c, gs.data, gs.current_region, String(route["to"]))["days"]
+	_set_weather(gs, "snow")
+	var start_day := GameClock.total_days
+	gs.travel(String(route["to"]))
+	assert_eq(GameClock.total_days - start_day, normal + 1)
+	_restore_weather(gs)
+
+
 func test_deed_with_enemy_needs_a_win() -> void:
 	var c := _start()
 	var gs := _game_state()

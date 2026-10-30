@@ -608,6 +608,10 @@ func travel(region_id: String) -> void:
 		return
 	_start_time_skip()
 	last_travel_road_encounter = ""
+	var snow_days := Weather.travel_extra_days(data, current_region, GameClock.total_days)
+	if snow_days > 0:
+		check["days"] = int(check["days"]) + snow_days
+		EventBus.post("Snow slows the road: +%d %s." % [snow_days, "day" if snow_days == 1 else "days"], "info")
 	current_region = region_id
 	last_arrival_first_visit = Exploration.visit(player, region_id)
 	world_flags["notice_road_" + region_id] = true  # you are already here (TRAV-001)
@@ -1130,6 +1134,9 @@ func gather(table: Array, days: int) -> void:
 	var rolled: Array = []
 	var found := Exploration.gather(player, Exploration.gather_table_for(player, data, table, season), rng, rolled)
 	Exploration.note_seasonal_gather(player, rolled, season)
+	var thrived: Array[String] = Weather.herb_bonus(data, Weather.of(data, current_region, GameClock.total_days), found, rng)
+	for item_id in thrived:
+		found[item_id] = int(found[item_id]) + 1
 	var notes: PackedStringArray = []
 	for item_id in found:
 		player.add_item(item_id, found[item_id])
@@ -1138,6 +1145,8 @@ func gather(table: Array, days: int) -> void:
 		EventBus.post("You search for %s but find nothing worth taking." % Calendar.format_duration(days))
 	else:
 		EventBus.post("You gather for %s. (%s)" % [Calendar.format_duration(days), ", ".join(notes)], "progress")
+	for item_id in thrived:
+		EventBus.post("The rain has the herbs thriving: +1 %s." % Items.item_plural(data, item_id, 1), "info")
 	if Exploration.locked_gather_count(player, data, table) > 0:
 		EventBus.post("You sense rarer treasures here, but your cultivation is too shallow to find them.")
 	_pass_time(days)

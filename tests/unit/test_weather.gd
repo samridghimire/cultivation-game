@@ -63,3 +63,37 @@ func test_validation() -> void:
 	ok.load_errors.clear()
 	ok._validate()
 	assert_true(ok.load_errors.is_empty(), ", ".join(ok.load_errors))
+
+
+func test_effects_helper_per_kind() -> void:
+	var d := data()
+	assert_eq(Weather.effect_note(d, "rain", "gather"), "(rain: herbs thrive)")
+	assert_eq(Weather.effect_note(d, "snow", "travel"), "(snow: +1 day)")
+	assert_eq(Weather.effect_note(d, "clear", "gather"), "")
+	assert_eq(Weather.effect_note(d, "rain", "travel"), "")
+	assert_eq(Weather.travel_extra_days(_with_weather({"any": {"snow": 1}}, 0.0), "qingshi_village", 5), 1)
+	assert_eq(Weather.travel_extra_days(_with_weather({"any": {"clear": 1}}, 0.0), "qingshi_village", 5), 0)
+
+
+func test_herb_bonus_only_for_herbs_in_rain() -> void:
+	var d := data()
+	var rng := seeded_rng(3)
+	var found := {"spirit_herb": 1, "iron_essence": 1}
+	var hits := 0
+	for i in 200:
+		var extra := Weather.herb_bonus(d, "rain", found, rng)
+		assert_false(extra.has("iron_essence"))
+		hits += extra.size()
+	assert_gt(hits, 20)
+	assert_true(hits < 90, "about a quarter of 200: %d" % hits)
+	assert_eq(Weather.herb_bonus(d, "clear", found, rng).size(), 0)
+
+
+func test_effects_validation() -> void:
+	for bad: Variant in [{"hail": {}}, {"rain": {"herb_bonus_chance": 2}}, {"snow": {"travel_extra_days": 0}}, {"rain": {"travel_extra_days": 1}}, {"rain": 3}]:
+		var errors: Array[String] = []
+		Weather.validate_effects(bad, errors)
+		assert_false(errors.is_empty(), str(bad))
+	var ok: Array[String] = []
+	Weather.validate_effects(data().weather_effects, ok)
+	assert_true(ok.is_empty())

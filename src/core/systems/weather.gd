@@ -60,3 +60,51 @@ static func _roll(region: Dictionary, region_id: String, day: int) -> String:
 		if pick < 0.0:
 			return kind
 	return "clear"
+
+
+## Checks regions.json `weather_effects` (WEATHER-002), appending problems to `errors`.
+static func validate_effects(effects: Dictionary, errors: Array[String]) -> void:
+	for kind: String in effects:
+		var e: Variant = effects[kind]
+		if not KINDS.has(kind) or not e is Dictionary:
+			errors.append("weather_effects '%s' must be a weather kind with an object" % kind)
+			continue
+		for key: String in e:
+			var v: Variant = e[key]
+			if key == "herb_bonus_chance" and kind == "rain":
+				if not (v is float or v is int) or float(v) < 0.0 or float(v) > 1.0:
+					errors.append("weather_effects.rain.herb_bonus_chance must be 0..1")
+			elif key == "travel_extra_days" and kind == "snow":
+				if not (v is float or v is int) or float(v) != floorf(float(v)) or int(v) < 1 or int(v) > 5:
+					errors.append("weather_effects.snow.travel_extra_days must be an int 1..5")
+			else:
+				errors.append("weather_effects.%s has unknown key '%s'" % [kind, key])
+
+
+## Extra days a journey starting from `region_id` on `day` takes (snow).
+static func travel_extra_days(data: GameData, region_id: String, day: int) -> int:
+	var e: Dictionary = data.weather_effects.get(of(data, region_id, day), {})
+	return int(e.get("travel_extra_days", 0))
+
+
+## One extra unit of each herb in `found` (item id -> count) that the weather grants:
+## a chance per herb stack on a rain day. Draws from `rng` only when it rains with herbs found.
+static func herb_bonus(data: GameData, kind: String, found: Dictionary, rng: RandomNumberGenerator) -> Array[String]:
+	var chance := float(data.weather_effects.get(kind, {}).get("herb_bonus_chance", 0.0))
+	var extra: Array[String] = []
+	if chance <= 0.0:
+		return extra
+	for item_id: String in found:
+		if (data.items.get(item_id, {}).get("tags", []) as Array).has("herb") and rng.randf() < chance:
+			extra.append(item_id)
+	return extra
+
+
+## The parenthesis the UI adds to a gather ("gather") or journey ("travel") entry on a `kind` day, "" if none.
+static func effect_note(data: GameData, kind: String, context: String) -> String:
+	var e: Dictionary = data.weather_effects.get(kind, {})
+	if context == "gather" and float(e.get("herb_bonus_chance", 0.0)) > 0.0:
+		return "(%s: herbs thrive)" % kind
+	if context == "travel" and int(e.get("travel_extra_days", 0)) > 0:
+		return "(%s: +%d %s)" % [kind, int(e["travel_extra_days"]), "day" if int(e["travel_extra_days"]) == 1 else "days"]
+	return ""

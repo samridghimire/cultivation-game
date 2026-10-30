@@ -42,6 +42,7 @@ var start_region := ""
 var renown: Dictionary = {}  # regions.json "renown" block (Renown); {} = none
 var travel_speed: Array = []  # TRAV-007: regions.json "travel_speed" (empty = everyone walks)
 var weather_persist: float = Weather.DEFAULT_PERSIST  # WEATHER-001: regions.json "weather_persist"
+var weather_effects: Dictionary = {}  # WEATHER-002: regions.json "weather_effects"
 var road: Dictionary = {}  # TRAV-006: regions.json "road" (empty = no road encounters)
 var encounters: Dictionary = {}  # id -> Dictionary
 ## True for an int or a whole-number float (JSON numbers load as floats).
@@ -231,6 +232,8 @@ func _load(dir: String) -> void:
 	weather_persist = float(world.get("weather_persist", Weather.DEFAULT_PERSIST))
 	if weather_persist < 0.0 or weather_persist > 1.0:
 		load_errors.append("weather_persist must be 0..1")
+	weather_effects = world.get("weather_effects", {})
+	Weather.validate_effects(weather_effects, load_errors)
 	travel_speed = world.get("travel_speed", [])
 	for region in world.get("regions", []):
 		regions[region["id"]] = region
