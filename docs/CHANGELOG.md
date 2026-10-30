@@ -2,6 +2,19 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-30 [WU-402] Villagers who need something show a gold "!" and ask whether you brought it.
+- 2026-10-30 [GFX-020] The fallen foe stays on the duel stage, and rain looks crisper.
+- 2026-10-30 [GFX-019] Inventory, shop and crafting lists show a small pixel icon for every item.
+- 2026-10-30 [WORLD-005] Weddings in your village: attend for favor, and a gift during the celebration counts double.
+- 2026-10-30 [QA-178] The hint screenshot checks match the current HUD again.
+- 2026-10-30 [FOLK-001] Neighbours sometimes ask you for a few herbs, ore or a pill, for stones and favor.
+- 2026-10-30 [C-265] Village happenings repeat less: rest days for common beats, one-time meetings stay one-time.
+- 2026-10-30 [HEART-002] Heart visions offer a righteous and a demonic answer that only fit your path.
+- 2026-10-30 [WU-401] Villagers greet you with a little speech bubble when you pass.
+- 2026-10-30 [WORLD-004] Villagers shelter indoors on rainy and snowy days and no longer stand on each other.
+- 2026-10-30 [GFX-018] Every quest-giver is a pixel-art person now; the bandit camp is a tent and a fire.
+- 2026-10-30 [GFX-017] Menus are solid and the world dims behind them, so text stays readable.
+- 2026-10-30 [WEATHER-002] Rain helps herbs grow; snow slows journeys by a day.
 - 2026-10-30 [WORLD-003] Villagers greet you in passing, warmly or coolly depending on how they feel about you.
 - 2026-10-30 [WU-400] The breakthrough window lets you still your heart: face the vision, see the outcome and the new odds.
 - 2026-10-30 [WU-398] Repairs to the hint screenshot checks.
