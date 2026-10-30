@@ -2147,3 +2147,25 @@ func test_greeting_for_reads_favor_and_fills_player_name() -> void:
 	assert_true(gs.greeting_for(npc.id) != warm)
 	assert_eq(gs.greeting_for("nobody"), "")
 	assert_eq(c.name, "Integration")
+
+
+func test_attend_celebration_gives_favor_to_both_once() -> void:
+	var c := _start()
+	var gs := _game_state()
+	var a := Npcs.spawn(gs.npcs, gs.data, seeded_rng(5), {"age_years": 25, "region": gs.current_region, "realm": "mortal"})
+	var b := Npcs.spawn(gs.npcs, gs.data, seeded_rng(6), {"age_years": 25, "region": gs.current_region, "realm": "mortal"})
+	Family.marry(a, b, "wife")
+	assert_true(gs.check_celebration(a.id) != "")
+	Folk.start_celebration(gs.world_flags, [a.id, b.id], GameClock.total_days, gs.data)
+	var day := GameClock.total_days
+	var align := c.alignment
+	gs.attend_celebration(a.id)
+	assert_eq(int(gs.npc_favor.get(a.id, 0)), 6)
+	assert_eq(int(gs.npc_favor.get(b.id, 0)), 6)
+	assert_eq(c.alignment, align + 1)
+	assert_eq(GameClock.total_days, day + 1)
+	gs.attend_celebration(b.id)
+	assert_eq(int(gs.npc_favor.get(b.id, 0)), 6)
+	assert_eq(GameClock.total_days, day + 1)
+	gs.end_session()
+

@@ -215,6 +215,7 @@ static func validate_requests(data: GameData) -> PackedStringArray:
 static func validate(data: GameData) -> PackedStringArray:
 	var errors: PackedStringArray = validate_greetings(data)
 	errors.append_array(validate_requests(data))
+	errors.append_array(validate_celebrations(data))
 	for e: Dictionary in data.encounters.values():
 		var blocks: Array = [[String(e["id"]), e.get("effects", {})]]
 		for i in e.get("choices", []).size():
@@ -232,4 +233,83 @@ static func validate(data: GameData) -> PackedStringArray:
 					errors.append("%s: %s must be a non-zero int within +-%d" % [block[0], pair[0], FAVOR_LIMIT])
 				if not joined.contains(pair[1]):
 					errors.append("%s: %s needs %s in the encounter's text" % [block[0], pair[0], pair[1]])
+	return errors
+
+
+# --- WORLD-005: village weddings you can attend ------------------------------
+
+const CELEBRATION_PREFIX := "celebration_"
+const ATTENDED_PREFIX := "celebration_attended_"
+const GIFT_PREFIX := "celebration_gift_"
+
+
+static func celebration_rules(data: GameData) -> Dictionary:
+	return data.family.get("celebrations", {})
+
+
+## Opens a celebration for each of `ids` (the newly-weds) until day `today` + rules.days.
+static func start_celebration(flags: Dictionary, ids: Array, today: int, data: GameData) -> void:
+	var days := int(celebration_rules(data).get("days", 0))
+	if days <= 0:
+		return
+	for id: Variant in ids:
+		flags[CELEBRATION_PREFIX + String(id)] = today + days
+
+
+## Whether a celebration for `npc_id` is still open on day `today`.
+static func celebration_open(flags: Dictionary, npc_id: String, today: int) -> bool:
+	return flags.has(CELEBRATION_PREFIX + npc_id) and today <= int(flags[CELEBRATION_PREFIX + npc_id])
+
+
+## Removes celebrations (and their attended / gift marks) that ended before `today`.
+static func expire_celebrations(flags: Dictionary, today: int) -> void:
+	for key: String in flags.keys():
+		if key.begins_with(CELEBRATION_PREFIX) and not key.begins_with(ATTENDED_PREFIX) and not key.begins_with(GIFT_PREFIX) and int(flags[key]) < today:
+			var id := key.trim_prefix(CELEBRATION_PREFIX)
+			flags.erase(key)
+			flags.erase(ATTENDED_PREFIX + id)
+			flags.erase(GIFT_PREFIX + id)
+
+
+## Why the player cannot attend `npc_id`'s celebration ("" when they can).
+static func check_attend(flags: Dictionary, npc_id: String, today: int) -> String:
+	if not celebration_open(flags, npc_id, today):
+		return "There is no wedding to attend."
+	if flags.has(ATTENDED_PREFIX + npc_id):
+		return "You have already attended this wedding."
+	return ""
+
+
+## Attending: {ok, reason, favor, alignment, days}. Marks it attended for `npc_id` and `partner_id`.
+static func attend(flags: Dictionary, npc_id: String, partner_id: String, today: int, data: GameData) -> Dictionary:
+	var reason := check_attend(flags, npc_id, today)
+	if reason != "":
+		return {"ok": false, "reason": reason, "favor": 0, "alignment": 0, "days": 0}
+	flags[ATTENDED_PREFIX + npc_id] = true
+	if partner_id != "":
+		flags[ATTENDED_PREFIX + partner_id] = true
+	var r := celebration_rules(data)
+	return {"ok": true, "reason": "", "favor": int(r.get("favor", 0)), "alignment": int(r.get("alignment", 0)), "days": int(r.get("attend_days", 1))}
+
+
+## The multiplier for a gift to `npc_id` now: gift_mult once per open celebration, else 1. `consume` marks it used.
+static func gift_multiplier(flags: Dictionary, npc_id: String, today: int, data: GameData, consume: bool) -> int:
+	if not celebration_open(flags, npc_id, today) or flags.has(GIFT_PREFIX + npc_id):
+		return 1
+	if consume:
+		flags[GIFT_PREFIX + npc_id] = true
+	return maxi(1, int(celebration_rules(data).get("gift_mult", 1)))
+
+
+static func validate_celebrations(data: GameData) -> PackedStringArray:
+	var errors: PackedStringArray = []
+	var r := celebration_rules(data)
+	if r.is_empty():
+		return errors
+	if int(r.get("days", 0)) < 1 or int(r.get("attend_days", 1)) < 1:
+		errors.append("family.json celebrations: days and attend_days must be >= 1")
+	if int(r.get("favor", 0)) < 0:
+		errors.append("family.json celebrations.favor must be >= 0")
+	if int(r.get("gift_mult", 1)) < 1:
+		errors.append("family.json celebrations.gift_mult must be >= 1")
 	return errors

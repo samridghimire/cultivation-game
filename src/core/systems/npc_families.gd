@@ -93,7 +93,7 @@ static func _marriages(npcs: Dictionary, data: GameData, days: int, rng: RandomN
 				continue
 			var b: CharacterData = partners[rng.randi_range(0, partners.size() - 1)]
 			Family.marry(a, b, marriage_rank(a, b, data))
-			events.append({"npc_id": a.id, "text": "%s and %s are married." % [a.name, b.name], "category": "info", "kind": "marriage"})
+			events.append({"npc_id": a.id, "text": "%s and %s are married." % [a.name, b.name], "category": "info", "kind": "marriage", "other_id": b.id})
 
 
 static func _conceptions(npcs: Dictionary, data: GameData, days: int, rng: RandomNumberGenerator) -> void:

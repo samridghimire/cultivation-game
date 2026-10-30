@@ -284,3 +284,42 @@ func test_request_validation() -> void:
 	ask["item"] = "spirit_herb"
 	ask["favor"] = 16
 	assert_eq(Folk.validate_requests(d).size(), 1, "favor out of range")
+
+
+# --- WORLD-005: village weddings you can attend ------------------------------
+
+func test_celebration_opens_expires_and_attends_once() -> void:
+	var flags := {}
+	Folk.start_celebration(flags, ["a", "b"], 100, data())
+	assert_true(Folk.celebration_open(flags, "a", 130))
+	assert_false(Folk.celebration_open(flags, "a", 131))
+	assert_false(Folk.celebration_open(flags, "zed", 100))
+	var r := Folk.attend(flags, "a", "b", 105, data())
+	assert_true(r["ok"])
+	assert_eq(r["favor"], 6)
+	assert_false(Folk.attend(flags, "a", "b", 106, data())["ok"])
+	assert_false(Folk.attend(flags, "b", "a", 106, data())["ok"])
+	assert_false(Folk.attend(flags, "a", "b", 200, data())["ok"])
+	Folk.expire_celebrations(flags, 120)
+	assert_true(flags.has("celebration_a"))
+	Folk.expire_celebrations(flags, 131)
+	assert_true(flags.is_empty())
+
+
+func test_celebration_gift_multiplier_is_once() -> void:
+	var flags := {}
+	assert_eq(Folk.gift_multiplier(flags, "a", 100, data(), true), 1)
+	Folk.start_celebration(flags, ["a"], 100, data())
+	assert_eq(Folk.gift_multiplier(flags, "a", 101, data(), false), 2)
+	assert_eq(Folk.gift_multiplier(flags, "a", 101, data(), true), 2)
+	assert_eq(Folk.gift_multiplier(flags, "a", 102, data(), true), 1)
+
+
+func test_celebration_validation() -> void:
+	var d := data()
+	assert_eq(Folk.validate_celebrations(d).size(), 0)
+	var saved: Dictionary = d.family["celebrations"]
+	d.family["celebrations"] = {"days": 0}
+	assert_true(Folk.validate_celebrations(d).size() > 0)
+	d.family["celebrations"] = saved
+

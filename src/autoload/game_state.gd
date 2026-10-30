@@ -1338,6 +1338,43 @@ func greeting_for(npc_id: String) -> String:
 	return Folk.greeting(npc, int(npc_favor.get(npc_id, 0)), GameClock.total_days, data).replace("{player}", player.name)
 
 
+## WORLD-005: why `npc_id`'s wedding cannot be attended now ("" when it can).
+func check_celebration(npc_id: String) -> String:
+	if not npcs.has(npc_id):
+		return "There is no wedding to attend."
+	return Folk.check_attend(world_flags, npc_id, GameClock.total_days)
+
+
+## WORLD-005: attend the wedding of `npc_id` and their spouse: favor with both, a nudge of alignment, a day.
+func attend_celebration(npc_id: String) -> void:
+	EventBus.topic = "family"
+	if not _can_act():
+		return
+	var reason := check_celebration(npc_id)
+	if reason != "":
+		EventBus.post(reason, "warning")
+		EventBus.player_changed.emit()
+		return
+	var npc: CharacterData = npcs[npc_id]
+	var partner_id := ""
+	for spouse_id in npc.spouses:
+		if npcs.has(spouse_id):
+			partner_id = String(spouse_id)
+			break
+	var result := Folk.attend(world_flags, npc_id, partner_id, GameClock.total_days, data)
+	var cap := int(data.family.get("acquaintance", {}).get("gift_max_favor", 100))
+	var names: Array[String] = []
+	for id: String in [npc_id, partner_id]:
+		if id == "":
+			continue
+		var favor := int(npc_favor.get(id, 0))
+		npc_favor[id] = favor + clampi(int(result["favor"]), 0, maxi(0, cap - favor))
+		names.append(npcs[id].name)
+	Alignment.shift(player, data, int(result["alignment"]))
+	EventBus.post("You join the wedding of %s, drink to their happiness and dance until late." % " and ".join(names), "progress")
+	_pass_time(int(result["days"]))
+
+
 ## Pass a few days chatting with an NPC who has no dialogue file; raises favor
 ## up to data/family.json acquaintance.chat_max_favor (enough to court).
 func chat(npc_id: String) -> void:
@@ -1466,6 +1503,7 @@ func give_gift(npc_id: String, item_id: String) -> void:
 	var taste := int(result["taste"])
 	var gain := int(result["favor"])
 	if taste >= 0:
+		gain *= Folk.gift_multiplier(world_flags, npc_id, GameClock.total_days, data, true)
 		var base := NpcClans.scaled_favor(npc_clans, data, npc_id, WorldEvents.scaled_favor(data, world_events, current_region, gain), cap - favor)
 		gain = base + Karma.favor_bonus(player, data, npc_id, base, cap - favor - base)
 	var before := _rival_attitude()
@@ -3095,6 +3133,10 @@ func _on_days_advanced(days: int) -> void:
 	for spouse_id in player.spouses:
 		reserved[spouse_id] = true
 	for event in Npcs.simulate(npcs, data, days, rng, reserved, world_flags):
+		if String(event.get("kind", "")) == "marriage" and npcs.has(event["npc_id"]) and Npcs.region_of(npcs[event["npc_id"]], data) == current_region:
+			Folk.start_celebration(world_flags, [event["npc_id"], event["other_id"]], GameClock.total_days, data)
+			EventBus.post("Word spreads of a wedding in %s: %s" % [data.regions.get(current_region, {}).get("name", current_region), event["text"]], "info")
+			continue
 		# News about generated strangers is noise; only report people the player knows.
 		if not Npcs.is_newsworthy(String(event["npc_id"]), player, npc_favor):
 			continue
@@ -3117,6 +3159,8 @@ func _on_days_advanced(days: int) -> void:
 			EventBus.post(String(legacy.get("rival_news", "Word spreads that someone has claimed the %s." % legacy["name"])), "info")
 	@warning_ignore("integer_division")
 	var months := player.age_days / Calendar.DAYS_PER_MONTH - age_before / Calendar.DAYS_PER_MONTH
+	if months > 0:
+		Folk.expire_celebrations(world_flags, GameClock.total_days)
 	for i in months:
 		EventBus.topic = "sect"
 		_sect_month_end()

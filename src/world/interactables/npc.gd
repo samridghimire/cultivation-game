@@ -280,6 +280,8 @@ func _acquaintance_options() -> Array[Dictionary]:
 		var days := int(data.family.get("acquaintance", {}).get("chat_days", 1))
 		var label := "Chat with %s (%s, favor %d)%s" % [npc.name, Calendar.format_duration(days), favor, festival_note(data, GameState.world_events, GameState.current_region)]
 		options.append(_entry(label, Family.check_chat(p, npc, favor, data), GameState.chat.bind(npc_id)))
+	if Folk.celebration_open(GameState.world_flags, npc_id, GameClock.total_days):
+		options.append(_entry("Attend the wedding (%s)" % Calendar.format_duration(int(Folk.celebration_rules(data).get("attend_days", 1))), GameState.check_celebration(npc_id), GameState.attend_celebration.bind(npc_id)))
 	var reason := "" if not p.inventory.is_empty() else "you carry nothing"
 	options.append(_entry("Give %s a gift%s" % [npc.name, festival_note(data, GameState.world_events, GameState.current_region)], reason, _set_gift_mode.bind(true)))
 	return options
