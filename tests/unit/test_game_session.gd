@@ -521,6 +521,20 @@ func test_fishing_catches_and_weather_changes_the_odds() -> void:
 	_restore_weather(gs)
 
 
+func test_cook_meal_spends_fish_and_a_day() -> void:
+	var c := _start()
+	var gs := _game_state()
+	var day := GameClock.total_days
+	gs.cook_meal("fish_stew")
+	assert_eq(c.item_count("fish_stew"), 0, "no fish, no meal")
+	assert_eq(GameClock.total_days, day, "a failed cook takes no time")
+	c.add_item("silver_carp", 2)
+	gs.cook_meal("fish_stew")
+	assert_eq(c.item_count("fish_stew"), 1)
+	assert_eq(c.item_count("silver_carp"), 0)
+	assert_eq(GameClock.total_days, day + 1)
+
+
 func test_snow_adds_a_day_to_travel() -> void:
 	var c := _start()
 	var gs := _game_state()

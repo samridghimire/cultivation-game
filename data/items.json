@@ -73,6 +73,8 @@
     {"id": "ancient_jade_slip", "name": "Ancient Jade Slip", "description": "A long-dead cultivator's insights into the Dao, sealed in jade.", "price": 0, "usable": true, "effects": {"qi": 8000, "breakthrough_bonus": 0.1}},
     {"id": "silver_carp", "name": "Silver Carp", "plural": "Silver Carp", "description": "A fat pond carp with scales like beaten silver.", "price": 2, "usable": false, "tags": ["fish"], "effects": {}},
     {"id": "mist_koi", "name": "Mist Koi", "plural": "Mist Koi", "description": "A pale koi that only rises in forest mist. Its flesh carries a little qi.", "price": 6, "usable": true, "tags": ["fish"], "effects": {"qi": 80}},
+    {"id": "fish_stew", "name": "Fish Stew", "plural": "Fish Stews", "description": "A plain, hot carp stew. Simple food that helps the body mend.", "price": 4, "usable": true, "tags": ["no_shop"], "effects": {"shorten_injury": 3}},
+    {"id": "eel_congee", "name": "Eel Congee", "plural": "Eel Congees", "description": "Rice porridge with braised eel; the kind of meal a village feeds its invalids.", "price": 6, "usable": true, "tags": ["no_shop"], "effects": {"shorten_injury": 5}},
     {"id": "marsh_eel", "name": "Marsh Eel", "description": "A slick, dark eel from the reeds.", "price": 3, "usable": false, "tags": ["fish"], "effects": {}},
     {"id": "dew_grass", "name": "Morning Dew Grass", "plural": "Morning Dew Grass", "description": "A common herb that holds a drop of qi in each blade.", "price": 4, "usable": false, "tags": ["herb"], "effects": {}},
     {"id": "qi_condensing_grass", "name": "Qi Condensing Grass", "plural": "Qi Condensing Grass", "description": "The main ingredient of Qi Gathering Pills.", "price": 12, "usable": false, "tags": ["herb"], "effects": {}},

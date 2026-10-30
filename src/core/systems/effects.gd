@@ -30,6 +30,7 @@ extends RefCounted
 ##                              needs a region_id passed to apply(), else it does nothing
 ##   contribution: int          sect contribution (1..500) for a sect member (Sects.add_contribution);
 ##                              a rogue gets nothing
+##   shorten_injury: int        ease every injury by this many days (1..60, Injuries.shorten); needs an injury
 ##   villager_favor / elder_favor: int  favor change with the person an encounter named ({villager} / {elder},
 ##                              see folk.gd, -20..20); applied by GameState, ignored by apply()
 ##   bloodline: String          grant a bloodline (data/bloodlines.json) to someone who has
@@ -51,6 +52,8 @@ static func check(c: CharacterData, data: GameData, effects: Dictionary) -> Stri
 		return "Burning %d years of life would kill you." % int(effects["burn_lifespan"])
 	if effects.has("heal_injury") and not _has_healable(c, effects["heal_injury"]):
 		return "You have no injury that this would heal."
+	if effects.has("shorten_injury") and not Injuries.has_any(c):
+		return "You have no injury that this would ease."
 	if effects.has("bloodline") and c.bloodline != "":
 		return "Your blood already carries the %s." % Bloodlines.bloodline_name(data, c.bloodline)
 	if effects.has("profession_xp"):
@@ -161,6 +164,10 @@ static func apply(c: CharacterData, data: GameData, effects: Dictionary, flags: 
 	if effects.has("heal_injury"):
 		for injury_id in Injuries.heal(c, effects["heal_injury"]):
 			notes.append("%s healed" % Injuries.injury_name(data, injury_id))
+	if effects.has("shorten_injury"):
+		var days := int(effects["shorten_injury"])
+		Injuries.shorten(c, days)
+		notes.append("injuries ease by %d %s" % [days, "day" if days == 1 else "days"])
 	if effects.has("dao_insight") and Dao.gain_levels(c, data, effects["dao_insight"]) > 0:
 		notes.append("Insight into the %s (level %d)" % [Dao.def_of(data, effects["dao_insight"])["name"], Dao.level(c, effects["dao_insight"])])
 	if effects.has("buff"):
@@ -196,7 +203,7 @@ const KEYS: Array[String] = [
 	"qi", "alignment", "items", "breakthrough_bonus", "breakthrough_realm", "set_flag", "clear_flag",
 	"learn_technique", "heal_injury", "burn_lifespan", "extend_lifespan", "learn_recipe", "dao_insight",
 	"buff", "reputation", "witnessed", "attributes", "bloodline", "practice_days",
-	"profession_xp", "renown", "contribution", "villager_favor", "elder_favor",
+	"profession_xp", "renown", "contribution", "villager_favor", "elder_favor", "shorten_injury",
 ]
 
 
@@ -218,6 +225,8 @@ static func validate(data: GameData, effects: Dictionary, where: String) -> Pack
 		var injury := String(effects["heal_injury"])
 		if injury != "all" and not data.injuries.has(injury):
 			errors.append("%s: unknown injury '%s'" % [where, injury])
+	if effects.has("shorten_injury") and (not (effects["shorten_injury"] is int or effects["shorten_injury"] is float) or int(effects["shorten_injury"]) < 1 or int(effects["shorten_injury"]) > 60):
+		errors.append("%s: shorten_injury must be a number of days 1..60" % where)
 	if effects.has("dao_insight") and not data.dao_insights.has(String(effects["dao_insight"])):
 		errors.append("%s: unknown dao insight '%s'" % [where, effects["dao_insight"]])
 	if effects.has("bloodline") and not data.bloodlines.has(String(effects["bloodline"])):

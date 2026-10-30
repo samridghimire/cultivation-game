@@ -34,6 +34,8 @@ static func describe_effects(effects: Dictionary, data: GameData) -> PackedStrin
 	if effects.has("heal_injury"):
 		var injury_id := String(effects["heal_injury"])
 		lines.append("Heals every injury" if injury_id == "all" else "Heals: %s" % Injuries.injury_name(data, injury_id))
+	if effects.has("shorten_injury"):
+		lines.append("Eases injuries by %d days" % int(effects["shorten_injury"]))
 	if effects.has("dao_insight"):
 		lines.append("A glimpse of the %s" % String(Dao.def_of(data, String(effects["dao_insight"])).get("name", "Dao")))
 	var attributes: Dictionary = effects.get("attributes", {})

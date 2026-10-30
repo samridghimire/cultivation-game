@@ -78,6 +78,10 @@ func _audit() -> Dictionary:
 				if output != "" and not items.has(output):
 					items[output] = true
 					changed = true
+	# FISH-002: home meals need no profession, only their ingredients.
+	for meal: Dictionary in gd.home_meals:
+		if _all_obtainable(meal["ingredients"], items):
+			items[String(meal["output"]["item"])] = true
 	return {"items": items, "recipes": recipes}
 
 

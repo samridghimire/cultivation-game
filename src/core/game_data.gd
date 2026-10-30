@@ -114,6 +114,8 @@ var anchors: Dictionary = {}
 ## Claimable cave abodes: abode id -> regions.json abode def plus "region" (Abodes).
 var abodes: Dictionary = {}
 var recipes: Dictionary = {}  # id -> Dictionary (data/recipes.json)
+## recipes.json home_meals (FISH-002): cooked at a workshop or the Family Home by anyone, see Cooking.
+var home_meals: Array = []
 var material_value_cache: Dictionary = {}  # item id -> float, filled lazily by Items.material_value
 ## Alchemy tunables (see Alchemy).
 var alchemy: Dictionary = {}
@@ -348,6 +350,7 @@ func _load(dir: String) -> void:
 	var crafting := _read(dir, "recipes.json")
 	alchemy = crafting.get("alchemy", {})
 	commissions = crafting.get("commissions", {})
+	home_meals = crafting.get("home_meals", [])
 	for recipe in crafting.get("recipes", []):
 		recipes[recipe["id"]] = recipe
 
@@ -939,11 +942,32 @@ func _validate_commissions() -> void:
 			load_errors.append("recipes.json commissions.max_price_fraction must be a number in (0, 1]")
 
 
+func _validate_home_meals() -> void:
+	var seen := {}
+	for meal: Dictionary in home_meals:
+		var id := String(meal.get("id", ""))
+		if id == "" or seen.has(id) or String(meal.get("name", "")) == "":
+			load_errors.append("recipes.json home_meals needs a unique id and a name (got '%s')" % id)
+		seen[id] = true
+		if int(meal.get("days", 0)) < 1:
+			load_errors.append("Home meal '%s' needs days >= 1" % id)
+		var ingredients: Dictionary = meal.get("ingredients", {})
+		if ingredients.is_empty():
+			load_errors.append("Home meal '%s' has no ingredients" % id)
+		for item_id: Variant in ingredients:
+			if not items.has(String(item_id)) or int(ingredients[item_id]) < 1:
+				load_errors.append("Home meal '%s' has a bad ingredient '%s'" % [id, item_id])
+		var output: Dictionary = meal.get("output", {})
+		if not items.has(String(output.get("item", ""))) or int(output.get("count", 0)) < 1:
+			load_errors.append("Home meal '%s' has a bad output" % id)
+
+
 func _validate_recipes() -> void:
 	var markup: Variant = alchemy.get("crafted_sell_markup", 1.3)
 	if not (markup is float or markup is int) or float(markup) < 1.0:
 		load_errors.append("recipes.json alchemy.crafted_sell_markup must be a number >= 1")
 	_validate_commissions()
+	_validate_home_meals()
 	for recipe: Dictionary in recipes.values():
 		var id: String = recipe["id"]
 		if not professions.has(recipe.get("profession", "")):

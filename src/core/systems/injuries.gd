@@ -62,6 +62,12 @@ static func heal(c: CharacterData, injury_id: String) -> PackedStringArray:
 	return healed
 
 
+## FISH-002: eases every injury by `days` (same as time passing, but no time is spent).
+## Returns the ids that healed completely.
+static func shorten(c: CharacterData, days: int) -> PackedStringArray:
+	return pass_days(c, days)
+
+
 ## Lets `days` pass. Returns the ids that healed completely.
 static func pass_days(c: CharacterData, days: int) -> PackedStringArray:
 	var healed: PackedStringArray = []

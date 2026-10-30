@@ -1195,6 +1195,20 @@ func fish(table: Array, days: int, place_name: String = "") -> void:
 	_pass_time(days)
 
 
+## FISH-002: cook a home meal (data/recipes.json home_meals) from ingredients in the pack.
+func cook_meal(meal_id: String) -> void:
+	EventBus.topic = "trade"
+	if not _can_act():
+		return
+	var result := Cooking.cook(player, data, meal_id)
+	if not result["ok"]:
+		EventBus.post(String(result["reason"]), "warning")
+		return
+	EventBus.post("You cook %s: +%d %s." % [Cooking.meal(data, meal_id)["name"], result["count"], Items.item_plural(data, String(result["item"]), int(result["count"]))], "progress")
+	EventBus.player_changed.emit()
+	_pass_time(int(result["days"]))
+
+
 func sell_item(item_id: String, quantity: int = 1) -> void:
 	EventBus.topic = "trade"
 	if not _can_act():
