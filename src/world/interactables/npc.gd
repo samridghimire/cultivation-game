@@ -321,10 +321,20 @@ func _acquaintance_options() -> Array[Dictionary]:
 		if other != null:
 			options.append(_entry("Settle the quarrel with %s" % other.name, GameState.check_quarrel(npc_id), EventBus.quarrel_requested.emit.bind(npc_id)))
 	if Folk.celebration_open(GameState.world_flags, npc_id, GameClock.total_days):
-		options.append(_entry(Folk.celebration_label(GameState.world_flags, npc_id, data), GameState.check_celebration(npc_id), GameState.attend_celebration.bind(npc_id)))
+		options.append(_entry(Folk.celebration_label(GameState.world_flags, npc_id, data), GameState.check_celebration(npc_id), _attend_celebration))
 	var reason := "" if not p.inventory.is_empty() else "you carry nothing"
 	options.append(_entry("Give %s a gift%s" % [npc.name, festival_note(data, GameState.world_events, GameState.current_region)], reason, _set_gift_mode.bind(true)))
 	return options
+
+
+## Attend the celebration; a confetti puff over the host unless motion is reduced (GFX-027).
+func _attend_celebration() -> void:
+	var open := GameState.check_celebration(npc_id) == ""
+	GameState.attend_celebration(npc_id)
+	if open and not MotionFx.reduced() and is_inside_tree():
+		var puff := ConfettiPuff.new()
+		puff.position = position + Vector2(0, -20)
+		get_parent().add_child(puff)
 
 
 ## One entry per carried item with the favor it is worth, then Back.

@@ -402,17 +402,35 @@ func _build_generated_npcs() -> void:
 
 
 ## GFX-023: strings of lanterns near the haunt of the first villager whose celebration is open here.
+## GFX-027: plus a bow on the nearest stall or house; family members celebrate at the Family Home.
 func _build_celebration_lanterns(people: Array[CharacterData], stands: Dictionary) -> void:
 	var ids: Array = people.map(func(c: CharacterData) -> String: return c.id)
 	var party := Folk.celebrants(GameState.world_flags, ids, GameClock.total_days)
 	for id: String in ids:
-		if party.has(id) and stands.has(id):
-			var lanterns := CelebrationLanterns.new()
-			lanterns.lantern_color = Folk.celebration_lantern(party[id])
-			lanterns.position = (stands[id] as Vector2) + Vector2(0, 30)
-			add_child(lanterns)
-			move_child(lanterns, 0)
-			return
+		if not party.has(id):
+			continue
+		var at := Vector2.ZERO
+		if stands.has(id):
+			at = (stands[id] as Vector2) + Vector2(0, 30)
+		elif _region.has("family_home") and FamilyHome.has_home(GameState.player, GameState.npcs, GameState.data, GameState.current_region):
+			var home: Dictionary = _region["family_home"]
+			at = _vec(home.get("pos", [0, 0])) + Vector2(0, _vec(home.get("size", [90, 64])).y / 2.0 + 30.0)
+		else:
+			continue
+		var lanterns := CelebrationLanterns.new()
+		lanterns.lantern_color = Folk.celebration_lantern(party[id])
+		lanterns.position = at
+		add_child(lanterns)
+		move_child(lanterns, 0)
+		var lm := CelebrationBow.nearest_landmark(_region.get("map", {}).get("landmarks", []), at)
+		if not lm.is_empty():
+			var bow := CelebrationBow.new()
+			bow.ribbon_color = lanterns.lantern_color
+			var size := _vec(lm["size"])
+			bow.span = size.x * 0.7
+			bow.position = _vec(lm["pos"]) + Vector2(0, -size.y * 0.2)
+			add_child(bow)
+		return
 
 
 ## Labels stay on screen as the camera moves (WU-269).
