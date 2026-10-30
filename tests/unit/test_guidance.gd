@@ -5384,3 +5384,59 @@ func test_goal_method_clause_held_and_spot_precedence() -> void:
 		assert_eq(clause, spot["clause"])
 	else:
 		assert_true(clause.contains("with the Azure Cloud Heart Sutra") or clause == String(spot.get("clause", "")), clause)
+
+
+func _village_data(kind: String) -> GameData:
+	var d := data()
+	d.regions["qingshi_village"]["weather"] = {"any": {kind: 1}}
+	d.weather_persist = 1.0
+	return d
+
+
+func test_village_lines_weather_only_when_nothing_open() -> void:
+	var d := _village_data("rain")
+	var lines := Guidance.village_lines(new_character(), d, {}, {}, "qingshi_village", 10)
+	assert_eq(lines.size() - _fishing_lines(lines), 1)
+	assert_true(lines[0].begins_with("Rain today: herbs thrive"), lines[0])
+	assert_true(lines[0].contains("fish bite more") and lines[0].contains("Water-root cultivation x1.10"), lines[0])
+
+
+func _fishing_lines(lines: PackedStringArray) -> int:
+	var n := 0
+	for l in lines:
+		if l.begins_with("Fishing at"):
+			n += 1
+	return n
+
+
+func test_village_lines_tip_with_days_left() -> void:
+	var d := _village_data("clear")
+	var friend := new_character(7)
+	friend.name = "Wu Lan"
+	var flags := {Folk.TIP_KEY: {"region": "qingshi_village", "item": "spirit_grass", "until": 15, "npc_id": friend.id}}
+	var lines := Guidance.village_lines(new_character(), d, {friend.id: friend}, flags, "qingshi_village", 10)
+	var found := false
+	for l in lines:
+		found = found or (l.begins_with("Wu Lan's tip:") and l.contains("6 days left"))
+	assert_true(found, "\n".join(lines))
+
+
+func test_village_lines_request_line() -> void:
+	var d := _village_data("clear")
+	var c := new_character()
+	var asker := new_character(9)
+	asker.name = "Old Fang"
+	d.regions["qingshi_village"]["npc_spots"] = [[100, 100]]
+	asker.home_region = "qingshi_village"
+	c.letter_requests.append({"npc_id": asker.id, "item": "spirit_grass", "count": 3, "until": 14, "favor": 5, "source": "folk"})
+	var lines := Guidance.village_lines(c, d, {asker.id: asker}, {}, "qingshi_village", 10)
+	if Npcs.region_of(asker, d) == "qingshi_village":
+		var found := false
+		for l in lines:
+			found = found or (l.begins_with("Old Fang wants 3") and l.contains("5 days left"))
+		assert_true(found, "\n".join(lines))
+
+
+func test_effects_text_empty_on_plain_day() -> void:
+	var d := data()
+	assert_eq(Weather.effects_text(d, "cloudy"), "")

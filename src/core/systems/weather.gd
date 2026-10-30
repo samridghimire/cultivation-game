@@ -140,6 +140,24 @@ static func effect_note(data: GameData, kind: String, context: String) -> String
 	return ""
 
 
+## "herbs thrive, fish bite more, Water-root cultivation x1.10" for a `kind` day: what it does today ("" = nothing) (WU-407).
+static func effects_text(data: GameData, kind: String) -> String:
+	var e: Dictionary = data.weather_effects.get(kind, {})
+	var parts: PackedStringArray = []
+	if float(e.get("herb_bonus_chance", 0.0)) > 0.0:
+		parts.append("herbs thrive")
+	var fish := fishing_multiplier(data, kind)
+	if fish > 1.0:
+		parts.append("fish bite more")
+	elif fish < 1.0:
+		parts.append("fish are shy")
+	if int(e.get("travel_extra_days", 0)) > 0:
+		parts.append("journeys take +%d %s" % [int(e["travel_extra_days"]), "day" if int(e["travel_extra_days"]) == 1 else "days"])
+	if e.has("qi_element"):
+		parts.append("%s-root cultivation x%.2f" % [String(e["qi_element"]["element"]).capitalize(), float(e["qi_element"]["mult"])])
+	return ", ".join(parts)
+
+
 static func _validate_qi_element(kind: String, v: Variant, errors: Array[String]) -> void:
 	if not v is Dictionary or not QI_ELEMENTS.has(String((v as Dictionary).get("element", ""))):
 		errors.append("weather_effects.%s.qi_element needs an element of %s" % [kind, ", ".join(QI_ELEMENTS)])

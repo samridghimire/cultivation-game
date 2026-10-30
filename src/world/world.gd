@@ -339,7 +339,18 @@ func _mark_hinted(hud: Node) -> void:
 	for node: Interactable in nodes:
 		if "hint_region" in node:
 			node.hint_region = region
-		node.set_hinted(hit.has(node))
+		node.set_hinted(hit.has(node) or _tip_target(node))
+
+
+## Whether `node` is a gather site the friend's active tip points at (WU-407).
+func _tip_target(node: Interactable) -> bool:
+	var tip := Folk.active_tip(GameState.world_flags, GameClock.total_days)
+	if tip.is_empty() or String(tip["region"]) != GameState.current_region or not "gather_table" in node:
+		return false
+	for entry: Dictionary in node.gather_table:
+		if String(entry.get("item", "")) == String(tip["item"]):
+			return true
+	return false
 
 
 ## Generated NPCs (Npcs.spawn, no def) stand at the region's npc_spots (the

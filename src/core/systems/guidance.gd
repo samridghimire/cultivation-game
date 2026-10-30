@@ -3523,6 +3523,42 @@ static func journal(c: CharacterData, data: GameData, flags: Dictionary, today: 
 		_add(out, "Commissions", Commissions.describe(c, data, order, today) + (". " + missing if missing != "" else ""), "warning" if Commissions.days_left(order, today) <= 7 else "normal")
 	_renown_entry(out, c, data, region_id)
 	_milestone_entries(out, c, data, flags, clan)
+	var village := village_lines(c, data, people, flags, region_id, today)
+	if village.size() > 1:
+		for line in village:
+			_add(out, "Around the village", line, "normal")
+	return out
+
+
+## Journal section "Around the village" (WU-407): today's weather and what it does, the friend's tip, open requests,
+## an open celebration and the nearest fishing spot. Only reads; the weather line is always first.
+static func village_lines(c: CharacterData, data: GameData, people: Dictionary, flags: Dictionary, region_id: String, today: int) -> PackedStringArray:
+	var out: PackedStringArray = []
+	var kind := Weather.of(data, region_id, today)
+	var effects := Weather.effects_text(data, kind)
+	out.append("%s today%s" % [Weather.label(kind), ": " + effects if effects != "" else ""])
+	var tip := Folk.active_tip(flags, today)
+	if not tip.is_empty():
+		var friend: CharacterData = people.get(String(tip.get("npc_id", "")))
+		out.append("%s's tip: %s in %s, %s left" % [friend.name if friend != null else "A friend", String(data.items.get(String(tip["item"]), {}).get("name", tip["item"])), _region_name(data, String(tip["region"])), Calendar.format_duration(int(tip["until"]) - today + 1)])
+	for req in Letters.requests_in_region(c, data, people, region_id, today):
+		out.append("%s wants %d %s, %s left" % [req["name"], req["count"], req["item"], Calendar.format_duration(int(req["days_left"]) + 1)])
+	for npc in Npcs.in_region(people, data, region_id):
+		if Folk.celebration_open(flags, npc.id, today) and Folk.check_attend(flags, npc.id, today) == "":
+			out.append("%s: %s" % [npc.name, Folk.celebration_label(flags, npc.id, data)])
+	var season := Calendar.season_of(today)
+	for place: Dictionary in data.regions.get(region_id, {}).get("places", []):
+		if place.get("type", "") != "fishing":
+			continue
+		var best := ""
+		var best_weight := INF
+		for entry: Dictionary in Exploration.gather_table_for(c, data, place.get("catch_table", []), season):
+			if String(entry.get("item", "")) != "" and float(entry.get("weight", 1)) <= best_weight:
+				best = String(entry["item"])
+				best_weight = float(entry.get("weight", 1))
+		if best != "":
+			out.append("Fishing at %s: best catch this %s is %s" % [place.get("display_name", "the pond"), season.to_lower(), data.items.get(best, {}).get("name", best)])
+			break
 	return out
 
 

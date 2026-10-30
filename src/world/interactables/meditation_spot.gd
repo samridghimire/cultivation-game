@@ -20,6 +20,10 @@ func get_options() -> Array[Dictionary]:
 		{"label": "Meditate (1 month)", "description": GameState.meditation_preview(Calendar.DAYS_PER_MONTH, qi_density), "action": GameState.cultivate.bind(Calendar.DAYS_PER_MONTH, qi_density), "keep_open": true},
 		{"label": "Closed-door cultivation (1 year)", "description": GameState.meditation_preview(Calendar.DAYS_PER_YEAR, qi_density), "action": GameState.cultivate.bind(Calendar.DAYS_PER_YEAR, qi_density), "keep_open": true},
 	])
+	var qi_note := Weather.effect_note(GameState.data, Weather.of(GameState.data, GameState.current_region, GameClock.total_days), "meditate")
+	if qi_note != "" and options.size() >= 2:
+		var meditate: Dictionary = options[options.size() - 2]
+		meditate["description"] = String(meditate.get("description", "")) + "\n" + qi_note
 	options.append_array(_dual_cultivation_options())
 	if Cultivation.can_attempt_breakthrough(GameState.player, GameState.data):
 		var chance := Cultivation.breakthrough_chance(GameState.player, GameState.data)
