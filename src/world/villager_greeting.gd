@@ -25,6 +25,19 @@ static func pick(candidates: Array, player_pos: Vector2, greeted: Dictionary, da
 	return best
 
 
+## WU-402: whether `req` (Letters.open_request, maybe {}) is a neighbour's folk request.
+static func is_folk_request(req: Dictionary) -> bool:
+	return not req.is_empty() and String(req.get("source", "letter")) == "folk"
+
+
+## The greeting with " Did you bring the <item>?" appended when `req` is a folk request the player
+## holds enough items for (`have` of the asked count).
+static func with_request(text: String, req: Dictionary, have: int, item_name: String) -> String:
+	if text == "" or not is_folk_request(req) or have < int(req.get("count", 1)):
+		return text
+	return "%s Did you bring the %s?" % [text, item_name]
+
+
 ## A small bubble above `above` (a node of height `height`): UIStyle panel, 12 px wrapped text.
 ## With `reduce_motion` it appears at once, otherwise it pops in with a scale. It frees itself
 ## after SHOW_SECONDS.

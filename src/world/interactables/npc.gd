@@ -129,6 +129,8 @@ func draw_generated_art() -> bool:
 ## Within this distance of the player the label shows the full "(realm)" suffix (WU-087).
 const FULL_LABEL_RANGE := 120.0
 var _near := false
+## True while this villager has an open folk request (WU-402): a "!" badge and a name that stays visible.
+var _asking := false
 
 
 ## Just the name until the player is close, then "Name (Qi Refining, 1st Layer)".
@@ -149,7 +151,7 @@ const NAME_FAR := 200.0
 
 
 func label_alpha(player_pos: Vector2) -> float:
-	if hinted or not GameState.data.npcs.get(npc_id, {}).is_empty() or _is_my_rival():
+	if hinted or _asking or not GameState.data.npcs.get(npc_id, {}).is_empty() or _is_my_rival():
 		return 1.0
 	var p := GameState.player
 	if p != null and (p.spouses.has(npc_id) or p.children.has(npc_id)):
@@ -193,7 +195,22 @@ func label_color() -> Color:
 	return Color.WHITE
 
 
+func shows_badge() -> bool:
+	return hinted or _asking
+
+
+## Re-reads whether this villager has an open folk request, redrawing the label when that changed.
+func refresh_request() -> void:
+	var asking := GameState.player != null and VillagerGreeting.is_folk_request(GameState.letter_request(npc_id))
+	if asking != _asking:
+		_asking = asking
+		if asking:
+			label_fade = 1.0
+		_redraw_label()
+
+
 func _update_near() -> void:
+	refresh_request()
 	var player := get_tree().get_first_node_in_group("player") as Node2D
 	var near := player != null and player.global_position.distance_to(global_position) <= FULL_LABEL_RANGE
 	if near != _near:
@@ -263,6 +280,8 @@ func _letter_options() -> Array[Dictionary]:
 	var item_name := String(GameState.data.items.get(String(req["item"]), {}).get("name", req["item"]))
 	var count := int(req.get("count", 1))
 	var label := "Give %s%s (they asked in a letter)" % [item_name, "" if count == 1 else " x%d" % count]
+	if VillagerGreeting.is_folk_request(req):
+		label = "Give %d %s" % [count, Items.item_plural(GameState.data, String(req["item"]), count)]
 	options.append(_entry(label, GameState.check_letter_request(npc_id), GameState.answer_letter_request.bind(npc_id)))
 	return options
 

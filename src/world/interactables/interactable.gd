@@ -182,6 +182,11 @@ static func region_marker_names(data: GameData, npcs: Dictionary, region_id: Str
 	return names
 
 
+## Whether the gold "!" badge shows above the label: hinted places, and NPCs who need you (WU-402).
+func shows_badge() -> bool:
+	return hinted
+
+
 ## Sets or clears `hinted`, redrawing only when it changed.
 func set_hinted(value: bool) -> void:
 	if hinted == value:
@@ -223,7 +228,7 @@ func drawn_label_rect(view: Rect2) -> Rect2:
 	var rect := label_rect()
 	rect.position.x = clamp_label_left(rect.position.x, rect.size.x, view.position.x, view.end.x)
 	rect.position.y += screen_lift
-	if hinted:
+	if shows_badge():
 		# The "!" badge sits above the label: a 20px circle centered on it, 14px over the baseline.
 		var base := position.y - size.y / 2.0 - 8.0 + label_offset.y + screen_lift
 		var badge := Rect2(rect.position.x + rect.size.x / 2.0 - 10.0, base - 34.0, 20.0, 20.0)
@@ -382,7 +387,7 @@ func _draw_label() -> void:
 	if is_inside_tree():
 		var view := _view_rect_local()
 		left = clamp_label_left(left, text_width, view.position.x, view.end.x)
-	if hinted:
+	if shows_badge():
 		# A gold badge with a dark "!" above the label.
 		var center := Vector2(left + text_width / 2.0, -size.y / 2.0 - 8.0 + label_offset.y + screen_lift - LABEL_FONT_SIZE - 10.0)
 		_label_node.draw_circle(center, 10.0, UIStyle.ACCENT)

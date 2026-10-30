@@ -412,6 +412,10 @@ func _check_greetings() -> void:
 		return
 	_greeted[id] = day
 	var text := GameState.greeting_for(id)
+	var req := GameState.letter_request(id)
+	if not req.is_empty():
+		var item_id := String(req["item"])
+		text = VillagerGreeting.with_request(text, req, GameState.player.item_count(item_id), String(GameState.data.items.get(item_id, {}).get("name", item_id)))
 	if text == "":
 		return
 	for node in get_children():
