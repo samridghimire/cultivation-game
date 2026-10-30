@@ -2474,3 +2474,31 @@ func test_folk_companion_round_trips() -> void:
 	var back := CharacterData.from_dict(c.to_dict())
 	assert_eq(String(back.folk_companion["npc"]), "n1")
 	assert_eq(int(back.folk_companion_day["n1"]), 9)
+
+
+func test_storm_gather_cuts_herbs_and_contemplation_doubles_thunder_dao() -> void:
+	var c := _start()
+	var gs := _game_state()
+	var table := [{"item": "spirit_herb", "weight": 1, "min": 2, "max": 2}]
+	_set_weather(gs, "clear")
+	gs.rng.seed = 5
+	gs.gather(table, 1)
+	var calm_yield := c.item_count("spirit_herb")
+	assert_gt(calm_yield, 0)
+	_set_weather(gs, "storm")
+	gs.rng.seed = 5
+	gs.gather(table, 1)
+	assert_eq(c.item_count("spirit_herb") - calm_yield, calm_yield - 1, "a storm day's gather yields one herb less")
+	Dao.gain_levels(c, gs.data, "thunder_dao")
+	c.attributes["comprehension"] = 1000
+	var before: float = float(c.dao["thunder_dao"]["progress"])
+	var level_before := Dao.level(c, "thunder_dao")
+	gs.contemplate_dao("thunder_dao", 1)
+	var stormy := float(c.dao["thunder_dao"]["progress"]) + 1000.0 * (Dao.level(c, "thunder_dao") - level_before) - before
+	_set_weather(gs, "clear")
+	var mid: float = float(c.dao["thunder_dao"]["progress"])
+	var level_mid := Dao.level(c, "thunder_dao")
+	gs.contemplate_dao("thunder_dao", 1)
+	var calm := float(c.dao["thunder_dao"]["progress"]) + 1000.0 * (Dao.level(c, "thunder_dao") - level_mid) - mid
+	assert_gt(stormy, calm * 1.5, "a storm day roughly doubles contemplation progress")
+	_restore_weather(gs)

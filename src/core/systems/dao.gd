@@ -126,11 +126,11 @@ static func check_contemplate(c: CharacterData, data: GameData, insight_id: Stri
 
 
 ## Contemplates an insight in seclusion for `days`. Returns {ok, reason, levels}.
-static func contemplate(c: CharacterData, data: GameData, insight_id: String, days: int, rng: RandomNumberGenerator) -> Dictionary:
+static func contemplate(c: CharacterData, data: GameData, insight_id: String, days: int, rng: RandomNumberGenerator, mult: float = 1.0) -> Dictionary:
 	var reason := check_contemplate(c, data, insight_id)
 	if reason != "":
 		return {"ok": false, "reason": reason, "levels": 0}
-	var amount := days * float(data.dao.get("seclusion_mult", 2.0))
+	var amount := days * float(data.dao.get("seclusion_mult", 2.0)) * mult
 	return {"ok": true, "reason": "", "levels": add_progress(c, data, insight_id, amount, rng)}
 
 

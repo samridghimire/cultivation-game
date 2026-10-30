@@ -730,6 +730,8 @@ func _explore_day(tags: Array, quiet: bool) -> Dictionary:
 	if tags.is_empty():
 		tags = data.regions.get(current_region, {}).get("encounter_tags", [])
 	tags = tags + WorldEvents.encounter_tags(data, world_events, current_region)
+	if Weather.of(data, current_region, GameClock.total_days) == "storm":
+		EventBus.post("A storm rolls over the sky; lightning walks the horizon.", "warning")
 	var encounter := Exploration.discovery_for(player, data, current_region, world_flags)
 	Exploration.add_explore_day(player, current_region)
 	last_explore_discovery = not encounter.is_empty()
@@ -1149,7 +1151,9 @@ func gather(table: Array, days: int) -> void:
 	var rolled: Array = []
 	var found := Exploration.gather(player, Exploration.gather_table_for(player, data, table, season), rng, rolled)
 	Exploration.note_seasonal_gather(player, rolled, season)
-	var thrived: Array[String] = Weather.herb_bonus(data, Weather.of(data, current_region, GameClock.total_days), found, rng)
+	var kind_today := Weather.of(data, current_region, GameClock.total_days)
+	var stormed := Weather.herb_penalty(data, kind_today, found)
+	var thrived: Array[String] = Weather.herb_bonus(data, kind_today, found, rng)
 	for item_id in thrived:
 		found[item_id] = int(found[item_id]) + 1
 	var tipped := Folk.tip_bonus(data, world_flags, GameClock.total_days, current_region, Exploration.gather_table_for(player, data, table, season))
@@ -1167,6 +1171,8 @@ func gather(table: Array, days: int) -> void:
 		var tip: Dictionary = Folk.active_tip(world_flags, GameClock.total_days)
 		var friend: CharacterData = npcs.get(String(tip.get("npc_id", "")))
 		EventBus.post("%s's tip was good: +%d %s." % [friend.name if friend != null else "Your friend", tipped[item_id], Items.item_plural(data, item_id, tipped[item_id])], "info")
+	if not stormed.is_empty():
+		EventBus.post("The storm batters the herbs: each stack yields less.", "info")
 	for item_id in thrived:
 		EventBus.post("The rain has the herbs thriving: +1 %s." % Items.item_plural(data, item_id, 1), "info")
 	if Exploration.locked_gather_count(player, data, table) > 0:
@@ -2246,7 +2252,7 @@ func contemplate_dao(insight_id: String, days: int) -> void:
 	if not _can_act():
 		return
 	_start_time_skip()
-	var result := Dao.contemplate(player, data, insight_id, days, rng)
+	var result := Dao.contemplate(player, data, insight_id, days, rng, Weather.dao_mult(data, Weather.of(data, current_region, GameClock.total_days), insight_id))
 	if not result["ok"]:
 		EventBus.post(result["reason"], "warning")
 		return

@@ -67,6 +67,8 @@ func _contemplation_options() -> Array[Dictionary]:
 	for insight_id in Dao.known_ids(p, data):
 		var label := "Contemplate the %s (1 month) [%s]" % [Dao.def_of(data, insight_id)["name"], Dao.progress_text(p, data, insight_id)]
 		var reason := Dao.check_contemplate(p, data, insight_id)
+		if Weather.dao_mult(data, Weather.of(data, GameState.current_region, GameClock.total_days), insight_id) > 1.0:
+			label += " " + Weather.effect_note(data, "storm", "meditate")
 		options.append({"label": label, "action": GameState.contemplate_dao.bind(insight_id, Calendar.DAYS_PER_MONTH), "disabled": reason != "", "reason": reason, "keep_open": true})
 	return options
 

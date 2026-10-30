@@ -183,3 +183,46 @@ func test_mean_qi_mult_averages_the_span() -> void:
 	assert_true(mean > 1.0 and mean < 1.1, "a mix of rain and clear days is between the two")
 	var year := Weather.mean_qi_mult(d, "qingshi_village", c, start, 2000)
 	assert_true(year > 1.0 and year < 1.1, "long spans are sampled, not walked day by day")
+
+
+func test_storm_is_rare_and_only_in_two_regions() -> void:
+	var d := data()
+	assert_true(d.load_errors.is_empty(), str(d.load_errors))
+	var storms := 0
+	for day in range(0, 4 * Calendar.DAYS_PER_YEAR):
+		for region_id: String in d.regions:
+			if Weather.of(d, region_id, day) == "storm":
+				storms += 1
+				assert_true(region_id in ["qingshi_village", "myriad_peaks_ridge"], region_id)
+	assert_gt(storms, 0, "summer storms happen")
+
+
+func test_storm_effects_validate() -> void:
+	for bad: Dictionary in [{"herb_yield_penalty": 0}, {"herb_yield_penalty": 1.5}, {"dao_boost": {"mult": 2}}, {"dao_boost": {"insight": "thunder_dao", "mult": 9}}]:
+		var errors: Array[String] = []
+		Weather.validate_effects({"storm": bad}, errors)
+		assert_false(errors.is_empty(), str(bad))
+	var ok: Array[String] = []
+	Weather.validate_effects(data().weather_effects, ok)
+	assert_true(ok.is_empty(), str(ok))
+
+
+func test_storm_cuts_herbs_boosts_thunder_dao_and_metal_qi() -> void:
+	var d := data()
+	var found := {"spirit_herb": 1, "dew_grass": 3, "iron_ore": 2}
+	var hit := Weather.herb_penalty(d, "storm", found)
+	assert_false(found.has("spirit_herb"), "a one-herb stack is emptied (min 0)")
+	assert_eq(int(found["dew_grass"]), 2)
+	assert_eq(int(found["iron_ore"]), 2, "ore is not a herb")
+	assert_true(hit.has("dew_grass"))
+	var clear := {"dew_grass": 3}
+	assert_true(Weather.herb_penalty(d, "clear", clear).is_empty())
+	assert_eq(int(clear["dew_grass"]), 3)
+	assert_almost_eq(Weather.dao_mult(d, "storm", "thunder_dao"), 2.0)
+	assert_almost_eq(Weather.dao_mult(d, "storm", "fire_dao"), 1.0)
+	assert_almost_eq(Weather.dao_mult(d, "clear", "thunder_dao"), 1.0)
+	assert_almost_eq(Weather.fishing_multiplier(d, "storm"), 0.5)
+	var c := CharacterData.new()
+	c.spiritual_roots = {"metal": 60}
+	assert_almost_eq(Weather.qi_mult(d, "storm", c), 1.1)
+	assert_true(Weather.effect_note(d, "storm", "meditate").contains("thunder speaks"))

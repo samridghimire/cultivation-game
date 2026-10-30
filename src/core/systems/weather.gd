@@ -3,7 +3,7 @@ extends RefCounted
 ## Daily weather (WEATHER-001): a pure function of region and date, so every view of a day agrees and nothing is saved.
 ## Weights come from data/regions.json "weather"; spells persist with regions.json "weather_persist".
 
-const KINDS: Array[String] = ["clear", "cloudy", "rain", "snow", "fog"]
+const KINDS: Array[String] = ["clear", "cloudy", "rain", "snow", "fog", "storm"]
 const DEFAULT_PERSIST := 0.6
 const MAX_SPELL_DAYS := 30
 const QI_ELEMENTS: Array[String] = ["metal", "wood", "water", "fire", "earth"]
@@ -11,7 +11,7 @@ const QI_ELEMENT_MIN_PURITY := 50
 const MAX_MEAN_SAMPLES := 365
 
 
-## The weather of `region_id` on `day` (GameClock.total_days): clear, cloudy, rain, snow or fog.
+## The weather of `region_id` on `day` (GameClock.total_days): clear, cloudy, rain, snow, fog or storm.
 static func of(data: GameData, region_id: String, day: int) -> String:
 	var region: Dictionary = data.regions.get(region_id, {})
 	if not region.has("weather"):
@@ -80,6 +80,11 @@ static func validate_effects(effects: Dictionary, errors: Array[String]) -> void
 			elif key == "travel_extra_days" and kind == "snow":
 				if not (v is float or v is int) or float(v) != floorf(float(v)) or int(v) < 1 or int(v) > 5:
 					errors.append("weather_effects.snow.travel_extra_days must be an int 1..5")
+			elif key == "herb_yield_penalty" and kind == "storm":
+				if not (v is float or v is int) or float(v) != floorf(float(v)) or int(v) < 1 or int(v) > 3:
+					errors.append("weather_effects.storm.herb_yield_penalty must be an int 1..3")
+			elif key == "dao_boost" and kind == "storm":
+				_validate_dao_boost(v, errors)
 			elif key == "qi_element":
 				_validate_qi_element(kind, v, errors)
 			else:
@@ -136,6 +141,8 @@ static func effect_note(data: GameData, kind: String, context: String) -> String
 		return "(%s: herbs thrive)" % kind
 	if context == "fish" and fishing_multiplier(data, kind) != 1.0:
 		return "(%s: fish bite more)" % kind if fishing_multiplier(data, kind) > 1.0 else "(%s: fish are shy)" % kind
+	if context == "meditate" and e.has("dao_boost"):
+		return "(%s: thunder speaks to those who listen)" % kind
 	if context == "meditate" and e.has("qi_element"):
 		return "(%s: %s qi stirs)" % [kind, e["qi_element"]["element"]]
 	if context == "travel" and int(e.get("travel_extra_days", 0)) > 0:
@@ -189,3 +196,36 @@ static func mean_qi_mult(data: GameData, region_id: String, c: CharacterData, fr
 	for i in samples:
 		total += qi_mult(data, of(data, region_id, from_day + i * days / samples), c)
 	return total / samples
+
+
+static func _validate_dao_boost(v: Variant, errors: Array[String]) -> void:
+	if not v is Dictionary or String((v as Dictionary).get("insight", "")) == "":
+		errors.append("weather_effects.storm.dao_boost needs an insight id")
+		return
+	var mult: Variant = (v as Dictionary).get("mult")
+	if not (mult is float or mult is int) or float(mult) < 1.0 or float(mult) > 3.0:
+		errors.append("weather_effects.storm.dao_boost.mult must be 1.0..3.0")
+
+
+## Multiplier on contemplation progress of `insight_id` on a `kind` day (WEATHER-004: thunder_dao x2 in a storm).
+static func dao_mult(data: GameData, kind: String, insight_id: String) -> float:
+	var b: Dictionary = data.weather_effects.get(kind, {}).get("dao_boost", {})
+	return float(b.get("mult", 1.0)) if String(b.get("insight", "")) == insight_id else 1.0
+
+
+## `found` (item id -> count) after a `kind` day's gather penalty: every herb stack loses
+## herb_yield_penalty (min 0, emptied stacks are removed). Returns the herbs that lost something.
+static func herb_penalty(data: GameData, kind: String, found: Dictionary) -> Array[String]:
+	var cut := int(data.weather_effects.get(kind, {}).get("herb_yield_penalty", 0))
+	var hit: Array[String] = []
+	if cut <= 0:
+		return hit
+	for item_id: String in found.keys():
+		if (data.items.get(item_id, {}).get("tags", []) as Array).has("herb"):
+			var left := maxi(0, int(found[item_id]) - cut)
+			hit.append(item_id)
+			if left == 0:
+				found.erase(item_id)
+			else:
+				found[item_id] = left
+	return hit
