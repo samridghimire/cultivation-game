@@ -3145,6 +3145,32 @@ func plant_field(item_id: String) -> void:
 	EventBus.player_changed.emit()
 
 
+## Water the region's field by hand (FARM-002): tomorrow counts as a rain day for its crops. Takes no time.
+func water_field() -> void:
+	EventBus.topic = "trade"
+	var place := FieldPlots.place_def(data, current_region)
+	if not _can_act() or place.is_empty():
+		return
+	var weather := Weather.of(data, current_region, GameClock.total_days)
+	var result := FieldPlots.water(player, place, FieldPlots.key(current_region, place), GameClock.total_days, weather)
+	EventBus.post("You carry water to %s." % place["display_name"] if result["ok"] else result["reason"], "progress" if result["ok"] else "warning")
+	EventBus.player_changed.emit()
+
+
+## Pay to enlarge the region's field once (FARM-002). Takes no time.
+func expand_field() -> void:
+	EventBus.topic = "trade"
+	var place := FieldPlots.place_def(data, current_region)
+	if not _can_act() or place.is_empty():
+		return
+	var result := FieldPlots.expand(player, place, FieldPlots.key(current_region, place), GameClock.total_days)
+	if result["ok"]:
+		EventBus.post("You pay %d spirit stones to clear more ground: %s now has %d plots." % [int(place["expand_cost"]), place["display_name"], int(place["max_plots"])], "trade")
+	else:
+		EventBus.post(result["reason"], "warning")
+	EventBus.player_changed.emit()
+
+
 ## Harvest every ripe crop in the region's field. Takes no time.
 func harvest_field() -> void:
 	EventBus.topic = "trade"

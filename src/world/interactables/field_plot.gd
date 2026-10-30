@@ -21,6 +21,11 @@ func get_options() -> Array[Dictionary]:
 		var reason := FieldPlots.check_plant(GameState.player, data, place, plot_key, item_id, today)
 		var name := String(data.items.get(item_id, {}).get("name", item_id))
 		options.append({"label": "Plant %s" % name, "description": info, "action": GameState.plant_field.bind(item_id), "disabled": reason != "", "reason": reason, "keep_open": true})
+	var water_reason := FieldPlots.check_water(GameState.player, place, plot_key, today, Weather.of(data, GameState.current_region, today))
+	options.append({"label": "Water the field", "description": info, "action": GameState.water_field, "disabled": water_reason != "", "reason": water_reason, "keep_open": true})
+	if int(place.get("expand_cost", 0)) > 0 and not bool(GameState.player.field_plots.get(plot_key, {}).get("expanded", false)):
+		var expand_reason := FieldPlots.check_expand(GameState.player, place, plot_key, today)
+		options.append({"label": "Enlarge the field (%d stones, %d plots)" % [int(place["expand_cost"]), int(place["max_plots"])], "description": info, "action": GameState.expand_field, "disabled": expand_reason != "", "reason": expand_reason, "keep_open": true})
 	for crop: Dictionary in GameState.player.field_plots.get(plot_key, {}).get("crops", []):
 		if int(crop["days_left"]) <= 0:
 			options.append({"label": "Harvest", "description": info, "action": GameState.harvest_field, "keep_open": true})

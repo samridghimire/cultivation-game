@@ -384,7 +384,12 @@ static func from_dict(d: Dictionary) -> CharacterData:
 			for crop in saved.get("crops", []):
 				if crop is Dictionary:
 					crops.append({"item": String(crop.get("item", "")), "days_left": int(crop.get("days_left", 0))})
-			c.field_plots[String(plot_key)] = {"paid_until": int(saved.get("paid_until", 0)), "crops": crops}
+			var entry := {"paid_until": int(saved.get("paid_until", 0)), "crops": crops}
+			if saved.has("watered_day"):
+				entry["watered_day"] = int(saved["watered_day"])
+			if saved.has("expanded"):
+				entry["expanded"] = bool(saved["expanded"])
+			c.field_plots[String(plot_key)] = entry
 	c.mission_cooldowns = _int_values(d.get("mission_cooldowns", {}))
 	c.mission_losses = _int_values(d.get("mission_losses", {}))
 	c.deed_days = _int_values(d.get("deed_days", {}))

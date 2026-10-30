@@ -4,6 +4,8 @@ extends RefCounted
 ## seasons (rain days grow it faster, frozen seasons stop it) and harvest it.
 ## Pure rules over CharacterData.field_plots =
 ## {"<region_id>:<display_name>": {paid_until: int (day), crops: [{item, days_left}]}}.
+## FARM-002: an entry may also hold watered_day (the last day it was watered by hand) and expanded
+## (true once the player paid the place's expand_cost: the plots rise to max_plots).
 ## Tuned by the region's "field_plot" place in data/regions.json.
 
 const TYPE := "field_plot"
@@ -26,6 +28,13 @@ static func key(region_id: String, place: Dictionary) -> String:
 
 static func _entry(c: CharacterData, plot_key: String) -> Dictionary:
 	return c.field_plots.get(plot_key, {})
+
+
+## How many crops the field holds for `c`: the place's plots, or max_plots once expanded.
+static func plots_for(c: CharacterData, place: Dictionary, plot_key: String) -> int:
+	if bool(_entry(c, plot_key).get("expanded", false)):
+		return maxi(int(place.get("plots", 1)), int(place.get("max_plots", 0)))
+	return int(place.get("plots", 1))
 
 
 static func rented(c: CharacterData, plot_key: String, today: int) -> bool:
@@ -74,9 +83,59 @@ static func check_plant(c: CharacterData, data: GameData, place: Dictionary, plo
 	var name := String(data.items.get(item_id, {}).get("name", item_id))
 	if c.item_count(item_id) < 1:
 		return "You have no %s to plant." % name
-	if (_entry(c, plot_key).get("crops", []) as Array).size() >= int(place.get("plots", 1)):
-		return "Every plot is planted (%d)." % int(place.get("plots", 1))
+	if (_entry(c, plot_key).get("crops", []) as Array).size() >= plots_for(c, place, plot_key):
+		return "Every plot is planted (%d)." % plots_for(c, place, plot_key)
 	return ""
+
+
+## Why `c` cannot water the field today, or "". Needs a growing crop, a clear or cloudy day, and no earlier watering today.
+static func check_water(c: CharacterData, place: Dictionary, plot_key: String, today: int, weather: String) -> String:
+	if not rented(c, plot_key, today):
+		return "Rent the field first."
+	var growing := false
+	for crop: Dictionary in _entry(c, plot_key).get("crops", []):
+		growing = growing or int(crop["days_left"]) > 0
+	if not growing:
+		return "Nothing in the field is growing."
+	if int(_entry(c, plot_key).get("watered_day", -1)) == today:
+		return "You already watered the field today."
+	if weather != "clear" and weather != "cloudy":
+		return "The weather will do the watering." if weather == "rain" else "Watering would do no good today."
+	if (place.get("frozen_seasons", []) as Array).has(Calendar.season_of(today).to_lower()):
+		return "The ground is frozen."
+	return ""
+
+
+## Waters the field: tomorrow's growth counts as a rain day (see advance). Returns {ok, reason}.
+static func water(c: CharacterData, place: Dictionary, plot_key: String, today: int, weather: String) -> Dictionary:
+	var reason := check_water(c, place, plot_key, today, weather)
+	if reason != "":
+		return {"ok": false, "reason": reason}
+	c.field_plots[plot_key]["watered_day"] = today
+	return {"ok": true, "reason": ""}
+
+
+## Why `c` cannot expand the field, or "".
+static func check_expand(c: CharacterData, place: Dictionary, plot_key: String, today: int) -> String:
+	if int(place.get("expand_cost", 0)) <= 0:
+		return "This field cannot be enlarged."
+	if bool(_entry(c, plot_key).get("expanded", false)):
+		return "The field is already enlarged."
+	if not rented(c, plot_key, today):
+		return "Rent the field first."
+	if c.item_count("spirit_stone") < int(place["expand_cost"]):
+		return "You cannot afford it (%d spirit stones)." % int(place["expand_cost"])
+	return ""
+
+
+## Pays expand_cost once to raise the plots to max_plots. Returns {ok, reason}.
+static func expand(c: CharacterData, place: Dictionary, plot_key: String, today: int) -> Dictionary:
+	var reason := check_expand(c, place, plot_key, today)
+	if reason != "":
+		return {"ok": false, "reason": reason}
+	c.add_item("spirit_stone", -int(place["expand_cost"]))
+	c.field_plots[plot_key]["expanded"] = true
+	return {"ok": true, "reason": ""}
 
 
 ## Plants one `item_id` from the inventory. Returns {ok, reason}.
@@ -110,7 +169,7 @@ static func advance(c: CharacterData, data: GameData, world_days: int, today: in
 				if (place.get("frozen_seasons", []) as Array).has(Calendar.season_of(day).to_lower()):
 					continue
 				left -= 1
-				if weather_of.call(region_id, day) == "rain":
+				if weather_of.call(region_id, day) == "rain" or int(entry.get("watered_day", -1)) == day - 1:
 					left -= int(place.get("rain_bonus_days", 0))
 				if left <= 0:
 					break
@@ -200,6 +259,11 @@ static func validate(data: GameData, region_id: String, region: Dictionary) -> A
 			errors.append("%s: plots must be 1..4" % who)
 		if int(place.get("rent", -1)) < 0:
 			errors.append("%s: rent must be >= 0" % who)
+		if place.has("expand_cost") or place.has("max_plots"):
+			if int(place.get("expand_cost", 0)) <= 0:
+				errors.append("%s: expand_cost must be > 0" % who)
+			if int(place.get("max_plots", 0)) < int(place.get("plots", 0)) or int(place.get("max_plots", 0)) > 8:
+				errors.append("%s: max_plots must be plots..8" % who)
 		if int(place.get("rent_days", 0)) < 1:
 			errors.append("%s: rent_days must be >= 1" % who)
 		var rain := int(place.get("rain_bonus_days", 0))
