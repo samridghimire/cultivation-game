@@ -3083,7 +3083,7 @@ func _start_hint_shot(gs: Node) -> void:
 		var today: int = int(root.get_node("GameClock").total_days)
 		c.professions["blacksmith"] = {"rank": 0, "xp": 0.0}
 		c.sect = {}
-		c.inventory = {"iron_essence": 20, "spirit_herb": 10}
+		c.inventory = {"iron_essence": 20, "cold_iron": 20, "spirit_herb": 10}  # QA-180: a kept id is left out whole, so a second ore must remain to sell
 		c.commissions = []
 		gs.current_region = "qingshi_village"
 		var free_offer := Guidance.sell_offer(c, gs.data, "qingshi_village", gs.world_flags)
@@ -3093,15 +3093,17 @@ func _start_hint_shot(gs: Node) -> void:
 		print("hint-shot sell keeps order: free ", free_offer, " kept ", kept_offer, " keep ", keep)
 		assert(int(keep.get("iron_essence", 0)) >= 2, "setup: the order does not keep Iron Essence: " + str(keep))
 		assert(not free_offer.is_empty(), "setup: nothing sells without the order")
-		assert(kept_offer.is_empty() or int(kept_offer["total"]) < int(free_offer["total"]), "the sell sum still counts the ore the order needs")
+		assert(not kept_offer.is_empty() and int(kept_offer["total"]) < int(free_offer["total"]), "the sell sum still counts the ore the order needs, or nothing else sells: " + str(kept_offer))
 		root.get_node("EventBus").player_changed.emit()
 		await root.get_tree().process_frame
 		hud.get("_banner").visible = false
 		var kj: Control = hud.get("_screens")["toggle_journal"]
-		await _show_journal(kj, "Next steps")
-		for _i in 3:
-			await root.get_tree().process_frame
-		print("hint-shot sell keeps order: journal shown"), "close": func() -> void:
+		var sell_line := "Sell your ore to the Wandering Merchant here (about %d stones) first." % int(kept_offer["total"])
+		kj.open()
+		await _scroll_to_text(kj, sell_line)
+		var kparsed: String = (kj.get("_text") as RichTextLabel).get_parsed_text()
+		assert(kparsed.contains(sell_line), "journal lacks the sell hint:\n" + kparsed)
+		print("hint-shot sell keeps order: journal shows the sell hint (", kept_offer["total"], " stones)"), "close": func() -> void:
 			(hud.get("_screens")["toggle_journal"] as Control).close()
 			c.professions = keeps_saved[0]
 			c.commissions = keeps_saved[1]
