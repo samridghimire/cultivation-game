@@ -453,6 +453,17 @@ static func is_sheltering(npc: CharacterData, region: Dictionary, day: int, adul
 	return HAUNT_STORMY.has(weather) and haunt_place(npc, region, day, adult) != haunt_place(npc, region, day, adult, weather)
 
 
+## Whether `npc` keeps a WORLD-001 daily round in `region_id`: a generated villager of that region
+## who is not part of `player`'s household there (the family keeps its spots by the Family Home).
+## Named NPCs stand where data/npcs.json puts them.
+static func keeps_round(npc: CharacterData, player: CharacterData, people: Dictionary, data: GameData, region_id: String) -> bool:
+	if data.npcs.has(npc.id) or region_of(npc, data) != region_id:
+		return false
+	if player != null and (player.spouses.has(npc.id) or player.children.has(npc.id)):
+		return not FamilyHome.has_home(player, people, data, region_id)
+	return true
+
+
 ## What a villager is up to at `place` (from `haunt_place`), "" for no place.
 static func activity_line(_npc: CharacterData, place: Dictionary, sheltering: String = "") -> String:
 	if place.is_empty():

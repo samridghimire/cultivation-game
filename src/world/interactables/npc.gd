@@ -577,6 +577,8 @@ static func known_tastes_text(flags: Dictionary, data: GameData, npc_id: String)
 
 ## "browsing the stalls at X" for a villager standing at a haunt, else "" (WORLD-002).
 func _activity_text(npc: CharacterData) -> String:
+	if not Npcs.keeps_round(npc, GameState.player, GameState.npcs, GameState.data, GameState.current_region):
+		return ""
 	var region: Dictionary = GameState.data.regions.get(GameState.current_region, {})
 	var adult := npc.age_years() >= int(GameState.data.family.get("adult_age", 16))
 	var weather := Weather.of(GameState.data, GameState.current_region, GameClock.total_days)

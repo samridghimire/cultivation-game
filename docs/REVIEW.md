@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 5435349
+Last reviewed commit: fae2671
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -1212,3 +1212,18 @@ Last reviewed commit: 5435349
     must hire") and "Their grandmother {villager}" (the villager can be a young man). Reworded neutrally.
   - Notes, not filed: WORLD-001's haunts are spread by angle only, so two villagers can share a haunt spot; a spell of
     weather keeps the season it began in for a few days (snow into early spring). Both cosmetic.
+- 2026-10-30 (reviewer): reviewed 5435349..fae2671 (WORLD-002, WORLD-003, WU-398/399/400, C-248, WEATHER-002, GFX-017,
+  GFX-018, WORLD-004, WU-401, HEART-002, C-265, FOLK-001; [PLAN]/[REVIEW] skipped). Main green before the fix (ALL CHECKS
+  PASSED, 2549 tests). No worker touched BACKLOG/CHANGELOG; no SAVE_VERSION change (FOLK-001 requests reuse
+  `letter_requests` with a `source` key that defaults to "letter"; from_dict now ints count/until/favor/gift counts);
+  no binary assets (GFX-018 looks are JSON, validated by PlaceLooks).
+  - FOLK-001: chance rolled before the open-request check, capped by max_open, per-npc open_request respected; folk
+    expiries are silent, letter ones still post. C-265: every new blocked_by_flag (youths, fold beast, peak rogue) is set
+    by every choice. HEART-002: alignment-gated choices validated at min/0/max alignment; the screen keeps gamepad focus
+    on the first vision choice and asks once before pushing on unfaced. WEATHER-002 snow days are added before travel.
+  - Fixed (WORLD-002/004): Look appended "Today they are browsing the stalls at ..." for every NPC, including named NPCs
+    (who stand where npcs.json puts them) and the player's spouse/children (who keep the Family Home spots), which the
+    haunt never moves. New Npcs.keeps_round gates the line to generated villagers on a daily round. Test added.
+  - Notes, not filed: FOLK-001's spec asked to validate that each ask item is gatherable/buyable somewhere; only
+    "known item" is checked. HEART-002 doesn't range-check a choice's `alignment` shift (Alignment.shift clamps).
+    World `_greeted` (WU-401) resets on every world reload, so a villager may greet twice a day after travel; harmless.

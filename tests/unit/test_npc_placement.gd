@@ -204,3 +204,29 @@ func test_villagers_at_one_place_stand_apart() -> void:
 				for b in people:
 					if a.id < b.id and Npcs.haunt_place(a, region, day, true, weather) == Npcs.haunt_place(b, region, day, true, weather):
 						assert_true((stands[a.id] as Vector2).distance_to(stands[b.id]) >= Npcs.HAUNT_SPACING - 0.01, "%s/%s day %d" % [a.id, b.id, day])
+
+
+## [REVIEW] Look's "Today they are ..." line is only for villagers on a daily round, not named NPCs or the family at home.
+func test_keeps_round_skips_named_npcs_family_and_other_regions() -> void:
+	var npcs := {}
+	Npcs.ensure_all(npcs, data(), seeded_rng())
+	var home_region := ""
+	for region: Dictionary in data().regions.values():
+		if region.has("family_home"):
+			home_region = String(region["id"])
+			break
+	assert_true(home_region != "", "some region has a family_home")
+	var player := new_character()
+	var villager := Npcs.spawn(npcs, data(), seeded_rng(1), {"region": home_region})
+	assert_true(Npcs.keeps_round(villager, player, npcs, data(), home_region))
+	var other := ""
+	for region_id: String in data().regions:
+		if region_id != home_region:
+			other = region_id
+			break
+	assert_false(Npcs.keeps_round(villager, player, npcs, data(), other), "not in its region")
+	var named_id: String = data().npcs.keys()[0]
+	var named: CharacterData = npcs[named_id]
+	assert_false(Npcs.keeps_round(named, player, npcs, data(), Npcs.region_of(named, data())), "named NPC")
+	player.spouses.append(villager.id)
+	assert_false(Npcs.keeps_round(villager, player, npcs, data(), home_region), "family stands by the Family Home")
