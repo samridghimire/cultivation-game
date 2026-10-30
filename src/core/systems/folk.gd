@@ -283,6 +283,7 @@ static func validate(data: GameData) -> PackedStringArray:
 	errors.append_array(validate_celebrations(data))
 	errors.append_array(validate_tips(data))
 	errors.append_array(validate_visits(data))
+	errors.append_array(validate_companions(data))
 	errors.append_array(validate_quarrels(data))
 	errors.append_array(validate_gifts(data))
 	for e: Dictionary in data.encounters.values():
@@ -796,3 +797,80 @@ static func validate_quarrels(data: GameData) -> PackedStringArray:
 	if int(o["extort"].get("stones", -1)) < 0:
 		errors.append("family.json folk_quarrels extort.stones must be >= 0")
 	return errors
+
+
+# --- A friend at your side (FOLK-005) ---
+
+
+## data/family.json folk_companions ({} = feature off).
+static func companion_rules(data: GameData) -> Dictionary:
+	return data.family.get("folk_companions", {})
+
+
+## Load errors in folk_companions: whole numbers, chance in [0, 1], a known injury.
+static func validate_companions(data: GameData) -> PackedStringArray:
+	var errors: PackedStringArray = []
+	var r: Dictionary = companion_rules(data)
+	if r.is_empty():
+		return errors
+	for key in ["min_favor", "cooldown_days", "favor_win", "favor_loss", "blows"]:
+		if not (r.get(key, -1) is int or r.get(key, -1) is float) or int(r.get(key, -1)) < 0:
+			errors.append("family.json folk_companions: %s must be a whole number >= 0" % key)
+	if int(r.get("blows", 0)) < 1:
+		errors.append("family.json folk_companions: blows must be >= 1")
+	var chance := float(r.get("injury_chance", -1))
+	if chance < 0.0 or chance > 1.0:
+		errors.append("family.json folk_companions: injury_chance must be in [0, 1]")
+	if not data.injuries.has(String(r.get("injury", ""))):
+		errors.append("family.json folk_companions: injury must be an injuries.json id")
+	return errors
+
+
+## Why `npc` cannot be asked along now ("" when they can): a living adult cultivator
+## of the region, favor >= min_favor, not asked within cooldown_days, nobody else coming today.
+static func check_invite(c: CharacterData, npc: CharacterData, favor: int, data: GameData, region_id: String, today: int) -> String:
+	var r: Dictionary = companion_rules(data)
+	if r.is_empty() or npc == null or not npc.alive:
+		return "Nobody can come with you."
+	if companion_today(c, today) != "":
+		return "A friend is already coming with you today."
+	if npc.realm_index < 1:
+		return "%s is no cultivator and could not keep up." % npc.name
+	if favor < int(r["min_favor"]):
+		return "%s does not know you well enough yet (favor %d needed)." % [npc.name, int(r["min_favor"])]
+	var left := int(c.folk_companion_day.get(npc.id, -100000)) + int(r["cooldown_days"]) - today
+	if left > 0:
+		return "%s has helped you lately; ask again in %d days." % [npc.name, left]
+	return ""
+
+
+## Ask `npc` along for today's fight.
+static func invite(c: CharacterData, npc_id: String, today: int) -> void:
+	c.folk_companion = {"npc": npc_id, "day": today}
+	c.folk_companion_day[npc_id] = today
+
+
+## The friend coming along today ("" = none).
+static func companion_today(c: CharacterData, today: int) -> String:
+	if int(c.folk_companion.get("day", -1)) != today:
+		return ""
+	return String(c.folk_companion.get("npc", ""))
+
+
+## The companion's strike: {name, damage}, like Karma.ally_strike but free.
+static func companion_strike(people: Dictionary, data: GameData, npc_id: String) -> Dictionary:
+	var ally: CharacterData = people[npc_id]
+	var blows := int(companion_rules(data).get("blows", 1))
+	return {"name": ally.name, "damage": maxi(1, int(Combat.stats(ally, data)["attack"]) * blows)}
+
+
+## After the fight: favor +favor_win / -favor_loss, and on a loss maybe an injury for them.
+## Returns the favor change. Clears the companion.
+static func finish_companion(c: CharacterData, people: Dictionary, favors: Dictionary, data: GameData, rng: RandomNumberGenerator, npc_id: String, won: bool) -> int:
+	var r: Dictionary = companion_rules(data)
+	c.folk_companion = {}
+	var delta := int(r["favor_win"]) if won else -int(r["favor_loss"])
+	favors[npc_id] = clampi(int(favors.get(npc_id, 0)) + delta, -100, 100)
+	if not won and people.has(npc_id) and rng.randf() < float(r["injury_chance"]):
+		Injuries.inflict(people[npc_id], data, String(r["injury"]))
+	return delta

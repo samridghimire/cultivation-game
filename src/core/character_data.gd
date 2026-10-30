@@ -155,6 +155,9 @@ var letter_requests: Array[Dictionary] = []
 var folk_gift_day: Dictionary = {}
 ## World day each generated villager last came to visit and shared tea with the player (WORLD-007): npc id -> day.
 var folk_visit_day: Dictionary = {}
+## Friend asked to join today's fight (FOLK-005): {npc, day} ({} = none); and the day each was last asked.
+var folk_companion: Dictionary = {}
+var folk_companion_day: Dictionary = {}
 ## Friend's prices from letters (SHOP-001): region id -> {"mult": float, "until": int world day}.
 var shop_deals: Dictionary = {}
 ## Secret realm id -> {"opening": int, "floor": int}: floors cleared in that opening (see SecretRealms).
@@ -275,6 +278,8 @@ func to_dict() -> Dictionary:
 		"letter_requests": letter_requests.duplicate(true),
 		"folk_gift_day": folk_gift_day.duplicate(),
 		"folk_visit_day": folk_visit_day.duplicate(),
+		"folk_companion": folk_companion.duplicate(),
+		"folk_companion_day": folk_companion_day.duplicate(),
 		"shop_deals": shop_deals.duplicate(true),
 		"secret_realms": secret_realms.duplicate(true),
 		"inheritances": inheritances.duplicate(),
@@ -410,6 +415,10 @@ static func from_dict(d: Dictionary) -> CharacterData:
 	c.letter_day = int(d.get("letter_day", -1))
 	c.folk_gift_day = _int_values(d.get("folk_gift_day", {}))
 	c.folk_visit_day = _int_values(d.get("folk_visit_day", {}))
+	var companion: Dictionary = d.get("folk_companion", {})
+	if not companion.is_empty():
+		c.folk_companion = {"npc": String(companion.get("npc", "")), "day": int(companion.get("day", -1))}
+	c.folk_companion_day = _int_values(d.get("folk_companion_day", {}))
 	for req in d.get("letter_requests", []):
 		var entry: Dictionary = (req as Dictionary).duplicate(true)
 		for key: String in ["count", "until", "favor"]:

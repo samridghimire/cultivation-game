@@ -708,3 +708,55 @@ func test_quarrel_validation() -> void:
 	d.family["folk_quarrels"]["topics"][0]["text"] = "no names"
 	assert_false(Folk.validate_quarrels(d).is_empty())
 	d.family["folk_quarrels"]["topics"][0]["text"] = "{a} {b}"
+
+
+# --- FOLK-005: a friend at your side ---
+
+func _companion_setup() -> Dictionary:
+	var npcs := {}
+	var npc := Npcs.spawn(npcs, data(), seeded_rng(3), {"age_years": 30, "region": "qingshi_village", "realm": "qi_refining"})
+	return {"npcs": npcs, "npc": npc}
+
+
+func test_companion_invite_gates() -> void:
+	var s := _companion_setup()
+	var npc: CharacterData = s["npc"]
+	var c := new_character()
+	var min_favor := int(data().family["folk_companions"]["min_favor"])
+	assert_true(Folk.check_invite(c, npc, min_favor - 1, data(), "qingshi_village", 100) != "")
+	assert_eq(Folk.check_invite(c, npc, min_favor, data(), "qingshi_village", 100), "")
+	var mortal := Npcs.spawn(s["npcs"], data(), seeded_rng(4), {"age_years": 30, "region": "qingshi_village", "realm": "mortal"})
+	assert_true(Folk.check_invite(c, mortal, 100, data(), "qingshi_village", 100) != "")
+	Folk.invite(c, npc.id, 100)
+	assert_eq(Folk.companion_today(c, 100), npc.id)
+	assert_eq(Folk.companion_today(c, 101), "")
+	assert_true(Folk.check_invite(c, npc, 100, data(), "qingshi_village", 101) != "", "cooldown")
+	assert_eq(Folk.check_invite(c, npc, 100, data(), "qingshi_village", 100 + int(data().family["folk_companions"]["cooldown_days"])), "")
+
+
+func test_companion_finish_win_and_loss() -> void:
+	var s := _companion_setup()
+	var npc: CharacterData = s["npc"]
+	var c := new_character()
+	var favors := {npc.id: 60}
+	Folk.invite(c, npc.id, 5)
+	assert_eq(Folk.finish_companion(c, s["npcs"], favors, data(), seeded_rng(1), npc.id, true), 2)
+	assert_eq(int(favors[npc.id]), 62)
+	assert_true(c.folk_companion.is_empty())
+	data().family["folk_companions"]["injury_chance"] = 1.0
+	assert_eq(Folk.finish_companion(c, s["npcs"], favors, data(), seeded_rng(1), npc.id, false), -2)
+	assert_eq(int(favors[npc.id]), 60)
+	assert_true(npc.injuries.has("internal_injury"))
+	data().family["folk_companions"]["injury_chance"] = 0.25
+
+
+func test_companion_strike_and_validation() -> void:
+	var s := _companion_setup()
+	var strike := Folk.companion_strike(s["npcs"], data(), s["npc"].id)
+	assert_true(int(strike["damage"]) >= 1)
+	assert_eq(Folk.validate_companions(data()).size(), 0)
+	var saved: Dictionary = data().family["folk_companions"].duplicate()
+	data().family["folk_companions"]["injury"] = "nope"
+	data().family["folk_companions"]["blows"] = 0
+	assert_eq(Folk.validate_companions(data()).size(), 2)
+	data().family["folk_companions"] = saved

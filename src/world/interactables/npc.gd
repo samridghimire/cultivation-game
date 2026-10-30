@@ -308,6 +308,8 @@ func _acquaintance_options() -> Array[Dictionary]:
 		options.append(_entry(label, Family.check_chat(p, npc, favor, data), GameState.chat.bind(npc_id)))
 	if GameState.visitor_today() == npc_id:
 		options.append(_entry("Share tea with %s" % npc.name, GameState.check_tea(npc_id), GameState.share_tea.bind(npc_id)))
+	if not Folk.companion_rules(data).is_empty() and npc.realm_index >= 1:
+		options.append(_entry("Come exploring with me", GameState.check_companion(npc_id), GameState.invite_companion.bind(npc_id)))
 	var quarrel := GameState.quarrel_of(npc_id)
 	if not quarrel.is_empty():
 		var other: CharacterData = GameState.npcs.get(Folk.quarrel_other(quarrel, npc_id))

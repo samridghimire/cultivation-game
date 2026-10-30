@@ -92,6 +92,8 @@ func test_every_character_field_survives_a_save() -> void:
 	c.gratitude = {"npc_test_friend": 25}
 	c.folk_gift_day = {"npc_test_friend": 77}
 	c.folk_visit_day = {"npc_test_friend": 88}
+	c.folk_companion = {"npc": "npc_test_friend", "day": 90}
+	c.folk_companion_day = {"npc_test_friend": 90}
 	c.dao = {"sword_dao": {"level": 2, "progress": 30.5}}
 	c.garden = [{"item": "flame_lotus", "days_left": 40}]
 	c.field_plots = {"qingshi_village:Farmer Tian's Spare Field": {"paid_until": 90, "crops": [{"item": "spirit_herb", "days_left": 12}]}}

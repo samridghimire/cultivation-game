@@ -1461,6 +1461,26 @@ func share_tea(npc_id: String) -> void:
 	EventBus.player_changed.emit()
 
 
+## FOLK-005: why `npc_id` cannot be asked to come exploring ("" when they can).
+func check_companion(npc_id: String) -> String:
+	return Folk.check_invite(player, npcs.get(npc_id), int(npc_favor.get(npc_id, 0)), data, current_region, GameClock.total_days)
+
+
+## FOLK-005: ask a friend to join today's fight (no time passes).
+func invite_companion(npc_id: String) -> void:
+	EventBus.topic = "family"
+	if not _can_act():
+		return
+	var reason := check_companion(npc_id)
+	if reason != "":
+		EventBus.post(reason, "warning")
+		EventBus.player_changed.emit()
+		return
+	Folk.invite(player, npc_id, GameClock.total_days)
+	EventBus.post("%s agrees to come exploring with you today." % npcs[npc_id].name, "progress")
+	EventBus.player_changed.emit()
+
+
 ## FOLK-004: why the quarrel `npc_id` is part of cannot be settled now ("" when it can).
 func check_quarrel(npc_id: String) -> String:
 	return Folk.check_settle(npcs, data, world_flags, current_region, npc_id, GameClock.total_days)
@@ -2846,10 +2866,17 @@ func fight_enemy(enemy: Dictionary, start_hp: int = -1, prefix: String = "") -> 
 	devour_target = {}
 	last_fight_spoils = PackedStringArray()
 	var allies: Array = []
+	var companion_id := ""
 	if not enemy.get("spar", false):
 		var ally_id := Karma.strike_ally(player, npcs, data, current_region, String(enemy.get("id", "")))
 		if ally_id != "":
 			allies.append(Karma.ally_strike(player, npcs, data, ally_id))
+		companion_id = Folk.companion_today(player, GameClock.total_days)
+		if companion_id != "" and npcs.has(companion_id):
+			allies.append(Folk.companion_strike(npcs, data, companion_id))
+			EventBus.post("%s joins the fight at your side." % npcs[companion_id].name, "progress")
+		else:
+			companion_id = ""
 	# win_chance rates a full-HP fight without allies; a wounded bout or an ally
 	# strike makes that figure wrong, so the respawn lesson leaves it out then.
 	var pre_odds := Combat.win_chance(player, data, enemy) if start_hp < 0 and allies.is_empty() else -1.0
@@ -2861,6 +2888,9 @@ func fight_enemy(enemy: Dictionary, start_hp: int = -1, prefix: String = "") -> 
 	var lines: PackedStringArray = result["log"]
 	EventBus.post(prefix + lines[0], "danger")
 	var outcome := Combat.apply_outcome(player, data, enemy, result, world_flags, rng)
+	if companion_id != "":
+		var delta := Folk.finish_companion(player, npcs, npc_favor, data, rng, companion_id, bool(result["victory"]))
+		EventBus.post("%s %s. (favor %+d)" % [npcs[companion_id].name, "is glad of the fight you won together" if delta >= 0 else "is hurt in the fight you lost", delta], "info")
 	var rounds := int(result["rounds"])
 	var summary := "%d/%d hp left" % [result["player_hp"], result["player_max_hp"]]
 	if rounds == 0:

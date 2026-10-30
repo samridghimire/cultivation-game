@@ -2450,3 +2450,27 @@ func test_settle_quarrel_mediate_and_extort() -> void:
 	gs.settle_quarrel(b.id, "side_a")
 	assert_eq(int(gs.npc_favor[a.id]), -6 + 8)
 	assert_eq(int(gs.npc_favor[b.id]), -6 - 8)
+
+
+func test_friend_joins_the_fight() -> void:
+	var c := _start()
+	var gs := _game_state()
+	var npc := Npcs.spawn(gs.npcs, gs.data, seeded_rng(5), {"age_years": 30, "region": "qingshi_village", "realm": "qi_refining"})
+	gs.npc_favor[npc.id] = 50
+	gs.invite_companion(npc.id)
+	assert_true(c.folk_companion.is_empty(), "favor too low")
+	gs.npc_favor[npc.id] = 60
+	gs.invite_companion(npc.id)
+	assert_eq(Folk.companion_today(c, GameClock.total_days), npc.id)
+	gs.fight("training_dummy" if gs.data.enemies.has("training_dummy") else gs.data.enemies.keys()[0])
+	assert_true(c.folk_companion.is_empty(), "companion used up")
+	assert_true(int(gs.npc_favor[npc.id]) != 60)
+
+
+func test_folk_companion_round_trips() -> void:
+	var c := _start()
+	c.folk_companion = {"npc": "n1", "day": 9}
+	c.folk_companion_day = {"n1": 9}
+	var back := CharacterData.from_dict(c.to_dict())
+	assert_eq(String(back.folk_companion["npc"]), "n1")
+	assert_eq(int(back.folk_companion_day["n1"]), 9)
