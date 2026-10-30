@@ -236,24 +236,40 @@ static func validate(data: GameData) -> PackedStringArray:
 	return errors
 
 
-# --- WORLD-005: village weddings you can attend ------------------------------
+# --- WORLD-005 / WORLD-006: village weddings, full-month feasts and funerals you can attend --------
 
 const CELEBRATION_PREFIX := "celebration_"
 const ATTENDED_PREFIX := "celebration_attended_"
 const GIFT_PREFIX := "celebration_gift_"
+const KIND_PREFIX := "celebration_kind_"
+const WEDDING := "wedding"
+## Keys of a celebration type (the top-level family.json `celebrations` keys are the wedding type).
+const CELEBRATION_KEYS: PackedStringArray = ["days", "attend_days", "favor", "alignment", "gift_mult", "label", "news", "attend_text"]
 
 
-static func celebration_rules(data: GameData) -> Dictionary:
-	return data.family.get("celebrations", {})
+## The rules of celebration type `kind`: the top-level keys are the wedding, `types` holds the others
+## (a `types.wedding` entry overrides the top level). {} for an unknown type.
+static func celebration_rules(data: GameData, kind: String = WEDDING) -> Dictionary:
+	var all: Dictionary = data.family.get("celebrations", {})
+	var types: Dictionary = all.get("types", {})
+	if kind != WEDDING:
+		return types.get(kind, {})
+	var rules := {}
+	for key in CELEBRATION_KEYS:
+		if all.has(key):
+			rules[key] = all[key]
+	rules.merge(types.get(WEDDING, {}), true)
+	return rules
 
 
-## Opens a celebration for each of `ids` (the newly-weds) until day `today` + rules.days.
-static func start_celebration(flags: Dictionary, ids: Array, today: int, data: GameData) -> void:
-	var days := int(celebration_rules(data).get("days", 0))
+## Opens a `kind` celebration for each of `ids` until day `today` + the type's days.
+static func start_celebration(flags: Dictionary, ids: Array, today: int, data: GameData, kind: String = WEDDING) -> void:
+	var days := int(celebration_rules(data, kind).get("days", 0))
 	if days <= 0:
 		return
 	for id: Variant in ids:
 		flags[CELEBRATION_PREFIX + String(id)] = today + days
+		flags[KIND_PREFIX + String(id)] = kind
 
 
 ## Whether a celebration for `npc_id` is still open on day `today`.
@@ -261,55 +277,102 @@ static func celebration_open(flags: Dictionary, npc_id: String, today: int) -> b
 	return flags.has(CELEBRATION_PREFIX + npc_id) and today <= int(flags[CELEBRATION_PREFIX + npc_id])
 
 
-## Removes celebrations (and their attended / gift marks) that ended before `today`.
+## The type of `npc_id`'s celebration (a missing kind flag, as in older saves, is a wedding).
+static func celebration_kind(flags: Dictionary, npc_id: String) -> String:
+	return String(flags.get(KIND_PREFIX + npc_id, WEDDING))
+
+
+## The menu label of `npc_id`'s celebration, with its days: "Attend the wedding (1 day)".
+static func celebration_label(flags: Dictionary, npc_id: String, data: GameData) -> String:
+	var r := celebration_rules(data, celebration_kind(flags, npc_id))
+	return "%s (%s)" % [r.get("label", "Attend the celebration"), Calendar.format_duration(int(r.get("attend_days", 1)))]
+
+
+## Whether `key` is a celebration end-day flag (not an attended / gift / kind mark).
+static func _is_end_key(key: String) -> bool:
+	return key.begins_with(CELEBRATION_PREFIX) and not key.begins_with(ATTENDED_PREFIX) and not key.begins_with(GIFT_PREFIX) and not key.begins_with(KIND_PREFIX)
+
+
+## Removes celebrations (and their attended / gift / kind marks) that ended before `today`.
 static func expire_celebrations(flags: Dictionary, today: int) -> void:
 	for key: String in flags.keys():
-		if key.begins_with(CELEBRATION_PREFIX) and not key.begins_with(ATTENDED_PREFIX) and not key.begins_with(GIFT_PREFIX) and int(flags[key]) < today:
+		if _is_end_key(key) and int(flags[key]) < today:
 			var id := key.trim_prefix(CELEBRATION_PREFIX)
 			flags.erase(key)
 			flags.erase(ATTENDED_PREFIX + id)
 			flags.erase(GIFT_PREFIX + id)
+			flags.erase(KIND_PREFIX + id)
 
 
 ## Why the player cannot attend `npc_id`'s celebration ("" when they can).
 static func check_attend(flags: Dictionary, npc_id: String, today: int) -> String:
+	var wedding := celebration_kind(flags, npc_id) == WEDDING
 	if not celebration_open(flags, npc_id, today):
-		return "There is no wedding to attend."
+		return "There is no wedding to attend." if wedding else "There is nothing to attend."
 	if flags.has(ATTENDED_PREFIX + npc_id):
-		return "You have already attended this wedding."
+		return "You have already attended this wedding." if wedding else "You have already paid your respects."
 	return ""
 
 
-## Attending: {ok, reason, favor, alignment, days}. Marks it attended for `npc_id` and `partner_id`.
+## Attending: {ok, reason, favor, alignment, days, text}. Marks it attended for `npc_id` and `partner_id`.
 static func attend(flags: Dictionary, npc_id: String, partner_id: String, today: int, data: GameData) -> Dictionary:
 	var reason := check_attend(flags, npc_id, today)
 	if reason != "":
-		return {"ok": false, "reason": reason, "favor": 0, "alignment": 0, "days": 0}
+		return {"ok": false, "reason": reason, "favor": 0, "alignment": 0, "days": 0, "text": ""}
 	flags[ATTENDED_PREFIX + npc_id] = true
 	if partner_id != "":
 		flags[ATTENDED_PREFIX + partner_id] = true
-	var r := celebration_rules(data)
-	return {"ok": true, "reason": "", "favor": int(r.get("favor", 0)), "alignment": int(r.get("alignment", 0)), "days": int(r.get("attend_days", 1))}
+	var r := celebration_rules(data, celebration_kind(flags, npc_id))
+	return {"ok": true, "reason": "", "favor": int(r.get("favor", 0)), "alignment": int(r.get("alignment", 0)), "days": int(r.get("attend_days", 1)), "text": String(r.get("attend_text", ""))}
 
 
-## The multiplier for a gift to `npc_id` now: gift_mult once per open celebration, else 1. `consume` marks it used.
+## The multiplier for a gift to `npc_id` now: the type's gift_mult once per open celebration, else 1. `consume` marks it used.
 static func gift_multiplier(flags: Dictionary, npc_id: String, today: int, data: GameData, consume: bool) -> int:
 	if not celebration_open(flags, npc_id, today) or flags.has(GIFT_PREFIX + npc_id):
 		return 1
 	if consume:
 		flags[GIFT_PREFIX + npc_id] = true
-	return maxi(1, int(celebration_rules(data).get("gift_mult", 1)))
+	return maxi(1, int(celebration_rules(data, celebration_kind(flags, npc_id)).get("gift_mult", 1)))
+
+
+## The living relatives (spouses, parents, children) of `dead` who live in `region_id`, minus the player's own family.
+static func mourners(npcs: Dictionary, data: GameData, dead: CharacterData, region_id: String, player: CharacterData) -> Array[String]:
+	var out: Array[String] = []
+	for group: Array in [dead.spouses, dead.parents, dead.children]:
+		for id: Variant in group:
+			var sid := String(id)
+			if out.has(sid) or not npcs.has(sid) or _is_player_family(player, sid):
+				continue
+			var rel: CharacterData = npcs[sid]
+			if rel.alive and Npcs.region_of(rel, data) == region_id:
+				out.append(sid)
+	return out
+
+
+static func _is_player_family(player: CharacterData, id: String) -> bool:
+	return player.spouses.has(id) or player.children.has(id) or player.parents.has(id)
 
 
 static func validate_celebrations(data: GameData) -> PackedStringArray:
 	var errors: PackedStringArray = []
-	var r := celebration_rules(data)
-	if r.is_empty():
+	var all: Dictionary = data.family.get("celebrations", {})
+	if all.is_empty():
 		return errors
-	if int(r.get("days", 0)) < 1 or int(r.get("attend_days", 1)) < 1:
-		errors.append("family.json celebrations: days and attend_days must be >= 1")
-	if int(r.get("favor", 0)) < 0:
-		errors.append("family.json celebrations.favor must be >= 0")
-	if int(r.get("gift_mult", 1)) < 1:
-		errors.append("family.json celebrations.gift_mult must be >= 1")
+	var types: Dictionary = all.get("types", {})
+	var checks: Dictionary = {WEDDING: celebration_rules(data, WEDDING)}
+	for kind: String in types:
+		if kind != WEDDING:
+			checks[kind] = types[kind]
+	for kind: String in checks:
+		var r: Dictionary = checks[kind]
+		var who := "family.json celebrations (%s)" % kind
+		if int(r.get("days", 0)) < 1 or int(r.get("attend_days", 1)) < 1:
+			errors.append("%s: days and attend_days must be >= 1" % who)
+		if int(r.get("favor", 0)) < 0:
+			errors.append("%s: favor must be >= 0" % who)
+		if int(r.get("gift_mult", 1)) < 1:
+			errors.append("%s: gift_mult must be >= 1" % who)
+		for key in ["label", "news", "attend_text"]:
+			if (kind != WEDDING or r.has(key)) and String(r.get(key, "")) == "":
+				errors.append("%s: %s must be non-empty" % [who, key])
 	return errors

@@ -2191,3 +2191,30 @@ func test_attend_celebration_gives_favor_to_both_once() -> void:
 	assert_eq(GameClock.total_days, day + 1)
 	gs.end_session()
 
+
+
+func test_birth_and_death_events_open_feast_and_funeral() -> void:
+	var c := _start()
+	var gs := _game_state()
+	var mother := Npcs.spawn(gs.npcs, gs.data, seeded_rng(5), {"age_years": 25, "region": gs.current_region, "realm": "mortal"})
+	var father := Npcs.spawn(gs.npcs, gs.data, seeded_rng(6), {"age_years": 27, "region": gs.current_region, "realm": "mortal"})
+	Family.marry(mother, father, "wife")
+	var birth: Dictionary = gs._celebration_for({"npc_id": mother.id, "kind": "birth", "text": "x"})
+	assert_eq(birth["kind"], "full_month")
+	assert_true(birth["ids"].has(mother.id) and birth["ids"].has(father.id))
+	var elsewhere := Npcs.spawn(gs.npcs, gs.data, seeded_rng(7), {"age_years": 25, "region": "misty_forest", "realm": "mortal"})
+	assert_eq(gs._celebration_for({"npc_id": elsewhere.id, "kind": "birth", "text": "x"})["kind"], "")
+	father.alive = false
+	var death: Dictionary = gs._celebration_for({"npc_id": father.id, "kind": "death", "text": "x"})
+	assert_eq(death["kind"], "funeral")
+	assert_eq(death["ids"], [mother.id])
+	var lone := Npcs.spawn(gs.npcs, gs.data, seeded_rng(8), {"age_years": 70, "region": gs.current_region, "realm": "mortal"})
+	assert_eq(gs._celebration_for({"npc_id": lone.id, "kind": "death", "text": "x"})["kind"], "", "no mourners, no funeral")
+	Folk.start_celebration(gs.world_flags, death["ids"], GameClock.total_days, gs.data, "funeral")
+	assert_eq(Folk.celebration_label(gs.world_flags, mother.id, gs.data), "Pay your respects (1 day)")
+	var align := c.alignment
+	gs.attend_celebration(mother.id)
+	assert_eq(int(gs.npc_favor.get(mother.id, 0)), 8)
+	assert_eq(c.alignment, align + 1)
+	assert_true(gs.check_celebration(mother.id) != "")
+	gs.end_session()

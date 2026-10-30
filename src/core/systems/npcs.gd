@@ -258,7 +258,7 @@ static func _live(c: CharacterData, data: GameData, days: int, rng: RandomNumber
 		var text := "News arrives: %s has died of old age at %d." % [c.name, c.age_years()]
 		if die(c, "old age"):
 			text += " The unborn child is lost as well."
-		events.append({"npc_id": c.id, "text": text, "category": "warning"})
+		events.append({"npc_id": c.id, "text": text, "category": "warning", "kind": "death"})
 		return
 	# Injuries heal with time; adults may get hurt (injuries.json "npc_mishap", per month).
 	Injuries.pass_days(c, days)
@@ -275,7 +275,7 @@ static func _live(c: CharacterData, data: GameData, days: int, rng: RandomNumber
 			var text := "Heaven's lightning falls: %s perished in the tribulation of %s." % [c.name, result["realm_name"]]
 			if die(c, "heavenly tribulation"):
 				text += " The unborn child is lost as well."
-			events.append({"npc_id": c.id, "text": text, "category": "warning"})
+			events.append({"npc_id": c.id, "text": text, "category": "warning", "kind": "death"})
 			return
 		# Mortal to Qi Refining is routine; only report real breakthroughs.
 		if result["success"] and c.realm_index > 1:

@@ -1378,10 +1378,11 @@ func attend_celebration(npc_id: String) -> void:
 		return
 	var npc: CharacterData = npcs[npc_id]
 	var partner_id := ""
-	for spouse_id in npc.spouses:
-		if npcs.has(spouse_id):
-			partner_id = String(spouse_id)
-			break
+	if Folk.celebration_kind(world_flags, npc_id) == Folk.WEDDING:
+		for spouse_id in npc.spouses:
+			if npcs.has(spouse_id):
+				partner_id = String(spouse_id)
+				break
 	var result := Folk.attend(world_flags, npc_id, partner_id, GameClock.total_days, data)
 	var cap := int(data.family.get("acquaintance", {}).get("gift_max_favor", 100))
 	var names: Array[String] = []
@@ -1392,8 +1393,37 @@ func attend_celebration(npc_id: String) -> void:
 		npc_favor[id] = favor + clampi(int(result["favor"]), 0, maxi(0, cap - favor))
 		names.append(npcs[id].name)
 	Alignment.shift(player, data, int(result["alignment"]))
-	EventBus.post("You join the wedding of %s, drink to their happiness and dance until late." % " and ".join(names), "progress")
+	EventBus.post(String(result["text"]).replace("{names}", " and ".join(names)), "progress")
 	_pass_time(int(result["days"]))
+
+
+## WORLD-005/006: the celebration a family event in the current region opens: {kind, ids}, kind "" for none.
+## A wedding opens for the pair, a birth (full-month feast) for the mother and her spouses, a death
+## (funeral) for the dead one's relatives who live here. The player's own family has its own flow.
+func _celebration_for(event: Dictionary) -> Dictionary:
+	var none := {"kind": "", "ids": []}
+	var id := String(event.get("npc_id", ""))
+	if not npcs.has(id):
+		return none
+	var npc: CharacterData = npcs[id]
+	if Npcs.region_of(npc, data) != current_region:
+		return none
+	match String(event.get("kind", "")):
+		"marriage":
+			return {"kind": Folk.WEDDING, "ids": [id, event["other_id"]]}
+		"birth":
+			if player.children.has(id) or player.spouses.has(id):
+				return none
+			var ids: Array = [id]
+			for spouse_id in npc.spouses:
+				if npcs.has(spouse_id) and npcs[spouse_id].alive and not player.spouses.has(spouse_id):
+					ids.append(String(spouse_id))
+			return {"kind": "full_month", "ids": ids}
+		"death":
+			var mourners := Folk.mourners(npcs, data, npc, current_region, player)
+			if not mourners.is_empty():
+				return {"kind": "funeral", "ids": mourners}
+	return none
 
 
 ## Pass a few days chatting with an NPC who has no dialogue file; raises favor
@@ -3154,9 +3184,11 @@ func _on_days_advanced(days: int) -> void:
 	for spouse_id in player.spouses:
 		reserved[spouse_id] = true
 	for event in Npcs.simulate(npcs, data, days, rng, reserved, world_flags):
-		if String(event.get("kind", "")) == "marriage" and npcs.has(event["npc_id"]) and Npcs.region_of(npcs[event["npc_id"]], data) == current_region:
-			Folk.start_celebration(world_flags, [event["npc_id"], event["other_id"]], GameClock.total_days, data)
-			EventBus.post("Word spreads of a wedding in %s: %s" % [data.regions.get(current_region, {}).get("name", current_region), event["text"]], "info")
+		var party := _celebration_for(event)
+		if party["kind"] != "":
+			Folk.start_celebration(world_flags, party["ids"], GameClock.total_days, data, party["kind"])
+			var news := String(Folk.celebration_rules(data, party["kind"]).get("news", "{text}"))
+			EventBus.post(news.replace("{region}", data.regions.get(current_region, {}).get("name", current_region)).replace("{text}", event["text"]), "info")
 			continue
 		# News about generated strangers is noise; only report people the player knows.
 		if not Npcs.is_newsworthy(String(event["npc_id"]), player, npc_favor):

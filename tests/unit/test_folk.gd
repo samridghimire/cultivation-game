@@ -323,3 +323,75 @@ func test_celebration_validation() -> void:
 	assert_true(Folk.validate_celebrations(d).size() > 0)
 	d.family["celebrations"] = saved
 
+
+
+# --- WORLD-006: full-month feasts and funerals --------------------------------
+
+func test_celebration_types_have_their_own_rules() -> void:
+	var d := data()
+	var flags := {}
+	Folk.start_celebration(flags, ["m"], 100, d, "full_month")
+	Folk.start_celebration(flags, ["x"], 100, d, "funeral")
+	assert_eq(Folk.celebration_kind(flags, "m"), "full_month")
+	assert_true(Folk.celebration_open(flags, "m", 130))
+	assert_true(Folk.celebration_open(flags, "x", 110))
+	assert_false(Folk.celebration_open(flags, "x", 111), "a funeral lasts 10 days")
+	assert_eq(Folk.celebration_label(flags, "x", d), "Pay your respects (1 day)")
+	assert_eq(Folk.celebration_label(flags, "m", d), "Attend the full-month feast (1 day)")
+	var r := Folk.attend(flags, "x", "", 101, d)
+	assert_eq(r["favor"], 8)
+	assert_eq(r["alignment"], 1)
+	assert_eq(Folk.check_attend(flags, "x", 102), "You have already paid your respects.")
+	assert_eq(Folk.check_attend(flags, "zed", 102), "There is no wedding to attend.", "no flags: the wedding wording")
+	assert_eq(Folk.gift_multiplier(flags, "m", 101, d, true), 2)
+	assert_eq(Folk.gift_multiplier(flags, "x", 101, d, true), 1)
+
+
+func test_kind_flag_defaults_to_wedding_and_expires_with_it() -> void:
+	var d := data()
+	var flags := {"celebration_old": 130}
+	assert_eq(Folk.celebration_kind(flags, "old"), "wedding")
+	assert_eq(Folk.celebration_label(flags, "old", d), "Attend the wedding (1 day)")
+	Folk.start_celebration(flags, ["x"], 100, d, "funeral")
+	Folk.expire_celebrations(flags, 105)
+	assert_true(flags.has("celebration_kind_x"), "a live kind flag is not mistaken for an end day")
+	assert_true(flags.has("celebration_old"))
+	Folk.expire_celebrations(flags, 111)
+	assert_false(flags.has("celebration_kind_x"))
+	assert_false(flags.has("celebration_x"))
+
+
+func test_legacy_top_level_rules_still_work() -> void:
+	var d := data()
+	d.family["celebrations"] = {"days": 30, "attend_days": 1, "favor": 6, "alignment": 1, "gift_mult": 2}
+	assert_eq(Folk.validate_celebrations(d).size(), 0)
+	var flags := {}
+	Folk.start_celebration(flags, ["a"], 100, d)
+	assert_eq(Folk.attend(flags, "a", "", 101, d)["favor"], 6)
+	d.family["celebrations"]["types"] = {"funeral": {"days": 10, "attend_days": 1, "favor": 1}}
+	assert_true(Folk.validate_celebrations(d).size() >= 2, "a type needs a label and news")
+
+
+func test_mourners_are_living_relatives_in_the_region() -> void:
+	var dead := CharacterData.new()
+	dead.id = "dead"
+	var kin := CharacterData.new()
+	kin.id = "kin"
+	var far := CharacterData.new()
+	far.id = "far"
+	var gone := CharacterData.new()
+	gone.id = "gone"
+	gone.alive = false
+	var mine := CharacterData.new()
+	mine.id = "mine"
+	var player := CharacterData.new()
+	player.children = ["mine"]
+	dead.spouses = ["kin"]
+	dead.children = ["far", "gone", "mine"]
+	var npcs := {"kin": kin, "far": far, "gone": gone, "mine": mine}
+	var d := data()
+	for c: CharacterData in [kin, gone, mine]:
+		c.home_region = "qingshi_village"
+	far.home_region = "misty_forest"
+	assert_eq(Folk.mourners(npcs, d, dead, "qingshi_village", player), ["kin"] as Array[String])
+	assert_true(Folk.mourners(npcs, d, dead, "fallen_star_market", player).is_empty())
