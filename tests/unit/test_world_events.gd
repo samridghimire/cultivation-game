@@ -85,6 +85,7 @@ func test_game_state_rolls_saves_and_applies_events() -> void:
 	gs.load_save_dict(saved)
 	assert_true(gs.world_events.is_empty(), "old saves load without events")
 	gs.world_events = [{"id": "spirit_qi_tide", "region": "fallen_star_market", "start_day": day, "end_day": day + 40}]
+	gs.player.spiritual_roots = {"metal": 80}  # no weather stirs a metal root (WEATHER-003)
 	assert_almost_eq(gs.region_qi_density(), Exploration.qi_density(gs.data, "fallen_star_market") * 1.5)
 	gs.cultivate(Calendar.DAYS_PER_MONTH * 2)
 	assert_true(gs.world_events.all(func(i: Dictionary) -> bool: return int(i["end_day"]) > _root().get_node("GameClock").total_days), "the tide ended at a month boundary")

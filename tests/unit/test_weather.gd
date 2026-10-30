@@ -131,3 +131,27 @@ func test_pond_places_validate_and_fish_exist() -> void:
 	assert_eq(ponds, 2)
 	for id in ["silver_carp", "mist_koi", "marsh_eel"]:
 		assert_true((d.items[id]["tags"] as Array).has("fish"), id)
+
+
+func test_qi_mult_needs_a_matching_root_of_50_plus() -> void:
+	var d := GameData.load_from_dir()
+	var c := CharacterData.new()
+	c.spiritual_roots = {"water": 60}
+	assert_almost_eq(Weather.qi_mult(d, "rain", c), 1.1)
+	c.spiritual_roots = {"water": 49}
+	assert_eq(Weather.qi_mult(d, "rain", c), 1.0)
+	c.spiritual_roots = {"fire": 90}
+	assert_eq(Weather.qi_mult(d, "rain", c), 1.0)
+	assert_eq(Weather.qi_mult(d, "cloudy", c), 1.0)
+	d.weather_effects = {}
+	c.spiritual_roots = {"water": 90}
+	assert_eq(Weather.qi_mult(d, "rain", c), 1.0, "no data, no effect")
+
+
+func test_qi_element_validation_and_note() -> void:
+	for bad: Variant in [{"rain": {"qi_element": {"element": "ice", "mult": 1.1}}}, {"rain": {"qi_element": {"element": "water", "mult": 1.5}}}, {"rain": {"qi_element": {"element": "water", "mult": 0.9}}}, {"rain": {"qi_element": 3}}]:
+		var errors: Array[String] = []
+		Weather.validate_effects(bad, errors)
+		assert_false(errors.is_empty(), str(bad))
+	assert_eq(Weather.effect_note(data(), "rain", "meditate"), "(rain: water qi stirs)")
+	assert_eq(Weather.effect_note(data(), "cloudy", "meditate"), "")

@@ -6,6 +6,8 @@ extends RefCounted
 const KINDS: Array[String] = ["clear", "cloudy", "rain", "snow", "fog"]
 const DEFAULT_PERSIST := 0.6
 const MAX_SPELL_DAYS := 30
+const QI_ELEMENTS: Array[String] = ["metal", "wood", "water", "fire", "earth"]
+const QI_ELEMENT_MIN_PURITY := 50
 
 
 ## The weather of `region_id` on `day` (GameClock.total_days): clear, cloudy, rain, snow or fog.
@@ -77,6 +79,8 @@ static func validate_effects(effects: Dictionary, errors: Array[String]) -> void
 			elif key == "travel_extra_days" and kind == "snow":
 				if not (v is float or v is int) or float(v) != floorf(float(v)) or int(v) < 1 or int(v) > 5:
 					errors.append("weather_effects.snow.travel_extra_days must be an int 1..5")
+			elif key == "qi_element":
+				_validate_qi_element(kind, v, errors)
 			else:
 				errors.append("weather_effects.%s has unknown key '%s'" % [kind, key])
 
@@ -129,6 +133,26 @@ static func effect_note(data: GameData, kind: String, context: String) -> String
 	var e: Dictionary = data.weather_effects.get(kind, {})
 	if context == "gather" and float(e.get("herb_bonus_chance", 0.0)) > 0.0:
 		return "(%s: herbs thrive)" % kind
+	if context == "meditate" and e.has("qi_element"):
+		return "(%s: %s qi stirs)" % [kind, e["qi_element"]["element"]]
 	if context == "travel" and int(e.get("travel_extra_days", 0)) > 0:
 		return "(%s: +%d %s)" % [kind, int(e["travel_extra_days"]), "day" if int(e["travel_extra_days"]) == 1 else "days"]
 	return ""
+
+
+static func _validate_qi_element(kind: String, v: Variant, errors: Array[String]) -> void:
+	if not v is Dictionary or not QI_ELEMENTS.has(String((v as Dictionary).get("element", ""))):
+		errors.append("weather_effects.%s.qi_element needs an element of %s" % [kind, ", ".join(QI_ELEMENTS)])
+		return
+	var mult: Variant = (v as Dictionary).get("mult")
+	if not (mult is float or mult is int) or float(mult) < 1.0 or float(mult) > 1.25:
+		errors.append("weather_effects.%s.qi_element.mult must be 1.0..1.25" % kind)
+
+
+## Cultivation multiplier of a `kind` day for `c` (WEATHER-003): the weather's qi_element mult when the
+## character's root has that element at 50+ purity, else 1.0.
+static func qi_mult(data: GameData, kind: String, c: CharacterData) -> float:
+	var q: Dictionary = data.weather_effects.get(kind, {}).get("qi_element", {})
+	if q.is_empty() or int(c.spiritual_roots.get(String(q.get("element", "")), 0)) < QI_ELEMENT_MIN_PURITY:
+		return 1.0
+	return float(q.get("mult", 1.0))

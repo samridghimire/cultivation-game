@@ -2433,9 +2433,10 @@ func journal_entries() -> Array[Dictionary]:
 	return Guidance.journal(player, data, world_flags, GameClock.total_days, current_region, hint_density(), npcs, world_events, clan, npc_favor)
 
 
-## Qi density of the current region, including active world events (LW-001).
+## Qi density of the current region, including active world events (LW-001) and today's weather for the player's root (WEATHER-003).
 func region_qi_density() -> float:
-	return Exploration.qi_density(data, current_region, world_flags) * WorldEvents.qi_multiplier(data, world_events, current_region)
+	var weather := Weather.of(data, current_region, GameClock.total_days)
+	return Exploration.qi_density(data, current_region, world_flags) * WorldEvents.qi_multiplier(data, world_events, current_region) * Weather.qi_mult(data, weather, player)
 
 
 ## Merchant price multiplier of the current region's active world events.

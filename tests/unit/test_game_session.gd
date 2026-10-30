@@ -463,6 +463,27 @@ func test_rain_adds_a_thriving_herb_when_gathering() -> void:
 	_restore_weather(gs)
 
 
+func test_rain_stirs_water_qi_for_a_water_root() -> void:
+	var c := _start()
+	c.spiritual_roots = {"water": 80}
+	var gs := _game_state()
+	gs.data.weather_effects = {"rain": {"qi_element": {"element": "water", "mult": 1.1}}}
+	_set_weather(gs, "clear")
+	var clear_density: float = gs.region_qi_density()
+	var clear_days: int = gs.days_to_next_stage()
+	_set_weather(gs, "rain")
+	assert_almost_eq(gs.region_qi_density(), clear_density * 1.1)
+	assert_true(gs.days_to_next_stage() < clear_days, "the HUD estimate follows the same rate")
+	var before := c.qi
+	gs.cultivate(10)
+	var rain_gain := c.qi - before
+	c.qi = before
+	_set_weather(gs, "clear")
+	gs.cultivate(10)
+	assert_true(rain_gain > c.qi - before, "rain meditation gains more qi")
+	_restore_weather(gs)
+
+
 func test_fishing_catches_and_weather_changes_the_odds() -> void:
 	var c := _start()
 	var gs := _game_state()
