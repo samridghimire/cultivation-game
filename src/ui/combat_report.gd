@@ -30,6 +30,9 @@ var _victory: bool = false
 var _advice: String = ""
 var _spoils: PackedStringArray = PackedStringArray()
 var playing: bool = false
+## WU-413: the friend who fought at your side ("" = none); set before show_fight.
+var companion_name: String = ""
+var _companion: Label
 
 const TICK_SECONDS: float = 0.25
 
@@ -60,6 +63,10 @@ func _init() -> void:
 	box.add_child(bars)
 	_player_bar = _make_bar(bars, "You", UIStyle.ACCENT)
 	_enemy_bar = _make_bar(bars, "Foe", UIStyle.CATEGORY_COLORS["danger"])
+	_companion = UIStyle.label("", 14, UIStyle.ACCENT)
+	_companion.name = "Companion"
+	_companion.visible = false
+	box.add_child(_companion)
 	_log = RichTextLabel.new()
 	_log.bbcode_enabled = true
 	_log.scroll_following = true
@@ -87,6 +94,11 @@ static func rating_line(c: CharacterData, data: GameData, enemy: Dictionary) -> 
 	if bool(enemy.get("friendly", false)):
 		return ""
 	return "Rated: %s before the fight." % UIStyle.fight_label(c, data, enemy)
+
+
+## "Xiao Ling fights at your side" for the report header ("" when nobody came).
+static func companion_line(friend: String) -> String:
+	return "%s fights at your side" % friend if friend != "" else ""
 
 
 ## Height of the fight log for `rows` lines: short fights get a short panel (WU-087).
@@ -155,6 +167,8 @@ func show_fight(enemy_name: String, victory: bool, lines: PackedStringArray, adv
 	_title.add_theme_color_override("font_color", _color)
 	_rated.text = rated
 	_rated.visible = rated != "" and not friendly
+	_companion.text = companion_line(companion_name)
+	_companion.visible = companion_name != ""
 	_log.clear()
 	_log.custom_minimum_size.y = minf(log_height(lines.size() + spoils.size() + (2 if advice != "" else 0)), log_room(get_viewport_rect().size.y if is_inside_tree() else 800.0))
 	_shown = 0

@@ -354,6 +354,11 @@ static func describe(c: CharacterData, data: GameData, place: Dictionary, plot_k
 	return lines
 
 
+## "Dry, water it today." when the crops could be watered right now (growing, not yet watered, fair and thawed), else "".
+static func dry_note(c: CharacterData, place: Dictionary, plot_key: String, today: int, weather: String) -> String:
+	return "Dry, water it today." if check_water(c, place, plot_key, today, weather) == "" else ""
+
+
 ## Problems with a region's field_plot places, for GameData._validate().
 static func validate(data: GameData, region_id: String, region: Dictionary) -> Array[String]:
 	var errors: Array[String] = []

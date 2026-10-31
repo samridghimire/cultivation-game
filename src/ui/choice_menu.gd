@@ -90,6 +90,8 @@ func _rebuild() -> void:
 		_buttons.add_child(UIStyle.label("There is nothing to do here.", 16))
 	for option in options:
 		var b := UIStyle.button(option["label"], _choose.bind(option))
+		if option.get("icon") is Texture2D:
+			ItemIcon.apply(b, option["icon"])
 		b.disabled = option.get("disabled", false)
 		var reason: String = String(option.get("reason", ""))
 		b.tooltip_text = reason

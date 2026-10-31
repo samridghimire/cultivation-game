@@ -27,6 +27,7 @@ var last_loss_advice: String = ""
 var last_fight_friendly: bool = false
 ## Reward notes of the last won fight ("+8 Spirit Stone"...), shown in the combat report.
 var last_fight_spoils: PackedStringArray = PackedStringArray()
+var last_fight_companion: String = ""  ## WU-413: name of the friend who fought beside you in the last fight ("" = none).
 ## Last fight's playback data from Combat.resolve: trace, player_max_hp, enemy_max_hp (WU-036).
 var last_fight_playback: Dictionary = {}
 ## Active world events (WorldEvents, LW-001): [{id, region, start_day, end_day}].
@@ -2946,6 +2947,7 @@ func fight_enemy(enemy: Dictionary, start_hp: int = -1, prefix: String = "") -> 
 		return false
 	devour_target = {}
 	last_fight_spoils = PackedStringArray()
+	last_fight_companion = ""
 	var allies: Array = []
 	var companion_id := ""
 	if not enemy.get("spar", false):
@@ -2955,6 +2957,7 @@ func fight_enemy(enemy: Dictionary, start_hp: int = -1, prefix: String = "") -> 
 		companion_id = Folk.companion_today(player, GameClock.total_days)
 		if companion_id != "" and npcs.has(companion_id) and npcs[companion_id].alive:
 			allies.append(Folk.companion_strike(npcs, data, companion_id))
+			last_fight_companion = npcs[companion_id].name
 			EventBus.post("%s joins the fight at your side." % npcs[companion_id].name, "progress")
 		else:
 			companion_id = ""

@@ -3,6 +3,7 @@ extends CanvasLayer
 ## windows (choice menu, toggleable screens, death screen).
 
 const MAIN_MENU := "res://src/ui/main_menu.tscn"
+const NPC_SCRIPT := preload("res://src/world/interactables/npc.gd")
 const MAX_LOG_LINES := 60
 const MAX_LAMPS := 5  ## GFX-031: soul lamps drawn before "x N".
 const QI_FILL := Color("6fd3c1")
@@ -47,6 +48,9 @@ var _last_category: String = ""
 var _repeat: int = 0
 var _log_lines: Array[String] = []  ## BBCode of each HUD log line, for collapsing repeats.
 var _status_panel: Control
+var _companion_chip: HBoxContainer  ## WU-413: the friend who fights beside you today.
+var _companion_portrait: PortraitBox
+var _companion_label: Label
 var _log_panel: Control
 var _fade_timer := 0.0
 var _fade_targets := Vector3.ONE  # status, log, guide
@@ -465,6 +469,15 @@ func _build_status_panel() -> void:
 	_injuries = UIStyle.label("", 14, UIStyle.CATEGORY_COLORS["danger"])
 	_injuries.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	box.add_child(_injuries)
+	_companion_chip = HBoxContainer.new()
+	_companion_chip.name = "CompanionChip"
+	_companion_chip.add_theme_constant_override("separation", 6)
+	_companion_chip.visible = false
+	_companion_portrait = PortraitBox.new(1)
+	_companion_chip.add_child(_companion_portrait)
+	_companion_label = UIStyle.label("", 13, UIStyle.ACCENT)
+	_companion_chip.add_child(_companion_label)
+	box.add_child(_companion_chip)
 	add_child(panel)
 	_build_guide_panel()
 
@@ -631,6 +644,7 @@ func _refresh() -> void:
 	var density := GameState.region_qi_density()
 	var qi_why := ", ".join(Exploration.qi_flag_reasons(data, GameState.current_region, GameState.world_flags))
 	_refresh_date_row(data)
+	_refresh_companion_chip(p)
 	_status.text = alignment_line(Alignment.tier_name(p.alignment, data), Sects.describe(p, data))
 	var region := "%s (Qi x%s%s)" % [Exploration.region_name(data, GameState.current_region), String.num(density, 2), ", " + qi_why if qi_why != "" else ""]
 	region += region_event_suffix(data, GameState.world_events, GameState.current_region, p)
@@ -737,6 +751,17 @@ static func lives_extra_text(lives: int) -> String:
 
 
 ## "Lives N" from the Creation Artifact (WU-095) as soul lamps: warning at 1 life, danger with "Final life" at 0.
+## The invited friend's chip: shown only on the day they were asked along (WU-413).
+func _refresh_companion_chip(p: CharacterData) -> void:
+	var id := Folk.companion_today(p, GameClock.total_days)
+	var friend: CharacterData = GameState.npcs.get(id) if id != "" and GameState.npcs != null else null
+	_companion_chip.visible = friend != null and friend.alive
+	if not _companion_chip.visible:
+		return
+	_companion_label.text = "%s is with you" % friend.name
+	_companion_portrait.set_portrait(PixelFigure.frame(NPC_SCRIPT.look_of(id, Color("9a8f7a")), "down", 0))
+
+
 func _refresh_lives(p: CharacterData) -> void:
 	var lives := p.artifact_lives
 	_lives.visible = lives >= 0
@@ -1085,6 +1110,7 @@ func _on_combat_started(enemy: Dictionary) -> void:
 func _on_combat_finished(enemy_name: String, victory: bool, lines: PackedStringArray) -> void:
 	_choice_menu.close()
 	_close_screens()
+	_combat_report.companion_name = GameState.last_fight_companion
 	_combat_report.show_fight(enemy_name, victory, lines, GameState.last_loss_advice, GameState.last_fight_spoils,
 			GameState.last_fight_playback.get("trace", []), int(GameState.last_fight_playback.get("player_max", 0)), int(GameState.last_fight_playback.get("enemy_max", 0)), GameState.last_fight_friendly, _fight_rating,
 			str(_fight_enemy.get("id", "")), _fight_enemy.get("tags", []))

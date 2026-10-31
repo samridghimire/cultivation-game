@@ -143,3 +143,21 @@ func test_guide_card_caps_wrapped_lines() -> void:
 	assert_true(shown.size() <= HudScript.GUIDE_MAX_LINES, str(shown))
 	assert_true((hud.get("_hint") as Label).text.contains("more in the journal (J)"))
 	_done(hud)
+
+
+## WU-413: the invited friend's chip shows on the invite day only.
+func test_companion_chip_only_on_invite_day() -> void:
+	var hud := await _build()
+	var chip: Control = hud.get("_companion_chip")
+	assert_false(chip.visible)
+	var npc := Npcs.spawn(GameState.npcs, GameState.data, seeded_rng(3), {"age_years": 30, "region": "qingshi_village", "realm": "qi_refining"})
+	Folk.invite(GameState.player, npc.id, GameClock.total_days)
+	hud.call("_refresh")
+	assert_true(chip.visible)
+	assert_true((hud.get("_companion_label") as Label).text.contains(npc.name))
+	assert_true((hud.get("_companion_portrait") as Control).visible)
+	Folk.invite(GameState.player, npc.id, GameClock.total_days - 1)
+	hud.call("_refresh")
+	assert_false(chip.visible, "the next day the chip is gone")
+	GameState.npcs.erase(npc.id)
+	_done(hud)

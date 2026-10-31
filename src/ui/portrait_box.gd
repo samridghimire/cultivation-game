@@ -10,11 +10,14 @@ const COLUMN_WIDTH := PixelFigure.SIZE.x * SCALE + 24 + 12
 var _rect: TextureRect
 
 
-func _init() -> void:
-	add_theme_stylebox_override("panel", UIStyle.panel_style())
+func _init(zoom: int = SCALE) -> void:
+	var style := UIStyle.panel_style()
+	if zoom < SCALE:  # WU-413: a small chip portrait gets a thin frame
+		style.set_content_margin_all(3)
+	add_theme_stylebox_override("panel", style)
 	size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	_rect = TextureRect.new()
-	_rect.custom_minimum_size = Vector2(PixelFigure.SIZE * SCALE)
+	_rect.custom_minimum_size = Vector2(PixelFigure.SIZE * zoom)
 	_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	_rect.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	add_child(_rect)

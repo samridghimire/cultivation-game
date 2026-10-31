@@ -27,6 +27,12 @@ const WEATHER := {
 	"storm": {"colors": {"a": Color("6c7486"), "b": Color("98a0b2"), "c": Color("f4d03f")}, "rows": ["............", "....ooo.....", "...obbbo.oo.", "..oabaaooaao", ".oabaaaaaabo", ".oaaaaaaaaao", "..ooooooooo.", ".....cc.....", "....cc......", "...cccc.....", ".....c......", "....c......."]},
 }
 
+## Farming tool glyphs for field menu entries (WU-413).
+const TOOLS := {
+	"watering_can": {"colors": {"a": Color("6fa8d6"), "b": Color("b9dcf2")}, "rows": ["............", "....oooo....", "...o....o...", "oo.oaaaao...", "oboaabaaao..", "oaaaabaaao..", ".oaaaaaaao..", "..oaaaaao...", "...ooooo....", "............", "............", "............"]},
+	"hoe": {"colors": {"a": Color("b8c0cc"), "c": Color("a9743c")}, "rows": ["............", "........ooo.", ".......oaaao", "......oaoooo", ".....oc.....", "....oc......", "...oc.......", "..oc........", ".oc.........", "oc..........", "............", "............"]},
+}
+
 static var _cache: Dictionary = {}
 
 
@@ -47,6 +53,11 @@ static func season(season_name: String) -> Texture2D:
 ## A 12x12 weather glyph for a Weather.KINDS id; null for anything else.
 static func weather(kind: String) -> Texture2D:
 	return _glyph("weather_" + kind, WEATHER, kind)
+
+
+## A 12x12 farming tool glyph ("watering_can", "hoe"); null for anything else.
+static func tool_glyph(name: String) -> Texture2D:
+	return _glyph("tool_" + name, TOOLS, name)
 
 
 static func _glyph(key: String, defs: Dictionary, name: String) -> Texture2D:
