@@ -104,3 +104,14 @@ func test_storm_explore_applies_a_test_injury() -> void:
 	var r := Weather.storm_explore(d, "storm", plain, seeded_rng(5))
 	assert_eq(r["event"], "lightning")
 	assert_eq(r["injury"], "test_scorched")
+
+
+## Review: every choice that sets the peddler's discount (he promises it "for a month") makes it a timed flag.
+func test_every_peddler_discount_choice_expires() -> void:
+	var count := 0
+	for e: Dictionary in data().encounters.values():
+		for effects in encounter_outcomes(e):
+			if Effects.flag_list(effects.get("set_flag", "")).has("storm_peddler_discount"):
+				count += 1
+				assert_eq(int(effects.get("flag_days", 0)), 30, "%s sets the discount without flag_days" % e["id"])
+	assert_gt(count, 1)

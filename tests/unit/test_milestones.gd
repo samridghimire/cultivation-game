@@ -197,8 +197,8 @@ func test_goal005_trophy_and_green_thumb() -> void:
 	assert_false(Milestones.newly_reached(c, d, {}).has("pond_legend"))
 	c.catch_log[trophies[0]] = 1
 	assert_true(Milestones.newly_reached(c, d, {}).has("pond_legend"))
-	var bare := data()
-	bare.regions["goal005_test"] = {}
+	# A fresh copy: stripping the trophies from the shared data() would leak into later tests.
+	var bare := GameData.load_from_dir()
 	for rid: String in bare.regions.keys():
 		var places: Array = bare.regions[rid].get("places", [])
 		for pl: Dictionary in places:

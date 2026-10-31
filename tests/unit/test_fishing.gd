@@ -187,3 +187,16 @@ func test_trophy_near_miss_and_clean_strike() -> void:
 	c.fishing_xp = 10
 	gs.fish(table, 1, "", 1.0)
 	assert_gt(c.item_count("mist_koi"), 0, "a clean strike by an Angler lands it")
+
+
+## Review: a denied trophy draw loses only the trophy, not the rest of the trip's catch.
+func test_trophy_near_miss_keeps_the_other_fish() -> void:
+	var gs: Node = Engine.get_main_loop().root.get_node("GameState")
+	var c := CharacterFactory.create("Angler", gs.data, seeded_rng(1))
+	gs.start_session(c)
+	gs.rng = seeded_rng(5)
+	var table := [{"item": "silver_carp", "weight": 10, "min": 1, "max": 1}, {"item": "mist_koi", "weight": 10, "min": 1, "max": 1, "trophy": true}]
+	for i in 6:
+		gs.fish(table, 1, "", 0.5)
+	assert_eq(c.item_count("mist_koi"), 0, "no trophy without a clean strike")
+	assert_gt(c.item_count("silver_carp"), 0, "the ordinary fish of a trip that drew the trophy are kept")

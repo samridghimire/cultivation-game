@@ -1243,7 +1243,8 @@ func fish(table: Array, days: int, place_name: String = "", quality: float = 0.5
 		found = Exploration.gather(player, usable, rng)
 		var trophy := Fishing.trophy_in(base, found)
 		if trophy != "" and not Fishing.trophy_allowed(quality, player.fishing_xp):
-			found = {}
+			# Only the trophy draw comes to nothing; the trip's other fish are still caught.
+			found.erase(trophy)
 			if quality >= 0.5:
 				EventBus.post("Something huge takes the bait and snaps the line.")
 	base = Fishing.filter_trophy(base, quality, player.fishing_xp)

@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: d37bbb0
+Last reviewed commit: 18b102f
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -1306,3 +1306,23 @@ Last reviewed commit: d37bbb0
     "scorched" injury, so an unrooted player struck by lightning only gets a flavour line, as the spec allows);
     watering and nourishing on the same day give a crop 2 care (spec: "once per day each"); `VillageBook.fish_order`
     and `Fishing.catchable` duplicate the fish scan in different orders (same set).
+- 2026-10-31 (reviewer, 3rd run): reviewed d37bbb0..18b102f (GATHER-002, C-278, FISH-005, GFX-035, DAY-001, GFX-036,
+  QA-183, WU-413, WEATHER-006, WU-417, FOLK-007, GOAL-005, C-280, WU-415; [PLAN]/[REVIEW] skipped). Main green (2833 tests
+  before this review). No worker touched BACKLOG/CHANGELOG (QA-183 refreshed balance_baseline.txt, its job); no
+  SAVE_VERSION change (`herb_log`, `folk_tier_seen`/`folk_tiers_seeded` default; timed flags are plain world-flag values);
+  no binary assets (tool glyphs, trend arrows, fish tints and the duel backdrop are drawn in code).
+  - FOLK-007 seeds tiers silently on old saves and fires only the highest new tier; GOAL-005's checks are validated and
+    `harvests` is counted in harvest_field; DAY-001 only digests posts made while the clock advances; WU-415 arrows show
+    in both Buy and Sell lists.
+  - Fixed (FISH-005): a cast whose draw landed on a trophy it was not allowed to land threw away the *whole* trip
+    (`found = {}`, 3 draws per trip), so once C-280 added trophy entries ~10% of ordinary trips at the two ponds caught
+    nothing. Now only the trophy draw is lost. Test added.
+    Fixed (WEATHER-006): the peddler's paid choice ("a fair price for a month") set the discount flag without
+    `flag_days`, a permanent 20% herb discount. Now 30 days too; a data test checks every choice that sets it.
+    Fixed (GOAL-005/C-280 test): test_milestones stripped `trophy` from the shared cached `data()` and added an empty
+    region to it; it now strips a fresh GameData.
+  - Notes, not filed: saves that took either peddler choice before WEATHER-006 hold `storm_peddler_discount: true`
+    (C-278 set it as a plain flag), which now means a permanent discount at the herb stall (<= 8-stone items);
+    `GameState.shop_name` is never cleared on close (only matters to a buy outside the shop screen); WEATHER-006's own
+    follow-up stands (region `qi_flags` and choice `requires.flag` still read flags by plain truthiness; no timed flag
+    reaches them today).
