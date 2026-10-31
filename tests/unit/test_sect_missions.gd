@@ -147,6 +147,36 @@ func test_game_state_take_missions() -> void:
 	gs.end_session()
 
 
+## QA-174: the mission board is gated by the world UI only (MissionBoard opens from a sect_hall place);
+## GameState.take_mission does not check the region. This pins today's rule: a disciple away from any hall
+## can still take a mission through the core call. (Finding filed in the commit; rules unchanged.)
+func test_take_mission_is_not_region_gated_in_core() -> void:
+	var gs: Node = _root().get_node("GameState")
+	var halls: Array[String] = []
+	for id: String in gs.data.regions:
+		var places: Array = gs.data.regions[id].get("places", [])
+		if places.any(func(p: Dictionary) -> bool: return p.get("type", "") == "sect_hall"):
+			halls.append(id)
+	assert_true(halls.has("qingshi_village"), "Qingshi has a hall")
+	var hall_less := ""
+	for id: String in gs.data.regions:
+		if not halls.has(id):
+			hall_less = id
+			break
+	assert_false(hall_less == "", "some region has no hall")
+	for region in [hall_less, "qingshi_village"]:
+		var c := CharacterFactory.create("Disciple", gs.data, seeded_rng())
+		gs.start_session(c)
+		c.realm_index = 4
+		c.alignment = 0
+		gs.join_sect("azure_cloud_sect")
+		gs.current_region = region
+		c.add_item("spirit_herb", 5)
+		gs.take_mission("gather_spirit_herbs")
+		assert_gt(int(c.sect["contribution"]), 0, "mission taken in %s" % region)
+		gs.end_session()
+
+
 ## G-008f: every sect posts at least two Core Formation missions, and missions
 ## against late-Qi-Refining foes wait for a late-Qi-Refining disciple.
 func test_mission_content_spans_realms() -> void:
