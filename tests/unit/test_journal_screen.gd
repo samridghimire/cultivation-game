@@ -42,3 +42,19 @@ func test_format_entries_colors_by_tone() -> void:
 	assert_true(lines[1].contains("[color=#e8a04a]"))
 	assert_true(lines[2].contains("[color=#999999]"))
 	assert_false(lines[3].contains("[color"))
+
+
+func test_cards_one_per_section_with_goal_boxes() -> void:
+	var j := JournalScreen.new()
+	j._build_cards([
+		{"section": "First goals", "text": "[x] Meditate"},
+		{"section": "First goals", "text": "[ ] Gather herbs"},
+		{"section": "Next steps", "text": "Rest"},
+	])
+	assert_eq(j._cards.get_child_count(), 2)
+	assert_eq(String(j._cards.get_child(0).get_meta("title")), "First goals")
+	assert_eq(JournalScreen.parse_goal("[x] A"), {"done": true, "text": "A"})
+	assert_true(JournalScreen.parse_goal("Plain").is_empty())
+	var first: Node = j._cards.get_child(0).get_child(0)
+	assert_true(first.get_child(1).get_child(0) is JournalScreen.CheckBox_pixel, "goal row has a pixel box")
+	j.free()

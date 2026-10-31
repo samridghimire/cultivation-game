@@ -147,3 +147,14 @@ func test_root_bars_and_portrait() -> void:
 	assert_false(sheet._text.get_parsed_text().contains("Spiritual Root:"), "moved to the bars")
 	sheet.free()
 	gs.end_session()
+
+
+func test_split_sections_makes_a_card_per_header() -> void:
+	var a := UIStyle.ACCENT.to_html(false)
+	var secs := CharacterSheet.split_sections("Intro line\n[color=#%s]Attributes[/color]\n  Str: 3\n\n[color=#%s]Sect Reputation[/color]\n  none\n" % [a, a])
+	assert_eq(secs.size(), 3)
+	assert_eq(secs[0]["title"], "")
+	assert_eq(secs[1]["title"], "Attributes")
+	assert_true(String(secs[1]["body"]).contains("Str: 3"))
+	assert_false(String(secs[1]["body"]).contains("Sect"), "sections do not run into each other")
+	assert_eq(secs[2]["title"], "Sect Reputation")

@@ -26,7 +26,9 @@ var _qi_bar: ProgressBar
 var _qi_label: Label
 var _root_title: Label
 var _root_box: VBoxContainer
+## Full BBCode source of the sheet (hidden); the visible cards are cut from it.
 var _text: RichTextLabel
+var _cards: VBoxContainer
 var _recharge: Button
 var _action_row: HFlowContainer
 var _gender_row: HBoxContainer
@@ -53,11 +55,14 @@ func _init() -> void:
 	columns.add_child(_scroll)
 	_text = RichTextLabel.new()
 	_text.bbcode_enabled = true
-	_text.fit_content = true
-	_text.custom_minimum_size = Vector2(596, 0)
-	_text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_text.resized.connect(_fit_scroll)
-	_scroll.add_child(_text)
+	_text.visible = false
+	add_child(_text)
+	_cards = VBoxContainer.new()
+	_cards.add_theme_constant_override("separation", 8)
+	_cards.custom_minimum_size = Vector2(596, 0)
+	_cards.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_cards.resized.connect(_fit_scroll)
+	_scroll.add_child(_cards)
 	_gender_row = HBoxContainer.new()
 	_gender_row.add_theme_constant_override("separation", 8)
 	_gender_row.add_child(UIStyle.label("Your gender is unknown. Choose:", 16))
@@ -188,7 +193,7 @@ func _process(delta: float) -> void:
 
 ## The scroll area is as tall as the text, up to MAX_TEXT_HEIGHT.
 func _fit_scroll() -> void:
-	_scroll.custom_minimum_size = Vector2(620, minf(_text.size.y, MAX_TEXT_HEIGHT))
+	_scroll.custom_minimum_size = Vector2(620, minf(_cards.size.y, MAX_TEXT_HEIGHT))
 
 
 func open() -> void:
@@ -379,6 +384,58 @@ func _rebuild() -> void:
 			t += "  [color=#888888]%s%s[/color]\n" % [def["name"], "" if count == "" else " (%s)" % count]
 	t += "\n[color=#888888]Press [I] for your inventory and [K] for techniques.[/color]"
 	_text.text = t
+	_build_cards(t)
+
+
+## Cuts the sheet's BBCode into headed sections: a header is a line that starts with an
+## accent- or danger-colored title. Text before the first header is an untitled section.
+## Returns [{title, head_color, body}], `title` being the header line's own text.
+static func split_sections(t: String) -> Array[Dictionary]:
+	var header := RegEx.new()
+	header.compile("^\\[color=#(%s|%s)\\](.*?)\\[/color\\](.*)$" % [UIStyle.ACCENT.to_html(false), UIStyle.CATEGORY_COLORS["danger"].to_html(false)])
+	var out: Array[Dictionary] = []
+	var body := PackedStringArray()
+	var cur := {"title": "", "note": "", "color": UIStyle.ACCENT}
+	for line in t.split("\n"):
+		var m := header.search(line)
+		if m != null:
+			out.append(_finish_section(cur, body))
+			body = PackedStringArray()
+			cur = {"title": m.get_string(2), "note": m.get_string(3).strip_edges(), "color": Color(m.get_string(1))}
+		else:
+			body.append(line)
+	out.append(_finish_section(cur, body))
+	return out.filter(func(sec: Dictionary) -> bool: return sec["title"] != "" or String(sec["body"]) != "")
+
+
+static func _finish_section(head: Dictionary, body: PackedStringArray) -> Dictionary:
+	var text := "\n".join(body).strip_edges()
+	if head["note"] != "":
+		text = ("%s\n%s" % [head["note"], text]).strip_edges()
+	return {"title": head["title"], "color": head["color"], "body": text}
+
+
+func _build_cards(t: String) -> void:
+	for c in _cards.get_children():
+		_cards.remove_child(c)
+		c.queue_free()
+	for sec in split_sections(t):
+		var card := UIStyle.panel()
+		card.name = "card_" + String(sec["title"]).validate_node_name() if sec["title"] != "" else "card_intro"
+		card.set_meta("title", sec["title"])
+		var inner := VBoxContainer.new()
+		inner.add_theme_constant_override("separation", 4)
+		card.add_child(inner)
+		if sec["title"] != "":
+			inner.add_child(UIStyle.label(sec["title"], 18, sec["color"]))
+		var body := RichTextLabel.new()
+		body.bbcode_enabled = true
+		body.fit_content = true
+		body.scroll_active = false
+		body.add_theme_font_size_override("normal_font_size", 15)
+		body.text = sec["body"]
+		inner.add_child(body)
+		_cards.add_child(card)
 
 
 ## WU-159: "Strongest foe beaten: <realm>" from the highest beat_realm flag set, "" when none.
