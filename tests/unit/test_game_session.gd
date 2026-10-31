@@ -2452,6 +2452,28 @@ func test_field_rent_plant_grow_harvest() -> void:
 	assert_eq(back.field_plots.size(), 1)
 
 
+func test_tending_for_days_earns_the_harvest_bonus() -> void:
+	var c := _start()
+	var gs := _game_state()
+	gs.current_region = "qingshi_village"
+	var place := FieldPlots.place_def(gs.data, gs.current_region)
+	var key := FieldPlots.key(gs.current_region, place)
+	c.inventory["spirit_stone"] = 20
+	c.inventory["spirit_herb"] = 1
+	c.spiritual_roots = {"fire": 80}
+	c.realm_index = 1
+	gs.rent_field()
+	gs.plant_field("spirit_herb")
+	for i in 6:
+		c.qi = 100.0
+		gs.nourish_field()
+		_game_state().get_node("/root/GameClock").advance(1)
+	assert_eq(int(c.field_plots[key]["crops"][0]["care"]), 6)
+	_game_state().get_node("/root/GameClock").advance(40)
+	gs.harvest_field()
+	assert_true(c.item_count("spirit_herb") >= 3, "2..3 plus the tended bonus")
+
+
 func test_nourish_field_spends_qi_and_grows_crop() -> void:
 	var c := _start()
 	var gs := _game_state()

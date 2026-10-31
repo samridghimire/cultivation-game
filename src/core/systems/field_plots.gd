@@ -7,6 +7,7 @@ extends RefCounted
 ## FARM-002: an entry may also hold watered_day (the last day it was watered by hand) and expanded
 ## (true once the player paid the place's expand_cost: the plots rise to max_plots).
 ## FARM-004: nourished_day is the last day qi was pressed into the soil (once a day, costs nourish_qi).
+## FARM-005: each crop carries `care` (days it was watered or nourished); enough care earns a richer harvest.
 ## Tuned by the region's "field_plot" place in data/regions.json.
 
 const TYPE := "field_plot"
@@ -14,6 +15,8 @@ const SEASONS: Array[String] = ["spring", "summer", "autumn", "winter"]
 const RENEW_WINDOW := 10
 const WOOD_MIN_PURITY := 50
 const DEFAULT_NOURISH_QI := 30
+const DEFAULT_TENDED_SHARE := 0.25
+const DEFAULT_TENDED_BONUS := 1
 
 
 ## The region's field_plot place, or {}.
@@ -141,7 +144,20 @@ static func water(c: CharacterData, place: Dictionary, plot_key: String, today: 
 	if reason != "":
 		return {"ok": false, "reason": reason}
 	c.field_plots[plot_key]["watered_day"] = today
+	_add_care(c.field_plots[plot_key])
 	return {"ok": true, "reason": ""}
+
+
+## One more day of care for every growing crop in the plot entry (FARM-005).
+static func _add_care(entry: Dictionary) -> void:
+	for crop: Dictionary in entry.get("crops", []):
+		if int(crop["days_left"]) > 0:
+			crop["care"] = int(crop.get("care", 0)) + 1
+
+
+## Days of care a crop of `item_id` needs for the tended bonus: ceil(total_days * tended_share).
+static func care_needed(place: Dictionary, item_id: String) -> int:
+	return maxi(1, ceili(crop_total_days(place, item_id) * float(place.get("tended_share", DEFAULT_TENDED_SHARE))))
 
 
 ## Why `c` cannot press qi into the field today, or "" (FARM-004). Needs a cultivator, enough qi,
@@ -180,6 +196,7 @@ static func nourish(c: CharacterData, place: Dictionary, plot_key: String, today
 	var step := 3 if int(c.spiritual_roots.get("wood", 0)) >= WOOD_MIN_PURITY else 2
 	var entry: Dictionary = c.field_plots[plot_key]
 	entry["nourished_day"] = today
+	_add_care(entry)
 	var first := {}
 	for crop: Dictionary in entry.get("crops", []):
 		if int(crop["days_left"]) <= 0:
@@ -254,9 +271,10 @@ static func advance(c: CharacterData, data: GameData, world_days: int, today: in
 	return ready
 
 
-## Harvests every ready crop. Returns {ok, items: {item_id: count}}.
+## Harvests every ready crop. Returns {ok, items: {item_id: count}, orphaned, tended: {item_id: true}}.
 static func harvest(c: CharacterData, place: Dictionary, plot_key: String, rng: RandomNumberGenerator) -> Dictionary:
 	var items := {}
+	var tended := {}
 	var orphaned: Array[String] = []
 	var entry := _entry(c, plot_key)
 	var keep: Array = []
@@ -274,11 +292,15 @@ static func harvest(c: CharacterData, place: Dictionary, plot_key: String, rng: 
 		else:
 			var span: Array = plant["yield"]
 			amount = rng.randi_range(int(span[0]), int(span[1])) + bonus
+			var extra := int(place.get("tended_bonus", DEFAULT_TENDED_BONUS))
+			if extra > 0 and int(crop.get("care", 0)) >= care_needed(place, item_id):
+				amount += extra
+				tended[item_id] = true
 		c.add_item(item_id, amount)
 		items[item_id] = int(items.get(item_id, 0)) + amount
 	if not items.is_empty():
 		entry["crops"] = keep
-	return {"ok": not items.is_empty(), "items": items, "orphaned": orphaned}
+	return {"ok": not items.is_empty(), "items": items, "orphaned": orphaned, "tended": tended}
 
 
 ## How far a crop has grown, 0.0 (just planted) .. 1.0 (ripe).
@@ -321,6 +343,10 @@ static func describe(c: CharacterData, data: GameData, place: Dictionary, plot_k
 		else:
 			var frozen := " (frozen in %s)" % ", ".join(place.get("frozen_seasons", [])) if not (place.get("frozen_seasons", []) as Array).is_empty() else ""
 			lines.append("%s: ready in %s%s" % [name, Calendar.format_duration(int(crop["days_left"])), frozen])
+			var need := care_needed(place, String(crop["item"]))
+			var care := int(crop.get("care", 0))
+			if care < need:
+				lines.append("Tended %d of %d days needed for a richer harvest." % [care, need])
 	if rented(c, plot_key, today):
 		lines.append("Rent paid until %s" % Calendar.format_date(int(entry["paid_until"])))
 	else:
@@ -356,6 +382,12 @@ static func validate(data: GameData, region_id: String, region: Dictionary) -> A
 		var wood := int(place.get("wood_bonus", 1))
 		if wood < 0 or wood > 2:
 			errors.append("%s: wood_bonus must be 0..2" % who)
+		var share := float(place.get("tended_share", DEFAULT_TENDED_SHARE))
+		if share <= 0.0 or share > 1.0:
+			errors.append("%s: tended_share must be > 0 and <= 1" % who)
+		var tb := int(place.get("tended_bonus", DEFAULT_TENDED_BONUS))
+		if tb < 0 or tb > 3:
+			errors.append("%s: tended_bonus must be 0..3" % who)
 		for season in place.get("frozen_seasons", []):
 			if not SEASONS.has(String(season)):
 				errors.append("%s: unknown frozen season '%s'" % [who, season])

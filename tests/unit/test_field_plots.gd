@@ -280,3 +280,62 @@ func test_nourish_cost_validation() -> void:
 		if place.get("type", "") == "field_plot":
 			place["nourish_qi"] = 0
 	assert_gt(FieldPlots.validate(d, "qingshi_village", region).size(), 0)
+
+
+## FARM-005: tending pays at harvest.
+func test_care_counts_from_water_and_nourish_once_a_day() -> void:
+	var c := _growing()
+	var p := _place()
+	assert_true(FieldPlots.water(c, p, KEY, 10, "clear")["ok"])
+	assert_false(FieldPlots.water(c, p, KEY, 10, "clear")["ok"], "not twice a day")
+	assert_eq(int(c.field_plots[KEY]["crops"][0]["care"]), 1)
+	FieldPlots.nourish(c, p, KEY, 10)
+	assert_eq(int(c.field_plots[KEY]["crops"][0]["care"]), 2, "nourish adds its own day")
+	FieldPlots.nourish(c, p, KEY, 10)
+	assert_eq(int(c.field_plots[KEY]["crops"][0]["care"]), 2, "refused nourish adds nothing")
+
+
+func test_tended_threshold_edge_and_stacking() -> void:
+	var p := _place()	# 5 days * 0.25 -> ceil 2
+	assert_eq(FieldPlots.care_needed(p, "spirit_herb"), 2)
+	var under := _farmer()
+	FieldPlots.rent(under, "qingshi_village", p, 0)
+	FieldPlots.plant(under, data(), p, KEY, "spirit_herb", 0)
+	under.field_plots[KEY]["crops"][0]["days_left"] = 0
+	under.field_plots[KEY]["crops"][0]["care"] = 1
+	var base := FieldPlots.harvest(under, p, KEY, seeded_rng())
+	assert_false(base["tended"].has("spirit_herb"))
+	var at := _farmer()
+	FieldPlots.rent(at, "qingshi_village", p, 0)
+	FieldPlots.plant(at, data(), p, KEY, "spirit_herb", 0)
+	at.field_plots[KEY]["crops"][0]["days_left"] = 0
+	at.field_plots[KEY]["crops"][0]["care"] = 2
+	var got := FieldPlots.harvest(at, p, KEY, seeded_rng())
+	assert_true(got["tended"].has("spirit_herb"))
+	assert_eq(int(got["items"]["spirit_herb"]), int(base["items"]["spirit_herb"]) + 1)
+	var w := _farmer()
+	w.spiritual_roots = {"wood": 60}
+	FieldPlots.rent(w, "qingshi_village", p, 0)
+	FieldPlots.plant(w, data(), p, KEY, "spirit_herb", 0)
+	w.field_plots[KEY]["crops"][0]["days_left"] = 0
+	w.field_plots[KEY]["crops"][0]["care"] = 5
+	assert_eq(int(FieldPlots.harvest(w, p, KEY, seeded_rng())["items"]["spirit_herb"]), int(base["items"]["spirit_herb"]) + 2, "wood and tended stack")
+
+
+func test_old_crop_without_care_and_describe() -> void:
+	var c := _growing(3)
+	assert_false(c.field_plots[KEY]["crops"][0].has("care"))
+	var lines := FieldPlots.describe(c, data(), _place(), KEY, 10)
+	assert_true("Tended 0 of 2 days needed for a richer harvest." in lines)
+	c.field_plots[KEY]["crops"][0]["days_left"] = 0
+	var got := FieldPlots.harvest(c, _place(), KEY, seeded_rng())
+	assert_true(got["ok"] and got["tended"].is_empty())
+
+
+func test_tended_validation() -> void:
+	var bad := {"qingshi_village": {"places": [_place()]}}
+	for kv: Array in [["tended_share", 0.0], ["tended_share", 1.5], ["tended_bonus", 4], ["tended_bonus", -1]]:
+		var place := _place()
+		place[kv[0]] = kv[1]
+		assert_true(FieldPlots.validate(data(), "qingshi_village", {"places": [place]}).size() > 0, "%s=%s" % kv)
+	assert_eq(FieldPlots.validate(data(), "qingshi_village", bad["qingshi_village"]).size(), 0)

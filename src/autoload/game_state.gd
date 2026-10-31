@@ -3241,7 +3241,8 @@ func harvest_field() -> void:
 	if result["ok"]:
 		var parts: PackedStringArray = []
 		for item_id in result["items"]:
-			parts.append("%d %s" % [result["items"][item_id], Items.item_plural(data, item_id, result["items"][item_id])])
+			var tended_note := ", well tended, +%d" % int(place.get("tended_bonus", FieldPlots.DEFAULT_TENDED_BONUS)) if (result["tended"] as Dictionary).has(item_id) else ""
+			parts.append("%d %s%s" % [result["items"][item_id], Items.item_plural(data, item_id, result["items"][item_id]), tended_note])
 		EventBus.post("You harvest %s: %s." % [place["display_name"], ", ".join(parts)], "progress")
 		if not (result["orphaned"] as Array).is_empty():
 			EventBus.post("Some of the crop was an odd, forgotten strain; you salvage a single herb of it.", "info")
