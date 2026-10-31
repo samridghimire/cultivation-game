@@ -83,3 +83,24 @@ func test_hud_shows_digest_and_hides_behind_modal() -> void:
 	await tree.process_frame
 	assert_true(card.is_showing(), "queued card shows once the modal closes")
 	_finish(hud)
+
+
+## Review: a second long action right after the first replaces last_digest without an empty frame; its card still shows.
+func test_back_to_back_digests_both_show() -> void:
+	var tree := Engine.get_main_loop() as SceneTree
+	var gs: Node = tree.root.get_node("GameState")
+	var hud := _hud()
+	await tree.process_frame
+	var card: DigestCard = hud.get("_digest_card")
+	hud.get("_banner").visible = false
+	gs.last_digest = DIGEST.duplicate(true)
+	await tree.process_frame
+	await tree.process_frame
+	assert_true(card.is_showing(), "first digest shown")
+	card.dismiss()
+	gs.last_digest = {"days": 10, "lines": ["The rain stops."]}
+	await tree.process_frame
+	await tree.process_frame
+	assert_true(card.is_showing(), "second digest shown too")
+	assert_eq(card.title_text(), "10 days pass")
+	_finish(hud)

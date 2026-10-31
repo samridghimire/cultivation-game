@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 18b102f
+Last reviewed commit: 676c1b3
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -1326,3 +1326,20 @@ Last reviewed commit: 18b102f
     `GameState.shop_name` is never cleared on close (only matters to a buy outside the shop screen); WEATHER-006's own
     follow-up stands (region `qi_flags` and choice `requires.flag` still read flags by plain truthiness; no timed flag
     reaches them today).
+- 2026-10-31 (reviewer, 4th run): reviewed 18b102f..676c1b3 (QA-174 part 1, MARKET-002, FOLK-008, GFX-037, WU-416, GFX-038,
+  C-281, FLAG-001, WU-418, GFX-039, CAL-001, QA-185, GFX-040; [PLAN]/[REVIEW] skipped). Main green before (2885 tests)
+  and after (2887). No worker touched BACKLOG/CHANGELOG (QA-185 refreshed balance_baseline.txt, its job); no SAVE_VERSION
+  change (FLAG-001 migrates the legacy bool `storm_peddler_discount` to a 30-day timed flag on load; FOLK-008 stores
+  `birthday_gift_<id>` = year as a plain world flag); no binary assets (seasonal ground, village life, hearts drawn in code).
+  - FLAG-001 closes last review's note (legacy permanent peddler discount); flag_days now extends, never shortens.
+    MARKET-002's stall is excluded from "sold nearby" hints; stock_tags item ids are checked after restricted tags.
+  - Fixed (WU-416): the HUD only re-armed the digest card when `last_digest` was empty during a frame, but `_pass_time`
+    clears and refills it synchronously, so a second 5+ day action in a row never showed its card (and a card queued
+    behind a banner showed the older digest). Now the picked-up digest is tracked by identity. Test added.
+    Fixed (CAL-001): `month_grid` ignored its month argument, so a 30-day window from mid-month put next month's
+    day-10 market in this month's day-10 cell (WU-419 would draw it). Entries outside the month are now left out. Test
+    added. Also moved `upcoming_days` above journal_entries' doc comment, which it had split off.
+  - Notes, not filed: FLAG-001's `today` defaults to -1, which counts every timed flag as active forever; callers still
+    passing no day (Npcs/Training child cultivation qi_density, Guidance qi/deep-path hints) are fine while no timed flag
+    reaches qi_flags or deep paths, but should pass the day if one ever does. C-281 and MARKET-002 skipped
+    `tools/balance.sh --check` (small, analytic figures in the commits; QA-185 refreshed the baseline after them).

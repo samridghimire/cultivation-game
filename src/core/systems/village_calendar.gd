@@ -74,11 +74,15 @@ static func _before(a: Dictionary, b: Dictionary) -> bool:
 	return String(a["text"]) < String(b["text"])
 
 
-## Buckets entries by day of month (1..30).
-static func month_grid(entries: Array, _month_start: int) -> Dictionary:
+## Buckets entries by day of month (1..30). Entries outside the month starting at `month_start_day` are left out
+## (a 30-day window from mid-month spans two months, whose days would share cells).
+static func month_grid(entries: Array, month_start_day: int) -> Dictionary:
 	var grid := {}
 	for e: Dictionary in entries:
-		var d := Calendar.day_of(int(e["day"]))
+		var day := int(e["day"])
+		if day < month_start_day or day >= month_start_day + Calendar.DAYS_PER_MONTH:
+			continue
+		var d := Calendar.day_of(day)
 		if not grid.has(d):
 			grid[d] = []
 		grid[d].append(e)

@@ -111,7 +111,8 @@ var _banner: Banner
 var _digest_card: DigestCard
 ## WU-416: the last_digest waiting for a quiet moment to show.
 var _digest_pending: Dictionary = {}
-var _digest_shown: bool = false
+## The last_digest already picked up (compared by identity: back-to-back long actions replace it without an empty frame).
+var _digest_seen: Dictionary = {}
 var _tech_levels: Dictionary = {}  # technique id -> last seen level (WU-130)
 var _goals_done: Array[String] = []  # texts of first goals already done (WU-131)
 var _goals_ladder: String = ""  # Guidance.goal_ladder_id when _goals_done was taken
@@ -1704,20 +1705,20 @@ func _compute_fade_targets() -> Vector3:
 func _poll_digest() -> void:
 	var d: Dictionary = GameState.last_digest
 	if d.is_empty():
-		_digest_shown = false
+		_digest_seen = {}
 		_digest_pending = {}
 		if _digest_card.visible:
 			_digest_card.dismiss()
 		return
-	if not _digest_shown and _digest_pending.is_empty() and DigestCard.should_show(d):
-		_digest_pending = d
+	if not is_same(d, _digest_seen):
+		_digest_seen = d
+		_digest_pending = d if DigestCard.should_show(d) else {}
 	if _digest_pending.is_empty():
 		return
 	if digest_blocked():
 		return
 	_digest_card.show_digest(_digest_pending)
 	_digest_pending = {}
-	_digest_shown = true
 
 
 ## True while a banner, modal, report or the death screen is up (the digest queues behind them).

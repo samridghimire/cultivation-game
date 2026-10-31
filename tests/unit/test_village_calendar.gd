@@ -67,3 +67,17 @@ func test_season_entry_and_ordering_and_grid() -> void:
 	var grid := VillageCalendar.month_grid(VillageCalendar.upcoming(data(), {}, {}, [], "qingshi_village", ms), ms)
 	assert_eq((grid[1] as Array).size(), 2)
 	assert_true(grid.has(10) and grid.has(25))
+
+
+## Review: a window starting mid-month reaches into the next month; month_grid keeps only the asked month.
+func test_month_grid_leaves_out_other_months() -> void:
+	var start := 9 * Calendar.DAYS_PER_MONTH + 14  # day 15 of month 10: the window runs into month 11
+	var e := VillageCalendar.upcoming(data(), {}, {}, [], "qingshi_village", start)
+	var next_month := start + 16  # day 1 of month 11
+	assert_true(e.any(func(x: Dictionary) -> bool: return int(x["day"]) == next_month + 9), "next month's day-10 market is in the window")
+	var grid := VillageCalendar.month_grid(e, VillageCalendar.month_start(start))
+	assert_false(grid.has(10), "day 10 of the next month does not land in this month's cell")
+	assert_true(grid.has(25))
+	var later := VillageCalendar.month_grid(e, next_month)
+	assert_true(later.has(10))
+	assert_false(later.has(25))
