@@ -624,6 +624,9 @@ func _validate_world() -> void:
 					load_errors.append("Region '%s' gathers unknown item '%s'" % [region["id"], entry["item"]])
 				if entry.has("min_realm") and realm_index_of(String(entry["min_realm"])) < 0:
 					load_errors.append("Region '%s' gather entry '%s' has unknown min_realm '%s'" % [region["id"], entry.get("item", ""), entry["min_realm"]])
+			if place.has("open_days"):
+				for problem in Places.validate(place["open_days"], "Region '%s' place '%s'" % [region["id"], place.get("display_name", "")]):
+					load_errors.append(problem)
 			if place.has("discount_flag"):
 				for problem in ShopDiscounts.validate(place["discount_flag"], "Region '%s' place '%s'" % [region["id"], place.get("display_name", "")]):
 					load_errors.append(problem)

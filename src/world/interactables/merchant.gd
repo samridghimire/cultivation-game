@@ -15,9 +15,13 @@ extends Interactable
 @export var max_alignment := 1000000
 ## Sect this merchant belongs to (data/sects.json id); prices follow your reputation with it.
 @export var faction := ""
+## Day-of-month ints this merchant is there (MARKET-002); empty = always. Closed: no menu entries.
+@export var open_days: Array = []
 
 
 func get_options() -> Array[Dictionary]:
+	if not Places.is_open({"open_days": open_days}, GameClock.total_days):
+		return []
 	var refusal := Items.check_merchant(GameState.player, min_alignment, max_alignment)
 	if refusal != "":
 		return [{"label": refusal, "action": Callable(), "disabled": true}]

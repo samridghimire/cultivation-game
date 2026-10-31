@@ -29,7 +29,7 @@ func test_stalls_follow_active_festival() -> void:
 	world._on_days_advanced(1)
 	var merchants := 0
 	for place: Dictionary in gs.data.regions["qingshi_village"]["places"]:
-		if place["type"] == "merchant":
+		if place["type"] == "merchant" and not place.has("open_days"):
 			merchants += 1
 	assert_true(merchants > 0)
 	assert_eq(_count_stalls(world), merchants)

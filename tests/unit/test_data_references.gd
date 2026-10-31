@@ -46,6 +46,7 @@ func _setup() -> Dictionary:
 	for item: Dictionary in d.items.values():
 		for tag in item.get("tags", []):
 			tags[String(tag)] = true
+		tags[String(item["id"])] = true  # MARKET-002: stock_tags may name single item ids
 	var bloodlines := {"": true}
 	for id: String in d.bloodlines:
 		bloodlines[id] = true

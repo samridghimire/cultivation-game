@@ -50,6 +50,7 @@ var _strikes := 0
 ## Festival stalls beside merchants (WU-097), rebuilt when the day or region changes.
 var _stalls: Array[Node2D] = []
 var _merchant_spots: Array[Vector2] = []
+var _timed_places: Dictionary = {}  # display_name -> node, places with open_days (MARKET-002)
 
 @onready var player: Player = $Player
 
@@ -108,6 +109,7 @@ func _build_season_tint() -> void:
 
 func _on_days_advanced(_days: int) -> void:
 	_refresh_stalls()
+	_refresh_timed_places()
 	var season := Calendar.season_of(GameClock.total_days)
 	var weather := _weather_today()
 	if season == _season and weather == _weather_kind:
@@ -303,21 +305,45 @@ func _build_decor() -> void:
 
 
 func _build_places() -> void:
+	_timed_places.clear()
 	for place: Dictionary in _region.get("places", []):
-		var node: Interactable = PLACE_SCRIPTS[place["type"]].new()
-		node.position = _vec(place.get("pos", [0, 0]))
-		node.art_kind = place["type"]
-		for key in place:
-			if LAYOUT_KEYS.has(key):
-				continue
-			node.set(key, _convert(place[key], node.get(key)))
-		# Add before the player so the player draws on top.
-		add_child(node)
-		move_child(node, player.get_index())
-		if place["type"] == "merchant":
-			_merchant_spots.append(node.position + Vector2(node.size.x / 2.0 + 34.0, 12.0))
+		if place.has("open_days"):
+			continue  # MARKET-002: _refresh_timed_places() adds it on its open days
+		_make_place(place)
+	_refresh_timed_places()
 	_build_abodes()
 	_build_family_home()
+
+
+## MARKET-002: adds the places with `open_days` that are open today and removes the ones that closed.
+func _refresh_timed_places() -> void:
+	for place: Dictionary in _region.get("places", []):
+		if not place.has("open_days"):
+			continue
+		var place_name := String(place.get("display_name", ""))
+		var existing: Node = _timed_places.get(place_name)
+		var open := Places.is_open(place, GameClock.total_days)
+		if open and existing == null:
+			_timed_places[place_name] = _make_place(place)
+		elif not open and existing != null:
+			existing.queue_free()
+			_timed_places.erase(place_name)
+
+
+func _make_place(place: Dictionary) -> Interactable:
+	var node: Interactable = PLACE_SCRIPTS[place["type"]].new()
+	node.position = _vec(place.get("pos", [0, 0]))
+	node.art_kind = place["type"]
+	for key in place:
+		if LAYOUT_KEYS.has(key):
+			continue
+		node.set(key, _convert(place[key], node.get(key)))
+	# Add before the player so the player draws on top.
+	add_child(node)
+	move_child(node, player.get_index())
+	if place["type"] == "merchant" and not place.has("open_days"):
+		_merchant_spots.append(node.position + Vector2(node.size.x / 2.0 + 34.0, 12.0))
+	return node
 
 
 ## The Family Home (FAM-011) while the player's spouses or children live here.

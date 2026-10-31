@@ -1304,7 +1304,8 @@ static func merchant_sells_nearby(data: GameData, item_id: String, region_id: St
 		if region_id != "" and (rid != region_id if local_only else not Exploration.is_nearby(data, region_id, rid)):
 			continue
 		for p: Dictionary in data.regions[rid].get("places", []):
-			if String(p.get("type", "")) == "merchant" and Items.merchant_sells(data, item, p.get("stock_tags", []), int(p.get("max_price", 0))):
+			# MARKET-002: a stall that is only open some days is not a dependable local source.
+			if String(p.get("type", "")) == "merchant" and not p.has("open_days") and Items.merchant_sells(data, item, p.get("stock_tags", []), int(p.get("max_price", 0))):
 				return true
 	return false
 
@@ -3572,6 +3573,9 @@ static func village_lines(c: CharacterData, data: GameData, people: Dictionary, 
 		var missing := Fishing.missing_hint(c, data, region_id, Calendar.season_of(today))
 		if missing != "":
 			out.append(missing)
+	var market_line := Places.hint_line(data.regions.get(region_id, {}), today)
+	if market_line != "":
+		out.append(market_line)
 	var sell_line := seasonal_sell_line(c, data, region_id, today)
 	if sell_line != "":
 		out.append(sell_line)
