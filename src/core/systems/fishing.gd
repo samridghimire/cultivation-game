@@ -160,6 +160,19 @@ static func trophy_in(table: Array, found: Dictionary) -> String:
 	return ""
 
 
+## Item ids of every trophy entry in any fishing place's catch_table (GOAL-005).
+static func trophy_items(data: GameData) -> PackedStringArray:
+	var out: PackedStringArray = []
+	for region: Dictionary in data.regions.values():
+		for place: Dictionary in region.get("places", []):
+			if String(place.get("type", "")) != "fishing":
+				continue
+			for entry: Dictionary in place.get("catch_table", []):
+				if is_trophy(entry) and not out.has(String(entry.get("item", ""))):
+					out.append(String(entry["item"]))
+	return out
+
+
 ## Errors for the trophy entries of one catch_table (`who` names the place).
 static func validate_table(data: GameData, table: Array, who: String) -> PackedStringArray:
 	var errors: PackedStringArray = []

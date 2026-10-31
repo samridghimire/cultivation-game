@@ -164,3 +164,44 @@ func test_c130_renown_title_milestones() -> void:
 	assert_false(got.has("known_across_the_land"), str(got))
 	LifeStats.add(c, "renown_titles", 3)
 	assert_true(Milestones.newly_reached(c, data(), {}).has("known_across_the_land"))
+
+
+func test_goal005_log_checks() -> void:
+	var c := new_character()
+	var fish := Fishing.catchable(data())
+	var herbs := HerbLore.findable(data())
+	assert_false(Milestones.newly_reached(c, data(), {}).has("first_catch"))
+	c.catch_log[fish[0]] = 1
+	assert_true(Milestones.newly_reached(c, data(), {}).has("first_catch"))
+	assert_false(Milestones.newly_reached(c, data(), {}).has("angler"))
+	for id in fish:
+		c.catch_log[id] = 1
+	assert_true(Milestones.newly_reached(c, data(), {}).has("angler"))
+	for i in 4:
+		c.herb_log[herbs[i]] = 3
+	assert_false(Milestones.newly_reached(c, data(), {}).has("herb_gatherer"))
+	c.herb_log[herbs[4]] = 1
+	assert_true(Milestones.newly_reached(c, data(), {}).has("herb_gatherer"))
+	assert_false(Milestones.newly_reached(c, data(), {}).has("herbalist"))
+	for id in herbs:
+		c.herb_log[id] = 1
+	assert_true(Milestones.newly_reached(c, data(), {}).has("herbalist"))
+	assert_eq(Milestones.progress(c, data(), {}, null, "angler")["target"], fish.size())
+
+
+func test_goal005_trophy_and_green_thumb() -> void:
+	var c := new_character()
+	var d := data()
+	# No trophy fish is in the data yet (C-280): add a synthetic pond for the check.
+	d.regions["goal005_test"] = {"places": [{"type": "fishing", "catch_table": [{"item": "silver_carp", "weight": 1, "trophy": true}]}]}
+	var trophies := Fishing.trophy_items(d)
+	assert_eq(trophies.size(), 1)
+	assert_false(Milestones.newly_reached(c, d, {}).has("pond_legend"))
+	c.catch_log[trophies[0]] = 1
+	assert_true(Milestones.newly_reached(c, d, {}).has("pond_legend"))
+	d.regions.erase("goal005_test")
+	assert_false(Milestones.newly_reached(c, d, {}).has("pond_legend"), "no trophy kinds, no milestone")
+	LifeStats.add(c, "harvests", 9)
+	assert_false(Milestones.newly_reached(c, data(), {}).has("green_thumb"))
+	LifeStats.add(c, "harvests")
+	assert_true(Milestones.newly_reached(c, data(), {}).has("green_thumb"))

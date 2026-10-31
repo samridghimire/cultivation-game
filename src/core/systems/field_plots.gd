@@ -274,6 +274,7 @@ static func advance(c: CharacterData, data: GameData, world_days: int, today: in
 ## Harvests every ready crop. Returns {ok, items: {item_id: count}, orphaned, tended: {item_id: true}}.
 static func harvest(c: CharacterData, place: Dictionary, plot_key: String, rng: RandomNumberGenerator) -> Dictionary:
 	var items := {}
+	var crops_done := 0
 	var tended := {}
 	var orphaned: Array[String] = []
 	var entry := _entry(c, plot_key)
@@ -297,10 +298,11 @@ static func harvest(c: CharacterData, place: Dictionary, plot_key: String, rng: 
 				amount += extra
 				tended[item_id] = true
 		c.add_item(item_id, amount)
+		crops_done += 1
 		items[item_id] = int(items.get(item_id, 0)) + amount
 	if not items.is_empty():
 		entry["crops"] = keep
-	return {"ok": not items.is_empty(), "items": items, "orphaned": orphaned, "tended": tended}
+	return {"ok": not items.is_empty(), "items": items, "orphaned": orphaned, "tended": tended, "crops": crops_done}
 
 
 ## How far a crop has grown, 0.0 (just planted) .. 1.0 (ripe).

@@ -3,7 +3,7 @@ extends RefCounted
 ## Milestones (GOAL-001): data/milestones.json entries the player earns once.
 ## Earned ids are kept in CharacterData.milestones.
 
-const CHECK_TYPES: Array[String] = ["realm", "life_stat", "flag", "sect_joined", "married", "clan_founded", "item_crafted", "flag_count"]
+const CHECK_TYPES: Array[String] = ["realm", "life_stat", "flag", "sect_joined", "married", "clan_founded", "item_crafted", "flag_count", "log_kinds", "log_complete", "trophy"]
 
 
 ## Ids of milestones whose check holds now and that are not yet earned, in file order.
@@ -36,7 +36,43 @@ static func is_met(c: CharacterData, data: GameData, flags: Dictionary, clan: Cl
 			return clan != null
 		"item_crafted":
 			return LifeStats.get_stat(c, "items_crafted") >= int(check.get("min", 1))
+		"log_kinds":
+			return log_count(c, data, check) >= int(check.get("min", 1))
+		"log_complete":
+			var total := log_total(data, check)
+			return total > 0 and log_count(c, data, check) >= total
+		"trophy":
+			for id in Fishing.trophy_items(data):
+				if int(c.catch_log.get(id, 0)) > 0:
+					return true
 	return false
+
+
+## The CharacterData log a log_kinds / log_complete check reads (catch_log or herb_log).
+static func _log_of(c: CharacterData, check: Dictionary) -> Dictionary:
+	return c.herb_log if String(check.get("log", "")) == "herb_log" else c.catch_log
+
+
+## Kinds the check's log can ever hold (log_complete's target).
+static func log_total(data: GameData, check: Dictionary) -> int:
+	return HerbLore.findable(data).size() if String(check.get("log", "")) == "herb_log" else Fishing.catchable(data).size()
+
+
+## Distinct kinds found in the check's log; log_complete counts only kinds still catchable/findable.
+static func log_count(c: CharacterData, data: GameData, check: Dictionary) -> int:
+	var log := _log_of(c, check)
+	if String(check.get("type", "")) != "log_complete":
+		var n := 0
+		for id: String in log:
+			if int(log[id]) > 0:
+				n += 1
+		return n
+	var listed := HerbLore.findable(data) if String(check.get("log", "")) == "herb_log" else Fishing.catchable(data)
+	var found := 0
+	for id in listed:
+		if int(log.get(id, 0)) > 0:
+			found += 1
+	return found
 
 
 ## Set world flags that start with check.prefix and end with check.suffix
@@ -72,6 +108,12 @@ static func progress(c: CharacterData, data: GameData, flags: Dictionary, clan: 
 		"flag_count":
 			target = maxi(1, int(check.get("min", 1)))
 			current = flag_count(flags, check)
+		"log_kinds":
+			target = maxi(1, int(check.get("min", 1)))
+			current = log_count(c, data, check)
+		"log_complete":
+			target = maxi(1, log_total(data, check))
+			current = log_count(c, data, check)
 		"realm":
 			var realm_index := data.realm_index_of(String(check.get("realm", "")))
 			if realm_index >= 0:

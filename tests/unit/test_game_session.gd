@@ -2665,3 +2665,18 @@ func test_friendship_old_save_does_not_burst() -> void:
 	gs.check_friendships()
 	assert_eq(c.inventory, before)
 	assert_eq(gs.friendship_label(npc.id), "Close friend")
+
+
+func test_goal005_first_fish_awards_first_catch() -> void:
+	var c := _start()
+	var gs := _game_state()
+	var table := [{"item": "silver_carp", "weight": 1, "min": 1, "max": 1}]
+	_set_weather(gs, "clear")
+	gs.data.fishing_weather = {}
+	assert_false(c.milestones.has("first_catch"))
+	for i in 30:
+		if c.milestones.has("first_catch"):
+			break
+		gs.fish(table, 1, "Test Pond")
+	assert_true(c.milestones.has("first_catch"))
+	_restore_weather(gs)

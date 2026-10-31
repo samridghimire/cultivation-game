@@ -5,7 +5,7 @@ extends RefCounted
 ## the end-of-life summary.
 
 const KEYS: Array[String] = ["fights_won", "fights_lost", "threats_fled", "breakthroughs", "breakthroughs_failed",
-	"tribulations_survived", "respawns", "items_crafted", "missions_done", "deeds_done", "encounters", "days_in_seclusion", "commissions_done", "commissions_lapsed", "tournaments_won", "incursions_repelled", "festival_activities", "realm_floors_cleared", "inheritances_claimed", "stones_earned", "qi_gathered", "regions_visited", "lectures_attended", "seasons_gathered", "happenings_seen", "discoveries", "bounties_done", "best_renown", "regions_mastered", "rival_bouts_won", "rival_bouts_lost", "renown_titles", "inheritances_lost", "profession_ranks", "profession_stones"]
+	"tribulations_survived", "respawns", "items_crafted", "missions_done", "deeds_done", "encounters", "days_in_seclusion", "commissions_done", "commissions_lapsed", "tournaments_won", "incursions_repelled", "festival_activities", "realm_floors_cleared", "inheritances_claimed", "stones_earned", "qi_gathered", "regions_visited", "lectures_attended", "seasons_gathered", "happenings_seen", "discoveries", "bounties_done", "best_renown", "regions_mastered", "rival_bouts_won", "rival_bouts_lost", "renown_titles", "inheritances_lost", "profession_ranks", "profession_stones", "harvests"]
 
 const LABELS := {
 	"fights_won": "Fights won",
@@ -16,6 +16,7 @@ const LABELS := {
 	"tribulations_survived": "Tribulations survived",
 	"respawns": "Times pulled back by the artifact",
 	"items_crafted": "Items crafted",
+	"harvests": "Field crops harvested",
 	"profession_ranks": "Profession ranks gained",
 	"profession_stones": "Spirit stones from your craft",
 	"commissions_done": "Commissions filled",

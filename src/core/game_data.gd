@@ -884,6 +884,10 @@ func _validate_milestones() -> void:
 			load_errors.append("Milestone '%s' names unknown life stat '%s'" % [id, check.get("stat", "")])
 		elif type == "flag_count" and String(check.get("prefix", "")) + String(check.get("suffix", "")) == "":
 			load_errors.append("Milestone '%s' flag_count check needs a prefix or suffix" % id)
+		elif (type == "log_kinds" or type == "log_complete") and not ["catch_log", "herb_log"].has(String(check.get("log", ""))):
+			load_errors.append("Milestone '%s' %s check needs log catch_log or herb_log" % [id, type])
+		elif type == "log_kinds" and int(check.get("min", 0)) < 1:
+			load_errors.append("Milestone '%s' log_kinds check needs min >= 1" % id)
 		elif type == "flag" and String(check.get("flag", "")) == "":
 			load_errors.append("Milestone '%s' flag check needs a flag" % id)
 
