@@ -828,3 +828,23 @@ func test_rogue_only_encounters_skip_sect_members() -> void:
 		ids.append(entry["encounter"]["id"])
 	assert_false(ids.has("village_grey_robed_recruiter"))
 	assert_false(ids.has("village_river_barter"))
+
+
+func test_sect_only_encounters_skip_rogues() -> void:
+	var c := new_character()
+	c.realm_index = data().realm_index_of("foundation_establishment")
+	c.sect = {}
+	var ids: Array[String] = []
+	for entry in Exploration.eligible_encounters(c, data(), ["village"], {}):
+		ids.append(entry["encounter"]["id"])
+	assert_false(ids.has("village_sect_junior_pointer"))
+	assert_false(ids.has("village_sect_farmer_dispute"))
+	assert_true(ids.has("village_merchant_night_guard"))
+	c.sect = {"id": "azure_cloud_sect", "rank": 0}
+	ids.clear()
+	for entry in Exploration.eligible_encounters(c, data(), ["village"], {}):
+		ids.append(entry["encounter"]["id"])
+	assert_true(ids.has("village_sect_junior_pointer"))
+	assert_true(ids.has("village_sect_farmer_dispute"))
+	for e: Dictionary in data().encounters.values():
+		assert_false(e.get("rogue_only", false) and e.get("sect_only", false), e["id"])

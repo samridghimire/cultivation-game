@@ -651,6 +651,10 @@ func _validate_world() -> void:
 						load_errors.append("Encounter '%s' has unknown weather '%s'" % [e["id"], kind])
 		if e.has("rogue_only") and typeof(e["rogue_only"]) != TYPE_BOOL:
 			load_errors.append("Encounter '%s' rogue_only must be a bool" % e["id"])
+		if e.has("sect_only") and typeof(e["sect_only"]) != TYPE_BOOL:
+			load_errors.append("Encounter '%s' sect_only must be a bool" % e["id"])
+		if e.get("rogue_only", false) == true and e.get("sect_only", false) == true:
+			load_errors.append("Encounter '%s' cannot be both rogue_only and sect_only" % e["id"])
 		if e.has("min_explores") and (typeof(e["min_explores"]) != TYPE_INT and typeof(e["min_explores"]) != TYPE_FLOAT or int(e["min_explores"]) < 1 or float(e["min_explores"]) != int(e["min_explores"])):
 			load_errors.append("Encounter '%s' min_explores must be an int >= 1" % e["id"])
 		if e.has("min_renown"):
