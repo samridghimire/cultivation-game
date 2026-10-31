@@ -654,7 +654,7 @@ func _refresh() -> void:
 	_stone_icon.texture = ItemIcon.for_id(data, "spirit_stone")
 	_stone_icon.visible = _stone_icon.texture != null
 	var density := GameState.region_qi_density()
-	var qi_why := ", ".join(Exploration.qi_flag_reasons(data, GameState.current_region, GameState.world_flags))
+	var qi_why := ", ".join(Exploration.qi_flag_reasons(data, GameState.current_region, GameState.world_flags, GameClock.total_days))
 	_refresh_date_row(data)
 	_refresh_companion_chip(p)
 	_status.text = alignment_line(Alignment.tier_name(p.alignment, data), Sects.describe(p, data))
@@ -1515,7 +1515,7 @@ func _show_arrival(region_id: String) -> void:
 	var data: GameData = GameState.data
 	if data == null or not data.regions.has(region_id):
 		return
-	var qi := Exploration.qi_density(data, region_id, GameState.world_flags)
+	var qi := Exploration.qi_density(data, region_id, GameState.world_flags, GameClock.total_days)
 	var first_visit := GameState.last_arrival_first_visit
 	var sub := arrival_subtitle(GameState.player, data, region_id, qi, WorldMapScreen.danger_name(data, region_id), first_visit)
 	var hold := Banner.HOLD_SECONDS * 1.5 if first_visit else 1.0

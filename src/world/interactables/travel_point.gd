@@ -39,7 +39,7 @@ const _NOTE_MAX := 90
 ## places that matter (merchant, clinic, bounty board, sect hall) once the region is visited.
 static func destination_note(c: CharacterData, data: GameData, to_id: String, flags: Dictionary) -> String:
 	var best := Guidance.best_qi_in_region(c, data, to_id, flags)
-	var note := "Qi x%s" % _num(Exploration.qi_density(data, to_id, flags))
+	var note := "Qi x%s" % _num(Exploration.qi_density(data, to_id, flags, GameClock.total_days))
 	if String(best["name"]) != "":
 		note += " (%s x%s)" % [GameData.plain_name(String(best["name"])), _num(float(best["density"]))]
 	if Exploration.visited(c, to_id):

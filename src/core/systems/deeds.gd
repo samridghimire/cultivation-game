@@ -27,7 +27,7 @@ static func check(c: CharacterData, data: GameData, deed: Dictionary, flags: Dic
 		var left := cooldown_left(c, deed, today)
 		if left > 0:
 			return "You did this recently. Try again in %d days." % left
-	return Exploration.check_choice(c, data, deed, flags)
+	return Exploration.check_choice(c, data, deed, flags, today)
 
 
 ## Days until `deed` can be repeated (0 when ready, once-only or no cooldown).

@@ -196,7 +196,7 @@ static func familiarity_lines(c: CharacterData, data: GameData, region_id: Strin
 	var days := Exploration.familiarity(c, region_id)
 	out.append("Explored %d day%s" % [days, "" if days == 1 else "s"])
 	var progress := Exploration.region_progress(c, data, region_id, flags)
-	if Exploration.mastered(c, data, region_id, flags):
+	if Exploration.mastered(c, data, region_id, flags, GameClock.total_days):
 		out.append("Mastered: you know every path here.")
 	elif int(progress["total"]) > 0:
 		out.append("Seen %d of %d happenings" % [progress["met"], progress["total"]])
@@ -310,9 +310,9 @@ static func foes_bbcode(foes: Array) -> String:
 
 ## "Qi density x2.75 (the valley guardian's seed)": the region's qi with the reasons its flags enrich it.
 static func qi_line(data: GameData, region_id: String, flags: Dictionary, events: Array) -> String:
-	var qi := Exploration.qi_density(data, region_id, flags) * WorldEvents.qi_multiplier(data, events, region_id)
+	var qi := Exploration.qi_density(data, region_id, flags, GameClock.total_days) * WorldEvents.qi_multiplier(data, events, region_id)
 	var text := "Qi density x%s" % String.num(qi, 2)
-	var reasons := Exploration.qi_flag_reasons(data, region_id, flags)
+	var reasons := Exploration.qi_flag_reasons(data, region_id, flags, GameClock.total_days)
 	if not reasons.is_empty():
 		text += " (%s)" % ", ".join(reasons)
 	return text

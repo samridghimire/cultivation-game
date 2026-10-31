@@ -185,7 +185,16 @@ static func apply(c: CharacterData, data: GameData, effects: Dictionary, flags: 
 		notes.append("%s %+d" % [String(attr_id).capitalize(), delta])
 	var timed := effects.has("flag_days") and today >= 0
 	for flag in flag_list(effects.get("set_flag", "")):
-		flags[flag] = {"until": today + int(effects["flag_days"])} if timed else true
+		if not timed:
+			flags[flag] = true
+			continue
+		var until := today + int(effects["flag_days"])
+		var old: Variant = flags.get(flag, false)
+		if old is Dictionary:
+			until = maxi(until, int((old as Dictionary).get("until", 0)))  # extend, never shorten
+		elif old is bool and old and flag_active(flags, flag, today):
+			continue  # already permanent
+		flags[flag] = {"until": until}
 	for flag in flag_list(effects.get("clear_flag", "")):
 		flags.erase(flag)
 	return notes
@@ -198,6 +207,17 @@ static func flag_active(flags: Dictionary, key: String, today: int) -> bool:
 	if value is Dictionary:
 		return today < int((value as Dictionary).get("until", 0))
 	return bool(value)
+
+
+## Legacy plain-`true` flags that became timed (flag -> days); load turns them into {"until": today + days}.
+const TIMED_FLAGS_LEGACY := {"storm_peddler_discount": 30}
+
+
+## Rewrites legacy bool flags named in TIMED_FLAGS_LEGACY as timed flags starting `today`.
+static func migrate_legacy_timed(flags: Dictionary, today: int) -> void:
+	for key: String in TIMED_FLAGS_LEGACY:
+		if flags.get(key, null) is bool and bool(flags[key]):
+			flags[key] = {"until": today + int(TIMED_FLAGS_LEGACY[key])}
 
 
 ## A set_flag/clear_flag value (a String or an Array of Strings) as a list.

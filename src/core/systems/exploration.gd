@@ -44,7 +44,7 @@ static func next_deep_path(c: CharacterData, data: GameData, region_id: String) 
 ## Encounter ids (data order) of deeper paths the character's days in the region have
 ## opened: `min_explores` reached, realm and alignment fit, `requires_flag` set and
 ## `blocked_by_flag` unset (GUIDE-016).
-static func open_deep_paths(c: CharacterData, data: GameData, region_id: String, flags: Dictionary) -> Array[String]:
+static func open_deep_paths(c: CharacterData, data: GameData, region_id: String, flags: Dictionary, today: int = -1) -> Array[String]:
 	var out: Array[String] = []
 	var tags: Array = data.regions.get(region_id, {}).get("encounter_tags", [])
 	var have := familiarity(c, region_id)
@@ -54,18 +54,18 @@ static func open_deep_paths(c: CharacterData, data: GameData, region_id: String,
 		if int(e["min_explores"]) > have or not realm_allows(c, data, e) or not alignment_allows(c, e) or not renown_allows(c, data, e, region_id):
 			continue
 		var needed: String = e.get("requires_flag", "")
-		if needed != "" and not flags.get(needed, false):
+		if needed != "" and not Effects.flag_active(flags, needed, today):
 			continue
 		var blocker: String = e.get("blocked_by_flag", "")
-		if blocker != "" and flags.get(blocker, false):
+		if blocker != "" and Effects.flag_active(flags, blocker, today):
 			continue
 		out.append(String(e["id"]))
 	return out
 
 
 ## The first open deep path that retires itself with a `blocked_by_flag` (met once), or {}.
-static func deep_path_for(c: CharacterData, data: GameData, region_id: String, flags: Dictionary) -> Dictionary:
-	for id: String in open_deep_paths(c, data, region_id, flags):
+static func deep_path_for(c: CharacterData, data: GameData, region_id: String, flags: Dictionary, today: int = -1) -> Dictionary:
+	for id: String in open_deep_paths(c, data, region_id, flags, today):
 		if String(data.encounters[id].get("blocked_by_flag", "")) != "":
 			return data.encounters[id]
 	return {}
@@ -141,24 +141,24 @@ static func quiet_line(data: GameData, region_id: String, day: int) -> String:
 
 
 ## The region's qi density. `flags` (the world flags) applies the region's `qi_flags` deed bonuses (QI-001).
-static func qi_density(data: GameData, region_id: String, flags: Dictionary = {}) -> float:
-	return float(data.regions.get(region_id, {}).get("qi_density", 1.0)) * (1.0 + qi_flag_bonus(data, region_id, flags))
+static func qi_density(data: GameData, region_id: String, flags: Dictionary = {}, today: int = -1) -> float:
+	return float(data.regions.get(region_id, {}).get("qi_density", 1.0)) * (1.0 + qi_flag_bonus(data, region_id, flags, today))
 
 
 ## Summed bonus of the region's `qi_flags` entries whose world flag is truthy.
-static func qi_flag_bonus(data: GameData, region_id: String, flags: Dictionary) -> float:
+static func qi_flag_bonus(data: GameData, region_id: String, flags: Dictionary, today: int = -1) -> float:
 	var total := 0.0
 	for entry: Dictionary in data.regions.get(region_id, {}).get("qi_flags", []):
-		if flags.get(String(entry.get("flag", "")), false):
+		if Effects.flag_active(flags, String(entry.get("flag", "")), today):
 			total += float(entry.get("bonus", 0.0))
 	return total
 
 
 ## The `text` of each active qi_flags entry (empty texts skipped), e.g. "the valley guardian's seed".
-static func qi_flag_reasons(data: GameData, region_id: String, flags: Dictionary) -> PackedStringArray:
+static func qi_flag_reasons(data: GameData, region_id: String, flags: Dictionary, today: int = -1) -> PackedStringArray:
 	var out := PackedStringArray()
 	for entry: Dictionary in data.regions.get(region_id, {}).get("qi_flags", []):
-		if flags.get(String(entry.get("flag", "")), false) and String(entry.get("text", "")) != "":
+		if Effects.flag_active(flags, String(entry.get("flag", "")), today) and String(entry.get("text", "")) != "":
 			out.append(String(entry["text"]))
 	return out
 
@@ -439,7 +439,7 @@ static func region_progress(c: CharacterData, data: GameData, region_id: String,
 ## True when the character knows a region completely (EXPL-003): every happening they can
 ## meet is met (`region_progress`), its discovery (if any) is found, and no deep path that
 ## retires itself is still waiting. Realm-gated encounters can make this false again.
-static func mastered(c: CharacterData, data: GameData, region_id: String, flags: Dictionary) -> bool:
+static func mastered(c: CharacterData, data: GameData, region_id: String, flags: Dictionary, today: int = -1) -> bool:
 	var progress := region_progress(c, data, region_id, flags)
 	if int(progress["total"]) <= 0 or int(progress["met"]) < int(progress["total"]):
 		return false
@@ -447,7 +447,7 @@ static func mastered(c: CharacterData, data: GameData, region_id: String, flags:
 		return false
 	if next_deep_path(c, data, region_id) != -1:
 		return false
-	for id in open_deep_paths(c, data, region_id, flags):
+	for id in open_deep_paths(c, data, region_id, flags, today):
 		if String(data.encounters[id].get("blocked_by_flag", "")) != "":
 			return false
 	return true
@@ -549,7 +549,7 @@ static func alignment_allows(c: CharacterData, entry: Dictionary) -> bool:
 ## Why `c` cannot pick `choice` (an entry of an encounter's `choices`), or ""
 ## if they can. `requires`: {min_realm, min_alignment, max_alignment, flag};
 ## the choice's effects must also be payable (e.g. items it costs).
-static func check_choice(c: CharacterData, data: GameData, choice: Dictionary, flags: Dictionary) -> String:
+static func check_choice(c: CharacterData, data: GameData, choice: Dictionary, flags: Dictionary, today: int = -1) -> String:
 	var req: Dictionary = choice.get("requires", {})
 	if req.has("min_realm") and c.realm_index < data.realm_index_of(req["min_realm"]):
 		return "Only a cultivator of %s or above could do that." % data.realms[data.realm_index_of(req["min_realm"])].name
@@ -557,7 +557,7 @@ static func check_choice(c: CharacterData, data: GameData, choice: Dictionary, f
 		return "Your heart is too dark for that."
 	if req.has("max_alignment") and c.alignment > int(req["max_alignment"]):
 		return "You are too soft-hearted for that."
-	if req.has("flag") and not flags.get(req["flag"], false):
+	if req.has("flag") and not Effects.flag_active(flags, String(req["flag"]), today):
 		return "You lack the knowledge for that."
 	var min_attrs: Dictionary = req.get("min_attributes", {})
 	for attr_id: String in min_attrs:
@@ -612,11 +612,11 @@ static func _attribute_name(data: GameData, attr_id: String) -> String:
 
 
 ## The choices of `encounter` for `c`: [{index, label, disabled, reason, fight, check}].
-static func choices(c: CharacterData, data: GameData, encounter: Dictionary, flags: Dictionary, people: Dictionary = {}) -> Array[Dictionary]:
+static func choices(c: CharacterData, data: GameData, encounter: Dictionary, flags: Dictionary, people: Dictionary = {}, today: int = -1) -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
 	var list: Array = encounter.get("choices", [])
 	for i in list.size():
-		var reason := check_choice(c, data, list[i], flags)
+		var reason := check_choice(c, data, list[i], flags, today)
 		var foe := choice_foe(c, data, list[i], people)
 		var chance := -1.0
 		if reason == "" and not foe.is_empty():
@@ -657,7 +657,7 @@ static func resolve_choice(c: CharacterData, data: GameData, encounter: Dictiona
 	if index < 0 or index >= list.size():
 		return {"ok": false, "reason": "That is not a choice here.", "text": "", "notes": PackedStringArray(), "days": 0, "enemy": "", "karma": false}
 	var choice: Dictionary = list[index]
-	var reason := check_choice(c, data, choice, flags)
+	var reason := check_choice(c, data, choice, flags, today)
 	if reason != "":
 		return {"ok": false, "reason": reason, "text": "", "notes": PackedStringArray(), "days": 0, "enemy": "", "karma": false}
 	var failed := choice.has("check") and rng != null and rng.randf() >= check_chance(c, choice)

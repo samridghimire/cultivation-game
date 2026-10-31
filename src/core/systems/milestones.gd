@@ -7,16 +7,16 @@ const CHECK_TYPES: Array[String] = ["realm", "life_stat", "flag", "sect_joined",
 
 
 ## Ids of milestones whose check holds now and that are not yet earned, in file order.
-static func newly_reached(c: CharacterData, data: GameData, flags: Dictionary, clan: ClanData = null) -> Array[String]:
+static func newly_reached(c: CharacterData, data: GameData, flags: Dictionary, clan: ClanData = null, today: int = -1) -> Array[String]:
 	var result: Array[String] = []
 	for def in data.milestones:
 		var id := String(def["id"])
-		if not c.milestones.has(id) and is_met(c, data, flags, clan, def["check"]):
+		if not c.milestones.has(id) and is_met(c, data, flags, clan, def["check"], today):
 			result.append(id)
 	return result
 
 
-static func is_met(c: CharacterData, data: GameData, flags: Dictionary, clan: ClanData, check: Dictionary) -> bool:
+static func is_met(c: CharacterData, data: GameData, flags: Dictionary, clan: ClanData, check: Dictionary, today: int = -1) -> bool:
 	match String(check.get("type", "")):
 		"realm":
 			var target := data.realm_index_of(String(check.get("realm", "")))
@@ -25,7 +25,7 @@ static func is_met(c: CharacterData, data: GameData, flags: Dictionary, clan: Cl
 		"life_stat":
 			return LifeStats.get_stat(c, String(check.get("stat", ""))) >= int(check.get("min", 1))
 		"flag":
-			return bool(flags.get(String(check.get("flag", "")), false))
+			return Effects.flag_active(flags, String(check.get("flag", "")), today)
 		"flag_count":
 			return flag_count(flags, check) >= int(check.get("min", 1))
 		"sect_joined":
@@ -141,9 +141,9 @@ static func progress_text(c: CharacterData, data: GameData, flags: Dictionary, c
 
 
 ## Marks every newly reached milestone as earned and returns their defs, in file order.
-static func award(c: CharacterData, data: GameData, flags: Dictionary, clan: ClanData = null) -> Array[Dictionary]:
+static func award(c: CharacterData, data: GameData, flags: Dictionary, clan: ClanData = null, today: int = -1) -> Array[Dictionary]:
 	var earned: Array[Dictionary] = []
-	for id in newly_reached(c, data, flags, clan):
+	for id in newly_reached(c, data, flags, clan, today):
 		c.milestones.append(id)
 		earned.append(data.milestone_def(id))
 	return earned

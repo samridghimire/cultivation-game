@@ -705,7 +705,7 @@ func explore_outlook(tags: Array = []) -> String:
 		tags = data.regions.get(current_region, {}).get("encounter_tags", [])
 	tags = tags + WorldEvents.encounter_tags(data, world_events, current_region)
 	var line := Guidance.outlook_text(Exploration.outlook(player, data, tags, world_flags, Calendar.season_of(GameClock.total_days), current_region, GameClock.total_days))
-	if Exploration.mastered(player, data, current_region, world_flags):
+	if Exploration.mastered(player, data, current_region, world_flags, GameClock.total_days):
 		line = (line + " You know every path here.").strip_edges()
 	return line
 
@@ -713,7 +713,7 @@ func explore_outlook(tags: Array = []) -> String:
 ## Once per region (world flag mastered_<region>): notes that the current region is now mastered.
 func _check_mastery() -> void:
 	var flag := "mastered_" + current_region
-	if current_region == "" or world_flags.get(flag, false) or not Exploration.mastered(player, data, current_region, world_flags):
+	if current_region == "" or world_flags.get(flag, false) or not Exploration.mastered(player, data, current_region, world_flags, GameClock.total_days):
 		return
 	world_flags[flag] = true
 	LifeStats.add(player, "regions_mastered")
@@ -745,7 +745,7 @@ func _explore_day(tags: Array, quiet: bool) -> Dictionary:
 	last_explore_discovery = not encounter.is_empty()
 	last_explore_deep_path = false
 	if encounter.is_empty():
-		encounter = Exploration.deep_path_for(player, data, current_region, world_flags)
+		encounter = Exploration.deep_path_for(player, data, current_region, world_flags, GameClock.total_days)
 		last_explore_deep_path = not encounter.is_empty()
 	if encounter.is_empty():
 		var hunted := Bounties.hunt_roll(player, data, current_region, GameClock.total_days, rng)
@@ -1028,7 +1028,7 @@ func attempt_inheritance(inheritance_id: String) -> void:
 func encounter_choices() -> Array[Dictionary]:
 	if pending_encounter == "" or not _can_act():
 		return []
-	return Exploration.choices(player, data, data.encounters.get(pending_encounter, {}), world_flags, npcs)
+	return Exploration.choices(player, data, data.encounters.get(pending_encounter, {}), world_flags, npcs, GameClock.total_days)
 
 
 ## Pick choice `index` of the pending encounter: applies its outcome, passes
@@ -2677,7 +2677,7 @@ func journal_entries() -> Array[Dictionary]:
 ## Qi density of the current region, including active world events (LW-001) and today's weather for the player's root (WEATHER-003).
 ## With `days` > 1 the weather factor is the mean over those days (RV-016).
 func region_qi_density(days: int = 1) -> float:
-	return Exploration.qi_density(data, current_region, world_flags) * WorldEvents.qi_multiplier(data, world_events, current_region) * Weather.mean_qi_mult(data, current_region, player, GameClock.total_days, days)
+	return Exploration.qi_density(data, current_region, world_flags, GameClock.total_days) * WorldEvents.qi_multiplier(data, world_events, current_region) * Weather.mean_qi_mult(data, current_region, player, GameClock.total_days, days)
 
 
 ## Merchant price multiplier of the current region's active world events.
@@ -3367,6 +3367,7 @@ func load_save_dict(d: Dictionary) -> void:
 		Alchemy.grant_rank_recipes(player, data)  # saves from before recipe learning
 	CreationArtifact.ensure(player, data)
 	world_flags = d.get("world_flags", {})
+	Effects.migrate_legacy_timed(world_flags, int(d.get("clock", {}).get("total_days", 0)))
 	auctions = d.get("auctions", {})
 	world_events = []
 	for instance in d.get("world_events", []):
@@ -3415,7 +3416,7 @@ func load_save_dict(d: Dictionary) -> void:
 	# Milestones reached before this save (or before GOAL-001) are awarded silently, so
 	# loading never re-announces them; every earned one is re-synced to Steam (idempotent).
 	LifeStats.backfill(player, data, world_flags)
-	Milestones.award(player, data, world_flags, clan)
+	Milestones.award(player, data, world_flags, clan, GameClock.total_days)
 	for id in player.milestones:
 		Platform.unlock_achievement(String(id))
 	EventBus.session_started.emit()
@@ -3517,7 +3518,7 @@ func _start_time_skip() -> void:
 func check_milestones() -> void:
 	if player == null:
 		return
-	for def in Milestones.award(player, data, world_flags, clan):
+	for def in Milestones.award(player, data, world_flags, clan, GameClock.total_days):
 		EventBus.post("Milestone: %s. %s" % [def["name"], def.get("description", "")], "progress")
 		Platform.unlock_achievement(String(def["id"]))
 		EventBus.milestone_reached.emit(String(def["id"]), String(def["name"]))

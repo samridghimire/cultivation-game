@@ -115,3 +115,46 @@ func test_every_peddler_discount_choice_expires() -> void:
 				count += 1
 				assert_eq(int(effects.get("flag_days", 0)), 30, "%s sets the discount without flag_days" % e["id"])
 	assert_gt(count, 1)
+
+
+func test_expired_timed_flag_gates_qi_choice_and_deep_path() -> void:
+	var c := new_character()
+	var d := data()
+	d.regions["tf_region"] = {"id": "tf_region", "qi_density": 1.0, "qi_flags": [{"flag": "tf", "bonus": 0.1, "text": "boon"}]}
+	var flags := {"tf": {"until": 20}}
+	assert_almost_eq(Exploration.qi_density(d, "tf_region", flags, 19), 1.1, 0.001)
+	assert_almost_eq(Exploration.qi_density(d, "tf_region", flags, 20), 1.0, 0.001)
+	assert_eq(Exploration.qi_flag_reasons(d, "tf_region", flags, 20).size(), 0)
+	assert_eq(Exploration.qi_flag_reasons(d, "tf_region", flags, 19).size(), 1)
+	var choice := {"label": "x", "requires": {"flag": "tf"}}
+	assert_eq(Exploration.check_choice(c, d, choice, flags, 19), "")
+	assert_true(Exploration.check_choice(c, d, choice, flags, 20) != "")
+	assert_true(Milestones.is_met(c, d, flags, null, {"type": "flag", "flag": "tf"}, 19))
+	assert_false(Milestones.is_met(c, d, flags, null, {"type": "flag", "flag": "tf"}, 20))
+
+
+func test_flag_days_extends_never_shortens() -> void:
+	var c := new_character()
+	var flags := {"x": {"until": 200}}
+	Effects.apply(c, data(), {"set_flag": "x", "flag_days": 30}, flags, "", 100)
+	assert_eq(int(flags["x"]["until"]), 200, "shorter refresh keeps the later end")
+	Effects.apply(c, data(), {"set_flag": "x", "flag_days": 150}, flags, "", 100)
+	assert_eq(int(flags["x"]["until"]), 250)
+	flags = {"p": true}
+	Effects.apply(c, data(), {"set_flag": "p", "flag_days": 5}, flags, "", 100)
+	assert_eq(flags["p"], true, "a permanent flag stays permanent")
+	flags = {"e": {"until": 50}}
+	Effects.apply(c, data(), {"set_flag": "e", "flag_days": 5}, flags, "", 100)
+	assert_eq(int(flags["e"]["until"]), 105, "an expired flag restarts")
+
+
+func test_legacy_peddler_discount_becomes_timed_on_load() -> void:
+	var gs: Node = _root().get_node("GameState")
+	gs.start_session(new_character())
+	var save: Dictionary = JSON.parse_string(JSON.stringify(gs.to_save_dict()))
+	save["world_flags"] = {"storm_peddler_discount": true, "other": true}
+	save["clock"] = {"total_days": 500}
+	gs.load_save_dict(save)
+	assert_eq(int(gs.world_flags["storm_peddler_discount"]["until"]), 530)
+	assert_eq(gs.world_flags["other"], true)
+	gs.end_session()
