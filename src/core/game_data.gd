@@ -44,6 +44,7 @@ var travel_speed: Array = []  # TRAV-007: regions.json "travel_speed" (empty = e
 var weather_persist: float = Weather.DEFAULT_PERSIST  # WEATHER-001: regions.json "weather_persist"
 var seasonal_prices: Dictionary = {}  # MARKET-001: items.json "seasonal_prices"
 var fishing_weather: Dictionary = {}  # FISH-001: regions.json "fishing_weather"
+var herb_lore: Dictionary = {}  # GATHER-001: regions.json "herb_lore" (HerbLore); {} = none
 var weather_effects: Dictionary = {}  # WEATHER-002: regions.json "weather_effects"
 var road: Dictionary = {}  # TRAV-006: regions.json "road" (empty = no road encounters)
 var encounters: Dictionary = {}  # id -> Dictionary
@@ -240,6 +241,8 @@ func _load(dir: String) -> void:
 		load_errors.append("weather_persist must be 0..1")
 	weather_effects = world.get("weather_effects", {})
 	Weather.validate_effects(weather_effects, load_errors)
+	herb_lore = world.get("herb_lore", {})
+	HerbLore.validate(herb_lore, load_errors)
 	fishing_weather = world.get("fishing_weather", {})
 	Weather.validate_fishing(fishing_weather, load_errors)
 	travel_speed = world.get("travel_speed", [])

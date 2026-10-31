@@ -240,6 +240,8 @@ func _rebuild() -> void:
 	t += "Cultivation speed: %.2f qi/day here\n" % Cultivation.qi_per_day(p, data, GameState.hint_density())
 	var devoured := "   |   Cultivators devoured: %d" % p.devoured if p.devoured > 0 else ""
 	t += "Alignment: %s (%d)%s   |   %s\n\n" % [Alignment.tier_name(p.alignment, data), p.alignment, devoured, Sects.describe(p, data)]
+	if p.gather_xp > 0:
+		t += "Herb lore: %s (%d)\n" % [HerbLore.rank_name(GameState.data.herb_lore, p.gather_xp), p.gather_xp]
 	if p.fishing_xp > 0:
 		t += "Fishing: %s (%d)\n" % [Fishing.rank_name(p.fishing_xp), p.fishing_xp]
 	var rank_line := SectFactions.rank_line(p, GameState.sect_standings())

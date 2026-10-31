@@ -3542,6 +3542,8 @@ static func village_lines(c: CharacterData, data: GameData, people: Dictionary, 
 	if tomorrow != kind and tomorrow_effects != "":
 		out.append("Tomorrow looks like %s: %s" % [tomorrow, tomorrow_effects])
 	_field_line(out, c, data, region_id, today)
+	if c.gather_xp > 0 and not data.herb_lore.is_empty():
+		out.append(HerbLore.status_line(data.herb_lore, c.gather_xp))
 	_meal_line(out, c, data)
 	var visitor := Folk.visitor(people, favor, data, c, region_id, today, kind, c.folk_visit_day)
 	if visitor != "" and people.has(visitor):

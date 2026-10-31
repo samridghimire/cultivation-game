@@ -1149,7 +1149,9 @@ func gather(table: Array, days: int) -> void:
 		return
 	var season := Calendar.season_of(GameClock.total_days)
 	var rolled: Array = []
-	var found := Exploration.gather(player, Exploration.gather_table_for(player, data, table, season), rng, rolled)
+	var base := Exploration.gather_table_for(player, data, table, season)
+	var found := Exploration.gather(player, HerbLore.skill_table(data.herb_lore, base, player.gather_xp), rng, rolled)
+	HerbLore.bonus_units(data.herb_lore, found, player.gather_xp, rng)
 	Exploration.note_seasonal_gather(player, rolled, season)
 	var kind_today := Weather.of(data, current_region, GameClock.total_days)
 	var stormed := Weather.herb_penalty(data, kind_today, found)
@@ -1163,6 +1165,10 @@ func gather(table: Array, days: int) -> void:
 	for item_id in found:
 		player.add_item(item_id, found[item_id])
 		notes.append("+%d %s" % [found[item_id], Items.item_plural(data, item_id, found[item_id])])
+	var old_rank := HerbLore.rank_name(data.herb_lore, player.gather_xp)
+	player.gather_xp += HerbLore.xp_gain(data.herb_lore, base, found)
+	if HerbLore.rank_name(data.herb_lore, player.gather_xp) != old_rank:
+		EventBus.post("Your herb lore has improved: %s." % HerbLore.rank_name(data.herb_lore, player.gather_xp), "progress")
 	if notes.is_empty():
 		EventBus.post("You search for %s but find nothing worth taking." % Calendar.format_duration(days))
 	else:
