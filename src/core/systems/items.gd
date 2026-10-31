@@ -381,7 +381,13 @@ static func seasonal_mult(data: GameData, item_id: String, season: String) -> fl
 	var seasons := harvest_seasons(data, item_id)
 	if seasons.is_empty():
 		return 1.0
-	return float(data.seasonal_prices["in_season_mult" if seasons.has(season) else "out_of_season_mult"])
+	return float(data.seasonal_prices["in_season_mult" if seasons.has(season.to_lower()) else "out_of_season_mult"])
+
+
+## GUIDE-204: +1 when `item_id` is dearer in `season` (seasonal_mult > 1), -1 when cheaper, 0 otherwise or for no season.
+## Selling pays more when buying costs more, so +1 is a good season to sell.
+static func season_trend(data: GameData, item_id: String, season: String) -> int:
+	return signi(roundi((seasonal_mult(data, item_id, season) - 1.0) * 1000.0))
 
 
 ## "In season: cheaper now" / "Out of season: dearer" for the inventory, or "".

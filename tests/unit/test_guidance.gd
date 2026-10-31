@@ -5558,7 +5558,7 @@ func test_merchant_price_applies_season() -> void:
 	assert_true(herb != "", "a seasonal herb exists")
 	var seasons := Items.harvest_seasons(d, herb)
 	var in_season: String = seasons[0]
-	var off := "Spring" if not seasons.has("Spring") else "Winter"
+	var off := "spring" if not seasons.has("spring") else "winter"
 	assert_false(seasons.has(off))
 	var plain := Guidance.merchant_price(c, d, "qingshi_village", herb)
 	assert_eq(Guidance.merchant_price(c, d, "qingshi_village", herb, ""), plain)
@@ -5575,3 +5575,33 @@ func test_village_lines_angler_log() -> void:
 	var lines := Guidance.village_lines(c, d, {}, {}, "misty_forest", 10)
 	assert_true(_has_line(lines, "Fish caught: 1 of 3 kinds"), str(lines))
 	assert_true(_has_line(lines, "Marsh Eel bites here in"), str(lines))
+
+
+## GUIDE-204: the seasonal sell line names the best-paying carried herb in a dear season.
+func test_seasonal_sell_line() -> void:
+	var d := data()
+	var c := _fresh()
+	var winter := 280
+	assert_eq(Calendar.season_of(winter), "Winter")
+	assert_eq(Guidance.seasonal_sell_line(c, d, "qingshi_village", winter), "", "nothing carried")
+	c.inventory["spirit_herb"] = 10
+	var line := Guidance.seasonal_sell_line(c, d, "qingshi_village", winter)
+	assert_true(line.begins_with("Herbs fetch more in winter: sell your 10 Spirit Herbs at the "), line)
+	assert_true(line.contains(" for %d each." % Items.sell_price(d, "spirit_herb", "winter")), line)
+	assert_eq(Guidance.seasonal_sell_line(c, d, "qingshi_village", 10), "", "spring: herbs are cheap")
+	assert_eq(Guidance.seasonal_sell_line(c, d, "qingshi_village", -1), "")
+	c.inventory.clear()
+	c.inventory["spirit_herb"] = 1
+	assert_eq(Guidance.seasonal_sell_line(c, d, "qingshi_village", winter), "", "too cheap")
+	c.inventory.clear()
+	c.inventory["iron_essence"] = 20
+	assert_eq(Guidance.seasonal_sell_line(c, d, "qingshi_village", winter), "", "flat item")
+
+
+## GUIDE-204: hints() stores the season in a copy of the flags; priced lines read it.
+func test_with_season_copies_flags() -> void:
+	var flags := {"a": 1}
+	var out := Guidance.with_season(flags, 280)
+	assert_eq(out["_season"], "Winter")
+	assert_false(flags.has("_season"))
+	assert_eq(Guidance.with_season(flags, -1), flags)

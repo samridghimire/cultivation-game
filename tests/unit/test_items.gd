@@ -180,3 +180,14 @@ func test_validate_seasonal_prices() -> void:
 	Items.validate_seasonal_prices({"in_season_mult": 0.9}, errors)
 	Items.validate_seasonal_prices({"bogus": 1.0, "in_season_mult": 0.9, "out_of_season_mult": 1.1}, errors)
 	assert_eq(errors.size(), 3)
+
+
+## GUIDE-204: season_trend is +1 out of season (dearer), -1 in season, 0 for flat items or no season; case-insensitive.
+func test_season_trend() -> void:
+	var d := data()
+	assert_eq(Items.season_trend(d, "spirit_herb", "winter"), 1)
+	assert_eq(Items.season_trend(d, "spirit_herb", "Winter"), 1)
+	assert_eq(Items.season_trend(d, "spirit_herb", "spring"), -1)
+	assert_eq(Items.season_trend(d, "spirit_herb", "Spring"), -1)
+	assert_eq(Items.season_trend(d, "spirit_herb", ""), 0)
+	assert_eq(Items.season_trend(d, "iron_essence", "winter"), 0)

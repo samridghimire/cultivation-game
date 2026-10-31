@@ -43,6 +43,7 @@ const IDLE_CULTIVATION_DAYS := 30  # GUIDE-057: days without cultivating before 
 ## and `region_id` drive the newcomer hints shown while Mortal or Qi Refining.
 static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit: int = 5, people: Dictionary = {}, flags: Dictionary = {}, region_id: String = "", today: int = -1, favor: Dictionary = {}) -> PackedStringArray:
 	var out: PackedStringArray = []
+	flags = with_season(flags, today)
 	# GUIDE-147: a nearly empty Creation Artifact leads, so the HUD headline shows it.
 	var lives_hint := artifact_lives_hint(c, data)
 	if lives_hint != "":
@@ -196,17 +197,17 @@ static func thin_defence_hint(c: CharacterData, data: GameData, region_id: Strin
 	var budget := -1  # GUIDE-188: stones left for armor once the manual named above is bought; -1 = all in hand
 	if not has_body and treasury.is_empty() and region_id != "":
 		var here := _body_manual_merchant(c, data, region_id)
-		if not here.is_empty() and merchant_price(c, data, region_id, String(here["item_id"])) <= c.item_count("spirit_stone"):
+		if not here.is_empty() and merchant_price(c, data, region_id, String(here["item_id"]), _season_in(flags)) <= c.item_count("spirit_stone"):
 			var here_id := String(here["item_id"])
-			buy_here = " Buy %s from the %s here for %d stones and learn it." % [data.items[here_id]["name"], here["merchant"], merchant_price(c, data, region_id, here_id)]
+			buy_here = " Buy %s from the %s here for %d stones and learn it." % [data.items[here_id]["name"], here["merchant"], merchant_price(c, data, region_id, here_id, _season_in(flags))]
 			line += buy_here
-			budget = c.item_count("spirit_stone") - merchant_price(c, data, region_id, here_id)
+			budget = c.item_count("spirit_stone") - merchant_price(c, data, region_id, here_id, _season_in(flags))
 	if not has_armor:
 		var armor_start := line.length()
 		if region_id != "":
 			var armor_id := affordable_armor(c, data, region_id, budget)
 			if armor_id != "":
-				line += " The %s sells %s for %d stones." % [merchant_selling(data, region_id, armor_id), data.items[armor_id]["name"], merchant_price(c, data, region_id, armor_id)]
+				line += " The %s sells %s for %d stones." % [merchant_selling(data, region_id, armor_id), data.items[armor_id]["name"], merchant_price(c, data, region_id, armor_id, _season_in(flags))]
 			else:
 				var far_clause := _far_armor_clause(c, data, region_id, budget)
 				line += far_clause
@@ -214,7 +215,7 @@ static func thin_defence_hint(c: CharacterData, data: GameData, region_id: Strin
 					# GUIDE-090: not affordable with stones, but the loot would pay for it.
 					var loot_armor := affordable_armor(c, data, region_id, (c.item_count("spirit_stone") if budget < 0 else budget) + int(offer.get("total", 0)))
 					if loot_armor != "" and not offer.is_empty():
-						line += " The %s sells %s for %d stones.%s" % [merchant_selling(data, region_id, loot_armor), data.items[loot_armor]["name"], merchant_price(c, data, region_id, loot_armor), _sell_first_clause(offer)]
+						line += " The %s sells %s for %d stones.%s" % [merchant_selling(data, region_id, loot_armor), data.items[loot_armor]["name"], merchant_price(c, data, region_id, loot_armor, _season_in(flags)), _sell_first_clause(offer)]
 		if line.length() == armor_start:
 			line += " Wear armor."
 	if not has_body and treasury.is_empty() and buy_here == "":
@@ -224,12 +225,12 @@ static func thin_defence_hint(c: CharacterData, data: GameData, region_id: Strin
 			if source != "":
 				var manual := _body_manual_merchant(c, data, region_id)
 				if not manual.is_empty():
-					source = "%s (%s here, %d stones)" % [data.items[manual["item_id"]]["name"], manual["merchant"], merchant_price(c, data, region_id, String(manual["item_id"]))]
+					source = "%s (%s here, %d stones)" % [data.items[manual["item_id"]]["name"], manual["merchant"], merchant_price(c, data, region_id, String(manual["item_id"]), _season_in(flags))]
 				line += " %s teaches one." % source
 				# GUIDE-144: the sell-first clause belongs to the merchant source only, not the sect treasury.
 				if not manual.is_empty() and not offer.is_empty() and _body_manual_treasury(c, data).is_empty():
 					# GUIDE-090: the manual costs more than the stones in hand but the loot would cover it.
-					var cost := merchant_price(c, data, region_id, String(manual["item_id"]))
+					var cost := merchant_price(c, data, region_id, String(manual["item_id"]), _season_in(flags))
 					var stones := c.item_count("spirit_stone")
 					if cost > stones and cost <= stones + int(offer["total"]):
 						line += _sell_first_clause(offer)
@@ -700,8 +701,20 @@ static func merchant_place(data: GameData, region_id: String, item_id: String) -
 
 ## GUIDE-073: what the merchant selling `item_id` in `region_id` charges `c`: base price with the merchant's
 ## sect reputation and the region's renown applied. World-event prices need GameState and are left out.
-## GUIDE-203: with a `season` the seasonal herb price applies (only buy_ingredient_hint passes it).
-## TODO season: the armor, manual, pill and heal hint lines still use the season-less price.
+## GUIDE-203/204: with a `season` the seasonal herb price applies. Hint lines that take `flags`
+## read the season from it (`with_season`, set once in `hints`).
+static func with_season(flags: Dictionary, today: int) -> Dictionary:
+	if today < 0:
+		return flags
+	var out := flags.duplicate()
+	out["_season"] = Calendar.season_of(today)
+	return out
+
+
+static func _season_in(flags: Dictionary) -> String:
+	return String(flags.get("_season", ""))
+
+
 static func merchant_price(c: CharacterData, data: GameData, region_id: String, item_id: String, season: String = "") -> int:
 	return _place_price(c, data, region_id, item_id, merchant_place(data, region_id, item_id), season)
 
@@ -837,7 +850,7 @@ static func _heal_source_entry(c: CharacterData, data: GameData, region_id: Stri
 			var item: Dictionary = data.items[item_id]
 			if not _heals(data, item_id, injury_id) or not Items.merchant_sells(data, item, p.get("stock_tags", []), int(p.get("max_price", 0))):
 				continue
-			var heal_price := _place_price(c, data, region_id, item_id, p)
+			var heal_price := _place_price(c, data, region_id, item_id, p, _season_in(flags))
 			if heal_price <= stones:
 				return {"text": "the %s sells %s for %d stones" % [p.get("display_name", "merchant"), item.get("name", item_id), heal_price], "affordable": true}
 	var far := nearest_selling(c, data, region_id, func(r: String) -> String:
@@ -1594,7 +1607,7 @@ static func qi_pill_offer(c: CharacterData, data: GameData, region_id: String, f
 			var qi := float(item.get("effects", {}).get("qi", 0.0))
 			if qi <= 0.0 or qi > room or not item_id.ends_with("_pill") or not Items.feeds_cultivation(data, item_id) or Items.realm_block(c, data, item_id) != "" or not Items.merchant_sells(data, item, place.get("stock_tags", []), int(place.get("max_price", 0))):
 				continue
-			var price := _place_price(c, data, region_id, item_id, place)
+			var price := _place_price(c, data, region_id, item_id, place, _season_in(flags))
 			if price <= spare and qi / price > best_ratio:
 				best_ratio = qi / price
 				best = {"item_id": item_id, "name": String(item["name"]), "merchant": String(place.get("display_name", "merchant")), "price": price, "qi": qi}
@@ -2652,7 +2665,7 @@ static func armor_hint(c: CharacterData, data: GameData, region_id: String, flag
 		if far != "":
 			return "Armor keeps you standing." + far
 		return _loot_armor_hint(c, data, region_id, flags)
-	return "Armor keeps you standing: the %s sells %s for %d stones." % [merchant_selling(data, region_id, armor_id), data.items[armor_id]["name"], merchant_price(c, data, region_id, armor_id)]
+	return "Armor keeps you standing: the %s sells %s for %d stones." % [merchant_selling(data, region_id, armor_id), data.items[armor_id]["name"], merchant_price(c, data, region_id, armor_id, _season_in(flags))]
 
 
 ## GUIDE-143: a sect member in Qi Refining (stage >= ARMOR_HINT_MIN_STAGE) with no body art hears about a
@@ -2677,7 +2690,7 @@ static func _loot_armor_hint(c: CharacterData, data: GameData, region_id: String
 	var budget := c.item_count("spirit_stone") + int(offer["total"])
 	var armor_id := affordable_armor(c, data, region_id, budget)
 	if armor_id != "":
-		return "Armor keeps you standing: sell your %s to the %s (about %d stones), then the %s sells %s for %d stones." % [offer["goods"], offer["merchant"], offer["total"], merchant_selling(data, region_id, armor_id), data.items[armor_id]["name"], merchant_price(c, data, region_id, armor_id)]
+		return "Armor keeps you standing: sell your %s to the %s (about %d stones), then the %s sells %s for %d stones." % [offer["goods"], offer["merchant"], offer["total"], merchant_selling(data, region_id, armor_id), data.items[armor_id]["name"], merchant_price(c, data, region_id, armor_id, _season_in(flags))]
 	var far := _far_armor_clause(c, data, region_id, budget)
 	if far == "":
 		return ""
@@ -3553,6 +3566,9 @@ static func village_lines(c: CharacterData, data: GameData, people: Dictionary, 
 		var missing := Fishing.missing_hint(c, data, region_id, Calendar.season_of(today))
 		if missing != "":
 			out.append(missing)
+	var sell_line := seasonal_sell_line(c, data, region_id, today)
+	if sell_line != "":
+		out.append(sell_line)
 	var visitor := Folk.visitor(people, favor, data, c, region_id, today, kind, c.folk_visit_day)
 	if visitor != "" and people.has(visitor):
 		var home := FamilyHome.has_home(c, people, data, region_id)
@@ -3581,6 +3597,37 @@ static func village_lines(c: CharacterData, data: GameData, people: Dictionary, 
 			out.append("Fishing at %s: best catch this %s is %s" % [place.get("display_name", "the pond"), season.to_lower(), data.items.get(best, {}).get("name", best)])
 			break
 	return out
+
+
+## GUIDE-204: "Herbs fetch more in winter: sell your 4 Dew Grass at the Village Herb Seller for 3 each."
+## for the carried item with a +1 sell trend today and the highest total (>= SEASON_SELL_MIN stones) that a
+## merchant in `region_id` buys. "" when none.
+const SEASON_SELL_MIN := 5
+static func seasonal_sell_line(c: CharacterData, data: GameData, region_id: String, today: int) -> String:
+	if today < 0 or not data.regions.has(region_id):
+		return ""
+	var season := Calendar.season_of(today)
+	var best_id := ""
+	var best_total := 0
+	var best_place := ""
+	var ids: Array = c.inventory.keys()
+	ids.sort()
+	for item_id: String in ids:
+		var count := c.item_count(item_id)
+		if count <= 0 or not data.items.has(item_id) or Items.season_trend(data, item_id, season) != 1:
+			continue
+		var each := Items.sell_price(data, item_id, season)
+		if each * count < SEASON_SELL_MIN or each * count <= best_total:
+			continue
+		for place: Dictionary in data.regions[region_id].get("places", []):
+			if String(place.get("type", "")) == "merchant" and Items.merchant_buys(data, item_id, place.get("stock_tags", []), place.get("buy_tags", [])):
+				best_id = item_id
+				best_total = each * count
+				best_place = String(place.get("display_name", "the merchant"))
+				break
+	if best_id == "":
+		return ""
+	return "Herbs fetch more in %s: sell your %d %s at the %s for %d each." % [season.to_lower(), c.item_count(best_id), Items.item_plural(data, best_id, c.item_count(best_id)), best_place, Items.sell_price(data, best_id, season)]
 
 
 ## GUIDE-202: a ripe crop to harvest, else a carried plantable and a free plot.
