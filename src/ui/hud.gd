@@ -83,6 +83,7 @@ var _threat_prompt: ThreatPrompt
 ## must have open(), close() and a `closed` signal.
 var _screens: Dictionary = {}
 var _village_book: VillageBook
+var _book_from: String = ""
 var _combat_report: CombatReport
 var _fight_rating: String = ""
 var _fight_enemy: Dictionary = {}
@@ -148,7 +149,9 @@ func _ready() -> void:
 	add_child(UIStyle.centered(_choice_menu))
 	_threat_prompt = ThreatPrompt.new()
 	add_child(_threat_prompt)
-	_add_screen("toggle_character_sheet", CharacterSheet.new())
+	var sheet := CharacterSheet.new()
+	_add_screen("toggle_character_sheet", sheet)
+	sheet.book_requested.connect(_open_village_book.bind("toggle_character_sheet"))
 	_add_screen("toggle_inventory", InventoryScreen.new())
 	_add_screen("toggle_techniques", TechniquesScreen.new())
 	_add_screen("toggle_artifact", ArtifactScreen.new())
@@ -158,9 +161,9 @@ func _ready() -> void:
 	var journal := JournalScreen.new()
 	_add_screen("toggle_journal", journal)
 	_village_book = VillageBook.new()  # WU-414: no key of its own, opens from the journal
-	_village_book.closed.connect(_update_modal)
+	_village_book.closed.connect(_on_book_closed)
 	add_child(UIStyle.centered(_village_book))
-	journal.book_requested.connect(_open_village_book)
+	journal.book_requested.connect(_open_village_book.bind("toggle_journal"))
 	_crafting = CraftingScreen.new()
 	_crafting.closed.connect(_update_modal)
 	add_child(UIStyle.centered(_crafting))
@@ -347,6 +350,7 @@ func _add_screen(action: String, screen: Control) -> void:
 func _close_screens() -> void:
 	for screen in _screens.values():
 		screen.close()
+	_book_from = ""
 	_village_book.close()
 	_breakthrough.close()
 	_crafting.close()
@@ -1572,10 +1576,20 @@ func _open_journal() -> void:
 	_update_modal()
 
 
-## The village book replaces the journal while open.
-func _open_village_book() -> void:
-	_screens["toggle_journal"].close()
+## The village book replaces the journal or character sheet it was opened from (`from`) while open;
+## closing it returns to that screen so focus lands back on the button.
+func _open_village_book(from: String = "toggle_journal") -> void:
+	_book_from = from
+	_screens[from].close()
 	_village_book.open()
+	_update_modal()
+
+
+func _on_book_closed() -> void:
+	var from := _book_from
+	_book_from = ""
+	if from == "toggle_character_sheet" and GameState.has_session() and GameState.player.alive:
+		_screens[from].open()
 	_update_modal()
 
 

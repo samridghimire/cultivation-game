@@ -7,6 +7,8 @@ extends PanelContainer
 ## The text scrolls (PgUp/PgDn, right stick) so a long sheet still fits a Steam Deck.
 
 signal closed
+## WU-417: the "Open village book" button on the Village crafts card.
+signal book_requested
 
 ## Tallest the text area may grow before it scrolls, so the sheet fits 1280x800.
 const MAX_TEXT_HEIGHT := 470.0
@@ -434,6 +436,10 @@ func _build_cards(t: String) -> void:
 		if sec["title"] == CRAFTS_TITLE and not _craft_rows.is_empty():
 			for row in _craft_rows:
 				inner.add_child(_craft_row(row))
+			var book := UIStyle.button("Open village book", func() -> void: book_requested.emit())
+			book.name = "VillageBookButton"
+			book.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+			inner.add_child(book)
 			_cards.add_child(card)
 			continue
 		var body := RichTextLabel.new()

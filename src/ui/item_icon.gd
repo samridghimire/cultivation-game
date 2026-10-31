@@ -21,13 +21,14 @@ const GLYPHS := {
 	"talisman": ["............", "...oooooo...", "...oaaaao...", "...oabbao...", "...oabbao...", "...oaaaao...", "...obaabo...", "...oaaaao...", "...oabbao...", "...oaaaao...", "...oooooo...", "............"],
 	"manual": ["............", "..ooooooo...", ".oaaaaaaao..", ".oabbbbbao..", ".oaaaaaaao..", ".oabbbbbao..", ".oaaaaaaao..", ".oabbbbbao..", ".oaaaaaaao..", "..ooooooo...", "............", "............"],
 	"scroll": ["............", ".ooooooooo..", "oabaaaaabo..", "oaaoooooao..", ".oaabbbaao..", ".oaaaaaaao..", ".oaabbbaao..", "oaaoooooao..", "oabaaaaabo..", ".ooooooooo..", "............", "............"],
+	"fish": ["............", "............", "....oooo..o.", "..ooabaaoooo", ".oabaaaaaaao", ".oaaaoaaaaao", ".oaaaaaaaaao", "..oooaaaoooo", "....oooo..o.", "............", "............", "............"],
 	"pouch": ["............", "....o..o....", "....oooo....", "...oabbao...", "..oaaaaaao..", ".oabaaaaaao.", ".oabaaaaaao.", ".oaaaaaaaao.", "..oaaaaaao..", "...oooooo...", "............", "............"],
 }
 
 const BODY := {
 	"pill": Color("e8b04a"), "herb": Color("5aa65a"), "ore": Color("8a8f9c"), "beast_material": Color("c9b18a"),
 	"spirit_stone": Color("7cc8e8"), "weapon": Color("b8c0cc"), "armor": Color("9a7a52"), "accessory": Color("d9a441"),
-	"talisman": Color("e8d27a"), "manual": Color("8a5a3a"), "scroll": Color("e8dcc0"), "pouch": Color("a8784a"),
+	"fish": Color("c88a5a"), "talisman": Color("e8d27a"), "manual": Color("8a5a3a"), "scroll": Color("e8dcc0"), "pouch": Color("a8784a"),
 }
 
 static var _cache: Dictionary = {}
@@ -48,6 +49,8 @@ static func kind_of(item: Dictionary) -> String:
 		return "manual"
 	if tags.has("scripture") or tags.has("inscription") or tags.has("formation"):
 		return "scroll"
+	if tags.has("fish"):
+		return "fish"
 	if tags.has("herb"):
 		return "herb"
 	if tags.has("ore"):
@@ -57,6 +60,14 @@ static func kind_of(item: Dictionary) -> String:
 	if bool(item.get("usable", false)):
 		return "pill"
 	return "pouch"
+
+
+## WU-417: the item's own `color` (html string) if it has one, else a stable hue from a hash of the id
+## (fixed saturation/value so it reads on the dark slot).
+static func tint_for(item_id: String, item: Dictionary) -> Color:
+	if item.has("color") and str(item["color"]) != "":
+		return Color(str(item["color"]))
+	return Color.from_hsv(float(absi(item_id.hash()) % 360) / 360.0, 0.6, 0.85)
 
 
 ## The icon for an item: a Sprites override when present, else the generated glyph (cached per item id).
@@ -70,6 +81,8 @@ static func texture(item_id: String, item: Dictionary) -> Texture2D:
 	var body: Color = BODY[kind]
 	if kind == "pill" or kind == "herb":
 		body = body.lerp(TINTS[absi(item_id.hash()) % TINTS.size()], 0.7)
+	elif kind == "fish":
+		body = tint_for(item_id, item)
 	var palette := {"o": OUTLINE, "a": body, "b": body.lightened(0.45)}
 	var img := Image.create(SIZE, SIZE, false, Image.FORMAT_RGBA8)
 	var rows: Array = GLYPHS[kind]

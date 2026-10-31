@@ -66,3 +66,68 @@ func test_book_opens_focused_and_closes() -> void:
 	assert_true(closed[0], "closed emitted")
 	hud.queue_free()
 	await _frames()
+
+
+func test_herbs_page_lists_every_findable_herb() -> void:
+	var root := _tree().root
+	var gs: Node = root.get_node("GameState")
+	var c := new_character()
+	var herbs := HerbLore.findable(data())
+	HerbLore.record_find(c, herbs[0], 3)
+	gs.start_session(c)
+	gs.pending_event = ""
+	var book := VillageBook.new()
+	root.add_child(book)
+	book.open()
+	book.set_page("herbs")
+	await _frames()
+	var grid := book.get("_grid") as GridContainer
+	assert_eq(grid.get_child_count(), herbs.size(), "one slot per findable herb")
+	var first := grid.get_node(herbs[0]) as Button
+	var second := grid.get_node(herbs[1]) as Button
+	assert_true(first.text.contains("found 3"), "found herb shows its count")
+	assert_eq(second.text, "???", "unfound herb is ???")
+	assert_true(VillageBook.herb_order(data()).size() == herbs.size())
+	assert_true(grid.get_child(0).has_focus(), "a slot is focused after switching pages")
+	book.set_page("fish")
+	await _frames()
+	assert_eq(grid.get_child_count(), Fishing.catchable(data()).size(), "fish page again")
+	assert_true(grid.get_child(0).has_focus(), "focus kept after switching back")
+	book.queue_free()
+	await _frames()
+
+
+func test_item_icon_fish_tints_are_stable_and_distinct() -> void:
+	var a := ItemIcon.tint_for("silver_carp", data().items["silver_carp"])
+	var b := ItemIcon.tint_for("marsh_eel", data().items["marsh_eel"])
+	assert_true(a != b, "different fish, different tints")
+	assert_eq(a, ItemIcon.tint_for("silver_carp", data().items["silver_carp"]), "same id, same tint")
+	assert_eq(ItemIcon.kind_of(data().items["silver_carp"]), "fish")
+
+
+func test_sheet_button_opens_book() -> void:
+	var root := _tree().root
+	var gs: Node = root.get_node("GameState")
+	var c := new_character()
+	c.fishing_xp = 5
+	gs.start_session(c)
+	gs.pending_event = ""
+	var hud: CanvasLayer = load("res://src/ui/hud.tscn").instantiate()
+	root.add_child(hud)
+	await _frames()
+	var sheet: Control = hud.get("_screens")["toggle_character_sheet"]
+	sheet.open()
+	await _frames(3)
+	var button := sheet.find_child("VillageBookButton", true, false) as Button
+	assert_true(button != null, "sheet has the Open village book button")
+	if button != null:
+		button.pressed.emit()
+	await _frames()
+	var book: VillageBook = hud.get("_village_book")
+	assert_true(book.visible, "book opens")
+	assert_false(sheet.visible, "sheet hides")
+	book.close()
+	await _frames()
+	assert_true(sheet.visible, "closing returns to the sheet")
+	hud.queue_free()
+	await _frames()
