@@ -23,6 +23,7 @@ var _fast_skips: CheckButton
 var _animate_fights: CheckButton
 var _ambient: CheckButton
 var _reduce_motion: CheckButton
+var _auto_cast: CheckButton
 var _show_all_labels: CheckButton
 var _key_help: CheckButton
 var _sliders: Dictionary = {}  # setting key -> HSlider
@@ -45,7 +46,7 @@ func _init() -> void:
 	add_child(outer)
 	outer.add_child(UIStyle.label("Settings", 26, UIStyle.ACCENT))
 	_general = VBoxContainer.new()
-	_general.add_theme_constant_override("separation", 12)
+	_general.add_theme_constant_override("separation", 8)
 	outer.add_child(_general)
 	var box := _general
 	_build_controls(outer)
@@ -96,6 +97,11 @@ func _init() -> void:
 	_reduce_motion.add_theme_font_size_override("font_size", 18)
 	_reduce_motion.toggled.connect(func(on: bool): Settings.set_value("reduce_motion", on))
 	box.add_child(_reduce_motion)
+	_auto_cast = CheckButton.new()
+	_auto_cast.text = "Auto fishing (skip the timing bar)"
+	_auto_cast.add_theme_font_size_override("font_size", 18)
+	_auto_cast.toggled.connect(func(on: bool): Settings.set_value("auto_cast", on))
+	box.add_child(_auto_cast)
 	_show_all_labels = CheckButton.new()
 	_show_all_labels.text = "Show all place names (not only the near ones)"
 	_show_all_labels.add_theme_font_size_override("font_size", 18)
@@ -309,6 +315,7 @@ func _sync() -> void:
 	_animate_fights.set_pressed_no_signal(Settings.get_value("animate_fights"))
 	_ambient.set_pressed_no_signal(Settings.get_value("ambient_effects"))
 	_reduce_motion.set_pressed_no_signal(Settings.get_value("reduce_motion"))
+	_auto_cast.set_pressed_no_signal(Settings.get_value("auto_cast"))
 	_show_all_labels.set_pressed_no_signal(Settings.get_value("show_all_labels"))
 	_key_help.set_pressed_no_signal(Settings.get_value("key_help"))
 	for key in _sliders:
