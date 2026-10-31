@@ -125,6 +125,8 @@ func test_missing_hint_picks_first_uncaught_in_season_fish() -> void:
 	assert_eq(Fishing.missing_hint(c, d, "misty_forest", "Summer"), "Marsh Eel bites here in summer.")
 	Fishing.record_catch(c, "marsh_eel", 1)
 	Fishing.record_catch(c, "mist_koi", 1)
+	assert_eq(Fishing.missing_hint(c, d, "misty_forest", "Summer"), "Lotus Bass bites here in summer.")
+	Fishing.record_catch(c, "lotus_bass", 1)
 	assert_eq(Fishing.missing_hint(c, d, "misty_forest", "Summer"), "")
 	assert_eq(Fishing.missing_hint(c, d, "no_such_region", "Summer"), "")
 
