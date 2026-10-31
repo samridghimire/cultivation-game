@@ -13,6 +13,9 @@ var _buttons: VBoxContainer
 var _scroll: ScrollContainer
 var _description: Label
 var _portrait: PortraitBox
+var _friend_row: HBoxContainer
+var _friend_label: Label
+var _friend_hearts: TextureRect
 
 
 func _init() -> void:
@@ -32,6 +35,17 @@ func _init() -> void:
 	box.add_child(_title)
 	# A rule under the title so it does not read as one of the options (WU-161).
 	box.add_child(HSeparator.new())
+	# WU-418: friendship tier name and heart row under a villager's name.
+	_friend_row = HBoxContainer.new()
+	_friend_row.add_theme_constant_override("separation", 8)
+	_friend_row.visible = false
+	_friend_hearts = TextureRect.new()
+	_friend_hearts.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	_friend_hearts.stretch_mode = TextureRect.STRETCH_KEEP
+	_friend_row.add_child(_friend_hearts)
+	_friend_label = UIStyle.label("", 15, Color(0.85, 0.75, 0.6))
+	_friend_row.add_child(_friend_label)
+	box.add_child(_friend_row)
 	# Long menus (a sect's whole shop) scroll instead of running off the screen (WU-065).
 	_scroll = ScrollContainer.new()
 	_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
@@ -66,6 +80,23 @@ func open_for(source: Node) -> void:
 	visible = true
 
 
+## Whether the friendship heart row is shown (test hook).
+func hearts_visible() -> bool:
+	return _friend_row.visible
+
+
+func friendship_text() -> String:
+	return _friend_label.text
+
+
+func _set_header(header: Dictionary) -> void:
+	_friend_row.visible = not header.is_empty()
+	if header.is_empty():
+		return
+	_friend_label.text = String(header["label"])
+	_friend_hearts.texture = header["hearts"]
+
+
 func portrait_visible() -> bool:
 	return _portrait.visible
 
@@ -85,6 +116,7 @@ func _rebuild() -> void:
 		child.queue_free()
 	_title.text = _source.display_name
 	_portrait.set_portrait(_source.portrait_texture() if _source.has_method("portrait_texture") else null)
+	_set_header(_source.menu_header() if _source.has_method("menu_header") else {})
 	var options: Array[Dictionary] = _source.menu_options()
 	if options.is_empty():
 		_buttons.add_child(UIStyle.label("There is nothing to do here.", 16))

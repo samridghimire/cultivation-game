@@ -39,6 +39,11 @@ const TRENDS := {
 	"down": {"colors": {"a": Color("4fae5c")}, "rows": ["............", ".....oo.....", "....oaao....", "....oaao....", "....oaao....", ".ooooaaoooo.", ".oaaaaaaaao.", "..oaaaaaao..", "...oaaaao...", "....oaao....", ".....oo.....", "............"]},
 }
 
+## Friendship heart, 5x5: 'a' fill, 'o' outline, 'b' highlight (WU-418).
+const HEART := ["oo.oo", "oaooa", "oaaao", ".oao.", "..o.."]
+const HEART_FILL := Color("e0553c")
+const HEART_EMPTY := Color("3a2f33")
+
 static var _cache: Dictionary = {}
 
 
@@ -71,6 +76,31 @@ static func trend(direction: int) -> Texture2D:
 	if direction == 0:
 		return null
 	return _glyph("trend_" + ("up" if direction > 0 else "down"), TRENDS, "up" if direction > 0 else "down")
+
+
+## A row of `count` pixel hearts, the first `filled` red and the rest dark (WU-418); each heart is 5 px wide
+## with 1 px between, scaled by `px`.
+static func hearts(count: int, filled: int, px: int = 2) -> Texture2D:
+	count = maxi(count, 1)
+	filled = clampi(filled, 0, count)
+	px = maxi(px, 1)
+	var key := "hearts_%d_%d_%d" % [count, filled, px]
+	if not _cache.has(key):
+		var img := Image.create((count * 6 - 1) * px, 5 * px, false, Image.FORMAT_RGBA8)
+		for i in count:
+			var fill := HEART_FILL if i < filled else HEART_EMPTY
+			for y in 5:
+				var row: String = HEART[y]
+				for x in 5:
+					var ch := row.substr(x, 1)
+					if ch == ".":
+						continue
+					var col: Color = OUTLINE if ch == "o" else fill
+					if ch == "o" and i >= filled:
+						col = Color("6b5a60")
+					img.fill_rect(Rect2i((i * 6 + x) * px, y * px, px, px), col)
+		_cache[key] = ImageTexture.create_from_image(img)
+	return _cache[key]
 
 
 static func _glyph(key: String, defs: Dictionary, name: String) -> Texture2D:

@@ -5,6 +5,7 @@ extends SceneTree
 ##     --resolution 1280x800 -s res://tests/sim/screenshot_first_hour.gd
 ## WU-218: append `-- --crafter` for a new Alchemist's first hour (workshop, hint, gather site, crafting,
 ## journal Commissions, Deliver) as crafter_*.png.
+## WU-418: append `-- --friend` for friend.png (a villager menu with the heart row).
 ## WU-414: append `-- --book` for village_book.png.
 ## GFX-033: append `-- --storm` to render the first-hour shots under a storm.
 ## GFX-037: append `-- --season=Winter` (Spring/Summer/Autumn/Winter) to start on that season's first day.
@@ -65,6 +66,9 @@ func _start() -> void:
 		special = true
 	if OS.get_cmdline_user_args().has("--quarrel"):  # QA-182: a FOLK-004 quarrel between two villagers
 		_quarrel_shots(gs, c)
+		special = true
+	if OS.get_cmdline_user_args().has("--friend"):  # WU-418: a Qingshi villager at favor 65 and their menu
+		_friend_shots(gs)
 		special = true
 	if OS.get_cmdline_user_args().has("--cast"):  # QA-182: the CastBar on the jetty, marker frozen mid-sweep
 		_cast_shots(gs)
@@ -341,6 +345,20 @@ func _quarrel_shots(gs: Node, c: CharacterData) -> void:
 		hud.get("_banner").visible = false
 		gs.current_region = "qingshi_village"
 		root.get_node("EventBus").quarrel_requested.emit(a.id), "close": hud.get("_quarrel").close})
+
+
+## WU-418: a generated Qingshi villager at favor 65 (Close friend); their menu shows the tier and hearts.
+func _friend_shots(gs: Node) -> void:
+	shots.append({"name": "friend", "open": func() -> void:
+		hud.get("_banner").visible = false
+		gs.current_region = "qingshi_village"
+		for node in world.find_children("*", "Interactable", true, false):
+			var id := String(node.get("npc_id") if node.get("npc_id") != null else "")
+			if id != "" and gs.npcs.has(id) and not gs.data.npcs.has(id):
+				gs.npc_favor[id] = 65
+				hud.get("_choice_menu").open_for(node)
+				return
+		print("friend shot: no generated villager found"), "close": hud.get("_choice_menu").close})
 
 
 ## QA-182: the cast bar with the marker held mid-sweep (processing off so it stays put).

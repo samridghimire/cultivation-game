@@ -233,6 +233,37 @@ static func tier_name(data: GameData, favor: int) -> String:
 	return "" if i < 0 else String(data.family["folk_tiers"][i]["name"])
 
 
+## WU-418: "Friends: A, B (+N more)" for the generated villagers of `region_id` at friendship tier >= 0, highest tier
+## first then name, at most 3 names. "" when there are none. Pure.
+static func friends_line(npcs: Dictionary, data: GameData, region_id: String, favor: Dictionary) -> String:
+	var found: Array[Dictionary] = []
+	for c in Npcs.generated_in_region(npcs, data, region_id):
+		var t := tier_index(data, int(favor.get(c.id, 0)))
+		if t >= 0:
+			found.append({"name": c.name, "tier": t})
+	if found.is_empty():
+		return ""
+	found.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		if a["tier"] != b["tier"]:
+			return int(a["tier"]) > int(b["tier"])
+		return String(a["name"]) < String(b["name"]))
+	var names: PackedStringArray = []
+	for i in mini(found.size(), 3):
+		names.append(String(found[i]["name"]))
+	var line := "Friends: " + ", ".join(names)
+	if found.size() > 3:
+		line += " (+%d more)" % (found.size() - 3)
+	return line
+
+
+## "a friend", "an acquaintance": the tier name for the Look sentence. "" below the first tier.
+static func counts_you_line(data: GameData, npc_name: String, favor: int) -> String:
+	var tier := tier_name(data, favor).to_lower()
+	if tier == "":
+		return ""
+	return "%s counts you %s %s." % [npc_name, "an" if "aeiou".contains(tier.substr(0, 1)) else "a", tier]
+
+
 ## Villagers in `ids` whose tier rose above what `seen` records: [{id, tier}], the highest new tier only. Pure.
 static func new_tiers(data: GameData, seen: Dictionary, favor_by_id: Dictionary, ids: Array) -> Array[Dictionary]:
 	var result: Array[Dictionary] = []

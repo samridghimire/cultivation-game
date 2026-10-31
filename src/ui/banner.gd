@@ -14,6 +14,7 @@ const MAX_QUEUE := 4
 var _flash: ColorRect
 var _ribbon: PanelContainer
 var _title: Label
+var _portrait: PortraitBox
 var _subtitle: Label
 var _tween: Tween
 var _queue: Array = []
@@ -50,10 +51,19 @@ func _init() -> void:
 	style.set_border_width_all(2)
 	_ribbon.add_theme_stylebox_override("panel", style)
 	holder.add_child(_ribbon)
+	var ribbon_row := HBoxContainer.new()
+	ribbon_row.add_theme_constant_override("separation", 12)
+	ribbon_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_ribbon.add_child(ribbon_row)
+	# WU-418: an optional speaker portrait at the left of the ribbon.
+	_portrait = PortraitBox.new(2)
+	_portrait.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	ribbon_row.add_child(_portrait)
 	var box := VBoxContainer.new()
 	box.alignment = BoxContainer.ALIGNMENT_CENTER
 	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_ribbon.add_child(box)
+	box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	ribbon_row.add_child(box)
 	_title = UIStyle.label("", 44)
 	_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_title.add_theme_constant_override("outline_size", 8)
@@ -81,6 +91,10 @@ func ribbon_size() -> Vector2:
 	return _ribbon.size
 
 
+func portrait_shown() -> bool:
+	return _portrait.visible
+
+
 func title_text() -> String:
 	return _title.text
 
@@ -90,16 +104,16 @@ func subtitle_text() -> String:
 
 
 ## `low` banners (the turn of the seasons) never wait in the queue: if something is showing they are dropped.
-func announce(title: String, subtitle: String, color: Color, hold: float = HOLD_SECONDS, low: bool = false) -> void:
+func announce(title: String, subtitle: String, color: Color, hold: float = HOLD_SECONDS, low: bool = false, portrait: Texture2D = null) -> void:
 	if low and (visible or held):
 		return
 	if held or (visible and _tween != null):
-		_queue.append([title, subtitle, color, hold])
+		_queue.append([title, subtitle, color, hold, portrait])
 		while _queue.size() > MAX_QUEUE:
 			_drop_oldest()
 		_shorten_current()
 		return
-	_play(title, subtitle, color, hold)
+	_play(title, subtitle, color, hold, portrait)
 
 
 ## Hold or release the banner. Releasing plays the next queued banner if none is showing.
@@ -132,7 +146,7 @@ func finish_current() -> void:
 		hide()
 		return
 	var next: Array = _queue.pop_front()
-	_play(next[0], next[1], next[2], hold_for(float(next[3]), _queue.size()))
+	_play(next[0], next[1], next[2], hold_for(float(next[3]), _queue.size()), next[4] if next.size() > 4 else null)
 
 
 ## WU-409: a banner on screen with another waiting behind it fades after QUEUED_HOLD_SECONDS in total.
@@ -156,8 +170,9 @@ func _drop_oldest() -> void:
 	_queue.remove_at(0)
 
 
-func _play(title: String, subtitle: String, color: Color, hold: float) -> void:
-	_current = [title, subtitle, color, hold]
+func _play(title: String, subtitle: String, color: Color, hold: float, portrait: Texture2D = null) -> void:
+	_current = [title, subtitle, color, hold, portrait]
+	_portrait.set_portrait(portrait)
 	_played_msec = Time.get_ticks_msec()
 	if _tween != null:
 		_tween.kill()

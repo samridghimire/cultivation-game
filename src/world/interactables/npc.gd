@@ -127,6 +127,16 @@ static func look_of(id: String, fallback: Color) -> Dictionary:
 	return look
 
 
+## WU-418: {label, hearts} for the menu header of a generated villager at a friendship tier; {} otherwise.
+func menu_header() -> Dictionary:
+	if GameState.player == null or GameState.data.npcs.has(npc_id) or GameState.friendship_tier_count() == 0:
+		return {}
+	var filled := GameState.friendship_hearts(npc_id)
+	if filled <= 0:
+		return {}
+	return {"label": GameState.friendship_label(npc_id), "hearts": HudIcons.hearts(GameState.friendship_tier_count(), filled, 3)}
+
+
 func portrait_texture() -> Texture2D:
 	return PixelFigure.frame(figure_look(), "down", 0)
 
@@ -686,6 +696,10 @@ func _look() -> void:
 	var injuries := Injuries.describe(npc, GameState.data)
 	if not injuries.is_empty():
 		text += " Injuries: %s." % ", ".join(injuries)
+	if not GameState.data.npcs.has(npc_id):
+		var counts := Folk.counts_you_line(GameState.data, npc.name, int(GameState.npc_favor.get(npc_id, 0)))
+		if counts != "":
+			text += " " + counts
 	var tastes := known_tastes_text(GameState.world_flags, GameState.data, npc_id)
 	if tastes != "":
 		text += " " + tastes

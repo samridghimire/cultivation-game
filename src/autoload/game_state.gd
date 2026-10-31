@@ -3553,8 +3553,19 @@ func check_friendships() -> void:
 		player.folk_tier_seen[hit["id"]] = int(hit["tier"])
 		if tier.has("line"):
 			EventBus.post(String(tier["line"]).replace("{name}", npc.name), "social")
+			EventBus.friendship_reached.emit(String(hit["id"]), "%s: %s" % [npc.name, String(tier["name"])])
 		if tier.has("gift"):
 			player.add_item(String(tier["gift"]["item"]), int(tier["gift"]["count"]))
+
+
+## WU-418: number of friendship tiers (hearts shown in the villager menu).
+func friendship_tier_count() -> int:
+	return data.family.get("folk_tiers", []).size()
+
+
+## WU-418: filled hearts for a villager: tier index + 1 (0 below the first tier).
+func friendship_hearts(npc_id: String) -> int:
+	return Folk.tier_index(data, int(npc_favor.get(npc_id, 0))) + 1
 
 
 ## FOLK-007: "Friend", "Close friend"... for the UI; "" when below the first tier.
