@@ -845,3 +845,38 @@ func test_extort_mark_starts_a_rumor_until_it_expires() -> void:
 	assert_true(Rumors.eligible(c, d, flags, "qingshi_village", 11).has("takes_coin_to_settle"))
 	assert_false(Rumors.eligible(c, d, flags, "misty_forest", 11).has("takes_coin_to_settle"), "only where it happened")
 	assert_false(Rumors.eligible(c, d, flags, "qingshi_village", 41).has("takes_coin_to_settle"))
+
+
+func test_tea_lines_pick_by_day_and_season() -> void:
+	var d := data()
+	var a := Folk.tea_line(d, "Wen", "Friendly", 10, "winter", false)
+	var b := Folk.tea_line(d, "Wen", "Friendly", 11, "winter", false)
+	assert_true(a.contains("Wen") and a.contains("Friendly"))
+	assert_true(a != b, "consecutive days differ")
+	assert_eq(a, Folk.tea_line(d, "Wen", "Friendly", 10, "winter", false))
+	for day in range(0, 40):
+		assert_false(Folk.tea_line(d, "Wen", "x", day, "winter", false).contains("melon"), "no summer melon in winter")
+	assert_true(Folk.tea_line(d, "Wen", "x", 3, "summer", true) != Folk.tea_line(d, "Wen", "x", 3, "summer", false))
+	assert_eq(Folk.validate_visits(d).size(), 0)
+
+
+func test_tea_lines_validation() -> void:
+	var d := data()
+	var saved: Dictionary = d.family["folk_visits"].duplicate(true)
+	d.family["folk_visits"]["tea_lines"] = []
+	assert_gt(Folk.validate_visits(d).size(), 0)
+	d.family["folk_visits"] = saved.duplicate(true)
+	d.family["folk_visits"]["tea_lines"] = ["No name here"]
+	assert_gt(Folk.validate_visits(d).size(), 0)
+	d.family["folk_visits"] = saved.duplicate(true)
+	d.family["folk_visits"]["tip_tea_lines"] = ["{name} says {oops}"]
+	assert_gt(Folk.validate_visits(d).size(), 0)
+	d.family["folk_visits"] = saved
+
+
+func test_wedding_greetings_use_partner() -> void:
+	var n := 0
+	for line: String in data().family["folk_greetings"]["celebration"]["wedding"]:
+		if line.contains("{partner}"):
+			n += 1
+	assert_true(n >= 2)

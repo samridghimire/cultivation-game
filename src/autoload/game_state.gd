@@ -1480,11 +1480,12 @@ func share_tea(npc_id: String) -> void:
 	var npc: CharacterData = npcs[npc_id]
 	npc_favor[npc_id] = mini(100, int(npc_favor.get(npc_id, 0)) + int(rules["tea_favor"]))
 	player.folk_visit_day[npc_id] = GameClock.total_days
-	EventBus.post("You share a pot of tea with %s and talk about small things. (%s)" % [npc.name, Family.favor_progress(int(npc_favor[npc_id]), data)], "progress")
 	var neighbours: Array = []
 	for route: Dictionary in data.regions.get(current_region, {}).get("routes", []):
 		neighbours.append(String(route.get("to", "")))
-	var tip := Folk.roll_tip(player, data, world_flags, current_region, neighbours, int(npc_favor[npc_id]), npc_id, GameClock.total_days, Calendar.season_of(GameClock.total_days), rng, float(rules.get("tip_chance", 0.0)))
+	var season := Calendar.season_of(GameClock.total_days)
+	var tip := Folk.roll_tip(player, data, world_flags, current_region, neighbours, int(npc_favor[npc_id]), npc_id, GameClock.total_days, season, rng, float(rules.get("tip_chance", 0.0)))
+	EventBus.post(Folk.tea_line(data, String(npc.name), Family.favor_progress(int(npc_favor[npc_id]), data), GameClock.total_days, season, not tip.is_empty()), "progress")
 	if not tip.is_empty():
 		EventBus.post(Folk.tip_line(data, tip, String(npc.name), GameClock.total_days, Weather.of(data, current_region, GameClock.total_days)), "info")
 	EventBus.player_changed.emit()

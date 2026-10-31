@@ -497,6 +497,27 @@ static func visit_rules(data: GameData) -> Dictionary:
 	return data.family.get("folk_visits", {})
 
 
+## C-277: the line for a shared pot of tea on `today`. `tea_lines` (or, when a tip comes with it, `tip_tea_lines`) is an array of
+## strings or {season, text}; entries for another season are skipped, the rest are picked by today % size. {name} and {progress} are filled.
+static func tea_line(data: GameData, npc_name: String, progress: String, today: int, season: String, with_tip: bool) -> String:
+	var lines: Array = _tea_pool(visit_rules(data).get("tip_tea_lines" if with_tip else "tea_lines", []), season)
+	var text := "You share a pot of tea with {name} and talk about small things. ({progress})" if lines.is_empty() else String(lines[posmod(today, lines.size())])
+	return text.replace("{name}", npc_name).replace("{progress}", progress)
+
+
+static func _tea_pool(entries: Variant, season: String) -> Array:
+	var pool: Array = []
+	if not (entries is Array):
+		return pool
+	for entry: Variant in entries:
+		if entry is Dictionary:
+			if String((entry as Dictionary).get("season", season)) == season:
+				pool.append(String((entry as Dictionary).get("text", "")))
+		else:
+			pool.append(String(entry))
+	return pool
+
+
 ## Load errors in folk_visits: chance in (0, 1], tip_chance in [0, 1], whole numbers >= 0, min_favor not below folk_tips.min_favor.
 static func validate_visits(data: GameData) -> PackedStringArray:
 	var errors: PackedStringArray = []
@@ -514,6 +535,24 @@ static func validate_visits(data: GameData) -> PackedStringArray:
 			errors.append("family.json folk_visits: %s must be a whole number >= 0" % key)
 	if int(r.get("min_favor", 0)) < int(tip_rules(data).get("min_favor", 0)):
 		errors.append("family.json folk_visits: min_favor must be at least folk_tips.min_favor")
+	for key in ["tea_lines", "tip_tea_lines"]:
+		if not r.has(key):
+			continue
+		if not (r[key] is Array) or (r[key] as Array).is_empty():
+			errors.append("family.json folk_visits.%s must be a non-empty array" % key)
+			continue
+		for entry: Variant in r[key]:
+			var text := String((entry as Dictionary).get("text", "")) if entry is Dictionary else (String(entry) if entry is String else "")
+			if text == "":
+				errors.append("family.json folk_visits.%s: lines must be non-empty strings or {season, text}" % key)
+			elif entry is Dictionary and not ["spring", "summer", "autumn", "winter"].has(String(entry.get("season", ""))):
+				errors.append("family.json folk_visits.%s: unknown season in '%s'" % [key, text])
+			elif not text.contains("{name}"):
+				errors.append("family.json folk_visits.%s: '%s' needs {name}" % [key, text])
+			else:
+				var stripped := text.replace("{name}", "").replace("{progress}", "")
+				if stripped.contains("{"):
+					errors.append("family.json folk_visits.%s: '%s' has an unknown placeholder" % [key, text])
 	return errors
 
 
