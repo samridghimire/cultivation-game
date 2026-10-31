@@ -54,15 +54,24 @@ func _start() -> void:
 	if OS.get_cmdline_user_args().has("--gather-note"):
 		_gather_note_shots(gs)
 		return
+	var special := false
 	if OS.get_cmdline_user_args().has("--field"):  # GFX-029: a rented field with a young and a nearly ripe crop
 		_field_shots(gs, c)
-		return
+		special = true
+	if OS.get_cmdline_user_args().has("--quarrel"):  # QA-182: a FOLK-004 quarrel between two villagers
+		_quarrel_shots(gs, c)
+		special = true
+	if OS.get_cmdline_user_args().has("--cast"):  # QA-182: the CastBar on the jetty, marker frozen mid-sweep
+		_cast_shots(gs)
+		special = true
 	if party:
+		special = true
 		shots.append({"name": "celebration", "open": func() -> void:
 			hud.get("_banner").visible = false
 			for node in world.get_children():
 				if node.get_script() != null and String(node.get_script().resource_path).ends_with("celebration_lanterns.gd"):
 					world.get_node("Player").position = node.position + Vector2(0, 50), "close": func() -> void: pass})
+	if special:
 		return
 	shots.append({"name": "hud_arrival", "open": func() -> void: pass, "close": func() -> void: pass})
 	# WU-406: a generated villager's greeting bubble, and one with the gold "!" for a folk request.
@@ -129,7 +138,12 @@ func _start() -> void:
 	var merchant := _find_script("merchant.gd")
 	if merchant != null:
 		var shop_menu: Control = hud.get("_choice_menu")
-		shots.append({"name": "shop", "open": func() -> void: shop_menu.open_for(merchant), "close": shop_menu.close})
+		shots.append({"name": "shop_menu", "open": func() -> void: shop_menu.open_for(merchant), "close": shop_menu.close})
+	# QA-182: the ShopScreen itself (the merchant's menu above only lists its entries).
+	var shop: Control = hud.get("_shop")
+	shots.append({"name": "shop", "open": func() -> void:
+		hud.get("_banner").visible = false
+		root.get_node("EventBus").shop_requested.emit("Wandering Merchant", 0, [], "", []), "close": shop.close})
 	var report: Control = hud.get("_combat_report")
 	# A real fight through GameState.fight (WU-181): the boar is rated and resolved
 	# like in play; seed 11 is a newcomer win. The HUD opens the report itself.
@@ -286,6 +300,34 @@ func _field_shots(gs: Node, c: CharacterData) -> void:
 		field.queue_redraw(), "close": func() -> void: pass})
 
 
+## QA-182: two Qingshi villagers in a quarrel, the window opened through the HUD's signal.
+func _quarrel_shots(gs: Node, c: CharacterData) -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 5
+	var a := Npcs.spawn(gs.npcs, gs.data, rng, {"age_years": 35, "region": "qingshi_village", "realm": "mortal", "gender": "male"})
+	var b := Npcs.spawn(gs.npcs, gs.data, rng, {"age_years": 31, "region": "qingshi_village", "realm": "mortal", "gender": "female"})
+	var topic: Dictionary = Folk.quarrel_rules(gs.data)["topics"][0]
+	var today: int = root.get_node("GameClock").total_days
+	gs.world_flags[Folk.quarrel_flag("qingshi_village")] = {"a": a.id, "b": b.id, "topic": String(topic["id"]), "until": today + 20}
+	shots.append({"name": "quarrel", "open": func() -> void:
+		hud.get("_banner").visible = false
+		gs.current_region = "qingshi_village"
+		root.get_node("EventBus").quarrel_requested.emit(a.id), "close": hud.get("_quarrel").close})
+
+
+## QA-182: the cast bar with the marker held mid-sweep (processing off so it stays put).
+func _cast_shots(gs: Node) -> void:
+	var cast: Control = hud.get("_cast_bar")
+	shots.append({"name": "cast", "open": func() -> void:
+		hud.get("_banner").visible = false
+		var rng := RandomNumberGenerator.new()
+		rng.seed = 2
+		cast.open_for([{"item": "spirit_herb", "weight": 100, "min": 1, "max": 1}], 1, "Qingshi Jetty", rng)
+		cast.set("marker", 0.45)
+		cast.set_process(false)
+		cast.get("_bar").queue_redraw(), "close": cast.close})
+
+
 func _find_gather_site(site_name: String) -> Node:
 	var stack: Array[Node] = [world]
 	while not stack.is_empty():
@@ -324,7 +366,7 @@ func _process(_d: float) -> bool:
 		return false
 	frames += 1
 	# WU-386: after a fight a milestone banner is still fading; wait it out (at most ~3 s) so it never dims a screen shot.
-	if frames >= SETTLE_FRAMES and shot.get("wait_banner", false) and hud.get("_banner").visible:
+	if frames >= SETTLE_FRAMES and hud.get("_banner").visible and (shot.get("wait_banner", false) or shot["name"] != "hud_arrival"):  # QA-182: queued notices covered the modals
 		if banner_wait_start < 0:
 			banner_wait_start = Time.get_ticks_msec()
 		if Time.get_ticks_msec() - banner_wait_start < BANNER_WAIT_MSEC:

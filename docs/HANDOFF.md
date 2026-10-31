@@ -2,6 +2,11 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## Village screens look (QA-182)
+
+`tests/sim/screenshot_first_hour.gd` flags now combine (`-- --celebration --field --quarrel --cast` renders all four); `--quarrel` opens the QuarrelWindow through `quarrel_requested`, `--cast` the CastBar with the marker frozen at 0.45, and the `shop` shot is the ShopScreen itself (the merchant's list is `shop_menu`, only when a merchant node exists). Every shot except `hud_arrival` now waits out a fading banner (queued notices used to cover the modals).
+Viewed at 1280x720 (all) and 1280x800 (run clean): celebration, quarrel, field, shop, cast, encounter, elder_mo_dialogue, hud_arrival, journal, character_sheet. Nothing clipped or overlapping; quarrel and cast read well, shop list/detail fit with the footer note, the journal and sheet scroll as designed. No one-place fixes needed.
+
 ## State on 2026-10-31 (planner, 06:15 UTC)
 - 13 tasks landed (QA-181, GFX-030/031/032, WU-411/412, FARM-003/004, GATHER-001, FISH-004, GUIDE-203, C-269/277). Review
   a12ccef..3579385 fixed C-277 inline, nothing filed. Live claim: WEATHER-005.
