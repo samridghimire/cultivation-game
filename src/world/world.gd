@@ -43,6 +43,7 @@ var _decor: Array[Dictionary] = []
 var _season_tint: CanvasModulate
 var _season := ""
 var _ambient: Node
+var _village_life: VillageLife
 var _weather_kind := "clear"
 ## The pinned weather, readable by UI that draws its own sky (the duel stage, GFX-038); "" = none.
 static var pinned_weather := ""
@@ -155,6 +156,7 @@ func _tint_for(season: String) -> Color:
 
 ## Rebuilds the particle layer for the region, season and "Ambient effects" setting.
 func _refresh_ambient() -> void:
+	_refresh_village_life()
 	if _ambient != null:
 		_ambient.queue_free()
 		_ambient = null
@@ -176,6 +178,15 @@ func _refresh_ambient() -> void:
 		_ambient = Ambient.make_emitter(kind, map_size)
 	add_child(_ambient)
 	_start_lightning()
+
+
+## GFX-040: chimney smoke, pond ripples, jumping fish and birds, rebuilt on season/weather change.
+func _refresh_village_life() -> void:
+	if _village_life == null:
+		_village_life = VillageLife.new()
+		_village_life.name = "VillageLife"
+		add_child(_village_life)
+	_village_life.setup(_region, _season, _weather_kind, MotionFx.reduced(), map_size)
 
 
 ## GFX-033: a white flash every 6-14 s on storm days (none with reduce_motion).
