@@ -2330,6 +2330,24 @@ func test_full_month_greeting_names_the_newborn() -> void:
 	greetings["celebration"] = saved
 
 
+func test_wedding_greeting_names_the_newest_spouse() -> void:
+	_start()
+	var gs := _game_state()
+	var groom := Npcs.spawn(gs.npcs, gs.data, seeded_rng(5), {"age_years": 40, "region": "qingshi_village", "realm": "mortal"})
+	var late_wife := Npcs.spawn(gs.npcs, gs.data, seeded_rng(6), {"age_years": 40, "region": "qingshi_village", "realm": "mortal"})
+	var bride := Npcs.spawn(gs.npcs, gs.data, seeded_rng(7), {"age_years": 30, "region": "qingshi_village", "realm": "mortal"})
+	late_wife.alive = false
+	groom.spouses.append(late_wife.id)
+	groom.spouses.append(bride.id)
+	var greetings: Dictionary = gs.data.family["folk_greetings"]
+	var saved: Variant = greetings.get("celebration", {}).duplicate(true)
+	greetings["celebration"] = {"wedding": ["{partner} and I thank you."]}
+	Folk.start_celebration(gs.world_flags, [groom.id], GameClock.total_days, gs.data)
+	assert_eq(gs.greeting_for(groom.id), "%s and I thank you." % bride.name, "a widower's new bride, not the late wife")
+	groom.spouses.clear()
+	assert_eq(gs.greeting_for(groom.id), "my beloved and I thank you.")
+	greetings["celebration"] = saved
+
 func test_chat_may_give_a_tip_that_boosts_gathering() -> void:
 	var c := _start()
 	var gs := _game_state()

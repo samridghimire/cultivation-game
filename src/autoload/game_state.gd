@@ -1425,7 +1425,7 @@ func greeting_for(npc_id: String) -> String:
 		return ""
 	var line := Folk.greeting(npc, int(npc_favor.get(npc_id, 0)), GameClock.total_days, data, world_flags).replace("{player}", player.name)
 	if line.contains("{partner}"):
-		line = line.replace("{partner}", String(npcs[npc.spouses[0]].name) if not npc.spouses.is_empty() and npcs.has(npc.spouses[0]) else "their spouse")
+		line = line.replace("{partner}", String(npcs[npc.spouses.back()].name) if not npc.spouses.is_empty() and npcs.has(npc.spouses.back()) else "my beloved")
 	if line.contains("{child}"):
 		line = line.replace("{child}", String(npcs[npc.children.back()].name) if not npc.children.is_empty() and npcs.has(npc.children.back()) else "the little one")
 	return line

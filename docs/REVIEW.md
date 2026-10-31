@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: a12ccef
+Last reviewed commit: 3579385
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -1274,3 +1274,17 @@ Last reviewed commit: a12ccef
   - Notes, not filed: FISH-003's cast quality is always 0.5 until WU-412 adds the cast bar; the meditation menu's storm
     tag on contemplation still reads today's weather (a hint; the progress is now averaged); `check_invite` does not
     re-check the companion's region (the menu only lists villagers present).
+- 2026-10-31 (reviewer, 1st run): reviewed a12ccef..3579385 (TECH-010, C-276, FOLK-006, WU-410, GFX-027, QA-181, GFX-031,
+  FARM-003, WU-412, C-269, GFX-032, GATHER-001, C-277; [PLAN]/[REVIEW] skipped). Main green (2749 tests before this
+  review). No worker touched BACKLOG/CHANGELOG; no SAVE_VERSION change (`gather_xp` defaults to 0, quarrel marks are world
+  flags, the `auto_cast` setting has a default); no binary assets (HUD glyphs, item frames and confetti are drawn in code).
+  - GATHER-001 follows its spec (xp 0 leaves the seeded draws unchanged, bonus before the weather penalty, rank-up once);
+    FARM-003 filters only Guidance by season, the field menu greys out-of-season plants; FOLK-006 marks expire with the
+    next monthly roll; WU-412's cast bar grabs focus, Esc is a miss, `auto_cast` skips it; TECH-010 made `greeting_for`
+    a pure getter (the world calls `receive_greeting_gift` once per greeting).
+  - Fixed (C-277): the wedding greeting filled {partner} with the villager's *first* spouse, so a widower's wedding
+    toasted the late wife (dead spouses stay in `spouses` until pruned); now the newest spouse, and the fallback reads
+    "my beloved" (the lines are first person: "{partner} and I have wine"). Test added.
+  - Notes, not filed: herb lore's extra unit applies to every gathered stack, ore at the quarry included (as specced);
+    a friend's tip item that is a rare table entry counts as a rare find for xp (+1); the cast bar draws its zone from
+    GameState.rng (UI touching the session rng, harmless but shifts later draws).
