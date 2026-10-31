@@ -25,6 +25,8 @@ func get_options() -> Array[Dictionary]:
 		options.append({"label": label, "description": info, "action": GameState.plant_field.bind(item_id), "disabled": reason != "", "reason": reason, "keep_open": true})
 	var water_reason := FieldPlots.check_water(GameState.player, place, plot_key, today, Weather.of(data, GameState.current_region, today))
 	options.append({"label": "Water the field", "description": info, "action": GameState.water_field, "disabled": water_reason != "", "reason": water_reason, "keep_open": true})
+	var nourish_reason := FieldPlots.check_nourish(GameState.player, place, plot_key, today)
+	options.append({"label": "Nourish with qi (%d qi)" % FieldPlots.nourish_cost(place), "description": info, "action": GameState.nourish_field, "disabled": nourish_reason != "", "reason": nourish_reason, "keep_open": true})
 	if int(place.get("expand_cost", 0)) > 0 and not bool(GameState.player.field_plots.get(plot_key, {}).get("expanded", false)):
 		var expand_reason := FieldPlots.check_expand(GameState.player, place, plot_key, today)
 		options.append({"label": "Enlarge the field (%d stones, %d plots)" % [int(place["expand_cost"]), int(place["max_plots"])], "description": info, "action": GameState.expand_field, "disabled": expand_reason != "", "reason": expand_reason, "keep_open": true})

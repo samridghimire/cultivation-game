@@ -3183,6 +3183,22 @@ func water_field() -> void:
 	EventBus.player_changed.emit()
 
 
+## Press qi into the region's field (FARM-004): its crops grow 2 days at once. Takes no time.
+func nourish_field() -> void:
+	EventBus.topic = "trade"
+	var place := FieldPlots.place_def(data, current_region)
+	if not _can_act() or place.is_empty():
+		return
+	var result := FieldPlots.nourish(player, place, FieldPlots.key(current_region, place), GameClock.total_days)
+	if result["ok"]:
+		var name: String = data.items.get(result["item"], {}).get("name", result["item"])
+		var left := int(result["days_left"])
+		EventBus.post("You press qi into the soil; the %s stirs (%s)." % [name, "ready now" if left <= 0 else "ready in %s" % Calendar.format_duration(left)], "progress")
+	else:
+		EventBus.post(result["reason"], "warning")
+	EventBus.player_changed.emit()
+
+
 ## Pay to enlarge the region's field once (FARM-002). Takes no time.
 func expand_field() -> void:
 	EventBus.topic = "trade"

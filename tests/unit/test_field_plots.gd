@@ -222,3 +222,61 @@ func test_real_fields_season_data() -> void:
 	assert_eq(FieldPlots.plant_seasons(place, "peach_blossom_petal"), ["spring"])
 	assert_false(FieldPlots.plantable(place, _day_of("Winter")).has("village_mugwort"))
 	assert_true(FieldPlots.plantable(place, _day_of("Winter")).has("spirit_herb"))
+
+
+func _growing(days_left: int = 10) -> CharacterData:
+	var c := _farmer()
+	c.realm_index = 1
+	c.qi = 100.0
+	FieldPlots.rent(c, "qingshi_village", _place(), 10)
+	FieldPlots.plant(c, data(), _place(), KEY, "spirit_herb", 10)
+	c.field_plots[KEY]["crops"][0]["days_left"] = days_left
+	return c
+
+
+func test_nourish_advances_and_costs_qi() -> void:
+	var c := _growing()
+	var r := FieldPlots.nourish(c, _place(), KEY, 10)
+	assert_true(r["ok"])
+	assert_eq(c.field_plots[KEY]["crops"][0]["days_left"], 8)
+	assert_eq(c.qi, 70.0)
+	assert_eq(c.field_plots[KEY]["nourished_day"], 10)
+	assert_eq(r["days_left"], 8)
+
+
+func test_nourish_wood_root_and_cap_at_ripe() -> void:
+	var c := _growing(2)
+	c.spiritual_roots = {"wood": 60}
+	FieldPlots.nourish(c, _place(), KEY, 10)
+	assert_eq(c.field_plots[KEY]["crops"][0]["days_left"], 0, "never past ripe")
+	var d := _growing()
+	d.spiritual_roots = {"wood": 60}
+	FieldPlots.nourish(d, _place(), KEY, 10)
+	assert_eq(d.field_plots[KEY]["crops"][0]["days_left"], 7)
+
+
+func test_nourish_refusals() -> void:
+	var p := _place()
+	var c := _growing()
+	c.realm_index = 0
+	assert_true(FieldPlots.check_nourish(c, p, KEY, 10).contains("cultivator"), "mortal")
+	c.realm_index = 1
+	c.qi = 5.0
+	assert_true(FieldPlots.check_nourish(c, p, KEY, 10).contains("30 qi"), "no qi")
+	c.qi = 100.0
+	assert_eq(FieldPlots.check_nourish(c, p, KEY, 10), "")
+	FieldPlots.nourish(c, p, KEY, 10)
+	assert_true(FieldPlots.check_nourish(c, p, KEY, 10).contains("already"), "once a day")
+	assert_eq(FieldPlots.check_nourish(c, p, KEY, 11), "", "next day is fine")
+	assert_true(FieldPlots.check_nourish(_growing(0), p, KEY, 10).contains("growing"), "ripe")
+	assert_true(FieldPlots.check_nourish(_growing(), p, KEY, _day_of("Winter")).contains("frozen") or FieldPlots.check_nourish(_growing(), p, KEY, _day_of("Winter")).contains("Rent"), "frozen or rent lapsed")
+	assert_true(FieldPlots.check_nourish(_farmer(), p, KEY, 10).contains("Rent"), "not rented")
+
+
+func test_nourish_cost_validation() -> void:
+	var d := data()
+	var region: Dictionary = d.regions["qingshi_village"].duplicate(true)
+	for place: Dictionary in region["places"]:
+		if place.get("type", "") == "field_plot":
+			place["nourish_qi"] = 0
+	assert_gt(FieldPlots.validate(d, "qingshi_village", region).size(), 0)

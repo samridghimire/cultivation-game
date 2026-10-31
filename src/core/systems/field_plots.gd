@@ -6,12 +6,14 @@ extends RefCounted
 ## {"<region_id>:<display_name>": {paid_until: int (day), crops: [{item, days_left}]}}.
 ## FARM-002: an entry may also hold watered_day (the last day it was watered by hand) and expanded
 ## (true once the player paid the place's expand_cost: the plots rise to max_plots).
+## FARM-004: nourished_day is the last day qi was pressed into the soil (once a day, costs nourish_qi).
 ## Tuned by the region's "field_plot" place in data/regions.json.
 
 const TYPE := "field_plot"
 const SEASONS: Array[String] = ["spring", "summer", "autumn", "winter"]
 const RENEW_WINDOW := 10
 const WOOD_MIN_PURITY := 50
+const DEFAULT_NOURISH_QI := 30
 
 
 ## The region's field_plot place, or {}.
@@ -140,6 +142,52 @@ static func water(c: CharacterData, place: Dictionary, plot_key: String, today: 
 		return {"ok": false, "reason": reason}
 	c.field_plots[plot_key]["watered_day"] = today
 	return {"ok": true, "reason": ""}
+
+
+## Why `c` cannot press qi into the field today, or "" (FARM-004). Needs a cultivator, enough qi,
+## an unfrozen field with an unripe crop, and no earlier nourishing today.
+static func check_nourish(c: CharacterData, place: Dictionary, plot_key: String, today: int) -> String:
+	if not rented(c, plot_key, today):
+		return "Rent the field first."
+	if c.realm_index < 1:
+		return "Only a cultivator can press qi into the soil."
+	var growing := false
+	for crop: Dictionary in _entry(c, plot_key).get("crops", []):
+		growing = growing or int(crop["days_left"]) > 0
+	if not growing:
+		return "Nothing in the field is growing."
+	if is_frozen(place, today):
+		return "The ground is frozen."
+	if int(_entry(c, plot_key).get("nourished_day", -1)) == today:
+		return "You already nourished the field today."
+	var cost := nourish_cost(place)
+	if c.qi < cost:
+		return "You need %d qi." % cost
+	return ""
+
+
+static func nourish_cost(place: Dictionary) -> int:
+	return int(place.get("nourish_qi", DEFAULT_NOURISH_QI))
+
+
+## Spends the qi and advances every growing crop by 2 days (3 with a Wood root 50+), never past ripe.
+## Returns {ok, reason, item, days_left} where item/days_left describe the first growing crop.
+static func nourish(c: CharacterData, place: Dictionary, plot_key: String, today: int) -> Dictionary:
+	var reason := check_nourish(c, place, plot_key, today)
+	if reason != "":
+		return {"ok": false, "reason": reason}
+	c.qi -= nourish_cost(place)
+	var step := 3 if int(c.spiritual_roots.get("wood", 0)) >= WOOD_MIN_PURITY else 2
+	var entry: Dictionary = c.field_plots[plot_key]
+	entry["nourished_day"] = today
+	var first := {}
+	for crop: Dictionary in entry.get("crops", []):
+		if int(crop["days_left"]) <= 0:
+			continue
+		crop["days_left"] = maxi(0, int(crop["days_left"]) - step)
+		if first.is_empty():
+			first = crop
+	return {"ok": true, "reason": "", "item": String(first.get("item", "")), "days_left": int(first.get("days_left", 0))}
 
 
 ## Why `c` cannot expand the field, or "".
@@ -303,6 +351,8 @@ static func validate(data: GameData, region_id: String, region: Dictionary) -> A
 		var rain := int(place.get("rain_bonus_days", 0))
 		if rain < 0 or rain > 3:
 			errors.append("%s: rain_bonus_days must be 0..3" % who)
+		if place.has("nourish_qi") and int(place["nourish_qi"]) < 1:
+			errors.append("%s: nourish_qi must be >= 1" % who)
 		var wood := int(place.get("wood_bonus", 1))
 		if wood < 0 or wood > 2:
 			errors.append("%s: wood_bonus must be 0..2" % who)
