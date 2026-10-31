@@ -145,3 +145,22 @@ func test_backdrop_silhouettes() -> void:  # GFX-035
 func test_stage_is_taller() -> void:  # GFX-035
 	assert_true(DuelStage.STAGE_HEIGHT >= 130.0 * 1.4)
 	assert_eq(DuelStage.new().custom_minimum_size.y, DuelStage.STAGE_HEIGHT)
+
+
+func test_hill_arc_stays_within_bounds() -> void:
+	var pts := DuelStage.hill_arc(100.0, 50.0, 60.0, 30.0)
+	assert_eq(pts[0].y, 50.0)
+	assert_true(absf(pts[pts.size() - 1].y - 50.0) < 0.001)
+	assert_true(absf(pts[0].x - 40.0) < 0.001)
+	assert_true(absf(pts[pts.size() - 1].x - 160.0) < 0.001)
+	for p in pts:
+		assert_true(p.y <= 50.001 and p.y >= 50.0 - 30.001)
+
+
+func test_stage_clips_and_reads_pinned_weather() -> void:
+	var s := DuelStage.new()
+	assert_true(s.clip_contents)
+	DuelStage.WorldScript.pinned_weather = "storm"
+	assert_true(s.is_raining())
+	DuelStage.WorldScript.pinned_weather = ""
+	s.free()

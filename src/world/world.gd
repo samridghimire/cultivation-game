@@ -44,6 +44,8 @@ var _season_tint: CanvasModulate
 var _season := ""
 var _ambient: Node
 var _weather_kind := "clear"
+## The pinned weather, readable by UI that draws its own sky (the duel stage, GFX-038); "" = none.
+static var pinned_weather := ""
 var _forced_weather := ""  # GFX-036: screenshots/tests pin the weather here
 var _lightning_timer: Timer
 var _strikes := 0
@@ -122,6 +124,13 @@ func _on_days_advanced(_days: int) -> void:
 	tween.tween_property(_season_tint, "color", _tint_for(season), 0.6)
 
 
+## The weather for a region and day, honouring a pinned (screenshot/test) weather.
+static func weather_today(data: GameData, rid: String, day: int) -> String:
+	if pinned_weather != "":
+		return pinned_weather
+	return Weather.of(data, rid, day)
+
+
 func _weather_today() -> String:
 	if _forced_weather != "":
 		return _forced_weather
@@ -131,6 +140,7 @@ func _weather_today() -> String:
 ## Screenshots/tests only: pins the weather kind so clock advances do not replace it.
 func force_weather(kind: String) -> void:
 	_forced_weather = kind
+	pinned_weather = kind
 	_weather_kind = kind
 	if _season_tint != null:
 		_season_tint.color = _tint_for(_season)
@@ -229,6 +239,8 @@ func _on_setting_changed(key: String, _value: Variant) -> void:
 
 
 func _exit_tree() -> void:
+	if _forced_weather != "":
+		pinned_weather = ""
 	if get_viewport() != null and get_viewport().size_changed.is_connected(_fit_pixel_zoom):
 		get_viewport().size_changed.disconnect(_fit_pixel_zoom)
 	if Settings.changed.is_connected(_on_setting_changed):

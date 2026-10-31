@@ -4,6 +4,7 @@ extends Control
 ## left, the foe on the right; `blow()` lunges the striker and flashes the struck one,
 ## `show_end_pose()` leaves the loser darkened and lying down. Placeholder art drawn in _draw().
 
+const WorldScript := preload("res://src/world/world.gd")
 const LUNGE := 24.0
 const LUNGE_SECONDS := 0.12
 const FOE_ROBE := Color("3a2f3d")
@@ -55,6 +56,7 @@ const STAGE_SHAKE_PIXELS := 3.0
 
 func _init() -> void:
 	custom_minimum_size = Vector2(0, STAGE_HEIGHT)
+	clip_contents = true
 	visible = false
 
 
@@ -272,6 +274,23 @@ static func sky_colors(season: String) -> Array:
 	return SKY_BY_SEASON.get(season, SKY_BY_SEASON["summer"])
 
 
+## True when today's weather (or the pinned screenshot weather) is rain or storm.
+func is_raining() -> bool:
+	if GameState.data == null:
+		return WorldScript.pinned_weather == "rain" or WorldScript.pinned_weather == "storm"
+	var weather := WorldScript.weather_today(GameState.data, GameState.current_region, GameClock.total_days)
+	return weather == "rain" or weather == "storm"
+
+
+## The upper half of a circle as a hill outline: starts and ends on `base_y`, never rises above `base_y - max_h`.
+static func hill_arc(cx: float, base_y: float, r: float, max_h: float, steps: int = 16) -> PackedVector2Array:
+	var pts := PackedVector2Array()
+	for i in steps + 1:
+		var a := PI * float(i) / float(steps)
+		pts.append(Vector2(cx - cos(a) * r, base_y - minf(sin(a) * r, max_h)))
+	return pts
+
+
 func _draw_backdrop(map: Dictionary, rid: String) -> void:
 	var top_h := size.y - GROUND_BAND
 	var sky := sky_colors(Calendar.season_of(GameClock.total_days))
@@ -283,24 +302,23 @@ func _draw_backdrop(map: Dictionary, rid: String) -> void:
 	var col := Color(map.get("ground", "4d6b3c")).darkened(0.45).lerp(haze, HAZE)
 	var kind := silhouette_for(rid)
 	var horizon := top_h
-	var raining := false
-	if get_tree() != null:
-		var weather := Weather.of(GameState.data, rid, GameClock.total_days) if GameState.data != null else "clear"
-		raining = weather == "rain" or weather == "storm"
-	if raining:
-		draw_rect(Rect2(0.0, 0.0, size.x, top_h), Color(0.12, 0.14, 0.2, 0.35))
+	if is_raining():
+		draw_rect(Rect2(0.0, 0.0, size.x, top_h), Color(0.12, 0.14, 0.2, 0.55))
 	else:
 		for c in cloud_shapes(rid, size.x, top_h):
 			draw_set_transform(Vector2(c["x"], c["y"]), 0.0, Vector2(1.0, 0.3))
 			draw_circle(Vector2.ZERO, c["r"], Color(1, 1, 1, 0.15))
 		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
-	var far := (map_ground_color(map).darkened(0.35)).lerp(haze, 0.7)  # distant mountain line
+	var far := (map_ground_color(map).darkened(0.35)).lerp(haze, 0.55)  # distant mountain line
 	for s in silhouette_shapes(rid + "_far", "hills", size.x):
-		draw_circle(Vector2(s["x"], horizon + 34.0 - float(s["h"]) * 0.5), 60.0 + float(s["h"]) * 0.6, far)
+		var fr := 60.0 + float(s["h"]) * 0.6
+		draw_colored_polygon(hill_arc(s["x"], horizon, fr, minf(float(s["h"]) + 14.0, top_h * 0.45)), far)
 	for s in silhouette_shapes(rid, kind, size.x):
 		var x: float = s["x"]
 		var w: float = s["w"]
 		var h: float = s["h"]
+		if kind == "roofs" and x + w + 12.0 > size.x:
+			continue
 		match kind:
 			"pines":
 				for row in int(h / PIXEL):
@@ -324,7 +342,7 @@ func _draw_backdrop(map: Dictionary, rid: String) -> void:
 				if s.get("tuft", false):
 					draw_rect(Rect2(x - 4.0, horizon - 14.0, 14.0, 14.0), col.lightened(0.15))
 			_:
-				draw_circle(Vector2(x, horizon + 20.0), w, col)
+				draw_colored_polygon(hill_arc(x, horizon, w, h), col)
 
 
 const HAZE := 0.45
