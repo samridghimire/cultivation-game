@@ -15,6 +15,8 @@ var data: GameData
 var player: CharacterData
 ## Persistent world facts, e.g. {"villager_dead": true}.
 var world_flags: Dictionary = {}
+## The merchant whose shop is open (set by ShopScreen.open), for its own discounts.
+var shop_name := ""
 ## Open auctions (Auctions): house_id -> {opening, lots}.
 var auctions: Dictionary = {}
 ## The cultivator just beaten whose cultivation may still be devoured
@@ -549,7 +551,7 @@ func buy_item(item_id: String, faction: String = "", quantity: int = 1) -> void:
 	EventBus.topic = "trade"
 	if not _can_act():
 		return
-	var result := Items.buy(player, data, item_id, quantity, faction, buy_multiplier(), price_season())
+	var result := Items.buy(player, data, item_id, quantity, faction, buy_multiplier(item_id), price_season())
 	if result["ok"]:
 		var item_name: String = data.items[item_id]["name"]
 		var what := Text.a(item_name) if quantity == 1 else "%d %s" % [quantity, item_name]
@@ -1036,7 +1038,7 @@ func choose_encounter(index: int) -> void:
 		return
 	var encounter: Dictionary = data.encounters.get(pending_encounter, {})
 	var renown_before := Renown.value(player, current_region)
-	var result := Exploration.resolve_choice(player, data, encounter, index, world_flags, current_region, rng)
+	var result := Exploration.resolve_choice(player, data, encounter, index, world_flags, current_region, rng, GameClock.total_days)
 	_effect_renown_banner(renown_before)
 	if not result["ok"]:
 		EventBus.post(result["reason"], "warning")
@@ -1469,7 +1471,7 @@ func greeting_for(npc_id: String) -> String:
 	var npc: CharacterData = npcs.get(npc_id)
 	if npc == null:
 		return ""
-	var line := Folk.greeting(npc, int(npc_favor.get(npc_id, 0)), GameClock.total_days, data, world_flags).replace("{player}", player.name)
+	var line := Folk.greeting(npc, int(npc_favor.get(npc_id, 0)), GameClock.total_days, data, world_flags, Weather.of(data, current_region, GameClock.total_days)).replace("{player}", player.name)
 	if line.contains("{partner}"):
 		line = line.replace("{partner}", String(npcs[npc.spouses.back()].name) if not npc.spouses.is_empty() and npcs.has(npc.spouses.back()) else "my beloved")
 	if line.contains("{child}"):
@@ -2686,8 +2688,12 @@ func market_multiplier() -> float:
 
 
 ## Buy-side multiplier: world events, local renown and a friend's price. Sell prices use market_multiplier() only.
-func buy_multiplier() -> float:
-	return market_multiplier() * Renown.buy_multiplier(player, data, current_region) * Letters.deal_multiplier(player, current_region, GameClock.total_days)
+## With `item_id`, the open shop's own discount for that item applies too (ShopDiscounts, WEATHER-006).
+func buy_multiplier(item_id: String = "") -> float:
+	var mult := market_multiplier() * Renown.buy_multiplier(player, data, current_region) * Letters.deal_multiplier(player, current_region, GameClock.total_days)
+	if item_id != "":
+		mult *= ShopDiscounts.discount_mult(data, current_region, shop_name, item_id, world_flags, GameClock.total_days)
+	return mult
 
 
 ## Local renown for a source (RENOWN-001); announces a new title.

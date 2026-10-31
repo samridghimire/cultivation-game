@@ -10,6 +10,8 @@ extends RefCounted
 ##                              for any other next realm, and while a bonus is already waiting
 ##   set_flag: String | [String]    set a world flag (or each flag of a list)
 ##   clear_flag: String | [String]  clear a world flag (or each flag of a list)
+##   flag_days: int             (WEATHER-006, >= 1) with set_flag: the flags expire after that many days
+##                              (stored as {"until": day}); read them with `flag_active`
 ##   learn_technique: String    learn a technique (see techniques.gd)
 ##   heal_injury: String        heal one injury id, or "all" (see injuries.gd)
 ##   burn_lifespan: int         spend years of lifespan (refused if it would kill outright)
@@ -91,7 +93,7 @@ static func _check_breakthrough_realm(c: CharacterData, data: GameData, realm_id
 
 ## Applies effects. `flags` is the world flag dictionary (mutated by set_flag).
 ## Returns a list of human-readable outcome strings.
-static func apply(c: CharacterData, data: GameData, effects: Dictionary, flags: Dictionary, region_id: String = "") -> PackedStringArray:
+static func apply(c: CharacterData, data: GameData, effects: Dictionary, flags: Dictionary, region_id: String = "", today: int = -1) -> PackedStringArray:
 	var notes: PackedStringArray = []
 	if effects.has("renown") and region_id != "":
 		var region_name := String(data.regions[region_id].get("name", region_id)) if data.regions.has(region_id) else region_id
@@ -181,11 +183,21 @@ static func apply(c: CharacterData, data: GameData, effects: Dictionary, flags: 
 		var delta := int(attribute_changes[attr_id])
 		c.attributes[attr_id] = c.attribute(attr_id) + delta
 		notes.append("%s %+d" % [String(attr_id).capitalize(), delta])
+	var timed := effects.has("flag_days") and today >= 0
 	for flag in flag_list(effects.get("set_flag", "")):
-		flags[flag] = true
+		flags[flag] = {"until": today + int(effects["flag_days"])} if timed else true
 	for flag in flag_list(effects.get("clear_flag", "")):
 		flags.erase(flag)
 	return notes
+
+
+## WEATHER-006: whether world flag `key` counts today. A plain truthy value always does; a timed flag
+## ({"until": day}) only while `today < until`. Missing or false = not active.
+static func flag_active(flags: Dictionary, key: String, today: int) -> bool:
+	var value: Variant = flags.get(key, false)
+	if value is Dictionary:
+		return today < int((value as Dictionary).get("until", 0))
+	return bool(value)
 
 
 ## A set_flag/clear_flag value (a String or an Array of Strings) as a list.
@@ -200,7 +212,7 @@ static func flag_list(value: Variant) -> PackedStringArray:
 
 
 const KEYS: Array[String] = [
-	"qi", "alignment", "items", "breakthrough_bonus", "breakthrough_realm", "set_flag", "clear_flag",
+	"qi", "alignment", "items", "breakthrough_bonus", "breakthrough_realm", "set_flag", "clear_flag", "flag_days",
 	"learn_technique", "heal_injury", "burn_lifespan", "extend_lifespan", "learn_recipe", "dao_insight",
 	"buff", "reputation", "witnessed", "attributes", "bloodline", "practice_days",
 	"profession_xp", "renown", "contribution", "villager_favor", "elder_favor", "shorten_injury",
@@ -265,6 +277,10 @@ static func validate(data: GameData, effects: Dictionary, where: String) -> Pack
 		var contribution: Variant = effects["contribution"]
 		if not (contribution is int or (contribution is float and contribution == floorf(contribution))) or int(contribution) < 1 or int(contribution) > 500:
 			errors.append("%s: contribution must be an int 1..500" % where)
+	if effects.has("flag_days"):
+		var days: Variant = effects["flag_days"]
+		if not (days is int or (days is float and days == floorf(days))) or int(days) < 1 or not effects.has("set_flag"):
+			errors.append("%s: flag_days must be an int >= 1 and needs set_flag" % where)
 	for key in ["set_flag", "clear_flag"]:
 		if not effects.has(key):
 			continue

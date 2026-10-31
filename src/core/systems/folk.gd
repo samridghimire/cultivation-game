@@ -94,7 +94,8 @@ static func favor_changes(effects: Dictionary, cast: Dictionary) -> Dictionary:
 
 ## What `npc` says in passing (WORLD-003) given the player's `favor` with them: a warm or cool line from
 ## data/family.json folk_greetings picked by hash(npc id + day), with {player} left for the caller. "" in between.
-static func greeting(npc: CharacterData, favor: int, day: int, data: GameData, flags: Dictionary = {}) -> String:
+## WEATHER-006: with today's `weather` and a warm villager, `folk_greetings.weather[weather]` lines come first.
+static func greeting(npc: CharacterData, favor: int, day: int, data: GameData, flags: Dictionary = {}, weather: String = "") -> String:
 	var bands: Dictionary = data.family.get("folk_greetings", {})
 	var party: Array = bands.get("celebration", {}).get(celebration_kind(flags, npc.id), [])
 	if celebration_open(flags, npc.id, day) and not party.is_empty():
@@ -103,6 +104,9 @@ static func greeting(npc: CharacterData, favor: int, day: int, data: GameData, f
 	if not shunned.is_empty() and shunned_by_mark(flags, npc.id, day):
 		return String(shunned[absi(hash(npc.id + str(day))) % shunned.size()])
 	var band: Dictionary = {}
+	var rainy: Array = bands.get("weather", {}).get(weather, [])
+	if weather != "" and not rainy.is_empty() and favor >= int(bands.get("warm", {}).get("min_favor", 1000)):
+		return String(rainy[absi(hash(npc.id + str(day))) % rainy.size()])
 	if favor >= int(bands.get("warm", {}).get("min_favor", 1000)):
 		band = bands["warm"]
 	elif favor <= int(bands.get("cool", {}).get("max_favor", -1000)):
@@ -131,6 +135,14 @@ static func validate_greetings(data: GameData) -> PackedStringArray:
 			for line: Variant in plines:
 				if not (line is String) or String(line) == "":
 					errors.append("family.json folk_greetings.celebration.%s: lines must be non-empty strings" % kind)
+	var skies: Variant = bands.get("weather", {})
+	if not (skies is Dictionary):
+		errors.append("family.json folk_greetings.weather must be an object")
+	else:
+		for kind: String in skies:
+			var wlines: Variant = skies[kind]
+			if not (wlines is Array) or wlines.is_empty() or not (wlines as Array).all(func(v: Variant) -> bool: return v is String and String(v) != ""):
+				errors.append("family.json folk_greetings.weather.%s: lines must be a non-empty array of strings" % kind)
 	for key: String in ["warm", "cool"]:
 		var band: Variant = bands.get(key)
 		if not (band is Dictionary):

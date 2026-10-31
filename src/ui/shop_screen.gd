@@ -198,7 +198,8 @@ func _hud_hint() -> String:
 
 ## Opens the merchant's wares (see merchant.gd for max_price / stock_tags / faction).
 func open(merchant_name: String = "Merchant", max_price: int = 0, stock_tags: Array = [], faction: String = "", buy_tags: Array = []) -> void:
-	_title.text = merchant_name + price_note(GameState.player, GameState.data, faction) + renown_note(GameState.player, GameState.data, GameState.current_region) + deal_note(GameState.player, GameState.current_region, GameClock.total_days)
+	GameState.shop_name = merchant_name
+	_title.text = merchant_name + friend_note(GameState.data, GameState.current_region, merchant_name, GameState.world_flags, GameClock.total_days) + price_note(GameState.player, GameState.data, faction) + renown_note(GameState.player, GameState.data, GameState.current_region) + deal_note(GameState.player, GameState.current_region, GameClock.total_days)
 	_max_price = max_price
 	_stock_tags = stock_tags
 	_buy_tags = buy_tags
@@ -265,6 +266,14 @@ static func price_note(c: CharacterData, data: GameData, faction: String) -> Str
 	if is_equal_approx(Reputation.price_multiplier(c, data, faction), 1.0):
 		return ""
 	return " (%s price)" % Reputation.tier_name(c, data, faction)
+
+
+## "  Storm-day friend's price" while this merchant's discount_flag holds (WEATHER-006), else "".
+static func friend_note(data: GameData, region_id: String, merchant_name: String, flags: Dictionary, today: int) -> String:
+	var rule: Dictionary = ShopDiscounts.place_named(data, region_id, merchant_name).get("discount_flag", {})
+	if rule.is_empty() or not Effects.flag_active(flags, String(rule.get("flag", "")), today):
+		return ""
+	return "  Storm-day friend's price"
 
 
 ## "  Renown: Respected (-5%)" when local renown discounts buying in `region_id`, else "".
@@ -362,7 +371,7 @@ static func upgrade_tag(c: CharacterData, data: GameData, item_id: String, facti
 				return ""
 			if val > worn_val:
 				higher = true
-		if higher and c.item_count("spirit_stone") >= unit_price(c, data, item_id, false, faction, GameState.buy_multiplier(), GameState.price_season()):
+		if higher and c.item_count("spirit_stone") >= unit_price(c, data, item_id, false, faction, GameState.buy_multiplier(item_id), GameState.price_season()):
 			return "upgrade"
 		return ""
 	var tech_id := manual_technique(data, item_id)
@@ -484,7 +493,7 @@ func _rebuild() -> void:
 			empty = "You have nothing this merchant wants." if _selling else "Nothing for sale."
 		_list.add_child(UIStyle.label(empty, 16, Color(0.7, 0.7, 0.7)))
 	for item_id in ids:
-		var price := unit_price(p, data, item_id, _selling, _faction, GameState.buy_multiplier(), GameState.price_season())
+		var price := unit_price(p, data, item_id, _selling, _faction, GameState.buy_multiplier(item_id), GameState.price_season())
 		var label: String = data.items[item_id]["name"]
 		if _selling:
 			label += "  (have %d)" % p.item_count(item_id)
@@ -632,7 +641,7 @@ func _is_ten_step(event: InputEvent, up: bool) -> bool:
 func _step(delta: int) -> void:
 	if _selected == "":
 		return
-	var most := max_quantity(GameState.player, GameState.data, _selected, _selling, _faction, GameState.buy_multiplier(), GameState.price_season())
+	var most := max_quantity(GameState.player, GameState.data, _selected, _selling, _faction, GameState.buy_multiplier(_selected), GameState.price_season())
 	_quantity = clampi(_quantity + delta, 1, maxi(most, 1))
 	_show_details()
 
@@ -648,7 +657,7 @@ func _show_details() -> void:
 	_name.text = item["name"]
 	if not _selling:
 		var note := manual_note(p, data, _selected)
-		var base := "%s  %d" % [item["name"], unit_price(p, data, _selected, false, _faction, GameState.buy_multiplier(), GameState.price_season())]
+		var base := "%s  %d" % [item["name"], unit_price(p, data, _selected, false, _faction, GameState.buy_multiplier(_selected), GameState.price_season())]
 		if note != "" and not row_fits(base + note):
 			_name.text += note
 	_description.text = String(item.get("description", ""))
@@ -666,9 +675,9 @@ func _show_details() -> void:
 	_compare.visible = _compare.text != ""
 	_wanted.text = sell_wanted_line(p, data, _selected, _selling, GameState.world_flags)
 	_wanted.visible = _wanted.text != ""
-	var most := max_quantity(p, data, _selected, _selling, _faction, GameState.buy_multiplier(), GameState.price_season())
+	var most := max_quantity(p, data, _selected, _selling, _faction, GameState.buy_multiplier(_selected), GameState.price_season())
 	_quantity = clampi(_quantity, 1, maxi(most, 1))
-	var unit := unit_price(p, data, _selected, _selling, _faction, GameState.buy_multiplier(), GameState.price_season())
+	var unit := unit_price(p, data, _selected, _selling, _faction, GameState.buy_multiplier(_selected), GameState.price_season())
 	_quantity_label.text = "x%d  (you have %d)" % [_quantity, p.item_count(_selected)]
 	_recharge_warn.text = "" if _selling else recharge_warning(p, data, unit * _quantity)
 	_recharge_warn.visible = _recharge_warn.text != ""

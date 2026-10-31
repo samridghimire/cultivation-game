@@ -31,7 +31,7 @@ func draw_generated_art() -> bool:
 
 
 func is_available() -> bool:
-	return hidden_by_flag == "" or not GameState.world_flags.get(hidden_by_flag, false)
+	return hidden_by_flag == "" or not Effects.flag_active(GameState.world_flags, hidden_by_flag, GameClock.total_days)
 
 
 func get_options() -> Array[Dictionary]:

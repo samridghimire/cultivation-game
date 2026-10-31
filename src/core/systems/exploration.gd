@@ -321,10 +321,10 @@ static func eligible_encounters(c: CharacterData, data: GameData, tags: Array, f
 		if folk_ok.is_valid() and not folk_ok.call(e):
 			continue
 		var blocker: String = e.get("blocked_by_flag", "")
-		if blocker != "" and flags.get(blocker, false):
+		if blocker != "" and Effects.flag_active(flags, blocker, day):
 			continue
 		var needed_flag: String = e.get("requires_flag", "")
-		if needed_flag != "" and not flags.get(needed_flag, false):
+		if needed_flag != "" and not Effects.flag_active(flags, needed_flag, day):
 			continue
 		if e.get("only_if_applicable", false) and Effects.check(c, data, e.get("effects", {})) != "":
 			continue
@@ -652,7 +652,7 @@ static func choice_foe(c: CharacterData, data: GameData, choice: Dictionary, peo
 ## and `karma` is true when the choice shifted alignment. A choice with a
 ## `check` rolls `rng` (no rng = the check succeeds); on failure its `on_fail`
 ## block is applied instead and `failed` is true.
-static func resolve_choice(c: CharacterData, data: GameData, encounter: Dictionary, index: int, flags: Dictionary, region_id: String = "", rng: RandomNumberGenerator = null) -> Dictionary:
+static func resolve_choice(c: CharacterData, data: GameData, encounter: Dictionary, index: int, flags: Dictionary, region_id: String = "", rng: RandomNumberGenerator = null, today: int = -1) -> Dictionary:
 	var list: Array = encounter.get("choices", [])
 	if index < 0 or index >= list.size():
 		return {"ok": false, "reason": "That is not a choice here.", "text": "", "notes": PackedStringArray(), "days": 0, "enemy": "", "karma": false}
@@ -665,7 +665,7 @@ static func resolve_choice(c: CharacterData, data: GameData, encounter: Dictiona
 	if failed:
 		choice = choice["on_fail"]
 	var effects: Dictionary = choice.get("effects", {})
-	var notes := Effects.apply(c, data, effects, flags, region_id) if not effects.is_empty() else PackedStringArray()
+	var notes := Effects.apply(c, data, effects, flags, region_id, today) if not effects.is_empty() else PackedStringArray()
 	return {"ok": true, "reason": "", "text": String(choice.get("text", "")), "notes": notes, "days": int(choice.get("days", 0)), "enemy": String(choice.get("enemy", "")), "karma": effects.has("alignment"), "failed": failed, "verdict": verdict}
 
 

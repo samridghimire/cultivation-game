@@ -624,6 +624,9 @@ func _validate_world() -> void:
 					load_errors.append("Region '%s' gathers unknown item '%s'" % [region["id"], entry["item"]])
 				if entry.has("min_realm") and realm_index_of(String(entry["min_realm"])) < 0:
 					load_errors.append("Region '%s' gather entry '%s' has unknown min_realm '%s'" % [region["id"], entry.get("item", ""), entry["min_realm"]])
+			if place.has("discount_flag"):
+				for problem in ShopDiscounts.validate(place["discount_flag"], "Region '%s' place '%s'" % [region["id"], place.get("display_name", "")]):
+					load_errors.append(problem)
 			if not place_types.has(place.get("type", "")):
 				load_errors.append("Region '%s' has a place of unknown type '%s'" % [region["id"], place.get("type", "")])
 			if place.get("type", "") == "auction" and not auction_houses.has(String(place.get("house_id", ""))):

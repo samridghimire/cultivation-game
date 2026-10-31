@@ -3755,7 +3755,7 @@ static func fair_fights(c: CharacterData, data: GameData, flags: Dictionary, tod
 		if String(place.get("type", "")) != "deed_giver" or String(place.get("deed_context", "")) == "":
 			continue
 		var hidden := String(place.get("hidden_by_flag", ""))
-		if hidden != "" and flags.get(hidden, false):
+		if hidden != "" and Effects.flag_active(flags, hidden, today):
 			continue
 		for deed in Deeds.available(data, String(place["deed_context"]), flags):
 			if rated >= FAIR_FIGHT_MAX_RATED:
