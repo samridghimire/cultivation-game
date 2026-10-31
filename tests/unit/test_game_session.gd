@@ -2700,6 +2700,22 @@ func test_birthday_gift_counts_double_once() -> void:
 	assert_true(other != null)
 
 
+func test_people_entries_lists_elder_mo_after_gift() -> void:
+	var c := _start()
+	var gs := _game_state()
+	gs.current_region = "qingshi_village"
+	Npcs.ensure_all(gs.npcs, gs.data, seeded_rng(4))
+	c.add_item("spirit_herb", 5)
+	gs.npc_favor["elder_mo"] = 10
+	gs.give_gift("elder_mo", "spirit_herb")
+	var found := false
+	for e: Dictionary in gs.people_entries():
+		if e["id"] == "elder_mo":
+			found = true
+			assert_true((e["likes_known"] as Array).has("spirit_herb"))
+	assert_true(found)
+
+
 func test_upcoming_days_lists_next_market_day() -> void:
 	_start()
 	var days: Array = []

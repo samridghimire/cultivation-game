@@ -2674,6 +2674,11 @@ func upcoming_days(span: int = 30) -> Array[Dictionary]:
 	return VillageCalendar.upcoming(data, npcs, npc_favor, world_events, current_region, GameClock.total_days, span)
 
 
+## FOLK-009: who you know in the current region (Folk.people_entries).
+func people_entries() -> Array[Dictionary]:
+	return Folk.people_entries(npcs, data, current_region, npc_favor, world_flags, GameClock.total_days)
+
+
 ## Journal entries for the current session (Guidance.journal); no side effects.
 func journal_entries() -> Array[Dictionary]:
 	return Guidance.journal(player, data, world_flags, GameClock.total_days, current_region, hint_density(), npcs, world_events, clan, npc_favor)

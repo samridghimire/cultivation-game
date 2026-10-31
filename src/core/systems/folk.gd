@@ -256,6 +256,41 @@ static func friends_line(npcs: Dictionary, data: GameData, region_id: String, fa
 	return line
 
 
+## FOLK-009: the people page. Every living NPC of `region_id` (generated villagers and named story NPCs) with favor >= 10,
+## favor desc then name. Entry: {id, name, favor, tier_index, tier_name, birthday_text, birthday_in, likes_known,
+## dislikes_known, likes_total}. Tastes come from the `taste_<npc>_<item>` world flags a gift leaves. Pure.
+static func people_entries(npcs: Dictionary, data: GameData, region_id: String, favor: Dictionary, flags: Dictionary, today: int) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	for c in Npcs.in_region(npcs, data, region_id):
+		var f := int(favor.get(c.id, 0))
+		if f < 10:
+			continue
+		var b := birthday_day(c, data)
+		var likes: Array[String] = []
+		var dislikes: Array[String] = []
+		var prefix := "taste_%s_" % c.id
+		for key: Variant in flags:
+			var k := String(key)
+			if not k.begins_with(prefix):
+				continue
+			var taste := int(flags[key])
+			if taste > 0:
+				likes.append(k.substr(prefix.length()))
+			elif taste < 0:
+				dislikes.append(k.substr(prefix.length()))
+		likes.sort()
+		dislikes.sort()
+		out.append({"id": c.id, "name": c.name, "favor": f, "tier_index": tier_index(data, f), "tier_name": tier_name(data, f),
+			"birthday_text": "" if b < 0 else "Month %d, Day %d" % [Calendar.month_of(b), Calendar.day_of(b)],
+			"birthday_in": days_to_birthday(c, data, today), "likes_known": likes, "dislikes_known": dislikes,
+			"likes_total": (data.npcs.get(c.id, {}).get("likes", []) as Array).size()})
+	out.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		if a["favor"] != b["favor"]:
+			return int(a["favor"]) > int(b["favor"])
+		return String(a["name"]) < String(b["name"]))
+	return out
+
+
 ## "a friend", "an acquaintance": the tier name for the Look sentence. "" below the first tier.
 static func counts_you_line(data: GameData, npc_name: String, favor: int) -> String:
 	var tier := tier_name(data, favor).to_lower()
