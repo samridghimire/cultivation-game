@@ -155,6 +155,8 @@ var letter_requests: Array[Dictionary] = []
 var folk_gift_day: Dictionary = {}
 ## Fishing skill (FISH-003): one point per trip, two for a rare catch.
 var fishing_xp: int = 0
+## Angler's log (FISH-004): fish item id -> times caught.
+var catch_log: Dictionary = {}
 ## Herb lore (GATHER-001): one point per gathering trip, two for a rare find.
 var gather_xp: int = 0
 ## World day each generated villager last came to visit and shared tea with the player (WORLD-007): npc id -> day.
@@ -282,6 +284,7 @@ func to_dict() -> Dictionary:
 		"letter_requests": letter_requests.duplicate(true),
 		"folk_gift_day": folk_gift_day.duplicate(),
 		"fishing_xp": fishing_xp,
+		"catch_log": catch_log.duplicate(),
 		"gather_xp": gather_xp,
 		"folk_visit_day": folk_visit_day.duplicate(),
 		"folk_companion": folk_companion.duplicate(),
@@ -426,6 +429,7 @@ static func from_dict(d: Dictionary) -> CharacterData:
 	c.letter_day = int(d.get("letter_day", -1))
 	c.folk_gift_day = _int_values(d.get("folk_gift_day", {}))
 	c.fishing_xp = int(d.get("fishing_xp", 0))
+	c.catch_log = _int_values(d.get("catch_log", {}))
 	c.gather_xp = int(d.get("gather_xp", 0))
 	c.folk_visit_day = _int_values(d.get("folk_visit_day", {}))
 	var companion: Dictionary = d.get("folk_companion", {})

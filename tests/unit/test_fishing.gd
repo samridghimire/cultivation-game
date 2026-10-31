@@ -54,7 +54,10 @@ func test_default_quality_draws_the_same_catch_as_plain_gather() -> void:
 	gs.fish(table, 1)
 	for id: String in expected:
 		assert_eq(c.item_count(id), int(expected[id]))
-	assert_eq(c.fishing_xp, Fishing.xp_gain(table, expected))
+	var firsts := 0
+	for id: String in expected:
+		firsts += Fishing.FIRST_CATCH_XP if gs.data.items[id].get("tags", []).has("fish") else 0
+	assert_eq(c.fishing_xp, Fishing.xp_gain(table, expected) + firsts)
 
 
 func test_xp_gain_is_two_for_a_rare_catch() -> void:
@@ -79,3 +82,57 @@ func test_fishing_xp_round_trips_and_defaults() -> void:
 	var d := c.to_dict()
 	d.erase("fishing_xp")
 	assert_eq(CharacterData.from_dict(d).fishing_xp, 0)
+
+
+## FISH-004: the angler's log.
+func test_first_catch_once_and_counts() -> void:
+	var gs: Node = Engine.get_main_loop().root.get_node("GameState")
+	var c := CharacterFactory.create("Angler", gs.data, seeded_rng(3))
+	gs.start_session(c)
+	var table := [{"item": "silver_carp", "weight": 5, "min": 1, "max": 1}]
+	var caught := 0
+	for i in 40:
+		var before := c.item_count("silver_carp")
+		gs.fish(table, 1, "", 0.5)
+		caught += c.item_count("silver_carp") - before
+	assert_true(caught > 0)
+	assert_eq(int(c.catch_log["silver_carp"]), caught)
+	assert_eq(c.fishing_xp, 40 + Fishing.FIRST_CATCH_XP, "one xp a trip, the first catch pays 2 once")
+
+
+func test_record_catch_reports_first_only() -> void:
+	var c := CharacterData.new()
+	assert_true(Fishing.record_catch(c, "silver_carp", 2))
+	assert_false(Fishing.record_catch(c, "silver_carp", 1))
+	assert_eq(int(c.catch_log["silver_carp"]), 3)
+
+
+func test_log_summary_counts_kinds_from_the_tables() -> void:
+	var d := data()
+	var c := CharacterData.new()
+	assert_eq(Fishing.log_summary(c, d), "", "empty log, no line")
+	var kinds := Fishing.catchable(d)
+	assert_true(kinds.has("silver_carp") and kinds.has("mist_koi") and not kinds.has("fish_stew"))
+	Fishing.record_catch(c, "silver_carp", 1)
+	assert_eq(Fishing.log_summary(c, d), "Fish caught: 1 of %d kinds" % kinds.size())
+
+
+func test_missing_hint_picks_first_uncaught_in_season_fish() -> void:
+	var d := data()
+	var c := CharacterData.new()
+	assert_eq(Fishing.missing_hint(c, d, "misty_forest", "Summer"), "Silver Carp bites here in summer.")
+	Fishing.record_catch(c, "silver_carp", 1)
+	assert_eq(Fishing.missing_hint(c, d, "misty_forest", "Summer"), "Marsh Eel bites here in summer.")
+	Fishing.record_catch(c, "marsh_eel", 1)
+	Fishing.record_catch(c, "mist_koi", 1)
+	assert_eq(Fishing.missing_hint(c, d, "misty_forest", "Summer"), "")
+	assert_eq(Fishing.missing_hint(c, d, "no_such_region", "Summer"), "")
+
+
+func test_catch_log_round_trips_and_defaults() -> void:
+	var c := CharacterData.new()
+	c.catch_log = {"silver_carp": 3}
+	assert_eq(int(CharacterData.from_dict(c.to_dict()).catch_log["silver_carp"]), 3)
+	var d := c.to_dict()
+	d.erase("catch_log")
+	assert_true(CharacterData.from_dict(d).catch_log.is_empty())

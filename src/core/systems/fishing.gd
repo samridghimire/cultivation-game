@@ -61,3 +61,56 @@ static func xp_gain(table: Array, found: Dictionary) -> int:
 		if is_rare(entry) and found.has(String(entry["item"])):
 			return 2
 	return 1
+
+
+## FISH-004: first-catch xp bonus.
+const FIRST_CATCH_XP := 2
+
+
+## Fish (items tagged `fish`) that any fishing place's catch_table can yield, in data order.
+static func catchable(data: GameData) -> PackedStringArray:
+	var seen := {}
+	for region: Dictionary in data.regions.values():
+		for place: Dictionary in region.get("places", []):
+			if String(place.get("type", "")) != "fishing":
+				continue
+			for entry: Dictionary in place.get("catch_table", []):
+				var id := String(entry.get("item", ""))
+				if id != "" and data.items.get(id, {}).get("tags", []).has("fish"):
+					seen[id] = true
+	var out: PackedStringArray = []
+	for id: String in data.items:
+		if seen.has(id):
+			out.append(id)
+	return out
+
+
+## Records a catch; returns true when it is the first of its kind.
+static func record_catch(c: CharacterData, item_id: String, count: int) -> bool:
+	var first := not c.catch_log.has(item_id)
+	c.catch_log[item_id] = int(c.catch_log.get(item_id, 0)) + count
+	return first
+
+
+## "Fish caught: 4 of 9 kinds", "" while the log is empty.
+static func log_summary(c: CharacterData, data: GameData) -> String:
+	if c.catch_log.is_empty():
+		return ""
+	var all := catchable(data)
+	var known := 0
+	for id in all:
+		if c.catch_log.has(id):
+			known += 1
+	return "Fish caught: %d of %d kinds" % [known, all.size()]
+
+
+## "Golden Eel bites here in summer." for the first uncaught fish a fishing place in `region_id` yields in `season`; "" if none.
+static func missing_hint(c: CharacterData, data: GameData, region_id: String, season: String) -> String:
+	for place: Dictionary in data.regions.get(region_id, {}).get("places", []):
+		if String(place.get("type", "")) != "fishing":
+			continue
+		for entry: Dictionary in Exploration.gather_table_for(c, data, place.get("catch_table", []), season):
+			var id := String(entry.get("item", ""))
+			if id != "" and data.items.get(id, {}).get("tags", []).has("fish") and not c.catch_log.has(id):
+				return "%s bites here in %s." % [data.items[id].get("name", id), season.to_lower()]
+	return ""

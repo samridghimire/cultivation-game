@@ -5564,3 +5564,14 @@ func test_merchant_price_applies_season() -> void:
 	assert_eq(Guidance.merchant_price(c, d, "qingshi_village", herb, ""), plain)
 	assert_true(Guidance.merchant_price(c, d, "qingshi_village", herb, in_season) < plain)
 	assert_true(Guidance.merchant_price(c, d, "qingshi_village", herb, off) > plain)
+
+
+## FISH-004: the journal shows the log once something is caught.
+func test_village_lines_angler_log() -> void:
+	var d := _village_data("clear")
+	var c := new_character()
+	assert_false(_has_line(Guidance.village_lines(c, d, {}, {}, "misty_forest", 10), "Fish caught"))
+	Fishing.record_catch(c, "silver_carp", 1)
+	var lines := Guidance.village_lines(c, d, {}, {}, "misty_forest", 10)
+	assert_true(_has_line(lines, "Fish caught: 1 of 3 kinds"), str(lines))
+	assert_true(_has_line(lines, "Marsh Eel bites here in"), str(lines))

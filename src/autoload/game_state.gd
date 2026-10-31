@@ -1215,14 +1215,20 @@ func fish(table: Array, days: int, place_name: String = "", quality: float = 0.5
 	if Fishing.rank_name(player.fishing_xp) != old_rank:
 		EventBus.post("Your fishing has improved: %s." % Fishing.rank_name(player.fishing_xp), "progress")
 	var notes: PackedStringArray = []
+	var first_catches: PackedStringArray = []
 	for item_id in found:
 		player.add_item(item_id, found[item_id])
 		notes.append("+%d %s" % [found[item_id], Items.item_plural(data, item_id, found[item_id])])
+		if data.items.get(item_id, {}).get("tags", []).has("fish") and Fishing.record_catch(player, item_id, int(found[item_id])):
+			first_catches.append(String(data.items[item_id]["name"]))
+			player.fishing_xp += Fishing.FIRST_CATCH_XP
 	var where := " at the %s" % place_name if place_name != "" else ""
 	if notes.is_empty():
 		EventBus.post("You fish for %s%s but nothing bites." % [Calendar.format_duration(days), where])
 	else:
 		EventBus.post("You fish for %s%s: %s." % [Calendar.format_duration(days), where, ", ".join(notes)], "progress")
+	for fish_name in first_catches:
+		EventBus.post("First catch: %s!" % fish_name, "progress")
 	_pass_time(days)
 
 
