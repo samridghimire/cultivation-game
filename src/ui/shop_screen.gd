@@ -44,6 +44,7 @@ var _sell_all_armed := false
 var _category := "All"
 const LIST_WIDTH := 540  ## about 60% of the panel (WU-133)
 const ROW_PADDING := 40  ## button margins + scrollbar
+const ROW_BADGE_PADDING := 90  ## framed icon + price badge on top of ROW_PADDING (GFX-032)
 const MAX_STEP := 1000000  ## a step too big to be anything but "Max"
 
 var _quantity := 1
@@ -327,9 +328,9 @@ static func manual_note(c: CharacterData, data: GameData, item_id: String) -> St
 
 
 ## True when `text` fits a shop row at the button font size (WU-133).
-static func row_fits(text: String) -> bool:
+static func row_fits(text: String, extra_padding: int = 0) -> bool:
 	var w := ThemeDB.fallback_font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, 18).x
-	return w <= LIST_WIDTH - ROW_PADDING
+	return w <= LIST_WIDTH - ROW_PADDING - extra_padding
 
 
 ## True when `item_id` is a combat manual and `c` knows no combat technique yet.
@@ -484,26 +485,26 @@ func _rebuild() -> void:
 		_list.add_child(UIStyle.label(empty, 16, Color(0.7, 0.7, 0.7)))
 	for item_id in ids:
 		var price := unit_price(p, data, item_id, _selling, _faction, GameState.buy_multiplier(), GameState.price_season())
-		var label := "%s  %d" % [data.items[item_id]["name"], price]
+		var label: String = data.items[item_id]["name"]
 		if _selling:
 			label += "  (have %d)" % p.item_count(item_id)
 		else:
 			var note := manual_note(p, data, item_id)
-			if row_fits(label + note):
+			if row_fits(label + note, ROW_BADGE_PADDING):
 				label += note
 			var tag_text := tag_note(upgrade_tag(p, data, item_id, _faction))
-			if tag_text != "" and row_fits(label + tag_text):
+			if tag_text != "" and row_fits(label + tag_text, ROW_BADGE_PADDING):
 				label += tag_text
 			var realm_text := realm_tag(p, data, item_id)
-			if realm_text != "" and row_fits(label + realm_text):
+			if realm_text != "" and row_fits(label + realm_text, ROW_BADGE_PADDING):
 				label += realm_text
 		if not _selling and GameState.festival_stock(_stock_tags).has(item_id) and not Items.shop_stock(data, _max_price, _stock_tags).has(item_id):
 			label += " (festival)"
 		if not _selling and item_id == _hinted:
 			label = "! " + label
-		var b := UIStyle.button(label, _select.bind(item_id))
-		b.name = item_id
-		ItemIcon.apply(b, ItemIcon.for_id(data, item_id))
+		var b := ItemRow.make(data, item_id, 1, "", price)
+		b.text = label
+		b.pressed.connect(_select.bind(item_id))
 		if not _selling and item_id == _hinted:
 			b.add_theme_color_override("font_color", UIStyle.ACCENT)
 		if not _selling and is_first_combat_manual(p, data, item_id):
@@ -513,7 +514,7 @@ func _rebuild() -> void:
 		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		b.clip_text = true
 		b.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-		b.tooltip_text = label
+		b.tooltip_text = "%s  %d" % [label, price]
 		b.toggle_mode = true
 		b.button_pressed = item_id == _selected
 		b.focus_entered.connect(_select.bind(item_id))

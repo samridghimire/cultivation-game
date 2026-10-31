@@ -13,8 +13,10 @@ var _scroll: ScrollContainer
 ## The item list shrinks to its rows between these heights (WU-087).
 const LIST_MIN_HEIGHT := 220.0
 const LIST_MAX_HEIGHT := 360.0
-const LIST_ROW_HEIGHT := 42.0
+const LIST_ROW_HEIGHT := 44.0
 var _name: Label
+var _picture: TextureRect
+var _picture_frame: PanelContainer
 var _description: Label
 var _effects: Label
 var _use_button: Button
@@ -66,8 +68,23 @@ func _init() -> void:
 	details.custom_minimum_size = Vector2(420, 0)
 	details.add_theme_constant_override("separation", 8)
 	columns.add_child(details)
+	var head := HBoxContainer.new()
+	head.add_theme_constant_override("separation", 12)
+	details.add_child(head)
+	_picture_frame = UIStyle.panel()
+	_picture_frame.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	_picture = TextureRect.new()
+	_picture.custom_minimum_size = Vector2(ItemIcon.SIZE * 4, ItemIcon.SIZE * 4)
+	_picture.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_picture.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_picture.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	_picture_frame.add_child(_picture)
+	head.add_child(_picture_frame)
 	_name = UIStyle.label("", 20, UIStyle.ACCENT)
-	details.add_child(_name)
+	_name.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_name.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	_name.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	head.add_child(_name)
 	_description = UIStyle.label("", 16)
 	_description.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	details.add_child(_description)
@@ -192,13 +209,8 @@ func _rebuild() -> void:
 	if ids.is_empty():
 		_list.add_child(UIStyle.label("Nothing here." if _category != "All" else "Your pouch is empty.", 16, Color(0.7, 0.7, 0.7)))
 	for item_id in ids:
-		var label := "%s  x%d" % [_item_name(data, item_id), p.item_count(item_id)]
-		if p.readied_talismans.has(item_id):
-			label += "  (readied)"
-		var b := UIStyle.button(label, _select.bind(item_id))
-		b.name = item_id
-		ItemIcon.apply(b, ItemIcon.for_id(data, item_id))
-		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		var b := ItemRow.make(data, item_id, p.item_count(item_id), "(readied)" if p.readied_talismans.has(item_id) else "")
+		b.pressed.connect(_select.bind(item_id))
 		b.toggle_mode = true
 		b.button_pressed = item_id == _selected
 		b.focus_entered.connect(_select.bind(item_id))
@@ -244,6 +256,8 @@ func _show_details() -> void:
 	var data := GameState.data
 	var item: Dictionary = data.items.get(_selected, {})
 	_name.text = _item_name(data, _selected) if _selected != "" else ""
+	_picture.texture = ItemIcon.for_id(data, _selected)
+	_picture_frame.visible = _picture.texture != null
 	_description.text = String(item.get("description", ""))
 	var lines := describe_effects(item.get("effects", {}), data)
 	if int(item.get("price", 0)) > 0:
