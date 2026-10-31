@@ -18,6 +18,11 @@ const PRESETS := {
 
 ## Weather presets (WU-399), not region-selectable: rain is drawn as 1x5 streaks, fog as sheets.
 const RAIN := {"amount": 300, "color": Color("c8d8f0", 0.7), "gravity": Vector2(70, 420), "speed": 40.0, "size": 1.0, "lifetime": 2.5}
+const STORM_TINT := Color(0.62, 0.66, 0.78)
+const LIGHTNING_MIN_SECONDS := 6.0
+const LIGHTNING_MAX_SECONDS := 14.0
+const FLASH_SECONDS := 0.08
+const FLASH_ALPHA := 0.35
 const CLOUDY_TINT := Color(0.9, 0.9, 0.9)
 const FOG_SHEETS := 2
 
@@ -30,6 +35,8 @@ static func weather_plan(kind: String) -> Dictionary:
 			return {"emitter": "rain", "fog": false, "tint": Color.WHITE}
 		"snow":
 			return {"emitter": "snow", "fog": false, "tint": Color.WHITE}
+		"storm":
+			return {"emitter": "storm", "fog": false, "tint": STORM_TINT}
 		"fog":
 			return {"emitter": "", "fog": true, "tint": Color.WHITE}
 		"cloudy":
@@ -39,7 +46,7 @@ static func weather_plan(kind: String) -> Dictionary:
 
 ## True when the weather takes the place of the season's ambient particles.
 static func replaces_season(kind: String) -> bool:
-	return kind == "rain" or kind == "snow" or kind == "fog"
+	return kind == "rain" or kind == "storm" or kind == "snow" or kind == "fog"
 
 
 ## Rain: a CPUParticles2D of slanted 1x5 px streaks over `area`.
@@ -60,6 +67,30 @@ static func make_rain(area: Vector2) -> CPUParticles2D:
 	p.texture = ImageTexture.create_from_image(img)
 	p.particle_flag_align_y = true
 	return p
+
+
+## True on days that leave the ground wet (rain and storm).
+static func is_wet(kind: String) -> bool:
+	return kind == "rain" or kind == "storm"
+
+
+## Storm rain: the rain emitter at 1.5x density.
+static func make_storm_rain(area: Vector2) -> CPUParticles2D:
+	var p := make_rain(area)
+	p.amount = int(RAIN["amount"] * 1.5)
+	return p
+
+
+## Seconds until the next lightning flash, 6-14 s, seeded from the day and the strike number.
+static func lightning_gap(day: int, n: int) -> float:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash([day, n, "lightning"])
+	return rng.randf_range(LIGHTNING_MIN_SECONDS, LIGHTNING_MAX_SECONDS)
+
+
+## Whether lightning flashes at all: never with reduce_motion.
+static func lightning_enabled(reduce_motion: bool) -> bool:
+	return not reduce_motion
 
 
 ## Fog: two large translucent sheets drifting slowly in opposite directions; the caller adds the node.

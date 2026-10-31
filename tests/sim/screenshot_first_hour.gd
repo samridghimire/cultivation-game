@@ -5,6 +5,7 @@ extends SceneTree
 ##     --resolution 1280x800 -s res://tests/sim/screenshot_first_hour.gd
 ## WU-218: append `-- --crafter` for a new Alchemist's first hour (workshop, hint, gather site, crafting,
 ## journal Commissions, Deliver) as crafter_*.png.
+## GFX-033: append `-- --storm` to render the first-hour shots under a storm.
 ## GFX-029: append `-- --field` for field.png (a growing field).
 ## GFX-023: append `-- --celebration` for celebration.png (wedding lanterns and red sashes).
 ## WU-223: append `-- --gather-note` for the Village Herb Slope menu in each season: gather_note_<season>.png.
@@ -42,6 +43,11 @@ func _start() -> void:
 	world = load("res://src/world/world.tscn").instantiate()
 	root.add_child(world)
 	hud = world.get_node("HUD")
+	if OS.get_cmdline_user_args().has("--storm"):  # GFX-033: force today's weather to storm
+		world.set("_weather_kind", "storm")
+		world.get("_season_tint").color = world.call("_tint_for", world.get("_season"))
+		world.call("_refresh_ambient")
+		world.queue_redraw()
 	if OS.get_cmdline_user_args().has("--crafter"):
 		_crafter_shots(gs, c)
 		return

@@ -76,3 +76,28 @@ func test_rain_and_fog_nodes_build() -> void:
 	var fog := Ambient.make_fog(Vector2(1600, 1000), false)
 	assert_eq(fog.get_child_count(), Ambient.FOG_SHEETS)
 	fog.free()
+
+
+func test_storm_plan_is_dark_and_wet() -> void:
+	var plan := Ambient.weather_plan("storm")
+	assert_eq(plan["emitter"], "storm")
+	var tint: Color = plan["tint"]
+	assert_true(tint.r < Ambient.CLOUDY_TINT.r)
+	assert_true(Ambient.is_wet("storm") and Ambient.is_wet("rain") and not Ambient.is_wet("snow"))
+	assert_true(Ambient.replaces_season("storm"))
+	assert_eq(Ambient.make_storm_rain(Vector2(100, 100)).amount, int(Ambient.RAIN["amount"] * 1.5))
+
+
+func test_lightning_gap_seeded_and_off_with_reduce_motion() -> void:
+	for n in 5:
+		var g := Ambient.lightning_gap(12, n)
+		assert_true(g >= 6.0 and g <= 14.0)
+		assert_eq(g, Ambient.lightning_gap(12, n))
+	assert_false(Ambient.lightning_enabled(true))
+	assert_true(Ambient.lightning_enabled(false))
+
+
+func test_crop_heights_by_stage() -> void:
+	var plot: GDScript = load("res://src/world/interactables/field_plot.gd")
+	assert_true(plot.crop_height(0) >= 4.0 and plot.crop_height(0) <= 6.0)
+	assert_true(plot.crop_height(3) >= 12.0 and plot.crop_height(3) <= 16.0)

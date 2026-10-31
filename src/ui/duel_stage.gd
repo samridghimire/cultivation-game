@@ -128,10 +128,15 @@ func show_end_pose(victory: bool, friendly: bool) -> void:
 	queue_redraw()
 
 
-## The loser's tilt: a person falls over (90 degrees); a four-legged beast is already horizontal,
-## so it rolls onto its back (180 degrees).
-static func toppled_tilt(beast: bool) -> float:
-	return PI if beast else PI / 2.0
+## The loser's tilt (GFX-033): everyone lies on their side (90 degrees), beast or person, so the
+## silhouette and its light rim stay readable instead of smearing.
+static func toppled_tilt(_beast: bool) -> float:
+	return PI / 2.0
+
+
+## True when fighter `who` (0 player, 1 foe) is lying defeated, for the "Defeated" tag and tests.
+func is_fallen(who: int) -> bool:
+	return _dark[who] > 0.0
 
 
 ## The tilt of a fighter, for tests: 0 = player, 1 = foe.
@@ -210,6 +215,13 @@ func _draw() -> void:
 		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 	_draw_fighter(0, Vector2(size.x * 0.25 + dx, base_y))
 	_draw_fighter(1, Vector2(size.x * 0.75 + dx, base_y))
+	for who in 2:
+		if is_fallen(who):
+			var font := ThemeDB.fallback_font
+			var text := "Defeated"
+			var w := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, 12).x
+			var cx2 := size.x * (0.25 if who == 0 else 0.75) + dx
+			draw_string(font, Vector2(cx2 - w / 2.0, minf(base_y + 11.0, size.y - 1.0)), text, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color("e8d9b0"))
 
 
 ## The current region's grass as a strip along the bottom (flat dark band when no region is loaded).

@@ -77,15 +77,21 @@ func draw_generated_art() -> bool:
 
 
 func _draw_crop(base: Vector2, stage: int, item_id: String) -> void:
+	var px := float(Sprites.scale())  # GFX-033: line weights and the fruit follow the pixel scale
 	var green := Color("8fd16a") if stage < 2 else Color("5fae44")
-	var height: float = [4.0, 8.0, 14.0, 16.0][stage]
-	draw_line(base, base + Vector2(0, -height), green, 2.0)
+	var height: float = crop_height(stage)
+	draw_line(base, base + Vector2(0, -height), green, px)
 	if stage >= 1:
-		draw_line(base + Vector2(0, -height * 0.5), base + Vector2(-5, -height * 0.8), green, 2.0)
-		draw_line(base + Vector2(0, -height * 0.5), base + Vector2(5, -height * 0.8), green, 2.0)
+		draw_line(base + Vector2(0, -height * 0.5), base + Vector2(-5, -height * 0.8), green, px)
+		draw_line(base + Vector2(0, -height * 0.5), base + Vector2(5, -height * 0.8), green, px)
 	if stage >= 2:
-		draw_line(base + Vector2(0, -height * 0.8), base + Vector2(-7, -height), green, 2.0)
-		draw_line(base + Vector2(0, -height * 0.8), base + Vector2(7, -height), green, 2.0)
+		draw_line(base + Vector2(0, -height * 0.8), base + Vector2(-7, -height), green, px)
+		draw_line(base + Vector2(0, -height * 0.8), base + Vector2(7, -height), green, px)
 	if stage == 3:
 		var tint: Color = ItemIcon.TINTS[absi(item_id.hash()) % ItemIcon.TINTS.size()]
-		draw_rect(Rect2(base + Vector2(-2, -height - 3), Vector2(5, 5)), tint)
+		draw_rect(Rect2(base + Vector2(-px, -height - 2 * px), Vector2(2 * px + 1, 2 * px + 1)), tint)
+
+
+## World-pixel height of a crop by growth stage 0..3: sprouts 4-6 px, ripe about a villager's head (16).
+static func crop_height(stage: int) -> float:
+	return [5.0, 9.0, 14.0, 16.0][clampi(stage, 0, 3)]

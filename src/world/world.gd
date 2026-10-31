@@ -44,6 +44,8 @@ var _season_tint: CanvasModulate
 var _season := ""
 var _ambient: Node
 var _weather_kind := "clear"
+var _lightning_timer: Timer
+var _strikes := 0
 ## Festival stalls beside merchants (WU-097), rebuilt when the day or region changes.
 var _stalls: Array[Node2D] = []
 var _merchant_spots: Array[Vector2] = []
@@ -134,6 +136,8 @@ func _refresh_ambient() -> void:
 		_ambient = Ambient.make_fog(map_size, not Settings.get_value("reduce_motion"))
 	elif plan["emitter"] == "rain":
 		_ambient = Ambient.make_rain(map_size)
+	elif plan["emitter"] == "storm":
+		_ambient = Ambient.make_storm_rain(map_size)
 	elif plan["emitter"] == "snow":
 		_ambient = Ambient.make_emitter("snow", map_size)
 	else:
@@ -142,6 +146,37 @@ func _refresh_ambient() -> void:
 			return
 		_ambient = Ambient.make_emitter(kind, map_size)
 	add_child(_ambient)
+	_start_lightning()
+
+
+## GFX-033: a white flash every 6-14 s on storm days (none with reduce_motion).
+func _start_lightning() -> void:
+	if _lightning_timer != null:
+		_lightning_timer.queue_free()
+		_lightning_timer = null
+	if _weather_kind != "storm" or not Ambient.lightning_enabled(Settings.get_value("reduce_motion")):
+		return
+	_lightning_timer = Timer.new()
+	_lightning_timer.one_shot = true
+	_lightning_timer.timeout.connect(_flash_lightning)
+	add_child(_lightning_timer)
+	_lightning_timer.start(Ambient.lightning_gap(GameClock.total_days, _strikes))
+
+
+func _flash_lightning() -> void:
+	_strikes += 1
+	var layer := CanvasLayer.new()
+	layer.layer = 40
+	var rect := ColorRect.new()
+	rect.color = Color(1, 1, 1, Ambient.FLASH_ALPHA)
+	rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	rect.set_anchors_preset(Control.PRESET_FULL_RECT)
+	layer.add_child(rect)
+	add_child(layer)
+	Audio.play("lightning")
+	get_tree().create_timer(Ambient.FLASH_SECONDS).timeout.connect(layer.queue_free)
+	if _lightning_timer != null:
+		_lightning_timer.start(Ambient.lightning_gap(GameClock.total_days, _strikes))
 
 
 ## Decoration only: a stall beside each merchant while a festival runs in this region.

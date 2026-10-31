@@ -36,7 +36,8 @@ func test_skip_dims_the_loser() -> void:
 
 func test_toppled_tilt_depends_on_body() -> void:
 	assert_eq(DuelStage.toppled_tilt(false), PI / 2.0)
-	assert_eq(DuelStage.toppled_tilt(true), PI)
+	assert_eq(DuelStage.toppled_tilt(true), PI / 2.0)  # GFX-033: beasts lie on their side too
+	assert_true(DuelStage.FALLEN_DARKEN <= 0.4)
 
 
 func test_no_trace_hides_stage() -> void:
