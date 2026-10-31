@@ -3593,6 +3593,8 @@ static func village_lines(c: CharacterData, data: GameData, people: Dictionary, 
 	for npc in Npcs.in_region(people, data, region_id):
 		if Folk.celebration_open(flags, npc.id, today) and Folk.check_attend(flags, npc.id, today) == "":
 			out.append("%s: %s" % [npc.name, Folk.celebration_label(flags, npc.id, data)])
+	for b: Dictionary in Folk.birthdays_soon(people, data, region_id, today, favor):
+		out.append("%s's birthday is today: a gift counts double." % b["npc"].name if int(b["in_days"]) == 0 else "%s's birthday in %s." % [b["npc"].name, Calendar.format_duration(int(b["in_days"]))])
 	var season := Calendar.season_of(today)
 	for place: Dictionary in data.regions.get(region_id, {}).get("places", []):
 		if place.get("type", "") != "fishing":

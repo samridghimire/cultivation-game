@@ -100,6 +100,9 @@ static func greeting(npc: CharacterData, favor: int, day: int, data: GameData, f
 	var party: Array = bands.get("celebration", {}).get(celebration_kind(flags, npc.id), [])
 	if celebration_open(flags, npc.id, day) and not party.is_empty():
 		return String(party[absi(hash(npc.id + str(day))) % party.size()])
+	var cake: Array = bands.get("birthday", [])
+	if not cake.is_empty() and birthday_today(npc, data, day):
+		return String(cake[absi(hash(npc.id + str(day))) % cake.size()])
 	var shunned: Array = bands.get("shunned", [])
 	if not shunned.is_empty() and shunned_by_mark(flags, npc.id, day):
 		return String(shunned[absi(hash(npc.id + str(day))) % shunned.size()])
@@ -135,6 +138,9 @@ static func validate_greetings(data: GameData) -> PackedStringArray:
 			for line: Variant in plines:
 				if not (line is String) or String(line) == "":
 					errors.append("family.json folk_greetings.celebration.%s: lines must be non-empty strings" % kind)
+	var cake: Variant = bands.get("birthday", [])
+	if not (cake is Array) or not (cake as Array).all(func(v: Variant) -> bool: return v is String and String(v) != ""):
+		errors.append("family.json folk_greetings.birthday must be an array of non-empty strings")
 	var skies: Variant = bands.get("weather", {})
 	if not (skies is Dictionary):
 		errors.append("family.json folk_greetings.weather must be an object")
@@ -485,6 +491,59 @@ static func attend(flags: Dictionary, npc_id: String, partner_id: String, today:
 		flags[ATTENDED_PREFIX + partner_id] = true
 	var r := celebration_rules(data, celebration_kind(flags, npc_id))
 	return {"ok": true, "reason": "", "favor": int(r.get("favor", 0)), "alignment": int(r.get("alignment", 0)), "days": int(r.get("attend_days", 1)), "text": String(r.get("attend_text", ""))}
+
+
+## FOLK-008: the day of the year (0..DAYS_PER_YEAR-1) of a generated villager's birthday: a stable hash of the id, never rng.
+## Named story NPCs have none (-1).
+static func birthday_day(npc: CharacterData, data: GameData) -> int:
+	if npc == null or data.npcs.has(npc.id):
+		return -1
+	return absi(hash("birthday:" + npc.id)) % Calendar.DAYS_PER_YEAR
+
+
+static func birthday_today(npc: CharacterData, data: GameData, day: int) -> bool:
+	var b := birthday_day(npc, data)
+	return b >= 0 and day >= 0 and day % Calendar.DAYS_PER_YEAR == b
+
+
+## Days from `day` until the villager's next birthday (0 = today, wraps over the year); -1 for no birthday.
+static func days_to_birthday(npc: CharacterData, data: GameData, day: int) -> int:
+	var b := birthday_day(npc, data)
+	if b < 0:
+		return -1
+	return posmod(b - day, Calendar.DAYS_PER_YEAR)
+
+
+## FOLK-008: living generated villagers of `region_id` you know (favor >= min_favor) whose birthday falls within
+## `span` days of `day`, as [{npc, in_days}] soonest first (ties by id). Pure.
+static func birthdays_soon(npcs: Dictionary, data: GameData, region_id: String, day: int, favor: Dictionary, span: int = 7, min_favor: int = 10) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	for npc in Npcs.generated_in_region(npcs, data, region_id):
+		if int(favor.get(npc.id, 0)) < min_favor:
+			continue
+		var n := days_to_birthday(npc, data, day)
+		if n >= 0 and n <= span:
+			out.append({"npc": npc, "in_days": n})
+	out.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		if a["in_days"] != b["in_days"]:
+			return a["in_days"] < b["in_days"]
+		return String(a["npc"].id) < String(b["npc"].id))
+	return out
+
+
+const BIRTHDAY_GIFT_PREFIX := "birthday_gift_"
+
+
+## FOLK-008: 2 for the first gift to `npc` on their birthday this year, else 1. `consume` marks it used.
+static func birthday_gift_multiplier(flags: Dictionary, npc: CharacterData, data: GameData, day: int, consume: bool) -> int:
+	if not birthday_today(npc, data, day):
+		return 1
+	var year := day / Calendar.DAYS_PER_YEAR
+	if int(flags.get(BIRTHDAY_GIFT_PREFIX + npc.id, -1)) == year:
+		return 1
+	if consume:
+		flags[BIRTHDAY_GIFT_PREFIX + npc.id] = year
+	return 2
 
 
 ## The multiplier for a gift to `npc_id` now: the type's gift_mult once per open celebration, else 1. `consume` marks it used.

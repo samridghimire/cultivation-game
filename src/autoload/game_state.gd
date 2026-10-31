@@ -1834,6 +1834,7 @@ func give_gift(npc_id: String, item_id: String) -> void:
 	var gain := int(result["favor"])
 	if taste >= 0:
 		gain *= Folk.gift_multiplier(world_flags, npc_id, GameClock.total_days, data, true)
+		gain *= Folk.birthday_gift_multiplier(world_flags, npcs[npc_id], data, GameClock.total_days, true)
 		var base := NpcClans.scaled_favor(npc_clans, data, npc_id, WorldEvents.scaled_favor(data, world_events, current_region, gain), cap - favor)
 		gain = base + Karma.favor_bonus(player, data, npc_id, base, cap - favor - base)
 	var before := _rival_attitude()

@@ -881,3 +881,58 @@ func test_wedding_greetings_use_partner() -> void:
 		if line.contains("{partner}"):
 			n += 1
 	assert_true(n >= 2)
+
+
+func test_birthday_is_stable_and_generated_only() -> void:
+	var npcs := {}
+	_village(npcs, 2)
+	var npc: CharacterData = npcs.values()[0]
+	var b := Folk.birthday_day(npc, data())
+	assert_true(b >= 0 and b < Calendar.DAYS_PER_YEAR)
+	assert_eq(Folk.birthday_day(npc, data()), b)
+	assert_true(Folk.birthday_today(npc, data(), b + Calendar.DAYS_PER_YEAR * 3))
+	assert_false(Folk.birthday_today(npc, data(), b + 1))
+	assert_eq(Folk.days_to_birthday(npc, data(), b + 1), Calendar.DAYS_PER_YEAR - 1)
+	var named := CharacterData.new()
+	named.id = data().npcs.keys()[0]
+	assert_eq(Folk.birthday_day(named, data()), -1)
+
+
+func test_birthday_greeting_uses_birthday_line() -> void:
+	var npcs := {}
+	_village(npcs, 1)
+	var npc: CharacterData = npcs.values()[0]
+	var day := Folk.birthday_day(npc, data()) + Calendar.DAYS_PER_YEAR
+	var lines: Array = data().family["folk_greetings"]["birthday"]
+	assert_true(lines.has(Folk.greeting(npc, 0, day, data())))
+	assert_true(lines.has(Folk.greeting(npc, 50, day, data())))
+	assert_false(lines.has(Folk.greeting(npc, 50, day + 1, data())))
+
+
+func test_birthday_gift_doubles_once_per_year() -> void:
+	var npcs := {}
+	_village(npcs, 1)
+	var npc: CharacterData = npcs.values()[0]
+	var flags := {}
+	var day := Folk.birthday_day(npc, data())
+	assert_eq(Folk.birthday_gift_multiplier(flags, npc, data(), day + 1, true), 1)
+	assert_eq(Folk.birthday_gift_multiplier(flags, npc, data(), day, false), 2)
+	assert_eq(Folk.birthday_gift_multiplier(flags, npc, data(), day, true), 2)
+	assert_eq(Folk.birthday_gift_multiplier(flags, npc, data(), day, true), 1)
+	assert_eq(Folk.birthday_gift_multiplier(flags, npc, data(), day + Calendar.DAYS_PER_YEAR, true), 2)
+
+
+func test_birthdays_soon_needs_favor_and_window() -> void:
+	var npcs := {}
+	_village(npcs, 3)
+	var ids: Array = npcs.keys()
+	var npc: CharacterData = npcs[ids[0]]
+	var b := Folk.birthday_day(npc, data())
+	var favor := {npc.id: 10}
+	var soon := Folk.birthdays_soon(npcs, data(), "qingshi_village", b + Calendar.DAYS_PER_YEAR - 3, favor)
+	assert_eq(soon.size(), 1)
+	assert_eq(int(soon[0]["in_days"]), 3)
+	assert_eq(Folk.birthdays_soon(npcs, data(), "qingshi_village", b + Calendar.DAYS_PER_YEAR - 3, {npc.id: 9}).size(), 0)
+	assert_eq(Folk.birthdays_soon(npcs, data(), "qingshi_village", b + 1, favor).size(), 0)
+	var lines := Guidance.village_lines(new_character(), data(), npcs, {}, "qingshi_village", b + Calendar.DAYS_PER_YEAR, favor)
+	assert_true("\n".join(lines).contains("birthday is today"))

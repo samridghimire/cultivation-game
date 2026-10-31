@@ -2680,3 +2680,21 @@ func test_goal005_first_fish_awards_first_catch() -> void:
 		gs.fish(table, 1, "Test Pond")
 	assert_true(c.milestones.has("first_catch"))
 	_restore_weather(gs)
+
+
+func test_birthday_gift_counts_double_once() -> void:
+	var c := _start()
+	var gs := _game_state()
+	var npc := Npcs.spawn(gs.npcs, gs.data, seeded_rng(6), {"age_years": 30, "region": "qingshi_village", "realm": "mortal"})
+	var other := Npcs.spawn(gs.npcs, gs.data, seeded_rng(7), {"age_years": 30, "region": "qingshi_village", "realm": "mortal"})
+	GameClock.total_days = Folk.birthday_day(npc, gs.data) + Calendar.DAYS_PER_YEAR
+	c.add_item("qi_gathering_pill", 3)
+	var worth := Family.gift_value(gs.data, "qi_gathering_pill")
+	gs.npc_favor[npc.id] = 0
+	gs.give_gift(npc.id, "qi_gathering_pill")
+	assert_eq(int(gs.npc_favor[npc.id]), worth * 2)
+	var after := int(gs.npc_favor[npc.id])
+	GameClock.total_days = Folk.birthday_day(npc, gs.data) + Calendar.DAYS_PER_YEAR
+	gs.give_gift(npc.id, "qi_gathering_pill")
+	assert_eq(int(gs.npc_favor[npc.id]) - after, worth, "only the first gift doubles")
+	assert_true(other != null)
