@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-31 [DAY-001] Long actions are summed up in a short digest of what happened.
 - 2026-10-31 [GFX-035] The duel stage has a seasonal sky, a skyline for each region and real grass.
 - 2026-10-31 [FISH-005] Rare trophy fish can be landed only with a clean strike and some fishing skill.
 - 2026-10-31 [C-278] Three storm-only village happenings and storm tips.
