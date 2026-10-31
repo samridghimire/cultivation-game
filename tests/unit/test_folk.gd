@@ -459,7 +459,7 @@ func test_tip_lines_follow_season_and_weather() -> void:
 			seasonal += 1
 		if line is Dictionary and line.has("weather"):
 			rainy += 1
-	assert_eq(lines.size(), 10)
+	assert_eq(lines.size(), 13)
 	assert_eq(seasonal, 4)
 	assert_true(rainy >= 2)
 	for day in range(0, 360):
@@ -470,6 +470,7 @@ func test_tip_lines_follow_season_and_weather() -> void:
 			assert_false(said.contains("brazier"), "a winter-only line never shows out of winter (day %d)" % day)
 		assert_false(said.contains("wet cloak") or said.contains("Fog sits"), "weather lines need their weather")
 	assert_true(Folk.tip_line(d, tip, "Wu Lan", 5, "rain") != "")
+	assert_true(Folk.tip_line(d, tip, "Wu Lan", 5, "storm") != "")
 
 
 func test_tip_validation_rejects_bad_rules() -> void:
