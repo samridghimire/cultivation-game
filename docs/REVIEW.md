@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 3579385
+Last reviewed commit: d37bbb0
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -1288,3 +1288,21 @@ Last reviewed commit: 3579385
   - Notes, not filed: herb lore's extra unit applies to every gathered stack, ore at the quarry included (as specced);
     a friend's tip item that is a rare table entry counts as a rare find for xp (+1); the cast bar draws its zone from
     GameState.rng (UI touching the session rng, harmless but shifts later draws).
+- 2026-10-31 (reviewer, 2nd run): reviewed 3579385..d37bbb0 (GUIDE-203, FISH-004, GFX-030, FARM-004, WU-411, GFX-034,
+  WEATHER-005, GUIDE-204, GFX-033, C-279, QA-182, FARM-005, WU-414; [PLAN]/[REVIEW] skipped). Main green apart from this
+  review's new test, which reproduced the bug below (2787 tests with it). No worker touched BACKLOG/CHANGELOG (QA-182 edited
+  HANDOFF, as its task asked); no SAVE_VERSION change (`catch_log` defaults to {}, a crop's `care` and a plot's
+  `nourished_day` are read with defaults); no binary assets (tea tray, lightning flash and village-book silhouettes are drawn
+  in code; the thunder SFX is synthesized).
+  - FARM-004/005 follow their specs (nourish once a day, never past ripe, Wood 50+ step 3; care from water and nourish,
+    threshold ceil(total*share)). GUIDE-204 removed the TODO and every listed hint prices with the season; `seasonal_mult`
+    now lowercases the season (callers pass Calendar's "Winter"). C-279 set rent 3 instead of the spec's 4 with sim numbers
+    in the commit (4 still left the field at -30); no `--check` run is mentioned. WEATHER-005 draws once, only on storm days.
+  - Fixed (FISH-004): the "Your fishing has improved" check ran before the first-catch +2 xp, so a rank reached through
+    the bonus was never announced (the next trip's old rank already included it). Test added.
+    Fixed (WEATHER-005): a multi-day explore in a storm posted "A storm rolls over the sky" every day; now only on a single
+    (non-quiet) explore day, while strikes and thunderwood still post.
+  - Notes, not filed: WEATHER-005's `lightning_damage_frac` is validated but unused (no persistent HP, and there is no
+    "scorched" injury, so an unrooted player struck by lightning only gets a flavour line, as the spec allows);
+    watering and nourishing on the same day give a crop 2 care (spec: "once per day each"); `VillageBook.fish_order`
+    and `Fishing.catchable` duplicate the fish scan in different orders (same set).

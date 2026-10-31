@@ -731,7 +731,8 @@ func _explore_day(tags: Array, quiet: bool) -> Dictionary:
 		tags = data.regions.get(current_region, {}).get("encounter_tags", [])
 	tags = tags + WorldEvents.encounter_tags(data, world_events, current_region)
 	if Weather.of(data, current_region, GameClock.total_days) == "storm":
-		EventBus.post("A storm rolls over the sky; lightning walks the horizon.", "warning")
+		if not quiet:  # explore_many would repeat it every storm day
+			EventBus.post("A storm rolls over the sky; lightning walks the horizon.", "warning")
 		_storm_strike()
 	var encounter := Exploration.discovery_for(player, data, current_region, world_flags)
 	Exploration.add_explore_day(player, current_region)
@@ -1230,8 +1231,6 @@ func fish(table: Array, days: int, place_name: String = "", quality: float = 0.5
 		found = Exploration.gather(player, usable, rng)
 	var old_rank := Fishing.rank_name(player.fishing_xp)
 	player.fishing_xp += Fishing.xp_gain(base, found)
-	if Fishing.rank_name(player.fishing_xp) != old_rank:
-		EventBus.post("Your fishing has improved: %s." % Fishing.rank_name(player.fishing_xp), "progress")
 	var notes: PackedStringArray = []
 	var first_catches: PackedStringArray = []
 	for item_id in found:
@@ -1247,6 +1246,9 @@ func fish(table: Array, days: int, place_name: String = "", quality: float = 0.5
 		EventBus.post("You fish for %s%s: %s." % [Calendar.format_duration(days), where, ", ".join(notes)], "progress")
 	for fish_name in first_catches:
 		EventBus.post("First catch: %s!" % fish_name, "progress")
+	# After the first-catch bonus, so a rank reached through it is announced too.
+	if Fishing.rank_name(player.fishing_xp) != old_rank:
+		EventBus.post("Your fishing has improved: %s." % Fishing.rank_name(player.fishing_xp), "progress")
 	_pass_time(days)
 
 

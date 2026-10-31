@@ -535,6 +535,27 @@ func test_fishing_catches_and_weather_changes_the_odds() -> void:
 	_restore_weather(gs)
 
 
+## [REVIEW] FISH-004: a rank reached through the first-catch bonus is announced.
+func test_first_catch_bonus_rank_up_is_announced() -> void:
+	var c := _start()
+	var gs := _game_state()
+	_set_weather(gs, "clear")
+	var table := [{"item": "silver_carp", "weight": 10, "min": 1, "max": 1}]
+	c.catch_log = {}
+	c.fishing_xp = Fishing.RANKS[1]["min"] - Fishing.FIRST_CATCH_XP - 1
+	_zero_round_posts.clear()
+	EventBus.message_posted.connect(_collect_post)
+	for i in 20:
+		gs.fish(table, 1)
+		if c.catch_log.has("silver_carp"):
+			break
+	EventBus.message_posted.disconnect(_collect_post)
+	assert_true(c.catch_log.has("silver_carp"), "a carp was caught")
+	assert_eq(Fishing.rank_name(c.fishing_xp), Fishing.RANKS[1]["name"])
+	assert_true("\n".join(_zero_round_posts).contains("Your fishing has improved"), "\n".join(_zero_round_posts))
+	_restore_weather(gs)
+
+
 func test_cook_meal_spends_fish_and_a_day() -> void:
 	var c := _start()
 	var gs := _game_state()
