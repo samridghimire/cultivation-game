@@ -32,6 +32,11 @@ static var attempt_trials := true
 ## --no-heal turns it off. heal_log["healed"] counts treatments, ["stones"] the stones the clinic took.
 static var heal_injuries := false
 static var heal_log := {"healed": 0, "stones": 0}
+## QA-181: in Qingshi a curious player works the village (see _village_month): rents the field and plants/harvests it, fishes the
+## jetty, sells the catch and crops, shares tea with a visitor, settles a quarrel. village_log counts it: stones from the field and
+## the fish (sold), rent paid, fishing days, harvests, teas, quarrels, favor. simulate_curious_years.gd's --village turns it on.
+static var village := false
+static var village_log := {"field_stones": 0, "rent": 0, "harvests": 0, "crops": 0, "fish_stones": 0, "fish_days": 0, "teas": 0, "quarrels": 0, "meals": 0}
 ## QA-163: with injury_report on, play() logs every injury the player takes: injury_log entries are
 ## {seed, id, day, region, news (the danger line the HUD showed), days (healing time), qi_lost (cultivation days it costs
 ## if left alone), end (day it went, -1 still open), treated (it went well before its time)}.
@@ -106,7 +111,7 @@ static var _memo := {}
 
 
 static func play_cached(gs: Node, clock: Node, seed_value: int, months: int, curious: bool = false, no_help: bool = false, wait_for_pill: int = 0) -> Dictionary:
-	var key := [seed_value, months, curious, no_help, wait_for_pill, follow_defence, practise_hint, attempt_trials, heal_injuries, spar_hint, min_mission_odds, chase_best_mission, buy_qi, shop_armor, spend_contribution, qi_pill_cap, far_qi, recharge_first, hint_missions, sect_method, stay_rogue, body_art, trial_report, sect_report, core_report]
+	var key := [seed_value, months, curious, no_help, wait_for_pill, follow_defence, practise_hint, attempt_trials, heal_injuries, village, spar_hint, min_mission_odds, chase_best_mission, buy_qi, shop_armor, spend_contribution, qi_pill_cap, far_qi, recharge_first, hint_missions, sect_method, stay_rogue, body_art, trial_report, sect_report, core_report]
 	if not _memo.has(key):
 		_memo[key] = play(gs, clock, seed_value, months, curious, Callable(), no_help, wait_for_pill)
 		gs.end_session()
@@ -424,6 +429,8 @@ static func _curious_month(gs: Node, c: CharacterData, done: Dictionary, today: 
 		_heal_before_fighting(gs, c, log)
 		heal_log["healed"] += int(log["healed"])
 		heal_log["stones"] += maxi(0, stones_before - c.item_count("spirit_stone"))
+	if village and c.alive:
+		_village_month(gs, c)
 	if follow_defence:
 		_follow_defence_hint(gs, c)
 	if practise_hint:
@@ -681,6 +688,76 @@ static func _sell_loot_here(gs: Node, c: CharacterData, region_id: String) -> vo
 		return
 	armor_log["stones_from_sales"] += gs.sell_all(best_ids)
 	armor_log["sold"] += 1
+
+
+## QA-181: see village. Only in Qingshi (the one region with a field, a jetty and a visitor spot for a newcomer). Sells crops by
+## kind (herb tag items the field grows) and fish at the merchant price (Items.sell, seasonal).
+static func _village_month(gs: Node, c: CharacterData) -> void:
+	if gs.current_region != "qingshi_village":
+		return
+	var region: Dictionary = gs.data.regions[gs.current_region]
+	var field := FieldPlots.place_def(gs.data, gs.current_region)
+	var fish_places: Array = []
+	for place: Dictionary in region.get("places", []):
+		if String(place.get("type", "")) == "fishing":
+			fish_places.append(place)
+	var today: int = gs.get_node("/root/GameClock").total_days
+	if not field.is_empty():
+		var key := FieldPlots.key(gs.current_region, field)
+		var crops: Dictionary = {}
+		for id: String in FieldPlots.plantable(field):
+			crops[id] = true
+		if FieldPlots.rented(c, key, today):
+			gs.harvest_field()
+			var got := 0
+			for id: String in crops:
+				got += c.item_count(id)
+			if got > 0:
+				village_log["harvests"] += 1
+				village_log["crops"] += got
+		# a plantable herb in the pack, and the rent in hand
+		var seed_id := ""
+		for id: String in crops:
+			if c.item_count(id) > 0 and (seed_id == "" or int(gs.data.items[id].get("price", 0)) < int(gs.data.items[seed_id].get("price", 0))):
+				seed_id = id
+		if not FieldPlots.rented(c, key, today) and seed_id != "" and c.item_count("spirit_stone") >= int(field["rent"]):
+			var s0 := c.item_count("spirit_stone")
+			gs.rent_field()
+			village_log["rent"] += s0 - c.item_count("spirit_stone")
+		if FieldPlots.rented(c, key, today):
+			for i in FieldPlots.plots_for(c, field, key):
+				if c.item_count(seed_id) <= 0:
+					break
+				gs.plant_field(seed_id)
+		for id: String in crops:
+			var n := c.item_count(id)
+			if n > 0 and id != seed_id:
+				var s1 := c.item_count("spirit_stone")
+				gs.sell_item(id, n)
+				village_log["field_stones"] += c.item_count("spirit_stone") - s1
+	# fish: two trips a month, one on a rain day when it rains
+	for place: Dictionary in fish_places:
+		for trip in 2:
+			if not c.alive:
+				return
+			gs.fish(place.get("catch_table", []), int(place.get("gather_days", 2)), String(place.get("display_name", "")))
+			village_log["fish_days"] += int(place.get("gather_days", 2))
+		var fish_ids: Array = []
+		for id: String in c.inventory.keys():
+			if "fish" in gs.data.items.get(id, {}).get("tags", []):
+				fish_ids.append(id)
+		var s2 := c.item_count("spirit_stone")
+		gs.sell_all(fish_ids)
+		village_log["fish_stones"] += c.item_count("spirit_stone") - s2
+		break
+	var visitor: String = gs.visitor_today()
+	if visitor != "" and gs.check_tea(visitor) == "":
+		gs.share_tea(visitor)
+		village_log["teas"] += 1
+	var q := Folk.open_quarrel(gs.world_flags, gs.current_region, today)
+	if not q.is_empty() and gs.check_quarrel(String(q["a"])) == "":
+		if not gs.settle_quarrel(String(q["a"]), "mediate").is_empty():
+			village_log["quarrels"] += 1
 
 
 ## QA-144: see buy_qi. The reserve is the next realm pill's price in the last three stages while none is held.

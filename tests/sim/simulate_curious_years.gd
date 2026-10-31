@@ -112,6 +112,8 @@ func _run() -> void:
 			FirstHour.sect_method = true  # QA-156
 		elif a == "--rogue":
 			FirstHour.stay_rogue = true  # QA-158
+		elif a == "--village":
+			FirstHour.village = true  # QA-181
 		elif a == "--buy-qi":
 			FirstHour.buy_qi = true  # QA-161
 		elif a == "--body-art":
@@ -255,6 +257,8 @@ func _run() -> void:
 		_print_arm_report(runs, months)
 	if FirstHour.core_report:
 		_print_core_report(runs)
+	if FirstHour.village:
+		print("Village (QA-181), %d seeds: %s" % [seeds, str(FirstHour.village_log)])
 	if _repeat_report:
 		_print_repeat_report(gs)
 	if FirstHour.injury_report:
