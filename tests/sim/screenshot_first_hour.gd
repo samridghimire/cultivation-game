@@ -101,6 +101,19 @@ func _start() -> void:
 			book.open()
 			book.call("set_page", "herbs")
 			book.get("_detail").text = book.call("hint_for", herbs[2], gs.data, gs.player), "close": book.close})
+		var host_region: String = gs.current_region
+		shots.append({"name": "village_book_people", "open": func() -> void:
+			hud.get("_banner").visible = false
+			var shown := 0
+			for npc: CharacterData in Npcs.in_region(gs.npcs, gs.data, host_region):
+				gs.npc_favor[npc.id] = 30 + shown * 25
+				shown += 1
+				if shown >= 3:
+					break
+			var first: CharacterData = Npcs.in_region(gs.npcs, gs.data, host_region)[0]
+			gs.world_flags["taste_%s_%s" % [first.id, "silver_carp"]] = 1
+			book.open()
+			book.call("set_page", "people"), "close": book.close})
 		special = true
 	if party:
 		special = true

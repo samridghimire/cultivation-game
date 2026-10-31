@@ -131,3 +131,34 @@ func test_sheet_button_opens_book() -> void:
 	assert_true(sheet.visible, "closing returns to the sheet")
 	hud.queue_free()
 	await _frames()
+
+
+func test_people_page_cards_and_unknown_tastes() -> void:
+	var root := _tree().root
+	var gs: Node = root.get_node("GameState")
+	gs.start_session(new_character())
+	gs.pending_event = ""
+	var book := VillageBook.new()
+	root.add_child(book)
+	book.open()
+	book.set_page("people")
+	await _frames()
+	assert_eq(VillageBook.PAGES.size(), 3, "three pages")
+	var grid := book.get("_grid") as GridContainer
+	assert_eq(grid.get_child_count(), 0, "nobody known yet")
+	assert_eq(book.get("_detail").text, "You have not got to know anyone here yet.")
+	var people := Npcs.in_region(gs.npcs, gs.data, gs.current_region)
+	assert_true(people.size() >= 2, "region has villagers")
+	gs.npc_favor[people[0].id] = 40
+	gs.npc_favor[people[1].id] = 20
+	book.set_page("people")
+	await _frames()
+	assert_eq(grid.get_child_count(), 2, "cards for two known villagers")
+	assert_true(grid.get_child(0).has_focus(), "first card focused")
+	var entry: Dictionary = gs.people_entries()[0]
+	var row := VillageBook.taste_row(gs.data, [], 2)
+	assert_eq(row.get_child_count(), 2, "unknown tastes are two ?")
+	assert_eq((row.get_child(0) as Label).text, "?")
+	assert_true(VillageBook.people_detail(entry, gs.data).contains("not yet learned"), "unknown likes worded")
+	book.queue_free()
+	await _frames()
