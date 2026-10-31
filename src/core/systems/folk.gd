@@ -212,6 +212,54 @@ static func validate_gifts(data: GameData) -> PackedStringArray:
 	return errors
 
 
+## FOLK-007: friendship tiers (family.json folk_tiers, ascending `min` favor). Index -1 = below the first tier.
+static func tier_index(data: GameData, favor: int) -> int:
+	var tiers: Array = data.family.get("folk_tiers", [])
+	var found := -1
+	for i in tiers.size():
+		if favor >= int(tiers[i]["min"]):
+			found = i
+	return found
+
+
+static func tier_name(data: GameData, favor: int) -> String:
+	var i := tier_index(data, favor)
+	return "" if i < 0 else String(data.family["folk_tiers"][i]["name"])
+
+
+## Villagers in `ids` whose tier rose above what `seen` records: [{id, tier}], the highest new tier only. Pure.
+static func new_tiers(data: GameData, seen: Dictionary, favor_by_id: Dictionary, ids: Array) -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	for id: String in ids:
+		var t := tier_index(data, int(favor_by_id.get(id, 0)))
+		if t > int(seen.get(id, -1)):
+			result.append({"id": id, "tier": t})
+	return result
+
+
+## Load errors in folk_tiers: strictly rising mins 1..100, names, known gift items with count 1..3.
+static func validate_tiers(data: GameData) -> PackedStringArray:
+	var errors: PackedStringArray = []
+	var tiers: Array = data.family.get("folk_tiers", [])
+	var last := 0
+	for i in tiers.size():
+		var t: Dictionary = tiers[i]
+		var where := "family.json folk_tiers %d" % i
+		var m := int(t.get("min", 0))
+		if m <= last or m > 100:
+			errors.append("%s: min must rise strictly within 1..100" % where)
+		last = m
+		if String(t.get("name", "")).is_empty():
+			errors.append("%s needs a name" % where)
+		if t.has("gift"):
+			var g: Dictionary = t["gift"]
+			if not data.items.is_empty() and not data.items.has(String(g.get("item", ""))):
+				errors.append("%s gift names unknown item %s" % [where, g.get("item", "?")])
+			if int(g.get("count", 0)) < 1 or int(g.get("count", 0)) > 3:
+				errors.append("%s gift count must be 1..3" % where)
+	return errors
+
+
 static func request_rules(data: GameData) -> Dictionary:
 	return data.family.get("folk_requests", {})
 
@@ -301,6 +349,7 @@ static func validate(data: GameData) -> PackedStringArray:
 	errors.append_array(validate_companions(data))
 	errors.append_array(validate_quarrels(data))
 	errors.append_array(validate_gifts(data))
+	errors.append_array(validate_tiers(data))
 	for e: Dictionary in data.encounters.values():
 		var blocks: Array = [[String(e["id"]), e.get("effects", {})]]
 		for i in e.get("choices", []).size():

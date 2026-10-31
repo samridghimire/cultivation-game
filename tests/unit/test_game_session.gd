@@ -2631,3 +2631,37 @@ func test_storm_exploring_can_bring_lightning_wood_and_dao() -> void:
 	assert_gt(wood, 0, "a storm branch was found")
 	assert_gt(gained, 0.0, "lightning fed Thunder Dao")
 	_restore_weather(gs)
+
+
+func test_friendship_tier_posts_line_and_gift_once() -> void:
+	var c := _start()
+	var gs := _game_state()
+	var npc := Npcs.spawn(gs.npcs, gs.data, seeded_rng(5), {"age_years": 30, "region": "qingshi_village", "realm": "mortal"})
+	gs.npc_favor[npc.id] = 35
+	gs.check_friendships()
+	assert_true(c.folk_tiers_seeded)
+	assert_eq(gs.friendship_label(npc.id), "Acquaintance")
+	gs.npc_favor[npc.id] = 45
+	var rice := c.item_count("sweet_rice_ball")
+	gs.check_friendships()
+	assert_eq(c.item_count("sweet_rice_ball"), rice + 2)
+	assert_eq(gs.friendship_label(npc.id), "Friend")
+	gs.check_friendships()
+	assert_eq(c.item_count("sweet_rice_ball"), rice + 2, "no repeat")
+	gs.npc_favor[npc.id] = 30
+	gs.check_friendships()
+	gs.npc_favor[npc.id] = 45
+	gs.check_friendships()
+	assert_eq(c.item_count("sweet_rice_ball"), rice + 2, "dip and recover does not repeat")
+
+
+func test_friendship_old_save_does_not_burst() -> void:
+	var c := _start()
+	var gs := _game_state()
+	var npc := Npcs.spawn(gs.npcs, gs.data, seeded_rng(6), {"age_years": 30, "region": "qingshi_village", "realm": "mortal"})
+	c.folk_tiers_seeded = false
+	gs.npc_favor[npc.id] = 70
+	var before := c.inventory.duplicate()
+	gs.check_friendships()
+	assert_eq(c.inventory, before)
+	assert_eq(gs.friendship_label(npc.id), "Close friend")

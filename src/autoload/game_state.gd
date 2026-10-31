@@ -94,6 +94,7 @@ func _ready() -> void:
 	GameClock.days_advanced.connect(_on_days_advanced)
 	GameClock.year_changed.connect(_on_year_changed)
 	EventBus.player_changed.connect(check_milestones)
+	EventBus.player_changed.connect(check_friendships)
 	EventBus.player_changed.connect(_announce_tier)
 	EventBus.player_changed.connect(check_unlock_notices)
 	EventBus.player_changed.connect(Platform.refresh_presence)
@@ -3517,6 +3518,44 @@ func check_milestones() -> void:
 		EventBus.post("Milestone: %s. %s" % [def["name"], def.get("description", "")], "progress")
 		Platform.unlock_achievement(String(def["id"]))
 		EventBus.milestone_reached.emit(String(def["id"]), String(def["name"]))
+
+
+## FOLK-007: the generated villagers whose favor you track, minus your family.
+func _friend_ids() -> Array:
+	var ids: Array = []
+	for id: String in npc_favor:
+		var c: CharacterData = npcs.get(id)
+		if c == null or data.npcs.has(id) or player.spouses.has(id) or player.children.has(id) or player.parents.has(id):
+			continue
+		ids.append(id)
+	ids.sort()
+	return ids
+
+
+## FOLK-007: a one-time line and small gift the first time a villager's favor reaches each friendship tier.
+func check_friendships() -> void:
+	if player == null or data.family.get("folk_tiers", []).is_empty():
+		return
+	var ids := _friend_ids()
+	if not player.folk_tiers_seeded:
+		# Old save (or first check): record current tiers silently so nothing bursts out.
+		for id: String in ids:
+			player.folk_tier_seen[id] = maxi(int(player.folk_tier_seen.get(id, -1)), Folk.tier_index(data, int(npc_favor.get(id, 0))))
+		player.folk_tiers_seeded = true
+		return
+	for hit in Folk.new_tiers(data, player.folk_tier_seen, npc_favor, ids):
+		var tier: Dictionary = data.family["folk_tiers"][int(hit["tier"])]
+		var npc: CharacterData = npcs[hit["id"]]
+		player.folk_tier_seen[hit["id"]] = int(hit["tier"])
+		if tier.has("line"):
+			EventBus.post(String(tier["line"]).replace("{name}", npc.name), "social")
+		if tier.has("gift"):
+			player.add_item(String(tier["gift"]["item"]), int(tier["gift"]["count"]))
+
+
+## FOLK-007: "Friend", "Close friend"... for the UI; "" when below the first tier.
+func friendship_label(npc_id: String) -> String:
+	return Folk.tier_name(data, int(npc_favor.get(npc_id, 0)))
 
 
 ## Announces each newly available feature once (GUIDE-008). Runs on player_changed.

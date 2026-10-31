@@ -153,6 +153,9 @@ var letter_day: int = -1
 var letter_requests: Array[Dictionary] = []
 ## World day each generated villager last gave the player a gift (FOLK-002): npc id -> day.
 var folk_gift_day: Dictionary = {}
+## Highest friendship tier already celebrated per villager (FOLK-007): npc id -> tier index; seeded once on old saves.
+var folk_tier_seen: Dictionary = {}
+var folk_tiers_seeded: bool = false
 ## Fishing skill (FISH-003): one point per trip, two for a rare catch.
 var fishing_xp: int = 0
 ## Angler's log (FISH-004): fish item id -> times caught.
@@ -290,6 +293,8 @@ func to_dict() -> Dictionary:
 		"gather_xp": gather_xp,
 		"herb_log": herb_log.duplicate(),
 		"folk_visit_day": folk_visit_day.duplicate(),
+		"folk_tier_seen": folk_tier_seen.duplicate(),
+		"folk_tiers_seeded": folk_tiers_seeded,
 		"folk_companion": folk_companion.duplicate(),
 		"folk_companion_day": folk_companion_day.duplicate(),
 		"shop_deals": shop_deals.duplicate(true),
@@ -436,6 +441,8 @@ static func from_dict(d: Dictionary) -> CharacterData:
 	c.gather_xp = int(d.get("gather_xp", 0))
 	c.herb_log = _int_values(d.get("herb_log", {}))
 	c.folk_visit_day = _int_values(d.get("folk_visit_day", {}))
+	c.folk_tier_seen = _int_values(d.get("folk_tier_seen", {}))
+	c.folk_tiers_seeded = bool(d.get("folk_tiers_seeded", false))
 	var companion: Dictionary = d.get("folk_companion", {})
 	if not companion.is_empty():
 		c.folk_companion = {"npc": String(companion.get("npc", "")), "day": int(companion.get("day", -1))}
