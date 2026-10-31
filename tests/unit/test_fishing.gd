@@ -144,3 +144,46 @@ func test_progress_between_ranks() -> void:
 	assert_eq(Fishing.progress(10), 0.0)
 	assert_eq(Fishing.progress(100), 1.0)
 	assert_eq(Fishing.progress(250), 1.0)
+
+
+## FISH-005: trophy entries.
+func _trophy_table() -> Array:
+	return [{"item": "", "weight": 1}, {"item": "mist_koi", "weight": 1, "min": 1, "max": 1, "trophy": true}]
+
+
+func test_trophy_allowed_edges() -> void:
+	assert_true(Fishing.trophy_allowed(1.0, 10))
+	assert_false(Fishing.trophy_allowed(0.99, 10))
+	assert_false(Fishing.trophy_allowed(1.0, 9))
+
+
+func test_filter_trophy_keeps_or_drops_the_entry() -> void:
+	var t := _trophy_table()
+	assert_eq(Fishing.filter_trophy(t, 1.0, 10).size(), 2)
+	assert_eq(Fishing.filter_trophy(t, 0.5, 10).size(), 1)
+	assert_eq(Fishing.filter_trophy(t, 1.0, 9).size(), 1)
+	var plain := [{"item": "", "weight": 1}, {"item": "silver_carp", "weight": 2}]
+	assert_eq(Fishing.filter_trophy(plain, 0.0, 0), plain, "no trophy entry: unchanged")
+
+
+func test_trophy_validation() -> void:
+	var d := data()
+	assert_eq(Fishing.validate_table(d, _trophy_table(), "x").size(), 0)
+	var two := _trophy_table() + [{"item": "silver_carp", "weight": 1, "trophy": true}]
+	assert_eq(Fishing.validate_table(d, two, "x").size(), 1)
+	assert_eq(Fishing.validate_table(d, [{"item": "mist_koi", "weight": 3, "trophy": true}], "x").size(), 1)
+	assert_eq(Fishing.validate_table(d, [{"item": "spirit_herb", "weight": 1, "trophy": true}], "x").size(), 1)
+
+
+func test_trophy_near_miss_and_clean_strike() -> void:
+	var gs: Node = Engine.get_main_loop().root.get_node("GameState")
+	var c := CharacterFactory.create("Angler", gs.data, seeded_rng(1))
+	gs.start_session(c)
+	gs.rng = seeded_rng(5)
+	var table := [{"item": "mist_koi", "weight": 10, "min": 1, "max": 1, "trophy": true}]
+	for i in 5:
+		gs.fish(table, 1, "", 0.5)
+	assert_eq(c.item_count("mist_koi"), 0, "an ordinary cast never lands the trophy")
+	c.fishing_xp = 10
+	gs.fish(table, 1, "", 1.0)
+	assert_gt(c.item_count("mist_koi"), 0, "a clean strike by an Angler lands it")

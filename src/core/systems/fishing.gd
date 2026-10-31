@@ -126,3 +126,52 @@ static func missing_hint(c: CharacterData, data: GameData, region_id: String, se
 			if id != "" and data.items.get(id, {}).get("tags", []).has("fish") and not c.catch_log.has(id):
 				return "%s bites here in %s." % [data.items[id].get("name", id), season.to_lower()]
 	return ""
+
+
+## FISH-005: a catch_table entry with `trophy: true` needs a clean strike and an Angler's skill.
+const TROPHY_QUALITY := 1.0
+const TROPHY_XP := 10
+
+
+static func is_trophy(entry: Dictionary) -> bool:
+	return bool(entry.get("trophy", false))
+
+
+static func trophy_allowed(quality: float, xp: int) -> bool:
+	return quality >= TROPHY_QUALITY and xp >= TROPHY_XP
+
+
+## `table` without its trophy entries unless `trophy_allowed`; a table with none is returned unchanged.
+static func filter_trophy(table: Array, quality: float, xp: int) -> Array:
+	if trophy_allowed(quality, xp):
+		return table
+	var out: Array = []
+	for entry: Dictionary in table:
+		if not is_trophy(entry):
+			out.append(entry)
+	return out
+
+
+## The item id of the table's trophy entry that is in `found`, or "".
+static func trophy_in(table: Array, found: Dictionary) -> String:
+	for entry: Dictionary in table:
+		if is_trophy(entry) and found.has(String(entry.get("item", ""))):
+			return String(entry["item"])
+	return ""
+
+
+## Errors for the trophy entries of one catch_table (`who` names the place).
+static func validate_table(data: GameData, table: Array, who: String) -> PackedStringArray:
+	var errors: PackedStringArray = []
+	var count := 0
+	for entry: Dictionary in table:
+		if not is_trophy(entry):
+			continue
+		count += 1
+		if float(entry.get("weight", 1)) > 1.0:
+			errors.append("%s: trophy entry weight must be <= 1" % who)
+		if not data.items.get(String(entry.get("item", "")), {}).get("tags", []).has("fish"):
+			errors.append("%s: trophy entry must be an item tagged fish" % who)
+	if count > 1:
+		errors.append("%s: at most one trophy entry per table" % who)
+	return errors

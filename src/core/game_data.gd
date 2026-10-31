@@ -611,6 +611,7 @@ func _validate_world() -> void:
 				load_errors.append_array(PlaceLooks.errors(place["look"], who))
 			if place.get("type", "") == "fishing" and (place.get("catch_table", []) as Array).is_empty():
 				load_errors.append("Region '%s' fishing place '%s' needs a catch_table" % [region["id"], place.get("display_name", "")])
+			load_errors.append_array(Fishing.validate_table(self, place.get("catch_table", []), "Region '%s' fishing place '%s'" % [region["id"], place.get("display_name", "")]))
 			for entry: Dictionary in place.get("catch_table", []):
 				_validate_seasons(entry, "Region '%s' catch entry '%s'" % [region["id"], entry.get("item", "")])
 				if entry.get("item", "") != "" and not items.has(entry["item"]):

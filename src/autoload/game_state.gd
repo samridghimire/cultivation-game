@@ -1235,16 +1235,25 @@ func fish(table: Array, days: int, place_name: String = "", quality: float = 0.5
 		EventBus.post("A fish takes the bait, then it got away.")
 	else:
 		found = Exploration.gather(player, usable, rng)
+		var trophy := Fishing.trophy_in(base, found)
+		if trophy != "" and not Fishing.trophy_allowed(quality, player.fishing_xp):
+			found = {}
+			if quality >= 0.5:
+				EventBus.post("Something huge takes the bait and snaps the line.")
+	base = Fishing.filter_trophy(base, quality, player.fishing_xp)
 	var old_rank := Fishing.rank_name(player.fishing_xp)
 	player.fishing_xp += Fishing.xp_gain(base, found)
 	var notes: PackedStringArray = []
 	var first_catches: PackedStringArray = []
+	var trophy_caught := ""
 	for item_id in found:
 		player.add_item(item_id, found[item_id])
 		notes.append("+%d %s" % [found[item_id], Items.item_plural(data, item_id, found[item_id])])
 		if data.items.get(item_id, {}).get("tags", []).has("fish") and Fishing.record_catch(player, item_id, int(found[item_id])):
 			first_catches.append(String(data.items[item_id]["name"]))
 			player.fishing_xp += Fishing.FIRST_CATCH_XP
+			if Fishing.trophy_in(base, {item_id: 1}) != "":
+				trophy_caught = String(data.items[item_id]["name"])
 	var where := " at the %s" % place_name if place_name != "" else ""
 	if notes.is_empty():
 		EventBus.post("You fish for %s%s but nothing bites." % [Calendar.format_duration(days), where])
@@ -1252,6 +1261,8 @@ func fish(table: Array, days: int, place_name: String = "", quality: float = 0.5
 		EventBus.post("You fish for %s%s: %s." % [Calendar.format_duration(days), where, ", ".join(notes)], "progress")
 	for fish_name in first_catches:
 		EventBus.post("First catch: %s!" % fish_name, "progress")
+	if trophy_caught != "":
+		EventBus.post("Pond legend: you landed the %s!" % trophy_caught, "progress")
 	# After the first-catch bonus, so a rank reached through it is announced too.
 	if Fishing.rank_name(player.fishing_xp) != old_rank:
 		EventBus.post("Your fishing has improved: %s." % Fishing.rank_name(player.fishing_xp), "progress")
