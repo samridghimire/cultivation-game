@@ -5573,7 +5573,7 @@ func test_village_lines_angler_log() -> void:
 	assert_false(_has_line(Guidance.village_lines(c, d, {}, {}, "misty_forest", 10), "Fish caught"))
 	Fishing.record_catch(c, "silver_carp", 1)
 	var lines := Guidance.village_lines(c, d, {}, {}, "misty_forest", 10)
-	assert_true(_has_line(lines, "Fish caught: 1 of 3 kinds"), str(lines))
+	assert_true(_has_line(lines, "Fish caught: 1 of 5 kinds"), str(lines))
 	assert_true(_has_line(lines, "Marsh Eel bites here in"), str(lines))
 
 
