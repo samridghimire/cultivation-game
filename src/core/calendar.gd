@@ -49,7 +49,7 @@ static func season_tint(season: String) -> Color:
 		"Autumn":
 			return Color(1.0, 0.93, 0.85)
 		"Winter":
-			return Color(0.88, 0.92, 1.0)
+			return Color(0.95, 0.97, 1.0)
 	return Color.WHITE
 
 

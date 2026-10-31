@@ -17,6 +17,10 @@ const MAX_COUNT := 300
 ## map.landmarks kinds (GFX-008, GFX-012); the solid ones block the player, the rest can be walked over.
 const LANDMARK_KINDS: PackedStringArray = ["house", "field", "pond", "fence", "well", "wall", "cliff", "stream", "lantern", "pine", "stall"]
 const SOLID_LANDMARKS: PackedStringArray = ["house", "well", "wall", "cliff", "lantern", "pine", "stall"]
+## Crop-row colour of the field landmark by season (GFX-037); transparent while the furrows lie bare.
+const CROP_COLORS := {"Spring": "7fc04a", "Summer": "4f9a3a", "Autumn": "d9aa3a", "Winter": "00000000"}
+## Autumn canopy tones a tree picks from by its seed.
+const AUTUMN_TONES: PackedStringArray = ["c9622a", "b8452c", "d99a2e", "a8532a"]
 ## Clearance kept around places, npc spots and the spawn point, and from the map edge.
 const CLEARANCE := 28.0
 const SPOT_RADIUS := 30.0
@@ -132,3 +136,27 @@ static func validate(data: GameData) -> PackedStringArray:
 
 static func _is_pair(v: Variant) -> bool:
 	return v is Array and (v as Array).size() == 2 and (v as Array).all(func(n: Variant) -> bool: return n is float or n is int)
+
+
+## How a tree looks in `season` (GFX-037): `canopy` colour, `bare` (no leaves), `snow` (white caps), `blossoms` and
+## `leaves` (fallen) pixel counts. Pure: the same (season, seed, base) always gives the same look.
+static func tree_look(season: String, seed_value: int, base: Color = Color("2e5a2a")) -> Dictionary:
+	var h := absi(seed_value * 2654435761) % 1000
+	match season:
+		"Spring":
+			return {"canopy": base.lightened(0.12), "bare": false, "snow": false, "blossoms": 5 + h % 4, "leaves": 0}
+		"Autumn":
+			return {"canopy": Color(AUTUMN_TONES[h % AUTUMN_TONES.size()]), "bare": false, "snow": false, "blossoms": 0, "leaves": 4 + h % 4}
+		"Winter":
+			return {"canopy": Color("6b5a48"), "bare": true, "snow": true, "blossoms": 0, "leaves": 0}
+	return {"canopy": base, "bare": false, "snow": false, "blossoms": 0, "leaves": 0}
+
+
+## Crop-row colour of the big field in `season` (alpha 0 in winter: bare furrows).
+static func crop_color(season: String) -> Color:
+	return Color(String(CROP_COLORS.get(season, "4f9a3a")))
+
+
+## True when roofs, pines and ponds carry snow or ice.
+static func is_snowy(season: String) -> bool:
+	return season == "Winter"

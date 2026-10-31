@@ -7,6 +7,7 @@ extends SceneTree
 ## journal Commissions, Deliver) as crafter_*.png.
 ## WU-414: append `-- --book` for village_book.png.
 ## GFX-033: append `-- --storm` to render the first-hour shots under a storm.
+## GFX-037: append `-- --season=Winter` (Spring/Summer/Autumn/Winter) to start on that season's first day.
 ## GFX-029: append `-- --field` for field.png (a growing field).
 ## GFX-023: append `-- --celebration` for celebration.png (wedding lanterns and red sashes).
 ## WU-223: append `-- --gather-note` for the Village Herb Slope menu in each season: gather_note_<season>.png.
@@ -36,6 +37,12 @@ func _start() -> void:
 	rng.seed = 3
 	var c := CharacterFactory.create("Lin Feng", gs.data, rng, "male")
 	gs.start_session(c)
+	for arg in OS.get_cmdline_user_args():  # GFX-037: start on a season's first day
+		if arg.begins_with("--season="):
+			var idx := ["Spring", "Summer", "Autumn", "Winter"].find(arg.substr(9).capitalize())
+			if idx >= 0:
+				var clock: Node = root.get_node("GameClock")
+				clock.total_days = idx * 3 * Calendar.DAYS_PER_MONTH
 	gs.pending_event = ""
 	var party := OS.get_cmdline_user_args().has("--celebration")
 	if party:  # GFX-023: a wedding for a Qingshi villager, before the world is built

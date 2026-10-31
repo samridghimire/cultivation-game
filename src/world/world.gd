@@ -675,7 +675,9 @@ func _draw_landmark(lm: Dictionary) -> void:
 		var water := Color(str(lm["color"])) if lm.has("color") else Color("3f7fa8")
 		var ptex := PixelLandmark.texture(str(lm["kind"]), size, water)
 		var px := Vector2(ptex.get_size()) * float(Sprites.scale())
-		draw_texture_rect(ptex, Rect2(Vector2(r.get_center().x - px.x / 2.0, r.end.y - px.y), px), false)
+		var origin := Vector2(r.get_center().x - px.x / 2.0, r.end.y - px.y)
+		draw_texture_rect(ptex, Rect2(origin, px), false)
+		_draw_season_overlay(str(lm["kind"]), origin, r, ptex.get_size())
 		if lm["kind"] == "stream":
 			_draw_bridges(r)
 		return
@@ -768,6 +770,45 @@ func _draw_landmark(lm: Dictionary) -> void:
 			draw_rect(Rect2(r.position.x + 8, r.position.y + r.size.y * 0.55, r.size.x - 16, 6), Color("c9a24a"))
 
 
+## GFX-037: snow caps on roofs and pines, an ice rim on ponds, crop rows on the field, by `_season`.
+func _draw_season_overlay(kind: String, origin: Vector2, r: Rect2, pix: Vector2) -> void:
+	var sc := float(Sprites.scale())
+	var snow := Color("f4f8ff")
+	var winter := Scenery.is_snowy(_season)
+	match kind:
+		"house":
+			if winter:
+				for i in 4:
+					var inset := 13 - i
+					draw_rect(Rect2(origin + Vector2(1 + inset, 3 + i) * sc, Vector2(48 - 2 * inset, 1) * sc), snow)
+		"stall":
+			if winter:
+				draw_rect(Rect2(origin + Vector2(0, 0), Vector2(40, 2) * sc), snow)
+		"pine":
+			if winter:
+				for i in 3:
+					for j in 3:
+						var half := (j + 2 + i) / 2 + 1
+						draw_rect(Rect2(origin + Vector2(10 - half, i * 6 + j) * sc, Vector2(half * 2, 1) * sc), snow)
+		"pond":
+			if winter:
+				var pts := PackedVector2Array()
+				for k in 33:
+					var a := TAU * k / 32.0
+					pts.append(r.get_center() + Vector2(cos(a) * r.size.x / 2.0, sin(a) * r.size.y / 2.0))
+				draw_colored_polygon(pts, Color(0.85, 0.93, 1.0, 0.3))
+				draw_polyline(pts, Color(0.92, 0.97, 1.0, 0.9), 3.0)
+		"field":
+			var crop := Scenery.crop_color(_season)
+			var y := 2
+			while y < int(pix.y) - 2:
+				if crop.a > 0.0:
+					draw_rect(Rect2(origin + Vector2(3, y + 1) * sc, Vector2(pix.x - 6, 2) * sc), crop)
+				else:
+					draw_rect(Rect2(origin + Vector2(2, y) * sc, Vector2(pix.x - 4, 3) * sc), Color(0.85, 0.92, 1.0, 0.25))
+				y += 4
+
+
 ## Planks across a stream where `crossing` (its overlap with `path_rect`) is, laid along the path's direction.
 ## The plank bridge wherever a path crosses the stream `r`.
 func _draw_bridges(r: Rect2) -> void:
@@ -792,6 +833,30 @@ func _draw_bridge(crossing: Rect2, path_rect: Rect2) -> void:
 	draw_rect(span, Color("4a3524"), false, 2.0)
 
 
+## GFX-037: a tree by season: spring blossom, autumn colours and fallen leaves, bare snowy winter branches.
+func _draw_tree(p: Vector2, k: float, base: Color) -> void:
+	var seed_value := int(p.x) * 7 + int(p.y) * 13
+	var look := Scenery.tree_look(_season, seed_value, base)
+	var c: Color = look["canopy"]
+	draw_circle(p + Vector2(4, 6) * k, 20.0 * k, Color(0, 0, 0, 0.25))
+	var trunk := Color("4a3524")
+	draw_rect(Rect2(p + Vector2(-3, 2) * k, Vector2(6, 14) * k), trunk)
+	if look["bare"]:
+		for tip: Vector2 in [Vector2(-14, -22), Vector2(0, -30), Vector2(13, -20), Vector2(-8, -12), Vector2(8, -10)]:
+			draw_line(p + Vector2(0, 2) * k, p + tip * k, c, 2.0)
+			draw_rect(Rect2(p + tip * k - Vector2(3, 3), Vector2(6, 3)), Color("f4f8ff"))
+		return
+	draw_circle(p + Vector2(0, -6) * k, 18.0 * k, c)
+	draw_circle(p + Vector2(-8, -2) * k, 12.0 * k, c.darkened(0.15))
+	draw_circle(p + Vector2(6, -14) * k, 9.0 * k, c.lightened(0.15))
+	for i in int(look["blossoms"]):
+		var o := Vector2(fposmod(seed_value * (i + 3), 29.0) - 14.0, fposmod(seed_value * (i + 5), 25.0) - 22.0)
+		draw_rect(Rect2(p + o * k, Vector2(3, 3)), Color("f6c6dc"))
+	for i in int(look["leaves"]):
+		var o := Vector2(fposmod(seed_value * (i + 2), 37.0) - 18.0, 8.0 + fposmod(seed_value * (i + 7), 9.0))
+		draw_rect(Rect2(p + o * k, Vector2(3, 2)), c.darkened(0.1))
+
+
 func _draw_decor(d: Dictionary) -> void:
 	var p: Vector2 = d["pos"]
 	var k: float = d["scale"]
@@ -804,11 +869,7 @@ func _draw_decor(d: Dictionary) -> void:
 		return
 	match d["kind"]:
 		"tree":
-			draw_circle(p + Vector2(4, 6) * k, 20.0 * k, Color(0, 0, 0, 0.25))
-			draw_rect(Rect2(p + Vector2(-3, 2) * k, Vector2(6, 14) * k), Color("4a3524"))
-			draw_circle(p + Vector2(0, -6) * k, 18.0 * k, c)
-			draw_circle(p + Vector2(-8, -2) * k, 12.0 * k, c.darkened(0.15))
-			draw_circle(p + Vector2(6, -14) * k, 9.0 * k, c.lightened(0.15))
+			_draw_tree(p, k, c)
 		"rock":
 			var pts := PackedVector2Array([Vector2(-12, 6), Vector2(-9, -5), Vector2(-1, -9), Vector2(10, -4), Vector2(12, 6)])
 			for i in pts.size():
