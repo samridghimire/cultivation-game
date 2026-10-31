@@ -88,8 +88,8 @@ static func make_variant(base: Color, rid: String, variant: int, flowers: bool) 
 
 ## The whole ground of a region as one texture, 1 px per sprite pixel (the caller scales it): 16-px
 ## cells picked by `variant_for`. Built once per region and season-bloom state, so `_draw()` stays cheap.
-static func ground_texture(base: Color, rid: String, size_px: Vector2i, flowers: bool) -> ImageTexture:
-	var key := "ground|%s|%s|%s|%s" % [base.to_html(), rid, size_px, flowers]
+static func ground_texture(base: Color, rid: String, size_px: Vector2i, flowers: bool, season: String = "") -> ImageTexture:
+	var key := "ground|%s|%s|%s|%s|%s" % [base.to_html(), rid, size_px, flowers, season]
 	if _cache.has(key):
 		return _cache[key]
 	var img := Image.create(size_px.x, size_px.y, false, Image.FORMAT_RGBA8)
@@ -102,15 +102,87 @@ static func ground_texture(base: Color, rid: String, size_px: Vector2i, flowers:
 			var w := mini(SIZE, size_px.x - cx * SIZE)
 			var h := mini(SIZE, size_px.y - cy * SIZE)
 			img.blit_rect(src, Rect2i(0, 0, w, h), Vector2i(cx * SIZE, cy * SIZE))
+	_apply_season(img, rid, season)
 	var tex := ImageTexture.create_from_image(img)
 	_cache[key] = tex
 	return tex
 
 
+const OCHRE := Color("b59a4a")
+const SNOW := Color("dfe6ee")
+const PATH_SNOW := Color("cfd6de")
+const FLOWER_COLORS := [Color("f4efe0"), Color("e88aa8"), Color("f2d24b")]
+const LEAF_COLORS := [Color("c8622a"), Color("d9902f"), Color("a8481f")]
+
+
+## GFX-039: the season a region's ground is drawn in: a region whose map has `no_snow` keeps its summer ground in winter.
+static func ground_season(season: String, map: Dictionary) -> String:
+	if season == "Winter" and bool(map.get("no_snow", false)):
+		return ""
+	return season
+
+
+## Recolours a finished ground image for `season` ("Spring", "Autumn", "Winter"; anything else is left alone).
+## No rng: every choice comes from `variant_for`-style hashes, so the same inputs give the same image.
+static func _apply_season(img: Image, rid: String, season: String) -> void:
+	var w := img.get_width()
+	var h := img.get_height()
+	match season:
+		"Spring":
+			for cy in ceili(float(h) / SIZE):
+				for cx in ceili(float(w) / SIZE):
+					var roll := absi(hash("%s|%d|%d|spring" % [rid, cx, cy]))
+					if roll % 2 != 0:
+						continue
+					var x := cx * SIZE + (roll / 2) % SIZE
+					var y := cy * SIZE + (roll / 32) % SIZE
+					if x < w and y < h:
+						img.set_pixel(x, y, FLOWER_COLORS[(roll / 512) % FLOWER_COLORS.size()])
+		"Autumn":
+			_tint_image(img, OCHRE, 0.25)
+			for cy in ceili(float(h) / SIZE):
+				for cx in ceili(float(w) / SIZE):
+					var roll := absi(hash("%s|%d|%d|autumn" % [rid, cx, cy]))
+					if roll % 3 != 0:
+						continue
+					var x := cx * SIZE + (roll / 3) % (SIZE - 1)
+					var y := cy * SIZE + (roll / 64) % SIZE
+					if x + 1 < w and y < h:
+						var leaf: Color = LEAF_COLORS[(roll / 1024) % LEAF_COLORS.size()]
+						img.set_pixel(x, y, leaf)
+						img.set_pixel(x + 1, y, leaf)
+		"Winter":
+			var summer := img.duplicate() as Image
+			_tint_image(img, SNOW, 0.55)
+			for cy in ceili(float(h) / SIZE):
+				for cx in ceili(float(w) / SIZE):
+					var roll := absi(hash("%s|%d|%d|winter" % [rid, cx, cy]))
+					var px := cx * SIZE + 2 + roll % (SIZE - 4)
+					var py := cy * SIZE + 2 + (roll / 16) % (SIZE - 4)
+					# An irregular 3-6 px patch of grass: a seed pixel and a few hash-picked neighbours.
+					var count := 3 + (roll / 256) % 4
+					var offsets := [Vector2i(0, 0), Vector2i(1, 0), Vector2i(0, 1), Vector2i(-1, 0), Vector2i(1, 1), Vector2i(0, -1)]
+					var start := (roll / 1024) % offsets.size()
+					for i in count:
+						var o: Vector2i = offsets[(start + i) % offsets.size()]
+						var x := px + o.x
+						var y := py + o.y
+						if x >= 0 and y >= 0 and x < w and y < h:
+							img.set_pixel(x, y, summer.get_pixel(x, y))
+
+
+static func _tint_image(img: Image, toward: Color, amount: float) -> void:
+	for y in img.get_height():
+		for x in img.get_width():
+			var c := img.get_pixel(x, y)
+			if c.a > 0.0:
+				img.set_pixel(x, y, Color(c.lerp(toward, amount), c.a))
+
+
 ## A path rectangle of `size_px` sprite pixels: the path tile with an irregular 2-3 px fringe along each
 ## edge cut away (transparent, so the grass or a crossing path shows) and rounded corners.
-static func path_texture(base: Color, rid: String, size_px: Vector2i) -> ImageTexture:
-	var key := "pathrect|%s|%s|%s" % [base.to_html(), rid, size_px]
+static func path_texture(base: Color, rid: String, size_px: Vector2i, season: String = "") -> ImageTexture:
+	var key := "pathrect|%s|%s|%s|%s" % [base.to_html(), rid, size_px, season]
 	if _cache.has(key):
 		return _cache[key]
 	var w := maxi(size_px.x, 1)
@@ -142,6 +214,8 @@ static func path_texture(base: Color, rid: String, size_px: Vector2i) -> ImageTe
 					var py: int = corner.y + sy * dy
 					if px >= 0 and py >= 0 and px < w and py < h:
 						img.set_pixel(px, py, clear)
+	if season == "Winter":
+		_tint_image(img, PATH_SNOW, 0.35)
 	var tex := ImageTexture.create_from_image(img)
 	_cache[key] = tex
 	return tex

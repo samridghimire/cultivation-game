@@ -574,6 +574,8 @@ func _validate_world() -> void:
 			var map_pos: Variant = region["map_pos"]
 			if not (map_pos is Array and (map_pos as Array).size() == 2 and (map_pos as Array).all(func(v): return (v is float or v is int) and v >= 0.0 and v <= 1.0)):
 				load_errors.append("Region '%s' map_pos must be [x, y] with values in 0..1" % region["id"])
+		if region.get("map", {}).has("no_snow") and not region["map"]["no_snow"] is bool:
+			load_errors.append("Region '%s' map.no_snow must be true or false" % region["id"])
 		var ambient: Variant = region.get("map", {}).get("ambient", {})
 		if not ambient is Dictionary:
 			load_errors.append("Region '%s' map.ambient must be an object" % region["id"])

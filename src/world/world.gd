@@ -633,8 +633,9 @@ func _draw() -> void:
 	else:
 		var ground_color := Color(map.get("ground", "4d6b3c"))
 		var sc := float(Sprites.scale())
-		var flowers := ["spring", "summer"].has(Calendar.season_of(GameClock.total_days))
-		var gtex := GroundTiles.ground_texture(ground_color, rid, Vector2i(ceili(map_size.x / sc), ceili(map_size.y / sc)), flowers)
+		var gseason := GroundTiles.ground_season(_season, map)
+		var flowers := ["Spring", "Summer"].has(_season)
+		var gtex := GroundTiles.ground_texture(ground_color, rid, Vector2i(ceili(map_size.x / sc), ceili(map_size.y / sc)), flowers, gseason)
 		draw_texture_rect(gtex, Rect2(Vector2.ZERO, Vector2(gtex.get_size()) * sc), false)
 	var path_tile := Sprites.first(["path_" + rid, "path"])
 	var path_color := Color(map.get("path_color", "8a7350"))
@@ -644,7 +645,7 @@ func _draw() -> void:
 			_draw_tiled(path_tile, rect)
 		else:
 			var psc := float(Sprites.scale())
-			var ptex := GroundTiles.path_texture(path_color, rid, Vector2i(ceili(rect.size.x / psc), ceili(rect.size.y / psc)))
+			var ptex := GroundTiles.path_texture(path_color, rid, Vector2i(ceili(rect.size.x / psc), ceili(rect.size.y / psc)), GroundTiles.ground_season(_season, map))
 			draw_texture_rect(ptex, Rect2(rect.position, Vector2(ptex.get_size()) * psc), false)
 	for lm: Dictionary in map.get("landmarks", []):
 		_draw_landmark(lm)
