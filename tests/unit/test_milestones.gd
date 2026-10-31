@@ -192,15 +192,19 @@ func test_goal005_log_checks() -> void:
 func test_goal005_trophy_and_green_thumb() -> void:
 	var c := new_character()
 	var d := data()
-	# No trophy fish is in the data yet (C-280): add a synthetic pond for the check.
-	d.regions["goal005_test"] = {"places": [{"type": "fishing", "catch_table": [{"item": "silver_carp", "weight": 1, "trophy": true}]}]}
 	var trophies := Fishing.trophy_items(d)
-	assert_eq(trophies.size(), 1)
+	assert_eq(trophies.size(), 2, "gold-scaled carp and ghostwhisker eel")
 	assert_false(Milestones.newly_reached(c, d, {}).has("pond_legend"))
 	c.catch_log[trophies[0]] = 1
 	assert_true(Milestones.newly_reached(c, d, {}).has("pond_legend"))
-	d.regions.erase("goal005_test")
-	assert_false(Milestones.newly_reached(c, d, {}).has("pond_legend"), "no trophy kinds, no milestone")
+	var bare := data()
+	bare.regions["goal005_test"] = {}
+	for rid: String in bare.regions.keys():
+		var places: Array = bare.regions[rid].get("places", [])
+		for pl: Dictionary in places:
+			for e: Dictionary in pl.get("catch_table", []):
+				e.erase("trophy")
+	assert_false(Milestones.newly_reached(c, bare, {}).has("pond_legend"), "no trophy kinds, no milestone")
 	LifeStats.add(c, "harvests", 9)
 	assert_false(Milestones.newly_reached(c, data(), {}).has("green_thumb"))
 	LifeStats.add(c, "harvests")
