@@ -5477,6 +5477,19 @@ func test_village_lines_field_plant_then_harvest() -> void:
 	assert_false(_has_line(Guidance.village_lines(c, d, {}, {}, "misty_forest", 10), "Your Morning Dew Grass"))
 
 
+func test_village_lines_field_skips_out_of_season_plant() -> void:
+	var d := _village_data("clear")
+	var c := new_character()
+	c.add_item("peach_blossom_petal", 1)
+	assert_true(_has_line(Guidance.village_lines(c, d, {}, {}, "qingshi_village", 10), "Plant your Peach Blossom Petal"))
+	var summer := 0
+	for day in 400:
+		if Calendar.season_of(day) == "Summer":
+			summer = day
+			break
+	assert_false(_has_line(Guidance.village_lines(c, d, {}, {}, "qingshi_village", summer), "Plant your"))
+
+
 func test_village_lines_meal_needs_injury_and_ingredients() -> void:
 	var d := _village_data("clear")
 	var c := new_character()

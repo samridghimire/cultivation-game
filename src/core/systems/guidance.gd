@@ -3588,7 +3588,7 @@ static func _field_line(out: PackedStringArray, c: CharacterData, data: GameData
 		out.append("Your field: %s, ready in %s" % [data.items.get(String(crop["item"]), {}).get("name", crop["item"]), Calendar.format_duration(int(crop["days_left"]))])
 		return
 	var carried := ""
-	for item_id in FieldPlots.plantable(place):
+	for item_id in FieldPlots.plantable(place, today):
 		if c.item_count(item_id) > 0:
 			carried = item_id
 			break

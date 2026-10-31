@@ -157,3 +157,68 @@ func test_describe_says_ready_in() -> void:
 	c.field_plots[KEY] = {"paid_until": 99, "crops": [{"item": "spirit_herb", "days_left": 3}]}
 	var lines := FieldPlots.describe(c, GameData.new(), _place(), KEY, 1)
 	assert_true("\n".join(lines).contains("ready in"), "\n".join(lines))
+
+
+func _day_of(season: String) -> int:
+	for day in 400:
+		if Calendar.season_of(day) == season:
+			return day
+	return 0
+
+
+func _seasonal_place() -> Dictionary:
+	var p := _place()
+	p["plants"]["spirit_herb"]["seasons"] = ["spring"]
+	p["plants"]["dew_grass"] = {"days": 5, "yield": [1, 2]}
+	return p
+
+
+func test_out_of_season_plant_is_refused() -> void:
+	var place := _seasonal_place()
+	var c := _farmer()
+	var spring := _day_of("Spring")
+	var summer := _day_of("Summer")
+	c.field_plots[KEY] = {"paid_until": summer + 50, "crops": []}
+	assert_eq(FieldPlots.check_plant(c, data(), place, KEY, "spirit_herb", spring), "")
+	assert_eq(FieldPlots.check_plant(c, data(), place, KEY, "spirit_herb", summer), "Spirit Herb is only planted in spring.")
+	c.add_item("dew_grass", 1)
+	assert_eq(FieldPlots.check_plant(c, data(), place, KEY, "dew_grass", summer), "", "no seasons key = any season")
+	assert_eq(FieldPlots.season_note(place, "spirit_herb"), "spring only")
+	place["plants"]["spirit_herb"]["seasons"] = ["spring", "summer", "autumn"]
+	assert_eq(FieldPlots.season_note(place, "spirit_herb"), "spring, summer and autumn")
+
+
+func test_plantable_filters_by_season_only_when_given_a_day() -> void:
+	var place := _seasonal_place()
+	assert_eq(FieldPlots.plantable(place).size(), 2)
+	assert_eq(FieldPlots.plantable(place, _day_of("Spring")).size(), 2)
+	assert_eq(FieldPlots.plantable(place, _day_of("Summer")), ["dew_grass"] as Array[String])
+
+
+func test_planted_crop_keeps_growing_into_another_season() -> void:
+	var place := _seasonal_place()
+	var c := _farmer()
+	var start := _day_of("Summer") - 2
+	c.field_plots[KEY] = {"paid_until": start + 90, "crops": [{"item": "spirit_herb", "days_left": 5}]}
+	var region_d := GameData.load_from_dir()
+	region_d.regions["qingshi_village"]["places"].append(place)
+	FieldPlots.advance(c, region_d, 5, start + 5, _weather("clear"))
+	assert_eq(int(c.field_plots[KEY]["crops"][0]["days_left"]), 0)
+
+
+func test_validation_rejects_bad_seasons() -> void:
+	var d := GameData.load_from_dir()
+	for bad: Variant in [[], ["monsoon"], "spring"]:
+		var region: Dictionary = d.regions["qingshi_village"]
+		var p := _seasonal_place()
+		p["plants"]["spirit_herb"]["seasons"] = bad
+		region["places"].append(p)
+		assert_true(FieldPlots.validate(d, "qingshi_village", region).any(func(e: String) -> bool: return e.contains("season")), str(bad))
+		region["places"].erase(p)
+
+
+func test_real_fields_season_data() -> void:
+	var place := FieldPlots.place_def(data(), "qingshi_village")
+	assert_eq(FieldPlots.plant_seasons(place, "peach_blossom_petal"), ["spring"])
+	assert_false(FieldPlots.plantable(place, _day_of("Winter")).has("village_mugwort"))
+	assert_true(FieldPlots.plantable(place, _day_of("Winter")).has("spirit_herb"))

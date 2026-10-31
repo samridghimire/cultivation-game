@@ -20,7 +20,9 @@ func get_options() -> Array[Dictionary]:
 			continue
 		var reason := FieldPlots.check_plant(GameState.player, data, place, plot_key, item_id, today)
 		var name := String(data.items.get(item_id, {}).get("name", item_id))
-		options.append({"label": "Plant %s" % name, "description": info, "action": GameState.plant_field.bind(item_id), "disabled": reason != "", "reason": reason, "keep_open": true})
+		var note := FieldPlots.season_note(place, item_id)
+		var label := "Plant %s" % name if FieldPlots.in_season(place, item_id, today) or note == "" else "Plant %s (%s)" % [name, note]
+		options.append({"label": label, "description": info, "action": GameState.plant_field.bind(item_id), "disabled": reason != "", "reason": reason, "keep_open": true})
 	var water_reason := FieldPlots.check_water(GameState.player, place, plot_key, today, Weather.of(data, GameState.current_region, today))
 	options.append({"label": "Water the field", "description": info, "action": GameState.water_field, "disabled": water_reason != "", "reason": water_reason, "keep_open": true})
 	if int(place.get("expand_cost", 0)) > 0 and not bool(GameState.player.field_plots.get(plot_key, {}).get("expanded", false)):

@@ -68,11 +68,36 @@ static func rent(c: CharacterData, region_id: String, place: Dictionary, today: 
 	return {"ok": true, "reason": ""}
 
 
-static func plantable(place: Dictionary) -> Array[String]:
+## The plants the field grows; with `today` >= 0 only those that may be planted in its season (FARM-003).
+static func plantable(place: Dictionary, today: int = -1) -> Array[String]:
 	var out: Array[String] = []
 	for item_id in place.get("plants", {}):
-		out.append(String(item_id))
+		if today < 0 or in_season(place, String(item_id), today):
+			out.append(String(item_id))
 	return out
+
+
+## The seasons (lower-case) `item_id` may be planted in; empty = any.
+static func plant_seasons(place: Dictionary, item_id: String) -> Array:
+	return place.get("plants", {}).get(item_id, {}).get("seasons", [])
+
+
+static func in_season(place: Dictionary, item_id: String, today: int) -> bool:
+	var seasons := plant_seasons(place, item_id)
+	return seasons.is_empty() or seasons.has(Calendar.season_of(today).to_lower())
+
+
+## "spring only" / "spring and summer" / "spring, summer and autumn"; "" for any season.
+static func season_note(place: Dictionary, item_id: String) -> String:
+	var seasons := plant_seasons(place, item_id)
+	if seasons.is_empty():
+		return ""
+	var names: Array[String] = []
+	for s in seasons:
+		names.append(String(s))
+	if names.size() == 1:
+		return "%s only" % names[0]
+	return "%s and %s" % [", ".join(names.slice(0, names.size() - 1)), names[-1]]
 
 
 static func check_plant(c: CharacterData, data: GameData, place: Dictionary, plot_key: String, item_id: String, today: int) -> String:
@@ -81,6 +106,8 @@ static func check_plant(c: CharacterData, data: GameData, place: Dictionary, plo
 	if not place.get("plants", {}).has(item_id):
 		return "That will not grow in the field."
 	var name := String(data.items.get(item_id, {}).get("name", item_id))
+	if not in_season(place, item_id, today):
+		return "%s is only planted in %s." % [name, season_note(place, item_id).trim_suffix(" only")]
 	if c.item_count(item_id) < 1:
 		return "You have no %s to plant." % name
 	if (_entry(c, plot_key).get("crops", []) as Array).size() >= plots_for(c, place, plot_key):
@@ -293,6 +320,14 @@ static func validate(data: GameData, region_id: String, region: Dictionary) -> A
 			if not def is Dictionary or int(def.get("days", 0)) < 1:
 				errors.append("%s: %s needs days >= 1" % [who, item_id])
 				continue
+			if def.has("seasons"):
+				var seasons: Variant = def["seasons"]
+				if not (seasons is Array and not (seasons as Array).is_empty()):
+					errors.append("%s: %s seasons must be a non-empty list" % [who, item_id])
+				else:
+					for season in seasons:
+						if not SEASONS.has(String(season)):
+							errors.append("%s: %s has unknown season '%s'" % [who, item_id, season])
 			var span: Variant = def.get("yield", [])
 			if not (span is Array and (span as Array).size() == 2 and int(span[0]) >= 1 and int(span[0]) <= int(span[1])):
 				errors.append("%s: %s yield must be [min, max] with 1 <= min <= max" % [who, item_id])
