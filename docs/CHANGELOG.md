@@ -2,6 +2,18 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-31 [GFX-035] The duel stage has a seasonal sky, a skyline for each region and real grass.
+- 2026-10-31 [FISH-005] Rare trophy fish can be landed only with a clean strike and some fishing skill.
+- 2026-10-31 [C-278] Three storm-only village happenings and storm tips.
+- 2026-10-31 [GATHER-002] An herbalist's log records every kind of herb you find, with a bonus for each first find.
+- 2026-10-31 [WU-414] The village book shows every fish you have caught and silhouettes of the ones still missing.
+- 2026-10-31 [FARM-005] Crops you water or nourish often give a bigger harvest.
+- 2026-10-31 [QA-182] Every new village screen was rendered and checked.
+- 2026-10-31 [C-279] Fishing pays a little less and Farmer Tian's field rent is halved, so both pay about like a day job.
+- 2026-10-31 [GFX-033] Storms darken the village with heavy rain, lightning and thunder; crops are easier to see; fallen fighters lie down.
+- 2026-10-31 [GUIDE-204] Every price hint uses the season's price, and the journal says when a herb you carry sells high.
+- 2026-10-31 [WEATHER-005] Exploring in a storm can bring lightning insight or a piece of lightning-struck wood.
+- 2026-10-31 [GFX-034] The character sheet has real bars, a Path card and a Village crafts card.
 - 2026-10-31 [WU-411] A friend who visits stands by a little tea tray and says they came to see how you are.
 - 2026-10-31 [FARM-004] Cultivators can pour qi into their field to speed the crops.
 - 2026-10-31 [GFX-030] The character sheet and journal are split into headed cards; goals have checkboxes.

@@ -7,6 +7,17 @@ Short-lived context for the next session. Update or trim it when you finish a se
 `tests/sim/screenshot_first_hour.gd` flags now combine (`-- --celebration --field --quarrel --cast` renders all four); `--quarrel` opens the QuarrelWindow through `quarrel_requested`, `--cast` the CastBar with the marker frozen at 0.45, and the `shop` shot is the ShopScreen itself (the merchant's list is `shop_menu`, only when a merchant node exists). Every shot except `hud_arrival` now waits out a fading banner (queued notices used to cover the modals).
 Viewed at 1280x720 (all) and 1280x800 (run clean): celebration, quarrel, field, shop, cast, encounter, elder_mo_dialogue, hud_arrival, journal, character_sheet. Nothing clipped or overlapping; quarrel and cast read well, shop list/detail fit with the footer note, the journal and sheet scroll as designed. No one-place fixes needed.
 
+## State on 2026-10-31 (planner, 12:15 UTC)
+- 12 tasks landed (GFX-033/034/035, WU-414, WEATHER-005, GUIDE-204, FARM-005, GATHER-002, FISH-005, C-278/279, QA-182).
+  Review 3579385..d37bbb0 fixed FISH-004 (rank-up via first-catch bonus) and WEATHER-005 (storm line every day) inline.
+- Planner shots (`screenshot_first_hour.gd -- --storm`, `-- --book --field`, 1280x800): sheet and book fine; the fallen boar
+  stands on its tail mid-air, roofs backdrop reads as hedges, `--storm` is lost after the first action -> GFX-036 (spec);
+  both fish share one icon, no herb page -> WU-417 (spec); no visible seasons -> GFX-037.
+- Systems had only DAY-001: added WEATHER-006 (spec, peddler discount flag nobody read), FOLK-007 (spec, friendship tiers ->
+  WU-418), GOAL-005, MARKET-002. Content: C-280 spec'd, C-281, C-282. QA-184 (tending pays?).
+- C-279 set rent 3 (not 4) with sim numbers; no `--check` run was mentioned. QA-183 is still the crafter-baseline question.
+- Next planner: view GFX-036/WU-417 shots when they land; read QA-183/QA-184 numbers.
+
 ## State on 2026-10-31 (planner, 06:15 UTC)
 - 13 tasks landed (QA-181, GFX-030/031/032, WU-411/412, FARM-003/004, GATHER-001, FISH-004, GUIDE-203, C-269/277). Review
   a12ccef..3579385 fixed C-277 inline, nothing filed. Live claim: WEATHER-005.
