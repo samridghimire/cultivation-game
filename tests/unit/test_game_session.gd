@@ -2698,3 +2698,12 @@ func test_birthday_gift_counts_double_once() -> void:
 	gs.give_gift(npc.id, "qi_gathering_pill")
 	assert_eq(int(gs.npc_favor[npc.id]) - after, worth, "only the first gift doubles")
 	assert_true(other != null)
+
+
+func test_upcoming_days_lists_next_market_day() -> void:
+	_start()
+	var days: Array = []
+	for e: Dictionary in _game_state().upcoming_days():
+		if e["kind"] == "market":
+			days.append(Calendar.day_of(int(e["day"])))
+	assert_eq(days, [10, 25])

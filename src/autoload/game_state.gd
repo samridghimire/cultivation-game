@@ -2670,6 +2670,11 @@ func hint_density() -> float:
 
 
 ## Journal entries for the current session (Guidance.journal); no side effects.
+## CAL-001: dated things in the next `span` days (market days, birthdays, festivals, seasons). No time passes.
+func upcoming_days(span: int = 30) -> Array[Dictionary]:
+	return VillageCalendar.upcoming(data, npcs, npc_favor, world_events, current_region, GameClock.total_days, span)
+
+
 func journal_entries() -> Array[Dictionary]:
 	return Guidance.journal(player, data, world_flags, GameClock.total_days, current_region, hint_density(), npcs, world_events, clan, npc_favor)
 
