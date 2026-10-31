@@ -3560,6 +3560,12 @@ static func village_lines(c: CharacterData, data: GameData, people: Dictionary, 
 	if c.gather_xp > 0 and not data.herb_lore.is_empty():
 		out.append(HerbLore.status_line(data.herb_lore, c.gather_xp))
 	_meal_line(out, c, data, people, region_id, today, fights)
+	var herb_line := HerbLore.log_summary(c, data)
+	if herb_line != "":
+		out.append(herb_line)
+		var herb_missing := HerbLore.missing_hint(c, data, region_id, Calendar.season_of(today))
+		if herb_missing != "":
+			out.append(herb_missing)
 	var log_line := Fishing.log_summary(c, data)
 	if log_line != "":
 		out.append(log_line)

@@ -128,3 +128,76 @@ func test_real_data_validates() -> void:
 	var data := GameData.load_from_dir()
 	assert_false(data.herb_lore.is_empty())
 	assert_eq(HerbLore.rank_name(data.herb_lore, 50), "Herbalist")
+
+
+## GATHER-002: the herbalist's log.
+func test_findable_lists_herbs_only() -> void:
+	var data := GameData.load_from_dir()
+	var kinds := HerbLore.findable(data)
+	assert_true(kinds.has("spirit_herb") and kinds.has("dew_grass"))
+	assert_false(kinds.has("iron_essence"), "ore is not an herb")
+	assert_eq(kinds.size(), HerbLore.findable(data).size())
+
+
+func test_record_find_reports_first_only() -> void:
+	var c := CharacterData.new()
+	assert_true(HerbLore.record_find(c, "spirit_herb", 2))
+	assert_false(HerbLore.record_find(c, "spirit_herb", 1))
+	assert_eq(int(c.herb_log["spirit_herb"]), 3)
+
+
+func test_log_summary_and_missing_hint() -> void:
+	var data := GameData.load_from_dir()
+	var c := CharacterData.new()
+	assert_eq(HerbLore.log_summary(c, data), "")
+	HerbLore.record_find(c, "spirit_herb", 1)
+	assert_eq(HerbLore.log_summary(c, data), "Herbs found: 1 of %d kinds" % HerbLore.findable(data).size())
+	var hint := HerbLore.missing_hint(c, data, "qingshi_village", "Spring")
+	assert_true(hint.contains("Morning Dew Grass grows on the Village Herb Slope in spring."), hint)
+	HerbLore.record_find(c, "dew_grass", 1)
+	assert_eq(HerbLore.missing_hint(c, data, "qingshi_village", "Spring"), "")
+	assert_eq(HerbLore.missing_hint(c, data, "no_such_region", "Spring"), "")
+
+
+func test_missing_hint_skips_locked_and_out_of_season() -> void:
+	var data := GameData.load_from_dir()
+	data.items["rare_test_herb"] = {"name": "Rare Test Herb", "tags": ["herb"], "price": 9}
+	data.regions["qingshi_village"]["places"] = [{"type": "gather", "display_name": "Plot", "gather_table": [
+		{"item": "rare_test_herb", "weight": 1, "min": 1, "max": 1, "min_realm": "foundation_establishment"},
+		{"item": "dew_grass", "weight": 1, "min": 1, "max": 1, "seasons": ["summer"]}]}]
+	var c := CharacterData.new()
+	assert_eq(HerbLore.missing_hint(c, data, "qingshi_village", "Winter"), "", "out of season and locked")
+	assert_eq(HerbLore.missing_hint(c, data, "qingshi_village", "Summer"), "Morning Dew Grass grows on the Plot in summer.")
+
+
+func test_gather_logs_first_find_once() -> void:
+	var gs: Node = Engine.get_main_loop().root.get_node("GameState")
+	var c := CharacterData.new()
+	c = CharacterFactory.create("Forager", gs.data, seeded_rng(3))
+	gs.start_session(c)
+	gs.data.herb_lore = {}  # no rank-ups; plain xp
+	var table := [{"item": "dew_grass", "weight": 5, "min": 1, "max": 1}]
+	var trips := 0
+	for i in 12:
+		gs.gather(table, 1)
+		trips += 1
+	assert_true(int(c.herb_log.get("dew_grass", 0)) > 0)
+	assert_eq(int(c.herb_log["dew_grass"]), c.item_count("dew_grass"))
+	assert_eq(c.gather_xp, trips + HerbLore.FIRST_FIND_XP, "one xp a trip, the first find pays 2 once")
+
+
+func test_ore_is_not_logged() -> void:
+	var gs: Node = Engine.get_main_loop().root.get_node("GameState")
+	var c := CharacterFactory.create("Miner", gs.data, seeded_rng(3))
+	gs.start_session(c)
+	gs.gather([{"item": "iron_essence", "weight": 5, "min": 1, "max": 1}], 1)
+	assert_true(c.herb_log.is_empty())
+
+
+func test_herb_log_round_trips_and_defaults() -> void:
+	var c := new_character()
+	c.herb_log = {"dew_grass": 4}
+	assert_eq(int(CharacterData.from_dict(c.to_dict()).herb_log["dew_grass"]), 4)
+	var d := c.to_dict()
+	d.erase("herb_log")
+	assert_true(CharacterData.from_dict(d).herb_log.is_empty())

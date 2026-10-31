@@ -94,3 +94,64 @@ static func bonus_units(cfg: Dictionary, found: Dictionary, xp: int, rng: Random
 ## Xp for a trip that found `found` from `table`: 1, or 2 with a rare find.
 static func xp_gain(_cfg: Dictionary, table: Array, found: Dictionary) -> int:
 	return Fishing.xp_gain(table, found)
+
+
+## GATHER-002: first-find xp bonus.
+const FIRST_FIND_XP := 2
+
+
+## Herbs (items tagged `herb`) that any gather place's gather_table can yield: region order, then price.
+static func findable(data: GameData) -> PackedStringArray:
+	var seen := {}
+	var rows: Array = []
+	var region_index := 0
+	for region: Dictionary in data.regions.values():
+		for place: Dictionary in region.get("places", []):
+			if String(place.get("type", "")) != "gather":
+				continue
+			for entry: Dictionary in place.get("gather_table", []):
+				var id := String(entry.get("item", ""))
+				if id != "" and not seen.has(id) and data.items.get(id, {}).get("tags", []).has("herb"):
+					seen[id] = true
+					rows.append({"id": id, "region": region_index, "price": int(data.items[id].get("price", 0))})
+		region_index += 1
+	rows.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		if a["region"] != b["region"]:
+			return a["region"] < b["region"]
+		return a["price"] < b["price"])
+	var out: PackedStringArray = []
+	for row: Dictionary in rows:
+		out.append(String(row["id"]))
+	return out
+
+
+## Records a find of `count` herbs; returns true when it is the first of its kind.
+static func record_find(c: CharacterData, item_id: String, count: int) -> bool:
+	var first := not c.herb_log.has(item_id)
+	c.herb_log[item_id] = int(c.herb_log.get(item_id, 0)) + count
+	return first
+
+
+## "Herbs found: 3 of 11 kinds", "" while the log is empty.
+static func log_summary(c: CharacterData, data: GameData) -> String:
+	if c.herb_log.is_empty():
+		return ""
+	var all := findable(data)
+	var known := 0
+	for id in all:
+		if c.herb_log.has(id):
+			known += 1
+	return "Herbs found: %d of %d kinds" % [known, all.size()]
+
+
+## "Qi Condensing Grass grows on the Herb Patch in summer." for the first unfound herb a gather place
+## in `region_id` can yield in `season` (realm-locked entries skipped); "" if none.
+static func missing_hint(c: CharacterData, data: GameData, region_id: String, season: String) -> String:
+	for place: Dictionary in data.regions.get(region_id, {}).get("places", []):
+		if String(place.get("type", "")) != "gather":
+			continue
+		for entry: Dictionary in Exploration.gather_table_for(c, data, place.get("gather_table", []), season):
+			var id := String(entry.get("item", ""))
+			if id != "" and data.items.get(id, {}).get("tags", []).has("herb") and not c.herb_log.has(id):
+				return "%s grows on the %s in %s." % [data.items[id].get("name", id), place.get("display_name", "land"), season.to_lower()]
+	return ""

@@ -1184,14 +1184,20 @@ func gather(table: Array, days: int) -> void:
 	for item_id in found:
 		player.add_item(item_id, found[item_id])
 		notes.append("+%d %s" % [found[item_id], Items.item_plural(data, item_id, found[item_id])])
+	var first_finds: PackedStringArray = []
+	for item_id in found:
+		if data.items.get(item_id, {}).get("tags", []).has("herb") and HerbLore.record_find(player, item_id, int(found[item_id])):
+			first_finds.append(String(data.items[item_id]["name"]))
 	var old_rank := HerbLore.rank_name(data.herb_lore, player.gather_xp)
-	player.gather_xp += HerbLore.xp_gain(data.herb_lore, base, found)
+	player.gather_xp += HerbLore.xp_gain(data.herb_lore, base, found) + HerbLore.FIRST_FIND_XP * first_finds.size()
 	if HerbLore.rank_name(data.herb_lore, player.gather_xp) != old_rank:
 		EventBus.post("Your herb lore has improved: %s." % HerbLore.rank_name(data.herb_lore, player.gather_xp), "progress")
 	if notes.is_empty():
 		EventBus.post("You search for %s but find nothing worth taking." % Calendar.format_duration(days))
 	else:
 		EventBus.post("You gather for %s. (%s)" % [Calendar.format_duration(days), ", ".join(notes)], "progress")
+	for herb_name in first_finds:
+		EventBus.post("First find: %s!" % herb_name, "progress")
 	for item_id in tipped:
 		var tip: Dictionary = Folk.active_tip(world_flags, GameClock.total_days)
 		var friend: CharacterData = npcs.get(String(tip.get("npc_id", "")))

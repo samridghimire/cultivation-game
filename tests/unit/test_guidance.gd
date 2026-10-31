@@ -5605,3 +5605,14 @@ func test_with_season_copies_flags() -> void:
 	assert_eq(out["_season"], "Winter")
 	assert_false(flags.has("_season"))
 	assert_eq(Guidance.with_season(flags, -1), flags)
+
+
+## GATHER-002: the journal shows the herbalist's log once something is found.
+func test_village_lines_herb_log() -> void:
+	var d := _village_data("clear")
+	var c := new_character()
+	assert_false(_has_line(Guidance.village_lines(c, d, {}, {}, "qingshi_village", 10), "Herbs found"))
+	HerbLore.record_find(c, "spirit_herb", 1)
+	var lines := Guidance.village_lines(c, d, {}, {}, "qingshi_village", 10)
+	assert_true(_has_line(lines, "Herbs found: 1 of"), str(lines))
+	assert_true(_has_line(lines, "Morning Dew Grass grows on the"), str(lines))
