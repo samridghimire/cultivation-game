@@ -44,6 +44,7 @@ var _season_tint: CanvasModulate
 var _season := ""
 var _ambient: Node
 var _weather_kind := "clear"
+var _forced_weather := ""  # GFX-036: screenshots/tests pin the weather here
 var _lightning_timer: Timer
 var _strikes := 0
 ## Festival stalls beside merchants (WU-097), rebuilt when the day or region changes.
@@ -99,7 +100,7 @@ func _ready() -> void:
 func _build_season_tint() -> void:
 	_season_tint = CanvasModulate.new()
 	_season = Calendar.season_of(GameClock.total_days)
-	_weather_kind = Weather.of(GameState.data, GameState.current_region, GameClock.total_days)
+	_weather_kind = _weather_today()
 	_season_tint.color = _tint_for(_season)
 	add_child(_season_tint)
 	GameClock.days_advanced.connect(_on_days_advanced)
@@ -108,7 +109,7 @@ func _build_season_tint() -> void:
 func _on_days_advanced(_days: int) -> void:
 	_refresh_stalls()
 	var season := Calendar.season_of(GameClock.total_days)
-	var weather := Weather.of(GameState.data, GameState.current_region, GameClock.total_days)
+	var weather := _weather_today()
 	if season == _season and weather == _weather_kind:
 		return
 	_season = season
@@ -117,6 +118,22 @@ func _on_days_advanced(_days: int) -> void:
 	_refresh_ambient()
 	var tween := create_tween()
 	tween.tween_property(_season_tint, "color", _tint_for(season), 0.6)
+
+
+func _weather_today() -> String:
+	if _forced_weather != "":
+		return _forced_weather
+	return Weather.of(GameState.data, GameState.current_region, GameClock.total_days)
+
+
+## Screenshots/tests only: pins the weather kind so clock advances do not replace it.
+func force_weather(kind: String) -> void:
+	_forced_weather = kind
+	_weather_kind = kind
+	if _season_tint != null:
+		_season_tint.color = _tint_for(_season)
+	queue_redraw()
+	_refresh_ambient()
 
 
 ## Season tint dimmed by the day's weather.

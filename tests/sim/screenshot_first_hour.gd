@@ -45,10 +45,7 @@ func _start() -> void:
 	root.add_child(world)
 	hud = world.get_node("HUD")
 	if OS.get_cmdline_user_args().has("--storm"):  # GFX-033: force today's weather to storm
-		world.set("_weather_kind", "storm")
-		world.get("_season_tint").color = world.call("_tint_for", world.get("_season"))
-		world.call("_refresh_ambient")
-		world.queue_redraw()
+		world.call("force_weather", "storm")
 	if OS.get_cmdline_user_args().has("--crafter"):
 		_crafter_shots(gs, c)
 		return

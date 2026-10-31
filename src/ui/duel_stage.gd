@@ -12,7 +12,9 @@ const BEAST_FURS := {"wolf": Color("8a8d92"), "boar": Color("5a4636"), "tiger": 
 const FALLEN_DARKEN := 0.3
 const DEFAULT_FUR := Color("6b5a48")
 const STAGE_HEIGHT := 182.0
-const GROUND_BAND := 24.0
+const GROUND_BAND := 56.0
+## Fighters stand this far above the stage bottom, mid-grass (GFX-036).
+const FEET_INSET := 34.0
 const RIM_LIGHTEN := 0.45
 ## Enemy id keywords -> PixelFigure beast kind, checked in order (GFX-028).
 const BEAST_KEYWORDS := [
@@ -218,7 +220,7 @@ func alpha_of(who: int) -> float:
 
 func _draw() -> void:
 	_draw_ground()
-	var base_y := size.y - 12.0 + _stage_offset().y
+	var base_y := size.y - FEET_INSET + _stage_offset().y
 	var dx := _stage_offset().x
 	for who in 2:
 		var cx := size.x * (0.25 if who == 0 else 0.75) + dx + _offset[who]
@@ -233,7 +235,26 @@ func _draw() -> void:
 			var text := "Defeated"
 			var w := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, 12).x
 			var cx2 := size.x * (0.25 if who == 0 else 0.75) + dx
-			draw_string(font, Vector2(cx2 - w / 2.0, minf(base_y + 11.0, size.y - 1.0)), text, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color("e8d9b0"))
+			var top := fallen_rect(_body_size(who), Vector2(cx2, base_y), who == 1 and _foe_beast).position.y
+			draw_string(font, Vector2(cx2 - w / 2.0, top - 5.0), text, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color("e8d9b0"))
+
+
+## The axis-aligned bounds of a fallen fighter (GFX-036). `tex_size` is the standing body in
+## drawn pixels, `feet` the ground point. A beast is flipped onto its back (same size, feet on
+## the ground); a person is rotated 90 degrees about the body centre and dropped to the ground.
+static func fallen_rect(tex_size: Vector2, feet: Vector2, beast: bool) -> Rect2:
+	if beast:
+		return Rect2(feet.x - tex_size.x / 2.0, feet.y - tex_size.y, tex_size.x, tex_size.y)
+	return Rect2(feet.x - tex_size.y / 2.0, feet.y - tex_size.x, tex_size.y, tex_size.x)
+
+
+## The standing body size in drawn pixels (mapped sprite, generated texture, or the shape fallback).
+func _body_size(who: int) -> Vector2:
+	var tex: Texture2D = _foe_texture if who == 1 else Sprites.texture("player_right")
+	if tex == null:
+		tex = _pixel_texture(who)
+		return Vector2(tex.get_size()) * 3.0
+	return Vector2(tex.get_size()) * float(Sprites.scale()) * 2.0
 
 
 ## The backdrop silhouette kind for a region id: pines, roofs, reeds, or the default hills.
@@ -258,49 +279,118 @@ func _draw_backdrop(map: Dictionary, rid: String) -> void:
 	for i in bands:
 		var c: Color = (sky[0] as Color).lerp(sky[1], float(i) / float(bands - 1))
 		draw_rect(Rect2(0.0, top_h * i / bands, size.x, ceilf(top_h / bands) + 1.0), c)
-	var col := Color(map.get("ground", "4d6b3c")).darkened(0.45)
+	var haze: Color = sky[1]
+	var col := Color(map.get("ground", "4d6b3c")).darkened(0.45).lerp(haze, HAZE)
 	var kind := silhouette_for(rid)
-	var u := 4.0  # pixel unit
 	var horizon := top_h
-	match kind:
-		"pines":
-			var x := 8.0
-			var k := 0
-			while x < size.x:
-				var h := 40.0 + float((k * 37) % 5) * 10.0
-				for row in int(h / u):
-					var w := (float(row) + 1.0) * u * 0.5
-					draw_rect(Rect2(x - w / 2.0, horizon - h + row * u, w, u), col)
-				x += 34.0 + float((k * 13) % 3) * 8.0
-				k += 1
-		"roofs":
-			var x := 6.0
-			var k := 0
-			while x < size.x:
-				var w := 56.0 + float((k * 29) % 3) * 16.0
-				var wall := 14.0 + float((k * 7) % 2) * 8.0
-				draw_rect(Rect2(x, horizon - wall, w, wall), col)
-				for row in 4:
-					draw_rect(Rect2(x - 4.0 + row * 4.0, horizon - wall - (row + 1) * u, w + 8.0 - row * 8.0, u), col)
-				if k == 1:
-					draw_rect(Rect2(x + w + 6.0, horizon - 36.0, 2.0, 36.0), col)
-					draw_rect(Rect2(x + w + 2.0, horizon - 28.0, 10.0, 12.0), Color("e0a040"))
-				x += w + 14.0
-				k += 1
-		"reeds":
-			var x := 4.0
-			var k := 0
-			while x < size.x:
-				var h := 20.0 + float((k * 11) % 4) * 8.0
+	var raining := false
+	if get_tree() != null:
+		var weather := Weather.of(GameState.data, rid, GameClock.total_days) if GameState.data != null else "clear"
+		raining = weather == "rain" or weather == "storm"
+	if raining:
+		draw_rect(Rect2(0.0, 0.0, size.x, top_h), Color(0.12, 0.14, 0.2, 0.35))
+	else:
+		for c in cloud_shapes(rid, size.x, top_h):
+			draw_set_transform(Vector2(c["x"], c["y"]), 0.0, Vector2(1.0, 0.3))
+			draw_circle(Vector2.ZERO, c["r"], Color(1, 1, 1, 0.15))
+		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+	var far := (map_ground_color(map).darkened(0.35)).lerp(haze, 0.7)  # distant mountain line
+	for s in silhouette_shapes(rid + "_far", "hills", size.x):
+		draw_circle(Vector2(s["x"], horizon + 34.0 - float(s["h"]) * 0.5), 60.0 + float(s["h"]) * 0.6, far)
+	for s in silhouette_shapes(rid, kind, size.x):
+		var x: float = s["x"]
+		var w: float = s["w"]
+		var h: float = s["h"]
+		match kind:
+			"pines":
+				for row in int(h / PIXEL):
+					var rw := (float(row) + 1.0) * PIXEL * 0.5 * (w / 34.0)
+					draw_rect(Rect2(x - rw / 2.0, horizon - h + row * PIXEL, rw, PIXEL), col)
+			"roofs":
+				var wall := 12.0 + h * 0.2
+				draw_rect(Rect2(x, horizon - wall, w, wall), col.darkened(0.15))
+				var roof_h := h * 0.45
+				var rows := int(roof_h / PIXEL)
+				for row in rows:  # a trapezoid whose bottom row flares into upturned eaves
+					var inset := float(row) * (w * 0.5 / maxf(rows, 1)) * 0.8
+					draw_rect(Rect2(x - 6.0 + inset, horizon - wall - (row + 1) * PIXEL, w + 12.0 - inset * 2.0, PIXEL), col)
+				draw_rect(Rect2(x - 9.0, horizon - wall - PIXEL - 3.0, 5.0, 3.0), col)
+				draw_rect(Rect2(x + w + 4.0, horizon - wall - PIXEL - 3.0, 5.0, 3.0), col)
+				if s.get("lantern", false):
+					draw_rect(Rect2(x + w + 8.0, horizon - 34.0, 2.0, 34.0), col)
+					draw_rect(Rect2(x + w + 5.0, horizon - 28.0, 8.0, 10.0), Color("e0a040").lerp(haze, 0.3))
+			"reeds":
 				draw_rect(Rect2(x, horizon - h, 2.0, h), col)
-				if k % 4 == 0:
+				if s.get("tuft", false):
 					draw_rect(Rect2(x - 4.0, horizon - 14.0, 14.0, 14.0), col.lightened(0.15))
-				x += 10.0
-				k += 1
-		_:
-			for i in 3:
-				var cx := size.x * (0.15 + 0.35 * i)
-				draw_circle(Vector2(cx, horizon + 20.0), 70.0 + i * 12.0, col)
+			_:
+				draw_circle(Vector2(x, horizon + 20.0), w, col)
+
+
+const HAZE := 0.45
+const PIXEL := 4.0
+
+
+static func map_ground_color(map: Dictionary) -> Color:
+	return Color(map.get("ground", "4d6b3c"))
+
+
+## A stable 0..1 value from a string seed and index (no rng: the same region always draws the same).
+static func unit_hash(seed_text: String, k: int) -> float:
+	return float(absi(hash(seed_text + ":" + str(k))) % 1000) / 999.0
+
+
+## The backdrop silhouette pieces for a region (GFX-036): irregular widths, heights and gaps,
+## varied per region id, identical on every call. Each piece is {x, w, h} (+ extras per kind).
+static func silhouette_shapes(rid: String, kind: String, width: float) -> Array:
+	var out: Array = []
+	var x := 6.0 + unit_hash(rid, 999) * 30.0
+	var k := 0
+	while x < width and k < 80:
+		var r1 := unit_hash(rid, k * 3)
+		var r2 := unit_hash(rid, k * 3 + 1)
+		var r3 := unit_hash(rid, k * 3 + 2)
+		var piece := {"x": x}
+		var step := 0.0
+		match kind:
+			"pines":
+				piece["w"] = 34.0 * (0.7 + r1 * 0.6)
+				piece["h"] = 50.0 * (0.6 + r2 * 0.6)
+				step = 22.0 + r3 * 34.0
+			"roofs":
+				piece["w"] = 62.0 * (0.7 + r1 * 0.6)
+				piece["h"] = 60.0 * (0.6 + r2 * 0.6)
+				piece["lantern"] = k == 1
+				step = piece["w"] + 10.0 + r3 * 70.0
+			"reeds":
+				piece["w"] = 2.0
+				piece["h"] = 28.0 * (0.6 + r2 * 0.6)
+				piece["tuft"] = k % 4 == 0
+				step = 7.0 + r3 * 9.0
+			_:
+				piece["w"] = 70.0 * (0.7 + r1 * 0.6)
+				piece["h"] = 40.0 * (0.6 + r2 * 0.6)
+				step = size_hills_step(r3)
+		out.append(piece)
+		x += step
+		k += 1
+	return out
+
+
+static func size_hills_step(r: float) -> float:
+	return 120.0 + r * 160.0
+
+
+## 2-3 soft cloud ellipses {x, y, r} for clear skies, seeded by the region id.
+static func cloud_shapes(rid: String, width: float, sky_h: float) -> Array:
+	var out: Array = []
+	for i in 2 + int(unit_hash(rid, 500) * 1.99):
+		out.append({
+			"x": width * (0.1 + 0.8 * unit_hash(rid, 510 + i)),
+			"y": sky_h * (0.15 + 0.3 * unit_hash(rid, 520 + i)),
+			"r": 40.0 + 40.0 * unit_hash(rid, 530 + i),
+		})
+	return out
 
 
 ## The current region's grass as a strip along the bottom (flat dark band when no region is loaded).
@@ -340,8 +430,18 @@ func _draw_fighter(who: int, feet: Vector2) -> void:
 	var tex: Texture2D = _foe_texture if who == 1 else Sprites.texture("player_right")
 	var base := 1.0 - _dark[who]
 	var tint := Color(base, base, base, _alpha[who]).lerp(Color(3, 3, 3, _alpha[who]), _flash[who])
-	var on_back := is_equal_approx(_tilt[who], PI)  # a beast rolled onto its back: flipped, not rotated
-	draw_set_transform(pos, 0.0 if on_back else _tilt[who] * (-1.0 if who == 1 else 1.0), Vector2.ONE)
+	var fallen := absf(_tilt[who]) > 0.01
+	var beast := who == 1 and _foe_beast
+	var on_back := fallen and beast  # a beast lies flipped on its back: it stays flat, feet on the ground
+	var body := _body_size(who)
+	if fallen and not beast:  # rotate about the body centre, then rest the side on the ground
+		var rot := _tilt[who] * (-1.0 if who == 1 else 1.0)
+		var pivot := pos + Vector2(0.0, -body.x / 2.0)
+		draw_set_transform_matrix(Transform2D(rot, pivot) * Transform2D(0.0, Vector2(0.0, body.y / 2.0)))
+	elif on_back:
+		draw_set_transform(pos + Vector2(0.0, -body.y), 0.0, Vector2(1.0, -1.0))
+	else:
+		draw_set_transform(pos, 0.0, Vector2.ONE)
 	var generated := tex == null
 	if generated:
 		tex = _pixel_texture(who)
@@ -349,8 +449,6 @@ func _draw_fighter(who: int, feet: Vector2) -> void:
 		var z := 3.0 if generated else float(Sprites.scale()) * 2.0
 		var w := tex.get_width() * z
 		var h := tex.get_height() * z
-		if on_back:
-			draw_set_transform(pos + Vector2(0.0, -h), 0.0, Vector2(1.0, -1.0))
 		if generated and who == 1:  # the foe faces left: a negative width mirrors the texture
 			draw_texture_rect(tex, Rect2(Vector2(w / 2.0, -h), Vector2(-w, h)), false, tint)
 		else:
