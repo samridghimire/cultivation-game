@@ -45,10 +45,10 @@ fresh() {
 	run "economy, bounty hunter (seeds 1-10, 12 months)" res://tests/sim/simulate_bounty.gd -- 10 12
 	run "profession income (Qi Refining, seeds 1-5, 24 months)" res://tests/sim/profession_income.gd -- 5 24
 	run "crafter start (new Alchemist, seeds 1-10, 180 days)" res://tests/sim/crafter_start.gd -- 10 180
-	run "crafter crafts: blacksmith (seed 1, 365 days)" res://tests/sim/crafter_start.gd -- 1 365 --prof=blacksmith
-	run "crafter crafts: talisman_master (seed 1, 365 days)" res://tests/sim/crafter_start.gd -- 1 365 --prof=talisman_master
-	run "crafter crafts: array_master (seed 1, 365 days)" res://tests/sim/crafter_start.gd -- 1 365 --prof=array_master
-	run "crafter crafts: beast_tamer (seed 1, 365 days)" res://tests/sim/crafter_start.gd -- 1 365 --prof=beast_tamer
+	run "crafter crafts: blacksmith (seeds 1-5, 365 days)" res://tests/sim/crafter_start.gd -- 5 365 --prof=blacksmith
+	run "crafter crafts: talisman_master (seeds 1-5, 365 days)" res://tests/sim/crafter_start.gd -- 5 365 --prof=talisman_master
+	run "crafter crafts: array_master (seeds 1-5, 365 days)" res://tests/sim/crafter_start.gd -- 5 365 --prof=array_master
+	run "crafter crafts: beast_tamer (seeds 1-5, 365 days)" res://tests/sim/crafter_start.gd -- 5 365 --prof=beast_tamer
 	run "quiet stretches (seeds 1-10, 365 days)" res://tests/sim/quiet_stretches.gd -- 10 365
 	run "first Foundation Establishment year (seeds 1-10)" res://tests/sim/simulate_foundation_year.gd -- 10 2
 	run "first hour, curious practiser (seeds 1-10, 12 months)" res://tests/sim/simulate_practise.gd -- 10 12
