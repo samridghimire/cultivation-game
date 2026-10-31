@@ -132,3 +132,16 @@ func test_foe_name_label() -> void:
 	assert_eq(r._foe_name.text, "Wild Boar")
 	assert_eq(r._you_name.text, "You")
 	r.free()
+
+
+func test_backdrop_silhouettes() -> void:  # GFX-035
+	assert_eq(DuelStage.silhouette_for("misty_forest"), "pines")
+	assert_eq(DuelStage.silhouette_for("qingshi_village"), "roofs")
+	assert_eq(DuelStage.silhouette_for("withered_bone_marsh"), "reeds")
+	assert_eq(DuelStage.silhouette_for("nowhere"), "hills")
+	assert_eq((DuelStage.sky_colors("winter") as Array).size(), 2)
+
+
+func test_stage_is_taller() -> void:  # GFX-035
+	assert_true(DuelStage.STAGE_HEIGHT >= 130.0 * 1.4)
+	assert_eq(DuelStage.new().custom_minimum_size.y, DuelStage.STAGE_HEIGHT)

@@ -11,7 +11,7 @@ const FOE_SASH := Color("7a2a2a")
 const BEAST_FURS := {"wolf": Color("8a8d92"), "boar": Color("5a4636"), "tiger": Color("b5652a"), "fox": Color("b5652a")}
 const FALLEN_DARKEN := 0.3
 const DEFAULT_FUR := Color("6b5a48")
-const STAGE_HEIGHT := 130.0
+const STAGE_HEIGHT := 182.0
 const GROUND_BAND := 24.0
 const RIM_LIGHTEN := 0.45
 ## Enemy id keywords -> PixelFigure beast kind, checked in order (GFX-028).
@@ -22,6 +22,18 @@ const BEAST_KEYWORDS := [
 	["snake", "snake"], ["serpent", "snake"], ["python", "snake"], ["viper", "snake"],
 	["bird", "bird"], ["crow", "bird"], ["hawk", "bird"], ["crane", "bird"], ["eagle", "bird"], ["roc", "bird"], ["condor", "bird"],
 ]
+
+## Region id -> backdrop silhouette kind (GFX-035); anything else gets low hills.
+const SILHOUETTES := {
+	"misty_forest": "pines", "azure_peak": "pines", "myriad_peaks_ridge": "pines",
+	"qingshi_village": "roofs", "fallen_star_market": "roofs",
+	"withered_bone_marsh": "reeds",
+}
+const DEFAULT_SILHOUETTE := "hills"
+const SKY_BY_SEASON := {
+	"spring": [Color("a9cde0"), Color("e3efe2")], "summer": [Color("7fb4dc"), Color("d6ebf2")],
+	"autumn": [Color("c98a5e"), Color("f0d3a0")], "winter": [Color("c9d6e0"), Color("eef2f5")],
+}
 
 var _foe_beast: bool = false
 var _foe_id: String = ""
@@ -224,6 +236,73 @@ func _draw() -> void:
 			draw_string(font, Vector2(cx2 - w / 2.0, minf(base_y + 11.0, size.y - 1.0)), text, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color("e8d9b0"))
 
 
+## The backdrop silhouette kind for a region id: pines, roofs, reeds, or the default hills.
+static func silhouette_for(region_id: String) -> String:
+	return String(SILHOUETTES.get(region_id, DEFAULT_SILHOUETTE))
+
+
+## True when a real region is loaded, so the backdrop is drawn (false for sims).
+func has_backdrop() -> bool:
+	return GameState.data != null and GameState.data.regions.has(GameState.current_region)
+
+
+## Sky gradient (top, horizon) for the season of the current day.
+static func sky_colors(season: String) -> Array:
+	return SKY_BY_SEASON.get(season, SKY_BY_SEASON["summer"])
+
+
+func _draw_backdrop(map: Dictionary, rid: String) -> void:
+	var top_h := size.y - GROUND_BAND
+	var sky := sky_colors(Calendar.season_of(GameClock.total_days))
+	var bands := 12
+	for i in bands:
+		var c: Color = (sky[0] as Color).lerp(sky[1], float(i) / float(bands - 1))
+		draw_rect(Rect2(0.0, top_h * i / bands, size.x, ceilf(top_h / bands) + 1.0), c)
+	var col := Color(map.get("ground", "4d6b3c")).darkened(0.45)
+	var kind := silhouette_for(rid)
+	var u := 4.0  # pixel unit
+	var horizon := top_h
+	match kind:
+		"pines":
+			var x := 8.0
+			var k := 0
+			while x < size.x:
+				var h := 40.0 + float((k * 37) % 5) * 10.0
+				for row in int(h / u):
+					var w := (float(row) + 1.0) * u * 0.5
+					draw_rect(Rect2(x - w / 2.0, horizon - h + row * u, w, u), col)
+				x += 34.0 + float((k * 13) % 3) * 8.0
+				k += 1
+		"roofs":
+			var x := 6.0
+			var k := 0
+			while x < size.x:
+				var w := 56.0 + float((k * 29) % 3) * 16.0
+				var wall := 14.0 + float((k * 7) % 2) * 8.0
+				draw_rect(Rect2(x, horizon - wall, w, wall), col)
+				for row in 4:
+					draw_rect(Rect2(x - 4.0 + row * 4.0, horizon - wall - (row + 1) * u, w + 8.0 - row * 8.0, u), col)
+				if k == 1:
+					draw_rect(Rect2(x + w + 6.0, horizon - 36.0, 2.0, 36.0), col)
+					draw_rect(Rect2(x + w + 2.0, horizon - 28.0, 10.0, 12.0), Color("e0a040"))
+				x += w + 14.0
+				k += 1
+		"reeds":
+			var x := 4.0
+			var k := 0
+			while x < size.x:
+				var h := 20.0 + float((k * 11) % 4) * 8.0
+				draw_rect(Rect2(x, horizon - h, 2.0, h), col)
+				if k % 4 == 0:
+					draw_rect(Rect2(x - 4.0, horizon - 14.0, 14.0, 14.0), col.lightened(0.15))
+				x += 10.0
+				k += 1
+		_:
+			for i in 3:
+				var cx := size.x * (0.15 + 0.35 * i)
+				draw_circle(Vector2(cx, horizon + 20.0), 70.0 + i * 12.0, col)
+
+
 ## The current region's grass as a strip along the bottom (flat dark band when no region is loaded).
 func _draw_ground() -> void:
 	var band := Rect2(0.0, size.y - GROUND_BAND, size.x, GROUND_BAND)
@@ -232,10 +311,19 @@ func _draw_ground() -> void:
 		draw_rect(band, Color("33402a"))
 		return
 	var map: Dictionary = GameState.data.regions[rid].get("map", {})
+	_draw_backdrop(map, rid)
 	var base := Color(map.get("ground", "4d6b3c"))
+	var decor: Dictionary = map.get("decor", {})
+	if decor.has("grass_color"):
+		base = Color(decor["grass_color"])
 	var tex := GroundTiles.ground_texture(base, rid, Vector2i(ceili(size.x / 3.0), int(GROUND_BAND / 3.0)), false)
 	draw_texture_rect(tex, Rect2(band.position, Vector2(tex.get_size()) * 3.0), false)
 	draw_line(band.position, Vector2(size.x, band.position.y), base.darkened(0.5), 2.0)
+	for i in 14:  # 2-3 pixel tufts, placed deterministically
+		var tx := float((i * 97 + 31) % int(maxf(size.x, 1.0)))
+		var ty := band.position.y + 6.0 + float((i * 53) % int(GROUND_BAND - 10.0))
+		draw_rect(Rect2(tx, ty, 2.0, 4.0), base.lightened(0.25))
+		draw_rect(Rect2(tx + 4.0, ty + 2.0, 2.0, 3.0), base.lightened(0.25))
 
 
 ## The whole-stage offset of a heavy hit's 3 px, 0.15 s shake.
