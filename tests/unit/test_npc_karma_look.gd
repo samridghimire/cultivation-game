@@ -2,6 +2,9 @@ extends TestCase
 ## RIV-001b: an NPC's "Look" text says whether they hate or owe the player.
 
 
+const NpcScript := preload("res://src/world/interactables/npc.gd")
+
+
 func _root() -> Node:
 	return (Engine.get_main_loop() as SceneTree).root
 
@@ -38,3 +41,22 @@ func test_look_mentions_grudge_and_gratitude() -> void:
 	Karma.add_gratitude(gs.player, gs.data, "xiao_ling", 20)
 	assert_true(_look_text(gs, "xiao_ling").contains("grateful"), "named NPCs can be looked at too")
 	gs.end_session()
+
+
+## WU-411: a visiting friend's Look line says they came to see how you are.
+func test_look_names_a_visiting_friend() -> void:
+	var gs: Node = _root().get_node("GameState")
+	gs.start_session(CharacterFactory.create("Host", gs.data, seeded_rng()))
+	var npc := Npcs.spawn(gs.npcs, gs.data, seeded_rng(5), {"age_years": 30, "region": "qingshi_village", "realm": "mortal"})
+	var menu: Node = load("res://src/world/interactables/npc.gd").new()
+	menu.npc_id = npc.id
+	menu._visiting = true
+	var posted: Array[String] = []
+	var grab := func(text: String, _category: String = "") -> void: posted.append(text)
+	EventBus.message_posted.connect(grab)
+	menu._look()
+	EventBus.message_posted.disconnect(grab)
+	menu.free()
+	var text := "\n".join(posted)
+	assert_true(text.contains(NpcScript.visit_line(npc.name)), text)
+	assert_eq(NpcScript.visit_line("Mei"), "Mei has come to see how you are.")

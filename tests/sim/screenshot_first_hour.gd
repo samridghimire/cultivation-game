@@ -63,18 +63,29 @@ func _start() -> void:
 	var villager := _generated_villager()
 	if villager != null:
 		shots.append({"name": "greeting_bubble", "open": func() -> void:
-			world.get_node("Player").position = villager.position + Vector2(40, 30)
+			# A stranger at favor 0 says nothing, so warm every villager up to speak.
+			for id: String in gs.npcs:
+				gs.npc_favor[id] = int(gs.data.family["folk_greetings"]["warm"]["min_favor"])
+			_teleport_player(villager.position + Vector2(40, 30))
 			world.set("_greeted", {})
 			world.call("_check_greetings"), "close": func() -> void: _clear_bubble()})
 		shots.append({"name": "folk_asker", "open": func() -> void:
 			c.letter_requests.append({"npc_id": villager.npc_id, "item": "spirit_herb", "count": 3, "until": root.get_node("GameClock").total_days + 20, "favor": 5, "effects": {}, "source": "folk", "text": ""})
 			villager.call("refresh_request")
-			world.get_node("Player").position = villager.position + Vector2(40, 30)
+			_teleport_player(villager.position + Vector2(40, 30))
 			world.set("_greeted", {})
 			world.call("_check_greetings"), "close": func() -> void:
 			_clear_bubble()
 			c.letter_requests.clear()
 			villager.call("refresh_request")})
+	# WU-411: a visiting friend with the tea tray beside them.
+	if villager != null:
+		shots.append({"name": "visitor", "open": func() -> void:
+			villager.set("_visiting", true)
+			villager.queue_redraw()
+			_teleport_player(villager.position + Vector2(60, 40)), "close": func() -> void:
+			villager.set("_visiting", false)
+			villager.queue_redraw()})
 	# WU-385: the HUD of a brand-new sect member (Azure Cloud Outer Disciple, Qi Refining 1, Qingshi Village).
 	var sect_saved: Array = []
 	shots.append({"name": "hud_after_sect", "open": func() -> void:
@@ -127,12 +138,28 @@ func _start() -> void:
 			shots.append({"name": action.trim_prefix("toggle_"), "open": s.open, "close": s.close, "wait_banner": true})
 
 
-## A generated (non-data) villager node of the world, null when none spawned.
+## The generated (non-data) villager of the world standing nearest the player's start, so the shot
+## frames them clear of the HUD cards (WU-411); null when none spawned.
 func _generated_villager() -> Node2D:
+	var best: Node2D = null
+	var best_dist := INF
+	var start: Vector2 = world.get_node("Player").position
 	for node in world.get_children():
 		if node.has_method("get_options") and node.get("npc_id") != null and not root.get_node("GameState").data.npcs.has(node.npc_id):
-			return node
-	return null
+			var d := start.distance_to(node.position)
+			if d >= 100.0 and d < best_dist:
+				best_dist = d
+				best = node
+	return best
+
+
+## Moves the player and snaps the smoothed camera there, so the shot frames the spot at once (WU-411).
+func _teleport_player(pos: Vector2) -> void:
+	var player: Node2D = world.get_node("Player")
+	player.position = pos
+	var camera := player.get_node_or_null("Camera2D") as Camera2D
+	if camera != null:
+		camera.reset_smoothing()
 
 
 func _clear_bubble() -> void:

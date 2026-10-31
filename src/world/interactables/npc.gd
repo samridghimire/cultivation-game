@@ -61,6 +61,7 @@ func sprite_keys() -> PackedStringArray:
 func _ready() -> void:
 	super._ready()
 	home = position
+	_visiting = GameState.player != null and npc_id != "" and GameState.visitor_today() == npc_id
 	var h := hash(npc_id)
 	_rng.seed = h
 	_phase = float(absi(h) % 628) / 100.0
@@ -141,8 +142,30 @@ func draw_generated_art() -> bool:
 ## Within this distance of the player the label shows the full "(realm)" suffix (WU-087).
 const FULL_LABEL_RANGE := 120.0
 var _near := false
+## True while this villager is today's visitor (WORLD-007): a small tea tray stands beside them (WU-411).
+var _visiting := false
 ## True while this villager has an open folk request (WU-402): a "!" badge and a name that stays visible.
 var _asking := false
+
+
+## The Look sentence for a visiting friend (WU-411).
+static func visit_line(npc_name: String) -> String:
+	return "%s has come to see how you are." % npc_name
+
+
+## Draws the tea tray (two cups and a pot) at the visitor's side in pixel blocks (WU-411).
+func _draw() -> void:
+	super._draw()
+	if not _visiting:
+		return
+	var s := float(Sprites.scale())
+	var o := Vector2(size.x / 2.0 + 4.0 * s, size.y / 2.0 - 5.0 * s)
+	draw_rect(Rect2(o, Vector2(14, 5) * s), Color("6b4a2b"))
+	draw_rect(Rect2(o, Vector2(14, 1) * s), Color("8f6a40"))
+	draw_rect(Rect2(o + Vector2(1, -3) * s, Vector2(3, 3) * s), Color("f4f0e6"))
+	draw_rect(Rect2(o + Vector2(10, -3) * s, Vector2(3, 3) * s), Color("f4f0e6"))
+	draw_rect(Rect2(o + Vector2(5, -4) * s, Vector2(4, 4) * s), Color("4f7a5a"))
+	draw_rect(Rect2(o + Vector2(6, -5) * s, Vector2(2, 1) * s), Color("4f7a5a"))
 
 
 ## Just the name until the player is close, then "Name (Qi Refining, 1st Layer)".
@@ -656,7 +679,9 @@ func _look() -> void:
 		if not GameState.data.clan_relations.is_empty():
 			text += " The %s is %s." % [(GameState.npc_clans[clan_id] as ClanData).name, NpcClans.standing_text(GameState.npc_clans, GameState.data, clan_id)]
 	var doing := _activity_text(npc)
-	if doing != "":
+	if _visiting:
+		text += " " + visit_line(npc.name)
+	elif doing != "":
 		text += " Today they are %s." % doing
 	var injuries := Injuries.describe(npc, GameState.data)
 	if not injuries.is_empty():
