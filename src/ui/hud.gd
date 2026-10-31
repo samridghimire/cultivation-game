@@ -108,6 +108,10 @@ var _gossip: GossipWindow
 var _family: FamilyScreen
 var _child_training: ChildTrainingScreen
 var _banner: Banner
+var _digest_card: DigestCard
+## WU-416: the last_digest waiting for a quiet moment to show.
+var _digest_pending: Dictionary = {}
+var _digest_shown: bool = false
 var _tech_levels: Dictionary = {}  # technique id -> last seen level (WU-130)
 var _goals_done: Array[String] = []  # texts of first goals already done (WU-131)
 var _goals_ladder: String = ""  # Guidance.goal_ladder_id when _goals_done was taken
@@ -238,6 +242,10 @@ func _ready() -> void:
 	add_child(UIStyle.centered(_realm_card))
 	_banner = Banner.new()
 	add_child(_banner)
+	_digest_card = DigestCard.new()
+	_set_anchored_rect(_digest_card, Vector4(0, 1, 0, 1), Vector4(16, -330, 416, -120))
+	_digest_card.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	add_child(_digest_card)
 	add_child(SaveToast.new())
 	_time_skip = TimeSkipOverlay.new()
 	_time_skip.closed.connect(_on_time_skip_closed)
@@ -1636,6 +1644,7 @@ static func panel_alpha(panel_rect: Rect2, covered: Array[Rect2]) -> float:
 
 
 func _process(delta: float) -> void:
+	_poll_digest()
 	_fade_timer -= delta
 	if _fade_timer <= 0.0:
 		_fade_timer = 0.1
@@ -1681,10 +1690,39 @@ func _compute_fade_targets() -> Vector3:
 		minf(panel_alpha(_guide_panel.get_global_rect(), covered), card_fade_target(_guide_panel.get_global_rect(), pp)))
 
 
+## WU-416: picks up a fresh GameState.last_digest and shows its card once nothing else is up.
+func _poll_digest() -> void:
+	var d: Dictionary = GameState.last_digest
+	if d.is_empty():
+		_digest_shown = false
+		_digest_pending = {}
+		if _digest_card.visible:
+			_digest_card.dismiss()
+		return
+	if not _digest_shown and _digest_pending.is_empty() and DigestCard.should_show(d):
+		_digest_pending = d
+	if _digest_pending.is_empty():
+		return
+	if digest_blocked():
+		return
+	_digest_card.show_digest(_digest_pending)
+	_digest_pending = {}
+	_digest_shown = true
+
+
+## True while a banner, modal, report or the death screen is up (the digest queues behind them).
+func digest_blocked() -> bool:
+	if _banner.visible or _banner.queued_count() > 0 or _time_skip.visible or _status_panel == null or not _status_panel.visible:
+		return true
+	return GameState.player == null or not GameState.player.alive or not GameState.pending_respawn.is_empty() or _death_screen.visible
+
+
 func _update_modal() -> void:
 	var blocking := _choice_menu.visible or _dialogue.visible or _encounter.visible or _quarrel.visible or _cast_bar.visible or _any_screen_open() or _combat_report.visible or _tribulation.visible or _respawn.visible or _realm_card.visible or _pause_menu.visible or _settings.visible or _help.visible or _load_screen.visible or _death_screen.visible
 	# The status panel, hints and log hide behind modals; a time-skip overlay alone keeps them.
 	_status_panel.visible = not blocking
+	if blocking and _digest_card != null:
+		_digest_card.dismiss()
 	_log_panel.visible = not blocking
 	_backdrop.visible = blocking
 	_prompt.visible = not blocking

@@ -69,6 +69,12 @@ func _start() -> void:
 	if OS.get_cmdline_user_args().has("--cast"):  # QA-182: the CastBar on the jetty, marker frozen mid-sweep
 		_cast_shots(gs)
 		special = true
+	if OS.get_cmdline_user_args().has("--digest"):  # WU-416: the "While you were away" card
+		shots.append({"name": "digest_card", "open": func() -> void:
+			hud.get("_banner").visible = false
+			gs.last_digest = {"days": 15, "lines": ["Your spirit field is ready to harvest.", "Xiao Ling drops by to visit.", "A storm passes over the village.", "You are close to a breakthrough."]}
+			hud.call("_poll_digest"), "close": func() -> void: hud.get("_digest_card").dismiss()})
+		special = true
 	if OS.get_cmdline_user_args().has("--book"):  # WU-414: the village book with two fish caught
 		Fishing.record_catch(gs.player, "silver_carp", 3)
 		Fishing.record_catch(gs.player, "marsh_eel", 1)
