@@ -39,6 +39,13 @@ const TRENDS := {
 	"down": {"colors": {"a": Color("4fae5c")}, "rows": ["............", ".....oo.....", "....oaao....", "....oaao....", "....oaao....", ".ooooaaoooo.", ".oaaaaaaaao.", "..oaaaaaao..", "...oaaaao...", "....oaao....", ".....oo.....", "............"]},
 }
 
+## Calendar kind glyphs (WU-419): market stall, birthday cake, festival lantern, snowflake and leaf for season starts.
+const CALENDAR := {
+	"market": {"colors": {"a": Color("d9534f"), "b": Color("f4e9d0"), "c": Color("a9743c")}, "rows": ["............", "............", ".oooooooooo.", "oabababababo", "oabababababo", ".oooooooooo.", "..oc....co..", "..oc....co..", "..occcccco..", "..oc....co..", "............", "............"]},
+	"birthday": {"colors": {"a": Color("f2a7c3"), "b": Color("fff1a8"), "c": Color("f6c44a")}, "rows": ["............", ".....c......", ".....c......", "....obo.....", "..oooooooo..", ".oabababaao.", ".oaaaaaaaao.", ".oooooooooo.", ".obbbbbbbbo.", ".oooooooooo.", "............", "............"]},
+	"festival": {"colors": {"a": Color("d9302f"), "b": Color("f6c44a"), "c": Color("8a4a22")}, "rows": ["............", ".....cc.....", ".....cc.....", "....oooo....", "...oaabao...", "..oaabbaao..", "..oaabbaao..", "..oaabbaao..", "...oaabao...", "....oooo....", ".....bb.....", "............"]},
+}
+
 ## Friendship heart, 5x5: 'a' fill, 'o' outline, 'b' highlight (WU-418).
 const HEART := ["oo.oo", "oaooa", "oaaao", ".oao.", "..o.."]
 const HEART_FILL := Color("e0553c")
@@ -76,6 +83,21 @@ static func trend(direction: int) -> Texture2D:
 	if direction == 0:
 		return null
 	return _glyph("trend_" + ("up" if direction > 0 else "down"), TRENDS, "up" if direction > 0 else "down")
+
+
+## A 12x12 calendar glyph for a VillageCalendar kind; season starts use the season's own glyph (leaf for Autumn,
+## snowflake for Winter, flower and sun otherwise, `season_name`). Null when unknown.
+static func calendar_kind(kind: String, season_name: String = "") -> Texture2D:
+	match kind:
+		"market":
+			return _glyph("cal_market", CALENDAR, "market")
+		"birthday":
+			return _glyph("cal_birthday", CALENDAR, "birthday")
+		"festival_active", "festival_month":
+			return _glyph("cal_festival", CALENDAR, "festival")
+		"season":
+			return season(season_name)
+	return null
 
 
 ## A row of `count` pixel hearts, the first `filled` red and the rest dark (WU-418); each heart is 5 px wide

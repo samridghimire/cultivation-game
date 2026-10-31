@@ -6,6 +6,7 @@ extends PanelContainer
 signal closed
 ## WU-414: the "Village book" button at the end of the Around the village card.
 signal book_requested
+signal calendar_requested
 
 const SCROLL_SPEED := 900.0
 const DIM := Color(0.6, 0.6, 0.6)
@@ -139,7 +140,13 @@ func _build_cards(list: Array) -> void:
 			var book := UIStyle.button("Village book", func() -> void: book_requested.emit())
 			book.name = "VillageBookButton"
 			book.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-			inner.add_child(book)
+			var cal := UIStyle.button("Calendar", func() -> void: calendar_requested.emit())
+			cal.name = "CalendarButton"
+			var row := HBoxContainer.new()
+			row.add_theme_constant_override("separation", 8)
+			row.add_child(book)
+			row.add_child(cal)
+			inner.add_child(row)
 		_cards.add_child(card)
 
 

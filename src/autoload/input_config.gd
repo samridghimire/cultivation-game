@@ -22,6 +22,7 @@ const KEYS := {
 	"toggle_clan": [KEY_G],
 	"toggle_journal": [KEY_J],
 	"toggle_family": [KEY_F],
+	"open_calendar": [KEY_Y],
 	"quick_save": [KEY_F5],
 	"quick_load": [KEY_F9],
 	"pause_menu": [KEY_ESCAPE],

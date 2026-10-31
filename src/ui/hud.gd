@@ -169,6 +169,8 @@ func _ready() -> void:
 	_village_book.closed.connect(_on_book_closed)
 	add_child(UIStyle.centered(_village_book))
 	journal.book_requested.connect(_open_village_book.bind("toggle_journal"))
+	_add_screen("open_calendar", CalendarScreen.new())  # WU-419
+	journal.calendar_requested.connect(_open_calendar_from_journal)
 	_crafting = CraftingScreen.new()
 	_crafting.closed.connect(_update_modal)
 	add_child(UIStyle.centered(_crafting))
@@ -1592,6 +1594,13 @@ func _open_journal() -> void:
 	_pause_menu.close()
 	var journal: Control = _screens["toggle_journal"]
 	journal.open()
+	_update_modal()
+
+
+## WU-419: the calendar replaces the journal while open.
+func _open_calendar_from_journal() -> void:
+	_close_screens()
+	_screens["open_calendar"].open()
 	_update_modal()
 
 
