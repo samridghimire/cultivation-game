@@ -55,7 +55,7 @@ func test_cards_do_not_overlap_and_cover_little() -> void:
 func test_lines_moved_into_their_rows() -> void:
 	var hud := await _build()
 	assert_false((hud.get("_status") as Label).text.contains("Qi: "))
-	assert_true((hud.get("_qi_text") as Label).text.begins_with("Qi: "))
+	assert_true((hud.get("_qi_text") as Label).text.begins_with("Qi "))
 	assert_true((hud.get("_currency") as Label).text != "")
 	var hints: PackedStringArray = hud.get("_hint_lines")
 	if not hints.is_empty():

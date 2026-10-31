@@ -73,6 +73,29 @@ static func panel(min_size: Vector2 = Vector2.ZERO) -> PanelContainer:
 	return p
 
 
+## GFX-031: a progress bar with a visible trough (darkened panel colour, 1 px border) and a rounded fill.
+static func bar(size: Vector2, fill: Color) -> ProgressBar:
+	var b := ProgressBar.new()
+	b.custom_minimum_size = size
+	b.show_percentage = false
+	var trough := StyleBoxFlat.new()
+	trough.bg_color = PANEL.darkened(0.4)
+	trough.border_color = ACCENT.darkened(0.5)
+	trough.set_border_width_all(1)
+	trough.set_corner_radius_all(2)
+	b.add_theme_stylebox_override("background", trough)
+	set_bar_fill(b, fill)
+	return b
+
+
+## Swaps the fill colour of a UIStyle.bar.
+static func set_bar_fill(b: ProgressBar, fill: Color) -> void:
+	var f := StyleBoxFlat.new()
+	f.bg_color = fill
+	f.set_corner_radius_all(2)
+	b.add_theme_stylebox_override("fill", f)
+
+
 static func label(text: String = "", font_size: int = 16, color: Color = Color.WHITE) -> Label:
 	var l := Label.new()
 	l.text = text

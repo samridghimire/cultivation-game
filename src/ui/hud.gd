@@ -4,6 +4,8 @@ extends CanvasLayer
 
 const MAIN_MENU := "res://src/ui/main_menu.tscn"
 const MAX_LOG_LINES := 60
+const MAX_LAMPS := 5  ## GFX-031: soul lamps drawn before "x N".
+const QI_FILL := Color("6fd3c1")
 const LOG_HEIGHT := 108.0  ## Space the log panel takes at the bottom (offset 108 in _build_log).
 const LOG_IDLE_SECONDS := 8.0  ## GFX-010: the log fades after this long without a message.
 const LOG_IDLE_ALPHA := 0.55
@@ -19,7 +21,14 @@ signal hints_changed
 var _age: Label
 var _breakthrough_details: String = ""
 var _status: Label
-var _lives: Label
+var _lives: HBoxContainer  ## GFX-031: soul lamps plus a Label for "x N" / "Final life".
+var _lives_extra: Label
+var _stone_icon: TextureRect
+var _date_row: HBoxContainer
+var _date_label: Label
+var _season_icon: TextureRect
+var _weather_icon: TextureRect
+var _weather_text: Label
 var _qi_bar: ProgressBar
 var _bottleneck: Label
 var _injuries: Label
@@ -382,6 +391,9 @@ func _any_screen_open() -> bool:
 func _build_status_panel() -> void:
 	var panel := UIStyle.panel(Vector2(316, 0))
 	_status_panel = panel
+	var style := UIStyle.panel_style()
+	style.set_content_margin_all(8)  # GFX-031: tighter inner margin keeps the card as short as before
+	panel.add_theme_stylebox_override("panel", style)
 	panel.position = Vector2(16, 16)
 	var box := VBoxContainer.new()
 	panel.add_child(box)
@@ -389,11 +401,11 @@ func _build_status_panel() -> void:
 	box.add_child(_age)
 	_realm = UIStyle.label("", 14, UIStyle.ACCENT)
 	box.add_child(_realm)
-	_qi_bar = ProgressBar.new()
-	_qi_bar.custom_minimum_size = Vector2(300, 16)
-	_qi_bar.show_percentage = false
+	_qi_bar = UIStyle.bar(Vector2(300, 16), QI_FILL)
 	box.add_child(_qi_bar)
 	_qi_text = UIStyle.label("", 12)
+	_qi_text.add_theme_constant_override("outline_size", 3)
+	_qi_text.add_theme_color_override("font_outline_color", Color(0.04, 0.05, 0.08))
 	_qi_text.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_qi_text.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_qi_text.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -402,17 +414,39 @@ func _build_status_panel() -> void:
 	var money_row := HBoxContainer.new()
 	money_row.add_theme_constant_override("separation", 16)
 	box.add_child(money_row)
-	_lives = UIStyle.label("", 14)
+	_lives = HBoxContainer.new()
+	_lives.add_theme_constant_override("separation", 2)
 	money_row.add_child(_lives)
+	_lives_extra = UIStyle.label("", 14)
+	_lives.add_child(_lives_extra)
 	_lives_badge = UIStyle.label("!", 15, UIStyle.ACCENT)
 	_lives_badge.visible = false
 	_lives.add_child(_lives_badge)
+	var stones := HBoxContainer.new()
+	stones.add_theme_constant_override("separation", 4)
+	money_row.add_child(stones)
+	_stone_icon = TextureRect.new()
+	_stone_icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	_stone_icon.stretch_mode = TextureRect.STRETCH_KEEP_CENTERED
+	_stone_icon.custom_minimum_size = Vector2(ItemIcon.SIZE * ItemIcon.ZOOM, 0)
+	stones.add_child(_stone_icon)
 	_currency = UIStyle.label("", 14)
-	money_row.add_child(_currency)
+	stones.add_child(_currency)
+	_date_row = HBoxContainer.new()
+	_date_row.add_theme_constant_override("separation", 6)
+	box.add_child(_date_row)
+	_date_label = UIStyle.label("", 13, Color(0.75, 0.76, 0.8))
+	_date_row.add_child(_date_label)
+	_season_icon = _small_icon()
+	_date_row.add_child(_season_icon)
+	_weather_icon = _small_icon()
+	_date_row.add_child(_weather_icon)
+	_weather_text = UIStyle.label("", 13, Color(0.75, 0.76, 0.8))
+	_date_row.add_child(_weather_text)
 	_status = UIStyle.label("", 13, Color(0.75, 0.76, 0.8))
 	_status.add_theme_constant_override("line_spacing", -3)
 	box.add_child(_status)
-	box.add_theme_constant_override("separation", 0)
+	box.add_theme_constant_override("separation", 1)
 	_bottleneck = UIStyle.label("", 14, UIStyle.ACCENT)
 	_bottleneck.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	box.add_child(_bottleneck)
@@ -421,6 +455,14 @@ func _build_status_panel() -> void:
 	box.add_child(_injuries)
 	add_child(panel)
 	_build_guide_panel()
+
+
+func _small_icon() -> TextureRect:
+	var t := TextureRect.new()
+	t.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	t.stretch_mode = TextureRect.STRETCH_KEEP_CENTERED
+	t.custom_minimum_size = Vector2(HudIcons.GLYPH_SIZE, HudIcons.GLYPH_SIZE)
+	return t
 
 
 ## GFX-010: the "Next steps" card on the top right (goal, hunt, festival fight, hints).
@@ -570,14 +612,14 @@ func _refresh() -> void:
 	_age.add_theme_color_override("font_color", UIStyle.CATEGORY_COLORS.get(age_cue, Color.WHITE))
 	_refresh_lives(p)
 	_realm.text = Cultivation.realm_label(p, data)
-	_qi_text.text = "Qi: %d / %d" % [int(p.qi), int(Cultivation.qi_required(p, data))]
+	_qi_text.text = "Qi %d / %d" % [int(p.qi), int(Cultivation.qi_required(p, data))]
 	_currency.text = currency_line(p)
+	_stone_icon.texture = ItemIcon.for_id(data, "spirit_stone")
+	_stone_icon.visible = _stone_icon.texture != null
 	var density := GameState.region_qi_density()
 	var qi_why := ", ".join(Exploration.qi_flag_reasons(data, GameState.current_region, GameState.world_flags))
-	_status.text = "\n".join(PackedStringArray([
-		alignment_line(Alignment.tier_name(p.alignment, data), Sects.describe(p, data)),
-		"%s · %s · %s" % [GameClock.date_string(), season_label(GameClock.total_days), _weather_label(data)],
-	]))
+	_refresh_date_row(data)
+	_status.text = alignment_line(Alignment.tier_name(p.alignment, data), Sects.describe(p, data))
 	var region := "%s (Qi x%s%s)" % [Exploration.region_name(data, GameState.current_region), String.num(density, 2), ", " + qi_why if qi_why != "" else ""]
 	region += region_event_suffix(data, GameState.world_events, GameState.current_region, p)
 	if SecretRealms.open_in_region(data, GameState.current_region, GameClock.total_days):
@@ -587,7 +629,7 @@ func _refresh() -> void:
 	_qi_bar.value = p.qi
 	_bottleneck.text = bottleneck_hint(p, data)
 	_bottleneck.visible = _bottleneck.text != ""
-	_qi_bar.modulate = UIStyle.ACCENT if _bottleneck.visible else Color.WHITE
+	UIStyle.set_bar_fill(_qi_bar, UIStyle.ACCENT if _bottleneck.visible else QI_FILL)
 	_injuries.visible = Injuries.has_any(p)
 	_injuries.text = "Injured: " + ", ".join(Injuries.describe(p, data))
 	var hint_count := int(Settings.get_value("hud_hints"))
@@ -660,22 +702,68 @@ static func fair_fight_line(entries: Array, font: Font = null, font_size: int = 
 	return full
 
 
-## WU-340: keeps the gold "!" just right of the Lives text.
+## WU-340: keeps the gold "!" just right of the lamps.
 func _place_lives_badge() -> void:
-	_lives_badge.position = Vector2(_lives.get_minimum_size().x + 6.0, 0.0)
+	_lives.move_child(_lives_badge, _lives.get_child_count() - 1)
 
 
-## True when the gold "!" beside the Lives label is showing (WU-340).
+## True when the gold "!" beside the lives lamps is showing (WU-340).
 func lives_badge_visible() -> bool:
 	return _lives_badge.visible and _lives.visible
 
 
-## "Lives N" from the Creation Artifact (WU-095): warning at 1 life, danger with "Final life" at 0.
+## Lamps shown for `lives`: one lit lamp per life up to MAX_LAMPS, one unlit lamp at 0.
+static func lamp_count(lives: int) -> int:
+	return clampi(lives, 1, MAX_LAMPS)
+
+
+## "x 2" after the fifth lamp, "Final life" at 0, else "".
+static func lives_extra_text(lives: int) -> String:
+	if lives == 0:
+		return "Final life"
+	return "x %d" % (lives - MAX_LAMPS) if lives > MAX_LAMPS else ""
+
+
+## "Lives N" from the Creation Artifact (WU-095) as soul lamps: warning at 1 life, danger with "Final life" at 0.
 func _refresh_lives(p: CharacterData) -> void:
-	_lives.text = lives_text(p.artifact_lives)
-	_lives.visible = _lives.text != ""
-	_lives.add_theme_color_override("font_color", lives_color(p.artifact_lives))
+	var lives := p.artifact_lives
+	_lives.visible = lives >= 0
+	_lives.tooltip_text = lives_text(lives)
+	for c in _lives.get_children():
+		if c is TextureRect:
+			_lives.remove_child(c)
+			c.queue_free()
+	if lives >= 0:
+		for i in lamp_count(lives):
+			var lamp := TextureRect.new()
+			lamp.texture = HudIcons.lamp(lives > 0)
+			lamp.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+			lamp.stretch_mode = TextureRect.STRETCH_KEEP_CENTERED
+			lamp.custom_minimum_size = Vector2(HudIcons.LAMP_SIZE)
+			lamp.mouse_filter = Control.MOUSE_FILTER_PASS
+			_lives.add_child(lamp)
+			_lives.move_child(lamp, i)
+	_lives_extra.text = lives_extra_text(lives)
+	_lives_extra.add_theme_color_override("font_color", lives_color(lives))
 	_place_lives_badge()
+
+
+## Date, season and weather icons with the full text in the tooltip.
+func _refresh_date_row(data: GameData) -> void:
+	var kind := Weather.of(data, GameState.current_region, GameClock.total_days)
+	var season_name := Calendar.season_of(GameClock.total_days)
+	_date_label.text = GameClock.date_string()
+	_season_icon.texture = HudIcons.season(season_name)
+	_season_icon.visible = _season_icon.texture != null
+	_weather_icon.texture = HudIcons.weather(kind)
+	_weather_icon.visible = _weather_icon.texture != null
+	_weather_text.text = Weather.label(kind) if _weather_icon.texture == null else ""
+	_weather_text.visible = _weather_text.text != ""
+	var season_text := season_label(GameClock.total_days)
+	_season_icon.tooltip_text = season_text
+	_date_row.tooltip_text = "%s · %s · %s" % [GameClock.date_string(), season_text, _weather_label(data)]
+	_date_label.mouse_filter = Control.MOUSE_FILTER_PASS
+	_date_row.mouse_filter = Control.MOUSE_FILTER_PASS
 
 
 static func lives_text(lives: int) -> String:
@@ -1223,7 +1311,7 @@ static func letter_banner(npc_name: String) -> PackedStringArray:
 
 ## WU-351: spirit stones, plus the sect contribution a member can still spend.
 static func currency_line(p: CharacterData) -> String:
-	var line := "Spirit Stones: %d" % p.item_count("spirit_stone")
+	var line := "%d" % p.item_count("spirit_stone")
 	if not p.is_rogue():
 		line += "   Contribution: %d" % Sects.contribution_balance(p)
 	return line

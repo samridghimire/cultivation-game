@@ -210,11 +210,11 @@ func test_hunt_line_and_banner() -> void:
 func test_currency_line() -> void:
 	var c := new_character()
 	c.inventory = {"spirit_stone": 1296}
-	assert_eq(HUD.currency_line(c), "Spirit Stones: 1296")
+	assert_eq(HUD.currency_line(c), "1296")
 	c.sect = {"id": "azure_cloud_sect", "rank": 1, "contribution": 7773, "spent": 0}
 	var line: String = HUD.currency_line(c)
 	assert_true(line.contains("Contribution: 7773"), line)
-	assert_true(line.begins_with("Spirit Stones: 1296"), line)
+	assert_true(line.begins_with("1296"), line)
 	c.sect["spent"] = 73
 	assert_true(HUD.currency_line(c).contains("Contribution: 7700"))
 
