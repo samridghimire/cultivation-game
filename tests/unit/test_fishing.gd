@@ -136,3 +136,11 @@ func test_catch_log_round_trips_and_defaults() -> void:
 	var d := c.to_dict()
 	d.erase("catch_log")
 	assert_true(CharacterData.from_dict(d).catch_log.is_empty())
+
+
+func test_progress_between_ranks() -> void:
+	assert_eq(Fishing.progress(0), 0.0)
+	assert_eq(Fishing.progress(5), 0.5)
+	assert_eq(Fishing.progress(10), 0.0)
+	assert_eq(Fishing.progress(100), 1.0)
+	assert_eq(Fishing.progress(250), 1.0)

@@ -12,6 +12,8 @@ signal closed
 const MAX_TEXT_HEIGHT := 470.0
 const SCROLL_SPEED := 900.0
 const LEFT_WIDTH := 250.0
+const CRAFTS_TITLE := "Village crafts"
+const PATH_TITLE := "Path"
 const ELEMENT_COLORS := {
 	"metal": Color("c8ccd4"), "wood": Color("6fbf5a"), "water": Color("4a9be8"),
 	"fire": Color("e8603a"), "earth": Color("c49a4a"),
@@ -37,6 +39,8 @@ var _train_children: Button
 var _family_button: Button
 ## Beast whose Release button awaits its confirming second press (FH-015).
 var _release_confirm := ""
+## Village skill rows for the "Village crafts" card (see craft_rows).
+var _craft_rows: Array[Dictionary] = []
 
 
 func _init() -> void:
@@ -113,9 +117,7 @@ func _build_left_column() -> VBoxContainer:
 	_realm_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_realm_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	col.add_child(_realm_label)
-	_qi_bar = ProgressBar.new()
-	_qi_bar.show_percentage = false
-	_qi_bar.custom_minimum_size = Vector2(0, 12)
+	_qi_bar = UIStyle.bar(Vector2(0, 12), Color("6fd3c1"))
 	col.add_child(_qi_bar)
 	_qi_label = UIStyle.label("", 13, Color("bbbbbb"))
 	_qi_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -138,7 +140,7 @@ func _rebuild_left() -> void:
 	_realm_label.text = Cultivation.realm_label(p, data)
 	var need := Cultivation.qi_required(p, data)
 	_qi_bar.max_value = maxf(need, 1.0)
-	_qi_bar.value = minf(p.qi, need)
+	_qi_bar.value = _qi_bar.max_value if Cultivation.is_at_bottleneck(p, data) else minf(p.qi, need)
 	_qi_label.text = "Qi %d / %d" % [int(p.qi), int(need)] if not Cultivation.is_at_bottleneck(p, data) else "At the bottleneck"
 	_root_title.text = SpiritualRoots.grade_for(p.spiritual_roots, data).get("name", "No Spiritual Root")
 	for child in _root_box.get_children():
@@ -151,16 +153,11 @@ func _rebuild_left() -> void:
 		var name_label := UIStyle.label(String(row["name"]), 14)
 		name_label.custom_minimum_size = Vector2(52, 0)
 		line.add_child(name_label)
-		var bar := ProgressBar.new()
+		var bar := UIStyle.bar(Vector2(150, 10), ELEMENT_COLORS.get(String(row["id"]), Color.WHITE))
 		bar.max_value = 100
 		bar.value = int(row["value"])
-		bar.show_percentage = false
 		bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		bar.custom_minimum_size = Vector2(0, 10)
-		var fill := StyleBoxFlat.new()
-		fill.bg_color = ELEMENT_COLORS.get(String(row["id"]), Color.WHITE)
-		bar.add_theme_stylebox_override("fill", fill)
 		line.add_child(bar)
 		var value_label := UIStyle.label(str(int(row["value"])), 14)
 		value_label.custom_minimum_size = Vector2(28, 0)
@@ -245,10 +242,6 @@ func _rebuild() -> void:
 	t += "Cultivation speed: %.2f qi/day here\n" % Cultivation.qi_per_day(p, data, GameState.hint_density())
 	var devoured := "   |   Cultivators devoured: %d" % p.devoured if p.devoured > 0 else ""
 	t += "Alignment: %s (%d)%s   |   %s\n\n" % [Alignment.tier_name(p.alignment, data), p.alignment, devoured, Sects.describe(p, data)]
-	if p.gather_xp > 0:
-		t += "Herb lore: %s (%d)\n" % [HerbLore.rank_name(GameState.data.herb_lore, p.gather_xp), p.gather_xp]
-	if p.fishing_xp > 0:
-		t += "Fishing: %s (%d)\n" % [Fishing.rank_name(p.fishing_xp), p.fishing_xp]
 	var rank_line := SectFactions.rank_line(p, GameState.sect_standings())
 	var contribution := contribution_line(p)
 	if rank_line != "":
@@ -259,6 +252,14 @@ func _rebuild() -> void:
 	if rival_line != "":
 		t += "[color=#%s]Rival[/color]\n  %s\n\n" % [accent, rival_line]
 	_gender_row.visible = p.gender == ""
+	_craft_rows = craft_rows(p, data)
+	if not _craft_rows.is_empty():
+		t += "[color=#%s]%s[/color]\n" % [accent, CRAFTS_TITLE]
+		for row in _craft_rows:
+			t += "  %s: %s (%d)\n" % [row["name"], row["rank"], row["xp"]]
+			if String(row["note"]) != "":
+				t += "  %s\n" % row["note"]
+		t += "\n"
 	var density := GameState.hint_density()
 	var hints := Guidance.hints(p, data, density, 4, GameState.npcs, GameState.world_flags, GameState.current_region, GameClock.total_days, GameState.npc_favor)
 	if not hints.is_empty():
@@ -421,13 +422,20 @@ func _build_cards(t: String) -> void:
 		c.queue_free()
 	for sec in split_sections(t):
 		var card := UIStyle.panel()
-		card.name = "card_" + String(sec["title"]).validate_node_name() if sec["title"] != "" else "card_intro"
+		if String(sec["title"]) == "":
+			sec["title"] = PATH_TITLE
+		card.name = "card_" + String(sec["title"]).validate_node_name()
 		card.set_meta("title", sec["title"])
 		var inner := VBoxContainer.new()
 		inner.add_theme_constant_override("separation", 4)
 		card.add_child(inner)
 		if sec["title"] != "":
 			inner.add_child(UIStyle.label(sec["title"], 18, sec["color"]))
+		if sec["title"] == CRAFTS_TITLE and not _craft_rows.is_empty():
+			for row in _craft_rows:
+				inner.add_child(_craft_row(row))
+			_cards.add_child(card)
+			continue
 		var body := RichTextLabel.new()
 		body.bbcode_enabled = true
 		body.fit_content = true
@@ -436,6 +444,41 @@ func _build_cards(t: String) -> void:
 		body.text = sec["body"]
 		inner.add_child(body)
 		_cards.add_child(card)
+
+
+## Rows for the "Village crafts" card: {name, rank, xp, progress 0..1, note}; empty while
+## no village skill has xp and the catch log is empty.
+static func craft_rows(c: CharacterData, data: GameData) -> Array[Dictionary]:
+	var rows: Array[Dictionary] = []
+	if c.fishing_xp <= 0 and c.gather_xp <= 0 and c.catch_log.is_empty():
+		return rows
+	rows.append({"name": "Fishing", "rank": Fishing.rank_name(c.fishing_xp), "xp": c.fishing_xp,
+		"progress": Fishing.progress(c.fishing_xp), "note": Fishing.log_summary(c, data)})
+	rows.append({"name": "Herb lore", "rank": HerbLore.rank_name(data.herb_lore, c.gather_xp), "xp": c.gather_xp,
+		"progress": HerbLore.progress(data.herb_lore, c.gather_xp), "note": ""})
+	return rows
+
+
+func _craft_row(row: Dictionary) -> Control:
+	var box := VBoxContainer.new()
+	box.name = "craft_" + String(row["name"]).validate_node_name()
+	var line := HBoxContainer.new()
+	line.add_theme_constant_override("separation", 8)
+	var name_label := UIStyle.label("%s: %s" % [row["name"], row["rank"]], 15)
+	name_label.custom_minimum_size = Vector2(190, 0)
+	line.add_child(name_label)
+	var bar := UIStyle.bar(Vector2(200, 10), ELEMENT_COLORS["wood"])
+	bar.name = "bar"
+	bar.max_value = 1.0
+	bar.step = 0.0
+	bar.value = float(row["progress"])
+	bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	line.add_child(bar)
+	line.add_child(UIStyle.label("%d xp" % int(row["xp"]), 14, Color("bbbbbb")))
+	box.add_child(line)
+	if String(row["note"]) != "":
+		box.add_child(UIStyle.label(String(row["note"]), 14, Color("bbbbbb")))
+	return box
 
 
 ## WU-159: "Strongest foe beaten: <realm>" from the highest beat_realm flag set, "" when none.
@@ -452,9 +495,9 @@ static func strongest_foe_line(data: GameData, flags: Dictionary) -> String:
 static func next_steps_text(hints: PackedStringArray, journal_key: String) -> String:
 	var t := ""
 	for i in mini(hints.size(), 3):
-		t += "  - %s\n" % hints[i]
+		t += "- %s\n" % hints[i]
 	if hints.size() > 3:
-		t += "[color=#%s]  More in the Journal (%s)[/color]\n" % [UIStyle.HINT.to_html(false), journal_key]
+		t += "[color=#%s]More in the Journal (%s)[/color]\n" % [UIStyle.HINT.to_html(false), journal_key]
 	return t
 
 

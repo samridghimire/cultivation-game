@@ -28,6 +28,18 @@ static func rank_name(xp: int) -> String:
 	return name
 
 
+## 0..1 progress from the current rank's threshold to the next; 1.0 at the top rank.
+static func progress(xp: int) -> float:
+	for i in range(RANKS.size() - 1, -1, -1):
+		var lo := int(RANKS[i]["min"])
+		if xp >= lo:
+			if i == RANKS.size() - 1:
+				return 1.0
+			var hi := int(RANKS[i + 1]["min"])
+			return clampf(float(xp - lo) / float(hi - lo), 0.0, 1.0)
+	return 0.0
+
+
 ## Multiplier on rare entries' weight: 1.0 at quality 0.5 and no xp.
 static func rare_mult(quality: float, xp: int) -> float:
 	return 1.0 + 0.5 * (clampf(quality, 0.0, 1.0) - 0.5) + float(mini(maxi(xp, 0), XP_CAP)) / 200.0

@@ -158,3 +158,32 @@ func test_split_sections_makes_a_card_per_header() -> void:
 	assert_true(String(secs[1]["body"]).contains("Str: 3"))
 	assert_false(String(secs[1]["body"]).contains("Sect"), "sections do not run into each other")
 	assert_eq(secs[2]["title"], "Sect Reputation")
+
+
+func test_sheet_polish_gfx034() -> void:
+	var gs := _game_state()
+	var c := CharacterFactory.create("Han Li", gs.data, seeded_rng(81), "male")
+	gs.start_session(c)
+	c.qi = 0.0
+	var sheet := CharacterSheet.new()
+	(Engine.get_main_loop() as SceneTree).root.add_child(sheet)
+	sheet.open()
+	assert_true(sheet._qi_bar.has_theme_stylebox_override("background"), "trough")
+	assert_eq(sheet._qi_bar.value, 0.0)
+	assert_eq(String(sheet._cards.get_child(0).get_meta("title")), "Path")
+	assert_true(sheet._cards.find_child("card_Village crafts", true, false) == null, "no crafts yet")
+	var hints := CharacterSheet.next_steps_text(PackedStringArray(["a", "b"]), "J")
+	for line in hints.strip_edges().split("\n"):
+		assert_true(line.begins_with("- "), line)
+	c.fishing_xp = 12
+	c.gather_xp = 20
+	sheet.open()
+	var card := sheet._cards.find_child("card_Village crafts", true, false)
+	assert_true(card != null, "crafts card")
+	var fb := (card.find_child("craft_Fishing", true, false) as Node).find_child("bar", true, false) as ProgressBar
+	assert_true(absf(fb.value - Fishing.progress(12)) < 0.001)
+	var hb := (card.find_child("craft_Herb lore", true, false) as Node).find_child("bar", true, false) as ProgressBar
+	assert_true(absf(hb.value - HerbLore.progress(gs.data.herb_lore, 20)) < 0.001)
+	assert_false(sheet._text.get_parsed_text().contains("Fishing: Angler (12)\nFishing"), "listed once")
+	sheet.free()
+	gs.end_session()
