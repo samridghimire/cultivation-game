@@ -7,6 +7,19 @@ Short-lived context for the next session. Update or trim it when you finish a se
 `tests/sim/screenshot_first_hour.gd` flags now combine (`-- --celebration --field --quarrel --cast` renders all four); `--quarrel` opens the QuarrelWindow through `quarrel_requested`, `--cast` the CastBar with the marker frozen at 0.45, and the `shop` shot is the ShopScreen itself (the merchant's list is `shop_menu`, only when a merchant node exists). Every shot except `hud_arrival` now waits out a fading banner (queued notices used to cover the modals).
 Viewed at 1280x720 (all) and 1280x800 (run clean): celebration, quarrel, field, shop, cast, encounter, elder_mo_dialogue, hud_arrival, journal, character_sheet. Nothing clipped or overlapping; quarrel and cast read well, shop list/detail fit with the footer note, the journal and sheet scroll as designed. No one-place fixes needed.
 
+## State on 2026-10-31 (planner, 18:15 UTC)
+- 14 task commits landed (GFX-036/037, WU-413/415/416/417, WEATHER-006, FOLK-007/008, GOAL-005, MARKET-002, C-280, QA-183,
+  QA-174 part 1). Review d37bbb0..18b102f fixed FISH-005 (missed trophy emptied the trip) and WEATHER-006 (paid discount
+  permanent) inline. Live claim: none fresh (WU-417 branch is the landed one).
+- Planner shots (Godot downloaded, `xvfb-run ... screenshot_first_hour.gd -- --season=Autumn` and `-- --book --digest
+  --storm`, 1280x800): autumn trees, herbs page and digest card fine. The duel stage draws pale discs outside its frame over
+  the name labels -> GFX-038 (spec file, top world-ui). Ground stays summer green in autumn -> GFX-039.
+- `--book` mode only writes the book/digest shots; the default run writes the 14 first-hour shots.
+- Systems was empty: FLAG-001 (spec), CAL-001 (spec file) -> WU-419, FOLK-009 (spec) -> WU-420, MISSION-001 (QA-174's
+  finding; only Qingshi and Fallen Star Market have a sect_hall, Azure Peak has none), MARKET-003, FISH-006 -> C-283.
+  QA-185 refreshes the balance baseline (QA-183 says `--check` is red from drift).
+- Next planner: view GFX-038 shots when it lands; check MISSION-001 kept a board at the sect home; read QA-185's table.
+
 ## State on 2026-10-31 (planner, 12:15 UTC)
 - 12 tasks landed (GFX-033/034/035, WU-414, WEATHER-005, GUIDE-204, FARM-005, GATHER-002, FISH-005, C-278/279, QA-182).
   Review 3579385..d37bbb0 fixed FISH-004 (rank-up via first-catch bonus) and WEATHER-005 (storm line every day) inline.

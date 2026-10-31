@@ -2,6 +2,20 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-31 [WU-416] After a long action a card sums up what happened while you were away.
+- 2026-10-31 [GFX-037] Trees blossom, turn and go bare with the seasons; winter roofs carry snow and ponds ice over.
+- 2026-10-31 [FOLK-008] Villagers have birthdays: a greeting, a doubled gift on the day, and a journal reminder.
+- 2026-10-31 [MARKET-002] A travelling market stall comes to Qingshi on the 10th and 25th of each month.
+- 2026-10-31 [QA-174] A test records that missions are only limited to sect halls by the world, not the rules (part 1).
+- 2026-10-31 [WU-415] The shop shows the season and arrows for items that are dear or cheap right now.
+- 2026-10-31 [C-280] Two legendary pond fish to land: the Gold-Scaled Carp and the autumn Ghostwhisker Eel.
+- 2026-10-31 [GOAL-005] Six village milestones for fishing, herb gathering and harvests.
+- 2026-10-31 [FOLK-007] Villagers become friends and close friends as their favor grows, each with a line and a gift.
+- 2026-10-31 [WU-417] The village book has an herbs page, opens from the character sheet, and fish have their own colours.
+- 2026-10-31 [WEATHER-006] Storms leave aftermaths: the stranded peddler's month-long herb discount and storm greetings.
+- 2026-10-31 [WU-413] The HUD shows which friend is with you today, and the field menu says when it needs water.
+- 2026-10-31 [QA-183] Crafter balance checks now use five seeds; herb lore did not make crafters poorer.
+- 2026-10-31 [GFX-036] Fallen beasts lie on their backs and each region has its own distant skyline in fights.
 - 2026-10-31 [DAY-001] Long actions are summed up in a short digest of what happened.
 - 2026-10-31 [GFX-035] The duel stage has a seasonal sky, a skyline for each region and real grass.
 - 2026-10-31 [FISH-005] Rare trophy fish can be landed only with a clean strike and some fishing skill.
