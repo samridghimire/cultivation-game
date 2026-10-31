@@ -18,6 +18,8 @@ var _sell_tab: Button
 var _list: VBoxContainer
 var _name: Label
 var _description: Label
+var _season_line: Label
+var _trend_line: Label
 var _effects: Label
 var _compare: Label
 var _wanted: Label
@@ -64,6 +66,10 @@ func _init() -> void:
 	_title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_title.custom_minimum_size.x = 200
 	header.add_child(_title)
+	_season_line = UIStyle.label("", 15, Color(0.75, 0.75, 0.75))
+	_season_line.name = "SeasonLine"
+	_season_line.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	header.add_child(_season_line)
 	_stones = UIStyle.label("", 18)
 	header.add_child(_stones)
 
@@ -119,6 +125,9 @@ func _init() -> void:
 	details.add_child(_name)
 	_description = _wrapped(UIStyle.label("", 16))
 	details.add_child(_description)
+	_trend_line = _wrapped(UIStyle.label("", 15, Color(0.75, 0.75, 0.75)))
+	_trend_line.name = "TrendLine"
+	details.add_child(_trend_line)
 	_effects = _wrapped(UIStyle.label("", 15, UIStyle.CATEGORY_COLORS["progress"]))
 	details.add_child(_effects)
 	_compare = _wrapped(UIStyle.label("", 15, Color(0.75, 0.75, 0.75)))
@@ -159,6 +168,18 @@ func _init() -> void:
 	_close_button = UIStyle.button("Close", close)
 	box.add_child(_close_button)
 	EventBus.player_changed.connect(func(): if visible: _rebuild())
+
+
+## WU-415: "Winter prices" under the title; "" without a season.
+static func season_header(season: String) -> String:
+	return "" if season == "" else "%s prices" % season.capitalize()
+
+
+## WU-415: "Dear in winter" (+1), "Cheap in autumn" (-1), "" for a flat item.
+static func trend_text(trend: int, season: String) -> String:
+	if trend == 0 or season == "":
+		return ""
+	return "%s in %s" % ["Dear" if trend > 0 else "Cheap", season.to_lower()]
 
 
 func _refresh_hint() -> void:
@@ -460,6 +481,7 @@ func _rebuild() -> void:
 	var p := GameState.player
 	var data := GameState.data
 	_stones.text = "Spirit Stones: %d" % p.item_count("spirit_stone")
+	_season_line.text = season_header(GameState.price_season())
 	_buy_tab.set_pressed_no_signal(not _selling)
 	_sell_tab.set_pressed_no_signal(_selling)
 	var buys := not (_stock_tags.is_empty() and _buy_tags.is_empty())
@@ -511,7 +533,8 @@ func _rebuild() -> void:
 			label += " (festival)"
 		if not _selling and item_id == _hinted:
 			label = "! " + label
-		var b := ItemRow.make(data, item_id, 1, "", price)
+		var trend := Items.season_trend(data, item_id, GameState.price_season())
+		var b := ItemRow.make(data, item_id, 1, "", price, trend)
 		b.text = label
 		b.pressed.connect(_select.bind(item_id))
 		if not _selling and item_id == _hinted:
@@ -524,6 +547,8 @@ func _rebuild() -> void:
 		b.clip_text = true
 		b.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 		b.tooltip_text = "%s  %d" % [label, price]
+		if trend != 0:
+			b.tooltip_text += "\n" + trend_text(trend, GameState.price_season())
 		b.toggle_mode = true
 		b.button_pressed = item_id == _selected
 		b.focus_entered.connect(_select.bind(item_id))
@@ -661,6 +686,8 @@ func _show_details() -> void:
 		if note != "" and not row_fits(base + note):
 			_name.text += note
 	_description.text = String(item.get("description", ""))
+	_trend_line.text = trend_text(Items.season_trend(data, _selected, GameState.price_season()), GameState.price_season())
+	_trend_line.visible = _trend_line.text != ""
 	var lines := Items.describe_effects(item.get("effects", {}), data)
 	if Equipment.is_equipment(data, _selected):
 		lines.insert(0, Equipment.describe_stats(data, _selected))

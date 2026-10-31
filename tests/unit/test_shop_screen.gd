@@ -461,3 +461,35 @@ func test_recharge_warning_only_when_the_buy_makes_recharge_unaffordable() -> vo
 	c.artifact_lives = 1
 	c.inventory = {"spirit_stone": cost - 1}
 	assert_eq(ShopScreen.recharge_warning(c, data(), 5), "", "already short")
+
+
+## WU-415: the season header, trend text and the row arrow.
+func test_season_trend_texts_and_header() -> void:
+	assert_eq(ShopScreen.season_header("winter"), "Winter prices")
+	assert_eq(ShopScreen.season_header(""), "")
+	assert_eq(ShopScreen.trend_text(1, "winter"), "Dear in winter")
+	assert_eq(ShopScreen.trend_text(-1, "autumn"), "Cheap in autumn")
+	assert_eq(ShopScreen.trend_text(0, "autumn"), "")
+
+
+func test_row_arrow_for_seasonal_item_only() -> void:
+	var d := data()
+	var seasonal := ""
+	var season := ""
+	var flat := ""
+	for id: String in d.items:
+		if flat == "" and Items.harvest_seasons(d, id).is_empty():
+			flat = id
+		for s in ["spring", "summer", "autumn", "winter"]:
+			if seasonal == "" and Items.season_trend(d, id, s) != 0:
+				seasonal = id
+				season = s
+	assert_true(seasonal != "" and flat != "")
+	var trend := Items.season_trend(d, seasonal, season)
+	var row := ItemRow.make(d, seasonal, 1, "", 10, trend)
+	assert_true(row.find_child("TrendArrow", true, false) != null)
+	assert_true(HudIcons.trend(trend) != null)
+	var flat_row := ItemRow.make(d, flat, 1, "", 10, Items.season_trend(d, flat, season))
+	assert_true(flat_row.find_child("TrendArrow", true, false) == null)
+	assert_true(HudIcons.trend(0) == null)
+	assert_true(HudIcons.trend(1) != HudIcons.trend(-1))

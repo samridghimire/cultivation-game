@@ -44,7 +44,7 @@ static func badge_text(count: int) -> String:
 
 ## Row button for `item_id`. The button text is the name plus `extra_tag`; `price` >= 0 shows a stone-priced badge
 ## instead of the count badge. Selection and focus are the caller's business.
-static func make(data: GameData, item_id: String, count: int, extra_tag: String = "", price: int = -1) -> Button:
+static func make(data: GameData, item_id: String, count: int, extra_tag: String = "", price: int = -1, trend: int = 0) -> Button:
 	var name := String(data.items.get(item_id, {}).get("name", item_id))
 	var b := UIStyle.button(name if extra_tag == "" else "%s  %s" % [name, extra_tag], Callable())
 	b.name = item_id
@@ -61,8 +61,19 @@ static func make(data: GameData, item_id: String, count: int, extra_tag: String 
 	badge.alignment = BoxContainer.ALIGNMENT_END
 	badge.add_theme_constant_override("separation", 4)
 	badge.set_anchors_preset(Control.PRESET_RIGHT_WIDE)
-	badge.offset_left = -BADGE_WIDTH - 8
+	badge.offset_left = -BADGE_WIDTH - 8 - (16 if trend != 0 and price >= 0 else 0)
 	badge.offset_right = -8
+	if price >= 0 and trend != 0:
+		var arrow := TextureRect.new()
+		arrow.name = "TrendArrow"
+		arrow.texture = HudIcons.trend(trend)
+		arrow.custom_minimum_size = Vector2(12, 12)
+		arrow.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		arrow.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		arrow.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		arrow.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		arrow.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		badge.add_child(arrow)
 	if price >= 0:
 		var stone := TextureRect.new()
 		stone.texture = ItemIcon.for_id(data, "spirit_stone")

@@ -33,6 +33,12 @@ const TOOLS := {
 	"hoe": {"colors": {"a": Color("b8c0cc"), "c": Color("a9743c")}, "rows": ["............", "........ooo.", ".......oaaao", "......oaoooo", ".....oc.....", "....oc......", "...oc.......", "..oc........", ".oc.........", "oc..........", "............", "............"]},
 }
 
+## Price trend arrows for the shop (WU-415): "up" is dear (warm red), "down" is cheap (green).
+const TRENDS := {
+	"up": {"colors": {"a": Color("e0553c")}, "rows": ["............", ".....oo.....", "....oaao....", "...oaaaao...", "..oaaaaaao..", ".oaaaaaaaao.", ".ooooaaoooo.", "....oaao....", "....oaao....", "....oaao....", ".....oo.....", "............"]},
+	"down": {"colors": {"a": Color("4fae5c")}, "rows": ["............", ".....oo.....", "....oaao....", "....oaao....", "....oaao....", ".ooooaaoooo.", ".oaaaaaaaao.", "..oaaaaaao..", "...oaaaao...", "....oaao....", ".....oo.....", "............"]},
+}
+
 static var _cache: Dictionary = {}
 
 
@@ -58,6 +64,13 @@ static func weather(kind: String) -> Texture2D:
 ## A 12x12 farming tool glyph ("watering_can", "hoe"); null for anything else.
 static func tool_glyph(name: String) -> Texture2D:
 	return _glyph("tool_" + name, TOOLS, name)
+
+
+## A 12x12 price trend arrow: +1 up (dear), -1 down (cheap); null for 0.
+static func trend(direction: int) -> Texture2D:
+	if direction == 0:
+		return null
+	return _glyph("trend_" + ("up" if direction > 0 else "down"), TRENDS, "up" if direction > 0 else "down")
 
 
 static func _glyph(key: String, defs: Dictionary, name: String) -> Texture2D:
