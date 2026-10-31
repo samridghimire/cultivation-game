@@ -4,6 +4,8 @@ extends PanelContainer
 ## grouped by section. Gamepad: right stick scrolls, B closes.
 
 signal closed
+## WU-414: the "Village book" button at the end of the Around the village card.
+signal book_requested
 
 const SCROLL_SPEED := 900.0
 const DIM := Color(0.6, 0.6, 0.6)
@@ -133,6 +135,11 @@ func _build_cards(list: Array) -> void:
 		inner.add_child(UIStyle.label(sec["section"], 18, UIStyle.ACCENT))
 		for e: Dictionary in sec["entries"]:
 			inner.add_child(_row(e))
+		if sec["section"] == "Around the village":
+			var book := UIStyle.button("Village book", func() -> void: book_requested.emit())
+			book.name = "VillageBookButton"
+			book.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+			inner.add_child(book)
 		_cards.add_child(card)
 
 

@@ -78,6 +78,7 @@ var _threat_prompt: ThreatPrompt
 ## Toggleable modal screens keyed by the input action that opens them. Each
 ## must have open(), close() and a `closed` signal.
 var _screens: Dictionary = {}
+var _village_book: VillageBook
 var _combat_report: CombatReport
 var _fight_rating: String = ""
 var _fight_enemy: Dictionary = {}
@@ -150,7 +151,12 @@ func _ready() -> void:
 	_add_screen("toggle_map", WorldMapScreen.new())
 	_add_screen("toggle_message_log", MessageLogScreen.new())
 	_add_screen("toggle_clan", ClanScreen.new())
-	_add_screen("toggle_journal", JournalScreen.new())
+	var journal := JournalScreen.new()
+	_add_screen("toggle_journal", journal)
+	_village_book = VillageBook.new()  # WU-414: no key of its own, opens from the journal
+	_village_book.closed.connect(_update_modal)
+	add_child(UIStyle.centered(_village_book))
+	journal.book_requested.connect(_open_village_book)
 	_crafting = CraftingScreen.new()
 	_crafting.closed.connect(_update_modal)
 	add_child(UIStyle.centered(_crafting))
@@ -337,6 +343,7 @@ func _add_screen(action: String, screen: Control) -> void:
 func _close_screens() -> void:
 	for screen in _screens.values():
 		screen.close()
+	_village_book.close()
 	_breakthrough.close()
 	_crafting.close()
 	_shop.close()
@@ -390,7 +397,7 @@ func _on_child_training_requested() -> void:
 
 
 func _any_screen_open() -> bool:
-	return _breakthrough.visible or _crafting.visible or _shop.visible or _mission_board.visible or _auction.visible or _sect_balance.visible or _gossip.visible or _child_training.visible or _screens.values().any(func(s): return s.visible)
+	return _breakthrough.visible or _crafting.visible or _shop.visible or _mission_board.visible or _auction.visible or _sect_balance.visible or _gossip.visible or _child_training.visible or _village_book.visible or _screens.values().any(func(s): return s.visible)
 
 
 func _build_status_panel() -> void:
@@ -1536,6 +1543,13 @@ func _open_journal() -> void:
 	_pause_menu.close()
 	var journal: Control = _screens["toggle_journal"]
 	journal.open()
+	_update_modal()
+
+
+## The village book replaces the journal while open.
+func _open_village_book() -> void:
+	_screens["toggle_journal"].close()
+	_village_book.open()
 	_update_modal()
 
 

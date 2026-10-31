@@ -5,6 +5,7 @@ extends SceneTree
 ##     --resolution 1280x800 -s res://tests/sim/screenshot_first_hour.gd
 ## WU-218: append `-- --crafter` for a new Alchemist's first hour (workshop, hint, gather site, crafting,
 ## journal Commissions, Deliver) as crafter_*.png.
+## WU-414: append `-- --book` for village_book.png.
 ## GFX-033: append `-- --storm` to render the first-hour shots under a storm.
 ## GFX-029: append `-- --field` for field.png (a growing field).
 ## GFX-023: append `-- --celebration` for celebration.png (wedding lanterns and red sashes).
@@ -63,6 +64,15 @@ func _start() -> void:
 		special = true
 	if OS.get_cmdline_user_args().has("--cast"):  # QA-182: the CastBar on the jetty, marker frozen mid-sweep
 		_cast_shots(gs)
+		special = true
+	if OS.get_cmdline_user_args().has("--book"):  # WU-414: the village book with two fish caught
+		Fishing.record_catch(gs.player, "silver_carp", 3)
+		Fishing.record_catch(gs.player, "marsh_eel", 1)
+		var book: Control = hud.get("_village_book")
+		shots.append({"name": "village_book", "open": func() -> void:
+			hud.get("_banner").visible = false
+			book.open()
+			book.get("_detail").text = book.call("hint_for", "mist_koi", gs.data, gs.player), "close": book.close})
 		special = true
 	if party:
 		special = true
