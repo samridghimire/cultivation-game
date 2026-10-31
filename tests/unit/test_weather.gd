@@ -247,3 +247,50 @@ func test_effects_text_words_the_storm() -> void:
 	assert_true(text.contains("herb yields cut by 1"), text)
 	assert_true(text.contains("Thunder Dao contemplation x2.0"), text)
 	assert_true(text.contains("Metal-root"), text)
+
+
+func test_storm_explore_validates() -> void:
+	for bad: Dictionary in [{"lightning_chance": 2.0, "lightning_damage_frac": 0.1, "thunderwood_chance": 0.0}, {"lightning_chance": 0.6, "lightning_damage_frac": 0.1, "thunderwood_chance": 0.6}, {"lightning_damage_frac": 0.1}]:
+		var errors: Array[String] = []
+		Weather.validate_effects({"storm": {"explore": bad}}, errors)
+		assert_false(errors.is_empty(), str(bad))
+	var ok: Array[String] = []
+	Weather.validate_effects(data().weather_effects, ok)
+	assert_true(ok.is_empty(), str(ok))
+
+
+func test_storm_explore_draws_only_on_storm_days() -> void:
+	var d := data()
+	var c := CharacterData.new()
+	var rng := seeded_rng()
+	var twin := seeded_rng()
+	for kind in ["clear", "rain", "snow", "fog", "cloudy"]:
+		assert_eq(Weather.storm_explore(d, kind, c, rng)["event"], "")
+	assert_eq(rng.randf(), twin.randf(), "no draw on non-storm days")
+	Weather.storm_explore(d, "storm", c, rng)
+	assert_true(rng.randf() != twin.randf(), "exactly one draw on a storm day")
+
+
+func test_storm_explore_outcomes() -> void:
+	var d := data()
+	d.weather_effects["storm"]["explore"] = {"lightning_chance": 0.5, "lightning_damage_frac": 0.15, "thunderwood_chance": 0.5, "injury": "spirit_burn"}
+	var plain := CharacterData.new()
+	var rooted := CharacterData.new()
+	rooted.spiritual_roots = {"metal": 60}
+	var seen := {}
+	for seed_value in 40:
+		var rng := RandomNumberGenerator.new()
+		rng.seed = seed_value
+		var r := Weather.storm_explore(d, "storm", plain, rng)
+		seen[r["event"]] = true
+		if r["event"] == "lightning":
+			assert_eq(r["injury"], "spirit_burn")
+			assert_eq(r["dao"], "")
+		elif r["event"] == "thunderwood":
+			assert_eq(r["item"], "lightning_struck_wood")
+		rng.seed = seed_value
+		var m := Weather.storm_explore(d, "storm", rooted, rng)
+		if m["event"] == "lightning":
+			assert_eq(m["dao"], "thunder_dao")
+			assert_eq(m["injury"], "")
+	assert_true(seen.has("lightning") and seen.has("thunderwood"), "both outcomes happen")

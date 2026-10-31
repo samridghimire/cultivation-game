@@ -93,6 +93,8 @@ static func validate_effects(effects: Dictionary, errors: Array[String]) -> void
 					errors.append("weather_effects.storm.herb_yield_penalty must be an int 1..3")
 			elif key == "dao_boost" and kind == "storm":
 				_validate_dao_boost(v, errors)
+			elif key == "explore" and kind == "storm":
+				_validate_storm_explore(v, errors)
 			elif key == "qi_element":
 				_validate_qi_element(kind, v, errors)
 			else:
@@ -253,3 +255,41 @@ static func herb_penalty(data: GameData, kind: String, found: Dictionary) -> Arr
 			else:
 				found[item_id] = left
 	return hit
+
+
+static func _validate_storm_explore(v: Variant, errors: Array[String]) -> void:
+	if not v is Dictionary:
+		errors.append("weather_effects.storm.explore must be an object")
+		return
+	var b: Dictionary = v
+	for key: String in ["lightning_chance", "lightning_damage_frac", "thunderwood_chance"]:
+		var x: Variant = b.get(key)
+		if not (x is float or x is int) or float(x) < 0.0 or float(x) > 1.0:
+			errors.append("weather_effects.storm.explore.%s must be 0..1" % key)
+	if (b.get("lightning_chance", 0.0) is float or b.get("lightning_chance", 0.0) is int) and (b.get("thunderwood_chance", 0.0) is float or b.get("thunderwood_chance", 0.0) is int) \
+			and float(b.get("lightning_chance", 0.0)) + float(b.get("thunderwood_chance", 0.0)) > 1.0:
+		errors.append("weather_effects.storm.explore chances must add up to at most 1")
+	if b.has("injury") and not b["injury"] is String:
+		errors.append("weather_effects.storm.explore.injury must be an injury id")
+
+
+## One day of exploring on a `kind` day (WEATHER-005). Draws exactly once, and only on a day whose weather has an
+## `explore` block (so seeded runs without storms do not shift). Returns {event: "" | "lightning" | "thunderwood",
+## dao: insight id when lightning is harvested as Thunder Dao progress, injury: injury id or "", item: item id}.
+static func storm_explore(data: GameData, kind: String, c: CharacterData, rng: RandomNumberGenerator) -> Dictionary:
+	var out := {"event": "", "dao": "", "injury": "", "item": ""}
+	var b: Dictionary = data.weather_effects.get(kind, {}).get("explore", {})
+	if b.is_empty():
+		return out
+	var r := rng.randf()
+	var lightning := float(b.get("lightning_chance", 0.0))
+	if r < lightning:
+		out["event"] = "lightning"
+		if Dao.level(c, "thunder_dao") > 0 or int(c.spiritual_roots.get("metal", 0)) >= QI_ELEMENT_MIN_PURITY:
+			out["dao"] = "thunder_dao"
+		else:
+			out["injury"] = String(b.get("injury", ""))
+	elif r < lightning + float(b.get("thunderwood_chance", 0.0)):
+		out["event"] = "thunderwood"
+		out["item"] = "lightning_struck_wood"
+	return out

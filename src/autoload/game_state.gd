@@ -732,6 +732,7 @@ func _explore_day(tags: Array, quiet: bool) -> Dictionary:
 	tags = tags + WorldEvents.encounter_tags(data, world_events, current_region)
 	if Weather.of(data, current_region, GameClock.total_days) == "storm":
 		EventBus.post("A storm rolls over the sky; lightning walks the horizon.", "warning")
+		_storm_strike()
 	var encounter := Exploration.discovery_for(player, data, current_region, world_flags)
 	Exploration.add_explore_day(player, current_region)
 	last_explore_discovery = not encounter.is_empty()
@@ -759,6 +760,23 @@ func _explore_day(tags: Array, quiet: bool) -> Dictionary:
 		_pass_time(1)
 		return {"event": "nothing"}
 	return _meet_encounter(encounter, explore_prefix(encounter, last_explore_discovery, last_explore_deep_path))
+
+
+## WEATHER-005: what a day of exploring in a storm may bring (lightning, or a lightning-struck branch).
+func _storm_strike() -> void:
+	var r := Weather.storm_explore(data, "storm", player, rng)
+	match String(r["event"]):
+		"lightning":
+			if String(r["dao"]) != "":
+				Dao.add_progress(player, data, String(r["dao"]), float(data.dao.get("seclusion_mult", 2.0)) * Weather.dao_mult(data, "storm", String(r["dao"])), rng)
+				EventBus.post("Lightning finds you, and you find something in it.", "progress")
+			elif String(r["injury"]) != "" and Injuries.inflict(player, data, String(r["injury"])):
+				EventBus.post("Lightning finds you: you are left with %s." % Injuries.injury_name(data, String(r["injury"])), "danger")
+			else:
+				EventBus.post("Lightning cracks down beside you and leaves your hair standing on end.", "warning")
+		"thunderwood":
+			player.add_item("lightning_struck_wood", 1)
+			EventBus.post("A bolt splits an old tree nearby; you pick up a piece of Lightning-struck Wood.", "info")
 
 
 ## The rival an encounter roll may use: none while the rival is keeping quiet (RIVAL-021).

@@ -2568,3 +2568,23 @@ func test_storm_gather_cuts_herbs_and_contemplation_doubles_thunder_dao() -> voi
 	var calm := float(c.dao["thunder_dao"]["progress"]) + 1000.0 * (Dao.level(c, "thunder_dao") - level_mid) - mid
 	assert_gt(stormy, calm * 1.5, "a storm day roughly doubles contemplation progress")
 	_restore_weather(gs)
+
+
+func test_storm_exploring_can_bring_lightning_wood_and_dao() -> void:
+	var c := _start()
+	var gs := _game_state()
+	_set_weather(gs, "storm")
+	gs.data.weather_effects["storm"]["explore"] = {"lightning_chance": 0.5, "lightning_damage_frac": 0.15, "thunderwood_chance": 0.5}
+	c.spiritual_roots = {"metal": 60}
+	Dao.gain_levels(c, gs.data, "thunder_dao")
+	var before: float = float(c.dao["thunder_dao"]["progress"])
+	var level_before := Dao.level(c, "thunder_dao")
+	var wood := 0
+	for i in 12:
+		gs.rng.seed = i
+		gs.explore()
+		wood = c.item_count("lightning_struck_wood")
+	var gained := float(c.dao["thunder_dao"]["progress"]) + 1000.0 * (Dao.level(c, "thunder_dao") - level_before) - before
+	assert_gt(wood, 0, "a storm branch was found")
+	assert_gt(gained, 0.0, "lightning fed Thunder Dao")
+	_restore_weather(gs)
