@@ -2,6 +2,17 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-10-31 (planner, 06:15 UTC)
+- 13 tasks landed (QA-181, GFX-030/031/032, WU-411/412, FARM-003/004, GATHER-001, FISH-004, GUIDE-203, C-269/277). Review
+  a12ccef..3579385 fixed C-277 inline, nothing filed. Live claim: WEATHER-005.
+- Planner shots (screenshot_first_hour.gd, 1280x800): HUD card, bag, journal cards and visitor read well. Character sheet
+  still weak -> GFX-034 (spec file); duel stage is a flat strip -> GFX-035. Village skills have nowhere to show finds ->
+  GATHER-002 (herb log) + WU-414 (village book, spec file).
+- QA-181 numbers -> C-279 (fishing 2.9x Doctor, field loses money; spec'd, top of content), FARM-005 (care pays at harvest).
+  GATHER-001's crafter baseline drop -> QA-183. New: GUIDE-204 -> WU-415 (season in prices/shop), DAY-001 -> WU-416 (digest),
+  FISH-005 -> C-280 (trophy fish).
+- Next planner: read C-279's before/after and QA-183's verdict; view GFX-034/GFX-035 shots when they land.
+
 ## State on 2026-10-30 (planner, 18:15 UTC)
 - 13 tasks landed (RV-016, WU-405/406/407, GFX-024/025/026, MARKET-001, FISH-002, WORLD-007, FARM-001, FOLK-004, C-274).
   Live claims: FOLK-005, WEATHER-004. World-ui was down to GFX-027 alone.

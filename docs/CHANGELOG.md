@@ -2,6 +2,19 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-31 [WU-411] A friend who visits stands by a little tea tray and says they came to see how you are.
+- 2026-10-31 [FARM-004] Cultivators can pour qi into their field to speed the crops.
+- 2026-10-31 [GFX-030] The character sheet and journal are split into headed cards; goals have checkboxes.
+- 2026-10-31 [FISH-004] An angler's log counts every kind of fish you catch and hints at the ones still missing.
+- 2026-10-31 [GUIDE-203] The journal suggests a strengthening meal before a hard hunt, and buy hints use the season's prices.
+- 2026-10-31 [C-277] Wedding greetings name the couple, and tea visits have seasonal lines.
+- 2026-10-31 [GATHER-001] Herb lore: gathering grows a skill that finds more and rarer herbs.
+- 2026-10-31 [GFX-032] The bag shows framed item icons with counts and a large picture of the chosen item.
+- 2026-10-31 [C-269] Four new village happenings for Foundation cultivators, two only for sect members.
+- 2026-10-31 [WU-412] Fishing is a timing bar: strike in the zone for a better catch (or let it cast automatically).
+- 2026-10-31 [FARM-003] Some crops can only be planted in their season.
+- 2026-10-31 [GFX-031] The HUD shows a real qi bar, soul-lamp lives and season and weather icons.
+- 2026-10-31 [QA-181] A year of village life measured: fishing pays too well, the field barely pays its rent.
 - 2026-10-30 [GFX-027] Celebrations show from across the village: a ribbon on the nearest stall and confetti when you attend.
 - 2026-10-30 [WU-410] Settling a quarrel opens its own window with both villagers' faces and the four ways to end it.
 - 2026-10-30 [FOLK-006] Villagers remember how you settled their quarrel for a month.
