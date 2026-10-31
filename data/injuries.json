@@ -14,7 +14,8 @@
     {"id": "demonic_qi_corrosion", "name": "Demonic Qi Corrosion", "description": "Foul demonic qi lodged in your body eats at your meridians from within.", "cultivation_mult": 0.6, "combat_mult": 0.75, "heal_days": 300, "treatment_cost": 900},
     {"id": "golden_core_fissure", "name": "Golden Core Fissure", "description": "A fissure runs across your golden core. Push it too hard and it may shatter.", "cultivation_mult": 0.25, "combat_mult": 0.8, "heal_days": 500, "treatment_cost": 1800},
     {"id": "sundered_body", "name": "Sundered Body", "description": "Bones shattered and flesh torn by a Core Formation blow. You can barely stand, let alone fight.", "cultivation_mult": 0.9, "combat_mult": 0.45, "heal_days": 120, "treatment_cost": 600},
-    {"id": "heart_demon", "name": "Heart Demon", "description": "The devoured cultivator's dying will lingers in your sea of consciousness, whispering while you meditate and clouding your moves in battle.", "cultivation_mult": 0.6, "combat_mult": 0.85, "heal_days": 240, "treatment_cost": 300}
+    {"id": "heart_demon", "name": "Heart Demon", "description": "The devoured cultivator's dying will lingers in your sea of consciousness, whispering while you meditate and clouding your moves in battle.", "cultivation_mult": 0.6, "combat_mult": 0.85, "heal_days": 240, "treatment_cost": 300},
+    {"id": "scorched", "name": "Scorched", "description": "A lightning bolt licked down your arm and left it blistered and numb. It stings, but it will mend in a couple of weeks.", "cultivation_mult": 0.95, "combat_mult": 0.9, "heal_days": 12, "treatment_cost": 8}
   ],
   "sources": {
     "npc_mishap": {"chance": 0.05, "table": [

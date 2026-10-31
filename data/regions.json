@@ -21,7 +21,7 @@
   "weather_persist": 0.6,
   "herb_lore": {"ranks": [{"min": 0, "name": "Novice"}, {"min": 15, "name": "Forager"}, {"min": 50, "name": "Herbalist"}, {"min": 120, "name": "Herb Sage"}], "xp_cap": 120, "bonus_chance_max": 0.35, "rare_mult_max": 1.5},
   "fishing_weather": {"rain": 1.5, "snow": 0.6, "storm": 0.5},
-  "weather_effects": {"rain": {"herb_bonus_chance": 0.25, "qi_element": {"element": "water", "mult": 1.1}}, "snow": {"travel_extra_days": 1, "qi_element": {"element": "water", "mult": 1.05}}, "fog": {"qi_element": {"element": "wood", "mult": 1.1}}, "clear": {"qi_element": {"element": "fire", "mult": 1.05}}, "storm": {"herb_yield_penalty": 1, "qi_element": {"element": "metal", "mult": 1.1}, "dao_boost": {"insight": "thunder_dao", "mult": 2.0}, "explore": {"lightning_chance": 0.08, "lightning_damage_frac": 0.15, "thunderwood_chance": 0.05}}},
+  "weather_effects": {"rain": {"herb_bonus_chance": 0.25, "qi_element": {"element": "water", "mult": 1.1}}, "snow": {"travel_extra_days": 1, "qi_element": {"element": "water", "mult": 1.05}}, "fog": {"qi_element": {"element": "wood", "mult": 1.1}}, "clear": {"qi_element": {"element": "fire", "mult": 1.05}}, "storm": {"herb_yield_penalty": 1, "qi_element": {"element": "metal", "mult": 1.1}, "dao_boost": {"insight": "thunder_dao", "mult": 2.0}, "explore": {"lightning_chance": 0.08, "lightning_damage_frac": 0.15, "thunderwood_chance": 0.05, "injury": "scorched"}}},
   "start_region": "qingshi_village",
   "regions": [
     {
