@@ -91,7 +91,7 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 	var idle_nudge := idle_crafter_hint(c, data, region_id, today, flags)
 	if idle_nudge != "":
 		out.append(idle_nudge)
-	var buy := buy_ingredient_hint(c, data, region_id)
+	var buy := buy_ingredient_hint(c, data, region_id, Calendar.season_of(today) if today >= 0 else "")
 	if buy != "":
 		out.append(buy)
 	var newcomer := _newcomer_hints(c, data, flags, region_id, today) if c.realm_index <= NEWCOMER_MAX_REALM else PackedStringArray()
@@ -639,7 +639,7 @@ static func _next_step_name(c: CharacterData, data: GameData, plain: String = "t
 ## GUIDE-066: a crafter who can craft nothing right now, and whose first in-rank recipe is short only of
 ## bought-only ingredients (no gather place yields them, a merchant in `region_id` sells them), hears
 ## where to buy. "" for a non-crafter, one who can craft something, or when no merchant here sells it.
-static func buy_ingredient_hint(c: CharacterData, data: GameData, region_id: String) -> String:
+static func buy_ingredient_hint(c: CharacterData, data: GameData, region_id: String, season: String = "") -> String:
 	if c.professions.is_empty() or region_id == "" or not craftable_now(c, data).is_empty():
 		return ""
 	for prof_id: String in data.professions:
@@ -669,12 +669,12 @@ static func buy_ingredient_hint(c: CharacterData, data: GameData, region_id: Str
 				continue
 			var line := ""
 			if int(seller["days"]) == 0:
-				line = "Your %s needs %s: the %s sells them for %d stones each." % [recipe["name"], Items.item_plural(data, item_id, 2), merchant_selling(data, region_id, item_id), merchant_price(c, data, region_id, item_id)]
+				line = "Your %s needs %s: the %s sells them for %d stones each." % [recipe["name"], Items.item_plural(data, item_id, 2), merchant_selling(data, region_id, item_id), merchant_price(c, data, region_id, item_id, season)]
 			else:
-				line = "Your %s needs %s: the %s %s sells them for %d stones each." % [recipe["name"], Items.item_plural(data, item_id, 2), seller["result"], _far_where(c, data, region_id, seller), merchant_price(c, data, seller["region_id"], item_id)]
+				line = "Your %s needs %s: the %s %s sells them for %d stones each." % [recipe["name"], Items.item_plural(data, item_id, 2), seller["result"], _far_where(c, data, region_id, seller), merchant_price(c, data, seller["region_id"], item_id, season)]
 			if c.item_count("spirit_stone") < Alchemy.shortfall_cost(c, data, recipe_id):
 				line += " Sell gathered herbs or take odd jobs first."
-			var unit_price: int = merchant_price(c, data, String(seller["region_id"]) if int(seller["days"]) > 0 else region_id, item_id)
+			var unit_price: int = merchant_price(c, data, String(seller["region_id"]) if int(seller["days"]) > 0 else region_id, item_id, season)
 			# GUIDE-078: bought paper plus the recipe's stones (the rest is gathered) against what the output sells for.
 			var spend := int(recipe["ingredients"][item_id]) * unit_price + int(recipe["ingredients"].get("spirit_stone", 0))
 			if spend >= int(Alchemy.recipe_margin(data, recipe_id)["value"]):
@@ -700,12 +700,14 @@ static func merchant_place(data: GameData, region_id: String, item_id: String) -
 
 ## GUIDE-073: what the merchant selling `item_id` in `region_id` charges `c`: base price with the merchant's
 ## sect reputation and the region's renown applied. World-event prices need GameState and are left out.
-static func merchant_price(c: CharacterData, data: GameData, region_id: String, item_id: String) -> int:
-	return _place_price(c, data, region_id, item_id, merchant_place(data, region_id, item_id))
+## GUIDE-203: with a `season` the seasonal herb price applies (only buy_ingredient_hint passes it).
+## TODO season: the armor, manual, pill and heal hint lines still use the season-less price.
+static func merchant_price(c: CharacterData, data: GameData, region_id: String, item_id: String, season: String = "") -> int:
+	return _place_price(c, data, region_id, item_id, merchant_place(data, region_id, item_id), season)
 
 
-static func _place_price(c: CharacterData, data: GameData, region_id: String, item_id: String, place: Dictionary) -> int:
-	return maxi(1, roundi(Reputation.buy_price(c, data, item_id, String(place.get("faction", ""))) * Renown.buy_multiplier(c, data, region_id)))
+static func _place_price(c: CharacterData, data: GameData, region_id: String, item_id: String, place: Dictionary, season: String = "") -> int:
+	return maxi(1, roundi(Reputation.buy_price(c, data, item_id, String(place.get("faction", "")), 1.0, season) * Renown.buy_multiplier(c, data, region_id)))
 
 
 ## WU-253: plain-words description of what a merchant place sells, from its `stock_tags`.
@@ -3523,7 +3525,7 @@ static func journal(c: CharacterData, data: GameData, flags: Dictionary, today: 
 		_add(out, "Commissions", Commissions.describe(c, data, order, today) + (". " + missing if missing != "" else ""), "warning" if Commissions.days_left(order, today) <= 7 else "normal")
 	_renown_entry(out, c, data, region_id)
 	_milestone_entries(out, c, data, flags, clan)
-	var village := village_lines(c, data, people, flags, region_id, today, favor)
+	var village := village_lines(c, data, people, flags, region_id, today, favor, fights)
 	if village.size() > 1:
 		for line in village:
 			_add(out, "Around the village", line, "normal")
@@ -3532,7 +3534,7 @@ static func journal(c: CharacterData, data: GameData, flags: Dictionary, today: 
 
 ## Journal section "Around the village" (WU-407): today's weather and what it does, the friend's tip, open requests,
 ## an open celebration and the nearest fishing spot. Only reads; the weather line is always first.
-static func village_lines(c: CharacterData, data: GameData, people: Dictionary, flags: Dictionary, region_id: String, today: int, favor: Dictionary = {}) -> PackedStringArray:
+static func village_lines(c: CharacterData, data: GameData, people: Dictionary, flags: Dictionary, region_id: String, today: int, favor: Dictionary = {}, fights: Array = []) -> PackedStringArray:
 	var out: PackedStringArray = []
 	var kind := Weather.of(data, region_id, today)
 	var effects := Weather.effects_text(data, kind)
@@ -3544,7 +3546,7 @@ static func village_lines(c: CharacterData, data: GameData, people: Dictionary, 
 	_field_line(out, c, data, region_id, today)
 	if c.gather_xp > 0 and not data.herb_lore.is_empty():
 		out.append(HerbLore.status_line(data.herb_lore, c.gather_xp))
-	_meal_line(out, c, data)
+	_meal_line(out, c, data, people, region_id, today, fights)
 	var visitor := Folk.visitor(people, favor, data, c, region_id, today, kind, c.folk_visit_day)
 	if visitor != "" and people.has(visitor):
 		var home := FamilyHome.has_home(c, people, data, region_id)
@@ -3601,14 +3603,54 @@ static func _field_line(out: PackedStringArray, c: CharacterData, data: GameData
 
 
 ## GUIDE-202: an injured player holding a home meal's ingredients is told to cook it.
-static func _meal_line(out: PackedStringArray, c: CharacterData, data: GameData) -> void:
-	if not Injuries.has_any(c):
+## GUIDE-203: before a foe rated Even or harder (a taken bounty, else a fair fight) a buff dish is held or cookable.
+static func _meal_line(out: PackedStringArray, c: CharacterData, data: GameData, people: Dictionary, region_id: String, today: int, fights: Array) -> void:
+	if Injuries.has_any(c):
+		for m: Dictionary in data.home_meals:
+			var days := int(data.items.get(String(m["output"]["item"]), {}).get("effects", {}).get("shorten_injury", 0))
+			if days > 0 and Cooking.check(c, data, String(m["id"])) == "":
+				out.append("Cook %s at a workshop: it eases your injury by %d days." % [m["name"], days])
+				return
+	var foe := _hard_foe_name(c, data, today, fights)
+	if foe == "":
 		return
+	var at_home := FamilyHome.has_home(c, people, data, region_id)
+	var workshop := ""
+	for p: Dictionary in data.regions.get(region_id, {}).get("places", []):
+		if String(p.get("type", "")) == "workshop":
+			workshop = String(p.get("display_name", "the workshop"))
+			break
+	var held := ""
+	var cookable := ""
 	for m: Dictionary in data.home_meals:
-		var days := int(data.items.get(String(m["output"]["item"]), {}).get("effects", {}).get("shorten_injury", 0))
-		if days > 0 and Cooking.check(c, data, String(m["id"])) == "":
-			out.append("Cook %s at a workshop: it eases your injury by %d days." % [m["name"], days])
-			return
+		var item_id := String(m["output"]["item"])
+		var buff: Dictionary = data.items.get(item_id, {}).get("effects", {}).get("buff", {})
+		if buff.is_empty() or c.buffs.has(String(buff.get("id", ""))):
+			continue
+		var mults := Buffs.describe_mults(buff.get("mults", {}))
+		var span := Calendar.format_duration(int(buff.get("days", 0)))
+		if held == "" and c.item_count(item_id) > 0:
+			held = "Eat %s before you hunt the %s: %s for %s." % [data.items[item_id]["name"], foe, mults, span]
+		elif cookable == "" and (workshop != "" or at_home) and Cooking.check(c, data, String(m["id"])) == "":
+			cookable = "Cook %s at %s before the hunt (%s, %s)." % [m["name"], workshop if workshop != "" else "the Family Home", mults, span]
+	if held != "":
+		out.append(held)
+	elif cookable != "":
+		out.append(cookable)
+
+
+## Name of the foe of a taken bounty, else of the first fair fight, when rated Even or harder (win chance < 90%); "" otherwise.
+static func _hard_foe_name(c: CharacterData, data: GameData, today: int, fights: Array) -> String:
+	var hunt := Bounties.active(c, data, today)
+	if not hunt.is_empty():
+		var enemy: Dictionary = data.enemies.get(String(hunt.get("enemy", "")), {})
+		if not enemy.is_empty() and Combat.win_chance(c, data, enemy) < 0.9:
+			return String(enemy.get("name", ""))
+		return ""
+	for f: Dictionary in fights:
+		if float(f.get("chance", 1.0)) < 0.9 and String(f.get("enemy", "")) != "":
+			return String(f["enemy"])
+	return ""
 
 
 ## Journal section "Fights you can win" (GUIDE-021): fair fights, or the first-fighting-style hint when

@@ -5501,6 +5501,28 @@ func test_village_lines_meal_needs_injury_and_ingredients() -> void:
 	assert_false(_has_line(Guidance.village_lines(c, d, {}, {}, "qingshi_village", 10), "Cook"))
 
 
+## GUIDE-203: a buff dish is suggested before an Even-or-harder foe.
+func test_village_lines_meal_before_a_hard_hunt() -> void:
+	var d := _village_data("clear")
+	var c := new_character()
+	var hard: Array = [{"enemy": "Iron-back Boar", "chance": 0.6}]
+	var weak: Array = [{"enemy": "Iron-back Boar", "chance": 0.95}]
+	assert_false(_has_line(Guidance.village_lines(c, d, {}, {}, "qingshi_village", 10, {}, hard), "Cook"), "no ingredients")
+	c.add_item("marsh_eel", 1)
+	c.add_item("sweet_rice_ball", 1)
+	var lines := Guidance.village_lines(c, d, {}, {}, "qingshi_village", 10, {}, hard)
+	assert_true(_has_line(lines, "Cook Eel Congee at Village Workshop before the hunt (+10% attack, 3 days)"), str(lines))
+	assert_false(_has_line(Guidance.village_lines(c, d, {}, {}, "qingshi_village", 10, {}, weak), "Cook"), "weak foe")
+	assert_false(_has_line(Guidance.village_lines(c, d, {}, {}, "qingshi_village", 10), "Cook"), "no foe")
+	c.add_item("eel_congee", 1)
+	lines = Guidance.village_lines(c, d, {}, {}, "qingshi_village", 10, {}, hard)
+	assert_true(_has_line(lines, "Eat Eel Congee before you hunt the Iron-back Boar: +10% attack for 3 days."), str(lines))
+	Buffs.add(c, "eels_vigour", "Eel's vigour", 3, {"attack": 0.1})
+	lines = Guidance.village_lines(c, d, {}, {}, "qingshi_village", 10, {}, hard)
+	assert_false(_has_line(lines, "Eat Eel"), "buff already active")
+	assert_false(_has_line(lines, "Cook Eel"), "buff already active")
+
+
 func test_village_lines_forecast_only_when_tomorrow_differs_and_matters() -> void:
 	var d := _village_data("rain")
 	assert_false(_has_line(Guidance.village_lines(new_character(), d, {}, {}, "qingshi_village", 10), "Tomorrow"), "same weather: no line")
@@ -5522,3 +5544,23 @@ func test_village_lines_visitor() -> void:
 	assert_true(_has_line(lines, "%s has come to see you" % npc.name), "\n".join(lines))
 	assert_false(_has_line(Guidance.village_lines(new_character(), d, npcs, {}, "qingshi_village", 10, {npc.id: 0}), npc.name))
 	d.family["folk_visits"]["chance"] = 0.15
+
+
+## GUIDE-203: merchant_price applies the season to a seasonal herb and leaves the default unchanged.
+func test_merchant_price_applies_season() -> void:
+	var d := data()
+	var c := new_character()
+	var herb := ""
+	for id: String in d.items:
+		if int(d.items[id].get("price", 0)) >= 10 and not Items.harvest_seasons(d, id).is_empty():
+			herb = id
+			break
+	assert_true(herb != "", "a seasonal herb exists")
+	var seasons := Items.harvest_seasons(d, herb)
+	var in_season: String = seasons[0]
+	var off := "Spring" if not seasons.has("Spring") else "Winter"
+	assert_false(seasons.has(off))
+	var plain := Guidance.merchant_price(c, d, "qingshi_village", herb)
+	assert_eq(Guidance.merchant_price(c, d, "qingshi_village", herb, ""), plain)
+	assert_true(Guidance.merchant_price(c, d, "qingshi_village", herb, in_season) < plain)
+	assert_true(Guidance.merchant_price(c, d, "qingshi_village", herb, off) > plain)
