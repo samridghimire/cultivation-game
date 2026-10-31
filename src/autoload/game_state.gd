@@ -78,6 +78,8 @@ var npc_clans: Dictionary = {}
 ## Player numbers before the current long action (TimeSkip.snapshot), for the
 ## time-skip summary. Set by _start_time_skip(), read by _pass_time().
 var _skip_before: Dictionary = {}
+## The last 5+ day action's digest {days, lines} (DAY-001); never saved, cleared when a new action starts.
+var last_digest: Dictionary = {}
 ## Player hp at the end of the last fight_enemy() (carried between tournament bouts).
 var last_fight_hp: int = -1
 
@@ -3453,7 +3455,9 @@ func _can_act() -> bool:
 func _pass_time(days: int, skip_title: String = "") -> void:
 	var posted_before := EventBus.posted_count
 	var age_before := player.age_days if player != null else 0
+	last_digest = {}
 	GameClock.advance(days)
+	_record_digest(days, EventBus.posted_count - posted_before)
 	if player != null and _month_of(player.age_days) > _month_of(age_before):
 		SaveManager.autosave()
 	if skip_title != "" and _can_act() and not _skip_before.is_empty():
@@ -3462,6 +3466,19 @@ func _pass_time(days: int, skip_title: String = "") -> void:
 		EventBus.time_skipped.emit(days, summary)
 	_skip_before = {}
 	EventBus.player_changed.emit()
+
+
+## Folds the posts made during a 5+ day action into last_digest (DAY-001).
+func _record_digest(days: int, posted: int) -> void:
+	if days < DayDigest.MIN_DAYS or posted <= 0:
+		return
+	var entries: Array[Dictionary] = []
+	var hist := EventBus.history
+	for i in range(maxi(0, hist.size() - posted), hist.size()):
+		entries.append({"text": hist[i]["text"], "category": hist[i]["category"]})
+	var lines := DayDigest.summarize(entries, days)
+	if not lines.is_empty():
+		last_digest = {"days": days, "lines": lines}
 
 
 @warning_ignore("integer_division")
