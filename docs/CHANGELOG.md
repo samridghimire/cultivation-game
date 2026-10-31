@@ -2,6 +2,22 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-10-30 [GFX-027] Celebrations show from across the village: a ribbon on the nearest stall and confetti when you attend.
+- 2026-10-30 [WU-410] Settling a quarrel opens its own window with both villagers' faces and the four ways to end it.
+- 2026-10-30 [FOLK-006] Villagers remember how you settled their quarrel for a month.
+- 2026-10-30 [C-276] The village field grows six crops, including mugwort, peach blossom petals and purple cloud mushrooms.
+- 2026-10-30 [TECH-010] Greeting gifts and orphaned crops are handled safely.
+- 2026-10-30 [FARM-002] Rent a second field in the Misty Forest, water your crops by hand and enlarge a field.
+- 2026-10-30 [GFX-029] You can watch your field grow, from bare soil to a ripe plant.
+- 2026-10-30 [WU-409] Notices appear on a dark ribbon with a title, and menus fit their options.
+- 2026-10-30 [FISH-003] Fishing is a skill: practice brings rarer catches.
+- 2026-10-30 [COOK-002] Home-cooked dishes give a few days of attack, defense or health, and you can cook at the Family Home.
+- 2026-10-30 [C-275] Friends share more tips, some only in their season or weather.
+- 2026-10-30 [GFX-028] The duel stage shows both fighters on the region's ground, beasts by kind, names over the bars.
+- 2026-10-30 [GUIDE-202] The journal mentions ripe crops, meals, tomorrow's weather and today's visitor; the HUD shows tomorrow's weather.
+- 2026-10-30 [WEATHER-004] Summer storms: fewer herbs and fish, but metal qi and Thunder Dao insight run strong.
+- 2026-10-30 [WU-408] You see who is speaking: a framed portrait in dialogue and NPC menus.
+- 2026-10-30 [FOLK-005] Ask a cultivator friend to explore with you and they fight at your side.
 - 2026-10-30 [RV-016] Waiting for one rainy day no longer boosts a whole year of seclusion: the weather's qi bonus is averaged over the days you cultivate.
 - 2026-10-30 [WU-405] The village pond has a pixel jetty, and the fishing option says when the weather makes fish bite.
 - 2026-10-30 [WU-407] The journal has an "Around the village" section: weather, a friend's tip, requests, celebrations and your best catch.
