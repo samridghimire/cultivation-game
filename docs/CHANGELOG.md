@@ -2,6 +2,19 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-11-01 [QA-186] Village look checked in screenshots; the village sim measures fishing at ~1.1 stones a day.
+- 2026-10-31 [WU-420] The village book has a People page: who you know, their hearts, birthdays and tastes.
+- 2026-10-31 [WU-419] A village calendar (Y) shows market days, birthdays, festivals and the seasons.
+- 2026-10-31 [C-282] Lightning can leave a mild scorch injury when you explore in a storm.
+- 2026-10-31 [FOLK-009] The game knows who you know in each village (for the People page).
+- 2026-10-31 [GFX-040] The village moves: chimney smoke, ripples and jumping fish on the pond, birds on clear days.
+- 2026-10-31 [QA-185] The balance check is green again.
+- 2026-10-31 [CAL-001] The game knows the month ahead: market days, birthdays, festivals and season starts.
+- 2026-10-31 [GFX-039] The ground follows the season: spring flowers, autumn leaves, winter snow.
+- 2026-10-31 [WU-418] Friendship shows as hearts on the villager menu, in the journal and with a banner when it grows.
+- 2026-10-31 [FLAG-001] Timed effects really end, including the stranded peddler's herb discount.
+- 2026-10-31 [C-281] Each season brings its own fish to the ponds.
+- 2026-10-31 [GFX-038] The duel stage stays inside its frame.
 - 2026-10-31 [WU-416] After a long action a card sums up what happened while you were away.
 - 2026-10-31 [GFX-037] Trees blossom, turn and go bare with the seasons; winter roofs carry snow and ponds ice over.
 - 2026-10-31 [FOLK-008] Villagers have birthdays: a greeting, a doubled gift on the day, and a journal reminder.
