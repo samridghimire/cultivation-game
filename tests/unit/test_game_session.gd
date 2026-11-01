@@ -2785,3 +2785,19 @@ func test_engage_roamer() -> void:
 	var day_after := int(GameClock.total_days)
 	assert_false(gs.engage_roamer(99), "bad slot refused")
 	assert_eq(int(GameClock.total_days), day_after, "refusals pass no time")
+
+
+func test_roamer_temper_and_charge() -> void:
+	var gs := _game_state()
+	_start()
+	gs.current_region = "misty_forest"
+	var roamers: Array[Dictionary] = gs.roamers_here()
+	var slot := int(roamers[0]["slot"])
+	assert_true(gs.roamer_temper(slot) in ["flees", "wary", "bold"])
+	assert_eq(gs.roamer_temper(99), "")
+	var before := EventBus.history.size()
+	gs.engage_roamer(slot, true)
+	var found := false
+	for i in range(before, EventBus.history.size()):
+		found = found or String(EventBus.history[i]["text"]).ends_with("charges you!")
+	assert_true(found, "charge line posted")

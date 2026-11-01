@@ -2945,14 +2945,25 @@ func roamers_here() -> Array[Dictionary]:
 	return Wildlife.roamers(data, current_region, GameClock.total_days, player.realm_index, world_flags)
 
 
+## How the roamer in `slot` reacts to you (flees/wary/bold), "" for no such slot (WILD-002).
+func roamer_temper(slot: int) -> String:
+	for r in roamers_here():
+		if int(r["slot"]) == slot:
+			return Wildlife.temper(player, data, String(r["enemy"]), String(r.get("temper", "")))
+	return ""
+
+
 ## Pick a fight with the roamer in `slot`. The beast leaves for the day whether you win or lose.
-func engage_roamer(slot: int) -> bool:
+## `charged`: a bold beast reached you first.
+func engage_roamer(slot: int, charged: bool = false) -> bool:
 	EventBus.topic = "combat"
 	if not _can_act():
 		return false
 	for r in roamers_here():
 		if int(r["slot"]) != slot:
 			continue
+		if charged:
+			EventBus.post("The %s charges you!" % String(data.enemies[String(r["enemy"])]["name"]), "combat")
 		var region := current_region
 		var won := fight(String(r["enemy"]))
 		# The fight may have taken days: the beast is gone for the day you come back to.

@@ -72,3 +72,39 @@ func test_wild_regions_have_roamers() -> void:
 			seasonal = seasonal or e.has("seasons")
 		assert_true(seasonal, "%s has a seasonal entry" % id)
 	assert_false(d.regions["fallen_star_market"].has("roamers"))
+
+
+## WILD-002: tempers by threat, override, validation, carried by roamers().
+func test_temper() -> void:
+	var d := _gdata()
+	var c := CharacterData.new()
+	c.realm_index = 0
+	var weak_id := ""
+	var strong_id := ""
+	for id: String in d.enemies:
+		var e: Dictionary = d.enemies[id]
+		if not (e.get("tags", []) as Array).has("beast"):
+			continue
+		var t := Wildlife.threat(c, d, id)
+		if t == "Weak" and weak_id == "":
+			weak_id = id
+		elif (t == "Risky" or t == "Dangerous" or t == "Deadly") and strong_id == "":
+			strong_id = id
+	assert_true(weak_id != "" and strong_id != "")
+	assert_eq(Wildlife.temper(c, d, weak_id), "flees")
+	assert_eq(Wildlife.temper(c, d, strong_id), "bold")
+	assert_eq(Wildlife.temper(c, d, weak_id, "bold"), "bold", "override wins")
+
+
+func test_temper_validation_and_carry() -> void:
+	var d := _gdata()
+	var old: Dictionary = d.regions["misty_forest"]["roamers"]
+	_with(d, {"count": [1, 1], "enemies": [{"enemy": "wild_boar", "weight": 1, "temper": "angry"}]})
+	assert_false(Wildlife.validate(d).is_empty())
+	_with(d, {"count": [2, 2], "enemies": [{"enemy": "wild_boar", "weight": 1, "temper": "wary"}]})
+	assert_true(Wildlife.validate(d).is_empty())
+	for r in Wildlife.roamers(d, "misty_forest", 3, 0, {}):
+		assert_eq(r["temper"], "wary")
+	_with(d, old)
+	for r in Wildlife.roamers(d, "misty_forest", 3, 0, {}):
+		assert_eq(r["temper"], "")

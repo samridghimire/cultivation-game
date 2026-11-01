@@ -5,9 +5,10 @@ extends RefCounted
 ## been fought stays gone (timed world flag) until the next day.
 
 const MAX_COUNT := 6
+const TEMPERS: Array[String] = ["flees", "wary", "bold"]
 
 
-## Today's roamers in a region: [{slot: int, enemy: String}]. Same inputs give the same list.
+## Today's roamers in a region: [{slot: int, enemy: String, temper: String}] (temper "" = by threat). Same inputs give the same list.
 ## The local rng below is a pure derivation from (region, day), not game randomness.
 static func roamers(data: GameData, region_id: String, day: int, realm_index: int, flags: Dictionary) -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
@@ -39,7 +40,7 @@ static func roamers(data: GameData, region_id: String, day: int, realm_index: in
 				pick = entry
 				break
 		if not Effects.flag_active(flags, flag_key(region_id, slot), day):
-			out.append({"slot": slot, "enemy": String(pick["enemy"])})
+			out.append({"slot": slot, "enemy": String(pick["enemy"]), "temper": String(pick.get("temper", ""))})
 	return out
 
 
@@ -55,6 +56,19 @@ static func mark_down(flags: Dictionary, region_id: String, slot: int, day: int)
 ## Danger label of a roamer for the player (Weak/Even/Risky/Dangerous/Deadly), as the fight hints show it.
 static func threat(c: CharacterData, data: GameData, enemy_id: String) -> String:
 	return Combat.danger_label(c, data, data.enemies[enemy_id])
+
+
+## WILD-002: how a beast reacts to the player: the override if set, else by threat
+## (Weak flees, Even is wary, Risky and worse is bold).
+static func temper(c: CharacterData, data: GameData, enemy_id: String, override: String = "") -> String:
+	if override != "":
+		return override
+	match threat(c, data, enemy_id):
+		"Weak":
+			return "flees"
+		"Even":
+			return "wary"
+	return "bold"
 
 
 static func _num(v: Variant) -> bool:
@@ -88,6 +102,8 @@ static func validate(data: GameData) -> PackedStringArray:
 				errors.append("%s enemy '%s' must be a non-lethal beast" % [where, e["enemy"]])
 			if not ((e.get("weight") is float or e.get("weight") is int) and float(e["weight"]) > 0.0):
 				errors.append("%s enemy '%s' needs weight > 0" % [where, e["enemy"]])
+			if e.has("temper") and not TEMPERS.has(String(e["temper"])):
+				errors.append("%s enemy '%s' has unknown temper '%s'" % [where, e["enemy"], e["temper"]])
 			for s: Variant in e.get("seasons", []):
 				if not Exploration.SEASON_NAMES.has(String(s)):
 					errors.append("%s enemy '%s' has unknown season '%s'" % [where, e["enemy"], s])
