@@ -383,6 +383,8 @@ func test_wild_hunt_win_pays_once_and_clears() -> void:
 	assert_true(c.bounty.is_empty())
 	assert_eq(c.item_count("spirit_stone"), stones + 25)
 	assert_eq(LifeStats.get_stat(c, "bounties_done"), 1)
+	var pay := int(Wildlife.spoils_of(c, "t_weakling").get("spirit_stone", 0))
+	assert_true(pay < 25, "the bounty's pay is not recorded as the beast's spoils")
 	for x in gs.roamers_here():
 		assert_true(int(x["slot"]) != 100, "gone after the win")
 	assert_false(gs.engage_roamer(100), "no second payout")

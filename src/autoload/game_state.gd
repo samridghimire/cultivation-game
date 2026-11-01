@@ -858,12 +858,16 @@ func _hunt_bounty_foe(enemy_id: String) -> Dictionary:
 
 ## Fight the active bounty's foe and pay the bounty on a win (BOUNTY-001, WILD-003). The hunt is paid
 ## even if it lapsed during the fight. Returns true if the player won and is still alive.
-func _fight_bounty(enemy_id: String) -> bool:
+## `spoils` (when given) receives what the fight itself dropped, before the bounty pay (WILD-005 hunt log).
+func _fight_bounty(enemy_id: String, spoils: Dictionary = {}) -> bool:
 	var enemy_name := String(data.enemies[enemy_id].get("name", enemy_id))
 	var bounty_id := String(player.bounty.get("id", ""))
+	var before := player.inventory.duplicate()
 	_bounty_fight = true
 	var won := fight(enemy_id)
 	_bounty_fight = false
+	if won:
+		spoils.merge(Wildlife.inventory_gain(before, player.inventory), true)
 	if won and _can_act():
 		var paid := Bounties.complete(player, data, GameClock.total_days, bounty_id)
 		var stones := int(paid["stones"])
@@ -3011,10 +3015,15 @@ func engage_roamer(slot: int, charged: bool = false) -> bool:
 			EventBus.post("The %s charges you!" % String(data.enemies[String(r["enemy"])]["name"]), "combat")
 		var region := current_region
 		var before := player.inventory.duplicate()
-		var won := _fight_bounty(String(r["enemy"])) if slot == Wildlife.BOUNTY_SLOT else fight(String(r["enemy"]))
+		var spoils := {}
+		var bounty := slot == Wildlife.BOUNTY_SLOT
+		var won := _fight_bounty(String(r["enemy"]), spoils) if bounty else fight(String(r["enemy"]))
 		if won:
 			Wildlife.record_hunt(player, String(r["enemy"]))
-			Wildlife.record_spoils(player, String(r["enemy"]), Wildlife.inventory_gain(before, player.inventory))
+			# The bounty's pay is not the beast's spoils (REVIEW of WILD-005).
+			if not bounty:
+				spoils = Wildlife.inventory_gain(before, player.inventory)
+			Wildlife.record_spoils(player, String(r["enemy"]), spoils)
 		# The fight may have taken days: the beast is gone for the day you come back to.
 		Wildlife.mark_down(world_flags, region, slot, GameClock.total_days)
 		EventBus.roamers_changed.emit()

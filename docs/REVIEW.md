@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: de28f82
+Last reviewed commit: 972f647
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -1388,3 +1388,18 @@ Last reviewed commit: de28f82
     player and jetties (z 0), so stream dashes/ripples can paint over a player wading a pond or the jetty tip; cosmetic.
     (3) Fleeing beasts clamp to map bounds but ignore houses/ponds, so they can run over scenery. (4) The village book's
     hunt detail reads "Wild Boar: Spoils: Boar Hide, Boar Meat." (double colon), wording only.
+- 2026-11-01 (reviewer, 4th run): reviewed de28f82..972f647 (MARKET-005, FORAGE-001, WU-428, WU-427, QA-188 part 3,
+  GUIDE-205, WILD-005, GUIDE-206, C-288, WU-429, GFX-049, QA-187, COOK-001, GFX-050; [PLAN]/[REVIEW] skipped). Main green
+  (3013 tests). No BACKLOG/CHANGELOG edits by workers; no SAVE_VERSION change (WILD-005's `hunt_spoils` defaults to {} in
+  from_dict, round-trip tested; forage pick flags live in world_flags, one per region slot, overwritten daily); no binary
+  assets (forage sprites, beast shapes and jetties are code-drawn).
+  - Fixed (WILD-005): winning the bounty quarry on the map recorded the bounty's spirit-stone pay as the beast's spoils
+    (engage_roamer diffed the inventory after Bounties.complete), so the village book's hunt page listed e.g.
+    "Spirit Stone x25" for a boar. _fight_bounty now hands back only what the fight dropped, before the pay. Test added.
+  - FORAGE-001/WU-427 (deterministic per region+day, pickup nodes rebuilt without moving standing ones, interact acts
+    directly so gamepad works), GUIDE-205/206 (roamers non-lethal by WILD-001 validation; walk-up ranks above explore),
+    COOK-001 (win_chance cached; buffs applied to a copy), WU-429 entry-aware hint cut, GFX-049 jetty clip OK.
+  - Notes, not filed: (1) C-288's forage is free income of ~3-7 stones/day per region (its own follow-up says the 1.5/day
+    budget is unreachable) and no sim picks forage yet (QA-190 is queued); planner to decide. (2) COOK-001's "Eat a %s"
+    reads oddly for vowel-initial meal names ("Eat a Eel Soup"); wording only. (3) Old saves with hunts but no
+    hunt_spoils show "spoils unknown" until the next win, which is fine.
