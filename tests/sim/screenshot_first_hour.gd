@@ -7,6 +7,7 @@ extends SceneTree
 ## journal Commissions, Deliver) as crafter_*.png.
 ## WU-418: append `-- --friend` for friend.png (a villager menu with the heart row).
 ## WU-414: append `-- --book` for village_book.png.
+## WU-430: `-- --great` (with --region=) starts on the region's next great-beast day.
 ## GFX-033: append `-- --storm` to render the first-hour shots under a storm.  GFX-051: `-- --rain` forces rain.
 ## GFX-037: append `-- --season=Winter` (Spring/Summer/Autumn/Winter) to start on that season's first day.
 ## GFX-029: append `-- --field` for field.png (a growing field).
@@ -58,6 +59,11 @@ func _start() -> void:
 					push_warning("--region: unknown region %s" % id)
 	if not region_list.is_empty():
 		gs.current_region = region_list[0]
+	if OS.get_cmdline_user_args().has("--great"):  # WU-430: jump to the region's next great-beast day
+		var clock: Node = root.get_node("GameClock")
+		var walk: int = Wildlife.next_great_day(gs.data, gs.current_region, clock.total_days, gs.player.realm_index)
+		if walk >= 0:
+			clock.total_days = walk
 	gs.pending_event = ""
 	var party := OS.get_cmdline_user_args().has("--celebration")
 	if party:  # GFX-023: a wedding for a Qingshi villager, before the world is built

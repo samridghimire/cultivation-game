@@ -109,3 +109,10 @@ func test_lamp_counts() -> void:
 	assert_eq(HudScript.lamp_count(9), 5)
 	assert_eq(HudScript.lives_extra_text(5), "")
 	assert_eq(HudScript.lives_extra_text(6), "x 1")
+
+
+func test_great_beast_has_its_own_calendar_glyph() -> void:
+	var great := HudIcons.calendar_kind("great_beast")
+	assert_true(great != null)
+	assert_true(great != HudIcons.calendar_kind("event"))
+	assert_true(HudIcons.map_mark("paw_gold") != null)

@@ -52,12 +52,14 @@ const CALENDAR_MORE := {
 	"rent": {"colors": {"a": Color("e8c76a"), "b": Color("fff1a8"), "c": Color("b8943a")}, "rows": ["............", "....oooo....", "..ooabbaoo..", ".oabaaaacao.", ".oaaooooaao.", ".oaaoccoaao.", ".oaaooooaao.", ".oacaaaaaao.", "..ooaaaaoo..", "....oooo....", "............", "............"]},
 	"request": {"colors": {"a": Color("f4e9d0"), "b": Color("d9534f"), "c": Color("b8a98a")}, "rows": ["............", "............", ".oooooooooo.", ".oaaaaaaaao.", ".ocaaaaaaco.", ".oacaaaacao.", ".oaaccccaao.", ".oaaabbaaao.", ".oaaabbaaao.", ".oooooooooo.", "............", "............"]},
 	"secret_realm": {"colors": {"a": Color("7a5cd6"), "b": Color("c9b8ff"), "c": Color("3a2a7a")}, "rows": ["............", "....oooo....", "..ooabbaoo..", ".oabaccabao.", ".oabaccabao.", ".oabaccabao.", ".oabaccabao.", ".oabaccabao.", ".oabaccabao.", ".oooooooooo.", "............", "............"]},
+	"great_beast": {"colors": {"a": Color("f2c94c"), "b": Color("fff1a8"), "c": Color("b8943a")}, "rows": ["............", "o..oo..oo..o", "oo.oaooao.oo", ".oooabbaooo.", "..oaabbaao..", ".oabaaaabao.", ".oaoacccaoao", ".oao.oaao.oa", "..o..oaao..o", "....oaoao...", "....ooooo...", "............"]},
 	"event": {"colors": {"a": Color("f0a050"), "b": Color("fff1a8"), "c": Color("d9702f")}, "rows": ["............", ".....oo.....", ".....oo.....", "....oabo....", ".ooooabboooo", ".oaabbbbbaao", "..oaabbbaao.", "...oabbbao..", "..oabaaabao.", "..oao..oaao.", "...o....o...", "............"]},
 }
 
 ## World map node marks (GFX-051): an open stall's coin, a roaming beast's paw, a forage leaf.
 const MARKS := {
 	"coin": {"colors": {"a": Color("e8c76a"), "b": Color("fff1a8"), "c": Color("b8943a")}, "rows": ["............", "....oooo....", "...oabbao...", "..oabccaao..", "..oabcaaao..", "..oabccaao..", "..oaaaaaco..", "...oaaaco...", "....oooo....", "............", "............", "............"]},
+	"paw_gold": {"colors": {"a": Color("f2c94c"), "b": Color("fff1a8"), "c": Color("b8943a")}, "rows": ["............", "..oo....oo..", ".oabo..obao.", ".oaao..oaao.", "..oo.oo.oo..", "oo.oabbao.oo", "oao.oaaao.oao", ".oo.oaaao.oo", "....oacao...", ".....ooo....", "............", "............"]},
 	"paw": {"colors": {"a": Color("c9873a"), "b": Color("e8b070"), "c": Color("8a4a22")}, "rows": ["............", "..oo....oo..", ".oabo..obao.", ".oaao..oaao.", "..oo.oo.oo..", "oo.oabbao.oo", "oao.oaaao.oao", ".oo.oaaao.oo", "....oacao...", ".....ooo....", "............", "............"]},
 	"leaf": {"colors": {"a": Color("5fbf5a"), "b": Color("a8e08a"), "c": Color("3a7a3a")}, "rows": ["............", "......ooo...", "....ooabbo..", "...oabaabao.", "..oabaaaaao.", "..oaaaaacao.", "..oaaaacao..", "...oaacco...", "..occoo.....", ".oc.........", "............", "............"]},
 }
@@ -121,7 +123,7 @@ static func calendar_kind(kind: String, season_name: String = "") -> Texture2D:
 		"field", "rent", "request", "secret_realm", "event":
 			return _glyph("cal_" + kind, CALENDAR_MORE, kind)
 		"great_beast":
-			return _glyph("cal_event", CALENDAR_MORE, "event")
+			return _glyph("cal_great_beast", CALENDAR_MORE, "great_beast")
 	return null
 
 

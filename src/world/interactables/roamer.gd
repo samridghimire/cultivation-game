@@ -13,6 +13,8 @@ const FLEE_SPEED := 132.0  # 0.6x the player's 220
 const NOTICE_RANGE := 160.0
 const CHARGE_SPEED := 110.0
 const TOUCH_RANGE := 44.0
+const GREAT_GOLD := Color("f2c94c")
+const GREAT_SCALE := 1.5
 const WORLD_SCRIPT := preload("res://src/world/world.gd")
 
 var slot := 0
@@ -31,13 +33,15 @@ var player_ref: Node2D
 var map_bounds := Vector2(100000, 100000)
 var blocked_rects: Array[Rect2] = []  # WU-429: houses, ponds and paths a fleeing beast will not enter
 var noticed := false
+var great := false  # WU-430: the WILD-006 great beast: 1.5x, gold ring, gold "(great)" name
 var charged := false  # WU-426: the open menu came from this beast's own charge
 var asked := false  # a bold beast opens its menu once per beast per day (nodes are rebuilt daily)
 
 
 ## Setup before add_child: the beast `enemy_id` of roamer `slot` standing at `pos`.
-func setup(p_slot: int, p_enemy: String, pos: Vector2, seed_value: int) -> void:
+func setup(p_slot: int, p_enemy: String, pos: Vector2, seed_value: int, p_great: bool = false) -> void:
 	slot = p_slot
+	great = p_great
 	enemy_id = p_enemy
 	position = pos
 	home = pos
@@ -62,12 +66,18 @@ func _update_name() -> void:
 	var title := String(def.get("name", enemy_id))
 	if GameState.has_session() and GameState.data.enemies.has(enemy_id):
 		title = "%s (%s)" % [title, Wildlife.threat(GameState.player, GameState.data, enemy_id)]
+	if great:
+		title += " (great)"
 	display_name = title
 	_redraw_label()
 
 
 func label_text() -> String:
 	return display_name
+
+
+func label_color() -> Color:
+	return GREAT_GOLD if great else Color.WHITE
 
 
 func get_options() -> Array[Dictionary]:
@@ -197,10 +207,13 @@ func draw_generated_art() -> bool:
 	var fur := DuelStage.fur_for(enemy_id)
 	var frame := int(_time * 3.0) % 2 if position.distance_to(_target) >= 2.0 else 0
 	var tex := PixelFigure.beast_frame(fur, frame, DuelStage.beast_kind(enemy_id))
-	var k := 2.0
+	var k := 2.0 * (GREAT_SCALE if great else 1.0)
 	var s := tex.get_size() * k
 	draw_set_transform(Vector2(0, 10), 0.0, Vector2(1.0, 0.4))
-	draw_circle(Vector2.ZERO, 16.0, Color(0, 0, 0, 0.3))
+	if great:
+		draw_arc(Vector2.ZERO, 30.0, 0.0, TAU, 40, Color(GREAT_GOLD, 0.7), 2.5)
+		draw_circle(Vector2.ZERO, 30.0, Color(GREAT_GOLD, 0.12))
+	draw_circle(Vector2.ZERO, 16.0 * (GREAT_SCALE if great else 1.0), Color(0, 0, 0, 0.3))
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2(facing, 1.0))
 	draw_texture_rect(tex, Rect2(-s.x / 2.0, 12.0 - s.y, s.x, s.y), false)
 	draw_set_transform(Vector2.ZERO)

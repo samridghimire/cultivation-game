@@ -375,7 +375,7 @@ func _spawn_roamer(r: Dictionary, blocked: Array[Rect2], avoid: Array[Vector2]) 
 	var spot := Roamer.pick_spot(GameState.current_region, day, slot, map_size, blocked, avoid)
 	avoid.append(spot)
 	var node: Roamer = ROAMER_SCRIPT.new()
-	node.setup(slot, String(r["enemy"]), spot, hash("%s:%d:%d:w" % [GameState.current_region, day, slot]))
+	node.setup(slot, String(r["enemy"]), spot, hash("%s:%d:%d:w" % [GameState.current_region, day, slot]), bool(r.get("great", false)))
 	node.player_ref = player
 	node.map_bounds = map_size
 	node.blocked_rects = blocked

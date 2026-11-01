@@ -182,3 +182,22 @@ func test_water_life_below_player() -> void:
 	w.setup({"id": "t", "map": {}}, false, false, true)
 	assert_true(w.z_index <= 0)
 	w.free()
+
+
+func test_great_roamer_is_gold_and_labelled() -> void:
+	var gs := (Engine.get_main_loop() as SceneTree).root.get_node("GameState")
+	var world := _world("misty_forest")
+	gs.start_session(CharacterFactory.create("Lin Feng", gs.data, seeded_rng(), "male"))
+	var plain := Roamer.new()
+	plain.setup(1, "wild_boar", Vector2(100, 100), 1)
+	var great := Roamer.new()
+	great.setup(101, "fog_antler_stag", Vector2(200, 200), 1, true)
+	assert_false(plain.display_name.ends_with("(great)"))
+	assert_true(great.display_name.contains("(great)"), great.display_name)
+	assert_eq(great.label_color(), Roamer.GREAT_GOLD)
+	assert_eq(plain.label_color(), Color.WHITE)
+	assert_eq(Roamer.GREAT_SCALE, 1.5)
+	plain.free()
+	great.free()
+	world.free()
+	gs.end_session()

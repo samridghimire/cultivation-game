@@ -315,6 +315,12 @@ static func roamer_count(c: CharacterData, data: GameData, region_id: String, da
 	return n
 
 
+## WU-430: the name of the great beast walking a region today ("" when none).
+static func great_name(c: CharacterData, data: GameData, region_id: String, day: int, flags: Dictionary) -> String:
+	var g := Wildlife.great_roamer(c, data, region_id, day, flags)
+	return "" if g.is_empty() else _enemy_name(data, String(g["enemy"]))
+
+
 ## WU-428: "Today: rain, market at Travelling Market Stall, 3 beasts roam." ("" for a region never visited).
 static func today_line(c: CharacterData, data: GameData, region_id: String, current_region: String, day: int, flags: Dictionary) -> String:
 	if is_unexplored(c, region_id, current_region):
@@ -323,7 +329,10 @@ static func today_line(c: CharacterData, data: GameData, region_id: String, curr
 	var markets := open_markets(data, region_id, day)
 	if not markets.is_empty():
 		parts.append("market at " + " and ".join(markets))
+	var great := great_name(c, data, region_id, day, flags)
 	var beasts := roamer_count(c, data, region_id, day, flags)
+	if great != "":
+		parts.append("a great %s walks here" % great)
 	if beasts > 0:
 		parts.append("%d beast%s roam%s" % [beasts, "" if beasts == 1 else "s", "s" if beasts == 1 else ""])
 	return "Today: " + ", ".join(parts) + "."
@@ -446,8 +455,9 @@ func _draw_map() -> void:
 		if not open_markets(data, region_id, GameClock.total_days).is_empty():
 			_canvas.draw_texture(HudIcons.map_mark("coin"), Vector2(mx, my))
 			mx -= 14.0
-		if roamer_count(GameState.player, data, region_id, GameClock.total_days, GameState.world_flags) > 0:
-			_canvas.draw_texture(HudIcons.map_mark("paw"), Vector2(mx, my))
+		var gold := great_name(GameState.player, data, region_id, GameClock.total_days, GameState.world_flags) != ""
+		if gold or roamer_count(GameState.player, data, region_id, GameClock.total_days, GameState.world_flags) > 0:
+			_canvas.draw_texture(HudIcons.map_mark("paw_gold" if gold else "paw"), Vector2(mx, my))
 	if _hint_region != "" and _positions.has(_hint_region):
 		var tip: Vector2 = Vector2(_positions[_hint_region]) + Vector2(NODE_SIZE.x / 2.0 - 4.0, -NODE_SIZE.y / 2.0 - 2.0)
 		_canvas.draw_string(font, tip, "!", HORIZONTAL_ALIGNMENT_LEFT, -1, 22, UIStyle.ACCENT)
