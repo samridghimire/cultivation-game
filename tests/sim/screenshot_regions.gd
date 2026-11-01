@@ -6,6 +6,7 @@ extends SceneTree
 ## PNGs go to user://screenshots/<region>.png (OUT_DIR). Add `-- --season=Winter` for
 ## one season (files become <region>_<season>.png) or `-- --season=all` for all four.
 ## `-- --weather=rain` (clear|cloudy|rain|snow|fog) jumps each region to a day with that weather
+## `-- --region=a,b` limits the shots to those region ids.
 ## (WU-399; files become <region>_<weather>.png; regions that never have it are skipped).
 
 const OUT_DIR := "user://screenshots"
@@ -29,6 +30,8 @@ func _start() -> void:
 		if arg.begins_with("--season="):
 			var v := arg.substr(9).capitalize()
 			seasons = ["Spring", "Summer", "Autumn", "Winter"] if v == "All" else [v]
+		elif arg.begins_with("--region="):
+			regions = arg.substr(9).split(",")
 		elif arg.begins_with("--weather="):
 			weather = arg.substr(10)
 	# A spouse and children in every region, so the Family Home (FAM-011) shows.

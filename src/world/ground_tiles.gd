@@ -88,8 +88,8 @@ static func make_variant(base: Color, rid: String, variant: int, flowers: bool) 
 
 ## The whole ground of a region as one texture, 1 px per sprite pixel (the caller scales it): 16-px
 ## cells picked by `variant_for`. Built once per region and season-bloom state, so `_draw()` stays cheap.
-static func ground_texture(base: Color, rid: String, size_px: Vector2i, flowers: bool, season: String = "") -> ImageTexture:
-	var key := "ground|%s|%s|%s|%s|%s" % [base.to_html(), rid, size_px, flowers, season]
+static func ground_texture(base: Color, rid: String, size_px: Vector2i, flowers: bool, season: String = "", style: String = "grass") -> ImageTexture:
+	var key := "ground|%s|%s|%s|%s|%s|%s" % [base.to_html(), rid, size_px, flowers, season, style]
 	if _cache.has(key):
 		return _cache[key]
 	var img := Image.create(size_px.x, size_px.y, false, Image.FORMAT_RGBA8)
@@ -102,10 +102,98 @@ static func ground_texture(base: Color, rid: String, size_px: Vector2i, flowers:
 			var w := mini(SIZE, size_px.x - cx * SIZE)
 			var h := mini(SIZE, size_px.y - cy * SIZE)
 			img.blit_rect(src, Rect2i(0, 0, w, h), Vector2i(cx * SIZE, cy * SIZE))
+	_apply_style(img, base, rid, style)
 	_apply_season(img, rid, season)
 	var tex := ImageTexture.create_from_image(img)
 	_cache[key] = tex
 	return tex
+
+
+const STYLES := ["grass", "paved", "scree", "bog", "litter"]
+
+
+## GFX-042: redraws a finished grass ground image in a regional style. "grass" is left alone. Every choice comes
+## from hashes of (rid, cell), so the same inputs give the same image.
+static func _apply_style(img: Image, base: Color, rid: String, style: String) -> void:
+	var w := img.get_width()
+	var h := img.get_height()
+	match style:
+		"paved":
+			# 16 px flagstones in offset rows, a 1 px darker mortar line, +-4% brightness per stone.
+			var mortar := base.darkened(0.3)
+			for y in h:
+				var row := y / SIZE
+				var shift := 8 if row % 2 == 1 else 0
+				for x in w:
+					var col := (x + shift) / SIZE
+					var edge := y % SIZE == 0 or (x + shift) % SIZE == 0
+					if edge:
+						img.set_pixel(x, y, mortar)
+					else:
+						var v := variant_for(rid, col, row)
+						var f := (float(absi(hash("%s|%d|%d|stone" % [rid, col, row])) % 81) - 40.0) / 1000.0
+						var c := base.lightened(f) if f >= 0.0 else base.darkened(-f)
+						if (x * 7 + y * 13 + v) % 11 == 0:
+							c = c.darkened(0.06)
+						img.set_pixel(x, y, c)
+		"scree":
+			for cy in ceili(float(h) / SIZE):
+				for cx in ceili(float(w) / SIZE):
+					var roll := absi(hash("%s|%d|%d|scree" % [rid, cx, cy]))
+					for i in 3 + roll % 3:
+						var r2 := absi(hash("%s|%d|%d|scree|%d" % [rid, cx, cy, i]))
+						var pw := 2 + r2 % 3
+						var ph := 2 + (r2 / 8) % 2
+						var px := cx * SIZE + (r2 / 64) % (SIZE - 4)
+						var py := cy * SIZE + (r2 / 1024) % (SIZE - 3)
+						var shade := base.lightened(0.14) if r2 % 2 == 0 else base.darkened(0.2)
+						_fill_clipped(img, Rect2i(px, py, pw, ph), shade)
+					if roll % 4 == 0:
+						var cx0 := cx * SIZE + (roll / 4) % (SIZE - 6)
+						var cy0 := cy * SIZE + (roll / 64) % (SIZE - 6)
+						for k in 5:
+							_set_clipped(img, cx0 + k, cy0 + k / 2, base.darkened(0.3))
+		"litter":
+			# Grass with darker leaf-litter specks (2x1 px) scattered over it.
+			for cy in ceili(float(h) / SIZE):
+				for cx in ceili(float(w) / SIZE):
+					var roll := absi(hash("%s|%d|%d|litter" % [rid, cx, cy]))
+					for i in 3 + roll % 3:
+						var r2 := absi(hash("%s|%d|%d|litter|%d" % [rid, cx, cy, i]))
+						_fill_clipped(img, Rect2i(cx * SIZE + r2 % (SIZE - 2), cy * SIZE + (r2 / 16) % SIZE, 2, 1), base.darkened(0.3 if r2 % 3 else 0.15))
+		"bog":
+			for cy in ceili(float(h) / SIZE):
+				for cx in ceili(float(w) / SIZE):
+					var roll := absi(hash("%s|%d|%d|bog" % [rid, cx, cy]))
+					if roll % 5 == 0:
+						var pw := 6 + (roll / 5) % 9
+						var ph := 4 + (roll / 64) % 5
+						var px := cx * SIZE + (roll / 512) % 8
+						var py := cy * SIZE + (roll / 4096) % 8
+						var water := base.darkened(0.3)
+						_fill_clipped(img, Rect2i(px + 1, py + 1, pw - 2, ph - 2), water)
+						_fill_clipped(img, Rect2i(px + 2, py, pw - 4, 1), water)
+						_fill_clipped(img, Rect2i(px + 2, py + ph - 1, pw - 4, 1), water)
+						_fill_clipped(img, Rect2i(px, py + 2, 1, ph - 4), water)
+						_fill_clipped(img, Rect2i(px + pw - 1, py + 2, 1, ph - 4), water)
+						_fill_clipped(img, Rect2i(px + 2, py, pw - 4, 1), base.lightened(0.25))
+					elif roll % 5 == 1:
+						var rx := cx * SIZE + 2 + (roll / 5) % (SIZE - 6)
+						var ry := cy * SIZE + 4 + (roll / 128) % (SIZE - 8)
+						var reed := base.lightened(0.3)
+						for k in 3 + roll % 3:
+							_fill_clipped(img, Rect2i(rx + k, ry + (k % 2), 1, 3 + k % 2), reed)
+
+
+static func _set_clipped(img: Image, x: int, y: int, c: Color) -> void:
+	if x >= 0 and y >= 0 and x < img.get_width() and y < img.get_height():
+		img.set_pixel(x, y, c)
+
+
+static func _fill_clipped(img: Image, r: Rect2i, c: Color) -> void:
+	for y in range(r.position.y, r.end.y):
+		for x in range(r.position.x, r.end.x):
+			_set_clipped(img, x, y, c)
 
 
 const OCHRE := Color("b59a4a")
@@ -181,8 +269,8 @@ static func _tint_image(img: Image, toward: Color, amount: float) -> void:
 
 ## A path rectangle of `size_px` sprite pixels: the path tile with an irregular 2-3 px fringe along each
 ## edge cut away (transparent, so the grass or a crossing path shows) and rounded corners.
-static func path_texture(base: Color, rid: String, size_px: Vector2i, season: String = "") -> ImageTexture:
-	var key := "pathrect|%s|%s|%s|%s" % [base.to_html(), rid, size_px, season]
+static func path_texture(base: Color, rid: String, size_px: Vector2i, season: String = "", style: String = "grass") -> ImageTexture:
+	var key := "pathrect|%s|%s|%s|%s|%s" % [base.to_html(), rid, size_px, season, style]
 	if _cache.has(key):
 		return _cache[key]
 	var w := maxi(size_px.x, 1)
@@ -192,6 +280,18 @@ static func path_texture(base: Color, rid: String, size_px: Vector2i, season: St
 	for y in h:
 		for x in w:
 			img.set_pixel(x, y, tile.get_pixel(x % SIZE, y % SIZE))
+	if style == "paved":
+		# A main street: wider (24 px), lighter flagstones with a faint mortar line.
+		var lit := base.lightened(0.12)
+		for y in h:
+			var shift := 12 if (y / 24) % 2 == 1 else 0
+			for x in w:
+				var col := (x + shift) / 24
+				var f := (float(absi(hash("%s|%d|%d|street" % [rid, col, y / 24])) % 61) - 30.0) / 1000.0
+				var c := lit.lightened(f) if f >= 0.0 else lit.darkened(-f)
+				if y % 24 == 0 or (x + shift) % 24 == 0:
+					c = base.darkened(0.12)
+				img.set_pixel(x, y, c)
 	var clear := Color(0, 0, 0, 0)
 	for side in 4:
 		var length := w if side < 2 else h

@@ -137,3 +137,52 @@ func test_winter_path_is_lighter() -> void:
 	var winter := GroundTiles.path_texture(path, "qingshi_village", Vector2i(48, 32), "Winter")
 	assert_true(_mean(winter)["v"] > _mean(summer)["v"])
 
+
+
+func _styled(style: String, rid: String = "styled") -> ImageTexture:
+	return GroundTiles.ground_texture(BASE, rid, Vector2i(96, 96), false, "", style)
+
+
+func _edge_count(tex: ImageTexture) -> int:
+	var img := tex.get_image()
+	var n := 0
+	for y in img.get_height():
+		for x in img.get_width() - 1:
+			# Strong edges only: grass speckle is subtle, mortar lines are not.
+			if absf(img.get_pixel(x, y).get_luminance() - img.get_pixel(x + 1, y).get_luminance()) > 0.08:
+				n += 1
+	return n
+
+
+func test_ground_styles_are_deterministic_and_differ() -> void:
+	for s in GroundTiles.STYLES:
+		var a := _styled(s)
+		GroundTiles._cache.clear()
+		var b := _styled(s)
+		assert_true(_bytes(a) == _bytes(b), s)
+	assert_true(_bytes(_styled("paved")) != _bytes(_styled("grass")))
+	assert_true(_bytes(_styled("scree")) != _bytes(_styled("grass")))
+	assert_true(_bytes(_styled("litter")) != _bytes(_styled("grass")))
+
+
+func test_paved_has_more_edges_than_grass() -> void:
+	assert_true(_edge_count(_styled("paved")) > _edge_count(_styled("grass")))
+
+
+func test_bog_is_darker_than_grass() -> void:
+	assert_true(_mean(_styled("bog"))["v"] < _mean(_styled("grass"))["v"])
+
+
+func test_paved_path_differs_from_plain_path() -> void:
+	var c := Color("9c917a")
+	var a := GroundTiles.path_texture(c, "styled", Vector2i(60, 48), "", "paved")
+	var b := GroundTiles.path_texture(c, "styled", Vector2i(60, 48), "", "grass")
+	assert_true(_bytes(a) != _bytes(b))
+
+
+func test_unknown_ground_style_is_rejected() -> void:
+	var d := GameData.load_from_dir()
+	d.regions["qingshi_village"]["map"]["ground_style"] = "lava"
+	d.load_errors.clear()
+	d._validate()
+	assert_true(", ".join(d.load_errors).contains("ground_style"))
