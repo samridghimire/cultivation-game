@@ -114,6 +114,8 @@ func _run() -> void:
 			FirstHour.stay_rogue = true  # QA-158
 		elif a == "--village":
 			FirstHour.village = true  # QA-181
+		elif a == "--tend":
+			FirstHour.tend = true  # QA-184
 		elif a == "--buy-qi":
 			FirstHour.buy_qi = true  # QA-161
 		elif a == "--body-art":

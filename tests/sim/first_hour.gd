@@ -36,7 +36,10 @@ static var heal_log := {"healed": 0, "stones": 0}
 ## jetty, sells the catch and crops, shares tea with a visitor, settles a quarrel. village_log counts it: stones from the field and
 ## the fish (sold), rent paid, fishing days, harvests, teas, quarrels, favor. simulate_curious_years.gd's --village turns it on.
 static var village := false
-static var village_log := {"field_stones": 0, "rent": 0, "harvests": 0, "crops": 0, "fish_stones": 0, "fish_days": 0, "teas": 0, "quarrels": 0, "meals": 0}
+## QA-184: --tend (needs --village): after planting, stay in the village and water (clear/cloudy day) and nourish (qi allows) the field
+## for as many days as the tended bonus needs (FieldPlots.care_needed); village_log["tend_days"] counts the days that took.
+static var tend := false
+static var village_log := {"field_stones": 0, "rent": 0, "harvests": 0, "crops": 0, "fish_stones": 0, "fish_days": 0, "teas": 0, "quarrels": 0, "meals": 0, "tend_days": 0}
 ## QA-163: with injury_report on, play() logs every injury the player takes: injury_log entries are
 ## {seed, id, day, region, news (the danger line the HUD showed), days (healing time), qi_lost (cultivation days it costs
 ## if left alone), end (day it went, -1 still open), treated (it went well before its time)}.
@@ -111,7 +114,7 @@ static var _memo := {}
 
 
 static func play_cached(gs: Node, clock: Node, seed_value: int, months: int, curious: bool = false, no_help: bool = false, wait_for_pill: int = 0) -> Dictionary:
-	var key := [seed_value, months, curious, no_help, wait_for_pill, follow_defence, practise_hint, attempt_trials, heal_injuries, village, spar_hint, min_mission_odds, chase_best_mission, buy_qi, shop_armor, spend_contribution, qi_pill_cap, far_qi, recharge_first, hint_missions, sect_method, stay_rogue, body_art, trial_report, sect_report, core_report]
+	var key := [seed_value, months, curious, no_help, wait_for_pill, tend, follow_defence, practise_hint, attempt_trials, heal_injuries, village, spar_hint, min_mission_odds, chase_best_mission, buy_qi, shop_armor, spend_contribution, qi_pill_cap, far_qi, recharge_first, hint_missions, sect_method, stay_rogue, body_art, trial_report, sect_report, core_report]
 	if not _memo.has(key):
 		_memo[key] = play(gs, clock, seed_value, months, curious, Callable(), no_help, wait_for_pill)
 		gs.end_session()
@@ -729,6 +732,8 @@ static func _village_month(gs: Node, c: CharacterData) -> void:
 				if c.item_count(seed_id) <= 0:
 					break
 				gs.plant_field(seed_id)
+			if tend:
+				_tend_field(gs, c, field, key, seed_id)
 		for id: String in crops:
 			var n := c.item_count(id)
 			if n > 0 and id != seed_id:
@@ -758,6 +763,20 @@ static func _village_month(gs: Node, c: CharacterData) -> void:
 	if not q.is_empty() and gs.check_quarrel(String(q["a"])) == "":
 		if not gs.settle_quarrel(String(q["a"]), "mediate").is_empty():
 			village_log["quarrels"] += 1
+
+
+## QA-184: see tend. One day at a time: water on a clear or cloudy day, nourish when qi allows, then let the day pass.
+static func _tend_field(gs: Node, c: CharacterData, field: Dictionary, key: String, crop_id: String) -> void:
+	for day in FieldPlots.care_needed(field, crop_id):
+		if not c.alive:
+			return
+		var before: int = int(c.field_plots[key].get("watered_day", -1)) + int(c.field_plots[key].get("nourished_day", -1))
+		gs.water_field()
+		gs.nourish_field()
+		if int(c.field_plots[key].get("watered_day", -1)) + int(c.field_plots[key].get("nourished_day", -1)) == before:
+			continue
+		gs._pass_time(1)
+		village_log["tend_days"] += 1
 
 
 ## QA-144: see buy_qi. The reserve is the next realm pill's price in the last three stages while none is held.
