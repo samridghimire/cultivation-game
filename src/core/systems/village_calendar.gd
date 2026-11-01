@@ -81,11 +81,12 @@ static func _own_dates(out: Array[Dictionary], data: GameData, npcs: Dictionary,
 			var left := int(crop.get("days_left", 0))
 			if left <= 0 or place.is_empty():
 				continue
+			# Mirrors FieldPlots.advance: reaching day D grows the crop if D is paid for and not frozen.
 			var day := start
-			while left > 0 and day < paid and day < end + 400:
+			while left > 0 and day + 1 < paid and day < end + 400:
+				day += 1
 				if not FieldPlots.is_frozen(place, day):
 					left -= 1
-				day += 1
 			if left > 0:
 				continue  # never ripens before the rent ends
 			var item_id := String(crop.get("item", ""))

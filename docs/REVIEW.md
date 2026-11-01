@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 676c1b3
+Last reviewed commit: 3508d33
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -1343,3 +1343,17 @@ Last reviewed commit: 676c1b3
     passing no day (Npcs/Training child cultivation qi_density, Guidance qi/deep-path hints) are fine while no timed flag
     reaches qi_flags or deep paths, but should pass the day if one ever does. C-281 and MARKET-002 skipped
     `tools/balance.sh --check` (small, analytic figures in the commits; QA-185 refreshed the baseline after them).
+- 2026-11-01 (reviewer): reviewed 676c1b3..3508d33 (FOLK-009, C-282, WU-419, WU-420, QA-186, MARKET-003, CAL-002, GFX-042,
+  WILD-001, C-286, WU-421; [PLAN] skipped). Main green before and after (2921 -> 2923 tests). No BACKLOG/CHANGELOG edits by
+  workers; no SAVE_VERSION change (roamer downs are timed world flags).
+  - Fixed in one [REVIEW] commit: (1) CAL-002 counted today as a growing day, but FieldPlots.advance grows a crop on
+    reaching each paid day, so a crop whose rent lapses on its ripening day was promised as "ready" and never ripened (also
+    off by one at a frozen-season boundary); the estimate now mirrors advance. (2) FOLK-009 read taste flags by prefix
+    only, so an NPC id that prefixes another ("li"/"li_wei") picked up the other's tastes as bogus item ids; now uses
+    Family.known_tastes (real item ids only). Tests added/updated for both.
+  - WILD-001: matches spec. Its validator is stricter than the spec (rejects every lethal roamer, not just lethal
+    non-beasts), which keeps map fights away from permadeath without the threat-sense prompt; C-287 must use non-lethal
+    beasts only (noted on its row). MARKET-003, WU-419/420/421, GFX-042, C-282, C-286 OK; calendar/book/labels keep
+    gamepad focus. Minor: GameData._validate_world references GroundTiles.STYLES (a src/world class) from core; harmless
+    (RefCounted, no Node), not filed.
+  - Nothing filed.

@@ -943,13 +943,14 @@ func test_people_entries_filter_order_and_tastes() -> void:
 	_village(npcs, 3)
 	var ids: Array = npcs.keys()
 	var favor := {ids[0]: 9, ids[1]: 30, ids[2]: 30}
-	var flags := {"taste_%s_herb" % ids[1]: 1, "taste_%s_ore" % ids[1]: -1, "taste_%s_moon_cake" % ids[1]: 1}
+	# Only real item ids count (Family.known_tastes): "taste_<id>_nope" is ignored.
+	var flags := {"taste_%s_spirit_herb" % ids[1]: 1, "taste_%s_iron_essence" % ids[1]: -1, "taste_%s_moon_cake" % ids[1]: 1, "taste_%s_nope" % ids[1]: 1}
 	var rows := Folk.people_entries(npcs, data(), "qingshi_village", favor, flags, 0)
 	assert_eq(rows.size(), 2, "favor 9 excluded")
 	assert_true(String(rows[0]["name"]) <= String(rows[1]["name"]), "ties by name")
 	var r: Dictionary = rows[0] if rows[0]["id"] == ids[1] else rows[1]
-	assert_eq(r["likes_known"], ["herb", "moon_cake"])
-	assert_eq(r["dislikes_known"], ["ore"])
+	assert_eq(r["likes_known"], ["moon_cake", "spirit_herb"])
+	assert_eq(r["dislikes_known"], ["iron_essence"])
 	assert_true(String(r["birthday_text"]).begins_with("Month "))
 	favor[ids[2]] = 50
 	assert_eq(Folk.people_entries(npcs, data(), "qingshi_village", favor, flags, 0)[0]["id"], ids[2], "favor desc")

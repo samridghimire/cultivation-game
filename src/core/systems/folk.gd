@@ -268,16 +268,12 @@ static func people_entries(npcs: Dictionary, data: GameData, region_id: String, 
 		var b := birthday_day(c, data)
 		var likes: Array[String] = []
 		var dislikes: Array[String] = []
-		var prefix := "taste_%s_" % c.id
-		for key: Variant in flags:
-			var k := String(key)
-			if not k.begins_with(prefix):
-				continue
-			var taste := int(flags[key])
-			if taste > 0:
-				likes.append(k.substr(prefix.length()))
-			elif taste < 0:
-				dislikes.append(k.substr(prefix.length()))
+		var tastes := Family.known_tastes(flags, data, c.id)  # real item ids only, so "li" never reads "li_wei"'s flags
+		for item_id: String in tastes:
+			if int(tastes[item_id]) > 0:
+				likes.append(item_id)
+			else:
+				dislikes.append(item_id)
 		likes.sort()
 		dislikes.sort()
 		out.append({"id": c.id, "name": c.name, "favor": f, "tier_index": tier_index(data, f), "tier_name": tier_name(data, f),

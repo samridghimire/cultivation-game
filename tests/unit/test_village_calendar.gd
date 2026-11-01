@@ -110,6 +110,19 @@ func test_planted_crop_shows_on_ready_day() -> void:
 	assert_true(String(e[0]["text"]).begins_with("Your "))
 
 
+func test_crop_not_ready_when_rent_lapses_first() -> void:
+	# FieldPlots.advance grows a crop on reaching each paid day, so 5 days left with rent paid until start + 5
+	# only grows 4 days: the crop never ripens and the calendar must not promise it.
+	var c := _calendar_player()
+	var start := 10
+	c.field_plots["qingshi_village:Test"] = {"paid_until": start + 5, "crops": [{"item": "spirit_herb", "days_left": 5}]}
+	if FieldPlots.place_def(data(), "qingshi_village").is_empty():
+		return
+	assert_eq(_kinds(VillageCalendar.upcoming(data(), {}, {}, [], "qingshi_village", start, 30, c), "field").size(), 0)
+	c.field_plots["qingshi_village:Test"]["paid_until"] = start + 6
+	assert_eq(_kinds(VillageCalendar.upcoming(data(), {}, {}, [], "qingshi_village", start, 30, c), "field").size(), 1)
+
+
 func test_rent_end_listed() -> void:
 	var c := _calendar_player()
 	c.field_plots["qingshi_village:Test"] = {"paid_until": 20, "crops": []}
