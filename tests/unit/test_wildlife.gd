@@ -124,3 +124,26 @@ func test_hunt_log_and_summary() -> void:
 	var back := CharacterData.from_dict(c.to_dict())
 	assert_eq(int(back.hunt_log["wild_boar"]), 2)
 	assert_true(CharacterData.from_dict({}).hunt_log.is_empty(), "old saves load empty")
+
+
+## C-289: every roamer beast drops an item; kitchen meats and meals validate; each meal is liked by an NPC.
+func test_roamer_spoils_and_meals() -> void:
+	var d := _gdata()
+	for rid: String in d.regions:
+		for e: Dictionary in d.regions[rid].get("roamers", {}).get("enemies", []):
+			var items: Dictionary = d.enemies[e["enemy"]].get("rewards", {}).get("items", {})
+			var got := false
+			for it: String in items:
+				if it != "spirit_stone":
+					got = true
+			assert_true(got, "%s drops a part" % e["enemy"])
+	for meat: String in ["boar_meat", "venison", "python_meat"]:
+		assert_true(d.items[meat].tags.has("meat"))
+		assert_true(d.items[meat].price >= 2 and d.items[meat].price <= 12)
+	var liked := {}
+	for n: Variant in d.npcs.values():
+		for l: Variant in n.likes:
+			liked[l] = true
+	for meal: String in ["boar_roast", "venison_broth"]:
+		assert_true(d.items.has(meal))
+		assert_true(liked.has(meal), "%s liked" % meal)
