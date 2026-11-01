@@ -46,7 +46,8 @@ static func roamers(data: GameData, region_id: String, day: int, realm_index: in
 
 
 ## WILD-003: the beast of the player's active bounty walks its region's map (slot 100), unless it is down
-## today or lethal and out of reach (exploration's evade rule). Returns {} when it does not.
+## today, out of reach (exploration's evade rule) or not a non-lethal beast: lethal hunts and human or
+## ghost quarry stay exploration-only, like every map roamer (WILD-001). Returns {} when it does not.
 static func bounty_roamer(c: CharacterData, data: GameData, region_id: String, day: int, flags: Dictionary) -> Dictionary:
 	var b := Bounties.active(c, data, day)
 	if b.is_empty() or String(b["region"]) != region_id or not data.enemies.has(String(b["enemy"])):
@@ -55,7 +56,7 @@ static func bounty_roamer(c: CharacterData, data: GameData, region_id: String, d
 	if Effects.flag_active(flags, flag_key(region_id, BOUNTY_SLOT), day):
 		return {}
 	var enemy: Dictionary = data.enemies[enemy_id]
-	if bool(enemy.get("lethal", false)) and Exploration.should_offer_flee(c, data, enemy_id):
+	if bool(enemy.get("lethal", false)) or not (enemy.get("tags", []) as Array).has("beast"):
 		return {}
 	if Exploration.should_evade(c, data, enemy_id):
 		return {}

@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 3508d33
+Last reviewed commit: 8711586
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -1357,3 +1357,19 @@ Last reviewed commit: 3508d33
     gamepad focus. Minor: GameData._validate_world references GroundTiles.STYLES (a src/world class) from core; harmless
     (RefCounted, no Node), not filed.
   - Nothing filed.
+- 2026-11-01 (reviewer, 2nd run): reviewed 3508d33..8711586 (QA-184, FOLK-011, FISH-006, GFX-041, GFX-043, C-285, C-287,
+  WU-423, WILD-002, CAL-003, QA-188, WU-422, WILD-003, GFX-044; [PLAN]/[REVIEW] skipped). Main green before and after
+  (2966 -> 2968 tests). No BACKLOG/CHANGELOG edits by workers; no SAVE_VERSION change and no new persistent state
+  (CAL-003's last reminder day is an unsaved var; FOLK-011 tastes derive from the npc id); no binary assets.
+  - Fixed (WILD-003): the bounty quarry on the map only hid lethal foes the player could *not* handle, so a lethal hunt
+    the player outclassed (blood-eyed wolf, bear king, rogue cultivator...) walked the map as a permadeath fight, against
+    the spec ("lethal hunts stay exploration-only") and WILD-001's non-lethal-beast rule; and the non-lethal cultivator
+    bounties (salt-road captain, ferry ringleader, roadside rogue, drunk bully) were drawn as beast figures. Now only a
+    non-lethal beast-tagged quarry roams. Abandoning the bounty now emits roamers_changed so the figure fades instead of
+    staying with a dead "Fight". Test added.
+  - FISH-006 (one got-away roll per trip, extra rain draws merged before the trophy check), FOLK-011 (stable hash picks,
+    like/dislike disjoint, validated), WILD-002, WU-423 (local rng, freed nodes dropped from the player's nearby list),
+    WU-422 (calendar keeps focus; [L] log still bound) OK.
+  - Notes, not filed: CAL-003's own follow-up stands ("Tomorrow: field rent is due" can never fire because upcoming()
+    lists rent only when paid_until > start); WU-424 should wire `engage_roamer(slot, true)` for bold beasts; taking a
+    bounty while already in its region shows the quarry only from the next day (world adds roamers on day change only).

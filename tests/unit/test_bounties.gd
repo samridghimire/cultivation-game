@@ -428,3 +428,25 @@ func test_wild_hunt_journal_note() -> void:
 		lines += String(e["text"]) + "\n"
 	assert_true(lines.contains("roams the"), lines)
 	_finish(gs)
+
+
+func test_wild_hunt_never_shows_an_easy_lethal_or_non_beast_target() -> void:
+	# [REVIEW] Lethal hunts stay exploration-only even when the player outclasses them, and a bounty on a
+	# cultivator or ghost never walks the map as a beast figure.
+	var gs := _gs()
+	var easy_lethal: Dictionary = gs.data.enemies["wild_boar"].duplicate(true)
+	easy_lethal.merge({"id": "t_easy_lethal", "hp": -1000, "attack": -1000, "defense": -1000, "speed": -1000, "lethal": true}, true)
+	gs.data.enemies["t_easy_lethal"] = easy_lethal
+	var c := _start_hunt(gs, "t_easy_lethal")
+	gs.take_bounty("t_bounty")
+	assert_true(Wildlife.bounty_roamer(c, gs.data, "misty_forest", int(GameClock.total_days), {}).is_empty(), "easy lethal")
+	_finish(gs)
+	var person: Dictionary = gs.data.enemies["wild_boar"].duplicate(true)
+	person.merge({"id": "t_bandit", "hp": -1000, "attack": -1000, "defense": -1000, "speed": -1000, "tags": ["cultivator"]}, true)
+	gs.data.enemies["t_bandit"] = person
+	c = _start_hunt(gs, "t_bandit")
+	gs.take_bounty("t_bounty")
+	assert_true(Wildlife.bounty_roamer(c, gs.data, "misty_forest", int(GameClock.total_days), {}).is_empty(), "non-beast")
+	_finish(gs)
+	gs.data.enemies.erase("t_easy_lethal")
+	gs.data.enemies.erase("t_bandit")

@@ -896,6 +896,7 @@ func abandon_bounty() -> void:
 		return
 	Bounties.abandon(player, data, GameClock.total_days)
 	EventBus.post("You give up the hunt.", "info")
+	EventBus.roamers_changed.emit()  # the hunted beast leaves the map (WILD-003)
 	EventBus.player_changed.emit()
 
 
