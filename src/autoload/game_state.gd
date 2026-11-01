@@ -3528,6 +3528,7 @@ func _pass_time(days: int, skip_title: String = "") -> void:
 	var age_before := player.age_days if player != null else 0
 	last_digest = {}
 	GameClock.advance(days)
+	_post_reminders()
 	_record_digest(days, EventBus.posted_count - posted_before)
 	if player != null and _month_of(player.age_days) > _month_of(age_before):
 		SaveManager.autosave()
@@ -3537,6 +3538,21 @@ func _pass_time(days: int, skip_title: String = "") -> void:
 		EventBus.time_skipped.emit(days, summary)
 	_skip_before = {}
 	EventBus.player_changed.emit()
+
+
+## CAL-003: once per day reached, tell the player what happens tomorrow (not saved).
+var _last_reminder_day := -1
+
+
+func _post_reminders() -> void:
+	if player == null or not player.alive:
+		return
+	var today := GameClock.total_days
+	if today == _last_reminder_day:
+		return
+	_last_reminder_day = today
+	for line in VillageCalendar.reminders(data, npcs, npc_favor, world_events, current_region, today, player, world_flags):
+		EventBus.post(line, "world")
 
 
 ## Folds the posts made during a 5+ day action into last_digest (DAY-001).

@@ -3,6 +3,7 @@ extends RefCounted
 ## CAL-001: the month ahead. Lists dated things the player can know about (market days, birthdays of known
 ## villagers, festivals, season starts) for a window of days. Pure functions, no state, no rng.
 
+const MAX_REMINDERS := 3
 const KIND_ORDER := ["market", "festival_active", "festival_month", "birthday", "field", "rent", "request", "secret_realm", "event", "season"]
 
 
@@ -23,7 +24,7 @@ static func upcoming(data: GameData, npcs: Dictionary, favor: Dictionary, active
 	# Birthdays of villagers you know.
 	for b: Dictionary in Folk.birthdays_soon(npcs, data, region_id, start, favor, span - 1):
 		var npc: CharacterData = b["npc"]
-		out.append({"day": start + int(b["in_days"]), "kind": "birthday", "text": "%s's birthday" % npc.name, "region": region_id})
+		out.append({"day": start + int(b["in_days"]), "kind": "birthday", "text": "%s's birthday" % npc.name, "region": region_id, "npc_id": npc.id})
 	# Festivals under way.
 	for inst: Dictionary in active_events:
 		if not WorldEvents.is_festival(data, String(inst.get("id", ""))):
@@ -130,6 +131,51 @@ static func _own_dates(out: Array[Dictionary], data: GameData, npcs: Dictionary,
 			out.append({"day": from_day, "kind": "event", "region": rid, "text": "%s begins in %s" % [ename, Exploration.region_name(data, rid)]})
 		if to_day >= start and to_day < end:
 			out.append({"day": to_day, "kind": "event", "region": rid, "text": "%s ends in %s" % [ename, Exploration.region_name(data, rid)]})
+
+
+## CAL-003: tomorrow's entries as at most MAX_REMINDERS short "Tomorrow: ..." lines in KIND_ORDER.
+## `flags` (world flags) lets a birthday line name a like the player has learned.
+static func reminders(data: GameData, npcs: Dictionary, favor: Dictionary, active_events: Array,
+		region_id: String, today: int, c: CharacterData, flags: Dictionary = {}) -> PackedStringArray:
+	var out := PackedStringArray()
+	for e: Dictionary in upcoming(data, npcs, favor, active_events, region_id, today + 1, 1, c):
+		if out.size() >= MAX_REMINDERS:
+			break
+		var line := _reminder_line(data, npcs, flags, e)
+		if line != "":
+			out.append(line)
+	return out
+
+
+static func _reminder_line(data: GameData, npcs: Dictionary, flags: Dictionary, e: Dictionary) -> String:
+	var text := String(e["text"])
+	match String(e["kind"]):
+		"market":
+			return "Tomorrow: %s." % text.replace("Market: ", "market day at ")
+		"birthday":
+			var line := "Tomorrow: %s" % text
+			var npc: CharacterData = npcs.get(String(e.get("npc_id", "")))
+			if npc != null:
+				var likes: Array[String] = []
+				var tastes := Family.known_tastes(flags, data, npc.id)
+				for item_id: String in tastes:
+					if int(tastes[item_id]) > 0:
+						likes.append(String(data.items[item_id].get("name", item_id)))
+				likes.sort()
+				if not likes.is_empty():
+					line += " (%s likes %s)" % ["she" if npc.gender == "female" else ("he" if npc.gender == "male" else "they"), likes[0]]
+			return line + "."
+		"field":
+			return "Tomorrow: %s." % text.replace("Your ", "your ")
+		"rent":
+			return "Tomorrow: field rent is due."
+		"request":
+			return "Tomorrow: %s." % text
+		"festival_month":
+			return ""
+		"season":
+			return ""
+	return "Tomorrow: %s." % text
 
 
 static func _before(a: Dictionary, b: Dictionary) -> bool:

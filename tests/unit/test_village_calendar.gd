@@ -159,3 +159,35 @@ func test_one_region_festival_month_has_region() -> void:
 	var e := _kinds(VillageCalendar.upcoming(data(), {}, {}, [], "qingshi_village", start), "festival_month")
 	assert_eq(e.size(), 1)
 	assert_true(e[0].has("region"))
+
+
+## CAL-003: tomorrow's reminders.
+func test_reminder_market_tomorrow() -> void:
+	var r := VillageCalendar.reminders(data(), {}, {}, [], "qingshi_village", 8, null)
+	assert_eq(r.size(), 1)
+	assert_true(r[0].begins_with("Tomorrow: market day at "), r[0])
+	assert_eq(VillageCalendar.reminders(data(), {}, {}, [], "qingshi_village", 10, null).size(), 0)
+
+
+func test_reminder_birthday_with_and_without_known_like() -> void:
+	var npcs := {}
+	_village(npcs, 1)
+	var npc: CharacterData = npcs[npcs.keys()[0]]
+	npc.gender = "female"
+	var today := Folk.birthday_day(npc, data()) + Calendar.DAYS_PER_YEAR - 1
+	var r := VillageCalendar.reminders(data(), npcs, {npc.id: 10}, [], "qingshi_village", today, null)
+	assert_eq(r.size(), 1)
+	assert_true(r[0].begins_with("Tomorrow: ") and r[0].contains("birthday") and not r[0].contains("likes"), r[0])
+	var item_id: String = data().items.keys()[0]
+	var flags := {"taste_%s_%s" % [npc.id, item_id]: 1}
+	r = VillageCalendar.reminders(data(), npcs, {npc.id: 10}, [], "qingshi_village", today, null, flags)
+	assert_true(r[0].contains("she likes"), r[0])
+	assert_eq(VillageCalendar.reminders(data(), npcs, {npc.id: 9}, [], "qingshi_village", today, null).size(), 0, "unknown villager")
+
+
+func test_reminders_capped_at_three() -> void:
+	var c := _calendar_player()
+	for i in 5:
+		c.letter_requests.append({"npc_id": "nobody", "item": "spirit_herb", "count": 1, "until": 9, "favor": 1, "effects": {}})
+	var r := VillageCalendar.reminders(data(), {}, {}, [], "qingshi_village", 8, c)
+	assert_eq(r.size(), VillageCalendar.MAX_REMINDERS)

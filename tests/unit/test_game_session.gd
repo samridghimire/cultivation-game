@@ -2801,3 +2801,17 @@ func test_roamer_temper_and_charge() -> void:
 	for i in range(before, EventBus.history.size()):
 		found = found or String(EventBus.history[i]["text"]).ends_with("charges you!")
 	assert_true(found, "charge line posted")
+
+
+func test_tomorrow_reminder_posted_once() -> void:
+	var gs := _game_state()
+	_start()
+	gs.current_region = "qingshi_village"
+	GameClock.total_days = 4
+	var before := EventBus.history.size()
+	gs._pass_time(4)  # now total day 8: market tomorrow
+	var n := 0
+	for i in range(before, EventBus.history.size()):
+		if String(EventBus.history[i]["text"]).begins_with("Tomorrow: market day"):
+			n += 1
+	assert_eq(n, 1)
