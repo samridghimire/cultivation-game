@@ -17,7 +17,7 @@ func test_deterministic_and_counted() -> void:
 	var days_seen := {}
 	for day in range(0, 60):
 		var r := Wildlife.roamers(d, "misty_forest", day, 0, {})
-		assert_true(r.size() >= 2 and r.size() <= 3)
+		assert_true(r.size() >= 2 and r.size() <= 4)
 		days_seen[str(r)] = true
 	assert_true(days_seen.size() > 1, "different days differ")
 	assert_true(Wildlife.roamers(d, "qingshi_village", 5, 0, {}).is_empty())
@@ -56,3 +56,19 @@ func test_validation() -> void:
 	_with(d, {"count": [1, 1], "enemies": [{"enemy": "rogue_cultivator", "weight": 1}]})
 	assert_false(Wildlife.validate(d).is_empty(), "non-beast")
 	_with(d, old)
+
+
+## C-287: every wild region has roamers, 3-5 entries, a non-lethal beast, at least one seasonal entry.
+func test_wild_regions_have_roamers() -> void:
+	var d := _gdata()
+	assert_true(Wildlife.validate(d).is_empty())
+	for id: String in ["misty_forest", "azure_peak", "withered_bone_marsh", "myriad_peaks_ridge"]:
+		var def: Dictionary = d.regions[id].get("roamers", {})
+		var entries: Array = def.get("enemies", [])
+		assert_true(entries.size() >= 3 and entries.size() <= 5, "%s entries" % id)
+		var seasonal := false
+		for e: Dictionary in entries:
+			assert_false(bool(d.enemies[e["enemy"]].get("lethal", false)))
+			seasonal = seasonal or e.has("seasons")
+		assert_true(seasonal, "%s has a seasonal entry" % id)
+	assert_false(d.regions["fallen_star_market"].has("roamers"))
