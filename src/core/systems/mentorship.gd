@@ -104,7 +104,7 @@ static func _taste_note(data: GameData, flags: Dictionary, npc: CharacterData) -
 		likes.sort()
 		return " They are fond of %s." % likes[0]
 	if flags.has("taste_told_" + npc.id):
-		var hint := Family.taste_hint(data, npc.id)
+		var hint := Family.taste_hint(data, npc.id, npc.name)
 		if hint != "":
 			return " " + hint
 	return ""

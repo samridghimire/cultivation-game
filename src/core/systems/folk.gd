@@ -279,7 +279,7 @@ static func people_entries(npcs: Dictionary, data: GameData, region_id: String, 
 		out.append({"id": c.id, "name": c.name, "favor": f, "tier_index": tier_index(data, f), "tier_name": tier_name(data, f),
 			"birthday_text": "" if b < 0 else "Month %d, Day %d" % [Calendar.month_of(b), Calendar.day_of(b)],
 			"birthday_in": days_to_birthday(c, data, today), "likes_known": likes, "dislikes_known": dislikes,
-			"likes_total": (data.npcs.get(c.id, {}).get("likes", []) as Array).size()})
+			"likes_total": (Family.taste_lists(data, c.id)["likes"] as Array).size()})
 	out.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
 		if a["favor"] != b["favor"]:
 			return int(a["favor"]) > int(b["favor"])
@@ -325,6 +325,20 @@ static func validate_tiers(data: GameData) -> PackedStringArray:
 				errors.append("%s gift names unknown item %s" % [where, g.get("item", "?")])
 			if int(g.get("count", 0)) < 1 or int(g.get("count", 0)) > 3:
 				errors.append("%s gift count must be 1..3" % where)
+	return errors
+
+
+## Load errors in folk_tastes: pools are arrays of non-empty strings, counts ints >= 0 and within the pool size.
+static func validate_tastes(data: GameData) -> PackedStringArray:
+	var errors: PackedStringArray = []
+	var t: Dictionary = data.family.get("folk_tastes", {})
+	for key in ["likes", "dislikes"]:
+		var pool: Array = t.get(key + "_pool", [])
+		for e in pool:
+			if typeof(e) != TYPE_STRING or String(e).is_empty():
+				errors.append("family.json folk_tastes %s_pool entries must be non-empty strings" % key)
+		if t.has(key) and (int(t[key]) < 0 or int(t[key]) > pool.size()):
+			errors.append("family.json folk_tastes %s must be 0..%d" % [key, pool.size()])
 	return errors
 
 
@@ -418,6 +432,7 @@ static func validate(data: GameData) -> PackedStringArray:
 	errors.append_array(validate_quarrels(data))
 	errors.append_array(validate_gifts(data))
 	errors.append_array(validate_tiers(data))
+	errors.append_array(validate_tastes(data))
 	for e: Dictionary in data.encounters.values():
 		var blocks: Array = [[String(e["id"]), e.get("effects", {})]]
 		for i in e.get("choices", []).size():

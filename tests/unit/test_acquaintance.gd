@@ -113,7 +113,9 @@ func test_game_state_chat_and_gift_unlock_courtship() -> void:
 func test_gift_taste_matches_ids_and_tags() -> void:
 	assert_eq(Family.gift_taste(data(), "elder_mo", "dew_grass"), 1, "tag match")
 	assert_eq(Family.gift_taste(data(), "elder_mo", "core_forming_pill"), 0, "neutral")
-	assert_eq(Family.gift_taste(data(), "nobody", "dew_grass"), 0, "generated NPCs have none")
+	var bare := data()
+	bare.family.erase("folk_tastes")
+	assert_eq(Family.gift_taste(bare, "nobody", "dew_grass"), 0, "without folk_tastes generated NPCs have none")
 	var d := GameData.new()
 	d.items = {"a": {"tags": ["herb"]}}
 	d.npcs = {"n": {"likes": ["a"], "dislikes": ["herb"]}}
@@ -151,7 +153,9 @@ func test_liked_and_disliked_gifts() -> void:
 func test_taste_hint_and_validation() -> void:
 	assert_eq(Family.taste_hint(data(), "elder_mo"), "Elder Mo is fond of herbs.")
 	assert_eq(Family.taste_hint(data(), "xiao_ling"), "Xiao Ling is fond of moon cake.")
-	assert_eq(Family.taste_hint(data(), "nobody"), "")
+	var bare := data()
+	bare.family.erase("folk_tastes")
+	assert_eq(Family.taste_hint(bare, "nobody"), "")
 	var d := GameData.new()
 	d.names = data().names
 	d.family = data().family

@@ -1719,7 +1719,7 @@ func chat(npc_id: String) -> void:
 	EventBus.post("You pass some time talking with %s. (%s)" % [npcs[npc_id].name, Family.favor_progress(int(npc_favor[npc_id]), data)] + (" The festival warms the mood." if festival else ""))
 	_post_attitude_change(before)
 	_greet_renowned(npc_id)
-	var hint := Family.taste_hint(data, npc_id)
+	var hint := Family.taste_hint(data, npc_id, npcs[npc_id].name)
 	if hint != "" and int(npc_favor[npc_id]) >= Family.taste_hint_favor(data) and not world_flags.has("taste_told_" + npc_id):
 		world_flags["taste_told_" + npc_id] = true
 		EventBus.post(hint, "info")

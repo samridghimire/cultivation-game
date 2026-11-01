@@ -654,7 +654,7 @@ static func known_tastes_text(flags: Dictionary, data: GameData, npc_id: String)
 	if not dislikes.is_empty():
 		parts.append("Dislikes: %s." % ", ".join(dislikes))
 	if likes.is_empty() and flags.has("taste_told_" + npc_id):
-		var hint := Family.taste_hint(data, npc_id)
+		var hint := Family.taste_hint(data, npc_id, String(GameState.npcs[npc_id].name) if GameState.npcs.has(npc_id) else "")
 		if hint != "":
 			parts.append(hint)
 	return " ".join(parts)

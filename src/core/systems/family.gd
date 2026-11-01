@@ -177,16 +177,44 @@ static func gift_value(data: GameData, item_id: String) -> int:
 	return clampi(price / maxi(1, int(rules.get("gift_price_per_favor", 10))), 1, int(rules.get("gift_max_per_item", 10)))
 
 
-## How the named NPC `npc_id` feels about `item_id` (GIFT-001): 1 liked, -1 disliked,
-## 0 neutral. npcs.json `likes`/`dislikes` entries match an item id or one of its
-## tags; a dislike wins over a like. Generated NPCs have no tastes.
+## FOLK-011: the {likes, dislikes} entries (item ids or tags) of `npc_id`: npcs.json for a named NPC,
+## else picked from family.json folk_tastes pools by a stable hash of the id (no rng). A like and a dislike never share an entry.
+static func taste_lists(data: GameData, npc_id: String) -> Dictionary:
+	if data.npcs.has(npc_id):
+		var def: Dictionary = data.npcs[npc_id]
+		return {"likes": def.get("likes", []), "dislikes": def.get("dislikes", [])}
+	var rules: Dictionary = data.family.get("folk_tastes", {})
+	if rules.is_empty():
+		return {"likes": [], "dislikes": []}
+	var dislikes := _pick_taste(rules.get("dislikes_pool", []), int(rules.get("dislikes", 0)), "dislike:" + npc_id, [])
+	var likes := _pick_taste(rules.get("likes_pool", []), int(rules.get("likes", 0)), "like:" + npc_id, dislikes)
+	return {"likes": likes, "dislikes": dislikes}
+
+
+static func _pick_taste(pool: Array, count: int, salt: String, banned: Array) -> Array:
+	var left: Array = []
+	for e in pool:
+		if not banned.has(e):
+			left.append(e)
+	var out: Array = []
+	var i := 0
+	while out.size() < count and not left.is_empty():
+		var k := absi(hash("%s:%d" % [salt, i])) % left.size()
+		out.append(left[k])
+		left.remove_at(k)
+		i += 1
+	return out
+
+
+## How the NPC `npc_id` feels about `item_id` (GIFT-001): 1 liked, -1 disliked,
+## 0 neutral. Entries match an item id or one of its tags; a dislike wins over a like.
 static func gift_taste(data: GameData, npc_id: String, item_id: String) -> int:
-	var def: Dictionary = data.npcs.get(npc_id, {})
+	var lists := taste_lists(data, npc_id)
 	var tags: Array = data.items.get(item_id, {}).get("tags", [])
-	for entry in def.get("dislikes", []):
+	for entry in lists["dislikes"]:
 		if entry == item_id or tags.has(entry):
 			return -1
-	for entry in def.get("likes", []):
+	for entry in lists["likes"]:
 		if entry == item_id or tags.has(entry):
 			return 1
 	return 0
@@ -195,7 +223,7 @@ static func gift_taste(data: GameData, npc_id: String, item_id: String) -> int:
 ## WU-108: true when `item_id` matches the NPC's first `likes` entry (an item id or one of its tags),
 ## the one a chat hint ("<Name> is fond of herbs.") names.
 static func matches_first_like(data: GameData, npc_id: String, item_id: String) -> bool:
-	var likes: Array = data.npcs.get(npc_id, {}).get("likes", [])
+	var likes: Array = taste_lists(data, npc_id)["likes"]
 	if likes.is_empty():
 		return false
 	var tags: Array = data.items.get(item_id, {}).get("tags", [])
@@ -246,12 +274,12 @@ static func known_tastes(flags: Dictionary, data: GameData, npc_id: String) -> D
 
 
 ## "<Name> is fond of herbs." for the NPC's first like, or "" if they have none.
-static func taste_hint(data: GameData, npc_id: String) -> String:
+static func taste_hint(data: GameData, npc_id: String, display_name: String = "") -> String:
 	var def: Dictionary = data.npcs.get(npc_id, {})
-	var likes: Array = def.get("likes", [])
+	var likes: Array = taste_lists(data, npc_id)["likes"]
 	if likes.is_empty():
 		return ""
-	return "%s is fond of %s." % [def.get("name", npc_id), _taste_word(data, String(likes[0]))]
+	return "%s is fond of %s." % [def.get("name", display_name if display_name != "" else npc_id), _taste_word(data, String(likes[0]))]
 
 
 ## Why `c` cannot give `item_id` to `other`, or "" if they can.

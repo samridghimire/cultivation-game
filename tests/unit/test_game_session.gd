@@ -2700,6 +2700,22 @@ func test_birthday_gift_counts_double_once() -> void:
 	assert_true(other != null)
 
 
+func test_liked_gift_to_generated_villager_sets_taste_flag() -> void:
+	var c := _start()
+	var gs := _game_state()
+	var npc := Npcs.spawn(gs.npcs, gs.data, seeded_rng(8), {"age_years": 30, "region": "qingshi_village", "realm": "mortal"})
+	var liked := ""
+	for item_id: String in gs.data.items:
+		if Family.gift_taste(gs.data, npc.id, item_id) > 0 and Family.gift_value(gs.data, item_id) > 0:
+			liked = item_id
+			break
+	assert_true(liked != "", "a generated villager likes something")
+	c.add_item(liked, 1)
+	gs.npc_favor[npc.id] = 0
+	gs.give_gift(npc.id, liked)
+	assert_eq(int(gs.world_flags.get("taste_%s_%s" % [npc.id, liked], 0)), 1)
+
+
 func test_people_entries_lists_elder_mo_after_gift() -> void:
 	var c := _start()
 	var gs := _game_state()
