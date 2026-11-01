@@ -590,7 +590,7 @@ func _spread_on_screen() -> void:
 		var to_world := get_canvas_transform().affine_inverse()
 		for r: Rect2 in hud.occupied_rects():
 			occupied.append(to_world * r)
-	Interactable.spread_on_screen(nodes, view, occupied)
+	Interactable.spread_on_screen(nodes, view, occupied, player.position if player != null else Vector2.ZERO)
 
 
 func _limit_camera() -> void:

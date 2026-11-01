@@ -170,7 +170,7 @@ func test_spread_on_screen_lifts_labels_the_edge_clamp_pushed_together() -> void
 	a.label_offset.x = 0.0
 	Interactable.spread_on_screen([a, b], view)
 	assert_false(a.drawn_label_rect(view).intersects(b.drawn_label_rect(view)), "drawn rects overlap")
-	assert_true(b.screen_lift < 0.0 or a.screen_lift < 0.0)
+	assert_true(b.screen_lift != 0.0 or a.screen_lift != 0.0 or a.label_covered or b.label_covered)
 	a.free()
 	b.free()
 
@@ -329,7 +329,7 @@ func test_spread_on_screen_moves_a_label_out_of_a_hud_rect() -> void:
 	var panel := a.drawn_label_rect(view).grow(4.0)
 	var occupied: Array[Rect2] = [panel]
 	Interactable.spread_on_screen([a], view, occupied)
-	assert_true(a.screen_lift < 0.0, "lifted")
+	assert_true(a.screen_lift != 0.0, "moved")
 	assert_false(a.drawn_label_rect(view).intersects(panel), "clear of the panel")
 	assert_false(a.label_covered)
 	a.free()

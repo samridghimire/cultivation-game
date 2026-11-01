@@ -277,36 +277,45 @@ func refresh_label_alpha(player_pos: Vector2) -> void:
 		_redraw_label()
 
 
-## Lifts labels (in order) whose screen-clamped rects overlap an earlier one; `view` is the visible
-## area in the nodes' parent coordinates. Redraws the labels that moved (WU-281).
-## `occupied` are HUD rects in the same coordinates; they count as already-placed labels (GFX-025).
-static func spread_on_screen(nodes: Array, view: Rect2, occupied: Array[Rect2] = []) -> void:
-	var placed: Array[Rect2] = occupied.duplicate()
+## Resolves label overlaps after the screen-edge clamp (WU-281, WU-421); `view` is the visible
+## area in the nodes' parent coordinates. Labels are ranked (highlighted, nearest to `player_pos`,
+## places before NPCs) and LabelLayout nudges or fades the lower-ranked ones. Redraws labels that changed.
+## `occupied` are HUD rects in the same coordinates; labels that cannot clear them are dimmed (GFX-025).
+static func spread_on_screen(nodes: Array, view: Rect2, occupied: Array[Rect2] = [], player_pos: Vector2 = Vector2.ZERO) -> void:
+	var shown: Array = []
+	var was_lift := {}
 	for node: Interactable in nodes:
-		if not node.label_drawn():
-			if node.screen_lift != 0.0:
-				node.screen_lift = 0.0
-				node._redraw_label()
-			continue
 		var before := node.screen_lift
+		was_lift[node] = before
 		node.screen_lift = 0.0
-		var rect := node.drawn_label_rect(view)
-		for _i in 6:
-			var hit := false
-			for other in placed:
-				if rect.intersects(other):
-					hit = true
-					break
-			if not hit:
-				break
-			node.screen_lift -= rect.size.y + 2.0
-			rect = node.drawn_label_rect(view)
-		var covered := false
-		for other in occupied:
-			covered = covered or rect.intersects(other)
-		placed.append(rect)
-		if node.screen_lift != before or node.label_covered != covered:
-			node.label_covered = covered
+		if node.label_drawn():
+			shown.append(node)
+		else:
+			if before != 0.0 or node.label_covered:
+				node.label_covered = false
+				node._redraw_label()
+	var ranked := shown.duplicate()
+	ranked.sort_custom(func(a: Interactable, b: Interactable) -> bool:
+		if a.highlighted != b.highlighted:
+			return a.highlighted
+		var an := a.get("npc_id") != null
+		var bn := b.get("npc_id") != null
+		if an != bn:
+			return not an
+		return a.position.distance_to(player_pos) < b.position.distance_to(player_pos))
+	var rects: Array[Rect2] = []
+	for node: Interactable in ranked:
+		rects.append(node.drawn_label_rect(view))
+	var result := LabelLayout.resolve(rects, view, occupied)
+	for i in ranked.size():
+		var node: Interactable = ranked[i]
+		var lift: float = result[i]["offset"]
+		var covered: bool = result[i]["faded"]
+		var prev: float = was_lift[node]
+		var changed: bool = lift != prev or covered != node.label_covered
+		node.screen_lift = lift
+		node.label_covered = covered
+		if changed:
 			node._redraw_label()
 
 
