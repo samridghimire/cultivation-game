@@ -2,6 +2,17 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-11-01 [GUIDE-205] The fair-fight hint names a winnable beast roaming here today, or one region away.
+- 2026-11-01 [QA-188] Balance baseline refreshed after the village data changes (part 3 of 3).
+- 2026-11-01 [WU-427] Herbs, mushrooms and ore lie on the map to pick up as you walk past.
+- 2026-11-01 [WU-428] The world map shows each region's weather, open market stalls and roaming beasts today.
+- 2026-11-01 [FORAGE-001] Each region has a few free pickups every day (core).
+- 2026-11-01 [MARKET-005] Hints say when a market stall opens next, and which fish only bite in the rain.
+- 2026-11-01 [GFX-047] Streams flow, ponds shimmer and rain rings the water.
+- 2026-11-01 [C-289] Hunted beasts drop meat; two new home meals cook it.
+- 2026-11-01 [GFX-046] Jetties sit on their ponds, the marsh has dead trees, the bog looks wet instead of dirty.
+- 2026-11-01 [CAL-004] Rent and request reminders always fire, and say what is due.
+- 2026-11-01 [WU-426] Bold beasts really charge you, and beasts no longer stack on each other.
 - 2026-11-01 [C-283] Every fishing place has a fish that only bites in the rain, plus a Loach Porridge home meal.
 - 2026-11-01 [WU-425] The village book has a Hunts page for the beasts you have hunted.
 - 2026-11-01 [GFX-045] Ponds have shores, reeds and highlights, streams have banks and stones, fishing places sit on real jetties.

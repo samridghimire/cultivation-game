@@ -2,6 +2,19 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-11-01 (planner, 18:15 UTC)
+- 11 tasks landed (WU-426/427/428, GFX-046/047, CAL-004, MARKET-005, FORAGE-001, GUIDE-205, C-289, QA-188 part 3).
+  QA-188 refreshed the whole balance baseline (drift = rng shift from village data). Review 8711586..de28f82: notes only;
+  its notes are now WU-429 (water z, fleeing beasts over scenery, double colon) and C-290 (the gentle ape is skinned).
+  Live claims: WILD-005 (18:06), MISSION-001 (14:30, expires ~18:30).
+- Planner shots (`--region=qingshi_village|withered_bone_marsh|misty_forest`, 1280x800; the shot is
+  `user://screenshots/first_hour/hud_arrival.png`): Next steps card ends mid-sentence ("(Sold at Wandering") -> WU-429;
+  Misty jetty crosses the road, vertical jetties look like poles, black blots under marsh dead trees, pickups invisible ->
+  GFX-049 (spec file); ape drawn as the plain quadruped -> GFX-050.
+- New systems: GUIDE-206 (HUD names where), COOK-001 (eat before you fight), MARKET-006, WILD-006 (great beast weekly, spec
+  file) -> WU-430 + C-291, GOAL-006. QA-190 sim picks forage.
+- Next planner: view WU-429/GFX-049/GFX-050 shots when they land; read QA-189/QA-190 numbers.
+
 ## State on 2026-11-01 (planner, 12:10 UTC)
 - 15 tasks landed (WU-422/423/424/425, GFX-044/045, WILD-002/003/004, CAL-003, MARKET-004, C-283/285/287, QA-188 part 2).
   Review 3508d33..8711586 fixed WILD-003 inline (only non-lethal beast quarry roams), nothing filed. MISSION-001's claim
