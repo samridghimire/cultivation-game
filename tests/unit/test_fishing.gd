@@ -127,6 +127,8 @@ func test_missing_hint_picks_first_uncaught_in_season_fish() -> void:
 	Fishing.record_catch(c, "mist_koi", 1)
 	assert_eq(Fishing.missing_hint(c, d, "misty_forest", "Summer"), "Lotus Bass bites here in summer.")
 	Fishing.record_catch(c, "lotus_bass", 1)
+	assert_eq(Fishing.missing_hint(c, d, "misty_forest", "Summer"), "Rain Bream bites here in summer.")  # C-283: weather is not considered by the hint
+	Fishing.record_catch(c, "rain_bream", 1)
 	assert_eq(Fishing.missing_hint(c, d, "misty_forest", "Summer"), "")
 	assert_eq(Fishing.missing_hint(c, d, "no_such_region", "Summer"), "")
 
@@ -227,3 +229,21 @@ func test_validate_weather_and_rules() -> void:
 	var errors: Array[String] = []
 	Fishing.validate_rules({"rain_extra_draws": 9}, errors)
 	assert_eq(errors.size(), 1)
+
+
+func test_every_fishing_place_has_a_rain_only_fish() -> void:  # C-283
+	var d := data()
+	var places := 0
+	for rid: String in d.regions:
+		var rain_ok: bool = d.regions[rid].get("weather", {}).values().any(func(w: Dictionary) -> bool: return w.has("rain"))
+		for place: Dictionary in d.regions[rid].get("places", []):
+			if String(place.get("type", "")) != "fishing":
+				continue
+			places += 1
+			var found := false
+			for e: Dictionary in place.get("catch_table", []):
+				if e.get("weather", []) == ["rain"]:
+					found = true
+			assert_true(found, "%s: no rain-only fish" % rid)
+			assert_true(rain_ok, "%s: rains never fall, so the rain fish is unreachable" % rid)
+	assert_eq(places, 5)
