@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 8711586
+Last reviewed commit: de28f82
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -1373,3 +1373,18 @@ Last reviewed commit: 8711586
   - Notes, not filed: CAL-003's own follow-up stands ("Tomorrow: field rent is due" can never fire because upcoming()
     lists rent only when paid_until > start); WU-424 should wire `engage_roamer(slot, true)` for bold beasts; taking a
     bounty while already in its region shows the quarry only from the next day (world adds roamers on day change only).
+- 2026-11-01 (reviewer, 3rd run): reviewed 8711586..de28f82 (WILD-004, MARKET-004, WU-424, GFX-045, WU-425, C-283,
+  WU-426, CAL-004, GFX-046, C-289, GFX-047; [PLAN]/[REVIEW] skipped). Main green (2989 tests). No BACKLOG/CHANGELOG
+  edits by workers; no SAVE_VERSION change (WILD-004's `hunt_log` defaults to {} in from_dict, save round-trip test
+  added); no binary assets (water, jetties and dead trees are code-drawn).
+  - All OK, nothing fixed or filed. WU-426 closes last run's notes (bold charge passes charged=true; the bounty quarry
+    spawns at once via roamers_changed); CAL-004 closes the "rent due tomorrow never fires" note. WU-425 hunt page keeps
+    gamepad focus (buttons + focus_entered detail). MARKET-004 conservatively skips market-day stalls in the gear,
+    no-healer and scroll hints (no today there), and checks seller_open where flags carry `_today`.
+  - Notes, not filed: (1) C-289 gives the Grave Guardian Ape ("tests your fists but never your life", the Fist Saint's
+    companion) a 25-stone Stone Ape Hide drop, so the gentle guardian is now skinned, and above the spec's 2-12 band; the
+    content worker may prefer a non-hide token (a shed tuft, a stone the ape leaves). C-289 also skipped the requested
+    village-sim before/after (QA-188/189 will see the small meat income). (2) WaterLife draws at z_index 3, above the
+    player and jetties (z 0), so stream dashes/ripples can paint over a player wading a pond or the jetty tip; cosmetic.
+    (3) Fleeing beasts clamp to map bounds but ignore houses/ponds, so they can run over scenery. (4) The village book's
+    hunt detail reads "Wild Boar: Spoils: Boar Hide, Boar Meat." (double colon), wording only.
