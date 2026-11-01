@@ -90,6 +90,35 @@ static func temper(c: CharacterData, data: GameData, enemy_id: String, override:
 	return "bold"
 
 
+## WILD-004: records a map beast beaten (hunt_log + the life stat).
+static func record_hunt(c: CharacterData, enemy_id: String) -> void:
+	c.hunt_log[enemy_id] = int(c.hunt_log.get(enemy_id, 0)) + 1
+	LifeStats.add(c, "beasts_hunted")
+
+
+## Every enemy any region's roamers list, sorted.
+static func huntable(data: GameData) -> PackedStringArray:
+	var seen := {}
+	for region: Dictionary in data.regions.values():
+		for e: Dictionary in region.get("roamers", {}).get("enemies", []):
+			seen[String(e["enemy"])] = true
+	var out := PackedStringArray(seen.keys())
+	out.sort()
+	return out
+
+
+## "Beasts hunted: 7 of 12 kinds", "" while the log is empty.
+static func log_summary(c: CharacterData, data: GameData) -> String:
+	if c.hunt_log.is_empty():
+		return ""
+	var all := huntable(data)
+	var known := 0
+	for id in all:
+		if c.hunt_log.has(id):
+			known += 1
+	return "Beasts hunted: %d of %d kinds" % [known, all.size()]
+
+
 static func _num(v: Variant) -> bool:
 	return v is float or v is int
 

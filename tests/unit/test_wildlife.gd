@@ -108,3 +108,19 @@ func test_temper_validation_and_carry() -> void:
 	_with(d, old)
 	for r in Wildlife.roamers(d, "misty_forest", 3, 0, {}):
 		assert_eq(r["temper"], "")
+
+
+func test_hunt_log_and_summary() -> void:
+	var d := _gdata()
+	var c := CharacterData.new()
+	assert_eq(Wildlife.log_summary(c, d), "")
+	Wildlife.record_hunt(c, "wild_boar")
+	Wildlife.record_hunt(c, "wild_boar")
+	assert_eq(int(c.hunt_log["wild_boar"]), 2)
+	assert_eq(LifeStats.get_stat(c, "beasts_hunted"), 2)
+	var all := Wildlife.huntable(d)
+	assert_true(all.has("wild_boar") and all.has("mist_fox"), "misty roamers are huntable")
+	assert_eq(Wildlife.log_summary(c, d), "Beasts hunted: 1 of %d kinds" % all.size())
+	var back := CharacterData.from_dict(c.to_dict())
+	assert_eq(int(back.hunt_log["wild_boar"]), 2)
+	assert_true(CharacterData.from_dict({}).hunt_log.is_empty(), "old saves load empty")

@@ -2787,6 +2787,17 @@ func test_engage_roamer() -> void:
 	assert_eq(int(GameClock.total_days), day_after, "refusals pass no time")
 
 
+func test_engage_roamer_records_hunt() -> void:
+	var gs := _game_state()
+	_start()
+	gs.current_region = "misty_forest"
+	var r: Dictionary = gs.roamers_here()[0]
+	var won: bool = gs.engage_roamer(int(r["slot"]))
+	var n := int(gs.player.hunt_log.get(String(r["enemy"]), 0))
+	assert_eq(n, 1 if won else 0, "only a win is logged")
+	assert_eq(LifeStats.get_stat(gs.player, "beasts_hunted"), n)
+
+
 func test_roamer_temper_and_charge() -> void:
 	var gs := _game_state()
 	_start()
