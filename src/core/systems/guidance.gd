@@ -710,11 +710,18 @@ static func _stall_ingredient_line(c: CharacterData, data: GameData, recipe: Dic
 
 ## GUIDE-073: the first merchant place in `region_id` that stocks `item_id`, or {}. Market-day stalls are skipped
 ## (MARKET-003: a closed stall is never pointed at as if it were open; see `timed_stall`).
-static func merchant_place(data: GameData, region_id: String, item_id: String) -> Dictionary:
+## MARKET-006: with `with_stall`, a stall that is the only seller comes back as a copy flagged `stall: true`.
+static func merchant_place(data: GameData, region_id: String, item_id: String, with_stall: bool = false) -> Dictionary:
 	var item: Dictionary = data.items.get(item_id, {})
 	for p: Dictionary in data.regions.get(region_id, {}).get("places", []):
 		if String(p.get("type", "")) == "merchant" and not p.has("open_days") and Items.merchant_sells(data, item, p.get("stock_tags", []), int(p.get("max_price", 0))):
 			return p
+	if with_stall:
+		var stall := timed_stall(data, region_id, item_id)
+		if not stall.is_empty():
+			var flagged := stall.duplicate()
+			flagged["stall"] = true
+			return flagged
 	return {}
 
 
@@ -744,7 +751,7 @@ static func _season_in(flags: Dictionary) -> String:
 
 
 static func merchant_price(c: CharacterData, data: GameData, region_id: String, item_id: String, season: String = "") -> int:
-	return _place_price(c, data, region_id, item_id, merchant_place(data, region_id, item_id), season)
+	return _place_price(c, data, region_id, item_id, merchant_place(data, region_id, item_id, true), season)
 
 
 static func _place_price(c: CharacterData, data: GameData, region_id: String, item_id: String, place: Dictionary, season: String = "") -> int:
@@ -936,7 +943,32 @@ static func _heal_source_entry(c: CharacterData, data: GameData, region_id: Stri
 	if not far_any.is_empty() and int(far_any["days"]) > 0:
 		var far_line := "the %s %s treats it for %d stones (you have %d)" % [far_any["result"], _far_where(c, data, region_id, far_any), cost, stones]
 		return {"text": far_line + _sell_gap_clause(c, data, region_id, flags, cost), "affordable": false}
-	return {"text": "", "affordable": false}
+	return {"text": _heal_stall_clause(c, data, region_id, injury_id, flags), "affordable": false}
+
+
+## MARKET-006: a market-day stall (here or on a nearby route) as the only seller of a cure: "the <stall> in <region>
+## sells <item> for N stones, next market day in N days" (", open today" on its day); "" without a known day.
+static func _heal_stall_clause(c: CharacterData, data: GameData, region_id: String, injury_id: String, flags: Dictionary) -> String:
+	var today := int(flags.get("_today", -1))
+	if today < 0:
+		return ""
+	var stones := c.item_count("spirit_stone")
+	var pick := func(r: String) -> String:
+		for p: Dictionary in data.regions.get(r, {}).get("places", []):
+			if String(p.get("type", "")) != "merchant" or not p.has("open_days"):
+				continue
+			for item_id: String in data.items:
+				if _heals(data, item_id, injury_id) and Items.merchant_sells(data, data.items[item_id], p.get("stock_tags", []), int(p.get("max_price", 0))) and _place_price(c, data, r, item_id, p, _season_in(flags)) <= stones:
+					return "%s|%s" % [p.get("display_name", "market stall"), item_id]
+		return ""
+	var far := nearest_selling(c, data, region_id, pick)
+	if far.is_empty():
+		return ""
+	var parts := String(far["result"]).split("|")
+	var place := _place_named(data, String(far["region_id"]), parts[0])
+	var price := _place_price(c, data, String(far["region_id"]), parts[1], place, _season_in(flags))
+	var where := "here" if int(far["days"]) == 0 else _far_where(c, data, region_id, far)
+	return "the %s %s sells %s for %d stones%s" % [parts[0], where, data.items[parts[1]].get("name", parts[1]), price, _market_when(place, today)]
 
 
 ## GUIDE-187: " Heal first: <Region> has no healer." when `c` is injured and `region_id` has neither a clinic
@@ -1660,8 +1692,14 @@ static func qi_pill_offer(c: CharacterData, data: GameData, region_id: String, f
 	var room := Cultivation.qi_to_bottleneck(c, data)
 	var best := {}
 	var best_ratio := 0.0
+	var stall_best := {}
+	var stall_ratio := 0.0
+	var today := int(flags.get("_today", -1))
 	for place: Dictionary in data.regions[region_id].get("places", []):
-		if String(place.get("type", "")) != "merchant" or not seller_open(place, flags):
+		if String(place.get("type", "")) != "merchant":
+			continue
+		var open := seller_open(place, flags)
+		if not open and today < 0:
 			continue
 		for item_id: String in data.items:
 			var item: Dictionary = data.items[item_id]
@@ -1669,9 +1707,17 @@ static func qi_pill_offer(c: CharacterData, data: GameData, region_id: String, f
 			if qi <= 0.0 or qi > room or not item_id.ends_with("_pill") or not Items.feeds_cultivation(data, item_id) or Items.realm_block(c, data, item_id) != "" or not Items.merchant_sells(data, item, place.get("stock_tags", []), int(place.get("max_price", 0))):
 				continue
 			var price := _place_price(c, data, region_id, item_id, place, _season_in(flags))
-			if price <= spare and qi / price > best_ratio:
+			if price > spare:
+				continue
+			if open and qi / price > best_ratio:
 				best_ratio = qi / price
 				best = {"item_id": item_id, "name": String(item["name"]), "merchant": String(place.get("display_name", "merchant")), "price": price, "qi": qi}
+			elif not open and qi / price > stall_ratio:
+				stall_ratio = qi / price
+				stall_best = {"item_id": item_id, "name": String(item["name"]), "merchant": String(place.get("display_name", "merchant")), "price": price, "qi": qi, "when": _market_when(place, today)}
+	# MARKET-006: a closed market-day stall as the only seller: still named, with its next market day.
+	if best.is_empty():
+		best = stall_best
 	if best.is_empty():
 		return {}
 	var count := mini(spare / int(best["price"]), int(room / float(best["qi"])))
@@ -2901,7 +2947,8 @@ static func _newcomer_hints(c: CharacterData, data: GameData, flags: Dictionary,
 		if out.is_empty() or not String(out[out.size() - 1]).begins_with("Use your"):
 			var offer := qi_pill_offer(c, data, region_id, flags)
 			if not offer.is_empty():
-				out.append("Buy %s with spare stones: the %s here sells them for %d stones, about %s of meditation each." % [Items.item_plural(data, String(offer["item_id"]), 2), offer["merchant"], offer["price"], Calendar.format_duration(int(offer["days"]))])
+				var stall_when := String(offer.get("when", ""))
+				out.append("Buy %s with spare stones: the %s here sells them for %d stones%s, about %s of meditation each." % [Items.item_plural(data, String(offer["item_id"]), 2), offer["merchant"], offer["price"], (" (" + stall_when.trim_prefix(", ") + ")") if stall_when != "" else "", Calendar.format_duration(int(offer["days"]))])
 	var fighting := first_combat_hint(c, data, region_id)
 	if fighting != "":
 		out.append(fighting)

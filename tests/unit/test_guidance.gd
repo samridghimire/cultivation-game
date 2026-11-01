@@ -5663,11 +5663,34 @@ func test_qi_pill_offer_follows_the_stall_days() -> void:
 			place = p
 	place["open_days"] = [10]
 	var closed_day := 5
-	assert_true(Guidance.qi_pill_offer(c, d, "qingshi_village", Guidance.with_season({}, closed_day)).is_empty(), "closed stall is no seller")
+	var closed_offer := Guidance.qi_pill_offer(c, d, "qingshi_village", Guidance.with_season({}, closed_day))
+	assert_true(String(closed_offer.get("when", "")).contains("next market day in"), "closed stall: named with its next market day")
+	assert_eq(String(Guidance.qi_pill_offer(c, d, "qingshi_village", Guidance.with_season({}, 9)).get("when", "")), "", "market day: no delay")
 	assert_true(Guidance.qi_pill_offer(c, d, "qingshi_village").is_empty(), "unknown day: not counted on")
 	assert_false(Guidance.qi_pill_offer(c, d, "qingshi_village", Guidance.with_season({}, 9)).is_empty(), "open on its market day")
 	place.erase("open_days")
 	assert_false(Guidance.qi_pill_offer(c, d, "qingshi_village").is_empty())
+
+
+## MARKET-006: a stall-only cure is named with its market day; the price matches the stall's shop.
+func test_heal_stall_and_price_follow_market_day() -> void:
+	var d := data()
+	var c := _fresh()
+	var stall := {"type": "merchant", "display_name": "Test Stall", "pos": [0, 0], "size": [10, 10], "open_days": [10], "stock_tags": ["burn_salve"]}
+	var places: Array = d.regions["misty_forest"]["places"]
+	places.append(stall)
+	c.add_item("spirit_stone", 5000)
+	var closed := Guidance._heal_stall_clause(c, d, "misty_forest", "scorched", Guidance.with_season({}, 5))
+	assert_true(closed.contains("Test Stall") and closed.contains("Burn Salve") and closed.contains("next market day in"), closed)
+	var open_line := Guidance._heal_stall_clause(c, d, "misty_forest", "scorched", Guidance.with_season({}, 9))
+	assert_true(open_line.contains("Test Stall") and open_line.contains("open today") and not open_line.contains("next market day"), open_line)
+	assert_eq(Guidance._heal_stall_clause(c, d, "misty_forest", "scorched", {}), "", "unknown day: silent")
+	var place := Guidance.merchant_place(d, "misty_forest", "burn_salve", true)
+	assert_true(place.get("stall", false), "sole-seller stall flagged")
+	assert_true(Guidance.merchant_place(d, "misty_forest", "burn_salve").is_empty(), "default skips stalls")
+	var shop_price := maxi(1, roundi(Reputation.buy_price(c, d, "burn_salve", "", 1.0, "") * Renown.buy_multiplier(c, d, "misty_forest")))
+	assert_eq(Guidance.merchant_price(c, d, "misty_forest", "burn_salve"), shop_price, "stall price counts")
+	places.erase(stall)
 
 
 func test_seller_open_rules() -> void:
