@@ -99,13 +99,32 @@ func test_beast_kind_by_id() -> void:
 	assert_eq(DuelStage.beast_kind("mist_wolf"), "wolf")
 	assert_eq(DuelStage.beast_kind("mist_python"), "snake")
 	assert_eq(DuelStage.beast_kind("azure_crane"), "bird")
-	assert_eq(DuelStage.beast_kind("flame_tailed_fox"), "wolf")
-	assert_eq(DuelStage.beast_kind("stone_ape"), "")
+	assert_eq(DuelStage.beast_kind("flame_tailed_fox"), "fox")
+	assert_eq(DuelStage.beast_kind("stone_ape"), "ape")
+	assert_eq(DuelStage.beast_kind("fog_antler_stag"), "deer")
+
+
+## GFX-050: every beast that roams a region has its own non-plain shape and a fur.
+func test_every_roamer_has_a_kind() -> void:
+	var f := FileAccess.open("res://data/regions.json", FileAccess.READ)
+	var regions: Dictionary = JSON.parse_string(f.get_as_text())
+	var seen := 0
+	for reg: Dictionary in regions.get("regions", []):
+		var roam: Dictionary = reg.get("roamers", {})
+		for r: Dictionary in roam.get("enemies", []):
+			seen += 1
+			var id := String(r["enemy"])
+			assert_true(DuelStage.beast_kind(id) != "", "%s has a beast kind" % id)
+	assert_true(seen > 0, "found roamers")
+	for kind in ["fox", "deer", "ape"]:
+		for i in 2:
+			var img := PixelFigure.beast_frame(Color("a8854f"), i, kind).get_image()
+			assert_eq(img.get_size(), Vector2i(24, 16))
 
 
 func test_beast_kinds_look_different_and_cache() -> void:
 	var fur := Color("8a8d92")
-	var kinds: Array[String] = ["", "wolf", "boar", "tiger", "snake", "bird"]
+	var kinds: Array[String] = ["", "wolf", "boar", "tiger", "snake", "bird", "fox", "deer", "ape"]
 	for a in kinds.size():
 		for b in range(a + 1, kinds.size()):
 			var ia := PixelFigure.beast_frame(fur, 0, kinds[a]).get_image()

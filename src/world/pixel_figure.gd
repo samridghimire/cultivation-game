@@ -187,7 +187,7 @@ const BEAST_SIZE := Vector2i(24, 16)
 
 
 ## GFX-028: kinds that are not the plain quadruped. Snake and bird are drawn from their own rows (same 24x16 frame);
-## wolf, boar and tiger edit the plain body (ears and tail, tusks and bristles, stripes) in `_beast_marks`.
+## wolf, boar, tiger, fox and deer edit the plain body (ears and tail, tusks and bristles, stripes, antlers); ape has its own rows in `_beast_marks`.
 const SNAKE_ROWS := [
 	"........................",
 	"........................",
@@ -216,7 +216,24 @@ const BIRD_ROWS := [
 	"........oofooffo.eoo....",
 	"........oo.oo.oo........",
 ]
-const BEAST_KINDS := ["wolf", "boar", "tiger", "snake", "bird"]
+## GFX-050: a hunched, upright ape with long arms; rows 10-11 swap per leg frame.
+const APE_ROWS := [
+	"..........oooo..........",
+	".........offffoo........",
+	"........offfffffoo......",
+	"..oooo..offfffefffo.....",
+	".offffooofffffffffo.....",
+	"offFFffffffffffooo......",
+	"offFFFFffffffffo........",
+	".offFFFFffffffo.........",
+	"..offFFfffffffo.........",
+	"...ooffffffffffo........",
+]
+const APE_LEGS := [
+	["....ofo.offfffo.ofo.....", "....ooo.ooo.ooo.ooo....."],
+	["...ofo..offfffo..ofo....", "...ooo..ooo.ooo..ooo...."],
+]
+const BEAST_KINDS := ["wolf", "boar", "tiger", "snake", "bird", "fox", "deer", "ape"]
 
 
 ## A generated 24x16 beast facing right (the foe mirrors it). `index` picks one of two leg frames;
@@ -231,6 +248,10 @@ static func beast_frame(fur: Color, index: int, kind: String = "") -> ImageTextu
 		var top := 4
 		if kind == "snake":
 			rows = SNAKE_ROWS.duplicate()
+			top = 3
+		elif kind == "ape":
+			rows = APE_ROWS.duplicate()
+			rows.append_array(APE_LEGS[i])
 			top = 3
 		elif kind == "bird":
 			rows = BIRD_ROWS.duplicate()
@@ -263,6 +284,24 @@ static func _beast_marks(img: Image, fur: Color, kind: String) -> void:
 			for x in range(4, 13):
 				img.set_pixelv(Vector2i(x, 6), fur.darkened(0.4))
 			for p in [Vector2i(22, 11), Vector2i(23, 10), Vector2i(21, 11)]:
+				img.set_pixelv(p, Color("f0e8d0"))
+		"fox":  # pointed ears, a big bushy tail with a pale tip
+			for p in [Vector2i(17, 3), Vector2i(17, 2), Vector2i(20, 3), Vector2i(20, 2), Vector2i(18, 3), Vector2i(19, 3)]:
+				img.set_pixelv(p, OUTLINE if p.x != 18 and p.x != 19 else fur)
+			for y in range(5, 10):
+				for x in range(0, 3):
+					img.set_pixel(x, y, fur if x > 0 else OUTLINE)
+			for p in [Vector2i(1, 5), Vector2i(1, 6), Vector2i(2, 5)]:
+				img.set_pixelv(p, Color("f0e8d0"))
+			img.set_pixelv(Vector2i(2, 4), OUTLINE)
+		"deer":  # antlers, a short pale tail and a pale belly
+			var antler := Color("c9b27a")
+			for p in [Vector2i(18, 0), Vector2i(18, 1), Vector2i(18, 2), Vector2i(17, 1), Vector2i(16, 0),
+					Vector2i(20, 1), Vector2i(21, 0), Vector2i(19, 2)]:
+				img.set_pixelv(p, antler)
+			for x in range(4, 13):
+				img.set_pixelv(Vector2i(x, 11), Color("e0d4b0"))
+			for p in [Vector2i(1, 8), Vector2i(2, 8), Vector2i(1, 9)]:
 				img.set_pixelv(p, Color("f0e8d0"))
 		"tiger":
 			for x in range(3, 14, 3):

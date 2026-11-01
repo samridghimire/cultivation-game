@@ -9,7 +9,9 @@ const LUNGE := 24.0
 const LUNGE_SECONDS := 0.12
 const FOE_ROBE := Color("3a2f3d")
 const FOE_SASH := Color("7a2a2a")
-const BEAST_FURS := {"wolf": Color("8a8d92"), "boar": Color("5a4636"), "tiger": Color("b5652a"), "fox": Color("b5652a")}
+const BEAST_FURS := {"wolf": Color("8a8d92"), "boar": Color("5a4636"), "tiger": Color("b5652a"), "fox": Color("c4702c"),
+	"stag": Color("a8854f"), "deer": Color("a8854f"), "elk": Color("a8854f"), "antler": Color("a8854f"),
+	"ape": Color("6e665a"), "python": Color("6b7040")}
 const FALLEN_DARKEN := 0.3
 const DEFAULT_FUR := Color("6b5a48")
 const STAGE_HEIGHT := 182.0
@@ -19,8 +21,9 @@ const FEET_INSET := 34.0
 const RIM_LIGHTEN := 0.45
 ## Enemy id keywords -> PixelFigure beast kind, checked in order (GFX-028).
 const BEAST_KEYWORDS := [
-	["wolf", "wolf"], ["fox", "wolf"], ["dog", "wolf"], ["hound", "wolf"],
+	["wolf", "wolf"], ["fox", "fox"], ["dog", "wolf"], ["hound", "wolf"],
 	["boar", "boar"], ["pig", "boar"],
+	["stag", "deer"], ["deer", "deer"], ["antler", "deer"], ["elk", "deer"], ["ape", "ape"], ["monkey", "ape"],
 	["tiger", "tiger"], ["leopard", "tiger"], ["cat", "tiger"],
 	["snake", "snake"], ["serpent", "snake"], ["python", "snake"], ["viper", "snake"],
 	["bird", "bird"], ["crow", "bird"], ["hawk", "bird"], ["crane", "bird"], ["eagle", "bird"], ["roc", "bird"], ["condor", "bird"],
