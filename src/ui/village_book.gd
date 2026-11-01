@@ -388,10 +388,14 @@ static func hunt_text(data: GameData, c: CharacterData, enemy_id: String) -> Str
 static func hunt_detail(data: GameData, c: CharacterData, enemy_id: String) -> String:
 	if not c.hunt_log.has(enemy_id):
 		return "Unhunted. It roams %s." % ", ".join(roams_in(data, enemy_id))
+	var nm := String(data.enemies[enemy_id].get("name", enemy_id))
+	var spoils := Wildlife.spoils_of(c, enemy_id)
+	if spoils.is_empty():
+		return "%s: spoils unknown." % nm
 	var names := PackedStringArray()
-	for item_id: String in data.enemies[enemy_id].get("rewards", {}).get("items", {}):
-		names.append(String(data.items.get(item_id, {}).get("name", item_id)))
-	return "%s: %s." % [String(data.enemies[enemy_id].get("name", enemy_id)), ("Spoils: " + ", ".join(names)) if not names.is_empty() else "no spoils"]
+	for item_id: String in spoils:
+		names.append("%s x%d" % [String(data.items.get(item_id, {}).get("name", item_id)), int(spoils[item_id])])
+	return "%s: Spoils: %s." % [nm, ", ".join(names)]
 
 
 func _build_hunts() -> void:

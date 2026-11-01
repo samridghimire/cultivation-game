@@ -177,4 +177,6 @@ func test_hunts_page_shows_hunted_and_hides_unhunted() -> void:
 	assert_true(hidden.begins_with("???"), hidden)
 	assert_false(hidden.contains(String(data().enemies[all[1]]["name"])))
 	assert_true(hidden.contains("roams"))
-	assert_true(VillageBook.hunt_detail(data(), c, all[0]).contains("Spoils") or VillageBook.hunt_detail(data(), c, all[0]).contains("no spoils"))
+	assert_true(VillageBook.hunt_detail(data(), c, all[0]).contains("spoils unknown"), "old save: no spoils recorded")
+	Wildlife.record_spoils(c, all[0], {"spirit_herb": 2})
+	assert_true(VillageBook.hunt_detail(data(), c, all[0]).contains("Spoils:"))

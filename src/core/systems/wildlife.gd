@@ -96,6 +96,31 @@ static func record_hunt(c: CharacterData, enemy_id: String) -> void:
 	LifeStats.add(c, "beasts_hunted")
 
 
+## WILD-005: adds what a win dropped (`gained`: item id -> count) to the hunt's spoils.
+static func record_spoils(c: CharacterData, enemy_id: String, gained: Dictionary) -> void:
+	if gained.is_empty():
+		return
+	var seen: Dictionary = c.hunt_spoils.get(enemy_id, {})
+	for item_id: String in gained:
+		seen[item_id] = int(seen.get(item_id, 0)) + int(gained[item_id])
+	c.hunt_spoils[enemy_id] = seen
+
+
+## Item id -> count of everything this beast has dropped for the player so far.
+static func spoils_of(c: CharacterData, enemy_id: String) -> Dictionary:
+	return c.hunt_spoils.get(enemy_id, {}).duplicate()
+
+
+## What `after` has more of than `before` (two inventories), item id -> count.
+static func inventory_gain(before: Dictionary, after: Dictionary) -> Dictionary:
+	var out := {}
+	for item_id: String in after:
+		var d := int(after[item_id]) - int(before.get(item_id, 0))
+		if d > 0:
+			out[item_id] = d
+	return out
+
+
 ## Every enemy any region's roamers list, sorted.
 static func huntable(data: GameData) -> PackedStringArray:
 	var seen := {}

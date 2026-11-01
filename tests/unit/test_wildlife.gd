@@ -126,6 +126,19 @@ func test_hunt_log_and_summary() -> void:
 	assert_true(CharacterData.from_dict({}).hunt_log.is_empty(), "old saves load empty")
 
 
+func test_hunt_spoils_record_and_round_trip() -> void:
+	var c := CharacterData.new()
+	assert_true(Wildlife.spoils_of(c, "wild_boar").is_empty())
+	var gain := Wildlife.inventory_gain({"a": 1, "b": 2}, {"a": 1, "b": 1, "c": 3})
+	assert_eq(gain, {"c": 3}, "only gains count")
+	Wildlife.record_spoils(c, "wild_boar", gain)
+	Wildlife.record_spoils(c, "wild_boar", {"c": 1, "d": 2})
+	assert_eq(Wildlife.spoils_of(c, "wild_boar"), {"c": 4, "d": 2})
+	var back := CharacterData.from_dict(c.to_dict())
+	assert_eq(Wildlife.spoils_of(back, "wild_boar"), {"c": 4, "d": 2})
+	assert_true(CharacterData.from_dict({"hunt_log": {"wild_boar": 1}}).hunt_spoils.is_empty(), "old save")
+
+
 ## C-289: every roamer beast drops an item; kitchen meats and meals validate; each meal is liked by an NPC.
 func test_roamer_spoils_and_meals() -> void:
 	var d := _gdata()

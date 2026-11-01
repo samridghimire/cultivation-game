@@ -166,6 +166,8 @@ var gather_xp: int = 0
 var herb_log: Dictionary = {}
 ## Hunting log (WILD-004): enemy id -> map beasts of that kind beaten.
 var hunt_log: Dictionary = {}
+## Spoils each map-beast win dropped (WILD-005): enemy id -> {item id: count}.
+var hunt_spoils: Dictionary = {}
 ## World day each generated villager last came to visit and shared tea with the player (WORLD-007): npc id -> day.
 var folk_visit_day: Dictionary = {}
 ## Friend asked to join today's fight (FOLK-005): {npc, day} ({} = none); and the day each was last asked.
@@ -293,6 +295,7 @@ func to_dict() -> Dictionary:
 		"fishing_xp": fishing_xp,
 		"catch_log": catch_log.duplicate(),
 		"hunt_log": hunt_log.duplicate(),
+		"hunt_spoils": hunt_spoils.duplicate(true),
 		"gather_xp": gather_xp,
 		"herb_log": herb_log.duplicate(),
 		"folk_visit_day": folk_visit_day.duplicate(),
@@ -442,6 +445,11 @@ static func from_dict(d: Dictionary) -> CharacterData:
 	c.fishing_xp = int(d.get("fishing_xp", 0))
 	c.catch_log = _int_values(d.get("catch_log", {}))
 	c.hunt_log = _int_values(d.get("hunt_log", {}))
+	var hs: Variant = d.get("hunt_spoils", {})
+	if hs is Dictionary:
+		for k: Variant in hs:
+			if hs[k] is Dictionary:
+				c.hunt_spoils[String(k)] = _int_values(hs[k])
 	c.gather_xp = int(d.get("gather_xp", 0))
 	c.herb_log = _int_values(d.get("herb_log", {}))
 	c.folk_visit_day = _int_values(d.get("folk_visit_day", {}))

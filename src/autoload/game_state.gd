@@ -3010,9 +3010,11 @@ func engage_roamer(slot: int, charged: bool = false) -> bool:
 		if charged:
 			EventBus.post("The %s charges you!" % String(data.enemies[String(r["enemy"])]["name"]), "combat")
 		var region := current_region
+		var before := player.inventory.duplicate()
 		var won := _fight_bounty(String(r["enemy"])) if slot == Wildlife.BOUNTY_SLOT else fight(String(r["enemy"]))
 		if won:
 			Wildlife.record_hunt(player, String(r["enemy"]))
+			Wildlife.record_spoils(player, String(r["enemy"]), Wildlife.inventory_gain(before, player.inventory))
 		# The fight may have taken days: the beast is gone for the day you come back to.
 		Wildlife.mark_down(world_flags, region, slot, GameClock.total_days)
 		EventBus.roamers_changed.emit()

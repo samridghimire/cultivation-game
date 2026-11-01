@@ -2796,6 +2796,8 @@ func test_engage_roamer_records_hunt() -> void:
 	var n := int(gs.player.hunt_log.get(String(r["enemy"]), 0))
 	assert_eq(n, 1 if won else 0, "only a win is logged")
 	assert_eq(LifeStats.get_stat(gs.player, "beasts_hunted"), n)
+	if not won:
+		assert_true(Wildlife.spoils_of(gs.player, String(r["enemy"])).is_empty(), "a loss records no spoils")
 
 
 func test_roamer_temper_and_charge() -> void:
