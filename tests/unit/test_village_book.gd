@@ -143,7 +143,7 @@ func test_people_page_cards_and_unknown_tastes() -> void:
 	book.open()
 	book.set_page("people")
 	await _frames()
-	assert_eq(VillageBook.PAGES.size(), 3, "three pages")
+	assert_eq(VillageBook.PAGES.size(), 4, "four pages")
 	var grid := book.get("_grid") as GridContainer
 	assert_eq(grid.get_child_count(), 0, "nobody known yet")
 	assert_eq(book.get("_detail").text, "You have not got to know anyone here yet.")
@@ -162,3 +162,19 @@ func test_people_page_cards_and_unknown_tastes() -> void:
 	assert_true(VillageBook.people_detail(entry, gs.data).contains("not yet learned"), "unknown likes worded")
 	book.queue_free()
 	await _frames()
+
+
+func test_hunts_page_shows_hunted_and_hides_unhunted() -> void:
+	var c := new_character()
+	var all := Wildlife.huntable(data())
+	assert_true(all.size() >= 2)
+	Wildlife.record_hunt(c, all[0])
+	Wildlife.record_hunt(c, all[0])
+	var name0 := String(data().enemies[all[0]]["name"])
+	assert_true(VillageBook.hunt_text(data(), c, all[0]).contains(name0))
+	assert_true(VillageBook.hunt_text(data(), c, all[0]).contains("hunted 2"))
+	var hidden := VillageBook.hunt_text(data(), c, all[1])
+	assert_true(hidden.begins_with("???"), hidden)
+	assert_false(hidden.contains(String(data().enemies[all[1]]["name"])))
+	assert_true(hidden.contains("roams"))
+	assert_true(VillageBook.hunt_detail(data(), c, all[0]).contains("Spoils") or VillageBook.hunt_detail(data(), c, all[0]).contains("no spoils"))

@@ -7,7 +7,7 @@ extends PanelContainer
 signal closed
 
 const COLUMNS := 6
-const PAGES: Array[String] = ["fish", "herbs", "people"]
+const PAGES: Array[String] = ["fish", "hunts", "herbs", "people"]
 const PEOPLE_COLUMNS := 3
 const CARD_SIZE := Vector2(320, 120)
 const NPC_SCRIPT := preload("res://src/world/interactables/npc.gd")
@@ -93,6 +93,8 @@ func set_page(page: String) -> void:
 
 ## The id list of the current page.
 func page_ids() -> PackedStringArray:
+	if _page == "hunts":
+		return Wildlife.huntable(GameState.data)
 	if _page == "people":
 		var ids: PackedStringArray = []
 		for e in GameState.people_entries():
@@ -210,6 +212,9 @@ func _build() -> void:
 	_detail.text = ""
 	if _page == "people":
 		_build_people()
+		return
+	if _page == "hunts":
+		_build_hunts()
 		return
 	_grid.columns = COLUMNS
 	var herbs := _page == "herbs"
@@ -358,3 +363,53 @@ static func people_detail(e: Dictionary, data: GameData) -> String:
 	if not dislikes.is_empty():
 		parts.append("Dislikes: %s." % names.call(dislikes))
 	return " ".join(parts)
+
+
+## WU-425: the regions whose roamer rosters can field `enemy_id`, by name.
+static func roams_in(data: GameData, enemy_id: String) -> PackedStringArray:
+	var out := PackedStringArray()
+	for rid: String in data.regions:
+		for e: Dictionary in data.regions[rid].get("roamers", {}).get("enemies", []):
+			if String(e["enemy"]) == enemy_id:
+				out.append(String(data.regions[rid].get("name", rid)))
+				break
+	out.sort()
+	return out
+
+
+## Slot text: the beast and its count when hunted, "???" with where it roams otherwise.
+static func hunt_text(data: GameData, c: CharacterData, enemy_id: String) -> String:
+	if c.hunt_log.has(enemy_id):
+		return "%s\nhunted %d" % [String(data.enemies[enemy_id].get("name", enemy_id)), int(c.hunt_log[enemy_id])]
+	return "???\n(roams %s)" % ", ".join(roams_in(data, enemy_id))
+
+
+## Detail line: the spoils a hunted beast drops, or a hint for an unhunted one.
+static func hunt_detail(data: GameData, c: CharacterData, enemy_id: String) -> String:
+	if not c.hunt_log.has(enemy_id):
+		return "Unhunted. It roams %s." % ", ".join(roams_in(data, enemy_id))
+	var names := PackedStringArray()
+	for item_id: String in data.enemies[enemy_id].get("rewards", {}).get("items", {}):
+		names.append(String(data.items.get(item_id, {}).get("name", item_id)))
+	return "%s: %s." % [String(data.enemies[enemy_id].get("name", enemy_id)), ("Spoils: " + ", ".join(names)) if not names.is_empty() else "no spoils"]
+
+
+func _build_hunts() -> void:
+	var data: GameData = GameState.data
+	var c: CharacterData = GameState.player
+	_grid.columns = 4
+	var summary := Wildlife.log_summary(c, data)
+	_header.text = summary if summary != "" else "Beasts hunted: none yet"
+	for id in Wildlife.huntable(data):
+		var found := c.hunt_log.has(id)
+		var b := UIStyle.button(hunt_text(data, c, id), Callable())
+		b.name = id
+		b.custom_minimum_size = Vector2(230, 80)
+		b.add_theme_font_size_override("font_size", 15)
+		b.set_meta("found", found)
+		if not found:
+			b.modulate = DIM
+		var show := func() -> void: _detail.text = hunt_detail(data, c, id)
+		b.focus_entered.connect(show)
+		b.mouse_entered.connect(show)
+		_grid.add_child(b)
