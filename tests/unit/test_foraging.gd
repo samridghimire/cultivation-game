@@ -12,10 +12,10 @@ func test_deterministic_and_counted() -> void:
 	var seen := {}
 	for day in range(0, 40):
 		var n := Foraging.nodes(d, "qingshi_village", day, 0, {})
-		assert_true(n.size() >= 2 and n.size() <= 3)
+		assert_true(n.size() >= 1 and n.size() <= 3)
 		seen[str(n)] = true
 	assert_true(seen.size() > 1, "different days differ")
-	assert_true(Foraging.nodes(d, "misty_forest", 5, 0, {}).is_empty())
+	assert_true(Foraging.nodes(d, "misty_forest", 5, 0, {}).size() >= 2)
 
 
 func test_season_and_realm_filters() -> void:
@@ -54,3 +54,21 @@ func test_validation() -> void:
 		d.regions["qingshi_village"]["forage"] = bad
 		assert_false(Foraging.validate(d).is_empty())
 	d.regions["qingshi_village"]["forage"] = old
+
+
+## C-288: every region forages cheaply; no pickup sells above 12; wild regions gate a rare entry by realm.
+func test_every_region_forages_cheaply() -> void:
+	var d := _gdata()
+	for id: String in d.regions:
+		var def: Dictionary = d.regions[id].get("forage", {})
+		assert_false(def.is_empty(), "%s has forage" % id)
+		assert_true((def["items"] as Array).size() >= 3, "%s has 3+ entries" % id)
+		for e: Dictionary in def["items"]:
+			assert_true(Items.sell_price(d, String(e["item"])) <= 12, "%s %s sells <= 12" % [id, e["item"]])
+	assert_true((d.regions["fallen_star_market"]["forage"]["count"] as Array)[0] == 0)
+	for id in ["azure_peak", "withered_bone_marsh", "myriad_peaks_ridge"]:
+		var gated := false
+		for e: Dictionary in d.regions[id]["forage"]["items"]:
+			gated = gated or e.has("min_realm")
+		assert_true(gated, "%s has a realm-gated entry" % id)
+	assert_true(Foraging.validate(d).is_empty())
