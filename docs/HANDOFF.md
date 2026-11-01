@@ -2,6 +2,17 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-11-01 (planner, 18:10 UTC)
+- 11 tasks landed (GFX-041/042/043, WU-421, CAL-002, WILD-001, FOLK-011, FISH-006, MARKET-003, C-286, QA-184). Review
+  676c1b3..3508d33 fixed CAL-002 and FOLK-009 inline, nothing filed.
+- Planner shots (`screenshot_first_hour.gd -- --region=misty_forest` / `withered_bone_marsh`, 1280x800; each run overwrites
+  the same first_hour folder): Misty Forest washed pale, no beasts drawn yet; marsh has pale square mist quads, no visible dead
+  trees, reed grid -> GFX-044 (spec). GFX-045 pond edges + `jetty` kind (GFX-043 Follow-up).
+- QA-184 makes C-285 live (spec'd with the numbers). New systems: WILD-002 (spec, tempers -> WU-424), CAL-003 (spec, tomorrow's
+  reminders), WILD-003 (bounty quarry as a roamer), WILD-004 (hunt log -> WU-425), MARKET-004. QA-188 re-measures after
+  FISH-006/FOLK-011 (balance --check not run by either).
+- Next planner: view WU-423/GFX-044 shots when they land; read C-285's before/after and QA-188's balance result.
+
 ## Village screens look (QA-182)
 
 `tests/sim/screenshot_first_hour.gd` flags now combine (`-- --celebration --field --quarrel --cast` renders all four); `--quarrel` opens the QuarrelWindow through `quarrel_requested`, `--cast` the CastBar with the marker frozen at 0.45, and the `shop` shot is the ShopScreen itself (the merchant's list is `shop_menu`, only when a merchant node exists). Every shot except `hud_arrival` now waits out a fading banner (queued notices used to cover the modals).

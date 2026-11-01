@@ -2,6 +2,17 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-11-01 [GFX-043] Winter reads as snow: white ground, snow-capped fences and wells, frozen ponds, footprints.
+- 2026-11-01 [GFX-041] Every region grows its own trees: pines, willows, dead trees and bamboo.
+- 2026-11-01 [FISH-006] Rain brings more bites at the pond; nobody fishes in a storm.
+- 2026-11-01 [FOLK-011] Every villager has likes and dislikes for gifts.
+- 2026-11-01 [QA-184] The village sim measures whether tending the field pays (not yet: 0.79 stones a day vs fishing's 1.10).
+- 2026-11-01 [WU-421] Place and people labels in the world no longer pile on top of each other.
+- 2026-11-01 [C-286] Fishing spots in the marsh, on Azure Peak and on Myriad Peaks Ridge, with nine new fish.
+- 2026-11-01 [WILD-001] The game rolls visible wild beasts for each region every day (drawn on the map by WU-423).
+- 2026-11-01 [GFX-042] Regions have their own ground: paved market streets, mountain scree, marsh bog, forest leaf litter.
+- 2026-11-01 [CAL-002] The calendar knows your own dates: crops ripening, rent due, requests, secret realms.
+- 2026-11-01 [MARKET-003] Hints and item sources name a stall's market days.
 - 2026-11-01 [QA-186] Village look checked in screenshots; the village sim measures fishing at ~1.1 stones a day.
 - 2026-10-31 [WU-420] The village book has a People page: who you know, their hearts, birthdays and tastes.
 - 2026-10-31 [WU-419] A village calendar (Y) shows market days, birthdays, festivals and the seasons.
