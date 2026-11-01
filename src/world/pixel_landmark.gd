@@ -24,12 +24,46 @@ static func pixel_size(kind: String, size: Vector2) -> Vector2i:
 
 
 ## `tint` is the pond's water colour; other kinds ignore it.
-static func texture(kind: String, size: Vector2, tint: Color = Color("3f7fa8")) -> ImageTexture:
+static func texture(kind: String, size: Vector2, tint: Color = Color("3f7fa8"), frozen: bool = false) -> ImageTexture:
 	var px := pixel_size(kind, size)
+	if frozen and kind == "pond":
+		return frozen_pond(px, tint)
 	var key := "%s|%s|%s" % [kind, px, tint.to_html()]
 	if not _cache.has(key):
 		_cache[key] = PixelPlace.from_rows(rows(kind, size), tint)
 	return _cache[key]
+
+
+## GFX-043: a pond frozen over: pale blue-white ice with 2-3 crack lines; the outer 2 px keep the (icy) rim.
+static func frozen_pond(px: Vector2i, water: Color) -> ImageTexture:
+	var key := "frozen|%s|%s" % [px, water.to_html()]
+	if _cache.has(key):
+		return _cache[key]
+	var img := (texture("pond", Vector2(px) * float(Sprites.scale()), water).get_image().duplicate() as Image)
+	var w := img.get_width()
+	var h := img.get_height()
+	var ice := Color("e3f0fa")
+	var crack := Color("a9c6dc")
+	var src := img.duplicate() as Image
+	for y in h:
+		for x in w:
+			var c := src.get_pixel(x, y)
+			if c.a <= 0.0:
+				continue
+			var edge := x < 2 or y < 2 or x >= w - 2 or y >= h - 2 or src.get_pixel(maxi(x - 2, 0), y).a <= 0.0 or src.get_pixel(mini(x + 2, w - 1), y).a <= 0.0 or src.get_pixel(x, maxi(y - 2, 0)).a <= 0.0 or src.get_pixel(x, mini(y + 2, h - 1)).a <= 0.0
+			img.set_pixel(x, y, Color(c.lerp(Color("f2f8ff"), 0.6), c.a) if edge else Color(ice, c.a))
+	# Cracks: three short zig-zag lines from fixed fractions of the pond.
+	for k in 3:
+		var x := int(w * (0.25 + 0.25 * k))
+		var y := int(h * (0.3 + 0.1 * k))
+		for i in maxi(3, h / 3):
+			var cx := x + (i * (k + 1)) % 3 - 1 + i / 2 * (1 if k != 1 else -1)
+			var cy := y + i
+			if cx >= 2 and cy >= 2 and cx < w - 2 and cy < h - 2 and img.get_pixel(cx, cy).a > 0.0:
+				img.set_pixel(cx, cy, crack)
+	var tex := ImageTexture.create_from_image(img)
+	_cache[key] = tex
+	return tex
 
 
 ## Template rows (all of one length) for `kind` in a rect of `size`.

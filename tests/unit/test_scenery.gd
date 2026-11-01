@@ -206,3 +206,34 @@ func test_tree_kind_validation() -> void:
 	}
 	var errors := Scenery.validate(data)
 	assert_eq(errors.size(), 3, str(errors))
+func test_winter_tint_brighter_than_autumn() -> void:
+	var w := Calendar.season_tint("Winter")
+	var a := Calendar.season_tint("Autumn")
+	assert_true(w.get_luminance() > a.get_luminance())
+
+
+func test_frozen_pond_differs_from_summer() -> void:
+	var size := Vector2(160, 100)
+	var summer := PixelLandmark.texture("pond", size)
+	var ice := PixelLandmark.texture("pond", size, Color("3f7fa8"), true)
+	assert_true(summer.get_image().get_data() != ice.get_image().get_data())
+	assert_eq(summer.get_size(), ice.get_size())
+
+
+func test_winter_ground_is_bright_snow() -> void:
+	var tex := GroundTiles.ground_texture(Color("4d6b3c"), "qingshi_village", Vector2i(40, 40), false, "Winter")
+	var img := tex.get_image()
+	var sum := 0.0
+	for y in img.get_height():
+		for x in img.get_width():
+			sum += img.get_pixel(x, y).get_luminance()
+	var mean := sum / float(img.get_width() * img.get_height())
+	assert_true(mean * Calendar.season_tint("Winter").get_luminance() > 0.6, "mean %f" % mean)
+
+
+func test_footprints_cap_at_twelve() -> void:
+	var prints: Array = []
+	for i in 30:
+		prints = Scenery.add_footprint(prints, Vector2(i, 0))
+	assert_eq(prints.size(), 12)
+	assert_eq(prints[11], Vector2(29, 0))

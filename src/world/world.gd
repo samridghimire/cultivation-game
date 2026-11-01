@@ -62,6 +62,9 @@ var _timed_places: Dictionary = {}  # display_name -> node, places with open_day
 var _greeted: Dictionary = {}
 var _greet_bubble: Control = null
 var _greet_modal := false
+## GFX-043: snow-day footprints behind the player (world positions, oldest first, max 12).
+var _prints: Array = []
+var _last_print_pos := Vector2.INF
 
 
 func _ready() -> void:
@@ -538,6 +541,7 @@ func _build_celebration_lanterns(people: Array[CharacterData], stands: Dictionar
 func _process(_delta: float) -> void:
 	var origin := get_canvas_transform().origin
 	var moved := player != null and _last_label_pos.distance_to(player.position) > 8.0
+	_track_footprints()
 	if moved:
 		_last_label_pos = player.position
 		_check_greetings()
@@ -551,6 +555,25 @@ func _process(_delta: float) -> void:
 		if node is Interactable:
 			(node as Interactable).camera_moved()
 	_spread_on_screen()
+
+
+## GFX-043: on snow days drop a footprint every ~16 px of walking; the trail fades by age (redraws only on a new print).
+func _track_footprints() -> void:
+	if player == null or not Scenery.is_snowy(_season) or bool(_region.get("map", {}).get("no_snow", false)):
+		return
+	if _last_print_pos.distance_to(player.position) < 16.0:
+		return
+	_last_print_pos = player.position
+	_prints = Scenery.add_footprint(_prints, player.position + Vector2(0, 14))
+	queue_redraw()
+
+
+func _draw_footprints() -> void:
+	for i in _prints.size():
+		var a := 0.15 + 0.5 * float(i + 1) / _prints.size()
+		var p: Vector2 = _prints[i]
+		draw_rect(Rect2(p + Vector2(-4, 0), Vector2(3, 4)), Color(0.45, 0.52, 0.62, a))
+		draw_rect(Rect2(p + Vector2(1, 3), Vector2(3, 4)), Color(0.45, 0.52, 0.62, a))
 
 
 ## WU-401: a nearby generated villager who has not greeted today says their line in a bubble.
@@ -660,6 +683,7 @@ func _draw() -> void:
 			draw_texture_rect(ptex, Rect2(rect.position, Vector2(ptex.get_size()) * psc), false)
 	for lm: Dictionary in map.get("landmarks", []):
 		_draw_landmark(lm)
+	_draw_footprints()
 	for d in _decor:
 		_draw_decor(d)
 	var border_tile := Sprites.first(["border_" + rid, "border"])
@@ -697,7 +721,8 @@ func _draw_landmark(lm: Dictionary) -> void:
 		return
 	if PixelLandmark.supports(str(lm["kind"])):
 		var water := Color(str(lm["color"])) if lm.has("color") else Color("3f7fa8")
-		var ptex := PixelLandmark.texture(str(lm["kind"]), size, water)
+		var frozen := Scenery.is_snowy(_season) and not bool(_region.get("map", {}).get("no_snow", false))
+		var ptex := PixelLandmark.texture(str(lm["kind"]), size, water, frozen)
 		var px := Vector2(ptex.get_size()) * float(Sprites.scale())
 		var origin := Vector2(r.get_center().x - px.x / 2.0, r.end.y - px.y)
 		draw_texture_rect(ptex, Rect2(origin, px), false)
@@ -808,6 +833,15 @@ func _draw_season_overlay(kind: String, origin: Vector2, r: Rect2, pix: Vector2)
 		"stall":
 			if winter:
 				draw_rect(Rect2(origin + Vector2(0, 0), Vector2(40, 2) * sc), snow)
+		"fence":
+			if winter:
+				draw_rect(Rect2(origin, Vector2(pix.x, 1) * sc), snow)
+		"well":
+			if winter:
+				draw_rect(Rect2(origin + Vector2(pix.x * 0.2, 0) * sc, Vector2(pix.x * 0.6, 2) * sc), snow)
+		"jetty", "dock":
+			if winter:
+				draw_rect(Rect2(origin, Vector2(pix.x, 1) * sc), snow)
 		"pine":
 			if winter:
 				for i in 3:
@@ -820,7 +854,6 @@ func _draw_season_overlay(kind: String, origin: Vector2, r: Rect2, pix: Vector2)
 				for k in 33:
 					var a := TAU * k / 32.0
 					pts.append(r.get_center() + Vector2(cos(a) * r.size.x / 2.0, sin(a) * r.size.y / 2.0))
-				draw_colored_polygon(pts, Color(0.85, 0.93, 1.0, 0.3))
 				draw_polyline(pts, Color(0.92, 0.97, 1.0, 0.9), 3.0)
 		"field":
 			var crop := Scenery.crop_color(_season)

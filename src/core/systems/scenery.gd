@@ -256,6 +256,15 @@ static func crop_color(season: String) -> Color:
 	return Color(String(CROP_COLORS.get(season, "4f9a3a")))
 
 
+## GFX-043: the newest footprint list: `prints` plus `pos`, oldest dropped beyond `cap` (default 12).
+static func add_footprint(prints: Array, pos: Vector2, cap: int = 12) -> Array:
+	var out := prints.duplicate()
+	out.append(pos)
+	while out.size() > cap:
+		out.remove_at(0)
+	return out
+
+
 ## True when roofs, pines and ponds carry snow or ice.
 static func is_snowy(season: String) -> bool:
 	return season == "Winter"

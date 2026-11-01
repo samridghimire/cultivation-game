@@ -241,7 +241,7 @@ static func _apply_season(img: Image, rid: String, season: String) -> void:
 						img.set_pixel(x + 1, y, leaf)
 		"Winter":
 			var summer := img.duplicate() as Image
-			_tint_image(img, SNOW, 0.55)
+			_tint_image(img, SNOW, 0.7)
 			for cy in ceili(float(h) / SIZE):
 				for cx in ceili(float(w) / SIZE):
 					var roll := absi(hash("%s|%d|%d|winter" % [rid, cx, cy]))
