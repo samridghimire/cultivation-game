@@ -160,3 +160,71 @@ func test_roamer_spoils_and_meals() -> void:
 	for meal: String in ["boar_roast", "venison_broth"]:
 		assert_true(d.items.has(meal))
 		assert_true(liked.has(meal), "%s liked" % meal)
+
+
+## WILD-006: the great beast.
+func _player(realm: int = 0) -> CharacterData:
+	var c := CharacterData.new()
+	c.realm_index = realm
+	return c
+
+
+func test_great_day_stable_and_in_range() -> void:
+	for id in ["misty_forest", "azure_peak", "x"]:
+		var g := Wildlife.great_day(id, {})
+		assert_true(g >= 0 and g <= 6)
+		assert_eq(g, Wildlife.great_day(id, {}))
+	assert_eq(Wildlife.great_day("misty_forest", {"weekday": 5}), 5)
+
+
+func test_great_roamer_only_on_its_weekday() -> void:
+	var d := _gdata()
+	var c := _player()
+	var def: Dictionary = d.regions["misty_forest"]["roamers"]["great"]
+	var wd := Wildlife.great_day("misty_forest", def)
+	var seen := 0
+	for day in range(0, 14):
+		var g := Wildlife.great_roamer(c, d, "misty_forest", day, {})
+		assert_eq(not g.is_empty(), day % 7 == wd)
+		if not g.is_empty():
+			seen += 1
+			assert_eq(int(g["slot"]), Wildlife.GREAT_SLOT)
+			assert_eq(g["enemy"], def["enemy"])
+	assert_eq(seen, 2)
+	var flags := {}
+	Wildlife.mark_down(flags, "misty_forest", Wildlife.GREAT_SLOT, wd)
+	assert_true(Wildlife.great_roamer(c, d, "misty_forest", wd, flags).is_empty(), "down today")
+	assert_false(Wildlife.great_roamer(c, d, "misty_forest", wd + 7, flags).is_empty(), "back next week")
+	assert_true(Wildlife.great_roamer(c, d, "qingshi_village", wd, {}).is_empty())
+
+
+func test_great_season_and_realm_gates() -> void:
+	var d := _gdata()
+	var roamers: Dictionary = d.regions["misty_forest"]["roamers"]
+	var old: Dictionary = roamers["great"]
+	roamers["great"] = {"enemy": "fog_antler_stag", "weekday": 0, "seasons": ["winter"], "min_realm": "foundation_establishment"}
+	assert_true(Wildlife.great_roamer(_player(0), d, "misty_forest", 280, {}).is_empty(), "below realm")
+	assert_false(Wildlife.great_roamer(_player(3), d, "misty_forest", 280, {}).is_empty())
+	assert_true(Wildlife.great_roamer(_player(3), d, "misty_forest", 0, {}).is_empty(), "out of season")
+	var nxt := Wildlife.next_great_day(d, "misty_forest", 0, 3)
+	assert_true(nxt >= 0 and nxt % 7 == 0 and Calendar.season_of(nxt) == "Winter" or Calendar.season_of(nxt) == "winter")
+	roamers["great"] = old
+
+
+func test_next_great_day() -> void:
+	var d := _gdata()
+	var nxt := Wildlife.next_great_day(d, "misty_forest", 10, 0)
+	assert_true(nxt >= 10 and nxt < 17)
+	assert_false(Wildlife.great_roamer(_player(), d, "misty_forest", nxt, {}).is_empty())
+	assert_eq(Wildlife.next_great_day(d, "qingshi_village", 0, 0), -1)
+
+
+func test_validate_rejects_bad_great() -> void:
+	var d := _gdata()
+	var roamers: Dictionary = d.regions["misty_forest"]["roamers"]
+	var old: Dictionary = roamers["great"]
+	for bad in [{"enemy": "stone_ape"}, {"enemy": "salt_road_captain"}, {"enemy": "nope"}, {"enemy": "fog_antler_stag", "weekday": 7}]:
+		roamers["great"] = bad
+		assert_false(Wildlife.validate(d).is_empty(), str(bad))
+	roamers["great"] = old
+	assert_true(Wildlife.validate(d).is_empty())

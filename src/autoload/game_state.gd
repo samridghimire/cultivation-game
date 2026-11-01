@@ -2957,9 +2957,13 @@ func festival_activity(event_id: String) -> void:
 ## Today's visible roaming beasts in the current region (WILD-001): [{slot, enemy}].
 func roamers_here() -> Array[Dictionary]:
 	var out := Wildlife.roamers(data, current_region, GameClock.total_days, player.realm_index, world_flags)
+	var great := Wildlife.great_roamer(player, data, current_region, GameClock.total_days, world_flags)
 	var hunted := Wildlife.bounty_roamer(player, data, current_region, GameClock.total_days, world_flags)
-	if not hunted.is_empty():
+	# A great beast that is also the bounty quarry shows once (the great entry wins).
+	if not hunted.is_empty() and not (not great.is_empty() and great["enemy"] == hunted["enemy"]):
 		out.append(hunted)
+	if not great.is_empty():
+		out.append(great)
 	return out
 
 
@@ -3017,12 +3021,20 @@ func engage_roamer(slot: int, charged: bool = false) -> bool:
 		var before := player.inventory.duplicate()
 		var spoils := {}
 		var bounty := slot == Wildlife.BOUNTY_SLOT
+		var great := slot == Wildlife.GREAT_SLOT
 		var won := _fight_bounty(String(r["enemy"]), spoils) if bounty else fight(String(r["enemy"]))
 		if won:
 			Wildlife.record_hunt(player, String(r["enemy"]))
 			# The bounty's pay is not the beast's spoils (REVIEW of WILD-005).
 			if not bounty:
 				spoils = Wildlife.inventory_gain(before, player.inventory)
+			if great:
+				# WILD-006: a great beast's normal spoils, twice over.
+				for item_id: String in spoils:
+					player.add_item(item_id, int(spoils[item_id]))
+					spoils[item_id] = int(spoils[item_id]) * 2
+				LifeStats.add(player, "great_beasts")
+				EventBus.post("The great %s's spoils come twice over." % String(data.enemies[String(r["enemy"])]["name"]), "progress")
 			Wildlife.record_spoils(player, String(r["enemy"]), spoils)
 		# The fight may have taken days: the beast is gone for the day you come back to.
 		Wildlife.mark_down(world_flags, region, slot, GameClock.total_days)

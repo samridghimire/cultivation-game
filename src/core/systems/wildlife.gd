@@ -6,6 +6,8 @@ extends RefCounted
 
 const MAX_COUNT := 6
 const BOUNTY_SLOT := 100
+const GREAT_SLOT := 101
+const GREAT_LOOKAHEAD := 400
 const TEMPERS: Array[String] = ["flees", "wary", "bold"]
 
 
@@ -61,6 +63,47 @@ static func bounty_roamer(c: CharacterData, data: GameData, region_id: String, d
 	if Exploration.should_evade(c, data, enemy_id):
 		return {}
 	return {"slot": BOUNTY_SLOT, "enemy": enemy_id, "temper": "bold"}
+
+
+## WILD-006: the weekday (0-6) a region's great beast walks: `def.weekday`, else a stable hash of the region id.
+static func great_day(region_id: String, def: Dictionary) -> int:
+	if def.has("weekday"):
+		return posmod(int(def["weekday"]), 7)
+	return posmod(hash(region_id), 7)
+
+
+static func _great_def(data: GameData, region_id: String) -> Dictionary:
+	return data.regions.get(region_id, {}).get("roamers", {}).get("great", {})
+
+
+## True when the region's great beast may walk on `day` for a player at `realm_index` (weekday, season, realm).
+static func _great_walks(data: GameData, region_id: String, def: Dictionary, day: int, realm_index: int) -> bool:
+	if def.is_empty() or day % 7 != great_day(region_id, def):
+		return false
+	if not Exploration.in_season(def, Calendar.season_of(day)):
+		return false
+	return not (def.has("min_realm") and realm_index < data.realm_index_of(String(def["min_realm"])))
+
+
+## The region's great beast ({slot 101, enemy, temper "wary", great true}) on its weekday, unless it is down today. Pure.
+static func great_roamer(c: CharacterData, data: GameData, region_id: String, day: int, flags: Dictionary) -> Dictionary:
+	var def := _great_def(data, region_id)
+	if not _great_walks(data, region_id, def, day, c.realm_index):
+		return {}
+	if Effects.flag_active(flags, flag_key(region_id, GREAT_SLOT), day):
+		return {}
+	return {"slot": GREAT_SLOT, "enemy": String(def["enemy"]), "temper": "wary", "great": true}
+
+
+## The first day >= from_day the region's great beast walks (for a player at `realm_index`); -1 when it has none.
+static func next_great_day(data: GameData, region_id: String, from_day: int, realm_index: int) -> int:
+	var def := _great_def(data, region_id)
+	if def.is_empty():
+		return -1
+	for day in range(from_day, from_day + GREAT_LOOKAHEAD):
+		if _great_walks(data, region_id, def, day, realm_index):
+			return day
+	return -1
 
 
 static func flag_key(region_id: String, slot: int) -> String:
@@ -158,6 +201,21 @@ static func validate(data: GameData) -> PackedStringArray:
 		if not def is Dictionary:
 			errors.append("%s must be an object" % where)
 			continue
+		var great: Variant = def.get("great")
+		if great != null:
+			if not great is Dictionary or not data.enemies.has(String(great.get("enemy", ""))):
+				errors.append("%s great needs a known enemy" % where)
+			else:
+				var ge: Dictionary = data.enemies[great["enemy"]]
+				if not (ge.get("tags", []) as Array).has("beast") or bool(ge.get("lethal", false)):
+					errors.append("%s great enemy '%s' must be a non-lethal beast" % [where, great["enemy"]])
+				if great.has("weekday") and not (_num(great["weekday"]) and int(great["weekday"]) >= 0 and int(great["weekday"]) <= 6):
+					errors.append("%s great weekday must be 0..6" % where)
+				if great.has("min_realm") and data.realm_index_of(String(great["min_realm"])) < 0:
+					errors.append("%s great has unknown min_realm" % where)
+				for gs: Variant in great.get("seasons", []):
+					if not Exploration.SEASON_NAMES.has(String(gs)):
+						errors.append("%s great has unknown season '%s'" % [where, gs])
 		var cnt: Variant = def.get("count")
 		if not (cnt is Array and cnt.size() == 2 and _num(cnt[0]) and _num(cnt[1]) \
 				and int(cnt[0]) >= 0 and int(cnt[0]) <= int(cnt[1]) and int(cnt[1]) <= MAX_COUNT):

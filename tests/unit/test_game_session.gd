@@ -2847,3 +2847,47 @@ func test_pick_forage() -> void:
 	assert_false(gs.pick_forage(int(n["slot"])), "already picked")
 	assert_eq(gs.forage_here().size(), nodes.size() - 1)
 	assert_false(gs.pick_forage(99))
+
+
+func test_great_beast_pays_double_and_counts() -> void:
+	var gs := _game_state()
+	_start()
+	gs.current_region = "misty_forest"
+	gs.player.realm_index = 5
+	var def: Dictionary = gs.data.regions["misty_forest"]["roamers"]["great"]
+	var wd := Wildlife.great_day("misty_forest", def)
+	GameClock.total_days = 7 * 50 + wd
+	var great: Dictionary = {}
+	for r in gs.roamers_here():
+		if int(r["slot"]) == Wildlife.GREAT_SLOT:
+			great = r
+	assert_false(great.is_empty(), "the great beast walks today")
+	var before := int(gs.player.inventory.get("spirit_stone", 0))
+	var won: bool = gs.engage_roamer(Wildlife.GREAT_SLOT)
+	if won:
+		assert_eq(LifeStats.get_stat(gs.player, "great_beasts"), 1)
+		var normal := int(gs.data.enemies[String(great["enemy"])]["rewards"]["items"]["spirit_stone"])
+		assert_true(int(gs.player.inventory.get("spirit_stone", 0)) - before >= 2 * normal, "double stones")
+	else:
+		assert_eq(LifeStats.get_stat(gs.player, "great_beasts"), 0)
+
+
+func test_great_beast_calendar_and_reminder() -> void:
+	var gs := _game_state()
+	_start()
+	gs.current_region = "misty_forest"
+	var def: Dictionary = gs.data.regions["misty_forest"]["roamers"]["great"]
+	var wd := Wildlife.great_day("misty_forest", def)
+	var day := 7 * 50 + wd
+	gs.player.visited_regions.erase("misty_forest")
+	var kinds := func(es: Array[Dictionary]) -> int:
+		var n := 0
+		for e in es:
+			if e["kind"] == "great_beast":
+				n += 1
+		return n
+	assert_eq(kinds.call(VillageCalendar.upcoming(gs.data, {}, {}, [], "qingshi_village", day, 14, gs.player)), 0, "unexplored")
+	gs.player.visited_regions.append("misty_forest")
+	assert_eq(kinds.call(VillageCalendar.upcoming(gs.data, {}, {}, [], "qingshi_village", day, 14, gs.player)), 2)
+	var lines := VillageCalendar.reminders(gs.data, {}, {}, [], "misty_forest", day - 1, gs.player, {})
+	assert_true(" ".join(lines).contains("a great"), str(lines))

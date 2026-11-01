@@ -63,9 +63,21 @@ static func upcoming(data: GameData, npcs: Dictionary, favor: Dictionary, active
 		if day > 0 and Calendar.season_of(day) != Calendar.season_of(day - 1):
 			out.append({"day": day, "kind": "season", "text": "%s begins" % Calendar.season_of(day), "region": ""})
 	if c != null:
+		_great_beasts(out, data, c, start, end)
 		_own_dates(out, data, npcs, active_events, c, start, end)
 	out.sort_custom(_before)
 	return out
+
+
+## WILD-006: days a great beast walks an explored region, inside [start, end).
+static func _great_beasts(out: Array[Dictionary], data: GameData, c: CharacterData, start: int, end: int) -> void:
+	for rid: String in c.visited_regions:
+		var day := Wildlife.next_great_day(data, rid, start, c.realm_index)
+		while day >= 0 and day < end:
+			var beast := String(data.enemies[String(data.regions[rid]["roamers"]["great"]["enemy"])].get("name", "beast"))
+			out.append({"day": day, "kind": "great_beast", "region": rid,
+				"text": "A great %s walks %s" % [beast, Exploration.region_name(data, rid)]})
+			day = Wildlife.next_great_day(data, rid, day + 1, c.realm_index)
 
 
 ## CAL-002: the player's own dated things inside [start, end).
@@ -142,15 +154,29 @@ static func reminders(data: GameData, npcs: Dictionary, favor: Dictionary, activ
 	for e: Dictionary in upcoming(data, npcs, favor, active_events, region_id, today + 1, 1, c):
 		if out.size() >= MAX_REMINDERS:
 			break
+		if String(e["kind"]) == "great_beast" and not _near(data, region_id, String(e["region"])):
+			continue
 		var line := _reminder_line(data, npcs, flags, e)
 		if line != "":
 			out.append(line)
 	return out
 
 
+## True when `rid` is `here` or one direct route from it.
+static func _near(data: GameData, here: String, rid: String) -> bool:
+	if rid == here:
+		return true
+	for r: Dictionary in data.regions.get(here, {}).get("routes", []):
+		if String(r.get("to", "")) == rid:
+			return true
+	return false
+
+
 static func _reminder_line(data: GameData, npcs: Dictionary, flags: Dictionary, e: Dictionary) -> String:
 	var text := String(e["text"])
 	match String(e["kind"]):
+		"great_beast":
+			return "Tomorrow: %s." % text.replace("A great", "a great")
 		"market":
 			return "Tomorrow: %s." % text.replace("Market: ", "market day at ")
 		"birthday":
