@@ -191,3 +191,22 @@ func test_reminders_capped_at_three() -> void:
 		c.letter_requests.append({"npc_id": "nobody", "item": "spirit_herb", "count": 1, "until": 9, "favor": 1, "effects": {}})
 	var r := VillageCalendar.reminders(data(), {}, {}, [], "qingshi_village", 8, c)
 	assert_eq(r.size(), VillageCalendar.MAX_REMINDERS)
+
+
+## CAL-004: the day before rent lapses gets a reminder; the lapse day is a calendar entry.
+func test_rent_reminder_fires_day_before() -> void:
+	var c := _calendar_player()
+	c.field_plots["qingshi_village:Test"] = {"paid_until": 20, "crops": []}
+	var r := VillageCalendar.reminders(data(), {}, {}, [], "qingshi_village", 19, c)
+	assert_true(r.has("Tomorrow: field rent is due."))
+	assert_eq(_kinds(VillageCalendar.upcoming(data(), {}, {}, [], "qingshi_village", 20, 30, c), "rent").size(), 1)
+
+
+func test_request_reminder_wording() -> void:
+	var c := _calendar_player()
+	c.letter_requests.append({"npc_id": "nobody", "item": "spirit_herb", "count": 2, "until": 12, "favor": 1, "effects": {}})
+	var r := VillageCalendar.reminders(data(), {}, {}, [], "qingshi_village", 11, c)
+	assert_eq(r.size(), 1)
+	assert_true(r[0].begins_with("Tomorrow: a neighbour's request is due (2 "), r[0])
+	var e := _kinds(VillageCalendar.upcoming(data(), {}, {}, [], "qingshi_village", 0, 30, c), "request")
+	assert_true(String(e[0]["text"]).begins_with("A neighbour's ask is due"))

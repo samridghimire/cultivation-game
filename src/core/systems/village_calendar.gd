@@ -75,7 +75,7 @@ static func _own_dates(out: Array[Dictionary], data: GameData, npcs: Dictionary,
 		var place := FieldPlots.place_def(data, rid)
 		var entry: Dictionary = c.field_plots[plot_key]
 		var paid := int(entry.get("paid_until", 0))
-		if paid > start and paid < end:
+		if paid >= start and paid < end:
 			out.append({"day": paid, "kind": "rent", "region": rid, "text": "Field rent runs out"})
 		var seen := {}
 		for crop: Dictionary in entry.get("crops", []):
@@ -102,10 +102,11 @@ static func _own_dates(out: Array[Dictionary], data: GameData, npcs: Dictionary,
 		if until < start or until >= end:
 			continue
 		var asker: CharacterData = npcs.get(req.get("npc_id", ""))
-		var npc_name := asker.name if asker != null else "Someone"
+		var npc_name := asker.name if asker != null else "A neighbour"
 		var item_id := String(req.get("item", ""))
-		out.append({"day": until, "kind": "request", "region": "",
-			"text": "%s's ask is due: %d %s" % [npc_name, int(req.get("count", 1)), Items.item_plural(data, item_id, int(req.get("count", 1)))]})
+		var what := "%d %s" % [int(req.get("count", 1)), Items.item_plural(data, item_id, int(req.get("count", 1)))]
+		out.append({"day": until, "kind": "request", "region": "", "who": npc_name, "what": what,
+			"text": "%s's ask is due: %s" % [npc_name, what]})
 	for realm_id: String in data.secret_realms:
 		var def: Dictionary = data.secret_realms[realm_id]
 		if not SecretRealms.admits(c, data, def):
@@ -170,7 +171,10 @@ static func _reminder_line(data: GameData, npcs: Dictionary, flags: Dictionary, 
 		"rent":
 			return "Tomorrow: field rent is due."
 		"request":
-			return "Tomorrow: %s." % text
+			var who := String(e.get("who", ""))
+			if who == "A neighbour":
+				who = "a neighbour"
+			return "Tomorrow: %s's request is due (%s)." % [who, String(e.get("what", ""))]
 		"festival_month":
 			return ""
 		"season":
