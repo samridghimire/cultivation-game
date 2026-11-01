@@ -1144,7 +1144,12 @@ static func _everything_month(gs: Node, c: CharacterData, kinds: Dictionary, tod
 		var cheapest := ""
 		for item_id: String in c.inventory:
 			if Family.gift_value(gs.data, item_id) > 0 and Family.check_gift(c, gs.npcs.get(best_id), int(gs.npc_favor.get(best_id, 0)), item_id, gs.data) == "":
-				if cheapest == "" or int(gs.data.items[item_id].get("price", 0)) < int(gs.data.items[cheapest].get("price", 0)):
+				# QA-188: never hand over a disliked item; a liked one beats a cheaper neutral one.
+				var taste := Family.gift_taste(gs.data, best_id, item_id)
+				if taste < 0:
+					continue
+				var cheap_taste := Family.gift_taste(gs.data, best_id, cheapest) if cheapest != "" else -2
+				if cheapest == "" or taste > cheap_taste or (taste == cheap_taste and int(gs.data.items[item_id].get("price", 0)) < int(gs.data.items[cheapest].get("price", 0))):
 					cheapest = item_id
 		if best_id != "" and cheapest != "":
 			gs.give_gift(best_id, cheapest)
