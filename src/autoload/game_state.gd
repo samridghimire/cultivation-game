@@ -2959,6 +2959,32 @@ func roamers_here() -> Array[Dictionary]:
 	return out
 
 
+## Today's visible pickups in the current region (FORAGE-001): [{slot, item, amount}].
+func forage_here() -> Array[Dictionary]:
+	return Foraging.nodes(data, current_region, GameClock.total_days, player.realm_index, world_flags)
+
+
+## Pick up the forage in `slot`. Takes no time (a stoop, not an action).
+func pick_forage(slot: int) -> bool:
+	if not _can_act():
+		return false
+	for n in forage_here():
+		if int(n["slot"]) != slot:
+			continue
+		var item_id := String(n["item"])
+		var amount := int(n["amount"])
+		player.add_item(item_id, amount)
+		Foraging.mark_picked(world_flags, current_region, slot, GameClock.total_days)
+		if data.items.get(item_id, {}).get("tags", []).has("herb"):
+			player.gather_xp += 1
+		LifeStats.add(player, "foraged")
+		EventBus.post("You pick %d %s by the path." % [amount, Items.item_plural(data, item_id, amount)], "world")
+		EventBus.forage_changed.emit()
+		EventBus.player_changed.emit()
+		return true
+	return false
+
+
 ## The enemy of the active bounty when its beast roams the current region today, else "" (WILD-003).
 func bounty_roamer_enemy() -> String:
 	return String(Wildlife.bounty_roamer(player, data, current_region, GameClock.total_days, world_flags).get("enemy", ""))

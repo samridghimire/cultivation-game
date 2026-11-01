@@ -40,6 +40,8 @@ signal ui_modal_changed(is_open: bool)
 signal region_changed(region_id: String)
 ## The visible roaming beasts of the current region changed (WILD-001).
 signal roamers_changed
+## Today's pickups in the current region changed (FORAGE-001).
+signal forage_changed
 ## Emitted just before a fight is resolved, with the enemy def; the player is still
 ## in the state the fight starts from (QA-055: rated odds are read here, not after).
 signal combat_started(enemy: Dictionary)

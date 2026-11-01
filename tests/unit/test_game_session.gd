@@ -2826,3 +2826,22 @@ func test_tomorrow_reminder_posted_once() -> void:
 		if String(EventBus.history[i]["text"]).begins_with("Tomorrow: market day"):
 			n += 1
 	assert_eq(n, 1)
+
+
+func test_pick_forage() -> void:
+	var gs := _game_state()
+	_start()
+	gs.current_region = "qingshi_village"
+	var nodes: Array[Dictionary] = gs.forage_here()
+	assert_true(nodes.size() >= 2)
+	var n: Dictionary = nodes[0]
+	var item := String(n["item"])
+	var had: int = gs.player.item_count(item)
+	var day := int(GameClock.total_days)
+	assert_true(gs.pick_forage(int(n["slot"])))
+	assert_eq(gs.player.item_count(item), had + int(n["amount"]))
+	assert_eq(int(GameClock.total_days), day, "picking takes no time")
+	assert_eq(LifeStats.get_stat(gs.player, "foraged"), 1)
+	assert_false(gs.pick_forage(int(n["slot"])), "already picked")
+	assert_eq(gs.forage_here().size(), nodes.size() - 1)
+	assert_false(gs.pick_forage(99))

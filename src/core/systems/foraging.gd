@@ -1,0 +1,92 @@
+class_name Foraging
+extends RefCounted
+## FORAGE-001: things to pick up on the way. A region may list `forage` in regions.json; every day a
+## deterministic few pickups lie on its map. Picking one costs no time; it stays gone until the next day.
+
+const MAX_COUNT := 8
+
+
+## Today's pickups in a region: [{slot: int, item: String, amount: int}]. Same inputs give the same list.
+## The local rng is a pure derivation from (region, day), not game randomness.
+static func nodes(data: GameData, region_id: String, day: int, realm_index: int, flags: Dictionary) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	var def: Dictionary = data.regions.get(region_id, {}).get("forage", {})
+	if def.is_empty():
+		return out
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash("forage:%s:%d" % [region_id, day])
+	var season := Calendar.season_of(day)
+	var pool: Array[Dictionary] = []
+	var total := 0.0
+	for entry: Dictionary in def.get("items", []):
+		if not Exploration.in_season(entry, season):
+			continue
+		if entry.has("min_realm") and realm_index < data.realm_index_of(String(entry["min_realm"])):
+			continue
+		pool.append(entry)
+		total += float(entry["weight"])
+	if pool.is_empty():
+		return out
+	var count_range: Array = def.get("count", [0, 0])
+	var count := rng.randi_range(int(count_range[0]), int(count_range[1]))
+	for slot in count:
+		var roll := rng.randf() * total
+		var pick: Dictionary = pool[pool.size() - 1]
+		for entry in pool:
+			roll -= float(entry["weight"])
+			if roll < 0.0:
+				pick = entry
+				break
+		var lo := int(pick.get("min", 1))
+		var amount := rng.randi_range(lo, int(pick.get("max", lo)))
+		if not Effects.flag_active(flags, flag_key(region_id, slot), day):
+			out.append({"slot": slot, "item": String(pick["item"]), "amount": amount})
+	return out
+
+
+static func flag_key(region_id: String, slot: int) -> String:
+	return "forage_%s_%d" % [region_id, slot]
+
+
+## The pickup in `slot` is gone for the rest of today.
+static func mark_picked(flags: Dictionary, region_id: String, slot: int, day: int) -> void:
+	flags[flag_key(region_id, slot)] = {"until": day + 1}
+
+
+static func _num(v: Variant) -> bool:
+	return v is float or v is int
+
+
+static func validate(data: GameData) -> PackedStringArray:
+	var errors: PackedStringArray = []
+	for region: Dictionary in data.regions.values():
+		if not region.has("forage"):
+			continue
+		var where := "Region '%s' forage" % region["id"]
+		var def: Variant = region["forage"]
+		if not def is Dictionary:
+			errors.append("%s must be an object" % where)
+			continue
+		var cnt: Variant = def.get("count")
+		if not (cnt is Array and cnt.size() == 2 and _num(cnt[0]) and _num(cnt[1]) \
+				and int(cnt[0]) >= 0 and int(cnt[0]) <= int(cnt[1]) and int(cnt[1]) <= MAX_COUNT):
+			errors.append("%s count must be [min, max] within 0..%d" % [where, MAX_COUNT])
+		var entries: Variant = def.get("items")
+		if not (entries is Array and not entries.is_empty()):
+			errors.append("%s needs a non-empty items list" % where)
+			continue
+		for e: Variant in entries:
+			if not e is Dictionary or not data.items.has(String(e.get("item", ""))):
+				errors.append("%s has an unknown item" % where)
+				continue
+			if not (_num(e.get("weight")) and float(e["weight"]) > 0.0):
+				errors.append("%s item '%s' needs weight > 0" % [where, e["item"]])
+			var lo := int(e.get("min", 1))
+			if lo < 1 or int(e.get("max", lo)) < lo:
+				errors.append("%s item '%s' needs 1 <= min <= max" % [where, e["item"]])
+			for s: Variant in e.get("seasons", []):
+				if not Exploration.SEASON_NAMES.has(String(s)):
+					errors.append("%s item '%s' has unknown season '%s'" % [where, e["item"], s])
+			if e.has("min_realm") and data.realm_index_of(String(e["min_realm"])) < 0:
+				errors.append("%s item '%s' has unknown min_realm" % [where, e["item"]])
+	return errors
