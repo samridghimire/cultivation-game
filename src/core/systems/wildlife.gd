@@ -5,6 +5,7 @@ extends RefCounted
 ## been fought stays gone (timed world flag) until the next day.
 
 const MAX_COUNT := 6
+const BOUNTY_SLOT := 100
 const TEMPERS: Array[String] = ["flees", "wary", "bold"]
 
 
@@ -42,6 +43,23 @@ static func roamers(data: GameData, region_id: String, day: int, realm_index: in
 		if not Effects.flag_active(flags, flag_key(region_id, slot), day):
 			out.append({"slot": slot, "enemy": String(pick["enemy"]), "temper": String(pick.get("temper", ""))})
 	return out
+
+
+## WILD-003: the beast of the player's active bounty walks its region's map (slot 100), unless it is down
+## today or lethal and out of reach (exploration's evade rule). Returns {} when it does not.
+static func bounty_roamer(c: CharacterData, data: GameData, region_id: String, day: int, flags: Dictionary) -> Dictionary:
+	var b := Bounties.active(c, data, day)
+	if b.is_empty() or String(b["region"]) != region_id or not data.enemies.has(String(b["enemy"])):
+		return {}
+	var enemy_id := String(b["enemy"])
+	if Effects.flag_active(flags, flag_key(region_id, BOUNTY_SLOT), day):
+		return {}
+	var enemy: Dictionary = data.enemies[enemy_id]
+	if bool(enemy.get("lethal", false)) and Exploration.should_offer_flee(c, data, enemy_id):
+		return {}
+	if Exploration.should_evade(c, data, enemy_id):
+		return {}
+	return {"slot": BOUNTY_SLOT, "enemy": enemy_id, "temper": "bold"}
 
 
 static func flag_key(region_id: String, slot: int) -> String:

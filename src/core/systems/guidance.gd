@@ -4093,7 +4093,8 @@ static func _opportunity_entries(out: Array[Dictionary], c: CharacterData, data:
 		var hunt := Bounties.active(c, data, today)
 		if not hunt.is_empty():
 			var prey: String = data.enemies.get(String(hunt["enemy"]), {}).get("name", hunt["enemy"])
-			_add(out, "Opportunities", "Bounty: %s in %s (%d days left, %d stones)." % [prey, _region_name(data, String(hunt["region"])), int(hunt["until_day"]) - today, int(hunt["reward_stones"])], "normal")
+			var roams := " (it roams the %s map today)" % _region_name(data, String(hunt["region"])) if not Wildlife.bounty_roamer(c, data, String(hunt["region"]), today, flags).is_empty() else ""
+			_add(out, "Opportunities", "Bounty: %s in %s (%d days left, %d stones)%s." % [prey, _region_name(data, String(hunt["region"])), int(hunt["until_day"]) - today, int(hunt["reward_stones"]), roams], "normal")
 		var shown_herbs := 0
 		for h in Exploration.seasonal_highlights(data, Calendar.season_of(today)):
 			if shown_herbs >= SEASONAL_JOURNAL_MAX:

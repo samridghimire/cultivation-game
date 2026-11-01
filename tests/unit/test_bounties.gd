@@ -347,3 +347,84 @@ func test_black_ferry_ringleader_bounty_is_a_fair_hunt_for_the_upper_layers() ->
 		var odds := Combat.win_chance(f, data(), data().enemies["black_ferry_ringleader"])
 		print("C-228 odds stage index %d, Iron Fist L5: %.2f" % [stage, odds])
 		assert_true(odds >= 0.45 and odds <= 0.85, "odds %.2f at index %d" % [odds, stage])
+
+
+func _weakling(gs: Node) -> void:
+	var weak: Dictionary = gs.data.enemies["wild_boar"].duplicate(true)
+	weak.merge({"id": "t_weakling", "hp": -1000, "attack": -1000, "defense": -1000, "speed": -1000}, true)
+	gs.data.enemies["t_weakling"] = weak
+
+
+func test_wild_hunt_roams_only_with_active_bounty_in_region() -> void:
+	var gs := _gs()
+	_weakling(gs)
+	var c := _start_hunt(gs, "t_weakling")
+	var day := int(GameClock.total_days)
+	assert_true(Wildlife.bounty_roamer(c, gs.data, "misty_forest", day, {}).is_empty(), "no bounty, no roamer")
+	gs.take_bounty("t_bounty")
+	var r := Wildlife.bounty_roamer(c, gs.data, "misty_forest", day, {})
+	assert_eq(int(r["slot"]), 100)
+	assert_eq(String(r["enemy"]), "t_weakling")
+	assert_true(Wildlife.bounty_roamer(c, gs.data, "qingshi_village", day, {}).is_empty(), "other region")
+	var found := false
+	for x in gs.roamers_here():
+		found = found or int(x["slot"]) == 100
+	assert_true(found, "roamers_here lists the hunted beast")
+	_finish(gs)
+
+
+func test_wild_hunt_win_pays_once_and_clears() -> void:
+	var gs := _gs()
+	_weakling(gs)
+	var c := _start_hunt(gs, "t_weakling")
+	gs.take_bounty("t_bounty")
+	var stones := c.item_count("spirit_stone")
+	assert_true(gs.engage_roamer(100))
+	assert_true(c.bounty.is_empty())
+	assert_eq(c.item_count("spirit_stone"), stones + 25)
+	assert_eq(LifeStats.get_stat(c, "bounties_done"), 1)
+	for x in gs.roamers_here():
+		assert_true(int(x["slot"]) != 100, "gone after the win")
+	assert_false(gs.engage_roamer(100), "no second payout")
+	assert_eq(LifeStats.get_stat(c, "bounties_done"), 1)
+	_finish(gs)
+
+
+func test_wild_hunt_loss_keeps_bounty_and_beast_is_down() -> void:
+	var gs := _gs()
+	var strong: Dictionary = gs.data.enemies["wild_boar"].duplicate(true)
+	strong.merge({"id": "t_titan", "attack": 5000, "hp": 50000, "defense": 5000}, true)
+	gs.data.enemies["t_titan"] = strong
+	var c := _start_hunt(gs, "t_titan")
+	gs.take_bounty("t_bounty")
+	var won: bool = gs.engage_roamer(100)
+	assert_false(won)
+	if c.alive:
+		assert_eq(String(c.bounty.get("id", "")), "t_bounty", "bounty kept")
+		assert_eq(LifeStats.get_stat(c, "bounties_done"), 0, "nothing paid")
+		assert_true(Wildlife.bounty_roamer(c, gs.data, "misty_forest", int(GameClock.total_days), gs.world_flags).is_empty(), "down for the day")
+	_finish(gs)
+
+
+func test_wild_hunt_never_shows_a_deadly_lethal_target() -> void:
+	var gs := _gs()
+	var foe: Dictionary = gs.data.enemies["mist_wolf"].duplicate(true)
+	foe.merge({"id": "t_titan", "realm": "core_formation", "attack": 900, "hp": 9000, "lethal": true}, true)
+	gs.data.enemies["t_titan"] = foe
+	var c := _start_hunt(gs, "t_titan")
+	gs.take_bounty("t_bounty")
+	assert_true(Wildlife.bounty_roamer(c, gs.data, "misty_forest", int(GameClock.total_days), {}).is_empty())
+	_finish(gs)
+
+
+func test_wild_hunt_journal_note() -> void:
+	var gs := _gs()
+	_weakling(gs)
+	var c := _start_hunt(gs, "t_weakling")
+	gs.take_bounty("t_bounty")
+	var day := int(GameClock.total_days)
+	var lines := ""
+	for e: Dictionary in Guidance.journal(c, gs.data, gs.world_flags, day, "misty_forest"):
+		lines += String(e["text"]) + "\n"
+	assert_true(lines.contains("roams the"), lines)
+	_finish(gs)

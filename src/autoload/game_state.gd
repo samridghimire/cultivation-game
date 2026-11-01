@@ -850,6 +850,16 @@ func _hunt_bounty_foe(enemy_id: String) -> Dictionary:
 		EventBus.post("The %s is far beyond you. You lose the trail." % enemy_name, "warning")
 		_pass_time(1)
 		return {"event": "nothing"}
+	_fight_bounty(enemy_id)
+	if _can_act():
+		_pass_time(1)
+	return {"event": "fight"}
+
+
+## Fight the active bounty's foe and pay the bounty on a win (BOUNTY-001, WILD-003). The hunt is paid
+## even if it lapsed during the fight. Returns true if the player won and is still alive.
+func _fight_bounty(enemy_id: String) -> bool:
+	var enemy_name := String(data.enemies[enemy_id].get("name", enemy_id))
 	var bounty_id := String(player.bounty.get("id", ""))
 	_bounty_fight = true
 	var won := fight(enemy_id)
@@ -862,9 +872,7 @@ func _hunt_bounty_foe(enemy_id: String) -> Dictionary:
 		EventBus.bounty_claimed.emit(enemy_name, stones)
 		_gain_renown("bounty")
 		EventBus.player_changed.emit()
-	if _can_act():
-		_pass_time(1)
-	return {"event": "fight"}
+	return won
 
 
 ## Take a bounty from a board. Takes no time.
@@ -2942,7 +2950,16 @@ func festival_activity(event_id: String) -> void:
 
 ## Today's visible roaming beasts in the current region (WILD-001): [{slot, enemy}].
 func roamers_here() -> Array[Dictionary]:
-	return Wildlife.roamers(data, current_region, GameClock.total_days, player.realm_index, world_flags)
+	var out := Wildlife.roamers(data, current_region, GameClock.total_days, player.realm_index, world_flags)
+	var hunted := Wildlife.bounty_roamer(player, data, current_region, GameClock.total_days, world_flags)
+	if not hunted.is_empty():
+		out.append(hunted)
+	return out
+
+
+## The enemy of the active bounty when its beast roams the current region today, else "" (WILD-003).
+func bounty_roamer_enemy() -> String:
+	return String(Wildlife.bounty_roamer(player, data, current_region, GameClock.total_days, world_flags).get("enemy", ""))
 
 
 ## How the roamer in `slot` reacts to you (flees/wary/bold), "" for no such slot (WILD-002).
@@ -2965,7 +2982,7 @@ func engage_roamer(slot: int, charged: bool = false) -> bool:
 		if charged:
 			EventBus.post("The %s charges you!" % String(data.enemies[String(r["enemy"])]["name"]), "combat")
 		var region := current_region
-		var won := fight(String(r["enemy"]))
+		var won := _fight_bounty(String(r["enemy"])) if slot == Wildlife.BOUNTY_SLOT else fight(String(r["enemy"]))
 		# The fight may have taken days: the beast is gone for the day you come back to.
 		Wildlife.mark_down(world_flags, region, slot, GameClock.total_days)
 		EventBus.roamers_changed.emit()
