@@ -73,6 +73,11 @@ func get_options() -> Array[Dictionary]:
 	return []
 
 
+## WU-427: true when interacting acts at once (no menu), e.g. a forage pickup. Called when the interact key is pressed.
+func use_directly() -> bool:
+	return false
+
+
 ## The speaker's framed portrait in menus and dialogue (WU-408); null = no portrait column.
 func portrait_texture() -> Texture2D:
 	return null

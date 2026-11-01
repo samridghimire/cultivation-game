@@ -111,6 +111,8 @@ func _physics_process(_delta: float) -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if input_enabled and event.is_action_pressed("interact") and _target != null:
 		get_viewport().set_input_as_handled()
+		if _target.use_directly():  # WU-427: a pickup is used without a menu
+			return
 		EventBus.interaction_menu_requested.emit(_target)
 
 

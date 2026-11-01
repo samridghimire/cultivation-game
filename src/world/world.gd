@@ -86,6 +86,7 @@ func _ready() -> void:
 	_place_at_spawn_anchor()
 	_build_npcs()
 	_build_roamers()
+	_build_forage()
 	_build_bounds()
 	_build_landmark_bodies()
 	_limit_camera()
@@ -105,6 +106,7 @@ func _ready() -> void:
 		_greet_modal = is_open)
 	EventBus.region_changed.connect(_on_region_changed)
 	EventBus.roamers_changed.connect(_on_roamers_changed)
+	EventBus.forage_changed.connect(_build_forage)
 	get_tree().auto_accept_quit = false
 
 
@@ -119,6 +121,7 @@ func _build_season_tint() -> void:
 
 func _on_days_advanced(_days: int) -> void:
 	_build_roamers()
+	_build_forage()
 	_refresh_stalls()
 	_refresh_timed_places()
 	var season := Calendar.season_of(GameClock.total_days)
@@ -374,6 +377,52 @@ func _spawn_roamer(r: Dictionary, blocked: Array[Rect2], avoid: Array[Vector2]) 
 	node.map_bounds = map_size
 	add_child(node)
 	move_child(node, player.get_index())
+
+
+## WU-427: one pickup node per FORAGE-001 node of today. Spots are seeded per region and day, so a rebuild keeps
+## standing pickups where they were and only adds or drops the ones whose slot changed.
+func _build_forage() -> void:
+	if not GameState.has_session():
+		return
+	var nodes := GameState.forage_here()
+	var wanted := {}
+	for n: Dictionary in nodes:
+		wanted[int(n["slot"])] = true
+	var present := {}
+	for node in get_children():
+		if node is ForagePickup and not node.is_queued_for_deletion():
+			if wanted.has(node.slot) and not node.taken:
+				present[node.slot] = true
+			elif not node.taken:
+				node.queue_free()
+	if present.size() == nodes.size():
+		return
+	var blocked: Array[Rect2] = Scenery.blocked_rects(_region)
+	var paths: Array[Rect2] = []
+	for p: Array in _region.get("map", {}).get("paths", []):
+		paths.append(Rect2(float(p[0]), float(p[1]), float(p[2]), float(p[3])))
+		blocked.erase(paths[-1])
+	var trees: Array[Vector2] = []
+	for d in _decor:
+		if d["kind"] == "tree":
+			trees.append(d["pos"])
+	var avoid: Array[Vector2] = [_vec(_region.get("spawn", [map_size.x / 2.0, map_size.y / 2.0]))]
+	for node in get_children():
+		if node is Roamer and not node.is_queued_for_deletion():
+			avoid.append(node.home)
+	var slot_count := 0
+	for n: Dictionary in nodes:
+		slot_count = maxi(slot_count, int(n["slot"]) + 1)
+	var spots := ForagePickup.pick_spots(GameState.current_region, GameClock.total_days, slot_count,
+			map_size, blocked, paths, trees, avoid)
+	for n: Dictionary in nodes:
+		var slot := int(n["slot"])
+		if present.has(slot) or slot >= spots.size() or spots[slot].x < 0.0:
+			continue
+		var pickup := ForagePickup.new()
+		pickup.setup(slot, String(n["item"]), int(n["amount"]), spots[slot])
+		add_child(pickup)
+		move_child(pickup, player.get_index())
 
 
 ## An engaged beast fades away; the rest stay.
