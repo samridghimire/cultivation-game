@@ -210,7 +210,47 @@ static func jetty_layout(region: Dictionary, lm: Dictionary) -> Dictionary:
 		else:
 			var rim4 := c.x - half.x * t2
 			rect = Rect2(rim4 + JETTY_OVERLAP - long_side, y - short_side / 2.0, long_side, short_side)
-	return {"rect": rect, "vertical": vertical, "on_water": true, "toward_water": -1 if (vertical and delta.y >= 0.0) or (not vertical and delta.x >= 0.0) else 1}
+	var toward := -1 if (vertical and delta.y >= 0.0) or (not vertical and delta.x >= 0.0) else 1
+	var clipped := _clip_to_paths(region, rect, vertical, toward)
+	if clipped.size.x > 0.0:
+		rect = clipped
+	return {"rect": rect, "vertical": vertical, "on_water": true, "toward_water": toward}
+
+
+## GFX-049: a jetty never crosses a path. Its land end (opposite the water end) stops JETTY_PATH_GAP px before a
+## path it would enter, but stays at least JETTY_MIN_LEN long (overlapping the water more). Unchanged if no path is in the way.
+const JETTY_PATH_GAP := 6.0
+const JETTY_MIN_LEN := 28.0
+
+
+static func _clip_to_paths(region: Dictionary, rect: Rect2, vertical: bool, toward: int) -> Rect2:
+	var out := rect
+	for pr: Array in region.get("map", {}).get("paths", []):
+		var path := Rect2(float(pr[0]), float(pr[1]), float(pr[2]), float(pr[3]))
+		if not path.intersects(out):
+			continue
+		# toward < 0: the water end is the low (north/west) end, so the land end is the high one; else the reverse.
+		if vertical:
+			if toward < 0:
+				var end_y := minf(out.end.y, path.position.y - JETTY_PATH_GAP)
+				if path.position.y >= out.position.y:
+					out = Rect2(out.position.x, out.position.y, out.size.x, maxf(JETTY_MIN_LEN, end_y - out.position.y))
+			else:
+				var start_y := maxf(out.position.y, path.end.y + JETTY_PATH_GAP)
+				if path.end.y <= out.end.y:
+					var len := maxf(JETTY_MIN_LEN, out.end.y - start_y)
+					out = Rect2(out.position.x, out.end.y - len, out.size.x, len)
+		else:
+			if toward < 0:
+				var end_x := minf(out.end.x, path.position.x - JETTY_PATH_GAP)
+				if path.position.x >= out.position.x:
+					out = Rect2(out.position.x, out.position.y, maxf(JETTY_MIN_LEN, end_x - out.position.x), out.size.y)
+			else:
+				var start_x := maxf(out.position.x, path.end.x + JETTY_PATH_GAP)
+				if path.end.x <= out.end.x:
+					var len2 := maxf(JETTY_MIN_LEN, out.end.x - start_x)
+					out = Rect2(out.end.x - len2, out.position.y, len2, out.size.y)
+	return out
 
 
 static func is_clear(pos: Vector2, blocked: Array[Rect2], spots: Array[Vector2]) -> bool:

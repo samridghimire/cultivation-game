@@ -1023,17 +1023,13 @@ func _draw_jetty(lm: Dictionary) -> void:
 	var lay := Scenery.jetty_layout(_region, lm)
 	var r: Rect2 = lay["rect"]
 	var size := _vec(lm["size"])
-	var ptex := PixelLandmark.texture("jetty", size)
-	var sc := float(Sprites.scale())
-	var px := Vector2(ptex.get_size()) * sc
 	var winter := Scenery.is_snowy(_season)
 	if bool(lay["vertical"]):
-		draw_set_transform(r.get_center(), PI / 2.0, Vector2.ONE)
-		draw_texture_rect(ptex, Rect2(-px / 2.0, px), false)
-		if winter:
-			draw_rect(Rect2(-px / 2.0, Vector2(px.x, sc)), Color("f4f8ff"))
-		draw_set_transform(Vector2.ZERO)
+		_draw_jetty_vertical(r, int(lay["toward_water"]), winter)
 	else:
+		var ptex := PixelLandmark.texture("jetty", size)
+		var sc := float(Sprites.scale())
+		var px := Vector2(ptex.get_size()) * sc
 		draw_texture_rect(ptex, Rect2(r.get_center() - px / 2.0, px), false)
 		if winter:
 			draw_rect(Rect2(r.position, Vector2(px.x, sc)), Color("f4f8ff"))
@@ -1047,6 +1043,30 @@ func _draw_jetty(lm: Dictionary) -> void:
 			else:
 				tip = Vector2(r.position.x + 2.0 if toward < 0 else r.end.x - 2.0, r.get_center().y + off)
 			draw_rect(Rect2(tip - Vector2(3, 3), Vector2(6, 6)), post)
+
+
+## GFX-049: a north-south jetty: boards run across the walkway (3 px with 1 px gaps), dark side rails, and the
+## posts at the water end. At least 18 px wide; `toward` < 0 means the water is at the north end.
+func _draw_jetty_vertical(r: Rect2, toward: int, winter: bool) -> void:
+	var w := maxf(18.0, r.size.x)
+	var box := Rect2(r.get_center().x - w / 2.0, r.position.y, w, r.size.y)
+	var plank := Color("a07a4c")
+	var gap := Color("4a3524")
+	var rail := Color("5a4028")
+	draw_rect(box, plank)
+	var y := box.position.y
+	while y < box.end.y:
+		draw_rect(Rect2(box.position.x, y + 3.0, box.size.x, 1.0), gap)
+		y += 4.0
+	draw_rect(Rect2(box.position.x, box.position.y, 2.0, box.size.y), rail)
+	draw_rect(Rect2(box.end.x - 2.0, box.position.y, 2.0, box.size.y), rail)
+	if winter:
+		draw_rect(Rect2(box.position.x + 2.0, box.position.y, box.size.x - 4.0, 2.0), Color("f4f8ff"))
+	var tip_y := box.position.y if toward < 0 else box.end.y
+	for dy: float in [2.0, 14.0]:
+		var yy := tip_y + (dy if toward < 0 else -dy)
+		draw_rect(Rect2(box.position.x - 2.0, yy - 2.0, 4.0, 4.0), gap.darkened(0.3))
+		draw_rect(Rect2(box.end.x - 2.0, yy - 2.0, 4.0, 4.0), gap.darkened(0.3))
 
 
 ## Planks across a stream where `crossing` (its overlap with `path_rect`) is, laid along the path's direction.
@@ -1079,7 +1099,10 @@ func _draw_tree(p: Vector2, k: float, base: Color, kind: String = "round") -> vo
 	var blossoms_ok: bool = bool(_region.get("map", {}).get("decor", {}).get("blossoms", true))
 	var look := Scenery.tree_look(_season, seed_value, base, kind, blossoms_ok)
 	var c: Color = look["canopy"]
-	draw_circle(p + Vector2(4, 6) * k, 20.0 * k, Color(0, 0, 0, 0.25))
+	if look["bare"]:
+		_draw_foot_shadow(p, k)
+	else:
+		draw_circle(p + Vector2(4, 6) * k, 20.0 * k, Color(0, 0, 0, 0.25))
 	if look["bare"]:
 		_draw_tree_bare(p, k, c, bool(look["snow"]), kind == "dead")
 		return
@@ -1096,6 +1119,17 @@ func _draw_tree(p: Vector2, k: float, base: Color, kind: String = "round") -> vo
 				draw_line(p + Vector2(sx, -4) * k, p + Vector2(sx * 1.1, -4.0 + len) * k, c.darkened(0.2), 1.0)
 		_:
 			_draw_tree_round(p, k, c, look, seed_value)
+
+
+## GFX-049: bare trees get a flat ellipse at the trunk foot (ground shade darkened), not a round dark blot.
+func _draw_foot_shadow(p: Vector2, k: float) -> void:
+	var ground := Color(String(_region.get("map", {}).get("ground", "4d6b3c")))
+	var w := 22.0 * k
+	var pts := PackedVector2Array()
+	for i in 20:
+		var a := TAU * float(i) / 20.0
+		pts.append(p + Vector2(0, 15) * k + Vector2(cos(a) * w / 2.0, sin(a) * w * 0.15))
+	draw_colored_polygon(pts, Color(ground.darkened(0.45), 0.22))
 
 
 func _draw_tree_round(p: Vector2, k: float, c: Color, look: Dictionary, seed_value: int) -> void:

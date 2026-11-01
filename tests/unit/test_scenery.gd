@@ -332,3 +332,26 @@ func test_marsh_arrival_view_has_dead_trees() -> void:
 		if lm["kind"] == "pine" and lm.get("tree_kind", "") == "dead" and view.has_point(Vector2(lm["pos"][0], lm["pos"][1])):
 			dead += 1
 	assert_true(dead >= 3, "dead trees in the marsh arrival view: %d" % dead)
+
+
+## GFX-049: a jetty stops short of a path below the pond rim, and no real jetty crosses any path.
+func test_jetty_never_crosses_a_path() -> void:
+	var region := {"map": {
+		"landmarks": [
+			{"kind": "pond", "pos": [200, 100], "size": [120, 80]},
+			{"kind": "jetty", "pos": [200, 160], "size": [20, 60]},
+		],
+		"paths": [[0, 170, 400, 30]],
+	}}
+	var lm: Dictionary = region["map"]["landmarks"][1]
+	var r: Rect2 = Scenery.jetty_layout(region, lm)["rect"]
+	assert_true(r.end.y <= 170.0 - Scenery.JETTY_PATH_GAP + 0.01, "jetty ends above the path (end %f)" % r.end.y)
+	assert_true(r.size.y >= Scenery.JETTY_MIN_LEN)
+	var gs := (Engine.get_main_loop() as SceneTree).root.get_node("GameState")
+	for region2: Dictionary in gs.data.regions.values():
+		for lm2: Dictionary in region2.get("map", {}).get("landmarks", []):
+			if lm2["kind"] != "jetty":
+				continue
+			var jr: Rect2 = Scenery.jetty_layout(region2, lm2)["rect"]
+			for pr: Array in region2.get("map", {}).get("paths", []):
+				assert_false(Rect2(pr[0], pr[1], pr[2], pr[3]).intersects(jr), "%s: jetty %s crosses a path" % [region2["id"], str(lm2["pos"])])

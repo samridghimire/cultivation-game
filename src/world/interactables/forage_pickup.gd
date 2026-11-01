@@ -3,7 +3,7 @@ extends Interactable
 ## WU-427: a small pickup on the map (GameState.forage_here). Walking up shows "[E] Pick Dew Grass"; interact
 ## picks it directly (no menu) through GameState.pick_forage. It sparkles every ~3 s (static with reduce_motion).
 
-const PX := 2  # each sprite pixel is drawn 2x2: 8x8 art becomes 16 px
+const PX := 4  # each sprite pixel is drawn 4x4: 8x8 art becomes 32 px (GFX-049: finds you can see)
 const SPARKLE_PERIOD := 3.0
 const SPARKLE_LEN := 0.3
 const POP_SECONDS := 0.25
@@ -32,7 +32,7 @@ func setup(p_slot: int, p_item: String, p_amount: int, pos: Vector2) -> void:
 	item_id = p_item
 	amount = p_amount
 	position = pos
-	size = Vector2(16, 16)
+	size = Vector2(32, 32)
 	reach = 24.0
 	art_kind = "forage"
 	var def: Dictionary = GameState.data.items.get(p_item, {}) if GameState.data != null else {}
@@ -146,12 +146,18 @@ func _physics_process(delta: float) -> void:
 func draw_generated_art() -> bool:
 	var tags: Array = GameState.data.items.get(item_id, {}).get("tags", []) if GameState.data != null else []
 	var tex := texture_for(sprite_kind(tags))
-	draw_texture_rect(tex, Rect2(Vector2(-8, -8), Vector2(8 * PX, 8 * PX)), false)
+	var half := 4.0 * PX
+	var disc := PackedVector2Array()
+	for i in 20:
+		var a := TAU * float(i) / 20.0
+		disc.append(Vector2(0, half * 0.55) + Vector2(cos(a) * 10.0, sin(a) * 4.0))
+	draw_colored_polygon(disc, Color(1, 0.95, 0.7, 0.28))
+	draw_texture_rect(tex, Rect2(Vector2(-half, -half), Vector2(8 * PX, 8 * PX)), false)
 	if _sparkle:
 		var c := Color(1, 1, 0.8, 0.9)
-		draw_rect(Rect2(4, -9, 2, 2), c)
-		draw_rect(Rect2(3, -8, 4, 0.0 + 1), c)
-		draw_rect(Rect2(4, -10, 2, 4), c)
+		draw_rect(Rect2(8, -16, 2, 2), c)
+		draw_rect(Rect2(7, -15, 4, 1), c)
+		draw_rect(Rect2(8, -17, 2, 4), c)
 	return true
 
 
