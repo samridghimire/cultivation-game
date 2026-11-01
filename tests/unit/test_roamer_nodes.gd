@@ -72,3 +72,51 @@ func test_stays_within_radius_of_home() -> void:
 		assert_true(node.position.distance_to(node.home) <= Roamer.WANDER_RADIUS + 1.0)
 	world.free()
 	gs.end_session()
+
+
+func _first_roamer(world: Node) -> Roamer:
+	for c in world.get_children():
+		if c is Roamer:
+			return c
+	return null
+
+
+func _still_player(world: Node, pos: Vector2) -> void:
+	world.player.position = pos
+	world.player.set_physics_process(false)
+
+
+func test_fleeing_beast_gains_distance() -> void:
+	var gs := (Engine.get_main_loop() as SceneTree).root.get_node("GameState")
+	var world := _world("misty_forest")
+	var node := _first_roamer(world)
+	node.temper = "flees"
+	_still_player(world, node.position + Vector2(60, 0))
+	var before := node.position.distance_to(world.player.position)
+	for i in 60:
+		node._wander(1.0 / 60.0)
+	assert_true(node.position.distance_to(world.player.position) > before + 20.0)
+	assert_true(node.position.x >= 24.0 and node.position.y >= 24.0)
+	world.free()
+	gs.end_session()
+
+
+func test_bold_beast_closes_in_and_asks_once() -> void:
+	var gs := (Engine.get_main_loop() as SceneTree).root.get_node("GameState")
+	var world := _world("misty_forest")
+	var node := _first_roamer(world)
+	node.temper = "bold"
+	_still_player(world, node.position + Vector2(140, 0))
+	var before := node.position.distance_to(world.player.position)
+	node._wander(1.0 / 60.0)
+	assert_true(node.noticed)
+	var asks := [0]
+	var cb := func(_s: Node) -> void: asks[0] += 1
+	EventBus.interaction_menu_requested.connect(cb)
+	for i in 120:
+		node._wander(1.0 / 60.0)
+	assert_true(node.position.distance_to(world.player.position) < before)
+	assert_eq(asks[0], 1)
+	EventBus.interaction_menu_requested.disconnect(cb)
+	world.free()
+	gs.end_session()

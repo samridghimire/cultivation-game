@@ -357,6 +357,8 @@ func _build_roamers() -> void:
 		var spot := Roamer.pick_spot(GameState.current_region, day, slot, map_size, blocked, avoid)
 		var node: Roamer = ROAMER_SCRIPT.new()
 		node.setup(slot, String(r["enemy"]), spot, hash("%s:%d:%d:w" % [GameState.current_region, day, slot]))
+		node.player_ref = player
+		node.map_bounds = map_size
 		add_child(node)
 		move_child(node, player.get_index())
 

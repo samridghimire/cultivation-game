@@ -8,6 +8,11 @@ const WANDER_RADIUS := 80.0
 const WALK_SPEED := 22.0
 const MIN_GAP := 48.0
 const FADE_SECONDS := 0.4
+const FLEE_RANGE := 120.0
+const FLEE_SPEED := 132.0  # 0.6x the player's 220
+const NOTICE_RANGE := 160.0
+const CHARGE_SPEED := 110.0
+const TOUCH_RANGE := 44.0
 const WORLD_SCRIPT := preload("res://src/world/world.gd")
 
 var slot := 0
@@ -20,6 +25,12 @@ var _wait := 0.0
 var _time := 0.0
 var _fading := false
 var _alpha := 1.0
+## WU-424: how the beast reacts to the player (flees/wary/bold), read from GameState.roamer_temper.
+var temper := ""
+var player_ref: Node2D
+var map_bounds := Vector2(100000, 100000)
+var noticed := false
+var asked := false  # a bold beast opens its menu once per beast per day (nodes are rebuilt daily)
 
 
 ## Setup before add_child: the beast `enemy_id` of roamer `slot` standing at `pos`.
@@ -35,6 +46,8 @@ func setup(p_slot: int, p_enemy: String, pos: Vector2, seed_value: int) -> void:
 	reach = 22.0
 	art_kind = "roamer"
 	_update_name()
+	if GameState.has_session():
+		temper = GameState.roamer_temper(slot)
 
 
 func _ready() -> void:
@@ -84,6 +97,8 @@ func _wander(delta: float) -> void:
 	if _fading or storm_still():
 		return
 	_time += delta
+	if _react(delta):
+		return
 	if position.distance_to(_target) < 2.0:
 		_wait -= delta
 		if _wait <= 0.0:
@@ -97,6 +112,54 @@ func _wander(delta: float) -> void:
 	if absf(step.x) > 0.01:
 		facing = 1.0 if step.x > 0.0 else -1.0
 	queue_redraw()
+
+
+## WU-424: temper-driven movement. Returns true when it moved the beast this frame.
+func _react(delta: float) -> bool:
+	if player_ref == null or not is_instance_valid(player_ref):
+		return false
+	var to_player := player_ref.position - position
+	var dist := to_player.length()
+	match temper:
+		"flees":
+			if dist < FLEE_RANGE and dist > 0.01:
+				var step := -to_player.normalized() * FLEE_SPEED * delta
+				position = Vector2(
+					clampf(position.x + step.x, 24.0, map_bounds.x - 24.0),
+					clampf(position.y + step.y, 24.0, map_bounds.y - 24.0))
+				home = position
+				_target = position
+				facing = 1.0 if step.x > 0.0 else -1.0
+				queue_redraw()
+				return true
+		"wary":
+			if dist < NOTICE_RANGE and absf(to_player.x) > 1.0:
+				var f := 1.0 if to_player.x > 0.0 else -1.0
+				if f != facing:
+					facing = f
+					queue_redraw()
+		"bold":
+			if not asked and dist < NOTICE_RANGE:
+				if not noticed:
+					noticed = true
+					queue_redraw()
+				if dist <= TOUCH_RANGE:
+					asked = true
+					noticed = false
+					queue_redraw()
+					if bool(player_ref.get("input_enabled")):
+						EventBus.interaction_menu_requested.emit(self)
+					return true
+				position += to_player.normalized() * minf(CHARGE_SPEED * delta, dist)
+				home = position
+				_target = position
+				facing = 1.0 if to_player.x > 0.0 else -1.0
+				queue_redraw()
+				return true
+			elif noticed and dist >= NOTICE_RANGE:
+				noticed = false
+				queue_redraw()
+	return false
 
 
 ## Beasts stay put when the world has a storm today.
@@ -117,6 +180,8 @@ func draw_generated_art() -> bool:
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2(facing, 1.0))
 	draw_texture_rect(tex, Rect2(-s.x / 2.0, 12.0 - s.y, s.x, s.y), false)
 	draw_set_transform(Vector2.ZERO)
+	if noticed:
+		draw_string(ThemeDB.fallback_font, Vector2(-4, 12.0 - s.y - 4.0), "!", HORIZONTAL_ALIGNMENT_CENTER, -1, 20, Color(1.0, 0.35, 0.25))
 	return true
 
 
