@@ -128,7 +128,7 @@ func test_pond_places_validate_and_fish_exist() -> void:
 		for place: Dictionary in region.get("places", []):
 			if place.get("type", "") == "fishing":
 				ponds += 1
-	assert_eq(ponds, 2)
+	assert_eq(ponds, 5)
 	for id in ["silver_carp", "mist_koi", "marsh_eel"]:
 		assert_true((d.items[id]["tags"] as Array).has("fish"), id)
 

@@ -193,7 +193,7 @@ func test_goal005_trophy_and_green_thumb() -> void:
 	var c := new_character()
 	var d := data()
 	var trophies := Fishing.trophy_items(d)
-	assert_eq(trophies.size(), 2, "gold-scaled carp and ghostwhisker eel")
+	assert_eq(trophies.size(), 5, "one trophy per fishing water: carp, eel, marsh, Azure, Myriad")
 	assert_false(Milestones.newly_reached(c, d, {}).has("pond_legend"))
 	c.catch_log[trophies[0]] = 1
 	assert_true(Milestones.newly_reached(c, d, {}).has("pond_legend"))
