@@ -228,3 +228,13 @@ func test_validate_rejects_bad_great() -> void:
 		assert_false(Wildlife.validate(d).is_empty(), str(bad))
 	roamers["great"] = old
 	assert_true(Wildlife.validate(d).is_empty())
+
+## C-290: the gentle ape leaves a token, not a skin.
+func test_gentle_ape_drop() -> void:
+	var d := _gdata()
+	var items: Dictionary = d.enemies["grave_guardian_ape"].rewards["items"]
+	assert_false(items.has("stone_ape_hide"))
+	assert_true(items.has("guardian_river_stone"))
+	var t: Variant = d.items["guardian_river_stone"]
+	assert_true(t.price >= 6 and t.price <= 10)
+	assert_false(t.tags.has("meat") or t.tags.has("hide") or t.tags.has("beast_material"))
