@@ -176,6 +176,9 @@ func _start() -> void:
 	if OS.get_cmdline_user_args().has("--craft-shots"):
 		_start_craft_shots(gs)
 		return
+	if OS.get_cmdline_user_args().has("--title") or OS.get_cmdline_user_args().has("--creation"):
+		_start_first_screens(gs)
+		return
 	if OS.get_cmdline_user_args().has("--first-hour"):
 		_start_first_hour(gs)
 		return
@@ -304,6 +307,22 @@ func _start() -> void:
 	root.add_child(world)
 	hud = world.get_node("HUD")
 	_build_shots(gs)
+
+
+## GFX-048: `-- --title` / `-- --creation` shoot the main menu (title.png) and character creation (creation.png).
+func _start_first_screens(gs: Node) -> void:
+	var holder := Node.new()
+	root.add_child(holder)
+	var args := OS.get_cmdline_user_args()
+	if args.has("--title"):
+		shots.append({"name": "title", "open": func() -> void:
+			holder.add_child(load("res://src/ui/main_menu.tscn").instantiate()), "close": func() -> void:
+			holder.get_child(0).queue_free()})
+	if args.has("--creation"):
+		shots.append({"name": "creation", "open": func() -> void:
+			gs.rng.seed = 7
+			holder.add_child(load("res://src/ui/character_creation.tscn").instantiate()), "close": func() -> void:
+			holder.get_child(0).queue_free()})
 
 
 ## WU-116: the first hour of a fresh character, in the order a new player meets it.

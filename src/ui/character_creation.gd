@@ -15,10 +15,7 @@ var _begin_button: Button
 
 func _ready() -> void:
 	GameState.rng.randomize()
-	var bg := ColorRect.new()
-	bg.color = UIStyle.BG
-	bg.set_anchors_preset(PRESET_FULL_RECT)
-	add_child(bg)
+	add_child(TitleBackdrop.new())  # GFX-048: same night-mountain backdrop as the title screen
 
 	var panel := UIStyle.panel(Vector2(560, 0))
 	var box := VBoxContainer.new()
@@ -56,10 +53,12 @@ func _ready() -> void:
 	var buttons := HBoxContainer.new()
 	buttons.add_theme_constant_override("separation", 10)
 	var reroll := UIStyle.button("Reroll Fate", _reroll)
-	buttons.add_child(reroll)
 	_begin_button = UIStyle.button("Begin", _begin)
-	buttons.add_child(_begin_button)
-	buttons.add_child(UIStyle.button("Back", func(): get_tree().change_scene_to_file(MAIN_MENU)))
+	var back := UIStyle.button("Back", func(): get_tree().change_scene_to_file(MAIN_MENU))
+	for b: Button in [reroll, _begin_button, back]:  # GFX-048: equal, finger-sized buttons
+		b.custom_minimum_size = Vector2(160, 44)
+		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		buttons.add_child(b)
 	box.add_child(buttons)
 	add_child(UIStyle.centered(panel))
 
@@ -78,11 +77,25 @@ static func talent_text(roots: Dictionary, data: GameData) -> String:
 	return "%.2fx, %s (average is 1.0x)" % [SpiritualRoots.cultivation_multiplier(roots, data), SpiritualRoots.grade_for(roots, data).get("name", "Unknown")]
 
 
+## GFX-048: how good a talent multiplier is, as {"label", "color"}, so the reroll shows the root's quality at a glance.
+static func talent_verdict(multiplier: float) -> Dictionary:
+	if multiplier < 0.8:
+		return {"label": "Poor", "color": Color("d98a6a")}
+	if multiplier < 1.2:
+		return {"label": "Average", "color": Color("d6d6d6")}
+	if multiplier < 1.8:
+		return {"label": "Good", "color": Color("9bd67a")}
+	if multiplier < 2.6:
+		return {"label": "Excellent", "color": Color("6fd0e8")}
+	return {"label": "Heaven-sent", "color": UIStyle.ACCENT}
+
+
 func _roll() -> void:
 	var data := GameState.data
 	_candidate = CharacterFactory.create(_name_edit.text, data, GameState.rng, _selected_gender())
 	var t := "Spiritual Root: [color=#%s]%s[/color]\n" % [UIStyle.ACCENT.to_html(false), SpiritualRoots.describe(_candidate.spiritual_roots, data)]
-	t += "Cultivation talent: %s\n\n" % talent_text(_candidate.spiritual_roots, data)
+	var verdict := talent_verdict(SpiritualRoots.cultivation_multiplier(_candidate.spiritual_roots, data))
+	t += "Cultivation talent: [color=#%s][b]%s[/b][/color], %s\n\n" % [(verdict["color"] as Color).to_html(false), verdict["label"], talent_text(_candidate.spiritual_roots, data)]
 	for attr in data.attributes:
 		t += "%s: %d   [color=#888888]%s[/color]\n" % [attr["name"], _candidate.attribute(attr["id"]), attr["description"]]
 	_summary.text = t
