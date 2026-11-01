@@ -101,3 +101,47 @@ func test_crop_heights_by_stage() -> void:
 	var plot: GDScript = load("res://src/world/interactables/field_plot.gd")
 	assert_true(plot.crop_height(0) >= 4.0 and plot.crop_height(0) <= 6.0)
 	assert_true(plot.crop_height(3) >= 12.0 and plot.crop_height(3) <= 16.0)
+
+
+func test_soft_texture_fades_to_clear_corners() -> void:
+	var img := Ambient.soft_texture().get_image()
+	assert_eq(img.get_pixel(0, 0).a, 0.0)
+	assert_true(img.get_pixel(16, 16).a > 0.5)
+	assert_true(Ambient.soft_texture() == Ambient.soft_texture(), "cached")
+
+
+func test_mist_uses_soft_texture_and_strength_scales_alpha() -> void:
+	var full := Ambient.make_emitter("mist", Vector2(1600, 1000))
+	var half := Ambient.make_emitter("mist", Vector2(1600, 1000), 0.5)
+	assert_true(full.texture == Ambient.soft_texture())
+	assert_true(absf(half.color.a - full.color.a * 0.5) < 0.001)
+	var petals := Ambient.make_emitter("petals", Vector2(1600, 1000))
+	assert_true(petals.texture == null, "small presets stay square")
+	full.free()
+	half.free()
+	petals.free()
+
+
+func test_fog_sheet_edges_fade() -> void:
+	var img := Ambient.fog_texture().get_image()
+	assert_eq(img.get_pixel(0, 32).a, img.get_pixel(0, 32).a)
+	assert_true(img.get_pixel(0, 32).a < 0.1)
+	assert_true(img.get_pixel(32, 32).a > 0.99)
+	var fog := Ambient.make_fog(Vector2(1600, 1000), false, 0.5)
+	assert_true(absf((fog.get_child(0) as CanvasItem).modulate.a - 0.08) < 0.001)
+	fog.free()
+
+
+func test_map_mist_validates_and_misty_forest_uses_it() -> void:
+	var gs := (Engine.get_main_loop() as SceneTree).root.get_node("GameState")
+	var mf: Dictionary = gs.data.regions["misty_forest"]
+	assert_true(float(mf["map"]["mist"]) < 1.0)
+	var d := GameData.new()
+	d.regions = {"r": {"id": "r", "map": {"mist": 1.5}}}
+	d.load_errors.clear()
+	d._validate()
+	var found := false
+	for e in d.load_errors:
+		if "map.mist" in e:
+			found = true
+	assert_true(found, "mist 1.5 rejected")

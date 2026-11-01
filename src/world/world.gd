@@ -161,6 +161,11 @@ func _tint_for(season: String) -> Color:
 	return Calendar.season_tint(season) * (Ambient.weather_plan(_weather_kind)["tint"] as Color)
 
 
+## The region's map.mist (0..1, default 1): scales fog sheets and mist particles (GFX-044).
+func _mist_strength() -> float:
+	return clampf(float(_region.get("map", {}).get("mist", 1.0)), 0.0, 1.0)
+
+
 ## Rebuilds the particle layer for the region, season and "Ambient effects" setting.
 func _refresh_ambient() -> void:
 	_refresh_village_life()
@@ -171,7 +176,7 @@ func _refresh_ambient() -> void:
 		return
 	var plan := Ambient.weather_plan(_weather_kind)
 	if plan["fog"]:
-		_ambient = Ambient.make_fog(map_size, not Settings.get_value("reduce_motion"))
+		_ambient = Ambient.make_fog(map_size, not Settings.get_value("reduce_motion"), _mist_strength())
 	elif plan["emitter"] == "rain":
 		_ambient = Ambient.make_rain(map_size)
 	elif plan["emitter"] == "storm":
@@ -182,7 +187,7 @@ func _refresh_ambient() -> void:
 		var kind := Ambient.kind_for(_region.get("map", {}).get("ambient", {}), _season)
 		if kind == "":
 			return
-		_ambient = Ambient.make_emitter(kind, map_size)
+		_ambient = Ambient.make_emitter(kind, map_size, _mist_strength())
 	add_child(_ambient)
 	_start_lightning()
 
@@ -965,7 +970,10 @@ func _draw_tree_round(p: Vector2, k: float, c: Color, look: Dictionary, seed_val
 
 
 func _draw_tree_bare(p: Vector2, k: float, c: Color, snowy: bool, broken_stub: bool) -> void:
-	draw_rect(Rect2(p + Vector2(-3, 2) * k, Vector2(6, 14) * k), Color("4a3524"))
+	# Dead trees (broken_stub): a darker trunk with a 1 px pale bark highlight so they read on dark bog.
+	draw_rect(Rect2(p + Vector2(-3, 2) * k, Vector2(6, 14) * k), Color("2a1f16") if broken_stub else Color("4a3524"))
+	if broken_stub:
+		draw_rect(Rect2(p + Vector2(-3, 2) * k, Vector2(1, 14 * k)), Color("b3a684"))
 	for tip: Vector2 in [Vector2(-14, -22), Vector2(0, -30), Vector2(13, -20), Vector2(-8, -12), Vector2(8, -10)]:
 		draw_line(p + Vector2(0, 2) * k, p + tip * k, c, 2.0)
 		if snowy:

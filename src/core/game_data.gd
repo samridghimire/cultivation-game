@@ -582,6 +582,10 @@ func _validate_world() -> void:
 			load_errors.append("Region '%s' map.no_snow must be true or false" % region["id"])
 		if region.get("map", {}).has("ground_style") and not GroundTiles.STYLES.has(region["map"]["ground_style"]):
 			load_errors.append("Region '%s' map.ground_style must be one of %s" % [region["id"], GroundTiles.STYLES])
+		if region.get("map", {}).has("mist"):
+			var mist: Variant = region["map"]["mist"]
+			if not ((mist is float or mist is int) and float(mist) >= 0.0 and float(mist) <= 1.0):
+				load_errors.append("Region '%s' map.mist must be a number from 0 to 1" % region["id"])
 		var ambient: Variant = region.get("map", {}).get("ambient", {})
 		if not ambient is Dictionary:
 			load_errors.append("Region '%s' map.ambient must be an object" % region["id"])

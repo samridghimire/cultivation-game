@@ -25,6 +25,42 @@ const FLASH_SECONDS := 0.08
 const FLASH_ALPHA := 0.35
 const CLOUDY_TINT := Color(0.9, 0.9, 0.9)
 const FOG_SHEETS := 2
+## GFX-044: presets with a `size` at or above this draw a soft round blob instead of a square.
+const SOFT_MIN_SIZE := 16.0
+const SOFT_TEX_SIZE := 32
+## Fraction of a fog sheet's width over which its alpha fades out at each side.
+const FOG_EDGE := 0.25
+
+static var _soft_tex: ImageTexture
+static var _fog_tex: Dictionary = {}
+
+
+## A 32 px radial gradient, alpha 1 at the centre to 0 at the edge; built once and cached.
+static func soft_texture() -> ImageTexture:
+	if _soft_tex == null:
+		var n := SOFT_TEX_SIZE
+		var img := Image.create(n, n, false, Image.FORMAT_RGBA8)
+		var mid := (n - 1) / 2.0
+		for y in n:
+			for x in n:
+				var d := Vector2(x - mid, y - mid).length() / (n / 2.0)
+				img.set_pixel(x, y, Color(1, 1, 1, clampf(1.0 - d, 0.0, 1.0)))
+		_soft_tex = ImageTexture.create_from_image(img)
+	return _soft_tex
+
+
+## A fog sheet texture: alpha 1 in the middle, fading to 0 over the outer FOG_EDGE of the width (and height).
+static func fog_texture(w: int = 64, h: int = 64) -> ImageTexture:
+	var key := Vector2i(w, h)
+	if not _fog_tex.has(key):
+		var img := Image.create(w, h, false, Image.FORMAT_RGBA8)
+		for y in h:
+			for x in w:
+				var ax := minf(x + 0.5, w - x - 0.5) / (w * FOG_EDGE)
+				var ay := minf(y + 0.5, h - y - 0.5) / (h * FOG_EDGE)
+				img.set_pixel(x, y, Color(1, 1, 1, clampf(minf(ax, ay), 0.0, 1.0)))
+		_fog_tex[key] = ImageTexture.create_from_image(img)
+	return _fog_tex[key]
 
 
 ## What the world draws for a day's weather: {"emitter": preset name or "", "fog": bool, "tint": Color}.
@@ -94,13 +130,17 @@ static func lightning_enabled(reduce_motion: bool) -> bool:
 
 
 ## Fog: two large translucent sheets drifting slowly in opposite directions; the caller adds the node.
-static func make_fog(area: Vector2, animate: bool) -> Node2D:
+## `strength` (0..1, a region's map.mist) scales the sheets' alpha.
+static func make_fog(area: Vector2, animate: bool, strength: float = 1.0) -> Node2D:
 	var root := Node2D.new()
 	root.name = "Fog"
 	root.z_index = 50
 	for i in FOG_SHEETS:
-		var sheet := ColorRect.new()
-		sheet.color = Color(0.88, 0.92, 0.94, 0.16)
+		var sheet := TextureRect.new()
+		sheet.texture = fog_texture()
+		sheet.stretch_mode = TextureRect.STRETCH_SCALE
+		sheet.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		sheet.modulate = Color(0.88, 0.92, 0.94, 0.16 * clampf(strength, 0.0, 1.0))
 		sheet.size = area * 1.4
 		sheet.position = Vector2(-area.x * 0.2, -area.y * 0.2)
 		sheet.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -121,7 +161,8 @@ static func kind_for(ambient: Dictionary, season: String) -> String:
 
 
 ## A CPUParticles2D covering `area` for the kind, or null for an unknown kind.
-static func make_emitter(kind: String, area: Vector2) -> CPUParticles2D:
+## `strength` (0..1, a region's map.mist) scales the "mist" preset's alpha.
+static func make_emitter(kind: String, area: Vector2, strength: float = 1.0) -> CPUParticles2D:
 	if not PRESETS.has(kind):
 		return null
 	var preset: Dictionary = PRESETS[kind]
@@ -141,5 +182,12 @@ static func make_emitter(kind: String, area: Vector2) -> CPUParticles2D:
 	p.scale_amount_min = float(preset["size"]) * 0.6
 	p.scale_amount_max = float(preset["size"])
 	p.color = preset["color"]
+	if kind == "mist":
+		p.color.a *= clampf(strength, 0.0, 1.0)
+	if float(preset["size"]) >= SOFT_MIN_SIZE:
+		p.texture = soft_texture()
+		# The 32 px texture is the particle: scale 1.0 = 32 px, so size / 32.
+		p.scale_amount_min = float(preset["size"]) * 0.6 / SOFT_TEX_SIZE
+		p.scale_amount_max = float(preset["size"]) / SOFT_TEX_SIZE
 	p.z_index = 50
 	return p

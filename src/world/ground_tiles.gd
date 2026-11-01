@@ -177,12 +177,22 @@ static func _apply_style(img: Image, base: Color, rid: String, style: String) ->
 						_fill_clipped(img, Rect2i(px, py + 2, 1, ph - 4), water)
 						_fill_clipped(img, Rect2i(px + pw - 1, py + 2, 1, ph - 4), water)
 						_fill_clipped(img, Rect2i(px + 2, py, pw - 4, 1), base.lightened(0.25))
-					elif roll % 5 == 1:
-						var rx := cx * SIZE + 2 + (roll / 5) % (SIZE - 6)
-						var ry := cy * SIZE + 4 + (roll / 128) % (SIZE - 8)
+					elif roll % 10 == 1:
+						# Reed tufts: about half as many as before, position and shape (2-3) vary per tile.
+						var r3 := absi(hash("%s|%d|%d|reed" % [rid, cx, cy]))
+						var rx := cx * SIZE + 2 + r3 % (SIZE - 8)
+						var ry := cy * SIZE + 4 + (r3 / 64) % (SIZE - 10)
 						var reed := base.lightened(0.3)
-						for k in 3 + roll % 3:
-							_fill_clipped(img, Rect2i(rx + k, ry + (k % 2), 1, 3 + k % 2), reed)
+						match (r3 / 4096) % 3:
+							0:
+								for k in 3:
+									_fill_clipped(img, Rect2i(rx + k * 2, ry + (k % 2), 1, 3 + k % 2), reed)
+							1:
+								for k in 4:
+									_fill_clipped(img, Rect2i(rx + k, ry + (k * 3) % 3, 1, 3), reed)
+							_:
+								_fill_clipped(img, Rect2i(rx, ry + 1, 1, 4), reed)
+								_fill_clipped(img, Rect2i(rx + 2, ry, 1, 5), reed)
 
 
 static func _set_clipped(img: Image, x: int, y: int, c: Color) -> void:

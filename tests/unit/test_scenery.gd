@@ -237,3 +237,12 @@ func test_footprints_cap_at_twelve() -> void:
 		prints = Scenery.add_footprint(prints, Vector2(i, 0))
 	assert_eq(prints.size(), 12)
 	assert_eq(prints[11], Vector2(29, 0))
+
+
+func test_marsh_spawns_dead_trees() -> void:
+	var gs := (Engine.get_main_loop() as SceneTree).root.get_node("GameState")
+	var dead := 0
+	for d in _trees(Scenery.place(gs.data.regions["withered_bone_marsh"], seeded_rng())):
+		if d["tree_kind"] == "dead":
+			dead += 1
+	assert_true(dead >= 1, "marsh has dead trees")
