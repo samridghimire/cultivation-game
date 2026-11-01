@@ -40,6 +40,20 @@ static func hint_line(region: Dictionary, today: int, window: int = 5) -> String
 	return "Market day in %d day%s: %s" % [best, "" if best == 1 else "s", best_name]
 
 
+## "market days 10 and 25" / "market days 5, 15 and 25" for a place with `open_days`; "" without (MARKET-003).
+static func days_phrase(place: Dictionary) -> String:
+	var days: Array = place.get("open_days", [])
+	if days.is_empty():
+		return ""
+	var parts: Array[String] = []
+	for d: Variant in days:
+		parts.append(str(int(d)))
+	var text := parts[0]
+	if parts.size() > 1:
+		text = ", ".join(parts.slice(0, parts.size() - 1)) + " and " + parts[parts.size() - 1]
+	return "market day%s %s" % ["" if parts.size() == 1 else "s", text]
+
+
 ## JSON numbers load as floats, so compare as ints.
 static func _has_day(days: Array, day: int) -> bool:
 	for d: Variant in days:

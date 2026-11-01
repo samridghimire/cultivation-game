@@ -182,6 +182,8 @@ static func _compute_sources(data: GameData, item_id: String) -> Array[String]:
 		for place: Dictionary in region.get("places", []):
 			var kind: String = place.get("type", "")
 			var where := "%s (%s)" % [place.get("display_name", kind), region.get("name", region["id"])]
+			if place.has("open_days"):
+				where = "%s (%s), %s" % [place.get("display_name", kind), Places.days_phrase(place), region.get("name", region["id"])]
 			if kind == "merchant" and merchant_sells(data, item, place.get("stock_tags", []), int(place.get("max_price", 0))):
 				lines.append("Sold at " + where)
 			elif kind == "fishing":

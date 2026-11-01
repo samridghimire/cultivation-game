@@ -16,7 +16,7 @@ var player: CharacterData
 ## Persistent world facts, e.g. {"villager_dead": true}.
 var world_flags: Dictionary = {}
 ## The merchant whose shop is open (set by ShopScreen.open), for its own discounts.
-var shop_name := ""
+var shop_name := ""  # the seller of the open shop screen; "" when none is open (close_shop)
 ## Open auctions (Auctions): house_id -> {opening, lots}.
 var auctions: Dictionary = {}
 ## The cultivator just beaten whose cultivation may still be devoured
@@ -2698,6 +2698,11 @@ func price_season() -> String:
 
 func market_multiplier() -> float:
 	return WorldEvents.price_multiplier(data, world_events, current_region)
+
+
+## MARKET-003: the shop screen closed; a later buy must not use the seller's stale discount.
+func close_shop() -> void:
+	shop_name = ""
 
 
 ## Buy-side multiplier: world events, local renown and a friend's price. Sell prices use market_multiplier() only.

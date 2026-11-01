@@ -98,3 +98,38 @@ func test_closed_merchant_has_no_menu() -> void:
 	assert_true(stall.get_options().size() > 0, "open on day 25")
 	stall.free()
 	gs.end_session()
+
+
+# MARKET-003
+
+func test_days_phrase() -> void:
+	assert_eq(Places.days_phrase({"open_days": [10, 25]}), "market days 10 and 25")
+	assert_eq(Places.days_phrase({"open_days": [5.0, 15.0, 25.0]}), "market days 5, 15 and 25")
+	assert_eq(Places.days_phrase({"open_days": [7]}), "market day 7")
+	assert_eq(Places.days_phrase({}), "")
+
+
+func test_sold_at_names_market_days() -> void:
+	var lines := Items.sources(_gd(), "sweet_rice_ball")
+	assert_true(lines.has("Sold at Travelling Market Stall (market days 10 and 25), Qingshi Village"), str(lines))
+
+
+func test_closed_stall_not_a_dependable_seller() -> void:
+	assert_false(Guidance.merchant_place(_gd(), "qingshi_village", "sweet_rice_ball").has("open_days"), "never the closed stall")
+	assert_false(Guidance.timed_stall(_gd(), "qingshi_village", "sweet_rice_ball").is_empty())
+
+
+func test_stall_ingredient_line_counts_days() -> void:
+	var recipe := {"name": "Rice Feast"}
+	var stall := _stall()
+	var line := Guidance._stall_ingredient_line(CharacterData.new(), _gd(), recipe, "sweet_rice_ball", stall, DAY_10 - 3)
+	assert_true(line.contains("next market day in 3 days"), line)
+	assert_true(line.contains("market days 10 and 25"), line)
+	assert_true(Guidance._stall_ingredient_line(CharacterData.new(), _gd(), recipe, "sweet_rice_ball", stall, DAY_10).contains("open today"))
+
+
+func test_close_shop_clears_seller() -> void:
+	var gs: Node = (Engine.get_main_loop() as SceneTree).root.get_node("GameState")
+	gs.shop_name = "Village Herb Seller"
+	gs.close_shop()
+	assert_eq(gs.shop_name, "")

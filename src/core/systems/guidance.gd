@@ -92,7 +92,7 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 	var idle_nudge := idle_crafter_hint(c, data, region_id, today, flags)
 	if idle_nudge != "":
 		out.append(idle_nudge)
-	var buy := buy_ingredient_hint(c, data, region_id, Calendar.season_of(today) if today >= 0 else "")
+	var buy := buy_ingredient_hint(c, data, region_id, Calendar.season_of(today) if today >= 0 else "", today)
 	if buy != "":
 		out.append(buy)
 	var newcomer := _newcomer_hints(c, data, flags, region_id, today) if c.realm_index <= NEWCOMER_MAX_REALM else PackedStringArray()
@@ -640,7 +640,7 @@ static func _next_step_name(c: CharacterData, data: GameData, plain: String = "t
 ## GUIDE-066: a crafter who can craft nothing right now, and whose first in-rank recipe is short only of
 ## bought-only ingredients (no gather place yields them, a merchant in `region_id` sells them), hears
 ## where to buy. "" for a non-crafter, one who can craft something, or when no merchant here sells it.
-static func buy_ingredient_hint(c: CharacterData, data: GameData, region_id: String, season: String = "") -> String:
+static func buy_ingredient_hint(c: CharacterData, data: GameData, region_id: String, season: String = "", today: int = -1) -> String:
 	if c.professions.is_empty() or region_id == "" or not craftable_now(c, data).is_empty():
 		return ""
 	for prof_id: String in data.professions:
@@ -661,6 +661,9 @@ static func buy_ingredient_hint(c: CharacterData, data: GameData, region_id: Str
 					break
 				var found := nearest_selling(c, data, region_id, func(r: String) -> String: return merchant_selling(data, r, ing))
 				if found.is_empty():
+					var stall := timed_stall(data, region_id, ing)
+					if today >= 0 and not stall.is_empty() and item_id == "":
+						return _stall_ingredient_line(c, data, recipe, ing, stall, today)
 					bought_only = false
 					break
 				if item_id == "":
@@ -690,11 +693,27 @@ static func merchant_selling(data: GameData, region_id: String, item_id: String)
 	return String(place.get("display_name", "merchant")) if not place.is_empty() else ""
 
 
-## GUIDE-073: the first merchant place in `region_id` that stocks `item_id`, or {}.
+## MARKET-003: the market-day stall (a merchant place with `open_days`) in `region_id` that stocks `item_id`, or {}.
+static func timed_stall(data: GameData, region_id: String, item_id: String) -> Dictionary:
+	var item: Dictionary = data.items.get(item_id, {})
+	for p: Dictionary in data.regions.get(region_id, {}).get("places", []):
+		if String(p.get("type", "")) == "merchant" and p.has("open_days") and Items.merchant_sells(data, item, p.get("stock_tags", []), int(p.get("max_price", 0))):
+			return p
+	return {}
+
+
+static func _stall_ingredient_line(c: CharacterData, data: GameData, recipe: Dictionary, item_id: String, stall: Dictionary, today: int) -> String:
+	var ahead := Places.days_until_open(stall, today)
+	var when := "open today" if ahead == 0 else "next market day in %s" % Calendar.format_duration(ahead)
+	return "Your %s needs %s: the %s sells them (%s; %s)." % [recipe["name"], Items.item_plural(data, item_id, 2), stall.get("display_name", "market stall"), Places.days_phrase(stall), when]
+
+
+## GUIDE-073: the first merchant place in `region_id` that stocks `item_id`, or {}. Market-day stalls are skipped
+## (MARKET-003: a closed stall is never pointed at as if it were open; see `timed_stall`).
 static func merchant_place(data: GameData, region_id: String, item_id: String) -> Dictionary:
 	var item: Dictionary = data.items.get(item_id, {})
 	for p: Dictionary in data.regions.get(region_id, {}).get("places", []):
-		if String(p.get("type", "")) == "merchant" and Items.merchant_sells(data, item, p.get("stock_tags", []), int(p.get("max_price", 0))):
+		if String(p.get("type", "")) == "merchant" and not p.has("open_days") and Items.merchant_sells(data, item, p.get("stock_tags", []), int(p.get("max_price", 0))):
 			return p
 	return {}
 
@@ -1322,7 +1341,7 @@ static func source_phrase(c: CharacterData, data: GameData, item_id: String, reg
 		if region_id != "" and not Exploration.is_nearby(data, region_id, rid):
 			continue
 		for p: Dictionary in data.regions[rid].get("places", []):
-			if String(p.get("type", "")) == "merchant" and Items.merchant_sells(data, item, p.get("stock_tags", []), int(p.get("max_price", 0))):
+			if String(p.get("type", "")) == "merchant" and not p.has("open_days") and Items.merchant_sells(data, item, p.get("stock_tags", []), int(p.get("max_price", 0))):
 				return "sold by merchants"
 	return ""
 

@@ -240,6 +240,7 @@ func close() -> void:
 	if not visible:
 		return
 	visible = false
+	GameState.close_shop()
 	closed.emit()
 
 
