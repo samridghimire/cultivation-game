@@ -14,6 +14,10 @@ extends SceneTree
 ## WU-223: append `-- --gather-note` for the Village Herb Slope menu in each season: gather_note_<season>.png.
 ## WU-404: shots open through the HUD's _update_modal, so the dim backdrop and hidden prompt show.
 ## append `-- --fight=cultivator` for combat_report_cultivator.png (GFX-020).
+## QA-187: `--region=a,b,...` renders only the arrival shot of each region as region_<id>.png (one world build per
+## region); with one id the normal shot set is rendered in that region and the arrival shot is also named region_<id>.png.
+## QA-187: append `-- --companion` (a Qingshi friend invited along, WU-413): companion.png (the HUD chip) and
+## field_menu.png (the rented field's menu with the tool icons).
 ## PNGs go to user://screenshots/first_hour/<name>.png. Never writes saves.
 ## (The mid-game sibling is screenshot_screens.gd.)
 
@@ -28,6 +32,7 @@ var index := 0
 var frames := 0
 var banner_wait_start := -1
 var started := false
+var region_list: Array[String] = []  ## QA-187: --region= ids
 var opened := false
 
 
@@ -45,8 +50,14 @@ func _start() -> void:
 				var clock: Node = root.get_node("GameClock")
 				clock.total_days = idx * 3 * Calendar.DAYS_PER_MONTH
 	for arg in OS.get_cmdline_user_args():  # GFX-041: start in a region (--region=misty_forest)
-		if arg.begins_with("--region=") and gs.data.regions.has(arg.substr(9)):
-			gs.current_region = arg.substr(9)
+		if arg.begins_with("--region="):
+			for id in arg.substr(9).split(",", false):
+				if gs.data.regions.has(id):
+					region_list.append(id)
+				else:
+					push_warning("--region: unknown region %s" % id)
+	if not region_list.is_empty():
+		gs.current_region = region_list[0]
 	gs.pending_event = ""
 	var party := OS.get_cmdline_user_args().has("--celebration")
 	if party:  # GFX-023: a wedding for a Qingshi villager, before the world is built
@@ -64,6 +75,13 @@ func _start() -> void:
 		_gather_note_shots(gs)
 		return
 	var special := false
+	if region_list.size() > 1:  # QA-187: one arrival shot per region, rebuilding the world between them
+		for id in region_list:
+			shots.append({"name": "region_" + id, "open": func() -> void: _rebuild_world(gs, id), "close": func() -> void: pass})
+		return
+	if OS.get_cmdline_user_args().has("--companion"):  # QA-187: the invited friend's chip and the field menu with tool icons
+		_companion_shots(gs, c)
+		special = true
 	if OS.get_cmdline_user_args().has("--field"):  # GFX-029: a rented field with a young and a nearly ripe crop
 		_field_shots(gs, c)
 		special = true
@@ -128,6 +146,8 @@ func _start() -> void:
 	if special:
 		return
 	shots.append({"name": "hud_arrival", "open": func() -> void: pass, "close": func() -> void: pass})
+	if region_list.size() == 1:
+		shots.append({"name": "region_" + region_list[0], "open": func() -> void: pass, "close": func() -> void: pass})
 	# WU-406: a generated villager's greeting bubble, and one with the gold "!" for a folk request.
 	var villager := _generated_villager()
 	if villager != null:
@@ -335,6 +355,36 @@ func _gather_note_shots(gs: Node) -> void:
 		hud.get("_banner").visible = false
 		menu.open_for(quarry)
 		print("Quarry: %s" % quarry.get_options()[0].get("description", "")), "close": menu.close})
+
+
+## QA-187: frees the world and builds a fresh one for region `id` (the HUD is the world's child).
+func _rebuild_world(gs: Node, id: String) -> void:
+	if world != null:
+		root.remove_child(world)
+		world.free()
+	gs.current_region = id
+	world = load("res://src/world/world.tscn").instantiate()
+	root.add_child(world)
+	hud = world.get_node("HUD")
+	hud.get("_banner").visible = false
+
+
+## QA-187: a Qingshi friend invited along (the HUD chip), then the rented field's menu (tool icons).
+func _companion_shots(gs: Node, c: CharacterData) -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 7
+	var friend := Npcs.spawn(gs.npcs, gs.data, rng, {"age_years": 30, "region": "qingshi_village", "realm": "mortal", "gender": "male"})
+	var today: int = root.get_node("GameClock").total_days
+	shots.append({"name": "companion", "open": func() -> void:
+		Folk.invite(c, friend.id, today)
+		hud.get("_banner").visible = false
+		root.get_node("EventBus").player_changed.emit(), "close": func() -> void: pass})
+	var place := FieldPlots.place_def(gs.data, "qingshi_village")
+	c.field_plots[FieldPlots.key("qingshi_village", place)] = {"paid_until": 90, "crops": [{"item": "spirit_herb", "days_left": 20}]}
+	var field := _find_script("field_plot.gd")
+	shots.append({"name": "field_menu", "open": func() -> void:
+		hud.get("_banner").visible = false
+		hud.get("_choice_menu").open_for(field), "close": hud.get("_choice_menu").close})
 
 
 func _field_shots(gs: Node, c: CharacterData) -> void:
