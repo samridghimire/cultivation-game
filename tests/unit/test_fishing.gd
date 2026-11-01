@@ -127,7 +127,7 @@ func test_missing_hint_picks_first_uncaught_in_season_fish() -> void:
 	Fishing.record_catch(c, "mist_koi", 1)
 	assert_eq(Fishing.missing_hint(c, d, "misty_forest", "Summer"), "Lotus Bass bites here in summer.")
 	Fishing.record_catch(c, "lotus_bass", 1)
-	assert_eq(Fishing.missing_hint(c, d, "misty_forest", "Summer"), "Rain Bream bites here in summer.")  # C-283: weather is not considered by the hint
+	assert_eq(Fishing.missing_hint(c, d, "misty_forest", "Summer"), "Rain Bream bites here when it rains.")  # MARKET-005
 	Fishing.record_catch(c, "rain_bream", 1)
 	assert_eq(Fishing.missing_hint(c, d, "misty_forest", "Summer"), "")
 	assert_eq(Fishing.missing_hint(c, d, "no_such_region", "Summer"), "")

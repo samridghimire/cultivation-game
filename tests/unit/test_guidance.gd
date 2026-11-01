@@ -5642,3 +5642,46 @@ func test_seller_open_rules() -> void:
 	assert_false(Guidance.seller_open({"open_days": [10]}, {}))
 	assert_true(Guidance.seller_open({"open_days": [10]}, {"_today": 9}))
 	assert_false(Guidance.seller_open({"open_days": [10]}, {"_today": 10}))
+
+
+## MARKET-005: with only market-day stalls selling gear, the hint names the next market day.
+func test_gear_elsewhere_line_names_next_market_day() -> void:
+	var d := data()
+	var c := _fresh()
+	var touched: Array[Dictionary] = []
+	for r: Dictionary in d.regions.values():
+		for p: Dictionary in r.get("places", []):
+			if String(p.get("type", "")) == "merchant" and not p.has("open_days") and p.get("display_name", "") != "":
+				var sells := false
+				for id: String in d.items:
+					if Equipment.slot_of(d, id) != "" and Items.merchant_sells(d, d.items[id], p.get("stock_tags", []), int(p.get("max_price", 0))):
+						sells = true
+				if sells:
+					p["open_days"] = [10]
+					touched.append(p)
+	assert_false(touched.is_empty())
+	var today := 5
+	var ahead := Places.days_until_open({"open_days": [10]}, today)
+	assert_true(ahead > 0)
+	assert_eq(Guidance.gear_elsewhere_line(c, d, "qingshi_village"), "", "unknown day: not pointed at")
+	var line := Guidance.gear_elsewhere_line(c, d, "misty_forest", today)
+	assert_true(line.contains("next market day in %s" % Calendar.format_duration(ahead)), line)
+	var open_day := today + ahead
+	var open_line := Guidance.gear_elsewhere_line(c, d, "misty_forest", open_day)
+	assert_true(open_line.contains("sells them, open today"), open_line)
+	assert_false(open_line.contains("next market day"), open_line)
+	for p in touched:
+		p.erase("open_days")
+
+
+## MARKET-005: a rain-only fish reads "when it rains"; a fish catchable in today's weather is hinted first.
+func test_fishing_missing_hint_weather() -> void:
+	var d := data()
+	var c := CharacterData.new()
+	for id in ["silver_carp", "marsh_eel", "mist_koi", "lotus_bass"]:
+		Fishing.record_catch(c, id, 1)
+	assert_eq(Fishing.missing_hint(c, d, "misty_forest", "Summer"), "Rain Bream bites here when it rains.")
+	assert_eq(Fishing.missing_hint(c, d, "misty_forest", "Summer", "clear"), "Rain Bream bites here when it rains.", "only one left")
+	var c2 := CharacterData.new()
+	var hint := Fishing.missing_hint(c2, d, "misty_forest", "Summer", "clear")
+	assert_false(hint.contains("Rain Bream"), hint)

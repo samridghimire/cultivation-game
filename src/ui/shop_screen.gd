@@ -555,7 +555,7 @@ func _rebuild() -> void:
 		b.focus_entered.connect(_select.bind(item_id))
 		b.gui_input.connect(_on_item_input)
 		_list.add_child(b)
-	var gear_line := "" if _selling else Guidance.gear_elsewhere_line(p, data, GameState.current_region)
+	var gear_line := "" if _selling else Guidance.gear_elsewhere_line(p, data, GameState.current_region, GameClock.total_days)
 	_gear_note.text = gear_line
 	_gear_note.visible = gear_line != ""
 	_show_details()

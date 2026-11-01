@@ -117,15 +117,37 @@ static func log_summary(c: CharacterData, data: GameData) -> String:
 
 
 ## "Golden Eel bites here in summer." for the first uncaught fish a fishing place in `region_id` yields in `season`; "" if none.
-static func missing_hint(c: CharacterData, data: GameData, region_id: String, season: String) -> String:
+## MARKET-005: a fish whose entry lists `weather` reads "... bites here in summer when it rains." (no "in <season>" when
+## the entry has no `seasons`), and with a `weather` given (today's kind) a fish catchable today beats one that is not.
+static func missing_hint(c: CharacterData, data: GameData, region_id: String, season: String, weather: String = "") -> String:
+	var fallback := ""
 	for place: Dictionary in data.regions.get(region_id, {}).get("places", []):
 		if String(place.get("type", "")) != "fishing":
 			continue
 		for entry: Dictionary in Exploration.gather_table_for(c, data, place.get("catch_table", []), season):
 			var id := String(entry.get("item", ""))
-			if id != "" and data.items.get(id, {}).get("tags", []).has("fish") and not c.catch_log.has(id):
-				return "%s bites here in %s." % [data.items[id].get("name", id), season.to_lower()]
-	return ""
+			if id == "" or not data.items.get(id, {}).get("tags", []).has("fish") or c.catch_log.has(id):
+				continue
+			var line := "%s bites here%s." % [data.items[id].get("name", id), _when_clause(entry, season)]
+			var kinds: Array = entry.get("weather", [])
+			if weather == "" or kinds.is_empty() or kinds.has(weather):
+				return line
+			if fallback == "":
+				fallback = line
+	return fallback
+
+
+static func _when_clause(entry: Dictionary, season: String) -> String:
+	var kinds: Array = entry.get("weather", [])
+	var text := ""
+	if kinds.is_empty() or entry.has("seasons"):
+		text = " in " + season.to_lower()
+	if not kinds.is_empty():
+		var words: PackedStringArray = []
+		for k: Variant in kinds:
+			words.append("it " + ("rains" if String(k) == "rain" else "snows" if String(k) == "snow" else "is %s" % String(k)))
+		text += " when " + " or ".join(words)
+	return text
 
 
 ## FISH-005: a catch_table entry with `trophy: true` needs a clean strike and an Angler's skill.

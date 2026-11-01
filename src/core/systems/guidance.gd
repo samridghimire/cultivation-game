@@ -776,21 +776,53 @@ static func merchant_goods(place: Dictionary) -> String:
 
 ## WU-260: "No weapons or armor here. The <Merchant> in <Region> (<duration>) sells them." when no merchant in
 ## `region_id` sells equipment and one within reach does; "" otherwise.
-static func gear_elsewhere_line(c: CharacterData, data: GameData, region_id: String) -> String:
+static func gear_elsewhere_line(c: CharacterData, data: GameData, region_id: String, today: int = -1) -> String:
+	var sells_gear := func(p: Dictionary) -> bool:
+		for item_id: String in data.items:
+			if Equipment.slot_of(data, item_id) != "" and Items.merchant_sells(data, data.items[item_id], p.get("stock_tags", []), int(p.get("max_price", 0))):
+				return true
+		return false
 	var pick := func(r: String) -> String:
 		for p: Dictionary in data.regions.get(r, {}).get("places", []):
-			if String(p.get("type", "")) != "merchant" or p.has("open_days"):
-				continue
-			for item_id: String in data.items:
-				if Equipment.slot_of(data, item_id) != "" and Items.merchant_sells(data, data.items[item_id], p.get("stock_tags", []), int(p.get("max_price", 0))):
-					return String(p.get("display_name", "merchant"))
+			if String(p.get("type", "")) == "merchant" and not p.has("open_days") and sells_gear.call(p):
+				return String(p.get("display_name", "merchant"))
 		return ""
 	if pick.call(region_id) != "":
 		return ""
 	var far := nearest_selling(c, data, region_id, pick)
 	if far.is_empty():
-		return ""
+		# MARKET-005: a market-day stall as the only seller; name its next market day.
+		if today < 0:
+			return ""
+		var stall_pick := func(r: String) -> String:
+			for p: Dictionary in data.regions.get(r, {}).get("places", []):
+				if String(p.get("type", "")) == "merchant" and p.has("open_days") and sells_gear.call(p):
+					return String(p.get("display_name", "merchant"))
+			return ""
+		var stall := nearest_selling(c, data, region_id, stall_pick)
+		if stall.is_empty():
+			return ""
+		var place := _place_named(data, String(stall["region_id"]), String(stall["result"]))
+		return "No weapons or armor here. The %s %s sells them%s." % [stall["result"], _far_where(c, data, region_id, stall), _market_when(place, today)]
 	return "No weapons or armor here. The %s %s sells them." % [far["result"], _far_where(c, data, region_id, far)]
+
+
+## MARKET-005: the place of `region_id` with display name `name`, or {}.
+static func _place_named(data: GameData, region_id: String, name: String) -> Dictionary:
+	for p: Dictionary in data.regions.get(region_id, {}).get("places", []):
+		if String(p.get("display_name", "")) == name:
+			return p
+	return {}
+
+
+## MARKET-005: ", next market day in 3 days" / ", open today" for a stall `place`; "" for an always-open place.
+static func _market_when(place: Dictionary, today: int) -> String:
+	if not place.has("open_days") or today < 0:
+		return ""
+	var ahead := Places.days_until_open(place, today)
+	if ahead < 0:
+		return ""
+	return ", open today" if ahead == 0 else ", next market day in %s" % Calendar.format_duration(ahead)
 
 
 ## WU-253: one "<Merchant>: <goods>" line per merchant place in `region_id`.
@@ -3355,7 +3387,7 @@ static func next_recipe_line(c: CharacterData, data: GameData, prof_id: String, 
 	if scroll_id != "":
 		source = source_phrase(c, data, scroll_id, region_id, today)
 		if source == "sold by merchants" and region_id != "":
-			source = _scroll_merchant_phrase(c, data, region_id, scroll_id, source)
+			source = _scroll_merchant_phrase(c, data, region_id, scroll_id, source, today)
 		if source == "":
 			var found := Items.sources(data, scroll_id)
 			source = String(found[0]).to_lower() if not found.is_empty() else ""
@@ -3387,10 +3419,16 @@ static func _scroll_treasury_phrase(c: CharacterData, data: GameData, scroll_id:
 
 ## GUIDE-184: "sold by the <Merchant> here for N stones" / "... in <Region> (<days>) for N stones" for the
 ## nearest merchant stocking `scroll_id`; `fallback` when none is in reach.
-static func _scroll_merchant_phrase(c: CharacterData, data: GameData, region_id: String, scroll_id: String, fallback: String) -> String:
+static func _scroll_merchant_phrase(c: CharacterData, data: GameData, region_id: String, scroll_id: String, fallback: String, today: int = -1) -> String:
 	var far := nearest_selling(c, data, region_id, func(r: String) -> String: return merchant_selling(data, r, scroll_id))
 	if far.is_empty():
-		return fallback
+		# MARKET-005: a market-day stall as the only seller.
+		var stall := nearest_selling(c, data, region_id, func(r: String) -> String: return String(timed_stall(data, r, scroll_id).get("display_name", "")))
+		if today < 0 or stall.is_empty():
+			return fallback
+		var place := _place_named(data, String(stall["region_id"]), String(stall["result"]))
+		var where := "here" if stall["region_id"] == region_id else _far_where(c, data, region_id, stall)
+		return "sold by the %s %s for %d stones%s" % [stall["result"], where, merchant_price(c, data, String(stall["region_id"]), scroll_id), _market_when(place, today)]
 	var rid: String = far["region_id"]
 	var price := merchant_price(c, data, rid, scroll_id)
 	if rid == region_id:
@@ -3601,7 +3639,7 @@ static func village_lines(c: CharacterData, data: GameData, people: Dictionary, 
 	var log_line := Fishing.log_summary(c, data)
 	if log_line != "":
 		out.append(log_line)
-		var missing := Fishing.missing_hint(c, data, region_id, Calendar.season_of(today))
+		var missing := Fishing.missing_hint(c, data, region_id, Calendar.season_of(today), Weather.of(data, region_id, today))
 		if missing != "":
 			out.append(missing)
 	var market_line := Places.hint_line(data.regions.get(region_id, {}), today)
