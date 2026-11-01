@@ -441,10 +441,13 @@ func _draw_map() -> void:
 		var icon := HudIcons.weather(Weather.of(data, region_id, GameClock.total_days))
 		if icon != null:
 			_canvas.draw_texture(icon, top_left + Vector2(NODE_SIZE.x - 14.0, 2.0))
+		var mx: float = top_left.x + NODE_SIZE.x - 14.0
+		var my: float = top_left.y + NODE_SIZE.y - 14.0
 		if not open_markets(data, region_id, GameClock.total_days).is_empty():
-			_canvas.draw_string(font, top_left + Vector2(NODE_SIZE.x - 14.0, NODE_SIZE.y - 4.0), "$", HORIZONTAL_ALIGNMENT_LEFT, -1, 14, MARK_COLORS["anchor"])
+			_canvas.draw_texture(HudIcons.map_mark("coin"), Vector2(mx, my))
+			mx -= 14.0
 		if roamer_count(GameState.player, data, region_id, GameClock.total_days, GameState.world_flags) > 0:
-			_canvas.draw_string(font, top_left + Vector2(NODE_SIZE.x - 28.0, NODE_SIZE.y - 4.0), "w", HORIZONTAL_ALIGNMENT_LEFT, -1, 14, MARK_COLORS["bounty"])
+			_canvas.draw_texture(HudIcons.map_mark("paw"), Vector2(mx, my))
 	if _hint_region != "" and _positions.has(_hint_region):
 		var tip: Vector2 = Vector2(_positions[_hint_region]) + Vector2(NODE_SIZE.x / 2.0 - 4.0, -NODE_SIZE.y / 2.0 - 2.0)
 		_canvas.draw_string(font, tip, "!", HORIZONTAL_ALIGNMENT_LEFT, -1, 22, UIStyle.ACCENT)

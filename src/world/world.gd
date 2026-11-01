@@ -874,7 +874,7 @@ func _draw_landmark(lm: Dictionary) -> void:
 	if PixelLandmark.supports(str(lm["kind"])):
 		var water := Color(str(lm["color"])) if lm.has("color") else Color("3f7fa8")
 		var frozen := Scenery.is_snowy(_season) and not bool(_region.get("map", {}).get("no_snow", false))
-		var ptex := PixelLandmark.texture(str(lm["kind"]), size, water, frozen)
+		var ptex := PixelLandmark.texture(str(lm["kind"]), size, water, frozen, MotionFx.reduced())
 		var px := Vector2(ptex.get_size()) * float(Sprites.scale())
 		var origin := Vector2(r.get_center().x - px.x / 2.0, r.end.y - px.y)
 		draw_texture_rect(ptex, Rect2(origin, px), false)
@@ -941,7 +941,7 @@ func _draw_landmark(lm: Dictionary) -> void:
 			draw_rect(r, Color("3f7fa8"))
 			draw_rect(r, Color("2e6488"), false, 2.0)
 			var ripple := r.position.y + 12.0
-			while ripple < r.end.y - 6.0:
+			while MotionFx.reduced() and ripple < r.end.y - 6.0:
 				draw_line(Vector2(r.get_center().x - r.size.x * 0.25, ripple), Vector2(r.get_center().x + r.size.x * 0.25, ripple), Color("8cc4e0"), 2.0)
 				ripple += 46.0
 			_draw_bridges(r)

@@ -7,7 +7,7 @@ extends SceneTree
 ## journal Commissions, Deliver) as crafter_*.png.
 ## WU-418: append `-- --friend` for friend.png (a villager menu with the heart row).
 ## WU-414: append `-- --book` for village_book.png.
-## GFX-033: append `-- --storm` to render the first-hour shots under a storm.
+## GFX-033: append `-- --storm` to render the first-hour shots under a storm.  GFX-051: `-- --rain` forces rain.
 ## GFX-037: append `-- --season=Winter` (Spring/Summer/Autumn/Winter) to start on that season's first day.
 ## GFX-029: append `-- --field` for field.png (a growing field).
 ## GFX-023: append `-- --celebration` for celebration.png (wedding lanterns and red sashes).
@@ -68,6 +68,8 @@ func _start() -> void:
 	hud = world.get_node("HUD")
 	if OS.get_cmdline_user_args().has("--storm"):  # GFX-033: force today's weather to storm
 		world.call("force_weather", "storm")
+	if OS.get_cmdline_user_args().has("--rain"):  # GFX-051: force today's weather to rain
+		world.call("force_weather", "rain")
 	if OS.get_cmdline_user_args().has("--crafter"):
 		_crafter_shots(gs, c)
 		return

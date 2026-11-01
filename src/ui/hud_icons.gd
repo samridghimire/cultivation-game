@@ -55,6 +55,13 @@ const CALENDAR_MORE := {
 	"event": {"colors": {"a": Color("f0a050"), "b": Color("fff1a8"), "c": Color("d9702f")}, "rows": ["............", ".....oo.....", ".....oo.....", "....oabo....", ".ooooabboooo", ".oaabbbbbaao", "..oaabbbaao.", "...oabbbao..", "..oabaaabao.", "..oao..oaao.", "...o....o...", "............"]},
 }
 
+## World map node marks (GFX-051): an open stall's coin, a roaming beast's paw, a forage leaf.
+const MARKS := {
+	"coin": {"colors": {"a": Color("e8c76a"), "b": Color("fff1a8"), "c": Color("b8943a")}, "rows": ["............", "....oooo....", "...oabbao...", "..oabccaao..", "..oabcaaao..", "..oabccaao..", "..oaaaaaco..", "...oaaaco...", "....oooo....", "............", "............", "............"]},
+	"paw": {"colors": {"a": Color("c9873a"), "b": Color("e8b070"), "c": Color("8a4a22")}, "rows": ["............", "..oo....oo..", ".oabo..obao.", ".oaao..oaao.", "..oo.oo.oo..", "oo.oabbao.oo", "oao.oaaao.oao", ".oo.oaaao.oo", "....oacao...", ".....ooo....", "............", "............"]},
+	"leaf": {"colors": {"a": Color("5fbf5a"), "b": Color("a8e08a"), "c": Color("3a7a3a")}, "rows": ["............", "......ooo...", "....ooabbo..", "...oabaabao.", "..oabaaaaao.", "..oaaaaacao.", "..oaaaacao..", "...oaacco...", "..occoo.....", ".oc.........", "............", "............"]},
+}
+
 ## Friendship heart, 5x5: 'a' fill, 'o' outline, 'b' highlight (WU-418).
 const HEART := ["oo.oo", "oaooa", "oaaao", ".oao.", "..o.."]
 const HEART_FILL := Color("e0553c")
@@ -80,6 +87,11 @@ static func season(season_name: String) -> Texture2D:
 ## A 12x12 weather glyph for a Weather.KINDS id; null for anything else.
 static func weather(kind: String) -> Texture2D:
 	return _glyph("weather_" + kind, WEATHER, kind)
+
+
+## A 12x12 world-map mark glyph ("coin", "paw", "leaf"); null for anything else.
+static func map_mark(name: String) -> Texture2D:
+	return _glyph("mark_" + name, MARKS, name)
 
 
 ## A 12x12 farming tool glyph ("watering_can", "hoe"); null for anything else.

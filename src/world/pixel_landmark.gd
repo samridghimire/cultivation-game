@@ -24,13 +24,14 @@ static func pixel_size(kind: String, size: Vector2) -> Vector2i:
 
 
 ## `tint` is the pond's water colour; other kinds ignore it.
-static func texture(kind: String, size: Vector2, tint: Color = Color("3f7fa8"), frozen: bool = false) -> ImageTexture:
+## `dashes` false leaves streams without baked ripple dashes (GFX-051: WaterLife scrolls its own).
+static func texture(kind: String, size: Vector2, tint: Color = Color("3f7fa8"), frozen: bool = false, dashes: bool = true) -> ImageTexture:
 	var px := pixel_size(kind, size)
 	if frozen and kind == "pond":
 		return frozen_pond(px, tint)
-	var key := "%s|%s|%s" % [kind, px, tint.to_html()]
+	var key := "%s|%s|%s|%s" % [kind, px, tint.to_html(), dashes]
 	if not _cache.has(key):
-		_cache[key] = PixelPlace.from_rows(rows(kind, size), tint)
+		_cache[key] = PixelPlace.from_rows(rows(kind, size, dashes), tint)
 	return _cache[key]
 
 
@@ -67,7 +68,7 @@ static func frozen_pond(px: Vector2i, water: Color) -> ImageTexture:
 
 
 ## Template rows (all of one length) for `kind` in a rect of `size`.
-static func rows(kind: String, size: Vector2) -> Array[String]:
+static func rows(kind: String, size: Vector2, dashes: bool = true) -> Array[String]:
 	var c: Array
 	var n := pixel_size(kind, size) if not FIXED.has(kind) else Vector2i.ZERO
 	match kind:
@@ -92,7 +93,7 @@ static func rows(kind: String, size: Vector2) -> Array[String]:
 		"cliff":
 			c = _cliff(n.x, n.y)
 		"stream":
-			c = _stream(n.x, n.y)
+			c = _stream(n.x, n.y, dashes)
 		"jetty":
 			c = _jetty()
 		_:
@@ -277,7 +278,7 @@ static func _cliff(w: int, h: int) -> Array:
 
 
 ## Two-tone water with light ripple dashes, 2-px darker banks on the long edges and a stone every ~60 px.
-static func _stream(w: int, h: int) -> Array:
+static func _stream(w: int, h: int, dashes: bool = true) -> Array:
 	var c := PixelPlace.canvas(w, h)
 	PixelPlace.rect(c, 0, 0, w, h, "r")
 	var step := maxi(8, 60 / maxi(1, Sprites.scale()))
@@ -285,7 +286,7 @@ static func _stream(w: int, h: int) -> Array:
 		PixelPlace.rect(c, 0, 0, w, mini(2, h), "R")
 		PixelPlace.rect(c, 0, maxi(0, h - 2), w, mini(2, h), "R")
 		var y := 4
-		while y < h - 3:
+		while dashes and y < h - 3:
 			var x := (y * 5) % 9
 			while x < w:
 				PixelPlace.rect(c, x, y, 4, 1, "h")
@@ -300,7 +301,7 @@ static func _stream(w: int, h: int) -> Array:
 		PixelPlace.rect(c, 0, 0, mini(2, w), h, "R")
 		PixelPlace.rect(c, maxi(0, w - 2), 0, mini(2, w), h, "R")
 		var x := 4
-		while x < w - 3:
+		while dashes and x < w - 3:
 			var y := (x * 5) % 9
 			while y < h:
 				PixelPlace.rect(c, x, y, 1, 4, "h")

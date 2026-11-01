@@ -42,6 +42,22 @@ func test_icon_textures() -> void:
 	assert_true(HudIcons.season("Monsoon") == null)
 
 
+func test_map_mark_glyphs() -> void:  # GFX-051
+	for k in ["coin", "paw", "leaf"]:
+		assert_eq(HudIcons.map_mark(k).get_size(), Vector2(12, 12), k)
+	assert_true(HudIcons.map_mark("coin") != HudIcons.map_mark("paw"))
+	assert_true(HudIcons.map_mark("dragon") == null)
+
+
+func test_stream_without_baked_dashes() -> void:  # GFX-051
+	var size := Vector2(400, 60)
+	var with_d := PixelLandmark.rows("stream", size)
+	var without := PixelLandmark.rows("stream", size, false)
+	assert_true(with_d != without)
+	assert_true("h" in "".join(with_d))
+	assert_true(not ("h" in "".join(without)))
+
+
 func test_lamps_for_lives() -> void:
 	var hud := _hud(3)
 	await _tree().process_frame
