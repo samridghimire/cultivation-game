@@ -45,6 +45,7 @@ var _season_tint: CanvasModulate
 var _season := ""
 var _ambient: Node
 var _village_life: VillageLife
+var _water_life: WaterLife
 var _weather_kind := "clear"
 ## The pinned weather, readable by UI that draws its own sky (the duel stage, GFX-038); "" = none.
 static var pinned_weather := ""
@@ -199,6 +200,12 @@ func _refresh_village_life() -> void:
 		_village_life.name = "VillageLife"
 		add_child(_village_life)
 	_village_life.setup(_region, _season, _weather_kind, MotionFx.reduced(), map_size)
+	if _water_life == null:
+		_water_life = WaterLife.new()
+		_water_life.name = "WaterLife"
+		add_child(_water_life)
+	var frozen := Scenery.is_snowy(_season) and not bool(_region.get("map", {}).get("no_snow", false))
+	_water_life.setup(_region, _weather_kind in ["rain", "storm"], frozen, MotionFx.reduced())
 
 
 ## GFX-033: a white flash every 6-14 s on storm days (none with reduce_motion).
