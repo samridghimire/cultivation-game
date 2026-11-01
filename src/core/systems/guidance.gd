@@ -3875,6 +3875,11 @@ static func fair_fights(c: CharacterData, data: GameData, flags: Dictionary, tod
 				and Mentorship.check_spar(c, rival, int(favor.get(rival.id, 0)), data, today) == "":
 			rated += 1
 			_rate_fight(found, c, data, Mentorship.spar_enemy(rival, data), "rival", "Challenge %s" % rival.name)
+	var roaming: Dictionary = {}
+	if found.size() < FAIR_FIGHTS_MAX and region_id != "" and rated < FAIR_FIGHT_MAX_RATED:
+		roaming = _roamer_fight(found, c, data, flags, today, region_id)
+		if not roaming.is_empty():
+			rated += 1
 	if found.size() < FAIR_FIGHTS_MAX and region_id != "":
 		var explore_rated := 0
 		var tags: Array = data.regions.get(region_id, {}).get("encounter_tags", [])
@@ -3882,11 +3887,38 @@ static func fair_fights(c: CharacterData, data: GameData, flags: Dictionary, tod
 			if rated >= FAIR_FIGHT_MAX_RATED or explore_rated >= FAIR_FIGHT_EXPLORE_MAX:
 				break
 			var foe: Dictionary = data.enemies[enemy_id]
+			if roaming.has(enemy_id):
+				continue
 			rated += 1
 			explore_rated += 1
 			_rate_fight(found, c, data, foe, "explore", "Explore here: %s" % foe.get("name", enemy_id))
 	found.sort_custom(fair_fight_before)
 	return _keep_trial(found, FAIR_FIGHTS_MAX)
+
+
+## GUIDE-205: a beast that roams the current region today (walk up to it), else one that roams a region one
+## route away, rated like any fair fight. Adds at most one "roamer" entry to `found` and returns {enemy_id: true}
+## for the beast it names ({} when none). Wildlife.roamers is deterministic (no game rng).
+static func _roamer_fight(found: Array[Dictionary], c: CharacterData, data: GameData, flags: Dictionary, today: int, region_id: String) -> Dictionary:
+	var spots: Array[Dictionary] = [{"region": region_id, "days": 0}]
+	for route: Dictionary in data.regions.get(region_id, {}).get("routes", []):
+		spots.append({"region": String(route.get("to", "")), "days": int(route.get("days", 1))})
+	for spot in spots:
+		var where := String(spot["region"])
+		if not data.regions.has(where):
+			continue
+		for r in Wildlife.roamers(data, where, today, c.realm_index, flags):
+			var enemy_id := String(r["enemy"])
+			var enemy: Dictionary = data.enemies.get(enemy_id, {})
+			if enemy.is_empty() or Combat.win_chance(c, data, enemy) < FAIR_FIGHT_MIN_CHANCE:
+				continue
+			var name := String(enemy.get("name", enemy_id))
+			var label := "A %s roams here today, walk up to it" % name
+			if int(spot["days"]) > 0:
+				label = "A %s roams %s today, %s away" % [name, _region_name(data, where), Calendar.format_duration(int(spot["days"]))]
+			_rate_fight(found, c, data, enemy, "roamer", label)
+			return {enemy_id: true}
+	return {}
 
 
 ## The first `n` of the sorted `found`, but an open sect trial (kind "trial") is never dropped: when it

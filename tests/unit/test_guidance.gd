@@ -1570,7 +1570,7 @@ func test_bare_rogue_gets_first_combat_hint_instead() -> void:
 	c.techniques = {}
 	var fights := Guidance.fair_fights(c, data(), {"chore_boar_done": true}, c.age_days, "qingshi_village")
 	for f in fights:
-		assert_eq(f["kind"], "explore", "only wilds foes are left for a bare rogue")
+		assert_true(f["kind"] in ["explore", "roamer"], "only wilds foes are left for a bare rogue")
 	if not fights.is_empty():
 		return  # GUIDE-030: a fair wilds foe replaces the hint
 	var hint := Guidance.first_combat_hint(c, data(), "qingshi_village")
@@ -3497,6 +3497,9 @@ func _gv99_injured_fighter() -> CharacterData:
 func test_empty_fair_fights_note_says_heal_first_when_injury_is_the_reason() -> void:
 	var c := _gv99_injured_fighter()
 	var flags := {"chore_boar_done": true}
+	for region_id: String in data().regions:  # GUIDE-205: a weak roamer is a fair fight even when hurt; none are about today
+		for slot in Wildlife.MAX_COUNT:
+			Wildlife.mark_down(flags, region_id, slot, c.age_days)
 	assert_true(Guidance.fair_fights(c, data(), flags, c.age_days, "misty_forest").is_empty(), "injuries drop every fight")
 	var note := Guidance.empty_fair_fights_note(c, data(), "misty_forest", c.age_days, flags)
 	assert_true(note.contains("heal your injuries first (healed, you could win: "), note)
@@ -5685,3 +5688,24 @@ func test_fishing_missing_hint_weather() -> void:
 	var c2 := CharacterData.new()
 	var hint := Fishing.missing_hint(c2, d, "misty_forest", "Summer", "clear")
 	assert_false(hint.contains("Rain Bream"), hint)
+
+
+## GUIDE-205: a roaming beast is named where it roams: here, or one route away.
+func test_fair_fights_name_a_roaming_beast() -> void:
+	var c := _fighter()
+	c.sect = {}
+	var d := data()
+	var day := -1
+	for t in range(0, 200):
+		for r in Wildlife.roamers(d, "misty_forest", t, c.realm_index, {}):
+			if Combat.win_chance(c, d, d.enemies[String(r["enemy"])]) >= Guidance.FAIR_FIGHT_MIN_CHANCE and day < 0:
+				day = t
+	assert_true(day >= 0, "a winnable roamer exists in Misty Forest")
+	var near := Guidance.fair_fights(c, d, {}, day, "qingshi_village")
+	var away := near.filter(func(f: Dictionary) -> bool: return f["kind"] == "roamer")
+	assert_eq(away.size(), 1)
+	assert_true(String(away[0]["text"]).contains("roams Misty Forest today"), String(away[0]["text"]))
+	assert_true(String(away[0]["text"]).contains("away"))
+	var here := Guidance.fair_fights(c, d, {}, day, "misty_forest").filter(func(f: Dictionary) -> bool: return f["kind"] == "roamer")
+	assert_eq(here.size(), 1)
+	assert_true(String(here[0]["text"]).contains("roams here today"), String(here[0]["text"]))
