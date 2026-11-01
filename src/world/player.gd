@@ -124,6 +124,7 @@ func remove_interactable(i: Interactable) -> void:
 
 
 func _update_target() -> void:
+	_nearby = _nearby.filter(func(i: Interactable) -> bool: return is_instance_valid(i) and not i.is_queued_for_deletion())
 	var best: Interactable = null
 	var best_dist := INF
 	for i in _nearby:

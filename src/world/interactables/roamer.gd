@@ -1,0 +1,140 @@
+class_name Roamer
+extends Interactable
+## WU-423: a wild beast you can see (Wildlife.roamers). It wanders slowly near its spot, faces its
+## movement and stays put in storms. Walking up offers Fight / Leave; Fight calls GameState.engage_roamer.
+## Spots are seeded from region, day and slot with a local rng (never GameState.rng).
+
+const WANDER_RADIUS := 80.0
+const WALK_SPEED := 22.0
+const MIN_GAP := 48.0
+const FADE_SECONDS := 0.4
+const WORLD_SCRIPT := preload("res://src/world/world.gd")
+
+var slot := 0
+var enemy_id := ""
+var home := Vector2.ZERO
+var facing := 1.0
+var _rng := RandomNumberGenerator.new()
+var _target := Vector2.ZERO
+var _wait := 0.0
+var _time := 0.0
+var _fading := false
+var _alpha := 1.0
+
+
+## Setup before add_child: the beast `enemy_id` of roamer `slot` standing at `pos`.
+func setup(p_slot: int, p_enemy: String, pos: Vector2, seed_value: int) -> void:
+	slot = p_slot
+	enemy_id = p_enemy
+	position = pos
+	home = pos
+	_target = pos
+	_rng.seed = seed_value
+	_wait = _rng.randf_range(0.5, 3.0)
+	size = Vector2(48, 32)
+	reach = 22.0
+	art_kind = "roamer"
+	_update_name()
+
+
+func _ready() -> void:
+	super._ready()
+	EventBus.player_changed.connect(_update_name)
+
+
+func _update_name() -> void:
+	var def: Dictionary = GameState.data.enemies.get(enemy_id, {})
+	var title := String(def.get("name", enemy_id))
+	if GameState.has_session() and GameState.data.enemies.has(enemy_id):
+		title = "%s (%s)" % [title, Wildlife.threat(GameState.player, GameState.data, enemy_id)]
+	display_name = title
+	_redraw_label()
+
+
+func label_text() -> String:
+	return display_name
+
+
+func get_options() -> Array[Dictionary]:
+	return [
+		{"label": "Fight", "description": "Take the beast on now.", "action": GameState.engage_roamer.bind(slot)},
+		{"label": "Leave", "description": "Walk away and let it be."},
+	]
+
+
+func _physics_process(delta: float) -> void:
+	_wander(delta)
+	if _fading:
+		_alpha = maxf(0.0, _alpha - delta / FADE_SECONDS)
+		modulate.a = _alpha
+		if _alpha <= 0.0:
+			queue_free()
+
+
+## Starts the short fade after the beast is gone for the day; the node frees itself.
+func fade_out() -> void:
+	_fading = true
+	monitoring = false
+	if MotionFx.reduced():
+		queue_free()
+
+
+## Wanders slowly within WANDER_RADIUS of home. Still in a storm, while fading or with a modal open.
+func _wander(delta: float) -> void:
+	if _fading or storm_still():
+		return
+	_time += delta
+	if position.distance_to(_target) < 2.0:
+		_wait -= delta
+		if _wait <= 0.0:
+			_wait = _rng.randf_range(1.5, 4.0)
+			var offset := Vector2.from_angle(_rng.randf() * TAU) * _rng.randf_range(10.0, WANDER_RADIUS)
+			_target = home + offset
+			_target = Vector2(maxf(24.0, _target.x), maxf(24.0, _target.y))
+		return
+	var step := (_target - position).normalized() * minf(WALK_SPEED * delta, position.distance_to(_target))
+	position += step
+	if absf(step.x) > 0.01:
+		facing = 1.0 if step.x > 0.0 else -1.0
+	queue_redraw()
+
+
+## Beasts stay put when the world has a storm today.
+func storm_still() -> bool:
+	if not GameState.has_session():
+		return false
+	return WORLD_SCRIPT.weather_today(GameState.data, GameState.current_region, GameClock.total_days) == "storm"
+
+
+func draw_generated_art() -> bool:
+	var fur := DuelStage.fur_for(enemy_id)
+	var frame := int(_time * 3.0) % 2 if position.distance_to(_target) >= 2.0 else 0
+	var tex := PixelFigure.beast_frame(fur, frame, DuelStage.beast_kind(enemy_id))
+	var k := 2.0
+	var s := tex.get_size() * k
+	draw_set_transform(Vector2(0, 10), 0.0, Vector2(1.0, 0.4))
+	draw_circle(Vector2.ZERO, 16.0, Color(0, 0, 0, 0.3))
+	draw_set_transform(Vector2.ZERO, 0.0, Vector2(facing, 1.0))
+	draw_texture_rect(tex, Rect2(-s.x / 2.0, 12.0 - s.y, s.x, s.y), false)
+	draw_set_transform(Vector2.ZERO)
+	return true
+
+
+## Spot for `slot`: >= MIN_GAP from every blocked rect, kept inside the map. Same inputs, same spot.
+static func pick_spot(region_id: String, day: int, slot: int, map_size: Vector2, blocked: Array[Rect2], avoid: Array[Vector2]) -> Vector2:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash("%s:%d:%d" % [region_id, day, slot])
+	var spot := Vector2(map_size.x / 2.0, map_size.y / 2.0)
+	for i in 60:
+		spot = Vector2(rng.randf_range(100.0, map_size.x - 100.0), rng.randf_range(100.0, map_size.y - 100.0))
+		var ok := true
+		for r in blocked:
+			if r.grow(MIN_GAP).has_point(spot):
+				ok = false
+				break
+		for p in avoid:
+			if ok and spot.distance_to(p) < MIN_GAP + 60.0:
+				ok = false
+		if ok:
+			return spot
+	return spot

@@ -27,6 +27,7 @@ const PLACE_SCRIPTS := {
 const LAYOUT_KEYS := ["type", "pos"]
 const NPC_SCRIPT := preload("res://src/world/interactables/npc.gd")
 const ABODE_SCRIPT := preload("res://src/world/interactables/abode.gd")
+const ROAMER_SCRIPT := preload("res://src/world/interactables/roamer.gd")
 const FAMILY_HOME_SCRIPT := preload("res://src/world/interactables/family_home.gd")
 ## Placeholder body color of generated NPCs by gender.
 const GENDER_COLORS := {"male": Color("8fb3e0"), "female": Color("e6a3c4")}
@@ -83,6 +84,7 @@ func _ready() -> void:
 	_refresh_stalls()
 	_place_at_spawn_anchor()
 	_build_npcs()
+	_build_roamers()
 	_build_bounds()
 	_build_landmark_bodies()
 	_limit_camera()
@@ -101,6 +103,7 @@ func _ready() -> void:
 		player.input_enabled = not is_open
 		_greet_modal = is_open)
 	EventBus.region_changed.connect(_on_region_changed)
+	EventBus.roamers_changed.connect(_on_roamers_changed)
 	get_tree().auto_accept_quit = false
 
 
@@ -114,6 +117,7 @@ func _build_season_tint() -> void:
 
 
 func _on_days_advanced(_days: int) -> void:
+	_build_roamers()
 	_refresh_stalls()
 	_refresh_timed_places()
 	var season := Calendar.season_of(GameClock.total_days)
@@ -328,6 +332,38 @@ func _build_decor() -> void:
 	rng.seed = hash(GameState.current_region)
 	_decor = Scenery.place(_region, rng)
 	_decor.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return a["pos"].y < b["pos"].y)
+
+
+## WU-423: one beast node per Wildlife roamer of today, at a seeded spot clear of places, paths and the arrival point.
+func _build_roamers() -> void:
+	for node in get_children():
+		if node is Roamer:
+			node.queue_free()
+	var blocked: Array[Rect2] = Scenery.landmark_rects(_region)
+	for place: Dictionary in _region.get("places", []):
+		var sz := _vec(place.get("size", [64, 64]))
+		blocked.append(Rect2(_vec(place.get("pos", [0, 0])) - sz / 2.0, sz))
+	for p: Array in _region.get("map", {}).get("paths", []):
+		blocked.append(Rect2(float(p[0]), float(p[1]), float(p[2]), float(p[3])))
+	var avoid: Array[Vector2] = [_vec(_region.get("spawn", [map_size.x / 2.0, map_size.y / 2.0]))]
+	var day := GameClock.total_days
+	for r: Dictionary in GameState.roamers_here():
+		var slot := int(r["slot"])
+		var spot := Roamer.pick_spot(GameState.current_region, day, slot, map_size, blocked, avoid)
+		var node: Roamer = ROAMER_SCRIPT.new()
+		node.setup(slot, String(r["enemy"]), spot, hash("%s:%d:%d:w" % [GameState.current_region, day, slot]))
+		add_child(node)
+		move_child(node, player.get_index())
+
+
+## An engaged beast fades away; the rest stay.
+func _on_roamers_changed() -> void:
+	var alive := {}
+	for r: Dictionary in GameState.roamers_here():
+		alive[int(r["slot"])] = true
+	for node in get_children():
+		if node is Roamer and not alive.has(node.slot):
+			node.fade_out()
 
 
 func _build_places() -> void:
