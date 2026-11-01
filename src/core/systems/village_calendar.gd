@@ -3,13 +3,14 @@ extends RefCounted
 ## CAL-001: the month ahead. Lists dated things the player can know about (market days, birthdays of known
 ## villagers, festivals, season starts) for a window of days. Pure functions, no state, no rng.
 
-const KIND_ORDER := ["market", "festival_active", "festival_month", "birthday", "season"]
+const KIND_ORDER := ["market", "festival_active", "festival_month", "birthday", "field", "rent", "request", "secret_realm", "event", "season"]
 
 
 ## Every dated thing in [start, start + span) days, soonest first.
 ## Each entry: {day: int (total days), kind: String, text: String, region: String ("" = anywhere)}.
+## CAL-002: with `c` given, also the player's own dates (crops, rent, requests, secret realms, events).
 static func upcoming(data: GameData, npcs: Dictionary, favor: Dictionary, active_events: Array,
-		region_id: String, start: int, span: int = 30) -> Array[Dictionary]:
+		region_id: String, start: int, span: int = 30, c: CharacterData = null) -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
 	var end := start + span
 	# Market days of timed places in this region.
@@ -54,14 +55,80 @@ static func upcoming(data: GameData, npcs: Dictionary, favor: Dictionary, active
 			var names: Array[String] = []
 			for r in def.get("regions", []):
 				names.append(Exploration.region_name(data, String(r)))
-			out.append({"day": key, "kind": "festival_month", "region": "",
+			out.append({"day": key, "kind": "festival_month", "region": String(def["regions"][0]) if (def.get("regions", []) as Array).size() == 1 else "",
 				"text": "%s this month (somewhere in %s)" % [String(def.get("name", eid)), " or ".join(names)]})
 	# Season starts.
 	for day in range(start, end):
 		if day > 0 and Calendar.season_of(day) != Calendar.season_of(day - 1):
 			out.append({"day": day, "kind": "season", "text": "%s begins" % Calendar.season_of(day), "region": ""})
+	if c != null:
+		_own_dates(out, data, npcs, active_events, c, start, end)
 	out.sort_custom(_before)
 	return out
+
+
+## CAL-002: the player's own dated things inside [start, end).
+static func _own_dates(out: Array[Dictionary], data: GameData, npcs: Dictionary, active_events: Array, c: CharacterData, start: int, end: int) -> void:
+	for plot_key: String in c.field_plots:
+		var rid := plot_key.get_slice(":", 0)
+		var place := FieldPlots.place_def(data, rid)
+		var entry: Dictionary = c.field_plots[plot_key]
+		var paid := int(entry.get("paid_until", 0))
+		if paid > start and paid < end:
+			out.append({"day": paid, "kind": "rent", "region": rid, "text": "Field rent runs out"})
+		var seen := {}
+		for crop: Dictionary in entry.get("crops", []):
+			var left := int(crop.get("days_left", 0))
+			if left <= 0 or place.is_empty():
+				continue
+			var day := start
+			while left > 0 and day < paid and day < end + 400:
+				if not FieldPlots.is_frozen(place, day):
+					left -= 1
+				day += 1
+			if left > 0:
+				continue  # never ripens before the rent ends
+			var item_id := String(crop.get("item", ""))
+			var ready := day  # the first day it stands ripe
+			if ready >= end or seen.has("%s@%d" % [item_id, ready]):
+				continue
+			seen["%s@%d" % [item_id, ready]] = true
+			out.append({"day": ready, "kind": "field", "region": rid,
+				"text": "Your %s is ready" % String(data.items.get(item_id, {}).get("name", item_id))})
+	for req: Dictionary in c.letter_requests:
+		var until := int(req.get("until", 0))
+		if until < start or until >= end:
+			continue
+		var asker: CharacterData = npcs.get(req.get("npc_id", ""))
+		var npc_name := asker.name if asker != null else "Someone"
+		var item_id := String(req.get("item", ""))
+		out.append({"day": until, "kind": "request", "region": "",
+			"text": "%s's ask is due: %d %s" % [npc_name, int(req.get("count", 1)), Items.item_plural(data, item_id, int(req.get("count", 1)))]})
+	for realm_id: String in data.secret_realms:
+		var def: Dictionary = data.secret_realms[realm_id]
+		if not SecretRealms.admits(c, data, def):
+			continue
+		var rname := String(def.get("name", realm_id))
+		var rid := String(def.get("region", ""))
+		for day in range(start, end):
+			var now := SecretRealms.is_open(def, day)
+			var before := SecretRealms.is_open(def, day - 1)
+			if now and not before:
+				out.append({"day": day, "kind": "secret_realm", "region": rid, "text": "%s opens" % rname})
+			elif before and not now:
+				out.append({"day": day, "kind": "secret_realm", "region": rid, "text": "%s closes" % rname})
+	for inst: Dictionary in active_events:
+		var eid := String(inst.get("id", ""))
+		if WorldEvents.is_festival(data, eid):
+			continue
+		var ename := WorldEvents.event_name(data, eid)
+		var rid := String(inst.get("region", ""))
+		var from_day := int(inst.get("start_day", 0))
+		var to_day := int(inst.get("end_day", 0))
+		if from_day >= start and from_day < end:
+			out.append({"day": from_day, "kind": "event", "region": rid, "text": "%s begins in %s" % [ename, Exploration.region_name(data, rid)]})
+		if to_day >= start and to_day < end:
+			out.append({"day": to_day, "kind": "event", "region": rid, "text": "%s ends in %s" % [ename, Exploration.region_name(data, rid)]})
 
 
 static func _before(a: Dictionary, b: Dictionary) -> bool:

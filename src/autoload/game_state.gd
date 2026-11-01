@@ -2671,7 +2671,7 @@ func hint_density() -> float:
 
 ## CAL-001: dated things in the next `span` days (market days, birthdays, festivals, seasons). No time passes.
 func upcoming_days(span: int = 30) -> Array[Dictionary]:
-	return VillageCalendar.upcoming(data, npcs, npc_favor, world_events, current_region, GameClock.total_days, span)
+	return VillageCalendar.upcoming(data, npcs, npc_favor, world_events, current_region, GameClock.total_days, span, player)
 
 
 ## FOLK-009: who you know in the current region (Folk.people_entries).

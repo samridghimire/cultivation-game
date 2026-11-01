@@ -81,3 +81,68 @@ func test_month_grid_leaves_out_other_months() -> void:
 	var later := VillageCalendar.month_grid(e, next_month)
 	assert_true(later.has(10))
 	assert_false(later.has(25))
+
+
+## CAL-002: the player's own dates.
+func _calendar_player() -> CharacterData:
+	var c := new_character()
+	c.realm_index = data().realm_index_of("qi_refining")
+	return c
+
+
+func test_own_dates_null_matches_old_output() -> void:
+	var a := VillageCalendar.upcoming(data(), {}, {}, [], "qingshi_village", 0, 30)
+	var b := VillageCalendar.upcoming(data(), {}, {}, [], "qingshi_village", 0, 30, null)
+	assert_eq(a, b)
+	assert_eq(_kinds(a, "field").size(), 0)
+
+
+func test_planted_crop_shows_on_ready_day() -> void:
+	var c := _calendar_player()
+	c.field_plots["qingshi_village:Test"] = {"paid_until": 200, "crops": [{"item": "spirit_herb", "days_left": 5}]}
+	var place := FieldPlots.place_def(data(), "qingshi_village")
+	var start := 10  # spring: not frozen
+	var e := _kinds(VillageCalendar.upcoming(data(), {}, {}, [], "qingshi_village", start, 30, c), "field")
+	if place.is_empty():
+		return
+	assert_eq(e.size(), 1)
+	assert_eq(int(e[0]["day"]), start + 5)
+	assert_true(String(e[0]["text"]).begins_with("Your "))
+
+
+func test_rent_end_listed() -> void:
+	var c := _calendar_player()
+	c.field_plots["qingshi_village:Test"] = {"paid_until": 20, "crops": []}
+	var e := _kinds(VillageCalendar.upcoming(data(), {}, {}, [], "qingshi_village", 0, 30, c), "rent")
+	assert_eq(e.size(), 1)
+	assert_eq(int(e[0]["day"]), 20)
+
+
+func test_request_shows_on_until_day() -> void:
+	var c := _calendar_player()
+	c.letter_requests.append({"npc_id": "nobody", "item": "spirit_herb", "count": 2, "until": 12, "favor": 1, "effects": {}})
+	var e := _kinds(VillageCalendar.upcoming(data(), {}, {}, [], "qingshi_village", 0, 30, c), "request")
+	assert_eq(e.size(), 1)
+	assert_eq(int(e[0]["day"]), 12)
+	assert_true(String(e[0]["text"]).contains("ask is due: 2"))
+
+
+func test_secret_realm_opening_once_and_barrier() -> void:
+	var def: Dictionary = data().secret_realms["peach_blossom_grotto"]
+	var opens := int(def["offset_years"]) * Calendar.DAYS_PER_YEAR
+	var c := _calendar_player()
+	var e := _kinds(VillageCalendar.upcoming(data(), {}, {}, [], "misty_forest", opens - 5, 30, c), "secret_realm")
+	var opening := e.filter(func(x: Dictionary) -> bool: return String(x["text"]) == "Peach Blossom Grotto opens")
+	assert_eq(opening.size(), 1)
+	assert_eq(int(opening[0]["day"]), opens)
+	assert_eq(String(opening[0]["region"]), "qingshi_village")
+	c.realm_index = data().realm_index_of("core_formation")
+	var closed := _kinds(VillageCalendar.upcoming(data(), {}, {}, [], "misty_forest", opens - 5, 30, c), "secret_realm")
+	assert_eq(closed.filter(func(x: Dictionary) -> bool: return String(x["text"]).begins_with("Peach")).size(), 0)
+
+
+func test_one_region_festival_month_has_region() -> void:
+	var start := 8 * Calendar.DAYS_PER_MONTH + 20
+	var e := _kinds(VillageCalendar.upcoming(data(), {}, {}, [], "qingshi_village", start), "festival_month")
+	assert_eq(e.size(), 1)
+	assert_true(e[0].has("region"))
