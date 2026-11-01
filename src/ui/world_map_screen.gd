@@ -40,6 +40,7 @@ var _places: Label
 var _marks: Label
 var _foes: RichTextLabel
 var _routes: Label
+var _today: Label
 var _close_button: Button
 var _selected := ""
 var _positions: Dictionary = {}
@@ -82,6 +83,8 @@ func _init() -> void:
 	details.add_child(_info)
 	_hint_note = _wrapped(UIStyle.label("", 16, UIStyle.ACCENT))
 	details.add_child(_hint_note)
+	_today = _wrapped(UIStyle.label("", 15, Color(0.8, 0.9, 0.8)))
+	details.add_child(_today)
 	_description = _wrapped(UIStyle.label("", 16))
 	details.add_child(_description)
 	_places = _wrapped(UIStyle.label("", 15))
@@ -97,7 +100,7 @@ func _init() -> void:
 	details.add_child(_marks)
 	_routes = _wrapped(UIStyle.label("", 15, UIStyle.CATEGORY_COLORS["progress"]))
 	details.add_child(_routes)
-	details.add_child(_wrapped(UIStyle.label("Red roads need a higher realm. Travel at a region's gate. Dots: blue sect hall, gold abode, pink family, teal anchor, purple secret realm, red world event.", 14, Color(0.6, 0.6, 0.6))))
+	details.add_child(_wrapped(UIStyle.label("Red roads need a higher realm. Travel at a region's gate. Dots: blue sect hall, gold abode, pink family, teal anchor, purple secret realm, red world event. Corner marks: weather, $ market open today, w beasts roam.", 14, Color(0.6, 0.6, 0.6))))
 
 	_close_button = UIStyle.button("Close", close)
 	box.add_child(_close_button)
@@ -295,6 +298,37 @@ static func bounty_marks(c: CharacterData, data: GameData, total_days: int, regi
 	return marks
 
 
+## WU-428: names of the stalls (places with open_days) of a region that are open on `day`.
+static func open_markets(data: GameData, region_id: String, day: int) -> PackedStringArray:
+	var out := PackedStringArray()
+	for place: Dictionary in data.regions.get(region_id, {}).get("places", []):
+		if place.has("open_days") and Places.is_open(place, day):
+			out.append(String(place.get("display_name", place.get("type", ""))))
+	return out
+
+
+## WU-428: how many beasts roam a region today (its roamers plus your bounty quarry).
+static func roamer_count(c: CharacterData, data: GameData, region_id: String, day: int, flags: Dictionary) -> int:
+	var n := Wildlife.roamers(data, region_id, day, c.realm_index, flags).size()
+	if not Wildlife.bounty_roamer(c, data, region_id, day, flags).is_empty():
+		n += 1
+	return n
+
+
+## WU-428: "Today: rain, market at Travelling Market Stall, 3 beasts roam." ("" for a region never visited).
+static func today_line(c: CharacterData, data: GameData, region_id: String, current_region: String, day: int, flags: Dictionary) -> String:
+	if is_unexplored(c, region_id, current_region):
+		return ""
+	var parts := PackedStringArray([Weather.of(data, region_id, day)])
+	var markets := open_markets(data, region_id, day)
+	if not markets.is_empty():
+		parts.append("market at " + " and ".join(markets))
+	var beasts := roamer_count(c, data, region_id, day, flags)
+	if beasts > 0:
+		parts.append("%d beast%s roam%s" % [beasts, "" if beasts == 1 else "s", "s" if beasts == 1 else ""])
+	return "Today: " + ", ".join(parts) + "."
+
+
 static func _enemy_name(data: GameData, enemy_id: String) -> String:
 	return String(data.enemies.get(enemy_id, {}).get("name", enemy_id))
 
@@ -400,6 +434,17 @@ func _draw_map() -> void:
 		var start: Vector2 = Vector2(_positions[region_id]) + Vector2(-(kinds.size() - 1) * 7.0, NODE_SIZE.y / 2.0 + 8.0)
 		for i in kinds.size():
 			_canvas.draw_circle(start + Vector2(i * 14.0, 0), 5.0, MARK_COLORS[kinds[i]])
+	for region_id in _positions:
+		if is_unexplored(GameState.player, region_id, GameState.current_region):
+			continue
+		var top_left: Vector2 = Vector2(_positions[region_id]) - NODE_SIZE / 2.0
+		var icon := HudIcons.weather(Weather.of(data, region_id, GameClock.total_days))
+		if icon != null:
+			_canvas.draw_texture(icon, top_left + Vector2(NODE_SIZE.x - 14.0, 2.0))
+		if not open_markets(data, region_id, GameClock.total_days).is_empty():
+			_canvas.draw_string(font, top_left + Vector2(NODE_SIZE.x - 14.0, NODE_SIZE.y - 4.0), "$", HORIZONTAL_ALIGNMENT_LEFT, -1, 14, MARK_COLORS["anchor"])
+		if roamer_count(GameState.player, data, region_id, GameClock.total_days, GameState.world_flags) > 0:
+			_canvas.draw_string(font, top_left + Vector2(NODE_SIZE.x - 28.0, NODE_SIZE.y - 4.0), "w", HORIZONTAL_ALIGNMENT_LEFT, -1, 14, MARK_COLORS["bounty"])
 	if _hint_region != "" and _positions.has(_hint_region):
 		var tip: Vector2 = Vector2(_positions[_hint_region]) + Vector2(NODE_SIZE.x / 2.0 - 4.0, -NODE_SIZE.y / 2.0 - 2.0)
 		_canvas.draw_string(font, tip, "!", HORIZONTAL_ALIGNMENT_LEFT, -1, 22, UIStyle.ACCENT)
@@ -434,6 +479,8 @@ func _show_details() -> void:
 	_info.text = "%s   |   Danger: %s" % [qi_line(data, _selected, GameState.world_flags, GameState.world_events), danger_name(data, _selected)]
 	_hint_note.text = "Your hint points here." if _selected == _hint_region and _selected != GameState.current_region else ""
 	_hint_note.visible = _hint_note.text != ""
+	_today.text = today_line(GameState.player, data, _selected, GameState.current_region, GameClock.total_days, GameState.world_flags)
+	_today.visible = _today.text != ""
 	_description.text = String(region.get("description", ""))
 	var name_here := renown_note(GameState.player, data, _selected)
 	if name_here != "":

@@ -366,3 +366,41 @@ func test_abode_line_names_unclaimed_abode() -> void:
 	assert_eq(WorldMapScreen.abode_line(c, data(), "qingshi_village"), "")
 	c.abode = "waterfall_cave"
 	assert_eq(WorldMapScreen.abode_line(c, data(), "misty_forest"), "")
+
+
+func test_today_line_names_open_market_and_beasts() -> void:
+	var c := new_character()
+	var day := -1
+	for d in 60:
+		if not WorldMapScreen.open_markets(data(), "qingshi_village", d).is_empty():
+			day = d
+			break
+	assert_true(day >= 0, "Qingshi has a market day")
+	var line := WorldMapScreen.today_line(c, data(), "qingshi_village", "qingshi_village", day, {})
+	assert_true(line.begins_with("Today: "), line)
+	assert_true(line.contains("market at Travelling Market Stall"), line)
+
+
+func test_today_line_without_roamers_or_market_has_no_paw() -> void:
+	var c := new_character()
+	var day := 0
+	for d in 60:
+		if WorldMapScreen.open_markets(data(), "qingshi_village", d).is_empty() and WorldMapScreen.roamer_count(c, data(), "qingshi_village", d, {}) == 0:
+			day = d
+			break
+	var line := WorldMapScreen.today_line(c, data(), "qingshi_village", "qingshi_village", day, {})
+	assert_false(line.contains("market"), line)
+	assert_false(line.contains("roam"), line)
+
+
+func test_today_line_counts_roamers_and_hides_unexplored() -> void:
+	var c := new_character()
+	var found := false
+	for d in 30:
+		var n := WorldMapScreen.roamer_count(c, data(), "misty_forest", d, {})
+		if n > 0:
+			assert_true(WorldMapScreen.today_line(c, data(), "misty_forest", "misty_forest", d, {}).contains("%d beast" % n))
+			found = true
+			break
+	assert_true(found, "misty forest has beasts some day")
+	assert_eq(WorldMapScreen.today_line(c, data(), "azure_peak", "misty_forest", 0, {}), "")
