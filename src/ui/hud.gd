@@ -67,8 +67,8 @@ var _target_name := ""
 ## [action, caption] pairs shown in the key bar.
 const KEY_HINTS := [
 	["interact", "act"], ["toggle_character_sheet", "sheet"], ["toggle_inventory", "bag"],
-	["toggle_techniques", "arts"], ["toggle_map", "map"], ["toggle_message_log", "log"],
-	["toggle_artifact", "artifact"], ["toggle_clan", "clan"], ["toggle_family", "family"], ["toggle_journal", "journal"], ["toggle_help", "help"],
+	["toggle_techniques", "arts"], ["toggle_map", "map"], ["open_calendar", "cal"],
+	["toggle_artifact", "relic"], ["toggle_clan", "clan"], ["toggle_family", "family"], ["toggle_journal", "journal"], ["toggle_help", "help"],
 ]  # GFX-016: one line at 1280 px; save/load/pause live in the pause menu and the help screen
 const GUIDE_MAX_LINES := 5  ## GFX-016: wrapped lines the "Next steps" card may show.
 const CARD_FADE_MARGIN := 16.0  ## GFX-016: the player this close to a card fades it.
@@ -1192,6 +1192,10 @@ func _on_dialogue_requested(_npc_id: String) -> void:
 	if is_instance_valid(_last_source) and _last_source.has_method("portrait_texture"):
 		portrait = _last_source.portrait_texture()
 	_dialogue.set_portrait(portrait)
+	var header: Dictionary = {}
+	if is_instance_valid(_last_source) and _last_source.has_method("menu_header"):
+		header = _last_source.menu_header()
+	_dialogue.set_header(header)
 	_dialogue.open()
 	_update_modal()
 

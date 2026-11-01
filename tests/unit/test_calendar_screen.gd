@@ -103,3 +103,58 @@ func test_journal_button_and_key() -> void:
 	assert_true(InputMap.has_action("open_calendar"), "action exists")
 	hud.queue_free()
 	await _frames()
+
+
+## WU-422: the legend lists every kind present; at most three 12 px icons per cell.
+func test_legend_lists_present_kinds() -> void:
+	var s := _screen()
+	var screen: CalendarScreen = s[1]
+	screen.open()
+	await _frames()
+	var legend := screen.get("_legend") as HBoxContainer
+	var kinds: Array = []
+	for item in legend.get_children():
+		kinds.append(item.get_meta("kind"))
+	assert_true(kinds.has("market"), "market in the legend")
+	for cell in (screen.get("_grid") as GridContainer).get_children():
+		assert_true(cell.get_meta("icons") <= CalendarScreen.MAX_ICONS, "<= 3 icons")
+	screen.queue_free()
+	await _frames()
+
+
+func test_empty_day_shows_next_entries() -> void:
+	var s := _screen()
+	var screen: CalendarScreen = s[1]
+	screen.open()
+	await _frames()
+	var entries: Dictionary = screen.get("_grid_entries")
+	var today := Calendar.day_of(GameClock.total_days)
+	var empty := -1
+	for d in range(today, 30):
+		if (entries.get(d, []) as Array).is_empty():
+			empty = d
+			break
+	assert_true(empty > 0, "an empty day exists")
+	screen.call("_show_day", empty)
+	var text := (screen.get("_detail") as Label).text
+	assert_true(text.contains("Next:") or text.contains("Nothing planned."), "empty day: " + text)
+	assert_false(text.contains("Nothing planned.\n"), "no bare line")
+	screen.queue_free()
+	await _frames()
+
+
+func test_all_kinds_have_icons() -> void:
+	for kind: String in VillageCalendar.KIND_ORDER:
+		assert_true(HudIcons.calendar_kind(kind, "Spring") != null, kind)
+
+
+func test_key_strip_fits_1280() -> void:
+	var ic: Node = _tree().root.get_node("InputConfig")
+	var label := Label.new()
+	label.add_theme_font_size_override("font_size", 12)
+	label.text = ic.key_bar_text(load("res://src/ui/hud.gd").KEY_HINTS)
+	_tree().root.add_child(label)
+	await _frames()
+	assert_true(label.get_minimum_size().x <= 600.0, "key strip %d px fits its 600 px slot" % int(label.get_minimum_size().x))
+	assert_true(label.text.contains("] cal"), "calendar listed")
+	label.queue_free()

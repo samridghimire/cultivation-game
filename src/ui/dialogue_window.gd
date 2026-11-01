@@ -13,6 +13,9 @@ var _speaker: Label
 var _text: Label
 var _choices: VBoxContainer
 var _portrait: PortraitBox
+var _friend_row: HBoxContainer
+var _friend_hearts: TextureRect
+var _friend_label: Label
 
 
 func _init() -> void:
@@ -30,6 +33,17 @@ func _init() -> void:
 	row.add_child(box)
 	_speaker = UIStyle.label("", 22, UIStyle.ACCENT)
 	box.add_child(_speaker)
+	# WU-422: friendship hearts under a generated villager's name, as in the choice menu.
+	_friend_row = HBoxContainer.new()
+	_friend_row.add_theme_constant_override("separation", 8)
+	_friend_row.visible = false
+	_friend_hearts = TextureRect.new()
+	_friend_hearts.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	_friend_hearts.stretch_mode = TextureRect.STRETCH_KEEP
+	_friend_row.add_child(_friend_hearts)
+	_friend_label = UIStyle.label("", 15, Color(0.85, 0.75, 0.6))
+	_friend_row.add_child(_friend_label)
+	box.add_child(_friend_row)
 	_text = UIStyle.label("", 17)
 	_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_text.custom_minimum_size = Vector2(TEXT_WIDTH, 0)
@@ -59,6 +73,19 @@ static func choice_label(choice: Dictionary) -> String:
 func set_portrait(tex: Texture2D) -> void:
 	_portrait.set_portrait(tex)
 	_text.custom_minimum_size.x = TEXT_WIDTH - (PortraitBox.COLUMN_WIDTH if tex != null else 0)
+
+
+## {label, hearts} from Npc.menu_header(); {} hides the row.
+func set_header(header: Dictionary) -> void:
+	_friend_row.visible = not header.is_empty()
+	if header.is_empty():
+		return
+	_friend_label.text = String(header["label"])
+	_friend_hearts.texture = header["hearts"]
+
+
+func hearts_visible() -> bool:
+	return _friend_row.visible
 
 
 func portrait_visible() -> bool:

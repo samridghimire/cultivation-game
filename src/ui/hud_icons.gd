@@ -46,6 +46,15 @@ const CALENDAR := {
 	"festival": {"colors": {"a": Color("d9302f"), "b": Color("f6c44a"), "c": Color("8a4a22")}, "rows": ["............", ".....cc.....", ".....cc.....", "....oooo....", "...oaabao...", "..oaabbaao..", "..oaabbaao..", "..oaabbaao..", "...oaabao...", "....oooo....", ".....bb.....", "............"]},
 }
 
+## WU-422 kinds: crop sprout, rent coin, request letter, secret realm gate, world event star.
+const CALENDAR_MORE := {
+	"field": {"colors": {"a": Color("5fbf5a"), "b": Color("a8e08a"), "c": Color("8a5a2c")}, "rows": ["............", "............", "..oo....oo..", ".oabo..obao.", ".oaabooabao.", "..oaabbaao..", "...ooabo....", ".....ac.....", ".....ac.....", "..occcccco..", "............", "............"]},
+	"rent": {"colors": {"a": Color("e8c76a"), "b": Color("fff1a8"), "c": Color("b8943a")}, "rows": ["............", "....oooo....", "..ooabbaoo..", ".oabaaaacao.", ".oaaooooaao.", ".oaaoccoaao.", ".oaaooooaao.", ".oacaaaaaao.", "..ooaaaaoo..", "....oooo....", "............", "............"]},
+	"request": {"colors": {"a": Color("f4e9d0"), "b": Color("d9534f"), "c": Color("b8a98a")}, "rows": ["............", "............", ".oooooooooo.", ".oaaaaaaaao.", ".ocaaaaaaco.", ".oacaaaacao.", ".oaaccccaao.", ".oaaabbaaao.", ".oaaabbaaao.", ".oooooooooo.", "............", "............"]},
+	"secret_realm": {"colors": {"a": Color("7a5cd6"), "b": Color("c9b8ff"), "c": Color("3a2a7a")}, "rows": ["............", "....oooo....", "..ooabbaoo..", ".oabaccabao.", ".oabaccabao.", ".oabaccabao.", ".oabaccabao.", ".oabaccabao.", ".oabaccabao.", ".oooooooooo.", "............", "............"]},
+	"event": {"colors": {"a": Color("f0a050"), "b": Color("fff1a8"), "c": Color("d9702f")}, "rows": ["............", ".....oo.....", ".....oo.....", "....oabo....", ".ooooabboooo", ".oaabbbbbaao", "..oaabbbaao.", "...oabbbao..", "..oabaaabao.", "..oao..oaao.", "...o....o...", "............"]},
+}
+
 ## Friendship heart, 5x5: 'a' fill, 'o' outline, 'b' highlight (WU-418).
 const HEART := ["oo.oo", "oaooa", "oaaao", ".oao.", "..o.."]
 const HEART_FILL := Color("e0553c")
@@ -97,7 +106,17 @@ static func calendar_kind(kind: String, season_name: String = "") -> Texture2D:
 			return _glyph("cal_festival", CALENDAR, "festival")
 		"season":
 			return season(season_name)
+		"field", "rent", "request", "secret_realm", "event":
+			return _glyph("cal_" + kind, CALENDAR_MORE, kind)
 	return null
+
+
+## WU-422: draws the glyph for a calendar entry kind into `rect` on canvas item `ci` (nearest filter, centred).
+static func draw_calendar_kind(ci: CanvasItem, kind: String, rect: Rect2, season_name: String = "") -> void:
+	var tex := calendar_kind(kind, season_name)
+	if tex == null:
+		return
+	ci.draw_texture_rect(tex, rect, false)
 
 
 ## A row of `count` pixel hearts, the first `filled` red and the rest dark (WU-418); each heart is 5 px wide
