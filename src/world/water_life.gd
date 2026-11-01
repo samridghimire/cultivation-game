@@ -47,7 +47,7 @@ func setup(region: Dictionary, rain: bool, frozen: bool, reduce_motion: bool) ->
 	_clock = 0.0
 	_rain = rain and not frozen and not reduce_motion
 	_reduce = reduce_motion
-	z_index = 3
+	z_index = 0  # WU-429: with the ground layer; the world moves this node below the figures
 	var map: Dictionary = region.get("map", {})
 	for pr: Array in map.get("paths", []):
 		_paths.append(Rect2(float(pr[0]), float(pr[1]), float(pr[2]), float(pr[3])))

@@ -46,6 +46,8 @@ var _season := ""
 var _ambient: Node
 var _village_life: VillageLife
 var _water_life: WaterLife
+var _spread_clock := 0.0  ## WU-429: seconds since the last label spread from a moving beast.
+var _roamer_spread_pos := {}
 var _weather_kind := "clear"
 ## The pinned weather, readable by UI that draws its own sky (the duel stage, GFX-038); "" = none.
 static var pinned_weather := ""
@@ -207,6 +209,7 @@ func _refresh_village_life() -> void:
 		_water_life = WaterLife.new()
 		_water_life.name = "WaterLife"
 		add_child(_water_life)
+		move_child(_water_life, 0)  # WU-429: under the player, beasts and people
 	var frozen := Scenery.is_snowy(_season) and not bool(_region.get("map", {}).get("no_snow", false))
 	_water_life.setup(_region, _weather_kind in ["rain", "storm"], frozen, MotionFx.reduced())
 
@@ -375,6 +378,7 @@ func _spawn_roamer(r: Dictionary, blocked: Array[Rect2], avoid: Array[Vector2]) 
 	node.setup(slot, String(r["enemy"]), spot, hash("%s:%d:%d:w" % [GameState.current_region, day, slot]))
 	node.player_ref = player
 	node.map_bounds = map_size
+	node.blocked_rects = blocked
 	add_child(node)
 	move_child(node, player.get_index())
 
@@ -669,13 +673,32 @@ func _process(_delta: float) -> void:
 		for node in get_children():
 			if node is Interactable:
 				(node as Interactable).refresh_label_alpha(player.position)
+	_spread_clock += _delta
 	if origin == _last_canvas_origin and not moved:
+		if _spread_clock >= 0.5 and _roamers_moved():
+			_spread_clock = 0.0
+			_spread_on_screen()
 		return
 	_last_canvas_origin = origin
 	for node in get_children():
 		if node is Interactable:
 			(node as Interactable).camera_moved()
 	_spread_on_screen()
+
+
+## WU-429: true when a beast moved more than 24 px since the last label spread (records the new spots).
+func _roamers_moved() -> bool:
+	var moved := false
+	for node in get_children():
+		if node is Roamer:
+			var last: Vector2 = _roamer_spread_pos.get(node.get_instance_id(), Vector2(-1e6, -1e6))
+			if last.distance_to(node.position) > 24.0:
+				moved = true
+	if moved:
+		for node in get_children():
+			if node is Roamer:
+				_roamer_spread_pos[node.get_instance_id()] = node.position
+	return moved
 
 
 ## GFX-043: on snow days drop a footprint every ~16 px of walking; the trail fades by age (redraws only on a new print).

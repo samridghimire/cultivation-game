@@ -29,6 +29,7 @@ var _alpha := 1.0
 var temper := ""
 var player_ref: Node2D
 var map_bounds := Vector2(100000, 100000)
+var blocked_rects: Array[Rect2] = []  # WU-429: houses, ponds and paths a fleeing beast will not enter
 var noticed := false
 var charged := false  # WU-426: the open menu came from this beast's own charge
 var asked := false  # a bold beast opens its menu once per beast per day (nodes are rebuilt daily)
@@ -127,9 +128,7 @@ func _react(delta: float) -> bool:
 		"flees":
 			if dist < FLEE_RANGE and dist > 0.01:
 				var step := -to_player.normalized() * FLEE_SPEED * delta
-				position = Vector2(
-					clampf(position.x + step.x, 24.0, map_bounds.x - 24.0),
-					clampf(position.y + step.y, 24.0, map_bounds.y - 24.0))
+				position = flee_position(position, step, map_bounds, blocked_rects)
 				home = position
 				_target = position
 				facing = 1.0 if step.x > 0.0 else -1.0
@@ -163,6 +162,27 @@ func _react(delta: float) -> bool:
 			elif noticed and dist >= NOTICE_RANGE:
 				noticed = false
 				queue_redraw()
+	return false
+
+
+## WU-429: `pos` moved by `step`, kept in the map and out of `blocked`. A blocked step slides along the other axis, else stops.
+static func flee_position(pos: Vector2, step: Vector2, bounds: Vector2, blocked: Array[Rect2]) -> Vector2:
+	var full := Vector2(clampf(pos.x + step.x, 24.0, bounds.x - 24.0), clampf(pos.y + step.y, 24.0, bounds.y - 24.0))
+	if not _in_blocked(full, blocked):
+		return full
+	var sx := Vector2(full.x, pos.y)
+	if not _in_blocked(sx, blocked):
+		return sx
+	var sy := Vector2(pos.x, full.y)
+	if not _in_blocked(sy, blocked):
+		return sy
+	return pos
+
+
+static func _in_blocked(p: Vector2, blocked: Array[Rect2]) -> bool:
+	for r in blocked:
+		if r.has_point(p):
+			return true
 	return false
 
 

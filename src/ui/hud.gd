@@ -877,9 +877,9 @@ func _apply_line_cap() -> void:
 		if label.visible:
 			used += maxi(1, wrapped_lines(label.text, font, 14, 316.0).size()) if label == _goal else 1
 	var budget := maxi(1, GUIDE_MAX_LINES - used)
-	var full := wrapped_lines(_hint_full, font, 14, 316.0)
-	if full.size() > budget:
-		_hint.text = "\n".join(overflow_cut(full, budget))
+	var cut := cut_entries(_hint_full.split("\n"), font, 14, 316.0, budget)
+	if cut.size() != _hint_full.split("\n").size() or "\n".join(cut) != _hint_full:
+		_hint.text = "\n".join(cut)
 
 
 ## The guide card shows only while one of its lines does. With hints off only the hunt line can (an active
@@ -1819,6 +1819,49 @@ static func overflow_cut(lines: PackedStringArray, max_lines: int) -> PackedStri
 	var out := lines.slice(0, maxi(max_lines - 1, 0))
 	out.append("... more in the journal (J)")
 	return out
+
+
+## WU-429: entry-aware cut. Whole entries only: one that does not fit entirely is dropped with everything after it
+## and the "... more" line closes the list. The first two entries always keep a first line (ellipsis at a word
+## boundary, never mid-word). Returns `entries` unchanged when everything fits in `max_lines`.
+static func cut_entries(entries: PackedStringArray, font: Font, font_size: int, width: float, max_lines: int) -> PackedStringArray:
+	var counts: Array[int] = []
+	var total := 0
+	for e in entries:
+		var n := maxi(1, wrapped_lines(e, font, font_size, width).size())
+		counts.append(n)
+		total += n
+	if total <= max_lines:
+		return entries
+	var out := PackedStringArray()
+	var room := maxi(1, max_lines - 1)
+	var used := 0
+	for i in entries.size():
+		if used + counts[i] <= room:
+			out.append(entries[i])
+			used += counts[i]
+		elif i < 2 and used < room:
+			out.append(ellipsize_first_line(entries[i], font, font_size, width))
+			used += 1
+		else:
+			break
+	if out.is_empty():
+		out.append(ellipsize_first_line(entries[0], font, font_size, width))
+	out.append("... more in the journal (J)")
+	return out
+
+
+## First wrapped line of `text`, ended with "…" at a word boundary and still one line wide.
+static func ellipsize_first_line(text: String, font: Font, font_size: int, width: float) -> String:
+	var lines := wrapped_lines(text, font, font_size, width)
+	var line := lines[0] if not lines.is_empty() else text
+	var words := line.split(" ", false)
+	while words.size() > 1:
+		var cand := " ".join(words).rstrip(",;:.-") + "…"
+		if wrapped_lines(cand, font, font_size, width).size() <= 1:
+			return cand
+		words.remove_at(words.size() - 1)
+	return (words[0] if not words.is_empty() else line).rstrip(",;:.-") + "…"
 
 
 ## The key strip's translucent dark backing (GFX-016).

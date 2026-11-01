@@ -395,7 +395,7 @@ static func hunt_detail(data: GameData, c: CharacterData, enemy_id: String) -> S
 	var names := PackedStringArray()
 	for item_id: String in spoils:
 		names.append("%s x%d" % [String(data.items.get(item_id, {}).get("name", item_id)), int(spoils[item_id])])
-	return "%s: Spoils: %s." % [nm, ", ".join(names)]
+	return "%s. Spoils: %s." % [nm, ", ".join(names)]
 
 
 func _build_hunts() -> void:

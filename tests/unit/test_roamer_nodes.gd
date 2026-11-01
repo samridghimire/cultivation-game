@@ -164,3 +164,21 @@ func test_taking_bounty_spawns_quarry_at_once() -> void:
 	gs.data.bounties.erase("t_bounty")
 	world.free()
 	gs.end_session()
+
+
+## WU-429: a fleeing step into a blocked rect slides or stops, over 60 physics steps.
+func test_flee_does_not_enter_blocked_rect() -> void:
+	var blocked: Array[Rect2] = [Rect2(200, 100, 100, 100)]
+	var pos := Vector2(180, 150)
+	for i in 60:
+		pos = Roamer.flee_position(pos, Vector2(2.2, 0.5), Vector2(1000, 1000), blocked)
+		assert_false(blocked[0].has_point(pos), str(pos))
+	assert_true(pos.y > 150.0, "slid along the free axis")
+
+
+## WU-429: water effects sit with the ground layer, below the player.
+func test_water_life_below_player() -> void:
+	var w := WaterLife.new()
+	w.setup({"id": "t", "map": {}}, false, false, true)
+	assert_true(w.z_index <= 0)
+	w.free()

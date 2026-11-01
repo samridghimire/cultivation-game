@@ -161,3 +161,21 @@ func test_companion_chip_only_on_invite_day() -> void:
 	assert_false(chip.visible, "the next day the chip is gone")
 	GameState.npcs.erase(npc.id)
 	_done(hud)
+
+
+## WU-429: the guide card keeps whole entries and never ends mid-word.
+func test_cut_entries_keeps_whole_entries() -> void:
+	var font := ThemeDB.fallback_font
+	var entries := PackedStringArray(["> Short one.", "> Look for the Manual: Iron Fist (Sold at Wandering Merchant stall near the old gate)", "> Third hint.", "> Fourth hint.", "> Fifth hint."])
+	var cut := HudScript.cut_entries(entries, font, 14, 316.0, 4)
+	assert_true(cut.size() <= 4 + 1)
+	assert_eq(cut[cut.size() - 1], "... more in the journal (J)")
+	assert_eq(cut[0], "> Short one.")
+	for e in cut:
+		assert_true(HudScript.wrapped_lines(e, font, 14, 316.0).size() <= 2, e)
+	var long := PackedStringArray(["> " + "alpha bravo charlie delta ".repeat(8), "> " + "echo foxtrot golf hotel ".repeat(8), "> third"])
+	var cut2 := HudScript.cut_entries(long, font, 14, 316.0, 3)
+	assert_true(cut2[0].ends_with("…"), cut2[0])
+	assert_eq(HudScript.wrapped_lines(cut2[0], font, 14, 316.0).size(), 1)
+	assert_true(cut2[0].trim_suffix("…").split(" ")[-1] in ["alpha", "bravo", "charlie", "delta"], "word boundary")
+	assert_eq(HudScript.cut_entries(PackedStringArray(["a", "b"]), font, 14, 316.0, 5), PackedStringArray(["a", "b"]))
