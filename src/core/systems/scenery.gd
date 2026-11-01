@@ -151,8 +151,66 @@ static func landmark_rects(region: Dictionary, solid_only: bool = false) -> Arra
 		var pos: Array = lm["pos"]
 		var sz: Array = lm["size"]
 		var size := Vector2(float(sz[0]), float(sz[1]))
-		out.append(Rect2(Vector2(float(pos[0]), float(pos[1])) - size / 2.0, size))
+		var rect := Rect2(Vector2(float(pos[0]), float(pos[1])) - size / 2.0, size)
+		if lm.get("kind", "") == "jetty":
+			rect = jetty_layout(region, lm)["rect"]
+		out.append(rect)
 	return out
+
+
+## GFX-046: where a `jetty` landmark really sits. Within JETTY_REACH px of a pond landmark it runs from the pond's
+## nearest rim toward the landmark's pos (the fishing place), long side perpendicular to the shore, overlapping the
+## water by JETTY_OVERLAP px; otherwise (a stream ford, no pond) it stays on its own rect. Returns {rect: Rect2 on
+## the map, vertical: bool (true = the long side runs north-south), on_water: bool}.
+const JETTY_REACH := 160.0
+const JETTY_OVERLAP := 8.0
+
+
+static func jetty_layout(region: Dictionary, lm: Dictionary) -> Dictionary:
+	var pos := Vector2(float(lm["pos"][0]), float(lm["pos"][1]))
+	var size := Vector2(float(lm["size"][0]), float(lm["size"][1]))
+	var own := Rect2(pos - size / 2.0, size)
+	var long_side := maxf(size.x, size.y)
+	var short_side := minf(size.x, size.y)
+	var best: Dictionary = {}
+	var best_dist := INF
+	for other: Dictionary in region.get("map", {}).get("landmarks", []):
+		if other.get("kind", "") != "pond":
+			continue
+		var pc := Vector2(float(other["pos"][0]), float(other["pos"][1]))
+		var half := Vector2(float(other["size"][0]), float(other["size"][1])) / 2.0
+		if not Rect2(pc - half, half * 2.0).grow(JETTY_REACH).has_point(pos):
+			continue
+		var d := pos.distance_to(pc)
+		if d < best_dist:
+			best_dist = d
+			best = {"c": pc, "half": half}
+	if best.is_empty():
+		return {"rect": own, "vertical": size.y > size.x, "on_water": false}
+	var c: Vector2 = best["c"]
+	var half: Vector2 = best["half"]
+	var delta := pos - c
+	var vertical := absf(delta.y) / half.y >= absf(delta.x) / half.x
+	var rect: Rect2
+	if vertical:
+		var x := clampf(pos.x, c.x - half.x * 0.8, c.x + half.x * 0.8)
+		var t := sqrt(maxf(0.0, 1.0 - pow((x - c.x) / half.x, 2.0)))
+		if delta.y >= 0.0:
+			var rim := c.y + half.y * t
+			rect = Rect2(x - short_side / 2.0, rim - JETTY_OVERLAP, short_side, long_side)
+		else:
+			var rim2 := c.y - half.y * t
+			rect = Rect2(x - short_side / 2.0, rim2 + JETTY_OVERLAP - long_side, short_side, long_side)
+	else:
+		var y := clampf(pos.y, c.y - half.y * 0.8, c.y + half.y * 0.8)
+		var t2 := sqrt(maxf(0.0, 1.0 - pow((y - c.y) / half.y, 2.0)))
+		if delta.x >= 0.0:
+			var rim3 := c.x + half.x * t2
+			rect = Rect2(rim3 - JETTY_OVERLAP, y - short_side / 2.0, long_side, short_side)
+		else:
+			var rim4 := c.x - half.x * t2
+			rect = Rect2(rim4 + JETTY_OVERLAP - long_side, y - short_side / 2.0, long_side, short_side)
+	return {"rect": rect, "vertical": vertical, "on_water": true, "toward_water": -1 if (vertical and delta.y >= 0.0) or (not vertical and delta.x >= 0.0) else 1}
 
 
 static func is_clear(pos: Vector2, blocked: Array[Rect2], spots: Array[Vector2]) -> bool:
@@ -198,6 +256,8 @@ static func validate(data: GameData) -> PackedStringArray:
 				errors.append("Region '%s' has a landmark with an unknown kind (%s)" % [region["id"], ", ".join(LANDMARK_KINDS)])
 			elif not (_is_pair(lm.get("pos")) and _is_pair(lm.get("size")) and float(lm["size"][0]) > 0.0 and float(lm["size"][1]) > 0.0):
 				errors.append("Region '%s' landmark '%s' needs numeric pos and positive size [x, y]" % [region["id"], lm["kind"]])
+			elif lm.has("tree_kind") and not (lm["kind"] == "pine" and TREE_KINDS.has(String(lm["tree_kind"]))):
+				errors.append("Region '%s' landmark '%s' tree_kind must be one of (%s) and only goes on a pine" % [region["id"], lm["kind"], ", ".join(TREE_KINDS)])
 			elif lm.has("color") and not (lm["color"] is String and Color.html_is_valid(lm["color"])):
 				errors.append("Region '%s' landmark '%s' color is not a color" % [region["id"], lm["kind"]])
 	return errors

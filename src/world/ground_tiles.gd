@@ -165,19 +165,25 @@ static func _apply_style(img: Image, base: Color, rid: String, style: String) ->
 			for cy in ceili(float(h) / SIZE):
 				for cx in ceili(float(w) / SIZE):
 					var roll := absi(hash("%s|%d|%d|bog" % [rid, cx, cy]))
-					if roll % 5 == 0:
-						var pw := 6 + (roll / 5) % 9
-						var ph := 4 + (roll / 64) % 5
+					# GFX-046: half as many dark puddles as before; length and strength vary per tile, so the ground
+					# reads as wet rather than dirty. Lighter bluish patches (about 3 of 5 tiles) sit between them.
+					if roll % 10 == 0:
+						var pw := 2 + (roll / 10) % 4 + 2
+						var ph := 2 + (roll / 64) % 2
 						var px := cx * SIZE + (roll / 512) % 8
-						var py := cy * SIZE + (roll / 4096) % 8
-						var water := base.darkened(0.3)
-						_fill_clipped(img, Rect2i(px + 1, py + 1, pw - 2, ph - 2), water)
-						_fill_clipped(img, Rect2i(px + 2, py, pw - 4, 1), water)
-						_fill_clipped(img, Rect2i(px + 2, py + ph - 1, pw - 4, 1), water)
-						_fill_clipped(img, Rect2i(px, py + 2, 1, ph - 4), water)
-						_fill_clipped(img, Rect2i(px + pw - 1, py + 2, 1, ph - 4), water)
-						_fill_clipped(img, Rect2i(px + 2, py, pw - 4, 1), base.lightened(0.25))
-					elif roll % 10 == 1:
+						var py := cy * SIZE + (roll / 4096) % 10
+						var strength := 0.25 + float((roll / 7) % 6) * 0.05
+						_fill_clipped(img, Rect2i(px, py, pw, ph), base.lerp(base.darkened(0.45), strength * 2.0))
+					elif (roll / 11) % 5 < 3:
+						var pw := 5 + (roll / 13) % 6
+						var ph := 3 + (roll / 128) % 3
+						var px := cx * SIZE + 1 + (roll / 1024) % (SIZE - pw - 2)
+						var py := cy * SIZE + 1 + (roll / 8192) % (SIZE - ph - 2)
+						var puddle := base.darkened(0.12).lerp(Color("2c4656"), 0.4)
+						_fill_clipped(img, Rect2i(px + 1, py, pw - 2, ph), puddle)
+						_fill_clipped(img, Rect2i(px, py + 1, pw, ph - 2), puddle)
+						_fill_clipped(img, Rect2i(px + 1, py, maxi(1, pw - 4), 1), puddle.lightened(0.12))
+					if roll % 10 == 1:
 						# Reed tufts: about half as many as before, position and shape (2-3) vary per tile.
 						var r3 := absi(hash("%s|%d|%d|reed" % [rid, cx, cy]))
 						var rx := cx * SIZE + 2 + r3 % (SIZE - 8)

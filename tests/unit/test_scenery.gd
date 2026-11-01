@@ -259,3 +259,76 @@ func test_jetty_landmark_and_pond_rim() -> void:
 	var rim := img.get_pixel(img.get_width() / 2, 1)
 	var centre := img.get_pixel(img.get_width() / 2, img.get_height() / 2)
 	assert_true(rim.get_luminance() < centre.get_luminance(), "rim darker than the water")
+
+
+## GFX-046: a jetty near a pond is laid from the pond's rim and overlaps the water; the fishing place stays on it.
+func test_jetty_meets_the_pond() -> void:
+	var gs := (Engine.get_main_loop() as SceneTree).root.get_node("GameState")
+	var checked := 0
+	for region: Dictionary in gs.data.regions.values():
+		var ponds: Array[Rect2] = []
+		for lm: Dictionary in region.get("map", {}).get("landmarks", []):
+			if lm["kind"] == "pond":
+				ponds.append(Rect2(Vector2(lm["pos"][0], lm["pos"][1]) - Vector2(lm["size"][0], lm["size"][1]) / 2.0, Vector2(lm["size"][0], lm["size"][1])))
+		for lm: Dictionary in region.get("map", {}).get("landmarks", []):
+			if lm["kind"] != "jetty":
+				continue
+			var lay := Scenery.jetty_layout(region, lm)
+			if not bool(lay["on_water"]):
+				continue
+			checked += 1
+			var rect: Rect2 = lay["rect"]
+			var overlap := false
+			for p in ponds:
+				var i := p.intersection(rect)
+				if i.size.x >= 4.0 and i.size.y >= 4.0:
+					overlap = true
+			assert_true(overlap, "%s: jetty overlaps its pond by 4+ px" % region["id"])
+			assert_true(rect.grow(10.0).has_point(Vector2(lm["pos"][0], lm["pos"][1])), "%s: the place stays at the jetty" % region["id"])
+	assert_true(checked >= 3, "several jetties sit on ponds")
+	# No pond near: the landmark keeps its own rect.
+	var lone := {"map": {"landmarks": [{"kind": "jetty", "pos": [100, 100], "size": [88, 28]}]}}
+	var lay2 := Scenery.jetty_layout(lone, lone["map"]["landmarks"][0])
+	assert_false(bool(lay2["on_water"]))
+	assert_eq(lay2["rect"], Rect2(56, 86, 88, 28))
+
+
+## GFX-046: a landmark tree_kind must be a known kind and only goes on a pine.
+func test_landmark_tree_kind_validation() -> void:
+	var gs := (Engine.get_main_loop() as SceneTree).root.get_node("GameState")
+	assert_eq(Scenery.validate(gs.data).size(), 0)
+	var saved: Array = gs.data.regions["withered_bone_marsh"]["map"]["landmarks"]
+	var bad := saved.duplicate(true)
+	for lm: Dictionary in bad:
+		if lm["kind"] == "pine":
+			lm["tree_kind"] = "oak"
+			break
+	gs.data.regions["withered_bone_marsh"]["map"]["landmarks"] = bad
+	var errors := Scenery.validate(gs.data)
+	gs.data.regions["withered_bone_marsh"]["map"]["landmarks"] = saved
+	assert_eq(errors.size(), 1)
+	var on_pond := saved.duplicate(true)
+	for lm: Dictionary in on_pond:
+		if lm["kind"] == "pond":
+			lm["tree_kind"] = "dead"
+			break
+	gs.data.regions["withered_bone_marsh"]["map"]["landmarks"] = on_pond
+	var errors2 := Scenery.validate(gs.data)
+	gs.data.regions["withered_bone_marsh"]["map"]["landmarks"] = saved
+	assert_eq(errors2.size(), 1)
+
+
+## GFX-046: the marsh's arrival view (spawn +- 640x400) holds at least 3 dead trees, decor or landmark.
+func test_marsh_arrival_view_has_dead_trees() -> void:
+	var gs := (Engine.get_main_loop() as SceneTree).root.get_node("GameState")
+	var region: Dictionary = gs.data.regions["withered_bone_marsh"]
+	var sp := Vector2(float(region["spawn"][0]), float(region["spawn"][1]))
+	var view := Rect2(sp - Vector2(640, 400), Vector2(1280, 800))
+	var dead := 0
+	for d in Scenery.place(region, seeded_rng()):
+		if d["kind"] == "tree" and d["tree_kind"] == "dead" and view.has_point(d["pos"]):
+			dead += 1
+	for lm: Dictionary in region["map"]["landmarks"]:
+		if lm["kind"] == "pine" and lm.get("tree_kind", "") == "dead" and view.has_point(Vector2(lm["pos"][0], lm["pos"][1])):
+			dead += 1
+	assert_true(dead >= 3, "dead trees in the marsh arrival view: %d" % dead)

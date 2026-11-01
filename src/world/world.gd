@@ -784,6 +784,14 @@ func _draw_landmark(lm: Dictionary) -> void:
 	if tex != null:
 		draw_texture_rect(tex, r, false)
 		return
+	if lm["kind"] == "pine" and String(lm.get("tree_kind", "pine")) != "pine":
+		# GFX-046: a landmark tree of another kind (a dead tree in the marsh), drawn by the decor tree painters.
+		var tree_base := Color(str(_region.get("map", {}).get("decor", {}).get("tree_color", "2e5a2a")))
+		_draw_tree(Vector2(r.get_center().x, r.end.y - 16.0), 1.2, tree_base, String(lm["tree_kind"]))
+		return
+	if lm["kind"] == "jetty":
+		_draw_jetty(lm)
+		return
 	if PixelLandmark.supports(str(lm["kind"])):
 		var water := Color(str(lm["color"])) if lm.has("color") else Color("3f7fa8")
 		var frozen := Scenery.is_snowy(_season) and not bool(_region.get("map", {}).get("no_snow", false))
@@ -929,6 +937,37 @@ func _draw_season_overlay(kind: String, origin: Vector2, r: Rect2, pix: Vector2)
 				else:
 					draw_rect(Rect2(origin + Vector2(2, y) * sc, Vector2(pix.x - 4, 3) * sc), Color(0.85, 0.92, 1.0, 0.25))
 				y += 4
+
+
+## GFX-046: the jetty runs out from the shore into its pond (Scenery.jetty_layout); darker posts stand in the water.
+func _draw_jetty(lm: Dictionary) -> void:
+	var lay := Scenery.jetty_layout(_region, lm)
+	var r: Rect2 = lay["rect"]
+	var size := _vec(lm["size"])
+	var ptex := PixelLandmark.texture("jetty", size)
+	var sc := float(Sprites.scale())
+	var px := Vector2(ptex.get_size()) * sc
+	var winter := Scenery.is_snowy(_season)
+	if bool(lay["vertical"]):
+		draw_set_transform(r.get_center(), PI / 2.0, Vector2.ONE)
+		draw_texture_rect(ptex, Rect2(-px / 2.0, px), false)
+		if winter:
+			draw_rect(Rect2(-px / 2.0, Vector2(px.x, sc)), Color("f4f8ff"))
+		draw_set_transform(Vector2.ZERO)
+	else:
+		draw_texture_rect(ptex, Rect2(r.get_center() - px / 2.0, px), false)
+		if winter:
+			draw_rect(Rect2(r.position, Vector2(px.x, sc)), Color("f4f8ff"))
+	if bool(lay["on_water"]):
+		var post := Color("2e2218")
+		var toward: int = int(lay["toward_water"])
+		for off: float in [-9.0, 9.0]:
+			var tip := r.get_center()
+			if bool(lay["vertical"]):
+				tip = Vector2(r.get_center().x + off, r.position.y + 2.0 if toward < 0 else r.end.y - 2.0)
+			else:
+				tip = Vector2(r.position.x + 2.0 if toward < 0 else r.end.x - 2.0, r.get_center().y + off)
+			draw_rect(Rect2(tip - Vector2(3, 3), Vector2(6, 6)), post)
 
 
 ## Planks across a stream where `crossing` (its overlap with `path_rect`) is, laid along the path's direction.
