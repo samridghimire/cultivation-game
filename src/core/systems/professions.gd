@@ -99,6 +99,6 @@ static func rank_up_line(c: CharacterData, data: GameData, prof_id: String, from
 		var item: Dictionary = data.items[scroll_id]
 		for rid: String in data.regions:
 			for p: Dictionary in data.regions[rid].get("places", []):
-				if String(p.get("type", "")) == "merchant" and Items.merchant_sells(data, item, p.get("stock_tags", []), int(p.get("max_price", 0))):
+				if String(p.get("type", "")) == "merchant" and not p.has("open_days") and Items.merchant_sells(data, item, p.get("stock_tags", []), int(p.get("max_price", 0))):
 					return line + " Scrolls are sold by merchants."
 	return line

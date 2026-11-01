@@ -5616,3 +5616,29 @@ func test_village_lines_herb_log() -> void:
 	var lines := Guidance.village_lines(c, d, {}, {}, "qingshi_village", 10)
 	assert_true(_has_line(lines, "Herbs found: 1 of"), str(lines))
 	assert_true(_has_line(lines, "Morning Dew Grass grows on the"), str(lines))
+
+
+## MARKET-004: a market-day stall is a qi-pill seller only on its days; otherwise the hint stays silent.
+func test_qi_pill_offer_follows_the_stall_days() -> void:
+	var d := data()
+	var c := _qr(2, 200)
+	var offer := Guidance.qi_pill_offer(c, d, "qingshi_village")
+	assert_false(offer.is_empty(), "an always-open seller offers pills")
+	var place := {}
+	for p: Dictionary in d.regions["qingshi_village"]["places"]:
+		if p.get("display_name", "") == offer["merchant"]:
+			place = p
+	place["open_days"] = [10]
+	var closed_day := 5
+	assert_true(Guidance.qi_pill_offer(c, d, "qingshi_village", Guidance.with_season({}, closed_day)).is_empty(), "closed stall is no seller")
+	assert_true(Guidance.qi_pill_offer(c, d, "qingshi_village").is_empty(), "unknown day: not counted on")
+	assert_false(Guidance.qi_pill_offer(c, d, "qingshi_village", Guidance.with_season({}, 9)).is_empty(), "open on its market day")
+	place.erase("open_days")
+	assert_false(Guidance.qi_pill_offer(c, d, "qingshi_village").is_empty())
+
+
+func test_seller_open_rules() -> void:
+	assert_true(Guidance.seller_open({}, {}))
+	assert_false(Guidance.seller_open({"open_days": [10]}, {}))
+	assert_true(Guidance.seller_open({"open_days": [10]}, {"_today": 9}))
+	assert_false(Guidance.seller_open({"open_days": [10]}, {"_today": 10}))

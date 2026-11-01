@@ -727,7 +727,16 @@ static func with_season(flags: Dictionary, today: int) -> Dictionary:
 		return flags
 	var out := flags.duplicate()
 	out["_season"] = Calendar.season_of(today)
+	out["_today"] = today
 	return out
+
+
+## MARKET-004: true when the merchant `place` is a seller `flags` can count on today. Always-open merchants are;
+## a market-day stall (`open_days`) only on its days, and never when today is unknown (flags carry `_today`).
+static func seller_open(place: Dictionary, flags: Dictionary) -> bool:
+	if not place.has("open_days"):
+		return true
+	return flags.has("_today") and Places.is_open(place, int(flags["_today"]))
 
 
 static func _season_in(flags: Dictionary) -> String:
@@ -770,7 +779,7 @@ static func merchant_goods(place: Dictionary) -> String:
 static func gear_elsewhere_line(c: CharacterData, data: GameData, region_id: String) -> String:
 	var pick := func(r: String) -> String:
 		for p: Dictionary in data.regions.get(r, {}).get("places", []):
-			if String(p.get("type", "")) != "merchant":
+			if String(p.get("type", "")) != "merchant" or p.has("open_days"):
 				continue
 			for item_id: String in data.items:
 				if Equipment.slot_of(data, item_id) != "" and Items.merchant_sells(data, data.items[item_id], p.get("stock_tags", []), int(p.get("max_price", 0))):
@@ -863,7 +872,7 @@ static func _heal_source_entry(c: CharacterData, data: GameData, region_id: Stri
 		if String(p.get("type", "")) == "clinic" and cost <= stones:
 			return {"text": "the %s treats it for %d stones" % [p.get("display_name", "clinic"), cost], "affordable": true}
 	for p: Dictionary in places:
-		if String(p.get("type", "")) != "merchant":
+		if String(p.get("type", "")) != "merchant" or not seller_open(p, flags):
 			continue
 		for item_id: String in data.items:
 			var item: Dictionary = data.items[item_id]
@@ -907,7 +916,7 @@ static func _no_healer_warning(c: CharacterData, data: GameData, region_id: Stri
 		var type := String(p.get("type", ""))
 		if type == "clinic":
 			return ""
-		if type != "merchant":
+		if type != "merchant" or p.has("open_days"):
 			continue
 		for injury_id: String in c.injuries:
 			for item_id: String in data.items:
@@ -1620,7 +1629,7 @@ static func qi_pill_offer(c: CharacterData, data: GameData, region_id: String, f
 	var best := {}
 	var best_ratio := 0.0
 	for place: Dictionary in data.regions[region_id].get("places", []):
-		if String(place.get("type", "")) != "merchant":
+		if String(place.get("type", "")) != "merchant" or not seller_open(place, flags):
 			continue
 		for item_id: String in data.items:
 			var item: Dictionary = data.items[item_id]
