@@ -14,6 +14,13 @@ const DEFAULTS := {
 	"tree_color": "2e5a2a", "rock_color": "7d7a72", "grass_color": "5f8a45", "flower_color": "e8c9e0",
 }
 const MAX_COUNT := 300
+## map.decor.tree_kinds kinds (GFX-041); "round" is the village tree and the default.
+const TREE_KINDS: PackedStringArray = ["round", "pine", "willow", "dead", "bamboo"]
+## map.decor.clusters (clumps of 4-7 trees) upper bound, and a clump's radius.
+const MAX_CLUSTERS := 12
+const CLUSTER_RADIUS := 60.0
+## Decor keys beyond DEFAULTS' counts and colours.
+const EXTRA_KEYS: PackedStringArray = ["tree_kinds", "blossoms", "clusters"]
 ## map.landmarks kinds (GFX-008, GFX-012); the solid ones block the player, the rest can be walked over.
 const LANDMARK_KINDS: PackedStringArray = ["house", "field", "pond", "fence", "well", "wall", "cliff", "stream", "lantern", "pine", "stall"]
 const SOLID_LANDMARKS: PackedStringArray = ["house", "well", "wall", "cliff", "lantern", "pine", "stall"]
@@ -57,13 +64,67 @@ static func place(region: Dictionary, rng: RandomNumberGenerator) -> Array[Dicti
 	var out: Array[Dictionary] = []
 	for kind: String in KINDS:
 		var color := Color(String(cfg[kind + "_color"]))
-		for i in clampi(int(cfg[count_key(kind)]), 0, MAX_COUNT):
+		var budget := clampi(int(cfg[count_key(kind)]), 0, MAX_COUNT)
+		if kind == "tree":
+			for c in clampi(int(cfg.get("clusters", 0)), 0, MAX_CLUSTERS):
+				budget -= _place_clump(out, cfg, color, budget, size, blocked, spots, rng)
+		for i in budget:
 			for attempt in TRIES:
 				var pos := Vector2(rng.randf_range(EDGE, size.x - EDGE), rng.randf_range(EDGE, size.y - EDGE))
 				if is_clear(pos, blocked, spots):
-					out.append({"kind": kind, "pos": pos, "scale": rng.randf_range(0.8, 1.25), "color": color})
+					out.append(_decor_item(kind, pos, color, cfg, rng))
 					break
 	return out
+
+
+static func _decor_item(kind: String, pos: Vector2, color: Color, cfg: Dictionary, rng: RandomNumberGenerator) -> Dictionary:
+	var item := {"kind": kind, "pos": pos, "scale": rng.randf_range(0.8, 1.25), "color": color}
+	if kind == "tree":
+		item["tree_kind"] = pick_tree_kind(cfg.get("tree_kinds", {}), rng)
+	return item
+
+
+## A weighted pick from map.decor.tree_kinds; no rng draw when the region has none (layouts stay stable).
+static func pick_tree_kind(kinds: Variant, rng: RandomNumberGenerator) -> String:
+	if not (kinds is Dictionary) or (kinds as Dictionary).is_empty():
+		return "round"
+	var keys: Array = (kinds as Dictionary).keys()
+	keys.sort()
+	var total := 0.0
+	for k: Variant in keys:
+		total += float(kinds[k])
+	var roll := rng.randf() * total
+	for k: Variant in keys:
+		roll -= float(kinds[k])
+		if roll < 0.0:
+			return String(k)
+	return String(keys[keys.size() - 1])
+
+
+## Seeds one clump of 4-7 trees around a clear centre; returns how many were placed (at most `budget`).
+static func _place_clump(out: Array[Dictionary], cfg: Dictionary, color: Color, budget: int, size: Vector2,
+		blocked: Array[Rect2], spots: Array[Vector2], rng: RandomNumberGenerator) -> int:
+	var want := mini(rng.randi_range(4, 7), budget)
+	if want <= 0:
+		return 0
+	var centre := Vector2.ZERO
+	var found := false
+	for attempt in TRIES * 3:
+		centre = Vector2(rng.randf_range(EDGE + CLUSTER_RADIUS, size.x - EDGE - CLUSTER_RADIUS), rng.randf_range(EDGE + CLUSTER_RADIUS, size.y - EDGE - CLUSTER_RADIUS))
+		if is_clear(centre, blocked, spots):
+			found = true
+			break
+	if not found:
+		return 0
+	var placed := 0
+	for i in want:
+		for attempt in TRIES:
+			var pos := centre + Vector2.from_angle(rng.randf_range(0.0, TAU)) * rng.randf_range(0.0, CLUSTER_RADIUS)
+			if pos.x > EDGE and pos.y > EDGE and pos.x < size.x - EDGE and pos.y < size.y - EDGE and is_clear(pos, blocked, spots):
+				out.append(_decor_item("tree", pos, color, cfg, rng))
+				placed += 1
+				break
+	return placed
 
 
 ## Paths as-is, places and abodes grown by CLEARANCE (both are centered on pos).
@@ -113,7 +174,15 @@ static func validate(data: GameData) -> PackedStringArray:
 			errors.append("Region '%s' map.decor must be an object" % region["id"])
 			continue
 		for key in decor:
-			if not DEFAULTS.has(key):
+			if key == "tree_kinds":
+				errors.append_array(_validate_tree_kinds(region["id"], decor[key]))
+			elif key == "blossoms":
+				if not decor[key] is bool:
+					errors.append("Region '%s' map.decor.blossoms must be true or false" % region["id"])
+			elif key == "clusters":
+				if not (decor[key] is float or decor[key] is int) or int(decor[key]) < 0 or int(decor[key]) > MAX_CLUSTERS:
+					errors.append("Region '%s' map.decor.clusters must be 0-%d" % [region["id"], MAX_CLUSTERS])
+			elif not DEFAULTS.has(key):
 				errors.append("Region '%s' map.decor has unknown key '%s'" % [region["id"], key])
 			elif String(key).ends_with("_color"):
 				if not (decor[key] is String and Color.html_is_valid(decor[key])):
@@ -134,17 +203,47 @@ static func validate(data: GameData) -> PackedStringArray:
 	return errors
 
 
+static func _validate_tree_kinds(region_id: String, kinds: Variant) -> PackedStringArray:
+	var errors: PackedStringArray = []
+	if not (kinds is Dictionary) or (kinds as Dictionary).is_empty():
+		errors.append("Region '%s' map.decor.tree_kinds must be a non-empty object" % region_id)
+		return errors
+	for k: Variant in kinds:
+		if not TREE_KINDS.has(String(k)):
+			errors.append("Region '%s' map.decor.tree_kinds has unknown kind '%s' (%s)" % [region_id, k, ", ".join(TREE_KINDS)])
+		elif not (kinds[k] is float or kinds[k] is int) or float(kinds[k]) <= 0.0:
+			errors.append("Region '%s' map.decor.tree_kinds.%s weight must be > 0" % [region_id, k])
+	return errors
+
+
 static func _is_pair(v: Variant) -> bool:
 	return v is Array and (v as Array).size() == 2 and (v as Array).all(func(n: Variant) -> bool: return n is float or n is int)
 
 
-## How a tree looks in `season` (GFX-037): `canopy` colour, `bare` (no leaves), `snow` (white caps), `blossoms` and
-## `leaves` (fallen) pixel counts. Pure: the same (season, seed, base) always gives the same look.
-static func tree_look(season: String, seed_value: int, base: Color = Color("2e5a2a")) -> Dictionary:
+## How a tree looks in `season` (GFX-037, GFX-041): `canopy` colour, `bare` (no leaves), `snow` (white caps),
+## `blossoms` and `leaves` (fallen) pixel counts. `kind` is a tree_kinds kind: only "round" blossoms (and only when
+## `blossoms_ok`), pine and bamboo stay green, willow yellows in autumn and bares in winter, dead is always bare.
+## Pure: the same (season, seed, base, kind) always gives the same look.
+static func tree_look(season: String, seed_value: int, base: Color = Color("2e5a2a"), kind: String = "round", blossoms_ok: bool = true) -> Dictionary:
 	var h := absi(seed_value * 2654435761) % 1000
+	match kind:
+		"dead":
+			return {"canopy": Color("8a7f6a"), "bare": true, "snow": season == "Winter", "blossoms": 0, "leaves": 0}
+		"pine", "bamboo":
+			var evergreen := base.lightened(0.12) if season == "Spring" else base
+			return {"canopy": evergreen, "bare": false, "snow": season == "Winter", "blossoms": 0, "leaves": 0}
+		"willow":
+			match season:
+				"Autumn":
+					return {"canopy": Color("c9b04a"), "bare": false, "snow": false, "blossoms": 0, "leaves": 4 + h % 4}
+				"Winter":
+					return {"canopy": Color("6b5a48"), "bare": true, "snow": true, "blossoms": 0, "leaves": 0}
+				"Spring":
+					return {"canopy": base.lightened(0.12), "bare": false, "snow": false, "blossoms": 0, "leaves": 0}
+			return {"canopy": base, "bare": false, "snow": false, "blossoms": 0, "leaves": 0}
 	match season:
 		"Spring":
-			return {"canopy": base.lightened(0.12), "bare": false, "snow": false, "blossoms": 5 + h % 4, "leaves": 0}
+			return {"canopy": base.lightened(0.12), "bare": false, "snow": false, "blossoms": (5 + h % 4) if blossoms_ok else 0, "leaves": 0}
 		"Autumn":
 			return {"canopy": Color(AUTUMN_TONES[h % AUTUMN_TONES.size()]), "bare": false, "snow": false, "blossoms": 0, "leaves": 4 + h % 4}
 		"Winter":

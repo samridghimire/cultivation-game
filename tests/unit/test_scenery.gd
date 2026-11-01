@@ -131,3 +131,78 @@ func test_new_landmark_kinds_validate_and_are_solid_where_expected() -> void:
 	var d := GameData.new()
 	d.regions = {"bad": {"id": "bad", "map": {"landmarks": [{"kind": "pond", "pos": [1, 2], "size": [3, 4], "color": "nope"}, {"kind": "stream", "pos": [1, 2], "size": [3, 4], "color": "3b4a2e"}]}}}
 	assert_eq(Scenery.validate(d).size(), 1)
+
+
+func _kinds_region(kinds: Variant, extra: Dictionary = {}) -> Dictionary:
+	var r := _region()
+	r["map"]["decor"] = {"trees": 30, "rocks": 0, "grass": 0, "flowers": 0}
+	if kinds != null:
+		r["map"]["decor"]["tree_kinds"] = kinds
+	r["map"]["decor"].merge(extra, true)
+	return r
+
+
+func _trees(placed: Array[Dictionary]) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	for d in placed:
+		if d["kind"] == "tree":
+			out.append(d)
+	return out
+
+
+func test_tree_kinds_pick_and_default() -> void:
+	for d in _trees(Scenery.place(_kinds_region({"pine": 1}), seeded_rng())):
+		assert_eq(d["tree_kind"], "pine")
+	var plain := _trees(Scenery.place(_kinds_region(null), seeded_rng()))
+	assert_true(plain.size() > 0)
+	for d in plain:
+		assert_eq(d["tree_kind"], "round")
+
+
+func test_tree_kinds_deterministic() -> void:
+	var a := _trees(Scenery.place(_kinds_region({"pine": 2, "dead": 1}), seeded_rng()))
+	var b := _trees(Scenery.place(_kinds_region({"pine": 2, "dead": 1}), seeded_rng()))
+	assert_eq(a.size(), b.size())
+	for i in a.size():
+		assert_eq(a[i]["tree_kind"], b[i]["tree_kind"])
+		assert_eq(a[i]["pos"], b[i]["pos"])
+
+
+func test_tree_look_by_kind() -> void:
+	var base := Color("2e5a2a")
+	assert_eq(int(Scenery.tree_look("Spring", 5, base, "pine")["blossoms"]), 0)
+	assert_true(int(Scenery.tree_look("Spring", 5, base, "round")["blossoms"]) > 0)
+	assert_eq(int(Scenery.tree_look("Spring", 5, base, "round", false)["blossoms"]), 0)
+	assert_true(Scenery.tree_look("Summer", 5, base, "dead")["bare"])
+	assert_false(Scenery.tree_look("Winter", 5, base, "pine")["bare"])
+	assert_true(Scenery.tree_look("Winter", 5, base, "willow")["bare"])
+
+
+func test_clusters_make_clumps_and_respect_blocked() -> void:
+	var region := _kinds_region({"round": 1}, {"trees": 60, "clusters": 3})
+	var trees := _trees(Scenery.place(region, seeded_rng()))
+	var blocked := Scenery.blocked_rects(region)
+	for d in trees:
+		for r in blocked:
+			assert_false(r.has_point(d["pos"]), "tree inside blocked rect")
+	var dense := 0
+	for d in trees:
+		var near := 0
+		for e in trees:
+			if d["pos"].distance_to(e["pos"]) <= 60.0:
+				near += 1
+		if near >= 4:
+			dense += 1
+	assert_true(dense >= 12, "three clumps of 4+ trees (got %d dense trees)" % dense)
+
+
+func test_tree_kind_validation() -> void:
+	var data := GameData.new()
+	data.regions = {
+		"a": {"id": "a", "map": {"decor": {"tree_kinds": {"oak": 1}}}},
+		"b": {"id": "b", "map": {"decor": {"tree_kinds": {"pine": 0}}}},
+		"c": {"id": "c", "map": {"decor": {"clusters": 20}}},
+		"d": {"id": "d", "map": {"decor": {"tree_kinds": {"pine": 1}, "blossoms": false, "clusters": 3}}},
+	}
+	var errors := Scenery.validate(data)
+	assert_eq(errors.size(), 3, str(errors))

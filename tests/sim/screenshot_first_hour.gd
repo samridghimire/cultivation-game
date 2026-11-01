@@ -44,6 +44,9 @@ func _start() -> void:
 			if idx >= 0:
 				var clock: Node = root.get_node("GameClock")
 				clock.total_days = idx * 3 * Calendar.DAYS_PER_MONTH
+	for arg in OS.get_cmdline_user_args():  # GFX-041: start in a region (--region=misty_forest)
+		if arg.begins_with("--region=") and gs.data.regions.has(arg.substr(9)):
+			gs.current_region = arg.substr(9)
 	gs.pending_event = ""
 	var party := OS.get_cmdline_user_args().has("--celebration")
 	if party:  # GFX-023: a wedding for a Qingshi villager, before the world is built

@@ -857,19 +857,33 @@ func _draw_bridge(crossing: Rect2, path_rect: Rect2) -> void:
 	draw_rect(span, Color("4a3524"), false, 2.0)
 
 
-## GFX-037: a tree by season: spring blossom, autumn colours and fallen leaves, bare snowy winter branches.
-func _draw_tree(p: Vector2, k: float, base: Color) -> void:
+## GFX-037/041: a tree by season and kind (round, pine, willow, dead, bamboo).
+func _draw_tree(p: Vector2, k: float, base: Color, kind: String = "round") -> void:
 	var seed_value := int(p.x) * 7 + int(p.y) * 13
-	var look := Scenery.tree_look(_season, seed_value, base)
+	var blossoms_ok: bool = bool(_region.get("map", {}).get("decor", {}).get("blossoms", true))
+	var look := Scenery.tree_look(_season, seed_value, base, kind, blossoms_ok)
 	var c: Color = look["canopy"]
 	draw_circle(p + Vector2(4, 6) * k, 20.0 * k, Color(0, 0, 0, 0.25))
-	var trunk := Color("4a3524")
-	draw_rect(Rect2(p + Vector2(-3, 2) * k, Vector2(6, 14) * k), trunk)
 	if look["bare"]:
-		for tip: Vector2 in [Vector2(-14, -22), Vector2(0, -30), Vector2(13, -20), Vector2(-8, -12), Vector2(8, -10)]:
-			draw_line(p + Vector2(0, 2) * k, p + tip * k, c, 2.0)
-			draw_rect(Rect2(p + tip * k - Vector2(3, 3), Vector2(6, 3)), Color("f4f8ff"))
+		_draw_tree_bare(p, k, c, bool(look["snow"]), kind == "dead")
 		return
+	match kind:
+		"pine":
+			_draw_tree_pine(p, k, c, bool(look["snow"]))
+		"bamboo":
+			_draw_tree_bamboo(p, k, c)
+		"willow":
+			_draw_tree_round(p, k, c, look, seed_value)
+			for i in 6:
+				var sx := (i - 2.5) * 6.0
+				var len := 14.0 + fposmod(seed_value * (i + 3), 9.0)
+				draw_line(p + Vector2(sx, -4) * k, p + Vector2(sx * 1.1, -4.0 + len) * k, c.darkened(0.2), 1.0)
+		_:
+			_draw_tree_round(p, k, c, look, seed_value)
+
+
+func _draw_tree_round(p: Vector2, k: float, c: Color, look: Dictionary, seed_value: int) -> void:
+	draw_rect(Rect2(p + Vector2(-3, 2) * k, Vector2(6, 14) * k), Color("4a3524"))
 	draw_circle(p + Vector2(0, -6) * k, 18.0 * k, c)
 	draw_circle(p + Vector2(-8, -2) * k, 12.0 * k, c.darkened(0.15))
 	draw_circle(p + Vector2(6, -14) * k, 9.0 * k, c.lightened(0.15))
@@ -879,6 +893,42 @@ func _draw_tree(p: Vector2, k: float, base: Color) -> void:
 	for i in int(look["leaves"]):
 		var o := Vector2(fposmod(seed_value * (i + 2), 37.0) - 18.0, 8.0 + fposmod(seed_value * (i + 7), 9.0))
 		draw_rect(Rect2(p + o * k, Vector2(3, 2)), c.darkened(0.1))
+
+
+func _draw_tree_bare(p: Vector2, k: float, c: Color, snowy: bool, broken_stub: bool) -> void:
+	draw_rect(Rect2(p + Vector2(-3, 2) * k, Vector2(6, 14) * k), Color("4a3524"))
+	for tip: Vector2 in [Vector2(-14, -22), Vector2(0, -30), Vector2(13, -20), Vector2(-8, -12), Vector2(8, -10)]:
+		draw_line(p + Vector2(0, 2) * k, p + tip * k, c, 2.0)
+		if snowy:
+			draw_rect(Rect2(p + tip * k - Vector2(3, 3), Vector2(6, 3)), Color("f4f8ff"))
+	if broken_stub:
+		draw_line(p + Vector2(0, 8) * k, p + Vector2(-10, 3) * k, c.darkened(0.2), 3.0)
+
+
+func _draw_tree_pine(p: Vector2, k: float, c: Color, snowy: bool) -> void:
+	draw_rect(Rect2(p + Vector2(-2, 4) * k, Vector2(4, 12) * k), Color("3a2a1c"))
+	for tier in 3:
+		var top := -34.0 + tier * 11.0
+		var half := 8.0 + tier * 5.0
+		var pts := PackedVector2Array([p + Vector2(0, top) * k, p + Vector2(half, top + 16.0) * k, p + Vector2(-half, top + 16.0) * k])
+		draw_colored_polygon(pts, c.darkened(0.05 * tier))
+		draw_line(p + Vector2(0, top) * k, p + Vector2(-half, top + 16.0) * k, c.lightened(0.2), 1.5)
+		if snowy:
+			draw_line(p + Vector2(-half * 0.5, top + 8.0) * k, p + Vector2(half * 0.5, top + 8.0) * k, Color("f4f8ff"), 2.0)
+
+
+func _draw_tree_bamboo(p: Vector2, k: float, c: Color) -> void:
+	var stalk := c.lightened(0.25)
+	for i in 4:
+		var x := (i - 1.5) * 6.0
+		var h := 26.0 + float((i * 7) % 4) * 6.0
+		draw_line(p + Vector2(x, 12) * k, p + Vector2(x, 12.0 - h) * k, stalk, 2.0)
+		var y := 6.0
+		while y < h:
+			draw_rect(Rect2(p + Vector2(x - 2, 12.0 - y) * k, Vector2(4, 1)), stalk.darkened(0.3))
+			y += 6.0
+		draw_line(p + Vector2(x, 12.0 - h) * k, p + Vector2(x + 5, 15.0 - h) * k, c, 2.0)
+		draw_line(p + Vector2(x, 12.0 - h) * k, p + Vector2(x - 5, 15.0 - h) * k, c, 2.0)
 
 
 func _draw_decor(d: Dictionary) -> void:
@@ -893,7 +943,7 @@ func _draw_decor(d: Dictionary) -> void:
 		return
 	match d["kind"]:
 		"tree":
-			_draw_tree(p, k, c)
+			_draw_tree(p, k, c, String(d.get("tree_kind", "round")))
 		"rock":
 			var pts := PackedVector2Array([Vector2(-12, 6), Vector2(-9, -5), Vector2(-1, -9), Vector2(10, -4), Vector2(12, 6)])
 			for i in pts.size():
