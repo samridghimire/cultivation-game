@@ -2,16 +2,17 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
-## State on 2026-11-01 (planner, 18:10 UTC)
-- 11 tasks landed (GFX-041/042/043, WU-421, CAL-002, WILD-001, FOLK-011, FISH-006, MARKET-003, C-286, QA-184). Review
-  676c1b3..3508d33 fixed CAL-002 and FOLK-009 inline, nothing filed.
-- Planner shots (`screenshot_first_hour.gd -- --region=misty_forest` / `withered_bone_marsh`, 1280x800; each run overwrites
-  the same first_hour folder): Misty Forest washed pale, no beasts drawn yet; marsh has pale square mist quads, no visible dead
-  trees, reed grid -> GFX-044 (spec). GFX-045 pond edges + `jetty` kind (GFX-043 Follow-up).
-- QA-184 makes C-285 live (spec'd with the numbers). New systems: WILD-002 (spec, tempers -> WU-424), CAL-003 (spec, tomorrow's
-  reminders), WILD-003 (bounty quarry as a roamer), WILD-004 (hunt log -> WU-425), MARKET-004. QA-188 re-measures after
-  FISH-006/FOLK-011 (balance --check not run by either).
-- Next planner: view WU-423/GFX-044 shots when they land; read C-285's before/after and QA-188's balance result.
+## State on 2026-11-01 (planner, 12:10 UTC)
+- 15 tasks landed (WU-422/423/424/425, GFX-044/045, WILD-002/003/004, CAL-003, MARKET-004, C-283/285/287, QA-188 part 2).
+  Review 3508d33..8711586 fixed WILD-003 inline (only non-lethal beast quarry roams), nothing filed. MISSION-001's claim
+  (06:06) expired without landing; it stays top of systems.
+- Planner shots (`--region=misty_forest|withered_bone_marsh|qingshi_village`, 1280x800; copy hud_arrival.png between runs,
+  the user:// path has a space): Misty Forest good, beasts visible. Jetties float 40-60 px off their ponds, the marsh's
+  visible trees are 6 landmark `pine`s (decor dead trees too few), bog ground noisy -> GFX-046 (spec file). Roamers stack
+  (ape on boar, names overlap) and bold charges don't pass `charged=true` -> WU-426.
+- New: FORAGE-001 (spec file) -> WU-427 + C-288; CAL-004, MARKET-005, GUIDE-205, WILD-005; C-289 spoils for the kitchen;
+  QA-188 is now the balance --check after the village data changes; QA-189 field sim sells its crop.
+- Next planner: view GFX-046/WU-426 shots when they land; read QA-188's balance result.
 
 ## Village screens look (QA-182)
 

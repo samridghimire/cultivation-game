@@ -2,6 +2,21 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-11-01 [C-283] Every fishing place has a fish that only bites in the rain, plus a Loach Porridge home meal.
+- 2026-11-01 [WU-425] The village book has a Hunts page for the beasts you have hunted.
+- 2026-11-01 [GFX-045] Ponds have shores, reeds and highlights, streams have banks and stones, fishing places sit on real jetties.
+- 2026-11-01 [WU-424] Wild beasts act on their temper: the weak flee, the wary watch you, the bold charge.
+- 2026-11-01 [MARKET-004] Hints no longer send you to a market stall on a day it is closed.
+- 2026-11-01 [WILD-004] The game keeps a hunting log and a Beast Hunter milestone.
+- 2026-11-01 [GFX-044] Soft round mist, a clearer Misty Forest and a marsh with readable dead trees.
+- 2026-11-01 [WILD-003] The beast your bounty hunts walks the map in its region.
+- 2026-11-01 [WU-422] The calendar shows an icon per kind of day, a legend and what comes next.
+- 2026-11-01 [QA-188] The first-hour sim's gift fallback respects villager tastes (part 2 of 3).
+- 2026-11-01 [CAL-003] Each morning the log reminds you what happens tomorrow.
+- 2026-11-01 [WILD-002] Wild beasts have a temper: they flee, watch or charge depending on how strong you are.
+- 2026-11-01 [WU-423] Wild beasts wander the map; walk up to fight them.
+- 2026-11-01 [C-287] Every wild region has roaming beasts.
+- 2026-11-01 [C-285] Renting the Qingshi field now pays: cheaper rent and bigger harvests.
 - 2026-11-01 [GFX-043] Winter reads as snow: white ground, snow-capped fences and wells, frozen ponds, footprints.
 - 2026-11-01 [GFX-041] Every region grows its own trees: pines, willows, dead trees and bamboo.
 - 2026-11-01 [FISH-006] Rain brings more bites at the pond; nobody fishes in a storm.
