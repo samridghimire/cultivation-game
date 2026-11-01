@@ -226,6 +226,8 @@ func test_fair_fight_line() -> void:
 	assert_eq(HUD.fair_fight_line(one), "Fair fight: Sect mission: Boar (80%)")
 	var named: Array[Dictionary] = [{"text": "Sect mission: Boar Hunt (Even, 80 in 100)", "chance": 0.8, "kind": "mission", "enemy": "Boar"}]
 	assert_eq(HUD.fair_fight_line(named), "Fair fight: Boar (Even 80)")
+	var here: Array[Dictionary] = [{"text": "x", "chance": 0.99, "kind": "roamer", "enemy": "Wild Boar", "short": "Wild Boar roams here"}]
+	assert_eq(HUD.fair_fight_line(here), "Fair fight: Wild Boar roams here (Weak 99)")
 
 
 ## WU-150: the longest enemy name still fits the 316px label (percent dropped first).

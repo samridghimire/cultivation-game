@@ -738,9 +738,12 @@ static func fair_fight_line(entries: Array, font: Font = null, font_size: int = 
 		return "Fair fight: %s" % String(best.get("text", ""))
 	var chance := float(best["chance"])
 	var label := Combat.label_for_chance(chance)
-	var full := "Fair fight: %s (%s %d)" % [enemy, label, roundi(chance * 100.0)]
+	var named := String(best.get("short", ""))
+	if named == "":
+		named = enemy
+	var full := "Fair fight: %s (%s %d)" % [named, label, roundi(chance * 100.0)]
 	if font != null and max_width > 0.0 and font.get_string_size(full, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x > max_width:
-		return "Fair fight: %s (%s)" % [enemy, label]
+		full = "Fair fight: %s (%s)" % [named, label]
 	return full
 
 

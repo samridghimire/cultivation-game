@@ -5709,3 +5709,36 @@ func test_fair_fights_name_a_roaming_beast() -> void:
 	var here := Guidance.fair_fights(c, d, {}, day, "misty_forest").filter(func(f: Dictionary) -> bool: return f["kind"] == "roamer")
 	assert_eq(here.size(), 1)
 	assert_true(String(here[0]["text"]).contains("roams here today"), String(here[0]["text"]))
+
+
+## GUIDE-206: every fair-fight entry carries a short, place-naming label for the HUD line.
+func test_fair_fight_entries_carry_a_short_label() -> void:
+	var c := _fighter()
+	c.sect = {}
+	var d := data()
+	var day := -1
+	for t in range(0, 200):
+		for r in Wildlife.roamers(d, "misty_forest", t, c.realm_index, {}):
+			if Combat.win_chance(c, d, d.enemies[String(r["enemy"])]) >= Guidance.FAIR_FIGHT_MIN_CHANCE and day < 0:
+				day = t
+	assert_true(day >= 0)
+	var away := Guidance.fair_fights(c, d, {}, day, "qingshi_village").filter(func(f: Dictionary) -> bool: return f["kind"] == "roamer")
+	assert_eq(away.size(), 1)
+	assert_true(String(away[0]["short"]).contains(" in Misty Forest ("), String(away[0]["short"]))
+	var here := Guidance.fair_fights(c, d, {}, day, "misty_forest")
+	var roamer: Dictionary = here.filter(func(f: Dictionary) -> bool: return f["kind"] == "roamer")[0]
+	assert_eq(roamer["short"], "%s roams here" % roamer["enemy"])
+	for f: Dictionary in here:
+		assert_true(f.has("short"))
+		if f["kind"] == "explore":
+			assert_eq(f["short"], "%s, explore here" % f["enemy"])
+	for f: Dictionary in Guidance.fair_fights(c, d, {}, c.age_days, "qingshi_village"):
+		if f["kind"] == "mission":
+			assert_true(String(f["short"]).begins_with("Mission: "))
+		if f["kind"] == "trial":
+			assert_eq(f["short"], "")
+	# the same foe walking up to you outranks exploring for it
+	var walk := {"text": "b", "chance": 0.8, "stones": 0, "enemy": "Boar", "walkup": true}
+	var expl := {"text": "a", "chance": 0.8, "stones": 0, "enemy": "Boar", "walkup": false}
+	assert_true(Guidance.fair_fight_before(walk, expl))
+	assert_false(Guidance.fair_fight_before(expl, walk))
