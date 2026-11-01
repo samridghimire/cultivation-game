@@ -351,16 +351,22 @@ func _build_roamers() -> void:
 	for p: Array in _region.get("map", {}).get("paths", []):
 		blocked.append(Rect2(float(p[0]), float(p[1]), float(p[2]), float(p[3])))
 	var avoid: Array[Vector2] = [_vec(_region.get("spawn", [map_size.x / 2.0, map_size.y / 2.0]))]
-	var day := GameClock.total_days
 	for r: Dictionary in GameState.roamers_here():
-		var slot := int(r["slot"])
-		var spot := Roamer.pick_spot(GameState.current_region, day, slot, map_size, blocked, avoid)
-		var node: Roamer = ROAMER_SCRIPT.new()
-		node.setup(slot, String(r["enemy"]), spot, hash("%s:%d:%d:w" % [GameState.current_region, day, slot]))
-		node.player_ref = player
-		node.map_bounds = map_size
-		add_child(node)
-		move_child(node, player.get_index())
+		_spawn_roamer(r, blocked, avoid)
+
+
+## WU-426: one beast node for roamer `r`; its spot joins `avoid` so the next beast keeps its distance.
+func _spawn_roamer(r: Dictionary, blocked: Array[Rect2], avoid: Array[Vector2]) -> void:
+	var day := GameClock.total_days
+	var slot := int(r["slot"])
+	var spot := Roamer.pick_spot(GameState.current_region, day, slot, map_size, blocked, avoid)
+	avoid.append(spot)
+	var node: Roamer = ROAMER_SCRIPT.new()
+	node.setup(slot, String(r["enemy"]), spot, hash("%s:%d:%d:w" % [GameState.current_region, day, slot]))
+	node.player_ref = player
+	node.map_bounds = map_size
+	add_child(node)
+	move_child(node, player.get_index())
 
 
 ## An engaged beast fades away; the rest stay.
@@ -368,9 +374,25 @@ func _on_roamers_changed() -> void:
 	var alive := {}
 	for r: Dictionary in GameState.roamers_here():
 		alive[int(r["slot"])] = true
+	var present := {}
+	var avoid: Array[Vector2] = [_vec(_region.get("spawn", [map_size.x / 2.0, map_size.y / 2.0]))]
 	for node in get_children():
-		if node is Roamer and not alive.has(node.slot):
-			node.fade_out()
+		if node is Roamer and not node.is_queued_for_deletion():
+			if alive.has(node.slot):
+				present[node.slot] = true
+				avoid.append(node.position)
+			else:
+				node.fade_out()
+	# WU-426: a beast that appears mid-day (the bounty quarry) gets a node at once.
+	var blocked: Array[Rect2] = Scenery.landmark_rects(_region)
+	for place: Dictionary in _region.get("places", []):
+		var sz := _vec(place.get("size", [64, 64]))
+		blocked.append(Rect2(_vec(place.get("pos", [0, 0])) - sz / 2.0, sz))
+	for p: Array in _region.get("map", {}).get("paths", []):
+		blocked.append(Rect2(float(p[0]), float(p[1]), float(p[2]), float(p[3])))
+	for r: Dictionary in GameState.roamers_here():
+		if not present.has(int(r["slot"])):
+			_spawn_roamer(r, blocked, avoid)
 
 
 func _build_places() -> void:

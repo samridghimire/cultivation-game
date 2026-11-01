@@ -30,6 +30,7 @@ var temper := ""
 var player_ref: Node2D
 var map_bounds := Vector2(100000, 100000)
 var noticed := false
+var charged := false  # WU-426: the open menu came from this beast's own charge
 var asked := false  # a bold beast opens its menu once per beast per day (nodes are rebuilt daily)
 
 
@@ -69,8 +70,10 @@ func label_text() -> String:
 
 
 func get_options() -> Array[Dictionary]:
+	var was_charge := charged
+	charged = false
 	return [
-		{"label": "Fight", "description": "Take the beast on now.", "action": GameState.engage_roamer.bind(slot)},
+		{"label": "Fight", "description": "Take the beast on now.", "action": GameState.engage_roamer.bind(slot, was_charge)},
 		{"label": "Leave", "description": "Walk away and let it be."},
 	]
 
@@ -148,6 +151,7 @@ func _react(delta: float) -> bool:
 					noticed = false
 					queue_redraw()
 					if bool(player_ref.get("input_enabled")):
+						charged = true
 						EventBus.interaction_menu_requested.emit(self)
 					return true
 				position += to_player.normalized() * minf(CHARGE_SPEED * delta, dist)

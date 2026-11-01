@@ -887,6 +887,7 @@ func take_bounty(bounty_id: String) -> void:
 		Bounties.take(player, data, bounty_id, GameClock.total_days)
 		var b := Bounties.def_of(data, bounty_id)
 		EventBus.post("You take the bounty: %s (%d days)" % [b["text"], int(b["days"])], "info")
+		EventBus.roamers_changed.emit()  # the quarry shows at once (WU-426)
 	EventBus.player_changed.emit()
 
 

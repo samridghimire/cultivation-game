@@ -120,3 +120,47 @@ func test_bold_beast_closes_in_and_asks_once() -> void:
 	EventBus.interaction_menu_requested.disconnect(cb)
 	world.free()
 	gs.end_session()
+
+
+func test_charged_fight_passes_charged_flag() -> void:
+	var gs := (Engine.get_main_loop() as SceneTree).root.get_node("GameState")
+	var world := _world("misty_forest")
+	var node := _first_roamer(world)
+	var plain: Callable = node.get_options()[0]["action"]
+	assert_eq(plain.get_bound_arguments(), [node.slot, false])
+	node.charged = true
+	var charged_action: Callable = node.get_options()[0]["action"]
+	assert_eq(charged_action.get_bound_arguments(), [node.slot, true])
+	assert_false(node.charged, "reset once the menu is read")
+	world.free()
+	gs.end_session()
+
+
+func test_beasts_keep_apart() -> void:
+	var blocked: Array[Rect2] = []
+	var avoid: Array[Vector2] = []
+	var spots: Array[Vector2] = []
+	for slot in 4:
+		var s := Roamer.pick_spot("misty_forest", 7, slot, Vector2(1600, 1000), blocked, avoid)
+		avoid.append(s)
+		spots.append(s)
+	for i in 4:
+		for j in range(i + 1, 4):
+			assert_true(spots[i].distance_to(spots[j]) >= 72.0, "beasts %d and %d" % [i, j])
+
+
+func test_taking_bounty_spawns_quarry_at_once() -> void:
+	var gs := (Engine.get_main_loop() as SceneTree).root.get_node("GameState")
+	var world := _world("misty_forest")
+	gs.data.bounties["t_bounty"] = {"id": "t_bounty", "enemy": "wild_boar", "region": "misty_forest", "reward_stones": 25, "days": 30, "cooldown_days": 10, "text": "Test posting."}
+	var before := _count(world)
+	gs.take_bounty("t_bounty")
+	var found := false
+	for c in world.get_children():
+		if c is Roamer and c.slot == Wildlife.BOUNTY_SLOT and not c.is_queued_for_deletion():
+			found = true
+	assert_true(found, "quarry node present")
+	assert_eq(_count(world), before + 1)
+	gs.data.bounties.erase("t_bounty")
+	world.free()
+	gs.end_session()
