@@ -3755,46 +3755,85 @@ static func _meal_line(out: PackedStringArray, c: CharacterData, data: GameData,
 			if days > 0 and Cooking.check(c, data, String(m["id"])) == "":
 				out.append("Cook %s at a workshop: it eases your injury by %d days." % [m["name"], days])
 				return
-	var foe := _hard_foe_name(c, data, today, fights)
-	if foe == "":
-		return
-	var at_home := FamilyHome.has_home(c, people, data, region_id)
+	var line := meal_before_fight(c, data, region_id, today, fights, people)
+	if line != "":
+		out.append(line)
+
+
+const MEAL_FIGHT_BELOW := 0.75  ## COOK-001: a meal is suggested only for a fight rated below this.
+const MEAL_MIN_GAIN := 0.05  ## COOK-001: ... and only when it raises the win chance by this much.
+const MEAL_STATS: Array[String] = ["attack", "defense", "max_hp"]
+
+
+## COOK-001: "Eat a Boar Roast before you fight the Mist Fox: Even 55 -> 63." for the held cooked meal whose buff
+## lifts the win chance most against the taken bounty's quarry (else the top fair fight) when that is rated below
+## MEAL_FIGHT_BELOW; "Cook X at <workshop> before ..." when none is held but one can be cooked here. "" when the
+## buff is active, the fight is easy, or no meal gains MEAL_MIN_GAIN. Deterministic (Combat.win_chance is seeded).
+static func meal_before_fight(c: CharacterData, data: GameData, region_id: String, today: int, fights: Array = [], people: Dictionary = {}) -> String:
+	var foe := _meal_foe(c, data, today, fights)
+	if foe.is_empty():
+		return ""
+	var base := Combat.win_chance(c, data, foe)
+	if base >= MEAL_FIGHT_BELOW:
+		return ""
 	var workshop := ""
 	for p: Dictionary in data.regions.get(region_id, {}).get("places", []):
 		if String(p.get("type", "")) == "workshop":
 			workshop = String(p.get("display_name", "the workshop"))
 			break
-	var held := ""
-	var cookable := ""
+	var can_cook_here := workshop != "" or FamilyHome.has_home(c, people, data, region_id)
+	var best_held := {}
+	var best_cook := {}
 	for m: Dictionary in data.home_meals:
 		var item_id := String(m["output"]["item"])
-		var buff: Dictionary = data.items.get(item_id, {}).get("effects", {}).get("buff", {})
+		var item: Dictionary = data.items.get(item_id, {})
+		var buff: Dictionary = item.get("effects", {}).get("buff", {})
 		if buff.is_empty() or c.buffs.has(String(buff.get("id", ""))):
 			continue
-		var mults := Buffs.describe_mults(buff.get("mults", {}))
-		var span := Calendar.format_duration(int(buff.get("days", 0)))
-		if held == "" and c.item_count(item_id) > 0:
-			held = "Eat %s before you hunt the %s: %s for %s." % [data.items[item_id]["name"], foe, mults, span]
-		elif cookable == "" and (workshop != "" or at_home) and Cooking.check(c, data, String(m["id"])) == "":
-			cookable = "Cook %s at %s before the hunt (%s, %s)." % [m["name"], workshop if workshop != "" else "the Family Home", mults, span]
-	if held != "":
-		out.append(held)
-	elif cookable != "":
-		out.append(cookable)
+		var useful := false
+		for stat in MEAL_STATS:
+			useful = useful or buff.get("mults", {}).has(stat)
+		if not useful:
+			continue
+		var held := c.item_count(item_id) > 0
+		if not held and not (can_cook_here and Cooking.check(c, data, String(m["id"])) == ""):
+			continue
+		var copy := CharacterData.from_dict(c.to_dict())
+		Buffs.add_from_effect(copy, buff)
+		var after := Combat.win_chance(copy, data, foe)
+		if after - base < MEAL_MIN_GAIN - 0.0001:
+			continue
+		var entry := {"item": item_id, "meal": m, "after": after, "price": int(item.get("price", 0))}
+		var slot: Dictionary = best_held if held else best_cook
+		if slot.is_empty() or after > float(slot["after"]) or (is_equal_approx(after, float(slot["after"])) and int(entry["price"]) < int(slot["price"])):
+			if held:
+				best_held = entry
+			else:
+				best_cook = entry
+	if not best_held.is_empty():
+		var nm := String(data.items[best_held["item"]]["name"])
+		return "Eat a %s before you fight the %s: %s %d -> %d." % [nm, String(foe.get("name", "")), Combat.label_for_chance(base), roundi(base * 100.0), roundi(float(best_held["after"]) * 100.0)]
+	if not best_cook.is_empty():
+		var nm2 := String(best_cook["meal"]["name"])
+		var where := workshop if workshop != "" else "the Family Home"
+		return "Cook %s at %s before you fight the %s (%s %d -> %d)." % [nm2, where, String(foe.get("name", "")), Combat.label_for_chance(base), roundi(base * 100.0), roundi(float(best_cook["after"]) * 100.0)]
+	return ""
 
 
-## Name of the foe of a taken bounty, else of the first fair fight, when rated Even or harder (win chance < 90%); "" otherwise.
-static func _hard_foe_name(c: CharacterData, data: GameData, today: int, fights: Array) -> String:
+## The enemy of the taken bounty, else of the first fair fight (matched by name), when its win chance is below MEAL_FIGHT_BELOW.
+static func _meal_foe(c: CharacterData, data: GameData, today: int, fights: Array) -> Dictionary:
 	var hunt := Bounties.active(c, data, today)
 	if not hunt.is_empty():
-		var enemy: Dictionary = data.enemies.get(String(hunt.get("enemy", "")), {})
-		if not enemy.is_empty() and Combat.win_chance(c, data, enemy) < 0.9:
-			return String(enemy.get("name", ""))
-		return ""
+		return data.enemies.get(String(hunt.get("enemy", "")), {})
 	for f: Dictionary in fights:
-		if float(f.get("chance", 1.0)) < 0.9 and String(f.get("enemy", "")) != "":
-			return String(f["enemy"])
-	return ""
+		var foe_name := String(f.get("enemy", ""))
+		if foe_name == "":
+			continue
+		for id: String in data.enemies:
+			if String(data.enemies[id].get("name", "")) == foe_name:
+				return data.enemies[id]
+		return {}
+	return {}
 
 
 ## Journal section "Fights you can win" (GUIDE-021): fair fights, or the first-fighting-style hint when

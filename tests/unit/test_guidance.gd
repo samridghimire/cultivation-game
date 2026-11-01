@@ -5504,26 +5504,56 @@ func test_village_lines_meal_needs_injury_and_ingredients() -> void:
 	assert_false(_has_line(Guidance.village_lines(c, d, {}, {}, "qingshi_village", 10), "Cook"))
 
 
-## GUIDE-203: a buff dish is suggested before an Even-or-harder foe.
-func test_village_lines_meal_before_a_hard_hunt() -> void:
+## COOK-001: finds a foe the new character rates below 0.75 and that Eel Congee's +10% attack lifts by 5+ points.
+func _meal_foe_case(d: GameData, c: CharacterData) -> String:
+	var buff: Dictionary = d.items["eel_congee"]["effects"]["buff"]
+	for id: String in d.enemies:
+		var e: Dictionary = d.enemies[id]
+		var base := Combat.win_chance(c, d, e)
+		if base < 0.15 or base >= 0.75:
+			continue
+		var copy := CharacterData.from_dict(c.to_dict())
+		Buffs.add_from_effect(copy, buff)
+		if Combat.win_chance(copy, d, e) - base >= 0.05:
+			return String(e["name"])
+	return ""
+
+
+func test_meal_before_fight_numbers() -> void:
 	var d := _village_data("clear")
 	var c := new_character()
-	var hard: Array = [{"enemy": "Iron-back Boar", "chance": 0.6}]
-	var weak: Array = [{"enemy": "Iron-back Boar", "chance": 0.95}]
-	assert_false(_has_line(Guidance.village_lines(c, d, {}, {}, "qingshi_village", 10, {}, hard), "Cook"), "no ingredients")
+	var foe := _meal_foe_case(d, c)
+	assert_true(foe != "", "some foe is lifted by Eel Congee")
+	var fights: Array = [{"enemy": foe, "chance": 0.5}]
+	assert_eq(Guidance.meal_before_fight(c, d, "qingshi_village", 10, fights), "", "no meal, no ingredients")
 	c.add_item("marsh_eel", 1)
 	c.add_item("sweet_rice_ball", 1)
-	var lines := Guidance.village_lines(c, d, {}, {}, "qingshi_village", 10, {}, hard)
-	assert_true(_has_line(lines, "Cook Eel Congee at Village Workshop before the hunt (+10% attack, 3 days)"), str(lines))
-	assert_false(_has_line(Guidance.village_lines(c, d, {}, {}, "qingshi_village", 10, {}, weak), "Cook"), "weak foe")
-	assert_false(_has_line(Guidance.village_lines(c, d, {}, {}, "qingshi_village", 10), "Cook"), "no foe")
+	var line := Guidance.meal_before_fight(c, d, "qingshi_village", 10, fights)
+	assert_true(line.begins_with("Cook Eel Congee at Village Workshop before you fight the %s (" % foe), line)
+	assert_true(line.contains(" -> "), line)
 	c.add_item("eel_congee", 1)
-	lines = Guidance.village_lines(c, d, {}, {}, "qingshi_village", 10, {}, hard)
-	assert_true(_has_line(lines, "Eat Eel Congee before you hunt the Iron-back Boar: +10% attack for 3 days."), str(lines))
+	line = Guidance.meal_before_fight(c, d, "qingshi_village", 10, fights)
+	assert_true(line.begins_with("Eat a Eel Congee before you fight the %s: " % foe), line)
+	assert_true(line.contains(" -> "), line)
+	assert_eq(line, Guidance.meal_before_fight(c, d, "qingshi_village", 10, fights), "deterministic")
+	assert_true(_has_line(Guidance.village_lines(c, d, {}, {}, "qingshi_village", 10, {}, fights), "Eat a Eel Congee"))
 	Buffs.add(c, "eels_vigour", "Eel's vigour", 3, {"attack": 0.1})
-	lines = Guidance.village_lines(c, d, {}, {}, "qingshi_village", 10, {}, hard)
-	assert_false(_has_line(lines, "Eat Eel"), "buff already active")
-	assert_false(_has_line(lines, "Cook Eel"), "buff already active")
+	assert_eq(Guidance.meal_before_fight(c, d, "qingshi_village", 10, fights), "", "buff already active")
+
+
+func test_meal_before_fight_easy_or_none() -> void:
+	var d := _village_data("clear")
+	var c := new_character()
+	c.add_item("eel_congee", 1)
+	assert_eq(Guidance.meal_before_fight(c, d, "qingshi_village", 10, []), "", "no foe")
+	var weak_id := ""
+	for id: String in d.enemies:
+		if Combat.win_chance(c, d, d.enemies[id]) >= 0.75:
+			weak_id = id
+			break
+	assert_true(weak_id != "")
+	var easy: Array = [{"enemy": String(d.enemies[weak_id]["name"]), "chance": 0.95}]
+	assert_eq(Guidance.meal_before_fight(c, d, "qingshi_village", 10, easy), "", "easy fight")
 
 
 func test_village_lines_forecast_only_when_tomorrow_differs_and_matters() -> void:
