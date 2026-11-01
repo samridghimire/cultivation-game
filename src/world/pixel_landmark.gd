@@ -4,8 +4,8 @@ extends RefCounted
 ## on-screen size, drawn at Sprites.scale()); pond, field and fence are built to fill their rect at that scale,
 ## so they never stretch. Shares PixelPlace's palette and helpers. Rendering only: pure, deterministic, cached.
 
-const KINDS := ["house", "well", "stall", "pine", "lantern", "pond", "field", "fence", "wall", "cliff", "stream"]
-const FIXED := ["house", "well", "stall", "pine", "lantern"]
+const KINDS := ["house", "well", "stall", "pine", "lantern", "pond", "field", "fence", "wall", "cliff", "stream", "jetty"]
+const FIXED := ["house", "well", "stall", "pine", "lantern", "jetty"]
 
 static var _cache: Dictionary = {}
 
@@ -39,7 +39,7 @@ static func frozen_pond(px: Vector2i, water: Color) -> ImageTexture:
 	var key := "frozen|%s|%s" % [px, water.to_html()]
 	if _cache.has(key):
 		return _cache[key]
-	var img := (texture("pond", Vector2(px) * float(Sprites.scale()), water).get_image().duplicate() as Image)
+	var img := PixelPlace.from_rows(_rows_of(_pond(px.x, px.y, false)), water).get_image()
 	var w := img.get_width()
 	var h := img.get_height()
 	var ice := Color("e3f0fa")
@@ -93,14 +93,33 @@ static func rows(kind: String, size: Vector2) -> Array[String]:
 			c = _cliff(n.x, n.y)
 		"stream":
 			c = _stream(n.x, n.y)
+		"jetty":
+			c = _jetty()
 		_:
 			return []
 	if kind != "pond" and kind != "stream":
 		PixelPlace.outline(c)
+	return _rows_of(c)
+
+
+static func _rows_of(c: Array) -> Array[String]:
 	var out: Array[String] = []
 	for row: Array in c:
 		out.append("".join(row))
 	return out
+
+
+## GFX-045: planks on posts, the long side touching the water (south edge); snow caps come from world.gd.
+static func _jetty() -> Array:
+	var c := PixelPlace.canvas(44, 14)
+	PixelPlace.rect(c, 0, 1, 44, 8, "t")
+	PixelPlace.rect(c, 0, 1, 44, 1, "p")
+	PixelPlace.rect(c, 0, 8, 44, 1, "T")
+	for x in range(5, 44, 6):
+		PixelPlace.rect(c, x, 2, 1, 6, "T")
+	for x: int in [1, 14, 28, 41]:
+		PixelPlace.rect(c, x, 9, 2, 5, "T")
+	return c
 
 
 static func _house() -> Array:
@@ -164,13 +183,34 @@ static func _lantern() -> Array:
 	return c
 
 
-## A pond with a 1-px sandy shore and a lighter patch of water.
-static func _pond(w: int, h: int) -> Array:
+## GFX-045: a pond with a 1-px mud ring, a 2-px darker shore rim, a highlight arc on the far (north) side and
+## 3-5 reed clumps on the edge (none when `reeds` is false, i.e. frozen).
+static func _pond(w: int, h: int, reeds: bool = true) -> Array:
 	var c := PixelPlace.canvas(w, h)
-	PixelPlace.ell(c, w / 2.0, h / 2.0, w / 2.0, h / 2.0, "e")
-	PixelPlace.ell(c, w / 2.0, h / 2.0, w / 2.0 - 1.0, h / 2.0 - 1.0, "r")
+	var cx := w / 2.0
+	var cy := h / 2.0
+	PixelPlace.ell(c, cx, cy, w / 2.0, h / 2.0, "e")
+	PixelPlace.ell(c, cx, cy, w / 2.0 - 1.0, h / 2.0 - 1.0, "R")
+	PixelPlace.ell(c, cx, cy, w / 2.0 - 3.0, h / 2.0 - 3.0, "r")
 	PixelPlace.ell(c, w * 0.4, h * 0.38, w * 0.18, h * 0.14, "h")
 	PixelPlace.ell(c, w * 0.62, h * 0.72, w * 0.12, h * 0.07, "R")
+	# Highlight arc: the top of the inner water edge.
+	for i in range(0, 15):
+		var a := PI * (1.15 + 0.7 * float(i) / 14.0)
+		var x := roundi(cx + cos(a) * (w / 2.0 - 4.0))
+		var y := roundi(cy + sin(a) * (h / 2.0 - 4.0))
+		if x >= 0 and y >= 0 and x < w and y < h and c[y][x] == "r":
+			c[y][x] = "h"
+	if reeds:
+		var count := 3 + (w + h) % 3
+		for k in count:
+			var a := TAU * (float(k) + 0.37 * float((w * 3 + h) % 5)) / float(count)
+			var x := roundi(cx + cos(a) * (w / 2.0 - 1.0))
+			var y := roundi(cy + sin(a) * (h / 2.0 - 1.0))
+			for dy in 4:
+				for dx in 2:
+					if x + dx >= 0 and x + dx < w and y - dy >= 0 and y - dy < h and (dx == 0 or dy < 3):
+						c[y - dy][x + dx] = "v"
 	return c
 
 
@@ -236,28 +276,39 @@ static func _cliff(w: int, h: int) -> Array:
 	return c
 
 
-## Two-tone water with a light ripple row, a darker bank on the long edges.
+## Two-tone water with light ripple dashes, 2-px darker banks on the long edges and a stone every ~60 px.
 static func _stream(w: int, h: int) -> Array:
 	var c := PixelPlace.canvas(w, h)
 	PixelPlace.rect(c, 0, 0, w, h, "r")
+	var step := maxi(8, 60 / maxi(1, Sprites.scale()))
 	if w >= h:
-		PixelPlace.rect(c, 0, 0, w, 1, "R")
-		PixelPlace.rect(c, 0, h - 1, w, 1, "R")
-		var y := 3
-		while y < h - 2:
+		PixelPlace.rect(c, 0, 0, w, mini(2, h), "R")
+		PixelPlace.rect(c, 0, maxi(0, h - 2), w, mini(2, h), "R")
+		var y := 4
+		while y < h - 3:
 			var x := (y * 5) % 9
 			while x < w:
 				PixelPlace.rect(c, x, y, 4, 1, "h")
 				x += 11
 			y += 5
+		var sx := step / 2
+		while sx < w - 1:
+			PixelPlace.rect(c, sx, 0, 2, 1, "s")
+			PixelPlace.rect(c, sx + step / 3, maxi(0, h - 1), 2, 1, "s")
+			sx += step
 	else:
-		PixelPlace.rect(c, 0, 0, 1, h, "R")
-		PixelPlace.rect(c, w - 1, 0, 1, h, "R")
-		var x := 3
-		while x < w - 2:
+		PixelPlace.rect(c, 0, 0, mini(2, w), h, "R")
+		PixelPlace.rect(c, maxi(0, w - 2), 0, mini(2, w), h, "R")
+		var x := 4
+		while x < w - 3:
 			var y := (x * 5) % 9
 			while y < h:
 				PixelPlace.rect(c, x, y, 1, 4, "h")
 				y += 11
 			x += 5
+		var sy := step / 2
+		while sy < h - 1:
+			PixelPlace.rect(c, 0, sy, 1, 2, "s")
+			PixelPlace.rect(c, maxi(0, w - 1), sy + step / 3, 1, 2, "s")
+			sy += step
 	return c

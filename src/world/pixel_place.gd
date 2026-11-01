@@ -340,17 +340,10 @@ static func _gather() -> Array:
 	return c
 
 
-## A plank jetty on posts with a line and float on the water and a few reeds (WU-405); planks take the place colour.
+## A fishing spot (WU-405): a rod, line and float and a few reeds; the planks and posts are the `jetty` landmark
+## drawn underneath (GFX-045), so its snow cap applies. `rect`s below use the old 44x22 layout.
 static func _jetty() -> Array:
 	var c := canvas(44, 22)
-	rect(c, 2, 6, 34, 9, "r")
-	rect(c, 2, 6, 34, 1, "h")
-	rect(c, 2, 14, 34, 1, "R")
-	for x in range(6, 34, 5):
-		rect(c, x, 7, 1, 7, "R")
-	for x: int in [4, 17, 29, 34]:
-		rect(c, x, 15, 2, 5, "t")
-		rect(c, x + 1, 15, 1, 5, "T")
 	rect(c, 38, 3, 1, 9, "T")
 	rect(c, 36, 3, 3, 1, "T")
 	rect(c, 38, 12, 2, 2, "g")

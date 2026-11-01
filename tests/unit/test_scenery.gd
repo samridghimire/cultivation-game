@@ -246,3 +246,16 @@ func test_marsh_spawns_dead_trees() -> void:
 		if d["tree_kind"] == "dead":
 			dead += 1
 	assert_true(dead >= 1, "marsh has dead trees")
+
+
+## GFX-045: the jetty is a valid landmark kind with a texture; ponds have a darker rim than their centre.
+func test_jetty_landmark_and_pond_rim() -> void:
+	assert_true(Scenery.LANDMARK_KINDS.has("jetty"))
+	assert_true(PixelLandmark.supports("jetty"))
+	var jt := PixelLandmark.texture("jetty", Vector2(88, 28))
+	assert_true(jt.get_width() > 0 and jt.get_height() > 0)
+	var size := Vector2(200, 120)
+	var img := PixelLandmark.texture("pond", size).get_image()
+	var rim := img.get_pixel(img.get_width() / 2, 1)
+	var centre := img.get_pixel(img.get_width() / 2, img.get_height() / 2)
+	assert_true(rim.get_luminance() < centre.get_luminance(), "rim darker than the water")

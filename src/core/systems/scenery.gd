@@ -22,7 +22,7 @@ const CLUSTER_RADIUS := 60.0
 ## Decor keys beyond DEFAULTS' counts and colours.
 const EXTRA_KEYS: PackedStringArray = ["tree_kinds", "blossoms", "clusters"]
 ## map.landmarks kinds (GFX-008, GFX-012); the solid ones block the player, the rest can be walked over.
-const LANDMARK_KINDS: PackedStringArray = ["house", "field", "pond", "fence", "well", "wall", "cliff", "stream", "lantern", "pine", "stall"]
+const LANDMARK_KINDS: PackedStringArray = ["house", "field", "pond", "fence", "well", "wall", "cliff", "stream", "lantern", "pine", "stall", "jetty"]
 const SOLID_LANDMARKS: PackedStringArray = ["house", "well", "wall", "cliff", "lantern", "pine", "stall"]
 ## Crop-row colour of the field landmark by season (GFX-037); transparent while the furrows lie bare.
 const CROP_COLORS := {"Spring": "7fc04a", "Summer": "4f9a3a", "Autumn": "d9aa3a", "Winter": "00000000"}
