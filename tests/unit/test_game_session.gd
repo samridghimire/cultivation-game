@@ -535,6 +535,35 @@ func test_fishing_catches_and_weather_changes_the_odds() -> void:
 	_restore_weather(gs)
 
 
+## FISH-006: a rain-only entry is caught only in rain; rain adds a draw; a storm refuses with no time passing.
+func test_fishing_rain_entries_extra_draws_and_storm() -> void:
+	var c := _start()
+	var gs := _game_state()
+	var table := [{"item": "silver_carp", "weight": 1, "min": 1, "max": 1, "weather": ["rain"]}]
+	gs.data.fishing_weather = {}
+	_set_weather(gs, "clear")
+	for i in 10:
+		gs.fish(table, 1)
+	assert_eq(c.item_count("silver_carp"), 0, "a rain-only entry is not caught on a clear day")
+	_set_weather(gs, "rain")
+	gs.data.fishing_rules = {"rain_extra_draws": 0}
+	var base_before := c.item_count("silver_carp")
+	gs.fish(table, 1)
+	var plain := c.item_count("silver_carp") - base_before
+	assert_gt(plain, 0, "rain-only entry is caught in rain")
+	gs.data.fishing_rules = {"rain_extra_draws": 1}
+	var before := c.item_count("silver_carp")
+	gs.fish(table, 1)
+	assert_eq(c.item_count("silver_carp") - before, plain * 2, "one extra draw doubles an all-fish table")
+	_set_weather(gs, "storm")
+	var day := GameClock.total_days
+	before = c.item_count("silver_carp")
+	gs.fish(table, 1)
+	assert_eq(GameClock.total_days, day, "a storm refuses and no time passes")
+	assert_eq(c.item_count("silver_carp"), before)
+	_restore_weather(gs)
+
+
 ## [REVIEW] FISH-004: a rank reached through the first-catch bonus is announced.
 func test_first_catch_bonus_rank_up_is_announced() -> void:
 	var c := _start()

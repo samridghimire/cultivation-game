@@ -43,6 +43,7 @@ var renown: Dictionary = {}  # regions.json "renown" block (Renown); {} = none
 var travel_speed: Array = []  # TRAV-007: regions.json "travel_speed" (empty = everyone walks)
 var weather_persist: float = Weather.DEFAULT_PERSIST  # WEATHER-001: regions.json "weather_persist"
 var seasonal_prices: Dictionary = {}  # MARKET-001: items.json "seasonal_prices"
+var fishing_rules: Dictionary = {}  # FISH-006: regions.json "fishing"
 var fishing_weather: Dictionary = {}  # FISH-001: regions.json "fishing_weather"
 var herb_lore: Dictionary = {}  # GATHER-001: regions.json "herb_lore" (HerbLore); {} = none
 var weather_effects: Dictionary = {}  # WEATHER-002: regions.json "weather_effects"
@@ -245,6 +246,8 @@ func _load(dir: String) -> void:
 	HerbLore.validate(herb_lore, load_errors)
 	fishing_weather = world.get("fishing_weather", {})
 	Weather.validate_fishing(fishing_weather, load_errors)
+	fishing_rules = world.get("fishing", {})
+	Fishing.validate_rules(fishing_rules, load_errors)
 	travel_speed = world.get("travel_speed", [])
 	for region in world.get("regions", []):
 		regions[region["id"]] = region
@@ -617,6 +620,7 @@ func _validate_world() -> void:
 			if place.get("type", "") == "fishing" and (place.get("catch_table", []) as Array).is_empty():
 				load_errors.append("Region '%s' fishing place '%s' needs a catch_table" % [region["id"], place.get("display_name", "")])
 			load_errors.append_array(Fishing.validate_table(self, place.get("catch_table", []), "Region '%s' fishing place '%s'" % [region["id"], place.get("display_name", "")]))
+			load_errors.append_array(Fishing.validate_weather(place.get("catch_table", []), "Region '%s' fishing place '%s'" % [region["id"], place.get("display_name", "")]))
 			for entry: Dictionary in place.get("catch_table", []):
 				_validate_seasons(entry, "Region '%s' catch entry '%s'" % [region["id"], entry.get("item", "")])
 				if entry.get("item", "") != "" and not items.has(entry["item"]):

@@ -188,3 +188,64 @@ static func validate_table(data: GameData, table: Array, who: String) -> PackedS
 	if count > 1:
 		errors.append("%s: at most one trophy entry per table" % who)
 	return errors
+
+
+## FISH-006: rain on the water. A catch_table entry may carry `weather` (list of weather kinds): it only rolls on those days.
+const STORM_REFUSAL := "The pond is too wild to fish in a storm."
+const DEFAULT_RAIN_EXTRA_DRAWS := 1
+
+
+## `table` without entries whose `weather` list excludes `kind`; entries without `weather` always stay.
+static func filter_weather(table: Array, kind: String) -> Array:
+	var out: Array = []
+	for entry: Dictionary in table:
+		if entry.has("weather") and not (entry["weather"] as Array).has(kind):
+			continue
+		out.append(entry)
+	return out
+
+
+## Extra draws a trip makes on a `kind` day (regions.json `fishing.rain_extra_draws`, default 1; rain only).
+static func extra_draws(data: GameData, kind: String) -> int:
+	if kind != "rain":
+		return 0
+	return int(data.fishing_rules.get("rain_extra_draws", DEFAULT_RAIN_EXTRA_DRAWS))
+
+
+## True when casting is refused (a storm day).
+static func too_wild(kind: String) -> bool:
+	return kind == "storm"
+
+
+## One hint line for the pond on a `kind` day ("" on other days).
+static func weather_line(data: GameData, kind: String) -> String:
+	if too_wild(kind):
+		return STORM_REFUSAL
+	if extra_draws(data, kind) > 0:
+		return "Fish bite in the rain."
+	return ""
+
+
+## Errors for regions.json `fishing` (rain_extra_draws int 0..3).
+static func validate_rules(rules: Dictionary, errors: Array[String]) -> void:
+	for key: String in rules:
+		if key != "rain_extra_draws":
+			errors.append("fishing has unknown key '%s'" % key)
+		elif not (rules[key] is int or rules[key] is float) or int(rules[key]) < 0 or int(rules[key]) > 3 or float(rules[key]) != int(rules[key]):
+			errors.append("fishing.rain_extra_draws must be an int 0..3")
+
+
+## Errors for `weather` lists on catch_table entries.
+static func validate_weather(table: Array, who: String) -> PackedStringArray:
+	var errors: PackedStringArray = []
+	for entry: Dictionary in table:
+		if not entry.has("weather"):
+			continue
+		var kinds: Variant = entry["weather"]
+		if not (kinds is Array) or (kinds as Array).is_empty():
+			errors.append("%s: weather must be a non-empty list" % who)
+			continue
+		for k in kinds:
+			if not (k is String) or not Weather.KINDS.has(k):
+				errors.append("%s: unknown weather '%s'" % [who, k])
+	return errors

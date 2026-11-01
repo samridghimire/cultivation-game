@@ -82,6 +82,9 @@ func open_for(catch_table: Array, trip_days: int, place: String, rng: RandomNumb
 	sweeps_done = 0
 	_finished = false
 	_hint.text = "Press %s or the button when the marker is in the bright zone. Esc: let it go." % InputConfig.current_label("interact")
+	var rain_line := Fishing.weather_line(GameState.data, Weather.of(GameState.data, GameState.current_region, GameClock.total_days))
+	if rain_line != "":
+		_hint.text += " " + rain_line
 	visible = true
 	set_process(true)
 	_bar.queue_redraw()

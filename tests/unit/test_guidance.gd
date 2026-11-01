@@ -5404,7 +5404,7 @@ func test_village_lines_weather_only_when_nothing_open() -> void:
 func _fishing_lines(lines: PackedStringArray) -> int:
 	var n := 0
 	for l in lines:
-		if l.begins_with("Fishing at"):
+		if l.begins_with("Fishing at") or l == "Fish bite in the rain.":
 			n += 1
 	return n
 

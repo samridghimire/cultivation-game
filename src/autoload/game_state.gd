@@ -1233,14 +1233,22 @@ func fish(table: Array, days: int, place_name: String = "", quality: float = 0.5
 	if not _can_act():
 		return
 	var season := Calendar.season_of(GameClock.total_days)
-	var mult := Weather.fishing_multiplier(data, Weather.of(data, current_region, GameClock.total_days))
-	var base := Exploration.gather_table_for(player, data, table, season)
+	var weather_kind := Weather.of(data, current_region, GameClock.total_days)
+	if Fishing.too_wild(weather_kind):
+		EventBus.post(Fishing.STORM_REFUSAL, "warning")
+		return
+	var mult := Weather.fishing_multiplier(data, weather_kind)
+	var base := Exploration.gather_table_for(player, data, Fishing.filter_weather(table, weather_kind), season)
 	var usable := Weather.scale_catch(Fishing.skill_table(base, quality, player.fishing_xp), mult)
 	var found: Dictionary = {}
 	if Fishing.got_away(quality, rng):
 		EventBus.post("A fish takes the bait, then it got away.")
 	else:
 		found = Exploration.gather(player, usable, rng)
+		for i in Fishing.extra_draws(data, weather_kind):
+			var more := Exploration.gather(player, usable, rng)
+			for id: String in more:
+				found[id] = int(found.get(id, 0)) + int(more[id])
 		var trophy := Fishing.trophy_in(base, found)
 		if trophy != "" and not Fishing.trophy_allowed(quality, player.fishing_xp):
 			# Only the trophy draw comes to nothing; the trip's other fish are still caught.

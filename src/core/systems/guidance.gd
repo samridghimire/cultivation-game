@@ -3586,6 +3586,9 @@ static func village_lines(c: CharacterData, data: GameData, people: Dictionary, 
 		var herb_missing := HerbLore.missing_hint(c, data, region_id, Calendar.season_of(today))
 		if herb_missing != "":
 			out.append(herb_missing)
+	var pond_line := Fishing.weather_line(data, kind)
+	if pond_line != "" and _has_fishing_place(data, region_id):
+		out.append(pond_line)
 	var log_line := Fishing.log_summary(c, data)
 	if log_line != "":
 		out.append(log_line)
@@ -3631,6 +3634,13 @@ static func village_lines(c: CharacterData, data: GameData, people: Dictionary, 
 			out.append("Fishing at %s: best catch this %s is %s" % [place.get("display_name", "the pond"), season.to_lower(), data.items.get(best, {}).get("name", best)])
 			break
 	return out
+
+
+static func _has_fishing_place(data: GameData, region_id: String) -> bool:
+	for place: Dictionary in data.regions.get(region_id, {}).get("places", []):
+		if String(place.get("type", "")) == "fishing":
+			return true
+	return false
 
 
 ## GUIDE-204: "Herbs fetch more in winter: sell your 4 Dew Grass at the Village Herb Seller for 3 each."

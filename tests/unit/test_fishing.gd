@@ -202,3 +202,28 @@ func test_trophy_near_miss_keeps_the_other_fish() -> void:
 		gs.fish(table, 1, "", 0.5)
 	assert_eq(c.item_count("mist_koi"), 0, "no trophy without a clean strike")
 	assert_gt(c.item_count("silver_carp"), 0, "the ordinary fish of a trip that drew the trophy are kept")
+
+
+## FISH-006: rain on the water.
+func test_filter_weather_keeps_matching_entries() -> void:
+	var table := [{"item": "", "weight": 1}, {"item": "silver_carp", "weight": 1, "weather": ["rain"]}]
+	assert_eq(Fishing.filter_weather(table, "clear").size(), 1)
+	assert_eq(Fishing.filter_weather(table, "rain").size(), 2)
+
+
+func test_extra_draws_only_on_rain() -> void:
+	var data := GameData.new()
+	data.fishing_rules = {"rain_extra_draws": 2}
+	assert_eq(Fishing.extra_draws(data, "rain"), 2)
+	assert_eq(Fishing.extra_draws(data, "clear"), 0)
+	data.fishing_rules = {}
+	assert_eq(Fishing.extra_draws(data, "rain"), 1, "default is one")
+
+
+func test_validate_weather_and_rules() -> void:
+	assert_eq(Fishing.validate_weather([{"item": "x", "weather": ["rain"]}], "p").size(), 0)
+	assert_eq(Fishing.validate_weather([{"item": "x", "weather": ["hail"]}], "p").size(), 1)
+	assert_eq(Fishing.validate_weather([{"item": "x", "weather": []}], "p").size(), 1)
+	var errors: Array[String] = []
+	Fishing.validate_rules({"rain_extra_draws": 9}, errors)
+	assert_eq(errors.size(), 1)
