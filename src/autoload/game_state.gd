@@ -2932,6 +2932,29 @@ func festival_activity(event_id: String) -> void:
 	EventBus.player_changed.emit()
 
 
+## Today's visible roaming beasts in the current region (WILD-001): [{slot, enemy}].
+func roamers_here() -> Array[Dictionary]:
+	return Wildlife.roamers(data, current_region, GameClock.total_days, player.realm_index, world_flags)
+
+
+## Pick a fight with the roamer in `slot`. The beast leaves for the day whether you win or lose.
+func engage_roamer(slot: int) -> bool:
+	EventBus.topic = "combat"
+	if not _can_act():
+		return false
+	for r in roamers_here():
+		if int(r["slot"]) != slot:
+			continue
+		var region := current_region
+		var won := fight(String(r["enemy"]))
+		# The fight may have taken days: the beast is gone for the day you come back to.
+		Wildlife.mark_down(world_flags, region, slot, GameClock.total_days)
+		EventBus.roamers_changed.emit()
+		return won
+	EventBus.post("There is no such beast about.", "warning")
+	return false
+
+
 ## Fight an enemy from data/enemies.json.
 func fight(enemy_id: String) -> bool:
 	EventBus.topic = "combat"

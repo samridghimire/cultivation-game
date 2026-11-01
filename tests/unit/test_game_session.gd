@@ -2723,3 +2723,20 @@ func test_upcoming_days_lists_next_market_day() -> void:
 		if e["kind"] == "market":
 			days.append(Calendar.day_of(int(e["day"])))
 	assert_eq(days, [10, 25])
+
+
+func test_engage_roamer() -> void:
+	var gs := _game_state()
+	_start()
+	gs.current_region = "misty_forest"
+	var roamers: Array[Dictionary] = gs.roamers_here()
+	assert_true(roamers.size() >= 2)
+	var slot := int(roamers[0]["slot"])
+	var log_before := int(EventBus.posted_count)
+	gs.engage_roamer(slot)
+	assert_true(int(EventBus.posted_count) > log_before, "a fight was posted")
+	for r in gs.roamers_here():
+		assert_true(int(r["slot"]) != slot, "downed slot is gone today")
+	var day_after := int(GameClock.total_days)
+	assert_false(gs.engage_roamer(99), "bad slot refused")
+	assert_eq(int(GameClock.total_days), day_after, "refusals pass no time")
