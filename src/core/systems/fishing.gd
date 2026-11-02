@@ -97,6 +97,20 @@ static func catchable(data: GameData) -> PackedStringArray:
 	return out
 
 
+## Fish (tag "fish") some catch_table entry only rolls in `kind` weather (e.g. "rain").
+static func weather_fish(data: GameData, kind: String) -> PackedStringArray:
+	var out: PackedStringArray = []
+	for region: Dictionary in data.regions.values():
+		for place: Dictionary in region.get("places", []):
+			if String(place.get("type", "")) != "fishing":
+				continue
+			for entry: Dictionary in place.get("catch_table", []):
+				var id := String(entry.get("item", ""))
+				if id != "" and (entry.get("weather", []) as Array).has(kind) and not out.has(id):
+					out.append(id)
+	return out
+
+
 ## Records a catch; returns true when it is the first of its kind.
 static func record_catch(c: CharacterData, item_id: String, count: int) -> bool:
 	var first := not c.catch_log.has(item_id)

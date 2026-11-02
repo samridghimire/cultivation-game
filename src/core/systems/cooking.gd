@@ -38,6 +38,7 @@ static func cook(c: CharacterData, data: GameData, meal_id: String) -> Dictionar
 	var item := String(output["item"])
 	var count := int(output["count"])
 	c.add_item(item, count)
+	c.cooked_meals[meal_id] = int(c.cooked_meals.get(meal_id, 0)) + 1
 	return {"ok": true, "reason": "", "item": item, "count": count, "days": int(m["days"])}
 
 

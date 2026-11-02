@@ -3,7 +3,7 @@ extends RefCounted
 ## Milestones (GOAL-001): data/milestones.json entries the player earns once.
 ## Earned ids are kept in CharacterData.milestones.
 
-const CHECK_TYPES: Array[String] = ["realm", "life_stat", "flag", "sect_joined", "married", "clan_founded", "item_crafted", "flag_count", "log_kinds", "log_complete", "trophy"]
+const CHECK_TYPES: Array[String] = ["realm", "life_stat", "flag", "sect_joined", "married", "clan_founded", "item_crafted", "flag_count", "log_kinds", "log_complete", "trophy", "rain_fish"]
 
 
 ## Ids of milestones whose check holds now and that are not yet earned, in file order.
@@ -45,17 +45,41 @@ static func is_met(c: CharacterData, data: GameData, flags: Dictionary, clan: Cl
 			for id in Fishing.trophy_items(data):
 				if int(c.catch_log.get(id, 0)) > 0:
 					return true
+		"rain_fish":
+			for id in Fishing.weather_fish(data, "rain"):
+				if int(c.catch_log.get(id, 0)) > 0:
+					return true
 	return false
 
 
 ## The CharacterData log a log_kinds / log_complete check reads (catch_log or herb_log).
 static func _log_of(c: CharacterData, check: Dictionary) -> Dictionary:
-	return c.herb_log if String(check.get("log", "")) == "herb_log" else c.catch_log
+	match String(check.get("log", "")):
+		"herb_log":
+			return c.herb_log
+		"hunt_log":
+			return c.hunt_log
+		"cooked_meals":
+			return c.cooked_meals
+	return c.catch_log
 
 
 ## Kinds the check's log can ever hold (log_complete's target).
 static func log_total(data: GameData, check: Dictionary) -> int:
-	return HerbLore.findable(data).size() if String(check.get("log", "")) == "herb_log" else Fishing.catchable(data).size()
+	return _listed(data, check).size()
+
+
+## Every kind the check's log can hold (the catchable fish, findable herbs, home meals).
+static func _listed(data: GameData, check: Dictionary) -> Array:
+	match String(check.get("log", "")):
+		"herb_log":
+			return Array(HerbLore.findable(data))
+		"cooked_meals":
+			var ids: Array = []
+			for m: Dictionary in data.home_meals:
+				ids.append(String(m["id"]))
+			return ids
+	return Array(Fishing.catchable(data))
 
 
 ## Distinct kinds found in the check's log; log_complete counts only kinds still catchable/findable.
@@ -67,7 +91,7 @@ static func log_count(c: CharacterData, data: GameData, check: Dictionary) -> in
 			if int(log[id]) > 0:
 				n += 1
 		return n
-	var listed := HerbLore.findable(data) if String(check.get("log", "")) == "herb_log" else Fishing.catchable(data)
+	var listed := _listed(data, check)
 	var found := 0
 	for id in listed:
 		if int(log.get(id, 0)) > 0:

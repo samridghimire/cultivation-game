@@ -209,3 +209,50 @@ func test_goal005_trophy_and_green_thumb() -> void:
 	assert_false(Milestones.newly_reached(c, data(), {}).has("green_thumb"))
 	LifeStats.add(c, "harvests")
 	assert_true(Milestones.newly_reached(c, data(), {}).has("green_thumb"))
+
+
+func test_goal006_village_milestones() -> void:
+	var c := new_character()
+	var d := data()
+	var got := func() -> Array[String]: return Milestones.newly_reached(c, d, {})
+	assert_false(got.call().has("first_find"))
+	LifeStats.add(c, "foraged")
+	assert_true(got.call().has("first_find"))
+	assert_false(got.call().has("forager"))
+	LifeStats.add(c, "foraged", 48)
+	assert_false(got.call().has("forager"), "49 is not 50")
+	LifeStats.add(c, "foraged")
+	assert_true(got.call().has("forager"))
+	# Home Cook: every home meal once.
+	for i in d.home_meals.size() - 1:
+		c.cooked_meals[String(d.home_meals[i]["id"])] = 1
+	assert_false(got.call().has("home_cook"))
+	c.cooked_meals[String(d.home_meals[d.home_meals.size() - 1]["id"])] = 2
+	assert_true(got.call().has("home_cook"))
+	# Rain Angler: a fish that needs rain; an ordinary fish does not count.
+	c.catch_log["silver_carp"] = 3
+	assert_false(got.call().has("rain_angler"))
+	c.catch_log["rain_loach"] = 1
+	assert_true(got.call().has("rain_angler"))
+	# Beast Hunter II: five different kinds.
+	for id in ["wild_boar", "mist_fox", "den_wolf", "moss_back_ape"]:
+		c.hunt_log[id] = 9
+	assert_false(got.call().has("beast_hunter_ii"))
+	c.hunt_log["mist_python"] = 1
+	assert_true(got.call().has("beast_hunter_ii"))
+
+
+func test_goal006_cooked_meals_recorded_and_saved() -> void:
+	var c := new_character()
+	var d := data()
+	var m: Dictionary = d.home_meals[0]
+	for item_id: String in m["ingredients"]:
+		c.add_item(item_id, int(m["ingredients"][item_id]) * 2)
+	assert_true(Cooking.cook(c, d, String(m["id"]))["ok"])
+	assert_true(Cooking.cook(c, d, String(m["id"]))["ok"])
+	assert_eq(int(c.cooked_meals[String(m["id"])]), 2)
+	var back := CharacterData.from_dict(c.to_dict())
+	assert_eq(back.cooked_meals, c.cooked_meals)
+	var old := c.to_dict()
+	old.erase("cooked_meals")
+	assert_eq(CharacterData.from_dict(old).cooked_meals.size(), 0, "old saves load")
