@@ -2,6 +2,20 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-11-01 [WU-430] A great beast looks great: bigger, gold-ringed, and marked on the world map and calendar.
+- 2026-11-01 [GFX-048] Character creation gets the title backdrop, a talent verdict and even buttons.
+- 2026-11-01 [GFX-051] The world map uses real coin and paw glyphs; streams no longer double-draw.
+- 2026-11-01 [C-290] The gentle guardian ape is no longer skinned; it leaves a river stone.
+- 2026-11-01 [MARKET-006] Healing and qi-pill hints name market stalls and their next market day.
+- 2026-11-01 [WILD-006] A great beast walks the wilds once a week, announced the day before, with double spoils.
+- 2026-11-01 [GFX-050] Foxes, stags and apes each have their own shape on the map and in duels.
+- 2026-11-01 [COOK-001] Hints suggest a meal before a hard fight, with the odds before and after.
+- 2026-11-01 [QA-187] The screenshot tool renders a list of regions and the companion chip.
+- 2026-11-01 [GFX-049] Jetties stay off the road, dead trees lose their black blots, and forage is easy to see.
+- 2026-11-01 [WU-429] The Next steps card shows whole hints; fleeing beasts no longer run over houses and ponds.
+- 2026-11-01 [C-288] Every region has things to pick up on the way.
+- 2026-11-01 [GUIDE-206] The HUD fair-fight line says where the fight is.
+- 2026-11-01 [WILD-005] The hunting log remembers what each beast actually dropped.
 - 2026-11-01 [GUIDE-205] The fair-fight hint names a winnable beast roaming here today, or one region away.
 - 2026-11-01 [QA-188] Balance baseline refreshed after the village data changes (part 3 of 3).
 - 2026-11-01 [WU-427] Herbs, mushrooms and ore lie on the map to pick up as you walk past.

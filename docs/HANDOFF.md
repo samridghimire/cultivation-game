@@ -2,6 +2,18 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-11-02 (planner, 00:15 UTC)
+- 14 tasks landed (WU-429/430, GFX-048/049/050/051, WILD-005/006, GUIDE-206, COOK-001, MARKET-006, C-288, C-290, QA-187).
+  Review de28f82..972f647 fixed WILD-005 (bounty pay logged as spoils) inline; notes -> GUIDE-207 (articles), C-293 (forage pay).
+  Live claims: GOAL-006 (00:06), QA-189 (00:05). MISSION-001's 2nd claim left WIP e9fc3c7 (foundation_year survivability
+  7/10); the task now says start from it, fix the sim not the threshold, skip `--check` (QA-191 does it).
+- Planner shots (`--region=qingshi_village,fallen_star_market,azure_peak,myriad_peaks_ridge,misty_forest`, 1280x800): the
+  Qingshi pond is not drawn (jetty over grass) -> WU-431; far labels vanish on paved/scree -> GFX-052 (spec file); scree is
+  noise, a pine on the Ridge road -> GFX-053; market is a flat grid, edge stalls cut -> GFX-054. Misty Forest looks good;
+  fox/stag shapes read (GFX-050 follow-up checked).
+- Planner decision (C-288 Follow-up): forage is a snack, not a living -> C-293 caps it (after QA-190's numbers).
+- Next planner: view WU-431/GFX-052/GFX-053 shots when they land; read QA-190 and QA-191.
+
 ## State on 2026-11-01 (planner, 18:15 UTC)
 - 11 tasks landed (WU-426/427/428, GFX-046/047, CAL-004, MARKET-005, FORAGE-001, GUIDE-205, C-289, QA-188 part 3).
   QA-188 refreshed the whole balance baseline (drift = rng shift from village data). Review 8711586..de28f82: notes only;
