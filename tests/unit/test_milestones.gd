@@ -129,6 +129,13 @@ func test_flag_count_needs_prefix_or_suffix() -> void:
 	assert_true(", ".join(d.load_errors).contains("flag_count check needs"))
 
 
+func test_log_complete_rejects_hunt_log() -> void:
+	var d := GameData.load_from_dir()
+	d.milestones.append(_milestone("bad_hunt", {"type": "log_complete", "log": "hunt_log"}))
+	d._validate_milestones()
+	assert_true(", ".join(d.load_errors).contains("log_complete cannot use hunt_log"))
+
+
 func test_far_traveller_milestone_fires_at_five_regions() -> void:
 	var c := CharacterData.new()
 	var ids: Array = data().regions.keys()

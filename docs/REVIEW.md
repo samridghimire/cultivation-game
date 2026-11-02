@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 972f647
+Last reviewed commit: 152ba5f
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -1403,3 +1403,17 @@ Last reviewed commit: 972f647
     budget is unreachable) and no sim picks forage yet (QA-190 is queued); planner to decide. (2) COOK-001's "Eat a %s"
     reads oddly for vowel-initial meal names ("Eat a Eel Soup"); wording only. (3) Old saves with hunts but no
     hunt_spoils show "spoils unknown" until the next win, which is fine.
+- 2026-11-02 (reviewer): reviewed 972f647..152ba5f (WILD-006, MARKET-006, GFX-051, C-290, GFX-048, WU-430, QA-189,
+  GOAL-006, WU-431, GUIDE-207, GFX-052, GFX-053, C-291; [PLAN] skipped). No BACKLOG/CHANGELOG edits by workers; no
+  SAVE_VERSION change (GOAL-006's `cooked_meals` defaults to {} in from_dict, old-save test added; great-beast "down"
+  state reuses the per-slot roamer flag); no binary assets (great-beast ring, gold paw and rock clusters are code-drawn).
+  - Fixed (GOAL-006): validation accepted a `log_complete` milestone on `hunt_log`, but Milestones._listed has no beast
+    list and fell back to the catchable fish, so such a milestone would need every fish in the hunt log. Now a load
+    error (hunt_log is log_kinds only). Test added.
+  - WILD-006/C-291 (deterministic weekday, validated non-lethal beasts, calendar + nearby-only reminder, x2 spoils
+    from the fight's own drops), MARKET-006 (stall only when no regular seller; closed stall named with its next day),
+    GUIDE-207 (Text.a for meal names, closes last run's "Eat a Eel Soup" note), GFX-052/053, WU-430/431, GFX-048 OK.
+  - Notes, not filed: (1) if a bounty quarry is the same enemy as today's great beast, the great entry hides it; beating
+    the great beast does not complete the bounty and the quarry reappears afterwards (no current data overlaps).
+    (2) The `paw`/`paw_gold` icon row 7 is 13 chars in a 12-wide glyph (pre-existing, clipped). (4) test_interactable_fuzz::test_fuzz_demonic_foundation failed once ("engine logged 1 error") in a run that overlapped my edits, then passed; watch for a flake. (3) The double spoils
+    double whatever the fight added to the inventory, stones included, which matches the spec's "spoils x2".

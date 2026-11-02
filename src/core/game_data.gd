@@ -903,6 +903,9 @@ func _validate_milestones() -> void:
 			load_errors.append("Milestone '%s' flag_count check needs a prefix or suffix" % id)
 		elif (type == "log_kinds" or type == "log_complete") and not ["catch_log", "herb_log", "hunt_log", "cooked_meals"].has(String(check.get("log", ""))):
 			load_errors.append("Milestone '%s' %s check needs log catch_log, herb_log, hunt_log or cooked_meals" % [id, type])
+		elif type == "log_complete" and String(check.get("log", "")) == "hunt_log":
+			# REVIEW of GOAL-006: Milestones._listed has no "every beast" list, so hunt_log is log_kinds only.
+			load_errors.append("Milestone '%s' log_complete cannot use hunt_log (use log_kinds)" % id)
 		elif type == "log_kinds" and int(check.get("min", 0)) < 1:
 			load_errors.append("Milestone '%s' log_kinds check needs min >= 1" % id)
 		elif type == "flag" and String(check.get("flag", "")) == "":
