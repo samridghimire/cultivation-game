@@ -11,7 +11,7 @@ const FOE_ROBE := Color("3a2f3d")
 const FOE_SASH := Color("7a2a2a")
 const BEAST_FURS := {"wolf": Color("8a8d92"), "boar": Color("5a4636"), "tiger": Color("b5652a"), "fox": Color("c4702c"),
 	"stag": Color("a8854f"), "deer": Color("a8854f"), "elk": Color("a8854f"), "antler": Color("a8854f"),
-	"ape": Color("6e665a"), "cloud_crane": Color("eceae4"), "toad": Color("55703a"), "_ram": Color("8d9096"), "python": Color("6b7040")}
+	"ape": Color("6e665a"), "cloud_crane": Color("eceae4"), "toad": Color("6a8f3c"), "_ram": Color("7d6850"), "python": Color("6b7040")}
 const FALLEN_DARKEN := 0.3
 const DEFAULT_FUR := Color("6b5a48")
 const STAGE_HEIGHT := 182.0

@@ -87,6 +87,8 @@ func _start() -> void:
 	if region_list.size() > 1:  # QA-187: one arrival shot per region, rebuilding the world between them
 		for id in region_list:
 			shots.append({"name": "region_" + id, "open": func() -> void: _rebuild_world(gs, id), "close": func() -> void: pass})
+			if OS.get_cmdline_user_args().has("--great"):  # GFX-060: and a close-up of the great roamer
+				shots.append({"name": "great_" + id, "open": func() -> void: _great_closeup(id), "close": func() -> void: pass})
 		return
 	if OS.get_cmdline_user_args().has("--companion"):  # QA-187: the invited friend's chip and the field menu with tool icons
 		_companion_shots(gs, c)
@@ -157,6 +159,9 @@ func _start() -> void:
 	shots.append({"name": "hud_arrival", "open": func() -> void: pass, "close": func() -> void: pass})
 	if region_list.size() == 1:
 		shots.append({"name": "region_" + region_list[0], "open": func() -> void: pass, "close": func() -> void: pass})
+	if OS.get_cmdline_user_args().has("--great"):  # GFX-060
+		var rid: String = gs.current_region
+		shots.append({"name": "great_" + rid, "open": func() -> void: _great_closeup(rid), "close": func() -> void: pass})
 	# WU-406: a generated villager's greeting bubble, and one with the gold "!" for a folk request.
 	var villager := _generated_villager()
 	if villager != null:
@@ -364,6 +369,23 @@ func _gather_note_shots(gs: Node) -> void:
 		hud.get("_banner").visible = false
 		menu.open_for(quarry)
 		print("Quarry: %s" % quarry.get_options()[0].get("description", "")), "close": menu.close})
+
+
+## GFX-060: moves the player beside the region's great roamer and snaps the camera there (prints a note when none is out).
+func _great_closeup(id: String) -> void:
+	var gs: Node = root.get_node("GameState")
+	var clock: Node = root.get_node("GameClock")
+	gs.player.realm_index = maxi(gs.player.realm_index, gs.data.realm_index_of("foundation_establishment"))  # the ram walks only for Foundation
+	var walk: int = Wildlife.next_great_day(gs.data, id, clock.total_days, gs.player.realm_index)
+	if walk >= 0:  # each region has its own great day: jump there and rebuild
+		clock.total_days = walk
+		_rebuild_world(gs, id)
+	hud.get("_banner").visible = false
+	for node in world.get_children():
+		if node.get("great") == true and node is Node2D:  # not `is Roamer`: naming the class compiles it before the autoloads exist
+			_teleport_player(node.position + Vector2(0, 90))
+			return
+	print("great_%s: no great beast out today" % id)
 
 
 ## QA-187: frees the world and builds a fresh one for region `id` (the HUD is the world's child).
