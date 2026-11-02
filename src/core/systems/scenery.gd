@@ -300,10 +300,35 @@ static func is_clear(pos: Vector2, blocked: Array[Rect2], spots: Array[Vector2])
 	return true
 
 
+## GFX-054: how far flagstones reach beyond a street on a `paved` ground.
+const PAVED_REACH := 80.0
+
+
+## GFX-054: the areas of a `paved` map that get flagstones (the rest is packed earth), as Rect2 in sprite px
+## (map px / `scale`): every path grown by PAVED_REACH plus the optional `map.plaza` [x, y, w, h].
+## Empty for any other ground style or a map without paths: the whole ground is then paved as before.
+static func paved_zones(map: Dictionary, scale: float = 1.0) -> Array:
+	var zones: Array = []
+	if str(map.get("ground_style", "grass")) != "paved" or map.get("paths", []).is_empty():
+		return zones
+	for r: Array in map.get("paths", []):
+		zones.append(Rect2(float(r[0]), float(r[1]), float(r[2]), float(r[3])).grow(PAVED_REACH))
+	var plaza: Variant = map.get("plaza", null)
+	if plaza is Array and plaza.size() == 4:
+		zones.append(Rect2(float(plaza[0]), float(plaza[1]), float(plaza[2]), float(plaza[3])))
+	for i in zones.size():
+		var z: Rect2 = zones[i]
+		zones[i] = Rect2(z.position / scale, z.size / scale)
+	return zones
+
+
 ## Load errors for map.decor in data/regions.json.
 static func validate(data: GameData) -> PackedStringArray:
 	var errors: PackedStringArray = []
 	for region: Dictionary in data.regions.values():
+		var plaza: Variant = region.get("map", {}).get("plaza", null)
+		if plaza != null and not (plaza is Array and plaza.size() == 4 and plaza.all(func(v: Variant) -> bool: return v is float or v is int) and float(plaza[2]) > 0.0 and float(plaza[3]) > 0.0):
+			errors.append("Region '%s' map.plaza must be [x, y, w, h] with w, h > 0" % region["id"])
 		var decor: Variant = region.get("map", {}).get("decor", {})
 		if not decor is Dictionary:
 			errors.append("Region '%s' map.decor must be an object" % region["id"])

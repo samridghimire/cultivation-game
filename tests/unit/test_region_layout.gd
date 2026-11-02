@@ -151,3 +151,40 @@ func test_npc_spot_labels_do_not_overlap_place_labels() -> void:
 			npc.free()
 			for pr: Array in place_rects:
 				assert_false(rect.intersects(pr[1]), "%s: %s label overlaps %s" % [region["id"], n["name"], pr[0]])
+
+
+## GFX-054: Fallen Star Market: every place but the City Gate stays 60 px inside the map, and at the arrival camera
+## (1280x800 on the spawn) no place, stall or NPC spot sits under the vitals card or the Next steps card.
+func test_market_town_layout() -> void:
+	var region: Dictionary = data().regions["fallen_star_market"]
+	var map: Dictionary = region["map"]
+	var inner := Rect2(Vector2.ZERO, Vector2(float(map["size"][0]), float(map["size"][1]))).grow(-60.0)
+	var spawn := Vector2(float(region["spawn"][0]), float(region["spawn"][1]))
+	var cam := Vector2(clampf(spawn.x - 640.0, 0.0, float(map["size"][0]) - 1280.0), clampf(spawn.y - 400.0, 0.0, float(map["size"][1]) - 800.0))
+	var cards: Array[Rect2] = [Rect2(16, 16, 330, 175), Rect2(910, 16, 360, 170)]
+	var rects: Array = []
+	for place: Dictionary in region["places"]:
+		if place["type"] != "travel":
+			assert_true(inner.encloses(_rect(place, [30, 30])), "%s is within 60 px of the map edge" % place.get("display_name", place["type"]))
+		rects.append([String(place.get("display_name", place["type"])), _rect(place, [30, 30])])
+	for lm: Dictionary in map["landmarks"]:
+		if lm["kind"] == "stall":
+			rects.append(["stall at %s" % [lm["pos"]], _rect(lm, [80, 50])])
+	for spot: Array in region["npc_spots"]:
+		rects.append(["NPC spot %s" % [spot], Rect2(float(spot[0]) - 14.0, float(spot[1]) - 14.0, 28.0, 28.0)])
+	for e: Array in rects:
+		var r: Rect2 = e[1]
+		r.position -= cam
+		for c in cards:
+			assert_false(r.intersects(c), "%s sits under a HUD card at the arrival camera" % e[0])
+
+
+## GFX-054: a paved map gets flagstones only along its streets and in its plaza.
+func test_paved_zones_follow_the_streets() -> void:
+	var map: Dictionary = data().regions["fallen_star_market"]["map"]
+	var zones := Scenery.paved_zones(map, 1.0)
+	assert_eq(zones.size(), 3)
+	assert_true(GroundTiles.in_paved_zone(zones, "x", 800, 500), "street crossing is paved")
+	assert_false(GroundTiles.in_paved_zone(zones, "x", 150, 900), "a far corner is packed earth")
+	assert_true(Scenery.paved_zones({"ground_style": "grass", "paths": [[0, 0, 10, 10]]}, 1.0).is_empty())
+	assert_true(Scenery.paved_zones({"ground_style": "paved"}, 1.0).is_empty())

@@ -88,8 +88,8 @@ static func make_variant(base: Color, rid: String, variant: int, flowers: bool) 
 
 ## The whole ground of a region as one texture, 1 px per sprite pixel (the caller scales it): 16-px
 ## cells picked by `variant_for`. Built once per region and season-bloom state, so `_draw()` stays cheap.
-static func ground_texture(base: Color, rid: String, size_px: Vector2i, flowers: bool, season: String = "", style: String = "grass") -> ImageTexture:
-	var key := "ground|%s|%s|%s|%s|%s|%s" % [base.to_html(), rid, size_px, flowers, season, style]
+static func ground_texture(base: Color, rid: String, size_px: Vector2i, flowers: bool, season: String = "", style: String = "grass", zones: Array = []) -> ImageTexture:
+	var key := "ground|%s|%s|%s|%s|%s|%s|%s" % [base.to_html(), rid, size_px, flowers, season, style, zones]
 	if _cache.has(key):
 		return _cache[key]
 	var img := Image.create(size_px.x, size_px.y, false, Image.FORMAT_RGBA8)
@@ -102,7 +102,7 @@ static func ground_texture(base: Color, rid: String, size_px: Vector2i, flowers:
 			var w := mini(SIZE, size_px.x - cx * SIZE)
 			var h := mini(SIZE, size_px.y - cy * SIZE)
 			img.blit_rect(src, Rect2i(0, 0, w, h), Vector2i(cx * SIZE, cy * SIZE))
-	_apply_style(img, base, rid, style)
+	_apply_style(img, base, rid, style, zones)
 	_apply_season(img, rid, season)
 	var tex := ImageTexture.create_from_image(img)
 	_cache[key] = tex
@@ -132,12 +132,33 @@ static func _scree_patches(img: Image, base: Color, rid: String) -> void:
 					img.set_pixel(x, y, img.get_pixel(x, y).lerp(tint, a))
 
 
+## GFX-054: true when (x, y) (sprite px) lies in one of the paved `zones` (Rect2 in sprite px), whose edge is
+## roughened by up to 6 px of per-8px-cell jitter so the flagstones fade into the earth in ragged steps.
+static func in_paved_zone(zones: Array, rid: String, x: int, y: int) -> bool:
+	var jitter := float(absi(hash("%s|%d|%d|zone" % [rid, x / 8, y / 8])) % 7)
+	for z: Rect2 in zones:
+		if z.grow(-jitter).has_point(Vector2(x, y)):
+			return true
+	return false
+
+
+## GFX-054: packed earth between the streets: the ground colour warmed and darkened with sparse pebbles.
+static func _earth_pixel(base: Color, rid: String, x: int, y: int) -> Color:
+	var earth := base.lerp(Color("7a6a48"), 0.3).darkened(0.08)
+	var r := absi(hash("%s|%d|%d|earth" % [rid, x, y]))
+	if r % 53 == 0:
+		return earth.lightened(0.14)
+	if r % 17 == 0:
+		return earth.darkened(0.1)
+	return earth.darkened(float((x / 4 + y / 4) % 3) * 0.02)
+
+
 const STYLES := ["grass", "paved", "scree", "bog", "litter"]
 
 
 ## GFX-042: redraws a finished grass ground image in a regional style. "grass" is left alone. Every choice comes
 ## from hashes of (rid, cell), so the same inputs give the same image.
-static func _apply_style(img: Image, base: Color, rid: String, style: String) -> void:
+static func _apply_style(img: Image, base: Color, rid: String, style: String, zones: Array = []) -> void:
 	var w := img.get_width()
 	var h := img.get_height()
 	match style:
@@ -148,6 +169,9 @@ static func _apply_style(img: Image, base: Color, rid: String, style: String) ->
 				var row := y / SIZE
 				var shift := 8 if row % 2 == 1 else 0
 				for x in w:
+					if not zones.is_empty() and not in_paved_zone(zones, rid, x, y):
+						img.set_pixel(x, y, _earth_pixel(base, rid, x, y))
+						continue
 					var col := (x + shift) / SIZE
 					var edge := y % SIZE == 0 or (x + shift) % SIZE == 0
 					if edge:

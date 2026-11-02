@@ -103,7 +103,8 @@ func test_every_region_has_landmarks_inside_the_map() -> void:
 		var map_rect := Rect2(0, 0, float(size[0]), float(size[1]))
 		var rects := Scenery.landmark_rects(region)
 		assert_gt(rects.size(), 5, "%s needs landmarks" % region["id"])
-		assert_true(rects.size() < 13, "%s has too many landmarks" % region["id"])
+		var cap := 20 if region["id"] == "fallen_star_market" else 13  # GFX-054: a lantern-lined main street
+		assert_true(rects.size() < cap, "%s has too many landmarks" % region["id"])
 		for r in rects:
 			assert_true(map_rect.encloses(r), "%s: landmark %s leaves the map" % [region["id"], r])
 

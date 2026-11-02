@@ -814,7 +814,7 @@ func _draw() -> void:
 		var sc := float(Sprites.scale())
 		var gseason := GroundTiles.ground_season(_season, map)
 		var flowers := ["Spring", "Summer"].has(_season)
-		var gtex := GroundTiles.ground_texture(ground_color, rid, Vector2i(ceili(map_size.x / sc), ceili(map_size.y / sc)), flowers, gseason, str(map.get("ground_style", "grass")))
+		var gtex := GroundTiles.ground_texture(ground_color, rid, Vector2i(ceili(map_size.x / sc), ceili(map_size.y / sc)), flowers, gseason, str(map.get("ground_style", "grass")), Scenery.paved_zones(map, sc))
 		draw_texture_rect(gtex, Rect2(Vector2.ZERO, Vector2(gtex.get_size()) * sc), false)
 	var path_tile := Sprites.first(["path_" + rid, "path"])
 	var path_color := Color(map.get("path_color", "8a7350"))
