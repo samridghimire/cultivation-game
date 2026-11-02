@@ -168,6 +168,8 @@ var herb_log: Dictionary = {}
 var hunt_log: Dictionary = {}
 ## Spoils each map-beast win dropped (WILD-005): enemy id -> {item id: count}.
 var hunt_spoils: Dictionary = {}
+## Great beasts slain (WILD-007): enemy id -> day of the first win (the trophy is given once).
+var great_beasts: Dictionary = {}
 ## Home meals cooked (GOAL-006): meal id -> times cooked.
 var cooked_meals: Dictionary = {}
 ## World day each generated villager last came to visit and shared tea with the player (WORLD-007): npc id -> day.
@@ -298,6 +300,7 @@ func to_dict() -> Dictionary:
 		"catch_log": catch_log.duplicate(),
 		"hunt_log": hunt_log.duplicate(),
 		"hunt_spoils": hunt_spoils.duplicate(true),
+		"great_beasts": great_beasts.duplicate(),
 		"cooked_meals": cooked_meals.duplicate(),
 		"gather_xp": gather_xp,
 		"herb_log": herb_log.duplicate(),
@@ -449,6 +452,7 @@ static func from_dict(d: Dictionary) -> CharacterData:
 	c.catch_log = _int_values(d.get("catch_log", {}))
 	c.hunt_log = _int_values(d.get("hunt_log", {}))
 	c.cooked_meals = _int_values(d.get("cooked_meals", {}))
+	c.great_beasts = _int_values(d.get("great_beasts", {}))
 	var hs: Variant = d.get("hunt_spoils", {})
 	if hs is Dictionary:
 		for k: Variant in hs:

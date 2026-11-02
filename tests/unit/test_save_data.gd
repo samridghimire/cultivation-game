@@ -97,6 +97,7 @@ func test_every_character_field_survives_a_save() -> void:
 	c.herb_log = {"dew_grass": 2}
 	c.hunt_log = {"wild_boar": 2}
 	c.hunt_spoils = {"wild_boar": {"boar_tusk": 3}}
+	c.great_beasts = {"old_tusker_boar": 12}
 	c.cooked_meals = {"fish_stew": 2}
 	c.folk_visit_day = {"npc_test_friend": 88}
 	c.folk_companion = {"npc": "npc_test_friend", "day": 90}

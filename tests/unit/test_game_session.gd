@@ -2863,13 +2863,19 @@ func test_great_beast_pays_double_and_counts() -> void:
 			great = r
 	assert_false(great.is_empty(), "the great beast walks today")
 	var before := int(gs.player.inventory.get("spirit_stone", 0))
+	gs.data.items["test_trophy"] = {"name": "Test Tusk", "tags": ["trophy"]}
+	def["trophy"] = "test_trophy"
 	var won: bool = gs.engage_roamer(Wildlife.GREAT_SLOT)
 	if won:
+		assert_eq(gs.player.item_count("test_trophy"), 1, "trophy on the first great win")
 		assert_eq(LifeStats.get_stat(gs.player, "great_beasts"), 1)
 		var normal := int(gs.data.enemies[String(great["enemy"])]["rewards"]["items"]["spirit_stone"])
 		assert_true(int(gs.player.inventory.get("spirit_stone", 0)) - before >= 2 * normal, "double stones")
 	else:
 		assert_eq(LifeStats.get_stat(gs.player, "great_beasts"), 0)
+		assert_eq(gs.player.item_count("test_trophy"), 0)
+	def.erase("trophy")
+	gs.data.items.erase("test_trophy")
 
 
 func test_great_beast_calendar_and_reminder() -> void:

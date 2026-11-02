@@ -258,3 +258,25 @@ func test_every_roamer_region_has_a_great_beast() -> void:
 		for route in d.regions[id].get("routes", []):
 			if days.has(route["to"]):
 				assert_true(days[id] != days[route["to"]], "%s and %s share a great day" % [id, route["to"]])
+
+
+## WILD-007: a trophy once per great beast kind.
+func test_record_great_trophy_once_and_round_trip() -> void:
+	var d := _gdata()
+	var old: Dictionary = d.regions["misty_forest"]["roamers"].duplicate(true)
+	d.items["test_trophy"] = {"name": "Test Tusk", "tags": ["trophy"]}
+	var g: Dictionary = d.regions["misty_forest"]["roamers"]["great"]
+	g["trophy"] = "test_trophy"
+	var c := CharacterData.new()
+	var enemy := String(g["enemy"])
+	assert_eq(Wildlife.record_great(c, d, enemy, "misty_forest", 12), "test_trophy", "first win gives it")
+	assert_eq(Wildlife.record_great(c, d, enemy, "misty_forest", 30), "", "later wins do not")
+	assert_eq(int(c.great_beasts[enemy]), 12, "first day kept")
+	assert_eq(int(CharacterData.from_dict(c.to_dict()).great_beasts[enemy]), 12, "round trip")
+	assert_true(CharacterData.from_dict({}).great_beasts.is_empty(), "old save loads")
+	assert_eq(Wildlife.validate(d).size(), 0, str(Wildlife.validate(d)))
+	d.items["test_trophy"]["tags"] = []
+	assert_true(Wildlife.validate(d).size() > 0, "trophy needs the tag")
+	d.items.erase("test_trophy")
+	d.regions["misty_forest"]["roamers"] = old
+	assert_eq(Wildlife.validate(d).size(), 0)

@@ -149,6 +149,27 @@ static func record_spoils(c: CharacterData, enemy_id: String, gained: Dictionary
 	c.hunt_spoils[enemy_id] = seen
 
 
+## WILD-007: the trophy item id of a great beast kind (from any region whose great beast it is), "" when none.
+static func great_trophy(data: GameData, enemy_id: String) -> String:
+	for region: Dictionary in data.regions.values():
+		var g: Dictionary = region.get("roamers", {}).get("great", {})
+		if not g.is_empty() and String(g.get("enemy", "")) == enemy_id and g.has("trophy"):
+			return String(g["trophy"])
+	return ""
+
+
+## WILD-007: records a great-beast win. Returns the trophy item id to give the first time ("" when
+## already recorded or the beast has no trophy). The first win's day is always stored.
+static func record_great(c: CharacterData, data: GameData, enemy_id: String, region_id: String, day: int) -> String:
+	if c.great_beasts.has(enemy_id):
+		return ""
+	c.great_beasts[enemy_id] = day
+	var def := _great_def(data, region_id)
+	if String(def.get("enemy", "")) == enemy_id and def.has("trophy"):
+		return String(def["trophy"])
+	return great_trophy(data, enemy_id)
+
+
 ## Item id -> count of everything this beast has dropped for the player so far.
 static func spoils_of(c: CharacterData, enemy_id: String) -> Dictionary:
 	return c.hunt_spoils.get(enemy_id, {}).duplicate()
@@ -213,6 +234,10 @@ static func validate(data: GameData) -> PackedStringArray:
 					errors.append("%s great weekday must be 0..6" % where)
 				if great.has("min_realm") and data.realm_index_of(String(great["min_realm"])) < 0:
 					errors.append("%s great has unknown min_realm" % where)
+				if great.has("trophy"):
+					var ti: Variant = data.items.get(String(great["trophy"]))
+					if ti == null or not ((ti as Dictionary).get("tags", []) as Array).has("trophy"):
+						errors.append("%s great trophy '%s' must be an item tagged trophy" % [where, great["trophy"]])
 				for gs: Variant in great.get("seasons", []):
 					if not Exploration.SEASON_NAMES.has(String(gs)):
 						errors.append("%s great has unknown season '%s'" % [where, gs])

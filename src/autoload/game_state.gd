@@ -3039,6 +3039,10 @@ func engage_roamer(slot: int, charged: bool = false) -> bool:
 					player.add_item(item_id, int(spoils[item_id]))
 					spoils[item_id] = int(spoils[item_id]) * 2
 				LifeStats.add(player, "great_beasts")
+				var trophy := Wildlife.record_great(player, data, String(r["enemy"]), region, GameClock.total_days)
+				if trophy != "":
+					player.add_item(trophy, 1)
+					EventBus.post("You take the %s as a token of the hunt." % String(data.items[trophy]["name"]).to_lower(), "progress")
 				EventBus.post("The great %s's spoils come twice over." % String(data.enemies[String(r["enemy"])]["name"]), "progress")
 			Wildlife.record_spoils(player, String(r["enemy"]), spoils)
 		# The fight may have taken days: the beast is gone for the day you come back to.
