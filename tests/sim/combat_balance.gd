@@ -200,6 +200,7 @@ static func appearances(data: GameData) -> Array[Dictionary]:
 	_add_world_event_foes(data, out)
 	_add_sect_trials(data, out)
 	_add_bounty_foes(data, out)
+	_add_roamers(data, out)
 	out.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return [a["realm_index"], a["enemy"], a["source"]] < [b["realm_index"], b["enemy"], b["source"]])
 	return out
 
@@ -315,3 +316,16 @@ static func _add_bounty_foes(data: GameData, out: Array[Dictionary]) -> void:
 		var b: Dictionary = data.bounties[id]
 		if data.enemies.has(String(b.get("enemy", ""))):
 			out.append({"enemy": String(b["enemy"]), "source": "bounty " + id, "realm_index": maxi(0, data.realm_index_of(String(b.get("min_realm", "mortal")))), "stage": int(b.get("min_stage", 0)), "forced": false, "optional": true})
+
+
+## QA-193: region roamers (WILD-001) and great beasts (WILD-006). They are seen on
+## the map and can be avoided or fled, so they are evadable and optional.
+static func _add_roamers(data: GameData, out: Array[Dictionary]) -> void:
+	for region_id: String in data.regions:
+		var roamers: Dictionary = data.regions[region_id].get("roamers", {})
+		for e: Dictionary in roamers.get("enemies", []):
+			if data.enemies.has(String(e.get("enemy", ""))):
+				out.append({"enemy": String(e["enemy"]), "source": "roamer " + region_id, "realm_index": maxi(0, data.realm_index_of(String(e.get("min_realm", "mortal")))), "stage": 0, "forced": false, "optional": true})
+		var great: Dictionary = roamers.get("great", {})
+		if data.enemies.has(String(great.get("enemy", ""))):
+			out.append({"enemy": String(great["enemy"]), "source": "great roamer " + region_id, "realm_index": maxi(0, data.realm_index_of(String(great.get("min_realm", "mortal")))), "stage": 0, "forced": false, "optional": true})

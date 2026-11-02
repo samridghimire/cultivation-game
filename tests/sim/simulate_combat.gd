@@ -32,7 +32,7 @@ func _run() -> void:
 			roundi(r["entry"] * 100), roundi(r["peak"] * 100), roundi(r["talisman"] * 100), roundi(r["bare"] * 100), roundi(r["veteran"] * 100), r["verdict"].to_upper(), note])
 	for enemy_id: String in data.enemies:
 		if not seen.has(enemy_id):
-			print("  UNUSED   %s never appears in an encounter or mission" % enemy_id)
+			print("  UNUSED   %s never appears in an encounter, mission or region" % enemy_id)
 	print("")
 	var header := "  %-22s" % "enemy \\ player"
 	for realm in mini(GRID_REALMS, data.realms.size()):

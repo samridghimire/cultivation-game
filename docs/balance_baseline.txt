@@ -844,10 +844,29 @@ Rival story, curious policy, 10 seeds, 36 months (cells: player/rival realm+stag
 Combat balance, 200 fights per cell. Typical player: attributes 10, Iron Fist + Stone Skin, best buyable gear.
 
 Where each enemy first appears (typical player entering the realm / at its peak / entering with talismans; bare player entering):
+  Mortal    bog_king_toad          great roamer withered_bone_m evadable                 entry   0%  peak   0%  talisman   0%  bare   0%  veteran on appearance   0%  UNBEATABLE (lethal: a Deadly foe is sensed and evaded)
+  Mortal    cloud_crane            great roamer azure_peak      evadable                 entry   0%  peak   0%  talisman   0%  bare   0%  veteran on appearance   0%  UNBEATABLE (lethal: a Deadly foe is sensed and evaded)
+  Mortal    den_wolf               roamer azure_peak            evadable                 entry   0%  peak   0%  talisman   0%  bare   0%  veteran on appearance   0%  UNBEATABLE (lethal: a Deadly foe is sensed and evaded)
+  Mortal    den_wolf               roamer misty_forest          evadable                 entry   0%  peak   0%  talisman   0%  bare   0%  veteran on appearance   0%  UNBEATABLE (lethal: a Deadly foe is sensed and evaded)
+  Mortal    den_wolf               roamer myriad_peaks_ridge    evadable                 entry   0%  peak   0%  talisman   0%  bare   0%  veteran on appearance   0%  UNBEATABLE (lethal: a Deadly foe is sensed and evaded)
+  Mortal    fog_antler_stag        roamer azure_peak            evadable                 entry   0%  peak   0%  talisman   0%  bare   0%  veteran on appearance   0%  UNBEATABLE (lethal: a Deadly foe is sensed and evaded)
+  Mortal    fog_antler_stag        roamer misty_forest          evadable                 entry   0%  peak   0%  talisman   0%  bare   0%  veteran on appearance   0%  UNBEATABLE (lethal: a Deadly foe is sensed and evaded)
+  Mortal    fog_antler_stag        roamer myriad_peaks_ridge    evadable                 entry   0%  peak   0%  talisman   0%  bare   0%  veteran on appearance   0%  UNBEATABLE (lethal: a Deadly foe is sensed and evaded)
+  Mortal    grave_guardian_ape     roamer withered_bone_marsh   evadable                 entry   0%  peak   0%  talisman   0%  bare   0%  veteran on appearance   0%  UNBEATABLE (lethal: a Deadly foe is sensed and evaded)
+  Mortal    iron_back_boar         roamer myriad_peaks_ridge    evadable                 entry   0%  peak   0%  talisman   0%  bare   0%  veteran on appearance   0%  UNBEATABLE (lethal: a Deadly foe is sensed and evaded)
+  Mortal    mist_fox               roamer azure_peak            evadable                 entry   0%  peak   0%  talisman   0%  bare   0%  veteran on appearance   0%  UNBEATABLE (lethal: a Deadly foe is sensed and evaded)
+  Mortal    mist_fox               roamer misty_forest          evadable                 entry   0%  peak   0%  talisman   0%  bare   0%  veteran on appearance   0%  UNBEATABLE (lethal: a Deadly foe is sensed and evaded)
+  Mortal    mist_python            roamer misty_forest          evadable                 entry   0%  peak   0%  talisman   0%  bare   0%  veteran on appearance   0%  UNBEATABLE (lethal: a Deadly foe is sensed and evaded)
+  Mortal    mist_python            roamer withered_bone_marsh   evadable                 entry   0%  peak   0%  talisman   0%  bare   0%  veteran on appearance   0%  UNBEATABLE (lethal: a Deadly foe is sensed and evaded)
+  Mortal    moss_back_ape          roamer myriad_peaks_ridge    evadable                 entry   0%  peak   0%  talisman   0%  bare   0%  veteran on appearance   0%  UNBEATABLE (lethal: a Deadly foe is sensed and evaded)
+  Mortal    moss_back_ape          roamer withered_bone_marsh   evadable                 entry   0%  peak   0%  talisman   0%  bare   0%  veteran on appearance   0%  UNBEATABLE (lethal: a Deadly foe is sensed and evaded)
   Mortal    mountain_bandit        choice city_cornered_merchan forced                   entry 100%  peak 100%  talisman 100%  bare  30%  veteran on appearance 100%  TRIVIAL
   Mortal    mountain_bandit        mission collect_a_debt       forced                   entry 100%  peak 100%  talisman 100%  bare  30%  veteran on appearance 100%  TRIVIAL
   Mortal    mountain_bandit        mission press_gang_bandits   forced                   entry 100%  peak 100%  talisman 100%  bare  30%  veteran on appearance 100%  TRIVIAL
+  Mortal    old_tusker_boar        great roamer misty_forest    evadable                 entry   0%  peak   0%  talisman   0%  bare   0%  veteran on appearance   0%  UNBEATABLE (lethal: a Deadly foe is sensed and evaded)
   Mortal    wild_boar              encounter village_boar       forced                   entry 100%  peak 100%  talisman 100%  bare  96%  veteran on appearance 100%  TRIVIAL
+  Mortal    wild_boar              roamer misty_forest          evadable                 entry 100%  peak 100%  talisman 100%  bare  96%  veteran on appearance 100%  TRIVIAL
+  Mortal    wild_boar              roamer withered_bone_marsh   evadable                 entry 100%  peak 100%  talisman 100%  bare  96%  veteran on appearance 100%  TRIVIAL
   Qi Refini azure_cloud_raider     mission answer_blood_lotus_c forced                   entry  93%  peak 100%  talisman 100%  bare   0%  veteran on appearance  99%  OK
   Qi Refini azure_crane            bounty azure_crane_bounty    evadable                 entry   1%  peak  90%  talisman  12%  bare   0%  veteran on appearance   3%  HARD
   Qi Refini azure_crane            encounter mountain_azure_cra evadable                 entry  53%  peak  90%  talisman  89%  bare   0%  veteran on appearance  68%  OK
@@ -950,6 +969,7 @@ Where each enemy first appears (typical player entering the realm / at its peak 
   Foundatio jade_python            encounter marsh_sunken_serpe evadable                 entry   0%  peak   0%  talisman   0%  bare   0%  veteran on appearance   0%  UNBEATABLE (lethal: a Deadly foe is sensed and evaded)
   Foundatio jade_python            realm sunken_sword_tomb floo forced                   entry   0%  peak   0%  talisman   0%  bare   0%  veteran on appearance   0%  UNBEATABLE
   Foundatio moon_ridge_elk         choice village_beast_at_the_ forced                   entry  79%  peak 100%  talisman 100%  bare   0%  veteran on appearance 100%  OK
+  Foundatio moon_ridge_elk         roamer azure_peak            evadable                 entry  79%  peak 100%  talisman 100%  bare   0%  veteran on appearance 100%  OK
   Foundatio pavilion_treasure_guardian trial myriad_treasure_pavili forced                   entry  68%  peak  97%  talisman  99%  bare   0%  veteran on appearance  98%  OK
   Foundatio roadside_rogue_cultivator bounty roadside_rogue_bounty evadable                 entry  72%  peak 100%  talisman 100%  bare   0%  veteran on appearance 100%  OK
   Foundatio roadside_rogue_cultivator encounter village_roadside_r forced                   entry  93%  peak 100%  talisman 100%  bare   0%  veteran on appearance 100%  OK
@@ -958,6 +978,7 @@ Where each enemy first appears (typical player entering the realm / at its peak 
   Foundatio stone_hide_boar_king   encounter forest_boar_king   evadable                 entry  70%  peak 100%  talisman 100%  bare   0%  veteran on appearance  98%  OK
   Foundatio sword_madman           encounter wild_sword_madman  evadable                 entry  46%  peak  46%  talisman  93%  bare   0%  veteran on appearance  99%  HARD
   Foundatio sword_madman           realm fallen_star_vault floo forced                   entry   3%  peak  46%  talisman  49%  bare   0%  veteran on appearance  70%  HARD
+  Foundatio thunder_horn_ram       great roamer myriad_peaks_ri evadable                 entry  71%  peak 100%  talisman 100%  bare   0%  veteran on appearance  98%  OK
   Foundatio tournament_champion    choice tournament_final/Chal forced                   entry  13%  peak  74%  talisman  74%  bare   0%  veteran on appearance  78%  HARD
   Foundatio vengeful_sect_elder    encounter wounded_traveller_ evadable                 entry   1%  peak  50%  talisman  42%  bare   0%  veteran on appearance  55%  HARD
   Core Form azure_grand_elder_shadow trial azure_cloud_sect rank  forced                   entry  65%  peak  96%  talisman  99%  bare   0%  veteran on appearance 100%  OK
@@ -1039,10 +1060,6 @@ Where each enemy first appears (typical player entering the realm / at its peak 
   Tribulati lightning_tithe_sovereign encounter ruins_lightning_ti evadable                 entry   8%  peak  77%  talisman  14%  bare   0%  veteran on appearance  98%  HARD
   Tribulati nine_thunder_peng      encounter mountain_nine_thun evadable                 entry   6%  peak  81%  talisman  14%  bare   0%  veteran on appearance  99%  HARD
   Tribulati thunder_vault_tortoise encounter mountain_thunder_v evadable                 entry  44%  peak 100%  talisman  46%  bare   0%  veteran on appearance 100%  HARD
-  UNUSED   old_tusker_boar never appears in an encounter or mission
-  UNUSED   bog_king_toad never appears in an encounter or mission
-  UNUSED   cloud_crane never appears in an encounter or mission
-  UNUSED   thunder_horn_ram never appears in an encounter or mission
 
 Win rate at stage 0 of each realm (no talismans):
   enemy \ player             Mortal Qi Refinin Foundation Core Forma Nascent So
