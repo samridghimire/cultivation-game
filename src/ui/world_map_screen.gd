@@ -38,6 +38,7 @@ var _name: Label
 var _info: Label
 var _description: Label
 var _hint_note: Label
+var _goal_region := ""  # WU-439: the region the first unfinished road goal points to
 var _hint_region := ""  # WU-316: the region the HUD's first hint points to
 var _places: Label
 var _marks: Label
@@ -126,6 +127,7 @@ func _unhandled_input(event: InputEvent) -> void:
 func open() -> void:
 	_selected = GameState.current_region
 	_hint_region = _read_hint_region()
+	_goal_region = goal_region_for(GameState.player, GameState.data, GameState.world_flags, GameClock.total_days)
 	_rebuild()
 	visible = true
 	_focus_selected.call_deferred()
@@ -153,6 +155,27 @@ static func hint_note(data: GameData, hint: String, current_region: String, regi
 	if region_id != current_region and Guidance.hinted_region(data, hint, current_region) == region_id:
 		return "Your hint points here."
 	return ""
+
+
+## WU-439: the road-goal region, only while road goals are active.
+static func goal_region_for(c: CharacterData, data: GameData, flags: Dictionary, today: int) -> String:
+	if not Guidance.road_goals_active(c, data, flags):
+		return ""
+	return Guidance.road_goal_region(c, data, flags, today)
+
+
+## WU-439: a one-line lure for a place you have not been, from what a traveller could have heard.
+static func lure_line(data: GameData, region_id: String) -> String:
+	var region: Dictionary = data.regions.get(region_id, {})
+	if not (region.get("roamers", {}) as Dictionary).get("great", {}).is_empty():
+		return "A great beast walks here."
+	for def: Dictionary in data.secret_realms.values() + data.inheritances.values():
+		if String(def.get("region", "")) == region_id:
+			return "Ruins are said to lie here."
+	for p: Dictionary in region.get("places", []):
+		if p.get("type", "") in ["secret_realm", "inheritance"]:
+			return "Ruins are said to lie here."
+	return "Danger: " + danger_name(data, region_id)
 
 
 ## Region id -> position as 0..1 fractions of the map. Uses `map_pos` when set;
@@ -644,6 +667,9 @@ func _draw_map() -> void:
 	if _hint_region != "" and _rects.has(_hint_region):
 		var hr: Rect2 = _rects[_hint_region]
 		_canvas.draw_string(font, Vector2(hr.end.x - 4.0, hr.position.y - 2.0), "!", HORIZONTAL_ALIGNMENT_LEFT, -1, 22, UIStyle.ACCENT)
+	if _goal_region != "" and _rects.has(_goal_region):
+		var gr: Rect2 = _rects[_goal_region]
+		_canvas.draw_string(font, Vector2(gr.position.x, gr.position.y - 4.0), "* goal", HORIZONTAL_ALIGNMENT_LEFT, -1, 14, UIStyle.ACCENT)
 	if _rects.has(GameState.current_region):
 		_canvas.draw_rect((_rects[GameState.current_region] as Rect2).grow(5.0), UIStyle.ACCENT, false, 3.0)
 
@@ -673,6 +699,8 @@ func _show_details() -> void:
 	_name.text = String(region.get("name", _selected))
 	_info.text = "%s   |   Danger: %s" % [qi_line(data, _selected, GameState.world_flags, GameState.world_events), danger_name(data, _selected)]
 	_hint_note.text = "Your hint points here." if _selected == _hint_region and _selected != GameState.current_region else ""
+	if _selected == _goal_region and _selected != GameState.current_region and _hint_note.text == "":
+		_hint_note.text = "Your road goal points here."
 	_hint_note.visible = _hint_note.text != ""
 	_today.text = today_line(GameState.player, data, _selected, GameState.current_region, GameClock.total_days, GameState.world_flags)
 	var by_path := forage_line(GameState.player, data, _selected, GameState.current_region, GameClock.total_days, GameState.world_flags)
@@ -686,6 +714,9 @@ func _show_details() -> void:
 	var deal := ShopScreen.deal_note(GameState.player, _selected, GameClock.total_days).strip_edges()
 	if deal != "":
 		_description.text += "\n" + deal
+	if is_unexplored(GameState.player, _selected, GameState.current_region):
+		_today.text += ("\n" if _today.text != "" else "") + "Unexplored. " + lure_line(data, _selected)
+		_today.visible = true
 	var places := place_names(data, _selected)
 	_places.text = ""
 	if not is_unexplored(GameState.player, _selected, GameState.current_region):

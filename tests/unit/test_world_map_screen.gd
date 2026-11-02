@@ -433,3 +433,46 @@ func test_forage_line_follows_pickups() -> void:  # WU-433
 		Foraging.mark_picked(flags, "qingshi_village", int(n["slot"]), day)
 	assert_eq(WorldMapScreen.forage_line(c, data(), "qingshi_village", "qingshi_village", day, flags), "")
 	assert_true(WorldMapScreen.forage_entries(c, data(), "qingshi_village", "qingshi_village", day, flags).is_empty())
+
+
+func test_lure_line_by_region_kind() -> void:
+	var d := data()
+	var great_id := ""
+	var ruins_id := ""
+	for rid: String in d.regions:
+		if not (d.regions[rid].get("roamers", {}) as Dictionary).get("great", {}).is_empty() and great_id == "":
+			great_id = rid
+	assert_true(great_id != "")
+	assert_eq(WorldMapScreen.lure_line(d, great_id), "A great beast walks here.")
+	for def: Dictionary in d.secret_realms.values():
+		var rid := String(def.get("region", ""))
+		if (d.regions[rid].get("roamers", {}) as Dictionary).get("great", {}).is_empty():
+			ruins_id = rid
+			break
+	if ruins_id != "":
+		assert_eq(WorldMapScreen.lure_line(d, ruins_id), "Ruins are said to lie here.")
+	var saved: Array = d.regions["qingshi_village"]["places"]
+	d.regions["qingshi_village"]["places"] = []
+	var secret_saved := d.secret_realms.duplicate()
+	var inh_saved := d.inheritances.duplicate()
+	d.secret_realms.clear()
+	d.inheritances.clear()
+	assert_true(WorldMapScreen.lure_line(d, "qingshi_village").begins_with("Danger: "))
+	d.regions["qingshi_village"]["places"] = saved
+	d.secret_realms = secret_saved
+	d.inheritances = inh_saved
+	assert_false(WorldMapScreen.lure_line(d, great_id).contains(Wildlife.display_name(d, String(d.regions[great_id]["roamers"]["great"]["enemy"]), true)), "no name until met")
+
+
+func test_road_goal_region_follows_first_unfinished_goal() -> void:
+	var c := new_character()
+	c.realm_index = 0
+	var flags := {}
+	var goals := Guidance.road_goals(c, data(), flags, 0)
+	var r := Guidance.road_goal_region(c, data(), flags, 0)
+	assert_true(r == "" or data().regions.has(r))
+	if not Guidance.road_goals_active(c, data(), flags):
+		assert_eq(WorldMapScreen.goal_region_for(c, data(), flags, 0), "")
+	assert_true(goals.size() >= 3)
+	c.realm_index = 2
+	assert_eq(Guidance.road_goal_region(c, data(), flags, 0), "")

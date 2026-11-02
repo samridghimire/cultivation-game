@@ -3125,18 +3125,9 @@ static func road_goals(c: CharacterData, data: GameData, flags: Dictionary, toda
 	if data.regions.has("fallen_star_market"):
 		rows.append(["Visit %s: armor, weapons and manuals are sold there" % _region_name(data, "fallen_star_market"), vet or c.visited_regions.has("fallen_star_market")])
 	var great_text := "Beat a great beast"
-	var best_rid := ""
-	var best_day := -1
-	for rid: String in data.regions:  # CAL-005: the soonest walk wins (ties: region order)
-		var def: Dictionary = data.regions[rid].get("roamers", {}).get("great", {})
-		if def.is_empty() or c.great_beasts.has(String(def.get("enemy", ""))):
-			continue
-		var nd := Wildlife.next_great_day(data, rid, today, c.realm_index)
-		if nd < 0:
-			continue  # REVIEW: never name a great beast this realm cannot meet (the Ridge's ram needs Foundation)
-		if best_day < 0 or nd < best_day:
-			best_day = nd
-			best_rid = rid
+	var next_great := _next_great(c, data, today)
+	var best_rid: String = next_great["region"]
+	var best_day: int = next_great["day"]
 	if best_rid != "":
 		var bdef: Dictionary = data.regions[best_rid]["roamers"]["great"]
 		var away := best_day - today
@@ -3158,6 +3149,39 @@ static func road_goals(c: CharacterData, data: GameData, flags: Dictionary, toda
 	for row: Array in rows:
 		out.append({"text": row[0], "done": row[1]})
 	return out
+
+
+## CAL-005: the region of the soonest great-beast walk this realm can meet and has not won ({"region": "", "day": -1} when none; ties: region order).
+static func _next_great(c: CharacterData, data: GameData, today: int) -> Dictionary:
+	var best_rid := ""
+	var best_day := -1
+	for rid: String in data.regions:
+		var def: Dictionary = data.regions[rid].get("roamers", {}).get("great", {})
+		if def.is_empty() or c.great_beasts.has(String(def.get("enemy", ""))):
+			continue
+		var nd := Wildlife.next_great_day(data, rid, today, c.realm_index)
+		if nd < 0:
+			continue  # REVIEW: never name a great beast this realm cannot meet (the Ridge's ram needs Foundation)
+		if best_day < 0 or nd < best_day:
+			best_day = nd
+			best_rid = rid
+	return {"region": best_rid, "day": best_day}
+
+
+## WU-439: the region the first unfinished road goal points at ("" when all done or that goal has no region).
+static func road_goal_region(c: CharacterData, data: GameData, flags: Dictionary, today: int = 0) -> String:
+	var regions: Array[String] = []
+	var first_hop := _first_route_from(data, data.start_region, "misty_forest")
+	if first_hop != "":
+		regions.append(first_hop)
+	if data.regions.has("fallen_star_market"):
+		regions.append("fallen_star_market")
+	regions.append(String(_next_great(c, data, today)["region"]))
+	var goals := road_goals(c, data, flags, today)
+	for i in goals.size():
+		if not bool(goals[i]["done"]):
+			return regions[i] if i < regions.size() else ""
+	return ""
 
 
 static func _first_route_from(data: GameData, from_id: String, to_id: String) -> String:
