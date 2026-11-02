@@ -758,20 +758,20 @@ func test_one_elder_mo_line_mentions_breathing() -> void:
 func test_first_goals_ladder_and_journal_section() -> void:
 	var c := _fresh()
 	var goals := Guidance.first_goals(c, data(), {})
-	assert_eq(goals.size(), 7)
+	assert_eq(goals.size(), 10)
 	for g in goals:
 		assert_false(g["done"])
 		for bad in ["%", "{", "<null>"]:
 			assert_false(String(g["text"]).contains(bad))
 	var section := Guidance.journal(c, data(), {}, 0, "qingshi_village").filter(func(e: Dictionary) -> bool: return e["section"] == "First goals")
-	assert_eq(section.size(), 7)
+	assert_eq(section.size(), 10)
 	assert_eq(section.filter(func(e: Dictionary) -> bool: return e["tone"] == "warning").size(), 1)
 	assert_eq(section[0]["tone"], "warning")
 	assert_true(String(section[0]["text"]).begins_with("[ ] "))
 	c.techniques = {"basic_breathing": {"level": 1}}
-	assert_false(Guidance.first_goals(c, data(), {})[2]["done"])
+	assert_false(Guidance.first_goals(c, data(), {})[5]["done"])
 	c.techniques["iron_fist"] = {"level": 1, "xp": 0.0}
-	assert_true(Guidance.first_goals(c, data(), {})[2]["done"])
+	assert_true(Guidance.first_goals(c, data(), {})[5]["done"])
 	c.realm_index = 1
 	c.stage = 2
 	c.sect = {"id": data().sects.keys()[0], "rank": 0, "contribution": 0, "spent": 0}
@@ -780,6 +780,31 @@ func test_first_goals_ladder_and_journal_section() -> void:
 	assert_true(Guidance.first_goals_done(c, data(), flags))
 	var after := Guidance.journal(c, data(), flags, 0, "qingshi_village").filter(func(e: Dictionary) -> bool: return e["section"] == "First goals")
 	assert_true(after.is_empty())
+
+
+## GOAL-007: the village-life goals follow "Learn your first technique", each flips at its own state.
+func test_first_goals_village_life() -> void:
+	var c := _fresh()
+	var g := Guidance.first_goals(c, data(), {})
+	assert_true(String(g[2]["text"]).begins_with("Pick something by the path"), g[2]["text"])
+	assert_true(String(g[3]["text"]).contains("Jetty") and String(g[3]["text"]).contains("Spare Field"), g[3]["text"])
+	assert_true(String(g[4]["text"]).begins_with("Cook a meal at"), g[4]["text"])
+	for i in [2, 3, 4]:
+		assert_false(g[i]["done"])
+	LifeStats.add(c, "foraged")
+	assert_true(Guidance.first_goals(c, data(), {})[2]["done"])
+	c.catch_log = {"carp": 1}
+	assert_true(Guidance.first_goals(c, data(), {})[3]["done"])
+	c.catch_log = {}
+	LifeStats.add(c, "harvests", 2)
+	assert_true(Guidance.first_goals(c, data(), {})[3]["done"], "a harvest counts")
+	c.cooked_meals = {"x": 1}
+	assert_true(Guidance.first_goals(c, data(), {})[4]["done"])
+	var vet := _fresh()
+	vet.realm_index = 1
+	vet.stage = 2
+	for goal in Guidance.first_goals(vet, data(), {}).slice(2, 5):
+		assert_true(goal["done"], "veterans are not dragged back: %s" % goal["text"])
 
 
 func test_first_goals_hidden_past_qi_refining() -> void:
@@ -1981,7 +2006,7 @@ func test_foundation_goals_clan_and_realm_limits() -> void:
 	assert_false(Guidance.foundation_goals_active(c, data(), {}))
 	assert_eq(Guidance.active_goal_ladder(c, data(), {}).size(), Guidance.tribulation_goals(c, data(), {}).size(), "only the Tribulation ladder is left")
 	c.realm_index = 1
-	assert_eq(Guidance.active_goal_ladder(c, data(), {}).size(), 7)
+	assert_eq(Guidance.active_goal_ladder(c, data(), {}).size(), 10)
 
 
 ## The HUD's ladder stays put once all its goals are done, so the last one is still announced.

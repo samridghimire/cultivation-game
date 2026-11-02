@@ -3021,9 +3021,17 @@ static func _echoes_goal(line: String, goal_lines: PackedStringArray) -> bool:
 ## The newcomer ladder: {text, done} in order.
 static func first_goals(c: CharacterData, data: GameData, flags: Dictionary) -> Array[Dictionary]:
 	var stage_3 := c.realm_index > 1 or (c.realm_index == 1 and c.stage >= 2)
+	# GOAL-007: the village-life goals; a veteran (3rd Layer or beyond) is not dragged back to them.
+	var fish_where := _first_place_of_type(data, "qingshi_village", "fishing")
+	var field_where := _first_place_of_type(data, "qingshi_village", "field_plot")
+	var cook_where := workshop_place(data, "qingshi_village")
+	var fish_or_farm := "Catch a fish" + (" at %s" % fish_where if fish_where != "" else "") + ", or bring in a harvest" + (" at %s" % field_where if field_where != "" else "")
 	var rows: Array = [
 		["Talk to Elder Mo in Qingshi Village", bool(flags.get(ELDER_MO_FLAG, false))],
 		["Learn your first technique", not c.techniques.is_empty()],
+		["Pick something by the path (herbs grow along the Qingshi roads)", stage_3 or LifeStats.get_stat(c, "foraged") >= 1],
+		[fish_or_farm, stage_3 or not c.catch_log.is_empty() or LifeStats.get_stat(c, "harvests") >= 1],
+		["Cook a meal" + (" at %s" % cook_where if cook_where != "" else ""), stage_3 or not c.cooked_meals.is_empty()],
 		["Learn a fighting style", Techniques.knows_kind(c, data, "combat")],
 		["Reach Qi Refining", c.realm_index >= 1],
 		["Join a sect, or explore the wilds as a rogue", not c.is_rogue() or LifeStats.get_stat(c, "encounters") >= 5],
@@ -3034,6 +3042,14 @@ static func first_goals(c: CharacterData, data: GameData, flags: Dictionary) -> 
 	for row: Array in rows:
 		out.append({"text": row[0], "done": row[1]})
 	return out
+
+
+## The display name of the first place of `type` in a region ("" when none).
+static func _first_place_of_type(data: GameData, region_id: String, type: String) -> String:
+	for place: Dictionary in data.regions.get(region_id, {}).get("places", []):
+		if String(place.get("type", "")) == type:
+			return String(place.get("display_name", place.get("name", "")))
+	return ""
 
 
 static func first_goals_done(c: CharacterData, data: GameData, flags: Dictionary) -> bool:

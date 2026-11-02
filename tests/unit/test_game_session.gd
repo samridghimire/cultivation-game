@@ -2830,6 +2830,16 @@ func test_tomorrow_reminder_posted_once() -> void:
 	assert_eq(n, 1)
 
 
+## GOAL-007: one forage in Qingshi advances the newcomer ladder.
+func test_forage_advances_first_goals() -> void:
+	var gs := _game_state()
+	_start()
+	gs.current_region = "qingshi_village"
+	assert_false(Guidance.first_goals(gs.player, gs.data, gs.world_flags)[2]["done"])
+	assert_true(gs.pick_forage(int(gs.forage_here()[0]["slot"])))
+	assert_true(Guidance.first_goals(gs.player, gs.data, gs.world_flags)[2]["done"])
+
+
 func test_pick_forage() -> void:
 	var gs := _game_state()
 	_start()
