@@ -190,7 +190,12 @@ func test_nothing_under_hud_cards_on_arrival() -> void:
 		var rects: Array = []
 		for place: Dictionary in region["places"]:
 			if place["type"] != "travel":
-				rects.append([String(place.get("display_name", place["type"])), _rect(place, [30, 30])])
+				var pname := String(place.get("display_name", place["type"]))
+				rects.append([pname, _rect(place, [30, 30])])
+				# WU-435: the name label too (approx. 7 px per char + 16 wide, 20 high, centred above the place).
+				var body := _rect(place, [30, 30])
+				var lw := 7.0 * pname.length() + 16.0
+				rects.append(["label of " + pname, Rect2(body.get_center().x - lw / 2.0, body.position.y - 30.0, lw, 20.0)])
 		for lm: Dictionary in map["landmarks"]:
 			if String(lm["kind"]) in kinds:
 				rects.append(["%s at %s" % [lm["kind"], lm["pos"]], _rect(lm, [80, 50])])

@@ -523,7 +523,7 @@ func _build_guide_panel() -> void:
 	_hunt.custom_minimum_size = Vector2(316, 0)
 	box.add_child(_hunt)
 	_fair = UIStyle.label("", 14, Color("c9b27a"))
-	_fair.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	_fair.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART  # WU-435: the whole line, on two lines when needed
 	_fair.custom_minimum_size = Vector2(316, 0)
 	box.add_child(_fair)
 	_hint = UIStyle.label("", 14, Color("9fd3c7"))
@@ -726,9 +726,9 @@ func _refresh_fair_fight() -> void:
 	_fit_panels.call_deferred()
 
 
-## "Fair fight: <enemy> (<rating> <percent>)" for the best entry ("" for an empty list). Falls back to the entry's
+## "Fair fight: <enemy> (<rating>, <N> in 100)" for the best entry ("" for an empty list). Falls back to the entry's
 ## full text when it names no enemy.
-## WU-150: when a font and width are given and the full line would not fit, the percent is dropped first.
+## WU-435: the line wraps to two lines; the percent is dropped only when two lines are not enough.
 static func fair_fight_line(entries: Array, font: Font = null, font_size: int = 14, max_width: float = 0.0) -> String:
 	if entries.is_empty():
 		return ""
@@ -741,8 +741,8 @@ static func fair_fight_line(entries: Array, font: Font = null, font_size: int = 
 	var named := String(best.get("short", ""))
 	if named == "":
 		named = enemy
-	var full := "Fair fight: %s (%s %d)" % [named, label, roundi(chance * 100.0)]
-	if font != null and max_width > 0.0 and font.get_string_size(full, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x > max_width:
+	var full := "Fair fight: %s (%s, %d in 100)" % [named, label, roundi(chance * 100.0)]
+	if font != null and max_width > 0.0 and wrapped_lines(full, font, font_size, max_width).size() > 2:
 		full = "Fair fight: %s (%s)" % [named, label]
 	return full
 
@@ -875,7 +875,7 @@ func _apply_line_cap() -> void:
 	var used := 0
 	for label: Label in [_goal, _hunt, _fair]:
 		if label.visible:
-			used += maxi(1, wrapped_lines(label.text, font, 14, 316.0).size()) if label == _goal else 1
+			used += maxi(1, wrapped_lines(label.text, font, 14, 316.0).size()) if label == _goal or label == _fair else 1
 	var budget := maxi(1, GUIDE_MAX_LINES - used)
 	var cut := cut_entries(_hint_full.split("\n"), font, 14, 316.0, budget)
 	if cut.size() != _hint_full.split("\n").size() or "\n".join(cut) != _hint_full:
