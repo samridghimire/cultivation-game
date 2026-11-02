@@ -197,3 +197,19 @@ func test_trophy_rows_list_great_beasts_in_region_order() -> void:
 	assert_true(String(rows[0]["detail"]).contains("slain day 10"))
 	assert_true(String(rows[0]["detail"]).contains("tusk"), "the trophy's description")
 	assert_false(bool(rows[1]["won"]), "others stay unwon")
+
+
+func test_great_rumors_exist_and_show_on_unwon_rows() -> void:
+	for rid: String in data().regions:
+		var g: Dictionary = data().regions[rid].get("roamers", {}).get("great", {})
+		if g.is_empty():
+			continue
+		var r := String(g.get("rumor", ""))
+		assert_true(r != "" and r.length() <= 140, "%s has a rumor <= 140 chars" % rid)
+		assert_false(r.to_lower().contains(String(data().enemies[g["enemy"]]["name"]).to_lower()), "%s rumor does not name the beast" % rid)
+	var c := CharacterFactory.create("T", data(), seeded_rng(), "male")
+	var rows := VillageBook.trophy_rows(c, data())
+	assert_true(String(rows[0]["detail"]).contains(Wildlife.rumor_of(data(), "misty_forest")), "unwon row shows the rumor")
+	Wildlife.record_great(c, data(), "old_tusker_boar", "misty_forest", 9)
+	rows = VillageBook.trophy_rows(c, data())
+	assert_false(String(rows[0]["detail"]).contains("Hunters say"), "won row drops the rumor")

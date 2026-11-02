@@ -6033,7 +6033,7 @@ func test_road_goal_great_beast_is_the_soonest_and_names_the_weekday() -> void:
 	assert_true(text.contains(Calendar.weekday_name(best_day)), text)
 	var away := best_day - 100
 	var when := "today" if away == 0 else ("tomorrow" if away == 1 else "in %d days" % away)
-	assert_true(text.ends_with(", %s)" % when), text)
+	assert_true(text.contains(", %s)" % when), text)  # C-297: the rumor follows
 
 
 func test_road_goals_foundation_stretch() -> void:

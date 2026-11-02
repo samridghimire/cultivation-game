@@ -426,6 +426,10 @@ static func trophy_rows(c: CharacterData, data: GameData) -> Array[Dictionary]:
 			var walk := Calendar.weekday_label(Wildlife.great_day(rid, g))
 			row["text"] = "???\n(%s, %s)" % [region, Calendar.weekday_label(Wildlife.great_day(rid, g))]
 			row["detail"] = "A great beast walks %s on %s." % [region, walk]
+			var rumor := Wildlife.rumor_of(data, rid)
+			if rumor != "":
+				row["rumor"] = rumor
+				row["detail"] = "%s\nHunters say: %s" % [row["detail"], rumor]
 		rows.append(row)
 	return rows
 

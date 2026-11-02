@@ -95,6 +95,11 @@ static func great_roamer(c: CharacterData, data: GameData, region_id: String, da
 	return {"slot": GREAT_SLOT, "enemy": String(def["enemy"]), "temper": "wary", "great": true}
 
 
+## C-297: the hunters' rumour about a region's great beast, "" when it has none.
+static func rumor_of(data: GameData, region_id: String) -> String:
+	return String(_great_def(data, region_id).get("rumor", ""))
+
+
 ## The first day >= from_day the region's great beast walks (for a player at `realm_index`); -1 when it has none.
 static func next_great_day(data: GameData, region_id: String, from_day: int, realm_index: int) -> int:
 	var def := _great_def(data, region_id)
@@ -285,6 +290,8 @@ static func validate(data: GameData) -> PackedStringArray:
 					errors.append("%s great enemy '%s' must be a non-lethal beast" % [where, great["enemy"]])
 				if great.has("weekday") and not (_num(great["weekday"]) and int(great["weekday"]) >= 0 and int(great["weekday"]) <= 6):
 					errors.append("%s great weekday must be 0..6" % where)
+				if great.has("rumor") and not (great["rumor"] is String and not String(great["rumor"]).strip_edges().is_empty()):
+					errors.append("%s great rumor must be a non-empty string" % where)
 				if great.has("min_realm") and data.realm_index_of(String(great["min_realm"])) < 0:
 					errors.append("%s great has unknown min_realm" % where)
 				if great.has("trophy"):

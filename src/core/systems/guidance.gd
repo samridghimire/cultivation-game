@@ -3133,6 +3133,9 @@ static func road_goals(c: CharacterData, data: GameData, flags: Dictionary, toda
 		var away := best_day - today
 		var when := "today" if away == 0 else ("tomorrow" if away == 1 else "in %d days" % away)
 		great_text += " (the next one: %s in %s, %s, %s)" % [Wildlife.display_name(data, String(bdef["enemy"]), true), _region_name(data, best_rid), Calendar.weekday_name(best_day), when]
+		var rumor := Wildlife.rumor_of(data, best_rid)
+		if rumor != "":
+			great_text += ". Hunters say: " + rumor
 	rows.append([great_text, vet or not c.great_beasts.is_empty()])
 	rows.append(["Finish a bounty", vet or LifeStats.get_stat(c, "bounties_done") >= 1])
 	var found := false
