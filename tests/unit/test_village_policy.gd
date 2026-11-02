@@ -17,7 +17,7 @@ func test_village_month_rents_plants_and_fishes() -> void:
 	c.add_item("spirit_stone", 20)
 	c.add_item("village_mugwort", 3)
 	FirstHour.village = true
-	FirstHour.village_log = {"field_stones": 0, "rent": 0, "harvests": 0, "crops": 0, "fish_stones": 0, "fish_days": 0, "teas": 0, "quarrels": 0, "meals": 0}
+	FirstHour.village_log = {"field_stones": 0, "rent": 0, "harvests": 0, "crops": 0, "fish_stones": 0, "fish_days": 0, "teas": 0, "quarrels": 0, "meals": 0, "forage_stones": 0, "forage_days": 0, "forage_picked": 0}
 	FirstHour._village_month(gs, c)
 	FirstHour.village = false
 	var field := FieldPlots.place_def(gs.data, "qingshi_village")
@@ -25,5 +25,6 @@ func test_village_month_rents_plants_and_fishes() -> void:
 	assert_true(FieldPlots.rented(c, key, _root().get_node("GameClock").total_days), "the field is rented")
 	assert_eq(int(FirstHour.village_log["rent"]), int(field["rent"]))
 	assert_true(int(FirstHour.village_log["fish_days"]) > 0, "it fished")
+	assert_eq(int(FirstHour.village_log["forage_days"]), 1, "it counted the forage visit")
 	assert_true(c.item_count("village_mugwort") < 3, "a herb was planted")
 	gs.end_session()

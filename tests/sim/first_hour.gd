@@ -39,7 +39,7 @@ static var village := false
 ## QA-184: --tend (needs --village): after planting, stay in the village and water (clear/cloudy day) and nourish (qi allows) the field
 ## for as many days as the tended bonus needs (FieldPlots.care_needed); village_log["tend_days"] counts the days that took.
 static var tend := false
-static var village_log := {"field_stones": 0, "rent": 0, "harvests": 0, "crops": 0, "fish_stones": 0, "fish_days": 0, "teas": 0, "quarrels": 0, "meals": 0, "tend_days": 0}
+static var village_log := {"field_stones": 0, "rent": 0, "harvests": 0, "crops": 0, "fish_stones": 0, "fish_days": 0, "teas": 0, "quarrels": 0, "meals": 0, "tend_days": 0, "forage_stones": 0, "forage_days": 0, "forage_picked": 0}
 ## QA-163: with injury_report on, play() logs every injury the player takes: injury_log entries are
 ## {seed, id, day, region, news (the danger line the HUD showed), days (healing time), qi_lost (cultivation days it costs
 ## if left alone), end (day it went, -1 still open), treated (it went well before its time)}.
@@ -743,6 +743,17 @@ static func _village_month(gs: Node, c: CharacterData) -> void:
 				var s1 := c.item_count("spirit_stone")
 				gs.sell_item(id, n)
 				village_log["field_stones"] += c.item_count("spirit_stone") - s1
+	# QA-190: forage: pick every pickup standing here today (no time cost) and sell the finds
+	var found: Dictionary = {}
+	for n: Dictionary in gs.forage_here():
+		if gs.pick_forage(int(n["slot"])):
+			found[String(n["item"])] = true
+			village_log["forage_picked"] += 1
+	village_log["forage_days"] += 1
+	for id: String in found:
+		var sf := c.item_count("spirit_stone")
+		gs.sell_item(id, c.item_count(id))
+		village_log["forage_stones"] += c.item_count("spirit_stone") - sf
 	# fish: two trips a month, one on a rain day when it rains
 	for place: Dictionary in fish_places:
 		for trip in 2:
