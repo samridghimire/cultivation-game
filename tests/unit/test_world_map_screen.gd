@@ -226,7 +226,8 @@ func test_unexplored_regions_are_dimmed() -> void:
 	screen.open()
 	var forest := screen._canvas.get_node("misty_forest") as Button
 	assert_true(forest.text.contains("Unexplored"))
-	assert_true(forest.modulate.a < 0.6)
+	assert_eq(forest.modulate.a, 1.0, "GFX-061: unexplored nodes are opaque, dimmed by colour")
+	assert_eq(forest.get_theme_color("font_color"), WorldMapScreen.node_colors(true)["text"])
 	var here := screen._canvas.get_node(NodePath(gs.current_region)) as Button
 	assert_false(here.text.contains("Unexplored"))
 	assert_true(WorldMapScreen.region_marks(gs.player, data(), gs.npcs, gs.world_events, 0, "misty_forest", gs.current_region).is_empty())

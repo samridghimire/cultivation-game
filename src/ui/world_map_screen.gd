@@ -183,6 +183,56 @@ static func node_footprint(rect: Rect2) -> Rect2:
 	return Rect2(rect.position, rect.size + Vector2(0, GLYPH_SIZE + 4.0))
 
 
+## GFX-061: colours of a node box: an opaque backing so routes never show through, and a dimmer
+## (but still readable) border and text for places not yet visited.
+static func node_colors(unexplored: bool) -> Dictionary:
+	if unexplored:
+		return {"bg": Color(0.1, 0.1, 0.13, 0.95), "border": Color(0.38, 0.38, 0.44), "text": Color(0.66, 0.66, 0.7)}
+	return {"bg": Color(0.08, 0.09, 0.13, 0.95), "border": Color(0.6, 0.55, 0.38), "text": Color(0.95, 0.95, 0.92)}
+
+
+## GFX-061: WCAG-style contrast ratio between two colours.
+static func contrast_ratio(a: Color, b: Color) -> float:
+	var la := _luminance(a)
+	var lb := _luminance(b)
+	return (maxf(la, lb) + 0.05) / (minf(la, lb) + 0.05)
+
+
+static func _luminance(c: Color) -> float:
+	var ch := PackedFloat32Array()
+	for v: float in [c.r, c.g, c.b]:
+		ch.append(v / 12.92 if v <= 0.03928 else pow((v + 0.055) / 1.055, 2.4))
+	return 0.2126 * ch[0] + 0.7152 * ch[1] + 0.0722 * ch[2]
+
+
+## GFX-061: the part of segment a-b outside both rects (a lies in rect_a, b in rect_b): the
+## returned two points sit 1 px outside the rects. Empty if the rects leave no room.
+static func clip_to_rects(a: Vector2, b: Vector2, rect_a: Rect2, rect_b: Rect2) -> PackedVector2Array:
+	var t0 := _exit_t(a, b, rect_a)
+	var t1 := 1.0 - _exit_t(b, a, rect_b)
+	if t0 >= t1:
+		return PackedVector2Array()
+	return PackedVector2Array([a.lerp(b, t0), a.lerp(b, t1)])
+
+
+## Fraction along from->to where the segment has left `rect` (plus ~1 px), 0 if it starts outside.
+static func _exit_t(from: Vector2, to: Vector2, rect: Rect2) -> float:
+	if not rect.has_point(from):
+		return 0.0
+	var len := from.distance_to(to)
+	if len < 0.001:
+		return 1.0
+	var lo := 0.0
+	var hi := 1.0
+	for i in 24:
+		var mid := (lo + hi) / 2.0
+		if rect.grow(1.0).has_point(from.lerp(to, mid)):
+			lo = mid
+		else:
+			hi = mid
+	return hi
+
+
 ## GFX-059: node centre in canvas pixels for a 0..1 layout fraction.
 static func center_of(fraction: Vector2) -> Vector2:
 	var lo := Vector2(MARGIN.x, MARGIN.y)
@@ -458,7 +508,7 @@ func _rebuild() -> void:
 		b.add_theme_font_size_override("font_size", 14)
 		if unexplored:
 			b.text += "\nUnexplored"
-			b.modulate.a = 0.45
+			b.add_theme_font_size_override("font_size", 14)
 		b.clip_text = true
 		b.position = rect.position
 		b.size = rect.size
@@ -467,6 +517,7 @@ func _rebuild() -> void:
 		if region_id == GameState.current_region:
 			b.add_theme_color_override("font_color", UIStyle.ACCENT)
 			b.add_theme_color_override("font_focus_color", UIStyle.ACCENT)
+		_style_node(b, unexplored, region_id == GameState.current_region)
 		b.focus_entered.connect(_select.bind(region_id))
 		b.pressed.connect(_select.bind(region_id))
 		_canvas.add_child(b)
@@ -516,6 +567,25 @@ func _draw_land(data: GameData) -> void:
 				_canvas.draw_circle(p, 6.0, Color(0.12, 0.34, 0.16, 0.8))
 
 
+func _style_node(b: Button, unexplored: bool, current: bool) -> void:
+	var col := node_colors(unexplored)
+	var text: Color = UIStyle.ACCENT if current else col["text"]
+	for state: String in ["normal", "hover", "pressed", "focus", "hover_pressed"]:
+		var sb := StyleBoxFlat.new()
+		sb.bg_color = col["bg"]
+		sb.border_color = col["border"]
+		sb.set_border_width_all(1 if unexplored else 2)
+		sb.set_corner_radius_all(4)
+		sb.set_content_margin_all(3)
+		if state != "normal":
+			sb.bg_color = (col["bg"] as Color).lightened(0.12)
+			sb.border_color = UIStyle.ACCENT
+			sb.set_border_width_all(2)
+		b.add_theme_stylebox_override(state, sb)
+	for key: String in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color", "font_hover_pressed_color"]:
+		b.add_theme_color_override(key, text)
+
+
 func _draw_map() -> void:
 	var data := GameState.data
 	if data == null:
@@ -535,7 +605,9 @@ func _draw_map() -> void:
 			drawn[key] = true
 			var a: Vector2 = _positions[region_id]
 			var b: Vector2 = _positions[to]
-			_canvas.draw_line(a, b, LOCKED_COLOR if _route_gated(data, region_id, to) else ROUTE_COLOR, 4.0)
+			var seg := clip_to_rects(a, b, node_footprint(_rects[region_id]), node_footprint(_rects[to]))
+			if seg.size() == 2:
+				_canvas.draw_line(seg[0], seg[1], LOCKED_COLOR if _route_gated(data, region_id, to) else ROUTE_COLOR, 4.0)
 			var snow := Weather.travel_extra_days(data, GameState.current_region, GameClock.total_days) if region_id == GameState.current_region else 0
 			var days := route_days_label(GameState.player, data, route, snow)
 			var size := font.get_string_size(days, HORIZONTAL_ALIGNMENT_LEFT, -1, 14) + Vector2(10, 4)

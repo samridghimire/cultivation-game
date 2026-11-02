@@ -54,3 +54,27 @@ func test_route_label_slides_off_a_node_in_the_middle() -> void:
 	var pos := WorldMapScreen.route_label_pos(Vector2(0, 100), Vector2(200, 100), Vector2(30, 20), blocker)
 	assert_false(blocker[0].intersects(Rect2(pos, Vector2(30, 20))))
 	assert_true(pos.y < 100.0)
+
+
+func test_node_colors_are_opaque_and_readable() -> void:
+	for unexplored: bool in [false, true]:
+		var c := WorldMapScreen.node_colors(unexplored)
+		assert_true((c["bg"] as Color).a >= 0.94, "backing is opaque")
+		assert_true(WorldMapScreen.contrast_ratio(c["text"], c["bg"]) >= 4.5, "text contrast (unexplored=%s)" % unexplored)
+
+
+func test_clip_to_rects_leaves_both_nodes() -> void:
+	var rects := _rects()
+	var feet := {}
+	for id: String in rects:
+		feet[id] = WorldMapScreen.node_footprint(rects[id])
+	for region: Dictionary in data().regions.values():
+		for route: Dictionary in region.get("routes", []):
+			var to := String(route.get("to", ""))
+			if not rects.has(to):
+				continue
+			var ra: Rect2 = feet[region["id"]]
+			var rb: Rect2 = feet[to]
+			var seg := WorldMapScreen.clip_to_rects((rects[region["id"]] as Rect2).get_center(), (rects[to] as Rect2).get_center(), ra, rb)
+			for p in seg:
+				assert_false(ra.has_point(p) or rb.has_point(p), "%s->%s point inside a node" % [region["id"], to])
