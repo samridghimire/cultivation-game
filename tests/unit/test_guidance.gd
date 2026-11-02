@@ -5832,3 +5832,15 @@ func test_fair_fights_all_carry_a_short_where_label() -> void:
 	var fresh := new_character()
 	for f: Dictionary in Guidance.fair_fights(fresh, data(), {}, fresh.age_days, "qingshi_village"):
 		assert_true(String(f["short"]) != "", String(f["text"]))
+
+
+## MISSION-001: away from the board, the mission hint says where the board is; at a hall it says "here".
+func test_mission_hint_says_where_the_board_is() -> void:
+	var d := data()
+	var c := _qr3_disciple()
+	var hall := _hall_name(d, "qingshi_village")
+	var here := Guidance._mission_hint(c, d, {}, "qingshi_village")
+	assert_true(here.contains("at the %s here" % hall), here)
+	var away := Guidance._mission_hint(c, d, {}, "misty_forest")
+	assert_true(away.contains(hall) and away.contains("Qingshi Village"), away)
+	assert_false(away.contains("here"), away)
