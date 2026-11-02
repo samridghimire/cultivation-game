@@ -2,6 +2,18 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-11-02 [GOAL-007] The newcomer goals now point at picking forage, catching a fish or harvesting, and cooking a meal.
+- 2026-11-02 [GFX-054] Fallen Star Market looks like a town: paved streets and a plaza, packed earth, trees and street lanterns.
+- 2026-11-02 [WILD-007] Your first win over each great beast gives a trophy, and the hunting log marks it.
+- 2026-11-02 [WU-432] Text fields, dropdowns, checkboxes and sliders share the game's look.
+- 2026-11-02 [FORAGE-002] The game knows what is still by the path in any region today.
+- 2026-11-02 [C-291] Every wild region has its own great beast.
+- 2026-11-02 [GFX-053] Mountain ground is calmer and rocks gather in groups off the roads.
+- 2026-11-02 [GFX-052] Place names stay readable on flagstones and scree.
+- 2026-11-02 [GUIDE-207] Every fair-fight hint says where, and meal names read right ("an Eel Soup").
+- 2026-11-02 [WU-431] Water highlights and rain ripples stay off the jetty planks.
+- 2026-11-02 [GOAL-006] New milestones for foraging, cooking, rain fishing and hunting.
+- 2026-11-02 [QA-189] The village sim sells its spare crop; tending a field pays about twice what fishing does.
 - 2026-11-01 [WU-430] A great beast looks great: bigger, gold-ringed, and marked on the world map and calendar.
 - 2026-11-01 [GFX-048] Character creation gets the title backdrop, a talent verdict and even buttons.
 - 2026-11-01 [GFX-051] The world map uses real coin and paw glyphs; streams no longer double-draw.

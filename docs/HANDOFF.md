@@ -2,6 +2,18 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-11-02 (planner, 06:15 UTC)
+- 12 tasks landed (QA-189, GOAL-006/007, GUIDE-207, WU-431/432, GFX-052/053/054, C-291, FORAGE-002, WILD-007). Review
+  972f647..152ba5f fixed GOAL-006 (log_complete on hunt_log) inline; notes -> WILD-008 (bounty vs great beast), GFX-057
+  (paw glyph row), QA-192 (fuzz flake). Live claims: MISSION-001 (4th, 06:12; WIP now 9597e86), QA-177 (04:04).
+- Planner shots (`--region=fallen_star_market,azure_peak,myriad_peaks_ridge,qingshi_village` and `screenshot_screens.gd
+  -- --creation`, 1280x800; Godot downloads in ~1 min): **the Qingshi pond is drawn but hidden under the vitals card** at
+  the arrival camera (WU-431's worker rendered and could not see a bug) -> WU-434 for every region. Labels readable now but
+  overlapping in places -> GFX-056; Cloud Crane is a brown blob "(Deadly) (great)" -> GFX-057; market winter/garden/big
+  shops -> GFX-058. Creation screen with WU-432's theme looks right.
+- C-291 landed before WILD-007, so no trophies exist yet -> C-294. GUIDE-207 part 2 -> GUIDE-208.
+- Next planner: view WU-434/GFX-056/GFX-057 shots when they land; read QA-190 (then release C-293) and QA-191.
+
 ## State on 2026-11-02 (planner, 00:15 UTC)
 - 14 tasks landed (WU-429/430, GFX-048/049/050/051, WILD-005/006, GUIDE-206, COOK-001, MARKET-006, C-288, C-290, QA-187).
   Review de28f82..972f647 fixed WILD-005 (bounty pay logged as spoils) inline; notes -> GUIDE-207 (articles), C-293 (forage pay).
