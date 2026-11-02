@@ -405,6 +405,9 @@ func _rebuild_world(gs: Node, id: String) -> void:
 	root.add_child(world)
 	hud = world.get_node("HUD")
 	hud.get("_banner").visible = false
+	for kind in ["storm", "rain"]:  # GFX-055: the rebuilt world keeps the forced weather (--rain/--storm)
+		if OS.get_cmdline_user_args().has("--" + kind):
+			world.call("force_weather", kind)
 
 
 ## QA-187: a Qingshi friend invited along (the HUD chip), then the rented field's menu (tool icons).

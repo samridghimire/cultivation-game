@@ -69,8 +69,8 @@ func test_weather_plan_maps_kind_to_preset() -> void:
 
 func test_rain_and_fog_nodes_build() -> void:
 	var rain := Ambient.make_rain(Vector2(1600, 1000))
-	assert_true(rain.amount <= 300)
-	assert_eq(rain.texture.get_size(), Vector2(1, 5))
+	assert_true(rain.amount <= 450)
+	assert_eq(rain.texture.get_size(), Vector2(2, 8))
 	assert_eq(rain.color, Color("c8d8f0", 0.7))
 	rain.free()
 	var fog := Ambient.make_fog(Vector2(1600, 1000), false)
@@ -145,3 +145,9 @@ func test_map_mist_validates_and_misty_forest_uses_it() -> void:
 		if "map.mist" in e:
 			found = true
 	assert_true(found, "mist 1.5 rejected")
+
+
+## GFX-055: rain greys the light a little (less than a storm), and its streaks are 2x8 px.
+func test_rain_tints_the_day() -> void:
+	var tint: Color = Ambient.weather_plan("rain")["tint"]
+	assert_true(tint.r < 1.0 and tint.r > Ambient.STORM_TINT.r)

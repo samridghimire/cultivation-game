@@ -1015,7 +1015,7 @@ func _draw_season_overlay(kind: String, origin: Vector2, r: Rect2, pix: Vector2)
 				if crop.a > 0.0:
 					draw_rect(Rect2(origin + Vector2(3, y + 1) * sc, Vector2(pix.x - 6, 2) * sc), crop)
 				else:
-					draw_rect(Rect2(origin + Vector2(2, y) * sc, Vector2(pix.x - 4, 3) * sc), Color(0.85, 0.92, 1.0, 0.25))
+					draw_rect(Rect2(origin + Vector2(2, y) * sc, Vector2(pix.x - 4, 3) * sc), Color(0.92, 0.96, 1.0, 0.6))  # GFX-055: snow-covered furrows
 				y += 4
 
 

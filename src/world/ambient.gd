@@ -17,13 +17,15 @@ const PRESETS := {
 }
 
 ## Weather presets (WU-399), not region-selectable: rain is drawn as 1x5 streaks, fog as sheets.
-const RAIN := {"amount": 300, "color": Color("c8d8f0", 0.7), "gravity": Vector2(70, 420), "speed": 40.0, "size": 1.0, "lifetime": 2.5}
+const RAIN := {"amount": 450, "color": Color("c8d8f0", 0.7), "gravity": Vector2(70, 420), "speed": 40.0, "size": 1.0, "lifetime": 2.5}
 const STORM_TINT := Color(0.62, 0.66, 0.78)
 const LIGHTNING_MIN_SECONDS := 6.0
 const LIGHTNING_MAX_SECONDS := 14.0
 const FLASH_SECONDS := 0.08
 const FLASH_ALPHA := 0.35
 const CLOUDY_TINT := Color(0.9, 0.9, 0.9)
+## GFX-055: a rainy day is visibly greyer and cooler than a clear one (it was untinted).
+const RAIN_TINT := Color(0.84, 0.88, 0.95)
 const FOG_SHEETS := 2
 ## GFX-044: presets with a `size` at or above this draw a soft round blob instead of a square.
 const SOFT_MIN_SIZE := 16.0
@@ -68,7 +70,7 @@ static func fog_texture(w: int = 64, h: int = 64) -> ImageTexture:
 static func weather_plan(kind: String) -> Dictionary:
 	match kind:
 		"rain":
-			return {"emitter": "rain", "fog": false, "tint": Color.WHITE}
+			return {"emitter": "rain", "fog": false, "tint": RAIN_TINT}
 		"snow":
 			return {"emitter": "snow", "fog": false, "tint": Color.WHITE}
 		"storm":
@@ -85,7 +87,7 @@ static func replaces_season(kind: String) -> bool:
 	return kind == "rain" or kind == "storm" or kind == "snow" or kind == "fog"
 
 
-## Rain: a CPUParticles2D of slanted 1x5 px streaks over `area`.
+## Rain: a CPUParticles2D of slanted 2x8 px streaks (GFX-055: were 1x5 and invisible at 1280x800) over `area`.
 static func make_rain(area: Vector2) -> CPUParticles2D:
 	var p := make_emitter("snow", area)
 	p.name = "Rain"
@@ -98,7 +100,7 @@ static func make_rain(area: Vector2) -> CPUParticles2D:
 	p.scale_amount_min = 1.0
 	p.scale_amount_max = 1.0
 	p.color = RAIN["color"]
-	var img := Image.create(1, 5, false, Image.FORMAT_RGBA8)
+	var img := Image.create(2, 8, false, Image.FORMAT_RGBA8)
 	img.fill(Color.WHITE)
 	p.texture = ImageTexture.create_from_image(img)
 	p.particle_flag_align_y = true
