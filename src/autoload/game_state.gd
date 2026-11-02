@@ -69,6 +69,8 @@ var pending_threat := ""
 var pending_respawn: Dictionary = {}
 ## Recap lines of the save that was just loaded (WU-025); the HUD shows them once on its arrival card and clears them.
 var load_recap: PackedStringArray = []
+## WU-438: true after a new session until the HUD has shown the starting region's name card; a load never sets it. Not saved.
+var arrival_banner_pending: bool = false
 ## New sessions start beside this anchor place: the awakening dream ends "You wake on Meditation Rock".
 const INTRO_SPAWN_ANCHOR := "qingshi_rock"
 ## Anchor the world should place the player at after the next region load ("" = region spawn).
@@ -125,6 +127,7 @@ func start_session(character: CharacterData) -> void:
 	pending_threat = ""
 	pending_respawn = {}
 	load_recap = []
+	arrival_banner_pending = true
 	spawn_anchor = INTRO_SPAWN_ANCHOR  # the awakening ends on Meditation Rock (FH-011)
 	dialogue_event = ""
 	pending_event = String(data.artifact.get("intro_event", ""))
@@ -164,6 +167,7 @@ func end_session() -> void:
 	pending_threat = ""
 	pending_respawn = {}
 	load_recap = []
+	arrival_banner_pending = false
 	spawn_anchor = ""
 	dialogue_event = ""
 	pending_event = ""

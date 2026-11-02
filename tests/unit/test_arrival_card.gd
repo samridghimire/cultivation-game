@@ -1,5 +1,6 @@
 extends TestCase
 ## WU-003: arrival banner on travel, not on session start/load.
+const HUD := preload("res://src/ui/hud.gd")
 
 func test_arrival_banner_on_region_change_only() -> void:
 	var root := (Engine.get_main_loop() as SceneTree).root
@@ -9,6 +10,11 @@ func test_arrival_banner_on_region_change_only() -> void:
 	var hud: CanvasLayer = load("res://src/ui/hud.tscn").instantiate()
 	root.add_child(hud)
 	var banner: Banner = hud.get("_banner")
+	# WU-438: a new game opens with the region name card once; the session signal itself shows nothing.
+	assert_true(banner.visible, "new game shows the starting region card")
+	assert_eq(banner.title_text(), Exploration.region_name(gs.data, gs.current_region))
+	assert_false(gs.arrival_banner_pending, "shown once")
+	banner.visible = false
 	bus.session_started.emit()
 	assert_false(banner.visible, "no banner at session start/load")
 	var dest: String = String(gs.data.regions[gs.current_region]["routes"][0]["to"])
@@ -65,6 +71,7 @@ func test_year_review_banner_and_setting() -> void:
 	var bus := root.get_node("EventBus")
 	var settings := root.get_node("Settings")
 	gs.start_session(CharacterFactory.create("Wanderer", gs.data, seeded_rng(4)))
+	gs.arrival_banner_pending = false  # WU-438: no new-game name card in the way
 	var hud: CanvasLayer = load("res://src/ui/hud.tscn").instantiate()
 	root.add_child(hud)
 	var banner: Banner = hud.get("_banner")
@@ -99,6 +106,7 @@ func test_first_visit_card_marked_once() -> void:
 	var gs := root.get_node("GameState")
 	var bus := root.get_node("EventBus")
 	gs.start_session(CharacterFactory.create("Wanderer", gs.data, seeded_rng(3)))
+	gs.arrival_banner_pending = false  # WU-438: no new-game name card in the way
 	var hud: CanvasLayer = load("res://src/ui/hud.tscn").instantiate()
 	root.add_child(hud)
 	var banner: Banner = hud.get("_banner")
@@ -112,4 +120,31 @@ func test_first_visit_card_marked_once() -> void:
 	assert_true(banner.subtitle_text().begins_with("Qi x"))
 	assert_false(banner.subtitle_text().contains("First visit"))
 	hud.free()
+	gs.end_session()
+
+
+## WU-438: the arrival line sits under the qi/danger line; a load never shows the name card.
+func test_arrival_card_carries_the_arrival_line() -> void:
+	var root := (Engine.get_main_loop() as SceneTree).root
+	var gs := root.get_node("GameState")
+	var bus := root.get_node("EventBus")
+	gs.start_session(CharacterFactory.create("Wanderer", gs.data, seeded_rng(3)))
+	var hud: CanvasLayer = load("res://src/ui/hud.tscn").instantiate()
+	root.add_child(hud)
+	var banner: Banner = hud.get("_banner")
+	var dest: String = String(gs.data.regions[gs.current_region]["routes"][0]["to"])
+	assert_eq(HUD.arrival_extra({"arrival_region": dest, "arrival_line": "Rain today."}, dest), "Rain today.")
+	assert_eq(HUD.arrival_extra({"arrival_region": "elsewhere", "arrival_line": "Rain today."}, dest), "")
+	banner.visible = false
+	gs.world_flags["arrival_region"] = dest
+	gs.world_flags["arrival_line"] = "A festival fills the lanes."
+	bus.region_changed.emit(dest)
+	assert_true(banner.subtitle_text().contains("\nA festival fills the lanes."))
+	banner.visible = false
+	gs.world_flags["arrival_line"] = ""
+	bus.region_changed.emit(dest)
+	assert_false(banner.subtitle_text().contains("\n"), "no empty second line")
+	hud.free()
+	gs.load_save_dict(gs.to_save_dict())
+	assert_false(gs.arrival_banner_pending, "a load does not ask for the name card")
 	gs.end_session()

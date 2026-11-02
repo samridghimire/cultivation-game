@@ -255,6 +255,7 @@ func _ready() -> void:
 	add_child(_time_skip)
 	_build_death_screen()
 	_show_load_recap()
+	_show_start_arrival()
 
 	EventBus.player_changed.connect(_refresh)
 	EventBus.session_started.connect(_refresh)
@@ -1500,6 +1501,21 @@ func _show_load_recap() -> void:
 	_banner.announce(lines[0], "\n".join(lines.slice(1)), UIStyle.ACCENT, 4.0)
 
 
+## WU-438: a new game opens with the starting region's name card (a load shows its recap instead).
+func _show_start_arrival() -> void:
+	var pending: bool = GameState.arrival_banner_pending
+	GameState.arrival_banner_pending = false
+	if pending and GameState.player != null and GameState.player.alive and GameState.pending_respawn.is_empty():
+		_show_arrival(GameState.current_region)
+
+
+## WU-438: the GUIDE-209 arrival line for `region_id`, "" when it is not today's or is empty.
+static func arrival_extra(flags: Dictionary, region_id: String) -> String:
+	if String(flags.get("arrival_region", "")) != region_id:
+		return ""
+	return String(flags.get("arrival_line", ""))
+
+
 ## Arrival card: region name with qi density and danger, shown on real travel.
 func _on_arrival(region_id: String) -> void:
 	if GameState.player == null or not GameState.player.alive:
@@ -1538,7 +1554,10 @@ func _show_arrival(region_id: String) -> void:
 	var qi := Exploration.qi_density(data, region_id, GameState.world_flags, GameClock.total_days)
 	var first_visit := GameState.last_arrival_first_visit
 	var sub := arrival_subtitle(GameState.player, data, region_id, qi, WorldMapScreen.danger_name(data, region_id), first_visit)
-	var hold := Banner.HOLD_SECONDS * 1.5 if first_visit else 1.0
+	var extra := arrival_extra(GameState.world_flags, region_id)
+	if extra != "":
+		sub += "\n" + extra
+	var hold := 2.4 if first_visit else 2.0
 	_banner.announce(Exploration.region_name(data, region_id), sub, UIStyle.ACCENT, hold)
 
 

@@ -73,6 +73,7 @@ func test_hud_holds_banner_while_combat_report_open() -> void:
 	var tree := Engine.get_main_loop() as SceneTree
 	var gs: Node = tree.root.get_node("GameState")
 	gs.start_session(new_character())
+	gs.arrival_banner_pending = false  # WU-438: the new-game name card would queue first
 	var hud: CanvasLayer = load("res://src/ui/hud.gd").new()
 	tree.root.add_child(hud)
 	hud._combat_report.show_fight("Wolf", true, PackedStringArray(["x"]))
