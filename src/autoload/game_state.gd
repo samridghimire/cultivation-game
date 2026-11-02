@@ -3015,7 +3015,11 @@ func pick_forage(slot: int) -> bool:
 			player.gather_xp += 1
 			HerbLore.record_find(player, item_id, amount)
 		LifeStats.add(player, "foraged")
-		EventBus.post("You pick %d %s by the path." % [amount, Items.item_plural(data, item_id, amount)], "world")
+		var find_text := "You pick %d %s by the path." % [amount, Items.item_plural(data, item_id, amount)]
+		var find_note := Guidance.find_note(data, item_id, current_region)
+		if find_note != "":
+			find_text += " " + find_note + "."
+		EventBus.post(find_text, "world")
 		EventBus.forage_changed.emit()
 		EventBus.player_changed.emit()
 		return true

@@ -2921,3 +2921,17 @@ func test_great_beast_calendar_and_reminder() -> void:
 	assert_eq(kinds.call(VillageCalendar.upcoming(gs.data, {}, {}, [], "qingshi_village", day, 14, gs.player)), 2)
 	var lines := VillageCalendar.reminders(gs.data, {}, {}, [], "misty_forest", day - 1, gs.player, {})
 	assert_true(" ".join(lines).contains("Great "), str(lines))
+
+
+func test_pick_forage_log_says_what_it_is_for() -> void:
+	var gs := _game_state()
+	_start()
+	gs.current_region = "qingshi_village"
+	var n: Dictionary = gs.forage_here()[0]
+	var msgs: Array = []
+	var cb := func(text: String, _cat: String) -> void: msgs.append(text)
+	EventBus.message_posted.connect(cb)
+	assert_true(gs.pick_forage(int(n["slot"])))
+	EventBus.message_posted.disconnect(cb)
+	assert_true(msgs.size() >= 1)
+	assert_true(String(msgs[0]).begins_with("You pick"), String(msgs[0]))

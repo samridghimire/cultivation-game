@@ -4673,3 +4673,33 @@ static func artifact_lives_hint(c: CharacterData, data: GameData) -> String:
 	if held < cost:
 		text += " You hold %d." % held
 	return text
+
+
+## GUIDE-211: what a picked find is good for, one sentence tail: "Used in Fish Stew (cook at the Village Workshop); sells for about 2."
+## Home meals first (with the nearest workshop, `region_id` first), then profession recipes; at most two uses.
+## Items with no use give only the sell note; items that cannot be sold give "".
+static func find_note(data: GameData, item_id: String, region_id: String) -> String:
+	var uses: PackedStringArray = []
+	var workshop := _workshop_name(data, region_id)
+	for meal: Dictionary in data.home_meals:
+		if meal.get("ingredients", {}).has(item_id) and uses.size() < 2:
+			uses.append("%s (cook at %s)" % [String(meal.get("name", meal["id"])), workshop] if workshop != "" else String(meal.get("name", meal["id"])))
+	for recipe_name in Items.recipes_using(data, item_id):
+		if uses.size() < 2 and not uses.has(recipe_name):
+			uses.append(recipe_name)
+	var parts: PackedStringArray = []
+	if not uses.is_empty():
+		parts.append("Used in " + ", ".join(uses))
+	var price := Items.sell_price(data, item_id)
+	if price > 0:
+		parts.append("sells for about %d" % price)
+	return "; ".join(parts)
+
+
+static func _workshop_name(data: GameData, region_id: String) -> String:
+	var found := ""
+	for rid: String in [region_id] + data.regions.keys():
+		for place: Dictionary in data.regions.get(rid, {}).get("places", []):
+			if String(place.get("type", "")) == "workshop":
+				return String(place.get("display_name", "the workshop"))
+	return found

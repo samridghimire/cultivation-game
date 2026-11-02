@@ -6000,3 +6000,22 @@ func test_road_goals_never_name_a_great_beast_above_the_realm() -> void:
 	var text := String(Guidance.road_goals(c, data(), {Guidance.ELDER_MO_FLAG: true})[2]["text"])
 	assert_false(text.contains("Ram"), text)
 	assert_eq(text, "Beat a great beast")
+
+
+func test_find_note_names_meal_and_sell_price() -> void:
+	var note := Guidance.find_note(data(), "spirit_herb", "qingshi_village")
+	assert_true(note.contains("Used in"), note)
+	assert_true(note.contains("Herb Porridge (cook at Village Workshop)"), note)
+	assert_true(note.contains("sells for about"), note)
+
+
+func test_find_note_without_use_is_only_the_sell_note() -> void:
+	var note := Guidance.find_note(data(), "willow_branch", "qingshi_village")
+	assert_false(note.contains("Used in"), note)
+	assert_true(note == "" or note.begins_with("sells for about"), note)
+
+
+func test_find_note_caps_uses_at_two() -> void:
+	var note := Guidance.find_note(data(), "spirit_herb", "qingshi_village")
+	var head := note.split(";")[0]
+	assert_true(head.count(",") <= 1, head)
