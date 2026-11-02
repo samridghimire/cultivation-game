@@ -11,6 +11,7 @@ Many leftover `claude/*` branches from the old PR flow point at tasks already do
 Filed by the reviewer (see docs/REVIEW.md). Take these before other work for your role.
 | id | role | status | task |
 |---|---|---|---|
+| RV-017 | world-ui | todo | (Reviewer fc7f679, MISSION-001.) **A mission board where the core says there is one.** `Sects.board_reason` accepts the sect's `home_region` as a board, and the Foundation-year sim takes its missions there, but azure_peak (Azure Cloud Sect) and withered_bone_marsh (Blood Lotus Sect) have **no `sect_hall` place**, so in the game a player can only reach a MissionBoard in Qingshi or the market: the sim plays a loop players cannot, and Guidance's hint sends an Azure Cloud disciple standing in Azure Peak to Qingshi. Fix: add a `sect_hall` place to azure_peak (its first_visit text already describes a hall floating on the cloud sea) and to withered_bone_marsh (a Blood Lotus hall in the reeds), placed so `test_nothing_under_hud_cards_on_arrival` and the label tests pass. Then make `Sects.board_reason` name the *nearest* hall (it currently names the first region in dict order with a hall; reuse a travel-distance helper or Guidance's `_hall_where` logic) and add a data test: every sect `home_region` has a `sect_hall` place. Render both regions and **view**. |
 
 ## P0: Playable and fun (the first hours)
 Next (planner 2026-11-02 06:15): 12 tasks landed (QA-189, GOAL-006/007, GUIDE-207, WU-431/432, GFX-052/053/054, C-291,

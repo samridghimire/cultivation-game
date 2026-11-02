@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 152ba5f
+Last reviewed commit: fc7f679
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -1417,3 +1417,19 @@ Last reviewed commit: 152ba5f
     the great beast does not complete the bounty and the quarry reappears afterwards (no current data overlaps).
     (2) The `paw`/`paw_gold` icon row 7 is 13 chars in a 12-wide glyph (pre-existing, clipped). (4) test_interactable_fuzz::test_fuzz_demonic_foundation failed once ("engine logged 1 error") in a run that overlapped my edits, then passed; watch for a flake. (3) The double spoils
     double whatever the fight added to the inventory, stones included, which matches the spec's "spoils x2".
+- 2026-11-02 (reviewer, 2nd run): reviewed 152ba5f..fc7f679 (MISSION-001 + its WIP 33ccb36, C-294, WU-434, GFX-056,
+  GUIDE-208, WILD-008, QA-192, GFX-057; [PLAN] skipped). No BACKLOG/CHANGELOG edits by workers; no SAVE_VERSION change;
+  no binary assets (crane/toad/ram figures are code-drawn).
+  - Process: the MISSION-001 WIP commit 33ccb36 was pushed to main without a task tag while its own commit message says
+    test_foundation_year failed (7/10), so main was red from 02:45 until e4ee4aa (06:37). Workers must keep WIP on their
+    claim branch.
+  - Filed P0 RV-017: MISSION-001 treats a sect's home_region as a mission board and the Foundation-year sim takes its
+    missions there, but azure_peak and withered_bone_marsh have no sect_hall place, so players cannot do what the sim
+    does; board_reason's "nearest" hall is just the first in dict order.
+  - Fixed: Old Tusker's Broken Tusk plural (C-294) was the singular.
+  - WILD-008 (bounty paid once, bounty roamer marked down), GUIDE-208 (stall-aware manual hint, qi pill one route away,
+    "Chore for X: Foe"), GFX-056 (deterministic 4 px label steps), GFX-057 (crane/toad/ram keywords match only the
+    intended enemy ids; paw glyph row fixed), WU-434 data moves (layout test over every region), QA-192 (logger names
+    seed/option) OK.
+  - Notes, not filed: GFX-056/057 and WU-434 (marsh) shots were not viewed by the workers (no display); the planner's next
+    shot pass should cover azure_peak, withered_bone_marsh and myriad_peaks_ridge with `--great`.
