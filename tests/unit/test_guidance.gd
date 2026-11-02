@@ -5844,3 +5844,50 @@ func test_mission_hint_says_where_the_board_is() -> void:
 	var away := Guidance._mission_hint(c, d, {}, "misty_forest")
 	assert_true(away.contains(hall) and away.contains("Qingshi Village"), away)
 	assert_false(away.contains("here"), away)
+
+
+func test_qi_pill_offer_near_names_a_pill_one_route_away() -> void:
+	var d := data()
+	var c := _qr(2, 400)
+	var found := false
+	for region_id: String in d.regions:
+		if not Guidance.qi_pill_offer(c, d, region_id).is_empty():
+			continue
+		var near := Guidance.qi_pill_offer_near(c, d, region_id)
+		if near.is_empty():
+			continue
+		found = true
+		assert_true(String(near["where"]).begins_with("in "), String(near["where"]))
+		assert_true(String(near["region_id"]) != region_id)
+		break
+	assert_true(found, "some region sells no pill but has a neighbour that does")
+	var here := Guidance.qi_pill_offer_near(c, d, "qingshi_village")
+	assert_false(here.has("where"), "a pill sold here has no far clause")
+
+
+func test_chore_fair_fight_reads_as_a_chore() -> void:
+	var c := new_character()
+	c.realm_index = 1
+	c.stage = 4
+	var shorts: Array[String] = []
+	for e: Dictionary in Guidance.fair_fights(c, data(), {}, c.age_days, "qingshi_village"):
+		if String(e["kind"]) == "deed":
+			shorts.append(String(e["short"]))
+	for s in shorts:
+		assert_true(s.begins_with("Chore for "), s)
+
+
+func test_far_manual_names_a_stall_with_its_market_day() -> void:
+	var d := data()
+	for region_id: String in d.regions:
+		for p: Dictionary in d.regions[region_id].get("places", []):
+			if String(p.get("type", "")) != "merchant" or not p.has("open_days"):
+				continue
+			for item_id: String in d.items:
+				if Guidance.merchant_selling(d, region_id, item_id) == "" and Guidance.timed_stall(d, region_id, item_id).get("display_name", "") == p.get("display_name", ""):
+					var line := Guidance.merchant_selling_when(d, region_id, item_id, 0)
+					assert_true(line.begins_with(String(p["display_name"])), line)
+					assert_true(line.contains("market day") or line.contains("open today"), line)
+					assert_eq(Guidance.merchant_selling_when(d, region_id, item_id), String(p["display_name"]))
+					return
+	assert_true(false, "no stall-only item in data")

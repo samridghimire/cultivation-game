@@ -235,10 +235,10 @@ static func thin_defence_hint(c: CharacterData, data: GameData, region_id: Strin
 					if cost > stones and cost <= stones + int(offer["total"]):
 						line += _sell_first_clause(offer)
 			else:
-				var far := nearest_selling(c, data, region_id, func(r: String) -> String: return String(_body_manual_merchant(c, data, r).get("item_id", "")))
+				var far := nearest_selling(c, data, region_id, func(r: String) -> String: return String(_body_manual_merchant(c, data, r, true).get("item_id", "")))
 				if not far.is_empty():
 					var manual: String = far["result"]
-					line += " %s (%s, %s, %s%s) teaches one." % [data.items[manual]["name"], merchant_selling(data, far["region_id"], manual), far["region_name"], Calendar.format_duration(int(far["days"])), _by_way_of(c, data, region_id, far)]
+					line += " %s (%s, %s, %s%s) teaches one." % [data.items[manual]["name"], merchant_selling_when(data, far["region_id"], manual, int(flags.get("_today", -1))), far["region_name"], Calendar.format_duration(int(far["days"])), _by_way_of(c, data, region_id, far)]
 	line += " Foundation foes hit hard."
 	if Injuries.has_any(c):
 		line += " Heal your injuries before you fight."
@@ -453,12 +453,14 @@ static func _body_manual_treasury(c: CharacterData, data: GameData) -> Dictionar
 
 
 ## GUIDE-072: {item_id, merchant} for the first body-art manual `c` lacks that a merchant in `region_id` sells; {} if none.
-static func _body_manual_merchant(c: CharacterData, data: GameData, region_id: String) -> Dictionary:
+static func _body_manual_merchant(c: CharacterData, data: GameData, region_id: String, with_stalls: bool = false) -> Dictionary:
 	for item_id: String in data.items:
 		var tech_id := Items.manual_technique(data, item_id)
 		if tech_id == "" or data.techniques[tech_id].kind != "body" or Techniques.knows(c, tech_id):
 			continue
 		var merchant := merchant_selling(data, region_id, item_id)
+		if merchant == "" and with_stalls:
+			merchant = String(timed_stall(data, region_id, item_id).get("display_name", ""))  # GUIDE-208
 		if merchant != "":
 			return {"item_id": item_id, "merchant": merchant}
 	return {}
@@ -691,6 +693,18 @@ static func buy_ingredient_hint(c: CharacterData, data: GameData, region_id: Str
 static func merchant_selling(data: GameData, region_id: String, item_id: String) -> String:
 	var place := merchant_place(data, region_id, item_id)
 	return String(place.get("display_name", "merchant")) if not place.is_empty() else ""
+
+
+## GUIDE-208: like `merchant_selling`, but a market-day stall that is the only seller also counts, with its next market
+## day when `today` >= 0: "Herb Stall, next market day in 3 days" / "Herb Stall, open today". "" if none.
+static func merchant_selling_when(data: GameData, region_id: String, item_id: String, today: int = -1) -> String:
+	var name := merchant_selling(data, region_id, item_id)
+	if name != "":
+		return name
+	var stall := timed_stall(data, region_id, item_id)
+	if stall.is_empty():
+		return ""
+	return String(stall.get("display_name", "market stall")) + _market_when(stall, today)
 
 
 ## MARKET-003: the market-day stall (a merchant place with `open_days`) in `region_id` that stocks `item_id`, or {}.
@@ -1679,7 +1693,7 @@ static func next_realm_pill(c: CharacterData, data: GameData) -> Dictionary:
 
 ## GUIDE-126: the qi pill `c` could buy with spare stones in `region_id`: {item_id, name, merchant, price, count, days}
 ## (days of meditation per pill here), or {} when nothing fits. Keeps the next realm pill's price and QI_BUY_KEEP.
-static func qi_pill_offer(c: CharacterData, data: GameData, region_id: String, flags: Dictionary = {}) -> Dictionary:
+static func qi_pill_offer(c: CharacterData, data: GameData, region_id: String, flags: Dictionary = {}, rate_region: String = "") -> Dictionary:
 	if not data.regions.has(region_id) or c.realm_index < 1 or Cultivation.is_at_bottleneck(c, data):
 		return {}
 	var reserve := next_realm_pill_price(c, data) if _pill_goal_applies(c, data) and not sect_pill_claimable(c, data) else 0
@@ -1721,13 +1735,29 @@ static func qi_pill_offer(c: CharacterData, data: GameData, region_id: String, f
 	if best.is_empty():
 		return {}
 	var count := mini(spare / int(best["price"]), int(room / float(best["qi"])))
-	var rate := Cultivation.qi_per_day(c, data, float(best_qi_in_region(c, data, region_id, flags)["density"]))
+	var rate := Cultivation.qi_per_day(c, data, float(best_qi_in_region(c, data, region_id if rate_region == "" else rate_region, flags)["density"]))
 	if count < 1 or rate <= 0.0:
 		return {}
 	best["count"] = count
 	best["days"] = maxi(1, ceili(float(best["qi"]) / rate))
 	best.erase("qi")
 	return best
+
+
+## GUIDE-208: `qi_pill_offer` for `region_id`, else for the nearest region within reach (like the heal hint). The offer
+## gains `region_id`, `region_name` and `where` (" in <Region> (<days>...)") for a far one; meditation days stay those of `region_id`.
+static func qi_pill_offer_near(c: CharacterData, data: GameData, region_id: String, flags: Dictionary = {}) -> Dictionary:
+	var here := qi_pill_offer(c, data, region_id, flags)
+	if not here.is_empty():
+		return here
+	var far := nearest_selling(c, data, region_id, func(r: String) -> String:
+		return "x" if r != region_id and not qi_pill_offer(c, data, r, flags, region_id).is_empty() else "")
+	if far.is_empty():
+		return {}
+	var offer := qi_pill_offer(c, data, String(far["region_id"]), flags, region_id)
+	offer["region_id"] = far["region_id"]
+	offer["where"] = _far_where(c, data, region_id, far)
+	return offer
 
 
 ## GUIDE-131: the qi `count` of `item_id` can add before the realm's bottleneck stops qi.
@@ -2945,10 +2975,11 @@ static func _newcomer_hints(c: CharacterData, data: GameData, flags: Dictionary,
 					out.append("Use your %s (Inventory, I): %d qi at once, about %s of meditation here." % [label, roundi(qi), Calendar.format_duration(maxi(1, ceili(qi / rate)))])
 				break
 		if out.is_empty() or not String(out[out.size() - 1]).begins_with("Use your"):
-			var offer := qi_pill_offer(c, data, region_id, flags)
+			var offer := qi_pill_offer_near(c, data, region_id, flags)
 			if not offer.is_empty():
 				var stall_when := String(offer.get("when", ""))
-				out.append("Buy %s with spare stones: the %s here sells them for %d stones%s, about %s of meditation each." % [Items.item_plural(data, String(offer["item_id"]), 2), offer["merchant"], offer["price"], (" (" + stall_when.trim_prefix(", ") + ")") if stall_when != "" else "", Calendar.format_duration(int(offer["days"]))])
+				var at := String(offer.get("where", "here"))
+				out.append("Buy %s with spare stones: the %s %s sells them for %d stones%s, about %s of meditation each." % [Items.item_plural(data, String(offer["item_id"]), 2), offer["merchant"], at, offer["price"], (" (" + stall_when.trim_prefix(", ") + ")") if stall_when != "" else "", Calendar.format_duration(int(offer["days"]))])
 	var fighting := first_combat_hint(c, data, region_id)
 	if fighting != "":
 		out.append(fighting)
@@ -3951,7 +3982,7 @@ static func fair_fights(c: CharacterData, data: GameData, flags: Dictionary, tod
 			if deed_enemy.is_empty() or Deeds.check(c, data, deed, flags, today) != "":
 				continue
 			rated += 1
-			_rate_fight(found, c, data, deed_enemy, "deed", "%s: %s" % [place.get("display_name", "Chore"), deed["name"]], _item_stones(deed.get("effects", {})), "%s at %s" % [deed_enemy.get("name", "Foe"), place.get("display_name", "the village")])
+			_rate_fight(found, c, data, deed_enemy, "deed", "%s: %s" % [place.get("display_name", "Chore"), deed["name"]], _item_stones(deed.get("effects", {})), "Chore for %s: %s" % [place.get("display_name", "the village"), deed_enemy.get("name", "Foe")])
 	var candidates: Array[Dictionary] = []
 	var hunt := Bounties.active(c, data, today)
 	if not hunt.is_empty():
@@ -3969,7 +4000,7 @@ static func fair_fights(c: CharacterData, data: GameData, flags: Dictionary, tod
 		if enemy.is_empty():
 			continue
 		rated += 1
-		_rate_fight(found, c, data, enemy, "bounty", "%s: %s in %s" % [cand["label"], enemy.get("name", b["enemy"]), _region_name(data, String(b["region"]))], Bounties.paid_stones(c, data, b), "Bounty: %s in %s" % [enemy.get("name", b["enemy"]), _region_name(data, String(b["region"]))])
+		_rate_fight(found, c, data, enemy, "bounty", "%s: %s in %s" % [cand["label"], enemy.get("name", b["enemy"]), _region_name(data, String(b["region"]))], Bounties.paid_stones(c, data, b), "Bounty: %s%s" % [enemy.get("name", b["enemy"]), "" if String(b["region"]) == region_id else " in " + _region_name(data, String(b["region"]))])
 	if rated < FAIR_FIGHT_MAX_RATED and c.rival != "" and flags.get(Rivals.FIRST_MEETING_FLAG, false):
 		var rival: CharacterData = people.get(c.rival)
 		if rival != null and rival.alive and region_id != "" and Npcs.region_of(rival, data) == region_id \
