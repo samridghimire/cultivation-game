@@ -2,6 +2,18 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-11-02 (planner, 12:15 UTC)
+- 13 tasks landed (MISSION-001, RV-017, WU-433/434, GFX-056/057, GUIDE-208/209, WILD-008, FORAGE-003, C-292, C-294,
+  QA-192). Review 152ba5f..fc7f679 filed RV-017 (landed). Live claims: QA-177, QA-190.
+- Planner shots (`screenshot_first_hour.gd -- --great --region=azure_peak,withered_bone_marsh,myriad_peaks_ridge` and
+  `screenshot_screens.gd -- --map-shot`, 1280x800): sect halls and labels look right; Great Cloud Crane reads; toad and ram
+  were off camera -> GFX-060. World map: marsh has no map_pos and overlaps the Ridge, names clipped -> GFX-059 (spec file).
+  HUD fair-fight line cut + "(Weak 99)" -> WU-435. Arrival line shows the old region's text -> GUIDE-210.
+- Planner decision (C-292 Follow-up): cash spirit-stone drops from roamers stay; the 2-12 band is for items.
+- New systems: GOAL-008 (goals that lead out of the village), FORAGE-004 rain finds (+ C-296), GUIDE-211 find notes,
+  WILD-010 renown for great beasts; WU-437 trophy shelf, WU-438 arrival banner.
+- Next planner: view GFX-059/WU-435/GFX-060 shots when they land; read QA-190 (then C-293) and QA-191.
+
 ## State on 2026-11-02 (planner, 06:15 UTC)
 - 12 tasks landed (QA-189, GOAL-006/007, GUIDE-207, WU-431/432, GFX-052/053/054, C-291, FORAGE-002, WILD-007). Review
   972f647..152ba5f fixed GOAL-006 (log_complete on hunt_log) inline; notes -> WILD-008 (bounty vs great beast), GFX-057

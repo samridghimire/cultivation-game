@@ -2,6 +2,19 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-11-02 [RV-017] Azure Peak and the Withered Bone Marsh each have a sect hall with a mission board.
+- 2026-11-02 [WU-433] The world map shows where there is forage today and lists it in the region detail.
+- 2026-11-02 [C-292] Hunting spoils from roaming beasts are priced like hides and meat, not treasures.
+- 2026-11-02 [GUIDE-209] Arriving somewhere tells you what is happening there today.
+- 2026-11-02 [FORAGE-003] The calendar announces seasonal forage, and picked herbs go into the herb log.
+- 2026-11-02 [GFX-057] The Cloud Crane, Bog-King Toad and Thunder-Horn Ram each look like what they are.
+- 2026-11-02 [QA-192] The fuzz test names the seed and option if the engine logs an error.
+- 2026-11-02 [WILD-008] Beating a great beast that is your bounty's quarry also pays the bounty.
+- 2026-11-02 [GUIDE-208] Buy hints name market-day stalls, the qi-pill hint looks one road away, chore lines read right.
+- 2026-11-02 [GFX-056] Place and NPC names no longer sit on top of each other.
+- 2026-11-02 [WU-434] Ponds and places are no longer hidden under the HUD cards when you arrive.
+- 2026-11-02 [C-294] Each great beast leaves a trophy the first time you beat it.
+- 2026-11-02 [MISSION-001] Sect missions are taken at a sect hall or in your sect's home region.
 - 2026-11-02 [GOAL-007] The newcomer goals now point at picking forage, catching a fish or harvesting, and cooking a meal.
 - 2026-11-02 [GFX-054] Fallen Star Market looks like a town: paved streets and a plaza, packed earth, trees and street lanterns.
 - 2026-11-02 [WILD-007] Your first win over each great beast gives a trophy, and the hunting log marks it.
