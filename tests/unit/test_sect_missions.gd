@@ -156,7 +156,7 @@ func test_take_mission_needs_the_board() -> void:
 		if places.any(func(p: Dictionary) -> bool: return p.get("type", "") == "sect_hall"):
 			halls.append(id)
 	assert_true(halls.has("qingshi_village"), "Qingshi has a hall")
-	for region in ["misty_forest", "qingshi_village", "azure_peak"]:
+	for region in ["misty_forest", "qingshi_village", "azure_peak", "withered_bone_marsh"]:
 		var c := CharacterFactory.create("Disciple", gs.data, seeded_rng())
 		gs.start_session(c)
 		c.realm_index = 4

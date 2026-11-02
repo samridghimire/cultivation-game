@@ -156,6 +156,7 @@
       ],
       "quiet_lines": ["Wind scours the ridge; far below, clouds roll like a slow white sea.", "You climb a switchback of wet stone and find only more switchback.", "A hawk hangs on the updraft, watching you, then slides away.", "Frost glitters on the rocks where the qi runs thin and sharp.", "Your breath smokes. The peak keeps its own counsel.", "Rockfall rattles in the distance, and then nothing.", "You rest in the lee of a boulder and watch the sun set the clouds on fire."], "encounter_tags": ["mountain", "wild", "azure_cliffs"],
       "places": [
+        {"type": "sect_hall", "display_name": "Azure Cloud Hall", "pos": [980, 730], "size": [160, 110], "color": "6f9fd0"},
         {"type": "meditation", "anchor_id": "azure_cliff", "display_name": "Cloud-Sea Cliff (5x qi)", "pos": [1340, 180], "size": [120, 70], "color": "c9dceb", "qi_density": 2.0},
         {"type": "gather", "display_name": "Crystal Vein", "pos": [600, 350], "size": [120, 80], "color": "7fa8c9", "gather_days": 10,
          "gather_table": [{"item": "iron_essence", "weight": 6, "min": 1, "max": 1}, {"item": "cold_iron", "weight": 0.9, "min": 1, "max": 1}, {"item": "azure_crystal", "weight": 0.18, "min": 1, "max": 1}, {"item": "star_silver", "weight": 0.018, "min": 1, "max": 1}, {"item": "profound_iron", "weight": 0.09, "min": 1, "max": 1}, {"item": "dragonblood_gold", "weight": 0.006, "min": 1, "max": 1}, {"item": "formation_jade", "weight": 0.06, "min": 1, "max": 1, "min_realm": "foundation_establishment"}, {"item": "", "weight": 6.1}]},
@@ -191,6 +192,7 @@
       ],
       "quiet_lines": ["Black water shivers though there is no wind.", "Your boots suck at the mud; something small plops into the reeds.", "Pale lights drift over the far pools and do not come closer.", "The air tastes of old iron and rot. You breathe through your sleeve.", "A rusted spearhead juts from the peat, and you leave it where it lies.", "Frogs fall silent as you pass and resume behind you.", "Fog crawls over the bog, carrying a faint, tuneless humming."], "encounter_tags": ["marsh", "wild"],
       "places": [
+        {"type": "sect_hall", "display_name": "Blood Lotus Reed Hall", "pos": [450, 230], "size": [160, 110], "color": "8a2f3a"},
         {"type": "meditation", "anchor_id": "bone_marsh_altar", "display_name": "Yin Gathering Altar (2.9x qi)", "pos": [1330, 180], "size": [110, 80], "color": "4a3a5c", "qi_density": 1.6},
         {"type": "meditation", "anchor_id": "bone_marsh_isle", "display_name": "Pure Lotus Isle", "pos": [560, 370], "size": [100, 70], "color": "c9d9b0", "qi_density": 1.2},
         {"type": "explore", "display_name": "Drowned Battlefield", "pos": [1150, 780], "size": [180, 100], "color": "3a3530", "explore_tags": ["marsh", "ruins"]},

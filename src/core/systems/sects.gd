@@ -647,6 +647,9 @@ static func board_reason(c: CharacterData, data: GameData, region_id: String) ->
 		return ""
 	if _hall_name(data, region_id) != "":
 		return ""
+	var far := Guidance.nearest_selling(c, data, region_id, func(r: String) -> String: return _hall_name(data, r))
+	if not far.is_empty():
+		return "The mission board is at a sect hall (nearest: %s, %s)." % [far["result"], far["region_name"]]
 	var home := home_region(data, String(c.sect["id"]))
 	var regions: Array = [home] + data.regions.keys()
 	for r: String in regions:

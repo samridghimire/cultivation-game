@@ -234,3 +234,14 @@ func test_place_labels_do_not_overlap_after_layout() -> void:
 				var a := Rect2(rects[i].position + offs[i], rects[i].size)
 				var b := Rect2(rects[j].position + offs[j], rects[j].size)
 				assert_false(a.intersects(b), "%s: labels '%s' and '%s' overlap" % [region["id"], names[i], names[j]])
+
+
+## RV-017: every sect's home region has a sect_hall place, so the mission board is reachable where the core says it is.
+func test_every_sect_home_region_has_a_hall() -> void:
+	for sect: SectDef in data().sects.values():
+		if sect.home_region == "":
+			continue
+		var has_hall := false
+		for place: Dictionary in data().regions[sect.home_region]["places"]:
+			has_hall = has_hall or String(place["type"]) == "sect_hall"
+		assert_true(has_hall, "%s has no sect_hall in %s" % [sect.id, sect.home_region])
