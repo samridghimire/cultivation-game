@@ -278,3 +278,25 @@ func test_bog_ground_is_calmer() -> void:
 			if img.get_pixel(x, y) != base:
 				changed += 1
 	assert_true(changed < 256 * 256 / 4, "marsh tiles still speckled: %d px" % changed)
+
+
+## REVIEW (GFX-062): with the world's real blocked rects, a roamer never stands inside a solid landmark (house, wall...);
+## the keep-clear fallback used to ignore them (about 1 beast in 14 in Qingshi was inside a building).
+func test_roamers_never_spawn_inside_solid_landmarks() -> void:
+	for region: Dictionary in data().regions.values():
+		var map_size := Vector2(float(region["map"]["size"][0]), float(region["map"]["size"][1]))
+		var zones := Roamer.keep_clear_zones(region)
+		var solid: Array[Rect2] = Scenery.landmark_rects(region)
+		var blocked: Array[Rect2] = Scenery.landmark_rects(region)
+		for place: Dictionary in region.get("places", []):
+			blocked.append(_rect(place, [64, 64]))
+		for p: Array in region["map"].get("paths", []):
+			blocked.append(Rect2(float(p[0]), float(p[1]), float(p[2]), float(p[3])))
+		for day in 60:
+			var spawn: Array = region.get("spawn", [map_size.x / 2.0, map_size.y / 2.0])
+			var avoid: Array[Vector2] = [Vector2(float(spawn[0]), float(spawn[1]))]
+			for slot in 5:
+				var spot := Roamer.pick_spot(String(region["id"]), day, slot, map_size, blocked, avoid, zones["rects"], zones["points"])
+				avoid.append(spot)
+				for r in solid:
+					assert_false(r.has_point(spot), "%s day %d slot %d inside a landmark %s" % [region["id"], day, slot, r])

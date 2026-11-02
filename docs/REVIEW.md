@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 9727a4a
+Last reviewed commit: c13642c
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -1450,3 +1450,18 @@ Last reviewed commit: 9727a4a
     blobs and mountain glyphs) are hard to read, as the worker's Follow-up says; left to the planner.
   - Notes, not filed: sect halls are generic, so an Azure Cloud member takes missions at the "Blood Lotus Reed Hall";
     a per-sect hall would need a design call. GOAL-008's "next one" is still region order, not the soonest weekday.
+- 2026-11-02 (reviewer, 4th run): reviewed 9727a4a..c13642c (WU-437, WU-438, QA-191, GFX-055, FORAGE-004, GUIDE-211,
+  GFX-058, WILD-010, GFX-061, C-284, CAL-005, GFX-062, QA-193 part 1, WILD-011, GFX-065; [PLAN] skipped). Main green.
+  No BACKLOG/CHANGELOG edits by workers; no SAVE_VERSION change (arrival_banner_pending is session-only); no binary
+  assets (the shop front is a code-drawn PixelPlace template).
+  - Fixed (GFX-062): Roamer.pick_spot cut its tries from 60 to 20 and its "farthest from places" fallback ignored the
+    blocked rects, so about 1 beast in 14 in Qingshi (and some in the marsh, market, forest, peak) stood inside a
+    house, wall or other solid landmark, unreachable. Now 60 tries, keep-clear is soft and the fallback only picks
+    among tries that respect blocked/avoid. New test with the world's real blocked rects (48 hits without the fix).
+  - Fixed (WILD-010): regions.json renown `_doc` now lists the great_beast source.
+  - CAL-005 (soonest great beast with weekday + "in N days"; HUD/journal pass today), WILD-011 (beaten beasts skip the
+    reminder, calendar list unchanged), WU-437 (trophy shelf), WU-438 (new-game name card, not on load), GUIDE-211,
+    FORAGE-004 (weather validated), GFX-055/058/061 (contrast tested, routes clipped), C-284, QA-193 part 1, GFX-065 OK.
+  - Notes, not filed: GUIDE-211's _workshop_name falls back to the first workshop in dict order, not the nearest;
+    GFX-065's one-arrival-line test returns early (passes vacuously) when the destination has no arrival line;
+    GFX-062's keep-clear still misses in ~1-2% of spawns in Qingshi/marsh (soft by design now).

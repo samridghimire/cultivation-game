@@ -232,6 +232,7 @@ func draw_generated_art() -> bool:
 
 
 const KEEP_CLEAR := 90.0
+const PICK_TRIES := 60
 
 
 ## GFX-062: rects (grown by KEEP_CLEAR) and points a roamer must not spawn near: every place and NPC home point.
@@ -248,33 +249,33 @@ static func keep_clear_zones(region: Dictionary) -> Dictionary:
 
 
 ## Spot for `slot`: >= MIN_GAP from every blocked rect, kept inside the map. Same inputs, same spot.
-## GFX-062: also outside `clear_rects` and KEEP_CLEAR from `clear_points`; after 20 tries the farthest candidate wins.
+## GFX-062: also outside `clear_rects` and KEEP_CLEAR from `clear_points` (soft: when no try clears them, the try
+## farthest from them wins, but only among tries that respect `blocked` and `avoid`).
+## REVIEW: the fallback used to ignore `blocked`, so a beast could stand inside a house or wall.
 static func pick_spot(region_id: String, day: int, slot: int, map_size: Vector2, blocked: Array[Rect2], avoid: Array[Vector2], clear_rects: Array[Rect2] = [], clear_points: Array[Vector2] = []) -> Vector2:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = hash("%s:%d:%d" % [region_id, day, slot])
 	var best := Vector2(map_size.x / 2.0, map_size.y / 2.0)
 	var best_score := -1e9
-	for i in 20:
+	var best_hard := false
+	for i in PICK_TRIES:
 		var spot := Vector2(rng.randf_range(100.0, map_size.x - 100.0), rng.randf_range(100.0, map_size.y - 100.0))
-		var ok := true
-		var score := 1e9
+		var hard := true
 		for r in blocked:
 			if r.grow(MIN_GAP).has_point(spot):
-				ok = false
+				hard = false
 		for p in avoid:
 			if spot.distance_to(p) < MIN_GAP + 60.0:
-				ok = false
+				hard = false
+		var score := 1e9
 		for r in clear_rects:
-			if r.has_point(spot):
-				ok = false
 			score = minf(score, maxf(maxf(r.position.x - spot.x, spot.x - r.end.x), maxf(r.position.y - spot.y, spot.y - r.end.y)))
 		for p in clear_points:
 			score = minf(score, spot.distance_to(p) - KEEP_CLEAR)
-			if spot.distance_to(p) < KEEP_CLEAR:
-				ok = false
-		if ok:
+		if hard and score >= 0.0:
 			return spot
-		if score > best_score:
+		if (hard and not best_hard) or (hard == best_hard and score > best_score):
+			best_hard = hard
 			best_score = score
 			best = spot
 	return best
