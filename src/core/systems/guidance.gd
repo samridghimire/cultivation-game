@@ -3112,6 +3112,55 @@ static func first_goals(c: CharacterData, data: GameData, flags: Dictionary) -> 
 	return out
 
 
+## GOAL-008: goals that lead out of the village, shown one at a time once the first ladder is done.
+## A veteran (Foundation or above) sees them done. Day counts and names come from data.
+static func road_goals(c: CharacterData, data: GameData, flags: Dictionary) -> Array[Dictionary]:
+	var vet := c.realm_index >= 2
+	var start: String = data.start_region
+	var rows: Array = []
+	var first_hop := _first_route_from(data, start, "misty_forest")
+	if first_hop != "":
+		var days := route_days(c, data, start, first_hop)
+		rows.append(["Walk to %s (%d days from %s)" % [_region_name(data, first_hop), days, _region_name(data, start)], vet or c.visited_regions.has(first_hop)])
+	if data.regions.has("fallen_star_market"):
+		rows.append(["Visit %s: armor, weapons and manuals are sold there" % _region_name(data, "fallen_star_market"), vet or c.visited_regions.has("fallen_star_market")])
+	var great_text := "Beat a great beast"
+	for rid: String in data.regions:
+		var def: Dictionary = data.regions[rid].get("roamers", {}).get("great", {})
+		if def.is_empty() or c.great_beasts.has(String(def.get("enemy", ""))):
+			continue
+		great_text += " (the next one: %s in %s, day %d of the 7-day week)" % [Wildlife.display_name(data, String(def["enemy"]), true), _region_name(data, rid), Wildlife.great_day(rid, def) + 1]
+		break
+	rows.append([great_text, vet or not c.great_beasts.is_empty()])
+	rows.append(["Finish a bounty", vet or LifeStats.get_stat(c, "bounties_done") >= 1])
+	var found := false
+	for key: String in flags:
+		if key.begins_with("discovered_") and bool(flags[key]):
+			found = true
+			break
+	rows.append(["Find a region's hidden discovery", vet or found])
+	var out: Array[Dictionary] = []
+	for row: Array in rows:
+		out.append({"text": row[0], "done": row[1]})
+	return out
+
+
+static func _first_route_from(data: GameData, from_id: String, to_id: String) -> String:
+	for r: Dictionary in data.regions.get(from_id, {}).get("routes", []):
+		if String(r.get("to", "")) == to_id:
+			return to_id
+	return ""
+
+
+static func road_goals_active(c: CharacterData, data: GameData, flags: Dictionary) -> bool:
+	if c.realm_index >= 2 or not first_goals_done(c, data, flags):
+		return false
+	for goal in road_goals(c, data, flags):
+		if not goal["done"]:
+			return true
+	return false
+
+
 ## The display name of the first place of `type` in a region ("" when none).
 static func _first_place_of_type(data: GameData, region_id: String, type: String) -> String:
 	for place: Dictionary in data.regions.get(region_id, {}).get("places", []):
@@ -3348,6 +3397,8 @@ static func goal_ladder_id(c: CharacterData) -> String:
 static func goal_ladder(id: String, c: CharacterData, data: GameData, flags: Dictionary, clan: ClanData = null) -> Array[Dictionary]:
 	if id == "first":
 		return first_goals(c, data, flags)
+	if id == "road":
+		return road_goals(c, data, flags)
 	if id == "foundation":
 		return foundation_goals(c, data, flags, clan)
 	if id == "core":
@@ -3368,6 +3419,8 @@ static func goal_ladder(id: String, c: CharacterData, data: GameData, flags: Dic
 static func active_goal_ladder(c: CharacterData, data: GameData, flags: Dictionary, clan: ClanData = null) -> Array[Dictionary]:
 	if c.realm_index <= 1 and not first_goals_done(c, data, flags):
 		return first_goals(c, data, flags)
+	if road_goals_active(c, data, flags):
+		return road_goals(c, data, flags)
 	if foundation_goals_active(c, data, flags, clan):
 		return foundation_goals(c, data, flags, clan)
 	if core_goals_active(c, data, flags, clan):
@@ -3648,6 +3701,14 @@ static func journal(c: CharacterData, data: GameData, flags: Dictionary, today: 
 				tone = "normal" if flagged else "warning"
 				flagged = true
 			_add(out, "First goals", ("[x] " if goal["done"] else "[ ] ") + String(goal["text"]), tone)
+	if road_goals_active(c, data, flags):
+		var road_flagged := false
+		for goal in road_goals(c, data, flags):
+			var road_tone := "dim"
+			if not goal["done"]:
+				road_tone = "normal" if road_flagged else "warning"
+				road_flagged = true
+			_add(out, "Road goals", ("[x] " if goal["done"] else "[ ] ") + String(goal["text"]), road_tone)
 	if foundation_goals_active(c, data, flags, clan):
 		var found_flagged := false
 		for goal in foundation_goals(c, data, flags, clan):

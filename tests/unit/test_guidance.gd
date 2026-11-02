@@ -5938,3 +5938,54 @@ func test_arrival_line_names_festival() -> void:
 	assert_true(line.begins_with("Today in Qingshi Village: the %s is on" % WorldEvents.event_name(d, festival_id)), line)
 	assert_false(Guidance.arrival_line(c, d, "misty_forest", 10, {}, "", events).contains("is on"))
 	assert_false(Guidance.arrival_line(c, d, "qingshi_village", 25, {}, "", events).contains("is on"))
+
+
+## GOAL-008: goals that lead out of the village.
+func _after_ladder() -> CharacterData:
+	var c := _fresh()
+	c.techniques = {"basic_breathing": {"level": 1}, "iron_fist": {"level": 1, "xp": 0.0}}
+	c.realm_index = 1
+	c.stage = 2
+	c.sect = {"id": data().sects.keys()[0], "rank": 0, "contribution": 0, "spent": 0}
+	c.cooked_meals["x"] = 1
+	LifeStats.add(c, "fights_won")
+	LifeStats.add(c, "foraged")
+	LifeStats.add(c, "harvests")
+	return c
+
+
+func test_road_goals_follow_the_first_ladder() -> void:
+	var flags := {Guidance.ELDER_MO_FLAG: true}
+	var c := _after_ladder()
+	assert_true(Guidance.first_goals_done(c, data(), flags))
+	assert_true(Guidance.road_goals_active(c, data(), flags))
+	var goals := Guidance.road_goals(c, data(), flags)
+	assert_eq(goals.size(), 5)
+	assert_true(String(goals[0]["text"]).contains("Misty Forest"))
+	assert_true(String(goals[0]["text"]).contains("3 days"))
+	assert_false(goals[0]["done"])
+	assert_eq(Guidance.active_goal_ladder(c, data(), flags)[0]["text"], goals[0]["text"])
+	c.visited_regions.append("misty_forest")
+	c.visited_regions.append("fallen_star_market")
+	goals = Guidance.road_goals(c, data(), flags)
+	assert_true(goals[0]["done"] and goals[1]["done"])
+	assert_true(String(goals[2]["text"]).begins_with("Beat a great beast (the next one: Great "))
+	assert_false(goals[2]["done"])
+	c.great_beasts["wild_boar"] = 3
+	assert_true(Guidance.road_goals(c, data(), flags)[2]["done"])
+	var section := Guidance.journal(c, data(), flags, 0, "qingshi_village").filter(func(e: Dictionary) -> bool: return e["section"] == "Road goals")
+	assert_eq(section.size(), 5)
+
+
+func test_road_goals_veteran_and_flags() -> void:
+	var flags := {Guidance.ELDER_MO_FLAG: true}
+	var c := _after_ladder()
+	LifeStats.add(c, "bounties_done")
+	assert_true(Guidance.road_goals(c, data(), flags)[3]["done"])
+	flags["discovered_misty_forest"] = true
+	assert_true(Guidance.road_goals(c, data(), flags)[4]["done"])
+	var vet := _after_ladder()
+	vet.realm_index = 2
+	for g in Guidance.road_goals(vet, data(), flags):
+		assert_true(g["done"])
+	assert_false(Guidance.road_goals_active(vet, data(), flags))
