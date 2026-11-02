@@ -49,3 +49,16 @@ func test_blockers_push_a_rect_clear() -> void:
 	var res := LabelLayout.resolve(rects, SCREEN, block)
 	assert_false(res[0]["faded"])
 	assert_true(res[0]["offset"] != 0.0)
+
+
+func test_offsets_three_stacked_rects_apart_and_stable() -> void:
+	var rects: Array[Rect2] = [Rect2(4, 300, 120, 16), Rect2(4, 302, 140, 16), Rect2(4, 304, 100, 16)]
+	var anchors: Array[Vector2] = [Vector2(60, 330), Vector2(60, 332), Vector2(60, 334)]
+	var offs := LabelLayout.offsets(rects, anchors)
+	for i in 3:
+		for j in range(i + 1, 3):
+			var a := Rect2(rects[i].position + offs[i], rects[i].size)
+			var b := Rect2(rects[j].position + offs[j], rects[j].size)
+			assert_false(a.intersects(b), "labels %d and %d overlap" % [i, j])
+	assert_eq(offs[0], Vector2.ZERO)
+	assert_eq(LabelLayout.offsets(rects, anchors), offs)

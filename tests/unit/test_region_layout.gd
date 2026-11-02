@@ -212,3 +212,25 @@ func test_paved_zones_follow_the_streets() -> void:
 	assert_false(GroundTiles.in_paved_zone(zones, "x", 150, 900), "a far corner is packed earth")
 	assert_true(Scenery.paved_zones({"ground_style": "grass", "paths": [[0, 0, 10, 10]]}, 1.0).is_empty())
 	assert_true(Scenery.paved_zones({"ground_style": "paved"}, 1.0).is_empty())
+
+
+## GFX-056: no two place name labels overlap once LabelLayout has run (approximate width 7 px per char + 16).
+func test_place_labels_do_not_overlap_after_layout() -> void:
+	for region: Dictionary in data().regions.values():
+		var rects: Array[Rect2] = []
+		var anchors: Array[Vector2] = []
+		var names: Array[String] = []
+		for place: Dictionary in region["places"]:
+			var n := String(place.get("display_name", place["type"]))
+			var pos := Vector2(float(place["pos"][0]), float(place["pos"][1]))
+			var sz: Array = place.get("size", [30, 30])
+			var w := 7.0 * n.length() + 16.0
+			rects.append(Rect2(pos.x - w / 2.0, pos.y - float(sz[1]) / 2.0 - 30.0, w, 20.0))
+			anchors.append(pos)
+			names.append(n)
+		var offs := LabelLayout.offsets(rects, anchors)
+		for i in rects.size():
+			for j in range(i + 1, rects.size()):
+				var a := Rect2(rects[i].position + offs[i], rects[i].size)
+				var b := Rect2(rects[j].position + offs[j], rects[j].size)
+				assert_false(a.intersects(b), "%s: labels '%s' and '%s' overlap" % [region["id"], names[i], names[j]])

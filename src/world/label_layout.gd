@@ -38,6 +38,41 @@ static func resolve(rects: Array[Rect2], screen: Rect2, blockers: Array[Rect2] =
 	return out
 
 
+## GFX-056: per-label y offsets so no two label rects overlap. `anchors` are the things the labels name.
+## Processed by anchor y then x; each label stays put unless it hits an already placed one, then it moves
+## up (else down) in 4 px steps, at most 40 px, and gives up (offset 0) when nothing fits.
+static func offsets(rects: Array[Rect2], anchors: Array[Vector2]) -> Array[Vector2]:
+	var order: Array[int] = []
+	for i in rects.size():
+		order.append(i)
+	order.sort_custom(func(a: int, b: int) -> bool:
+		if anchors[a].y != anchors[b].y:
+			return anchors[a].y < anchors[b].y
+		if anchors[a].x != anchors[b].x:
+			return anchors[a].x < anchors[b].x
+		return a < b)
+	var out: Array[Vector2] = []
+	out.resize(rects.size())
+	out.fill(Vector2.ZERO)
+	var placed: Array[Rect2] = []
+	for i in order:
+		var chosen := rects[i]
+		if _hits(chosen, placed):
+			for dir in [-1.0, 1.0]:
+				var found := false
+				for k in range(1, 11):
+					var moved := Rect2(rects[i].position + Vector2(0, dir * 4.0 * k), rects[i].size)
+					if not _hits(moved, placed):
+						chosen = moved
+						out[i] = Vector2(0, dir * 4.0 * k)
+						found = true
+						break
+				if found:
+					break
+		placed.append(chosen)
+	return out
+
+
 static func _hits(rect: Rect2, others: Array[Rect2]) -> bool:
 	for other in others:
 		if rect.intersects(other):

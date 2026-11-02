@@ -217,21 +217,14 @@ func set_hinted(value: bool) -> void:
 
 ## Lifts the labels of `nodes` (in order) until none overlaps an earlier one.
 static func spread_labels(nodes: Array) -> void:
-	var placed: Array[Rect2] = []
+	var rects: Array[Rect2] = []
+	var anchors: Array[Vector2] = []
 	for node: Interactable in nodes:
-		var text := node.label_text()
-		var rect := node.label_rect(text)
-		for _i in 6:
-			var hit := false
-			for other in placed:
-				if rect.intersects(other):
-					hit = true
-					break
-			if not hit:
-				break
-			node.label_offset.y -= rect.size.y + 2.0
-			rect = node.label_rect(text)
-		placed.append(rect)
+		rects.append(node.label_rect(node.label_text()))
+		anchors.append(node.position)
+	var shifts := LabelLayout.offsets(rects, anchors)
+	for i in nodes.size():
+		(nodes[i] as Interactable).label_offset += shifts[i]
 
 
 ## The interact prompt already names the current target, so its own label is not drawn
