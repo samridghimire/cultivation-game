@@ -59,6 +59,7 @@ func _start() -> void:
 					push_warning("--region: unknown region %s" % id)
 	if not region_list.is_empty():
 		gs.current_region = region_list[0]
+		gs.call("_post_arrival_line")  # GUIDE-210: the region's own arrival line
 	if OS.get_cmdline_user_args().has("--great"):  # WU-430: jump to the region's next great-beast day
 		var clock: Node = root.get_node("GameClock")
 		var walk: int = Wildlife.next_great_day(gs.data, gs.current_region, clock.total_days, gs.player.realm_index)
@@ -371,6 +372,7 @@ func _rebuild_world(gs: Node, id: String) -> void:
 		root.remove_child(world)
 		world.free()
 	gs.current_region = id
+	gs.call("_post_arrival_line")  # GUIDE-210
 	world = load("res://src/world/world.tscn").instantiate()
 	root.add_child(world)
 	hud = world.get_node("HUD")

@@ -44,8 +44,14 @@ const IDLE_CULTIVATION_DAYS := 30  # GUIDE-057: days without cultivating before 
 ## and `region_id` drive the newcomer hints shown while Mortal or Qi Refining.
 ## GUIDE-209: "Today in Misty Forest: the Old Tusker roams, 3 things by the path, an open stall, rain-fish biting."
 ## Up to three short items from what already exists; "" when nothing is notable. Pure.
-static func arrival_line(c: CharacterData, data: GameData, region_id: String, day: int, flags: Dictionary, weather: String = "") -> String:
+static func arrival_line(c: CharacterData, data: GameData, region_id: String, day: int, flags: Dictionary, weather: String = "", events: Array = []) -> String:
 	var items: PackedStringArray = []
+	# GUIDE-210: a festival running here today comes first.
+	for instance: Dictionary in WorldEvents.active_in(events, region_id):
+		var event_id := String(instance.get("id", ""))
+		if WorldEvents.is_festival(data, event_id) and int(instance.get("end_day", -1)) >= day:
+			items.append("the %s is on" % WorldEvents.event_name(data, event_id))
+			break
 	var great := Wildlife.great_roamer(c, data, region_id, day, flags)
 	if not great.is_empty():
 		items.append("the %s roams" % String(data.enemies.get(String(great["enemy"]), {}).get("name", "great beast")))
@@ -71,8 +77,9 @@ static func arrival_line(c: CharacterData, data: GameData, region_id: String, da
 static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit: int = 5, people: Dictionary = {}, flags: Dictionary = {}, region_id: String = "", today: int = -1, favor: Dictionary = {}) -> PackedStringArray:
 	var out: PackedStringArray = []
 	flags = with_season(flags, today)
-	# GUIDE-209: the arrival line leads for the day it was posted.
-	if today >= 0 and int(flags.get("arrival_day", -1)) == today and String(flags.get("arrival_line", "")) != "":
+	# GUIDE-209: the arrival line leads for the day it was posted; GUIDE-210: only in the region it was posted for.
+	if today >= 0 and int(flags.get("arrival_day", -1)) == today and String(flags.get("arrival_line", "")) != "" \
+			and String(flags.get("arrival_region", "")) == region_id:
 		out.append(String(flags["arrival_line"]))
 	# GUIDE-147: a nearly empty Creation Artifact leads, so the HUD headline shows it.
 	var lives_hint := artifact_lives_hint(c, data)

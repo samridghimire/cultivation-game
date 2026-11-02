@@ -659,8 +659,9 @@ func travel(region_id: String) -> void:
 ## GUIDE-209: one log line for what is notable here today; the HUD shows it for that day.
 func _post_arrival_line() -> void:
 	var day := GameClock.total_days
-	var line := Guidance.arrival_line(player, data, current_region, day, world_flags, Weather.of(data, current_region, day))
+	var line := Guidance.arrival_line(player, data, current_region, day, world_flags, Weather.of(data, current_region, day), world_events)
 	world_flags["arrival_day"] = day
+	world_flags["arrival_region"] = current_region
 	world_flags["arrival_line"] = line
 	if line != "":
 		EventBus.post(line, "travel")

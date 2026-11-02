@@ -5905,6 +5905,36 @@ func test_arrival_line_lists_great_beast_and_is_quiet_otherwise() -> void:
 	assert_true(line.contains(beast + " roams"), line)
 	assert_eq(Guidance.arrival_line(c, d, "no_such_region", wd, {}, ""), "")
 	# The line leads the hints on its day only.
-	var flags := {"arrival_day": wd, "arrival_line": "Today in X: y."}
+	var flags := {"arrival_day": wd, "arrival_line": "Today in X: y.", "arrival_region": "misty_forest"}
 	assert_eq(Guidance.hints(c, d, 1.0, 5, {}, flags, "misty_forest", wd)[0], "Today in X: y.")
 	assert_false(Guidance.hints(c, d, 1.0, 5, {}, flags, "misty_forest", wd + 1).has("Today in X: y."))
+
+
+## GUIDE-210: the line shows only in the region it was posted for; old flags without a region hide it.
+func test_arrival_line_hint_needs_matching_region() -> void:
+	var d := data()
+	var c := new_character()
+	c.realm_index = 1
+	var flags := {"arrival_day": 10, "arrival_line": "Today in X: y.", "arrival_region": "qingshi_village"}
+	assert_true(Guidance.hints(c, d, 1.0, 5, {}, flags, "qingshi_village", 10).has("Today in X: y."))
+	assert_false(Guidance.hints(c, d, 1.0, 5, {}, flags, "misty_forest", 10).has("Today in X: y."))
+	flags.erase("arrival_region")
+	assert_false(Guidance.hints(c, d, 1.0, 5, {}, flags, "qingshi_village", 10).has("Today in X: y."))
+
+
+## GUIDE-210: a festival running in the region leads the arrival line.
+func test_arrival_line_names_festival() -> void:
+	var d := data()
+	var c := new_character()
+	c.realm_index = 1
+	var festival_id := ""
+	for id: String in d.world_events:
+		if WorldEvents.is_festival(d, id):
+			festival_id = id
+			break
+	assert_true(festival_id != "", "a festival exists in data")
+	var events: Array = [{"id": festival_id, "region": "qingshi_village", "end_day": 20}]
+	var line := Guidance.arrival_line(c, d, "qingshi_village", 10, {}, "", events)
+	assert_true(line.begins_with("Today in Qingshi Village: the %s is on" % WorldEvents.event_name(d, festival_id)), line)
+	assert_false(Guidance.arrival_line(c, d, "misty_forest", 10, {}, "", events).contains("is on"))
+	assert_false(Guidance.arrival_line(c, d, "qingshi_village", 25, {}, "", events).contains("is on"))

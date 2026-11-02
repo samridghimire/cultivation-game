@@ -1528,6 +1528,7 @@ func test_travel_posts_arrival_line() -> void:
 	var target := String(gs.data.regions[gs.data.start_region]["routes"][0]["to"])
 	gs.travel(target)
 	assert_eq(int(gs.world_flags.get("arrival_day", -1)), GameClock.total_days)
+	assert_eq(String(gs.world_flags.get("arrival_region", "")), target)
 	var line := String(gs.world_flags.get("arrival_line", "x"))
 	if line != "":
 		assert_true(line.begins_with("Today in "), line)
