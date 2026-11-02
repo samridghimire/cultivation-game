@@ -355,3 +355,41 @@ func test_jetty_never_crosses_a_path() -> void:
 			var jr: Rect2 = Scenery.jetty_layout(region2, lm2)["rect"]
 			for pr: Array in region2.get("map", {}).get("paths", []):
 				assert_false(Rect2(pr[0], pr[1], pr[2], pr[3]).intersects(jr), "%s: jetty %s crosses a path" % [region2["id"], str(lm2["pos"])])
+
+
+## GFX-053: rock groups of several sizes, validated 0..12.
+func test_rock_clusters_group_rocks_in_sizes_and_validate() -> void:
+	var region := _region()
+	region["map"]["decor"] = {"trees": 0, "rocks": 40, "rock_clusters": 4, "grass": 0, "flowers": 0}
+	var rocks: Array[Dictionary] = []
+	for d in Scenery.place(region, seeded_rng(3)):
+		if d["kind"] == "rock":
+			rocks.append(d)
+	assert_eq(rocks.size(), 40)
+	var scales := {}
+	for d in rocks:
+		scales[snappedf(float(d["scale"]), 0.01)] = true
+	assert_true(scales.size() >= 3, "rocks come in several sizes")
+	var bad := GameData.new()
+	bad.regions = {"bad": {"id": "bad", "map": {"decor": {"rock_clusters": 13}}}, "ok": {"id": "ok", "map": {"decor": {"rock_clusters": 6}}}}
+	assert_eq(Scenery.validate(bad).size(), 1)
+
+
+## GFX-053: no decor within 12 px of a path or 20 px of a place / npc spot, and no pine landmark on a road.
+func test_no_decor_or_pine_on_roads_or_spots_in_any_region() -> void:
+	for region: Dictionary in data().regions.values():
+		var paths: Array[Rect2] = []
+		for r in region.get("map", {}).get("paths", []):
+			paths.append(Rect2(float(r[0]), float(r[1]), float(r[2]), float(r[3])))
+		for lm: Dictionary in region.get("map", {}).get("landmarks", []):
+			if lm["kind"] == "pine":
+				var rect := Rect2(Vector2(float(lm["pos"][0]), float(lm["pos"][1])) - Vector2(float(lm["size"][0]), float(lm["size"][1])) / 2.0, Vector2(float(lm["size"][0]), float(lm["size"][1])))
+				for p in paths:
+					assert_false(p.intersects(rect), "%s: pine landmark at %s on a path" % [region["id"], lm["pos"]])
+		var spots: Array = region.get("npc_spots", [])
+		for d in Scenery.place(region, seeded_rng(11)):
+			var pos: Vector2 = d["pos"]
+			for p in paths:
+				assert_false(p.grow(12.0).has_point(pos), "%s: %s within 12 px of a path" % [region["id"], d["kind"]])
+			for s in spots:
+				assert_gt(pos.distance_to(Vector2(float(s[0]), float(s[1]))), 20.0, "%s: %s on an npc spot" % [region["id"], d["kind"]])

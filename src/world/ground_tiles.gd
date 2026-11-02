@@ -109,6 +109,29 @@ static func ground_texture(base: Color, rid: String, size_px: Vector2i, flowers:
 	return tex
 
 
+## GFX-053: 3-6 big soft tint patches on a scree ground, seeded from the region id: frost above y 300, moss below.
+static func _scree_patches(img: Image, base: Color, rid: String) -> void:
+	var w := img.get_width()
+	var h := img.get_height()
+	var n := 3 + absi(hash(rid + "|patches")) % 4
+	for i in n:
+		var r := absi(hash("%s|patch|%d" % [rid, i]))
+		var centre := Vector2(float(r % w), float((r / 4096) % h))
+		var radius := 90.0 + float((r / 64) % 90)
+		var frost := centre.y < 300.0
+		var tint := Color("dfe9f2") if frost else Color("3f6a52")
+		var x0 := maxi(0, int(centre.x - radius))
+		var x1 := mini(w, int(centre.x + radius))
+		var y0 := maxi(0, int(centre.y - radius * 0.7))
+		var y1 := mini(h, int(centre.y + radius * 0.7))
+		for y in range(y0, y1):
+			for x in range(x0, x1):
+				var d := Vector2((x - centre.x) / radius, (y - centre.y) / (radius * 0.7)).length()
+				if d < 1.0:
+					var a := (1.0 - d) * (1.0 - d) * 0.35
+					img.set_pixel(x, y, img.get_pixel(x, y).lerp(tint, a))
+
+
 const STYLES := ["grass", "paved", "scree", "bog", "litter"]
 
 
@@ -146,13 +169,14 @@ static func _apply_style(img: Image, base: Color, rid: String, style: String) ->
 						var ph := 2 + (r2 / 8) % 2
 						var px := cx * SIZE + (r2 / 64) % (SIZE - 4)
 						var py := cy * SIZE + (r2 / 1024) % (SIZE - 3)
-						var shade := base.lightened(0.14) if r2 % 2 == 0 else base.darkened(0.2)
+						var shade := base.lightened(0.07) if r2 % 2 == 0 else base.darkened(0.1)  # GFX-053: half the contrast
 						_fill_clipped(img, Rect2i(px, py, pw, ph), shade)
 					if roll % 4 == 0:
 						var cx0 := cx * SIZE + (roll / 4) % (SIZE - 6)
 						var cy0 := cy * SIZE + (roll / 64) % (SIZE - 6)
 						for k in 5:
-							_set_clipped(img, cx0 + k, cy0 + k / 2, base.darkened(0.3))
+							_set_clipped(img, cx0 + k, cy0 + k / 2, base.darkened(0.15))
+			_scree_patches(img, base, rid)
 		"litter":
 			# Grass with darker leaf-litter specks (2x1 px) scattered over it.
 			for cy in ceili(float(h) / SIZE):

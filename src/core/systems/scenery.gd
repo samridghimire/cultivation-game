@@ -20,7 +20,12 @@ const TREE_KINDS: PackedStringArray = ["round", "pine", "willow", "dead", "bambo
 const MAX_CLUSTERS := 12
 const CLUSTER_RADIUS := 60.0
 ## Decor keys beyond DEFAULTS' counts and colours.
-const EXTRA_KEYS: PackedStringArray = ["tree_kinds", "blossoms", "clusters"]
+const EXTRA_KEYS: PackedStringArray = ["tree_kinds", "blossoms", "clusters", "rock_clusters"]
+## map.decor.rock_clusters (GFX-053): boulder groups of 3-6 rocks in 2-3 sizes, seeded before the scatter.
+const MAX_ROCK_CLUSTERS := 12
+const ROCK_CLUSTER_RADIUS := 45.0
+## Decor keeps this far from a path rect (GFX-053).
+const PATH_CLEARANCE := 12.0
 ## map.landmarks kinds (GFX-008, GFX-012); the solid ones block the player, the rest can be walked over.
 const LANDMARK_KINDS: PackedStringArray = ["house", "field", "pond", "fence", "well", "wall", "cliff", "stream", "lantern", "pine", "stall", "jetty"]
 const SOLID_LANDMARKS: PackedStringArray = ["house", "well", "wall", "cliff", "lantern", "pine", "stall"]
@@ -68,6 +73,9 @@ static func place(region: Dictionary, rng: RandomNumberGenerator) -> Array[Dicti
 		if kind == "tree":
 			for c in clampi(int(cfg.get("clusters", 0)), 0, MAX_CLUSTERS):
 				budget -= _place_clump(out, cfg, color, budget, size, blocked, spots, rng)
+		if kind == "rock":
+			for c in clampi(int(cfg.get("rock_clusters", 0)), 0, MAX_ROCK_CLUSTERS):
+				budget -= _place_rock_group(out, cfg, color, budget, size, blocked, spots, rng)
 		for i in budget:
 			for attempt in TRIES:
 				var pos := Vector2(rng.randf_range(EDGE, size.x - EDGE), rng.randf_range(EDGE, size.y - EDGE))
@@ -127,11 +135,40 @@ static func _place_clump(out: Array[Dictionary], cfg: Dictionary, color: Color, 
 	return placed
 
 
-## Paths as-is, places and abodes grown by CLEARANCE (both are centered on pos).
+## GFX-053: a group of 3-6 rocks in 2-3 sizes (scale 0.7..1.9) around a clear centre; returns how many were placed.
+static func _place_rock_group(out: Array[Dictionary], cfg: Dictionary, color: Color, budget: int, size: Vector2,
+		blocked: Array[Rect2], spots: Array[Vector2], rng: RandomNumberGenerator) -> int:
+	var want := mini(rng.randi_range(3, 6), budget)
+	if want <= 0:
+		return 0
+	var centre := Vector2.ZERO
+	var found := false
+	for attempt in TRIES * 3:
+		centre = Vector2(rng.randf_range(EDGE + ROCK_CLUSTER_RADIUS, size.x - EDGE - ROCK_CLUSTER_RADIUS), rng.randf_range(EDGE + ROCK_CLUSTER_RADIUS, size.y - EDGE - ROCK_CLUSTER_RADIUS))
+		if is_clear(centre, blocked, spots):
+			found = true
+			break
+	if not found:
+		return 0
+	var sizes := [0.7, 1.2, 1.9]
+	var placed := 0
+	for i in want:
+		for attempt in TRIES:
+			var pos := centre + Vector2.from_angle(rng.randf_range(0.0, TAU)) * rng.randf_range(0.0, ROCK_CLUSTER_RADIUS)
+			if pos.x > EDGE and pos.y > EDGE and pos.x < size.x - EDGE and pos.y < size.y - EDGE and is_clear(pos, blocked, spots):
+				var item := _decor_item("rock", pos, color, cfg, rng)
+				item["scale"] = float(sizes[rng.randi_range(0, 2)]) if i > 0 else 1.9
+				out.append(item)
+				placed += 1
+				break
+	return placed
+
+
+## Paths grown by PATH_CLEARANCE, places and abodes grown by CLEARANCE (both are centered on pos).
 static func blocked_rects(region: Dictionary) -> Array[Rect2]:
 	var out: Array[Rect2] = []
 	for r in region.get("map", {}).get("paths", []):
-		out.append(Rect2(float(r[0]), float(r[1]), float(r[2]), float(r[3])))
+		out.append(Rect2(float(r[0]), float(r[1]), float(r[2]), float(r[3])).grow(PATH_CLEARANCE))
 	for p: Dictionary in region.get("places", []) + region.get("abodes", []):
 		var pos: Array = p.get("pos", [0, 0])
 		var sz: Array = p.get("size", [64, 64])
@@ -280,6 +317,9 @@ static func validate(data: GameData) -> PackedStringArray:
 			elif key == "clusters":
 				if not (decor[key] is float or decor[key] is int) or int(decor[key]) < 0 or int(decor[key]) > MAX_CLUSTERS:
 					errors.append("Region '%s' map.decor.clusters must be 0-%d" % [region["id"], MAX_CLUSTERS])
+			elif key == "rock_clusters":
+				if not (decor[key] is float or decor[key] is int) or int(decor[key]) < 0 or int(decor[key]) > MAX_ROCK_CLUSTERS:
+					errors.append("Region '%s' map.decor.rock_clusters must be 0-%d" % [region["id"], MAX_ROCK_CLUSTERS])
 			elif not DEFAULTS.has(key):
 				errors.append("Region '%s' map.decor has unknown key '%s'" % [region["id"], key])
 			elif String(key).ends_with("_color"):
