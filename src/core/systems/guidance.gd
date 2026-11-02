@@ -3859,7 +3859,7 @@ static func meal_before_fight(c: CharacterData, data: GameData, region_id: Strin
 				best_cook = entry
 	if not best_held.is_empty():
 		var nm := String(data.items[best_held["item"]]["name"])
-		return "Eat a %s before you fight the %s: %s %d -> %d." % [nm, String(foe.get("name", "")), Combat.label_for_chance(base), roundi(base * 100.0), roundi(float(best_held["after"]) * 100.0)]
+		return "Eat %s before you fight the %s: %s %d -> %d." % [Text.a(nm), String(foe.get("name", "")), Combat.label_for_chance(base), roundi(base * 100.0), roundi(float(best_held["after"]) * 100.0)]
 	if not best_cook.is_empty():
 		var nm2 := String(best_cook["meal"]["name"])
 		var where := workshop if workshop != "" else "the Family Home"
@@ -3912,7 +3912,7 @@ static func fair_fights(c: CharacterData, data: GameData, flags: Dictionary, tod
 	if trial_id != "" and Sects.check_promotion(c, data) == "":
 		rated += 1
 		var sect: SectDef = data.sects[c.sect["id"]]
-		_rate_fight(found, c, data, Sects.trial_opponent(data, trial_id), "trial", "Sect trial: %s" % sect.rank_name(Sects.next_rank(c, data)), 0)
+		_rate_fight(found, c, data, Sects.trial_opponent(data, trial_id), "trial", "Sect trial: %s" % sect.rank_name(Sects.next_rank(c, data)), 0, "%s, sect trial" % String(data.enemies.get(trial_id, {}).get("name", trial_id)))
 	for id in Sects.available_missions(c, data, flags):
 		if rated >= FAIR_FIGHT_MAX_RATED:
 			break
@@ -3935,7 +3935,7 @@ static func fair_fights(c: CharacterData, data: GameData, flags: Dictionary, tod
 			if deed_enemy.is_empty() or Deeds.check(c, data, deed, flags, today) != "":
 				continue
 			rated += 1
-			_rate_fight(found, c, data, deed_enemy, "deed", "%s: %s" % [place.get("display_name", "Chore"), deed["name"]], _item_stones(deed.get("effects", {})))
+			_rate_fight(found, c, data, deed_enemy, "deed", "%s: %s" % [place.get("display_name", "Chore"), deed["name"]], _item_stones(deed.get("effects", {})), "%s at %s" % [deed_enemy.get("name", "Foe"), place.get("display_name", "the village")])
 	var candidates: Array[Dictionary] = []
 	var hunt := Bounties.active(c, data, today)
 	if not hunt.is_empty():

@@ -1549,6 +1549,7 @@ func test_fair_fights_list_an_open_sect_trial() -> void:
 	var trials := fights.filter(func(f: Dictionary) -> bool: return f["kind"] == "trial")
 	assert_eq(trials.size(), 1, "the open trial is listed")
 	assert_true(String(trials[0]["text"]).begins_with("Sect trial: Inner Disciple"))
+	assert_true(String(trials[0]["short"]).contains("sect trial"), "GUIDE-207: the trial carries a where-label")
 
 
 func test_fair_fights_skip_the_trial_without_contribution_or_strength() -> void:
@@ -5533,10 +5534,10 @@ func test_meal_before_fight_numbers() -> void:
 	assert_true(line.contains(" -> "), line)
 	c.add_item("eel_congee", 1)
 	line = Guidance.meal_before_fight(c, d, "qingshi_village", 10, fights)
-	assert_true(line.begins_with("Eat a Eel Congee before you fight the %s: " % foe), line)
+	assert_true(line.begins_with("Eat an Eel Congee before you fight the %s: " % foe), line)
 	assert_true(line.contains(" -> "), line)
 	assert_eq(line, Guidance.meal_before_fight(c, d, "qingshi_village", 10, fights), "deterministic")
-	assert_true(_has_line(Guidance.village_lines(c, d, {}, {}, "qingshi_village", 10, {}, fights), "Eat a Eel Congee"))
+	assert_true(_has_line(Guidance.village_lines(c, d, {}, {}, "qingshi_village", 10, {}, fights), "Eat an Eel Congee"))
 	Buffs.add(c, "eels_vigour", "Eel's vigour", 3, {"attack": 0.1})
 	assert_eq(Guidance.meal_before_fight(c, d, "qingshi_village", 10, fights), "", "buff already active")
 
@@ -5795,3 +5796,14 @@ func test_fair_fight_entries_carry_a_short_label() -> void:
 	var expl := {"text": "a", "chance": 0.8, "stones": 0, "enemy": "Boar", "walkup": false}
 	assert_true(Guidance.fair_fight_before(walk, expl))
 	assert_false(Guidance.fair_fight_before(expl, walk))
+
+
+## GUIDE-207: every fair-fight entry names where, so the HUD line never falls back to a bare foe name.
+func test_fair_fights_all_carry_a_short_where_label() -> void:
+	var c := _fighter()
+	for region_id: String in ["qingshi_village", "misty_forest"]:
+		for f: Dictionary in Guidance.fair_fights(c, data(), {}, c.age_days, region_id):
+			assert_true(String(f["short"]) != "", "%s has a short label: %s" % [region_id, f["text"]])
+	var fresh := new_character()
+	for f: Dictionary in Guidance.fair_fights(fresh, data(), {}, fresh.age_days, "qingshi_village"):
+		assert_true(String(f["short"]) != "", String(f["text"]))
