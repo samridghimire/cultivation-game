@@ -172,6 +172,8 @@ var hunt_spoils: Dictionary = {}
 var great_beasts: Dictionary = {}
 ## Home meals cooked (GOAL-006): meal id -> times cooked.
 var cooked_meals: Dictionary = {}
+## Forage pickups taken in a lifetime (FORAGE-005): drives the forager's eye tiers.
+var forage_picks: int = 0
 ## World day each generated villager last came to visit and shared tea with the player (WORLD-007): npc id -> day.
 var folk_visit_day: Dictionary = {}
 ## Friend asked to join today's fight (FOLK-005): {npc, day} ({} = none); and the day each was last asked.
@@ -302,6 +304,7 @@ func to_dict() -> Dictionary:
 		"hunt_spoils": hunt_spoils.duplicate(true),
 		"great_beasts": great_beasts.duplicate(),
 		"cooked_meals": cooked_meals.duplicate(),
+		"forage_picks": forage_picks,
 		"gather_xp": gather_xp,
 		"herb_log": herb_log.duplicate(),
 		"folk_visit_day": folk_visit_day.duplicate(),
@@ -452,6 +455,7 @@ static func from_dict(d: Dictionary) -> CharacterData:
 	c.catch_log = _int_values(d.get("catch_log", {}))
 	c.hunt_log = _int_values(d.get("hunt_log", {}))
 	c.cooked_meals = _int_values(d.get("cooked_meals", {}))
+	c.forage_picks = int(d.get("forage_picks", 0))
 	c.great_beasts = _int_values(d.get("great_beasts", {}))
 	var hs: Variant = d.get("hunt_spoils", {})
 	if hs is Dictionary:

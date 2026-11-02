@@ -169,3 +169,63 @@ func test_expected_forage_value_per_day() -> void:
 				var per_day := (int(counts[0]) + int(counts[1])) / 2.0 * value / weight
 				assert_true(per_day <= cap, "%s %s: %.2f stones/day > %.1f" % [id, season, per_day, cap])
 	assert_eq(String(d.items["village_mugwort"]["name"]), "Mugwort")
+
+
+## FORAGE-005: a forager's eye.
+func test_forager_tiers() -> void:
+	assert_eq(Foraging.tier_for(0), 0)
+	assert_eq(Foraging.tier_for(24), 0)
+	assert_eq(Foraging.tier_for(25), 1)
+	assert_eq(Foraging.tier_for(75), 2)
+	assert_eq(Foraging.tier_for(150), 3)
+	assert_eq(Foraging.tier_line(0), "")
+	assert_true(Foraging.tier_line(3) != "")
+
+
+func test_tier_two_adds_pickups_and_tier_three_adds_copies() -> void:
+	var d := _gdata()
+	var base_n := 0
+	var t2_n := 0
+	var base_amt := 0
+	var t3_amt := 0
+	for day in range(0, 120):
+		var b := Foraging.nodes(d, "qingshi_village", day, 0, {}, 0)
+		var t1 := Foraging.nodes(d, "qingshi_village", day, 0, {}, 1)
+		assert_eq(b, t1)  # tier 1 changes no pickups
+		var t2 := Foraging.nodes(d, "qingshi_village", day, 0, {}, 2)
+		var t3 := Foraging.nodes(d, "qingshi_village", day, 0, {}, 3)
+		assert_eq(t3, Foraging.nodes(d, "qingshi_village", day, 0, {}, 3))
+		base_n += b.size()
+		t2_n += t2.size()
+		assert_true(t2.size() <= 4)
+		for n in b:
+			base_amt += int(n["amount"])
+		for n in t3:
+			t3_amt += int(n["amount"])
+	assert_true(t2_n > base_n)
+	assert_true(t3_amt > base_amt)
+
+
+func test_tier_three_value_stays_within_cap() -> void:
+	var d := _gdata()
+	var total := 0.0
+	var days := 360
+	for day in days:
+		for n in Foraging.nodes(d, "qingshi_village", day, 0, {}, 3):
+			total += Items.sell_price(d, String(n["item"])) * int(n["amount"])
+	var base := 0.0
+	for day in days:
+		for n in Foraging.nodes(d, "qingshi_village", day, 0, {}, 0):
+			base += Items.sell_price(d, String(n["item"])) * int(n["amount"])
+	assert_true(total / days <= 2.0, "%.2f stones/day (base %.2f)" % [total / days, base / days])
+
+
+func test_picking_counts_and_posts_tier_line() -> void:
+	var gs := (Engine.get_main_loop() as SceneTree).root.get_node("GameState")
+	gs.start_session(CharacterFactory.create("Lin Feng", gs.data, seeded_rng(), "male"))
+	gs.current_region = "qingshi_village"
+	gs.player.forage_picks = 24
+	assert_true(gs.pick_forage(int(gs.forage_here()[0]["slot"])))
+	assert_eq(gs.player.forage_picks, 25)
+	assert_eq(CharacterData.from_dict(gs.player.to_dict()).forage_picks, 25)
+	gs.end_session()

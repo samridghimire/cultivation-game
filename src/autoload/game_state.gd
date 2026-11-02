@@ -2992,12 +2992,12 @@ func roamers_here() -> Array[Dictionary]:
 
 ## Today's visible pickups in the current region (FORAGE-001): [{slot, item, amount}].
 func forage_here() -> Array[Dictionary]:
-	return Foraging.nodes(data, current_region, GameClock.total_days, player.realm_index, world_flags)
+	return Foraging.nodes(data, current_region, GameClock.total_days, player.realm_index, world_flags, Foraging.tier_for(player.forage_picks))
 
 
 ## Unpicked forage today in any region (FORAGE-002). The current region matches `forage_here`.
 func forage_today(region_id: String) -> Array[Dictionary]:
-	return Foraging.unpicked(data, region_id, GameClock.total_days, player.realm_index, world_flags)
+	return Foraging.unpicked(data, region_id, GameClock.total_days, player.realm_index, world_flags, Foraging.tier_for(player.forage_picks))
 
 
 ## Pick up the forage in `slot`. Takes no time (a stoop, not an action).
@@ -3015,11 +3015,16 @@ func pick_forage(slot: int) -> bool:
 			player.gather_xp += 1
 			HerbLore.record_find(player, item_id, amount)
 		LifeStats.add(player, "foraged")
+		var tier_before := Foraging.tier_for(player.forage_picks)
+		player.forage_picks += 1
+		var tier_line := Foraging.tier_line(Foraging.tier_for(player.forage_picks)) if Foraging.tier_for(player.forage_picks) > tier_before else ""
 		var find_text := "You pick %d %s by the path." % [amount, Items.item_plural(data, item_id, amount)]
 		var find_note := Guidance.find_note(data, item_id, current_region)
 		if find_note != "":
 			find_text += " " + find_note + "."
 		EventBus.post(find_text, "world")
+		if tier_line != "":
+			EventBus.post(tier_line, "world")
 		EventBus.forage_changed.emit()
 		EventBus.player_changed.emit()
 		return true
