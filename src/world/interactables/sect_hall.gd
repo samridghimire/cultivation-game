@@ -15,6 +15,7 @@ func on_menu_closed() -> void:
 func get_options() -> Array[Dictionary]:
 	var options: Array[Dictionary] = []
 	var player := GameState.player
+	GameState.world_flags[Guidance.SECT_HALL_FLAG] = true  # GOAL-009: idempotent marker, "has seen a hall"
 	if _pending != "":
 		return _confirm_options()
 	if not player.is_rogue():

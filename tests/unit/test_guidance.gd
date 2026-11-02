@@ -5960,7 +5960,7 @@ func test_road_goals_follow_the_first_ladder() -> void:
 	assert_true(Guidance.first_goals_done(c, data(), flags))
 	assert_true(Guidance.road_goals_active(c, data(), flags))
 	var goals := Guidance.road_goals(c, data(), flags)
-	assert_eq(goals.size(), 5)
+	assert_eq(goals.size(), 8)
 	assert_true(String(goals[0]["text"]).contains("Misty Forest"))
 	assert_true(String(goals[0]["text"]).contains("3 days"))
 	assert_false(goals[0]["done"])
@@ -5974,7 +5974,7 @@ func test_road_goals_follow_the_first_ladder() -> void:
 	c.great_beasts["wild_boar"] = 3
 	assert_true(Guidance.road_goals(c, data(), flags)[2]["done"])
 	var section := Guidance.journal(c, data(), flags, 0, "qingshi_village").filter(func(e: Dictionary) -> bool: return e["section"] == "Road goals")
-	assert_eq(section.size(), 5)
+	assert_eq(section.size(), 8)
 
 
 func test_road_goals_veteran_and_flags() -> void:
@@ -6034,3 +6034,22 @@ func test_road_goal_great_beast_is_the_soonest_and_names_the_weekday() -> void:
 	var away := best_day - 100
 	var when := "today" if away == 0 else ("tomorrow" if away == 1 else "in %d days" % away)
 	assert_true(text.ends_with(", %s)" % when), text)
+
+
+func test_road_goals_sect_and_layer_goals() -> void:
+	var flags := {Guidance.ELDER_MO_FLAG: true}
+	var c := _after_ladder()
+	c.sect = {}
+	assert_false(Guidance.road_goals(c, data(), flags)[5]["done"])
+	flags[Guidance.SECT_HALL_FLAG] = true  # a rogue who visited a hall is done without joining
+	assert_true(Guidance.road_goals(c, data(), flags)[5]["done"])
+	var joined := _after_ladder()
+	assert_true(Guidance.road_goals(joined, data(), {Guidance.ELDER_MO_FLAG: true})[5]["done"])
+	assert_false(Guidance.road_goals(joined, data(), flags)[6]["done"])
+	LifeStats.add(joined, "missions_done")
+	assert_true(Guidance.road_goals(joined, data(), flags)[6]["done"])
+	c.bounty = {"id": "x", "until_day": 9}
+	assert_true(Guidance.road_goals(c, data(), flags)[6]["done"])
+	assert_false(Guidance.road_goals(c, data(), flags)[7]["done"])
+	c.stage = 6
+	assert_true(Guidance.road_goals(c, data(), flags)[7]["done"])

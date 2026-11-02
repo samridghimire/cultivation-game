@@ -3112,6 +3112,10 @@ static func first_goals(c: CharacterData, data: GameData, flags: Dictionary) -> 
 	return out
 
 
+## World flag set when the player opens a sect hall's menu (GOAL-009).
+const SECT_HALL_FLAG := "visited_sect_hall"
+
+
 ## GOAL-008: goals that lead out of the village, shown one at a time once the first ladder is done.
 ## A veteran (Foundation or above) sees them done. Day counts and names come from data.
 static func road_goals(c: CharacterData, data: GameData, flags: Dictionary, today: int = 0) -> Array[Dictionary]:
@@ -3150,6 +3154,10 @@ static func road_goals(c: CharacterData, data: GameData, flags: Dictionary, toda
 			found = true
 			break
 	rows.append(["Find a region's hidden discovery", vet or found])
+	# GOAL-009: the sect road. A rogue who has stood in a sect hall and walked away has chosen too.
+	rows.append(["Join a sect, or stay free (a sect hall takes recruits)", vet or not c.is_rogue() or bool(flags.get(SECT_HALL_FLAG, false))])
+	rows.append(["Take a sect mission or a bounty", vet or LifeStats.get_stat(c, "missions_done") >= 1 or LifeStats.get_stat(c, "bounties_done") >= 1 or not c.bounty.is_empty()])
+	rows.append(["Reach the 6th Layer of Qi Refining", vet or c.stage >= 6])
 	var out: Array[Dictionary] = []
 	for row: Array in rows:
 		out.append({"text": row[0], "done": row[1]})
