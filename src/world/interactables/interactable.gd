@@ -34,6 +34,9 @@ const LABEL_FONT_SIZE := 14
 const PLACE_NEAR := 220.0
 const PLACE_FAR := 420.0
 const PLACE_FAR_ALPHA := 0.35
+## Ground styles that get a dark plate behind name labels (GFX-052); set by World when a region builds.
+const PLATE_GROUNDS: Array[String] = ["paved", "scree"]
+static var ground_style := "grass"
 ## Draws the name label above every sibling building (WU-278).
 var _label_node: Node2D
 ## The top hint names this place: a gold "!" is drawn above its label (WU-280).
@@ -432,11 +435,26 @@ func _draw_label() -> void:
 	if fade <= 0.0:
 		return
 	var at := Vector2(left, -size.y / 2.0 - 8.0 + label_offset.y + screen_lift)
-	var fill := label_color()
-	fill.a *= fade
-	# A dark outline first so the name reads on any ground (GFX-015).
-	_label_node.draw_string_outline(font, at, text, HORIZONTAL_ALIGNMENT_LEFT, -1, LABEL_FONT_SIZE, 3, Color(0, 0, 0, 0.7 * fade))
-	_label_node.draw_string(font, at, text, HORIZONTAL_ALIGNMENT_LEFT, -1, LABEL_FONT_SIZE, fill)
+	var paint := label_paint(fade, label_color())
+	if PLATE_GROUNDS.has(ground_style):
+		var h := font.get_height(LABEL_FONT_SIZE)
+		var plate := Rect2(Vector2(left, at.y - h * 0.8), Vector2(text_width, h)).grow(3.0)
+		_label_node.draw_rect(plate, Color(0.05, 0.05, 0.07, 0.45 * fade))
+	# A dark outline first so the name reads on any ground (GFX-015, GFX-052).
+	_label_node.draw_string_outline(font, at, text, HORIZONTAL_ALIGNMENT_LEFT, -1, LABEL_FONT_SIZE, 4, paint["outline"])
+	_label_node.draw_string(font, at, text, HORIZONTAL_ALIGNMENT_LEFT, -1, LABEL_FONT_SIZE, paint["fill"])
+
+
+## Fill and outline colours of a name label at `fade` (0..1): a far label's fill moves toward a muted tone
+## but stays opaque, the outline never fades, only fade 0 hides it (GFX-052).
+static func label_paint(fade: float, base: Color) -> Dictionary:
+	if fade <= 0.0:
+		return {"fill": Color(base, 0.0), "outline": Color(0, 0, 0, 0.0)}
+	var muted := Color(0.78, 0.78, 0.74)
+	var f := clampf(fade, 0.0, 1.0)
+	var fill := muted.lerp(base, f)
+	fill.a = maxf(0.85, base.a * f)
+	return {"fill": fill, "outline": Color(0, 0, 0, 0.85)}
 
 
 ## A small diamond in the top-right corner of artifact anchor places: hollow
