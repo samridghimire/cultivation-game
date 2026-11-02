@@ -4,7 +4,7 @@ extends RefCounted
 ## villagers, festivals, season starts) for a window of days. Pure functions, no state, no rng.
 
 const MAX_REMINDERS := 3
-const KIND_ORDER := ["market", "festival_active", "festival_month", "birthday", "field", "rent", "request", "secret_realm", "event", "season"]
+const KIND_ORDER := ["market", "festival_active", "festival_month", "birthday", "field", "rent", "request", "secret_realm", "event", "forage", "season"]
 
 
 ## Every dated thing in [start, start + span) days, soonest first.
@@ -64,9 +64,32 @@ static func upcoming(data: GameData, npcs: Dictionary, favor: Dictionary, active
 			out.append({"day": day, "kind": "season", "text": "%s begins" % Calendar.season_of(day), "region": ""})
 	if c != null:
 		_great_beasts(out, data, c, start, end)
+		_forage_seasons(out, data, c, start, end)
 		_own_dates(out, data, npcs, active_events, c, start, end)
 	out.sort_custom(_before)
 	return out
+
+
+## FORAGE-003: the first day in the window a visited region's seasonal forage comes into season (one line per region).
+static func _forage_seasons(out: Array[Dictionary], data: GameData, c: CharacterData, start: int, end: int) -> void:
+	for rid: String in c.visited_regions:
+		var items: Array = data.regions.get(rid, {}).get("forage", {}).get("items", [])
+		if items.is_empty():
+			continue
+		for day in range(maxi(start, 1), end):
+			var season := Calendar.season_of(day)
+			if season == Calendar.season_of(day - 1):
+				continue
+			var names: PackedStringArray = []
+			for e: Dictionary in items:
+				if e.has("seasons") and (e["seasons"] as Array).has(season.to_lower()):
+					var nm := String(data.items.get(String(e["item"]), {}).get("name", e["item"]))
+					if not names.has(nm):
+						names.append(nm)
+			if not names.is_empty():
+				out.append({"day": day, "kind": "forage", "region": rid,
+					"text": "%s forage on the %s paths: %s" % [season, Exploration.region_name(data, rid), ", ".join(names)]})
+				break
 
 
 ## WILD-006: days a great beast walks an explored region, inside [start, end).

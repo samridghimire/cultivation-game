@@ -210,3 +210,19 @@ func test_request_reminder_wording() -> void:
 	assert_true(r[0].begins_with("Tomorrow: a neighbour's request is due (2 "), r[0])
 	var e := _kinds(VillageCalendar.upcoming(data(), {}, {}, [], "qingshi_village", 0, 30, c), "request")
 	assert_true(String(e[0]["text"]).begins_with("A neighbour's ask is due"))
+
+
+## FORAGE-003: a visited region's seasonal forage shows the day before its season starts.
+func test_forage_season_line_only_for_visited() -> void:
+	var c := CharacterFactory.create("Lin Feng", data(), seeded_rng(), "male")
+	c.visited_regions = ["qingshi_village"]
+	var e := _kinds(VillageCalendar.upcoming(data(), {}, {}, [], "qingshi_village", 359, 3, c), "forage")
+	assert_eq(e.size(), 1)
+	assert_eq(e[0]["day"], 360)
+	assert_eq(e[0]["region"], "qingshi_village")
+	assert_true(String(e[0]["text"]).contains(String(data().items["peach_blossom_petal"]["name"])), e[0]["text"])
+	assert_true(VillageCalendar.reminders(data(), {}, {}, [], "qingshi_village", 359, c).size() >= 1)
+	c.visited_regions = []
+	assert_eq(_kinds(VillageCalendar.upcoming(data(), {}, {}, [], "qingshi_village", 359, 3, c), "forage").size(), 0)
+	c.visited_regions = ["qingshi_village"]
+	assert_eq(_kinds(VillageCalendar.upcoming(data(), {}, {}, [], "qingshi_village", 100, 5, c), "forage").size(), 0)

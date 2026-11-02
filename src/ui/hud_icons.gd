@@ -52,6 +52,7 @@ const CALENDAR_MORE := {
 	"rent": {"colors": {"a": Color("e8c76a"), "b": Color("fff1a8"), "c": Color("b8943a")}, "rows": ["............", "....oooo....", "..ooabbaoo..", ".oabaaaacao.", ".oaaooooaao.", ".oaaoccoaao.", ".oaaooooaao.", ".oacaaaaaao.", "..ooaaaaoo..", "....oooo....", "............", "............"]},
 	"request": {"colors": {"a": Color("f4e9d0"), "b": Color("d9534f"), "c": Color("b8a98a")}, "rows": ["............", "............", ".oooooooooo.", ".oaaaaaaaao.", ".ocaaaaaaco.", ".oacaaaacao.", ".oaaccccaao.", ".oaaabbaaao.", ".oaaabbaaao.", ".oooooooooo.", "............", "............"]},
 	"secret_realm": {"colors": {"a": Color("7a5cd6"), "b": Color("c9b8ff"), "c": Color("3a2a7a")}, "rows": ["............", "....oooo....", "..ooabbaoo..", ".oabaccabao.", ".oabaccabao.", ".oabaccabao.", ".oabaccabao.", ".oabaccabao.", ".oabaccabao.", ".oooooooooo.", "............", "............"]},
+	"forage": {"colors": {"a": Color("5fbf5a"), "b": Color("a8e08a"), "c": Color("8a5a2c")}, "rows": ["............", "......oo....", "....ooabo...", "...oabbao...", "..oabaaao...", "..oaaaao.o..", "...oaaoooao.", "....ooabao..", "....oc.oo...", "...oc.......", "..oc........", "............"]},
 	"great_beast": {"colors": {"a": Color("f2c94c"), "b": Color("fff1a8"), "c": Color("b8943a")}, "rows": ["............", "o..oo..oo..o", "oo.oaooao.oo", ".oooabbaooo.", "..oaabbaao..", ".oabaaaabao.", ".oaoacccaoao", ".oao.oaao.oa", "..o..oaao..o", "....oaoao...", "....ooooo...", "............"]},
 	"event": {"colors": {"a": Color("f0a050"), "b": Color("fff1a8"), "c": Color("d9702f")}, "rows": ["............", ".....oo.....", ".....oo.....", "....oabo....", ".ooooabboooo", ".oaabbbbbaao", "..oaabbbaao.", "...oabbbao..", "..oabaaabao.", "..oao..oaao.", "...o....o...", "............"]},
 }
@@ -120,7 +121,7 @@ static func calendar_kind(kind: String, season_name: String = "") -> Texture2D:
 			return _glyph("cal_festival", CALENDAR, "festival")
 		"season":
 			return season(season_name)
-		"field", "rent", "request", "secret_realm", "event":
+		"field", "rent", "request", "secret_realm", "event", "forage":
 			return _glyph("cal_" + kind, CALENDAR_MORE, kind)
 		"great_beast":
 			return _glyph("cal_great_beast", CALENDAR_MORE, "great_beast")

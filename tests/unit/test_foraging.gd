@@ -98,3 +98,21 @@ func test_game_state_forage_today() -> void:
 	assert_eq(gs.forage_today("qingshi_village").size(), n - 1)
 	assert_eq(gs.forage_today("qingshi_village"), gs.forage_here())
 	gs.end_session()
+
+
+## FORAGE-003: picking a herb forage adds it to the herb log.
+func test_pick_herb_forage_records_herb_log() -> void:
+	var gs := (Engine.get_main_loop() as SceneTree).root.get_node("GameState")
+	gs.start_session(CharacterFactory.create("Lin Feng", gs.data, seeded_rng(), "male"))
+	gs.current_region = "qingshi_village"
+	for day in range(0, 40):
+		GameClock.total_days = day
+		for n: Dictionary in gs.forage_here():
+			if gs.data.items[String(n["item"])].get("tags", []).has("herb"):
+				assert_false(gs.player.herb_log.has(String(n["item"])))
+				assert_true(gs.pick_forage(int(n["slot"])))
+				assert_eq(int(gs.player.herb_log[String(n["item"])]), int(n["amount"]))
+				gs.end_session()
+				return
+	gs.end_session()
+	assert_true(false, "no herb forage found in 40 days")

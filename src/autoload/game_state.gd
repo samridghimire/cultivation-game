@@ -2996,6 +2996,7 @@ func pick_forage(slot: int) -> bool:
 		Foraging.mark_picked(world_flags, current_region, slot, GameClock.total_days)
 		if data.items.get(item_id, {}).get("tags", []).has("herb"):
 			player.gather_xp += 1
+			HerbLore.record_find(player, item_id, amount)
 		LifeStats.add(player, "foraged")
 		EventBus.post("You pick %d %s by the path." % [amount, Items.item_plural(data, item_id, amount)], "world")
 		EventBus.forage_changed.emit()
