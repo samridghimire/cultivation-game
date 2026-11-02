@@ -280,3 +280,24 @@ func test_record_great_trophy_once_and_round_trip() -> void:
 	d.items.erase("test_trophy")
 	d.regions["misty_forest"]["roamers"] = old
 	assert_eq(Wildlife.validate(d).size(), 0)
+
+
+## C-294: every great beast leaves a real, trophy-tagged, unsold token.
+func test_every_great_beast_has_a_trophy() -> void:
+	var d := _gdata()
+	var seen := 0
+	for rid: String in d.regions:
+		var rd: Variant = d.regions[rid]
+		if not (rd is Dictionary) or not (rd as Dictionary).has("roamers"):
+			continue
+		var great: Dictionary = (rd as Dictionary)["roamers"].get("great", {})
+		if great.is_empty():
+			continue
+		seen += 1
+		var tid := String(great.get("trophy", ""))
+		assert_true(d.items.has(tid), "%s trophy exists" % rid)
+		var tags: Array = (d.items[tid] as Dictionary).get("tags", [])
+		assert_true(tags.has("trophy") and tags.has("no_shop"), "%s trophy tags" % rid)
+		var price := int((d.items[tid] as Dictionary).get("price", 0))
+		assert_true(price >= 15 and price <= 40, "%s trophy price" % rid)
+	assert_true(seen >= 4)
