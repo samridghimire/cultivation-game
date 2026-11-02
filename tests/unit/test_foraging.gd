@@ -33,6 +33,34 @@ func test_season_and_realm_filters() -> void:
 	d.regions["qingshi_village"]["forage"] = old
 
 
+## FORAGE-004: a weather-gated item only rolls on those days.
+func test_weather_gated_item() -> void:
+	var d := _gdata()
+	var old: Variant = d.regions["misty_forest"]["forage"]
+	d.regions["misty_forest"]["forage"] = {"count": [3, 3], "items": [
+		{"item": "dew_grass", "weight": 1},
+		{"item": "purple_cloud_mushroom", "weight": 50, "weather": ["rain"]}]}
+	var rain_seen := false
+	for day in range(0, 120):
+		var wx := Weather.of(d, "misty_forest", day)
+		for n in Foraging.nodes(d, "misty_forest", day, 0, {}):
+			if n["item"] == "purple_cloud_mushroom":
+				assert_eq(wx, "rain", "mushrooms only in rain")
+				rain_seen = true
+	assert_true(rain_seen, "a rain day offers the mushroom")
+	d.regions["misty_forest"]["forage"] = old
+
+
+func test_weather_validation() -> void:
+	var d := _gdata()
+	var old: Variant = d.regions["qingshi_village"]["forage"]
+	for bad: Variant in [["monsoon"], []]:
+		d.regions["qingshi_village"]["forage"] = {"count": [1, 2], "items": [{"item": "dew_grass", "weight": 1, "weather": bad}]}
+		assert_false(Foraging.validate(d).is_empty())
+	d.regions["qingshi_village"]["forage"] = old
+	assert_true(Foraging.validate(d).is_empty())
+
+
 func test_picked_slot_returns_next_day() -> void:
 	var d := _gdata()
 	var flags := {}

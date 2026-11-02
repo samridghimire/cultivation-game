@@ -21,6 +21,8 @@ static func nodes(data: GameData, region_id: String, day: int, realm_index: int,
 	for entry: Dictionary in def.get("items", []):
 		if not Exploration.in_season(entry, season):
 			continue
+		if entry.has("weather") and not (entry["weather"] as Array).has(Weather.of(data, region_id, day)):
+			continue
 		if entry.has("min_realm") and realm_index < data.realm_index_of(String(entry["min_realm"])):
 			continue
 		pool.append(entry)
@@ -109,6 +111,14 @@ static func validate(data: GameData) -> PackedStringArray:
 			for s: Variant in e.get("seasons", []):
 				if not Exploration.SEASON_NAMES.has(String(s)):
 					errors.append("%s item '%s' has unknown season '%s'" % [where, e["item"], s])
+			if e.has("weather"):
+				var kinds: Variant = e["weather"]
+				if not (kinds is Array and not kinds.is_empty()):
+					errors.append("%s item '%s' weather must be a non-empty list" % [where, e["item"]])
+				else:
+					for k: Variant in kinds:
+						if not Weather.KINDS.has(String(k)):
+							errors.append("%s item '%s' has unknown weather '%s'" % [where, e["item"], k])
 			if e.has("min_realm") and data.realm_index_of(String(e["min_realm"])) < 0:
 				errors.append("%s item '%s' has unknown min_realm" % [where, e["item"]])
 	return errors
