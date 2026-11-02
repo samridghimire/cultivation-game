@@ -6,6 +6,9 @@ extends RefCounted
 const DAYS_PER_MONTH := 30
 const MONTHS_PER_YEAR := 12
 const DAYS_PER_YEAR := DAYS_PER_MONTH * MONTHS_PER_YEAR
+const DAYS_PER_WEEK := 7
+## CAL-005: the seven luminaries; index = total_days % 7 (the same index Wildlife.great_day uses).
+const WEEKDAY_NAMES: Array[String] = ["Sunday", "Moonday", "Fireday", "Waterday", "Woodday", "Metalday", "Earthday"]
 
 
 @warning_ignore("integer_division")
@@ -20,6 +23,23 @@ static func month_of(total_days: int) -> int:
 
 static func day_of(total_days: int) -> int:
 	return total_days % DAYS_PER_MONTH + 1
+
+
+static func weekday_of(total_days: int) -> int:
+	return posmod(total_days, DAYS_PER_WEEK)
+
+
+static func weekday_name(total_days: int) -> String:
+	return WEEKDAY_NAMES[weekday_of(total_days)]
+
+
+static func weekday_label(index: int) -> String:
+	return WEEKDAY_NAMES[posmod(index, DAYS_PER_WEEK)]
+
+
+## Days from `from_day` until the next `weekday` (0 when today is that weekday).
+static func days_until_weekday(from_day: int, weekday: int) -> int:
+	return posmod(weekday - weekday_of(from_day), DAYS_PER_WEEK)
 
 
 static func season_of(total_days: int) -> String:

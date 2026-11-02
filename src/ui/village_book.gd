@@ -405,7 +405,7 @@ static func hunt_detail(data: GameData, c: CharacterData, enemy_id: String) -> S
 
 
 ## WU-437: one row per great beast in regions.json order: {enemy, region, name, won, day, trophy, text, detail}.
-## Won -> the trophy's name and description; not yet -> "???" with where and which day of the 7-day week it walks.
+## Won -> the trophy's name and description; not yet -> "???" with where and which weekday it walks.
 static func trophy_rows(c: CharacterData, data: GameData) -> Array[Dictionary]:
 	var rows: Array[Dictionary] = []
 	for rid: String in data.regions:
@@ -423,8 +423,8 @@ static func trophy_rows(c: CharacterData, data: GameData) -> Array[Dictionary]:
 			row["text"] = "%s\n%s" % [Wildlife.display_name(data, enemy, true), String(item.get("name", "no trophy"))]
 			row["detail"] = "%s, slain day %d. %s" % [Wildlife.display_name(data, enemy, true), row["day"], String(item.get("description", ""))]
 		else:
-			var walk := "day %d of the week" % (Wildlife.great_day(rid, g) + 1)
-			row["text"] = "???\n(%s, day %d)" % [region, Wildlife.great_day(rid, g) + 1]
+			var walk := Calendar.weekday_label(Wildlife.great_day(rid, g))
+			row["text"] = "???\n(%s, %s)" % [region, Calendar.weekday_label(Wildlife.great_day(rid, g))]
 			row["detail"] = "A great beast walks %s on %s." % [region, walk]
 		rows.append(row)
 	return rows

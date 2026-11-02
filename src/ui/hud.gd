@@ -964,7 +964,7 @@ static func first_sentence(text: String) -> String:
 ## "Goal: ..." line: the first unfinished first goal, then the realm goal ladder's next step, then the generic goal ("" = none).
 static func goal_text(c: CharacterData, data: GameData, flags: Dictionary, clan: ClanData, density: float, region_id: String = "", today: int = -1) -> String:
 	if Guidance.first_goals_done(c, data, flags) or c.realm_index >= 2:
-		for row in Guidance.active_goal_ladder(c, data, flags, clan):
+		for row in Guidance.active_goal_ladder(c, data, flags, clan, GameClock.total_days):
 			if not row["done"]:
 				return "Goal: " + str(row["text"])
 		var lines := Guidance.goals(c, data, flags, clan, density, region_id, today)
@@ -1273,7 +1273,7 @@ func _done_goal_texts() -> Array[String]:
 	var out: Array[String] = []
 	if GameState.player == null:
 		return out
-	for goal in Guidance.goal_ladder(_goals_ladder, GameState.player, GameState.data, GameState.world_flags, GameState.clan):
+	for goal in Guidance.goal_ladder(_goals_ladder, GameState.player, GameState.data, GameState.world_flags, GameState.clan, GameClock.total_days):
 		if goal["done"]:
 			out.append(str(goal["text"]))
 	return out
@@ -1291,7 +1291,7 @@ func _announce_goals_done() -> void:
 	if c == null:
 		return
 	if Guidance.goal_ladder_id(c) == _goals_ladder:
-		var goals := Guidance.goal_ladder(_goals_ladder, c, GameState.data, GameState.world_flags, GameState.clan)
+		var goals := Guidance.goal_ladder(_goals_ladder, c, GameState.data, GameState.world_flags, GameState.clan, GameClock.total_days)
 		var text := goals_done_banner(_goals_done, goals, _goals_ladder, InputConfig.current_label("toggle_journal"))
 		if text != "":
 			_banner.announce("Goal done", text, UIStyle.ACCENT, 1.5)

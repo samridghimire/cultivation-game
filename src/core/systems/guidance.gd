@@ -3114,7 +3114,7 @@ static func first_goals(c: CharacterData, data: GameData, flags: Dictionary) -> 
 
 ## GOAL-008: goals that lead out of the village, shown one at a time once the first ladder is done.
 ## A veteran (Foundation or above) sees them done. Day counts and names come from data.
-static func road_goals(c: CharacterData, data: GameData, flags: Dictionary) -> Array[Dictionary]:
+static func road_goals(c: CharacterData, data: GameData, flags: Dictionary, today: int = 0) -> Array[Dictionary]:
 	var vet := c.realm_index >= 2
 	var start: String = data.start_region
 	var rows: Array = []
@@ -3125,14 +3125,23 @@ static func road_goals(c: CharacterData, data: GameData, flags: Dictionary) -> A
 	if data.regions.has("fallen_star_market"):
 		rows.append(["Visit %s: armor, weapons and manuals are sold there" % _region_name(data, "fallen_star_market"), vet or c.visited_regions.has("fallen_star_market")])
 	var great_text := "Beat a great beast"
-	for rid: String in data.regions:
+	var best_rid := ""
+	var best_day := -1
+	for rid: String in data.regions:  # CAL-005: the soonest walk wins (ties: region order)
 		var def: Dictionary = data.regions[rid].get("roamers", {}).get("great", {})
 		if def.is_empty() or c.great_beasts.has(String(def.get("enemy", ""))):
 			continue
-		if Wildlife.next_great_day(data, rid, 0, c.realm_index) < 0:
+		var nd := Wildlife.next_great_day(data, rid, today, c.realm_index)
+		if nd < 0:
 			continue  # REVIEW: never name a great beast this realm cannot meet (the Ridge's ram needs Foundation)
-		great_text += " (the next one: %s in %s, day %d of the 7-day week)" % [Wildlife.display_name(data, String(def["enemy"]), true), _region_name(data, rid), Wildlife.great_day(rid, def) + 1]
-		break
+		if best_day < 0 or nd < best_day:
+			best_day = nd
+			best_rid = rid
+	if best_rid != "":
+		var bdef: Dictionary = data.regions[best_rid]["roamers"]["great"]
+		var away := best_day - today
+		var when := "today" if away == 0 else ("tomorrow" if away == 1 else "in %d days" % away)
+		great_text += " (the next one: %s in %s, %s, %s)" % [Wildlife.display_name(data, String(bdef["enemy"]), true), _region_name(data, best_rid), Calendar.weekday_name(best_day), when]
 	rows.append([great_text, vet or not c.great_beasts.is_empty()])
 	rows.append(["Finish a bounty", vet or LifeStats.get_stat(c, "bounties_done") >= 1])
 	var found := false
@@ -3396,11 +3405,11 @@ static func goal_ladder_id(c: CharacterData) -> String:
 
 
 ## The goals of ladder `id` (goal_ladder_id), done or not; [] for "".
-static func goal_ladder(id: String, c: CharacterData, data: GameData, flags: Dictionary, clan: ClanData = null) -> Array[Dictionary]:
+static func goal_ladder(id: String, c: CharacterData, data: GameData, flags: Dictionary, clan: ClanData = null, today: int = 0) -> Array[Dictionary]:
 	if id == "first":
 		return first_goals(c, data, flags)
 	if id == "road":
-		return road_goals(c, data, flags)
+		return road_goals(c, data, flags, today)
 	if id == "foundation":
 		return foundation_goals(c, data, flags, clan)
 	if id == "core":
@@ -3418,11 +3427,11 @@ static func goal_ladder(id: String, c: CharacterData, data: GameData, flags: Dic
 
 
 ## The goal ladder currently shown (first, Foundation, then Core Formation goals), [] when none.
-static func active_goal_ladder(c: CharacterData, data: GameData, flags: Dictionary, clan: ClanData = null) -> Array[Dictionary]:
+static func active_goal_ladder(c: CharacterData, data: GameData, flags: Dictionary, clan: ClanData = null, today: int = 0) -> Array[Dictionary]:
 	if c.realm_index <= 1 and not first_goals_done(c, data, flags):
 		return first_goals(c, data, flags)
 	if road_goals_active(c, data, flags):
-		return road_goals(c, data, flags)
+		return road_goals(c, data, flags, today)
 	if foundation_goals_active(c, data, flags, clan):
 		return foundation_goals(c, data, flags, clan)
 	if core_goals_active(c, data, flags, clan):
@@ -3705,7 +3714,7 @@ static func journal(c: CharacterData, data: GameData, flags: Dictionary, today: 
 			_add(out, "First goals", ("[x] " if goal["done"] else "[ ] ") + String(goal["text"]), tone)
 	if road_goals_active(c, data, flags):
 		var road_flagged := false
-		for goal in road_goals(c, data, flags):
+		for goal in road_goals(c, data, flags, today):
 			var road_tone := "dim"
 			if not goal["done"]:
 				road_tone = "normal" if road_flagged else "warning"
