@@ -59,6 +59,11 @@ func test_appearances_cover_every_enemy() -> void:
 		kinds[String(a["source"]).split(" ")[0]] = true
 	for kind in ["encounter", "choice", "mission", "realm", "trial", "defence"]:
 		assert_true(kinds.has(kind), "no %s fights in appearances()" % kind)
+	# C-291: a region's great beast is an optional, always-wary, non-lethal map roamer; no fight source rates it.
+	for region: Dictionary in data().regions.values():
+		var great: Dictionary = region.get("roamers", {}).get("great", {})
+		if great.has("enemy"):
+			seen[String(great["enemy"])] = true
 	for enemy_id: String in data().enemies:
 		assert_true(seen.has(enemy_id), "%s never appears in a fight source; add it to appearances() or remove it" % enemy_id)
 

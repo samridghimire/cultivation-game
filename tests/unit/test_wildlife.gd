@@ -238,3 +238,23 @@ func test_gentle_ape_drop() -> void:
 	var t: Variant = d.items["guardian_river_stone"]
 	assert_true(t.price >= 6 and t.price <= 10)
 	assert_false(t.tags.has("meat") or t.tags.has("hide") or t.tags.has("beast_material"))
+
+
+## C-291: every region with roamers has a valid great beast, and linked regions never share its day.
+func test_every_roamer_region_has_a_great_beast() -> void:
+	var d := _gdata()
+	var days := {}
+	for id in d.regions:
+		var rd: Dictionary = d.regions[id]
+		if not rd.has("roamers"):
+			continue
+		assert_true(rd["roamers"].has("great"), "%s has a great beast" % id)
+		var g: Dictionary = rd["roamers"]["great"]
+		assert_true(d.enemies.has(g["enemy"]), "%s great enemy exists" % id)
+		assert_false(d.enemies[g["enemy"]].lethal, "%s great is not lethal" % id)
+		assert_true(d.enemies[g["enemy"]].tags.has("beast"), "%s great is a beast" % id)
+		days[id] = Wildlife.great_day(id, g)
+	for id in days:
+		for route in d.regions[id].get("routes", []):
+			if days.has(route["to"]):
+				assert_true(days[id] != days[route["to"]], "%s and %s share a great day" % [id, route["to"]])
