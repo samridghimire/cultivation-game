@@ -65,8 +65,10 @@ static func play(gs: Node, seed_value: int, realm_index: int, region_id: String,
 		if c.alive and Cultivation.can_attempt_breakthrough(c, gs.data):
 			gs.attempt_breakthrough()
 		if sect and not c.is_rogue() and c.alive:
+			# MISSION-001: a player walks to the sect's home region, where the board always is.
+			gs.current_region = Sects.home_region(gs.data, String(c.sect["id"]))
 			for mission_id in Sects.available_missions(c, gs.data, gs.world_flags):
-				if Sects.check_mission(c, gs.data, mission_id, gs.world_flags) == "":
+				if Sects.check_mission(c, gs.data, mission_id, gs.world_flags, gs.current_region) == "":
 					gs.take_mission(mission_id)
 					break
 			_come_home(gs, region_id)

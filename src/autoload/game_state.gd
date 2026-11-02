@@ -2550,7 +2550,7 @@ func take_mission(mission_id: String) -> void:
 	EventBus.topic = "sect"
 	if not _can_act():
 		return
-	var reason := Sects.check_mission(player, data, mission_id, world_flags)
+	var reason := Sects.check_mission(player, data, mission_id, world_flags, current_region)
 	if reason != "":
 		EventBus.post(reason, "warning")
 		EventBus.player_changed.emit()

@@ -638,12 +638,41 @@ static func mission_rank_realm_reason(c: CharacterData, data: GameData, mission:
 	return ""
 
 
-## Why `c` cannot take `mission_id` now, or "" if they can.
-static func check_mission(c: CharacterData, data: GameData, mission_id: String, flags: Dictionary = {}) -> String:
+## MISSION-001: "" when the mission board is in `region_id` (a region with a `sect_hall` place, or the
+## sect's home region); otherwise why not, naming the sect's hall. "" for a rogue or an empty region id.
+static func board_reason(c: CharacterData, data: GameData, region_id: String) -> String:
+	if region_id == "" or c.is_rogue():
+		return ""
+	if region_id == home_region(data, String(c.sect["id"])):
+		return ""
+	if _hall_name(data, region_id) != "":
+		return ""
+	var home := home_region(data, String(c.sect["id"]))
+	var regions: Array = [home] + data.regions.keys()
+	for r: String in regions:
+		var hall := _hall_name(data, r)
+		if hall != "":
+			return "The mission board is at a sect hall (nearest: %s, %s)." % [hall, Exploration.region_name(data, r)]
+	return "The mission board is at a sect hall."
+
+
+static func _hall_name(data: GameData, region_id: String) -> String:
+	for p: Dictionary in data.regions.get(region_id, {}).get("places", []):
+		if String(p.get("type", "")) == "sect_hall":
+			return String(p.get("display_name", "sect hall"))
+	return ""
+
+
+## Why `c` cannot take `mission_id` now, or "" if they can. A non-empty `region_id` also requires
+## the mission board to be there (board_reason); "" skips that check.
+static func check_mission(c: CharacterData, data: GameData, mission_id: String, flags: Dictionary = {}, region_id: String = "") -> String:
 	if not data.sect_missions.has(mission_id):
 		return "No such mission."
 	if c.is_rogue():
 		return "Only sect disciples receive sect missions."
+	var board := board_reason(c, data, region_id)
+	if board != "":
+		return board
 	var offered: Array = data.sect_missions[mission_id].get("sects", [])
 	if not offered.is_empty() and not offered.has(c.sect["id"]):
 		return "Your sect does not offer that mission."

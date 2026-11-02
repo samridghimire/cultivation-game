@@ -147,10 +147,8 @@ func test_game_state_take_missions() -> void:
 	gs.end_session()
 
 
-## QA-174: the mission board is gated by the world UI only (MissionBoard opens from a sect_hall place);
-## GameState.take_mission does not check the region. This pins today's rule: a disciple away from any hall
-## can still take a mission through the core call. (Finding filed in the commit; rules unchanged.)
-func test_take_mission_is_not_region_gated_in_core() -> void:
+## MISSION-001: a mission can be taken only where the board is: a region with a sect_hall place or the sect's home region.
+func test_take_mission_needs_the_board() -> void:
 	var gs: Node = _root().get_node("GameState")
 	var halls: Array[String] = []
 	for id: String in gs.data.regions:
@@ -158,13 +156,7 @@ func test_take_mission_is_not_region_gated_in_core() -> void:
 		if places.any(func(p: Dictionary) -> bool: return p.get("type", "") == "sect_hall"):
 			halls.append(id)
 	assert_true(halls.has("qingshi_village"), "Qingshi has a hall")
-	var hall_less := ""
-	for id: String in gs.data.regions:
-		if not halls.has(id):
-			hall_less = id
-			break
-	assert_false(hall_less == "", "some region has no hall")
-	for region in [hall_less, "qingshi_village"]:
+	for region in ["misty_forest", "qingshi_village", "azure_peak"]:
 		var c := CharacterFactory.create("Disciple", gs.data, seeded_rng())
 		gs.start_session(c)
 		c.realm_index = 4
@@ -173,7 +165,10 @@ func test_take_mission_is_not_region_gated_in_core() -> void:
 		gs.current_region = region
 		c.add_item("spirit_herb", 5)
 		gs.take_mission("gather_spirit_herbs")
-		assert_gt(int(c.sect["contribution"]), 0, "mission taken in %s" % region)
+		var taken: bool = int(c.sect["contribution"]) > 0
+		assert_eq(taken, region != "misty_forest", "mission in %s" % region)
+		if region == "misty_forest":
+			assert_true(Sects.check_mission(c, gs.data, "gather_spirit_herbs", gs.world_flags, region).begins_with("The mission board is at a sect hall (nearest: "))
 		gs.end_session()
 
 
