@@ -735,8 +735,11 @@ static func _village_month(gs: Node, c: CharacterData) -> void:
 			if tend:
 				_tend_field(gs, c, field, key, seed_id)
 		for id: String in crops:
+			# QA-189: keep `plots` seeds of the crop it plants, sell the surplus (and every other kind)
 			var n := c.item_count(id)
-			if n > 0 and id != seed_id:
+			if id == seed_id:
+				n -= FieldPlots.plots_for(c, field, key)
+			if n > 0:
 				var s1 := c.item_count("spirit_stone")
 				gs.sell_item(id, n)
 				village_log["field_stones"] += c.item_count("spirit_stone") - s1
