@@ -63,13 +63,17 @@ func _ready() -> void:
 
 func _update_name() -> void:
 	var def: Dictionary = GameState.data.enemies.get(enemy_id, {})
-	var title := String(def.get("name", enemy_id))
+	var threat := ""
 	if GameState.has_session() and GameState.data.enemies.has(enemy_id):
-		title = "%s (%s)" % [title, Wildlife.threat(GameState.player, GameState.data, enemy_id)]
-	if great:
-		title += " (great)"
-	display_name = title
+		threat = Wildlife.threat(GameState.player, GameState.data, enemy_id)
+	display_name = label_for(String(def.get("name", enemy_id)), threat, great)
 	_redraw_label()
+
+
+## GFX-057: "Wolf (Easy)"; a great beast reads "Great Cloud Crane (Deadly)" (the threat stays in one bracket).
+static func label_for(beast_name: String, threat: String, is_great: bool) -> String:
+	var title := ("Great " + beast_name) if is_great else beast_name
+	return "%s (%s)" % [title, threat] if threat != "" else title
 
 
 func label_text() -> String:

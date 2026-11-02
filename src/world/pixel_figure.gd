@@ -233,7 +233,42 @@ const APE_LEGS := [
 	["....ofo.offfffo.ofo.....", "....ooo.ooo.ooo.ooo....."],
 	["...ofo..offfffo..ofo....", "...ooo..ooo.ooo..ooo...."],
 ]
-const BEAST_KINDS := ["wolf", "boar", "tiger", "snake", "bird", "fox", "deer", "ape"]
+## GFX-057: great-beast shapes. Crane: tall, long legs and neck, red crown (frame 1 lifts the wings); toad: squat, warty, with a throat sac.
+const CRANE_ROWS := [
+	"................oo......",
+	"...............orro.....",
+	"..............offfeodd..",
+	"..............offffo....",
+	".............offo.......",
+	".............ofo........",
+	".............ofo........",
+	"..ooo.....ooofFo........",
+	".offfoooooofffFFo.......",
+	"offffffffffffFFo........",
+	"offFFFFFFFFFFFo.........",
+	".offFFFFFFFFFo..........",
+	"..oooooooooooo..........",
+]
+const CRANE_LEGS := [
+	["......od....od.........", "......d.....d..........", "......d.....d.........."],
+	["......od....od.........", ".....d.......d.........", ".....dd.....dd........."],
+]
+const TOAD_ROWS := [
+	"......oo....oo..........",
+	".....oeeo..oeeo.........",
+	"...oooffooooffoooo......",
+	"..offffffffffffffoo.....",
+	".offFffffFfffFffffffo...",
+	"offffFfffffFfffffffffo..",
+	"offFFFFFFFFFFFFFFpppfoo.",
+	"offffffffffffffffppfooo.",
+	".ooffffffffffffffffoo...",
+]
+const TOAD_LEGS := [
+	["..ofo.oo.....oo.ofo....", ".offo.........offo.....", ".ooo..........ooo......"],
+	["..ofo..oo...oo..ofo....", "..offo........offo.....", "..ooo.........ooo......"],
+]
+const BEAST_KINDS := ["wolf", "boar", "tiger", "snake", "bird", "fox", "deer", "ape", "crane", "toad", "ram"]
 
 
 ## A generated 24x16 beast facing right (the foe mirrors it). `index` picks one of two leg frames;
@@ -243,7 +278,8 @@ static func beast_frame(fur: Color, index: int, kind: String = "") -> ImageTextu
 	var key := "beast|%s|%d|%s" % [fur.to_html(), i, kind]
 	if not _cache.has(key):
 		var img := Image.create(BEAST_SIZE.x, BEAST_SIZE.y, false, Image.FORMAT_RGBA8)
-		var colors := {"o": OUTLINE, "f": fur, "F": fur.darkened(0.25), "e": Color("e8d8a0")}
+		var colors := {"o": OUTLINE, "f": fur, "F": fur.darkened(0.25), "e": Color("e8d8a0"),
+			"r": Color("c8352b"), "d": Color("d8a838"), "p": Color("e6d9a8")}
 		var rows: Array = BEAST_ROWS.slice(0, 9)
 		var top := 4
 		if kind == "snake":
@@ -253,6 +289,17 @@ static func beast_frame(fur: Color, index: int, kind: String = "") -> ImageTextu
 			rows = APE_ROWS.duplicate()
 			rows.append_array(APE_LEGS[i])
 			top = 3
+		elif kind == "crane":
+			rows = CRANE_ROWS.duplicate()
+			rows.append_array(CRANE_LEGS[i])
+			top = 0
+			if i == 1:  # wings lifted
+				rows[6] = "..oo......ooofo......."
+				rows[5] = ".ofo......ofo........."
+		elif kind == "toad":
+			rows = TOAD_ROWS.duplicate()
+			rows.append_array(TOAD_LEGS[i])
+			top = 4
 		elif kind == "bird":
 			rows = BIRD_ROWS.duplicate()
 			top = 3
@@ -303,6 +350,13 @@ static func _beast_marks(img: Image, fur: Color, kind: String) -> void:
 				img.set_pixelv(Vector2i(x, 11), Color("e0d4b0"))
 			for p in [Vector2i(1, 8), Vector2i(2, 8), Vector2i(1, 9)]:
 				img.set_pixelv(p, Color("f0e8d0"))
+		"ram":  # curled pale horns and a thick shaggy ruff
+			var horn := Color("d8cfae")
+			for p in [Vector2i(20, 2), Vector2i(19, 2), Vector2i(18, 3), Vector2i(17, 4), Vector2i(17, 5), Vector2i(18, 6),
+					Vector2i(22, 2), Vector2i(23, 3), Vector2i(23, 4), Vector2i(22, 5)]:
+				img.set_pixelv(p, horn)
+			for x in range(3, 14):
+				img.set_pixelv(Vector2i(x, 8), fur.darkened(0.4))
 		"tiger":
 			for x in range(3, 14, 3):
 				for y in range(7, 12):

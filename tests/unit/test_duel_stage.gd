@@ -183,3 +183,33 @@ func test_stage_clips_and_reads_pinned_weather() -> void:
 	assert_true(s.is_raining())
 	DuelStage.WorldScript.pinned_weather = ""
 	s.free()
+
+
+## GFX-057: every great beast maps to a non-default shape, and the new shapes are 24x16 and distinct.
+func test_great_beasts_have_their_own_kind() -> void:
+	var f := FileAccess.open("res://data/regions.json", FileAccess.READ)
+	var regions: Dictionary = JSON.parse_string(f.get_as_text())
+	var seen := 0
+	for reg: Dictionary in regions.get("regions", []):
+		var great: Dictionary = reg.get("roamers", {}).get("great", {})
+		if great.is_empty():
+			continue
+		seen += 1
+		var id := String(great["enemy"])
+		assert_true(DuelStage.beast_kind(id) != "", "%s has a beast kind" % id)
+		assert_true(DuelStage.beast_kind(id) != "bird" and DuelStage.beast_kind(id) != "boar" or id == "old_tusker_boar", "%s has a great shape" % id)
+	assert_true(seen >= 4, "found the great beasts")
+	assert_eq(DuelStage.beast_kind("cloud_crane"), "crane")
+	assert_eq(DuelStage.beast_kind("bog_king_toad"), "toad")
+	assert_eq(DuelStage.beast_kind("thunder_horn_ram"), "ram")
+	for kind in ["crane", "toad", "ram"]:
+		for i in 2:
+			assert_eq(PixelFigure.beast_frame(Color("a8854f"), i, kind).get_image().get_size(), Vector2i(24, 16))
+		var a := PixelFigure.beast_frame(Color("a8854f"), 0, kind).get_image()
+		for other in ["", "bird", "boar", "deer"]:
+			assert_true(a.get_data() != PixelFigure.beast_frame(Color("a8854f"), 0, other).get_image().get_data(), "%s differs from %s" % [kind, other])
+
+
+func test_great_roamer_label() -> void:
+	assert_eq(Roamer.label_for("Cloud Crane", "Deadly", true), "Great Cloud Crane (Deadly)")
+	assert_eq(Roamer.label_for("Wild Boar", "Easy", false), "Wild Boar (Easy)")

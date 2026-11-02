@@ -59,8 +59,8 @@ const CALENDAR_MORE := {
 ## World map node marks (GFX-051): an open stall's coin, a roaming beast's paw, a forage leaf.
 const MARKS := {
 	"coin": {"colors": {"a": Color("e8c76a"), "b": Color("fff1a8"), "c": Color("b8943a")}, "rows": ["............", "....oooo....", "...oabbao...", "..oabccaao..", "..oabcaaao..", "..oabccaao..", "..oaaaaaco..", "...oaaaco...", "....oooo....", "............", "............", "............"]},
-	"paw_gold": {"colors": {"a": Color("f2c94c"), "b": Color("fff1a8"), "c": Color("b8943a")}, "rows": ["............", "..oo....oo..", ".oabo..obao.", ".oaao..oaao.", "..oo.oo.oo..", "oo.oabbao.oo", "oao.oaaao.oao", ".oo.oaaao.oo", "....oacao...", ".....ooo....", "............", "............"]},
-	"paw": {"colors": {"a": Color("c9873a"), "b": Color("e8b070"), "c": Color("8a4a22")}, "rows": ["............", "..oo....oo..", ".oabo..obao.", ".oaao..oaao.", "..oo.oo.oo..", "oo.oabbao.oo", "oao.oaaao.oao", ".oo.oaaao.oo", "....oacao...", ".....ooo....", "............", "............"]},
+	"paw_gold": {"colors": {"a": Color("f2c94c"), "b": Color("fff1a8"), "c": Color("b8943a")}, "rows": ["............", "..oo....oo..", ".oabo..obao.", ".oaao..oaao.", "..oo.oo.oo..", "oo.oabbao.oo", "oa.oaaaao.ao", ".oo.oaaao.oo", "....oacao...", ".....ooo....", "............", "............"]},
+	"paw": {"colors": {"a": Color("c9873a"), "b": Color("e8b070"), "c": Color("8a4a22")}, "rows": ["............", "..oo....oo..", ".oabo..obao.", ".oaao..oaao.", "..oo.oo.oo..", "oo.oabbao.oo", "oa.oaaaao.ao", ".oo.oaaao.oo", "....oacao...", ".....ooo....", "............", "............"]},
 	"leaf": {"colors": {"a": Color("5fbf5a"), "b": Color("a8e08a"), "c": Color("3a7a3a")}, "rows": ["............", "......ooo...", "....ooabbo..", "...oabaabao.", "..oabaaaaao.", "..oaaaaacao.", "..oaaaacao..", "...oaacco...", "..occoo.....", ".oc.........", "............", "............"]},
 }
 
