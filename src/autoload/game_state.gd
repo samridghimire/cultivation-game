@@ -2972,6 +2972,11 @@ func forage_here() -> Array[Dictionary]:
 	return Foraging.nodes(data, current_region, GameClock.total_days, player.realm_index, world_flags)
 
 
+## Unpicked forage today in any region (FORAGE-002). The current region matches `forage_here`.
+func forage_today(region_id: String) -> Array[Dictionary]:
+	return Foraging.unpicked(data, region_id, GameClock.total_days, player.realm_index, world_flags)
+
+
 ## Pick up the forage in `slot`. Takes no time (a stoop, not an action).
 func pick_forage(slot: int) -> bool:
 	if not _can_act():

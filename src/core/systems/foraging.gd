@@ -44,6 +44,28 @@ static func nodes(data: GameData, region_id: String, day: int, realm_index: int,
 	return out
 
 
+## FORAGE-002: today's pickups still lying in a region (picked slots already excluded by `nodes`).
+static func unpicked(data: GameData, region_id: String, day: int, realm_index: int, flags: Dictionary) -> Array[Dictionary]:
+	return nodes(data, region_id, day, realm_index, flags)
+
+
+## "Village Mugwort x2, Morning Dew Mushroom": item display names, a count only when above 1.
+static func summary(data: GameData, entries: Array) -> String:
+	var counts := {}
+	var order: Array[String] = []
+	for e: Dictionary in entries:
+		var id := String(e["item"])
+		if not counts.has(id):
+			order.append(id)
+			counts[id] = 0
+		counts[id] = int(counts[id]) + int(e.get("amount", 1))
+	var parts: PackedStringArray = []
+	for id in order:
+		var name := String(data.items.get(id, {}).get("name", id))
+		parts.append("%s x%d" % [name, counts[id]] if int(counts[id]) > 1 else name)
+	return ", ".join(parts)
+
+
 static func flag_key(region_id: String, slot: int) -> String:
 	return "forage_%s_%d" % [region_id, slot]
 

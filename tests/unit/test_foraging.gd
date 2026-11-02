@@ -72,3 +72,29 @@ func test_every_region_forages_cheaply() -> void:
 			gated = gated or e.has("min_realm")
 		assert_true(gated, "%s has a realm-gated entry" % id)
 	assert_true(Foraging.validate(d).is_empty())
+
+
+func test_unpicked_and_summary() -> void:
+	var d := _gdata()
+	var flags := {}
+	assert_eq(Foraging.unpicked(d, "qingshi_village", 40, 0, flags), Foraging.nodes(d, "qingshi_village", 40, 0, {}))
+	var before := Foraging.unpicked(d, "qingshi_village", 40, 0, flags)
+	Foraging.mark_picked(flags, "qingshi_village", int(before[0]["slot"]), 40)
+	assert_eq(Foraging.unpicked(d, "qingshi_village", 40, 0, flags).size(), before.size() - 1)
+	assert_eq(Foraging.unpicked(d, "qingshi_village", 40, 0, flags), Foraging.unpicked(d, "qingshi_village", 40, 0, flags))
+	var nm: String = d.items["dew_grass"]["name"]
+	var other: String = d.items["spirit_herb"]["name"]
+	assert_eq(Foraging.summary(d, [{"item": "dew_grass", "amount": 1}, {"item": "spirit_herb", "amount": 1}, {"item": "dew_grass", "amount": 1}]), "%s x2, %s" % [nm, other])
+	assert_eq(Foraging.summary(d, []), "")
+
+
+func test_game_state_forage_today() -> void:
+	var gs := (Engine.get_main_loop() as SceneTree).root.get_node("GameState")
+	gs.start_session(CharacterFactory.create("Lin Feng", gs.data, seeded_rng(), "male"))
+	gs.current_region = "qingshi_village"
+	assert_eq(gs.forage_today("qingshi_village"), gs.forage_here())
+	var n: int = gs.forage_here().size()
+	assert_true(gs.pick_forage(int(gs.forage_here()[0]["slot"])))
+	assert_eq(gs.forage_today("qingshi_village").size(), n - 1)
+	assert_eq(gs.forage_today("qingshi_village"), gs.forage_here())
+	gs.end_session()
