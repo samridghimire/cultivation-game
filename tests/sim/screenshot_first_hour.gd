@@ -133,6 +133,12 @@ func _start() -> void:
 			book.open()
 			book.call("set_page", "herbs")
 			book.get("_detail").text = book.call("hint_for", herbs[2], gs.data, gs.player), "close": book.close})
+		shots.append({"name": "village_book_hunts", "open": func() -> void:  # WU-437: the trophy shelf, one trophy won
+			hud.get("_banner").visible = false
+			Wildlife.record_hunt(c, "wild_boar")
+			Wildlife.record_great(c, gs.data, "old_tusker_boar", "misty_forest", 11)
+			book.open()
+			book.call("set_page", "hunts"), "close": book.close})
 		var host_region: String = gs.current_region
 		shots.append({"name": "village_book_people", "open": func() -> void:
 			hud.get("_banner").visible = false

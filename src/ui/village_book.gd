@@ -390,7 +390,7 @@ static func hunt_detail(data: GameData, c: CharacterData, enemy_id: String) -> S
 		return "Unhunted. It roams %s." % ", ".join(roams_in(data, enemy_id))
 	var nm := String(data.enemies[enemy_id].get("name", enemy_id))
 	if c.great_beasts.has(enemy_id):
-		nm += " (great, slain day %d)" % (int(c.great_beasts[enemy_id]) + 1)
+		nm = Wildlife.display_name(data, enemy_id, true) + " (slain day %d)" % (int(c.great_beasts[enemy_id]) + 1)
 	var spoils := Wildlife.spoils_of(c, enemy_id)
 	if spoils.is_empty():
 		return "%s: spoils unknown." % nm
@@ -404,18 +404,59 @@ static func hunt_detail(data: GameData, c: CharacterData, enemy_id: String) -> S
 	return out
 
 
+## WU-437: one row per great beast in regions.json order: {enemy, region, name, won, day, trophy, text, detail}.
+## Won -> the trophy's name and description; not yet -> "???" with where and which day of the 7-day week it walks.
+static func trophy_rows(c: CharacterData, data: GameData) -> Array[Dictionary]:
+	var rows: Array[Dictionary] = []
+	for rid: String in data.regions:
+		var g: Dictionary = data.regions[rid].get("roamers", {}).get("great", {})
+		if g.is_empty():
+			continue
+		var enemy := String(g["enemy"])
+		var won := c.great_beasts.has(enemy)
+		var region := String(data.regions[rid].get("name", rid))
+		var trophy := Wildlife.great_trophy(data, enemy)
+		var item: Dictionary = data.items.get(trophy, {})
+		var row := {"enemy": enemy, "region": region, "won": won, "trophy": trophy, "day": -1}
+		if won:
+			row["day"] = int(c.great_beasts[enemy]) + 1
+			row["text"] = "%s\n%s" % [Wildlife.display_name(data, enemy, true), String(item.get("name", "no trophy"))]
+			row["detail"] = "%s, slain day %d. %s" % [Wildlife.display_name(data, enemy, true), row["day"], String(item.get("description", ""))]
+		else:
+			var walk := "day %d of the week" % (Wildlife.great_day(rid, g) + 1)
+			row["text"] = "???\n(%s, day %d)" % [region, Wildlife.great_day(rid, g) + 1]
+			row["detail"] = "A great beast walks %s on %s." % [region, walk]
+		rows.append(row)
+	return rows
+
+
 func _build_hunts() -> void:
 	var data: GameData = GameState.data
 	var c: CharacterData = GameState.player
 	_grid.columns = 4
 	var summary := Wildlife.log_summary(c, data)
 	_header.text = summary if summary != "" else "Beasts hunted: none yet"
+	for row in trophy_rows(c, data):  # WU-437: the trophy shelf comes first
+		var tb := UIStyle.button(String(row["text"]), Callable())
+		tb.name = "trophy_" + String(row["enemy"])
+		tb.custom_minimum_size = Vector2(230, 80)
+		tb.add_theme_font_size_override("font_size", 15)
+		tb.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		if not bool(row["won"]):
+			tb.modulate = DIM
+		else:
+			tb.add_theme_color_override("font_color", Color("e8c35a"))
+		var tshow := func() -> void: _detail.text = String(row["detail"])
+		tb.focus_entered.connect(tshow)
+		tb.mouse_entered.connect(tshow)
+		_grid.add_child(tb)
 	for id in Wildlife.huntable(data):
 		var found := c.hunt_log.has(id)
 		var b := UIStyle.button(hunt_text(data, c, id), Callable())
 		b.name = id
 		b.custom_minimum_size = Vector2(230, 80)
 		b.add_theme_font_size_override("font_size", 15)
+		b.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART  # a long "roams ..." list wraps instead of widening the grid
 		b.set_meta("found", found)
 		if not found:
 			b.modulate = DIM

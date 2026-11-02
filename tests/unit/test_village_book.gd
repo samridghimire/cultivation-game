@@ -180,3 +180,20 @@ func test_hunts_page_shows_hunted_and_hides_unhunted() -> void:
 	assert_true(VillageBook.hunt_detail(data(), c, all[0]).contains("spoils unknown"), "old save: no spoils recorded")
 	Wildlife.record_spoils(c, all[0], {"spirit_herb": 2})
 	assert_true(VillageBook.hunt_detail(data(), c, all[0]).contains("Spoils:"))
+
+
+func test_trophy_rows_list_great_beasts_in_region_order() -> void:
+	var c := CharacterFactory.create("T", data(), seeded_rng(), "male")
+	var rows := VillageBook.trophy_rows(c, data())
+	assert_eq(rows.size(), 4, "four great beasts")
+	assert_eq(String(rows[0]["enemy"]), "old_tusker_boar", "regions.json order")
+	assert_false(bool(rows[0]["won"]))
+	assert_true(String(rows[0]["text"]).begins_with("???"), "unwon is a mystery")
+	assert_true(String(rows[0]["text"]).contains("Misty Forest"), "says where")
+	Wildlife.record_great(c, data(), "old_tusker_boar", "misty_forest", 9)
+	rows = VillageBook.trophy_rows(c, data())
+	assert_true(bool(rows[0]["won"]))
+	assert_true(String(rows[0]["text"]).contains("Great Old Tusker"))
+	assert_true(String(rows[0]["detail"]).contains("slain day 10"))
+	assert_true(String(rows[0]["detail"]).contains("tusk"), "the trophy's description")
+	assert_false(bool(rows[1]["won"]), "others stay unwon")
