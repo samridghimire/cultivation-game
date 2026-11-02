@@ -100,7 +100,7 @@ func _init() -> void:
 	details.add_child(_marks)
 	_routes = _wrapped(UIStyle.label("", 15, UIStyle.CATEGORY_COLORS["progress"]))
 	details.add_child(_routes)
-	details.add_child(_wrapped(UIStyle.label("Red roads need a higher realm. Travel at a region's gate. Dots: blue sect hall, gold abode, pink family, teal anchor, purple secret realm, red world event. Corner marks: weather, $ market open today, w beasts roam.", 14, Color(0.6, 0.6, 0.6))))
+	details.add_child(_wrapped(UIStyle.label("Red roads need a higher realm. Travel at a region's gate. Dots: blue sect hall, gold abode, pink family, teal anchor, purple secret realm, red world event. Corner marks: weather, $ market open today, w beasts roam, leaf forage by the path.", 14, Color(0.6, 0.6, 0.6))))
 
 	_close_button = UIStyle.button("Close", close)
 	box.add_child(_close_button)
@@ -338,6 +338,21 @@ static func today_line(c: CharacterData, data: GameData, region_id: String, curr
 	return "Today: " + ", ".join(parts) + "."
 
 
+## WU-433: unpicked forage today in a region ([] for a region never visited).
+static func forage_entries(c: CharacterData, data: GameData, region_id: String, current_region: String, day: int, flags: Dictionary) -> Array[Dictionary]:
+	if is_unexplored(c, region_id, current_region):
+		return []
+	return Foraging.unpicked(data, region_id, day, c.realm_index, flags)
+
+
+## WU-433: "By the path today: Village Mugwort x2, Morning Dew Mushroom." ("" when nothing is left or never visited).
+static func forage_line(c: CharacterData, data: GameData, region_id: String, current_region: String, day: int, flags: Dictionary) -> String:
+	var entries := forage_entries(c, data, region_id, current_region, day, flags)
+	if entries.is_empty():
+		return ""
+	return "By the path today: %s." % Foraging.summary(data, entries)
+
+
 static func _enemy_name(data: GameData, enemy_id: String) -> String:
 	return String(data.enemies.get(enemy_id, {}).get("name", enemy_id))
 
@@ -458,6 +473,9 @@ func _draw_map() -> void:
 		var gold := great_name(GameState.player, data, region_id, GameClock.total_days, GameState.world_flags) != ""
 		if gold or roamer_count(GameState.player, data, region_id, GameClock.total_days, GameState.world_flags) > 0:
 			_canvas.draw_texture(HudIcons.map_mark("paw_gold" if gold else "paw"), Vector2(mx, my))
+			mx -= 14.0
+		if not forage_entries(GameState.player, data, region_id, GameState.current_region, GameClock.total_days, GameState.world_flags).is_empty():
+			_canvas.draw_texture(HudIcons.map_mark("leaf"), Vector2(mx, my))
 	if _hint_region != "" and _positions.has(_hint_region):
 		var tip: Vector2 = Vector2(_positions[_hint_region]) + Vector2(NODE_SIZE.x / 2.0 - 4.0, -NODE_SIZE.y / 2.0 - 2.0)
 		_canvas.draw_string(font, tip, "!", HORIZONTAL_ALIGNMENT_LEFT, -1, 22, UIStyle.ACCENT)
@@ -493,6 +511,9 @@ func _show_details() -> void:
 	_hint_note.text = "Your hint points here." if _selected == _hint_region and _selected != GameState.current_region else ""
 	_hint_note.visible = _hint_note.text != ""
 	_today.text = today_line(GameState.player, data, _selected, GameState.current_region, GameClock.total_days, GameState.world_flags)
+	var by_path := forage_line(GameState.player, data, _selected, GameState.current_region, GameClock.total_days, GameState.world_flags)
+	if by_path != "":
+		_today.text += ("\n" if _today.text != "" else "") + by_path
 	_today.visible = _today.text != ""
 	_description.text = String(region.get("description", ""))
 	var name_here := renown_note(GameState.player, data, _selected)

@@ -414,3 +414,21 @@ func test_today_line_names_the_great_beast() -> void:
 	assert_true(name != "", "a great beast walks on its weekday")
 	assert_true(line.contains("the %s walks here" % name), line)
 	assert_eq(WorldMapScreen.great_name(c, data(), "misty_forest", day + 1, {}), "")
+
+
+func test_forage_line_follows_pickups() -> void:  # WU-433
+	var c := new_character()
+	var flags := {}
+	var day := -1
+	for d in 40:
+		if not Foraging.unpicked(data(), "qingshi_village", d, c.realm_index, flags).is_empty():
+			day = d
+			break
+	assert_true(day >= 0, "some day has forage")
+	var line := WorldMapScreen.forage_line(c, data(), "qingshi_village", "qingshi_village", day, flags)
+	assert_true(line.begins_with("By the path today: ") and line.ends_with("."), line)
+	assert_eq(WorldMapScreen.forage_line(c, data(), "misty_forest", "qingshi_village", day, flags), "", "unvisited shows nothing")
+	for n in Foraging.unpicked(data(), "qingshi_village", day, c.realm_index, flags):
+		Foraging.mark_picked(flags, "qingshi_village", int(n["slot"]), day)
+	assert_eq(WorldMapScreen.forage_line(c, data(), "qingshi_village", "qingshi_village", day, flags), "")
+	assert_true(WorldMapScreen.forage_entries(c, data(), "qingshi_village", "qingshi_village", day, flags).is_empty())
