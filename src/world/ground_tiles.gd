@@ -103,7 +103,7 @@ static func ground_texture(base: Color, rid: String, size_px: Vector2i, flowers:
 			var h := mini(SIZE, size_px.y - cy * SIZE)
 			img.blit_rect(src, Rect2i(0, 0, w, h), Vector2i(cx * SIZE, cy * SIZE))
 	_apply_style(img, base, rid, style, zones)
-	_apply_season(img, rid, season)
+	_apply_season(img, rid, season, PAVED_SNOW if style == "paved" else WINTER_SNOW)
 	var tex := ImageTexture.create_from_image(img)
 	_cache[key] = tex
 	return tex
@@ -263,6 +263,8 @@ static func _fill_clipped(img: Image, r: Rect2i, c: Color) -> void:
 const OCHRE := Color("b59a4a")
 const SNOW := Color("dfe6ee")
 const PATH_SNOW := Color("cfd6de")
+const WINTER_SNOW := 0.7  ## how far winter ground is tinted toward SNOW
+const PAVED_SNOW := 0.45  ## GFX-064: paved ground is tinted less, so the flagstone grid still shows through the snow
 const FLOWER_COLORS := [Color("f4efe0"), Color("e88aa8"), Color("f2d24b")]
 const LEAF_COLORS := [Color("c8622a"), Color("d9902f"), Color("a8481f")]
 
@@ -276,7 +278,7 @@ static func ground_season(season: String, map: Dictionary) -> String:
 
 ## Recolours a finished ground image for `season` ("Spring", "Autumn", "Winter"; anything else is left alone).
 ## No rng: every choice comes from `variant_for`-style hashes, so the same inputs give the same image.
-static func _apply_season(img: Image, rid: String, season: String) -> void:
+static func _apply_season(img: Image, rid: String, season: String, snow_amount: float = WINTER_SNOW) -> void:
 	var w := img.get_width()
 	var h := img.get_height()
 	match season:
@@ -305,7 +307,7 @@ static func _apply_season(img: Image, rid: String, season: String) -> void:
 						img.set_pixel(x + 1, y, leaf)
 		"Winter":
 			var summer := img.duplicate() as Image
-			_tint_image(img, SNOW, 0.7)
+			_tint_image(img, SNOW, snow_amount)
 			for cy in ceili(float(h) / SIZE):
 				for cx in ceili(float(w) / SIZE):
 					var roll := absi(hash("%s|%d|%d|winter" % [rid, cx, cy]))

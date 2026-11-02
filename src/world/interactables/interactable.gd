@@ -387,7 +387,7 @@ func _draw() -> void:
 		var k := maxi(1, int(minf(size.x / tex_size.x, size.y / tex_size.y)))
 		draw_texture_rect(art, Rect2(-tex_size * k / 2.0, tex_size * k), false)
 	elif not draw_generated_art():
-		PlaceArt.draw(self, art_kind, size, color, art_active())
+		PlaceArt.draw(self, art_kind, size, color, art_active(), display_name)
 	if highlighted:
 		var glow := 0.5 + 0.5 * sin(_pulse_time * 5.0)
 		var ring := Rect2(-size / 2.0, size).grow(6.0 + 2.0 * glow)

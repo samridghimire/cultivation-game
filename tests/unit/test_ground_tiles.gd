@@ -186,3 +186,16 @@ func test_unknown_ground_style_is_rejected() -> void:
 	d.load_errors.clear()
 	d._validate()
 	assert_true(", ".join(d.load_errors).contains("ground_style"))
+
+
+## GFX-064: snow on paved ground is thinner, so the flagstone grid stays visible in winter.
+func test_paved_winter_keeps_the_grid() -> void:
+	var summer := GroundTiles.ground_texture(BASE, "fallen_star_market", Vector2i(64, 64), false, "", "paved").get_image()
+	var plain := GroundTiles.ground_texture(BASE, "fallen_star_market", Vector2i(64, 64), false, "Winter", "grass").get_image()
+	var paved := GroundTiles.ground_texture(BASE, "fallen_star_market", Vector2i(64, 64), false, "Winter", "paved").get_image()
+	# Mortar row y=16: how far it sits from a stone pixel (y=20) in the same column.
+	var gap_paved := absf(paved.get_pixel(5, 20).v - paved.get_pixel(5, 16).v)
+	var gap_summer := absf(summer.get_pixel(5, 20).v - summer.get_pixel(5, 16).v)
+	assert_true(gap_paved > gap_summer * 0.4, "mortar still reads through the snow")
+	assert_true(paved.get_pixel(5, 20).v < plain.get_pixel(5, 20).v + 0.5)
+	assert_eq(GroundTiles.PAVED_SNOW < GroundTiles.WINTER_SNOW, true)

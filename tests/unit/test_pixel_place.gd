@@ -117,3 +117,21 @@ func test_wide_merchants_draw_a_shop_front() -> void:
 	assert_true(shop == PixelPlace.texture("shop", Vector2(140, 100), Color("c9823a")), "same cache entry as the shop kind")
 	var scale := float(Sprites.scale())
 	assert_true(Vector2(shop.get_size()) * scale <= Vector2(148, 108), "fits the Pill Pavilion")
+
+
+## GFX-064: merchants from 110 px wide are shops; the smithy and the scroll pavilion have their own look.
+func test_big_shops_are_buildings() -> void:
+	assert_eq(PixelPlace.SHOP_MIN_WIDTH, 110.0)
+	assert_eq(PixelPlace.shop_look("Heavenforge Smithy"), "shop_smithy")
+	assert_eq(PixelPlace.shop_look("Ten Thousand Scrolls Pavilion"), "shop_scrolls")
+	assert_eq(PixelPlace.shop_look("Pill Pavilion"), "shop")
+	var stall := PixelPlace.texture("merchant", Vector2(100, 70), Color("aa4433"))
+	var shop := PixelPlace.texture("merchant", Vector2(110, 80), Color("aa4433"))
+	var smithy := PixelPlace.texture("merchant", Vector2(110, 80), Color("aa4433"), false, "Heavenforge Smithy")
+	var scrolls := PixelPlace.texture("merchant", Vector2(110, 80), Color("aa4433"), false, "Ten Thousand Scrolls Pavilion")
+	assert_true(shop.get_height() > stall.get_height(), "110 px is a shop, 100 px a stall")
+	assert_true(smithy.get_image().get_data() != shop.get_image().get_data(), "smithy differs")
+	assert_true(scrolls.get_image().get_data() != shop.get_image().get_data(), "scrolls differ")
+	assert_eq(smithy.get_size(), shop.get_size())
+	assert_true(Vector2(shop.get_size()) * float(Sprites.scale()) <= Vector2(118, 88), "110 px shop fits its rect")
+

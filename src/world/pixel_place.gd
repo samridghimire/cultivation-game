@@ -9,7 +9,7 @@ extends RefCounted
 ## Rendering only: pure and deterministic, no node access.
 
 const KINDS := ["merchant", "workshop", "sect_hall", "clinic", "orphanage", "family_home", "bounty_board", "travel", "auction"]
-const SHOP_MIN_WIDTH := 120.0  ## GFX-058: merchants at least this wide draw as the two-storey "shop" instead of a stall
+const SHOP_MIN_WIDTH := 110.0  ## GFX-058: merchants at least this wide draw as the two-storey "shop" instead of a stall
 const NATURE_KINDS := ["meditation", "gather", "explore", "inheritance", "abode", "secret_realm", "camp", "fishing"]
 const PALETTE := ".owWrRhdtTpgsSev"
 const OUTLINE := Color("2b2118")
@@ -23,7 +23,7 @@ static var _cache: Dictionary = {}
 
 
 static func supports(kind: String) -> bool:
-	return KINDS.has(kind) or NATURE_KINDS.has(kind) or kind == "shop"
+	return KINDS.has(kind) or NATURE_KINDS.has(kind) or kind.begins_with("shop")
 
 
 ## Pixel size of the template for `kind` (travel flips with the gate's orientation).
@@ -32,13 +32,25 @@ static func template_size(kind: String, horizontal: bool = true) -> Vector2i:
 	return Vector2i(r[0].length(), r.size()) if not r.is_empty() else Vector2i.ZERO
 
 
-static func texture(kind: String, size: Vector2, color: Color, active: bool = false) -> ImageTexture:
+## GFX-064: the shop variant for a merchant's name: "shop_smithy" (chimney with a glow) or "shop_scrolls" (scroll sign), else "shop".
+static func shop_look(place_name: String) -> String:
+	var n := place_name.to_lower()
+	if n.contains("smith") or n.contains("forge"):
+		return "shop_smithy"
+	if n.contains("scroll"):
+		return "shop_scrolls"
+	return "shop"
+
+
+static func texture(kind: String, size: Vector2, color: Color, active: bool = false, place_name: String = "") -> ImageTexture:
+	var compact := false
 	if kind == "merchant" and size.x >= SHOP_MIN_WIDTH:
-		kind = "shop"
+		kind = shop_look(place_name)
+		compact = size.x < 120.0
 	var horizontal := size.x >= size.y
-	var key := "%s|%s|%s|%s" % [kind, color.to_html(), horizontal if kind == "travel" else true, active]
+	var key := "%s|%s|%s|%s" % [kind + ("_c" if compact else ""), color.to_html(), horizontal if kind == "travel" else true, active]
 	if not _cache.has(key):
-		_cache[key] = from_rows(rows(kind, horizontal, active), color, active)
+		_cache[key] = from_rows(rows(kind, horizontal, active, compact), color, active)
 	return _cache[key]
 
 
@@ -58,13 +70,17 @@ static func from_rows(r: Array[String], color: Color, active: bool = false) -> I
 
 
 ## Template rows for `kind` (empty for unsupported kinds); each row has the same length.
-static func rows(kind: String, horizontal: bool = true, active: bool = false) -> Array[String]:
+static func rows(kind: String, horizontal: bool = true, active: bool = false, compact: bool = false) -> Array[String]:
 	var c: Array
 	match kind:
 		"merchant":
 			c = _merchant()
 		"shop":
-			c = _shop()
+			c = _shop("", compact)
+		"shop_smithy":
+			c = _shop("smithy", compact)
+		"shop_scrolls":
+			c = _shop("scrolls", compact)
 		"workshop":
 			c = _workshop()
 		"sect_hall":
@@ -191,27 +207,50 @@ static func _merchant() -> Array:
 
 ## GFX-058: a two-storey shop front for wide merchants (>= SHOP_MIN_WIDTH): upper floor with a hanging sign, shuttered
 ## windows, a striped awning over a counter and the door.
-static func _shop() -> Array:
-	var c := canvas(66, 46)
-	box(c, 6, 16, 54, 30, "w", "W")
-	rect(c, 6, 16, 2, 30, "t")
-	rect(c, 58, 16, 2, 30, "T")
-	rect(c, 6, 28, 54, 2, "t")
-	for wx in [13, 29, 45]:
+static func _shop(look: String = "", compact: bool = false) -> Array:
+	# The 110-119 px shops use a 58x44 canvas (so the art fits the place rect), the wider ones 66x46.
+	var w := 58 if compact else 66
+	var h := 44 if compact else 46
+	var c := canvas(w, h)
+	var bw := w - 12  # wall width
+	var wh := h - 16  # wall height
+	box(c, 6, 16, bw, wh, "w", "W")
+	rect(c, 6, 16, 2, wh, "t")
+	rect(c, 6 + bw - 2, 16, 2, wh, "T")
+	rect(c, 6, 28, bw, 2, "t")
+	for wx in ([12, 24] if compact else [13, 29, 45]):
 		rect(c, wx, 20, 8, 6, "p")
 		rect(c, wx, 20, 1, 6, "T")
-	for x in range(8, 58):
+	for x in range(8, 6 + bw - 2):
 		rect(c, x, 31, 1, 4, "r" if (x / 3) % 2 == 0 else "p")
-	rect(c, 8, 35, 50, 1, "R")
-	rect(c, 12, 37, 14, 9, "T")
+	rect(c, 8, 35, bw - 4, 1, "R")
+	var dx := 32 if compact else 38  # the door
+	var wx2 := dx + (11 if compact else 12)  # the side window
+	rect(c, 12, 37, 14, h - 37, "T")
 	rect(c, 14, 37, 10, 3, "h")
-	rect(c, 38, 36, 10, 10, "d")
-	rect(c, 40, 41, 6, 5, "g")
-	rect(c, 50, 38, 6, 8, "p")
-	roof(c, 2, 4, 62, 13)
-	rect(c, 24, 3, 18, 7, "t")
-	rect(c, 25, 4, 16, 5, "g")
-	rect(c, 28, 6, 10, 1, "T")
+	rect(c, dx, 36, 10, h - 36, "d")
+	rect(c, dx + 2, 41, 6, h - 41, "g")
+	rect(c, wx2, 38, 6, h - 38, "p")
+	roof(c, 2, 4, w - 4, 13)
+	var sx := (w - 18) / 2
+	rect(c, sx, 3, 18, 7, "t")
+	rect(c, sx + 1, 4, 16, 5, "g")
+	rect(c, sx + 4, 6, 10, 1, "T")
+	match look:
+		"smithy":
+			# A stone chimney rising from the roof, its mouth glowing gold.
+			var cx := w - 16
+			box(c, cx, 0, 6, 12, "s", "S")
+			rect(c, cx + 1, 0, 4, 2, "d")
+			rect(c, cx + 2, 0, 2, 1, "g")
+		"scrolls":
+			# A hanging scroll sign by the door: paper with gold rods and dark text strokes.
+			rect(c, wx2, 33, 8, 1, "g")
+			rect(c, wx2 + 1, 34, 6, h - 36, "p")
+			rect(c, wx2, h - 2, 8, 1, "g")
+			rect(c, wx2 + 2, 36, 4, 1, "T")
+			rect(c, wx2 + 2, 38, 4, 1, "T")
+			rect(c, wx2 + 2, 40, 3, 1, "T")
 	return c
 
 
