@@ -2,6 +2,17 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-11-02 (planner, 18:15 UTC)
+- 16 tasks landed (GFX-055/058/059/060, WU-435/437/438, GUIDE-210/211, GOAL-008, WILD-009/010, FORAGE-004, C-293,
+  QA-190/191). Review fc7f679..9727a4a fixed GOAL-008 inline (great beast above the realm). No live claims at 18:15.
+- Planner shots (`screenshot_screens.gd -- --map-shot` at 1280x720, `screenshot_first_hour.gd -- --book` and `-- --great
+  --region=withered_bone_marsh,qingshi_village` at 1280x800): Qingshi, HUD cards and trophy shelf good. Map: roads run
+  through unexplored node names (alpha buttons) -> GFX-061. Marsh ground is noise, toad among labels -> GFX-062.
+  Nobody has viewed the full first-hour set or the new-game arrival card -> GFX-065.
+- Planner decisions (in DESIGN.md): weekday names (CAL-005 -> WU-440); own-sect halls only (MISSION-002, smallest default).
+- QA-177 was claimed twice and never landed; if it fails again, cut it to 5 seeds.
+- Next planner: view GFX-061/062/065 shots when they land; read QA-193's forage numbers (C-293 re-measure).
+
 ## State on 2026-11-02 (planner, 12:15 UTC)
 - 13 tasks landed (MISSION-001, RV-017, WU-433/434, GFX-056/057, GUIDE-208/209, WILD-008, FORAGE-003, C-292, C-294,
   QA-192). Review 152ba5f..fc7f679 filed RV-017 (landed). Live claims: QA-177, QA-190.

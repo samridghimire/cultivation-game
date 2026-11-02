@@ -2,6 +2,22 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-11-02 [WILD-010] Beating a great beast makes you known in its region.
+- 2026-11-02 [GFX-058] Fallen Star Market's big shops look like buildings, and the town has gardens instead of boulders.
+- 2026-11-02 [GUIDE-211] A forage find says what it is used for and what it sells for.
+- 2026-11-02 [FORAGE-004] Rain brings mushrooms to Misty Forest.
+- 2026-11-02 [GFX-055] Rain reads clearly on screen, rainy days look grey, and winter fields are under snow.
+- 2026-11-02 [QA-191] The balance baseline now reflects sect missions being taken at sect halls.
+- 2026-11-02 [WU-438] Arriving somewhere (or starting a new game) shows the region's name and what is happening there today.
+- 2026-11-02 [WU-437] The village book's Hunts page shows a trophy shelf for the great beasts.
+- 2026-11-02 [WU-435] The Next steps card shows the whole fair-fight line, and no place name hides under a HUD card.
+- 2026-11-02 [C-293] Forage is a snack, not a living: fewer, cheaper finds.
+- 2026-11-02 [GFX-060] The great beasts stand out from the ground they walk on.
+- 2026-11-02 [WILD-009] After a few hunts a beast's menu tells you what it usually leaves and how it behaves.
+- 2026-11-02 [GOAL-008] After the first goals, new goals lead you out of the village.
+- 2026-11-02 [GFX-059] The world map is readable: every region in its place, whole names, clear road labels and land under the roads.
+- 2026-11-02 [QA-190] The village simulation now forages, measuring what forage earns.
+- 2026-11-02 [GUIDE-210] The arrival line belongs to the region you are in and mentions festivals.
 - 2026-11-02 [RV-017] Azure Peak and the Withered Bone Marsh each have a sect hall with a mission board.
 - 2026-11-02 [WU-433] The world map shows where there is forage today and lists it in the region detail.
 - 2026-11-02 [C-292] Hunting spoils from roaming beasts are priced like hides and meat, not treasures.
