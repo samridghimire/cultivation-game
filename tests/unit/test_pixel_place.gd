@@ -105,3 +105,15 @@ func test_landmarks_fit_data() -> void:
 			var size := Vector2(lm["size"][0], lm["size"][1])
 			var px := Vector2(PixelLandmark.texture(lm["kind"], size).get_size()) * scale
 			assert_true(px.x <= size.x + 8.0 and px.y <= size.y + 8.0, "%s %s: %s vs %s" % [region.get("id", "?"), lm["kind"], px, size])
+
+
+func test_wide_merchants_draw_a_shop_front() -> void:
+	assert_true(PixelPlace.supports("shop"))
+	var r := PixelPlace.rows("shop")
+	assert_true(r.size() > 40, "shop rows")
+	var stall := PixelPlace.texture("merchant", Vector2(90, 60), Color("c9823a"))
+	var shop := PixelPlace.texture("merchant", Vector2(140, 100), Color("c9823a"))
+	assert_true(shop.get_height() > stall.get_height() and shop.get_width() > stall.get_width(), "wide merchant is a building")
+	assert_true(shop == PixelPlace.texture("shop", Vector2(140, 100), Color("c9823a")), "same cache entry as the shop kind")
+	var scale := float(Sprites.scale())
+	assert_true(Vector2(shop.get_size()) * scale <= Vector2(148, 108), "fits the Pill Pavilion")

@@ -9,6 +9,7 @@ extends RefCounted
 ## Rendering only: pure and deterministic, no node access.
 
 const KINDS := ["merchant", "workshop", "sect_hall", "clinic", "orphanage", "family_home", "bounty_board", "travel", "auction"]
+const SHOP_MIN_WIDTH := 120.0  ## GFX-058: merchants at least this wide draw as the two-storey "shop" instead of a stall
 const NATURE_KINDS := ["meditation", "gather", "explore", "inheritance", "abode", "secret_realm", "camp", "fishing"]
 const PALETTE := ".owWrRhdtTpgsSev"
 const OUTLINE := Color("2b2118")
@@ -22,7 +23,7 @@ static var _cache: Dictionary = {}
 
 
 static func supports(kind: String) -> bool:
-	return KINDS.has(kind) or NATURE_KINDS.has(kind)
+	return KINDS.has(kind) or NATURE_KINDS.has(kind) or kind == "shop"
 
 
 ## Pixel size of the template for `kind` (travel flips with the gate's orientation).
@@ -32,6 +33,8 @@ static func template_size(kind: String, horizontal: bool = true) -> Vector2i:
 
 
 static func texture(kind: String, size: Vector2, color: Color, active: bool = false) -> ImageTexture:
+	if kind == "merchant" and size.x >= SHOP_MIN_WIDTH:
+		kind = "shop"
 	var horizontal := size.x >= size.y
 	var key := "%s|%s|%s|%s" % [kind, color.to_html(), horizontal if kind == "travel" else true, active]
 	if not _cache.has(key):
@@ -60,6 +63,8 @@ static func rows(kind: String, horizontal: bool = true, active: bool = false) ->
 	match kind:
 		"merchant":
 			c = _merchant()
+		"shop":
+			c = _shop()
 		"workshop":
 			c = _workshop()
 		"sect_hall":
@@ -181,6 +186,32 @@ static func _merchant() -> Array:
 		if red:
 			rect(c, x, 1, 1, 1, "h")
 			rect(c, x, 8, 1, 1, "R")
+	return c
+
+
+## GFX-058: a two-storey shop front for wide merchants (>= SHOP_MIN_WIDTH): upper floor with a hanging sign, shuttered
+## windows, a striped awning over a counter and the door.
+static func _shop() -> Array:
+	var c := canvas(66, 46)
+	box(c, 6, 16, 54, 30, "w", "W")
+	rect(c, 6, 16, 2, 30, "t")
+	rect(c, 58, 16, 2, 30, "T")
+	rect(c, 6, 28, 54, 2, "t")
+	for wx in [13, 29, 45]:
+		rect(c, wx, 20, 8, 6, "p")
+		rect(c, wx, 20, 1, 6, "T")
+	for x in range(8, 58):
+		rect(c, x, 31, 1, 4, "r" if (x / 3) % 2 == 0 else "p")
+	rect(c, 8, 35, 50, 1, "R")
+	rect(c, 12, 37, 14, 9, "T")
+	rect(c, 14, 37, 10, 3, "h")
+	rect(c, 38, 36, 10, 10, "d")
+	rect(c, 40, 41, 6, 5, "g")
+	rect(c, 50, 38, 6, 8, "p")
+	roof(c, 2, 4, 62, 13)
+	rect(c, 24, 3, 18, 7, "t")
+	rect(c, 25, 4, 16, 5, "g")
+	rect(c, 28, 6, 10, 1, "T")
 	return c
 
 
