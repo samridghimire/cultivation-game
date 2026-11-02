@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: fc7f679
+Last reviewed commit: 9727a4a
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -1433,3 +1433,20 @@ Last reviewed commit: fc7f679
     seed/option) OK.
   - Notes, not filed: GFX-056/057 and WU-434 (marsh) shots were not viewed by the workers (no display); the planner's next
     shot pass should cover azure_peak, withered_bone_marsh and myriad_peaks_ridge with `--great`.
+- 2026-11-02 (reviewer, 3rd run): reviewed fc7f679..9727a4a (FORAGE-003, GUIDE-209, RV-017, GUIDE-210, QA-190, GFX-059,
+  GOAL-008, WILD-009, GFX-060, C-293, WU-435; [PLAN] skipped). Main green (3080 tests). No BACKLOG/CHANGELOG edits by
+  workers; no SAVE_VERSION change (arrival_day/region/line are world flags, missing keys hide the line); no binary assets
+  (map land, mountains and trees are code-drawn).
+  - Fixed (GOAL-008): the great-beast road goal named "the next one" as the first unbeaten great beast in region order,
+    with no realm check, so a Qi Refining player who had beaten the three open ones was sent after the Thunder-Horn Ram
+    (min_realm Foundation), which never walks for them. It now skips beasts `Wildlife.next_great_day` says the realm
+    cannot meet. Test added (fails without the fix).
+  - RV-017 (halls on azure_peak / marsh, board_reason by route days), GUIDE-209/210 (arrival line per region, festival
+    first, old flags hide it), FORAGE-003, WILD-009 (no data has temper overrides, so the first-region temper lookup is
+    fine; spec's "fight preview" part only reaches the Fight option's description), QA-190, C-293 (formula caps 1.7 /
+    2.9 vs the spec's "~1.5 / ~2.5"; only the --village sim arm forages, so no balance-baseline impact), WU-435 (12
+    places moved, layout test extended), GFX-060 OK.
+  - Viewed map_hint (GFX-059) at 1280x800: names whole, no overlaps, but unexplored nodes (45% alpha over the land
+    blobs and mountain glyphs) are hard to read, as the worker's Follow-up says; left to the planner.
+  - Notes, not filed: sect halls are generic, so an Azure Cloud member takes missions at the "Blood Lotus Reed Hall";
+    a per-sect hall would need a design call. GOAL-008's "next one" is still region order, not the soonest weekday.

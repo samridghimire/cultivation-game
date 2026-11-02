@@ -3129,6 +3129,8 @@ static func road_goals(c: CharacterData, data: GameData, flags: Dictionary) -> A
 		var def: Dictionary = data.regions[rid].get("roamers", {}).get("great", {})
 		if def.is_empty() or c.great_beasts.has(String(def.get("enemy", ""))):
 			continue
+		if Wildlife.next_great_day(data, rid, 0, c.realm_index) < 0:
+			continue  # REVIEW: never name a great beast this realm cannot meet (the Ridge's ram needs Foundation)
 		great_text += " (the next one: %s in %s, day %d of the 7-day week)" % [Wildlife.display_name(data, String(def["enemy"]), true), _region_name(data, rid), Wildlife.great_day(rid, def) + 1]
 		break
 	rows.append([great_text, vet or not c.great_beasts.is_empty()])

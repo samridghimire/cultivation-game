@@ -5989,3 +5989,14 @@ func test_road_goals_veteran_and_flags() -> void:
 	for g in Guidance.road_goals(vet, data(), flags):
 		assert_true(g["done"])
 	assert_false(Guidance.road_goals_active(vet, data(), flags))
+
+
+func test_road_goals_never_name_a_great_beast_above_the_realm() -> void:
+	var c := _after_ladder()
+	for rid: String in data().regions:
+		var def: Dictionary = data().regions[rid].get("roamers", {}).get("great", {})
+		if not def.is_empty() and not def.has("min_realm"):
+			c.great_beasts[String(def["enemy"])] = 1
+	var text := String(Guidance.road_goals(c, data(), {Guidance.ELDER_MO_FLAG: true})[2]["text"])
+	assert_false(text.contains("Ram"), text)
+	assert_eq(text, "Beat a great beast")
