@@ -97,8 +97,9 @@ static func _great_beasts(out: Array[Dictionary], data: GameData, c: CharacterDa
 	for rid: String in c.visited_regions:
 		var day := Wildlife.next_great_day(data, rid, start, c.realm_index)
 		while day >= 0 and day < end:
-			var beast := Wildlife.display_name(data, String(data.regions[rid]["roamers"]["great"]["enemy"]), true)
-			out.append({"day": day, "kind": "great_beast", "region": rid,
+			var enemy := String(data.regions[rid]["roamers"]["great"]["enemy"])
+			var beast := Wildlife.display_name(data, enemy, true)
+			out.append({"day": day, "kind": "great_beast", "region": rid, "enemy": enemy,
 				"text": "The %s walks %s" % [beast, Exploration.region_name(data, rid)]})
 			day = Wildlife.next_great_day(data, rid, day + 1, c.realm_index)
 
@@ -177,7 +178,9 @@ static func reminders(data: GameData, npcs: Dictionary, favor: Dictionary, activ
 	for e: Dictionary in upcoming(data, npcs, favor, active_events, region_id, today + 1, 1, c):
 		if out.size() >= MAX_REMINDERS:
 			break
-		if String(e["kind"]) == "great_beast" and not _near(data, region_id, String(e["region"])):
+		# WILD-011: only a beast that is close and that the player has not beaten yet is worth a reminder.
+		if String(e["kind"]) == "great_beast" and (not _near(data, region_id, String(e["region"]))
+				or (c != null and c.great_beasts.has(String(e.get("enemy", ""))))):
 			continue
 		var line := _reminder_line(data, npcs, flags, e)
 		if line != "":
