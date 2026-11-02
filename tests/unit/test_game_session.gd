@@ -2859,7 +2859,7 @@ func test_pick_forage() -> void:
 	_start()
 	gs.current_region = "qingshi_village"
 	var nodes: Array[Dictionary] = gs.forage_here()
-	assert_true(nodes.size() >= 2)
+	assert_true(nodes.size() >= 1)
 	var n: Dictionary = nodes[0]
 	var item := String(n["item"])
 	var had: int = gs.player.item_count(item)

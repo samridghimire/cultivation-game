@@ -15,7 +15,7 @@ func test_deterministic_and_counted() -> void:
 		assert_true(n.size() >= 1 and n.size() <= 3)
 		seen[str(n)] = true
 	assert_true(seen.size() > 1, "different days differ")
-	assert_true(Foraging.nodes(d, "misty_forest", 5, 0, {}).size() >= 2)
+	assert_true(Foraging.nodes(d, "misty_forest", 5, 0, {}).size() >= 1)
 
 
 func test_season_and_realm_filters() -> void:
@@ -116,3 +116,28 @@ func test_pick_herb_forage_records_herb_log() -> void:
 				return
 	gs.end_session()
 	assert_true(false, "no herb forage found in 40 days")
+
+
+## C-293: forage is a snack, not a living. Worst-case (season x realm) expected sell value per day stays small.
+func test_expected_forage_value_per_day() -> void:
+	var d := _gdata()
+	for id: String in d.regions:
+		var def: Dictionary = d.regions[id].get("forage", {})
+		var cap := 1.7 if id == "qingshi_village" else 2.9
+		for season: String in ["spring", "summer", "autumn", "winter"]:
+			for gated in [false, true]:
+				var weight := 0.0
+				var value := 0.0
+				for e: Dictionary in def["items"]:
+					if not Exploration.in_season(e, season):
+						continue
+					if e.has("min_realm") and not gated:
+						continue
+					var lo := int(e.get("min", 1))
+					var avg := (lo + int(e.get("max", lo))) / 2.0
+					weight += float(e["weight"])
+					value += float(e["weight"]) * Items.sell_price(d, String(e["item"])) * avg
+				var counts: Array = def["count"]
+				var per_day := (int(counts[0]) + int(counts[1])) / 2.0 * value / weight
+				assert_true(per_day <= cap, "%s %s: %.2f stones/day > %.1f" % [id, season, per_day, cap])
+	assert_eq(String(d.items["village_mugwort"]["name"]), "Mugwort")

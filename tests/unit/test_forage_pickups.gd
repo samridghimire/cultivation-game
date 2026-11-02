@@ -24,7 +24,7 @@ func test_spawns_as_many_as_forage_here() -> void:
 	var gs := (Engine.get_main_loop() as SceneTree).root.get_node("GameState")
 	var world := _world("qingshi_village")
 	var n: int = gs.forage_here().size()
-	assert_true(n >= 2)
+	assert_true(n >= 1)
 	assert_eq(_pickups(world).size(), n)
 	var first: ForagePickup = _pickups(world)[0]
 	assert_true(first.display_name.begins_with("Pick "), first.display_name)
