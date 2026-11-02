@@ -1520,6 +1520,19 @@ func test_travel_records_visited_regions() -> void:
 	assert_eq(gs.player.visited_regions.size(), 2)
 
 
+## GUIDE-209: arriving posts the day's arrival line and stores it for the HUD.
+func test_travel_posts_arrival_line() -> void:
+	var gs := _game_state()
+	var c := _start()
+	c.realm_index = 1
+	var target := String(gs.data.regions[gs.data.start_region]["routes"][0]["to"])
+	gs.travel(target)
+	assert_eq(int(gs.world_flags.get("arrival_day", -1)), GameClock.total_days)
+	var line := String(gs.world_flags.get("arrival_line", "x"))
+	if line != "":
+		assert_true(line.begins_with("Today in "), line)
+
+
 ## TRAV-006: with the road chance forced to 1, a journey meets a road encounter.
 func test_travel_meets_road_encounter() -> void:
 	var gs := _game_state()

@@ -5891,3 +5891,20 @@ func test_far_manual_names_a_stall_with_its_market_day() -> void:
 					assert_eq(Guidance.merchant_selling_when(d, region_id, item_id), String(p["display_name"]))
 					return
 	assert_true(false, "no stall-only item in data")
+
+
+## GUIDE-209: the arrival line lists the great beast on its day and nothing on a quiet one.
+func test_arrival_line_lists_great_beast_and_is_quiet_otherwise() -> void:
+	var d := data()
+	var c := new_character()
+	c.realm_index = 1
+	var wd := Wildlife.great_day("misty_forest", d.regions["misty_forest"]["roamers"]["great"])
+	var line := Guidance.arrival_line(c, d, "misty_forest", wd, {}, "")
+	assert_true(line.begins_with("Today in Misty Forest: "), line)
+	var beast := String(d.enemies[String(d.regions["misty_forest"]["roamers"]["great"]["enemy"])]["name"])
+	assert_true(line.contains(beast + " roams"), line)
+	assert_eq(Guidance.arrival_line(c, d, "no_such_region", wd, {}, ""), "")
+	# The line leads the hints on its day only.
+	var flags := {"arrival_day": wd, "arrival_line": "Today in X: y."}
+	assert_eq(Guidance.hints(c, d, 1.0, 5, {}, flags, "misty_forest", wd)[0], "Today in X: y.")
+	assert_false(Guidance.hints(c, d, 1.0, 5, {}, flags, "misty_forest", wd + 1).has("Today in X: y."))

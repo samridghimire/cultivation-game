@@ -26,6 +26,7 @@ const OUTGROWN_FAIR_MAX := 0.85
 const FAIR_FIGHT_MIN_CHANCE := 0.7  # "Even" or better (Combat.label_for_chance)
 const FASTER_SPOT_MIN_SAVED := 90  ## GUIDE-197: days a faster qi spot must save (or a third of the wait, if more) to be named.
 const MISSION_HINT_RICH := 2000  ## GUIDE-197: a duty-met member holding this much contribution gets no mission hint.
+const ARRIVAL_MAX_ITEMS := 3  ## GUIDE-209
 const CHORE_REGION := "qingshi_village"
 const QI_BUY_KEEP := 20  ## Stones the qi-pill hint leaves for the clinic (GUIDE-126).
 const HEADLINE_CHARS := 120  ## The HUD shows this many characters of a hint (HUD.HINT_MAX_CHARS, WU-305).
@@ -41,9 +42,38 @@ const IDLE_CULTIVATION_DAYS := 30  # GUIDE-057: days without cultivating before 
 ## stands (region x sect bonus), used for the days-to-next-stage estimate.
 ## `people` (the NPCs, optional) enables the family hints. `flags` (world flags)
 ## and `region_id` drive the newcomer hints shown while Mortal or Qi Refining.
+## GUIDE-209: "Today in Misty Forest: the Old Tusker roams, 3 things by the path, an open stall, rain-fish biting."
+## Up to three short items from what already exists; "" when nothing is notable. Pure.
+static func arrival_line(c: CharacterData, data: GameData, region_id: String, day: int, flags: Dictionary, weather: String = "") -> String:
+	var items: PackedStringArray = []
+	var great := Wildlife.great_roamer(c, data, region_id, day, flags)
+	if not great.is_empty():
+		items.append("the %s roams" % String(data.enemies.get(String(great["enemy"]), {}).get("name", "great beast")))
+	for place: Dictionary in data.regions.get(region_id, {}).get("places", []):
+		if place.has("open_days") and Places.is_open(place, day):
+			items.append("%s is open" % String(place.get("display_name", "a stall")))
+			break
+	var forage := Foraging.unpicked(data, region_id, day, c.realm_index, flags).size()
+	if forage > 0:
+		items.append("%d %s by the path" % [forage, "thing" if forage == 1 else "things"])
+	if weather != "" and Fishing.extra_draws(data, weather) > 0 and not Fishing.too_wild(weather):
+		for place: Dictionary in data.regions.get(region_id, {}).get("places", []):
+			if String(place.get("type", "")) == "fishing":
+				items.append("%s-fish biting" % weather)
+				break
+	if items.is_empty():
+		return ""
+	if items.size() > ARRIVAL_MAX_ITEMS:
+		items.resize(ARRIVAL_MAX_ITEMS)
+	return "Today in %s: %s." % [Exploration.region_name(data, region_id), ", ".join(items)]
+
+
 static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit: int = 5, people: Dictionary = {}, flags: Dictionary = {}, region_id: String = "", today: int = -1, favor: Dictionary = {}) -> PackedStringArray:
 	var out: PackedStringArray = []
 	flags = with_season(flags, today)
+	# GUIDE-209: the arrival line leads for the day it was posted.
+	if today >= 0 and int(flags.get("arrival_day", -1)) == today and String(flags.get("arrival_line", "")) != "":
+		out.append(String(flags["arrival_line"]))
 	# GUIDE-147: a nearly empty Creation Artifact leads, so the HUD headline shows it.
 	var lives_hint := artifact_lives_hint(c, data)
 	if lives_hint != "":

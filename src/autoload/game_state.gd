@@ -142,6 +142,7 @@ func start_session(character: CharacterData) -> void:
 	EventBus.clear_history()
 	EventBus.session_started.emit()
 	EventBus.post("%s sets out on the path of cultivation." % player.name, "progress")
+	_post_arrival_line()
 	EventBus.player_changed.emit()
 
 
@@ -650,8 +651,19 @@ func travel(region_id: String) -> void:
 			last_explore_discovery = false
 			last_explore_deep_path = false
 			_meet_encounter(road, "On the road: ")
+	_post_arrival_line()
 	EventBus.region_changed.emit(region_id)
 	SaveManager.autosave()
+
+
+## GUIDE-209: one log line for what is notable here today; the HUD shows it for that day.
+func _post_arrival_line() -> void:
+	var day := GameClock.total_days
+	var line := Guidance.arrival_line(player, data, current_region, day, world_flags, Weather.of(data, current_region, day))
+	world_flags["arrival_day"] = day
+	world_flags["arrival_line"] = line
+	if line != "":
+		EventBus.post(line, "travel")
 
 
 ## After a journey, an NPC with a strong grudge may ambush the player, and a
