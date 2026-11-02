@@ -19,6 +19,7 @@ const MIN_RIPPLES := 3
 var flow_offset := 0.0
 var _streams: Array[Rect2] = []
 var _ponds: Array[Rect2] = []
+var _jetties: Array[Rect2] = []  ## WU-431: planks lie over the water; highlights and ripples skip them
 var _paths: Array[Rect2] = []
 var _rain := false
 var _reduce := false
@@ -41,6 +42,7 @@ static func shimmer_alpha(t: float) -> float:
 func setup(region: Dictionary, rain: bool, frozen: bool, reduce_motion: bool) -> void:
 	_streams.clear()
 	_ponds.clear()
+	_jetties.clear()
 	_paths.clear()
 	_ripples.clear()
 	flow_offset = 0.0
@@ -61,9 +63,19 @@ func setup(region: Dictionary, rain: bool, frozen: bool, reduce_motion: bool) ->
 			"pond":
 				if not frozen:
 					_ponds.append(rect)
+			"jetty":
+				_jetties.append(Scenery.jetty_layout(region, lm)["rect"] as Rect2)
 	_rng.seed = hash(str(region.get("id", "")))
 	set_process(not reduce_motion and (not _streams.is_empty() or not _ponds.is_empty()))
 	queue_redraw()
+
+
+## True if `p` lies on a jetty's planks (WU-431).
+func on_jetty(p: Vector2) -> bool:
+	for j in _jetties:
+		if j.has_point(p):
+			return true
+	return false
 
 
 func ripple_count() -> int:
@@ -83,7 +95,9 @@ func advance(delta: float) -> void:
 		var want := MIN_RIPPLES * _ponds.size()
 		while _ripples.size() < mini(want + 1, ripple_cap(_ponds.size())) and _rng.randf() < delta * 2.0 + 0.001:
 			var pond := _ponds[_rng.randi() % _ponds.size()]
-			_ripples.append({"pos": VillageLife.point_in(pond, _rng.randi(), _rng.randi()), "t": 0.0})
+			var spot := VillageLife.point_in(pond, _rng.randi(), _rng.randi())
+			if not on_jetty(spot):
+				_ripples.append({"pos": spot, "t": 0.0})
 	queue_redraw()
 
 
@@ -101,8 +115,15 @@ func _draw() -> void:
 		var pts := PackedVector2Array()
 		for i in 15:
 			var ang := PI * (1.15 + 0.7 * float(i) / 14.0)
-			pts.append(c + Vector2(cos(ang) * (p.size.x / 2.0 - 8.0), sin(ang) * (p.size.y / 2.0 - 8.0)))
-		draw_polyline(pts, Color(1, 1, 1, a), 2.0)
+			var pt := c + Vector2(cos(ang) * (p.size.x / 2.0 - 8.0), sin(ang) * (p.size.y / 2.0 - 8.0))
+			if on_jetty(pt):  # WU-431: draw the arc in pieces around the planks
+				if pts.size() >= 2:
+					draw_polyline(pts, Color(1, 1, 1, a), 2.0)
+				pts = PackedVector2Array()
+			else:
+				pts.append(pt)
+		if pts.size() >= 2:
+			draw_polyline(pts, Color(1, 1, 1, a), 2.0)
 	for r in _ripples:
 		var t := float(r["t"]) / RIPPLE_LIFE
 		var rad := 2.0 + t * 12.0
