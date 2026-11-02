@@ -645,23 +645,36 @@ static func board_reason(c: CharacterData, data: GameData, region_id: String) ->
 		return ""
 	if region_id == home_region(data, String(c.sect["id"])):
 		return ""
-	if _hall_name(data, region_id) != "":
+	if hall_name(data, region_id, c) != "":
 		return ""
-	var far := Guidance.nearest_selling(c, data, region_id, func(r: String) -> String: return _hall_name(data, r))
+	var far := Guidance.nearest_selling(c, data, region_id, func(r: String) -> String: return hall_name(data, r, c))
 	if not far.is_empty():
 		return "The mission board is at a sect hall (nearest: %s, %s)." % [far["result"], far["region_name"]]
 	var home := home_region(data, String(c.sect["id"]))
 	var regions: Array = [home] + data.regions.keys()
 	for r: String in regions:
-		var hall := _hall_name(data, r)
+		var hall := hall_name(data, r, c)
 		if hall != "":
 			return "The mission board is at a sect hall (nearest: %s, %s)." % [hall, Exploration.region_name(data, r)]
 	return "The mission board is at a sect hall."
 
 
-static func _hall_name(data: GameData, region_id: String) -> String:
+## MISSION-002: whether the sect_hall `place` serves `c`: a place without a `sect` serves every disciple,
+## one with a `sect` only that sect's members. A rogue is served by none (they have no board).
+static func hall_serves(c: CharacterData, place: Dictionary) -> bool:
+	if c.is_rogue():
+		return false
+	var sect_id := String(place.get("sect", ""))
+	return sect_id == "" or sect_id == String(c.sect["id"])
+
+
+## The display name of the first sect hall in `region_id` that serves `c` ("" if none). For a rogue
+## (who joins at a hall) any hall without a `sect` counts.
+static func hall_name(data: GameData, region_id: String, c: CharacterData) -> String:
 	for p: Dictionary in data.regions.get(region_id, {}).get("places", []):
-		if String(p.get("type", "")) == "sect_hall":
+		if String(p.get("type", "")) != "sect_hall":
+			continue
+		if hall_serves(c, p) or (c.is_rogue() and String(p.get("sect", "")) == ""):
 			return String(p.get("display_name", "sect hall"))
 	return ""
 

@@ -7,6 +7,9 @@ extends Interactable
 ## "leave" or "join:<sect id>" while the menu asks "are you sure?" (WU-032).
 var _pending := ""
 
+## MISSION-002: the sect whose hall this is ("" = open to every disciple).
+@export var sect := ""
+
 
 func on_menu_closed() -> void:
 	_pending = ""
@@ -18,7 +21,12 @@ func get_options() -> Array[Dictionary]:
 	GameState.world_flags[Guidance.SECT_HALL_FLAG] = true  # GOAL-009: idempotent marker, "has seen a hall"
 	if _pending != "":
 		return _confirm_options()
-	if not player.is_rogue():
+	if not player.is_rogue() and not Sects.hall_serves(player, {"sect": sect}):
+		var own := GameState.data.sects.get(sect) as SectDef
+		var board := Sects.board_reason(player, GameState.data, GameState.current_region)
+		options.append({"label": "Mission board (not your sect's hall)", "disabled": true, "action": func() -> void: pass,
+			"reason": "This is the %s's hall. Your board: %s" % [own.name if own != null else "another sect", board.trim_prefix("The mission board is at ")]})
+	elif not player.is_rogue():
 		var ids := Sects.available_missions(player, GameState.data, GameState.world_flags)
 		var ready := ids.filter(func(id: String) -> bool: return Sects.check_mission(player, GameState.data, id, GameState.world_flags) == "").size()
 		options.append({"label": "Mission board (%d of %d available)" % [ready, ids.size()], "action": EventBus.mission_board_requested.emit})

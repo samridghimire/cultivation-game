@@ -1962,11 +1962,7 @@ static func _usable_breakthrough_item(c: CharacterData, data: GameData, item_id:
 static func _hall_where(c: CharacterData, data: GameData, region_id: String) -> String:
 	if region_id == "":
 		return "at a sect hall"
-	var pick := func(r: String) -> String:
-		for p: Dictionary in data.regions.get(r, {}).get("places", []):
-			if String(p.get("type", "")) == "sect_hall":
-				return String(p.get("display_name", ""))
-		return ""
+	var pick := func(r: String) -> String: return Sects.hall_name(data, r, c)
 	var far := nearest_selling(c, data, region_id, pick)
 	if far.is_empty():
 		return "at a sect hall"

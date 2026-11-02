@@ -166,8 +166,8 @@ func test_take_mission_needs_the_board() -> void:
 		c.add_item("spirit_herb", 5)
 		gs.take_mission("gather_spirit_herbs")
 		var taken: bool = int(c.sect["contribution"]) > 0
-		assert_eq(taken, region != "misty_forest", "mission in %s" % region)
-		if region == "misty_forest":
+		assert_eq(taken, region != "misty_forest" and region != "withered_bone_marsh", "mission in %s" % region)
+		if region == "misty_forest" or region == "withered_bone_marsh":
 			assert_true(Sects.check_mission(c, gs.data, "gather_spirit_herbs", gs.world_flags, region).begins_with("The mission board is at a sect hall (nearest: "))
 		gs.end_session()
 
@@ -279,3 +279,29 @@ func test_fight_mission_posts_one_opening_line() -> void:
 	assert_eq(opening.size(), 1)
 	assert_true(String(opening[0]).contains("You face"))
 	gs.end_session()
+
+
+## MISSION-002: a sect's own hall serves only its disciples; halls without a `sect` serve everyone.
+func test_sect_halls_serve_their_own_disciples() -> void:
+	var d := data()
+	var azure := _disciple("azure_cloud_sect")
+	var blood := _disciple("blood_lotus_sect")
+	assert_false(Sects.hall_serves(new_character(), {}), "rogue")
+	assert_true(Sects.hall_serves(azure, {}), "no sect = open")
+	assert_true(Sects.hall_serves(azure, {"sect": "azure_cloud_sect"}))
+	assert_false(Sects.hall_serves(blood, {"sect": "azure_cloud_sect"}))
+	assert_eq(Sects.board_reason(blood, d, "withered_bone_marsh"), "", "Blood Lotus takes missions in the marsh")
+	var reason := Sects.board_reason(azure, d, "withered_bone_marsh")
+	assert_true(reason.begins_with("The mission board is at a sect hall (nearest: "), reason)
+	assert_false(reason.contains("Blood Lotus Reed Hall"), reason)
+	assert_eq(Sects.hall_name(d, "qingshi_village", azure), Sects.hall_name(d, "qingshi_village", blood), "open hall")
+	assert_eq(Sects.hall_name(d, "azure_peak", blood), "")
+
+
+func test_validation_rejects_unknown_hall_sect() -> void:
+	var d := GameData.load_from_dir()
+	assert_eq(d.load_errors.size(), 0)
+	d.regions["qingshi_village"]["places"].append({"type": "sect_hall", "display_name": "X", "sect": "nope"})
+	d.load_errors.clear()
+	d._validate_world()
+	assert_true("unknown sect 'nope'" in "\n".join(d.load_errors))

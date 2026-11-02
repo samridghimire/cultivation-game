@@ -648,6 +648,8 @@ func _validate_world() -> void:
 				load_errors.append("Region '%s' has a place of unknown type '%s'" % [region["id"], place.get("type", "")])
 			if place.get("type", "") == "auction" and not auction_houses.has(String(place.get("house_id", ""))):
 				load_errors.append("Region '%s' auction place has unknown house_id '%s'" % [region["id"], place.get("house_id", "")])
+			if place.has("sect") and not sects.has(String(place["sect"])):
+				load_errors.append("Region '%s' place has unknown sect '%s'" % [region["id"], place["sect"]])
 			if place.has("faction") and not sects.has(place["faction"]):
 				load_errors.append("Region '%s' place has unknown faction '%s'" % [region["id"], place["faction"]])
 	var discoveries := {}
