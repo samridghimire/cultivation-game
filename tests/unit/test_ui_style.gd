@@ -15,3 +15,10 @@ func test_screens_leave_no_orphan_nodes() -> void:
 		screen.free()
 		var after := int(Performance.get_monitor(Performance.OBJECT_ORPHAN_NODE_COUNT))
 		assert_eq(after, before, "%s leaked %d nodes" % [screen_class.get_global_name(), after - before])
+
+
+func test_shared_theme_styles_form_controls() -> void:
+	var t := UIStyle.theme()
+	assert_true(t == UIStyle.theme(), "cached")
+	for pair in [["LineEdit", "normal"], ["LineEdit", "focus"], ["OptionButton", "normal"], ["OptionButton", "focus"], ["PopupMenu", "panel"], ["CheckBox", "focus"], ["CheckButton", "focus"], ["HSlider", "slider"], ["HSlider", "grabber_area"], ["SpinBox", "normal"], ["VScrollBar", "grabber"], ["HScrollBar", "scroll"]]:
+		assert_true(t.has_stylebox(pair[1], pair[0]), "%s/%s styled" % pair)

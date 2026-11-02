@@ -56,6 +56,70 @@ static func tint_button_text(b: Button, color: Color) -> void:
 		b.add_theme_color_override(state, color)
 
 
+static var _theme: Theme
+
+
+## WU-432: one Theme for the controls screens do not style themselves (LineEdit, OptionButton + its popup,
+## CheckBox/CheckButton, HSlider, SpinBox, scrollbars), in the panel/accent colours with a gold focus ring.
+## Cached; Settings sets it on the root window so every screen inherits it.
+static func theme() -> Theme:
+	if _theme != null:
+		return _theme
+	var t := Theme.new()
+	var field := _box(PANEL.lightened(0.06), ACCENT.darkened(0.5), 1, 4, 8)
+	var field_hover := _box(PANEL.lightened(0.1), ACCENT.darkened(0.2), 1, 4, 8)
+	var focus := _box(PANEL.lightened(0.1), ACCENT, 2, 4, 8)
+	focus.draw_center = false
+	for type in ["LineEdit", "SpinBox"]:
+		t.set_stylebox("normal", type, field)
+		t.set_stylebox("focus", type, focus)
+	t.set_stylebox("read_only", "LineEdit", _box(PANEL, ACCENT.darkened(0.6), 1, 4, 8))
+	t.set_color("font_color", "LineEdit", Color.WHITE)
+	t.set_color("caret_color", "LineEdit", ACCENT)
+	t.set_color("selection_color", "LineEdit", ACCENT.darkened(0.55))
+	t.set_color("font_placeholder_color", "LineEdit", HINT.darkened(0.2))
+	for state in ["normal", "pressed", "disabled"]:
+		t.set_stylebox(state, "OptionButton", field)
+	t.set_stylebox("hover", "OptionButton", field_hover)
+	t.set_stylebox("focus", "OptionButton", focus)
+	t.set_color("font_color", "OptionButton", Color.WHITE)
+	t.set_color("font_hover_color", "OptionButton", ACCENT)
+	t.set_color("font_focus_color", "OptionButton", ACCENT)
+	var popup := _box(PANEL, ACCENT.darkened(0.3), 1, 4, 6)
+	t.set_stylebox("panel", "PopupMenu", popup)
+	t.set_stylebox("hover", "PopupMenu", _box(ACCENT.darkened(0.7), ACCENT.darkened(0.7), 0, 3, 4))
+	t.set_color("font_color", "PopupMenu", Color.WHITE)
+	t.set_color("font_hover_color", "PopupMenu", ACCENT)
+	for type in ["CheckBox", "CheckButton"]:
+		t.set_stylebox("focus", type, focus)
+		t.set_color("font_hover_color", type, ACCENT)
+		t.set_color("font_focus_color", type, ACCENT)
+	var track := _box(PANEL.darkened(0.4), ACCENT.darkened(0.5), 1, 3, 0)
+	track.content_margin_top = 4
+	track.content_margin_bottom = 4
+	t.set_stylebox("slider", "HSlider", track)
+	t.set_stylebox("grabber_area", "HSlider", _box(ACCENT.darkened(0.2), ACCENT.darkened(0.2), 0, 3, 0))
+	t.set_stylebox("grabber_area_highlight", "HSlider", _box(ACCENT, ACCENT, 0, 3, 0))
+	t.set_stylebox("focus", "HSlider", focus)
+	for type in ["HScrollBar", "VScrollBar"]:
+		t.set_stylebox("scroll", type, _box(PANEL.darkened(0.4), PANEL.darkened(0.4), 0, 3, 0))
+		t.set_stylebox("grabber", type, _box(ACCENT.darkened(0.45), ACCENT.darkened(0.45), 0, 3, 0))
+		t.set_stylebox("grabber_highlight", type, _box(ACCENT.darkened(0.2), ACCENT.darkened(0.2), 0, 3, 0))
+		t.set_stylebox("grabber_pressed", type, _box(ACCENT, ACCENT, 0, 3, 0))
+	_theme = t
+	return t
+
+
+static func _box(bg: Color, border: Color, width: int, radius: int, margin: int) -> StyleBoxFlat:
+	var s := StyleBoxFlat.new()
+	s.bg_color = bg
+	s.border_color = border
+	s.set_border_width_all(width)
+	s.set_corner_radius_all(radius)
+	s.set_content_margin_all(margin)
+	return s
+
+
 static func panel_style() -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
 	style.bg_color = PANEL

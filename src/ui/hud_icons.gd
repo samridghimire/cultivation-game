@@ -30,7 +30,7 @@ const WEATHER := {
 ## Farming tool glyphs for field menu entries (WU-413).
 const TOOLS := {
 	"watering_can": {"colors": {"a": Color("6fa8d6"), "b": Color("b9dcf2")}, "rows": ["............", "....oooo....", "...o....o...", "oo.oaaaao...", "oboaabaaao..", "oaaaabaaao..", ".oaaaaaaao..", "..oaaaaao...", "...ooooo....", "............", "............", "............"]},
-	"hoe": {"colors": {"a": Color("b8c0cc"), "c": Color("a9743c")}, "rows": ["............", "........ooo.", ".......oaaao", "......oaoooo", ".....oc.....", "....oc......", "...oc.......", "..oc........", ".oc.........", "oc..........", "............", "............"]},
+	"hoe": {"colors": {"a": Color("b8c0cc"), "c": Color("a9743c")}, "rows": ["............", "...oooooo...", "..oaaaaaao..", "..oaaaaaao..", "..ooocooo...", "....occo....", "....occo....", "....occo....", "....occo....", "....occo....", "....oooo....", "............"]},
 }
 
 ## Price trend arrows for the shop (WU-415): "up" is dear (warm red), "down" is cheap (green).

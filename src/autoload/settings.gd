@@ -44,6 +44,7 @@ var _values: Dictionary = DEFAULTS.duplicate()
 
 
 func _ready() -> void:
+	get_tree().root.theme = UIStyle.theme()  # WU-432: one look for every control
 	_ensure_buses()
 	load_settings()
 	apply_all()
