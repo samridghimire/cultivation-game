@@ -301,3 +301,23 @@ func test_every_great_beast_has_a_trophy() -> void:
 		var price := int((d.items[tid] as Dictionary).get("price", 0))
 		assert_true(price >= 15 and price <= 40, "%s trophy price" % rid)
 	assert_true(seen >= 4)
+
+
+## WILD-009: quarry notes appear after 3 hunts, deterministic, temper only without recorded spoils.
+func test_quarry_notes() -> void:
+	var d := _gdata()
+	var c := _player()
+	var id := "wild_boar"
+	assert_eq(Wildlife.quarry_notes(c, d, id), "", "unknown below 3 hunts")
+	c.hunt_log[id] = 2
+	assert_eq(Wildlife.quarry_notes(c, d, id), "")
+	c.hunt_log[id] = 3
+	var bare := Wildlife.quarry_notes(c, d, id)
+	assert_true(bare != "" and not bare.contains("Usually leaves"), "old save: temper only")
+	var items: Array = d.items.keys()
+	items.sort()
+	Wildlife.record_spoils(c, id, {items[2]: 1, items[1]: 5, items[0]: 1, items[3]: 1})
+	var note := Wildlife.quarry_notes(c, d, id)
+	assert_true(note.begins_with("Usually leaves: %s, " % d.items[items[1]]["name"]), note)
+	assert_eq(note.split(",").size(), 3 if not note.split(";")[0].contains("spirit") else 3, "at most 3 items")
+	assert_eq(note, Wildlife.quarry_notes(c, d, id), "deterministic")

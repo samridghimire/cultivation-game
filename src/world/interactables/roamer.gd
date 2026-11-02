@@ -87,8 +87,13 @@ func label_color() -> Color:
 func get_options() -> Array[Dictionary]:
 	var was_charge := charged
 	charged = false
+	var desc := "Take the beast on now."
+	if GameState.has_session():
+		var notes := Wildlife.quarry_notes(GameState.player, GameState.data, enemy_id)
+		if notes != "":
+			desc += " " + notes + "."
 	return [
-		{"label": "Fight", "description": "Take the beast on now.", "action": GameState.engage_roamer.bind(slot, was_charge)},
+		{"label": "Fight", "description": desc, "action": GameState.engage_roamer.bind(slot, was_charge)},
 		{"label": "Leave", "description": "Walk away and let it be."},
 	]
 

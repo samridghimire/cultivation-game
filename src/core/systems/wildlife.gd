@@ -191,6 +191,43 @@ static func inventory_gain(before: Dictionary, after: Dictionary) -> Dictionary:
 	return out
 
 
+## WILD-009: what a hunter knows of a beast kind after 3 wins: its temper and its usual spoils (most often
+## dropped first, then by name, at most 3). "" below 3 hunts. Spoils are left out for saves that predate them.
+static func quarry_notes(c: CharacterData, data: GameData, enemy_id: String) -> String:
+	if int(c.hunt_log.get(enemy_id, 0)) < 3 or not data.enemies.has(enemy_id):
+		return ""
+	var parts: PackedStringArray = []
+	var spoils := spoils_of(c, enemy_id)
+	var ids: Array = []
+	for item_id: String in spoils:
+		if data.items.has(item_id) and item_id != "spirit_stone":
+			ids.append(item_id)
+	ids.sort_custom(func(a: String, b: String) -> bool:
+		var ca := int(spoils[a])
+		var cb := int(spoils[b])
+		if ca != cb:
+			return ca > cb
+		return String(data.items[a]["name"]) < String(data.items[b]["name"]))
+	var names: PackedStringArray = []
+	for item_id: String in ids.slice(0, 3):
+		names.append(String(data.items[item_id]["name"]))
+	if not names.is_empty():
+		parts.append("Usually leaves: %s (from your hunts)" % ", ".join(names))
+	var override := ""
+	for region: Dictionary in data.regions.values():
+		for e: Dictionary in region.get("roamers", {}).get("enemies", []):
+			if String(e["enemy"]) == enemy_id and override == "":
+				override = String(e.get("temper", ""))
+	match temper(c, data, enemy_id, override):
+		"flees":
+			parts.append("flees when you come close")
+		"wary":
+			parts.append("keeps its distance, wary")
+		_:
+			parts.append("charges when it sees you")
+	return "; ".join(parts)
+
+
 ## Every enemy any region's roamers list, sorted.
 static func huntable(data: GameData) -> PackedStringArray:
 	var seen := {}
