@@ -215,14 +215,14 @@ static func _apply_style(img: Image, base: Color, rid: String, style: String, zo
 					var roll := absi(hash("%s|%d|%d|bog" % [rid, cx, cy]))
 					# GFX-046: half as many dark puddles as before; length and strength vary per tile, so the ground
 					# reads as wet rather than dirty. Lighter bluish patches (about 3 of 5 tiles) sit between them.
-					if roll % 10 == 0:
+					if roll % 20 == 0:
 						var pw := 2 + (roll / 10) % 4 + 2
 						var ph := 2 + (roll / 64) % 2
 						var px := cx * SIZE + (roll / 512) % 8
 						var py := cy * SIZE + (roll / 4096) % 10
 						var strength := 0.25 + float((roll / 7) % 6) * 0.05
 						_fill_clipped(img, Rect2i(px, py, pw, ph), base.lerp(base.darkened(0.45), strength * 2.0))
-					elif (roll / 11) % 5 < 3:
+					elif (roll / 11) % 5 < 1:
 						var pw := 5 + (roll / 13) % 6
 						var ph := 3 + (roll / 128) % 3
 						var px := cx * SIZE + 1 + (roll / 1024) % (SIZE - pw - 2)
@@ -231,7 +231,7 @@ static func _apply_style(img: Image, base: Color, rid: String, style: String, zo
 						_fill_clipped(img, Rect2i(px + 1, py, pw - 2, ph), puddle)
 						_fill_clipped(img, Rect2i(px, py + 1, pw, ph - 2), puddle)
 						_fill_clipped(img, Rect2i(px + 1, py, maxi(1, pw - 4), 1), puddle.lightened(0.12))
-					if roll % 10 == 1:
+					if roll % 20 == 1:
 						# Reed tufts: about half as many as before, position and shape (2-3) vary per tile.
 						var r3 := absi(hash("%s|%d|%d|reed" % [rid, cx, cy]))
 						var rx := cx * SIZE + 2 + r3 % (SIZE - 8)

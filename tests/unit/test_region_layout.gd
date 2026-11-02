@@ -250,3 +250,31 @@ func test_every_sect_home_region_has_a_hall() -> void:
 		for place: Dictionary in data().regions[sect.home_region]["places"]:
 			has_hall = has_hall or String(place["type"]) == "sect_hall"
 		assert_true(has_hall, "%s has no sect_hall in %s" % [sect.id, sect.home_region])
+
+
+## GFX-062: a roamer never spawns within 90 px of a place (the bog-king toad used to stand between labels).
+func test_roamers_spawn_clear_of_places() -> void:
+	for region: Dictionary in data().regions.values():
+		var map_size := Vector2(float(region["map"]["size"][0]), float(region["map"]["size"][1]))
+		var zones := Roamer.keep_clear_zones(region)
+		var none: Array[Rect2] = []
+		var avoid: Array[Vector2] = []
+		for day in 14:
+			for slot in 3:
+				var spot := Roamer.pick_spot(String(region["id"]), day, slot, map_size, none, avoid, zones["rects"], zones["points"])
+				for place: Dictionary in region["places"]:
+					assert_false(_rect(place, [30, 30]).grow(90.0 - 1.0).has_point(spot), "%s day %d slot %d spawns by %s" % [region["id"], day, slot, place.get("display_name", "?")])
+
+
+## GFX-062: the marsh ground carries about half the old speckle.
+func test_bog_ground_is_calmer() -> void:
+	var img := Image.create(256, 256, false, Image.FORMAT_RGBA8)
+	var base := Color("384330")
+	img.fill(base)
+	GroundTiles._apply_style(img, base, "withered_bone_marsh", "bog")
+	var changed := 0
+	for y in 256:
+		for x in 256:
+			if img.get_pixel(x, y) != base:
+				changed += 1
+	assert_true(changed < 256 * 256 / 4, "marsh tiles still speckled: %d px" % changed)

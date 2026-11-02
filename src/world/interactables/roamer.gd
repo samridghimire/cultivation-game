@@ -231,21 +231,50 @@ func draw_generated_art() -> bool:
 	return true
 
 
+const KEEP_CLEAR := 90.0
+
+
+## GFX-062: rects (grown by KEEP_CLEAR) and points a roamer must not spawn near: every place and NPC home point.
+static func keep_clear_zones(region: Dictionary) -> Dictionary:
+	var rects: Array[Rect2] = []
+	for place: Dictionary in region.get("places", []):
+		var sz := Vector2(float(place.get("size", [64, 64])[0]), float(place.get("size", [64, 64])[1]))
+		var pos := Vector2(float(place.get("pos", [0, 0])[0]), float(place.get("pos", [0, 0])[1]))
+		rects.append(Rect2(pos - sz / 2.0, sz).grow(KEEP_CLEAR))
+	var points: Array[Vector2] = []
+	for spot: Array in region.get("npc_spots", []):
+		points.append(Vector2(float(spot[0]), float(spot[1])))
+	return {"rects": rects, "points": points}
+
+
 ## Spot for `slot`: >= MIN_GAP from every blocked rect, kept inside the map. Same inputs, same spot.
-static func pick_spot(region_id: String, day: int, slot: int, map_size: Vector2, blocked: Array[Rect2], avoid: Array[Vector2]) -> Vector2:
+## GFX-062: also outside `clear_rects` and KEEP_CLEAR from `clear_points`; after 20 tries the farthest candidate wins.
+static func pick_spot(region_id: String, day: int, slot: int, map_size: Vector2, blocked: Array[Rect2], avoid: Array[Vector2], clear_rects: Array[Rect2] = [], clear_points: Array[Vector2] = []) -> Vector2:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = hash("%s:%d:%d" % [region_id, day, slot])
-	var spot := Vector2(map_size.x / 2.0, map_size.y / 2.0)
-	for i in 60:
-		spot = Vector2(rng.randf_range(100.0, map_size.x - 100.0), rng.randf_range(100.0, map_size.y - 100.0))
+	var best := Vector2(map_size.x / 2.0, map_size.y / 2.0)
+	var best_score := -1e9
+	for i in 20:
+		var spot := Vector2(rng.randf_range(100.0, map_size.x - 100.0), rng.randf_range(100.0, map_size.y - 100.0))
 		var ok := true
+		var score := 1e9
 		for r in blocked:
 			if r.grow(MIN_GAP).has_point(spot):
 				ok = false
-				break
 		for p in avoid:
-			if ok and spot.distance_to(p) < MIN_GAP + 60.0:
+			if spot.distance_to(p) < MIN_GAP + 60.0:
+				ok = false
+		for r in clear_rects:
+			if r.has_point(spot):
+				ok = false
+			score = minf(score, maxf(maxf(r.position.x - spot.x, spot.x - r.end.x), maxf(r.position.y - spot.y, spot.y - r.end.y)))
+		for p in clear_points:
+			score = minf(score, spot.distance_to(p) - KEEP_CLEAR)
+			if spot.distance_to(p) < KEEP_CLEAR:
 				ok = false
 		if ok:
 			return spot
-	return spot
+		if score > best_score:
+			best_score = score
+			best = spot
+	return best

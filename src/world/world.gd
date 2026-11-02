@@ -48,6 +48,7 @@ var _village_life: VillageLife
 var _water_life: WaterLife
 var _spread_clock := 0.0  ## WU-429: seconds since the last label spread from a moving beast.
 var _roamer_spread_pos := {}
+var _clear_zones := {"rects": [] as Array[Rect2], "points": [] as Array[Vector2]}  ## GFX-062
 var _weather_kind := "clear"
 ## The pinned weather, readable by UI that draws its own sky (the duel stage, GFX-038); "" = none.
 static var pinned_weather := ""
@@ -358,6 +359,7 @@ func _build_roamers() -> void:
 	for node in get_children():
 		if node is Roamer:
 			node.queue_free()
+	_clear_zones = Roamer.keep_clear_zones(_region)
 	var blocked: Array[Rect2] = Scenery.landmark_rects(_region)
 	for place: Dictionary in _region.get("places", []):
 		var sz := _vec(place.get("size", [64, 64]))
@@ -373,7 +375,7 @@ func _build_roamers() -> void:
 func _spawn_roamer(r: Dictionary, blocked: Array[Rect2], avoid: Array[Vector2]) -> void:
 	var day := GameClock.total_days
 	var slot := int(r["slot"])
-	var spot := Roamer.pick_spot(GameState.current_region, day, slot, map_size, blocked, avoid)
+	var spot := Roamer.pick_spot(GameState.current_region, day, slot, map_size, blocked, avoid, _clear_zones["rects"], _clear_zones["points"])
 	avoid.append(spot)
 	var node: Roamer = ROAMER_SCRIPT.new()
 	node.setup(slot, String(r["enemy"]), spot, hash("%s:%d:%d:w" % [GameState.current_region, day, slot]), bool(r.get("great", false)))
