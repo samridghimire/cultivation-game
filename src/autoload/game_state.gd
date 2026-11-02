@@ -869,14 +869,20 @@ func _fight_bounty(enemy_id: String, spoils: Dictionary = {}) -> bool:
 	if won:
 		spoils.merge(Wildlife.inventory_gain(before, player.inventory), true)
 	if won and _can_act():
-		var paid := Bounties.complete(player, data, GameClock.total_days, bounty_id)
-		var stones := int(paid["stones"])
-		var bonus_line := " Your name earned you %d more." % int(paid["bonus"]) if int(paid["bonus"]) > 0 else ""
-		EventBus.post("Bounty claimed: %d spirit stones.%s" % [stones, bonus_line], "progress")
-		EventBus.bounty_claimed.emit(enemy_name, stones)
-		_gain_renown("bounty")
-		EventBus.player_changed.emit()
+		_pay_bounty(bounty_id, enemy_name)
 	return won
+
+
+## Pay the active bounty `bounty_id` for a beaten quarry (shared by the bounty fight and WILD-008's great beast).
+## `lead` starts the single message ("The Great Wild Boar was your quarry."); empty gives the plain line.
+func _pay_bounty(bounty_id: String, enemy_name: String, lead: String = "") -> void:
+	var paid := Bounties.complete(player, data, GameClock.total_days, bounty_id)
+	var stones := int(paid["stones"])
+	var bonus_line := " Your name earned you %d more." % int(paid["bonus"]) if int(paid["bonus"]) > 0 else ""
+	EventBus.post("%sBounty claimed: %d spirit stones.%s" % [(lead + " ") if lead != "" else "", stones, bonus_line], "progress")
+	EventBus.bounty_claimed.emit(enemy_name, stones)
+	_gain_renown("bounty")
+	EventBus.player_changed.emit()
 
 
 ## Take a bounty from a board. Takes no time.
@@ -3021,12 +3027,16 @@ func engage_roamer(slot: int, charged: bool = false) -> bool:
 		if int(r["slot"]) != slot:
 			continue
 		if charged:
-			EventBus.post("The %s charges you!" % String(data.enemies[String(r["enemy"])]["name"]), "combat")
+			EventBus.post("The %s charges you!" % Wildlife.display_name(data, String(r["enemy"]), slot == Wildlife.GREAT_SLOT), "combat")
 		var region := current_region
 		var before := player.inventory.duplicate()
 		var spoils := {}
 		var bounty := slot == Wildlife.BOUNTY_SLOT
 		var great := slot == Wildlife.GREAT_SLOT
+		# WILD-008: a great beast that is also the active bounty's quarry settles the bounty too.
+		var bounty_id := ""
+		if great and String(Wildlife.bounty_roamer(player, data, region, GameClock.total_days, world_flags).get("enemy", "")) == String(r["enemy"]):
+			bounty_id = String(player.bounty.get("id", ""))
 		var won := _fight_bounty(String(r["enemy"]), spoils) if bounty else fight(String(r["enemy"]))
 		if won:
 			Wildlife.record_hunt(player, String(r["enemy"]))
@@ -3043,7 +3053,10 @@ func engage_roamer(slot: int, charged: bool = false) -> bool:
 				if trophy != "":
 					player.add_item(trophy, 1)
 					EventBus.post("You take the %s as a token of the hunt." % String(data.items[trophy]["name"]).to_lower(), "progress")
-				EventBus.post("The great %s's spoils come twice over." % String(data.enemies[String(r["enemy"])]["name"]), "progress")
+				EventBus.post("The %s's spoils come twice over." % Wildlife.display_name(data, String(r["enemy"]), true), "progress")
+				if bounty_id != "" and _can_act():
+					_pay_bounty(bounty_id, String(data.enemies[String(r["enemy"])]["name"]), "The %s was your quarry." % Wildlife.display_name(data, String(r["enemy"]), true))
+					Wildlife.mark_down(world_flags, region, Wildlife.BOUNTY_SLOT, GameClock.total_days)
 			Wildlife.record_spoils(player, String(r["enemy"]), spoils)
 		# The fight may have taken days: the beast is gone for the day you come back to.
 		Wildlife.mark_down(world_flags, region, slot, GameClock.total_days)

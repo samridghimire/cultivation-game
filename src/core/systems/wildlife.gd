@@ -106,6 +106,12 @@ static func next_great_day(data: GameData, region_id: String, from_day: int, rea
 	return -1
 
 
+## WILD-008: an enemy's display name; the great beast reads "Great <name>".
+static func display_name(data: GameData, enemy_id: String, great: bool) -> String:
+	var n := String(data.enemies.get(enemy_id, {}).get("name", enemy_id))
+	return "Great " + n if great else n
+
+
 static func flag_key(region_id: String, slot: int) -> String:
 	return "roamer_down_%s_%d" % [region_id, slot]
 

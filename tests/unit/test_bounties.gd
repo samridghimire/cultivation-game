@@ -392,6 +392,33 @@ func test_wild_hunt_win_pays_once_and_clears() -> void:
 	_finish(gs)
 
 
+## WILD-008: the great beast that is also the bounty quarry settles the bounty in one fight.
+func test_great_beast_completes_matching_bounty() -> void:
+	var gs := _gs()
+	_weakling(gs)
+	var c := _start_hunt(gs, "t_weakling")
+	var def: Dictionary = gs.data.regions["misty_forest"]["roamers"]["great"]
+	var old_enemy: Variant = def["enemy"]
+	def["enemy"] = "t_weakling"
+	GameClock.total_days = 7 * 50 + Wildlife.great_day("misty_forest", def)
+	gs.take_bounty("t_bounty")
+	var stones := c.item_count("spirit_stone")
+	assert_true(gs.engage_roamer(Wildlife.GREAT_SLOT))
+	assert_true(c.bounty.is_empty(), "bounty done by the great beast")
+	assert_eq(LifeStats.get_stat(c, "bounties_done"), 1)
+	assert_true(c.item_count("spirit_stone") >= stones + 25)
+	for x in gs.roamers_here():
+		assert_true(int(x["slot"]) != 100 and int(x["slot"]) != Wildlife.GREAT_SLOT, "no roamer reappears today")
+	def["enemy"] = old_enemy
+	_finish(gs)
+
+
+func test_display_name_great() -> void:
+	var d := data()
+	assert_eq(Wildlife.display_name(d, "wild_boar", true), "Great " + String(d.enemies["wild_boar"]["name"]))
+	assert_eq(Wildlife.display_name(d, "wild_boar", false), String(d.enemies["wild_boar"]["name"]))
+
+
 func test_wild_hunt_loss_keeps_bounty_and_beast_is_down() -> void:
 	var gs := _gs()
 	var strong: Dictionary = gs.data.enemies["wild_boar"].duplicate(true)

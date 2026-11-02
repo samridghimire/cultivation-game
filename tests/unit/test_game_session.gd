@@ -2906,4 +2906,4 @@ func test_great_beast_calendar_and_reminder() -> void:
 	gs.player.visited_regions.append("misty_forest")
 	assert_eq(kinds.call(VillageCalendar.upcoming(gs.data, {}, {}, [], "qingshi_village", day, 14, gs.player)), 2)
 	var lines := VillageCalendar.reminders(gs.data, {}, {}, [], "misty_forest", day - 1, gs.player, {})
-	assert_true(" ".join(lines).contains("a great"), str(lines))
+	assert_true(" ".join(lines).contains("Great "), str(lines))

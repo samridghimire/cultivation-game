@@ -318,7 +318,7 @@ static func roamer_count(c: CharacterData, data: GameData, region_id: String, da
 ## WU-430: the name of the great beast walking a region today ("" when none).
 static func great_name(c: CharacterData, data: GameData, region_id: String, day: int, flags: Dictionary) -> String:
 	var g := Wildlife.great_roamer(c, data, region_id, day, flags)
-	return "" if g.is_empty() else _enemy_name(data, String(g["enemy"]))
+	return "" if g.is_empty() else Wildlife.display_name(data, String(g["enemy"]), true)
 
 
 ## WU-428: "Today: rain, market at Travelling Market Stall, 3 beasts roam." ("" for a region never visited).
@@ -332,7 +332,7 @@ static func today_line(c: CharacterData, data: GameData, region_id: String, curr
 	var great := great_name(c, data, region_id, day, flags)
 	var beasts := roamer_count(c, data, region_id, day, flags)
 	if great != "":
-		parts.append("a great %s walks here" % great)
+		parts.append("the %s walks here" % great)
 	if beasts > 0:
 		parts.append("%d beast%s roam%s" % [beasts, "" if beasts == 1 else "s", "s" if beasts == 1 else ""])
 	return "Today: " + ", ".join(parts) + "."

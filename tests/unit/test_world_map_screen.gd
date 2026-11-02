@@ -412,5 +412,5 @@ func test_today_line_names_the_great_beast() -> void:
 	var line := WorldMapScreen.today_line(c, data(), "misty_forest", "misty_forest", day, {})
 	var name := WorldMapScreen.great_name(c, data(), "misty_forest", day, {})
 	assert_true(name != "", "a great beast walks on its weekday")
-	assert_true(line.contains("a great %s walks here" % name), line)
+	assert_true(line.contains("the %s walks here" % name), line)
 	assert_eq(WorldMapScreen.great_name(c, data(), "misty_forest", day + 1, {}), "")
