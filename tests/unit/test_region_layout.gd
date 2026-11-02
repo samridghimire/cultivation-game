@@ -179,6 +179,30 @@ func test_market_town_layout() -> void:
 			assert_false(r.intersects(c), "%s sits under a HUD card at the arrival camera" % e[0])
 
 
+## WU-434: nothing important hides under the HUD cards at the arrival camera, in any region.
+func test_nothing_under_hud_cards_on_arrival() -> void:
+	var cards: Array[Rect2] = [Rect2(16, 16, 330, 175), Rect2(910, 16, 360, 170), Rect2(16, 735, 410, 55)]
+	var kinds: Array[String] = ["pond", "jetty", "house", "field", "well", "stall"]
+	for region: Dictionary in data().regions.values():
+		var map: Dictionary = region["map"]
+		var spawn := Vector2(float(region["spawn"][0]), float(region["spawn"][1]))
+		var cam := Vector2(clampf(spawn.x - 640.0, 0.0, float(map["size"][0]) - 1280.0), clampf(spawn.y - 400.0, 0.0, float(map["size"][1]) - 800.0))
+		var rects: Array = []
+		for place: Dictionary in region["places"]:
+			if place["type"] != "travel":
+				rects.append([String(place.get("display_name", place["type"])), _rect(place, [30, 30])])
+		for lm: Dictionary in map["landmarks"]:
+			if String(lm["kind"]) in kinds:
+				rects.append(["%s at %s" % [lm["kind"], lm["pos"]], _rect(lm, [80, 50])])
+		for spot: Array in region["npc_spots"]:
+			rects.append(["NPC spot %s" % [spot], Rect2(float(spot[0]) - 14.0, float(spot[1]) - 14.0, 28.0, 28.0)])
+		for e: Array in rects:
+			var r: Rect2 = e[1]
+			r.position -= cam
+			for c in cards:
+				assert_false(r.intersects(c), "%s: %s sits under a HUD card at the arrival camera" % [region["id"], e[0]])
+
+
 ## GFX-054: a paved map gets flagstones only along its streets and in its plaza.
 func test_paved_zones_follow_the_streets() -> void:
 	var map: Dictionary = data().regions["fallen_star_market"]["map"]
