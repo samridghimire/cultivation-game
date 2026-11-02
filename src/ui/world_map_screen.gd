@@ -11,8 +11,11 @@ extends PanelContainer
 signal closed
 
 const HudScript := preload("res://src/ui/hud.gd")
-const CANVAS_SIZE := Vector2(560, 420)
-const NODE_SIZE := Vector2(132, 40)
+const CANVAS_SIZE := Vector2(640, 460)
+const NODE_HEIGHT := 40.0
+## Room kept round the node centres: left/right, top, bottom (the bottom holds the glyph row).
+const MARGIN := Vector4(84, 26, 30, 56)
+const GLYPH_SIZE := 24.0
 const DANGER_NAMES: PackedStringArray = ["Safe", "Low", "Moderate", "High", "Deadly"]
 const ROUTE_COLOR := Color(0.85, 0.76, 0.5, 0.8)
 const LOCKED_COLOR := Color(0.9, 0.38, 0.32, 0.8)
@@ -44,13 +47,14 @@ var _today: Label
 var _close_button: Button
 var _selected := ""
 var _positions: Dictionary = {}
+var _rects: Dictionary = {}
 
 
 func _init() -> void:
 	var temp := UIStyle.panel()
 	add_theme_stylebox_override("panel", temp.get_theme_stylebox("panel"))
 	temp.free()
-	custom_minimum_size = Vector2(980, 0)
+	custom_minimum_size = Vector2(1020, 0)
 	visible = false
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 10)
@@ -69,11 +73,11 @@ func _init() -> void:
 	# The details scroll so long region notes never push the screen past a
 	# Steam Deck's height.
 	var details_scroll := ScrollContainer.new()
-	details_scroll.custom_minimum_size = Vector2(380, CANVAS_SIZE.y)
+	details_scroll.custom_minimum_size = Vector2(340, CANVAS_SIZE.y)
 	details_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	columns.add_child(details_scroll)
 	var details := VBoxContainer.new()
-	details.custom_minimum_size = Vector2(360, 0)
+	details.custom_minimum_size = Vector2(320, 0)
 	details.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	details.add_theme_constant_override("separation", 8)
 	details_scroll.add_child(details)
@@ -100,7 +104,7 @@ func _init() -> void:
 	details.add_child(_marks)
 	_routes = _wrapped(UIStyle.label("", 15, UIStyle.CATEGORY_COLORS["progress"]))
 	details.add_child(_routes)
-	details.add_child(_wrapped(UIStyle.label("Red roads need a higher realm. Travel at a region's gate. Dots: blue sect hall, gold abode, pink family, teal anchor, purple secret realm, red world event. Corner marks: weather, $ market open today, w beasts roam, leaf forage by the path.", 14, Color(0.6, 0.6, 0.6))))
+	details.add_child(_wrapped(UIStyle.label("Red roads need a higher realm. Travel at a region's gate. Dots: blue sect hall, gold abode, pink family, teal anchor, purple secret realm, red world event. Row under a name: weather, coin market open today, paw beasts roam (gold: a great beast), leaf forage by the path.", 14, Color(0.6, 0.6, 0.6))))
 
 	_close_button = UIStyle.button("Close", close)
 	box.add_child(_close_button)
@@ -166,6 +170,41 @@ static func layout(data: GameData) -> Dictionary:
 		var angle := TAU * float(i) / unplaced.size() - PI / 2.0
 		result[unplaced[i]] = Vector2(0.5, 0.5) + Vector2(cos(angle) * 0.4, sin(angle) * 0.38)
 	return result
+
+
+## GFX-059: the box of a region node, wide enough for the whole name (min 110 wide, 40 high).
+static func node_rect(region_name: String, center: Vector2, font: Font, font_size: int) -> Rect2:
+	var w := maxf(110.0, font.get_string_size(region_name, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x + 24.0)
+	return Rect2(center - Vector2(w, NODE_HEIGHT) / 2.0, Vector2(w, NODE_HEIGHT))
+
+
+## GFX-059: the node box plus the glyph row under it (what must stay clear of other nodes).
+static func node_footprint(rect: Rect2) -> Rect2:
+	return Rect2(rect.position, rect.size + Vector2(0, GLYPH_SIZE + 4.0))
+
+
+## GFX-059: node centre in canvas pixels for a 0..1 layout fraction.
+static func center_of(fraction: Vector2) -> Vector2:
+	var lo := Vector2(MARGIN.x, MARGIN.y)
+	var hi := CANVAS_SIZE - Vector2(MARGIN.x, MARGIN.w)
+	return lo + fraction * (hi - lo)
+
+
+## GFX-059: top-left of a route's day label: beside the line (10 px off it), at the middle or slid
+## along the line (0.35 / 0.65, then further) until it hits no node rect.
+static func route_label_pos(a: Vector2, b: Vector2, label_size: Vector2, node_rects: Array[Rect2]) -> Vector2:
+	var dir := (b - a).normalized()
+	var normal := Vector2(-dir.y, dir.x)
+	if normal.y > 0.0:
+		normal = -normal
+	var push := 10.0 + absf(normal.x) * label_size.x / 2.0 + absf(normal.y) * label_size.y / 2.0
+	var best := Vector2.ZERO
+	for t: float in [0.5, 0.35, 0.65, 0.25, 0.75, 0.42, 0.58]:
+		best = a.lerp(b, t) + normal * push - label_size / 2.0
+		var rect := Rect2(best, label_size).grow(2.0)
+		if not node_rects.any(func(n: Rect2) -> bool: return n.intersects(rect)):
+			return best
+	return best
 
 
 ## Text lines for the focused region: route from the current region (or
@@ -399,30 +438,35 @@ func _rebuild() -> void:
 		_canvas.remove_child(child)
 		child.queue_free()
 	_positions.clear()
+	_rects.clear()
 	var fractions := layout(data)
-	var area := CANVAS_SIZE - NODE_SIZE
+	var font := ThemeDB.fallback_font
 	var ids := fractions.keys()
 	ids.sort()
 	for region_id in ids:
-		var top_left: Vector2 = Vector2(fractions[region_id]) * area
-		_positions[region_id] = top_left + NODE_SIZE / 2.0
+		var center := center_of(fractions[region_id])
+		var label := Exploration.region_name(data, region_id)
+		var unexplored := is_unexplored(GameState.player, region_id, GameState.current_region)
+		if region_id == GameState.current_region:
+			label = "* " + label
+		var rect := node_rect(label, center, font, 14)
+		_positions[region_id] = center
+		_rects[region_id] = rect
 		var b := Button.new()
 		b.name = region_id
-		b.text = Exploration.region_name(data, region_id)
+		b.text = label
 		b.add_theme_font_size_override("font_size", 14)
-		if is_unexplored(GameState.player, region_id, GameState.current_region):
+		if unexplored:
 			b.text += "\nUnexplored"
 			b.modulate.a = 0.45
-			b.add_theme_font_size_override("font_size", 12)
 		b.clip_text = true
-		b.position = top_left
-		b.size = NODE_SIZE
+		b.position = rect.position
+		b.size = rect.size
 		b.toggle_mode = true
 		b.button_pressed = region_id == _selected
 		if region_id == GameState.current_region:
 			b.add_theme_color_override("font_color", UIStyle.ACCENT)
 			b.add_theme_color_override("font_focus_color", UIStyle.ACCENT)
-			b.text = "* " + b.text
 		b.focus_entered.connect(_select.bind(region_id))
 		b.pressed.connect(_select.bind(region_id))
 		_canvas.add_child(b)
@@ -430,12 +474,57 @@ func _rebuild() -> void:
 	_show_details()
 
 
+## GFX-059: ground colour of a region's land blob from its map.ground_style.
+static func land_color(region: Dictionary) -> Color:
+	match String(region.get("map", {}).get("ground_style", "")):
+		"scree":
+			return Color(0.62, 0.64, 0.68)
+		"bog":
+			return Color(0.42, 0.45, 0.24)
+		"paved":
+			return Color(0.74, 0.65, 0.45)
+		"litter":
+			return Color(0.28, 0.5, 0.3)
+	return Color(0.4, 0.6, 0.32)
+
+
+## GFX-059: the painted land, from region data only (soft blobs, mountains on scree, trees on woods).
+func _draw_land(data: GameData) -> void:
+	_canvas.draw_rect(Rect2(Vector2.ZERO, CANVAS_SIZE), Color(0.2, 0.19, 0.14))
+	var ids := _positions.keys()
+	ids.sort()
+	for region_id: String in ids:
+		var region: Dictionary = data.regions[region_id]
+		var c: Vector2 = _positions[region_id]
+		var col := land_color(region)
+		for k in 5:
+			var r := 96.0 - k * 14.0
+			_canvas.draw_circle(c, r, Color(col.r, col.g, col.b, 0.13))
+		var rng := RandomNumberGenerator.new()
+		rng.seed = hash(region_id)
+		var decor: Dictionary = region.get("map", {}).get("decor", {})
+		if String(region.get("map", {}).get("ground_style", "")) == "scree":
+			for k in 5:
+				var p := c + Vector2(rng.randf_range(-90, 90), rng.randf_range(-60, 60))
+				var h := rng.randf_range(16, 26)
+				_canvas.draw_colored_polygon(PackedVector2Array([p + Vector2(-h, h * 0.6), p + Vector2(0, -h), p + Vector2(h, h * 0.6)]), Color(0.42, 0.45, 0.5, 0.7))
+				_canvas.draw_colored_polygon(PackedVector2Array([p + Vector2(-h * 0.3, -h * 0.4), p + Vector2(0, -h), p + Vector2(h * 0.3, -h * 0.4)]), Color(0.92, 0.94, 0.98, 0.8))
+		if int(decor.get("trees", 0)) >= 30:
+			for k in 9:
+				var p := c + Vector2(rng.randf_range(-100, 100), rng.randf_range(-60, 70))
+				_canvas.draw_rect(Rect2(p + Vector2(-1.5, 4), Vector2(3, 6)), Color(0.3, 0.2, 0.12, 0.8))
+				_canvas.draw_circle(p, 6.0, Color(0.12, 0.34, 0.16, 0.8))
+
+
 func _draw_map() -> void:
 	var data := GameState.data
 	if data == null:
 		return
-	_canvas.draw_rect(Rect2(Vector2.ZERO, CANVAS_SIZE), Color(0.12, 0.14, 0.12, 0.9))
+	_draw_land(data)
 	var font := ThemeDB.fallback_font
+	var node_rects: Array[Rect2] = []
+	for r: Rect2 in _rects.values():
+		node_rects.append(node_footprint(r))
 	var drawn := {}
 	for region_id in _positions:
 		for route: Dictionary in data.regions[region_id].get("routes", []):
@@ -449,39 +538,42 @@ func _draw_map() -> void:
 			_canvas.draw_line(a, b, LOCKED_COLOR if _route_gated(data, region_id, to) else ROUTE_COLOR, 4.0)
 			var snow := Weather.travel_extra_days(data, GameState.current_region, GameClock.total_days) if region_id == GameState.current_region else 0
 			var days := route_days_label(GameState.player, data, route, snow)
-			_canvas.draw_string(font, (a + b) / 2.0 + Vector2(4, -4), days, HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color(0.9, 0.9, 0.85))
+			var size := font.get_string_size(days, HORIZONTAL_ALIGNMENT_LEFT, -1, 14) + Vector2(10, 4)
+			var pos := route_label_pos(a, b, size, node_rects)
+			node_rects.append(Rect2(pos, size))  # later labels keep clear of this one
+			_canvas.draw_rect(Rect2(pos, size), Color(0.08, 0.08, 0.1, 0.85))
+			_canvas.draw_string(font, pos + Vector2(5, size.y - 5), days, HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color(0.9, 0.9, 0.85))
 	for region_id in _positions:
+		var rect: Rect2 = _rects[region_id]
+		var x := rect.position.x
+		var y := rect.end.y + 3.0
+		if not is_unexplored(GameState.player, region_id, GameState.current_region):
+			var icon := HudIcons.weather(Weather.of(data, region_id, GameClock.total_days))
+			if icon != null:
+				_canvas.draw_texture_rect(icon, Rect2(x, y, GLYPH_SIZE, GLYPH_SIZE), false)
+				x += GLYPH_SIZE + 2.0
+			if not open_markets(data, region_id, GameClock.total_days).is_empty():
+				_canvas.draw_texture_rect(HudIcons.map_mark("coin"), Rect2(x, y, GLYPH_SIZE, GLYPH_SIZE), false)
+				x += GLYPH_SIZE + 2.0
+			var gold := great_name(GameState.player, data, region_id, GameClock.total_days, GameState.world_flags) != ""
+			if gold or roamer_count(GameState.player, data, region_id, GameClock.total_days, GameState.world_flags) > 0:
+				_canvas.draw_texture_rect(HudIcons.map_mark("paw_gold" if gold else "paw"), Rect2(x, y, GLYPH_SIZE, GLYPH_SIZE), false)
+				x += GLYPH_SIZE + 2.0
+			if not forage_entries(GameState.player, data, region_id, GameState.current_region, GameClock.total_days, GameState.world_flags).is_empty():
+				_canvas.draw_texture_rect(HudIcons.map_mark("leaf"), Rect2(x, y, GLYPH_SIZE, GLYPH_SIZE), false)
+				x += GLYPH_SIZE + 2.0
 		var kinds: Array = []
 		for mark in region_marks(GameState.player, data, GameState.npcs, GameState.world_events, GameClock.total_days, region_id, GameState.current_region, GameState.world_flags):
 			if not kinds.has(mark["kind"]):
 				kinds.append(mark["kind"])
-		var start: Vector2 = Vector2(_positions[region_id]) + Vector2(-(kinds.size() - 1) * 7.0, NODE_SIZE.y / 2.0 + 8.0)
-		for i in kinds.size():
-			_canvas.draw_circle(start + Vector2(i * 14.0, 0), 5.0, MARK_COLORS[kinds[i]])
-	for region_id in _positions:
-		if is_unexplored(GameState.player, region_id, GameState.current_region):
-			continue
-		var top_left: Vector2 = Vector2(_positions[region_id]) - NODE_SIZE / 2.0
-		var icon := HudIcons.weather(Weather.of(data, region_id, GameClock.total_days))
-		if icon != null:
-			_canvas.draw_texture(icon, top_left + Vector2(NODE_SIZE.x - 14.0, 2.0))
-		var mx: float = top_left.x + NODE_SIZE.x - 14.0
-		var my: float = top_left.y + NODE_SIZE.y - 14.0
-		if not open_markets(data, region_id, GameClock.total_days).is_empty():
-			_canvas.draw_texture(HudIcons.map_mark("coin"), Vector2(mx, my))
-			mx -= 14.0
-		var gold := great_name(GameState.player, data, region_id, GameClock.total_days, GameState.world_flags) != ""
-		if gold or roamer_count(GameState.player, data, region_id, GameClock.total_days, GameState.world_flags) > 0:
-			_canvas.draw_texture(HudIcons.map_mark("paw_gold" if gold else "paw"), Vector2(mx, my))
-			mx -= 14.0
-		if not forage_entries(GameState.player, data, region_id, GameState.current_region, GameClock.total_days, GameState.world_flags).is_empty():
-			_canvas.draw_texture(HudIcons.map_mark("leaf"), Vector2(mx, my))
-	if _hint_region != "" and _positions.has(_hint_region):
-		var tip: Vector2 = Vector2(_positions[_hint_region]) + Vector2(NODE_SIZE.x / 2.0 - 4.0, -NODE_SIZE.y / 2.0 - 2.0)
-		_canvas.draw_string(font, tip, "!", HORIZONTAL_ALIGNMENT_LEFT, -1, 22, UIStyle.ACCENT)
-	if _positions.has(GameState.current_region):
-		var here := Rect2(Vector2(_positions[GameState.current_region]) - NODE_SIZE / 2.0, NODE_SIZE).grow(5.0)
-		_canvas.draw_rect(here, UIStyle.ACCENT, false, 3.0)
+		for kind in kinds:
+			_canvas.draw_circle(Vector2(x + 6.0, y + GLYPH_SIZE / 2.0), 5.0, MARK_COLORS[kind])
+			x += 14.0
+	if _hint_region != "" and _rects.has(_hint_region):
+		var hr: Rect2 = _rects[_hint_region]
+		_canvas.draw_string(font, Vector2(hr.end.x - 4.0, hr.position.y - 2.0), "!", HORIZONTAL_ALIGNMENT_LEFT, -1, 22, UIStyle.ACCENT)
+	if _rects.has(GameState.current_region):
+		_canvas.draw_rect((_rects[GameState.current_region] as Rect2).grow(5.0), UIStyle.ACCENT, false, 3.0)
 
 
 ## Whether the road between two regions needs a minimum realm in either direction.
