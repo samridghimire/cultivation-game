@@ -2935,3 +2935,36 @@ func test_pick_forage_log_says_what_it_is_for() -> void:
 	EventBus.message_posted.disconnect(cb)
 	assert_true(msgs.size() >= 1)
 	assert_true(String(msgs[0]).begins_with("You pick"), String(msgs[0]))
+
+
+func test_great_beast_win_raises_renown() -> void:
+	var gs := _game_state()
+	_start()
+	gs.current_region = "misty_forest"
+	gs.player.realm_index = 5
+	var def: Dictionary = gs.data.regions["misty_forest"]["roamers"]["great"]
+	GameClock.total_days = 7 * 50 + Wildlife.great_day("misty_forest", def)
+	var before := Renown.value(gs.player, "misty_forest")
+	var won: bool = gs.engage_roamer(Wildlife.GREAT_SLOT)
+	var gain := int(gs.data.renown["sources"]["great_beast"])
+	if won:
+		assert_eq(Renown.value(gs.player, "misty_forest"), before + gain, "renown once")
+		assert_false(gs.engage_roamer(Wildlife.GREAT_SLOT), "the beast is gone for the day")
+		assert_eq(Renown.value(gs.player, "misty_forest"), before + gain)
+	else:
+		assert_eq(Renown.value(gs.player, "misty_forest"), before, "no renown on a loss")
+
+
+func test_ordinary_roamer_and_missing_source_add_no_renown() -> void:
+	var gs := _game_state()
+	_start()
+	gs.current_region = "qingshi_village"
+	var before := Renown.value(gs.player, "qingshi_village")
+	for r in gs.roamers_here():
+		gs.engage_roamer(int(r["slot"]))
+		break
+	assert_eq(Renown.value(gs.player, "qingshi_village"), before)
+	gs.data.renown["sources"].erase("great_beast")
+	var r2 := Renown.gain(gs.player, gs.data, "misty_forest", "great_beast")
+	assert_eq(int(r2["gained"]), 0)
+	gs.data.renown["sources"]["great_beast"] = 15

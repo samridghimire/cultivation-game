@@ -3071,6 +3071,7 @@ func engage_roamer(slot: int, charged: bool = false) -> bool:
 					player.add_item(item_id, int(spoils[item_id]))
 					spoils[item_id] = int(spoils[item_id]) * 2
 				LifeStats.add(player, "great_beasts")
+				_gain_renown("great_beast")  # WILD-010: the hunter is known (the beast walks and falls once a day)
 				var trophy := Wildlife.record_great(player, data, String(r["enemy"]), region, GameClock.total_days)
 				if trophy != "":
 					player.add_item(trophy, 1)
