@@ -19,6 +19,7 @@ extends SceneTree
 ## region); with one id the normal shot set is rendered in that region and the arrival shot is also named region_<id>.png.
 ## QA-187: append `-- --companion` (a Qingshi friend invited along, WU-413): companion.png (the HUD chip) and
 ## field_menu.png (the rented field's menu with the tool icons).
+## GFX-065: append `-- --arrival-card` for arrival_card.png, right after a new game starts, the card still up.
 ## PNGs go to user://screenshots/first_hour/<name>.png. Never writes saves.
 ## (The mid-game sibling is screenshot_screens.gd.)
 
@@ -35,6 +36,11 @@ var banner_wait_start := -1
 var started := false
 var region_list: Array[String] = []  ## QA-187: --region= ids
 var opened := false
+
+
+## GFX-065: drop the Qingshi arrival line start_session posted, so a --region shot shows one line for its day.
+func _drop_start_line() -> void:
+	root.get_node("EventBus").clear_history()
 
 
 func _start() -> void:
@@ -59,13 +65,17 @@ func _start() -> void:
 					push_warning("--region: unknown region %s" % id)
 	if not region_list.is_empty():
 		gs.current_region = region_list[0]
-		gs.call("_post_arrival_line")  # GUIDE-210: the region's own arrival line
 	if OS.get_cmdline_user_args().has("--great"):  # WU-430: jump to the region's next great-beast day
 		var clock: Node = root.get_node("GameClock")
 		var walk: int = Wildlife.next_great_day(gs.data, gs.current_region, clock.total_days, gs.player.realm_index)
 		if walk >= 0:
 			clock.total_days = walk
+	if not region_list.is_empty():
+		_drop_start_line()
+		gs.call("_post_arrival_line")  # GUIDE-210: the region's own arrival line, once, after the day is final
 	gs.pending_event = ""
+	if OS.get_cmdline_user_args().has("--arrival-card"):
+		gs.arrival_banner_pending = true  # GFX-065: as a new game from the title screen sets it
 	var party := OS.get_cmdline_user_args().has("--celebration")
 	if party:  # GFX-023: a wedding for a Qingshi villager, before the world is built
 		var bride := Npcs.spawn(gs.npcs, gs.data, rng, {"age_years": 24, "region": "qingshi_village", "realm": "mortal", "gender": "female"})
@@ -84,6 +94,9 @@ func _start() -> void:
 		_gather_note_shots(gs)
 		return
 	var special := false
+	if OS.get_cmdline_user_args().has("--arrival-card"):  # GFX-065: the new-game region card, before it fades
+		shots.append({"name": "arrival_card", "open": func() -> void: pass, "close": func() -> void: pass})
+		return
 	if region_list.size() > 1:  # QA-187: one arrival shot per region, rebuilding the world between them
 		for id in region_list:
 			shots.append({"name": "region_" + id, "open": func() -> void: _rebuild_world(gs, id), "close": func() -> void: pass})
@@ -525,7 +538,7 @@ func _process(_d: float) -> bool:
 		return false
 	frames += 1
 	# WU-386: after a fight a milestone banner is still fading; wait it out (at most ~3 s) so it never dims a screen shot.
-	if frames >= SETTLE_FRAMES and hud.get("_banner").visible and (shot.get("wait_banner", false) or shot["name"] != "hud_arrival"):  # QA-182: queued notices covered the modals
+	if frames >= SETTLE_FRAMES and hud.get("_banner").visible and (shot.get("wait_banner", false) or shot["name"] not in ["hud_arrival", "arrival_card"]):  # QA-182: queued notices covered the modals
 		if banner_wait_start < 0:
 			banner_wait_start = Time.get_ticks_msec()
 		if Time.get_ticks_msec() - banner_wait_start < BANNER_WAIT_MSEC:

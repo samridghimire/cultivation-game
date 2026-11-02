@@ -613,6 +613,23 @@ func test_snow_adds_a_day_to_travel() -> void:
 	_restore_weather(gs)
 
 
+func test_one_travel_posts_one_arrival_line() -> void:  # GFX-065
+	var c := _start()
+	var gs := _game_state()
+	c.realm_index = 1
+	gs.data.road = {}
+	var route: Dictionary = gs.data.regions[gs.data.start_region]["routes"][0]
+	gs.travel(String(route["to"]))
+	var line := String(gs.world_flags.get("arrival_line", ""))
+	if line == "":
+		return
+	var count := 0
+	for m: Dictionary in EventBus.history:
+		if String(m["text"]) == line and String(m["category"]) == "travel":
+			count += 1
+	assert_eq(count, 1, "the arrival line is posted once per travel")
+
+
 func test_journey_days_matches_days_spent_and_labels() -> void:
 	var c := _start()
 	var gs := _game_state()

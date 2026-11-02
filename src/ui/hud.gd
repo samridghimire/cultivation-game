@@ -545,7 +545,7 @@ func _build_guide_panel() -> void:
 	_key_bar = UIStyle.label("", 12, Color(0.7, 0.7, 0.7, 0.85))
 	_key_bar.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	_key_bar.add_theme_stylebox_override("normal", key_bar_style())
-	_set_anchored_rect(_key_bar, Vector4(1, 1, 1, 1), Vector4(-616, -34, -16, -8))
+	_set_anchored_rect(_key_bar, Vector4(1, 1, 1, 1), Vector4(-640, -34, -16, -8))  # GFX-065: wide enough for 11 hints at 1280 and 720 (it was cut at [C] sheet)
 	_key_bar.grow_horizontal = Control.GROW_DIRECTION_BEGIN
 	_key_bar.grow_vertical = Control.GROW_DIRECTION_BEGIN
 	_key_bar.visible = bool(Settings.get_value("key_help"))

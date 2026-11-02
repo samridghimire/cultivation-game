@@ -179,3 +179,12 @@ func test_cut_entries_keeps_whole_entries() -> void:
 	assert_eq(HudScript.wrapped_lines(cut2[0], font, 14, 316.0).size(), 1)
 	assert_true(cut2[0].trim_suffix("…").split(" ")[-1] in ["alpha", "bravo", "charlie", "delta"], "word boundary")
 	assert_eq(HudScript.cut_entries(PackedStringArray(["a", "b"]), font, 14, 316.0, 5), PackedStringArray(["a", "b"]))
+
+
+func test_key_bar_is_wide_enough_for_its_hints() -> void:  # GFX-065
+	var hud := await _build()
+	var bar: Label = hud.get("_key_bar")
+	await _tree().process_frame
+	assert_true(bar.get_global_rect().size.x >= bar.get_minimum_size().x - 24.0 - 1.0, "key bar text fits its box")
+	assert_true(bar.get_global_rect().position.x >= 0.0, "key bar stays on screen")
+	_done(hud)
