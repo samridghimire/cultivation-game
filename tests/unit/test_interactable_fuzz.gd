@@ -12,6 +12,18 @@ const MAX_CALLS_PER_NODE := 14
 ## Long actions (a year of closed-door cultivation) are covered elsewhere and slow the run.
 const SKIP_PREFIXES := ["Travel to ", "Closed-door cultivation"]
 
+## QA-192: names the seed and the option being run when the engine logs an error,
+## so a one-in-N flake is actionable from the test output alone.
+class ContextLogger extends Logger:
+	var context := ""
+	var seed_text := ""
+
+	func _log_error(function: String, file: String, line: int, code: String, _rationale: String, _editor_notify: bool, error_type: int, _script_backtraces: Array[ScriptBacktrace]) -> void:
+		if error_type == ERROR_TYPE_WARNING:
+			return
+		print("FUZZ ENGINE ERROR seed=%s during [%s]: %s (%s:%d %s)" % [seed_text, context, code, file, line, function])
+
+var _ctx := ContextLogger.new()
 var _last_day := 0
 var _calls := 0
 var _window_realm := ""
@@ -210,6 +222,7 @@ func _fuzz_node(node: Interactable, region_id: String) -> void:
 		_pairs["%s|%s" % [node.get_script().resource_path, _label_key(label)]] = true
 		calls += 1
 		_calls += 1
+		_ctx.context = "%s / %s / %s" % [region_id, node.display_name, label]
 		(pick["action"] as Callable).call()
 		if _gs().in_dialogue():
 			_gs().end_dialogue()
@@ -255,6 +268,8 @@ func _fuzz_all_regions(kind: String) -> void:
 	var old_hints: Variant = Settings.get_value("hud_hints")
 	Settings.set_value("hud_hints", old_hints if _hints_on else 0)
 	_start(kind)
+	_ctx.seed_text = "%s kind=%s" % [str(_gs().rng.seed), kind]
+	OS.add_logger(_ctx)
 	var bus := _tree().root.get_node("EventBus")
 	bus.message_posted.connect(_check_message)
 	_last_day = _clock().total_days
@@ -283,6 +298,7 @@ func _fuzz_all_regions(kind: String) -> void:
 	if OS.get_environment("FUZZ_LOG") != "":
 		print("FUZZ %s calls=%d day=%d pairs=%d" % [kind, _calls, _clock().total_days, _pairs.size()])
 	bus.message_posted.disconnect(_check_message)
+	OS.remove_logger(_ctx)
 	Settings.set_value("hud_hints", old_hints)
 	_only_region = ""
 	_gs().end_session()
