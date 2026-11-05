@@ -46,7 +46,7 @@ static func hint_line(region: Dictionary, today: int, window: int = 5, data: Gam
 				names.append(String(data.items.get(id, {}).get("name", id)))
 			if not names.is_empty():
 				var wants := wanted_phrase(best_place, today, data)
-				var reg_note := "; you are a regular here (-%d%%)" % roundi(regular_discount(best_place) * 100.0) if is_reg else ""
+				var reg_note := "; %d%% off for you" % roundi(regular_discount(best_place) * 100.0) if is_reg else ""
 				return "Market day today: %s%s sells %s%s%s" % [best_name, " (regular)" if is_reg else "", ", ".join(names), "" if wants == "" else "; wants " + wants, reg_note]
 		return "Market day today: %s is open" % best_name
 	var reg_tag := " (regular)" if rotates and is_regular(best_place, int(regulars.get(place_key(best_name), 0))) else ""

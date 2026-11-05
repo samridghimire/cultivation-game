@@ -269,7 +269,7 @@ func test_is_regular_threshold_and_defaults() -> void:
 
 func test_hint_line_says_regular() -> void:
 	var line := Places.hint_line(_region(), DAY_10, 5, _gd(), {"travelling_market_stall": 3})
-	assert_true(line.contains("you are a regular here (-10%)"), line)
+	assert_true(line.contains("(regular) sells") and line.contains("; 10% off for you"), line)
 	assert_false(Places.hint_line(_region(), DAY_10, 5, _gd(), {"travelling_market_stall": 2}).contains("regular"))
 
 

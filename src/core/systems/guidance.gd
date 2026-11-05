@@ -132,7 +132,9 @@ static func _missed_festivals(data: GameData, flags: Dictionary, day: int, seaso
 			continue
 		for m in def.get("months", []):
 			var probe := (year * Calendar.MONTHS_PER_YEAR + int(m) - 1) * Calendar.DAYS_PER_MONTH
-			if Calendar.season_of(probe).to_lower() == season_key and int(m) < month and int(flags.get(seen_key(eid), -1)) != year:
+			# <= month: festivals roll on the month's first day and last at most 10 days, so one in this (the season's
+			# last) month is over by the time the ending line posts (Qingming is in month 3, C-307).
+			if Calendar.season_of(probe).to_lower() == season_key and int(m) <= month and int(flags.get(seen_key(eid), -1)) != year:
 				out.append(String(def.get("name", eid)))
 				break
 	return out

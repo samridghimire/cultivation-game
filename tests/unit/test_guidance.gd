@@ -6245,6 +6245,8 @@ func test_season_ending_said_right() -> void:
 	c.visited_regions.clear()
 	assert_true(Guidance.season_ending(c, data(), 357, {}).contains("Lantern Festival"))
 	assert_eq(Guidance.season_ending(c, data(), 357, {Guidance.seen_key("lantern_festival"): Calendar.year_of(357)}), "")
+	# Qingming sits in spring's last month (C-307): spring's end still names it as missed.
+	assert_true(Guidance.season_ending(c, data(), 87, {}).contains("Qingming"), Guidance.season_ending(c, data(), 87, {}))
 
 
 ## TODAY-001: market day first/next, wanted item, great beast, season ending, order and cap.

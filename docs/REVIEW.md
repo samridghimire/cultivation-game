@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: ebed75d
+Last reviewed commit: d8b322a
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -1517,3 +1517,18 @@ Last reviewed commit: ebed75d
     year does not break "three years running"; C-299 made the Corpse Peddler's Skiff (the marsh's only shop) open on
     days 6 and 21 only, as specced; SEASON-003's leaving line uses singular names ("Purple Cloud Mushroom and Mist
     Fox go with it") and lists an in-season (fat) roamer as leaving although the plain beast stays.
+- 2026-11-05 (reviewer, 4th run): reviewed ebed75d..d8b322a (QA-195, GFX-073, WILD-016, GFX-074, SEASON-004, C-307,
+  C-306, TODAY-001, QA-045, WU-456, WU-453, WU-454; [PLAN]/[REVIEW] skipped). Main green before and after (3242 tests).
+  No BACKLOG/CHANGELOG edits by workers; no SAVE_VERSION change (`festival_seen_<id>` and `village_hunt` are world
+  flags); no binary assets.
+  - Fixed (cross-feature, SEASON-004 x C-307): the "You missed the X this year" check only counted festivals in months
+    *before* the current one, and C-307 moved Qingming into spring's last month, so spring's ending never named a
+    missed Qingming. Now `<=` month (festivals roll on the month's first day and last <= 10 days, so they are over by
+    the season's last 3 days); test added.
+  - Fixed (WU-453): the market-day line said "Stall (regular) sells ...; you are a regular here (-10%)". The tail is
+    now "; 10% off for you".
+  - WILD-016, WU-456, WU-454 (focus, modal/blocking lists, queues behind the road card), TODAY-001, GFX-073, GFX-074,
+    C-306 (keepsakes no_shop, obtainability audit reads grants), QA-045, QA-195 OK.
+  - Notes, not filed: WILD-016 fights the Misty Forest beast from Qingshi's board without travelling, marks the
+    season's hunt used before the fight (a loss spends it), and its "spoils come twice over" line is not reflected in
+    the combat report's spoils list; TODAY-001 calls VillageCalendar's private `_reminder_line`.
