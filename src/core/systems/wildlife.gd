@@ -127,6 +127,27 @@ static func display_name(data: GameData, enemy_id: String, great: bool) -> Strin
 	return "Great " + n if great else n
 
 
+## WILD-013: true when `enemy_id` has a roamers entry in `region_id` whose `in_season` list holds today's season:
+## its spoils then roll twice.
+static func in_season_now(data: GameData, region_id: String, enemy_id: String, day: int) -> bool:
+	var season := Calendar.season_of(day).to_lower()
+	for e: Dictionary in data.regions.get(region_id, {}).get("roamers", {}).get("enemies", []):
+		if String(e["enemy"]) == enemy_id and (e.get("in_season", []) as Array).has(season):
+			return true
+	return false
+
+
+## WILD-013: "Fat Mist Foxes run in Misty Forest this autumn." for the first in-season beast kind, "" if none.
+static func season_clause(data: GameData, region_id: String, day: int) -> String:
+	var season := Calendar.season_of(day).to_lower()
+	for e: Dictionary in data.regions.get(region_id, {}).get("roamers", {}).get("enemies", []):
+		if (e.get("in_season", []) as Array).has(season):
+			var n := String(data.enemies.get(String(e["enemy"]), {}).get("name", e["enemy"]))
+			var plural := n + ("es" if n.ends_with("x") or n.ends_with("s") else "s")
+			return "Fat %s run in %s this %s." % [plural, Exploration.region_name(data, region_id), season]
+	return ""
+
+
 static func flag_key(region_id: String, slot: int) -> String:
 	return "roamer_down_%s_%d" % [region_id, slot]
 
@@ -325,4 +346,9 @@ static func validate(data: GameData) -> PackedStringArray:
 					errors.append("%s enemy '%s' has unknown season '%s'" % [where, e["enemy"], s])
 			if e.has("min_realm") and data.realm_index_of(String(e["min_realm"])) < 0:
 				errors.append("%s enemy '%s' has unknown min_realm" % [where, e["enemy"]])
+			if e.has("in_season") and not e["in_season"] is Array:
+				errors.append("%s enemy '%s' in_season must be a list of seasons" % [where, e["enemy"]])
+			for s: Variant in e.get("in_season", []) if e.get("in_season") is Array else []:
+				if not Exploration.SEASON_NAMES.has(String(s)):
+					errors.append("%s enemy '%s' has unknown in_season '%s'" % [where, e["enemy"], s])
 	return errors

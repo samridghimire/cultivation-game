@@ -340,3 +340,51 @@ func test_tracks_the_day_before_a_walk_only() -> void:
 	assert_false(Wildlife.tracks_today(d, "misty_forest", 6, 0), "realm the beast ignores")
 	assert_true(Wildlife.tracks_today(d, "misty_forest", 6, 3))
 	d.regions["misty_forest"]["roamers"]["great"] = old
+
+
+## WILD-013: in-season beasts.
+func test_in_season_helpers_and_validation() -> void:
+	var d := _gdata()
+	var autumn_day := 7 * 30  # month 8 (autumn)
+	var summer_day := 4 * 30  # month 5 (summer)
+	assert_eq(Calendar.season_of(autumn_day), "Autumn")
+	assert_eq(Calendar.season_of(summer_day), "Summer")
+	assert_true(Wildlife.in_season_now(d, "misty_forest", "mist_fox", autumn_day))
+	assert_false(Wildlife.in_season_now(d, "misty_forest", "mist_fox", summer_day))
+	assert_false(Wildlife.in_season_now(d, "misty_forest", "wild_boar", autumn_day))
+	assert_eq(Wildlife.season_clause(d, "misty_forest", autumn_day), "Fat Mist Foxes run in Misty Forest this autumn.")
+	assert_eq(Wildlife.season_clause(d, "misty_forest", summer_day), "")
+	assert_true(Wildlife.season_clause(d, "withered_bone_marsh", summer_day).begins_with("Fat Mist Pythons"))
+	var old: Dictionary = d.regions["misty_forest"]["roamers"]
+	d.regions["misty_forest"]["roamers"] = {"count": [1, 1], "enemies": [{"enemy": "mist_fox", "weight": 1, "in_season": ["monsoon"]}]}
+	assert_eq(Wildlife.validate(d).size(), 1)
+	d.regions["misty_forest"]["roamers"] = {"count": [1, 1], "enemies": [{"enemy": "mist_fox", "weight": 1, "in_season": "autumn"}]}
+	assert_eq(Wildlife.validate(d).size(), 1)
+	d.regions["misty_forest"]["roamers"] = old
+	assert_eq(Wildlife.validate(d).size(), 0)
+
+
+func test_in_season_spoils_double_only_in_season() -> void:
+	var gs := (Engine.get_main_loop() as SceneTree).root.get_node("GameState")
+	var weak: Dictionary = gs.data.enemies["wild_boar"].duplicate(true)
+	weak.merge({"id": "t_weakling", "hp": -1000, "attack": -1000, "defense": -1000, "speed": -1000}, true)
+	weak["rewards"] = {"items": {"boar_meat": 2}}
+	gs.data.enemies["t_weakling"] = weak
+	var old: Dictionary = gs.data.regions["misty_forest"]["roamers"]
+	var got: Array[int] = []
+	for season_list: Array in [[], ["spring", "summer", "autumn", "winter"]]:
+		var entry := {"enemy": "t_weakling", "weight": 1}
+		if not season_list.is_empty():
+			entry["in_season"] = season_list
+		gs.data.regions["misty_forest"]["roamers"] = {"count": [1, 1], "enemies": [entry]}
+		var c := CharacterFactory.create("Hunter", gs.data, seeded_rng(9))
+		gs.start_session(c)
+		gs.current_region = "misty_forest"
+		GameClock.total_days = 5
+		var before := c.item_count("boar_meat")
+		assert_true(gs.engage_roamer(0))
+		got.append(c.item_count("boar_meat") - before)
+	gs.data.regions["misty_forest"]["roamers"] = old
+	gs.data.enemies.erase("t_weakling")
+	assert_eq(got[1], got[0] * 2, "in season doubles the spoils")
+	assert_true(got[0] > 0)

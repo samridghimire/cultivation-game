@@ -676,6 +676,9 @@ func _post_arrival_line() -> void:
 	world_flags["arrival_line"] = line
 	if line != "":
 		EventBus.post(line, "travel")
+	var season_line := Wildlife.season_clause(data, current_region, day)  # WILD-013
+	if season_line != "":
+		EventBus.post(season_line, "travel")
 
 
 ## After a journey, an NPC with a strong grudge may ambush the player, and a
@@ -3114,6 +3117,12 @@ func engage_roamer(slot: int, charged: bool = false) -> bool:
 			# The bounty's pay is not the beast's spoils (REVIEW of WILD-005).
 			if not bounty:
 				spoils = Wildlife.inventory_gain(before, player.inventory)
+			if not great and not bounty and Wildlife.in_season_now(data, region, String(r["enemy"]), GameClock.total_days):
+				# WILD-013: an in-season beast's spoils roll twice.
+				for item_id: String in spoils:
+					player.add_item(item_id, int(spoils[item_id]))
+					spoils[item_id] = int(spoils[item_id]) * 2
+				EventBus.post("In season, the %s's spoils come twice over." % Wildlife.display_name(data, String(r["enemy"]), false), "progress")
 			if great:
 				# WILD-006: a great beast's normal spoils, twice over.
 				for item_id: String in spoils:
