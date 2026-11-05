@@ -3222,3 +3222,39 @@ func test_season_ending_posts_once() -> void:
 			again += 1
 	assert_eq(again, 1, "once per season")
 	assert_true(EventBus.posted_count >= after)
+
+
+## WILD-016: the village hunt is offered in its window, once a season, with the hunters' strike and doubled spoils.
+func test_village_hunt() -> void:
+	_start()
+	var gs := _game_state()
+	gs.current_region = "qingshi_village"
+	GameClock.total_days = 188  # autumn day 9
+	assert_eq(gs.village_hunt_quarry(), "", "before the first market day")
+	GameClock.total_days = 189  # autumn day 10, the first market day
+	assert_eq(gs.village_hunt_quarry(), "mist_fox")
+	GameClock.total_days = 192
+	assert_eq(gs.village_hunt_quarry(), "", "window over")
+	GameClock.total_days = 190
+	gs.player.realm_index = 3
+	var npc_id := ""
+	for id: String in gs.npcs:
+		if gs.npcs[id].alive and gs.npcs[id].home_region == "qingshi_village":
+			npc_id = id
+			break
+	var favor_before: int = int(gs.npc_favor.get(npc_id, 0))
+	var won: bool = gs.join_village_hunt()
+	assert_eq(int(gs.world_flags[VillageHunt.FLAG]), 180)
+	assert_eq(gs.hunt_ally, {}, "ally cleared")
+	assert_eq(gs.village_hunt_quarry(), "", "once a season")
+	if won and npc_id != "":
+		assert_eq(int(gs.npc_favor.get(npc_id, 0)), mini(100, favor_before + 1))
+	GameClock.total_days = 189 + 90  # winter day 10
+	assert_eq(gs.village_hunt_quarry(), "den_wolf", "next season again")
+	GameClock.total_days = 189 + 180  # spring: nothing in season in the forest
+	assert_eq(gs.village_hunt_quarry(), "")
+	gs.current_region = "misty_forest"
+	GameClock.total_days = 189
+	assert_eq(gs.village_hunt_quarry(), "", "only where the hunt is posted")
+	assert_false(gs.join_village_hunt())
+	gs.end_session()

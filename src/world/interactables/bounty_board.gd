@@ -27,6 +27,10 @@ func get_options() -> Array[Dictionary]:
 		var label := "Hunt: %s in %s%s, %s (%s)" % [enemy.get("name", b["enemy"]), Exploration.region_name(data, String(b["region"])), distance_note(c, data, GameState.current_region, String(b["region"])), pay, UIStyle.odds_text(c, data, enemy, bool(enemy.get("lethal", false)))]
 		var reason := Bounties.check_take(c, data, String(b["id"]), today)
 		options.append({"label": label, "description": Warnings.append_to(c, "%s (%s to finish)" % [b["text"], Calendar.format_duration(int(b["days"]))]), "action": GameState.take_bounty.bind(String(b["id"])), "disabled": reason != "", "reason": reason, "keep_open": true})
+	var village_beast := GameState.village_hunt_quarry()  # WILD-016
+	if village_beast != "":
+		var vname: String = data.enemies.get(village_beast, {}).get("name", village_beast)
+		options.append({"label": "Join the village hunt: %s (1 day)" % vname, "description": VillageHunt.notice(data, GameState.current_region, today), "action": GameState.join_village_hunt})
 	var hunt := Bounties.active(c, data, today)
 	if not hunt.is_empty():
 		var prey: String = data.enemies.get(String(hunt["enemy"]), {}).get("name", hunt["enemy"])

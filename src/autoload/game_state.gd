@@ -29,6 +29,7 @@ var last_loss_advice: String = ""
 var last_fight_friendly: bool = false
 ## Reward notes of the last won fight ("+8 Spirit Stone"...), shown in the combat report.
 var last_fight_spoils: PackedStringArray = PackedStringArray()
+var hunt_ally: Dictionary = {}  ## WILD-016: the village hunters' strike for the next fight ({} = none).
 var last_fight_companion: String = ""  ## WU-413: name of the friend who fought beside you in the last fight ("" = none).
 ## Last fight's playback data from Combat.resolve: trace, player_max_hp, enemy_max_hp (WU-036).
 var last_fight_playback: Dictionary = {}
@@ -3280,6 +3281,45 @@ func engage_roamer(slot: int, charged: bool = false) -> bool:
 	return false
 
 
+## WILD-016: the beast of the village hunt posted here today, "" when none is.
+func village_hunt_quarry() -> String:
+	if not _can_act() or not VillageHunt.active(data, current_region, GameClock.total_days, world_flags):
+		return ""
+	return VillageHunt.quarry(data, current_region, GameClock.total_days)
+
+
+## WILD-016: join the village hunt (once a season): fight the in-season beast with the hunters beside you,
+## its spoils twice over, +1 favor with every villager of the region.
+func join_village_hunt() -> bool:
+	EventBus.topic = "combat"
+	var enemy_id := village_hunt_quarry()
+	if enemy_id == "":
+		EventBus.post("No hunt leaves from here today.", "warning")
+		return false
+	var region := current_region
+	VillageHunt.mark_done(world_flags, GameClock.total_days)
+	EventBus.post(VillageHunt.notice(data, region, GameClock.total_days), "world")
+	var before := player.inventory.duplicate()
+	hunt_ally = VillageHunt.ally(player, data, float(VillageHunt.def(data, region)["bonus"]))
+	var won := fight(enemy_id)
+	hunt_ally = {}
+	if won:
+		Wildlife.record_hunt(player, enemy_id)
+		var spoils := Wildlife.inventory_gain(before, player.inventory)
+		for item_id: String in spoils:
+			player.add_item(item_id, int(spoils[item_id]))
+			spoils[item_id] = int(spoils[item_id]) * 2
+		Wildlife.record_spoils(player, enemy_id, spoils)
+		if not spoils.is_empty():
+			EventBus.post("Shared with the hunters, the %s's spoils come twice over." % String(data.enemies[enemy_id]["name"]).to_lower(), "progress")
+		for npc_id: String in npcs:
+			if npcs[npc_id].alive and npcs[npc_id].home_region == region:
+				npc_favor[npc_id] = clampi(int(npc_favor.get(npc_id, 0)) + 1, -100, 100)
+		EventBus.post("A share of the meat goes to the village. People remember it.", "world")
+	EventBus.player_changed.emit()
+	return won
+
+
 ## Fight an enemy from data/enemies.json.
 func fight(enemy_id: String) -> bool:
 	EventBus.topic = "combat"
@@ -3333,6 +3373,8 @@ func fight_enemy(enemy: Dictionary, start_hp: int = -1, prefix: String = "") -> 
 			EventBus.post("%s joins the fight at your side." % npcs[companion_id].name, "progress")
 		else:
 			companion_id = ""
+		if not hunt_ally.is_empty():
+			allies.append(hunt_ally)
 	# win_chance rates a full-HP fight without allies; a wounded bout or an ally
 	# strike makes that figure wrong, so the respawn lesson leaves it out then.
 	var pre_odds := Combat.win_chance(player, data, enemy) if start_hp < 0 and allies.is_empty() else -1.0
