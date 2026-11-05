@@ -333,3 +333,33 @@ func test_spread_on_screen_moves_a_label_out_of_a_hud_rect() -> void:
 	assert_false(a.drawn_label_rect(view).intersects(panel), "clear of the panel")
 	assert_false(a.label_covered)
 	a.free()
+
+
+func test_gfx073_offscreen_anchor_hides_label() -> void:
+	var view := Rect2(0, 0, 400, 400)
+	var n := _npc("Peddler Hei", Vector2(450, 200))
+	Interactable.spread_on_screen([n], view)
+	assert_true(n.label_offscreen)
+	assert_false(n.label_drawn())
+	n.free()
+
+
+func test_gfx073_anchor_under_panel_hides_label() -> void:
+	var view := Rect2(0, 0, 400, 400)
+	var n := _npc("Aa", Vector2(200, 380))
+	var panel: Array[Rect2] = [Rect2(0, 350, 400, 50)]
+	Interactable.spread_on_screen([n], view, panel)
+	assert_false(n.label_drawn())
+	n.free()
+
+
+func test_gfx073_label_slides_off_panel_and_inside_view() -> void:
+	var view := Rect2(0, 0, 400, 400)
+	var n := _npc("Wild Boar (Wounded)", Vector2(300, 200))
+	var r := n.drawn_label_rect(view)
+	var panel: Array[Rect2] = [Rect2(r.position.x - 4, r.position.y - 4, 60, r.size.y + 8)]
+	Interactable.spread_on_screen([n], view, panel)
+	var after := n.drawn_label_rect(view)
+	assert_true(view.encloses(after), "label inside the screen")
+	assert_false(panel[0].intersects(after), "label clear of the panel")
+	n.free()

@@ -47,6 +47,9 @@ var screen_lift := 0.0
 var label_fade := 1.0
 ## Set by spread_on_screen when a HUD panel covers the label and it cannot move clear: drawn dimmed.
 var label_covered := false
+## GFX-073: sideways slide (px) that keeps the label clear of HUD panels, and whether the anchor is off screen / under a panel.
+var screen_shift_x := 0.0
+var label_offscreen := false
 
 
 func _ready() -> void:
@@ -239,6 +242,7 @@ func drawn_label_rect(view: Rect2) -> Rect2:
 	var rect := label_rect()
 	rect.position.x = clamp_label_left(rect.position.x, rect.size.x, view.position.x, view.end.x)
 	rect.position.y += screen_lift
+	rect.position.x += screen_shift_x
 	if shows_badge():
 		# The "!" badge sits above the label: a 20px circle centered on it, 14px over the baseline.
 		var base := position.y - size.y / 2.0 - 8.0 + label_offset.y + screen_lift
@@ -254,7 +258,7 @@ func label_drawn_ignoring_target() -> bool:
 
 ## Whether the name label is drawn at all (unavailable places and the current target hide it).
 func label_drawn() -> bool:
-	return visible and label_visible(highlighted) and label_fade > 0.0
+	return visible and not label_offscreen and label_visible(highlighted) and label_fade > 0.0
 
 
 ## How visible the name label is for a player standing at `player_pos` (parent coordinates).
@@ -316,6 +320,12 @@ static func spread_on_screen(nodes: Array, view: Rect2, occupied: Array[Rect2] =
 		var before := node.screen_lift
 		was_lift[node] = before
 		node.screen_lift = 0.0
+		var was_shift: float = node.screen_shift_x
+		var was_off: bool = node.label_offscreen
+		node.screen_shift_x = 0.0
+		node.label_offscreen = anchor_hidden(node.position, view, occupied)
+		if node.label_offscreen != was_off or was_shift != 0.0:
+			node._redraw_label()
 		if node.label_drawn():
 			shown.append(node)
 		else:
@@ -335,7 +345,13 @@ static func spread_on_screen(nodes: Array, view: Rect2, occupied: Array[Rect2] =
 		return a.position.distance_to(player_pos) < b.position.distance_to(player_pos))
 	var rects: Array[Rect2] = []
 	for node: Interactable in ranked:
-		rects.append(node.drawn_label_rect(view))
+		var r := node.drawn_label_rect(view)
+		var dx := slide_clear(r, view, occupied)  # GFX-073: slide sideways off the HUD panels
+		if dx != 0.0:
+			node.screen_shift_x = dx
+			node._redraw_label()
+			r.position.x += dx
+		rects.append(r)
 	var blockers: Array[Rect2] = occupied.duplicate()
 	var own: Dictionary = {}
 	for i in ranked.size():  # GFX-071: a great beast's body is a blocker for every label but its own
@@ -354,6 +370,42 @@ static func spread_on_screen(nodes: Array, view: Rect2, occupied: Array[Rect2] =
 		node.label_covered = covered
 		if changed:
 			node._redraw_label()
+
+
+## GFX-073: whether a label's anchor is off screen or under a HUD panel (its label is then not drawn).
+static func anchor_hidden(anchor: Vector2, view: Rect2, occupied: Array[Rect2]) -> bool:
+	if not view.has_point(anchor):
+		return true
+	for o in occupied:
+		if o.has_point(anchor):
+			return true
+	return false
+
+
+## GFX-073: the sideways slide (at most the rect's own width, either way) that gets `rect` inside `view`
+## and off every `occupied` rect; 0 when it already is, or when no slide helps.
+static func slide_clear(rect: Rect2, view: Rect2, occupied: Array[Rect2]) -> float:
+	var hits := false
+	for o in occupied:
+		if o.intersects(rect):
+			hits = true
+	if not hits:
+		return 0.0
+	var step := 8.0
+	var k := 1
+	while step * k <= rect.size.x:
+		for dir in [-1.0, 1.0]:
+			var moved := Rect2(rect.position + Vector2(dir * step * k, 0), rect.size)
+			if not view.encloses(moved):
+				continue
+			var clear := true
+			for o in occupied:
+				if o.intersects(moved):
+					clear = false
+			if clear:
+				return dir * step * k
+		k += 1
+	return 0.0
 
 
 ## Shifts labels sideways so none sticks out past `bounds` (WU-160).
@@ -451,6 +503,9 @@ func _draw_label() -> void:
 	if is_inside_tree():
 		var view := _view_rect_local()
 		left = clamp_label_left(left, text_width, view.position.x, view.end.x)
+	left += screen_shift_x
+	if label_offscreen:
+		return
 	if shows_badge():
 		# A gold badge with a dark "!" above the label.
 		var center := Vector2(left + text_width / 2.0, -size.y / 2.0 - 8.0 + label_offset.y + screen_lift - LABEL_FONT_SIZE - 10.0)
