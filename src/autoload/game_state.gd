@@ -40,6 +40,10 @@ var current_region := ""
 var last_arrival_first_visit: bool = false
 ## Id of the road encounter the last travel produced, "" if none (WU-080).
 var last_travel_road_encounter: String = ""
+## WU-443: the last journey, for the road card (not saved).
+var last_travel_from: String = ""
+var last_travel_days: int = 0
+var last_travel_snow: int = 0
 ## Live NPCs: id -> CharacterData (definitions in data/npcs.json).
 var npcs: Dictionary = {}
 ## How much each NPC likes the player: id -> int.
@@ -638,6 +642,9 @@ func travel(region_id: String) -> void:
 	if snow_days > 0:
 		check["days"] = journey_days({"days": check["base_days"]})
 		EventBus.post("Snow slows the road: +%d %s." % [snow_days, "day" if snow_days == 1 else "days"], "info")
+	last_travel_from = current_region
+	last_travel_days = int(check["days"])
+	last_travel_snow = snow_days
 	current_region = region_id
 	last_arrival_first_visit = Exploration.visit(player, region_id)
 	world_flags["notice_road_" + region_id] = true  # you are already here (TRAV-001)

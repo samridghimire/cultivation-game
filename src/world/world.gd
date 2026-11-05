@@ -301,8 +301,11 @@ func _notification(what: int) -> void:
 
 ## Travel or an artifact respawn moved the player: rebuild the world for the
 ## new region (only when this world is the running scene, not a preview or test).
-func _on_region_changed(_region_id: String) -> void:
+func _on_region_changed(region_id: String) -> void:
 	if get_tree().current_scene == self:
+		if GameState.last_travel_from != "" and GameState.last_travel_from != region_id and GameState.player != null and GameState.player.alive:
+			var data: GameData = GameState.data
+			RoadCard.show_over(get_tree(), RoadCard.text_for(Exploration.region_name(data, GameState.last_travel_from), Exploration.region_name(data, region_id), GameState.last_travel_days, GameState.last_travel_snow), bool(Settings.get_value("reduce_motion")))
 		get_tree().reload_current_scene.call_deferred()
 
 
