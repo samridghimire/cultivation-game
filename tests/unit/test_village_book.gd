@@ -185,7 +185,7 @@ func test_hunts_page_shows_hunted_and_hides_unhunted() -> void:
 func test_trophy_rows_list_great_beasts_in_region_order() -> void:
 	var c := CharacterFactory.create("T", data(), seeded_rng(), "male")
 	var rows := VillageBook.trophy_rows(c, data())
-	assert_eq(rows.size(), 5, "four great beasts and the Old Tusker's return slot")
+	assert_eq(rows.size(), 8, "four great beasts and their four return slots")
 	assert_eq(String(rows[0]["enemy"]), "old_tusker_boar", "regions.json order")
 	assert_false(bool(rows[0]["won"]))
 	assert_true(String(rows[0]["text"]).begins_with("???"), "unwon is a mystery")
@@ -224,7 +224,7 @@ func test_return_slot_sits_beside_the_first_and_opens_after_it() -> void:
 	assert_false(String(rows[1]["detail"]).contains("Hunters say"), "no spoiler before the first win")
 	Wildlife.record_great(c, data(), "old_tusker_boar", "misty_forest", 9)
 	rows = VillageBook.trophy_rows(c, data())
-	assert_eq(rows.size(), 5, "slot count is stable")
+	assert_eq(rows.size(), 8, "slot count is stable")
 	assert_false(bool(rows[1]["won"]))
 	assert_true(String(rows[1]["text"]).contains("Wed") or String(rows[1]["text"]).contains("(Misty Forest,"), String(rows[1]["text"]))
 	assert_true(String(rows[1]["detail"]).contains(Wildlife.rumor_of(data(), "misty_forest", c)), "the return's rumour")

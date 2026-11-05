@@ -252,7 +252,11 @@ func test_great_without_return_keeps_beast() -> void:
 	var d := _gdata()
 	var c := _player()
 	c.great_beasts["cloud_crane"] = 1
+	var g: Dictionary = d.regions["azure_peak"]["roamers"]["great"]
+	var old: Variant = g["return"]
+	g.erase("return")
 	assert_eq(Wildlife.active_great_enemy(c, d, "azure_peak"), "cloud_crane")
+	g["return"] = old
 
 
 func test_validate_rejects_bad_return() -> void:
@@ -338,6 +342,36 @@ func test_every_great_beast_has_a_trophy() -> void:
 		assert_true(tags.has("trophy") and tags.has("no_shop"), "%s trophy tags" % rid)
 		var price := int((d.items[tid] as Dictionary).get("price", 0))
 		assert_true(price >= 15 and price <= 40, "%s trophy price" % rid)
+	assert_true(seen >= 4)
+
+
+## C-301: every great beast comes back stronger, with its own trophy and rumour.
+func test_every_great_return_is_stronger() -> void:
+	var d := _gdata()
+	var seen := 0
+	for rid: String in d.regions:
+		var rd: Variant = d.regions[rid]
+		if not (rd is Dictionary) or not (rd as Dictionary).has("roamers"):
+			continue
+		var great: Dictionary = (rd as Dictionary)["roamers"].get("great", {})
+		if great.is_empty():
+			continue
+		seen += 1
+		assert_true(great.has("return"), "%s has a return" % rid)
+		var ret: Dictionary = great.get("return", {})
+		var a: Dictionary = d.enemies[String(great["enemy"])]
+		var b: Dictionary = d.enemies[String(ret["enemy"])]
+		assert_true(String(ret.get("rumor", "")) != "", "%s return rumour" % rid)
+		assert_true(d.items.has(String(ret["trophy"])), "%s return trophy" % rid)
+		assert_true(ret["trophy"] != great["trophy"], "%s trophies differ" % rid)
+		assert_eq(a.get("tags"), b.get("tags"), "%s tags" % rid)
+		assert_eq(a.get("lethal"), b.get("lethal"), "%s lethal" % rid)
+		var ra := d.realm_index_of(String(a["realm"]))
+		var rb := d.realm_index_of(String(b["realm"]))
+		if int(a.get("hp", 0)) > 0 and ra == rb:
+			assert_true(int(b["hp"]) + int(b["attack"]) > int(a["hp"]) + int(a["attack"]), "%s stronger" % rid)
+		else:
+			assert_true(rb > ra or (rb == ra and int(b["stage"]) > int(a["stage"])), "%s later stage" % rid)
 	assert_true(seen >= 4)
 
 

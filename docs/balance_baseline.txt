@@ -1060,6 +1060,10 @@ Where each enemy first appears (typical player entering the realm / at its peak 
   Tribulati lightning_tithe_sovereign encounter ruins_lightning_ti evadable                 entry   8%  peak  77%  talisman  14%  bare   0%  veteran on appearance  98%  HARD
   Tribulati nine_thunder_peng      encounter mountain_nine_thun evadable                 entry   6%  peak  81%  talisman  14%  bare   0%  veteran on appearance  99%  HARD
   Tribulati thunder_vault_tortoise encounter mountain_thunder_v evadable                 entry  44%  peak 100%  talisman  46%  bare   0%  veteran on appearance 100%  HARD
+  UNUSED   scarred_old_tusker never appears in an encounter, mission or region
+  UNUSED   old_bog_king_toad never appears in an encounter, mission or region
+  UNUSED   broken_crown_crane never appears in an encounter, mission or region
+  UNUSED   cracked_horn_ram never appears in an encounter, mission or region
 
 Win rate at stage 0 of each realm (no talismans):
   enemy \ player             Mortal Qi Refinin Foundation Core Forma Nascent So
@@ -1173,9 +1177,13 @@ Win rate at stage 0 of each realm (no talismans):
   lightning_tithe_sovereign         0%         0%         0%         0%         0%
   final_stair_vow_guardian         0%         0%         0%         0%         0%
   old_tusker_boar                0%        23%       100%       100%       100%
+  scarred_old_tusker             0%         6%       100%       100%       100%
   bog_king_toad                  0%        14%       100%       100%       100%
   cloud_crane                    0%         1%       100%       100%       100%
   thunder_horn_ram               0%         0%        71%       100%       100%
+  old_bog_king_toad              0%         6%       100%       100%       100%
+  broken_crown_crane             0%         0%       100%       100%       100%
+  cracked_horn_ram               0%         0%        19%       100%       100%
 
 Typical player vs a plain enemy of the same realm and stage (QA-007d target ~60-90%), and at the realm's peak vs a plain enemy one realm up:
   Qi Refining             stage 0:  95%  stage 4:  91%  stage 8:  84%   next realm:   0%
