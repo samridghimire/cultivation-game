@@ -85,3 +85,56 @@ func test_finished_fires_with_reduce_motion() -> void:
 			break
 	assert_eq(state["n"], 1)
 	assert_true(RoadCard.current == null)
+
+
+## WU-452: road card -> road encounter -> arrival banner.
+func test_encounter_waits_for_card_then_banner_waits_for_encounter() -> void:
+	var root := _tree().root
+	var gs := root.get_node("GameState")
+	gs.start_session(CharacterFactory.create("Wanderer", gs.data, seeded_rng(3)))
+	gs.arrival_banner_pending = true
+	gs.pending_encounter = "road_lost_child"
+	gs.last_travel_road_encounter = "road_rain_shelter"
+	var card := RoadCard.new()  # a fake card that only emits `finished` on demand
+	RoadCard.current = card
+	var hud: CanvasLayer = load("res://src/ui/hud.tscn").instantiate()
+	root.add_child(hud)
+	var enc: Control = hud.get("_encounter")
+	var banner: Banner = hud.get("_banner")
+	assert_false(enc.visible, "not before the card ends")
+	assert_false(banner.visible)
+	card.finished.emit()
+	assert_true(enc.visible, "opens when the card finishes")
+	assert_false(banner.visible, "the banner waits for the encounter")
+	enc.close()
+	assert_true(banner.visible, "banner after the encounter closes")
+	RoadCard.current = null
+	card.free()
+	hud.free()
+	gs.pending_encounter = ""
+	gs.last_travel_road_encounter = ""
+	gs.end_session()
+
+
+func test_no_card_opens_at_once_and_no_choice_just_banner() -> void:
+	var root := _tree().root
+	var gs := root.get_node("GameState")
+	gs.start_session(CharacterFactory.create("Wanderer", gs.data, seeded_rng(3)))
+	gs.arrival_banner_pending = true
+	gs.pending_encounter = "road_lost_child"
+	gs.last_travel_road_encounter = "road_rain_shelter"
+	var hud: CanvasLayer = load("res://src/ui/hud.tscn").instantiate()
+	root.add_child(hud)
+	assert_true((hud.get("_encounter") as Control).visible)
+	assert_false((hud.get("_banner") as Banner).visible)
+	hud.free()
+	gs.pending_encounter = ""
+	gs.arrival_banner_pending = true
+	var hud2: CanvasLayer = load("res://src/ui/hud.tscn").instantiate()
+	root.add_child(hud2)
+	assert_true((hud2.get("_banner") as Banner).visible, "no choice: banner at once")
+	assert_false(load("res://src/ui/hud.gd").has_road_choice("", "road_x"))
+	assert_true(load("res://src/ui/hud.gd").has_road_choice("e", "road_x"))
+	hud2.free()
+	gs.last_travel_road_encounter = ""
+	gs.end_session()

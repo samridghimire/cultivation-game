@@ -20,6 +20,7 @@ extends SceneTree
 ## region); with one id the normal shot set is rendered in that region and the arrival shot is also named region_<id>.png.
 ## QA-187: append `-- --companion` (a Qingshi friend invited along, WU-413): companion.png (the HUD chip) and
 ## field_menu.png (the rented field's menu with the tool icons).
+## WU-452: `-- --road-card [--road-encounter]` renders road_card.png (and road_encounter.png).
 ## GFX-065: append `-- --arrival-card` for arrival_card.png, right after a new game starts, the card still up.
 ## PNGs go to user://screenshots/first_hour/<name>.png. Never writes saves.
 ## (The mid-game sibling is screenshot_screens.gd.)
@@ -97,6 +98,18 @@ func _start() -> void:
 	var special := false
 	if OS.get_cmdline_user_args().has("--arrival-card"):  # GFX-065: the new-game region card, before it fades
 		shots.append({"name": "arrival_card", "open": func() -> void: pass, "close": func() -> void: pass})
+		return
+	if OS.get_cmdline_user_args().has("--road-card"):  # WU-452: the road card mid-fill; with --road-encounter, then the encounter after it
+		var card_script: GDScript = load("res://src/ui/road_card.gd")  # loaded late: it needs the autoloads
+		shots.append({"name": "road_card", "open": func() -> void: card_script.show_over(self, card_script.text_for("Qingshi Village", "Misty Forest", 3, 0), false, card_script.detail_for("Lost Child")), "close": func() -> void: pass})
+		if OS.get_cmdline_user_args().has("--road-encounter"):
+			shots.append({"name": "road_encounter", "open": func() -> void:
+				if is_instance_valid(card_script.current):
+					card_script.current.queue_free()
+					card_script.current = null
+				gs.pending_encounter = "road_lost_child"
+				gs.last_travel_road_encounter = "road_lost_child"
+				hud.call("_on_encounter_choice_requested", "road_lost_child"), "close": func() -> void: pass})
 		return
 	if region_list.size() > 1:  # QA-187: one arrival shot per region, rebuilding the world between them
 		for id in region_list:

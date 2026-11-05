@@ -1572,10 +1572,26 @@ func _show_start_arrival() -> void:
 	GameState.arrival_banner_pending = false
 	if pending and GameState.player != null and GameState.player.alive and GameState.pending_respawn.is_empty():
 		var region_id: String = GameState.current_region
+		var road_choice := has_road_choice(GameState.pending_encounter, GameState.last_travel_road_encounter)
 		if is_instance_valid(RoadCard.current):
-			RoadCard.current.finished.connect(func(): _show_arrival(region_id), CONNECT_ONE_SHOT)  # WU-447
+			RoadCard.current.finished.connect(func(): _after_road_card(region_id, road_choice), CONNECT_ONE_SHOT)  # WU-447, WU-452
 		else:
-			_show_arrival(region_id)
+			_after_road_card(region_id, road_choice)
+
+
+## WU-452: true when the journey just made left a road encounter with a choice waiting to be answered.
+static func has_road_choice(pending_encounter: String, road_encounter: String) -> bool:
+	return pending_encounter != "" and road_encounter != ""
+
+
+## WU-452: order is road card -> road encounter -> arrival banner. The window opens now (the card is over) and the
+## arrival banner waits for it to close; without a choice the banner shows at once.
+func _after_road_card(region_id: String, road_choice: bool) -> void:
+	if road_choice and GameState.pending_encounter != "" and GameState.player != null and GameState.player.alive:
+		_arrival_waiting = region_id
+		_on_encounter_choice_requested(GameState.pending_encounter)
+	else:
+		_show_arrival(region_id)
 
 
 ## WU-438: the GUIDE-209 arrival line for `region_id`, "" when it is not today's or is empty.
