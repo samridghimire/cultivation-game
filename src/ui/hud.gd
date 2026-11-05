@@ -851,6 +851,13 @@ func occupied_rects() -> Array[Rect2]:
 	return rects
 
 
+## GFX-069: screen rect of the shown "[E] <name>" chip, an empty Rect2 when there is none.
+func current_prompt_rect() -> Rect2:
+	if _prompt == null or _prompt.text == "" or not _prompt.is_visible_in_tree():
+		return Rect2()
+	return _prompt.get_global_rect()
+
+
 ## WU-441: where the "[E] <name>" chip goes: just above the target's name label, else just below it, clamped
 ## inside `screen` and clear of `avoid` rects whenever a free spot exists (else the clamped spot above).
 static func prompt_rect(target_label_rect: Rect2, screen: Rect2, avoid: Array[Rect2], chip_size: Vector2 = Vector2(190, 30)) -> Rect2:

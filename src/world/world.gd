@@ -682,7 +682,7 @@ func _process(_delta: float) -> void:
 				(node as Interactable).refresh_label_alpha(player.position)
 	_spread_clock += _delta
 	if origin == _last_canvas_origin and not moved:
-		if _spread_clock >= 0.5 and _roamers_moved():
+		if Interactable.respread_due(_spread_clock, _movers_moved()):
 			_spread_clock = 0.0
 			_spread_on_screen()
 		return
@@ -693,19 +693,20 @@ func _process(_delta: float) -> void:
 	_spread_on_screen()
 
 
-## WU-429: true when a beast moved more than 24 px since the last label spread (records the new spots).
-func _roamers_moved() -> bool:
-	var moved := false
+## GFX-069: the farthest any beast or villager moved since the last label spread (records the new spots when
+## it is past the threshold, so an idle scene costs one distance check per mover).
+func _movers_moved() -> float:
+	var far := 0.0
+	var movers: Array[Node] = []
 	for node in get_children():
-		if node is Roamer:
+		if node is Roamer or (node is Interactable and node.get("npc_id") != null):
+			movers.append(node)
 			var last: Vector2 = _roamer_spread_pos.get(node.get_instance_id(), Vector2(-1e6, -1e6))
-			if last.distance_to(node.position) > 24.0:
-				moved = true
-	if moved:
-		for node in get_children():
-			if node is Roamer:
-				_roamer_spread_pos[node.get_instance_id()] = node.position
-	return moved
+			far = maxf(far, last.distance_to((node as Node2D).position))
+	if far > Interactable.RESPREAD_MOVE:
+		for node in movers:
+			_roamer_spread_pos[node.get_instance_id()] = (node as Node2D).position
+	return far
 
 
 ## GFX-043: on snow days drop a footprint every ~16 px of walking; the trail fades by age (redraws only on a new print).
@@ -764,6 +765,15 @@ func _spread_on_screen() -> void:
 		var to_world := get_canvas_transform().affine_inverse()
 		for r: Rect2 in hud.occupied_rects():
 			occupied.append(to_world * r)
+		if hud.has_method("current_prompt_rect"):  # GFX-069: the [E] chip covers no label
+			var chip: Rect2 = hud.current_prompt_rect()
+			if chip.size != Vector2.ZERO:
+				occupied.append(to_world * chip)
+	for node: Interactable in nodes:  # GFX-069: the target's highlight box is a blocker for the other labels
+		if node.highlighted and node.visible:
+			var box := Rect2(node.position - node.size / 2.0, node.size).grow(8.0)
+			if not box.intersects(node.drawn_label_rect(view)):
+				occupied.append(box)
 	Interactable.spread_on_screen(nodes, view, occupied, player.position if player != null else Vector2.ZERO)
 
 

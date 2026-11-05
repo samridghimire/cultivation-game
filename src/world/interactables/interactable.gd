@@ -283,6 +283,25 @@ func refresh_label_alpha(player_pos: Vector2) -> void:
 		_redraw_label()
 
 
+## GFX-069: a faded label this close to the player ranks as highlighted, so it is readable on approach.
+const FADED_NEAR := 60.0
+## GFX-069: seconds between label re-spreads while beasts or villagers move, and the move that counts.
+const RESPREAD_INTERVAL := 0.25
+const RESPREAD_MOVE := 4.0
+
+
+## GFX-069: 0 = highlighted (or faded and within FADED_NEAR of the player), 1 = a great beast, 2 = everything else.
+static func label_rank(node: Interactable, player_pos: Vector2) -> int:
+	if node.highlighted or (node.label_covered and node.position.distance_to(player_pos) <= FADED_NEAR):
+		return 0
+	return 1 if node.get("great") == true else 2
+
+
+## GFX-069: whether a label re-spread is due: something moved more than RESPREAD_MOVE and RESPREAD_INTERVAL passed.
+static func respread_due(clock: float, moved_px: float) -> bool:
+	return clock >= RESPREAD_INTERVAL and moved_px > RESPREAD_MOVE
+
+
 ## Resolves label overlaps after the screen-edge clamp (WU-281, WU-421); `view` is the visible
 ## area in the nodes' parent coordinates. Labels are ranked (highlighted, nearest to `player_pos`,
 ## places before NPCs) and LabelLayout nudges or fades the lower-ranked ones. Redraws labels that changed.
@@ -302,8 +321,10 @@ static func spread_on_screen(nodes: Array, view: Rect2, occupied: Array[Rect2] =
 				node._redraw_label()
 	var ranked := shown.duplicate()
 	ranked.sort_custom(func(a: Interactable, b: Interactable) -> bool:
-		if a.highlighted != b.highlighted:
-			return a.highlighted
+		var ra := label_rank(a, player_pos)
+		var rb := label_rank(b, player_pos)
+		if ra != rb:
+			return ra < rb
 		var an := a.get("npc_id") != null
 		var bn := b.get("npc_id") != null
 		if an != bn:
