@@ -130,6 +130,38 @@ static func tracks_today(data: GameData, region_id: String, day: int, realm_inde
 	return _great_walks(data, region_id, def, day + 1, realm_index)
 
 
+## WILD-015: the bait item the player would spend on the region's great-beast trail: a `great.bait` id they hold,
+## else any held item tagged `bait`; "" when the region has no great beast or they hold none.
+static func bait_item(c: CharacterData, data: GameData, region_id: String) -> String:
+	var def := _great_def(data, region_id)
+	if def.is_empty():
+		return ""
+	for id: Variant in def.get("bait", []):
+		if c.item_count(String(id)) > 0:
+			return String(id)
+	for id: String in c.inventory:
+		if c.item_count(id) > 0 and (data.items.get(id, {}).get("tags", []) as Array).has("bait"):
+			return id
+	return ""
+
+
+## WILD-015: the share of hp and attack a baited great beast loses.
+static func bait_weaken(data: GameData, region_id: String) -> float:
+	return float(_great_def(data, region_id).get("bait_weaken", 0.1))
+
+
+## WILD-015: a copy of the enemy that starts the fight weakened.
+static func weakened(enemy: Dictionary, frac: float) -> Dictionary:
+	var e := enemy.duplicate(true)
+	e["weaken"] = frac
+	return e
+
+
+## WILD-015: world flag holding the day a baited trail's beast walks.
+static func bait_flag(region_id: String) -> String:
+	return "bait_" + region_id
+
+
 ## WILD-012: the line shown when exploring on a tracks day.
 const TRACKS_LINE := "Fresh tracks, wider than a cart: something big walks here tomorrow."
 
@@ -338,6 +370,16 @@ static func validate(data: GameData) -> PackedStringArray:
 					var ti: Variant = data.items.get(String(great["trophy"]))
 					if ti == null or not ((ti as Dictionary).get("tags", []) as Array).has("trophy"):
 						errors.append("%s great trophy '%s' must be an item tagged trophy" % [where, great["trophy"]])
+				if great.has("bait"):
+					var bl: Variant = great["bait"]
+					if not (bl is Array and not (bl as Array).is_empty()):
+						errors.append("%s great bait must be a non-empty list of item ids" % where)
+					else:
+						for bid: Variant in bl:
+							if not data.items.has(String(bid)):
+								errors.append("%s great bait '%s' is not an item" % [where, bid])
+				if great.has("bait_weaken") and not (_num(great["bait_weaken"]) and float(great["bait_weaken"]) >= 0.02 and float(great["bait_weaken"]) <= 0.5):
+					errors.append("%s great bait_weaken must be 0.02..0.5" % where)
 				var rt: Variant = great.get("return")
 				if rt != null:
 					if not rt is Dictionary or not data.enemies.has(String(rt.get("enemy", ""))):

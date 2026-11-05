@@ -3162,3 +3162,34 @@ func test_season_digest_posts_once_per_season() -> void:
 	var after: int = EventBus.posted_count
 	gs._pass_time(1)
 	assert_eq(EventBus.posted_count, after, "not again the same season")
+
+
+## WILD-015: baiting on a tracks day spends the item and a day, and the baited beast fights weakened once.
+func test_bait_the_trail() -> void:
+	_start()
+	var gs := _game_state()
+	var clock: Node = _root().get_node("GameClock")
+	var region := "misty_forest"
+	gs.current_region = region
+	var wd := Wildlife.great_day(region, gs.data.regions[region]["roamers"]["great"])
+	clock.total_days = (clock.total_days / 7) * 7 + 7 + posmod(wd - 1, 7)
+	assert_true(Wildlife.tracks_today(gs.data, region, clock.total_days, gs.player.realm_index), "setup")
+	assert_eq(gs.bait_offer(), "", "no bait held")
+	assert_false(gs.set_bait())
+	gs.player.add_item("village_mugwort", 2)
+	assert_eq(gs.bait_offer(), "village_mugwort")
+	var day := int(clock.total_days)
+	assert_true(gs.set_bait())
+	assert_eq(gs.player.item_count("village_mugwort"), 1)
+	assert_eq(int(clock.total_days), day + 1)
+	assert_eq(int(gs.world_flags[Wildlife.bait_flag(region)]), day + 1)
+	assert_eq(gs.bait_offer(), "", "not a tracks day any more")
+	var slots: Array = gs.roamers_here()
+	var found := false
+	for r in slots:
+		if int(r["slot"]) == Wildlife.GREAT_SLOT:
+			found = true
+	assert_true(found, "the beast walks the day after")
+	gs.engage_roamer(Wildlife.GREAT_SLOT)
+	assert_false(gs.world_flags.has(Wildlife.bait_flag(region)), "bait used up")
+	gs.end_session()

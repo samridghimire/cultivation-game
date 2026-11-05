@@ -83,6 +83,10 @@ static func enemy_stats(enemy: Dictionary, data: GameData) -> Dictionary:
 	s["attack"] = maxi(1, s["attack"] + int(enemy.get("attack", 0)))
 	s["defense"] = maxi(0, s["defense"] + int(enemy.get("defense", 0)))
 	s["speed"] = s["speed"] + int(enemy.get("speed", 0))
+	var weaken := clampf(float(enemy.get("weaken", 0.0)), 0.0, 0.9)  # WILD-015: a baited beast
+	if weaken > 0.0:
+		s["max_hp"] = maxi(1, roundi(s["max_hp"] * (1.0 - weaken)))
+		s["attack"] = maxi(1, roundi(s["attack"] * (1.0 - weaken)))
 	return s
 
 

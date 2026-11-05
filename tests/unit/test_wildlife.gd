@@ -448,3 +448,27 @@ func test_in_season_spoils_double_only_in_season() -> void:
 	gs.data.enemies.erase("t_weakling")
 	assert_eq(got[1], got[0] * 2, "in season doubles the spoils")
 	assert_true(got[0] > 0)
+
+
+## WILD-015: bait items, weaken, validation.
+func test_bait_item_weaken_and_validation() -> void:
+	var d := _gdata()
+	var c := _player()
+	assert_eq(Wildlife.bait_item(c, d, "misty_forest"), "", "holds none")
+	c.add_item("village_mugwort", 1)
+	assert_eq(Wildlife.bait_item(c, d, "misty_forest"), "village_mugwort")
+	assert_eq(Wildlife.bait_item(c, d, "qingshi_village"), "", "no great beast")
+	assert_eq(Wildlife.bait_weaken(d, "misty_forest"), 0.1)
+	var e: Dictionary = d.enemies["old_tusker_boar"]
+	var base := Combat.enemy_stats(e, d)
+	var weak := Combat.enemy_stats(Wildlife.weakened(e, 0.1), d)
+	assert_true(int(weak["max_hp"]) < int(base["max_hp"]))
+	assert_true(int(weak["attack"]) < int(base["attack"]))
+	assert_eq(int(weak["defense"]), int(base["defense"]))
+	d.regions["misty_forest"]["roamers"]["great"]["bait"] = ["no_such_item"]
+	assert_true(Wildlife.validate(d).size() > 0)
+	d.regions["misty_forest"]["roamers"]["great"]["bait"] = ["village_mugwort"]
+	d.regions["misty_forest"]["roamers"]["great"]["bait_weaken"] = 0.9
+	assert_true(Wildlife.validate(d).size() > 0)
+	d.regions["misty_forest"]["roamers"]["great"].erase("bait_weaken")
+	assert_eq(Wildlife.validate(d).size(), 0)

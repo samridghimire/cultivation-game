@@ -800,6 +800,31 @@ func _explore_day(tags: Array, quiet: bool) -> Dictionary:
 	return _meet_encounter(encounter, explore_prefix(encounter, last_explore_discovery, last_explore_deep_path))
 
 
+## WILD-015: the bait item the player could set on today's trail, "" when it is not a tracks day, the trail is
+## already baited, or they hold none.
+func bait_offer() -> String:
+	if not _can_act() or not Wildlife.tracks_today(data, current_region, GameClock.total_days, player.realm_index):
+		return ""
+	if int(world_flags.get(Wildlife.bait_flag(current_region), -1)) == GameClock.total_days + 1:
+		return ""
+	return Wildlife.bait_item(player, data, current_region)
+
+
+## WILD-015: spend one bait item and a day to bait the trail; the great beast walks weakened tomorrow (the day it comes).
+func set_bait() -> bool:
+	EventBus.topic = "world"
+	var item_id := bait_offer()
+	if item_id == "":
+		EventBus.post("There is nothing to bait a trail with here, or no trail to bait.", "warning")
+		return false
+	player.add_item(item_id, -1)
+	world_flags[Wildlife.bait_flag(current_region)] = GameClock.total_days + 1
+	EventBus.post("You set %s on the trail and wait for dusk." % Text.a(String(data.items[item_id]["name"]).to_lower()), "world")
+	_pass_time(1)
+	EventBus.player_changed.emit()
+	return true
+
+
 ## WEATHER-005: what a day of exploring in a storm may bring (lightning, or a lightning-struck branch).
 func _storm_strike() -> void:
 	var r := Weather.storm_explore(data, "storm", player, rng)
@@ -3143,7 +3168,17 @@ func engage_roamer(slot: int, charged: bool = false) -> bool:
 		var bounty_id := ""
 		if great and String(Wildlife.bounty_roamer(player, data, region, GameClock.total_days, world_flags).get("enemy", "")) == String(r["enemy"]):
 			bounty_id = String(player.bounty.get("id", ""))
-		var won := _fight_bounty(String(r["enemy"]), spoils) if bounty else fight(String(r["enemy"]))
+		var baited := great and int(world_flags.get(Wildlife.bait_flag(region), -1)) == GameClock.total_days
+		if baited:
+			world_flags.erase(Wildlife.bait_flag(region))
+			EventBus.post("The bait was taken: the %s limps on the trail." % Wildlife.display_name(data, String(r["enemy"]), true), "world")
+		var won := false
+		if bounty:
+			won = _fight_bounty(String(r["enemy"]), spoils)
+		elif baited:
+			won = fight_enemy(Wildlife.weakened(data.enemies[String(r["enemy"])], Wildlife.bait_weaken(data, region)))
+		else:
+			won = fight(String(r["enemy"]))
 		if won:
 			Wildlife.record_hunt(player, String(r["enemy"]))
 			# The bounty's pay is not the beast's spoils (REVIEW of WILD-005).
