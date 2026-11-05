@@ -77,7 +77,7 @@ func test_every_festival_has_two_untagged_shop_items() -> void:
 			assert_true(int(item["price"]) <= 15, "%s is cheap" % item_id)
 
 
-## C-305: festivals fall in distinct months and cover summer, autumn and winter.
+## C-305: festivals fall in distinct months and cover all four seasons (C-307).
 func test_festivals_cover_the_year() -> void:
 	var d := GameData.load_from_dir()
 	var months := {}
@@ -90,5 +90,6 @@ func test_festivals_cover_the_year() -> void:
 			months[m] = ev["id"]
 			seasons[Calendar.season_of((m - 1) * Calendar.DAYS_PER_MONTH)] = true
 	assert_true(months.has(5), "the Dragon Boat Festival sits in mid-summer")
-	for s: String in ["Summer", "Autumn", "Winter"]:
+	assert_true(months.has(3), "Qingming sits in spring")
+	for s: String in ["Spring", "Summer", "Autumn", "Winter"]:
 		assert_true(seasons.has(s), "a festival in %s" % s)

@@ -6187,7 +6187,10 @@ func test_road_goals_sect_and_layer_goals() -> void:
 func test_season_digest_lines_and_cap() -> void:
 	var c := new_character()
 	var flags := {}
-	assert_eq(Guidance.season_digest(c, data(), flags, 0, "qingshi_village").size(), 0, "nothing explored")
+	var unexplored := Guidance.season_digest(c, data(), flags, 0, "qingshi_village")
+	assert_true(unexplored.size() <= 1, "nothing explored: only the spring festival line (C-307)")
+	for line: String in unexplored:
+		assert_true(line.begins_with("Festivals this"), line)
 	c.visited_regions.append("qingshi_village")
 	c.visited_regions.append("misty_forest")
 	var spring := Guidance.season_digest(c, data(), flags, 0, "qingshi_village")
