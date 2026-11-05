@@ -3877,6 +3877,7 @@ func _pass_time(days: int, skip_title: String = "") -> void:
 	last_digest = {}
 	GameClock.advance(days)
 	_post_season_digest()
+	_record_festival_seen()
 	_post_season_ending()
 	_post_reminders()
 	_record_digest(days, EventBus.posted_count - posted_before)
@@ -3908,6 +3909,16 @@ func _post_season_digest() -> void:
 		EventBus.post(line, "world")
 
 
+## SEASON-004: ending a day in the region of an active festival counts as having seen it this year.
+func _record_festival_seen() -> void:
+	if player == null:
+		return
+	for inst: Dictionary in world_events:
+		var eid := String(inst.get("id", ""))
+		if WorldEvents.is_festival(data, eid) and String(inst.get("region", "")) == current_region:
+			world_flags[Guidance.seen_key(eid)] = Calendar.year_of(GameClock.total_days)
+
+
 ## SEASON-003: within three days of a season's end post what leaves with it, once per season (world flag).
 @warning_ignore("integer_division")
 func _post_season_ending() -> void:
@@ -3917,7 +3928,7 @@ func _post_season_ending() -> void:
 	var idx := today / (Calendar.DAYS_PER_MONTH * 3)
 	if int(world_flags.get("season_ending_idx", -1)) >= idx:
 		return
-	var line := Guidance.season_ending(player, data, today)
+	var line := Guidance.season_ending(player, data, today, world_flags)
 	if line == "":
 		return
 	world_flags["season_ending_idx"] = idx

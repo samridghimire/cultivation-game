@@ -6210,7 +6210,8 @@ func test_season_digest_skips_unexplored_regions() -> void:
 
 func test_season_ending_names_what_leaves() -> void:
 	var c := new_character()
-	assert_eq(Guidance.season_ending(c, data(), 266), "", "nothing explored")
+	var seen := {Guidance.seen_key("mid_autumn_festival"): Calendar.year_of(266)}
+	assert_eq(Guidance.season_ending(c, data(), 266, seen), "", "nothing explored, festival seen")
 	c.visited_regions.append("misty_forest")
 	assert_eq(Guidance.season_ending(c, data(), 200), "", "mid-season")
 	var line := Guidance.season_ending(c, data(), 266)  # autumn, 3 days left
@@ -6219,5 +6220,25 @@ func test_season_ending_names_what_leaves() -> void:
 	assert_true(Guidance.season_ending(c, data(), 268).contains("tomorrow"))
 	assert_true(Guidance.season_ending(c, data(), 269).contains("today"))
 	# across the year end: winter 359 is the last day
-	var winter := Guidance.season_ending(c, data(), 357)
+	var winter := Guidance.season_ending(c, data(), 357, {})
 	assert_false(winter.contains("Mist Fox"), winter)
+
+
+## SEASON-004: plural names, a fat roamer thins out instead of leaving, missed vs seen vs upcoming festivals.
+func test_season_ending_said_right() -> void:
+	var c := new_character()
+	c.visited_regions.append("misty_forest")
+	var year := Calendar.year_of(266)
+	var seen := {Guidance.seen_key("mid_autumn_festival"): year}
+	var line := Guidance.season_ending(c, data(), 266, seen)
+	assert_true(line.contains("go with them."), line)
+	assert_true(line.contains("Foxes") or line.contains("Mushrooms"), line)
+	assert_false(line.contains("missed"), line)
+	var missed := Guidance.season_ending(c, data(), 266, {})
+	assert_true(missed.contains("You missed the Mid-Autumn Moon Festival this year."), missed)
+	var old := Guidance.season_ending(c, data(), 266, {Guidance.seen_key("mid_autumn_festival"): year - 1})
+	assert_true(old.contains("missed"), "seen last year does not count")
+	# Winter's Lantern Festival (month 10) is behind on day 357; its season-mate in month 12 is not yet.
+	c.visited_regions.clear()
+	assert_true(Guidance.season_ending(c, data(), 357, {}).contains("Lantern Festival"))
+	assert_eq(Guidance.season_ending(c, data(), 357, {Guidance.seen_key("lantern_festival"): Calendar.year_of(357)}), "")

@@ -3224,6 +3224,22 @@ func test_season_ending_posts_once() -> void:
 	assert_true(EventBus.posted_count >= after)
 
 
+## SEASON-004: ending a day in a festival's region sets festival_seen_<id> to the year.
+func test_festival_seen_flag() -> void:
+	var gs := _game_state()
+	_start()
+	GameClock.total_days = 140
+	gs.current_region = "qingshi_village"
+	gs.world_events = [{"id": "dragon_boat_festival", "region": "qingshi_village", "start_day": 140, "end_day": 148}]
+	gs.world_flags.erase("festival_seen_dragon_boat_festival")
+	gs._pass_time(1)
+	assert_eq(int(gs.world_flags.get("festival_seen_dragon_boat_festival", -1)), Calendar.year_of(141))
+	gs.world_flags.erase("festival_seen_dragon_boat_festival")
+	gs.current_region = "misty_forest"
+	gs._pass_time(1)
+	assert_false(gs.world_flags.has("festival_seen_dragon_boat_festival"), "elsewhere is not seen")
+
+
 ## WILD-016: the village hunt is offered in its window, once a season, with the hunters' strike and doubled spoils.
 func test_village_hunt() -> void:
 	_start()

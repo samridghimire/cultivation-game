@@ -77,36 +77,68 @@ static func season_digest(c: CharacterData, data: GameData, _flags: Dictionary, 
 ## SEASON-003: "Autumn ends in 3 days: Purple Cloud Mushrooms and Mist Fox go with it." What leaves with the season
 ## (seasonal forage and season-bound roamers in explored regions that the next season lacks). "" when it is not within
 ## SEASON_ENDING_DAYS of the season's end or nothing leaves. Pure.
-static func season_ending(c: CharacterData, data: GameData, day: int) -> String:
+static func season_ending(c: CharacterData, data: GameData, day: int, flags: Dictionary = {}) -> String:
 	var left := Calendar.days_left_in_season(day)
 	if left > SEASON_ENDING_DAYS:
 		return ""
 	var key := Calendar.season_of(day).to_lower()
 	var next_key := Calendar.season_of(day + left + 1).to_lower()
 	var names: PackedStringArray = []
+	var thin: PackedStringArray = []
 	for rid: String in c.visited_regions:
 		var region: Dictionary = data.regions.get(rid, {})
 		for e: Dictionary in region.get("forage", {}).get("items", []):
 			var seasons: Array = e.get("seasons", [])
 			if seasons.has(key) and not seasons.has(next_key):
-				var nm := String(data.items.get(String(e["item"]), {}).get("name", e["item"]))
+				var nm := Text.plural(String(data.items.get(String(e["item"]), {}).get("name", e["item"])), 2)
 				if not names.has(nm):
 					names.append(nm)
 		for e: Dictionary in region.get("roamers", {}).get("enemies", []):
 			var seasons: Array = e.get("seasons", [])
 			var fat: Array = e.get("in_season", [])
-			var leaves := (seasons.has(key) and not seasons.has(next_key)) or (fat.has(key) and not fat.has(next_key))
-			if leaves:
-				var bn := String(data.enemies.get(String(e["enemy"]), {}).get("name", e["enemy"]))
+			var bn := Text.plural(String(data.enemies.get(String(e["enemy"]), {}).get("name", e["enemy"])), 2)
+			if seasons.has(key) and not seasons.has(next_key):
 				if not names.has(bn):
 					names.append(bn)
-	if names.is_empty():
+			elif fat.has(key) and not fat.has(next_key) and not thin.has(bn):
+				thin.append(bn)
+	var missed := _missed_festivals(data, flags, day, key)
+	if names.is_empty() and thin.is_empty() and missed.is_empty():
 		return ""
 	if names.size() > SEASON_ENDING_MAX:
 		names.resize(SEASON_ENDING_MAX)
+	if thin.size() > SEASON_ENDING_MAX:
+		thin.resize(SEASON_ENDING_MAX)
 	var when := "today" if left == 0 else ("tomorrow" if left == 1 else "in %d days" % left)
-	var list := names[0] if names.size() == 1 else "%s and %s" % [", ".join(names.slice(0, names.size() - 1)), names[names.size() - 1]]
-	return "%s ends %s: %s go%s with it." % [Calendar.season_of(day), when, list, "es" if names.size() == 1 else ""]
+	var parts: PackedStringArray = []
+	if not names.is_empty():
+		parts.append("%s go with them." % Text.join_and(names))
+	if not thin.is_empty():
+		parts.append("The fat %s thin out." % Text.join_and(thin))
+	for f in missed:
+		parts.append("You missed the %s this year." % f)
+	return "%s ends %s: %s" % [Calendar.season_of(day), when, " ".join(parts)]
+
+
+## SEASON-004: names of festivals of the ending season (their month already behind us) that the player did not attend this year.
+static func _missed_festivals(data: GameData, flags: Dictionary, day: int, season_key: String) -> PackedStringArray:
+	var out: PackedStringArray = []
+	var year := Calendar.year_of(day)
+	var month := Calendar.month_of(day)
+	for eid: String in data.world_events:
+		var def: Dictionary = data.world_events[eid]
+		if not bool(def.get("festival", false)):
+			continue
+		for m in def.get("months", []):
+			var probe := (year * Calendar.MONTHS_PER_YEAR + int(m) - 1) * Calendar.DAYS_PER_MONTH
+			if Calendar.season_of(probe).to_lower() == season_key and int(m) < month and int(flags.get(seen_key(eid), -1)) != year:
+				out.append(String(def.get("name", eid)))
+				break
+	return out
+
+
+static func seen_key(event_id: String) -> String:
+	return "festival_seen_%s" % event_id
 
 
 static func _season_region_lines(data: GameData, rid: String, key: String, with_weather: bool) -> PackedStringArray:
