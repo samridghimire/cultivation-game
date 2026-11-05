@@ -2,6 +2,18 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-11-05 [WILD-013] Some beasts run fat in their season: their spoils come twice, and the arrival line says so.
+- 2026-11-05 [WU-443] Travel has a road card: the route and its days, a line that fills, then the new region.
+- 2026-11-05 [MARKET-008] The market stall wants one find each market day and pays extra for it.
+- 2026-11-05 [C-296] Weather finds: a rain mushroom in Qingshi, a fog moss in the marsh, a snow herb on the Ridge.
+- 2026-11-05 [C-297] Hunters' rumours hint at each great beast you have not beaten yet.
+- 2026-11-05 [GFX-068] Azure Peak looks like a sect's mountain: a paved court, steps, lanterns and a mountain gate.
+- 2026-11-05 [WU-440] The HUD and the calendar name the day of the week.
+- 2026-11-05 [GOAL-010] Road goals lead on to Foundation: the 9th Layer, a Foundation pill, the attempt.
+- 2026-11-05 [MARKET-007] The travelling market stall brings new wares each market day.
+- 2026-11-05 [GFX-066] Text is crisp at 1280x720 and 1080p.
+- 2026-11-05 [WU-441] The first screen is clear: Elder Mo is not hidden and the interact prompt sits by its target.
+- 2026-11-05 [WILD-012] Fresh tracks warn you the day before a great beast walks.
 - 2026-11-02 [FORAGE-005] Foraging often sharpens your eye: more finds on some days and the odd extra copy.
 - 2026-11-02 [GFX-064] The smithy and the scroll pavilion look like buildings, and the market street's flagstones show through snow.
 - 2026-11-02 [WU-439] Unexplored places on the world map hint at what waits there, and the region your goal points at is marked.

@@ -2,6 +2,18 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-11-05 (planner, 06:15 UTC)
+- 12 tasks landed (WILD-012, WU-441, GFX-066, MARKET-007, GOAL-010, WU-440, GFX-068, C-297, C-296, MARKET-008, WU-443,
+  WILD-013). Review c13642c..53e7743 fixed GOAL-009/010 0-based layers, FORAGE-005 shown slots inline. Live claims at 06:15:
+  QA-193 (04:03), WU-445 (05:50), SEASON-001 (06:06).
+- Planner shots: 720p text whole (GFX-066 good), Elder Mo clear (WU-441 good), marsh court/gate good. Labels collide (crane on
+  Hermit Gu, chip on Pond Jetty) -> GFX-069 (spec file); Azure court flat and the gate thin -> GFX-070.
+- New line: route-specific road encounters (TRAVEL-001 spec file; generic road encounters exist since TRAV-006), WU-447, C-303, Foundation road goals (GOAL-011), market regulars (MARKET-009,
+  also prunes MARKET-008's per-day flags), bait on the tracks day (WILD-015), season ending line (SEASON-003), weather-herb
+  recipes (C-302), tracks drawn on the ground (WU-450).
+- WILD-013 skipped its balance check: C-300 (or QA-194 (3)) refreshes village/combat.
+- Next planner: view GFX-069/GFX-070/WU-447 shots when they land; the owner still has not answered GFX-002 (art pack).
+
 ## State on 2026-11-05 (planner, 00:15 UTC)
 - 12 tasks landed on 2026-11-02 (GFX-061/062/064/065, WU-439, CAL-005, WILD-011, MISSION-002, GOAL-009, FORAGE-005, C-284,
   QA-193 part 1); nothing landed 2026-11-03/04 (probably the weekly usage ran out). Live claim: WILD-012 (00:06 today).
