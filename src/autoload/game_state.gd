@@ -3241,7 +3241,8 @@ func engage_roamer(slot: int, charged: bool = false) -> bool:
 				for item_id: String in spoils:
 					player.add_item(item_id, int(spoils[item_id]))
 					spoils[item_id] = int(spoils[item_id]) * 2
-				EventBus.post("In season, the %s's spoils come twice over." % Wildlife.display_name(data, String(r["enemy"]), false), "progress")
+				if not spoils.is_empty():
+					EventBus.post("In season, the %s's spoils come twice over." % Wildlife.display_name(data, String(r["enemy"]), false), "progress")
 			if great:
 				# WILD-006: a great beast's normal spoils, twice over.
 				for item_id: String in spoils:
@@ -3253,7 +3254,8 @@ func engage_roamer(slot: int, charged: bool = false) -> bool:
 				if trophy != "":
 					player.add_item(trophy, 1)
 					EventBus.post("You take the %s as a token of the hunt." % String(data.items[trophy]["name"]).to_lower(), "progress")
-				EventBus.post("The %s's spoils come twice over." % Wildlife.display_name(data, String(r["enemy"]), true), "progress")
+				if not spoils.is_empty():
+					EventBus.post("The %s's spoils come twice over." % Wildlife.display_name(data, String(r["enemy"]), true), "progress")
 				if bounty_id != "" and _can_act():
 					_pay_bounty(bounty_id, String(data.enemies[String(r["enemy"])]["name"]), "The %s was your quarry." % Wildlife.display_name(data, String(r["enemy"]), true))
 					Wildlife.mark_down(world_flags, region, Wildlife.BOUNTY_SLOT, GameClock.total_days)

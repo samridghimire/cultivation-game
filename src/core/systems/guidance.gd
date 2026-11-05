@@ -3242,19 +3242,18 @@ static func _core_road_rows(c: CharacterData, data: GameData, today: int) -> Arr
 	var rows: Array[Dictionary] = []
 	var next_name: String = data.realms[mini(c.realm_index + 1, data.realms.size() - 1)].name
 	rows.append({"text": "Reach %s Middle" % data.realms[2].name, "done": vet or (c.realm_index == 2 and c.stage >= 1), "region": ""})
-	# REVIEW: only a Foundation-gated beast completes this goal (no per-realm win record), so only such a beast is named.
-	var next_great := _next_great(c, data, today, data.realms[2].id)
+	# GOAL-012: the realm each win happened in is recorded; the soonest beast not yet beaten in Foundation is named (return beasts too).
+	var next_great := _next_great(c, data, today, "", true)
 	var beast_rid: String = next_great["region"]
 	if beast_rid != "":
 		var away: int = int(next_great["day"]) - today
 		var when := "today" if away == 0 else ("tomorrow" if away == 1 else "in %d days" % away)
 		var enemy := Wildlife.active_great_enemy(c, data, beast_rid)
-		var done_beast := vet
-		for rid: String in data.regions:
-			var gdef: Dictionary = data.regions[rid].get("roamers", {}).get("great", {})
-			if not gdef.is_empty() and String(gdef.get("min_realm", "")) == data.realms[2].id and c.great_beasts.has(String(gdef.get("enemy", ""))):
-				done_beast = true
-		rows.append({"text": "Beat a great beast of your realm: %s walks %s on %s" % [Wildlife.display_name(data, enemy, true), _region_name(data, beast_rid), Calendar.weekday_name(int(next_great["day"]))] + (" (%s)" % when), "done": done_beast, "region": beast_rid})
+		var rumor := Wildlife.rumor_of(data, beast_rid, c)
+		var line := "Beat a great beast of your realm: %s walks %s on %s" % [Wildlife.display_name(data, enemy, true), _region_name(data, beast_rid), Calendar.weekday_name(int(next_great["day"]))] + (" (%s)" % when)
+		if rumor != "":
+			line += ". Hunters say: " + rumor
+		rows.append({"text": line, "done": vet or _won_great_in_foundation(c), "region": beast_rid})
 	var pill_text := "Get %s pill" % Text.a(next_name)
 	var where := _foundation_pill_where(c, data)
 	if where != "":
@@ -3263,6 +3262,14 @@ static func _core_road_rows(c: CharacterData, data: GameData, today: int) -> Arr
 	rows.append({"text": pill_text, "done": vet or c.breakthrough_pill != "" or not breakthrough_items(c, data).is_empty(), "region": pill_region})
 	rows.append({"text": "Reach %s Peak, then attempt %s (now %d%%)" % [data.realms[2].name, next_name, roundi(Cultivation.breakthrough_chance(c, data) * 100)], "done": vet or c.breakthrough_failures >= 1, "region": ""})
 	return rows
+
+
+## GOAL-012: true when any great beast fell while the player was in Foundation or above.
+static func _won_great_in_foundation(c: CharacterData) -> bool:
+	for enemy_id: String in c.great_beast_realms:
+		if int(c.great_beast_realms[enemy_id]) >= 2:
+			return true
+	return false
 
 
 ## GOAL-010: where to get the next realm's pill: the sect treasury when `c`'s rank reaches it, else the
@@ -3294,12 +3301,18 @@ static func _foundation_pill_region(c: CharacterData, data: GameData) -> String:
 
 ## CAL-005: the region of the soonest great-beast walk this realm can meet and has not won ({"region": "", "day": -1} when none; ties: region order).
 ## `min_realm` (REVIEW of GOAL-011): when set, only great beasts gated at that realm id count.
-static func _next_great(c: CharacterData, data: GameData, today: int, min_realm: String = "") -> Dictionary:
+## `foundation_goal` (GOAL-012): count a kind as unbeaten until it fell in Foundation or above, and name a region's return beast.
+static func _next_great(c: CharacterData, data: GameData, today: int, min_realm: String = "", foundation_goal: bool = false) -> Dictionary:
 	var best_rid := ""
 	var best_day := -1
 	for rid: String in data.regions:
 		var def: Dictionary = data.regions[rid].get("roamers", {}).get("great", {})
-		if def.is_empty() or c.great_beasts.has(String(def.get("enemy", ""))):
+		if def.is_empty():
+			continue
+		if foundation_goal:
+			if int(c.great_beast_realms.get(Wildlife.active_great_enemy(c, data, rid), -1)) >= 2:
+				continue
+		elif c.great_beasts.has(String(def.get("enemy", ""))):
 			continue
 		if min_realm != "" and String(def.get("min_realm", "")) != min_realm:
 			continue

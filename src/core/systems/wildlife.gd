@@ -251,6 +251,8 @@ static func great_trophy(data: GameData, enemy_id: String) -> String:
 ## WILD-007: records a great-beast win. Returns the trophy item id to give the first time ("" when
 ## already recorded or the beast has no trophy). The first win's day is always stored.
 static func record_great(c: CharacterData, data: GameData, enemy_id: String, region_id: String, day: int) -> String:
+	# GOAL-012: remember the best realm each kind was beaten in (a re-win in a higher realm counts).
+	c.great_beast_realms[enemy_id] = maxi(int(c.great_beast_realms.get(enemy_id, -1)), c.realm_index)
 	if c.great_beasts.has(enemy_id):
 		return ""
 	c.great_beasts[enemy_id] = day
