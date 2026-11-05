@@ -3145,10 +3145,46 @@ static func road_goals(c: CharacterData, data: GameData, flags: Dictionary, toda
 	rows.append(["Join a sect, or stay free (a sect hall takes recruits)", vet or not c.is_rogue() or bool(flags.get(SECT_HALL_FLAG, false))])
 	rows.append(["Take a sect mission or a bounty", vet or LifeStats.get_stat(c, "missions_done") >= 1 or LifeStats.get_stat(c, "bounties_done") >= 1 or not c.bounty.is_empty()])
 	rows.append(["Reach the 6th Layer of Qi Refining", vet or c.stage >= 6])
+	# GOAL-010: the last stretch of Qi Refining.
+	rows.append(["Reach the 9th Layer of Qi Refining", vet or c.stage >= 9])
+	var pill_text := "Get a %s pill" % data.realms[mini(c.realm_index + 1, data.realms.size() - 1)].name
+	var where := _foundation_pill_where(c, data)
+	if where != "":
+		pill_text += ": " + where
+	rows.append([pill_text, vet or c.breakthrough_pill != "" or not breakthrough_items(c, data).is_empty()])
+	rows.append(["Attempt %s (now %d%%)" % [data.realms[mini(c.realm_index + 1, data.realms.size() - 1)].name, roundi(Cultivation.breakthrough_chance(c, data) * 100)],
+		vet or LifeStats.get_stat(c, "breakthroughs") + LifeStats.get_stat(c, "breakthroughs_failed") >= 1 or c.breakthrough_failures >= 1])
 	var out: Array[Dictionary] = []
 	for row: Array in rows:
 		out.append({"text": row[0], "done": row[1]})
 	return out
+
+
+## GOAL-010: where to get the next realm's pill: the sect treasury when `c`'s rank reaches it, else the
+## cheapest known seller ("" when none is known).
+static func _foundation_pill_where(c: CharacterData, data: GameData) -> String:
+	var entry := sect_pill_entry(c, data)
+	if not entry.is_empty() and int(c.sect.get("rank", 0)) >= int(entry["min_rank"]):
+		return "the sect treasury for %d contribution" % int(entry["cost"])
+	var pill := next_realm_pill(c, data)
+	if pill.is_empty():
+		return ""
+	var source := Items.sources(data, String(pill["id"]))[0]
+	if source.begins_with("Sold at "):
+		return source.substr(0, 1).to_lower() + source.substr(1) + " for %d" % int(pill.get("price", 0))
+	return source
+
+
+## GOAL-010: the region of the cheapest seller of the next realm's pill ("" when none).
+static func _foundation_pill_region(c: CharacterData, data: GameData) -> String:
+	var pill := next_realm_pill(c, data)
+	if pill.is_empty():
+		return ""
+	for rid: String in data.regions:
+		for place: Dictionary in data.regions[rid].get("places", []):
+			if String(place.get("type", "")) == "merchant" and Items.merchant_sells(data, pill, place.get("stock_tags", []), int(place.get("max_price", 0))):
+				return rid
+	return ""
 
 
 ## CAL-005: the region of the soonest great-beast walk this realm can meet and has not won ({"region": "", "day": -1} when none; ties: region order).
@@ -3177,6 +3213,9 @@ static func road_goal_region(c: CharacterData, data: GameData, flags: Dictionary
 	if data.regions.has("fallen_star_market"):
 		regions.append("fallen_star_market")
 	regions.append(String(_next_great(c, data, today)["region"]))
+	regions.append_array(["", "", "", "", "", ""])  # bounty, discovery, sect, mission, 6th layer, 9th layer
+	var sect_pill := _foundation_pill_where(c, data).begins_with("the sect treasury")
+	regions.append("" if sect_pill else _foundation_pill_region(c, data))
 	var goals := road_goals(c, data, flags, today)
 	for i in goals.size():
 		if not bool(goals[i]["done"]):

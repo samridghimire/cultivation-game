@@ -5960,7 +5960,7 @@ func test_road_goals_follow_the_first_ladder() -> void:
 	assert_true(Guidance.first_goals_done(c, data(), flags))
 	assert_true(Guidance.road_goals_active(c, data(), flags))
 	var goals := Guidance.road_goals(c, data(), flags)
-	assert_eq(goals.size(), 8)
+	assert_eq(goals.size(), 11)
 	assert_true(String(goals[0]["text"]).contains("Misty Forest"))
 	assert_true(String(goals[0]["text"]).contains("3 days"))
 	assert_false(goals[0]["done"])
@@ -5974,7 +5974,7 @@ func test_road_goals_follow_the_first_ladder() -> void:
 	c.great_beasts["wild_boar"] = 3
 	assert_true(Guidance.road_goals(c, data(), flags)[2]["done"])
 	var section := Guidance.journal(c, data(), flags, 0, "qingshi_village").filter(func(e: Dictionary) -> bool: return e["section"] == "Road goals")
-	assert_eq(section.size(), 8)
+	assert_eq(section.size(), 11)
 
 
 func test_road_goals_veteran_and_flags() -> void:
@@ -6034,6 +6034,43 @@ func test_road_goal_great_beast_is_the_soonest_and_names_the_weekday() -> void:
 	var away := best_day - 100
 	var when := "today" if away == 0 else ("tomorrow" if away == 1 else "in %d days" % away)
 	assert_true(text.ends_with(", %s)" % when), text)
+
+
+func test_road_goals_foundation_stretch() -> void:
+	var flags := {Guidance.ELDER_MO_FLAG: true}
+	var c := _after_ladder()
+	var goals := Guidance.road_goals(c, data(), flags)
+	assert_eq(goals[8]["text"], "Reach the 9th Layer of Qi Refining")
+	assert_false(goals[8]["done"])
+	assert_true(String(goals[9]["text"]).begins_with("Get a Foundation Establishment"), String(goals[9]["text"]))
+	assert_false(goals[9]["done"])
+	assert_true(String(goals[10]["text"]).contains("(now "))
+	assert_false(goals[10]["done"])
+	c.stage = 9
+	assert_true(Guidance.road_goals(c, data(), flags)[8]["done"])
+	c.breakthrough_pill = "x"
+	assert_true(Guidance.road_goals(c, data(), flags)[9]["done"])
+	assert_true(Guidance.road_goals_active(c, data(), flags))
+	LifeStats.add(c, "breakthroughs_failed")
+	assert_true(Guidance.road_goals(c, data(), flags)[10]["done"])
+	var vet := _after_ladder()
+	vet.realm_index = 2
+	for g in Guidance.road_goals(vet, data(), flags):
+		assert_true(g["done"])
+
+
+func test_road_goal_pill_text_names_treasury_or_shop() -> void:
+	var flags := {Guidance.ELDER_MO_FLAG: true}
+	var rogue := _after_ladder()
+	rogue.sect = {}
+	var text := String(Guidance.road_goals(rogue, data(), flags)[9]["text"])
+	assert_false(text.contains("treasury"), text)
+	var disciple := _after_ladder()
+	var entry := Guidance.sect_pill_entry(disciple, data())
+	if not entry.is_empty():
+		disciple.sect["rank"] = int(entry["min_rank"])
+		var t2 := String(Guidance.road_goals(disciple, data(), flags)[9]["text"])
+		assert_true(t2.contains("the sect treasury for %d contribution" % int(entry["cost"])), t2)
 
 
 func test_road_goals_sect_and_layer_goals() -> void:
