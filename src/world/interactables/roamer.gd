@@ -42,6 +42,8 @@ var asked := false  # a bold beast opens its menu once per beast per day (nodes 
 func setup(p_slot: int, p_enemy: String, pos: Vector2, seed_value: int, p_great: bool = false) -> void:
 	slot = p_slot
 	great = p_great
+	if great:
+		add_to_group("great_roamer")  # GFX-075: the edge arrow looks for it
 	enemy_id = p_enemy
 	position = pos
 	home = pos
@@ -74,6 +76,18 @@ func _update_name() -> void:
 static func label_for(beast_name: String, threat: String, is_great: bool) -> String:
 	var title := ("Great " + beast_name) if is_great else beast_name
 	return "%s (%s)" % [title, threat] if threat != "" else title
+
+
+## GFX-075: the beast's plain name for the edge arrow ("Cloud Crane").
+func short_name() -> String:
+	return String(GameState.data.enemies.get(enemy_id, {}).get("name", enemy_id))
+
+
+## GFX-075: the danger colour of this beast against the player.
+func danger_color() -> Color:
+	if not GameState.has_session() or not GameState.data.enemies.has(enemy_id):
+		return Color.WHITE
+	return UIStyle.danger_color(Wildlife.threat(GameState.player, GameState.data, enemy_id))
 
 
 func label_text() -> String:

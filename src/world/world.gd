@@ -84,6 +84,7 @@ func _ready() -> void:
 	Interactable.ground_style = str(map.get("ground_style", "grass"))
 	player.position = _vec(_region.get("spawn", [map_size.x / 2.0, map_size.y / 2.0]))
 	_build_season_tint()
+	_build_beast_arrow()
 	_build_decor()
 	_refresh_ambient()
 	Settings.changed.connect(_on_setting_changed)
@@ -383,6 +384,16 @@ func _build_roamers() -> void:
 		if bool(r.get("great", false)):
 			great_spot = avoid[avoid.size() - 1]
 	_build_tracks(blocked, great_spot)
+
+
+## GFX-075: an edge arrow on the HUD layer that points at an off-screen great beast.
+func _build_beast_arrow() -> void:
+	var layer := CanvasLayer.new()
+	layer.layer = 5
+	var arrow := BeastArrow.new()
+	arrow.hud = get_node_or_null("HUD")
+	layer.add_child(arrow)
+	add_child(layer)
 
 
 ## WU-450: the trail of prints: toward the beast's own spot on its day, toward its spawn area the day before.
