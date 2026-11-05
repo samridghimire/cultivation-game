@@ -334,11 +334,18 @@ func test_sect_courts_and_gates() -> void:
 			var hall := _rect(place, [64, 64])
 			assert_true(court.encloses(hall), "%s court covers its hall" % place["display_name"])
 			assert_true(court.size.x > hall.size.x * 1.3, "%s court is a real court" % place["display_name"])
+			if court.size.y > hall.size.y * 1.4:
+				assert_true(hall.get_center().y < court.get_center().y, "%s hall stands in the court's north half" % place["display_name"])
+				assert_true(hall.position.y - court.position.y >= SectCourt.TOP_MARGIN - 0.5, "%s grass above the hall for its label" % place["display_name"])
 			assert_true(Rect2(Vector2.ZERO, Vector2(float(region["map"]["size"][0]), float(region["map"]["size"][1]))).encloses(court), "%s court inside map" % place["display_name"])
 			for p in region["map"]["paths"]:
 				assert_false(court.intersects(Rect2(p[0], p[1], p[2], p[3])), "%s court on a path" % place["display_name"])
 			for other: Dictionary in region["places"]:
 				if other != place:
 					assert_false(court.intersects(_rect(other, [64, 64])), "%s court over %s" % [place["display_name"], other.get("display_name", "?")])
+		if not g.is_empty():
+			var gr := SectCourt.gate_rect(g)
+			assert_true(gr.size.y >= 90.0, "%s gate is tall (roofed)" % region["id"])
+			assert_true(Rect2(Vector2.ZERO, Vector2(float(region["map"]["size"][0]), float(region["map"]["size"][1]))).encloses(gr), "%s gate inside map" % region["id"])
 		assert_eq(not g.is_empty(), has_sect_hall, "%s gate only with a sect hall" % region["id"])
 	assert_true(seen >= 2, "azure peak and the marsh both have sect halls")
