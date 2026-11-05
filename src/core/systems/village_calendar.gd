@@ -11,7 +11,7 @@ const KIND_ORDER := ["market", "festival_active", "festival_month", "birthday", 
 ## Each entry: {day: int (total days), kind: String, text: String, region: String ("" = anywhere)}.
 ## CAL-002: with `c` given, also the player's own dates (crops, rent, requests, secret realms, events).
 static func upcoming(data: GameData, npcs: Dictionary, favor: Dictionary, active_events: Array,
-		region_id: String, start: int, span: int = 30, c: CharacterData = null) -> Array[Dictionary]:
+		region_id: String, start: int, span: int = 30, c: CharacterData = null, flags: Dictionary = {}) -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
 	var end := start + span
 	# Market days of timed places in this region.
@@ -36,7 +36,7 @@ static func upcoming(data: GameData, npcs: Dictionary, favor: Dictionary, active
 		var rid := String(inst.get("region", ""))
 		var until := Calendar.format_date(int(inst.get("end_day", 0)))
 		out.append({"day": first, "kind": "festival_active", "region": rid,
-			"text": "%s in %s (until %s)%s" % [WorldEvents.event_name(data, String(inst["id"])), Exploration.region_name(data, rid), until, _contest_suffix(data, String(inst["id"]))]})
+			"text": "%s in %s (until %s)%s" % [WorldEvents.event_name(data, String(inst["id"])), Exploration.region_name(data, rid), until, _contest_suffix(data, String(inst["id"]), flags, start)]})
 	# Festival months inside the window that are not under way.
 	var seen_months := {}
 	for day in range(start, end):
@@ -57,7 +57,7 @@ static func upcoming(data: GameData, npcs: Dictionary, favor: Dictionary, active
 			for r in def.get("regions", []):
 				names.append(Exploration.region_name(data, String(r)))
 			out.append({"day": key, "kind": "festival_month", "region": String(def["regions"][0]) if (def.get("regions", []) as Array).size() == 1 else "",
-				"text": "%s this month (somewhere in %s)%s" % [String(def.get("name", eid)), " or ".join(names), _contest_suffix(data, eid)]})
+				"text": "%s this month (somewhere in %s)%s" % [String(def.get("name", eid)), " or ".join(names), _contest_suffix(data, eid, flags, start)]})
 	# Season starts.
 	for day in range(start, end):
 		if day > 0 and Calendar.season_of(day) != Calendar.season_of(day - 1):
@@ -272,6 +272,9 @@ static func _in_month(def: Dictionary, month: int) -> bool:
 
 
 ## " (contest: Lantern riddles)" when the festival has a contest (FEST-006).
-static func _contest_suffix(data: GameData, event_id: String) -> String:
+static func _contest_suffix(data: GameData, event_id: String, flags: Dictionary = {}, today: int = 0) -> String:
 	var contest := FestivalContest.contest_of(data, event_id)
-	return "" if contest.is_empty() else " (contest: %s)" % String(contest["name"])
+	if contest.is_empty():
+		return ""
+	var champ := FestivalContest.champion_text(flags, event_id, Calendar.year_of(today))
+	return " (contest: %s%s)" % [String(contest["name"]), "; " + champ if champ != "" else ""]

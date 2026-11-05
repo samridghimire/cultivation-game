@@ -4,6 +4,8 @@ extends RefCounted
 ## The player's attribute score plays 2-4 villagers; ties go to the player. Pure: no state, rng passed in.
 
 const DEFAULT_RIVAL_ATTRIBUTE := 8
+const CHAMPION_BONUS := 2
+const MASTER_STREAK := 3
 
 
 static func contest_of(data: GameData, event_id: String) -> Dictionary:
@@ -12,6 +14,57 @@ static func contest_of(data: GameData, event_id: String) -> Dictionary:
 
 static func flag_key(event_id: String, year: int) -> String:
 	return "contest_%s_%d" % [event_id, year]
+
+
+static func winner_key(event_id: String) -> String:
+	return "contest_winner_%s" % event_id
+
+
+static func master_key(event_id: String) -> String:
+	return "contest_master_%s" % event_id
+
+
+## The previous years' winner record {year, name, you, streak} of a festival's contest, or {} (FEST-007).
+## Only a record from before `year` counts: this year's winner is not yet "last year's champion".
+static func champion(flags: Dictionary, event_id: String, year: int) -> Dictionary:
+	var rec: Variant = flags.get(winner_key(event_id), {})
+	if rec is Dictionary and (rec as Dictionary).has("year") and int((rec as Dictionary)["year"]) < year:
+		return rec
+	return {}
+
+
+## A rival's name to tease the player about, or "" (a winner that was the player or a stranger is no champion).
+static func champion_rival(flags: Dictionary, event_id: String, year: int) -> String:
+	var rec := champion(flags, event_id, year)
+	if rec.is_empty() or bool(rec.get("you", false)) or String(rec.get("name", "")) in ["", "a stranger"]:
+		return ""
+	return String(rec["name"])
+
+
+## Calendar text: "Mei Lan won last year" (or "is the reigning champion"), "" if none.
+static func champion_text(flags: Dictionary, event_id: String, year: int) -> String:
+	var rec := champion(flags, event_id, year)
+	if rec.is_empty():
+		return ""
+	var who := "You" if bool(rec.get("you", false)) else String(rec.get("name", ""))
+	if who == "":
+		return ""
+	return "%s won last year" % who if int(rec["year"]) == year - 1 else "%s %s the reigning champion" % [who, "are" if who == "You" else "is"]
+
+
+## Write this year's winner; returns the player's consecutive-win streak for this contest (FEST-007).
+## At MASTER_STREAK the world flag `contest_master_<event>` is set (read by milestones).
+static func record(flags: Dictionary, event_id: String, year: int, result: Dictionary) -> int:
+	var winner: Dictionary = (result.get("scores", []) as Array)[0]
+	var you := bool(winner["you"])
+	var streak := 0
+	if you:
+		var prev: Variant = flags.get(winner_key(event_id), {})
+		streak = (int((prev as Dictionary).get("streak", 0)) if prev is Dictionary and bool((prev as Dictionary).get("you", false)) else 0) + 1
+	flags[winner_key(event_id)] = {"year": year, "name": "You" if you else String(winner["name"]), "you": you, "streak": streak}
+	if streak >= MASTER_STREAK:
+		flags[master_key(event_id)] = true
+	return streak
 
 
 ## "" if the contest can be entered now, otherwise the reason it cannot.
@@ -27,7 +80,7 @@ static func check(data: GameData, active: Array, _c: CharacterData, event_id: St
 
 
 ## Run the contest. `rivals` are the villagers who enter (fewer than `rivals` is fine; missing ones become strangers).
-static func run(data: GameData, c: CharacterData, event_id: String, rivals: Array[CharacterData], rng: RandomNumberGenerator) -> Dictionary:
+static func run(data: GameData, c: CharacterData, event_id: String, rivals: Array[CharacterData], rng: RandomNumberGenerator, champion_name: String = "") -> Dictionary:
 	var contest := contest_of(data, event_id)
 	if contest.is_empty():
 		return {}
@@ -44,7 +97,10 @@ static func run(data: GameData, c: CharacterData, event_id: String, rivals: Arra
 		if i < rivals.size():
 			name = rivals[i].name
 			base = rivals[i].attribute(attribute) if rivals[i].attributes.has(attribute) else DEFAULT_RIVAL_ATTRIBUTE
-		scores.append({"name": name, "score": base + rng.randi_range(0, 10), "you": false})
+		var score := base + rng.randi_range(0, 10)
+		if champion_name != "" and name == champion_name:
+			score += CHAMPION_BONUS
+		scores.append({"name": name, "score": score, "you": false})
 	# Stable sort high to low; the player is first in the list, so ties go to the player.
 	var order: Array[Dictionary] = []
 	for s in scores:
@@ -109,6 +165,11 @@ static func validate(data: GameData) -> PackedStringArray:
 				errors.append("%s prize favor_all must be 0..5" % id)
 			if int(prize.get("renown", 0)) < 0 or int(prize.get("renown", 0)) > 5:
 				errors.append("%s prize renown must be 0..5" % id)
+		var greeting := String(contest.get("champion_greeting", ""))
+		if greeting == "":
+			errors.append("%s needs a champion_greeting" % id)
+		elif greeting.replace("{player}", "").contains("{"):
+			errors.append("%s champion_greeting may only use {player}" % id)
 		var stripped := String(contest.get("lose_text", "")).replace("{winner}", "")
 		if stripped.contains("{"):
 			errors.append("%s lose_text may only use {winner}" % id)

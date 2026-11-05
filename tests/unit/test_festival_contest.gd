@@ -123,3 +123,82 @@ func test_game_state_enters_once_a_year() -> void:
 	for e: Dictionary in line:
 		assert_false(String(e["text"]).contains("are on at the festival stall"), "no hint after entering")
 	gs.end_session()
+
+
+func _won(you: bool, name: String) -> Dictionary:
+	return {"scores": [{"name": name, "score": 9, "you": you}, {"name": "x", "score": 1, "you": not you}]}
+
+
+func test_champion_recorded_and_only_from_a_past_year() -> void:
+	var flags := {}
+	FestivalContest.record(flags, "lantern_festival", 3, _won(false, "Mei Lan"))
+	assert_eq(FestivalContest.champion(flags, "lantern_festival", 3), {}, "this year's winner is not last year's champion")
+	assert_eq(FestivalContest.champion_rival(flags, "lantern_festival", 4), "Mei Lan")
+	assert_eq(FestivalContest.champion_text(flags, "lantern_festival", 4), "Mei Lan won last year")
+	assert_eq(FestivalContest.champion_text({}, "lantern_festival", 4), "")
+	FestivalContest.record(flags, "lantern_festival", 4, _won(true, "You"))
+	assert_eq(FestivalContest.champion_rival(flags, "lantern_festival", 5), "", "the player is no rival")
+	assert_eq(FestivalContest.champion_text(flags, "lantern_festival", 5), "You won last year")
+
+
+func test_champion_scores_two_more() -> void:
+	var d := data()
+	var p := new_character()
+	var rivals: Array[CharacterData] = [_npc("Mei Lan", 8), _npc("Old Wu", 8)]
+	var a := FestivalContest.run(d, p, "lantern_festival", rivals, seeded_rng(9))
+	var b := FestivalContest.run(d, p, "lantern_festival", rivals, seeded_rng(9), "Mei Lan")
+	var sa := {}
+	var sb := {}
+	for s: Dictionary in a["scores"]:
+		sa[s["name"]] = int(s["score"])
+	for s: Dictionary in b["scores"]:
+		sb[s["name"]] = int(s["score"])
+	assert_eq(sb["Mei Lan"], sa["Mei Lan"] + 2)
+	assert_eq(sb["Old Wu"], sa["Old Wu"])
+
+
+func test_three_in_a_row_sets_master_flag_once_and_awards_milestone() -> void:
+	var flags := {}
+	assert_eq(FestivalContest.record(flags, "lantern_festival", 1, _won(true, "You")), 1)
+	assert_eq(FestivalContest.record(flags, "lantern_festival", 2, _won(true, "You")), 2)
+	assert_false(flags.has("contest_master_lantern_festival"))
+	FestivalContest.record(flags, "lantern_festival", 3, _won(false, "Mei Lan"))
+	assert_eq(FestivalContest.record(flags, "lantern_festival", 4, _won(true, "You")), 1, "a loss resets the streak")
+	FestivalContest.record(flags, "lantern_festival", 5, _won(true, "You"))
+	assert_eq(FestivalContest.record(flags, "lantern_festival", 6, _won(true, "You")), 3)
+	assert_true(bool(flags["contest_master_lantern_festival"]))
+	var got := Milestones.newly_reached(new_character(), data(), flags)
+	assert_true(got.has("riddle_master"))
+	assert_false(got.has("kite_master"))
+
+
+func test_calendar_names_the_champion() -> void:
+	var d := data()
+	var inst := {"id": "lantern_festival", "region": "qingshi_village", "start_day": 400, "end_day": 408}
+	var flags := {"contest_winner_lantern_festival": {"year": Calendar.year_of(400) - 1, "name": "Mei Lan", "you": false, "streak": 0}}
+	var found := false
+	for x: Dictionary in VillageCalendar.upcoming(d, {}, {}, [inst], "qingshi_village", 400, 5, null, flags):
+		if String(x["text"]).contains("(contest: Lantern riddles; Mei Lan won last year)"):
+			found = true
+	assert_true(found)
+
+
+func test_game_state_champion_enters_and_greets() -> void:
+	var gs := _root().get_node("GameState")
+	gs.start_session(new_character())
+	gs.current_region = "qingshi_village"
+	var day: int = _root().get_node("GameClock").total_days
+	var year := Calendar.year_of(day)
+	var folk := Folk.candidates(gs.npcs, gs.data, gs.player, "qingshi_village")
+	assert_true(folk.size() >= 1)
+	var champ: CharacterData = folk[folk.size() - 1]
+	gs.world_flags[FestivalContest.winner_key("lantern_festival")] = {"year": year - 1, "name": champ.name, "you": false, "streak": 0}
+	gs.world_events = [{"id": "lantern_festival", "region": "qingshi_village", "start_day": day, "end_day": day + 8}]
+	var result: Dictionary = gs.festival_contest("lantern_festival")
+	var names: Array = []
+	for s: Dictionary in result["scores"]:
+		names.append(s["name"])
+	assert_true(names.has(champ.name), "last year's champion always enters")
+	var w: Dictionary = gs.world_flags[FestivalContest.winner_key("lantern_festival")]
+	assert_eq(int(w["year"]), year)
+	gs.end_session()

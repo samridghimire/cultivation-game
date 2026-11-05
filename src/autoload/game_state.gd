@@ -2818,7 +2818,7 @@ func hint_density() -> float:
 
 ## CAL-001: dated things in the next `span` days (market days, birthdays, festivals, seasons). No time passes.
 func upcoming_days(span: int = 30) -> Array[Dictionary]:
-	return VillageCalendar.upcoming(data, npcs, npc_favor, world_events, current_region, GameClock.total_days, span, player)
+	return VillageCalendar.upcoming(data, npcs, npc_favor, world_events, current_region, GameClock.total_days, span, player, world_flags)
 
 
 ## FOLK-009: who you know in the current region (Folk.people_entries).
@@ -3107,14 +3107,23 @@ func festival_contest(event_id: String) -> Dictionary:
 		EventBus.player_changed.emit()
 		return {}
 	var contest := FestivalContest.contest_of(data, event_id)
+	var year := Calendar.year_of(GameClock.total_days)
+	var champ_name := FestivalContest.champion_rival(world_flags, event_id, year)
 	var rivals: Array[CharacterData] = []
 	for npc in Folk.candidates(npcs, data, player, current_region):
-		if rivals.size() >= int(contest["rivals"]):
-			break
-		rivals.append(npc)
-	var result := FestivalContest.run(data, player, event_id, rivals, rng)
-	world_flags[FestivalContest.flag_key(event_id, Calendar.year_of(GameClock.total_days))] = true
+		if npc.name == champ_name:
+			rivals.push_front(npc)  # last year's champion always enters
+		else:
+			rivals.append(npc)
+	if rivals.size() > int(contest["rivals"]):
+		rivals.resize(int(contest["rivals"]))
+	if champ_name != "" and (rivals.is_empty() or rivals[0].name != champ_name):
+		champ_name = ""  # not in this village any more
+	var result := FestivalContest.run(data, player, event_id, rivals, rng, champ_name)
+	world_flags[FestivalContest.flag_key(event_id, year)] = true
 	EventBus.post(String(contest["text"]), "world")
+	if champ_name != "":
+		EventBus.post("%s: %s" % [champ_name, String(contest.get("champion_greeting", "")).replace("{player}", player.name)], "world")
 	EventBus.post("%s You place %s of %d." % [String(result["text"]), FestivalContest.ordinal(int(result["place"])), int(result["total"])], "world")
 	var prize: Dictionary = result["prize"]
 	for item_id: String in prize.get("items", {}):
@@ -3127,6 +3136,9 @@ func festival_contest(event_id: String) -> Dictionary:
 				npc_favor[npc.id] = clampi(int(npc_favor.get(npc.id, 0)) + favor, -100, 100)
 	if int(prize.get("renown", 0)) > 0:
 		Renown.add(player, data, current_region, int(prize["renown"]))
+	var streak := FestivalContest.record(world_flags, event_id, year, result)
+	if streak == FestivalContest.MASTER_STREAK:
+		EventBus.post("Three years running: the %s is yours." % String(contest["name"]), "progress")
 	last_contest = result
 	EventBus.contest_finished.emit(result)
 	EventBus.player_changed.emit()
