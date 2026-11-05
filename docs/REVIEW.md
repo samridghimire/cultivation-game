@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 25992e9
+Last reviewed commit: ebed75d
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -1499,3 +1499,21 @@ Last reviewed commit: 25992e9
     "spoils come twice over" even when the beast dropped nothing; GOAL-011 still has no per-realm win record, so a
     Foundation player with no Foundation-gated beast left sees the row skipped (spec allows); WU-443 road card skip
     accepts any key/joypad button (gamepad OK).
+- 2026-11-05 (reviewer, 3rd run): reviewed 25992e9..ebed75d (MARKET-009, WU-450, WU-451, C-299, C-302, WILD-015,
+  MARKET-010, GFX-071, FEST-006, GOAL-012, GFX-072, WU-452, C-301, C-305, FEST-007, f027f5e, SEASON-003; [PLAN]/[REVIEW]
+  skipped). Main green after f027f5e (3219 tests). No
+  BACKLOG/CHANGELOG edits by workers; no SAVE_VERSION change (`market_regular`, `great_beast_realms` default to {};
+  contest records are world flags); no binary assets.
+  - **Main was red** between ad5d1e9 and f027f5e: C-305 added a dragon boat race `contest` without the
+    `champion_greeting` that FEST-007 made required, so GameData failed validation. A worker fixed it (f027f5e) while I
+    was fixing the same; I kept theirs and only added the missing three-in-a-row milestone (`dragon_boat_master`).
+  - Tip for agents: killing tools/test.sh mid-run can leave `user://settings.cfg` with `hud_hints=0`, which makes
+    test_hud_layout fail on every later run in that container; delete the file.
+  - MARKET-009 (regular tally overwritten per stall, old `wanted_sold_*` flags just go stale), MARKET-010 (reserved
+    `untagged` tag validated), WILD-015, FEST-006, FEST-007, GOAL-012 (realm recorded at the win; Foundation = index 2),
+    WU-450/GFX-072 (local rng, reduce_motion respected), WU-451, WU-452, GFX-071, C-299, C-301, C-302 OK.
+  - Notes, not filed: WILD-015's bait has no UI caller yet (worker's follow-up; GameState.bait_offer/set_bait) and its
+    session test never checks the fight was weakened; FEST-007's streak counts consecutive *wins entered*, so skipping a
+    year does not break "three years running"; C-299 made the Corpse Peddler's Skiff (the marsh's only shop) open on
+    days 6 and 21 only, as specced; SEASON-003's leaving line uses singular names ("Purple Cloud Mushroom and Mist
+    Fox go with it") and lists an in-season (fat) roamer as leaving although the plain beast stays.

@@ -3,6 +3,7 @@
 	"milestones": [
 		{"id": "riddle_master", "name": "Riddle Master of Qingshi", "description": "Win the Lantern riddles three years running.", "check": {"type": "flag", "flag": "contest_master_lantern_festival"}},
 		{"id": "kite_master", "name": "Kite Master of Azure Peak", "description": "Win the ridge kite contest three years running.", "check": {"type": "flag", "flag": "contest_master_qingming_festival"}},
+		{"id": "dragon_boat_master", "name": "Stroke Oar of Qingshi", "description": "Win the dragon boat race three years running.", "check": {"type": "flag", "flag": "contest_master_dragon_boat_festival"}},
 		{"id": "moon_palate", "name": "Moon Palate of the Market", "description": "Win the moon-cake judging three years running.", "check": {"type": "flag", "flag": "contest_master_mid_autumn_festival"}},
 		{"id": "first_find", "name": "First Find", "description": "Pick up your first thing on the way.", "check": {"type": "life_stat", "stat": "foraged", "min": 1}},
 		{"id": "forager", "name": "Forager", "description": "Pick up fifty things on the way.", "check": {"type": "life_stat", "stat": "foraged", "min": 50}},
