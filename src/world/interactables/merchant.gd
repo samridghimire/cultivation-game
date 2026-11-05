@@ -64,6 +64,27 @@ func _draw() -> void:
 		_draw_market_mark()
 
 
+var _twinkle_t := 0.0
+var _twinkle_a := 1.0
+
+
+## GFX-072: the market sparkle's alpha 0.4-1.0 over `t` seconds (period ~1.2 s); 1.0 with reduce_motion.
+static func twinkle_alpha(t: float, reduced: bool) -> float:
+	if reduced:
+		return 1.0
+	return 0.7 + 0.3 * sin(TAU * t / 1.2)
+
+
+func _physics_process(delta: float) -> void:
+	if not shows_market_mark(open_days, rotating_stock, GameClock.total_days) or MotionFx.reduced():
+		return
+	_twinkle_t += delta
+	var a := snappedf(twinkle_alpha(_twinkle_t, false), 0.1)
+	if not is_equal_approx(a, _twinkle_a):
+		_twinkle_a = a
+		queue_redraw()
+
+
 ## WU-445: true on a day this rotating-stock stall is open.
 static func shows_market_mark(days: Array, rotating: Dictionary, today: int) -> bool:
 	return Places.is_market_day_stall({"open_days": days, "rotating_stock": rotating}, today)
@@ -72,13 +93,13 @@ static func shows_market_mark(days: Array, rotating: Dictionary, today: int) -> 
 ## Bunting flag on a pole at the stall's top-right corner plus a gold "new wares" sparkle (static, so reduce_motion-safe).
 func _draw_market_mark() -> void:
 	var pole := Vector2(size.x / 2.0 - 4.0, -size.y / 2.0)
-	var gold := Color(1.0, 0.85, 0.3)
+	var gold := Color(1.0, 0.85, 0.3, _twinkle_a)
 	draw_line(pole, pole + Vector2(0, -26), Color(0.4, 0.28, 0.16), 2.0)
 	draw_colored_polygon(PackedVector2Array([pole + Vector2(0, -26), pole + Vector2(16, -21), pole + Vector2(0, -16)]), Color(0.8, 0.2, 0.2))
 	var s := pole + Vector2(-14, -22)
 	draw_line(s + Vector2(-5, 0), s + Vector2(5, 0), gold, 2.0)
 	draw_line(s + Vector2(0, -5), s + Vector2(0, 5), gold, 2.0)
-	draw_circle(s, 2.0, Color(1, 1, 0.8))
+	draw_circle(s, 2.0, Color(1, 1, 0.8, _twinkle_a))
 
 
 ## A small scroll above the merchant (placeholder art).

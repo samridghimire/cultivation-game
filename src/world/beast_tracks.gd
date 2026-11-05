@@ -3,8 +3,12 @@ extends RefCounted
 ## WU-450: the trail of prints a great beast leaves on the ground. Pure: positions come from a local seeded rng
 ## (never GameState.rng) and nothing here touches nodes. The world draws the result under labels and figures.
 
-const COUNT_MIN := 8
-const COUNT_MAX := 12
+const COUNT_MIN := 14  ## prints in a full trail (GFX-072)
+const COUNT_MAX := 20
+const FLOOR_COUNT := 8  ## fewest worth drawing when places block the rest
+const STRIDE_MIN := 30.0
+const STRIDE_MAX := 36.0
+const SIDE_OFFSET := 8.0
 const EDGE_MARGIN := 60.0
 const MIN_ALPHA := 0.18
 const MAX_ALPHA := 0.7
@@ -59,16 +63,20 @@ static func _attempt(rng: RandomNumberGenerator, map_size: Vector2, spot: Vector
 		2: start = Vector2(EDGE_MARGIN, rng.randf_range(0.2, 0.8) * map_size.y)
 		_: start = Vector2(map_size.x - EDGE_MARGIN, rng.randf_range(0.2, 0.8) * map_size.y)
 	var out: Array[Dictionary] = []
-	var total := (spot - start).length() - STOP_SHORT
-	if total < 120.0:
+	if (spot - start).length() < STOP_SHORT + STRIDE_MIN * float(COUNT_MIN):
 		return out
 	var dir := (spot - start).normalized()
 	var perp := Vector2(-dir.y, dir.x)
 	var n := rng.randi_range(COUNT_MIN, COUNT_MAX)
-	var step := total / float(n)
+	# walk a real stride from the beast end back toward the edge: i = 0 is the freshest print
+	var along := STOP_SHORT
+	var bounds := Rect2(Vector2.ONE * EDGE_MARGIN * 0.5, map_size - Vector2.ONE * EDGE_MARGIN)
 	for i in n:
 		var side := 1 if i % 2 == 0 else -1
-		var pos := start + dir * (step * (float(i) + 0.5)) + perp * (side * 14.0 + rng.randf_range(-6.0, 6.0))
+		var pos := spot - dir * along + perp * (side * SIDE_OFFSET)
+		along += rng.randf_range(STRIDE_MIN, STRIDE_MAX)
+		if not bounds.has_point(pos):
+			break  # the clamp cuts the trail: another edge is tried
 		var ok := true
 		for r in blocked:
 			if r.grow(8.0).has_point(pos):
@@ -77,14 +85,21 @@ static func _attempt(rng: RandomNumberGenerator, map_size: Vector2, spot: Vector
 			if r.has_point(pos):
 				ok = false
 		if not ok:
-			continue
-		out.append({"pos": pos, "angle": dir.angle(), "alpha": lerpf(MIN_ALPHA, MAX_ALPHA, float(i) / float(n - 1)), "side": side})
+			continue  # a gap in the trail, the stride goes on
+		out.append({"pos": pos, "angle": dir.angle(), "alpha": lerpf(MAX_ALPHA, MIN_ALPHA, float(i) / float(n - 1)), "side": side})
+	out.reverse()  # far end first, as before
 	return out
 
 
+## GFX-072: pressed earth, or a blue-grey shadow on snow.
+static func print_color(a: float, snowy: bool) -> Color:
+	return Color(0.35, 0.4, 0.5, a) if snowy else Color(0.16, 0.11, 0.07, a)
+
+
 ## Draws one print on `canvas`: `p` centre, `angle` heading, `shape` from shape_for, `a` alpha.
-static func draw_print(canvas: CanvasItem, p: Vector2, angle: float, shape: String, a: float, side: int = 1) -> void:
-	var col := Color(0.8, 0.7, 0.52, a)  # pale dust: reads on dark forest and bog ground
+static func draw_print(canvas: CanvasItem, p: Vector2, angle: float, shape: String, a: float, side: int = 1, snowy: bool = false) -> void:
+	var col := print_color(a, snowy)
+	var rim := Color(0.85, 0.78, 0.6, a * 0.6)
 	canvas.draw_set_transform(p, angle, Vector2(1.4, 1.4))
 	match shape:
 		"hoof":  # two split halves
@@ -104,4 +119,5 @@ static func draw_print(canvas: CanvasItem, p: Vector2, angle: float, shape: Stri
 			canvas.draw_rect(Rect2(-8, -6, 11, 12), col)
 			for t in 4:
 				canvas.draw_rect(Rect2(5, -9 + t * 5, 5, 4), col)
+	canvas.draw_line(Vector2(-6, -8), Vector2(-6, 8), rim, 1.0)  # leading-edge rim (forward is +x; the scale gives ~1.4 px)
 	canvas.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)

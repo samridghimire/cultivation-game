@@ -879,7 +879,7 @@ func _draw() -> void:
 		_draw_landmark(lm)
 	_draw_footprints()
 	for t: Dictionary in _tracks:
-		BeastTracks.draw_print(self, t["pos"], t["angle"], _tracks_shape, t["alpha"], t["side"])
+		BeastTracks.draw_print(self, t["pos"], t["angle"], _tracks_shape, t["alpha"], t["side"], GroundTiles.ground_season(_season, map) == "Winter")
 	for d in _decor:
 		_draw_decor(d)
 	var border_tile := Sprites.first(["border_" + rid, "border"])

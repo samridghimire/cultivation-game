@@ -76,3 +76,32 @@ func test_world_draws_prints_only_on_tracks_day() -> void:
 	assert_true(world._tracks.size() >= 4, str(world._tracks.size()))
 	world.free()
 	_gs().end_session()
+
+
+func test_stride_trail() -> void:  # GFX-072
+	for region in ["misty_forest", "withered_bone_marsh", "azure_peak", "r"]:
+		for day in [5, 12, 40]:
+			var t := BeastTracks.trail(region, day, Vector2(1600, 1000), Vector2(1100, 700), [], [])
+			assert_true(t.size() >= BeastTracks.COUNT_MIN and t.size() <= BeastTracks.COUNT_MAX, "%s %d: %d" % [region, day, t.size()])
+			for i in range(1, t.size()):
+				var d: float = (t[i]["pos"] - t[i - 1]["pos"]).length()
+				assert_true(d >= 26.0 and d <= 40.0, "stride %f" % d)
+			assert_eq(t, BeastTracks.trail(region, day, Vector2(1600, 1000), Vector2(1100, 700), [], []))
+
+
+func test_gap_keeps_stride_and_snow_colour() -> void:
+	var blocked: Array[Rect2] = [Rect2(700, 400, 120, 120)]
+	var t := BeastTracks.trail("r", 9, Vector2(1600, 1000), Vector2(1200, 800), blocked, [])
+	assert_true(t.size() >= BeastTracks.FLOOR_COUNT)
+	assert_true(BeastTracks.print_color(0.5, true) != BeastTracks.print_color(0.5, false))
+
+
+func test_market_twinkle() -> void:
+	var lo := 2.0
+	var hi := 0.0
+	for i in 120:
+		var a: float = load("res://src/world/interactables/merchant.gd").twinkle_alpha(float(i) * 0.01, false)
+		lo = minf(lo, a)
+		hi = maxf(hi, a)
+	assert_true(lo >= 0.399 and hi <= 1.001 and hi > 0.95 and lo < 0.45)
+	assert_eq(load("res://src/world/interactables/merchant.gd").twinkle_alpha(0.3, true), 1.0)
