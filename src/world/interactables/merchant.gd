@@ -41,6 +41,9 @@ func get_options() -> Array[Dictionary]:
 	var festival := GameState.festival_activity_here(stock_tags)
 	if festival != "":
 		options.append(festival_entry(festival))
+	var contest := GameState.festival_contest_here()
+	if contest != "" and WorldEvents.sold_by(GameState.data, contest, stock_tags):
+		options.append(contest_entry(contest))
 	return options
 
 
@@ -109,6 +112,27 @@ func festival_entry(event_id: String) -> Dictionary:
 		"reason": reason,
 		"keep_open": true,
 	}
+
+
+## "Enter the <contest>" for the festival contest under way here (FEST-006).
+func contest_entry(event_id: String) -> Dictionary:
+	var contest := FestivalContest.contest_of(GameState.data, event_id)
+	var reason := GameState.check_festival_contest(event_id)
+	return {
+		"label": "Enter the %s" % contest["name"],
+		"description": String(contest["text"]),
+		"action": _enter_contest.bind(event_id),
+		"disabled": reason != "",
+		"reason": reason,
+		"keep_open": true,
+	}
+
+
+func _enter_contest(event_id: String) -> void:
+	if GameState.check_festival_contest(event_id) != "":
+		return
+	GameState.festival_contest(event_id)
+	Audio.play("chime_progress")
 
 
 func _take_part(event_id: String) -> void:

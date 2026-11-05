@@ -479,6 +479,7 @@ func _validate() -> void:
 	load_errors.append_array(BodyTempering.validate(self))
 	load_errors.append_array(Devouring.validate(self))
 	load_errors.append_array(WorldEvents.validate(self))
+	load_errors.append_array(FestivalContest.validate(self))
 	load_errors.append_array(Rivals.validate(self))
 	load_errors.append_array(Folk.validate(self))
 	for item: Dictionary in items.values():

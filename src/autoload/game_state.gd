@@ -48,6 +48,8 @@ var last_travel_snow: int = 0
 var npcs: Dictionary = {}
 ## How much each NPC likes the player: id -> int.
 var npc_favor: Dictionary = {}
+## The latest festival contest result (FEST-006); session only.
+var last_contest: Dictionary = {}
 ## The conversation in progress ("" = none) and its current node.
 var dialogue_npc := ""
 var dialogue_node := ""
@@ -3079,6 +3081,56 @@ func festival_activity(event_id: String) -> void:
 		_pass_time(int(result["days"]))
 	LifeStats.add(player, "festival_activities")
 	EventBus.player_changed.emit()
+
+
+## The active event in this region that has a contest, or "" (first in data order) (FEST-006).
+func festival_contest_here() -> String:
+	for def: Dictionary in data.world_events.values():
+		var event_id := String(def["id"])
+		if def.has("contest") and not WorldEvents.instance_in(world_events, event_id, current_region).is_empty():
+			return event_id
+	return ""
+
+
+func check_festival_contest(event_id: String) -> String:
+	return FestivalContest.check(data, world_events, player, event_id, current_region, world_flags, Calendar.year_of(GameClock.total_days))
+
+
+## Enter a festival's contest (FEST-006): once a year, takes no time. Rivals are villagers of the region.
+func festival_contest(event_id: String) -> Dictionary:
+	EventBus.topic = "world"
+	if not _can_act():
+		return {}
+	var reason := check_festival_contest(event_id)
+	if reason != "":
+		EventBus.post(reason, "warning")
+		EventBus.player_changed.emit()
+		return {}
+	var contest := FestivalContest.contest_of(data, event_id)
+	var rivals: Array[CharacterData] = []
+	for npc in Folk.candidates(npcs, data, player, current_region):
+		if rivals.size() >= int(contest["rivals"]):
+			break
+		rivals.append(npc)
+	var result := FestivalContest.run(data, player, event_id, rivals, rng)
+	world_flags[FestivalContest.flag_key(event_id, Calendar.year_of(GameClock.total_days))] = true
+	EventBus.post(String(contest["text"]), "world")
+	EventBus.post("%s You place %s of %d." % [String(result["text"]), FestivalContest.ordinal(int(result["place"])), int(result["total"])], "world")
+	var prize: Dictionary = result["prize"]
+	for item_id: String in prize.get("items", {}):
+		player.add_item(item_id, int(prize["items"][item_id]))
+		EventBus.post("Prize: %d x %s." % [int(prize["items"][item_id]), data.items[item_id].name], "progress")
+	var favor := int(prize.get("favor_all", 0))
+	if favor > 0:
+		for npc in Npcs.in_region(npcs, data, current_region):
+			if npc.id != player.id:
+				npc_favor[npc.id] = clampi(int(npc_favor.get(npc.id, 0)) + favor, -100, 100)
+	if int(prize.get("renown", 0)) > 0:
+		Renown.add(player, data, current_region, int(prize["renown"]))
+	last_contest = result
+	EventBus.contest_finished.emit(result)
+	EventBus.player_changed.emit()
+	return result
 
 
 ## Today's visible roaming beasts in the current region (WILD-001): [{slot, enemy}].

@@ -3969,7 +3969,7 @@ static func journal(c: CharacterData, data: GameData, flags: Dictionary, today: 
 				var reason := WorldEvents.check_join(data, events, c, event_id, kind, region_id)
 				_add(out, "World events", "%s: %s" % [kind.capitalize(), "you can enter" if reason == "" else reason], "normal" if reason == "" else "dim")
 	_other_region_event_entries(out, c, data, today, region_id, events)
-	_festival_entries(out, data, today, region_id, events)
+	_festival_entries(out, data, today, region_id, events, flags)
 	_opportunity_entries(out, c, data, flags, today, region_id)
 	_fair_fight_entries(out, fights, c, data, region_id, today, flags)
 	for npc in _region_people(c, data, people, favor, region_id, today, "pointers").slice(0, POINTER_JOURNAL_MAX):
@@ -4435,7 +4435,7 @@ static func _other_region_event_entries(out: Array[Dictionary], c: CharacterData
 
 
 ## Festivals in this region or a neighbouring one.
-static func _festival_entries(out: Array[Dictionary], data: GameData, today: int, region_id: String, events: Array) -> void:
+static func _festival_entries(out: Array[Dictionary], data: GameData, today: int, region_id: String, events: Array, flags: Dictionary = {}) -> void:
 	for instance: Dictionary in events:
 		var event_id := String(instance["id"])
 		var where := String(instance.get("region", ""))
@@ -4444,6 +4444,10 @@ static func _festival_entries(out: Array[Dictionary], data: GameData, today: int
 		var activity := WorldEvents.activity_of(data, event_id)
 		if where == region_id and not activity.is_empty() and not bool(instance.get("activity_done", false)):
 			_add(out, "Opportunities", "Festival: %s at %s (ask a merchant; once this festival)." % [activity["name"], _region_name(data, where)], "normal")
+		# FEST-006: one low-priority line while the contest is open to the player this year.
+		var contest := FestivalContest.contest_of(data, event_id)
+		if where == region_id and not contest.is_empty() and not flags.has(FestivalContest.flag_key(event_id, Calendar.year_of(today))):
+			_add(out, "Next steps", "The %s are on at the festival stall today." % String(contest["name"]), "dim")
 
 
 ## Children to teach, garden plots, companion beasts and pregnancies.
