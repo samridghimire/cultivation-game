@@ -322,3 +322,23 @@ func test_c299_new_carts() -> void:
 		assert_eq(Places.validate_rotating(place["rotating_stock"], place, data.items, data.restricted_item_tags, "x").size(), 0)
 		assert_true((place["rotating_stock"]["pool"] as Array).size() >= 8)
 	assert_eq((skiff["open_days"] as Array).size(), 2)
+
+
+## MARKET-010: a rotating stall without stock_tags keeps selling plain untagged goods beside its picks.
+func test_night_stall_keeps_untagged_wares() -> void:
+	var data := _gd()
+	var place := ShopDiscounts.place_named(data, "fallen_star_market", "Night Market Stall")
+	var max_price := int(place.get("max_price", 0))
+	var tags := Places.stock_tags_today(place, DAY_10)
+	assert_true(tags.has("untagged"))
+	var picks := Places.rotating_picks(place, DAY_10)
+	assert_true(picks.size() > 0)
+	assert_true(Items.merchant_sells(data, data.items["paper_lantern"], tags, max_price), "plain cheap item")
+	assert_true(Items.merchant_sells(data, data.items[picks[0]], tags, max_price), "a pick")
+	var rich: Dictionary = data.items["foundation_establishment_pill"]
+	assert_false(Items.merchant_sells(data, rich, tags, max_price), "over max_price")
+	# Guidance-style call with the plain (empty) stock_tags agrees on the untagged item.
+	assert_true(Items.merchant_sells(data, data.items["paper_lantern"], place.get("stock_tags", []), max_price))
+	# The Travelling Market Stall has stock_tags: no untagged added.
+	assert_false(Places.stock_tags_today(_stall(), DAY_10).has("untagged"))
+	assert_false(Items.merchant_sells(data, data.items["paper_lantern"], ["herb"], max_price), "tagged stall unchanged")

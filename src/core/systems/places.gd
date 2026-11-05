@@ -150,7 +150,10 @@ static func new_today_note(region: Dictionary, stall_name: String, today: int, d
 ## MARKET-007: `stock_tags` plus today's rotating picks.
 static func stock_tags_today(place: Dictionary, today: int, regular: bool = false) -> Array:
 	var tags: Array = (place.get("stock_tags", []) as Array).duplicate()
-	tags.append_array(rotating_picks(place, today, regular))
+	var picks := rotating_picks(place, today, regular)
+	if tags.is_empty() and not picks.is_empty():
+		tags.append("untagged")  # MARKET-010: keep the stall's plain wares beside the picks
+	tags.append_array(picks)
 	return tags
 
 

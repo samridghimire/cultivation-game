@@ -101,6 +101,8 @@ static func merchant_sells(data: GameData, item: Dictionary, stock_tags: Array, 
 			return false
 	if stock_tags.is_empty():
 		return tags.is_empty()
+	if stock_tags.has("untagged") and tags.is_empty():
+		return true  # MARKET-010: reserved tag, also sells untagged items
 	if stock_tags.has(item.get("id", "")):
 		return true  # MARKET-002: stock_tags may also name single item ids
 	for tag in tags:
