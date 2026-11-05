@@ -29,7 +29,7 @@ func get_options() -> Array[Dictionary]:
 	var refusal := Items.check_merchant(GameState.player, min_alignment, max_alignment)
 	if refusal != "":
 		return [{"label": refusal, "action": Callable(), "disabled": true}]
-	var tags_today: Array = Places.stock_tags_today({"display_name": display_name, "open_days": open_days, "stock_tags": stock_tags, "rotating_stock": rotating_stock}, GameClock.total_days)
+	var tags_today: Array = Places.stock_tags_today({"display_name": display_name, "open_days": open_days, "stock_tags": stock_tags, "rotating_stock": rotating_stock, "wanted": wanted}, GameClock.total_days, GameState.is_market_regular(display_name))
 	var want := Places.wanted_today({"display_name": display_name, "open_days": open_days, "rotating_stock": rotating_stock, "wanted": wanted}, GameClock.total_days)
 	var buys_today: Array = buy_tags.duplicate()
 	if not want.is_empty():

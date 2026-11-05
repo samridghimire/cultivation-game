@@ -170,6 +170,8 @@ var hunt_log: Dictionary = {}
 var hunt_spoils: Dictionary = {}
 ## Great beasts slain (WILD-007): enemy id -> day of the first win (the trophy is given once).
 var great_beasts: Dictionary = {}
+## Market days on which the player sold a stall's wanted item (MARKET-009): place key -> days.
+var market_regular: Dictionary = {}
 ## Home meals cooked (GOAL-006): meal id -> times cooked.
 var cooked_meals: Dictionary = {}
 ## Forage pickups taken in a lifetime (FORAGE-005): drives the forager's eye tiers.
@@ -303,6 +305,7 @@ func to_dict() -> Dictionary:
 		"hunt_log": hunt_log.duplicate(),
 		"hunt_spoils": hunt_spoils.duplicate(true),
 		"great_beasts": great_beasts.duplicate(),
+		"market_regular": market_regular.duplicate(),
 		"cooked_meals": cooked_meals.duplicate(),
 		"forage_picks": forage_picks,
 		"gather_xp": gather_xp,
@@ -457,6 +460,7 @@ static func from_dict(d: Dictionary) -> CharacterData:
 	c.cooked_meals = _int_values(d.get("cooked_meals", {}))
 	c.forage_picks = int(d.get("forage_picks", 0))
 	c.great_beasts = _int_values(d.get("great_beasts", {}))
+	c.market_regular = _int_values(d.get("market_regular", {}))
 	var hs: Variant = d.get("hunt_spoils", {})
 	if hs is Dictionary:
 		for k: Variant in hs:

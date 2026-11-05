@@ -3099,6 +3099,34 @@ func test_market_wanted_price_and_cap() -> void:
 	GameState.shop_name = ""
 
 
+## MARKET-009: selling the wanted item on three different market days makes the player a regular (once per day, not per item).
+func test_market_regular_after_three_market_days() -> void:
+	_start()
+	var clock := _root().get_node("GameClock")
+	GameState.current_region = "qingshi_village"
+	GameState.shop_name = "Travelling Market Stall"
+	GameState.world_flags["wanted_sold_travelling_market_stall_9"] = 5  # an old MARKET-008 flag is ignored
+	var days := [9, 24, 39]
+	for i in days.size():
+		clock.total_days = days[i]
+		var id := String(GameState.market_wanted()["item"])
+		GameState.player.add_item(id, 4)
+		GameState.sell_item(id, 1)
+		GameState.sell_item(id, 2)  # same day: not counted again
+		assert_eq(int(GameState.player.market_regular["travelling_market_stall"]), i + 1)
+		assert_eq(int(GameState.market_wanted()["left"]), 2, "tally spans both sales")
+		assert_eq(GameState.is_market_regular("Travelling Market Stall"), i == 2)
+	clock.total_days = 54
+	var plain := Places.rotating_picks(ShopDiscounts.place_named(GameState.data, "qingshi_village", "Travelling Market Stall"), 54)
+	var picks := Places.rotating_picks(ShopDiscounts.place_named(GameState.data, "qingshi_village", "Travelling Market Stall"), 54, true)
+	assert_eq(picks.size(), plain.size() + 1)
+	var item := String(picks[0])
+	var cut := GameState.buy_multiplier(item)
+	GameState.shop_name = ""
+	assert_true(cut < GameState.buy_multiplier(item), "regular discount on a rotating ware")
+	GameState.shop_name = ""
+
+
 ## MARKET-007: the Travelling Market Stall's shop gets its fixed tags plus 3 rotating picks on market day.
 func test_market_stall_rotating_stock_options() -> void:
 	_start()

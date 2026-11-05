@@ -245,3 +245,51 @@ func test_wu445_map_line_and_shop_title_note() -> void:
 	assert_eq(note.split(", ").size(), 3, "three wares")
 	assert_eq(Places.new_today_note(_region(), "Travelling Market Stall", DAY_10 + 1, _gd()), "")
 	assert_eq(Places.new_today_note(_region(), "Wandering Merchant", DAY_10, _gd()), "")
+
+
+## MARKET-009: regular status, the extra pick, validation.
+func test_regular_extra_pick_keeps_first_picks() -> void:
+	var place := _stall()
+	var plain := Places.rotating_picks(place, DAY_10)
+	var reg := Places.rotating_picks(place, DAY_10, true)
+	assert_eq(reg.size(), plain.size() + 1)
+	assert_eq(reg.slice(0, plain.size()), plain, "first picks unchanged")
+	assert_eq(Places.rotating_picks(place, DAY_10 + 1, true).size(), 0, "closed day")
+	assert_eq(Places.stock_tags_today(place, DAY_10, true).size(), Places.stock_tags_today(place, DAY_10).size() + 1)
+
+
+func test_is_regular_threshold_and_defaults() -> void:
+	var place := _stall()
+	assert_eq(Places.regular_after(place), 3)
+	assert_true(absf(Places.regular_discount(place) - 0.1) < 0.0001)
+	assert_false(Places.is_regular(place, 2))
+	assert_true(Places.is_regular(place, 3))
+	assert_false(Places.is_regular({}, 9), "no wanted block")
+
+
+func test_hint_line_says_regular() -> void:
+	var line := Places.hint_line(_region(), DAY_10, 5, _gd(), {"travelling_market_stall": 3})
+	assert_true(line.contains("you are a regular here (-10%)"), line)
+	assert_false(Places.hint_line(_region(), DAY_10, 5, _gd(), {"travelling_market_stall": 2}).contains("regular"))
+
+
+func test_validate_wanted_regular_fields() -> void:
+	var place := _stall()
+	var good: Dictionary = (place["wanted"] as Dictionary).duplicate()
+	good["regular_after"] = 2
+	good["regular_discount"] = 0.3
+	assert_eq(Places.validate_wanted(good, place, _gd().items, "x").size(), 0)
+	good["regular_after"] = 0
+	assert_eq(Places.validate_wanted(good, place, _gd().items, "x").size(), 1)
+	good["regular_after"] = 3
+	good["regular_discount"] = 0.5
+	assert_eq(Places.validate_wanted(good, place, _gd().items, "x").size(), 1)
+
+
+func test_market_regular_save_round_trip_and_default() -> void:
+	var c := CharacterData.new()
+	c.market_regular = {"travelling_market_stall": 2}
+	assert_eq(CharacterData.from_dict(c.to_dict()).market_regular, {"travelling_market_stall": 2})
+	var d := c.to_dict()
+	d.erase("market_regular")
+	assert_eq(CharacterData.from_dict(d).market_regular, {})

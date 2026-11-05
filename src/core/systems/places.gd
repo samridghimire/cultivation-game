@@ -23,7 +23,7 @@ static func days_until_open(place: Dictionary, today: int) -> int:
 
 ## Journal hint for the region's timed places: "Market day in 3 days: Travelling Market Stall" when 1-5 days
 ## away, "... today" on the day, "" otherwise. The nearest one wins.
-static func hint_line(region: Dictionary, today: int, window: int = 5, data: GameData = null) -> String:
+static func hint_line(region: Dictionary, today: int, window: int = 5, data: GameData = null, regulars: Dictionary = {}) -> String:
 	var best_name := ""
 	var best_place: Dictionary = {}
 	var best := window + 1
@@ -41,11 +41,13 @@ static func hint_line(region: Dictionary, today: int, window: int = 5, data: Gam
 	if best == 0:
 		if rotates and data != null:  # MARKET-007: name today's wares
 			var names: Array[String] = []
-			for id: String in rotating_picks(best_place, today):
+			var is_reg := is_regular(best_place, int(regulars.get(place_key(best_name), 0)))
+			for id: String in rotating_picks(best_place, today, is_reg):
 				names.append(String(data.items.get(id, {}).get("name", id)))
 			if not names.is_empty():
 				var wants := wanted_phrase(best_place, today, data)
-				return "Market day today: %s sells %s%s" % [best_name, ", ".join(names), "" if wants == "" else "; wants " + wants]
+				var reg_note := "; you are a regular here (-%d%%)" % roundi(regular_discount(best_place) * 100.0) if is_reg else ""
+				return "Market day today: %s sells %s%s%s" % [best_name, ", ".join(names), "" if wants == "" else "; wants " + wants, reg_note]
 		return "Market day today: %s is open" % best_name
 	return "Market day in %d day%s: %s%s" % [best, "" if best == 1 else "s", best_name, " (new wares each time)" if rotates else ""]
 
@@ -86,7 +88,8 @@ static func validate(days: Variant, where: String) -> Array[String]:
 
 ## MARKET-007: the `count` distinct pool items a merchant place sells on `today` ([] without `rotating_stock` or when
 ## closed). Deterministic per (display_name, day): a weighted pick without replacement from a local seeded rng.
-static func rotating_picks(place: Dictionary, today: int) -> Array[String]:
+## MARKET-009: a regular gets one extra pick (`count` + 1; the first `count` picks are unchanged).
+static func rotating_picks(place: Dictionary, today: int, regular: bool = false) -> Array[String]:
 	var picks: Array[String] = []
 	var rot: Dictionary = place.get("rotating_stock", {})
 	if rot.is_empty() or not is_open(place, today):
@@ -94,7 +97,7 @@ static func rotating_picks(place: Dictionary, today: int) -> Array[String]:
 	var pool: Array = (rot.get("pool", []) as Array).duplicate()
 	var rng := RandomNumberGenerator.new()
 	rng.seed = hash(String(place.get("display_name", ""))) ^ today
-	for n in mini(int(rot.get("count", 0)), pool.size()):
+	for n in mini(int(rot.get("count", 0)) + (1 if regular else 0), pool.size()):
 		var total := 0.0
 		for e: Dictionary in pool:
 			total += float(e.get("weight", 1.0))
@@ -145,10 +148,30 @@ static func new_today_note(region: Dictionary, stall_name: String, today: int, d
 
 
 ## MARKET-007: `stock_tags` plus today's rotating picks.
-static func stock_tags_today(place: Dictionary, today: int) -> Array:
+static func stock_tags_today(place: Dictionary, today: int, regular: bool = false) -> Array:
 	var tags: Array = (place.get("stock_tags", []) as Array).duplicate()
-	tags.append_array(rotating_picks(place, today))
+	tags.append_array(rotating_picks(place, today, regular))
 	return tags
+
+
+## MARKET-009: key of a stall in CharacterData.market_regular and the per-day wanted tally.
+static func place_key(display_name: String) -> String:
+	return display_name.to_snake_case()
+
+
+## MARKET-009: different market days of selling the wanted item that make the player a regular (wanted.regular_after, default 3).
+static func regular_after(place: Dictionary) -> int:
+	return int((place.get("wanted", {}) as Dictionary).get("regular_after", 3))
+
+
+## MARKET-009: price cut on a regular's rotating wares (wanted.regular_discount, default 0.1).
+static func regular_discount(place: Dictionary) -> float:
+	return float((place.get("wanted", {}) as Dictionary).get("regular_discount", 0.1))
+
+
+## MARKET-009: true when `days_sold` market days of wanted sales earn the stall's regular status.
+static func is_regular(place: Dictionary, days_sold: int) -> bool:
+	return place.has("wanted") and days_sold >= regular_after(place)
 
 
 ## MARKET-008: most units of the wanted item a stall buys at the bonus price per open day.
@@ -189,6 +212,11 @@ static func validate_wanted(wanted: Variant, place: Dictionary, items: Dictionar
 	for id: Variant in (wanted as Dictionary)["pool"]:
 		if not items.has(String(id)) or int((items[String(id)] as Dictionary).get("price", 0)) <= 0:
 			problems.append("%s wanted item '%s' is unknown or has no price" % [where, id])
+	var w := wanted as Dictionary
+	if w.has("regular_after") and (not (w["regular_after"] is int or w["regular_after"] is float) or int(w["regular_after"]) < 1):
+		problems.append("%s wanted regular_after must be an int >= 1" % where)
+	if w.has("regular_discount") and (not (w["regular_discount"] is int or w["regular_discount"] is float) or float(w["regular_discount"]) < 0.0 or float(w["regular_discount"]) > 0.3):
+		problems.append("%s wanted regular_discount must be 0..0.3" % where)
 	return problems
 
 

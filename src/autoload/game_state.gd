@@ -1357,12 +1357,24 @@ func market_wanted() -> Dictionary:
 	var w := Places.wanted_today(place, GameClock.total_days)
 	if w.is_empty():
 		return {}
-	w["left"] = maxi(0, Places.WANTED_CAP - int(world_flags.get(_wanted_key(), 0)))
+	w["left"] = maxi(0, Places.WANTED_CAP - _wanted_sold_today())
 	return w
 
 
-func _wanted_key() -> String:
-	return "wanted_sold_%s_%d" % [shop_name.to_snake_case(), GameClock.total_days]
+## MARKET-009: units of the wanted item sold at the open shop today (one {day, sold} entry per stall, overwritten each day).
+func _wanted_sold_today() -> int:
+	var e: Variant = (world_flags.get("market_wanted_sold", {}) as Dictionary).get(Places.place_key(shop_name), {})
+	if e is Dictionary and int((e as Dictionary).get("day", -1)) == GameClock.total_days:
+		return int((e as Dictionary).get("sold", 0))
+	return 0
+
+
+## MARKET-009: true once the player has sold the named stall's wanted item on enough market days.
+func is_market_regular(stall_name: String) -> bool:
+	if player == null:
+		return false
+	var place := ShopDiscounts.place_named(data, current_region, stall_name)
+	return Places.is_regular(place, int(player.market_regular.get(Places.place_key(stall_name), 0)))
 
 
 func sell_item(item_id: String, quantity: int = 1) -> void:
@@ -1386,12 +1398,28 @@ func sell_item(item_id: String, quantity: int = 1) -> void:
 		result["reason"] = bonus["reason"]
 		result["stones"] = int(result["stones"]) + int(bonus["stones"])
 		if bonus["ok"]:
-			world_flags[_wanted_key()] = int(world_flags.get(_wanted_key(), 0)) + bonus_units
+			_record_wanted_sale(bonus_units)
 	if result["ok"]:
 		EventBus.post("You sell %d %s for %d spirit stones." % [quantity, Items.item_plural(data, item_id, quantity), result["stones"]])
 	else:
 		EventBus.post(result["reason"], "warning")
 	EventBus.player_changed.emit()
+
+
+## MARKET-009: tally wanted units sold today; the first sale of a market day counts toward being a regular.
+func _record_wanted_sale(units: int) -> void:
+	var key := Places.place_key(shop_name)
+	var was_sold := _wanted_sold_today()
+	var tally: Dictionary = world_flags.get("market_wanted_sold", {})
+	tally[key] = {"day": GameClock.total_days, "sold": was_sold + units}
+	world_flags["market_wanted_sold"] = tally
+	if was_sold > 0:
+		return
+	var place := ShopDiscounts.place_named(data, current_region, shop_name)
+	var days := int(player.market_regular.get(key, 0)) + 1
+	player.market_regular[key] = days
+	if days == Places.regular_after(place):
+		EventBus.post("%s now treats you as a regular: cheaper wares and one more on the table each market day." % shop_name, "progress")
 
 
 ## Sells every full stack in `ids` (see Items.bulk_sell_ids) with one message.
@@ -2803,6 +2831,10 @@ func buy_multiplier(item_id: String = "") -> float:
 	var mult := market_multiplier() * Renown.buy_multiplier(player, data, current_region) * Letters.deal_multiplier(player, current_region, GameClock.total_days)
 	if item_id != "":
 		mult *= ShopDiscounts.discount_mult(data, current_region, shop_name, item_id, world_flags, GameClock.total_days)
+		if shop_name != "" and is_market_regular(shop_name):  # MARKET-009
+			var stall := ShopDiscounts.place_named(data, current_region, shop_name)
+			if Places.rotating_picks(stall, GameClock.total_days, true).has(item_id):
+				mult *= 1.0 - Places.regular_discount(stall)
 	return mult
 
 
