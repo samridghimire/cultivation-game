@@ -6206,3 +6206,18 @@ func test_season_digest_skips_unexplored_regions() -> void:
 	c.visited_regions.append("qingshi_village")
 	var lines := "\n".join(Guidance.season_digest(c, data(), {}, 180, "qingshi_village"))
 	assert_false(lines.contains("Misty Forest"))
+
+
+func test_season_ending_names_what_leaves() -> void:
+	var c := new_character()
+	assert_eq(Guidance.season_ending(c, data(), 266), "", "nothing explored")
+	c.visited_regions.append("misty_forest")
+	assert_eq(Guidance.season_ending(c, data(), 200), "", "mid-season")
+	var line := Guidance.season_ending(c, data(), 266)  # autumn, 3 days left
+	assert_true(line.begins_with("Autumn ends in 3 days:"), line)
+	assert_true(line.contains("Mist Fox"), line)
+	assert_true(Guidance.season_ending(c, data(), 268).contains("tomorrow"))
+	assert_true(Guidance.season_ending(c, data(), 269).contains("today"))
+	# across the year end: winter 359 is the last day
+	var winter := Guidance.season_ending(c, data(), 357)
+	assert_false(winter.contains("Mist Fox"), winter)

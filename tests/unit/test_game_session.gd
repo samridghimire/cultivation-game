@@ -3193,3 +3193,32 @@ func test_bait_the_trail() -> void:
 	gs.engage_roamer(Wildlife.GREAT_SLOT)
 	assert_false(gs.world_flags.has(Wildlife.bait_flag(region)), "bait used up")
 	gs.end_session()
+
+
+## SEASON-003: the season-ending line posts once, three days before the season ends.
+func test_season_ending_posts_once() -> void:
+	var gs := _game_state()
+	var c := _start()
+	c.visited_regions.append("misty_forest")
+	gs.current_region = "misty_forest"
+	gs.world_flags.erase("season_ending_idx")
+	GameClock.total_days = 200
+	gs._pass_time(1)
+	assert_false(gs.world_flags.has("season_ending_idx"), "mid-season posts nothing")
+	GameClock.total_days = 265
+	var before: int = EventBus.posted_count
+	gs._pass_time(1)  # day 266
+	assert_true(EventBus.posted_count > before)
+	var found := false
+	for h in EventBus.history:
+		if String(h["text"]).begins_with("Autumn ends in"):
+			found = true
+	assert_true(found, "line posted")
+	var after: int = EventBus.posted_count
+	gs._pass_time(1)
+	var again := 0
+	for h in EventBus.history:
+		if String(h["text"]).begins_with("Autumn ends"):
+			again += 1
+	assert_eq(again, 1, "once per season")
+	assert_true(EventBus.posted_count >= after)

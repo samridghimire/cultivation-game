@@ -3835,6 +3835,7 @@ func _pass_time(days: int, skip_title: String = "") -> void:
 	last_digest = {}
 	GameClock.advance(days)
 	_post_season_digest()
+	_post_season_ending()
 	_post_reminders()
 	_record_digest(days, EventBus.posted_count - posted_before)
 	if player != null and _month_of(player.age_days) > _month_of(age_before):
@@ -3863,6 +3864,22 @@ func _post_season_digest() -> void:
 	EventBus.post("%s begins." % Calendar.season_of(today), "world")
 	for line in Guidance.season_digest(player, data, world_flags, today, current_region):
 		EventBus.post(line, "world")
+
+
+## SEASON-003: within three days of a season's end post what leaves with it, once per season (world flag).
+@warning_ignore("integer_division")
+func _post_season_ending() -> void:
+	if player == null or not player.alive:
+		return
+	var today := GameClock.total_days
+	var idx := today / (Calendar.DAYS_PER_MONTH * 3)
+	if int(world_flags.get("season_ending_idx", -1)) >= idx:
+		return
+	var line := Guidance.season_ending(player, data, today)
+	if line == "":
+		return
+	world_flags["season_ending_idx"] = idx
+	EventBus.post(line, "world")
 
 
 ## CAL-003: once per day reached, tell the player what happens tomorrow (not saved).

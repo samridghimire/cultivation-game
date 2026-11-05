@@ -28,6 +28,8 @@ const FASTER_SPOT_MIN_SAVED := 90  ## GUIDE-197: days a faster qi spot must save
 const MISSION_HINT_RICH := 2000  ## GUIDE-197: a duty-met member holding this much contribution gets no mission hint.
 const ARRIVAL_MAX_ITEMS := 3  ## GUIDE-209
 const SEASON_DIGEST_MAX := 4  ## SEASON-001
+const SEASON_ENDING_DAYS := 3  ## SEASON-003: days before a season ends that its leaving line is posted.
+const SEASON_ENDING_MAX := 5
 const CHORE_REGION := "qingshi_village"
 const QI_BUY_KEEP := 20  ## Stones the qi-pill hint leaves for the clinic (GUIDE-126).
 const HEADLINE_CHARS := 120  ## The HUD shows this many characters of a hint (HUD.HINT_MAX_CHARS, WU-305).
@@ -70,6 +72,41 @@ static func season_digest(c: CharacterData, data: GameData, _flags: Dictionary, 
 	if out.size() > SEASON_DIGEST_MAX:
 		out.resize(SEASON_DIGEST_MAX)
 	return out
+
+
+## SEASON-003: "Autumn ends in 3 days: Purple Cloud Mushrooms and Mist Fox go with it." What leaves with the season
+## (seasonal forage and season-bound roamers in explored regions that the next season lacks). "" when it is not within
+## SEASON_ENDING_DAYS of the season's end or nothing leaves. Pure.
+static func season_ending(c: CharacterData, data: GameData, day: int) -> String:
+	var left := Calendar.days_left_in_season(day)
+	if left > SEASON_ENDING_DAYS:
+		return ""
+	var key := Calendar.season_of(day).to_lower()
+	var next_key := Calendar.season_of(day + left + 1).to_lower()
+	var names: PackedStringArray = []
+	for rid: String in c.visited_regions:
+		var region: Dictionary = data.regions.get(rid, {})
+		for e: Dictionary in region.get("forage", {}).get("items", []):
+			var seasons: Array = e.get("seasons", [])
+			if seasons.has(key) and not seasons.has(next_key):
+				var nm := String(data.items.get(String(e["item"]), {}).get("name", e["item"]))
+				if not names.has(nm):
+					names.append(nm)
+		for e: Dictionary in region.get("roamers", {}).get("enemies", []):
+			var seasons: Array = e.get("seasons", [])
+			var fat: Array = e.get("in_season", [])
+			var leaves := (seasons.has(key) and not seasons.has(next_key)) or (fat.has(key) and not fat.has(next_key))
+			if leaves:
+				var bn := String(data.enemies.get(String(e["enemy"]), {}).get("name", e["enemy"]))
+				if not names.has(bn):
+					names.append(bn)
+	if names.is_empty():
+		return ""
+	if names.size() > SEASON_ENDING_MAX:
+		names.resize(SEASON_ENDING_MAX)
+	var when := "today" if left == 0 else ("tomorrow" if left == 1 else "in %d days" % left)
+	var list := names[0] if names.size() == 1 else "%s and %s" % [", ".join(names.slice(0, names.size() - 1)), names[names.size() - 1]]
+	return "%s ends %s: %s go%s with it." % [Calendar.season_of(day), when, list, "es" if names.size() == 1 else ""]
 
 
 static func _season_region_lines(data: GameData, rid: String, key: String, with_weather: bool) -> PackedStringArray:
