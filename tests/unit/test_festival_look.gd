@@ -75,3 +75,20 @@ func test_every_festival_has_two_untagged_shop_items() -> void:
 			var item: Dictionary = d.items[item_id]
 			assert_true((item.get("tags", []) as Array).is_empty(), "%s must be untagged" % item_id)
 			assert_true(int(item["price"]) <= 15, "%s is cheap" % item_id)
+
+
+## C-305: festivals fall in distinct months and cover summer, autumn and winter.
+func test_festivals_cover_the_year() -> void:
+	var d := GameData.load_from_dir()
+	var months := {}
+	var seasons := {}
+	for ev: Dictionary in d.world_events.values():
+		if not bool(ev.get("festival", false)):
+			continue
+		for m: int in ev.get("months", []):
+			assert_false(months.has(m), "month %d holds one festival" % m)
+			months[m] = ev["id"]
+			seasons[Calendar.season_of((m - 1) * Calendar.DAYS_PER_MONTH)] = true
+	assert_true(months.has(5), "the Dragon Boat Festival sits in mid-summer")
+	for s: String in ["Summer", "Autumn", "Winter"]:
+		assert_true(seasons.has(s), "a festival in %s" % s)
