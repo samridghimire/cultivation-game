@@ -3104,6 +3104,32 @@ func check_festival_contest(event_id: String) -> String:
 	return FestivalContest.check(data, world_events, player, event_id, current_region, world_flags, Calendar.year_of(GameClock.total_days))
 
 
+## The contest the place with `tags` can be practised for today, or "" (FEST-008).
+func practice_offer(tags: Array) -> String:
+	return FestivalContest.practice_event_for(data, tags, GameClock.total_days)
+
+
+func check_practice(event_id: String) -> String:
+	return FestivalContest.check_practice(data, event_id, GameClock.total_days, world_flags)
+
+
+## Practise for a coming festival contest (FEST-008): 1 day, +2 to the contest roll, max +6.
+func practise_for_contest(event_id: String) -> bool:
+	EventBus.topic = "world"
+	if not _can_act():
+		return false
+	var reason := check_practice(event_id)
+	if reason != "":
+		EventBus.post(reason, "warning")
+		EventBus.player_changed.emit()
+		return false
+	var bonus := FestivalContest.practise(data, event_id, GameClock.total_days, world_flags)
+	EventBus.post("You spend the day practising for the %s (+%d to your roll)." % [String(FestivalContest.contest_of(data, event_id)["name"]), bonus], "progress")
+	_pass_time(1)
+	EventBus.player_changed.emit()
+	return true
+
+
 ## Enter a festival's contest (FEST-006): once a year, takes no time. Rivals are villagers of the region.
 func festival_contest(event_id: String) -> Dictionary:
 	EventBus.topic = "world"
@@ -3127,12 +3153,13 @@ func festival_contest(event_id: String) -> Dictionary:
 		rivals.resize(int(contest["rivals"]))
 	if champ_name != "" and (rivals.is_empty() or rivals[0].name != champ_name):
 		champ_name = ""  # not in this village any more
-	var result := FestivalContest.run(data, player, event_id, rivals, rng, champ_name)
+	var practice := FestivalContest.practice_bonus(world_flags, event_id, year)
+	var result := FestivalContest.run(data, player, event_id, rivals, rng, champ_name, practice)
 	world_flags[FestivalContest.flag_key(event_id, year)] = true
 	EventBus.post(String(contest["text"]), "world")
 	if champ_name != "":
 		EventBus.post("%s: %s" % [champ_name, String(contest.get("champion_greeting", "")).replace("{player}", player.name)], "world")
-	EventBus.post("%s You place %s of %d." % [String(result["text"]), FestivalContest.ordinal(int(result["place"])), int(result["total"])], "world")
+	EventBus.post("%s You place %s of %d.%s" % [String(result["text"]), FestivalContest.ordinal(int(result["place"])), int(result["total"]), (" Your practice told (+%d)." % practice) if practice > 0 else ""], "world")
 	var prize: Dictionary = result["prize"]
 	for item_id: String in prize.get("items", {}):
 		player.add_item(item_id, int(prize["items"][item_id]))

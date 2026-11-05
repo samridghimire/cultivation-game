@@ -17,6 +17,8 @@ extends Area2D
 @export var reach := 28.0
 ## Creation Artifact anchor id (data/regions.json "anchor_id"); "" = not an anchor.
 @export var anchor_id := ""
+## regions.json place `tags` (FEST-008 practice places).
+var tags: Array = []
 ## PlaceArt look: the regions.json place type or "npc" ("" = plain box).
 var art_kind := ""
 ## The player's current interaction target pulses (set by Player).
@@ -92,6 +94,11 @@ func portrait_texture() -> Texture2D:
 ## get_options() plus the anchor entry when this place is an artifact anchor.
 func menu_options() -> Array[Dictionary]:
 	var options := get_options()
+	var practice := GameState.practice_offer(tags) if not tags.is_empty() else ""
+	if practice != "":
+		var reason := GameState.check_practice(practice)
+		var pname := String(FestivalContest.contest_of(GameState.data, practice)["name"])
+		options.append({"label": "Practise for the %s (1 day)" % pname, "description": "A day's practice adds +%d to this year's roll (max +%d)." % [FestivalContest.PRACTICE_PER_DAY, FestivalContest.PRACTICE_MAX], "action": GameState.practise_for_contest.bind(practice), "disabled": reason != "", "reason": reason})
 	if anchor_id == "":
 		return options
 	var c: CharacterData = GameState.player

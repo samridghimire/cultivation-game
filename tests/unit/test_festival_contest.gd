@@ -202,3 +202,73 @@ func test_game_state_champion_enters_and_greets() -> void:
 	var w: Dictionary = gs.world_flags[FestivalContest.winner_key("lantern_festival")]
 	assert_eq(int(w["year"]), year)
 	gs.end_session()
+
+
+## FEST-008: practice for the contest.
+const LANTERN_START := 270  # day 1 of month 10, year 1
+
+
+func test_practice_window_is_the_week_before() -> void:
+	var d := data()
+	assert_eq(FestivalContest.start_within_window(d, "lantern_festival", LANTERN_START - 7), LANTERN_START)
+	assert_eq(FestivalContest.start_within_window(d, "lantern_festival", LANTERN_START - 1), LANTERN_START)
+	assert_eq(FestivalContest.start_within_window(d, "lantern_festival", LANTERN_START - 8), -1)
+	assert_eq(FestivalContest.start_within_window(d, "lantern_festival", LANTERN_START), -1)
+	assert_eq(FestivalContest.practice_event_for(d, ["elder"], LANTERN_START - 3), "lantern_festival")
+	assert_eq(FestivalContest.practice_event_for(d, ["jetty"], LANTERN_START - 3), "")
+	assert_eq(FestivalContest.practice_event_for(d, ["elder"], 100), "")
+
+
+func test_practice_bonus_caps_and_expires_next_year() -> void:
+	var d := data()
+	var flags := {}
+	for i in 5:
+		FestivalContest.practise(d, "lantern_festival", LANTERN_START - 4, flags)
+	assert_eq(FestivalContest.practice_bonus(flags, "lantern_festival", 1), 6)
+	assert_true(FestivalContest.check_practice(d, "lantern_festival", LANTERN_START - 4, flags) != "")
+	assert_eq(FestivalContest.practice_bonus(flags, "lantern_festival", 2), 0)
+	var next_year := LANTERN_START + Calendar.DAYS_PER_YEAR - 2
+	assert_eq(FestivalContest.check_practice(d, "lantern_festival", next_year, flags), "")
+
+
+func test_run_adds_practice() -> void:
+	var d := data()
+	var p := new_character()
+	var a := FestivalContest.run(d, p, "lantern_festival", [], seeded_rng(3))
+	var b := FestivalContest.run(d, p, "lantern_festival", [], seeded_rng(3), "", 6)
+	var mine_a := 0
+	var mine_b := 0
+	for s: Dictionary in a["scores"]:
+		if bool(s["you"]):
+			mine_a = int(s["score"])
+	for s: Dictionary in b["scores"]:
+		if bool(s["you"]):
+			mine_b = int(s["score"])
+	assert_eq(mine_b, mine_a + 6)
+	assert_eq(int(b["practice"]), 6)
+
+
+func test_validation_catches_unmatched_practice_place() -> void:
+	var d := GameData.load_from_dir()
+	d.world_events["lantern_festival"]["contest"]["practice_place"] = "nowhere"
+	assert_eq(FestivalContest.validate(d).size(), 1)
+
+
+func test_game_state_practice_then_contest() -> void:
+	var gs := _root().get_node("GameState")
+	var clock := _root().get_node("GameClock")
+	gs.start_session(new_character())
+	gs.current_region = "qingshi_village"
+	clock.total_days = LANTERN_START - 3
+	assert_eq(gs.practice_offer(["elder"]), "lantern_festival")
+	assert_true(gs.practise_for_contest("lantern_festival"))
+	assert_eq(clock.total_days, LANTERN_START - 2)
+	assert_true(gs.practise_for_contest("lantern_festival"))
+	assert_eq(FestivalContest.practice_bonus(gs.world_flags, "lantern_festival", 1), 4)
+	clock.total_days = LANTERN_START
+	assert_eq(gs.practice_offer(["elder"]), "")
+	assert_false(gs.practise_for_contest("lantern_festival"))
+	gs.world_events = [{"id": "lantern_festival", "region": "qingshi_village", "start_day": LANTERN_START, "end_day": LANTERN_START + 8}]
+	var result: Dictionary = gs.festival_contest("lantern_festival")
+	assert_eq(int(result["practice"]), 4)
+	gs.end_session()

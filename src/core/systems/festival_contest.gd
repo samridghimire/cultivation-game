@@ -6,6 +6,10 @@ extends RefCounted
 const DEFAULT_RIVAL_ATTRIBUTE := 8
 const CHAMPION_BONUS := 2
 const MASTER_STREAK := 3
+## FEST-008: practice in the week before the festival.
+const PRACTICE_WINDOW := 7
+const PRACTICE_PER_DAY := 2
+const PRACTICE_MAX := 6
 
 
 static func contest_of(data: GameData, event_id: String) -> Dictionary:
@@ -22,6 +26,56 @@ static func winner_key(event_id: String) -> String:
 
 static func master_key(event_id: String) -> String:
 	return "contest_master_%s" % event_id
+
+
+static func practice_key(event_id: String, year: int) -> String:
+	return "practice_%s_%d" % [event_id, year]
+
+
+## The first day of the festival's month after `day` within PRACTICE_WINDOW days, or -1 (festivals start on day 1 of a `months` month).
+static func start_within_window(data: GameData, event_id: String, day: int) -> int:
+	var months: Array = WorldEvents.def_of(data, event_id).get("months", [])
+	for offset in range(1, PRACTICE_WINDOW + 1):
+		var d := day + offset
+		if Calendar.day_of(d) == 1 and months.any(func(m: Variant) -> bool: return int(m) == Calendar.month_of(d)):
+			return d
+	return -1
+
+
+## The contest (event id) that `tags` (a place's tags) can practise for today, or "".
+static func practice_event_for(data: GameData, tags: Array, day: int) -> String:
+	for event_id: String in data.world_events:
+		var place := String(contest_of(data, event_id).get("practice_place", ""))
+		if place != "" and tags.has(place) and start_within_window(data, event_id, day) >= 0:
+			return event_id
+	return ""
+
+
+## Practice days banked for the festival that starts on `start_day` (flag keyed by that day's year).
+static func practice_days(flags: Dictionary, event_id: String, year: int) -> int:
+	return int(flags.get(practice_key(event_id, year), 0))
+
+
+static func practice_bonus(flags: Dictionary, event_id: String, year: int) -> int:
+	return mini(PRACTICE_MAX, PRACTICE_PER_DAY * practice_days(flags, event_id, year))
+
+
+## "" if one more day of practice is allowed, otherwise why not.
+static func check_practice(data: GameData, event_id: String, day: int, flags: Dictionary) -> String:
+	var name := String(contest_of(data, event_id).get("name", event_id))
+	var start := start_within_window(data, event_id, day)
+	if start < 0:
+		return "It is too early (or too late) to practise for the %s." % name
+	if practice_bonus(flags, event_id, Calendar.year_of(start)) >= PRACTICE_MAX:
+		return "You cannot get any readier for the %s." % name
+	return ""
+
+
+## Bank one day of practice; returns the bonus now held.
+static func practise(data: GameData, event_id: String, day: int, flags: Dictionary) -> int:
+	var year := Calendar.year_of(start_within_window(data, event_id, day))
+	flags[practice_key(event_id, year)] = practice_days(flags, event_id, year) + 1
+	return practice_bonus(flags, event_id, year)
 
 
 ## The previous years' winner record {year, name, you, streak} of a festival's contest, or {} (FEST-007).
@@ -80,12 +134,13 @@ static func check(data: GameData, active: Array, _c: CharacterData, event_id: St
 
 
 ## Run the contest. `rivals` are the villagers who enter (fewer than `rivals` is fine; missing ones become strangers).
-static func run(data: GameData, c: CharacterData, event_id: String, rivals: Array[CharacterData], rng: RandomNumberGenerator, champion_name: String = "") -> Dictionary:
+static func run(data: GameData, c: CharacterData, event_id: String, rivals: Array[CharacterData], rng: RandomNumberGenerator, champion_name: String = "", practice: int = 0) -> Dictionary:
 	var contest := contest_of(data, event_id)
 	if contest.is_empty():
 		return {}
 	var attribute := String(contest.get("attribute", ""))
 	var mine := c.attribute(attribute) + rng.randi_range(0, 10)
+	mine += practice
 	var profession := String(contest.get("profession", ""))
 	if profession != "":
 		mine += 2 * Professions.rank_of(c, profession)
@@ -117,7 +172,7 @@ static func run(data: GameData, c: CharacterData, event_id: String, rivals: Arra
 	var prizes: Array = contest.get("prizes", [])
 	var prize: Dictionary = prizes[place - 1] if place - 1 < prizes.size() else {}
 	var text := String(contest.get("win_text", "")) if place == 1 else String(contest.get("lose_text", "")).replace("{winner}", String(order[0]["name"]))
-	return {"event_id": event_id, "name": String(contest.get("name", event_id)), "place": place, "total": order.size(), "scores": order, "prize": prize, "text": text}
+	return {"event_id": event_id, "name": String(contest.get("name", event_id)), "place": place, "total": order.size(), "scores": order, "prize": prize, "text": text, "practice": practice}
 
 
 static func standings_lines(result: Dictionary) -> PackedStringArray:
@@ -150,6 +205,17 @@ static func validate(data: GameData) -> PackedStringArray:
 		var profession := String(contest.get("profession", ""))
 		if profession != "" and not data.professions.has(profession):
 			errors.append("%s has unknown profession '%s'" % [id, profession])
+		var practice_place: Variant = contest.get("practice_place", "")
+		if not practice_place is String:
+			errors.append("%s practice_place must be a tag string" % id)
+		elif String(practice_place) != "":
+			var found := false
+			for rid: String in data.world_events[event_id].get("regions", []):
+				for place: Dictionary in data.regions.get(rid, {}).get("places", []):
+					if (place.get("tags", []) as Array).has(practice_place):
+						found = true
+			if not found:
+				errors.append("%s practice_place '%s' matches no place tag in its regions" % [id, practice_place])
 		var rivals := int(contest.get("rivals", 0))
 		if rivals < 2 or rivals > 4:
 			errors.append("%s needs rivals 2..4" % id)
