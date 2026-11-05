@@ -8,6 +8,7 @@ extends SceneTree
 ## WU-418: append `-- --friend` for friend.png (a villager menu with the heart row).
 ## WU-414: append `-- --book` for village_book.png.
 ## WU-430: `-- --great` (with --region=) starts on the region's next great-beast day.
+## WU-450: `-- --great --tracks` starts the day before it, so the trail of prints shows.
 ## GFX-033: append `-- --storm` to render the first-hour shots under a storm.  GFX-051: `-- --rain` forces rain.
 ## GFX-037: append `-- --season=Winter` (Spring/Summer/Autumn/Winter) to start on that season's first day.
 ## GFX-029: append `-- --field` for field.png (a growing field).
@@ -65,11 +66,11 @@ func _start() -> void:
 					push_warning("--region: unknown region %s" % id)
 	if not region_list.is_empty():
 		gs.current_region = region_list[0]
-	if OS.get_cmdline_user_args().has("--great"):  # WU-430: jump to the region's next great-beast day
+	if OS.get_cmdline_user_args().has("--great") or OS.get_cmdline_user_args().has("--tracks"):  # WU-430: jump to the region's next great-beast day
 		var clock: Node = root.get_node("GameClock")
 		var walk: int = Wildlife.next_great_day(gs.data, gs.current_region, clock.total_days, gs.player.realm_index)
 		if walk >= 0:
-			clock.total_days = walk
+			clock.total_days = walk - (1 if OS.get_cmdline_user_args().has("--tracks") else 0)  # WU-450: --tracks = the day before
 	if not region_list.is_empty():
 		_drop_start_line()
 		gs.call("_post_arrival_line")  # GUIDE-210: the region's own arrival line, once, after the day is final

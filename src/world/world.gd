@@ -48,6 +48,8 @@ var _village_life: VillageLife
 var _water_life: WaterLife
 var _spread_clock := 0.0  ## WU-429: seconds since the last label spread from a moving beast.
 var _roamer_spread_pos := {}
+var _tracks: Array[Dictionary] = []  ## WU-450: a great beast's trail of prints
+var _tracks_shape := "paw"
 var _clear_zones := {"rects": [] as Array[Rect2], "points": [] as Array[Vector2]}  ## GFX-062
 var _weather_kind := "clear"
 ## The pinned weather, readable by UI that draws its own sky (the duel stage, GFX-038); "" = none.
@@ -371,8 +373,31 @@ func _build_roamers() -> void:
 	for p: Array in _region.get("map", {}).get("paths", []):
 		blocked.append(Rect2(float(p[0]), float(p[1]), float(p[2]), float(p[3])))
 	var avoid: Array[Vector2] = [_vec(_region.get("spawn", [map_size.x / 2.0, map_size.y / 2.0]))]
+	var great_spot := Vector2(-1, -1)
 	for r: Dictionary in GameState.roamers_here():
 		_spawn_roamer(r, blocked, avoid)
+		if bool(r.get("great", false)):
+			great_spot = avoid[avoid.size() - 1]
+	_build_tracks(blocked, great_spot)
+
+
+## WU-450: the trail of prints: toward the beast's own spot on its day, toward its spawn area the day before.
+func _build_tracks(blocked: Array[Rect2], great_spot: Vector2) -> void:
+	_tracks = []
+	var day := GameClock.total_days
+	var enemy := BeastTracks.beast_for(GameState.data, GameState.player, GameState.current_region, day)
+	if enemy != "":
+		var spot := great_spot
+		if spot.x < 0.0:
+			if Wildlife.next_great_day(GameState.data, GameState.current_region, day, GameState.player.realm_index) == day:
+				enemy = ""  # beast day, but it is down or gone: no prints
+			else:
+				var avoid: Array[Vector2] = [_vec(_region.get("spawn", [map_size.x / 2.0, map_size.y / 2.0]))]
+				spot = Roamer.pick_spot(GameState.current_region, day + 1, Wildlife.GREAT_SLOT, map_size, blocked, avoid, _clear_zones["rects"], _clear_zones["points"])
+		if enemy != "":
+			_tracks_shape = BeastTracks.shape_for(enemy)
+			_tracks = BeastTracks.trail(GameState.current_region, day, map_size, spot, blocked, _clear_zones["rects"])
+	queue_redraw()
 
 
 ## WU-426: one beast node for roamer `r`; its spot joins `avoid` so the next beast keeps its distance.
@@ -441,6 +466,9 @@ func _on_roamers_changed() -> void:
 	var alive := {}
 	for r: Dictionary in GameState.roamers_here():
 		alive[int(r["slot"])] = true
+	if not alive.has(Wildlife.GREAT_SLOT) and not _tracks.is_empty() and Wildlife.next_great_day(GameState.data, GameState.current_region, GameClock.total_days, GameState.player.realm_index) == GameClock.total_days:
+		_tracks = []  # WU-450: the beast was beaten today; its prints go with it
+		queue_redraw()
 	var present := {}
 	var avoid: Array[Vector2] = [_vec(_region.get("spawn", [map_size.x / 2.0, map_size.y / 2.0]))]
 	for node in get_children():
@@ -846,6 +874,8 @@ func _draw() -> void:
 	for lm: Dictionary in map.get("landmarks", []):
 		_draw_landmark(lm)
 	_draw_footprints()
+	for t: Dictionary in _tracks:
+		BeastTracks.draw_print(self, t["pos"], t["angle"], _tracks_shape, t["alpha"], t["side"])
 	for d in _decor:
 		_draw_decor(d)
 	var border_tile := Sprites.first(["border_" + rid, "border"])
