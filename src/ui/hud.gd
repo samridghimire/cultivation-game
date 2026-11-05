@@ -128,6 +128,7 @@ var _pending_year: Array = []  # [year, lines, start_year] waiting for a free sc
 static var _showing_skip: Dictionary = {}
 var _respawn: RespawnScreen
 var _realm_card: RealmCard
+var _contest_card: ContestCard  # WU-454
 ## [frame, text] of recent feature notices, so a realm card can list the ones its breakthrough caused.
 var _recent_notices: Array = []
 ## [realm name, description, details, notices] of a realm card waiting for the tribulation screen to close ([] = none).
@@ -246,6 +247,10 @@ func _ready() -> void:
 	_realm_card = RealmCard.new()
 	_realm_card.closed.connect(_update_modal)
 	add_child(UIStyle.centered(_realm_card))
+	_contest_card = ContestCard.new()
+	_contest_card.closed.connect(_update_modal)
+	add_child(UIStyle.centered(_contest_card))
+	EventBus.contest_finished.connect(_on_contest_finished)
 	_banner = Banner.new()
 	add_child(_banner)
 	_digest_card = DigestCard.new()
@@ -328,7 +333,7 @@ func _ready() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if _choice_menu.visible or _dialogue.visible or _encounter.visible or _quarrel.visible or _cast_bar.visible or _combat_report.visible or _tribulation.visible or _respawn.visible or _realm_card.visible or _pause_menu.visible or _settings.visible or _help.visible or _load_screen.visible or _death_screen.visible:
+	if _choice_menu.visible or _dialogue.visible or _encounter.visible or _quarrel.visible or _cast_bar.visible or _combat_report.visible or _tribulation.visible or _respawn.visible or _realm_card.visible or _contest_card.visible or _pause_menu.visible or _settings.visible or _help.visible or _load_screen.visible or _death_screen.visible:
 		return
 	if event.is_action_pressed("pause_menu"):
 		# Consumed here so the world's own Esc handling never runs mid-session.
@@ -1140,7 +1145,7 @@ func _refresh_key_hints() -> void:
 
 
 func _on_menu_requested(source: Node) -> void:
-	if _any_screen_open() or _dialogue.visible or _encounter.visible or _quarrel.visible or _cast_bar.visible or _combat_report.visible or _tribulation.visible or _respawn.visible or _realm_card.visible or _pause_menu.visible or _settings.visible or _help.visible or _load_screen.visible or _death_screen.visible:
+	if _any_screen_open() or _dialogue.visible or _encounter.visible or _quarrel.visible or _cast_bar.visible or _combat_report.visible or _tribulation.visible or _respawn.visible or _realm_card.visible or _contest_card.visible or _pause_menu.visible or _settings.visible or _help.visible or _load_screen.visible or _death_screen.visible:
 		return
 	_last_source = source
 	_choice_menu.open_for(source)
@@ -1689,6 +1694,23 @@ func _open_pending_realm_card() -> void:
 	_update_modal()
 
 
+## WU-454: the podium card after a festival contest; waits for a running road card.
+func _on_contest_finished(result: Dictionary) -> void:
+	if is_instance_valid(RoadCard.current):
+		RoadCard.current.finished.connect(func(): _show_contest_card(result), CONNECT_ONE_SHOT)
+	else:
+		_show_contest_card.call_deferred(result)
+
+
+func _show_contest_card(result: Dictionary) -> void:
+	if GameState.player == null or not GameState.player.alive:
+		return
+	_choice_menu.close()
+	_close_screens()
+	_contest_card.open(result, GameState.data)
+	_update_modal()
+
+
 ## Settings replaces the pause menu while open, then returns to it.
 func _open_settings() -> void:
 	_pause_menu.visible = false
@@ -1851,7 +1873,7 @@ func digest_blocked() -> bool:
 
 
 func _update_modal() -> void:
-	var blocking := _choice_menu.visible or _dialogue.visible or _encounter.visible or _quarrel.visible or _cast_bar.visible or _any_screen_open() or _combat_report.visible or _tribulation.visible or _respawn.visible or _realm_card.visible or _pause_menu.visible or _settings.visible or _help.visible or _load_screen.visible or _death_screen.visible
+	var blocking := _choice_menu.visible or _dialogue.visible or _encounter.visible or _quarrel.visible or _cast_bar.visible or _any_screen_open() or _combat_report.visible or _tribulation.visible or _respawn.visible or _realm_card.visible or _contest_card.visible or _pause_menu.visible or _settings.visible or _help.visible or _load_screen.visible or _death_screen.visible
 	# The status panel, hints and log hide behind modals; a time-skip overlay alone keeps them.
 	_status_panel.visible = not blocking
 	if blocking and _digest_card != null:
@@ -1868,7 +1890,7 @@ func _update_modal() -> void:
 
 ## Banners wait while a report that must be read (fight, respawn, tribulation, death) is up.
 func _hold_banners() -> void:
-	_banner.set_held(_combat_report.visible or _realm_card.visible or _respawn.visible or _tribulation.visible or _death_screen.visible)
+	_banner.set_held(_combat_report.visible or _realm_card.visible or _contest_card.visible or _respawn.visible or _tribulation.visible or _death_screen.visible)
 
 
 func _return_to_menu() -> void:
