@@ -3070,3 +3070,23 @@ func test_market_stall_rotating_stock_options() -> void:
 	assert_true(tags.has("sweet_rice_ball"))
 	assert_false(stall.get_options().is_empty(), "open on day 10")
 	stall.free()
+
+
+func test_season_digest_posts_once_per_season() -> void:
+	var gs := _game_state()
+	var c := _start()
+	c.visited_regions.append("qingshi_village")
+	gs.current_region = "qingshi_village"
+	GameClock.total_days = 85
+	gs.world_flags.erase("season_digest_idx")
+	gs._pass_time(1)  # first pass seeds the flag silently
+	var before: int = EventBus.posted_count
+	gs._pass_time(1)  # still spring
+	assert_eq(EventBus.posted_count, before, "no post inside a season")
+	GameClock.total_days = 89
+	gs._pass_time(1)  # day 90: summer begins
+	assert_true(EventBus.posted_count > before)
+	assert_true(String(EventBus.history[EventBus.history.size() - 1]["text"]).length() > 0)
+	var after: int = EventBus.posted_count
+	gs._pass_time(1)
+	assert_eq(EventBus.posted_count, after, "not again the same season")

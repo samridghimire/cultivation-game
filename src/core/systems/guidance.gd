@@ -27,6 +27,7 @@ const FAIR_FIGHT_MIN_CHANCE := 0.7  # "Even" or better (Combat.label_for_chance)
 const FASTER_SPOT_MIN_SAVED := 90  ## GUIDE-197: days a faster qi spot must save (or a third of the wait, if more) to be named.
 const MISSION_HINT_RICH := 2000  ## GUIDE-197: a duty-met member holding this much contribution gets no mission hint.
 const ARRIVAL_MAX_ITEMS := 3  ## GUIDE-209
+const SEASON_DIGEST_MAX := 4  ## SEASON-001
 const CHORE_REGION := "qingshi_village"
 const QI_BUY_KEEP := 20  ## Stones the qi-pill hint leaves for the clinic (GUIDE-126).
 const HEADLINE_CHARS := 120  ## The HUD shows this many characters of a hint (HUD.HINT_MAX_CHARS, WU-305).
@@ -42,6 +43,74 @@ const IDLE_CULTIVATION_DAYS := 30  # GUIDE-057: days without cultivating before 
 ## stands (region x sect bonus), used for the days-to-next-stage estimate.
 ## `people` (the NPCs, optional) enables the family hints. `flags` (world flags)
 ## and `region_id` drive the newcomer hints shown while Mortal or Qi Refining.
+## SEASON-001: up to SEASON_DIGEST_MAX short lines for the season `day` falls in, from what the player could know:
+## seasonal forage and season-bound roamers in explored regions, festivals this season, the region's usual weather.
+## The current region's lines come first, then festivals, then other explored regions. Pure.
+static func season_digest(c: CharacterData, data: GameData, _flags: Dictionary, day: int, region_id: String) -> PackedStringArray:
+	var season := Calendar.season_of(day)
+	var key := season.to_lower()
+	var out: PackedStringArray = []
+	var here: Array = [region_id] if c.visited_regions.has(region_id) else []
+	var others: Array = []
+	for rid: String in c.visited_regions:
+		if rid != region_id:
+			others.append(rid)
+	for rid: String in here:
+		out.append_array(_season_region_lines(data, rid, key, true))
+	var first_month := ((Calendar.month_of(day) - 1) / 3) * 3 + 1
+	var fests: PackedStringArray = []
+	for eid: String in data.world_events:
+		var def: Dictionary = data.world_events[eid]
+		if not bool(def.get("festival", false)):
+			continue
+		for m in range(first_month, first_month + 3):
+			if VillageCalendar._in_month(def, m):
+				fests.append(String(def.get("name", eid)))
+				break
+	if not fests.is_empty():
+		out.append("Festivals this %s: %s." % [key, ", ".join(fests)])
+	for rid: String in others:
+		out.append_array(_season_region_lines(data, rid, key, false))
+	if out.size() > SEASON_DIGEST_MAX:
+		out.resize(SEASON_DIGEST_MAX)
+	return out
+
+
+static func _season_region_lines(data: GameData, rid: String, key: String, with_weather: bool) -> PackedStringArray:
+	var out: PackedStringArray = []
+	var region: Dictionary = data.regions.get(rid, {})
+	var rname := Exploration.region_name(data, rid)
+	var names: PackedStringArray = []
+	for e: Dictionary in region.get("forage", {}).get("items", []):
+		if (e.get("seasons", []) as Array).has(key):
+			var nm := String(data.items.get(String(e["item"]), {}).get("name", e["item"]))
+			if not names.has(nm):
+				names.append(nm)
+	if not names.is_empty():
+		out.append("In season in %s: %s." % [rname, ", ".join(names)])
+	var beasts: PackedStringArray = []
+	for e: Dictionary in region.get("roamers", {}).get("enemies", []):
+		var seasons: Array = e.get("seasons", [])
+		if (not seasons.is_empty() and seasons.has(key)) or (e.get("in_season", []) as Array).has(key):
+			var bn := String(data.enemies.get(String(e["enemy"]), {}).get("name", e["enemy"]))
+			if not beasts.has(bn):
+				beasts.append(bn)
+	if not beasts.is_empty():
+		out.append("Roaming %s this %s: %s." % [rname, key, ", ".join(beasts)])
+	if with_weather:
+		var table: Dictionary = region.get("weather", {})
+		var weights: Dictionary = table.get(key, table.get("any", {}))
+		var best := ""
+		var best_w := 0.0
+		for kind: String in weights:
+			if float(weights[kind]) > best_w:
+				best_w = float(weights[kind])
+				best = kind
+		if best != "":
+			out.append("Expect mostly %s weather in %s." % [best, rname])
+	return out
+
+
 ## GUIDE-209: "Today in Misty Forest: the Old Tusker roams, 3 things by the path, an open stall, rain-fish biting."
 ## Up to three short items from what already exists; "" when nothing is notable. Pure.
 static func arrival_line(c: CharacterData, data: GameData, region_id: String, day: int, flags: Dictionary, weather: String = "", events: Array = []) -> String:

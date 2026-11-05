@@ -6094,3 +6094,27 @@ func test_road_goals_sect_and_layer_goals() -> void:
 	assert_false(Guidance.road_goals(c, data(), flags)[7]["done"])
 	c.stage = 5  # the 6th Layer
 	assert_true(Guidance.road_goals(c, data(), flags)[7]["done"])
+
+
+func test_season_digest_lines_and_cap() -> void:
+	var c := new_character()
+	var flags := {}
+	assert_eq(Guidance.season_digest(c, data(), flags, 0, "qingshi_village").size(), 0, "nothing explored")
+	c.visited_regions.append("qingshi_village")
+	c.visited_regions.append("misty_forest")
+	var spring := Guidance.season_digest(c, data(), flags, 0, "qingshi_village")
+	assert_true(spring.size() >= 1 and spring.size() <= Guidance.SEASON_DIGEST_MAX)
+	assert_true(spring[0].contains("Peach Blossom") or spring[0].contains("peach"), "local forage first: " + spring[0])
+	var autumn := Guidance.season_digest(c, data(), flags, 180, "misty_forest")
+	assert_true(autumn.size() <= Guidance.SEASON_DIGEST_MAX)
+	assert_true(autumn[0].contains("Misty Forest"))
+	var joined := "\n".join(autumn)
+	assert_true(joined.contains("Mist Fox"), "autumn roamer named")
+	assert_false("\n".join(spring).contains("Mist Fox"))
+
+
+func test_season_digest_skips_unexplored_regions() -> void:
+	var c := new_character()
+	c.visited_regions.append("qingshi_village")
+	var lines := "\n".join(Guidance.season_digest(c, data(), {}, 180, "qingshi_village"))
+	assert_false(lines.contains("Misty Forest"))
