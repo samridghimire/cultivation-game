@@ -39,10 +39,6 @@ const ARMOR_HINT_MIN_STAGE := 3  # GUIDE-069: Qi Refining stage from which an un
 const IDLE_CULTIVATION_DAYS := 30  # GUIDE-057: days without cultivating before a Qi Refining crafter is nudged
 
 
-## Up to `limit` hints for `c`. `density` is the qi density where the player
-## stands (region x sect bonus), used for the days-to-next-stage estimate.
-## `people` (the NPCs, optional) enables the family hints. `flags` (world flags)
-## and `region_id` drive the newcomer hints shown while Mortal or Qi Refining.
 ## SEASON-001: up to SEASON_DIGEST_MAX short lines for the season `day` falls in, from what the player could know:
 ## seasonal forage and season-bound roamers in explored regions, festivals this season, the region's usual weather.
 ## The current region's lines come first, then festivals, then other explored regions. Pure.
@@ -143,6 +139,10 @@ static func arrival_line(c: CharacterData, data: GameData, region_id: String, da
 	return "Today in %s: %s." % [Exploration.region_name(data, region_id), ", ".join(items)]
 
 
+## Up to `limit` hints for `c`. `density` is the qi density where the player
+## stands (region x sect bonus), used for the days-to-next-stage estimate.
+## `people` (the NPCs, optional) enables the family hints. `flags` (world flags)
+## and `region_id` drive the newcomer hints shown while Mortal or Qi Refining.
 static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit: int = 5, people: Dictionary = {}, flags: Dictionary = {}, region_id: String = "", today: int = -1, favor: Dictionary = {}) -> PackedStringArray:
 	var out: PackedStringArray = []
 	flags = with_season(flags, today)
@@ -3242,7 +3242,8 @@ static func _core_road_rows(c: CharacterData, data: GameData, today: int) -> Arr
 	var rows: Array[Dictionary] = []
 	var next_name: String = data.realms[mini(c.realm_index + 1, data.realms.size() - 1)].name
 	rows.append({"text": "Reach %s Middle" % data.realms[2].name, "done": vet or (c.realm_index == 2 and c.stage >= 1), "region": ""})
-	var next_great := _next_great(c, data, today)
+	# REVIEW: only a Foundation-gated beast completes this goal (no per-realm win record), so only such a beast is named.
+	var next_great := _next_great(c, data, today, data.realms[2].id)
 	var beast_rid: String = next_great["region"]
 	if beast_rid != "":
 		var away: int = int(next_great["day"]) - today
@@ -3292,12 +3293,15 @@ static func _foundation_pill_region(c: CharacterData, data: GameData) -> String:
 
 
 ## CAL-005: the region of the soonest great-beast walk this realm can meet and has not won ({"region": "", "day": -1} when none; ties: region order).
-static func _next_great(c: CharacterData, data: GameData, today: int) -> Dictionary:
+## `min_realm` (REVIEW of GOAL-011): when set, only great beasts gated at that realm id count.
+static func _next_great(c: CharacterData, data: GameData, today: int, min_realm: String = "") -> Dictionary:
 	var best_rid := ""
 	var best_day := -1
 	for rid: String in data.regions:
 		var def: Dictionary = data.regions[rid].get("roamers", {}).get("great", {})
 		if def.is_empty() or c.great_beasts.has(String(def.get("enemy", ""))):
+			continue
+		if min_realm != "" and String(def.get("min_realm", "")) != min_realm:
 			continue
 		var nd := Wildlife.next_great_day(data, rid, today, c.realm_index)
 		if nd < 0:

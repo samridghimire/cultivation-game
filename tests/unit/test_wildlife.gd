@@ -392,6 +392,7 @@ func test_in_season_helpers_and_validation() -> void:
 	assert_false(Wildlife.in_season_now(d, "misty_forest", "wild_boar", autumn_day))
 	assert_eq(Wildlife.season_clause(d, "misty_forest", autumn_day), "Fat Mist Foxes run in Misty Forest this autumn.")
 	assert_eq(Wildlife.season_clause(d, "misty_forest", summer_day), "")
+	assert_eq(Wildlife.season_clause(d, "misty_forest", 9 * 30), "Fat Den Wolves run in Misty Forest this winter.")
 	assert_true(Wildlife.season_clause(d, "withered_bone_marsh", summer_day).begins_with("Fat Mist Pythons"))
 	var old: Dictionary = d.regions["misty_forest"]["roamers"]
 	d.regions["misty_forest"]["roamers"] = {"count": [1, 1], "enemies": [{"enemy": "mist_fox", "weight": 1, "in_season": ["monsoon"]}]}

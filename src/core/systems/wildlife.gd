@@ -156,7 +156,7 @@ static func season_clause(data: GameData, region_id: String, day: int) -> String
 	for e: Dictionary in data.regions.get(region_id, {}).get("roamers", {}).get("enemies", []):
 		if (e.get("in_season", []) as Array).has(season):
 			var n := String(data.enemies.get(String(e["enemy"]), {}).get("name", e["enemy"]))
-			var plural := n + ("es" if n.ends_with("x") or n.ends_with("s") else "s")
+			var plural := Text.plural(n, 2)
 			return "Fat %s run in %s this %s." % [plural, Exploration.region_name(data, region_id), season]
 	return ""
 

@@ -31,6 +31,8 @@ static func plural(noun: String, count: int) -> String:
 	for ending in ["s", "x", "z", "ch", "sh"]:
 		if lower.ends_with(ending):
 			return noun + "es"
+	if lower.ends_with("lf"):  # Wolf -> Wolves (REVIEW of WILD-013)
+		return noun.left(noun.length() - 1) + "ves"
 	if lower.ends_with("y") and noun.length() >= 2 and not "aeiou".contains(lower.substr(lower.length() - 2, 1)):
 		return noun.left(noun.length() - 1) + "ies"
 	return noun + "s"

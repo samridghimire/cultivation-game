@@ -32,6 +32,7 @@ func test_join_and() -> void:
 func test_plural() -> void:
 	assert_eq(Text.plural("Spirit Herb", 1), "Spirit Herb")
 	assert_eq(Text.plural("Spirit Herb", 2), "Spirit Herbs")
+	assert_eq(Text.plural("Den Wolf", 2), "Den Wolves")
 	assert_eq(Text.plural("Glass", 2), "Glasses")
 	assert_eq(Text.plural("Peach", 3), "Peaches")
 	assert_eq(Text.plural("Fairy", 2), "Fairies")

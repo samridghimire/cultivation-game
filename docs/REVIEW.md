@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 53e7743
+Last reviewed commit: 25992e9
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -1482,3 +1482,20 @@ Last reviewed commit: 53e7743
   - Notes, not filed: MARKET-008 leaves one `wanted_sold_<shop>_<day>` world flag per market day it buys on (never
     pruned, ~2 per month); WILD-012 tracks still show for a great beast already beaten; C-296's three herbs have no use
     beyond selling (no recipe takes them) — a content follow-up for the planner.
+- 2026-11-05 (reviewer, 2nd run): reviewed 53e7743..25992e9 (WU-443, WILD-013, WU-445, SEASON-001, WU-447, GFX-069,
+  WILD-014, C-300, GFX-070, TRAVEL-001, GFX-067, GOAL-011; [PLAN] skipped). No BACKLOG/CHANGELOG edits by workers; no
+  SAVE_VERSION change (`season_digest_idx` is a world flag seeded on first pass; road-card fields are session-only); no
+  binary assets.
+  - Fixed (GOAL-011): "Beat a great beast of your realm" named the soonest unbeaten great beast of any gate (usually the
+    Old Tusker, Cloud Crane or Bog King Toad), but only beating a Foundation-gated beast ticked it, so a Foundation
+    player could beat the named beast and the goal stayed open. It now names only Foundation-gated beasts
+    (`_next_great(..., min_realm)`), matching the done check; test checks a week of days.
+  - Fixed (WILD-013/C-300): the in-season arrival line pluralised with its own rule: "Fat Den Wolfs run in ...". Now uses
+    Text.plural, which learned -lf -> -lves (test).
+  - Fixed (SEASON-001): `season_digest` was inserted between `hints()` and its doc comment; the comment is back on hints.
+  - WILD-014 (return beast; calendar/rumour/shelf follow it), TRAVEL-001 (validated road_regions, x2 weight, destination
+    weather, payable costs), WU-445, WU-447 (arrival waits for the card), GFX-069, GFX-070, GFX-067, WU-443 OK.
+  - Notes, not filed: WILD-013's doubling lives in GameState.engage_roamer next to WILD-006's (same pattern) and posts
+    "spoils come twice over" even when the beast dropped nothing; GOAL-011 still has no per-realm win record, so a
+    Foundation player with no Foundation-gated beast left sees the row skipped (spec allows); WU-443 road card skip
+    accepts any key/joypad button (gamepad OK).

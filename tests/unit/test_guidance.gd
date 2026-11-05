@@ -6075,7 +6075,9 @@ func test_core_road_goals_appear_at_foundation_and_done_edges() -> void:
 	assert_eq(goals.size(), 15)
 	assert_eq(goals[11]["text"], "Reach Foundation Establishment Middle")
 	assert_false(goals[11]["done"])
-	assert_true(String(goals[12]["text"]).begins_with("Beat a great beast of your realm: "), String(goals[12]["text"]))
+	assert_true(String(goals[12]["text"]).begins_with("Beat a great beast of your realm: Great Thunder-Horn Ram"), String(goals[12]["text"]))
+	for day in [100, 101, 102, 103, 104, 105, 106]:  # never a Qi Refining beast whose win would not tick the goal
+		assert_true(String(Guidance.road_goals(c, data(), flags, day)[12]["text"]).contains("Thunder-Horn Ram"))
 	assert_true(String(goals[13]["text"]).begins_with("Get a Core Formation pill"), String(goals[13]["text"]))
 	assert_true(String(goals[14]["text"]).begins_with("Reach Foundation Establishment Peak, then attempt Core Formation (now "), String(goals[14]["text"]))
 	c.stage = 1
@@ -6103,7 +6105,8 @@ func test_core_road_goal_beast_skipped_when_all_beaten_and_region_pointers() -> 
 	var c := _foundation_walker()
 	c.stage = 1  # the Middle goal is done, so the pointer is on the beast
 	var r := Guidance.road_goal_region(c, data(), flags, 100)
-	assert_eq(r, String(Guidance._next_great(c, data(), 100)["region"]))
+	assert_eq(r, String(Guidance._next_great(c, data(), 100, data().realms[2].id)["region"]))
+	assert_eq(r, "myriad_peaks_ridge", "the pointer goes to the Foundation beast the goal names")
 	for rid: String in data().regions:
 		var def: Dictionary = data().regions[rid].get("roamers", {}).get("great", {})
 		if not def.is_empty():
