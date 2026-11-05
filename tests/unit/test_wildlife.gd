@@ -402,6 +402,27 @@ func test_in_season_helpers_and_validation() -> void:
 	assert_eq(Wildlife.validate(d).size(), 0)
 
 
+## C-300: at most two in-season beasts per region, each in a season it can appear in.
+func test_in_season_limits() -> void:
+	var d := _gdata()
+	var old: Dictionary = d.regions["misty_forest"]["roamers"]
+	d.regions["misty_forest"]["roamers"] = {"count": [1, 1], "enemies": [{"enemy": "den_wolf", "weight": 1, "seasons": ["winter"], "in_season": ["spring"]}]}
+	assert_eq(Wildlife.validate(d).size(), 1, "in_season outside seasons")
+	d.regions["misty_forest"]["roamers"] = {"count": [1, 1], "enemies": [
+		{"enemy": "mist_fox", "weight": 1, "in_season": ["autumn"]},
+		{"enemy": "wild_boar", "weight": 1, "in_season": ["spring"]},
+		{"enemy": "den_wolf", "weight": 1, "in_season": ["winter"]}]}
+	assert_eq(Wildlife.validate(d).size(), 1, "three in-season beasts")
+	d.regions["misty_forest"]["roamers"] = old
+	assert_eq(Wildlife.validate(d).size(), 0)
+	for rid: String in ["misty_forest", "azure_peak", "withered_bone_marsh", "myriad_peaks_ridge"]:
+		var n := 0
+		for e: Dictionary in d.regions[rid]["roamers"]["enemies"]:
+			if e.has("in_season"):
+				n += 1
+		assert_true(n >= 1 and n <= 2, rid)
+
+
 func test_in_season_spoils_double_only_in_season() -> void:
 	var gs := (Engine.get_main_loop() as SceneTree).root.get_node("GameState")
 	var weak: Dictionary = gs.data.enemies["wild_boar"].duplicate(true)

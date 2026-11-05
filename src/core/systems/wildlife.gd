@@ -362,6 +362,7 @@ static func validate(data: GameData) -> PackedStringArray:
 		if not (entries is Array and not entries.is_empty()):
 			errors.append("%s needs a non-empty enemies list" % where)
 			continue
+		var in_season_count: int = 0
 		for e: Variant in entries:
 			if not e is Dictionary or not data.enemies.has(String(e.get("enemy", ""))):
 				errors.append("%s has an unknown enemy" % where)
@@ -383,4 +384,10 @@ static func validate(data: GameData) -> PackedStringArray:
 			for s: Variant in e.get("in_season", []) if e.get("in_season") is Array else []:
 				if not Exploration.SEASON_NAMES.has(String(s)):
 					errors.append("%s enemy '%s' has unknown in_season '%s'" % [where, e["enemy"], s])
+				elif e.has("seasons") and not (e["seasons"] as Array).has(s):
+					errors.append("%s enemy '%s' in_season '%s' is not one of its seasons" % [where, e["enemy"], s])
+			if e.get("in_season") is Array and not (e["in_season"] as Array).is_empty():
+				in_season_count += 1
+		if in_season_count > 2:
+			errors.append("%s has %d in_season beasts (max 2)" % [where, in_season_count])
 	return errors
