@@ -654,6 +654,9 @@ func _draw_map() -> void:
 			if gold or roamer_count(GameState.player, data, region_id, GameClock.total_days, GameState.world_flags) > 0:
 				_canvas.draw_texture_rect(HudIcons.map_mark("paw_gold" if gold else "paw"), Rect2(x, y, GLYPH_SIZE, GLYPH_SIZE), false)
 				x += GLYPH_SIZE + 2.0
+			elif Wildlife.tracks_today(data, region_id, GameClock.total_days, GameState.player.realm_index):
+				_canvas.draw_texture_rect(HudIcons.map_mark("paw"), Rect2(x, y, GLYPH_SIZE, GLYPH_SIZE), false, Color(1, 1, 1, 0.5))
+				x += GLYPH_SIZE + 2.0
 			if not forage_entries(GameState.player, data, region_id, GameState.current_region, GameClock.total_days, GameState.world_flags).is_empty():
 				_canvas.draw_texture_rect(HudIcons.map_mark("leaf"), Rect2(x, y, GLYPH_SIZE, GLYPH_SIZE), false)
 				x += GLYPH_SIZE + 2.0

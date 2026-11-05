@@ -2994,3 +2994,30 @@ func test_ordinary_roamer_and_missing_source_add_no_renown() -> void:
 	var r2 := Renown.gain(gs.player, gs.data, "misty_forest", "great_beast")
 	assert_eq(int(r2["gained"]), 0)
 	gs.data.renown["sources"]["great_beast"] = 15
+
+
+func test_explore_posts_tracks_line_once_per_day() -> void:
+	_start()
+	var gs := _game_state()
+	var clock: Node = _root().get_node("GameClock")
+	var region := "misty_forest"
+	gs.current_region = region
+	gs.world_flags["discovered_" + region] = true
+	var wd := Wildlife.great_day(region, gs.data.regions[region]["roamers"]["great"])
+	clock.total_days = (clock.total_days / 7) * 7 + 7 + posmod(wd - 1, 7)
+	if not Wildlife.tracks_today(gs.data, region, clock.total_days, gs.player.realm_index):
+		clock.total_days += 7
+	assert_true(Wildlife.tracks_today(gs.data, region, clock.total_days, gs.player.realm_index), "setup")
+	_zero_round_posts.clear()
+	EventBus.message_posted.connect(_collect_post)
+	gs.world_flags["tracks_day_" + region] = -1
+	gs.explore(["t_no_such_tag"])
+	clock.total_days -= 1  # still the same tracks day for the once-a-day guard
+	var first := "\n".join(_zero_round_posts)
+	assert_true(first.contains("Fresh tracks"), first)
+	_zero_round_posts.clear()
+	clock.total_days = int(gs.world_flags["tracks_day_" + region])
+	gs.explore(["t_no_such_tag"])
+	EventBus.message_posted.disconnect(_collect_post)
+	assert_false("\n".join(_zero_round_posts).contains("Fresh tracks"), "once per day")
+	gs.end_session()

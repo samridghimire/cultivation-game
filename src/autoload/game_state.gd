@@ -757,6 +757,10 @@ func _explore_day(tags: Array, quiet: bool) -> Dictionary:
 		if not quiet:  # explore_many would repeat it every storm day
 			EventBus.post("A storm rolls over the sky; lightning walks the horizon.", "warning")
 		_storm_strike()
+	if Wildlife.tracks_today(data, current_region, GameClock.total_days, player.realm_index) \
+			and int(world_flags.get("tracks_day_" + current_region, -1)) != GameClock.total_days:
+		world_flags["tracks_day_" + current_region] = GameClock.total_days
+		EventBus.post(Wildlife.TRACKS_LINE, "world")
 	var encounter := Exploration.discovery_for(player, data, current_region, world_flags)
 	Exploration.add_explore_day(player, current_region)
 	last_explore_discovery = not encounter.is_empty()

@@ -321,3 +321,22 @@ func test_quarry_notes() -> void:
 	assert_true(note.begins_with("Usually leaves: %s, " % d.items[items[1]]["name"]), note)
 	assert_eq(note.split(",").size(), 3 if not note.split(";")[0].contains("spirit") else 3, "at most 3 items")
 	assert_eq(note, Wildlife.quarry_notes(c, d, id), "deterministic")
+
+
+func test_tracks_the_day_before_a_walk_only() -> void:
+	var d := _gdata()
+	var def: Dictionary = d.regions["misty_forest"]["roamers"]["great"]
+	var wd := Wildlife.great_day("misty_forest", def)
+	var hits := 0
+	for day in range(0, 14):
+		var t := Wildlife.tracks_today(d, "misty_forest", day, 0)
+		assert_eq(t, (day + 1) % 7 == wd and not Wildlife.great_roamer(_player(), d, "misty_forest", day + 1, {}).is_empty())
+		if t:
+			hits += 1
+	assert_true(hits >= 1)
+	assert_false(Wildlife.tracks_today(d, "qingshi_village", 0, 0), "no great beast there")
+	var old: Dictionary = d.regions["misty_forest"]["roamers"]["great"]
+	d.regions["misty_forest"]["roamers"]["great"] = {"enemy": "fog_antler_stag", "weekday": 0, "min_realm": "foundation_establishment"}
+	assert_false(Wildlife.tracks_today(d, "misty_forest", 6, 0), "realm the beast ignores")
+	assert_true(Wildlife.tracks_today(d, "misty_forest", 6, 3))
+	d.regions["misty_forest"]["roamers"]["great"] = old

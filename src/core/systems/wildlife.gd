@@ -106,6 +106,16 @@ static func next_great_day(data: GameData, region_id: String, from_day: int, rea
 	return -1
 
 
+## WILD-012: true on the day before the region's great beast walks (for a player at `realm_index`).
+static func tracks_today(data: GameData, region_id: String, day: int, realm_index: int) -> bool:
+	var def := _great_def(data, region_id)
+	return _great_walks(data, region_id, def, day + 1, realm_index)
+
+
+## WILD-012: the line shown when exploring on a tracks day.
+const TRACKS_LINE := "Fresh tracks, wider than a cart: something big walks here tomorrow."
+
+
 ## WILD-008: an enemy's display name; the great beast reads "Great <name>".
 static func display_name(data: GameData, enemy_id: String, great: bool) -> String:
 	var n := String(data.enemies.get(enemy_id, {}).get("name", enemy_id))
