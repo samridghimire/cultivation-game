@@ -828,6 +828,7 @@ func _draw() -> void:
 			var psc := float(Sprites.scale())
 			var ptex := GroundTiles.path_texture(path_color, rid, Vector2i(ceili(rect.size.x / psc), ceili(rect.size.y / psc)), GroundTiles.ground_season(_season, map), str(map.get("ground_style", "grass")))
 			draw_texture_rect(ptex, Rect2(rect.position, Vector2(ptex.get_size()) * psc), false)
+	_draw_sect_courts()
 	for lm: Dictionary in map.get("landmarks", []):
 		_draw_landmark(lm)
 	_draw_footprints()
@@ -839,6 +840,18 @@ func _draw() -> void:
 			_draw_tiled(border_tile, strip)
 	else:
 		draw_rect(Rect2(Vector2.ZERO, map_size), Color(map.get("border", "2a3a20")), false, 6.0)
+
+
+## GFX-068: the paved court of each sect hall and the mountain gate (no collision; drawn under the places).
+func _draw_sect_courts() -> void:
+	var snowy := GroundTiles.ground_season(_season, _region.get("map", {})) == "Winter"
+	for place: Dictionary in _region.get("places", []):
+		if SectCourt.is_sect_hall(place):
+			var hall := Rect2(_vec(place["pos"]) - _vec(place.get("size", [64, 64])) / 2.0, _vec(place.get("size", [64, 64])))
+			SectCourt.draw_court(self, hall, SectCourt.court_rect(place, _region), snowy)
+	var g := SectCourt.gate(_region)
+	if not g.is_empty():
+		SectCourt.draw_gate(self, g, ThemeDB.fallback_font)
 
 
 ## Tiles `tile` at the sprite scale over `area`, clipping the last row and column (GFX-006).

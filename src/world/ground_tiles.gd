@@ -187,7 +187,7 @@ static func _apply_style(img: Image, base: Color, rid: String, style: String, zo
 			for cy in ceili(float(h) / SIZE):
 				for cx in ceili(float(w) / SIZE):
 					var roll := absi(hash("%s|%d|%d|scree" % [rid, cx, cy]))
-					for i in 3 + roll % 3:
+					for i in 1 + roll % 3:  # GFX-068: half the blobs
 						var r2 := absi(hash("%s|%d|%d|scree|%d" % [rid, cx, cy, i]))
 						var pw := 2 + r2 % 3
 						var ph := 2 + (r2 / 8) % 2
@@ -195,7 +195,7 @@ static func _apply_style(img: Image, base: Color, rid: String, style: String, zo
 						var py := cy * SIZE + (r2 / 1024) % (SIZE - 3)
 						var shade := base.lightened(0.07) if r2 % 2 == 0 else base.darkened(0.1)  # GFX-053: half the contrast
 						_fill_clipped(img, Rect2i(px, py, pw, ph), shade)
-					if roll % 4 == 0:
+					if roll % 8 == 0:
 						var cx0 := cx * SIZE + (roll / 4) % (SIZE - 6)
 						var cy0 := cy * SIZE + (roll / 64) % (SIZE - 6)
 						for k in 5:

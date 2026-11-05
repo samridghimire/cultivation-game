@@ -300,3 +300,45 @@ func test_roamers_never_spawn_inside_solid_landmarks() -> void:
 				avoid.append(spot)
 				for r in solid:
 					assert_false(r.has_point(spot), "%s day %d slot %d inside a landmark %s" % [region["id"], day, slot, r])
+
+
+## GFX-068: the mountain ground carries about half the old speckle (old: about 12% of pixels, now about 6%).
+func test_scree_ground_is_calmer() -> void:
+	var base := Color("627889")
+	var img := Image.create(256, 256, false, Image.FORMAT_RGBA8)
+	img.fill(base)
+	GroundTiles._apply_style(img, base, "azure_peak", "scree")
+	var patches := Image.create(256, 256, false, Image.FORMAT_RGBA8)
+	patches.fill(base)
+	GroundTiles._scree_patches(patches, base, "azure_peak")
+	var speckled := 0
+	for y in 256:
+		for x in 256:
+			if img.get_pixel(x, y) != patches.get_pixel(x, y):
+				speckled += 1
+	assert_true(speckled < 256 * 256 / 10, "mountain tiles still speckled: %d px" % speckled)
+
+
+## GFX-068: both sect halls get a court inside the map, clear of paths and other places, and the region a gate.
+func test_sect_courts_and_gates() -> void:
+	var seen := 0
+	for region: Dictionary in data().regions.values():
+		var g := SectCourt.gate(region)
+		var has_sect_hall := false
+		for place: Dictionary in region["places"]:
+			if not SectCourt.is_sect_hall(place):
+				continue
+			has_sect_hall = true
+			seen += 1
+			var court := SectCourt.court_rect(place, region)
+			var hall := _rect(place, [64, 64])
+			assert_true(court.encloses(hall), "%s court covers its hall" % place["display_name"])
+			assert_true(court.size.x > hall.size.x * 1.3, "%s court is a real court" % place["display_name"])
+			assert_true(Rect2(Vector2.ZERO, Vector2(float(region["map"]["size"][0]), float(region["map"]["size"][1]))).encloses(court), "%s court inside map" % place["display_name"])
+			for p in region["map"]["paths"]:
+				assert_false(court.intersects(Rect2(p[0], p[1], p[2], p[3])), "%s court on a path" % place["display_name"])
+			for other: Dictionary in region["places"]:
+				if other != place:
+					assert_false(court.intersects(_rect(other, [64, 64])), "%s court over %s" % [place["display_name"], other.get("display_name", "?")])
+		assert_eq(not g.is_empty(), has_sect_hall, "%s gate only with a sect hall" % region["id"])
+	assert_true(seen >= 2, "azure peak and the marsh both have sect halls")
