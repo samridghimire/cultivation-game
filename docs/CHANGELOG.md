@@ -2,6 +2,20 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-11-05 [QA-195] The road-goal integration test follows the HUD goal from Foundation Middle to the great beast.
+- 2026-11-05 [GFX-073] World labels stay on screen and clear of the HUD panels.
+- 2026-11-05 [SEASON-003] Three days before a season ends, a line names what goes with it.
+- 2026-11-05 [FEST-007] Last year's contest champion is named on the calendar and enters again; three wins running earn a milestone.
+- 2026-11-05 [C-305] A Dragon Boat Festival in Qingshi, with a boat race.
+- 2026-11-05 [C-301] The Bog King Toad, Cloud Crane and Thunder-Horn Ram come back angrier after you beat them.
+- 2026-11-05 [WU-452] A road encounter waits until the road card has finished.
+- 2026-11-05 [GFX-072] Great-beast prints form a trail you can follow.
+- 2026-11-05 [GOAL-012] Road goals remember the realm you beat each great beast in, and point at return beasts.
+- 2026-11-05 [FEST-006] Each festival has a contest against the villagers, with placings and prizes.
+- 2026-11-05 [GFX-071] The mountain gate spans the road, the Azure court leaves room, and the Great Cloud Crane can be seen.
+- 2026-11-05 [MARKET-010] The Night Market Stall sells its old wares again besides the daily picks.
+- 2026-11-05 [WILD-015] A great beast's trail can be baited the day before it walks, so it comes in weakened.
+- 2026-11-05 [C-302] The weather herbs go into recipes.
 - 2026-11-05 [C-299] Market days in Fallen Star Market and the marsh, with their own wares and wants.
 - 2026-11-05 [WU-451] The village book's trophy shelf keeps a place for the beast that comes back.
 - 2026-11-05 [WU-450] Great beasts leave tracks on the ground the day before they walk.

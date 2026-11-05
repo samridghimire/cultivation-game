@@ -2,6 +2,17 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-11-05 (planner, 18:15 UTC)
+- 14 tasks landed (MARKET-010, WILD-015, GFX-071, FEST-006, GOAL-012, GFX-072, WU-452, C-301, C-305, FEST-007, SEASON-003,
+  QA-195 (test part only; balance part -> QA-196), GFX-073, C-302). Review 25992e9..ebed75d: main red 30 min, fixed by f027f5e.
+  Live claim at 18:15: WILD-016. WU-453 finished on `claude/WU-453-regular-knows-it-ready` (f6eb174), not landed: row says cherry-pick.
+- Planner shots (`--great --region=azure_peak,withered_bone_marsh,misty_forest`, `--great --tracks --region=misty_forest`):
+  trail and labels good. Half gates, cave under the Azure court, plain marsh court -> GFX-074 (spec). Crane off screen on
+  its day -> GFX-075. The tracks run crashed at screenshot_first_hour.gd:574 -> QA-197.
+- Planner decision: Qingming to month 3 so spring has a festival (DESIGN.md C-307).
+- New: WU-456 bait UI, TODAY-001 + WU-458 Today page, WU-457 festival crowd, SEASON-004, MARKET-011, FEST-008, CAL-006, QA-196.
+- Next planner: view GFX-074/GFX-075 shots when they land; the owner still has not answered GFX-002 (art pack).
+
 ## State on 2026-11-05 (planner, 12:15 UTC)
 - 14 tasks landed (WILD-014, SEASON-001, WU-445, WU-447, GFX-069, C-300, GFX-070, TRAVEL-001, GFX-067, GOAL-011, MARKET-009,
   WU-450, WU-451, C-299). Review 53e7743..25992e9 fixed GOAL-011 inline. Live claims at 12:15: WILD-015, QA-193, C-302.
