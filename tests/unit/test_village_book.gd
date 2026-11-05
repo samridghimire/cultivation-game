@@ -185,7 +185,7 @@ func test_hunts_page_shows_hunted_and_hides_unhunted() -> void:
 func test_trophy_rows_list_great_beasts_in_region_order() -> void:
 	var c := CharacterFactory.create("T", data(), seeded_rng(), "male")
 	var rows := VillageBook.trophy_rows(c, data())
-	assert_eq(rows.size(), 4, "four great beasts")
+	assert_eq(rows.size(), 5, "four great beasts and the Old Tusker's return slot")
 	assert_eq(String(rows[0]["enemy"]), "old_tusker_boar", "regions.json order")
 	assert_false(bool(rows[0]["won"]))
 	assert_true(String(rows[0]["text"]).begins_with("???"), "unwon is a mystery")
@@ -213,3 +213,22 @@ func test_great_rumors_exist_and_show_on_unwon_rows() -> void:
 	Wildlife.record_great(c, data(), "old_tusker_boar", "misty_forest", 9)
 	rows = VillageBook.trophy_rows(c, data())
 	assert_false(String(rows[0]["detail"]).contains("Hunters say"), "won row drops the rumor")
+
+
+func test_return_slot_sits_beside_the_first_and_opens_after_it() -> void:
+	var c := CharacterFactory.create("T", data(), seeded_rng(), "male")
+	var rows := VillageBook.trophy_rows(c, data())
+	assert_eq(String(rows[1]["enemy"]), "scarred_old_tusker", "second slot beside the first")
+	assert_false(bool(rows[1]["won"]))
+	assert_true(String(rows[1]["text"]).begins_with("???"))
+	assert_false(String(rows[1]["detail"]).contains("Hunters say"), "no spoiler before the first win")
+	Wildlife.record_great(c, data(), "old_tusker_boar", "misty_forest", 9)
+	rows = VillageBook.trophy_rows(c, data())
+	assert_eq(rows.size(), 5, "slot count is stable")
+	assert_false(bool(rows[1]["won"]))
+	assert_true(String(rows[1]["text"]).contains("Wed") or String(rows[1]["text"]).contains("(Misty Forest,"), String(rows[1]["text"]))
+	assert_true(String(rows[1]["detail"]).contains(Wildlife.rumor_of(data(), "misty_forest", c)), "the return's rumour")
+	Wildlife.record_great(c, data(), "scarred_old_tusker", "misty_forest", 20)
+	rows = VillageBook.trophy_rows(c, data())
+	assert_true(bool(rows[1]["won"]))
+	assert_true(String(rows[1]["text"]).contains("Scarred Old Tusker"), String(rows[1]["text"]))

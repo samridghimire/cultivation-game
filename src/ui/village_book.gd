@@ -414,8 +414,8 @@ static func trophy_rows(c: CharacterData, data: GameData) -> Array[Dictionary]:
 			continue
 		var blocks: Array[Dictionary] = [g]
 		var ret: Variant = g.get("return")
-		# WILD-014: the returned beast gets its own shelf row once the first one has fallen.
-		if ret is Dictionary and c.great_beasts.has(String(g["enemy"])):
+		# WU-451: a region with a `return` beast always shows a second slot beside the first.
+		if ret is Dictionary:
 			blocks.append(ret)
 		for block: Dictionary in blocks:
 			_trophy_row(rows, c, data, rid, g, block)
@@ -433,6 +433,10 @@ static func _trophy_row(rows: Array[Dictionary], c: CharacterData, data: GameDat
 		row["day"] = int(c.great_beasts[enemy]) + 1
 		row["text"] = "%s\n%s" % [Wildlife.display_name(data, enemy, true), String(item.get("name", "no trophy"))]
 		row["detail"] = "%s, slain day %d. %s" % [Wildlife.display_name(data, enemy, true), row["day"], String(item.get("description", ""))]
+	elif block != g and not c.great_beasts.has(String(g["enemy"])):
+		# WU-451: the return beast stays a mystery until the first has fallen (its rumour would spoil it).
+		row["text"] = "???\n(%s)" % region
+		row["detail"] = "Some say a great beast never walks alone."
 	else:
 		var walk := Calendar.weekday_label(Wildlife.great_day(rid, g))
 		row["text"] = "???\n(%s, %s)" % [region, Calendar.weekday_label(Wildlife.great_day(rid, g))]
