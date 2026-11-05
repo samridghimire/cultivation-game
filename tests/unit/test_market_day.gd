@@ -273,6 +273,27 @@ func test_hint_line_says_regular() -> void:
 	assert_false(Places.hint_line(_region(), DAY_10, 5, _gd(), {"travelling_market_stall": 2}).contains("regular"))
 
 
+func test_regular_note_newcomer_and_regular() -> void:
+	var place := _stall()
+	var wants := Places.wanted_phrase(place, DAY_10, _gd())
+	var zero := Places.regular_note(place, 0, DAY_10, _gd())
+	assert_true(zero.contains("Wanted today: " + wants), zero)
+	assert_true(zero.contains("Sold on 0 of 3 market days to become a regular."), zero)
+	assert_true(Places.regular_note(place, 1, DAY_10, _gd()).contains("Sold on 1 of 3"))
+	assert_true(Places.regular_note(place, 2, DAY_10, _gd()).contains("Sold on 2 of 3"))
+	var reg := Places.regular_note(place, 3, DAY_10, _gd())
+	assert_eq(reg, "  Regular here: 10%% off new wares, %d on the table" % Places.rotating_picks(place, DAY_10, true).size())
+	assert_true(reg.contains("4 on the table"), reg)
+	assert_eq(Places.regular_note({"rotating_stock": {}}, 5, DAY_10, _gd()), "", "no wanted block")
+
+
+func test_hint_line_regular_tag_on_name() -> void:
+	var reg := {"travelling_market_stall": 3}
+	assert_true(Places.hint_line(_region(), DAY_10, 5, _gd(), reg).contains("Travelling Market Stall (regular) sells"))
+	assert_true(Places.hint_line(_region(), DAY_10 - 3, 5, _gd(), reg).contains("Travelling Market Stall (regular) (new wares"))
+	assert_false(Places.hint_line(_region(), DAY_10 - 3, 5, _gd(), {}).contains("(regular)"))
+
+
 func test_validate_wanted_regular_fields() -> void:
 	var place := _stall()
 	var good: Dictionary = (place["wanted"] as Dictionary).duplicate()

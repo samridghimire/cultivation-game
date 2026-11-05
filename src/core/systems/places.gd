@@ -47,9 +47,10 @@ static func hint_line(region: Dictionary, today: int, window: int = 5, data: Gam
 			if not names.is_empty():
 				var wants := wanted_phrase(best_place, today, data)
 				var reg_note := "; you are a regular here (-%d%%)" % roundi(regular_discount(best_place) * 100.0) if is_reg else ""
-				return "Market day today: %s sells %s%s%s" % [best_name, ", ".join(names), "" if wants == "" else "; wants " + wants, reg_note]
+				return "Market day today: %s%s sells %s%s%s" % [best_name, " (regular)" if is_reg else "", ", ".join(names), "" if wants == "" else "; wants " + wants, reg_note]
 		return "Market day today: %s is open" % best_name
-	return "Market day in %d day%s: %s%s" % [best, "" if best == 1 else "s", best_name, " (new wares each time)" if rotates else ""]
+	var reg_tag := " (regular)" if rotates and is_regular(best_place, int(regulars.get(place_key(best_name), 0))) else ""
+	return "Market day in %d day%s: %s%s%s" % [best, "" if best == 1 else "s", best_name, reg_tag, " (new wares each time)" if rotates else ""]
 
 
 ## "market days 10 and 25" / "market days 5, 15 and 25" for a place with `open_days`; "" without (MARKET-003).
@@ -170,6 +171,17 @@ static func regular_after(place: Dictionary) -> int:
 ## MARKET-009: price cut on a regular's rotating wares (wanted.regular_discount, default 0.1).
 static func regular_discount(place: Dictionary) -> float:
 	return float((place.get("wanted", {}) as Dictionary).get("regular_discount", 0.1))
+
+
+## WU-453: shop title note for a stall with a `wanted` block: "  Regular here: 10% off new wares, 4 on the table"
+## for a regular, "  Wanted today: Boar Hide (x1.5). Sold on 1 of 3 market days to become a regular." otherwise; "" without `wanted`.
+static func regular_note(place: Dictionary, days_sold: int, today: int, data: GameData) -> String:
+	if not place.has("wanted"):
+		return ""
+	if is_regular(place, days_sold):
+		return "  Regular here: %d%% off new wares, %d on the table" % [roundi(regular_discount(place) * 100.0), rotating_picks(place, today, true).size()]
+	var wants := wanted_phrase(place, today, data)
+	return "  %sSold on %d of %d market days to become a regular." % ["" if wants == "" else "Wanted today: %s. " % wants, mini(days_sold, regular_after(place)), regular_after(place)]
 
 
 ## MARKET-009: true when `days_sold` market days of wanted sales earn the stall's regular status.

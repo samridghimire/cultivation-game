@@ -217,10 +217,18 @@ func _hud_hint() -> String:
 	return "" if node == null else String(node.call("first_hint"))
 
 
+## WU-453: the title's regular/wanted note for the open stall (market days only).
+func regular_title_note() -> String:
+	var stall := ShopDiscounts.place_named(GameState.data, GameState.current_region, GameState.shop_name)
+	if stall.is_empty() or not Places.is_market_day_stall(stall, GameClock.total_days):
+		return ""
+	return Places.regular_note(stall, int(GameState.player.market_regular.get(Places.place_key(GameState.shop_name), 0)), GameClock.total_days, GameState.data)
+
+
 ## Opens the merchant's wares (see merchant.gd for max_price / stock_tags / faction).
 func open(merchant_name: String = "Merchant", max_price: int = 0, stock_tags: Array = [], faction: String = "", buy_tags: Array = []) -> void:
 	GameState.shop_name = merchant_name
-	_title.text = merchant_name + friend_note(GameState.data, GameState.current_region, merchant_name, GameState.world_flags, GameClock.total_days) + price_note(GameState.player, GameState.data, faction) + renown_note(GameState.player, GameState.data, GameState.current_region) + deal_note(GameState.player, GameState.current_region, GameClock.total_days) + Places.new_today_note(GameState.data.regions.get(GameState.current_region, {}), merchant_name, GameClock.total_days, GameState.data)
+	_title.text = merchant_name + friend_note(GameState.data, GameState.current_region, merchant_name, GameState.world_flags, GameClock.total_days) + price_note(GameState.player, GameState.data, faction) + renown_note(GameState.player, GameState.data, GameState.current_region) + deal_note(GameState.player, GameState.current_region, GameClock.total_days) + Places.new_today_note(GameState.data.regions.get(GameState.current_region, {}), merchant_name, GameClock.total_days, GameState.data) + regular_title_note()
 	_max_price = max_price
 	_stock_tags = stock_tags
 	_buy_tags = buy_tags
