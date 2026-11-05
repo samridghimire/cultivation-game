@@ -669,12 +669,19 @@ func _draw_map() -> void:
 			x += 14.0
 	if _hint_region != "" and _rects.has(_hint_region):
 		var hr: Rect2 = _rects[_hint_region]
-		_canvas.draw_string(font, Vector2(hr.end.x - 4.0, hr.position.y - 2.0), "!", HORIZONTAL_ALIGNMENT_LEFT, -1, 22, UIStyle.ACCENT)
+		var hm := hint_marker_rect(hr)
+		_canvas.draw_rect(hm, Color(0.1, 0.09, 0.08, 1.0))  # GFX-067: opaque backing so no road line shows through
+		_canvas.draw_string(font, Vector2(hm.position.x + 5.0, hm.end.y - 4.0), "!", HORIZONTAL_ALIGNMENT_LEFT, -1, 22, UIStyle.ACCENT)
 	if _goal_region != "" and _rects.has(_goal_region):
 		var gr: Rect2 = _rects[_goal_region]
 		_canvas.draw_string(font, Vector2(gr.position.x, gr.position.y - 4.0), "* goal", HORIZONTAL_ALIGNMENT_LEFT, -1, 14, UIStyle.ACCENT)
 	if _rects.has(GameState.current_region):
 		_canvas.draw_rect((_rects[GameState.current_region] as Rect2).grow(5.0), UIStyle.ACCENT, false, 3.0)
+
+
+## GFX-067: the box of the "!" hint marker: wholly above and outside the node rect, at its right end.
+static func hint_marker_rect(node_rect: Rect2) -> Rect2:
+	return Rect2(node_rect.end.x - 16.0, node_rect.position.y - 28.0, 18.0, 26.0)
 
 
 ## Whether the road between two regions needs a minimum realm in either direction.

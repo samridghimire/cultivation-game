@@ -476,3 +476,11 @@ func test_road_goal_region_follows_first_unfinished_goal() -> void:
 	assert_true(goals.size() >= 3)
 	c.realm_index = 2
 	assert_eq(Guidance.road_goal_region(c, data(), flags, 0), "")
+
+
+## GFX-067: the "!" hint marker sits wholly outside the node rect.
+func test_hint_marker_is_outside_the_node() -> void:
+	var node := Rect2(300, 400, 160, 60)
+	var m := WorldMapScreen.hint_marker_rect(node)
+	assert_false(m.intersects(node), "clear of the node box")
+	assert_true(m.end.y <= node.position.y)

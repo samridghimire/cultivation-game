@@ -43,3 +43,20 @@ func test_ripple_point_is_inside_pond_and_deterministic() -> void:
 		var p := VillageLife.point_in(rect, 5, n)
 		assert_true(rect.has_point(p))
 		assert_eq(p, VillageLife.point_in(rect, 5, n))
+
+
+## GFX-067: the Heavenforge Smithy smokes; reduce_motion keeps the emitter silent.
+func test_smithy_chimney_smokes() -> void:
+	var region: Dictionary = data().regions["fallen_star_market"]
+	for reduce in [false, true]:
+		var vl := VillageLife.new()
+		vl.setup(region, "Spring", "clear", reduce, Vector2(1600, 1000))
+		var found := false
+		for c in vl.get_children():
+			if c.name == "SmithySmoke":
+				found = true
+				assert_eq((c as CPUParticles2D).emitting, not reduce)
+		assert_true(found, "smithy emitter exists")
+		vl.free()
+	var off := PixelPlace.smithy_smoke_offset(Vector2(110, 80))
+	assert_true(off.y < 0.0 and off.x > 0.0, "above and right of the shop centre")

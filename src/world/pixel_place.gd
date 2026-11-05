@@ -32,6 +32,15 @@ static func template_size(kind: String, horizontal: bool = true) -> Vector2i:
 	return Vector2i(r[0].length(), r.size()) if not r.is_empty() else Vector2i.ZERO
 
 
+## GFX-067: where a smithy's smoke leaves its chimney, relative to the place's centre (matches `_shop`'s stack).
+static func smithy_smoke_offset(size: Vector2) -> Vector2:
+	var compact := size.x < 120.0
+	var tex_w := 58 if compact else 66
+	var tex_h := 44 if compact else 46
+	var sc := float(Sprites.scale())
+	return Vector2((tex_w - 17 + 3.5 - tex_w / 2.0) * sc, size.y / 2.0 - tex_h * sc)
+
+
 ## GFX-064: the shop variant for a merchant's name: "shop_smithy" (chimney with a glow) or "shop_scrolls" (scroll sign), else "shop".
 static func shop_look(place_name: String) -> String:
 	var n := place_name.to_lower()
@@ -239,10 +248,13 @@ static func _shop(look: String = "", compact: bool = false) -> Array:
 	match look:
 		"smithy":
 			# A stone chimney rising from the roof, its mouth glowing gold.
-			var cx := w - 16
-			box(c, cx, 0, 6, 12, "s", "S")
-			rect(c, cx + 1, 0, 4, 2, "d")
-			rect(c, cx + 2, 0, 2, 1, "g")
+			# GFX-067: dark soot-stained stack with a cap, standing out from the grey roof; a bright furnace mouth.
+			var cx := w - 17
+			box(c, cx, 0, 7, 14, "T", "o")
+			rect(c, cx - 1, 0, 9, 2, "o")
+			rect(c, cx + 1, 1, 5, 1, "d")
+			rect(c, cx + 2, 1, 3, 1, "g")
+			rect(c, cx + 3, 1, 1, 1, "p")
 		"scrolls":
 			# A hanging scroll sign by the door: paper with gold rods and dark text strokes.
 			rect(c, wx2, 33, 8, 1, "g")

@@ -99,6 +99,16 @@ func setup(region: Dictionary, season: String, weather: String, reduce_motion: b
 			"pond":
 				if not pond_frozen(season) and not reduce_motion:
 					_ponds.append(rect)
+	# GFX-067: a smithy's chimney smokes steadily.
+	for pl: Dictionary in region.get("places", []):
+		if String(pl.get("type", "")) == "merchant" and float(pl["size"][0]) >= PixelPlace.SHOP_MIN_WIDTH \
+				and PixelPlace.shop_look(String(pl.get("display_name", ""))) == "shop_smithy":
+			var psize := Vector2(float(pl["size"][0]), float(pl["size"][1]))
+			var ppos := Vector2(float(pl["pos"][0]), float(pl["pos"][1]))
+			var smoke := make_smoke(ppos + PixelPlace.smithy_smoke_offset(psize), season, reduce_motion)
+			smoke.name = "SmithySmoke"
+			smoke.amount = 8
+			add_child(smoke)
 	set_process(not reduce_motion)
 	queue_redraw()
 
