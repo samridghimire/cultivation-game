@@ -415,6 +415,48 @@ static func validate_seasonal_prices(block: Dictionary, errors: Array[String]) -
 		errors.append("seasonal_prices needs both in_season_mult and out_of_season_mult")
 
 
+## MARKET-011: a merchant takes this many units of one item in FLOOD_DAYS before the price drops.
+const FLOOD_DAYS := 7
+const FLOOD_STEP := 0.1
+const FLOOD_FLOOR := 0.5
+
+
+static func validate_merchants(block: Dictionary, errors: Array[String]) -> void:
+	for key: String in block:
+		var v: Variant = block[key]
+		if key != "flood_after" or not (v is float or v is int) or float(v) != floorf(float(v)) or int(v) < 1 or int(v) > 50:
+			errors.append("merchants '%s' must be flood_after, an int 1..50" % key)
+
+
+static func flood_after(data: GameData) -> int:
+	return int(data.merchants.get("flood_after", 5))
+
+
+## MARKET-011: units still counted against a merchant on `today`: `entry` is {day, count}; one step recovers per
+## day since the last sale and nothing counts after FLOOD_DAYS.
+static func flood_count(entry: Variant, today: int) -> int:
+	if not entry is Dictionary:
+		return 0
+	var age := today - int((entry as Dictionary).get("day", today))
+	if age >= FLOOD_DAYS:
+		return 0
+	return maxi(0, int((entry as Dictionary).get("count", 0)) - maxi(0, age))
+
+
+## MARKET-011: sell-price factor for the next unit when `count` units already count: 1.0 up to flood_after, then
+## -10% per extra unit, never below 50%.
+static func flood_mult(data: GameData, count: int) -> float:
+	var extra := count + 1 - flood_after(data)
+	return 1.0 if extra <= 0 else maxf(FLOOD_FLOOR, 1.0 - FLOOD_STEP * extra)
+
+
+## MARKET-011: drops tally entries that no longer count on `today`.
+static func flood_prune(tally: Dictionary, today: int) -> void:
+	for key: String in tally.keys():
+		if flood_count(tally[key], today) <= 0:
+			tally.erase(key)
+
+
 static func _seasonal_round(price: int, mult: float) -> int:
 	if price <= 0 or mult == 1.0:
 		return price

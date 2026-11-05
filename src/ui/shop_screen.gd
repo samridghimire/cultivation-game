@@ -532,10 +532,13 @@ func _rebuild() -> void:
 		_list.add_child(UIStyle.label(empty, 16, Color(0.7, 0.7, 0.7)))
 	var wanted := GameState.market_wanted() if _selling else {}
 	for item_id in ids:
-		var price := unit_price(p, data, item_id, _selling, _faction, GameState.buy_multiplier(item_id), GameState.price_season(), float(wanted["mult"]) if not wanted.is_empty() and String(wanted["item"]) == item_id and int(wanted["left"]) > 0 else 1.0)
+		var price := unit_price(p, data, item_id, _selling, _faction, GameState.buy_multiplier(item_id), GameState.price_season(), float(wanted["mult"]) if not wanted.is_empty() and String(wanted["item"]) == item_id and int(wanted["left"]) > 0 else (GameState.market_flood_mult(item_id) if _selling else 1.0))
 		var label: String = data.items[item_id]["name"]
 		if _selling:
 			label += "  (have %d)" % p.item_count(item_id)
+			var flood := GameState.market_flood_mult(item_id)
+			if flood < 1.0 and not (not wanted.is_empty() and String(wanted["item"]) == item_id and int(wanted["left"]) > 0):
+				label += "  (plenty already: %d%%)" % roundi(flood * 100.0)
 		else:
 			var note := manual_note(p, data, item_id)
 			if row_fits(label + note, ROW_BADGE_PADDING):

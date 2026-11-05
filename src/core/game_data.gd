@@ -42,6 +42,7 @@ var start_region := ""
 var renown: Dictionary = {}  # regions.json "renown" block (Renown); {} = none
 var travel_speed: Array = []  # TRAV-007: regions.json "travel_speed" (empty = everyone walks)
 var weather_persist: float = Weather.DEFAULT_PERSIST  # WEATHER-001: regions.json "weather_persist"
+var merchants: Dictionary = {}  # MARKET-011: items.json "merchants"
 var seasonal_prices: Dictionary = {}  # MARKET-001: items.json "seasonal_prices"
 var fishing_rules: Dictionary = {}  # FISH-006: regions.json "fishing"
 var fishing_weather: Dictionary = {}  # FISH-001: regions.json "fishing_weather"
@@ -219,6 +220,8 @@ func _load(dir: String) -> void:
 	restricted_item_tags = PackedStringArray(item_file.get("restricted_tags", []))
 	seasonal_prices = item_file.get("seasonal_prices", {})
 	Items.validate_seasonal_prices(seasonal_prices, load_errors)
+	merchants = item_file.get("merchants", {})
+	Items.validate_merchants(merchants, load_errors)
 	for item in item_file.get("items", []):
 		items[item["id"]] = item
 		var taught: String = String(item.get("effects", {}).get("learn_recipe", ""))

@@ -3067,6 +3067,28 @@ func test_explore_posts_tracks_line_once_per_day() -> void:
 	gs.end_session()
 
 
+## MARKET-011: the 6th and later units of one item sold to one merchant pay less; the wanted item is exempt.
+func test_market_flooded_stall_pays_less() -> void:
+	_start()
+	var clock := _root().get_node("GameClock")
+	clock.total_days = 10  # closed day: no wanted item
+	GameState.current_region = "qingshi_village"
+	GameState.shop_name = "Travelling Market Stall"
+	var id := "dew_grass"
+	var base := Items.sell_price(GameState.data, id)
+	GameState.player.add_item(id, 8)
+	var before := GameState.player.item_count("spirit_stone")
+	GameState.sell_item(id, 7)
+	var expected := base * 5 + roundi(base * 0.9) + roundi(base * 0.8)
+	assert_eq(GameState.player.item_count("spirit_stone") - before, expected)
+	assert_almost_eq(GameState.market_flood_mult(id), 0.7, 0.001)
+	clock.total_days = 12  # two steps recovered
+	assert_almost_eq(GameState.market_flood_mult(id), 0.9, 0.001)
+	clock.total_days = 30
+	assert_eq(GameState.market_flood_mult(id), 1.0)
+	GameState.shop_name = ""
+
+
 ## MARKET-008: the stall pays 1.5x for today's wanted item, 5 units a day, and nothing extra for other items or days.
 func test_market_wanted_price_and_cap() -> void:
 	_start()

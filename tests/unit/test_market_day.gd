@@ -363,3 +363,25 @@ func test_night_stall_keeps_untagged_wares() -> void:
 	# The Travelling Market Stall has stock_tags: no untagged added.
 	assert_false(Places.stock_tags_today(_stall(), DAY_10).has("untagged"))
 	assert_false(Items.merchant_sells(data, data.items["paper_lantern"], ["herb"], max_price), "tagged stall unchanged")
+
+
+## MARKET-011: the flood curve, recovery, expiry and pruning.
+func test_flood_curve_recovery_and_prune() -> void:
+	var data := _gd()
+	assert_eq(Items.flood_after(data), 5)
+	assert_eq(Items.flood_mult(data, 4), 1.0, "the 5th unit is still full price")
+	assert_almost_eq(Items.flood_mult(data, 5), 0.9, 0.001)
+	assert_almost_eq(Items.flood_mult(data, 7), 0.7, 0.001)
+	assert_almost_eq(Items.flood_mult(data, 40), 0.5, 0.001, "floor")
+	var entry := {"day": 10, "count": 8}
+	assert_eq(Items.flood_count(entry, 10), 8)
+	assert_eq(Items.flood_count(entry, 12), 6, "one step a day")
+	assert_eq(Items.flood_count({"day": 10, "count": 30}, 17), 0, "nothing counts after 7 days")
+	var tally := {"a|x": entry, "b|y": {"day": 0, "count": 3}}
+	Items.flood_prune(tally, 10)
+	assert_true(tally.has("a|x"))
+	assert_false(tally.has("b|y"))
+	var errors: Array[String] = []
+	Items.validate_merchants({"flood_after": 0}, errors)
+	Items.validate_merchants({"bogus": 1}, errors)
+	assert_eq(errors.size(), 2)

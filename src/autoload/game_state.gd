@@ -1426,7 +1426,7 @@ func sell_item(item_id: String, quantity: int = 1) -> void:
 		EventBus.post("You do not have enough.", "warning")
 		EventBus.player_changed.emit()
 		return
-	var result := Items.sell(player, data, item_id, quantity - bonus_units, price_season()) if quantity > bonus_units else {"ok": true, "reason": "", "stones": 0}
+	var result := _sell_flooded(item_id, quantity - bonus_units) if quantity > bonus_units else {"ok": true, "reason": "", "stones": 0}
 	if result["ok"] and bonus_units > 0:
 		var bonus := Items.sell(player, data, item_id, bonus_units, price_season(), bonus_mult)
 		result["ok"] = bonus["ok"]
@@ -1439,6 +1439,45 @@ func sell_item(item_id: String, quantity: int = 1) -> void:
 	else:
 		EventBus.post(result["reason"], "warning")
 	EventBus.player_changed.emit()
+
+
+## MARKET-011: units of `item_id` sold to the open shop that still count as a glut ("<shop>|<item>" -> {day, count}).
+func _flood_key(item_id: String) -> String:
+	return "%s|%s" % [Places.place_key(shop_name), item_id]
+
+
+func _flood_units(item_id: String) -> int:
+	if shop_name == "":
+		return 0
+	return Items.flood_count((world_flags.get("market_sold", {}) as Dictionary).get(_flood_key(item_id), {}), GameClock.total_days)
+
+
+## MARKET-011: factor on the open shop's sell price for the next unit of `item_id` (1.0 when not flooded).
+func market_flood_mult(item_id: String) -> float:
+	return Items.flood_mult(data, _flood_units(item_id))
+
+
+## MARKET-011: sells `quantity` units one at a time, each at the flood factor of the units sold before it.
+func _sell_flooded(item_id: String, quantity: int) -> Dictionary:
+	var total := {"ok": true, "reason": "", "stones": 0}
+	if shop_name == "":
+		return Items.sell(player, data, item_id, quantity, price_season())
+	var tally: Dictionary = world_flags.get("market_sold", {})
+	var today := GameClock.total_days
+	var count := _flood_units(item_id)
+	for i in quantity:
+		var r := Items.sell(player, data, item_id, 1, price_season(), Items.flood_mult(data, count))
+		if not r["ok"]:
+			total["ok"] = i > 0
+			total["reason"] = r["reason"]
+			break
+		total["stones"] = int(total["stones"]) + int(r["stones"])
+		count += 1
+	if int(total["stones"]) > 0:
+		tally[_flood_key(item_id)] = {"day": today, "count": count}
+		Items.flood_prune(tally, today)
+		world_flags["market_sold"] = tally
+	return total
 
 
 ## MARKET-009: tally wanted units sold today; the first sale of a market day counts toward being a regular.
@@ -1467,7 +1506,7 @@ func sell_all(ids: Array) -> int:
 	var stones := 0
 	for id in ids:
 		var count := player.item_count(id)
-		var result := Items.sell(player, data, id, count, price_season())
+		var result := _sell_flooded(id, count)
 		if result["ok"]:
 			sold += count
 			stones += int(result["stones"])
