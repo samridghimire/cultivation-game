@@ -1564,7 +1564,11 @@ func _show_start_arrival() -> void:
 	var pending: bool = GameState.arrival_banner_pending
 	GameState.arrival_banner_pending = false
 	if pending and GameState.player != null and GameState.player.alive and GameState.pending_respawn.is_empty():
-		_show_arrival(GameState.current_region)
+		var region_id: String = GameState.current_region
+		if is_instance_valid(RoadCard.current):
+			RoadCard.current.finished.connect(func(): _show_arrival(region_id), CONNECT_ONE_SHOT)  # WU-447
+		else:
+			_show_arrival(region_id)
 
 
 ## WU-438: the GUIDE-209 arrival line for `region_id`, "" when it is not today's or is empty.
@@ -1576,6 +1580,8 @@ static func arrival_extra(flags: Dictionary, region_id: String) -> String:
 
 ## Arrival card: region name with qi density and danger, shown on real travel.
 func _on_arrival(region_id: String) -> void:
+	if is_instance_valid(RoadCard.current):
+		return # the road card is up: the reloaded HUD shows the arrival when it ends (WU-447)
 	if GameState.player == null or not GameState.player.alive:
 		return # killed on the road with no lives left: the death screen is up
 	if not GameState.pending_respawn.is_empty():

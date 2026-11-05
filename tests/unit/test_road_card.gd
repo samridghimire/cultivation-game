@@ -49,3 +49,39 @@ func test_any_key_skips() -> void:
 	await _tree().process_frame
 	assert_false(is_instance_valid(card))
 
+
+
+func test_detail_line_text() -> void:
+	assert_eq(RoadCard.detail_for(""), "")
+	assert_eq(RoadCard.detail_for("Rain Shelter"), "On the way: Rain Shelter")
+	assert_eq(RoadCard.encounter_name(null, "road_rain_shelter"), "")
+	var data := GameData.load_from_dir()
+	assert_eq(RoadCard.encounter_name(data, "road_rain_shelter"), "Rain Shelter")
+	assert_eq(RoadCard.encounter_name(data, ""), "")
+
+
+func test_finished_fires_on_skip_and_sets_current() -> void:
+	var card := RoadCard.show_over(_tree(), "A -> B · 1 day", false, "On the way: X")
+	assert_true(RoadCard.current == card)
+	var state := {"n": 0}
+	card.finished.connect(func(): state["n"] += 1)
+	var ev := InputEventKey.new()
+	ev.keycode = KEY_SPACE
+	ev.pressed = true
+	card._input(ev)
+	card._input(ev)
+	assert_eq(state["n"], 1)
+	assert_true(RoadCard.current == null)
+	await _tree().process_frame
+
+
+func test_finished_fires_with_reduce_motion() -> void:
+	var card := RoadCard.show_over(_tree(), "A -> B · 1 day", true)
+	var state := {"n": 0}
+	card.finished.connect(func(): state["n"] += 1)
+	for i in 40:
+		await _tree().process_frame
+		if state["n"] > 0:
+			break
+	assert_eq(state["n"], 1)
+	assert_true(RoadCard.current == null)

@@ -2,7 +2,8 @@ class_name RoadCard
 extends CanvasLayer
 ## WU-443: the road between regions. Travel rebuilds the world, so this card lives under the
 ## tree root: it fades to dark (~0.3 s), shows "From -> To · 3 days" with a dotted line that
-## fills over ~1 s, then fades out onto the new region. Any key or button skips it; with
+## fills over ~1 s, then fades out onto the new region. An optional detail line sits under the route
+## (WU-447: the snow delay, "On the way: <road encounter>"); `finished` fires when it ends (fade-out or skip). Any key or button skips it; with
 ## `reduce_motion` it is a 0.2 s cut with no line animation. It swallows input while it shows.
 
 const FADE_IN := 0.3
@@ -12,7 +13,13 @@ const TOTAL_SECONDS := 1.8
 const REDUCED_SECONDS := 0.2
 const DOTS := 24
 
+signal finished
+
+## The card on screen, null when none (the HUD holds the arrival banner until it ends).
+static var current: RoadCard = null
+
 var _elapsed: float = 0.0
+var _done: bool = false
 var _total: float = TOTAL_SECONDS
 var _reduced: bool = false
 var _dim: ColorRect
@@ -26,6 +33,21 @@ static func text_for(from_name: String, to_name: String, days: int, snow_days: i
 	if snow_days > 0:
 		text += " (+%d %s, snow)" % [snow_days, "day" if snow_days == 1 else "days"]
 	return text
+
+
+## WU-447: the detail line under the route: "On the way: Rain Shelter" for a road encounter, else "".
+static func detail_for(encounter_name: String) -> String:
+	return "On the way: " + encounter_name if encounter_name != "" else ""
+
+
+## Display name of a road encounter id: its `name`, else the id without "road_" in title case.
+static func encounter_name(data: GameData, encounter_id: String) -> String:
+	if encounter_id == "" or data == null:
+		return ""
+	var e: Dictionary = data.encounters.get(encounter_id, {})
+	if String(e.get("name", "")) != "":
+		return String(e["name"])
+	return encounter_id.trim_prefix("road_").replace("_", " ").capitalize()
 
 
 ## How many of `total` dots are filled `t` seconds in (0 before the fade-in ends).
@@ -43,16 +65,17 @@ static func dim_alpha(t: float, total_s: float, fade_in: float, fade_out: float)
 
 
 ## Shows the card over the running game; returns null when there is no tree to hold it.
-static func show_over(tree: SceneTree, text: String, reduce_motion: bool) -> RoadCard:
+static func show_over(tree: SceneTree, text: String, reduce_motion: bool, detail: String = "") -> RoadCard:
 	if tree == null:
 		return null
 	var card := RoadCard.new()
-	card._setup(text, reduce_motion)
+	card._setup(text, reduce_motion, detail)
 	tree.root.add_child(card)
+	current = card
 	return card
 
 
-func _setup(text: String, reduce_motion: bool) -> void:
+func _setup(text: String, reduce_motion: bool, detail: String = "") -> void:
 	layer = 100
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_reduced = reduce_motion
@@ -75,13 +98,17 @@ func _setup(text: String, reduce_motion: bool) -> void:
 	_line = UIStyle.label("", 22, Color.WHITE)
 	_line.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_box.add_child(_line)
+	if detail != "":
+		var extra := UIStyle.label(detail, 18, Color(0.8, 0.8, 0.85))
+		extra.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		_box.add_child(extra)
 	_apply(0.0)
 
 
 func _process(delta: float) -> void:
 	_elapsed += delta
 	if _elapsed >= _total:
-		queue_free()
+		_finish()
 		return
 	_apply(_elapsed)
 
@@ -100,7 +127,17 @@ func _input(event: InputEvent) -> void:
 	if event is InputEventKey or event is InputEventJoypadButton or event is InputEventMouseButton:
 		if event.is_pressed():
 			get_viewport().set_input_as_handled()
-			queue_free()
+			_finish()
 	elif event.is_action_pressed("ui_accept") or event.is_action_pressed("ui_cancel"):
 		get_viewport().set_input_as_handled()
-		queue_free()
+		_finish()
+
+
+func _finish() -> void:
+	if _done:
+		return
+	_done = true
+	if current == self:
+		current = null
+	finished.emit()
+	queue_free()
