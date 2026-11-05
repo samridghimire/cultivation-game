@@ -3195,6 +3195,42 @@ func test_bait_the_trail() -> void:
 	gs.end_session()
 
 
+## WU-456: the explore site offers the bait row on a tracks day only.
+func test_explore_site_bait_row() -> void:
+	var Site := preload("res://src/world/interactables/explore_site.gd")
+	_start()
+	var gs := _game_state()
+	var clock: Node = _root().get_node("GameClock")
+	var region := "misty_forest"
+	gs.current_region = region
+	var wd := Wildlife.great_day(region, gs.data.regions[region]["roamers"]["great"])
+	clock.total_days = (clock.total_days / 7) * 7 + 7 + posmod(wd - 1, 7)
+	var rows := Site.bait_options()
+	assert_eq(rows.size(), 1, "disabled row without bait")
+	assert_true(bool(rows[0]["disabled"]))
+	assert_true(String(rows[0]["reason"]).contains("mugwort"))
+	gs.player.add_item("village_mugwort", 2)
+	rows = Site.bait_options()
+	assert_eq(rows.size(), 1)
+	assert_false(rows[0].has("disabled"))
+	assert_true(String(rows[0]["description"]).contains("weakened"))
+	(rows[0]["action"] as Callable).call()
+	assert_eq(gs.player.item_count("village_mugwort"), 1)
+	assert_true(gs.world_flags.has(Wildlife.bait_flag(region)))
+	assert_eq(Site.bait_options().size(), 0, "not a tracks day now")
+	gs.end_session()
+
+
+## WU-456: bait_line words both cases.
+func test_bait_line_text() -> void:
+	var data: GameData = _game_state().data
+	var held := Wildlife.bait_line(data, "misty_forest", "village_mugwort")
+	assert_true(held.begins_with("Uses 1 "), held)
+	assert_true(held.contains("weakened"))
+	assert_true(Wildlife.bait_line(data, "misty_forest", "").begins_with("You need "))
+	assert_eq(Wildlife.bait_line(data, "qingshi_village", ""), "")
+
+
 ## SEASON-003: the season-ending line posts once, three days before the season ends.
 func test_season_ending_posts_once() -> void:
 	var gs := _game_state()

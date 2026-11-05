@@ -14,8 +14,24 @@ func get_options() -> Array[Dictionary]:
 	outlook += quarry_note(GameState.player, GameState.data, GameState.current_region, GameClock.total_days)
 	var options: Array[Dictionary] = [{"label": "Explore", "description": outlook, "action": GameState.explore.bind(explore_tags), "keep_open": true}]
 	options.append({"label": "Explore for a week (stops when something happens)", "description": outlook, "action": GameState.explore_many.bind(7, explore_tags), "keep_open": true})
+	options.append_array(bait_options())
 	options.append_array(event_options())
 	return options
+
+
+## WU-456: the "Set bait on the trail" row on a great beast's tracks day (disabled while no bait is held).
+static func bait_options() -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	var region := GameState.current_region
+	var item_id := GameState.bait_offer()
+	if item_id != "":
+		out.append({"label": "Set bait on the trail", "description": Wildlife.bait_line(GameState.data, region, item_id, GameState.player), "action": GameState.set_bait, "keep_open": true})
+	elif Wildlife.tracks_today(GameState.data, region, GameClock.total_days, GameState.player.realm_index) \
+			and int(GameState.world_flags.get(Wildlife.bait_flag(region), -1)) != GameClock.total_days + 1:
+		var reason := Wildlife.bait_line(GameState.data, region, "", GameState.player)
+		if reason != "":
+			out.append({"label": "Set bait on the trail", "description": reason, "action": GameState.set_bait, "disabled": true, "reason": reason, "keep_open": true})
+	return out
 
 
 ## Ends the Explore descriptions when the active bounty's quarry roams this region (WU-082).

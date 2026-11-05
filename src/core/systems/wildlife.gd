@@ -157,6 +157,24 @@ static func weakened(enemy: Dictionary, frac: float) -> Dictionary:
 	return e
 
 
+## WU-456: the menu description of the bait row. With `item_id` held: what it costs and what it does; with "": which
+## items the region's great beast takes as bait. "" when the region has no great beast.
+static func bait_line(data: GameData, region_id: String, item_id: String, c: CharacterData = null) -> String:
+	var def := _great_def(data, region_id)
+	if def.is_empty():
+		return ""
+	var enemy := active_great_enemy(c, data, region_id) if c != null else String(def.get("enemy", ""))
+	var beast := display_name(data, enemy, true)
+	if item_id != "":
+		return "Uses 1 %s, 1 day. Tomorrow the %s comes in weakened." % [String(data.items[item_id]["name"]).to_lower(), beast]
+	var names: Array[String] = []
+	for id: Variant in def.get("bait", []):
+		names.append(String(data.items.get(String(id), {}).get("name", String(id))).to_lower())
+	if names.is_empty():
+		return "You need something tagged bait to lure the %s." % beast
+	return "You need " + " or ".join(names) + " to lure the " + beast + "."
+
+
 ## WILD-015: world flag holding the day a baited trail's beast walks.
 static func bait_flag(region_id: String) -> String:
 	return "bait_" + region_id
