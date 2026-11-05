@@ -655,7 +655,7 @@ func travel(region_id: String) -> void:
 		EventBus.post(first_sight, "info")
 	_pass_time(check["days"], "Travelling to %s" % Exploration.region_name(data, region_id))
 	if not _road_ambush() and _can_act():
-		var road := Exploration.road_encounter(player, data, int(check["days"]), world_flags, rng, Calendar.season_of(GameClock.total_days), GameClock.total_days)
+		var road := Exploration.road_encounter(player, data, int(check["days"]), world_flags, rng, Calendar.season_of(GameClock.total_days), GameClock.total_days, last_travel_from, region_id)
 		if not road.is_empty():
 			last_travel_road_encounter = String(road.get("id", ""))
 			# Not an exploration find: the encounter window must not title it a discovery.

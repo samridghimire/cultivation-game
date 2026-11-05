@@ -681,6 +681,14 @@ func _validate_world() -> void:
 				for kind: Variant in kinds:
 					if not (kind is String) or not Weather.KINDS.has(kind):
 						load_errors.append("Encounter '%s' has unknown weather '%s'" % [e["id"], kind])
+		if e.has("road_regions"):
+			var rr: Variant = e["road_regions"]
+			if not (rr is Array) or (rr as Array).is_empty() or not (e.get("tags", []) as Array).has("road"):
+				load_errors.append("Encounter '%s' road_regions must be a non-empty list and needs the `road` tag" % e["id"])
+			else:
+				for rid: Variant in rr:
+					if not (rid is String) or not regions.has(rid):
+						load_errors.append("Encounter '%s' road_regions names unknown region '%s'" % [e["id"], rid])
 		if e.has("rogue_only") and typeof(e["rogue_only"]) != TYPE_BOOL:
 			load_errors.append("Encounter '%s' rogue_only must be a bool" % e["id"])
 		if e.has("sect_only") and typeof(e["sect_only"]) != TYPE_BOOL:

@@ -262,13 +262,37 @@ static func road_note(data: GameData, days: int) -> String:
 	return "Roads are quiet."
 
 
-static func road_encounter(c: CharacterData, data: GameData, days: int, flags: Dictionary, rng: RandomNumberGenerator, season: String, day: int = -1) -> Dictionary:
+## `from_region` / `to_region` (TRAVEL-001) name the journey: an encounter with `road_regions` is only eligible when
+## one of them is listed (and then weighs x2); its `weather` gate reads the destination's weather on `day`.
+## Calls without regions (old sims) only see encounters without `road_regions`, which keeps their output stable.
+static func road_encounter(c: CharacterData, data: GameData, days: int, flags: Dictionary, rng: RandomNumberGenerator, season: String, day: int = -1, from_region: String = "", to_region: String = "") -> Dictionary:
 	if data.road.is_empty():
 		return {}
 	var chance := road_chance(data, days)
 	if rng.randf() >= chance:
 		return {}
-	return roll_encounter(c, data, data.road["encounter_tags"], flags, rng, null, 1.0, season, "", 0, func(e: Dictionary) -> bool: return not Folk.uses(e), day)
+	var ok := func(e: Dictionary) -> bool:
+		if Folk.uses(e):
+			return false
+		if e.has("road_regions") and not ((e["road_regions"] as Array).has(from_region) or (e["road_regions"] as Array).has(to_region)):
+			return false
+		if e.has("weather") and day >= 0 and to_region != "" and not (e["weather"] as Array).has(Weather.of(data, to_region, day)):
+			return false
+		return true
+	var pool := eligible_encounters(c, data, data.road["encounter_tags"], flags, null, 1.0, season, "", 0, ok, day)
+	var total := 0.0
+	for entry in pool:
+		if entry["encounter"].has("road_regions"):
+			entry["weight"] = float(entry["weight"]) * 2.0
+		total += float(entry["weight"])
+	if total <= 0.0:
+		return {}
+	var roll := rng.randf() * total
+	for entry in pool:
+		roll -= float(entry["weight"])
+		if roll < 0.0:
+			return entry["encounter"]
+	return pool.back()["encounter"]
 
 
 ## The region's first-exploration discovery (TRAV-005): its `discovery`

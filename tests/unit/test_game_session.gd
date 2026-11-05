@@ -1552,6 +1552,25 @@ func test_travel_posts_arrival_line() -> void:
 
 
 ## TRAV-006: with the road chance forced to 1, a journey meets a road encounter.
+func test_travel_meets_route_encounter_of_its_road() -> void:
+	var gs := _game_state()
+	var c := _start()
+	c.realm_index = 1
+	var old_road: Dictionary = gs.data.road
+	var old_encounters: Dictionary = gs.data.encounters
+	gs.data.road = {"chance_per_day": 1.0, "max_chance": 1.0, "encounter_tags": ["road"]}
+	var only := {}
+	for id: String in gs.data.encounters:
+		if gs.data.encounters[id].has("road_regions") and (gs.data.encounters[id]["road_regions"] as Array).has("misty_forest") and not gs.data.encounters[id].has("weather"):
+			only[id] = gs.data.encounters[id]
+	assert_false(only.is_empty())
+	gs.data.encounters = only
+	gs.travel("misty_forest")
+	gs.data.road = old_road
+	gs.data.encounters = old_encounters
+	assert_true(only.has(gs.last_travel_road_encounter), gs.last_travel_road_encounter)
+
+
 func test_travel_meets_road_encounter() -> void:
 	var gs := _game_state()
 	var c := _start()
