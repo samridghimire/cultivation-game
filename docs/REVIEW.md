@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: c13642c
+Last reviewed commit: 53e7743
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -1465,3 +1465,20 @@ Last reviewed commit: c13642c
   - Notes, not filed: GUIDE-211's _workshop_name falls back to the first workshop in dict order, not the nearest;
     GFX-065's one-arrival-line test returns early (passes vacuously) when the destination has no arrival line;
     GFX-062's keep-clear still misses in ~1-2% of spawns in Qingshi/marsh (soft by design now).
+- 2026-11-05 (reviewer): reviewed c13642c..53e7743 (GOAL-009, MISSION-002, WU-439, GFX-064, FORAGE-005, WILD-012, WU-441,
+  GFX-066, MARKET-007, GOAL-010, WU-440, GFX-068, C-297, C-296, MARKET-008; [PLAN] skipped). Main green (3138 tests).
+  No BACKLOG/CHANGELOG edits by workers; no SAVE_VERSION change (`forage_picks` defaults to 0; wanted/tracks counters are
+  world flags); no binary assets (sect court and gate are code-drawn).
+  - Fixed (GOAL-009/010): the "Reach the 6th Layer" / "Reach the 9th Layer" road goals tested `c.stage >= 6` / `>= 9`, but
+    stage is 0-based, so the first needed the 7th Layer and the second could never be met in Qi Refining (max stage 8;
+    only Foundation's veteran flag ticked it). Now `realm_index == 1 and stage >= 5 / >= 8`; tests check both edges.
+  - Fixed (FORAGE-005): the eye's extra-slot and bonus-copy rolls shared the forage rng, so crossing the 75th/150th pick
+    mid-day reshuffled the items in slots already drawn on the map (a node could give a different item than shown).
+    They now use their own seeded stream; new test checks shown slots keep their item at tiers 2/3.
+  - Fixed (C-296): Frostbell Herb's plural was the singular.
+  - MISSION-002 (sect-only halls), WU-439, WILD-012, WU-441 (prompt_rect tested), GFX-066 (pixel snap off), MARKET-007
+    (validated pools, deterministic picks), MARKET-008 (cap 5/day, split sell price, Sell-tab total), WU-440, C-297,
+    GFX-064, GFX-068 OK.
+  - Notes, not filed: MARKET-008 leaves one `wanted_sold_<shop>_<day>` world flag per market day it buys on (never
+    pruned, ~2 per month); WILD-012 tracks still show for a great beast already beaten; C-296's three herbs have no use
+    beyond selling (no recipe takes them) — a content follow-up for the planner.

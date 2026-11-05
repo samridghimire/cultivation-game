@@ -3147,9 +3147,9 @@ static func road_goals(c: CharacterData, data: GameData, flags: Dictionary, toda
 	# GOAL-009: the sect road. A rogue who has stood in a sect hall and walked away has chosen too.
 	rows.append(["Join a sect, or stay free (a sect hall takes recruits)", vet or not c.is_rogue() or bool(flags.get(SECT_HALL_FLAG, false))])
 	rows.append(["Take a sect mission or a bounty", vet or LifeStats.get_stat(c, "missions_done") >= 1 or LifeStats.get_stat(c, "bounties_done") >= 1 or not c.bounty.is_empty()])
-	rows.append(["Reach the 6th Layer of Qi Refining", vet or c.stage >= 6])
+	rows.append(["Reach the 6th Layer of Qi Refining", vet or (c.realm_index == 1 and c.stage >= 5)])  # stage is 0-based: 5 = 6th Layer
 	# GOAL-010: the last stretch of Qi Refining.
-	rows.append(["Reach the 9th Layer of Qi Refining", vet or c.stage >= 9])
+	rows.append(["Reach the 9th Layer of Qi Refining", vet or (c.realm_index == 1 and c.stage >= 8)])  # 8 = 9th Layer, the last
 	var pill_text := "Get a %s pill" % data.realms[mini(c.realm_index + 1, data.realms.size() - 1)].name
 	var where := _foundation_pill_where(c, data)
 	if where != "":

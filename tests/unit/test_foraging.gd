@@ -206,6 +206,20 @@ func test_tier_two_adds_pickups_and_tier_three_adds_copies() -> void:
 	assert_true(t3_amt > base_amt)
 
 
+## REVIEW: reaching a tier mid-day must not change which item lies in a slot already shown on the map.
+func test_tier_keeps_shown_slots() -> void:
+	var d := _gdata()
+	for region_id: String in ["qingshi_village", "withered_bone_marsh"]:
+		for day in range(0, 120):
+			var b := Foraging.nodes(d, region_id, day, 0, {}, 0)
+			for tier in [2, 3]:
+				var t := Foraging.nodes(d, region_id, day, 0, {}, tier)
+				assert_true(t.size() >= b.size())
+				for i in b.size():
+					assert_eq(t[i]["item"], b[i]["item"], "%s day %d tier %d slot %d" % [region_id, day, tier, i])
+					assert_true(int(t[i]["amount"]) - int(b[i]["amount"]) in [0, 1])
+
+
 func test_tier_three_value_stays_within_cap() -> void:
 	var d := _gdata()
 	var total := 0.0

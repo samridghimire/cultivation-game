@@ -54,7 +54,11 @@ static func nodes(data: GameData, region_id: String, day: int, realm_index: int,
 		return out
 	var count_range: Array = def.get("count", [0, 0])
 	var count := rng.randi_range(int(count_range[0]), int(count_range[1]))
-	if tier >= 2 and count == int(count_range[1]) and rng.randf() < 0.5:
+	# REVIEW: the eye's rolls use their own stream, so reaching a tier mid-day never changes the slots already shown
+	# (the extra slot is appended last and the bonus copy only touches `amount`).
+	var eye := RandomNumberGenerator.new()
+	eye.seed = hash("forage-eye:%s:%d" % [region_id, day])
+	if tier >= 2 and count == int(count_range[1]) and eye.randf() < 0.5:
 		count += 1  # FORAGE-005: on half of the full days the eye finds one more (about +17% overall)
 	for slot in count:
 		var roll := rng.randf() * total
@@ -66,7 +70,7 @@ static func nodes(data: GameData, region_id: String, day: int, realm_index: int,
 				break
 		var lo := int(pick.get("min", 1))
 		var amount := rng.randi_range(lo, int(pick.get("max", lo)))
-		if tier >= 3 and rng.randf() < BONUS_COPY_CHANCE:
+		if tier >= 3 and eye.randf() < BONUS_COPY_CHANCE:
 			amount += 1
 		if not Effects.flag_active(flags, flag_key(region_id, slot), day):
 			out.append({"slot": slot, "item": String(pick["item"]), "amount": amount})

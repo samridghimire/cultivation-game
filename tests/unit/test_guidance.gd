@@ -6046,7 +6046,9 @@ func test_road_goals_foundation_stretch() -> void:
 	assert_false(goals[9]["done"])
 	assert_true(String(goals[10]["text"]).contains("(now "))
 	assert_false(goals[10]["done"])
-	c.stage = 9
+	c.stage = 7  # the 8th Layer (stage is 0-based)
+	assert_false(Guidance.road_goals(c, data(), flags)[8]["done"])
+	c.stage = 8  # the 9th Layer, the last one, so the goal can be met before Foundation
 	assert_true(Guidance.road_goals(c, data(), flags)[8]["done"])
 	c.breakthrough_pill = "x"
 	assert_true(Guidance.road_goals(c, data(), flags)[9]["done"])
@@ -6088,5 +6090,7 @@ func test_road_goals_sect_and_layer_goals() -> void:
 	c.bounty = {"id": "x", "until_day": 9}
 	assert_true(Guidance.road_goals(c, data(), flags)[6]["done"])
 	assert_false(Guidance.road_goals(c, data(), flags)[7]["done"])
-	c.stage = 6
+	c.stage = 4  # the 5th Layer (stage is 0-based)
+	assert_false(Guidance.road_goals(c, data(), flags)[7]["done"])
+	c.stage = 5  # the 6th Layer
 	assert_true(Guidance.road_goals(c, data(), flags)[7]["done"])
