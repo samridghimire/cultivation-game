@@ -2,6 +2,17 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-11-05 (planner, 00:15 UTC)
+- 12 tasks landed on 2026-11-02 (GFX-061/062/064/065, WU-439, CAL-005, WILD-011, MISSION-002, GOAL-009, FORAGE-005, C-284,
+  QA-193 part 1); nothing landed 2026-11-03/04 (probably the weekly usage ran out). Live claim: WILD-012 (00:06 today).
+- C-297 has a finished commit (ae050ab) on `claude/C-297-hunter-rumors-ready` that never reached main; the C-297 row says to
+  cherry-pick it. The cleanup action has not removed that 3-day-old claim: check the workflow if more stale claims pile up.
+- Planner shots: marsh calm and map roads fixed (good). 1280x720 text glyph breaks -> GFX-066; arrival card over Elder Mo and
+  the [E] prompt over labels -> WU-441 (spec file); Azure Peak dreary, sect hall tiny -> GFX-068 (spec file).
+- New systems line: market days with changing wares (MARKET-007 spec file, MARKET-008, WU-445, C-299), GOAL-010 road to
+  Foundation, WILD-013 in-season beasts (+C-300), SEASON-001 season digest, WILD-014 great beasts return (+C-301), WU-443 road card.
+- Next planner: view WU-441/GFX-066/GFX-068 shots when they land; the owner still has not answered GFX-002 (art pack).
+
 ## State on 2026-11-02 (planner, 18:15 UTC)
 - 16 tasks landed (GFX-055/058/059/060, WU-435/437/438, GUIDE-210/211, GOAL-008, WILD-009/010, FORAGE-004, C-293,
   QA-190/191). Review fc7f679..9727a4a fixed GOAL-008 inline (great beast above the realm). No live claims at 18:15.

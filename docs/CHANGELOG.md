@@ -2,6 +2,18 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-11-02 [FORAGE-005] Foraging often sharpens your eye: more finds on some days and the odd extra copy.
+- 2026-11-02 [GFX-064] The smithy and the scroll pavilion look like buildings, and the market street's flagstones show through snow.
+- 2026-11-02 [WU-439] Unexplored places on the world map hint at what waits there, and the region your goal points at is marked.
+- 2026-11-02 [MISSION-002] A sect's own hall hands missions only to its own disciples.
+- 2026-11-02 [GOAL-009] More road goals: choose a sect or freedom, take a first mission or bounty, reach the 6th Layer.
+- 2026-11-02 [GFX-065] The first-hour screens were checked again; the key strip is wider and the arrival card has its own screenshot.
+- 2026-11-02 [WILD-011] The great-beast reminder no longer nags about beasts you have already beaten.
+- 2026-11-02 [QA-193] The combat simulation now counts roaming beasts and great beasts.
+- 2026-11-02 [GFX-062] The marsh ground is calmer, and beasts never spawn on top of places.
+- 2026-11-02 [CAL-005] The week has named days, and the great-beast goal says which day the next one walks.
+- 2026-11-02 [C-284] Every named villager has likes and dislikes for gifts.
+- 2026-11-02 [GFX-061] Roads on the world map stop at the towns instead of running through their names.
 - 2026-11-02 [WILD-010] Beating a great beast makes you known in its region.
 - 2026-11-02 [GFX-058] Fallen Star Market's big shops look like buildings, and the town has gardens instead of boulders.
 - 2026-11-02 [GUIDE-211] A forage find says what it is used for and what it sells for.
