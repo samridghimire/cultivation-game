@@ -35,5 +35,6 @@ window/stretch/aspect="expand"
 renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.mobile="gl_compatibility"
 textures/canvas_textures/default_texture_filter=0
-2d/snap/snap_2d_transforms_to_pixel=true
-2d/snap/snap_2d_vertices_to_pixel=true
+; GFX-066: pixel snapping drops and merges glyphs at the fractional stretch (0.9 at 1280x720), so it stays off.
+2d/snap/snap_2d_transforms_to_pixel=false
+2d/snap/snap_2d_vertices_to_pixel=false
