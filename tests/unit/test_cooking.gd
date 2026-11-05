@@ -97,3 +97,18 @@ func test_folk_ask_for_fish_exists() -> void:
 	for ask: Dictionary in data().family["folk_requests"]["asks"]:
 		found = found or String(ask["item"]) == "silver_carp"
 	assert_true(found)
+
+
+## C-302: each weather herb cooks into a dish with an effect, and its description hints the use.
+func test_c302_weather_herb_dishes() -> void:
+	for pair: Array in [["rain_cap_mushroom", "rain_cap_broth"], ["fogbloom_moss", "fogbloom_tonic"], ["frostbell_herb", "frostbell_tea"]]:
+		var c := new_character()
+		c.add_item(pair[0], 2)
+		assert_true(Cooking.cook(c, data(), pair[1])["ok"], pair[1])
+		assert_eq(c.item_count(pair[1]), 1)
+		assert_true(String(data().items[pair[0]]["description"]).contains("cook") or String(data().items[pair[0]]["description"]).contains("brew") or String(data().items[pair[0]]["description"]).contains("steep"), pair[0])
+	var c2 := new_character()
+	c2.add_item("rain_cap_mushroom", 2)
+	Cooking.cook(c2, data(), "rain_cap_broth")
+	Items.use(c2, data(), "rain_cap_broth", {})
+	assert_gt(Buffs.multiplier(c2, "max_hp"), 1.0)
