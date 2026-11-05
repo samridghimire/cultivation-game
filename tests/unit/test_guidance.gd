@@ -5985,7 +5985,7 @@ func test_road_goals_veteran_and_flags() -> void:
 	flags["discovered_misty_forest"] = true
 	assert_true(Guidance.road_goals(c, data(), flags)[4]["done"])
 	var vet := _after_ladder()
-	vet.realm_index = 2
+	vet.realm_index = 3
 	for g in Guidance.road_goals(vet, data(), flags):
 		assert_true(g["done"])
 	assert_false(Guidance.road_goals_active(vet, data(), flags))
@@ -6056,9 +6056,61 @@ func test_road_goals_foundation_stretch() -> void:
 	LifeStats.add(c, "breakthroughs_failed")
 	assert_true(Guidance.road_goals(c, data(), flags)[10]["done"])
 	var vet := _after_ladder()
-	vet.realm_index = 2
+	vet.realm_index = 3
 	for g in Guidance.road_goals(vet, data(), flags):
 		assert_true(g["done"])
+
+
+func _foundation_walker() -> CharacterData:
+	var c := _after_ladder()
+	c.realm_index = 2
+	c.stage = 0
+	return c
+
+
+func test_core_road_goals_appear_at_foundation_and_done_edges() -> void:
+	var flags := {Guidance.ELDER_MO_FLAG: true}
+	var c := _foundation_walker()
+	var goals := Guidance.road_goals(c, data(), flags, 100)
+	assert_eq(goals.size(), 15)
+	assert_eq(goals[11]["text"], "Reach Foundation Establishment Middle")
+	assert_false(goals[11]["done"])
+	assert_true(String(goals[12]["text"]).begins_with("Beat a great beast of your realm: "), String(goals[12]["text"]))
+	assert_true(String(goals[13]["text"]).begins_with("Get a Core Formation pill"), String(goals[13]["text"]))
+	assert_true(String(goals[14]["text"]).begins_with("Reach Foundation Establishment Peak, then attempt Core Formation (now "), String(goals[14]["text"]))
+	c.stage = 1
+	assert_true(Guidance.road_goals(c, data(), flags, 100)[11]["done"])
+	c.breakthrough_pill = "core_forming_pill"
+	assert_true(Guidance.road_goals(c, data(), flags, 100)[13]["done"])
+	assert_false(Guidance.road_goals(c, data(), flags, 100)[14]["done"])
+	c.breakthrough_failures = 1
+	assert_true(Guidance.road_goals(c, data(), flags, 100)[14]["done"])
+	assert_true(Guidance.road_goals_active(c, data(), flags))
+
+
+func test_core_road_goals_not_shown_to_qi_refining_and_veteran_done() -> void:
+	var flags := {Guidance.ELDER_MO_FLAG: true}
+	assert_eq(Guidance.road_goals(_after_ladder(), data(), flags, 100).size(), 11)
+	var vet := _foundation_walker()
+	vet.realm_index = 3
+	for g in Guidance.road_goals(vet, data(), flags, 100):
+		assert_true(g["done"])
+	assert_false(Guidance.road_goals_active(vet, data(), flags))
+
+
+func test_core_road_goal_beast_skipped_when_all_beaten_and_region_pointers() -> void:
+	var flags := {Guidance.ELDER_MO_FLAG: true}
+	var c := _foundation_walker()
+	c.stage = 1  # the Middle goal is done, so the pointer is on the beast
+	var r := Guidance.road_goal_region(c, data(), flags, 100)
+	assert_eq(r, String(Guidance._next_great(c, data(), 100)["region"]))
+	for rid: String in data().regions:
+		var def: Dictionary = data().regions[rid].get("roamers", {}).get("great", {})
+		if not def.is_empty():
+			c.great_beasts[String(def["enemy"])] = 1
+	var goals := Guidance.road_goals(c, data(), flags, 100)
+	assert_eq(goals.size(), 14)
+	assert_true(String(goals[12]["text"]).begins_with("Get a Core Formation pill"), String(goals[12]["text"]))
 
 
 func test_road_goal_pill_text_names_treasury_or_shop() -> void:

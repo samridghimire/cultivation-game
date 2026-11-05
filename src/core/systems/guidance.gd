@@ -3226,10 +3226,43 @@ static func road_goals(c: CharacterData, data: GameData, flags: Dictionary, toda
 	rows.append([pill_text, vet or c.breakthrough_pill != "" or not breakthrough_items(c, data).is_empty()])
 	rows.append(["Attempt %s (now %d%%)" % [data.realms[mini(c.realm_index + 1, data.realms.size() - 1)].name, roundi(Cultivation.breakthrough_chance(c, data) * 100)],
 		vet or LifeStats.get_stat(c, "breakthroughs") + LifeStats.get_stat(c, "breakthroughs_failed") >= 1 or c.breakthrough_failures >= 1])
+	if c.realm_index >= 2:
+		for extra: Dictionary in _core_road_rows(c, data, today):
+			rows.append([extra["text"], extra["done"]])
 	var out: Array[Dictionary] = []
 	for row: Array in rows:
 		out.append({"text": row[0], "done": row[1]})
 	return out
+
+
+## GOAL-011: the four Foundation road goals as {text, done, region} (region "" = none). Only built from
+## Foundation on; a veteran (Core Formation or beyond) sees them done. The great-beast row is left out
+## when no unbeaten beast of this realm is left.
+static func _core_road_rows(c: CharacterData, data: GameData, today: int) -> Array[Dictionary]:
+	var vet := c.realm_index >= 3
+	var rows: Array[Dictionary] = []
+	var next_name: String = data.realms[mini(c.realm_index + 1, data.realms.size() - 1)].name
+	rows.append({"text": "Reach %s Middle" % data.realms[2].name, "done": vet or (c.realm_index == 2 and c.stage >= 1), "region": ""})
+	var next_great := _next_great(c, data, today)
+	var beast_rid: String = next_great["region"]
+	if beast_rid != "":
+		var away: int = int(next_great["day"]) - today
+		var when := "today" if away == 0 else ("tomorrow" if away == 1 else "in %d days" % away)
+		var enemy := Wildlife.active_great_enemy(c, data, beast_rid)
+		var done_beast := vet
+		for rid: String in data.regions:
+			var gdef: Dictionary = data.regions[rid].get("roamers", {}).get("great", {})
+			if not gdef.is_empty() and String(gdef.get("min_realm", "")) == data.realms[2].id and c.great_beasts.has(String(gdef.get("enemy", ""))):
+				done_beast = true
+		rows.append({"text": "Beat a great beast of your realm: %s walks %s on %s" % [Wildlife.display_name(data, enemy, true), _region_name(data, beast_rid), Calendar.weekday_name(int(next_great["day"]))] + (" (%s)" % when), "done": done_beast, "region": beast_rid})
+	var pill_text := "Get %s pill" % Text.a(next_name)
+	var where := _foundation_pill_where(c, data)
+	if where != "":
+		pill_text += ": " + where
+	var pill_region := "" if where.begins_with("the sect treasury") else _foundation_pill_region(c, data)
+	rows.append({"text": pill_text, "done": vet or c.breakthrough_pill != "" or not breakthrough_items(c, data).is_empty(), "region": pill_region})
+	rows.append({"text": "Reach %s Peak, then attempt %s (now %d%%)" % [data.realms[2].name, next_name, roundi(Cultivation.breakthrough_chance(c, data) * 100)], "done": vet or c.breakthrough_failures >= 1, "region": ""})
+	return rows
 
 
 ## GOAL-010: where to get the next realm's pill: the sect treasury when `c`'s rank reaches it, else the
@@ -3288,6 +3321,10 @@ static func road_goal_region(c: CharacterData, data: GameData, flags: Dictionary
 	regions.append_array(["", "", "", "", "", ""])  # bounty, discovery, sect, mission, 6th layer, 9th layer
 	var sect_pill := _foundation_pill_where(c, data).begins_with("the sect treasury")
 	regions.append("" if sect_pill else _foundation_pill_region(c, data))
+	regions.append("")  # attempt Foundation
+	if c.realm_index >= 2:
+		for extra: Dictionary in _core_road_rows(c, data, today):
+			regions.append(String(extra["region"]))
 	var goals := road_goals(c, data, flags, today)
 	for i in goals.size():
 		if not bool(goals[i]["done"]):
@@ -3303,7 +3340,7 @@ static func _first_route_from(data: GameData, from_id: String, to_id: String) ->
 
 
 static func road_goals_active(c: CharacterData, data: GameData, flags: Dictionary) -> bool:
-	if c.realm_index >= 2 or not first_goals_done(c, data, flags):
+	if c.realm_index >= 3 or not first_goals_done(c, data, flags):
 		return false
 	for goal in road_goals(c, data, flags):
 		if not goal["done"]:
@@ -3569,10 +3606,10 @@ static func goal_ladder(id: String, c: CharacterData, data: GameData, flags: Dic
 static func active_goal_ladder(c: CharacterData, data: GameData, flags: Dictionary, clan: ClanData = null, today: int = 0) -> Array[Dictionary]:
 	if c.realm_index <= 1 and not first_goals_done(c, data, flags):
 		return first_goals(c, data, flags)
-	if road_goals_active(c, data, flags):
-		return road_goals(c, data, flags, today)
 	if foundation_goals_active(c, data, flags, clan):
 		return foundation_goals(c, data, flags, clan)
+	if road_goals_active(c, data, flags):
+		return road_goals(c, data, flags, today)
 	if core_goals_active(c, data, flags, clan):
 		return core_goals(c, data, flags, clan)
 	if nascent_goals_active(c, data, flags, clan):
@@ -3851,7 +3888,7 @@ static func journal(c: CharacterData, data: GameData, flags: Dictionary, today: 
 				tone = "normal" if flagged else "warning"
 				flagged = true
 			_add(out, "First goals", ("[x] " if goal["done"] else "[ ] ") + String(goal["text"]), tone)
-	if road_goals_active(c, data, flags):
+	if road_goals_active(c, data, flags) and not foundation_goals_active(c, data, flags, clan):
 		var road_flagged := false
 		for goal in road_goals(c, data, flags, today):
 			var road_tone := "dim"
