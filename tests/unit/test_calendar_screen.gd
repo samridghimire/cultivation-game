@@ -158,3 +158,26 @@ func test_key_strip_fits_1280() -> void:
 	assert_true(label.get_minimum_size().x <= 600.0, "key strip %d px fits its 600 px slot" % int(label.get_minimum_size().x))
 	assert_true(label.text.contains("] cal"), "calendar listed")
 	label.queue_free()
+
+
+func test_cells_carry_weekday_and_great_beast_mark() -> void:
+	var s := _screen()
+	var screen: CalendarScreen = s[1]
+	screen.open()
+	await _frames()
+	var grid := screen.get("_grid") as GridContainer
+	var start := VillageCalendar.month_start(GameClock.total_days)
+	for d in range(1, 31):
+		var cell := grid.get_child(d - 1) as Button
+		assert_true(cell.text.contains(Calendar.weekday_short(start + d - 1)), "day %d shows its weekday" % d)
+		var entries: Array = (screen.get("_grid_entries") as Dictionary).get(d, [])
+		for e: Dictionary in entries:
+			if String(e["kind"]) == "great_beast":
+				assert_true(cell.find_child("Icon_great_beast", true, false) != null or int(cell.get_meta("icons")) >= 3, "paw mark on day %d" % d)
+	screen.queue_free()
+	await _frames()
+
+
+func test_date_string_names_the_weekday() -> void:
+	assert_eq(Calendar.format_date_weekday(1), "Year 1, Month 1, Day 2, Moonday")
+	assert_true(GameClock.date_string().ends_with(Calendar.weekday_name(GameClock.total_days)), "HUD date ends with the weekday")

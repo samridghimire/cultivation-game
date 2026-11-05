@@ -77,6 +77,16 @@ static func format_date(total_days: int) -> String:
 	return "Year %d, Month %d, Day %d" % [year_of(total_days), month_of(total_days), day_of(total_days)]
 
 
+## "Year 1, Month 1, Day 2, Moonday" (WU-440: the HUD date line).
+static func format_date_weekday(total_days: int) -> String:
+	return "%s, %s" % [format_date(total_days), weekday_name(total_days)]
+
+
+## Three-letter weekday ("Sun", "Moo", "Fir"...), used on calendar cells.
+static func weekday_short(total_days: int) -> String:
+	return weekday_name(total_days).substr(0, 3)
+
+
 ## Human-readable duration, e.g. "1 year and 2 months" or "5 days".
 @warning_ignore("integer_division")
 static func format_duration(days: int) -> String:

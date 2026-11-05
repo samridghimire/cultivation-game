@@ -123,7 +123,7 @@ func _build() -> void:
 		var cell := Button.new()
 		cell.name = "Day_%d" % d
 		cell.custom_minimum_size = CELL_SIZE
-		cell.text = str(d)
+		cell.text = "%d %s" % [d, Calendar.weekday_short(start + d - 1)]
 		cell.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		cell.add_theme_font_size_override("font_size", 18)
 		cell.set_meta("day", d)
@@ -211,7 +211,7 @@ func _today_style() -> StyleBoxFlat:
 
 func _show_day(d: int) -> void:
 	var total := _month_start() + d - 1
-	var lines: Array[String] = [Calendar.format_date(total) + ("  (today)" if total == GameClock.total_days else "")]
+	var lines: Array[String] = [Calendar.format_date_weekday(total) + ("  (today)" if total == GameClock.total_days else "")]
 	var entries: Array = _grid_entries.get(d, [])
 	if entries.is_empty():
 		if total >= GameClock.total_days:

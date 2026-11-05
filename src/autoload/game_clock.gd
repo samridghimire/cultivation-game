@@ -23,7 +23,7 @@ func reset() -> void:
 
 
 func date_string() -> String:
-	return Calendar.format_date(total_days)
+	return Calendar.format_date_weekday(total_days)
 
 
 func to_dict() -> Dictionary:
