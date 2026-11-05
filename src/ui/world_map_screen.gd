@@ -709,6 +709,9 @@ func _show_details() -> void:
 	var by_path := forage_line(GameState.player, data, _selected, GameState.current_region, GameClock.total_days, GameState.world_flags)
 	if by_path != "":
 		_today.text += ("\n" if _today.text != "" else "") + by_path
+	var market_day := Places.market_day_line(region, GameClock.total_days)
+	if market_day != "" and not is_unexplored(GameState.player, _selected, GameState.current_region):
+		_today.text += ("\n" if _today.text != "" else "") + market_day
 	_today.visible = _today.text != ""
 	_description.text = String(region.get("description", ""))
 	var name_here := renown_note(GameState.player, data, _selected)

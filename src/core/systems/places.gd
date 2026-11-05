@@ -110,6 +110,40 @@ static func rotating_picks(place: Dictionary, today: int) -> Array[String]:
 	return picks
 
 
+## WU-445: true while `place` is a rotating-stock stall open on `today` (draws the bunting and sparkle).
+static func is_market_day_stall(place: Dictionary, today: int) -> bool:
+	return place.has("rotating_stock") and is_open(place, today)
+
+
+## WU-445: names of the rotating-stock stalls open today in `region`.
+static func market_day_stalls(region: Dictionary, today: int) -> Array[String]:
+	var out: Array[String] = []
+	for place: Dictionary in region.get("places", []):
+		if is_market_day_stall(place, today):
+			out.append(String(place.get("display_name", "Market")))
+	return out
+
+
+## WU-445: "Market day today: Travelling Market Stall (new wares)" for the world map region detail; "" otherwise.
+static func market_day_line(region: Dictionary, today: int) -> String:
+	var stalls := market_day_stalls(region, today)
+	if stalls.is_empty():
+		return ""
+	return "Market day today: %s (new wares)" % " and ".join(stalls)
+
+
+## WU-445: "  New today: A, B, C" for the shop title of the stall called `stall_name` in `region`; "" when it has none.
+static func new_today_note(region: Dictionary, stall_name: String, today: int, data: GameData) -> String:
+	for place: Dictionary in region.get("places", []):
+		if String(place.get("display_name", "")) != stall_name:
+			continue
+		var names: Array[String] = []
+		for id: String in rotating_picks(place, today):
+			names.append(String(data.items.get(id, {}).get("name", id)))
+		return "" if names.is_empty() else "  New today: " + ", ".join(names)
+	return ""
+
+
 ## MARKET-007: `stock_tags` plus today's rotating picks.
 static func stock_tags_today(place: Dictionary, today: int) -> Array:
 	var tags: Array = (place.get("stock_tags", []) as Array).duplicate()

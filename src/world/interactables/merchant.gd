@@ -57,6 +57,25 @@ func _draw() -> void:
 	super._draw()
 	if GameState.player != null and shows_manual_mark(GameState.player, GameState.data, GameState.current_region, display_name):
 		_draw_manual_mark()
+	if shows_market_mark(open_days, rotating_stock, GameClock.total_days):
+		_draw_market_mark()
+
+
+## WU-445: true on a day this rotating-stock stall is open.
+static func shows_market_mark(days: Array, rotating: Dictionary, today: int) -> bool:
+	return Places.is_market_day_stall({"open_days": days, "rotating_stock": rotating}, today)
+
+
+## Bunting flag on a pole at the stall's top-right corner plus a gold "new wares" sparkle (static, so reduce_motion-safe).
+func _draw_market_mark() -> void:
+	var pole := Vector2(size.x / 2.0 - 4.0, -size.y / 2.0)
+	var gold := Color(1.0, 0.85, 0.3)
+	draw_line(pole, pole + Vector2(0, -26), Color(0.4, 0.28, 0.16), 2.0)
+	draw_colored_polygon(PackedVector2Array([pole + Vector2(0, -26), pole + Vector2(16, -21), pole + Vector2(0, -16)]), Color(0.8, 0.2, 0.2))
+	var s := pole + Vector2(-14, -22)
+	draw_line(s + Vector2(-5, 0), s + Vector2(5, 0), gold, 2.0)
+	draw_line(s + Vector2(0, -5), s + Vector2(0, 5), gold, 2.0)
+	draw_circle(s, 2.0, Color(1, 1, 0.8))
 
 
 ## A small scroll above the merchant (placeholder art).

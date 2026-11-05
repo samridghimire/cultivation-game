@@ -225,3 +225,23 @@ func test_wanted_validation() -> void:
 func test_hint_line_names_wanted() -> void:
 	var today := Places.hint_line(_region(), DAY_10, 5, _gd())
 	assert_true("; wants " in today and "(x1.5)" in today, today)
+
+
+func test_wu445_market_day_marks_only_on_open_days() -> void:
+	var stall := _stall()
+	assert_true(Places.is_market_day_stall(stall, DAY_10))
+	assert_false(Places.is_market_day_stall(stall, DAY_10 + 1))
+	assert_false(Places.is_market_day_stall({"open_days": [10]}, DAY_10), "no rotating stock, no mark")
+	assert_true(load("res://src/world/interactables/merchant.gd").shows_market_mark(stall["open_days"], stall["rotating_stock"], DAY_10))
+	assert_false(load("res://src/world/interactables/merchant.gd").shows_market_mark(stall["open_days"], stall["rotating_stock"], DAY_10 + 1))
+
+
+func test_wu445_map_line_and_shop_title_note() -> void:
+	var line := Places.market_day_line(_region(), DAY_10)
+	assert_true(line.contains("Travelling Market Stall") and line.contains("new wares"), line)
+	assert_eq(Places.market_day_line(_region(), DAY_10 + 1), "")
+	var note := Places.new_today_note(_region(), "Travelling Market Stall", DAY_10, _gd())
+	assert_true(note.begins_with("  New today: "), note)
+	assert_eq(note.split(", ").size(), 3, "three wares")
+	assert_eq(Places.new_today_note(_region(), "Travelling Market Stall", DAY_10 + 1, _gd()), "")
+	assert_eq(Places.new_today_note(_region(), "Wandering Merchant", DAY_10, _gd()), "")

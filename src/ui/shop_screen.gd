@@ -220,7 +220,7 @@ func _hud_hint() -> String:
 ## Opens the merchant's wares (see merchant.gd for max_price / stock_tags / faction).
 func open(merchant_name: String = "Merchant", max_price: int = 0, stock_tags: Array = [], faction: String = "", buy_tags: Array = []) -> void:
 	GameState.shop_name = merchant_name
-	_title.text = merchant_name + friend_note(GameState.data, GameState.current_region, merchant_name, GameState.world_flags, GameClock.total_days) + price_note(GameState.player, GameState.data, faction) + renown_note(GameState.player, GameState.data, GameState.current_region) + deal_note(GameState.player, GameState.current_region, GameClock.total_days)
+	_title.text = merchant_name + friend_note(GameState.data, GameState.current_region, merchant_name, GameState.world_flags, GameClock.total_days) + price_note(GameState.player, GameState.data, faction) + renown_note(GameState.player, GameState.data, GameState.current_region) + deal_note(GameState.player, GameState.current_region, GameClock.total_days) + Places.new_today_note(GameState.data.regions.get(GameState.current_region, {}), merchant_name, GameClock.total_days, GameState.data)
 	_max_price = max_price
 	_stock_tags = stock_tags
 	_buy_tags = buy_tags
