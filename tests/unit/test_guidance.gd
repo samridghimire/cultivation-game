@@ -6245,3 +6245,51 @@ func test_season_ending_said_right() -> void:
 	c.visited_regions.clear()
 	assert_true(Guidance.season_ending(c, data(), 357, {}).contains("Lantern Festival"))
 	assert_eq(Guidance.season_ending(c, data(), 357, {Guidance.seen_key("lantern_festival"): Calendar.year_of(357)}), "")
+
+
+## TODAY-001: market day first/next, wanted item, great beast, season ending, order and cap.
+func test_today_lines_market_wanted_beast_and_cap() -> void:
+	var d := data()
+	var c := new_character()
+	c.realm_index = 1
+	c.visited_regions.append("qingshi_village")
+	var stall := {}
+	for p: Dictionary in d.regions["qingshi_village"]["places"]:
+		if p.has("open_days") and p.has("wanted"):
+			stall = p
+	assert_false(stall.is_empty(), "Qingshi has a wanted-item stall")
+	var open_day := -1
+	for day in range(300, 340):
+		if Places.is_open(stall, day):
+			open_day = day
+			break
+	var lines := Guidance.today_lines(c, d, {}, [], open_day, "qingshi_village")
+	assert_true(lines.size() > 0 and lines[0].begins_with("Market day today at"), str(lines))
+	var wants := false
+	for l in lines:
+		if l.contains(" wants "):
+			wants = true
+	assert_true(wants, "the stall's wanted item is named: %s" % str(lines))
+	var soon := Guidance.today_lines(c, d, {}, [], open_day - 2, "qingshi_village")
+	var found := false
+	for l in soon:
+		if l.begins_with("Market day at") and l.contains("in 2 days"):
+			found = true
+	assert_true(found, "next market within 3 days: %s" % str(soon))
+	assert_false(" ".join(Guidance.today_lines(c, d, {}, [], open_day + 4, "qingshi_village")).contains("Market day"), "no market in sight")
+	# Great beast today, then baited, then tracks the day before.
+	var great: Dictionary = d.regions["misty_forest"]["roamers"]["great"]
+	var wd := Wildlife.great_day("misty_forest", great)
+	var beast := String(d.enemies[String(great["enemy"])]["name"])
+	var g := Guidance.today_lines(c, d, {}, [], wd, "misty_forest")
+	assert_true(g[0].contains(beast) and g[0].contains("walks"), str(g))
+	var baited := Guidance.today_lines(c, d, {Wildlife.bait_flag("misty_forest"): wd}, [], wd, "misty_forest")
+	assert_true(baited[0].contains("baited"), str(baited))
+	var tr := Guidance.today_lines(c, d, {}, [], wd - 1, "misty_forest")
+	assert_true(tr[0].contains("tracks"), str(tr))
+	assert_true(Guidance.today_lines(c, d, {}, [], wd + 1, "misty_forest").size() <= Guidance.TODAY_MAX)
+	# Season ending closes the list.
+	c.visited_regions.append("misty_forest")
+	var end := Guidance.today_lines(c, d, {}, [], 268, "misty_forest")
+	assert_true(end[end.size() - 1].begins_with("Autumn ends"), str(end))
+	assert_eq(Guidance.today_lines(c, d, {}, [], 0, "no_such_region").size(), 0)

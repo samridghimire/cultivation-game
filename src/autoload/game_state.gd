@@ -670,6 +670,13 @@ func travel(region_id: String) -> void:
 	SaveManager.autosave()
 
 
+## TODAY-001: what today holds here (festival, great beast, market, forage, reminders, season's end).
+func today_lines() -> PackedStringArray:
+	if player == null:
+		return PackedStringArray()
+	return Guidance.today_lines(player, data, world_flags, world_events, GameClock.total_days, current_region, npcs, npc_favor)
+
+
 ## GUIDE-209: one log line for what is notable here today; the HUD shows it for that day.
 func _post_arrival_line() -> void:
 	var day := GameClock.total_days

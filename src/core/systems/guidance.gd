@@ -30,6 +30,7 @@ const ARRIVAL_MAX_ITEMS := 3  ## GUIDE-209
 const SEASON_DIGEST_MAX := 4  ## SEASON-001
 const SEASON_ENDING_DAYS := 3  ## SEASON-003: days before a season ends that its leaving line is posted.
 const SEASON_ENDING_MAX := 5
+const TODAY_MAX := 8  ## TODAY-001
 const CHORE_REGION := "qingshi_village"
 const QI_BUY_KEEP := 20  ## Stones the qi-pill hint leaves for the clinic (GUIDE-126).
 const HEADLINE_CHARS := 120  ## The HUD shows this many characters of a hint (HUD.HINT_MAX_CHARS, WU-305).
@@ -181,11 +182,9 @@ static func _season_region_lines(data: GameData, rid: String, key: String, with_
 static func arrival_line(c: CharacterData, data: GameData, region_id: String, day: int, flags: Dictionary, weather: String = "", events: Array = []) -> String:
 	var items: PackedStringArray = []
 	# GUIDE-210: a festival running here today comes first.
-	for instance: Dictionary in WorldEvents.active_in(events, region_id):
-		var event_id := String(instance.get("id", ""))
-		if WorldEvents.is_festival(data, event_id) and int(instance.get("end_day", -1)) >= day:
-			items.append("the %s is on" % WorldEvents.event_name(data, event_id))
-			break
+	var fest := _festival_today(data, events, region_id, day)
+	if fest != "":
+		items.append("the %s is on" % fest)
 	var great := Wildlife.great_roamer(c, data, region_id, day, flags)
 	if not great.is_empty():
 		items.append("the %s roams" % String(data.enemies.get(String(great["enemy"]), {}).get("name", "great beast")))
@@ -193,19 +192,129 @@ static func arrival_line(c: CharacterData, data: GameData, region_id: String, da
 		if place.has("open_days") and Places.is_open(place, day):
 			items.append("%s is open" % String(place.get("display_name", "a stall")))
 			break
-	var forage := Foraging.unpicked(data, region_id, day, c.realm_index, flags).size()
-	if forage > 0:
-		items.append("%d %s by the path" % [forage, "thing" if forage == 1 else "things"])
-	if weather != "" and Fishing.extra_draws(data, weather) > 0 and not Fishing.too_wild(weather):
-		for place: Dictionary in data.regions.get(region_id, {}).get("places", []):
-			if String(place.get("type", "")) == "fishing":
-				items.append("%s-fish biting" % weather)
-				break
+	var forage := _forage_phrase(c, data, region_id, day, flags)
+	if forage != "":
+		items.append(forage)
+	var fish := _fish_phrase(data, region_id, weather)
+	if fish != "":
+		items.append(fish)
 	if items.is_empty():
 		return ""
 	if items.size() > ARRIVAL_MAX_ITEMS:
 		items.resize(ARRIVAL_MAX_ITEMS)
 	return "Today in %s: %s." % [Exploration.region_name(data, region_id), ", ".join(items)]
+
+
+## Name of the festival running in `region_id` today, "" when none.
+static func _festival_today(data: GameData, events: Array, region_id: String, day: int) -> String:
+	for instance: Dictionary in WorldEvents.active_in(events, region_id):
+		var event_id := String(instance.get("id", ""))
+		if WorldEvents.is_festival(data, event_id) and int(instance.get("end_day", -1)) >= day:
+			return WorldEvents.event_name(data, event_id)
+	return ""
+
+
+## "3 things by the path", "" when nothing is unpicked.
+static func _forage_phrase(c: CharacterData, data: GameData, region_id: String, day: int, flags: Dictionary) -> String:
+	var forage := Foraging.unpicked(data, region_id, day, c.realm_index, flags).size()
+	if forage <= 0:
+		return ""
+	return "%d %s by the path" % [forage, "thing" if forage == 1 else "things"]
+
+
+## "rain-fish biting" when the weather helps the region's fishing place, else "".
+static func _fish_phrase(data: GameData, region_id: String, weather: String) -> String:
+	if weather != "" and Fishing.extra_draws(data, weather) > 0 and not Fishing.too_wild(weather):
+		for place: Dictionary in data.regions.get(region_id, {}).get("places", []):
+			if String(place.get("type", "")) == "fishing":
+				return "%s-fish biting" % weather
+	return ""
+
+
+## TODAY-001: up to TODAY_MAX short lines on what today holds here, in a fixed order, each only when true: a festival
+## and its contest, a great beast (tracks, baited), market day now or within 3 days, a stall's wanted item, in-season
+## beasts and forage/fishing, today's and tomorrow's calendar reminders, the season's ending. Pure.
+static func today_lines(c: CharacterData, data: GameData, flags: Dictionary, active_events: Array, day: int, region_id: String,
+		npcs: Dictionary = {}, favor: Dictionary = {}) -> PackedStringArray:
+	var out: PackedStringArray = []
+	var rname := Exploration.region_name(data, region_id)
+	var year := Calendar.year_of(day)
+	# 1. Festival and its contest.
+	var fest := _festival_today(data, active_events, region_id, day)
+	if fest != "":
+		var line := "The %s is on in %s" % [fest, rname]
+		for instance: Dictionary in WorldEvents.active_in(active_events, region_id):
+			var eid := String(instance.get("id", ""))
+			if not WorldEvents.is_festival(data, eid):
+				continue
+			var contest := FestivalContest.contest_of(data, eid)
+			if not contest.is_empty():
+				if FestivalContest.check(data, active_events, c, eid, region_id, flags, year) == "":
+					line += "; the %s is open" % String(contest["name"])
+				var champ := FestivalContest.champion_text(flags, eid, year)
+				if champ != "":
+					line += " (%s)" % champ
+			break
+		out.append(line + ".")
+	# 2. A great beast walking here today, or its tracks.
+	var great := Wildlife.great_roamer(c, data, region_id, day, flags)
+	if not great.is_empty():
+		var bn := String(data.enemies.get(String(great["enemy"]), {}).get("name", "great beast"))
+		out.append("The %s walks %s today%s." % [bn, rname, " (you baited its trail)" if int(flags.get(Wildlife.bait_flag(region_id), -1)) == day else ""])
+	elif Wildlife.tracks_today(data, region_id, day, c.realm_index):
+		out.append("Fresh tracks in %s: a great beast walks tomorrow%s." % [rname, " (you baited the trail)" if int(flags.get(Wildlife.bait_flag(region_id), -1)) == day + 1 else ""])
+	# 3. Market day here, or the next within 3 days.
+	var market := _market_today_line(data, region_id, day)
+	if market != "":
+		out.append(market)
+	# 4. A stall's wanted item.
+	for place: Dictionary in data.regions.get(region_id, {}).get("places", []):
+		var wanted := Places.wanted_phrase(place, day, data)
+		if wanted != "":
+			out.append("%s wants %s today." % [String(place.get("display_name", "A stall")), wanted])
+			break
+	# 5. In-season beasts, seasonal or weather forage, fishing.
+	var season := Wildlife.season_clause(data, region_id, day)
+	if season != "":
+		out.append(season)
+	var bits: PackedStringArray = []
+	var forage := _forage_phrase(c, data, region_id, day, flags)
+	if forage != "":
+		bits.append(forage)
+	var fish := _fish_phrase(data, region_id, Weather.of(data, region_id, day))
+	if fish != "":
+		bits.append(fish)
+	if not bits.is_empty():
+		out.append("%s: %s." % [rname, ", ".join(bits)])
+	# 6. Calendar reminders for today and tomorrow.
+	for e: Dictionary in VillageCalendar.upcoming(data, npcs, favor, active_events, region_id, day, 1, c, flags):
+		if ["market", "great_beast", "festival_active", "festival_month", "forage", "season"].has(String(e["kind"])):
+			continue
+		var rem := VillageCalendar._reminder_line(data, npcs, flags, e)
+		if rem != "":
+			out.append(rem.replace("Tomorrow: ", "Today: "))
+	for rem in VillageCalendar.reminders(data, npcs, favor, active_events, region_id, day, c, flags):
+		if not rem.begins_with("Tomorrow: market") and not rem.contains("great beast"):
+			out.append(rem)
+	# 7. The season ending.
+	var ending := season_ending(c, data, day, flags)
+	if ending != "":
+		out.append(ending)
+	if out.size() > TODAY_MAX:
+		out.resize(TODAY_MAX)
+	return out
+
+
+## "Market day today at X." or "Market day at X in 2 days."; "" when none within 3 days.
+static func _market_today_line(data: GameData, region_id: String, day: int) -> String:
+	for d in range(day, day + 4):
+		for place: Dictionary in data.regions.get(region_id, {}).get("places", []):
+			if place.has("open_days") and Places.is_open(place, d):
+				var nm := String(place.get("display_name", "the market"))
+				if d == day:
+					return "Market day today at %s." % nm
+				return "Market day at %s %s." % [nm, "tomorrow" if d == day + 1 else "in %d days" % (d - day)]
+	return ""
 
 
 ## Up to `limit` hints for `c`. `density` is the qi density where the player

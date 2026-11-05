@@ -3274,3 +3274,13 @@ func test_village_hunt() -> void:
 	assert_eq(gs.village_hunt_quarry(), "", "only where the hunt is posted")
 	assert_false(gs.join_village_hunt())
 	gs.end_session()
+
+
+## TODAY-001: the wrapper reads the live session.
+func test_today_lines_wrapper() -> void:
+	var gs := _game_state()
+	_start()
+	GameClock.total_days = 268
+	gs.current_region = "misty_forest"
+	assert_eq(gs.today_lines(), Guidance.today_lines(gs.player, gs.data, gs.world_flags, gs.world_events, 268, "misty_forest", gs.npcs, gs.npc_favor))
+	assert_true(gs.today_lines().size() <= Guidance.TODAY_MAX)
