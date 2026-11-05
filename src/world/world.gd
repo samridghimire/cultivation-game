@@ -801,6 +801,9 @@ func _spread_on_screen() -> void:
 			var chip: Rect2 = hud.current_prompt_rect()
 			if chip.size != Vector2.ZERO:
 				occupied.append(to_world * chip)
+	var gate := SectCourt.gate(_region)
+	if not gate.is_empty():  # GFX-074: the gate's name board is a blocker, so the exit label moves off it
+		occupied.append((SectCourt.gate_parts(gate)["stele"] as Rect2).grow(4.0))
 	for node: Interactable in nodes:  # GFX-069: the target's highlight box is a blocker for the other labels
 		if node.highlighted and node.visible:
 			var box := Rect2(node.position - node.size / 2.0, node.size).grow(8.0)
@@ -896,7 +899,7 @@ func _draw_sect_courts() -> void:
 	for place: Dictionary in _region.get("places", []):
 		if SectCourt.is_sect_hall(place):
 			var hall := Rect2(_vec(place["pos"]) - _vec(place.get("size", [64, 64])) / 2.0, _vec(place.get("size", [64, 64])))
-			SectCourt.draw_court(self, hall, SectCourt.court_rect(place, _region), snowy)
+			SectCourt.draw_court(self, hall, SectCourt.court_rect(place, _region), snowy, SectCourt.court_style(_region))
 	var g := SectCourt.gate(_region)
 	if not g.is_empty():
 		SectCourt.draw_gate(self, g, ThemeDB.fallback_font)

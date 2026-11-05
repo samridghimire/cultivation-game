@@ -6,7 +6,8 @@ extends RefCounted
 const SCALE := 1.6
 const STONE := 16.0
 const TOP_MARGIN := 22.0  ## grass between the court's north edge and the hall roof
-const GATE_X := 210.0  ## how far in from the map edge the gate stands
+const GATE_X := 250.0  ## how far in from the map edge the gate stands (GFX-074: its pillars stand >= 120 px clear of the exit post)
+const EXIT_CLEAR := 120.0
 
 
 static func _rect(entry: Dictionary) -> Rect2:
@@ -32,7 +33,17 @@ static func court_rect(hall: Dictionary, region: Dictionary) -> Rect2:
 		var r := Rect2(Vector2(hr.get_center().x - size.x / 2.0, hr.position.y - TOP_MARGIN), size)
 		if bounds.encloses(r) and _clear(r, hall, region):
 			return r
+	# GFX-074: a hall hemmed in by neighbours gets a wide, shallow court (sideways and north, hardly any south).
+	for ext in [40.0, 28.0, 16.0]:
+		var r := Rect2(hr.position.x - ext, hr.position.y - TOP_MARGIN, hr.size.x + ext * 2.0, hr.size.y + TOP_MARGIN + 4.0)
+		if bounds.encloses(r) and _clear(r, hall, region):
+			return r
 	return hr
+
+
+## GFX-074: "marsh" for the Withered Bone Marsh's dark court, "stone" elsewhere.
+static func court_style(region: Dictionary) -> String:
+	return "marsh" if "marsh" in String(region.get("id", "")) else "stone"
 
 
 ## GFX-071: what a place really covers: the drawn landmark (about 1.3x its size), the 22 px label band above
@@ -81,7 +92,10 @@ static func gate(region: Dictionary) -> Dictionary:
 
 
 ## Flagstones, three steps to the door and two stone lanterns. `hall` is the hall's rect, `court` from court_rect().
-static func draw_court(ci: CanvasItem, hall: Rect2, court: Rect2, snowy: bool) -> void:
+static func draw_court(ci: CanvasItem, hall: Rect2, court: Rect2, snowy: bool, style: String = "stone") -> void:
+	if style == "marsh":
+		_draw_marsh_court(ci, hall, court, snowy)
+		return
 	var base := Color("8d939b") if not snowy else Color("c3cad2")
 	var mortar := base.darkened(0.3)
 	ci.draw_rect(court, base)
@@ -120,6 +134,49 @@ static func draw_court(ci: CanvasItem, hall: Rect2, court: Rect2, snowy: bool) -
 		ci.draw_rect(Rect2(c.x - 3.0, c.y - 7.0, 6.0, 3.0), Color("f2c75c"))
 
 
+## GFX-074: dark flagstones, steps up into the hall, two red lanterns and reeds along the court's edge.
+static func _draw_marsh_court(ci: CanvasItem, hall: Rect2, court: Rect2, snowy: bool) -> void:
+	var base := Color("3b4140") if not snowy else Color("8d969a")
+	var mortar := base.darkened(0.45)
+	ci.draw_rect(court, base)
+	var row := 0
+	var y := court.position.y
+	while y < court.end.y:
+		ci.draw_line(Vector2(court.position.x, y), Vector2(court.end.x, y), mortar, 1.0)
+		var x := court.position.x + (STONE / 2.0 if row % 2 == 1 else 0.0)
+		while x < court.end.x:
+			if x > court.position.x:
+				ci.draw_line(Vector2(x, y), Vector2(x, minf(y + STONE, court.end.y)), mortar, 1.0)
+			x += STONE * 2.0
+		y += STONE
+		row += 1
+	ci.draw_rect(court, mortar.darkened(0.3), false, 2.0)
+	ci.draw_rect(Rect2(court.position.x + 3.0, court.end.y + 2.0, court.size.x, 4.0), Color(0, 0, 0, 0.25))
+	# Steps rise into the hall's lower edge (the court is shallow here).
+	for i in 3:
+		var w := 40.0 + 12.0 * i
+		var step := Rect2(hall.get_center().x - w / 2.0, hall.end.y - 14.0 + 5.0 * i, w, 5.0)
+		ci.draw_rect(step, base.lightened(0.2 - 0.05 * i))
+		ci.draw_rect(Rect2(step.position.x, step.end.y - 1.0, w, 1.0), mortar)
+	# Two red lanterns flank the hall on the court's flagstones.
+	for lx in [court.position.x + 14.0, court.end.x - 14.0]:
+		var c := Vector2(lx, hall.get_center().y + 18.0)
+		ci.draw_rect(Rect2(c.x - 1.0, c.y - 6.0, 2.0, 20.0), Color("2b2118"))
+		ci.draw_rect(Rect2(c.x - 5.0, c.y - 14.0, 10.0, 12.0), Color("8e1f1f"))
+		ci.draw_rect(Rect2(c.x - 3.0, c.y - 12.0, 6.0, 8.0), Color("e04b3a"))
+		ci.draw_rect(Rect2(c.x - 6.0, c.y - 15.0, 12.0, 2.0), Color("2b2118"))
+	# Reeds along the west and north edges.
+	var reed := Color("6b7a3a") if not snowy else Color("a9b49a")
+	var n := int(court.size.y / 9.0)
+	for i in n:
+		var ry := court.position.y + 6.0 + i * 9.0
+		ci.draw_line(Vector2(court.position.x - 2.0, ry + 8.0), Vector2(court.position.x - 4.0, ry - 4.0), reed, 1.0)
+		ci.draw_line(Vector2(court.position.x - 5.0, ry + 8.0), Vector2(court.position.x - 6.0, ry), reed.darkened(0.2), 1.0)
+	for i in int(court.size.x / 11.0):
+		var rx := court.position.x + 6.0 + i * 11.0
+		ci.draw_line(Vector2(rx, court.position.y - 1.0), Vector2(rx - 1.0, court.position.y - 9.0), reed, 1.0)
+
+
 const STELE_W := 170.0
 const POST_TOP := 38.0  ## post height above its foot line
 
@@ -131,7 +188,7 @@ static func gate_parts(g: Dictionary) -> Dictionary:
 	var top := path.position.y - 20.0
 	var bottom := path.end.y + 4.0
 	var west: bool = gx < float(g.get("map_w", 1e9)) / 2.0
-	var stele_x := gx - 18.0 - STELE_W if west else gx + 18.0
+	var stele_x := gx + 18.0 if west else gx - 18.0 - STELE_W  # GFX-074: the board stands on the map side of the gate
 	return {
 		"roof": Rect2(gx - 14.0, top - POST_TOP - 8.0, 28.0, bottom - top + 16.0),
 		"posts": [Rect2(gx - 11.0, top - POST_TOP, 22.0, POST_TOP + 16.0), Rect2(gx - 11.0, bottom - POST_TOP, 22.0, POST_TOP + 16.0)],

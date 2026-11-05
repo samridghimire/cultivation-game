@@ -357,5 +357,21 @@ func test_sect_courts_and_gates() -> void:
 			assert_true(roof.position.y <= (parts["posts"][0] as Rect2).position.y and roof.end.y >= (parts["posts"][1] as Rect2).position.y, "%s roof runs post to post" % region["id"])
 			assert_false((parts["stele"] as Rect2).intersects(parts["posts"][0]), "%s stele beside the post" % region["id"])
 			assert_true(Rect2(Vector2.ZERO, Vector2(float(region["map"]["size"][0]), float(region["map"]["size"][1]))).encloses(gr), "%s gate inside map" % region["id"])
+			# GFX-074: both pillars well clear of the edge-exit post, and no place sprite inside the court.
+			for place: Dictionary in region["places"]:
+				if String(place.get("type", "")) == "travel":
+					for post: Rect2 in parts["posts"]:
+						assert_true(post.position.x >= float(place["pos"][0]) + SectCourt.EXIT_CLEAR, "%s pillars clear of the exit post" % region["id"])
+					assert_false((parts["stele"] as Rect2).intersects(_rect(place, [64, 64]).grow(30.0)), "%s name board clear of the exit" % region["id"])
+			for place: Dictionary in region["places"]:
+				if SectCourt.is_sect_hall(place):
+					var court := SectCourt.court_rect(place, region)
+					for other: Dictionary in region["places"]:
+						if other != place:
+							assert_false(court.intersects(_rect(other, [64, 64])), "%s: %s sprite inside the court" % [region["id"], other.get("display_name", "?")])
+					assert_false(court.intersects(parts["stele"]), "%s court clear of the board" % region["id"])
+					if region["id"] == "withered_bone_marsh":
+						assert_true(court.size.x > _rect(place, [64, 64]).size.x + 30.0, "marsh hall has a real court")
+						assert_eq(SectCourt.court_style(region), "marsh")
 		assert_eq(not g.is_empty(), has_sect_hall, "%s gate only with a sect hall" % region["id"])
 	assert_true(seen >= 2, "azure peak and the marsh both have sect halls")
