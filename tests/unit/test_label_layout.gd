@@ -62,3 +62,15 @@ func test_offsets_three_stacked_rects_apart_and_stable() -> void:
 			assert_false(a.intersects(b), "labels %d and %d overlap" % [i, j])
 	assert_eq(offs[0], Vector2.ZERO)
 	assert_eq(LabelLayout.offsets(rects, anchors), offs)
+
+
+## GFX-071: a great beast's body blocks other labels but not its own.
+func test_figure_blocker_moves_other_labels_not_its_own() -> void:
+	var figure := Rect2(400, 300, 48, 40)
+	var rects: Array[Rect2] = [Rect2(396, 304, 70, 14), Rect2(396, 322, 70, 14)]
+	var blockers: Array[Rect2] = [figure]
+	var res := LabelLayout.resolve(rects, SCREEN, blockers, {0: 0})
+	assert_eq(res[0]["offset"], 0.0, "own label stays")
+	assert_false(res[0]["faded"], "own label visible")
+	var moved: Rect2 = Rect2(rects[1].position + Vector2(0, float(res[1]["offset"])), rects[1].size)
+	assert_true(bool(res[1]["faded"]) or not moved.intersects(figure), "other label leaves the figure or fades")

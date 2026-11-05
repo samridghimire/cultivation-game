@@ -357,6 +357,10 @@ func _build_decor() -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = hash(GameState.current_region)
 	_decor = Scenery.place(_region, rng)
+	var g := SectCourt.gate(_region)
+	if not g.is_empty():  # GFX-071: nothing grows on the gate or its name stele
+		var keep := SectCourt.gate_rect(g).grow(12.0)
+		_decor = _decor.filter(func(d: Dictionary) -> bool: return not keep.intersects(Rect2(d["pos"] - Vector2(16, 16), Vector2(32, 32))))
 	_decor.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return a["pos"].y < b["pos"].y)
 
 

@@ -306,6 +306,9 @@ static func respread_due(clock: float, moved_px: float) -> bool:
 ## area in the nodes' parent coordinates. Labels are ranked (highlighted, nearest to `player_pos`,
 ## places before NPCs) and LabelLayout nudges or fades the lower-ranked ones. Redraws labels that changed.
 ## `occupied` are HUD rects in the same coordinates; labels that cannot clear them are dimmed (GFX-025).
+const GREAT_FIGURE := Vector2(48.0, 40.0)  ## GFX-071: a great beast's drawn body
+
+
 static func spread_on_screen(nodes: Array, view: Rect2, occupied: Array[Rect2] = [], player_pos: Vector2 = Vector2.ZERO) -> void:
 	var shown: Array = []
 	var was_lift := {}
@@ -333,7 +336,14 @@ static func spread_on_screen(nodes: Array, view: Rect2, occupied: Array[Rect2] =
 	var rects: Array[Rect2] = []
 	for node: Interactable in ranked:
 		rects.append(node.drawn_label_rect(view))
-	var result := LabelLayout.resolve(rects, view, occupied)
+	var blockers: Array[Rect2] = occupied.duplicate()
+	var own: Dictionary = {}
+	for i in ranked.size():  # GFX-071: a great beast's body is a blocker for every label but its own
+		var gn: Interactable = ranked[i]
+		if gn.get("great") == true:
+			own[i] = blockers.size()
+			blockers.append(Rect2(gn.position - GREAT_FIGURE / 2.0, GREAT_FIGURE))
+	var result := LabelLayout.resolve(rects, view, blockers, own)
 	for i in ranked.size():
 		var node: Interactable = ranked[i]
 		var lift: float = result[i]["offset"]

@@ -9,14 +9,17 @@ const MAX_STEPS := 2
 ## {offset: float (y shift), faded: bool} per rect. A rect that overlaps an already placed one
 ## (or a `blockers` rect) is nudged down then up by its height (max MAX_STEPS tries each way,
 ## and never off `screen`); if it still overlaps it is marked faded and left in place.
-static func resolve(rects: Array[Rect2], screen: Rect2, blockers: Array[Rect2] = []) -> Array[Dictionary]:
+## `own_blocker` (GFX-071) maps a rect index to the blocker index that rect belongs to; that one is ignored for it.
+static func resolve(rects: Array[Rect2], screen: Rect2, blockers: Array[Rect2] = [], own_blocker: Dictionary = {}) -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
 	var placed: Array[Rect2] = blockers.duplicate()
-	for rect in rects:
+	for ri in rects.size():
+		var rect := rects[ri]
+		var skip: int = int(own_blocker.get(ri, -1))
 		var chosen := rect
 		var offset := 0.0
 		var faded := false
-		if _hits(rect, placed):
+		if _hits(rect, placed, skip):
 			faded = true
 			var step := rect.size.y + 2.0
 			var tries: Array[float] = []
@@ -28,7 +31,7 @@ static func resolve(rects: Array[Rect2], screen: Rect2, blockers: Array[Rect2] =
 				var moved := Rect2(rect.position + Vector2(0, dy), rect.size)
 				if screen.size != Vector2.ZERO and not screen.encloses(moved):
 					continue
-				if not _hits(moved, placed):
+				if not _hits(moved, placed, skip):
 					chosen = moved
 					offset = dy
 					faded = false
@@ -73,8 +76,8 @@ static func offsets(rects: Array[Rect2], anchors: Array[Vector2]) -> Array[Vecto
 	return out
 
 
-static func _hits(rect: Rect2, others: Array[Rect2]) -> bool:
-	for other in others:
-		if rect.intersects(other):
+static func _hits(rect: Rect2, others: Array[Rect2], skip: int = -1) -> bool:
+	for i in others.size():
+		if i != skip and rect.intersects(others[i]):
 			return true
 	return false

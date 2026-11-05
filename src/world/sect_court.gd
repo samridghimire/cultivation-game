@@ -7,8 +7,6 @@ const SCALE := 1.6
 const STONE := 16.0
 const TOP_MARGIN := 22.0  ## grass between the court's north edge and the hall roof
 const GATE_X := 210.0  ## how far in from the map edge the gate stands
-const GATE_NAME_W := 184.0
-const GATE_ROOF_RISE := 46.0  ## GFX-070: lintel centre above the path's top edge (minus 20)
 
 
 static func _rect(entry: Dictionary) -> Rect2:
@@ -29,12 +27,22 @@ static func court_rect(hall: Dictionary, region: Dictionary) -> Rect2:
 	var hr := _rect(hall)
 	var map_size := Vector2(float(region["map"]["size"][0]), float(region["map"]["size"][1]))
 	var bounds := Rect2(Vector2.ZERO, map_size).grow(-8.0)
-	for scale in [1.9, 1.7, 1.5]:
+	for scale in [1.9, 1.7, 1.5, 1.35]:
 		var size := Vector2(hr.size.x * (1.0 + (scale - 1.0) * 0.7), hr.size.y * scale)
 		var r := Rect2(Vector2(hr.get_center().x - size.x / 2.0, hr.position.y - TOP_MARGIN), size)
 		if bounds.encloses(r) and _clear(r, hall, region):
 			return r
 	return hr
+
+
+## GFX-071: what a place really covers: the drawn landmark (about 1.3x its size), the 22 px label band above
+## it and 12 px of clearance.
+static func place_footprint(place: Dictionary) -> Rect2:
+	var r := _rect(place)
+	var big := Rect2(r.get_center() - r.size * 0.65, r.size * 1.3)
+	big.position.y -= 22.0
+	big.size.y += 22.0
+	return big.grow(12.0)
 
 
 static func _clear(r: Rect2, hall: Dictionary, region: Dictionary) -> bool:
@@ -44,7 +52,7 @@ static func _clear(r: Rect2, hall: Dictionary, region: Dictionary) -> bool:
 	for place: Dictionary in region.get("places", []):
 		if place == hall:
 			continue
-		if r.intersects(_rect(place)):
+		if r.intersects(place_footprint(place)):
 			return false
 	return true
 
@@ -69,7 +77,7 @@ static func gate(region: Dictionary) -> Dictionary:
 		if String(place.get("type", "")) == "travel":
 			from_left = float(place["pos"][0]) < map_w / 2.0
 			break
-	return {"path": path, "x": GATE_X if from_left else map_w - GATE_X, "name": String(region.get("name", "")), "color": post}
+	return {"path": path, "x": GATE_X if from_left else map_w - GATE_X, "name": String(region.get("name", "")), "color": post, "map_w": map_w}
 
 
 ## Flagstones, three steps to the door and two stone lanterns. `hall` is the hall's rect, `court` from court_rect().
@@ -112,51 +120,73 @@ static func draw_court(ci: CanvasItem, hall: Rect2, court: Rect2, snowy: bool) -
 		ci.draw_rect(Rect2(c.x - 3.0, c.y - 7.0, 6.0, 3.0), Color("f2c75c"))
 
 
-## The screen rect the drawn gate covers (lintel and board to the stone feet).
-static func gate_rect(g: Dictionary) -> Rect2:
-	var path: Rect2 = g["path"]
-	var top := path.position.y - 20.0 - GATE_ROOF_RISE - 14.0
-	var bottom := path.end.y + 4.0 + 16.0
-	return Rect2(g["x"] - GATE_NAME_W / 2.0 - 14.0, top, GATE_NAME_W + 28.0, bottom - top)
+const STELE_W := 170.0
+const POST_TOP := 38.0  ## post height above its foot line
 
 
-## GFX-070: a roofed gate across the path: two tall posts, a tiled lintel with upturned ends in the hall's
-## colour, and the name board hanging under it. About twice the old height.
-static func draw_gate(ci: CanvasItem, g: Dictionary, font: Font) -> void:
+## GFX-071: the pieces of the gate seen side-on: the roof band (north-south, over the road), both posts, the stele.
+static func gate_parts(g: Dictionary) -> Dictionary:
 	var path: Rect2 = g["path"]
 	var gx: float = g["x"]
 	var top := path.position.y - 20.0
 	var bottom := path.end.y + 4.0
+	var west: bool = gx < float(g.get("map_w", 1e9)) / 2.0
+	var stele_x := gx - 18.0 - STELE_W if west else gx + 18.0
+	return {
+		"roof": Rect2(gx - 14.0, top - POST_TOP - 8.0, 28.0, bottom - top + 16.0),
+		"posts": [Rect2(gx - 11.0, top - POST_TOP, 22.0, POST_TOP + 16.0), Rect2(gx - 11.0, bottom - POST_TOP, 22.0, POST_TOP + 16.0)],
+		"stele": Rect2(stele_x, top - POST_TOP - 6.0, STELE_W, POST_TOP + 12.0),
+	}
+
+
+## The screen rect the drawn gate covers (roof band, posts and name stele).
+static func gate_rect(g: Dictionary) -> Rect2:
+	var parts := gate_parts(g)
+	var r: Rect2 = parts["roof"]
+	r = r.merge(parts["stele"])
+	for p: Rect2 in parts["posts"]:
+		r = r.merge(p)
+	return r
+
+
+## GFX-071: a roofed gate seen from the south with the road passing under it: two posts on the path's edges,
+## a tiled roof band running north-south between their tops, and the name on a stone stele beside the north post.
+static func draw_gate(ci: CanvasItem, g: Dictionary, font: Font) -> void:
+	var parts := gate_parts(g)
 	var roof: Color = g["color"]
 	var wood := Color("5a4030")
 	var dark := Color("2b2118")
-	var span := maxf(GATE_NAME_W, 120.0) / 2.0 + 14.0
-	# Posts: one each side of the path, drawn as tall pillars on a stone foot.
-	for py in [top, bottom]:
-		ci.draw_rect(Rect2(gx - 11.0, py + 2.0, 22.0, 14.0), dark)
-		ci.draw_rect(Rect2(gx - 10.0, py + 3.0, 20.0, 12.0), Color("8d939b"))
-		ci.draw_rect(Rect2(gx - 6.0, py - 38.0, 12.0, 44.0), dark)
-		ci.draw_rect(Rect2(gx - 5.0, py - 37.0, 10.0, 42.0), wood)
-		ci.draw_rect(Rect2(gx - 5.0, py - 37.0, 3.0, 42.0), wood.lightened(0.2))
-	# Lintel: a curved tiled roof band with upturned ends, centred on the path.
-	var cy := top - GATE_ROOF_RISE
-	var pts := PackedVector2Array()
-	for i in 17:
-		var t := float(i) / 16.0
-		var x := gx - span + t * span * 2.0
-		pts.append(Vector2(x, cy - 7.0 * pow(absf(t * 2.0 - 1.0), 2.2)))
-	ci.draw_polyline(pts, dark, 14.0)
-	ci.draw_polyline(pts, roof, 11.0)
-	var hi := PackedVector2Array()
-	for p in pts:
-		hi.append(p + Vector2(0.0, -4.0))
-	ci.draw_polyline(hi, roof.lightened(0.25), 2.0)
-	for i in range(0, pts.size(), 2):
-		ci.draw_line(pts[i] + Vector2(0.0, -4.0), pts[i] + Vector2(0.0, 5.0), roof.darkened(0.3), 1.0)
-	# Name board hanging under the lintel.
-	var board := Rect2(gx - GATE_NAME_W / 2.0, cy + 8.0, GATE_NAME_W, 22.0)
-	ci.draw_line(Vector2(board.position.x + 12.0, cy + 4.0), Vector2(board.position.x + 12.0, board.position.y), dark, 2.0)
-	ci.draw_line(Vector2(board.end.x - 12.0, cy + 4.0), Vector2(board.end.x - 12.0, board.position.y), dark, 2.0)
+	var posts: Array = parts["posts"]
+	var band: Rect2 = parts["roof"]
+	var north: Rect2 = posts[0]
+	var south: Rect2 = posts[1]
+	_draw_post(ci, north, wood, dark)
+	# Roof band with upturned ends sticking 8 px past each post.
+	ci.draw_rect(band.grow(1.5), dark)
+	ci.draw_rect(band, roof)
+	ci.draw_rect(Rect2(band.position.x, band.position.y, 5.0, band.size.y), roof.lightened(0.25))
+	var y := band.position.y + 3.0
+	while y < band.end.y:
+		ci.draw_line(Vector2(band.position.x, y), Vector2(band.end.x, y), roof.darkened(0.3), 1.0)
+		y += 4.0
+	for cap_y in [band.position.y, band.end.y - 3.0]:
+		ci.draw_rect(Rect2(band.position.x - 2.0, cap_y, band.size.x + 4.0, 3.0), roof.lightened(0.15))
+	_draw_post(ci, south, wood, dark)
+	# Name stele: a plinth with the board on it, facing the viewer.
+	var st: Rect2 = parts["stele"]
+	var plinth := Rect2(st.get_center().x - 40.0, st.position.y + 26.0, 80.0, st.size.y - 26.0)
+	ci.draw_rect(plinth.grow(1.0), dark)
+	ci.draw_rect(plinth, Color("8d939b"))
+	var board := Rect2(st.position.x, st.position.y, STELE_W, 26.0)
 	ci.draw_rect(board.grow(2.0), dark)
 	ci.draw_rect(board, wood.darkened(0.2))
-	ci.draw_string(font, board.position + Vector2(0.0, 16.0), String(g["name"]), HORIZONTAL_ALIGNMENT_CENTER, board.size.x, 14, Color("f2e3b8"))
+	ci.draw_string(font, board.position + Vector2(0.0, 18.0), String(g["name"]), HORIZONTAL_ALIGNMENT_CENTER, board.size.x, 14, Color("f2e3b8"))
+
+
+static func _draw_post(ci: CanvasItem, r: Rect2, wood: Color, dark: Color) -> void:
+	var foot_y := r.end.y - 14.0
+	ci.draw_rect(Rect2(r.position.x, foot_y, 22.0, 14.0), dark)
+	ci.draw_rect(Rect2(r.position.x + 1.0, foot_y + 1.0, 20.0, 12.0), Color("8d939b"))
+	ci.draw_rect(Rect2(r.position.x + 5.0, r.position.y, 12.0, 44.0), dark)
+	ci.draw_rect(Rect2(r.position.x + 6.0, r.position.y + 1.0, 10.0, 42.0), wood)
+	ci.draw_rect(Rect2(r.position.x + 6.0, r.position.y + 1.0, 3.0, 42.0), wood.lightened(0.2))
