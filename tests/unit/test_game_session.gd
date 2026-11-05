@@ -2818,6 +2818,31 @@ func test_engage_roamer() -> void:
 	assert_eq(int(GameClock.total_days), day_after, "refusals pass no time")
 
 
+## WILD-014: beat the Old Tusker, and the same weekday the Scarred Old Tusker walks in his slot.
+func test_great_beast_returns_scarred() -> void:
+	var gs := _game_state()
+	_start()
+	gs.current_region = "misty_forest"
+	gs.player.realm_index = 3
+	var g: Dictionary = gs.data.regions["misty_forest"]["roamers"]["great"]
+	GameClock.total_days = 7 * 60 + Wildlife.great_day("misty_forest", g)
+	var found := false
+	for r in gs.roamers_here():
+		found = found or String(r["enemy"]) == "old_tusker_boar"
+	assert_true(found, "the first beast walks")
+	assert_true(gs.engage_roamer(Wildlife.GREAT_SLOT))
+	assert_true(gs.player.great_beasts.has("old_tusker_boar"))
+	assert_true(gs.player.item_count("old_tuskers_broken_tusk") >= 1)
+	GameClock.total_days = Wildlife.next_great_day(gs.data, "misty_forest", GameClock.total_days + 1, 3)
+	var enemies: Array = []
+	for r in gs.roamers_here():
+		enemies.append(String(r["enemy"]))
+	assert_true(enemies.has("scarred_old_tusker"), "the return walks")
+	assert_false(enemies.has("old_tusker_boar"))
+	assert_true(gs.engage_roamer(Wildlife.GREAT_SLOT))
+	assert_true(gs.player.item_count("scarred_tuskers_spear_head") >= 1)
+
+
 func test_engage_roamer_records_hunt() -> void:
 	var gs := _game_state()
 	_start()

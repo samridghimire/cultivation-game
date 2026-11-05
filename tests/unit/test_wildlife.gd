@@ -229,6 +229,44 @@ func test_validate_rejects_bad_great() -> void:
 	roamers["great"] = old
 	assert_true(Wildlife.validate(d).is_empty())
 
+## WILD-014: the first beast, beaten, comes back as the `return` enemy.
+func test_great_return_switches_after_first_win() -> void:
+	var d := _gdata()
+	var c := _player()
+	assert_eq(Wildlife.active_great_enemy(c, d, "misty_forest"), "old_tusker_boar")
+	var wd := Wildlife.great_day("misty_forest", d.regions["misty_forest"]["roamers"]["great"])
+	var day := 7 * 40 + wd
+	assert_eq(String(Wildlife.great_roamer(c, d, "misty_forest", day, {})["enemy"]), "old_tusker_boar")
+	assert_eq(Wildlife.record_great(c, d, "old_tusker_boar", "misty_forest", day), "old_tuskers_broken_tusk")
+	assert_eq(Wildlife.active_great_enemy(c, d, "misty_forest"), "scarred_old_tusker")
+	assert_eq(String(Wildlife.great_roamer(c, d, "misty_forest", day + 7, {})["enemy"]), "scarred_old_tusker")
+	assert_eq(Wildlife.next_great_day(d, "misty_forest", day + 1, 0), day + 7, "same weekday")
+	assert_eq(Wildlife.record_great(c, d, "scarred_old_tusker", "misty_forest", day + 7), "scarred_tuskers_spear_head")
+	assert_eq(Wildlife.record_great(c, d, "scarred_old_tusker", "misty_forest", day + 14), "", "once")
+	assert_eq(Wildlife.record_great(c, d, "old_tusker_boar", "misty_forest", day + 14), "", "once")
+	assert_eq(Wildlife.active_great_enemy(c, d, "qingshi_village"), "")
+	assert_true(Wildlife.rumor_of(d, "misty_forest", c) != Wildlife.rumor_of(d, "misty_forest"))
+
+
+func test_great_without_return_keeps_beast() -> void:
+	var d := _gdata()
+	var c := _player()
+	c.great_beasts["cloud_crane"] = 1
+	assert_eq(Wildlife.active_great_enemy(c, d, "azure_peak"), "cloud_crane")
+
+
+func test_validate_rejects_bad_return() -> void:
+	var d := _gdata()
+	var g: Dictionary = d.regions["misty_forest"]["roamers"]["great"]
+	var old: Dictionary = g["return"]
+	for bad in [{"enemy": "nope", "trophy": "old_tuskers_broken_tusk"}, {"enemy": "salt_road_captain", "trophy": "old_tuskers_broken_tusk"},
+			{"enemy": "scarred_old_tusker", "trophy": "spirit_stone"}, {"enemy": "scarred_old_tusker"}]:
+		g["return"] = bad
+		assert_false(Wildlife.validate(d).is_empty(), str(bad))
+	g["return"] = old
+	assert_true(Wildlife.validate(d).is_empty())
+
+
 ## C-290: the gentle ape leaves a token, not a skin.
 func test_gentle_ape_drop() -> void:
 	var d := _gdata()

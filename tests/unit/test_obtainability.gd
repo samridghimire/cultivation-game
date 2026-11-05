@@ -127,6 +127,8 @@ func _collect_grants(granted: Dictionary) -> void:
 		var great: Dictionary = (region.get("roamers", {}) as Dictionary).get("great", {})
 		if great.has("trophy"):
 			granted[String(great["trophy"])] = "regions.json roamers.great.trophy"
+		if great.has("return"):
+			granted[String(great["return"]["trophy"])] = "regions.json roamers.great.return.trophy"
 
 
 ## Positive counts under an `items` key are grants; `requires.items` are costs.

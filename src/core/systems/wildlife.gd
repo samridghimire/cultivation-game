@@ -92,12 +92,25 @@ static func great_roamer(c: CharacterData, data: GameData, region_id: String, da
 		return {}
 	if Effects.flag_active(flags, flag_key(region_id, GREAT_SLOT), day):
 		return {}
-	return {"slot": GREAT_SLOT, "enemy": String(def["enemy"]), "temper": "wary", "great": true}
+	return {"slot": GREAT_SLOT, "enemy": active_great_enemy(c, data, region_id), "temper": "wary", "great": true}
+
+
+## WILD-014: the enemy the region's great-beast slot spawns: the `return` enemy once the first beast is beaten, else the first.
+static func active_great_enemy(c: CharacterData, data: GameData, region_id: String) -> String:
+	var def := _great_def(data, region_id)
+	var ret: Variant = def.get("return")
+	if ret is Dictionary and c != null and c.great_beasts.has(String(def.get("enemy", ""))):
+		return String(ret.get("enemy", def.get("enemy", "")))
+	return String(def.get("enemy", ""))
 
 
 ## C-297: the hunters' rumour about a region's great beast, "" when it has none.
-static func rumor_of(data: GameData, region_id: String) -> String:
-	return String(_great_def(data, region_id).get("rumor", ""))
+static func rumor_of(data: GameData, region_id: String, c: CharacterData = null) -> String:
+	var def := _great_def(data, region_id)
+	var ret: Variant = def.get("return")
+	if ret is Dictionary and c != null and c.great_beasts.has(String(def.get("enemy", ""))) and ret.has("rumor"):
+		return String(ret["rumor"])
+	return String(def.get("rumor", ""))
 
 
 ## The first day >= from_day the region's great beast walks (for a player at `realm_index`); -1 when it has none.
@@ -197,6 +210,9 @@ static func great_trophy(data: GameData, enemy_id: String) -> String:
 		var g: Dictionary = region.get("roamers", {}).get("great", {})
 		if not g.is_empty() and String(g.get("enemy", "")) == enemy_id and g.has("trophy"):
 			return String(g["trophy"])
+		var ret: Variant = g.get("return")
+		if ret is Dictionary and String(ret.get("enemy", "")) == enemy_id and ret.has("trophy"):
+			return String(ret["trophy"])
 	return ""
 
 
@@ -209,6 +225,9 @@ static func record_great(c: CharacterData, data: GameData, enemy_id: String, reg
 	var def := _great_def(data, region_id)
 	if String(def.get("enemy", "")) == enemy_id and def.has("trophy"):
 		return String(def["trophy"])
+	var ret: Variant = def.get("return")
+	if ret is Dictionary and String(ret.get("enemy", "")) == enemy_id and ret.has("trophy"):
+		return String(ret["trophy"])
 	return great_trophy(data, enemy_id)
 
 
@@ -319,6 +338,19 @@ static func validate(data: GameData) -> PackedStringArray:
 					var ti: Variant = data.items.get(String(great["trophy"]))
 					if ti == null or not ((ti as Dictionary).get("tags", []) as Array).has("trophy"):
 						errors.append("%s great trophy '%s' must be an item tagged trophy" % [where, great["trophy"]])
+				var rt: Variant = great.get("return")
+				if rt != null:
+					if not rt is Dictionary or not data.enemies.has(String(rt.get("enemy", ""))):
+						errors.append("%s great return needs a known enemy" % where)
+					else:
+						var re: Dictionary = data.enemies[rt["enemy"]]
+						if bool(re.get("lethal", false)) or not (re.get("tags", []) as Array).has("beast"):
+							errors.append("%s great return enemy '%s' must be a non-lethal beast" % [where, rt["enemy"]])
+						var rti: Variant = data.items.get(String(rt.get("trophy", "")))
+						if rti == null or not (rti.get("tags", []) as Array).has("trophy"):
+							errors.append("%s great return trophy must be an item tagged trophy" % where)
+						if rt.has("rumor") and not (rt["rumor"] is String and not String(rt["rumor"]).is_empty() and String(rt["rumor"]).length() <= 140):
+							errors.append("%s great return rumor must be a string of at most 140 characters" % where)
 				for gs: Variant in great.get("seasons", []):
 					if not Exploration.SEASON_NAMES.has(String(gs)):
 						errors.append("%s great has unknown season '%s'" % [where, gs])

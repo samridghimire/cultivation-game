@@ -64,6 +64,8 @@ func test_appearances_cover_every_enemy() -> void:
 		var great: Dictionary = region.get("roamers", {}).get("great", {})
 		if great.has("enemy"):
 			seen[String(great["enemy"])] = true
+			if great.has("return"):
+				seen[String(great["return"]["enemy"])] = true  # WILD-014
 	for enemy_id: String in data().enemies:
 		assert_true(seen.has(enemy_id), "%s never appears in a fight source; add it to appearances() or remove it" % enemy_id)
 

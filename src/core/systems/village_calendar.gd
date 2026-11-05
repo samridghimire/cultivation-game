@@ -97,7 +97,7 @@ static func _great_beasts(out: Array[Dictionary], data: GameData, c: CharacterDa
 	for rid: String in c.visited_regions:
 		var day := Wildlife.next_great_day(data, rid, start, c.realm_index)
 		while day >= 0 and day < end:
-			var enemy := String(data.regions[rid]["roamers"]["great"]["enemy"])
+			var enemy := Wildlife.active_great_enemy(c, data, rid)
 			var beast := Wildlife.display_name(data, enemy, true)
 			out.append({"day": day, "kind": "great_beast", "region": rid, "enemy": enemy,
 				"text": "The %s walks %s" % [beast, Exploration.region_name(data, rid)]})

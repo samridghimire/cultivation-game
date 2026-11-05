@@ -412,26 +412,36 @@ static func trophy_rows(c: CharacterData, data: GameData) -> Array[Dictionary]:
 		var g: Dictionary = data.regions[rid].get("roamers", {}).get("great", {})
 		if g.is_empty():
 			continue
-		var enemy := String(g["enemy"])
-		var won := c.great_beasts.has(enemy)
-		var region := String(data.regions[rid].get("name", rid))
-		var trophy := Wildlife.great_trophy(data, enemy)
-		var item: Dictionary = data.items.get(trophy, {})
-		var row := {"enemy": enemy, "region": region, "won": won, "trophy": trophy, "day": -1}
-		if won:
-			row["day"] = int(c.great_beasts[enemy]) + 1
-			row["text"] = "%s\n%s" % [Wildlife.display_name(data, enemy, true), String(item.get("name", "no trophy"))]
-			row["detail"] = "%s, slain day %d. %s" % [Wildlife.display_name(data, enemy, true), row["day"], String(item.get("description", ""))]
-		else:
-			var walk := Calendar.weekday_label(Wildlife.great_day(rid, g))
-			row["text"] = "???\n(%s, %s)" % [region, Calendar.weekday_label(Wildlife.great_day(rid, g))]
-			row["detail"] = "A great beast walks %s on %s." % [region, walk]
-			var rumor := Wildlife.rumor_of(data, rid)
-			if rumor != "":
-				row["rumor"] = rumor
-				row["detail"] = "%s\nHunters say: %s" % [row["detail"], rumor]
-		rows.append(row)
+		var blocks: Array[Dictionary] = [g]
+		var ret: Variant = g.get("return")
+		# WILD-014: the returned beast gets its own shelf row once the first one has fallen.
+		if ret is Dictionary and c.great_beasts.has(String(g["enemy"])):
+			blocks.append(ret)
+		for block: Dictionary in blocks:
+			_trophy_row(rows, c, data, rid, g, block)
 	return rows
+
+
+static func _trophy_row(rows: Array[Dictionary], c: CharacterData, data: GameData, rid: String, g: Dictionary, block: Dictionary) -> void:
+	var enemy := String(block["enemy"])
+	var won := c.great_beasts.has(enemy)
+	var region := String(data.regions[rid].get("name", rid))
+	var trophy := Wildlife.great_trophy(data, enemy)
+	var item: Dictionary = data.items.get(trophy, {})
+	var row := {"enemy": enemy, "region": region, "won": won, "trophy": trophy, "day": -1}
+	if won:
+		row["day"] = int(c.great_beasts[enemy]) + 1
+		row["text"] = "%s\n%s" % [Wildlife.display_name(data, enemy, true), String(item.get("name", "no trophy"))]
+		row["detail"] = "%s, slain day %d. %s" % [Wildlife.display_name(data, enemy, true), row["day"], String(item.get("description", ""))]
+	else:
+		var walk := Calendar.weekday_label(Wildlife.great_day(rid, g))
+		row["text"] = "???\n(%s, %s)" % [region, Calendar.weekday_label(Wildlife.great_day(rid, g))]
+		row["detail"] = "A great beast walks %s on %s." % [region, walk]
+		var rumor := String(block.get("rumor", ""))
+		if rumor != "":
+			row["rumor"] = rumor
+			row["detail"] = "%s\nHunters say: %s" % [row["detail"], rumor]
+	rows.append(row)
 
 
 func _build_hunts() -> void:
