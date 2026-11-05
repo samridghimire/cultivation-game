@@ -317,8 +317,8 @@ static func deal_note(c: CharacterData, region_id: String, today: int) -> String
 
 ## Price of one `item_id` on the current tab.
 ## `market_mult`: the region's world-event price multiplier (GameState.buy_multiplier: world events and local renown; buying only).
-static func unit_price(c: CharacterData, data: GameData, item_id: String, selling: bool, faction: String = "", market_mult: float = 1.0, season: String = "") -> int:
-	return Items.sell_price(data, item_id, season) if selling else Reputation.buy_price(c, data, item_id, faction, market_mult, season)
+static func unit_price(c: CharacterData, data: GameData, item_id: String, selling: bool, faction: String = "", market_mult: float = 1.0, season: String = "", wanted_mult: float = 1.0) -> int:
+	return roundi(Items.sell_price(data, item_id, season) * wanted_mult) if selling else Reputation.buy_price(c, data, item_id, faction, market_mult, season)
 
 
 ## Most of `item_id` that `c` can buy with their stones or sell from their pouch.
@@ -436,6 +436,13 @@ static func sell_wanted_line(c: CharacterData, data: GameData, item_id: String, 
 	return InventoryScreen.wanted_by_sect_line(c, data, item_id, flags)
 
 
+## MARKET-008: the Sell tab note for the stall's wanted item.
+static func market_wanted_line(mult: float, left: int) -> String:
+	if left <= 0:
+		return "Wanted today, but the stall has bought its fill."
+	return "Wanted today: x%s the usual price for the next %d." % [String.num(mult, 2).trim_suffix("0"), left]
+
+
 ## WU-341: at low artifact lives: a warning when paying `price` is what puts the recharge out of reach.
 static func recharge_warning(c: CharacterData, data: GameData, price: int) -> String:
 	if c.artifact_lives < 0 or c.artifact_lives > Guidance.LOW_ARTIFACT_LIVES:
@@ -515,8 +522,9 @@ func _rebuild() -> void:
 		if _category == "All":
 			empty = "You have nothing this merchant wants." if _selling else "Nothing for sale."
 		_list.add_child(UIStyle.label(empty, 16, Color(0.7, 0.7, 0.7)))
+	var wanted := GameState.market_wanted() if _selling else {}
 	for item_id in ids:
-		var price := unit_price(p, data, item_id, _selling, _faction, GameState.buy_multiplier(item_id), GameState.price_season())
+		var price := unit_price(p, data, item_id, _selling, _faction, GameState.buy_multiplier(item_id), GameState.price_season(), float(wanted["mult"]) if not wanted.is_empty() and String(wanted["item"]) == item_id and int(wanted["left"]) > 0 else 1.0)
 		var label: String = data.items[item_id]["name"]
 		if _selling:
 			label += "  (have %d)" % p.item_count(item_id)
@@ -702,6 +710,9 @@ func _show_details() -> void:
 	_compare.text = compare_text(p, data, _selected)
 	_compare.visible = _compare.text != ""
 	_wanted.text = sell_wanted_line(p, data, _selected, _selling, GameState.world_flags)
+	var want := GameState.market_wanted()
+	if _selling and not want.is_empty() and String(want["item"]) == _selected:
+		_wanted.text = (_wanted.text + "\n" if _wanted.text != "" else "") + market_wanted_line(float(want["mult"]), int(want["left"]))
 	_wanted.visible = _wanted.text != ""
 	var most := max_quantity(p, data, _selected, _selling, _faction, GameState.buy_multiplier(_selected), GameState.price_season())
 	_quantity = clampi(_quantity, 1, maxi(most, 1))
@@ -709,7 +720,11 @@ func _show_details() -> void:
 	_quantity_label.text = "x%d  (you have %d)" % [_quantity, p.item_count(_selected)]
 	_recharge_warn.text = "" if _selling else recharge_warning(p, data, unit * _quantity)
 	_recharge_warn.visible = _recharge_warn.text != ""
-	_trade_button.text = "%s %d for %d spirit stones" % ["Sell" if _selling else "Buy", _quantity, unit * _quantity]
+	var total := unit * _quantity
+	if _selling and not want.is_empty() and String(want["item"]) == _selected:
+		var bonus := mini(_quantity, int(want["left"]))
+		total = unit * (_quantity - bonus) + unit_price(p, data, _selected, true, _faction, 1.0, GameState.price_season(), float(want["mult"])) * bonus
+	_trade_button.text = "%s %d for %d spirit stones" % ["Sell" if _selling else "Buy", _quantity, total]
 	_trade_button.disabled = most < 1
 	_trade_button.tooltip_text = "You cannot afford it." if most < 1 and not _selling else ""
 

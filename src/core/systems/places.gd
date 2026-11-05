@@ -44,7 +44,8 @@ static func hint_line(region: Dictionary, today: int, window: int = 5, data: Gam
 			for id: String in rotating_picks(best_place, today):
 				names.append(String(data.items.get(id, {}).get("name", id)))
 			if not names.is_empty():
-				return "Market day today: %s sells %s" % [best_name, ", ".join(names)]
+				var wants := wanted_phrase(best_place, today, data)
+				return "Market day today: %s sells %s%s" % [best_name, ", ".join(names), "" if wants == "" else "; wants " + wants]
 		return "Market day today: %s is open" % best_name
 	return "Market day in %d day%s: %s%s" % [best, "" if best == 1 else "s", best_name, " (new wares each time)" if rotates else ""]
 
@@ -114,6 +115,47 @@ static func stock_tags_today(place: Dictionary, today: int) -> Array:
 	var tags: Array = (place.get("stock_tags", []) as Array).duplicate()
 	tags.append_array(rotating_picks(place, today))
 	return tags
+
+
+## MARKET-008: most units of the wanted item a stall buys at the bonus price per open day.
+const WANTED_CAP := 5
+
+
+## MARKET-008: {item, mult} the stall wants on `today` ({} without `wanted` or `rotating_stock`, or when closed).
+## One uniform pick from `wanted.pool`, deterministic per (display_name, day).
+static func wanted_today(place: Dictionary, today: int) -> Dictionary:
+	var wanted: Dictionary = place.get("wanted", {})
+	var pool: Array = wanted.get("pool", [])
+	if wanted.is_empty() or pool.is_empty() or not place.has("rotating_stock") or not is_open(place, today):
+		return {}
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash(String(place.get("display_name", "")) + "/wanted") ^ today
+	return {"item": String(pool[rng.randi_range(0, pool.size() - 1)]), "mult": float(wanted.get("mult", 1.0))}
+
+
+## MARKET-008: "Boar Hide (x1.5)" for the journal's market-day line; "" when nothing is wanted today.
+static func wanted_phrase(place: Dictionary, today: int, data: GameData) -> String:
+	var w := wanted_today(place, today)
+	if w.is_empty():
+		return ""
+	return "%s (x%s)" % [String(data.items.get(w["item"], {}).get("name", w["item"])), String.num(float(w["mult"]), 2).trim_suffix("0")]
+
+
+## Load-time check of a `wanted` value on a place that has `rotating_stock`.
+static func validate_wanted(wanted: Variant, place: Dictionary, items: Dictionary, where: String) -> Array[String]:
+	var problems: Array[String] = []
+	if not wanted is Dictionary or not (wanted as Dictionary).get("pool") is Array or ((wanted as Dictionary)["pool"] as Array).is_empty():
+		problems.append("%s wanted needs a non-empty pool" % where)
+		return problems
+	if not place.has("rotating_stock"):
+		problems.append("%s wanted needs rotating_stock" % where)
+	var mult := float((wanted as Dictionary).get("mult", 0.0))
+	if mult < 1.2 or mult > 2.0:
+		problems.append("%s wanted mult must be 1.2..2.0" % where)
+	for id: Variant in (wanted as Dictionary)["pool"]:
+		if not items.has(String(id)) or int((items[String(id)] as Dictionary).get("price", 0)) <= 0:
+			problems.append("%s wanted item '%s' is unknown or has no price" % [where, id])
+	return problems
 
 
 ## Load-time check of a `rotating_stock` value on a merchant place with items `items`.

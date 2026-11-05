@@ -280,7 +280,7 @@ static func shop_stock(data: GameData, max_price: int, stock_tags: Array) -> Arr
 ## merchants only, and the item must have a sell price).
 static func merchant_buys(data: GameData, item_id: String, stock_tags: Array, buy_tags: Array = []) -> bool:
 	var tags: Array = stock_tags + buy_tags
-	return not tags.is_empty() and has_tag(data, item_id, tags) and sell_price(data, item_id) > 0
+	return not tags.is_empty() and (has_tag(data, item_id, tags) or buy_tags.has(item_id)) and sell_price(data, item_id) > 0
 
 
 ## Merchant places that buy `item_id`, sorted by region name:
@@ -472,8 +472,9 @@ static func compute_material_value(data: GameData, item_id: String) -> float:
 
 
 ## Returns {ok, reason, stones}.
-static func sell(c: CharacterData, data: GameData, item_id: String, quantity: int = 1, season: String = "") -> Dictionary:
-	var price := sell_price(data, item_id, season) * quantity
+## `mult` (MARKET-008, a stall's wanted item) scales the unit price.
+static func sell(c: CharacterData, data: GameData, item_id: String, quantity: int = 1, season: String = "", mult: float = 1.0) -> Dictionary:
+	var price := roundi(sell_price(data, item_id, season) * mult) * quantity
 	if price <= 0 or item_id == "spirit_stone":
 		return {"ok": false, "reason": "No one will buy that.", "stones": 0}
 	if c.item_count(item_id) < quantity:

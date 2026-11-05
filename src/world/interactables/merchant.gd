@@ -17,6 +17,8 @@ extends Interactable
 @export var faction := ""
 ## Day-of-month ints this merchant is there (MARKET-002); empty = always. Closed: no menu entries.
 @export var open_days: Array = []
+## MARKET-008: {pool: [item ids], mult 1.2..2.0}; one pool item is bought at mult x on each open day (Places.wanted_today).
+@export var wanted: Dictionary = {}
 ## MARKET-007: {pool: [{item, weight}], count}; today's picks are added to stock_tags when the shop opens.
 @export var rotating_stock: Dictionary = {}
 
@@ -28,8 +30,12 @@ func get_options() -> Array[Dictionary]:
 	if refusal != "":
 		return [{"label": refusal, "action": Callable(), "disabled": true}]
 	var tags_today: Array = Places.stock_tags_today({"display_name": display_name, "open_days": open_days, "stock_tags": stock_tags, "rotating_stock": rotating_stock}, GameClock.total_days)
+	var want := Places.wanted_today({"display_name": display_name, "open_days": open_days, "rotating_stock": rotating_stock, "wanted": wanted}, GameClock.total_days)
+	var buys_today: Array = buy_tags.duplicate()
+	if not want.is_empty():
+		buys_today.append(want["item"])
 	var options: Array[Dictionary] = [
-		{"label": "Browse wares", "action": EventBus.shop_requested.emit.bind(display_name, max_price, tags_today, faction, buy_tags)},
+		{"label": "Browse wares", "action": EventBus.shop_requested.emit.bind(display_name, max_price, tags_today, faction, buys_today)},
 		{"label": "Ask about rumors", "action": _ask_rumors},
 	]
 	var festival := GameState.festival_activity_here(stock_tags)

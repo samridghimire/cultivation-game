@@ -1339,11 +1339,44 @@ func cook_meal(meal_id: String) -> void:
 	_pass_time(int(result["days"]))
 
 
+## MARKET-008: the open shop's wanted item today: {item, mult, left} (left = units still bought at the bonus), or {}.
+func market_wanted() -> Dictionary:
+	if shop_name == "":
+		return {}
+	var place := ShopDiscounts.place_named(data, current_region, shop_name)
+	var w := Places.wanted_today(place, GameClock.total_days)
+	if w.is_empty():
+		return {}
+	w["left"] = maxi(0, Places.WANTED_CAP - int(world_flags.get(_wanted_key(), 0)))
+	return w
+
+
+func _wanted_key() -> String:
+	return "wanted_sold_%s_%d" % [shop_name.to_snake_case(), GameClock.total_days]
+
+
 func sell_item(item_id: String, quantity: int = 1) -> void:
 	EventBus.topic = "trade"
 	if not _can_act():
 		return
-	var result := Items.sell(player, data, item_id, quantity, price_season())
+	var bonus_units := 0
+	var bonus_mult := 1.0
+	var want := market_wanted()
+	if not want.is_empty() and String(want["item"]) == item_id:
+		bonus_units = mini(quantity, int(want["left"]))
+		bonus_mult = float(want["mult"])
+	if player.item_count(item_id) < quantity:
+		EventBus.post("You do not have enough.", "warning")
+		EventBus.player_changed.emit()
+		return
+	var result := Items.sell(player, data, item_id, quantity - bonus_units, price_season()) if quantity > bonus_units else {"ok": true, "reason": "", "stones": 0}
+	if result["ok"] and bonus_units > 0:
+		var bonus := Items.sell(player, data, item_id, bonus_units, price_season(), bonus_mult)
+		result["ok"] = bonus["ok"]
+		result["reason"] = bonus["reason"]
+		result["stones"] = int(result["stones"]) + int(bonus["stones"])
+		if bonus["ok"]:
+			world_flags[_wanted_key()] = int(world_flags.get(_wanted_key(), 0)) + bonus_units
 	if result["ok"]:
 		EventBus.post("You sell %d %s for %d spirit stones." % [quantity, Items.item_plural(data, item_id, quantity), result["stones"]])
 	else:

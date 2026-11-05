@@ -3023,6 +3023,38 @@ func test_explore_posts_tracks_line_once_per_day() -> void:
 	gs.end_session()
 
 
+## MARKET-008: the stall pays 1.5x for today's wanted item, 5 units a day, and nothing extra for other items or days.
+func test_market_wanted_price_and_cap() -> void:
+	_start()
+	var clock := _root().get_node("GameClock")
+	clock.total_days = 9
+	GameState.current_region = "qingshi_village"
+	GameState.shop_name = "Travelling Market Stall"
+	var want := GameState.market_wanted()
+	assert_false(want.is_empty())
+	var id := String(want["item"])
+	var other := "boar_hide" if id != "boar_hide" else "dew_grass"
+	var base := Items.sell_price(GameState.data, id)
+	GameState.player.add_item(id, 8)
+	GameState.player.add_item(other, 2)
+	var before := GameState.player.item_count("spirit_stone")
+	GameState.sell_item(id, 3)
+	assert_eq(GameState.player.item_count("spirit_stone") - before, roundi(base * 1.5) * 3)
+	assert_eq(int(GameState.market_wanted()["left"]), 2)
+	before = GameState.player.item_count("spirit_stone")
+	GameState.sell_item(id, 5)  # 2 at the bonus, 3 at the plain price
+	assert_eq(GameState.player.item_count("spirit_stone") - before, roundi(base * 1.5) * 2 + base * 3)
+	assert_eq(int(GameState.market_wanted()["left"]), 0)
+	before = GameState.player.item_count("spirit_stone")
+	GameState.sell_item(other, 2)
+	assert_eq(GameState.player.item_count("spirit_stone") - before, Items.sell_price(GameState.data, other) * 2, "no bonus on other items")
+	clock.total_days = 9 + 30  # next market day: a fresh allowance
+	assert_eq(int(GameState.market_wanted()["left"]), 5)
+	clock.total_days = 10  # closed
+	assert_true(GameState.market_wanted().is_empty())
+	GameState.shop_name = ""
+
+
 ## MARKET-007: the Travelling Market Stall's shop gets its fixed tags plus 3 rotating picks on market day.
 func test_market_stall_rotating_stock_options() -> void:
 	_start()

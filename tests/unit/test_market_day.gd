@@ -192,3 +192,36 @@ func test_hint_line_rotating() -> void:
 	assert_eq(Places.hint_line(region, DAY_10 - 3), "Market day in 3 days: Travelling Market Stall (new wares each time)")
 	var today := Places.hint_line(region, DAY_10, 5, _gd())
 	assert_true(today.begins_with("Market day today: Travelling Market Stall sells "), today)
+
+
+# --- MARKET-008: wanted items ---
+
+func test_wanted_deterministic_and_open_day_only() -> void:
+	var place := _stall()
+	var w := Places.wanted_today(place, DAY_10)
+	assert_false(w.is_empty())
+	assert_eq(Places.wanted_today(place, DAY_10), w, "same day, same want")
+	assert_true((place["wanted"]["pool"] as Array).has(w["item"]))
+	assert_eq(float(w["mult"]), 1.5)
+	assert_true(Places.wanted_today(place, DAY_10 + 1).is_empty(), "closed day")
+	assert_true(Places.wanted_today({"display_name": "x"}, DAY_10).is_empty())
+	var seen := {}
+	for month in 12:
+		seen[Places.wanted_today(place, DAY_10 + 30 * month)["item"]] = true
+	assert_true(seen.size() > 1, "the want changes between market days")
+
+
+func test_wanted_validation() -> void:
+	var data := _gd()
+	var place := _stall().duplicate(true)
+	assert_eq(Places.validate_wanted(place["wanted"], place, data.items, "x").size(), 0)
+	assert_true(Places.validate_wanted({"pool": ["boar_hide"], "mult": 3.0}, place, data.items, "x").size() > 0, "mult too high")
+	assert_true(Places.validate_wanted({"pool": ["nope"], "mult": 1.5}, place, data.items, "x").size() > 0, "unknown item")
+	assert_true(Places.validate_wanted({"pool": [], "mult": 1.5}, place, data.items, "x").size() > 0, "empty pool")
+	place.erase("rotating_stock")
+	assert_true(Places.validate_wanted({"pool": ["boar_hide"], "mult": 1.5}, place, data.items, "x").size() > 0, "needs rotating_stock")
+
+
+func test_hint_line_names_wanted() -> void:
+	var today := Places.hint_line(_region(), DAY_10, 5, _gd())
+	assert_true("; wants " in today and "(x1.5)" in today, today)
