@@ -108,6 +108,7 @@ func _collect_grants(granted: Dictionary) -> void:
 		"dialogue": gd.dialogues,
 		"secret_realms.json": gd.secret_realms,
 		"inheritances.json": gd.inheritances,
+		"world_events.json": gd.world_events,
 	}
 	for label: String in sources:
 		_walk(sources[label], label, "", granted)
