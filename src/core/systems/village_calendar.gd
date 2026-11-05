@@ -188,6 +188,41 @@ static func reminders(data: GameData, npcs: Dictionary, favor: Dictionary, activ
 	return out
 
 
+## CAL-006: the player's marks.
+const MAX_MARKS := 5
+
+
+## "" if `day` may be marked with `label` (a label the calendar shows that day), else why not.
+static func check_mark(c: CharacterData, entries: Array[Dictionary], today: int, day: int, label: String) -> String:
+	if day <= today:
+		return "Only a future day can be marked."
+	if c.marked_days.has(day):
+		return "That day is already marked."
+	if c.marked_days.size() >= MAX_MARKS:
+		return "You can mark at most %d days; unmark one first." % MAX_MARKS
+	for e: Dictionary in entries:
+		if int(e["day"]) == day and String(e["text"]) == label:
+			return ""
+	return "The calendar shows nothing like that on that day."
+
+
+## Drops marks of days that are over.
+static func prune_marks(c: CharacterData, today: int) -> void:
+	for day: int in c.marked_days.keys():
+		if day < today:
+			c.marked_days.erase(day)
+
+
+## Lines for marked days: today's "Today: <label> (you marked it)." and tomorrow's "Tomorrow: <label>.".
+static func mark_lines(c: CharacterData, today: int) -> PackedStringArray:
+	var out := PackedStringArray()
+	if c.marked_days.has(today):
+		out.append("Today: %s (you marked it)." % String(c.marked_days[today]))
+	if c.marked_days.has(today + 1):
+		out.append("Tomorrow: %s." % String(c.marked_days[today + 1]))
+	return out
+
+
 ## True when `rid` is `here` or one direct route from it.
 static func _near(data: GameData, here: String, rid: String) -> bool:
 	if rid == here:

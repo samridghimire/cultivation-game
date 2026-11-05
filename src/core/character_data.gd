@@ -170,6 +170,8 @@ var hunt_log: Dictionary = {}
 var hunt_spoils: Dictionary = {}
 ## Great beasts slain (WILD-007): enemy id -> day of the first win (the trophy is given once).
 var great_beasts: Dictionary = {}
+## CAL-006: day (total days) -> label of the future days the player marked on the calendar.
+var marked_days: Dictionary = {}
 ## Highest realm index a great beast kind was beaten in (GOAL-012): enemy id -> realm_index. Older saves have none.
 var great_beast_realms: Dictionary = {}
 ## Market days on which the player sold a stall's wanted item (MARKET-009): place key -> days.
@@ -307,6 +309,7 @@ func to_dict() -> Dictionary:
 		"hunt_log": hunt_log.duplicate(),
 		"hunt_spoils": hunt_spoils.duplicate(true),
 		"great_beasts": great_beasts.duplicate(),
+		"marked_days": marked_days.duplicate(),
 		"great_beast_realms": great_beast_realms.duplicate(),
 		"market_regular": market_regular.duplicate(),
 		"cooked_meals": cooked_meals.duplicate(),
@@ -463,6 +466,9 @@ static func from_dict(d: Dictionary) -> CharacterData:
 	c.cooked_meals = _int_values(d.get("cooked_meals", {}))
 	c.forage_picks = int(d.get("forage_picks", 0))
 	c.great_beasts = _int_values(d.get("great_beasts", {}))
+	var saved_marks: Dictionary = d.get("marked_days", {})
+	for k in saved_marks:
+		c.marked_days[int(k)] = String(saved_marks[k])
 	c.great_beast_realms = _int_values(d.get("great_beast_realms", {}))
 	c.market_regular = _int_values(d.get("market_regular", {}))
 	var hs: Variant = d.get("hunt_spoils", {})

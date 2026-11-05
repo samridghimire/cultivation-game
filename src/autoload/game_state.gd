@@ -2868,6 +2868,27 @@ func upcoming_days(span: int = 30) -> Array[Dictionary]:
 	return VillageCalendar.upcoming(data, npcs, npc_favor, world_events, current_region, GameClock.total_days, span, player, world_flags)
 
 
+## CAL-006: mark a future day with a label the calendar shows that day (no time passes).
+func mark_day(day: int, label: String) -> bool:
+	EventBus.topic = "world"
+	var today := GameClock.total_days
+	VillageCalendar.prune_marks(player, today)
+	var reason := VillageCalendar.check_mark(player, upcoming_days(maxi(1, day - today + 1)), today, day, label)
+	if reason != "":
+		EventBus.post(reason, "warning")
+		EventBus.player_changed.emit()
+		return false
+	player.marked_days[day] = label
+	EventBus.post("You mark the day: %s." % label, "progress")
+	EventBus.player_changed.emit()
+	return true
+
+
+func unmark_day(day: int) -> void:
+	if player.marked_days.erase(day):
+		EventBus.player_changed.emit()
+
+
 ## FOLK-009: who you know in the current region (Folk.people_entries).
 func people_entries() -> Array[Dictionary]:
 	return Folk.people_entries(npcs, data, current_region, npc_favor, world_flags, GameClock.total_days)
@@ -4019,6 +4040,9 @@ func _post_reminders() -> void:
 	if today == _last_reminder_day:
 		return
 	_last_reminder_day = today
+	VillageCalendar.prune_marks(player, today)
+	for line in VillageCalendar.mark_lines(player, today):
+		EventBus.post(line, "world")
 	for line in VillageCalendar.reminders(data, npcs, npc_favor, world_events, current_region, today, player, world_flags):
 		EventBus.post(line, "world")
 

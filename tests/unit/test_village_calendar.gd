@@ -226,3 +226,62 @@ func test_forage_season_line_only_for_visited() -> void:
 	assert_eq(_kinds(VillageCalendar.upcoming(data(), {}, {}, [], "qingshi_village", 359, 3, c), "forage").size(), 0)
 	c.visited_regions = ["qingshi_village"]
 	assert_eq(_kinds(VillageCalendar.upcoming(data(), {}, {}, [], "qingshi_village", 100, 5, c), "forage").size(), 0)
+
+
+## CAL-006: marked days.
+func _market_label() -> String:
+	var e := VillageCalendar.upcoming(data(), {}, {}, [], "qingshi_village", 0, 30)
+	return String(_kinds(e, "market")[0]["text"])
+
+
+func test_mark_checks_cap_and_label() -> void:
+	var c := new_character()
+	var entries := VillageCalendar.upcoming(data(), {}, {}, [], "qingshi_village", 0, 30)
+	var m: Dictionary = _kinds(entries, "market")[0]
+	var day := int(m["day"])
+	assert_eq(VillageCalendar.check_mark(c, entries, 0, day, String(m["text"])), "")
+	assert_true(VillageCalendar.check_mark(c, entries, 0, day, "nonsense") != "")
+	assert_true(VillageCalendar.check_mark(c, entries, day, day, String(m["text"])) != "", "not a future day")
+	for i in VillageCalendar.MAX_MARKS:
+		c.marked_days[100 + i] = "x"
+	assert_true(VillageCalendar.check_mark(c, entries, 0, day, String(m["text"])).contains("at most"))
+
+
+func test_prune_and_lines() -> void:
+	var c := new_character()
+	c.marked_days = {3: "old", 5: "Market: Qingshi", 6: "Festival"}
+	VillageCalendar.prune_marks(c, 5)
+	assert_false(c.marked_days.has(3))
+	assert_eq(Array(VillageCalendar.mark_lines(c, 5)), ["Today: Market: Qingshi (you marked it).", "Tomorrow: Festival."])
+	assert_eq(VillageCalendar.mark_lines(c, 20).size(), 0)
+
+
+func test_marks_save_round_trip_and_old_saves_load() -> void:
+	var c := new_character()
+	c.marked_days = {12: "Market: x"}
+	var back := CharacterData.from_dict(JSON.parse_string(JSON.stringify(c.to_dict())))
+	assert_eq(back.marked_days, {12: "Market: x"})
+	var d := c.to_dict()
+	d.erase("marked_days")
+	assert_eq(CharacterData.from_dict(d).marked_days, {})
+
+
+func test_game_state_mark_day() -> void:
+	var gs: Node = (Engine.get_main_loop() as SceneTree).root.get_node("GameState")
+	var clock: Node = (Engine.get_main_loop() as SceneTree).root.get_node("GameClock")
+	gs.start_session(new_character())
+	gs.current_region = "qingshi_village"
+	clock.total_days = 0
+	var label := _market_label()
+	var day := 9
+	assert_false(gs.mark_day(day, "made up"))
+	assert_true(gs.mark_day(day, label))
+	assert_eq(gs.player.marked_days[day], label)
+	assert_false(gs.mark_day(day, label), "already marked")
+	gs.unmark_day(day)
+	assert_false(gs.player.marked_days.has(day))
+	gs.mark_day(day, label)
+	clock.total_days = day - 1
+	gs.player.marked_days[day] = "Market: Qingshi"
+	assert_eq(Array(VillageCalendar.mark_lines(gs.player, day - 1)), ["Tomorrow: Market: Qingshi."])
+	gs.end_session()
