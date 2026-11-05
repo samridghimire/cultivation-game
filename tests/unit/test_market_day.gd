@@ -293,3 +293,32 @@ func test_market_regular_save_round_trip_and_default() -> void:
 	var d := c.to_dict()
 	d.erase("market_regular")
 	assert_eq(CharacterData.from_dict(d).market_regular, {})
+
+
+## C-299: every wanted pool pays (sell price x mult) below the item's buy price, so there is no buy-here-sell-there loop.
+func test_c299_wanted_never_beats_buy_price() -> void:
+	var data := _gd()
+	var seen := 0
+	for rid: String in data.regions:
+		for place: Dictionary in data.regions[rid].get("places", []):
+			if not place.has("wanted"):
+				continue
+			seen += 1
+			var mult := float(place["wanted"]["mult"])
+			for id: Variant in place["wanted"]["pool"]:
+				var buy := int(data.items[String(id)]["price"])
+				for season: String in ["spring", "summer", "autumn", "winter"]:
+					assert_true(float(Items.sell_price(data, String(id), season)) * mult < float(buy) * Items.seasonal_mult(data, String(id), season) + 0.001 or buy <= 2, "%s at %s" % [id, place["display_name"]])
+	assert_true(seen >= 3, "three stalls want things")
+
+
+## C-299: the night stall and the marsh skiff run rotating carts with valid pools; the skiff opens twice a month.
+func test_c299_new_carts() -> void:
+	var data := _gd()
+	var night := ShopDiscounts.place_named(data, "fallen_star_market", "Night Market Stall")
+	var skiff := ShopDiscounts.place_named(data, "withered_bone_marsh", "Corpse Peddler's Skiff")
+	for place: Dictionary in [night, skiff]:
+		assert_false(place.is_empty())
+		assert_eq(Places.validate_rotating(place["rotating_stock"], place, data.items, data.restricted_item_tags, "x").size(), 0)
+		assert_true((place["rotating_stock"]["pool"] as Array).size() >= 8)
+	assert_eq((skiff["open_days"] as Array).size(), 2)
