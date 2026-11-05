@@ -63,6 +63,9 @@ var _prompt: Label
 var _backdrop: ColorRect  ## GFX-017: dims the world behind any open modal.
 var _key_bar: Label
 var _target_name := ""
+var _prompt_floating := false
+## Labels keep this many px above the key strip (WU-441).
+const KEY_STRIP_CLEARANCE := 28.0
 
 ## [action, caption] pairs shown in the key bar.
 const KEY_HINTS := [
@@ -841,8 +844,63 @@ func occupied_rects() -> Array[Rect2]:
 	var rects: Array[Rect2] = []
 	for c: Control in [_status_panel, _guide_panel, _log_panel, _key_bar]:
 		if c != null and c.is_visible_in_tree():
-			rects.append(c.get_global_rect())
+			var r := c.get_global_rect()
+			if c == _key_bar:
+				r = r.grow_side(SIDE_TOP, KEY_STRIP_CLEARANCE)  # WU-441: labels keep off the key strip
+			rects.append(r)
 	return rects
+
+
+## WU-441: where the "[E] <name>" chip goes: just above the target's name label, else just below it, clamped
+## inside `screen` and clear of `avoid` rects whenever a free spot exists (else the clamped spot above).
+static func prompt_rect(target_label_rect: Rect2, screen: Rect2, avoid: Array[Rect2], chip_size: Vector2 = Vector2(190, 30)) -> Rect2:
+	var x := target_label_rect.get_center().x - chip_size.x / 2.0
+	var above_y := target_label_rect.position.y - chip_size.y - 2.0
+	var below_y := target_label_rect.end.y + 2.0
+	var first := Rect2()
+	var tries: Array[float] = [above_y, below_y, above_y - chip_size.y - 2.0, below_y + chip_size.y + 2.0]
+	for i in tries.size():
+		var r := Rect2(Vector2(x, tries[i]), chip_size)
+		r.position.x = clampf(r.position.x, screen.position.x, maxf(screen.position.x, screen.end.x - chip_size.x))
+		r.position.y = clampf(r.position.y, screen.position.y, maxf(screen.position.y, screen.end.y - chip_size.y))
+		if i == 0:
+			first = r
+		var hit := false
+		for a in avoid:
+			if r.intersects(a):
+				hit = true
+				break
+		if not hit:
+			return r
+	return first
+
+
+## WU-441: moves the prompt next to its target's label; the bottom-centre spot stays the fallback.
+func _place_prompt() -> void:
+	if _prompt == null or _target_name == "":
+		return
+	var player := get_tree().get_first_node_in_group("player")
+	var target: Interactable = player.current_target() if player != null and player.has_method("current_target") else null
+	var parent := target.get_parent() as CanvasItem if target != null else null
+	if target == null or parent == null or not target.label_drawn_ignoring_target():
+		_prompt_to_bottom()
+		return
+	var xf := parent.get_global_transform_with_canvas()
+	var label_rect: Rect2 = xf * target.label_rect()
+	var screen := get_viewport().get_visible_rect()
+	var chip := _prompt.get_combined_minimum_size()
+	var rect := prompt_rect(label_rect, screen, occupied_rects(), chip)
+	if _prompt_floating == false:
+		_prompt.set_anchors_preset(Control.PRESET_TOP_LEFT)
+		_prompt_floating = true
+	_prompt.position = rect.position
+	_prompt.size = chip
+
+
+func _prompt_to_bottom() -> void:
+	if _prompt_floating:
+		_set_anchored_rect(_prompt, Vector4(0.5, 1, 0.5, 1), Vector4(-300, -170, 300, -132))
+		_prompt_floating = false
 
 
 ## Drops the lowest-priority lines until each card clears the log (WU-091, GFX-010): the status card loses its
@@ -1772,6 +1830,7 @@ func _update_modal() -> void:
 	_log_panel.visible = not blocking
 	_backdrop.visible = blocking
 	_prompt.visible = not blocking
+	_place_prompt()
 	_update_guide_visibility()
 	_key_bar.visible = bool(Settings.get_value("key_help")) and not blocking
 	EventBus.ui_modal_changed.emit(blocking or _time_skip.visible)

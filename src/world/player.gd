@@ -116,6 +116,11 @@ func _unhandled_input(event: InputEvent) -> void:
 		EventBus.interaction_menu_requested.emit(_target)
 
 
+## The interactable the interact prompt names right now (null when none).
+func current_target() -> Interactable:
+	return _target if is_instance_valid(_target) else null
+
+
 func add_interactable(i: Interactable) -> void:
 	if not _nearby.has(i):
 		_nearby.append(i)

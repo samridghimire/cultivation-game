@@ -247,6 +247,11 @@ func drawn_label_rect(view: Rect2) -> Rect2:
 	return rect
 
 
+## WU-441: whether the node has a label that would show if it were not the target (the chip then sits on it).
+func label_drawn_ignoring_target() -> bool:
+	return visible and label_text() != ""
+
+
 ## Whether the name label is drawn at all (unavailable places and the current target hide it).
 func label_drawn() -> bool:
 	return visible and label_visible(highlighted) and label_fade > 0.0
