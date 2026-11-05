@@ -60,8 +60,8 @@ func test_stall_goods_are_not_sold_by_the_village_herb_seller() -> void:
 func test_hint_line() -> void:
 	var region := _region()
 	assert_eq(Places.hint_line(region, DAY_10), "Market day today: Travelling Market Stall is open")
-	assert_eq(Places.hint_line(region, DAY_10 - 3), "Market day in 3 days: Travelling Market Stall")
-	assert_eq(Places.hint_line(region, DAY_10 - 1), "Market day in 1 day: Travelling Market Stall")
+	assert_eq(Places.hint_line(region, DAY_10 - 3), "Market day in 3 days: Travelling Market Stall (new wares each time)")
+	assert_eq(Places.hint_line(region, DAY_10 - 1), "Market day in 1 day: Travelling Market Stall (new wares each time)")
 	assert_eq(Places.hint_line(region, DAY_10 + 1), "", "14 days away: no hint")
 	assert_eq(Places.hint_line(region, DAY_10 - 6), "", "6 days away: no hint")
 
@@ -70,7 +70,7 @@ func test_journal_village_card_mentions_market_day() -> void:
 	var data := _gd()
 	var c := CharacterFactory.create("Market", data, seeded_rng(), "male")
 	var lines := Guidance.village_lines(c, data, {}, {}, "qingshi_village", DAY_10 - 2)
-	assert_true("Market day in 2 days: Travelling Market Stall" in lines)
+	assert_true("Market day in 2 days: Travelling Market Stall (new wares each time)" in lines)
 	lines = Guidance.village_lines(c, data, {}, {}, "qingshi_village", DAY_10 + 1)
 	for line in lines:
 		assert_false(line.begins_with("Market day"), line)
@@ -133,3 +133,62 @@ func test_close_shop_clears_seller() -> void:
 	gs.shop_name = "Village Herb Seller"
 	gs.close_shop()
 	assert_eq(gs.shop_name, "")
+
+
+# --- MARKET-007: rotating stock ---
+
+func test_rotating_picks_deterministic_distinct_and_vary() -> void:
+	var place := _stall()
+	var a := Places.rotating_picks(place, DAY_10)
+	assert_eq(a.size(), 3)
+	assert_eq(Places.rotating_picks(place, DAY_10), a, "same day, same wares")
+	var pool_ids: Array[String] = []
+	for e: Dictionary in place["rotating_stock"]["pool"]:
+		pool_ids.append(String(e["item"]))
+	for id in a:
+		assert_true(pool_ids.has(id), id)
+	assert_eq(a.size(), Array(a).duplicate().filter(func(x: String) -> bool: return a.count(x) == 1).size(), "distinct")
+	var differs := false
+	for month in range(1, 6):
+		if Places.rotating_picks(place, DAY_10 + 30 * month) != a:
+			differs = true
+	assert_true(differs, "other open days differ")
+	assert_eq(Places.rotating_picks(place, DAY_10 + 1).size(), 0, "closed day")
+	assert_eq(Places.rotating_picks({"display_name": "x"}, 3).size(), 0, "no rotating_stock")
+
+
+func test_stock_tags_today_keeps_fixed_tags() -> void:
+	var tags := Places.stock_tags_today(_stall(), DAY_10)
+	assert_eq(tags.size(), 6)
+	assert_true(tags.has("sweet_rice_ball"))
+
+
+func test_rotating_validation() -> void:
+	var data := _gd()
+	var place := {"type": "merchant"}
+	var ok := {"pool": [{"item": "qi_gathering_pill", "weight": 1}], "count": 1}
+	assert_eq(Places.validate_rotating(ok, place, data.items, data.restricted_item_tags, "x").size(), 0)
+	var zero := {"pool": [{"item": "qi_gathering_pill", "weight": 0}], "count": 1}
+	assert_eq(Places.validate_rotating(zero, place, data.items, data.restricted_item_tags, "x").size(), 1)
+	var unknown := {"pool": [{"item": "nope", "weight": 1}], "count": 1}
+	assert_true(Places.validate_rotating(unknown, place, data.items, data.restricted_item_tags, "x").size() > 0)
+	var big := {"pool": [{"item": "qi_gathering_pill", "weight": 1}], "count": 2}
+	assert_true(Places.validate_rotating(big, place, data.items, data.restricted_item_tags, "x").size() > 0)
+
+
+func test_stall_pool_is_valid_and_no_gear() -> void:
+	var data := _gd()
+	var place := _stall()
+	assert_eq(Places.validate_rotating(place["rotating_stock"], place, data.items, data.restricted_item_tags, "x").size(), 0)
+	for e: Dictionary in place["rotating_stock"]["pool"]:
+		var item: Dictionary = data.items[e["item"]]
+		assert_true(int(item["price"]) <= 120, e["item"])
+		assert_false((item.get("tags", []) as Array).has("weapon") or (item.get("tags", []) as Array).has("armor") or (item.get("tags", []) as Array).has("equipment"), e["item"])
+		assert_true(Items.merchant_sells(data, item, Places.stock_tags_today(place, DAY_10).duplicate() + [e["item"]], 0), e["item"])
+
+
+func test_hint_line_rotating() -> void:
+	var region := _region()
+	assert_eq(Places.hint_line(region, DAY_10 - 3), "Market day in 3 days: Travelling Market Stall (new wares each time)")
+	var today := Places.hint_line(region, DAY_10, 5, _gd())
+	assert_true(today.begins_with("Market day today: Travelling Market Stall sells "), today)

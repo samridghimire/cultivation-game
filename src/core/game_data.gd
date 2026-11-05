@@ -641,6 +641,9 @@ func _validate_world() -> void:
 			if place.has("open_days"):
 				for problem in Places.validate(place["open_days"], "Region '%s' place '%s'" % [region["id"], place.get("display_name", "")]):
 					load_errors.append(problem)
+			if place.has("rotating_stock"):
+				for problem in Places.validate_rotating(place["rotating_stock"], place, items, restricted_item_tags, "Region '%s' place '%s'" % [region["id"], place.get("display_name", "")]):
+					load_errors.append(problem)
 			if place.has("discount_flag"):
 				for problem in ShopDiscounts.validate(place["discount_flag"], "Region '%s' place '%s'" % [region["id"], place.get("display_name", "")]):
 					load_errors.append(problem)

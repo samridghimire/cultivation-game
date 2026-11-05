@@ -23,8 +23,9 @@ static func days_until_open(place: Dictionary, today: int) -> int:
 
 ## Journal hint for the region's timed places: "Market day in 3 days: Travelling Market Stall" when 1-5 days
 ## away, "... today" on the day, "" otherwise. The nearest one wins.
-static func hint_line(region: Dictionary, today: int, window: int = 5) -> String:
+static func hint_line(region: Dictionary, today: int, window: int = 5, data: GameData = null) -> String:
 	var best_name := ""
+	var best_place: Dictionary = {}
 	var best := window + 1
 	for place: Dictionary in region.get("places", []):
 		if not place.has("open_days"):
@@ -33,11 +34,19 @@ static func hint_line(region: Dictionary, today: int, window: int = 5) -> String
 		if ahead >= 0 and ahead < best:
 			best = ahead
 			best_name = String(place.get("display_name", "Market"))
+			best_place = place
 	if best_name == "":
 		return ""
+	var rotates := best_place.has("rotating_stock")
 	if best == 0:
+		if rotates and data != null:  # MARKET-007: name today's wares
+			var names: Array[String] = []
+			for id: String in rotating_picks(best_place, today):
+				names.append(String(data.items.get(id, {}).get("name", id)))
+			if not names.is_empty():
+				return "Market day today: %s sells %s" % [best_name, ", ".join(names)]
 		return "Market day today: %s is open" % best_name
-	return "Market day in %d day%s: %s" % [best, "" if best == 1 else "s", best_name]
+	return "Market day in %d day%s: %s%s" % [best, "" if best == 1 else "s", best_name, " (new wares each time)" if rotates else ""]
 
 
 ## "market days 10 and 25" / "market days 5, 15 and 25" for a place with `open_days`; "" without (MARKET-003).
@@ -71,4 +80,67 @@ static func validate(days: Variant, where: String) -> Array[String]:
 	for d: Variant in days:
 		if not (d is int or d is float) or int(d) != float(d) or int(d) < 1 or int(d) > Calendar.DAYS_PER_MONTH:
 			problems.append("%s open_days has an invalid day '%s'" % [where, str(d)])
+	return problems
+
+
+## MARKET-007: the `count` distinct pool items a merchant place sells on `today` ([] without `rotating_stock` or when
+## closed). Deterministic per (display_name, day): a weighted pick without replacement from a local seeded rng.
+static func rotating_picks(place: Dictionary, today: int) -> Array[String]:
+	var picks: Array[String] = []
+	var rot: Dictionary = place.get("rotating_stock", {})
+	if rot.is_empty() or not is_open(place, today):
+		return picks
+	var pool: Array = (rot.get("pool", []) as Array).duplicate()
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash(String(place.get("display_name", ""))) ^ today
+	for n in mini(int(rot.get("count", 0)), pool.size()):
+		var total := 0.0
+		for e: Dictionary in pool:
+			total += float(e.get("weight", 1.0))
+		var roll := rng.randf() * total
+		var chosen := pool.size() - 1
+		for i in pool.size():
+			roll -= float((pool[i] as Dictionary).get("weight", 1.0))
+			if roll < 0.0:
+				chosen = i
+				break
+		picks.append(String((pool[chosen] as Dictionary)["item"]))
+		pool.remove_at(chosen)
+	return picks
+
+
+## MARKET-007: `stock_tags` plus today's rotating picks.
+static func stock_tags_today(place: Dictionary, today: int) -> Array:
+	var tags: Array = (place.get("stock_tags", []) as Array).duplicate()
+	tags.append_array(rotating_picks(place, today))
+	return tags
+
+
+## Load-time check of a `rotating_stock` value on a merchant place with items `items`.
+static func validate_rotating(rot: Variant, place: Dictionary, items: Dictionary, restricted: PackedStringArray, where: String) -> Array[String]:
+	var problems: Array[String] = []
+	if not rot is Dictionary or not (rot as Dictionary).get("pool") is Array or ((rot as Dictionary)["pool"] as Array).is_empty():
+		problems.append("%s rotating_stock needs a non-empty pool" % where)
+		return problems
+	if String(place.get("type", "")) != "merchant":
+		problems.append("%s rotating_stock is only for merchant places" % where)
+	var pool: Array = (rot as Dictionary)["pool"]
+	var count: Variant = (rot as Dictionary).get("count")
+	if not (count is int or count is float) or int(count) != float(count) or int(count) < 1 or int(count) > mini(6, pool.size()):
+		problems.append("%s rotating_stock count must be 1..min(6, pool size)" % where)
+	for e: Variant in pool:
+		if not e is Dictionary or not items.has(String((e as Dictionary).get("item", ""))):
+			problems.append("%s rotating_stock has an unknown item" % where)
+			continue
+		var w: Variant = (e as Dictionary).get("weight")
+		if not (w is int or w is float) or float(w) <= 0.0:
+			problems.append("%s rotating_stock weight of '%s' must be > 0" % [where, (e as Dictionary)["item"]])
+		var item: Dictionary = items[(e as Dictionary)["item"]]
+		var price := int(item.get("price", 0))
+		var max_price := int(place.get("max_price", 0))
+		if price <= 0 or (max_price > 0 and price > max_price):
+			problems.append("%s rotating_stock item '%s' has no price or exceeds max_price" % [where, (e as Dictionary)["item"]])
+		for tag: Variant in item.get("tags", []):
+			if restricted.has(String(tag)):
+				problems.append("%s rotating_stock item '%s' carries a restricted tag" % [where, (e as Dictionary)["item"]])
 	return problems

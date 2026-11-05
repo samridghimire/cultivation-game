@@ -20,7 +20,7 @@ static func upcoming(data: GameData, npcs: Dictionary, favor: Dictionary, active
 			continue
 		for day in range(start, end):
 			if Places.is_open(place, day):
-				out.append({"day": day, "kind": "market", "text": "Market: %s" % String(place.get("display_name", "stall")), "region": region_id})
+				out.append({"day": day, "kind": "market", "text": "Market: %s%s" % [String(place.get("display_name", "stall")), " (new wares each time)" if place.has("rotating_stock") else ""], "region": region_id})
 	# Birthdays of villagers you know.
 	for b: Dictionary in Folk.birthdays_soon(npcs, data, region_id, start, favor, span - 1):
 		var npc: CharacterData = b["npc"]

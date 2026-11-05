@@ -3873,7 +3873,7 @@ static func village_lines(c: CharacterData, data: GameData, people: Dictionary, 
 		var missing := Fishing.missing_hint(c, data, region_id, Calendar.season_of(today), Weather.of(data, region_id, today))
 		if missing != "":
 			out.append(missing)
-	var market_line := Places.hint_line(data.regions.get(region_id, {}), today)
+	var market_line := Places.hint_line(data.regions.get(region_id, {}), today, 5, data)
 	if market_line != "":
 		out.append(market_line)
 	var sell_line := seasonal_sell_line(c, data, region_id, today)

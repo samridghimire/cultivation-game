@@ -3021,3 +3021,20 @@ func test_explore_posts_tracks_line_once_per_day() -> void:
 	EventBus.message_posted.disconnect(_collect_post)
 	assert_false("\n".join(_zero_round_posts).contains("Fresh tracks"), "once per day")
 	gs.end_session()
+
+
+## MARKET-007: the Travelling Market Stall's shop gets its fixed tags plus 3 rotating picks on market day.
+func test_market_stall_rotating_stock_options() -> void:
+	_start()
+	var clock := _root().get_node("GameClock")
+	clock.total_days = 9  # day 10 of the month
+	var stall: Interactable = load("res://src/world/interactables/merchant.gd").new()
+	stall.display_name = "Travelling Market Stall"
+	stall.open_days = [10, 25]
+	stall.stock_tags = ["sweet_rice_ball"]
+	stall.rotating_stock = ShopDiscounts.place_named(GameState.data, "qingshi_village", "Travelling Market Stall")["rotating_stock"]
+	var tags: Array = Places.stock_tags_today({"display_name": stall.display_name, "open_days": stall.open_days, "stock_tags": stall.stock_tags, "rotating_stock": stall.rotating_stock}, clock.total_days)
+	assert_eq(tags.size(), 4)
+	assert_true(tags.has("sweet_rice_ball"))
+	assert_false(stall.get_options().is_empty(), "open on day 10")
+	stall.free()

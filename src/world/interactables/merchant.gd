@@ -17,6 +17,8 @@ extends Interactable
 @export var faction := ""
 ## Day-of-month ints this merchant is there (MARKET-002); empty = always. Closed: no menu entries.
 @export var open_days: Array = []
+## MARKET-007: {pool: [{item, weight}], count}; today's picks are added to stock_tags when the shop opens.
+@export var rotating_stock: Dictionary = {}
 
 
 func get_options() -> Array[Dictionary]:
@@ -25,8 +27,9 @@ func get_options() -> Array[Dictionary]:
 	var refusal := Items.check_merchant(GameState.player, min_alignment, max_alignment)
 	if refusal != "":
 		return [{"label": refusal, "action": Callable(), "disabled": true}]
+	var tags_today: Array = Places.stock_tags_today({"display_name": display_name, "open_days": open_days, "stock_tags": stock_tags, "rotating_stock": rotating_stock}, GameClock.total_days)
 	var options: Array[Dictionary] = [
-		{"label": "Browse wares", "action": EventBus.shop_requested.emit.bind(display_name, max_price, stock_tags, faction, buy_tags)},
+		{"label": "Browse wares", "action": EventBus.shop_requested.emit.bind(display_name, max_price, tags_today, faction, buy_tags)},
 		{"label": "Ask about rumors", "action": _ask_rumors},
 	]
 	var festival := GameState.festival_activity_here(stock_tags)
