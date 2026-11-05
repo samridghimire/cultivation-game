@@ -176,6 +176,27 @@ func test_goal_text_faster_spot_clause() -> void:
 	assert_false(HUD.goal_text(c, d, flags, null, 1.0).contains("Azure Peak"))
 
 
+## QA-195 (GOAL-011): a Foundation Early character with the ladder done is told to reach Middle, then the great beast.
+func test_goal_text_foundation_middle_then_great_beast() -> void:
+	var d := data()
+	var c := new_character()
+	c.realm_index = 2
+	c.stage = 0
+	c.sect = {"id": "azure_cloud_sect", "rank": 2, "contribution": 0, "spent": 0}
+	c.techniques = {"basic_breathing": {"level": 1}, "iron_fist": {"level": 1, "xp": 0.0}, "stone_skin": {"level": 1, "xp": 0.0}}
+	c.equipment["armor"] = "cloth_robe"
+	c.abode = "cave"
+	c.cooked_meals["x"] = 1
+	for stat: String in ["fights_won", "foraged", "harvests"]:
+		LifeStats.add(c, stat)
+	c.body_stage = 1
+	var flags := {Guidance.beat_realm_flag("foundation_establishment"): true, Guidance.ELDER_MO_FLAG: true}
+	assert_eq(HUD.goal_text(c, d, flags, null, 1.0, "qingshi_village", 100), "Goal: Reach Foundation Establishment Middle")
+	c.stage = 1
+	var after := HUD.goal_text(c, d, flags, null, 1.0, "qingshi_village", 100)
+	assert_true(after.begins_with("Goal: Beat a great beast of your realm: "), after)
+
+
 ## WU-192: the arrival banner subtitle names the region's renown title.
 func test_arrival_subtitle() -> void:
 	var d := data()
