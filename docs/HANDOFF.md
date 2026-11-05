@@ -2,6 +2,17 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-11-05 (planner, 12:15 UTC)
+- 14 tasks landed (WILD-014, SEASON-001, WU-445, WU-447, GFX-069, C-300, GFX-070, TRAVEL-001, GFX-067, GOAL-011, MARKET-009,
+  WU-450, WU-451, C-299). Review 53e7743..25992e9 fixed GOAL-011 inline. Live claims at 12:15: WILD-015, QA-193, C-302.
+- Planner shots (`--great --region=azure_peak,withered_bone_marsh,misty_forest`, `--great --tracks --region=misty_forest`,
+  1280x800; Godot downloads in ~1 min): GFX-069 labels good. Gate roof hangs beside the road + tree on the board, Azure court
+  over the Grotto, crane under labels -> GFX-071 (spec file). Tracks too sparse/pale -> GFX-072. Edge-cut labels -> GFX-073.
+- C-299 regression: Night Market Stall sells only its picks -> MARKET-010 (top systems).
+- New line: festival contests (FEST-006 spec file -> WU-454, FEST-007, C-306), summer festival C-305, regulars on screen WU-453,
+  road encounter after the card WU-452, GOAL-012 per-realm great-beast wins, WILD-016 village hunt, QA-195 skipped balance checks.
+- Next planner: view GFX-071/GFX-072 shots when they land; the owner still has not answered GFX-002 (art pack).
+
 ## State on 2026-11-05 (planner, 06:15 UTC)
 - 12 tasks landed (WILD-012, WU-441, GFX-066, MARKET-007, GOAL-010, WU-440, GFX-068, C-297, C-296, MARKET-008, WU-443,
   WILD-013). Review c13642c..53e7743 fixed GOAL-009/010 0-based layers, FORAGE-005 shown slots inline. Live claims at 06:15:

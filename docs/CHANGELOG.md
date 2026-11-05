@@ -2,6 +2,20 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-11-05 [C-299] Market days in Fallen Star Market and the marsh, with their own wares and wants.
+- 2026-11-05 [WU-451] The village book's trophy shelf keeps a place for the beast that comes back.
+- 2026-11-05 [WU-450] Great beasts leave tracks on the ground the day before they walk.
+- 2026-11-05 [MARKET-009] Sell a stall what it wants often enough and you become a regular there.
+- 2026-11-05 [GOAL-011] Road goals lead on from Foundation to Core Formation.
+- 2026-11-05 [GFX-067] The smithy smokes, and map hint markers are easier to read.
+- 2026-11-05 [TRAVEL-001] Each road has its own encounters.
+- 2026-11-05 [GFX-070] Sect halls stand on their court, and the mountain gate has a roof.
+- 2026-11-05 [C-300] Each wild region has a beast that runs fat in its season.
+- 2026-11-05 [WILD-014] A beaten great beast comes back angrier, with its own trophy.
+- 2026-11-05 [GFX-069] World labels no longer sit on each other or under the [E] prompt.
+- 2026-11-05 [WU-447] The road card finishes before the arrival banner, and names what happened on the road.
+- 2026-11-05 [SEASON-001] A new season opens with a short note of what it brings.
+- 2026-11-05 [WU-445] Market day shows: bunting on the stall, new wares named on the map and in the shop.
 - 2026-11-05 [WILD-013] Some beasts run fat in their season: their spoils come twice, and the arrival line says so.
 - 2026-11-05 [WU-443] Travel has a road card: the route and its days, a line that fills, then the new region.
 - 2026-11-05 [MARKET-008] The market stall wants one find each market day and pays extra for it.
