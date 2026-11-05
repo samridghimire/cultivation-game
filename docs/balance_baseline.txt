@@ -1552,22 +1552,35 @@ New days per month (median over seeds): 10 6 6 8 3 7 5 6 7 4 6 5 2
 
 ## first Foundation Establishment year (seeds 1-10)
 
-First Foundation Establishment year: 10 seeds
+First Foundation Establishment year: 10 seeds, sensed threats: slip away
   region / variant               won  lost  fled  injur  lives  stones  stage
-  qingshi_village rogue             3     0     0      0      0      24      0
-  qingshi_village sect             16     0     0      0      0      88      0
+  qingshi_village rogue             3     0     0      0      0      36      0
+      met 35 foes in all, evaded 0; stage by month 3/6/12: 0/0/0; 45 fights rated <50%: 3, 50-75%: 1, 75-95%: 4, >95%: 37
+  qingshi_village sect             15     0     0      0      0     100      0
+      met 152 foes in all, evaded 0; stage by month 3/6/12: 0/0/0; 162 fights rated <50%: 2, 50-75%: 1, 75-95%: 7, >95%: 152
   misty_forest rogue               11     0     0      0      0     316      0
+      met 109 foes in all, evaded 3; stage by month 3/6/12: 0/0/0; 106 fights rated <50%: 0, 50-75%: 1, 75-95%: 13, >95%: 92
   misty_forest sect                22     0     0      0      0     391      1
+      met 218 foes in all, evaded 0; stage by month 3/6/12: 0/0/1; 218 fights rated <50%: 1, 50-75%: 0, 75-95%: 14, >95%: 203
   fallen_star_market rogue          3     0     0      0      0      44      0
+      met 31 foes in all, evaded 0; stage by month 3/6/12: 0/0/0; 32 fights rated <50%: 2, 50-75%: 1, 75-95%: 0, >95%: 29
   fallen_star_market sect          15     0     0      0      0      96      0
+      met 147 foes in all, evaded 0; stage by month 3/6/12: 0/0/0; 148 fights rated <50%: 3, 50-75%: 2, 75-95%: 10, >95%: 133
   azure_peak rogue                  9     0     0      0      0     414      1
+      met 98 foes in all, evaded 3; stage by month 3/6/12: 0/1/1; 102 fights rated <50%: 0, 50-75%: 2, 75-95%: 15, >95%: 85
   azure_peak sect                  19     0     0      0      0     353      2
+      met 197 foes in all, evaded 1; stage by month 3/6/12: 0/1/2; 200 fights rated <50%: 0, 50-75%: 1, 75-95%: 14, >95%: 185
   withered_bone_marsh rogue        11     0     0      0      0     588      1
+      met 111 foes in all, evaded 5; stage by month 3/6/12: 0/0/1; 106 fights rated <50%: 0, 50-75%: 3, 75-95%: 10, >95%: 93
   withered_bone_marsh sect         22     0     0      0      0     827      1
+      met 233 foes in all, evaded 13; stage by month 3/6/12: 0/0/1; 220 fights rated <50%: 0, 50-75%: 2, 75-95%: 12, >95%: 206
   myriad_peaks_ridge rogue          7     0     0      0      0     888      2
+      met 69 foes in all, evaded 1; stage by month 3/6/12: 0/1/2; 74 fights rated <50%: 0, 50-75%: 1, 75-95%: 10, >95%: 63
   myriad_peaks_ridge sect          19     0     0      0      0     877      2
+      met 194 foes in all, evaded 0; stage by month 3/6/12: 1/2/2; 199 fights rated <50%: 0, 50-75%: 3, 75-95%: 5, >95%: 191
   median of all runs: won 13 lost 0 fled 0 injuries 0 lives 0 stones 316 stage 1
   runs with no artifact life spent: 110 of 120
+  rated odds of every fight fought (all runs): 1612 fights rated <50%: 11, 50-75%: 18, 75-95%: 114, >95%: 1469
   median win share of fought fights: 100%
 
 ## first hour, curious practiser (seeds 1-10, 12 months)
@@ -1599,4 +1612,37 @@ Curious practiser: 10 seeds, 12 months
      9        3        3         5           668   42     0  295
     10        3        4         5           869   40     4  271
   Medians: iron_fist level m3 3, m6 3, m12 5; first wolf win day 632 (0 seeds never); fights won 42, lost 1; QR3 day 271 (10/10 reached)
+
+## first Foundation Establishment year, fighting sensed threats (seeds 1-10)
+
+First Foundation Establishment year: 10 seeds, sensed threats: fight
+  region / variant               won  lost  fled  injur  lives  stones  stage
+  qingshi_village rogue             3     0     0      0      0      36      0
+      met 35 foes in all, evaded 0; stage by month 3/6/12: 0/0/0; 45 fights rated <50%: 3, 50-75%: 1, 75-95%: 4, >95%: 37
+  qingshi_village sect             15     0     0      0      0     100      0
+      met 152 foes in all, evaded 0; stage by month 3/6/12: 0/0/0; 162 fights rated <50%: 2, 50-75%: 1, 75-95%: 7, >95%: 152
+  misty_forest rogue               11     0     0      0      0     316      0
+      met 109 foes in all, evaded 1; stage by month 3/6/12: 0/0/0; 108 fights rated <50%: 1, 50-75%: 1, 75-95%: 13, >95%: 93
+  misty_forest sect                22     0     0      0      0     391      1
+      met 218 foes in all, evaded 0; stage by month 3/6/12: 0/0/1; 218 fights rated <50%: 1, 50-75%: 0, 75-95%: 14, >95%: 203
+  fallen_star_market rogue          3     0     0      0      0      44      0
+      met 31 foes in all, evaded 0; stage by month 3/6/12: 0/0/0; 32 fights rated <50%: 2, 50-75%: 1, 75-95%: 0, >95%: 29
+  fallen_star_market sect          15     0     0      0      0      96      0
+      met 147 foes in all, evaded 0; stage by month 3/6/12: 0/0/0; 148 fights rated <50%: 3, 50-75%: 2, 75-95%: 10, >95%: 133
+  azure_peak rogue                  9     0     0      0      0     414      1
+      met 99 foes in all, evaded 1; stage by month 3/6/12: 0/1/1; 105 fights rated <50%: 2, 50-75%: 2, 75-95%: 15, >95%: 86
+  azure_peak sect                  19     0     0      0      0     353      2
+      met 201 foes in all, evaded 0; stage by month 3/6/12: 0/1/2; 203 fights rated <50%: 4, 50-75%: 2, 75-95%: 14, >95%: 183
+  withered_bone_marsh rogue        11     0     0      0      0     588      1
+      met 111 foes in all, evaded 4; stage by month 3/6/12: 0/0/1; 107 fights rated <50%: 1, 50-75%: 3, 75-95%: 10, >95%: 93
+  withered_bone_marsh sect         22     0     0      0      0     827      1
+      met 229 foes in all, evaded 8; stage by month 3/6/12: 0/0/1; 221 fights rated <50%: 4, 50-75%: 0, 75-95%: 12, >95%: 205
+  myriad_peaks_ridge rogue          7     0     0      0      0     888      2
+      met 71 foes in all, evaded 0; stage by month 3/6/12: 0/1/2; 77 fights rated <50%: 2, 50-75%: 1, 75-95%: 10, >95%: 64
+  myriad_peaks_ridge sect          19     0     0      0      0     877      2
+      met 194 foes in all, evaded 0; stage by month 3/6/12: 1/2/2; 199 fights rated <50%: 0, 50-75%: 3, 75-95%: 5, >95%: 191
+  median of all runs: won 13 lost 0 fled 0 injuries 0 lives 0 stones 316 stage 1
+  runs with no artifact life spent: 106 of 120
+  rated odds of every fight fought (all runs): 1625 fights rated <50%: 25, 50-75%: 17, 75-95%: 114, >95%: 1469
+  median win share of fought fights: 100%
 

@@ -20,8 +20,11 @@ static func friendly_regions(data: GameData, realm_index: int) -> Array[String]:
 	return out
 
 
-## Plays `months` months. Returns {won, lost, fled, injuries, lives_spent, stones, stage, alive}.
-static func play(gs: Node, seed_value: int, realm_index: int, region_id: String, sect: bool, months: int = 12) -> Dictionary:
+## Plays `months` months. `fight_threats` answers every sensed threat with a fight instead of slipping away
+## (QA-045). Returns {won, lost, fled, evaded, injuries, lives_spent, stones, stage, alive, odds, stage_m3,
+## stage_m6}; `odds` is the rated win chance of every fight actually fought, `evaded` counts foes the
+## player slipped past without being asked (overwhelming killing intent).
+static func play(gs: Node, seed_value: int, realm_index: int, region_id: String, sect: bool, months: int = 12, fight_threats: bool = false) -> Dictionary:
 	gs.rng.seed = seed_value
 	var rng := RandomNumberGenerator.new()
 	rng.seed = seed_value
@@ -47,7 +50,22 @@ static func play(gs: Node, seed_value: int, realm_index: int, region_id: String,
 	var lives_start: int = c.artifact_lives
 	var stones_start: int = c.item_count("spirit_stone")
 	var density := Exploration.qi_density(gs.data, region_id)
+	var odds: Array[float] = []
+	var evaded := [0]
+	var bus: Node = gs.get_node("/root/EventBus")
+	var on_fight := func(enemy: Dictionary) -> void: odds.append(Combat.win_chance(c, gs.data, enemy))
+	var on_message := func(text: String, _category: String) -> void:
+		if text.contains("slip away before the"):
+			evaded[0] += 1
+	bus.combat_started.connect(on_fight)
+	bus.message_posted.connect(on_message)
+	var stage_m3 := 0
+	var stage_m6 := 0
 	for month in months:
+		if month == 3:
+			stage_m3 = c.stage
+		elif month == 6:
+			stage_m6 = c.stage
 		if not c.alive:
 			break
 		if sect and not c.is_rogue() and c.alive:
@@ -63,7 +81,7 @@ static func play(gs: Node, seed_value: int, realm_index: int, region_id: String,
 			if gs.pending_encounter != "":
 				gs.choose_encounter(0)
 			if gs.pending_threat != "":
-				gs.face_threat(false)
+				gs.face_threat(fight_threats)
 			if not c.alive:
 				break
 			_come_home(gs, region_id)
@@ -72,7 +90,13 @@ static func play(gs: Node, seed_value: int, realm_index: int, region_id: String,
 		gs.cultivate(maxi(1, Calendar.DAYS_PER_MONTH - WEEKS_EXPLORED * 7), density)
 		if c.alive and Cultivation.can_attempt_breakthrough(c, gs.data):
 			gs.attempt_breakthrough()
+	bus.combat_started.disconnect(on_fight)
+	bus.message_posted.disconnect(on_message)
 	var out := {
+		"evaded": evaded[0],
+		"odds": odds,
+		"stage_m3": stage_m3 if months > 3 else c.stage,
+		"stage_m6": stage_m6 if months > 6 else c.stage,
 		"won": LifeStats.get_stat(c, "fights_won"),
 		"lost": LifeStats.get_stat(c, "fights_lost"),
 		"fled": LifeStats.get_stat(c, "threats_fled"),
