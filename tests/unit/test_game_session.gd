@@ -2844,6 +2844,7 @@ func test_great_beast_returns_scarred() -> void:
 	gs.current_region = "misty_forest"
 	gs.player.realm_index = 3
 	var g: Dictionary = gs.data.regions["misty_forest"]["roamers"]["great"]
+	g.erase("max_realm")  # C-317: the Qi Refining cap is tested elsewhere; here a strong player fights the first beast
 	GameClock.total_days = 7 * 60 + Wildlife.great_day("misty_forest", g)
 	var found := false
 	for r in gs.roamers_here():
@@ -2852,7 +2853,7 @@ func test_great_beast_returns_scarred() -> void:
 	assert_true(gs.engage_roamer(Wildlife.GREAT_SLOT))
 	assert_true(gs.player.great_beasts.has("old_tusker_boar"))
 	assert_true(gs.player.item_count("old_tuskers_broken_tusk") >= 1)
-	GameClock.total_days = Wildlife.next_great_day(gs.data, "misty_forest", GameClock.total_days + 1, 3)
+	GameClock.total_days = Wildlife.next_great_day(gs.data, "misty_forest", GameClock.total_days + 1, 3, gs.player)
 	var enemies: Array = []
 	for r in gs.roamers_here():
 		enemies.append(String(r["enemy"]))
@@ -2940,6 +2941,7 @@ func test_great_beast_pays_double_and_counts() -> void:
 	gs.current_region = "misty_forest"
 	gs.player.realm_index = 5
 	var def: Dictionary = gs.data.regions["misty_forest"]["roamers"]["great"]
+	def.erase("max_realm")  # C-317: a strong player still meets the first beast here
 	var wd := Wildlife.great_day("misty_forest", def)
 	GameClock.total_days = 7 * 50 + wd
 	var great: Dictionary = {}
@@ -2967,8 +2969,9 @@ func test_great_beast_calendar_and_reminder() -> void:
 	var gs := _game_state()
 	_start()
 	gs.current_region = "misty_forest"
-	gs.player.realm_index = 1  # WILD-018: the return beast walks from Qi Refining
+	gs.player.realm_index = 2  # C-317: the return beast walks from Foundation
 	var def: Dictionary = gs.data.regions["misty_forest"]["roamers"]["great"]
+	def.erase("max_realm")  # the first beast still walks for this test
 	var wd := Wildlife.great_day("misty_forest", def)
 	var day := 7 * 50 + wd
 	gs.player.visited_regions.erase("misty_forest")

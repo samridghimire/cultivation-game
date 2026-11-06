@@ -238,9 +238,11 @@ func test_great_return_switches_after_first_win() -> void:
 	var day := 7 * 40 + wd
 	assert_eq(String(Wildlife.great_roamer(c, d, "misty_forest", day, {})["enemy"]), "old_tusker_boar")
 	assert_eq(Wildlife.record_great(c, d, "old_tusker_boar", "misty_forest", day), "old_tuskers_broken_tusk")
+	assert_eq(Wildlife.great_enemy_for(c, d, "misty_forest"), "", "C-317: the return is a Foundation fight")
+	c.realm_index = d.realm_index_of("foundation_establishment")
 	assert_eq(Wildlife.active_great_enemy(c, d, "misty_forest"), "scarred_old_tusker")
 	assert_eq(String(Wildlife.great_roamer(c, d, "misty_forest", day + 7, {})["enemy"]), "scarred_old_tusker")
-	assert_eq(Wildlife.next_great_day(d, "misty_forest", day + 1, 1, c), day + 7, "same weekday")
+	assert_eq(Wildlife.next_great_day(d, "misty_forest", day + 1, c.realm_index, c), day + 7, "same weekday")
 	assert_eq(Wildlife.record_great(c, d, "scarred_old_tusker", "misty_forest", day + 7), "scarred_tuskers_spear_head")
 	assert_eq(Wildlife.record_great(c, d, "scarred_old_tusker", "misty_forest", day + 14), "", "once")
 	assert_eq(Wildlife.record_great(c, d, "old_tusker_boar", "misty_forest", day + 14), "", "once")
@@ -603,3 +605,21 @@ func test_great_max_realm_validation() -> void:
 	assert_false(Wildlife.validate(d).is_empty(), "return unknown max_realm")
 	d.regions["misty_forest"]["roamers"] = old
 	assert_true(Wildlife.validate(d).is_empty())
+
+
+## C-317: every region's great beast is a fight for each realm it serves, and the returns are Foundation fights.
+func test_great_beasts_for_every_realm() -> void:
+	var d := _gdata()
+	var foundation_only := ["myriad_peaks_ridge"]  # its first great beast is built for Foundation
+	var qr := _player(d.realm_index_of("qi_refining"))
+	var fe := _player(d.realm_index_of("foundation_establishment"))
+	for rid: String in d.regions:
+		var g: Dictionary = d.regions[rid].get("roamers", {}).get("great", {})
+		if g.is_empty():
+			continue
+		assert_true(Wildlife.next_great_day(d, rid, 100, fe.realm_index, fe) >= 0, "%s: a great beast walks for Foundation" % rid)
+		if not foundation_only.has(rid):
+			assert_true(Wildlife.next_great_day(d, rid, 100, qr.realm_index, qr) >= 0, "%s: a great beast walks for Qi Refining" % rid)
+			assert_eq(String(g.get("max_realm", "")), "qi_refining", "%s: the first beast is Qi Refining only" % rid)
+		var ret: Dictionary = g.get("return", {})
+		assert_eq(String(d.enemies[String(ret["enemy"])]["realm"]), "foundation_establishment", "%s: the return beast is a Foundation foe" % rid)
