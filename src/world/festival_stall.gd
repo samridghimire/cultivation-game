@@ -30,6 +30,7 @@ func _ready() -> void:
 	_label.size = Vector2(180, 20)
 	_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_label.z_index = 20  # GFX-085: above every NPC label
 	add_child(_label)
 
 

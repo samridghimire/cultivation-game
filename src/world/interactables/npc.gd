@@ -184,6 +184,8 @@ func label_text() -> String:
 	if not _near:
 		var i := display_name.find(" (")
 		text = display_name.substr(0, i) if i > 0 else display_name
+	elif display_name.ends_with(" (Mortal)"):
+		text = display_name.trim_suffix(" (Mortal)")  # GFX-085: a mortal has no realm to show
 	if _is_my_rival():
 		text += " (rival)"
 	return text

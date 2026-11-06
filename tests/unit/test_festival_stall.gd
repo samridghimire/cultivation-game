@@ -62,7 +62,8 @@ func test_stalls_follow_active_festival() -> void:
 		if place["type"] == "merchant" and not place.has("open_days") and not place.has("festival_only"):
 			merchants += 1
 	assert_true(merchants > 0)
-	assert_eq(_count_stalls(world), merchants)
+	var extra := 1 if gs.data.regions["qingshi_village"].has("festival_square") else 0  # GFX-085: the contest stall at the square
+	assert_eq(_count_stalls(world), merchants + extra)
 	gs.world_events = [{"id": "lantern_festival", "region": "elsewhere", "start_day": 0, "end_day": 99999, "done": false}]
 	world._on_days_advanced(1)
 	await (Engine.get_main_loop() as SceneTree).process_frame

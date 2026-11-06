@@ -263,14 +263,31 @@ func _refresh_stalls() -> void:
 			break
 	if festival == "":
 		return
-	for spot in _merchant_spots:
+	var caption := FestivalContest.crowd_caption(GameState.data, festival, _contest_open(festival))
+	var spots: Array[Vector2] = []
+	# GFX-085: a region with a festival_square holds its contest stall (and crowd) there.
+	var square: Variant = festival_square()
+	if square != null and GameState.data.world_events.get(festival, {}).has("contest"):
+		spots.append(square as Vector2)
+		for spot in _merchant_spots:
+			spots.append(spot)
+	else:
+		spots.append_array(_merchant_spots)
+	for i in spots.size():
 		var stall := FestivalStall.new()
 		stall.event_id = festival
-		stall.position = spot
-		stall.caption = FestivalContest.crowd_caption(GameState.data, festival, _contest_open(festival))
+		stall.position = spots[i]
+		stall.caption = caption if i == 0 else ("" if square != null else caption)
 		add_child(stall)
 		move_child(stall, player.get_index())
 		_stalls.append(stall)
+
+
+## GFX-085: the region's festival_square in map px, or null.
+func festival_square() -> Variant:
+	if not _region.has("festival_square"):
+		return null
+	return _vec(_region["festival_square"])
 
 
 ## Whether `event_id` has a contest here the player has not entered this year (WU-457).
@@ -693,6 +710,10 @@ func _build_generated_npcs() -> void:
 	var centre: Variant = _crowd_centre()
 	if centre != null:
 		var crowd_avoid: Array[Vector2] = avoid.duplicate()
+		for stall in _stalls:  # no villager stands on a stall or under its caption
+			crowd_avoid.append(stall.position)
+			if stall.caption != "":
+				crowd_avoid.append(stall.position + Vector2(0, -40))
 		var crowd := FestivalContest.crowd_positions(centre as Vector2, neighbours.size(), crowd_avoid)
 		for k in crowd.size():
 			stands[neighbours[k].id] = crowd[k]

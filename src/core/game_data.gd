@@ -626,6 +626,8 @@ func _validate_world() -> void:
 						elif not ((w is float or w is int) and w > 0):
 							load_errors.append("Region '%s' weather.%s.%s weight must be > 0" % [region["id"], key, kind])
 		load_errors.append_array(FieldPlots.validate(self, String(region["id"]), region))
+		if region.has("festival_square"):
+			load_errors.append_array(_festival_square_errors(region))
 		for spot in region.get("npc_spots", []):
 			if not (spot is Array and (spot as Array).size() == 2):
 				load_errors.append("Region '%s' has an npc_spot that is not [x, y]: %s" % [region["id"], spot])
@@ -1102,3 +1104,22 @@ func _validate_recipes() -> void:
 		var recipe_id: String = item.get("effects", {}).get("learn_recipe", "")
 		if recipe_id != "" and not recipes.has(recipe_id):
 			load_errors.append("Item '%s' teaches unknown recipe '%s'" % [item["id"], recipe_id])
+
+
+## GFX-085: a region's festival_square must be [x, y] inside the map and 80 px clear of every place.
+static func _festival_square_errors(region: Dictionary) -> Array[String]:
+	var errors: Array[String] = []
+	var sq: Variant = region["festival_square"]
+	var rid := String(region["id"])
+	if not (sq is Array and (sq as Array).size() == 2 and ((sq as Array)[0] is float or (sq as Array)[0] is int) and ((sq as Array)[1] is float or (sq as Array)[1] is int)):
+		errors.append("Region '%s' festival_square must be [x, y]" % rid)
+		return errors
+	var pos := Vector2(float(sq[0]), float(sq[1]))
+	var size: Array = region.get("map", {}).get("size", [1600, 1000])
+	if pos.x < 0.0 or pos.y < 0.0 or pos.x > float(size[0]) or pos.y > float(size[1]):
+		errors.append("Region '%s' festival_square is outside the map" % rid)
+	for place: Dictionary in region.get("places", []):
+		var pp: Array = place.get("pos", [0, 0])
+		if pos.distance_to(Vector2(float(pp[0]), float(pp[1]))) < 80.0:
+			errors.append("Region '%s' festival_square is within 80 px of '%s'" % [rid, place.get("display_name", "")])
+	return errors
