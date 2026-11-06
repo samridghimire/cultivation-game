@@ -45,6 +45,7 @@ var _decor: Array[Dictionary] = []
 var _season_tint: CanvasModulate
 var _season := ""
 var _ambient: Node
+var _critters: CritterLayer  # GFX-086: hens, ducks, butterflies
 var _village_life: VillageLife
 var _water_life: WaterLife
 var _spread_clock := 0.0  ## WU-429: seconds since the last label spread from a moving beast.
@@ -217,6 +218,11 @@ func _refresh_village_life() -> void:
 		move_child(_water_life, 0)  # WU-429: under the player, beasts and people
 	var frozen := Scenery.is_snowy(_season) and not bool(_region.get("map", {}).get("no_snow", false))
 	_water_life.setup(_region, _weather_kind in ["rain", "storm"], frozen, MotionFx.reduced())
+	if _critters == null:
+		_critters = CritterLayer.new()
+		_critters.name = "Critters"
+		add_child(_critters)
+	_critters.setup(_region, _season, GameClock.total_days, bool(Settings.get_value("ambient_effects")), MotionFx.reduced())
 
 
 ## GFX-033: a white flash every 6-14 s on storm days (none with reduce_motion).

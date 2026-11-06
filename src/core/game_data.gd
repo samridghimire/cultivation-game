@@ -600,6 +600,8 @@ func _validate_world() -> void:
 			var mist: Variant = region["map"]["mist"]
 			if not ((mist is float or mist is int) and float(mist) >= 0.0 and float(mist) <= 1.0):
 				load_errors.append("Region '%s' map.mist must be a number from 0 to 1" % region["id"])
+		for err in Critters.validate(region):  # GFX-086
+			load_errors.append(err)
 		var ambient: Variant = region.get("map", {}).get("ambient", {})
 		if not ambient is Dictionary:
 			load_errors.append("Region '%s' map.ambient must be an object" % region["id"])
