@@ -23,6 +23,7 @@ extends SceneTree
 ## WU-452: `-- --road-card [--road-encounter]` renders road_card.png (and road_encounter.png).
 ## GFX-065: append `-- --arrival-card` for arrival_card.png, right after a new game starts, the card still up.
 ## GFX-081: `-- --shrine=N` sets the old shrine's stage (0..4).
+## QA-198: `-- --festival` (festival_qingshi), `--contest` (contest_card), `--practice` (practice_menu), `--regular` (shop_regular), `--journal` (journal_today); one flag per run.
 ## PNGs go to user://screenshots/first_hour/<name>.png. Never writes saves.
 ## (The mid-game sibling is screenshot_screens.gd.)
 
@@ -78,6 +79,7 @@ func _start() -> void:
 		var walk: int = Wildlife.next_great_day(gs.data, gs.current_region, clock.total_days, gs.player.realm_index)
 		if walk >= 0:
 			clock.total_days = walk - (1 if OS.get_cmdline_user_args().has("--tracks") else 0)  # WU-450: --tracks = the day before
+	_festival_clock(gs)  # QA-198: --festival/--contest/--practice/--regular/--journal pick the day before the world is built
 	if not region_list.is_empty():
 		_drop_start_line()
 		gs.call("_post_arrival_line")  # GUIDE-210: the region's own arrival line, once, after the day is final
@@ -128,6 +130,9 @@ func _start() -> void:
 		return
 	if OS.get_cmdline_user_args().has("--companion"):  # QA-187: the invited friend's chip and the field menu with tool icons
 		_companion_shots(gs, c)
+		special = true
+	if _has_festival_flag():  # QA-198
+		_festival_shots(gs)
 		special = true
 	if OS.get_cmdline_user_args().has("--field"):  # GFX-029: a rented field with a young and a nearly ripe crop
 		_field_shots(gs, c)
@@ -226,30 +231,36 @@ func _start() -> void:
 			villager.call("refresh_request")})
 	# WU-411: a visiting friend with the tea tray beside them.
 	if villager != null:
+		var visitor_ref: WeakRef = weakref(villager)  # a freed lambda capture errors on call; a WeakRef does not
 		shots.append({"name": "visitor", "open": func() -> void:
 			villager.set("_visiting", true)
 			villager.queue_redraw()
 			_teleport_player(villager.position + Vector2(60, 40)), "close": func() -> void:
-			villager.set("_visiting", false)
-			villager.queue_redraw()})
+			var who: Node = visitor_ref.get_ref()  # QA-198: the world may have rebuilt (and freed them) by now
+			if who != null:
+				who.set("_visiting", false)
+				who.queue_redraw()})
 	# WU-385: the HUD of a brand-new sect member (Azure Cloud Outer Disciple, Qi Refining 1, Qingshi Village).
 	var sect_saved: Array = []
-	shots.append({"name": "hud_after_sect", "open": func() -> void:
-		sect_saved.append_array([c.sect.duplicate(), c.realm_index, c.stage, c.qi])
-		c.realm_index = gs.data.realm_index_of("qi_refining")
-		c.stage = 0
-		c.qi = 0.0
-		gs.current_region = "qingshi_village"
-		gs.join_sect("azure_cloud_sect")
-		assert(c.sect.get("id", "") == "azure_cloud_sect", "join_sect did not make the player a member")
-		hud.get("_banner").visible = false
-		root.get_node("EventBus").player_changed.emit(), "close": func() -> void:
-			c.sect = sect_saved[0]
-			c.realm_index = sect_saved[1]
-			c.stage = sect_saved[2]
-			c.qi = sect_saved[3]
-			sect_saved.clear()
-			root.get_node("EventBus").player_changed.emit()})
+	# QA-198: join_sect here moves the player to Qingshi without rebuilding the world, so a --region run
+	# (world = another region) made freed lambda captures fire; this shot is only for the default Qingshi start.
+	if region_list.is_empty():
+		shots.append({"name": "hud_after_sect", "open": func() -> void:
+			sect_saved.append_array([c.sect.duplicate(), c.realm_index, c.stage, c.qi])
+			c.realm_index = gs.data.realm_index_of("qi_refining")
+			c.stage = 0
+			c.qi = 0.0
+			gs.current_region = "qingshi_village"
+			gs.join_sect("azure_cloud_sect")
+			assert(c.sect.get("id", "") == "azure_cloud_sect", "join_sect did not make the player a member")
+			hud.get("_banner").visible = false
+			root.get_node("EventBus").player_changed.emit(), "close": func() -> void:
+				c.sect = sect_saved[0]
+				c.realm_index = sect_saved[1]
+				c.stage = sect_saved[2]
+				c.qi = sect_saved[3]
+				sect_saved.clear()
+				root.get_node("EventBus").player_changed.emit()})
 	shots.append({"name": "elder_mo_dialogue", "open": func() -> void:
 		for node in world.get_children():  # WU-408: the HUD remembers whose menu was opened, for the portrait
 			if node.has_method("portrait_texture") and node.get("npc_id") == "elder_mo":
@@ -483,6 +494,97 @@ func _field_shots(gs: Node, c: CharacterData) -> void:
 		hud.get("_banner").visible = false
 		world.get_node("Player").position = field.position + Vector2(0, 70)
 		field.queue_redraw(), "close": func() -> void: pass})
+
+
+const FESTIVAL_ID := "dragon_boat_festival"  ## QA-198: Qingshi's May festival (contest, practice at the jetty)
+
+
+func _has_festival_flag() -> bool:
+	for f in ["--festival", "--contest", "--practice", "--regular", "--journal"]:
+		if OS.get_cmdline_user_args().has(f):
+			return true
+	return false
+
+
+## QA-198: the Qingshi market stall that has a `wanted` block (WU-453), or {}.
+func _wanted_stall(gs: Node) -> Dictionary:
+	for place: Dictionary in gs.data.regions["qingshi_village"].get("places", []):
+		if place.has("wanted") and place.has("rotating_stock"):
+			return place
+	return {}
+
+
+## QA-198: sets the clock (and the festival, via the month roll) before the world is built.
+func _festival_clock(gs: Node) -> void:
+	var args := OS.get_cmdline_user_args()
+	var clock: Node = root.get_node("GameClock")
+	var may_first := 4 * Calendar.DAYS_PER_MONTH  # month 5, day 1: the dragon boat festival starts
+	if args.has("--festival") or args.has("--contest"):
+		clock.total_days = may_first
+		gs.call("_world_events_month")
+	elif args.has("--practice"):
+		clock.total_days = may_first - 3  # inside the 7-day practice window
+	elif args.has("--regular"):
+		var stall := _wanted_stall(gs)
+		var day: int = clock.total_days
+		while not Places.is_market_day_stall(stall, day) and day < 400:
+			day += 1
+		clock.total_days = day
+	elif args.has("--journal"):
+		var walk: int = Wildlife.next_great_day(gs.data, gs.current_region, clock.total_days, gs.player.realm_index)
+		if walk >= 0:
+			clock.total_days = walk
+		var entries: Array[Dictionary] = gs.upcoming_days(40)  # CAL-006: mark the first real calendar entry after today
+		var marked := false
+		for e: Dictionary in entries:
+			if int(e["day"]) > int(clock.total_days):
+				marked = gs.mark_day(int(e["day"]), String(e["text"]))
+				print("journal: mark day %d '%s' -> %s" % [int(e["day"]), String(e["text"]), marked])
+				if marked:
+					clock.total_days = int(e["day"])  # stand on the marked day, so its line is in today_lines
+				break
+		if not marked:
+			push_warning("--journal: nothing to mark in the next 40 days")
+
+
+func _festival_shots(gs: Node) -> void:
+	var args := OS.get_cmdline_user_args()
+	if args.has("--festival"):
+		shots.append({"name": "festival_qingshi", "open": func() -> void:
+			hud.get("_banner").visible = false
+			var stalls: Array = world.get("_stalls")
+			print("festival: %d stall(s), caption=%s" % [stalls.size(), stalls[0].get("caption") if not stalls.is_empty() else "-"])
+			if not stalls.is_empty():
+				_teleport_player(stalls[0].position + Vector2(0, 90)), "close": func() -> void: pass})
+	if args.has("--contest"):
+		shots.append({"name": "contest_card", "open": func() -> void:
+			hud.get("_banner").visible = false
+			var res: Dictionary = gs.festival_contest(FESTIVAL_ID)
+			print("contest: result keys=%s" % [res.keys()]), "close": func() -> void: hud.get("_contest_card").close()})
+	if args.has("--practice"):
+		shots.append({"name": "practice_menu", "open": func() -> void:
+			hud.get("_banner").visible = false
+			for node in world.find_children("*", "Interactable", true, false):
+				var tags: Variant = node.get("tags")
+				if tags is Array and (tags as Array).has("jetty"):
+					_teleport_player(node.position + Vector2(0, 60))
+					hud.get("_choice_menu").open_for(node)
+					return
+			print("practice shot: no jetty place found"), "close": hud.get("_choice_menu").close})
+	if args.has("--regular"):
+		var stall := _wanted_stall(gs)
+		var key := Places.place_key(String(stall["display_name"]))
+		gs.player.market_regular[key] = Places.regular_after(stall)
+		var shop: Control = hud.get("_shop")
+		shots.append({"name": "shop_regular", "open": func() -> void:
+			hud.get("_banner").visible = false
+			root.get_node("EventBus").shop_requested.emit(String(stall["display_name"]), 0, [], "", []), "close": shop.close})
+	if args.has("--journal"):
+		var journal: Control = hud.get("_screens")["toggle_journal"]
+		shots.append({"name": "journal_today", "open": func() -> void:
+			hud.get("_banner").visible = false
+			journal.open()
+			print("journal today_lines: %s" % [gs.today_lines()]), "close": journal.close})
 
 
 ## QA-182: two Qingshi villagers in a quarrel, the window opened through the HUD's signal.

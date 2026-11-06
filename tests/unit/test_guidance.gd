@@ -6270,6 +6270,20 @@ func test_season_ending_said_right() -> void:
 	assert_true(Guidance.season_ending(c, data(), 87, {}).contains("Qingming"), Guidance.season_ending(c, data(), 87, {}))
 
 
+## QA-198: the player's own marked day (CAL-006) is in Today, first, and tomorrow's mark too.
+func test_today_lines_show_marked_days() -> void:
+	var d := data()
+	var c := new_character()
+	c.visited_regions.append("qingshi_village")
+	assert_eq(Guidance.today_lines(c, d, {}, [], 40, "qingshi_village").size() > 0 and Guidance.today_lines(c, d, {}, [], 40, "qingshi_village")[0].contains("you marked it"), false)
+	c.marked_days[40] = "Shrine visit"
+	c.marked_days[41] = "Fish at dawn"
+	var lines := Guidance.today_lines(c, d, {}, [], 40, "qingshi_village")
+	assert_eq(lines[0], "Today: Shrine visit (you marked it).", str(lines))
+	assert_true(lines.has("Tomorrow: Fish at dawn."), str(lines))
+	assert_true(lines.size() <= Guidance.TODAY_MAX)
+
+
 ## TODAY-001: market day first/next, wanted item, great beast, season ending, order and cap.
 func test_today_lines_market_wanted_beast_and_cap() -> void:
 	var d := data()

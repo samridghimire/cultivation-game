@@ -241,6 +241,8 @@ static func today_lines(c: CharacterData, data: GameData, flags: Dictionary, act
 	var out: PackedStringArray = []
 	var rname := Exploration.region_name(data, region_id)
 	var year := Calendar.year_of(day)
+	# 0. The days the player marked on the calendar (CAL-006): today's and tomorrow's.
+	out.append_array(VillageCalendar.mark_lines(c, day))
 	# 1. Festival and its contest.
 	var fest := _festival_today(data, active_events, region_id, day)
 	if fest != "":
