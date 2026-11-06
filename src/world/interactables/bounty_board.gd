@@ -18,6 +18,9 @@ func get_options() -> Array[Dictionary]:
 	var data: GameData = GameState.data
 	var today := GameClock.total_days
 	var options: Array[Dictionary] = []
+	var tasks := GameState.season_tasks()  # WU-466
+	if not tasks.is_empty() and GameState.current_region == SeasonTasks.REGION:
+		options.append({"label": SeasonBoard.option_label(tasks, SeasonTasks.season_name(today)), "action": EventBus.season_board_requested.emit})
 	for b: Dictionary in Bounties.offers(c, data, today, GameState.current_region):
 		var enemy: Dictionary = data.enemies.get(String(b["enemy"]), {})
 		var paid := Bounties.paid_stones(c, data, b)

@@ -176,7 +176,7 @@ func _build_today(lines: PackedStringArray, tasks: Array = [], reward_line: Stri
 	inner.add_child(head)
 	# WU-462: the season's village tasks sit at the top; a done task gets a check.
 	if not tasks.is_empty():
-		var sh := UIStyle.label("The season's tasks", 15, UIStyle.ACCENT)
+		var sh := UIStyle.label(season_header(GameState.current_region), 15, UIStyle.ACCENT)
 		sh.name = "SeasonHeader"
 		inner.add_child(sh)
 		for t: Dictionary in tasks:
@@ -190,6 +190,11 @@ func _build_today(lines: PackedStringArray, tasks: Array = [], reward_line: Stri
 	for line in lines:
 		inner.add_child(_today_row(line, HudIcons.today_glyph(HudIcons.today_icon(line)), "today_row"))
 	_today.add_child(card)
+
+
+## The Today page's season section title; says where the tasks are done when the player is elsewhere (WU-466).
+static func season_header(region_id: String) -> String:
+	return "The season's tasks" if region_id == SeasonTasks.REGION else "The season's tasks (in Qingshi Village)"
 
 
 ## "<text> (n/count)" for a season task row (the count only when more than one is needed).

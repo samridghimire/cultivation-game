@@ -146,6 +146,12 @@ func _start() -> void:
 	if OS.get_cmdline_user_args().has("--cast"):  # QA-182: the CastBar on the jetty, marker frozen mid-sweep
 		_cast_shots(gs)
 		special = true
+	if OS.get_cmdline_user_args().has("--season-board"):  # WU-466: the village board's season task card
+		var sboard: Control = hud.get("_season_board")
+		shots.append({"name": "season_board", "open": func() -> void:
+			hud.get("_banner").visible = false
+			sboard.open(), "close": sboard.close})
+		special = true
 	if OS.get_cmdline_user_args().has("--calendar"):  # WU-419: the month calendar, a festival-free market month
 		var cal: Control = hud.get("_screens")["open_calendar"]
 		shots.append({"name": "calendar", "open": func() -> void:

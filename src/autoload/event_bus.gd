@@ -99,6 +99,8 @@ signal region_mastered(region_id: String)
 signal feature_unlocked(text: String)
 ## WU-462: the season's village tasks are all done (season name, reward text).
 signal season_tasks_done(season: String, reward: String)
+## WU-466: the village bounty board asks for the season's task card.
+signal season_board_requested
 ## Id of the notice being announced by `feature_unlocked` ("" when unknown); the HUD titles the banner by it (WU-409).
 var last_notice_id: String = ""
 

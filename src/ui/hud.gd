@@ -130,6 +130,7 @@ static var _showing_skip: Dictionary = {}
 var _respawn: RespawnScreen
 var _realm_card: RealmCard
 var _contest_card: ContestCard  # WU-454
+var _season_board: SeasonBoard  # WU-466
 ## [frame, text] of recent feature notices, so a realm card can list the ones its breakthrough caused.
 var _recent_notices: Array = []
 ## [realm name, description, details, notices] of a realm card waiting for the tribulation screen to close ([] = none).
@@ -251,6 +252,9 @@ func _ready() -> void:
 	_contest_card = ContestCard.new()
 	_contest_card.closed.connect(_update_modal)
 	add_child(UIStyle.centered(_contest_card))
+	_season_board = SeasonBoard.new()
+	_season_board.closed.connect(_update_modal)
+	add_child(UIStyle.centered(_season_board))
 	EventBus.contest_finished.connect(_on_contest_finished)
 	_banner = Banner.new()
 	add_child(_banner)
@@ -282,6 +286,7 @@ func _ready() -> void:
 	EventBus.crafting_requested.connect(_on_crafting_requested)
 	EventBus.shop_requested.connect(_on_shop_requested)
 	EventBus.mission_board_requested.connect(_on_mission_board_requested)
+	EventBus.season_board_requested.connect(_on_season_board_requested)
 	EventBus.auction_requested.connect(_on_auction_requested)
 	EventBus.sect_balance_requested.connect(_on_sect_balance_requested)
 	EventBus.gossip_requested.connect(_on_gossip_requested)
@@ -335,7 +340,7 @@ func _ready() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if _choice_menu.visible or _dialogue.visible or _encounter.visible or _quarrel.visible or _cast_bar.visible or _combat_report.visible or _tribulation.visible or _respawn.visible or _realm_card.visible or _contest_card.visible or _pause_menu.visible or _settings.visible or _help.visible or _load_screen.visible or _death_screen.visible:
+	if _choice_menu.visible or _dialogue.visible or _encounter.visible or _quarrel.visible or _cast_bar.visible or _combat_report.visible or _tribulation.visible or _respawn.visible or _realm_card.visible or _contest_card.visible or _season_board.visible or _pause_menu.visible or _settings.visible or _help.visible or _load_screen.visible or _death_screen.visible:
 		return
 	if event.is_action_pressed("pause_menu"):
 		# Consumed here so the world's own Esc handling never runs mid-session.
@@ -392,6 +397,12 @@ func _on_crafting_requested(prof_id: String) -> void:
 
 func _on_shop_requested(merchant_name: String, max_price: int, stock_tags: Array, faction: String, buy_tags: Array) -> void:
 	_shop.open(merchant_name, max_price, stock_tags, faction, buy_tags)
+	_update_modal()
+
+
+func _on_season_board_requested() -> void:
+	_close_screens()
+	_season_board.open()
 	_update_modal()
 
 
@@ -704,7 +715,7 @@ func _refresh() -> void:
 	_hunt.text = hunt
 	_hunt.tooltip_text = hunt
 	_hunt.visible = hunt != ""
-	var one_left := season_one_left_line(GameState.season_tasks(), SeasonTasks.season_name(GameClock.total_days)) if hint_count > 0 else ""
+	var one_left := season_one_left_line(GameState.season_tasks(), SeasonTasks.season_name(GameClock.total_days)) if hint_count > 0 and SeasonBoard.near_village(data, GameState.current_region) else ""
 	_season_task.text = one_left
 	_season_task.visible = one_left != ""
 	_hint_lines = hints
@@ -1156,7 +1167,7 @@ func _refresh_key_hints() -> void:
 
 
 func _on_menu_requested(source: Node) -> void:
-	if _any_screen_open() or _dialogue.visible or _encounter.visible or _quarrel.visible or _cast_bar.visible or _combat_report.visible or _tribulation.visible or _respawn.visible or _realm_card.visible or _contest_card.visible or _pause_menu.visible or _settings.visible or _help.visible or _load_screen.visible or _death_screen.visible:
+	if _any_screen_open() or _dialogue.visible or _encounter.visible or _quarrel.visible or _cast_bar.visible or _combat_report.visible or _tribulation.visible or _respawn.visible or _realm_card.visible or _contest_card.visible or _season_board.visible or _pause_menu.visible or _settings.visible or _help.visible or _load_screen.visible or _death_screen.visible:
 		return
 	_last_source = source
 	_choice_menu.open_for(source)
@@ -1901,7 +1912,7 @@ func digest_blocked() -> bool:
 
 
 func _update_modal() -> void:
-	var blocking := _choice_menu.visible or _dialogue.visible or _encounter.visible or _quarrel.visible or _cast_bar.visible or _any_screen_open() or _combat_report.visible or _tribulation.visible or _respawn.visible or _realm_card.visible or _contest_card.visible or _pause_menu.visible or _settings.visible or _help.visible or _load_screen.visible or _death_screen.visible
+	var blocking := _choice_menu.visible or _dialogue.visible or _encounter.visible or _quarrel.visible or _cast_bar.visible or _any_screen_open() or _combat_report.visible or _tribulation.visible or _respawn.visible or _realm_card.visible or _contest_card.visible or _season_board.visible or _pause_menu.visible or _settings.visible or _help.visible or _load_screen.visible or _death_screen.visible
 	# The status panel, hints and log hide behind modals; a time-skip overlay alone keeps them.
 	_status_panel.visible = not blocking
 	if blocking and _digest_card != null:
@@ -1918,7 +1929,7 @@ func _update_modal() -> void:
 
 ## Banners wait while a report that must be read (fight, respawn, tribulation, death) is up.
 func _hold_banners() -> void:
-	_banner.set_held(_combat_report.visible or _realm_card.visible or _contest_card.visible or _respawn.visible or _tribulation.visible or _death_screen.visible)
+	_banner.set_held(_combat_report.visible or _realm_card.visible or _contest_card.visible or _season_board.visible or _respawn.visible or _tribulation.visible or _death_screen.visible)
 
 
 func _return_to_menu() -> void:
