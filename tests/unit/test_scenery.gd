@@ -103,7 +103,7 @@ func test_every_region_has_landmarks_inside_the_map() -> void:
 		var map_rect := Rect2(0, 0, float(size[0]), float(size[1]))
 		var rects := Scenery.landmark_rects(region)
 		assert_gt(rects.size(), 5, "%s needs landmarks" % region["id"])
-		var cap := 20 if region["id"] == "fallen_star_market" else 13  # GFX-054: a lantern-lined main street
+		var cap := 20 if region["id"] == "fallen_star_market" else (16 if region["id"] == "azure_peak" else 13)  # GFX-054: a lantern-lined main street; GFX-079: steps + clouds
 		assert_true(rects.size() < cap, "%s has too many landmarks" % region["id"])
 		for r in rects:
 			assert_true(map_rect.encloses(r), "%s: landmark %s leaves the map" % [region["id"], r])
@@ -394,3 +394,38 @@ func test_no_decor_or_pine_on_roads_or_spots_in_any_region() -> void:
 				assert_false(p.grow(12.0).has_point(pos), "%s: %s within 12 px of a path" % [region["id"], d["kind"]])
 			for s in spots:
 				assert_gt(pos.distance_to(Vector2(float(s[0]), float(s[1]))), 20.0, "%s: %s on an npc spot" % [region["id"], d["kind"]])
+
+
+## GFX-079: steps and clouds are valid, never solid; scree_density is validated and thins the speckle.
+func test_steps_and_clouds_are_walkable_landmarks() -> void:
+	for kind in ["steps", "clouds"]:
+		assert_true(Scenery.LANDMARK_KINDS.has(kind), kind)
+		assert_false(Scenery.SOLID_LANDMARKS.has(kind), kind)
+	var d := GameData.new()
+	d.regions = {"ok": {"id": "ok", "map": {"scree_density": 0.4, "landmarks": [{"kind": "steps", "pos": [1, 2], "size": [3, 4]}]}},
+		"bad": {"id": "bad", "map": {"scree_density": 2.0}}}
+	assert_eq(Scenery.validate(d).size(), 1)
+
+
+func test_azure_peak_has_steps_clouds_and_more_trees() -> void:
+	var data := GameData.load_from_dir()
+	var map: Dictionary = data.regions["azure_peak"]["map"]
+	var kinds: Array = map["landmarks"].map(func(l: Dictionary) -> String: return l["kind"])
+	assert_true(kinds.has("steps") and kinds.has("clouds"))
+	assert_true(int(map["decor"]["trees"]) >= 25)
+	assert_true(float(map["scree_density"]) <= 0.5)
+
+
+func test_scree_density_thins_the_speckle() -> void:
+	var base := Color("5f7a74")
+	var full := GroundTiles.ground_texture(base, "dens_t", Vector2i(160, 160), false, "", "scree", [], 1.0).get_image()
+	var thin := GroundTiles.ground_texture(base, "dens_t", Vector2i(160, 160), false, "", "scree", [], 0.4).get_image()
+	var diff := 0
+	var diff_thin := 0
+	for y in 160:
+		for x in 160:
+			if full.get_pixel(x, y) != base:
+				diff += 1
+			if thin.get_pixel(x, y) != base:
+				diff_thin += 1
+	assert_true(diff_thin < diff)

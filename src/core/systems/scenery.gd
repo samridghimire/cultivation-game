@@ -27,7 +27,7 @@ const ROCK_CLUSTER_RADIUS := 45.0
 ## Decor keeps this far from a path rect (GFX-053).
 const PATH_CLEARANCE := 12.0
 ## map.landmarks kinds (GFX-008, GFX-012); the solid ones block the player, the rest can be walked over.
-const LANDMARK_KINDS: PackedStringArray = ["house", "field", "pond", "fence", "well", "wall", "cliff", "stream", "lantern", "pine", "stall", "jetty"]
+const LANDMARK_KINDS: PackedStringArray = ["house", "field", "pond", "fence", "well", "wall", "cliff", "stream", "lantern", "pine", "stall", "jetty", "steps", "clouds"]
 const SOLID_LANDMARKS: PackedStringArray = ["house", "well", "wall", "cliff", "lantern", "pine", "stall"]
 ## Crop-row colour of the field landmark by season (GFX-037); transparent while the furrows lie bare.
 const CROP_COLORS := {"Spring": "7fc04a", "Summer": "4f9a3a", "Autumn": "d9aa3a", "Winter": "00000000"}
@@ -329,6 +329,9 @@ static func validate(data: GameData) -> PackedStringArray:
 		var plaza: Variant = region.get("map", {}).get("plaza", null)
 		if plaza != null and not (plaza is Array and plaza.size() == 4 and plaza.all(func(v: Variant) -> bool: return v is float or v is int) and float(plaza[2]) > 0.0 and float(plaza[3]) > 0.0):
 			errors.append("Region '%s' map.plaza must be [x, y, w, h] with w, h > 0" % region["id"])
+		var density: Variant = region.get("map", {}).get("scree_density", 1.0)
+		if not ((density is float or density is int) and float(density) >= 0.0 and float(density) <= 1.0):
+			errors.append("Region '%s' map.scree_density must be 0-1" % region["id"])
 		var decor: Variant = region.get("map", {}).get("decor", {})
 		if not decor is Dictionary:
 			errors.append("Region '%s' map.decor must be an object" % region["id"])

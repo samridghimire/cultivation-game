@@ -910,7 +910,7 @@ func _draw() -> void:
 		var sc := float(Sprites.scale())
 		var gseason := GroundTiles.ground_season(_season, map)
 		var flowers := ["Spring", "Summer"].has(_season)
-		var gtex := GroundTiles.ground_texture(ground_color, rid, Vector2i(ceili(map_size.x / sc), ceili(map_size.y / sc)), flowers, gseason, str(map.get("ground_style", "grass")), Scenery.paved_zones(map, sc))
+		var gtex := GroundTiles.ground_texture(ground_color, rid, Vector2i(ceili(map_size.x / sc), ceili(map_size.y / sc)), flowers, gseason, str(map.get("ground_style", "grass")), Scenery.paved_zones(map, sc), float(map.get("scree_density", 1.0)))
 		draw_texture_rect(gtex, Rect2(Vector2.ZERO, Vector2(gtex.get_size()) * sc), false)
 	var path_tile := Sprites.first(["path_" + rid, "path"])
 	var path_color := Color(map.get("path_color", "8a7350"))
@@ -967,6 +967,35 @@ func _draw_tiled(tile: Texture2D, area: Rect2) -> void:
 		y += step.y
 
 
+## GFX-079: stone steps down a slope (walkable): pale treads with a dark riser line under each, side kerbs.
+func _draw_steps(r: Rect2) -> void:
+	draw_rect(r, Color("9aa3a8"))
+	var y := r.position.y
+	var i := 0
+	while y < r.end.y:
+		var h := minf(14.0, r.end.y - y)
+		draw_rect(Rect2(r.position.x, y, r.size.x, h), Color("b4bcc0") if i % 2 == 0 else Color("a5aeb2"))
+		draw_rect(Rect2(r.position.x, y + h - 3.0, r.size.x, 3.0), Color("6f787e"))
+		y += 14.0
+		i += 1
+	draw_rect(Rect2(r.position.x - 4.0, r.position.y, 4.0, r.size.y), Color("5f686e"))
+	draw_rect(Rect2(r.end.x, r.position.y, 4.0, r.size.y), Color("5f686e"))
+
+
+## GFX-079: a cloud-sea band: layered pale translucent bands with rounded puffs; static (it never moves).
+func _draw_clouds(r: Rect2) -> void:
+	for layer in 3:
+		var band := Rect2(r.position.x, r.position.y + r.size.y * layer / 3.0, r.size.x, r.size.y / 3.0 + 4.0)
+		draw_rect(band, Color(0.92, 0.96, 1.0, 0.16 + 0.07 * layer))
+		var x := r.position.x + 30.0 * layer
+		var k := 0
+		while x < r.end.x:
+			var puff := 26.0 + float((k * 37 + layer * 19) % 24)
+			draw_circle(Vector2(x, band.position.y + 4.0), puff * 0.5, Color(0.95, 0.98, 1.0, 0.14 + 0.05 * layer))
+			x += 90.0 + float((k * 53) % 40)
+			k += 1
+
+
 ## One map.landmarks entry: its `landmark_<kind>` sprite scaled into the rect, else placeholder art (GFX-008).
 func _draw_landmark(lm: Dictionary) -> void:
 	var size := _vec(lm["size"])
@@ -982,6 +1011,12 @@ func _draw_landmark(lm: Dictionary) -> void:
 		return
 	if lm["kind"] == "jetty":
 		_draw_jetty(lm)
+		return
+	if lm["kind"] == "steps":
+		_draw_steps(r)
+		return
+	if lm["kind"] == "clouds":
+		_draw_clouds(r)
 		return
 	if PixelLandmark.supports(str(lm["kind"])):
 		var water := Color(str(lm["color"])) if lm.has("color") else Color("3f7fa8")
