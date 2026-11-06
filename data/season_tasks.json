@@ -1,0 +1,37 @@
+{
+  "_doc": "SEASON-005: the village elder's seasonal tasks. seasons: {spring|summer|autumn|winter: {tasks: [exactly 3 {id (globally unique), text (non-empty), kind, target, count (int 1..5)}], payout: {stones (int >= 0), renown (int >= 0, in Qingshi Village), favor_all (int >= 0, favor with every villager of Qingshi Village), item (optional items.json id, one given)}}}. kind: catch (target = an items.json fish id; counts fish caught), gather (target = an items.json id; counts units gathered or foraged), hunt (target = an enemies.json id; counts wins), contest (target = a world_events.json id with a contest; counts entries), sell_wanted (target ''; counts units sold to a market's wanted-item bonus). Progress lives in CharacterData.season_tasks and resets when the season changes; SeasonTasks.note adds to it and pays the reward once when all three are done.",
+  "seasons": {
+    "spring": {
+      "tasks": [
+        {"id": "spring_bream", "text": "Land a Peach-Blossom Bream from the village pond.", "kind": "catch", "target": "peach_blossom_bream", "count": 1},
+        {"id": "spring_petals", "text": "Gather 3 Peach Blossom Petals for the shrine.", "kind": "gather", "target": "peach_blossom_petal", "count": 3},
+        {"id": "spring_stag", "text": "Drive off a Fog-Antler Stag that is trampling the fields.", "kind": "hunt", "target": "fog_antler_stag", "count": 1}
+      ],
+      "payout": {"stones": 60, "renown": 2, "favor_all": 1}
+    },
+    "summer": {
+      "tasks": [
+        {"id": "summer_bass", "text": "Land a Lotus Bass from the forest pond.", "kind": "catch", "target": "lotus_bass", "count": 1},
+        {"id": "summer_grass", "text": "Gather 2 Qi Condensing Grass for the elder's tonic.", "kind": "gather", "target": "qi_condensing_grass", "count": 2},
+        {"id": "summer_boats", "text": "Race in the Dragon Boat Festival.", "kind": "contest", "target": "dragon_boat_festival", "count": 1}
+      ],
+      "payout": {"stones": 80, "renown": 2, "favor_all": 1}
+    },
+    "autumn": {
+      "tasks": [
+        {"id": "autumn_roach", "text": "Land a Maple Roach for the harvest table.", "kind": "catch", "target": "maple_roach", "count": 1},
+        {"id": "autumn_fox", "text": "Hunt a Mist Fox that raids the granaries.", "kind": "hunt", "target": "mist_fox", "count": 1},
+        {"id": "autumn_market", "text": "Sell 2 of a stall's wanted goods at the market.", "kind": "sell_wanted", "target": "", "count": 2}
+      ],
+      "payout": {"stones": 100, "renown": 2, "favor_all": 1}
+    },
+    "winter": {
+      "tasks": [
+        {"id": "winter_perch", "text": "Land an Ice Perch for the winter feast.", "kind": "catch", "target": "ice_perch", "count": 1},
+        {"id": "winter_wolf", "text": "Hunt a Den Wolf that prowls near the village.", "kind": "hunt", "target": "den_wolf", "count": 1},
+        {"id": "winter_lanterns", "text": "Join the Lantern Festival contest.", "kind": "contest", "target": "lantern_festival", "count": 1}
+      ],
+      "payout": {"stones": 120, "renown": 2, "favor_all": 1}
+    }
+  }
+}

@@ -1276,6 +1276,7 @@ func gather(table: Array, days: int) -> void:
 	for item_id in found:
 		player.add_item(item_id, found[item_id])
 		notes.append("+%d %s" % [found[item_id], Items.item_plural(data, item_id, found[item_id])])
+		_season_note("gather", String(item_id), int(found[item_id]))
 	var first_finds: PackedStringArray = []
 	for item_id in found:
 		if data.items.get(item_id, {}).get("tags", []).has("herb") and HerbLore.record_find(player, item_id, int(found[item_id])):
@@ -1350,6 +1351,7 @@ func fish(table: Array, days: int, place_name: String = "", quality: float = 0.5
 	for item_id in found:
 		player.add_item(item_id, found[item_id])
 		notes.append("+%d %s" % [found[item_id], Items.item_plural(data, item_id, found[item_id])])
+		_season_note("catch", String(item_id), int(found[item_id]))
 		if data.items.get(item_id, {}).get("tags", []).has("fish") and Fishing.record_catch(player, item_id, int(found[item_id])):
 			first_catches.append(String(data.items[item_id]["name"]))
 			player.fishing_xp += Fishing.FIRST_CATCH_XP
@@ -1434,6 +1436,7 @@ func sell_item(item_id: String, quantity: int = 1) -> void:
 		result["stones"] = int(result["stones"]) + int(bonus["stones"])
 		if bonus["ok"]:
 			_record_wanted_sale(bonus_units)
+			_season_note("sell_wanted", "", bonus_units)
 	if result["ok"]:
 		EventBus.post("You sell %d %s for %d spirit stones." % [quantity, Items.item_plural(data, item_id, quantity), result["stones"]])
 	else:
@@ -3229,6 +3232,7 @@ func festival_contest(event_id: String) -> Dictionary:
 	var invite := FestivalContest.invitation(data, npcs, npc_favor, GameClock.total_days)
 	var companion: CharacterData = invite["npc"] if not invite.is_empty() and String(invite["event_id"]) == event_id and current_region == String(data.world_events[event_id].get("regions", [""])[0]) else null
 	world_flags[FestivalContest.flag_key(event_id, year)] = true
+	_season_note("contest", event_id, 1)
 	EventBus.post(String(contest["text"]), "world")
 	if champ_name != "":
 		EventBus.post("%s: %s" % [champ_name, String(contest.get("champion_greeting", "")).replace("{player}", player.name)], "world")
@@ -3310,6 +3314,7 @@ func pick_forage(slot: int) -> bool:
 			player.gather_xp += 1
 			HerbLore.record_find(player, item_id, amount)
 		LifeStats.add(player, "foraged")
+		_season_note("gather", item_id, amount)
 		var tier_before := Foraging.tier_for(player.forage_picks)
 		player.forage_picks += 1
 		var tier_line := Foraging.tier_line(Foraging.tier_for(player.forage_picks)) if Foraging.tier_for(player.forage_picks) > tier_before else ""
@@ -3372,6 +3377,7 @@ func engage_roamer(slot: int, charged: bool = false) -> bool:
 			won = fight(String(r["enemy"]))
 		if won:
 			Wildlife.record_hunt(player, String(r["enemy"]))
+			_season_note("hunt", String(r["enemy"]), 1)
 			# The bounty's pay is not the beast's spoils (REVIEW of WILD-005).
 			if not bounty:
 				spoils = Wildlife.inventory_gain(before, player.inventory)
@@ -3407,6 +3413,34 @@ func engage_roamer(slot: int, charged: bool = false) -> bool:
 	return false
 
 
+## SEASON-005: counts progress on the season's village tasks, posts the lines and pays the reward once.
+func _season_note(kind: String, target: String, n: int) -> void:
+	var day := GameClock.total_days
+	var was_done := bool(player.season_tasks.get("done", false)) and String(player.season_tasks.get("season_key", "")) == SeasonTasks.season_key(day)
+	var lines := SeasonTasks.note(player, data, kind, target, n, day)
+	for line in lines:
+		EventBus.post(line, "progress")
+	if was_done or lines.is_empty() or not bool(player.season_tasks.get("done", false)):
+		return
+	var reward: Dictionary = SeasonTasks.def(data, day).get("payout", {})
+	if int(reward.get("stones", 0)) > 0:
+		player.add_item("spirit_stone", int(reward["stones"]))
+	if String(reward.get("item", "")) != "":
+		player.add_item(String(reward["item"]), 1)
+	if int(reward.get("renown", 0)) > 0:
+		Renown.add(player, data, SeasonTasks.REGION, int(reward["renown"]))
+	var favor := int(reward.get("favor_all", 0))
+	if favor > 0:
+		for npc in Npcs.in_region(npcs, data, SeasonTasks.REGION):
+			if npc.id != player.id:
+				npc_favor[npc.id] = clampi(int(npc_favor.get(npc.id, 0)) + favor, -100, 100)
+
+
+## SEASON-005: this season's village tasks as [{text, n, count, done}] (for the journal).
+func season_tasks() -> Array[Dictionary]:
+	return SeasonTasks.list(player, data, GameClock.total_days)
+
+
 ## WILD-016: the beast of the village hunt posted here today, "" when none is.
 func village_hunt_quarry() -> String:
 	if not _can_act() or not VillageHunt.active(data, current_region, GameClock.total_days, world_flags):
@@ -3439,6 +3473,7 @@ func join_village_hunt() -> bool:
 		_pass_time(extra)
 	if won:
 		Wildlife.record_hunt(player, enemy_id)
+		_season_note("hunt", enemy_id, 1)
 		var spoils := Wildlife.inventory_gain(before, player.inventory)
 		for item_id: String in spoils:
 			var n := int(spoils[item_id])

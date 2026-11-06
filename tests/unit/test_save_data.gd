@@ -96,6 +96,7 @@ func test_every_character_field_survives_a_save() -> void:
 	c.catch_log = {"silver_carp": 3}
 	c.herb_log = {"dew_grass": 2}
 	c.hunt_log = {"wild_boar": 2}
+	c.season_tasks = {"season_key": "1-spring", "progress": {"spring_bream": 1}, "done": false}
 	c.hunt_spoils = {"wild_boar": {"boar_tusk": 3}}
 	c.great_beasts = {"old_tusker_boar": 12}
 	c.marked_days = {40: "Market: Qingshi Village"}
