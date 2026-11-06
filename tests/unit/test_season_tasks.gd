@@ -214,3 +214,31 @@ func test_incense_validation() -> void:
 	assert_false(SeasonTasks.validate(gd).is_empty(), "flag missing from qi_flags")
 	gd.season_tasks = saved
 	assert_true(SeasonTasks.validate(gd).is_empty())
+
+
+## GUIDE-214: where a task can be done.
+func test_where_per_kind() -> void:
+	var gd: GameData = _gs().data
+	var c := CharacterData.new()
+	c.realm_index = gd.realm_index_of("foundation_establishment")
+	assert_eq(SeasonTasks.where({"kind": "catch", "target": "peach_blossom_bream"}, c, gd, 5), "at Village Pond Jetty")
+	assert_eq(SeasonTasks.where({"kind": "catch", "target": "peach_blossom_bream"}, c, gd, 185), "", "not in autumn")
+	assert_true(SeasonTasks.where({"kind": "gather", "target": "peach_blossom_petal"}, c, gd, 5).contains("village"), "forage")
+	assert_true(SeasonTasks.where({"kind": "gather", "target": "spirit_herb"}, c, gd, 5).begins_with("at Village Herb Slope"))
+	assert_true(SeasonTasks.where({"kind": "hunt", "target": "mist_fox"}, c, gd, 185).begins_with("in ") or SeasonTasks.where({"kind": "hunt", "target": "mist_fox"}, c, gd, 185) == "at the village hunt")
+	var contest := SeasonTasks.where({"kind": "contest", "target": "dragon_boat_festival"}, c, gd, 95)
+	assert_true(contest.contains("Dragon Boat Festival") and contest.contains("month 5"), contest)
+	assert_eq(SeasonTasks.where({"kind": "sell_wanted", "target": ""}, c, gd, 5), "at a market stall's wanted item")
+	assert_eq(SeasonTasks.where({"kind": "catch", "target": "no_such_fish"}, c, gd, 5), "")
+	assert_eq(SeasonTasks.where({"kind": "hunt", "target": "no_such_beast"}, c, gd, 5), "")
+
+
+func test_list_carries_where_and_hud_line() -> void:
+	var gs := _gs()
+	_start()
+	GameClock.total_days = 5
+	var tasks: Array[Dictionary] = gs.season_tasks()
+	assert_eq(String(tasks[0]["where"]), "at Village Pond Jetty")
+	const HUD := preload("res://src/ui/hud.gd")
+	var line: String = HUD.season_one_left_line([{"text": "Catch a fish.", "where": "at Village Pond Jetty", "done": false}], "spring")
+	assert_eq(line, "One more for spring: Catch a fish at Village Pond Jetty.")

@@ -194,9 +194,13 @@ func _build_today(lines: PackedStringArray, tasks: Array = [], reward_line: Stri
 
 ## "<text> (n/count)" for a season task row (the count only when more than one is needed).
 static func season_task_text(t: Dictionary) -> String:
+	var text := String(t["text"])
+	var where := String(t.get("where", ""))
+	if where != "" and not bool(t.get("done", false)):
+		text = "%s %s." % [text.trim_suffix("."), where]
 	if int(t.get("count", 1)) > 1:
-		return "%s (%d/%d)" % [t["text"], t["n"], t["count"]]
-	return String(t["text"])
+		return "%s (%d/%d)" % [text, t["n"], t["count"]]
+	return text
 
 
 func _today_row(line: String, tex: Texture2D, meta: String) -> HBoxContainer:

@@ -1312,7 +1312,11 @@ static func season_one_left_line(tasks: Array, season_name: String) -> String:
 	var left: Array = tasks.filter(func(t: Dictionary) -> bool: return not bool(t["done"]))
 	if tasks.is_empty() or left.size() != 1:
 		return ""
-	return "One more for %s: %s" % [season_name, left[0]["text"]]
+	var where := String(left[0].get("where", ""))
+	var text := String(left[0]["text"])
+	if where != "":
+		text = "%s %s." % [text.trim_suffix("."), where]
+	return "One more for %s: %s" % [season_name, text]
 
 
 ## WU-462: a banner when the season's set is complete.

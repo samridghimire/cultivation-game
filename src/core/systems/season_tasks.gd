@@ -168,7 +168,84 @@ static func list(c: CharacterData, data: GameData, day: int) -> Array[Dictionary
 	var progress: Dictionary = _state(c, day)["progress"]
 	for t: Dictionary in d["tasks"]:
 		var n := int(progress.get(String(t["id"]), 0))
-		out.append({"text": String(t["text"]), "n": n, "count": int(t["count"]), "done": n >= int(t["count"])})
+		out.append({"text": String(t["text"]), "where": where(t, c, data, day), "n": n, "count": int(t["count"]), "done": n >= int(t["count"])})
+	return out
+
+
+## GUIDE-214: where to do a task ("at Village Pond Jetty", "Misty Forest Pond in Misty Forest", "" when nothing fits).
+## Pure. Qingshi's places come first, then regions by travel days from Qingshi.
+static func where(task: Dictionary, c: CharacterData, data: GameData, day: int = -1) -> String:
+	if day < 0:
+		day = GameClock.total_days
+	var season := Calendar.season_of(day).to_lower()
+	var target := String(task.get("target", ""))
+	var kind := String(task.get("kind", ""))
+	match kind:
+		"catch", "gather":
+			for rid in _regions_nearest(data):
+				var region: Dictionary = data.regions[rid]
+				for place: Dictionary in region.get("places", []):
+					var table: Array = place.get("catch_table", []) if kind == "catch" else place.get("gather_table", [])
+					for e: Dictionary in table:
+						if String(e.get("item", "")) == target and Exploration.in_season(e, season):
+							return "at %s" % place["display_name"] if rid == REGION else "%s in %s" % [place["display_name"], region["name"]]
+				if kind == "gather":
+					for e: Dictionary in region.get("forage", {}).get("items", []):
+						if String(e.get("item", "")) == target and Exploration.in_season(e, season):
+							return "by the paths of %s" % region["name"] if rid != REGION else "by the village paths"
+		"hunt":
+			var realm := c.realm_index if c != null else 0
+			for rid in _regions_nearest(data):
+				for r in _roamer_days(data, rid, day, realm):
+					if String(r) == target:
+						return "in %s" % data.regions[rid]["name"]
+			if VillageHunt.quarry(data, REGION, day) == target:
+				return "at the village hunt"
+		"contest":
+			var ev: Dictionary = data.world_events.get(target, {})
+			if not ev.is_empty():
+				var months: Array = ev.get("months", [])
+				var rnames: PackedStringArray = []
+				for rid: String in ev.get("regions", []):
+					rnames.append(String(data.regions.get(rid, {}).get("name", rid)))
+				if not months.is_empty() and not rnames.is_empty():
+					return "at the %s in %s, month %d" % [ev.get("name", target), ", ".join(rnames), int(months[0])]
+		"sell_wanted":
+			return "at a market stall's wanted item"
+	return ""
+
+
+## Region ids ordered by travel days from Qingshi (Qingshi first, unreachable ones last).
+static func _regions_nearest(data: GameData) -> Array[String]:
+	var dist := {REGION: 0}
+	var queue: Array[String] = [REGION]
+	while not queue.is_empty():
+		var cur: String = queue.pop_front()
+		for route: Dictionary in data.regions.get(cur, {}).get("routes", []):
+			var to := String(route.get("to", ""))
+			var d: int = int(dist[cur]) + int(route.get("days", 1))
+			if not dist.has(to) or d < int(dist[to]):
+				dist[to] = d
+				queue.append(to)
+	var ids: Array[String] = []
+	for rid: String in data.regions:
+		ids.append(rid)
+	ids.sort_custom(func(a: String, b: String) -> bool:
+		var da: int = int(dist.get(a, 9999))
+		var db: int = int(dist.get(b, 9999))
+		return da < db or (da == db and a < b))
+	return ids
+
+
+## Enemy ids roaming the region on any day of `day`'s season for a character of `realm`.
+static func _roamer_days(data: GameData, rid: String, day: int, realm: int) -> Array[String]:
+	var out: Array[String] = []
+	var start := day - posmod(day, 90)
+	for d in range(start, start + 90):
+		for r in Wildlife.roamers(data, rid, d, realm, {}):
+			var id := String(r["enemy"])
+			if not out.has(id):
+				out.append(id)
 	return out
 
 
