@@ -97,6 +97,8 @@ var visited_regions: Array[String] = []
 var seasonal_gathers: Array[String] = []
 ## SEASON-005: the village's seasonal tasks {season_key, progress: {task_id: n}, done}.
 var season_tasks: Dictionary = {}
+## SEASON-006: season keys whose three village tasks were finished (unique).
+var seasons_completed: Array[String] = []
 ## Cultivators whose cultivation this character has devoured (Devouring, DEM-001).
 var devoured := 0
 ## Id of the player's named rival NPC (Rivals, RIV-002), "" if none.
@@ -297,6 +299,7 @@ func to_dict() -> Dictionary:
 		"visited_regions": visited_regions.duplicate(),
 		"seasonal_gathers": seasonal_gathers.duplicate(),
 		"season_tasks": season_tasks.duplicate(true),
+		"seasons_completed": seasons_completed.duplicate(),
 		"devoured": devoured,
 		"rival": rival,
 		"abode": abode,
@@ -453,6 +456,9 @@ static func from_dict(d: Dictionary) -> CharacterData:
 		c.visited_regions.append(String(region_id))
 	for season in d.get("seasonal_gathers", []):
 		c.seasonal_gathers.append(String(season))
+	for sk in d.get("seasons_completed", []):
+		if not c.seasons_completed.has(String(sk)):
+			c.seasons_completed.append(String(sk))
 	var st: Variant = d.get("season_tasks", {})
 	if st is Dictionary and not (st as Dictionary).is_empty():
 		c.season_tasks = {"season_key": String(st.get("season_key", "")), "progress": _int_values(st.get("progress", {})), "done": bool(st.get("done", false))}

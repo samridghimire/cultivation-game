@@ -1,5 +1,15 @@
 {
-  "_doc": "SEASON-005: the village elder's seasonal tasks. seasons: {spring|summer|autumn|winter: {tasks: [exactly 3 {id (globally unique), text (non-empty), kind, target, count (int 1..5)}], payout: {stones (int >= 0), renown (int >= 0, in Qingshi Village), favor_all (int >= 0, favor with every villager of Qingshi Village), item (optional items.json id, one given)}}}. kind: catch (target = an items.json fish id; counts fish caught), gather (target = an items.json id; counts units gathered or foraged), hunt (target = an enemies.json id; counts wins), contest (target = a world_events.json id with a contest; counts entries), sell_wanted (target ''; counts units sold to a market's wanted-item bonus). Progress lives in CharacterData.season_tasks and resets when the season changes; SeasonTasks.note adds to it and pays the reward once when all three are done.",
+  "_doc": "SEASON-005: the village elder's seasonal tasks. seasons: {spring|summer|autumn|winter: {tasks: [exactly 3 {id (globally unique), text (non-empty), kind, target, count (int 1..5)}], payout: {stones (int >= 0), renown (int >= 0, in Qingshi Village), favor_all (int >= 0, favor with every villager of Qingshi Village), item (optional items.json id, one given)}}}. kind: catch (target = an items.json fish id; counts fish caught), gather (target = an items.json id; counts units gathered or foraged), hunt (target = an enemies.json id; counts wins), contest (target = a world_events.json id with a contest; counts entries), sell_wanted (target ''; counts units sold to a market's wanted-item bonus). restoration (optional, SEASON-006): {region (regions.json id), name (e.g. \"the old shrine\"), stages: [1..8 {flag (unique world flag), text}], qi_flag: {flag (unique), bonus (0 < b <= 0.1), text}}: each season whose three tasks are finished (CharacterData.seasons_completed, unique season keys) repairs one stage and sets its world flag; when all are reached qi_flag.flag is set too, and the region must list that flag with the same bonus in its qi_flags. Progress lives in CharacterData.season_tasks and resets when the season changes; SeasonTasks.note adds to it and pays the reward once when all three are done.",
+  "restoration": {
+    "region": "qingshi_village", "name": "the old shrine",
+    "stages": [
+      {"flag": "shrine_stage_1", "text": "Villagers clear the weeds and rubble from the old shrine."},
+      {"flag": "shrine_stage_2", "text": "A new roof of grey tile goes up over the old shrine."},
+      {"flag": "shrine_stage_3", "text": "The old shrine's cracked altar stone is set straight and polished."},
+      {"flag": "shrine_stage_4", "text": "Incense is lit at the old shrine for the first time in a generation."}
+    ],
+    "qi_flag": {"flag": "shrine_restored", "bonus": 0.05, "text": "the restored shrine"}
+  },
   "seasons": {
     "spring": {
       "tasks": [

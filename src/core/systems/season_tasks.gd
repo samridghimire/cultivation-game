@@ -54,7 +54,55 @@ static func note(c: CharacterData, data: GameData, kind: String, target: String,
 	if all_done(c, data, day):
 		st["done"] = true
 		lines.append("The village thanks you for the %s: %s." % [season_name(day), reward_text(data, day)])
+		var key := String(st["season_key"])
+		if not c.seasons_completed.has(key):
+			c.seasons_completed.append(key)
+			var rest := restoration(data)
+			var stages: Array = rest.get("stages", [])
+			if not stages.is_empty():
+				var idx := mini(c.seasons_completed.size(), stages.size()) - 1
+				lines.append(String(stages[idx]["text"]))
+				if c.seasons_completed.size() == stages.size():
+					var qf: Dictionary = rest.get("qi_flag", {})
+					lines.append("%s stands again: Qingshi's qi rises %d%%." % [_cap(String(rest.get("name", "The shrine"))), roundi(float(qf.get("bonus", 0.0)) * 100.0)])
 	return lines
+
+
+## The restoration block of data/season_tasks.json ({} when absent).
+static func restoration(data: GameData) -> Dictionary:
+	return data.season_tasks.get("restoration", {})
+
+
+## SEASON-006: stages of the restoration reached (0..stages).
+static func restoration_stage(c: CharacterData, data: GameData) -> int:
+	return mini(c.seasons_completed.size(), (restoration(data).get("stages", []) as Array).size())
+
+
+## World flags the reached stages set (plus the qi flag once all are reached).
+static func restoration_flags(c: CharacterData, data: GameData) -> Array[String]:
+	var out: Array[String] = []
+	var rest := restoration(data)
+	var stages: Array = rest.get("stages", [])
+	var n := restoration_stage(c, data)
+	for i in n:
+		out.append(String(stages[i]["flag"]))
+	if not stages.is_empty() and n >= stages.size():
+		out.append(String((rest.get("qi_flag", {}) as Dictionary).get("flag", "")))
+	return out
+
+
+## "The old shrine: 1 of 4 stages repaired." while unfinished, else "".
+static func restoration_line(c: CharacterData, data: GameData) -> String:
+	var rest := restoration(data)
+	var total := (rest.get("stages", []) as Array).size()
+	var n := restoration_stage(c, data)
+	if total == 0 or n >= total:
+		return ""
+	return "%s: %d of %d stages repaired." % [_cap(String(rest["name"])), n, total]
+
+
+static func _cap(s: String) -> String:
+	return s.substr(0, 1).to_upper() + s.substr(1)
 
 
 static func all_done(c: CharacterData, data: GameData, day: int) -> bool:
@@ -137,4 +185,38 @@ static func validate(data: GameData) -> Array[String]:
 				errs.append("season_tasks.json %s payout %s must be >= 0" % [s, k])
 		if r.has("item") and not data.items.has(String(r["item"])):
 			errs.append("season_tasks.json %s payout item '%s' is unknown" % [s, r["item"]])
+	if data.season_tasks.has("restoration"):
+		errs.append_array(_validate_restoration(data))
+	return errs
+
+
+static func _validate_restoration(data: GameData) -> Array[String]:
+	var errs: Array[String] = []
+	var rest: Dictionary = data.season_tasks["restoration"]
+	var region := String(rest.get("region", ""))
+	if not data.regions.has(region):
+		errs.append("season_tasks.json restoration has unknown region '%s'" % region)
+	if String(rest.get("name", "")) == "":
+		errs.append("season_tasks.json restoration needs a name")
+	var stages: Array = rest.get("stages", [])
+	if stages.size() < 1 or stages.size() > 8:
+		errs.append("season_tasks.json restoration needs 1..8 stages")
+	var seen := {}
+	for st: Dictionary in stages:
+		var f := String(st.get("flag", ""))
+		if f == "" or String(st.get("text", "")) == "" or seen.has(f):
+			errs.append("season_tasks.json restoration stage needs a unique flag and text (got '%s')" % f)
+		seen[f] = true
+	var qf: Dictionary = rest.get("qi_flag", {})
+	var bonus := float(qf.get("bonus", 0.0))
+	var qflag := String(qf.get("flag", ""))
+	if qflag == "" or seen.has(qflag) or bonus <= 0.0 or bonus > 0.1:
+		errs.append("season_tasks.json restoration qi_flag needs a unique flag and a bonus in (0, 0.1]")
+	elif data.regions.has(region):
+		var listed := false
+		for e: Dictionary in data.regions[region].get("qi_flags", []):
+			if String(e.get("flag", "")) == qflag and is_equal_approx(float(e.get("bonus", 0.0)), bonus):
+				listed = true
+		if not listed:
+			errs.append("region '%s' qi_flags must list restoration flag '%s' with bonus %s" % [region, qflag, bonus])
 	return errs

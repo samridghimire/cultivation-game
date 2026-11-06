@@ -3423,6 +3423,8 @@ func _season_note(kind: String, target: String, n: int) -> void:
 	var day := GameClock.total_days
 	var was_done := bool(player.season_tasks.get("done", false)) and String(player.season_tasks.get("season_key", "")) == SeasonTasks.season_key(day)
 	var lines := SeasonTasks.note(player, data, kind, target, n, day)
+	for flag in SeasonTasks.restoration_flags(player, data):
+		world_flags[flag] = true
 	for line in lines:
 		EventBus.post(line, "progress")
 	if was_done or lines.is_empty() or not bool(player.season_tasks.get("done", false)):

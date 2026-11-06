@@ -303,6 +303,11 @@ static func today_lines(c: CharacterData, data: GameData, flags: Dictionary, act
 	for rem in VillageCalendar.reminders(data, npcs, favor, active_events, region_id, day, c, flags):
 		if not rem.begins_with("Tomorrow: market") and not rem.contains("great beast"):
 			out.append(rem)
+	# 6b. The shrine's repair (SEASON-006), while this season's set is still open.
+	if region_id == SeasonTasks.REGION and not bool(c.season_tasks.get("done", false) and String(c.season_tasks.get("season_key", "")) == SeasonTasks.season_key(day)):
+		var shrine := SeasonTasks.restoration_line(c, data)
+		if shrine != "":
+			out.append(shrine)
 	# 7. The season ending.
 	var ending := season_ending(c, data, day, flags)
 	if ending != "":

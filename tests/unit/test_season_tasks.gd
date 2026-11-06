@@ -22,7 +22,7 @@ func test_progress_per_kind_and_reward_once() -> void:
 	var lines := SeasonTasks.note(c, gd, "gather", "peach_blossom_petal", 1, 5)
 	assert_eq(lines.size(), 1)
 	lines = SeasonTasks.note(c, gd, "hunt", "fog_antler_stag", 1, 5)
-	assert_eq(lines.size(), 2, "task + thanks")
+	assert_eq(lines.size(), 3, "task + thanks + shrine stage")
 	assert_true(lines[1].begins_with("The village thanks you for the spring"))
 	assert_true(SeasonTasks.note(c, gd, "hunt", "fog_antler_stag", 1, 5).is_empty(), "paid once")
 	var list := SeasonTasks.list(c, gd, 5)
@@ -75,3 +75,58 @@ func test_game_state_hooks_pay_reward() -> void:
 	gs._season_note("hunt", "fog_antler_stag", 1)
 	assert_eq(c.item_count("spirit_stone"), stones + 60, "once")
 	gs.end_session()
+
+
+## SEASON-006: the shrine restoration.
+func _finish_season(c: CharacterData, gd: GameData, day: int) -> Array[String]:
+	var lines: Array[String] = []
+	for t: Dictionary in SeasonTasks.def(gd, day)["tasks"]:
+		lines.append_array(SeasonTasks.note(c, gd, String(t["kind"]), String(t["target"]), int(t["count"]), day))
+	return lines
+
+
+func test_restoration_stages_count_once() -> void:
+	var gd: GameData = _gs().data
+	var c := CharacterData.new()
+	assert_eq(SeasonTasks.restoration_stage(c, gd), 0)
+	var lines := _finish_season(c, gd, 5)
+	assert_true(String(lines[lines.size() - 1]).begins_with("Villagers clear"), "stage 1 text")
+	_finish_season(c, gd, 6)
+	assert_eq(SeasonTasks.restoration_stage(c, gd), 1, "same season twice counts once")
+	_finish_season(c, gd, 95)
+	assert_eq(SeasonTasks.restoration_stage(c, gd), 2)
+	assert_eq(SeasonTasks.restoration_flags(c, gd), ["shrine_stage_1", "shrine_stage_2"])
+	assert_eq(SeasonTasks.restoration_line(c, gd), "The old shrine: 2 of 4 stages repaired.")
+
+
+func test_restoration_complete_and_qi() -> void:
+	var gs := _gs()
+	var c := _start()
+	var base: float = gs.region_qi_density()
+	for day in [5, 95, 185, 275]:
+		GameClock.total_days = day
+		for t: Dictionary in SeasonTasks.def(gs.data, day)["tasks"]:
+			gs._season_note(String(t["kind"]), String(t["target"]), int(t["count"]))
+	assert_eq(SeasonTasks.restoration_stage(c, gs.data), 4)
+	assert_true(bool(gs.world_flags.get("shrine_restored", false)))
+	GameClock.total_days = 5
+	assert_true(absf(gs.region_qi_density() - base * 1.05) < 0.02 * base, "qi +5%")
+	assert_eq(SeasonTasks.restoration_line(c, gs.data), "")
+
+
+func test_restoration_validation_and_save() -> void:
+	var gd: GameData = _gs().data
+	var saved: Dictionary = gd.season_tasks.duplicate(true)
+	gd.season_tasks["restoration"]["region"] = "nowhere"
+	assert_false(SeasonTasks.validate(gd).is_empty(), "unknown region")
+	gd.season_tasks = saved.duplicate(true)
+	gd.season_tasks["restoration"]["qi_flag"]["bonus"] = 0.5
+	assert_false(SeasonTasks.validate(gd).is_empty(), "bonus too big")
+	gd.season_tasks = saved
+	assert_true(SeasonTasks.validate(gd).is_empty())
+	var c := CharacterData.new()
+	c.seasons_completed.append("1-spring")
+	assert_eq(CharacterData.from_dict(c.to_dict()).seasons_completed, ["1-spring"] as Array[String])
+	var d := c.to_dict()
+	d.erase("seasons_completed")
+	assert_true(CharacterData.from_dict(d).seasons_completed.is_empty())
