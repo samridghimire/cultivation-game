@@ -753,16 +753,17 @@ static func fair_fight_line(entries: Array, font: Font = null, font_size: int = 
 		return ""
 	var best: Dictionary = entries[0]
 	var enemy := String(best.get("enemy", ""))
+	var prefix := Guidance.fair_fight_prefix(best)
 	if enemy == "" or not best.has("chance"):
-		return "Fair fight: %s" % String(best.get("text", ""))
+		return "%s: %s" % [prefix, String(best.get("text", ""))]
 	var chance := float(best["chance"])
 	var label := Combat.label_for_chance(chance)
 	var named := String(best.get("short", ""))
 	if named == "":
 		named = enemy
-	var full := "Fair fight: %s (%s, %d in 100)" % [named, label, roundi(chance * 100.0)]
+	var full := "%s: %s (%s, %d in 100)" % [prefix, named, label, roundi(chance * 100.0)]
 	if font != null and max_width > 0.0 and wrapped_lines(full, font, font_size, max_width).size() > 2:
-		full = "Fair fight: %s (%s)" % [named, label]
+		full = "%s: %s (%s)" % [prefix, named, label]
 	return full
 
 

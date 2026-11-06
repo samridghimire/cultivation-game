@@ -1545,6 +1545,22 @@ func _fighter() -> CharacterData:
 	return c
 
 
+## GUIDE-212: an even fight with no pay sorts before an easy one that pays; inside a band stones lead.
+func test_fair_fight_order_puts_even_before_easy() -> void:
+	var even := {"text": "A", "chance": 0.8, "stones": 0}
+	var easy := {"text": "B", "chance": 1.0, "stones": 50}
+	var easy2 := {"text": "C", "chance": 0.95, "stones": 10}
+	var list: Array[Dictionary] = [easy2, easy, even]
+	list.sort_custom(Guidance.fair_fight_before)
+	assert_eq(list, [even, easy, easy2] as Array[Dictionary])
+
+
+func test_fair_fight_prefix() -> void:
+	assert_eq(Guidance.fair_fight_prefix({"chance": 0.95}), "Easy fight")
+	assert_eq(Guidance.fair_fight_prefix({"chance": 0.8}), "Fair fight")
+	assert_eq(Guidance.fair_fight_prefix({}), "Fair fight")
+
+
 func test_fair_fights_are_even_or_better_sorted_and_capped() -> void:
 	var c := _fighter()
 	var fights := Guidance.fair_fights(c, data(), {}, c.age_days, "qingshi_village")
@@ -1554,6 +1570,11 @@ func test_fair_fights_are_even_or_better_sorted_and_capped() -> void:
 		if i > 0:
 			var prev: Dictionary = fights[i - 1]
 			var cur: Dictionary = fights[i]
+			var prev_easy: bool = float(prev["chance"]) >= Guidance.EASY_FIGHT_CHANCE
+			var cur_easy: bool = float(cur["chance"]) >= Guidance.EASY_FIGHT_CHANCE
+			assert_false(prev_easy and not cur_easy, "even fights come before easy ones")
+			if prev_easy != cur_easy:
+				continue
 			assert_true(int(prev["stones"]) >= int(cur["stones"]))
 			if int(prev["stones"]) == int(cur["stones"]):
 				assert_true(float(prev["chance"]) >= float(cur["chance"]))

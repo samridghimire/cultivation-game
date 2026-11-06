@@ -4557,8 +4557,24 @@ static func _keep_trial(found: Array[Dictionary], n: int) -> Array[Dictionary]:
 	return shown
 
 
-## fair_fights order: stones paid (most first), then win chance, then text.
+## GUIDE-212: win chance from which a fight is "Easy" (label "Weak") rather than a fair one.
+const EASY_FIGHT_CHANCE := 0.9
+
+
+## "Fair fight" when the entry's chance is below EASY_FIGHT_CHANCE (or it has none), "Easy fight" otherwise.
+static func fair_fight_prefix(entry: Dictionary) -> String:
+	if entry.has("chance") and float(entry["chance"]) >= EASY_FIGHT_CHANCE:
+		return "Easy fight"
+	return "Fair fight"
+
+
+## fair_fights order: an even fight (chance below EASY_FIGHT_CHANCE) before an easy one, then within each band
+## stones paid (most first), then win chance, then text.
 static func fair_fight_before(a: Dictionary, b: Dictionary) -> bool:
+	var a_easy := float(a["chance"]) >= EASY_FIGHT_CHANCE
+	var b_easy := float(b["chance"]) >= EASY_FIGHT_CHANCE
+	if a_easy != b_easy:
+		return not a_easy
 	if int(a["stones"]) != int(b["stones"]):
 		return int(a["stones"]) > int(b["stones"])
 	if not is_equal_approx(float(a["chance"]), float(b["chance"])):
