@@ -9,7 +9,7 @@ extends RefCounted
 
 ## Kinds with their own look; anything else is a plain box.
 const KINDS := ["meditation", "merchant", "workshop", "sect_hall", "travel", "gather", "fishing", "field_plot", "explore", "deed_giver", "npc",
-	"camp", "clinic", "orphanage", "secret_realm", "auction", "inheritance", "bounty_board", "abode", "family_home"]
+	"camp", "clinic", "orphanage", "secret_realm", "auction", "inheritance", "bounty_board", "abode", "family_home", "shrine"]
 const OUTLINE := Color("2a2018")
 const WOOD := Color("6b4a2e")
 const STONE := Color("8d8a82")
@@ -57,6 +57,8 @@ static func draw(ci: CanvasItem, kind: String, size: Vector2, color: Color, acti
 			_notice_board(ci, h, color)
 		"inheritance":
 			_stele(ci, h, color)
+		"shrine":
+			_stele(ci, h, color)  # the live stage art is Shrine.draw_generated_art (GFX-081)
 		"abode":
 			_cave_dwelling(ci, h, color)
 		"family_home":

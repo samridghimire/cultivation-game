@@ -22,6 +22,7 @@ extends SceneTree
 ## field_menu.png (the rented field's menu with the tool icons).
 ## WU-452: `-- --road-card [--road-encounter]` renders road_card.png (and road_encounter.png).
 ## GFX-065: append `-- --arrival-card` for arrival_card.png, right after a new game starts, the card still up.
+## GFX-081: `-- --shrine=N` sets the old shrine's stage (0..4).
 ## PNGs go to user://screenshots/first_hour/<name>.png. Never writes saves.
 ## (The mid-game sibling is screenshot_screens.gd.)
 
@@ -67,6 +68,11 @@ func _start() -> void:
 					push_warning("--region: unknown region %s" % id)
 	if not region_list.is_empty():
 		gs.current_region = region_list[0]
+	for arg in OS.get_cmdline_user_args():  # GFX-081: --shrine=N sets the old shrine's restoration stage (0..4)
+		if arg.begins_with("--shrine="):
+			gs.player.seasons_completed.clear()
+			for i in clampi(int(arg.substr(9)), 0, 4):
+				gs.player.seasons_completed.append("shot_%d" % i)
 	if OS.get_cmdline_user_args().has("--great") or OS.get_cmdline_user_args().has("--tracks"):  # WU-430: jump to the region's next great-beast day
 		var clock: Node = root.get_node("GameClock")
 		var walk: int = Wildlife.next_great_day(gs.data, gs.current_region, clock.total_days, gs.player.realm_index)

@@ -3427,6 +3427,8 @@ func _season_note(kind: String, target: String, n: int) -> void:
 		world_flags[flag] = true
 	for line in lines:
 		EventBus.post(line, "progress")
+	if not lines.is_empty():
+		EventBus.player_changed.emit()  # GFX-081: the shrine redraws at its new stage
 	if was_done or lines.is_empty() or not bool(player.season_tasks.get("done", false)):
 		return
 	var reward: Dictionary = SeasonTasks.def(data, day).get("payout", {})
