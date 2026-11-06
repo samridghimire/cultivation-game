@@ -79,6 +79,13 @@ const TODAY_EXTRA := {
 	"fish": {"colors": {"a": Color("6fa8d6"), "b": Color("b9dcf2"), "c": Color("3a6a9a")}, "rows": ["............", "............", "............", "....oooo..o.", "..ooabbaooco", ".oabaaaaaaco", ".oaoaaaaaaco", "..ooaaaaooco", "...ooooo..o.", "............", "............", "............"]},
 }
 
+## WU-471: Next-steps line kinds: goal scroll, fight swords, plain dot (sun and leaf reuse the weather and mark glyphs).
+const HINTS := {
+	"scroll": {"colors": {"a": Color("f4e9d0"), "b": Color("e8c76a"), "c": Color("8a6a3a")}, "rows": ["............", "..oooooooo..", ".oabbbbbbao.", ".oaaaaaaaao.", "..oacccaao..", "..oaaaaaao..", "..oacccaao..", "..oaaaaaao..", ".oaaaaaaaao.", ".oabbbbbbao.", "..oooooooo..", "............"]},
+	"swords": {"colors": {"a": Color("d9d9e0"), "b": Color("f4f4fa"), "c": Color("c9873a")}, "rows": ["............", "oo........oo", "obo......obo", ".obo....obo.", "..obo..obo..", "...obbbbo...", "....obbo....", "...ocooco...", "..occo.occo.", "..oo....oo..", "............", "............"]},
+	"plain": {"colors": {"a": Color("9fd3c7"), "b": Color("d8f2ec")}, "rows": ["............", "............", "............", "....oooo....", "...oabbao...", "...oabaao...", "...oaaaao...", "....oooo....", "............", "............", "............", "............"]},
+}
+
 static var _cache: Dictionary = {}
 
 
@@ -140,6 +147,20 @@ static func today_glyph(name: String) -> Texture2D:
 		"calendar", "dot", "fish", "check":
 			return _glyph("today_" + name, TODAY_EXTRA, name)
 	return null
+
+
+## WU-471: the 12x12 icon for a `Hud.hint_kind` ("goal", "fight", "today", "season", "other").
+static func hint_glyph(kind: String) -> Texture2D:
+	match kind:
+		"goal":
+			return _glyph("hint_scroll", HINTS, "scroll")
+		"fight":
+			return _glyph("hint_swords", HINTS, "swords")
+		"today":
+			return weather("clear")
+		"season":
+			return _glyph("mark_leaf", MARKS, "leaf")
+	return _glyph("hint_plain", HINTS, "plain")
 
 
 ## A 12x12 world-map mark glyph ("coin", "paw", "leaf"); null for anything else.

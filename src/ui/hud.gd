@@ -10,6 +10,8 @@ const QI_FILL := Color("6fd3c1")
 const LOG_HEIGHT := 108.0  ## Space the log panel takes at the bottom (offset 108 in _build_log).
 const LOG_IDLE_SECONDS := 8.0  ## GFX-010: the log fades after this long without a message.
 const LOG_IDLE_ALPHA := 0.55
+const HINT_ICON_W := 16  ## WU-471: the icon column left of the hint lines.
+const HINT_W := 300.0  ## The hint label's width (the card's 316 minus the icon column).
 const HINT_MAX_CHARS := 84  ## WU-468: a status-panel hint line is cut past this (about two wrapped lines).
 const STATUS_MARGIN := 8.0  ## Gap kept between the status panel and the log.
 ## Lifespan cue thresholds (fraction of the lifespan left).
@@ -35,6 +37,7 @@ var _bottleneck: Label
 var _injuries: Label
 var _hint: Label
 var _lives_badge: Label  # WU-340: the same gold "!" beside the Lives label while the first hint is the artifact lives line
+var _hint_icons: Control  # WU-471: the icon column left of the hint label
 var _hint_badge: Label  # WU-284: gold "!" over the first hint when it names a place here
 var _hint_lines: PackedStringArray = []
 var _hint_full := ""  ## GFX-016: the hint text before the line cap.
@@ -562,15 +565,19 @@ func _build_guide_panel() -> void:
 	_season_task.visible = false
 	_hint = UIStyle.label("", 14, Color("9fd3c7"))
 	_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_hint.custom_minimum_size = Vector2(316, 0)
-	# WU-406: the bullet sits beside the label (not in leading spaces, which autowrap trims).
+	_hint.custom_minimum_size = Vector2(HINT_W, 0)
+	# WU-471: a 16 px icon column (one 12 px icon per hint line) sits beside the label; the badge overlays its corner.
 	var hint_row := HBoxContainer.new()
-	hint_row.add_theme_constant_override("separation", 4)
+	hint_row.add_theme_constant_override("separation", 0)
 	box.add_child(hint_row)
+	_hint_icons = Control.new()
+	_hint_icons.custom_minimum_size = Vector2(HINT_ICON_W, 0)
+	_hint_icons.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	hint_row.add_child(_hint_icons)
 	_hint_badge = UIStyle.label("●", 9, Color("9fd3c7"))  # GFX-017: a real bullet, not a thin "!" that reads as a bar
-	_hint_badge.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	_hint_badge.position = Vector2(6, -3)
 	_hint_badge.visible = false
-	hint_row.add_child(_hint_badge)
+	_hint_icons.add_child(_hint_badge)
 	_hint.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	hint_row.add_child(_hint)
 	_hint.visibility_changed.connect(func() -> void: hint_row.visible = _hint.visible)
@@ -977,9 +984,10 @@ func _apply_line_cap() -> void:
 		if label.visible:
 			used += maxi(1, wrapped_lines(label.text, font, 14, 316.0).size()) if label != _hunt else 1
 	var budget := maxi(1, GUIDE_MAX_LINES - used)
-	var cut := cut_entries(_hint_full.split("\n"), font, 14, 316.0, budget)
+	var cut := cut_entries(_hint_full.split("\n"), font, 14, HINT_W, budget)
 	if cut.size() != _hint_full.split("\n").size() or "\n".join(cut) != _hint_full:
 		_hint.text = "\n".join(cut)
+	_sync_hint_icons()
 
 
 ## The guide card shows only while one of its lines does. With hints off only the hunt line can (an active
@@ -1003,13 +1011,52 @@ func _set_hint_text(lines: PackedStringArray) -> void:
 	var out: Array = []
 	var cut := false
 	for i in lines.size():
-		out.append(("" if i == 0 and marked else "> ") + cap_hint(lines[i]))
+		out.append(cap_hint(lines[i]))
 		cut = cut or cap_hint(lines[i]) != lines[i]
 	_hint_full = "\n".join(out)
 	_hint.text = _hint_full
 	# WU-315: mouse hover shows the whole text when a line was cut.
 	_hint.tooltip_text = "\n".join(lines) if cut else ""
 	_hint.mouse_filter = Control.MOUSE_FILTER_PASS
+	_sync_hint_icons()
+
+
+## WU-471: "goal", "fight", "today", "season" or "other" by the line's prefix. Pure.
+static func hint_kind(line: String) -> String:
+	var t := line.strip_edges().trim_prefix("> ")
+	if t.begins_with("Goal"):
+		return "goal"
+	if t.begins_with("Easy") or t.begins_with("Fair"):
+		return "fight"
+	if t.begins_with("Today"):
+		return "today"
+	if t.begins_with("One more for"):
+		return "season"
+	return "other"
+
+
+## WU-471: one 12 px icon per shown hint line, at the line's first wrapped row.
+func _sync_hint_icons() -> void:
+	if _hint_icons == null:
+		return
+	for c in _hint_icons.get_children():
+		if c != _hint_badge:
+			_hint_icons.remove_child(c)
+			c.free()
+	if not _hint.visible and _hint.text == "":
+		return
+	var font := _hint.get_theme_font("font")
+	var line_h := font.get_height(14)
+	var y := 0.0
+	for e in _hint.text.split("\n"):
+		var icon := TextureRect.new()
+		icon.texture = HudIcons.hint_glyph(hint_kind(e))
+		icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		icon.position = Vector2(1, y + (line_h - 12.0) * 0.5)
+		icon.size = Vector2(12, 12)
+		_hint_icons.add_child(icon)
+		y += maxi(1, wrapped_lines(e, font, 14, HINT_W).size()) * line_h
 
 
 ## Names of the places and NPCs in the current region (what the world marks with its "!" badge).

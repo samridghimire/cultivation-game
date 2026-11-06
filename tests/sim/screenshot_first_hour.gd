@@ -149,6 +149,9 @@ func _start() -> void:
 	if OS.get_cmdline_user_args().has("--cast"):  # QA-182: the CastBar on the jetty, marker frozen mid-sweep
 		_cast_shots(gs)
 		special = true
+	if OS.get_cmdline_user_args().has("--hud-panel"):  # WU-471: the Next-steps panel, cropped at 2x
+		shots.append({"name": "hud_panel", "open": func() -> void: hud.get("_banner").visible = false, "close": func() -> void: pass, "crop": true})
+		special = true
 	if OS.get_cmdline_user_args().has("--season-board"):  # WU-466: the village board's season task card
 		var sboard: Control = hud.get("_season_board")
 		shots.append({"name": "season_board", "open": func() -> void:
@@ -729,7 +732,13 @@ func _process(_d: float) -> bool:
 		banner_wait_start = -1
 		DirAccess.make_dir_recursive_absolute(OUT_DIR)
 		var file := "%s/%s.png" % [OUT_DIR, shot["name"]]
-		root.get_viewport().get_texture().get_image().save_png(file)
+		var img: Image = root.get_viewport().get_texture().get_image()
+		if shot.get("crop", false):  # WU-471: the guide panel at 2x
+			var panel: Control = hud.get("_guide_panel")
+			var r := panel.get_global_rect().grow(6.0)
+			img = img.get_region(Rect2i(r).intersection(Rect2i(Vector2i.ZERO, img.get_size())))
+			img.resize(img.get_width() * 2, img.get_height() * 2, Image.INTERPOLATE_NEAREST)
+		img.save_png(file)
 		print("saved %s" % ProjectSettings.globalize_path(file))
 		(shot["close"] as Callable).call()
 		opened = false
