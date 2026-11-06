@@ -1,6 +1,8 @@
 extends TestCase
 ## TravelPoint.destination_note: what waits at the other end of a road (WU-319).
 
+const HUD := preload("res://src/ui/hud.gd")
+
 
 func test_note_names_qi_and_best_spot() -> void:
 	var c := new_character()
