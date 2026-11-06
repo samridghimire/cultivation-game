@@ -506,6 +506,9 @@ const FESTIVAL_ID := "dragon_boat_festival"  ## QA-198: Qingshi's May festival (
 
 
 func _has_festival_flag() -> bool:
+	for a in OS.get_cmdline_user_args():
+		if a.begins_with("--festival-stall="):
+			return true
 	for f in ["--festival", "--contest", "--practice", "--regular", "--journal"]:
 		if OS.get_cmdline_user_args().has(f):
 			return true
@@ -525,6 +528,17 @@ func _festival_clock(gs: Node) -> void:
 	var args := OS.get_cmdline_user_args()
 	var clock: Node = root.get_node("GameClock")
 	var may_first := 4 * Calendar.DAYS_PER_MONTH  # month 5, day 1: the dragon boat festival starts
+	for a in args:  # GFX-083: --festival-stall=<event id> starts that festival's first day in its region
+		if a.begins_with("--festival-stall="):
+			var ev: Dictionary = gs.data.world_events.get(a.substr(17), {})
+			if ev.is_empty():
+				push_warning("--festival-stall: unknown event %s" % a.substr(17))
+				break
+			var region_id := String(ev["regions"][0])
+			gs.current_region = region_id
+			var month := int(ev["months"][0])
+			clock.total_days = (month - 1) * Calendar.DAYS_PER_MONTH
+			gs.world_events = [{"id": a.substr(17), "region": region_id, "start_day": clock.total_days, "end_day": clock.total_days + int(ev["min_days"]), "done": false}]
 	if args.has("--festival") or args.has("--contest"):
 		clock.total_days = may_first
 		gs.call("_world_events_month")
@@ -555,6 +569,17 @@ func _festival_clock(gs: Node) -> void:
 
 func _festival_shots(gs: Node) -> void:
 	var args := OS.get_cmdline_user_args()
+	for a in args:  # GFX-083: stand 120 px from the festival_only stall
+		if a.begins_with("--festival-stall="):
+			var id := a.substr(17)
+			shots.append({"name": "festival_stall_" + id, "open": func() -> void:
+				hud.get("_banner").visible = false
+				for place: Dictionary in gs.data.regions[gs.current_region]["places"]:
+					if String(place.get("festival_only", "")) == id:
+						var pos := Vector2(float(place["pos"][0]), float(place["pos"][1]))
+						_teleport_player(pos + Vector2(-100, 70))
+						return
+				print("festival-stall: no stall for %s" % id), "close": func() -> void: pass})
 	if args.has("--festival"):
 		shots.append({"name": "festival_qingshi", "open": func() -> void:
 			hud.get("_banner").visible = false

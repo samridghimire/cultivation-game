@@ -25,6 +25,17 @@ extends Interactable
 @export var rotating_stock: Dictionary = {}
 
 
+func _ready() -> void:
+	super._ready()
+	if festival_only != "":  # GFX-083: the matching decoration beside the stall
+		var decor := FestivalStall.new()
+		decor.event_id = festival_only
+		decor.decor_only = true
+		decor.position = Vector2(size.x / 2.0 + 40.0, size.y / 2.0 - 4.0)
+		decor.z_index = 1
+		add_child(decor)
+
+
 func get_options() -> Array[Dictionary]:
 	if festival_only != "" and not Places.festival_open({"festival_only": festival_only}, GameState.world_events, GameState.current_region, GameClock.total_days):
 		return []
@@ -62,6 +73,8 @@ static func shows_manual_mark(c: CharacterData, data: GameData, region_id: Strin
 
 func _draw() -> void:
 	super._draw()
+	if festival_only != "":  # GFX-083: scalloped festival trim along the awning
+		FestivalStall.draw_scallops(self, Vector2(0, -size.y / 2.0), size.x, color)
 	if GameState.player != null and shows_manual_mark(GameState.player, GameState.data, GameState.current_region, display_name):
 		_draw_manual_mark()
 	if shows_market_mark(open_days, rotating_stock, GameClock.total_days):

@@ -16,6 +16,36 @@ func test_stall_decor_by_festival() -> void:
 	assert_eq(FestivalStall.decor_for("mystery_festival"), "lanterns")
 
 
+## GFX-083: each festival has its own look, and every festival_only stall's festival is a known one.
+func test_festival_looks_distinct() -> void:
+	var gs := (Engine.get_main_loop() as SceneTree).root.get_node("GameState")
+	var seen := {}
+	for id: String in gs.data.world_events:
+		if gs.data.world_events[id].get("festival", false):
+			var look := FestivalStall.decor_for(id)
+			assert_false(seen.has(look), "look %s reused by %s" % [look, id])
+			seen[look] = id
+	assert_eq(seen.size(), 4)
+	for region: Dictionary in gs.data.regions.values():
+		for place: Dictionary in region["places"]:
+			if place.has("festival_only"):
+				assert_true(FestivalStall.LOOKS.has(String(place["festival_only"])))
+
+
+func test_festival_only_merchant_has_decor() -> void:
+	var m: Interactable = load("res://src/world/interactables/merchant.gd").new()
+	m.festival_only = "mid_autumn_festival"
+	m.size = Vector2(70, 60)
+	m._ready()
+	var found: FestivalStall = null
+	for c in m.get_children():
+		if c is FestivalStall:
+			found = c
+	assert_true(found != null and found.decor_only)
+	assert_eq(FestivalStall.decor_for(found.event_id), "moon")
+	m.free()
+
+
 func test_stalls_follow_active_festival() -> void:
 	var root := (Engine.get_main_loop() as SceneTree).root
 	var gs := root.get_node("GameState")
