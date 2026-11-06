@@ -112,6 +112,7 @@ func _ready() -> void:
 		player.input_enabled = not is_open
 		_greet_modal = is_open)
 	EventBus.region_changed.connect(_on_region_changed)
+	EventBus.contest_finished.connect(_on_contest_finished)
 	EventBus.roamers_changed.connect(_on_roamers_changed)
 	EventBus.forage_changed.connect(_build_forage)
 	get_tree().auto_accept_quit = false
@@ -265,9 +266,33 @@ func _refresh_stalls() -> void:
 		var stall := FestivalStall.new()
 		stall.event_id = festival
 		stall.position = spot
+		stall.caption = FestivalContest.crowd_caption(GameState.data, festival, _contest_open(festival))
 		add_child(stall)
 		move_child(stall, player.get_index())
 		_stalls.append(stall)
+
+
+## Whether `event_id` has a contest here the player has not entered this year (WU-457).
+func _contest_open(event_id: String) -> bool:
+	return GameState.data.world_events.get(event_id, {}).has("contest") and GameState.check_festival_contest(event_id) == ""
+
+
+## The contest stall's crowd centre when a villager crowd should gather, else null (WU-457).
+func _crowd_centre() -> Variant:
+	var event_id := GameState.festival_contest_here()
+	if event_id == "" or _stalls.is_empty() or not _contest_open(event_id):
+		return null
+	return _stalls[0].position + Vector2(0, 20)
+
+
+## The contest was entered: the crowd goes home and the caption goes away.
+func _on_contest_finished(_result: Dictionary) -> void:
+	for node in get_children():
+		if node is Interactable and node.get("npc_id") != null:
+			remove_child(node)
+			node.queue_free()
+	_refresh_stalls()
+	_build_npcs()
 
 
 func _on_setting_changed(key: String, _value: Variant) -> void:
@@ -664,6 +689,12 @@ func _build_generated_npcs() -> void:
 			neighbours.append(c)
 	var visitor := GameState.visitor_today()
 	var stands := Npcs.haunt_positions(neighbours, _region, GameClock.total_days, int(data.family.get("adult_age", 16)), Weather.of(data, GameState.current_region, GameClock.total_days), visitor, GameState.visit_place_for(visitor), GameState.together_places())
+	var centre: Variant = _crowd_centre()
+	if centre != null:
+		var crowd_avoid: Array[Vector2] = avoid.duplicate()
+		var crowd := FestivalContest.crowd_positions(centre as Vector2, neighbours.size(), crowd_avoid)
+		for k in crowd.size():
+			stands[neighbours[k].id] = crowd[k]
 	for i in people.size():
 		var c := people[i]
 		var node: Interactable = NPC_SCRIPT.new()

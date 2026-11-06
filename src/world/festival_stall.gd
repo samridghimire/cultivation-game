@@ -11,6 +11,25 @@ const POLE := Color("6b4a2e")
 const OUTLINE := Color("2a2018")
 
 var event_id := ""
+## WU-457: "<contest> today" shown above the stall while its contest is open to the player.
+var caption := ""
+var _label: Label
+
+
+func _ready() -> void:
+	if caption == "":
+		return
+	_label = Label.new()
+	_label.text = caption
+	_label.add_theme_font_size_override("font_size", 14)
+	_label.add_theme_color_override("font_color", GOLD)
+	_label.add_theme_color_override("font_outline_color", OUTLINE)
+	_label.add_theme_constant_override("outline_size", 4)
+	_label.position = Vector2(-90, -40)
+	_label.size = Vector2(180, 20)
+	_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_label)
 
 
 ## "willow" for Qingming, otherwise "lanterns".

@@ -240,3 +240,41 @@ static func validate(data: GameData) -> PackedStringArray:
 		if stripped.contains("{"):
 			errors.append("%s lose_text may only use {winner}" % id)
 	return errors
+
+
+## WU-457: how many villagers gather round the contest stall.
+const CROWD_MAX := 4
+const CROWD_RADIUS := 74.0
+const CROWD_CLEAR := 56.0
+
+
+## The caption over the festival stall while the contest is still open to you: "<name> today", else "".
+static func crowd_caption(data: GameData, event_id: String, open: bool) -> String:
+	if event_id == "" or not open:
+		return ""
+	return "%s today" % String(contest_of(data, event_id).get("name", ""))
+
+
+## Where `count` (capped at CROWD_MAX) villagers stand: a ring round `center`, skipping spots within
+## CROWD_CLEAR of any `avoid` point (roads, other places) by trying wider rings. Deterministic.
+static func crowd_positions(center: Vector2, count: int, avoid: Array[Vector2]) -> Array[Vector2]:
+	var out: Array[Vector2] = []
+	var want := clampi(count, 0, CROWD_MAX)
+	var step := 0
+	while out.size() < want and step < 48:
+		var ring := step / 8
+		var angle := TAU * (float(step % 8) + 0.5 * float(ring % 2)) / 8.0 + PI / 2.0
+		step += 1
+		var pos := center + Vector2.from_angle(angle) * (CROWD_RADIUS + 36.0 * float(ring))
+		var clear := true
+		for a in avoid:
+			if pos.distance_to(a) < CROWD_CLEAR:
+				clear = false
+				break
+		for o in out:
+			if pos.distance_to(o) < 36.0:
+				clear = false
+				break
+		if clear:
+			out.append(pos)
+	return out
