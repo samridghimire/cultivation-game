@@ -177,26 +177,31 @@ static func _draw_marsh_court(ci: CanvasItem, hall: Rect2, court: Rect2, snowy: 
 		ci.draw_line(Vector2(rx, court.position.y - 1.0), Vector2(rx - 1.0, court.position.y - 9.0), reed, 1.0)
 
 
-const STELE_W := 170.0
-const POST_TOP := 38.0  ## post height above its foot line
+const STELE_W := 136.0  ## the hanging name board
+const POST_H := 64.0  ## post height above its foot line (GFX-076)
+const POST_BASE := 8.0  ## plinth below the foot line
+const ROOF_W := 40.0
+const GATE_KEEP := 24.0  ## decor and idle villagers stay this far off the gate
 
 
-## GFX-071: the pieces of the gate seen side-on: the roof band (north-south, over the road), both posts, the stele.
+## GFX-076: the gate in 3/4 view. Posts stand on the north and south road verges (feet 4 px off the path); the roof
+## is lifted by the post height and spans from the north post's top to the south post's top; the name board hangs
+## under the roof's south end.
 static func gate_parts(g: Dictionary) -> Dictionary:
 	var path: Rect2 = g["path"]
 	var gx: float = g["x"]
-	var top := path.position.y - 20.0
-	var bottom := path.end.y + 4.0
-	var west: bool = gx < float(g.get("map_w", 1e9)) / 2.0
-	var stele_x := gx + 18.0 if west else gx - 18.0 - STELE_W  # GFX-074: the board stands on the map side of the gate
+	var north_foot := path.position.y - 4.0
+	var south_foot := path.end.y + 4.0
+	var top := north_foot - POST_H
+	var roof_end := south_foot - POST_H
 	return {
-		"roof": Rect2(gx - 14.0, top - POST_TOP - 8.0, 28.0, bottom - top + 16.0),
-		"posts": [Rect2(gx - 11.0, top - POST_TOP, 22.0, POST_TOP + 16.0), Rect2(gx - 11.0, bottom - POST_TOP, 22.0, POST_TOP + 16.0)],
-		"stele": Rect2(stele_x, top - POST_TOP - 6.0, STELE_W, POST_TOP + 12.0),
+		"roof": Rect2(gx - ROOF_W / 2.0, top, ROOF_W, roof_end - top),
+		"posts": [Rect2(gx - 13.0, top, 26.0, POST_H + POST_BASE), Rect2(gx - 13.0, roof_end, 26.0, POST_H + POST_BASE)],
+		"stele": Rect2(gx - STELE_W / 2.0, roof_end + 10.0, STELE_W, 22.0),
 	}
 
 
-## The screen rect the drawn gate covers (roof band, posts and name stele).
+## The screen rect the drawn gate covers (roof, posts and name board).
 static func gate_rect(g: Dictionary) -> Rect2:
 	var parts := gate_parts(g)
 	var r: Rect2 = parts["roof"]
@@ -206,8 +211,26 @@ static func gate_rect(g: Dictionary) -> Rect2:
 	return r
 
 
-## GFX-071: a roofed gate seen from the south with the road passing under it: two posts on the path's edges,
-## a tiled roof band running north-south between their tops, and the name on a stone stele beside the north post.
+## GFX-076: `pos` pushed out of the gate's keep-out zone (gate_rect grown by GATE_KEEP), along the shortest way out.
+static func nudge_off_gate(pos: Vector2, g: Dictionary) -> Vector2:
+	if g.is_empty():
+		return pos
+	var keep := gate_rect(g).grow(GATE_KEEP)
+	if not keep.has_point(pos):
+		return pos
+	var options: Array[Vector2] = [
+		Vector2(keep.position.x - 1.0, pos.y), Vector2(keep.end.x + 1.0, pos.y),
+		Vector2(pos.x, keep.position.y - 1.0), Vector2(pos.x, keep.end.y + 1.0),
+	]
+	var best := options[0]
+	for o in options:
+		if o.distance_to(pos) < best.distance_to(pos):
+			best = o
+	return best
+
+
+## GFX-076: two posts either side of the road, a lifted roof joining their tops (lighter top face, darker south
+## edge, upturned eave ends), a soft shadow on the road under it and the region's name on a board.
 static func draw_gate(ci: CanvasItem, g: Dictionary, font: Font) -> void:
 	var parts := gate_parts(g)
 	var roof: Color = g["color"]
@@ -215,35 +238,35 @@ static func draw_gate(ci: CanvasItem, g: Dictionary, font: Font) -> void:
 	var dark := Color("2b2118")
 	var posts: Array = parts["posts"]
 	var band: Rect2 = parts["roof"]
-	var north: Rect2 = posts[0]
-	var south: Rect2 = posts[1]
-	_draw_post(ci, north, wood, dark)
-	# Roof band with upturned ends sticking 8 px past each post.
+	var path: Rect2 = g["path"]
+	ci.draw_rect(Rect2(band.position.x - 2.0, path.position.y, band.size.x + 4.0, path.size.y), Color(0, 0, 0, 0.2))
 	ci.draw_rect(band.grow(1.5), dark)
-	ci.draw_rect(band, roof)
-	ci.draw_rect(Rect2(band.position.x, band.position.y, 5.0, band.size.y), roof.lightened(0.25))
-	var y := band.position.y + 3.0
-	while y < band.end.y:
-		ci.draw_line(Vector2(band.position.x, y), Vector2(band.end.x, y), roof.darkened(0.3), 1.0)
-		y += 4.0
-	for cap_y in [band.position.y, band.end.y - 3.0]:
-		ci.draw_rect(Rect2(band.position.x - 2.0, cap_y, band.size.x + 4.0, 3.0), roof.lightened(0.15))
-	_draw_post(ci, south, wood, dark)
-	# Name stele: a plinth with the board on it, facing the viewer.
-	var st: Rect2 = parts["stele"]
-	var plinth := Rect2(st.get_center().x - 40.0, st.position.y + 26.0, 80.0, st.size.y - 26.0)
-	ci.draw_rect(plinth.grow(1.0), dark)
-	ci.draw_rect(plinth, Color("8d939b"))
-	var board := Rect2(st.position.x, st.position.y, STELE_W, 26.0)
+	ci.draw_rect(band, roof.lightened(0.15))
+	var y := band.position.y + 4.0
+	while y < band.end.y - 6.0:
+		ci.draw_line(Vector2(band.position.x, y), Vector2(band.end.x, y), roof.darkened(0.15), 1.0)
+		y += 5.0
+	ci.draw_rect(Rect2(band.position.x, band.end.y - 6.0, band.size.x, 6.0), roof.darkened(0.35))
+	for ex in [band.position.x - 4.0, band.end.x - 2.0]:
+		for ey in [band.position.y - 3.0, band.end.y - 4.0]:
+			ci.draw_rect(Rect2(ex, ey, 6.0, 4.0), roof.lightened(0.3))
+	for post: Rect2 in posts:
+		_draw_post(ci, post, wood, dark)
+	var board: Rect2 = parts["stele"]
 	ci.draw_rect(board.grow(2.0), dark)
 	ci.draw_rect(board, wood.darkened(0.2))
-	ci.draw_string(font, board.position + Vector2(0.0, 18.0), String(g["name"]), HORIZONTAL_ALIGNMENT_CENTER, board.size.x, 14, Color("f2e3b8"))
+	ci.draw_line(Vector2(board.position.x + 10.0, board.position.y - 2.0), Vector2(board.position.x + 10.0, board.position.y - 8.0), dark, 2.0)
+	ci.draw_line(Vector2(board.end.x - 10.0, board.position.y - 2.0), Vector2(board.end.x - 10.0, board.position.y - 8.0), dark, 2.0)
+	ci.draw_string(font, board.position + Vector2(0.0, 16.0), String(g["name"]), HORIZONTAL_ALIGNMENT_CENTER, board.size.x, 13, Color("f2e3b8"))
 
 
 static func _draw_post(ci: CanvasItem, r: Rect2, wood: Color, dark: Color) -> void:
-	var foot_y := r.end.y - 14.0
-	ci.draw_rect(Rect2(r.position.x, foot_y, 22.0, 14.0), dark)
-	ci.draw_rect(Rect2(r.position.x + 1.0, foot_y + 1.0, 20.0, 12.0), Color("8d939b"))
-	ci.draw_rect(Rect2(r.position.x + 5.0, r.position.y, 12.0, 44.0), dark)
-	ci.draw_rect(Rect2(r.position.x + 6.0, r.position.y + 1.0, 10.0, 42.0), wood)
-	ci.draw_rect(Rect2(r.position.x + 6.0, r.position.y + 1.0, 3.0, 42.0), wood.lightened(0.2))
+	var foot_y := r.end.y - POST_BASE
+	ci.draw_rect(Rect2(r.position.x, foot_y, r.size.x, POST_BASE), dark)
+	ci.draw_rect(Rect2(r.position.x + 1.0, foot_y + 1.0, r.size.x - 2.0, POST_BASE - 2.0), Color("8d939b"))
+	var cx := r.get_center().x
+	ci.draw_rect(Rect2(cx - 7.0, r.position.y + 4.0, 14.0, foot_y - r.position.y - 4.0), dark)
+	ci.draw_rect(Rect2(cx - 6.0, r.position.y + 4.0, 12.0, foot_y - r.position.y - 5.0), wood)
+	ci.draw_rect(Rect2(cx - 6.0, r.position.y + 4.0, 3.0, foot_y - r.position.y - 5.0), wood.lightened(0.2))
+	ci.draw_rect(Rect2(cx - 10.0, r.position.y, 20.0, 6.0), dark)
+	ci.draw_rect(Rect2(cx - 9.0, r.position.y + 1.0, 18.0, 4.0), wood.lightened(0.1))

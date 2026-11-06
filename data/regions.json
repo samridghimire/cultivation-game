@@ -148,7 +148,7 @@
       "spawn": [120, 500],
       "family_home": {"pos": [1100, 640], "size": [90, 64]},
       "npc_spots": [[500, 380], [900, 380], [1000, 620], [600, 620], [1450, 350], [300, 810], [1500, 910], [100, 90], [1140, 90], [1140, 910], [1300, 630], [100, 630], [620, 910], [460, 110]],
-      "abodes": [{"id": "cloud_piercing_grotto", "display_name": "Cloud-Piercing Grotto (abode)", "cost": 2500, "min_realm": "foundation_establishment", "qi_density": 2.5, "storage_slots": 30, "anchor_id": "cloud_grotto_abode", "pos": [900, 850], "size": [100, 70], "color": "9fb4c9"}],
+      "abodes": [{"id": "cloud_piercing_grotto", "display_name": "Cloud-Piercing Grotto (abode)", "cost": 2500, "min_realm": "foundation_establishment", "qi_density": 2.5, "storage_slots": 30, "anchor_id": "cloud_grotto_abode", "pos": [740, 880], "size": [100, 70], "color": "9fb4c9"}],
       "routes": [
         {"to": "misty_forest", "days": 7},
         {"to": "fallen_star_market", "days": 12},

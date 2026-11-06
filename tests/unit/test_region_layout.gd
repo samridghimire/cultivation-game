@@ -351,11 +351,17 @@ func test_sect_courts_and_gates() -> void:
 			var parts := SectCourt.gate_parts(g)
 			var roof: Rect2 = parts["roof"]
 			assert_true(absf(roof.get_center().x - float(g["x"])) <= 24.0 and roof.size.x <= 48.0, "%s roof spans the road, not the map" % region["id"])
-			assert_true(gr.encloses(parts["stele"]), "%s gate rect holds the stele" % region["id"])
+			assert_true(gr.encloses(parts["stele"]), "%s gate rect holds the board" % region["id"])
 			for post: Rect2 in parts["posts"]:
 				assert_true(gr.encloses(post), "%s gate rect holds both posts" % region["id"])
 			assert_true(roof.position.y <= (parts["posts"][0] as Rect2).position.y and roof.end.y >= (parts["posts"][1] as Rect2).position.y, "%s roof runs post to post" % region["id"])
-			assert_false((parts["stele"] as Rect2).intersects(parts["posts"][0]), "%s stele beside the post" % region["id"])
+			assert_false((parts["stele"] as Rect2).intersects(parts["posts"][0]), "%s board clear of the north post" % region["id"])
+			# GFX-076: both posts stay visible (neither is hidden inside the roof) and stand on the road verges.
+			for post: Rect2 in parts["posts"]:
+				assert_false(roof.encloses(post), "%s a post is hidden under the roof" % region["id"])
+			assert_true((parts["posts"][0] as Rect2).end.y - SectCourt.POST_BASE <= (g["path"] as Rect2).position.y, "%s north post on the north verge" % region["id"])
+			assert_true((parts["posts"][1] as Rect2).end.y - SectCourt.POST_BASE >= (g["path"] as Rect2).end.y, "%s south post on the south verge" % region["id"])
+			assert_true(roof.size.y >= (g["path"] as Rect2).size.y, "%s roof spans the road" % region["id"])
 			assert_true(Rect2(Vector2.ZERO, Vector2(float(region["map"]["size"][0]), float(region["map"]["size"][1]))).encloses(gr), "%s gate inside map" % region["id"])
 			# GFX-074: both pillars well clear of the edge-exit post, and no place sprite inside the court.
 			for place: Dictionary in region["places"]:
@@ -370,8 +376,25 @@ func test_sect_courts_and_gates() -> void:
 						if other != place:
 							assert_false(court.intersects(_rect(other, [64, 64])), "%s: %s sprite inside the court" % [region["id"], other.get("display_name", "?")])
 					assert_false(court.intersects(parts["stele"]), "%s court clear of the board" % region["id"])
+					for abode: Dictionary in region.get("abodes", []):  # GFX-076: the drawn abode (1.3x) stays off the court
+						var ar := _rect(abode, [100, 70])
+						assert_false(court.intersects(Rect2(ar.get_center() - ar.size * 0.65, ar.size * 1.3)), "%s: abode sprite inside the court" % region["id"])
 					if region["id"] == "withered_bone_marsh":
 						assert_true(court.size.x > _rect(place, [64, 64]).size.x + 30.0, "marsh hall has a real court")
 						assert_eq(SectCourt.court_style(region), "marsh")
 		assert_eq(not g.is_empty(), has_sect_hall, "%s gate only with a sect hall" % region["id"])
 	assert_true(seen >= 2, "azure peak and the marsh both have sect halls")
+
+
+## GFX-076: idle villagers keep 24 px off the gate (decor is filtered against the same zone in world.gd).
+func test_gate_keep_out() -> void:
+	for region: Dictionary in data().regions.values():
+		var g := SectCourt.gate(region)
+		if g.is_empty():
+			continue
+		var keep := SectCourt.gate_rect(g).grow(SectCourt.GATE_KEEP)
+		var out := SectCourt.nudge_off_gate(SectCourt.gate_rect(g).get_center(), g)
+		assert_false(keep.has_point(out), "%s nudged villager leaves the gate" % region["id"])
+		assert_eq(SectCourt.nudge_off_gate(Vector2(5, 5), g), Vector2(5, 5))
+		for spot: Array in region.get("npc_spots", []):
+			assert_false(keep.has_point(Vector2(float(spot[0]), float(spot[1]))), "%s npc spot in the gate" % region["id"])

@@ -385,8 +385,8 @@ func _build_decor() -> void:
 	_decor = Scenery.place(_region, rng)
 	var g := SectCourt.gate(_region)
 	if not g.is_empty():  # GFX-071: nothing grows on the gate or its name stele
-		var keep := SectCourt.gate_rect(g).grow(12.0)
-		_decor = _decor.filter(func(d: Dictionary) -> bool: return not keep.intersects(Rect2(d["pos"] - Vector2(16, 16), Vector2(32, 32))))
+		var keep := SectCourt.gate_rect(g).grow(SectCourt.GATE_KEEP)
+		_decor = _decor.filter(func(d: Dictionary) -> bool: return not keep.intersects(Rect2(d["pos"] - Vector2(16, 44), Vector2(32, 60))))
 	_decor.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return a["pos"].y < b["pos"].y)
 
 
@@ -678,6 +678,9 @@ func _build_generated_npcs() -> void:
 	if _region.has("family_home"):
 		avoid.append(_vec(_region["family_home"].get("pos", [0, 0])))
 	var spots := Npcs.spot_positions(people.size() + family.size(), _region.get("npc_spots", []), player.position, avoid)
+	var gate := SectCourt.gate(_region)
+	for i in spots.size():  # GFX-076: nobody stands in the gate
+		spots[i] = SectCourt.nudge_off_gate(spots[i], gate)
 	if not family.is_empty():
 		var split := FamilyHome.split_spots(spots, family.size(), _vec(_region["family_home"].get("pos", [0, 0])))
 		spots = split[1]
